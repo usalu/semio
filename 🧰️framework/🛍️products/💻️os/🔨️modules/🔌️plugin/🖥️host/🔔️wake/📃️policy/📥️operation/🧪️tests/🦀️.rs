@@ -134,3 +134,12 @@ fn native_retirement_receives_scoped_execution_after_its_actual_metadata(){
  assert!(closed);
  assert!(driver.operation_terminal_is_empty().unwrap());
 }
+
+#[test]
+fn exhausted_items_refusal_names_the_dimension_and_every_amount(){
+ let error=items_exhausted(ItemsLedger{issued:48_000_000,remaining:164_000,guest_held:100_000,reserve:64_000,grant:4096},None);
+ assert_eq!(error.kind,semio_framework_value::ValueRefusalKind::WorkLimit);
+ assert_eq!(error.message,"semantic operation currency exhausted with cleanup reserve retained: dimension=retained items, issued=48000000, spent=47836000, remaining=164000, held by guest=100000, cleanup reserve=64000, turn grant=4096, spendable=0");
+ let overdrawn=items_exhausted(ItemsLedger{issued:10,remaining:20,guest_held:30,reserve:40,grant:0},None);
+ assert!(overdrawn.message.contains("spent=0")&&overdrawn.message.contains("spendable=0")&&overdrawn.message.contains("turn grant=0"));
+}

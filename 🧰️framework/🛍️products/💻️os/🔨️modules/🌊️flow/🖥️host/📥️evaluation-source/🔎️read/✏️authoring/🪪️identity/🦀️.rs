@@ -1,5 +1,5 @@
 //! 🪪️ An original descriptor lends its explicit identity or funds a collision-tested generated identity.
-use super::super::*;
+use super::*;
 use super::{text::FundedText,compare::TextCompare,unsigned::UnsignedWork};
 use semio_framework_job::{OriginalConstructionDemand,OriginalTurnFailure,StepContext};
 use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,RetirementDemand,ValueError,ValueRefusalKind};

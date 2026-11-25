@@ -117,7 +117,7 @@ export class TypedOperationCall {
   readonly diagnostics: OwnedOperationDiagnostic[] = [];
   diagnosticProgress: { readonly bytes: number; readonly nodes: number } | null = null;
   diagnosticOwnedBytes = 0;
-  constructor(readonly router: TypedOperationRouter, readonly label: string) {}
+  constructor(readonly router: TypedOperationRouter, readonly label: string, readonly adopts: boolean = true) {}
   observe(token: TypedOperationToken): boolean { return this.router.observe(this, token); }
   fault(token: TypedOperationToken, message: string): boolean { return this.router.fault(this, token, message); }
   accept(effects: readonly WireVariant[]): Promise<void> { return this.router.accept(this, effects); }
@@ -144,16 +144,16 @@ export class TypedOperationRouter {
   });
   private readonly live = new Set<TypedOperationCall>();
   private readonly parked: { readonly call: TypedOperationCall; readonly receiver: number; readonly operation: bigint; readonly message: string }[] = [];
-  constructor(private readonly report: (code: string, message: string) => void = reportTypedOperationFault, private readonly publishDiagnostic: (token: TypedOperationToken, diagnostic: OwnedOperationDiagnostic) => void = publishOperationDiagnostic, private readonly publishFault: (receiver: number, error: SemioFaultError) => void = publishOperationFault) {}
-  open(label: string): TypedOperationCall {
-    const call = new TypedOperationCall(this, label);
+  constructor(private readonly report: (code: string, message: string) => void = reportTypedOperationFault, private readonly publishDiagnostic: (token: TypedOperationToken, diagnostic: OwnedOperationDiagnostic) => void = publishOperationDiagnostic, private readonly publishFault: (receiver: number, error: SemioFaultError) => boolean = publishOperationFault) {}
+  open(label: string, adopts = true): TypedOperationCall {
+    const call = new TypedOperationCall(this, label, adopts);
     this.live.add(call);
     return call;
   }
   observe(call: TypedOperationCall, token: TypedOperationToken): boolean {
     const key = typedOperationOwnerKey(token), owner = this.owners.get(key);
     if (owner) return owner === call;
-    if (token.sequence !== 0 || !this.live.has(call)) return false;
+    if (token.sequence !== 0 || !call.adopts || !this.live.has(call)) return false;
     this.owners.set(key, call);
     return true;
   }
@@ -162,8 +162,7 @@ export class TypedOperationRouter {
     if (this.observe(call, token)) return true;
     const owner = this.owners.get(typedOperationOwnerKey(token));
     if (!owner || !this.live.has(owner)) {
-      this.report(TYPED_OPERATION_UNATTRIBUTED_FAULT, `${message} (operation ${operation} sequence ${sequence} observed by ${call.label})`);
-      this.publishFault(token.receiver, typedOperationFaultError(message));
+      if (!this.publishFault(token.receiver, typedOperationFaultError(message))) this.report(TYPED_OPERATION_UNATTRIBUTED_FAULT, `${message} (operation ${operation} sequence ${sequence} observed by ${call.label})`);
       return false;
     }
     if (this.parked.length >= TYPED_OPERATION_PARK_CAPACITY) {
@@ -216,14 +215,17 @@ export class TypedOperationRouter {
 export const typedOperationRoutersByActor = new Map<string, TypedOperationRouter>();
 
 /** 🧭️ Runs one host call under `actorId`'s typed-operation ownership scope: the call rejects with the
- * fault page parked for this exact call and never with a foreign operation's. */
-export async function withTypedOperationCall<T>(actorId: string, label: string, body: (call: TypedOperationCall) => Promise<T>): Promise<T> {
+ * fault page parked for this exact call and never with a foreign operation's. `adopts: false` marks a call that dispatches no
+ * operation (a window refresh): it never becomes the owner of an operation whose first page it happens to observe, so a refusal
+ * of an action that settles while a refresh drains reaches the shell's localized notice instead of failing that refresh
+ * (round 4 of ticket 26/11/22/GET-PDF-ARTIFACT-EDITOR-WORKING-END-TO-END: `tree window refresh failed SemioFaultError: pdf page 99 does not exist`). */
+export async function withTypedOperationCall<T>(actorId: string, label: string, body: (call: TypedOperationCall) => Promise<T>, adopts = true): Promise<T> {
   let router = typedOperationRoutersByActor.get(actorId);
   if (!router) {
     router = new TypedOperationRouter();
     typedOperationRoutersByActor.set(actorId, router);
   }
-  const call = router.open(`${actorId}:${label}`);
+  const call = router.open(`${actorId}:${label}`, adopts);
   try {
     const value = await body(call);
     if (!router.isLive(call)) throw Error(`typed-operation owner cancelled: ${call.label}`);

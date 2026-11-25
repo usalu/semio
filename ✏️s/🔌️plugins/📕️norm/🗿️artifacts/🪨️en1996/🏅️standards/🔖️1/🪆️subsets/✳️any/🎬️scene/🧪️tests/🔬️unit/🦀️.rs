@@ -715,7 +715,7 @@ fn a_chase_is_cut_into_the_wall_face_and_carries_a_width_grip_and_the_table_in_i
     let layout = Layout::of(&document, &[]);
     assert!(handles::ids(&document, &layout, "wall-members:chase-chase-1").iter().any(|id| id.ends_with("width")));
     let (scene, _) = scene_of(&document, &[]);
-    assert!(format!("{:?}", entity(&scene, "wall-members:chase-chase-1").detail).contains("Table 8.1"));
+    assert!(format!("{:?}", entity(&scene, "wall-members:chase-chase-1").accessible_detail).contains("Table 8.1"));
 }
 
 #[test]
@@ -884,7 +884,7 @@ fn the_effective_height_and_the_mid_height_eccentricity_are_dimensioned_in_3d() 
         assert!(scene.annotations.iter().any(|a| matches!(a, scene::Annotation::Dimension { id: d, .. } if *d == id(suffix))), "{suffix}");
     }
     let wall = entity(&scene, "wall-openings");
-    let detail = format!("{:?}", wall.detail);
+    let detail = format!("{:?}", wall.accessible_detail);
     assert!(detail.contains("h_ef/t_ef") && detail.contains("e_mk"));
 }
 

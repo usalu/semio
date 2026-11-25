@@ -231,7 +231,7 @@ pub fn emit_page_edit(snapshot: &PdfSnapshot, action: &str, payload: &str) -> Re
     }
 }
 
-/// 🎯 Declares the page-object selection domain and points the page window at it.
+/// 🎯 Declares the page-object selection domain, points the page window at it and puts the framework's interaction verbs on the app roster, which the builder's own injection cannot do for a domain installed after the build: without `interactionSelect` on the roster, a keyboard pick on a thumbnail row is dropped as undeclared.
 pub fn install_object_interaction(definition: &mut semio_plugin::AppDefinition) {
     definition.interactions.push(semio_plugin::InteractionDefinition {
         id: OBJECT_DOMAIN.into(),
@@ -250,6 +250,11 @@ pub fn install_object_interaction(definition: &mut semio_plugin::AppDefinition) 
     for window in definition.window_kinds.iter_mut() {
         if window.id == WINDOW_KIND_ID {
             window.interactions = vec![semio_plugin::InteractionRef::new(OBJECT_DOMAIN)];
+        }
+    }
+    for action in semio_plugin::interaction_action_definitions(definition) {
+        if !definition.actions.iter().any(|declared| declared.id == action.id) {
+            definition.actions.push(action);
         }
     }
 }

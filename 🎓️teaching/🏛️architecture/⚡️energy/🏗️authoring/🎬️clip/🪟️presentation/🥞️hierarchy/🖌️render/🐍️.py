@@ -23,8 +23,8 @@ def _presentation():
 def _camera(point):
     """📷 Normalize the actual cursor against the shared canvas bounds."""
     contract = _hierarchy.hierarchy_contract()
-    top, bottom = (contract["chrome"][key] for key in ("navbarHeight", "footerHeight"))
-    return {"x": min(1, max(0, point[0] / 1600)), "y": min(1, max(0, (point[1] - top) / (900 - top - bottom)))}
+    canvas = contract["canvas"]
+    return {"x": min(1, max(0, (point[0] - canvas["x"]) / canvas["width"])), "y": min(1, max(0, (point[1] - canvas["y"]) / canvas["height"]))}
 
 
 def initial_hierarchy():
@@ -171,9 +171,8 @@ def choreography(video_id, phase, t, controls):
 def _nodes(browser):
     """🌳 Expose only measured actual DOM targets and active ancestry for verification."""
     contract = _hierarchy.hierarchy_contract()
-    nodes = [{"id": "app", "parent": None, "role": "root", "rect": {"x": 0, "y": 0, "width": 1600, "height": 900}},
-             {"id": "canvas", "parent": "app", "role": "canvas", "rect": {"x": 0, "y": contract["chrome"]["navbarHeight"],
-              "width": 1600, "height": 900 - contract["chrome"]["navbarHeight"] - contract["chrome"]["footerHeight"]}}]
+    nodes = [{"id": "app", "parent": None, "role": "root", "rect": {"x": 0, "y": 0, **contract["viewport"]}},
+             {"id": "canvas", "parent": "app", "role": "canvas", "rect": dict(contract["canvas"])}]
     branch = browser["hierarchy"]["opened_path"]
     ancestors = branch[:-1] if len(branch) == 4 else branch
     parent = "canvas"

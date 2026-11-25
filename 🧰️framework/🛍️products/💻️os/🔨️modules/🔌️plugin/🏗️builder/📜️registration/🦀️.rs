@@ -1,5 +1,5 @@
 //! 📜️ Owned plugin descriptor registration data, independent of mounted app execution.
-use semio_framework::{AssetDeclaration,ExecutionMode,ExtensionPointDeclaration};
+use semio_framework::{AssetDeclaration,ComponentDeclaration,ExecutionMode,ExtensionPointDeclaration};
 use semio_framework::kernel::{ActivationEvent,CapabilityRequest,QuotaSchema};
 /// 🧺️ Consumed descriptor values transferred once into the assembled plugin.
 pub struct PluginDescriptorParts{
@@ -9,6 +9,7 @@ pub extension_points: Vec<ExtensionPointDeclaration>,
 pub execution: ExecutionMode,
 pub quotas: QuotaSchema,
 pub assets: Vec<AssetDeclaration>,
+pub components: Vec<ComponentDeclaration>,
 }
 /// 📇️ Authoring data retained by a fluent plugin builder until assembly.
 #[derive(Default)]
@@ -19,6 +20,7 @@ extension_points: Vec<ExtensionPointDeclaration>,
 execution: ExecutionMode,
 quotas: QuotaSchema,
 assets: Vec<AssetDeclaration>,
+components: Vec<(String,usize)>,
 }
 impl PluginDescriptorRegistration{
 pub fn activation(&mut self,event:ActivationEvent){if !self.activation_events.contains(&event){self.activation_events.push(event)}}
@@ -27,7 +29,24 @@ pub fn extension_point(&mut self,declaration:ExtensionPointDeclaration){if !self
 pub fn execution(&mut self,mode:ExecutionMode){self.execution=mode}
 pub fn quota(&mut self,schema:QuotaSchema){self.quotas=merge_quota_schema(self.quotas,schema)}
 pub fn asset(&mut self,declaration:AssetDeclaration){if !self.assets.contains(&declaration){self.assets.push(declaration)}}
-pub fn into_parts(self)->PluginDescriptorParts{PluginDescriptorParts{activation_events:self.activation_events,capability_requests:self.capability_requests,extension_points:self.extension_points,execution:self.execution,quotas:self.quotas,assets:self.assets}}
+pub fn component(&mut self,id:String,first_app:usize){self.components.push((id,first_app))}
+pub fn declares_components(&self)->bool{!self.components.is_empty()}
+pub fn into_parts(self,app_ids:&[String])->Result<PluginDescriptorParts,String>{let components=component_declarations(self.components,app_ids)?;Ok(PluginDescriptorParts{activation_events:self.activation_events,capability_requests:self.capability_requests,extension_points:self.extension_points,execution:self.execution,quotas:self.quotas,assets:self.assets,components})}
+}
+/// 🧩️ Every app registered from one `component` call to the next belongs to that component; a package that declares components
+/// assigns each app to exactly one, by a unique non-empty id.
+fn component_declarations(starts:Vec<(String,usize)>,app_ids:&[String])->Result<Vec<ComponentDeclaration>,String>{
+    if starts.is_empty(){return Ok(Vec::new())}
+    if starts[0].1!=0{return Err(format!("app {:?} is registered before the first component",app_ids[0]))}
+    let mut declarations:Vec<ComponentDeclaration>=Vec::with_capacity(starts.len());
+    for (index,(id,first)) in starts.iter().enumerate(){
+        let end=starts.get(index+1).map_or(app_ids.len(),|next|next.1);
+        if id.is_empty()||!id.bytes().all(|byte|byte.is_ascii_lowercase()||byte.is_ascii_digit()||byte==b'-'||byte==b'_'){return Err(format!("component id {id:?} must be non-empty lowercase ascii, digits, '-' or '_'"))}
+        if declarations.iter().any(|declaration|&declaration.id==id){return Err(format!("component {id:?} is declared twice"))}
+        if *first>=end{return Err(format!("component {id:?} serves no app"))}
+        declarations.push(ComponentDeclaration{id:id.clone(),apps:app_ids[*first..end].to_vec()});
+    }
+    Ok(declarations)
 }
 /// 📏️ Incoming explicit quotas override only the corresponding existing fields.
 fn merge_quota_schema(base: QuotaSchema, incoming: QuotaSchema) -> QuotaSchema {

@@ -168,6 +168,8 @@ impl<T:NativeReceive<DslValue>+Sync> OriginalJsonOutputReceiving<T>{
   })
  }
  pub fn phase(&self)->&'static str{match self.phase{Phase::Parse=>"parse",Phase::Bind=>"bind",Phase::Source=>"source",Phase::Receiver=>"receiver",Phase::Receive=>"receive",Phase::Take=>"take",Phase::CloseReceiver=>"closeReceiver",Phase::CloseParser=>"closeParser",Phase::Ready=>"ready"}}
+ /// 🔬️ Names the grammar frontier the parser stands on, so measurements can attribute work to validation, strings, keys and structure.
+ pub fn grammar_phase(&self)->&'static str{match self.parser.as_ref(){Some(parser) if parser.validated_position()<self.length=>"validate",Some(parser) if parser.frames.last().is_some_and(|frame|frame.state==6&&parser.lexeme.is_none())=>"compare-key",Some(parser)=>parser.phase(),None=>""}}
  pub fn bytes_read(&self)->usize{self.read_position}
  pub fn source_bytes(&self)->usize{self.length}
  pub fn ready(&self)->bool{!self.closing&&!self.faulted&&self.phase==Phase::Ready&&self.output.is_some()}

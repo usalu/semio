@@ -2,8 +2,8 @@ import {mkdirSync,readFileSync,renameSync,rmSync,writeFileSync} from "node:fs";
 import {dirname} from "node:path";
 import type {RemoteExecutionDigestV1} from "../../🟦️.ts";
 
-/** 📓️ One unfinished operation of the scheduler as its journal keeps it: what is needed to know it again after a restart (identity, action, platform, requester, bounds) and, while it executes, the machine that runs it (the machine registers again with the task it kept running and the operation is bound to it). */
-export type SchedulerJournalRowV1=Readonly<{id:string;instance:string;action:RemoteExecutionDigestV1;platform:readonly Readonly<{name:string;value:string}>[];timeoutSeconds:number;stage:"QUEUED"|"EXECUTING";attempt:number;failures:number;offload:boolean;requester?:string;submittedBy?:string;peakMegabytes?:number;worker?:Readonly<{name:string;origin:string}>}>;
+/** 📓️ One unfinished operation of the scheduler as its journal keeps it: what is needed to know it again after a restart (identity, action, platform, requester, bounds) and, while it executes, for how long it has run and the machine that runs it (the machine registers again with the task it kept running and the operation is bound to it). */
+export type SchedulerJournalRowV1=Readonly<{id:string;instance:string;action:RemoteExecutionDigestV1;platform:readonly Readonly<{name:string;value:string}>[];timeoutSeconds:number;stage:"QUEUED"|"EXECUTING";attempt:number;failures:number;offload:boolean;requester?:string;submittedBy?:string;peakMegabytes?:number;runningMilliseconds?:number;worker?:Readonly<{name:string;origin:string}>}>;
 
 /** 📓️ The journal file: its rows and the wall time it was written. */
 export type SchedulerJournalV1=Readonly<{version:1;savedAtMs:number;operations:readonly SchedulerJournalRowV1[]}>;

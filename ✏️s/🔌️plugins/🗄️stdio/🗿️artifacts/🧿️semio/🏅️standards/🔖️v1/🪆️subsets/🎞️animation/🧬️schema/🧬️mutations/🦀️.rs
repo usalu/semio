@@ -61,6 +61,7 @@ pub enum SemioAnimationMutation {
     SetKeyframeValue(set_keyframe_value::SetKeyframeValue),
 }
 dsl::original_pack_value_operation_receiving!(SemioAnimationMutation);
+dsl::artifact_persisted_binary_operation!(SemioAnimationMutation);
 
 /// 🏷️ The declared kebab-case mutation vocabulary of `stdio.semio.animation`, in enum
 /// declaration order — what the `🎞️mutate-semio-animation` case's completeness gate counts against

@@ -347,10 +347,11 @@ export function parseGitViewV1(porcelain:string,extra:Readonly<{deleted?:readonl
   if(y===" ")continue;
   lines.push(`${x}${y} ${path}`);
  }
- const known=new Set(lines);
- for(const path of extra.deleted??[]){const line=` D ${path.normalize("NFC")}`;if(!known.has(line)){known.add(line);lines.push(line);}}
- for(const path of extra.untracked??[]){const line=`?? ${path.normalize("NFC")}`;if(!known.has(line)){known.add(line);lines.push(line);}}
- return assembleViewV1(lines,stage);
+ const absent=new Set((extra.deleted??[]).map(path=>path.normalize("NFC"))),column=new Map(stage.map(entry=>[entry.slice(2),entry[0]!]));
+ const kept=lines.filter(line=>line.startsWith("??")||!absent.has(line.slice(3))),known=new Set(kept);
+ for(const path of absent){const line=`${column.get(path)??" "}D ${path}`;if(!known.has(line)){known.add(line);kept.push(line);}}
+ for(const path of extra.untracked??[]){const line=`?? ${path.normalize("NFC")}`;if(!known.has(line)){known.add(line);kept.push(line);}}
+ return assembleViewV1(kept,stage);
 }
 
 /** 🧮️ Builds a view from its lines (any order) and its stage entries: sorts the lines bytewise and derives the counts and the digest. An entry of any state whose path the path policy refuses (too long, illegal characters, reserved names) is left out, because the replica never carries such a file: the machine that holds it untracked, or modified, and every machine that adopted its stage and so reads the tracked path as deleted would otherwise differ from the machines that do not. The staged column is kept. */
@@ -378,7 +379,7 @@ async function carriedViewV1(worktree:string,view:GitViewV1):Promise<GitViewV1>{
 /** 🛑️ Whether the signal has fired by now, read afresh so an abort that lands during an await is seen. */
 const abortedV1=(signal?:AbortSignal):boolean=>signal?.aborted===true;
 
-/** 🪟 Reads the working-tree view with `git --no-optional-locks status --porcelain=v1 -z --untracked-files=all --no-renames` under the pins `GIT_PINS_V1` and `GIT_VIEW_PINS_V1`, which never takes `index.lock`; `null` without `git` or a root `.git`, when git fails or when `signal` aborts. Never throws. On a volume that treats names case-insensitively or normalisation-insensitively (APFS, NTFS) git cannot see that the index spells a name differently than the disk does (`Foo.txt` against `foo.txt`, NFC against NFD): such a tracked path is added as ` D <index path>`, and an NFD-only spelling as `?? <path>`, exactly as git shows them on Linux, so the lines are the same on every operating system for the same disk state. `.git/info/exclude` stays a per-machine input that no flag removes: `GitGuardsV1.infoExclude` counts its rules and the fleet verdict fails on a difference. */
+/** 🪟 Reads the working-tree view with `git --no-optional-locks status --porcelain=v1 -z --untracked-files=all --no-renames` under the pins `GIT_PINS_V1` and `GIT_VIEW_PINS_V1`, which never takes `index.lock`; `null` without `git` or a root `.git`, when git fails or when `signal` aborts. Never throws. On a volume that treats names case-insensitively or normalisation-insensitively (APFS, NTFS) git cannot see that the index spells a name differently than the disk does (`Foo.txt` against `foo.txt`, NFC against NFD): such a tracked path is written as `<index column>D <index path>` in place of any line git printed for it (an entry added to the stage and deleted from the disk is the one line `AD`, never `AD` plus ` D`), and an NFD-only spelling as `?? <path>`, exactly as git shows them on Linux, so the lines are the same on every operating system for the same disk state. `.git/info/exclude` stays a per-machine input that no flag removes: `GitGuardsV1.infoExclude` counts its rules and the fleet verdict fails on a difference. */
 export async function gitViewV1(worktree:string,signal?:AbortSignal):Promise<GitViewV1|null>{
  try{
   if(!await gitPresentV1(worktree,signal))return null;

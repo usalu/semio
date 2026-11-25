@@ -15,13 +15,10 @@ const playCardUiLabel = registerUiTranslationBundles({
 
 export function PlayCard({
   pane,
-  lifted,
   onClick,
   className,
 }: {
   readonly pane: PlayPaneSpec;
-  /** 🎈️ Lifted while its app is revealed — never maps to window `active` (that paints the primary frame stroke). */
-  readonly lifted?: boolean;
   readonly onClick: () => void;
   readonly className?: string;
 }) {
@@ -33,7 +30,6 @@ export function PlayCard({
       as="button"
       slot="play-pane-card"
       label={openAppLabel}
-      lifted={lifted}
       onClick={onClick}
       className={cn("size-full", className)}
       icon={<Icon icon={pane.icon} size="small" title={uiDataLabel(pane.label)} className="shrink-0 text-muted-foreground transition-colors group-hover:text-foreground" />}

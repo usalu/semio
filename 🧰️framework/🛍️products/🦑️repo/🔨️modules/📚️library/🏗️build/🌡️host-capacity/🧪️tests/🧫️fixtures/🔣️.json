@@ -1,4 +1,23 @@
 {
+ "capacityCommand": {
+  "lowAvailable": 5548,
+  "recoveredAvailable": 9000,
+  "floor": 4096,
+  "recoverySample": 8,
+  "fresh": [
+   {"flags":["--memory=2048","--cpu=4"],"memory":2048,"cpu":4,"waitsForRecovery":true},
+   {"flags":["--operation=command"],"memory":1452,"cpu":1,"waitsForRecovery":false},
+   {"flags":["--operation=show"],"memory":3072,"cpu":2,"waitsForRecovery":true}
+  ],
+  "inherited": [
+   {"memory":3072,"cpu":4,"condition":"active","starts":true},
+   {"memory":1536,"cpu":4,"condition":"active","starts":false},
+   {"memory":3072,"cpu":2,"condition":"active","starts":false},
+   {"memory":3072,"cpu":4,"condition":"quiet","starts":false},
+   {"memory":3072,"cpu":4,"condition":"lent","starts":false},
+   {"memory":3072,"cpu":4,"condition":"disabled","starts":false}
+  ]
+ },
  "asks": [
   {
    "name": "run with explicit parallel names its target kind",

@@ -13,13 +13,55 @@
       "de": "Eine 58-jährige, 1,66 m große Gärtnerin kniet in Strohhut, hochgekrempeltem Leinenhemd, Canvas-Hose und Clogs auf einem Schaumkissen und jätet mit der Handschaufel neben einem Trog: Jäten, aufrechtes Knien und Greifen zum Trog, eine Grabschleife und eine Troglauf-Runde; zwei einzeln gezeichnete Maßstäbe (1:100 und 1:50); 1:500 und 1:200 sind als nicht verfügbar erklärt."
     },
     "tags": [
-      "human",
-      "gardener",
-      "kneeling",
-      "garden",
-      "tool",
-      "low-posture",
-      "adult"
+      {
+        "id": "human",
+        "title": {
+          "en": "human",
+          "de": "Mensch"
+        }
+      },
+      {
+        "id": "gardener",
+        "title": {
+          "en": "gardener",
+          "de": "Gärtner"
+        }
+      },
+      {
+        "id": "kneeling",
+        "title": {
+          "en": "kneeling",
+          "de": "Knien"
+        }
+      },
+      {
+        "id": "garden",
+        "title": {
+          "en": "garden",
+          "de": "Garten"
+        }
+      },
+      {
+        "id": "tool",
+        "title": {
+          "en": "tool",
+          "de": "Werkzeug"
+        }
+      },
+      {
+        "id": "low-posture",
+        "title": {
+          "en": "low posture",
+          "de": "tiefe Haltung"
+        }
+      },
+      {
+        "id": "adult",
+        "title": {
+          "en": "adult",
+          "de": "erwachsen"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage content worker NW-H2",
@@ -34443,61 +34485,65 @@
               "points": [
                 [
                   -0.008,
-                  -0.1522
+                  -0.13724
                 ],
                 [
                   0.105,
-                  -0.163
+                  -0.151
                 ],
                 [
-                  0.24,
-                  -0.17
+                  0.17,
+                  -0.122
                 ],
                 [
-                  0.272,
-                  -0.14
+                  0.25596,
+                  -0.06275
                 ],
                 [
-                  0.307,
-                  -0.08
+                  0.25955,
+                  -0.04643
+                ],
+                [
+                  0.268,
+                  -0.04196
                 ],
                 [
                   0.328,
-                  -0.06
+                  0.06196
                 ],
                 [
-                  0.328,
-                  0.06
+                  0.31305,
+                  0.07643
                 ],
                 [
-                  0.307,
-                  0.08
-                ],
-                [
-                  0.272,
-                  0.14
+                  0.28444,
+                  0.09875
                 ],
                 [
                   0.24,
-                  0.17
+                  0.119
+                ],
+                [
+                  0.17,
+                  0.137
                 ],
                 [
                   0.105,
-                  0.163
+                  0.133
                 ],
                 [
                   -0.008,
-                  0.1522
+                  0.1163
                 ]
               ],
               "solid": {
                 "kind": "extruded",
-                "sweep": "v",
-                "z0": -0.1515,
-                "z1": 0.1164,
+                "sweep": "w",
+                "z0": -0.155,
+                "z1": 0.155,
                 "zTip": [
-                  -0.0091,
-                  0.0731
+                  -0.1181,
+                  0.1181
                 ]
               }
             },
@@ -37599,62 +37645,66 @@
               "points": [
                 [
                   -0.008,
-                  -0.1522
+                  -0.13724
                 ],
                 [
                   0.105,
-                  -0.163
+                  -0.151
                 ],
                 [
-                  0.24,
-                  -0.17
+                  0.17,
+                  -0.122
                 ],
                 [
-                  0.272,
-                  -0.14
+                  0.25596,
+                  -0.06275
                 ],
                 [
-                  0.307,
-                  -0.08
+                  0.25955,
+                  -0.04643
+                ],
+                [
+                  0.268,
+                  -0.04196
                 ],
                 [
                   0.328,
-                  -0.06
+                  0.06196
                 ],
                 [
-                  0.328,
-                  0.06
+                  0.31305,
+                  0.07643
                 ],
                 [
-                  0.307,
-                  0.08
-                ],
-                [
-                  0.272,
-                  0.14
+                  0.28444,
+                  0.09875
                 ],
                 [
                   0.24,
-                  0.17
+                  0.119
+                ],
+                [
+                  0.17,
+                  0.137
                 ],
                 [
                   0.105,
-                  0.163
+                  0.133
                 ],
                 [
                   -0.008,
-                  0.1522
+                  0.1163
                 ]
               ],
               "closed": true,
               "solid": {
                 "kind": "extruded",
-                "sweep": "v",
-                "z0": -0.1515,
-                "z1": 0.1164,
+                "sweep": "w",
+                "z0": -0.155,
+                "z1": 0.155,
                 "zTip": [
-                  -0.0091,
-                  0.0731
+                  -0.1181,
+                  0.1181
                 ]
               }
             },

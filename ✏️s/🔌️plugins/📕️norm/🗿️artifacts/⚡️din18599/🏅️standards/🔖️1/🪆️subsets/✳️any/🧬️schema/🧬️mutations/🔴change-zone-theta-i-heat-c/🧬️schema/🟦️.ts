@@ -4,9 +4,9 @@
 import { normWireLiteral, normWireNumber, normWireObject, normWireRange, type NormWireReader, normWireRequired, normWireString } from "@semio-tech/norm-js/registry/contract";
 
 export interface ChangeZoneThetaIHeatC {
-  mutation: "changezonethetaiheatc";
+  mutation: "changeZoneThetaIHeatC";
   zoneId: string;
   newThetaIHeatC: number;
 }
 
-export const parseChangeZoneThetaIHeatC: NormWireReader<ChangeZoneThetaIHeatC> = normWireObject<ChangeZoneThetaIHeatC>({ mutation: normWireRequired(normWireLiteral("changezonethetaiheatc")), zoneId: normWireRequired(normWireString), newThetaIHeatC: normWireRequired(normWireRange(normWireNumber, {"minimum":10,"maximum":30})) });
+export const parseChangeZoneThetaIHeatC: NormWireReader<ChangeZoneThetaIHeatC> = normWireObject<ChangeZoneThetaIHeatC>({ mutation: normWireRequired(normWireLiteral("changeZoneThetaIHeatC")), zoneId: normWireRequired(normWireString), newThetaIHeatC: normWireRequired(normWireRange(normWireNumber, {"minimum":10,"maximum":30})) });

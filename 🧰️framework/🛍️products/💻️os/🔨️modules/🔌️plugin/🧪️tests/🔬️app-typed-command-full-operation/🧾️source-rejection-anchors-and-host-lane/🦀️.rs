@@ -210,6 +210,56 @@
         follow_step_is_funded(&source);
     }
 
+    /// 🔒️ The scrub dispatch writer, the typing dispatch commit and the gesture settlement wait on the same follow read of their ledger,
+    /// so each drives the follow before it re-polls instead of spinning until leftover-budget maintenance moves it.
+    #[test]
+    fn every_writer_waiting_on_a_follow_read_drives_the_follow() {
+        let source=instance_source();
+        let dispatch=slice(&source,"pub async fn prepare_original_tool_dispatch","
+    }
+");
+        let scrub=dispatch.find("follow.reads_presses(&self.tool_machines)){self.as_render().follow_before_writer(cx,\"scrub\")?;return Ok(None)}").expect("the scrub writer drives a follow that reads its press slot");
+        assert!(scrub<dispatch.find(".advance(&mut self.tool_machines.presses,").expect("the scrub writer advances"),"before the scrub writer advances");
+        let typing=slice(&source,"async fn advance_original_typing_pass","
+    }
+");
+        let commit=typing.find("row.awaits_source())&&self.tools.original_tool_follow.as_ref().is_some_and(|follow|follow.reads_typing(&self.tool_machines)){self.as_render().follow_before_writer(cx,\"typing commit\")?;return Ok(false)}").expect("the typing commit drives a follow that reads its typing slot");
+        assert!(commit<typing.find("OriginalTypingCommit::admit(").expect("the typing commit admits"),"before the typing commit admits or moves its row");
+        let unit=slice(&source,"fn settle_tool_operation_unit","
+    }
+");
+        let gesture=unit.find("self.tool_machines.refold_owed&&self.tools.original_tool_follow.as_ref().is_some_and(|follow|follow.reads_gestures(&self.tool_machines)){return self.follow_before_writer(cx,\"gesture\")}").expect("a refused gesture settlement drives a follow that reads its gesture slot");
+        assert!(gesture<unit.find("self.settle_gesture_slot(operation,").expect("the gesture settles"),"before the gesture settlement retries");
+    }
+
+    /// ⏸️ A blur or a freeze that meets a press, gesture or typing slot the tool follow holds a retained read on is deferred by
+    /// its ledger instead of dropped (ledger law `🔗️read/🧪️tests/⏸️deferred`): the host lane requests the refold that makes the
+    /// follow return the read, and every follow step that may return one settles the deferred aborts right after it, so the
+    /// slot ends before any writer re-polls it (ticket 26/11/24).
+    #[test]
+    fn a_host_abort_during_a_follow_read_ends_its_slot_once_the_follow_returns_the_read() {
+        let source=instance_source();
+        let settle=slice(&source,"pub fn settle_deferred_tool_aborts","pub fn follow_tool_machines");
+        for ledger in ["presses","gestures","typing"]{assert!(settle.contains(&format!("self.tool_machines.{ledger}.settle_deferred_aborts()")),"the {ledger} ledger settles its deferred aborts");}
+        assert!(settle.contains("if gestures{self.tool_machines.gesture_ended=true;}"),"an ended gesture owes its windows a repaint");
+        let follow=slice(&source,"pub fn follow_tool_machines","pub fn tool_overlay_waits_for_foreground");
+        assert!(follow.find("self.settle_deferred_tool_aborts()").expect("a refold request settles first")<follow.find("refold_request.checked_add").expect("the refold request"),"deferred aborts end before the refold is requested");
+        let step=slice(&source,"pub fn tool_overlay_retirement_step","fn tool_overlay_alias_retirement_step");
+        let settled="if self.settle_deferred_tool_aborts(){self.follow_tool_machines(true);}";
+        let take=step.find("self.tools.original_tool_follow.take();").expect("the finished follow is taken");
+        let advance=step.find("owner.advance(&self.stores.store").expect("the follow advances or closes");
+        assert!(step[take..advance].contains(settled),"the follow that finished returning its reads settles the deferred aborts");
+        assert!(step[advance..].find(settled).expect("a follow step settles the deferred aborts")<step[advance..].find("original_lifecycle_net_after").expect("the follow step answers"),"every follow step that may return a read settles the deferred aborts before it answers");
+        let blur=slice(&source,"pub fn end_window_gesture","pub fn end_every_gesture");
+        assert!(blur.contains("_ if self.tool_machines.gestures.abort_deferred(event.window_id()) => self.follow_tool_machines(true),"),"a deferred blur requests the refold that returns the read");
+        let every=slice(&source,"pub fn end_every_gesture","pub fn take_gesture_ended");
+        assert!(every.contains("} else if self.tool_machines.gestures.aborts_deferred() {"),"a deferred instance-wide fact requests the refold that returns the read");
+        let freeze=slice(&source,"pub fn freeze_tool_machines","pub fn admit_gesture_slot");
+        assert!(freeze.contains("self.tool_machines.presses.abort_all(ToolAbortReason::Frozen)")&&freeze.contains("self.tool_machines.typing.abort_all(ToolAbortReason::Frozen)")&&freeze.contains("self.follow_tool_machines(true)"),"a freeze defers lent presses and runs and requests the refold that returns them");
+        let gesture=slice(&source,"pub fn settle_gesture_slot","pub fn request_gesture_cancellation");
+        assert!(gesture.find("self.settle_deferred_tool_aborts()").expect("a gesture settlement settles first")<gesture.find("self.tool_machines.gestures.open(").expect("the decision is judged against the slot"),"a gesture decision is judged against a slot whose deferred abort already ended it");
+    }
+
     /// ✂️ The source between a settlement's signature and its end marker.
     fn slice<'s>(source:&'s str,start:&str,end:&str)->&'s str{let begin=source.find(start).expect("the settlement exists");let stop=source[begin..].find(end).map(|offset|begin+offset).expect("the settlement ends");&source[begin..stop]}
 

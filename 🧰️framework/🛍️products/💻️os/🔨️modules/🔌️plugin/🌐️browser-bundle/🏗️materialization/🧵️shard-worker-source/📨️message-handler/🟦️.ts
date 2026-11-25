@@ -30,8 +30,8 @@ self.addEventListener("message", async (event) => {
   // 📬️ The host said something. A drive in flight reads this counter every step and crosses back the
   // moment it moves, so an ingress message, a cancel or a view-state change never waits behind a
   // guest the worker is pumping. Bumped BEFORE any dispatch, for every kind without exception.
-  const inputMark = ++hostInputSeq;
   const msg = event.data ?? {};
+  const inputMark = noteHostInput(msg.actorId);
   const { kind } = msg;
   if (kind === "attachHeartbeatSab") {
     heartbeatShardIndex = msg.shardIndex;
@@ -58,6 +58,7 @@ self.addEventListener("message", async (event) => {
       await closeOriginalActor(msg.actorId, msg.activationGeneration);
     } finally {
       leaveTurn();
+      hostActorInputSeq.delete(msg.actorId);
       endRequest();
     }
     return;
@@ -80,7 +81,7 @@ self.addEventListener("message", async (event) => {
   let leaveTurn;
   try {
     if (kind === "activate") {
-      const entry = await loadActor(actorId, msg.activationGeneration, msg.moduleUrl, msg.originalAdmission);
+      const entry = await loadActor(actorId, msg.activationGeneration, msg.moduleUrl, msg.component ?? null, msg.originalAdmission, msg.coreModules);
       entry.pendingAssets = msg.assets ?? [];
       reply(requestId, undefined);
       return;
@@ -134,7 +135,7 @@ self.addEventListener("message", async (event) => {
         let drivePolls = 0;
         let driveStopped = shardTurnStatusTag(result) === "more-work" ? (shardTurnCarriesNothing(result) ? "" : "carried") : "idle";
         while (driveStopped === "") {
-          if (hostInputSeq !== inputMark) { driveStopped = "input"; break; }
+          if (hostInputMoved(inputMark, actorId)) { driveStopped = "input"; break; }
           if (actors.get(actorId) !== actor || actor.activationGeneration !== msg.activationGeneration) { driveStopped = "closed"; break; }
           if (originalDriveSource.operationClockUs() >= driveDeadline || originalDriveSource.fuelRemaining === 0) { driveStopped = "budget"; break; }
           if (drivePolls + 1 >= driveSteps) { driveStopped = "steps"; break; }
@@ -143,7 +144,7 @@ self.addEventListener("message", async (event) => {
           // uninterruptible: an \`await\` settles on the microtask queue, which never drains the
           // message queue.
           await driveYield();
-          if (hostInputSeq !== inputMark) { driveStopped = "input"; break; }
+          if (hostInputMoved(inputMark, actorId)) { driveStopped = "input"; break; }
           if (actors.get(actorId) !== actor || actor.activationGeneration !== msg.activationGeneration) { driveStopped = "closed"; break; }
           result = await actor.api.poll([], undefined, undefined, msg.budget);
           drivePolls += 1;

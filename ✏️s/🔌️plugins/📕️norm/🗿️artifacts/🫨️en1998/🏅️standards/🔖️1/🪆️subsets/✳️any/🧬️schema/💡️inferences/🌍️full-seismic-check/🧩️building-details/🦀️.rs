@@ -41,11 +41,14 @@ pub(super) fn check_site_ground(report: &mut CheckReport, document: &En1998Snaps
         } else {
             vec![letter.to_string()]
         };
-        check = check.remedy(Remedy::one_of(
-            SubjectRef::new("", path, lc("Ground class", "Baugrundklasse")),
+        let target = SubjectRef::new("", path, lc("Ground class", "Baugrundklasse"));
+        check = check.remedy(if options.is_empty() {
+            Remedy::advisory(target, lc(&format!("The DIN EN 1998-1/NA ground combinations cover the classes A, B and C only; ground type {letter} has none, so the site inputs need a special study or a correction."), &format!("Die Baugrundkombinationen der DIN EN 1998-1/NA umfassen nur die Klassen A, B und C; für Baugrundklasse {letter} gibt es keine, daher ist eine Sonderuntersuchung oder eine Korrektur der Standorteingaben nötig.")))
+        } else { Remedy::one_of(
+            target,
             options,
             lc("Choose the ground class that matches the site inputs or correct them (boundary values take the lower class).", "Baugrundklasse passend zu den Standorteingaben wählen oder diese korrigieren (Grenzwerte gehören zur unteren Klasse)."),
-        ));
+        ) });
     }
     report.push(check.build());
 }

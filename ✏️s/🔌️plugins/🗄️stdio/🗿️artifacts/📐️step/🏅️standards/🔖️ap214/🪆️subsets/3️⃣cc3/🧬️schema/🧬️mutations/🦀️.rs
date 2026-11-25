@@ -77,6 +77,7 @@ pub enum StepCc3Mutation {
     RestoreEntities(restore_entities::RestoreEntities),
 }
 dsl::original_pack_value_operation_receiving!(StepCc3Mutation);
+dsl::artifact_persisted_binary_operation!(StepCc3Mutation);
 
 /// 📇️ Kebab-case spelling of every `StepCc3Mutation` variant, in declaration order — the
 /// `step-ap214-cc3` catalog in `../../🔣️oracle.json` must match verbatim.

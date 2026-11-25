@@ -18,7 +18,7 @@ export type ServiceDefinitionPortsV1=Readonly<{platform:FleetPlatformV1;home:str
 /** 📋️ What one maintenance pass did: `absent` (nothing installed here), `current`, `pending` (a difference waits for its quiet period, `dueMs` says how long), `reloading` (written, the detached helper reloads the service manager and records the outcome), `applied`, `restored`, `needs-privilege`, `refused`. */
 export type ServiceDefinitionResultV1=Readonly<{action:"absent"|"current"|"pending"|"reloading"|"applied"|"restored"|"needs-privilege"|"refused";reason?:string;dueMs?:number;services?:readonly string[];path?:string;command?:string}>;
 
-type Unit=Readonly<{name:"replica"|"compact"|"cache"|"relay";target:string;label:string;desired:string;installed:string|undefined}>;
+type Unit=Readonly<{name:"replica"|"compact"|"mount"|"cache"|"relay";target:string;label:string;desired:string;installed:string|undefined}>;
 type Launch=Readonly<{name:Unit["name"];target:string;desired:string;installed:string|undefined}>;
 type State=Readonly<{version:1;pendingDigest:string;pendingMs:number;appliedDigest:string;appliedMs:number;reportedMs:number}>;
 
@@ -98,6 +98,7 @@ function planOf(topology:FleetTopologyV1,groupId:string,ports:ServiceDefinitionP
  const group=groupV1(topology,groupId),serving=server&&group.server.platform===platform,parts=workerPartsV1(topology,groupId,platform,serving),extra=serving?serverPartsV1(topology,groupId):{};
  const definitions:readonly Readonly<{name:Unit["name"];target:string;definition:string}>[]=[
   {name:"replica",target:parts["target"]!,definition:parts["definition"]!},{name:"compact",target:parts["compact-target"]!,definition:parts["compact-definition"]!},
+  ...parts["mount-target"]===undefined?[]:[{name:"mount" as const,target:parts["mount-target"],definition:parts["mount-definition"]!}],
   ...extra["cache-target"]===undefined?[]:[{name:"cache" as const,target:extra["cache-target"],definition:extra["cache-unit"]!},{name:"relay" as const,target:extra["relay-target"]!,definition:extra["relay-unit"]!}]
  ];
  const launches:Launch[]=[];

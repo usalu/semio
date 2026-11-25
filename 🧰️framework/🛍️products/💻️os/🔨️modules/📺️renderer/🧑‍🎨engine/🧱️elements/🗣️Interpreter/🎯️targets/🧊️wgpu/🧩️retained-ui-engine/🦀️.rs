@@ -47,7 +47,7 @@ pub use close_scene_pointer_and_dispatch::{
     claim_scene_pointer_at, claim_scene_pointer_owner, close_ui_document_one,
     dispatch_presented_ui_pointer_event, dispatch_ui_event, dispatch_ui_pointer_event,
     register_clipped_retained_hit_targets, register_retained_hit_targets, release_scene_pointer,
-    request_ui_document_close, retained_any_pointer_capture, retained_content_height, retained_map_retry_key, retained_paint2d_key, retained_tree_drop_preview, retained_window_pointer_capture,
+    request_ui_document_close, retained_any_pointer_capture, retained_content_height, retained_map_retry_key, retained_paint2d_key, retained_tree_drop_places, retained_tree_drop_preview, retained_window_pointer_capture,
     retained_pointer_capture_window, retained_scene_target, retained_scene_target_at, retained_selection_cancellation,
     scene_pointer_target_is_live, tree_window_measures,
 };
@@ -55,7 +55,7 @@ pub use close_scene_pointer_and_dispatch::{
 pub use close_scene_pointer_and_dispatch::retained_root_is_tree;
 use close_scene_pointer_and_dispatch::{apply_window_clock_caret, stamp_window_clock};
 
-pub use semio_ui_wgpu_engine::{tree_drop_box_border, TreeDropShape, TREE_DROP_BOX_BORDER_ALPHA, TREE_DROP_BOX_FILL_ALPHA};
+pub use semio_ui_wgpu_engine::{drag_ghost_position, drag_starts, insert_slot, tree_drop_band, DropPlaceState, DropRect, TreeBand};
 
 #[path = "♿️accessibility-dispatch-and-focus/🦀️.rs"]
 mod accessibility_dispatch_and_focus;

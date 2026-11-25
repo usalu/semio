@@ -11,7 +11,7 @@
   ],
   "properties": {
     "mutation": {
-      "const": "changeelementlabelen"
+      "const": "changeElementLabelEn"
     },
     "elementId": {
       "type": "string",

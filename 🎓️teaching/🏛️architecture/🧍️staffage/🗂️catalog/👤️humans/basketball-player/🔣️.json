@@ -13,13 +13,55 @@
    "de": "Ein grosser Basketballspieler von 1,98 m und 95 kg (männlicher Körperbau) in ärmellosem Mesh-Trikot, knielangen Shorts, Stirnband und hohen Basketballschuhen mit einem Ball der Grösse 7: tiefe, versetzte Dribbelstellung mit einem wiederholten Dribbeln von zwei Ballkontakten pro Sekunde, Ansatz und Abwurf eines Sprungwurfs am höchsten Punkt eines 0,35-m-Sprungs und Stehen mit dem Ball bei ruhiger Atmung; vier einzeln gezeichnete Massstäbe von 1:500 bis 1:50."
   },
   "tags": [
-   "human",
-   "sport",
-   "basketball",
-   "ball",
-   "ball-sport",
-   "athlete",
-   "tall"
+   {
+    "id": "human",
+    "title": {
+     "en": "human",
+     "de": "Mensch"
+    }
+   },
+   {
+    "id": "sport",
+    "title": {
+     "en": "sport",
+     "de": "Sport"
+    }
+   },
+   {
+    "id": "basketball",
+    "title": {
+     "en": "basketball",
+     "de": "Basketball"
+    }
+   },
+   {
+    "id": "ball",
+    "title": {
+     "en": "ball",
+     "de": "Ball"
+    }
+   },
+   {
+    "id": "ball-sport",
+    "title": {
+     "en": "ball sport",
+     "de": "Ballsport"
+    }
+   },
+   {
+    "id": "athlete",
+    "title": {
+     "en": "athlete",
+     "de": "Sportler"
+    }
+   },
+   {
+    "id": "tall",
+    "title": {
+     "en": "tall",
+     "de": "hochgewachsen"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage human worker HW-07",

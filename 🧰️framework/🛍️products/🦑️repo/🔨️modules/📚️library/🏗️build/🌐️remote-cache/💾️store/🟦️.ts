@@ -11,6 +11,7 @@ import {protectedKindV1,requireSlotShapeV1,SLOT_GRACE_MILLISECONDS_V1,type Decla
 import {stalenessOnArrivalV1,stalenessReportV1,type StalenessReasonV1,type StalenessVerdictV1,type TreeDigestsV1} from "../🏷️retention/🍂️staleness/🟦️.ts";
 import {reclaimCasObjectsV1} from "../../🗄️cas/🪦️reclaim/🟦️.ts";
 import {remoteCacheFileBudgetOfMachineV1,remoteCacheWidthV1} from "../📏️fd-budget/🟦️.ts";
+import {ownProcessIdentityV1,processHolderAliveV1} from "../../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts";
 
 /** 🗂️ Names the three keyspaces one store partitions: Bazel action results, Bazel content blobs and Nx task archives; the only place that spells them, so every other module reads them from here. */
 export const REMOTE_CACHE_KINDS_V1={ac:"ac",cas:"cas",nx:"nx"} as const;
@@ -47,7 +48,6 @@ export type RemoteCacheClaimOutcomeV1="claimed"|"missing";
 
 const NAMESPACE=/^[a-z0-9][a-z0-9._-]{0,63}$/u,KEYS:Readonly<Record<RemoteCacheKindV1,RegExp>>={ac:/^[0-9a-f]{64}$/u,cas:/^[0-9a-f]{64}$/u,nx:/^[a-z0-9_-]{1,128}$/u};
 
-const alive=(pid:number):boolean=>{try{process.kill(pid,0);return true;}catch(error){return (error as NodeJS.ErrnoException).code==="EPERM";}};
 
 /** 🔎️ Admits only namespaces and keys that map to exactly one portable file name. */
 export function requireRemoteCacheAddressV1(namespace:string,kind:RemoteCacheKindV1,key:string):void{
@@ -81,7 +81,7 @@ export class RemoteCacheStoreV1{
  private report:ReturnType<typeof stalenessReportV1>|undefined;
  private readonly refused:Record<string,number>={};
  private retired=new Map<string,StaleCauseV1>();
- private readonly writing=join(".tmp",`${process.pid}-${randomUUID()}`);
+ private readonly writing=join(".tmp",`${process.pid}-${ownProcessIdentityV1().startMs}-${randomUUID()}`);
  private readonly options:RemoteCacheStoreOptionsV1; private constructor(options:RemoteCacheStoreOptionsV1){this.options=options;}
  private get grace():number{return this.options.graceMilliseconds??SLOT_GRACE_MILLISECONDS_V1;}
  private storedClock=0;
@@ -94,7 +94,7 @@ export class RemoteCacheStoreV1{
   const store=new RemoteCacheStoreV1(options);
   await mkdir(store.root,{recursive:true});await mkdir(join(store.root,".tmp"),{recursive:true});
   try{for(const row of JSON.parse(await readFile(join(store.root,".retention","retired.json"),"utf8")) as unknown[]){try{requireSlotShapeV1("Tombstone",row,"tombstone");const{blob,...cause}=row as TombstoneV1;store.retired.set(blob,cause as StaleCauseV1);}catch{}}}catch{}
-  for(const name of await readdir(join(store.root,".tmp")))if(!alive(Number.parseInt(name,10)))await rm(join(store.root,".tmp",name),{recursive:true,force:true});
+  for(const name of await readdir(join(store.root,".tmp")))if(!/^\d+-\d+-/u.test(name)||!processHolderAliveV1({pid:Number.parseInt(name,10),startMs:Number(name.split("-")[1])}))await rm(join(store.root,".tmp",name),{recursive:true,force:true});
   await mkdir(store.temporary,{recursive:true});
   const scanned=store.exclusively(()=>store.refresh(options.startupScan==="background"?4:32)).then(()=>{options.onEvent?.({stage:"ready",entries:store.index.size,bytes:store.bytes});});
   if(options.startupScan==="background")void scanned.catch(()=>undefined);else await scanned;
@@ -364,6 +364,14 @@ export class RemoteCacheStoreV1{
   const relative=this.relative(namespace,kind,key);
   if(!await this.has(namespace,kind,key))return "missing";
   await this.publish(relative,{slot},kind,await this.referencesOf(relative,kind));return "claimed";
+ }
+
+ /** 🔭️ The action results stored under one slot of a namespace, newest first and at most `limit` (16): what a client asks to find the stored unit its own key is nearest to (`SlotKeys` of the fleet schema). Reads the slot index only, never a file.
+  * @see ../../../⚡️caching/🦀️cargo/🗃️unit-cache/🛰️fleet/🧬️schema/🔣️.json */
+ keysOfSlot(namespace:string,slot:string,limit=16):readonly Readonly<{key:string;storedAtMs:number}>[]{
+  const prefix=namespace+"/ac/",rows:{key:string;storedAtMs:number}[]=[];
+  for(const [relative,meta] of this.slots)if(meta.slot===slot&&relative.startsWith(prefix))rows.push({key:relative.slice(relative.lastIndexOf("/")+1),storedAtMs:meta.storedAt});
+  return rows.sort((left,right)=>right.storedAtMs-left.storedAtMs).slice(0,Math.max(0,Math.min(16,limit)));
  }
 
  /** ✍️ Streams one value into the store: the body is bounded, hashed when `verify` is set, written to a temporary file and then published atomically; nothing partial is ever visible. */

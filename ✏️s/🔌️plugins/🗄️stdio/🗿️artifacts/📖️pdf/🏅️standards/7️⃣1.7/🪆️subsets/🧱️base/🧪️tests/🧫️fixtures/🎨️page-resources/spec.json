@@ -1,0 +1,51 @@
+{
+  "pages": 2,
+  "declared": [
+    {
+      "ColorSpace": [
+        "CsD",
+        "CsN",
+        "CsR",
+        "CsS"
+      ],
+      "Shading": [
+        "Sh1",
+        "Sh2"
+      ],
+      "Pattern": [
+        "P1",
+        "P2"
+      ]
+    },
+    {
+      "ColorSpace": [
+        "Cs9",
+        "CsD"
+      ],
+      "Shading": [],
+      "Pattern": []
+    }
+  ],
+  "colorSpaces": [
+    "CsD",
+    "CsR",
+    "CsS",
+    "CsN",
+    "CsD_2"
+  ],
+  "shadings": [
+    "Sh1",
+    "Sh2"
+  ],
+  "patterns": [
+    "P1",
+    "P2"
+  ],
+  "images": [
+    "Px"
+  ],
+  "drawings": [
+    4,
+    1
+  ]
+}

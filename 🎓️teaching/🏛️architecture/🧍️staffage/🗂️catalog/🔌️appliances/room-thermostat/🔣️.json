@@ -13,15 +13,69 @@
       "de": "Ein quadratischer elektronischer Raumthermostat von 90 mm in der Frontansicht: ein Gehäuse mit Anzeigefenster und Lampe für die Heizanforderung und ein runder Sollwert-Drehknopf, der sich dreht; die Elektronik nimmt 0,14 W im Leerlauf und 0,7 W bei geschlossenem Relais auf."
     },
     "tags": [
-      "thermostat",
-      "room-thermostat",
-      "heating-control",
-      "wall-mounted",
-      "appliance",
-      "electronics",
-      "internal-gain",
-      "electrical",
-      "dial"
+      {
+        "id": "thermostat",
+        "title": {
+          "en": "thermostat",
+          "de": "Thermostat"
+        }
+      },
+      {
+        "id": "room-thermostat",
+        "title": {
+          "en": "room thermostat",
+          "de": "Raumthermostat"
+        }
+      },
+      {
+        "id": "heating-control",
+        "title": {
+          "en": "heating control",
+          "de": "Heizungsregelung"
+        }
+      },
+      {
+        "id": "wall-mounted",
+        "title": {
+          "en": "wall mounted",
+          "de": "wandmontiert"
+        }
+      },
+      {
+        "id": "appliance",
+        "title": {
+          "en": "appliance",
+          "de": "Gerät"
+        }
+      },
+      {
+        "id": "electronics",
+        "title": {
+          "en": "electronics",
+          "de": "Elektronik"
+        }
+      },
+      {
+        "id": "internal-gain",
+        "title": {
+          "en": "internal gain",
+          "de": "innere Wärmelast"
+        }
+      },
+      {
+        "id": "electrical",
+        "title": {
+          "en": "electrical",
+          "de": "Elektro"
+        }
+      },
+      {
+        "id": "dial",
+        "title": {
+          "en": "dial",
+          "de": "Drehregler"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage content (G1)",

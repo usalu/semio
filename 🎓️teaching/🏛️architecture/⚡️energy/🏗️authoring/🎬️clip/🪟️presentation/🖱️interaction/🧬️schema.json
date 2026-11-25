@@ -112,7 +112,6 @@
       "additionalProperties": false,
       "required": [
         "size",
-        "inset",
         "iconSize",
         "titleHeight",
         "placement",
@@ -121,10 +120,6 @@
       ],
       "properties": {
         "size": {
-          "type": "number",
-          "exclusiveMinimum": 0
-        },
-        "inset": {
           "type": "number",
           "exclusiveMinimum": 0
         },

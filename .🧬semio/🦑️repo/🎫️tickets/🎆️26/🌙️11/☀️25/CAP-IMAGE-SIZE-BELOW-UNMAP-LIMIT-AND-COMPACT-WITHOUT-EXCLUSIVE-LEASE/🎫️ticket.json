@@ -1,0 +1,49 @@
+{
+  "title": "Cap Image Size Below Unmap Limit and Compact Without Exclusive Lease",
+  "emoji": "💾",
+  "status": "closed",
+  "description": "Fix repo build-storage design: sparse APFS images (fixed.dmg) growing beyond ~32 GiB can never return freed blocks to host; cache gc cannot compact (lease-timeout) while builds hold leases; disk fills monotonically. Cap declared image size below the unmap limit, shard larger stores, budget eviction inside image before cap, bounded-wait compaction between builds. Test-driven, cross-platform, no touching live images.",
+  "summary": "Cap every cache image birth and growth at the platform unmap limit (macOS 32 GiB, from the shard schema) so no new image can be too large to give back freed blocks; oversize bloated live images enter the existing quiescent regrow path; live images are untouched. Tests: corpus plus independent Python model, five oracles updated. See 📓️image-cap-unmap-limit-2026-11-25.md.",
+  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS",
+  "sessions": [
+    "299872b6-b6d8-4699-89f3-4c1762b3e426"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-25 20:09:52",
+      "author": "",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Fix repo build-storage design: sparse APFS images (fixed.dmg) growing beyond ~32 GiB can never return freed blocks to host; cache gc cannot compact (lease-timeout) while builds hold leases; disk fills monotonically. Cap declared image size below the unmap limit, shard larger stores, budget eviction inside image before cap, bounded-wait compaction between builds. Test-driven, cross-platform, no touching live images.",
+      "llm": "sonnet-5-5"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-25 20:17:29",
+      "author": "ueli",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "8d17d8ba3998690932b0032ea2ca41bce5c994b6",
+      "summary": "Cap every cache image birth and growth at the platform unmap limit (macOS 32 GiB, from the shard schema) so no new image can be too large to give back freed blocks; oversize bloated live images enter the existing quiescent regrow path; live images are untouched. Tests: corpus plus independent Python model, five oracles updated. See 📓️image-cap-unmap-limit-2026-11-25.md.",
+      "files": [
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📐️elastic/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/CAP-IMAGE-SIZE-BELOW-UNMAP-LIMIT-AND-COMPACT-WITHOUT-EXCLUSIVE-LEASE/📓️image-cap-unmap-limit-2026-11-25.md"
+        }
+      ]
+    }
+  ]
+}

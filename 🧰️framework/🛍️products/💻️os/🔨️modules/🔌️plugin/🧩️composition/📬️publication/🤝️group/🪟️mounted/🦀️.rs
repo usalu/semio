@@ -1,5 +1,6 @@
 //! 🏇️ Mounted member groups, receipts and members of the plugin SDK publication.
 
+#[cfg(test)]
 use semio_framework_test_fixtures::fixture_path;
 
 extern crate semio_os_kernel as store;

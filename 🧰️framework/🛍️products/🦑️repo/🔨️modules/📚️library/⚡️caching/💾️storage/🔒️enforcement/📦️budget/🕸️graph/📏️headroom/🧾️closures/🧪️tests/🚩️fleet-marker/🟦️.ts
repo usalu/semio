@@ -9,7 +9,7 @@ import {memberKindOfV1} from "../../🗂️members/🟨️.mjs";
 
 const origin=physicalSourceOriginV1(import.meta.url,(import.meta as ImportMeta&{semioPhysicalSourceURL?:string}).semioPhysicalSourceURL);
 const source=(url:string)=>readFileSync(new URL(url,origin),"utf8");
-const tree=ts.createSourceFile("closures.ts",source("../../🟦️.ts"),ts.ScriptTarget.Latest,true,ts.ScriptKind.TS);
+const tree=ts.createSourceFile("closures.ts",source("../../🏷️names/🟦️.ts"),ts.ScriptTarget.Latest,true,ts.ScriptKind.TS);
 const declaration=tree.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text==="role")!;
 const role=Function(ts.transpileModule(declaration.getText(tree),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.None}}).outputText+";return role")() as (name:string)=>string;
 const record="inference/selections/"+"8d8f21d7".repeat(8)+"/np/72cd315a856dcac8c8e97b16.json";

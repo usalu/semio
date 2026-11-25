@@ -51,6 +51,7 @@ semio-framework-schema-registry = { path = "../../../../../../../../🔨️modul
 semio-framework-tool-machine = { workspace = true }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-plugin-ownership = { path = "../../../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
+semio-plugin-store-lifecycle = { path = "../../../../♻️lifecycle/🧱️owner/📦️packages/🦀️rust" }
 semio_ui_contract = { path = "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-ui-contract" }
 semio-ui-locale = { path = "../../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-os-store-engine-replay = { path = "../../../../../🏪️store/🕰️history/🏁️replay/📦️packages/🦀️rust" }

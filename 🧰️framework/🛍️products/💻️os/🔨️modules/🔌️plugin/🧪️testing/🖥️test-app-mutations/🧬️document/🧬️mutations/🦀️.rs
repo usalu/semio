@@ -23,6 +23,7 @@ pub enum TestMutation {
 
 
 semio_os_kernel::original_ordinal_operation_receiving!(TestMutation);
+semio_os_kernel::artifact_persisted_encoded_binary_operation!(TestMutation);
 
 impl protocol::OpText for TestMutation {
     fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {

@@ -17,7 +17,10 @@ impl<Op> protocol::MutationKind<En1995Snapshot, Op> for ChangePanelLayerOrientat
 impl<Op> protocol::ColdMutationKind<En1995Snapshot, Op> for ChangePanelLayerOrientation where Op: protocol::ColdMutation<En1995Snapshot, ReferenceDiff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::change_panel_layer_orientation::ChangePanelLayerOrientation> {
     fn diff(&self, base: &En1995Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<En1995Snapshot>>::ReferenceDiff> { crate::change_panel_layer_orientation::diff::diff(self, base) }
     fn inverse(&self, base: &En1995Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-        crate::change_panel_layer_orientation::inverse::inverse(self, base)
+        Ok(match crate::change_panel_layer_orientation::inverse::inverse(self, base) {
+            Some(inverse) => vec![Op::from(inverse)],
+            None => Vec::new(),
+        })
     }
 }
 

@@ -1,14 +1,14 @@
 import type { BrowserInput } from "./🌐️browser/🟦️.tsx";
+import { launchChromium } from "../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🌐️chromium-launch/🟦️";
 
 type TestSource = { readonly directory: string; readonly url: string };
 
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
   const { MediaTransportHost, MediaTransportOwnerScope } = dependencies;
   const { afterEach, describe, expect, it, vi } = vitest;
-  const [React, testing, { chromium }, { dirname, resolve }, { fileURLToPath }, { mediaTransportLabels }, { collectMediaTransportBytes }, { SEGMENTED_DOWNLOAD_CONTRACT }] = await Promise.all([
+  const [React, testing, { dirname, resolve }, { fileURLToPath }, { mediaTransportLabels }, { collectMediaTransportBytes }, { SEGMENTED_DOWNLOAD_CONTRACT }] = await Promise.all([
     import("react"),
     import("@semio-tech/ui-react/test"),
-    import("playwright"),
     import("node:path"),
     import("node:url"),
     import("@semio-tech/plugin-window-kits/media"),
@@ -231,8 +231,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         encode(value = ""): Uint8Array { return Uint8Array.from(Buffer.from(value)); }
       });
       const { build } = await import("esbuild");
-      const bundle = await build({ entryPoints: [resolve(dirname(fileURLToPath(source.url)), "🌐️browser/🟦️.tsx")], bundle: true, format: "iife", platform: "browser", target: "chrome120", write: false, logLevel: "silent", define: { "import.meta.vitest": "undefined" } });
-      const browser = await chromium.launch({ headless: true });
+      const bundle = await build({ entryPoints: [resolve(dirname(fileURLToPath(source.url)), "🌐️browser/🟦️.tsx")], bundle: true, format: "iife", platform: "browser", target: "chrome120", write: false, logLevel: "silent", loader: { ".css": "empty" }, define: { "import.meta.vitest": "undefined" } });
+      const browser = await launchChromium();
       try {
         const page = await browser.newPage();
         await page.setContent('<div id="root"></div>');

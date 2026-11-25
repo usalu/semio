@@ -3,7 +3,7 @@
 use crate::standards::v1_7::subsets::base::io::foreign_artifacts::NativePdfArtifactResources;
 use crate::standards::v1_7::subsets::base::modules::content::{extract_text, parse_content, ContentProgramCursor, ContentProgramEvent as Event, ContentProgramReceipt, NoFonts};
 use crate::standards::v1_7::subsets::base::modules::lexer::CosGrant;
-use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfOp, PdfTextArrayItem, PdfTextString};
+use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfOp, PdfPropertyList, PdfTextArrayItem, PdfTextString};
 
 const PAGE: &[u8] = include_bytes!("🧪️content-program.txt");
 
@@ -60,6 +60,7 @@ impl Account {
 fn transferred_bytes(op: &PdfOp) -> usize {
     match op {
         PdfOp::SetFont { name, .. } | PdfOp::SetFillColorSpace { name } => name.capacity(),
+        PdfOp::BeginMarkedContentWithProperties { tag, properties: PdfPropertyList::Named { name } } | PdfOp::MarkedContentPointWithProperties { tag, properties: PdfPropertyList::Named { name } } => tag.capacity() + name.capacity(),
         PdfOp::SetDash { array, .. } | PdfOp::SetFillColor { components: array } => array.capacity() * std::mem::size_of::<f64>(),
         PdfOp::ShowText { text } | PdfOp::NextLineShowText { text } | PdfOp::NextLineShowTextSpaced { text, .. } => match text {
             PdfTextString::Text { text } => text.capacity(),
@@ -303,4 +304,47 @@ fn simple_type1_differences_and_mac_roman_decode_like_the_reference_codec() {
             assert_eq!(controlled_simple_text(base, &differences, byte), reference.as_deref(), "{base:?} {authored:?} {byte}");
         }
     }
+}
+
+#[test]
+fn codec_fonts_decode_text_and_codes_like_the_reference_parser_in_one_unit_turns() {
+    use crate::standards::v1_7::subsets::base::modules::{content::FontTable, fonts::FontCodec};
+    use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfBaseEncoding, PdfFont, PdfFontKind, PdfSimpleEncoding, PdfToUnicode, PdfToUnicodeMapping};
+
+    struct Fonts(FontCodec);
+    impl FontTable for Fonts {
+        fn font(&self, name: &str) -> Option<&FontCodec> { (name == "F1").then_some(&self.0) }
+    }
+
+    let source = b"/OC /oc1 BDC /Span /MCID0 DP BT /F1 12 Tf (Hello) Tj [(W) 120 (orld) -50 <8081>] TJ (\\351t\\351) ' 2 0 (x\\001) \" /F2 9 Tf (plain) Tj ET EMC";
+    let mut resources = NativePdfArtifactResources::from_objects(&[]);
+    let font = PdfFont {
+        id: "F1".into(),
+        kind: PdfFontKind::TrueType {
+            base_font: "Arial".into(), encoding: PdfSimpleEncoding { base: Some(PdfBaseEncoding::WinAnsi), differences: Vec::new() },
+            first_char: 0, widths: Vec::new(), descriptor: None, program: None,
+        },
+        to_unicode: Some(PdfToUnicode { byte_width: 1, mappings: vec![PdfToUnicodeMapping::Char { code: 0x81, text: "Ω".into() }] }),
+        extra: Vec::new(),
+    };
+    let fonts = Fonts(FontCodec::new(&font, &resources).unwrap());
+    let expected = parse_content(source, &fonts, &mut resources).unwrap();
+    let mut cursor = ContentProgramCursor::new(0);
+    let mut account = Account::default();
+    let mut operators = Vec::new();
+    loop {
+        match account.record(cursor.advance(source, &fonts, account.grant(), false)) {
+            Event::OperatorReady => operators.push(cursor.take_operator().unwrap()),
+            Event::Complete => break,
+            Event::More | Event::NeedsAllocation { .. } | Event::NeedsRelease { .. } => {}
+            event => panic!("unexpected codec text state {event:?}"),
+        }
+    }
+    assert_eq!(operators, expected);
+    assert!(operators.iter().any(|op| matches!(op, PdfOp::ShowText { text: PdfTextString::Text { text } } if text == "Hello")));
+    assert!(operators.iter().any(|op| matches!(op, PdfOp::ShowTextArray { items } if items.iter().any(|item| matches!(item, PdfTextArrayItem::Text { text } if text.ends_with('Ω'))))));
+    assert!(account.denied[0], "every decoded string was quoted before it was kept");
+    assert!(matches!(&operators[0], PdfOp::BeginMarkedContentWithProperties { tag, properties: PdfPropertyList::Named { name } } if tag == "OC" && name == "oc1"), "a named property list stays on the controlled path");
+    account.close(&mut cursor);
+    assert_eq!(account.acquired, account.released + operators.iter().map(transferred_bytes).sum::<usize>());
 }

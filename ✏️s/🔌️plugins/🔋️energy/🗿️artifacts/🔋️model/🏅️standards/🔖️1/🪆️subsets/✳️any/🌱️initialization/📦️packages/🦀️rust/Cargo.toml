@@ -12,7 +12,7 @@ path = "../../🦀️.rs"
 [dependencies]
 semio-s-plugin-energy-engine-sim-retirement = { workspace = true }
 semio-framework-artifact-reference = { workspace = true }
-semio-plugin-ownership = { path = "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
+semio-plugin-store-lifecycle = { path = "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/♻️lifecycle/🧱️owner/📦️packages/🦀️rust" }
 semio-os-kernel = { path = "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
 semio-framework-job = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }

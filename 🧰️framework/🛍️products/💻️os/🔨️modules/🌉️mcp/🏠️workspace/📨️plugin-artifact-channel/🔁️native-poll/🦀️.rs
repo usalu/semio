@@ -1,25 +1,21 @@
 //! 🔁️ The headless channel runs the current Source-bound guest event protocol.
 
 use super::*;
-use semio_framework::kernel::{Event, TurnResult};
+use semio_framework::kernel::{Event, KernelPollOutput, TurnResult};
 use semio_framework_pack_json::JsonReadLimits;
 use semio_framework_value::ValueRefusalKind;
-use semio_plugin_host::{GuestRelayNativeOrigin, GuestRelayOperationRequest};
+use semio_plugin_host::GuestRelayNativeOrigin;
 use semio_plugin_host_poll::{EventJsonSource, GuestPollNoReceiverState, GuestPollSession, GuestPollSessionStatus, OriginalNativeDecodePolicy};
 
 const POLL_STEPS_PER_YIELD: usize = 32;
 
-pub(super) type NativePoll = GuestPollSession<TurnResult, GuestPollNoReceiverState>;
+pub(super) type NativePoll = GuestPollSession<KernelPollOutput, GuestPollNoReceiverState>;
 
 impl PluginArtifactChannel {
     pub(super) fn issue_native_poll(&self, actor: semio_framework_actor::ActorId, origin: GuestRelayNativeOrigin, scope: &ActivationScope) -> Result<Box<NativePoll>, Fault> {
         let host = self.host_driver_policy;
         let cancel = scope.cancel().clone();
-        let driver = self.operation_caps().issue(GuestRelayOperationRequest {
-            work_units: host.root.operation_fuel,
-            maximum_elapsed_microseconds: host.root.maximum_lifetime_microseconds,
-            retained: host.operation,
-        }, semio_framework_job::default_now_us, Box::new(move || cancel.is_cancelled_now())).map_err(|error| Self::not_wired("guest poll Source", error))?;
+        let driver = self.operation_caps().issue(implicit_editor_request(host.root.maximum_lifetime_microseconds), semio_framework_job::default_now_us, Box::new(move || cancel.is_cancelled_now())).map_err(|error| Self::not_wired("guest poll Source", error))?;
         let maximum_owned_bytes = host.operation.maximum_capacity_bytes;
         let limits = JsonReadLimits {
             maximum_bytes: u64::from(host.root.max_patch_bytes),
@@ -58,7 +54,7 @@ fn next_poll_phase(poll: &mut NativePoll, scope: &ActivationScope, deadline: std
         match step(poll) {
             GuestPollSessionStatus::Ready => return Ok(()),
             GuestPollSessionStatus::Pending if std::time::Instant::now() < deadline => std::thread::yield_now(),
-            GuestPollSessionStatus::Pending => return Err(PluginArtifactChannel::budget_fault("guest poll")),
+            GuestPollSessionStatus::Pending => return Err(poll_deadline_fault(poll)),
             status => return Err(poll_fault(poll, status)),
         }
     }
@@ -80,7 +76,12 @@ pub(super) fn poll_turn<T>(poll: &mut NativePoll, events: &[Event], scope: &Acti
     loop {
         scope.checkpoint()?;
         let status = poll.drive_step(input.as_ref(), &mut |output, _, _| {
-            if let Some(receive) = receive.take() { result = Some(receive(output)); }
+            if let Some(receive) = receive.take() {
+                result = Some(match &output.result.status {
+                    semio_framework::kernel::TurnStatus::Faulted(detail) => Err(decode_guest_fault(detail)),
+                    _ => receive(&output.result),
+                });
+            }
             Ok(true)
         });
         match status {
@@ -92,19 +93,25 @@ pub(super) fn poll_turn<T>(poll: &mut NativePoll, events: &[Event], scope: &Acti
                     steps_since_yield = 0;
                 }
             }
-            GuestPollSessionStatus::Pending | GuestPollSessionStatus::Delivered => return Err(PluginArtifactChannel::budget_fault("guest poll")),
+            GuestPollSessionStatus::Pending | GuestPollSessionStatus::Delivered => return Err(poll_deadline_fault(poll)),
             status => return Err(poll_fault(poll, status)),
         }
     }
+}
+
+fn poll_deadline_fault(poll: &NativePoll) -> Fault {
+    let mut fault = PluginArtifactChannel::budget_fault("guest poll");
+    fault.message.push_str(&format!(" ({})", poll.pending_diagnostic()));
+    fault
 }
 
 fn poll_fault(poll: &NativePoll, status: GuestPollSessionStatus) -> Fault {
     let failure = poll.failure().or_else(|| poll.cleanup_failure());
     if let Some(value) = failure.and_then(|failure| failure.primary.as_ref()).and_then(|primary| primary.primary_value()) {
         match value.kind {
-            ValueRefusalKind::WorkLimit => return Fault { message: format!("guest poll: {}", value.message), ..PluginArtifactChannel::budget_fault("guest poll") },
+            ValueRefusalKind::WorkLimit | ValueRefusalKind::OwnershipLimit => return Fault { message: format!("guest poll: {}", value.message), ..PluginArtifactChannel::budget_fault("guest poll") },
             ValueRefusalKind::Canceled => return Fault { code: ACTIVATION_CANCELLED_FAULT_CODE.to_string(), message: format!("guest poll: {}", value.message) },
-            _ => {}
+            kind => return PluginArtifactChannel::not_wired("guest poll", format!("{status:?}: {kind:?}: {}", value.message)),
         }
     }
     PluginArtifactChannel::not_wired("guest poll", format!("{status:?}: {failure:?}"))

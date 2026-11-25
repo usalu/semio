@@ -5,7 +5,7 @@ use semio_framework::{ActionKind, Fault, FaultCode, FaultFrom, FaultOrigin};
 use semio_plugin_decl_emission::{ActionMeta, Emit};
 use semio_plugin_decl_app::ArtifactApp;
 use semio_framework_artifact_reference::{ArtifactDialect, ArtifactRef};
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use store::os_store::composition_coordinator::CompositionCoordinator;
 use crate::dispatch_bundle::DispatchCtx;

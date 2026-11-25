@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:process:identity:v1",
+  "title": "How a process is named: its pid together with its creation time",
+  "description": "A pid alone does not name a process: Windows hands a freed pid to the next process within seconds. Every record that judges a holder alive (a lease, a lock owner, a grant, a stage in flight, a supervisor, a warden) names the process by `{pid, startMs}`, the creation time in milliseconds since the epoch as the operating system reports it (Windows: the creation FILETIME of the process as `Win32_Process.CreationDate`; macOS and Linux: `ps -o lstart=`, a second wide), and judges it by this one function. The verdict is `same` when the pid exists with a creation time within `toleranceMilliseconds` of the recorded one, `gone` when the pid does not exist, `reused` when it exists with another creation time (the holder is dead and its resource is free), `unknown` when the table could not be read (never a reason to free a resource). A record without a creation time is a hard schema error: there is no pid-only path, holders rewrite their record on their next start. A creation time that was only a lower bound (the clock read before the spawn) is never recorded: it is read from the process itself after the spawn, or pinned by the first observation of the process within `spawnGraceMilliseconds` after the spawn.",
+  "definitions": {
+    "Policy": {"const": {"version": 1, "toleranceMilliseconds": 3000, "spawnGraceMilliseconds": 300000, "readTimeoutMilliseconds": 15000}},
+    "ProcessIdentity": {
+      "type": "object",
+      "required": ["pid", "startMs"],
+      "additionalProperties": false,
+      "properties": {
+        "pid": {"type": "integer", "minimum": 1},
+        "startMs": {"type": "integer", "minimum": 1}
+      }
+    },
+    "Verdict": {"enum": ["same", "gone", "reused", "unknown"]}
+  },
+  "oneOf": [{"$ref": "#/definitions/ProcessIdentity"}]
+}

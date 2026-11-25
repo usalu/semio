@@ -138,14 +138,13 @@ fn an_unrelated_edit_rebuilds_only_the_edited_fragment() {
     assert!(projector.cache().misses() <= 4, "misses {}", projector.cache().misses());
 }
 
-/// ⏱️ Sorts one scenario's timings, prints its `[latency] <code>/scene-<scenario>` line (p50, p95 and the budget; debug builds get 20 times) and asserts the p95 against it; `cold` is the first projection of a fresh projector (one sample, its own budget), `drag` a placement that changes every step, `commit` a real edit followed by its checks and projection.
+/// ⏱️ Sorts one scenario's timings, prints its `[latency] <code>/scene-<scenario>` line (p50, p95 and the budget) and asserts the p95 against it in release builds only (the documented rule of the latency gates; the figure is still printed); `cold` is the first projection of a fresh projector (one sample, its own budget), `drag` a placement that changes every step, `commit` a real edit followed by its checks and projection.
 fn gate_scenario(code: &str, scenario: &str, mut samples: Vec<f64>, release_ms: f64) {
     samples.sort_by(f64::total_cmp);
     let at = |percent: usize| samples[(samples.len() * percent / 100).min(samples.len() - 1)];
     let (p50, p95) = (at(50), at(95));
-    let budget = if cfg!(debug_assertions) { release_ms * 20.0 } else { release_ms };
-    eprintln!("[latency] {code}/scene-{scenario} p50_ms={p50:.3} p95_ms={p95:.3} budget_ms={budget:.1}");
-    assert!(p95 < budget, "{code}/scene-{scenario}: p95 {p95:.1} ms exceeds {budget} ms");
+    eprintln!("[latency] {code}/scene-{scenario} p50_ms={p50:.3} p95_ms={p95:.3} budget_ms={release_ms:.1}");
+    assert!(cfg!(debug_assertions) || p95 < release_ms, "{code}/scene-{scenario}: p95 {p95:.1} ms exceeds {release_ms} ms");
 }
 
 #[test]

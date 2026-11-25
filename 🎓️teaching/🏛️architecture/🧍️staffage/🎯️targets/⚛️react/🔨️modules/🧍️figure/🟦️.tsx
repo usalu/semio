@@ -3,6 +3,7 @@
  * The planar viewpoints (`elevation`, `front`, `plan`) and `axonometric` are drawings made by the library's `depict`; the axonometric drawing is made by the library like the others and names in words why an asset without volume has none. `model` mounts the owned WebGL2 viewer (loaded on demand): the representation is a variant of the model, the pose or clip is the query, the clock drives the time,
  * the scale is the level of detail and the environment colours the thermal view; see {@link ../🧊️spatial/🖥️stage/🟦️.ts}.
  *
+ * A drawing whose texts are wider on the page than the room it reserved for them is shown in a window that takes them in ({@link sceneWindow}), so no caption is cut at the edge of the paper.
  * `fit="paper"` sizes the element to the scene in CSS millimetres times `zoom` (zoom 1 is print size on screen); `fit="contain"` fills the parent box and never reports the scene's size back to it, so a walking figure cannot resize the card around it.
  * Only analytic views solve thermal or structural analyses; results are memoised by (asset, query, time, environment) across all figures.
  *
@@ -20,7 +21,8 @@ import { useHeldTime } from "../⏱️clock/🟦️.ts";
 import { useSvgMarkup } from "../🧮️pipeline/🧬️svg/🟦️.ts";
 import { describeScene, valueText, valuedItems, word } from "../🗣️labels/🟦️.ts";
 import { translator } from "../🌐️i18n/🟦️.ts";
-import { defaultQuery, figureFrame, inlineSvg, queryAt, sceneExtent } from "../🧮️pipeline/🟦️.ts";
+import { defaultQuery, figureFrame, inlineSvg, queryAt, sceneExtent, sceneWindow } from "../🧮️pipeline/🟦️.ts";
+import { useTextEpoch } from "../🧮️pipeline/🔤️text/⚛️hook/🟦️.tsx";
 import { flowFrameOf, flowsIn, unionFrame } from "../🌊️flow/🟦️.ts";
 import { FlowStage, paperProjection, type FlowStageOptions } from "../🌊️flow/🖥️stage/🟦️.ts";
 import { ViewpointGate } from "../🧮️pipeline/🦥️lazy/⚛️hook/🟦️.tsx";
@@ -223,7 +225,8 @@ function DrawnFigure(props: DrawnProps): ReactElement {
   const { scene } = frame;
   const flowLayers = props.flow !== undefined && props.flow.length > 0 && flowsIn(asset, props.view) && query.kind !== "transition" ? props.flow : null;
   const flowing = flowLayers !== null;
-  const paperWindow = useMemo(() => props.frame ?? (flowing ? unionFrame(sceneExtent(scene), flowFrameOf(frame.state, props.viewpoint, scene.metadata.mmPerMetre, props.viewpoint === "axonometric" ? axonometricCamera() : undefined)) : undefined), [props.frame, flowing, scene, frame.state, props.viewpoint]);
+  const faces = useTextEpoch();
+  const paperWindow = useMemo(() => props.frame ?? (flowing ? unionFrame(sceneExtent(scene), flowFrameOf(frame.state, props.viewpoint, scene.metadata.mmPerMetre, props.viewpoint === "axonometric" ? axonometricCamera() : undefined)) : sceneWindow(scene)), [props.frame, flowing, scene, frame.state, props.viewpoint, faces]);
   const frameKey = paperWindow === undefined ? "" : JSON.stringify(paperWindow);
   const markup = useMemo(() => inlineSvg(scene, paperWindow), [scene, frameKey]);
   const inkRef = useRef<HTMLDivElement | null>(null);

@@ -13,14 +13,62 @@
    "de": "Ein verglaster Flachkollektor von 2,0 m mal 1,0 m und 40 kg, 35 Grad geneigt auf einem Stahlgestell: Aluminiumwanne mit Mineralwolle, Solarglas, selektiver Absorber mit neun Steigrohren, Vor- und Rücklauf-Sammler."
   },
   "tags": [
-   "solar-thermal",
-   "flat-plate-collector",
-   "collector",
-   "absorber",
-   "stagnation",
-   "dec",
-   "solar-heat",
-   "machinery"
+   {
+    "id": "solar-thermal",
+    "title": {
+     "en": "solar thermal",
+     "de": "Solarthermie"
+    }
+   },
+   {
+    "id": "flat-plate-collector",
+    "title": {
+     "en": "flat plate collector",
+     "de": "Flachkollektor"
+    }
+   },
+   {
+    "id": "collector",
+    "title": {
+     "en": "collector",
+     "de": "Kollektor"
+    }
+   },
+   {
+    "id": "absorber",
+    "title": {
+     "en": "absorber",
+     "de": "Absorber"
+    }
+   },
+   {
+    "id": "stagnation",
+    "title": {
+     "en": "stagnation",
+     "de": "Stagnation"
+    }
+   },
+   {
+    "id": "dec",
+    "title": {
+     "en": "DEC",
+     "de": "DEC"
+    }
+   },
+   {
+    "id": "solar-heat",
+    "title": {
+     "en": "solar heat",
+     "de": "Solarwärme"
+    }
+   },
+   {
+    "id": "machinery",
+    "title": {
+     "en": "machinery",
+     "de": "Maschinen"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content (G2)",

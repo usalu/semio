@@ -37,6 +37,7 @@ pub enum Ifc2x3Mutation {
     SetHeader(set_header::SetHeader),
 }
 dsl::original_pack_value_operation_receiving!(Ifc2x3Mutation);
+dsl::artifact_persisted_binary_operation!(Ifc2x3Mutation);
 
 /// 📇️ Kebab-case spelling of every `Ifc2x3Mutation` variant, in declaration order -- the
 /// exhaustive mutation catalog `../../🔣️oracle.json`'s `kinds` array is required to

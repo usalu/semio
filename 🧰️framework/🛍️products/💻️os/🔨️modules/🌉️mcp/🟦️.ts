@@ -1,4 +1,5 @@
 import { MCP_BINARY_NAME, MCP_BINARY_TARGET, MCP_STDIO_BUILD_MODE_V1, mcpBinaryFreshness, requireMcpBinary, resolveMcpBinaryPath, stageMcpBinaryAsync } from "./📦️binary/🟦️.ts";
+import {type MissingMcpModelV1} from "./📡️stdio/📦️component-models/🕳️missing/🟦️.ts";
 import {MCP_MANIFEST_REL} from "./📡️stdio/🏗️staging/🟦️.ts";
 import {readNativeCatalogV1} from "../🔌️plugin/📇️registry/📥️runtime/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../📦️packages/🟦️typescript/🧬️schema/🟦️.ts";
@@ -19,15 +20,20 @@ import{type ResourceLeaseControl}from"../../../../🔨️modules/🏃️process/
  */
 
 import { type ChildProcessByStdio, spawn } from "node:child_process";
-import { randomUUID } from "node:crypto";
-import { accessSync, constants as fsConstants, readdirSync, readFileSync, statSync } from "node:fs";
-import { join, posix, resolve, win32 } from "node:path";
+import { createHash, randomUUID } from "node:crypto";
+import { accessSync, chmodSync, constants as fsConstants, copyFileSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { basename, join, posix, resolve, win32 } from "node:path";
 import { createInterface } from "node:readline";
 import { setTimeout as delay } from "node:timers/promises";
 import { serveWarmMcpGateway } from "./📡️stdio/🚪️gateway/🟦️.ts";
+import componentModelsPolicy from "./📡️stdio/📦️component-models/🔣️.json" with { type: "json" };
+import warmGatewayPolicy from "./📡️stdio/🚪️gateway/🧬️schema/🔣️.json" with { type: "json" };
 import type { Readable, Writable } from "node:stream";
 
 /** 🏛️ The authored embedding policy of the host driver (finite wake, drive and operation currency plus the root turn limits) that `semio-os-mcp` requires through `--host-driver-policy`; schema: `🔌️plugin/🖥️host/🔔️wake/📃️policy/🧬️schema`. */
+const MCP_COMPONENT_MODELS_ENV = componentModelsPolicy.definitions.Protocol.const.environment;
+
 export const MCP_HOST_DRIVER_POLICY_PATH = join(import.meta.dirname, "🎚️config", "🏛️host-driver-policy.json");
 
 /** 💡️ Declares cleanup currency for each separately authorized inference operation. */
@@ -73,41 +79,113 @@ export function serveWarmMcpStdio(repoRoot: string, extra: readonly string[], en
   return serveWarmMcpGateway({ stage: async (progress, signal) => { selected = await waitForMcpPublicationV1(binary, signal); signal.throwIfAborted(); const status = env.SEMIO_OS_MCP_BIN || mcpBinaryFreshness(selected, platform).fresh ? 0 : await stage(MCP_BINARY_TARGET, progress, signal); return status || (catalogTarget ? await stage(catalogTarget, progress, signal) : 0); }, command: () => { if (!statSync(selected).isFile()) throw Error("Published MCP executable required"); if (platform !== "win32") accessSync(selected, fsConstants.X_OK); return selected; }, args: withMcpHostDriverPolicy(["stdio", ...extra]), cwd: repoRoot, env, input: process.stdin, output: process.stdout, onStop });
 }
 
-/** 🗄️ Keeps the published executable and catalog components admitted throughout the stdio server lifetime. */
-export async function servePublishedMcpStdioV1(repoRoot:string,extra:readonly string[],invocation:ScriptInvocation,control:ResourceLeaseControl,env:NodeJS.ProcessEnv=process.env,catalogTarget?:string,stage:(target:string,progress:(line:string)=>void,signal:AbortSignal)=>Promise<number>=(target,progress,signal)=>stageMcpBinaryAsync(repoRoot,progress,signal,target),onStop?:(reason:unknown)=>void):Promise<number>{
+/** 🔭️ What a launch can observe about a previously published server: whether a usable catalog publication exists, a fingerprint of the executable plus catalog publication (`🦀️catalog.json`, `🔌️plugins.json`), and a private copy of the executable the old server runs from while the refresh replaces the publication (`discard` removes every copy). */
+export type McpPublicationProbeV1 = Readonly<{ usable: () => boolean; fingerprint: (binary: string) => string; snapshot: (binary: string) => string; discard: () => void }>;
+
+/** 🔭️ Probes the executable and the `SEMIO_PLUGIN_CATALOG` publication named by `env`: the executable is compared by size, modification time and inode, the small catalog files by content hash. */
+export function createMcpPublicationProbeV1(env: NodeJS.ProcessEnv = process.env): McpPublicationProbeV1 {
+  const files = (): string[] => env.SEMIO_PLUGIN_CATALOG ? ["🦀️catalog.json", "🔌️plugins.json"].map(name => join(env.SEMIO_PLUGIN_CATALOG!, name)) : [];
+  const stamp = (path: string): string => { const facts = statSync(path); return `${path}:${facts.size}:${facts.mtimeMs}:${facts.ino}`; };
+  let directory: string | undefined;
+  return {
+    usable: () => { try { return files().every(path => statSync(path).isFile()); } catch { return false; } },
+    fingerprint: binary => {
+      try { return [stamp(binary), ...files().map(path => `${path}:${createHash("sha256").update(readFileSync(path)).digest("hex")}`)].join("\n"); } catch { return `unreadable:${randomUUID()}`; }
+    },
+    snapshot: binary => {
+      directory ??= mkdtempSync(join(tmpdir(), "semio-mcp-"));
+      const copy = join(mkdtempSync(join(directory, "s-")), basename(binary));
+      copyFileSync(binary, copy, fsConstants.COPYFILE_FICLONE);
+      chmodSync(copy, statSync(binary).mode & 0o777);
+      return copy;
+    },
+    discard: () => { try { if (directory) rmSync(directory, { recursive: true, force: true }); } catch {} directory = undefined; },
+  };
+}
+
+/** 🗄️ Keeps the published executable and catalog components admitted throughout the stdio server lifetime. With a `probe` that finds a usable previous publication, that server answers at once from a private copy of its executable (the publication writer takes an exclusive lease, so no reader can stay admitted during the refresh) while its component readers stay held until the refreshed publication is admitted, or to the end when the refresh fails; the refreshed publication is then admitted for the rest of the lifetime and the gateway swaps to it only when it differs. */
+export async function servePublishedMcpStdioV1(repoRoot:string,extra:readonly string[],invocation:ScriptInvocation,control:ResourceLeaseControl,env:NodeJS.ProcessEnv=process.env,catalogTarget?:string,stage:(target:string,progress:(line:string)=>void,signal:AbortSignal)=>Promise<number>=(target,progress,signal)=>stageMcpBinaryAsync(repoRoot,progress,signal,target),onStop?:(reason:unknown)=>void,probe?:McpPublicationProbeV1,buildModel?:(pluginId:string,progress:(line:string)=>void,signal:AbortSignal)=>Promise<void>):Promise<number>{
  const {withAdmittedPublishedCargoExecutableV1}=await import("../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts");
  const {readBuildMode}=await import("../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts");
  const mode=readBuildMode((invocation.capabilities as Readonly<{buildMode?:unknown}>|undefined)?.buildMode??MCP_STDIO_BUILD_MODE_V1);
  if(env.SEMIO_BUILD_MODE!==undefined&&readBuildMode(env.SEMIO_BUILD_MODE)!==mode)throw Error("MCP launch mode differs from the issued invocation");
- const stopped=new AbortController(),launchEnv:NodeJS.ProcessEnv={},publications:Promise<unknown>[]=[];
+ const stopped=new AbortController(),launchEnv:NodeJS.ProcessEnv={},publications:Promise<unknown>[]=[],attempts:Promise<unknown>[]=[];
  const phase=()=>createRequestedIssuedResourceControlV1(control,0,stopped.signal);
- let selected:string,acquired=false,release!:()=>void,preparing:Promise<number>|undefined,stageSignal:AbortSignal|undefined;
+ let selected:string,acquired=false,usableServed=false,modelsBefore:string|undefined,refreshed=true,release!:()=>void,retireComponents=()=>{},preparing:Promise<number>|undefined,stageSignal:AbortSignal|undefined;
  const closed=new Promise<void>(resolve=>{release=resolve;});
- const hold=<T>(read:(consume:(value:T)=>Promise<void>)=>Promise<unknown>):Promise<T>=>new Promise((ready,refuse)=>{
-  const publication=read(async value=>{stopped.signal.throwIfAborted();ready(value);await closed;});
-  publications.push(publication);
+ const hold=<T>(read:(consume:(value:T)=>Promise<void>)=>Promise<unknown>,until:Promise<void>=closed,attempt=false):Promise<T>=>new Promise((ready,refuse)=>{
+  const publication=read(async value=>{stopped.signal.throwIfAborted();ready(value);await until;});
+  (attempt?attempts:publications).push(publication);
   void publication.catch(refuse);
  });
- const prepare=async(progress:(line:string)=>void,signal:AbortSignal):Promise<number>=>{
-  for(const target of[...(env.SEMIO_OS_MCP_BIN?[]:[MCP_BINARY_TARGET]),...(catalogTarget?[catalogTarget]:[])]){signal.throwIfAborted();const status=await stage(target,progress,signal);if(status!==0)return status;}
-  signal.throwIfAborted();
+ const admit=async(until:Promise<void>,componentsUntil:Promise<void>=until,attempt=false):Promise<{path:string;prepared:NodeJS.ProcessEnv}>=>{
   const binary=env.SEMIO_OS_MCP_BIN?requireMcpBinary(repoRoot,env):hold<string>(consume=>withAdmittedPublishedCargoExecutableV1(
-   MCP_MANIFEST_REL,MCP_BINARY_NAME+(process.platform==="win32"?".exe":""),repoRoot,mode,invocation,phase(),artifact=>consume(artifact.path)));
+   MCP_MANIFEST_REL,MCP_BINARY_NAME+(process.platform==="win32"?".exe":""),repoRoot,mode,invocation,phase(),artifact=>consume(artifact.path)),until,attempt);
   const components=hold<NodeJS.ProcessEnv>(async consume=>{
    const {withMcpComponentEnvironmentV1}=await import("./📡️stdio/📦️component-models/🟦️.ts");
    return withMcpComponentEnvironmentV1(repoRoot,invocation,phase(),env,consume);
-  });
-  const [path,preparedEnv]=await Promise.all([binary,components]);
-  selected=path;
-  Object.assign(launchEnv,preparedEnv);
+  },componentsUntil,attempt);
+  const [path,prepared]=await Promise.all([binary,components]);
+  return {path,prepared};
+ };
+ let settleExpected:(expected:boolean)=>void=()=>{};
+ const expected=probe?.usable()?new Promise<boolean>(resolve=>{settleExpected=resolve;}):undefined;
+ const prepare=async(progress:(line:string)=>void,signal:AbortSignal,serving:()=>void):Promise<number>=>{
+  let before:string|undefined;
+  const serveUsable=async():Promise<void>=>{
+   if(!probe?.usable())return;
+   const retirePrevious=retireComponents;
+   let retireBinary=()=>{},retireNext=()=>{};
+   const binaryHeld=new Promise<void>(resolve=>{retireBinary=resolve;}),componentsHeld=new Promise<void>(resolve=>{retireNext=resolve;});
+   try{
+    const next=await admit(binaryHeld,componentsHeld,true),stamp=probe.fingerprint(next.path);
+    if(stamp===before&&next.prepared[MCP_COMPONENT_MODELS_ENV]===modelsBefore)return retireNext();
+    selected=env.SEMIO_OS_MCP_BIN?next.path:probe.snapshot(next.path);
+    Object.assign(launchEnv,next.prepared);
+    before=stamp;
+    modelsBefore=launchEnv[MCP_COMPONENT_MODELS_ENV];
+    retireComponents=retireNext;
+    retirePrevious();
+    usableServed=true;
+    serving();
+   }catch(error){retireNext();progress(`[semio-os-mcp] the published server could not be admitted: ${String(error)}`);}
+   finally{retireBinary();}
+  };
+  await serveUsable();
+  settleExpected(usableServed);
+  const targets=[...(env.SEMIO_OS_MCP_BIN?[]:[MCP_BINARY_TARGET]),...(catalogTarget?[catalogTarget]:[])];
+  for(const[index,target]of targets.entries()){signal.throwIfAborted();const status=await stage(target,progress,signal);if(status!==0)return status;signal.throwIfAborted();if(before===undefined||index<targets.length-1)await serveUsable();}
+  signal.throwIfAborted();
+  const held=await admit(closed);
+  selected=held.path;
+  Object.assign(launchEnv,held.prepared);
   acquired=true;
+  retireComponents();
+  refreshed=before===undefined||probe!.fingerprint(held.path)!==before||launchEnv[MCP_COMPONENT_MODELS_ENV]!==modelsBefore;
   return 0;
  };
- try{return await serveWarmMcpGateway({stage:(progress,signal)=>{stageSignal=signal;preparing=prepare(progress,signal);return preparing;},command:()=>selected,args:withMcpHostDriverPolicy(["stdio",...extra]),cwd:repoRoot,env:launchEnv,input:process.stdin,output:process.stdout,onStop:()=>{if(!acquired)stopped.abort(stageSignal?.reason);onStop?.(stageSignal?.reason);}});}
+ const models=async(missing:MissingMcpModelV1,progress:(line:string)=>void,signal:AbortSignal):Promise<boolean>=>{
+  await Promise.allSettled([preparing]);
+  signal.throwIfAborted();
+  if(!acquired&&!usableServed)throw Error("the published MCP server is not admitted yet");
+  const {buildMcpComponentModelV1}=await import("./📡️stdio/📦️component-models/🟦️.ts");
+  await(buildModel??((pluginId,log,abort)=>buildMcpComponentModelV1(repoRoot,invocation,pluginId,log,abort)))(missing.pluginId,progress,signal);
+  signal.throwIfAborted();
+  const before=launchEnv[MCP_COMPONENT_MODELS_ENV];
+  Object.assign(launchEnv,await hold<NodeJS.ProcessEnv>(async consume=>{
+   const {withMcpComponentEnvironmentV1}=await import("./📡️stdio/📦️component-models/🟦️.ts");
+   return withMcpComponentEnvironmentV1(repoRoot,invocation,phase(),env,consume);
+  }));
+  return launchEnv[MCP_COMPONENT_MODELS_ENV]!==before;
+ };
+ try{return await serveWarmMcpGateway({expected,models,stage:(progress,signal,serving)=>{stageSignal=signal;preparing=prepare(progress,signal,serving);return preparing;},changed:()=>refreshed,command:()=>selected,args:withMcpHostDriverPolicy(["stdio",...extra]),cwd:repoRoot,env:launchEnv,input:process.stdin,output:process.stdout,onStop:()=>{if(!acquired)stopped.abort(stageSignal?.reason);onStop?.(stageSignal?.reason);}});}
  finally{
-  if(!acquired)stopped.abort();
   release();
+  retireComponents();
+  if(!acquired)stopped.abort();
   const preparation=await Promise.allSettled([preparing]),readers=await Promise.allSettled(publications);
+  await Promise.allSettled(attempts);
+  probe?.discard();
   for(const result of[...preparation,...readers])if(result.status==="rejected"&&
    !(stageSignal?.aborted&&result.reason===stageSignal.reason)&&
    !(stopped.signal.aborted&&result.reason===stopped.signal.reason))throw result.reason;
@@ -139,7 +217,7 @@ export type RawMcpProcess = {
  * JSON). Queue/waiter shape mirrors `os-hub-ts`'s `openFrameSocket` — the established pattern in
  * this repo for "await the next line from a live child process" over an event-based stream. */
 export function spawnRawMcp(bin: string, args: readonly string[] = ["stdio"], environment: NodeJS.ProcessEnv = process.env): RawMcpProcess {
-  const child = spawn(bin, withMcpHostDriverPolicy(args), { env: environment, stdio: ["pipe", "pipe", "pipe"] }) as ChildProcessByStdio<Writable, Readable, Readable>;
+  const child = spawn(bin, withMcpHostDriverPolicy(args), { windowsHide: true, env: environment, stdio: ["pipe", "pipe", "pipe"] }) as ChildProcessByStdio<Writable, Readable, Readable>;
   const allLines: string[] = [];
   const queue: string[] = [];
   let waiters: Array<(error: Error | null, line?: string) => void> = [];
@@ -234,6 +312,8 @@ export type McpServerEntry = { readonly command: string; readonly args: readonly
 /** 🧾️ One step of the client journey: what was attempted, whether it held, and the one-line
  * evidence the report table prints beside it. `wire` is the raw JSON-RPC result the step read. */
 export type McpClientStep = { readonly step: string; readonly ok: boolean; readonly detail: string; readonly wire?: unknown };
+const OS_MCP_CLIENT_TERMINAL_STEP_V1 = "os: active inference cancellation settles without committed effects";
+const REPO_MCP_CLIENT_TERMINAL_STEP_V1 = "repo: resources/read repo://goals";
 
 /** 📨️ A JSON-RPC envelope as it arrives on a server's stdout — a response (`id` present) or a
  * server-initiated notification (`method` present, no `id`), which is how progress travels. */
@@ -480,7 +560,7 @@ export async function runRepoMcpClientJourney(repoRoot: string,invocation:Script
 
     const goals = await session.request("resources/read", { uri: "repo://goals" });
     const body = String(mcpJsonPathV1(goals.result,["contents",0,"text"]) ?? "");
-    announce(steps, { step: "repo: resources/read repo://goals", ok: !goals.error && body.length > 0, detail: goals.error ? JSON.stringify(goals.error) : `${body.length} byte(s): ${body.slice(0, 120).replace(/\s+/g, " ")}`, wire: goals.result });
+    announce(steps, { step: REPO_MCP_CLIENT_TERMINAL_STEP_V1, ok: !goals.error && body.length > 0, detail: goals.error ? JSON.stringify(goals.error) : `${body.length} byte(s): ${body.slice(0, 120).replace(/\s+/g, " ")}`, wire: goals.result });
     return steps;
   });
 }
@@ -501,8 +581,8 @@ export async function runOsMcpClientJourney(repoRoot: string, folder: string, pi
     const nativeCatalog = readNativeCatalogV1(JSON.parse(readFileSync(join(publication, "🦀️catalog.json"), "utf8")));
     const owner = nativeCatalog.plugins.find(row => row.pluginId === pins.pluginId);
     if (!owner) throw Error("The selected plugin is absent from the native catalog");
-    const { readNativeCallerAuthorityV1 } = await import("@semio-tech/repo-lib/artifacts");
-    const { withComponentModelV1 } = await import("@semio-tech/framework-plugin/model/reading");
+    const { readNativeCallerAuthorityV1 } = await import("../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️artifacts/🟦️.ts");
+    const { withComponentModelV1 } = await import("../🔌️plugin/📦️packages/🦀️rust/📦️model/👓️reading/🟦️.ts");
     const mode = readNativeCallerAuthorityV1(invocation.capabilities).original.buildMode;
     return withComponentModelV1(repoRoot, invocation, { version: 1, mode, pluginId: pins.pluginId, cratePath: owner.cratePath }, control, async model => {
       const descriptor = JSON.parse(readFileSync(model.descriptor, "utf8"));
@@ -523,11 +603,17 @@ export async function verifyActiveInferenceCancellationV1(session: Pick<McpClien
   const submit = parseInferenceSubmitInput({ documentId: cancelArtifactId, inferenceSchema: pins.inferenceSchema, pluginId: pins.inferencePluginId, ...pins.inferenceLimits, revision: 0, documentGeneration: 1, cancellationId: cancelArtifactId });
   const submitted = await session.call("inference_submit", submit);
   const jobHandle = submitted.structuredContent?.jobHandle;
-  if (submitted.isError === true || typeof jobHandle !== "string") {
+  const job = (reply: McpToolReply) => reply.structuredContent?.job as Record<string, unknown> | undefined;
+  const jobId = job(submitted)?.jobId;
+  const binding = { jobId, documentId: cancelArtifactId, serviceId: pins.inferenceSchema, artifactKind: pins.inferenceArtifactKind, pluginId: pins.inferencePluginId };
+  const jobFrom = (reply: McpToolReply) => {
+    const page = job(reply);
+    return reply.isError !== true && reply.structuredContent?.jobHandle === jobHandle && Object.entries(binding).every(([field, value]) => page?.[field] === value) ? page : undefined;
+  };
+  if (typeof jobHandle !== "string" || !jobHandle || typeof jobId !== "string" || !jobId || !jobFrom(submitted)) {
     onStep(mcpStepFailure("os: active inference cancellation submit", JSON.stringify(submitted.structuredContent)));
     return;
   }
-  const jobFrom = (reply: McpToolReply) => reply.structuredContent?.job as Record<string, unknown> | undefined;
   const isActive = (job: Record<string, unknown> | undefined) => ["ACCEPTED", "RUNNING"].includes(String(job?.state ?? "").toUpperCase());
   const progressRows = (job: Record<string, unknown> | undefined) => Array.isArray(job?.progress) ? job.progress.length : 0;
   const observe = async (page: typeof submitted, waiting: (job: ReturnType<typeof jobFrom>) => boolean) => {
@@ -544,7 +630,8 @@ export async function verifyActiveInferenceCancellationV1(session: Pick<McpClien
   const page = await observe(submitted, job => isActive(job) && progressRows(job) === 0);
   const active = jobFrom(page);
   const observedActive = page.isError !== true && isActive(active) && progressRows(active) > 0;
-  onStep({ step: "os: observe active progressing inference before cancel", ok: observedActive, detail: `state=${String(active?.state ?? "").toUpperCase()} progressRows=${progressRows(active)}`, wire: page.structuredContent });
+  onStep({ step: "os: observe active progressing inference before cancel", ok: observedActive, detail: active ? `state=${String(active.state ?? "").toUpperCase()} progressRows=${progressRows(active)}` : "Reply did not identify the submitted inference job", wire: page.structuredContent });
+  if (!active) return;
   const cancelled = await session.call("inference_cancel", { jobHandle });
   const terminal = await observe(cancelled, isActive);
   const cancelledJob = jobFrom(terminal);
@@ -552,14 +639,25 @@ export async function verifyActiveInferenceCancellationV1(session: Pick<McpClien
   const originalDocument = snapshotDocumentBase64(beforeCancel);
   const unchanged = beforeCancel.isError !== true && afterCancel.isError !== true && originalDocument.length > 0 && originalDocument === snapshotDocumentBase64(afterCancel);
   onStep({
-    step: "os: active inference cancellation settles without committed effects",
+    step: OS_MCP_CLIENT_TERMINAL_STEP_V1,
     ok: observedActive && cancelled.isError !== true && terminal.isError !== true && inferenceCancellationVerdictV1(active, cancelledJob, unchanged),
-    detail: `state=${cancelledJob?.state} cancelRequested=${cancelledJob?.cancelRequested} documentUnchanged=${unchanged}`,
+    detail: cancelledJob ? `state=${cancelledJob.state} cancelRequested=${cancelledJob.cancelRequested} documentUnchanged=${unchanged}` : "Cancellation reply did not identify the submitted inference job",
     wire: terminal.structuredContent,
   });
 }
 
 export type McpClientDocumentPhaseV1 = "baseline" | "invoke" | "undo" | "redo" | "rollback";
+
+/** ⏳️ Waits until a warming gateway announces the native catalog through `notifications/tools/list_changed`, giving up when its staging reports the server unavailable or the readiness deadline of the gateway schema passes. */
+export async function awaitMcpNativeCatalogV1(session: Pick<McpClientSessionV1, "serverNotifications" | "stderrLines">): Promise<boolean> {
+  const readiness = warmGatewayPolicy.definitions.ClientReadiness.const, deadline = performance.now() + readiness.maximumMilliseconds;
+  while (performance.now() < deadline) {
+    if (session.serverNotifications().some(row => row.method === "notifications/tools/list_changed")) return true;
+    if (session.stderrLines().some(line => line.includes(readiness.unavailablePrefix))) return false;
+    await delay(readiness.pollMilliseconds);
+  }
+  return false;
+}
 
 /** 🚀️ Measures the protocol journey through a held real stdio session and its selected app declaration. */
 export async function driveOsMcpClientSessionV1(
@@ -573,6 +671,11 @@ export async function driveOsMcpClientSessionV1(
     if (initialized.error) return [...steps, mcpStepFailure("os: initialize", JSON.stringify(initialized.error))];
     await session.notify("notifications/initialized", {});
     announce(steps, { step: "os: initialize", ok: true, detail: `server=${mcpJsonPathV1(initialized.result,["serverInfo","name"])}@${mcpJsonPathV1(initialized.result,["serverInfo","version"])} protocol=${initialized.result?.protocolVersion}`, wire: initialized.result });
+    if (mcpJsonPathV1(initialized.result, ["serverInfo", "version"]) === "warming") {
+      const started = performance.now(), ready = await awaitMcpNativeCatalogV1(session);
+      announce(steps, { step: "os: warm gateway announces the native catalog", ok: ready, detail: ready ? `tools/list_changed after ${((performance.now() - started) / 1000).toFixed(1)} s` : session.stderrLines().slice(-8).join("\n") });
+      if (!ready) return steps;
+    }
 
     const [tools, resources, prompts] = await Promise.all([
       session.request("tools/list", {}),
@@ -793,12 +896,18 @@ export async function driveOsMcpClientSessionV1(
     return steps;
 }
 
+/** 🏁️ A journey with no recorded failure still owes its required terminal result. */
+export function requireMcpClientTerminalStepV1(steps: readonly McpClientStep[], terminal: string): readonly McpClientStep[] {
+  if (steps.some(step => !step.ok || step.step === terminal)) return steps;
+  return [...steps, mcpStepFailure(terminal, "The journey ended before reaching its required terminal result")];
+}
+
 /** 🏁️ Both `.mcp.json` servers, one report. Returns every step so a caller can print the table and
  * exit non-zero on the first red — the gate never summarises a failure away. */
 export async function runMcpClientEndToEnd(repoRoot: string, folder: string, pins: McpClientE2ePinsV1,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl): Promise<readonly McpClientStep[]> {
   const os = await runOsMcpClientJourney(repoRoot, folder, pins,invocation,phaseControl);
   const repo = await runRepoMcpClientJourney(repoRoot,invocation,phaseControl);
-  return [...os, ...repo];
+  return [...requireMcpClientTerminalStepV1(os, OS_MCP_CLIENT_TERMINAL_STEP_V1), ...requireMcpClientTerminalStepV1(repo, REPO_MCP_CLIENT_TERMINAL_STEP_V1)];
 }
 //#endregion 🔖️ClientEndToEnd
 

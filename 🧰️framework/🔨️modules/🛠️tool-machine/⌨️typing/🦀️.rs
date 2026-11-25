@@ -328,7 +328,10 @@ impl<M: Clone + 'static> Typing<M> {
 
 /// 🗂️ Every window's open typing run (at most one per window). Pure: the runtime keeps one per app instance, overlays
 /// [`Self::provisional`] on the committed document for every render, publishes every committed run as ONE edit stamped with
-/// its `TransactionRef`, and fires lapsed runs ([`Self::lapse`]) whenever it runs.
+/// its `TransactionRef`, and fires lapsed runs ([`Self::lapse`]) whenever it runs. A host abort that meets a row lent to a
+/// retained read or to the original writer is deferred on the row (law `🔗️read/🧪️tests/⏸️deferred`): the run is ended at
+/// once for every reader of the ledger, and [`Self::settle_deferred_aborts`] drops it once the row is released; a lapse
+/// waits on such a row and fires on the next lapse after it.
 #[derive(Debug, PartialEq)]
 pub struct TypingLedger<M> {
     pub(super) source_revision:u64,
@@ -346,7 +349,8 @@ impl<M> Default for TypingLedger<M> {
 impl<M: 'static> TypingLedger<M> {
     /// 🪪️ Identifies the original provisional source across a multi-turn complete-prefix refold.
     pub fn source_revision(&self)->u64{self.source_revision}
-    fn update_live_windows(&mut self,window:&str,was_open:bool){let open=self.open(window).is_some();if open&&!was_open{self.live_windows+=1;}else if was_open&&!open{self.live_windows-=1;}}
+    fn resident(&self,window:&str)->bool{self.original_slot(window).is_some_and(|slot|!slot.is_empty())}
+    fn update_live_windows(&mut self,window:&str,was_open:bool){let open=self.resident(window);if open&&!was_open{self.live_windows+=1;}else if was_open&&!open{self.live_windows-=1;}}
     fn change_source_revision(&mut self){self.source_revision=self.source_revision.checked_add(1).expect("original tool source revision exhausted");}
 
     /// 🛋️ Whether no window types.
@@ -354,14 +358,14 @@ impl<M: 'static> TypingLedger<M> {
         self.live_windows==0
     }
 
-    /// 🔎️ The open run of `window`.
+    /// 🔎️ The open run of `window`; a run whose abort waits on its row is already ended.
     pub fn open(&self, window: &str) -> Option<&TypingState<M>> {
-        self.original_slot(window).filter(|slot|!slot.is_empty()).map(RetainedOriginalSlot::get)
+        self.position(window).ok().map(|index|&self.windows[index]).filter(|row|!row.state.is_empty()&&row.deferred.is_none()).map(|row|row.state.get())
     }
 
     /// 🪟️ The windows holding an open run, in window id order.
     pub fn windows(&self) -> impl Iterator<Item = &str> {
-        self.windows.iter().filter(|row|!row.state.is_empty()).map(|row|row.key.as_str())
+        self.windows.iter().filter(|row|!row.state.is_empty()&&row.deferred.is_none()).map(|row|row.key.as_str())
     }
 
     /// 👁️ Every open run's net leaves, window by window in window id order — the overlay a render applies on the committed
@@ -396,7 +400,8 @@ impl<M: 'static> TypingLedger<M> {
     /// Answers every step in order.
     pub fn send(&mut self, window: &str, tool: &str, actor: &ActorId, input: TypingInput<M>, fold: impl Fn(&[M], &[M]) -> TypingFold<M>, clock: HybridLogicalTimestamp) -> Result<Vec<ToolStep<M>>, ToolRefusal> where M:Clone {
         if self.original_write_pending()||self.retained_read_pending(window){return Err(ToolRefusal::Unclosed)}
-        let was_open=self.open(window).is_some();
+        self.settle_deferred(window);
+        let was_open=self.resident(window);
         let (mut typing, other) = self.run(window, tool, actor);
         let steps = typing.send(input, fold, clock);
         self.keep(window, typing);
@@ -408,6 +413,7 @@ impl<M: 'static> TypingLedger<M> {
     /// 🌬️ Commits `window`'s open run as ONE edit (`reason`); `Idle` when the window does not type.
     pub fn commit(&mut self, window: &str, reason: TypingCommit, clock: HybridLogicalTimestamp) -> Result<ToolStep<M>, ToolRefusal> where M:Clone {
         if self.original_write_pending()||self.retained_read_pending(window){return Err(ToolRefusal::Unclosed)}
+        self.settle_deferred(window);
         let Some(state)=self.cold_take(window)else{return Ok(ToolStep::Idle)};
         let mut typing = Typing::resume(state)?;
         typing.runner.host.now_ms = clock.physical_ms;
@@ -427,8 +433,9 @@ impl<M: 'static> TypingLedger<M> {
     /// 💀️ Fires the idle lapse of every run whose deadline `clock` reached: each commits as ONE edit, one step per lapsed window.
     pub fn lapse(&mut self, clock: HybridLogicalTimestamp) -> Vec<(String, Result<ToolStep<M>, ToolRefusal>)> where M:Clone {
         if self.original_write_pending(){return Vec::new()}
+        let settled: Vec<(String, Result<ToolStep<M>, ToolRefusal>)> = self.settle_deferred_aborts().into_iter().map(|(window, step)| (window, Ok(step))).collect();
         let lapsed: Vec<String> = self.windows.iter().filter(|row|!row.state.is_empty()&&!row.state.has_read()&&row.state.get().deadline_ms<=clock.physical_ms).map(|row|row.key.to_string()).collect();
-        lapsed
+        let fired = lapsed
             .into_iter()
             .filter_map(|window| {
                 let mut typing = match Typing::resume(self.cold_take(window.as_str())?) {
@@ -440,19 +447,46 @@ impl<M: 'static> TypingLedger<M> {
                 self.keep(&window, typing);
                 self.update_live_windows(&window,true);
                 Some((window, step))
-            })
-            .collect()
+            });
+        settled.into_iter().chain(fired).collect()
     }
 
-    /// 🧯️ Host abort of `window`'s open run (a conflicting base): zero trace. `Aborted(ref, reason)`, or `Idle`.
+    /// 🧯️ Host abort of `window`'s open run (a conflicting base): zero trace. `Aborted(ref, reason)`, or `Idle`. A row lent to
+    /// a retained read or to the original writer keeps the fact (the first one wins) and [`Self::settle_deferred_aborts`]
+    /// ends its run once the row is released.
     pub fn abort(&mut self, window: &str, reason: ToolAbortReason) -> ToolStep<M> {
-        if self.original_write_pending()||self.retained_read_pending(window){return ToolStep::Idle}
+        let Ok(index)=self.position(window)else{return ToolStep::Idle};
+        if self.original_write_pending()||self.windows[index].state.has_read(){
+            let row=&mut self.windows[index];
+            if row.deferred.is_none()&&!row.state.is_empty(){row.deferred=Some(reason);}
+            return ToolStep::Idle;
+        }
+        let reason=self.windows[index].deferred.take().unwrap_or(reason);
         let Some(state)=self.cold_take(window)else{return ToolStep::Idle};self.live_windows-=1;self.change_source_revision();ToolStep::Aborted(state.transaction,reason)
+    }
+
+    pub fn settle_deferred(&mut self,window:&str)->Option<ToolStep<M>>{
+        let index=self.position(window).ok()?;
+        if self.original_write_pending()||self.windows[index].state.has_read()||self.windows[index].deferred.is_none(){return None}
+        Some(self.abort(window,ToolAbortReason::Tool))
+    }
+
+    /// ⏯️ Ends every run whose host abort waited on a row since released by its retained read and the original writer: one
+    /// `(window, Aborted)` per run with the deferred fact's reason, in window id order.
+    pub fn settle_deferred_aborts(&mut self) -> Vec<(String, ToolStep<M>)> {
+        if self.original_write_pending(){return Vec::new()}
+        let ready:Vec<String>=self.windows.iter().filter(|row|row.deferred.is_some()&&!row.state.has_read()).map(|row|row.key.to_string()).collect();
+        ready.into_iter().filter_map(|window|self.settle_deferred(&window).filter(|step|!matches!(step,ToolStep::Idle)).map(|step|(window,step))).collect()
+    }
+
+    /// ⏸️ Whether a host abort of `window` waits on its row.
+    pub fn abort_deferred(&self, window: &str) -> bool {
+        self.position(window).is_ok_and(|index|self.windows[index].deferred.is_some())
     }
 
     /// 🧊️ Host abort of every open run (a frozen document): zero trace, one step per window.
     pub fn abort_all(&mut self, reason: ToolAbortReason) -> Vec<(String, ToolStep<M>)> {
-        let windows: Vec<String> = self.windows().map(str::to_owned).collect();
+        let windows: Vec<String> = self.windows.iter().filter(|row|!row.state.is_empty()).map(|row|row.key.to_string()).collect();
         windows.into_iter().map(|window| (window.clone(), self.abort(&window, reason))).collect()
     }
 

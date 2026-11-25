@@ -13,19 +13,97 @@
    "de": "Ein abschließbarer Schaukasten aus Holz in der kommunalen Parkbauweise nach vielen Jahren: ein Kasten 1,50 x 1,00 m auf zwei Lärchenpfosten unter einem Satteldach, die oben angeschlagene Tür von zwei Gasdruckfedern gehoben, das Verbundglas um einen Spinnennetzsprung herum zusammengehalten über einem von der Sonne ausgebleichten Parkplan, der dunkelgrüne Anstrich blättert, der alte linke Pfosten grau, rissig und besprüht, der rechte Pfosten in frischer Lärche ersetzt, Moos am schattigen hinteren Hang, die Pfosten auf verzinkten U-Trägern in Betonpunktfundamenten."
   },
   "tags": [
-   "used",
-   "park",
-   "public-space",
-   "signage",
-   "notice-board",
-   "showcase",
-   "timber",
-   "larch",
-   "laminated-glass",
-   "gas-spring",
-   "gable-roof",
-   "concrete-footing",
-   "street-furniture"
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "park",
+    "title": {
+     "en": "park",
+     "de": "Park"
+    }
+   },
+   {
+    "id": "public-space",
+    "title": {
+     "en": "public space",
+     "de": "öffentlicher Raum"
+    }
+   },
+   {
+    "id": "signage",
+    "title": {
+     "en": "signage",
+     "de": "Beschilderung"
+    }
+   },
+   {
+    "id": "notice-board",
+    "title": {
+     "en": "notice board",
+     "de": "Anschlagtafel"
+    }
+   },
+   {
+    "id": "showcase",
+    "title": {
+     "en": "showcase",
+     "de": "Schaukasten"
+    }
+   },
+   {
+    "id": "timber",
+    "title": {
+     "en": "timber",
+     "de": "Holz"
+    }
+   },
+   {
+    "id": "larch",
+    "title": {
+     "en": "larch",
+     "de": "Lärche"
+    }
+   },
+   {
+    "id": "laminated-glass",
+    "title": {
+     "en": "laminated glass",
+     "de": "Verbundglas"
+    }
+   },
+   {
+    "id": "gas-spring",
+    "title": {
+     "en": "gas spring",
+     "de": "Gasfeder"
+    }
+   },
+   {
+    "id": "gable-roof",
+    "title": {
+     "en": "gable roof",
+     "de": "Satteldach"
+    }
+   },
+   {
+    "id": "concrete-footing",
+    "title": {
+     "en": "concrete footing",
+     "de": "Betonfundament"
+    }
+   },
+   {
+    "id": "street-furniture",
+    "title": {
+     "en": "street furniture",
+     "de": "Stadtmobiliar"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content (used park objects wave)",

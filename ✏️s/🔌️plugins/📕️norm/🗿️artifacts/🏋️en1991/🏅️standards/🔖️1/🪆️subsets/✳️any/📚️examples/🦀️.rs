@@ -24,4 +24,7 @@ pub mod example_subjects;
 mod example_subjects_unit;
 #[path = "⚠️multi-fail-noncompliant/🦀️.rs"]
 pub mod multi_fail_noncompliant;
+#[cfg(test)]
+#[path = "🧪️tests/🗜️pack-twins/🦀️.rs"]
+mod pack_twins;
 //#endregion 🪢️Mounts

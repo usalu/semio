@@ -3,7 +3,7 @@ import { readFile, readdir, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { PLUGIN_DESCRIPTOR_PROBE_SOURCE, finalizePluginDescriptor } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🛂️descriptor/🟦️.ts";
 import { rewritePreview2ShimImports } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts";
-import { rewriteJcoAsyncResultLiftingAt, rewriteJcoComponentAssetUrlsAt } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🧬️jco-module-rewrites/🟦️.ts";
+import { rewriteJcoAsyncResultLiftingAt, rewriteJcoComponentFactoryAt } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🧬️jco-module-rewrites/🟦️.ts";
 import { ensurePreview2ShimVendorAt } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🩹️preview2-shim-patches/🟦️.ts";
 import { hostShimSource } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🪢️host-shim-source/🟦️.ts";
 
@@ -16,7 +16,7 @@ if (phase === "stage") {
   const vendor = join(staging, "vendor");
   ensurePreview2ShimVendorAt(vendor, root);
   rewriteJcoAsyncResultLiftingAt(modulePath);
-  rewriteJcoComponentAssetUrlsAt(modulePath);
+  rewriteJcoComponentFactoryAt(modulePath);
   rewritePreview2ShimImports(modulePath, vendor);
   await writeFile(join(staging, "module", "🟨️.js"), hostShimSource());
   await writeFile(join(staging, "descriptor-probe-source.mjs"), PLUGIN_DESCRIPTOR_PROBE_SOURCE);

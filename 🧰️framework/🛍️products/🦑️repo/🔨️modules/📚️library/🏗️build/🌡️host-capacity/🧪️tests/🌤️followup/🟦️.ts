@@ -86,7 +86,8 @@ test("A multi-worker target declares its envelope: the grant carries its cores a
    plans[target]={cpu:granted.handle!.plan.cpu,memory:granted.handle!.plan.memoryMegabytes,stacks:planTestWorkersV1(workerPolicy,"e2e-stacks",facts).workers};
   },ports(directory,{tool:"nx"}));
  }
- expect(plans["test-e2e"]).toMatchObject({cpu:4,memory:6144});expect(plans["test-e2e"]!.stacks,"the sharding is no longer inert on an admitted run").toBeGreaterThan(1);
+ const total=Math.floor(totalmem()/1048576),reach=Math.floor((total-hostFloorMegabytesV1(policy,{totalMegabytes:total}))*policy.estimates.maximumShareBasisPoints/10000);
+ expect(plans["test-e2e"],"the declared 6144 MB per job, within the share of this host the sizing may ask for").toMatchObject({cpu:4,memory:Math.min(6144,Math.max(policy.estimates.minimumMegabytes,reach-1536))});expect(plans["test-e2e"]!.stacks,"the sharding is no longer inert on an admitted run").toBeGreaterThan(1);
  expect(plans["test-unit"]).toMatchObject({cpu:1});expect(plans["test-unit"]!.stacks).toBe(1);
 },30000);
 

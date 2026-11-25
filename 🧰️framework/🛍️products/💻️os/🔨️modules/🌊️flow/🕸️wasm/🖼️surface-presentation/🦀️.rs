@@ -60,6 +60,21 @@ pub(super) mod surface_canvas {
         });
     }
 
+    /// 🩹️ Sends every panic message of this module to the browser console, with the live JS call stack, before the abort trap ends the instance (same report as the frame Worker's `install_worker_panic_trace` in `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️browser-worker/🦀️.rs`).
+    pub fn install_flow_panic_report() {
+        use std::sync::Once;
+        static INSTALLED: Once = Once::new();
+        INSTALLED.call_once(|| {
+            let previous = std::panic::take_hook();
+            std::panic::set_hook(Box::new(move |info| {
+                let witness = js_sys::Error::new("flow panic stack");
+                let stack = js_sys::Reflect::get(&witness, &JsValue::from_str("stack")).unwrap_or_else(|_| JsValue::from_str("<stack unavailable>"));
+                web_sys::console::error_2(&JsValue::from_str(&format!("flow panicked: {info}")), &stack);
+                previous(info);
+            }));
+        });
+    }
+
     /// 🔎️ Whether this surface presents on the GPU — the host reads it to decide whether to keep a
     /// 2D context off the canvas (a canvas admits exactly one context kind, for its whole life).
     #[wasm_bindgen(js_name = flowSurfaceCanvasPresentsOnGpu)]
@@ -109,6 +124,10 @@ pub(super) mod surface_canvas {
     pub fn flow_resize_surface_canvas(_surface: u32, _logical_width: u32, _logical_height: u32, _dpr: f64) {}
 
     pub fn flow_detach_surface_canvas(_surface: u32) {}
+
+    pub fn install_flow_panic_report() {}
 }
+
+pub use surface_canvas::install_flow_panic_report;
 
 //#endregion 🖼️SurfacePresentation

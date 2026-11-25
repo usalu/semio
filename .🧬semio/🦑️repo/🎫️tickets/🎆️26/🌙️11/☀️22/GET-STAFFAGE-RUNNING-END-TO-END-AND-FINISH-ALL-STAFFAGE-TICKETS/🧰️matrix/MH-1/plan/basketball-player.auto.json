@@ -1,0 +1,6 @@
+[
+  {"op": "volume", "scale": "50", "id": "hand-r", "as": "auto"},
+  {"op": "volume", "scale": "50", "id": "shorts", "as": "auto"},
+  {"op": "volume", "scale": "100", "id": "shirt", "as": "auto"},
+  {"op": "volume", "scale": "500", "id": "hand-r", "as": "auto"}
+]

@@ -5,7 +5,7 @@ import { constants as fsConstants, createReadStream, createWriteStream, copyFile
 
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 
-import { PLAYWRIGHT_MODULE_SPECIFIER } from "../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🟦️.ts";
+import { launchBrowserV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🟦️.ts";
 
 
 import { openStudioE2e, openStudioE2eCommandPalette, waitForStudioE2eCondition } from "../🎬️studio/🟦️.ts";
@@ -195,8 +195,7 @@ async function closeCatalogSmokeWindow(page: import("playwright").Page, windowId
 
 async function runCatalogSmokeVerify(repoRoot: string, baseUrl: string, opts: { readonly outDir: string; readonly timeoutMs: number; readonly perProgramMs: number }): Promise<CatalogSmokeReport> {
   ensureRepositoryBrowserPathV1(repoRoot,process.env);
-  const { chromium }: typeof import("playwright") = await import(PLAYWRIGHT_MODULE_SPECIFIER);
-  const browser = await chromium.launch({ headless: true });
+  const browser = await launchBrowserV1({ headless: true });
   const page = await browser.newPage();
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(String(error)));

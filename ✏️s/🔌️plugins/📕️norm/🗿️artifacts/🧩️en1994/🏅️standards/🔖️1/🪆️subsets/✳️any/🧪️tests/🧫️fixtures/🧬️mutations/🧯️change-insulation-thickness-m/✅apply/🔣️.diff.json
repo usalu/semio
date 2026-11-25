@@ -5,7 +5,16 @@
   "beams": null,
   "columns": null,
   "slabs": null,
+  "placements": null,
+  "studs": null,
   "fireRating": null,
   "insulationThicknessM": 0.028,
-  "fatigueDetail": null
+  "fatigueDetail": null,
+  "reliabilityClass": null,
+  "cases": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  }
 }

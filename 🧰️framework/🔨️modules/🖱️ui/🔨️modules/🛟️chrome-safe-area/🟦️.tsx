@@ -40,7 +40,7 @@ export function shellNavbarTrailingEndReserveStyle(widthPx: number): React.CSSPr
 /** 🧢 One OPEN chrome-hosted dock's cap row: it sizes to its CONTENT and never below the body it
  * caps, so the fold control is laid out BESIDE the tab strip instead of underneath it.
  *
- * The cap row is a flex row of `[tab strip | gap | controls]` inside a panel root pinned to the body
+ * The cap row is a flex row of chips, `[tab strip | controls]`, over the content inside a panel root pinned to the body
  * width, and the strip is `flex: 0 1 auto` over a container with visible overflow. Pinned to the body,
  * a strip whose tabs need more room than is left after the fold control and the navbar reserve keeps
  * its own content width and simply PAINTS outside the box flex gave it — over the controls, which carry
@@ -193,6 +193,11 @@ export function chromePanelSafeArea(affordance: SafeAreaBox, host: SafeAreaBox, 
   return CHROME_PANEL_SAFE_AREA_CLEAR;
 }
 
+/** 🪪️ The anchor-corner strip of an affordance (its header, `headPx` tall at its block edge): an open pane yields to the docks that cover ITS HEADER, not to every chip row or chrome band its tall body merely overlaps at the far end — those pinned it under the dock it should have cleared. */
+export function chromePanelHeadBox(affordance: SafeAreaBox, anchor: Anchor, headPx: number): SafeAreaBox {
+  return anchorVertical(anchor) === "bottom" ? { ...affordance, top: Math.max(affordance.top, affordance.bottom - headPx) } : { ...affordance, bottom: Math.min(affordance.bottom, affordance.top + headPx) };
+}
+
 /** 🖌️ {@link anchorPositionStyle}'s two edge insets, moved inward by a {@link chromePanelSafeArea}
  * — the flush `var(--spacing-single)` inset (or the caller's own `base`, e.g. a window content rail's
  * {@link windowChromeClearedTopOffset}) when the safe area is clear, so a shell with no open panel lays
@@ -221,6 +226,7 @@ export function useChromePanelSafeArea({
   yieldAxis,
   gapPx = 0,
   enabled = true,
+  headPx,
 }: {
   readonly hostRef: React.RefObject<HTMLElement | null>;
   readonly affordanceRef: React.RefObject<HTMLElement | null>;
@@ -228,6 +234,7 @@ export function useChromePanelSafeArea({
   readonly yieldAxis: SafeAreaYield;
   readonly gapPx?: number;
   readonly enabled?: boolean;
+  readonly headPx?: number;
 }): ChromePanelSafeArea {
   const shellScope = useShellScopeOptional();
   const panels = useShellChromePanelBoxes(shellScope?.rootRef.current ?? undefined);
@@ -256,7 +263,7 @@ export function useChromePanelSafeArea({
       const blockShift = vertical === "top" ? -applied.blockPx : vertical === "bottom" ? applied.blockPx : 0;
       const inlineShift = horizontal === "right" ? applied.inlinePx : horizontal === "left" ? -applied.inlinePx : 0;
       const unreserved: SafeAreaBox = { left: rect.left + inlineShift, top: rect.top + blockShift, right: rect.right + inlineShift, bottom: rect.bottom + blockShift };
-      commit(chromePanelSafeArea(unreserved, safeAreaBoxFromRect(host.getBoundingClientRect()), anchor, boxes, yieldAxis, gapPx));
+      commit(chromePanelSafeArea(headPx === undefined ? unreserved : chromePanelHeadBox(unreserved, anchor, headPx), safeAreaBoxFromRect(host.getBoundingClientRect()), anchor, boxes, yieldAxis, gapPx));
     };
     sync();
     const resizeObserver = typeof ResizeObserver !== "undefined" ? new ResizeObserver(sync) : null;
@@ -267,6 +274,6 @@ export function useChromePanelSafeArea({
       resizeObserver?.disconnect();
       window.removeEventListener("resize", sync);
     };
-  }, [affordanceRef, anchor, attached, enabled, gapPx, hostRef, panels, yieldAxis]);
+  }, [affordanceRef, anchor, attached, enabled, gapPx, headPx, hostRef, panels, yieldAxis]);
   return safeArea;
 }

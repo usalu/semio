@@ -63,6 +63,17 @@ fn label(locale: Locale, en: &str, de: &str) -> String {
     }
 }
 
+/// 🔀 The accessible name of a move row; it names the page so the row is unambiguous when read on its own.
+pub fn move_label(locale: Locale, page: usize, later: bool) -> String {
+    let number = page_number(page);
+    match (locale, later) {
+        (Locale::En, false) => format!("Move page {number} earlier"),
+        (Locale::En, true) => format!("Move page {number} later"),
+        (Locale::De, false) => format!("Seite {number} nach vorne verschieben"),
+        (Locale::De, true) => format!("Seite {number} nach hinten verschieben"),
+    }
+}
+
 fn error(code: &'static str) -> PluginAssemblyError {
     PluginAssemblyError::new(code, "pdf thumbnail strip admission failed")
 }
@@ -75,7 +86,7 @@ fn numbers(entries: &[(&str, f64)]) -> UiAssemblyResult<UiValue> {
     Ok(UiValue::Map(map.finish()))
 }
 
-/// 🖼️ The strip body. `object_domain` is the page editor's object selection domain; activating a row selects that page in it.
+/// 🖼️ The strip body: one tree section of page rows, because a tree renders only its sections. `object_domain` is the page editor's object selection domain; activating a row selects that page in it. Rows activate through their [`semio_plugin::activation_target`], never a record `Activate` binding, which the retained UI contract refuses (`invalidRowTarget`).
 pub fn render_thumbnail_strip(snapshot: &PdfSnapshot, controller_id: &str, object_domain: &str, locale: Locale) -> UiAssemblyResult<semio_ui_contract::BuiltNode> {
     render_thumbnail_strip_marked(snapshot, controller_id, object_domain, locale, &|_| Vec::new())
 }
@@ -84,7 +95,7 @@ pub fn render_thumbnail_strip(snapshot: &PdfSnapshot, controller_id: &str, objec
 pub fn render_thumbnail_strip_marked(snapshot: &PdfSnapshot, controller_id: &str, object_domain: &str, locale: Locale, peers: &dyn Fn(usize) -> Vec<String>) -> UiAssemblyResult<semio_ui_contract::BuiltNode> {
     let action = |name: &str| ActionId::try_v1(controller_id, name).ok_or_else(|| error("pdf.thumbnails.action"));
     let count = snapshot.pages.len();
-    let mut tree = semio_ui_contract::tree().try_id("pdf-thumbnails").map_err(|_| error("pdf.thumbnails.root-id"))?;
+    let mut section = semio_ui_contract::tree_section(ui::Label(UiText::clipped(&label(locale, "Pages", "Seiten")))).try_id("pdf-thumbnails-pages").map_err(|_| error("pdf.thumbnails.section-id"))?.default_open(true);
     for thumbnail in thumbnails(snapshot, THUMBNAIL_EDGE) {
         let page = thumbnail.page;
         let mut text = format!("{} {} / {count} ({}x{})", label(locale, "Page", "Seite"), page_number(page), thumbnail.width, thumbnail.height);
@@ -101,22 +112,23 @@ pub fn render_thumbnail_strip_marked(snapshot: &PdfSnapshot, controller_id: &str
         drag.try_push(UiText::clipped(THUMBNAIL_DRAG_KEY), UiText::clipped(&page_number(page).to_string())).map_err(|_| error("pdf.thumbnails.drag"))?;
         let mut row = semio_ui_contract::tree_item(ui::Label(UiText::clipped(&text))).try_id(format!("pdf-thumbnail-{page}")).map_err(|_| error("pdf.thumbnails.entry-id"))?
             .default_open(false).draggable(true).drag_data(drag)
-            .try_on_with(ui::Trigger::Activate, action(semio_plugin::INTERACTION_SELECT_ACTION_ID)?, UiValue::Map(selection.finish())).map_err(|_| error("pdf.thumbnails.selection"))?
+            .target(semio_plugin::activation_target((action(semio_plugin::INTERACTION_SELECT_ACTION_ID)?, Some(UiValue::Map(selection.finish()))))?)
             .try_on_with(ui::Trigger::Drop, action("move-page")?, numbers(&[("x", page_number(page) as f64)])?).map_err(|_| error("pdf.thumbnails.drop"))?;
-        for (id, text, to) in [("earlier", label(locale, "Move page earlier", "Seite nach vorne"), page.checked_sub(1)), ("later", label(locale, "Move page later", "Seite nach hinten"), Some(page + 1))] {
+        for (id, text, to) in [("earlier", move_label(locale, page, false), page.checked_sub(1)), ("later", move_label(locale, page, true), Some(page + 1))] {
             let Some((from, to)) = to.and_then(|to| reorder_args(count, page, to)) else { continue };
             let item = semio_ui_contract::tree_item(ui::Label(UiText::clipped(&text))).try_id(format!("pdf-thumbnail-{page}-{id}")).map_err(|_| error("pdf.thumbnails.move-id"))?
-                .try_on_with(ui::Trigger::Activate, action("move-page")?, numbers(&[("page", page_number(from) as f64), ("x", page_number(to) as f64)])?).map_err(|_| error("pdf.thumbnails.move"))?
+                .target(semio_plugin::activation_target((action("move-page")?, Some(numbers(&[("page", page_number(from) as f64), ("x", page_number(to) as f64)])?)))?)
                 .try_build().map_err(|_| error("pdf.thumbnails.move"))?;
             row = row.try_child(item).map_err(|_| error("pdf.thumbnails.child"))?;
         }
-        tree = tree.try_child(row.try_build().map_err(|_| error("pdf.thumbnails.entry"))?).map_err(|_| error("pdf.thumbnails.child"))?;
+        section = section.try_child(row.try_build().map_err(|_| error("pdf.thumbnails.entry"))?).map_err(|_| error("pdf.thumbnails.child"))?;
     }
     if count == 0 {
         let empty = semio_ui_contract::tree_item(ui::Label(UiText::clipped(empty_label(locale)))).try_id("pdf-thumbnails-empty").map_err(|_| error("pdf.thumbnails.empty-id"))?.try_build().map_err(|_| error("pdf.thumbnails.empty"))?;
-        tree = tree.try_child(empty).map_err(|_| error("pdf.thumbnails.empty"))?;
+        section = section.try_child(empty).map_err(|_| error("pdf.thumbnails.empty"))?;
     }
-    tree.try_build().map_err(|_| error("pdf.thumbnails.root"))
+    let section = section.try_build().map_err(|_| error("pdf.thumbnails.section"))?;
+    semio_ui_contract::tree().try_id("pdf-thumbnails").map_err(|_| error("pdf.thumbnails.root-id"))?.try_child(section).map_err(|_| error("pdf.thumbnails.section"))?.try_build().map_err(|_| error("pdf.thumbnails.root"))
 }
 
 /// 🫙 The row a document without pages shows, so the strip is never an empty tree the shell cannot tell from an unpublished surface.

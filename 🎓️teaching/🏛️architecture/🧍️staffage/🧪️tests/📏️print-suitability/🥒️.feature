@@ -14,6 +14,11 @@ Feature: Print suitability is measured on the inked paper geometry
     When they are measured
     Then no gap violation is reported
 
+  Scenario: An ink gap of exactly zero is a join whatever the rounding
+    Given two rectangles whose centre lines are one pen width apart at 1:20 to 1:500, so the ink between them is exactly zero
+    When they are measured
+    Then no gap violation is reported, and a pair 0.02 mm farther apart reports a gap of 0.02 mm
+
   Scenario: A white sliver between separate shapes
     Given two rectangles whose ink gap is 0.105 mm at 1:500
     When they are measured

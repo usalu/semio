@@ -1,0 +1,16 @@
+{
+  "_comment": "Inputs hand-authored; the expected admission second of the large request is computed by the independent Python oracle (python3 🐍️.py), never by the TypeScript implementation.",
+  "stepSeconds": 5,
+  "horizonSeconds": 1500,
+  "agingSeconds": 300,
+  "totalMegabytes": 16384,
+  "foreignMegabytes": 1500,
+  "memory": {
+    "interactiveReserveBasisPoints": 2500,
+    "interactiveReserveMinimumMegabytes": 2048,
+    "interactiveReserveMaximumMegabytes": 8192,
+    "sessionCapBasisPoints": 4000
+  },
+  "heavy": {"session": "heavy", "heldMegabytes": 4000, "bigMegabytes": 3500},
+  "light": {"session": "light", "requestMegabytes": 500, "runSeconds": 100, "firstArrivalSecond": 5, "arrivalEverySeconds": 10, "initialEndSeconds": [20, 30, 40, 50, 60, 70]}
+}

@@ -269,6 +269,8 @@ pub struct TextProps {
     pub emphasize: Option<bool>,
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub data_attributes: Option<semio_ui_contract::UiFixedMap<semio_ui_contract::UiText>>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub heading_level: Option<u16>,
 }
 }
 semio_framework_value::native_json_codec!{

@@ -7,6 +7,8 @@ use semio_framework_value_native_owned::native_decoding::NativeDecodeContinuatio
 pub use original_context::EvaluationRequestContextInput;
 use original_context::EvaluationRequestContext;
 
+use super::evaluate_request_admission_and_drive::EvaluationRound;
+
 /// 🔎️ Key comparison borrows one stable registry slot under the unchanged caller authority.
 #[derive(Default)]
 struct EvaluationSlotLookup{epoch:Option<u64>,slot:usize,position:usize,selected:Option<usize>,done:bool}
@@ -37,12 +39,12 @@ pub struct EvaluationInvokeCursor {
     parser:Option<JsonGrammarCursor<Value>>,continuation:Option<NativeDecodeContinuation>,
     root:Option<Value>,request:Option<EvaluateRequest>,reply_pending:Option<neural_engine::PendingExtensionEval>,active:Option<Box<dyn ErasedSnapshotRetirement>>,
     field:usize,result_field:usize,result_required:u8,required:u8,decoded:bool,normal_context_posted:bool,normal_progress:RetainedCloneProgress,
-    pub slot:Option<usize>,lookup:Option<EvaluationSlotLookup>,insertion:Option<EvaluationOriginalInsertion>,insertion_registry:Option<neural_engine::SharedRegistry>,round_units:u64,
+    pub slot:Option<usize>,lookup:Option<EvaluationSlotLookup>,insertion:Option<EvaluationOriginalInsertion>,insertion_registry:Option<neural_engine::SharedRegistry>,round:EvaluationRound,
     suppressed_wire:Option<EvaluationWire>,ready_wire:Option<EvaluationWire>,ready_complete:bool,ready_faulted:bool,ready_external:bool,wait_terminal:bool,fault:Option<EvaluationFailure>,close_failure:Option<original_failure::EvaluationCloseFailure>,fault_place:Option<semio_framework_job::OriginalDomainReservation<EvaluationFailure>>,close_failure_place:Option<semio_framework_job::OriginalDomainReservation<original_failure::EvaluationCloseFailure>>,response:Option<EvaluationOutput>,response_failed:bool,context:Option<EvaluationRequestContext>,context_prepared:bool,closing:bool,
 }
 impl EvaluationInvokeCursor {
     pub fn new(operation:u64,generation:u64,request:&[u8])->Self {
-        Self {operation,generation,pointer:request.as_ptr()as usize,length:request.len(),parser:None,continuation:None,root:None,request:None,reply_pending:None,active:None,field:0,result_field:0,result_required:0,required:0,decoded:false,normal_context_posted:false,normal_progress:Default::default(),slot:None,lookup:None,insertion:None,insertion_registry:None,round_units:0,suppressed_wire:None,ready_wire:None,ready_complete:false,ready_faulted:false,ready_external:false,wait_terminal:false,fault:None,close_failure:None,fault_place:None,close_failure_place:None,response:None,response_failed:false,context:None,context_prepared:false,closing:false}
+        Self {operation,generation,pointer:request.as_ptr()as usize,length:request.len(),parser:None,continuation:None,root:None,request:None,reply_pending:None,active:None,field:0,result_field:0,result_required:0,required:0,decoded:false,normal_context_posted:false,normal_progress:Default::default(),slot:None,lookup:None,insertion:None,insertion_registry:None,round:EvaluationRound::new(0),suppressed_wire:None,ready_wire:None,ready_complete:false,ready_faulted:false,ready_external:false,wait_terminal:false,fault:None,close_failure:None,fault_place:None,close_failure_place:None,response:None,response_failed:false,context:None,context_prepared:false,closing:false}
     }
     /// 🧾️ Reports whether this exact last step already posted its original context receipt.
     pub fn normal_context_posted(&self)->bool{self.normal_context_posted}
@@ -215,7 +217,7 @@ impl EvaluationInvokeCursor {
             let policy=grant;let mut jobs=evaluation_jobs().lock().unwrap_or_else(std::sync::PoisonError::into_inner);let lookup=self.lookup.as_mut().unwrap();
             let(existing,physical)=lookup.step(&jobs,registry.owner_identity(),self.request.as_ref().unwrap(),policy)?;let Some(existing)=existing else{return Ok((None,physical))};
             let remaining=evaluation_remaining_grant(policy,physical);if remaining.maximum_items==0{return Ok((None,physical))}
-            let mut original=self.request.take().unwrap();self.round_units=original.round_units;
+            let mut original=self.request.take().unwrap();self.round=EvaluationRound::new(original.round_units);
             if existing.is_none(){
                 if original.resume||original.external_result.is_some(){drop(jobs);let reply=EvaluationReply::refused(original,physical,"evaluation continuation has no retained owner");return Ok((self.retain_reply(reply),physical))}
                 if jobs.closing_owner.is_some()||jobs.jobs.len()>=EVALUATION_JOB_CAPACITY{drop(jobs);let reply=EvaluationReply::refused(original,physical,"evaluation capacity remains owned by pending work");return Ok((self.retain_reply(reply),physical))}
@@ -226,7 +228,8 @@ impl EvaluationInvokeCursor {
         }
         if let Some(slot)=self.slot{
             let policy=grant;let mut jobs=evaluation_jobs().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-            let reply=evaluation_drive_original(registry,&mut jobs,slot,policy,self.round_units,empty,None,cx);let receipt=reply.retirement_progress;self.normal_context_posted=reply.retirement_posted;drop(jobs);return Ok((self.retain_reply(reply),receipt));
+            let round=(!self.wait_terminal).then_some(&mut self.round);
+            let reply=evaluation_drive_original(registry,&mut jobs,slot,policy,round,empty,None,cx);let receipt=reply.retirement_progress;self.normal_context_posted=reply.retirement_posted;drop(jobs);return Ok((self.retain_reply(reply),receipt));
         }
         if self.root.is_some(){let result=self.decode_field(grant);return match result{Ok(receipt)=>Ok((None,receipt)),Err(fault)=>{self.fail(fault);Ok((None,RetainedCloneProgress{copied_items:1,..empty}))}};}
         if self.parser.is_none(){let source=JsonSourceCursor::<_,Value>::new(request,JsonMemberPolicy::Reject,JsonReadLimits{maximum_bytes:request.len()as u64,maximum_allocation_bytes:grant.maximum_capacity_bytes,maximum_depth:grant.maximum_depth,maximum_items:request.len()as u64})?;self.parser=Some(source.into_grammar().1);return Ok((None,RetainedCloneProgress{copied_items:1,..empty}));}

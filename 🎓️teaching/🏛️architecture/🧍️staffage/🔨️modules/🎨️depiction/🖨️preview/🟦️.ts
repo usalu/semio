@@ -79,13 +79,13 @@ export function printSized(scene: DrawingScene): string {
   return `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" version="1.1" width="${num(width)}mm" height="${num(height)}mm" viewBox="0 0 ${num(width)} ${num(height)}"><rect width="${num(width)}" height="${num(height)}" fill="#ffffff"/><svg x="0" y="0" width="${num(scene.widthMm)}" height="${num(scene.heightMm)}" viewBox="0 0 ${num(scene.widthMm)} ${num(scene.heightMm)}">${svgMarkup(scene)}</svg>${bar}</svg>\n`;
 }
 
-/** ✍️ Breaks a caption into lines no wider than a cell, measured with the Helvetica metrics of the drawings; a single word wider than the cell stays on its own line. */
+/** ✍️ Breaks a caption into lines no wider than a cell, measured with the Helvetica metrics of the sheet (its `FONT`); a single word wider than the cell stays on its own line. */
 export function captionLines(caption: string, widthMm: number, sizeMm = CAPTION_MM): string[] {
   const lines: string[] = [];
   let line = "";
   for (const word of caption.split(/\s+/u)) {
     const next = line === "" ? word : `${line} ${word}`;
-    if (line !== "" && textWidthMm(next, sizeMm) > widthMm) {
+    if (line !== "" && textWidthMm(next, sizeMm, false, "helvetica") > widthMm) {
       lines.push(line);
       line = word;
     } else line = next;

@@ -1,15 +1,15 @@
-import{readIssuedScriptProcessEnvelopeV1}from"@semio-tech/process/routing";
+import{readIssuedScriptProcessEnvelopeV1}from"../../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{readNativeCallerAuthorityV1}from"../../../../../../../📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 import{createHash,randomInt}from"node:crypto";
 import{AsyncLocalStorage}from"node:async_hooks";
 import{join}from"node:path";
-import type{ScriptInvocation}from"@semio-tech/process/routing";
-import{checkResourceLeaseControl,type ResourceLeaseControl}from"@semio-tech/process/leases";
-import{observeNativePlatformProtectedInitializationV1,withNativePlatformProtectedMaintenanceParentV1,withNativePlatformProtectedMaintenanceReadV1,readNativePlatformProtectedMaintenanceJournalPresenceV1,withNativePlatformProtectedFundingReplacementV1}from"@semio-tech/process/artifacts/native-build/storage/publication/platform";
-import{nativeImageRootV1,type NativeProtectedMaintenanceParentV1}from"@semio-tech/process/artifacts/native-build/storage/platform/contract";
-import type{NativeStorageAllocationV1,NativeStoragePolicyV1,NativeStorageStateV1}from"@semio-tech/process/artifacts/native-build/storage";
+import type{ScriptInvocation}from"../../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import{observeNativePlatformProtectedInitializationV1,withNativePlatformProtectedMaintenanceParentV1,withNativePlatformProtectedMaintenanceReadV1,readNativePlatformProtectedMaintenanceJournalPresenceV1,withNativePlatformProtectedFundingReplacementV1}from"../../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/📤️publication/🌐️platform/🟦️.ts";
+import{nativeImageRootV1,type NativeProtectedMaintenanceParentV1}from"../../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
+import type{NativeStorageAllocationV1,NativeStoragePolicyV1,NativeStorageStateV1}from"../../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
 import{readNativeImageRetirementFileV1}from"../../../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📄️retirement-file/🟦️.ts";
-import{withArtifactRelativeDirectoryV1}from"@semio-tech/framework-filesystem/observation/descriptor";
+import{withArtifactRelativeDirectoryV1}from"../../../../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
 import{spawnSync}from"node:child_process";
 import{readdirSync,readFileSync,rmSync}from"node:fs";
 import{leaseElapsedSecondsV1}from"../../../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/📈️standing/🤝️yield/🟦️.ts";
@@ -49,7 +49,7 @@ export function processAncestorsV1(parentOf:(pid:number)=>number|undefined,start
   return Object.freeze(found);
 }
 const parentOfProcessV1=(pid:number):number|undefined=>{
-  const run=process.platform==="win32"?spawnSync("powershell",["-NoProfile","-Command","(Get-CimInstance Win32_Process -Filter \"ProcessId="+pid+"\").ParentProcessId"],{encoding:"utf8"}):spawnSync("ps",["-o","ppid=","-p",String(pid)],{encoding:"utf8",env:{...process.env,LC_ALL:"C"}}),value=Number.parseInt(run.stdout,10);
+  const run=process.platform==="win32"?spawnSync("powershell",["-NoProfile","-Command","(Get-CimInstance Win32_Process -Filter \"ProcessId="+pid+"\").ParentProcessId"],{windowsHide:true,encoding:"utf8"}):spawnSync("ps",["-o","ppid=","-p",String(pid)],{encoding:"utf8",env:{...process.env,LC_ALL:"C"}}),value=Number.parseInt(run.stdout,10);
   return run.status===0&&Number.isSafeInteger(value)?value:undefined;
 };
 /** 🧬️ Whether a live pid is not the process that registered the hold: the operating system started it more than the tolerance after the registered start, so the pid was reused (Windows reuses pids within hours); an unknown start never counts as reused. */
@@ -62,7 +62,7 @@ export function dependencyStoreWaitKeyV1(holder?:DependencyStoreHolderV1):"depen
 export function dependencyStoreWaitLineV1(seconds:number,limit:number,holder?:DependencyStoreHolderV1):Readonly<{key:ReturnType<typeof dependencyStoreWaitKeyV1>;values:Readonly<Record<string,string|number>>}>{const key=dependencyStoreWaitKeyV1(holder);return holder===undefined?{key,values:{seconds,limit}}:{key,values:{seconds,limit,...holderValuesV1(holder),...key==="dependency-store.waiting-for-silent-holder"?{silent:Math.round((holder.silentMs??0)/1000)}:{}}};}
 const osStartedAtMsOfProcessV1=(pid:number):number|undefined=>{
   if(!Number.isSafeInteger(pid)||pid<1)return undefined;
-  if(process.platform==="win32"){const run=spawnSync("powershell",["-NoProfile","-Command","[DateTimeOffset]::new((Get-Process -Id "+pid+" -ErrorAction Stop).StartTime).ToUnixTimeMilliseconds()"],{encoding:"utf8",timeout:15000}),value=Number.parseInt(run.stdout,10);return run.status===0&&Number.isSafeInteger(value)?value:undefined;}
+  if(process.platform==="win32"){const run=spawnSync("powershell",["-NoProfile","-Command","[DateTimeOffset]::new((Get-Process -Id "+pid+" -ErrorAction Stop).StartTime).ToUnixTimeMilliseconds()"],{windowsHide:true,encoding:"utf8",timeout:15000}),value=Number.parseInt(run.stdout,10);return run.status===0&&Number.isSafeInteger(value)?value:undefined;}
   const run=spawnSync("ps",["-o","etime=","-p",String(pid)],{encoding:"utf8",env:{...process.env,LC_ALL:"C"},timeout:15000}),seconds=leaseElapsedSecondsV1(run.stdout);return run.status===0&&seconds!==undefined?Date.now()-seconds*1000:undefined;
 };
 const processAliveV1=(pid:number):boolean=>{try{process.kill(pid,0);return true;}catch(error){return (error as NodeJS.ErrnoException).code==="EPERM";}};
@@ -168,7 +168,7 @@ export function reconcileRepositoryDependencyBootstrapFundingV1(invocation:Scrip
  const observed=await observeFundingV1(parent,actual,policy);if(observed.presence!=="present")throw Error("Initial empty funding must use the existing canonical allocator");const rows=observed.state.allocations,marker=observed.marker,exact=(row:NativeStorageAllocationV1|undefined)=>!!marker&&!!row&&row.id===marker.allocation&&row.owner===marker.owner&&row.bytes===marker.bytes&&row.kind==="artifact-publication"&&row.phase==="committed"&&!row.child&&!row.namespace;
  if(rows.some(row=>row.owner!==owner||row.kind!=="artifact-publication"||row.child||row.namespace)||rows.length<1||rows.length>2)throw Error("Exact bounded Dependencies funding association required");const matching=rows.find(row=>exact(row));if(!observed.markerIntent&&rows.length===1&&matching&&matching.bytes===policy.maximumArtifactBytes)return;
  await withNativePlatformProtectedFundingReplacementV1(parent,actual,control,policy,async issuer=>{
- let pending=readRepositoryDependencyMarkerIntentFileV1(policy.root,()=>checkResourceLeaseControl(actual)),contextSha256=pending?.baseline?.contextSha256??observed.markerSha256;if(!contextSha256)throw Error("Exact original Dependencies marker context required");let claim:import("@semio-tech/process/artifacts/native-build/storage").NativeStorageFundingReplacementV1,settled:NativeStorageAllocationV1;const associated=rows.find(row=>row.funding?.phase==="reserved")??rows.find(row=>!!row.funding&&row.id!==marker?.allocation)??rows.find(row=>!!row.funding);
+ let pending=readRepositoryDependencyMarkerIntentFileV1(policy.root,()=>checkResourceLeaseControl(actual)),contextSha256=pending?.baseline?.contextSha256??observed.markerSha256;if(!contextSha256)throw Error("Exact original Dependencies marker context required");let claim:import("../../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts").NativeStorageFundingReplacementV1,settled:NativeStorageAllocationV1;const associated=rows.find(row=>row.funding?.phase==="reserved")??rows.find(row=>!!row.funding&&row.id!==marker?.allocation)??rows.find(row=>!!row.funding);
  if(associated){const funding=associated.funding!,predecessor=marker&&funding.predecessor.id===marker.allocation&&funding.predecessor.owner===marker.owner&&funding.predecessor.bytes===marker.bytes;if(funding.contextSha256!==contextSha256||funding.targetBytes!==policy.maximumArtifactBytes||(pending?(pending.baseline?associated.id!==pending.baseline.allocation.id:!predecessor)||funding.phase!=="settled"||rows.length!==1:(!predecessor||funding.phase==="reserved"&&(!matching||rows.length!==2)||funding.phase==="settled"&&rows.length!==1)))throw Error("Exact interrupted Dependencies funding predecessor required");claim=await issuer.recover({version:1,expectedSequence:observed.state.sequence,id:associated.id,owner,contextSha256});settled=funding.phase==="reserved"?await issuer.settle(claim):issuer.read(claim).allocation;}
  else{if(pending||rows.length!==1||!matching||matching.bytes>=policy.maximumArtifactBytes)throw Error("Actual smaller committed Dependencies funding required");claim=await issuer.reserve({version:1,expectedSequence:observed.state.sequence,predecessor:{id:matching.id,owner:matching.owner,kind:"artifact-publication",phase:"committed",bytes:matching.bytes},contextSha256});settled=await issuer.settle(claim);}
  if(settled.kind!=="artifact-publication"||settled.phase!=="committed"||settled.owner!==owner||settled.bytes!==policy.maximumArtifactBytes)throw Error("Actual issued current Dependencies funding required");const currentFunding=issuer.read(claim),bytes=repositoryDependencyFundingMarkerBytesV1(settled),sha256=createHash("sha256").update(bytes).digest("hex");const extension=defineNativeFundingMetadataRoleV1(control,{version:1,id:"repository-dependencies-funding-marker",owner,targetName:"dependencies.json",intentName:"funding.json",preparedPurpose:"publish-current-dependency-funding-marker",maximumTargetBytes:2048,policy},repositoryDependencyFundingMarkerBytesV1),metadata=issuer.metadataInfo(extension,claim);if(pending&&!pending.intent){const retired=await issuer.retireUnpreparedMetadata(extension,claim);if(!retired.intentRemoved)await removeRepositoryDependencyMarkerIntentFileV1(policy.root,pending,()=>checkResourceLeaseControl(actual));pending=undefined;}let intentFile:RepositoryDependencyMarkerIntentFileV1|undefined=pending;
@@ -181,6 +181,6 @@ export function reconcileRepositoryDependencyBootstrapFundingV1(invocation:Scrip
 });}
 import{readRepositoryDependencyMarkerIntentFileV1,writeRepositoryDependencyMarkerBaselineFileV1,writeRepositoryDependencyMarkerIntentFileV1,removeRepositoryDependencyMarkerIntentFileV1,type RepositoryDependencyMarkerIntentFileV1}from"./📋️intent/📜️journal/🟦️.ts";
 import{repositoryDependencyFundingMarkerBytesV1,requireRepositoryDependencyMarkerPublicationBindingV1}from"./📋️intent/🟦️.ts";
-import{artifactRelativeFilePublicationPreparedDataV1,artifactRelativeFilePublicationStageNameV1,type ArtifactReadFileIdentityV1}from"@semio-tech/framework-filesystem/observation/descriptor";
+import{artifactRelativeFilePublicationPreparedDataV1,artifactRelativeFilePublicationStageNameV1,type ArtifactReadFileIdentityV1}from"../../../../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
 
-import{defineNativeFundingMetadataRoleV1}from"@semio-tech/process/artifacts/native-build/storage";
+import{defineNativeFundingMetadataRoleV1}from"../../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";

@@ -1,0 +1,8 @@
+{
+ "version": 1,
+ "area": "remote-execution-worker",
+ "cases": [
+  {"name": "partition directory absent", "partitionDirectory": false, "darwin": "detached", "other": "home"},
+  {"name": "partition directory without attached image", "partitionDirectory": true, "darwin": "detached", "other": "home"}
+ ]
+}

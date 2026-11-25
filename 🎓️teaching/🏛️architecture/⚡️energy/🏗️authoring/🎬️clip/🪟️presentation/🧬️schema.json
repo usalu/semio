@@ -9,6 +9,7 @@
     "locales",
     "identity",
     "chrome",
+    "canvas",
     "focus",
     "sourceCrop",
     "timing",
@@ -59,8 +60,7 @@
       "required": [
         "navbarHeight",
         "footerHeight",
-        "titleHeight",
-        "inset"
+        "titleHeight"
       ],
       "properties": {
         "navbarHeight": {
@@ -71,18 +71,19 @@
         },
         "titleHeight": {
           "const": 24
-        },
-        "inset": {
-          "const": 3.2
         }
       }
+    },
+    "canvas": {
+      "$ref": "#/$defs/rect"
     },
     "focus": {
       "type": "object",
       "additionalProperties": false,
       "required": [
         "rect",
-        "viewport"
+        "viewport",
+        "safeClearance"
       ],
       "properties": {
         "rect": {
@@ -90,6 +91,30 @@
         },
         "viewport": {
           "$ref": "#/$defs/rect"
+        },
+        "safeClearance": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "top",
+            "right",
+            "bottom",
+            "left"
+          ],
+          "properties": {
+            "top": {
+              "const": 24
+            },
+            "right": {
+              "const": 0
+            },
+            "bottom": {
+              "const": 0
+            },
+            "left": {
+              "const": 0
+            }
+          }
         }
       }
     },

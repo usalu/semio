@@ -33,13 +33,19 @@ pub fn handle(_payload: &FocusEntity, _doc: &ArtifactView<'_, Fem3dSnapshot>, _c
 /// 🎥️ The orbit the addressed World3d window is currently drawn with — both window kinds keep it
 /// in their own persisted window config.
 pub fn addressed_camera(cfg: &ConfigView<'_, NoConfig>, view: &semio_plugin::ViewModel) -> Result<Viewport3dOrbit, Fault> {
-    let id = view.window_id.as_deref().ok_or_else(|| Fault::from("fem3d.focus-entity.window-required"))?;
-    let kind = view.window_instances.iter().find(|window| window.id == id).map(|window| window.window_kind_id.as_str()).ok_or_else(|| Fault::from("fem3d.focus-entity.window-stale"))?;
+    let (_, kind) = addressed_window(view)?;
     match kind {
         model::FEM3D_WINDOW_MODEL => Ok(model::config::current(cfg).camera),
         results::FEM3D_WINDOW_RESULTS => Ok(results::config::current(cfg).camera),
         _ => Err(Fault::from("fem3d.focus-entity.window-kind")),
     }
+}
+
+/// 🪟️ The window a focus addresses and its kind: the command's own window, else the focused pane, because a panel button carries no window of its own.
+fn addressed_window(view: &semio_plugin::ViewModel) -> Result<(&str, &str), Fault> {
+    let id = view.window_id.as_deref().or(view.focused_window_id.as_deref()).ok_or_else(|| Fault::from("fem3d.focus-entity.window-required"))?;
+    let kind = view.window_instances.iter().find(|window| window.id == id).map(|window| window.window_kind_id.as_str()).ok_or_else(|| Fault::from("fem3d.focus-entity.window-stale"))?;
+    Ok((id, kind))
 }
 
 /// 🎯️ Re-aims the orbit at the entity — its own point for a node, the midpoint for a member, the
@@ -48,8 +54,9 @@ pub fn addressed_camera(cfg: &ConfigView<'_, NoConfig>, view: &semio_plugin::Vie
 /// window-config path.
 pub fn handle_window(payload: &FocusEntity, doc: &ArtifactView<'_, Fem3dSnapshot>, cfg: &ConfigView<'_, NoConfig>, view: &semio_plugin::ViewModel) -> Result<Emit<Fem3dMutation, NoConfigMutation>, Fault> {
     let camera = addressed_camera(cfg, view)?;
+    let (id, _) = addressed_window(view)?;
     let target = fem3d_entity_point(doc.snapshot, &payload.id).ok_or_else(|| Fault::from("fem3d.focus-entity.unknown-entity"))?;
-    set_camera::handle_window(&SetCamera { camera: focused_orbit(&camera, target) }, cfg, view)
+    set_camera::camera_in_window(&SetCamera { camera: focused_orbit(&camera, target) }, cfg, view, id)
 }
 
 /// 🎯️ The orbit `camera` becomes when it is re-aimed at `target`: the eye keeps its offset from the

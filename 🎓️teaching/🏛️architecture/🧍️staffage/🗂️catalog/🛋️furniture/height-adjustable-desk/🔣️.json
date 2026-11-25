@@ -13,12 +13,48 @@
       "de": "Ein Sitz-Steh-Schreibtisch mit zwei Motoren: zwei gepresste T-Füße tragen je eine dreiteilige Teleskopsäule (zwei Schubstufen, links und rechts identische Ketten) mit dem Motorgehäuse am Kopf, Seitenzargen und ein Querträger unter einer laminierten Platte 1,6 x 0,8 m; ein 27-Zoll-Monitor auf seinem Ständer und ein geschlossener Laptop stehen darauf. Vorderansicht, Länge entlang x."
     },
     "tags": [
-      "desk",
-      "office",
-      "height-adjustable",
-      "prismatic",
-      "steel",
-      "particleboard"
+      {
+        "id": "desk",
+        "title": {
+          "en": "desk",
+          "de": "Schreibtisch"
+        }
+      },
+      {
+        "id": "office",
+        "title": {
+          "en": "office",
+          "de": "Büro"
+        }
+      },
+      {
+        "id": "height-adjustable",
+        "title": {
+          "en": "height adjustable",
+          "de": "höhenverstellbar"
+        }
+      },
+      {
+        "id": "prismatic",
+        "title": {
+          "en": "prismatic",
+          "de": "prismatisch"
+        }
+      },
+      {
+        "id": "steel",
+        "title": {
+          "en": "steel",
+          "de": "Stahl"
+        }
+      },
+      {
+        "id": "particleboard",
+        "title": {
+          "en": "particleboard",
+          "de": "Spanplatte"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage content (CV-FO)",

@@ -9,7 +9,7 @@ import buildPolicy from "../../🔣️policy.json" with {type:"json"};
 import catalog from "../../⚙️operations/🔣️catalog.json" with {type:"json"};
 import {leasePriorityClassV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {BUILD_HOST_CAPACITY_POLICY_V1,buildCapacityAskV1,buildCapacityDeferredV1,createCapacityControlV1,grantedBuildArgumentsV1,withBuildCapacityV1} from "../🟦️.ts";
-import {sizeHostRequestV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🟦️.ts";
+import {newHostCapacityIdV1,sizeHostRequestV1,withHostCapacityV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🟦️.ts";
 import {runCapacityCommandV1} from "../⌨️command/🟦️.ts";
 import fixture from "./🧫️fixtures/🔣️.json";
 import toolRegistry from "../../../../../../../🔨️modules/🏃️process/🧰️tools/🔣️.json";
@@ -112,9 +112,9 @@ test("repo capacity status prints one line per fact in English and German and a 
   expect(await runCapacityCommandV1(["status","--json"],context({LANG:"en_US.UTF-8"},line=>json.push(line)))).toBe(0);
  },{directory,policy:fast,strip,sample:async()=>({host:host(),swappedOutMegabytes:0}),pid:process.pid});
  expect(english[0]).toMatch(/^\[capacity\] \d+ MB available of \d+ MB \(floor \d+ MB, -?\d+ MB spare\), pressure \w+, swap \S+ MB, load \S+, open files \S+, attached images \S+; 1 running, 0 waiting$/u);
- expect(english[1]).toMatch(/^\[capacity\]   running \S+ run: 2 job\(s\), \d+ MB reserved, \S+ MB observed, pid \d+, since \d+s$/u);
+ expect(english.join("\n")).toMatch(/^\[capacity\]   running \S+ run: 2 job\(s\), \d+ MB reserved, \S+ MB observed, pid \d+, since \d+s$/mu);
  expect(german[0]).toMatch(/verfügbar von .* laufen, 0 warten$/u);
- expect(german[1]).toContain("läuft");
+ expect(german.join("\n")).toMatch(/^\[capacity\]   läuft \S+ run:/mu);
  expect(JSON.parse(json.join("\n"))).toMatchObject({grants:[{operation:"run"}],waiters:[]});
 });
 
@@ -125,8 +125,8 @@ test("repo capacity status marks a grant that is lent back in English and German
   const file=join(directory,"grants",readdirSync(join(directory,"grants"))[0]!);writeFileSync(file,JSON.stringify({...JSON.parse(readFileSync(file,"utf8")),lentSinceMs:Date.now()}));
   await runCapacityCommandV1(["status"],context({LANG:"en_US.UTF-8"},line=>english.push(line)));await runCapacityCommandV1(["status"],context({LANG:"de_DE.UTF-8"},line=>german.push(line)));await runCapacityCommandV1(["status","--json"],context({LANG:"en_US.UTF-8"},line=>json.push(line)));
  },{directory,policy:fast,strip,sample,pid:process.pid});
- expect(english[1]).toMatch(/^\[capacity\]   lent \S+ run: its process only waits in a queue, so the \d+ MB reserved and \d+ core\(s\) count for nobody/u);
- expect(german[1]).toContain("verliehen");expect(JSON.parse(json.join("\n")).grants[0].lentSinceMs).toBeGreaterThan(0);
+ expect(english.join("\n")).toMatch(/^\[capacity\]   lent \S+ run: its process only waits in a queue, so the \d+ MB reserved and \d+ core\(s\) count for nobody/mu);
+ expect(german.join("\n")).toMatch(/^\[capacity\]   verliehen \S+ run:/mu);expect(JSON.parse(json.join("\n")).grants[0].lentSinceMs).toBeGreaterThan(0);
 });
 
 test("repo capacity run admits an arbitrary command, hands it the grant and returns its exit code",async()=>{
@@ -139,6 +139,47 @@ test("repo capacity run admits an arbitrary command, hands it the grant and retu
  await expect(runCapacityCommandV1(["run","--memory=0","--","true"],context)).rejects.toThrow("positive integer");
  await expect(runCapacityCommandV1(["run","--operation=nonsense","--","true"],context)).rejects.toThrow("Unknown capacity operation");
  await expect(runCapacityCommandV1(["frobnicate"],context)).rejects.toThrow("Expected repo capacity status|run");
+});
+
+const capacityProbe=[process.execPath,"-e",`
+ const [directory,memory,cpu,inherited]=process.argv.slice(1),id=process.env.SEMIO_HOST_CAPACITY_GRANT;
+ const fs=require("node:fs"),path=require("node:path"),grant=JSON.parse(fs.readFileSync(path.join(directory,"grants",id+".json"),"utf8"));
+ fs.writeFileSync(path.join(directory,"child"),id);
+ process.exit(grant.reservedMegabytes===Number(memory)&&grant.cpu===Number(cpu)&&(!inherited||inherited===id)?7:41);
+`];
+
+test("an explicit capacity command waits for its entire reservation while catalogue estimates can shrink",async()=>{
+ const data=fixture.capacityCommand,policy=readHostCapacityPolicyV1({...fast,wait:{...fast.wait,bypassMilliseconds:0}});
+ for(const row of data.fresh){
+  let samples=0;
+  const directory=fresh(),context={directory,policy,environment:{LANG:"en_US.UTF-8"},write:()=>undefined,
+   sample:async()=>({host:host({availableMegabytes:++samples>=data.recoverySample?data.recoveredAvailable:data.lowAvailable}),swappedOutMegabytes:0})};
+  expect(hostFloorMegabytesV1(policy,host())).toBe(data.floor);
+  expect(await runCapacityCommandV1(["run",...row.flags,"--",...capacityProbe,directory,String(row.memory),String(row.cpu)],context),row.flags.join(" ")).toBe(7);
+  expect(samples>=data.recoverySample,row.flags.join(" ")).toBe(row.waitsForRecovery);
+  expect(readdirSync(join(directory,"grants"))).toEqual([]);
+ }
+});
+
+test("an explicit capacity command may reuse only a sufficient active inherited reservation",async()=>{
+ for(const row of fixture.capacityCommand.inherited){
+  const directory=fresh(),environment={LANG:"en_US.UTF-8",SEMIO_HOST_CAPACITY_DIRECTORY:directory},sample=async()=>({host:host(),swappedOutMegabytes:0});
+  const id=newHostCapacityIdV1(),request={...sizeHostRequestV1(fast,{id,operation:"command"})!,fixedMegabytes:row.memory,cpuPerJob:row.cpu};
+  const control=createCapacityControlV1();
+  try{
+   await withHostCapacityV1({directory,environment,sample,request,control:control.control,policy:fast,write:()=>undefined},async outer=>{
+    const file=join(directory,"grants",outer.id+".json"),grant=JSON.parse(readFileSync(file,"utf8"));
+    if(row.condition==="quiet")writeFileSync(file,JSON.stringify({...grant,quiet:true}));
+    if(row.condition==="lent")writeFileSync(file,JSON.stringify({...grant,lentSinceMs:Date.now()}));
+    const nested={...environment,...outer.environment,...row.condition==="disabled"?{SEMIO_HOST_CAPACITY:"off"}:{}},
+     run=runCapacityCommandV1(["run","--memory=2048","--cpu=4","--",...capacityProbe,directory,String(row.memory),String(row.cpu),outer.id],{directory,environment:nested,sample,policy:fast,write:()=>undefined});
+    if(row.starts)expect(await run).toBe(7);
+    else await expect(run).rejects.toThrow("requires a live reservation");
+    expect(existsSync(join(directory,"child")),JSON.stringify(row)).toBe(row.starts);
+    expect(readdirSync(join(directory,"grants"))).toEqual([outer.id+".json"]);
+   });
+  }finally{control.dispose();}
+ }
 });
 
 test("Measured demand closes the loop: runs report their peak, the class learns it, and the next request of that class reserves its learned share while the build tool envelope stays at the default",async()=>{

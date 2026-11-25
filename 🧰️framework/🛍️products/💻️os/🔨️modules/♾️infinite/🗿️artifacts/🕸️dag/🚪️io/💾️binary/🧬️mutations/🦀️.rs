@@ -11,3 +11,4 @@ impl crate::os_spr::OpBinary for DagMutation {
 }
 
 dsl::original_ordinal_operation_receiving!(DagMutation);
+dsl::artifact_persisted_binary_operation!(DagMutation);

@@ -13,20 +13,104 @@
    "de": "Ein ausgebautes 24-kW-Gas-Brennwert-Kombiwandgerät von 440 x 700 x 350 mm, wie eine Bauteilbörse es anbietet: entleert, seine fünf Anschlüsse abgeschnitten und verschlossen, oben noch der konzentrische Abgasadapter 60/100 und die von der alten Wand abgenommene Schiene in ihrer Tasche, auf zwei Kanthölzern auf einer Europalette unter zwei Ratschengurten. Es wird am Krangehänge an seiner Schiene angehoben und schwingt 30 Grad unter den Haken, und an einer neuen Wand wieder eingebaut brennt es mit 19,2 kW mit Abgasfahne und tropfendem Kondensat."
   },
   "tags": [
-   "component",
-   "reclaimed",
-   "used",
-   "hvac",
-   "heating",
-   "plumbing",
-   "gas-boiler",
-   "condensing-boiler",
-   "combi-boiler",
-   "wall-hung",
-   "steel",
-   "pallet",
-   "ratchet-strap",
-   "flue"
+   {
+    "id": "component",
+    "title": {
+     "en": "component",
+     "de": "Bauteil"
+    }
+   },
+   {
+    "id": "reclaimed",
+    "title": {
+     "en": "reclaimed",
+     "de": "wiederverwendet"
+    }
+   },
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "hvac",
+    "title": {
+     "en": "HVAC",
+     "de": "HLK"
+    }
+   },
+   {
+    "id": "heating",
+    "title": {
+     "en": "heating",
+     "de": "Heizung"
+    }
+   },
+   {
+    "id": "plumbing",
+    "title": {
+     "en": "plumbing",
+     "de": "Sanitär"
+    }
+   },
+   {
+    "id": "gas-boiler",
+    "title": {
+     "en": "gas boiler",
+     "de": "Gaskessel"
+    }
+   },
+   {
+    "id": "condensing-boiler",
+    "title": {
+     "en": "condensing boiler",
+     "de": "Brennwertkessel"
+    }
+   },
+   {
+    "id": "combi-boiler",
+    "title": {
+     "en": "combi boiler",
+     "de": "Kombikessel"
+    }
+   },
+   {
+    "id": "wall-hung",
+    "title": {
+     "en": "wall hung",
+     "de": "wandhängend"
+    }
+   },
+   {
+    "id": "steel",
+    "title": {
+     "en": "steel",
+     "de": "Stahl"
+    }
+   },
+   {
+    "id": "pallet",
+    "title": {
+     "en": "pallet",
+     "de": "Palette"
+    }
+   },
+   {
+    "id": "ratchet-strap",
+    "title": {
+     "en": "ratchet strap",
+     "de": "Ratschengurt"
+    }
+   },
+   {
+    "id": "flue",
+    "title": {
+     "en": "flue",
+     "de": "Abgasrohr"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage component authors (used HVAC wave, author 02)",
@@ -127,7 +211,7 @@
     "emissivity": 0.9,
     "solarAbsorptivity": 0.1,
     "densityKgM3": 2500,
-    "conductivityWmK": 1.0,
+    "conductivityWmK": 1,
     "specificHeatJKgK": 840,
     "source": "literature",
     "reference": "iso-10456-2007"
@@ -255,8 +339,8 @@
     "densityKgM3": 7850,
     "conductivityWmK": 50,
     "specificHeatJKgK": 460,
-    "elasticModulusPa": 210000000000.0,
-    "strengthPa": 235000000.0,
+    "elasticModulusPa": 210000000000,
+    "strengthPa": 235000000,
     "source": "literature",
     "reference": "incropera-2018"
    },
@@ -271,8 +355,8 @@
     "densityKgM3": 7850,
     "conductivityWmK": 50,
     "specificHeatJKgK": 460,
-    "elasticModulusPa": 210000000000.0,
-    "strengthPa": 355000000.0,
+    "elasticModulusPa": 210000000000,
+    "strengthPa": 355000000,
     "source": "literature",
     "reference": "incropera-2018"
    },
@@ -287,8 +371,8 @@
     "densityKgM3": 7900,
     "conductivityWmK": 15,
     "specificHeatJKgK": 500,
-    "elasticModulusPa": 193000000000.0,
-    "strengthPa": 205000000.0,
+    "elasticModulusPa": 193000000000,
+    "strengthPa": 205000000,
     "source": "literature",
     "reference": "incropera-2018"
    },
@@ -317,8 +401,8 @@
     "densityKgM3": 550,
     "conductivityWmK": 0.13,
     "specificHeatJKgK": 1600,
-    "elasticModulusPa": 11000000000.0,
-    "strengthPa": 24000000.0,
+    "elasticModulusPa": 11000000000,
+    "strengthPa": 24000000,
     "source": "literature",
     "reference": "en-13698-1"
    },
@@ -333,8 +417,8 @@
     "densityKgM3": 450,
     "conductivityWmK": 0.12,
     "specificHeatJKgK": 1600,
-    "elasticModulusPa": 11000000000.0,
-    "strengthPa": 24000000.0,
+    "elasticModulusPa": 11000000000,
+    "strengthPa": 24000000,
     "source": "literature",
     "reference": "en-338-2016"
    },
@@ -349,8 +433,8 @@
     "densityKgM3": 1380,
     "conductivityWmK": 0.15,
     "specificHeatJKgK": 1200,
-    "elasticModulusPa": 8000000000.0,
-    "strengthPa": 400000000.0,
+    "elasticModulusPa": 8000000000,
+    "strengthPa": 400000000,
     "source": "literature",
     "reference": "en-12195-2"
    }
@@ -367,8 +451,8 @@
       "de": "Europalette mit den zwei Kanthölzern und den vier Zurrhaken (bleibt am Boden)"
      },
      "x": -0.6,
-     "y": 0.0,
-     "angleDeg": 0.0,
+     "y": 0,
+     "angleDeg": 0,
      "lengthM": 1.2,
      "joint": {
       "type": "fixed"
@@ -391,7 +475,7 @@
      },
      "x": 0.417,
      "y": 0.904,
-     "angleDeg": 0.0,
+     "angleDeg": 0,
      "lengthM": 0.05,
      "joint": {
       "type": "prismatic",
@@ -407,9 +491,9 @@
       "en": "Boiler casing with heat exchanger, adapter and capped connections, pivoting about the hanging point of its bracket",
       "de": "Kesselgehäuse mit Wärmeübertrager, Adapter und verschlossenen Anschlüssen, drehbar um den Aufhängepunkt seiner Wandschiene"
      },
-     "x": 0.0,
-     "y": 0.0,
-     "angleDeg": 0.0,
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
      "lengthM": 0.358,
      "joint": {
       "type": "revolute",
@@ -417,7 +501,7 @@
       "maxDeg": 5
      },
      "mass": {
-      "kg": 36.0,
+      "kg": 36,
       "comX": 0.19,
       "comY": -0.33,
       "distribution": "point",
@@ -432,16 +516,16 @@
       "en": "Wall-hanging rail taken off the old wall, hooked into the hanging pocket",
       "de": "Von der alten Wand abgenommene Aufhängeschiene, in die Aufhängetasche eingehängt"
      },
-     "x": 0.0,
-     "y": 0.0,
-     "angleDeg": 0.0,
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
      "lengthM": 0.016,
      "joint": {
       "type": "fixed"
      },
      "mass": {
       "kg": 0.55,
-      "comX": 0.0,
+      "comX": 0,
       "comY": -0.0225,
       "distribution": "point",
       "source": "literature",
@@ -457,7 +541,7 @@
      },
      "x": 0.253,
      "y": -0.75,
-     "angleDeg": 0.0,
+     "angleDeg": 0,
      "lengthM": 0.01,
      "joint": {
       "type": "prismatic",
@@ -485,7 +569,7 @@
      "mass": {
       "kg": 0.0178,
       "comX": 0.074,
-      "comY": 0.0,
+      "comY": 0,
       "distribution": "uniform",
       "source": "literature",
       "reference": "en-12195-2"
@@ -499,8 +583,8 @@
       "de": "Hintere Schenkel der zwei Ratschengurte"
      },
      "x": 0.148,
-     "y": 0.0,
-     "angleDeg": 0.0,
+     "y": 0,
+     "angleDeg": 0,
      "lengthM": 0.73261,
      "joint": {
       "type": "revolute",
@@ -510,7 +594,7 @@
      "mass": {
       "kg": 0.0879,
       "comX": 0.3663,
-      "comY": 0.0,
+      "comY": 0,
       "distribution": "uniform",
       "source": "literature",
       "reference": "en-12195-2"
@@ -524,7 +608,7 @@
       "de": "Hintere Hälften der Gurte über der Gehäusedecke"
      },
      "x": 0.73261,
-     "y": 0.0,
+     "y": 0,
      "angleDeg": -61.5142,
      "lengthM": 0.185,
      "joint": {
@@ -535,7 +619,7 @@
      "mass": {
       "kg": 0.0222,
       "comX": 0.0925,
-      "comY": 0.0,
+      "comY": 0,
       "distribution": "uniform",
       "source": "literature",
       "reference": "en-12195-2"
@@ -560,7 +644,7 @@
      "mass": {
       "kg": 0.0178,
       "comX": 0.074,
-      "comY": 0.0,
+      "comY": 0,
       "distribution": "uniform",
       "source": "literature",
       "reference": "en-12195-2"
@@ -574,8 +658,8 @@
       "de": "Vordere Schenkel der zwei Ratschengurte"
      },
      "x": 0.148,
-     "y": 0.0,
-     "angleDeg": 0.0,
+     "y": 0,
+     "angleDeg": 0,
      "lengthM": 0.73742,
      "joint": {
       "type": "revolute",
@@ -585,7 +669,7 @@
      "mass": {
       "kg": 0.0885,
       "comX": 0.3687,
-      "comY": 0.0,
+      "comY": 0,
       "distribution": "uniform",
       "source": "literature",
       "reference": "en-12195-2"
@@ -599,7 +683,7 @@
       "de": "Vordere Hälften der Gurte mit den Ratschen"
      },
      "x": 0.73742,
-     "y": 0.0,
+     "y": 0,
      "angleDeg": 60.9454,
      "lengthM": 0.175,
      "joint": {
@@ -679,7 +763,7 @@
        "translation": [
         0.6,
         0.133,
-        0.0
+        0
        ]
       }
      },
@@ -739,7 +823,7 @@
        "translation": [
         0.0725,
         0.111,
-        0.0
+        0
        ]
       }
      },
@@ -759,7 +843,7 @@
        "translation": [
         0.6,
         0.111,
-        0.0
+        0
        ]
       }
      },
@@ -779,7 +863,7 @@
        "translation": [
         1.1275,
         0.111,
-        0.0
+        0
        ]
       }
      },
@@ -819,7 +903,7 @@
        "translation": [
         0.0725,
         0.061,
-        0.0
+        0
        ]
       }
      },
@@ -879,7 +963,7 @@
        "translation": [
         0.6,
         0.061,
-        0.0
+        0
        ]
       }
      },
@@ -939,7 +1023,7 @@
        "translation": [
         1.1275,
         0.061,
-        0.0
+        0
        ]
       }
      },
@@ -999,7 +1083,7 @@
        "translation": [
         0.6,
         0.011,
-        0.0
+        0
        ]
       }
      },
@@ -1239,7 +1323,7 @@
        "translation": [
         0.183,
         -0.33,
-        0.0
+        0
        ]
       },
       "cornerRadius": 0.008
@@ -1260,7 +1344,7 @@
        "translation": [
         0.366,
         -0.6175,
-        0.0
+        0
        ]
       }
      },
@@ -1287,7 +1371,7 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        -0.6175,
        0.1
       ]
@@ -1315,7 +1399,7 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        -0.6175,
        0.145
       ]
@@ -1407,8 +1491,8 @@
       ],
       "origin": [
        0.183,
-       0.0,
-       0.0
+       0,
+       0
       ]
      },
      {
@@ -1447,8 +1531,8 @@
       ],
       "origin": [
        0.183,
-       0.0,
-       0.0
+       0,
+       0
       ]
      },
      {
@@ -1487,8 +1571,8 @@
       ],
       "origin": [
        0.183,
-       0.0,
-       0.0
+       0,
+       0
       ]
      },
      {
@@ -1514,9 +1598,9 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        0.065,
-       0.0
+       0
       ]
      },
      {
@@ -1542,9 +1626,9 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        0.098,
-       0.0
+       0
       ]
      },
      {
@@ -1571,7 +1655,7 @@
       ],
       "origin": [
        0.153,
-       0.0,
+       0,
        -0.13
       ]
      },
@@ -1599,7 +1683,7 @@
       ],
       "origin": [
        0.153,
-       0.0,
+       0,
        -0.13
       ]
      },
@@ -1627,7 +1711,7 @@
       ],
       "origin": [
        0.153,
-       0.0,
+       0,
        -0.13
       ]
      },
@@ -1655,7 +1739,7 @@
       ],
       "origin": [
        0.153,
-       0.0,
+       0,
        -0.065
       ]
      },
@@ -1683,7 +1767,7 @@
       ],
       "origin": [
        0.153,
-       0.0,
+       0,
        -0.065
       ]
      },
@@ -1711,7 +1795,7 @@
       ],
       "origin": [
        0.153,
-       0.0,
+       0,
        -0.065
       ]
      },
@@ -1739,8 +1823,8 @@
       ],
       "origin": [
        0.153,
-       0.0,
-       0.0
+       0,
+       0
       ]
      },
      {
@@ -1767,8 +1851,8 @@
       ],
       "origin": [
        0.153,
-       0.0,
-       0.0
+       0,
+       0
       ]
      },
      {
@@ -1795,8 +1879,8 @@
       ],
       "origin": [
        0.153,
-       0.0,
-       0.0
+       0,
+       0
       ]
      },
      {
@@ -1823,7 +1907,7 @@
       ],
       "origin": [
        0.153,
-       0.0,
+       0,
        0.065
       ]
      },
@@ -1851,7 +1935,7 @@
       ],
       "origin": [
        0.153,
-       0.0,
+       0,
        0.065
       ]
      },
@@ -1879,7 +1963,7 @@
       ],
       "origin": [
        0.153,
-       0.0,
+       0,
        0.065
       ]
      },
@@ -1907,7 +1991,7 @@
       ],
       "origin": [
        0.153,
-       0.0,
+       0,
        0.13
       ]
      },
@@ -1935,7 +2019,7 @@
       ],
       "origin": [
        0.153,
-       0.0,
+       0,
        0.13
       ]
      },
@@ -1963,7 +2047,7 @@
       ],
       "origin": [
        0.153,
-       0.0,
+       0,
        0.13
       ]
      },
@@ -1991,8 +2075,8 @@
       ],
       "origin": [
        0.253,
-       0.0,
-       0.0
+       0,
+       0
       ]
      },
      {
@@ -2019,8 +2103,8 @@
       ],
       "origin": [
        0.253,
-       0.0,
-       0.0
+       0,
+       0
       ]
      },
      {
@@ -2037,9 +2121,9 @@
       ],
       "transform": {
        "translation": [
-        0.0,
+        0,
         0.006,
-        0.0
+        0
        ]
       },
       "texture": true
@@ -2058,7 +2142,7 @@
       ],
       "transform": {
        "translation": [
-        0.0,
+        0,
         -0.645,
         -0.15
        ]
@@ -2078,7 +2162,7 @@
       ],
       "transform": {
        "translation": [
-        0.0,
+        0,
         -0.645,
         0.15
        ]
@@ -2098,9 +2182,9 @@
       ],
       "transform": {
        "translation": [
-        0.0,
+        0,
         -0.0225,
-        0.0
+        0
        ]
       }
      },
@@ -3216,7 +3300,7 @@
        "translation": [
         0.0085,
         -0.33,
-        0.0
+        0
        ]
       },
       "sheet": true,
@@ -3239,7 +3323,7 @@
        "translation": [
         0.178,
         -0.6795,
-        0.0
+        0
        ]
       },
       "sheet": true,
@@ -3260,9 +3344,9 @@
       ],
       "transform": {
        "translation": [
-        0.0,
+        0,
         -0.00375,
-        0.0
+        0
        ]
       },
       "member": "boiler",
@@ -3282,8 +3366,8 @@
       ],
       "transform": {
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         -0.16
        ]
       },
@@ -3304,8 +3388,8 @@
       ],
       "transform": {
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         -0.16
        ]
       },
@@ -3326,8 +3410,8 @@
       ],
       "transform": {
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         -0.16
        ]
       },
@@ -3348,8 +3432,8 @@
       ],
       "transform": {
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.16
        ]
       },
@@ -3370,8 +3454,8 @@
       ],
       "transform": {
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.16
        ]
       },
@@ -3392,8 +3476,8 @@
       ],
       "transform": {
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.16
        ]
       },
@@ -3414,8 +3498,8 @@
       ],
       "transform": {
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         -0.16
        ]
       },
@@ -3436,8 +3520,8 @@
       ],
       "transform": {
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         -0.16
        ]
       },
@@ -3458,8 +3542,8 @@
       ],
       "transform": {
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         -0.16
        ]
       },
@@ -3480,8 +3564,8 @@
       ],
       "transform": {
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.16
        ]
       },
@@ -3502,8 +3586,8 @@
       ],
       "transform": {
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.16
        ]
       },
@@ -3524,8 +3608,8 @@
       ],
       "transform": {
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.16
        ]
       },
@@ -3533,7 +3617,7 @@
       "part": "joint"
      },
      {
-      "id": "support-pallet-contact-back-right",
+      "id": "support-pallet-back-right",
       "bone": "pallet",
       "material": "pallet-pine",
       "role": "body",
@@ -3553,10 +3637,10 @@
       },
       "member": "pallet",
       "part": "support",
-      "anchor": "pallet-contact-back-right"
+      "anchor": "pallet-back-right"
      },
      {
-      "id": "support-pallet-contact-back-left",
+      "id": "support-pallet-back-left",
       "bone": "pallet",
       "material": "pallet-pine",
       "role": "body",
@@ -3576,10 +3660,10 @@
       },
       "member": "pallet",
       "part": "support",
-      "anchor": "pallet-contact-back-left"
+      "anchor": "pallet-back-left"
      },
      {
-      "id": "support-pallet-contact-front-right",
+      "id": "support-pallet-front-right",
       "bone": "pallet",
       "material": "pallet-pine",
       "role": "body",
@@ -3599,10 +3683,10 @@
       },
       "member": "pallet",
       "part": "support",
-      "anchor": "pallet-contact-front-right"
+      "anchor": "pallet-front-right"
      },
      {
-      "id": "support-pallet-contact-front-left",
+      "id": "support-pallet-front-left",
       "bone": "pallet",
       "material": "pallet-pine",
       "role": "body",
@@ -3622,7 +3706,7 @@
       },
       "member": "pallet",
       "part": "support",
-      "anchor": "pallet-contact-front-left"
+      "anchor": "pallet-front-left"
      },
      {
       "id": "mass-pallet",
@@ -3640,7 +3724,7 @@
        "translation": [
         0.6,
         0.09141,
-        0.0
+        0
        ]
       },
       "member": "pallet",
@@ -3662,7 +3746,7 @@
        "translation": [
         0.19,
         -0.33,
-        0.0
+        0
        ]
       },
       "member": "boiler",
@@ -3682,9 +3766,9 @@
       ],
       "transform": {
        "translation": [
-        0.0,
+        0,
         -0.0225,
-        0.0
+        0
        ]
       },
       "member": "bracket",
@@ -3706,7 +3790,7 @@
        "translation": [
         0.09,
         -0.015,
-        0.0
+        0
        ]
       },
       "member": "strap-front-top",
@@ -3788,7 +3872,7 @@
        "translation": [
         0.6,
         0.133,
-        0.0
+        0
        ]
       }
      },
@@ -3848,7 +3932,7 @@
        "translation": [
         0.0725,
         0.111,
-        0.0
+        0
        ]
       }
      },
@@ -3868,7 +3952,7 @@
        "translation": [
         0.6,
         0.111,
-        0.0
+        0
        ]
       }
      },
@@ -3888,7 +3972,7 @@
        "translation": [
         1.1275,
         0.111,
-        0.0
+        0
        ]
       }
      },
@@ -3928,7 +4012,7 @@
        "translation": [
         0.0725,
         0.061,
-        0.0
+        0
        ]
       }
      },
@@ -3988,7 +4072,7 @@
        "translation": [
         0.6,
         0.061,
-        0.0
+        0
        ]
       }
      },
@@ -4048,7 +4132,7 @@
        "translation": [
         1.1275,
         0.061,
-        0.0
+        0
        ]
       }
      },
@@ -4108,7 +4192,7 @@
        "translation": [
         0.6,
         0.011,
-        0.0
+        0
        ]
       }
      },
@@ -4268,7 +4352,7 @@
        "translation": [
         0.183,
         -0.33,
-        0.0
+        0
        ]
       },
       "cornerRadius": 0.012
@@ -4289,7 +4373,7 @@
        "translation": [
         0.366,
         -0.6175,
-        0.0
+        0
        ]
       }
      },
@@ -4317,8 +4401,8 @@
       ],
       "origin": [
        0.183,
-       0.0,
-       0.0
+       0,
+       0
       ]
      },
      {
@@ -4357,8 +4441,8 @@
       ],
       "origin": [
        0.183,
-       0.0,
-       0.0
+       0,
+       0
       ]
      },
      {
@@ -4397,8 +4481,8 @@
       ],
       "origin": [
        0.183,
-       0.0,
-       0.0
+       0,
+       0
       ]
      },
      {
@@ -4425,7 +4509,7 @@
       ],
       "origin": [
        0.153,
-       0.0,
+       0,
        -0.13
       ]
      },
@@ -4453,7 +4537,7 @@
       ],
       "origin": [
        0.153,
-       0.0,
+       0,
        -0.065
       ]
      },
@@ -4481,8 +4565,8 @@
       ],
       "origin": [
        0.153,
-       0.0,
-       0.0
+       0,
+       0
       ]
      },
      {
@@ -4509,7 +4593,7 @@
       ],
       "origin": [
        0.153,
-       0.0,
+       0,
        0.065
       ]
      },
@@ -4537,7 +4621,7 @@
       ],
       "origin": [
        0.153,
-       0.0,
+       0,
        0.13
       ]
      },
@@ -4565,8 +4649,8 @@
       ],
       "origin": [
        0.253,
-       0.0,
-       0.0
+       0,
+       0
       ]
      },
      {
@@ -4583,7 +4667,7 @@
       ],
       "transform": {
        "translation": [
-        0.0,
+        0,
         -0.645,
         -0.15
        ]
@@ -4603,7 +4687,7 @@
       ],
       "transform": {
        "translation": [
-        0.0,
+        0,
         -0.645,
         0.15
        ]
@@ -4623,9 +4707,9 @@
       ],
       "transform": {
        "translation": [
-        0.0,
+        0,
         -0.0225,
-        0.0
+        0
        ]
       }
      },
@@ -5603,7 +5687,7 @@
        "translation": [
         0.0085,
         -0.33,
-        0.0
+        0
        ]
       },
       "sheet": true,
@@ -5626,7 +5710,7 @@
        "translation": [
         0.178,
         -0.6795,
-        0.0
+        0
        ]
       },
       "sheet": true,
@@ -5647,9 +5731,9 @@
       ],
       "transform": {
        "translation": [
-        0.0,
+        0,
         -0.0075,
-        0.0
+        0
        ]
       },
       "member": "boiler",
@@ -5669,8 +5753,8 @@
       ],
       "transform": {
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         -0.16
        ]
       },
@@ -5691,8 +5775,8 @@
       ],
       "transform": {
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         -0.16
        ]
       },
@@ -5713,8 +5797,8 @@
       ],
       "transform": {
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         -0.16
        ]
       },
@@ -5735,8 +5819,8 @@
       ],
       "transform": {
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.16
        ]
       },
@@ -5757,8 +5841,8 @@
       ],
       "transform": {
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.16
        ]
       },
@@ -5779,8 +5863,8 @@
       ],
       "transform": {
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.16
        ]
       },
@@ -5801,8 +5885,8 @@
       ],
       "transform": {
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         -0.16
        ]
       },
@@ -5823,8 +5907,8 @@
       ],
       "transform": {
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         -0.16
        ]
       },
@@ -5845,8 +5929,8 @@
       ],
       "transform": {
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         -0.16
        ]
       },
@@ -5867,8 +5951,8 @@
       ],
       "transform": {
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.16
        ]
       },
@@ -5889,8 +5973,8 @@
       ],
       "transform": {
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.16
        ]
       },
@@ -5911,8 +5995,8 @@
       ],
       "transform": {
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.16
        ]
       },
@@ -5920,7 +6004,7 @@
       "part": "joint"
      },
      {
-      "id": "support-pallet-contact-back-right",
+      "id": "support-pallet-back-right",
       "bone": "pallet",
       "material": "pallet-pine",
       "role": "body",
@@ -5940,10 +6024,10 @@
       },
       "member": "pallet",
       "part": "support",
-      "anchor": "pallet-contact-back-right"
+      "anchor": "pallet-back-right"
      },
      {
-      "id": "support-pallet-contact-back-left",
+      "id": "support-pallet-back-left",
       "bone": "pallet",
       "material": "pallet-pine",
       "role": "body",
@@ -5963,10 +6047,10 @@
       },
       "member": "pallet",
       "part": "support",
-      "anchor": "pallet-contact-back-left"
+      "anchor": "pallet-back-left"
      },
      {
-      "id": "support-pallet-contact-front-right",
+      "id": "support-pallet-front-right",
       "bone": "pallet",
       "material": "pallet-pine",
       "role": "body",
@@ -5986,10 +6070,10 @@
       },
       "member": "pallet",
       "part": "support",
-      "anchor": "pallet-contact-front-right"
+      "anchor": "pallet-front-right"
      },
      {
-      "id": "support-pallet-contact-front-left",
+      "id": "support-pallet-front-left",
       "bone": "pallet",
       "material": "pallet-pine",
       "role": "body",
@@ -6009,7 +6093,7 @@
       },
       "member": "pallet",
       "part": "support",
-      "anchor": "pallet-contact-front-left"
+      "anchor": "pallet-front-left"
      },
      {
       "id": "mass-pallet",
@@ -6027,7 +6111,7 @@
        "translation": [
         0.6,
         0.09141,
-        0.0
+        0
        ]
       },
       "member": "pallet",
@@ -6049,7 +6133,7 @@
        "translation": [
         0.19,
         -0.33,
-        0.0
+        0
        ]
       },
       "member": "boiler",
@@ -6069,9 +6153,9 @@
       ],
       "transform": {
        "translation": [
-        0.0,
+        0,
         -0.0225,
-        0.0
+        0
        ]
       },
       "member": "bracket",
@@ -6093,7 +6177,7 @@
        "translation": [
         0.09,
         -0.015,
-        0.0
+        0
        ]
       },
       "member": "strap-front-top",
@@ -6135,7 +6219,7 @@
        "translation": [
         0.6,
         0.129,
-        0.0
+        0
        ]
       }
      },
@@ -6175,7 +6259,7 @@
        "translation": [
         0.0725,
         0.072,
-        0.0
+        0
        ]
       }
      },
@@ -6235,7 +6319,7 @@
        "translation": [
         0.6,
         0.072,
-        0.0
+        0
        ]
       }
      },
@@ -6295,7 +6379,7 @@
        "translation": [
         1.1275,
         0.072,
-        0.0
+        0
        ]
       }
      },
@@ -6355,7 +6439,7 @@
        "translation": [
         0.6,
         0.015,
-        0.0
+        0
        ]
       }
      },
@@ -6515,7 +6599,7 @@
        "translation": [
         0.183,
         -0.33,
-        0.0
+        0
        ]
       },
       "cornerRadius": 0.02
@@ -6553,7 +6637,7 @@
       "origin": [
        0.183,
        0,
-       0.0
+       0
       ]
      },
      {
@@ -6572,7 +6656,7 @@
        "translation": [
         0.153,
         -0.7125,
-        0.0
+        0
        ]
       }
      },
@@ -6600,8 +6684,8 @@
       ],
       "origin": [
        0.253,
-       0.0,
-       0.0
+       0,
+       0
       ]
      },
      {
@@ -6620,7 +6704,7 @@
        "translation": [
         -0.007,
         -0.0225,
-        0.0
+        0
        ]
       }
      },
@@ -7110,7 +7194,7 @@
        "translation": [
         0.373,
         -0.6175,
-        0.0
+        0
        ]
       },
       "region": "controls",
@@ -7418,7 +7502,7 @@
        "translation": [
         0.0085,
         -0.33,
-        0.0
+        0
        ]
       },
       "sheet": true,
@@ -7441,7 +7525,7 @@
        "translation": [
         0.178,
         -0.6795,
-        0.0
+        0
        ]
       },
       "sheet": true,
@@ -7462,9 +7546,9 @@
       ],
       "transform": {
        "translation": [
-        0.0,
+        0,
         -0.015,
-        0.0
+        0
        ]
       },
       "member": "boiler",
@@ -7484,8 +7568,8 @@
       ],
       "transform": {
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         -0.16
        ]
       },
@@ -7506,8 +7590,8 @@
       ],
       "transform": {
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         -0.16
        ]
       },
@@ -7528,8 +7612,8 @@
       ],
       "transform": {
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         -0.16
        ]
       },
@@ -7550,8 +7634,8 @@
       ],
       "transform": {
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.16
        ]
       },
@@ -7572,8 +7656,8 @@
       ],
       "transform": {
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.16
        ]
       },
@@ -7594,8 +7678,8 @@
       ],
       "transform": {
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.16
        ]
       },
@@ -7616,8 +7700,8 @@
       ],
       "transform": {
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         -0.16
        ]
       },
@@ -7638,8 +7722,8 @@
       ],
       "transform": {
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         -0.16
        ]
       },
@@ -7660,8 +7744,8 @@
       ],
       "transform": {
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         -0.16
        ]
       },
@@ -7682,8 +7766,8 @@
       ],
       "transform": {
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.16
        ]
       },
@@ -7704,8 +7788,8 @@
       ],
       "transform": {
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.16
        ]
       },
@@ -7726,8 +7810,8 @@
       ],
       "transform": {
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.16
        ]
       },
@@ -7735,7 +7819,7 @@
       "part": "joint"
      },
      {
-      "id": "support-pallet-contact-back-right",
+      "id": "support-pallet-back-right",
       "bone": "pallet",
       "material": "pallet-pine",
       "role": "body",
@@ -7755,10 +7839,10 @@
       },
       "member": "pallet",
       "part": "support",
-      "anchor": "pallet-contact-back-right"
+      "anchor": "pallet-back-right"
      },
      {
-      "id": "support-pallet-contact-back-left",
+      "id": "support-pallet-back-left",
       "bone": "pallet",
       "material": "pallet-pine",
       "role": "body",
@@ -7778,10 +7862,10 @@
       },
       "member": "pallet",
       "part": "support",
-      "anchor": "pallet-contact-back-left"
+      "anchor": "pallet-back-left"
      },
      {
-      "id": "support-pallet-contact-front-right",
+      "id": "support-pallet-front-right",
       "bone": "pallet",
       "material": "pallet-pine",
       "role": "body",
@@ -7801,10 +7885,10 @@
       },
       "member": "pallet",
       "part": "support",
-      "anchor": "pallet-contact-front-right"
+      "anchor": "pallet-front-right"
      },
      {
-      "id": "support-pallet-contact-front-left",
+      "id": "support-pallet-front-left",
       "bone": "pallet",
       "material": "pallet-pine",
       "role": "body",
@@ -7824,7 +7908,7 @@
       },
       "member": "pallet",
       "part": "support",
-      "anchor": "pallet-contact-front-left"
+      "anchor": "pallet-front-left"
      },
      {
       "id": "mass-pallet",
@@ -7842,7 +7926,7 @@
        "translation": [
         0.6,
         0.09141,
-        0.0
+        0
        ]
       },
       "member": "pallet",
@@ -7864,7 +7948,7 @@
        "translation": [
         0.19,
         -0.33,
-        0.0
+        0
        ]
       },
       "member": "boiler",
@@ -7884,9 +7968,9 @@
       ],
       "transform": {
        "translation": [
-        0.0,
+        0,
         -0.0225,
-        0.0
+        0
        ]
       },
       "member": "bracket",
@@ -7908,7 +7992,7 @@
        "translation": [
         0.09,
         -0.015,
-        0.0
+        0
        ]
       },
       "member": "strap-front-top",
@@ -7931,16 +8015,741 @@
     ]
    },
    "500": {
-    "status": "unavailable",
-    "denominator": 500
+    "status": "authored",
+    "denominator": 500,
+    "decisions": [
+     {
+      "en": "Body for the 75 mm feature: the pallet as one 144 mm slab, the two bearers widened from 40 to 75 mm, the boiler as its casing box with the flue adapter as one 126 mm cylinder on top and the connection row as one 75 mm block below; the two lashing straps are typified as one 100 mm band on the centre line, six declared 2 mm sheets on the strap bones, so the lashing still reads and still opens in the poses; hooks, rail, trap, fascia and ratchets are below the feature and left out.",
+      "de": "Körper für das 75-mm-Merkmal: die Palette als eine 144-mm-Platte, die zwei Lagerhölzer von 40 auf 75 mm verbreitert, die Therme als ihr Gehäusequader mit dem Abgasadapter als einem 126-mm-Zylinder oben und der Anschlussreihe als einem 75-mm-Block unten; die zwei Zurrgurte sind zu einem 100-mm-Band auf der Mittellinie typisiert, sechs erklärte 2-mm-Platten an den Gurtknochen, sodass die Verzurrung lesbar bleibt und sich in den Posen weiter öffnet; Haken, Schiene, Siphon, Blende und Ratschen liegen unter dem Merkmal und entfallen."
+     },
+     {
+      "en": "Thermal: the body solids in their regions and layers by reference; controls patch, trap and rail as shells of their layer at true size, the hidden burner and heat exchanger as blocks inside the casing and a 75 mm flue-gas outlet on the adapter.",
+      "de": "Thermik: die Körper in ihren Regionen und Schichten als Verweis; Bedienfläche, Siphon und Schiene als Schalen ihrer Schicht in wahrer Größe, der verdeckte Brenner und Wärmetauscher als Blöcke im Gehäuse und ein 75-mm-Abgasauslass auf dem Adapter."
+     },
+     {
+      "en": "Structure: the members by reference, the casing also holding the bracket bone, two 75 mm bearer pads, four 75 mm pallet supports and two mass markers.",
+      "de": "Tragwerk: die Stäbe als Verweis, das Gehäuse fasst auch den Konsolenknochen, zwei 75-mm-Auflagen auf den Lagerhölzern, vier 75-mm-Palettenauflager und zwei Massenmarken."
+     }
+    ],
+    "body": [
+     {
+      "id": "pallet-slab",
+      "kind": "box",
+      "bone": "pallet",
+      "material": "pallet-pine",
+      "role": "body",
+      "tone": 0.58,
+      "size": [
+       1.2,
+       0.144,
+       0.8
+      ],
+      "transform": {
+       "translation": [
+        0.6,
+        0.072,
+        0
+       ]
+      }
+     },
+     {
+      "id": "bearers",
+      "kind": "box",
+      "bone": "pallet",
+      "material": "spruce",
+      "role": "body",
+      "tone": 0.7,
+      "size": [
+       0.4,
+       0.08,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.6,
+        0.184,
+        -0.21
+       ]
+      },
+      "repeat": {
+       "count": 2,
+       "translation": [
+        0,
+        0,
+        0.42
+       ]
+      }
+     },
+     {
+      "id": "casing",
+      "kind": "box",
+      "bone": "boiler",
+      "material": "painted-steel-aged",
+      "role": "body",
+      "tone": 0.86,
+      "size": [
+       0.35,
+       0.7,
+       0.44
+      ],
+      "transform": {
+       "translation": [
+        0.183,
+        -0.33,
+        0
+       ]
+      }
+     },
+     {
+      "id": "adapter",
+      "kind": "revolve",
+      "bone": "boiler",
+      "material": "flue-aluminium",
+      "role": "body",
+      "tone": 0.8,
+      "profile": [
+       [
+        0.02,
+        0
+       ],
+       [
+        0.02,
+        0.063
+       ],
+       [
+        0.125,
+        0.063
+       ],
+       [
+        0.125,
+        0
+       ]
+      ],
+      "axis": [
+       0,
+       1,
+       0
+      ],
+      "origin": [
+       0.1835,
+       0,
+       0
+      ]
+     },
+     {
+      "id": "connections",
+      "kind": "box",
+      "bone": "boiler",
+      "material": "brass",
+      "role": "body",
+      "tone": 0.5,
+      "size": [
+       0.075,
+       0.075,
+       0.29
+      ],
+      "transform": {
+       "translation": [
+        0.153,
+        -0.7175,
+        0
+       ]
+      }
+     },
+     {
+      "id": "strap-back-foot",
+      "kind": "box",
+      "bone": "strap-back-foot",
+      "material": "polyester-webbing",
+      "role": "body",
+      "tone": 0.35,
+      "size": [
+       0.148,
+       0.002,
+       0.1
+      ],
+      "transform": {
+       "translation": [
+        0.074,
+        0.001,
+        0
+       ]
+      },
+      "sheet": true
+     },
+     {
+      "id": "strap-back-leg",
+      "kind": "box",
+      "bone": "strap-back-leg",
+      "material": "polyester-webbing",
+      "role": "body",
+      "tone": 0.35,
+      "size": [
+       0.733,
+       0.002,
+       0.1
+      ],
+      "transform": {
+       "translation": [
+        0.3665,
+        0.001,
+        0
+       ]
+      },
+      "sheet": true
+     },
+     {
+      "id": "strap-back-top",
+      "kind": "box",
+      "bone": "strap-back-top",
+      "material": "polyester-webbing",
+      "role": "body",
+      "tone": 0.35,
+      "size": [
+       0.185,
+       0.002,
+       0.1
+      ],
+      "transform": {
+       "translation": [
+        0.0925,
+        0.001,
+        0
+       ]
+      },
+      "sheet": true
+     },
+     {
+      "id": "strap-front-foot",
+      "kind": "box",
+      "bone": "strap-front-foot",
+      "material": "polyester-webbing",
+      "role": "body",
+      "tone": 0.35,
+      "size": [
+       0.148,
+       0.002,
+       0.1
+      ],
+      "transform": {
+       "translation": [
+        0.074,
+        -0.001,
+        0
+       ]
+      },
+      "sheet": true
+     },
+     {
+      "id": "strap-front-leg",
+      "kind": "box",
+      "bone": "strap-front-leg",
+      "material": "polyester-webbing",
+      "role": "body",
+      "tone": 0.35,
+      "size": [
+       0.737,
+       0.002,
+       0.1
+      ],
+      "transform": {
+       "translation": [
+        0.3685,
+        -0.001,
+        0
+       ]
+      },
+      "sheet": true
+     },
+     {
+      "id": "strap-front-top",
+      "kind": "box",
+      "bone": "strap-front-top",
+      "material": "polyester-webbing",
+      "role": "body",
+      "tone": 0.35,
+      "size": [
+       0.175,
+       0.002,
+       0.1
+      ],
+      "transform": {
+       "translation": [
+        0.0875,
+        -0.001,
+        0
+       ]
+      },
+      "sheet": true
+     }
+    ],
+    "thermal": [
+     {
+      "id": "th-pallet-slab",
+      "of": "pallet-slab",
+      "region": "pallet",
+      "layer": "boards"
+     },
+     {
+      "id": "th-bearers",
+      "of": "bearers",
+      "region": "bearers",
+      "layer": "timber"
+     },
+     {
+      "id": "th-casing",
+      "of": "casing",
+      "region": "casing",
+      "layer": "sheet"
+     },
+     {
+      "id": "th-adapter",
+      "of": "adapter",
+      "region": "flue-adapter",
+      "layer": "pipe"
+     },
+     {
+      "id": "th-connections",
+      "of": "connections",
+      "region": "connections",
+      "layer": "tube"
+     },
+     {
+      "id": "th-strap-back-foot",
+      "of": "strap-back-foot",
+      "region": "straps",
+      "layer": "webbing"
+     },
+     {
+      "id": "th-strap-back-leg",
+      "of": "strap-back-leg",
+      "region": "straps",
+      "layer": "webbing"
+     },
+     {
+      "id": "th-strap-back-top",
+      "of": "strap-back-top",
+      "region": "straps",
+      "layer": "webbing"
+     },
+     {
+      "id": "th-strap-front-foot",
+      "of": "strap-front-foot",
+      "region": "straps",
+      "layer": "webbing"
+     },
+     {
+      "id": "th-strap-front-leg",
+      "of": "strap-front-leg",
+      "region": "straps",
+      "layer": "webbing"
+     },
+     {
+      "id": "th-strap-front-top",
+      "of": "strap-front-top",
+      "region": "straps",
+      "layer": "webbing"
+     },
+     {
+      "id": "th-controls-patch",
+      "kind": "box",
+      "bone": "boiler",
+      "material": "polycarbonate",
+      "role": "body",
+      "tone": 0.42,
+      "size": [
+       0.03,
+       0.085,
+       0.4
+      ],
+      "transform": {
+       "translation": [
+        0.373,
+        -0.6175,
+        0
+       ]
+      },
+      "region": "controls",
+      "layer": "panel"
+     },
+     {
+      "id": "th-trap",
+      "kind": "revolve",
+      "bone": "boiler",
+      "material": "polypropylene",
+      "role": "body",
+      "tone": 0.88,
+      "profile": [
+       [
+        -0.75,
+        0
+       ],
+       [
+        -0.75,
+        0.02
+       ],
+       [
+        -0.68,
+        0.02
+       ],
+       [
+        -0.68,
+        0
+       ]
+      ],
+      "axis": [
+       0,
+       1,
+       0
+      ],
+      "origin": [
+       0.253,
+       0,
+       0
+      ],
+      "region": "condensate-trap",
+      "layer": "body"
+     },
+     {
+      "id": "th-rail",
+      "kind": "box",
+      "bone": "bracket",
+      "material": "galv",
+      "role": "body",
+      "tone": 0.55,
+      "size": [
+       0.03,
+       0.045,
+       0.38
+      ],
+      "transform": {
+       "translation": [
+        -0.007,
+        -0.0225,
+        0
+       ]
+      },
+      "region": "bracket",
+      "layer": "rail"
+     },
+     {
+      "id": "th-burner",
+      "kind": "box",
+      "bone": "boiler",
+      "material": "burner-mesh",
+      "role": "body",
+      "tone": 0.5,
+      "size": [
+       0.04,
+       0.08,
+       0.08
+      ],
+      "transform": {
+       "translation": [
+        0.263,
+        -0.21,
+        0
+       ]
+      },
+      "region": "burner",
+      "layer": "mesh"
+     },
+     {
+      "id": "th-heat-exchanger",
+      "kind": "box",
+      "bone": "boiler",
+      "material": "stainless-steel",
+      "role": "body",
+      "tone": 0.5,
+      "size": [
+       0.17,
+       0.23,
+       0.23
+      ],
+      "transform": {
+       "translation": [
+        0.158,
+        -0.21,
+        0
+       ]
+      },
+      "region": "heat-exchanger",
+      "layer": "wall"
+     },
+     {
+      "id": "th-flue-gas",
+      "kind": "revolve",
+      "bone": "boiler",
+      "material": "polypropylene",
+      "role": "detail",
+      "tone": 0.5,
+      "profile": [
+       [
+        0.125,
+        0
+       ],
+       [
+        0.125,
+        0.0375
+       ],
+       [
+        0.2,
+        0.0375
+       ],
+       [
+        0.2,
+        0
+       ]
+      ],
+      "axis": [
+       0,
+       1,
+       0
+      ],
+      "origin": [
+       0.1835,
+       0,
+       0
+      ],
+      "region": "flue-adapter",
+      "tags": [
+       "flue-gas"
+      ]
+     }
+    ],
+    "structure": [
+     {
+      "id": "member-pallet-slab",
+      "of": "pallet-slab",
+      "member": "pallet",
+      "part": "member"
+     },
+     {
+      "id": "member-bearers",
+      "of": "bearers",
+      "member": "pallet",
+      "part": "member"
+     },
+     {
+      "id": "member-casing",
+      "of": "casing",
+      "member": "boiler",
+      "part": "member",
+      "members": [
+       "bracket"
+      ]
+     },
+     {
+      "id": "member-strap-back-foot",
+      "of": "strap-back-foot",
+      "member": "strap-back-foot",
+      "part": "member"
+     },
+     {
+      "id": "member-strap-back-leg",
+      "of": "strap-back-leg",
+      "member": "strap-back-leg",
+      "part": "member"
+     },
+     {
+      "id": "member-strap-back-top",
+      "of": "strap-back-top",
+      "member": "strap-back-top",
+      "part": "member"
+     },
+     {
+      "id": "member-strap-front-foot",
+      "of": "strap-front-foot",
+      "member": "strap-front-foot",
+      "part": "member"
+     },
+     {
+      "id": "member-strap-front-leg",
+      "of": "strap-front-leg",
+      "member": "strap-front-leg",
+      "part": "member"
+     },
+     {
+      "id": "member-strap-front-top",
+      "of": "strap-front-top",
+      "member": "strap-front-top",
+      "part": "member"
+     },
+     {
+      "id": "joint-bearer-pads",
+      "kind": "box",
+      "bone": "boiler",
+      "material": "epdm",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.35,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.183,
+        -0.7175,
+        -0.21
+       ]
+      },
+      "repeat": {
+       "count": 2,
+       "translation": [
+        0,
+        0,
+        0.42
+       ]
+      },
+      "member": "boiler",
+      "part": "joint"
+     },
+     {
+      "id": "support-pallet-back-right",
+      "kind": "box",
+      "bone": "pallet",
+      "material": "pallet-pine",
+      "role": "ground",
+      "tone": 0.3,
+      "size": [
+       0.1,
+       0.075,
+       0.1
+      ],
+      "transform": {
+       "translation": [
+        0.0725,
+        0.0375,
+        -0.35
+       ]
+      },
+      "member": "pallet",
+      "part": "support",
+      "anchor": "pallet-back-right"
+     },
+     {
+      "id": "support-pallet-back-left",
+      "kind": "box",
+      "bone": "pallet",
+      "material": "pallet-pine",
+      "role": "ground",
+      "tone": 0.3,
+      "size": [
+       0.1,
+       0.075,
+       0.1
+      ],
+      "transform": {
+       "translation": [
+        0.0725,
+        0.0375,
+        0.35
+       ]
+      },
+      "member": "pallet",
+      "part": "support",
+      "anchor": "pallet-back-left"
+     },
+     {
+      "id": "support-pallet-front-right",
+      "kind": "box",
+      "bone": "pallet",
+      "material": "pallet-pine",
+      "role": "ground",
+      "tone": 0.3,
+      "size": [
+       0.1,
+       0.075,
+       0.1
+      ],
+      "transform": {
+       "translation": [
+        1.1275,
+        0.0375,
+        -0.35
+       ]
+      },
+      "member": "pallet",
+      "part": "support",
+      "anchor": "pallet-front-right"
+     },
+     {
+      "id": "support-pallet-front-left",
+      "kind": "box",
+      "bone": "pallet",
+      "material": "pallet-pine",
+      "role": "ground",
+      "tone": 0.3,
+      "size": [
+       0.1,
+       0.075,
+       0.1
+      ],
+      "transform": {
+       "translation": [
+        1.1275,
+        0.0375,
+        0.35
+       ]
+      },
+      "member": "pallet",
+      "part": "support",
+      "anchor": "pallet-front-left"
+     },
+     {
+      "id": "mass-boiler",
+      "kind": "box",
+      "bone": "boiler",
+      "material": "galv",
+      "role": "detail",
+      "tone": 0.5,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.183,
+        -0.33,
+        0
+       ]
+      },
+      "member": "boiler",
+      "part": "mass"
+     },
+     {
+      "id": "mass-pallet",
+      "kind": "box",
+      "bone": "pallet",
+      "material": "pallet-pine",
+      "role": "detail",
+      "tone": 0.5,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.6,
+        0.072,
+        0
+       ]
+      },
+      "member": "pallet",
+      "part": "mass"
+     }
+    ]
    }
   },
   "anchors": [
    {
-    "id": "pallet-contact-back-right",
+    "id": "pallet-back-right",
     "bone": "pallet",
     "x": 0.0725,
-    "y": 0.0,
+    "y": 0,
     "z": -0.35,
     "kind": "support",
     "title": {
@@ -7954,10 +8763,10 @@
     "frictionCoefficient": 0.5
    },
    {
-    "id": "pallet-contact-back-left",
+    "id": "pallet-back-left",
     "bone": "pallet",
     "x": 0.0725,
-    "y": 0.0,
+    "y": 0,
     "z": 0.35,
     "kind": "support",
     "title": {
@@ -7971,10 +8780,10 @@
     "frictionCoefficient": 0.5
    },
    {
-    "id": "pallet-contact-front-right",
+    "id": "pallet-front-right",
     "bone": "pallet",
     "x": 1.1275,
-    "y": 0.0,
+    "y": 0,
     "z": -0.35,
     "kind": "support",
     "title": {
@@ -7988,10 +8797,10 @@
     "frictionCoefficient": 0.5
    },
    {
-    "id": "pallet-contact-front-left",
+    "id": "pallet-front-left",
     "bone": "pallet",
     "x": 1.1275,
-    "y": 0.0,
+    "y": 0,
     "z": 0.35,
     "kind": "support",
     "title": {
@@ -8007,9 +8816,9 @@
    {
     "id": "lifting-point",
     "bone": "bracket",
-    "x": 0.0,
-    "y": 0.0,
-    "z": 0.0,
+    "x": 0,
+    "y": 0,
+    "z": 0,
     "kind": "support",
     "title": {
      "en": "Shackle of the crane sling in the centre slot of the rail",
@@ -8025,7 +8834,7 @@
     "bone": "bracket",
     "x": -0.008,
     "y": -0.0225,
-    "z": 0.0,
+    "z": 0,
     "kind": "support",
     "title": {
      "en": "Rail screwed to the new wall",
@@ -8041,7 +8850,7 @@
     "bone": "boiler",
     "x": -0.008,
     "y": -0.645,
-    "z": 0.0,
+    "z": 0,
     "kind": "support",
     "title": {
      "en": "EPDM spacers of the lower back against the wall",
@@ -8058,7 +8867,7 @@
     "bone": "boiler",
     "x": 0.183,
     "y": 0.125,
-    "z": 0.0,
+    "z": 0,
     "kind": "emitter",
     "title": {
      "en": "Mouth of the 60 mm flue pipe of the adapter",
@@ -8070,7 +8879,7 @@
     "bone": "boiler",
     "x": 0.19,
     "y": -0.33,
-    "z": 0.0,
+    "z": 0,
     "kind": "load",
     "title": {
      "en": "Centre of the 2.5 l water content when refilled",
@@ -8106,7 +8915,7 @@
        "material": "pallet-pine",
        "region": "pallet",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.122,
        "w": 1.2,
        "h": 0.022
@@ -8121,7 +8930,7 @@
        "material": "pallet-pine",
        "region": "pallet",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.122,
        "w": 1.2,
        "h": 0.022
@@ -8136,7 +8945,7 @@
        "material": "pallet-pine",
        "region": "pallet",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.122,
        "w": 1.2,
        "h": 0.022
@@ -8151,7 +8960,7 @@
        "material": "pallet-pine",
        "region": "pallet",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.122,
        "w": 1.2,
        "h": 0.022
@@ -8166,7 +8975,7 @@
        "material": "pallet-pine",
        "region": "pallet",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.122,
        "w": 1.2,
        "h": 0.022
@@ -8181,7 +8990,7 @@
        "material": "pallet-pine",
        "region": "pallet",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.1,
        "w": 0.145,
        "h": 0.022
@@ -8226,7 +9035,7 @@
        "material": "pallet-pine",
        "region": "pallet",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.022,
        "w": 0.145,
        "h": 0.078
@@ -8241,7 +9050,7 @@
        "material": "pallet-pine",
        "region": "pallet",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.022,
        "w": 0.145,
        "h": 0.078
@@ -8256,7 +9065,7 @@
        "material": "pallet-pine",
        "region": "pallet",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.022,
        "w": 0.145,
        "h": 0.078
@@ -8361,8 +9170,8 @@
        "material": "pallet-pine",
        "region": "pallet",
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 1.2,
        "h": 0.022
       },
@@ -8376,8 +9185,8 @@
        "material": "pallet-pine",
        "region": "pallet",
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 1.2,
        "h": 0.022
       },
@@ -8391,8 +9200,8 @@
        "material": "pallet-pine",
        "region": "pallet",
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 1.2,
        "h": 0.022
       },
@@ -9006,8 +9815,8 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.148,
        "h": 0.002
       },
@@ -9021,8 +9830,8 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.73261,
        "h": 0.002
       },
@@ -9036,8 +9845,8 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.185,
        "h": 0.002
       },
@@ -9051,7 +9860,7 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.002,
        "w": 0.148,
        "h": 0.002
@@ -9066,7 +9875,7 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.002,
        "w": 0.73742,
        "h": 0.002
@@ -9081,7 +9890,7 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.002,
        "w": 0.175,
        "h": 0.002
@@ -9111,8 +9920,8 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.148,
        "h": 0.002
       },
@@ -9126,8 +9935,8 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.73261,
        "h": 0.002
       },
@@ -9141,8 +9950,8 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.185,
        "h": 0.002
       },
@@ -9156,7 +9965,7 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.002,
        "w": 0.148,
        "h": 0.002
@@ -9171,7 +9980,7 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.002,
        "w": 0.73742,
        "h": 0.002
@@ -9186,7 +9995,7 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.002,
        "w": 0.175,
        "h": 0.002
@@ -9495,7 +10304,7 @@
        "region": "pallet",
        "kind": "rect",
        "x": -0.4,
-       "y": 0.0,
+       "y": 0,
        "w": 0.1,
        "h": 0.022
       },
@@ -9510,7 +10319,7 @@
        "region": "pallet",
        "kind": "rect",
        "x": -0.0725,
-       "y": 0.0,
+       "y": 0,
        "w": 0.145,
        "h": 0.022
       },
@@ -9525,7 +10334,7 @@
        "region": "pallet",
        "kind": "rect",
        "x": 0.3,
-       "y": 0.0,
+       "y": 0,
        "w": 0.1,
        "h": 0.022
       },
@@ -9689,10 +10498,17 @@
        "material": "painted-steel-aged",
        "region": "casing",
        "kind": "rect",
-       "x": -0.22,
-       "y": 0.224,
-       "w": 0.44,
-       "h": 0.7
+       "x": 0.008,
+       "y": -0.68,
+       "w": 0.35,
+       "h": 0.7,
+       "r": 0.008,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.22,
+        "z1": 0.22
+       }
       },
       {
        "id": "fascia",
@@ -9704,10 +10520,16 @@
        "material": "polycarbonate",
        "region": "controls",
        "kind": "rect",
-       "x": -0.2,
-       "y": 0.244,
-       "w": 0.4,
-       "h": 0.085
+       "x": 0.358,
+       "y": -0.66,
+       "w": 0.016,
+       "h": 0.085,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2,
+        "z1": 0.2
+       }
       },
       {
        "id": "knob-0",
@@ -9718,11 +10540,112 @@
        "tone": 0.22,
        "material": "polycarbonate",
        "region": "controls",
-       "kind": "ellipse",
-       "cx": 0.1,
-       "cy": 0.2865,
-       "rx": 0.012,
-       "ry": 0.012
+       "kind": "poly",
+       "points": [
+        [
+         -0.6175,
+         0.112
+        ],
+        [
+         -0.614394,
+         0.111591
+        ],
+        [
+         -0.6115,
+         0.110392
+        ],
+        [
+         -0.609015,
+         0.108485
+        ],
+        [
+         -0.607108,
+         0.106
+        ],
+        [
+         -0.605909,
+         0.103106
+        ],
+        [
+         -0.6055,
+         0.1
+        ],
+        [
+         -0.605909,
+         0.096894
+        ],
+        [
+         -0.607108,
+         0.094
+        ],
+        [
+         -0.609015,
+         0.091515
+        ],
+        [
+         -0.6115,
+         0.089608
+        ],
+        [
+         -0.614394,
+         0.088409
+        ],
+        [
+         -0.6175,
+         0.088
+        ],
+        [
+         -0.620606,
+         0.088409
+        ],
+        [
+         -0.6235,
+         0.089608
+        ],
+        [
+         -0.625985,
+         0.091515
+        ],
+        [
+         -0.627892,
+         0.094
+        ],
+        [
+         -0.629091,
+         0.096894
+        ],
+        [
+         -0.6295,
+         0.1
+        ],
+        [
+         -0.629091,
+         0.103106
+        ],
+        [
+         -0.627892,
+         0.106
+        ],
+        [
+         -0.625985,
+         0.108485
+        ],
+        [
+         -0.6235,
+         0.110392
+        ],
+        [
+         -0.620606,
+         0.111591
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0.374,
+        "z1": 0.386
+       }
       },
       {
        "id": "knob-1",
@@ -9733,11 +10656,112 @@
        "tone": 0.22,
        "material": "polycarbonate",
        "region": "controls",
-       "kind": "ellipse",
-       "cx": 0.145,
-       "cy": 0.2865,
-       "rx": 0.012,
-       "ry": 0.012
+       "kind": "poly",
+       "points": [
+        [
+         -0.6175,
+         0.157
+        ],
+        [
+         -0.614394,
+         0.156591
+        ],
+        [
+         -0.6115,
+         0.155392
+        ],
+        [
+         -0.609015,
+         0.153485
+        ],
+        [
+         -0.607108,
+         0.151
+        ],
+        [
+         -0.605909,
+         0.148106
+        ],
+        [
+         -0.6055,
+         0.145
+        ],
+        [
+         -0.605909,
+         0.141894
+        ],
+        [
+         -0.607108,
+         0.139
+        ],
+        [
+         -0.609015,
+         0.136515
+        ],
+        [
+         -0.6115,
+         0.134608
+        ],
+        [
+         -0.614394,
+         0.133409
+        ],
+        [
+         -0.6175,
+         0.133
+        ],
+        [
+         -0.620606,
+         0.133409
+        ],
+        [
+         -0.6235,
+         0.134608
+        ],
+        [
+         -0.625985,
+         0.136515
+        ],
+        [
+         -0.627892,
+         0.139
+        ],
+        [
+         -0.629091,
+         0.141894
+        ],
+        [
+         -0.6295,
+         0.145
+        ],
+        [
+         -0.629091,
+         0.148106
+        ],
+        [
+         -0.627892,
+         0.151
+        ],
+        [
+         -0.625985,
+         0.153485
+        ],
+        [
+         -0.6235,
+         0.155392
+        ],
+        [
+         -0.620606,
+         0.156591
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0.374,
+        "z1": 0.386
+       }
       },
       {
        "id": "display",
@@ -9747,11 +10771,32 @@
        "filled": true,
        "tone": 0.18,
        "material": "display-glass",
-       "kind": "rect",
-       "x": -0.09,
-       "y": 0.269,
-       "w": 0.1,
-       "h": 0.035
+       "kind": "poly",
+       "points": [
+        [
+         -0.635,
+         -0.09
+        ],
+        [
+         -0.635,
+         0.01
+        ],
+        [
+         -0.6,
+         0.01
+        ],
+        [
+         -0.6,
+         -0.09
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0.374,
+        "z1": 0.376
+       }
       },
       {
        "id": "service-label",
@@ -9761,11 +10806,32 @@
        "filled": true,
        "tone": 0.97,
        "material": "paper-label",
-       "kind": "rect",
-       "x": -0.19,
-       "y": 0.774,
-       "w": 0.1,
-       "h": 0.07
+       "kind": "poly",
+       "points": [
+        [
+         -0.13,
+         -0.19
+        ],
+        [
+         -0.13,
+         -0.09
+        ],
+        [
+         -0.06,
+         -0.09
+        ],
+        [
+         -0.06,
+         -0.19
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0.358,
+        "z1": 0.36
+       }
       },
       {
        "id": "adapter-collar",
@@ -9777,10 +10843,16 @@
        "material": "flue-aluminium",
        "region": "flue-adapter",
        "kind": "rect",
-       "x": -0.0625,
-       "y": 0.924,
+       "x": 0.1205,
+       "y": 0.02,
        "w": 0.125,
-       "h": 0.025
+       "h": 0.025,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.0625,
+        "z1": 0.0625
+       }
       },
       {
        "id": "adapter-air-pipe",
@@ -9792,10 +10864,16 @@
        "material": "flue-aluminium",
        "region": "flue-adapter",
        "kind": "rect",
-       "x": -0.05,
-       "y": 0.949,
+       "x": 0.133,
+       "y": 0.045,
        "w": 0.1,
-       "h": 0.075
+       "h": 0.075,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.05,
+        "z1": 0.05
+       }
       },
       {
        "id": "adapter-flue-pipe",
@@ -9807,10 +10885,16 @@
        "material": "polypropylene",
        "region": "flue-adapter",
        "kind": "rect",
-       "x": -0.03,
-       "y": 0.949,
+       "x": 0.153,
+       "y": 0.045,
        "w": 0.06,
-       "h": 0.08
+       "h": 0.08,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.03,
+        "z1": 0.03
+       }
       },
       {
        "id": "test-plug-0",
@@ -9821,11 +10905,112 @@
        "tone": 0.3,
        "material": "polypropylene",
        "region": "flue-adapter",
-       "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.969,
-       "rx": 0.007,
-       "ry": 0.007
+       "kind": "poly",
+       "points": [
+        [
+         0.065,
+         0.007
+        ],
+        [
+         0.066812,
+         0.006761
+        ],
+        [
+         0.0685,
+         0.006062
+        ],
+        [
+         0.06995,
+         0.00495
+        ],
+        [
+         0.071062,
+         0.0035
+        ],
+        [
+         0.071761,
+         0.001812
+        ],
+        [
+         0.072,
+         0
+        ],
+        [
+         0.071761,
+         -0.001812
+        ],
+        [
+         0.071062,
+         -0.0035
+        ],
+        [
+         0.06995,
+         -0.00495
+        ],
+        [
+         0.0685,
+         -0.006062
+        ],
+        [
+         0.066812,
+         -0.006761
+        ],
+        [
+         0.065,
+         -0.007
+        ],
+        [
+         0.063188,
+         -0.006761
+        ],
+        [
+         0.0615,
+         -0.006062
+        ],
+        [
+         0.06005,
+         -0.00495
+        ],
+        [
+         0.058938,
+         -0.0035
+        ],
+        [
+         0.058239,
+         -0.001812
+        ],
+        [
+         0.058,
+         0
+        ],
+        [
+         0.058239,
+         0.001812
+        ],
+        [
+         0.058938,
+         0.0035
+        ],
+        [
+         0.06005,
+         0.00495
+        ],
+        [
+         0.0615,
+         0.006062
+        ],
+        [
+         0.063188,
+         0.006761
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0.2315,
+        "z1": 0.247
+       }
       },
       {
        "id": "test-plug-1",
@@ -9836,11 +11021,112 @@
        "tone": 0.3,
        "material": "polypropylene",
        "region": "flue-adapter",
-       "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 1.002,
-       "rx": 0.007,
-       "ry": 0.007
+       "kind": "poly",
+       "points": [
+        [
+         0.098,
+         0.007
+        ],
+        [
+         0.099812,
+         0.006761
+        ],
+        [
+         0.1015,
+         0.006062
+        ],
+        [
+         0.10295,
+         0.00495
+        ],
+        [
+         0.104062,
+         0.0035
+        ],
+        [
+         0.104761,
+         0.001812
+        ],
+        [
+         0.105,
+         0
+        ],
+        [
+         0.104761,
+         -0.001812
+        ],
+        [
+         0.104062,
+         -0.0035
+        ],
+        [
+         0.10295,
+         -0.00495
+        ],
+        [
+         0.1015,
+         -0.006062
+        ],
+        [
+         0.099812,
+         -0.006761
+        ],
+        [
+         0.098,
+         -0.007
+        ],
+        [
+         0.096188,
+         -0.006761
+        ],
+        [
+         0.0945,
+         -0.006062
+        ],
+        [
+         0.09305,
+         -0.00495
+        ],
+        [
+         0.091938,
+         -0.0035
+        ],
+        [
+         0.091239,
+         -0.001812
+        ],
+        [
+         0.091,
+         0
+        ],
+        [
+         0.091239,
+         0.001812
+        ],
+        [
+         0.091938,
+         0.0035
+        ],
+        [
+         0.09305,
+         0.00495
+        ],
+        [
+         0.0945,
+         0.006062
+        ],
+        [
+         0.096188,
+         0.006761
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0.2315,
+        "z1": 0.247
+       }
       },
       {
        "id": "nut-0",
@@ -9852,10 +11138,16 @@
        "material": "brass",
        "region": "connections",
        "kind": "rect",
-       "x": -0.1465,
-       "y": 0.212,
+       "x": 0.1365,
+       "y": -0.692,
        "w": 0.033,
-       "h": 0.012
+       "h": 0.012,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.1465,
+        "z1": -0.1135
+       }
       },
       {
        "id": "stub-0",
@@ -9867,10 +11159,16 @@
        "material": "copper",
        "region": "connections",
        "kind": "rect",
-       "x": -0.141,
-       "y": 0.179,
+       "x": 0.142,
+       "y": -0.725,
        "w": 0.022,
-       "h": 0.033
+       "h": 0.033,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.141,
+        "z1": -0.119
+       }
       },
       {
        "id": "cap-0",
@@ -9882,10 +11180,16 @@
        "material": "brass",
        "region": "connections",
        "kind": "rect",
-       "x": -0.145,
-       "y": 0.159,
+       "x": 0.138,
+       "y": -0.745,
        "w": 0.03,
-       "h": 0.02
+       "h": 0.02,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.145,
+        "z1": -0.115
+       }
       },
       {
        "id": "nut-1",
@@ -9897,10 +11201,16 @@
        "material": "brass",
        "region": "connections",
        "kind": "rect",
-       "x": -0.0815,
-       "y": 0.212,
+       "x": 0.1365,
+       "y": -0.692,
        "w": 0.033,
-       "h": 0.012
+       "h": 0.012,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.0815,
+        "z1": -0.0485
+       }
       },
       {
        "id": "stub-1",
@@ -9912,10 +11222,16 @@
        "material": "copper",
        "region": "connections",
        "kind": "rect",
-       "x": -0.0725,
-       "y": 0.179,
+       "x": 0.1455,
+       "y": -0.725,
        "w": 0.015,
-       "h": 0.033
+       "h": 0.033,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.0725,
+        "z1": -0.0575
+       }
       },
       {
        "id": "cap-1",
@@ -9927,10 +11243,16 @@
        "material": "brass",
        "region": "connections",
        "kind": "rect",
-       "x": -0.077,
-       "y": 0.159,
+       "x": 0.141,
+       "y": -0.745,
        "w": 0.024,
-       "h": 0.02
+       "h": 0.02,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.077,
+        "z1": -0.053
+       }
       },
       {
        "id": "nut-2",
@@ -9942,10 +11264,16 @@
        "material": "brass",
        "region": "connections",
        "kind": "rect",
-       "x": -0.0165,
-       "y": 0.212,
+       "x": 0.1365,
+       "y": -0.692,
        "w": 0.033,
-       "h": 0.012
+       "h": 0.012,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.0165,
+        "z1": 0.0165
+       }
       },
       {
        "id": "stub-2",
@@ -9957,10 +11285,16 @@
        "material": "copper",
        "region": "connections",
        "kind": "rect",
-       "x": -0.011,
-       "y": 0.179,
+       "x": 0.142,
+       "y": -0.725,
        "w": 0.022,
-       "h": 0.033
+       "h": 0.033,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.011,
+        "z1": 0.011
+       }
       },
       {
        "id": "cap-2",
@@ -9972,10 +11306,16 @@
        "material": "brass",
        "region": "connections",
        "kind": "rect",
-       "x": -0.015,
-       "y": 0.159,
+       "x": 0.138,
+       "y": -0.745,
        "w": 0.03,
-       "h": 0.02
+       "h": 0.02,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.015,
+        "z1": 0.015
+       }
       },
       {
        "id": "nut-3",
@@ -9987,10 +11327,16 @@
        "material": "brass",
        "region": "connections",
        "kind": "rect",
-       "x": 0.0485,
-       "y": 0.212,
+       "x": 0.1365,
+       "y": -0.692,
        "w": 0.033,
-       "h": 0.012
+       "h": 0.012,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.0485,
+        "z1": 0.0815
+       }
       },
       {
        "id": "stub-3",
@@ -10002,10 +11348,16 @@
        "material": "copper",
        "region": "connections",
        "kind": "rect",
-       "x": 0.0575,
-       "y": 0.179,
+       "x": 0.1455,
+       "y": -0.725,
        "w": 0.015,
-       "h": 0.033
+       "h": 0.033,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.0575,
+        "z1": 0.0725
+       }
       },
       {
        "id": "cap-3",
@@ -10017,10 +11369,16 @@
        "material": "brass",
        "region": "connections",
        "kind": "rect",
-       "x": 0.053,
-       "y": 0.159,
+       "x": 0.141,
+       "y": -0.745,
        "w": 0.024,
-       "h": 0.02
+       "h": 0.02,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.053,
+        "z1": 0.077
+       }
       },
       {
        "id": "nut-4",
@@ -10032,10 +11390,16 @@
        "material": "brass",
        "region": "connections",
        "kind": "rect",
-       "x": 0.1135,
-       "y": 0.212,
+       "x": 0.1365,
+       "y": -0.692,
        "w": 0.033,
-       "h": 0.012
+       "h": 0.012,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.1135,
+        "z1": 0.1465
+       }
       },
       {
        "id": "stub-4",
@@ -10047,10 +11411,16 @@
        "material": "copper",
        "region": "connections",
        "kind": "rect",
-       "x": 0.119,
-       "y": 0.179,
+       "x": 0.142,
+       "y": -0.725,
        "w": 0.022,
-       "h": 0.033
+       "h": 0.033,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.119,
+        "z1": 0.141
+       }
       },
       {
        "id": "cap-4",
@@ -10062,10 +11432,16 @@
        "material": "brass",
        "region": "connections",
        "kind": "rect",
-       "x": 0.115,
-       "y": 0.159,
+       "x": 0.138,
+       "y": -0.745,
        "w": 0.03,
-       "h": 0.02
+       "h": 0.02,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.115,
+        "z1": 0.145
+       }
       },
       {
        "id": "trap",
@@ -10077,10 +11453,16 @@
        "material": "polypropylene",
        "region": "condensate-trap",
        "kind": "rect",
-       "x": -0.02,
-       "y": 0.174,
+       "x": 0.233,
+       "y": -0.73,
        "w": 0.04,
-       "h": 0.05
+       "h": 0.05,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.02,
+        "z1": 0.02
+       }
       },
       {
        "id": "drain-hose",
@@ -10092,10 +11474,16 @@
        "material": "pe-hose",
        "region": "condensate-trap",
        "kind": "rect",
-       "x": -0.0125,
-       "y": 0.154,
+       "x": 0.2405,
+       "y": -0.75,
        "w": 0.025,
-       "h": 0.02
+       "h": 0.02,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.0125,
+        "z1": 0.0125
+       }
       },
       {
        "id": "spacer-0",
@@ -10107,10 +11495,16 @@
        "material": "epdm",
        "region": "casing",
        "kind": "rect",
-       "x": -0.17,
-       "y": 0.244,
-       "w": 0.04,
-       "h": 0.03
+       "x": -0.008,
+       "y": -0.66,
+       "w": 0.016,
+       "h": 0.03,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.17,
+        "z1": -0.13
+       }
       },
       {
        "id": "spacer-1",
@@ -10122,10 +11516,16 @@
        "material": "epdm",
        "region": "casing",
        "kind": "rect",
-       "x": 0.13,
-       "y": 0.244,
-       "w": 0.04,
-       "h": 0.03
+       "x": -0.008,
+       "y": -0.66,
+       "w": 0.016,
+       "h": 0.03,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.13,
+        "z1": 0.17
+       }
       },
       {
        "id": "rail",
@@ -10137,10 +11537,16 @@
        "material": "galv",
        "region": "bracket",
        "kind": "rect",
-       "x": -0.19,
-       "y": 0.859,
-       "w": 0.38,
-       "h": 0.045
+       "x": -0.008,
+       "y": -0.045,
+       "w": 0.016,
+       "h": 0.045,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.19,
+        "z1": 0.19
+       }
       },
       {
        "id": "strap-0-back-foot",
@@ -10152,10 +11558,16 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": -0.185,
-       "y": 0.15,
-       "w": 0.05,
-       "h": 0.13104
+       "x": 0,
+       "y": 0,
+       "w": 0.148,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.185,
+        "z1": -0.135
+       }
       },
       {
        "id": "strap-0-back-leg",
@@ -10167,10 +11579,16 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": -0.185,
-       "y": 0.28008,
-       "w": 0.05,
-       "h": 0.64487
+       "x": 0,
+       "y": 0,
+       "w": 0.73261,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.185,
+        "z1": -0.135
+       }
       },
       {
        "id": "strap-0-back-top",
@@ -10182,10 +11600,16 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": -0.185,
-       "y": 0.924,
-       "w": 0.05,
-       "h": 0.002
+       "x": 0,
+       "y": 0,
+       "w": 0.185,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.185,
+        "z1": -0.135
+       }
       },
       {
        "id": "strap-0-front-foot",
@@ -10197,10 +11621,16 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": -0.185,
-       "y": 0.15,
-       "w": 0.05,
-       "h": 0.13035
+       "x": 0,
+       "y": -0.002,
+       "w": 0.148,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.185,
+        "z1": -0.135
+       }
       },
       {
        "id": "strap-0-front-leg",
@@ -10212,10 +11642,16 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": -0.185,
-       "y": 0.27938,
-       "w": 0.05,
-       "h": 0.6456
+       "x": 0,
+       "y": -0.002,
+       "w": 0.73742,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.185,
+        "z1": -0.135
+       }
       },
       {
        "id": "strap-0-front-top",
@@ -10227,10 +11663,16 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": -0.185,
-       "y": 0.924,
-       "w": 0.05,
-       "h": 0.002
+       "x": 0,
+       "y": -0.002,
+       "w": 0.175,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.185,
+        "z1": -0.135
+       }
       },
       {
        "id": "ratchet-0",
@@ -10242,10 +11684,16 @@
        "material": "steel",
        "region": "straps",
        "kind": "rect",
-       "x": -0.19,
-       "y": 0.926,
-       "w": 0.06,
-       "h": 0.025
+       "x": 0.03,
+       "y": -0.027,
+       "w": 0.12,
+       "h": 0.025,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.19,
+        "z1": -0.13
+       }
       },
       {
        "id": "strap-1-back-foot",
@@ -10257,10 +11705,16 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": 0.135,
-       "y": 0.15,
-       "w": 0.05,
-       "h": 0.13104
+       "x": 0,
+       "y": 0,
+       "w": 0.148,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.135,
+        "z1": 0.185
+       }
       },
       {
        "id": "strap-1-back-leg",
@@ -10272,10 +11726,16 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": 0.135,
-       "y": 0.28008,
-       "w": 0.05,
-       "h": 0.64487
+       "x": 0,
+       "y": 0,
+       "w": 0.73261,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.135,
+        "z1": 0.185
+       }
       },
       {
        "id": "strap-1-back-top",
@@ -10287,10 +11747,16 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": 0.135,
-       "y": 0.924,
-       "w": 0.05,
-       "h": 0.002
+       "x": 0,
+       "y": 0,
+       "w": 0.185,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.135,
+        "z1": 0.185
+       }
       },
       {
        "id": "strap-1-front-foot",
@@ -10302,10 +11768,16 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": 0.135,
-       "y": 0.15,
-       "w": 0.05,
-       "h": 0.13035
+       "x": 0,
+       "y": -0.002,
+       "w": 0.148,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.135,
+        "z1": 0.185
+       }
       },
       {
        "id": "strap-1-front-leg",
@@ -10317,10 +11789,16 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": 0.135,
-       "y": 0.27938,
-       "w": 0.05,
-       "h": 0.6456
+       "x": 0,
+       "y": -0.002,
+       "w": 0.73742,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.135,
+        "z1": 0.185
+       }
       },
       {
        "id": "strap-1-front-top",
@@ -10332,10 +11810,16 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": 0.135,
-       "y": 0.924,
-       "w": 0.05,
-       "h": 0.002
+       "x": 0,
+       "y": -0.002,
+       "w": 0.175,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.135,
+        "z1": 0.185
+       }
       },
       {
        "id": "ratchet-1",
@@ -10347,10 +11831,16 @@
        "material": "steel",
        "region": "straps",
        "kind": "rect",
-       "x": 0.13,
-       "y": 0.926,
-       "w": 0.06,
-       "h": 0.025
+       "x": 0.03,
+       "y": -0.027,
+       "w": 0.12,
+       "h": 0.025,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.13,
+        "z1": 0.19
+       }
       },
       {
        "id": "fascia-seam",
@@ -10363,15 +11853,29 @@
        "kind": "poly",
        "points": [
         [
-         -0.215,
-         0.339
+         -0.566,
+         -0.215
         ],
         [
-         0.215,
-         0.339
+         -0.566,
+         0.215
+        ],
+        [
+         -0.564,
+         0.215
+        ],
+        [
+         -0.564,
+         -0.215
         ]
        ],
-       "closed": false
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0.358,
+        "z1": 0.36
+       }
       },
       {
        "id": "limescale-streak",
@@ -10384,19 +11888,37 @@
        "kind": "poly",
        "points": [
         [
-         0.02,
-         0.229
+         -0.675275,
+         0.020962
         ],
         [
-         0.03,
-         0.264
+         -0.640071,
+         0.030997
         ],
         [
-         0.025,
-         0.299
+         -0.604859,
+         0.02599
+        ],
+        [
+         -0.605141,
+         0.02401
+        ],
+        [
+         -0.639929,
+         0.029003
+        ],
+        [
+         -0.674725,
+         0.019038
         ]
        ],
-       "closed": false
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0.374,
+        "z1": 0.376
+       }
       },
       {
        "id": "pallet-stamp",
@@ -10438,15 +11960,29 @@
        "kind": "poly",
        "points": [
         [
-         -0.16,
-         0.25
+         0,
+         0
         ],
         [
-         -0.16,
-         0.85
+         0.652771,
+         0
+        ],
+        [
+         0.652771,
+         -0.002
+        ],
+        [
+         0,
+         -0.002
         ]
        ],
-       "closed": false
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.161,
+        "z1": -0.159
+       }
       },
       {
        "id": "stitching-1",
@@ -10459,15 +11995,29 @@
        "kind": "poly",
        "points": [
         [
-         0.16,
-         0.25
+         0,
+         0
         ],
         [
-         0.16,
-         0.85
+         0.652771,
+         0
+        ],
+        [
+         0.652771,
+         -0.002
+        ],
+        [
+         0,
+         -0.002
         ]
        ],
-       "closed": false
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.159,
+        "z1": 0.161
+       }
       }
      ],
      "plan": [
@@ -10931,10 +12481,17 @@
        "material": "painted-steel-aged",
        "region": "casing",
        "kind": "rect",
-       "x": -0.175,
-       "y": -0.22,
+       "x": 0.008,
+       "y": -0.68,
        "w": 0.35,
-       "h": 0.44
+       "h": 0.7,
+       "r": 0.008,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.22,
+        "z1": 0.22
+       }
       },
       {
        "id": "fascia",
@@ -10946,10 +12503,16 @@
        "material": "polycarbonate",
        "region": "controls",
        "kind": "rect",
-       "x": 0.175,
-       "y": -0.2,
+       "x": 0.358,
+       "y": -0.66,
        "w": 0.016,
-       "h": 0.4
+       "h": 0.085,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2,
+        "z1": 0.2
+       }
       },
       {
        "id": "knob-0",
@@ -10961,10 +12524,16 @@
        "material": "polycarbonate",
        "region": "controls",
        "kind": "rect",
-       "x": 0.191,
-       "y": 0.088,
+       "x": 0.374,
+       "y": -0.6295,
        "w": 0.012,
-       "h": 0.024
+       "h": 0.024,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.088,
+        "z1": 0.112
+       }
       },
       {
        "id": "knob-1",
@@ -10976,10 +12545,16 @@
        "material": "polycarbonate",
        "region": "controls",
        "kind": "rect",
-       "x": 0.191,
-       "y": 0.133,
+       "x": 0.374,
+       "y": -0.6295,
        "w": 0.012,
-       "h": 0.024
+       "h": 0.024,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.133,
+        "z1": 0.157
+       }
       },
       {
        "id": "adapter-collar",
@@ -10990,11 +12565,112 @@
        "tone": 0.8,
        "material": "flue-aluminium",
        "region": "flue-adapter",
-       "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
-       "rx": 0.0625,
-       "ry": 0.0625
+       "kind": "poly",
+       "points": [
+        [
+         0.2455,
+         0
+        ],
+        [
+         0.24337,
+         0.016176
+        ],
+        [
+         0.237127,
+         0.03125
+        ],
+        [
+         0.227194,
+         0.044194
+        ],
+        [
+         0.21425,
+         0.054127
+        ],
+        [
+         0.199176,
+         0.06037
+        ],
+        [
+         0.183,
+         0.0625
+        ],
+        [
+         0.166824,
+         0.06037
+        ],
+        [
+         0.15175,
+         0.054127
+        ],
+        [
+         0.138806,
+         0.044194
+        ],
+        [
+         0.128873,
+         0.03125
+        ],
+        [
+         0.12263,
+         0.016176
+        ],
+        [
+         0.1205,
+         0
+        ],
+        [
+         0.12263,
+         -0.016176
+        ],
+        [
+         0.128873,
+         -0.03125
+        ],
+        [
+         0.138806,
+         -0.044194
+        ],
+        [
+         0.15175,
+         -0.054127
+        ],
+        [
+         0.166824,
+         -0.06037
+        ],
+        [
+         0.183,
+         -0.0625
+        ],
+        [
+         0.199176,
+         -0.06037
+        ],
+        [
+         0.21425,
+         -0.054127
+        ],
+        [
+         0.227194,
+         -0.044194
+        ],
+        [
+         0.237127,
+         -0.03125
+        ],
+        [
+         0.24337,
+         -0.016176
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": 0.02,
+        "z1": 0.045
+       }
       },
       {
        "id": "adapter-air-pipe",
@@ -11006,7 +12682,13 @@
        "material": "flue-aluminium",
        "region": "flue-adapter",
        "kind": "path",
-       "d": "M 0.05 0.0 A 0.05 0.05 0 1 0 -0.05 0.0 A 0.05 0.05 0 1 0 0.05 0.0 Z M 0.048 0.0 A 0.048 0.048 0 1 0 -0.048 0.0 A 0.048 0.048 0 1 0 0.048 0.0 Z"
+       "d": "M 0.233 0 A 0.05 0.05 0 1 0 0.133 0 A 0.05 0.05 0 1 0 0.233 0 Z M 0.231 0 A 0.048 0.048 0 1 0 0.135 0 A 0.048 0.048 0 1 0 0.231 0 Z",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": 0.045,
+        "z1": 0.12
+       }
       },
       {
        "id": "adapter-flue-pipe",
@@ -11018,7 +12700,13 @@
        "material": "polypropylene",
        "region": "flue-adapter",
        "kind": "path",
-       "d": "M 0.03 0.0 A 0.03 0.03 0 1 0 -0.03 0.0 A 0.03 0.03 0 1 0 0.03 0.0 Z M 0.0285 0.0 A 0.0285 0.0285 0 1 0 -0.0285 0.0 A 0.0285 0.0285 0 1 0 0.0285 0.0 Z"
+       "d": "M 0.213 0 A 0.03 0.03 0 1 0 0.153 0 A 0.03 0.03 0 1 0 0.213 0 Z M 0.2115 0 A 0.0285 0.0285 0 1 0 0.1545 0 A 0.0285 0.0285 0 1 0 0.2115 0 Z",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": 0.045,
+        "z1": 0.125
+       }
       },
       {
        "id": "test-plug-0",
@@ -11030,10 +12718,16 @@
        "material": "polypropylene",
        "region": "flue-adapter",
        "kind": "rect",
-       "x": 0.0485,
-       "y": -0.007,
+       "x": 0.2315,
+       "y": 0.058,
        "w": 0.0155,
-       "h": 0.014
+       "h": 0.014,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.007,
+        "z1": 0.007
+       }
       },
       {
        "id": "test-plug-1",
@@ -11045,10 +12739,16 @@
        "material": "polypropylene",
        "region": "flue-adapter",
        "kind": "rect",
-       "x": 0.0485,
-       "y": -0.007,
+       "x": 0.2315,
+       "y": 0.091,
        "w": 0.0155,
-       "h": 0.014
+       "h": 0.014,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.007,
+        "z1": 0.007
+       }
       },
       {
        "id": "spacer-0",
@@ -11060,10 +12760,16 @@
        "material": "epdm",
        "region": "casing",
        "kind": "rect",
-       "x": -0.191,
-       "y": -0.17,
+       "x": -0.008,
+       "y": -0.66,
        "w": 0.016,
-       "h": 0.04
+       "h": 0.03,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.17,
+        "z1": -0.13
+       }
       },
       {
        "id": "spacer-1",
@@ -11075,10 +12781,16 @@
        "material": "epdm",
        "region": "casing",
        "kind": "rect",
-       "x": -0.191,
-       "y": 0.13,
+       "x": -0.008,
+       "y": -0.66,
        "w": 0.016,
-       "h": 0.04
+       "h": 0.03,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.13,
+        "z1": 0.17
+       }
       },
       {
        "id": "rail",
@@ -11090,10 +12802,16 @@
        "material": "galv",
        "region": "bracket",
        "kind": "rect",
-       "x": -0.191,
-       "y": -0.19,
+       "x": -0.008,
+       "y": -0.045,
        "w": 0.016,
-       "h": 0.38
+       "h": 0.045,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.19,
+        "z1": 0.19
+       }
       },
       {
        "id": "strap-0-back-foot",
@@ -11105,10 +12823,16 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": -0.60676,
-       "y": -0.185,
-       "w": 0.07235,
-       "h": 0.05
+       "x": 0,
+       "y": 0,
+       "w": 0.148,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.185,
+        "z1": -0.135
+       }
       },
       {
        "id": "strap-0-back-leg",
@@ -11120,10 +12844,16 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": -0.53617,
-       "y": -0.185,
-       "w": 0.35117,
-       "h": 0.05
+       "x": 0,
+       "y": 0,
+       "w": 0.73261,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.185,
+        "z1": -0.135
+       }
       },
       {
        "id": "strap-0-back-top",
@@ -11135,10 +12865,16 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": -0.185,
-       "y": -0.185,
+       "x": 0,
+       "y": 0,
        "w": 0.185,
-       "h": 0.05
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.185,
+        "z1": -0.135
+       }
       },
       {
        "id": "strap-0-front-foot",
@@ -11150,10 +12886,16 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": 0.53312,
-       "y": -0.185,
-       "w": 0.07362,
-       "h": 0.05
+       "x": 0,
+       "y": -0.002,
+       "w": 0.148,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.185,
+        "z1": -0.135
+       }
       },
       {
        "id": "strap-0-front-leg",
@@ -11165,10 +12907,16 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": 0.175,
-       "y": -0.185,
-       "w": 0.35987,
-       "h": 0.05
+       "x": 0,
+       "y": -0.002,
+       "w": 0.73742,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.185,
+        "z1": -0.135
+       }
       },
       {
        "id": "strap-0-front-top",
@@ -11180,10 +12928,16 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": 0.0,
-       "y": -0.185,
+       "x": 0,
+       "y": -0.002,
        "w": 0.175,
-       "h": 0.05
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.185,
+        "z1": -0.135
+       }
       },
       {
        "id": "ratchet-0",
@@ -11195,10 +12949,16 @@
        "material": "steel",
        "region": "straps",
        "kind": "rect",
-       "x": 0.025,
-       "y": -0.19,
+       "x": 0.03,
+       "y": -0.027,
        "w": 0.12,
-       "h": 0.06
+       "h": 0.025,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.19,
+        "z1": -0.13
+       }
       },
       {
        "id": "strap-1-back-foot",
@@ -11210,10 +12970,16 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": -0.60676,
-       "y": 0.135,
-       "w": 0.07235,
-       "h": 0.05
+       "x": 0,
+       "y": 0,
+       "w": 0.148,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.135,
+        "z1": 0.185
+       }
       },
       {
        "id": "strap-1-back-leg",
@@ -11225,10 +12991,16 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": -0.53617,
-       "y": 0.135,
-       "w": 0.35117,
-       "h": 0.05
+       "x": 0,
+       "y": 0,
+       "w": 0.73261,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.135,
+        "z1": 0.185
+       }
       },
       {
        "id": "strap-1-back-top",
@@ -11240,10 +13012,16 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": -0.185,
-       "y": 0.135,
+       "x": 0,
+       "y": 0,
        "w": 0.185,
-       "h": 0.05
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.135,
+        "z1": 0.185
+       }
       },
       {
        "id": "strap-1-front-foot",
@@ -11255,10 +13033,16 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": 0.53312,
-       "y": 0.135,
-       "w": 0.07362,
-       "h": 0.05
+       "x": 0,
+       "y": -0.002,
+       "w": 0.148,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.135,
+        "z1": 0.185
+       }
       },
       {
        "id": "strap-1-front-leg",
@@ -11270,10 +13054,16 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": 0.175,
-       "y": 0.135,
-       "w": 0.35987,
-       "h": 0.05
+       "x": 0,
+       "y": -0.002,
+       "w": 0.73742,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.135,
+        "z1": 0.185
+       }
       },
       {
        "id": "strap-1-front-top",
@@ -11285,10 +13075,16 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.135,
+       "x": 0,
+       "y": -0.002,
        "w": 0.175,
-       "h": 0.05
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.135,
+        "z1": 0.185
+       }
       },
       {
        "id": "ratchet-1",
@@ -11300,10 +13096,16 @@
        "material": "steel",
        "region": "straps",
        "kind": "rect",
-       "x": 0.025,
-       "y": 0.13,
+       "x": 0.03,
+       "y": -0.027,
        "w": 0.12,
-       "h": 0.06
+       "h": 0.025,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.13,
+        "z1": 0.19
+       }
       }
      ]
     },
@@ -11369,7 +13171,7 @@
        "material": "pallet-pine",
        "region": "pallet",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.122,
        "w": 1.2,
        "h": 0.022
@@ -11384,7 +13186,7 @@
        "material": "pallet-pine",
        "region": "pallet",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.122,
        "w": 1.2,
        "h": 0.022
@@ -11399,7 +13201,7 @@
        "material": "pallet-pine",
        "region": "pallet",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.122,
        "w": 1.2,
        "h": 0.022
@@ -11414,7 +13216,7 @@
        "material": "pallet-pine",
        "region": "pallet",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.122,
        "w": 1.2,
        "h": 0.022
@@ -11429,7 +13231,7 @@
        "material": "pallet-pine",
        "region": "pallet",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.122,
        "w": 1.2,
        "h": 0.022
@@ -11444,7 +13246,7 @@
        "material": "pallet-pine",
        "region": "pallet",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.1,
        "w": 0.145,
        "h": 0.022
@@ -11489,7 +13291,7 @@
        "material": "pallet-pine",
        "region": "pallet",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.022,
        "w": 0.145,
        "h": 0.078
@@ -11504,7 +13306,7 @@
        "material": "pallet-pine",
        "region": "pallet",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.022,
        "w": 0.145,
        "h": 0.078
@@ -11519,7 +13321,7 @@
        "material": "pallet-pine",
        "region": "pallet",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.022,
        "w": 0.145,
        "h": 0.078
@@ -11624,8 +13426,8 @@
        "material": "pallet-pine",
        "region": "pallet",
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 1.2,
        "h": 0.022
       },
@@ -11639,8 +13441,8 @@
        "material": "pallet-pine",
        "region": "pallet",
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 1.2,
        "h": 0.022
       },
@@ -11654,8 +13456,8 @@
        "material": "pallet-pine",
        "region": "pallet",
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 1.2,
        "h": 0.022
       },
@@ -11970,8 +13772,8 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.148,
        "h": 0.002
       },
@@ -11985,8 +13787,8 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.73261,
        "h": 0.002
       },
@@ -12000,8 +13802,8 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.185,
        "h": 0.002
       },
@@ -12015,7 +13817,7 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.002,
        "w": 0.148,
        "h": 0.002
@@ -12030,7 +13832,7 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.002,
        "w": 0.73742,
        "h": 0.002
@@ -12045,7 +13847,7 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.002,
        "w": 0.175,
        "h": 0.002
@@ -12075,8 +13877,8 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.148,
        "h": 0.002
       },
@@ -12090,8 +13892,8 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.73261,
        "h": 0.002
       },
@@ -12105,8 +13907,8 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.185,
        "h": 0.002
       },
@@ -12120,7 +13922,7 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.002,
        "w": 0.148,
        "h": 0.002
@@ -12135,7 +13937,7 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.002,
        "w": 0.73742,
        "h": 0.002
@@ -12150,7 +13952,7 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.002,
        "w": 0.175,
        "h": 0.002
@@ -12438,7 +14240,7 @@
        "region": "pallet",
        "kind": "rect",
        "x": -0.4,
-       "y": 0.0,
+       "y": 0,
        "w": 0.1,
        "h": 0.022
       },
@@ -12453,7 +14255,7 @@
        "region": "pallet",
        "kind": "rect",
        "x": -0.0725,
-       "y": 0.0,
+       "y": 0,
        "w": 0.145,
        "h": 0.022
       },
@@ -12468,7 +14270,7 @@
        "region": "pallet",
        "kind": "rect",
        "x": 0.3,
-       "y": 0.0,
+       "y": 0,
        "w": 0.1,
        "h": 0.022
       },
@@ -12572,10 +14374,17 @@
        "material": "painted-steel-aged",
        "region": "casing",
        "kind": "rect",
-       "x": -0.22,
-       "y": 0.224,
-       "w": 0.44,
-       "h": 0.7
+       "x": 0.008,
+       "y": -0.68,
+       "w": 0.35,
+       "h": 0.7,
+       "r": 0.012,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.22,
+        "z1": 0.22
+       }
       },
       {
        "id": "fascia",
@@ -12587,10 +14396,16 @@
        "material": "polycarbonate",
        "region": "controls",
        "kind": "rect",
-       "x": -0.2,
-       "y": 0.244,
-       "w": 0.4,
-       "h": 0.085
+       "x": 0.358,
+       "y": -0.66,
+       "w": 0.016,
+       "h": 0.085,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2,
+        "z1": 0.2
+       }
       },
       {
        "id": "adapter-collar",
@@ -12602,10 +14417,16 @@
        "material": "flue-aluminium",
        "region": "flue-adapter",
        "kind": "rect",
-       "x": -0.0625,
-       "y": 0.924,
+       "x": 0.1205,
+       "y": 0.02,
        "w": 0.125,
-       "h": 0.025
+       "h": 0.025,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.0625,
+        "z1": 0.0625
+       }
       },
       {
        "id": "adapter-air-pipe",
@@ -12617,10 +14438,16 @@
        "material": "flue-aluminium",
        "region": "flue-adapter",
        "kind": "rect",
-       "x": -0.05,
-       "y": 0.949,
+       "x": 0.133,
+       "y": 0.045,
        "w": 0.1,
-       "h": 0.075
+       "h": 0.075,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.05,
+        "z1": 0.05
+       }
       },
       {
        "id": "adapter-flue-pipe",
@@ -12632,10 +14459,16 @@
        "material": "polypropylene",
        "region": "flue-adapter",
        "kind": "rect",
-       "x": -0.03,
-       "y": 0.924,
+       "x": 0.153,
+       "y": 0.02,
        "w": 0.06,
-       "h": 0.105
+       "h": 0.105,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.03,
+        "z1": 0.03
+       }
       },
       {
        "id": "connection-0",
@@ -12647,10 +14480,16 @@
        "material": "brass",
        "region": "connections",
        "kind": "rect",
-       "x": -0.145,
-       "y": 0.159,
+       "x": 0.138,
+       "y": -0.745,
        "w": 0.03,
-       "h": 0.065
+       "h": 0.065,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.145,
+        "z1": -0.115
+       }
       },
       {
        "id": "connection-1",
@@ -12662,10 +14501,16 @@
        "material": "brass",
        "region": "connections",
        "kind": "rect",
-       "x": -0.08,
-       "y": 0.159,
+       "x": 0.138,
+       "y": -0.745,
        "w": 0.03,
-       "h": 0.065
+       "h": 0.065,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.08,
+        "z1": -0.05
+       }
       },
       {
        "id": "connection-2",
@@ -12677,10 +14522,16 @@
        "material": "brass",
        "region": "connections",
        "kind": "rect",
-       "x": -0.015,
-       "y": 0.159,
+       "x": 0.138,
+       "y": -0.745,
        "w": 0.03,
-       "h": 0.065
+       "h": 0.065,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.015,
+        "z1": 0.015
+       }
       },
       {
        "id": "connection-3",
@@ -12692,10 +14543,16 @@
        "material": "brass",
        "region": "connections",
        "kind": "rect",
-       "x": 0.05,
-       "y": 0.159,
+       "x": 0.138,
+       "y": -0.745,
        "w": 0.03,
-       "h": 0.065
+       "h": 0.065,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.05,
+        "z1": 0.08
+       }
       },
       {
        "id": "connection-4",
@@ -12707,10 +14564,16 @@
        "material": "brass",
        "region": "connections",
        "kind": "rect",
-       "x": 0.115,
-       "y": 0.159,
+       "x": 0.138,
+       "y": -0.745,
        "w": 0.03,
-       "h": 0.065
+       "h": 0.065,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.115,
+        "z1": 0.145
+       }
       },
       {
        "id": "trap",
@@ -12722,10 +14585,16 @@
        "material": "polypropylene",
        "region": "condensate-trap",
        "kind": "rect",
-       "x": -0.02,
-       "y": 0.154,
+       "x": 0.233,
+       "y": -0.75,
        "w": 0.04,
-       "h": 0.07
+       "h": 0.07,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.02,
+        "z1": 0.02
+       }
       },
       {
        "id": "spacer-0",
@@ -12737,10 +14606,16 @@
        "material": "epdm",
        "region": "casing",
        "kind": "rect",
-       "x": -0.17,
-       "y": 0.244,
-       "w": 0.04,
-       "h": 0.03
+       "x": -0.008,
+       "y": -0.66,
+       "w": 0.016,
+       "h": 0.03,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.17,
+        "z1": -0.13
+       }
       },
       {
        "id": "spacer-1",
@@ -12752,10 +14627,16 @@
        "material": "epdm",
        "region": "casing",
        "kind": "rect",
-       "x": 0.13,
-       "y": 0.244,
-       "w": 0.04,
-       "h": 0.03
+       "x": -0.008,
+       "y": -0.66,
+       "w": 0.016,
+       "h": 0.03,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.13,
+        "z1": 0.17
+       }
       },
       {
        "id": "rail",
@@ -12767,10 +14648,16 @@
        "material": "galv",
        "region": "bracket",
        "kind": "rect",
-       "x": -0.19,
-       "y": 0.859,
-       "w": 0.38,
-       "h": 0.045
+       "x": -0.008,
+       "y": -0.045,
+       "w": 0.016,
+       "h": 0.045,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.19,
+        "z1": 0.19
+       }
       },
       {
        "id": "strap-0-back-foot",
@@ -12782,10 +14669,16 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": -0.185,
-       "y": 0.15,
-       "w": 0.05,
-       "h": 0.13104
+       "x": 0,
+       "y": 0,
+       "w": 0.148,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.185,
+        "z1": -0.135
+       }
       },
       {
        "id": "strap-0-back-leg",
@@ -12797,10 +14690,16 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": -0.185,
-       "y": 0.28008,
-       "w": 0.05,
-       "h": 0.64487
+       "x": 0,
+       "y": 0,
+       "w": 0.73261,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.185,
+        "z1": -0.135
+       }
       },
       {
        "id": "strap-0-back-top",
@@ -12812,10 +14711,16 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": -0.185,
-       "y": 0.924,
-       "w": 0.05,
-       "h": 0.002
+       "x": 0,
+       "y": 0,
+       "w": 0.185,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.185,
+        "z1": -0.135
+       }
       },
       {
        "id": "strap-0-front-foot",
@@ -12827,10 +14732,16 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": -0.185,
-       "y": 0.15,
-       "w": 0.05,
-       "h": 0.13035
+       "x": 0,
+       "y": -0.002,
+       "w": 0.148,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.185,
+        "z1": -0.135
+       }
       },
       {
        "id": "strap-0-front-leg",
@@ -12842,10 +14753,16 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": -0.185,
-       "y": 0.27938,
-       "w": 0.05,
-       "h": 0.6456
+       "x": 0,
+       "y": -0.002,
+       "w": 0.73742,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.185,
+        "z1": -0.135
+       }
       },
       {
        "id": "strap-0-front-top",
@@ -12857,10 +14774,16 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": -0.185,
-       "y": 0.924,
-       "w": 0.05,
-       "h": 0.002
+       "x": 0,
+       "y": -0.002,
+       "w": 0.175,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.185,
+        "z1": -0.135
+       }
       },
       {
        "id": "ratchet-0",
@@ -12872,10 +14795,16 @@
        "material": "steel",
        "region": "straps",
        "kind": "rect",
-       "x": -0.19,
-       "y": 0.926,
-       "w": 0.06,
-       "h": 0.025
+       "x": 0.03,
+       "y": -0.027,
+       "w": 0.12,
+       "h": 0.025,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.19,
+        "z1": -0.13
+       }
       },
       {
        "id": "strap-1-back-foot",
@@ -12887,10 +14816,16 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": 0.135,
-       "y": 0.15,
-       "w": 0.05,
-       "h": 0.13104
+       "x": 0,
+       "y": 0,
+       "w": 0.148,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.135,
+        "z1": 0.185
+       }
       },
       {
        "id": "strap-1-back-leg",
@@ -12902,10 +14837,16 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": 0.135,
-       "y": 0.28008,
-       "w": 0.05,
-       "h": 0.64487
+       "x": 0,
+       "y": 0,
+       "w": 0.73261,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.135,
+        "z1": 0.185
+       }
       },
       {
        "id": "strap-1-back-top",
@@ -12917,10 +14858,16 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": 0.135,
-       "y": 0.924,
-       "w": 0.05,
-       "h": 0.002
+       "x": 0,
+       "y": 0,
+       "w": 0.185,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.135,
+        "z1": 0.185
+       }
       },
       {
        "id": "strap-1-front-foot",
@@ -12932,10 +14879,16 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": 0.135,
-       "y": 0.15,
-       "w": 0.05,
-       "h": 0.13035
+       "x": 0,
+       "y": -0.002,
+       "w": 0.148,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.135,
+        "z1": 0.185
+       }
       },
       {
        "id": "strap-1-front-leg",
@@ -12947,10 +14900,16 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": 0.135,
-       "y": 0.27938,
-       "w": 0.05,
-       "h": 0.6456
+       "x": 0,
+       "y": -0.002,
+       "w": 0.73742,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.135,
+        "z1": 0.185
+       }
       },
       {
        "id": "strap-1-front-top",
@@ -12962,10 +14921,16 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": 0.135,
-       "y": 0.924,
-       "w": 0.05,
-       "h": 0.002
+       "x": 0,
+       "y": -0.002,
+       "w": 0.175,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.135,
+        "z1": 0.185
+       }
       },
       {
        "id": "ratchet-1",
@@ -12977,10 +14942,16 @@
        "material": "steel",
        "region": "straps",
        "kind": "rect",
-       "x": 0.13,
-       "y": 0.926,
-       "w": 0.06,
-       "h": 0.025
+       "x": 0.03,
+       "y": -0.027,
+       "w": 0.12,
+       "h": 0.025,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.13,
+        "z1": 0.19
+       }
       },
       {
        "id": "fascia-seam",
@@ -12993,15 +14964,29 @@
        "kind": "poly",
        "points": [
         [
-         -0.215,
-         0.339
+         -0.566,
+         -0.215
         ],
         [
-         0.215,
-         0.339
+         -0.566,
+         0.215
+        ],
+        [
+         -0.564,
+         0.215
+        ],
+        [
+         -0.564,
+         -0.215
         ]
        ],
-       "closed": false
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0.358,
+        "z1": 0.36
+       }
       }
      ],
      "plan": [
@@ -13405,10 +15390,17 @@
        "material": "painted-steel-aged",
        "region": "casing",
        "kind": "rect",
-       "x": -0.175,
-       "y": -0.22,
+       "x": 0.008,
+       "y": -0.68,
        "w": 0.35,
-       "h": 0.44
+       "h": 0.7,
+       "r": 0.012,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.22,
+        "z1": 0.22
+       }
       },
       {
        "id": "fascia",
@@ -13420,10 +15412,16 @@
        "material": "polycarbonate",
        "region": "controls",
        "kind": "rect",
-       "x": 0.175,
-       "y": -0.2,
+       "x": 0.358,
+       "y": -0.66,
        "w": 0.016,
-       "h": 0.4
+       "h": 0.085,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2,
+        "z1": 0.2
+       }
       },
       {
        "id": "adapter-collar",
@@ -13434,11 +15432,112 @@
        "tone": 0.8,
        "material": "flue-aluminium",
        "region": "flue-adapter",
-       "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
-       "rx": 0.0625,
-       "ry": 0.0625
+       "kind": "poly",
+       "points": [
+        [
+         0.2455,
+         0
+        ],
+        [
+         0.24337,
+         0.016176
+        ],
+        [
+         0.237127,
+         0.03125
+        ],
+        [
+         0.227194,
+         0.044194
+        ],
+        [
+         0.21425,
+         0.054127
+        ],
+        [
+         0.199176,
+         0.06037
+        ],
+        [
+         0.183,
+         0.0625
+        ],
+        [
+         0.166824,
+         0.06037
+        ],
+        [
+         0.15175,
+         0.054127
+        ],
+        [
+         0.138806,
+         0.044194
+        ],
+        [
+         0.128873,
+         0.03125
+        ],
+        [
+         0.12263,
+         0.016176
+        ],
+        [
+         0.1205,
+         0
+        ],
+        [
+         0.12263,
+         -0.016176
+        ],
+        [
+         0.128873,
+         -0.03125
+        ],
+        [
+         0.138806,
+         -0.044194
+        ],
+        [
+         0.15175,
+         -0.054127
+        ],
+        [
+         0.166824,
+         -0.06037
+        ],
+        [
+         0.183,
+         -0.0625
+        ],
+        [
+         0.199176,
+         -0.06037
+        ],
+        [
+         0.21425,
+         -0.054127
+        ],
+        [
+         0.227194,
+         -0.044194
+        ],
+        [
+         0.237127,
+         -0.03125
+        ],
+        [
+         0.24337,
+         -0.016176
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": 0.02,
+        "z1": 0.045
+       }
       },
       {
        "id": "adapter-air-pipe",
@@ -13450,7 +15549,13 @@
        "material": "flue-aluminium",
        "region": "flue-adapter",
        "kind": "path",
-       "d": "M 0.05 0.0 A 0.05 0.05 0 1 0 -0.05 0.0 A 0.05 0.05 0 1 0 0.05 0.0 Z M 0.048 0.0 A 0.048 0.048 0 1 0 -0.048 0.0 A 0.048 0.048 0 1 0 0.048 0.0 Z"
+       "d": "M 0.233 0 A 0.05 0.05 0 1 0 0.133 0 A 0.05 0.05 0 1 0 0.233 0 Z M 0.231 0 A 0.048 0.048 0 1 0 0.135 0 A 0.048 0.048 0 1 0 0.231 0 Z",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": 0.045,
+        "z1": 0.12
+       }
       },
       {
        "id": "adapter-flue-pipe",
@@ -13462,7 +15567,13 @@
        "material": "polypropylene",
        "region": "flue-adapter",
        "kind": "path",
-       "d": "M 0.03 0.0 A 0.03 0.03 0 1 0 -0.03 0.0 A 0.03 0.03 0 1 0 0.03 0.0 Z M 0.0285 0.0 A 0.0285 0.0285 0 1 0 -0.0285 0.0 A 0.0285 0.0285 0 1 0 0.0285 0.0 Z"
+       "d": "M 0.213 0 A 0.03 0.03 0 1 0 0.153 0 A 0.03 0.03 0 1 0 0.213 0 Z M 0.2115 0 A 0.0285 0.0285 0 1 0 0.1545 0 A 0.0285 0.0285 0 1 0 0.2115 0 Z",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": 0.02,
+        "z1": 0.125
+       }
       },
       {
        "id": "spacer-0",
@@ -13474,10 +15585,16 @@
        "material": "epdm",
        "region": "casing",
        "kind": "rect",
-       "x": -0.191,
-       "y": -0.17,
+       "x": -0.008,
+       "y": -0.66,
        "w": 0.016,
-       "h": 0.04
+       "h": 0.03,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.17,
+        "z1": -0.13
+       }
       },
       {
        "id": "spacer-1",
@@ -13489,10 +15606,16 @@
        "material": "epdm",
        "region": "casing",
        "kind": "rect",
-       "x": -0.191,
-       "y": 0.13,
+       "x": -0.008,
+       "y": -0.66,
        "w": 0.016,
-       "h": 0.04
+       "h": 0.03,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.13,
+        "z1": 0.17
+       }
       },
       {
        "id": "rail",
@@ -13504,10 +15627,16 @@
        "material": "galv",
        "region": "bracket",
        "kind": "rect",
-       "x": -0.191,
-       "y": -0.19,
+       "x": -0.008,
+       "y": -0.045,
        "w": 0.016,
-       "h": 0.38
+       "h": 0.045,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.19,
+        "z1": 0.19
+       }
       },
       {
        "id": "strap-0-back-foot",
@@ -13519,10 +15648,16 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": -0.60676,
-       "y": -0.185,
-       "w": 0.07235,
-       "h": 0.05
+       "x": 0,
+       "y": 0,
+       "w": 0.148,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.185,
+        "z1": -0.135
+       }
       },
       {
        "id": "strap-0-back-leg",
@@ -13534,10 +15669,16 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": -0.53617,
-       "y": -0.185,
-       "w": 0.35117,
-       "h": 0.05
+       "x": 0,
+       "y": 0,
+       "w": 0.73261,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.185,
+        "z1": -0.135
+       }
       },
       {
        "id": "strap-0-back-top",
@@ -13549,10 +15690,16 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": -0.185,
-       "y": -0.185,
+       "x": 0,
+       "y": 0,
        "w": 0.185,
-       "h": 0.05
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.185,
+        "z1": -0.135
+       }
       },
       {
        "id": "strap-0-front-foot",
@@ -13564,10 +15711,16 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": 0.53312,
-       "y": -0.185,
-       "w": 0.07362,
-       "h": 0.05
+       "x": 0,
+       "y": -0.002,
+       "w": 0.148,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.185,
+        "z1": -0.135
+       }
       },
       {
        "id": "strap-0-front-leg",
@@ -13579,10 +15732,16 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": 0.175,
-       "y": -0.185,
-       "w": 0.35987,
-       "h": 0.05
+       "x": 0,
+       "y": -0.002,
+       "w": 0.73742,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.185,
+        "z1": -0.135
+       }
       },
       {
        "id": "strap-0-front-top",
@@ -13594,10 +15753,16 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": 0.0,
-       "y": -0.185,
+       "x": 0,
+       "y": -0.002,
        "w": 0.175,
-       "h": 0.05
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.185,
+        "z1": -0.135
+       }
       },
       {
        "id": "ratchet-0",
@@ -13609,10 +15774,16 @@
        "material": "steel",
        "region": "straps",
        "kind": "rect",
-       "x": 0.025,
-       "y": -0.19,
+       "x": 0.03,
+       "y": -0.027,
        "w": 0.12,
-       "h": 0.06
+       "h": 0.025,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.19,
+        "z1": -0.13
+       }
       },
       {
        "id": "strap-1-back-foot",
@@ -13624,10 +15795,16 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": -0.60676,
-       "y": 0.135,
-       "w": 0.07235,
-       "h": 0.05
+       "x": 0,
+       "y": 0,
+       "w": 0.148,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.135,
+        "z1": 0.185
+       }
       },
       {
        "id": "strap-1-back-leg",
@@ -13639,10 +15816,16 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": -0.53617,
-       "y": 0.135,
-       "w": 0.35117,
-       "h": 0.05
+       "x": 0,
+       "y": 0,
+       "w": 0.73261,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.135,
+        "z1": 0.185
+       }
       },
       {
        "id": "strap-1-back-top",
@@ -13654,10 +15837,16 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": -0.185,
-       "y": 0.135,
+       "x": 0,
+       "y": 0,
        "w": 0.185,
-       "h": 0.05
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.135,
+        "z1": 0.185
+       }
       },
       {
        "id": "strap-1-front-foot",
@@ -13669,10 +15858,16 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": 0.53312,
-       "y": 0.135,
-       "w": 0.07362,
-       "h": 0.05
+       "x": 0,
+       "y": -0.002,
+       "w": 0.148,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.135,
+        "z1": 0.185
+       }
       },
       {
        "id": "strap-1-front-leg",
@@ -13684,10 +15879,16 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": 0.175,
-       "y": 0.135,
-       "w": 0.35987,
-       "h": 0.05
+       "x": 0,
+       "y": -0.002,
+       "w": 0.73742,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.135,
+        "z1": 0.185
+       }
       },
       {
        "id": "strap-1-front-top",
@@ -13699,10 +15900,16 @@
        "material": "polyester-webbing",
        "region": "straps",
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.135,
+       "x": 0,
+       "y": -0.002,
        "w": 0.175,
-       "h": 0.05
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.135,
+        "z1": 0.185
+       }
       },
       {
        "id": "ratchet-1",
@@ -13714,10 +15921,16 @@
        "material": "steel",
        "region": "straps",
        "kind": "rect",
-       "x": 0.025,
-       "y": 0.13,
+       "x": 0.03,
+       "y": -0.027,
        "w": 0.12,
-       "h": 0.06
+       "h": 0.025,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.13,
+        "z1": 0.19
+       }
       }
      ]
     },
@@ -13783,7 +15996,7 @@
        "material": "pallet-pine",
        "region": "pallet",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.114,
        "w": 1.2,
        "h": 0.03
@@ -13798,7 +16011,7 @@
        "material": "pallet-pine",
        "region": "pallet",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.03,
        "w": 0.145,
        "h": 0.084
@@ -13813,7 +16026,7 @@
        "material": "pallet-pine",
        "region": "pallet",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.03,
        "w": 0.145,
        "h": 0.084
@@ -13828,7 +16041,7 @@
        "material": "pallet-pine",
        "region": "pallet",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.03,
        "w": 0.145,
        "h": 0.084
@@ -13933,8 +16146,8 @@
        "material": "pallet-pine",
        "region": "pallet",
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 1.2,
        "h": 0.03
       },
@@ -13948,8 +16161,8 @@
        "material": "pallet-pine",
        "region": "pallet",
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 1.2,
        "h": 0.03
       },
@@ -13963,8 +16176,8 @@
        "material": "pallet-pine",
        "region": "pallet",
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 1.2,
        "h": 0.03
       },
@@ -14179,8 +16392,8 @@
        "penMm": 0.2,
        "region": "straps",
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.148,
        "h": 0.002
       },
@@ -14195,8 +16408,8 @@
        "penMm": 0.2,
        "region": "straps",
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.73261,
        "h": 0.002
       },
@@ -14211,8 +16424,8 @@
        "penMm": 0.2,
        "region": "straps",
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.185,
        "h": 0.002
       },
@@ -14227,7 +16440,7 @@
        "penMm": 0.2,
        "region": "straps",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.002,
        "w": 0.148,
        "h": 0.002
@@ -14243,7 +16456,7 @@
        "penMm": 0.2,
        "region": "straps",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.002,
        "w": 0.73742,
        "h": 0.002
@@ -14259,7 +16472,7 @@
        "penMm": 0.2,
        "region": "straps",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.002,
        "w": 0.175,
        "h": 0.002
@@ -14275,8 +16488,8 @@
        "penMm": 0.2,
        "region": "straps",
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.148,
        "h": 0.002
       },
@@ -14291,8 +16504,8 @@
        "penMm": 0.2,
        "region": "straps",
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.73261,
        "h": 0.002
       },
@@ -14307,8 +16520,8 @@
        "penMm": 0.2,
        "region": "straps",
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.185,
        "h": 0.002
       },
@@ -14323,7 +16536,7 @@
        "penMm": 0.2,
        "region": "straps",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.002,
        "w": 0.148,
        "h": 0.002
@@ -14339,7 +16552,7 @@
        "penMm": 0.2,
        "region": "straps",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.002,
        "w": 0.73742,
        "h": 0.002
@@ -14355,7 +16568,7 @@
        "penMm": 0.2,
        "region": "straps",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.002,
        "w": 0.175,
        "h": 0.002
@@ -14523,7 +16736,7 @@
        "region": "pallet",
        "kind": "rect",
        "x": -0.4,
-       "y": 0.0,
+       "y": 0,
        "w": 0.1,
        "h": 0.03
       },
@@ -14538,7 +16751,7 @@
        "region": "pallet",
        "kind": "rect",
        "x": -0.0725,
-       "y": 0.0,
+       "y": 0,
        "w": 0.145,
        "h": 0.03
       },
@@ -14553,7 +16766,7 @@
        "region": "pallet",
        "kind": "rect",
        "x": 0.3,
-       "y": 0.0,
+       "y": 0,
        "w": 0.1,
        "h": 0.03
       },
@@ -14660,10 +16873,17 @@
         "controls"
        ],
        "kind": "rect",
-       "x": -0.22,
-       "y": 0.224,
-       "w": 0.44,
-       "h": 0.7
+       "x": 0.008,
+       "y": -0.68,
+       "w": 0.35,
+       "h": 0.7,
+       "r": 0.02,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.22,
+        "z1": 0.22
+       }
       },
       {
        "id": "adapter",
@@ -14677,39 +16897,45 @@
        "kind": "poly",
        "points": [
         [
-         0.0625,
-         0.924
+         0.02,
+         0.0625
         ],
         [
-         0.0625,
-         0.949
+         0.045,
+         0.0625
         ],
         [
-         0.05,
-         0.949
+         0.045,
+         0.05
         ],
         [
-         0.05,
-         1.029
+         0.125,
+         0.05
         ],
         [
-         -0.05,
-         1.029
+         0.125,
+         -0.05
         ],
         [
-         -0.05,
-         0.949
+         0.045,
+         -0.05
         ],
         [
-         -0.0625,
-         0.949
+         0.045,
+         -0.0625
         ],
         [
-         -0.0625,
-         0.924
+         0.02,
+         -0.0625
         ]
        ],
-       "closed": true
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0.1205,
+        "z1": 0.2455
+       }
       },
       {
        "id": "connections",
@@ -14721,10 +16947,16 @@
        "material": "brass",
        "region": "connections",
        "kind": "rect",
-       "x": -0.145,
-       "y": 0.159,
-       "w": 0.29,
-       "h": 0.065
+       "x": 0.138,
+       "y": -0.745,
+       "w": 0.03,
+       "h": 0.065,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.145,
+        "z1": 0.145
+       }
       },
       {
        "id": "trap",
@@ -14736,10 +16968,16 @@
        "material": "polypropylene",
        "region": "condensate-trap",
        "kind": "rect",
-       "x": -0.02,
-       "y": 0.154,
+       "x": 0.233,
+       "y": -0.75,
        "w": 0.04,
-       "h": 0.07
+       "h": 0.07,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.02,
+        "z1": 0.02
+       }
       },
       {
        "id": "rail",
@@ -14751,10 +16989,16 @@
        "material": "galv",
        "region": "bracket",
        "kind": "rect",
-       "x": -0.19,
-       "y": 0.859,
-       "w": 0.38,
-       "h": 0.045
+       "x": -0.022,
+       "y": -0.045,
+       "w": 0.03,
+       "h": 0.045,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.19,
+        "z1": 0.19
+       }
       },
       {
        "id": "strap-0-back-foot",
@@ -14767,10 +17011,16 @@
        "penMm": 0.2,
        "region": "straps",
        "kind": "rect",
-       "x": -0.185,
-       "y": 0.15,
-       "w": 0.05,
-       "h": 0.13104
+       "x": 0,
+       "y": 0,
+       "w": 0.148,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.185,
+        "z1": -0.135
+       }
       },
       {
        "id": "strap-0-back-leg",
@@ -14783,10 +17033,16 @@
        "penMm": 0.2,
        "region": "straps",
        "kind": "rect",
-       "x": -0.185,
-       "y": 0.28008,
-       "w": 0.05,
-       "h": 0.64487
+       "x": 0,
+       "y": 0,
+       "w": 0.73261,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.185,
+        "z1": -0.135
+       }
       },
       {
        "id": "strap-0-back-top",
@@ -14799,10 +17055,16 @@
        "penMm": 0.2,
        "region": "straps",
        "kind": "rect",
-       "x": -0.185,
-       "y": 0.924,
-       "w": 0.05,
-       "h": 0.002
+       "x": 0,
+       "y": 0,
+       "w": 0.185,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.185,
+        "z1": -0.135
+       }
       },
       {
        "id": "strap-0-front-foot",
@@ -14815,10 +17077,16 @@
        "penMm": 0.2,
        "region": "straps",
        "kind": "rect",
-       "x": -0.185,
-       "y": 0.15,
-       "w": 0.05,
-       "h": 0.13035
+       "x": 0,
+       "y": -0.002,
+       "w": 0.148,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.185,
+        "z1": -0.135
+       }
       },
       {
        "id": "strap-0-front-leg",
@@ -14831,10 +17099,16 @@
        "penMm": 0.2,
        "region": "straps",
        "kind": "rect",
-       "x": -0.185,
-       "y": 0.27938,
-       "w": 0.05,
-       "h": 0.6456
+       "x": 0,
+       "y": -0.002,
+       "w": 0.73742,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.185,
+        "z1": -0.135
+       }
       },
       {
        "id": "strap-0-front-top",
@@ -14847,10 +17121,16 @@
        "penMm": 0.2,
        "region": "straps",
        "kind": "rect",
-       "x": -0.185,
-       "y": 0.924,
-       "w": 0.05,
-       "h": 0.002
+       "x": 0,
+       "y": -0.002,
+       "w": 0.175,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.185,
+        "z1": -0.135
+       }
       },
       {
        "id": "strap-1-back-foot",
@@ -14863,10 +17143,16 @@
        "penMm": 0.2,
        "region": "straps",
        "kind": "rect",
-       "x": 0.135,
-       "y": 0.15,
-       "w": 0.05,
-       "h": 0.13104
+       "x": 0,
+       "y": 0,
+       "w": 0.148,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.135,
+        "z1": 0.185
+       }
       },
       {
        "id": "strap-1-back-leg",
@@ -14879,10 +17165,16 @@
        "penMm": 0.2,
        "region": "straps",
        "kind": "rect",
-       "x": 0.135,
-       "y": 0.28008,
-       "w": 0.05,
-       "h": 0.64487
+       "x": 0,
+       "y": 0,
+       "w": 0.73261,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.135,
+        "z1": 0.185
+       }
       },
       {
        "id": "strap-1-back-top",
@@ -14895,10 +17187,16 @@
        "penMm": 0.2,
        "region": "straps",
        "kind": "rect",
-       "x": 0.135,
-       "y": 0.924,
-       "w": 0.05,
-       "h": 0.002
+       "x": 0,
+       "y": 0,
+       "w": 0.185,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.135,
+        "z1": 0.185
+       }
       },
       {
        "id": "strap-1-front-foot",
@@ -14911,10 +17209,16 @@
        "penMm": 0.2,
        "region": "straps",
        "kind": "rect",
-       "x": 0.135,
-       "y": 0.15,
-       "w": 0.05,
-       "h": 0.13035
+       "x": 0,
+       "y": -0.002,
+       "w": 0.148,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.135,
+        "z1": 0.185
+       }
       },
       {
        "id": "strap-1-front-leg",
@@ -14927,10 +17231,16 @@
        "penMm": 0.2,
        "region": "straps",
        "kind": "rect",
-       "x": 0.135,
-       "y": 0.27938,
-       "w": 0.05,
-       "h": 0.6456
+       "x": 0,
+       "y": -0.002,
+       "w": 0.73742,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.135,
+        "z1": 0.185
+       }
       },
       {
        "id": "strap-1-front-top",
@@ -14943,10 +17253,16 @@
        "penMm": 0.2,
        "region": "straps",
        "kind": "rect",
-       "x": 0.135,
-       "y": 0.924,
-       "w": 0.05,
-       "h": 0.002
+       "x": 0,
+       "y": -0.002,
+       "w": 0.175,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.135,
+        "z1": 0.185
+       }
       }
      ],
      "plan": [
@@ -15248,10 +17564,17 @@
         "controls"
        ],
        "kind": "rect",
-       "x": -0.175,
-       "y": -0.22,
+       "x": 0.008,
+       "y": -0.68,
        "w": 0.35,
-       "h": 0.44
+       "h": 0.7,
+       "r": 0.02,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.22,
+        "z1": 0.22
+       }
       },
       {
        "id": "adapter",
@@ -15262,11 +17585,112 @@
        "tone": 0.8,
        "material": "flue-aluminium",
        "region": "flue-adapter",
-       "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
-       "rx": 0.0625,
-       "ry": 0.0625
+       "kind": "poly",
+       "points": [
+        [
+         0.2455,
+         0
+        ],
+        [
+         0.24337,
+         0.016176
+        ],
+        [
+         0.237127,
+         0.03125
+        ],
+        [
+         0.227194,
+         0.044194
+        ],
+        [
+         0.21425,
+         0.054127
+        ],
+        [
+         0.199176,
+         0.06037
+        ],
+        [
+         0.183,
+         0.0625
+        ],
+        [
+         0.166824,
+         0.06037
+        ],
+        [
+         0.15175,
+         0.054127
+        ],
+        [
+         0.138806,
+         0.044194
+        ],
+        [
+         0.128873,
+         0.03125
+        ],
+        [
+         0.12263,
+         0.016176
+        ],
+        [
+         0.1205,
+         0
+        ],
+        [
+         0.12263,
+         -0.016176
+        ],
+        [
+         0.128873,
+         -0.03125
+        ],
+        [
+         0.138806,
+         -0.044194
+        ],
+        [
+         0.15175,
+         -0.054127
+        ],
+        [
+         0.166824,
+         -0.06037
+        ],
+        [
+         0.183,
+         -0.0625
+        ],
+        [
+         0.199176,
+         -0.06037
+        ],
+        [
+         0.21425,
+         -0.054127
+        ],
+        [
+         0.227194,
+         -0.044194
+        ],
+        [
+         0.237127,
+         -0.03125
+        ],
+        [
+         0.24337,
+         -0.016176
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": 0.02,
+        "z1": 0.125
+       }
       },
       {
        "id": "rail",
@@ -15278,10 +17702,16 @@
        "material": "galv",
        "region": "bracket",
        "kind": "rect",
-       "x": -0.205,
-       "y": -0.19,
+       "x": -0.022,
+       "y": -0.045,
        "w": 0.03,
-       "h": 0.38
+       "h": 0.045,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.19,
+        "z1": 0.19
+       }
       },
       {
        "id": "strap-0-back-foot",
@@ -15294,10 +17724,16 @@
        "penMm": 0.2,
        "region": "straps",
        "kind": "rect",
-       "x": -0.60676,
-       "y": -0.185,
-       "w": 0.07235,
-       "h": 0.05
+       "x": 0,
+       "y": 0,
+       "w": 0.148,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.185,
+        "z1": -0.135
+       }
       },
       {
        "id": "strap-0-back-leg",
@@ -15310,10 +17746,16 @@
        "penMm": 0.2,
        "region": "straps",
        "kind": "rect",
-       "x": -0.53617,
-       "y": -0.185,
-       "w": 0.35117,
-       "h": 0.05
+       "x": 0,
+       "y": 0,
+       "w": 0.73261,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.185,
+        "z1": -0.135
+       }
       },
       {
        "id": "strap-0-back-top",
@@ -15326,10 +17768,16 @@
        "penMm": 0.2,
        "region": "straps",
        "kind": "rect",
-       "x": -0.185,
-       "y": -0.185,
+       "x": 0,
+       "y": 0,
        "w": 0.185,
-       "h": 0.05
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.185,
+        "z1": -0.135
+       }
       },
       {
        "id": "strap-0-front-foot",
@@ -15342,10 +17790,16 @@
        "penMm": 0.2,
        "region": "straps",
        "kind": "rect",
-       "x": 0.53312,
-       "y": -0.185,
-       "w": 0.07362,
-       "h": 0.05
+       "x": 0,
+       "y": -0.002,
+       "w": 0.148,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.185,
+        "z1": -0.135
+       }
       },
       {
        "id": "strap-0-front-leg",
@@ -15358,10 +17812,16 @@
        "penMm": 0.2,
        "region": "straps",
        "kind": "rect",
-       "x": 0.175,
-       "y": -0.185,
-       "w": 0.35987,
-       "h": 0.05
+       "x": 0,
+       "y": -0.002,
+       "w": 0.73742,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.185,
+        "z1": -0.135
+       }
       },
       {
        "id": "strap-0-front-top",
@@ -15374,10 +17834,16 @@
        "penMm": 0.2,
        "region": "straps",
        "kind": "rect",
-       "x": 0.0,
-       "y": -0.185,
+       "x": 0,
+       "y": -0.002,
        "w": 0.175,
-       "h": 0.05
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.185,
+        "z1": -0.135
+       }
       },
       {
        "id": "strap-1-back-foot",
@@ -15390,10 +17856,16 @@
        "penMm": 0.2,
        "region": "straps",
        "kind": "rect",
-       "x": -0.60676,
-       "y": 0.135,
-       "w": 0.07235,
-       "h": 0.05
+       "x": 0,
+       "y": 0,
+       "w": 0.148,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.135,
+        "z1": 0.185
+       }
       },
       {
        "id": "strap-1-back-leg",
@@ -15406,10 +17878,16 @@
        "penMm": 0.2,
        "region": "straps",
        "kind": "rect",
-       "x": -0.53617,
-       "y": 0.135,
-       "w": 0.35117,
-       "h": 0.05
+       "x": 0,
+       "y": 0,
+       "w": 0.73261,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.135,
+        "z1": 0.185
+       }
       },
       {
        "id": "strap-1-back-top",
@@ -15422,10 +17900,16 @@
        "penMm": 0.2,
        "region": "straps",
        "kind": "rect",
-       "x": -0.185,
-       "y": 0.135,
+       "x": 0,
+       "y": 0,
        "w": 0.185,
-       "h": 0.05
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.135,
+        "z1": 0.185
+       }
       },
       {
        "id": "strap-1-front-foot",
@@ -15438,10 +17922,16 @@
        "penMm": 0.2,
        "region": "straps",
        "kind": "rect",
-       "x": 0.53312,
-       "y": 0.135,
-       "w": 0.07362,
-       "h": 0.05
+       "x": 0,
+       "y": -0.002,
+       "w": 0.148,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.135,
+        "z1": 0.185
+       }
       },
       {
        "id": "strap-1-front-leg",
@@ -15454,10 +17944,16 @@
        "penMm": 0.2,
        "region": "straps",
        "kind": "rect",
-       "x": 0.175,
-       "y": 0.135,
-       "w": 0.35987,
-       "h": 0.05
+       "x": 0,
+       "y": -0.002,
+       "w": 0.73742,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.135,
+        "z1": 0.185
+       }
       },
       {
        "id": "strap-1-front-top",
@@ -15470,10 +17966,16 @@
        "penMm": 0.2,
        "region": "straps",
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.135,
+       "x": 0,
+       "y": -0.002,
        "w": 0.175,
-       "h": 0.05
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.135,
+        "z1": 0.185
+       }
       }
      ]
     },
@@ -15552,10 +18054,10 @@
     "bones": {},
     "ground": "authored",
     "contacts": [
-     "pallet-contact-back-right",
-     "pallet-contact-back-left",
-     "pallet-contact-front-right",
-     "pallet-contact-front-left"
+     "pallet-back-right",
+     "pallet-back-left",
+     "pallet-front-right",
+     "pallet-front-left"
     ],
     "thermal": {
      "operating": {
@@ -15645,10 +18147,10 @@
     },
     "ground": "authored",
     "contacts": [
-     "pallet-contact-back-right",
-     "pallet-contact-back-left",
-     "pallet-contact-front-right",
-     "pallet-contact-front-left"
+     "pallet-back-right",
+     "pallet-back-left",
+     "pallet-front-right",
+     "pallet-front-left"
     ],
     "thermal": {
      "operating": {
@@ -15727,7 +18229,7 @@
       "angleDeg": 208.4858
      },
      "strap-back-leg": {
-      "angleDeg": -90.0
+      "angleDeg": -90
      },
      "strap-back-top": {
       "angleDeg": 61.5142
@@ -15736,7 +18238,7 @@
       "angleDeg": -209.0546
      },
      "strap-front-leg": {
-      "angleDeg": 90.0
+      "angleDeg": 90
      },
      "strap-front-top": {
       "angleDeg": -60.9454
@@ -15744,10 +18246,10 @@
     },
     "ground": "authored",
     "contacts": [
-     "pallet-contact-back-right",
-     "pallet-contact-back-left",
-     "pallet-contact-front-right",
-     "pallet-contact-front-left"
+     "pallet-back-right",
+     "pallet-back-left",
+     "pallet-front-right",
+     "pallet-front-left"
     ],
     "thermal": {
      "operating": {
@@ -15826,7 +18328,7 @@
       "angleDeg": 208.4858
      },
      "strap-back-leg": {
-      "angleDeg": -90.0
+      "angleDeg": -90
      },
      "strap-back-top": {
       "angleDeg": 61.5142
@@ -15835,7 +18337,7 @@
       "angleDeg": -209.0546
      },
      "strap-front-leg": {
-      "angleDeg": 90.0
+      "angleDeg": 90
      },
      "strap-front-top": {
       "angleDeg": -60.9454
@@ -15846,10 +18348,10 @@
     },
     "ground": "authored",
     "contacts": [
-     "pallet-contact-back-right",
-     "pallet-contact-back-left",
-     "pallet-contact-front-right",
-     "pallet-contact-front-left",
+     "pallet-back-right",
+     "pallet-back-left",
+     "pallet-front-right",
+     "pallet-front-left",
      "lifting-point"
     ],
     "thermal": {
@@ -15928,7 +18430,7 @@
       "angleDeg": 208.4858
      },
      "strap-back-leg": {
-      "angleDeg": -90.0
+      "angleDeg": -90
      },
      "strap-back-top": {
       "angleDeg": 61.5142
@@ -15937,7 +18439,7 @@
       "angleDeg": -209.0546
      },
      "strap-front-leg": {
-      "angleDeg": 90.0
+      "angleDeg": 90
      },
      "strap-front-top": {
       "angleDeg": -60.9454
@@ -15946,15 +18448,15 @@
       "dy": 0.24
      },
      "boiler": {
-      "angleDeg": -30.0
+      "angleDeg": -30
      }
     },
     "ground": "authored",
     "contacts": [
-     "pallet-contact-back-right",
-     "pallet-contact-back-left",
-     "pallet-contact-front-right",
-     "pallet-contact-front-left",
+     "pallet-back-right",
+     "pallet-back-left",
+     "pallet-front-right",
+     "pallet-front-left",
      "lifting-point"
     ],
     "thermal": {
@@ -16033,7 +18535,7 @@
       "angleDeg": 208.4858
      },
      "strap-back-leg": {
-      "angleDeg": -90.0
+      "angleDeg": -90
      },
      "strap-back-top": {
       "angleDeg": 61.5142
@@ -16042,21 +18544,21 @@
       "angleDeg": -209.0546
      },
      "strap-front-leg": {
-      "angleDeg": 90.0
+      "angleDeg": 90
      },
      "strap-front-top": {
       "angleDeg": -60.9454
      },
      "boiler-lift": {
-      "dy": 1.0
+      "dy": 1
      }
     },
     "ground": "authored",
     "contacts": [
-     "pallet-contact-back-right",
-     "pallet-contact-back-left",
-     "pallet-contact-front-right",
-     "pallet-contact-front-left",
+     "pallet-back-right",
+     "pallet-back-left",
+     "pallet-front-right",
+     "pallet-front-left",
      "wall-bracket",
      "wall-rest"
     ],
@@ -16150,7 +18652,7 @@
       "angleDeg": 208.4858
      },
      "strap-back-leg": {
-      "angleDeg": -90.0
+      "angleDeg": -90
      },
      "strap-back-top": {
       "angleDeg": 61.5142
@@ -16159,21 +18661,21 @@
       "angleDeg": -209.0546
      },
      "strap-front-leg": {
-      "angleDeg": 90.0
+      "angleDeg": 90
      },
      "strap-front-top": {
       "angleDeg": -60.9454
      },
      "boiler-lift": {
-      "dy": 1.0
+      "dy": 1
      }
     },
     "ground": "authored",
     "contacts": [
-     "pallet-contact-back-right",
-     "pallet-contact-back-left",
-     "pallet-contact-front-right",
-     "pallet-contact-front-left",
+     "pallet-back-right",
+     "pallet-back-left",
+     "pallet-front-right",
+     "pallet-front-left",
      "wall-bracket",
      "wall-rest"
     ],
@@ -16302,22 +18804,22 @@
     ],
     "contacts": [
      {
-      "anchor": "pallet-contact-back-right",
+      "anchor": "pallet-back-right",
       "fromS": 0,
       "toS": 14
      },
      {
-      "anchor": "pallet-contact-back-left",
+      "anchor": "pallet-back-left",
       "fromS": 0,
       "toS": 14
      },
      {
-      "anchor": "pallet-contact-front-right",
+      "anchor": "pallet-front-right",
       "fromS": 0,
       "toS": 14
      },
      {
-      "anchor": "pallet-contact-front-left",
+      "anchor": "pallet-front-left",
       "fromS": 0,
       "toS": 14
      },
@@ -16514,22 +19016,22 @@
     ],
     "contacts": [
      {
-      "anchor": "pallet-contact-back-right",
+      "anchor": "pallet-back-right",
       "fromS": 0,
       "toS": 40
      },
      {
-      "anchor": "pallet-contact-back-left",
+      "anchor": "pallet-back-left",
       "fromS": 0,
       "toS": 40
      },
      {
-      "anchor": "pallet-contact-front-right",
+      "anchor": "pallet-front-right",
       "fromS": 0,
       "toS": 40
      },
      {
-      "anchor": "pallet-contact-front-left",
+      "anchor": "pallet-front-left",
       "fromS": 0,
       "toS": 40
      },
@@ -16742,7 +19244,7 @@
        "kind": "metal",
        "material": "painted-steel-aged",
        "thicknessM": 0.0008,
-       "resistanceM2KW": 1.6e-05,
+       "resistanceM2KW": 0.000016,
        "heatCapacityJM2K": 3700,
        "source": "authored-estimate",
        "reference": "iso-10456-2007"
@@ -16818,7 +19320,7 @@
        "kind": "metal",
        "material": "flue-aluminium",
        "thicknessM": 0.001,
-       "resistanceM2KW": 6e-06,
+       "resistanceM2KW": 0.000006,
        "heatCapacityJM2K": 2400,
        "source": "authored-estimate",
        "reference": "iso-10456-2007"
@@ -16855,7 +19357,7 @@
        "kind": "metal",
        "material": "brass",
        "thicknessM": 0.0015,
-       "resistanceM2KW": 1.4e-05,
+       "resistanceM2KW": 0.000014,
        "heatCapacityJM2K": 4800,
        "source": "authored-estimate",
        "reference": "iso-10456-2007"
@@ -16929,7 +19431,7 @@
        "kind": "metal",
        "material": "galv",
        "thicknessM": 0.002,
-       "resistanceM2KW": 4e-05,
+       "resistanceM2KW": 0.00004,
        "heatCapacityJM2K": 7200,
        "source": "authored-estimate",
        "reference": "iso-10456-2007"
@@ -17050,7 +19552,7 @@
      "areaM2": 0.0201,
      "characteristicLengthM": 0.08,
      "geometry": "cylinder",
-     "skyViewFactor": 0.0,
+     "skyViewFactor": 0,
      "layers": [
       {
        "id": "mesh",
@@ -17061,7 +19563,7 @@
        "kind": "metal",
        "material": "burner-mesh",
        "thicknessM": 0.001,
-       "resistanceM2KW": 7e-05,
+       "resistanceM2KW": 0.00007,
        "heatCapacityJM2K": 3600,
        "source": "authored-estimate",
        "reference": "iso-10456-2007"
@@ -17093,7 +19595,7 @@
      "areaM2": 0.2059,
      "characteristicLengthM": 0.23,
      "geometry": "cylinder",
-     "skyViewFactor": 0.0,
+     "skyViewFactor": 0,
      "layers": [
       {
        "id": "wall",
@@ -17104,7 +19606,7 @@
        "kind": "metal",
        "material": "stainless-steel",
        "thicknessM": 0.001,
-       "resistanceM2KW": 6.7e-05,
+       "resistanceM2KW": 0.000067,
        "heatCapacityJM2K": 3950,
        "source": "authored-estimate",
        "reference": "iso-10456-2007"
@@ -17157,10 +19659,10 @@
    "gravityMS2": 9.80665,
    "dynamics": "quasi-static",
    "supports": [
-    "pallet-contact-back-right",
-    "pallet-contact-back-left",
-    "pallet-contact-front-right",
-    "pallet-contact-front-left"
+    "pallet-back-right",
+    "pallet-back-left",
+    "pallet-front-right",
+    "pallet-front-left"
    ],
    "assumptions": [
     {

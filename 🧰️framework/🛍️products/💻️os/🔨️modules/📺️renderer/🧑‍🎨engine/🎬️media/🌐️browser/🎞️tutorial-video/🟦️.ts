@@ -73,10 +73,10 @@ export function tutorialVideoLocalTimeMs(playheadMs: number, cueAtMs: number, so
   return playheadMs - cueAtMs + sourceOffsetMs;
 }
 
-/** 📹️ Hosts React's `<video id="ui.tutorial.video">` for the wgpu shell inside the media overlay root: muted playsInline, `pointer-events:none`, `object-fit:cover`, `rounded-lg`, slaved to the playhead rather than played independently. */
+/** 📹️ Hosts React's `<video id="ui.tutorial.video">` for the wgpu shell inside the media overlay root, its id scoped by the mount root's own id so two embedded mounts never share a DOM id: muted playsInline, `pointer-events:none`, `object-fit:cover`, `rounded-lg`, slaved to the playhead rather than played independently. */
 export function createBrowserTutorialVideoOverlay(root: HTMLElement): { readonly accept: (plan: TutorialVideoOverlayPlan | null) => void; readonly dispose: () => void } {
   const video = document.createElement("video");
-  video.id = "ui.tutorial.video";
+  video.id = root.id === "" ? "ui.tutorial.video" : `${root.id}.ui.tutorial.video`;
   video.dataset.slot = "tutorial-video-overlay";
   video.playsInline = true;
   video.setAttribute("aria-hidden", "true");

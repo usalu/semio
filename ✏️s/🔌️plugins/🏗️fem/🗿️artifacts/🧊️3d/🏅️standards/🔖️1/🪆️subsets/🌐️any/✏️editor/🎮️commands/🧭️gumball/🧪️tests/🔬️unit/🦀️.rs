@@ -192,3 +192,27 @@ async fn the_world3d_gumball_live_protocol_lands_as_its_guest_edits() {
     }
     assert!(consumed >= 7, "every guest case of the protocol fixture is consumed: {consumed}");
 }
+
+/// 🌀️ LAW (F2): a ring turn of the slab `sol1` never makes it vanish or breaks the analysis. About the extrusion axis
+/// (also with sensor noise on the reported axis) the slab turns and the model still builds and solves; about a tipping axis
+/// the solid cannot follow, stays exactly as it was and the model still builds and solves.
+#[test]
+fn a_ring_turn_of_a_solid_keeps_it_and_its_analysis_alive() {
+    let doc = demo();
+    let sol = semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3d_entity_target("solid", "sol1").unwrap();
+    let before = doc.solids.iter().find(|s| s.id == "sol1").map(|s| (s.outline.clone(), s.base_z, s.height)).expect("sol1");
+    for (axis, follows) in [([0.0, 0.0, 1.0], true), ([1e-7, -2e-7, 1.0], true), ([0.0, 0.0, -1.0], true), ([1.0, 0.0, 0.0], false), ([0.0, 1.0, 0.0], false)] {
+        for angle in [0.3, 1.0, 1.5707963267948966, 2.5, 6.0] {
+            let tick = fem3d_gumball_tick(&doc, std::slice::from_ref(&sol), Fem3dGumballMotion::Rotate { axis, angle }).expect("tick");
+            let moved = crate::context::applied(&doc, &Fem3dMutation::MoveSelection(tick));
+            let after = moved.solids.iter().find(|s| s.id == "sol1").map(|s| (s.outline.clone(), s.base_z, s.height)).unwrap_or_else(|| panic!("axis {axis:?} angle {angle}: the slab vanished"));
+            assert!(after.0.iter().flatten().all(|value| value.is_finite()) && after.2 > 0.0, "axis {axis:?} angle {angle}: {after:?}");
+            assert_eq!(after != before, follows, "axis {axis:?} angle {angle}: the slab {} follow", if follows { "must" } else { "cannot" });
+            if follows {
+                assert!((after.1 - before.1).abs() < 1e-6 && (after.2 - before.2).abs() < 1e-6, "axis {axis:?} angle {angle}: the extrusion is kept: {after:?}");
+            }
+            semio_s_artifact_fem_3d_engine::fem3d_engine::build_model(&moved, "dead").unwrap_or_else(|fault| panic!("axis {axis:?} angle {angle}: the model builds: {fault:?}"));
+            semio_s_artifact_fem_3d_engine::fem3d_engine::fem3d_solve(&moved, "dead").unwrap_or_else(|fault| panic!("axis {axis:?} angle {angle}: the analysis solves: {fault:?}"));
+        }
+    }
+}

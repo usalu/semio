@@ -1,6 +1,5 @@
 extern crate semio_os_kernel as store;
-#[path = "../../../../🧪️tests/🧰️support/🦀️.rs"]
-mod context;
+use semio_s_artifact_process_process3d_harness as context;
 use semio_s_artifact_process_process3d_panels::catalogue::*;
 use semio_s_artifact_process_process3d_kit::iconed_tree_item_with_action;
 use semio_s_artifact_process_process3d_kit::installed_catalogs;

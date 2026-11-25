@@ -208,3 +208,35 @@ fn an_authored_catalogue_slice_wins_over_the_inference() {
     drain_retired_ui_owners();
 }
 //#endregion 🧬️InferenceLaws
+
+/// 👻️ LAW (ticket 26/09/23/PUZZLE-5D-PART-DRAG-PREVIEW-IN-BOTH-WINDOWS): ONE catalogue row payload drives the drop ghost
+/// of BOTH panes. The board pane reads `kindId` and builds a circle or rectangle ghost the board engine admits (a positive
+/// radius, or a positive width and height); the world pane reads `objectKind`. A payload only one pane can parse shows
+/// the ghost in that pane alone.
+#[test]
+fn a_catalogue_row_payload_is_admitted_by_the_board_and_the_world_ghost() {
+    drain_retired_ui_owners();
+    let rows: Vec<Value> = [json!({ "id": "plain", "name": "Plain" }), json!({ "id": "disc", "name": "Disc", "shape": "circle", "radius": 12.0 }), json!({ "id": "slab", "name": "Slab", "shape": "rectangle", "width": 30.0, "height": 10.0 })].into();
+    let mut document = crate::editor::puzzle5d::entities::empty_document();
+    document.kind_catalogs = Some(json!({ "parts": rows, "grips": [], "fasteners": [], "ropes": [] }));
+    let scene = Puzzle5dScene { document, runtime: crate::editor::puzzle5d::config::Puzzle5dRuntime::default(), active_utility: String::new(), interaction: Default::default() };
+    let windows = TreeWindows::unhosted();
+    let tree = render(&scene, labels(), &windows).expect("catalogue");
+    let parts = child_of(&tree, PARTS_SECTION);
+    assert_eq!(parts.children.len(), 3);
+    for row in parts.children.iter() {
+        let semio_ui_contract::Component::TreeItem(props) = &row.component else { panic!("catalogue row {} is not a tree item", row.key.as_str()) };
+        assert_eq!(props.draggable, Some(true), "row {} must be draggable", row.key.as_str());
+        let drag_data = props.drag_data.as_ref().expect("drag data");
+        let encoded = drag_data.iter().find(|(mime, _)| mime.as_str() == PUZZLE5D_CATALOGUE_DRAG_MIME).map(|(_, value)| value.as_str()).expect("catalogue mime");
+        let payload: serde_json::Value = serde_json::from_str(encoded).expect("independent payload parser");
+        let kind = payload["kindId"].as_str().expect("the board pane reads kindId");
+        assert_eq!(payload["objectKind"].as_str(), Some(kind), "the world pane reads objectKind, the same kind");
+        let positive = |key: &str| payload[key].as_f64().is_some_and(|value| value.is_finite() && value > 0.0);
+        let rectangle = payload["shape"].as_str() == Some("rectangle");
+        assert!(!rectangle || (positive("width") && positive("height")), "a rectangle ghost needs its extent in the payload of {kind}");
+        assert!(rectangle || payload.get("radius").is_none() || positive("radius"), "a circle ghost needs a positive radius when it carries one in {kind}");
+    }
+    drop(tree);
+    drain_retired_ui_owners();
+}

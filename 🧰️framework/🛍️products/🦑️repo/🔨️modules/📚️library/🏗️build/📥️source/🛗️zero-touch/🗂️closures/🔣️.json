@@ -50,6 +50,12 @@
       "reason": "repo tools setup nx captures and compiles this closure before any workspace link exists"
     },
     {
+      "id": "micromamba-setup",
+      "entry": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📦️packages/🐍️python/🧱️native/🟦️.ts",
+      "mode": "full",
+      "reason": "repo tools setup micromamba provisions the Python environment manager before any dependency exists"
+    },
+    {
       "id": "cargo-compiler",
       "entry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/📥️entry/📜️script.ts",
       "mode": "full",
@@ -170,6 +176,14 @@
     {
       "module": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🏗️build/🕸️graph/📥️inference/🟨️.mjs",
       "reason": "The public inference entry re-exports the graph inference seam statically, so it is itself post-install; importers reach it by a dynamic import only."
+    },
+    {
+      "module": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/👷️service/🟨️.mjs",
+      "reason": "The project farm worker service imports the graph inference seam statically, so it is itself post-install; the captured worker role loads it by a dynamic import only."
+    },
+    {
+      "module": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🛠️dev/🎮️playground/🟦️.ts",
+      "reason": "The root playground builds, activates and serves the product through installed dependencies; dev playground loads it by a dynamic import inside the opened dependency and product stores only."
     },
     {
       "module": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/🏗️builder/📥️inputs/🔌️nx/🟦️.ts",

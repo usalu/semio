@@ -751,10 +751,11 @@ pub(crate) fn tree_window_indexed_rows<B: HasChildren>(mut builder: B, windows: 
             }
             Err(error) => return Err(error),
         };
-        let Some(cost) = semio_ui_runtime::surface_subtree_items(&node).ok().filter(|cost| *cost <= items) else {
+        let cost = semio_ui_runtime::surface_subtree_items(&node).map_err(|_| ui_assembly_error("ui.tree-window.subtree-census"))?;
+        if cost > items {
             unbuilt();
             break;
-        };
+        }
         windows.items.set(items - cost);
         builder = match builder.try_child(node) {
             Ok(builder) => builder,

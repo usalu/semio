@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 
 import { compile } from "@tailwindcss/node";
 import { interactiveActiveFillClass, interactiveOnClass, interactiveTabActiveClass } from "@semio-tech/ui-react";
-import { chromium } from "playwright";
+import { launchChromium } from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🌐️chromium-launch/🟦️";
 import { applyUiThemeToRoot, clearUiThemeFromRoot, resolveThemeAppearancePalettes, semioTheme } from "@semio-tech/ui-styling";
 import { describe, expect, it } from "vitest";
 
@@ -33,7 +33,7 @@ describe("🎨️ Chrome palette projection", () => {
       root.append(button);
     });
     applyUiThemeToRoot(root, theme);
-    const browser = await chromium.launch({ headless: true });
+    const browser = await launchChromium();
     try {
       const page = await browser.newPage();
       await page.setContent(root.outerHTML);
@@ -65,7 +65,7 @@ describe("🎨️ Chrome palette projection", () => {
     root.innerHTML = '<div data-selected="true" data-tree-hover-path="row" data-tree-selection-path="row"><div data-slot="tree-row-layout"><div data-slot="tree-row-content" class="' + interactiveActiveFillClass + '"><button data-slot="tree-label">Curvilinear</button><span data-slot="tree-icon">Icon</span></div><span data-slot="tree-gutter-slot">Guide</span></div><div data-slot="tree-item-content"><div data-slot="tree-row-layout"><div data-slot="tree-row-content"><button data-slot="tree-label">Unselected descendant</button></div></div></div></div>';
     const theme = semioTheme();
     applyUiThemeToRoot(root, theme);
-    const browser = await chromium.launch({ headless: true });
+    const browser = await launchChromium();
     try {
       const page = await browser.newPage();
       await page.setContent(root.outerHTML);
@@ -94,7 +94,7 @@ describe("🎨️ Chrome palette projection", () => {
       applyUiThemeToRoot(root, theme);
       return root;
     });
-    const browser = await chromium.launch({ headless: true });
+    const browser = await launchChromium();
     try {
       const page = await browser.newPage();
       await page.setContent(roots.map((root) => root.outerHTML).join(""));

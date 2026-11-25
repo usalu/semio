@@ -96,7 +96,7 @@ export function uiAccessibilityRoleV1(component: Component, activatable: boolean
       return named;
     }
     case "text":
-      return "paragraph";
+      return component.headingLevel == null ? "paragraph" : "heading";
     case "button":
       return "button";
     case "separator":
@@ -227,6 +227,11 @@ export function uiProgressFractionV1(completed: number, total: number | null | u
   return total > 0 ? Math.min(1, Math.max(0, completed / total)) : 0;
 }
 
+/** 🔠️ The announced heading level of a text component, clamped to `1..6`; `null` for a paragraph. */
+export function uiHeadingLevelV1(level: number | null | undefined): number | null {
+  return level == null ? null : Math.min(6, Math.max(1, Math.trunc(level)));
+}
+
 /** 📹️ Projects ONE published node record. Pure over the record: a renderer's own walk supplies
  * `depth` and afterwards stamps whatever live state only it knows (`focused`, and its laid-out
  * rect). A hidden node is KEPT, carrying `hidden` — dropping it would disagree with the DOM
@@ -274,7 +279,7 @@ export function uiAccessibilityProjectionNodeV1(record: UiNodeRecord, depth: num
     multiline: false,
     controls: null,
     activeDescendant: null,
-    level: record.component.type === "treeItem" ? depth + 1 : null,
+    level: record.component.type === "treeItem" ? depth + 1 : record.component.type === "text" ? uiHeadingLevelV1(record.component.headingLevel) : null,
     multiselectable: record.component.type === "tree" && record.component.interactionDomain != null,
     ...uiAccessibilityValueV1(record.component),
     invalid: false,

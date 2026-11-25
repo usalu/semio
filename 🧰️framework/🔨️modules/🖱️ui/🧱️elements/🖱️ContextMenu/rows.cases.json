@@ -1,0 +1,10 @@
+{
+  "schema": "context-menu-rows/v1",
+  "inset": 0,
+  "cases": [
+    { "id": "three-items", "items": ["item", "item", "item"], "contentRows": 3, "lines": 2, "rowYRows": [0, 1, 2], "activeFill": "hover-fill", "activeText": "emphasised" },
+    { "id": "unlabelled-separator-has-no-height", "items": ["item", "separator", "item"], "contentRows": 2, "lines": 1, "rowYRows": [0, null, 1], "activeFill": "hover-fill", "activeText": "emphasised" },
+    { "id": "header-is-a-row", "items": ["header", "item", "item"], "contentRows": 3, "lines": 2, "rowYRows": [0, 1, 2], "activeFill": "hover-fill", "activeText": "emphasised" },
+    { "id": "empty", "items": [], "contentRows": 0, "lines": 0, "rowYRows": [], "activeFill": "hover-fill", "activeText": "emphasised" }
+  ]
+}

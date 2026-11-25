@@ -1,0 +1,21 @@
+[package]
+workspace = "../../../../../../../../../../.."
+name = "semio-s-artifact-norm-en1992-checks-reach-and-trace"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "EN 1992 reach and trace laws: the route table of the catalogue entries and the spec trace"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-s-artifact-norm-en1992-checks = { workspace = true }
+semio-s-artifact-norm-en1992-model = { workspace = true }
+semio-s-plugin-norm-compliance = { workspace = true, features = ["compliance-testing"] }

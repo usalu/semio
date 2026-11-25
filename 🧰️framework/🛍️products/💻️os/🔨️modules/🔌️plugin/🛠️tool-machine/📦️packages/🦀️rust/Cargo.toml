@@ -27,6 +27,7 @@ artifact-app-testing = []
 [dependencies]
 semio-os-kernel = { path = "../../../../../📦️packages/🦀️rust" }
 semio-plugin-ownership = { path = "../../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
+semio-plugin-store-lifecycle = { path = "../../../♻️lifecycle/🧱️owner/📦️packages/🦀️rust" }
 semio-plugin-window-config = { path = "../../../🪟️window/🎚️config/📦️packages/🦀️rust" }
 semio-plugin-window-config-original = { path = "../../../🪟️window/🎚️config/🧿️original/📦️packages/🦀️rust" }
 semio-plugin-decl-views = { path = "../../../📜️declaration/👁️view/📦️packages/🦀️rust" }

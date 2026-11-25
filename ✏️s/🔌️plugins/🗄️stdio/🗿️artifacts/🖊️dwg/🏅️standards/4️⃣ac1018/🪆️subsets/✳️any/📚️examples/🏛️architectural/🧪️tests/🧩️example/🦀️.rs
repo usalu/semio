@@ -53,17 +53,17 @@ async fn real_decode_projects_logical_state() {
     assert!(snap.drawing.objects.iter().all(|object| !object.class_name.is_empty()), "every framed object must resolve to a fixed or custom class name");
     let relation_bodies =
         snap.drawing.objects.iter().filter(|object| object.owner_handle.is_some() || !object.reactor_handles.is_empty() || object.extension_dictionary_handle.is_some() || !object.referenced_handles.is_empty() || object.body.is_some()).count();
-    let named_dictionaries = snap.drawing.objects.iter().filter(|object| matches!(&object.body, Some(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody::Dictionary(body)) if !body.entries.is_empty())).count();
-    let named_records = snap.drawing.objects.iter().filter(|object| matches!(&object.body, Some(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody::TableRecord(_)))).count();
-    let table_controls = snap.drawing.objects.iter().filter(|object| matches!(&object.body, Some(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody::TableControl(body)) if !body.entry_handles().is_empty())).count();
-    let xrecords = snap.drawing.objects.iter().filter(|object| matches!(&object.body, Some(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody::XRecord(_)))).count();
-    let typed_xrecords = snap.drawing.objects.iter().filter(|object| matches!(&object.body, Some(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody::XRecord(body)) if !body.values.is_empty())).count();
+    let named_dictionaries = snap.drawing.objects.iter().filter(|object| matches!(&object.body, Some(semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody::Dictionary(body)) if !body.entries.is_empty())).count();
+    let named_records = snap.drawing.objects.iter().filter(|object| matches!(&object.body, Some(semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody::TableRecord(_)))).count();
+    let table_controls = snap.drawing.objects.iter().filter(|object| matches!(&object.body, Some(semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody::TableControl(body)) if !body.entry_handles().is_empty())).count();
+    let xrecords = snap.drawing.objects.iter().filter(|object| matches!(&object.body, Some(semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody::XRecord(_)))).count();
+    let typed_xrecords = snap.drawing.objects.iter().filter(|object| matches!(&object.body, Some(semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody::XRecord(body)) if !body.values.is_empty())).count();
     let xrecord_values = snap
         .drawing
         .objects
         .iter()
         .filter_map(|object| match &object.body {
-            Some(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody::XRecord(body)) => Some(body.values.len()),
+            Some(semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody::XRecord(body)) => Some(body.values.len()),
             _ => None,
         })
         .sum::<usize>();
@@ -72,7 +72,7 @@ async fn real_decode_projects_logical_state() {
         .objects
         .iter()
         .filter_map(|object| match &object.body {
-            Some(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody::XRecord(body)) => Some(body.object_id_handles.len()),
+            Some(semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody::XRecord(body)) => Some(body.object_id_handles.len()),
             _ => None,
         })
         .sum::<usize>();
@@ -81,7 +81,7 @@ async fn real_decode_projects_logical_state() {
         .objects
         .iter()
         .filter_map(|object| match &object.body {
-            Some(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody::XRecord(body)) => Some(body.values.iter().filter(|value| matches!(value, semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::xrecord::DwgXRecordValue::ObjectId { .. })).count()),
+            Some(semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody::XRecord(body)) => Some(body.values.iter().filter(|value| matches!(value, semio_s_artifact_stdio_dwg_snapshot_objects_xrecord::DwgXRecordValue::ObjectId { .. })).count()),
             _ => None,
         })
         .sum::<usize>();

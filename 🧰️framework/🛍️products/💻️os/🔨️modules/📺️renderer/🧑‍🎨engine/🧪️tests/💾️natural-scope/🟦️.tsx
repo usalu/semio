@@ -8,6 +8,7 @@ import { DOCUMENT_ARCHIVE_MAXIMUM_BYTES, encodeDocumentArchiveBytes } from "@sem
 import { NATURAL_FILE_BROWSER_READ_CHUNK_BYTES_V1 } from "../../🧱️elements/🛠️ShellHelpers/🔩️plumbing/📥️downloads-and-file-requests/🟦️.ts";
 import { buildScopeState } from "../../🧱️elements/🏛️ShellHost/📤️document-transfer-tabs/🔶️scope/🟦️.tsx";
 import fixture from "./🔣️.json";
+import opened from "../../🧱️elements/🏛️ShellHost/📂️opened-program/🔣️.json";
 
 const selection = vi.hoisted(() => ({ files: [] as File[], downloads: [] as string[], segmented: [] as number[][], aborted: false }));
 vi.mock("../../🧱️elements/🛠️ShellHelpers/🔩️plumbing/📥️downloads-and-file-requests/🟦️.ts", async importOriginal => ({ ...await importOriginal<object>(), downloadMediaExportBytes: (file: string) => { selection.downloads.push(file); }, shellSegmentedDownloadSinkFactory: async (file: string) => ({ write: async (bytes: Uint8Array) => { selection.segmented.push([...bytes]); }, close: async () => { selection.downloads.push(file); }, abort: async () => { selection.aborted = true; } }), requestFileSelectionV1: async () => selection.files }));
@@ -18,7 +19,7 @@ afterEach(() => vi.restoreAllMocks());
 const deferred = <T,>() => { let resolve!: (value: T) => void; const promise = new Promise<T>(done => { resolve = done; }); return { promise, resolve }; };
 const archive = { parent_pack: new Uint8Array([1, 2]), parent_spr: new Uint8Array([3]), members: [] };
 const document = { documentId: "01900000-0000-7000-8000-000000000001", schema: "stdio.txt", name: "Chosen.txt", storage: "folder" as const, target: "/data/kept", admittedAtMs: 42, surface: { pluginId: "stdio-text", appId: "s.stdio.txt@utf-8/*#editor" } };
-function setup(segmented = false) {
+function setup(segmented = false, hostMode = true) {
   const calls: string[] = [];
   const media = { outputPort: "artifact:native", filename: "document.pdf", mediaType: "application/pdf", formatKind: "s.stdio.pdf@1.7" };
   const actions = segmented ? [{ id: EXPORT_MEDIA_FILE_ACTION_ID, args: Object.entries(media).map(([id, value]) => ({ id, default: value })) }] : [];
@@ -40,7 +41,15 @@ function setup(segmented = false) {
   const core = {
     pluginOpInFlightRef: { current: new Set<string>() },
     persistProgramDocumentRef: { current: async (..._args: unknown[]) => {} },
-    hostAppId: "host", landingAppId: "landing", resolveSyncTargetSession: () => target,
+    historyStore: { get: () => ({}) as Record<string, unknown> }, identityRef: { current: null },
+    onAction: vi.fn(async (action: { action: string }) => { calls.push(action.action); return { kind: "applied" }; }),
+    hostMode, hostAppId: "host", landingAppId: "landing", resolveSyncTargetSession: () => target,
+    adoptPreparedPrimarySession: vi.fn(async (appId: string, prepared: { instanceId: number; current: () => boolean; onPublished: () => void }) => {
+      calls.push("adopt");
+      if (!prepared.current()) return;
+      core.sessionRef.current = { pluginId: handle.pluginId, app: { id: appId }, instanceId: prepared.instanceId, viewState: {} };
+      prepared.onPublished();
+    }),
     ensureBackboneWorker: () => worker, backboneWorkerRef: { current: worker }, localDocumentOwnersRef: { current: new Map() },
     session: host, sessionRef: { current: host }, uiLocaleRef: { current: "en" }, uiLocale: "en",
     loadedPluginsRef: { current: [{ handle, manifest: { apps: [app] } }] }, loadedPlugins: [{ handle }],
@@ -201,7 +210,7 @@ it("Save waits for exact fresh archive readback; persisted and older content do 
   expect(view.requests().filter(request => request.kind === "send").map(request => request.kind === "send" && request.message.kind)).toEqual(fixture.saveRequests);
   const count = view.requests().length;
   view.observer().status(false); expect(view.requests()).toHaveLength(count);
-  view.observer().status(true); expect(view.requests()).toHaveLength(count + 1);
+  view.observer().status(true); await vi.waitFor(() => expect(view.requests()).toHaveLength(count + 1));
   view.observer().archive(encodeDocumentArchiveBytes({ ...archive, parent_pack: [9] }));
   await Promise.resolve();
   expect(view.handle.exportAppMedia).not.toHaveBeenCalled();
@@ -325,14 +334,14 @@ it("new natural opening refuses a plugin already being retired", async () => {
   await view.state.openNaturalFile(); expect(view.handle.createApp).not.toHaveBeenCalled(); expect(view.calls).not.toContain("focus");
 });
 
-it("retirement recovers an existing kept owner with current bytes before reattaching", async () => {
+it("retirement recovers an existing kept owner with current bytes before reattaching, and settles the reattachment before the instance may close", async () => {
   const view = setupSave(false); view.core.localCatalogRef.current.documents = [document];
   const currentArchive = { ...archive, parent_pack: [9], members: [{ ordinal: 0, reference: { artifact_id: "child", artifact_kind: "stdio.txt", standard: "utf-8", subset: "*" }, owner: { parent: { artifact_id: document.documentId, artifact_kind: "stdio.txt", standard: "utf-8", subset: "*" }, slot: "member", child_id: "child" }, envelope_pack: [7] }] };
   view.handle.readAppDocumentArchive.mockResolvedValue(currentArchive as never);
   await view.core.persistProgramDocumentRef.current({ handle: view.handle, session: view.target, name: "Recovered.txt" }, new AbortController().signal);
   const admission = view.core.writeLocalDocumentRef.current.mock.calls[0]![0] as { document: typeof document; archive: Uint8Array };
   expect(admission.document).toEqual(document); expect(admission.archive).toEqual(encodeDocumentArchiveBytes(currentArchive));
-  expect(view.calls.filter(call => ["drain", "write", "attach", "catalog", "focus"].includes(call))).toEqual(["drain", "write", "attach"]);
+  expect(view.calls.filter(call => ["drain", "write", "attach", "catalog", "focus"].includes(call))).toEqual(["drain", "write", "attach", "drain"]);
   expect(view.handle.loadAppDocumentArchive).not.toHaveBeenCalled(); expect(selection.downloads).toEqual([]);
 });
 it("recovery refuses attachment if native content changes after the verified write", async () => {
@@ -406,4 +415,48 @@ it("Save names a document that never came from a file by kind and time", async (
   await saving;
   expect(selection.downloads).toHaveLength(1);
   expect(selection.downloads[0]).toMatch(/^txt-\d{8}T\d{6}Z\.txt$/u);
+});
+
+const standaloneOpening = opened.cases.find(entry => entry.id === "standalone-adopts-the-opened-file")!;
+it("a standalone program host adopts the opened file as its program after it is durable, so every window follows it", async () => {
+  const view = setup(false, false);
+  view.core.sessionRef.current = { ...view.core.sessionRef.current, pluginId: view.handle.pluginId, app: { id: document.surface.appId } };
+  await view.state.openNaturalFile();
+  expect(view.calls.filter(call => ["import", "write", "attach", "catalog", "focus", "adopt"].includes(call))).toEqual(["import", "write", "attach", "catalog", standaloneOpening.publication === "adopt-primary" ? "adopt" : "focus"]);
+  expect(view.core.adoptPreparedPrimarySession).toHaveBeenCalledWith(document.surface.appId, expect.objectContaining({ handle: view.handle, instanceId: 7 }));
+  expect(view.core.sessionRef.current.instanceId).toBe(7);
+  expect(view.calls).toContain("shell.documentTransfer.file-opened");
+  expect(view.handle.destroyApp).not.toHaveBeenCalled();
+});
+it("a standalone program host whose session switch refuses the opened file retires it and unlists it", async () => {
+  const view = setup(false, false);
+  view.core.adoptPreparedPrimarySession.mockImplementation(async () => { view.calls.push("adopt"); });
+  vi.spyOn(console, "warn").mockImplementation(() => undefined);
+  await view.state.openNaturalFile();
+  expect(view.calls).toContain("adopt");
+  expect(view.calls).toContain("close");
+  expect(view.handle.destroyApp).toHaveBeenCalledWith(7);
+  expect(view.calls).not.toContain("shell.documentTransfer.file-opened");
+  expect(view.core.documentTransferFlightRef.current).toBe(false);
+});
+it("a standalone program host reopens a kept file as its program, and a kept file it already shows needs no switch", async () => {
+  const view = setup(false, false); view.core.localCatalogRef.current.documents = [document];
+  await view.state.openKeptFile(document, new AbortController().signal);
+  expect(view.calls.filter(call => ["load", "attach", "focus", "adopt"].includes(call))).toEqual(["load", "attach", "adopt"]);
+  expect(view.core.sessionRef.current.instanceId).toBe(7);
+  view.core.openDocumentSessionsRef.current.set(document.documentId, { plugin: view.handle, session: { app: view.core.loadedPluginsRef.current[0]!.manifest.apps[0], instanceId: 7 } });
+  view.core.adoptPreparedPrimarySession.mockClear(); view.core.readLocalDocumentRef.current.mockClear();
+  await view.state.openKeptFile(document, new AbortController().signal);
+  expect(view.core.adoptPreparedPrimarySession).not.toHaveBeenCalled(); expect(view.core.readLocalDocumentRef.current).not.toHaveBeenCalled();
+  expect(view.calls.filter(call => call === "shell.documentTransfer.file-opened")).toHaveLength(2);
+});
+it("a standalone program host checkpoints the uncommitted edits of the program it replaces before the switch retires it", async () => {
+  const view = setup(false, false);
+  const primary = { ...view.core.sessionRef.current, pluginId: view.handle.pluginId, app: { id: document.surface.appId, controllerId: "pdf" }, instanceId: 1 };
+  view.core.sessionRef.current = primary;
+  view.core.historyStore.get = () => ({ [`${primary.pluginId}#1`]: { cursor: 2, entries: { a: { seq: 1, kind: "mutation", applied: true }, b: { seq: 2, kind: "mutation", applied: true } } } });
+  await view.state.openNaturalFile();
+  expect(view.calls.filter(call => ["catalog", "commitCheckpoint", "adopt"].includes(call))).toEqual(["catalog", "commitCheckpoint", "adopt"]);
+  expect(view.core.onAction).toHaveBeenCalledWith(expect.objectContaining({ controllerId: "pdf", action: "commitCheckpoint" }));
+  expect(view.core.sessionRef.current.instanceId).toBe(7);
 });

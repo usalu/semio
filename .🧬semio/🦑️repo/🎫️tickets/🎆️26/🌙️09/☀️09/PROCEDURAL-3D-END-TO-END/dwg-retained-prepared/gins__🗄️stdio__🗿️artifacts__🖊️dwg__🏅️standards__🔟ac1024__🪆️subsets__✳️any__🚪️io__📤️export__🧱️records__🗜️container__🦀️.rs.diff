@@ -1,0 +1,10 @@
+--- a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📤️export/🧱️records/🗜️container/🦀️.rs
++++ b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📤️export/🧱️records/🗜️container/🦀️.rs
+@@ -141,6 +141,7 @@
+     pub address: u64,
+     pub allocation_size: u32,
+ }
++semio_framework_value::artifact_retire_struct!(EncodedR2004Page { section_id, page_number, start_offset, payload, address, allocation_size });
+ // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+ pub fn align_r2004(value: usize) -> usize {
+     (value + 0x1f) & !0x1f

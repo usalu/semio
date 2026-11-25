@@ -35,7 +35,13 @@ export function registerKeepsMeasuredPopupMinimumTests(): void {
       expect(listbox.querySelectorAll('[data-slot="select-scroll-down-button"]')).toHaveLength(1);
       const viewport = listbox.querySelector<HTMLElement>('[data-slot="select-viewport"]')!;
       expect(viewport.className).toContain("overflow-y-auto");
-      expect(viewport.className).toContain("p-single");
+      expect(viewport.className).not.toContain("p-single");
+      expect(viewport.hasAttribute("data-shared-border-cells")).toBe(true);
+      expect(viewport.getAttribute("data-orientation")).toBe("vertical");
+      const selected = listbox.querySelector<HTMLElement>('[data-slot="select-item"][data-value="row-6"]')!;
+      expect(selected.getAttribute("data-selected")).toBe("true");
+      expect(selected.querySelector("svg")).toBeNull();
+      expect(selected.className).not.toContain("rounded");
       expect(scrollIntoView).toHaveBeenCalledWith({ block: "nearest" });
     } finally {
       if (descriptor) Object.defineProperty(HTMLElement.prototype, "scrollIntoView", descriptor);

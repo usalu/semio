@@ -13,17 +13,83 @@
    "de": "Ein gebrauchter Fernsehsessel mit Hebelmechanik in dunkelbraunem PVC-Kunstleder, 0,89 m breit über dem Hebel, 0,91 m tief und 1,01 m hoch, 39,5 kg: zwei Armkästen mit gepolsterten Rollen, ein durchgesessenes Sitzkissen, eine am Sitz angelenkte Wasserfall-Lehne mit vier Kissen, eine gepolsterte Fußstütze an einem vernieteten Stahlgestänge und der Auslösehebel an der rechten Armlehne; der weichmacherarme Bezug ist auf der rechten Armrolle gerissen und mit Packband überklebt. Gelagert auf einer gefalteten Möbeldecke, von zwei Personen unter den Armkästen getragen und wieder benutzt aufrecht, mit hochgestellter Fußstütze und um 35 Grad zurückgelehnt."
   },
   "tags": [
-   "used",
-   "household",
-   "second-hand",
-   "living",
-   "recliner",
-   "armchair",
-   "seating",
-   "faux-leather",
-   "upholstery",
-   "mechanism",
-   "moving-blanket"
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "household",
+    "title": {
+     "en": "household",
+     "de": "Haushalt"
+    }
+   },
+   {
+    "id": "second-hand",
+    "title": {
+     "en": "second-hand",
+     "de": "Second-Hand"
+    }
+   },
+   {
+    "id": "living",
+    "title": {
+     "en": "living",
+     "de": "Wohnen"
+    }
+   },
+   {
+    "id": "recliner",
+    "title": {
+     "en": "recliner",
+     "de": "Relaxsessel"
+    }
+   },
+   {
+    "id": "armchair",
+    "title": {
+     "en": "armchair",
+     "de": "Sessel"
+    }
+   },
+   {
+    "id": "seating",
+    "title": {
+     "en": "seating",
+     "de": "Sitzmöbel"
+    }
+   },
+   {
+    "id": "faux-leather",
+    "title": {
+     "en": "faux leather",
+     "de": "Kunstleder"
+    }
+   },
+   {
+    "id": "upholstery",
+    "title": {
+     "en": "upholstery",
+     "de": "Polster"
+    }
+   },
+   {
+    "id": "mechanism",
+    "title": {
+     "en": "mechanism",
+     "de": "Mechanik"
+    }
+   },
+   {
+    "id": "moving-blanket",
+    "title": {
+     "en": "moving blanket",
+     "de": "Umzugsdecke"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content (used household objects wave)",

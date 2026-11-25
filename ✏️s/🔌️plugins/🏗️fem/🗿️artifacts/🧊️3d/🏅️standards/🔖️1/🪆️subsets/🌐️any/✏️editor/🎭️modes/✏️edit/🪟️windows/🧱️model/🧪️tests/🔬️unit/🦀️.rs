@@ -36,7 +36,7 @@ async fn model_scene_renders_solid_mesh_and_oriented_member_instances_3d() {
 /// gumball at the node with live dispatch; without a selection it stays inactive.
 #[test]
 fn transform_utility_arms_the_gumball_over_the_selection() {
-    let doc = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::fem3d_demo_snapshot();
+    let doc = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::fem3d_demo_snapshot().expect("bundled demo loads");
     let window = Fem3dModelWindowConfig::default();
     let armed = model_scene(&doc, &window, &Fem3dInteractionSnapshot::selecting([semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3d_entity_target("node", "n20_l1").unwrap()]), true).unwrap();
     let record: semio_framework_pack_json::Value = semio_framework_pack_json::parse(&armed.selection_json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("selection json");

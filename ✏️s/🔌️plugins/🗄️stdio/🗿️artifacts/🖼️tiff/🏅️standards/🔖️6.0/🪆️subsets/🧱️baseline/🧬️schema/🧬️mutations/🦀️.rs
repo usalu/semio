@@ -16,6 +16,7 @@ pub enum TiffBaselineMutation {
     SetBitsPerSample(set_bits_per_sample::SetBitsPerSample),
 }
 dsl::original_pack_value_operation_receiving!(TiffBaselineMutation);
+dsl::artifact_persisted_binary_operation!(TiffBaselineMutation);
 
 pub const KINDS: &[&str] = &["set-photometric-interpretation", "set-bits-per-sample"];
 crate::impl_serde_op_codec!(TiffBaselineMutation, "tiff-baseline-mutation");

@@ -5,7 +5,7 @@
 //! unchanged grant on exactly one owner; the same module drives the envelope-ingress, store-replacement and archive-load
 //! frontiers for both the live rotation and the close ladder.
 use semio_plugin_decl_app::ArtifactApp;
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use semio_plugin_decl_emission::Emit;
 use semio_framework::FaultFrom;

@@ -1,10 +1,10 @@
 import {expect,test} from "bun:test";
 import {spawnSync} from "node:child_process";
-import {existsSync,mkdirSync,mkdtempSync,readFileSync,realpathSync,rmSync,writeFileSync} from "node:fs";
+import {existsSync,mkdirSync,mkdtempSync,readFileSync,realpathSync,rmSync,symlinkSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import vectors from "./🔣️.json" with {type:"json"};
-import {appleLinkV1,installNameArgumentsV1,linkRootArgumentsV1,machineNeutralRemapV1,objectRootArgumentsV1,remappedNameV1,remapsOfV1,rustSourceRemapArgumentsV1} from "../🟦️.ts";
+import {appleLinkV1,canonicalOutDirectoryArgumentsV1,canonicalSourceArgumentsV1,installNameArgumentsV1,linkRootArgumentsV1,machineNeutralRemapV1,objectRootArgumentsV1,remappedNameV1,remapsOfV1,rustSourceRemapArgumentsV1} from "../🟦️.ts";
 
 const fromSpec=(specs:readonly string[])=>remapsOfV1(specs.map(spec=>"--remap-path-prefix="+spec));
 test("every vector gives the recorded name (TypeScript model)",()=>{for(const row of vectors.cases)expect(remappedNameV1(fromSpec(row.remaps),row.path),row.label).toBe(row.name);});
@@ -71,4 +71,74 @@ test("the standard library source is remapped for every unit: the rule is stated
   const plain=build([],"plain"),mapped=build(rustSourceRemapArgumentsV1([],real,hash),"mapped");
   expect(plain.includes(Buffer.from(real)),"without the flag the sysroot path is in the unit").toBe(true);expect(mapped.includes(Buffer.from(real)),"with the flag no path of the machine is left").toBe(false);
  }finally{rmSync(base,{recursive:true,force:true});}
+});
+
+test("one source file spelled with and without `..` segments compiles to the same bytes after canonicalisation (oracle: rustc)",()=>{
+ const base=realpathSync(mkdtempSync(join(realpathSync(tmpdir()),"remap-spelling-")));
+ try{
+  mkdirSync(join(base,"module","packages","rust"),{recursive:true});writeFileSync(join(base,"module","lib.rs"),"pub fn f<T:Clone>(x:&T)->T{x.clone()}\npub const N:&str=file!();\n");
+  const spelled="module/packages/rust/../../lib.rs",plain="module/lib.rs";
+  const compile=(source:string,out:string):Buffer[]=>{
+   mkdirSync(join(base,out),{recursive:true});
+   const args=["--edition=2021","--crate-type","lib","--crate-name","spell","--emit=metadata,link","-Cmetadata=x","-Cextra-filename=-x","--remap-path-prefix="+base+"=.","--out-dir",out,source];
+   const result=spawnSync("rustc",canonicalSourceArgumentsV1(args,source,base) as string[],{encoding:"utf8",cwd:base,env:{...process.env,RUSTC_BOOTSTRAP:"1"}});
+   expect(result.status,result.stderr).toBe(0);
+   return[readFileSync(join(base,out,"libspell-x.rlib")),readFileSync(join(base,out,"libspell-x.rmeta"))];
+  };
+  const raw=(source:string,out:string):Buffer[]=>{
+   mkdirSync(join(base,out),{recursive:true});
+   const result=spawnSync("rustc",["--edition=2021","--crate-type","lib","--crate-name","spell","--emit=metadata,link","-Cmetadata=x","-Cextra-filename=-x","--remap-path-prefix="+base+"=.","--out-dir",out,source],{encoding:"utf8",cwd:base,env:{...process.env,RUSTC_BOOTSTRAP:"1"}});
+   expect(result.status,result.stderr).toBe(0);
+   return[readFileSync(join(base,out,"libspell-x.rlib")),readFileSync(join(base,out,"libspell-x.rmeta"))];
+  };
+  const [rawSpelled,rawPlain]=[raw(spelled,"r1"),raw(plain,"r2")];
+  expect(rawSpelled[0]!.equals(rawPlain[0]!),"control: the spelling alone changes the rlib").toBe(false);
+  const [canonSpelled,canonPlain]=[compile(spelled,"c1"),compile(plain,"c2")];
+  expect(canonSpelled[0]!.equals(canonPlain[0]!)).toBe(true);expect(canonSpelled[1]!.equals(canonPlain[1]!)).toBe(true);
+ }finally{rmSync(base,{recursive:true,force:true});}
+});
+test("canonicalisation rewrites only a relative source whose normal form is the same file",()=>{
+ const base=realpathSync(mkdtempSync(join(realpathSync(tmpdir()),"remap-spelling-")));
+ try{
+  mkdirSync(join(base,"a","b"),{recursive:true});mkdirSync(join(base,"elsewhere","deep"),{recursive:true});
+  writeFileSync(join(base,"a","x.rs"),"");writeFileSync(join(base,"x.rs"),"");writeFileSync(join(base,"elsewhere","x.rs"),"");symlinkSync(join(base,"elsewhere","deep"),join(base,"a","link"));
+  const args=(source:string)=>["--crate-name","c",source,"--edition=2021"];
+  expect(canonicalSourceArgumentsV1(args("a/b/../x.rs"),"a/b/../x.rs",base)).toEqual(args("a/x.rs"));
+  expect(canonicalSourceArgumentsV1(args("./a/x.rs"),"./a/x.rs",base)).toEqual(args("a/x.rs"));
+  expect(canonicalSourceArgumentsV1(args("a/x.rs"),"a/x.rs",base)).toEqual(args("a/x.rs"));
+  expect(canonicalSourceArgumentsV1(args("a/link/../x.rs"),"a/link/../x.rs",base),"a link makes the lexical form another file").toEqual(args("a/link/../x.rs"));
+  expect(canonicalSourceArgumentsV1(args(join(base,"a","b","..","x.rs")),join(base,"a","b","..","x.rs"),base)).toEqual(args(join(base,"a","b","..","x.rs")));
+  expect(canonicalSourceArgumentsV1(args("missing/../x.rs"),"missing/../x.rs",base)).toEqual(args("missing/../x.rs"));
+  expect(canonicalSourceArgumentsV1(args("a/x.rs"),"",base)).toEqual(args("a/x.rs"));
+ }finally{rmSync(base,{recursive:true,force:true});}
+});
+test("the generated-source directory of a build script is named one way in every compile, in the crate and in its dependent (oracle: rustc)",()=>{
+ const base=realpathSync(mkdtempSync(join(realpathSync(tmpdir()),"remap-out-")));
+ try{
+  mkdirSync(join(base,"src"),{recursive:true});
+  writeFileSync(join(base,"src","d.rs"),'include!(concat!(env!("OUT_DIR"),"/gen.rs"));\npub trait T{fn t(&self)->u32;}\nimpl<X:Clone> T for X{fn t(&self)->u32{gen()}}\n');
+  writeFileSync(join(base,"src","w.rs"),"extern crate d;\nuse d::T;\npub fn f()->u32{5u8.t()+String::new().t()}\n");
+  const build=(hash:string,canonical:boolean):{d:Buffer;w:Buffer}=>{
+   const outDir=join(base,"lane"+hash,"build","d",hash,"out"),out=join(base,"o"+hash+(canonical?"c":"r"));
+   mkdirSync(outDir,{recursive:true});mkdirSync(out,{recursive:true});writeFileSync(join(outDir,"gen.rs"),"pub fn gen()->u32{1}\n");
+   const given=["--edition=2021","--crate-type","lib","--crate-name","d","--emit=metadata","-Cmetadata=dm","-Cextra-filename=-dm","--remap-path-prefix="+join(base,"lane"+hash,"build")+"=/cargo/build-dir","--out-dir",out,"src/d.rs"],env={...process.env,OUT_DIR:outDir,RUSTC_BOOTSTRAP:"1"};
+   const first=spawnSync("rustc",(canonical?canonicalOutDirectoryArgumentsV1(given,outDir):given) as string[],{encoding:"utf8",cwd:base,env});expect(first.status,first.stderr).toBe(0);
+   const second=spawnSync("rustc",["--edition=2021","--crate-type","lib","--crate-name","w","--emit=metadata","-Cmetadata=wm","--extern","d="+join(out,"libd-dm.rmeta"),"--out-dir",out,"src/w.rs"],{encoding:"utf8",cwd:base,env});expect(second.status,second.stderr).toBe(0);
+   return{d:readFileSync(join(out,"libd-dm.rmeta")),w:readFileSync(join(out,"libw.rmeta"))};
+  };
+  const [rawA,rawB]=[build("aaaa1111aaaa1111",false),build("bbbb2222bbbb2222",false)];
+  expect(rawA.d.equals(rawB.d),"control: Cargo's hash directory alone changes the crate").toBe(false);expect(rawA.w.equals(rawB.w),"control: and its dependent").toBe(false);
+  const [canonA,canonB]=[build("cccc3333cccc3333",true),build("dddd4444dddd4444",true)];
+  expect(canonA.d.equals(canonB.d)).toBe(true);expect(canonA.w.equals(canonB.w)).toBe(true);
+ }finally{rmSync(base,{recursive:true,force:true});}
+});
+test("the generated-source remapping is appended last, once, and only for an absolute OUT_DIR; the key sees it as a role",()=>{
+ const args=["--crate-name","c","--remap-path-prefix=/b=/cargo/build-dir","x.rs"],out="/b/serde/0123456789abcdef/out";
+ const once=canonicalOutDirectoryArgumentsV1(args,out);
+ expect(once).toEqual([...args,"--remap-path-prefix="+out+"=/cargo/out-dir"]);
+ expect(canonicalOutDirectoryArgumentsV1(once,out)).toEqual(once);
+ expect(canonicalOutDirectoryArgumentsV1(args,undefined)).toEqual(args);expect(canonicalOutDirectoryArgumentsV1(args,"")).toEqual(args);expect(canonicalOutDirectoryArgumentsV1(args,"out")).toEqual(args);
+ expect(canonicalOutDirectoryArgumentsV1(args,out+"/")).toEqual([...args,"--remap-path-prefix="+out+"=/cargo/out-dir"]);
+ expect(remappedNameV1(remapsOfV1(once),out+"/private.rs")).toBe("/cargo/out-dir/private.rs");
+ for(const from of["/b/x/1111111111111111/out","/Users/a/lane/build/y/2222222222222222/out"])expect(machineNeutralRemapV1("--remap-path-prefix="+from+"=/cargo/out-dir")).toBe("--remap-path-prefix=⟨cargo-out-dir⟩=/cargo/out-dir");
 });

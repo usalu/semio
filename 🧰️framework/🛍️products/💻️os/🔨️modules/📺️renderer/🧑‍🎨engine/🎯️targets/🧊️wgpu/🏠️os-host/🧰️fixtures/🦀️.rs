@@ -27,7 +27,7 @@ pub fn finish_cpu_only_fixture_component_close(close: impl FnOnce(&semio_rendere
     let Some(request) = take_component_surface_close_request() else { return };
     assert!(matches!(
         request.owner.kind,
-        semio_ui_declaration::ui::SurfaceKind::TiledMap | semio_ui_declaration::ui::SurfaceKind::NodeGraph | semio_ui_declaration::ui::SurfaceKind::Board2d | semio_ui_declaration::ui::SurfaceKind::TextEditor
+        semio_ui_declaration::ui::SurfaceKind::TiledMap | semio_ui_declaration::ui::SurfaceKind::NodeGraph | semio_ui_declaration::ui::SurfaceKind::Board2d | semio_ui_declaration::ui::SurfaceKind::TextEditor | semio_ui_declaration::ui::SurfaceKind::Paint2d
     ));
     if let Some(token) = semio_renderer_wgpu_engine_registry::engine_surface_registry::engine_surface_token(&request.owner.host_id) {
         assert_eq!(request.engine_token, Some(token), "the scene close owns the exact engine token bound during paint");

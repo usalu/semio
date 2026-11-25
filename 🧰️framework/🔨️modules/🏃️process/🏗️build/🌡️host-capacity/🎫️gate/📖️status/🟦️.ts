@@ -1,5 +1,6 @@
 import {concurrentEditV1,retryOnConcurrentEditSyncV1,type ChurnOptionsV1} from "../../../../../📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
 import {spawnSync} from "node:child_process";
+import {readProcessStartV1} from "../../../../🔖️identity/🟦️.ts";
 import {mkdirSync,readdirSync,readFileSync,renameSync,statSync,unlinkSync,writeFileSync} from "node:fs";
 import {homedir,uptime} from "node:os";
 import {isAbsolute,join} from "node:path";
@@ -71,9 +72,10 @@ export function prepare(directory:string):string{
  return root;
 }
 
-/** 🕰️ The start of a process in milliseconds since the epoch (the moment of the call less its elapsed time from `ps`, good to a second), `undefined` when it cannot be told (Windows, a missing process, a failing command). */
+/** 🕰️ The start of a process in milliseconds since the epoch (the moment of the call less its elapsed time from `ps`, good to a second), `undefined` when it cannot be told (a missing process, a failing command); Windows reads the creation time through the shared process identity. */
 export function processStartMillisecondsV1(pid:number,platform:NodeJS.Platform=process.platform,now:()=>number=Date.now):number|undefined{
- if(platform==="win32"||!Number.isInteger(pid)||pid<1)return undefined;
+ if(!Number.isInteger(pid)||pid<1)return undefined;
+ if(platform==="win32"){const read=readProcessStartV1(pid,platform);return typeof read==="number"?read:undefined;}
  try{
   const run=spawnSync("ps",["-o","etime=","-p",String(pid)],{encoding:"utf8",timeout:3000}),found=/^\s*(?:(\d+)-)?(?:(\d+):)?(\d+):(\d+)\s*$/u.exec(run.stdout);
   return found===null?undefined:now()-((((Number(found[1]??0)*24+Number(found[2]??0))*60+Number(found[3]))*60+Number(found[4]))*1000);

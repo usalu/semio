@@ -6,70 +6,119 @@
       "root": "🔌️plugin/🦀️.rs",
       "enum": "StdioApps",
       "label": "Stdio",
-      "main": true
+      "main": true,
+      "shards": []
     },
     {
       "id": "stdio-pdf",
       "root": "🧩️extensions/📘️pdf/🦀️.rs",
       "enum": "StdioPdfApps",
       "label": "Stdio PDF",
-      "main": false
+      "main": false,
+      "shards": [
+        {
+          "root": "🧩️extensions/📘️pdf/🧩️shards/4️⃣1.4/🦀️.rs",
+          "enum": "StdioPdf14Apps",
+          "variants": [
+            "Pdf14AEditor",
+            "Pdf14AViewer",
+            "Pdf14Editor",
+            "Pdf14Viewer",
+            "Pdf14XEditor",
+            "Pdf14XViewer"
+          ]
+        },
+        {
+          "root": "🧩️extensions/📘️pdf/🧩️shards/7️⃣1.7/✏️editors/🦀️.rs",
+          "enum": "StdioPdf17EditorApps",
+          "variants": [
+            "Pdf17AEditor",
+            "Pdf17Editor",
+            "Pdf17EEditor",
+            "Pdf17HEditor",
+            "Pdf17UaEditor",
+            "Pdf17VtEditor",
+            "Pdf17XEditor"
+          ]
+        },
+        {
+          "root": "🧩️extensions/📘️pdf/🧩️shards/7️⃣1.7/👁️viewers/🦀️.rs",
+          "enum": "StdioPdf17ViewerApps",
+          "variants": [
+            "Pdf17AViewer",
+            "Pdf17Viewer",
+            "Pdf17EViewer",
+            "Pdf17HViewer",
+            "Pdf17UaViewer",
+            "Pdf17VtViewer",
+            "Pdf17XViewer"
+          ]
+        }
+      ]
     },
     {
       "id": "stdio-cad",
       "root": "🧩️extensions/🛠️cad/🦀️.rs",
       "enum": "StdioCadApps",
       "label": "Stdio CAD",
-      "main": false
+      "main": false,
+      "shards": []
     },
     {
       "id": "stdio-bim",
       "root": "🧩️extensions/🏠️bim/🦀️.rs",
       "enum": "StdioBimApps",
       "label": "Stdio BIM",
-      "main": false
+      "main": false,
+      "shards": []
     },
     {
       "id": "stdio-office",
       "root": "🧩️extensions/💼️office/🦀️.rs",
       "enum": "StdioOfficeApps",
       "label": "Stdio Office",
-      "main": false
+      "main": false,
+      "shards": []
     },
     {
       "id": "stdio-semio",
       "root": "🧩️extensions/🧿️semio/🦀️.rs",
       "enum": "StdioSemioApps",
       "label": "Stdio Semio",
-      "main": false
+      "main": false,
+      "shards": []
     },
     {
       "id": "stdio-media",
       "root": "🧩️extensions/🎵️media/🦀️.rs",
       "enum": "StdioMediaApps",
       "label": "Stdio Media",
-      "main": false
+      "main": false,
+      "shards": []
     },
     {
       "id": "stdio-mesh",
       "root": "🧩️extensions/🔺️mesh/🦀️.rs",
       "enum": "StdioMeshApps",
       "label": "Stdio Mesh",
-      "main": false
+      "main": false,
+      "shards": []
     },
     {
       "id": "stdio-image",
       "root": "🧩️extensions/🖼️image/🦀️.rs",
       "enum": "StdioImageApps",
       "label": "Stdio Image",
-      "main": false
+      "main": false,
+      "shards": []
     },
     {
       "id": "stdio-binary",
       "root": "🧩️extensions/🔢️binary/🦀️.rs",
       "enum": "StdioBinaryApps",
       "label": "Stdio Binary",
-      "main": false
+      "main": false,
+      "shards": []
     }
   ]
 }

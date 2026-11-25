@@ -1,0 +1,533 @@
+{
+  "tint": {
+    "available": 10,
+    "active": 32
+  },
+  "offset": {
+    "x": 8,
+    "y": 10
+  },
+  "places": [
+    {
+      "name": "the place under the pointer is the active one",
+      "places": [
+        {
+          "id": "a",
+          "rect": {
+            "left": 0,
+            "top": 0,
+            "right": 100,
+            "bottom": 50
+          }
+        },
+        {
+          "id": "b",
+          "rect": {
+            "left": 0,
+            "top": 60,
+            "right": 100,
+            "bottom": 110
+          }
+        }
+      ],
+      "point": {
+        "x": 10,
+        "y": 70
+      },
+      "active": "b"
+    },
+    {
+      "name": "a pointer over no place activates none",
+      "places": [
+        {
+          "id": "a",
+          "rect": {
+            "left": 0,
+            "top": 0,
+            "right": 100,
+            "bottom": 50
+          }
+        }
+      ],
+      "point": {
+        "x": 500,
+        "y": 500
+      },
+      "active": null
+    },
+    {
+      "name": "of nested places the smallest wins",
+      "places": [
+        {
+          "id": "outer",
+          "rect": {
+            "left": 0,
+            "top": 0,
+            "right": 100,
+            "bottom": 100
+          }
+        },
+        {
+          "id": "inner",
+          "rect": {
+            "left": 20,
+            "top": 20,
+            "right": 60,
+            "bottom": 60
+          }
+        }
+      ],
+      "point": {
+        "x": 30,
+        "y": 30
+      },
+      "active": "inner"
+    },
+    {
+      "name": "outside the inner place the outer one is active",
+      "places": [
+        {
+          "id": "outer",
+          "rect": {
+            "left": 0,
+            "top": 0,
+            "right": 100,
+            "bottom": 100
+          }
+        },
+        {
+          "id": "inner",
+          "rect": {
+            "left": 20,
+            "top": 20,
+            "right": 60,
+            "bottom": 60
+          }
+        }
+      ],
+      "point": {
+        "x": 80,
+        "y": 80
+      },
+      "active": "outer"
+    },
+    {
+      "name": "of equal places the later one lies on top",
+      "places": [
+        {
+          "id": "a",
+          "rect": {
+            "left": 0,
+            "top": 0,
+            "right": 10,
+            "bottom": 10
+          }
+        },
+        {
+          "id": "b",
+          "rect": {
+            "left": 0,
+            "top": 0,
+            "right": 10,
+            "bottom": 10
+          }
+        }
+      ],
+      "point": {
+        "x": 5,
+        "y": 5
+      },
+      "active": "b"
+    },
+    {
+      "name": "the edges of a place belong to it",
+      "places": [
+        {
+          "id": "a",
+          "rect": {
+            "left": 0,
+            "top": 0,
+            "right": 100,
+            "bottom": 50
+          }
+        }
+      ],
+      "point": {
+        "x": 100,
+        "y": 50
+      },
+      "active": "a"
+    },
+    {
+      "name": "no place shows nothing",
+      "places": [],
+      "point": {
+        "x": 1,
+        "y": 1
+      },
+      "active": null
+    }
+  ],
+  "ghost": [
+    {
+      "name": "the copy lies below and to the right of the pointer",
+      "point": {
+        "x": 100,
+        "y": 200
+      },
+      "position": {
+        "x": 108,
+        "y": 210
+      }
+    },
+    {
+      "name": "before any travel it lies at the press",
+      "point": {
+        "x": 0,
+        "y": 0
+      },
+      "position": {
+        "x": 8,
+        "y": 10
+      }
+    },
+    {
+      "name": "travel to the upper left reaches negative coordinates",
+      "point": {
+        "x": -20,
+        "y": -30
+      },
+      "position": {
+        "x": -12,
+        "y": -20
+      }
+    }
+  ],
+  "threshold": [
+    {
+      "name": "no travel is a press",
+      "from": {
+        "x": 0,
+        "y": 0
+      },
+      "to": {
+        "x": 0,
+        "y": 0
+      },
+      "begins": false
+    },
+    {
+      "name": "three pixels stay a press",
+      "from": {
+        "x": 0,
+        "y": 0
+      },
+      "to": {
+        "x": 3,
+        "y": 0
+      },
+      "begins": false
+    },
+    {
+      "name": "four pixels begin the drag",
+      "from": {
+        "x": 0,
+        "y": 0
+      },
+      "to": {
+        "x": 4,
+        "y": 0
+      },
+      "begins": true
+    },
+    {
+      "name": "a diagonal of five pixels begins the drag",
+      "from": {
+        "x": 0,
+        "y": 0
+      },
+      "to": {
+        "x": 3,
+        "y": 4
+      },
+      "begins": true
+    },
+    {
+      "name": "a short diagonal stays a press",
+      "from": {
+        "x": 0,
+        "y": 0
+      },
+      "to": {
+        "x": 2,
+        "y": 2
+      },
+      "begins": false
+    },
+    {
+      "name": "travel to the upper left counts as well",
+      "from": {
+        "x": 10,
+        "y": 10
+      },
+      "to": {
+        "x": 6,
+        "y": 10
+      },
+      "begins": true
+    }
+  ],
+  "keys": [
+    {
+      "key": "Escape",
+      "cancels": true
+    },
+    {
+      "key": "Enter",
+      "cancels": false
+    },
+    {
+      "key": " ",
+      "cancels": false
+    },
+    {
+      "key": "Tab",
+      "cancels": false
+    },
+    {
+      "key": "ArrowLeft",
+      "cancels": false
+    }
+  ],
+  "insertSlots": [
+    {
+      "name": "an empty row is the whole slot",
+      "row": {
+        "left": 0,
+        "top": 0,
+        "right": 200,
+        "bottom": 24
+      },
+      "items": [],
+      "index": 0,
+      "slot": {
+        "left": 0,
+        "top": 0,
+        "right": 200,
+        "bottom": 24
+      }
+    },
+    {
+      "name": "before the first item the slot is its first half",
+      "row": {
+        "left": 0,
+        "top": 0,
+        "right": 200,
+        "bottom": 24
+      },
+      "items": [
+        {
+          "left": 0,
+          "top": 0,
+          "right": 50,
+          "bottom": 24
+        },
+        {
+          "left": 50,
+          "top": 0,
+          "right": 100,
+          "bottom": 24
+        }
+      ],
+      "index": 0,
+      "slot": {
+        "left": 0,
+        "top": 0,
+        "right": 25,
+        "bottom": 24
+      }
+    },
+    {
+      "name": "between two items the slot is the first half of the later one",
+      "row": {
+        "left": 0,
+        "top": 0,
+        "right": 200,
+        "bottom": 24
+      },
+      "items": [
+        {
+          "left": 0,
+          "top": 0,
+          "right": 50,
+          "bottom": 24
+        },
+        {
+          "left": 50,
+          "top": 0,
+          "right": 100,
+          "bottom": 24
+        }
+      ],
+      "index": 1,
+      "slot": {
+        "left": 50,
+        "top": 0,
+        "right": 75,
+        "bottom": 24
+      }
+    },
+    {
+      "name": "after the last item the slot is its second half",
+      "row": {
+        "left": 0,
+        "top": 0,
+        "right": 200,
+        "bottom": 24
+      },
+      "items": [
+        {
+          "left": 0,
+          "top": 0,
+          "right": 50,
+          "bottom": 24
+        },
+        {
+          "left": 50,
+          "top": 0,
+          "right": 100,
+          "bottom": 24
+        }
+      ],
+      "index": 2,
+      "slot": {
+        "left": 75,
+        "top": 0,
+        "right": 100,
+        "bottom": 24
+      }
+    },
+    {
+      "name": "an index past the end clamps to the end",
+      "row": {
+        "left": 0,
+        "top": 0,
+        "right": 200,
+        "bottom": 24
+      },
+      "items": [
+        {
+          "left": 0,
+          "top": 0,
+          "right": 50,
+          "bottom": 24
+        }
+      ],
+      "index": 99,
+      "slot": {
+        "left": 25,
+        "top": 0,
+        "right": 50,
+        "bottom": 24
+      }
+    },
+    {
+      "name": "a negative index clamps to the start",
+      "row": {
+        "left": 0,
+        "top": 0,
+        "right": 200,
+        "bottom": 24
+      },
+      "items": [
+        {
+          "left": 0,
+          "top": 0,
+          "right": 50,
+          "bottom": 24
+        }
+      ],
+      "index": -3,
+      "slot": {
+        "left": 0,
+        "top": 0,
+        "right": 25,
+        "bottom": 24
+      }
+    },
+    {
+      "name": "the slot takes the height of the row",
+      "row": {
+        "left": 10,
+        "top": 4,
+        "right": 210,
+        "bottom": 28
+      },
+      "items": [
+        {
+          "left": 10,
+          "top": 6,
+          "right": 60,
+          "bottom": 26
+        }
+      ],
+      "index": 0,
+      "slot": {
+        "left": 10,
+        "top": 4,
+        "right": 35,
+        "bottom": 28
+      }
+    }
+  ],
+  "treeBands": [
+    {
+      "name": "before is the upper quarter of the row",
+      "row": {
+        "left": 0,
+        "top": 100,
+        "right": 200,
+        "bottom": 124
+      },
+      "position": "before",
+      "band": {
+        "left": 0,
+        "top": 100,
+        "right": 200,
+        "bottom": 106
+      }
+    },
+    {
+      "name": "after is the lower quarter of the row",
+      "row": {
+        "left": 0,
+        "top": 100,
+        "right": 200,
+        "bottom": 124
+      },
+      "position": "after",
+      "band": {
+        "left": 0,
+        "top": 118,
+        "right": 200,
+        "bottom": 124
+      }
+    },
+    {
+      "name": "inside is the whole row",
+      "row": {
+        "left": 0,
+        "top": 100,
+        "right": 200,
+        "bottom": 124
+      },
+      "position": "inside",
+      "band": {
+        "left": 0,
+        "top": 100,
+        "right": 200,
+        "bottom": 124
+      }
+    }
+  ]
+}

@@ -174,6 +174,12 @@
   --color-secondary: #34d1bf;
   --color-tertiary: #fa9500;
   --color-danger: #a60009;
+  --color-danger-bright: #ff8a90;
+  --color-danger-deep: #8c0007;
+  --color-warning-deep: #544300;
+  --color-success-deep: #2d452d;
+  --color-success-bright: #93c294;
+  --color-info-deep: #483d32;
   --color-warning: #fccf05;
   --color-info: #dbbea1;
   --color-success: #7eb77f;
@@ -239,6 +245,18 @@
   --text-sm: 12.8px;
   --text-xs: 11.2px;
   --text-base: 14.4px;
+}
+
+:root {
+  --level-shade-step: 5%;
+  --element-shade-step: 6%;
+  --hover-shade-step: 12%;
+  --glass-alpha-step: 0.12;
+  --glass-blur-step: 0.5rem;
+  --glass-saturate: 1.45;
+  --veil-alpha: 0.4;
+  --veil-blur: 0.5rem;
+  --chip-tint: 10%;
 }
 
 /* Generated from framework/ui/styling/🔣️.json — run `repo ./📜️script.ts generate`. */

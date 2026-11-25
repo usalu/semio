@@ -1,0 +1,4 @@
+live-rigid 600 - "$M/one.ts" --snapshot "$SP/snap/finned-heat-exchanger.json" --out "$G/live-rigid.cells.json" --probe
+live-olive 1800 - "$M/one.ts" --snapshot "$SP/snap/olive-tree.json" --out "$G/live-olive.cells.json" --probe
+profile-umbrella 2400 --cpu-prof --cpu-prof-dir="$G/prof-umbrella" "$M/one.ts" --snapshot "$SP/snap/person-with-umbrella.json" --out "$G/profile-umbrella.cells.json" --probe
+live-jogger 5400 - "$M/one.ts" --snapshot "$SP/snap/jogger.json" --out "$G/live-jogger.cells.json" --probe

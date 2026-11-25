@@ -154,5 +154,5 @@
     "execute",
     "reset"
   ],
-  "formDefaultOpen": false
+  "formDefaultOpen": true
 }

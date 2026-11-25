@@ -135,6 +135,9 @@ impl PdfNormalObjectCursor {
         Ok(NormalObjectStatus::More)
     }
 
+    /// 🔡️ Whether the next units lex one source byte each (the header, the value tokens, the stream prefix or the scan for `endstream`) rather than plan a length, wait or close.
+    pub fn lexes_bytes(&self) -> bool { matches!(self.phase, Phase::Frame | Phase::Span(_)) }
+
     /// 📮 Delivers the requested reference length or selects the bounded marker search.
     pub fn provide_length(&mut self, reference: ObjRef, length: Option<usize>) -> Result<(), &'static str> {
         let Phase::Wait { reference: expected, start, source_len } = self.phase else { return Err("normal object has no outstanding length request"); };

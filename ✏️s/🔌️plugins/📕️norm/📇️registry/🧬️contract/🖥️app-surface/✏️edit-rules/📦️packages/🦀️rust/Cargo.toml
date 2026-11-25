@@ -17,7 +17,10 @@ path = "../../🦀️.rs"
 
 [dependencies]
 semio-os-kernel = { workspace = true }
+semio-framework = { workspace = true }
+semio-framework-pack-json = { workspace = true }
 semio-framework-value = { workspace = true }
+semio-s-plugin-norm-inspector-forms = { path = "../../../🪺️inspector-forms/📦️packages/🦀️rust" }
 semio-s-plugin-norm-app-surface-foundation = { workspace = true }
 
 [dev-dependencies]

@@ -41,6 +41,7 @@ name = "compile_cancellation_law"
 path = "../../🏠️workspace/🧪️tests/⏱️compile-cancellation-law/🦀️.rs"
 
 [dependencies]
+semio-framework-async = { workspace = true }
 semio-os-mcp-process-arena = { path = "../../🌱️process-arena/📦️packages/🦀️rust" }
 semio-ui-contract-validation = { path = "../../../../../../🔨️modules/🖱️ui/🧬️contract/🛡️limits/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
@@ -79,7 +80,6 @@ semio-plugin-host = { path = "../../../🔌️plugin/🖥️host/📦️packages
 semio-plugin-guest-contract = { path = "../../../🔌️plugin/🧬️guest-contract/📦️packages/🦀️rust" }
 framework_hash = { path = "../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
 semio-framework-actor = { path = "../../../../../../🔨️modules/🎭️actor/📦️packages/🦀️rust" }
-semio-framework-async = { workspace = true }
 serde = { workspace = true }
 semio-os-spr = { path = "../../../📡️spr/📦️packages/🦀️rust", features = ["protocol-laws"] }
 semio-framework-pack = { path = "../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }

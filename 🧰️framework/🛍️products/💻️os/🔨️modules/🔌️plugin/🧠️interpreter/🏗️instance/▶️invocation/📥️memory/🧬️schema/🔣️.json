@@ -8,7 +8,7 @@
     "expectedInstructions",
     "address",
     "width",
-    "deniedCopyBytes"
+    "deniedFuel"
   ],
   "properties": {
     "version": {
@@ -30,8 +30,8 @@
     "width": {
       "const": 8
     },
-    "deniedCopyBytes": {
-      "const": 7
+    "deniedFuel": {
+      "const": 0
     }
   }
 }

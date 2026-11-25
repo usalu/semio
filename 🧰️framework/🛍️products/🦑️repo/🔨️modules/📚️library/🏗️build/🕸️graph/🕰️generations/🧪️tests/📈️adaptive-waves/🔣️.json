@@ -1,15 +1,15 @@
 {
   "version": 1,
   "cases": [
-    {"name": "a wave that does not say what it inferred keeps the base", "size": 48, "elapsedMilliseconds": 100000, "expected": 48},
-    {"name": "a wave without inference grows with the time budget: 300 s over 100 s is three times", "size": 48, "inferred": 0, "elapsedMilliseconds": 100000, "expected": 144},
+    {"name": "a wave that does not say what it inferred keeps the base", "size": 48, "elapsedMilliseconds": 300000, "expected": 48},
+    {"name": "a wave without inference grows with the time budget: 900 s over 300 s is three times", "size": 48, "inferred": 0, "elapsedMilliseconds": 300000, "expected": 144},
     {"name": "growth is bounded by the growth factor per wave", "size": 48, "inferred": 0, "elapsedMilliseconds": 10000, "expected": 192},
-    {"name": "a wave twice over the budget halves", "size": 480, "inferred": 0, "elapsedMilliseconds": 600000, "expected": 240},
+    {"name": "a wave twice over the budget halves", "size": 480, "inferred": 0, "elapsedMilliseconds": 1800000, "expected": 240},
     {"name": "a wave far over the budget returns to the base", "size": 480, "inferred": 0, "elapsedMilliseconds": 10000000, "expected": 48},
     {"name": "the maximum bounds the wave", "size": 480, "inferred": 0, "elapsedMilliseconds": 1000, "expected": 960},
     {"name": "a wave that inferred more than a quarter of its projects returns to the base", "size": 480, "inferred": 130, "elapsedMilliseconds": 1000, "expected": 48},
-    {"name": "a few inferred projects stop the growth but not the size", "size": 96, "inferred": 2, "elapsedMilliseconds": 100000, "expected": 96},
-    {"name": "a few inferred projects in a wave over the budget shrink it", "size": 96, "inferred": 2, "elapsedMilliseconds": 600000, "expected": 48},
+    {"name": "a few inferred projects stop the growth but not the size", "size": 96, "inferred": 2, "elapsedMilliseconds": 300000, "expected": 96},
+    {"name": "a few inferred projects in a wave over the budget shrink it", "size": 96, "inferred": 2, "elapsedMilliseconds": 1800000, "expected": 48},
     {"name": "a machine granted half the memory has half the base and half the maximum", "size": 24, "inferred": 0, "elapsedMilliseconds": 1000, "basisPoints": 5000, "expected": 96},
     {"name": "a machine granted half the memory never exceeds half the maximum", "size": 400, "inferred": 0, "elapsedMilliseconds": 1000, "basisPoints": 5000, "expected": 480},
     {"name": "no elapsed time is the fastest wave", "size": 48, "inferred": 0, "elapsedMilliseconds": 0, "expected": 192}

@@ -21,7 +21,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Browser, Page } from "playwright";
-import { PLAYWRIGHT_MODULE_SPECIFIER } from "../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🟦️.ts";
+import { launchBrowserV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🟦️.ts";
 import { acceptanceCheckResult, publishAcceptanceCheckResult, withAcceptanceRecord } from "@semio-tech/repo-test/acceptance/orchestration";
 import { devServePortV1, ensureDevServe } from "../../🚀️local-hub/🏃️execution/🟦️.ts";
 
@@ -584,8 +584,7 @@ export async function runProgramMatrix(repoRoot: string, options: ProgramMatrixO
   const out = join(outDir, "matrix.json");
   const log = (line: string): void => console.log(`[matrix] ${line}`);
   ensureRepositoryBrowserPathV1(repoRoot,process.env);
-  const { chromium }: typeof import("playwright") = await import(PLAYWRIGHT_MODULE_SPECIFIER);
-  const browser: Browser = await chromium.launch({ headless: !options.headed, args: ["--use-angle=metal"] });
+  const browser: Browser = await launchBrowserV1({ headless: !options.headed, args: ["--use-angle=metal"] });
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
   page.setDefaultNavigationTimeout(180_000);
   await page.addInitScript(() => {

@@ -672,6 +672,10 @@
      "en": ", its view is still being refreshed",
      "de": ", seine Ansicht wird noch erneuert"
     },
+    "workers.tree.old": {
+     "en": ", tree not compared: the replica's attestation is old, so its view ({files} differing line(s)) no longer describes the worker's tree",
+     "de": ", Baum nicht verglichen: der Nachweis der Replika ist alt, ihre Ansicht ({files} abweichende Zeile(n)) beschreibt den Baum des Workers nicht mehr"
+    },
     "workers.tree.unknown": {
      "en": ", tree not comparable (no readable view)",
      "de": ", Baum nicht vergleichbar (keine lesbare Ansicht)"
@@ -3562,7 +3566,7 @@
     "subjectMegabytes": {"type": ["integer", "null"], "minimum": 0},
     "suspended": {"type": ["integer", "null"], "minimum": 0},
     "counters": {"anyOf": [{"type": "null"}, {"type": "object", "additionalProperties": false, "required": ["suspended", "resumed", "cancelled"], "properties": {"suspended": {"type": "integer", "minimum": 0}, "resumed": {"type": "integer", "minimum": 0}, "cancelled": {"type": "integer", "minimum": 0}}}]},
-    "lastAlarm": {"anyOf": [{"type": "null"}, {"type": "object", "additionalProperties": false, "required": ["atMs", "action", "kind", "pid", "owner", "megabytes", "text"], "properties": {"atMs": {"type": "integer", "minimum": 0}, "action": {"enum": ["suspend", "resume", "cancel"]}, "kind": {"type": "string"}, "pid": {"type": "integer", "minimum": 1}, "owner": {"type": "string"}, "megabytes": {"type": "integer", "minimum": 0}, "text": {"type": "object", "additionalProperties": false, "required": ["en", "de"], "properties": {"en": {"type": "string"}, "de": {"type": "string"}}}}}]},
+    "lastAlarm": {"anyOf": [{"type": "null"}, {"type": "object", "additionalProperties": false, "required": ["atMs", "action", "kind", "pid", "owner", "megabytes", "text"], "properties": {"atMs": {"type": "integer", "minimum": 0}, "action": {"enum": ["suspend", "resume", "cancel", "report"]}, "kind": {"type": "string"}, "pid": {"type": "integer", "minimum": 1}, "owner": {"type": "string"}, "megabytes": {"type": "integer", "minimum": 0}, "text": {"type": "object", "additionalProperties": false, "required": ["en", "de"], "properties": {"en": {"type": "string"}, "de": {"type": "string"}}}}}]},
     "overhead": {"anyOf": [{"type": "null"}, {"type": "object", "additionalProperties": false, "required": ["tickMillisecondsP95", "cpuBasisPoints", "residentMegabytes"], "properties": {"tickMillisecondsP95": {"type": "number", "minimum": 0}, "cpuBasisPoints": {"type": "number", "minimum": 0}, "residentMegabytes": {"type": "number", "minimum": 0}}}]}
    }
   },

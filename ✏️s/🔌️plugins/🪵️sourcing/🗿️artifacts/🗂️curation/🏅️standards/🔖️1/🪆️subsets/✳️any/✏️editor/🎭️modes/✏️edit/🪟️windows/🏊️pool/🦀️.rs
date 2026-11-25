@@ -1,10 +1,10 @@
 //! 🏊️ Sourcing curation app — the pool window: the full stock catalogue with filter chrome + drag source.
 
-use crate::schema::{available_modules, curated_count, filtered_stock, typology_flatten};
+use crate::schema::{available_modules, catalog_kind_name, catalog_module_label, catalog_typology_label, catalog_typology_path, curated_count, filtered_stock, typology_flatten};
 use crate::{CurationSnapshot, ObjectKind, SortDirection};
 use crate::editor::sourcing::config::SourcingCurationConfig;
 use crate::editor::sourcing::terminology::SourcingLabels;
-use crate::editor::sourcing::editor_vocabulary::{sourcing_action, sourcing_table, sourcing_table_action, sourcing_table_row, ui_value_bool, ui_value_map, ui_value_text};
+use crate::editor::sourcing::editor_vocabulary::{sourcing_action, sourcing_row_menu, sourcing_table, sourcing_table_action, sourcing_table_row, ui_value_bool, ui_value_map, ui_value_text};
 use semio_plugin::plugin_app_close_prelude as ui;
 use semio_plugin::plugin_app_close_prelude::InputKind;
 use semio_plugin::Buildable;
@@ -70,17 +70,18 @@ pub fn pool_kinds(document: &CurationSnapshot, cfg: &SourcingCurationConfig) -> 
     filtered
 }
 
-/// 🧺️ One pool row: catalogue fields plus a single curated-count stepper (`curationSetCount`). Row
+/// 🧺️ One pool row: catalogue fields, a single curated-count stepper (`curationSetCount`) and the row's "More" menu. Row
 /// buttons were removed — they duplicated the stepper's +/- and stacked extra plus icons beside it.
-pub fn pool_row(document: &CurationSnapshot, kind: &ObjectKind, _labels: &SourcingLabels) -> semio_framework_value::DslValue {
+pub fn pool_row(document: &CurationSnapshot, kind: &ObjectKind, labels: &SourcingLabels, locale: semio_plugin::Locale) -> semio_framework_value::DslValue {
     sourcing_table_row(
         &kind.id,
         vec![
-            ("name", TableCell::Text { value: kind.name.clone() }),
-            ("module", TableCell::Text { value: kind.module_id.clone() }),
-            ("typology", TableCell::Text { value: kind.typology_path.join(" / ") }),
+            ("name", TableCell::Text { value: catalog_kind_name(kind, locale) }),
+            ("module", TableCell::Text { value: catalog_module_label(&kind.module_id, &kind.module_id, locale) }),
+            ("typology", TableCell::Text { value: catalog_typology_path(kind, locale) }),
             ("availability", TableCell::Number { value: kind.availability as f64 }),
             ("curated", TableCell::Stepper { value: curated_count(document, &kind.id) as f64, min: 0.0, max: kind.availability as f64, step: 1.0, action: sourcing_table_action("curationSetCount", Some(&kind.id)) }),
+            ("menu", sourcing_row_menu(kind, curated_count(document, &kind.id), labels)),
         ],
     )
 }
@@ -99,7 +100,7 @@ fn ui_label(value: impl AsRef<str>) -> UiAssemblyResult<semio_plugin::UiLabel> {
 
 /// 🔍️ The pool's filter chrome: free-text query, one toggle per module, the typology path, and the
 /// minimum availability — each bound to its session-only config command.
-pub fn filter_bar(cfg: &SourcingCurationConfig, labels: &SourcingLabels) -> UiAssemblyResult<BuiltNode> {
+pub fn filter_bar(cfg: &SourcingCurationConfig, labels: &SourcingLabels, locale: semio_plugin::Locale) -> UiAssemblyResult<BuiltNode> {
     let filters = &cfg.filters;
     let mut children = UiFixedList::<BuiltNode>::default();
     let (query_action, _) = sourcing_action("setFilterQuery", None)?;
@@ -109,7 +110,7 @@ pub fn filter_bar(cfg: &SourcingCurationConfig, labels: &SourcingLabels) -> UiAs
     for module in &modules {
         let pressed = filters.module_ids.iter().any(|id| id == &module.module_id);
         let (action, args) = sourcing_action("setFilterModule", Some(ui_value_map([("moduleId", ui_value_text(&module.module_id)?), ("enabled", ui_value_bool(!pressed))])?))?;
-        let toggle = ui::toggle(pressed).icon(ui_text("layers")?).text(ui_label(&module.label)?).try_id(format!("sourcing-filter-module-{}", module.module_id)).map_err(|_| filter_error("module-id"))?;
+        let toggle = ui::toggle(pressed).icon(ui_text("layers")?).text(ui_label(catalog_module_label(&module.module_id, &module.label, locale))?).try_id(format!("sourcing-filter-module-{}", module.module_id)).map_err(|_| filter_error("module-id"))?;
         let toggle = match args {
             Some(args) => toggle.try_on_with(Trigger::Change, action, args),
             None => toggle.try_on(Trigger::Change, action),
@@ -121,7 +122,7 @@ pub fn filter_bar(cfg: &SourcingCurationConfig, labels: &SourcingLabels) -> UiAs
     let mut typology = ui::select(ui_text(filters.typology_path.join("/"))?).try_item(ui_text("")?, ui_label(labels.all_typologies.as_str())?).map_err(|_| filter_error("typology-all"))?;
     for module in &modules {
         for (path, label) in typology_flatten(&module.typology) {
-            typology = typology.try_item(ui_text(path.join("/"))?, ui_label(label)?).map_err(|_| filter_error("typology-item"))?;
+            typology = typology.try_item(ui_text(path.join("/"))?, ui_label(path.last().map_or(label.clone(), |segment| catalog_typology_label(segment, &label, locale)))?).map_err(|_| filter_error("typology-item"))?;
         }
     }
     children.try_push(typology.try_label(labels.col_typology.as_str()).map_err(|_| filter_error("typology-label"))?.try_id("sourcing-filter-typology").map_err(|_| filter_error("typology-id"))?.try_on(Trigger::Change, typology_action).map_err(|_| filter_error("typology-binding"))?.try_build().map_err(|_| filter_error("typology-build"))?).map_err(|_| filter_error("children"))?;
@@ -134,7 +135,7 @@ pub fn filter_bar(cfg: &SourcingCurationConfig, labels: &SourcingLabels) -> UiAs
     ui::row().try_id("sourcing-pool-filters").map_err(|_| filter_error("row-id"))?.try_children(children).map_err(|_| filter_error("row-children"))?.try_build().map_err(|_| filter_error("row-build"))
 }
 
-pub fn render(document: &CurationSnapshot, cfg: &SourcingCurationConfig, labels: &SourcingLabels, locale: semio_plugin::Locale) -> UiAssemblyResult<BuiltNode> {
+pub fn render(document: &CurationSnapshot, cfg: &SourcingCurationConfig, labels: &SourcingLabels, selected_ids: &[String], locale: semio_plugin::Locale) -> UiAssemblyResult<BuiltNode> {
     let columns = [
         ("name", labels.col_name.as_str(), true),
         ("module", labels.col_module.as_str(), true),
@@ -142,10 +143,14 @@ pub fn render(document: &CurationSnapshot, cfg: &SourcingCurationConfig, labels:
         ("availability", labels.col_availability.as_str(), true),
         ("curated", labels.col_curated.as_str(), false),
     ];
-    let rows = pool_kinds(document, cfg).iter().map(|kind| pool_row(document, kind, labels)).collect();
-    let table = sourcing_table(SOURCING_CURATION_SURFACE_POOL, &columns, rows, "dropOnPool", cfg.filters.sort.as_ref(), semio_plugin::surface_name(locale, "Pool table", "Pool-Tabelle"))?;
+    let mut kinds = pool_kinds(document, cfg);
+    if let Some(sort) = cfg.filters.sort.as_ref().filter(|sort| sort.column_id == "name") {
+        kinds.sort_by(|a, b| { let ordering = catalog_kind_name(a, locale).cmp(&catalog_kind_name(b, locale)); if sort.direction == SortDirection::Desc { ordering.reverse() } else { ordering } });
+    }
+    let rows = kinds.iter().map(|kind| pool_row(document, kind, labels, locale)).collect();
+    let table = sourcing_table(SOURCING_CURATION_SURFACE_POOL, &columns, rows, "dropOnPool", cfg.filters.sort.as_ref(), selected_ids, semio_plugin::surface_name(locale, "Pool table", "Pool-Tabelle"))?;
     let mut children = UiFixedList::<BuiltNode>::default();
-    children.try_push(filter_bar(cfg, labels)?).map_err(|_| filter_error("children"))?;
+    children.try_push(filter_bar(cfg, labels, locale)?).map_err(|_| filter_error("children"))?;
     children.try_push(table).map_err(|_| filter_error("children"))?;
     ui::column().try_id("sourcing-pool").map_err(|_| filter_error("column-id"))?.try_children(children).map_err(|_| filter_error("column-children"))?.try_build().map_err(|_| filter_error("column-build"))
 }

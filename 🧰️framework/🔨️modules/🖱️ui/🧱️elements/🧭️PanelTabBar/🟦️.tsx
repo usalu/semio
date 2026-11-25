@@ -15,7 +15,6 @@ import { type UiLabel } from "../🎗️UiLabel/🟦️.tsx";
 import { Icon, type ControlIcon, renderControlIcon } from "../🔣️Icons/🟦️.tsx";
 import { DragHandle } from "../🧱️DragHandle/🟦️.tsx";
 import { Ribbon, type RibbonRow } from "../🎀️Ribbon/🟦️.tsx";
-import { chipGapReadsAsSliver } from "../🃏️CardStack/bands.ts";
 import { useSharedBorderFrameRef } from "../🗂️WindowChrome/shared-border.ts";
 import { type FlowBlock, FlowProvider, useFlow } from "../../🔨️modules/🧭️flow-direction-context/🟦️.tsx";
 import { useLabel, useControlInlineText } from "../🏷️Label/🟦️.tsx";
@@ -28,7 +27,8 @@ import { type UiStatus } from "@semio-tech/ui-styling";
 import { type TreePanelSource } from "../🖼️Panel/🌲️tree-source/🟦️.ts";
 import { usePanelDockContext, PANEL_TREE_UNIT_MIME, beginPanelTreeUnitDrag, endPanelTreeUnitDrag, readActivePanelTreeUnitDrag, usePanelTreeUnitDragActive, type PanelDockContextValue } from "../../🔨️modules/🧲️panel-dock/🟦️.tsx";
 import { type Anchor, flowFromAnchor, ANCHORS } from "../../🔨️modules/⚓️panel-anchor/🟦️.ts";
-import { panelTabIconSlotClass, panelTabLabelClass, panelTabButtonClass, panelTabBarClass, panelTabBarScrollRowClass, panelTabBarEdge, panelTabButtonDividerClass, panelWindowInactiveTabClass, modeDockInactiveTabBeforeGapClass, modeDockInactiveTabClass, modeDockActiveTabClass, modeDockActiveTabFillClass, modeDockTabLabelClassName, dropZoneReadyClass, panelAnchorTabBarClass, mobilePanelTabBarClass, mobilePanelTabButtonClass, panelAnchorTabButtonClass } from "../../🔨️modules/🎨️chrome-class-names/🟦️.ts";
+import { type DropPlaceState, dragSourceAttributes, dropPlaceAttributes, insertSlot, useNativeDropOver } from "../../🔨️modules/🫳️pointer-drag/🟦️.tsx";
+import { panelTabIconSlotClass, panelTabLabelClass, panelTabButtonClass, panelTabBarClass, panelTabBarScrollRowClass, panelTabBarEdge, panelTabButtonDividerClass, panelWindowInactiveTabClass, modeDockInactiveTabBeforeGapClass, modeDockInactiveTabClass, modeDockActiveTabClass, modeDockActiveTabFillClass, modeDockTabLabelClassName, panelAnchorTabBarClass, mobilePanelTabBarClass, mobilePanelTabButtonClass, panelAnchorTabButtonClass } from "../../🔨️modules/🎨️chrome-class-names/🟦️.ts";
 // #endregion 🔌️Adapters
 
 // #region 📑️PanelTabBar
@@ -387,8 +387,29 @@ export function applyDockSkeleton(defaultDock: PanelDock, skeleton: DockSkeleton
   return { anchors };
 }
 
-/** ↔ Insert-position indicator shown between tab buttons while a drag hovers a row. */
-const panelTabInsertPreviewClass = "w-0.5 self-stretch rounded-full bg-accent shrink-0";
+/**
+ * ↔️ The place a dragged tab is inserted at, shown as a rectangle inside the row over half of the tab that follows it
+ * (at the end over the second half of the last one) — nothing is inserted between the tabs, so nothing moves.
+ * @see ../../🔨️modules/🫳️pointer-drag/places.ts `insertSlot`
+ */
+const PanelTabInsertSlot: React.FC<{ readonly index: number; readonly excluded: ReadonlySet<string> | null }> = ({ index, excluded }) => {
+  const self = reactHostPort.useRef<HTMLDivElement>(null);
+  const [slot, setSlot] = reactHostPort.useState<{ readonly left: number; readonly top: number; readonly width: number; readonly height: number } | null>(null);
+  reactHostPort.useLayoutEffect(() => {
+    const row = self.current?.parentElement;
+    if (!row) return;
+    const bounds = row.getBoundingClientRect();
+    const items = [...row.querySelectorAll<HTMLElement>("[data-tab-id]")]
+      .filter((button) => !excluded?.has(button.dataset.tabId ?? "") && button.closest("[data-slot$='-tabs']") === row)
+      .map((button) => {
+        const rect = button.getBoundingClientRect();
+        return { left: rect.left - bounds.left + row.scrollLeft, top: 0, right: rect.right - bounds.left + row.scrollLeft, bottom: bounds.height };
+      });
+    const found = insertSlot({ left: 0, top: 0, right: Math.max(bounds.width, row.scrollWidth), bottom: bounds.height }, items, index);
+    setSlot({ left: found.left, top: found.top, width: found.right - found.left, height: found.bottom - found.top });
+  }, [index, excluded]);
+  return <div ref={self} data-slot="panel-tab-insert-preview" aria-hidden="true" {...dropPlaceAttributes("active")} className="pointer-events-none absolute" style={slot ? { left: slot.left, top: slot.top, width: slot.width, height: slot.height } : { display: "none" }} />;
+};
 
 /**
  * 📑️ One tab button; a child component (not inlined in {@link PanelTabRow}'s `.map`) so it can call
@@ -411,17 +432,20 @@ const PanelTabButton: React.FC<{
   readonly stackSize: number;
   readonly isDragSource: boolean;
   readonly isChildDropTarget: boolean;
+  readonly isNestReady: boolean;
   readonly isUnitDropReady: boolean;
   readonly anchor?: Anchor;
   readonly dock: PanelDockContextValue | null;
   readonly onSelect: (tabId: string) => void;
   readonly compactLabels: boolean;
-}> = ({ tab, variant, buttonClass, tabSlot, isActive, showActiveColor, stackIndex, stackSize, isDragSource, isChildDropTarget, isUnitDropReady, anchor, dock, onSelect, compactLabels }) => {
+}> = ({ tab, variant, buttonClass, tabSlot, isActive, showActiveColor, stackIndex, stackSize, isDragSource, isChildDropTarget, isNestReady, isUnitDropReady, anchor, dock, onSelect, compactLabels }) => {
   const Icon = tab.icon;
   const inlineText = useControlInlineText(tab.id, tab.name);
   const surfaceDrag = useUiDriverDragSurface();
   const level = useLevel();
   const draggable = Boolean(anchor && dock);
+  const unitOver = useNativeDropOver();
+  const placeState: DropPlaceState | undefined = isChildDropTarget ? "active" : isNestReady ? "available" : isUnitDropReady ? (unitOver.over ? "active" : "available") : undefined;
   const windowTabChrome = variant === "panel" || variant === "chrome";
   const inactiveTabChromeClass = windowTabChrome ? panelWindowInactiveTabClass : stackIndex === stackSize - 1 ? modeDockInactiveTabBeforeGapClass : modeDockInactiveTabClass;
   return (
@@ -432,8 +456,8 @@ const PanelTabButton: React.FC<{
         data-hover-scope
         data-tab-id={tab.id}
         data-tab-kind={tab.kind}
-        data-drag-source={isDragSource ? "true" : undefined}
-        data-drop-nest={isChildDropTarget ? "true" : undefined}
+        {...dragSourceAttributes(isDragSource)}
+        {...dropPlaceAttributes(placeState)}
         data-shared-border-state={isChildDropTarget ? "active" : undefined}
         id={tab.id}
         data-level={level}
@@ -442,6 +466,8 @@ const PanelTabButton: React.FC<{
         aria-pressed={isActive}
         onClick={() => onSelect(tab.id)}
         onPointerDown={draggable && surfaceDrag ? (event) => dock!.startTabDrag(anchor!, tab.id, tab.name, event) : undefined}
+        onDragEnter={anchor && dock && tab.kind === "leaf" ? unitOver.bind.onDragEnter : undefined}
+        onDragLeave={anchor && dock && tab.kind === "leaf" ? unitOver.bind.onDragLeave : undefined}
         onDragOver={
           anchor && dock && tab.kind === "leaf"
             ? (event) => {
@@ -452,6 +478,7 @@ const PanelTabButton: React.FC<{
         onDrop={
           anchor && dock && tab.kind === "leaf"
             ? (event) => {
+                unitOver.reset();
                 if (!event.dataTransfer.types.includes(PANEL_TREE_UNIT_MIME)) return;
                 event.preventDefault();
                 const session = readActivePanelTreeUnitDrag();
@@ -468,9 +495,6 @@ const PanelTabButton: React.FC<{
           windowTabChrome && isActive && showActiveColor && modeDockActiveTabClass,
           !windowTabChrome && isActive && showActiveColor && modeDockActiveTabFillClass,
           windowTabChrome && panelTabButtonDividerClass,
-          isDragSource && "opacity-40",
-          isChildDropTarget && "bg-accent/20",
-          isUnitDropReady && dropZoneReadyClass,
         )}
       >
         {windowTabChrome ? (
@@ -494,7 +518,7 @@ const PanelTabButton: React.FC<{
             ) : null}
           </>
         )}
-        {draggable && !surfaceDrag ? <DragHandle labelId="ui.tree.drag.sort" subject={tab.name} onPointerDown={(event) => dock!.startTabDrag(anchor!, tab.id, tab.name, event)} onClick={(event) => event.stopPropagation()} emphasized={(isActive && showActiveColor) || isUnitDropReady} /> : null}
+        {draggable && !surfaceDrag ? <DragHandle labelId="ui.tree.drag.sort" subject={tab.name} onPointerDown={(event) => dock!.startTabDrag(anchor!, tab.id, tab.name, event)} onClick={(event) => event.stopPropagation()} emphasized={(isActive && showActiveColor) || placeState !== undefined} /> : null}
       </button>
     </ChromeControlHint>
   );
@@ -537,48 +561,6 @@ const PanelTabRow: React.FC<PanelTabRowProps> = ({ variant, anchor, parentPath =
     activeButton?.scrollIntoView({ block: "nearest", inline: "nearest" });
   }, [resolvedActiveId, tabIdsKey, tabSlot]);
 
-  reactHostPort.useLayoutEffect(() => {
-    const bar = barRef.current;
-    if (!bar || !fullWidth || variant !== "panel") return;
-    let extended: HTMLElement[] = [];
-    const reset = () => {
-      for (const element of extended) {
-        element.style.removeProperty("flex-basis");
-        element.style.removeProperty("flex-grow");
-        element.style.removeProperty("max-width");
-      }
-      extended = [];
-    };
-    const fit = () => {
-      reset();
-      const item = bar.lastElementChild as HTMLElement | null;
-      const last = item?.matches("button[data-tab-id]") ? item : item?.querySelector<HTMLElement>(":scope > button[data-tab-id]");
-      if (!item || !last || bar.scrollWidth > bar.clientWidth || !chipGapReadsAsSliver(bar.getBoundingClientRect().right - item.getBoundingClientRect().right)) return;
-      extended = item === last ? [last] : [item, last];
-      const widths = extended.map(element => element.offsetWidth);
-      extended.forEach((element, index) => {
-        element.style.flexBasis = `${widths[index]}px`;
-        element.style.flexGrow = "1";
-        element.style.maxWidth = "none";
-      });
-    };
-    const resize = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(fit);
-    const observe = () => {
-      resize?.disconnect();
-      resize?.observe(bar);
-      for (const child of bar.children) resize?.observe(child);
-      fit();
-    };
-    const mutations = new MutationObserver(observe);
-    mutations.observe(bar, { childList: true, characterData: true, subtree: true });
-    observe();
-    return () => {
-      mutations.disconnect();
-      resize?.disconnect();
-      reset();
-    };
-  }, [fullWidth, tabIdsKey, variant]);
-
   const parentPathKey = parentPath.join("/");
   const setRowRef = reactHostPort.useCallback(
     (element: HTMLDivElement | null) => {
@@ -605,15 +587,15 @@ const PanelTabRow: React.FC<PanelTabRowProps> = ({ variant, anchor, parentPath =
 
   return (
     <div ref={frameRef} data-slot={`${tabSlot}-tab-frame`} {...(edge ? { "data-shared-border-frame": "", "data-shared-border-edges": edge } : {})} className={cn(frameClass, fullWidth && "w-full")}>
-    <div ref={setRowRef} {...(ghostDim ? { "data-dim": true } : {})} dir="ltr" data-slot={`${tabSlot}-tabs`} data-shared-border-group="" data-orientation="horizontal" className={cn(panelTabBarScrollRowClass, rowDropReady && dropZoneReadyClass)}>
+    <div ref={setRowRef} {...(ghostDim ? { "data-dim": true } : {})} dir="ltr" data-slot={`${tabSlot}-tabs`} data-shared-border-group="" data-orientation="horizontal" {...dropPlaceAttributes(rowDropReady ? "available" : undefined)} className={panelTabBarScrollRowClass}>
       {sortedTabs.map((tab, index) => {
         const isActive = tab.id === resolvedActiveId;
         const isDragSource = Boolean(anchor && dock?.dragTabId === tab.id);
         const isChildDropTarget = Boolean(anchor && dropTarget?.kind === "child" && dropTarget.anchor === anchor && dropTarget.parentId === tab.id);
+        const isNestReady = rowDropReady && tab.kind === "branch" && !dock?.draggedSubtreeIds?.has(tab.id);
         const isUnitDropReady = unitDragActive && Boolean(anchor) && tab.kind === "leaf";
         return (
           <React.Fragment key={tab.id}>
-            {dropInsertIndex === index ? <div data-slot="panel-tab-insert-preview" aria-hidden className={panelTabInsertPreviewClass} /> : null}
             <PanelTabButton
               tab={tab}
               variant={variant}
@@ -625,6 +607,7 @@ const PanelTabRow: React.FC<PanelTabRowProps> = ({ variant, anchor, parentPath =
               stackSize={sortedTabs.length}
               isDragSource={isDragSource}
               isChildDropTarget={isChildDropTarget}
+              isNestReady={isNestReady}
               isUnitDropReady={isUnitDropReady}
               anchor={anchor}
               dock={dock}
@@ -634,7 +617,7 @@ const PanelTabRow: React.FC<PanelTabRowProps> = ({ variant, anchor, parentPath =
           </React.Fragment>
         );
       })}
-      {dropInsertIndex === sortedTabs.length ? <div data-slot="panel-tab-insert-preview" aria-hidden className={panelTabInsertPreviewClass} /> : null}
+      {dropInsertIndex !== null ? <PanelTabInsertSlot index={dropInsertIndex} excluded={dock?.draggedSubtreeIds ?? null} /> : null}
     </div>
     </div>
   );

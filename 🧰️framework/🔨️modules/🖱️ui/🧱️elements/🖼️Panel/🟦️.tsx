@@ -17,7 +17,6 @@ import { Scrollable } from "../📜️Scrollable/🟦️.tsx";
 import { Tree } from "../🌳️Tree/🟦️.tsx";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { useFirstDraggableElementAlias } from "../🆔️ElementId/🟦️.tsx";
-import { dropZoneReadyFillClass } from "../../🔨️modules/🎨️chrome-class-names/🟦️.ts";
 import { FlowProvider, useFlow } from "../../🔨️modules/🧭️flow-direction-context/🟦️.tsx";
 import { LevelProvider, getLevelZClass, useSurfaceActive } from "../🌈️Surface/🟦️.tsx";
 import { useShellScopeOptional } from "../🐚️ShellScope/🟦️.tsx";
@@ -74,7 +73,7 @@ function PanelLiveTreeUnit({ source, render }: { readonly source: TreePanelDefin
   return <>{render(config)}</>;
 }
 
-import { usePointerDrag } from "../../🔨️modules/🫳️pointer-drag/🟦️.tsx";
+import { beginNativeDragGhost, dropPlaceAttributes, useNativeDropOver, usePointerDrag } from "../../🔨️modules/🫳️pointer-drag/🟦️.tsx";
 export { usePointerDrag };
 
 /** 📦️ Native HTML drag-and-drop event props for a host element. */
@@ -95,6 +94,7 @@ function PanelTreeUnitHeader({
   const dock = usePanelDockContext();
   const surfaceDrag = useUiDriverDragSurface();
   const { armed, arm } = useNativeDragArm();
+  const unitOver = useNativeDropOver();
   const unitDockDraggable = Boolean(dock && anchor);
   const effectiveDraggable = unitDockDraggable && (surfaceDrag || armed);
   const UnitIcon = unit.icon;
@@ -102,9 +102,13 @@ function PanelTreeUnitHeader({
     <div
       data-slot="panel-tree-unit-header"
       draggable={effectiveDraggable}
+      {...dropPlaceAttributes(unitDragActive ? (unitOver.over ? "active" : "available") : undefined)}
+      onDragEnter={unitDockDraggable ? unitOver.bind.onDragEnter : undefined}
+      onDragLeave={unitDockDraggable ? unitOver.bind.onDragLeave : undefined}
       onDragStart={
         unitDockDraggable
           ? (event) => {
+              beginNativeDragGhost(event, String(unit.label ?? tabId));
               event.dataTransfer.effectAllowed = "move";
               event.dataTransfer.setData(PANEL_TREE_UNIT_MIME, unit.id);
               beginPanelTreeUnitDrag({ tabId, unitId: unit.id, label: unit.label ?? tabId });
@@ -122,6 +126,7 @@ function PanelTreeUnitHeader({
       onDrop={
         unitDockDraggable
           ? (event) => {
+              unitOver.reset();
               if (!event.dataTransfer.types.includes(PANEL_TREE_UNIT_MIME) || !dock || !anchor) return;
               event.preventDefault();
               const session = readActivePanelTreeUnitDrag();
@@ -135,7 +140,6 @@ function PanelTreeUnitHeader({
         "flex shrink-0 items-center gap-single px-single py-half text-2xs",
         unitDragActive ? "text-emphasized" : "text-muted-foreground",
         unitDockDraggable && surfaceDrag && "cursor-grab active:cursor-grabbing",
-        unitDragActive && dropZoneReadyFillClass,
       )}
     >
       {UnitIcon ? <UnitIcon size={12} /> : null}
@@ -309,7 +313,8 @@ export function PanelEmptyDockZone({ anchor }: { readonly anchor: Anchor }) {
       data-slot="panel-empty-drop-zone"
       data-shared-border-cell=""
       data-active={isDropAnchor ? "true" : undefined}
-      className={cn("flex h-medium min-w-[10rem] items-center justify-center", dropZoneReadyFillClass, isDropAnchor ? "text-accent" : "text-emphasized")}
+      {...dropPlaceAttributes(isDropAnchor ? "active" : "available")}
+      className={cn("flex h-medium min-w-[10rem] items-center justify-center", isDropAnchor ? "text-accent" : "text-emphasized")}
     >
       <Icon icon="grip-vertical" size="small" />
     </div>
@@ -508,10 +513,9 @@ const Panel: React.FC<PanelProps> = ({
                 bodyClassName="flex min-h-0 flex-1 flex-col"
                 bodySlot="panel-content"
                 bodyRef={panelContentRef}
-                titleChips={<PanelTabBar anchor={anchor} activePath={resolvedPath} onActivePathChange={handlePathChange} tabs={tabs} variant="panel" direction={flow.block} maxRows={1} showActiveColor={visible} />}
+                titleChips={<PanelTabBar anchor={anchor} activePath={resolvedPath} onActivePathChange={handlePathChange} tabs={tabs} variant="panel" direction={flow.block} showActiveColor={visible} />}
                 body={
                   <div data-slot="panel-body-stack" className={cn("relative flex min-h-0 min-w-0 w-full flex-1", isBottom ? "flex-col-reverse" : "flex-col")}>
-                    <PanelTabBar anchor={anchor} activePath={resolvedPath} onActivePathChange={handlePathChange} tabs={tabs} variant="panel" direction={flow.block} startDepth={1} showActiveColor={visible} />
                     <Scrollable className="relative flex-1 min-h-0" viewportClassName={isBottom ? "flex min-h-full flex-col justify-end" : undefined}>
                       {activeTabTrees && bodyLeaf ? (
                         <PanelTreeUnitsPane anchor={anchor} tabId={bodyLeaf.id} units={activeTabTrees} treeOpenStates={treeOpenStates} onTreeOpenStateChange={onTreeOpenStateChange} treeContentRevision={treeContentRevision} />

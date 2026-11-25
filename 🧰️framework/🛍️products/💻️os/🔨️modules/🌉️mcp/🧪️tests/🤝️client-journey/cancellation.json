@@ -10,6 +10,15 @@
  "documentCases": [
   {"name":"both bytes survive active cancellation","progressDelayMs":40,"cancelDelayMs":30,"before":{"packBase64":"YQ==","sprBase64":"Yg=="},"after":{"packBase64":"YQ==","sprBase64":"Yg=="},"expected":true},
   {"name":"missing history is not an unchanged document","progressDelayMs":0,"cancelDelayMs":0,"before":{"packBase64":"YQ=="},"after":{"packBase64":"YQ=="},"expected":false},
-  {"name":"changed history is not an unchanged document","progressDelayMs":0,"cancelDelayMs":0,"before":{"packBase64":"YQ==","sprBase64":"Yg=="},"after":{"packBase64":"YQ==","sprBase64":"Yw=="},"expected":false}
+  {"name":"changed history is not an unchanged document","progressDelayMs":0,"cancelDelayMs":0,"before":{"packBase64":"YQ==","sprBase64":"Yg=="},"after":{"packBase64":"YQ==","sprBase64":"Yw=="},"expected":false},
+  {"name":"foreign terminal job cannot prove cancellation","progressDelayMs":0,"cancelDelayMs":0,"before":{"packBase64":"YQ==","sprBase64":"Yg=="},"after":{"packBase64":"YQ==","sprBase64":"Yg=="},"terminalJobId":"job-foreign","expected":false},
+  {"name":"foreign terminal handle cannot prove cancellation","progressDelayMs":0,"cancelDelayMs":0,"before":{"packBase64":"YQ==","sprBase64":"Yg=="},"after":{"packBase64":"YQ==","sprBase64":"Yg=="},"terminalHandle":"handle-foreign","expected":false}
+ ],
+ "terminalCases": [
+  {"steps":[],"passes":false,"added":true},
+  {"steps":[{"step":"progress","ok":true}],"passes":false,"added":true},
+  {"steps":[{"step":"progress","ok":false}],"passes":false,"added":false},
+  {"steps":[{"step":"complete","ok":false}],"passes":false,"added":false},
+  {"steps":[{"step":"progress","ok":true},{"step":"complete","ok":true}],"passes":true,"added":false}
  ]
 }

@@ -46,7 +46,7 @@ fn render_context_menu_level_renders_a_labeled_separator_as_a_header_without_a_h
 fn render_context_menu_level_clips_to_viewport_height_and_scrolls_hidden_rows_into_view() {
     let items: Vec<ContextMenuItem> = (0..20).map(|index| ContextMenuItem { id: format!("item-{index}"), label: format!("Item {index}"), ..Default::default() }).collect();
     let theme = Theme::default();
-    let row_h = theme.control_height;
+    let row_h = theme.chip_row_height();
     let viewport_h = row_h * 4.0;
     let menu_at = |scroll_offset: f32| ContextMenuState { items: items.clone(), scroll_offset, ..Default::default() };
     let mut draw = DrawList::default();
@@ -82,6 +82,36 @@ fn render_context_menu_level_flips_a_submenu_left_when_it_would_overflow_the_rig
     let parent_w = context_menu_level_width(&parent_items, &theme);
     let child_hit = input.staged_hits().iter().find(|hit| hit.control_id.as_deref() == Some("child-1")).expect("submenu row registers a hit");
     assert!(child_hit.rect.x < parent_w, "expected the submenu to flip left of the parent row, got x={}", child_hit.rect.x);
+}
+
+/// ⚖️ LAW 12: the rows of a context menu follow `context-menu-rows/v1`: chip-row high, full width, no inset, single lines between them, the active row filled and emphasised.
+#[test]
+fn context_menu_rows_follow_the_language_neutral_cases() {
+    let cases: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧱️elements/🖱️ContextMenu/rows.cases.json")).expect("context menu rows cases");
+    assert_eq!(cases["schema"], "context-menu-rows/v1");
+    let theme = Theme::light();
+    let row_h = semio_renderer_wgpu_shell_view_overlays::context_menu_row_height(&theme);
+    assert!((row_h - theme.chip_row_height()).abs() < f32::EPSILON);
+    for case in cases["cases"].as_array().expect("cases") {
+        let id = case["id"].as_str().expect("id");
+        let items: Vec<ContextMenuItem> = case["items"].as_array().expect("items").iter().enumerate().map(|(index, kind)| match kind.as_str().expect("kind") {
+            "separator" => ContextMenuItem { id: format!("sep-{index}"), separator: true, ..Default::default() },
+            "header" => ContextMenuItem { id: format!("head-{index}"), label: "Header".into(), separator: true, ..Default::default() },
+            _ => ContextMenuItem { id: format!("item-{index}"), label: format!("Item {index}"), ..Default::default() },
+        }).collect();
+        let slots = semio_renderer_wgpu_shell_view_overlays::context_menu_row_slots(&items);
+        let expected: Vec<Option<usize>> = case["rowYRows"].as_array().expect("rows").iter().map(|row| row.as_u64().map(|value| value as usize)).collect();
+        assert_eq!(slots, expected, "{id}: row slots");
+        let height = semio_renderer_wgpu_shell_view_overlays::context_menu_content_height(&items, &theme);
+        assert!((height - case["contentRows"].as_u64().expect("content rows") as f32 * row_h).abs() < 0.001, "{id}: content height has no padding");
+        let menu = ContextMenuState { x: 10.0, y: 10.0, items: items.clone(), active: items.iter().position(|item| !item.separator).map(|index| vec![index]).unwrap_or_default(), ..Default::default() };
+        let ops = semio_renderer_wgpu_shell_view_overlays::context_menu_paint_ops(&theme, &menu, (800.0, 600.0));
+        let lines = ops.iter().filter(|op| matches!(op, semio_renderer_wgpu_shell_view_overlays::ContextMenuPaintOp::Solid(rect, color) if (rect.h - theme.stroke_hairline).abs() < f32::EPSILON && color.r == theme.border_normal.r && color.g == theme.border_normal.g)).count();
+        assert_eq!(lines as u64, case["lines"].as_u64().expect("lines"), "{id}: single lines between rows");
+        let fills = ops.iter().filter(|op| matches!(op, semio_renderer_wgpu_shell_view_overlays::ContextMenuPaintOp::Solid(rect, color) if (rect.h - row_h).abs() < 0.001 && color.r == theme.row_hover.r && color.g == theme.row_hover.g)).count();
+        assert_eq!(fills, usize::from(menu.active.first().is_some()), "{id}: only the active row is filled with the hover fill");
+        assert!(!ops.iter().any(|op| matches!(op, semio_renderer_wgpu_shell_view_overlays::ContextMenuPaintOp::Icon { id, .. } if id == "check")), "{id}: no tick");
+    }
 }
 
 fn text_selection_schema() -> serde_json::Value {

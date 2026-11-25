@@ -20,12 +20,10 @@
     "panelDrop": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["insertBarWidthPx", "nestMinFraction", "nestMaxFraction", "nestFillAlpha", "emptyZoneMinWidthRem"],
+      "required": ["nestMinFraction", "nestMaxFraction", "emptyZoneMinWidthRem"],
       "properties": {
-        "insertBarWidthPx": { "type": "number", "exclusiveMinimum": 0 },
         "nestMinFraction": { "type": "number", "minimum": 0, "maximum": 1 },
         "nestMaxFraction": { "type": "number", "minimum": 0, "maximum": 1 },
-        "nestFillAlpha": { "type": "number", "minimum": 0, "maximum": 1 },
         "emptyZoneMinWidthRem": { "type": "number", "exclusiveMinimum": 0 }
       }
     },

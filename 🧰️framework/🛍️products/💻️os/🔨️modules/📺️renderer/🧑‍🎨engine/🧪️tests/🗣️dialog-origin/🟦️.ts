@@ -6,6 +6,7 @@ import { makeEffectDispatchOne } from "../../🧱️elements/🛠️ShellHelpers
 import { parseResolvedPluginViewState } from "@semio-tech/framework-manifest/view-state-and-public-invocation";
 import type { LoadedProgramState } from "../../🧱️elements/🐚️Shell/📦️program-sessions/🟦️.ts";
 import deepEqual from "fast-deep-equal";
+import hostEffectFixture from "../../../../../../../🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/🔁️host-effect-invocation/🔣️.json";
 import dialogOriginFixture from "../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/🗨️dialog-origin/🔣️.json";
 import { createAdmittedShellInstanceV1, shellDialogOriginIsCurrentV1, shellDialogOriginV1, shellEffectOwnerIsCurrentV1, shellEffectSourceIsCurrentV1, type ShellDialogOriginV1 } from "../../🧱️elements/🏛️ShellHost/🗨️dialog-origin/🟦️.ts";
 import admittedInstanceFixture from "../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/🗨️dialog-origin/🛂️admission/🔣️.json";
@@ -503,6 +504,28 @@ describe("Shell dialog origin", () => {
     secondCallbacks.onSubmit({ name: "B duplicate" });
     expect(dispatch).toHaveBeenCalledExactlyOnceWith("createArtifact", b.origin, { name: "B accepted" });
     view.unmount();
+  });
+
+  it("dispatches deferred actions and commands with their exact requested window", async () => {
+    for (const row of hostEffectFixture.cases) {
+      if (!row.windowInstances || !row.scope) continue;
+      const handleAction = vi.fn((_instanceId: number, _wire: string) => Promise.resolve({ requestedEffects: [] }));
+      const handleCommand = vi.fn((_instanceId: number, _wire: string) => Promise.resolve({ requestedEffects: [] }));
+      const plugin = { handle: { handleAction, handleCommand } } as unknown as LoadedProgramState;
+      const session = {
+        pluginId: hostEffectFixture.scope.pluginId,
+        instanceId: 7,
+        app: { id: hostEffectFixture.scope.appId, windowKinds: [{ id: row.scope.windowKindId }], commands: row.appCommandIds?.map((id) => ({ id })) ?? [], modes: [] },
+        viewState: { activeModeId: hostEffectFixture.scope.modeId, activeWindowKindId: row.scope.windowKindId, windowId: row.scope.windowInstanceId },
+      } as unknown as Parameters<typeof makeEffectDispatchOne>[1];
+      const resolveViewState = () => resolvedViewStateFixture({ viewState: { ...session.viewState, windowInstances: row.windowInstances } });
+      await makeEffectDispatchOne(plugin, session, async () => {}, () => true, resolveViewState)(row.action, row.args);
+      const sent = row.expect.kind === "command" ? handleCommand : handleAction;
+      const unused = row.expect.kind === "command" ? handleAction : handleCommand;
+      expect(sent).toHaveBeenCalledTimes(1);
+      expect(unused).not.toHaveBeenCalled();
+      expect(deepEqual(JSON.parse(sent.mock.calls[0]![1]), row.expect.invocation), row.why).toBe(true);
+    }
   });
 
   it("drops delayed effect replies and scheduled invocations after the owning mount retires", async () => {

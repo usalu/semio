@@ -1,0 +1,76 @@
+[
+ {
+  "scale": "50",
+  "bone": "hand-l",
+  "paint": "hand-l",
+  "replace": [
+   "hand-l"
+  ],
+  "fit": [
+   {
+    "id": "hand-l",
+    "stations": 8
+   }
+  ]
+ },
+ {
+  "scale": "100",
+  "bone": "hand-l",
+  "paint": "hand-l"
+ },
+ {
+  "scale": "100",
+  "bone": "head",
+  "paint": "head",
+  "solids": [
+   "head",
+   "hair",
+   "nose"
+  ]
+ },
+ {
+  "scale": "500",
+  "bone": "head",
+  "paint": "head"
+ },
+ {
+  "scale": "100",
+  "bone": "middle-proximal-l",
+  "paint": "hand-l"
+ },
+ {
+  "scale": "100",
+  "bone": "middle-middle-l",
+  "paint": "hand-l"
+ },
+ {
+  "scale": "100",
+  "bone": "middle-distal-l",
+  "paint": "hand-l"
+ },
+ {
+  "scale": "100",
+  "bone": "thumb-metacarpal-l",
+  "paint": "hand-l"
+ },
+ {
+  "scale": "100",
+  "bone": "thumb-proximal-l",
+  "paint": "hand-l"
+ },
+ {
+  "scale": "50",
+  "bone": "thumb-metacarpal-l",
+  "paint": "hand-l"
+ },
+ {
+  "scale": "50",
+  "bone": "thumb-proximal-l",
+  "paint": "hand-l"
+ },
+ {
+  "scale": "50",
+  "bone": "thumb-distal-l",
+  "paint": "hand-l"
+ }
+]

@@ -13,13 +13,55 @@
    "de": "Ein knickgelenkter Radlader von 20 t mit 3,5-m3-Schaufel: Hinterwagen mit Motorhaube, Gegengewicht, Kabine, Kotflügeln und Aufstiegen, Vorderwagen mit Hubgerüst, zwei Hubarme aus Blech, Z-Kinematik (Kippzylinder, Umlenkhebel und Kippstange) und zwei Hubzylinder, Reifen 23.5R25 mit Stollen und senkrechtes Auspuffrohr. Die Rahmen lenken um das Knickgelenk (40° je Seite) mit zwei Lenkzylindern."
   },
   "tags": [
-   "machine",
-   "wheel-loader",
-   "articulated",
-   "diesel",
-   "hydraulic",
-   "construction",
-   "wheeled"
+   {
+    "id": "machine",
+    "title": {
+     "en": "machine",
+     "de": "Maschine"
+    }
+   },
+   {
+    "id": "wheel-loader",
+    "title": {
+     "en": "wheel loader",
+     "de": "Radlader"
+    }
+   },
+   {
+    "id": "articulated",
+    "title": {
+     "en": "articulated",
+     "de": "Gelenk-"
+    }
+   },
+   {
+    "id": "diesel",
+    "title": {
+     "en": "diesel",
+     "de": "Diesel"
+    }
+   },
+   {
+    "id": "hydraulic",
+    "title": {
+     "en": "hydraulic",
+     "de": "hydraulisch"
+    }
+   },
+   {
+    "id": "construction",
+    "title": {
+     "en": "construction",
+     "de": "Bau"
+    }
+   },
+   {
+    "id": "wheeled",
+    "title": {
+     "en": "wheeled",
+     "de": "rollend"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content worker NW-MA",

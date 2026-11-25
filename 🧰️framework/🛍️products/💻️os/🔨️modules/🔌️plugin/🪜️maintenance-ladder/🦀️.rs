@@ -9,7 +9,7 @@ use semio_plugin_ownership::bounded_ownership::{ARTIFACT_LIVE_OUTPUT_SLOTS, Arti
 use semio_plugin_instance_stores::stores_components::{ActionIngress, InstanceStores, LocalInteraction, PeerRoster};
 use semio_plugin_document_media::{ActiveArtifactEnvelopeIngress, ActiveArtifactStoreReplacement, ActiveArtifactStoreReplacementState, ActiveDocumentArchiveLoadState, ArtifactStoreReplacementPublicationGuard, ArtifactStoreReplacementRefusal, CompositionPinsRetirement, publish_boxed_document_store_candidate_if_authoritative};
 use semio_plugin_decl_app::{ArtifactApp, DOCUMENT_LOAD_FAILED_CODE, document_load_fault};
-use semio_plugin_ownership::store_lifecycle::{ArtifactDisposal, ArtifactDocumentStoreDisposer, ArtifactOwnedDisposer, ArtifactSnapshotCloseRetention};
+use semio_plugin_store_lifecycle::store_lifecycle::{ArtifactDisposal, ArtifactDocumentStoreDisposer, ArtifactOwnedDisposer, ArtifactSnapshotCloseRetention};
 use pack::snapshot::ArtifactPack;
 use store::{ArtifactStore, ConfigStore, MemberFactory, Mutation, ReferenceSpaceMember};
 use semio_plugin_instance_children::children_components::ChildComposition;
@@ -395,22 +395,28 @@ if stage==0{return match self.shared().maintenance_tool_selection(){MaintenanceT
     /// 🎁️ One granted turn of the next store replacement; a closing app cancels it first and removes it once terminal.
     pub fn drive_store_replacement_jobs(&mut self,cx:&mut semio_framework_job::StepContext<'_>,loan:RetainedCloneGrant,closing:bool)->Result<PluginLifecycleStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
         let demand=self.shared().store_replacement_demands(closing,loan.maximum_copy_bytes)?;
-        let composed=self.shared().store_replacement_target(closing).and_then(|(_,operation)|self.ingest.store_replacement_jobs.get(operation))
-            .is_some_and(|job|matches!(job.state, ActiveArtifactStoreReplacementState::Initializing | ActiveArtifactStoreReplacementState::OpeningMembers));
         let advance=|same:&mut semio_framework_job::StepContext<'_>,grant|{
             let step=self.drive_store_replacement_original(same,grant,closing)?;
             let terminal=self.ingest.store_replacement_jobs.is_empty();
             let step=if !terminal{match step{PluginLifecycleStep::Complete(progress)=>PluginLifecycleStep::Progress(progress),step=>step}}else{step};
             Ok((step,terminal))
         };
-        if composed {
-            original_composed_lifecycle_step(cx,loan,demand,advance)
-        }else{
-            semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,loan,demand,advance)
-        }
+        semio_plugin_document_media::original_composed_lifecycle_step(cx,loan,demand,advance)
     }
 
+    /// 📈️ One store-replacement turn, which also adds the records the turn paid to the replacement's decode count: the load reports it as the progress of the long phase.
     fn drive_store_replacement_original(&mut self,cx:&mut semio_framework_job::StepContext<'_>, grant: RetainedCloneGrant, closing: bool) -> Result<PluginLifecycleStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+        let target = self.shared().store_replacement_target(closing).map(|(_, operation_id)| operation_id);
+        let step = self.drive_store_replacement_unit(cx, grant, closing);
+        if let (Some(operation_id), Ok(PluginLifecycleStep::Progress(progress))) = (target, &step) {
+            if let Some(active) = self.ingest.store_replacement_jobs.get_mut(operation_id) {
+                active.decoded = active.decoded.saturating_add(progress.copied_items as u64);
+            }
+        }
+        step
+    }
+
+    fn drive_store_replacement_unit(&mut self,cx:&mut semio_framework_job::StepContext<'_>, grant: RetainedCloneGrant, closing: bool) -> Result<PluginLifecycleStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         use ActiveArtifactStoreReplacementState as State;
         let empty = RetainedCloneProgress::default();
         let item = item();
@@ -438,8 +444,7 @@ if stage==0{return match self.shared().maintenance_tool_selection(){MaintenanceT
             let step = active.drive_initializer(cx, grant);
             return step;
         }
-        if (matches!(state, State::AwaitingMembers | State::OpeningMembers | State::ClosingRejectedMember | State::ValidatingClosure | State::PreparingCandidateViews)
-            || (active.mounted_genesis.is_some() && state == State::CandidateReady)) && active.cancelled() {
+        if matches!(state, State::AwaitingMembers | State::OpeningMembers | State::ClosingRejectedMember | State::ValidatingClosure | State::PreparingCandidateViews | State::CandidateReady) && active.cancelled() {
             active.refuse(ArtifactStoreReplacementRefusal::Cancelled);
             return Ok(PluginLifecycleStep::Progress(item));
         }
@@ -547,7 +552,7 @@ if stage==0{return match self.shared().maintenance_tool_selection(){MaintenanceT
             active.refuse(ArtifactStoreReplacementRefusal::PublicationGuard(guard));
             return Ok(PluginLifecycleStep::Progress(item));
         }
-        if A::validate_document_store_publication(&active.publication_token, semio_plugin_ownership::store_lifecycle::DocumentStoreLivePublication::new(semio_framework_job::OperationId(operation_id), live_generation, self.child_composition.child_content_generation)).is_err() {
+        if A::validate_document_store_publication(&active.publication_token, semio_plugin_store_lifecycle::store_lifecycle::DocumentStoreLivePublication::new(semio_framework_job::OperationId(operation_id), live_generation, self.child_composition.child_content_generation)).is_err() {
             *active.retained_disposer = Some(disposer);
             active.refuse(ArtifactStoreReplacementRefusal::PublicationAuthorityRejected);
             return Ok(PluginLifecycleStep::Progress(item));
@@ -611,7 +616,7 @@ if stage==0{return match self.shared().maintenance_tool_selection(){MaintenanceT
         };
         if self.shared().document_archive_target(closing).is_none()&&(!closing||self.ingest.document_archive_loads.empty_backing_byte_demand().is_none_or(|bytes|bytes==0)){return Ok(PluginLifecycleStep::Complete(Default::default()))}
         if closing&&self.shared().document_archive_target(closing).is_none()&&self.ingest.document_archive_loads.empty_backing_byte_demand().is_some_and(|bytes|bytes!=0){let grant=semio_plugin_ownership::bounded_ownership::original_lifecycle_grant(cx,grant);if cx.retirement_should_yield()||!semio_plugin_ownership::bounded_ownership::plugin_grant_funds(demand,grant){return Ok(PluginLifecycleStep::Progress(Default::default()))}let step=match self.ingest.document_archive_loads.close_empty_backing_step(grant){Ok(step)=>step,Err(error)=>return Err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from(error).debit_original(cx))};let progress=step.progress();cx.consume_fuel(u64::from(progress!=Default::default()));cx.consume_retained(progress).map_err(|error|semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from(error.with_retained_progress(progress)))?;return Ok(PluginLifecycleStep::Progress(progress))}
-        original_composed_lifecycle_step(cx, grant, demand, |same, grant| {
+        semio_plugin_document_media::original_composed_lifecycle_step(cx, grant, demand, |same, grant| {
             let step = self.drive_document_archive_original(same, grant, closing)?;
             let terminal=self.shared().document_archive_target(closing).is_none()&&(!closing||self.ingest.document_archive_loads.empty_backing_byte_demand().is_none_or(|bytes|bytes==0));
             Ok((step, terminal))
@@ -680,58 +685,6 @@ impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'stati
     /// 🫧️ Quiescence of every maintenance frontier except a live transient press preview: a preview is a deliberate, committed-nowhere overlay that only its own release or cancel retires, so the tool-overlay unit that merely awaits the already-returned foreground source never blocks the settle of a tick.
     pub fn maintenance_ladder_quiescent_under_live_preview(&self) -> bool {
         self.maintenance_ladder_settled(true)
-    }
-
-    pub fn debug_unsettled(&self) -> String {
-        let live_preview_allowed=false;let overlay = self.render_ref();let mut out=String::new();
-        if !(self.stores.window_config_store.direct_ingress_quiescent()) { out.push_str("[DEBUG] unsettled clause 0\n"); }
-        if !(!(overlay.tool_overlay_retirement_pending() && !(live_preview_allowed && overlay.tool_overlay_waits_for_foreground()))) { out.push_str("[DEBUG] unsettled clause 1\n"); }
-        if !(self.tool_run_ref().tool_run_retirement_demand(0).is_ok_and(|demand| demand == RetirementDemand::default())) { out.push_str("[DEBUG] unsettled clause 2\n"); }
-        if !(self.time_travel_ref().time_travel_retirement_demands(0).is_ok_and(|demand| demand == RetirementDemand::default())) { out.push_str("[DEBUG] unsettled clause 3\n"); }
-        if !(self.history.pending_command_prune.is_none()) { out.push_str("[DEBUG] unsettled clause 4\n"); }
-        if !(!self.history.command_prune_requested()) { out.push_str("[DEBUG] unsettled clause 5\n"); }
-        if !(self.history.command_log.pruned_terminal_is_empty()) { out.push_str("[DEBUG] unsettled clause 6\n"); }
-        if !(self.child_composition.private_child_groups.is_empty()) { out.push_str("[DEBUG] unsettled clause 7\n"); }
-        if !(self.tools.tool_operations.is_empty()) { out.push_str("[DEBUG] unsettled clause 8\n"); }
-        if !(self.tools.original_emission_admission.is_none()) { out.push_str("[DEBUG] unsettled clause 9\n"); }
-        if !(self.tools.original_emission_receipt.is_none()) { out.push_str("[DEBUG] unsettled clause 10\n"); }
-        if !(self.tools.original_emission_result.is_none()) { out.push_str("[DEBUG] unsettled clause 11\n"); }
-        if !(self.tools.original_emission_construction.as_ref().is_none_or(|admission| admission.terminal_is_empty())) { out.push_str("[DEBUG] unsettled clause 12\n"); }
-        if !(self.tools.tool_cancellations.active_operation_count() == 0) { out.push_str("[DEBUG] unsettled clause 13\n"); }
-        if !(self.tools.latest_wins_commands.is_empty()) { out.push_str("[DEBUG] unsettled clause 14\n"); }
-        if !(self.tools.latest_wins_keys.map.as_ref().is_some_and(|map| map.is_empty())) { out.push_str("[DEBUG] unsettled clause 15\n"); }
-        if !(self.tools.latest_wins_keys.can_begin()) { out.push_str("[DEBUG] unsettled clause 16\n"); }
-        if !(self.tools.agent_lane_preview.is_none()) { out.push_str("[DEBUG] unsettled clause 17\n"); }
-        if !(self.media.media_submission_refusal_terminal_is_empty()) { out.push_str("[DEBUG] unsettled clause 18\n"); }
-        if !(self.ingress.action_ingress_sources_idle()) { out.push_str("[DEBUG] unsettled clause 19\n"); }
-        if !(self.media.media_closures.is_empty()) { out.push_str("[DEBUG] unsettled clause 20\n"); }
-        if !(self.media.segmented_closures.is_empty()) { out.push_str("[DEBUG] unsettled clause 21\n"); }
-        if !(self.media.snapshot_retirements.is_empty()) { out.push_str("[DEBUG] unsettled clause 22\n"); }
-        if !(self.child_composition.child_content_retirements.is_empty()) { out.push_str("[DEBUG] unsettled clause 23\n"); }
-        if !(self.child_composition.child_member_retirements.is_empty()) { out.push_str("[DEBUG] unsettled clause 24\n"); }
-        if !(self.roster.peer_roster_publications.is_empty()) { out.push_str("[DEBUG] unsettled clause 25\n"); }
-        if !(self.roster.peer_presence_retirements.is_empty()) { out.push_str("[DEBUG] unsettled clause 26\n"); }
-        if !(self.roster.presence_peer_retirements.is_empty()) { out.push_str("[DEBUG] unsettled clause 27\n"); }
-        if !(self.ingest.envelope_ingress.is_empty()) { out.push_str("[DEBUG] unsettled clause 28\n"); }
-        if !(self.ingest.envelope_decode_jobs.is_empty()) { out.push_str("[DEBUG] unsettled clause 29\n"); }
-        if !(self.ingest.store_replacement_jobs.is_empty()) { out.push_str("[DEBUG] unsettled clause 30\n"); }
-        if !(self.ingest.document_archive_loads.is_empty()) { out.push_str("[DEBUG] unsettled clause 31\n"); }
-        if !(self.ingest.envelope_field_decoder_retirements.is_empty()) { out.push_str("[DEBUG] unsettled clause 32\n"); }
-        if !(self.ingest.envelope_field_decoders.get().is_none_or(|owner|owner.next_returned_ticket().is_none())) { out.push_str("[DEBUG] unsettled clause 33\n"); }
-        if !(self.ingest.envelope_completed_record_retirements.is_empty()) { out.push_str("[DEBUG] unsettled clause 34\n"); }
-        if !(self.ingest.envelope_completed_records.get().is_none_or(|owner|owner.terminal_is_empty())) { out.push_str("[DEBUG] unsettled clause 35\n"); }
-        if !(!self.stores.store.has_pending_maintenance_retirements()) { out.push_str("[DEBUG] unsettled clause 36\n"); }
-        if !(!self.stores.config_store.has_pending_maintenance_retirements()) { out.push_str("[DEBUG] unsettled clause 37\n"); }
-        if !(!self.stores.draft_store.has_pending_maintenance_retirements()) { out.push_str("[DEBUG] unsettled clause 38\n"); }
-        if !(!self.stores.interaction_store.has_pending_maintenance_retirements()) { out.push_str("[DEBUG] unsettled clause 39\n"); }
-        if !(self.stores.window_config_store.maintenance_retirements_terminal_is_empty()) { out.push_str("[DEBUG] unsettled clause 40\n"); }
-        if !(self.stores.window_transient_store.maintenance_terminal_is_empty()) { out.push_str("[DEBUG] unsettled clause 41\n"); }
-        if !(self.stores.retired_window_transient_stores.is_empty()) { out.push_str("[DEBUG] unsettled clause 42\n"); }
-        if !(self.stores.presence_store.local_read_maintenance_is_idle()) { out.push_str("[DEBUG] unsettled clause 43\n"); }
-        if !(self.ingest.snapshot_read_returns_terminal_is_empty(&*self.stores, &*self.interaction)) { out.push_str("[DEBUG] unsettled clause 44\n"); }
-        if !(!semio_framework_job_worker::worker_job_retirements_are_parked()) { out.push_str("[DEBUG] unsettled clause 45\n"); }
-        if !(self.tools.live_runtime_instance_id.is_none_or(|instance_id| if self.ingest.document_blocks_pending_effects() { A::mounted_jobs_terminal_is_empty(instance_id) } else { A::mounted_job_maintenance_phase(instance_id).is_none() })) { out.push_str("[DEBUG] unsettled clause 46\n"); }
-        out
     }
 
     fn maintenance_ladder_settled(&self, live_preview_allowed: bool) -> bool {
@@ -1051,10 +1004,10 @@ pub(crate) fn store_replacement_commit_capacity() -> usize {
 
 pub(crate) fn store_replacement_unit_demands<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static>(active: &ActiveArtifactStoreReplacement<A::Snapshot, A::Mutation, M>, closing: bool, body: usize) -> Result<RetirementDemand, ValueError> {
     use ActiveArtifactStoreReplacementState as State;
-    let live = matches!(active.state, State::AwaitingMembers | State::OpeningMembers | State::ClosingRejectedMember | State::ValidatingClosure | State::PreparingCandidateViews);
+    let live = matches!(active.state, State::AwaitingMembers | State::OpeningMembers | State::ClosingRejectedMember | State::ValidatingClosure | State::PreparingCandidateViews | State::CandidateReady);
     Ok(match active.state {
         State::Initializing => active.initializer_demands_for_turn(body, closing)?,
-        _ if (live || active.mounted_genesis.is_some() && active.state==State::CandidateReady) && (closing || active.cancelled()) => item_demand(),
+        _ if live && (closing || active.cancelled()) => item_demand(),
         State::AwaitingMembers if active.mounted_genesis.is_some() && active.candidate_children.is_none()=>ChildMemberRegistry::<M>::birth_demands()?,
         State::AwaitingMembers | State::ClosingRejectedMember => item_demand(),
         State::OpeningMembers => active.member_open_demands(body)?,
@@ -1100,28 +1053,3 @@ fn whole_receipt(step: PluginLifecycleStep, posted: RetainedCloneProgress) -> Pl
     }
 }
 
-/// 🪙️ Lends the actual phase to a composed owner and accounts for already-posted Source controls once.
-fn original_composed_lifecycle_step(
-    cx: &mut semio_framework_job::StepContext<'_>,
-    loan: RetainedCloneGrant,
-    demand: RetirementDemand,
-    advance: impl FnOnce(&mut semio_framework_job::StepContext<'_>, RetainedCloneGrant)
-        -> Result<(PluginLifecycleStep, bool), semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>,
-) -> Result<PluginLifecycleStep, semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
-    use semio_plugin_ownership::bounded_ownership::{original_lifecycle_delta, original_lifecycle_step, original_plugin_turn_grant};
-    let grant = original_plugin_turn_grant(loan, cx.retained_grant());
-    let reserved_before = cx.reserved_return_progress();
-    let mut step = original_lifecycle_step(cx, grant, demand, |same, _| {
-        let (mut step, terminal) = same.with_retained_loan(grant, |owner| advance(owner, grant).map_err(Into::into))?;
-        if let PluginLifecycleStep::Progress(progress) | PluginLifecycleStep::Complete(progress) = &mut step {
-            let reserved = original_lifecycle_delta(reserved_before, same.reserved_return_progress())?;
-            *progress = original_lifecycle_delta(reserved, *progress)?;
-        }
-        Ok((step, terminal))
-    })?;
-    if let PluginLifecycleStep::Progress(progress) | PluginLifecycleStep::Complete(progress) = &mut step {
-        let reserved = original_lifecycle_delta(reserved_before, cx.reserved_return_progress())?;
-        *progress = progress.checked_add(reserved)?;
-    }
-    Ok(step)
-}

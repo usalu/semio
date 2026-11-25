@@ -39,7 +39,7 @@ pub use builder_traits::{Buildable, HasBase, HasChildren, HasStackLayout, Retain
 #[path = "📚️stack-container-text-and-button-builders/🦀️.rs"]
 mod stack_container_text_and_button_builders;
 pub use stack_container_text_and_button_builders::{
-    button, column, field, form, row, section, sheet, stack, text, ButtonBuilder, ContainerBuilder, StackBuilder,
+    button, column, field, form, heading, row, section, sheet, stack, text, ButtonBuilder, ContainerBuilder, StackBuilder,
     TextBuilder,
 };
 

@@ -17,16 +17,56 @@ macro_rules! norm_live_acceptance {
                 protocol::apply_diff_cold(raised.diff(), document).unwrap_or_else(|error| panic!("a mutation of the batch does not apply: {error:?}"))
             }
 
-            /// 🌱️ The tree of `seed` with the first row of `spec`, placed the way a click places it: the insert resolves through the editor's own edit rules, which seed an empty collection.
-            fn with_first_row(seed: &Doc, spec: &$crate::direct_manipulation::InsertSpec, tree: &semio_framework_value::DslValue) -> semio_framework_value::DslValue {
-                let insert = $crate::direct_manipulation::insert_edit(tree, spec, [0.0, 0.0, 0.0]).unwrap_or_else(|error| panic!("kind '{}': {error}", spec.id));
-                let mutations = <$app as $crate::NormLiveEditor>::live_resolve(seed, &insert).unwrap_or_else(|error| panic!("kind '{}': the first row does not resolve: {error}", spec.id));
+            /// 🌱️ The tree with the first row of `spec`, placed the way a click places it: the insert resolves through the editor's own edit rules, an empty collection starts from the default row of its insert mutation schema, and every collection the row links to is filled first by the same placement (the prerequisite chain read from the declared references).
+            fn with_first_row(spec: &$crate::direct_manipulation::InsertSpec, tree: &semio_framework_value::DslValue) -> semio_framework_value::DslValue {
+                grow(spec, tree, 0)
+            }
+
+            fn grow(spec: &$crate::direct_manipulation::InsertSpec, tree: &semio_framework_value::DslValue, depth: usize) -> semio_framework_value::DslValue {
+                use semio_framework_value::FromValue;
+                assert!(depth < 8, "kind '{}': the prerequisite chain does not end", spec.id);
+                let rules = <$app as $crate::NormRetainedEditor>::inspector_rules();
+                let palette = <$app as $crate::NormLiveEditor>::live_palette();
+                let mut tree = tree.clone();
+                for kinds in rules.required_links::<Doc, Mut>(&spec.collection).unwrap_or_else(|error| panic!("kind '{}': {error}", spec.id)) {
+                    let Some(collection) = rules.link_collections(&kinds).first().copied() else { continue };
+                    if !rules.link_ids(&tree, &kinds).is_empty() {
+                        continue;
+                    }
+                    let prerequisite = palette.iter().find(|candidate| candidate.collection == collection).unwrap_or_else(|| panic!("kind '{}': the row links to {kinds:?} whose collection '{collection}' is not in the palette: it must be creatable through the inspector list or the insertItem command, which this walk does not drive", spec.id));
+                    tree = grow(prerequisite, &tree, depth + 1);
+                }
+                let base = <Doc as FromValue>::from_value(tree.clone()).unwrap_or_else(|error| panic!("kind '{}': the document does not load: {error:?}", spec.id));
+                let insert = $crate::placement_insert_edit::<$app>(&base, spec, [0.0, 0.0, 0.0]).unwrap_or_else(|error| panic!("kind '{}': {error}", spec.id));
+                let mutations = <$app as $crate::NormLiveEditor>::live_resolve(&base, &insert).unwrap_or_else(|error| panic!("kind '{}': the first row does not resolve: {error}", spec.id));
                 let mut placed: Option<Doc> = None;
                 for mutation in &mutations {
-                    placed = Some(step(placed.as_ref().unwrap_or(seed), mutation));
+                    placed = Some(step(placed.as_ref().unwrap_or(&base), mutation));
                 }
                 placed.unwrap_or_else(|| panic!("kind '{}': the first row raises no mutation", spec.id)).to_value()
             }
+
+            #[test]
+            fn a_first_row_that_links_to_a_missing_target_is_refused_naming_it_until_the_target_exists() {
+                use semio_framework_value::FromValue;
+                let rules = <$app as $crate::NormRetainedEditor>::inspector_rules();
+                let document = Doc::default();
+                let seed = document.to_value();
+                let placements = semio_s_plugin_norm_structural_scene::projection_kit::PLACEMENTS_FIELD;
+                for spec in <$app as $crate::NormLiveEditor>::live_palette().iter().filter(|spec| spec.collection != placements) {
+                    let empty = seed.get(&spec.collection).and_then(semio_framework_value::DslValue::as_array).is_some_and(|rows| rows.is_empty());
+                    let missing = rules.required_links::<Doc, Mut>(&spec.collection).unwrap_or_default().into_iter().find(|kinds| !rules.link_collections(kinds).is_empty() && rules.link_ids(&seed, kinds).is_empty());
+                    let (true, Some(kinds)) = (empty, missing) else { continue };
+                    if <$app as $crate::NormRetainedEditor>::starter_row(&document, &spec.collection, 0).is_some() {
+                        continue;
+                    }
+                    let error = $crate::placement_insert_edit::<$app>(&document, spec, [0.0; 3]).expect_err(&format!("kind '{}': a bare insert has no target to link to", spec.id));
+                    assert!(error.contains("insert one first") && error.contains(&kinds.join(" or ")), "kind '{}': {error}", spec.id);
+                    let grown = with_first_row(spec, &seed);
+                    assert!(<Doc as FromValue>::from_value(grown).is_ok(), "kind '{}': the document with its prerequisites loads", spec.id);
+                }
+            }
+
             type Family = <$app as $crate::NormRetainedEditor>::Family;
 
             fn probe() -> (Doc, semio_s_plugin_norm_structural_scene::EntityRef, semio_s_plugin_norm_structural_scene::Handle, f64, f64) {
@@ -233,7 +273,7 @@ macro_rules! norm_live_acceptance {
                 for spec in <$app as $crate::NormLiveEditor>::live_palette().iter().filter(|spec| spec.collection != placements) {
                     let mut tree = seed.to_value();
                     if tree.get(&spec.collection).and_then(DslValue::as_array).is_none_or(|rows| rows.is_empty()) {
-                        tree = with_first_row(&seed, spec, &tree);
+                        tree = with_first_row(spec, &tree);
                     }
                     let Some(id) = tree.get(&spec.collection).and_then(DslValue::as_array).and_then(|list| list.first()).and_then($crate::object_id_field).map(str::to_owned) else { continue };
                     let doc = <Doc as FromValue>::from_value(tree.clone()).unwrap_or_else(|error| panic!("kind '{}': the document with a first row does not load: {error:?}", spec.id));
@@ -271,7 +311,7 @@ macro_rules! norm_live_acceptance {
                     let count = |tree: &DslValue| tree.get(&spec.collection).and_then(DslValue::as_array).map(|rows| rows.len());
                     let before = count(&tree).unwrap_or_else(|| panic!("kind '{}': the snapshot has no list '{}'", spec.id, spec.collection));
                     if before == 0 {
-                        tree = with_first_row(&seed, spec, &tree);
+                        tree = with_first_row(spec, &tree);
                     }
                     let rows = count(&tree).unwrap_or_default();
                     let doc = <Doc as FromValue>::from_value(tree.clone()).unwrap_or_else(|error| panic!("kind '{}': the document with a first row does not load: {error:?}", spec.id));
@@ -317,7 +357,7 @@ macro_rules! norm_live_acceptance {
                     let mut tree = seed.to_value();
                     let rows = |tree: &DslValue| tree.get(&spec.collection).and_then(DslValue::as_array).map(|rows| rows.iter().filter_map(|row| $crate::object_id_field(row).map(str::to_owned)).collect::<Vec<String>>()).unwrap_or_default();
                     if rows(&tree).is_empty() {
-                        tree = with_first_row(&seed, spec, &tree);
+                        tree = with_first_row(spec, &tree);
                     }
                     let first = rows(&tree).into_iter().next().unwrap_or_else(|| panic!("kind '{}': rows carry an id", spec.id));
                     let copy = $crate::entity_editing::duplicate_edits(&tree, &spec.collection, std::slice::from_ref(&first), &[]).unwrap_or_else(|error| panic!("kind '{}': duplicate: {error}", spec.id));
@@ -368,7 +408,7 @@ macro_rules! norm_live_acceptance {
                 for spec in <$app as $crate::NormLiveEditor>::live_palette() {
                     let mut tree = seed.to_value();
                     if tree.get(&spec.collection).and_then(DslValue::as_array).is_none_or(|rows| rows.is_empty()) {
-                        tree = with_first_row(&seed, &spec, &tree);
+                        tree = with_first_row(&spec, &tree);
                     }
                     let Some(id) = tree.get(&spec.collection).and_then(DslValue::as_array).and_then(|list| list.first()).and_then($crate::object_id_field).map(str::to_owned) else { continue };
                     let doc = <Doc as FromValue>::from_value(tree).unwrap_or_else(|error| panic!("kind '{}': the document with a first row does not load: {error:?}", spec.id));
@@ -619,7 +659,7 @@ macro_rules! norm_live_acceptance {
                 for spec in <$app as $crate::NormLiveEditor>::live_palette() {
                     let mut grown = doc.to_value();
                     if grown.get(&spec.collection).and_then(DslValue::as_array).is_none_or(|rows| rows.is_empty()) {
-                        grown = with_first_row(&doc, &spec, &grown);
+                        grown = with_first_row(&spec, &grown);
                     }
                     let Some(id) = grown.get(&spec.collection).and_then(DslValue::as_array).and_then(|list| list.first()).and_then($crate::object_id_field).map(str::to_owned) else { continue };
                     let loaded = <Doc as FromValue>::from_value(grown).unwrap_or_else(|error| panic!("kind '{}': the document with a first row does not load: {error:?}", spec.id));

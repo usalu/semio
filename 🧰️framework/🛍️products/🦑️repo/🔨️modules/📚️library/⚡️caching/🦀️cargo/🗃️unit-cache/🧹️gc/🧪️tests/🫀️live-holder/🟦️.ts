@@ -1,3 +1,4 @@
+import {ownProcessIdentityV1} from "../../../../../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts";
 import{test,expect}from"bun:test";
 import{spawnSync}from"node:child_process";
 import{existsSync,mkdirSync,mkdtempSync,rmSync,utimesSync,writeFileSync}from"node:fs";
@@ -7,7 +8,7 @@ import{lanePathsV1,listLanesV1,removeLaneV1}from"../../../🧵️lane/🟦️.ts
 import{tryClaimV1}from"../../../🔒️lock/🟦️.ts";
 import{UNIT_CACHE_POLICY_V1}from"../../../🔏️key/🟦️.ts";
 const layout=UNIT_CACHE_POLICY_V1.layout;
-const lane=(root:string,id:string,pid:number,ageMs:number)=>{const paths=lanePathsV1(root,id);mkdirSync(paths.live,{recursive:true});const marker=join(paths.live,pid+"-abc123");writeFileSync(marker,JSON.stringify({pid}));const then=new Date(Date.now()-ageMs);utimesSync(marker,then,then);return paths;};
+const lane=(root:string,id:string,pid:number,ageMs:number)=>{const paths=lanePathsV1(root,id);mkdirSync(paths.live,{recursive:true});const marker=join(paths.live,pid+"-abc123");writeFileSync(marker,JSON.stringify({pid,startMs:pid===process.pid?ownProcessIdentityV1().startMs:Date.now()}));const then=new Date(Date.now()-ageMs);utimesSync(marker,then,then);return paths;};
 /** 🫀️ A lane is live while its holder pid is alive, however old the heartbeat; only a dead holder frees it; the reserved lane is never listed. */
 test("garbage collection keeps a lane whose holder is alive with a stale heartbeat",()=>{
  const root=mkdtempSync(join(tmpdir(),"semio-gc-live-"));

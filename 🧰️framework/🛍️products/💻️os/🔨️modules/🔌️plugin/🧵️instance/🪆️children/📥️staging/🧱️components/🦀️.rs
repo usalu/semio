@@ -1,7 +1,7 @@
 //! 🛖️ The instance components of `instance-children`: ChildComposition (WP6, plan section 7.3).
 use semio_plugin_decl_app::ArtifactApp;
 use semio_plugin_ownership::bounded_ownership::ArtifactFixedRegistry;
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use semio_plugin_child::{ChildContentRetirement, ChildMemberRegistry, ChildMemberRetirement};
 use semio_plugin_decl_views::child_view::ChildContentView;

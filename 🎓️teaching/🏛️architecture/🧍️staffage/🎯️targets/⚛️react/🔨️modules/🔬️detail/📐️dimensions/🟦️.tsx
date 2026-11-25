@@ -29,7 +29,7 @@ export function DimensionsSection(props: { readonly asset: Asset; readonly row: 
         <Fact term={t("detail.dimensions.id")}>{asset.id}</Fact>
         <Fact term={t("detail.dimensions.titles")}><span lang="en">{asset.title.en}</span> · <span lang="de">{asset.title.de}</span></Fact>
         <Fact term={t("detail.dimensions.tags")}>
-          <span className="flex flex-wrap gap-single">{asset.tags.map((tag) => <Tag key={tag}>{tag}</Tag>)}</span>
+          <span className="flex flex-wrap gap-single">{asset.tags.map((tag) => <Tag key={tag.id}>{tag.title[language]}</Tag>)}</span>
         </Fact>
       </FactList>
       <DataTable caption={t("detail.paper.caption", { height: num(dimensions.heightM, language), width: num(dimensions.widthM, language) })} head={[t("detail.paper.scale"), t("detail.paper.height"), t("detail.paper.width"), t("detail.paper.drawing"), t("detail.paper.line")]}>

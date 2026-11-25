@@ -64,7 +64,7 @@ fn find_drawing_layer_in_node<'a>(node: &'a DrawingLayerNode, target_id: &(impl 
 }
 
 pub fn selected_drawing_layers<'a>(document: &'a DrawingSnapshot, ids: &[String]) -> Vec<&'a DrawingLayerNode> {
-    flatten_drawing_layers(&document.layers).into_iter().filter(|layer| ids.iter().any(|id| id == &layer_base(layer).id || id == &drawing_play_layers_tree_row_id(layer))).collect()
+    flatten_drawing_layers(&document.layers).into_iter().filter(|layer| ids.iter().any(|id| id == &layer_base(layer).id)).collect()
 }
 
 /// 🔒️ A lock on any ancestor protects its complete subtree from interactive edits.
@@ -96,32 +96,9 @@ pub fn flatten_drawing_layers(layers: &semio_framework_value_persistent::list::P
     out
 }
 
-pub fn drawing_play_layers_tree_row_id(layer: &DrawingLayerNode) -> String {
-    let segment = match layer {
-        DrawingLayerNode::Group(_) => "group",
-        DrawingLayerNode::Boolean(_) => "boolean",
-        DrawingLayerNode::Trace(_) => "trace",
-        DrawingLayerNode::Path(_) => "path",
-        DrawingLayerNode::Shape(_) => "shape",
-        DrawingLayerNode::Text(_) => "text",
-        DrawingLayerNode::Image(_) => "image",
-    };
-    format!("drawing-play-layers.{segment}.{}", layer_id(layer))
-}
-
+/// 🪢️ A boolean operand row repeats a layer that may also have its own row, so it is keyed by both identities.
 pub fn drawing_play_boolean_child_row_id(boolean_id: &(impl semio_framework_value::paged::Utf8Text + std::fmt::Display + ?Sized), child_id: &(impl std::fmt::Display + ?Sized)) -> String {
     format!("drawing-play-layers.boolean-child.{}.{boolean_id}{child_id}", boolean_id.text_bytes())
-}
-
-pub fn drawing_play_layer_id_from_tree_row_id(row_id: &str) -> Option<String> {
-    let (kind, id) = row_id.strip_prefix("drawing-play-layers.")?.split_once('.')?;
-    if kind == "boolean-child" {
-        let (length, ids) = id.split_once('.')?;
-        let child = ids.get(length.parse::<usize>().ok()?..)?;
-        return (!child.is_empty()).then(|| child.to_string());
-    }
-    if !matches!(kind, "group" | "boolean" | "trace" | "path" | "shape" | "text" | "image") || id.is_empty() { return None; }
-    Some(id.to_string())
 }
 
 pub fn clone_drawing_layer_node(node: &DrawingLayerNode, name_suffix: &str, identities: &semio_framework_value_persistent::list::PagedList<DrawingIdentityAssignment,{usize::MAX}>) -> Result<DrawingLayerNode,semio_framework_value::ValueError> {

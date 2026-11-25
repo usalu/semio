@@ -109,6 +109,12 @@
     {
       "cancelAt": "awaitingAck",
       "committed": true
+    },
+    {
+      "staleAt": "preflight",
+      "committed": false,
+      "faultCode": "interactive-job.stale",
+      "nextGeneration": 1
     }
   ],
   "resultAck": {

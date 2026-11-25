@@ -13,12 +13,48 @@
       "de": "Eine Stahl-Wendeltreppe mit 1,6 m Durchmesser, wie sie ein Hersteller baut: ein Kernrohr CHS 168,3 x 6,3 auf einer 400-mm-Fußplatte, vierzehn darauf gesteckte Stufeneinheiten und das Podest 0,8 x 0,8 m (Nabenhülse 177,8 x 4,0 und gekantete 5-mm-Wanne mit 70 mm Bord), das Podest an die Stirn der oberen Decke geschraubt und an beiden freien Seiten umwehrt, 15 Steigungen von 0,187 m (2,80 m Geschosshöhe), 22,5 Grad je Stufe mit 30 mm Übergriff, drei 12-mm-Stäbe je Stufe, Antritts-, Wende- und Austrittspfosten und ein 42,4-mm-Wendelhandlauf, der über dem Podest waagrecht weiterläuft, 1,0 m über der Stufenmitte (0,91 m über jeder Vorderkante); in der Ansicht gezeichnet, in der jede Stufe als Balken mit wendelfolgender Länge erscheint und der Handlauf als Sinuskurve; ein Grundrisssymbol zeigt die echte Spirale."
     },
     "tags": [
-      "component",
-      "structural",
-      "stair",
-      "spiral",
-      "steel",
-      "helix"
+      {
+        "id": "component",
+        "title": {
+          "en": "component",
+          "de": "Bauteil"
+        }
+      },
+      {
+        "id": "structural",
+        "title": {
+          "en": "structural",
+          "de": "tragend"
+        }
+      },
+      {
+        "id": "stair",
+        "title": {
+          "en": "stair",
+          "de": "Treppe"
+        }
+      },
+      {
+        "id": "spiral",
+        "title": {
+          "en": "spiral",
+          "de": "Spirale"
+        }
+      },
+      {
+        "id": "steel",
+        "title": {
+          "en": "steel",
+          "de": "Stahl"
+        }
+      },
+      {
+        "id": "helix",
+        "title": {
+          "en": "helix",
+          "de": "Wendel"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage component authors (NW-C)",

@@ -123,6 +123,19 @@ function staffageReleaseDocumentVitePlugin(): OwnedBuildPlugin {
   };
 }
 
+/** 🎭️ Vite: replaces the Node cast exporter with its browser stand-in. The library's barrel re-exports the exporter, so every bundle that reaches the barrel needs it: the page and, apart from it, each worker (Vite bundles a worker with `worker.plugins` alone).
+ * @see ./🌐️cast-stub.ts — the stand-in
+ * @see ../../../🎯️targets/⚛️react/🔨️modules/🌊️flow/🧵️server/worker.ts — the air flow worker */
+export function staffageBrowserCastVitePlugin(): OwnedBuildPlugin {
+  return {
+    name: "staffage-browser-cast",
+    enforce: "pre",
+    resolveId(source: string) {
+      return source.replaceAll("\\", "/").endsWith("📤️export/🎭️cast/🟦️.ts") ? resolve(siteRoot, "🏗️builder/🌐️vite/🌐️cast-stub.ts") : null;
+    },
+  };
+}
+
 /** 🧍️ Vite: the staffage archive site, a static React and Tailwind bundle without a backend. Assets resolve from the domain root and land in the package's `dist`; a release build is what `https://${STAFFAGE_SITE_HOST}` serves. Vite's dependency cache is the one the repository issues for the build mode, and `TEACHING_ARCHITECTURE_STAFFAGE_WATCH=off` stops the dev server watching the sources.
  * @see ../../🟦️.ts — the entry
  * @see ../../📦️packages/🟦️typescript/📜️script.ts — the `dev-site` and `build` verbs */
@@ -130,18 +143,10 @@ export default defineOwnedBuildConfigFactory(({ command, mode }) => ({
   root: siteRoot,
   base: "/",
   publicDir: false,
-  worker: { format: "es" as const },
+  worker: { format: "es" as const, plugins: () => [staffageBrowserCastVitePlugin()] },
   cacheDir: viteCacheDirectory(repoRoot, { ...process.env, SEMIO_BUILD_MODE: readBuildMode(mode) }),
   plugins: [
-    {
-      name: "staffage-browser-cast",
-      enforce: "pre" as const,
-      resolveId(source: string) {
-        const normalized = source.replaceAll("\\", "/");
-        if (normalized.endsWith("/📤️export/🎭️cast/🟦️.ts") || normalized.endsWith("📤️export/🎭️cast/🟦️.ts")) return resolve(siteRoot, "🏗️builder/🌐️vite/🌐️cast-stub.ts");
-        return null;
-      },
-    },
+    staffageBrowserCastVitePlugin(),
     staffageAssetVitePlugin(command === "build" && readBuildMode(mode) === "release"),
     semioServeCloseVitePlugin(),
     semioServeUpgradeVitePlugin(),

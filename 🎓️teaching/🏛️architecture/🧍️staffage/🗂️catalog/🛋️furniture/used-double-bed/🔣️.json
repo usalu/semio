@@ -13,21 +13,111 @@
    "de": "Ein gebrauchtes Doppelbett aus massiver Kiefer, 160 x 200 cm, mit zwei Rahmenlattenrosten und zwei durchgelegenen Taschenfederkernmatratzen, zerlegt auf einer Möbeldecke gelagert, wie ein Gebrauchtwarenkaufhaus es aus einer Haushaltsauflösung annimmt: Holme hochkant, Kopf- und Fußteil quer darüber, der abgeschraubte Mittelfuß und ein Beutel mit Bolzen; eine Matratze wird von zwei Personen hinausgetragen, dann wird das Bett für zwei Schlafende wieder aufgebaut."
   },
   "tags": [
-   "used",
-   "household",
-   "second-hand",
-   "bedroom",
-   "furniture",
-   "bed",
-   "double-bed",
-   "mattress",
-   "pocket-spring-mattress",
-   "slatted-base",
-   "pine",
-   "solid-wood",
-   "dismantled",
-   "moving-blanket",
-   "flat-clearance"
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "household",
+    "title": {
+     "en": "household",
+     "de": "Haushalt"
+    }
+   },
+   {
+    "id": "second-hand",
+    "title": {
+     "en": "second-hand",
+     "de": "Second-Hand"
+    }
+   },
+   {
+    "id": "bedroom",
+    "title": {
+     "en": "bedroom",
+     "de": "Schlafzimmer"
+    }
+   },
+   {
+    "id": "furniture",
+    "title": {
+     "en": "furniture",
+     "de": "Möbel"
+    }
+   },
+   {
+    "id": "bed",
+    "title": {
+     "en": "bed",
+     "de": "Bett"
+    }
+   },
+   {
+    "id": "double-bed",
+    "title": {
+     "en": "double bed",
+     "de": "Doppelbett"
+    }
+   },
+   {
+    "id": "mattress",
+    "title": {
+     "en": "mattress",
+     "de": "Matratze"
+    }
+   },
+   {
+    "id": "pocket-spring-mattress",
+    "title": {
+     "en": "pocket spring mattress",
+     "de": "Taschenfederkernmatratze"
+    }
+   },
+   {
+    "id": "slatted-base",
+    "title": {
+     "en": "slatted base",
+     "de": "Lattenrost"
+    }
+   },
+   {
+    "id": "pine",
+    "title": {
+     "en": "pine",
+     "de": "Kiefer"
+    }
+   },
+   {
+    "id": "solid-wood",
+    "title": {
+     "en": "solid wood",
+     "de": "Massivholz"
+    }
+   },
+   {
+    "id": "dismantled",
+    "title": {
+     "en": "dismantled",
+     "de": "zerlegt"
+    }
+   },
+   {
+    "id": "moving-blanket",
+    "title": {
+     "en": "moving blanket",
+     "de": "Umzugsdecke"
+    }
+   },
+   {
+    "id": "flat-clearance",
+    "title": {
+     "en": "flat clearance",
+     "de": "flache Freihaltung"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content (used household objects wave)",

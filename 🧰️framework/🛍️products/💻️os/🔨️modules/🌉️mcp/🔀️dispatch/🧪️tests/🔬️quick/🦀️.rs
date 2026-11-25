@@ -905,3 +905,51 @@ fn declining_elicitation_slot() -> ElicitationSlot {
 }
 
 //#endregion 🔖️UnboundChannelAndResolvableApproval
+
+/// 🕳️ Every tool path that can meet a missing component model keeps the typed `missingModel` details end to end: through the channel Fault where the call travels it, and merged with the path's own context where the tool adds one.
+#[test]
+fn missing_model_details_survive_every_path_to_the_tool_answer() {
+    use semio_os_mcp_catalog::plugin_paths_and_descriptor::{missing_plugin_model_error, PluginRegistryEntry};
+    use semio_os_mcp_port::channel_port::map_fault;
+    use semio_os_mcp_routing::routing_and_shell_routed::routing_fault;
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../📡️stdio/📦️component-models/🧪️tests/🔣️.json")).unwrap();
+    let expected = &fixture["missing"][0];
+    let entry = PluginRegistryEntry { plugin_id: expected["pluginId"].as_str().unwrap().into(), owner_root: "/owner".into(), crate_path: expected["cratePath"].as_str().unwrap().into() };
+    for path in fixture["paths"].as_array().unwrap() {
+        let mut error = missing_plugin_model_error(&entry);
+        if path["viaFault"].as_bool().unwrap() { error = map_fault(&routing_fault(error)); }
+        if !path["context"].is_null() { error = error.with_context(path["context"].clone()); }
+        let payload = error.to_tool_error_payload();
+        assert_eq!(payload["code"], "PLUGIN_UNAVAILABLE", "{}", path["name"]);
+        assert_eq!(payload["retryable"], true, "{}", path["name"]);
+        assert_eq!(payload["message"], expected["payload"]["message"], "{}", path["name"]);
+        for key in ["cause", "missingModel", "summary"] {
+            assert_eq!(payload["details"][key], expected["payload"]["details"][key], "{} {key}", path["name"]);
+        }
+        for (key, value) in path["context"].as_object().into_iter().flatten() {
+            assert_eq!(&payload["details"][key], value, "{} {key}", path["name"]);
+        }
+    }
+}
+
+/// 🧩️ Context never replaces a typed cause: existing details keys win, absent ones are filled.
+#[test]
+fn error_context_merges_into_existing_details() {
+    let error = GatewayError::new(GatewayErrorCode::Internal, "x").with_details(serde_json::json!({ "cause": "typed", "kind": "own" })).with_context(serde_json::json!({ "kind": "context", "jobId": "j" }));
+    assert_eq!(error.details, serde_json::json!({ "cause": "typed", "kind": "own", "jobId": "j" }));
+    assert_eq!(GatewayError::new(GatewayErrorCode::Internal, "x").with_context(serde_json::json!({ "jobId": "j" })).details, serde_json::json!({ "jobId": "j" }));
+}
+
+#[test]
+fn a_directly_exposed_gateway_tool_is_refused_by_name_before_any_artifact_channel_is_touched() {
+    let mut capability = synthetic_capability("capabilities.search", &[], ApprovalMode::Never, false);
+    capability.exposure = ToolExposure::Direct { tool_name: "capabilities_search".to_string() };
+    let catalog = single_capability_catalog(capability);
+    let (adapter, channel, _handles, _audit) = harness(AutoApprovePolicy::Never);
+    let error = adapter.prepare(&catalog, &principal(&[]), &SessionHandle::new("s"), "capabilities.search", serde_json::json!({}), 0, 0).expect_err("a gateway tool is not an artifact action");
+    assert_eq!(error.code, GatewayErrorCode::InputInvalid);
+    assert!(!error.retryable);
+    assert!(error.message.contains("`capabilities_search`"), "{}", error.message);
+    assert_eq!(error.details["tool"], "capabilities_search");
+    assert!(channel.frame_log().is_empty(), "no plugin or channel may be involved");
+}

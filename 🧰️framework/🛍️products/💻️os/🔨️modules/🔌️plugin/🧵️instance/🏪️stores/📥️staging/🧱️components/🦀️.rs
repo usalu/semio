@@ -1,10 +1,10 @@
 //! 🧺️ The instance components of `instance-stores`: ConstructorState, InstanceStores, PeerRoster, ActionIngress, LocalInteraction (WP6, plan section 7.3).
-use semio_plugin_ownership::original_store_genesis::OriginalStoreSlot;
+use semio_plugin_store_lifecycle::original_store_genesis::OriginalStoreSlot;
 use semio_plugin_ownership::bounded_ownership::{ARTIFACT_LIVE_OUTPUT_SLOTS, ArtifactFixedRegistry};
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use std::sync::Arc;
 use semio_plugin_decl_app::ArtifactApp;
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use store::{ArtifactStore, ConfigStore, MemberFactory, Mutation, SpaceMember};
 use semio_plugin_operation::original_catalog_constructor::{ArtifactStoreConstructorKind, ArtifactStoreConstructorPhase, OriginalCatalogConstructor};

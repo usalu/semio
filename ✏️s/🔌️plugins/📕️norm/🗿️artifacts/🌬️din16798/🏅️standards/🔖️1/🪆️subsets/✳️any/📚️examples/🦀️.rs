@@ -24,4 +24,7 @@ pub mod residential_method3;
 #[cfg(test)]
 #[path = "🏠️residential-method3/🧪️tests/🧩️example/🦀️.rs"]
 mod example_residential_method3;
+#[cfg(test)]
+#[path = "🧪️tests/🗜️pack-twins/🦀️.rs"]
+mod pack_twins;
 //#endregion 🪢️Mounts

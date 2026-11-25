@@ -115,17 +115,13 @@ pub struct OwnedInvocation {
 pub fn owned_engine_identity() -> &'static str {
     static IDENTITY: std::sync::OnceLock<String> = std::sync::OnceLock::new();
     IDENTITY.get_or_init(|| {
-        let interpreter = semio_plugin_interpreter::INTERPRETER_SOURCE.as_bytes();
-        let host = OWNED_RUNTIME_SOURCE.as_bytes();
-        let imports=semio_plugin_interpreter_imports::ORIGINAL_HOST_SOURCE.as_bytes();
-        let mut engine = Vec::with_capacity(72 + interpreter.len() + host.len()+imports.len());
+        let sources = [semio_plugin_interpreter::INTERPRETER_SOURCE, semio_plugin_interpreter::NUMERIC_SOURCE, OWNED_RUNTIME_SOURCE, semio_plugin_interpreter_imports::ORIGINAL_HOST_SOURCE];
+        let mut engine = Vec::with_capacity(72 + sources.iter().map(|source| source.len()).sum::<usize>());
         engine.extend_from_slice(b"semio.owned-engine/v1\n");
-        engine.extend_from_slice(&(interpreter.len() as u64).to_le_bytes());
-        engine.extend_from_slice(interpreter);
-        engine.extend_from_slice(&(host.len() as u64).to_le_bytes());
-        engine.extend_from_slice(host);
-        engine.extend_from_slice(&(imports.len()as u64).to_le_bytes());
-        engine.extend_from_slice(imports);
+        for source in sources {
+            engine.extend_from_slice(&(source.len() as u64).to_le_bytes());
+            engine.extend_from_slice(source.as_bytes());
+        }
         format!("owned-engine-v1:{}", semio_framework_hash::hex_lower(semio_framework_hash::hash(&engine).as_bytes()))
     })
 }

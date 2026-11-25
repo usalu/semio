@@ -17,6 +17,7 @@ pub mod standards {
                         #[path = "../../../../🧪️tests/🔬️unit/🦀️.rs"]
                         pub mod tests;
                     }
+                    pub use semio_s_artifact_sourcing_curation_domain::standards::v1::subsets::any::schema::domain::{catalog_kind_name, catalog_module_label, catalog_typology_path, curated_count};
                     pub use semio_s_artifact_sourcing_curation_domain::standards::v1::subsets::any::schema::snapshot;
                     #[path = "."]
                     pub mod diff {

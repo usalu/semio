@@ -5,7 +5,8 @@
   "id": "boot-l",
   "respan": true,
   "from": "plan",
-  "why": "the foot was three sheets of paper, one per view (a side outline 0.8 mm thick, a front one, a plan one); cross-legged the thigh is twisted 65 degrees and each view showed its own sheet turned (front and plan up to 148 mm apart): the side outline gets the width of the plan outline"
+  "why": "the foot was three sheets of paper, one per view (a side outline 0.8 mm thick, a front one, a plan one); cross-legged the thigh is twisted 65 degrees and each view showed its own sheet turned (front and plan up to 148 mm apart): the side outline gets the width of the plan outline",
+  "inset": 0.012
  },
  {
   "op": "copy",
@@ -24,7 +25,8 @@
   "id": "boot-r",
   "respan": true,
   "from": "plan",
-  "why": "the foot was three sheets of paper, one per view (a side outline 0.8 mm thick, a front one, a plan one); cross-legged the thigh is twisted 65 degrees and each view showed its own sheet turned (front and plan up to 148 mm apart): the side outline gets the width of the plan outline"
+  "why": "the foot was three sheets of paper, one per view (a side outline 0.8 mm thick, a front one, a plan one); cross-legged the thigh is twisted 65 degrees and each view showed its own sheet turned (front and plan up to 148 mm apart): the side outline gets the width of the plan outline",
+  "inset": 0.012
  },
  {
   "op": "copy",
@@ -43,7 +45,8 @@
   "id": "boot-toe-l",
   "respan": true,
   "from": "plan",
-  "why": "the foot was three sheets of paper, one per view (a side outline 0.8 mm thick, a front one, a plan one); cross-legged the thigh is twisted 65 degrees and each view showed its own sheet turned (front and plan up to 148 mm apart): the side outline gets the width of the plan outline"
+  "why": "the foot was three sheets of paper, one per view (a side outline 0.8 mm thick, a front one, a plan one); cross-legged the thigh is twisted 65 degrees and each view showed its own sheet turned (front and plan up to 148 mm apart): the side outline gets the width of the plan outline",
+  "inset": 0.012
  },
  {
   "op": "copy",
@@ -62,7 +65,8 @@
   "id": "boot-toe-r",
   "respan": true,
   "from": "plan",
-  "why": "the foot was three sheets of paper, one per view (a side outline 0.8 mm thick, a front one, a plan one); cross-legged the thigh is twisted 65 degrees and each view showed its own sheet turned (front and plan up to 148 mm apart): the side outline gets the width of the plan outline"
+  "why": "the foot was three sheets of paper, one per view (a side outline 0.8 mm thick, a front one, a plan one); cross-legged the thigh is twisted 65 degrees and each view showed its own sheet turned (front and plan up to 148 mm apart): the side outline gets the width of the plan outline",
+  "inset": 0.012
  },
  {
   "op": "copy",
@@ -81,7 +85,8 @@
   "id": "boot-l",
   "respan": true,
   "from": "plan",
-  "why": "the foot was three sheets of paper, one per view (a side outline 0.8 mm thick, a front one, a plan one); cross-legged the thigh is twisted 65 degrees and each view showed its own sheet turned (front and plan up to 148 mm apart): the side outline gets the width of the plan outline"
+  "why": "the foot was three sheets of paper, one per view (a side outline 0.8 mm thick, a front one, a plan one); cross-legged the thigh is twisted 65 degrees and each view showed its own sheet turned (front and plan up to 148 mm apart): the side outline gets the width of the plan outline",
+  "inset": 0.012
  },
  {
   "op": "copy",
@@ -100,7 +105,8 @@
   "id": "boot-r",
   "respan": true,
   "from": "plan",
-  "why": "the foot was three sheets of paper, one per view (a side outline 0.8 mm thick, a front one, a plan one); cross-legged the thigh is twisted 65 degrees and each view showed its own sheet turned (front and plan up to 148 mm apart): the side outline gets the width of the plan outline"
+  "why": "the foot was three sheets of paper, one per view (a side outline 0.8 mm thick, a front one, a plan one); cross-legged the thigh is twisted 65 degrees and each view showed its own sheet turned (front and plan up to 148 mm apart): the side outline gets the width of the plan outline",
+  "inset": 0.012
  },
  {
   "op": "copy",
@@ -119,7 +125,8 @@
   "id": "boot-l",
   "respan": true,
   "from": "plan",
-  "why": "the foot was three sheets of paper, one per view (a side outline 0.8 mm thick, a front one, a plan one); cross-legged the thigh is twisted 65 degrees and each view showed its own sheet turned (front and plan up to 148 mm apart): the side outline gets the width of the plan outline"
+  "why": "the foot was three sheets of paper, one per view (a side outline 0.8 mm thick, a front one, a plan one); cross-legged the thigh is twisted 65 degrees and each view showed its own sheet turned (front and plan up to 148 mm apart): the side outline gets the width of the plan outline",
+  "inset": 0.012
  },
  {
   "op": "copy",
@@ -138,7 +145,8 @@
   "id": "boot-r",
   "respan": true,
   "from": "plan",
-  "why": "the foot was three sheets of paper, one per view (a side outline 0.8 mm thick, a front one, a plan one); cross-legged the thigh is twisted 65 degrees and each view showed its own sheet turned (front and plan up to 148 mm apart): the side outline gets the width of the plan outline"
+  "why": "the foot was three sheets of paper, one per view (a side outline 0.8 mm thick, a front one, a plan one); cross-legged the thigh is twisted 65 degrees and each view showed its own sheet turned (front and plan up to 148 mm apart): the side outline gets the width of the plan outline",
+  "inset": 0.012
  },
  {
   "op": "copy",
@@ -180,31 +188,47 @@
   "why": "upper-arm-l: the same body in the three views (the arm is spread and twisted)"
  },
  {
-  "op": "prism",
+  "op": "extrude",
   "scale": "200",
   "id": "shirt",
   "view": "front",
-  "why": "torso: flat shape on a trunk that leans 16 degrees: prism that keeps the outline"
+  "why": "torso: flat shape on a trunk that leans back 16 degrees; a prism that keeps the front outline is a box, 47 mm too long in the plan when leaning back and 20 mm too high in the front of the default pose: the elevation outline swept over the width of the front outline"
  },
  {
-  "op": "prism",
+  "op": "extrude",
   "scale": "200",
   "id": "shirt",
   "view": "plan",
-  "why": "torso: flat shape on a trunk that leans 16 degrees: prism that keeps the outline"
+  "across": "front",
+  "why": "torso: flat shape on a trunk that leans back 16 degrees; a prism that keeps the plan outline is a box, 47 mm too long in the plan when leaning back and 20 mm too high in the front of the default pose: the elevation outline swept over the width of the front outline"
  },
  {
-  "op": "prism",
+  "op": "extrude",
   "scale": "500",
   "id": "shirt",
   "view": "front",
-  "why": "torso: flat shape on a trunk that leans 16 degrees: prism that keeps the outline"
+  "why": "torso: flat shape on a trunk that leans back 16 degrees; a prism that keeps the front outline is a box, 47 mm too long in the plan when leaning back and 20 mm too high in the front of the default pose: the elevation outline swept over the width of the front outline"
  },
  {
-  "op": "prism",
+  "op": "extrude",
   "scale": "500",
   "id": "shirt",
   "view": "plan",
-  "why": "torso: flat shape on a trunk that leans 16 degrees: prism that keeps the outline"
+  "across": "front",
+  "why": "torso: flat shape on a trunk that leans back 16 degrees; a prism that keeps the plan outline is a box, 47 mm too long in the plan when leaning back and 20 mm too high in the front of the default pose: the elevation outline swept over the width of the front outline"
+ },
+ {
+  "op": "loft-thickness",
+  "scale": "100",
+  "id": "toe-bones-l",
+  "min": 0.0075,
+  "why": "structure solid of the toes, 14.9 mm thick at 1:100 (feature 15.0 mm): the paper-thin toe drawing (0.8 mm) had lowered the limit of `volumes-feature`; with the toe drawn as a body the solid is raised by 0.1 mm to the feature"
+ },
+ {
+  "op": "loft-thickness",
+  "scale": "100",
+  "id": "toe-bones-r",
+  "min": 0.0075,
+  "why": "structure solid of the toes, 14.9 mm thick at 1:100 (feature 15.0 mm): the paper-thin toe drawing (0.8 mm) had lowered the limit of `volumes-feature`; with the toe drawn as a body the solid is raised by 0.1 mm to the feature"
  }
 ]

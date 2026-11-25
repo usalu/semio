@@ -95,6 +95,22 @@ impl EventRouter {
         Some(Rect::new(rect.x, y, rect.w, height))
     }
 
+    /// 🎯️ Every row the row-reorder drag in flight can be dropped on, with the band of the row the drop resolves against: the rows that carry the row-reorder MIME in a tree that binds a drop action, but not the dragged row itself. Empty when no such drag is in flight.
+    pub fn tree_drop_places(&self, tree: &UiTree) -> Vec<(NodeId, Rect)> {
+        let mime = ui_contract::TREE_ROW_REORDER_MIME;
+        let Some(drag) = self.drag.as_ref().filter(|drag| drag.payload.contains_key(mime)) else { return Vec::new() };
+        let mut places = Vec::new();
+        let mut stack: Vec<NodeId> = tree.root.into_iter().collect();
+        while let Some(id) = stack.pop() {
+            stack.extend(tree.children(id));
+            let accepts = id != drag.source && tree.authored_tree_item(id).is_some_and(|item| item.drag_data.as_ref().is_some_and(|data| data.contains_key(mime))) && Self::tree_node_drops(tree, id);
+            if let Some(frame) = accepts.then(|| self.tree_row_frame(tree, id)).flatten() {
+                places.push((id, frame));
+            }
+        }
+        places
+    }
+
     /// 🎯️ Finds the nearest declared drop target whose predicate accepts the active drag.
     fn nearest_accepting_drop_target(&self, tree: &UiTree, from: NodeId) -> Option<NodeId> {
         let mime = ui_contract::TREE_ROW_REORDER_MIME;

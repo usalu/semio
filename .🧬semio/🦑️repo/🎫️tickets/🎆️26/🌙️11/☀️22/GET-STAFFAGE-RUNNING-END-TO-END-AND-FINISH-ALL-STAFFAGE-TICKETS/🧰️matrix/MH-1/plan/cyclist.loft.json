@@ -1,0 +1,13 @@
+[
+  {"op": "anchor", "id": "pedal-spindle-r", "set": {"z": -0.13}, "fixed": true},
+  {"op": "anchor", "id": "pedal-spindle-l", "set": {"z": 0.13}, "fixed": true},
+  {"scale": "50", "label": "part thigh-l", "choose": [[{"op": "volume", "id": "thigh-l", "as": "revolved"}], [{"op": "volume", "id": "thigh-l", "as": "loft"}], [{"op": "volume", "id": "thigh-l", "as": "prism-w"}]]},
+  {"scale": "50", "label": "part thigh-r", "choose": [[{"op": "volume", "id": "thigh-r", "as": "revolved"}], [{"op": "volume", "id": "thigh-r", "as": "loft"}], [{"op": "volume", "id": "thigh-r", "as": "prism-w"}]]},
+  {"scale": "100", "label": "part thigh-l", "choose": [[{"op": "volume", "id": "thigh-l", "as": "revolved"}], [{"op": "volume", "id": "thigh-l", "as": "loft"}], [{"op": "volume", "id": "thigh-l", "as": "prism-w"}]]},
+  {"scale": "500", "label": "part thigh-l", "choose": [[{"op": "volume", "id": "thigh-l", "as": "revolved"}], [{"op": "volume", "id": "thigh-l", "as": "loft"}], [{"op": "volume", "id": "thigh-l", "as": "prism-w"}]]},
+  {"scale": "500", "label": "part thigh-r", "choose": [[{"op": "volume", "id": "thigh-r", "as": "revolved"}], [{"op": "volume", "id": "thigh-r", "as": "loft"}], [{"op": "volume", "id": "thigh-r", "as": "prism-w"}]]},
+  {"scale": "100", "label": "part jacket", "choose": [[{"op": "volume", "id": "jacket", "as": "loft"}]]},
+  {"scale": "200", "label": "part jacket", "choose": [[{"op": "volume", "id": "jacket", "as": "loft"}]]},
+  {"scale": "500", "label": "part jacket", "choose": [[{"op": "volume", "id": "jacket", "as": "loft"}]]},
+  {"scale": "500", "label": "part shoe-rear-l", "choose": [[{"op": "volume", "id": "shoe-rear-l", "as": "prism-w"}], [{"op": "volume", "id": "shoe-rear-l", "as": "loft"}]]}
+]

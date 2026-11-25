@@ -19,4 +19,7 @@ mod example_multi_fail;
 pub mod loadbearing_wall;
 #[path = "❌️multi-fail-masonry/🦀️.rs"]
 pub mod multi_fail_masonry;
+#[cfg(test)]
+#[path = "🧪️tests/🗜️pack-twins/🦀️.rs"]
+mod pack_twins;
 //#endregion 🪢️Mounts

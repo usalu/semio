@@ -14,6 +14,8 @@ import { pickOriginalMedia } from "../../../🔌️PluginRuntime/🚚️handle-t
 import { originalMediaRequest } from "../../../🔌️PluginRuntime/🚚️handle-turn-drive/original-media-wire.ts";
 import { coerceWireBytes } from "../../../🔌️PluginRuntime/🟦️.tsx";
 import type { ShellCoreAfterSpawnedSession } from "../../🛫️spawned-session/🟦️.ts";
+import { documentLoadRunningV1, noteDocumentLoadEndV1 } from "../../⏳️document-load-gate/🟦️.ts";
+import { exampleRestoredAfterUnappliedLoadV1 } from "../../../🛠️ShellHelpers/🔩️plumbing/🔀️example-switching/🟦️.ts";
 
 /**
  * 📦️ Loads a pack and spr pair through the program's stepped archive loader with progress and cancellation.
@@ -34,15 +36,29 @@ export async function applyLoadDocumentEffect({ loadedPlugins, uiTerminologyRef,
     const sprBytes = coerceWireBytes(payload.spr);
     const file = resolveManifestLabel(baseSession.app.label, uiTerminologyRef.current, uiLocaleRef.current) || baseSession.app.id;
     const task = core.documentTransferRef.current.trackDocumentTransfer(file, baseSession.pluginId);
+    task.signal.addEventListener("abort", () => core.documentLoadGateRef.current.markCancelling(baseSession.pluginId, baseSession.instanceId), { once: true });
+    const exampleKey = programHistoryKeyV1(baseSession);
+    let restored = false;
+    const restoreExample = () => {
+      if (restored || core.focusedExampleProgramRef.current !== exampleKey) return;
+      restored = true;
+      const restoration = exampleRestoredAfterUnappliedLoadV1(core.exampleBeforePickByProgramRef.current.get(exampleKey), core.committedExamplesByProgramRef.current.get(exampleKey));
+      if (restoration === undefined) return;
+      core.committedExamplesByProgramRef.current.set(exampleKey, restoration.memory);
+      core.exampleBeforePickByProgramRef.current.delete(exampleKey);
+      core.dispatch({ type: "SET_ACTIVE_EXAMPLE_ID", value: restoration.visibleExampleId });
+    };
     const showLoad = (load: { readonly completed: number; readonly total: number } | null) => historyStore.update((projections) => programHistoryProjectionsWithLoadV1(projections, programHistoryKeyV1(baseSession), load));
     try {
-      const loaded = await loadDocumentPair(pluginEntry.handle, baseSession.instanceId, packBytes, sprBytes, () => isCurrentEffectOwner(effectOwner), { signal: task.signal, progress: (status) => { task.progress(status.completed, status.total > 0 ? status.total : null); showLoad(status); } });
-      if (loaded) await refreshHistorySnapshot(baseSession);
+      const loaded = await loadDocumentPair(pluginEntry.handle, baseSession.instanceId, packBytes, sprBytes, () => isCurrentEffectOwner(effectOwner), { signal: task.signal, progress: (status) => { task.progress(status.completed, status.total > 0 ? status.total : null); const stopping = core.documentLoadGateRef.current.cancelling(baseSession.pluginId, baseSession.instanceId) || status.state === "cancelled"; showLoad(documentLoadRunningV1(status.state) && !stopping ? status : null); if (stopping) restoreExample(); } });
+      if (loaded) { core.exampleBeforePickByProgramRef.current.delete(exampleKey); await refreshHistorySnapshot(baseSession); }
       return loaded;
     } catch (error) {
       const cancelled = documentLoadCancelledV1(error, task.signal);
       console.warn(`[os-shell] ${documentTransferNoticeCodeV1(cancelled ? "load-cancelled" : "load-failed")} ${baseSession.pluginId}#${baseSession.instanceId}`, error);
       core.documentTransferRef.current.notifyDocumentTransfer(cancelled ? "load-cancelled" : "load-failed", file, cancelled ? "info" : "error");
+      noteDocumentLoadEndV1(effectOwner, cancelled);
+      if (!cancelled) restoreExample();
     } finally {
       showLoad(null);
       task.finish();

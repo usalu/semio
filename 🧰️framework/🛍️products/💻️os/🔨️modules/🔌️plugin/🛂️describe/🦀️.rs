@@ -200,10 +200,24 @@ async fn plugin_descriptor<PA: semio_plugin_reactor_app::PluginApp>(runtime: &se
         extension_points: extras.extension_points,
         execution: extras.execution,
         execution_protocol: ExecutionProtocol { app_channel_version: protocol::CHANNEL_VERSION },
+        components: extras.components,
         quotas: extras.quotas,
         contributions,
         assets,
     }
+}
+
+/// 📤️ Writes the semantic pair (`🔣️.json` and `🛂️.descriptor.semio`) of an assembled descriptor under `directory`, the native counterpart of the component emitter's pair, so a descriptor can be settled without building the component for wasm.
+/// @see ../🖨️describe/🛂️descriptor-emission/🦀️.rs
+pub fn emit_semantic_descriptor_pair(directory: &std::path::Path, bytes: &[u8]) -> Result<(), String> {
+    let value = store::pack_rt::decode_wire_value(bytes).map_err(|error| format!("decoding the descriptor: {error}"))?;
+    let descriptor: PackageDescriptor = semio_framework_value::FromValue::from_value(value).map_err(|error| format!("decoding the descriptor: {error}"))?;
+    let value = semio_framework_value::ToValue::to_value(&descriptor);
+    let json = format!("{}\n", semio_framework_pack_json::to_string_pretty(&semio_framework_pack_json::from_dsl_value(&value)));
+    let pack = store::pack_rt::encode_wire_value(semio_framework::CanonicalDescriptorValue::new(value).value());
+    std::fs::create_dir_all(directory).map_err(|error| error.to_string())?;
+    std::fs::write(directory.join("🔣️.json"), json).map_err(|error| error.to_string())?;
+    std::fs::write(directory.join("🛂️.descriptor.semio"), pack).map_err(|error| error.to_string())
 }
 
 /// 🔌️ Encodes the plugin's installed runtime descriptor.
@@ -280,7 +294,7 @@ pub async fn describe_extension() -> Vec<u8> {
         topic_contributions: extension.topic_contributions.clone(),
         commands: Vec::new(),
         artifact_kinds: Vec::new(),
-        hosted_artifact_kinds: Vec::new(),
+        hosted_artifact_kinds: Vec::new(), action_sets: Vec::new(),
         dependencies: extension.dependencies,
         contributions: extension.contributions.clone(),
     };
@@ -307,6 +321,7 @@ pub async fn describe_extension() -> Vec<u8> {
         extension_points: Vec::new(),
         execution: extension.execution,
         execution_protocol: ExecutionProtocol { app_channel_version: protocol::CHANNEL_VERSION },
+        components: Vec::new(),
         quotas: kernel::QuotaSchema::default(),
         contributions,
         assets: Vec::new(),

@@ -1,0 +1,46 @@
+{
+  "scopes": ["first", "second"],
+  "cases": [
+    { "outcome": "pass", "started": ["first", "second"] },
+    { "outcome": "child-exit", "started": ["first"] },
+    { "outcome": "cancel", "started": ["first"] }
+  ],
+  "diagnostics": [
+    {
+      "name": "DIN 4108 signed",
+      "scope": "din4108", "port": "6035", "lanes": ["din4108"],
+      "probes": [
+        ["verify-play-components.mjs", ["delivery", "din4108"], false, false],
+        ["probe-archive-play.mjs", ["http://127.0.0.1:6035/#din4108", "300"], true, false],
+        ["probe-archive-play.mjs", ["http://127.0.0.1:6035/#din4108", "300"], true, true]
+      ]
+    },
+    {
+      "name": "DIN 4108 paired preview",
+      "scope": "din4108", "port": "6054", "lanes": ["din4108"],
+      "probes": [
+        ["probe-archive-play.mjs", ["http://127.0.0.1:6054/#din4108", "300"], true, false],
+        ["probe-archive-play.mjs", ["http://127.0.0.1:6054/#din4108", "300"], true, true]
+      ]
+    },
+    {
+      "name": "Standards signed",
+      "scope": "standards", "port": "6033", "lanes": ["din4108", "din18599", "en1990", "en1992", "en1995"],
+      "probes": [
+        ["verify-play-components.mjs", ["delivery"], false, false],
+        ["probe-archive-play.mjs", ["http://127.0.0.1:6033/#din4108", "300"], true, false],
+        ["probe-eurocode-viewports.mjs", ["en1990", "en1992"], false, false],
+        ["verify-play-components.mjs", ["browser"], false, false],
+        ["probe-norm-catalogue-examples.mjs", [], true, false]
+      ]
+    },
+    {
+      "name": "Strict EN 1990 companion",
+      "scope": "en1990", "port": "6036", "lanes": ["en1990"],
+      "probes": [
+        ["verify-play-components.mjs", ["delivery", "en1990"], false, false],
+        ["probe-norm-routes.mjs", ["en1990"], false, false]
+      ]
+    }
+  ]
+}

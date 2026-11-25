@@ -13,13 +13,55 @@
    "de": "Ein fahrerloser Motorroller mit 125-cm3-Viertaktmotor, Durchstieg und Stahl-Monocoque (130 kg, 12-Zoll-Räder, Spiegel) mit klappbarer Sitzbank, Hauptständer, Abgasstrahl, heißem Motor, Schalldämpfer, Reifen und Bremsen."
   },
   "tags": [
-   "vehicle",
-   "scooter",
-   "motorcycle",
-   "125cc",
-   "four-stroke",
-   "petrol",
-   "wheeled"
+   {
+    "id": "vehicle",
+    "title": {
+     "en": "vehicle",
+     "de": "Fahrzeug"
+    }
+   },
+   {
+    "id": "scooter",
+    "title": {
+     "en": "scooter",
+     "de": "Roller"
+    }
+   },
+   {
+    "id": "motorcycle",
+    "title": {
+     "en": "motorcycle",
+     "de": "Motorrad"
+    }
+   },
+   {
+    "id": "125cc",
+    "title": {
+     "en": "125cc",
+     "de": "125-cm³-Motorrad"
+    }
+   },
+   {
+    "id": "four-stroke",
+    "title": {
+     "en": "four-stroke",
+     "de": "Viertakt"
+    }
+   },
+   {
+    "id": "petrol",
+    "title": {
+     "en": "petrol",
+     "de": "Benzin"
+    }
+   },
+   {
+    "id": "wheeled",
+    "title": {
+     "en": "wheeled",
+     "de": "rollend"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content worker NW-VE (vehicles)",
@@ -377,20 +419,38 @@
     "frictionCoefficient": 0.8
    },
    {
-    "id": "stand-foot",
+    "id": "stand-foot-left",
     "bone": "stand",
     "x": 0.215,
     "y": 0,
     "kind": "contact",
     "title": {
-     "en": "Stand foot",
-     "de": "Ständerfuß"
+     "en": "Left stand foot",
+     "de": "Linker Ständerfuß"
     },
     "support": "contact",
     "normalDeg": 90,
     "footprintLengthM": 0.06,
-    "footprintWidthM": 0.2,
-    "frictionCoefficient": 0.6
+    "footprintWidthM": 0.052,
+    "frictionCoefficient": 0.6,
+    "z": 0.143
+   },
+   {
+    "id": "stand-foot-right",
+    "bone": "stand",
+    "x": 0.215,
+    "y": 0,
+    "kind": "contact",
+    "title": {
+     "en": "Right stand foot",
+     "de": "Rechter Ständerfuß"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.06,
+    "footprintWidthM": 0.052,
+    "frictionCoefficient": 0.6,
+    "z": -0.143
    },
    {
     "id": "tailpipe",
@@ -4562,7 +4622,7 @@
        ],
        "closed": true,
        "id": "tyre-r",
-       "bone": "wheel-r",
+       "bone": "swing",
        "role": "body",
        "z": 3,
        "filled": true,
@@ -19929,7 +19989,8 @@
     "ground": "auto",
     "contacts": [
      "contact-f",
-     "stand-foot"
+     "stand-foot-left",
+     "stand-foot-right"
     ],
     "thermal": {
      "operating": {
@@ -20177,7 +20238,8 @@
     "ground": "auto",
     "contacts": [
      "contact-f",
-     "stand-foot"
+     "stand-foot-left",
+     "stand-foot-right"
     ],
     "thermal": {
      "operating": {
@@ -20708,7 +20770,8 @@
     "ground": "auto",
     "contacts": [
      "contact-f",
-     "stand-foot"
+     "stand-foot-left",
+     "stand-foot-right"
     ],
     "thermal": {
      "operating": {
@@ -21016,7 +21079,12 @@
       "toS": 4.2
      },
      {
-      "anchor": "stand-foot",
+      "anchor": "stand-foot-left",
+      "fromS": 4.2,
+      "toS": 7
+     },
+     {
+      "anchor": "stand-foot-right",
       "fromS": 4.2,
       "toS": 7
      }
@@ -21063,10 +21131,19 @@
       "t": 4.2,
       "kind": "contact-on",
       "title": {
-       "en": "Stand foot touches down",
-       "de": "Ständerfuß setzt auf"
+       "en": "Left stand foot touches down",
+       "de": "Linker Ständerfuß setzt auf"
       },
-      "target": "stand-foot"
+      "target": "stand-foot-left"
+     },
+     {
+      "t": 4.2,
+      "kind": "contact-on",
+      "title": {
+       "en": "Right stand foot touches down",
+       "de": "Rechter Ständerfuß setzt auf"
+      },
+      "target": "stand-foot-right"
      },
      {
       "t": 4.2,

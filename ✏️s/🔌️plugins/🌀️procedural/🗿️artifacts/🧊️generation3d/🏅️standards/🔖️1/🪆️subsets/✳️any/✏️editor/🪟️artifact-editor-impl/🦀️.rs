@@ -611,7 +611,7 @@ impl ArtifactEditor for Generation3dPlayApp {
     /// 🆓️ The marks-free entry point the framework still offers (no owner, no transient, no
     /// interaction) — every live window goes through `render_with_request_context` instead.
     fn render(body_key: &str, doc: &ArtifactView<'_, Generation3dSnapshot>, cfg: &ConfigView<'_, Generation3dConfig>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
-        with_scratch_session(|session| generation3d_render_body(body_key, doc.snapshot, cfg.snapshot, None, view_state, &PreviewInteractionMarks::default(), session, doc.tool_run(), &mut None))
+        with_scratch_session(|session| generation3d_render_body(body_key, doc.snapshot, cfg.snapshot, None, view_state, &PreviewInteractionMarks::default(), session, doc.tool_run_poll(), &mut None))
     }
 
     /// 💚️ Resolves the live `graph` hover/selection once per render and threads it into every
@@ -642,7 +642,7 @@ impl ArtifactEditor for Generation3dPlayApp {
                 let gesture = previews.then(|| generation3d_gumball_preview(doc.snapshot, &marks, &owner.gumball)).flatten();
                 let (document, marks) = gesture.as_ref().map_or((doc.snapshot, &marks), |(document, marks)| (document, marks));
                 let mut hover_groups = None;
-                let rendered = owner.with_session(|session| generation3d_render_body(body_key, document, cfg.snapshot, preview_eval_text, view_state, marks, session, doc.tool_run(), &mut hover_groups));
+                let rendered = owner.with_session(|session| generation3d_render_body(body_key, document, cfg.snapshot, preview_eval_text, view_state, marks, session, doc.tool_run_poll(), &mut hover_groups));
                 if let (Ok(Ok(_)), Some(groups)) = (&rendered, hover_groups) {
                     owner.preview_hover.publish(window_id, groups);
                 }

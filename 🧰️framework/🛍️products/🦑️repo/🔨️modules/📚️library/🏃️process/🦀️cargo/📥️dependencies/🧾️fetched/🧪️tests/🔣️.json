@@ -187,6 +187,28 @@
    "expect": false
   },
   {
+   "op": "archives",
+   "expect": true
+  },
+  {
+   "op": "corruptCrate",
+   "name": "serde-1.0.0.crate",
+   "index": "idx2"
+  },
+  {
+   "op": "archives",
+   "expect": false
+  },
+  {
+   "op": "recreateCrate",
+   "name": "serde-1.0.0.crate",
+   "index": "idx2"
+  },
+  {
+   "op": "archives",
+   "expect": true
+  },
+  {
    "op": "capture",
    "lock": "git",
    "defined": false

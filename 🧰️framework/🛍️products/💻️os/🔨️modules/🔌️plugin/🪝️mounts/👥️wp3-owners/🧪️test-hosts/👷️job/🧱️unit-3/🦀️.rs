@@ -11,7 +11,7 @@ use semio_framework_artifact_reference::ArtifactDialect;
 #[cfg(test)]
 use semio_plugin_operation::ArtifactDocumentAuthority;
 #[cfg(test)]
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_framework_artifact_reference::ArtifactRef;
 use store::ArtifactStore;

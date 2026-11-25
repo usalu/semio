@@ -1,0 +1,5 @@
+{
+"ops": [
+{"op": "solid-from", "scale": "500", "view": "elevation", "id": "forearm-r", "from": "front"}
+]
+}

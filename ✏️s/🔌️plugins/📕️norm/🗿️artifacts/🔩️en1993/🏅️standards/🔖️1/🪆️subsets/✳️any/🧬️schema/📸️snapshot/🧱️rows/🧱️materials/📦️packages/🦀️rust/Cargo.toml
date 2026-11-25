@@ -1,0 +1,37 @@
+[package]
+workspace = "../../../../../../../../../.."
+name = "semio-s-artifact-norm-en1993-model-rows-materials"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "EN 1993 model rows (materials)"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+serde = { workspace = true, optional = true }
+semio-framework-dsl-record = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-dsl-record-derive = { workspace = true }
+semio-os-kernel = { workspace = true }
+semio-framework-pack-json = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-schema = { workspace = true }
+semio-framework-schema-composition = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }
+semio-framework-schema-registry = { workspace = true }
+semio-framework-schema-state = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-plugin-norm-compliance = { workspace = true }
+pack = { workspace = true }
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-value-native-owned = { workspace = true }
+semio-s-artifact-norm-contract = { workspace = true }
+
+[features]
+test-support = ["dep:serde", "semio-s-plugin-norm-compliance/test-support"]

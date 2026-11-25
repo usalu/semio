@@ -15,6 +15,9 @@ use semio_s_artifact_fem_2d_boundary::standards::v1::subsets::any::schema::mutat
 use semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::remove_load;
 
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::element_id;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::load_id;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemElement;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemLoad;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 use semio_plugin::ArtifactView;
 use semio_plugin::ConfigView;
@@ -39,7 +42,17 @@ pub fn handle(payload: &RemoveSelection, doc: &ArtifactView<'_, Fem2dSnapshot>, 
     remove_ids(doc, &payload.ids)
 }
 
-/// 🗂️ Emits one dependency-ordered transaction over the selected entities, including case-owned loads.
+/// 🔗️ The two node ids a member connects.
+fn element_ends(element: &FemElement) -> [&str; 2] {
+    match element { FemElement::Bar { start, end, .. } | FemElement::Beam { start, end, .. } => [start, end] }
+}
+
+/// ⌨️ The payload the delete keybinding means: no ids of its own speaks for the live framework selection, ids it names win.
+pub fn with_selection(payload: &RemoveSelection, selection: &[String]) -> RemoveSelection {
+    if payload.ids.is_empty() { RemoveSelection { ids: selection.to_vec() } } else { payload.clone() }
+}
+
+/// 🗂️ Emits one dependency-ordered transaction over the selected entities, cascading to the supports, members and loads that name a removed node, member or region.
 pub fn remove_ids(doc: &ArtifactView<'_, Fem2dSnapshot>, ids: &[String]) -> Result<Emit<Fem2dMutation, NoConfigMutation>, Fault> {
     let snapshot = doc.snapshot;
     let addresses: Vec<_> = ids.iter().filter_map(|id| protocol::wire::decode_scoped_identity(id).ok()).collect();
@@ -68,19 +81,29 @@ pub fn remove_ids(doc: &ArtifactView<'_, Fem2dSnapshot>, ids: &[String]) -> Resu
         }
     }
     if removed != combinations.len() { return Err(Fault::from("fem2d.remove-selection.combination-cycle")); }
+    let removed_nodes: HashSet<&str> = snapshot.nodes.iter().map(|row| row.id.as_str()).filter(|id| selected.contains(&("node", *id))).collect();
+    let removed_elements: HashSet<&str> = snapshot.elements.iter().filter(|row| selected.contains(&("element", element_id(row))) || element_ends(row).iter().any(|end| removed_nodes.contains(end))).map(element_id).collect();
+    let removed_regions: HashSet<&str> = snapshot.regions.iter().map(|row| row.id.as_str()).filter(|id| selected.contains(&("region", *id))).collect();
     for case in &snapshot.load_cases {
         if selected.contains(&("loadCase", case.id.as_str())) { continue; }
-        for load in case.loads.iter().filter(|load| selected_loads.contains(&(case.id.as_str(), semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::load_id(load)))) {
-            operations.push(Fem2dMutation::RemoveLoad(semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::remove_load::RemoveLoad { case_id: case.id.clone(), load_id: semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::load_id(load).into() }));
+        for load in case.loads.iter().filter(|load| {
+            let id = load_id(load);
+            selected_loads.contains(&(case.id.as_str(), id)) || match load {
+                FemLoad::Nodal { node_id, .. } => removed_nodes.contains(node_id.as_str()),
+                FemLoad::MemberUdl { element_id, .. } => removed_elements.contains(element_id.as_str()),
+                FemLoad::Area { region_id, .. } => removed_regions.contains(region_id.as_str()),
+            }
+        }) {
+            operations.push(Fem2dMutation::RemoveLoad(semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::remove_load::RemoveLoad { case_id: case.id.clone(), load_id: load_id(load).into() }));
         }
     }
     for row in snapshot.load_cases.iter().filter(|row| selected.contains(&("loadCase", row.id.as_str()))) {
         operations.push(Fem2dMutation::DeleteLoadCase(semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::delete_load_case::DeleteLoadCase { id: row.id.clone() }));
     }
-    for row in snapshot.supports.iter().filter(|row| selected.contains(&("support", row.id.as_str()))) {
+    for row in snapshot.supports.iter().filter(|row| selected.contains(&("support", row.id.as_str())) || removed_nodes.contains(row.node_id.as_str())) {
         operations.push(Fem2dMutation::DeleteSupport(semio_s_artifact_fem_2d_boundary::standards::v1::subsets::any::schema::mutations::delete_support::DeleteSupport { id: row.id.clone() }));
     }
-    for row in snapshot.elements.iter().filter(|row| selected.contains(&("element", element_id(row)))) {
+    for row in snapshot.elements.iter().filter(|row| removed_elements.contains(element_id(row))) {
         operations.push(Fem2dMutation::DeleteElement(semio_s_artifact_fem_2d_mesh_topology::standards::v1::subsets::any::schema::mutations::delete_element::DeleteElement { id: element_id(row).into() }));
     }
     for row in snapshot.regions.iter().filter(|row| selected.contains(&("region", row.id.as_str()))) {

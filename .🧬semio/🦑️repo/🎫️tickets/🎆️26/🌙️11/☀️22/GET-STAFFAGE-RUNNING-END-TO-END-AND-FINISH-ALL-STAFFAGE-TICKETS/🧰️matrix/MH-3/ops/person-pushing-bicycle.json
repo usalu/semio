@@ -1,8 +1,14 @@
 [
-  { "op": "copy", "scale": "50", "id": "hand-r", "from": "elevation", "to": ["front"] },
-  { "op": "copy", "scale": "100", "id": "hand-r", "from": "elevation", "to": ["front"] },
-  { "op": "front-sweep", "scale": "500", "id": "hand-r", "view": "plan" },
-  { "op": "copy", "scale": "100", "id": "forearm-r", "from": "elevation", "to": ["front"] },
-  { "op": "front-sweep", "scale": "100", "id": "shoe-r", "view": "plan" },
-  { "op": "copy", "scale": "500", "id": "shank-l", "bone": "shank-l", "fromId": "shank-r", "fromBone": "shank-r", "from": "elevation", "to": ["elevation"] }
+  {"op": "copy", "scale": "100", "id": "hand-r", "from": "elevation", "to": ["front"]},
+  {"op": "front-sweep", "scale": "500", "id": "hand-r", "view": "plan"},
+  {"op": "copy", "scale": "100", "id": "forearm-r", "from": "elevation", "to": ["front"]},
+  {"op": "front-sweep", "scale": "100", "id": "shoe-r", "view": "plan"},
+  {"op": "copy", "scale": "500", "id": "shank-l", "bone": "shank-l", "fromId": "shank-r", "fromBone": "shank-r", "from": "elevation", "to": ["elevation"]},
+  {"op": "simplify", "scale": "50"},
+  {"op": "set", "scale": "50", "view": "elevation", "id": "hand-r", "ifPresent": true, "set": {"penMm": 0.18}},
+  {"op": "set", "scale": "50", "view": "front", "id": "hand-r", "ifPresent": true, "set": {"penMm": 0.18}},
+  {"op": "set", "scale": "50", "view": "plan", "id": "hand-r", "ifPresent": true, "set": {"penMm": 0.18}},
+  {"op": "set", "scale": "50", "view": "elevation", "id": "hand-l", "ifPresent": true, "set": {"penMm": 0.18}},
+  {"op": "set", "scale": "50", "view": "front", "id": "hand-l", "ifPresent": true, "set": {"penMm": 0.18}},
+  {"op": "set", "scale": "50", "view": "plan", "id": "hand-l", "ifPresent": true, "set": {"penMm": 0.18}}
 ]

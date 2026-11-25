@@ -5,7 +5,7 @@ use semio_framework_value_testing_effect_bank::{EffectBank,Wallet};
 
 #[path="../../../../../../🌱️value/📝️text/📦️paged/🧪️tests/native-rig.rs"]
 #[allow(dead_code)]
-mod staged_rig;
+pub(crate) mod staged_rig;
 
 thread_local!{static BANK:std::cell::RefCell<EffectBank>=std::cell::RefCell::new(EffectBank::new(Wallet::new(RetainedCloneGrant{maximum_items:1<<30,maximum_copy_bytes:1<<40,maximum_capacity_bytes:1<<40,maximum_release_bytes:1<<40,maximum_depth:1<<10},1<<50)));}
 /// 🪙️ The finite Source stock a normal cursor turn is funded from.
@@ -18,6 +18,67 @@ pub(crate) fn turn<T>(grant:RetainedCloneGrant,call:impl FnOnce(&mut RetainedAll
   assert_ne!(bank.take_admitted(),Some(false));
   match poll{RetainedWorkPoll::Complete(done)=>(done.result.unwrap_or_else(|()|unreachable!("a cursor turn reports no failure of its own")),heap.0,heap.1),RetainedWorkPoll::Pending{..}=>unreachable!("a synchronous cursor turn completes in its own original action")}
  })
+}
+
+/// 📨️ The owned wire records its identity projection before publishing the original Source.
+#[test]
+fn owned_pack_wire_projects_and_closes_during_source_admission() {
+    #[derive(semio_framework_value::RetireOwned)]
+    struct OwnedText { title: String }
+
+    impl FieldProjectionSource for OwnedText {
+        fn projection_view(&self, path: &[usize]) -> Result<V<'_>, ValueError> {
+            if path.is_empty() { Ok(V::IntrinsicText(&self.title)) } else { Err(invalid("unexpected original text path")) }
+        }
+    }
+
+    fn drive<T>(policy: RetainedCloneGrant, run: impl FnOnce(&mut RetainedAllocationEffect<'_>) -> T) -> (T, usize, usize) {
+        turn(policy, |effect| {
+            let mut output = None;
+            let mut run = Some(run);
+            let source = effect.work_source_turn();
+            semio_framework_value::retained_clone::with_original_invocation(source, effect, &mut |effect| {
+                output = Some(run.take().unwrap()(effect));
+            }).unwrap();
+            output.unwrap()
+        })
+    }
+
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../📨️wire/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let title = fixture["source"]["title"].as_str().unwrap();
+    let field_id = fixture["fieldId"].as_u64().unwrap() as u16;
+    let mut allow = |_| true;
+    let mut control = semio_framework_value::NativeEncodeControl::new(4096, &mut allow);
+    let value = semio_framework_value::DslValue::String(title.to_owned());
+    let expected = semio_framework_pack_record_encode::encode_value_record_body_controlled(field_id, &value, &Default::default(), &mut control).unwrap();
+    let policy = grant(1 << 20, 1 << 20);
+    for stop in (0..18).map(Some).chain([None]) {
+        let original = OwnedText { title: title.to_owned() };
+        let pointer = original.title.as_ptr();
+        let mut writer = OwnedProjectedPackWireCursor::new(original, field_id);
+        let mut ready = None;
+        for poll in 0..1024 {
+            if stop == Some(poll) { break; }
+            let (step, birth, release) = drive(policy, |effect| writer.advance(effect));
+            let step = step.unwrap_or_else(|error| panic!("poll {poll}: {error:?}"));
+            assert_eq!((birth, release), (step.progress.retained_capacity_bytes, step.progress.released_bytes));
+            if step.ready.is_some() { ready = step.ready; break; }
+        }
+        if stop.is_some() {
+            for _ in 0..1024 {
+                if writer.terminal_is_empty() { break; }
+                let (step, birth, release) = drive(policy, |effect| writer.close_step(effect));
+                let receipt = step.unwrap_or_else(|error| panic!("close after {stop:?}: {error:?}")).progress();
+                assert_eq!((birth, release), (receipt.retained_capacity_bytes, receipt.released_bytes));
+            }
+            assert!(ready.is_none());
+        } else {
+            let ready = ready.expect("owned Pack writer must answer");
+            assert_eq!(ready.source.title.as_ptr(), pointer);
+            assert_eq!(ready.wire.to_vec_owner(), expected);
+        }
+        assert!(writer.terminal_is_empty(), "owned Pack writer retained custody after {stop:?}");
+    }
 }
 
 static REFERENCE_FIELDS: [F; 4] = [F::new(4,"subset",B::Text),F::new(1,"id",B::Text),F::new(3,"standard",B::Text),F::new(2,"kind",B::Text)];
@@ -70,7 +131,7 @@ fn borrowed_projected_pack_native_paged_key_and_text_cross_unicode_pages(){
  let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🌿️native-text/🔣️.json")).unwrap();let marker=fixture["scalar"].as_str().unwrap().as_bytes();let split=fixture["split"].as_u64().unwrap()as usize;let length=fixture["bytes"].as_u64().unwrap()as usize;
  struct Bytes<'a>{marker:&'a[u8],split:usize,length:usize}impl TextReadSource for Bytes<'_>{fn byte_len(&self)->usize{self.length}fn byte_at(&self,index:usize)->Option<u8>{if index>=self.length{None}else if index>=self.split&&index<self.split+self.marker.len(){Some(self.marker[index-self.split])}else{Some(b'x')}}}
  struct Source{value:PagedText<8194>}impl FieldProjectionSource for Source{fn projection_view(&self,path:&[usize])->Result<V<'_>,ValueError>{Ok(match path{[]=>V::Record(&[1]),[0]=>V::Map(1),[0,0]=>V::TextSource(self.value.read_view()?),_=>return Err(invalid("native text path"))})}fn projection_key_view(&self,path:&[usize],index:usize)->Result<TextReadView<'_>,ValueError>{if path!=[0]||index!=0{return Err(invalid("native key path"));}self.value.read_view()}}
- let original=staged_rig::source(String::from_utf8((0..length).map(|index|Bytes{marker,split,length}.byte_at(index).unwrap()).collect()).unwrap());let bind=staged_rig::encoder::projection_work(original.borrow()).unwrap();let mut bank=staged_rig::EncodeBank::new(staged_rig::Stock::for_outputs::<8194>(&[(length,bind)],65536,64).unwrap(),false);let value=bank.run(65536,64,|turn,control|staged_rig::encode_success::<_,8194>(&original,control,turn,65536,"","")).unwrap();bank.finish();staged_rig::close_source(original);let source=Source{value};assert!(source.value.read_view().unwrap().contiguous().is_none());let backing=source.value.allocated_bytes();
+ let original=staged_rig::source(String::from_utf8((0..length).map(|index|Bytes{marker,split,length}.byte_at(index).unwrap()).collect()).unwrap());let bind=staged_rig::encoder::projection_work(original.borrow()).unwrap();let mut bank=staged_rig::EncodeBank::new(staged_rig::Stock::for_outputs::<8194>(&[(length,bind)],65536,64).unwrap(),false);let value=bank.run(65536,64,|turn,control|staged_rig::encode_success::<_,8194>(&original,control,turn,length,"","")).unwrap();bank.finish();staged_rig::close_source(original);let source=Source{value};assert!(source.value.read_view().unwrap().contiguous().is_none());let backing=source.value.allocated_bytes();
  let spec=BorrowedRecordSpec{keyword:None,layout:RecordLayout::Inline,fields:&MAP_FIELDS};let mut cursor=BorrowedProjectedPackCursor::default();let mut output=[0;1];let mut actual=Vec::new();
  for _ in 0..100000{let capacity=cursor.next_capacity_byte_demand().unwrap();let(step,birth,free)=turn(grant(capacity,0),|effect|cursor.advance(&source,spec,&mut output,effect).unwrap());assert_eq!((birth,free),(step.progress.retained_capacity_bytes,0));actual.extend_from_slice(&output[..step.written_bytes]);if step.complete{break;}}
  let complete=cursor.is_complete();close(&mut cursor);assert!(complete);let mut expected=vec![1,130,64];expected.extend((0..length).map(|index|Bytes{marker,split,length}.byte_at(index).unwrap()));expected.extend(self::expected(fixture["bodyHex"].as_str().unwrap()));assert_eq!(actual,expected);assert_eq!(source.value.allocated_bytes(),backing);
@@ -211,9 +272,15 @@ fn borrowed_pack_failure_preserves_real_comparison_and_original_symbol_backing()
         let(outcome,birth,free)=turn(policy,|effect|cursor.symbols.reserve_one(effect));let step=match outcome.result{Ok(semio_framework_value_persistent::list::PagedListReservationOutcome::Ready(step))=>step,_=>panic!("original symbol reservation was refused or denied")};
         assert_eq!(birth,step.allocated_bytes);assert_eq!(free,0);assert!(birth<=policy.maximum_capacity_bytes);retained+=birth;
     }
-    cursor.symbols.push_reserved(Symbol { path:[0;64], depth:0, occurrences:usize::MAX, selected:false, forced:false,key:None }).unwrap();
-    cursor.note=Some(Symbol { path:[0;64], depth:0, occurrences:1, selected:false, forced:false,key:None });
+    while !cursor.order.has_reserved_slot() {
+        let(outcome,birth,free)=turn(policy,|effect|cursor.order.reserve_one(effect));let step=match outcome.result{Ok(semio_framework_value_persistent::list::PagedListReservationOutcome::Ready(step))=>step,_=>panic!("original symbol order reservation was refused or denied")};
+        assert_eq!(birth,step.allocated_bytes);assert_eq!(free,0);assert!(birth<=policy.maximum_capacity_bytes);retained+=birth;
+    }
+    cursor.symbols.push_reserved(Symbol { path:[0;64], depth:0, occurrences:usize::MAX, selected:false, forced:false,key:None,rank:0 }).unwrap();
+    cursor.order.push_reserved(0).unwrap();
+    cursor.note=Some(Symbol { path:[0;64], depth:0, occurrences:1, selected:false, forced:false,key:None,rank:0 });
     cursor.phase=Phase::Find;
+    cursor.insertion=cursor.symbols.len();
     let mut output=[0xa5;64];
     let(failure,birth,free)=turn(policy,|effect|cursor.advance_intrinsic(&source,1,&mut output,effect).unwrap_err());
     let receipt=failure.reason.retained_progress();

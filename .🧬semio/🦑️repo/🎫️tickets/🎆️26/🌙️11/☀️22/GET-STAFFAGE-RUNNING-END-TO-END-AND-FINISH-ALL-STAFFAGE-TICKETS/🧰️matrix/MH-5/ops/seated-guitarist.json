@@ -179,5 +179,465 @@
     ]
    }
   }
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "50",
+  "id": "neck",
+  "bone": "neck"
+ },
+ {
+  "op": "sync",
+  "scale": "50",
+  "id": "neck",
+  "bone": "neck"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "100",
+  "id": "neck",
+  "bone": "neck"
+ },
+ {
+  "op": "sync",
+  "scale": "100",
+  "id": "neck",
+  "bone": "neck"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "200",
+  "id": "neck",
+  "bone": "neck"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "200",
+  "id": "neck",
+  "bone": "neck"
+ },
+ {
+  "op": "sync",
+  "scale": "200",
+  "id": "neck",
+  "bone": "neck"
+ },
+ {
+  "op": "anchor-split",
+  "id": "stool-ground",
+  "into": [
+   {
+    "id": "stool-foot-fl",
+    "y": -0.19,
+    "z": 0.19,
+    "footprintLengthM": 0.029,
+    "footprintWidthM": 0.029,
+    "title": {
+     "en": "Front left stool foot on the floor",
+     "de": "Vorderer linker Hockerfu\u00df auf dem Boden"
+    }
+   },
+   {
+    "id": "stool-foot-fr",
+    "y": -0.19,
+    "z": -0.19,
+    "footprintLengthM": 0.029,
+    "footprintWidthM": 0.029,
+    "title": {
+     "en": "Front right stool foot on the floor",
+     "de": "Vorderer rechter Hockerfu\u00df auf dem Boden"
+    }
+   },
+   {
+    "id": "stool-foot-bl",
+    "y": 0.19,
+    "z": 0.19,
+    "footprintLengthM": 0.029,
+    "footprintWidthM": 0.029,
+    "title": {
+     "en": "Back left stool foot on the floor",
+     "de": "Hinterer linker Hockerfu\u00df auf dem Boden"
+    }
+   },
+   {
+    "id": "stool-foot-br",
+    "y": 0.19,
+    "z": -0.19,
+    "footprintLengthM": 0.029,
+    "footprintWidthM": 0.029,
+    "title": {
+     "en": "Back right stool foot on the floor",
+     "de": "Hinterer rechter Hockerfu\u00df auf dem Boden"
+    }
+   }
+  ]
+ },
+ {
+  "op": "set",
+  "scale": "50",
+  "view": "plan",
+  "id": "head",
+  "bone": "head",
+  "why": "plan head as the elevation outline swept over the head width (extrude, set): mouth and nostrils stay on the head when it nods",
+  "set": {
+   "kind": "poly",
+   "points": [
+    [
+     -0.0781,
+     -0.1071
+    ],
+    [
+     -0.064,
+     -0.1168
+    ],
+    [
+     -0.0141,
+     -0.1237
+    ],
+    [
+     -0.0141,
+     -0.1388
+    ],
+    [
+     -0.0062,
+     -0.1481
+    ],
+    [
+     0.034,
+     -0.1327
+    ],
+    [
+     0.0343,
+     -0.1298
+    ],
+    [
+     0.0601,
+     -0.1324
+    ],
+    [
+     0.1006,
+     -0.1248
+    ],
+    [
+     0.1322,
+     -0.0993
+    ],
+    [
+     0.1491,
+     -0.0634
+    ],
+    [
+     0.1491,
+     0.0113
+    ],
+    [
+     0.1324,
+     0.0468
+    ],
+    [
+     0.0999,
+     0.0691
+    ],
+    [
+     0.0602,
+     0.0725
+    ],
+    [
+     0.0258,
+     0.0655
+    ],
+    [
+     -0.0101,
+     0.0462
+    ],
+    [
+     -0.038,
+     0.0095
+    ],
+    [
+     -0.0641,
+     -0.0352
+    ],
+    [
+     -0.078,
+     -0.0685
+    ]
+   ],
+   "closed": true,
+   "x": null,
+   "y": null,
+   "w": null,
+   "h": null,
+   "x0": null,
+   "y0": null,
+   "x1": null,
+   "y1": null,
+   "r0": null,
+   "r1": null,
+   "r": null,
+   "cx": null,
+   "cy": null,
+   "rx": null,
+   "ry": null,
+   "d": null,
+   "followTip": null,
+   "solid": {
+    "kind": "extruded",
+    "sweep": "w",
+    "z0": -0.1047,
+    "z1": 0.0684
+   }
+  }
+ },
+ {
+  "op": "set",
+  "scale": "100",
+  "view": "plan",
+  "id": "head",
+  "bone": "head",
+  "why": "plan head as the elevation outline swept over the head width (extrude, set): mouth and nostrils stay on the head when it nods",
+  "set": {
+   "kind": "poly",
+   "points": [
+    [
+     -0.0774,
+     -0.1076
+    ],
+    [
+     -0.0545,
+     -0.1186
+    ],
+    [
+     -0.013,
+     -0.1243
+    ],
+    [
+     -0.0129,
+     -0.1415
+    ],
+    [
+     0.008,
+     -0.145
+    ],
+    [
+     0.0311,
+     -0.1339
+    ],
+    [
+     0.0323,
+     -0.1299
+    ],
+    [
+     0.0449,
+     -0.1312
+    ],
+    [
+     0.1013,
+     -0.1242
+    ],
+    [
+     0.1356,
+     -0.0935
+    ],
+    [
+     0.1493,
+     -0.0641
+    ],
+    [
+     0.1493,
+     0.0117
+    ],
+    [
+     0.1352,
+     0.042
+    ],
+    [
+     0.0998,
+     0.0694
+    ],
+    [
+     0.0409,
+     0.0697
+    ],
+    [
+     -0.0134,
+     0.0415
+    ],
+    [
+     -0.0554,
+     -0.0177
+    ],
+    [
+     -0.0772,
+     -0.0627
+    ]
+   ],
+   "closed": true,
+   "x": null,
+   "y": null,
+   "w": null,
+   "h": null,
+   "x0": null,
+   "y0": null,
+   "x1": null,
+   "y1": null,
+   "r0": null,
+   "r1": null,
+   "r": null,
+   "cx": null,
+   "cy": null,
+   "rx": null,
+   "ry": null,
+   "d": null,
+   "followTip": null,
+   "solid": {
+    "kind": "extruded",
+    "sweep": "w",
+    "z0": -0.1035,
+    "z1": 0.068
+   }
+  }
+ },
+ {
+  "op": "set",
+  "scale": "200",
+  "view": "plan",
+  "id": "head",
+  "bone": "head",
+  "why": "plan head as the elevation outline swept over the head width (extrude, set): mouth and nostrils stay on the head when it nods",
+  "set": {
+   "kind": "poly",
+   "points": [
+    [
+     -0.0784,
+     -0.1098
+    ],
+    [
+     -0.0308,
+     -0.1259
+    ],
+    [
+     0.0377,
+     -0.1338
+    ],
+    [
+     0.1111,
+     -0.1197
+    ],
+    [
+     0.1496,
+     -0.0644
+    ],
+    [
+     0.1491,
+     0.0144
+    ],
+    [
+     0.1083,
+     0.0653
+    ],
+    [
+     0.0377,
+     0.0684
+    ],
+    [
+     -0.0308,
+     0.0214
+    ],
+    [
+     -0.0787,
+     -0.0576
+    ]
+   ],
+   "closed": true,
+   "x": null,
+   "y": null,
+   "w": null,
+   "h": null,
+   "x0": null,
+   "y0": null,
+   "x1": null,
+   "y1": null,
+   "r0": null,
+   "r1": null,
+   "r": null,
+   "cx": null,
+   "cy": null,
+   "rx": null,
+   "ry": null,
+   "d": null,
+   "followTip": null,
+   "solid": {
+    "kind": "extruded",
+    "sweep": "w",
+    "z0": -0.0921,
+    "z1": 0.0777
+   }
+  }
+ },
+ {
+  "op": "set",
+  "scale": "500",
+  "view": "plan",
+  "id": "head",
+  "bone": "head",
+  "why": "plan head as the elevation outline swept over the head width (extrude, set): mouth and nostrils stay on the head when it nods",
+  "set": {
+   "kind": "poly",
+   "points": [
+    [
+     -0.1308,
+     -0.0939
+    ],
+    [
+     0.0459,
+     -0.1317
+    ],
+    [
+     0.1471,
+     -0.0786
+    ],
+    [
+     0.1497,
+     0.0242
+    ],
+    [
+     0.04,
+     0.0695
+    ],
+    [
+     -0.0527,
+     0.0278
+    ],
+    [
+     -0.131,
+     0.0318
+    ]
+   ],
+   "closed": true,
+   "x": null,
+   "y": null,
+   "w": null,
+   "h": null,
+   "x0": null,
+   "y0": null,
+   "x1": null,
+   "y1": null,
+   "r0": null,
+   "r1": null,
+   "r": null,
+   "cx": null,
+   "cy": null,
+   "rx": null,
+   "ry": null,
+   "d": null,
+   "followTip": null,
+   "solid": {
+    "kind": "extruded",
+    "sweep": "w",
+    "z0": -0.0862,
+    "z1": 0.085
+   }
+  }
  }
 ]

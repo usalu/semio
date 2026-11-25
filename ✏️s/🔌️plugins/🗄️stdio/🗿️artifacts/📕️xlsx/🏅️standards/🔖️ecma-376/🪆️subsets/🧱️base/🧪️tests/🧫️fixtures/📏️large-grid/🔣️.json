@@ -1,0 +1,46 @@
+{
+  "reader": "openpyxl.load_workbook",
+  "packageVersion": "openpyxl@3.1.5",
+  "packageBytes": 56652,
+  "sha256": "sha256:e61f3b64dc83b95f93f79acec9b25d62345554131bb041a21a7603949e58ace6",
+  "sheets": [
+    {
+      "name": "Ledger",
+      "rows": 480,
+      "columns": 14,
+      "cells": 6720
+    },
+    {
+      "name": "Archive",
+      "rows": 240,
+      "columns": 10,
+      "cells": 2400
+    },
+    {
+      "name": "Notes",
+      "rows": 60,
+      "columns": 4,
+      "cells": 240
+    }
+  ],
+  "probes": {
+    "Ledger": {
+      "A1": "Ledger-0001-01",
+      "B2": "Ledger-0002-02",
+      "C480": "Ledger unique text of row 480 and column 3, padded so the sheet part outgrows one scheduler step",
+      "D240": 30.0625
+    },
+    "Archive": {
+      "A1": "Archive-0001-01",
+      "B2": "Archive-0002-02",
+      "C240": "Archive unique text of row 240 and column 3, padded so the sheet part outgrows one scheduler step",
+      "D120": 15.0625
+    },
+    "Notes": {
+      "A1": "Notes-0001-01",
+      "B2": "Notes-0002-02",
+      "C60": "Notes unique text of row 60 and column 3, padded so the sheet part outgrows one scheduler step",
+      "D30": 3.8125
+    }
+  }
+}

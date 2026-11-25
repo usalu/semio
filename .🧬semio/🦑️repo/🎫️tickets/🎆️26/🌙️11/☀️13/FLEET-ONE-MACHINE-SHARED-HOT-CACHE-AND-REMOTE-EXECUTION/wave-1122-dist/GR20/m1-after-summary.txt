@@ -1,0 +1,99 @@
+p1-2d-trace-rs.json no json
+p1-cad-js.json drainMs 107303 drainCpuMs 15315 queuedBefore 2 wall 471.56 user+sys 109.1 rssMB 2249 runCpuMs 92587 err None closure {'derived': 18, 'loaded': 11, 'stale': 13, 'checked': 24, 'stamped': 11, 'stampsKept': 12, 'fetched': 0, 'reasked': 0, 'reaskFailed': 0, 'reaskEqual': 0, 'reaskDifferent': 0} lane {'fetched': 10, 'prefetched': 0, 'computed': 8, 'published': 15, 'refused': 0, 'missed': 0, 'imported': 0, 'reused': 24} writes 719 stat 33740
+p1-canvas-react-renderer.json drainMs 10214 drainCpuMs 1106 queuedBefore 0 wall 137.88 user+sys 22.6 rssMB 951 runCpuMs 20041 err None closure {'derived': 4, 'loaded': 1, 'stale': 0, 'checked': 1, 'stamped': 1, 'stampsKept': 3, 'fetched': 0, 'reasked': 0, 'reaskFailed': 0, 'reaskEqual': 0, 'reaskDifferent': 0} lane {'fetched': 0, 'prefetched': 0, 'computed': 4, 'published': 1, 'refused': 0, 'missed': 0, 'imported': 0, 'reused': 0} writes 44 stat 5103
+p1-cargo-workspaces.json drainMs 34308 drainCpuMs 6839 queuedBefore 14 wall 280.76 user+sys 72.2 rssMB 1936 runCpuMs 64061 err None closure {'derived': 30, 'loaded': 10, 'stale': 13, 'checked': 23, 'stamped': 10, 'stampsKept': 28, 'fetched': 0, 'reasked': 0, 'reaskFailed': 0, 'reaskEqual': 0, 'reaskDifferent': 0} lane {'fetched': 4, 'prefetched': 0, 'computed': 26, 'published': 3, 'refused': 2, 'missed': 0, 'imported': 0, 'reused': 56} writes 167 stat 33731
+p1-compiler-syntax-ecma-ts.json drainMs 9999 drainCpuMs 1087 queuedBefore 0 wall 165.02 user+sys 27.2 rssMB 1406 runCpuMs 24766 err None closure {'derived': 4, 'loaded': 0, 'stale': 0, 'checked': 0, 'stamped': 0, 'stampsKept': 3, 'fetched': 0, 'reasked': 0, 'reaskFailed': 0, 'reaskEqual': 0, 'reaskDifferent': 0} lane {'fetched': 0, 'prefetched': 0, 'computed': 4, 'published': 2, 'refused': 1, 'missed': 0, 'imported': 0, 'reused': 0} writes 5091 stat 5100
+p1-component-deployment-contract.json drainMs 87467 drainCpuMs 9442 queuedBefore 0 wall 662.11 user+sys 85.6 rssMB 1836 runCpuMs 69760 err None closure {'derived': 23, 'loaded': 2, 'stale': 1, 'checked': 3, 'stamped': 2, 'stampsKept': 19, 'fetched': 0, 'reasked': 0, 'reaskFailed': 0, 'reaskEqual': 0, 'reaskDifferent': 0} lane {'fetched': 0, 'prefetched': 0, 'computed': 23, 'published': 18, 'refused': 4, 'missed': 0, 'imported': 0, 'reused': 3} writes 2217 stat 32968
+p1-course-react.json drainMs 1 drainCpuMs 1 queuedBefore 0 wall 243.19 user+sys 35.5 rssMB 838 runCpuMs 33666 err None closure {'derived': 3, 'loaded': 3, 'stale': 0, 'checked': 3, 'stamped': 2, 'stampsKept': 3, 'fetched': 0, 'reasked': 0, 'reaskFailed': 0, 'reaskEqual': 0, 'reaskDifferent': 0} lane {'fetched': 0, 'prefetched': 0, 'computed': 3, 'published': 2, 'refused': 1, 'missed': 0, 'imported': 0, 'reused': 4} writes 161 stat 5317
+p1-course-rs.json no json
+p1-course.json drainMs 2285 drainCpuMs 193 queuedBefore 0 wall 115.70 user+sys 14.3 rssMB 339 runCpuMs 12444 err None closure {'derived': 2, 'loaded': 3, 'stale': 0, 'checked': 3, 'stamped': 2, 'stampsKept': 2, 'fetched': 0, 'reasked': 0, 'reaskFailed': 0, 'reaskEqual': 0, 'reaskDifferent': 0} lane {'fetched': 0, 'prefetched': 0, 'computed': 2, 'published': 1, 'refused': 0, 'missed': 0, 'imported': 0, 'reused': 3} writes 10 stat 5331
+p1-dag-dag-rs.json no json
+p1-dag-dag.json drainMs 3485 drainCpuMs 559 queuedBefore 2 wall 82.06 user+sys 28.5 rssMB 1786 runCpuMs 26732 err None closure {'derived': 10, 'loaded': 1, 'stale': 2, 'checked': 3, 'stamped': 1, 'stampsKept': 9, 'fetched': 0, 'reasked': 0, 'reaskFailed': 0, 'reaskEqual': 0, 'reaskDifferent': 0} lane {'fetched': 1, 'prefetched': 0, 'computed': 9, 'published': 7, 'refused': 0, 'missed': 0, 'imported': 0, 'reused': 15} writes 103 stat 12956
+p1-dag-plugin.json drainMs 15282 drainCpuMs 3638 queuedBefore 8 wall 191.40 user+sys 64.4 rssMB 1744 runCpuMs 58669 err None closure {'derived': 28, 'loaded': 12, 'stale': 11, 'checked': 23, 'stamped': 12, 'stampsKept': 28, 'fetched': 0, 'reasked': 0, 'reaskFailed': 0, 'reaskEqual': 0, 'reaskDifferent': 0} lane {'fetched': 10, 'prefetched': 0, 'computed': 18, 'published': 4, 'refused': 0, 'missed': 0, 'imported': 0, 'reused': 24} writes 119 stat 70442
+p1-draw-js.json drainMs 3075 drainCpuMs 273 queuedBefore 2 wall 134.41 user+sys 22.9 rssMB 504 runCpuMs 20643 err None closure {'derived': 8, 'loaded': 2, 'stale': 0, 'checked': 2, 'stamped': 1, 'stampsKept': 9, 'fetched': 0, 'reasked': 0, 'reaskFailed': 0, 'reaskEqual': 0, 'reaskDifferent': 0} lane {'fetched': 0, 'prefetched': 0, 'computed': 8, 'published': 4, 'refused': 0, 'missed': 0, 'imported': 0, 'reused': 9} writes 80 stat 115
+p1-framework-job-worker-rs.json no json
+p2-2d-trace-rs.json drainMs 2267 drainCpuMs 208 queuedBefore 2 wall 23.34 user+sys 3.3 rssMB 363 runCpuMs 1641 err None closure {'derived': 6, 'loaded': 2, 'stale': 0, 'checked': 2, 'stamped': 2, 'stampsKept': 6, 'fetched': 0, 'reasked': 0, 'reaskFailed': 0, 'reaskEqual': 0, 'reaskDifferent': 0} lane {'fetched': 0, 'prefetched': 0, 'computed': 6, 'published': 3, 'refused': 0, 'missed': 0, 'imported': 0, 'reused': 6} writes 12 stat 18
+p2-course-rs.json drainMs 9676 drainCpuMs 681 queuedBefore 3 wall 131.25 user+sys 41.4 rssMB 1806 runCpuMs 38275 err None closure {'derived': 9, 'loaded': 11, 'stale': 1, 'checked': 12, 'stamped': 8, 'stampsKept': 12, 'fetched': 0, 'reasked': 0, 'reaskFailed': 0, 'reaskEqual': 0, 'reaskDifferent': 0} lane {'fetched': 1, 'prefetched': 0, 'computed': 8, 'published': 5, 'refused': 0, 'missed': 0, 'imported': 0, 'reused': 30} writes 42 stat 8576
+p2-dag-dag-rs.json drainMs 11419 drainCpuMs 1039 queuedBefore 6 wall 101.48 user+sys 15.6 rssMB 691 runCpuMs 12409 err None closure {'derived': 27, 'loaded': 5, 'stale': 0, 'checked': 5, 'stamped': 4, 'stampsKept': 28, 'fetched': 0, 'reasked': 0, 'reaskFailed': 0, 'reaskEqual': 0, 'reaskDifferent': 0} lane {'fetched': 0, 'prefetched': 0, 'computed': 27, 'published': 20, 'refused': 0, 'missed': 0, 'imported': 0, 'reused': 88} writes 72 stat 179
+p2-framework-job-worker-rs.json drainMs 1478 drainCpuMs 262 queuedBefore 2 wall 31.53 user+sys 3.8 rssMB 334 runCpuMs 2074 err None closure {'derived': 6, 'loaded': 2, 'stale': 0, 'checked': 2, 'stamped': 2, 'stampsKept': 6, 'fetched': 0, 'reasked': 0, 'reaskFailed': 0, 'reaskEqual': 0, 'reaskDifferent': 0} lane {'fetched': 0, 'prefetched': 0, 'computed': 6, 'published': 3, 'refused': 0, 'missed': 0, 'imported': 0, 'reused': 5} writes 12 stat 18
+p3-2d-trace-rs.json drainMs 0 drainCpuMs 0 queuedBefore 0 wall 12.87 user+sys 2.6 rssMB 280 runCpuMs 1469 err None closure {'derived': 0, 'loaded': 8, 'stale': 0, 'checked': 5, 'stamped': 5, 'stampsKept': 0, 'fetched': 0, 'reasked': 0, 'reaskFailed': 0, 'reaskEqual': 0, 'reaskDifferent': 0} lane {'fetched': 0, 'prefetched': 0, 'computed': 0, 'published': 0, 'refused': 0, 'missed': 0, 'imported': 0, 'reused': 0} writes None stat None
+p3-cad-js.json drainMs 1852 drainCpuMs 956 queuedBefore 0 wall 123.89 user+sys 43.2 rssMB 2462 runCpuMs 40914 err None closure {'derived': 5, 'loaded': 20, 'stale': 5, 'checked': 29, 'stamped': 24, 'stampsKept': 5, 'fetched': 0, 'reasked': 0, 'reaskFailed': 0, 'reaskEqual': 0, 'reaskDifferent': 0} lane {'fetched': 5, 'prefetched': 0, 'computed': 0, 'published': 4, 'refused': 0, 'missed': 0, 'imported': 0, 'reused': 72} writes 38 stat 33808
+p3-canvas-react-renderer.json drainMs 0 drainCpuMs 0 queuedBefore 0 wall 88.95 user+sys 17.4 rssMB 1277 runCpuMs 16265 err None closure {'derived': 1, 'loaded': 4, 'stale': 1, 'checked': 5, 'stamped': 4, 'stampsKept': 1, 'fetched': 0, 'reasked': 0, 'reaskFailed': 0, 'reaskEqual': 0, 'reaskDifferent': 0} lane {'fetched': 1, 'prefetched': 0, 'computed': 0, 'published': 0, 'refused': 0, 'missed': 0, 'imported': 0, 'reused': 0} writes 12 stat 35350
+p3-cargo-workspaces.json drainMs 4072 drainCpuMs 510 queuedBefore 0 wall 302.39 user+sys 81.9 rssMB 1280 runCpuMs 79325 err None closure {'derived': 17, 'loaded': 23, 'stale': 17, 'checked': 37, 'stamped': 7, 'stampsKept': 33, 'fetched': 0, 'reasked': 0, 'reaskFailed': 0, 'reaskEqual': 0, 'reaskDifferent': 0} lane {'fetched': 16, 'prefetched': 0, 'computed': 1, 'published': 15, 'refused': 1, 'missed': 0, 'imported': 0, 'reused': 368} writes 90 stat 30927
+p3-compiler-syntax-ecma-ts.json drainMs 0 drainCpuMs 0 queuedBefore 0 wall 11.89 user+sys 2.3 rssMB 225 runCpuMs 1051 err None closure {'derived': 0, 'loaded': 4, 'stale': 0, 'checked': 4, 'stamped': 4, 'stampsKept': 0, 'fetched': 0, 'reasked': 0, 'reaskFailed': 0, 'reaskEqual': 0, 'reaskDifferent': 0} lane {'fetched': 0, 'prefetched': 0, 'computed': 0, 'published': 0, 'refused': 0, 'missed': 0, 'imported': 0, 'reused': 0} writes None stat None
+p3-component-deployment-contract.json drainMs 7486 drainCpuMs 1306 queuedBefore 0 wall 186.62 user+sys 43.8 rssMB 1983 runCpuMs 40764 err None closure {'derived': 3, 'loaded': 22, 'stale': 3, 'checked': 25, 'stamped': 14, 'stampsKept': 11, 'fetched': 0, 'reasked': 0, 'reaskFailed': 0, 'reaskEqual': 0, 'reaskDifferent': 0} lane {'fetched': 2, 'prefetched': 0, 'computed': 1, 'published': 2, 'refused': 0, 'missed': 0, 'imported': 0, 'reused': 21} writes 52 stat 30702
+p3-course-react.json drainMs 39 drainCpuMs 27 queuedBefore 0 wall 104.16 user+sys 17.4 rssMB 1372 runCpuMs 15769 err None closure {'derived': 1, 'loaded': 5, 'stale': 1, 'checked': 6, 'stamped': 5, 'stampsKept': 1, 'fetched': 0, 'reasked': 0, 'reaskFailed': 0, 'reaskEqual': 0, 'reaskDifferent': 0} lane {'fetched': 0, 'prefetched': 0, 'computed': 1, 'published': 0, 'refused': 0, 'missed': 0, 'imported': 0, 'reused': 0} writes 3 stat 36592
+p3-course-rs.json drainMs 0 drainCpuMs 0 queuedBefore 0 wall 58.65 user+sys 17.2 rssMB 615 runCpuMs 15191 err None closure {'derived': 0, 'loaded': 20, 'stale': 0, 'checked': 20, 'stamped': 11, 'stampsKept': 9, 'fetched': 0, 'reasked': 0, 'reaskFailed': 0, 'reaskEqual': 0, 'reaskDifferent': 0} lane {'fetched': 0, 'prefetched': 0, 'computed': 0, 'published': 0, 'refused': 0, 'missed': 0, 'imported': 0, 'reused': 0} writes 9 stat None
+p3-course.json drainMs 0 drainCpuMs 0 queuedBefore 0 wall 14.48 user+sys 2.3 rssMB 262 runCpuMs 1091 err None closure {'derived': 0, 'loaded': 5, 'stale': 0, 'checked': 5, 'stamped': 5, 'stampsKept': 0, 'fetched': 0, 'reasked': 0, 'reaskFailed': 0, 'reaskEqual': 0, 'reaskDifferent': 0} lane {'fetched': 0, 'prefetched': 0, 'computed': 0, 'published': 0, 'refused': 0, 'missed': 0, 'imported': 0, 'reused': 0} writes None stat None
+p3-dag-dag-rs.json drainMs 0 drainCpuMs 0 queuedBefore 0 wall 18.96 user+sys 6.9 rssMB 532 runCpuMs 4629 err None closure {'derived': 0, 'loaded': 32, 'stale': 0, 'checked': 24, 'stamped': 23, 'stampsKept': 1, 'fetched': 0, 'reasked': 0, 'reaskFailed': 0, 'reaskEqual': 0, 'reaskDifferent': 0} lane {'fetched': 0, 'prefetched': 0, 'computed': 0, 'published': 0, 'refused': 0, 'missed': 0, 'imported': 0, 'reused': 0} writes 1 stat None
+p3-dag-dag.json drainMs 0 drainCpuMs 0 queuedBefore 0 wall 14.57 user+sys 2.6 rssMB 338 runCpuMs 1457 err None closure {'derived': 0, 'loaded': 11, 'stale': 0, 'checked': 11, 'stamped': 11, 'stampsKept': 0, 'fetched': 0, 'reasked': 0, 'reaskFailed': 0, 'reaskEqual': 0, 'reaskDifferent': 0} lane {'fetched': 0, 'prefetched': 0, 'computed': 0, 'published': 0, 'refused': 0, 'missed': 0, 'imported': 0, 'reused': 0} writes None stat None
+p3-dag-plugin.json drainMs 0 drainCpuMs 0 queuedBefore 0 wall 65.02 user+sys 20.4 rssMB 753 runCpuMs 18004 err None closure {'derived': 0, 'loaded': 40, 'stale': 0, 'checked': 39, 'stamped': 27, 'stampsKept': 10, 'fetched': 0, 'reasked': 0, 'reaskFailed': 0, 'reaskEqual': 0, 'reaskDifferent': 0} lane {'fetched': 0, 'prefetched': 0, 'computed': 0, 'published': 0, 'refused': 0, 'missed': 0, 'imported': 0, 'reused': 0} writes 10 stat None
+p3-draw-js.json drainMs 0 drainCpuMs 0 queuedBefore 0 wall 18.13 user+sys 2.5 rssMB 251 runCpuMs 1052 err None closure {'derived': 0, 'loaded': 10, 'stale': 0, 'checked': 10, 'stamped': 10, 'stampsKept': 0, 'fetched': 0, 'reasked': 0, 'reaskFailed': 0, 'reaskEqual': 0, 'reaskDifferent': 0} lane {'fetched': 0, 'prefetched': 0, 'computed': 0, 'published': 0, 'refused': 0, 'missed': 0, 'imported': 0, 'reused': 0} writes None stat None
+total ms 602542.42
+--- self
+   67880ms  11.3% statSync :0
+   49259ms   8.2% writeSync :0
+   45136ms   7.5% readFileSync :0
+   42713ms   7.1% stringify :0
+   39565ms   6.6% lstatSync :0
+   23249ms   3.9% existsSync :0
+   22854ms   3.8% gc :0
+   22626ms   3.8% update :0
+   10896ms   1.8% numberOf %F0%9F%97%9C%EF%B8%8Fpacked-rows/%F0%9F%9F%A6%EF%B8%8F.ts:35
+   10103ms   1.7% join :0
+    9573ms   1.6% parse :0
+    7471ms   1.2% toString :0
+    6766ms   1.1% Buffer :0
+    6551ms   1.1% visit %F0%9F%91%81%EF%B8%8Fobservation/%F0%9F%9F%A8%EF%B8%8F.mjs:896
+    5774ms   1.0% (anon) %F0%9F%A7%B3%EF%B8%8Fportable/%F0%9F%9F%A6%EF%B8%8F.ts:318
+    5566ms   0.9% hash :0
+    5507ms   0.9% resolve :0
+    5373ms   0.9% map :1
+    5298ms   0.9% allocUnsafe :0
+    5242ms   0.9% fetch :0
+    3839ms   0.6% anonymous :0
+    3451ms   0.6% Set :0
+    3400ms   0.6% countStrings %F0%9F%97%9C%EF%B8%8Fpacked-rows/%F0%9F%9F%A6%EF%B8%8F.ts:24
+    3385ms   0.6% (anon) %F0%9F%97%9C%EF%B8%8Fpacked-rows/%F0%9F%9F%A6%EF%B8%8F.ts:51
+    3376ms   0.6% relativeToRootV1 %F0%9F%A7%B3%EF%B8%8Fportable/%F0%9F%9F%A6%EF%B8%8F.ts:42
+--- inclusive
+  602542ms 100.0% (root) :0
+  100781ms  16.7% keepDerivedClosureV1 %F0%9F%A7%AD%EF%B8%8Fscript-inputs/%F0%9F%9F%A8%EF%B8%8F.mjs:1826
+   96448ms  16.0% (anon) %F0%9F%9A%9A%EF%B8%8Fentry-lane/%F0%9F%9F%A6%EF%B8%8F.ts:119
+   93789ms  15.6% stampKnownEntryV1 %F0%9F%A7%AD%EF%B8%8Fscript-inputs/%F0%9F%9F%A8%EF%B8%8F.mjs:1623
+   91995ms  15.3% observationWitnessV1 %F0%9F%91%81%EF%B8%8Fobservation/%F0%9F%9F%A8%EF%B8%8F.mjs:893
+   83768ms  13.9% observeReadSourceV1 %F0%9F%91%81%EF%B8%8Fobservation/%F0%9F%9F%A8%EF%B8%8F.mjs:535
+   82823ms  13.7% run node:async_hooks:137
+   82419ms  13.7% processTicksAndRejections :7
+   82378ms  13.7% walkImportsV1 %F0%9F%A7%AD%EF%B8%8Fscript-inputs/%F0%9F%9F%A8%EF%B8%8F.mjs:468
+   81816ms  13.6% packBundleV1 %F0%9F%A7%B3%EF%B8%8Fportable/%F0%9F%9F%A6%EF%B8%8F.ts:337
+   81430ms  13.5% (anon) :0
+   67880ms  11.3% statSync :0
+   65374ms  10.8% (anon) %F0%9F%A7%AD%EF%B8%8Fscript-inputs/%F0%9F%9F%A8%EF%B8%8F.mjs:586
+   57490ms   9.5% walkNodeV1 %F0%9F%A7%AD%EF%B8%8Fscript-inputs/%F0%9F%9F%A8%EF%B8%8F.mjs:506
+   56044ms   9.3% memoizedObservedAsyncComputationV1 %F0%9F%91%81%EF%B8%8Fobservation/%F0%9F%9F%A8%EF%B8%8F.mjs:364
+   55303ms   9.2% observeDetachedV1 %F0%9F%91%81%EF%B8%8Fobservation/%F0%9F%9F%A8%EF%B8%8F.mjs:855
+   53802ms   8.9% closurePackagesV1 %F0%9F%A7%AD%EF%B8%8Fscript-inputs/%F0%9F%9F%A8%EF%B8%8F.mjs:1058
+   53547ms   8.9% zlibBufferSync node:zlib:86
+   53488ms   8.9% processChunkSync node:zlib:197
+   49390ms   8.2% map :1
+   49259ms   8.2% writeSync :0
+   45750ms   7.6% save %F0%9F%92%BE%EF%B8%8Fentries/%F0%9F%9F%A8%EF%B8%8F.mjs:70
+   45136ms   7.5% readFileSync :0
+   44132ms   7.3% (anon) %F0%9F%A7%AD%EF%B8%8Fscript-inputs/%F0%9F%9F%A8%EF%B8%8F.mjs:513
+   43568ms   7.2% observeSourceBytesV1 %F0%9F%91%81%EF%B8%8Fobservation/%F0%9F%9F%A8%EF%B8%8F.mjs:528
+   43552ms   7.2% (anon) %F0%9F%A7%AD%EF%B8%8Fscript-inputs/%F0%9F%9F%A8%EF%B8%8F.mjs:514
+   42713ms   7.1% stringify :0
+   41630ms   6.9% visit %F0%9F%91%81%EF%B8%8Fobservation/%F0%9F%9F%A8%EF%B8%8F.mjs:896
+   39565ms   6.6% lstatSync :0
+   39239ms   6.5% sourceAnalysisImageV1 %F0%9F%91%81%EF%B8%8Fobservation/%F0%9F%9F%A8%EF%B8%8F.mjs:514
+   39018ms   6.5% (anon) %F0%9F%A7%AD%EF%B8%8Fscript-inputs/%F0%9F%9F%A8%EF%B8%8F.mjs:519
+   34666ms   5.8% forEach :1
+   34363ms   5.7% witnessCalmV1 %F0%9F%91%81%EF%B8%8Fobservation/%F0%9F%9F%A8%EF%B8%8F.mjs:887
+   28472ms   4.7% publishGraphEntryOutcomeV1 %F0%9F%9B%B0%EF%B8%8Fexchange/%F0%9F%9F%A6%EF%B8%8F.ts:277
+   27840ms   4.6% analyzeSourceV1 %F0%9F%91%81%EF%B8%8Fobservation/%F0%9F%9F%A8%EF%B8%8F.mjs:499
+   27499ms   4.6% (anon) %F0%9F%9A%9A%EF%B8%8Fentry-lane/%F0%9F%9F%A6%EF%B8%8F.ts:171
+   26806ms   4.4% yieldInferenceV1 %F0%9F%A7%AD%EF%B8%8Fscript-inputs/%F0%9F%9F%A8%EF%B8%8F.mjs:2191
+   26399ms   4.4% every :1
+   26343ms   4.4% flatIntoArrayWithCallback :1
+   25861ms   4.3% packGraphDocumentV1 %F0%9F%9B%B0%EF%B8%8Fexchange/%F0%9F%9F%A6%EF%B8%8F.ts:57

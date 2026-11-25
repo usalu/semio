@@ -13,17 +13,83 @@
       "de": "Ein wandmontiertes Lüftungsgerät mit Wärmerückgewinnung von 0,6 m mal 0,6 m: ein Stahlkasten an einer Wandschiene, mit Schauglas auf das drehende Zuluftlaufrad mit Deckscheibe und vier Kanalstutzen oben; innen ein Gegenstrom-Plattenwärmeübertrager, der Abluftventilator und zwei Filter; es bewegt 110 bis 220 m3/h und gibt 85 Prozent der Abluftwärme zurück bei 38 bis 75 W."
     },
     "tags": [
-      "mvhr",
-      "heat-recovery",
-      "ventilation",
-      "mechanical-ventilation",
-      "appliance",
-      "wall-mounted",
-      "supply-air",
-      "extract-air",
-      "internal-gain",
-      "electrical",
-      "rotating"
+      {
+        "id": "mvhr",
+        "title": {
+          "en": "MVHR",
+          "de": "Lüftung mit Wärmerückgewinnung"
+        }
+      },
+      {
+        "id": "heat-recovery",
+        "title": {
+          "en": "heat recovery",
+          "de": "Wärmerückgewinnung"
+        }
+      },
+      {
+        "id": "ventilation",
+        "title": {
+          "en": "ventilation",
+          "de": "Lüftung"
+        }
+      },
+      {
+        "id": "mechanical-ventilation",
+        "title": {
+          "en": "mechanical ventilation",
+          "de": "mechanische Lüftung"
+        }
+      },
+      {
+        "id": "appliance",
+        "title": {
+          "en": "appliance",
+          "de": "Gerät"
+        }
+      },
+      {
+        "id": "wall-mounted",
+        "title": {
+          "en": "wall mounted",
+          "de": "wandmontiert"
+        }
+      },
+      {
+        "id": "supply-air",
+        "title": {
+          "en": "supply air",
+          "de": "Zuluft"
+        }
+      },
+      {
+        "id": "extract-air",
+        "title": {
+          "en": "extract air",
+          "de": "Abluft"
+        }
+      },
+      {
+        "id": "internal-gain",
+        "title": {
+          "en": "internal gain",
+          "de": "innere Wärmelast"
+        }
+      },
+      {
+        "id": "electrical",
+        "title": {
+          "en": "electrical",
+          "de": "Elektro"
+        }
+      },
+      {
+        "id": "rotating",
+        "title": {
+          "en": "rotating",
+          "de": "rotierend"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage content (A10)",

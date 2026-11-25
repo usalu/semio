@@ -91,14 +91,14 @@ impl ArtifactEditor for SurfaceEditorFixture {
     fn build_document_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Option<Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>>> {
         Some(crate::app_testing::mutation_fixture::wire::admit_document_store_owners::<Self::Snapshot, Self::Mutation>("testkit-surface-artifact-retained", grant))
     }
-    fn build_document_store_disposer() -> semio_plugin_ownership::store_lifecycle::ArtifactDisposal<store::ArtifactStore<Self::Snapshot, Self::Mutation>> {
-        Some(semio_plugin_ownership::store_lifecycle::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
+    fn build_document_store_disposer() -> semio_plugin_store_lifecycle::store_lifecycle::ArtifactDisposal<store::ArtifactStore<Self::Snapshot, Self::Mutation>> {
+        Some(semio_plugin_store_lifecycle::store_lifecycle::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
     }
-    fn build_config_store_disposer() -> semio_plugin_ownership::store_lifecycle::ArtifactDisposal<store::ConfigStore<Self::Config, Self::ConfigMutation>> {
-        Some(semio_plugin_ownership::store_lifecycle::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
+    fn build_config_store_disposer() -> semio_plugin_store_lifecycle::store_lifecycle::ArtifactDisposal<store::ConfigStore<Self::Config, Self::ConfigMutation>> {
+        Some(semio_plugin_store_lifecycle::store_lifecycle::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
     }
-    fn build_draft_store_disposer() -> semio_plugin_ownership::store_lifecycle::ArtifactDisposal<store::DraftStore<Self::Draft, Self::DraftMutation>> {
-        Some(semio_plugin_ownership::store_lifecycle::bounded_document_store_disposer::<Self::Draft, Self::DraftMutation>())
+    fn build_draft_store_disposer() -> semio_plugin_store_lifecycle::store_lifecycle::ArtifactDisposal<store::DraftStore<Self::Draft, Self::DraftMutation>> {
+        Some(semio_plugin_store_lifecycle::store_lifecycle::bounded_document_store_disposer::<Self::Draft, Self::DraftMutation>())
     }
     fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
         Some(crate::app_testing::mutation_fixture::no_state::presence_local_root_retirement_factory())
@@ -109,10 +109,10 @@ impl ArtifactEditor for SurfaceEditorFixture {
     fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
         Some(crate::app_testing::mutation_fixture::no_state::transient_local_root_retirement_factory())
     }
-    fn build_presence_store_disposer() -> semio_plugin_ownership::store_lifecycle::ArtifactDisposal<store::PresenceStore<Self::Presence, Self::PresenceMutation>> {
+    fn build_presence_store_disposer() -> semio_plugin_store_lifecycle::store_lifecycle::ArtifactDisposal<store::PresenceStore<Self::Presence, Self::PresenceMutation>> {
         Some(crate::app_testing::mutation_fixture::no_state::presence_store_disposer())
     }
-    fn build_transient_store_disposer() -> semio_plugin_ownership::store_lifecycle::ArtifactDisposal<store::TransientStore<Self::Transient, Self::TransientMutation>> {
+    fn build_transient_store_disposer() -> semio_plugin_store_lifecycle::store_lifecycle::ArtifactDisposal<store::TransientStore<Self::Transient, Self::TransientMutation>> {
         Some(crate::app_testing::mutation_fixture::no_state::transient_store_disposer())
     }
     fn reference_birth()->Option<fn()->Result<SurfaceSnapshot,Fault>>{Some(||{
@@ -197,11 +197,11 @@ impl ArtifactViewer for SurfaceViewerFixture {
         "surface-viewer-noop"
     }
 
-    fn build_document_store_disposer() -> semio_plugin_ownership::store_lifecycle::ArtifactDisposal<store::ArtifactStore<Self::Snapshot, Self::Mutation>> {
-        Some(semio_plugin_ownership::store_lifecycle::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
+    fn build_document_store_disposer() -> semio_plugin_store_lifecycle::store_lifecycle::ArtifactDisposal<store::ArtifactStore<Self::Snapshot, Self::Mutation>> {
+        Some(semio_plugin_store_lifecycle::store_lifecycle::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
     }
-    fn build_config_store_disposer() -> semio_plugin_ownership::store_lifecycle::ArtifactDisposal<store::ConfigStore<Self::Config, Self::ConfigMutation>> {
-        Some(semio_plugin_ownership::store_lifecycle::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
+    fn build_config_store_disposer() -> semio_plugin_store_lifecycle::store_lifecycle::ArtifactDisposal<store::ConfigStore<Self::Config, Self::ConfigMutation>> {
+        Some(semio_plugin_store_lifecycle::store_lifecycle::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
     }
     fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
         Some(crate::app_testing::mutation_fixture::no_state::presence_local_root_retirement_factory())
@@ -212,10 +212,10 @@ impl ArtifactViewer for SurfaceViewerFixture {
     fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
         Some(crate::app_testing::mutation_fixture::no_state::transient_local_root_retirement_factory())
     }
-    fn build_presence_store_disposer() -> semio_plugin_ownership::store_lifecycle::ArtifactDisposal<store::PresenceStore<Self::Presence, Self::PresenceMutation>> {
+    fn build_presence_store_disposer() -> semio_plugin_store_lifecycle::store_lifecycle::ArtifactDisposal<store::PresenceStore<Self::Presence, Self::PresenceMutation>> {
         Some(crate::app_testing::mutation_fixture::no_state::presence_store_disposer())
     }
-    fn build_transient_store_disposer() -> semio_plugin_ownership::store_lifecycle::ArtifactDisposal<store::TransientStore<Self::Transient, Self::TransientMutation>> {
+    fn build_transient_store_disposer() -> semio_plugin_store_lifecycle::store_lifecycle::ArtifactDisposal<store::TransientStore<Self::Transient, Self::TransientMutation>> {
         Some(crate::app_testing::mutation_fixture::no_state::transient_store_disposer())
     }
     fn reference_birth()->Option<fn()->Result<SurfaceSnapshot,Fault>>{Some(||{

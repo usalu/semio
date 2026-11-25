@@ -13,19 +13,20 @@ role = "library"
 workspace = true
 
 [lib]
-path = "🦀️.rs"
+path = "../../🦀️.rs"
 
 [dependencies]
+semio-s-artifact-stdio-dwg-snapshot-objects-metadata = { workspace = true }
+semio-s-artifact-stdio-dwg-snapshot-objects-xrecord = { workspace = true }
+semio-s-artifact-stdio-dwg-snapshot-objects-tables = { workspace = true }
+semio-s-artifact-stdio-dwg-snapshot-objects-associativity = { workspace = true }
+semio-s-artifact-stdio-dwg-snapshot-objects-entities = { workspace = true }
+semio-s-artifact-stdio-dwg-snapshot-objects-styles = { workspace = true }
+semio-s-artifact-stdio-dwg-snapshot-objects-constraints = { workspace = true }
+semio-s-artifact-stdio-dwg-snapshot-objects-blocks = { workspace = true }
 semio-framework-dsl-record = { workspace = true }
 semio-framework-dsl-record-derive = { workspace = true }
-semio-os-kernel = { workspace = true }
 semio-framework-pack-json = { workspace = true }
-semio-framework-schema = { workspace = true }
-semio-framework-schema-composition = { workspace = true }
-semio-framework-schema-state = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-framework-value-native-owned = { workspace = true }
 semio-framework-value-derive = { workspace = true }
-
-[dev-dependencies]
-semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

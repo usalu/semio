@@ -6,6 +6,7 @@ const require = createRequire(resolve("✏️s/🔌️plugins/🖍️draw/🧪�
 const { chromium } = require("playwright");
 const browser = await chromium.launch({ headless: true, args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-unsafe-webgpu"] });
 const page = await (await browser.newContext({ locale: "en", viewport: { width: 1600, height: 1000 } })).newPage();
+await page.routeWebSocket(address => address.searchParams.has("token"), () => undefined);
 await page.goto("http://127.0.0.1:6064/?plugin=draw");
 await page.waitForFunction(() => document.documentElement.dataset.semioOsReady, undefined, { timeout: 90000 });
 await page.waitForTimeout(8000);

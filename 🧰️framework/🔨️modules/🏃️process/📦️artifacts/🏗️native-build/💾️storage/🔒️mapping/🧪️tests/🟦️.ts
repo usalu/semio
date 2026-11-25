@@ -6,7 +6,7 @@ import {setTimeout as pause} from "node:timers/promises";
 import {declareBuildTestEnvelopeV1,withBuildTestInvocationV1} from "../../../../../🧪️testing/📥️invocation/🟦️.ts";
 import {createIssuedResourceControlV1} from "../../../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import {withNativeStorageMappingReadV1,nativeStorageMappingQueueV1} from "../🟦️.ts";
-declareBuildTestEnvelopeV1({owner:"native-mapping-admission",maximumElapsedMilliseconds:60000,capabilities:{}});
+declareBuildTestEnvelopeV1({owner:"native-mapping-admission",maximumElapsedMilliseconds:60000,capabilities:{artifacts:true}});
 const fixture=async(body:(binding:Parameters<typeof withNativeStorageMappingReadV1>[0])=>Promise<void>)=>withBuildTestInvocationV1(async original=>{
  const base=process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir();mkdirSync(base,{recursive:true});const directory=mkdtempSync(join(base,"mapping-")),root=join(directory,"root"),leases=join(directory,"leases");mkdirSync(root);mkdirSync(leases);
  try{await body({root,identity:"mapping-test",leaseDirectory:leases,control:createIssuedResourceControlV1(original,"native:mapping-admission",0)});}finally{rmSync(directory,{recursive:true,force:true});}

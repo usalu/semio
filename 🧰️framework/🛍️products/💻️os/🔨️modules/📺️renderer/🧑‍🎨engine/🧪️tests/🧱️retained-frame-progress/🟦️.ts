@@ -3,7 +3,7 @@
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { chromium } from "playwright";
+import { launchChromium } from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🌐️chromium-launch/🟦️";
 import { describe, expect, it } from "vitest";
 import { retainedFrameProgressFixtureUrl } from "@semio-tech/ui/testing/fixtures";
 
@@ -17,7 +17,7 @@ describe("🧱️ retained frame progress and origin", () => {
   });
 
   it("matches Chromium when a mounted surface moves without changing size", async () => {
-    const browser = await chromium.launch({ headless: true });
+    const browser = await launchChromium();
     try {
       const page = await browser.newPage({ viewport: { width: 480, height: 360 } });
       const [initial, moved] = await page.evaluate(({ initial, moved }) => {

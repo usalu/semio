@@ -1,6 +1,6 @@
 {
   "ChangeJointWeldForceTransverse": {
-    "id": "joint-j1",
+    "id": "joint",
     "newWeldForceTransverse": 1.5
   }
 }

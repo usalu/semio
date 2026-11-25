@@ -127,6 +127,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
             )
             .await
             .with_original_tool_run(tool_runs.original_view_for(view_state.window_id.as_deref()))
+            .with_tool_run_poll(tool_runs.poll_view_for(view_state.window_id.as_deref()))
             .with_instance(self.tools.instance_operation_owner.clone())
             .with_operations(&operation_progress);
             let cfg = ConfigView { snapshot: tool_machines.config_overlay_or(config).as_ref(), window: window_config.as_ref().map(|authority| self.stores.window_config_store.preview_or(&authority.snapshot)) };

@@ -4,7 +4,7 @@ use semio_plugin_job::original_steps::retired;
 use semio_framework_value::{RetirementDemand,RetainedCloneProgress,RetainedCloneStep,ValueError,ValueRefusalKind};
 use semio_plugin_window_config::{WindowConfigOwner,WindowConfigOwnerRegistry,OriginalWindowOwnerRegistration};
 use semio_plugin_window_transient::window_transient::{WindowTransientOwner,WindowTransientOwnerRegistry,OriginalWindowTransientOwnerRegistration};
-use semio_plugin_ownership::original_store_genesis::OriginalStoreBirth;
+use semio_plugin_store_lifecycle::original_store_genesis::OriginalStoreBirth;
 use std::{mem::{size_of,ManuallyDrop},marker::PhantomData};
 fn invalid(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,message)}
 fn construction(d:RetirementDemand)->OriginalConstructionDemand{OriginalConstructionDemand{items:1,copy_bytes:d.copy_bytes,capacity_bytes:d.capacity_bytes,release_bytes:d.release_bytes,depth:d.depth}}

@@ -6,7 +6,7 @@ import requests from "../../🧫️fixtures/🔣️.json" with {type:"json"};
 
 const MiB=1048576,GiB=1024*MiB,base=requests.requests.valid[0]! as unknown as AdmitRequestV1,pass={id:"wasm-release-00",profile:"release",target:"wasm32-wasip2"};
 const unit=(crate:string):AdmitRequestV1=>({...base,crate,package:crate.replaceAll("_","-"),crateTypes:["lib"],target:"host",externs:[],pid:1});
-const historyOf=(crates:readonly string[],peakBytes:number)=>new Map<string,readonly UnitObservationV1[]>(crates.map(crate=>[unitKeyV1(unit(crate),pass.profile),[{v:1,key:unitKeyV1(unit(crate),pass.profile),peakRssBytes:peakBytes,outputBytes:0,wallMs:1000,cpuMs:1000,remainingMs:0,atMs:1}]]));
+const historyOf=(crates:readonly string[],peakBytes:number)=>new Map<string,readonly UnitObservationV1[]>(crates.map(crate=>[unitKeyV1(unit(crate),pass.profile),[{v:1,key:unitKeyV1(unit(crate),pass.profile),peakRssBytes:peakBytes,outputBytes:0,wallMs:1000,cpuMs:1000,remainingMs:0,atMs:1,lines:0}]]));
 const margin=Math.floor(16*GiB*ADMISSION_POLICY_V1.available.marginBasisPoints/10000);
 
 type Client={rows:Record<string,unknown>[];verdict:(count:number)=>Promise<boolean>;close:()=>void};
@@ -49,14 +49,43 @@ test("the broker re-evaluates on its own poll timer while a unit is held back",a
  }finally{await broker.close();}
 });
 
-test("a warden at guard holds every start, whatever the wait; calm releases it",async()=>{
- let clock=1_000_000,level:"calm"|"guard"|"danger"="guard";const broker=await open({now:()=>clock,available:()=>16*GiB,warden:()=>level,cancels:()=>[]},["semio_a"]);
+test("a warden at guard or danger holds every start, even if available memory is unknown",async()=>{
+ let clock=1_000_000,level:"calm"|"guard"|"danger"="guard";const broker=await open({now:()=>clock,available:()=>level==="danger"?undefined:16*GiB,warden:()=>level,cancels:()=>[]},["semio_a"]);
  try{
   const client=await connect(broker.endpoint,unit("semio_a"));
   expect(await client.verdict(1)).toBe(false);
   clock+=10*ADMISSION_POLICY_V1.available.waitMilliseconds;resample(broker);await settle();
   expect(broker.stats()).toMatchObject({running:0,waiting:1});
-  level="danger";resample(broker);await settle();
+ level="danger";resample(broker);await settle();
+  expect(broker.stats()).toMatchObject({running:0,waiting:1});
+  level="calm";resample(broker);
+  expect(await client.verdict(2)).toBe(true);
+  client.close();
+ }finally{await broker.close();}
+});
+
+test("an idle broker holds low memory past its wait bound during active swap and resumes when it subsides",async()=>{
+ let clock=1_000_000;const lines:string[]=[],broker=await open({now:()=>clock,available:()=>GiB,warden:()=>"calm",cancels:()=>[],log:line=>lines.push(line)},["semio_a"]);
+ try{
+  const client=await connect(broker.endpoint,unit("semio_a"));
+  expect(await client.verdict(1)).toBe(false);
+  clock+=ADMISSION_POLICY_V1.available.waitMilliseconds;
+  broker.observe({nonRustcBytes:0,swapOutBytesPerSecond:ADMISSION_POLICY_V1.swapOutBytesPerSecond+1});
+  expect(broker.stats()).toMatchObject({running:0,waiting:1});
+  expect(lines.at(-1)).toContain("host is actively swapping");
+  resample(broker);
+  expect(await client.verdict(2)).toBe(true);
+  client.close();
+ }finally{await broker.close();}
+});
+
+test("the low-memory wait bound needs a calm warden reading to release a unit",async()=>{
+ let clock=1_000_000,level:"calm"|undefined;const broker=await open({now:()=>clock,available:()=>GiB,warden:()=>level,cancels:()=>[]},["semio_a"]);
+ try{
+  const client=await connect(broker.endpoint,unit("semio_a"));
+  expect(await client.verdict(1)).toBe(false);
+  clock+=ADMISSION_POLICY_V1.available.waitMilliseconds;
+  resample(broker);
   expect(broker.stats()).toMatchObject({running:0,waiting:1});
   level="calm";resample(broker);
   expect(await client.verdict(2)).toBe(true);

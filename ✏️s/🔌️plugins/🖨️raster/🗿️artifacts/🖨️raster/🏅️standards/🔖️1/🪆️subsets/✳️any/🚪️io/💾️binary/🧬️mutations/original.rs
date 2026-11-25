@@ -24,6 +24,7 @@ use selection::Selection;
 
 dsl::original_tagged_operation_receiving!(RasterMutationDsl, COMPONENT_PROTOCOL_SEMIO);
 dsl::original_converted_operation_receiving!(RasterMutation);
+dsl::artifact_persisted_binary_operation!(RasterMutation);
 
 #[derive(Default, RetireOwned)]
 #[value(send_only)]

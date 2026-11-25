@@ -1,0 +1,452 @@
+{
+  "description": "Language-agnostic vectors of the `loft` shape, hand-computed on the sample figure at 1:100. The thigh bone `thigh-l` starts at the pelvis origin and hangs down in the pose `stand` (u = world -y, v = world +x ahead, w = world +z left); in `stride-left-forward` it is turned by 22 degrees about w (world angle -68 degrees, cos 68 = 0.3746065934, sin 68 = 0.9271838546), so u = (0.374607, -0.927184, 0) and v = (0.927184, 0.374607, 0). A section is the superellipse |x/rx|^n + |y/ry|^n = 1 in its own plane, drawn as `segments` points, point j at the angle 2 pi j / segments from the section's x axis: (rx sgn(cos) |cos|^(2/n), ry sgn(sin) |sin|^(2/n)). `limb` states the limb rotation [0.5, 0.5, 0.5, 0.5] on every section (x = v, rx the half depth; y = w, ry the half width): a section at (a, b, c) reaches b - rx .. b + rx along v and c - ry .. c + ry along w. `plain` states no rotation and runs exactly along u, so x is w (rx the half width) and y is v (ry the half depth), exponent 4. Every extent is relative to the pelvis origin: elevation [ahead, up], front [left, up], plan [ahead, left]. stand, limb: ahead -0.05 (section 0) .. 0.02 + 0.04 = 0.06 (section 1), up -0.45 .. 0, left -0.08 .. 0.08 (section 0). stride, limb: ahead -0.05 sin 68 = -0.046359 .. 0.45 cos 68 + 0.02 sin 68 = 0.187117, up -0.45 sin 68 - 0.02 cos 68 = -0.424725 .. 0.05 cos 68 = 0.018730. stride, plain: ahead -0.05 sin 68 = -0.046359 .. 0.45 cos 68 + 0.03 sin 68 = 0.196389, up -0.45 sin 68 - 0.03 cos 68 = -0.428471 .. 0.018730. The depth that ranks the shape is its nearest point: the foremost in the front (0.06 for `limb` in `stand`), the highest in the plan (0).",
+  "asset": "sample-figure",
+  "scale": 100,
+  "bone": "thigh-l",
+  "segments": 32,
+  "toleranceM": 1e-05,
+  "kernelToleranceM": 0.0005,
+  "areaToleranceM2": 1e-06,
+  "lofts": {
+    "limb": {
+      "sections": [
+        {
+          "at": [
+            0,
+            0,
+            0
+          ],
+          "rx": 0.05,
+          "ry": 0.08,
+          "rotation": [
+            0.5,
+            0.5,
+            0.5,
+            0.5
+          ]
+        },
+        {
+          "at": [
+            0.3,
+            0.02,
+            0.01
+          ],
+          "rx": 0.04,
+          "ry": 0.06,
+          "rotation": [
+            0.5,
+            0.5,
+            0.5,
+            0.5
+          ]
+        },
+        {
+          "at": [
+            0.45,
+            0,
+            0
+          ],
+          "rx": 0.02,
+          "ry": 0.03,
+          "rotation": [
+            0.5,
+            0.5,
+            0.5,
+            0.5
+          ]
+        }
+      ]
+    },
+    "plain": {
+      "sections": [
+        {
+          "at": [
+            0,
+            0,
+            0
+          ],
+          "rx": 0.08,
+          "ry": 0.05,
+          "exponent": 4
+        },
+        {
+          "at": [
+            0.45,
+            0,
+            0
+          ],
+          "rx": 0.04,
+          "ry": 0.03,
+          "exponent": 4
+        }
+      ]
+    }
+  },
+  "cases": [
+    {
+      "name": "at rest the sections lie level: the front shows the half widths, the plan the sections themselves, the elevation the half depths",
+      "pose": "stand",
+      "basis": {
+        "u": [
+          0,
+          -1,
+          0
+        ],
+        "v": [
+          1,
+          0,
+          0
+        ],
+        "w": [
+          0,
+          0,
+          1
+        ]
+      },
+      "extents": {
+        "limb": {
+          "elevation": {
+            "minX": -0.05,
+            "maxX": 0.06,
+            "minY": -0.45,
+            "maxY": 0
+          },
+          "front": {
+            "minX": -0.08,
+            "maxX": 0.08,
+            "minY": -0.45,
+            "maxY": 0
+          },
+          "plan": {
+            "minX": -0.05,
+            "maxX": 0.06,
+            "minY": -0.08,
+            "maxY": 0.08
+          }
+        },
+        "plain": {
+          "elevation": {
+            "minX": -0.05,
+            "maxX": 0.05,
+            "minY": -0.45,
+            "maxY": 0
+          },
+          "front": {
+            "minX": -0.08,
+            "maxX": 0.08,
+            "minY": -0.45,
+            "maxY": 0
+          },
+          "plan": {
+            "minX": -0.05,
+            "maxX": 0.05,
+            "minY": -0.08,
+            "maxY": 0.08
+          }
+        }
+      },
+      "depth": {
+        "limb": {
+          "front": 0.06,
+          "plan": 0
+        }
+      }
+    },
+    {
+      "name": "in the stride the loft turns with its bone: the sections tilt, the three views stay one body",
+      "pose": "stride-left-forward",
+      "basis": {
+        "u": [
+          0.3746065934,
+          -0.9271838546,
+          0
+        ],
+        "v": [
+          0.9271838546,
+          0.3746065934,
+          0
+        ],
+        "w": [
+          0,
+          0,
+          1
+        ]
+      },
+      "extents": {
+        "limb": {
+          "elevation": {
+            "minX": -0.046359,
+            "maxX": 0.187117,
+            "minY": -0.424725,
+            "maxY": 0.01873
+          },
+          "front": {
+            "minX": -0.08,
+            "maxX": 0.08,
+            "minY": -0.424725,
+            "maxY": 0.01873
+          },
+          "plan": {
+            "minX": -0.046359,
+            "maxX": 0.187117,
+            "minY": -0.08,
+            "maxY": 0.08
+          }
+        },
+        "plain": {
+          "elevation": {
+            "minX": -0.046359,
+            "maxX": 0.196389,
+            "minY": -0.428471,
+            "maxY": 0.01873
+          },
+          "front": {
+            "minX": -0.08,
+            "maxX": 0.08,
+            "minY": -0.428471,
+            "maxY": 0.01873
+          },
+          "plan": {
+            "minX": -0.046359,
+            "maxX": 0.196389,
+            "minY": -0.08,
+            "maxY": 0.08
+          }
+        }
+      },
+      "depth": {
+        "limb": {
+          "front": 0.187117,
+          "plan": 0.01873
+        }
+      }
+    }
+  ],
+  "refused": [
+    {
+      "name": "a single section",
+      "code": "loft-sections",
+      "schema": false,
+      "geometry": {
+        "sections": [
+          {
+            "at": [
+              0,
+              0,
+              0
+            ],
+            "rx": 0.05,
+            "ry": 0.08
+          }
+        ]
+      }
+    },
+    {
+      "name": "two sections at the same centre",
+      "code": "loft-sections",
+      "schema": true,
+      "geometry": {
+        "sections": [
+          {
+            "at": [
+              0.1,
+              0,
+              0
+            ],
+            "rx": 0.05,
+            "ry": 0.08
+          },
+          {
+            "at": [
+              0.1,
+              0,
+              0
+            ],
+            "rx": 0.04,
+            "ry": 0.06
+          }
+        ]
+      }
+    },
+    {
+      "name": "a section without a positive half extent",
+      "code": "loft-section",
+      "schema": false,
+      "geometry": {
+        "sections": [
+          {
+            "at": [
+              0,
+              0,
+              0
+            ],
+            "rx": 0,
+            "ry": 0.08
+          },
+          {
+            "at": [
+              0.45,
+              0,
+              0
+            ],
+            "rx": 0.04,
+            "ry": 0.06
+          }
+        ]
+      }
+    },
+    {
+      "name": "a section rotation that is no unit quaternion",
+      "code": "loft-section",
+      "schema": true,
+      "geometry": {
+        "sections": [
+          {
+            "at": [
+              0,
+              0,
+              0
+            ],
+            "rx": 0.05,
+            "ry": 0.08,
+            "rotation": [
+              1,
+              1,
+              1,
+              1
+            ]
+          },
+          {
+            "at": [
+              0.45,
+              0,
+              0
+            ],
+            "rx": 0.04,
+            "ry": 0.06
+          }
+        ]
+      }
+    },
+    {
+      "name": "a path that turns back inside its own section",
+      "code": "loft-fold",
+      "schema": true,
+      "geometry": {
+        "sections": [
+          {
+            "at": [
+              0,
+              0,
+              0
+            ],
+            "rx": 0.05,
+            "ry": 0.08,
+            "rotation": [
+              0.5,
+              0.5,
+              0.5,
+              0.5
+            ]
+          },
+          {
+            "at": [
+              0.2,
+              0,
+              0
+            ],
+            "rx": 0.05,
+            "ry": 0.08,
+            "rotation": [
+              0.5,
+              0.5,
+              0.5,
+              0.5
+            ]
+          },
+          {
+            "at": [
+              0.1,
+              0,
+              0
+            ],
+            "rx": 0.05,
+            "ry": 0.08,
+            "rotation": [
+              0.5,
+              0.5,
+              0.5,
+              0.5
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "a solid hint on a loft",
+      "code": "loft-solid",
+      "schema": false,
+      "geometry": {
+        "sections": [
+          {
+            "at": [
+              0,
+              0,
+              0
+            ],
+            "rx": 0.05,
+            "ry": 0.08
+          },
+          {
+            "at": [
+              0.45,
+              0,
+              0
+            ],
+            "rx": 0.04,
+            "ry": 0.06
+          }
+        ],
+        "solid": {
+          "kind": "extruded",
+          "sweep": "w",
+          "z0": -0.1,
+          "z1": 0.1
+        }
+      }
+    },
+    {
+      "name": "a weight on a bone the rig does not have",
+      "code": "volume-weights-bone",
+      "schema": true,
+      "geometry": {
+        "sections": [
+          {
+            "at": [
+              0,
+              0,
+              0
+            ],
+            "rx": 0.05,
+            "ry": 0.08
+          },
+          {
+            "at": [
+              0.45,
+              0,
+              0
+            ],
+            "rx": 0.04,
+            "ry": 0.06
+          }
+        ],
+        "weights": [
+          {
+            "bone": "tail",
+            "weight": 1
+          }
+        ]
+      }
+    }
+  ]
+}

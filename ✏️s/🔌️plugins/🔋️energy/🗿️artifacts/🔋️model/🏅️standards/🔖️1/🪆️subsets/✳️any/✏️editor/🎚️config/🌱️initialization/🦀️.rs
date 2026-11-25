@@ -1,6 +1,6 @@
 //! 🌱️ Config creation declares its authored default, original Pack receiver and shared publication/replay issuer.
 use super::{EnergyModelConfig as State,EnergyModelConfigMutation as Mutation};
-use semio_plugin_ownership::original_store_genesis::{OriginalStoreGenesisOwner,OriginalFixedStoreInitial,FixedStoreInitial};
+use semio_plugin_store_lifecycle::original_store_genesis::{OriginalStoreGenesisOwner,OriginalFixedStoreInitial,FixedStoreInitial};
 use semio_framework_value::{RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,ValueError,ValueRefusalKind,retained_clone::RetainedCloneBirthDemand};
 use semio_os_store_codec_registry::native_snapshot::{OriginalArtifactPackReceiving,OriginalSnapshotRecordReceiving};
 use std::{mem::size_of,sync::Arc};

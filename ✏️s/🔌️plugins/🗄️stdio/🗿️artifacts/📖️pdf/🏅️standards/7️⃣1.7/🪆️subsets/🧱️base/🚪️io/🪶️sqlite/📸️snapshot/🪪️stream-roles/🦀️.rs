@@ -71,7 +71,7 @@ pub fn read_role(reader: &mut Reader<'_, '_, '_>, key: i64) -> Result<PdfAdmitte
         "unicodeMap" => PdfStreamRoleValue::UnicodeMap { mapping: font::read_unicode(reader, row.integer(6)?)? },
         "characterMap" => match font::read_cmap(reader, row.integer(7)?)? { PdfCMap::Embedded { cmap } => PdfStreamRoleValue::CharacterMap { cmap }, _ => return Err(invalid()) },
         "fontProgram" => PdfStreamRoleValue::FontProgram { program: font::read_program(reader, row.integer(8)?)? },
-        "image" => PdfStreamRoleValue::Image { image: resource::read_image(reader, row.integer(9)?)? },
+        "image" => PdfStreamRoleValue::Image { image: Box::new(resource::read_image(reader, row.integer(9)?)?) },
         "metadataText" => PdfStreamRoleValue::MetadataText { text: reader.text(row, 10)? },
         "attachmentBytes" => PdfStreamRoleValue::AttachmentBytes { bytes: reader.blob(row, 11)? },
         "paletteComponents" => PdfStreamRoleValue::PaletteComponents { components: reader.blob(row,12)? },

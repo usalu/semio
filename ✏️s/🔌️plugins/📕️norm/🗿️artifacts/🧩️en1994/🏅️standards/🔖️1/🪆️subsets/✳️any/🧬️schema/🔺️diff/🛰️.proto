@@ -26,7 +26,7 @@ message En1994Diff {
   // @state artifact
   optional string reliability_class = 12;
   // @state artifact
-  optional CaseRowDelta cases = 13;
+  CaseRowDelta cases = 13;
 }
 message En1994BeamsActionsInserted {
   uint64 index = 1;

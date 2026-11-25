@@ -313,12 +313,24 @@ pub fn gesture_handles_uncached<A: NormLiveEditor>(document: &A::Snapshot, gestu
     handles.into_iter().map(|handle| if handle.id == gesture.handle { crate::entity_editing::with_scene_targets(handle, &scene) } else { handle }).collect()
 }
 
+/// ➕️ The `insertItem` edit of a click of `spec` at `at` into `document`: a copy of the last row, or, in an empty collection, the family's [`NormRetainedEditor::starter_row`] where it has one, else the default row derived from the item schema of the insert mutation of the collection.
+pub fn placement_insert_edit<A: NormLiveEditor>(document: &A::Snapshot, spec: &InsertSpec, at: [f64; 3]) -> Result<NormEdit, String>
+where
+    A::Snapshot: semio_framework_value::ToValue,
+{
+    let tree = semio_framework_value::ToValue::to_value(document);
+    insert_edit(&tree, spec, at, || match A::starter_row(document, &spec.collection, 0) {
+        Some(row) => Ok(row),
+        None => A::inspector_rules().default_row::<A::Snapshot, A::Mutation>(&tree, &spec.collection),
+    })
+}
+
 fn placement_edit<A: NormLiveEditor>(document: &A::Snapshot, placement: &Placement) -> Result<NormEdit, String>
 where
     A::Snapshot: semio_framework_value::ToValue,
 {
     let spec = A::live_palette().into_iter().find(|spec| spec.id == placement.spec).ok_or_else(|| format!("unknown insert tool '{}'", placement.spec))?;
-    insert_edit(&semio_framework_value::ToValue::to_value(document), &spec, snap_point(placement.at, placement.free))
+    placement_insert_edit::<A>(document, &spec, snap_point(placement.at, placement.free))
 }
 
 /// 📤️ The document lane of `setFields`: a plain bundle commits all its writes as one edit, its placement leaves through the shared `PlacementCommit` (an entity without a row is ONE insert of its standing pose with the dragged leaves); a gesture commits only on release (or Enter) with the writes the statechart releases; a placement commits one `insertItem` edit at the snapped cursor; every other gesture step leaves the document alone.

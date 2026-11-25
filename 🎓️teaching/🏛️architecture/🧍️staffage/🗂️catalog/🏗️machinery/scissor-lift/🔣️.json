@@ -13,13 +13,55 @@
    "de": "Eine batterieelektrische 19-ft-Scherenarbeitsbühne der Klasse Genie GS-1932 in der Seitenansicht: vier Scherenstufen aus acht Rohrarmen, die sich zu einem 0,44 m hohen Paket falten oder zu einer 5,79 m hohen Plattform heben, ein Hubzylinder zwischen den ersten beiden Stufen, eine 0,91 m ausschiebbare Bühnenverlängerung, klappbares Geländer sowie zwei Personen mit Werkzeugkasten als Lasten."
   },
   "tags": [
-   "machine",
-   "scissor-lift",
-   "mewp",
-   "electric",
-   "battery",
-   "access-platform",
-   "construction"
+   {
+    "id": "machine",
+    "title": {
+     "en": "machine",
+     "de": "Maschine"
+    }
+   },
+   {
+    "id": "scissor-lift",
+    "title": {
+     "en": "scissor lift",
+     "de": "Scherenhebebühne"
+    }
+   },
+   {
+    "id": "mewp",
+    "title": {
+     "en": "MEWP",
+     "de": "Hubarbeitsbühne"
+    }
+   },
+   {
+    "id": "electric",
+    "title": {
+     "en": "electric",
+     "de": "elektrisch"
+    }
+   },
+   {
+    "id": "battery",
+    "title": {
+     "en": "battery",
+     "de": "Batterie"
+    }
+   },
+   {
+    "id": "access-platform",
+    "title": {
+     "en": "access platform",
+     "de": "Arbeitsbühne"
+    }
+   },
+   {
+    "id": "construction",
+    "title": {
+     "en": "construction",
+     "de": "Bau"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content worker NW-MA",

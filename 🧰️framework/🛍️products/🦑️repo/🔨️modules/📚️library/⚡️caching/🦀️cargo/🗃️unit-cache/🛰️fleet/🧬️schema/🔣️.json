@@ -27,9 +27,9 @@
         },
         "breaker": { "downFaults": 2, "downMilliseconds": 15000, "deniedMilliseconds": 15000, "noClaimsMilliseconds": 600000, "reachableMilliseconds": 300000 },
         "claim": { "ttlMilliseconds": 30000, "heartbeatMilliseconds": 8000, "finalTtlMilliseconds": 90000, "minimumWaitMilliseconds": 30000, "maximumWaitMilliseconds": 1200000, "defaultExpectedMilliseconds": 90000, "waitFactor": 2, "maximumRounds": 40, "retries": 2, "retryBackoffMilliseconds": 750 },
-        "limits": { "maximumEntryBytes": 268435456, "maximumBlobBytes": 268435456, "maximumBlobs": 64, "maximumManifestBytes": 4194304, "maximumDownloadConcurrency": 4, "maximumUploadConcurrency": 3, "maximumUploadJobs": 8 },
+        "limits": { "maximumEntryBytes": 1342177280, "maximumBlobBytes": 1342177280, "maximumBlobs": 64, "maximumManifestBytes": 4194304, "maximumDownloadConcurrency": 4, "maximumUploadConcurrency": 3, "maximumUploadJobs": 8, "maximumUploadBytesInFlight": 1073741824 },
         "spool": { "minimumEntries": 4096, "maximumEntries": 262144, "freeSharePercent": 1, "entryBytes": 8192, "waitMilliseconds": 30000, "boundTtlMilliseconds": 30000 },
-        "uploader": { "heartbeatMilliseconds": 2000, "staleMilliseconds": 10000, "idleMilliseconds": 900000, "pollMilliseconds": 200, "waitingPollMilliseconds": 2000, "spawnThrottleMilliseconds": 3000, "jobMilliseconds": 120000, "maximumJobAgeMilliseconds": 21600000, "retryBackoffMilliseconds": 15000, "maximumBackoffMilliseconds": 300000, "takeoverMilliseconds": 30000, "sweepMilliseconds": 5000, "registryRefreshMilliseconds": 600000, "registryRetentionMilliseconds": 3600000 },
+        "uploader": { "heartbeatMilliseconds": 2000, "staleMilliseconds": 10000, "idleMilliseconds": 900000, "pollMilliseconds": 200, "waitingPollMilliseconds": 2000, "spawnThrottleMilliseconds": 3000, "jobMilliseconds": 120000, "maximumJobAgeMilliseconds": 21600000, "retryBackoffMilliseconds": 15000, "maximumBackoffMilliseconds": 300000, "takeoverMilliseconds": 30000, "sweepMilliseconds": 5000, "registryRefreshMilliseconds": 600000, "registryRetentionMilliseconds": 3600000, "pinMaximumJobs": 4096, "pinRefreshMilliseconds": 30000 },
         "linkedCrateTypes": ["proc-macro", "bin", "cdylib", "dylib", "staticlib"],
         "hostIndependent": { "targetPrefixes": ["wasm32-"], "crateTypes": ["lib", "rlib"], "token": "any" }
       }
@@ -60,6 +60,27 @@
         "bytes": { "type": "integer", "minimum": 0 },
         "executable": { "type": "boolean" },
         "template": { "type": "boolean" }
+      }
+    },
+    "KeyComponents": {
+      "description": "The named inputs of the key of a unit as individual digests (toolchain, source, platform, one extern:<dependency> per dependency artifact, env:<NAME> per observed variable, args.<class> per argument class), so the keys of one slot that differ can be explained by the inputs that differ without access to the machines. `values` carries the text of the small, path-free argument classes.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["origin", "components"],
+      "properties": {
+        "origin": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "components": { "type": "object", "maxProperties": 512, "additionalProperties": { "type": "string", "pattern": "^[a-f0-9]{8,64}$" } },
+        "values": { "type": "object", "maxProperties": 32, "additionalProperties": { "type": "string", "maxLength": 512 } }
+      }
+    },
+    "SlotKeys": {
+      "description": "What the cache answers to `GET /<instance>/v1/slots/<slot>`: the action results currently stored under one slot, newest first.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["slot", "keys"],
+      "properties": {
+        "slot": { "$ref": "#/definitions/Digest" },
+        "keys": { "type": "array", "maxItems": 16, "items": { "type": "object", "additionalProperties": false, "required": ["key", "storedAtMs"], "properties": { "key": { "$ref": "#/definitions/Digest" }, "storedAtMs": { "type": "integer", "minimum": 0 } } } }
       }
     },
     "RemoteUnit": {
@@ -96,6 +117,7 @@
         "outputs": { "type": "array", "minItems": 1, "maxItems": 64, "items": { "$ref": "#/definitions/Output" } },
         "stdout": { "anyOf": [{ "$ref": "#/definitions/Digest" }, { "type": "null" }] },
         "stderr": { "anyOf": [{ "$ref": "#/definitions/Digest" }, { "type": "null" }] },
+        "keyComponents": { "$ref": "#/definitions/KeyComponents" },
         "retention": { "description": "What the unit was built from (a Declaration of the slot schema, checked by the code that writes it): the server reads it when the unit arrives and judges the unit against its synchronized tree.", "type": "object" }
       }
     },
@@ -139,6 +161,7 @@
         "costMs": { "type": "integer", "minimum": 0 },
         "platform": { "$ref": "#/definitions/Platform" },
         "queuedMs": { "type": "integer", "minimum": 0 },
+        "keyComponents": { "$ref": "#/definitions/KeyComponents" },
         "attempts": { "type": "integer", "minimum": 0 },
         "notBeforeMs": { "type": "integer", "minimum": 0 },
         "deferredBy": { "description": "The fleet identity (endpoint, instance and credential) whose client was not usable (breaker open, credential denied) when the job was put off: a drainer with another identity takes it at once instead of after `notBeforeMs`.", "type": "string", "minLength": 1 }

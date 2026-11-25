@@ -1,4 +1,4 @@
-/** 🌾️ Gives straight culms their lean as a solid: `bun lean.ts <id> --bones <regex> [--views plan] [--scales 50,100] [--straight 0.004]` writes `set` ops into `ops/<id>.json`. A culm of an ornamental grass stands in the sagittal plane of its bone and leans sideways; the plan (and front) drew it as a flat line or sliver in world coordinates, which is carried at one depth and keeps its direction when the wind swings the bone (cause D). For every flat shape of a matching bone that has a twin of the same id in the side elevation spans at least 0.6 of the bone length and is straight (its points lie within `straight` metres of the line through its two ends, apart from its own width), the shape takes the outline of the elevation twin and becomes an `extruded` solid, `sweep: "w"`, whose lateral span runs linearly from the place of the drawn shape (read from the front of an upright bone, from the plan of a level one) at the bone origin (`z0`, `z1`) to its place at the bone tip (`zTip`), at least 1.5 mm wide: at rest it is the drawn culm, in every pose the bone carries it whole.
+/** 🌾️ Gives straight culms their lean as a solid: `bun lean.ts <id> --bones <regex> [--ids <regex>] [--views plan] [--scales 50,100] [--straight 0.004]` writes `set` ops into `ops/<id>.json`. A culm of an ornamental grass stands in the sagittal plane of its bone and leans sideways; the plan (and front) drew it as a flat line or sliver in world coordinates, which is carried at one depth and keeps its direction when the wind swings the bone (cause D). For every flat shape of a matching bone that has a twin of the same id in the side elevation spans at least 0.6 of the bone length and is straight (its points lie within `straight` metres of the line through its two ends, apart from its own width), the shape takes the outline of the elevation twin and becomes an `extruded` solid, `sweep: "w"`, whose lateral span runs linearly from the place of the drawn shape (read from the front of an upright bone, from the plan of a level one) at the bone origin (`z0`, `z1`) to its place at the bone tip (`zTip`), at least 1.5 mm wide: at rest it is the drawn culm, in every pose the bone carries it whole.
  * @see ./apply.ts */
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -11,6 +11,7 @@ const flag = (name: string): string | undefined => (args.indexOf(`--${name}`) < 
 const id = args[0]!;
 const asset = readDoc(id).doc.asset;
 const bones = new RegExp(flag("bones")!);
+const ids = new RegExp(flag("ids") ?? ".");
 const views = (flag("views") ?? "plan").split(",");
 const scales = flag("scales")?.split(",");
 const STRAIGHT = Number(flag("straight") ?? 0.004);
@@ -24,7 +25,7 @@ for (const scale of Object.keys(asset.representations)) {
   if (geometry === undefined || (scales !== undefined && !scales.includes(scale))) continue;
   for (const view of views)
     for (const shape of geometry[view]) {
-      if (!bones.test(shape.bone) || shape.solid !== undefined || shape.kind === "member") continue;
+      if (!bones.test(shape.bone) || !ids.test(shape.id) || shape.solid !== undefined || shape.kind === "member") continue;
       const twin = geometry.elevation.find((candidate: any) => candidate.id === shape.id && candidate.bone === shape.bone && candidate.solid === undefined);
       if (twin === undefined) continue;
       const { o, u } = rest[shape.bone]!.frame;

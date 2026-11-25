@@ -20,6 +20,7 @@ pub(super) struct FlowOperation {
     retained_page: Option<AbiPage>,
     retained_page_emitted: bool,
     pub cancelled: bool,
+    settled: Option<(AbiStatusCode, AbiErrorCode, String, Vec<u8>)>,
 }
 
 pub(super) enum FlowResource<D> {
@@ -138,7 +139,7 @@ impl<D: FlowDomain> FlowBridge<D> {
         let admission = FlowFeatureAdmission { session: session_handle, request_generation: request.generation };
         let feature = D::start_feature(session.borrow().domain.clone(), admission, code, payload).map_err(|failure| AbiPortRejection { code: failure.code, message: returned() })?;
         self.request_ledger.admit(request.request_id, request.generation).map_err(|code| AbiPortRejection { code, message: returned() })?;
-        let operation = FlowOperation { session_handle, request_id: request.request_id, generation: request.generation, feature, reader: None, retained_page: None, retained_page_emitted: false, cancelled: false };
+        let operation = FlowOperation { session_handle, request_id: request.request_id, generation: request.generation, feature, reader: None, retained_page: None, retained_page_emitted: false, cancelled: false, settled: None };
         let handle = self.resources.open(FlowResource::Operation(operation)).map_err(|(code, _)| AbiPortRejection { code, message: returned() })?;
         self.active_resources += 1;
         self.requests[request_slot(request.request_id)] = Some(RequestEntry { request_id: request.request_id, generation: request.generation, operation: handle });
@@ -267,13 +268,13 @@ impl<D: FlowDomain> FlowBridge<D> {
                 operation.feature.cancel(budget).map_err(|failure| failure.code)?;
                 operation.cancelled = true;
             }
-            if operation.cancelled {
-                if let Some(page) = operation.retained_page.take() {
+            if operation.cancelled || operation.settled.is_some() {
+                if let Some(page) = operation.retained_page.take_if(|_| operation.cancelled) {
                     if operation.reader.is_some() { operation.retained_page = Some(page); return Err(AbiErrorCode::Busy); }
                     operation.reader = Some(AbiPageReader::try_new(handle, page.bytes.into_vec()).map_err(|rejected| rejected.code)?);
                     operation.retained_page_emitted = false;
                 }
-                if let Some(reader) = operation.reader.as_mut() {
+                if let Some(reader) = operation.reader.as_mut().filter(|_| operation.cancelled) {
                     reader.cancel();
                     if !reader.terminal_is_empty() {
                         reader.close_step(budget)?;
@@ -288,8 +289,9 @@ impl<D: FlowDomain> FlowBridge<D> {
                     self.work.push_back(handle);
                     return Ok(());
                 }
-                event = Some(terminal_event(operation.request_id, operation.generation, handle, AbiStatusCode::Cancelled, AbiErrorCode::Cancelled));
-                reply = Some(failure_reply(operation.request_id, operation.generation, AbiStatusCode::Cancelled, AbiErrorCode::Cancelled, "cancelled"));
+                let (status, code, message, output) = operation.settled.take().unwrap_or((AbiStatusCode::Cancelled, AbiErrorCode::Cancelled, "cancelled".to_owned(), Vec::new()));
+                event = Some(terminal_event(operation.request_id, operation.generation, handle, status, code));
+                reply = Some(if status == AbiStatusCode::Ok { success_reply(operation.request_id, operation.generation, output) } else { failure_reply(operation.request_id, operation.generation, status, code, &message) });
                 retain = false;
             } else if let Some(retained_page) = operation.retained_page.as_ref() {
                 if !operation.retained_page_emitted {
@@ -299,11 +301,7 @@ impl<D: FlowDomain> FlowBridge<D> {
             } else if let Some(reader) = operation.reader.as_mut() {
                 match reader.read_step(budget)? {
                     AbiCursorStep::PageComplete(_) => page = reader.page().cloned(),
-                    AbiCursorStep::Complete => {
-                        event = Some(terminal_event(operation.request_id, operation.generation, handle, AbiStatusCode::Ok, AbiErrorCode::Sealed));
-                        reply = Some(success_reply(operation.request_id, operation.generation, Vec::new()));
-                        retain = false;
-                    }
+                    AbiCursorStep::Complete => operation.settled = Some((AbiStatusCode::Ok, AbiErrorCode::Sealed, String::new(), Vec::new())),
                     _ => {}
                 }
             } else {
@@ -330,20 +328,10 @@ impl<D: FlowDomain> FlowBridge<D> {
                     }
                     FlowFeatureStep::Failed(failure) => {
                         self.retained_progress = failure.retained_progress;
-                        event = Some(terminal_event(operation.request_id, operation.generation, handle, AbiStatusCode::Failed, failure.code));
-                        reply = Some(failure_reply(operation.request_id, operation.generation, AbiStatusCode::Failed, failure.code, failure.message()));
-                        retain = false;
+                        operation.settled = Some((AbiStatusCode::Failed, failure.code, failure.message().to_owned(), Vec::new()));
                     }
-                    FlowFeatureStep::Complete(output) if output.len() > FLOW_MAX_OUTPUT_BYTES => {
-                        event = Some(terminal_event(operation.request_id, operation.generation, handle, AbiStatusCode::Rejected, AbiErrorCode::LimitExceeded));
-                        reply = Some(failure_reply(operation.request_id, operation.generation, AbiStatusCode::Rejected, AbiErrorCode::LimitExceeded, "output limit"));
-                        retain = false;
-                    }
-                    FlowFeatureStep::Complete(output) if output.len() <= FLOW_MAX_INLINE_REPLY_BYTES => {
-                        event = Some(terminal_event(operation.request_id, operation.generation, handle, AbiStatusCode::Ok, AbiErrorCode::Sealed));
-                        reply = Some(success_reply(operation.request_id, operation.generation, output));
-                        retain = false;
-                    }
+                    FlowFeatureStep::Complete(output) if output.len() > FLOW_MAX_OUTPUT_BYTES => operation.settled = Some((AbiStatusCode::Rejected, AbiErrorCode::LimitExceeded, "output limit".to_owned(), Vec::new())),
+                    FlowFeatureStep::Complete(output) if output.len() <= FLOW_MAX_INLINE_REPLY_BYTES => operation.settled = Some((AbiStatusCode::Ok, AbiErrorCode::Sealed, String::new(), output)),
                     FlowFeatureStep::Complete(output) => {
                         let total = output.len();
                         operation.reader = Some(AbiPageReader::try_new(handle, output).map_err(|rejected| rejected.code)?);

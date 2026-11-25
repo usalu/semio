@@ -15,6 +15,7 @@ fn tick_addressing_fixture_json() -> &'static str { repo_text!("✏️s/🔌️p
 struct TickAddressingFixture {
     format: String,
     version: u8,
+    command_arguments: Vec<String>,
     window_kinds: std::collections::BTreeMap<String, String>,
     arming: Vec<ArmingCase>,
     dispatch: Vec<DispatchCase>,
@@ -53,6 +54,14 @@ fn fixture() -> TickAddressingFixture {
     assert_eq!(fixture.format, "semio.generation3d.tick-addressing");
     assert_eq!(fixture.version, 1);
     fixture
+}
+
+#[test]
+fn editor_tick_command_declares_its_window_address() {
+    let definition = semio_s_artifact_procedural_generation3d::manifest::create_generation3d_app();
+    let tick = definition.commands.iter().find(|command| command.id == "flowEvalTick").unwrap();
+    let arguments: Vec<&str> = tick.args.iter().map(|argument| argument.id.as_str()).collect();
+    assert_eq!(arguments, fixture().command_arguments);
 }
 
 fn roster(fixture: &TickAddressingFixture, attached: &[AttachedWindow]) -> ViewModel {

@@ -26,8 +26,13 @@
     "frame": {
       "width": 4,
       "height": 2,
-      "title_width": 1.5,
-      "title_depth": 0.4
+      "top_depth": 0.4,
+      "top_chips": [
+        [
+          0,
+          1.5
+        ]
+      ]
     },
     "frame_vertices": [
       [
@@ -157,7 +162,8 @@
           }
         ],
         "path": [
-          0
+          0,
+          3
         ],
         "channel": "stroke"
       },
@@ -168,7 +174,8 @@
           "1200 W"
         ],
         "path": [
-          0
+          0,
+          3
         ],
         "channel": "stroke"
       },
@@ -196,7 +203,8 @@
         ],
         "path": [
           0,
-          0
+          0,
+          3
         ],
         "channel": "stroke"
       },
@@ -619,5 +627,232 @@
         ]
       ]
     }
-  ]
+  ],
+  "card_grid": {
+    "entries": [["Heat", "4 kWh"], ["Power", "2 kW"], ["Time", "2 h"]],
+    "rows": 2,
+    "cols": 2,
+    "expected_frame_edges": [2, 4, 4],
+    "expected_unique_edges": 10
+  },
+  "chip_edges": [
+    {
+      "id": "opposite-chips-share-one-hairline-when-rows-fill-the-frame",
+      "input": {"width": 120, "height": 80, "top_depth": 50, "top_chips": [[0, 90]], "bottom_depth": 60, "bottom_chips": [[30, 120]]},
+      "edges": [[0, 50, 30, 50], [30, 50, 30, 80], [30, 50, 90, 50], [90, 0, 90, 50], [90, 50, 120, 50]]
+    },
+    {
+      "id": "overlapping-measured-spans-paint-their-common-edge-once",
+      "input": {"width": 120, "height": 80, "top_depth": 20, "top_chips": [[-10, 50], [30, 70], [75, 125]]},
+      "edges": [[0, 20, 30, 20], [30, 0, 30, 20], [30, 20, 50, 20], [50, 0, 50, 20], [50, 20, 70, 20], [70, 0, 70, 20], [75, 0, 75, 20], [75, 20, 120, 20]]
+    },
+    {
+      "id": "title-top-left",
+      "input": {
+        "width": 120,
+        "height": 80,
+        "top_depth": 12,
+        "top_chips": [
+          [
+            0,
+            40
+          ]
+        ]
+      },
+      "edges": [
+        [
+          0,
+          12,
+          40,
+          12
+        ],
+        [
+          40,
+          0,
+          40,
+          12
+        ]
+      ]
+    },
+    {
+      "id": "abutting-chips-share-one-divider",
+      "input": {
+        "width": 120,
+        "height": 80,
+        "top_depth": 12,
+        "top_chips": [
+          [
+            0,
+            40
+          ],
+          [
+            40,
+            80
+          ]
+        ]
+      },
+      "edges": [
+        [
+          0,
+          12,
+          40,
+          12
+        ],
+        [
+          40,
+          0,
+          40,
+          12
+        ],
+        [
+          40,
+          12,
+          80,
+          12
+        ],
+        [
+          80,
+          0,
+          80,
+          12
+        ]
+      ]
+    },
+    {
+      "id": "full-width-chip",
+      "input": {
+        "width": 120,
+        "height": 80,
+        "top_depth": 12,
+        "top_chips": [
+          [
+            0,
+            120
+          ]
+        ]
+      },
+      "edges": [
+        [
+          0,
+          12,
+          120,
+          12
+        ]
+      ]
+    },
+    {
+      "id": "bottom-chip-in-the-middle",
+      "input": {
+        "width": 120,
+        "height": 80,
+        "bottom_depth": 12,
+        "bottom_chips": [
+          [
+            40,
+            80
+          ]
+        ]
+      },
+      "edges": [
+        [
+          40,
+          68,
+          40,
+          80
+        ],
+        [
+          40,
+          68,
+          80,
+          68
+        ],
+        [
+          80,
+          68,
+          80,
+          80
+        ]
+      ]
+    },
+    {
+      "id": "top-and-bottom-chips",
+      "input": {
+        "width": 120,
+        "height": 80,
+        "top_depth": 12,
+        "top_chips": [
+          [
+            0,
+            40
+          ]
+        ],
+        "bottom_depth": 12,
+        "bottom_chips": [
+          [
+            80,
+            120
+          ]
+        ]
+      },
+      "edges": [
+        [
+          0,
+          12,
+          40,
+          12
+        ],
+        [
+          40,
+          0,
+          40,
+          12
+        ],
+        [
+          80,
+          68,
+          80,
+          80
+        ],
+        [
+          80,
+          68,
+          120,
+          68
+        ]
+      ]
+    },
+    {
+      "id": "chip-row-covering-the-frame",
+      "input": {
+        "width": 120,
+        "height": 80,
+        "top_depth": 80,
+        "top_chips": [
+          [
+            0,
+            40
+          ]
+        ]
+      },
+      "edges": [
+        [
+          40,
+          0,
+          40,
+          80
+        ]
+      ]
+    }
+  ],
+  "rounded_depictions": {
+    "reason": "Shapes of other programs and device drawings are content: Grasshopper canvas and widgets, the Excel workbook, the radiator glow, thermometer and battery drawings. Every other clip rectangle is square.",
+    "files": [
+      "🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🐍️.py",
+      "🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py",
+      "🏛️architecture/📊️excel/🎬️clip/🎨️visuals/📗️workbook/🐍️.py",
+      "🏛️architecture/🦗️grasshopper/🎬️clip/🎨️visuals/🦗️canvas/🐍️.py",
+      "🏛️architecture/🦗️grasshopper/🎬️clip/💊️capsule/🐍️.py",
+      "🏛️architecture/🦗️grasshopper/🎬️clip/🦴️anatomy/🐍️.py"
+    ]
+  }
 }

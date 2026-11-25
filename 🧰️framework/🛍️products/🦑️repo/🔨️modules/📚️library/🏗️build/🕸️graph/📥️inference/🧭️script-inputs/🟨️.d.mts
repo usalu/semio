@@ -27,7 +27,6 @@ export function closureHandleOfV1(value: unknown): ScriptInputsValueV1;
 export function registerClosureQueryV1(name: string, query: ScriptInputsValueV1): void;
 export function bindClosureScriptsV1(workspaceRoot: string, scripts: ScriptInputsValueV1): void;
 export function resetClosureEntriesV1(entryBytes?: number): void;
-export function mergeWalkMembersV1(table: { get(key: string): string[] | undefined; set(key: string, value: string[]): unknown }, digest: string, members: string[]): boolean;
 export function closureCollectionsV1(): { name: string; entries: number; bytes: number }[];
 export function closureEntryCountsV1(): { derived: number; loaded: number; stale: number; checked: number; fetched: number; reasked: number; reaskFailed: number; reaskEqual: number; reaskDifferent: number };
 export function closureStoreDirectoryV1(workspaceRoot: string): string | undefined;
@@ -52,7 +51,6 @@ export const closureTravelV1: Readonly<{ export(workspaceRoot: string, image: st
 
 /** 🫧️ Releases what one finished owner left in the shared script input cache. */
 export function closureEntriesWithLayersV1(): number;
-export function chargedToSharedV1<T>(cache: object, work: () => Promise<T>): Promise<T>;
 export function releaseOwnerStateV1(scripts: ScriptInputsValueV1, options?: { shrink?: boolean; now?: boolean; gate?: { grantBytes(): number | undefined; footprintBytes(): number } }): void;
 /** 📈️ Whether a look releases the shared cache: the managed memory grew `lookReleaseGrowthBytes` beyond its lowest reading, or the host is short. */
 export function lookReleaseDueV1(lowestBytes: number, managedBytes: number, options?: { shrink?: boolean; limits?: { lookReleaseGrowthBytes: number } }): boolean;
@@ -69,3 +67,17 @@ export function preflightToolClosuresV1(workspaceRoot: string, scripts: ScriptIn
 export function closureLayerListV1(log: unknown, view: { key: unknown; digest?: string; store?: unknown; rows?: unknown }): any;
 export function layerVerdictCountsV1(): { hits: number; joined: number; checked: number; indexed: number; milliseconds: number };
 export const scriptProviderIdsV1: () => readonly string[];
+/** 🌳️ One walk question of the module closure graph. */
+export type ClosureGraphQuestionV1 = { roots: readonly string[]; requiredSources?: boolean; resources?: readonly string[]; selectors?: Iterable<readonly [string, readonly string[]]>; stops?: Iterable<readonly [string, string]> };
+/** 🌳️ One pass of the module closure graph over walk questions. */
+export function closureGraphPassV1(cache: any, workspaceRoot: string, questions: readonly ClosureGraphQuestionV1[], options?: { graph?: import("./🌳️closure-graph/🟨️.mjs").ClosureGraphV1; signal?: AbortSignal; progress?: (step: { done: number; total: number }) => unknown; witness?: boolean; prune?: boolean; trusted?: { has(key: string): boolean }; pass?: object }): Promise<{ digests: (string | undefined)[]; visited: number; built: number; pruned: number; graph: import("./🌳️closure-graph/🟨️.mjs").ClosureGraphV1 }>;
+/** 🧭️ The walk question of one target's command entries. */
+export function targetClosureQuestionV1(target: unknown, workspaceRoot: string, scripts: any, projectRoot?: string, nativeManifest?: string): Promise<ClosureGraphQuestionV1 | undefined>;
+/** 🌳️ The closure digest the module graph answers for one walk question, once per validation round. */
+export function closureGraphAnswerV1(cache: any, workspaceRoot: string, question: ClosureGraphQuestionV1, pass?: object): Promise<string>;
+/** 🗄️ The directory the module graph of a workspace is kept in on this machine. */
+export function closureGraphDirectoryV1(workspaceRoot: string): string | undefined;
+/** 💾️ Saves now every module graph of this process that changed since its last save. */
+export function flushClosureGraphsV1(): Promise<void>;
+/** 🪪️ The keys of the stored nodes whose witness holds now. */
+export function closureGraphWitnessedV1(graph: import("./🌳️closure-graph/🟨️.mjs").ClosureGraphV1, options?: { step?: () => unknown }): Promise<Set<string>>;

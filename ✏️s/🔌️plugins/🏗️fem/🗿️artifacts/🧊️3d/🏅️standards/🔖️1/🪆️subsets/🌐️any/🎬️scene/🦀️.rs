@@ -34,6 +34,8 @@ pub const FEM3D_GRANULARITY_MATERIAL: &str = "material";
 pub const FEM3D_GRANULARITY_SECTION: &str = "section";
 pub const FEM3D_GRANULARITY_LOAD_CASE: &str = "loadCase";
 pub const FEM3D_GRANULARITY_COMBINATION: &str = "combination";
+pub const FEM3D_GRANULARITY_ANALYSIS: &str = "analysis";
+pub const FEM3D_ANALYSIS_ID: &str = "settings";
 
 /// 🪪️ The canonical interaction address of an entity in its semantic namespace.
 pub fn fem3d_entity_target(kind: &str, id: &str) -> Result<String, protocol::wire::ScopedIdentityError> {
@@ -291,6 +293,47 @@ pub fn fem3d_load_instances(doc: &Fem3dSnapshot, displacements: Option<&HashMap<
     Ok(instances)
 }
 
+/// 🚨️ The bilingual diagnostic a solid that cannot be meshed carries as its label (English, then German; the scene has no
+/// locale of its own), naming the solid and the mesher's reason.
+pub fn fem3d_unmeshable_solid_label(solid_id: &str, reason: &str) -> String {
+    format!("Solid {solid_id} cannot be meshed: {reason} | Körper {solid_id} lässt sich nicht vernetzen: {reason}")
+}
+
+/// 🚨️ The marker mesh and label of a solid the mesher refused: its outline prism (base to top along its axis) in the error
+/// tint, so it is still drawn, pickable and visibly wrong instead of silently missing.
+fn fem3d_unmeshable_solid_marker(solid: &FemSolid, reason: &str) -> (Value, String) {
+    let count = solid.outline.len() as u32;
+    let mut positions: Vec<f64> = Vec::with_capacity(count as usize * 6);
+    for height in [solid.base_z, solid.base_z + solid.height] {
+        for point in &solid.outline {
+            positions.extend_from_slice(&solid.axis.to_world(point[0], point[1], height));
+        }
+    }
+    let mut indices: Vec<u32> = Vec::new();
+    for index in 0..count {
+        let next = (index + 1) % count;
+        indices.extend_from_slice(&[index, next, next + count, index, next + count, index + count]);
+        if index >= 1 && index + 1 < count {
+            indices.extend_from_slice(&[0, index + 1, index, count, count + index, count + index + 1]);
+        }
+    }
+    let normals: Vec<[f64; 3]> = indices.chunks(3).map(|face| {
+        let [a, b, c] = [0, 1, 2].map(|corner| [positions[face[corner] as usize * 3], positions[face[corner] as usize * 3 + 1], positions[face[corner] as usize * 3 + 2]]);
+        let (e0, e1) = ([b[0] - a[0], b[1] - a[1], b[2] - a[2]], [c[0] - a[0], c[1] - a[1], c[2] - a[2]]);
+        let raw = [e0[1] * e1[2] - e0[2] * e1[1], e0[2] * e1[0] - e0[0] * e1[2], e0[0] * e1[1] - e0[1] * e1[0]];
+        let length = (raw[0] * raw[0] + raw[1] * raw[1] + raw[2] * raw[2]).sqrt();
+        if length > 0.0 { raw.map(|value| value / length) } else { [0.0, 0.0, 1.0] }
+    }).collect();
+    let colors: Vec<f64> = (0..count * 2).flat_map(|_| [0.86, 0.15, 0.15, 1.0]).collect();
+    let mesh = semio_framework_pack_json::json!({ "id": format!("solid-{}", solid.id), "data": {
+        "positions": positions,
+        "indices": indices,
+        "colors": colors,
+        "attributes": { "normal": { "domain": "face", "semantic": "normal", "interpolation": "constant", "values": normals } }
+    } });
+    (mesh, fem3d_unmeshable_solid_label(&solid.id, reason))
+}
+
 /// 🧱️ Every `FemSolid`'s boundary surface as a custom `meshes_json` entry with indexed vertices and
 /// flat face normals, plus its identity-transform instance keyed by the
 /// solid's own id — `nodal_stress`, when present, colors each vertex by
@@ -303,7 +346,13 @@ pub fn fem3d_solid_mesh_entries(doc: &Fem3dSnapshot, displacements: Option<&Hash
 
     let mut meshes = Vec::new();
     let mut instances = Vec::new();
-    let Ok(solid_meshes) = mesh_preview::fem3d_mesh_preview(doc) else { return Ok((meshes, instances)) };
+    let (solid_meshes, failures) = mesh_preview::fem3d_mesh_preview_partial(doc);
+    for (solid_id, reason) in &failures {
+        let Some(solid) = doc.solids.iter().find(|solid| &solid.id == solid_id) else { continue };
+        let (mesh, label) = fem3d_unmeshable_solid_marker(solid, reason);
+        meshes.push(mesh);
+        instances.push(instance(solid_id, FEM3D_GRANULARITY_SOLID, &format!("solid-{solid_id}"), [0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 1.0], [1.0, 1.0, 1.0], &label)?);
+    }
     let (min, max) = match nodal_stress {
         Some(map) if !map.is_empty() => (map.values().cloned().fold(f64::INFINITY, f64::min), map.values().cloned().fold(f64::NEG_INFINITY, f64::max)),
         _ => (0.0, 1.0),

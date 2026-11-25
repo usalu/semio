@@ -204,6 +204,14 @@ function hit(ray: Ray, faces: Triangle[], minimumX = -Infinity) {
   return faces.some((t) => ray.intersectTriangle(t.a, t.b, t.c, false, point) && point.x >= minimumX);
 }
 
+/** 🔥️ What the body of each band of the heater resolves (D52). `volumes-feature` allows no solid dimension below the smallest feature of the band (7.5, 15, 30, 75 mm), and the bands state their choice in `volumes.<scale>.decisions`: the eight 1.5 mm slats at a pitch of 20 mm are kept at 1:50 (texture) and stand as four 15 mm slats at 1:100 (the thermal list keeps them at their gauge between the two 5 mm rails of the cassette, six bands on the ray); the 26 mm opening of the carry grip is kept down to 1:100 and is a solid lug from 1:200 on, where the outlet is one panel; the 44 mm dial leaves the body at 1:500 and stays in the thermal list. */
+const HEATER_RESOLVES: Readonly<Record<50 | 100 | 200 | 500, { readonly gripOpen: boolean; readonly louvres: Readonly<Record<"light-solid" | "thermal", number>>; readonly dial: Readonly<Record<"light-solid" | "thermal", boolean>> }>> = {
+  50: { gripOpen: true, louvres: { "light-solid": 8, thermal: 8 }, dial: { "light-solid": true, thermal: true } },
+  100: { gripOpen: true, louvres: { "light-solid": 4, thermal: 6 }, dial: { "light-solid": true, thermal: true } },
+  200: { gripOpen: false, louvres: { "light-solid": 1, thermal: 1 }, dial: { "light-solid": true, thermal: true } },
+  500: { gripOpen: false, louvres: { "light-solid": 1, thermal: 1 }, dial: { "light-solid": false, thermal: true } },
+};
+
 describe("portable heater and slatted park bench", () => {
   const source = (file: string): Asset => JSON.parse(readFileSync(new URL(file, import.meta.url), "utf8")).asset;
   const heater = source("../../🗂️catalog/🔌️appliances/electric-fan-heater/🔣️.json");
@@ -213,21 +221,22 @@ describe("portable heater and slatted park bench", () => {
     return samples.filter((inside, index) => inside && !samples[index - 1]).length;
   }
 
-  it.each([50, 100, 200, 500] as const)("keeps the carry grip open and resolves the heater outlet at 1:%i", async (scale) => {
+  it.each([50, 100, 200, 500] as const)("keeps the carry bar and resolves the grip opening, the outlet louvres and the dial of the heater as the band of 1:%i states", async (scale) => {
+    const resolves = HEATER_RESOLVES[scale];
     for (const view of ["light-solid", "thermal", "forces"] as const) {
       const model = await modelOf(heater, { scale, view, poses: [], clips: [] });
       const face = triangles(model.solids.filter((s) => s.node === "body" && !s.tags?.includes("part-mass")));
       const across = (y: number, z: number) => new Ray(new Vector3(0.20, y, z), new Vector3(-1, 0, 0));
       for (const z of [-0.04, 0, 0.04]) {
-        expect(hit(across(0.286, z), face), `${view} hand clearance ${z}`).toBe(false);
+        expect(hit(across(0.286, z), face), `${view} hand clearance ${z}`).toBe(!resolves.gripOpen);
         expect(hit(across(0.304, z), face), `${view} bar above hand ${z}`).toBe(true);
       }
       if (view !== "forces") {
         const knobs = model.solids.filter((s) => s.node === "knob");
         const gauge = triangles(knobs);
-        expect(hit(new Ray(new Vector3(0, 0.017, -0.15), new Vector3(0, 0, 1)), gauge), `end of the 44 mm control dial in ${view}`).toBe(true);
+        expect(hit(new Ray(new Vector3(0, 0.017, -0.15), new Vector3(0, 0, 1)), gauge), `end of the 44 mm control dial in ${view}`).toBe(resolves.dial[view]);
         const aperture = Array.from({ length: 155 }, (_, i) => hit(across(0.0673 + i * 0.001, 0.076), face, 0.08));
-        expect(bands(aperture), `${view} louvre bands across outlet`).toBe(8);
+        expect(bands(aperture), `${view} louvre bands across outlet`).toBe(resolves.louvres[view]);
       }
     }
   });

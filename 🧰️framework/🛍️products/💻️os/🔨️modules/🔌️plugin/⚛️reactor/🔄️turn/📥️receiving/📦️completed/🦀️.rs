@@ -5,13 +5,18 @@ use std::mem::ManuallyDrop;
 use semio_framework_job::{OriginalTurnFailure, StepContext};
 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
 use semio_framework::kernel::RequestOutcome;
-use crate::original_receiving::{ResponseFields, metadata};
+/// 🎁 The response fields one decoded Completed input donates: action name, arguments and fault.
+#[doc(hidden)]
+pub type ResponseFields=(Option<String>,Option<semio_framework_value::DslValue>,Option<semio_framework::Fault>);
+/// 🪙 Pays one retained unit of progress for a bounded step, or reports that the turn must yield first.
+#[doc(hidden)]
+pub fn metadata(cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{if cx.should_yield()||cx.retained_grant().maximum_items==0||cx.retained_grant().maximum_depth==0{return Ok(false)}cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);Ok(true)}
 use semio_framework_value::{RetainedCloneProgress, ValueError, ValueRefusalKind};
 use semio_plugin_actor_host::requests;
 use semio_framework_value::{DslValue, RetainedCloneGrant};
 use semio_framework_job_native_decode::{OriginalNativeDecodeSource, OriginalNativeDecodePolicy, OriginalNativeDecodeIssued};
 use semio_framework_pack_json::{JsonGrammarCursor, JsonSourceCursor, JsonReadLimits, JsonMemberPolicy};
-use pack::intrinsic::RetainedIntrinsicDocument;
+use pack::intrinsic::RetainedIntrinsicBody;
 use semio_plugin_reactor_receiving_source::retired_poll;
 #[doc(hidden)]
 #[path="⚠️fault/🦀️.rs"]
@@ -19,7 +24,7 @@ pub mod fault;
 #[doc(hidden)]
 #[path="⚠️failure/🦀️.rs"]
 pub mod failure;
-use crate::original_receiving::completed::failure::DecodeFailure;
+use crate::failure::DecodeFailure;
 use pack::intrinsic::RetainedIntrinsicInput;
 const MAXIMUM:usize=semio_framework_trace::GUEST_HOST_ANSWER_CEILING_BYTES;
 type Grammar=JsonGrammarCursor<DslValue>;
@@ -29,7 +34,7 @@ pub enum CompletedResult{Response(ResponseFields),Request(Result<Vec<u8>,semio_f
 #[derive(semio_framework_value::RetireOwned)]
 pub struct Inputs{pub event:Option<Event>,pub continuation:Option<requests::ExtensionContinuation>,correlation:Option<DslValue>,pub output:Option<DslValue>,pub fault_value:Option<DslValue>,pub fault:Option<semio_framework::Fault>,pub fields:Vec<(String,DslValue)>,pub wire:Vec<u8>,pub partial:Vec<u8>}
 #[doc(hidden)]
-pub struct CompletedInput{pub inputs:ManuallyDrop<Option<Inputs>>,pub closing:ManuallyDrop<Option<ControlledRetirement<Inputs>>>,pub native:ManuallyDrop<OriginalNativeDecodeSource>,pub grammar:ManuallyDrop<Option<Grammar>>,grammar_close:ManuallyDrop<Option<ControlledRetirement<Grammar>>>,pub pack:ManuallyDrop<Option<RetainedIntrinsicDocument<'static>>>,pub binding:ManuallyDrop<Option<fault::FaultCursor>>,pub issue:ManuallyDrop<Option<DecodeFailure>>,pub issue_place:ManuallyDrop<Option<semio_framework_job::OriginalDomainReservation<DecodeFailure>>>,issue_close:ManuallyDrop<Option<ControlledRetirement<DecodeFailure>>>,pub phase:u8,pub field:usize,string_offset:usize,string_cost:usize,wire_offset:usize,fields_reserved:bool,pub closed:bool}
+pub struct CompletedInput{pub inputs:ManuallyDrop<Option<Inputs>>,pub closing:ManuallyDrop<Option<ControlledRetirement<Inputs>>>,pub native:ManuallyDrop<OriginalNativeDecodeSource>,pub grammar:ManuallyDrop<Option<Grammar>>,grammar_close:ManuallyDrop<Option<ControlledRetirement<Grammar>>>,pub pack:ManuallyDrop<Option<RetainedIntrinsicBody<'static>>>,pub binding:ManuallyDrop<Option<fault::FaultCursor>>,pub issue:ManuallyDrop<Option<DecodeFailure>>,pub issue_place:ManuallyDrop<Option<semio_framework_job::OriginalDomainReservation<DecodeFailure>>>,issue_close:ManuallyDrop<Option<ControlledRetirement<DecodeFailure>>>,pub phase:u8,pub field:usize,string_offset:usize,string_cost:usize,wire_offset:usize,fields_reserved:bool,pub closed:bool}
 impl CompletedInput{
  fn with_inputs(event:Event,continuation:Option<requests::ExtensionContinuation>,partial:Vec<u8>,phase:u8)->Self{Self{inputs:ManuallyDrop::new(Some(Inputs{event:Some(event),continuation,correlation:None,output:None,fault_value:None,fault:None,fields:Vec::new(),wire:Vec::new(),partial})),closing:ManuallyDrop::new(None),native:ManuallyDrop::new(OriginalNativeDecodeSource::empty(OriginalNativeDecodePolicy{maximum_owned_bytes:MAXIMUM})),grammar:ManuallyDrop::new(None),grammar_close:ManuallyDrop::new(None),pack:ManuallyDrop::new(None),binding:ManuallyDrop::new(None),issue:ManuallyDrop::new(None),issue_place:ManuallyDrop::new(None),issue_close:ManuallyDrop::new(None),phase,field:0,string_offset:0,string_cost:0,wire_offset:0,fields_reserved:false,closed:false}}
  pub fn new(event:Event,continuation:requests::ExtensionContinuation)->Self{Self::with_inputs(event,Some(continuation),Vec::new(),0)}
@@ -73,7 +78,7 @@ impl CompletedInput{
   if self.pack.is_none(){
    if !self.wire_step(cx)?{return Ok(None)}let grant=RetainedCloneGrant{maximum_items:1,..cx.retained_grant()};if cx.should_yield()||grant.maximum_items==0{return Ok(None)}let inputs=self.inputs.as_mut().unwrap();
    let limits=pack::PackLimits{max_file_len:MAXIMUM as u64,max_segment_len:MAXIMUM as u64,max_symbols:MAXIMUM as u32,max_depth:128,max_items:MAXIMUM as u64,max_total_alloc:MAXIMUM as u64};
-   let Some((made,performed))=cx.with_original_effect(grant,|_,effect|{let bytes=Self::take_wire(inputs);RetainedIntrinsicDocument::new(RetainedIntrinsicInput::OwnedBytes(bytes),limits,MAXIMUM,effect)})?else{return Ok(None)};cx.consume_work(performed);
+   let Some((made,performed))=cx.with_original_effect(grant,|_,effect|{let bytes=Self::take_wire(inputs);RetainedIntrinsicBody::new(RetainedIntrinsicInput::OwnedBytes(bytes),limits,MAXIMUM,effect)})?else{return Ok(None)};cx.consume_work(performed);
    match made{Ok(owner)=>*self.pack=Some(owner),Err((error,RetainedIntrinsicInput::OwnedBytes(bytes)))=>{inputs.wire=bytes;*self.issue=Some(DecodeFailure::Pack(error,Default::default()));self.phase=250},Err(_)=>unreachable!()}return Ok(None)
   }
   let owner=self.pack.as_mut().unwrap();let demand=match owner.original_step_demands(){Ok(demand)=>demand,Err(error)=>{*self.issue=Some(DecodeFailure::Pack(error,Default::default()));self.phase=250;return Ok(None)}};let grant=cx.retained_grant();if !permits(cx,grant,demand){return Ok(None)}let Some(call)=through(cx,false,|effect|owner.advance_original_step(effect,false))?else{return Ok(None)};let progress=call.progress;match call.result{Ok(step)if step.complete=>{if !metadata(cx)?{return Ok(None)}self.inputs.as_mut().unwrap().output=owner.take_output();self.phase=5},Ok(_)=>{},Err(error)=>{*self.issue=Some(DecodeFailure::Pack(error,progress));self.phase=250}}Ok(None)

@@ -1,8 +1,6 @@
 // #region 🔌️Adapters
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import * as React from "react";
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
 import { describe, expect, it, vi } from "vitest";
 import { OverviewCard, OverviewCardAction, OverviewCardOpenChip } from "../../🟦️.tsx";
 // #endregion 🔌️Adapters
@@ -106,7 +104,7 @@ describe("OverviewCard", () => {
 
   it("renders a whole-card button whose name is its label, with a non-interactive open chip", () => {
     const onClick = vi.fn();
-    const { rerender } = render(
+    render(
       <OverviewCard
         as="button"
         slot="play-pane-card"
@@ -126,23 +124,9 @@ describe("OverviewCard", () => {
     expect(button.hasAttribute("data-play-pane-card")).toBe(true);
     expect(screen.queryByRole("heading")).toBeNull();
     expect(button.querySelector('[data-slot="play-pane-card-open-chip"]')?.textContent?.trim()).toBe("Open");
-    expect(button.querySelector("[data-overview-card-paint]")?.className.split(" ")).not.toContain("-translate-y-0.5");
-    expect(button.querySelector("[data-overview-card-paint]")?.className.split(" ")).not.toContain("group-hover:-translate-y-0.5");
+    expect(button.querySelector("[data-overview-card-paint]")?.className).not.toMatch(/translate|transition-transform/u);
     fireEvent.click(button);
     expect(onClick).toHaveBeenCalledTimes(1);
-    rerender(
-      <OverviewCard as="button" slot="play-pane-card" lifted onClick={onClick} icon={null} title="Home">
-        <span>Every app in one place</span>
-      </OverviewCard>,
-    );
-    expect(screen.getByRole("button").querySelector("[data-overview-card-paint]")?.className.split(" ")).toContain("-translate-y-0.5");
-  });
-
-  it("never lifts a card tiled in a stack or grid or swiped in the layered overview, so hover and reveal cannot break a shared line", () => {
-    const css = readFileSync(resolve(import.meta.dirname, "../../../../🎨️styling/🖌️ui/🎨️.css"), "utf8");
-    const rule = css.match(/:is\(\[data-card-stack\], \[data-card-grid\], \[data-layered-overview\]\) \[data-overview-card-paint\] \{([^}]*)\}/u);
-    expect(rule?.[1]).toMatch(/translate: none !important/u);
-    expect(rule?.[1]).toMatch(/transform: none !important/u);
   });
 });
 // #endregion 🃏️OverviewCardAnatomy

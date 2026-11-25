@@ -256,6 +256,38 @@
             }
           }
         },
+        "components": {
+          "description": "The deployable components of a package whose apps close in more than one: each app of manifest.apps belongs to exactly one component, and a host loads only the component that owns the app an activation opens; an activation of no app runs on the first. Absent for a package of one component.",
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "apps"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128,
+                "pattern": "^[a-z0-9_-]+$"
+              },
+              "apps": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 4096,
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 4096
+                }
+              }
+            }
+          }
+        },
         "quotas": {
           "type": "object"
         },

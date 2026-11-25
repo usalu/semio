@@ -1,17 +1,17 @@
-/** 🖼️ Live previews of catalog rows: a figure on the ambient clock when the asset is ready, and a designed state when it is pending, missing, invalid or fails to draw.
+/** 🖼️ Previews of catalog rows: a figure on the ambient clock when the asset is ready and the live set seats it (else the still it drew once), and a designed state when it is pending, missing, invalid or fails to draw.
  *
  * Previews follow the surface theme (light ink on the dark surface, dark ink on the light one) and never draw dimension lines or labels: the card around them names the asset.
  *
  * @see ../🧮️pipeline/🟦️.ts — the figure drawing
  * @see ../🧭️context/🟦️.tsx — the ambient clock
+ * @see ./🚦️live/🟦️.ts — which previews are live
  */
 import { Component, useEffect, useLayoutEffect, useMemo, useRef, useState, type ErrorInfo, type ReactElement, type ReactNode } from "react";
 import type { Asset, EvaluationQuery, Issue, Language, View, PlanarViewpoint } from "@teaching/staffage";
 import { defaultQuery, depictionOptions, queryAt } from "../🧮️pipeline/🟦️.ts";
-import { drawFigure, type Drawing } from "../🧮️pipeline/🏁️drawing/🟦️.ts";
-import { retainDrawing } from "../🧮️pipeline/🏁️drawing/queue.ts";
+import type { Drawing } from "../🧮️pipeline/🏁️drawing/🟦️.ts";
 import { writeSvgMarkup } from "../🧮️pipeline/🧬️svg/🟦️.ts";
-import { driveFigure } from "../⏱️clock/🏁️frames/🟦️.ts";
+import { runFigure } from "./🚦️live/🟦️.ts";
 import { word } from "../🗣️labels/🟦️.ts";
 import { useArchive } from "../🧭️context/🟦️.tsx";
 import { type StaffageClock } from "../⏱️clock/🟦️.ts";
@@ -122,7 +122,7 @@ const QUIET = { dimensions: false, scaleBar: false, legend: false, labels: false
 
 type PreviewDrawingProps = { readonly asset: Asset; readonly clock: StaffageClock; readonly query?: EvaluationQuery; readonly view: View; readonly viewpoint: PlanarViewpoint; readonly scale: number; readonly language: Language };
 
-/** 🖌️ Updates the ink of an inert archive preview. Its card names the asset; the drawing needs no per-frame layout or accessibility attributes. */
+/** 🖌️ Updates the ink of an inert archive preview. Its card names the asset; the drawing needs no per-frame layout or accessibility attributes. A clip follows the clock while the live set seats the preview, a pose is drawn once. */
 function PreviewDrawing({ asset, clock, query, view, viewpoint, scale, language }: PreviewDrawingProps): ReactElement {
   const ink = useRef<HTMLDivElement>(null);
   const [failure, setFailure] = useState<{ error: unknown } | null>(null);
@@ -142,32 +142,17 @@ function PreviewDrawing({ asset, clock, query, view, viewpoint, scale, language 
     const element = ink.current;
     if (element === null) return;
     let shown: Drawing["fidelity"] | undefined;
-    const receive = (next: Drawing) => {
-      writeSvgMarkup(element, next.markup);
-      if (shown !== next.fidelity) setFidelity((shown = next.fidelity));
-    };
-    const fail = (error: unknown) => setFailure({ error });
-    const lease = clock.drawBudgetMs > 0 ? retainDrawing(asset, drawing.options, false, receive, fail) : null;
-    let lastTime = Number.NaN;
-    const step = () => {
-      const now = drawing.time();
-      if (now === lastTime) return;
-      lastTime = now;
-      const query = queryAt(drawing.initial, now);
-      try {
-        if (lease) lease.request(query);
-        else receive(drawFigure(asset, drawing.options, query));
-      } catch (error) {
-        fail(error);
-      }
-    };
-    step();
-    const cancelPending = () => {
-      lastTime = Number.NaN;
-      lease?.cancelPending();
-    };
-    const stop = drawing.initial.kind === "pose" ? undefined : driveFigure(clock, { element, animated: () => true, step, cancelPending });
-    return () => { stop?.(); lease?.release(); };
+    return runFigure({
+      element, clock, asset, options: drawing.options, wrapLoops: false, liveness: drawing.initial.kind === "pose" ? "still" : "budgeted",
+      time: drawing.time,
+      query: (timeS) => queryAt(drawing.initial, timeS),
+      animated: () => true,
+      paint: (next) => {
+        writeSvgMarkup(element, next.markup);
+        if (shown !== next.fidelity) setFidelity((shown = next.fidelity));
+      },
+      fail: (error) => setFailure({ error }),
+    }).stop;
   }, [asset, clock, drawing]);
   if (failure !== null) throw failure.error;
   return (

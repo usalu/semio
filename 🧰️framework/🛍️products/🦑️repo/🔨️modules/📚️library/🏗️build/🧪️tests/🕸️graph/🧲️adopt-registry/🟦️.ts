@@ -27,6 +27,7 @@ const world=async(seed:number,pinned:boolean)=>{
  const graph={version:1,projects:{},dependencies:[]},invalidated=Object.freeze({kind:"invalidated",reason:"owner-registry"});
  const bindings={
   withOwnerRegistryCustodyV1,
+  sliceReadStepV1:(_step:string,run:()=>Promise<unknown>)=>run(),sliceReadWaitStepV1:(_step:string,run:(leave:()=>void)=>Promise<unknown>)=>run(()=>{}),
   requireIssuedResourceControlInvocationV1:()=>{},checkResourceLeaseControl:()=>{},checkScriptInvocation:()=>{},
   readBuildGraphSelectionV1:(value:unknown)=>value,readBuildOwnerRegistryV1:(value:unknown)=>value,
   importModuleV1:async()=>({readBuildOwnerRegistrySourceV1:()=>JSON.stringify(readRegistry())}),

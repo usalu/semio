@@ -161,9 +161,7 @@ impl<'ctx> PointerCtx<'ctx> {
         self.input.update_tree_hover(input, &mut self.settle);
         if let Some((ref item_id, ref drag_data)) = self.input.pending_tree_drag {
             if down {
-                let dx = x - self.input.tree_drag_origin.0;
-                let dy = y - self.input.tree_drag_origin.1;
-                if self.input.tree_drag.is_none() && (dx * dx + dy * dy) > 25.0 {
+                if self.input.tree_drag.is_none() && semio_renderer_wgpu_ui_engine::retained_ui_engine::drag_starts([self.input.tree_drag_origin.0, self.input.tree_drag_origin.1], [x, y]) {
                     self.input.tree_drag = Some(TreeDragState { source_id: item_id.clone(), drag_data: drag_data.clone(), x, y, drop_target_id: None, drop_position: TreeDropPosition::Inside });
                     self.input.pending_tree_drag = None;
                 }
@@ -213,9 +211,7 @@ impl<'ctx> PointerCtx<'ctx> {
         }
         if let Some((payload, origin)) = &self.dock.pending_dock_drag {
             if down && !self.dock.dock.mobile {
-                let dx = x - origin.0;
-                let dy = y - origin.1;
-                if self.dock.dock_drag.is_none() && (dx * dx + dy * dy) > 25.0 {
+                if self.dock.dock_drag.is_none() && semio_renderer_wgpu_ui_engine::retained_ui_engine::drag_starts([origin.0, origin.1], [x, y]) {
                     let payload = payload.clone();
                     let origin = *origin;
                     self.dock.pending_dock_drag = None;

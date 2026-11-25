@@ -5,7 +5,7 @@ use semio_framework_value::{ByteReadSource, RetireOwned};
 use crate::standards::v1_7::subsets::base::{
     io::{export::{Moved, Reading, graft::Graft}, import::original_custody::{self, GraphDigest, RetainedOriginal}},
     modules::{lexer::dict_get, lower::lower_info},
-    schema::{graph_source::ObjectSource, snapshot::{ObjRef, PdfDictEntry, PdfIndirectObject, PdfObject, PdfSnapshot}},
+    schema::{graph_source::ObjectSource, snapshot::{ObjRef, PdfAnnotationKind, PdfDictEntry, PdfIndirectObject, PdfObject, PdfSnapshot}},
 };
 use super::{classic_graph_quote::GraphLoan, graph::object_capacity, original_tail::{OriginalTail, TailRefusal}};
 
@@ -67,6 +67,7 @@ pub struct IncrementPlan {
     rows: IncrementRows,
     info: Option<ObjRef>,
     seen: Seen,
+    leaves: Vec<(ObjRef, ObjRef)>,
 }
 
 impl IncrementPlan {
@@ -79,7 +80,7 @@ impl IncrementPlan {
     fn with(base: Option<OriginalBase>, document: Option<String>) -> Self {
         Self { base, document, held: None, measured: [0; 32], touched: Vec::new(), pending: Vec::new(), fresh: 0,
             stage: Stage::Baseline, tail: None, digest: GraphDigest::default(), root: None, catalog: None, next: 0, page: 0,
-            rows: IncrementRows::default(), info: None, seen: Seen::default() }
+            rows: IncrementRows::default(), info: None, seen: Seen::default(), leaves: Vec::new() }
     }
 
     pub fn ready(&self) -> bool { self.stage == Stage::Done }
@@ -179,14 +180,17 @@ impl IncrementPlan {
         let catalog = loan.trailer.root;
         let root = dictionary(loan, catalog).and_then(|entries| dict_get(entries, "Pages")).and_then(reference).ok_or(Compact::Tree)?;
         let tree = dictionary(loan, root).ok_or(Compact::Tree)?;
-        let Some(PdfObject::Array(kids)) = dict_get(tree, "Kids") else { return Err(Compact::Tree) };
-        if kids.len() != snapshot.pages.len() || !name_is(tree, "Type", "Pages") { return Err(Compact::Tree); }
-        let mut unique = HashSet::with_capacity(kids.len());
-        if !kids.iter().all(|kid| reference(kid).is_some_and(|kid| unique.insert(kid))) { return Err(Compact::Tree); }
+        if !name_is(tree, "Type", "Pages") { return Err(Compact::Tree); }
+        self.leaves = page_leaves(loan, root)?;
+        if self.leaves.len() != snapshot.pages.len() { return Err(Compact::Tree); }
         self.root = Some(root);
         self.catalog = Some(catalog);
         let mut seeds = BTreeMap::new();
-        seeds.insert(root.num, row(root, PdfObject::Dict(restrict(tree, &[]))));
+        if !snapshot.outlines.is_empty() || !snapshot.named_destinations.is_empty() || snapshot.open_action.is_some() {
+            seed_page_stubs(loan, &mut seeds, &self.leaves, None)?;
+        } else {
+            seeds.insert(root.num, row(root, PdfObject::Dict(restrict(tree, &[]))));
+        }
         let trailer = trailer_entries(loan);
         let version = &snapshot.declared_version;
         let bytes = Cell::new(0);
@@ -228,30 +232,40 @@ impl IncrementPlan {
             return Ok(IncrementTurn { work: 1, ..Default::default() });
         }
         let (catalog, root) = self.catalog.zip(self.root).ok_or(Compact::Tree)?;
-        let tree = dictionary(loan, root).ok_or(Compact::Tree)?;
-        let Some(PdfObject::Array(kids)) = dict_get(tree, "Kids") else { return Err(Compact::Tree) };
-        let page_ref = kids.get(index).and_then(reference).ok_or(Compact::Tree)?;
+        let (page_ref, parent) = *self.leaves.get(index).ok_or(Compact::Tree)?;
         let original = dictionary(loan, page_ref).ok_or(Compact::Tree)?;
-        if !name_is(original, "Type", "Page") || dict_get(original, "Parent").and_then(reference) != Some(root) { return Err(Compact::Tree); }
+        if !name_is(original, "Type", "Page") || dict_get(original, "Parent").and_then(reference) != Some(parent) { return Err(Compact::Tree); }
+        let chain = ancestors(loan, parent, root)?;
         let mut seeds = BTreeMap::new();
         seeds.insert(catalog.num, row(catalog, PdfObject::Dict(vec![
             PdfDictEntry::new("Type", PdfObject::name("Catalog")), PdfDictEntry::new("Pages", PdfObject::Ref(root))])));
-        seeds.insert(root.num, row(root, PdfObject::Dict(restrict(tree, &[page_ref]))));
+        let typed = &snapshot.pages[index];
+        let links = typed.annotations.iter().any(|annotation| matches!(annotation.kind, PdfAnnotationKind::Link { .. } | PdfAnnotationKind::Widget { .. }));
+        let at = if links { index } else { 0 };
+        if links {
+            seed_page_stubs(loan, &mut seeds, &self.leaves, Some(page_ref))?;
+        } else {
+            for (position, node) in chain.iter().enumerate() {
+                let child = if position == 0 { page_ref } else { chain[position - 1] };
+                seeds.insert(node.num, row(*node, PdfObject::Dict(restrict(dictionary(loan, *node).ok_or(Compact::Tree)?, &[child]))));
+            }
+        }
         seeds.insert(page_ref.num, row(page_ref, PdfObject::Dict(original.to_vec())));
-        for owner in [original, tree] {
-            if let Some(resources) = dict_get(owner, "Resources") { seed_resources(loan, resources, &mut seeds, 0); }
+        for owner in std::iter::once(page_ref).chain(chain.iter().copied()) {
+            if let Some(resources) = dictionary(loan, owner).and_then(|owner| dict_get(owner, "Resources")) { seed_resources(loan, resources, &mut seeds, 0); }
         }
         let trailer = vec![PdfDictEntry::new("Root", PdfObject::Ref(catalog))];
         let version = &snapshot.declared_version;
         let bytes = Cell::new(0);
         let reading = Reading::of(Slice { loan, seeds: &seeds, bytes: &bytes }, &trailer, version).map_err(|_| Compact::Page)?;
         let mut work = PAGE_WORK.max(bytes.get() / 16);
-        let typed = &snapshot.pages[index];
-        if reading.lanes.pages.len() != 1 || !resources_agree(&reading.lanes, snapshot) { return Err(Compact::Resources); }
+        if reading.lanes.pages.len() != if links { self.leaves.len() } else { 1 } || !resources_agree(&reading.lanes, snapshot) { return Err(Compact::Resources); }
         let mut turn = IncrementTurn::default();
         let mut final_reading = reading;
-        if final_reading.lanes.pages[0] != *typed {
-            let probe = PdfSnapshot { pages: vec![typed.clone()], objects: Vec::new(), trailer: Vec::new(), admitted_stream_roles: Vec::new(), ..final_reading.lanes.clone() };
+        if final_reading.lanes.pages[at] != *typed {
+            let mut pages = final_reading.lanes.pages.clone();
+            pages[at] = typed.clone();
+            let probe = PdfSnapshot { pages, objects: final_reading.lanes.objects.clone(), trailer: Vec::new(), admitted_stream_roles: Vec::new(), ..final_reading.lanes.clone() };
             let before = self.next;
             let mut graft = Graft::sparse(&probe, seeds.clone(), trailer.clone(), self.next);
             let original = final_reading;
@@ -372,6 +386,63 @@ fn dictionary(loan: GraphLoan<'_>, owner: ObjRef) -> Option<&[PdfDictEntry]> {
 
 fn name_is(dictionary: &[PdfDictEntry], key: &str, wanted: &str) -> bool {
     matches!(dict_get(dictionary, key), Some(PdfObject::Name(name)) if name == wanted)
+}
+
+/// 📇️ Seeds every node of the page tree as authored and every page except `full` as a bare page under its own parent, so outline, destination and link targets read back as their page indices without lifting another page's content.
+fn seed_page_stubs(loan: GraphLoan<'_>, seeds: &mut BTreeMap<u32, PdfIndirectObject>, leaves: &[(ObjRef, ObjRef)], full: Option<ObjRef>) -> Result<(), Compact> {
+    for (page, parent) in leaves {
+        if !seeds.contains_key(&parent.num) { seeds.insert(parent.num, row(*parent, PdfObject::Dict(dictionary(loan, *parent).ok_or(Compact::Tree)?.to_vec()))); }
+        let mut node = *parent;
+        for _ in 0..MAX_TREE_DEPTH {
+            let Some(up) = dictionary(loan, node).and_then(|entries| dict_get(entries, "Parent")).and_then(reference) else { break; };
+            if seeds.contains_key(&up.num) { break; }
+            seeds.insert(up.num, row(up, PdfObject::Dict(dictionary(loan, up).ok_or(Compact::Tree)?.to_vec())));
+            node = up;
+        }
+        if Some(*page) != full {
+            seeds.insert(page.num, row(*page, PdfObject::Dict(vec![PdfDictEntry::new("Type", PdfObject::name("Page")), PdfDictEntry::new("Parent", PdfObject::Ref(*parent))])));
+        }
+    }
+    Ok(())
+}
+
+/// 🌲️ Deepest page-tree nesting the appended route follows.
+const MAX_TREE_DEPTH: usize = 64;
+
+/// 🌲️ Every page of a (possibly nested) page tree in document order with its parent node; each node and page reached once.
+fn page_leaves(loan: GraphLoan<'_>, root: ObjRef) -> Result<Vec<(ObjRef, ObjRef)>, Compact> {
+    let mut leaves = Vec::new();
+    let mut seen = HashSet::from([root]);
+    let mut stack: Vec<(ObjRef, usize)> = vec![(root, 0)];
+    while let Some((node, next)) = stack.pop() {
+        let entries = dictionary(loan, node).ok_or(Compact::Tree)?;
+        let Some(PdfObject::Array(kids)) = dict_get(entries, "Kids") else { return Err(Compact::Tree) };
+        let Some(kid) = kids.get(next) else { continue; };
+        stack.push((node, next + 1));
+        let kid = reference(kid).filter(|kid| seen.insert(*kid)).ok_or(Compact::Tree)?;
+        let child = dictionary(loan, kid).ok_or(Compact::Tree)?;
+        if dict_get(child, "Parent").and_then(reference) != Some(node) { return Err(Compact::Tree); }
+        if name_is(child, "Type", "Pages") {
+            if stack.len() >= MAX_TREE_DEPTH { return Err(Compact::Tree); }
+            stack.push((kid, 0));
+        } else if name_is(child, "Type", "Page") {
+            leaves.push((kid, node));
+        } else {
+            return Err(Compact::Tree);
+        }
+    }
+    Ok(leaves)
+}
+
+/// 🪜️ The page-tree nodes from `parent` up to `root`, both included.
+fn ancestors(loan: GraphLoan<'_>, parent: ObjRef, root: ObjRef) -> Result<Vec<ObjRef>, Compact> {
+    let mut chain = vec![parent];
+    while *chain.last().expect("page tree chain") != root {
+        if chain.len() >= MAX_TREE_DEPTH { return Err(Compact::Tree); }
+        let up = dictionary(loan, *chain.last().expect("page tree chain")).and_then(|entries| dict_get(entries, "Parent")).and_then(reference).ok_or(Compact::Tree)?;
+        chain.push(up);
+    }
+    Ok(chain)
 }
 
 /// 🌳️ The page tree node with only `kids` below it.

@@ -97,13 +97,36 @@ async fn drawing_io_declares_vector_out_and_export_media_covers_both_ports() {
     let meta = artifact_laws::meta("local");
     let (_, receipt) = settled(&mut app, DrawingCommand::AddLayer(add_layer::AddLayer { kind: "shape:rect".into() }), &meta).await;
     assert_one_artifact_publication(&receipt);
-    let projection = app.snapshot().expect("projection");
+    settle_drawing_geometry(&mut app, meta.view_state.as_deref()).await;
     let history = semio_plugin::HistoryView::empty();
-    let doc = ArtifactView::with_operation(&projection, &history,semio_s_artifact_draw_drawing_editor::identity_test::operation());
+    let doc = ArtifactView::with_render_context(
+        app.snapshot_ref(),
+        &history,
+        semio_plugin::ChildContentView::EMPTY,
+        app.fixture_original_render_operation(),
+        app.fixture_original_document_identity(),
+        None,
+    ).await;
     let vector = DrawingPlayApp::export_media("vector:out", &doc).expect("vector:out");
     let MediaPayload::Structured { schema, json } = vector.payload else { panic!("expected structured svg payload") };
     assert_eq!(schema, "2d.drawing");
     assert!(json.starts_with("<svg"));
     assert!(DrawingPlayApp::export_media("artifact:out", &doc).is_ok());
     assert!(matches!(DrawingPlayApp::export_media("unknown:out", &doc), Err(MediaError::NotImplemented)));
+}
+
+/// 🎯️ The status line counts the selection, so every verb that moves it refreshes the engagements; a hover repaints the canvas alone.
+#[test]
+fn a_moved_selection_refreshes_the_status_line() {
+    use semio_framework::kernel::UiDirtyScope;
+    use semio_plugin::InteractionVerb;
+    for domain in [DRAWING_INTERACTION_DOMAIN, DRAWING_POINT_DOMAIN] {
+        for verb in [InteractionVerb::Select, InteractionVerb::ClearSelection, InteractionVerb::SelectAll, InteractionVerb::Hover] {
+            let Some(UiDirtyScope::Partial { engagements, panel_bodies, window_bodies, .. }) = <DrawingPlayApp as ArtifactEditor>::interaction_scope(verb, &[domain]) else { panic!("{verb:?} declares its scope") };
+            assert_eq!(engagements, verb != InteractionVerb::Hover);
+            assert_eq!(panel_bodies.is_empty(), verb == InteractionVerb::Hover);
+            assert_eq!(window_bodies.len(), 1);
+        }
+    }
+    assert!(<DrawingPlayApp as ArtifactEditor>::interaction_scope(InteractionVerb::Select, &["other"]).is_none());
 }

@@ -1,6 +1,6 @@
 //! 🫧️ Exact no-state store retirement owners for the keyed app fixture: the framework's own zero-payload owners.
 
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use semio_plugin_decl_views::{NoPresence, NoPresenceMutation};
 use semio_os_kernel as store;
 

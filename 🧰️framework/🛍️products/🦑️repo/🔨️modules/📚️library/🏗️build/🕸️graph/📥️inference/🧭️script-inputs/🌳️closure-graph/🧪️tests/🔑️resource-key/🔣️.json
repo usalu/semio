@@ -1,0 +1,12 @@
+{
+  "$comment": "Language-agnostic fixture: a tree, one walk question with a resource, and the workspace names every traversal of the module closure graph must reach.",
+  "files": {
+    "package.json": "{\"name\":\"resource-key-fixture\"}\n",
+    "entry.ts": "import \"./loader.ts\";import \"./plain.ts\";export {};\n",
+    "loader.ts": "export const wasm = new URL(\"./engine.wasm\", import.meta.url);\n",
+    "plain.ts": "export const plain = 1;\n",
+    "engine.wasm": "\u0000asm"
+  },
+  "question": { "roots": ["entry.ts"], "requiredSources": true, "resources": ["engine.wasm"], "selectors": [], "stops": [] },
+  "reached": ["{workspaceRoot}/engine.wasm", "{workspaceRoot}/entry.ts", "{workspaceRoot}/loader.ts", "{workspaceRoot}/plain.ts"]
+}

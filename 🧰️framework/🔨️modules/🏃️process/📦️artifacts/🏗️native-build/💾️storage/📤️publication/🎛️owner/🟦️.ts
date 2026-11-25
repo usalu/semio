@@ -19,7 +19,7 @@ import{spawn}from"node:child_process";
 import{acceptResourceLeaseCleanupV1,requireAcceptedResourceLeaseRetainedBodyV1,type AcceptedResourceLeaseCleanupV1,requireMaterializedPathV1,checkResourceLeaseControl,resourceLeasePathV1,requireResourceLeaseWriterProofV1,requireAcceptedPhysicalCleanupWriterProofV1,acquireResourceLease,captureResourceLeaseWriterProofV1,type ResourceLease,type ResourceLeaseControl,type ResourceLeaseWriterProofV1}from"../../../../../🔒️leases/🟦️.ts";
 import{requireIssuedResourceControlRefinementV1,requireAcceptedPhysicalCleanupControlV1,readIssuedResourceControlCapabilitiesV1,readAcceptedPhysicalCleanupV1,checkAcceptedPhysicalCleanupV1,withAcceptedPhysicalCleanupV1,beginAcceptedPhysicalCleanupV1,withRequestedIssuedResourceControlV1,withAcceptedPhysicalCleanupOperationV1}from"../../../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import type{AcceptedPhysicalCleanupV1}from"../../../../../🧭️routing/📥️invocation/🏃️process/🧹️cleanup/🟦️.ts";
-import{withArtifactDescriptorV1,requireArtifactDescriptorClosureV1}from"@semio-tech/framework-filesystem/observation/descriptor";
+import{withArtifactDescriptorV1,requireArtifactDescriptorClosureV1}from"../../../../../../📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
 import{captureOwnedCommandV1,captureOwnedCommandResultV1}from"../../../../../🎛️owned-execution/🟦️.ts";
 import{terminateOwnedChildTree}from"../../../../../🪓️termination/🟦️.ts";
 import{validateJsonSchemaSubset}from"../../../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";

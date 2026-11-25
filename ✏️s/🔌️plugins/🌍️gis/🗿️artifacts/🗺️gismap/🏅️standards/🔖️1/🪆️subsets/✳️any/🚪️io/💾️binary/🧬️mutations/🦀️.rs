@@ -55,4 +55,5 @@ impl protocol::OpBinary for GisMapMutation {
 }
 
 dsl::original_pack_value_operation_receiving!(GisMapMutation);
+dsl::artifact_persisted_binary_operation!(GisMapMutation);
 }

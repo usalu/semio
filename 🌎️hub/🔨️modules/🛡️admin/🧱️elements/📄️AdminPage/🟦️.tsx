@@ -8,7 +8,7 @@ import { SharedBorderRow, SharedBorderRowCell } from "@semio-tech/ui-react";
  * @see ../../../../../🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪢️SharedBorderRow/🟦️.tsx */
 export function AdminPage({ title, actions, children, "data-slot": slot = "admin-page" }: { readonly title: React.ReactNode; readonly actions?: React.ReactNode; readonly children?: React.ReactNode; readonly "data-slot"?: string }): React.ReactElement {
   return (
-    <div className="flex h-full w-full flex-col overflow-auto [&_[data-slot=scroll-area]]:!h-auto" data-slot={slot}>
+    <div className="flex h-full w-full flex-col overflow-auto pt-[var(--admin-clear-top,0px)] scroll-pt-[var(--admin-clear-top,0px)] [&_[data-slot=scroll-area]]:!h-auto" data-slot={slot}>
       <SharedBorderRow edges={["bottom"]} data-slot="admin-page-head">
         <SharedBorderRowCell className="flex-1">
           <h1 className="text-lg font-semibold text-emphasized">{title}</h1>

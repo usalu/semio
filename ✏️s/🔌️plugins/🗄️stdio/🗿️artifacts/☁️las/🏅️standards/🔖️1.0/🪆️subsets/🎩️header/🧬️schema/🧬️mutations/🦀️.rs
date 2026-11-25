@@ -70,6 +70,7 @@ pub enum LasMutation {
     SetPoint(set_point::SetPoint),
 }
 dsl::original_pack_value_operation_receiving!(LasMutation);
+dsl::artifact_persisted_binary_operation!(LasMutation);
 //#endregion 🔖️Mutations
 
 //#region 🔖️Kinds

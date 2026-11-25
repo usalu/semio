@@ -5,7 +5,7 @@ import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { existsSync } from "node:fs";
 import { ensureRepositoryBrowserPathV1, prepareRepositoryBrowserV1 } from "../../../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🧰️preparation/🟦️.ts";
-import { PLAYWRIGHT_MODULE_SPECIFIER, browserLaunchOptionsV1 } from "../../../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🟦️.ts";
+import { browserLaunchOptionsV1, launchBrowserV1 } from "../../../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🟦️.ts";
 import { openedBlobMimeV1, openedUiOwnerV1 } from "../🔒️adapter/🟦️.ts";
 import { openSessions } from "../../🔑️sessions/🟦️.ts";
 
@@ -17,8 +17,7 @@ test("real browser port observes, interacts, chooses, downloads and aborts", asy
   try {
     await withBuildTestInvocationV1(async invocation => prepareRepositoryBrowserV1(repoRoot, invocation));
     ensureRepositoryBrowserPathV1(repoRoot, process.env);
-    const { chromium }: typeof import("playwright") = await import(PLAYWRIGHT_MODULE_SPECIFIER);
-    const browser = await chromium.launch(browserLaunchOptionsV1());
+    const browser = await launchBrowserV1(browserLaunchOptionsV1());
     try {
       const page = await browser.newPage();
       const address = server.address();

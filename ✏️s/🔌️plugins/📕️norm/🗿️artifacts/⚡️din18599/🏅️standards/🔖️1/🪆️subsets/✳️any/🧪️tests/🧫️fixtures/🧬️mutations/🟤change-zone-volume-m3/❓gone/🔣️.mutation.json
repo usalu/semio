@@ -1,5 +1,5 @@
 {
-  "mutation": "changezonevolumem3",
+  "mutation": "changeZoneVolumeM3",
   "zoneId": "ghost",
   "newVolumeM3": 390.0
 }

@@ -359,7 +359,7 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
     <>
       {stepperGroup}
       {refusal?.message ? (
-        <span id={refusalId} role="alert" data-slot="stepper-refusal" className="text-destructive block w-full text-xs leading-tight">
+        <span id={refusalId} role="alert" data-slot="stepper-refusal" className="text-destructive-foreground block w-full text-xs leading-tight">
           {refusal.message}
         </span>
       ) : null}

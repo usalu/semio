@@ -42,5 +42,7 @@ fn refused()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated
 #[path="📥️recipient/🦀️.rs"]mod recipient;
 pub use recipient::{ActorFailureRecipient,ActorFailureRecipientHome,ActorFailureRecipientAccepted};
 
+#[path="🧮️operation-ledger/🦀️.rs"]mod operation_ledger;
+pub use operation_ledger::GuestOperationLedger;
 #[path="🎛️fetch/🦀️.rs"]mod fetch;
 pub use fetch::{ActorFailureFetch,ActorFailureFetchStatus,ActorFailurePlan,ActorFailureAcknowledged};

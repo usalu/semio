@@ -41,11 +41,11 @@ fn direct_owners_descriptors_surfaces_and_catalog_correspond() {
             assert!(surface_source.contains(kind) || surface_source.contains(variant));
         }
         {
-            let surface_source = std::fs::read_to_string(owner.join("📝️text/🦀️.rs")).expect("direct language surface");
+            let surface_source = std::fs::read_to_string(mutation_root.join("../../🚪️io/📝️text/🧬️mutations").join(directory).join("🦀️.rs")).expect("direct language surface");
             assert!(surface_source.contains(kind) || surface_source.contains(variant));
         }
         {
-            let surface_source = std::fs::read_to_string(owner.join("💾️binary/🦀️.rs")).expect("direct language surface");
+            let surface_source = std::fs::read_to_string(mutation_root.join("../../🚪️io/💾️binary/🧬️mutations").join(directory).join("🦀️.rs")).expect("direct language surface");
             assert!(surface_source.contains(kind) || surface_source.contains(variant));
         }
         assert!(vectors.iter().any(|vector| vector["mutationId"] == kind && vector["mutationDirectoryName"] == directory));
@@ -75,11 +75,11 @@ fn direct_owners_descriptors_surfaces_and_catalog_correspond() {
             assert!(surface_source.contains(kind) || surface_source.contains(variant));
         }
         {
-            let surface_source = std::fs::read_to_string(owner.join("📝️text/🦀️.rs")).expect("direct language surface");
+            let surface_source = std::fs::read_to_string(mutation_root.join("../../🚪️io/📝️text/🧬️mutations").join(directory).join("🦀️.rs")).expect("direct language surface");
             assert!(surface_source.contains(kind) || surface_source.contains(variant));
         }
         {
-            let surface_source = std::fs::read_to_string(owner.join("💾️binary/🦀️.rs")).expect("direct language surface");
+            let surface_source = std::fs::read_to_string(mutation_root.join("../../🚪️io/💾️binary/🧬️mutations").join(directory).join("🦀️.rs")).expect("direct language surface");
             assert!(surface_source.contains(kind) || surface_source.contains(variant));
         }
         assert!(vectors.iter().any(|vector| vector["mutationId"] == kind && vector["mutationDirectoryName"] == directory));
@@ -109,11 +109,11 @@ fn direct_owners_descriptors_surfaces_and_catalog_correspond() {
             assert!(surface_source.contains(kind) || surface_source.contains(variant));
         }
         {
-            let surface_source = std::fs::read_to_string(owner.join("📝️text/🦀️.rs")).expect("direct language surface");
+            let surface_source = std::fs::read_to_string(mutation_root.join("../../🚪️io/📝️text/🧬️mutations").join(directory).join("🦀️.rs")).expect("direct language surface");
             assert!(surface_source.contains(kind) || surface_source.contains(variant));
         }
         {
-            let surface_source = std::fs::read_to_string(owner.join("💾️binary/🦀️.rs")).expect("direct language surface");
+            let surface_source = std::fs::read_to_string(mutation_root.join("../../🚪️io/💾️binary/🧬️mutations").join(directory).join("🦀️.rs")).expect("direct language surface");
             assert!(surface_source.contains(kind) || surface_source.contains(variant));
         }
         assert!(vectors.iter().any(|vector| vector["mutationId"] == kind && vector["mutationDirectoryName"] == directory));
@@ -143,11 +143,11 @@ fn direct_owners_descriptors_surfaces_and_catalog_correspond() {
             assert!(surface_source.contains(kind) || surface_source.contains(variant));
         }
         {
-            let surface_source = std::fs::read_to_string(owner.join("📝️text/🦀️.rs")).expect("direct language surface");
+            let surface_source = std::fs::read_to_string(mutation_root.join("../../🚪️io/📝️text/🧬️mutations").join(directory).join("🦀️.rs")).expect("direct language surface");
             assert!(surface_source.contains(kind) || surface_source.contains(variant));
         }
         {
-            let surface_source = std::fs::read_to_string(owner.join("💾️binary/🦀️.rs")).expect("direct language surface");
+            let surface_source = std::fs::read_to_string(mutation_root.join("../../🚪️io/💾️binary/🧬️mutations").join(directory).join("🦀️.rs")).expect("direct language surface");
             assert!(surface_source.contains(kind) || surface_source.contains(variant));
         }
         assert!(vectors.iter().any(|vector| vector["mutationId"] == kind && vector["mutationDirectoryName"] == directory));

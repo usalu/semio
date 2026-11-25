@@ -238,7 +238,7 @@ fn the_viewer_preview_status_obeys_the_shared_contract_in_every_state() {
     for state in &contract.states {
         let mut session = FlowEvalSession::new();
         replay(state, &mut session);
-        let published = preview_eval::preview_progress_status_json_for(Some(&session), run_view(state.status.cancellable).as_ref(), address(state.addressable));
+        let published = preview_eval::preview_progress_status_json_for(Some(&session), run_view(state.status.cancellable).as_ref().map(semio_plugin::ToolRunView::poll_view), address(state.addressable));
         crate::flow_operators::retire_flow_eval_session(session);
         let status: serde_json::Value = serde_json::from_str(&published).expect("the viewer preview status is one JSON object");
         assert_contract_shape(&status, contract, &fixture.phase_labels, &viewer.cancel_action, &state.id);
@@ -409,7 +409,7 @@ fn a_settled_chain_publishes_no_spinner_and_no_abort_however_stale_the_run_view_
         semio_framework_tool_run::ToolRunState::Running,
     );
 
-    let started = semio_s_artifact_procedural_3d_preview_eval::preview_scene_status_json(None, Some(&live_run), None).expect("a live run publishes a status");
+    let started = semio_s_artifact_procedural_3d_preview_eval::preview_scene_status_json(None, Some(live_run.poll_view()), None).expect("a live run publishes a status");
     let started: serde_json::Value = serde_json::from_str(&started).expect("status json");
     assert_eq!(started["computing"], serde_json::json!(true), "a run with no census behind it still speaks for the evaluation it started");
 
@@ -420,10 +420,10 @@ fn a_settled_chain_publishes_no_spinner_and_no_abort_however_stale_the_run_view_
     session.begin_window_tick("preview-1", crate::preview_reply::TURN).map(drop).expect("original window latch turn");
     session.note_window_extensions_in_flight("preview-1", 1, crate::preview_reply::TURN).map(drop).expect("original window latch turn");
     session.note_window_tick_outcome("preview-1", true, crate::preview_reply::TURN).map(drop).expect("original window latch turn");
-    let working = semio_s_artifact_procedural_3d_preview_eval::preview_scene_status_json(Some(&session), Some(&live_run), None).expect("a working chain publishes a status");
+    let working = semio_s_artifact_procedural_3d_preview_eval::preview_scene_status_json(Some(&session), Some(live_run.poll_view()), None).expect("a working chain publishes a status");
     let working: serde_json::Value = serde_json::from_str(&working).expect("status json");
     assert_eq!(working["computing"], serde_json::json!(true), "a working chain is computing");
-    let working_addressed: serde_json::Value = serde_json::from_str(&semio_s_artifact_procedural_3d_preview_eval::preview_progress_status_json_for(Some(&session), Some(&live_run), Ok(GEOMETRY_EXTENSION_PLUGIN_ID.to_string()))).expect("status json");
+    let working_addressed: serde_json::Value = serde_json::from_str(&semio_s_artifact_procedural_3d_preview_eval::preview_progress_status_json_for(Some(&session), Some(live_run.poll_view()), Ok(GEOMETRY_EXTENSION_PLUGIN_ID.to_string()))).expect("status json");
     assert_eq!(working_addressed["cancellable"], serde_json::json!(true), "and its work can be stopped");
 
     session.settle_window_extension("preview-1", crate::preview_reply::TURN).map(drop).expect("original window latch turn");
@@ -432,10 +432,10 @@ fn a_settled_chain_publishes_no_spinner_and_no_abort_however_stale_the_run_view_
     let chain = session.preview_chain_status();
     assert!(chain.settled(), "the chain settled its whole census: {chain:?}");
 
-    let settled = semio_s_artifact_procedural_3d_preview_eval::preview_scene_status_json(Some(&session), Some(&live_run), None).expect("a settled chain still publishes a status");
+    let settled = semio_s_artifact_procedural_3d_preview_eval::preview_scene_status_json(Some(&session), Some(live_run.poll_view()), None).expect("a settled chain still publishes a status");
     let settled: serde_json::Value = serde_json::from_str(&settled).expect("status json");
     assert!(settled.get("computing").is_none() || settled["computing"] == serde_json::json!(false), "a settled chain publishes no spinner, whatever the run view still says: {settled}");
-    let settled_addressed: serde_json::Value = serde_json::from_str(&semio_s_artifact_procedural_3d_preview_eval::preview_progress_status_json_for(Some(&session), Some(&live_run), Ok(GEOMETRY_EXTENSION_PLUGIN_ID.to_string()))).expect("status json");
+    let settled_addressed: serde_json::Value = serde_json::from_str(&semio_s_artifact_procedural_3d_preview_eval::preview_progress_status_json_for(Some(&session), Some(live_run.poll_view()), Ok(GEOMETRY_EXTENSION_PLUGIN_ID.to_string()))).expect("status json");
     assert_eq!(settled_addressed["phase"], serde_json::json!("idle"), "a settled chain is idle");
     assert!((settled_addressed["progress"]["ratio"].as_f64().expect("ratio") - 1.0).abs() < 1e-9, "and complete");
     assert_eq!(settled_addressed["cancellable"], serde_json::json!(false), "and offers no abort for work that no longer exists: {settled_addressed}");

@@ -1,7 +1,9 @@
 import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 import { validateJsonSchemaSubset } from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+import stagingSchema from "../../../../../../💻️os/🔨️modules/🌉️mcp/📡️stdio/🏗️staging/🧬️schema/🔣️.json" with { type: "json" };
 
 const protocol = schema.$defs.Protocol.const;
+const generatedOwners = stagingSchema.definitions.Producer.const.prerequisites.map(row => Object.freeze(["run", row.target, protocol.outputFlag]));
 
 /** 🌱️ Declares only the native gateway and explicit catalog descendants of the canonical OS MCP launch. */
 export function rootDevMcpBuildRequestsV1(argv: readonly string[]): readonly (readonly string[])[] | null {
@@ -26,6 +28,7 @@ export async function rootDevMcpFreshCapabilitiesV1(root: string, argv: readonly
   const descendants = await Promise.all(requests.map(request => createBuildBootstrapCapabilitiesV1(root, request, environment)));
   const first = descendants[0]!, original = createNativeBuildCallerCapabilitiesV1(root, argv, first.tool, { ...environment, SEMIO_BUILD_MODE: first.buildMode });
   const launches = new Map(original.launches.map(launch => [JSON.stringify(launch), launch]));
+  for (const request of generatedOwners) launches.set(JSON.stringify(["repo", ...request]), ["repo", ...request]);
   for (const child of descendants) {
     if (child.tool !== original.tool || child.buildMode !== original.buildMode || JSON.stringify(child.native) !== JSON.stringify(original.native)) throw Error("Same original native gateway resources required");
     for (const launch of child.launches) launches.set(JSON.stringify(launch), launch);

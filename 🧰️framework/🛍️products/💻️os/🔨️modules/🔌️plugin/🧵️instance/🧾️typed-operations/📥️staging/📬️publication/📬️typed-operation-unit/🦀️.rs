@@ -17,26 +17,27 @@ fn granted_effect<R>(cx:&mut semio_framework_job::StepContext<'_>,grant:Retained
 fn store_unit_run(body:RetainedCloneGrant,work_quote:u64,mut step:impl FnMut(RetainedCloneGrant)->(Result<store::os_store::one_item_publication::ArtifactStoreOneItemAdvance,OriginalPublicationAdvanceFailure>,u64,bool))->(Result<store::os_store::one_item_publication::ArtifactStoreOneItemAdvance,OriginalPublicationAdvanceFailure>,RetainedCloneProgress,u64){
     use store::os_store::one_item_publication::ArtifactStoreOneItemAdvance as Advance;
     let(mut prior,mut work,mut last)=(RetainedCloneProgress::default(),0u64,None);
-    semio_framework_value::debug_histogram::debug_unit("run.scope");
     loop{
         let left=RetainedCloneGrant{maximum_items:body.maximum_items.saturating_sub(prior.copied_items),maximum_copy_bytes:body.maximum_copy_bytes.saturating_sub(prior.copied_bytes),maximum_capacity_bytes:body.maximum_capacity_bytes.saturating_sub(prior.retained_capacity_bytes),maximum_release_bytes:body.maximum_release_bytes.saturating_sub(prior.released_bytes),..body};
         let(result,spent,more)=step(left);work=work.saturating_add(spent);
-        semio_framework_value::debug_histogram::debug_unit("run.steps");
         match result{
             Ok(Advance::PreparationProgress(checkpoint,receipt)) if receipt!=RetainedCloneProgress::default()&&receipt.fits(left)=>{
                 prior=prior.saturating_add(receipt);
-                let stop=if !more{"run.stop.more"}else if work>=work_quote{"run.stop.work"}else if prior.copied_items>=body.maximum_items{"run.stop.items"}else{last=Some(checkpoint);continue};
-                semio_framework_value::debug_histogram::debug_unit(stop);
-                return(Ok(Advance::PreparationProgress(checkpoint,RetainedCloneProgress::default())),prior,work);
+                if !more||work>=work_quote||prior.copied_items>=body.maximum_items{
+                    return(Ok(Advance::PreparationProgress(checkpoint,RetainedCloneProgress::default())),prior,work);
+                }
+                last=Some(checkpoint);continue;
             }
-            Ok(Advance::Blocked)=>{semio_framework_value::debug_histogram::debug_unit("run.stop.blocked");return(last.map_or(Ok(Advance::Blocked),|checkpoint|Ok(Advance::PreparationProgress(checkpoint,RetainedCloneProgress::default()))),prior,work)}
-            other=>{semio_framework_value::debug_histogram::debug_unit("run.stop.other");return(other,prior,work)}
+            Ok(Advance::Blocked)=>{return(last.map_or(Ok(Advance::Blocked),|checkpoint|Ok(Advance::PreparationProgress(checkpoint,RetainedCloneProgress::default()))),prior,work)}
+            other=>{return(other,prior,work)}
         }
     }
 }
 
 impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> TypedCtx<'ctx, A, M, X> {
-    pub fn publish_mounted_typed_operation_unit(&mut self, mounted: &mut MountedTypedCommandFullOperation<A>, retained:RetainedCloneGrant, cx:&mut semio_framework_job::StepContext<'_>) -> Result<(), semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+    /// 📬️ Publishes one unit of `mounted` under the caller's `loan`: every ladder phase spends at most one item of it, while a durable store lane's receiving scope runs [`store_unit_run`] over the whole loan so one host turn chains as many store units as it funds.
+    pub fn publish_mounted_typed_operation_unit(&mut self, mounted: &mut MountedTypedCommandFullOperation<A>, loan:RetainedCloneGrant, cx:&mut semio_framework_job::StepContext<'_>) -> Result<(), semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+        let retained=RetainedCloneGrant{maximum_items:loan.maximum_items.min(1),..loan};
         let op=mounted.operation.operation.0;
         if !mounted.publication_failure.terminal_is_empty(){let custody=&mut mounted.publication_failure;if !custody.reservation.as_ref().is_some_and(|place|place.ready()){custody.reservation.get_or_insert_with(Default::default).prepare(cx)?;note_publication_wait(op,"the publication failure reservation is not funded yet (fuel, retained items, copy bytes)",[cx.fuel_remaining(),cx.retained_grant().maximum_items as u64,cx.retained_grant().maximum_copy_bytes as u64]);return Ok(())}let place=custody.reservation.as_mut().expect("funded publication failure reservation");if !place.pending(){place.with_body(cx,|_,slot|{*slot=custody.original.take();Ok(())})?;}if let Some(mut failure)=semio_framework_job::admit_original_domain_failure(place,cx)?{if place.terminal_is_empty(){custody.reservation=None}failure.effects=Default::default();return Err(failure.into())}return Ok(())}
         if mounted.result_page_retirement_pending() {
@@ -85,9 +86,21 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             })?;
             return Ok(());
         }
+        if mounted.pending_artifact_publication.as_ref().is_some_and(PendingArtifactStorePublication::is_closing){
+            let lane=mounted.pending_artifact_publication.as_ref().map_or(0,|pending|pending.lane().0 as u64);
+            if mounted.pending_artifact_publication.as_ref().is_some_and(PendingArtifactStorePublication::holds_store_custody){
+                let(stores,pending)=(&mut *self.stores,mounted.pending_artifact_publication.as_mut().expect("closing publication checked above"));
+                let step=semio_plugin_ownership::bounded_ownership::plugin_effect_turn(cx,|effect|stores.return_publication_custody(pending,effect).map(|progress|semio_framework_value::RetainedCloneStep::Progress(progress.unwrap_or_default())))?;
+                if step.progress()==RetainedCloneProgress::default(){note_publication_wait(op,"the closing publication's store custody return made no progress (lane, retained items, fuel)",[lane,retained.maximum_items as u64,cx.fuel_remaining()]);}
+                return Ok(())
+            }
+            let step=cx.with_retained_loan(retained,|same|mounted.advance_closing_publication(same))?;
+            if step.progress().is_none_or(|progress|progress==RetainedCloneProgress::default()){note_publication_wait(op,"the closing pending publication retirement made no progress (lane, retained items, fuel)",[lane,retained.maximum_items as u64,cx.fuel_remaining()]);}
+            return Ok(())
+        }
         if mounted.reject_cancelled_publication()? {
             mounted.reserve_cancelled_result(cx)?;
-            self.stores.handoff_mounted_durable_publication(mounted)?;
+            if !self.stores.handoff_mounted_durable_publication(mounted)? {if let Some(pending)=mounted.pending_artifact_publication.as_mut(){pending.begin_close(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::Canceled,"pending publication was cancelled before its commit"));}}
             return Ok(());
         }
         let _permit = mounted.cancellation_lease.as_ref().and_then(ToolCancellationLease::try_claim_publication).ok_or_else(|| plugin_sdk_fault("typed-operation publication claim is cancelled or occupied"))?;
@@ -130,27 +143,44 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         }
         let live_revision = self.stores.store.content_revision_now();
         let live_generation = self.stores.store.generation_now();
-        if !typed_operation_document_is_fresh(&mounted.operation, mounted.canonical_revision, live_revision, live_generation) {
-            if self.stores.handoff_mounted_durable_publication(mounted)? {
-                return Err(plugin_sdk_fault("typed-operation pending publication rejected a stale immutable document root").into());
-            }
-            if let Some(pending)=mounted.pending_artifact_publication.as_mut(){pending.begin_close(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"pending publication rejected a stale immutable document root"));}
-            return Err(plugin_sdk_fault("typed-operation pending publication rejected a stale immutable document root").into());
+        let window_config_selected = matches!(mounted.pending_artifact_publication, Some(PendingArtifactStorePublication::WindowConfig(_)))
+            || matches!(mounted.publication.as_ref(), Some(ArtifactToolCompletionValue::Emit(Ok(emit), _)) if !emit.window_config_mutations.is_empty());
+        let stale_window_config = window_config_selected && mounted.window_config_authority.as_ref().is_some_and(|authority| {
+            self.stores.window_config_store.borrow(&authority.window_kind_id, &authority.window_id)
+                .is_none_or(|live| !authority.matches_committed(&live))
+        });
+        if !typed_operation_document_is_fresh(&mounted.operation, mounted.canonical_revision, live_revision, live_generation) || stale_window_config {
+            let message = if stale_window_config {
+                "typed-operation pending publication rejected a stale window configuration root"
+            } else {
+                "typed-operation pending publication rejected a stale immutable document root"
+            };
+            let demand = semio_framework_value::RetirementDemand { copy_bytes: std::mem::size_of_val(&mounted.terminal_fault), depth: 1, ..Default::default() };
+            cx.with_original_retirement(|cx| {
+                semio_framework_job::close_original_retained_step(cx, demand, |_| {
+                    mounted.terminal_fault = Some(semio_plugin_decl_app::borrowed_report(
+                        FaultOrigin::Framework, "interactive-job.stale", semio_framework::Severity::Error,
+                        message, false,
+                    ));
+                    mounted.cancellation_lease.as_ref().expect("claimed publication lease").cancel();
+                    semio_framework_value::RetainedWorkOutcome {
+                        work: 1,
+                        result: Ok(semio_framework_value::RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() })),
+                    }
+                })?;
+                Ok(())
+            })?;
+            return Ok(());
         }
         if mounted.pending_artifact_publication.is_none() && matches!(mounted.publication.as_ref(),Some(ArtifactToolCompletionValue::Emit(Ok(emit),_))if emit.has_artifact_mutations()||!emit.config_mutations.is_empty()||!emit.draft_mutations.is_empty()||!emit.window_config_mutations.is_empty()) && mounted.admit_actor_capture(retained,cx)? {return Ok(());}
-        if mounted.pending_artifact_publication.as_ref().is_some_and(PendingArtifactStorePublication::is_closing){
-            let lane=mounted.pending_artifact_publication.as_ref().map_or(0,|pending|pending.lane().0 as u64);
-            let step=cx.with_retained_loan(retained,|same|mounted.advance_closing_publication(same))?;
-            if step.progress().is_none_or(|progress|progress==RetainedCloneProgress::default()){note_publication_wait(op,"the closing pending publication retirement made no progress (lane, retained items, fuel)",[lane,retained.maximum_items as u64,cx.fuel_remaining()]);}
-            return Ok(())
-        }
         if let Some(pending) = mounted.pending_artifact_publication.as_mut() {
-            let capture=if matches!(pending,PendingArtifactStorePublication::Artifact(_)|PendingArtifactStorePublication::Config(_)|PendingArtifactStorePublication::Draft(_)){2*std::mem::size_of::<Option<semio_plugin_retained_command::typed_operation::OriginalPublicationFailure>>()}else{0};
+            let durable=matches!(pending,PendingArtifactStorePublication::Artifact(_)|PendingArtifactStorePublication::Config(_)|PendingArtifactStorePublication::Draft(_));
+            let capture=if durable{2*std::mem::size_of::<Option<semio_plugin_retained_command::typed_operation::OriginalPublicationFailure>>()}else{0};
             let (scope_items, scope_copy, scope_work) = if cx.original_receiving_scope_held() { (0, 0, 0) } else { semio_framework_job::original_receiving_scope_headroom() };
             let phase = cx.retained_grant();
             let fuel = cx.fuel_remaining();
             let receiving_quote = RetainedCloneGrant {
-                maximum_items: retained.maximum_items.min(phase.maximum_items.saturating_sub(scope_items)),
+                maximum_items: (if durable{loan}else{retained}).maximum_items.min(phase.maximum_items.saturating_sub(scope_items)),
                 maximum_copy_bytes: retained.maximum_copy_bytes.min(phase.maximum_copy_bytes.saturating_sub(scope_copy)),
                 ..retained
             };

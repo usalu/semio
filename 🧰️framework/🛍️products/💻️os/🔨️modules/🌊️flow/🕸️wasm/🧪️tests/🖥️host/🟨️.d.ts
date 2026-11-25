@@ -1,2 +1,2 @@
-/** 🧪️ Declaration of the adjacent side-effect-only authored Source law. */
-export {};
+/** 🧪️ Exercises the selected Flow browser publication. */
+export declare function testPublishedFlowHost(packageRoot: string): Promise<void>;

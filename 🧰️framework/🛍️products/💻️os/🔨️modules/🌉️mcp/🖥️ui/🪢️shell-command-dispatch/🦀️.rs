@@ -53,10 +53,18 @@ pub fn bridge_not_running_error() -> GatewayError {
     .retryable()
 }
 
+/// 🌐️ Remedy for a gateway nobody has dialled yet, tool-neutral: the shell is started through `repo`.
+pub const NO_SHELL_REMEDY: (&str, &str) = (
+    "Start a Semio shell through `repo`; it dials this gateway on its own. Then retry.",
+    "Starte eine Semio-Shell über `repo`; sie verbindet sich selbstständig mit diesem Gateway. Dann erneut versuchen.",
+);
+
 /// 🕳️ A `BridgeHandle` exists but no shell connection is live — the normal headless state, not a
 /// bug. The gateway's offer is already published, so a shell started now dials it on its own.
 pub fn no_shell_attached_error() -> GatewayError {
-    GatewayError::new(GatewayErrorCode::PluginUnavailable, "no shell is attached to `/bridge` yet — start `bun run dashboard run playground:s` (it dials this gateway on its own) and retry").retryable()
+    GatewayError::new(GatewayErrorCode::PluginUnavailable, "no shell is attached to `/bridge` yet — start a Semio shell through `repo` (it dials this gateway on its own) and retry")
+        .with_details(serde_json::json!({ "remedy": { "en": NO_SHELL_REMEDY.0, "de": NO_SHELL_REMEDY.1 } }))
+        .retryable()
 }
 
 /// 🧭️ The connection this facet routes `ShellCommand`/`semio://window…` reads through — the

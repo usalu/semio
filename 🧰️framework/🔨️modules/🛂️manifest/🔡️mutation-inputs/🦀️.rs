@@ -134,8 +134,8 @@ pub fn mutation_input_audit(schema_json: &str, resolver: &dyn InputSchemaResolve
 pub fn registered_input_schema_document(id: &str) -> Option<DslValue> {
     #[derive(Default)]
     struct Index {
-        parsed: std::collections::HashSet<(usize, usize)>,
-        documents: std::collections::HashMap<String, DslValue>,
+        parsed: std::collections::BTreeSet<(usize, usize)>,
+        documents: BTreeMap<String, DslValue>,
     }
     static INDEX: OnceLock<Mutex<Index>> = OnceLock::new();
     let mut index = INDEX.get_or_init(Default::default).lock().expect("input schema index lock");

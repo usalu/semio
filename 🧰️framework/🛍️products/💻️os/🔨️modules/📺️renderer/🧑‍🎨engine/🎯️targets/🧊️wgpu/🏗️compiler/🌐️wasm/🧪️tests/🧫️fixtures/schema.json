@@ -217,8 +217,8 @@
     },
     "rendererPackages": {
       "type": "array",
-      "minItems": 97,
-      "maxItems": 97,
+      "minItems": 99,
+      "maxItems": 99,
       "items": {
         "type": "object",
         "additionalProperties": false,
@@ -243,8 +243,8 @@
     },
     "domainPackages": {
       "type": "array",
-      "minItems": 315,
-      "maxItems": 315,
+      "minItems": 318,
+      "maxItems": 318,
       "items": {
         "type": "object",
         "additionalProperties": false,

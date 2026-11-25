@@ -1,5 +1,5 @@
 {
-  "mutation": "changezoneoccupants",
+  "mutation": "changeZoneOccupants",
   "zoneId": "zone-living",
   "newOccupants": 5
 }

@@ -4,9 +4,9 @@
 import { normWireLiteral, normWireNumber, normWireObject, normWireRange, type NormWireReader, normWireRequired, normWireString } from "@semio-tech/norm-js/registry/contract";
 
 export interface ChangeElementOrientationDeg {
-  mutation: "changeelementorientationdeg";
+  mutation: "changeElementOrientationDeg";
   elementId: string;
   newOrientationDeg: number;
 }
 
-export const parseChangeElementOrientationDeg: NormWireReader<ChangeElementOrientationDeg> = normWireObject<ChangeElementOrientationDeg>({ mutation: normWireRequired(normWireLiteral("changeelementorientationdeg")), elementId: normWireRequired(normWireString), newOrientationDeg: normWireRequired(normWireRange(normWireNumber, {"minimum":0,"maximum":360})) });
+export const parseChangeElementOrientationDeg: NormWireReader<ChangeElementOrientationDeg> = normWireObject<ChangeElementOrientationDeg>({ mutation: normWireRequired(normWireLiteral("changeElementOrientationDeg")), elementId: normWireRequired(normWireString), newOrientationDeg: normWireRequired(normWireRange(normWireNumber, {"minimum":0,"maximum":360})) });

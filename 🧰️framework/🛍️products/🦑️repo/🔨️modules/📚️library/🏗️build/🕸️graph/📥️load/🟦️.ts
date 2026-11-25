@@ -25,6 +25,7 @@ import {readGenerationExternalInputsV1,resolveGenerationExternalInputV1,canonica
 import {loadGenerationGraphV1,type GenerationLoadStatsV1} from "../🕰️generations/🔌️load/🟨️.mjs";
 import {graphSnapshotPolicyV1,GRAPH_LIMITS_V1,graphDeclarationV1,graphPinSchemaV1,buildGraphProducerAuthorityV1,loadedGraphModuleAuthorityV1,loadedGraphAdmissionFormatV1,graphSelfUrlsV1} from "../🔐️authority/🟦️.ts";
 import {openOwnerCheckpointV1} from "./💾️owner-checkpoint/🟦️.ts";
+import {forgetPersistedPathsV1,readForgottenPathsV1,rowsForgottenV1} from "./🪦️forgotten-paths/🟦️.ts";
 import {createPassReuseV1} from "./♻️pass-reuse/🟦️.ts";
 import type {TakenMemoV1} from "../📥️inference/📦️project-nodes/♻️taken-memo/🟨️.mjs";
 import {settleInventoryRoundsV1,type InventoryVolatileV1} from "./🔁️inventory-rounds/🟦️.ts";
@@ -32,7 +33,9 @@ import {graphInventoryTextV1,graphRetryTextV1,graphSettleTextV1,graphDirtyTextV1
 import {awaitPlannerQuietV1} from "./🔕️settle-quiet/🟦️.ts";
 import {observeOwnerWithRetryV1,ownerWithheldTextV1,stableOwnerFailureHoldsV1} from "./🛟️owner-isolation/🟦️.ts";
 import {readAdmissionMemoV1,writeAdmissionMemoV1,packAdmissionMemoV1,ownersOfAdmissionMemoV1} from "./🧠️admission-memo/🟦️.ts";
-import {describeCollectionV1,registerSliceCollectionsV1,sliceReadStepV1} from "../../🧠️memory/📋️slice-report/🟨️.mjs";
+import {createOwnerFactsPagesV1,ownerFactsResidentCharactersV1} from "./📚️owner-facts-pages/🟦️.ts";
+import {SLICE_RECYCLE_POLICY_V1} from "../../🧠️memory/♻️recycle/🟨️.mjs";
+import {describeCollectionV1,registerSliceCollectionsV1,sliceReadStepV1,sliceReadWaitStepV1} from "../../🧠️memory/📋️slice-report/🟨️.mjs";
 import sourceAuthoritySchema from "../../🧬️schema/📥️authority.json" with {type:"json"};
 import sliceReportSchema from "../../🧠️memory/📋️slice-report/🧬️schema/🔣️.json" with {type:"json"};
 import {loadSelectedThroughFleetV1} from "./🤝️selected-exchange/🔌️attempt/🟦️.ts";
@@ -55,21 +58,31 @@ const isOwnerRegistryInvalidationV1=(value:unknown):value is OwnerRegistryInvali
 
 /** 🕯️ The admission facts of the owners this process observed, each with the rows that observation consumed: a later attempt of the same read asks for the same owner again, and a memo whose rows still hold answers without observing it, so one edit re-observes the owners whose rows it touched and no others.
  * @see ../../🧪️tests/🕸️graph/🩹️repair-rounds */
-const ownerFactsMemoV1=new Map<string,{readonly facts:unknown;readonly rows:readonly unknown[]}>();
+const ownerFactsMemoV1=new Map<string,{facts:unknown;readonly rows:readonly unknown[]}>();
+
+/** 📚️ Keeps the facts of the memo entries out of the heap beyond a budget that is a share of the live-heap threshold of a slice worker (`SEMIO_SLICE_RECYCLE_HEAP_MB`, else the declared policy): every entry is written to a page file of the process and read back on use, least recently used facts leave the heap first.
+ * @see ./📚️owner-facts-pages/🟦️.ts */
+const ownerFactsPagesV1=createOwnerFactsPagesV1({residentCharacters:ownerFactsResidentCharactersV1(Number(process.env[SLICE_RECYCLE_POLICY_V1.heapEnvironment])||SLICE_RECYCLE_POLICY_V1.heapMegabytes,GRAPH_LIMITS_V1.ownerFactsResidentHeapDivisor,GRAPH_LIMITS_V1.ownerFactsHeapBytesPerCharacter),maximumPageBytes:GRAPH_LIMITS_V1.ownerFactsPagesMaximumBytes});
 
 /** 📏️ What the owner memo holds, for the slice memory report: its entries, and its distinct rows beside the row references its entries hold (equal when every entry shares one instance per row).
  * @see ../../🧠️memory/📋️slice-report/🟨️.mjs */
 registerSliceCollectionsV1("owner-facts",()=>{const distinct=new Set<unknown>();let held=0;for(const entry of ownerFactsMemoV1.values()){held+=entry.rows.length;for(const row of entry.rows)distinct.add(row);}return [describeCollectionV1("graph:ownerFactsMemo",ownerFactsMemoV1),{...describeCollectionV1("graph:ownerFactsMemoRows ("+held+" held, "+distinct.size+" distinct)",[...distinct].slice(0,64)),entries:distinct.size}];});
 
-function rememberOwnerFactsV1(key:string,entry:{readonly facts:unknown;readonly rows:readonly unknown[]}):void{
-  ownerFactsMemoV1.delete(key);ownerFactsMemoV1.set(key,entry);
-  while(ownerFactsMemoV1.size>GRAPH_LIMITS_V1.ownerFactsMemoEntries)ownerFactsMemoV1.delete(ownerFactsMemoV1.keys().next().value as string);
+function rememberOwnerFactsV1(key:string,entry:{facts:unknown;readonly rows:readonly unknown[]}):void{
+  forgetOwnerFactV1(key);ownerFactsMemoV1.set(key,entry);ownerFactsPagesV1.admit(entry);
+  while(ownerFactsMemoV1.size>GRAPH_LIMITS_V1.ownerFactsMemoEntries)forgetOwnerFactV1(ownerFactsMemoV1.keys().next().value as string);
+}
+
+function forgetOwnerFactV1(key:string):void{
+  const entry=ownerFactsMemoV1.get(key);if(entry===undefined)return;
+  ownerFactsMemoV1.delete(key);ownerFactsPagesV1.release(entry);
 }
 
 /** 🧲️ The admission facts of one scope this process remembers and the way a generation of the fleet or the admission memo seeds them: the key text of a fact names the scope, the admission format of this process and the question, so a fact of another machine is stored under this format.
  * @see ./🤝️selected-exchange/🔌️attempt/🟦️.ts */
 export const selectedAdmissionFactsV1={
-  entries(scope:string):readonly {suffix:string;facts:unknown;rows:readonly unknown[]}[]{const prefix=scope+"\0"+loadedGraphAdmissionFormatV1+"\0";return [...ownerFactsMemoV1].filter(([key])=>key.startsWith(prefix)).map(([key,entry])=>({suffix:key.slice(prefix.length),facts:entry.facts,rows:entry.rows}));},
+  suffixes(scope:string):string[]{const prefix=scope+"\0"+loadedGraphAdmissionFormatV1+"\0";return [...ownerFactsMemoV1.keys()].filter(key=>key.startsWith(prefix)).map(key=>key.slice(prefix.length));},
+  entries(scope:string):readonly {suffix:string;readonly facts:unknown;rows:readonly unknown[]}[]{const prefix=scope+"\0"+loadedGraphAdmissionFormatV1+"\0";return [...ownerFactsMemoV1].filter(([key])=>key.startsWith(prefix)).map(([key,entry])=>({suffix:key.slice(prefix.length),get facts(){return ownerFactsPagesV1.facts(entry);},rows:entry.rows}));},
   seed(scope:string,suffix:string,facts:unknown,rows:readonly unknown[]):void{rememberOwnerFactsV1(scope+"\0"+loadedGraphAdmissionFormatV1+"\0"+suffix,{facts,rows:observationV1.shareObservationRowsV1((Object.isFrozen(rows)?[...rows]:rows) as unknown[])});}
 };
 
@@ -78,7 +91,11 @@ export const selectedAdmissionFactsV1={
  * @see ../../🧪️tests/🕸️graph/🩹️repair-rounds */
 export async function observeOwnerFactsMemoizedV1(input:{readonly key:string;readonly hold:(rows:readonly unknown[])=>Promise<boolean>;readonly observation:Pick<typeof observationV1,"captureObservedSourceInputsV1"|"retainObservedRowsV1">&Partial<Pick<typeof observationV1,"shareObservationRowsV1">>;readonly observe:()=>Promise<unknown>;readonly boundary?:(error:unknown)=>unknown;readonly recover?:()=>Promise<{readonly facts:unknown;readonly rows:readonly unknown[]}|undefined>;readonly persist?:(entry:{readonly facts:unknown;readonly rows:readonly unknown[]})=>void;readonly outcome?:(kind:"memo"|"checkpoint"|"discovery")=>void;readonly owner?:string;readonly aborted?:()=>boolean;readonly foreign?:(error:unknown)=>boolean;readonly onRetry?:Parameters<typeof observeOwnerWithRetryV1>[0]["onRetry"];readonly trust?:{has(entry:object):boolean;add(entry:object):void}}):Promise<unknown>{
   const memoized=ownerFactsMemoV1.get(input.key);
-  if(memoized!==undefined&&(input.trust?.has(memoized)===true||await input.hold(memoized.rows))){input.trust?.add(memoized);input.observation.retainObservedRowsV1(memoized.rows as never);input.outcome?.("memo");return memoized.facts;}
+  if(memoized!==undefined&&(input.trust?.has(memoized)===true||await input.hold(memoized.rows))){
+    let facts:unknown,readable=true;
+    try{facts=ownerFactsPagesV1.facts(memoized);}catch{readable=false;forgetOwnerFactV1(input.key);}
+    if(readable){input.trust?.add(memoized);input.observation.retainObservedRowsV1(memoized.rows as never);input.outcome?.("memo");return facts;}
+  }
   const recovered=await input.recover?.();
   if(recovered!==undefined&&await input.hold(recovered.rows)){input.observation.shareObservationRowsV1?.(recovered.rows as never);rememberOwnerFactsV1(input.key,recovered);input.trust?.add(recovered);input.observation.retainObservedRowsV1(recovered.rows as never);input.outcome?.("checkpoint");return recovered.facts;}
   const observe=input.boundary===undefined?input.observe:async()=>{try{return await input.observe();}catch(error){let classified:unknown;try{classified=input.boundary!(error);}catch{classified=undefined;}throw classified??error;}},fresh=await observeOwnerWithRetryV1({owner:input.owner??input.key,attempt:onFailure=>input.observation.captureObservedSourceInputsV1(observe,onFailure as never,false),hold:input.hold,aborted:input.aborted,foreign:input.foreign,onRetry:input.onRetry}),entry={facts:fresh.value,rows:input.observation.shareObservationRowsV1?.(fresh.observations as never)??fresh.observations};
@@ -98,7 +115,7 @@ export function forgetOwnerFactsReferencingV1(scope:string,paths:readonly string
   if(paths.length===0)return [];
   const named=new Set(paths),listings=new Set(paths.map(path=>path.slice(0,Math.max(path.lastIndexOf("/"),path.lastIndexOf("\\")))));
   const prefix=scope+"\0"+loadedGraphAdmissionFormatV1+"\0";const forgotten:string[]=[];
-  for(const [key,entry] of [...ownerFactsMemoV1])if(key.startsWith(prefix)&&entry.rows.some(row=>{const {kind,path}=row as {kind:string;path:string};return named.has(path)||(kind==="readdir"||kind==="readdirNames")&&listings.has(path);})){ownerFactsMemoV1.delete(key);forgotten.push(key.slice(prefix.length).split(" ")[0]!);}
+  for(const [key,entry] of [...ownerFactsMemoV1])if(key.startsWith(prefix)&&entry.rows.some(row=>{const {kind,path}=row as {kind:string;path:string};return named.has(path)||(kind==="readdir"||kind==="readdirNames")&&listings.has(path);})){forgetOwnerFactV1(key);forgotten.push(key.slice(prefix.length).split(" ")[0]!);}
   return [...new Set(forgotten)];
 }
 
@@ -170,12 +187,12 @@ async function loadBuildGraphAttemptV1(root:string,invocation:ScriptInvocation,p
   const selected=options.selection.kind!=="all",path=scope?join(dirname(buildGraphPathV1(root)),"selected",scope+".json"):buildGraphPathV1(root),authorityPath=scope?join(dirname(path),scope+".authority.json"):join(dirname(path),graphDeclarationV1("../🧬️schema/📣️publication.json").properties.authority.const);
   if(options.sealedOnly){if(selected)return undefined;try{if(!buildGraphProducerAuthorityV1(JSON.parse(await readFile(authorityPath,"utf8")),loadedGraphModuleAuthorityV1))return undefined;}catch(error){if((error as NodeJS.ErrnoException).code==="ENOENT"||error instanceof SyntaxError)return undefined;throw error;}}
   const check=()=>checkResourceLeaseControl(phaseControl);
-  const observation=observationV1,[producer]=await Promise.all([import("../📥️inference/🟨️.mjs"),import("../../../../🧪️test/📦️packages/🟦️typescript/🟨️.mjs"),import("../📥️inference/🛡️policy/🟨️.mjs")]);checkResourceLeaseControl(phaseControl);
-  const memoPath=scope?join(dirname(path),scope+".admission.json"):"";
+  const observation=observationV1,[producer]=await sliceReadStepV1("module-load",()=>Promise.all([import("../📥️inference/🟨️.mjs"),import("../../../../🧪️test/📦️packages/🟦️typescript/🟨️.mjs"),import("../📥️inference/🛡️policy/🟨️.mjs")]));checkResourceLeaseControl(phaseControl);
+  const memoPath=scope?join(dirname(path),scope+".admission.json"):"",forgottenFile=scope?join(dirname(path),scope+".forgotten.json"):"";
   let recovery:Promise<Awaited<ReturnType<typeof openOwnerCheckpointV1>>|undefined>|undefined;
   const checkpointForScope=()=>recovery??=(async()=>{
     if(!scope)return undefined;
-    try{return await openOwnerCheckpointV1(join(repositoryBuildGraphWriterDirectoryV1(root,"inference"),"oc"),scope,loadedGraphAdmissionFormatV1,{check,yieldContinuation:()=>phaseControl.yieldContinuation(),publish:(paths,plan,write)=>withBuildGraphOptionalPublicationsV1(paths,plan,write,undefined)});}catch{check();return undefined;}
+    try{return await openOwnerCheckpointV1(join(repositoryBuildGraphWriterDirectoryV1(root,"inference"),"oc"),scope,loadedGraphAdmissionFormatV1,{check,refused:(rows,storedAt)=>rowsForgottenV1(readForgottenPathsV1(forgottenFile),rows,storedAt),yieldContinuation:()=>phaseControl.yieldContinuation(),publish:(paths,plan,write)=>withBuildGraphOptionalPublicationsV1(paths,plan,write,undefined)});}catch{check();return undefined;}
   })();
   const inventory=async(report:ReturnType<typeof createGraphInventoryAwaitReportV1>,followUp=false,trust:{current:WeakSet<object>}={current:new WeakSet()},volatile:ReadonlySet<string>=new Set(),vanished?:(path:string)=>void)=>{
     let started=performance.now();
@@ -184,14 +201,15 @@ async function loadBuildGraphAttemptV1(root:string,invocation:ScriptInvocation,p
       if(ownerRegistryDigestV1(readBuildOwnerRegistryV1(JSON.parse(producer.readBuildOwnerRegistrySourceV1(root))))!==registryDigest)return ownerRegistryInvalidationV1;
       report.begin("memo-read");
     }
+    const forgotten=selected&&scope&&!followUp?readForgottenPathsV1(forgottenFile):undefined,memoStoredAt=forgotten!==undefined&&forgotten.paths.size>0?await lstat(memoPath).then(status=>status.mtimeMs,()=>0):0;
     let lent=selected&&scope&&!followUp?await readAdmissionMemoV1(memoPath,scope,value=>value.format===loadedGraphAdmissionFormatV1):undefined;
     const storedAdmission=lent?.admission;
     if(lent!==undefined&&scope!==undefined){
       report.count({observations:lent.observations.length});report.begin("memo-seed");
-      const known=new Set(selectedAdmissionFactsV1.entries(scope).map(entry=>entry.suffix));for(const owner of ownersOfAdmissionMemoV1(lent,known))selectedAdmissionFactsV1.seed(scope,owner.suffix,owner.facts,owner.rows);
+      const known=new Set(selectedAdmissionFactsV1.suffixes(scope));try{for await(const owner of ownersOfAdmissionMemoV1(lent,known)){if(forgotten!==undefined&&rowsForgottenV1(forgotten,owner.rows,memoStoredAt))continue;selectedAdmissionFactsV1.seed(scope,owner.suffix,owner.facts,owner.rows);}}finally{await lent.close();}
       report.begin("memo-check",{observations:lent.observations.length});
     }
-    const remembered=lent!==undefined&&await buildGraphSourceFactsHoldV1(lent.observations,invocation)?lent:undefined;
+    const remembered=lent!==undefined&&!(forgotten!==undefined&&rowsForgottenV1(forgotten,lent.observations,memoStoredAt))&&await buildGraphSourceFactsHoldV1(lent.observations,invocation)?lent:undefined;
     if(lent!==undefined)report.count({reused:remembered!==undefined});
     if(remembered===undefined)lent=undefined;
     if(selected)timing("admission-memo",started,{hit:remembered!==undefined});started=performance.now();
@@ -250,6 +268,7 @@ async function loadBuildGraphAttemptV1(root:string,invocation:ScriptInvocation,p
     report.begin("membership-hash",counts);const digest=await buildGraphMembershipV1(root,files,invocation,volatile,vanished);timing("workspace-membership-hash",started);
     return {files,digest,admission,observations:captured?.observations??[]};
   };
+  let inventoryAttempts=0;
   const settledInventory=async(orNothing:boolean):Promise<(Awaited<ReturnType<typeof inventory>>&{volatile?:InventoryVolatileV1})|undefined>=>{
     const started=performance.now(),trust={current:new WeakSet<object>()},relative=(path:string)=>(path.startsWith(root)?path.slice(root.length+1):path).split("\\").join("/");
     let attemptStarted=performance.now(),note:{en:string;de:string}|undefined,report=createGraphInventoryAwaitReportV1(),attempts=0;
@@ -257,7 +276,7 @@ async function loadBuildGraphAttemptV1(root:string,invocation:ScriptInvocation,p
       limits:{repairRounds:GRAPH_LIMITS_V1.repairRounds,volatileRounds:GRAPH_LIMITS_V1.inventoryVolatileRounds,inventoryRounds:GRAPH_LIMITS_V1.inventoryRounds},orNothing,lenient:true,
       attempt:async(round,volatile,lenient)=>{
         attempts=round;report=createGraphInventoryAwaitReportV1();attemptStarted=performance.now();
-        const value=await sliceReadStepV1("inventory",()=>inventory(report,round>1,trust,new Set([...volatile].map(relative)),lenient?path=>{(volatile as Set<string>).add(join(root,path));}:undefined),{},()=>({...report.read(),...(note&&{note})}));
+        const value=await sliceReadStepV1("inventory",()=>inventory(report,round>1,trust,new Set([...volatile].map(relative)),lenient?path=>{(volatile as Set<string>).add(join(root,path));}:undefined),{round:++inventoryAttempts},()=>({...report.read(),...(note&&{note})}));
         if(round>1)process.stderr.write("[graph-inventory] "+JSON.stringify({version:1,round,elapsedMilliseconds:Math.round(performance.now()-started),...report.outcomes(),text:graphInventoryTextV1(round,report.outcomes(),Math.round(performance.now()-started))})+"\n");
         return value;
       },
@@ -307,7 +326,7 @@ async function loadBuildGraphAttemptV1(root:string,invocation:ScriptInvocation,p
     return discoverBuildGraphV1(root,options.selection,registry!,invocation,phaseControl,on.files,on.admission,true,reuse.memo);
   },(rows:unknown[],authority:unknown[])=>{failedFacts=rows;failedAuthority=authority;});
   type Basis=Exclude<Awaited<ReturnType<typeof inventory>>,OwnerRegistryInvalidationV1>;
-  const stale:{kind:string;path:string;fact:unknown}[]=[];let moved:string[]=[],staleCount=0,rounds=reuse.carried.round,previousStale="",membershipMoved=false,admissionMoved=false;
+  const stale:{kind:string;path:string;fact:unknown}[]=[];let moved:string[]=[],staleCount=0,rounds=reuse.carried.round,previousStale="",refreshedSignature="",membershipMoved=false,admissionMoved=false;
   const collect=(row:{kind:string;path:string;fact:unknown})=>{staleCount++;if(stale.length<GRAPH_LIMITS_V1.sealStalePaths)stale.push(row);},sameAdmission=(left:Basis,right:Basis)=>!selected||JSON.stringify(left.admission)===JSON.stringify(right.admission);
   const followed=(current:Awaited<ReturnType<typeof inventory>>|undefined)=>{rounds++;if(current!==undefined&&!isOwnerRegistryInvalidationV1(current))basis=current;};
   for(;;){
@@ -319,7 +338,7 @@ async function loadBuildGraphAttemptV1(root:string,invocation:ScriptInvocation,p
       const current=await settledInventory(true);if(current!==undefined&&isOwnerRegistryInvalidationV1(current))throw error;
       const holds=await sliceReadStepV1("facts-hold",()=>buildGraphSourceFactsHoldV1(failedFacts,invocation,collect),{round:rounds+1});
       if(stableOwnerFailureHoldsV1(error,holds)||holds&&current!==undefined&&current.digest===basis.digest&&sameAdmission(basis,current)||rounds>=GRAPH_LIMITS_V1.repairRounds)throw error;
-      process.stderr.write("[graph-repair] "+JSON.stringify({round:rounds+1,failure:true,stale:stale.map(row=>row.path)})+"\n");moved=[...stale.map(row=>row.path),...followedPathsV1(root,error)];followed(current);continue;
+      process.stderr.write("[graph-repair] "+JSON.stringify({round:rounds+1,failure:true,stale:stale.map(row=>row.path)})+"\n");moved=[...stale.map(row=>row.path),...followedPathsV1(root,error)];if(scope){evictOwnerFactsReferencingV1(scope,moved);await forgetPersistedPathsV1(forgottenFile,moved);}followed(current);continue;
     }
     if(isOwnerRegistryInvalidationV1(produced.value)){invalidated("owner-registry",{before:basis.digest});return produced.value;}
     if(rounds===0)timing("graph-original-inference",phaseStarted,{observations:produced.observations.length});
@@ -331,9 +350,12 @@ async function loadBuildGraphAttemptV1(root:string,invocation:ScriptInvocation,p
     captured={value:produced.value as BuildGraphV1,observations:observed};
     if(holds&&!membershipMoved&&!admissionMoved)break;
     const signature=JSON.stringify(stale.map(row=>[row.path,row.fact]).sort());
-    if(staleCount>0&&!membershipMoved&&!admissionMoved&&signature===previousStale){process.stderr.write("[graph-retry] "+JSON.stringify({version:1,reason:"unrefreshed-facts",stale:stale.map(row=>row.path)})+"\n");throw observation.staleSourceFactsErrorV1(stale);}
+    if(staleCount>0&&!membershipMoved&&!admissionMoved&&signature===previousStale){
+      if(refreshedSignature!==signature){refreshedSignature=signature;moved=stale.map(row=>row.path);if(scope){evictOwnerFactsReferencingV1(scope,moved);await forgetPersistedPathsV1(forgottenFile,moved);}process.stderr.write("[graph-retry] "+JSON.stringify({version:1,reason:"refresh-facts",stale:stale.slice(0,8).map(row=>row.path),staleCount})+"\n");followed(current);continue;}
+      process.stderr.write("[graph-retry] "+JSON.stringify({version:1,reason:"unrefreshed-facts",stale:stale.map(row=>row.path)})+"\n");throw observation.staleSourceFactsErrorV1(stale);
+    }
     if(rounds>=GRAPH_LIMITS_V1.repairRounds)break;
-    previousStale=signature;const repairStarted=performance.now();process.stderr.write("[graph-repair] "+JSON.stringify({round:rounds+1,stale:stale.slice(0,8).map(row=>row.path),staleCount,membershipMoved,admissionMoved})+"\n");moved=stale.map(row=>row.path);followed(current);timing("graph-repair",repairStarted,{round:rounds,holds});
+    previousStale=signature;const repairStarted=performance.now();process.stderr.write("[graph-repair] "+JSON.stringify({round:rounds+1,stale:stale.slice(0,8).map(row=>row.path),staleCount,membershipMoved,admissionMoved})+"\n");moved=stale.map(row=>row.path);if(scope){evictOwnerFactsReferencingV1(scope,moved);await forgetPersistedPathsV1(forgottenFile,moved);}followed(current);timing("graph-repair",repairStarted,{round:rounds,holds});
   }
   const verdict=sealVerdictV1({rounds,staleCount,stale,membershipMoved,admissionMoved,projects:captured.value.projects as never,rows:captured.observations as never});
   reportSealV1(verdict);process.stderr.write("[graph-seal] "+JSON.stringify({version:1,mode:verdict.mode,rounds,sealedWithLaterChanges:verdict.sealedWithLaterChanges,laterChangedOwners:verdict.laterChangedOwners,membershipMoved,admissionMoved,owners:Object.keys(verdict.owners).length})+"\n");
@@ -428,14 +450,14 @@ async function loadBuildGraphUnpinnedV1(root:string,invocation:ScriptInvocation,
   }
   for(;;){
     checkScriptInvocation(invocation);checkResourceLeaseControl(phaseControl);
-    const producer=await import("../📥️inference/🟨️.mjs");checkResourceLeaseControl(phaseControl);const registry=readBuildOwnerRegistryV1(JSON.parse(producer.readBuildOwnerRegistrySourceV1(root))),scope=options.selection.kind!=="all"?buildGraphScopeKeyV1(options.selection):undefined;
+    const registry=await sliceReadStepV1("registry-read",async()=>{const producer=await import("../📥️inference/🟨️.mjs");checkResourceLeaseControl(phaseControl);return readBuildOwnerRegistryV1(JSON.parse(producer.readBuildOwnerRegistrySourceV1(root)));}),scope=options.selection.kind!=="all"?buildGraphScopeKeyV1(options.selection):undefined;
     if(scope===undefined){const sealed=await readSealedBuildGraphV1(root,invocation,phaseControl,options,registry);if(sealed&&!isOwnerRegistryInvalidationV1(sealed)){checkScriptInvocation(invocation);return sealed;}}
-    const graph=await withOwnerRegistryCustodyV1<BuildGraphV1|OwnerRegistryInvalidationV1|undefined>(phaseControl.signal,contain=>withBuildGraphStateV1(root,invocation,phaseControl,async(store,actualControl,critical)=>{
+    const graph=await sliceReadWaitStepV1("graph-state",leave=>withOwnerRegistryCustodyV1<BuildGraphV1|OwnerRegistryInvalidationV1|undefined>(phaseControl.signal,contain=>withBuildGraphStateV1(root,invocation,phaseControl,async(store,actualControl,critical)=>{
       const staging=scope?join(store.root,"selected"):store.root;await store.recheck();checkResourceLeaseControl(actualControl);requireNativeStoragePathV1(store.root,staging);await mkdir(staging,{recursive:true});checkResourceLeaseControl(actualControl);const selectedStage=scope?new RegExp("^"+scope+"(?:\\.authority)?\\.json\\.[a-f0-9-]{36}$","u"):undefined;
       await critical(async()=>{const staged=await readdir(staging);checkResourceLeaseControl(actualControl);for(const name of staged){if(!(selectedStage?.test(name)??/^(?:canonical|authority)\.json\.[a-f0-9-]{36}$/u.test(name)))continue;await store.recheck();checkResourceLeaseControl(actualControl);const path=join(staging,name),status=await lstat(path);checkResourceLeaseControl(actualControl);if(!status.isFile()||status.isSymbolicLink()||status.nlink!==1||status.size>graphSnapshotPolicyV1.maximumSnapshotBytes)throw Error("Owned bounded graph staging file required");await rm(path);checkResourceLeaseControl(actualControl);}});
-      checkResourceLeaseControl(actualControl);await store.recheck();const attempt=()=>loadBuildGraphAttemptV1(root,invocation,actualControl,options,registry,scope,critical);
+      checkResourceLeaseControl(actualControl);await store.recheck();leave();const attempt=()=>loadBuildGraphAttemptV1(root,invocation,actualControl,options,registry,scope,critical);
       return contain(()=>scope===undefined?attempt():selectedThroughFleetV1({root,invocation,scope,staging,attempt}));
-    },scope));
+    },scope)));
     checkScriptInvocation(invocation);checkResourceLeaseControl(phaseControl);
     if(graph&&!isOwnerRegistryInvalidationV1(graph))return graph;
     clearPinnedAuthorityV1();process.stderr.write("[graph-repair] "+JSON.stringify({version:1,registry:"adopted"})+"\n");

@@ -141,13 +141,20 @@ pub(super) fn plan_world3d_non_primary_press_pick(session_state: &WorldSessionSt
     })
 }
 
+/// 🖱️ Whether a plain left press on empty space orbits: no merge modifier and no utility, paint gesture or engagement session that owns the left button (`select` keeps its marquee and gumball).
+pub fn world3d_left_press_orbits(session_state: &WorldSessionState, selection_state: &WorldSelectionState, modifiers: &PointerModifiers) -> bool {
+    !(modifiers.shift || modifiers.ctrl || modifiers.meta || selection_state.engagement_session_active || selection_state.interaction_mode == "paint")
+        && !matches!(session_state.active_utility.as_str(), "select" | "fill" | "worldRelocate" | "brush" | "volumeBrush" | "surfaceBrush")
+}
+
 pub fn plan_world3d_drag(session_state: &WorldSessionState, camera_state: &WorldCameraState, generation: u64, dx: f32, dy: f32, button: i16, modifiers: &PointerModifiers) -> Option<WorldInteractionPlan> {
-    let operation = if button == 1 || (button == 2 && modifiers.shift) {
-        1.0
-    } else if button == 2 && (modifiers.alt || modifiers.meta) {
-        2.0
-    } else {
-        return None;
+    let operation = match button {
+        0 if !(modifiers.shift || modifiers.ctrl || modifiers.meta) => 2.0,
+        1 if modifiers.shift => 1.0,
+        1 => 2.0,
+        2 if (modifiers.alt || modifiers.meta) && !modifiers.shift => 2.0,
+        2 => 1.0,
+        _ => return None,
     };
     let mut next = camera_state.orbit.clone();
     if operation == 1.0 {
@@ -653,6 +660,7 @@ pub struct WorldInteractionAuthority {
     pub(crate) terrain_press: Option<semio_os_infinite_world_model::WorldTerrainStroke>,
     pub(crate) terrain_position_press: Option<TerrainPositionPress>,
     pub(crate) engagement_press: bool,
+    pub(crate) left_orbit: bool,
     pub marquee: Option<WorldMarqueeGesture>,
     pub gumball: Option<WorldGumballGesture>,
     /// 🧲️ The handle drag of this surface: its pickable handles, the bindings of its node and the drag in flight.
@@ -666,7 +674,7 @@ pub struct WorldInteractionAuthority {
 
 impl Default for WorldInteractionAuthority {
     fn default() -> Self {
-        Self { queue: WorldInteractionIntentQueue::default(), blocked: None, registry: None, active: None, right_press: None, right_dragged: false, terrain_press: None, terrain_position_press: None, engagement_press: false, marquee: None, gumball: None, handles: WorldHandleDrag::default(), gumball_swallow: false, next_generation: 1, faulted: false, closing: false }
+        Self { queue: WorldInteractionIntentQueue::default(), blocked: None, registry: None, active: None, right_press: None, right_dragged: false, terrain_press: None, terrain_position_press: None, engagement_press: false, left_orbit: false, marquee: None, gumball: None, handles: WorldHandleDrag::default(), gumball_swallow: false, next_generation: 1, faulted: false, closing: false }
     }
 }
 //#endregion 🧵️WorldInteractionTransaction

@@ -1,0 +1,20 @@
+--- a/🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🗂️catalog/🟦️.ts
++++ b/🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🗂️catalog/🟦️.ts
+@@ -34,6 +34,9 @@
+ /** 📐️ Absolute tolerance of the same comparison in real metres (15 mm); the larger of the two applies. */
+ export const EXTENT_TOLERANCE_M = 0.015;
+ 
++/** 🔠️ The name of a section: one capital letter, or two joined by a hyphen or a dash (A, A-A, B–B). It is the same in every language, so the cut-line marker and with it the paper position of the drawing do not depend on the language. */
++export const SECTION_LABEL = /^\p{Lu}(?:[-–]\p{Lu})?$/u;
++
+ /** 🎞️ The instants per clip at which the tilt of a bone out of the plane of its shapes is sampled. */
+ const TILT_SAMPLES = 9;
+ 
+@@ -482,6 +485,7 @@
+       if (section === undefined) continue;
+       const [low, high, axis, axisDe] = viewpoint === "elevation" ? [Math.min(...lateral), Math.max(...lateral), "lateral", "Querachse"] as const : viewpoint === "front" ? [state.bounds.minX, state.bounds.maxX, "forward", "Vorwärtsachse"] as const : [state.bounds.minY, state.bounds.maxY, "height", "Höhenachse"] as const;
+       const nameEn = viewpoint === "elevation" ? "side" : viewpoint;
++      if (!(SECTION_LABEL.test(section.label.en) && section.label.de === section.label.en)) add(`${path}.sections.${viewpoint}.label`, "section-label", `The ${nameEn} section is named "${section.label.en}" / "${section.label.de}": a section is named by its letters (A or A-A), the same in every language; the cut-line marker prints them beside its arrows and the caption says "Section A-A".`, `Der Schnitt der ${viewpoint === "elevation" ? "Seitenansicht" : viewpoint === "front" ? "Vorderansicht" : "Draufsicht"} heißt "${section.label.en}" / "${section.label.de}": ein Schnitt wird mit seinen Buchstaben benannt (A oder A-A), in jeder Sprache gleich; die Schnittlinie trägt sie an ihren Pfeilen und die Beschriftung lautet "Schnitt A-A".`);
+       if (!(section.plane >= low - EXTENT_TOLERANCE_M && section.plane <= high + EXTENT_TOLERANCE_M)) add(`${path}.sections.${viewpoint}.plane`, "section-plane-outside", `The ${nameEn} section "${section.label.en}" cuts at ${section.plane} m on the ${axis} axis, outside the extent ${low.toFixed(3)}…${high.toFixed(3)} m of the asset.`, `Der ${viewpoint === "plan" ? "Grundriss-Schnitt" : "Schnitt"} "${section.label.de}" der ${viewpoint === "elevation" ? "Seitenansicht" : viewpoint === "front" ? "Vorderansicht" : "Draufsicht"} liegt bei ${section.plane} m auf der ${axisDe}, außerhalb der Ausdehnung ${low.toFixed(3)}…${high.toFixed(3)} m des Assets.`);
+     }
+     if (!within(height, asset.dimensions.heightM)) add(`${path}.geometry`, "extent-height", `The default-pose height ${height.toFixed(3)} m of the 1:${rep.denominator} drawing differs from dimensions.heightM ${asset.dimensions.heightM} m by more than max(2 % of the declared value, 15 mm).`, `Die Höhe ${height.toFixed(3)} m der Zeichnung 1:${rep.denominator} in der Standardpose weicht um mehr als max(2 % des deklarierten Werts, 15 mm) von dimensions.heightM ${asset.dimensions.heightM} m ab.`);

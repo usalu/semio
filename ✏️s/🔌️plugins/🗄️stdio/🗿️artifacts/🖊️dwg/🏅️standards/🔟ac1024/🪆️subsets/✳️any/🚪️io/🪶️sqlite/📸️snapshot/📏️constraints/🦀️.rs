@@ -2,17 +2,17 @@
 /// 🗄️ The DDL of the tables this module projects.
 pub const SQL: &str = include_str!("🗄️.sql");
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::constraints::DwgAssoc2dConstraintGroup;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::constraints::DwgAxisConstraint;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::constraints::DwgConstrainedBoundedLine;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::constraints::DwgConstrainedDatumLine;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::constraints::DwgConstrainedImplicitPoint;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::constraints::DwgConstraintGeometry;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::constraints::DwgConstraintNode;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::constraints::DwgConstraintNodeCore;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::constraints::DwgDistanceConstraint;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::constraints::DwgExplicitConstraint;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::constraints::DwgGeometricConstraint;
+use semio_s_artifact_stdio_dwg_snapshot_objects_constraints::DwgAssoc2dConstraintGroup;
+use semio_s_artifact_stdio_dwg_snapshot_objects_constraints::DwgAxisConstraint;
+use semio_s_artifact_stdio_dwg_snapshot_objects_constraints::DwgConstrainedBoundedLine;
+use semio_s_artifact_stdio_dwg_snapshot_objects_constraints::DwgConstrainedDatumLine;
+use semio_s_artifact_stdio_dwg_snapshot_objects_constraints::DwgConstrainedImplicitPoint;
+use semio_s_artifact_stdio_dwg_snapshot_objects_constraints::DwgConstraintGeometry;
+use semio_s_artifact_stdio_dwg_snapshot_objects_constraints::DwgConstraintNode;
+use semio_s_artifact_stdio_dwg_snapshot_objects_constraints::DwgConstraintNodeCore;
+use semio_s_artifact_stdio_dwg_snapshot_objects_constraints::DwgDistanceConstraint;
+use semio_s_artifact_stdio_dwg_snapshot_objects_constraints::DwgExplicitConstraint;
+use semio_s_artifact_stdio_dwg_snapshot_objects_constraints::DwgGeometricConstraint;
 use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::number::Projection;
 use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::optional_words;
 use super::associativity::{project_action,reconstruct_action};

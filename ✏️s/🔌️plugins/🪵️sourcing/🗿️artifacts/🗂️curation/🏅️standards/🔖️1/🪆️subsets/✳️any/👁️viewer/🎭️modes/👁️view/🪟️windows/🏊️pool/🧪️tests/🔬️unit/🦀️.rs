@@ -20,9 +20,23 @@ async fn definition_uses_the_framework_table_window_kit() {
 async fn view_model_lists_every_stock_row_with_five_columns() {
     let document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     let stock = stock_of(&document);
-    let view = view_model(&document);
-    assert_eq!(view.columns.len(), 5);
+    let view = view_model(&document, semio_plugin::Locale::En);
+    assert_eq!(view.columns, ["Name", "Module", "Typology", "Availability", "Curated"]);
     assert_eq!(view.rows.len(), stock.len());
+}
+
+#[semio_framework_async_macros::async_test]
+async fn view_model_is_localized_and_shows_the_curation_read_only() {
+    let mut document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
+    let first = stock_of(&document).remove(0);
+    crate::schema::curation_set(&mut document, &first.id, 2);
+    let german = view_model(&document, semio_plugin::Locale::De);
+    assert_eq!(german.columns, ["Name", "Modul", "Typologie", "Verfügbarkeit", "Kuratiert"]);
+    assert_eq!(german.rows[0][0], "Brettschichtholz GL24h 200×400");
+    assert_eq!(german.rows[0][1], "Balken");
+    assert_eq!(german.rows[0][2], "Balken / Massivholz / Brettschichtholz");
+    assert_eq!(german.rows[0][4], "2");
+    assert_eq!(view_model(&document, semio_plugin::Locale::En).rows[0][4], "2");
 }
 
 #[semio_framework_async_macros::async_test]

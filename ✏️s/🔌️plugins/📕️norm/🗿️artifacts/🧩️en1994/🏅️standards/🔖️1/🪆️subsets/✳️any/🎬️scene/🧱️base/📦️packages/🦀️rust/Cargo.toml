@@ -20,3 +20,4 @@ semio-s-artifact-norm-en1994-checks = { workspace = true }
 semio-s-artifact-norm-en1994-model = { workspace = true }
 semio-s-plugin-norm-compliance = { workspace = true }
 semio-s-plugin-norm-structural-scene = { workspace = true }
+semio-s-plugin-norm-mechanics = { workspace = true }

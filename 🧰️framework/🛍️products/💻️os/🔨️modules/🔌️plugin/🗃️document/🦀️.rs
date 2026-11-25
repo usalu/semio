@@ -50,12 +50,12 @@ use semio_plugin_child::OwnedDocumentMemberIngressRegistry;
 use semio_plugin_decl_views::history_view::HistoryCommandFilter;
 use semio_plugin_decl_views::history_view::HistoryView;
 use semio_plugin_ownership::sdk_fault::plugin_sdk_fault;
-use semio_plugin_ownership::store_lifecycle::ArtifactDisposal;
-use semio_plugin_ownership::store_lifecycle::ArtifactStoreInitializationJob;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactDisposal;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactStoreInitializationJob;
 
 #[path = "📨️envelope-decode-and-ingress/🦀️.rs"]
 mod envelope_decode_and_ingress;
-pub use envelope_decode_and_ingress::{ActiveArtifactEnvelopeDecode, ActiveArtifactEnvelopeDecodeState, ActiveArtifactEnvelopeIngress, ArtifactEnvelopeDecodeOperationHandle, ArtifactEnvelopeDecodeOperationPoll, envelope_decode_replacement, original_rejection_lifecycle};
+pub use envelope_decode_and_ingress::{ActiveArtifactEnvelopeDecode, ActiveArtifactEnvelopeDecodeState, ActiveArtifactEnvelopeIngress, ArtifactEnvelopeDecodeOperationHandle, ArtifactEnvelopeDecodeOperationPoll, envelope_decode_replacement, original_composed_lifecycle_step, original_rejection_lifecycle};
 use envelope_decode_and_ingress::original_worker_lifecycle;
 
 #[path = "🏷️candidate-publication-and-composition-pins/🦀️.rs"]
@@ -64,7 +64,7 @@ pub use candidate_publication_and_composition_pins::{CompositionPinsRetirement, 
 
 #[path = "🧾️store-replacement-vocabulary/🦀️.rs"]
 mod store_replacement_vocabulary;
-pub use store_replacement_vocabulary::{ActiveArtifactStoreReplacement, ActiveArtifactStoreReplacementState, ArtifactStoreReplacementPublicationGuard, ArtifactStoreReplacementRefusal};
+pub use store_replacement_vocabulary::{ActiveArtifactStoreReplacement, STORE_REPLACEMENT_STAGES, ActiveArtifactStoreReplacementState, ArtifactStoreReplacementPublicationGuard, ArtifactStoreReplacementRefusal};
 use store_replacement_vocabulary::{ArtifactStoreRefusalCode, ArtifactStoreReplacementLeg};
 
 #[path = "🔁️store-replacement-admission-and-member-drive/🦀️.rs"]

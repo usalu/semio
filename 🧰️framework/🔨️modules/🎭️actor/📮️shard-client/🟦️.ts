@@ -109,7 +109,7 @@ export class ShardClient {
   leaseExclusive(actorId: string, options?: { readonly force?: boolean }): number { return this.hub.routing.leaseExclusive(actorId, options); }
   releaseExclusive(actorId: string): void { return this.hub.routing.releaseExclusive(actorId); }
   shardIndexFor(actorId: string): number | undefined { return this.hub.routing.shardIndexFor(actorId); }
-  activate(actorId: string, moduleUrl: string, caps: readonly ShardCapabilityGrant[], budget: ShardBudget, assets?: readonly ShardAsset[]): Promise<void> { return this.hub.activations.activate(actorId, moduleUrl, caps, budget, assets); }
+  activate(actorId: string, moduleUrl: string, caps: readonly ShardCapabilityGrant[], budget: ShardBudget, assets?: readonly ShardAsset[], component?: string | null): Promise<void> { return this.hub.activations.activate(actorId, moduleUrl, caps, budget, assets, component); }
   captureActorActivation(actorId: string): ShardActorActivationLease { return this.hub.activations.captureActorActivation(actorId); }
   dispose(actorId: string): void { return this.hub.activations.dispose(actorId); }
   captureInstanceLifecycle(actorId: string, instanceId: number): ShardInstanceLifecycleLease { return this.hub.lifecycles.captureInstanceLifecycle(actorId, instanceId); }

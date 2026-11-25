@@ -72,6 +72,11 @@ class ExactUIParityTests(unittest.TestCase):
         result = geometry.window_geometry(case["rect"], case["titleAdvance"])
         self.assert_rect(result["title"], case["title"])
         self.assert_rect(result["control"], case["control"])
+        self.assert_rect(result["body"], case["body"])
+        self.assertEqual(result["body"]["x"] + result["body"]["width"], case["rect"]["x"] + case["rect"]["width"])
+        self.assertEqual(result["body"], case["rect"])
+        self.assertEqual(result["body"]["y"], result["surface"]["y"])
+        self.assertNotIn("inset", result["metrics"])
         for key, expected in (("outline", case["outline"]), ("border_outline", case["borderOutline"])):
             self.assertEqual(len(result[key]), len(expected))
             for actual, point in zip(result[key], expected):
@@ -187,10 +192,8 @@ class ExactUIParityTests(unittest.TestCase):
                 pixels = source.convert("RGB")
                 self.assertEqual(pixels.size,(1600,900))
                 self.assertEqual(pixels.getpixel((100,100)),tuple(CASES["window"]["bodyPixel"]))
-                self.assertEqual(pixels.getpixel((0,100)),tuple(CASES["window"]["floorPixel"]))
-                for channel, plain in zip(pixels.getpixel((200,60)),pixels.getpixel((200,100)),strict=True):
-                    self.assertAlmostEqual(channel,plain,delta=CASES["oracle"]["compositeChannelTolerance"])
-                self.assertNotEqual(pixels.getpixel((200,60)),tuple(CASES["window"]["floorPixel"]))
+                for probe in CASES["window"]["underChipProbes"]:
+                    self.assertEqual(pixels.getpixel(tuple(probe["under"])),pixels.getpixel(tuple(probe["plain"])),msg=probe["name"])
                 with Image.open(zoomed) as zoom:
                     self.assertIsNotNone(ImageChops.difference(pixels, zoom.convert("RGB")).getbbox())
 
@@ -233,7 +236,7 @@ class ExactUIParityTests(unittest.TestCase):
         presentation = importlib.import_module(PRESENTATION + ".🐍️")
         contract = presentation.presentation_contract()
         metrics = importlib.import_module(PRESENTATION + ".📐️geometry.🐍️").geometry_metrics()
-        for key, metric in (("navbarHeight", "navbar_height"), ("footerHeight", "footer_height"), ("inset", "inset"), ("titleHeight", "title_height")):
+        for key, metric in (("navbarHeight", "navbar_height"), ("footerHeight", "footer_height"), ("titleHeight", "title_height")):
             self.assertAlmostEqual(contract["chrome"][key], CASES["shell"][key])
             self.assertAlmostEqual(contract["chrome"][key], metrics[metric])
         canvas = CASES["grid"]["canvas"]
@@ -244,9 +247,6 @@ class ExactUIParityTests(unittest.TestCase):
             self.assertEqual(len({(entry["cell"]["column"],entry["cell"]["row"]) for entry in entries}), len(entries))
             for entry in entries:
                 self.assertNotIn("rect",entry)
-        focus = contract["focus"]["rect"]
-        self.assertGreaterEqual(focus["x"],canvas["x"])
-        self.assertGreaterEqual(focus["y"],canvas["y"])
-        self.assertLessEqual(focus["x"]+focus["width"],canvas["x"]+canvas["width"])
-        self.assertLessEqual(focus["y"]+focus["height"],canvas["y"]+canvas["height"])
+        self.assertEqual(contract["focus"]["rect"],canvas)
+        self.assertEqual(contract["canvas"],canvas)
 

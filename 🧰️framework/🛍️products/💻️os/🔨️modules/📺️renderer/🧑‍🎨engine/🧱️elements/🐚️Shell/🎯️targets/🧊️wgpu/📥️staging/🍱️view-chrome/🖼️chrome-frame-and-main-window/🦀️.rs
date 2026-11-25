@@ -3,6 +3,7 @@
 //! Members of tier-1 crates are methods of their component struct with the lower components as parameters; use-case members stay `impl ShellState` and address the components as `self.<component>.<field>`; a private item that crossed a module boundary was widened to `pub(super)`.
 
 use super::*;
+use semio_renderer_wgpu_ui_engine::retained_ui_engine::{insert_slot, DropPlaceState, DropRect};
 
 //#region ShellChrome
 
@@ -28,6 +29,7 @@ pub struct ShellChromeChildCursor {
     pub rect: Option<Rect>,
     pub path: ShellUtilityPath,
     pub depth: usize,
+    pub band_glass: usize,
     pub find_rejected: Option<ShellFindItem>,
     pub glyph: RetainedGlyphCursor,
 }
@@ -356,8 +358,9 @@ impl<'ctx> ChromeViewCtx<'ctx> {
                 continue;
             }
             let zone = semio_renderer_wgpu_shell_dock::empty_anchor_drop_zone_rect(anchor, anchor_panel_rect(anchor, self.dock.anchor_state(anchor).size, Some(theme.control_height), 1, 0, body, theme), theme);
-            draw.push_solid([zone.x, zone.y, zone.w, zone.h], theme.celebrate[1]);
-            let tint = if hovered == Some(anchor) { theme.accent } else { theme.border_emphasized };
+            let state = if hovered == Some(anchor) { DropPlaceState::Active } else { DropPlaceState::Available };
+            draw.push_solid([zone.x, zone.y, zone.w, zone.h], theme.accent.with_alpha(theme.accent.a * state.tint_alpha()));
+            let tint = if state == DropPlaceState::Active { theme.accent } else { theme.border_emphasized };
             chrome_icon(draw, icons, "grip-vertical", zone.x + (zone.w - PANEL_CHROME_GRIP_SIZE) * 0.5, zone.y + (zone.h - PANEL_CHROME_GRIP_SIZE) * 0.5, PANEL_CHROME_GRIP_SIZE, tint);
         }
     }
@@ -365,10 +368,9 @@ impl<'ctx> ChromeViewCtx<'ctx> {
     /// 📑️ Paints and hit-tests one anchor's tab bar: a branch row toggles open/shut, a leaf row selects,
     /// and every row is a `PanelTab` drag source so a tab can be carried to another anchor.
     ///
-    /// 🫳️ While a tab drag is live, the row under the pointer paints the INSERT PREVIEW — React's
-    /// `panelTabInsertPreviewClass` (`🧭️PanelTabBar/🟦️.tsx`), a `w-0.5` accent pill the height of the
-    /// row, drawn before the chip the drop would land in front of (and after the last chip when the
-    /// drop index is past the end). The index is React's own rule: the half of the chip the pointer is
+    /// 🫳️ While a tab drag is live every tab row is a drop place tinted `DROP_TINT_AVAILABLE_PERCENT`, every branch chip a nest place, and the row under the pointer paints the INSERT SLOT
+    /// (`insert_slot` of `🔨️modules/🫳️pointer-drag/places.rs`, React's `PanelTabInsertSlot`): the rectangle inside the row that is the first half of the chip the drop would land in front of (the second half of
+    /// the last chip when the drop index is past the end), tinted `DROP_TINT_ACTIVE_PERCENT`, as is the branch the pointer nests into. The index is React's own rule: the half of the chip the pointer is
     /// over (`fraction >= 0.5` → after), or the row's length when the pointer is past every chip.
     pub fn paint_anchor_tab_bar(&mut self, anchor: PanelAnchor, draw: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, panel: Rect) {
         let rows = self.dock.anchor_panel_tab_rows(anchor);
@@ -379,37 +381,34 @@ impl<'ctx> ChromeViewCtx<'ctx> {
         for (row_index, row) in rows.iter().enumerate() {
             let y = flowed_anchor_tab_row_y(anchor.flow().block, panel, row_index, rows.len(), row_h);
             let row_rect = Rect::new(panel.x + theme.gap_standard, y, (panel.w - theme.gap_standard * 2.0).max(0.0), row_h);
-            let total_width = row
+            let widths: Vec<f32> = row
                 .iter()
                 .map(|node| {
                     let item = ChromeGroupItem { control_id: node.id.as_str(), icon_id: Some(node.icon_id.as_str()), label: Some(node.label.as_str()), active: false, disabled: false, kind: HitKind::PanelTab };
                     retained_panel_chrome_item_width(atlas, theme, &item).unwrap_or(theme.control_height)
                 })
-                .sum::<f32>()
-                + theme.gap_standard * row.len().saturating_sub(1) as f32;
+                .collect();
+            let total_width = widths.iter().sum::<f32>() + theme.gap_standard * row.len().saturating_sub(1) as f32;
             let max_offset = (total_width - row_rect.w).max(0.0);
             let scroll_id = panel_tab_scroll_id(anchor, row_index);
             let offset = self.input.scroll_offsets.get(&scroll_id).copied().unwrap_or_default().clamp(0.0, max_offset);
             self.input.scroll_offsets.insert(scroll_id.clone(), offset);
             input.register_hit(HitTarget { rect: row_rect, event: None, control_id: Some(scroll_id.clone()), kind: HitKind::ScrollRegion, drag_axis: None, drag_data: None });
             let mut x = row_rect.x - offset;
-            let preview = dragging.then(|| self.dock.dock_tab_insert_preview(row, atlas, theme, row_rect, offset, input.pointer_x, input.pointer_y)).flatten();
+            let insert = dragging.then(|| self.dock.dock_tab_insert_index(row, atlas, theme, row_rect, offset, input.pointer_x, input.pointer_y)).flatten();
             let nest = dragging.then(|| self.dock.dock_tab_nest_target(row, atlas, theme, row_rect, offset, input.pointer_x, input.pointer_y)).flatten();
+            let tint = |state: DropPlaceState| theme.accent.with_alpha(theme.accent.a * state.tint_alpha());
             if dragging {
-                draw.push_solid([panel.x, y, panel.w, row_h], theme.celebrate[1]);
+                draw.push_solid([panel.x, y, panel.w, row_h], tint(DropPlaceState::Available));
             }
             draw.push_scissor(row_rect);
+            let mut chips = Vec::with_capacity(row.len());
             for (node_index, node) in row.iter().enumerate() {
-                if preview == Some(x) {
-                    draw.push_rounded([x, y + theme.gap_standard, TAB_INSERT_PREVIEW_WIDTH_PX, (row_h - theme.gap_standard * 2.0).max(0.0)], theme.accent, TAB_INSERT_PREVIEW_WIDTH_PX * 0.5);
-                }
                 let is_active = active.get(row_index + active_offset).is_some_and(|id| id == &node.id);
                 let item = ChromeGroupItem { control_id: node.id.as_str(), icon_id: Some(node.icon_id.as_str()), label: Some(node.label.as_str()), active: is_active, disabled: false, kind: HitKind::PanelTab };
-                let chip_w = retained_panel_chrome_item_width(atlas, theme, &item).unwrap_or(theme.control_height);
+                let chip_w = widths[node_index];
                 let chip = Rect::new(x, y + (row_h - theme.control_height) * 0.5, chip_w, theme.control_height);
-                if nest == Some(node_index) {
-                    draw.push_rounded([chip.x, chip.y, chip.w, chip.h], theme.accent.with_alpha(semio_renderer_wgpu_shell_chrome_state::chrome_parity_constants().panel_drop.nest_fill_alpha), theme.border_radius);
-                }
+                chips.push(DropRect::from_frame([chip.x, chip.y, chip.w, chip.h]));
                 if is_active {
                     draw.push_rounded([chip.x, chip.y, chip.w, chip.h], theme.accent, theme.border_radius);
                 }
@@ -432,8 +431,15 @@ impl<'ctx> ChromeViewCtx<'ctx> {
                 }
                 x += chip_w + theme.gap_standard;
             }
-            if preview == Some(x) {
-                draw.push_rounded([x, y + theme.gap_standard, TAB_INSERT_PREVIEW_WIDTH_PX, (row_h - theme.gap_standard * 2.0).max(0.0)], theme.accent, TAB_INSERT_PREVIEW_WIDTH_PX * 0.5);
+            if dragging {
+                for (node_index, chip) in chips.iter().enumerate().filter(|(node_index, _)| row[*node_index].is_branch()) {
+                    let state = if nest == Some(node_index) { DropPlaceState::Active } else { DropPlaceState::Available };
+                    draw.push_solid(chip.frame(), tint(state));
+                }
+            }
+            if let Some(index) = insert {
+                let slot = insert_slot(DropRect::from_frame([row_rect.x, y, row_rect.w, row_h]), &chips, index as i64);
+                draw.push_solid(slot.frame(), tint(DropPlaceState::Active));
             }
             draw.pop_scissor();
             paint_scroll_thumb(draw, input, theme, &scroll_id, row_rect, total_width, offset, false);
@@ -540,7 +546,7 @@ impl<'ctx> ChromeViewCtx<'ctx> {
                     cursor.phase = u16::MAX;
                     return false;
                 };
-                cursor.scalar = panel_draw.push_glass([panel.x, panel.y, panel.w, panel.h], theme.border_radius, theme.glass(Level::Panel));
+                cursor.scalar = panel_draw.push_glass([panel.x, panel.y, panel.w, panel.h], 0.0, theme.glass(Level::Panel));
                 cursor.phase = 2;
             }
             2 => {

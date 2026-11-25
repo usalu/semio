@@ -13,13 +13,55 @@
       "de": "Ein Erwachsener in knielangem Wollmantel mit Schal auf dem Weg zur Arbeit, Umhängetasche an der Hüfte: Gang von der Ferse zum Zeh mit Doppelstandphase, frei schwingender ferner Arm und pendelnde Tasche, deren Gewicht die nahe Schulter trägt."
     },
     "tags": [
-      "human",
-      "adult",
-      "walker",
-      "commuter",
-      "overcoat",
-      "bag",
-      "gait"
+      {
+        "id": "human",
+        "title": {
+          "en": "human",
+          "de": "Mensch"
+        }
+      },
+      {
+        "id": "adult",
+        "title": {
+          "en": "adult",
+          "de": "erwachsen"
+        }
+      },
+      {
+        "id": "walker",
+        "title": {
+          "en": "walker",
+          "de": "Fußgänger"
+        }
+      },
+      {
+        "id": "commuter",
+        "title": {
+          "en": "commuter",
+          "de": "Pendler"
+        }
+      },
+      {
+        "id": "overcoat",
+        "title": {
+          "en": "overcoat",
+          "de": "Mantel"
+        }
+      },
+      {
+        "id": "bag",
+        "title": {
+          "en": "bag",
+          "de": "Tasche"
+        }
+      },
+      {
+        "id": "gait",
+        "title": {
+          "en": "gait",
+          "de": "Gangart"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage content worker CV-H1",

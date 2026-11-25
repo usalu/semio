@@ -5,7 +5,16 @@ use super::*;
 //#region 🔖️ToolSchemas
 //#region 🔖️InferenceToolSchemas
 pub fn inference_list_input_shape() -> serde_json::Value {
-    serde_json::json!({ "type": "object", "properties": { "artifactId": { "type": "string" } }, "additionalProperties": false })
+    serde_json::json!({
+        "type": "object",
+        "properties": {
+            "artifactId": { "type": "string" },
+            "inferenceSchema": { "type": "string" },
+            "limit": { "type": "integer", "minimum": 1, "maximum": 100, "default": 20 },
+            "cursor": { "type": "string", "description": "The `nextCursor` of a previous page; omit for the first page." },
+        },
+        "additionalProperties": false,
+    })
 }
 
 pub fn inference_list_input_schema() -> serde_json::Value {
@@ -13,7 +22,7 @@ pub fn inference_list_input_schema() -> serde_json::Value {
 }
 
 pub fn inference_list_output_shape() -> serde_json::Value {
-    serde_json::json!({ "type": "object", "properties": { "artifactId": {}, "artifactKind": {}, "declared": { "type": "array" } } })
+    serde_json::json!({ "type": "object", "properties": { "artifactId": {}, "artifactKind": {}, "declared": { "type": "array" }, "total": { "type": "integer" }, "nextCursor": { "type": ["string", "null"] } } })
 }
 
 pub fn inference_list_output_schema() -> serde_json::Value {
@@ -44,12 +53,18 @@ pub fn inference_get_output_schema() -> serde_json::Value {
 /// 📏️ The canonical five-axis requested policy grants no native authority.
 pub(super) fn inference_retained_policy_shape()->serde_json::Value{let mut schema:serde_json::Value=serde_json::from_str(include_str!("../🔣️.json")).expect("committed MCP schema is valid");schema["$defs"]["InferenceRetainedPolicy"].take()}
 
+/// 🧷️ Makes the shape self-contained: its policy reference resolves against its own `definitions` bucket, which the mirror hoists.
+fn with_retained_policy_definition(mut shape:serde_json::Value)->serde_json::Value{shape["properties"]["retainedPolicy"]=serde_json::json!({"$ref":"#/definitions/InferenceRetainedPolicy"});shape["definitions"]=serde_json::json!({"InferenceRetainedPolicy":inference_retained_policy_shape()});shape}
+
+/// 📌️ Replaces the policy reference with the inline policy and drops the definitions bucket.
+fn with_inline_retained_policy(mut input:serde_json::Value)->serde_json::Value{input["properties"]["retainedPolicy"]=inference_retained_policy_shape();if let Some(map)=input.as_object_mut(){map.remove("definitions");}input}
+
 pub fn inference_submit_input_shape() -> serde_json::Value {
-    let mut schema:serde_json::Value=serde_json::from_str(include_str!("../🔣️.json")).expect("committed MCP schema is valid");schema["$defs"]["InferenceSubmitInput"].take()
+    let mut schema:serde_json::Value=serde_json::from_str(include_str!("../🔣️.json")).expect("committed MCP schema is valid");with_retained_policy_definition(schema["$defs"]["InferenceSubmitInput"].take())
 }
 
 pub fn inference_submit_input_schema() -> serde_json::Value {
-    let mut input=inference_submit_input_shape();input["properties"]["retainedPolicy"]=inference_retained_policy_shape();wire("inference.submit","input",input)
+    wire("inference.submit","input",with_inline_retained_policy(inference_submit_input_shape()))
 }
 
 /// 📐️ `inference.events`/`inference.cancel` — one session-owned job handle plus a bounded progress
@@ -92,11 +107,11 @@ pub fn inference_job_output_schema(capability_id: &str) -> serde_json::Value {
 /// caller's canonical request body for the plugin's own inference schema; `pluginId`/`artifactId`
 /// are optional disambiguators when a kind declares rows from more than one contributor.
 pub fn inference_run_input_shape() -> serde_json::Value {
-    let mut schema:serde_json::Value=serde_json::from_str(include_str!("../🔣️.json")).expect("committed MCP schema is valid");schema["$defs"]["InferenceRunInput"].take()
+    let mut schema:serde_json::Value=serde_json::from_str(include_str!("../🔣️.json")).expect("committed MCP schema is valid");with_retained_policy_definition(schema["$defs"]["InferenceRunInput"].take())
 }
 
 pub fn inference_run_input_schema() -> serde_json::Value {
-    let mut input=inference_run_input_shape();input["properties"]["retainedPolicy"]=inference_retained_policy_shape();wire("inference.run","input",input)
+    wire("inference.run","input",with_inline_retained_policy(inference_run_input_shape()))
 }
 
 pub fn inference_run_output_shape() -> serde_json::Value {

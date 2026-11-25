@@ -9,7 +9,7 @@
   "duplicateClose": "same-promise",
   "lateOpen": "exact-session-retired",
   "openFailure": {
-    "verifiedRejection": { "nativeSession": "absent", "entry": "released" },
+    "verifiedRejection": { "nativeSession": "absent", "entry": "released", "lateSubscriber": "session open rejected before admission", "unhandledRejections": 0 },
     "uncertainTransport": { "entry": "retained-until-host-terminal", "globalCloseCalls": 1, "terminal": true }
   },
   "backpressure": { "closeControlRejections": 3, "receiptAckRejections": 2, "eventSlotCollision": "retained-pending-publication" },

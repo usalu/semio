@@ -27,7 +27,7 @@ function shared(who:Who):Record<string,string>{
 const open=async(who:Who):Promise<void>=>{who.replica=await openReplicaV1(who.options);};
 async function die(who:Who):Promise<void>{
  who.replica=undefined;
- writeFileSync(join(who.options.worktree,".cache","f","daemon.lock"),JSON.stringify({version:1,pid:2147483646,startedMs:1,originId:who.name}));
+ writeFileSync(join(who.options.worktree,".cache","f","daemon.lock"),JSON.stringify({version:1,pid:2147483646,startMs:1,originId:who.name}));
 }
 async function settle(all:readonly Who[]):Promise<void>{for(let round=0;round<4;round++){for(const who of all)await publishOnceV1(who.replica!);for(const who of all)await followOnceV1(who.replica!);}}
 

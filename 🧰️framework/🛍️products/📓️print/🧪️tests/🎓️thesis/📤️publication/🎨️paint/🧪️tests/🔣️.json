@@ -1,5 +1,19 @@
 [
   {
+    "name": "dark heading foreground",
+    "input": {
+      "runs": [
+        { "text": "Research Question", "color": "#f7f3e3" },
+        { "text": "1.", "color": "#f7f3e3" },
+        { "text": "1", "color": "#f7f3e3" },
+        { "text": "Body text", "color": "#91968f" }
+      ],
+      "heading": { "title": "Research Question", "number": "1.1" },
+      "foreground": "#f7f3e3"
+    },
+    "accepted": true
+  },
+  {
     "name": "whole numeral",
     "input": {
       "runs": [

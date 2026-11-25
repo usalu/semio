@@ -42,7 +42,7 @@ use semio_plugin::ToolDefinition;
 use semio_plugin::ToolRunJobPurpose;
 use semio_plugin::ToolRunJobRequest;
 use semio_plugin::ToolRunRetargetableJob;
-use semio_plugin::OriginalToolRunView;
+use semio_plugin::ToolRunPollView;
 use semio_plugin::WindowMeasure;
 use semio_framework_tool_run::JobKindId;
 use semio_framework_tool_run::ToolRunDefinition;
@@ -99,7 +99,7 @@ pub fn run_definition() -> ToolRunDefinition {
 /// numeric measure's `{value}` payload preserves the action semantics). `max: None` is the product
 /// decision: the planner plans toward whatever the user types, and a document that cannot hold that many
 /// says so as a visible stall step. Changing it during a run reconfigures the run.
-pub fn count_measure(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels, tool_run: Option<OriginalToolRunView<'_>>) -> WindowMeasure {
+pub fn count_measure(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels, tool_run: Option<ToolRunPollView<'_>>) -> WindowMeasure {
     WindowMeasure::Number {
         id: "puzzle3d-fill-count".into(),
         label: Some(labels.count.into()),
@@ -117,17 +117,17 @@ pub fn count_measure(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels, tool_run
 
 /// 🛠️ Fill tool measures — count entry and the nested distribution tree. Progress, status and every run
 /// control are the framework ToolRun panel's.
-pub fn measures(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels, tool_run: Option<OriginalToolRunView<'_>>) -> Vec<WindowMeasure> {
+pub fn measures(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels, tool_run: Option<ToolRunPollView<'_>>) -> Vec<WindowMeasure> {
     vec![count_measure(envelope, labels, tool_run), puzzle3d_distribution_group(envelope, labels, Some(true))]
 }
 
 /// 🏃️ The fill run of this document instance while it is not terminal.
-pub fn live_fill_run(tool_run: Option<OriginalToolRunView<'_>>) -> Option<OriginalToolRunView<'_>> {
+pub fn live_fill_run(tool_run: Option<ToolRunPollView<'_>>) -> Option<ToolRunPollView<'_>> {
     tool_run.filter(|run| run.tool_id == PUZZLE3D_FILL_TOOL_ID && !run.state.is_terminal())
 }
 
 /// 🛑️ `toolRunAbort` bound to the live fill run's current identity, or `None` without one.
-pub fn abort_action(tool_run: Option<OriginalToolRunView<'_>>) -> Option<ActionDescriptor> {
+pub fn abort_action(tool_run: Option<ToolRunPollView<'_>>) -> Option<ActionDescriptor> {
     let run = live_fill_run(tool_run)?;
     Some(puzzle3d_action(TOOL_RUN_ABORT_ACTION_ID, Some(semio_framework_pack_json::object([(TOOL_RUN_ARG_RUN_ID.to_string(), run.identity.id.run.to_string().into()), (TOOL_RUN_ARG_GENERATION.to_string(), u64::from(run.identity.generation).into())]))))
 }

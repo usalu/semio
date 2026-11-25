@@ -12,6 +12,7 @@
 import { forwardRef, useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type HTMLAttributes, type ReactElement, type ReactNode, type Ref } from "react";
 import { createPortal } from "react-dom";
 import { CardStack, Icon, OverviewCard, SharedBorderRow, SharedBorderRowCell, OverviewCardAction, cn, overviewCardChipClass, useSharedBorderFrameRef, type IconName, type OverviewCardActionProps, sharedBorderlessBoxProps } from "@semio-tech/ui-react/chrome";
+import { ScrollThumb } from "../🧷️scroll-thumb/🟦️.tsx";
 import type { Icon as QuizIcon, Motion, TaskKind } from "@semio-tech/course";
 import type { CourseText } from "../🌐️i18n/🟦️.ts";
 
@@ -211,6 +212,7 @@ export interface PaneView {
 export function PageFrame(props: { readonly page: string; readonly overlay?: ReactNode; readonly children: ReactNode }): ReactElement {
   return (
     <div data-page={props.page} className="course-page-frame ui-scrollbar-hidden relative h-full min-h-0 w-full overflow-auto bg-background text-foreground">
+      <ScrollThumb />
       <CardStack>
         {props.children}
         {props.overlay}

@@ -1,0 +1,32 @@
+--- a/✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/📏️measure-utilities-and-io/🦀️.rs
++++ b/✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/📏️measure-utilities-and-io/🦀️.rs
+@@ -203,12 +203,8 @@
+ pub(super) struct ExportDwg(pub(super) SessionCapture);
+ 
+ impl Operator for ExportDwg {
+-    fn step_plan(&self,input:Dictionary,grant:semio_framework_value::RetainedCloneGrant)->Result<(neural_engine::OperatorPlanAdmission,semio_framework_value::RetainedCloneProgress),(EvalError,Dictionary)>{neural_engine::OperatorPlanAdmission::immediate(input,grant)}
+-    fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
+-    fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_maximum_copy_bytes:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
+-    fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
+-    fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(1)}
+-            retire_geometry_capture!(0);
++    retained_geometry_job!(ExportDwg);
++    retire_geometry_capture!(0);
+     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+         self.0.with_kernel_read(|kernel| {
+             let geometry = read_geometry(input, "geometry")?;
+@@ -222,12 +218,8 @@
+ pub(super) struct ImportDwg(pub(super) SessionCapture);
+ 
+ impl Operator for ImportDwg {
+-    fn step_plan(&self,input:Dictionary,grant:semio_framework_value::RetainedCloneGrant)->Result<(neural_engine::OperatorPlanAdmission,semio_framework_value::RetainedCloneProgress),(EvalError,Dictionary)>{neural_engine::OperatorPlanAdmission::immediate(input,grant)}
+-    fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
+-    fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_maximum_copy_bytes:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
+-    fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
+-    fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(1)}
+-            retire_geometry_capture!(0);
++    retained_geometry_job!(ImportDwg);
++    retire_geometry_capture!(0);
+     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+         self.0.with_kernel(|kernel| {
+             let data = decode_base64(&read_text(input, "data")?)?;

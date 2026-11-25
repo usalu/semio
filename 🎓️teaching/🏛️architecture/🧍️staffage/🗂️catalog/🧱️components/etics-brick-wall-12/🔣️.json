@@ -13,13 +13,55 @@
       "de": "Eine Vollziegelwand von 1960 mit 12 cm WDVS im Vertikalschnitt, 1 m hoch: 15 mm Innenputz, 365 mm Vollziegel, 120 mm Mineralwolle-WDVS und 20 mm Mineralputz, U = 0,24 W/(m² K) bei Innenraum 20 °C und R_si 0,13, R_se 0,04 m²K/W."
     },
     "tags": [
-      "component",
-      "thermal",
-      "wall",
-      "build-up",
-      "brick",
-      "etics",
-      "insulation"
+      {
+        "id": "component",
+        "title": {
+          "en": "component",
+          "de": "Bauteil"
+        }
+      },
+      {
+        "id": "thermal",
+        "title": {
+          "en": "thermal",
+          "de": "thermisch"
+        }
+      },
+      {
+        "id": "wall",
+        "title": {
+          "en": "wall",
+          "de": "Wand"
+        }
+      },
+      {
+        "id": "build-up",
+        "title": {
+          "en": "build up",
+          "de": "Aufbau"
+        }
+      },
+      {
+        "id": "brick",
+        "title": {
+          "en": "brick",
+          "de": "Backstein"
+        }
+      },
+      {
+        "id": "etics",
+        "title": {
+          "en": "ETICS",
+          "de": "WDVS"
+        }
+      },
+      {
+        "id": "insulation",
+        "title": {
+          "en": "insulation",
+          "de": "Dämmung"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage component authors (W11 build)",

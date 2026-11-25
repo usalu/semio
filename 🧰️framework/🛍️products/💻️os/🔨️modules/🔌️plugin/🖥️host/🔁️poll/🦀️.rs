@@ -9,7 +9,7 @@ use semio_framework_value::{DslValue, RetainedCloneProgress, RetainedCloneStep, 
 use semio_framework_value_native_owned::NativeReceive;
 use semio_plugin_guest_contract::{operation_authority::owned_result::{self, OwnedReturn}, original_actor_context::{OriginalActorFixedCall, OriginalActorFixedKind, OriginalActorFixedReceipt}};
 use semio_plugin_host_guest_runtime::{CompiledHandle, GuestInstance, GuestRuntimes, OriginalCoreValue, OwnedOriginalCallProgress, OwnedOriginalCallResult, OwnedOriginalCallStatus, OwnedSemioExport};
-use semio_plugin_host_actor_failure::{ActorFailureRecipient,ActorFailureFetch};
+use semio_plugin_host_actor_failure::{ActorFailureRecipient,ActorFailureFetch,GuestOperationLedger};
 use semio_plugin_host_post_turn_relay::{GuestRelayUnitFlow, GuestRelayUnitStatus, NativeInstanceRetirement};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -46,6 +46,8 @@ pub struct GuestPoll<T: NativeReceive<DslValue> + RetireOwned + Sync,R:GuestPoll
     scalar_received:Option<OwnedOriginalCallResult>,
     transport_failure: Option<OriginalTurnFailure>,
     fixed: Option<OriginalActorFixedCall>,
+    fixed_seen: Option<(OriginalActorFixedKind,u64)>,
+    operation: Option<GuestOperationLedger>,
     close_kind: Option<OriginalActorFixedKind>,
     budget: Option<OriginalJobBudget>,
     input_budget: Option<OriginalJobBudget>,
@@ -114,7 +116,7 @@ fn charge_frame(cx: &mut StepContext<'_>, bytes: usize) -> Result<bool, Original
 impl<T: NativeReceive<DslValue> + RetireOwned + Sync,R:GuestPollFailureReceiving> GuestPoll<T,R> {
     /// 🌱️ No guest allocation or decoder Source is admitted by construction.
     pub fn new(policy: OriginalNativeDecodePolicy, limits: JsonReadLimits,receiver:R) -> Self {
-        Self { origin_binding:None,origin_address:None,decode_policy:policy,decode_limits:limits,receiver,binding: None, home_address: None, unit: GuestRelayUnitFlow::empty(), decoder: OriginalJsonOutputSource::new(policy, limits), captured: None, capture_close: None, outcome: None, settlement: None, return_place: OriginalCallerReturnPlace::empty(), scalar_progress: None, scalar_result: None,scalar_received:None, transport_failure: None, fixed: None, close_kind: None, budget: None, input_budget: None, raw_word: None, input_progress_pending: false, awaiting_input_budget: false, prepared: None, pointer: 0, length: 0, phase: Phase::Boot, scalar_started: false, failed: false, resident: false, output_captured: false, capsule: None, frozen: false,core_quiescent:false,actor_failure:None,failure_fetch:ActorFailureFetch::empty(),failure_plan:None,failure_budget:None,failure_received:None,failure_active:false,failure_begin_place:OriginalCallerReturnPlace::empty(),failure_born:None,failure_releasing:false,failure_pointer:0,failure_length:0,failure_recipient_accepted:None,failure_ack_frame:None,failure_ack_lower:None,failure_ack_host:None,failure_acknowledged:None, bootstrap_identity:None,bootstrap_returned:None,bootstrap_status:None,bootstrap_resume:None,journal_identity:None,header_returned:None }
+        Self { origin_binding:None,origin_address:None,decode_policy:policy,decode_limits:limits,receiver,binding: None, home_address: None, unit: GuestRelayUnitFlow::empty(), decoder: OriginalJsonOutputSource::new(policy, limits), captured: None, capture_close: None, outcome: None, settlement: None, return_place: OriginalCallerReturnPlace::empty(), scalar_progress: None, scalar_result: None,scalar_received:None, transport_failure: None, fixed: None, fixed_seen: None, operation: None, close_kind: None, budget: None, input_budget: None, raw_word: None, input_progress_pending: false, awaiting_input_budget: false, prepared: None, pointer: 0, length: 0, phase: Phase::Boot, scalar_started: false, failed: false, resident: false, output_captured: false, capsule: None, frozen: false,core_quiescent:false,actor_failure:None,failure_fetch:ActorFailureFetch::empty(),failure_plan:None,failure_budget:None,failure_received:None,failure_active:false,failure_begin_place:OriginalCallerReturnPlace::empty(),failure_born:None,failure_releasing:false,failure_pointer:0,failure_length:0,failure_recipient_accepted:None,failure_ack_frame:None,failure_ack_lower:None,failure_ack_host:None,failure_acknowledged:None, bootstrap_identity:None,bootstrap_returned:None,bootstrap_status:None,bootstrap_resume:None,journal_identity:None,header_returned:None }
     }
     fn validate(&self, cx: &StepContext<'_>) -> Result<(), OriginalTurnFailure> {
         cx.original_source_parent()?.validate_borrowed_context(cx)?;
@@ -226,11 +228,36 @@ impl<T: NativeReceive<DslValue> + RetireOwned + Sync,R:GuestPollFailureReceiving
     pub fn decoding_outcome(&self) -> Option<&OriginalJsonOutputOutcome> { self.outcome.as_ref().and_then(ControlledRetirement::original) }
     pub fn settlement_outcome(&self) -> Option<&OriginalNativeDecodeOutcome<RetainedCloneStep>> { self.settlement.as_ref().and_then(ControlledRetirement::original) }
     pub fn fixed_receipt(&self) -> Option<&OriginalActorFixedCall> { self.fixed.as_ref() }
+    pub fn refusal_cause(&self) -> String {
+        let mut parts = vec![format!("phase {:?}", self.phase)];
+        if let Some(progress) = &self.scalar_progress { parts.push(format!("guest execution {:?}", progress.result)); }
+        if let Some(failure) = self.unit.failure() { parts.push(format!("guest input refused {failure:?}")); }
+        if let Some(outcome) = self.decoding_outcome() {
+            if let Some(refusal) = outcome.receiving_refusal.as_ref().and_then(|ticket| self.decoder.receiving_refusal(ticket)) {
+                parts.push(format!("output receiving refused {}", refusal.diagnostic()));
+            }
+            if let Err(failure) = &outcome.value {
+                let cause = self.decoder.failure().and_then(|stored| {
+                    let primary = stored.primary();
+                    primary.primary.as_ref().or(primary.quote_refusal.as_ref()).or(primary.allocation_refusal.as_ref())
+                });
+                if let Some(error) = cause {
+                    parts.push(format!("output decoding refused {error}"));
+                } else {
+                    parts.push(format!("output decoding refused {failure:?}"));
+                }
+            }
+        }
+        if let Some((kind, work)) = self.fixed.as_ref().map(|call| (call.kind, call.work_units_spent)).or(self.fixed_seen) { parts.push(format!("last guest receipt {kind:?}, {work} guest work units")); }
+        if self.actor_failure.is_some() { parts.push("guest actor failure reference retained without a failure-service crossing".to_string()); }
+        parts.join("; ")
+    }
     pub fn raw_word(&self) -> Option<u64> { self.raw_word }
     /// 🧾️ Releases an observed fixed receipt only after its original metadata is paid.
     pub fn acknowledge_fixed_step(&mut self, cx: &mut StepContext<'_>) -> Result<bool, OriginalTurnFailure> {
         self.validate(cx)?;
         if self.fixed.is_none() { return Ok(true); }
+        self.fixed_seen = self.fixed.as_ref().map(|call| (call.kind, call.work_units_spent));
         if !charge(cx, true)? { return Ok(false); }
         self.fixed.take();
         Ok(true)
@@ -425,9 +452,10 @@ impl<T: NativeReceive<DslValue> + RetireOwned + Sync,R:GuestPollFailureReceiving
                     Phase::Boot|Phase::CloseContext|Phase::Poll|Phase::CloseOutput=>{let issued=budget.ok_or_else(||invalid("Poll export requires its issued guest subloan"))?;require_core_wire_reserve(issued,if self.phase==Phase::Poll{152}else if matches!(self.phase,Phase::Boot|Phase::CloseContext){200}else{144})?;for(slot,value)in args.iter_mut().zip(issued.scalar_arguments()){*slot=OriginalCoreValue::I64(value as i64)}if self.phase==Phase::CloseContext{OwnedSemioExport::CloseActorContext}else if self.phase==Phase::Boot{OwnedSemioExport::AdmitActorContext}else if self.phase==Phase::Poll{OwnedSemioExport::Poll}else{OwnedSemioExport::CloseActorOutput}},
                     Phase::ReleaseBoot|Phase::ReleaseBootstrap|Phase::ReleaseContext|Phase::ReleaseHeader|Phase::ReleaseOutput|Phase::CloseReceipt=>{args[0]=OriginalCoreValue::I32(self.pointer as i32);args[1]=OriginalCoreValue::I32(self.length as i32);OwnedSemioExport::Deallocate},
                     _=>return Err(invalid("Poll scalar export is out of phase"))
-                };let count=if export==OwnedSemioExport::Deallocate{2}else{OriginalJobBudget::SCALAR_ARGUMENT_COUNT};if runtime.begin_original_scalar_step(instance,export,&args[..count],cx)?{self.scalar_started=true;if export!=OwnedSemioExport::Deallocate{self.budget=budget}}return Ok(())
+                };let count=if export==OwnedSemioExport::Deallocate{2}else{OriginalJobBudget::SCALAR_ARGUMENT_COUNT};if runtime.begin_original_scalar_step(instance,export,&args[..count],cx)?{self.scalar_started=true;if export!=OwnedSemioExport::Deallocate{self.budget=budget}self.operation=budget.filter(|_|export==OwnedSemioExport::Poll).map(|issued|GuestOperationLedger::new(issued.retained_policy.maximum_capacity_bytes));}return Ok(())
             }
-            let progress=runtime.advance_original_scalar_step(instance,execution,cx)?;
+            let progress=match self.operation.as_mut(){Some(ledger)=>runtime.advance_original_scalar_step_receiving(instance,execution,ledger,cx)?,None=>runtime.advance_original_scalar_step(instance,execution,cx)?};
+            if !matches!(&progress.result,Ok(OwnedOriginalCallStatus::Pending)){self.operation=None;}
             let ready=matches!(&progress.result,Ok(OwnedOriginalCallStatus::Ready));
             let refused=progress.result.is_err()||matches!(&progress.result,Ok(OwnedOriginalCallStatus::Cancelled|OwnedOriginalCallStatus::Deadline));
             self.scalar_progress=Some(progress);

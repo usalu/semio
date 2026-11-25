@@ -49,7 +49,6 @@ export interface OverviewCardButtonProps extends OverviewCardBaseProps {
   readonly as: "button";
   readonly onClick: () => void;
   readonly label?: string;
-  readonly lifted?: boolean;
 }
 
 /** ⚙️ Props of {@link OverviewCard}. */
@@ -118,7 +117,7 @@ export function OverviewCard(props: OverviewCardProps): React.ReactElement {
         className,
       )}
     >
-      <div data-overview-card-paint="" className={cn("h-full transition-transform duration-200 motion-reduce:transition-none", props.lifted && "-translate-y-0.5")}>{chrome}</div>
+      <div data-overview-card-paint="" className="h-full">{chrome}</div>
     </button>
   );
 }

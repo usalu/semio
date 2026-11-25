@@ -13,10 +13,7 @@ extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
 use semio_s_artifact_norm_en1992_model::En1992Snapshot;
-
-fn missing_target(what: impl std::fmt::Display) -> protocol::MutationApplyError {
-    protocol::MutationApplyError::new("mutation.apply.missing-target", format!("{what} does not exist"))
-}
+use semio_s_plugin_norm_compliance::{nested_patch, scalar_patch};
 
 /// 🔑️ Key extractors of the foreign model rows (`id`), local markers for `list_delta!`.
 macro_rules! row_key {
@@ -45,72 +42,6 @@ row_key! {
     RcMemberKey for RcMember;
     AnchorKey for Anchor;
     PlacementKey for Placement;
-}
-
-/// 🩹️ Sparse scalar patch of one keyed row: the struct, its commit, coalescing, inverse and emptiness.
-macro_rules! scalar_patch {
-    ($(#[$doc:meta])* $name:ident for $row:ty { $($f:ident: $t:ty),+ $(,)? }) => {
-        $(#[$doc])*
-        #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
-        #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
-        #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase", default))]
-        #[value(rename_all = "camelCase", default)]
-        pub struct $name { $(pub $f: Option<$t>),+ }
-
-        impl protocol::list_delta::RowPatch<$row> for $name {
-            fn commit_into(&self, row: &mut $row, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
-                $(if let Some(value) = &self.$f { row.$f = value.clone(); })+
-                Ok(())
-            }
-            fn absorb(&mut self, later: Self) { $(if later.$f.is_some() { self.$f = later.$f; })+ }
-            fn inverse(&self, row: &$row) -> Self { Self { $($f: self.$f.as_ref().map(|_| row.$f.clone())),+ } }
-            fn is_empty(&self) -> bool { true $(&& self.$f.is_none())+ }
-        }
-    };
-}
-
-/// 🩹️ Sparse patch of one keyed row with direct leaves (`set`), leaves behind an optional object (`within`) and owned row lanes (`rows`): the struct, its commit, coalescing, inverse and emptiness.
-macro_rules! nested_patch {
-    ($(#[$doc:meta])* $name:ident for $row:ty { set { $($f:ident: $t:ty),* $(,)? } within { $($w:ident => $obj:ident . $inner:ident : $wt:ty),* $(,)? } optional { $($o:ident : $ot:ty => $oflag:ident),* $(,)? } rows { $($lane:ident : $rows:ty = $label:literal),* $(,)? } }) => {
-        $(#[$doc])*
-        #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
-        #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
-        #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase", default))]
-        #[value(rename_all = "camelCase", default)]
-        pub struct $name { $(pub $f: Option<$t>,)* $(pub $w: Option<$wt>,)* $(pub $o: Option<$ot>, pub $oflag: Option<bool>,)* $(pub $lane: Option<$rows>,)* }
-
-        impl protocol::list_delta::RowPatch<$row> for $name {
-            #[allow(unused_variables)]
-            fn commit_into(&self, row: &mut $row, capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
-                $(if let Some(value) = &self.$f { row.$f = value.clone(); })*
-                $(if let Some(value) = &self.$w { row.$obj.as_mut().ok_or_else(|| missing_target(stringify!($obj)))?.$inner = value.clone(); })*
-                $(if self.$oflag == Some(true) { row.$o = None; } else if let Some(value) = &self.$o { row.$o = Some(value.clone()); })*
-                $(if let Some(rows) = &self.$lane { row.$lane = rows.commit_onto(&row.$lane, capability).map_err(|error| error.under([$label]))?; })*
-                Ok(())
-            }
-            fn absorb(&mut self, later: Self) {
-                $(if later.$f.is_some() { self.$f = later.$f; })*
-                $(if later.$w.is_some() { self.$w = later.$w; })*
-                $(if later.$oflag == Some(true) { self.$oflag = Some(true); self.$o = None; } else if later.$o.is_some() { self.$o = later.$o; self.$oflag = None; })*
-                $(if let Some(theirs) = later.$lane {
-                    match self.$lane.as_mut() {
-                        Some(mine) => mine.absorb(theirs),
-                        None => self.$lane = Some(theirs),
-                    }
-                    self.$lane = self.$lane.take().filter(|rows| !rows.is_empty());
-                })*
-            }
-            fn inverse(&self, row: &$row) -> Self {
-                Self {
-                    $($f: self.$f.as_ref().map(|_| row.$f.clone()),)*
-                    $($w: self.$w.as_ref().and_then(|_| (|| Some(row.$obj.as_ref()?.$inner.clone()))()),)*
-                    $($o: if self.$o.is_some() || self.$oflag == Some(true) { row.$o.clone() } else { None }, $oflag: if (self.$o.is_some() || self.$oflag == Some(true)) && row.$o.is_none() { Some(true) } else { None },)*
-                    $($lane: self.$lane.as_ref().map(|rows| rows.inverse(&row.$lane)).filter(|rows| !rows.is_empty()),)*
-                }
-            }
-            fn is_empty(&self) -> bool { true $(&& self.$f.is_none())* $(&& self.$w.is_none())* $(&& self.$o.is_none() && self.$oflag != Some(true))* $(&& self.$lane.as_ref().map_or(true, |rows| rows.is_empty()))* }
-        }
-    };
 }
 
 scalar_patch! {
@@ -234,10 +165,58 @@ protocol::list_delta! {
 nested_patch! {
     /// 🩹️ Sparse patch of the `members` row addressed by its key.
     En1992MembersPatch for semio_s_artifact_norm_en1992_model::RcMember {
-        set { label_en: String, label_de: String, kind: semio_s_artifact_norm_en1992_model::MemberKind, concrete_grade_id: String, reinforcement_grade_id: String, prestress_steel_id: String, exposure: semio_s_artifact_norm_en1992_model::ExposureClass, width: f64, height: f64, effective_depth: f64, cover: f64, span: f64, support: semio_s_artifact_norm_en1992_model::SupportCondition, buckling_length: f64, use_fem: bool, udl: f64, deflection_sensitive: bool, hd_over_h: f64, liquid_sigma_s: f64, liquid_rho_p_eff: f64, liquid_f_ct_eff: f64, liquid_s_r_max: f64, bridge_sigma_c: f64, bridge_delta_sigma_s: f64, relative_humidity: f64 , bearing_width: f64}
-        within { stirrups_diameter => stirrups.diameter: f64, stirrups_spacing => stirrups.spacing: f64, stirrups_legs => stirrups.legs: u32, punching_column_width => punching.column_width: f64, punching_column_depth => punching.column_depth: f64, punching_column_position => punching.column_position: semio_s_artifact_norm_en1992_model::ColumnPosition, punching_asw => punching.asw: f64, punching_beta_method => punching.beta_method: semio_s_artifact_norm_en1992_model::PunchingBetaMethod, punching_moment_c1 => punching.moment_c1: f64, punching_moment_c2 => punching.moment_c2: f64, prestress_force => prestress.force: f64, prestress_area => prestress.area: f64, prestress_eccentricity => prestress.eccentricity: f64, prestress_loss_ratio => prestress.loss_ratio: f64, fire_rating => fire.rating: semio_s_artifact_norm_en1992_model::FireRating, fire_axis_distance => fire.axis_distance: f64, fire_slab_system => fire.slab_system: semio_s_artifact_norm_en1992_model::SlabFireSystem }
-        optional { tightness: semio_s_artifact_norm_en1992_model::TightnessClass => clear_tightness }
-        rows { longitudinal: En1992MembersLongitudinalRows = "longitudinal", actions: En1992MembersActionsRows = "actions", section_points: En1992MembersSectionPointsRows = "sectionPoints", bars: En1992MembersBarsRows = "bars", tendon_points: En1992MembersTendonPointsRows = "tendonPoints", stud_rows: En1992MembersStudRowsRows = "studRows", openings: En1992MembersOpeningsRows = "openings" }
+        leaf label_en: String,
+        leaf label_de: String,
+        leaf kind: semio_s_artifact_norm_en1992_model::MemberKind,
+        leaf concrete_grade_id: String,
+        leaf reinforcement_grade_id: String,
+        leaf prestress_steel_id: String,
+        leaf exposure: semio_s_artifact_norm_en1992_model::ExposureClass,
+        leaf width: f64,
+        leaf height: f64,
+        leaf effective_depth: f64,
+        leaf cover: f64,
+        leaf span: f64,
+        leaf support: semio_s_artifact_norm_en1992_model::SupportCondition,
+        leaf buckling_length: f64,
+        nested_option stirrups_diameter: f64 = (stirrups.diameter),
+        nested_option stirrups_spacing: f64 = (stirrups.spacing),
+        nested_option stirrups_legs: u32 = (stirrups.legs),
+        nested_option punching_column_width: f64 = (punching.column_width),
+        nested_option punching_column_depth: f64 = (punching.column_depth),
+        nested_option punching_column_position: semio_s_artifact_norm_en1992_model::ColumnPosition = (punching.column_position),
+        nested_option punching_asw: f64 = (punching.asw),
+        nested_option prestress_force: f64 = (prestress.force),
+        nested_option prestress_area: f64 = (prestress.area),
+        nested_option prestress_eccentricity: f64 = (prestress.eccentricity),
+        nested_option prestress_loss_ratio: f64 = (prestress.loss_ratio),
+        nested_option fire_rating: semio_s_artifact_norm_en1992_model::FireRating = (fire.rating),
+        nested_option fire_axis_distance: f64 = (fire.axis_distance),
+        nested_option fire_slab_system: semio_s_artifact_norm_en1992_model::SlabFireSystem = (fire.slab_system),
+        leaf use_fem: bool,
+        leaf udl: f64,
+        leaf deflection_sensitive: bool,
+        leaf hd_over_h: f64,
+        leaf liquid_sigma_s: f64,
+        leaf liquid_rho_p_eff: f64,
+        leaf liquid_f_ct_eff: f64,
+        leaf liquid_s_r_max: f64,
+        leaf bridge_sigma_c: f64,
+        leaf bridge_delta_sigma_s: f64,
+        leaf relative_humidity: f64,
+        leaf bearing_width: f64,
+        clearable tightness: semio_s_artifact_norm_en1992_model::TightnessClass = (clear_tightness),
+        clear clear_tightness: bool = (tightness),
+        rows longitudinal: En1992MembersLongitudinalRows = "longitudinal",
+        rows actions: En1992MembersActionsRows = "actions",
+        rows section_points: En1992MembersSectionPointsRows = "sectionPoints",
+        rows bars: En1992MembersBarsRows = "bars",
+        rows tendon_points: En1992MembersTendonPointsRows = "tendonPoints",
+        rows stud_rows: En1992MembersStudRowsRows = "studRows",
+        nested_option punching_beta_method: semio_s_artifact_norm_en1992_model::PunchingBetaMethod = (punching.beta_method),
+        nested_option punching_moment_c1: f64 = (punching.moment_c1),
+        nested_option punching_moment_c2: f64 = (punching.moment_c2),
+        rows openings: En1992MembersOpeningsRows = "openings",
     }
 }
 
@@ -263,10 +242,16 @@ protocol::list_delta! {
 nested_patch! {
     /// 🩹️ Sparse patch of the `anchors` row addressed by its key.
     En1992AnchorsPatch for semio_s_artifact_norm_en1992_model::Anchor {
-        set { h_ef: f64, cracked: bool, f_uk: f64, f_yk: f64, a_s: f64, d: f64, c1: f64, f_ck: f64, head_diameter: f64 }
-        within {  }
-        optional {  }
-        rows { actions: En1992AnchorsActionsRows = "actions" }
+        leaf h_ef: f64,
+        leaf cracked: bool,
+        leaf f_uk: f64,
+        leaf f_yk: f64,
+        leaf a_s: f64,
+        leaf d: f64,
+        leaf c1: f64,
+        leaf f_ck: f64,
+        leaf head_diameter: f64,
+        rows actions: En1992AnchorsActionsRows = "actions",
     }
 }
 

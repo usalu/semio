@@ -18,9 +18,16 @@ Feature: Unified page chrome chip borders
   Scenario: Chips are glass surfaces one step above the page
     Given the chip surface in the shared language-neutral fixture
     When a chip is rendered with transparency enabled
-    Then its fill is the chip surface at the fixture opacity so the content beneath stays visible
+    Then its fill is the glass of the level above its frame at the alpha derived from the styling tokens, under a veil of the foreground at the chip tint, so the content beneath stays visible
+    And its title and number meet normal-text contrast against the composited canvas
     When the transparency switch is off
-    Then the same chip is filled with the opaque chip surface
+    Then the same two layers are filled flattened onto the canvas
+
+  Scenario: Heading depth accents the inner side of each chip
+    Given a heading at any depth
+    When its title and number chips are rendered in light or dark print
+    Then their fill is window-level glass and their labels use the foreground
+    And the heading-depth accent appears on the inner vertical edge
 
   Scenario: Window, table, figure and heading chips share one rectangle
     Given the frame geometry in the shared language-neutral fixture

@@ -8,7 +8,7 @@ import { findWorkspaceRoot } from "@semio-tech/process/routing";
 
 const repoRoot = findWorkspaceRoot();
 
-import { PLAYWRIGHT_MODULE_SPECIFIER } from "../../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🟦️.ts";
+import { launchBrowserV1 } from "../../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🟦️.ts";
 
 import { BenchBudgetDefinition, benchWebSkippedRow } from "../📋️plan/🟦️.ts";
 
@@ -54,8 +54,7 @@ runBenchWebBudgets(${JSON.stringify({ pluginIds, firstPluginExtensionIds, shardC
   .catch((error) => { window.__BENCH_WEB__.error = String((error && error.stack) || error); window.__BENCH_WEB__.done = true; });
 </script></body></html>`;
   ensureRepositoryBrowserPathV1(repoRoot, process.env);
-  const { chromium }: typeof import("playwright") = await import(PLAYWRIGHT_MODULE_SPECIFIER);
-  const browser = await chromium.launch({ headless: true });
+  const browser = await launchBrowserV1({ headless: true });
   try {
     const page = await browser.newPage();
     await page.setContent(html, { waitUntil: "load" });

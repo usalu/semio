@@ -1,0 +1,15 @@
+const o={};
+await openForm("setSelectionMode");
+await runForm("setSelectionMode",{domainId:"viewport",mode:"Multiple"});
+await page.waitForTimeout(3000);
+o.hx1=__hx.slice(-6);
+const n=__hx.length;
+await closeAct(); await page.waitForTimeout(800);
+await actClick("clearSelection"); await page.waitForTimeout(2500);
+o.hxClear=__hx.slice(n);
+const n2=__hx.length;
+await openForm("setSelectionMode");
+await runForm("setSelectionMode",{domainId:"fem3d",mode:"Single"});
+await page.waitForTimeout(3000);
+o.hxFem=__hx.slice(n2);
+return o;

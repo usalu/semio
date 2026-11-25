@@ -25,19 +25,19 @@ fn build_config_store_owners(grant: RetainedCloneGrant) -> Option<Result<(store:
         V::build_config_store_owners(grant).or_else(|| Some(store::os_store::document_store_owners::bounded_artifact_store_owners::<Self::Config, Self::ConfigMutation>(grant)))
     }
 
-    fn build_document_store_disposer() -> semio_plugin_ownership::store_lifecycle::ArtifactDisposal<store::ArtifactStore<Self::Snapshot, Self::Mutation>> {
-        V::build_document_store_disposer().or_else(|| Some(semio_plugin_ownership::store_lifecycle::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>()))
+    fn build_document_store_disposer() -> semio_plugin_store_lifecycle::store_lifecycle::ArtifactDisposal<store::ArtifactStore<Self::Snapshot, Self::Mutation>> {
+        V::build_document_store_disposer().or_else(|| Some(semio_plugin_store_lifecycle::store_lifecycle::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>()))
     }
 
-    fn build_config_store_disposer() -> semio_plugin_ownership::store_lifecycle::ArtifactDisposal<store::ConfigStore<Self::Config, Self::ConfigMutation>> {
-        V::build_config_store_disposer().or_else(|| Some(semio_plugin_ownership::store_lifecycle::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>()))
+    fn build_config_store_disposer() -> semio_plugin_store_lifecycle::store_lifecycle::ArtifactDisposal<store::ConfigStore<Self::Config, Self::ConfigMutation>> {
+        V::build_config_store_disposer().or_else(|| Some(semio_plugin_store_lifecycle::store_lifecycle::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>()))
     }
 
-    fn build_presence_store_disposer() -> semio_plugin_ownership::store_lifecycle::ArtifactDisposal<store::PresenceStore<Self::Presence, Self::PresenceMutation>> {
+    fn build_presence_store_disposer() -> semio_plugin_store_lifecycle::store_lifecycle::ArtifactDisposal<store::PresenceStore<Self::Presence, Self::PresenceMutation>> {
         V::build_presence_store_disposer().or_else(|| Some(semio_plugin_decl_views::presence_retirement::no_presence_store_disposer()))
     }
 
-    fn build_transient_store_disposer() -> semio_plugin_ownership::store_lifecycle::ArtifactDisposal<store::TransientStore<Self::Transient, Self::TransientMutation>> {
+    fn build_transient_store_disposer() -> semio_plugin_store_lifecycle::store_lifecycle::ArtifactDisposal<store::TransientStore<Self::Transient, Self::TransientMutation>> {
         V::build_transient_store_disposer().or_else(|| Some(semio_plugin_decl_views::transient_retirement::no_transient_store_disposer()))
     }
 

@@ -10,6 +10,31 @@ export async function registerTypedOperationCompletionTests(vitest: PluginRuntim
     const idle = { tag: "idle" } as const;
     const moreWork = { tag: "moreWork" } as const;
 
+    it("runs a waiting interactive edit before a queued standing drain", async () => {
+      const { createTurnPump } = await import("../../🧱️elements/🔌️PluginRuntime/🚚️handle-turn-drive/🟦️.ts");
+      const { serializeCommandIngressForActor } = await import("../../🧱️elements/🔌️PluginRuntime/🧵️turn-dispatch/🟦️.ts");
+      const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧪️tests/🧫️fixtures/📨️command-settlement.json");
+      const { default: equal } = await import("fast-deep-equal");
+      const instance = 41707, actorId = "standing-drain-priority#" + instance;
+      const observed: string[] = [];
+      const entered = Promise.withResolvers<void>(), release = Promise.withResolvers<void>();
+      const prior = serializeCommandIngressForActor(actorId, async () => { entered.resolve(); await release.promise; });
+      await entered.promise;
+      type Owners = Parameters<typeof createTurnPump>;
+      const pump = createTurnPump(
+        { state: {}, closingInstances: new Set(), actorIdByInstance: new Map([[instance, actorId]]), documentBindings: new Map(), turnOutcomes: [], shardClient: { captureActorActivation: () => ({ assertActive() {} }) } } as unknown as Owners[0],
+        { requireActorId: () => actorId, submitTurn: async () => { observed.push("drain"); return { status: idle, nextWake: null, effects: [], uiPatches: [] }; } } as unknown as Owners[1],
+        { acceptUiPatches: () => [] } as unknown as Owners[2],
+        { routeHostEffects: () => [] } as unknown as Owners[3],
+      );
+      const drain = pump.drainTypedOperations(instance);
+      const edit = serializeCommandIngressForActor(actorId, async () => { observed.push("edit"); });
+      release.resolve();
+      await Promise.all([prior, drain, edit]);
+      pendingCompletionEffects.delete(instance);
+      expect(equal(observed, fixture.standingDrainOrder), observed.join(", ")).toBe(true);
+    });
+
     it("stops at the first idle settle instead of polling forever", async () => {
       const statuses: unknown[] = [moreWork, moreWork, idle, moreWork];
       let polls = 0;

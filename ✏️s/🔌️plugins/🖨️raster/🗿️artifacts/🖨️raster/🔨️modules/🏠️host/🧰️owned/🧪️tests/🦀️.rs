@@ -20,7 +20,7 @@ fn exact_grant(demand: semio_framework_value::RetirementDemand) -> RetainedClone
     RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: RASTER_OWNED_FIELD_BYTES.max(demand.copy_bytes), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) }
 }
 
-fn with_effect<T>(grant: RetainedCloneGrant, budget: u64, run: impl FnOnce(&mut RetainedAllocationEffect<'_>) -> T) -> T {
+pub(crate) fn with_effect<T>(grant: RetainedCloneGrant, budget: u64, run: impl FnOnce(&mut RetainedAllocationEffect<'_>) -> T) -> T {
     let mut turn = semio_framework_job::OriginalRetirementPump::new().turn(budget.max(1), u64::MAX, semio_framework_job::default_now_us, grant).unwrap();
     let (result, _) = turn.with_effect(|effect| run(&mut effect.nested_within(grant, budget))).unwrap().expect("test work quote");
     result

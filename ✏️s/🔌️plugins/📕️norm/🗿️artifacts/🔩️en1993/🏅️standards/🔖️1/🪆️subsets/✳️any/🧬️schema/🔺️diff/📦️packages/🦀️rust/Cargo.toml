@@ -16,6 +16,12 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-s-artifact-norm-en1993-diff-rows-members = { workspace = true }
+semio-s-artifact-norm-en1993-diff-rows-joints = { workspace = true }
+semio-s-artifact-norm-en1993-diff-rows-fatigue-fire = { workspace = true }
+semio-s-artifact-norm-en1993-diff-rows-thin-walled = { workspace = true }
+semio-s-artifact-norm-en1993-diff-rows-structures = { workspace = true }
+semio-s-artifact-norm-en1993-diff-rows-frame = { workspace = true }
 serde = { workspace = true, optional = true }
 semio-framework-dsl-record = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-dsl-record-derive = { workspace = true }
@@ -35,9 +41,15 @@ semio-s-artifact-norm-en1993-model = { workspace = true }
 semio-s-plugin-norm-compliance = { workspace = true }
 
 [features]
-test-support = ["dep:serde", "semio-s-artifact-norm-en1993-model/test-support", "semio-s-plugin-norm-compliance/test-support"]
+test-support = ["dep:serde", "semio-s-artifact-norm-en1993-diff-rows-members/test-support", "semio-s-artifact-norm-en1993-diff-rows-joints/test-support", "semio-s-artifact-norm-en1993-diff-rows-fatigue-fire/test-support", "semio-s-artifact-norm-en1993-diff-rows-thin-walled/test-support", "semio-s-artifact-norm-en1993-diff-rows-structures/test-support", "semio-s-artifact-norm-en1993-diff-rows-frame/test-support", "semio-s-artifact-norm-en1993-model/test-support", "semio-s-plugin-norm-compliance/test-support"]
 
 [dev-dependencies]
+semio-s-artifact-norm-en1993-diff-rows-members = { workspace = true, features = ["test-support"] }
+semio-s-artifact-norm-en1993-diff-rows-joints = { workspace = true, features = ["test-support"] }
+semio-s-artifact-norm-en1993-diff-rows-fatigue-fire = { workspace = true, features = ["test-support"] }
+semio-s-artifact-norm-en1993-diff-rows-thin-walled = { workspace = true, features = ["test-support"] }
+semio-s-artifact-norm-en1993-diff-rows-structures = { workspace = true, features = ["test-support"] }
+semio-s-artifact-norm-en1993-diff-rows-frame = { workspace = true, features = ["test-support"] }
 semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-s-plugin-norm-compliance = { workspace = true, features = ["compliance-testing"] }
 serde = { workspace = true }

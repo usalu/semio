@@ -1,7 +1,7 @@
 //! 📷️ Shared window camera fixtures: one schema-first camera state, its whole-record mutation, the retained edit and the owners that bind them, mounted by the in-crate preview laws and the companion window-config laws alike.
 
 use std::sync::Arc;
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use semio_plugin_window_config::{WindowConfigOwner, bounded_window_config_preparation_factory, bounded_window_config_store_disposer, bounded_window_config_store_owners};
 use semio_os_kernel as pack;
 use semio_os_kernel as protocol;

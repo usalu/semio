@@ -693,7 +693,7 @@ fn unbalanced_column_moments_show_a_moment_glyph_per_direction_and_grips_for_the
         assert!(built.handles.iter().any(|h| matches!(h.kind, scene::HandleKind::ChoiceStepper) && h.writes.iter().any(|w| w.path == path)), "{path} has a choice stepper");
     }
     let simplified = En1992Snapshot::flat_slab_punching();
-    let (plain, _) = built(&simplified, &[]);
+    let (plain, _) = self::built(&simplified, &[]);
     assert!(plain.handles.iter().any(|h| h.writes.iter().any(|w| w.path.ends_with("punching.betaMethod"))));
     assert!(plain.handles.iter().all(|h| h.writes.iter().all(|w| !w.path.contains("punching.moment"))), "the moments are only editable with the method from unbalanced moments");
 }
@@ -791,7 +791,7 @@ fn the_grade_legend_and_the_anchor_and_placement_diagrams_project_the_document()
     let plan = built.diagrams.iter().find(|d| d.id == "placements:document").expect("placement plan");
     assert_eq!(plan.table_twin.columns[0].values, vec![2.0]);
     assert_eq!(plan.markers[0].binding.as_ref().map(|b| b.path.as_str()), Some("placements[id=anc-1].x"));
-    let (none, _) = built(&En1992Snapshot::compliant_office_frame(), &[]);
+    let (none, _) = self::built(&En1992Snapshot::compliant_office_frame(), &[]);
     assert!(none.diagrams.iter().all(|d| d.id != "placements:document"));
 }
 
@@ -810,7 +810,7 @@ fn every_section_point_of_an_outline_has_a_grip_per_axis_on_the_member() {
     }
     close(built.handles.iter().find(|h| h.id == format!("{id}/outline-p3-y")).expect("grip").writes[0].map.base, 0.5, 1e-12);
     let rectangle = En1992Snapshot::compliant_office_frame();
-    let (plain, _) = built(&rectangle, &[]);
+    let (plain, _) = self::built(&rectangle, &[]);
     assert!(plain.handles.iter().all(|h| !h.id.contains("/outline-")), "a rectangle has no outline grips");
 }
 

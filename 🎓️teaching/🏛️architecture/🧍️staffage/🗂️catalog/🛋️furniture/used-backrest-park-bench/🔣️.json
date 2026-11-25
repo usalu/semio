@@ -13,19 +13,97 @@
    "de": "Eine klassische 1,80 m lange städtische Parkbank mit Lehne nach zwanzig Jahren im Volkspark: Zwei einteilige Grauguss-Seitenteile mit Armlehnen, tannengrün lackiert und an den Füßen rostend, tragen drei Sitz- und zwei Rückenlatten aus Tropenhartholz, silbergrau verwittert und rissig; die vordere Sitzlatte hat der Bauhof durch frische gelbe Robinie ersetzt. Die Gestelle sind auf zwei Beton-Punktfundamente gedübelt, deren Oberseiten 25 mm aus dem ausgetretenen Kies ragen. Graffiti und ein abgerissener Aufkleber an der Lehne, Moos auf der beschatteten Oberkante, Kaugummi auf dem Sitz und eine Fersenmulde davor erzählen von ihrem Gebrauch. Sie wird an zwei Rundschlingen ausgehoben und trägt drei Sitzende. Seitenansicht: die Bankvorderseite entlang ihrer Länge."
   },
   "tags": [
-   "used",
-   "park",
-   "public-space",
-   "seating",
-   "bench",
-   "street-furniture",
-   "cast-iron",
-   "hardwood",
-   "timber",
-   "robinia",
-   "concrete",
-   "point-footing",
-   "weathered"
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "park",
+    "title": {
+     "en": "park",
+     "de": "Park"
+    }
+   },
+   {
+    "id": "public-space",
+    "title": {
+     "en": "public space",
+     "de": "öffentlicher Raum"
+    }
+   },
+   {
+    "id": "seating",
+    "title": {
+     "en": "seating",
+     "de": "Sitzmöbel"
+    }
+   },
+   {
+    "id": "bench",
+    "title": {
+     "en": "bench",
+     "de": "Bank"
+    }
+   },
+   {
+    "id": "street-furniture",
+    "title": {
+     "en": "street furniture",
+     "de": "Stadtmobiliar"
+    }
+   },
+   {
+    "id": "cast-iron",
+    "title": {
+     "en": "cast iron",
+     "de": "Gusseisen"
+    }
+   },
+   {
+    "id": "hardwood",
+    "title": {
+     "en": "hardwood",
+     "de": "Laubholz"
+    }
+   },
+   {
+    "id": "timber",
+    "title": {
+     "en": "timber",
+     "de": "Holz"
+    }
+   },
+   {
+    "id": "robinia",
+    "title": {
+     "en": "robinia",
+     "de": "Robinie"
+    }
+   },
+   {
+    "id": "concrete",
+    "title": {
+     "en": "concrete",
+     "de": "Beton"
+    }
+   },
+   {
+    "id": "point-footing",
+    "title": {
+     "en": "point footing",
+     "de": "Einzelfundament"
+    }
+   },
+   {
+    "id": "weathered",
+    "title": {
+     "en": "weathered",
+     "de": "verwittert"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content (used park objects wave, row 01)",

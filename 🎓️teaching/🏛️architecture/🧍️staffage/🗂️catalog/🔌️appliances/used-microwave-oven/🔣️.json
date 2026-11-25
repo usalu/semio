@@ -13,17 +13,83 @@
    "de": "Eine gebrauchte 20-Liter-Solo-Mikrowelle 0,44 x 0,258 x 0,352 m von etwa 2005, 10,71 kg, 700 W Leistung und 1150 W Nennaufnahme: ein Garraum von 315 x 212 x 293 mm, dessen weißer Lack vergilbt und bespritzt ist, ein 245-mm-Glasdrehteller auf seinem Rollenring, eine seitlich angeschlagene Tür mit zerkratztem Fenster, eine Türöffnertaste, der originale Zeitknopf und ein schwarzer Ersatz-Leistungsknopf, ein eingedellter Deckel mit Preisaufkleber und ein geklebtes Netzkabel; gelagert auf einem flachgelegten Bananenkarton im Lager, von einer Person getragen, wieder in Betrieb auf einer Küchenarbeitsplatte mit drehendem Teller."
   },
   "tags": [
-   "used",
-   "household",
-   "second-hand",
-   "kitchen",
-   "microwave",
-   "appliance",
-   "turntable",
-   "steel",
-   "glass",
-   "abs",
-   "countertop"
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "household",
+    "title": {
+     "en": "household",
+     "de": "Haushalt"
+    }
+   },
+   {
+    "id": "second-hand",
+    "title": {
+     "en": "second-hand",
+     "de": "Second-Hand"
+    }
+   },
+   {
+    "id": "kitchen",
+    "title": {
+     "en": "kitchen",
+     "de": "Küche"
+    }
+   },
+   {
+    "id": "microwave",
+    "title": {
+     "en": "microwave",
+     "de": "Mikrowelle"
+    }
+   },
+   {
+    "id": "appliance",
+    "title": {
+     "en": "appliance",
+     "de": "Gerät"
+    }
+   },
+   {
+    "id": "turntable",
+    "title": {
+     "en": "turntable",
+     "de": "Drehteller"
+    }
+   },
+   {
+    "id": "steel",
+    "title": {
+     "en": "steel",
+     "de": "Stahl"
+    }
+   },
+   {
+    "id": "glass",
+    "title": {
+     "en": "glass",
+     "de": "Glas"
+    }
+   },
+   {
+    "id": "abs",
+    "title": {
+     "en": "ABS",
+     "de": "ABS"
+    }
+   },
+   {
+    "id": "countertop",
+    "title": {
+     "en": "countertop",
+     "de": "Arbeitsplatte"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content (used household objects wave)",
@@ -9268,12 +9334,1004 @@
     ]
    },
    "200": {
-    "status": "unavailable",
-    "denominator": 200
+    "status": "authored",
+    "denominator": 200,
+    "decisions": [
+     {
+      "en": "Body for the 30 mm feature: the housing shell runs from the pad to the top (the 10 mm feet and the technical bay merge into it) and keeps the cavity as its opening, closed by a 30 mm back; the door keeps its 35 mm frame with the window and the 4 mm glass as a declared sheet, the fascia is its 35 mm block and the turntable one 30 mm disc; knobs, plug, cord, button and hinge pins are below the feature and left out.",
+      "de": "Körper für das 30-mm-Merkmal: die Gehäuseschale reicht von der Unterlage bis zur Oberseite (die 10-mm-Füße und der Technikraum gehen in ihr auf) und behält den Garraum als Öffnung, geschlossen von einer 30-mm-Rückwand; die Tür behält ihren 35-mm-Rahmen mit Fenster und das 4-mm-Glas als erklärte Platte, die Blende ist ihr 35-mm-Block und der Drehteller eine 30-mm-Scheibe; Knöpfe, Stecker, Kabel, Taste und Scharnierzapfen liegen unter dem Merkmal und entfallen."
+     },
+     {
+      "en": "Thermal: the body solids in their regions by reference, the cavity lining with its back sheet, the exhaust patch and one iron block for the hidden electronics.",
+      "de": "Thermik: die Körper in ihren Regionen als Verweis, die Garraumauskleidung mit ihrer Rückwand, die Abluftfläche und ein Eisenblock für die verdeckte Elektronik."
+     },
+     {
+      "en": "Structure: the members by reference, the back also holding the cord bone that runs 20 mm behind it, a 30 mm pad support and the mass marker.",
+      "de": "Tragwerk: die Stäbe als Verweis, die Rückwand fasst auch den Kabelknochen, der 20 mm hinter ihr läuft, ein 30-mm-Auflager der Unterlage und die Massenmarke."
+     }
+    ],
+    "body": [
+     {
+      "id": "pad",
+      "kind": "box",
+      "bone": "pad",
+      "material": "corrugated-board",
+      "role": "body",
+      "tone": 0.62,
+      "size": [
+       0.48,
+       0.008,
+       0.395
+      ],
+      "transform": {
+       "translation": [
+        0.24,
+        0.004,
+        0.0075
+       ]
+      },
+      "sheet": true
+     },
+     {
+      "id": "shell",
+      "kind": "extrude",
+      "bone": "housing",
+      "material": "painted-steel",
+      "role": "body",
+      "tone": 0.86,
+      "profile": [
+       [
+        0,
+        0
+       ],
+       [
+        0.44,
+        0
+       ],
+       [
+        0.44,
+        0.258
+       ],
+       [
+        0,
+        0.258
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.135,
+      "to": 0.135,
+      "holes": [
+       [
+        [
+         0.006,
+         0.024
+        ],
+        [
+         0.329,
+         0.024
+        ],
+        [
+         0.329,
+         0.244
+        ],
+        [
+         0.006,
+         0.244
+        ]
+       ]
+      ]
+     },
+     {
+      "id": "back",
+      "kind": "box",
+      "bone": "housing",
+      "material": "painted-steel",
+      "role": "body",
+      "tone": 0.8,
+      "size": [
+       0.44,
+       0.258,
+       0.03
+      ],
+      "transform": {
+       "translation": [
+        0.22,
+        0.129,
+        0.15
+       ]
+      }
+     },
+     {
+      "id": "plate",
+      "kind": "revolve",
+      "bone": "turntable",
+      "material": "borosilicate",
+      "role": "body",
+      "tone": 0.85,
+      "profile": [
+       [
+        -0.004,
+        0
+       ],
+       [
+        -0.004,
+        0.1225
+       ],
+       [
+        0.026,
+        0.1225
+       ],
+       [
+        0.026,
+        0
+       ]
+      ],
+      "axis": [
+       1,
+       0,
+       0
+      ],
+      "origin": [
+       0,
+       0,
+       0
+      ]
+     },
+     {
+      "id": "door-frame",
+      "kind": "extrude",
+      "bone": "door",
+      "material": "abs-aged",
+      "role": "body",
+      "tone": 0.92,
+      "profile": [
+       [
+        0,
+        0
+       ],
+       [
+        0,
+        -0.3185
+       ],
+       [
+        0.245,
+        -0.3185
+       ],
+       [
+        0.245,
+        0
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.035,
+      "to": 0,
+      "holes": [
+       [
+        [
+         0.0465,
+         -0.045
+        ],
+        [
+         0.0465,
+         -0.265
+        ],
+        [
+         0.1985,
+         -0.265
+        ],
+        [
+         0.1985,
+         -0.045
+        ]
+       ]
+      ]
+     },
+     {
+      "id": "glass",
+      "kind": "box",
+      "bone": "door",
+      "material": "door-glass",
+      "role": "body",
+      "tone": 0.3,
+      "size": [
+       0.152,
+       0.22,
+       0.004
+      ],
+      "transform": {
+       "translation": [
+        0.1225,
+        -0.155,
+        -0.023
+       ]
+      },
+      "sheet": true
+     },
+     {
+      "id": "fascia",
+      "kind": "box",
+      "bone": "panel",
+      "material": "abs-aged",
+      "role": "body",
+      "tone": 0.9,
+      "size": [
+       0.247,
+       0.12,
+       0.035
+      ],
+      "transform": {
+       "translation": [
+        0.1235,
+        0,
+        0
+       ]
+      }
+     }
+    ],
+    "thermal": [
+     {
+      "id": "th-pad",
+      "of": "pad",
+      "region": "pad"
+     },
+     {
+      "id": "th-shell",
+      "of": "shell",
+      "region": "casing"
+     },
+     {
+      "id": "th-back",
+      "of": "back",
+      "region": "casing"
+     },
+     {
+      "id": "th-cavity-lining",
+      "kind": "extrude",
+      "bone": "cavity",
+      "material": "cavity-paint",
+      "role": "body",
+      "tone": 0.72,
+      "profile": [
+       [
+        0,
+        0
+       ],
+       [
+        0.315,
+        0
+       ],
+       [
+        0.315,
+        0.212
+       ],
+       [
+        0,
+        0.212
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.135,
+      "to": 0.135,
+      "holes": [
+       [
+        [
+         0.0005,
+         0.0005
+        ],
+        [
+         0.3145,
+         0.0005
+        ],
+        [
+         0.3145,
+         0.2115
+        ],
+        [
+         0.0005,
+         0.2115
+        ]
+       ]
+      ],
+      "region": "cavity"
+     },
+     {
+      "id": "th-cavity-back",
+      "kind": "box",
+      "bone": "cavity",
+      "material": "cavity-paint",
+      "role": "body",
+      "tone": 0.66,
+      "size": [
+       0.315,
+       0.212,
+       0.0005
+      ],
+      "transform": {
+       "translation": [
+        0.1575,
+        0.106,
+        0.13475
+       ]
+      },
+      "region": "cavity",
+      "sheet": true
+     },
+     {
+      "id": "th-plate",
+      "of": "plate",
+      "region": "turntable"
+     },
+     {
+      "id": "th-door-frame",
+      "of": "door-frame",
+      "region": "door"
+     },
+     {
+      "id": "th-glass",
+      "of": "glass",
+      "region": "window"
+     },
+     {
+      "id": "th-fascia",
+      "of": "fascia",
+      "region": "panel"
+     },
+     {
+      "id": "th-exhaust-vents",
+      "kind": "box",
+      "bone": "side-r",
+      "material": "painted-steel",
+      "role": "body",
+      "tone": 0.45,
+      "size": [
+       0.08,
+       0.0005,
+       0.12
+      ],
+      "transform": {
+       "translation": [
+        0.179,
+        -0.0005,
+        0
+       ]
+      },
+      "region": "casing",
+      "tags": [
+       "exhaust"
+      ],
+      "sheet": true
+     },
+     {
+      "id": "th-electronics",
+      "kind": "box",
+      "bone": "housing",
+      "material": "electrical-iron",
+      "role": "body",
+      "tone": 0.3,
+      "size": [
+       0.09,
+       0.2,
+       0.1
+      ],
+      "transform": {
+       "translation": [
+        0.38,
+        0.13,
+        0.04
+       ]
+      },
+      "region": "electronics"
+     }
+    ],
+    "structure": [
+     {
+      "id": "m-pad",
+      "of": "pad",
+      "member": "pad",
+      "part": "member"
+     },
+     {
+      "id": "m-shell",
+      "of": "shell",
+      "member": "housing",
+      "part": "member",
+      "members": [
+       "base",
+       "side-l",
+       "side-r",
+       "top",
+       "cavity"
+      ]
+     },
+     {
+      "id": "m-back",
+      "of": "back",
+      "member": "housing",
+      "part": "member",
+      "members": [
+       "cord"
+      ]
+     },
+     {
+      "id": "m-plate",
+      "of": "plate",
+      "member": "turntable",
+      "part": "member"
+     },
+     {
+      "id": "m-door-frame",
+      "of": "door-frame",
+      "member": "door",
+      "part": "member"
+     },
+     {
+      "id": "m-fascia",
+      "of": "fascia",
+      "member": "panel",
+      "part": "member"
+     },
+     {
+      "id": "support-pad-floor",
+      "kind": "box",
+      "bone": "pad",
+      "material": "corrugated-board",
+      "role": "ground",
+      "tone": 0.2,
+      "size": [
+       0.4,
+       0.03,
+       0.3
+      ],
+      "transform": {
+       "translation": [
+        0.24,
+        0.015,
+        0.0075
+       ]
+      },
+      "member": "pad",
+      "part": "support",
+      "anchor": "pad-floor"
+     },
+     {
+      "id": "mass-housing",
+      "kind": "ellipsoid",
+      "bone": "housing",
+      "material": "electrical-iron",
+      "role": "detail",
+      "tone": 0.3,
+      "radii": [
+       0.02,
+       0.02,
+       0.02
+      ],
+      "transform": {
+       "translation": [
+        0.270328,
+        0.102376,
+        0.02
+       ]
+      },
+      "member": "housing",
+      "part": "mass"
+     }
+    ]
    },
    "500": {
-    "status": "unavailable",
-    "denominator": 500
+    "status": "authored",
+    "denominator": 500,
+    "decisions": [
+     {
+      "en": "Body for the 75 mm feature: on the pad as its declared 8 mm sheet the housing is one block from the pad to the top (feet, shell and back merged) behind a front of 75 mm parts: the door as its frame with the window as a glass block set 10 mm back, and the fascia block; turntable, knobs, plug and cord are below the feature and left out.",
+      "de": "Körper für das 75-mm-Merkmal: auf der Unterlage als erklärter 8-mm-Platte ist das Gehäuse ein Block von der Unterlage bis zur Oberseite (Füße, Schale und Rückwand verschmolzen) hinter einer Front aus 75-mm-Teilen: die Tür als ihr Rahmen mit dem Fenster als 10 mm zurückgesetztem Glasblock und der Blendenblock; Drehteller, Knöpfe, Stecker und Kabel liegen unter dem Merkmal und entfallen."
+     },
+     {
+      "en": "Thermal: the block split into its regions at 75 mm: the casing as a tube around the cavity with a 75 mm back, door frame and fascia by reference with the glass as its declared 4 mm sheet, the lining as one tube closed by the casing back, the turntable as a 75 mm disc, the exhaust patch and one iron block for the hidden electronics.",
+      "de": "Thermik: der Block in seine Regionen zu 75 mm geteilt: das Gehäuse als Rohr um den Garraum mit 75-mm-Rückwand, Türrahmen und Blende als Verweis mit dem Glas als erklärter 4-mm-Platte, die Auskleidung als ein von der Gehäuserückwand geschlossenes Rohr, der Drehteller als 75-mm-Scheibe, die Abluftfläche und ein Eisenblock für die verdeckte Elektronik."
+     },
+     {
+      "en": "Structure: pad, block, door with glass and fascia by reference, the turntable as a 75 mm member, a 75 mm pad support and the mass marker.",
+      "de": "Tragwerk: Unterlage, Block, Tür mit Glas und Blende als Verweis, der Drehteller als 75-mm-Stab, ein 75-mm-Auflager der Unterlage und die Massenmarke."
+     }
+    ],
+    "body": [
+     {
+      "id": "pad",
+      "kind": "box",
+      "bone": "pad",
+      "material": "corrugated-board",
+      "role": "body",
+      "tone": 0.62,
+      "size": [
+       0.48,
+       0.008,
+       0.395
+      ],
+      "transform": {
+       "translation": [
+        0.24,
+        0.004,
+        0.0075
+       ]
+      },
+      "sheet": true
+     },
+     {
+      "id": "block",
+      "kind": "box",
+      "bone": "housing",
+      "material": "painted-steel",
+      "role": "body",
+      "tone": 0.86,
+      "size": [
+       0.44,
+       0.258,
+       0.26
+      ],
+      "transform": {
+       "translation": [
+        0.22,
+        0.129,
+        0.035
+       ]
+      }
+     },
+     {
+      "id": "door-frame",
+      "kind": "extrude",
+      "bone": "door",
+      "material": "abs-aged",
+      "role": "body",
+      "tone": 0.92,
+      "profile": [
+       [
+        0,
+        0
+       ],
+       [
+        0,
+        -0.3185
+       ],
+       [
+        0.245,
+        -0.3185
+       ],
+       [
+        0.245,
+        0
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.035,
+      "to": 0.04,
+      "holes": [
+       [
+        [
+         0.0465,
+         -0.045
+        ],
+        [
+         0.0465,
+         -0.265
+        ],
+        [
+         0.1985,
+         -0.265
+        ],
+        [
+         0.1985,
+         -0.045
+        ]
+       ]
+      ]
+     },
+     {
+      "id": "glass",
+      "kind": "box",
+      "bone": "door",
+      "material": "door-glass",
+      "role": "body",
+      "tone": 0.3,
+      "size": [
+       0.152,
+       0.22,
+       0.065
+      ],
+      "transform": {
+       "translation": [
+        0.1225,
+        -0.155,
+        0.0075
+       ]
+      }
+     },
+     {
+      "id": "fascia",
+      "kind": "box",
+      "bone": "panel",
+      "material": "abs-aged",
+      "role": "body",
+      "tone": 0.9,
+      "size": [
+       0.247,
+       0.12,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.1235,
+        0,
+        0.02
+       ]
+      }
+     }
+    ],
+    "thermal": [
+     {
+      "id": "th-pad",
+      "of": "pad",
+      "region": "pad"
+     },
+     {
+      "id": "th-casing",
+      "kind": "extrude",
+      "bone": "housing",
+      "material": "painted-steel",
+      "role": "body",
+      "tone": 0.86,
+      "profile": [
+       [
+        0,
+        0
+       ],
+       [
+        0.44,
+        0
+       ],
+       [
+        0.44,
+        0.258
+       ],
+       [
+        0,
+        0.258
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.095,
+      "to": 0.09,
+      "holes": [
+       [
+        [
+         0.006,
+         0.024
+        ],
+        [
+         0.329,
+         0.024
+        ],
+        [
+         0.329,
+         0.244
+        ],
+        [
+         0.006,
+         0.244
+        ]
+       ]
+      ],
+      "region": "casing"
+     },
+     {
+      "id": "th-back",
+      "kind": "box",
+      "bone": "housing",
+      "material": "painted-steel",
+      "role": "body",
+      "tone": 0.8,
+      "size": [
+       0.44,
+       0.258,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.22,
+        0.129,
+        0.1275
+       ]
+      },
+      "region": "casing"
+     },
+     {
+      "id": "th-cavity-lining",
+      "kind": "extrude",
+      "bone": "cavity",
+      "material": "cavity-paint",
+      "role": "body",
+      "tone": 0.72,
+      "profile": [
+       [
+        0,
+        0
+       ],
+       [
+        0.315,
+        0
+       ],
+       [
+        0.315,
+        0.212
+       ],
+       [
+        0,
+        0.212
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.095,
+      "to": 0.09,
+      "holes": [
+       [
+        [
+         0.0005,
+         0.0005
+        ],
+        [
+         0.3145,
+         0.0005
+        ],
+        [
+         0.3145,
+         0.2115
+        ],
+        [
+         0.0005,
+         0.2115
+        ]
+       ]
+      ],
+      "region": "cavity"
+     },
+     {
+      "id": "th-plate",
+      "kind": "revolve",
+      "bone": "turntable",
+      "material": "borosilicate",
+      "role": "body",
+      "tone": 0.85,
+      "profile": [
+       [
+        -0.004,
+        0
+       ],
+       [
+        -0.004,
+        0.1225
+       ],
+       [
+        0.071,
+        0.1225
+       ],
+       [
+        0.071,
+        0
+       ]
+      ],
+      "axis": [
+       1,
+       0,
+       0
+      ],
+      "origin": [
+       0,
+       0,
+       0
+      ],
+      "region": "turntable"
+     },
+     {
+      "id": "th-door-frame",
+      "of": "door-frame",
+      "region": "door"
+     },
+     {
+      "id": "th-glass",
+      "kind": "box",
+      "bone": "door",
+      "material": "door-glass",
+      "role": "body",
+      "tone": 0.3,
+      "size": [
+       0.152,
+       0.22,
+       0.004
+      ],
+      "transform": {
+       "translation": [
+        0.1225,
+        -0.155,
+        -0.023
+       ]
+      },
+      "region": "window",
+      "sheet": true
+     },
+     {
+      "id": "th-fascia",
+      "of": "fascia",
+      "region": "panel"
+     },
+     {
+      "id": "th-exhaust-vents",
+      "kind": "box",
+      "bone": "side-r",
+      "material": "painted-steel",
+      "role": "body",
+      "tone": 0.45,
+      "size": [
+       0.08,
+       0.0005,
+       0.12
+      ],
+      "transform": {
+       "translation": [
+        0.179,
+        -0.0005,
+        0
+       ]
+      },
+      "region": "casing",
+      "tags": [
+       "exhaust"
+      ],
+      "sheet": true
+     },
+     {
+      "id": "th-electronics",
+      "kind": "box",
+      "bone": "housing",
+      "material": "electrical-iron",
+      "role": "body",
+      "tone": 0.3,
+      "size": [
+       0.09,
+       0.2,
+       0.1
+      ],
+      "transform": {
+       "translation": [
+        0.38,
+        0.13,
+        0.04
+       ]
+      },
+      "region": "electronics"
+     }
+    ],
+    "structure": [
+     {
+      "id": "m-pad",
+      "of": "pad",
+      "member": "pad",
+      "part": "member"
+     },
+     {
+      "id": "m-block",
+      "of": "block",
+      "member": "housing",
+      "part": "member",
+      "members": [
+       "base",
+       "side-l",
+       "side-r",
+       "top",
+       "cavity",
+       "cord"
+      ]
+     },
+     {
+      "id": "m-plate",
+      "kind": "revolve",
+      "bone": "turntable",
+      "material": "borosilicate",
+      "role": "body",
+      "tone": 0.85,
+      "profile": [
+       [
+        -0.004,
+        0
+       ],
+       [
+        -0.004,
+        0.1225
+       ],
+       [
+        0.071,
+        0.1225
+       ],
+       [
+        0.071,
+        0
+       ]
+      ],
+      "axis": [
+       1,
+       0,
+       0
+      ],
+      "origin": [
+       0,
+       0,
+       0
+      ],
+      "member": "turntable",
+      "part": "member"
+     },
+     {
+      "id": "m-door-frame",
+      "of": "door-frame",
+      "member": "door",
+      "part": "member"
+     },
+     {
+      "id": "m-glass",
+      "of": "glass",
+      "member": "door",
+      "part": "member"
+     },
+     {
+      "id": "m-fascia",
+      "of": "fascia",
+      "member": "panel",
+      "part": "member"
+     },
+     {
+      "id": "support-pad-floor",
+      "kind": "box",
+      "bone": "pad",
+      "material": "corrugated-board",
+      "role": "ground",
+      "tone": 0.2,
+      "size": [
+       0.4,
+       0.075,
+       0.3
+      ],
+      "transform": {
+       "translation": [
+        0.24,
+        0.0375,
+        0.0075
+       ]
+      },
+      "member": "pad",
+      "part": "support",
+      "anchor": "pad-floor"
+     },
+     {
+      "id": "mass-housing",
+      "kind": "box",
+      "bone": "housing",
+      "material": "electrical-iron",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.270328,
+        0.102376,
+        0.02
+       ]
+      },
+      "member": "housing",
+      "part": "mass"
+     }
+    ]
    }
   },
   "presentation": {

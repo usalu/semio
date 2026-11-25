@@ -218,3 +218,14 @@ fn a_cancelled_release_selects_nothing_and_leaves_no_gesture() {
     assert!(emit.effects.is_empty(), "no pick on a cancelled release");
 }
 //#endregion 🧪️BatchedSamples
+
+/// 🖱️ The 2D camera binding the host reads from the meta layer: right drag always pans, a plain left drag pans only under the direct-select utility, so marquee and lasso keep the left button.
+#[test]
+fn the_meta_layer_declares_which_buttons_pan() {
+    let direct = fem2d_canvas_meta_utility_layer(FEM2D_UTILITY_SELECT_DIRECT);
+    assert_eq!((direct["leftDragPans"].as_bool(), direct["rightDragPans"].as_bool()), (Some(true), Some(true)));
+    for utility in [FEM2D_UTILITY_SELECT_MARQUEE, FEM2D_UTILITY_SELECT_LASSO, FEM2D_UTILITY_TRANSFORM, FEM2D_UTILITY_PAN] {
+        let layer = fem2d_canvas_meta_utility_layer(utility);
+        assert_eq!((layer["leftDragPans"].as_bool(), layer["rightDragPans"].as_bool()), (Some(false), Some(true)), "{utility}");
+    }
+}

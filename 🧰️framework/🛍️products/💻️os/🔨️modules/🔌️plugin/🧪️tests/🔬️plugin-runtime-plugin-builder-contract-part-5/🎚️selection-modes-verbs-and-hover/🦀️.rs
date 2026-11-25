@@ -31,6 +31,32 @@
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }
 
+    /// 🛡️ LAW: a refused interaction verb is answered as that command's own typed refusal and lets the next verb commit — a refusal must never poison the session.
+    #[semio_framework_async_macros::async_test]
+    async fn a_refused_interaction_verb_does_not_poison_the_next_verb() {
+        let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original builder fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = semio_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
+
+        let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
+        let admitted = app.handle_action(SET_SELECTION_MODE_ACTION_ID, Some(dv(json!({ "domainId": "viewport", "mode": "single" }))), &meta(), &mut identity).await.expect("undeclared domain admission");
+        let error = semio_plugin_instance_app::plugin_app_impl::settle_framework_reserved_admission(&mut *app, admitted, cx).await.expect_err("an undeclared domain must be refused");
+        assert!(error.message.contains("viewport"), "unexpected error: {}", error.message);
+
+        reserved_action(&mut app, SET_SELECTION_MODE_ACTION_ID, Some(&dv(json!({ "domainId": "items", "mode": "single" }))), &mut identity, cx).await;
+        assert_eq!(app.interaction_state().await.active_mode.get("items").copied(), Some(SelectionMode::Single), "the verb after a refusal commits");
+
+        artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
+    
+        }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
+    }
+
     #[semio_framework_async_macros::async_test]
     async fn clear_selection_and_select_all_apply_across_every_declared_domain() {
         let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original builder fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{

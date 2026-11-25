@@ -14,7 +14,6 @@ extern crate semio_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
-use semio_s_plugin_norm_compliance::NormHost;
 use crate::commands::{apply_remedy, insert_item, remove_item, selected_check, set_field, set_fields, preview_remedy, clear_preview, cancel_evaluation, evaluate_units, viewport_act, copy_entities, duplicate_entities, paste_entities, move_entity, delete_entities};
 use crate::modes::edit as edit_mode;
 use crate::modes::edit::windows::{checks, diagrams, outliner, properties, viewport};
@@ -42,23 +41,7 @@ use semio_plugin::app::Dialect;
 use semio_framework_2d_compute::EngineHandles;
 
 //#region ðï¸Constants
-/// 🏷️ This standard's display name â the app label, its artifact-kind name and the catalogue headline.
-pub const LABEL: &str = "EN 1992";
-/// 🆔️ The playground/registry variant key â every body key, window id and schema is derived from it.
-pub const VARIANT: &str = "en1992";
-/// 🆔️ Retained-command / UI action controller id.
-pub const CONTROLLER_ID: &str = "s.norm-eurocode-structural.en1992@1/*#editor";
-pub const DOCUMENT_SCHEMA: &str = "semio.norm.en1992/v1";
-/// 🏷️ The scene entity kinds EN 1992 projects: one interaction granularity each.
-pub const ENTITY_KIND_SCENE_KINDS: &[semio_s_plugin_norm_structural_scene::EntityKind] = &[
-    semio_s_plugin_norm_structural_scene::EntityKind::Member,
-    semio_s_plugin_norm_structural_scene::EntityKind::Plate,
-    semio_s_plugin_norm_structural_scene::EntityKind::Solid,
-    semio_s_plugin_norm_structural_scene::EntityKind::Fastener,
-    semio_s_plugin_norm_structural_scene::EntityKind::Support,
-    semio_s_plugin_norm_structural_scene::EntityKind::Load,
-    semio_s_plugin_norm_structural_scene::EntityKind::Surface,
-];
+pub use semio_s_artifact_norm_en1992_editor_family::{LABEL, VARIANT, CONTROLLER_ID, DOCUMENT_SCHEMA, ENTITY_KIND_SCENE_KINDS, En1992Family, Host};
 //#endregion ðï¸Constants
 
 //#region ðï¸Commands
@@ -302,6 +285,7 @@ mod remedy_latency {
 
     /// ⏱️ The failing members keep the commit budget (400 ms) with the bounded remedy search for a different real edit every round, the first evaluation keeps its own cold budget (1000 ms), and the single-member drag preview keeps the 12 ms drag budget with a different reinforcement every tick; asserted in release builds only, like the shared gates.
     #[test]
+    #[cfg_attr(debug_assertions, ignore = "latency gate: the workload (150 evaluations with the remedy search) only fits the budget in a release build")]
     fn the_bounded_remedy_search_and_the_member_drag_preview_hold_the_live_budget() {
         let doc = En1992Snapshot::failing_under_reinforced();
         let time = |run: &mut dyn FnMut()| {
@@ -386,41 +370,6 @@ impl semio_s_plugin_norm_app_surface::NormRetainedEditor for En1992PlayApp {
 //#endregion 🧵️RetainedCommands
 
 //#region 🧩️ComplianceFamily
-/// 🧩️ Headless `NormFamily` binding (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) —
-/// relocated verbatim from the deleted `⚙️engine`. This is stateful/host-facing behaviour, so it
-/// belongs to the app that edits the artifact, not the artifact's own `🧬️schema`.
-pub struct En1992Family;
-
-impl semio_s_plugin_norm_compliance::NormFamily for En1992Family {
-    type Document = En1992Snapshot;
-    type Mutation = En1992Mutation;
-
-    fn family_id() -> semio_s_plugin_norm_compliance::NormFamilyId {
-        semio_s_plugin_norm_compliance::NormFamilyId::En1992
-    }
-
-    fn evaluate(document: &En1992Snapshot) -> semio_s_plugin_norm_compliance::CheckReport {
-        <En1992Family as semio_s_plugin_norm_compliance::IncrementalNormFamily>::evaluate_incrementally(document)
-    }
-
-    fn live_report(document: &En1992Snapshot) -> std::sync::Arc<semio_s_plugin_norm_compliance::CheckReport> {
-        semio_s_artifact_norm_en1992_inferences::live::report(document)
-    }
-
-    fn live_progress() -> semio_s_plugin_norm_compliance::incremental_evaluation::EvalProgress {
-        semio_s_artifact_norm_en1992_inferences::live::progress()
-    }
-
-    fn live_responsive(document: &En1992Snapshot, budget: std::time::Duration) -> (std::sync::Arc<semio_s_plugin_norm_compliance::CheckReport>, bool) {
-        semio_s_artifact_norm_en1992_inferences::live::responsive(document, budget)
-    }
-
-    fn cancel_live() {
-        semio_s_artifact_norm_en1992_inferences::live::cancel()
-    }
-}
-
-pub type Host = NormHost<En1992Family>;
 //#endregion 🧩️ComplianceFamily
 
 //#region ðï¸Manifest
@@ -586,10 +535,8 @@ mod example;
 //#endregion 🪢️TaxonomyMounts
 
 //#region 🪢️Mounts
-#[path = "🏷️field-meta/🦀️.rs"]
-pub mod field_meta;
-#[path = "🧮️incremental/🦀️.rs"]
-pub mod incremental;
+pub extern crate semio_s_artifact_norm_en1992_editor_field_meta as field_meta;
+pub use semio_s_artifact_norm_en1992_editor_family::incremental;
 #[path = "."]
 pub mod commands {
     #[path = "🎮️commands/🩹apply-remedy/🦀️.rs"]
@@ -609,20 +556,7 @@ pub mod config {
     #[path = "🎚️config/🧬️schema/🦀️.rs"]
     pub mod schema;
 }
-#[path = "."]
-pub mod modes {
-    #[path = "🎭️modes/✏️edit/🦀️.rs"]
-    pub mod edit;
-}
-#[path = "."]
-pub mod panels {
-    #[path = "📌️panels/📚️catalogue/🦀️.rs"]
-    pub mod catalogue;
-    #[path = "📌️panels/🗿️artifact/🦀️.rs"]
-    pub mod document;
-    #[path = "📌️panels/🔍️inspection/🦀️.rs"]
-    pub mod inspection;
-}
+pub use semio_s_artifact_norm_en1992_editor_surfaces::{modes, panels};
 #[path = "."]
 pub mod presence {
     #[path = "👥️presence/🧬️schema/🦀️.rs"]

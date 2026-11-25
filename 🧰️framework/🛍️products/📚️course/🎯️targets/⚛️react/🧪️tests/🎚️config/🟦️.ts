@@ -11,7 +11,7 @@ const root = resolve(target, "📦️packages/🟦️typescript");
 const product = resolve(target, "../..");
 const repoRoot = resolve(product, "../../..");
 
-/** 🧪️ Vitest for `@semio-tech/course-react`: the web client's cases under the product's `🧪️tests`, run in jsdom. */
+/** 🧪️ Vitest for `@semio-tech/course-react`: the web client's cases under the product's `🧪️tests`, run in jsdom. A case gets thirty seconds: the journeys through the whole client take five to seven on a host that builds something else at the same time. */
 export default defineConfig(async () => ({
   root,
   cacheDir: process.env.SEMIO_TICKET_DIR ? resolve(process.env.SEMIO_TICKET_DIR, "🗑️generated", "vitest-course-react-cache") : undefined,
@@ -23,6 +23,7 @@ export default defineConfig(async () => ({
     root,
     name: "@semio-tech/course-react",
     environment: "jsdom",
+    testTimeout: 30_000,
     include: [
       "../../../../🧪️tests/🔓️access/🟦️.tsx",
       "../../🧪️tests/📚️course-shell/🟦️.tsx",

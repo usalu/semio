@@ -7,7 +7,7 @@ use semio_plugin_operation::CANCEL_TYPED_OPERATION_ACTION_ID;
 use semio_framework_value::DslValue;
 use semio_framework::Fault;
 use semio_framework::kernel::UiDirtyScope;
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use semio_plugin_decl_emission::Emit;
 use semio_framework::FaultFrom;

@@ -19,10 +19,7 @@ def plan(state):
     def eligible(unit):
         if unit["held"]:
             return False
-        age = now - unit["lastUsedMs"]
-        if unit["busy"]:
-            return unit["path"] not in newest and age >= policy["busyMinimumAgeMilliseconds"]
-        return age >= policy["minimumAgeMilliseconds"]
+        return now - unit["lastUsedMs"] >= policy["minimumAgeMilliseconds"]
 
     removed = {}
     for unit in units:

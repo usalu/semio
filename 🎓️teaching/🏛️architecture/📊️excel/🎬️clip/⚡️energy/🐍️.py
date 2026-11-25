@@ -400,7 +400,7 @@ class Beat4_Energy(_live_scene.RefreshMoving, _visuals.ClipScene):
         """⛓️ A framed list of dependent cells: the label on one line and the live value under it."""
         pitch, width = 0.56, 3.7
         height = pitch * len(rows) + 0.2
-        frame = _engine.RoundedRectangle(corner_radius=0.08, width=width, height=height, stroke_color=MUTED, stroke_width=_draft.W_THIN, fill_color=BACKGROUND, fill_opacity=0.9)
+        frame = _engine.Rectangle(width=width, height=height, stroke_color=MUTED, stroke_width=_draft.W_THIN, fill_color=BACKGROUND, fill_opacity=0.9)
         frame.move_to(np.array([at[0], at[1], 0.0]))
         panel = _engine.VGroup(frame)
         top = at[1] + height / 2 - 0.1 - pitch / 2
@@ -726,7 +726,7 @@ class Beat4_Energy(_live_scene.RefreshMoving, _visuals.ClipScene):
         T, CL = self.T, self.CL
 
         def tile(x, y, label, fn, color):
-            box = _engine.RoundedRectangle(corner_radius=0.08, width=1.7, height=0.8, stroke_color=color, stroke_width=_draft.W_THIN, fill_color=color, fill_opacity=0.14).move_to((x, y, 0))
+            box = _engine.Rectangle(width=1.7, height=0.8, stroke_color=color, stroke_width=_draft.W_THIN, fill_color=color, fill_opacity=0.14).move_to((x, y, 0))
             return _engine.VGroup(box, self._say(label, (x, y + 0.2), size=SMALL, color=MUTED, width=1.6), self._readout(fn, (x, y - 0.13), size=SMALL, color=INK))
 
         xs = [at[0] - 2.8, at[0] - 0.93, at[0] + 0.93, at[0] + 2.8]

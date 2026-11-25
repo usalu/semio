@@ -144,7 +144,7 @@ fn canvas_paint_matches_mupdf_probes() {
     for case in fixture["cases"].as_array().unwrap() {
         let name = case["name"].as_str().unwrap();
         let snapshot = decode_pdf(case_pdf(case).as_bytes()).unwrap_or_else(|error| panic!("{name}: {error}"));
-        let scene: Vec<Value> = serde_json::from_str(&canvas_layers(&snapshot, None)).unwrap();
+        let scene: Vec<Value> = serde_json::from_str(&canvas_layers(&snapshot, None, semio_ui_locale::Locale::En)).unwrap();
         assert!(scene.iter().all(|layer| !layer["id"].as_str().unwrap_or("").ends_with(".label")), "{name}: placeholder label painted");
         let tolerance = case["tolerance"].as_f64().unwrap();
         for probe in case["probes"].as_array().unwrap() {

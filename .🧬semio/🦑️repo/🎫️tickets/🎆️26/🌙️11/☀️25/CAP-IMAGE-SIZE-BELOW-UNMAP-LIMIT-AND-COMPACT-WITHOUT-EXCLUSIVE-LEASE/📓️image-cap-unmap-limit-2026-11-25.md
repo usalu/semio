@@ -1,0 +1,21 @@
+# Cap Every Cache Image At The Unmap Limit
+
+## Cause (measured 2026-11-25, g1-m03)
+- macOS returns freed blocks of a mounted APFS image only for containers up to 2^35 bytes (32 GiB). The in-place kick (`🍎️image/👟️kick`, sibling volume `semio-trim`) is therefore ineffective for `.cache/b/r/fixed.dmg` (declared 57.98 GB, receipt `maximumPhysicalBytes` 57 982 058 496) and `.cache/b/d` (38.6 GB). The only remaining path is the exclusive detach cycle, which is nonwaiting and ends as `lease-timeout` while builds run. Host allocation only ever grows.
+- Why the images got that large: `budget/📐️elastic` sized births (`elasticCapacityV1`, `effectiveCapacityV1`), and the in-place growth (`elasticGrowthCeilingV1`, `growElasticImageInPlaceV1`) up to `elastic.rust.maximumBytes` = 96 GiB, `elastic.products.maximumBytes` = 40 GiB, and `pinnedCapacityV1` gave `dependencies` its declared 36 GiB. The platform limit existed only in the shard schema (`🧩️shard` `maximumImageBytes`) and in the kick message; no sizing rule used it. The shard switchover (ticket PROCEDURAL-3D-END-TO-END) is an operator step with lane birth not wired into the pool, so it did not help.
+
+## Change (schema first, no live image touched)
+- `budget/📐️elastic/🟦️.ts`: `imageCapBytesV1(platform)` reads the single source of truth `NATIVE_IMAGE_SHARD_V1.maximumImageBytes` (darwin 2^35, linux 128 GiB, windows 64 GiB, `Infinity` elsewhere). It bounds every birth and growth: `elasticCapacityV1` ceiling, `elasticGrowthCeilingV1` (so the in-place `hdiutil resize` can never cross it), the grown size of `effectiveCapacityV1`, and the declared capacity of a not yet born fixed partition (`pinnedCapacityV1`, so `dependencies` is born at 32 GiB; its need of 29.2 GB fits). Linux and Windows limits are above every declared maximum, so their behavior is unchanged.
+- Live images keep the receipt they were born with (`effectiveCapacityV1` and `pinnedCapacityV1` receipt branches untouched), so no budget mismatch, no refusal, no forced recreation.
+- `imageOversizeV1(receipt, platform)` flags an image born above the cap. `repositoryPartitionRegrowDueV1` (`budget/🟦️.ts`) now also answers true for an oversize elastic image that is bloated by the partition's own reclaim rule. This enters the existing regrow path (`regrowElasticImageOutcomeV1`): resume, in-place grow (target 0 now), exclusive nonwaiting lease (`held` while any build holds the image), journal admission, reset. The next opener births the image at most at the cap. Nothing is detached or deleted while a build holds it; the change takes effect at the first quiescent moment of the normal storage lifecycle.
+- Eviction inside the image is the existing high/low water collector (`unit-cache/🧹️gc`, shares of `volumeBytes`); with the capacity capped it now evicts before the image reaches the unmap limit instead of at 96 GiB.
+- Exported through `budget/🟦️.ts`: `imageCapBytesV1`, `imageOversizeV1`.
+
+## Tests (never weakened)
+- New (`budget/🧪️tests/🟦️.ts`): `image cap: no sizing rule produces an image above the platform limit...` (corpus `imageCap`, `imageCapGrowth` in `🧫️fixtures/🔣️.json`, language-agnostic JSON, compared with an independent Python model whose limits are written from the schema, not read from code) and `image cap: only a receipt above the platform limit is oversize`.
+- Updated oracles of five existing tests (elastic growth, rust capacity, host fit, pinned capacity, floor): their Python models and expected values now include the platform cap (rust born on a 400 GiB host: 32 GiB instead of 40 GiB; dependencies born 32 GiB instead of 36 GiB). The assertions got stricter, none removed.
+- `repo test-file` of the budget suite: 22 pass, 3 fail. The 3 failures are the unchanged baseline of this host (`hdiutil create failed - No child processes` / nx partition / probe, disk pressure), identical before the change.
+
+## Not done / follow-ups
+- Doctor finding for a live oversize image (rules, texts, tests) and lane-level sharding (`imageShards.enabled`, pool wiring) remain; sharding is only needed for a working set above 32 GiB.
+- The oversize rust and dependencies images are retired by the normal lifecycle only when the image is quiescent; on a host where builds never pause, `repo cache reset` in an idle window remains the operator path.

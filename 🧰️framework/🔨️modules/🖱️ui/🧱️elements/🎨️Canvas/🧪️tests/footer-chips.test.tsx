@@ -44,8 +44,10 @@ describe("canvas bottom edge chips", () => {
     const canvas = container.querySelector('[data-slot="canvas"]') as HTMLElement;
     expect(canvas.className).toMatch(/\bp-0\b/u);
     const row = canvas.querySelector('[data-slot="canvas-footer"]') as HTMLElement;
-    expect(canvas.firstChild?.textContent).toBe("content");
-    expect(canvas.lastElementChild).toBe(row);
+    const stage = canvas.querySelector('[data-slot="canvas-stage"]') as HTMLElement;
+    expect(canvas.firstElementChild).toBe(stage);
+    expect(stage.firstChild?.textContent).toBe("content");
+    expect(stage.lastElementChild).toBe(row);
     expect(row.children).toHaveLength(1);
     expect(row.querySelector('[data-slot="canvas-footer-end"]')).toBeTruthy();
   });
@@ -56,7 +58,7 @@ describe("canvas bottom edge chips", () => {
     expect(row).toBeTruthy();
     const column = container.querySelector('[data-slot="layout-canvas-column"]') as HTMLElement;
     expect(column.contains(row)).toBe(true);
-    expect(row.parentElement?.contains(container.querySelector('[data-testid="canvas-body"]'))).toBe(true);
+    expect(container.querySelector('[data-slot="layout-canvas-bleed"]')?.contains(container.querySelector('[data-testid="canvas-body"]'))).toBe(true);
     const footer = container.querySelector('[data-testid="footer"]') as HTMLElement;
     expect(footer.contains(row)).toBe(false);
     expect(footer.parentElement?.contains(row)).toBe(false);

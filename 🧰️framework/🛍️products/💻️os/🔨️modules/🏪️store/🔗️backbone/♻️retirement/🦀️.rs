@@ -79,13 +79,9 @@ impl ArtifactStoreBackboneRetirement {
         let callback = wake.get().filter(|callback| Arc::strong_count(callback) == 1).map_or(0, |callback| std::alloc::Layout::new::<[usize; 2]>().extend(std::alloc::Layout::for_value(&**callback)).map_or(0, |(layout, _)| layout.pad_to_align().size()));
         shared_retirement_allocation_bytes::<Wake>() + callback
     }
-    fn detach_queue(owner: &mut Option<Arc<Queue>>) -> Option<VecDeque<BackboneMessage>> {
-        let queue = owner.as_ref()?;
-        if Arc::strong_count(queue) != 1 { return None; }
-        match Arc::try_unwrap(owner.take().unwrap()) {
-            Ok(queue) => Some(queue.into_inner().unwrap_or_else(std::sync::PoisonError::into_inner)),
-            Err(queue) => { *owner = Some(queue); None }
-        }
+    /// 🔗️ Releases this end's alias of a queue the peer end may still share; only the last end receives the queue to retire its messages. See [`MemoryBackbone::pair`](crate::MemoryBackbone::pair).
+    fn release_queue(owner: &mut Option<Arc<Queue>>) -> Option<VecDeque<BackboneMessage>> {
+        owner.take().and_then(Arc::into_inner).map(|queue| queue.into_inner().unwrap_or_else(std::sync::PoisonError::into_inner))
     }
 }
 
@@ -103,7 +99,7 @@ impl ErasedSnapshotRetirement for ArtifactStoreBackboneRetirement {
         let demand = self.demands()?;
         if grant.maximum_copy_bytes<demand.copy_bytes{return Ok(RetainedCloneStep::Progress(empty))}
         if grant.maximum_depth < demand.depth || grant.maximum_release_bytes < demand.release_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
-        let progress = RetainedCloneProgress { copied_items: 1, copied_bytes:demand.copy_bytes, released_bytes: demand.release_bytes, ..empty };
+        let mut progress = RetainedCloneProgress { copied_items: 1, copied_bytes:demand.copy_bytes, released_bytes: demand.release_bytes, ..empty };
         if self.bytes.is_some() { drop(self.bytes.take()); }
         else if let Some(message) = self.message.as_mut() {
             match message {
@@ -124,12 +120,8 @@ impl ErasedSnapshotRetirement for ArtifactStoreBackboneRetirement {
         } else if let Some(queue) = self.queue.as_mut() {
             if let Some(message) = queue.pop_front() { *self.message = Some(message); }
             else { drop(self.queue.take()); }
-        } else if let Some(wake) = self.wake.as_ref() {
-            if Arc::strong_count(wake) != 1 || Self::wake_release_bytes(wake) != demand.release_bytes { return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default())); }
-            match Arc::try_unwrap(self.wake.take().unwrap()) {
-                Ok(wake) => drop(wake),
-                Err(wake) => { *self.wake = Some(wake); return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default())); }
-            }
+        } else if let Some(wake) = self.wake.take() {
+            progress.released_bytes = Arc::into_inner(wake).map_or(0, |wake| Self::wake_release_bytes(&wake));
         } else {
             let backbone = self.backbone.as_mut().unwrap();
             let uri = match backbone { Backbones::Port(value) => &mut value.uri, Backbones::Memory(value) => &mut value.uri, Backbones::Channel(value) => &mut value.uri };
@@ -141,8 +133,7 @@ impl ErasedSnapshotRetirement for ArtifactStoreBackboneRetirement {
                     Backbones::Port(_) => None,
                 };
                 if let Some(queue) = queue {
-                    if let Some(queue) = Self::detach_queue(queue) { *self.queue = Some(queue); }
-                    else { return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default())); }
+                    match Self::release_queue(queue) { Some(queue) => *self.queue = Some(queue), None => progress.released_bytes = 0 }
                 } else if let Some(Backbones::Channel(value)) = self.backbone.take() { *self.wake = Some(value.outbound_wake); }
                 else { drop(self.backbone.take()); }
             }

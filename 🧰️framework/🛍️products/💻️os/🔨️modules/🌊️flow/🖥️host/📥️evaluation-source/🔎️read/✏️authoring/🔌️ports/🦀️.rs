@@ -1,5 +1,5 @@
 //! 🔌️ Borrowed widget ports preserve declared identities and schemas without presentation allocation.
-use super::super::*;
+use super::*;
 use super::compare::TextCompare;
 use semio_framework_artifact_flow_flow::{FlowSnapshotSource,Widget};
 use semio_framework_job::{OriginalTurnFailure,StepContext};

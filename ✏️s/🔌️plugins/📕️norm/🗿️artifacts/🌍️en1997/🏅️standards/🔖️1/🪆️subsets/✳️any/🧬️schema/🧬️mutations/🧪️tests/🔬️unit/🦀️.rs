@@ -248,3 +248,34 @@ async fn change_design_approach_satisfies_the_inverse_and_absorb_laws() {
     protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }
 //#endregion 🧪️MutationLaws
+
+//#region 🧪️LinkedDefaultRows
+fn insert_without_row(document: &semio_s_artifact_norm_en1997_model::En1997Snapshot, path: &str) -> Result<Vec<En1997Mutation>, String> {
+    resolve_edit(document, &semio_s_plugin_norm_app_surface::NormEdit::InsertItem { path: path.into(), index: 0, value: None })
+}
+
+#[test]
+fn an_insert_without_a_row_links_to_the_first_existing_row_of_the_target_collection() {
+    let demo = compliant_demo();
+    let layer = demo.layers.first().expect("the demo has a layer").id.clone();
+    let [mutation] = insert_without_row(&demo, "labTests").expect("a lab test links to a layer").try_into().expect("one mutation");
+    let text = format!("{mutation:?}");
+    assert!(text.contains(&format!("layer_id: {layer:?}")), "{text}");
+    assert!(text.contains("\"labTests-"), "the row gets a fresh id: {text}");
+}
+
+#[test]
+fn an_insert_without_a_row_is_refused_naming_the_missing_target() {
+    let mut demo = compliant_demo();
+    demo.layers.clear();
+    let error = insert_without_row(&demo, "labTests").expect_err("no layer to link to");
+    assert!(error.contains("layer") && error.contains("insert one first"), "{error}");
+}
+
+#[test]
+fn a_field_without_a_declared_target_keeps_its_schema_default() {
+    let demo = compliant_demo();
+    let [mutation] = insert_without_row(&demo, "cases").expect("a case needs no document row").try_into().expect("one mutation");
+    assert!(format!("{mutation:?}").contains("entry_id: \"\""), "{mutation:?}");
+}
+//#endregion 🧪️LinkedDefaultRows

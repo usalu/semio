@@ -19,7 +19,7 @@ import {repositoryCheckoutRootV1} from "../../⚡️caching/💾️storage/🔒�
 import {createIssuedResourceControlV1,type ScriptInvocation} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 /** 🧫️ One private repository: its root, whether this process owns it (an adopted one is retired by its parent), invocations issued for it, partitions prepared ahead of a timed test, scratch directories inside it, the isolation check and its retirement. */
-export interface PrivateRepositoryWorkspaceV1{readonly root:string;readonly owned:boolean;invoke<T>(body:(invocation:ScriptInvocation)=>Promise<T>,options?:Readonly<{owner?:string;maximumElapsedMilliseconds?:number}>):Promise<T>;within<T>(body:()=>Promise<T>):Promise<T>;prepare(...partitions:RepositoryCachePartitionIdV1[]):Promise<void>;scratch(prefix:string):Promise<string>;requireIsolated():Promise<string>;close():Promise<void>}
+export interface PrivateRepositoryWorkspaceV1{readonly root:string;readonly owned:boolean;invoke<T>(body:(invocation:ScriptInvocation)=>Promise<T>,options?:Readonly<{owner?:string;maximumElapsedMilliseconds?:number;arguments?:readonly string[]}>):Promise<T>;within<T>(body:()=>Promise<T>):Promise<T>;prepare(...partitions:RepositoryCachePartitionIdV1[]):Promise<void>;scratch(prefix:string):Promise<string>;requireIsolated():Promise<string>;close():Promise<void>}
 /** 🪦️ Retires the private root through its declared unit-test invocation. */
 async function retirePrivateRootV1(root:string):Promise<void>{
  await privateRepositoryInvocationV1(root)(async original=>retirePrivateRepositoryRootV1(root,original,createIssuedResourceControlV1(original,"repository:private-retire",0)),{owner:"private-repository-retirement",maximumElapsedMilliseconds:120000});

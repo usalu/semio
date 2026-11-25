@@ -146,7 +146,11 @@ impl<A:ArtifactApp> ReservedPreparation<A>{
  pub fn advance_builder(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   self.validate(self.revision,cx)?;
   if self.job.is_some(){return Ok(true)}
-  if self.body.is_none(){A::build_reserved_tool_job(&mut self.request,&mut self.body,&mut self.wire_construction,cx)?;return Ok(false)}
+  if self.body.is_none(){
+   if self.request.as_ref().is_some_and(|request|matches!(request.input,Some(ArtifactReservedToolInput::OriginalPicker{..}))){A::build_original_picker_job(&mut self.request,&mut self.body,&mut self.wire_construction,cx)?;}
+   else{A::build_reserved_tool_job(&mut self.request,&mut self.body,&mut self.wire_construction,cx)?;}
+   return Ok(false)
+  }
   if !self.wire_construction.terminal_is_empty(){self.wire_construction.retire_born_candidate_step(cx)?;return Ok(false)}
   ArtifactReservedToolJob::admit_boxed_original(&mut self.body,&mut self.job,cx)
  }

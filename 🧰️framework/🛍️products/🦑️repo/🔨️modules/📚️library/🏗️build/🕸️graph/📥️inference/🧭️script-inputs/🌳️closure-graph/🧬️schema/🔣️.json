@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:build:graph:closure-graph:v1",
+  "title": "Module closure graph / Modul-Closure-Graph",
+  "description": "EN: One module graph per tree: a node is a module (or resource) with the digest of what the walk reads of it (kind, name, resolved edges, defined ports, generated imports), an edge a resolved import; the digest of a strongly connected component is the SHA-256 of its sorted member entry digests `sha256(name NUL nodeDigest)`, an empty line and the sorted distinct digests of the components and cut tools (`sha256(NUL tool NUL name)`) it imports, memoised once per component and stop family, and the closure digest of a question (its roots, cut at the declared tool entries) is the SHA-256 of the sorted distinct component digests of its roots: every owner's closure identity is a lookup after one linear pass and an edit moves exactly the closures that reach the edited node. The graph is stored digest addressed: the nodes in `buckets` chunks by key hash (`c/<sha256>.json.br`, the SHA-256 of the uncompressed text), named by an atomically replaced head, so a save that stops anywhere leaves the previous head whole and an edit rewrites one chunk. DE: Ein Modulgraph pro Baum: ein Knoten ist ein Modul (oder eine Ressource) mit dem Digest dessen, was der Lauf von ihm liest (Art, Name, aufgelöste Kanten, definierte Ports, generierte Importe), eine Kante ein aufgelöster Import; der Digest einer starken Zusammenhangskomponente ist der SHA-256 ihrer sortierten Eintragsdigests `sha256(Name NUL Knotendigest)`, einer Leerzeile und der sortierten verschiedenen Digests der Komponenten und geschnittenen Werkzeuge (`sha256(NUL tool NUL Name)`), die sie importiert, einmal pro Komponente und Stopp-Familie memoisiert, und der Closure-Digest einer Frage (ihre Wurzeln, an den deklarierten Werkzeugeinstiegen geschnitten) ist der SHA-256 der sortierten verschiedenen Komponentendigests ihrer Wurzeln: die Closure-Identität jedes Owners ist nach einem linearen Durchlauf ein Nachschlagen und eine Änderung bewegt genau die Closures, die den geänderten Knoten erreichen. Der Graph wird digestadressiert gespeichert: die Knoten in `buckets` Stücken nach Schlüsselhash (`c/<sha256>.json.br`, der SHA-256 des unkomprimierten Textes), benannt von einem atomar ersetzten Kopf, sodass ein Speichern, das irgendwo endet, den vorigen Kopf ganz lässt und eine Änderung ein Stück neu schreibt.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "fact", "directory", "buckets", "compressionQuality", "chunkGraceMilliseconds", "saveDelayMilliseconds", "fleet"],
+  "properties": {
+    "version": {"const": 1},
+    "fact": {"const": "closure-graph", "description": "EN: The name of the `global` row a command walk is recorded as: `[fact, workspaceRoot, question]` with the closure digest of the question as its fact, so a closure entry or a project holds one row per walk and is valid while the graph answers the same digest. DE: Der Name der `global`-Zeile, als die ein Befehlslauf festgehalten wird: `[fact, workspaceRoot, Frage]` mit dem Closure-Digest der Frage als Fakt, sodass ein Closure-Eintrag oder ein Projekt eine Zeile pro Lauf hält und gültig ist, solange der Graph denselben Digest antwortet."},
+    "directory": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$", "description": "EN: The directory of the machine state (`.cache/f/<directory>`) the module graph of a checkout is kept in, shared by every process of the machine whatever closure store it binds. DE: Das Verzeichnis des Maschinenzustands (`.cache/f/<directory>`), in dem der Modulgraph eines Checkouts liegt, geteilt von jedem Prozess der Maschine, welchen Closure-Speicher er auch bindet."},
+    "buckets": {"type": "integer", "minimum": 1, "maximum": 4096, "description": "EN: How many chunks the nodes are stored in, by the first bytes of the SHA-256 of their key: an edit rewrites the chunk of each changed node, every other chunk is reused by its digest. DE: In wie viele Stücke die Knoten nach den ersten Bytes des SHA-256 ihres Schlüssels gespeichert werden: eine Änderung schreibt das Stück jedes geänderten Knotens neu, jedes andere Stück wird über seinen Digest wiederverwendet."},
+    "compressionQuality": {"type": "integer", "minimum": 0, "maximum": 11, "description": "EN: Brotli quality of the stored chunks. DE: Brotli-Qualität der gespeicherten Stücke."},
+    "chunkGraceMilliseconds": {"type": "integer", "minimum": 0, "description": "EN: How long a chunk no head names any more stays on disk after it was last named or written: every inference process of a machine saves into one directory, and a reader that read the previous head must still find its chunks. DE: Wie lange ein Stück, das kein Kopf mehr nennt, nach dem letzten Nennen oder Schreiben auf der Platte bleibt: jeder Inferenzprozess einer Maschine speichert in ein Verzeichnis, und ein Leser, der den vorigen Kopf las, muss dessen Stücke noch finden."},
+    "saveDelayMilliseconds": {"type": "integer", "minimum": 0, "description": "EN: How long after a change a process saves its module graph into the machine's directory (and at the latest before it exits), so a burst of walks is one save. DE: Wie lange nach einer Änderung ein Prozess seinen Modulgraphen in das Verzeichnis der Maschine speichert (spätestens vor seinem Ende), sodass eine Folge von Läufen ein Speichern ist."},
+    "fleet": {"type": "object", "additionalProperties": false, "required": ["domain", "retentionManifest"], "description": "EN: The fleet object of a stored graph: the result of a key from `domain` and the SHA-256 of the head text, its chunks as blobs and the retention manifest (`retentionManifest`, kind `graph`) that puts it into the protected class of the cache server. DE: Das Flottenobjekt eines gespeicherten Graphen: das Ergebnis eines Schlüssels aus `domain` und dem SHA-256 des Kopftextes, seine Stücke als Blobs und das Aufbewahrungsmanifest (`retentionManifest`, Art `graph`), das es in die geschützte Klasse des Cache-Servers stellt.", "properties": {"domain": {"const": "semio.closure-graph.v1"}, "retentionManifest": {"const": "stage.json"}}}
+  },
+  "definitions": {
+    "Head": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "chunks", "pool", "nodes", "edges"],
+      "description": "EN: The stored graph: the digest of every chunk in bucket order (null for an empty bucket), the node and edge counts. DE: Der gespeicherte Graph: der Digest jedes Stücks in Eimerreihenfolge (null für einen leeren Eimer), die Knoten- und Kantenzahl.",
+      "properties": {
+        "version": {"const": 1},
+        "chunks": {"type": "array", "items": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"}},
+        "pool": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$", "description": "EN: The digest of the pool chunk (`c/<digest>.json.br`, `{version, bases}`) that holds each distinct base layer of the witnesses once, a witness naming its base by index; null when no node has one. DE: Der Digest des Pool-Stücks (`c/<digest>.json.br`, `{version, bases}`), das jede verschiedene Basisschicht der Zeugen einmal hält, ein Zeuge nennt seine Basis per Index; null, wenn kein Knoten eine hat."},
+        "nodes": {"type": "integer", "minimum": 0},
+        "edges": {"type": "integer", "minimum": 0}
+      }
+    },
+    "Chunk": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "records"],
+      "description": "EN: The nodes of one bucket, sorted by key: `[key, name, kind, digest, edges, extra]`, `edges` the keys of the targets, `extra` the caller's data of the node (its witness, whose shared `base` layer is an index into the pool the head names) or null. DE: Die Knoten eines Eimers, nach Schlüssel sortiert: `[Schlüssel, Name, Art, Digest, Kanten, Zusatz]`, `Kanten` die Schlüssel der Ziele, `Zusatz` die Daten des Aufrufers zum Knoten (sein Zeuge) oder null.",
+      "properties": {
+        "version": {"const": 1},
+        "records": {"type": "array", "items": {"type": "array", "minItems": 6, "maxItems": 6}}
+      }
+    }
+  }
+}

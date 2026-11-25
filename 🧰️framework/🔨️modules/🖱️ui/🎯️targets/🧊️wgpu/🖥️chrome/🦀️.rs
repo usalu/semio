@@ -34,6 +34,16 @@ pub fn push_control_border(draw: &mut DrawList, rect: Rect, theme: &Theme, borde
     draw.push_shared_border(rect, theme.stroke_hairline, border, state);
 }
 
+/// 📏️ Paints a list row and the single divider it owns on its leading edge.
+pub fn push_chrome_row(draw: &mut DrawList, row: Rect, fill: Option<Rgba>, divider_above: bool, theme: &Theme) {
+    if let Some(fill) = fill {
+        draw.push_solid([row.x, row.y, row.w, row.h], fill);
+    }
+    if divider_above {
+        draw.push_solid([row.x, row.y, row.w, theme.stroke_hairline], theme.border_normal);
+    }
+}
+
 pub fn push_icon(draw: &mut DrawList, icons: &IconAtlas, icon_id: &str, x: f32, y: f32, size: f32, color: Rgba) {
     if let Some(uv) = icons.icon_uv(icon_id) {
         draw.push_textured([x, y, size, size], uv, color);

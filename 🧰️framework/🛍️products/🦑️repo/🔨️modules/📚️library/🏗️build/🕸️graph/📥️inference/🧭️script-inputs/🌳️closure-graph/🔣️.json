@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "fact": "closure-graph",
+  "directory": "closure-graph",
+  "buckets": 256,
+  "compressionQuality": 5,
+  "chunkGraceMilliseconds": 600000,
+  "saveDelayMilliseconds": 30000,
+  "fleet": {
+    "domain": "semio.closure-graph.v1",
+    "retentionManifest": "stage.json"
+  }
+}

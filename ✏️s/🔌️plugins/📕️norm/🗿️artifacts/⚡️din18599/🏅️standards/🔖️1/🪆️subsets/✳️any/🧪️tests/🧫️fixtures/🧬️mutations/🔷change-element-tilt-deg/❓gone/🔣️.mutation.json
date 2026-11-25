@@ -1,5 +1,5 @@
 {
-  "mutation": "changeelementtiltdeg",
+  "mutation": "changeElementTiltDeg",
   "elementId": "ghost",
   "newTiltDeg": 80.0
 }

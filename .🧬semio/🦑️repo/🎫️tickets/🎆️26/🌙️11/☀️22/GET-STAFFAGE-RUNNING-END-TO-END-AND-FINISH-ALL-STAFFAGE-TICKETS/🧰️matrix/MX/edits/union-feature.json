@@ -1,0 +1,7 @@
+[
+ {
+  "name": "scenario",
+  "old": "  Scenario: Duplicate points do not matter",
+  "new": "  Scenario: Prism faces that stand within nanometres of the vertical\n    Given the faces of a shank prism of a pregnant person swept along the bone normal with one profile edge along the bone, whose sweep edges stand 0.5 to 23 nanometres off the vertical in the front view, and the faces of a hand prism of a tour guide seen along its profile with its two end outlines as slivers of 2 micrometres\n    When their union is built\n    Then the slab union that cannot close with vertical slabs is repeated on the polygons turned by a fixed angle and turned back, and the union is one ring of the area shapely and polygon-clipping find\n\n  Scenario: Duplicate points do not matter"
+ }
+]

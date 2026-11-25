@@ -7,7 +7,7 @@ use semio_framework::{AppRole, Fault, FaultCode, FaultFrom, FaultOrigin};
 use std::sync::Arc;
 use semio_plugin_decl_app::ArtifactApp;
 use semio_plugin_operation::{ArtifactDocumentAuthority, ToolCancellationLease, ToolOperationKey};
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use semio_plugin_decl_app::tool_contract::{ArtifactToolCompletionValue, ArtifactToolPublicationLane, TYPED_OPERATION_FAULT_PAGE_BYTES, TypedOperationResultLane};
 use semio_plugin_decl_views::child_view::ChildContentView;

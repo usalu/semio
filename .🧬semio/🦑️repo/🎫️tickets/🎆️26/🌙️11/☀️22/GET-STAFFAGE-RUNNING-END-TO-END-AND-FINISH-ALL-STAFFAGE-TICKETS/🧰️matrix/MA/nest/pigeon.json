@@ -1,0 +1,291 @@
+[
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "far-thigh",
+  "bone": "thigh-f"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "near-thigh",
+  "bone": "thigh-n"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "far-tarsus",
+  "bone": "tarsus-f"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "near-tarsus",
+  "bone": "tarsus-n"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "body",
+  "bone": "trunk"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "head",
+  "bone": "head"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "jaw",
+  "bone": "jaw"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "eye-f",
+  "bone": "head",
+  "twin": "eye",
+  "twinBone": "head"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "far-toes",
+  "bone": "toes-f"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "near-toes",
+  "bone": "toes-n"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "far-toe-inner",
+  "bone": "toes-f"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "near-toe-inner",
+  "bone": "toes-n"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "far-toe-outer",
+  "bone": "toes-f"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "near-toe-outer",
+  "bone": "toes-n"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "far-hallux",
+  "bone": "toes-f"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "near-hallux",
+  "bone": "toes-n"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "far-tarsus",
+  "bone": "tarsus-f"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "near-tarsus",
+  "bone": "tarsus-n"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "far-thigh",
+  "bone": "thigh-f"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "near-thigh",
+  "bone": "thigh-n"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "jaw",
+  "bone": "jaw"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "far-thigh",
+  "bone": "thigh-f"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "near-thigh",
+  "bone": "thigh-n"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "far-tarsus",
+  "bone": "tarsus-f"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "near-tarsus",
+  "bone": "tarsus-n"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "body",
+  "bone": "trunk"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "head",
+  "bone": "head"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "jaw",
+  "bone": "jaw"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "far-toes",
+  "bone": "toes-f"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "near-toes",
+  "bone": "toes-n"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "far-toe-spread",
+  "bone": "toes-f"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "near-toe-spread",
+  "bone": "toes-n"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "far-tarsus",
+  "bone": "tarsus-f"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "near-tarsus",
+  "bone": "tarsus-n"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "far-thigh",
+  "bone": "thigh-f"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "near-thigh",
+  "bone": "thigh-n"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "body",
+  "bone": "trunk"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "jaw",
+  "bone": "jaw"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "front",
+  "id": "body",
+  "bone": "trunk"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "front",
+  "id": "neck",
+  "bone": "neck-2"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "plan",
+  "id": "body",
+  "bone": "trunk"
+ }
+]

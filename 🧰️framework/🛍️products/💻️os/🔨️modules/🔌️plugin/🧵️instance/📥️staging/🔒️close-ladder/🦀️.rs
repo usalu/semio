@@ -6,7 +6,7 @@ use store::os_store::ArtifactStoreNativeVcsTurn as _;
 use semio_plugin_ownership::bounded_ownership::{ARTIFACT_LIVE_OUTPUT_SLOTS, PluginLifecycleStep};
 use semio_plugin_instance_stores::stores_components::{ActionIngress, InstanceStores, PeerRoster};
 use semio_plugin_decl_app::ArtifactApp;
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use semio_plugin_decl_views::child_view::CHILD_CONTENT_SLOTS;
 use semio_plugin_child::ChildMemberRetirement;

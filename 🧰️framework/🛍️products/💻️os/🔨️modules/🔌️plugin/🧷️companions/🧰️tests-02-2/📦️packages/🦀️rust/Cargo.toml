@@ -51,6 +51,7 @@ semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️jo
 semio-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", features = ["mutation-testing"] }
 semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-plugin-ownership = { path = "../../../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
+semio-plugin-store-lifecycle = { path = "../../../../♻️lifecycle/🧱️owner/📦️packages/🦀️rust" }
 semio-framework-time-travel = { workspace = true }
 semio-framework-tool-machine = { workspace = true }
 semio-framework-tool-run = { workspace = true }

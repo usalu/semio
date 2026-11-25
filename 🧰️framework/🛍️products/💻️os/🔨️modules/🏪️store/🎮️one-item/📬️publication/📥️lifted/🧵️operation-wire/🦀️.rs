@@ -13,6 +13,12 @@ pub enum ArtifactPreparedOperationSource<'a> {
     Text { header: &'static [u8], body: &'a dyn ArtifactOperationText },
     CanonicalJson { header: &'static [u8], body: &'a dyn ArtifactCanonicalJson },
     HexJson { header: &'static [u8], prefix: &'static [u8], body: &'a dyn ArtifactCanonicalJson },
+    Encoded { body: &'a dyn ArtifactOperationEncoded },
+}
+
+/// 🔢️ An operation whose authored binary codec produces its complete frame in one call; the cursor owns that frame under funded capacity and copies it out sixty-four bytes per turn.
+pub trait ArtifactOperationEncoded: Sync {
+    fn encode_once(&self) -> Result<Vec<u8>, ValueError>;
 }
 
 /// ⚠️ Exact initialized output prefix remains visible when a domain source refuses.
@@ -139,5 +145,5 @@ impl<M:ArtifactCanonicalJsonTree+semio_framework_value_native_owned::native_deco
 
 #[path="🧳️receiving/🦀️.rs"]
 pub mod original_receiving;
-pub use original_receiving::{ArtifactOriginalOperationReceiving,ArtifactPersistedOperation};
+pub use original_receiving::{ArtifactOriginalOperationReceiving,ArtifactPersistedOperation,encoded_operation_source};
 

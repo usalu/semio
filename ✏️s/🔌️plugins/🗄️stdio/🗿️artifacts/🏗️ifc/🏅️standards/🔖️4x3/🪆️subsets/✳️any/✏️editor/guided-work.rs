@@ -100,4 +100,7 @@ impl GuidedWork{
 impl GuidedProducer{
     fn empty(&self)->bool{match self{Self::Template{work,source}=>work.is_none()&&source.is_none(),Self::TypeInput{work,source}=>work.is_none()&&source.is_none()}}
 }
-retire_self!([] GuidedWork);
+impl GuidedWork{
+    pub(super) fn close_work(&self,body:usize)->Result<u64,ValueError>{if !self.retirement.is_empty(){return self.retirement.next_owner_work::<StagedFormRequest>(false,&None,body);}match &self.producer{GuidedProducer::TypeInput{work:Some(work),..}=>work.close_work(body),_=>Ok(1)}}
+}
+retire_self!([] GuidedWork; work = |work: &GuidedWork, body: usize| work.close_work(body));

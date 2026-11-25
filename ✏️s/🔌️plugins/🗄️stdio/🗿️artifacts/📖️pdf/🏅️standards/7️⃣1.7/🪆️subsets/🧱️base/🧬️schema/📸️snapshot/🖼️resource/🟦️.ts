@@ -28,4 +28,4 @@ export type PdfImageMask =
   | { kind: "stencil"; image: string }
   | { kind: "colorKey"; ranges: number[] };
 
-export type PdfImageBody = { kind: "samples"; values: number[] } | { kind: "artifact"; reference: ArtifactRef };
+export type PdfImageBody = { kind: "samples"; packed: number[] } | { kind: "artifact"; reference: ArtifactRef };

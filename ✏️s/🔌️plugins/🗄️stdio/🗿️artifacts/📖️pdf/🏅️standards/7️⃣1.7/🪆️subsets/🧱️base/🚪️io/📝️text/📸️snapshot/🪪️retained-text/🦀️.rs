@@ -196,12 +196,46 @@ pub struct RetainedTextCursor {
 }
 
 impl RetainedTextCursor {
+    /// 🏃️ The most bytes one text action writes (a walk frame, a queued role or the value replacing a string), the price of one action inside a body run.
+    pub const ACTION_WRITE_BYTES: usize = {
+        let (frame, role, value) = (std::mem::size_of::<Frame>(), std::mem::size_of::<(usize, u8)>(), std::mem::size_of::<PdfObject>());
+        let first = if frame > role { frame } else { role };
+        if first > value { first } else { value }
+    };
+
     pub fn new(maximum_objects: usize) -> Self {
         Self { stage: Stage::ReserveMarks, maximum_objects, index: 0, walk: Walk::default(), marks: Vec::new(), queue: Vec::new(), replacement: None, pending_role: None, conversion: None }
     }
 
+    /// 🏃️ Bytes the next unit writes when it is a run unit: one mark or one walked value; one queue entry for a discovered role; `None` for allocation, conversion and retirement.
+    pub fn run_write_bytes(&self) -> Option<usize> {
+        if self.pending_role.is_some() { return Some(std::mem::size_of::<(usize, u8)>()); }
+        match self.stage {
+            Stage::InitializeMarks | Stage::CollectObjects | Stage::CollectTrailer | Stage::Propagate => Some(1),
+            Stage::BindObjects | Stage::BindTrailer if self.conversion.is_none() => Some(1),
+            _ => None,
+        }
+    }
+
+    /// ▶️ Runs the next unit and then as many scanning units as the grant's work still covers, each exactly the unit a single-unit grant would run.
     pub fn advance(
         &mut self, objects: &mut [PdfIndirectObject], trailer: &mut [PdfDictEntry], position: impl Fn(ObjRef) -> Option<usize>,
+        grant: RetainedTextGrant, cancelled: bool,
+    ) -> RetainedTextReceipt {
+        let scanning = self.run_write_bytes() == Some(1);
+        let mut total = self.advance_unit(objects, trailer, &position, grant, cancelled);
+        while scanning && total.work < grant.work && total.status == Ok(RetainedTextStatus::More) && total.allocated_bytes == 0 && total.released_bytes == 0
+            && self.run_write_bytes() == Some(1)
+        {
+            let step = self.advance_unit(objects, trailer, &position, grant, false);
+            total.work += step.work;
+            total.status = step.status;
+        }
+        total
+    }
+
+    fn advance_unit(
+        &mut self, objects: &mut [PdfIndirectObject], trailer: &mut [PdfDictEntry], position: &impl Fn(ObjRef) -> Option<usize>,
         grant: RetainedTextGrant, cancelled: bool,
     ) -> RetainedTextReceipt {
         use RetainedTextStatus as Status;

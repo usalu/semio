@@ -1,0 +1,27 @@
+{
+ "target": "s1a",
+ "groups": "^fol-",
+ "points": 32,
+ "decisions": {
+  "silhouette": {
+   "en": "At 1:500 (1 m is 2 mm) the magnolia is a low and broad crown, 13 mm wide and 12 mm high, of the nine foliage masses of this tree (an upper and a low mass on each of the four stems and the shaded core), above the short visible stems and the root crown; every mass is drawn as the true outline of its 1:500 solid. The masses stand where their stems carry them, so the front elevation is another drawing than the side elevation.",
+   "de": "Bei 1:500 (1 m sind 2 mm) ist die Magnolie eine niedrige, breite Krone von 13 mm Breite und 12 mm Höhe aus den neun Laubmassen dieses Baums (je eine obere und eine tiefe Masse an jedem der vier Stämme und der Schattenkern) über den kurzen sichtbaren Stämmen und dem Wurzelstock; jede Masse ist als wahrer Umriss ihres 1:500-Körpers gezeichnet. Die Massen stehen dort, wo ihre Stämme sie tragen, daher ist die Vorderansicht eine andere Zeichnung als die Seitenansicht."
+  },
+  "retained": {
+   "en": "Retained: root crown, the lower parts of the four stems and the outlines of the nine foliage masses.",
+   "de": "Beibehalten: Wurzelstock, die unteren Teile der vier Stämme und die Umrisse der neun Laubmassen."
+  },
+  "merged": {
+   "en": "Merged into the masses: the foliage of each stem, the upper stems, the low branches and the flowers (all regions of the crown are listed on every mass).",
+   "de": "In den Massen vereint: das Laub jedes Stamms, die oberen Stämme, die tiefen Äste und die Blüten (alle Regionen der Krone sind an jeder Masse genannt)."
+  },
+  "omitted": {
+   "en": "Omitted: every flower as a mark; the only internal edges are the outlines of the masses.",
+   "de": "Weggelassen: jede Blüte als Zeichen; die einzigen inneren Kanten sind die Umrisse der Massen."
+  }
+ },
+ "volume": {
+  "en": "Body at 1:500: root crown and the lower stems as plain lofts, and the crown as nine masses bound to the first stem as the drawing binds it: one ellipsoid per foliage bone of the 1:200 body (four upper masses, four low masses, the shaded core), each with the reach of that foliage to every side.",
+  "de": "Körper bei 1:500: Wurzelstock und die unteren Stämme als einfache Lofts und die Krone als neun Massen, an den ersten Stamm gebunden wie in der Zeichnung: ein Ellipsoid je Laubknochen des 1:200-Körpers (vier obere Massen, vier tiefe Massen, der Schattenkern), jedes mit der Ausladung dieses Laubs nach jeder Seite."
+ }
+}

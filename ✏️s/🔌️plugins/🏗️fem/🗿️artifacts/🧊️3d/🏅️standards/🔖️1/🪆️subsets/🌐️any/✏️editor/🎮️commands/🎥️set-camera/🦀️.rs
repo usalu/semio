@@ -27,20 +27,25 @@ pub fn handle(_payload: &SetCamera, _doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg
 }
 
 pub fn handle_window(payload: &SetCamera, cfg: &ConfigView<'_, NoConfig>, view: &semio_plugin::ViewModel) -> Result<Emit<Fem3dMutation, NoConfigMutation>, Fault> {
+    let id = view.window_id.as_deref().ok_or_else(|| Fault::from("fem3d.camera.window-required"))?;
+    camera_in_window(payload, cfg, view, id)
+}
+
+/// 🎥️ Writes the camera into one named window instance — the focused pane when a panel button, which carries no window of its own, asked.
+pub fn camera_in_window(payload: &SetCamera, cfg: &ConfigView<'_, NoConfig>, view: &semio_plugin::ViewModel, id: &str) -> Result<Emit<Fem3dMutation, NoConfigMutation>, Fault> {
     payload.camera.validate().map_err(|error| Fault::from(error.to_string()))?;
     let camera = payload.camera;
-    let id = view.window_id.as_deref().ok_or_else(|| Fault::from("fem3d.camera.window-required"))?;
     let kind = view.window_instances.iter().find(|window| window.id == id).map(|window| window.window_kind_id.as_str()).ok_or_else(|| Fault::from("fem3d.camera.window-stale"))?;
     let mutation = match kind {
         model::FEM3D_WINDOW_MODEL => {
             let mut next = model::config::current(cfg);
             next.camera = camera;
-            model::config::addressed(view, next)?
+            model::config::addressed_to(id, next)
         }
         results::FEM3D_WINDOW_RESULTS => {
             let mut next = results::config::current(cfg);
             next.camera = camera;
-            results::config::addressed(view, next)?
+            results::config::addressed_to(id, next)
         }
         _ => return Err(Fault::from("fem3d.camera.window-kind")),
     };

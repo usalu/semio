@@ -22,10 +22,12 @@ pub enum PdfFault {
     PageNumberOutOfRange,
     SaveDeclined,
     UnknownField,
+    GlyphsMissing,
+    ContentPreserved,
 }
 
 impl PdfFault {
-    pub const ALL: [PdfFault; 16] = [
+    pub const ALL: [PdfFault; 18] = [
         PdfFault::PageEdit,
         PdfFault::UnhandledAction,
         PdfFault::ArgumentMissing,
@@ -42,6 +44,8 @@ impl PdfFault {
         PdfFault::PageNumberOutOfRange,
         PdfFault::SaveDeclined,
         PdfFault::UnknownField,
+        PdfFault::GlyphsMissing,
+        PdfFault::ContentPreserved,
     ];
 
     pub const fn code(self) -> &'static str {
@@ -62,6 +66,8 @@ impl PdfFault {
             PdfFault::PageNumberOutOfRange => "stdio.pdf.page-number-out-of-range",
             PdfFault::SaveDeclined => "stdio.pdf.save-declined",
             PdfFault::UnknownField => "stdio.pdf.unknown-field",
+            PdfFault::GlyphsMissing => "stdio.pdf.glyphs-missing",
+            PdfFault::ContentPreserved => "stdio.pdf.content-preserved",
         }
     }
 
@@ -83,6 +89,8 @@ impl PdfFault {
             PdfFault::PageNumberOutOfRange => "Page {page} does not exist. Enter a page number from 1 to {last}.",
             PdfFault::SaveDeclined => "This document cannot be saved with the available memory. Encrypted documents and documents whose edits reach beyond the pages and the document information need more memory to save. Nothing was written.",
             PdfFault::UnknownField => "The document has no field {field}.",
+            PdfFault::GlyphsMissing => "The font {font} has no glyphs for the requested text, for example because the document embeds only the glyphs it already uses. Nothing was changed.",
+            PdfFault::ContentPreserved => "This content on page {page} is preserved in the document but cannot be displayed or edited here. Nothing was changed.",
         }
     }
 
@@ -104,6 +112,8 @@ impl PdfFault {
             PdfFault::PageNumberOutOfRange => "Seite {page} existiert nicht. Geben Sie eine Seitenzahl von 1 bis {last} ein.",
             PdfFault::SaveDeclined => "Dieses Dokument kann mit dem verfügbaren Speicher nicht gespeichert werden. Verschlüsselte Dokumente und Dokumente, deren Änderungen über die Seiten und die Dokumentinformationen hinausgehen, brauchen zum Speichern mehr Speicher. Es wurde nichts geschrieben.",
             PdfFault::UnknownField => "Das Dokument hat kein Feld {field}.",
+            PdfFault::GlyphsMissing => "Die Schrift {font} enthält keine Glyphen für den gewünschten Text, zum Beispiel weil das Dokument nur die bereits verwendeten Glyphen einbettet. Es wurde nichts geändert.",
+            PdfFault::ContentPreserved => "Dieser Inhalt auf Seite {page} bleibt im Dokument erhalten, kann hier aber nicht angezeigt oder bearbeitet werden. Es wurde nichts geändert.",
         }
     }
 }

@@ -26,7 +26,7 @@ impl crate::Present for FakePresenter {
         let model = cx.read(&self.model);
         let label = format!("{}:{}", self.count, model.value);
         crate::ComponentTree::new(
-            crate::TreeNode::try_new("root", ui_contract::Component::Text(ui_contract::TextProps { value: ui_contract::Label::try_from(label).expect("bounded fixture label"), emphasize: None, data_attributes: None })).expect("bounded fixture node"),
+            crate::TreeNode::try_new("root", ui_contract::Component::Text(ui_contract::TextProps { value: ui_contract::Label::try_from(label).expect("bounded fixture label"), emphasize: None, data_attributes: None, heading_level: None })).expect("bounded fixture node"),
         )
     }
 }

@@ -1,0 +1,186 @@
+{
+ "apple-tree": {
+  "scan": 11,
+  "scanCodes": {
+   "anchor-landmark": 11
+  },
+  "reported": 108,
+  "gate": 359,
+  "gateCodes": {
+   "anchor-landmark": "359 (worst 200 mm)"
+  }
+ },
+ "bamboo-clump": {
+  "scan": 105,
+  "scanCodes": {
+   "anchor-landmark": 103,
+   "sync-forward": 2
+  },
+  "reported": 47,
+  "gate": 1864,
+  "gateCodes": {
+   "anchor-landmark": "1856 (worst 273 mm)",
+   "sync-forward": "8 (worst 100 mm)"
+  }
+ },
+ "black-alder": {
+  "scan": 26,
+  "scanCodes": {
+   "sync-bone-height": 15,
+   "sync-bone-forward": 8,
+   "anchor-landmark": 3
+  },
+  "reported": 128,
+  "gate": 312,
+  "gateCodes": {
+   "anchor-landmark": "21 (worst 693 mm)",
+   "sync-bone-forward": "92 (worst 863 mm)",
+   "sync-bone-height": "199 (worst 1041 mm)"
+  }
+ },
+ "black-locust": {
+  "scan": 4,
+  "scanCodes": {
+   "sync-forward": 4
+  },
+  "reported": 128,
+  "gate": 56,
+  "gateCodes": {
+   "sync-forward": "56 (worst 623 mm)"
+  }
+ },
+ "common-ash": {
+  "scan": 182,
+  "scanCodes": {
+   "anchor-landmark": 182
+  },
+  "reported": 1,
+  "gate": 3796,
+  "gateCodes": {
+   "anchor-landmark": "3796 (worst 2700 mm)"
+  }
+ },
+ "common-lilac": {
+  "scan": 8,
+  "scanCodes": {
+   "sync-bone-forward": 4,
+   "sync-bone-lateral": 4
+  },
+  "reported": 0,
+  "gate": 236,
+  "gateCodes": {
+   "sync-bone-forward": "118 (worst 360 mm)",
+   "sync-bone-lateral": "118 (worst 360 mm)"
+  }
+ },
+ "common-reed": {
+  "scan": 335,
+  "scanCodes": {
+   "anchor-landmark": 289,
+   "sync-forward": 5,
+   "sync-bone-forward": 41
+  },
+  "reported": 36,
+  "gate": 7425,
+  "gateCodes": {
+   "anchor-landmark": "6921 (worst 196 mm)",
+   "sync-bone-forward": "441 (worst 128 mm)",
+   "sync-forward": "63 (worst 128 mm)"
+  }
+ },
+ "crab-apple": {
+  "scan": 10,
+  "scanCodes": {
+   "anchor-landmark": 10
+  },
+  "reported": 17,
+  "gate": 279,
+  "gateCodes": {
+   "anchor-landmark": "279 (worst 299 mm)"
+  }
+ },
+ "dawn-redwood": {
+  "scan": 16,
+  "scanCodes": {
+   "anchor-landmark": 16
+  },
+  "reported": 0,
+  "gate": 396,
+  "gateCodes": {
+   "anchor-landmark": "396 (worst 945 mm)"
+  }
+ },
+ "english-oak": {
+  "scan": 90,
+  "scanCodes": {
+   "anchor-landmark": 84,
+   "sync-height": 3,
+   "sync-lateral": 1,
+   "sync-bone-forward": 2
+  },
+  "reported": 136,
+  "gate": 2138,
+  "gateCodes": {
+   "anchor-landmark": "2063 (worst 4354 mm)",
+   "sync-height": "16 (worst 421 mm)",
+   "sync-lateral": "2 (worst 419 mm)",
+   "sync-bone-forward": "57 (worst 553 mm)"
+  }
+ },
+ "european-beech": {
+  "scan": 191,
+  "scanCodes": {
+   "anchor-landmark": 191
+  },
+  "reported": 0,
+  "gate": 3939,
+  "gateCodes": {
+   "anchor-landmark": "3939 (worst 3559 mm)"
+  }
+ },
+ "field-maple": {
+  "scan": 18,
+  "scanCodes": {
+   "sync-forward": 3,
+   "anchor-landmark": 14,
+   "sync-bone-height": 1
+  },
+  "reported": 16,
+  "gate": 299,
+  "gateCodes": {
+   "sync-forward": "13 (worst 245 mm)",
+   "anchor-landmark": "282 (worst 351 mm)",
+   "sync-bone-height": "4 (worst 224 mm)"
+  }
+ },
+ "fig-tree": {
+  "scan": 8,
+  "scanCodes": {
+   "anchor-landmark": 8
+  },
+  "reported": 0,
+  "gate": 247,
+  "gateCodes": {
+   "anchor-landmark": "247 (worst 188 mm)"
+  }
+ },
+ "hawthorn": {
+  "scan": 46,
+  "scanCodes": {
+   "sync-bone-forward": 15,
+   "sync-forward": 3,
+   "sync-height": 3,
+   "sync-bone-height": 12,
+   "anchor-landmark": 13
+  },
+  "reported": 287,
+  "gate": 830,
+  "gateCodes": {
+   "anchor-landmark": "271 (worst 248 mm)",
+   "sync-bone-forward": "269 (worst 496 mm)",
+   "sync-bone-height": "190 (worst 673 mm)",
+   "sync-forward": "25 (worst 245 mm)",
+   "sync-height": "75 (worst 443 mm)"
+  }
+ }
+}

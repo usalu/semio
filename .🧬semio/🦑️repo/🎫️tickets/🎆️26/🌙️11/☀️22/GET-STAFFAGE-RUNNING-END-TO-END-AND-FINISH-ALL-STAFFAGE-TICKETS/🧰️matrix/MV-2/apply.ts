@@ -1,8 +1,10 @@
 /** 🧷️ The multiview repair of a plant of MV-2, the last step of its chain (after its generator and after `🧰️silhouette/SV-2/apply.ts` or `🧰️silhouette/R4-P/make/<id>.sh`): `bun apply.ts <id> [--in file] [--out file] [--write]` applies `ops/<id>.json` in order and writes only the values that differ into the text of the file (`rewrite` keeps every other byte); the file is read right before it is written and nothing is written when it changed meanwhile. Every op sets absolute values, so a second run changes nothing.
  *
  * Ops:
+ * A shape that `carry.ts` gave the suffix `-mvs` is found under its old id.
  * - `{ "op": "anchor", id, "set": { bone, x, y, z } }`: binds an anchor to the bone that draws its place.
  * - `{ "op": "set", scale, view, id, bone?, "set": {…} }`: sets fields of one shape (`null` removes a field).
+ * - `{ "op": "rename", scale, view, id, bone, to }`: gives a flat front or plan shape another id than its elevation twin (suffix `-dp`), so the engine carries each of its points at the depth of the elevation silhouette of its bone there instead of the whole sheet at one depth.
  * - `{ "op": "remove", scale, view, id, bone? }`: removes a shape.
  * - `{ "op": "add", scale, view, "before"?: id, "shape": {…} }`: adds a shape (replaces the one of the same id and bone) before the named shape, else at the end.
  * @see ./anchors.ts
@@ -24,7 +26,10 @@ const ops = JSON.parse(readFileSync(flag("ops") ?? join(import.meta.dir, "ops", 
 let refused = 0;
 for (const op of ops) {
   const list: any[] | undefined = op.scale === undefined ? undefined : asset.representations[op.scale]?.geometry?.[op.view];
-  const index = (shapeId: string, bone?: string): number => list!.findIndex((shape) => shape.id === shapeId && (bone === undefined || shape.bone === bone));
+  const index = (shapeId: string, bone?: string): number => {
+    const at = (name: string): number => list!.findIndex((shape) => shape.id === name && (bone === undefined || shape.bone === bone));
+    return at(shapeId) >= 0 ? at(shapeId) : at(`${shapeId}-mvs`);
+  };
   const refuse = (why: string): void => {
     refused++;
     console.log(`REFUSED ${JSON.stringify(op).slice(0, 160)}: ${why}`);
@@ -38,6 +43,10 @@ for (const op of ops) {
     const i = index(op.id, op.bone);
     if (i < 0) refuse("no such shape");
     else for (const [key, value] of Object.entries(op.set)) value === null ? delete list[i][key] : (list[i][key] = value);
+  } else if (op.op === "rename") {
+    const i = index(op.id, op.bone);
+    if (i >= 0) list[i].id = op.to;
+    else if (index(op.to, op.bone) < 0) refuse("no such shape");
   } else if (op.op === "remove") {
     const i = index(op.id, op.bone);
     if (i >= 0) list.splice(i, 1);

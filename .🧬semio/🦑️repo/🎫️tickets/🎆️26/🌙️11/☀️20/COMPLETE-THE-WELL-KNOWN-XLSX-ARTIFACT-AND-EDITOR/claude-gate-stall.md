@@ -25,3 +25,10 @@ Remaining duplicates of the old `kill(pid,0)` check (not on this stall path, lef
 
 ## Not done
 A waiter diagnostic ("waiting on ticket pid N, slot holders ...") is not added; `slot-wait` events carry only the wait time.
+
+## `repo cargo` stalls in phase `source.served` (xlsx feature host, 2026-11-24)
+- Symptom: `repo cargo --store=shared --configuration=prototype -- build --manifest-path <claude-oracles2/host>/Cargo.toml --bin host --features sut` sat in `[repo] still working ...; last phase started: source.served` and `build:source-admission` for 10 minutes with no live child; the watchdog then printed "This process (repository:build) made no progress for 10 min and has no live child: it exits now so that the leases it holds are released." and exited 124. Three tries in a row, each ~11 min.
+- Evidence: `🗑️generated/claude-oracles2/host-term-1.log`, `host-term-2.log`, `host-term-3.log` (the last 20 lines of each show the watchdog).
+- Context at the time: cargo was admitted with 3 of 10 jobs behind another xlsx test run (`[capacity] ... behind semio-s-artifact-stdio-xlsx-base`), the nx and products storage images had been unmounted by the session restart (`repo doctor`: "Image nx is not attached", "Image products is not attached"; repaired with `repo doctor --fix --only=storage`, which attached both without touching image data), and the cache disk had 5-8 % free.
+- Hypothesis for the tooling fix: `build:source-admission` of a manifest OUTSIDE the registered workspaces (a generated host under a ticket folder) has no progress signal, so a slow or blocked admission is indistinguishable from a hang; either report progress per unit (as the earlier `cargo:source-admission` unit/units lines did) or fail fast with the blocking resource named.
+- Workaround used: the rustup toolchain cargo directly (`CARGO_BUILD_RUSTC=rustc CARGO_BUILD_RUSTC_WRAPPER= CARGO_PROFILE_DEV_DEBUG=0 -j 6`, target dirs under `claude-oracles2/`), launched in the Terminal panel (`run-feature.sh`).

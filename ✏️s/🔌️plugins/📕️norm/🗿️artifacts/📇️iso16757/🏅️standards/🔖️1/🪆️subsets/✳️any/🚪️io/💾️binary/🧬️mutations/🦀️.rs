@@ -365,4 +365,5 @@ pub(crate) fn write_str_bin(out: &mut Vec<u8>, s: &str) {
 }
 }
 
-dsl::original_pack_value_operation_receiving!(crate::Iso16757Mutation);
+dsl::original_decoded_operation_receiving!(crate::Iso16757Mutation);
+dsl::artifact_persisted_binary_operation!(crate::Iso16757Mutation);

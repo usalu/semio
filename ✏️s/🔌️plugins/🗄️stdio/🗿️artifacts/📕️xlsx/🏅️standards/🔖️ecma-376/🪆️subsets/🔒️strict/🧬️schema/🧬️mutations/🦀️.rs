@@ -92,6 +92,7 @@ pub enum XlsxStrictMutation {
     SetWorksheetContentType(set_worksheet_content_type::SetWorksheetContentType),
 }
 dsl::original_pack_value_operation_receiving!(XlsxStrictMutation);
+dsl::artifact_persisted_binary_operation!(XlsxStrictMutation);
 
 /// 🧾️ Kebab-case spelling of every `XlsxStrictMutation` variant, in declaration order — the exhaustive
 /// mutation catalog `xlsx-ecma-376-strict` (`../../🔣️oracle.json`) is measured against

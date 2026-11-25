@@ -112,12 +112,12 @@ export function openProjectFarmV1({ workspaceRoot, context, contracts, closureSt
   let hub = HUBS.get(key);
   for (const [other, old] of HUBS) if (other !== key && old.users === 0 && old.pools.every(pool => !pool.farm.pending)) void retireHubV1(old).catch(() => {});
   if (hub !== undefined && (hub.state === "off" || hub.closing)) { void retireHubV1(hub).catch(() => {}); hub = undefined; }
-  const plan = planGraphFarmV1({ projects, environment, cores, policy, maximumWorkers, minimumWorkers: lean.lean ? 1 : 2 });
+  const plan = planGraphFarmV1({ projects, environment, cores, policy, maximumWorkers, minimumWorkers: 1 });
   if (hub === undefined && REFUSED.has(key)) { say("serial", { projects, reason: "identity" }); return undefined; }
   if (hub === undefined) {
     if (plan.workers === 0) { if (plan.reason === "work" || plan.reason === "cpu" || plan.reason === "memory") say("serial", { projects, reason: plan.reason }); return undefined; }
     const lease = reserveFarmV1({ kind: "project-farm", workerMegabytes: policy.workerMegabytes, wanted: plan.workers, environment });
-    if (lease.workers < (lean.lean ? 1 : 2)) { lease.release(); if (lean.lean) for (const line of renderLeanSliceMessageV1("tooSmall", { child: lean.childMegabytes, parent: lean.parentMegabytes, ceiling: Math.round(lean.limitMegabytes ?? 0) }, environment)) write(line); say("serial", { projects, reason: "memory" }); return undefined; }
+    if (lease.workers < 1) { lease.release(); if (lean.lean) for (const line of renderLeanSliceMessageV1("tooSmall", { child: lean.childMegabytes, parent: lean.parentMegabytes, ceiling: Math.round(lean.limitMegabytes ?? 0) }, environment)) write(line); say("serial", { projects, reason: "memory" }); return undefined; }
     plan.workers = Math.min(plan.workers, lease.workers);
     hub = createHubV1(key);
     hub.lease = lease;

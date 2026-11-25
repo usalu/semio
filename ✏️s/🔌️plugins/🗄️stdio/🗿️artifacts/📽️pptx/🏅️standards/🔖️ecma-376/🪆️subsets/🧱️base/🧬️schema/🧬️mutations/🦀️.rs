@@ -81,6 +81,7 @@ pub enum PptxMutation {
     RemoveContentType(remove_content_type::RemoveContentType),
 }
 dsl::original_pack_value_operation_receiving!(PptxMutation);
+dsl::artifact_persisted_binary_operation!(PptxMutation);
 //#endregion 🔖️Mutations
 
 //#region 🔖️Kinds

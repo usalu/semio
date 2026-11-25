@@ -32,6 +32,8 @@ use semio_framework_pack_json::ArtifactCanonicalJsonTreeWireCursor;
 use semio_framework_value::{retirement::controlled::ControlledRetirement,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,RetirementDemand,ValueError};
 use semio_framework_job::{StepContext,OriginalTurnFailure};
 use std::mem::ManuallyDrop;
+/// ⚖️ Alternates bounded input work with the still-owned output without crossing the present barrier.
+pub fn browser_output_input_turn(next_input:&mut bool,pending:bool,present_barrier:bool)->bool{if pending&&!present_barrier&&*next_input{*next_input=false;true}else{*next_input=true;false}}
 pub struct OriginalBrowserOutput{encoding:ManuallyDrop<Option<ArtifactCanonicalJsonTreeWireCursor<BrowserTickOutput>>>,wire:ManuallyDrop<Option<ControlledRetirement<Vec<u8>>>>,closing:bool}
 impl OriginalBrowserOutput{
  pub fn new(original:BrowserTickOutput)->Self{Self{encoding:ManuallyDrop::new(Some(ArtifactCanonicalJsonTreeWireCursor::new(original))),wire:ManuallyDrop::new(None),closing:false}}

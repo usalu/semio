@@ -19,6 +19,7 @@ use semio_framework_test_fixtures::fixture_path;
 
     use super::*;
     use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
+    use semio_framework_value::birth_ledger::original_birth_ledger;
     use semio_plugin_testing_fixtures_publication::publication_fixture::presence::mutations::change_publication_presence::ChangePublicationPresence;
 use semio_plugin_testing_fixtures_publication::publication_fixture::presence::PublicationPresence;
 use semio_plugin_testing_fixtures_publication::publication_fixture::presence::mutations::PublicationPresenceMutation;
@@ -62,6 +63,7 @@ pub const FIXTURE: &str = include_str!("../../🧵️retained-command/🔄️ful
         for _ in 0..artifact_app_laws::OriginalFixtureCaller::maximum_turns() {
             let mut output = None;
             let demand = mounted.result_page_presentation_demands().unwrap();
+            let settled_before = original_birth_ledger().settled();
             let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| {
                 semio_plugin_ownership::bounded_ownership::original_lifecycle_source_effect_step(cx, grant, demand, |_, effect| {
                     let (page, progress) = mounted.take_result_page(effect)?;
@@ -72,7 +74,8 @@ pub const FIXTURE: &str = include_str!("../../🧵️retained-command/🔄️ful
             });
             let progress = match step { PluginLifecycleStep::Progress(p) | PluginLifecycleStep::Complete(p) => p, _ => Default::default() };
             assert!(progress.fits(grant));
-            assert_eq!((heap.requested_bytes, heap.released_bytes), (progress.retained_capacity_bytes, progress.released_bytes));
+            let settled_births = original_birth_ledger().settled() - settled_before;
+            assert_eq!((heap.requested_bytes, heap.released_bytes), (progress.retained_capacity_bytes, progress.released_bytes + settled_births));
             if output.is_some() || progress == Default::default() { return output; }
         }
         panic!("mounted result presentation exceeded the original caller bound")
@@ -81,10 +84,12 @@ pub const FIXTURE: &str = include_str!("../../🧵️retained-command/🔄️ful
     fn retire_acknowledged_mounted_page<A: ArtifactApp>(mounted: &mut MountedTypedCommandFullOperation<A>, grant: RetainedCloneGrant, cx: &mut semio_framework_job::StepContext<'_>) {
         for _ in 0..artifact_app_laws::OriginalFixtureCaller::maximum_turns() {
             if !mounted.result_page_retirement_pending() { return; }
+            let settled_before = original_birth_ledger().settled();
             let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| cx.with_retained_loan(grant, |same| mounted.advance_acknowledged_result_page(same)).expect("same original producer page retirement"));
             let progress = match step { PluginLifecycleStep::Progress(p) | PluginLifecycleStep::Complete(p) => p, _ => Default::default() };
             assert!(progress.fits(grant));
-            assert_eq!((heap.requested_bytes, heap.released_bytes), (progress.retained_capacity_bytes, progress.released_bytes));
+            let settled_births = original_birth_ledger().settled() - settled_before;
+            assert_eq!((heap.requested_bytes, heap.released_bytes), (progress.retained_capacity_bytes, progress.released_bytes + settled_births));
         }
         panic!("original acknowledged mounted page did not retire")
     }

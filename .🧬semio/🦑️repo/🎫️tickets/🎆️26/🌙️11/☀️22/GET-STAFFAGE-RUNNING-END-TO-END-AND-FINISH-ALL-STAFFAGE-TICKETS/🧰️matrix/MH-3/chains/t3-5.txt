@@ -1,0 +1,13 @@
+# third fixer: two more crutch variants at 1:500; the print suitability of person-drinking-coffee now and of its untouched backup (the shared engine changed at 12:20 to 12:34); light proof of the two newly written assets and of person-cooking again (it authors lateralScale, which the engine reads since 12:20); check CLI again for the three assets proven before the engine changed (2500 MB for the vitest steps)
+(cd "$T" && FOCUS=0.05 ONLY=1 timeout 600 "$B" "$here/zoom.ts" "$GEN/backup/person-pushing-bicycle.json" 50 default "$GEN/zoom/hand-only-before.png" '^hand-r$') 2>&1 | tail -1
+(cd "$T" && FOCUS=0.05 ONLY=1 timeout 600 "$B" "$here/zoom.ts" "$GEN/var/bicycle-b8.json" 50 default "$GEN/zoom/hand-only-b8.png" '^hand-r$') 2>&1 | tail -1
+(cd "$T" && FOCUS=0.12 timeout 600 "$B" "$here/zoom.ts" "$GEN/var/bicycle-b8.json" 50 default "$GEN/zoom/hand-ctx-b8.png" '^hand-r$') 2>&1 | tail -1
+NOGATE=1 MEASURE=1 MSCALES=50 "$here/in-var.sh" person-pushing-bicycle "$here/var/bicycle-b10.json" bicycle-b10
+NOGATE=1 MEASURE=1 MSCALES=50 "$here/in-var.sh" person-pushing-bicycle "$here/var/bicycle-b11.json" bicycle-b11
+MEASURE=1 "$here/in-var.sh" person-on-crutches "$here/var/crutches-c3.json" crutches-c3
+MEASURE=1 "$here/in-var.sh" person-on-crutches "$here/var/crutches-c4.json" crutches-c4
+(cd "$T" && timeout 600 "$B" "$here/zoom.ts" "$GEN/var/crutches-c4.json" 500 default "$GEN/zoom/crutches-c4-500.png" '^crutch') 2>&1 | tail -1
+(cd "$S/📦️packages/🟦️typescript" && timeout 600 "$B" "$here/suit.ts" person-drinking-coffee "$GEN/backup/person-drinking-coffee.json") 2>&1 | cut -c1-400
+TAG=two "$here/in-prove.sh" person-hanging-laundry person-eating-standing
+TAG=cook REGATE=person-cooking "$here/in-prove.sh" person-cooking
+"$here/in-check.sh" person-queuing person-checking-watch person-cooking

@@ -16,6 +16,8 @@ role = "hub"
 path = "🦀️.rs"
 
 [dependencies]
+semio-hub-raster-editor-app = { workspace = true }
+semio-hub-raster-viewer-app = { workspace = true }
 semio-s-artifact-raster-raster-viewer = { path = "../../../../../✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/📦️packages/🦀️rust" }
 semio-s-artifact-raster-raster-editor = { path = "../../../../../✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust" }
 semio-framework-pack = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }

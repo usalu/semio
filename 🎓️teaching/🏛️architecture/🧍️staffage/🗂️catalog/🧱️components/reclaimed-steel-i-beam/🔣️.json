@@ -13,14 +13,62 @@
    "de": "Ein historischer gewalzter Stahlträger INP 240 (DIN 1025-1, geneigte Flansche) von 6,0 m, aus einer Decke ausgebaut: ein Ende von Hand brenngeschnitten, am anderen Ende der genietete Anschluss aus zwei Winkeln L 80 x 8 mit offenen Schraubenlöchern, vier alte Schraubenlöcher im Steg und eine Rostpatina; er liegt auf zwei Kanthölzern im Lager, hängt beim Anheben an einem Zweistranggehänge und wird als frei aufliegender Deckenträger mit 5,91 m Stützweite wieder eingebaut."
   },
   "tags": [
-   "component",
-   "reclaimed",
-   "steel",
-   "beam",
-   "i-section",
-   "historic",
-   "riveted",
-   "structural"
+   {
+    "id": "component",
+    "title": {
+     "en": "component",
+     "de": "Bauteil"
+    }
+   },
+   {
+    "id": "reclaimed",
+    "title": {
+     "en": "reclaimed",
+     "de": "wiederverwendet"
+    }
+   },
+   {
+    "id": "steel",
+    "title": {
+     "en": "steel",
+     "de": "Stahl"
+    }
+   },
+   {
+    "id": "beam",
+    "title": {
+     "en": "beam",
+     "de": "Balken"
+    }
+   },
+   {
+    "id": "i-section",
+    "title": {
+     "en": "I-section",
+     "de": "I-Profil"
+    }
+   },
+   {
+    "id": "historic",
+    "title": {
+     "en": "historic",
+     "de": "historisch"
+    }
+   },
+   {
+    "id": "riveted",
+    "title": {
+     "en": "riveted",
+     "de": "genietet"
+    }
+   },
+   {
+    "id": "structural",
+    "title": {
+     "en": "structural",
+     "de": "tragend"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage component authors",

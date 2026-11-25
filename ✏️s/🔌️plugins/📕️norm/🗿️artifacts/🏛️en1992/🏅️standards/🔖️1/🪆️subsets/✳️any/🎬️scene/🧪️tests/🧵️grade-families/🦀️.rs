@@ -126,7 +126,8 @@ fn the_anchorage_zone_has_the_required_length_of_the_anchorage_check_and_follows
     let zone = scene::projection_kit::test_support::entity(&built.scene, &format!("{}:anchorage-{}-a", member.id, layer.id));
     let required = check(&report, &format!("en1992.8.4.anchorage.{}.{}", member.id, layer.id)).limit.value;
     let scene::Geometry::Member(g) = &zone.geometry else { panic!("member geometry") };
-    let (a, b) = (&g.axis.points[0], &g.axis.points[1]);
+    let scene::Path3::Polyline(axis) = &g.axis else { panic!("polyline axis") };
+    let (a, b) = (&axis.points[0], &axis.points[1]);
     let length = a.distance(b);
     assert!((length - required.min((member.span - 2.0 * member.cover) / 2.0)).abs() < 1e-9, "{length} vs {required}");
     assert!(zone.utilisation.is_some());
@@ -136,7 +137,8 @@ fn the_anchorage_zone_has_the_required_length_of_the_anchorage_check_and_follows
     let longer = check(&report_again, &format!("en1992.8.4.anchorage.{}.{}", member.id, layer.id)).limit.value;
     assert!(longer > required, "a thicker bar needs a longer anchorage");
     let scene::Geometry::Member(g2) = &scene::projection_kit::test_support::entity(&again.scene, &format!("{}:anchorage-{}-a", member.id, layer.id)).geometry else { panic!("member geometry") };
-    assert!(g2.axis.points[0].distance(&g2.axis.points[1]) > length - 1e-12);
+    let scene::Path3::Polyline(axis2) = &g2.axis else { panic!("polyline axis") };
+    assert!(axis2.points[0].distance(&axis2.points[1]) > length - 1e-12);
 }
 
 fn tied() -> En1992Snapshot {

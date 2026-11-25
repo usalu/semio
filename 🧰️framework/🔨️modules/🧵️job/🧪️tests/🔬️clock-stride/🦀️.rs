@@ -77,3 +77,29 @@ fn the_logical_clock_advances_one_microsecond_per_read_per_thread() {
     assert_eq!(other, (Some(1), Some(2)));
     assert_eq!(logical_now_us(), Some(first + 3));
 }
+
+/// 🛑️ A stride grown on cheap units never delays cancellation and never hides a unit that declares large work: cancellation is the token's atomic (no clock read at all), and `consume_fuel` charges declared work against the stride so the next deadline check is a real read (2026-11-25: 4.5-20 s guest turns inside one non-preemptible step).
+#[test]
+fn a_calibrated_stride_neither_delays_cancellation_nor_hides_declared_work() {
+    let _serial = SERIAL.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    let law = law()["declaredWork"].clone();
+    let token = crate::root_cancel_token();
+    let mut sequence = 0;
+    let mut progress = semio_framework_value::RetainedCloneProgress::default();
+    let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 16, maximum_copy_bytes: 32768, maximum_capacity_bytes: 1048576, maximum_release_bytes: 1048576, maximum_depth: 128 };
+    FAKE_NOW_US.store(1_000_000, Ordering::SeqCst);
+    FAKE_READS.store(0, Ordering::SeqCst);
+    let mut cx = crate::StepContext::new(crate::OperationId(1), crate::Generation(1), crate::StepBudget::new(u64::MAX / 2, 1_000_000 + 60_000_000, grant), token.clone(), fake_now_us, &mut sequence, &mut progress);
+    for _ in 0..law["warmCalls"].as_u64().unwrap() {
+        FAKE_NOW_US.fetch_add(law["unitCostUs"].as_u64().unwrap(), Ordering::SeqCst);
+        assert!(!cx.should_yield());
+    }
+    assert!(FAKE_READS.load(Ordering::SeqCst) <= law["maxReadsWhileWarm"].as_u64().unwrap(), "the warm stride reads the clock only about once per interval");
+    let reads = FAKE_READS.load(Ordering::SeqCst);
+    token.cancel_now();
+    assert!(cx.is_cancelled(), "cancellation is visible on the very next check, whatever the stride");
+    assert_eq!(FAKE_READS.load(Ordering::SeqCst), reads, "and costs no clock read");
+    cx.consume_fuel(u64::from(ClockStride::MAXIMUM_STRIDE));
+    let _ = cx.should_yield();
+    assert_eq!(FAKE_READS.load(Ordering::SeqCst) - reads, law["readsAfterOneLargeDeclaredUnit"].as_u64().unwrap(), "a unit declaring a whole stride of work forces the next deadline check to read the real clock");
+}

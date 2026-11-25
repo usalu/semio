@@ -40,5 +40,6 @@ impl OpBinary for En1995Mutation {
     }
 }
 
-semio_os_kernel::original_pack_value_operation_receiving!(En1995Mutation);
+semio_os_kernel::original_decoded_operation_receiving!(En1995Mutation);
+semio_os_kernel::artifact_persisted_binary_operation!(En1995Mutation);
 }

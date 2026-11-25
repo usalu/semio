@@ -46,7 +46,8 @@
         "watchdogHandle",
         "originalWorkStock",
         "originalClosures",
-        "originalReturns"
+        "originalReturns",
+        "coreModules"
       ]
     },
     {
@@ -167,7 +168,7 @@
   ],
   "minimumShells": {
     "client": {
-      "bytes": 976,
+      "bytes": 992,
       "slots": 3,
       "owners": 3
     },
@@ -208,9 +209,11 @@
         "activationGeneration",
         "originalAdmission",
         "moduleUrl",
+        "component",
         "caps",
         "budget",
-        "assets"
+        "assets",
+        "coreModules"
       ]
     },
     {
@@ -370,6 +373,17 @@
       ]
     },
     {
+      "kind": "core-module",
+      "ok": null,
+      "fields": [
+        "kind",
+        "actorId",
+        "activationGeneration",
+        "url",
+        "module"
+      ]
+    },
+    {
       "kind": "result",
       "ok": true,
       "fields": [
@@ -466,9 +480,9 @@
     "result",
     "result",
     "original-succession-request",
+    "core-module",
     "original-turn-receipt",
     "original-producer-held",
-    "original-source-close",
     "original-source-close"
   ],
   "hostFramePayloadKinds": [

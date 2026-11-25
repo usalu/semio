@@ -1,0 +1,323 @@
+{
+ "rhododendron": {
+  "hard": 8,
+  "reported": 0,
+  "families": {
+   "sync": 8,
+   "anchor": 0,
+   "band-copy": 0,
+   "in-band": 0,
+   "cue": 0,
+   "paper": 0,
+   "dimension": 0,
+   "view": 0,
+   "error": 0,
+   "group-drift": 0
+  },
+  "syncRest": 2,
+  "syncPosed": 6,
+  "anchorPlaces": {},
+  "anchorKinds": {},
+  "codes": {
+   "sync-bone-forward": 4,
+   "sync-bone-lateral": 4
+  }
+ },
+ "rosemary-bush": {
+  "hard": 4,
+  "reported": 4,
+  "families": {
+   "sync": 4,
+   "anchor": 0,
+   "band-copy": 0,
+   "in-band": 0,
+   "cue": 0,
+   "paper": 0,
+   "dimension": 0,
+   "view": 0,
+   "error": 0,
+   "group-drift": 4
+  },
+  "syncRest": 0,
+  "syncPosed": 4,
+  "anchorPlaces": {},
+  "anchorKinds": {},
+  "codes": {
+   "sync-forward": 2,
+   "group-drift-forward": 4,
+   "sync-bone-height": 1,
+   "sync-bone-forward": 1
+  }
+ },
+ "rowan": {
+  "hard": 8,
+  "reported": 47,
+  "families": {
+   "sync": 4,
+   "anchor": 3,
+   "band-copy": 0,
+   "in-band": 1,
+   "cue": 0,
+   "paper": 0,
+   "dimension": 0,
+   "view": 0,
+   "error": 0,
+   "group-drift": 47
+  },
+  "syncRest": 0,
+  "syncPosed": 4,
+  "anchorPlaces": {
+   "off-shapes": 2,
+   "other-bone": 1
+  },
+  "anchorKinds": {
+   "emitter": 3
+  },
+  "codes": {
+   "group-drift-forward": 18,
+   "sync-forward": 2,
+   "sync-height": 2,
+   "group-drift-height": 29,
+   "anchor-landmark": 3,
+   "derived-view-in-band": 1
+  }
+ },
+ "saucer-magnolia": {
+  "hard": 1,
+  "reported": 2,
+  "families": {
+   "sync": 0,
+   "anchor": 0,
+   "band-copy": 0,
+   "in-band": 1,
+   "cue": 0,
+   "paper": 0,
+   "dimension": 0,
+   "view": 0,
+   "error": 0,
+   "group-drift": 2
+  },
+  "syncRest": 0,
+  "syncPosed": 0,
+  "anchorPlaces": {},
+  "anchorKinds": {},
+  "codes": {
+   "group-drift-height": 2,
+   "derived-view-in-band": 1
+  }
+ },
+ "scots-pine": {
+  "hard": 13,
+  "reported": 3,
+  "families": {
+   "sync": 13,
+   "anchor": 0,
+   "band-copy": 0,
+   "in-band": 0,
+   "cue": 0,
+   "paper": 0,
+   "dimension": 0,
+   "view": 0,
+   "error": 0,
+   "group-drift": 3
+  },
+  "syncRest": 0,
+  "syncPosed": 13,
+  "anchorPlaces": {},
+  "anchorKinds": {},
+  "codes": {
+   "group-drift-height": 3,
+   "sync-bone-height": 13
+  }
+ },
+ "small-leaved-lime": {
+  "hard": 185,
+  "reported": 244,
+  "families": {
+   "sync": 96,
+   "anchor": 89,
+   "band-copy": 0,
+   "in-band": 0,
+   "cue": 0,
+   "paper": 0,
+   "dimension": 0,
+   "view": 0,
+   "error": 0,
+   "group-drift": 244
+  },
+  "syncRest": 16,
+  "syncPosed": 80,
+  "anchorPlaces": {
+   "other-bone": 89
+  },
+  "anchorKinds": {
+   "emitter": 89
+  },
+  "codes": {
+   "group-drift-height": 130,
+   "group-drift-forward": 108,
+   "sync-bone-lateral": 96,
+   "group-drift-lateral": 6,
+   "anchor-landmark": 89
+  }
+ },
+ "stone-pine": {
+  "hard": 22,
+  "reported": 7,
+  "families": {
+   "sync": 22,
+   "anchor": 0,
+   "band-copy": 0,
+   "in-band": 0,
+   "cue": 0,
+   "paper": 0,
+   "dimension": 0,
+   "view": 0,
+   "error": 0,
+   "group-drift": 7
+  },
+  "syncRest": 0,
+  "syncPosed": 22,
+  "anchorPlaces": {},
+  "anchorKinds": {},
+  "codes": {
+   "group-drift-height": 7,
+   "sync-bone-height": 22
+  }
+ },
+ "sunflower": {
+  "hard": 4,
+  "reported": 28,
+  "families": {
+   "sync": 4,
+   "anchor": 0,
+   "band-copy": 0,
+   "in-band": 0,
+   "cue": 0,
+   "paper": 0,
+   "dimension": 0,
+   "view": 0,
+   "error": 0,
+   "group-drift": 28
+  },
+  "syncRest": 0,
+  "syncPosed": 4,
+  "anchorPlaces": {},
+  "anchorKinds": {},
+  "codes": {
+   "sync-forward": 2,
+   "group-drift-forward": 21,
+   "group-drift-height": 7,
+   "sync-height": 2
+  }
+ },
+ "sycamore-maple": {
+  "hard": 27,
+  "reported": 24,
+  "families": {
+   "sync": 6,
+   "anchor": 21,
+   "band-copy": 0,
+   "in-band": 0,
+   "cue": 0,
+   "paper": 0,
+   "dimension": 0,
+   "view": 0,
+   "error": 0,
+   "group-drift": 24
+  },
+  "syncRest": 0,
+  "syncPosed": 6,
+  "anchorPlaces": {
+   "other-bone": 21
+  },
+  "anchorKinds": {
+   "emitter": 21
+  },
+  "codes": {
+   "group-drift-height": 17,
+   "sync-bone-height": 3,
+   "group-drift-forward": 7,
+   "anchor-landmark": 21,
+   "sync-bone-forward": 3
+  }
+ },
+ "tulip-tree": {
+  "hard": 0,
+  "reported": 104,
+  "families": {
+   "sync": 0,
+   "anchor": 0,
+   "band-copy": 0,
+   "in-band": 0,
+   "cue": 0,
+   "paper": 0,
+   "dimension": 0,
+   "view": 0,
+   "error": 0,
+   "group-drift": 104
+  },
+  "syncRest": 0,
+  "syncPosed": 0,
+  "anchorPlaces": {},
+  "anchorKinds": {},
+  "codes": {
+   "group-drift-height": 40,
+   "group-drift-forward": 64
+  }
+ },
+ "weeping-willow": {
+  "hard": 18,
+  "reported": 117,
+  "families": {
+   "sync": 8,
+   "anchor": 10,
+   "band-copy": 0,
+   "in-band": 0,
+   "cue": 0,
+   "paper": 0,
+   "dimension": 0,
+   "view": 0,
+   "error": 0,
+   "group-drift": 117
+  },
+  "syncRest": 0,
+  "syncPosed": 8,
+  "anchorPlaces": {
+   "other-bone": 10
+  },
+  "anchorKinds": {
+   "emitter": 10
+  },
+  "codes": {
+   "group-drift-height": 33,
+   "group-drift-forward": 63,
+   "group-drift-lateral": 21,
+   "anchor-landmark": 10,
+   "sync-forward": 8
+  }
+ },
+ "wisteria-pergola": {
+  "hard": 6,
+  "reported": 0,
+  "families": {
+   "sync": 6,
+   "anchor": 0,
+   "band-copy": 0,
+   "in-band": 0,
+   "cue": 0,
+   "paper": 0,
+   "dimension": 0,
+   "view": 0,
+   "error": 0,
+   "group-drift": 0
+  },
+  "syncRest": 0,
+  "syncPosed": 6,
+  "anchorPlaces": {},
+  "anchorKinds": {},
+  "codes": {
+   "sync-bone-forward": 6
+  }
+ }
+}

@@ -9,7 +9,7 @@ import {HOST_POLICY_V1,renderTextV1} from "../../📨️protocol/🎚️policy/�
 const sleep=milliseconds=>new Promise(resolve=>setTimeout(resolve,milliseconds));
 
 /** ⌨ Runs one host subcommand and returns the process exit code. `runForeground()` runs the service in this process; `command` is the argument vector that does so in a detached child. */
-export async function runHostCommandV1({args,languages,implementation,runForeground,command,environment=process.env,platform=process.platform,cwd=process.cwd(),stdout=process.stdout,stderr=process.stderr,signal,policy,probe=probeConsentV1,launchctl=(program,list)=>{const result=spawnSync(program,list,{encoding:"utf8",timeout:10000});return{status:result.status??1,stdout:result.stdout??""};}}){
+export async function runHostCommandV1({args,languages,implementation,runForeground,command,environment=process.env,platform=process.platform,cwd=process.cwd(),stdout=process.stdout,stderr=process.stderr,signal,policy,probe=probeConsentV1,launchctl=(program,list)=>{const result=spawnSync(program,list,{windowsHide:true,encoding:"utf8",timeout:10000});return{status:result.status??1,stdout:result.stdout??""};}}){
  const say=(key,fields)=>{const text=renderTextV1(key,fields,languages);return text?text[languages[0]]??Object.values(text)[0]:key;};
  const print=text=>stdout.write(text+"\n"),fail=text=>stderr.write(text+"\n"),sub=args[0];
  const statusLimit=policy?.statusReplyMilliseconds??HOST_POLICY_V1.statusReplyMilliseconds;

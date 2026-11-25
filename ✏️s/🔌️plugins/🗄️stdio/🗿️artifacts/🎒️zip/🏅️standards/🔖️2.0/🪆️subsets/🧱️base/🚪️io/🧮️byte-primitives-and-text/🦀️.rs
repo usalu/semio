@@ -43,14 +43,39 @@ fn crc32_table() -> [u32; 256] {
     table
 }
 
+/// 🧮 Resumable CRC-32 (ISO-HDLC / ZIP): absorbs bytes in any slicing and reports the same value as one pass.
+pub struct Crc32 {
+    table: [u32; 256],
+    state: u32,
+}
+
+impl Crc32 {
+    pub fn new() -> Self {
+        Self { table: crc32_table(), state: 0xFFFF_FFFF }
+    }
+
+    pub fn update(&mut self, data: &[u8]) {
+        for &byte in data {
+            self.state = self.table[((self.state ^ byte as u32) & 0xFF) as usize] ^ (self.state >> 8);
+        }
+    }
+
+    pub fn value(&self) -> u32 {
+        self.state ^ 0xFFFF_FFFF
+    }
+}
+
+impl Default for Crc32 {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 /// 🧮 CRC-32 (ISO-HDLC / ZIP).
 pub fn crc32(data: &[u8]) -> u32 {
-    let table = crc32_table();
-    let mut c = 0xFFFFFFFFu32;
-    for &b in data {
-        c = table[((c ^ b as u32) & 0xFF) as usize] ^ (c >> 8);
-    }
-    c ^ 0xFFFFFFFF
+    let mut crc = Crc32::new();
+    crc.update(data);
+    crc.value()
 }
 //#endregion CRC32
 

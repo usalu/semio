@@ -98,3 +98,11 @@ Seen in this event and not yet changed: the alarm text says "available memory is
 Every event was triggered by the OS pressure level with heavy swap traffic while 1.9–2.4 GB were still available; each returned to calm after one or two cancels and each worker kept publishing. Not verified: whether a cancelled local final is cancelled again when its pass restarts on a worker that stays at its edge (g1-m10).
 
 The Windows worker's record flapped between absent and calm: its 15 s observe-only tick plus the slow process walk passed the 30 s freshness bound; the tick is 8 s now.
+
+## 7. Follow-up: broker bound, dwg exceeder, cad final (added 2026-11-24/25)
+
+- The native-build broker bounds every unit start by measured available memory and holds starts while the warden is at guard or danger (`impl-S5-broker-available.md`).
+- `semio_s_artifact_stdio_dwg_snapshot_objects` (4,894 MB on its own) is on the carving list, action `split-families`; not split yet.
+- The cad component final was measured directly: 8,036 MB charged, 2,198 MB resident; the thin-LTO start loads the 6,259 MB of dependency bitcode and holds it to the end. No declared setting brings it under 4,096 MB; the closure has to shrink. Details and the largest libraries: `carve-C3-final-memory.md`.
+- Units are now recorded at the larger of resident and charged memory, so forecasts stop understating compressed compilers (`🧪️tests/🗜️charged-peak/`).
+- Puzzle final: not measured directly.

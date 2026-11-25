@@ -24,6 +24,9 @@ import (
 
 // #region 🐚️Host
 
+// 🫥️hideChild is a no-op: Unix children open no console window.
+func hideChild(command *exec.Cmd, shareConsole bool) {}
+
 // 🔄️handOff replaces this process with the runtime; it returns only when the replacement failed.
 func handOff(executable string, argv []string, env []string) error {
 	signal.Reset()
@@ -68,7 +71,9 @@ func systemLanguages(locale OsLocale) []string {
 	}
 	deadline, stop := context.WithTimeout(context.Background(), time.Duration(locale.Darwin.TimeoutMs)*time.Millisecond)
 	defer stop()
-	output, err := exec.CommandContext(deadline, locale.Darwin.Command, locale.Darwin.Args...).Output()
+	command := exec.CommandContext(deadline, locale.Darwin.Command, locale.Darwin.Args...)
+	hideChild(command, false)
+	output, err := command.Output()
 	if err != nil {
 		return nil
 	}

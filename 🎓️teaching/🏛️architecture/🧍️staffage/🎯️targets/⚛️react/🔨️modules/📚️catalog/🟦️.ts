@@ -11,13 +11,13 @@
  * @see ../🔎️search/🟦️.ts — `Row`
  * @see ../../../../🗂️catalog/🔣️.json — the manifest
  */
-import { inflateZlib } from "../../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/📤️export/🎬️fbx/🗜️deflate/🟦️.ts";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { CATEGORIES, SCALE_DENOMINATORS, totalPowerW, validateAsset, validateManifest } from "@teaching/staffage";
 import type { Asset, CategoryEntry, Revision, CategoryId, Issue, JobControl, Manifest, ManifestEntry, Slug, Text } from "@teaching/staffage";
 import type { StaffageFindingsLine, StaffageServedPayload } from "../../🌐️vite/🟦️.ts";
 import manifestDocument from "../../../../🗂️catalog/🔣️.json";
 import { namedPoses, type Row } from "../🔎️search/🟦️.ts";
+import { unpackAsset } from "./🗜️payload/🟦️.ts";
 
 /** 🗂️ The assets of one category folder, gathered from its one-file-per-asset documents. */
 export type CategoryDocument = { readonly assets: readonly Asset[]; readonly revisions: Readonly<Record<Slug, Revision>> };
@@ -36,19 +36,6 @@ const documentsFor = (entry: CategoryEntry): string[] => {
   return Object.keys(documents).filter((path) => stripSelectors(path).includes(wanted));
 };
 
-function decodeGeometry(packed: string): unknown {
-  const bytes = Uint8Array.from(atob(packed), char => char.charCodeAt(0));
-  return JSON.parse(new TextDecoder().decode(inflateZlib(bytes)));
-}
-
-function deferGeometry(target: object, key: string, packed: string): void {
-  Object.defineProperty(target, key, { enumerable: true, configurable: true, get() {
-    const value = decodeGeometry(packed);
-    Object.defineProperty(target, key, { enumerable: true, value });
-    return value;
-  } });
-}
-
 const decoded = new Map<string, Promise<{ asset: Asset; revision: Revision }>>();
 
 async function readDocument(key: string, signal?: AbortSignal): Promise<{ asset: Asset; revision: Revision }> {
@@ -65,15 +52,7 @@ async function readDocument(key: string, signal?: AbortSignal): Promise<{ asset:
 }
 
 function decodeDocument(payload: StaffageServedPayload): { asset: Asset; revision: Revision } {
-  const asset = decodeGeometry(payload.header) as Asset;
-  if (payload.scales) {
-    const volumes = {};
-    for (const [scale, packed] of Object.entries(payload.scales)) deferGeometry(volumes, scale, packed);
-    Object.defineProperty(asset, "volumes", { enumerable: true, value: volumes });
-  }
-  for (const [scale, packed] of Object.entries(payload.drawings ?? {})) {
-    deferGeometry(asset.representations[scale as keyof Asset["representations"]], "geometry", packed);
-  }
+  const asset = unpackAsset(payload);
   verdicts.set(asset, payload.issues ?? payload.findings ?? validateAsset(asset));
   return { asset, revision: payload.revision as Revision };
 }

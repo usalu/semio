@@ -32,18 +32,16 @@ describe("host variant Nx fan-out", () => {
       const library = join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library");
       const corpus = JSON.parse(readFileSync(join(library, "⚡️caching/🧪️tests/🧊️preparation/🔣️.json"), "utf8")), contracts = JSON.parse(readFileSync(join(library, "🔣️taxonomy.json"), "utf8")).generatorContracts;
       const targets = await cacheInternals.playgroundPreparationTargets(["hub/Cargo.toml", "alpha/Cargo.toml", "beta/Cargo.toml"], fixture, "owner", contracts, [parseCatalogBuildContributionV1({ ...corpus.catalog, publication: { ...corpus.catalog.publication, contributions: ["hub", "alpha", "beta"].map((root) => ({ ownerRoot: root, packageRoots: [root] })) } })], { preparationControl: { async advance() {} } });
+      const components = (target: string): string[] => (targets[target].dependsOn as string[]).filter((dependency) => dependency.endsWith(":component"));
       for (const profile of ["prototype", "release"]) {
         for (const renderer of ["react", "wgpu"] as const) {
-          const prepare = targets[`prepare-hub-${renderer}-${profile}`];
-          expect(prepare, `prepare-hub-${renderer}-${profile}`).toBeDefined();
-          const outputs = prepare.outputs as string[], modules = outputs.filter((output) => output.includes("/modules/")).map((output) => output.slice(output.lastIndexOf("/") + 1));
-          expect(outputs.filter((output) => output.includes("/components/")).length, `prepare-hub-${renderer}-${profile} builds one component`).toBe(1);
-          expect(modules, `prepare-hub-${renderer}-${profile} builds only the host's boot closure`).toEqual(["🧩️hub"]);
+          expect(targets[`prepare-hub-${renderer}-${profile}`], `prepare-hub-${renderer}-${profile}`).toBeDefined();
+          expect(components(`prepare-hub-${renderer}-${profile}`), `prepare-hub-${renderer}-${profile} builds only the host's boot closure`).toEqual(["hub:component"]);
         }
-        const nativePrepare = targets[`prepare-hub-native-${profile}`];
-        expect(nativePrepare, `prepare-hub-native-${profile}`).toBeDefined();
-        expect((nativePrepare.outputs as string[]).filter((output) => output.includes("/components/")).length, `prepare-hub-native-${profile} builds the whole host session`).toBe(3);
-        expect((targets[`prepare-alpha-react-${profile}`].outputs as string[]).filter((output) => output.includes("/modules/")).map((output) => output.slice(output.lastIndexOf("/") + 1)), "a non-host variant never inherits the host fan-out").toEqual(["🧩️alpha"]);
+        expect(targets[`prepare-hub-native-${profile}`], `prepare-hub-native-${profile}`).toBeDefined();
+        for (const name of [`prepare-hub-react-${profile}`, `prepare-hub-wgpu-${profile}`, `prepare-alpha-react-${profile}`]) expect(targets[name].outputs, `${name} is a cached verdict over component targets and compiles nothing itself`).toEqual([]);
+        expect(components(`prepare-hub-native-${profile}`).sort(), `prepare-hub-native-${profile} builds the whole host session`).toEqual(["alpha:component", "beta:component", "hub:component"]);
+        expect(components(`prepare-alpha-react-${profile}`), "a non-host variant never inherits the host fan-out").toEqual(["alpha:component"]);
         for (const renderer of ["react", "wgpu"]) expect(targets[`activate-hub-${renderer}-${profile}`].dependsOn).toEqual([`prepare-hub-${renderer}-${profile}`]);
       }
     } finally {

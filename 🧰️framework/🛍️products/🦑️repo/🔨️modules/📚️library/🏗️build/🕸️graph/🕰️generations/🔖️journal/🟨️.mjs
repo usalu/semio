@@ -1,4 +1,5 @@
 import{createHash}from"node:crypto";
+import{brotliCompressSync,brotliDecompressSync,constants}from"node:zlib";
 import{tmpdir}from"node:os";
 import{join}from"node:path";
 import{profilePhaseV1}from"../../../⏱️profile/🟨️.mjs";
@@ -9,7 +10,7 @@ import{readGenerationManifestV1}from"../📖️documents/🟨️.mjs";
 import{derivedOwnerNameV1,isDerivedOwnerV1,isDerivedRowV1}from"../✂️cutoff/🟨️.mjs";
 
 /** 📏️ The declared limits of the build journal: the directory under the store root, the version, the rows one line of a rows file carries at most and the bytes after which a wave starts its next rows file (a wave never holds more than one part of its rows). */
-export const BUILD_JOURNAL_V1=Object.freeze({directory:"j",version:1,rowsPerLine:4096,partBytes:8388608,maximumOwners:200000});
+export const BUILD_JOURNAL_V1=Object.freeze({directory:"j",version:1,rowsPerLine:4096,partBytes:8388608,maximumOwners:200000,rowsSuffix:".rows.br",brotliQuality:4});
 
 /** 🔑️ The name of the journal of one build: the digest of what the build starts from (the generation it refines, the identity, the implementation, the membership and the owners it has to derive). */
 export const buildJournalKeyV1=input=>createHash("sha256").update(canonicalJsonV1(input)).digest("hex");
@@ -50,6 +51,14 @@ export function encodeJournalRowsV1(entries){
  return Buffer.from(lines.join("\n")+"\n","utf8");
 }
 
+/** 🗜️ Packs the text of one rows file into its stored form: Brotli (a system library of the runtime, deterministic for a fixed quality) over the canonical lines, so a whole-graph journal needs a fraction of the plain JSON bytes. */
+export function packJournalRowsV1(bytes){
+ return brotliCompressSync(bytes,{params:{[constants.BROTLI_PARAM_QUALITY]:BUILD_JOURNAL_V1.brotliQuality,[constants.BROTLI_PARAM_SIZE_HINT]:bytes.length}});
+}
+
+/** 🗜️ Unpacks the stored form of one rows file back into the canonical lines. */
+export function unpackJournalRowsV1(bytes){return brotliDecompressSync(bytes);}
+
 /** 🧾️ Reads the lines of a rows file back into entries `{name, mode, rows}`; the lines of one owner follow each other. */
 export function decodeJournalRowsV1(bytes){
  const entries=[];
@@ -87,7 +96,7 @@ export function createBuildJournalV1({fs,root,manifestPath,publish,settler,say,s
   for(const file of saved.rows){
    const bytes=await fs.read(join(directory,file.file));
    if(!bytes||sha256(bytes)!==file.sha256)return undefined;
-   for(const entry of decodeJournalRowsV1(bytes)){
+   for(const entry of decodeJournalRowsV1(unpackJournalRowsV1(bytes))){
     aborted(signal);
     if(entry.mode==="a")return undefined;
     if(isDerivedOwnerV1(entry.name)){pseudo.set(entry.name,(pseudo.get(entry.name)??true)&&await holds(entry.rows));continue;}
@@ -101,7 +110,7 @@ export function createBuildJournalV1({fs,root,manifestPath,publish,settler,say,s
   const reused=new Set(reusable),needed=new Set(reusable.flatMap(name=>[...refs.get(name)??[]])),keepEntry=entry=>isDerivedOwnerV1(entry.name)?needed.has(entry.name):reused.has(entry.name);
   const log=createRowLogV1({path:join(tmpdir(),"semio-row-logs","resume-"+saved.key.slice(0,16)+"-"+process.pid+".rows")}),upserts=new Map(),rewritten=[];
   for(let at=0;at<saved.rows.length;at++){
-   const kept=decodeJournalRowsV1(await fs.read(join(directory,saved.rows[at].file))).filter(keepEntry),bytes=encodeJournalRowsV1(kept.map(entry=>({name:entry.name,mode:entry.mode,rows:entry.rows})));
+   const kept=decodeJournalRowsV1(unpackJournalRowsV1(await fs.read(join(directory,saved.rows[at].file)))).filter(keepEntry),bytes=packJournalRowsV1(encodeJournalRowsV1(kept.map(entry=>({name:entry.name,mode:entry.mode,rows:entry.rows}))));
    await fs.write(join(directory,saved.rows[at].file),bytes);rewritten.push({file:saved.rows[at].file,sha256:sha256(bytes),bytes:bytes.length});
    for(const entry of kept){const known=upserts.get(entry.name);upserts.set(entry.name,known?known.concat(entry.rows):log.append(entry.rows));}
   }
@@ -115,7 +124,7 @@ export function createBuildJournalV1({fs,root,manifestPath,publish,settler,say,s
   sealed:input=>save({...header(input),state:"sealed",manifest:input.manifest,derived:input.derived}),
   async wave({key,current,repair,identity,implementation,carry,steps,upserts,append,owners,env}){
    const first=carry.files.length;let pending=[],pendingBytes=0;
-   const flush=async()=>{const bytes=Buffer.from(pending.length?pending.join(""):"\n","utf8"),file=key+"."+carry.files.length+".rows";pending=[];pendingBytes=0;await fs.write(join(directory,file),bytes);carry.files.push({file,sha256:sha256(bytes),bytes:bytes.length});};
+   const flush=async()=>{const bytes=packJournalRowsV1(Buffer.from(pending.length?pending.join(""):"\n","utf8")),file=key+"."+carry.files.length+BUILD_JOURNAL_V1.rowsSuffix;pending=[];pendingBytes=0;await fs.write(join(directory,file),bytes);carry.files.push({file,sha256:sha256(bytes),bytes:bytes.length});};
    const put=async line=>{pending.push(line);pendingBytes+=line.length;if(pendingBytes>=BUILD_JOURNAL_V1.partBytes)await flush();};
    const putOwner=async(name,mode,list)=>{let any=false;for await(const batch of batchesOf(list)){if(!batch.length)continue;any=true;await put(JSON.stringify({o:name,m:mode,r:batch})+"\n");}if(!any)await put(JSON.stringify({o:name,m:mode,r:[]})+"\n");};
    for(const[name,list]of upserts)if(name!==P.envOwner)await putOwner(name,"u",list);
@@ -146,7 +155,7 @@ export function createBuildJournalV1({fs,root,manifestPath,publish,settler,say,s
    for(const file of saved.rows){
     const bytes=await fs.read(join(directory,file.file));
     if(!bytes||sha256(bytes)!==file.sha256){log.close();await clear(key);return undefined;}
-    for(const entry of decodeJournalRowsV1(bytes)){const target=entry.mode==="u"?upserts:append,known=target.get(entry.name);target.set(entry.name,known?known.concat(entry.rows):log.append(entry.rows));}
+    for(const entry of decodeJournalRowsV1(unpackJournalRowsV1(bytes))){const target=entry.mode==="u"?upserts:append,known=target.get(entry.name);target.set(entry.name,known?known.concat(entry.rows):log.append(entry.rows));}
    }
    if(!(saved.membership===membership&&membership!==undefined&&canonicalJsonV1(saved.names)===canonicalJsonV1(ordered))){
     const kept=hold&&current?.manifest?await reconcileWaves({saved,current,found,ordered,hold,signal,membership}):undefined;

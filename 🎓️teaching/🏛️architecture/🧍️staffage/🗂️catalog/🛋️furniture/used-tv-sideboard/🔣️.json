@@ -13,17 +13,83 @@
    "de": "Ein gebrauchtes TV-Lowboard aus Spanplatte, 1,80 x 0,40 x 0,45 m, in abgestoßener weißer Folie mit zwei Klappentüren nach unten und einer Schublade unter einem offenen Fach mit Kabeldurchlass, auf sechs Kunststoffgleitern; die Deckplatte ist von Jahren Fenstersonne vergilbt außer dort, wo der Fernseherfuß stand, eine Türecke ist abgeplatzt, und der verlorene Schubladengriff wurde durch einen Buchenknopf ersetzt. Im Gebrauchtwarenlager mit zugeklebten Fronten und Preisschild auf der Platte, von zwei Personen waagrecht getragen, wieder in Gebrauch unter einem 55-Zoll-Fernseher."
   },
   "tags": [
-   "used",
-   "household",
-   "second-hand",
-   "living",
-   "tv-sideboard",
-   "lowboard",
-   "storage",
-   "chipboard",
-   "flap-door",
-   "drawer",
-   "interior"
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "household",
+    "title": {
+     "en": "household",
+     "de": "Haushalt"
+    }
+   },
+   {
+    "id": "second-hand",
+    "title": {
+     "en": "second-hand",
+     "de": "Second-Hand"
+    }
+   },
+   {
+    "id": "living",
+    "title": {
+     "en": "living",
+     "de": "Wohnen"
+    }
+   },
+   {
+    "id": "tv-sideboard",
+    "title": {
+     "en": "TV sideboard",
+     "de": "TV-Sideboard"
+    }
+   },
+   {
+    "id": "lowboard",
+    "title": {
+     "en": "lowboard",
+     "de": "Lowboard"
+    }
+   },
+   {
+    "id": "storage",
+    "title": {
+     "en": "storage",
+     "de": "Lagerung"
+    }
+   },
+   {
+    "id": "chipboard",
+    "title": {
+     "en": "chipboard",
+     "de": "Spanplatte"
+    }
+   },
+   {
+    "id": "flap-door",
+    "title": {
+     "en": "flap door",
+     "de": "Klapptür"
+    }
+   },
+   {
+    "id": "drawer",
+    "title": {
+     "en": "drawer",
+     "de": "Schublade"
+    }
+   },
+   {
+    "id": "interior",
+    "title": {
+     "en": "interior",
+     "de": "Innenausbau"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content (used household objects wave, author 05)",

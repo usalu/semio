@@ -276,7 +276,7 @@ impl ArtifactViewer for EnergyModelViewer {
             structure::BODY_KEY => structure::render(doc.snapshot, view_state.locale)?,
             zones::BODY_KEY => zones::render(doc.snapshot, view_state.locale)?,
             simulation::BODY_KEY => simulation::render(doc.snapshot.model.read().run_period),
-            model_window::BODY_KEY => model_window::render_with_camera(&doc.snapshot.model.read(), model_window::config::current(cfg))?,
+            model_window::BODY_KEY => model_window::render_with_camera(&doc.snapshot.model.read(), model_window::config::current(cfg), view_state.locale)?,
             _ => {
                 semio_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_plugin::PluginAssemblyError::new("energy.model.viewer.render", "the unknown-body label could not be assembled"))?
             }

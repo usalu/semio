@@ -8,6 +8,7 @@ import {collectGarbageSingleFlightV1,reclaimUnitStorageV1,unitBudgetBytesV1} fro
 import fixture from "./🧫️fixtures/🔣️.json";
 import componentSchema from "../🧬️schema/🔣️.json";
 import {UNIT_POLICY_V1 as policy,collectUnitsV1,leaseDirectoryOfStoreV1,measureUnitsV1,planUnitsV1,profileLeasePortV1,profileLeaseResourceV1,unitProfilesV1,unitTextV1,type BuildUnitV1,type ProfileLeasePortV1} from "../🟦️.ts";
+import {ownProcessIdentityV1} from "../../../../../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts";
 
 const checkout=resolve(import.meta.dir).split(sep+"🧰️framework")[0]!;
 /** 🛡️ A test never reaches the store of the real checkout: refuses (loudly) any path inside it. */
@@ -31,17 +32,17 @@ test("the fixture is closed and the planner equals the independent Python oracle
  let seed=20261024;const next=(limit:number)=>{seed=(seed*1103515245+12345)%2147483648;return seed%limit;},now=2000*hour,states:{needBytes:number;nowMs:number;units:BuildUnitV1[]}[]=[];
  for(let index=0;index<400;index++){
   const units:BuildUnitV1[]=[];
-  for(const profile of["prototype","debug"])for(const crate of["a","b","c","d"].filter(()=>next(3)>0)){const busy=next(2)===0;for(let variant=0;variant<next(7);variant++)units.push({path:`/s/b/p/${profile}/build/${crate}/${variant.toString(16).padStart(16,"0")}`,crate,profile,bytes:next(500)*1048576,lastUsedMs:now-next(60*60)*60000,held:next(8)===0,busy:profile==="debug"?busy:!busy});}
+  for(const profile of["prototype","debug"])for(const crate of["a","b","c","d"].filter(()=>next(3)>0)){for(let variant=0;variant<next(7);variant++)units.push({path:`/s/b/p/${profile}/build/${crate}/${variant.toString(16).padStart(16,"0")}`,crate,profile,bytes:next(500)*1048576,lastUsedMs:now-next(60*60)*60000,held:next(8)===0});}
   states.push({needBytes:next(3)?next(3000)*1048576:0,nowMs:now,units});
  }
  const expected=python(states);states.forEach((state,at)=>expect(planUnitsV1(state) as unknown,JSON.stringify(state).slice(0,200)).toEqual(expected[at]));
 });
 
-test("the policy keeps what a live build needs: a busy profile never loses its newest variants and a unit younger than the minimum age never goes",()=>{
- expect(policy.busyMinimumAgeMilliseconds).toBeGreaterThan(policy.minimumAgeMilliseconds);expect(policy.idleMilliseconds).toBeGreaterThan(policy.busyMinimumAgeMilliseconds);expect(policy.keepNewestPerCrate).toBeGreaterThanOrEqual(2);
- const now=500*hour,units:BuildUnitV1[]=[0,1,2,3].map(index=>({path:`/s/b/p/prototype/build/x/${index}`,crate:"x",profile:"prototype",bytes:1,lastUsedMs:now-(index===0?policy.minimumAgeMilliseconds/2:policy.busyMinimumAgeMilliseconds*(index+1)),held:false,busy:true}));
- expect(planUnitsV1({needBytes:1e12,nowMs:now,units}).map(row=>row.path)).toEqual(["/s/b/p/prototype/build/x/3","/s/b/p/prototype/build/x/2"]);
- expect(planUnitsV1({needBytes:1e12,nowMs:now,units:units.map(unit=>({...unit,busy:false}))}).map(row=>row.path)).toEqual(["/s/b/p/prototype/build/x/3","/s/b/p/prototype/build/x/2","/s/b/p/prototype/build/x/1"]);
+test("the policy keeps what a live build needs: a held unit never goes however old and a unit younger than the minimum age never goes",()=>{
+ expect(policy.heldGraceMilliseconds).toBeGreaterThan(policy.minimumAgeMilliseconds);expect(policy.idleMilliseconds).toBeGreaterThan(policy.heldGraceMilliseconds);expect(policy.keepNewestPerCrate).toBeGreaterThanOrEqual(2);
+ const now=500*hour,units:BuildUnitV1[]=[0,1,2,3].map(index=>({path:`/s/b/p/prototype/build/x/${index}`,crate:"x",profile:"prototype",bytes:1,lastUsedMs:now-(index===0?policy.minimumAgeMilliseconds/2:policy.heldGraceMilliseconds*(index+1)),held:false}));
+ expect(planUnitsV1({needBytes:1e12,nowMs:now,units}).map(row=>row.path)).toEqual(["/s/b/p/prototype/build/x/3","/s/b/p/prototype/build/x/2","/s/b/p/prototype/build/x/1"]);
+ expect(planUnitsV1({needBytes:1e12,nowMs:now,units:units.map(unit=>({...unit,held:true}))})).toEqual([]);
 });
 
 function unit(store:string,profile:string,crate:string,hash:string,bytes:number,ageHours:number){
@@ -61,8 +62,9 @@ test("profiles are found below the declared bases at two levels, units need a fi
   const now=Date.now(),rows=await measureUnitsV1(unitProfilesV1(store),{nowMs:now,busy:()=>false,lock:()=>"missing"});
   expect(rows.length).toBe(3);const byPath=new Map(rows.map(row=>[row.path,row]));
   expect(byPath.get(first)!.bytes).toBeGreaterThanOrEqual(65536);expect(Math.abs(now-byPath.get(first)!.lastUsedMs-5*hour)).toBeLessThan(120000);expect(Math.abs(now-byPath.get(second)!.lastUsedMs-30*hour)).toBeLessThan(120000);
-  expect(rows.every(row=>!row.held&&!row.busy)).toBe(true);
-  const unsupported=await measureUnitsV1(unitProfilesV1(store),{nowMs:now,busy:()=>true,lock:()=>"unsupported"});expect(unsupported.map(row=>row.held)).toEqual([false,false,true]);expect(unsupported.every(row=>row.busy)).toBe(true);
+  expect(rows.every(row=>!row.held)).toBe(true);
+  const unsupported=await measureUnitsV1(unitProfilesV1(store),{nowMs:now,busy:()=>false,lock:()=>"unsupported"});expect(unsupported.map(row=>row.held)).toEqual([false,false,true]);
+  const leased=await measureUnitsV1(unitProfilesV1(store),{nowMs:now,busy:()=>true,lock:()=>"missing"});expect(leased.every(row=>row.held),"a profile compilers hold holds every unit of it").toBe(true);
  }finally{rmSync(root,{recursive:true,force:true});}
 });
 
@@ -81,18 +83,35 @@ test("a collection frees stale units under an exclusive profile lease, keeps a u
  }finally{rmSync(root,{recursive:true,force:true});}
 });
 
-test("a profile that compilers hold loses only superseded units idle for the busy minimum, and pressure stops once the image has its free space",async()=>{
+test("a profile that compilers hold loses no unit however idle or superseded, and pressure stops once the image has its free space",async()=>{
  const root=mkdtempSync(join(realpathSync(tmpdir()),"units-")),store=join(root,"m");
  try{
   const old=unit(store,"b/p/prototype","a","1",65536,40),mid=unit(store,"b/p/prototype","a","2",65536,10),fresh=unit(store,"b/p/prototype","a","3",65536,4),newest=unit(store,"b/p/prototype","a","4",65536,1);
   const busy=await collectUnitsV1(store,{dryRun:false,needBytes:()=>10**9,leases:async()=>"busy",lock:()=>({release:()=>undefined}),report:{language:"en",write:()=>undefined}});
-  expect(busy.busyProfiles).toBe(1);expect(busy.removed.map(row=>row.path)).toEqual([old,mid]);expect([fresh,newest].every(existsSync)).toBe(true);
+  expect(busy.busyProfiles).toBe(1);expect(busy.removed).toEqual([]);expect([old,mid,fresh,newest].every(existsSync)).toBe(true);expect(busy.held).toBe(4);
   const again=unit(store,"b/p/prototype","b","1",65536,20),second=unit(store,"b/p/prototype","b","2",65536,15),third=unit(store,"b/p/prototype","b","3",65536,10),fourth=unit(store,"b/p/prototype","b","4",65536,5);let calls=0;
   const idle=await collectUnitsV1(store,{dryRun:false,needBytes:()=>10**9,satisfied:()=>++calls>1,leases:async()=>({release:()=>undefined}),lock:()=>({release:()=>undefined})});
   expect(idle.removed.length).toBeLessThan(6);expect(existsSync(again)).toBe(false);expect(fourth&&second&&third).toBeTruthy();
   const stopped=new AbortController();stopped.abort();await expect(collectUnitsV1(store,{dryRun:false,needBytes:()=>0,signal:stopped.signal,leases:async()=>({release:()=>undefined}),lock:()=>({release:()=>undefined})})).rejects.toThrow();
  }finally{rmSync(root,{recursive:true,force:true});}
 });
+
+test("a collector that runs while a compiler holds the build lease of the profile leaves every unit of it, idle, superseded, unlocked, over budget and under pressure alike, and takes them once the compiler is gone",async()=>{
+ if(!["darwin","linux"].includes(process.platform))return;
+ const {root,store,leases}=privateWorkspace("units-holder-");
+ try{
+  mkdirSync(join(store,"u","locks"),{recursive:true});
+  const paths=["a","b","c","d","e"].map((hash,index)=>unit(store,"b/p/prototype","pack-http",hash,65536,200-index)),profile=unitProfilesV1(store)[0]!;
+  const compiler=await acquireResourceLease({directory:leases,resource:profileLeaseResourceV1(profile),mode:"shared",signal:new AbortController().signal,timeoutMs:0});
+  try{
+   const dry=await collectUnitsV1(store,{dryRun:true,needBytes:()=>10**12,budgetBytes:0});expect(dry.removed).toEqual([]);expect(dry.held).toBe(paths.length);expect(dry.busyProfiles).toBe(1);
+   const applied=await collectUnitsV1(store,{dryRun:false,needBytes:()=>10**12,budgetBytes:0});expect(applied.removed).toEqual([]);expect(paths.every(existsSync)).toBe(true);
+   await reclaimUnitStorageV1(store,10**12,{capacityBytes:1});expect(paths.every(existsSync),"the reclaim before a build leaves them too").toBe(true);
+   const swept=await collectGarbageSingleFlightV1(join(store,"u"),1,{nowMs:Date.now()+365*24*hour,volume:()=>({volumeBytes:2**40,freeBytes:1})});if(!swept.running)expect(swept.applied.units).toBe(0);expect(paths.every(existsSync),"the pressure sweep leaves them too").toBe(true);
+  }finally{compiler.release();}
+  const gone=await collectUnitsV1(store,{dryRun:false,needBytes:()=>10**12,budgetBytes:0});expect(gone.removed.length).toBe(paths.length);expect(paths.some(existsSync)).toBe(false);
+ }finally{rmSync(root,{recursive:true,force:true});}
+},60000);
 
 test("a real compiler lock keeps its unit, a real exclusive build lease makes a profile busy, a free one is taken without waiting and released",async()=>{
  if(!["darwin","linux"].includes(process.platform))return;
@@ -173,7 +192,7 @@ test("a lane with a live holder loses no unit however old, idle, over budget or 
  const root=mkdtempSync(join(realpathSync(tmpdir()),"units-live-")),store=join(root,"m"),free={leases:async()=>({release:()=>undefined}),lock:()=>"unsupported" as const};
  try{
   const mine="u/l/p488470/prototype",other="u/l/p111111/prototype",stale=["a","b","c"].flatMap(hash=>["proc-macro2","serde"].map(crate=>unit(store,mine,crate,hash,65536,40))),spare=unit(store,other,"proc-macro2","a",65536,40);
-  const marker=join(store,"u/l/p488470/v",process.pid+"-abc123");mkdirSync(join(store,"u/l/p488470/v"),{recursive:true});writeFileSync(marker,JSON.stringify({pid:process.pid}));
+  const marker=join(store,"u/l/p488470/v",process.pid+"-abc123");mkdirSync(join(store,"u/l/p488470/v"),{recursive:true});writeFileSync(marker,JSON.stringify({...ownProcessIdentityV1()}));
   const options={needBytes:()=>1e12,budgetBytes:0,...free},dry=await collectUnitsV1(store,{dryRun:true,...options});
   expect(dry.removed.map(row=>row.path)).toEqual([spare]);
   const applied=await collectUnitsV1(store,{dryRun:false,...options});

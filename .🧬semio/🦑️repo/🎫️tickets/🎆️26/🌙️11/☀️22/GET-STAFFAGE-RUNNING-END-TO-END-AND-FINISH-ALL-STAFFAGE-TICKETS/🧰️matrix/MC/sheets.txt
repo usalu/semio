@@ -1,0 +1,14 @@
+city-bus:50:kneeling-at-stop city-bus:100:braking city-bus:200:arriving city-bus:500:level-cruise
+city-car:50:driving city-car:100:braking-nose-down city-car:200:lane-exit city-car:500:crawl-in
+diesel-generator:50:rated-load diesel-generator:100:rated-load
+forklift:50:travel-stopped forklift:100:tilted-mast forklift:200:travel-cruised
+motor-scooter:50:braking-nose-down
+reclaimed-cast-iron-column:50:lifted reclaimed-cast-iron-column:100:slung reclaimed-cast-iron-column:200:reinstalled reclaimed-cast-iron-column:500:lifted
+reclaimed-precast-stair:50:stored reclaimed-precast-stair:50:lifted reclaimed-precast-stair:100:reinstalled reclaimed-precast-stair:200:lifted reclaimed-precast-stair:500:reinstalled
+reclaimed-trapezoidal-sheet-stack:50:slings-tensioned reclaimed-trapezoidal-sheet-stack:100:lifted reclaimed-trapezoidal-sheet-stack:200:slings-tensioned reclaimed-trapezoidal-sheet-stack:500:lifted
+used-air-water-heat-pump-monobloc:500:stored
+used-forced-draught-oil-burner:50:lifted used-forced-draught-oil-burner:100:lifted used-forced-draught-oil-burner:200:reinstalled
+used-pellet-boiler:50:straps-released used-pellet-boiler:100:lifted used-pellet-boiler:200:sling-taut used-pellet-boiler:500:lifted
+used-towel-radiator:50:upright used-towel-radiator:100:reinstalled used-towel-radiator:200:lifted
+used-wall-hung-gas-boiler:50:lifted used-wall-hung-gas-boiler:100:straps-down used-wall-hung-gas-boiler:200:straps-open
+vintage-car-1929:50:braking vintage-car-1929:100:driving vintage-car-1929:200:lane-exit vintage-car-1929:500:crawl-in

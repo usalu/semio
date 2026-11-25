@@ -224,3 +224,24 @@ fn admitted_module_queries_match_the_neutral_typed_roster() {
     let expected_ids: Vec<&str> = native_stock.as_array().unwrap().iter().map(|row| row["id"].as_str().unwrap()).collect();
     assert_eq!(demo_stock().iter().map(|row| row.id.as_str()).collect::<Vec<_>>(), expected_ids);
 }
+
+#[semio_framework_async_macros::async_test]
+async fn every_shipped_module_typology_segment_and_kind_has_an_english_and_a_german_label() {
+    use semio_plugin::Locale::{De, En};
+    for module in authored_modules() {
+        assert_ne!(catalog_module_label(module.module_id(), module.label(), De), catalog_module_label(module.module_id(), module.label(), En), "module {}", module.module_id());
+        assert_eq!(catalog_module_label(module.module_id(), module.label(), En), module.label());
+        for (path, label) in typology_flatten(&module.typology()) {
+            let segment = path.last().unwrap();
+            assert_eq!(catalog_typology_label(segment, &label, En), label, "typology {path:?}");
+            assert!(!catalog_typology_label(segment, &label, De).is_empty());
+        }
+        for kind in module.demo_kinds() {
+            assert_eq!(catalog_kind_name(&kind, En), kind.name, "kind {}", kind.id);
+            assert_ne!(catalog_kind_name(&kind, De), kind.name.as_str(), "kind {} keeps its English name in German", kind.id);
+        }
+    }
+    let unlisted = ObjectKind { id: "unlisted".into(), name: "Own Kind".into(), module_id: "own".into(), typology_path: vec!["own".into()], availability: 1, geometry: Box::new(GeometryRecipe::Box { width: 1.0, height: 1.0, depth: 1.0 }) };
+    assert_eq!(catalog_kind_name(&unlisted, De), "Own Kind");
+    assert_eq!(catalog_module_label("own", "Own", De), "Own");
+}

@@ -4,15 +4,61 @@ Fixer report. Batch `🧰️matrix/batches/MF.tsv`, brief `📋️multiview-brie
 
 ## 1. Result
 
-RESULT-PLACEHOLDER
+- Authors' gate (`T/🔎️scan.ts`, every pose of every authored scale): **20 of 20 clean** (before: 0 clean, 324 hard findings).
+- Matrix (`T/📊️matrix.ts`, also clip instants and transitions): **16 of 20 without a `fail` cell**. Four keep failing cells, all in clip instants or transitions that the gate does not visit: `cafe-chair` (14), `office-swivel-chair` (70), `used-fridge-freezer` (42), `used-tumble-dryer` (42). Numbers and causes in section 6.
+- No band copy and no in-band view in the batch: no `allowlist.json` was written.
+- The manifest was not edited; no declared dimension changed.
 
 ## 2. Per asset: findings and matrix
 
-TABLE-PLACEHOLDER
+Hard findings of the gate by code, before (start of the batch) and after; matrix cells of the asset by status with the failing check.
+
+| Asset | Hard findings before | Hard after | Reported after | Matrix cells after |
+|---|---|---|---|---|
+| `cafe-chair` | 2: sync-bone-height 1, sync-forward 1 | none | 12 | 14 fail, 112 group-drift, 126 ok (sync-height 14) |
+| `electric-fan-heater` | 18: anchor-landmark 18 | none | 0 | 210 ok, 21 unavailable |
+| `gas-hob` | 3: anchor-landmark 3 | none | 6 | 84 group-drift, 147 ok, 21 unavailable |
+| `office-swivel-chair` | 4: sync-forward 4 | none | 47 | 70 fail, 182 group-drift (sync-forward 28, sync-lateral 56) |
+| `used-bedside-table` | 18: anchor-landmark 12, sync-bone-height 1, sync-forward 4, sync-height 1 | none | 2 | 70 group-drift, 140 ok, 21 unavailable |
+| `used-dishwasher` | 8: sync-bone-forward 1, sync-bone-height 4, sync-height 3 | none | 24 | 140 group-drift, 70 ok, 21 unavailable |
+| `used-electric-cooker` | 5: anchor-landmark 2, sync-forward 3 | none | 6 | 210 group-drift, 21 ok, 21 unavailable |
+| `used-electric-guitar-and-combo` | 16: anchor-landmark 16 | none | 0 | 252 ok |
+| `used-electronic-drum-kit` | 20: anchor-landmark 20 | none | 0 | 252 ok |
+| `used-electronic-organ` | 24: anchor-landmark 24 | none | 0 | 210 ok, 21 unavailable |
+| `used-fridge-freezer` | 76: anchor-landmark 70, sync-bone-forward 3, sync-forward 3 | none | 24 | 42 fail, 126 group-drift, 84 ok (sync-forward 42) |
+| `used-high-chair` | 17: sync-bone-forward 10, sync-bone-height 4, sync-forward 3 | none | 7 | 28 group-drift, 203 ok, 21 unavailable |
+| `used-hinged-wardrobe` | 13: anchor-landmark 6, sync-bone-forward 5, sync-bone-height 2 | none | 0 | 231 ok, 21 range-end |
+| `used-kitchen-base-cabinet` | 1: sync-height 1 | none | 12 | 112 group-drift, 140 ok |
+| `used-microwave-oven` | 3: anchor-landmark 1, sync-bone-height 2 | none | 6 | 42 group-drift, 126 ok, 42 unavailable |
+| `used-park-armchair` | 20: anchor-landmark 8, sync-bone-forward 4, sync-bone-height 4, sync-forward 4 | none | 16 | 252 group-drift |
+| `used-recliner-chair` | 14: anchor-landmark 8, sync-bone-height 2, sync-height 4 | none | 0 | 252 ok |
+| `used-tumble-dryer` | 16: anchor-landmark 12, sync-bone-height 1, sync-height 3 | none | 17 | 42 fail, 154 group-drift, 35 ok, 21 unavailable (sync-lateral 42) |
+| `used-washing-machine` | 42: anchor-landmark 28, sync-bone-forward 2, sync-forward 6, sync-height 6 | none | 0 | 42 group-drift, 210 ok |
+| `used-wingback-armchair` | 4: sync-height 4 | none | 0 | 252 ok |
 
 ## 3. Proof
 
-PROOF-PLACEHOLDER
+Each run to the end in this session on the final catalog documents (`prove.sh`, `matrix.sh`, `verify.sh`).
+
+| Check | Result |
+|---|---|
+| `T/🔎️scan.ts --language en` on the 20 ids | 20 clean, 0 hard findings |
+| `validateAsset` | 0 issues for all 20 (before: 0) |
+| check CLI `--asset <id>` | `✓` for all 20 |
+| every authored scale prints (default profile) | all 20; with both range ends: 19, `used-hinged-wardrobe` 1:20 (gap `mirror` / `handle-2-bar`) fails as it did before the batch, unchanged document part |
+| `🧊️catalog-silhouette` | 20 passed |
+| `🧊️three-views` | 40 passed |
+| `🌡️catalog-physics` | 40 passed |
+| `✅️asset-validation` (ids, manifest cases, sample figure) | 10 passed |
+| `🫁️breathing-catalog`, `⚡️asset-power` | no case names an asset of the batch (290 and 24 skipped) |
+| `🧊️model-glyph-size`, `🧊️model-glyph-edges` (use `electric-fan-heater`) | 1 and 4 passed |
+| `🧊️model-bounds`, cases of the heater | 5 passed, 3 fail at 1:100, 1:200, 1:500 in the `light-solid` view (louvre bands 4 for 8, hand clearance). The repair changed only anchors, contacts and the `structure` lists of this asset; `body` and `thermal` of every scale are identical to the document before the batch, so these failures are not from this batch. Not run before the repair, so this is by comparison of the documents, not by a before run. |
+| second run of `fix.ts` (`verify.sh`) | changes nothing for all 20 |
+| matrix per asset | table in section 2 |
+
+Rest pose: `restdiff.ts` (evaluated outlines of the default pose before and after) showed no moved outline except the added covered parts and the cases named in section 4. Silhouette guard (`../MR/measure.ts`, before and after): identical for 12 assets, within 0.0001 for `office-swivel-chair`; changed for seven, all inside the gate: `cafe-chair` plan 1:50 0.9908 / 1.9 mm to 0.9905 / 3.8 mm, `used-park-armchair` plan up to 0.9952 / 7.2 mm (legs as tapered solids), `used-recliner-chair` front 1:100 0.9974 / 18.8 mm to 0.9942 / 21.2 mm, `gas-hob` front 1:50 0.9793 to 0.9784, `used-washing-machine` elevation 1:500 (4.4), `used-bedside-table` elevation 1:100 better (26.0 to 10.4 mm), `used-kitchen-base-cabinet` front 1:500 better.
+
+Sheets opened (r3-2d, 1:50): `used-tumble-dryer` `carried` before and after, `used-fridge-freezer` `carried` before and after, `used-washing-machine` `carried`, `used-bedside-table` `carried`, `office-swivel-chair` rest before and after (strips variant, rejected). **Not opened: every other changed view and scale** (the other 15 assets and the bands 1:100 to 1:500); for those the evidence is the outline comparison and the silhouette guard only.
 
 ## 4. What was wrong and what was changed
 
@@ -67,10 +113,32 @@ Poses, clips and `structure.supports` name the new contacts in place of the lump
 - `used-washing-machine` 1:500: the emitter `drawer-vent` lies in the fascia, 25 mm ahead of the block (tolerance 20 mm). The block was widened by the fascia (30 mm, 0.06 mm on paper) instead of moving the emitter. Silhouette elevation 1:500: 1.0000 / 0.0 mm before, 0.9565 / 31.1 mm after (gate 0.92 and 2 features); the 3D body of that band was not changed.
 - `gas-hob`: the emitter moved 30 mm sideways to the burner. Thermal and flow tests of the asset pass (section 3).
 
+### 4.5 Paint order of a tilted carcass with doors
+
+The paint order of a pose follows the nearest point of each shape. A carcass made one full-depth solid in the front comes forward at its foot when tilted back and was then painted over the door that hangs higher: `used-fridge-freezer` `carried`, 1:200, left 65 mm of the fridge door visible (found as a print failure at 1:350). The front carcass of the fridge is therefore three solids (plinth zone, behind the freezer door, behind the fridge door; `cuts` of the spec), the two behind the doors 2 mm narrower so they stay hidden at rest. The same defect of the engine is filed in `requests.md` by another fixer (`shapeDepthIn`).
+
 ## 5. Files
 
-FILES-PLACEHOLDER
+Updated, 20 catalog documents `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🛋️furniture/<id>/🔣️.json` (cafe-chair, office-swivel-chair, used-bedside-table, used-high-chair, used-hinged-wardrobe, used-kitchen-base-cabinet, used-park-armchair, used-recliner-chair, used-wingback-armchair) and `…/🔌️appliances/<id>/🔣️.json` (electric-fan-heater, gas-hob, used-dishwasher, used-electric-cooker, used-electric-guitar-and-combo, used-electronic-drum-kit, used-electronic-organ, used-fridge-freezer, used-microwave-oven, used-tumble-dryer, used-washing-machine).
+
+Created under `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️22/GET-STAFFAGE-RUNNING-END-TO-END-AND-FINISH-ALL-STAFFAGE-TICKETS/`: `multiview-MF.md`; `🧰️matrix/MF/` with `fix.ts` (the repair), `apply.ts`, `files.ts`, `validate.ts`, `cells.py`, `dump.py` (copies from MB-2), `print.ts`, `restdiff.ts`, `apply.sh`, `redo.sh`, `verify.sh`, `prove.sh`, `matrix.sh`, `vt.sh`, `t.sh`, `run.sh`, `look.sh`, `d.sh`, `rig.py`, `ids.py`, `where.py`, `groups.py`, `table.py` and `spec/<id>.json` (20).
+
+Removed: `🗑️generated/matrix/MF` (backups, trial copies, logs, sheets, matrix folders). `requests.md`: nothing added (the paint-order defect of 4.5 is already filed there by another fixer).
 
 ## 6. Open
 
-OPEN-PLACEHOLDER
+Four assets are not clean in the matrix. Measured with `../MR/gate.ts` (poses, clip instants, transitions) before and after:
+
+| Asset | Hard findings before | After | What is left |
+|---|---|---|---|
+| `cafe-chair` | 37 | 3 | `sync-height` 1:50, clip `tip-back` at 1.748 s: 18.3 mm against a tolerance of 18 mm (front 19 mm higher than the elevation). Legs and back posts that lean more than their thickness stay flat in the plan of 1:50. |
+| `office-swivel-chair` | 134 | 106 | `sync-lateral` 29 to 32 mm (tolerance 20) at all four scales while the seat swivels (transitions and clip `swivel-rotation`), and `sync-forward` 20 mm at 1:200 and 1:500 in that clip. Unchanged by this batch; the swivel was not worked on. |
+| `used-fridge-freezer` | 1,019 | 15 | `sync-forward` 83 to 90 mm (tolerance 37) at 1:50, 1:100, 1:200 in the transition `carried>stored` at 0.5 (plan reaches further back than the elevation). Cause not found. |
+| `used-tumble-dryer` | 169 | 6 | `sync-lateral` 20 mm (tolerance 18) at 1:50 and 1:100 in clip `clean-filter` at 2.706 s, door open. Same number as before the batch; the door solids were not changed. |
+
+Also open:
+
+- Open strokes on a tilting bone stay flat (4.1). The clean remedy needs a solid form for a stroke or a face bone; neither was introduced.
+- `used-washing-machine` `carried`, front: the two rear feet show below the body with a gap, because the front has no body solid under the front panel. A full-depth body was not added: with the paint-order rule (4.5) it would be painted over the door.
+- Sheets of 15 assets and of the coarser bands were not opened (section 3).
+- `used-hinged-wardrobe` does not print at 1:20, as before.

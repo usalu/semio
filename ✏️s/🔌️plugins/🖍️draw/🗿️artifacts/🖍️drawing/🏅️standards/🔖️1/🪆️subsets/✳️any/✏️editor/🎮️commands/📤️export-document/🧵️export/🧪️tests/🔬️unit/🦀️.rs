@@ -71,6 +71,7 @@ async fn original_export_read_returns_under_exact_physical_grants() {
     );
     let mut issuer = Store::new::<store::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.unwrap();
     issuer.install_document_store_owners_exact(store::os_store::document_store_owners::funded_bounded_artifact_store_owners().unwrap());
+    let registry_owners = issuer.owners.snapshot_read_leases.strong_count();
     let read = issuer.snapshot_read().unwrap();
     let original = read.get() as *const DrawingSnapshot;
     let stock = RetainedCloneGrant { maximum_items: 1 << 20, maximum_copy_bytes: 1 << 24, maximum_capacity_bytes: 1 << 24, maximum_release_bytes: 1 << 24, maximum_depth: 128 };
@@ -168,6 +169,8 @@ async fn original_export_read_returns_under_exact_physical_grants() {
     assert_eq!((physical.requested_bytes, physical.released_bytes), (0, 0));
     caller.retire_exact();
 
+    assert_eq!(issuer.outstanding_snapshot_read_count(), 0);
+    assert_eq!(issuer.owners.snapshot_read_leases.strong_count(), registry_owners);
     for _ in 0..100_000 {
         if issuer.close_owned_terminal_is_empty() { break; }
         let selected = grant(issuer.close_owned_demands(4096).unwrap());

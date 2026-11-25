@@ -65,6 +65,10 @@ class Scale(unittest.TestCase):
         bracket = next(anchor for anchor in asset["anchors"] if anchor["id"] == "wall-bracket")
         casing = next(bone for bone in asset["rig"]["bones"] if bone["id"] == bracket["bone"])
         self.assertAlmostEqual(bracket["y"] + casing["y"], mount["bracketLocalM"])
+        self.assertAlmostEqual(mount["bracketHeightM"] - mount["bracketLocalM"], mount["boilerOriginM"])
+        self.assertAlmostEqual(SCENE.BOILER_CLEARANCE_M, mount["boilerOriginM"])
+        self.assertAlmostEqual(mount["bracketHeightM"] - mount["bracketLocalM"], mount["boilerOriginM"])
+        self.assertAlmostEqual(SCENE.BOILER_CLEARANCE_M, mount["boilerOriginM"])
         for vector in mount["cases"]:
             with self.subTest(vector=vector):
                 floor, unit = vector["floorY"], vector["unit"]

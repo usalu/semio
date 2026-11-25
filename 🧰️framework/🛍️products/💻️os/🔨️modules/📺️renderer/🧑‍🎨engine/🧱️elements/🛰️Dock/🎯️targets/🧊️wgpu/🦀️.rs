@@ -41,7 +41,7 @@ mod dock_state_render_and_drop;
 mod layout_conversion_and_drop_zones;
 pub use layout_conversion_and_drop_zones::{
     compute_dock_drop_zone, compute_tab_insert_index, dock_cap_depth, dock_from_window_layout,
-    dock_node_to_layout_root, drop_zone_indicator_rect, resolve_split_side,
+    dock_drop_places, dock_node_to_layout_root, drop_zone_indicator_rect, resolve_split_side,
     split_drop_preview_in_body, stack_tab_bar_rect, window_layout_instance_titles,
 };
 use layout_conversion_and_drop_zones::{

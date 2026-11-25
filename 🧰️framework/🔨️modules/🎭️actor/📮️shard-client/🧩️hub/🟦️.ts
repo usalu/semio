@@ -23,6 +23,7 @@ export interface ShardTransportRole {
 export interface ShardRoutingRole {
   terminate(index: number, detail?: string): readonly string[];
   rebuild(index: number): void;
+  recycleIdle(slot: ShardSlot, closed?: bigint): boolean;
   assignShard(actorId: string): ShardSlot;
 }
 

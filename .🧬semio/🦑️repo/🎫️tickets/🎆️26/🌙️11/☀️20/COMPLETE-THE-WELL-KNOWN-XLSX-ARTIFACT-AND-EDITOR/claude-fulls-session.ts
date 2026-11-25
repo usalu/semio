@@ -1,3 +1,4 @@
+process.env.SEMIO_PLUGIN_CATALOG ??= "/Users/ueli/Documents/semio/✏️s/🧑‍💻dev/🧩️catalog/🤖️generated";
 import {readFileSync, mkdirSync, writeFileSync} from "node:fs";
 import {join, resolve} from "node:path";
 import {renderPlaygroundSessionTypeScript} from "@semio-tech/plugin-registry/playground/session";

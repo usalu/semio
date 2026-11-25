@@ -1,13 +1,13 @@
 /** 🧊️ The model the MH-5 repair measures with: the body every drawn shape implies (the engine's own placement rules of `evaluate`, written as a rigid point cloud in the frame of the bone) and the bone frames of every subject of the matrix (poses, clip instants, transitions), so the extents the matrix compares are known in milliseconds instead of minutes. The real gate (`../MR/gate.ts`) stays the proof; `mgate.ts` prints both tiers from this model.
  *
- * Bodies: a flat elevation shape is a plate in the (u, v) plane of its bone; a flat front or plan shape with an elevation twin is a plate at the middle depth of that twin at rest; `extruded` sweeps u, v, w and `revolved` about the u axis of the own bone are the prisms and bodies of revolution of `solid3`. Everything else (a flat shape without a twin, `followTip` growth, a foreign axis bone, skinned solids) is `undefined`: not modelled, only the real gate judges it.
+ * Bodies: a flat elevation shape is a plate in the (u, v) plane of its bone; a flat front or plan shape with an elevation twin is a plate at the middle depth of that twin at rest; `extruded` sweeps u, v, w and `revolved` about the u axis of the own bone are the prisms and bodies of revolution of `solid3`; a `loft` is its section rings. Everything else (a flat shape without a twin, `followTip` growth, a foreign axis bone, skinned solids) is `undefined`: not modelled, only the real gate judges it.
  * @see ../../../../../../../../🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🧮️evaluation/🟦️.ts */
 import { join } from "node:path";
 import { S } from "../MR/lib.ts";
 
 const T = join(S, "🧪️tests", "🔭️multiview-coverage");
 const engine = await import(join(T, "🧰️.ts"));
-const { evaluate, flattenGeometry } = await import(join(S, "🔨️modules", "🧮️evaluation", "🟦️.ts"));
+const { evaluate, flattenGeometry, loftRings } = await import(join(S, "🔨️modules", "🧮️evaluation", "🟦️.ts"));
 const { restFrames } = await import(join(S, "🔨️modules", "🦴️rig", "🟦️.ts"));
 
 export type V3 = readonly [number, number, number];
@@ -58,7 +58,7 @@ export function subjectsOf(source: any): Subject[] {
 }
 
 /** 🖊️ The rings of a shape as point lists. */
-export const ringsOf = (shape: any): P2[][] => (shape.kind === "poly" ? [shape.points as P2[]] : flattenGeometry(shape).rings.map((ring: any[]) => ring.map((p) => [p.x, p.y] as const)));
+export const ringsOf = (shape: any): P2[][] => (shape.kind === "loft" ? [[[0, 0]]] : shape.kind === "poly" ? [shape.points as P2[]] : flattenGeometry(shape).rings.map((ring: any[]) => ring.map((p) => [p.x, p.y] as const)));
 export const pointsOf = (shape: any): P2[] => ringsOf(shape).flat();
 
 /** 📍️ A world point of the rest pose in the local coordinates (u, v, w) of a rest frame. */
@@ -85,13 +85,14 @@ export function prismPoints(profile: readonly P2[], solid: any, rest: Frame, len
 export function bodyOf(asset: any, rest: Record<string, Frame>, view: View, shape: any, twin: any | undefined): Body | undefined {
   const r = rest[shape.bone];
   if (r === undefined || shape.kind === "member") return undefined;
+  if (shape.kind === "loft") return shape.weights?.length ? undefined : { local: loftRings(shape).flat() as V3[] };
   const points = pointsOf(shape);
   if (points.length === 0) return undefined;
   const solid = shape.solid;
   const length = asset.rig.bones.find((bone: any) => bone.id === shape.bone).lengthM;
   if (solid === undefined) {
     if (view === "elevation") return { local: points.map(([u, v]) => [u, v, 0] as const) };
-    if (shape.followTip === true || twin === undefined) return undefined;
+    if (shape.followTip === true || twin === undefined || twin.kind === "loft") return undefined;
     const placed = pointsOf(twin).map(([u, v]) => toWorld(r, [u, v, 0]));
     const k = view === "plan" ? 1 : 0;
     const middle = (Math.min(...placed.map((p) => p[k])) + Math.max(...placed.map((p) => p[k]))) / 2;

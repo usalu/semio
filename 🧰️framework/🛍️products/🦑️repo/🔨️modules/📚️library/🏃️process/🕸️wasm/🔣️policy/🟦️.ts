@@ -37,7 +37,7 @@ const WASM_BINDGEN_TOOL_PORT_V1:WasmBindgenToolPortV1={
  prepared:workspace=>wasmBindgenCargoCommandV1(join(repositoryCachePartitionRootV1(workspace,"rust"),"cargo","home")),
  exists:existsSync,
  lookup:environment=>runtimeSupportsV1("which")?runtimeWhichV1("wasm-bindgen",{PATH:environment.PATH}):null,
- probe:(command,environment)=>{const result=spawnSync(command,["--version"],{env:environment,encoding:"utf8",timeout:10000});return{status:result.status,stdout:result.stdout??""};},
+ probe:(command,environment)=>{const result=spawnSync(command,["--version"],{windowsHide:true,env:environment,encoding:"utf8",timeout:10000});return{status:result.status,stdout:result.stdout??""};},
 };
 /** 📦️ Resolves the exact locked owned generator before an ambient executable. */
 export function resolveWasmBindgenBin(repoRoot=getWorkspaceRoot(),env:Readonly<Record<string,string|undefined>>=process.env,port:WasmBindgenToolPortV1=WASM_BINDGEN_TOOL_PORT_V1):string{

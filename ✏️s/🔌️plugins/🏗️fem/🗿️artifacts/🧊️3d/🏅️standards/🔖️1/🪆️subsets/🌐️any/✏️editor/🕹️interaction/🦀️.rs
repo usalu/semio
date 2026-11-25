@@ -30,6 +30,8 @@ pub use semio_s_artifact_fem_3d_scene::standards::v1::subsets::any::scene::fem3d
 pub use semio_s_artifact_fem_3d_scene::standards::v1::subsets::any::scene::fem3d_node_point;
 pub use semio_s_artifact_fem_3d_scene::standards::v1::subsets::any::scene::fem3d_solid_centroid;
 pub use semio_s_artifact_fem_3d_scene::standards::v1::subsets::any::scene::fem3d_solid_top_point;
+pub use semio_s_artifact_fem_3d_scene::standards::v1::subsets::any::scene::FEM3D_ANALYSIS_ID;
+pub use semio_s_artifact_fem_3d_scene::standards::v1::subsets::any::scene::FEM3D_GRANULARITY_ANALYSIS;
 pub use semio_s_artifact_fem_3d_scene::standards::v1::subsets::any::scene::FEM3D_GRANULARITY_COMBINATION;
 pub use semio_s_artifact_fem_3d_scene::standards::v1::subsets::any::scene::FEM3D_GRANULARITY_ELEMENT;
 pub use semio_s_artifact_fem_3d_scene::standards::v1::subsets::any::scene::FEM3D_GRANULARITY_LOAD;
@@ -54,17 +56,18 @@ pub fn fem3d_interaction_definition() -> InteractionDefinition {
         id: FEM3D_INTERACTION_DOMAIN.into(),
         label: LocalizedLabel::native("Structure", "Tragwerk"),
         granularities: vec![
-            granularity(FEM3D_GRANULARITY_NODE, "Node", "Knoten", "circle-dot"),
             granularity(FEM3D_GRANULARITY_ELEMENT, "Element", "Element", "minus"),
+            granularity(FEM3D_GRANULARITY_NODE, "Node", "Knoten", "circle-dot"),
             granularity(FEM3D_GRANULARITY_SOLID, "Solid", "Volumenkörper", "box"),
-            granularity(FEM3D_GRANULARITY_SUPPORT, "Support", "Lager", "anchor"),
+            granularity(FEM3D_GRANULARITY_SUPPORT, "Support", "Lager", "triangle"),
             granularity(FEM3D_GRANULARITY_LOAD, "Load", "Last", "arrow-down"),
             granularity(FEM3D_GRANULARITY_MATERIAL, "Material", "Material", "layers"),
-            granularity(FEM3D_GRANULARITY_SECTION, "Section", "Querschnitt", "ruler"),
+            granularity(FEM3D_GRANULARITY_SECTION, "Section", "Querschnitt", "beam"),
             granularity(FEM3D_GRANULARITY_LOAD_CASE, "Load Case", "Lastfall", "list"),
             granularity(FEM3D_GRANULARITY_COMBINATION, "Combination", "Kombination", "link"),
+            granularity(FEM3D_GRANULARITY_ANALYSIS, "Analysis", "Analyse", "settings-2"),
         ],
-        hierarchy: HierarchyProvider::Flat,
+        hierarchy: HierarchyProvider::Topology,
         hover: HoverSpec { enabled: true, transitive: false, channels: vec![FEM3D_POINTER_CHANNEL.into()], broadcast: true },
         selection: SelectionSpec {
             modes: vec![SelectionMode::Multiple, SelectionMode::Single],
@@ -74,6 +77,24 @@ pub fn fem3d_interaction_definition() -> InteractionDefinition {
             broadcast: true,
         },
     }
+}
+
+/// 🌳️ Every selectable entity of one document as a flat topology in granularity order (elements first, the default Select All scope) — the universe `selectAll` and range selection walk, and the ids revalidation keeps.
+pub fn fem3d_interaction_topology(doc: &Fem3dSnapshot) -> semio_framework::InteractionTopology {
+    let node = |granularity: &str, identity: Result<String, protocol::wire::ScopedIdentityError>| identity.ok().map(|id| semio_framework::TopologyNode { id, granularity: granularity.into(), parent: None });
+    let target = |granularity: &str, id: &str| node(granularity, fem3d_entity_target(granularity, id));
+    let ordered = doc.elements.iter().filter_map(|element| target(FEM3D_GRANULARITY_ELEMENT, &element_id(element)))
+        .chain(doc.nodes.iter().filter_map(|item| target(FEM3D_GRANULARITY_NODE, item.id.as_str())))
+        .chain(doc.solids.iter().filter_map(|item| target(FEM3D_GRANULARITY_SOLID, &item.id)))
+        .chain(doc.supports.iter().filter_map(|item| target(FEM3D_GRANULARITY_SUPPORT, &item.id)))
+        .chain(doc.load_cases.iter().flat_map(|case| case.loads.iter().filter_map(|load| node(FEM3D_GRANULARITY_LOAD, fem3d_load_target(&case.id, &load_id(load))))))
+        .chain(doc.materials.iter().filter_map(|item| target(FEM3D_GRANULARITY_MATERIAL, item.id.as_str())))
+        .chain(doc.sections.iter().filter_map(|item| target(FEM3D_GRANULARITY_SECTION, &item.id)))
+        .chain(doc.load_cases.iter().filter_map(|item| target(FEM3D_GRANULARITY_LOAD_CASE, &item.id)))
+        .chain(doc.combinations.iter().filter_map(|item| target(FEM3D_GRANULARITY_COMBINATION, &item.id)))
+        .chain(target(FEM3D_GRANULARITY_ANALYSIS, FEM3D_ANALYSIS_ID))
+        .collect();
+    semio_framework::InteractionTopology { domains: std::collections::BTreeMap::from([(FEM3D_INTERACTION_DOMAIN.to_string(), semio_framework::DomainTopology { ordered })]) }
 }
 //#endregion 🔖️Definition
 
@@ -116,6 +137,9 @@ pub fn fem3d_entity_kind(doc: &Fem3dSnapshot, identity: &str) -> Option<&'static
     let segments = protocol::wire::decode_scoped_identity(identity).ok()?;
     if matches!(segments.as_slice(), [FEM3D_GRANULARITY_LOAD, _, _]) { return fem3d_load_owner(doc, identity).map(|_| FEM3D_GRANULARITY_LOAD); }
     let [kind, id] = segments.as_slice() else { return None };
+    if *kind == FEM3D_GRANULARITY_ANALYSIS && *id == FEM3D_ANALYSIS_ID {
+        return Some(FEM3D_GRANULARITY_ANALYSIS);
+    }
     if *kind == FEM3D_GRANULARITY_NODE && doc.nodes.iter().any(|node| node.id.as_str() == *id) {
         return Some(FEM3D_GRANULARITY_NODE);
     }
@@ -156,7 +180,7 @@ pub fn fem3d_load_owner<'a>(doc: &'a Fem3dSnapshot, identity: &str) -> Option<(&
 pub fn fem3d_entity_id(identity: &str) -> Option<&str> {
     let segments = protocol::wire::decode_scoped_identity(identity).ok()?;
     match segments.as_slice() {
-        [FEM3D_GRANULARITY_NODE | FEM3D_GRANULARITY_ELEMENT | FEM3D_GRANULARITY_SOLID | FEM3D_GRANULARITY_SUPPORT | FEM3D_GRANULARITY_MATERIAL | FEM3D_GRANULARITY_SECTION | FEM3D_GRANULARITY_LOAD_CASE | FEM3D_GRANULARITY_COMBINATION, id] | [FEM3D_GRANULARITY_LOAD, _, id] => Some(*id),
+        [FEM3D_GRANULARITY_NODE | FEM3D_GRANULARITY_ELEMENT | FEM3D_GRANULARITY_SOLID | FEM3D_GRANULARITY_SUPPORT | FEM3D_GRANULARITY_MATERIAL | FEM3D_GRANULARITY_SECTION | FEM3D_GRANULARITY_LOAD_CASE | FEM3D_GRANULARITY_COMBINATION | FEM3D_GRANULARITY_ANALYSIS, id] | [FEM3D_GRANULARITY_LOAD, _, id] => Some(*id),
         _ => None,
     }
 }

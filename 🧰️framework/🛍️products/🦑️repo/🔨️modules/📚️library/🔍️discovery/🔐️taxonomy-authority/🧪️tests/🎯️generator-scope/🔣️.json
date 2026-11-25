@@ -1,0 +1,1 @@
+{"id":"absent-test-owner","contract":{"target":"absent:test","ownerPath":"absent","outputRoots":[]},"scopes":[{"ids":[],"problems":0},{"ids":["absent-test-owner"],"problems":1}]}

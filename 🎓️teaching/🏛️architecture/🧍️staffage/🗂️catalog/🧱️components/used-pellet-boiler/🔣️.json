@@ -13,21 +13,111 @@
    "de": "Ein gebrauchter Pelletkessel mit 15 kW und integriertem Tagesbehälter von 155 l, wie eine Bauteilbörse ihn lagert: 1,0 x 0,75 x 1,31 m, 255 kg, entleert, Vor- und Rücklauf verschlossen, der Abgasstutzen 130 mm oben hinten offen und verrußt, ein abgeschnittener Rest des Pellet-Saugschlauchs am Zyklon, mit zwei Ratschengurten auf einer EPAL-Palette verzurrt und mit dem Kettengehänge obenauf; an zwei M12-Ringschrauben angehoben und wieder eingebaut mit 15 kW Feuerung, 70/55 °C Wasser und 140 °C Abgas."
   },
   "tags": [
-   "component",
-   "reclaimed",
-   "used",
-   "hvac",
-   "heating",
-   "pellet-boiler",
-   "boiler",
-   "biomass",
-   "wood-pellets",
-   "hopper",
-   "flue",
-   "sheet-steel",
-   "pallet",
-   "ratchet-strap",
-   "chain-sling"
+   {
+    "id": "component",
+    "title": {
+     "en": "component",
+     "de": "Bauteil"
+    }
+   },
+   {
+    "id": "reclaimed",
+    "title": {
+     "en": "reclaimed",
+     "de": "wiederverwendet"
+    }
+   },
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "hvac",
+    "title": {
+     "en": "HVAC",
+     "de": "HLK"
+    }
+   },
+   {
+    "id": "heating",
+    "title": {
+     "en": "heating",
+     "de": "Heizung"
+    }
+   },
+   {
+    "id": "pellet-boiler",
+    "title": {
+     "en": "pellet boiler",
+     "de": "Pelletkessel"
+    }
+   },
+   {
+    "id": "boiler",
+    "title": {
+     "en": "boiler",
+     "de": "Heizkessel"
+    }
+   },
+   {
+    "id": "biomass",
+    "title": {
+     "en": "biomass",
+     "de": "Biomasse"
+    }
+   },
+   {
+    "id": "wood-pellets",
+    "title": {
+     "en": "wood pellets",
+     "de": "Holzpellets"
+    }
+   },
+   {
+    "id": "hopper",
+    "title": {
+     "en": "hopper",
+     "de": "Trichter"
+    }
+   },
+   {
+    "id": "flue",
+    "title": {
+     "en": "flue",
+     "de": "Abgasrohr"
+    }
+   },
+   {
+    "id": "sheet-steel",
+    "title": {
+     "en": "sheet steel",
+     "de": "Stahlblech"
+    }
+   },
+   {
+    "id": "pallet",
+    "title": {
+     "en": "pallet",
+     "de": "Palette"
+    }
+   },
+   {
+    "id": "ratchet-strap",
+    "title": {
+     "en": "ratchet strap",
+     "de": "Ratschengurt"
+    }
+   },
+   {
+    "id": "chain-sling",
+    "title": {
+     "en": "chain sling",
+     "de": "Kettengehänge"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage component authors (used HVAC wave, author 07)",
@@ -104,7 +194,7 @@
     "specificHeatJKgK": 460,
     "source": "authored-estimate",
     "reference": "incropera-2018",
-    "elasticModulusPa": 210000000000.0
+    "elasticModulusPa": 210000000000
    },
    {
     "id": "enamel-black",
@@ -161,7 +251,7 @@
     "specificHeatJKgK": 460,
     "source": "literature",
     "reference": "incropera-2018",
-    "elasticModulusPa": 210000000000.0
+    "elasticModulusPa": 210000000000
    },
    {
     "id": "polycarbonate",
@@ -288,7 +378,7 @@
     "specificHeatJKgK": 1600,
     "source": "literature",
     "reference": "iso-10456-2007",
-    "elasticModulusPa": 11000000000.0
+    "elasticModulusPa": 11000000000
    },
    {
     "id": "chipboard-block",
@@ -303,7 +393,7 @@
     "specificHeatJKgK": 1700,
     "source": "authored-estimate",
     "reference": "iso-10456-2007",
-    "elasticModulusPa": 3000000000.0
+    "elasticModulusPa": 3000000000
    },
    {
     "id": "polyester-webbing",
@@ -332,7 +422,7 @@
     "specificHeatJKgK": 460,
     "source": "literature",
     "reference": "en-818-4",
-    "elasticModulusPa": 210000000000.0
+    "elasticModulusPa": 210000000000
    }
   ],
   "rig": {
@@ -346,8 +436,8 @@
       "en": "Yard reference point of the component exchange (fixed root)",
       "de": "Bezugspunkt im Lager der Bauteilbörse (feste Wurzel)"
      },
-     "x": 0.0,
-     "y": 0.0,
+     "x": 0,
+     "y": 0,
      "angleDeg": 0,
      "lengthM": 0.05,
      "joint": {
@@ -362,7 +452,7 @@
       "de": "EPAL-Europalette mit den zwei Ratschengurten (bleibt beim Anheben zurück)"
      },
      "x": -0.4,
-     "y": 0.0,
+     "y": 0,
      "angleDeg": 0,
      "lengthM": 0.8,
      "joint": {
@@ -398,7 +488,7 @@
       "maxM": 0.5
      },
      "mass": {
-      "kg": 255.0,
+      "kg": 255,
       "comX": 0.36,
       "comY": 0.5,
       "distribution": "point",
@@ -440,7 +530,7 @@
       "en": "Front chain leg, hinged in the front eye",
       "de": "Vorderer Kettenstrang, im vorderen Ring eingehängt"
      },
-     "x": 0.0,
+     "x": 0,
      "y": 0.033,
      "angleDeg": 0,
      "lengthM": 0.05,
@@ -494,7 +584,7 @@
       "en": "Strap right, front half over the top",
       "de": "Gurt rechts, vordere Hälfte über die Oberseite"
      },
-     "x": 0.0,
+     "x": 0,
      "y": 1.052,
      "angleDeg": 0,
      "lengthM": 0.05,
@@ -546,7 +636,7 @@
       "en": "Strap right, back half over the top",
       "de": "Gurt rechts, hintere Hälfte über die Oberseite"
      },
-     "x": 0.0,
+     "x": 0,
      "y": 1.052,
      "angleDeg": 0,
      "lengthM": 0.05,
@@ -581,7 +671,7 @@
       "en": "Strap left, front half over the top",
       "de": "Gurt links, vordere Hälfte über die Oberseite"
      },
-     "x": 0.0,
+     "x": 0,
      "y": 1.072,
      "angleDeg": 0,
      "lengthM": 0.05,
@@ -633,7 +723,7 @@
       "en": "Strap left, back half over the top",
       "de": "Gurt links, hintere Hälfte über die Oberseite"
      },
-     "x": 0.0,
+     "x": 0,
      "y": 1.072,
      "angleDeg": 0,
      "lengthM": 0.05,
@@ -666,7 +756,7 @@
        "translation": [
         0.75,
         0.011,
-        0.0
+        0
        ]
       },
       "cornerRadius": 0.002
@@ -687,7 +777,7 @@
        "translation": [
         0.4,
         0.011,
-        0.0
+        0
        ]
       },
       "cornerRadius": 0.002
@@ -708,7 +798,7 @@
        "translation": [
         0.05,
         0.011,
-        0.0
+        0
        ]
       },
       "cornerRadius": 0.002
@@ -750,7 +840,7 @@
        "translation": [
         0.75,
         0.061,
-        0.0
+        0
        ]
       },
       "cornerRadius": 0.003
@@ -813,7 +903,7 @@
        "translation": [
         0.4,
         0.061,
-        0.0
+        0
        ]
       },
       "cornerRadius": 0.003
@@ -876,7 +966,7 @@
        "translation": [
         0.05,
         0.061,
-        0.0
+        0
        ]
       },
       "cornerRadius": 0.003
@@ -939,7 +1029,7 @@
        "translation": [
         0.4,
         0.111,
-        0.0
+        0
        ]
       },
       "cornerRadius": 0.002
@@ -981,7 +1071,7 @@
        "translation": [
         0.7275,
         0.133,
-        0.0
+        0
        ]
       },
       "cornerRadius": 0.002
@@ -1002,7 +1092,7 @@
        "translation": [
         0.56375,
         0.133,
-        0.0
+        0
        ]
       },
       "cornerRadius": 0.002
@@ -1023,7 +1113,7 @@
        "translation": [
         0.4,
         0.133,
-        0.0
+        0
        ]
       },
       "cornerRadius": 0.002
@@ -1044,7 +1134,7 @@
        "translation": [
         0.23625,
         0.133,
-        0.0
+        0
        ]
       },
       "cornerRadius": 0.002
@@ -1065,7 +1155,7 @@
        "translation": [
         0.0725,
         0.133,
-        0.0
+        0
        ]
       },
       "cornerRadius": 0.002
@@ -1079,7 +1169,7 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
+        0,
         0.02
        ],
        [
@@ -1094,7 +1184,7 @@
       ],
       "origin": [
        0.705,
-       0.0,
+       0,
        -0.45
       ]
      },
@@ -1107,7 +1197,7 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
+        0,
         0.02
        ],
        [
@@ -1122,7 +1212,7 @@
       ],
       "origin": [
        0.705,
-       0.0,
+       0,
        0.45
       ]
      },
@@ -1135,7 +1225,7 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
+        0,
         0.02
        ],
        [
@@ -1150,7 +1240,7 @@
       ],
       "origin": [
        0.045,
-       0.0,
+       0,
        -0.45
       ]
      },
@@ -1163,7 +1253,7 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
+        0,
         0.02
        ],
        [
@@ -1178,7 +1268,7 @@
       ],
       "origin": [
        0.045,
-       0.0,
+       0,
        0.45
       ]
      },
@@ -1198,7 +1288,7 @@
        "translation": [
         0.375,
         0.05,
-        0.0
+        0
        ]
       }
      },
@@ -1370,7 +1460,7 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        0.786,
        -0.2
       ]
@@ -1542,7 +1632,7 @@
       ],
       "origin": [
        0.125,
-       0.0,
+       0,
        -0.2
       ]
      },
@@ -1582,7 +1672,7 @@
       ],
       "origin": [
        0.125,
-       0.0,
+       0,
        -0.2
       ]
      },
@@ -1630,7 +1720,7 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        0.776,
        -0.08
       ]
@@ -1648,7 +1738,7 @@
         0.01685
        ],
        [
-        0.0,
+        0,
         0.01685
        ]
       ],
@@ -1658,7 +1748,7 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        0.836,
        -0.36
       ]
@@ -1686,7 +1776,7 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        0.836,
        -0.36
       ]
@@ -1704,7 +1794,7 @@
         0.01685
        ],
        [
-        0.0,
+        0,
         0.01685
        ]
       ],
@@ -1714,7 +1804,7 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        0.476,
        -0.36
       ]
@@ -1742,7 +1832,7 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        0.476,
        -0.36
       ]
@@ -1771,7 +1861,7 @@
       ],
       "origin": [
        0.255,
-       0.0,
+       0,
        0.29
       ]
      },
@@ -1799,7 +1889,7 @@
       ],
       "origin": [
        0.255,
-       0.0,
+       0,
        0.29
       ]
      },
@@ -1826,7 +1916,7 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        1.186,
        0.29
       ]
@@ -1880,7 +1970,7 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
+        0,
         0.016
        ],
        [
@@ -1894,9 +1984,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -1932,7 +2022,7 @@
         0.05715
        ],
        [
-        0.0,
+        0,
         0.058
        ],
        [
@@ -1980,7 +2070,7 @@
         0.00885
        ],
        [
-        0.0,
+        0,
         0.008
        ],
        [
@@ -2031,7 +2121,7 @@
          0.04652
         ],
         [
-         0.0,
+         0,
          0.047
         ],
         [
@@ -2079,7 +2169,7 @@
          0.01948
         ],
         [
-         0.0,
+         0,
          0.019
         ],
         [
@@ -2118,12 +2208,12 @@
       "p0": [
        -0.03,
        -0.022,
-       0.0
+       0
       ],
       "p1": [
        -0.45,
        -0.022,
-       0.0
+       0
       ],
       "r0": 0.011,
       "r1": 0.011
@@ -2137,7 +2227,7 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
+        0,
         0.016
        ],
        [
@@ -2152,8 +2242,8 @@
       ],
       "origin": [
        -0.5,
-       0.0,
-       0.0
+       0,
+       0
       ]
      },
      {
@@ -2375,12 +2465,12 @@
       "p0": [
        0.03,
        -0.022,
-       0.0
+       0
       ],
       "p1": [
        0.45,
        -0.022,
-       0.0
+       0
       ],
       "r0": 0.011,
       "r1": 0.011
@@ -2402,7 +2492,7 @@
        "translation": [
         -0.001,
         0.526,
-        0.0
+        0
        ]
       }
      },
@@ -2423,7 +2513,7 @@
        "translation": [
         -0.1895,
         -0.001,
-        0.0
+        0
        ]
       }
      },
@@ -2444,7 +2534,7 @@
        "translation": [
         0.001,
         0.526,
-        0.0
+        0
        ]
       }
      },
@@ -2465,7 +2555,7 @@
        "translation": [
         0.1895,
         -0.001,
-        0.0
+        0
        ]
       }
      },
@@ -2484,8 +2574,8 @@
       "transform": {
        "translation": [
         0.0135,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      },
@@ -2506,7 +2596,7 @@
        "translation": [
         -0.001,
         0.536,
-        0.0
+        0
        ]
       }
      },
@@ -2527,7 +2617,7 @@
        "translation": [
         -0.1895,
         -0.001,
-        0.0
+        0
        ]
       }
      },
@@ -2548,7 +2638,7 @@
        "translation": [
         0.001,
         0.536,
-        0.0
+        0
        ]
       }
      },
@@ -2569,7 +2659,7 @@
        "translation": [
         0.1895,
         -0.001,
-        0.0
+        0
        ]
       }
      },
@@ -2588,8 +2678,8 @@
       "transform": {
        "translation": [
         0.0135,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      }
@@ -2965,7 +3055,7 @@
       ],
       "origin": [
        0.125,
-       0.0,
+       0,
        -0.2
       ],
       "tags": [
@@ -3214,7 +3304,7 @@
        "translation": [
         0.4,
         0.075,
-        0.0
+        0
        ]
       },
       "member": "pallet",
@@ -3258,7 +3348,7 @@
        "translation": [
         -0.25,
         0.011,
-        0.0
+        0
        ]
       },
       "member": "sling",
@@ -3300,7 +3390,7 @@
        "translation": [
         0.75,
         0.011,
-        0.0
+        0
        ]
       }
      },
@@ -3320,7 +3410,7 @@
        "translation": [
         0.4,
         0.011,
-        0.0
+        0
        ]
       }
      },
@@ -3340,7 +3430,7 @@
        "translation": [
         0.05,
         0.011,
-        0.0
+        0
        ]
       }
      },
@@ -3380,7 +3470,7 @@
        "translation": [
         0.75,
         0.061,
-        0.0
+        0
        ]
       }
      },
@@ -3440,7 +3530,7 @@
        "translation": [
         0.4,
         0.061,
-        0.0
+        0
        ]
       }
      },
@@ -3500,7 +3590,7 @@
        "translation": [
         0.05,
         0.061,
-        0.0
+        0
        ]
       }
      },
@@ -3560,7 +3650,7 @@
        "translation": [
         0.4,
         0.111,
-        0.0
+        0
        ]
       }
      },
@@ -3600,7 +3690,7 @@
        "translation": [
         0.7275,
         0.133,
-        0.0
+        0
        ]
       }
      },
@@ -3620,7 +3710,7 @@
        "translation": [
         0.56375,
         0.133,
-        0.0
+        0
        ]
       }
      },
@@ -3640,7 +3730,7 @@
        "translation": [
         0.4,
         0.133,
-        0.0
+        0
        ]
       }
      },
@@ -3660,7 +3750,7 @@
        "translation": [
         0.23625,
         0.133,
-        0.0
+        0
        ]
       }
      },
@@ -3680,7 +3770,7 @@
        "translation": [
         0.0725,
         0.133,
-        0.0
+        0
        ]
       }
      },
@@ -3693,7 +3783,7 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
+        0,
         0.02
        ],
        [
@@ -3708,7 +3798,7 @@
       ],
       "origin": [
        0.705,
-       0.0,
+       0,
        -0.45
       ]
      },
@@ -3721,7 +3811,7 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
+        0,
         0.02
        ],
        [
@@ -3736,7 +3826,7 @@
       ],
       "origin": [
        0.705,
-       0.0,
+       0,
        0.45
       ]
      },
@@ -3749,7 +3839,7 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
+        0,
         0.02
        ],
        [
@@ -3764,7 +3854,7 @@
       ],
       "origin": [
        0.045,
-       0.0,
+       0,
        -0.45
       ]
      },
@@ -3777,7 +3867,7 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
+        0,
         0.02
        ],
        [
@@ -3792,7 +3882,7 @@
       ],
       "origin": [
        0.045,
-       0.0,
+       0,
        0.45
       ]
      },
@@ -3812,7 +3902,7 @@
        "translation": [
         0.375,
         0.05,
-        0.0
+        0
        ]
       }
      },
@@ -4080,7 +4170,7 @@
       ],
       "origin": [
        0.125,
-       0.0,
+       0,
        -0.2
       ]
      },
@@ -4120,7 +4210,7 @@
       ],
       "origin": [
        0.125,
-       0.0,
+       0,
        -0.2
       ]
      },
@@ -4167,7 +4257,7 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        0.776,
        -0.08
       ]
@@ -4185,7 +4275,7 @@
         0.019
        ],
        [
-        0.0,
+        0,
         0.019
        ]
       ],
@@ -4195,7 +4285,7 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        0.836,
        -0.36
       ]
@@ -4213,7 +4303,7 @@
         0.019
        ],
        [
-        0.0,
+        0,
         0.019
        ]
       ],
@@ -4223,7 +4313,7 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        0.476,
        -0.36
       ]
@@ -4252,7 +4342,7 @@
       ],
       "origin": [
        0.255,
-       0.0,
+       0,
        0.29
       ]
      },
@@ -4280,7 +4370,7 @@
       ],
       "origin": [
        0.255,
-       0.0,
+       0,
        0.29
       ]
      },
@@ -4307,7 +4397,7 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        1.186,
        0.29
       ]
@@ -4366,9 +4456,9 @@
       ],
       "transform": {
        "translation": [
-        0.0,
+        0,
         0.025,
-        0.0
+        0
        ]
       }
      },
@@ -4382,12 +4472,12 @@
       "p0": [
        -0.03,
        -0.022,
-       0.0
+       0
       ],
       "p1": [
        -0.45,
        -0.022,
-       0.0
+       0
       ],
       "r0": 0.011,
       "r1": 0.011
@@ -4408,7 +4498,7 @@
        "translation": [
         -0.5,
         0.025,
-        0.0
+        0
        ]
       }
      },
@@ -4422,12 +4512,12 @@
       "p0": [
        0.03,
        -0.022,
-       0.0
+       0
       ],
       "p1": [
        0.45,
        -0.022,
-       0.0
+       0
       ],
       "r0": 0.011,
       "r1": 0.011
@@ -4449,7 +4539,7 @@
        "translation": [
         -0.001,
         0.526,
-        0.0
+        0
        ]
       }
      },
@@ -4470,7 +4560,7 @@
        "translation": [
         -0.1895,
         -0.001,
-        0.0
+        0
        ]
       }
      },
@@ -4491,7 +4581,7 @@
        "translation": [
         0.001,
         0.526,
-        0.0
+        0
        ]
       }
      },
@@ -4512,7 +4602,7 @@
        "translation": [
         0.1895,
         -0.001,
-        0.0
+        0
        ]
       }
      },
@@ -4531,8 +4621,8 @@
       "transform": {
        "translation": [
         0.0135,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      },
@@ -4553,7 +4643,7 @@
        "translation": [
         -0.001,
         0.536,
-        0.0
+        0
        ]
       }
      },
@@ -4574,7 +4664,7 @@
        "translation": [
         -0.1895,
         -0.001,
-        0.0
+        0
        ]
       }
      },
@@ -4595,7 +4685,7 @@
        "translation": [
         0.001,
         0.536,
-        0.0
+        0
        ]
       }
      },
@@ -4616,7 +4706,7 @@
        "translation": [
         0.1895,
         -0.001,
-        0.0
+        0
        ]
       }
      },
@@ -4635,8 +4725,8 @@
       "transform": {
        "translation": [
         0.0135,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      }
@@ -4976,7 +5066,7 @@
       ],
       "origin": [
        0.125,
-       0.0,
+       0,
        -0.2
       ],
       "tags": [
@@ -5191,7 +5281,7 @@
        "translation": [
         0.4,
         0.075,
-        0.0
+        0
        ]
       },
       "member": "pallet",
@@ -5235,7 +5325,7 @@
        "translation": [
         -0.25,
         0.011,
-        0.0
+        0
        ]
       },
       "member": "sling",
@@ -5270,11 +5360,11 @@
       "kind": "extrude",
       "profile": [
        [
-        0.0,
+        0,
         -0.6
        ],
        [
-        0.0,
+        0,
         0.6
        ],
        [
@@ -5331,11 +5421,11 @@
       "kind": "extrude",
       "profile": [
        [
-        0.0,
+        0,
         -0.6
        ],
        [
-        0.0,
+        0,
         0.6
        ],
        [
@@ -5392,11 +5482,11 @@
       "kind": "extrude",
       "profile": [
        [
-        0.0,
+        0,
         -0.6
        ],
        [
-        0.0,
+        0,
         0.6
        ],
        [
@@ -5441,7 +5531,7 @@
        ]
       ],
       "plane": "yz",
-      "from": 0.0,
+      "from": 0,
       "to": 0.1
      },
      {
@@ -5460,7 +5550,7 @@
        "translation": [
         0.4,
         0.122,
-        0.0
+        0
        ]
       }
      },
@@ -5473,7 +5563,7 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
+        0,
         0.02
        ],
        [
@@ -5488,7 +5578,7 @@
       ],
       "origin": [
        0.705,
-       0.0,
+       0,
        -0.45
       ]
      },
@@ -5501,7 +5591,7 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
+        0,
         0.02
        ],
        [
@@ -5516,7 +5606,7 @@
       ],
       "origin": [
        0.705,
-       0.0,
+       0,
        0.45
       ]
      },
@@ -5529,7 +5619,7 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
+        0,
         0.02
        ],
        [
@@ -5544,7 +5634,7 @@
       ],
       "origin": [
        0.045,
-       0.0,
+       0,
        -0.45
       ]
      },
@@ -5557,7 +5647,7 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
+        0,
         0.02
        ],
        [
@@ -5572,7 +5662,7 @@
       ],
       "origin": [
        0.045,
-       0.0,
+       0,
        0.45
       ]
      },
@@ -5592,7 +5682,7 @@
        "translation": [
         0.375,
         0.05,
-        0.0
+        0
        ]
       }
      },
@@ -5732,7 +5822,7 @@
       ],
       "origin": [
        0.125,
-       0.0,
+       0,
        -0.2
       ]
      },
@@ -5779,7 +5869,7 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        0.776,
        -0.08
       ]
@@ -5797,7 +5887,7 @@
         0.02
        ],
        [
-        0.0,
+        0,
         0.02
        ]
       ],
@@ -5807,7 +5897,7 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        0.836,
        -0.36
       ]
@@ -5825,7 +5915,7 @@
         0.02
        ],
        [
-        0.0,
+        0,
         0.02
        ]
       ],
@@ -5835,7 +5925,7 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        0.476,
        -0.36
       ]
@@ -5864,7 +5954,7 @@
       ],
       "origin": [
        0.255,
-       0.0,
+       0,
        0.29
       ]
      },
@@ -5892,7 +5982,7 @@
       ],
       "origin": [
        0.255,
-       0.0,
+       0,
        0.29
       ]
      },
@@ -5919,7 +6009,7 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        1.186,
        0.29
       ]
@@ -5978,9 +6068,9 @@
       ],
       "transform": {
        "translation": [
-        0.0,
+        0,
         0.025,
-        0.0
+        0
        ]
       }
      },
@@ -5995,12 +6085,12 @@
       "p0": [
        -0.03,
        -0.022,
-       0.0
+       0
       ],
       "p1": [
        -0.45,
        -0.022,
-       0.0
+       0
       ],
       "r0": 0.011,
       "r1": 0.011
@@ -6021,7 +6111,7 @@
        "translation": [
         -0.5,
         0.025,
-        0.0
+        0
        ]
       }
      },
@@ -6036,12 +6126,12 @@
       "p0": [
        0.03,
        -0.022,
-       0.0
+       0
       ],
       "p1": [
        0.45,
        -0.022,
-       0.0
+       0
       ],
       "r0": 0.011,
       "r1": 0.011
@@ -6063,7 +6153,7 @@
        "translation": [
         -0.001,
         0.526,
-        0.0
+        0
        ]
       }
      },
@@ -6084,7 +6174,7 @@
        "translation": [
         -0.1895,
         -0.001,
-        0.0
+        0
        ]
       }
      },
@@ -6105,7 +6195,7 @@
        "translation": [
         0.001,
         0.526,
-        0.0
+        0
        ]
       }
      },
@@ -6126,7 +6216,7 @@
        "translation": [
         0.1895,
         -0.001,
-        0.0
+        0
        ]
       }
      },
@@ -6147,7 +6237,7 @@
        "translation": [
         -0.001,
         0.536,
-        0.0
+        0
        ]
       }
      },
@@ -6168,7 +6258,7 @@
        "translation": [
         -0.1895,
         -0.001,
-        0.0
+        0
        ]
       }
      },
@@ -6189,7 +6279,7 @@
        "translation": [
         0.001,
         0.536,
-        0.0
+        0
        ]
       }
      },
@@ -6210,7 +6300,7 @@
        "translation": [
         0.1895,
         -0.001,
-        0.0
+        0
        ]
       }
      }
@@ -6420,7 +6510,7 @@
       ],
       "origin": [
        0.125,
-       0.0,
+       0,
        -0.2
       ],
       "tags": [
@@ -6539,7 +6629,7 @@
        "translation": [
         0.4,
         0.075,
-        0.0
+        0
        ]
       },
       "member": "pallet",
@@ -6583,7 +6673,7 @@
        "translation": [
         -0.25,
         0.011,
-        0.0
+        0
        ]
       },
       "member": "sling",
@@ -6625,7 +6715,7 @@
        "translation": [
         0.4,
         0.072,
-        0.0
+        0
        ]
       }
      },
@@ -6725,7 +6815,7 @@
       ],
       "origin": [
        0.125,
-       0.0,
+       0,
        -0.2
       ]
      },
@@ -6781,7 +6871,7 @@
       ],
       "origin": [
        0.255,
-       0.0,
+       0,
        0.29
       ]
      },
@@ -6796,12 +6886,12 @@
       "p0": [
        -0.03,
        -0.022,
-       0.0
+       0
       ],
       "p1": [
        -0.45,
        -0.022,
-       0.0
+       0
       ],
       "r0": 0.011,
       "r1": 0.011
@@ -6817,12 +6907,12 @@
       "p0": [
        0.03,
        -0.022,
-       0.0
+       0
       ],
       "p1": [
        0.45,
        -0.022,
-       0.0
+       0
       ],
       "r0": 0.011,
       "r1": 0.011
@@ -6898,7 +6988,7 @@
       ],
       "origin": [
        0.125,
-       0.0,
+       0,
        -0.2
       ],
       "tags": [
@@ -6967,7 +7057,7 @@
        "translation": [
         -0.001,
         0.556,
-        0.0
+        0
        ]
       },
       "region": "straps"
@@ -6989,7 +7079,7 @@
        "translation": [
         0.001,
         0.556,
-        0.0
+        0
        ]
       },
       "region": "straps"
@@ -7011,7 +7101,7 @@
        "translation": [
         -0.001,
         0.556,
-        0.0
+        0
        ]
       },
       "region": "straps"
@@ -7033,7 +7123,7 @@
        "translation": [
         0.001,
         0.556,
-        0.0
+        0
        ]
       },
       "region": "straps"
@@ -7086,7 +7176,7 @@
        "translation": [
         0.75,
         0.0375,
-        0.0
+        0
        ]
       },
       "member": "pallet",
@@ -7109,7 +7199,7 @@
        "translation": [
         0.4,
         0.0375,
-        0.0
+        0
        ]
       },
       "member": "pallet",
@@ -7132,7 +7222,7 @@
        "translation": [
         0.05,
         0.0375,
-        0.0
+        0
        ]
       },
       "member": "pallet",
@@ -7155,7 +7245,7 @@
        "translation": [
         0.4,
         0.075,
-        0.0
+        0
        ]
       },
       "member": "pallet",
@@ -7199,7 +7289,7 @@
        "translation": [
         -0.25,
         0.011,
-        0.0
+        0
        ]
       },
       "member": "sling",
@@ -7410,7 +7500,7 @@
        "material": "spruce-weathered",
        "kind": "rect",
        "x": 0.7,
-       "y": 0.0,
+       "y": 0,
        "w": 0.1,
        "h": 0.022,
        "r": 0.002
@@ -7426,7 +7516,7 @@
        "material": "spruce-weathered",
        "kind": "rect",
        "x": 0.3275,
-       "y": 0.0,
+       "y": 0,
        "w": 0.145,
        "h": 0.022,
        "r": 0.002
@@ -7441,8 +7531,8 @@
        "region": "pallet",
        "material": "spruce-weathered",
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.1,
        "h": 0.022,
        "r": 0.002
@@ -7553,7 +7643,7 @@
        "region": "pallet",
        "material": "chipboard-block",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.022,
        "w": 0.1,
        "h": 0.078,
@@ -7569,7 +7659,7 @@
        "region": "pallet",
        "material": "chipboard-block",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.022,
        "w": 0.1,
        "h": 0.078,
@@ -7579,13 +7669,13 @@
        "id": "block-back-2",
        "bone": "pallet",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.42,
        "region": "pallet",
        "material": "chipboard-block",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.022,
        "w": 0.1,
        "h": 0.078,
@@ -7601,7 +7691,7 @@
        "region": "pallet",
        "material": "spruce-weathered",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.1,
        "w": 0.8,
        "h": 0.022,
@@ -7617,7 +7707,7 @@
        "region": "pallet",
        "material": "spruce-weathered",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.1,
        "w": 0.8,
        "h": 0.022,
@@ -7633,7 +7723,7 @@
        "region": "pallet",
        "material": "spruce-weathered",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.1,
        "w": 0.8,
        "h": 0.022,
@@ -7713,7 +7803,7 @@
        "region": "pallet",
        "material": "spruce-weathered",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.122,
        "w": 0.145,
        "h": 0.022,
@@ -7730,7 +7820,7 @@
        "material": "galvanised-steel",
        "kind": "rect",
        "x": 0.685,
-       "y": 0.0,
+       "y": 0,
        "w": 0.04,
        "h": 0.03
       },
@@ -7745,7 +7835,7 @@
        "material": "galvanised-steel",
        "kind": "rect",
        "x": 0.685,
-       "y": 0.0,
+       "y": 0,
        "w": 0.04,
        "h": 0.03
       },
@@ -7760,7 +7850,7 @@
        "material": "galvanised-steel",
        "kind": "rect",
        "x": 0.025,
-       "y": 0.0,
+       "y": 0,
        "w": 0.04,
        "h": 0.03
       },
@@ -7775,7 +7865,7 @@
        "material": "galvanised-steel",
        "kind": "rect",
        "x": 0.025,
-       "y": 0.0,
+       "y": 0,
        "w": 0.04,
        "h": 0.03
       },
@@ -7804,7 +7894,7 @@
        "region": "casing",
        "material": "powder-coat-faded",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.07,
        "w": 0.75,
        "h": 0.98,
@@ -7820,7 +7910,7 @@
        "region": "hopper",
        "material": "powder-coat-faded",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.07,
        "w": 0.75,
        "h": 0.98,
@@ -7836,7 +7926,7 @@
        "region": "hopper",
        "material": "powder-coat-faded",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 1.05,
        "w": 0.75,
        "h": 0.02,
@@ -8205,7 +8295,7 @@
        "material": "alloy-steel",
        "kind": "rect",
        "x": -0.016,
-       "y": 0.0,
+       "y": 0,
        "w": 0.032,
        "h": 0.008
       },
@@ -8249,7 +8339,7 @@
        "material": "alloy-steel",
        "kind": "rect",
        "x": -0.516,
-       "y": 0.0,
+       "y": 0,
        "w": 0.032,
        "h": 0.008
       },
@@ -8293,7 +8383,7 @@
        "material": "polyester-webbing",
        "kind": "rect",
        "x": -0.002,
-       "y": 0.0,
+       "y": 0,
        "w": 0.002,
        "h": 1.052
       },
@@ -8322,8 +8412,8 @@
        "region": "straps",
        "material": "polyester-webbing",
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.002,
        "h": 1.052
       },
@@ -8368,7 +8458,7 @@
        "material": "polyester-webbing",
        "kind": "rect",
        "x": -0.002,
-       "y": 0.0,
+       "y": 0,
        "w": 0.002,
        "h": 1.072
       },
@@ -8397,8 +8487,8 @@
        "region": "straps",
        "material": "polyester-webbing",
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.002,
        "h": 1.072
       },
@@ -8442,7 +8532,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.556
         ],
         [
@@ -8997,7 +9087,7 @@
        "material": "spruce-weathered",
        "kind": "rect",
        "x": -0.6,
-       "y": 0.0,
+       "y": 0,
        "w": 1.2,
        "h": 0.022,
        "r": 0.002
@@ -9013,7 +9103,7 @@
        "material": "spruce-weathered",
        "kind": "rect",
        "x": -0.6,
-       "y": 0.0,
+       "y": 0,
        "w": 1.2,
        "h": 0.022,
        "r": 0.002
@@ -9029,7 +9119,7 @@
        "material": "spruce-weathered",
        "kind": "rect",
        "x": -0.6,
-       "y": 0.0,
+       "y": 0,
        "w": 1.2,
        "h": 0.022,
        "r": 0.002
@@ -9680,7 +9770,7 @@
        "id": "flow-cap",
        "bone": "boiler",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.52,
        "region": "connections",
@@ -9837,11 +9927,21 @@
        "tone": 0.28,
        "region": "sling",
        "material": "alloy-steel",
-       "kind": "ellipse",
-       "cx": -0.085,
-       "cy": 1.205,
-       "rx": 0.011,
-       "ry": 0.011
+       "kind": "member",
+       "from": {
+        "x": -0.019,
+        "y": -0.022,
+        "z": 0
+       },
+       "to": {
+        "x": -0.461,
+        "y": -0.022,
+        "z": 0
+       },
+       "section": {
+        "kind": "circle",
+        "d": 0.022
+       }
       },
       {
        "id": "eye-collar-back",
@@ -9882,11 +9982,21 @@
        "tone": 0.28,
        "region": "sling",
        "material": "alloy-steel",
-       "kind": "ellipse",
-       "cx": -0.115,
-       "cy": 1.205,
-       "rx": 0.011,
-       "ry": 0.011
+       "kind": "member",
+       "from": {
+        "x": 0.019,
+        "y": -0.022,
+        "z": 0
+       },
+       "to": {
+        "x": 0.461,
+        "y": -0.022,
+        "z": 0
+       },
+       "section": {
+        "kind": "circle",
+        "d": 0.022
+       }
       },
       {
        "id": "strap-r-front-leg",
@@ -9898,10 +10008,16 @@
        "region": "straps",
        "material": "polyester-webbing",
        "kind": "rect",
-       "x": -0.5,
-       "y": 0.144,
-       "w": 0.05,
-       "h": 1.052
+       "x": -0.002,
+       "y": 0,
+       "w": 0.002,
+       "h": 1.052,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.5,
+        "z1": -0.45
+       }
       },
       {
        "id": "strap-r-front-top",
@@ -9913,10 +10029,16 @@
        "region": "straps",
        "material": "polyester-webbing",
        "kind": "rect",
-       "x": -0.5,
-       "y": 1.194,
-       "w": 0.05,
-       "h": 0.002
+       "x": -0.377,
+       "y": -0.002,
+       "w": 0.375,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.5,
+        "z1": -0.45
+       }
       },
       {
        "id": "strap-r-back-leg",
@@ -9928,10 +10050,16 @@
        "region": "straps",
        "material": "polyester-webbing",
        "kind": "rect",
-       "x": -0.5,
-       "y": 0.144,
-       "w": 0.05,
-       "h": 1.052
+       "x": 0,
+       "y": 0,
+       "w": 0.002,
+       "h": 1.052,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.5,
+        "z1": -0.45
+       }
       },
       {
        "id": "strap-r-back-top",
@@ -9943,10 +10071,16 @@
        "region": "straps",
        "material": "polyester-webbing",
        "kind": "rect",
-       "x": -0.5,
-       "y": 1.194,
-       "w": 0.05,
-       "h": 0.002
+       "x": 0.002,
+       "y": -0.002,
+       "w": 0.375,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.5,
+        "z1": -0.45
+       }
       },
       {
        "id": "strap-r-ratchet",
@@ -9958,10 +10092,16 @@
        "region": "straps",
        "material": "galvanised-steel",
        "kind": "rect",
-       "x": -0.505,
-       "y": 0.5,
-       "w": 0.06,
-       "h": 0.16
+       "x": 0.001,
+       "y": -0.08,
+       "w": 0.025,
+       "h": 0.16,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.505,
+        "z1": -0.445
+       }
       },
       {
        "id": "strap-l-front-leg",
@@ -9973,10 +10113,16 @@
        "region": "straps",
        "material": "polyester-webbing",
        "kind": "rect",
-       "x": 0.43,
-       "y": 0.144,
-       "w": 0.05,
-       "h": 1.072
+       "x": -0.002,
+       "y": 0,
+       "w": 0.002,
+       "h": 1.072,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.43,
+        "z1": 0.48
+       }
       },
       {
        "id": "strap-l-front-top",
@@ -9988,10 +10134,16 @@
        "region": "straps",
        "material": "polyester-webbing",
        "kind": "rect",
-       "x": 0.43,
-       "y": 1.214,
-       "w": 0.05,
-       "h": 0.002
+       "x": -0.377,
+       "y": -0.002,
+       "w": 0.375,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.43,
+        "z1": 0.48
+       }
       },
       {
        "id": "strap-l-back-leg",
@@ -10003,10 +10155,16 @@
        "region": "straps",
        "material": "polyester-webbing",
        "kind": "rect",
-       "x": 0.43,
-       "y": 0.144,
-       "w": 0.05,
-       "h": 1.072
+       "x": 0,
+       "y": 0,
+       "w": 0.002,
+       "h": 1.072,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.43,
+        "z1": 0.48
+       }
       },
       {
        "id": "strap-l-back-top",
@@ -10018,10 +10176,16 @@
        "region": "straps",
        "material": "polyester-webbing",
        "kind": "rect",
-       "x": 0.43,
-       "y": 1.214,
-       "w": 0.05,
-       "h": 0.002
+       "x": 0.002,
+       "y": -0.002,
+       "w": 0.375,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.43,
+        "z1": 0.48
+       }
       },
       {
        "id": "strap-l-ratchet",
@@ -10033,10 +10197,16 @@
        "region": "straps",
        "material": "galvanised-steel",
        "kind": "rect",
-       "x": 0.425,
-       "y": 0.5,
-       "w": 0.06,
-       "h": 0.16
+       "x": 0.001,
+       "y": -0.08,
+       "w": 0.025,
+       "h": 0.16,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.425,
+        "z1": 0.485
+       }
       },
       {
        "id": "hopper-joint",
@@ -10148,11 +10318,11 @@
          0.76
         ],
         [
-         0.0,
+         0,
          0.76
         ],
         [
-         0.0,
+         0,
          0.82
         ],
         [
@@ -10253,11 +10423,11 @@
        "points": [
         [
          0.15,
-         1.0
+         1
         ],
         [
          0.24,
-         1.0
+         1
         ],
         [
          0.24,
@@ -10274,21 +10444,35 @@
        "id": "strap-stitch-r",
        "bone": "strap-r-front",
        "role": "texture",
-       "z": 2.0,
+       "z": 2,
        "filled": false,
        "tone": 0.3,
        "kind": "poly",
        "points": [
         [
-         -0.495,
-         0.6
+         -0.002,
+         0.455
         ],
         [
-         -0.455,
-         0.6
+         0,
+         0.455
+        ],
+        [
+         0,
+         0.457
+        ],
+        [
+         -0.002,
+         0.457
         ]
        ],
-       "closed": false
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.495,
+        "z1": -0.455
+       }
       },
       {
        "id": "strap-stitch-l",
@@ -10300,15 +10484,29 @@
        "kind": "poly",
        "points": [
         [
-         0.435,
-         0.6
+         -0.002,
+         0.455
         ],
         [
-         0.475,
-         0.6
+         0,
+         0.455
+        ],
+        [
+         0,
+         0.457
+        ],
+        [
+         -0.002,
+         0.457
         ]
        ],
-       "closed": false
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.435,
+        "z1": 0.475
+       }
       }
      ],
      "plan": [
@@ -10348,7 +10546,7 @@
        "id": "bottom-board-back",
        "bone": "pallet",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.5,
        "region": "pallet",
@@ -11133,13 +11331,21 @@
        "tone": 0.28,
        "region": "sling",
        "material": "alloy-steel",
-       "kind": "capsule",
-       "x0": 0.22,
-       "y0": -0.085,
-       "x1": -0.2,
-       "y1": -0.085,
-       "r0": 0.011,
-       "r1": 0.011
+       "kind": "member",
+       "from": {
+        "x": -0.019,
+        "y": -0.022,
+        "z": 0
+       },
+       "to": {
+        "x": -0.461,
+        "y": -0.022,
+        "z": 0
+       },
+       "section": {
+        "kind": "circle",
+        "d": 0.022
+       }
       },
       {
        "id": "eye-collar-back",
@@ -11180,13 +11386,21 @@
        "tone": 0.28,
        "region": "sling",
        "material": "alloy-steel",
-       "kind": "capsule",
-       "x0": -0.22,
-       "y0": -0.115,
-       "x1": 0.2,
-       "y1": -0.115,
-       "r0": 0.011,
-       "r1": 0.011
+       "kind": "member",
+       "from": {
+        "x": 0.019,
+        "y": -0.022,
+        "z": 0
+       },
+       "to": {
+        "x": 0.461,
+        "y": -0.022,
+        "z": 0
+       },
+       "section": {
+        "kind": "circle",
+        "d": 0.022
+       }
       },
       {
        "id": "strap-r-front-leg",
@@ -11198,10 +11412,16 @@
        "region": "straps",
        "material": "polyester-webbing",
        "kind": "rect",
-       "x": 0.375,
-       "y": -0.5,
+       "x": -0.002,
+       "y": 0,
        "w": 0.002,
-       "h": 0.05
+       "h": 1.052,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.5,
+        "z1": -0.45
+       }
       },
       {
        "id": "strap-r-front-top",
@@ -11213,10 +11433,16 @@
        "region": "straps",
        "material": "polyester-webbing",
        "kind": "rect",
-       "x": 0.0,
-       "y": -0.5,
+       "x": -0.377,
+       "y": -0.002,
        "w": 0.375,
-       "h": 0.05
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.5,
+        "z1": -0.45
+       }
       },
       {
        "id": "strap-r-back-leg",
@@ -11228,10 +11454,16 @@
        "region": "straps",
        "material": "polyester-webbing",
        "kind": "rect",
-       "x": -0.377,
-       "y": -0.5,
+       "x": 0,
+       "y": 0,
        "w": 0.002,
-       "h": 0.05
+       "h": 1.052,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.5,
+        "z1": -0.45
+       }
       },
       {
        "id": "strap-r-back-top",
@@ -11243,10 +11475,16 @@
        "region": "straps",
        "material": "polyester-webbing",
        "kind": "rect",
-       "x": -0.375,
-       "y": -0.5,
+       "x": 0.002,
+       "y": -0.002,
        "w": 0.375,
-       "h": 0.05
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.5,
+        "z1": -0.45
+       }
       },
       {
        "id": "strap-r-ratchet",
@@ -11258,10 +11496,16 @@
        "region": "straps",
        "material": "galvanised-steel",
        "kind": "rect",
-       "x": 0.377,
-       "y": -0.505,
+       "x": 0.001,
+       "y": -0.08,
        "w": 0.025,
-       "h": 0.06
+       "h": 0.16,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.505,
+        "z1": -0.445
+       }
       },
       {
        "id": "strap-l-front-leg",
@@ -11273,10 +11517,16 @@
        "region": "straps",
        "material": "polyester-webbing",
        "kind": "rect",
-       "x": 0.375,
-       "y": 0.43,
+       "x": -0.002,
+       "y": 0,
        "w": 0.002,
-       "h": 0.05
+       "h": 1.072,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.43,
+        "z1": 0.48
+       }
       },
       {
        "id": "strap-l-front-top",
@@ -11288,10 +11538,16 @@
        "region": "straps",
        "material": "polyester-webbing",
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.43,
+       "x": -0.377,
+       "y": -0.002,
        "w": 0.375,
-       "h": 0.05
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.43,
+        "z1": 0.48
+       }
       },
       {
        "id": "strap-l-back-leg",
@@ -11303,10 +11559,16 @@
        "region": "straps",
        "material": "polyester-webbing",
        "kind": "rect",
-       "x": -0.377,
-       "y": 0.43,
+       "x": 0,
+       "y": 0,
        "w": 0.002,
-       "h": 0.05
+       "h": 1.072,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.43,
+        "z1": 0.48
+       }
       },
       {
        "id": "strap-l-back-top",
@@ -11318,10 +11580,16 @@
        "region": "straps",
        "material": "polyester-webbing",
        "kind": "rect",
-       "x": -0.375,
-       "y": 0.43,
+       "x": 0.002,
+       "y": -0.002,
        "w": 0.375,
-       "h": 0.05
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.43,
+        "z1": 0.48
+       }
       },
       {
        "id": "strap-l-ratchet",
@@ -11333,10 +11601,16 @@
        "region": "straps",
        "material": "galvanised-steel",
        "kind": "rect",
-       "x": 0.377,
-       "y": 0.425,
+       "x": 0.001,
+       "y": -0.08,
        "w": 0.025,
-       "h": 0.06
+       "h": 0.16,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.425,
+        "z1": 0.485
+       }
       },
       {
        "id": "hopper-joint",
@@ -11632,11 +11906,11 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.53
         ],
         [
-         0.0,
+         0,
          -0.52
         ]
        ],
@@ -11692,15 +11966,29 @@
        "kind": "poly",
        "points": [
         [
-         -0.17,
-         -0.085
+         -0.42,
+         -0.021
         ],
         [
-         0.2,
-         -0.085
+         -0.05,
+         -0.021
+        ],
+        [
+         -0.05,
+         -0.023
+        ],
+        [
+         -0.42,
+         -0.023
         ]
        ],
-       "closed": false
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.086,
+        "z1": -0.084
+       }
       },
       {
        "id": "chain-links-back",
@@ -11712,15 +12000,29 @@
        "kind": "poly",
        "points": [
         [
-         -0.2,
-         -0.115
+         0.05,
+         -0.021
         ],
         [
-         0.17,
-         -0.115
+         0.42,
+         -0.021
+        ],
+        [
+         0.42,
+         -0.023
+        ],
+        [
+         0.05,
+         -0.023
         ]
        ],
-       "closed": false
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.116,
+        "z1": -0.114
+       }
       }
      ]
     },
@@ -11787,7 +12089,7 @@
        "material": "spruce-weathered",
        "kind": "rect",
        "x": 0.7,
-       "y": 0.0,
+       "y": 0,
        "w": 0.1,
        "h": 0.022
       },
@@ -11802,7 +12104,7 @@
        "material": "spruce-weathered",
        "kind": "rect",
        "x": 0.3275,
-       "y": 0.0,
+       "y": 0,
        "w": 0.145,
        "h": 0.022
       },
@@ -11816,8 +12118,8 @@
        "region": "pallet",
        "material": "spruce-weathered",
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.1,
        "h": 0.022
       },
@@ -11921,7 +12223,7 @@
        "region": "pallet",
        "material": "chipboard-block",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.022,
        "w": 0.1,
        "h": 0.078
@@ -11936,7 +12238,7 @@
        "region": "pallet",
        "material": "chipboard-block",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.022,
        "w": 0.1,
        "h": 0.078
@@ -11945,13 +12247,13 @@
        "id": "block-back-2",
        "bone": "pallet",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.42,
        "region": "pallet",
        "material": "chipboard-block",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.022,
        "w": 0.1,
        "h": 0.078
@@ -11966,7 +12268,7 @@
        "region": "pallet",
        "material": "spruce-weathered",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.1,
        "w": 0.8,
        "h": 0.022
@@ -11981,7 +12283,7 @@
        "region": "pallet",
        "material": "spruce-weathered",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.1,
        "w": 0.8,
        "h": 0.022
@@ -11996,7 +12298,7 @@
        "region": "pallet",
        "material": "spruce-weathered",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.1,
        "w": 0.8,
        "h": 0.022
@@ -12071,7 +12373,7 @@
        "region": "pallet",
        "material": "spruce-weathered",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.122,
        "w": 0.145,
        "h": 0.022
@@ -12087,7 +12389,7 @@
        "material": "galvanised-steel",
        "kind": "rect",
        "x": 0.685,
-       "y": 0.0,
+       "y": 0,
        "w": 0.04,
        "h": 0.03
       },
@@ -12102,7 +12404,7 @@
        "material": "galvanised-steel",
        "kind": "rect",
        "x": 0.685,
-       "y": 0.0,
+       "y": 0,
        "w": 0.04,
        "h": 0.03
       },
@@ -12117,7 +12419,7 @@
        "material": "galvanised-steel",
        "kind": "rect",
        "x": 0.025,
-       "y": 0.0,
+       "y": 0,
        "w": 0.04,
        "h": 0.03
       },
@@ -12132,7 +12434,7 @@
        "material": "galvanised-steel",
        "kind": "rect",
        "x": 0.025,
-       "y": 0.0,
+       "y": 0,
        "w": 0.04,
        "h": 0.03
       },
@@ -12161,7 +12463,7 @@
        "region": "casing",
        "material": "powder-coat-faded",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.07,
        "w": 0.75,
        "h": 0.98
@@ -12176,7 +12478,7 @@
        "region": "hopper",
        "material": "powder-coat-faded",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.07,
        "w": 0.75,
        "h": 0.98
@@ -12191,7 +12493,7 @@
        "region": "hopper",
        "material": "powder-coat-faded",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 1.05,
        "w": 0.75,
        "h": 0.02
@@ -12511,7 +12813,7 @@
        "material": "alloy-steel",
        "kind": "rect",
        "x": -0.022,
-       "y": 0.0,
+       "y": 0,
        "w": 0.044,
        "h": 0.05
       },
@@ -12543,7 +12845,7 @@
        "material": "alloy-steel",
        "kind": "rect",
        "x": -0.522,
-       "y": 0.0,
+       "y": 0,
        "w": 0.044,
        "h": 0.05
       },
@@ -12575,7 +12877,7 @@
        "material": "polyester-webbing",
        "kind": "rect",
        "x": -0.002,
-       "y": 0.0,
+       "y": 0,
        "w": 0.002,
        "h": 1.052
       },
@@ -12604,8 +12906,8 @@
        "region": "straps",
        "material": "polyester-webbing",
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.002,
        "h": 1.052
       },
@@ -12650,7 +12952,7 @@
        "material": "polyester-webbing",
        "kind": "rect",
        "x": -0.002,
-       "y": 0.0,
+       "y": 0,
        "w": 0.002,
        "h": 1.072
       },
@@ -12679,8 +12981,8 @@
        "region": "straps",
        "material": "polyester-webbing",
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.002,
        "h": 1.072
       },
@@ -12724,7 +13026,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.556
         ],
         [
@@ -12767,7 +13069,7 @@
        "material": "spruce-weathered",
        "kind": "rect",
        "x": -0.6,
-       "y": 0.0,
+       "y": 0,
        "w": 1.2,
        "h": 0.022
       },
@@ -12782,7 +13084,7 @@
        "material": "spruce-weathered",
        "kind": "rect",
        "x": -0.6,
-       "y": 0.0,
+       "y": 0,
        "w": 1.2,
        "h": 0.022
       },
@@ -12797,7 +13099,7 @@
        "material": "spruce-weathered",
        "kind": "rect",
        "x": -0.6,
-       "y": 0.0,
+       "y": 0,
        "w": 1.2,
        "h": 0.022
       },
@@ -13364,7 +13666,7 @@
        "id": "fan-motor",
        "bone": "boiler",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.5,
        "region": "flue-fan",
@@ -13506,11 +13808,21 @@
        "tone": 0.28,
        "region": "sling",
        "material": "alloy-steel",
-       "kind": "ellipse",
-       "cx": -0.085,
-       "cy": 1.205,
-       "rx": 0.011,
-       "ry": 0.011
+       "kind": "member",
+       "from": {
+        "x": -0.019,
+        "y": -0.022,
+        "z": 0
+       },
+       "to": {
+        "x": -0.461,
+        "y": -0.022,
+        "z": 0
+       },
+       "section": {
+        "kind": "circle",
+        "d": 0.022
+       }
       },
       {
        "id": "eye-back",
@@ -13536,11 +13848,21 @@
        "tone": 0.28,
        "region": "sling",
        "material": "alloy-steel",
-       "kind": "ellipse",
-       "cx": -0.115,
-       "cy": 1.205,
-       "rx": 0.011,
-       "ry": 0.011
+       "kind": "member",
+       "from": {
+        "x": 0.019,
+        "y": -0.022,
+        "z": 0
+       },
+       "to": {
+        "x": 0.461,
+        "y": -0.022,
+        "z": 0
+       },
+       "section": {
+        "kind": "circle",
+        "d": 0.022
+       }
       },
       {
        "id": "strap-r-front-leg",
@@ -13552,10 +13874,16 @@
        "region": "straps",
        "material": "polyester-webbing",
        "kind": "rect",
-       "x": -0.5,
-       "y": 0.144,
-       "w": 0.05,
-       "h": 1.052
+       "x": -0.002,
+       "y": 0,
+       "w": 0.002,
+       "h": 1.052,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.5,
+        "z1": -0.45
+       }
       },
       {
        "id": "strap-r-front-top",
@@ -13567,10 +13895,16 @@
        "region": "straps",
        "material": "polyester-webbing",
        "kind": "rect",
-       "x": -0.5,
-       "y": 1.194,
-       "w": 0.05,
-       "h": 0.002
+       "x": -0.377,
+       "y": -0.002,
+       "w": 0.375,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.5,
+        "z1": -0.45
+       }
       },
       {
        "id": "strap-r-back-leg",
@@ -13582,10 +13916,16 @@
        "region": "straps",
        "material": "polyester-webbing",
        "kind": "rect",
-       "x": -0.5,
-       "y": 0.144,
-       "w": 0.05,
-       "h": 1.052
+       "x": 0,
+       "y": 0,
+       "w": 0.002,
+       "h": 1.052,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.5,
+        "z1": -0.45
+       }
       },
       {
        "id": "strap-r-back-top",
@@ -13597,10 +13937,16 @@
        "region": "straps",
        "material": "polyester-webbing",
        "kind": "rect",
-       "x": -0.5,
-       "y": 1.194,
-       "w": 0.05,
-       "h": 0.002
+       "x": 0.002,
+       "y": -0.002,
+       "w": 0.375,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.5,
+        "z1": -0.45
+       }
       },
       {
        "id": "strap-r-ratchet",
@@ -13612,10 +13958,16 @@
        "region": "straps",
        "material": "galvanised-steel",
        "kind": "rect",
-       "x": -0.505,
-       "y": 0.5,
-       "w": 0.06,
-       "h": 0.16
+       "x": 0.001,
+       "y": -0.08,
+       "w": 0.025,
+       "h": 0.16,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.505,
+        "z1": -0.445
+       }
       },
       {
        "id": "strap-l-front-leg",
@@ -13627,10 +13979,16 @@
        "region": "straps",
        "material": "polyester-webbing",
        "kind": "rect",
-       "x": 0.43,
-       "y": 0.144,
-       "w": 0.05,
-       "h": 1.072
+       "x": -0.002,
+       "y": 0,
+       "w": 0.002,
+       "h": 1.072,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.43,
+        "z1": 0.48
+       }
       },
       {
        "id": "strap-l-front-top",
@@ -13642,10 +14000,16 @@
        "region": "straps",
        "material": "polyester-webbing",
        "kind": "rect",
-       "x": 0.43,
-       "y": 1.214,
-       "w": 0.05,
-       "h": 0.002
+       "x": -0.377,
+       "y": -0.002,
+       "w": 0.375,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.43,
+        "z1": 0.48
+       }
       },
       {
        "id": "strap-l-back-leg",
@@ -13657,10 +14021,16 @@
        "region": "straps",
        "material": "polyester-webbing",
        "kind": "rect",
-       "x": 0.43,
-       "y": 0.144,
-       "w": 0.05,
-       "h": 1.072
+       "x": 0,
+       "y": 0,
+       "w": 0.002,
+       "h": 1.072,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.43,
+        "z1": 0.48
+       }
       },
       {
        "id": "strap-l-back-top",
@@ -13672,10 +14042,16 @@
        "region": "straps",
        "material": "polyester-webbing",
        "kind": "rect",
-       "x": 0.43,
-       "y": 1.214,
-       "w": 0.05,
-       "h": 0.002
+       "x": 0.002,
+       "y": -0.002,
+       "w": 0.375,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.43,
+        "z1": 0.48
+       }
       },
       {
        "id": "strap-l-ratchet",
@@ -13687,10 +14063,16 @@
        "region": "straps",
        "material": "galvanised-steel",
        "kind": "rect",
-       "x": 0.425,
-       "y": 0.5,
-       "w": 0.06,
-       "h": 0.16
+       "x": 0.001,
+       "y": -0.08,
+       "w": 0.025,
+       "h": 0.16,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.425,
+        "z1": 0.485
+       }
       },
       {
        "id": "hopper-joint",
@@ -13824,7 +14206,7 @@
        "id": "bottom-board-back",
        "bone": "pallet",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.5,
        "region": "pallet",
@@ -14540,13 +14922,21 @@
        "tone": 0.28,
        "region": "sling",
        "material": "alloy-steel",
-       "kind": "capsule",
-       "x0": 0.22,
-       "y0": -0.085,
-       "x1": -0.2,
-       "y1": -0.085,
-       "r0": 0.011,
-       "r1": 0.011
+       "kind": "member",
+       "from": {
+        "x": -0.019,
+        "y": -0.022,
+        "z": 0
+       },
+       "to": {
+        "x": -0.461,
+        "y": -0.022,
+        "z": 0
+       },
+       "section": {
+        "kind": "circle",
+        "d": 0.022
+       }
       },
       {
        "id": "eye-back",
@@ -14572,13 +14962,21 @@
        "tone": 0.28,
        "region": "sling",
        "material": "alloy-steel",
-       "kind": "capsule",
-       "x0": -0.22,
-       "y0": -0.115,
-       "x1": 0.2,
-       "y1": -0.115,
-       "r0": 0.011,
-       "r1": 0.011
+       "kind": "member",
+       "from": {
+        "x": 0.019,
+        "y": -0.022,
+        "z": 0
+       },
+       "to": {
+        "x": 0.461,
+        "y": -0.022,
+        "z": 0
+       },
+       "section": {
+        "kind": "circle",
+        "d": 0.022
+       }
       },
       {
        "id": "strap-r-front-leg",
@@ -14590,10 +14988,16 @@
        "region": "straps",
        "material": "polyester-webbing",
        "kind": "rect",
-       "x": 0.375,
-       "y": -0.5,
+       "x": -0.002,
+       "y": 0,
        "w": 0.002,
-       "h": 0.05
+       "h": 1.052,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.5,
+        "z1": -0.45
+       }
       },
       {
        "id": "strap-r-front-top",
@@ -14605,10 +15009,16 @@
        "region": "straps",
        "material": "polyester-webbing",
        "kind": "rect",
-       "x": 0.0,
-       "y": -0.5,
+       "x": -0.377,
+       "y": -0.002,
        "w": 0.375,
-       "h": 0.05
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.5,
+        "z1": -0.45
+       }
       },
       {
        "id": "strap-r-back-leg",
@@ -14620,10 +15030,16 @@
        "region": "straps",
        "material": "polyester-webbing",
        "kind": "rect",
-       "x": -0.377,
-       "y": -0.5,
+       "x": 0,
+       "y": 0,
        "w": 0.002,
-       "h": 0.05
+       "h": 1.052,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.5,
+        "z1": -0.45
+       }
       },
       {
        "id": "strap-r-back-top",
@@ -14635,10 +15051,16 @@
        "region": "straps",
        "material": "polyester-webbing",
        "kind": "rect",
-       "x": -0.375,
-       "y": -0.5,
+       "x": 0.002,
+       "y": -0.002,
        "w": 0.375,
-       "h": 0.05
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.5,
+        "z1": -0.45
+       }
       },
       {
        "id": "strap-r-ratchet",
@@ -14650,10 +15072,16 @@
        "region": "straps",
        "material": "galvanised-steel",
        "kind": "rect",
-       "x": 0.377,
-       "y": -0.505,
+       "x": 0.001,
+       "y": -0.08,
        "w": 0.025,
-       "h": 0.06
+       "h": 0.16,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.505,
+        "z1": -0.445
+       }
       },
       {
        "id": "strap-l-front-leg",
@@ -14665,10 +15093,16 @@
        "region": "straps",
        "material": "polyester-webbing",
        "kind": "rect",
-       "x": 0.375,
-       "y": 0.43,
+       "x": -0.002,
+       "y": 0,
        "w": 0.002,
-       "h": 0.05
+       "h": 1.072,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.43,
+        "z1": 0.48
+       }
       },
       {
        "id": "strap-l-front-top",
@@ -14680,10 +15114,16 @@
        "region": "straps",
        "material": "polyester-webbing",
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.43,
+       "x": -0.377,
+       "y": -0.002,
        "w": 0.375,
-       "h": 0.05
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.43,
+        "z1": 0.48
+       }
       },
       {
        "id": "strap-l-back-leg",
@@ -14695,10 +15135,16 @@
        "region": "straps",
        "material": "polyester-webbing",
        "kind": "rect",
-       "x": -0.377,
-       "y": 0.43,
+       "x": 0,
+       "y": 0,
        "w": 0.002,
-       "h": 0.05
+       "h": 1.072,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.43,
+        "z1": 0.48
+       }
       },
       {
        "id": "strap-l-back-top",
@@ -14710,10 +15156,16 @@
        "region": "straps",
        "material": "polyester-webbing",
        "kind": "rect",
-       "x": -0.375,
-       "y": 0.43,
+       "x": 0.002,
+       "y": -0.002,
        "w": 0.375,
-       "h": 0.05
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.43,
+        "z1": 0.48
+       }
       },
       {
        "id": "strap-l-ratchet",
@@ -14725,10 +15177,16 @@
        "region": "straps",
        "material": "galvanised-steel",
        "kind": "rect",
-       "x": 0.377,
-       "y": 0.425,
+       "x": 0.001,
+       "y": -0.08,
        "w": 0.025,
-       "h": 0.06
+       "h": 0.16,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.425,
+        "z1": 0.485
+       }
       },
       {
        "id": "hopper-joint",
@@ -14835,7 +15293,7 @@
        "material": "spruce-weathered",
        "kind": "rect",
        "x": 0.7,
-       "y": 0.0,
+       "y": 0,
        "w": 0.1,
        "h": 0.1
       },
@@ -14850,7 +15308,7 @@
        "material": "spruce-weathered",
        "kind": "rect",
        "x": 0.3275,
-       "y": 0.0,
+       "y": 0,
        "w": 0.145,
        "h": 0.1
       },
@@ -14864,8 +15322,8 @@
        "region": "pallet",
        "material": "spruce-weathered",
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.1,
        "h": 0.1
       },
@@ -14879,7 +15337,7 @@
        "region": "pallet",
        "material": "spruce-weathered",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.1,
        "w": 0.8,
        "h": 0.044
@@ -14895,7 +15353,7 @@
        "material": "galvanised-steel",
        "kind": "rect",
        "x": 0.685,
-       "y": 0.0,
+       "y": 0,
        "w": 0.04,
        "h": 0.03
       },
@@ -14903,14 +15361,14 @@
        "id": "foot-1",
        "bone": "boiler",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.3,
        "region": "casing",
        "material": "galvanised-steel",
        "kind": "rect",
        "x": 0.685,
-       "y": 0.0,
+       "y": 0,
        "w": 0.04,
        "h": 0.03
       },
@@ -14925,7 +15383,7 @@
        "material": "galvanised-steel",
        "kind": "rect",
        "x": 0.025,
-       "y": 0.0,
+       "y": 0,
        "w": 0.04,
        "h": 0.03
       },
@@ -14940,7 +15398,7 @@
        "material": "galvanised-steel",
        "kind": "rect",
        "x": 0.025,
-       "y": 0.0,
+       "y": 0,
        "w": 0.04,
        "h": 0.03
       },
@@ -14969,7 +15427,7 @@
        "region": "casing",
        "material": "powder-coat-faded",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.07,
        "w": 0.75,
        "h": 0.98
@@ -14984,7 +15442,7 @@
        "region": "hopper",
        "material": "powder-coat-faded",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.07,
        "w": 0.75,
        "h": 0.98
@@ -14999,7 +15457,7 @@
        "region": "hopper",
        "material": "powder-coat-faded",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 1.05,
        "w": 0.75,
        "h": 0.02
@@ -15199,7 +15657,7 @@
        "material": "alloy-steel",
        "kind": "rect",
        "x": -0.022,
-       "y": 0.0,
+       "y": 0,
        "w": 0.044,
        "h": 0.05
       },
@@ -15231,7 +15689,7 @@
        "material": "alloy-steel",
        "kind": "rect",
        "x": -0.522,
-       "y": 0.0,
+       "y": 0,
        "w": 0.044,
        "h": 0.05
       },
@@ -15263,7 +15721,7 @@
        "material": "polyester-webbing",
        "kind": "rect",
        "x": -0.002,
-       "y": 0.0,
+       "y": 0,
        "w": 0.002,
        "h": 1.052
       },
@@ -15292,8 +15750,8 @@
        "region": "straps",
        "material": "polyester-webbing",
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.002,
        "h": 1.052
       },
@@ -15323,7 +15781,7 @@
        "material": "polyester-webbing",
        "kind": "rect",
        "x": -0.002,
-       "y": 0.0,
+       "y": 0,
        "w": 0.002,
        "h": 1.072
       },
@@ -15352,8 +15810,8 @@
        "region": "straps",
        "material": "polyester-webbing",
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.002,
        "h": 1.072
       },
@@ -15382,7 +15840,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.556
         ],
         [
@@ -15407,11 +15865,11 @@
        "points": [
         [
          -0.6,
-         0.0
+         0
         ],
         [
          0.6,
-         0.0
+         0
         ],
         [
          0.6,
@@ -15469,11 +15927,11 @@
        "points": [
         [
          -0.6,
-         0.0
+         0
         ],
         [
          0.6,
-         0.0
+         0
         ],
         [
          0.6,
@@ -15531,11 +15989,11 @@
        "points": [
         [
          -0.6,
-         0.0
+         0
         ],
         [
          0.6,
-         0.0
+         0
         ],
         [
          0.6,
@@ -15779,7 +16237,7 @@
        "id": "fan-motor",
        "bone": "boiler",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.5,
        "region": "flue-fan",
@@ -15921,11 +16379,21 @@
        "tone": 0.28,
        "region": "sling",
        "material": "alloy-steel",
-       "kind": "ellipse",
-       "cx": -0.085,
-       "cy": 1.205,
-       "rx": 0.011,
-       "ry": 0.011
+       "kind": "member",
+       "from": {
+        "x": -0.019,
+        "y": -0.022,
+        "z": 0
+       },
+       "to": {
+        "x": -0.461,
+        "y": -0.022,
+        "z": 0
+       },
+       "section": {
+        "kind": "circle",
+        "d": 0.022
+       }
       },
       {
        "id": "eye-back",
@@ -15951,11 +16419,21 @@
        "tone": 0.28,
        "region": "sling",
        "material": "alloy-steel",
-       "kind": "ellipse",
-       "cx": -0.115,
-       "cy": 1.205,
-       "rx": 0.011,
-       "ry": 0.011
+       "kind": "member",
+       "from": {
+        "x": 0.019,
+        "y": -0.022,
+        "z": 0
+       },
+       "to": {
+        "x": 0.461,
+        "y": -0.022,
+        "z": 0
+       },
+       "section": {
+        "kind": "circle",
+        "d": 0.022
+       }
       },
       {
        "id": "strap-r-front-leg",
@@ -15967,10 +16445,16 @@
        "region": "straps",
        "material": "polyester-webbing",
        "kind": "rect",
-       "x": -0.5,
-       "y": 0.144,
-       "w": 0.05,
-       "h": 1.052
+       "x": -0.002,
+       "y": 0,
+       "w": 0.002,
+       "h": 1.052,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.5,
+        "z1": -0.45
+       }
       },
       {
        "id": "strap-r-front-top",
@@ -15982,10 +16466,16 @@
        "region": "straps",
        "material": "polyester-webbing",
        "kind": "rect",
-       "x": -0.5,
-       "y": 1.194,
-       "w": 0.05,
-       "h": 0.002
+       "x": -0.377,
+       "y": -0.002,
+       "w": 0.375,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.5,
+        "z1": -0.45
+       }
       },
       {
        "id": "strap-r-back-leg",
@@ -15997,10 +16487,16 @@
        "region": "straps",
        "material": "polyester-webbing",
        "kind": "rect",
-       "x": -0.5,
-       "y": 0.144,
-       "w": 0.05,
-       "h": 1.052
+       "x": 0,
+       "y": 0,
+       "w": 0.002,
+       "h": 1.052,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.5,
+        "z1": -0.45
+       }
       },
       {
        "id": "strap-r-back-top",
@@ -16012,10 +16508,16 @@
        "region": "straps",
        "material": "polyester-webbing",
        "kind": "rect",
-       "x": -0.5,
-       "y": 1.194,
-       "w": 0.05,
-       "h": 0.002
+       "x": 0.002,
+       "y": -0.002,
+       "w": 0.375,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.5,
+        "z1": -0.45
+       }
       },
       {
        "id": "strap-l-front-leg",
@@ -16027,10 +16529,16 @@
        "region": "straps",
        "material": "polyester-webbing",
        "kind": "rect",
-       "x": 0.43,
-       "y": 0.144,
-       "w": 0.05,
-       "h": 1.072
+       "x": -0.002,
+       "y": 0,
+       "w": 0.002,
+       "h": 1.072,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.43,
+        "z1": 0.48
+       }
       },
       {
        "id": "strap-l-front-top",
@@ -16042,10 +16550,16 @@
        "region": "straps",
        "material": "polyester-webbing",
        "kind": "rect",
-       "x": 0.43,
-       "y": 1.214,
-       "w": 0.05,
-       "h": 0.002
+       "x": -0.377,
+       "y": -0.002,
+       "w": 0.375,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.43,
+        "z1": 0.48
+       }
       },
       {
        "id": "strap-l-back-leg",
@@ -16057,10 +16571,16 @@
        "region": "straps",
        "material": "polyester-webbing",
        "kind": "rect",
-       "x": 0.43,
-       "y": 0.144,
-       "w": 0.05,
-       "h": 1.072
+       "x": 0,
+       "y": 0,
+       "w": 0.002,
+       "h": 1.072,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.43,
+        "z1": 0.48
+       }
       },
       {
        "id": "strap-l-back-top",
@@ -16072,10 +16592,16 @@
        "region": "straps",
        "material": "polyester-webbing",
        "kind": "rect",
-       "x": 0.43,
-       "y": 1.214,
-       "w": 0.05,
-       "h": 0.002
+       "x": 0.002,
+       "y": -0.002,
+       "w": 0.375,
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.43,
+        "z1": 0.48
+       }
       },
       {
        "id": "hopper-joint",
@@ -16153,7 +16679,7 @@
        "id": "runner-back",
        "bone": "pallet",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.46,
        "region": "pallet",
@@ -16505,13 +17031,21 @@
        "tone": 0.28,
        "region": "sling",
        "material": "alloy-steel",
-       "kind": "capsule",
-       "x0": 0.22,
-       "y0": -0.085,
-       "x1": -0.2,
-       "y1": -0.085,
-       "r0": 0.011,
-       "r1": 0.011
+       "kind": "member",
+       "from": {
+        "x": -0.019,
+        "y": -0.022,
+        "z": 0
+       },
+       "to": {
+        "x": -0.461,
+        "y": -0.022,
+        "z": 0
+       },
+       "section": {
+        "kind": "circle",
+        "d": 0.022
+       }
       },
       {
        "id": "eye-back",
@@ -16537,13 +17071,21 @@
        "tone": 0.28,
        "region": "sling",
        "material": "alloy-steel",
-       "kind": "capsule",
-       "x0": -0.22,
-       "y0": -0.115,
-       "x1": 0.2,
-       "y1": -0.115,
-       "r0": 0.011,
-       "r1": 0.011
+       "kind": "member",
+       "from": {
+        "x": 0.019,
+        "y": -0.022,
+        "z": 0
+       },
+       "to": {
+        "x": 0.461,
+        "y": -0.022,
+        "z": 0
+       },
+       "section": {
+        "kind": "circle",
+        "d": 0.022
+       }
       },
       {
        "id": "strap-r-front-leg",
@@ -16555,10 +17097,16 @@
        "region": "straps",
        "material": "polyester-webbing",
        "kind": "rect",
-       "x": 0.375,
-       "y": -0.5,
+       "x": -0.002,
+       "y": 0,
        "w": 0.002,
-       "h": 0.05
+       "h": 1.052,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.5,
+        "z1": -0.45
+       }
       },
       {
        "id": "strap-r-front-top",
@@ -16570,10 +17118,16 @@
        "region": "straps",
        "material": "polyester-webbing",
        "kind": "rect",
-       "x": 0.0,
-       "y": -0.5,
+       "x": -0.377,
+       "y": -0.002,
        "w": 0.375,
-       "h": 0.05
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.5,
+        "z1": -0.45
+       }
       },
       {
        "id": "strap-r-back-leg",
@@ -16585,10 +17139,16 @@
        "region": "straps",
        "material": "polyester-webbing",
        "kind": "rect",
-       "x": -0.377,
-       "y": -0.5,
+       "x": 0,
+       "y": 0,
        "w": 0.002,
-       "h": 0.05
+       "h": 1.052,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.5,
+        "z1": -0.45
+       }
       },
       {
        "id": "strap-r-back-top",
@@ -16600,10 +17160,16 @@
        "region": "straps",
        "material": "polyester-webbing",
        "kind": "rect",
-       "x": -0.375,
-       "y": -0.5,
+       "x": 0.002,
+       "y": -0.002,
        "w": 0.375,
-       "h": 0.05
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.5,
+        "z1": -0.45
+       }
       },
       {
        "id": "strap-l-front-leg",
@@ -16615,10 +17181,16 @@
        "region": "straps",
        "material": "polyester-webbing",
        "kind": "rect",
-       "x": 0.375,
-       "y": 0.43,
+       "x": -0.002,
+       "y": 0,
        "w": 0.002,
-       "h": 0.05
+       "h": 1.072,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.43,
+        "z1": 0.48
+       }
       },
       {
        "id": "strap-l-front-top",
@@ -16630,10 +17202,16 @@
        "region": "straps",
        "material": "polyester-webbing",
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.43,
+       "x": -0.377,
+       "y": -0.002,
        "w": 0.375,
-       "h": 0.05
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.43,
+        "z1": 0.48
+       }
       },
       {
        "id": "strap-l-back-leg",
@@ -16645,10 +17223,16 @@
        "region": "straps",
        "material": "polyester-webbing",
        "kind": "rect",
-       "x": -0.377,
-       "y": 0.43,
+       "x": 0,
+       "y": 0,
        "w": 0.002,
-       "h": 0.05
+       "h": 1.072,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.43,
+        "z1": 0.48
+       }
       },
       {
        "id": "strap-l-back-top",
@@ -16660,10 +17244,16 @@
        "region": "straps",
        "material": "polyester-webbing",
        "kind": "rect",
-       "x": -0.375,
-       "y": 0.43,
+       "x": 0.002,
+       "y": -0.002,
        "w": 0.375,
-       "h": 0.05
+       "h": 0.002,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.43,
+        "z1": 0.48
+       }
       },
       {
        "id": "hopper-joint",
@@ -16752,8 +17342,8 @@
        ],
        "material": "spruce-weathered",
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.8,
        "h": 0.144
       },
@@ -16770,8 +17360,8 @@
        ],
        "material": "powder-coat-faded",
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.75,
        "h": 1.05
       },
@@ -16788,8 +17378,8 @@
        ],
        "material": "powder-coat-faded",
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.75,
        "h": 1.07
       },
@@ -16842,7 +17432,7 @@
        "id": "suction-unit",
        "bone": "boiler",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.7,
        "regions": [
@@ -16941,7 +17531,7 @@
        "material": "spruce-weathered",
        "kind": "rect",
        "x": -0.6,
-       "y": 0.0,
+       "y": 0,
        "w": 1.2,
        "h": 0.144
       },
@@ -17015,7 +17605,7 @@
        "id": "fan-unit",
        "bone": "boiler",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.44,
        "region": "flue-fan",
@@ -17086,11 +17676,21 @@
         "sling"
        ],
        "material": "alloy-steel",
-       "kind": "ellipse",
-       "cx": -0.085,
-       "cy": 1.205,
-       "rx": 0.011,
-       "ry": 0.011
+       "kind": "member",
+       "from": {
+        "x": -0.019,
+        "y": -0.022,
+        "z": 0
+       },
+       "to": {
+        "x": -0.461,
+        "y": -0.022,
+        "z": 0
+       },
+       "section": {
+        "kind": "circle",
+        "d": 0.022
+       }
       },
       {
        "id": "chain-back",
@@ -17103,11 +17703,21 @@
         "sling"
        ],
        "material": "alloy-steel",
-       "kind": "ellipse",
-       "cx": -0.115,
-       "cy": 1.205,
-       "rx": 0.011,
-       "ry": 0.011
+       "kind": "member",
+       "from": {
+        "x": 0.019,
+        "y": -0.022,
+        "z": 0
+       },
+       "to": {
+        "x": 0.461,
+        "y": -0.022,
+        "z": 0
+       },
+       "section": {
+        "kind": "circle",
+        "d": 0.022
+       }
       }
      ],
      "plan": [
@@ -17115,7 +17725,7 @@
        "id": "pallet",
        "bone": "pallet",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.55,
        "regions": [
@@ -17239,13 +17849,21 @@
         "sling"
        ],
        "material": "alloy-steel",
-       "kind": "capsule",
-       "x0": 0.22,
-       "y0": -0.085,
-       "x1": -0.2,
-       "y1": -0.085,
-       "r0": 0.011,
-       "r1": 0.011
+       "kind": "member",
+       "from": {
+        "x": -0.019,
+        "y": -0.022,
+        "z": 0
+       },
+       "to": {
+        "x": -0.461,
+        "y": -0.022,
+        "z": 0
+       },
+       "section": {
+        "kind": "circle",
+        "d": 0.022
+       }
       },
       {
        "id": "chain-back",
@@ -17258,13 +17876,21 @@
         "sling"
        ],
        "material": "alloy-steel",
-       "kind": "capsule",
-       "x0": -0.22,
-       "y0": -0.115,
-       "x1": 0.2,
-       "y1": -0.115,
-       "r0": 0.011,
-       "r1": 0.011
+       "kind": "member",
+       "from": {
+        "x": 0.019,
+        "y": -0.022,
+        "z": 0
+       },
+       "to": {
+        "x": 0.461,
+        "y": -0.022,
+        "z": 0
+       },
+       "section": {
+        "kind": "circle",
+        "d": 0.022
+       }
       }
      ]
     },
@@ -18475,7 +19101,7 @@
      "model": "operating",
      "material": "powder-coat-faded",
      "areaM2": 4.292,
-     "characteristicLengthM": 1.0,
+     "characteristicLengthM": 1,
      "geometry": "vertical-plate",
      "skyViewFactor": 0.4,
      "layers": [
@@ -18488,7 +19114,7 @@
        "kind": "insulation",
        "material": "mineral-wool",
        "thicknessM": 0.04,
-       "resistanceM2KW": 1.0,
+       "resistanceM2KW": 1,
        "heatCapacityJM2K": 2500,
        "source": "literature",
        "reference": "iso-10456-2007"
@@ -18502,7 +19128,7 @@
        "kind": "metal",
        "material": "powder-coat-faded",
        "thicknessM": 0.001,
-       "resistanceM2KW": 2e-05,
+       "resistanceM2KW": 0.00002,
        "heatCapacityJM2K": 3600,
        "source": "authored-estimate",
        "reference": "incropera-2018"
@@ -18528,7 +19154,7 @@
      "model": "passive",
      "material": "powder-coat-faded",
      "areaM2": 2.875,
-     "characteristicLengthM": 1.0,
+     "characteristicLengthM": 1,
      "geometry": "vertical-plate",
      "skyViewFactor": 0.4,
      "layers": [
@@ -18541,7 +19167,7 @@
        "kind": "metal",
        "material": "powder-coat-faded",
        "thicknessM": 0.001,
-       "resistanceM2KW": 2e-05,
+       "resistanceM2KW": 0.00002,
        "heatCapacityJM2K": 3600,
        "source": "authored-estimate",
        "reference": "incropera-2018"
@@ -18611,7 +19237,7 @@
        "kind": "metal",
        "material": "steel-sooted",
        "thicknessM": 0.0025,
-       "resistanceM2KW": 5e-05,
+       "resistanceM2KW": 0.00005,
        "heatCapacityJM2K": 9000,
        "source": "authored-estimate",
        "reference": "iso-10456-2007"
@@ -18648,7 +19274,7 @@
        "kind": "metal",
        "material": "cast-aluminium",
        "thicknessM": 0.004,
-       "resistanceM2KW": 3e-05,
+       "resistanceM2KW": 0.00003,
        "heatCapacityJM2K": 9700,
        "source": "authored-estimate",
        "reference": "iso-10456-2007"
@@ -18687,7 +19313,7 @@
        "kind": "metal",
        "material": "steel-rusty",
        "thicknessM": 0.0032,
-       "resistanceM2KW": 6e-05,
+       "resistanceM2KW": 0.00006,
        "heatCapacityJM2K": 11500,
        "source": "authored-estimate",
        "reference": "iso-10456-2007"
@@ -18739,7 +19365,7 @@
        "kind": "metal",
        "material": "powder-coat-faded",
        "thicknessM": 0.001,
-       "resistanceM2KW": 2e-05,
+       "resistanceM2KW": 0.00002,
        "heatCapacityJM2K": 3600,
        "source": "authored-estimate",
        "reference": "incropera-2018"

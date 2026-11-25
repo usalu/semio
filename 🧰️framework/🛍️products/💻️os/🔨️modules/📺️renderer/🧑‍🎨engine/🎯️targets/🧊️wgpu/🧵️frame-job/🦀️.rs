@@ -190,20 +190,6 @@ fn run_frame_owner_turn(cx: &mut StepContext<'_>, advance: impl FnOnce(&mut Step
     Some(step)
 }
 
-/// 🧾️ A worker turn receipt excludes the return span its outcome reserved on the caller, so the caller's already posted total is the receipt plus that reserved delta.
-fn posted_receipt(before: RetainedCloneProgress, receipt: RetainedCloneProgress, held_before: RetainedCloneProgress, cx: &StepContext<'_>) -> bool {
-    let held_after = cx.reserved_return_progress();
-    let delta = |after: usize, before: usize| after.checked_sub(before);
-    let (Some(copied_items), Some(copied_bytes), Some(retained_capacity_bytes), Some(released_bytes)) = (
-        delta(held_after.copied_items, held_before.copied_items),
-        delta(held_after.copied_bytes, held_before.copied_bytes),
-        delta(held_after.retained_capacity_bytes, held_before.retained_capacity_bytes),
-        delta(held_after.released_bytes, held_before.released_bytes),
-    ) else { return false };
-    let reserved = RetainedCloneProgress { copied_items, copied_bytes, retained_capacity_bytes, released_bytes };
-    before.checked_add(receipt).and_then(|total| total.checked_add(reserved)).is_ok_and(|total| total == cx.retained_progress())
-}
-
 fn return_worker_cancel_alias(
     cx: &mut StepContext<'_>,
     return_alias: impl FnOnce(&CancelToken, &mut RetainedAllocationEffect<'_>) -> RetainedWorkOutcome<Option<RetainedCloneStep>, WorkerJobDemandError>,
@@ -364,9 +350,8 @@ impl ActiveFrameBuild {
     /// "applied within the next frame" true for `DispatchEvents` and `Resize` alike.
     ///
     /// 🌀️ Superseded inputs end THIS build with no frame and no fault; the caller's next
-    /// opportunity admits a fresh one against the current witness. The transaction is
-    /// DROPPED here rather than closed after its exact external input witness is
-    /// returned. Every action its authorities take belongs to `AppRuntime::frame_actions`
+    /// opportunity admits a fresh one against the current witness after the transaction's
+    /// retained children are closed. Every action its authorities take belongs to `AppRuntime::frame_actions`
     /// (`🧊️renderer/🦀️.rs`), which outlives every candidate.
     ///
     /// 🩺️ A refused preparation is the ONE terminal this build cannot explain by itself.
@@ -396,7 +381,7 @@ impl ActiveFrameBuild {
                 ActiveFramePhase::ApplyPending(directives) => std::mem::take(directives),
                 _ => return ActiveFrameStep::Pending,
             };
-            self.phase = ActiveFramePhase::Build(semio_renderer_wgpu_frame_transaction::FrameTransaction::new(directives, self.operation, self.presentation_generation, self.retained));
+            self.phase = ActiveFramePhase::Build(semio_renderer_wgpu_frame_transaction::FrameTransaction::new(directives, self.operation, self.presentation_generation, self.retained).with_business_generation(self.generation));
             return ActiveFrameStep::Pending;
         }
         match &mut self.phase {
@@ -453,7 +438,7 @@ impl ActiveFrameBuild {
                     let Some((issued,progress))=session.take_checked_out_retained_step_receipt()else{return ActiveFrameStep::Fault(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original deadline worker omitted its checked-out physical receipt"))};
                     self.deadline_receipt_received=true;
                     let after=cx.retained_progress();
-                    let posted=posted_receipt(before,progress,held_before,cx);
+                    let posted=semio_renderer_wgpu_app_runtime::posted_receipt(before,progress,held_before,cx);
                     if issued!=expected||!progress.fits(issued)||!posted{self.deadline_refused_receipt=Some((issued,progress));return ActiveFrameStep::Fault(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original deadline worker tuple differs from its already posted original caller receipt"))}
                     return ActiveFrameStep::Pending;
                 }
@@ -476,14 +461,14 @@ impl ActiveFrameBuild {
                 if self.overruns.admit(&watchdog.finish()).is_terminal() {
                     if let semio_renderer_wgpu_frame_transaction::AppFrameTransactionStep::Complete(frame) = transaction_step {
                         let preparation = frame.into_preparation();
-                        self.phase = ActiveFramePhase::Prepare(preparation);
+                        self.retiring_phase = Some(std::mem::replace(&mut self.phase, ActiveFramePhase::Prepare(preparation)));
                     }
                     self.quarantine_overrun("os_renderer.frame.transaction overran the interactive ceiling");
                     return ActiveFrameStep::Pending;
                 }
                 match transaction_step {
                     semio_renderer_wgpu_frame_transaction::AppFrameTransactionStep::Complete(frame) => {
-                        self.phase = ActiveFramePhase::Prepare(frame.into_preparation());
+                        self.retiring_phase = Some(std::mem::replace(&mut self.phase, ActiveFramePhase::Prepare(frame.into_preparation())));
                         ActiveFrameStep::Pending
                     }
                     semio_renderer_wgpu_frame_transaction::AppFrameTransactionStep::Pending => ActiveFrameStep::Pending,
@@ -492,8 +477,8 @@ impl ActiveFrameBuild {
                         if !transaction.discard_presented_input_candidate(&self.runtime) {
                             return ActiveFrameStep::Pending;
                         }
-                        self.phase = ActiveFramePhase::Terminal;
-                        ActiveFrameStep::Complete(None)
+                        self.retiring_phase = Some(std::mem::replace(&mut self.phase, ActiveFramePhase::Terminal));
+                        ActiveFrameStep::Pending
                     }
                     semio_renderer_wgpu_frame_transaction::AppFrameTransactionStep::Fault => {
                         self.cancel.as_ref().unwrap().cancel_now();
@@ -610,13 +595,28 @@ impl InteractiveJob for ActiveFrameBuild {
     }
 }
 
+/// ⏱️ Upper bound of acknowledged, resumed and re-stepped units one host turn may run beyond its time slice check.
+const FRAME_UNITS_PER_TURN: usize = 256;
+
 fn generation_is_fresh(requested: Generation, completed: Generation) -> bool {
     requested == completed
 }
 
 impl FrameBuildHandle {
     /// 🎟️ Admits and advances the existing frame owner with the initiating business authority.
+    ///
+    /// ⏱️ A yield is acknowledged, resumed and stepped again inside the same turn for as long as the caller's own budget allows and each unit still spends it, so a build is not throttled to one unit per host tick.
     pub fn poll_runtime_on_original_caller(&mut self,runtime:semio_renderer_wgpu_app_runtime::AppMailbox,inputs:FrameBuildInputs,presentation_generation:Generation,cx:&mut StepContext<'_>)->Result<Option<semio_renderer_wgpu_app_runtime::AppFramePresentation>,OriginalTurnFailure>{
+        let slice_end_us=cx.now_us().map(|now|now.saturating_add(semio_framework_job::INTERACTIVE_STEP_CEILING_US/2));
+        for _ in 0..FRAME_UNITS_PER_TURN{
+            let spent=(cx.retained_progress(),cx.fuel_remaining());
+            let frame=self.poll_runtime_unit(&runtime,&inputs,presentation_generation,cx)?;
+            if frame.is_some()||cx.should_yield()||!self.has_live_session()||spent==(cx.retained_progress(),cx.fuel_remaining())||slice_end_us.is_none_or(|end|cx.now_us().is_none_or(|now|now>=end)){return Ok(frame)}
+        }
+        Ok(None)
+    }
+
+    fn poll_runtime_unit(&mut self,runtime:&semio_renderer_wgpu_app_runtime::AppMailbox,inputs:&FrameBuildInputs,presentation_generation:Generation,cx:&mut StepContext<'_>)->Result<Option<semio_renderer_wgpu_app_runtime::AppFramePresentation>,OriginalTurnFailure>{
         if cx.should_yield(){return Ok(None)}
         if self.original_refused_receipt.is_some(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original frame receiver retains its refused physical tuple").into())}
         if self.original_presentation_generation.is_some_and(|original|original!=presentation_generation){if let Some(session)=self.session.as_ref(){let _=session.begin_close();}else{return Ok(None)}}
@@ -636,7 +636,7 @@ impl FrameBuildHandle {
                     let mut owner=if poll==semio_framework_job_worker::WorkerJobPoll::Terminal{session.take_terminal()}else{session.take_outcome(ticket)}.map_err(|_|semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original frame callback lost its retained outcome"))?;
                     let tuple=owner.take_retained_step_receipt();self.original_outcome_kind=owner.outcome_descriptor().map(JobOutcomeDescriptor::kind);self.ticket=Some(ticket);self.original_outcome=Some(owner);
                     let Some((issued,progress))=tuple else{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original frame callback omitted its physical receipt").into())};
-                    if issued!=expected||!progress.fits(issued)||!posted_receipt(before,progress,held_before,cx){self.original_refused_receipt=Some((issued,progress));return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original frame callback receipt differs from its already posted initiating recipient").into())}
+                    if issued!=expected||!progress.fits(issued)||!semio_renderer_wgpu_app_runtime::posted_receipt(before,progress,held_before,cx){self.original_refused_receipt=Some((issued,progress));return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original frame callback receipt differs from its already posted initiating recipient").into())}
                 },
                 semio_framework_job_worker::WorkerJobPoll::Closing=>{
                     match session.has_original_cancel_alias_witness(cx.original_cancel_token()){
@@ -654,7 +654,7 @@ impl FrameBuildHandle {
             let mut cancel = None;
             let alias_admission = cx.admit_original_cancel_alias(&mut cancel);
             if let Some(cancel) = cancel {
-                let mut job = ActiveFrameBuild::new(runtime, inputs, cx.operation(), cx.generation(), cancel, cx.retained_grant());
+                let mut job = ActiveFrameBuild::new(runtime.clone(), inputs.clone(), cx.operation(), cx.generation(), cancel, cx.retained_grant());
                 job.presentation_generation = presentation_generation;
                 self.original_job = Some(job);
                 self.original_presentation_generation = Some(presentation_generation);

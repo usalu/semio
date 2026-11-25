@@ -57,6 +57,49 @@
         }
       }
     },
+    "DetachedGuardProtocol": {
+      "const": {
+        "version": 1,
+        "withdrawnModeBits": 146,
+        "identity": [
+          "dev",
+          "ino",
+          "type",
+          "permissions-or-guarded"
+        ],
+        "authority": false
+      }
+    },
+    "ModeCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "held",
+        "actual",
+        "expected"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "held": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "actual": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "expected": {
+          "type": "boolean"
+        }
+      }
+    },
     "PublicationBindingProtocol": {
       "const": {
         "version": 1,

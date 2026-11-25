@@ -63,6 +63,7 @@ class BimChapterSourceContract(unittest.TestCase):
         exec(compile(ast.fix_missing_locations(ast.Module(body=[function],type_ignores=[])),'actual-native-class-pages','exec'),scope)
         subject=type('Pages',(),{'_rows':scope['_rows']})()
         subject.number=lambda value,digits:str(value)
+        subject._reveal_then=lambda fades,updates,seconds,reveal:fades[0]
         subject._tags=lambda name,kind:kind
         subject._lit=lambda drawing,tags:{'action':'highlight','tag':tags}
         subject._class_row=lambda tracker,kind,text,y,color:{'type':'row','class':kind,'y':y}
@@ -219,8 +220,10 @@ class BimChapterSourceContract(unittest.TestCase):
             def probe(key):
                 def check():
                     called.append((name,key))
+                check.__module__=name
+                check.__name__=key
                 return check
-            return SimpleNamespace(**{key:probe(key) for key in names},run=lambda root:None)
+            return SimpleNamespace(**{key:probe(key) for key in names},run=lambda root:None,__name__=name)
         class Loader:
             def loadTestsFromName(self,name):
                 classes.append(name)
@@ -228,16 +231,17 @@ class BimChapterSourceContract(unittest.TestCase):
             def discover(self,*args,**kwargs):
                 return unittest.TestSuite()
         tree=ast.parse((CLIP/'🧪️tests'/'🐍️.py').read_text())
-        hook=next(node for node in tree.body if isinstance(node,ast.FunctionDef) and node.name=='load_tests')
+        hook=[node for node in tree.body if (isinstance(node,ast.FunctionDef) and node.name in ('load_tests','_colocated_tests'))
+              or (isinstance(node,ast.Assign) and any(isinstance(target,ast.Name) and target.id in ('COLOCATED_TEST_MODULES','ROOT_TEST_MODULES') for target in node.targets))]
         space={'unittest':unittest,'importlib':SimpleNamespace(import_module=imported),'CLIP':CLIP,'ROOT':CLIP.parents[4]}
-        exec(compile(ast.fix_missing_locations(ast.Module(body=[hook],type_ignores=[])),'standard-hook','exec'),space)
+        exec(compile(ast.fix_missing_locations(ast.Module(body=hook,type_ignores=[])),'standard-hook','exec'),space)
         suite=space['load_tests'](Loader(),unittest.TestSuite(),None)
         result=unittest.TestResult()
         suite.run(result)
         self.assertEqual(result.errors,[])
         for name,case in cases.items():
             with self.subTest(module=name):
-                scheduled=classes if case['kind']=='class' else imports
+                scheduled=imports
                 self.assertEqual(Counter(scheduled)[name],1)
                 path=CLIP/Path(*case['module'].split('.'))
                 tree=ast.parse(path.with_suffix('.py').read_text())

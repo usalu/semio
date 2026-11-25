@@ -16,6 +16,9 @@ import { dispatchTrigger } from "../⚡️action-dispatch/🟦️.tsx";
 import { sharedBorderlessBoxProps } from "@semio-tech/ui-react";
 //#region 🔖️UiInterpreter
 //#region ComponentRenderers
+/** 🪟️ Spatial surfaces fill their window edge to edge beneath the floating chrome; the dead-line inset must never push them down. */
+const EDGELESS_SURFACE_KINDS: ReadonlySet<string> = new Set(["canvas-2d", "world-3d", "board-2d", "tiled-map"]);
+
 /** 🚚️ A surface whose scene declares out-of-doc payload lanes (`world-3d`, `canvas-2d`, `board-2d`). Its `doc.bytes` carry only
  * the spine; the lanes are retained text-leaf subtrees hanging off this very node, so this view — and
  * only this view — subscribes to the whole document's revision: a lane leaf changing does NOT change
@@ -110,7 +113,7 @@ function SurfaceAccessibilityShell({ record, context, children }: { readonly rec
       data-ui-node-id={record.id}
       data-ui-node-key={record.key}
       data-ui-surface-shell=""
-      data-window-content-layout={record.component.type === "surface" && record.component.kind === "canvas-2d" ? "edgeless" : undefined}
+      data-window-content-layout={record.component.type === "surface" && EDGELESS_SURFACE_KINDS.has(record.component.kind) ? "edgeless" : undefined}
       role="application"
       tabIndex={record.disabled ? -1 : 0}
       aria-disabled={record.disabled || undefined}

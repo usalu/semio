@@ -13,25 +13,139 @@
    "de": "Ein gebrauchtes Paar Handtrommeln, wie es ein Gebrauchtinstrumentenhandel anbietet: eine seilgestimmte westafrikanische Djembe von 0,60 m Höhe, aus einem Stamm Lenke geschnitzt, mit einer Schale von 0,32 m und einem rasierten Ziegenfell, das an den Schlagzonen von den Händen nachgedunkelt ist, mit ausgeblichenem 5-mm-Seil in 24 Vertikalen und Mali-Flechtung zwischen stählernem Kronen- und unterem Ring geschnürt, der Fußring verschrammt; und ein Cajón 0,30 x 0,30 x 0,48 m aus Birkensperrholz mit einer 110-mm-Schallöffnung in der Rückwand, einem Gitarrensaiten-Snare hinter der 3-mm-Schlagplatte, die an beiden oberen Ecken und in der Mitte bis aufs blanke Holz abgespielt ist, der hinteren Oberkante rund abgegriffen und einem Händleraufkleber an der Seite; zusammen 11.7 kg. Posen: nebeneinander auf dem Boden gelagert, von zwei Helfern an Schallöffnung und Kronenring getragen und auf dem Cajón sitzend gespielt, die Djembe zwischen den Knien gekippt."
   },
   "tags": [
-   "used",
-   "instrument",
-   "music",
-   "second-hand",
-   "percussion",
-   "folk",
-   "hand-drum",
-   "djembe",
-   "cajon",
-   "goblet-drum",
-   "box-drum",
-   "membranophone",
-   "idiophone",
-   "goatskin",
-   "rope-tuned",
-   "lenke",
-   "hardwood",
-   "birch-plywood",
-   "passive"
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "instrument",
+    "title": {
+     "en": "instrument",
+     "de": "Instrument"
+    }
+   },
+   {
+    "id": "music",
+    "title": {
+     "en": "music",
+     "de": "Musik"
+    }
+   },
+   {
+    "id": "second-hand",
+    "title": {
+     "en": "second-hand",
+     "de": "Second-Hand"
+    }
+   },
+   {
+    "id": "percussion",
+    "title": {
+     "en": "percussion",
+     "de": "Schlaginstrumente"
+    }
+   },
+   {
+    "id": "folk",
+    "title": {
+     "en": "folk",
+     "de": "Volksmusik"
+    }
+   },
+   {
+    "id": "hand-drum",
+    "title": {
+     "en": "hand drum",
+     "de": "Handtrommel"
+    }
+   },
+   {
+    "id": "djembe",
+    "title": {
+     "en": "djembe",
+     "de": "Djembé"
+    }
+   },
+   {
+    "id": "cajon",
+    "title": {
+     "en": "cajón",
+     "de": "Cajón"
+    }
+   },
+   {
+    "id": "goblet-drum",
+    "title": {
+     "en": "goblet drum",
+     "de": "Bechertrommel"
+    }
+   },
+   {
+    "id": "box-drum",
+    "title": {
+     "en": "box drum",
+     "de": "Kistentrommel"
+    }
+   },
+   {
+    "id": "membranophone",
+    "title": {
+     "en": "membranophone",
+     "de": "Membranophon"
+    }
+   },
+   {
+    "id": "idiophone",
+    "title": {
+     "en": "idiophone",
+     "de": "Idiophon"
+    }
+   },
+   {
+    "id": "goatskin",
+    "title": {
+     "en": "goatskin",
+     "de": "Ziegenfell"
+    }
+   },
+   {
+    "id": "rope-tuned",
+    "title": {
+     "en": "rope tuned",
+     "de": "seilgespannt"
+    }
+   },
+   {
+    "id": "lenke",
+    "title": {
+     "en": "lenke",
+     "de": "Lenke"
+    }
+   },
+   {
+    "id": "hardwood",
+    "title": {
+     "en": "hardwood",
+     "de": "Laubholz"
+    }
+   },
+   {
+    "id": "birch-plywood",
+    "title": {
+     "en": "birch plywood",
+     "de": "Birkensperrholz"
+    }
+   },
+   {
+    "id": "passive",
+    "title": {
+     "en": "passive",
+     "de": "passiv"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage instrument authors (used instruments wave, author 20)",
@@ -8602,8 +8716,378 @@
     ]
    },
    "500": {
-    "status": "unavailable",
-    "denominator": 500
+    "status": "authored",
+    "denominator": 500,
+    "decisions": [
+     {
+      "en": "Body for the 75 mm feature: the cajon is one closed box (carcass tube, back and port merged) with the tapa as its declared 3 mm sheet on the front; the djembe is its hollow goblet shell reduced to twelve profile points (a hollow part judged by its overall extents; its 140 mm waist still prints and its open foot keeps the inner surface), under its skin as the declared sheet and the crown ring at its true section as the one slender hoop; bottom ring, lacing and the rolled collar are below the feature and left out.",
+      "de": "Körper für das 75-mm-Merkmal: das Cajon ist ein geschlossener Kasten (Korpusrohr, Rückwand und Schallloch verschmolzen) mit der Schlagplatte als erklärter 3-mm-Platte an der Front; die Djembe ist ihre hohle Kelchschale, auf zwölf Profilpunkte reduziert (ein Hohlteil, nach seinen Gesamtmaßen beurteilt; ihre 140-mm-Taille druckt noch und ihr offener Fuß behält die Innenfläche), unter ihrem Fell als erklärter Platte und mit dem Kronenring im wahren Querschnitt als einzigem schlanken Reif; unterer Ring, Schnürung und der gerollte Kragen liegen unter dem Merkmal und entfallen."
+     },
+     {
+      "en": "Thermal: one surface per region by reference.",
+      "de": "Thermik: eine Oberfläche je Region als Verweis."
+     },
+     {
+      "en": "Structure: the members by reference, the two joints as 75 mm balls and the two mass markers.",
+      "de": "Tragwerk: die Stäbe als Verweis, die zwei Gelenke als 75-mm-Kugeln und die zwei Massenmarken."
+     }
+    ],
+    "body": [
+     {
+      "id": "cajon",
+      "kind": "box",
+      "bone": "cajon",
+      "material": "birch-ply",
+      "role": "body",
+      "tone": 0.6,
+      "size": [
+       0.48,
+       0.297,
+       0.3
+      ],
+      "transform": {
+       "translation": [
+        0.24,
+        0.0015,
+        0
+       ]
+      }
+     },
+     {
+      "id": "tapa",
+      "kind": "box",
+      "bone": "cajon",
+      "material": "birch-tapa",
+      "role": "body",
+      "tone": 0.74,
+      "size": [
+       0.48,
+       0.003,
+       0.3
+      ],
+      "transform": {
+       "translation": [
+        0.24,
+        -0.1485,
+        0
+       ]
+      },
+      "sheet": true
+     },
+     {
+      "id": "goblet",
+      "kind": "revolve",
+      "bone": "djembe",
+      "material": "lenke",
+      "role": "body",
+      "tone": 0.38,
+      "profile": [
+       [
+        0,
+        0.113
+       ],
+       [
+        0.2,
+        0.081
+       ],
+       [
+        0.322,
+        0.07
+       ],
+       [
+        0.48,
+        0.1445
+       ],
+       [
+        0.565,
+        0.1586
+       ],
+       [
+        0.598,
+        0.147
+       ],
+       [
+        0.598,
+        0.14
+       ],
+       [
+        0.5,
+        0.13
+       ],
+       [
+        0.38,
+        0.069
+       ],
+       [
+        0.3,
+        0.048
+       ],
+       [
+        0.15,
+        0.065
+       ],
+       [
+        0,
+        0.094
+       ],
+       [
+        0,
+        0.113
+       ]
+      ],
+      "axis": [
+       1,
+       0,
+       0
+      ],
+      "origin": [
+       0,
+       0,
+       0
+      ]
+     },
+     {
+      "id": "head",
+      "kind": "revolve",
+      "bone": "djembe-head",
+      "material": "goatskin",
+      "role": "body",
+      "tone": 0.88,
+      "profile": [
+       [
+        0,
+        0
+       ],
+       [
+        0,
+        0.141
+       ],
+       [
+        0.0012,
+        0.141
+       ],
+       [
+        0.0012,
+        0
+       ]
+      ],
+      "axis": [
+       1,
+       0,
+       0
+      ],
+      "origin": [
+       0,
+       0,
+       0
+      ],
+      "sheet": true
+     },
+     {
+      "id": "crown-ring",
+      "kind": "revolve",
+      "bone": "djembe",
+      "material": "ring-rope",
+      "role": "body",
+      "tone": 0.25,
+      "profile": [
+       [
+        0.562,
+        0.1653
+       ],
+       [
+        0.560243,
+        0.169543
+       ],
+       [
+        0.556,
+        0.1713
+       ],
+       [
+        0.551757,
+        0.169543
+       ],
+       [
+        0.55,
+        0.1653
+       ],
+       [
+        0.551757,
+        0.161057
+       ],
+       [
+        0.556,
+        0.1593
+       ],
+       [
+        0.560243,
+        0.161057
+       ],
+       [
+        0.562,
+        0.1653
+       ]
+      ],
+      "axis": [
+       1,
+       0,
+       0
+      ],
+      "origin": [
+       0,
+       0,
+       0
+      ],
+      "slender": true
+     }
+    ],
+    "thermal": [
+     {
+      "id": "th-cajon",
+      "of": "cajon",
+      "region": "cajon-carcass"
+     },
+     {
+      "id": "th-tapa",
+      "of": "tapa",
+      "region": "cajon-tapa"
+     },
+     {
+      "id": "th-goblet",
+      "of": "goblet",
+      "region": "djembe-shell"
+     },
+     {
+      "id": "th-head",
+      "of": "head",
+      "region": "djembe-head"
+     },
+     {
+      "id": "th-crown-ring",
+      "of": "crown-ring",
+      "region": "djembe-rope"
+     }
+    ],
+    "structure": [
+     {
+      "id": "st-cajon",
+      "of": "cajon",
+      "member": "cajon",
+      "part": "member"
+     },
+     {
+      "id": "st-tapa",
+      "of": "tapa",
+      "member": "cajon",
+      "part": "member"
+     },
+     {
+      "id": "st-goblet",
+      "of": "goblet",
+      "member": "djembe",
+      "part": "member"
+     },
+     {
+      "id": "st-head",
+      "of": "head",
+      "member": "djembe-head",
+      "part": "member"
+     },
+     {
+      "id": "st-crown-ring",
+      "of": "crown-ring",
+      "member": "djembe",
+      "part": "member"
+     },
+     {
+      "id": "joint-tilt-pivot",
+      "kind": "ellipsoid",
+      "bone": "djembe",
+      "material": "lenke",
+      "role": "detail",
+      "tone": 0.25,
+      "radii": [
+       0.0375,
+       0.0375,
+       0.0375
+      ],
+      "transform": {
+       "translation": [
+        0.0375,
+        0.098,
+        0
+       ]
+      },
+      "member": "djembe",
+      "part": "joint"
+     },
+     {
+      "id": "joint-head",
+      "kind": "ellipsoid",
+      "bone": "djembe-head",
+      "material": "goatskin",
+      "role": "detail",
+      "tone": 0.25,
+      "radii": [
+       0.0375,
+       0.0375,
+       0.0375
+      ],
+      "transform": {
+       "translation": [
+        -0.0375,
+        0,
+        0
+       ]
+      },
+      "member": "djembe-head",
+      "part": "joint"
+     },
+     {
+      "id": "mass-cajon",
+      "kind": "ellipsoid",
+      "bone": "cajon",
+      "material": "birch-ply",
+      "role": "detail",
+      "tone": 0.2,
+      "radii": [
+       0.06,
+       0.06,
+       0.06
+      ],
+      "transform": {
+       "translation": [
+        0.24,
+        0.01,
+        0
+       ]
+      },
+      "member": "cajon",
+      "part": "mass"
+     },
+     {
+      "id": "mass-djembe",
+      "kind": "ellipsoid",
+      "bone": "djembe",
+      "material": "lenke",
+      "role": "detail",
+      "tone": 0.2,
+      "radii": [
+       0.06,
+       0.06,
+       0.06
+      ],
+      "transform": {
+       "translation": [
+        0.333,
+        0,
+        0
+       ]
+      },
+      "member": "djembe",
+      "part": "mass"
+     }
+    ]
    }
   },
   "presentation": {

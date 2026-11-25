@@ -311,7 +311,7 @@ def _boiler(center, w: float = 0.80, h: float = 1.0):
 
 def _heat_pump(center, w: float = 1.0, h: float = 1.0):
     """🌬️ Air-source heat pump outdoor unit in winter air, fitted into the ``w`` × ``h`` box around ``center``; its clip plays through scene time at ``rate``."""
-    return fitted_staffage("shared-heat-pump-heating-sweep", width=w, height=h, rate=1.0).move_to(np.array(center, dtype=float))
+    return fitted_staffage("shared-heat-pump-heating-modulation", width=w, height=h, rate=1.0).move_to(np.array(center, dtype=float))
 
 
 def _tank(center, w: float = 0.80, h: float = 1.0, level: float = 1.0):

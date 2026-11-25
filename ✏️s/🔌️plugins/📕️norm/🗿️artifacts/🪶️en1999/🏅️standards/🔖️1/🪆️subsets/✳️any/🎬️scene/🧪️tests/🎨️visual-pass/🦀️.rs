@@ -296,7 +296,7 @@ fn numeric_fields(node: &Value, defs: &Value, path: String, out: &mut BTreeMap<S
 }
 
 fn schema_fields() -> BTreeMap<String, Option<f64>> {
-    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../🧬️schema/📸️snapshot/🔣️.json");
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../🧬️schema/📸️snapshot/🔣️.json");
     let schema: Value = serde_json::from_slice(&std::fs::read(path).expect("snapshot schema")).expect("json");
     let defs = schema.get("$defs").or_else(|| schema.get("definitions")).cloned().unwrap_or(Value::Null);
     let mut out = BTreeMap::new();

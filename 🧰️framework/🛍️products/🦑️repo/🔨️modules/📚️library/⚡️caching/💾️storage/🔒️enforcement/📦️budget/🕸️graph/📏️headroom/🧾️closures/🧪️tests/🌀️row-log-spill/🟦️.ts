@@ -10,7 +10,7 @@ import {rowLogFileNameV1} from "../../../../../../../../../🏗️build/🕸️g
 
 const origin=physicalSourceOriginV1(import.meta.url,(import.meta as ImportMeta&{semioPhysicalSourceURL?:string}).semioPhysicalSourceURL);
 const source=(url:string)=>readFileSync(new URL(url,origin),"utf8");
-const tree=ts.createSourceFile("closures.ts",source("../../🟦️.ts"),ts.ScriptTarget.Latest,true,ts.ScriptKind.TS);
+const tree=ts.createSourceFile("closures.ts",source("../../🏷️names/🟦️.ts")+"\n"+source("../../🟦️.ts"),ts.ScriptTarget.Latest,true,ts.ScriptKind.TS);
 const declared=(name:string)=>tree.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text===name)!;
 const load=Function(ts.transpileModule(declared("role").getText(tree)+"\n"+declared("spill").getText(tree),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.None}}).outputText+";return{role,spill}")() as{role:(name:string)=>string;spill:(name:string)=>boolean};
 const hash="8d8f21d7".repeat(8),log=rowLogFileNameV1(38258,1763470000000,0);

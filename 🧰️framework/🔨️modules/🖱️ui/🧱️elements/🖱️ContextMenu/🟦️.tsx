@@ -25,7 +25,7 @@ export { createDOMEventBinding, type DOMListenerTarget } from "../../🔨️modu
 export interface ContextMenuProps {
   items?: readonly ContextMenuItem[];
   children: React.ReactNode;
-  /** 🪟️ Title chip on the window-chrome cap row. */
+  /** 🪟️ Title chip on the window-chrome chip row. */
   title: UiLabel;
   /** 🖼️ Catalog icon shown in the title chip before the title. */
   titleIcon?: IconSource;
@@ -70,7 +70,7 @@ export interface ContextMenuControllerProps {
   position: { x: number; y: number } | null;
   items: readonly ContextMenuItem[];
   onOpenChange: (open: boolean) => void;
-  /** 🏷️ Title chip on the window-chrome cap row. */
+  /** 🏷️ Title chip on the window-chrome chip row. */
   title: UiLabel;
   /** 📚️ Catalog icon in the title chip. */
   titleIcon?: IconSource;
@@ -345,8 +345,10 @@ export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ op
           onContextMenu={(event) => event.preventDefault()}
           ref={menuRef}
           role="menu"
+          data-shared-border-cells=""
+          data-orientation="vertical"
           tabIndex={-1}
-          className="w-max max-w-none overflow-auto"
+          className="w-full min-w-max max-w-none overflow-auto"
           style={{ maxWidth: "calc(100vw - 2px)", maxHeight: "calc(100dvh - var(--chip-row-height) - 2px)" }}
         >
           {renderFixedContextMenuItems(items, [], renderOptions)}
@@ -362,8 +364,10 @@ export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ op
               dir={flow.inline === "rtl" ? "rtl" : undefined}
               onContextMenu={(event) => event.preventDefault()}
               role="menu"
+              data-shared-border-cells=""
+              data-orientation="vertical"
               tabIndex={-1}
-              className="flex w-max min-w-0 max-w-none flex-col overflow-auto"
+              className="flex w-full min-w-max max-w-none flex-col overflow-auto"
               style={{ maxWidth: "calc(100vw - 2px)", maxHeight: "calc(100dvh - 2px)" }}
             >
               {renderFixedContextMenuItems(wing.items, wing.parentPath, renderOptions)}

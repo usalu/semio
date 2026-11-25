@@ -548,11 +548,7 @@ impl AppBuilder {
                         definition.keybindings.push(Keybinding { keys: keys.clone(), action: KeybindingActionDescriptor { controller_id: definition.controller_id.clone(), action: action.id.clone(), args: None } });
                     }
                 }
-                for window in definition.window_kinds.iter_mut() {
-                    if !window.actions.iter().any(|entry| entry.id == action.id) {
-                        window.actions.push(action.clone());
-                    }
-                }
+                definition.actions.push(action);
             }
         }
         let fit = semio_framework::node_graph_fit_action_definition();

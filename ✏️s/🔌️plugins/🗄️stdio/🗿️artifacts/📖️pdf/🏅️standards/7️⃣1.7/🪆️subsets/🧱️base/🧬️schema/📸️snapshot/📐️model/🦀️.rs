@@ -28,7 +28,7 @@ pub use font_model::{
 
 #[path = "🖼️xobjects/🦀️.rs"]
 mod xobjects;
-pub use xobjects::{PdfFormXObject, PdfImage, PdfImageBody, PdfImageMask, PdfTransparencyGroup};
+pub use xobjects::{pack_samples, packed_sample_geometry, PdfFormXObject, PdfImage, PdfImageBody, PdfImageMask, PdfPackedSamples, PdfTransparencyGroup};
 
 #[path = "🎯️navigation/🦀️.rs"]
 mod navigation;

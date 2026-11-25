@@ -161,9 +161,31 @@ fn begin_close_paid(&mut self,_effect:&mut crate::RetainedAllocationEffect<'_>)-
     fn requires_original_birth(&self)->bool{false}
     fn close_original_birth_step(&mut self,_original:&mut crate::OriginalRetirementCloseLoan<'_>,_grant:RetainedCloneGrant)->crate::OriginalRetirementPoll{crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"clone cursor has no selected original birth").into()),work:0})}
     fn requires_original_control(&self)->bool{false}
-    fn close_original_step(&mut self,_original:&mut crate::OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll{self.close_step(body,effect)}
-    fn close_step(&mut self,body:usize,_effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll{crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"clone cursor has no original close implementation").into()),work:0})}
+    /// 🎮️ Settles the original-controlled close producer of this cursor into one poll.
+    fn close_original_step(&mut self,original:&mut crate::OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll{
+        if !self.requires_original_control(){return self.close_step(body,effect)}
+        settle_close_reply(effect,&mut |effect,reply,recover|if recover{self.recover_close_original_into(original,body,effect,reply)}else{self.close_original_into(original,body,effect,reply)})
+    }
+    /// 🪜️ Settles the close producer of this cursor into one poll.
+    fn close_step(&mut self,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll{
+        settle_close_reply(effect,&mut |effect,reply,recover|if recover{self.recover_close_into(body,effect,reply)}else{self.close_into(body,effect,reply)})
+    }
 
+}
+
+/// 🪢️ Settles one erased close reply into a poll; a recovered invocation resumes its own producer.
+#[inline(never)]
+fn settle_close_reply(effect:&mut RetainedAllocationEffect<'_>,close:&mut dyn for<'r> FnMut(&mut RetainedAllocationEffect<'_>,OriginalEffectReply<'r,RetainedCloneStep,crate::OriginalRetirementFailure>,bool)->Result<OriginalEffectReplyComplete<'r,RetainedCloneStep,crate::OriginalRetirementFailure>,ValueError>)->crate::OriginalRetirementPoll{
+    let recover=effect.invocation().is_some_and(|invocation|invocation.mode()==OriginalEffectCallbackMode::Recover);
+    let before=effect.performed_work();
+    let mut slot=None;
+    let ran=OriginalEffectReply::borrow(&mut slot).and_then(|reply|close(&mut *effect,reply,recover).map(|_|()));
+    let work=effect.performed_work().saturating_sub(before);
+    match (ran,slot.take()){
+        (Err(error),_)=>crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(error.into()),work}),
+        (Ok(()),Some(result))=>crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result,work}),
+        (Ok(()),None)=>crate::RetainedWorkPoll::Pending{work},
+    }
 }
 
 pub use semio_framework_value_clone_source::{RetainedCloneClose,RetainedEmptyOwner,RetainedCloseSelection,close_retained_binding};

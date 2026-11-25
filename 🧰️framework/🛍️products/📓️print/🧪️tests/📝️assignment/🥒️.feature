@@ -59,6 +59,8 @@ Feature: Reusable assignment document
     Given the worked example parameter matrix in either supported language
     Then its left name chip is absent while its automatic right number uses the connected outline
     And blank titles do not disable table chrome or its counter
+    And its chips lie inside the header row above the 16 millimetre frame, so every column divider reaches the top edge and each header cell is a closed rectangle
+    And every table rule is one frame hairline wide
     And its type icons and parameter values remain in the matrix cells
 
   Scenario: An assignment cover arranges its metadata in titled windows

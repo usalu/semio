@@ -1,0 +1,118 @@
+{
+  "contract": "semio.tool.deferred-abort.v1",
+  "window": "source",
+  "cases": [
+    {
+      "name": "a-blur-during-a-gesture-read-ends-it-once-the-read-returns",
+      "role": "gesture",
+      "held": [{ "host": "blur" }],
+      "heldExpected": { "aborted": [], "open": false, "provisional": true, "revisionMoved": false, "closed": "press" },
+      "returned": [{ "settleDeferred": true }],
+      "returnedExpected": { "aborted": [{ "window": "source", "reason": "blur" }], "open": false, "provisional": false, "revisionMoved": true, "closed": "press" }
+    },
+    {
+      "name": "the-first-host-fact-during-a-gesture-read-wins",
+      "role": "gesture",
+      "held": [{ "host": "blur" }, { "hostAll": "timeTravelFrozen" }, { "host": "captureLost" }],
+      "heldExpected": { "aborted": [], "open": false, "provisional": true, "revisionMoved": false, "closed": "press" },
+      "returned": [{ "settleDeferred": true }, { "settleDeferred": true }],
+      "returnedExpected": { "aborted": [{ "window": "source", "reason": "blur" }], "open": false, "provisional": false, "revisionMoved": true, "closed": "press" }
+    },
+    {
+      "name": "a-freeze-during-a-gesture-read-ends-it-once-the-read-returns",
+      "role": "gesture",
+      "held": [{ "hostAll": "timeTravelFrozen" }],
+      "heldExpected": { "aborted": [], "open": false, "provisional": true, "revisionMoved": false, "closed": "press" },
+      "returned": [{ "settleDeferred": true }],
+      "returnedExpected": { "aborted": [{ "window": "source", "reason": "frozen" }], "open": false, "provisional": false, "revisionMoved": true, "closed": "press" }
+    },
+    {
+      "name": "a-window-retired-during-a-gesture-read-forgets-its-press-and-ends-once-the-read-returns",
+      "role": "gesture",
+      "held": [{ "retain": [] }],
+      "heldExpected": { "aborted": [], "open": false, "provisional": true, "revisionMoved": false, "closed": null },
+      "returned": [{ "settleDeferred": true }],
+      "returnedExpected": { "aborted": [{ "window": "source", "reason": "retired" }], "open": false, "provisional": false, "revisionMoved": true, "closed": null }
+    },
+    {
+      "name": "a-gesture-write-after-the-read-returns-ends-the-deferred-gesture-first",
+      "role": "gesture",
+      "held": [{ "host": "blur" }, { "write": "refused" }],
+      "heldExpected": { "aborted": [], "open": false, "provisional": true, "revisionMoved": false, "closed": "press" },
+      "returned": [{ "write": "accepted" }, { "settleDeferred": true }],
+      "returnedExpected": { "aborted": [], "open": false, "provisional": false, "revisionMoved": true, "closed": "press" }
+    },
+    {
+      "name": "a-freeze-during-a-press-read-ends-it-once-the-read-returns",
+      "role": "scrub",
+      "held": [{ "abortAll": "frozen" }],
+      "heldExpected": { "aborted": [], "open": false, "provisional": true, "revisionMoved": false, "closed": null },
+      "returned": [{ "settleDeferred": true }],
+      "returnedExpected": { "aborted": [{ "window": "source", "reason": "frozen" }], "open": false, "provisional": false, "revisionMoved": true, "closed": "press" }
+    },
+    {
+      "name": "a-named-cancel-of-the-open-press-during-its-read-closes-it-now-and-ends-it-once-the-read-returns",
+      "role": "scrub",
+      "held": [{ "abort": "blur", "press": "press" }],
+      "heldExpected": { "aborted": [], "open": false, "provisional": true, "revisionMoved": false, "closed": "press" },
+      "returned": [{ "settleDeferred": true }],
+      "returnedExpected": { "aborted": [{ "window": "source", "reason": "blur" }], "open": false, "provisional": false, "revisionMoved": true, "closed": "press" }
+    },
+    {
+      "name": "a-named-cancel-of-another-press-during-a-read-keeps-the-open-press",
+      "role": "scrub",
+      "held": [{ "abort": "blur", "press": "other" }],
+      "heldExpected": { "aborted": [], "open": true, "provisional": true, "revisionMoved": false, "closed": "other" },
+      "returned": [{ "settleDeferred": true }],
+      "returnedExpected": { "aborted": [], "open": true, "provisional": true, "revisionMoved": false, "closed": "other" }
+    },
+    {
+      "name": "a-press-tick-after-the-read-returns-ends-the-deferred-press-first-and-stays-silent",
+      "role": "scrub",
+      "held": [{ "abortAll": "frozen" }, { "write": "refused" }],
+      "heldExpected": { "aborted": [], "open": false, "provisional": true, "revisionMoved": false, "closed": null },
+      "returned": [{ "write": "accepted" }, { "settleDeferred": true }],
+      "returnedExpected": { "aborted": [], "open": false, "provisional": false, "revisionMoved": true, "closed": "press" }
+    },
+    {
+      "name": "a-freeze-during-a-typing-read-ends-the-run-once-the-read-returns",
+      "role": "typing",
+      "held": [{ "abortAll": "frozen" }],
+      "heldExpected": { "aborted": [], "open": false, "provisional": true, "revisionMoved": false, "closed": null },
+      "returned": [{ "settleDeferred": true }],
+      "returnedExpected": { "aborted": [{ "window": "source", "reason": "frozen" }], "open": false, "provisional": false, "revisionMoved": true, "closed": null }
+    },
+    {
+      "name": "a-moved-base-during-a-typing-read-ends-the-run-once-the-read-returns",
+      "role": "typing",
+      "held": [{ "abort": "baseMoved" }, { "abortAll": "frozen" }],
+      "heldExpected": { "aborted": [], "open": false, "provisional": true, "revisionMoved": false, "closed": null },
+      "returned": [{ "settleDeferred": true }],
+      "returnedExpected": { "aborted": [{ "window": "source", "reason": "baseMoved" }], "open": false, "provisional": false, "revisionMoved": true, "closed": null }
+    },
+    {
+      "name": "a-typing-commit-after-the-read-returns-ends-the-deferred-run-first-and-publishes-nothing",
+      "role": "typing",
+      "held": [{ "abortAll": "frozen" }, { "write": "refused" }],
+      "heldExpected": { "aborted": [], "open": false, "provisional": true, "revisionMoved": false, "closed": null },
+      "returned": [{ "write": "accepted" }, { "settleDeferred": true }],
+      "returnedExpected": { "aborted": [], "open": false, "provisional": false, "revisionMoved": true, "closed": null }
+    },
+    {
+      "name": "a-lapse-during-a-typing-read-waits-and-fires-after-the-read-returns",
+      "role": "typing",
+      "held": [{ "lapse": 100000 }],
+      "heldExpected": { "aborted": [], "open": true, "provisional": true, "revisionMoved": false, "closed": null },
+      "returned": [{ "lapse": 100000 }],
+      "returnedExpected": { "aborted": [{ "window": "source", "committed": true }], "open": false, "provisional": false, "revisionMoved": true, "closed": null }
+    },
+    {
+      "name": "a-freeze-and-a-lapse-during-a-typing-read-end-the-run-without-a-commit",
+      "role": "typing",
+      "held": [{ "abortAll": "frozen" }, { "lapse": 100000 }],
+      "heldExpected": { "aborted": [], "open": false, "provisional": true, "revisionMoved": false, "closed": null },
+      "returned": [{ "lapse": 100000 }],
+      "returnedExpected": { "aborted": [{ "window": "source", "reason": "frozen" }], "open": false, "provisional": false, "revisionMoved": true, "closed": null }
+    }
+  ]
+}

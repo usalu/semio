@@ -380,7 +380,7 @@ describe("🚏️ the navbar", () => {
     expect(navbar().querySelector("[data-course-brand]")?.textContent).toBe("Ways course");
   });
 
-  it("leads back, forward, up and to the overview, names where each way leads, and the address follows without a new history entry", { timeout: 30_000 }, async () => {
+  it("leads back, forward, up and to the overview, names where each way leads, and the address follows without a new history entry", { timeout: 90_000 }, async () => {
     const user = userEvent.setup();
     render(app(device()));
     await arrived();

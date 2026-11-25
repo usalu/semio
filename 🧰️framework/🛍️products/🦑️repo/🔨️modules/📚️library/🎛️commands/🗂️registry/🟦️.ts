@@ -4,20 +4,23 @@ import { compileJsonSchemaSubset } from "../../../../../../🔨️modules/🧬�
 import { resolveBuildHelpLanguageV1 } from "../../🏗️build/⚙️operations/📖️help/🟦️.ts";
 import type { ScriptCommand, ScriptInvocation, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
-/** 🛗️ What a command's process needs before it can start: `none` runs on a fresh clone with only Bun, `dependencies` needs the locked dependencies, which the router provisions first. */
-export type RootCommandRequiresV1 = "none" | "dependencies";
+/** 🛗️ What a command's process needs before it can start: `none` runs on a fresh clone with only Bun, `dependencies` needs the locked dependencies, which the router provisions first, `staged` needs them installed to load and ensures their freshness during its own staging. */
+export type RootCommandRequiresV1 = "none" | "dependencies" | "staged";
 
 /** 🌐️ A text in every language the registry declares. */
 export type RootCommandTextV1 = Readonly<Record<string, string>>;
 
+/** 🛤️ A route of a command whose need differs from the command's, selected by its leading segments. */
+export type RootCommandRouteV1 = Readonly<{ segments: readonly string[]; requires: RootCommandRequiresV1; reason: RootCommandTextV1 }>;
+
 /** 🧭️ One command of the root script as the registry declares it. */
-export type RootCommandV1 = Readonly<{ id: string; module: string; export: string; requires: RootCommandRequiresV1; reason: RootCommandTextV1; synopsis?: string; summary: RootCommandTextV1 }>;
+export type RootCommandV1 = Readonly<{ id: string; module: string; export: string; requires: RootCommandRequiresV1; reason: RootCommandTextV1; routes?: readonly RootCommandRouteV1[]; synopsis?: string; summary: RootCommandTextV1 }>;
 
 /** 🗂️ The authored registry of every root command. */
 export type RootCommandRegistryV1 = Readonly<{ version: 1; languages: readonly string[]; labels: Readonly<Record<string, RootCommandTextV1>>; commands: readonly RootCommandV1[] }>;
 
-/** 🚦️ Provisions the dependencies of one command before its module is loaded. */
-export type RootCommandGateV1 = (command: RootCommandV1, invocation: ScriptInvocation) => Promise<void>;
+/** 🚦️ Provisions the dependencies of one command route, named by the segments after the command, before its module is loaded. */
+export type RootCommandGateV1 = (command: RootCommandV1, segments: readonly string[], invocation: ScriptInvocation) => Promise<void>;
 
 /** 💤️ Loads the implementing class of one command. */
 export type RootCommandLoaderV1 = () => Promise<ScriptCommand>;
@@ -36,10 +39,20 @@ export function readRootCommandRegistryV1(value: unknown): RootCommandRegistryV1
   for (const command of registry.commands) {
     if (ids.has(command.id)) throw Error(`Root command ${command.id} is declared twice`);
     ids.add(command.id);
+    const routes = new Set((command.routes ?? []).map((route) => route.segments.join(" ")));
+    if (routes.size !== (command.routes ?? []).length) throw Error(`Root command ${command.id} declares a route twice`);
   }
   if (!ids.has("repo")) throw Error("The root command registry must declare repo, the owner of dependency provisioning");
   return registry;
 }
+
+/** 🛤️ The need of the route the segments select: the longest declared route they start with, else the command's own. */
+export function rootCommandRequirementV1(command: RootCommandV1, segments: readonly string[]): RootCommandRequiresV1 {
+  const matches = (command.routes ?? []).filter((route) => route.segments.every((segment, index) => segments[index] === segment));
+  return matches.reduce<RootCommandRouteV1 | undefined>((best, route) => (best === undefined || route.segments.length > best.segments.length ? route : best), undefined)?.requires ?? command.requires;
+}
+
+const REQUIRES_LABELS: Readonly<Record<RootCommandRequiresV1, string>> = { none: "requiresNone", dependencies: "requiresDependencies", staged: "requiresStaged" };
 
 /** 🏠️ The registry authored next to this module. */
 export function rootCommandRegistryV1(): RootCommandRegistryV1 {
@@ -56,11 +69,11 @@ export function renderRootCommandHelpV1(registry: RootCommandRegistryV1, id: str
   const label = (name: string): string => registry.labels[name]![language]!;
   if (id === undefined) {
     const choice = registry.languages.join("|");
-    return [`${frontend} - ${label("tagline")}`, "", `${label("usage")}:`, `  ${frontend} <command> [arguments]`, `  ${frontend} <command> --help [--lang=${choice}]`, "", `${label("commands")}:`, ...table(registry.commands.map((command) => [command.requires === "dependencies" ? `${command.id} *` : command.id, command.summary[language]!] as const)), "", label("legend")].join("\n");
+    return [`${frontend} - ${label("tagline")}`, "", `${label("usage")}:`, `  ${frontend} <command> [arguments]`, `  ${frontend} <command> --help [--lang=${choice}]`, "", `${label("commands")}:`, ...table(registry.commands.map((command) => [command.requires === "none" ? command.id : `${command.id} *`, command.summary[language]!] as const)), "", label("legend")].join("\n");
   }
   const command = registry.commands.find((row) => row.id === id);
   if (command === undefined) throw Error(`${label("unknownCommand").replaceAll("{command}", id)} (${registry.commands.map((row) => row.id).join("|")})`);
-  return [`${command.id} - ${command.summary[language]!}`, "", `${label("usage")}:`, `  ${frontend} ${command.synopsis ?? `${command.id} [arguments]`}`, "", `${label("requires")}: ${label(command.requires === "none" ? "requiresNone" : "requiresDependencies")}`].join("\n");
+  return [`${command.id} - ${command.summary[language]!}`, "", `${label("usage")}:`, `  ${frontend} ${command.synopsis ?? `${command.id} [arguments]`}`, "", `${label("requires")}: ${label(REQUIRES_LABELS[command.requires])}`, ...(command.routes ?? []).map((route) => `  ${command.id} ${route.segments.join(" ")}: ${label(REQUIRES_LABELS[route.requires])}`)].join("\n");
 }
 
 /** 🔎️ Reads whether the arguments ask for help and for which command; arguments after `--` belong to the command, and arguments without a command ask for the router help. */
@@ -81,11 +94,11 @@ export function rootCommandHelpV1(registry: RootCommandRegistryV1, argv: readonl
   return request === undefined ? undefined : renderRootCommandHelpV1(registry, request.command, resolveBuildHelpLanguageV1(registry.languages, argv, environment, osLanguages));
 }
 
-/** 🔌️ Registers every command of the registry lazily: the gate runs before the module is loaded, and the loaders must match the registry exactly. */
+/** 🔌️ Registers every command of the registry lazily: the gate of the dispatched route runs on every dispatch before the module is loaded once, and the loaders must match the registry exactly. */
 export function registerRootCommandsV1(router: ScriptRouter, registry: RootCommandRegistryV1, loaders: Readonly<Record<string, RootCommandLoaderV1>>, gate: RootCommandGateV1): ScriptRouter {
   const declared = registry.commands.map((command) => command.id), supplied = Object.keys(loaders);
   const missing = declared.filter((id) => !supplied.includes(id)), extra = supplied.filter((id) => !declared.includes(id));
   if (missing.length || extra.length) throw Error(`Root command loaders must match the registry (missing: ${missing.join(",") || "-"}; unknown: ${extra.join(",") || "-"})`);
-  for (const command of registry.commands) router.registerLazy(command.id, async (invocation) => { await gate(command, invocation); return loaders[command.id]!(); });
+  for (const command of registry.commands) router.registerGated(command.id, (invocation, segments) => gate(command, segments, invocation), loaders[command.id]!);
   return router;
 }

@@ -14,7 +14,7 @@ use semio_ui_runtime::{ComponentTree, TreeNode};
 #[doc(hidden)]
 pub fn tree(text: &str) -> ComponentTree {
     let value = ui_contract::UiText::try_from_str(text).expect("bounded fixture text");
-    let root = TreeNode::try_new("root", ui_contract::Component::Text(ui_contract::TextProps { value: ui_contract::Label(value), emphasize: None, data_attributes: None })).expect("bounded fixture tree");
+    let root = TreeNode::try_new("root", ui_contract::Component::Text(ui_contract::TextProps { value: ui_contract::Label(value), emphasize: None, data_attributes: None, heading_level: None })).expect("bounded fixture tree");
     ComponentTree::new(root)
 }
 

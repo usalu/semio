@@ -1,0 +1,67 @@
+//! 🧩️ En1994 editor family: the identity constants of the editor, its headless `NormFamily` binding and the incremental check units; the surfaces and the app wiring depend on it.
+
+use semio_s_plugin_norm_compliance::NormHost;
+use semio_s_artifact_norm_en1994_model::En1994Snapshot;
+use semio_s_artifact_norm_en1994_mutations::En1994Mutation;
+
+//#region 🔖️Constants
+/// 🏷️ This standard's display name — the app label, its artifact-kind name and the catalogue headline.
+pub const LABEL: &str = "EN 1994";
+/// 🆔️ The playground/registry variant key — every body key, window id and schema is derived from it.
+pub const VARIANT: &str = "en1994";
+/// 🆔️ Retained-command / UI action controller id.
+pub const CONTROLLER_ID: &str = "s.norm-eurocode-structural.en1994@1/*#editor";
+pub const DOCUMENT_SCHEMA: &str = "semio.norm.en1994/v1";
+/// 🏷️ The scene entity kinds EN 1994 projects: one interaction granularity each.
+pub const ENTITY_KIND_SCENE_KINDS: &[semio_s_plugin_norm_structural_scene::EntityKind] = &[
+    semio_s_plugin_norm_structural_scene::EntityKind::Member,
+    semio_s_plugin_norm_structural_scene::EntityKind::Plate,
+    semio_s_plugin_norm_structural_scene::EntityKind::Fastener,
+    semio_s_plugin_norm_structural_scene::EntityKind::Support,
+    semio_s_plugin_norm_structural_scene::EntityKind::Load,
+    semio_s_plugin_norm_structural_scene::EntityKind::Surface,
+];
+//#endregion 🔖️Constants
+
+//#region 🧩️ComplianceFamily
+/// 🧩️ Headless `NormFamily` binding (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) —
+/// relocated verbatim from the deleted `⚙️engine`. This is stateful/host-facing behaviour, so it
+/// belongs to the app that edits the artifact, not the artifact's own `🧬️schema`.
+pub struct En1994Family;
+
+impl semio_s_plugin_norm_compliance::NormFamily for En1994Family {
+    type Document = En1994Snapshot;
+    type Mutation = En1994Mutation;
+
+    fn family_id() -> semio_s_plugin_norm_compliance::NormFamilyId {
+        semio_s_plugin_norm_compliance::NormFamilyId::En1994
+    }
+
+    fn evaluate(document: &En1994Snapshot) -> semio_s_plugin_norm_compliance::CheckReport {
+        <En1994Family as semio_s_plugin_norm_compliance::IncrementalNormFamily>::evaluate_incrementally(document)
+    }
+
+    fn live_report(document: &En1994Snapshot) -> std::sync::Arc<semio_s_plugin_norm_compliance::CheckReport> {
+        semio_s_artifact_norm_en1994_inferences::live::report(document)
+    }
+
+    fn live_progress() -> semio_s_plugin_norm_compliance::incremental_evaluation::EvalProgress {
+        semio_s_artifact_norm_en1994_inferences::live::progress()
+    }
+
+    fn live_responsive(document: &En1994Snapshot, budget: std::time::Duration) -> (std::sync::Arc<semio_s_plugin_norm_compliance::CheckReport>, bool) {
+        semio_s_artifact_norm_en1994_inferences::live::responsive(document, budget)
+    }
+
+    fn cancel_live() {
+        semio_s_artifact_norm_en1994_inferences::live::cancel()
+    }
+}
+
+pub type Host = NormHost<En1994Family>;
+//#endregion 🧩️ComplianceFamily
+
+//#region 🪢️Mounts
+#[path = "../🧮️incremental/🦀️.rs"]
+pub mod incremental;
+//#endregion 🪢️Mounts

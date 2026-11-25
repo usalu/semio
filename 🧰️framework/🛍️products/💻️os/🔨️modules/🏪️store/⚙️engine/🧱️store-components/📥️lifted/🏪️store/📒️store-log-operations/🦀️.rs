@@ -347,15 +347,12 @@ where
 
     //#endregion 🔖️DeferredReprojection
     //#region 🔖️Supersede
-    /// 🪴️ Authors into `envelopes` the commit of every pending edit (when one is pending or no checkpoint exists) and a
+    /// 🪴️ Authors into `envelopes` the commit of every pending edit (a baseline checkpoint over the current head when none is pending and no checkpoint exists) and a
     /// `Branch` of `name` at the resulting head, answering the new alternative's id.
     pub async fn author_head_alternative(&self, name: String, clock: &mut HybridLogicalTimestamp, envelopes: &mut Vec<semio_os_spr::MutationEnvelope>, identity: &mut EntityIdentityAuthority<'_>) -> Result<String, VcsError> {
         let pending = uncommitted_edit_ids(&self.envelope, &*self.applied_edit_ids).await;
         let checkpoint_id = if !pending.is_empty() || self.envelope.vcs.checkpoints.is_empty() {
-            if self.applied_edit_ids.is_empty() {
-                return Err(VcsError::NoCheckpoint);
-            }
-            let (transition, dependencies, checkpoint_id) = self.pending_checkpoint_transition(None, Vec::new(), identity).await?;
+            let (transition, dependencies, checkpoint_id) = if pending.is_empty() { self.baseline_checkpoint_transition(identity)? } else { self.pending_checkpoint_transition(None, Vec::new(), identity).await? };
             clock.tick(now_ms());
             envelopes.push(self.transition_envelope(&transition, dependencies, Vec::new(), *clock));
             checkpoint_id
@@ -421,6 +418,15 @@ where
         if pending.is_empty() {
             return Err(VcsError::ValidationFailed(EMPTY_CHECKPOINT_MESSAGE.to_string()));
         }
+        self.checkpoint_transition_of(pending, message, authors, identity)
+    }
+
+    /// 🏁️ The `Commit` transition of a baseline checkpoint over the current head with no pending edit: the history position an alternative of a document that has no checkpoint yet branches from.
+    pub fn baseline_checkpoint_transition(&self, identity: &mut EntityIdentityAuthority<'_>) -> Result<(semio_os_spr::HistoryTransition, Vec<MutationId>, String), VcsError> {
+        self.checkpoint_transition_of(Vec::new(), None, Vec::new(), identity)
+    }
+
+    fn checkpoint_transition_of(&self, pending: Vec<String>, message: Option<String>, authors: Vec<Author>, identity: &mut EntityIdentityAuthority<'_>) -> Result<(semio_os_spr::HistoryTransition, Vec<MutationId>, String), VcsError> {
         let change_id = identity.encode(|control|mint_change_id(&pending, message.as_deref(), control))?;
         let saved_at = now_iso();
         let parent = self.current_checkpoint_id.as_ref().and_then(|id| self.envelope.vcs.checkpoints.iter().find(|checkpoint| checkpoint.id == *id));

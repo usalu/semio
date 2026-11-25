@@ -1,10 +1,11 @@
 import{test,expect}from"bun:test";
 import Ajv from"ajv";
 import{Database}from"bun:sqlite";
-import{mkdtemp,mkdir,rename,rm}from"node:fs/promises";
+import{chmod,mkdtemp,mkdir,rename,rm}from"node:fs/promises";
 import{join,resolve}from"node:path";
 import{lstatSync}from"node:fs";
 import*as mount from"../🟦️.ts";
+import{guardDetachedNativeImageMountV1}from"../../../../🍎️image/♻️reclaim/🟦️.ts";
 import schema from"../🧬️schema/🔣️.json";
 import corpus from"./🔣️.json";
 
@@ -12,5 +13,6 @@ test("observation tolerates boot scoped device reassignment without publishing a
 
 test("observation tolerates published device changes while live inode replacement still refuses",async()=>{const api=mount as unknown as Record<string,unknown>,bind=api.bindPublishedNativeImageMountDirectoryV1;expect(typeof bind).toBe("function");const base=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!base)throw Error("Original test artifact directory required");await mkdir(base,{recursive:true});const area=await mkdtemp(join(resolve(base),"mount-binding-")),directory=join(area,"m"),previous=join(area,"previous");try{await mkdir(directory);const facts=lstatSync(directory,{bigint:true}),published={dev:String(facts.dev+1n),ino:String(facts.ino),mode:Number(facts.mode)},bound=(bind as Function)({published,publishedBackingDevice:published.dev,currentBackingDevice:String(facts.dev)});expect(Object.isFrozen(bound)).toBe(true);mount.requireNativeImageMountDirectoryV1(directory,bound);await rename(directory,previous);await mkdir(directory);expect(()=>mount.requireNativeImageMountDirectoryV1(directory,bound)).toThrow("changed");expect(published.dev).toBe(String(facts.dev+1n));}finally{await rm(area,{recursive:true,force:true});}});
 
+test("the detached guard's withdrawn write bits keep the same underlying directory while a wider, other-typed or changed mode refuses",()=>{const ajv=new Ajv({strict:true}).addSchema(schema),valid=ajv.compile({$ref:schema.$id+"#/definitions/ModeCase"}),db=new Database(":memory:");try{expect(corpus.modes.length).toBeGreaterThan(0);for(const row of corpus.modes){expect(Boolean(valid(row)),row.id).toBe(true);const oracle=db.query("SELECT (:actual=:held OR :actual=(:held&~:withdrawn)) AS admitted").get({":held":row.held,":actual":row.actual,":withdrawn":schema.definitions.DetachedGuardProtocol.const.withdrawnModeBits})as{admitted:number};expect(Boolean(oracle.admitted),row.id).toBe(row.expected);expect(mount.nativeImageMountModeAdmittedV1(row.held,row.actual),row.id).toBe(row.expected);}}finally{db.close();}});
 
-
+test("an underlying mount directory guarded after a real detach reopens, a widened or replaced one still refuses",async()=>{const base=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!base)throw Error("Original test artifact directory required");await mkdir(base,{recursive:true});const area=await mkdtemp(join(resolve(base),"mount-guard-")),directory=join(area,"m");try{await mkdir(directory,{mode:0o755});await chmod(directory,0o755);const held=mount.observeNativeImageMountDirectoryV1(directory);guardDetachedNativeImageMountV1(directory);expect(lstatSync(directory).mode).toBe(mount.nativeImageGuardedMountModeV1(held.mode));mount.requireNativeImageMountDirectoryV1(directory,held);mount.requireEmptyNativeImageMountDirectoryV1(directory,held,()=>{});await chmod(directory,0o777);expect(()=>mount.requireNativeImageMountDirectoryV1(directory,held)).toThrow("Original underlying mount directory changed");await chmod(directory,0o755);await rename(directory,join(area,"previous"));await mkdir(directory,{mode:0o755});guardDetachedNativeImageMountV1(directory);expect(()=>mount.requireNativeImageMountDirectoryV1(directory,held)).toThrow("Original underlying mount directory changed");}finally{await chmod(join(area,"m"),0o755).catch(()=>{});await rm(area,{recursive:true,force:true});}});

@@ -4,7 +4,7 @@ use semio_framework_job::{close_original_retained_step, Generation, OperationId,
 use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetainedWorkOutcome};
 use semio_os_kernel::ActorId;
 use semio_plugin_mounted_owner::MountedOwnerPolicyV1;
-use semio_plugin_ownership::original_store_genesis::{OriginalStoreBirth, OriginalStoreGenesis, OriginalStoreSlot};
+use semio_plugin_store_lifecycle::original_store_genesis::{OriginalStoreBirth, OriginalStoreGenesis, OriginalStoreSlot};
 
 type Source = OriginalStoreGenesis<ScalarGenesis<false>>;
 const MOUNT: MountedOwnerPolicyV1 = MountedOwnerPolicyV1::INTERACTIVE_COMPONENT;

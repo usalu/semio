@@ -13,12 +13,48 @@
       "de": "Ein 1,0 m hoher Trinkbrunnen mit Gusssockel, Edelstahlbecken und Schwanenhals-Auslauf: ein Drucktaster öffnet den Hahn, der Wasserstrahl fällt im Bogen ins Becken als kühle, feuchte Feuchtequelle und der Sockel erwärmt sich in der Sonne."
     },
     "tags": [
-      "drinking-fountain",
-      "water",
-      "cast-iron",
-      "pedestal",
-      "moisture-source",
-      "public-space"
+      {
+        "id": "drinking-fountain",
+        "title": {
+          "en": "drinking fountain",
+          "de": "Trinkbrunnen"
+        }
+      },
+      {
+        "id": "water",
+        "title": {
+          "en": "water",
+          "de": "Wasser"
+        }
+      },
+      {
+        "id": "cast-iron",
+        "title": {
+          "en": "cast iron",
+          "de": "Gusseisen"
+        }
+      },
+      {
+        "id": "pedestal",
+        "title": {
+          "en": "pedestal",
+          "de": "Sockel"
+        }
+      },
+      {
+        "id": "moisture-source",
+        "title": {
+          "en": "moisture source",
+          "de": "Feuchtequelle"
+        }
+      },
+      {
+        "id": "public-space",
+        "title": {
+          "en": "public space",
+          "de": "öffentlicher Raum"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage content (NW-O)",

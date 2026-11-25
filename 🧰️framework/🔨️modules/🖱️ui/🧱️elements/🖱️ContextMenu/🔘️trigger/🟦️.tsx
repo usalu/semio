@@ -19,10 +19,12 @@ export interface ContextMenuTriggerButtonProps {
   /** 🎯️ The element whose context menu opens; resolved at activation so a re-rendered target is never stale. */
   resolveTarget: (button: HTMLButtonElement) => Element | null;
   className?: string;
+  /** 🏷️ Data attributes forwarded to the button (e.g. `data-glass-chip`). */
+  readonly [attribute: `data-${string}`]: string | undefined;
 }
 
 /** 🔘️ The visible "More" button (`ui.contextMenu.more`, English and German) that opens a right-click-only menu. */
-export const ContextMenuTriggerButton: React.FC<ContextMenuTriggerButtonProps> = ({ resolveTarget, className }) => {
+export const ContextMenuTriggerButton: React.FC<ContextMenuTriggerButtonProps> = ({ resolveTarget, className, ...data }) => {
   const label = useLabel("ui.contextMenu.more");
   return (
     <button
@@ -31,8 +33,9 @@ export const ContextMenuTriggerButton: React.FC<ContextMenuTriggerButtonProps> =
       title={label}
       aria-haspopup="menu"
       {...sharedBorderlessBoxProps}
+      {...data}
       data-context-menu-trigger=""
-      className={cn("inline-flex size-6 shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-accent [@media(pointer:coarse)]:size-10", className)}
+      className={cn("inline-flex size-6 shrink-0 items-center justify-center text-muted-foreground hover:bg-accent [@media(pointer:coarse)]:size-10", className)}
       onClick={(event) => {
         event.stopPropagation();
         const button = event.currentTarget;

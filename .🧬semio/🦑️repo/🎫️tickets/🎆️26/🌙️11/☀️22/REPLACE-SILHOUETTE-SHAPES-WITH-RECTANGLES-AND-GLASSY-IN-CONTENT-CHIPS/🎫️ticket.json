@@ -1,9 +1,9 @@
 {
   "title": "Replace Silhouette Shapes with Rectangles and Glassy In-Content Chips",
   "emoji": "🪟",
-  "status": "open",
+  "status": "closed",
   "description": "The UI design system shifts away from the silhouette shape (rectangles with chips outside, producing gap shapes between elements) towards plain rectangles where chips sit inside the content, layered on top of it with a different, glassy background through which the content stays visible. Migrate the complete monorepo end to end: schemas, shared geometry, React, wgpu, TUI and print targets, all consumers, tests, fixtures, stories and docs, so UI elements compose without gap shapes.",
-  "summary": "Replaced the window silhouette model (chips outside, gap cutouts, polygon clip) with window-frame-geometry/v1 (one rectangle, content edge to edge, glass chips inside) across React, styling, wgpu renderer, OS Rust dock and Shell, TUI, print and products. Old names are gone except in absence-check tests. Verified: UI React 1629 passed (5 need Playwright Chromium), typechecks clean, Rust frame, border, renderer, paint-laws 110, CardStack 29, dock laws 76 pass. Open: mounted-layout 1 failure and Shell test crates chrome-4 (4) and input-1 (49) fail on other agents' in-flight job, value-arena and document-lease work; D3D12/Vulkan, Storybook, Python visuals and a live OS shell check were not run. See summary.md in the ticket folder.",
+  "summary": "Round 2 of the shift to rectangles with glassy in-content chips is done across web, sites, OS renderer, wgpu, TUI, Python clips, clip presentation and LaTeX. Chip glass and tint come from one token source (CSS, Rust, Python, LaTeX). Fixed on the way: covered tab text, incomplete active borders, duplicated select arrows, menu focus ring, canvas stopping at the bands, drag previews, unreadable semantic text inks, embedded video id clash, missing staffage clip, stale tests. Verified: UI 1713 tests, OS renderer 3594 (7 tests and 2 suites environmental), new Storybook frame visuals 9 of 9, every touched Rust group 0 failures in its last run (some not rerun after the ink change), print on macOS, clip tests and stills (bim retirement unfinished, 4 primary-energy scale tests red). Not verified: running OS shell, wgpu on screen, D3D12 and Vulkan, full clip renders. Details and open points: summary.md.",
   "goal": "🎯runningframework",
   "sessions": [
     "467708bf-7ed2-4a9b-9055-8ee851147b57",
@@ -1318,6 +1318,1196 @@
       "client": "claude-code",
       "checkpoint": "",
       "prompt": "Close the remaining verification gaps: fix the mounted-layout, shell-tests-chrome-4 and shell-tests-input-1 test failures, serve the OS shell natively for a live frame check, and run the Python visuals and Chromium-dependent tests where the project can provision them."
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-25 14:41:15",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "8d17d8ba3998690932b0032ea2ca41bce5c994b6",
+      "summary": "Round 2 of the shift to rectangles with glassy in-content chips is done across web, sites, OS renderer, wgpu, TUI, Python clips, clip presentation and LaTeX. Chip glass and tint come from one token source (CSS, Rust, Python, LaTeX). Fixed on the way: covered tab text, incomplete active borders, duplicated select arrows, menu focus ring, canvas stopping at the bands, drag previews, unreadable semantic text inks, embedded video id clash, missing staffage clip, stale tests. Verified: UI 1713 tests, OS renderer 3594 (7 tests and 2 suites environmental), new Storybook frame visuals 9 of 9, every touched Rust group 0 failures in its last run (some not rerun after the ink change), print on macOS, clip tests and stills (bim retirement unfinished, 4 primary-energy scale tests red). Not verified: running OS shell, wgpu on screen, D3D12 and Vulkan, full clip renders. Details and open points: summary.md.",
+      "files": [
+        {
+          "path": ".storybook/🧪️tests/🧪️browser-runner/📚️suites/🟦️.ts"
+        },
+        {
+          "path": ".storybook/🧪️tests/🧪️browser-runner/🟦️.ts"
+        },
+        {
+          "path": "♻️mit-bestand/🧺️demonstrator/⚛️demonstrator-card.tsx"
+        },
+        {
+          "path": "♻️mit-bestand/🧺️demonstrator/🟦️.tsx"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🥽️mesh-workbench/🧪️tests/🧩️example/🟦️.ts"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📺️renderer/🎛️repl/🟦️.tsx"
+        },
+        {
+          "path": "🌎️hub/🔨️modules/🛡️admin/🧪️tests/🛡️admin/🟦️.tsx"
+        },
+        {
+          "path": "🌎️hub/🔨️modules/🛡️admin/🧱️elements/📄️AdminPage/🟦️.tsx"
+        },
+        {
+          "path": "🌎️hub/🔨️modules/🛡️admin/🧱️elements/🛡️AdminApp/🟦️.tsx"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/❓️need/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧍️staffage/🔣️.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧍️staffage/🧪️tests/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🎨️semio-style/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🎨️semio-style/🔣️.cases.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🌐️browser/🟦️.tsx"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🌐️browser/🧪️tests/🖱️hover/🔣️.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🌐️browser/🧪️tests/🖱️hover/🟦️.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🌐️browser/🧪️tests/🪟️frame-body/🔣️.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🌐️browser/🧪️tests/🪟️frame-body/🟦️.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🎨️surface/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🎨️surface/🧪️tests/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🎨️surface/🧪️tests/🔣️.cases.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🎨️surface/🧬️chip.schema.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/📐️geometry/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/📐️geometry/🧪️tests/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/📐️geometry/🧪️tests/🔣️.cases.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/📐️geometry/🧬️schema.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🔣️.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🖱️interaction/🔣️.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🖱️interaction/🧬️schema.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🥞️hierarchy/🖌️render/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🧪️tests/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🧪️tests/🔣️.cases.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🧬️schema.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🗺️roadmap/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/♨️system-losses/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🧪️tests/🔣️scale.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🎯️optimization/🎬️clip/📉️extrema/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🎨️visuals/📐️drafting/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🎨️visuals/🧾️panels/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/👁️representations/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🔌️exchange/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🔗️consistency/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🧪️tests/🧩️chapter-source/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🧬️objects/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🏢️nakagin/🎨️visuals/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/📊️excel/🎬️clip/⚡️energy/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/📊️excel/🎬️clip/📍️references/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/📊️excel/🎬️clip/🦴️anatomy/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🦗️grasshopper/🎬️clip/🌳️trees/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🦗️grasshopper/🎬️clip/💊️capsule/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🦗️grasshopper/🎬️clip/🦴️anatomy/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🦗️grasshopper/🎬️clip/🫗️casting/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/📦️packages/🟦️typescript/📚️app/🟦️.tsx"
+        },
+        {
+          "path": "🏢️semio-tech/🎡️play/⚛️play-card.tsx"
+        },
+        {
+          "path": "🏢️semio-tech/🎡️play/🏠️play-landing.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🧪️tests/⚓️alignment/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📐️projection/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/package.json"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧬️schema/📏️text-width/🪟️console/🔣️.json"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🌓️theme/🔣️.json"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🌓️theme/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🎨️palette/🎨️.css"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🎨️palette/🔷️.cs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🎭️theme/🧩️component/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📽️projection/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🔣️.json"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🔤️tokens/🐍️.py"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🔤️tokens/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🖌️ui/🎨️.css"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🛂️adapters.manifest.json"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🛡️verification/🧪️tests/🎭️color-primitives/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🛡️verification/🧪️tests/📏️relative-sizing/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🤖️generated/🌓️palette-theme/🎨️.css"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🤖️generated/🔤️tokens/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🧪️tests/🎚️config/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🧪️tests/🧩️suite/🎨️styling-resolve/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🧪️tests/🧪️semantic-ink-contrast/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🧪️tests/🧪️theme-resolve/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🎓️introduction/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🎥️tutorial-ui/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🎨️chrome-classes/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📋️canvas-pick/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📚️component-exports/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📣️display-components/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/📥️source/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🔌️host-ports/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🖥️fullscreen/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🗿️framework-exports/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🚦️status-surface/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🧪️tests/🎚️config/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🧱️window-chrome/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🧲️panel-dock/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚙️engine/📣️dispatch-and-overlay-api/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚙️engine/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚡️events/🫳️drag-drop/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖌️paint/🎨️node-painting-with-driver/🎛️control-nodes/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖌️paint/🎨️node-painting-with-driver/📝️text-and-structure-nodes/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖌️paint/📶️progress-celebrate-and-widget-painters/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖌️paint/🔬️reference/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖌️paint/🖼️ui-image-sources-skeleton-and-overlays/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🔧️pipeline/🎬️execution/🧪️tests/🔬️unit/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🪶️light/📦️packages/🦀️rust/Cargo.toml"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🪶️light/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/⚓️panel-anchor/places.cases.json"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/⚓️panel-anchor/places.schema.json"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/⚓️panel-anchor/places.test.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/⚓️panel-anchor/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🎨️chrome-class-names/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🛟️chrome-safe-area/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🫳️pointer-drag/ghost.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🫳️pointer-drag/layer.test.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🫳️pointer-drag/places.cases.json"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🫳️pointer-drag/places.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🫳️pointer-drag/places.schema.json"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🫳️pointer-drag/places.test.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🫳️pointer-drag/places.test.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🫳️pointer-drag/places.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🫳️pointer-drag/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🌐️chromium-launch/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/📤️prepared-readback/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔤️text-advances/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-paint-unit/🎚️number-stepper-slider-and-field-paint-laws/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-paint-unit/🎴️ring-slider-and-icon-select-state-paint-laws/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-paint-unit/🔽️select-popup-drop-and-drag-paint-laws/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-reconcile-unit/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-theme-token-parity/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🖼️storybook-frame-visuals/cases.json"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🖼️storybook-frame-visuals/cases.schema.json"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🖼️storybook-frame-visuals/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧪️owned-locale-detector-retirement/🎨️shell-components-1/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧪️owned-locale-detector-retirement/🎬️uiintroduction-appearance-2-and-more/🔸️uiintroduction-appearance/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧪️owned-locale-detector-retirement/🎯️tree-helpers-3/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧪️owned-locale-detector-retirement/🏷️level-context/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧪️owned-locale-detector-retirement/📐️shell-components-4/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧪️owned-locale-detector-retirement/📦️control-chrome-1/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧪️owned-locale-detector-retirement/🔎️shell-components-10/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧪️owned-locale-detector-retirement/🗂️shell-components-5/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧪️owned-locale-detector-retirement/🧰️harness/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🔽️retained-select-overlay-raster/🔣️.json"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🔽️select-popup-geometry/🔣️.json"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧬️schema/📐️chrome-parity-constants/🔣️.json"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧬️schema/📐️chrome-parity-constants/🧮️values.json"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/⌨️Command/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/⌨️Command/🧪️tests/🧩️component/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/⚙️VirtualFileSystem/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🃏️CardStack/bands.cases.json"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🃏️CardStack/bands.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🃏️CardStack/bands.schema.json"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🃏️CardStack/bands.test.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🃏️CardStack/bands.test.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🃏️CardStack/bands.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🃏️OverviewCard/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🃏️OverviewCard/🧪️tests/🧩️component/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/↕️sortable-item/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🌱️section/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🍃️item/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🧩️props/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🧪️tests/drag-places.test.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🧪️tests/🔤️text-flow/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🧪️tests/🧫️fixtures/🧲️drag-drop/🔣️.json"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🧪️tests/🧲️drag-drop.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🧪️tests/🧲️drag-drop/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🧲️drag-drop/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🧲️drag-drop/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🪢️views/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎚️Slider/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎨️Canvas/⚓️dock/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎨️Canvas/🎯️drop/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎨️Canvas/📖️stories/🧪️.story.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎨️Canvas/🖱️mode-drag-and-window-callbacks/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎨️Canvas/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎨️Canvas/🧪️tests/drag.test.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎨️Canvas/🧪️tests/footer-chips.test.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎨️Canvas/🧪️tests/shared-border-dock.test.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎨️Canvas/🧲️drag-preview/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎨️Canvas/🧲️drop-places/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🐚️ShellScope/🧪️tests/🧩️component/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/👥️PresenceBar/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/💡️ChromeControlHint/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/💬️Dialog/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📊️Table/drag.test.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📊️Table/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📊️Table/🧪️tests/🧩️row-seams/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📋️MenuItem/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📌️WindowPane/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📐️Layout/📖️stories/🧪️.story.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📐️Layout/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📐️Layout/🧪️tests/🧩️component/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📑️Tabs/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📑️Tabs/🧪️tests/🧩️component/boundary.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📝️Field/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📨️UIDialog/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔚️Footer/📖️stories/🧪️.story.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔝️Navbar/bands.cases.json"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔝️Navbar/bands.schema.json"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔣️Icons/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔣️Icons/🧪️tests/🧩️component/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔽️Select/🎯️targets/🧊️wgpu/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔽️Select/📖️stories/🧪️.story.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔽️Select/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔽️Select/🧪️tests/🔬️wgpu-select-keyboard/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔽️Select/🧪️tests/🧩️component/🟢️uses-owned-rtl-placement/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔽️Select/🧭️behavior/popup-rows.cases.json"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔽️Select/🧭️behavior/popup-rows.schema.json"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔽️Select/🧭️behavior/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🕰️HistoryTable/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🖱️ContextMenu/rows.cases.json"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🖱️ContextMenu/rows.schema.json"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🖱️ContextMenu/🎨️item-render/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🖱️ContextMenu/🔘️trigger/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🖱️ContextMenu/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🖱️ContextMenu/🥣️chrome/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🖱️ContextMenu/🧪️tests/🔘️trigger/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🖱️ContextMenu/🪜️submenu/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🖼️Panel/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🗂️WindowChrome/compositor.cases.json"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🗂️WindowChrome/frame-structure.test.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🗂️WindowChrome/shared-border.test.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🗂️WindowChrome/shared-border.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🗂️WindowChrome/state-boxes.test.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🗂️WindowChrome/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🧭️PanelTabBar/drag.test.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🧭️PanelTabBar/shared-border.test.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🧭️PanelTabBar/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪜️Stepper/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪟️Window/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪢️SharedBorderRow/frame-law-static.test.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🧊️3d/🗿️model/🖥️viewer/🧪️tests/🔶️gpu/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🎤️presentation/🎯️targets/⚛️react/🎨️styles/🔲️interaction-handles-and-controls/🎨️.css"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🎤️presentation/🧪️tests/📄️pdf-and-figure-interaction/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📖️stories/🎨️.css"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/📖️stories/🧭️coordination/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/💡️inference/🧪️tests/🔬️quick/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🗿️artifact/🧪️tests/🔬️quick/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧭️protocol/🧪️tests/🔬️quick/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧭️protocol/🧪️tests/🚪️input-gate-law/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧭️protocol/🧪️tests/🧫️fixtures/📄️paging-law/🔣️.json"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧭️protocol/🧪️tests/🧫️fixtures/🚪️input-gate-law/🔣️.json"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🧹️retirement/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎬️media/🌐️browser/🎞️tutorial-video/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌲️shell-tests-chrome-5/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🍱️shell-view-chrome/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🚶️shell-session/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🛰️dock/📦️packages/🦀️rust/Cargo.toml"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧪️tests/🎬️media-app/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧪️tests/🪆️embedded-browser/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🪀️shell-view-panels/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🔮️oracles/🎨️world3d-scene-shading/📐️scene-shading-oracle/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🔮️oracles/🎨️world3d-scene-shading/🔭️reference-visual-oracle/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🔮️oracles/🎨️world3d-scene-shading/🕸️grid-visual-oracle/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🔮️oracles/🎨️world3d-scene-shading/🪟️authored-surface-oracle/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/⌨️text-input-oracle/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/⏱️gpu-animation-clock/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/⏱️wgpu-worker-step-budget/📦️native-response-and-decode-retirement/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/⏱️wgpu-worker-step-budget/🖼️asset-decode-and-presenter-wakes/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/⏱️wgpu-worker-step-budget/🧮️scheduler-contract-and-ownership/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/♿️editable-controls/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/♿️retained-toggle-semantics/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🆚️diff-view-produced-surface/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🌓️native-theme-invalidation/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🎛️platform-prefs/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🎨️chrome-palette/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🎨️icon-svg-lighting/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🎬️wgpu-browser-media/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/👆️browser-cursor-presentation/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/📐️chrome-parity-constants/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/📖️procedural-descriptors/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/📤️asset-cancellation/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔒️shell-option-locks/📚️example-offers-and-switching/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧩️package-integration/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧱️retained-frame-progress/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧲️engine-surface-retention/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧺️turn-patch-batch/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🪆️embedded-mount/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🪟️chrome-frame-laws/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/✏️TextEditor/🖍️buffer-and-edit-helpers/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/✏️TextEditor/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🎯️marquee-and-bridges/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/📏️modelling/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌳️GraphTimelineHost/🧪️tests/🎨️layout/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎬️MediaTransportHost/🧪️tests/♻️lifecycle/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🍞️transient-notice/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🎚️shell-model/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/📋️panel-hosting/🔶️brand/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/📝️staging/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🔖️session-notice/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🖼️canvas-footer/🟠️footer-items/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🗂️local-catalog/📂️files/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🚪️close-guard/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧱️notice-bands/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/⚓️dock/🖼️chrome-frame-and-main-window/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🍱️view-chrome/🖼️chrome-frame-and-main-window/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🍱️view-chrome/🗨️chrome-overlays-and-tour/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🍱️view-chrome/🧭️navbar-footer-and-overlays/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🎚️chrome-state/🎨️theme-file-import-and-accessibility/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🖍️view-paint/🔖️identity-and-types/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🗨️view-overlays/💬️chrome-dialog-and-tooltips/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🗨️view-overlays/🧭️navbar-footer-and-overlays/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🚶️session/🖼️chrome-frame-and-main-window/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🪀️view-panels/⌨️keyboard-and-palette/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🪀️view-panels/🖼️chrome-frame-and-main-window/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🪀️view-panels/🧭️navbar-footer-and-overlays/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🪧️view-chrome-overlays/🧭️overlay-steps/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🎓️tour-overlay-and-chord-glyphs/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/📐️retained-tree-reorder/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🔝️wgpu-shell-bands/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🔬️wgpu-chrome-parity-constants/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🔬️wgpu-context-menu-keyboard/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/👕️canvas-presence/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/💬️AgentChatPanel/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📊️Table/🧪️tests/🔘️button-accessibility/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📡️EventFeedHost/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📡️EventFeedHost/🧪️tests/🎨️layout/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔄️ShellSync/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔎️ShellSearch/🧪️tests/🧩️component/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔺️DiffViewHost/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🔷️diagram-node/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🖼️dag-overlays/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🪄️catalogue-spotlight/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖋️InkCanvasHost/🧱️ink-block-views/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖋️InkCanvasHost/🪟️ink-overlays/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖌️Paint2dHost/✍️editing/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖌️Paint2dHost/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖼️IconRenderHost/🧪️tests/📤️gpu-export/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖼️IconRenderHost/🧪️tests/📤️png-export/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖼️IconRenderHost/🧪️tests/📥️download/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖼️IconRenderHost/🧪️tests/🖼️frame-presentation/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🌳️tree-walk/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🎛️control-port/container.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🎯️targets/🧊️wgpu/🧩️retained-ui-engine/📕️close-scene-pointer-and-dispatch/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🎯️targets/🧊️wgpu/🧩️retained-ui-engine/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🔤️display-views/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/⏪️time-travel/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/⏪️time-travel/🧪️tests/📐️geometry/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/⏪️time-travel/🧪️tests/📝️draft-editor/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/⏪️time-travel/🧪️tests/📡️reprojection-status/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🧪️tests/🪟️empty-dock-notice/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛰️Dock/🎯️targets/🧊️wgpu/📐️layout-conversion-and-drop-zones/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛰️Dock/🎯️targets/🧊️wgpu/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛰️Dock/🧪️tests/🌐️browser-acceptance/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛰️Dock/🧪️tests/🔬️wgpu-unit/🧲️drops-and-drop-zones/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🤖️AgentApprovals/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🧩️BlockListHost/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🧭️TiledMapHost/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/⚖️parity/🏃️execution/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📊️benchmarks/🔌️plugins/🌐️browser/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️testing/🚶️journey/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/⏯️tool-run-matrix/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/⏱️interaction-latency/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/♨️hot-update/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🎬️studio/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/👥️two-human/📡️transport/🧪️tests/🌐️worker.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/👥️two-human/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/👥️two-human/🧩️opened/🧪️tests/🌐️browser.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/💤️idle-budget/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🔀️connection-budget/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🔬️catalog-smoke/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🌉️fixtures-and-pixels/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️time-travel/🎪️run/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧮️program-matrix/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📓️print/README.md"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📓️print/🎮️commands/🧪️print-pipeline-verification/🧪️tests/🖨️pipeline/⚡️quick-pipeline-verification/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📓️print/🔨️modules/🎨print-design-token-paints/🧪️tests/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📓️print/🔨️modules/🎨print-design-token-paints/🧮️resolution/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-core.sty"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-tokens.sty"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-window.sty"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📓️print/🧪️tests/🏷️page-chrome/🔣️.json"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📓️print/🧪️tests/🏷️page-chrome/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📓️print/🧪️tests/🏷️page-chrome/🥒️.feature"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🎨️styles/⚖️footer-and-forced-colors/🎨️.css"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🎨️styles/👥️peer-marks/🎨️.css"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/🎛️preferences/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/👥️presence/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/📚️app/🛟️load-fallback/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/📚️app/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/🧷️scroll-thumb/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/🪟️chrome/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🧪️tests/🌍️language-choice/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🧪️tests/🧷️scroll-thumb/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🧫️fixtures/🧷️scroll-thumb/🔣️.json"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🟦️.ts"
+        }
+      ]
     }
   ]
 }

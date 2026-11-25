@@ -12,6 +12,8 @@
   ],
   "externalDependencies": {
     "🔨️modules/🖨️tectonic-template-compilation/🟦️.ts": [
+      "@semio-tech/framework-filesystem",
+      "@semio-tech/nx-bootstrap-tools",
       "@semio-tech/process",
       "@semio-tech/repo-lib",
       "@semio-tech/schema-validator-ts",
@@ -22,6 +24,8 @@
       "@semio-tech/ui-styling"
     ],
     "🔨️modules/🖨️tectonic-template-compilation/📜️script.ts": [
+      "@semio-tech/framework-filesystem",
+      "@semio-tech/nx-bootstrap-tools",
       "@semio-tech/process",
       "@semio-tech/repo-lib",
       "@semio-tech/schema-validator-ts",

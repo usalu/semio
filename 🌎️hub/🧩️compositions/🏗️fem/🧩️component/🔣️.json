@@ -976,6 +976,7 @@
               "transformMove",
               "transform"
             ],
+            "initialUtilityId": "selectDirect",
             "interactions": [
               "fem2d"
             ],
@@ -1905,6 +1906,7 @@
               "transformMove",
               "transform"
             ],
+            "initialUtilityId": "selectDirect",
             "interactions": [
               "fem2d"
             ],
@@ -11455,7 +11457,76 @@
             },
             "kind": "mutation",
             "iconId": "sparkles",
-            "args": [],
+            "args": [
+              {
+                "id": "start",
+                "label": {
+                  "native": {
+                    "en": "Start Node",
+                    "de": "Startknoten"
+                  },
+                  "reuse": {
+                    "en": "Start Node",
+                    "de": "Startknoten"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": true
+              },
+              {
+                "id": "end",
+                "label": {
+                  "native": {
+                    "en": "End Node",
+                    "de": "Endknoten"
+                  },
+                  "reuse": {
+                    "en": "End Node",
+                    "de": "Endknoten"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": true
+              },
+              {
+                "id": "materialId",
+                "label": {
+                  "native": {
+                    "en": "Material",
+                    "de": "Material"
+                  },
+                  "reuse": {
+                    "en": "Material",
+                    "de": "Material"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": true
+              },
+              {
+                "id": "sectionId",
+                "label": {
+                  "native": {
+                    "en": "Section",
+                    "de": "Querschnitt"
+                  },
+                  "reuse": {
+                    "en": "Section",
+                    "de": "Querschnitt"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": true
+              }
+            ],
             "inPalette": true,
             "semantics": {
               "effects": {
@@ -11509,7 +11580,95 @@
             },
             "kind": "mutation",
             "iconId": "sparkles",
-            "args": [],
+            "args": [
+              {
+                "id": "start",
+                "label": {
+                  "native": {
+                    "en": "Start Node",
+                    "de": "Startknoten"
+                  },
+                  "reuse": {
+                    "en": "Start Node",
+                    "de": "Startknoten"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": true
+              },
+              {
+                "id": "end",
+                "label": {
+                  "native": {
+                    "en": "End Node",
+                    "de": "Endknoten"
+                  },
+                  "reuse": {
+                    "en": "End Node",
+                    "de": "Endknoten"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": true
+              },
+              {
+                "id": "materialId",
+                "label": {
+                  "native": {
+                    "en": "Material",
+                    "de": "Material"
+                  },
+                  "reuse": {
+                    "en": "Material",
+                    "de": "Material"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": true
+              },
+              {
+                "id": "sectionId",
+                "label": {
+                  "native": {
+                    "en": "Section",
+                    "de": "Querschnitt"
+                  },
+                  "reuse": {
+                    "en": "Section",
+                    "de": "Querschnitt"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": true
+              },
+              {
+                "id": "roll",
+                "label": {
+                  "native": {
+                    "en": "Roll",
+                    "de": "Rollwinkel"
+                  },
+                  "reuse": {
+                    "en": "Roll",
+                    "de": "Rollwinkel"
+                  }
+                },
+                "schema": {
+                  "kind": "number",
+                  "integer": false
+                },
+                "required": false,
+                "default": 0.0
+              }
+            ],
             "inPalette": true,
             "semantics": {
               "effects": {
@@ -11563,7 +11722,63 @@
             },
             "kind": "mutation",
             "iconId": "sparkles",
-            "args": [],
+            "args": [
+              {
+                "id": "name",
+                "label": {
+                  "native": {
+                    "en": "Name",
+                    "de": "Name"
+                  },
+                  "reuse": {
+                    "en": "Name",
+                    "de": "Name"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": true
+              },
+              {
+                "id": "e",
+                "label": {
+                  "native": {
+                    "en": "Young's Modulus",
+                    "de": "Elastizitätsmodul"
+                  },
+                  "reuse": {
+                    "en": "Young's Modulus",
+                    "de": "Elastizitätsmodul"
+                  }
+                },
+                "schema": {
+                  "kind": "number",
+                  "integer": false
+                },
+                "required": false,
+                "default": 210000000000.0
+              },
+              {
+                "id": "g",
+                "label": {
+                  "native": {
+                    "en": "Shear Modulus",
+                    "de": "Schubmodul"
+                  },
+                  "reuse": {
+                    "en": "Shear Modulus",
+                    "de": "Schubmodul"
+                  }
+                },
+                "schema": {
+                  "kind": "number",
+                  "integer": false
+                },
+                "required": false,
+                "default": 81000000000.0
+              }
+            ],
             "inPalette": true,
             "semantics": {
               "effects": {
@@ -11617,7 +11832,97 @@
             },
             "kind": "mutation",
             "iconId": "sparkles",
-            "args": [],
+            "args": [
+              {
+                "id": "name",
+                "label": {
+                  "native": {
+                    "en": "Name",
+                    "de": "Name"
+                  },
+                  "reuse": {
+                    "en": "Name",
+                    "de": "Name"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": true
+              },
+              {
+                "id": "area",
+                "label": {
+                  "native": {
+                    "en": "Area",
+                    "de": "Fläche"
+                  },
+                  "reuse": {
+                    "en": "Area",
+                    "de": "Fläche"
+                  }
+                },
+                "schema": {
+                  "kind": "number",
+                  "integer": false
+                },
+                "required": true
+              },
+              {
+                "id": "iy",
+                "label": {
+                  "native": {
+                    "en": "Second Moment Y",
+                    "de": "Flächenträgheitsmoment Y"
+                  },
+                  "reuse": {
+                    "en": "Second Moment Y",
+                    "de": "Flächenträgheitsmoment Y"
+                  }
+                },
+                "schema": {
+                  "kind": "number",
+                  "integer": false
+                },
+                "required": true
+              },
+              {
+                "id": "iz",
+                "label": {
+                  "native": {
+                    "en": "Second Moment Z",
+                    "de": "Flächenträgheitsmoment Z"
+                  },
+                  "reuse": {
+                    "en": "Second Moment Z",
+                    "de": "Flächenträgheitsmoment Z"
+                  }
+                },
+                "schema": {
+                  "kind": "number",
+                  "integer": false
+                },
+                "required": true
+              },
+              {
+                "id": "j",
+                "label": {
+                  "native": {
+                    "en": "Torsion Constant",
+                    "de": "Torsionskonstante"
+                  },
+                  "reuse": {
+                    "en": "Torsion Constant",
+                    "de": "Torsionskonstante"
+                  }
+                },
+                "schema": {
+                  "kind": "number",
+                  "integer": false
+                },
+                "required": true
+              }
+            ],
             "inPalette": true,
             "semantics": {
               "effects": {
@@ -11671,7 +11976,43 @@
             },
             "kind": "mutation",
             "iconId": "sparkles",
-            "args": [],
+            "args": [
+              {
+                "id": "nodeId",
+                "label": {
+                  "native": {
+                    "en": "Node",
+                    "de": "Knoten"
+                  },
+                  "reuse": {
+                    "en": "Node",
+                    "de": "Knoten"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": true
+              },
+              {
+                "id": "fixed",
+                "label": {
+                  "native": {
+                    "en": "Fixed Degrees of Freedom",
+                    "de": "Gesperrte Freiheitsgrade"
+                  },
+                  "reuse": {
+                    "en": "Fixed Degrees of Freedom",
+                    "de": "Gesperrte Freiheitsgrade"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": false,
+                "default": "tx,ty,tz,rx,ry,rz"
+              }
+            ],
             "inPalette": true,
             "semantics": {
               "effects": {
@@ -11726,6 +12067,139 @@
             "kind": "mutation",
             "iconId": "sparkles",
             "args": [
+              {
+                "id": "nodeId",
+                "label": {
+                  "native": {
+                    "en": "Node",
+                    "de": "Knoten"
+                  },
+                  "reuse": {
+                    "en": "Node",
+                    "de": "Knoten"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": true
+              },
+              {
+                "id": "dof",
+                "label": {
+                  "native": {
+                    "en": "Degree of Freedom",
+                    "de": "Freiheitsgrad"
+                  },
+                  "reuse": {
+                    "en": "Degree of Freedom",
+                    "de": "Freiheitsgrad"
+                  }
+                },
+                "schema": {
+                  "kind": "string",
+                  "options": [
+                    {
+                      "value": "tx",
+                      "label": {
+                        "native": {
+                          "en": "Tx",
+                          "de": "Tx"
+                        },
+                        "reuse": {
+                          "en": "Tx",
+                          "de": "Tx"
+                        }
+                      }
+                    },
+                    {
+                      "value": "ty",
+                      "label": {
+                        "native": {
+                          "en": "Ty",
+                          "de": "Ty"
+                        },
+                        "reuse": {
+                          "en": "Ty",
+                          "de": "Ty"
+                        }
+                      }
+                    },
+                    {
+                      "value": "tz",
+                      "label": {
+                        "native": {
+                          "en": "Tz",
+                          "de": "Tz"
+                        },
+                        "reuse": {
+                          "en": "Tz",
+                          "de": "Tz"
+                        }
+                      }
+                    },
+                    {
+                      "value": "rx",
+                      "label": {
+                        "native": {
+                          "en": "Rx",
+                          "de": "Rx"
+                        },
+                        "reuse": {
+                          "en": "Rx",
+                          "de": "Rx"
+                        }
+                      }
+                    },
+                    {
+                      "value": "ry",
+                      "label": {
+                        "native": {
+                          "en": "Ry",
+                          "de": "Ry"
+                        },
+                        "reuse": {
+                          "en": "Ry",
+                          "de": "Ry"
+                        }
+                      }
+                    },
+                    {
+                      "value": "rz",
+                      "label": {
+                        "native": {
+                          "en": "Rz",
+                          "de": "Rz"
+                        },
+                        "reuse": {
+                          "en": "Rz",
+                          "de": "Rz"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "required": false,
+                "default": "tz"
+              },
+              {
+                "id": "value",
+                "label": {
+                  "native": {
+                    "en": "Value",
+                    "de": "Wert"
+                  },
+                  "reuse": {
+                    "en": "Value",
+                    "de": "Wert"
+                  }
+                },
+                "schema": {
+                  "kind": "number",
+                  "integer": false
+                },
+                "required": true
+              },
               {
                 "id": "caseId",
                 "label": {
@@ -11798,6 +12272,79 @@
             "kind": "mutation",
             "iconId": "sparkles",
             "args": [
+              {
+                "id": "elementId",
+                "label": {
+                  "native": {
+                    "en": "Element",
+                    "de": "Element"
+                  },
+                  "reuse": {
+                    "en": "Element",
+                    "de": "Element"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": true
+              },
+              {
+                "id": "wx",
+                "label": {
+                  "native": {
+                    "en": "Wx",
+                    "de": "Wx"
+                  },
+                  "reuse": {
+                    "en": "Wx",
+                    "de": "Wx"
+                  }
+                },
+                "schema": {
+                  "kind": "number",
+                  "integer": false
+                },
+                "required": false,
+                "default": 0.0
+              },
+              {
+                "id": "wy",
+                "label": {
+                  "native": {
+                    "en": "Wy",
+                    "de": "Wy"
+                  },
+                  "reuse": {
+                    "en": "Wy",
+                    "de": "Wy"
+                  }
+                },
+                "schema": {
+                  "kind": "number",
+                  "integer": false
+                },
+                "required": true
+              },
+              {
+                "id": "wz",
+                "label": {
+                  "native": {
+                    "en": "Wz",
+                    "de": "Wz"
+                  },
+                  "reuse": {
+                    "en": "Wz",
+                    "de": "Wz"
+                  }
+                },
+                "schema": {
+                  "kind": "number",
+                  "integer": false
+                },
+                "required": false,
+                "default": 0.0
+              },
               {
                 "id": "caseId",
                 "label": {

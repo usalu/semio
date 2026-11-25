@@ -97,7 +97,22 @@
           "stressX": null,
           "stressZ": null,
           "shearStress": null,
-          "alphaCr": null
+          "alphaCr": null,
+          "corrugationFlat": null,
+          "corrugationProjection": null,
+          "corrugationDepth": null,
+          "webHeight": null,
+          "stiffenerSpacing": null,
+          "stiffenerShape": null,
+          "stiffenerDepth": null,
+          "stiffenerThickness": null,
+          "stiffenerFlangeWidth": null,
+          "stiffenerFlangeThickness": null,
+          "lateralPressure": null,
+          "lateralPressureCoefficient": null,
+          "steelGrade": null,
+          "steelSubgrade": null,
+          "designTemperature": null
         }
       }
     ]

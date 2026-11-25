@@ -82,7 +82,7 @@ pub use constructors::{construction, gas_material, glazing_material, link, mater
 
 #[path = "⚖️laws/🦀️.rs"]
 mod laws;
-pub use laws::{assert_canonical, assert_diff, assert_diff_applies, assert_diff_canonical, assert_forward, assert_inverse, assert_laws, assert_outcome, assert_semantics, committed, write_when_requested};
+pub use laws::{assert_canonical, assert_diff, assert_diff_applies, assert_diff_canonical, assert_forward, assert_inverse, assert_inverse_sum, assert_laws, inverse_law, inverse_sum_law, assert_outcome, assert_semantics, committed, write_when_requested};
 
 #[path = "🏷️kinds/🦀️.rs"]
 mod kinds;

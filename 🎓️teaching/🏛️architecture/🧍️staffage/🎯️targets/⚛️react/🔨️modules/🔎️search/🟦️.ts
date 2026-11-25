@@ -104,10 +104,10 @@ export function normalize(text: string): string {
   return text.normalize("NFD").replace(/\p{M}/gu, "").replace(/ß/gu, "ss").toLowerCase();
 }
 
-/** 🧾️ Everything searchable of a row: both titles, tags, both summaries, the distinction. */
+/** 🧾️ Everything searchable of a row: both titles, the slugs and both titles of the tags, both summaries, the distinction. */
 export function searchText(row: Row): string {
   const { entry, asset } = row;
-  return normalize([entry.title.en, entry.title.de, entry.category, entry.id.replaceAll("-", " "), entry.distinction.en, entry.distinction.de, ...(asset === undefined ? [] : [asset.title.en, asset.title.de, asset.summary.en, asset.summary.de, ...asset.tags])].join(" "));
+  return normalize([entry.title.en, entry.title.de, entry.category, entry.id.replaceAll("-", " "), entry.distinction.en, entry.distinction.de, ...(asset === undefined ? [] : [asset.title.en, asset.title.de, asset.summary.en, asset.summary.de, ...asset.tags.flatMap((tag) => [tag.id, tag.title.en, tag.title.de])])].join(" "));
 }
 
 /** 📏️ The nominal height of a row in metres. */

@@ -123,7 +123,10 @@ describe("🪟️ the viewer", () => {
     expect([...sheet.querySelectorAll("figure[data-viewpoint]")].map((cell) => cell.getAttribute("data-viewpoint"))).toEqual([...SHEET_ORDER]);
     const focus = [...sheet.querySelectorAll("figure[data-focus]")].map((cell) => cell.getAttribute("data-viewpoint"));
     expect(focus).toEqual(["front"]);
-    expect(within(sheet as HTMLElement).getByRole("button", { name: "Front elevation, focused pane" }).getAttribute("aria-pressed")).toBe("true");
+    const button = within(sheet as HTMLElement).getByRole("button", { name: "Front elevation, focused pane" });
+    expect(button.getAttribute("aria-pressed")).toBe("true");
+    expect(button.closest('[data-window-frame-chip][data-level="pane"]')).not.toBeNull();
+    expect(button.closest('[data-window-frame][data-level="window"]')).not.toBeNull();
   });
 });
 
@@ -194,7 +197,7 @@ describe("🚫️ unavailability is explicit", () => {
     const { container } = render(wrap(<ThreeViewSheet asset={withoutPlan} view="dark-line" scale={{ denominator: 100 }} language="en" sheet={sheet} zoom={1} focus="elevation" />));
     const plan = container.querySelector("figure[data-viewpoint=plan]")!;
     expect(plan.getAttribute("data-available")).toBe("false");
-    expect(plan.querySelectorAll("svg")).toHaveLength(plan.querySelectorAll("[data-notice] svg").length);
+    expect(plan.querySelector("[data-staffage-figure]")).toBeNull();
     expect(plan.querySelector("[data-notice=unavailable][data-shared-border-group]")).not.toBeNull();
     expect(plan.textContent).toContain("The plan (top view) is not available");
     expect(plan.textContent).toContain("This drawing has no plan (top view).");

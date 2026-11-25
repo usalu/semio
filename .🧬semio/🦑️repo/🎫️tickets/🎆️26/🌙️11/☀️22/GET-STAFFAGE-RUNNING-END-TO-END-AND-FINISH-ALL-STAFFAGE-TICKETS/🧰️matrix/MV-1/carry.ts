@@ -1,8 +1,8 @@
-/** 🍃️ Gives the flat front and plan drawing of a part its depth, as the last step of the chain of a plant: `bun carry.ts <id|file.json> [--out file] [--write] [--stations 3,4,6,8,11,14] [--goal 0.75] [--limit 0.75] [--only bone,bone] [--scales 50,100]`.
+/** 🍃️ Gives the flat front and plan drawing of a part its depth, as the last step of the chain of a plant: `bun carry.ts <id|file.json> [--out file] [--write] [--stations 3,4,6,8,11,14] [--goal 0.75] [--limit 0.75] [--only bone,bone] [--area <smallest plate in m², default (tolerance / 4)²>] [--scales 50,100]`.
  *
  * A flat front or plan outline is one sheet at one depth: when the wind poses turn its bone in the sagittal plane the sheet foreshortens, while the elevation outline of the same part turns as a whole (cause D of `multiview-diagnosis.md`). The run measures, per authored scale and over every subject of the matrix (poses, clip instants, transitions), how far the height (front) or forward (plan) extent of each bone leaves the extent of its elevation shapes, and for every bone beyond `limit` × tolerance whose views agree in the default pose to half the tolerance (a bone whose views draw different parts is not a turning sheet) it adds depth plates below the drawn outline:
  * - the elevation outline of the bone is cut at a number of stations (the first rung of the ladder `--stations` that brings the bone below `goal` × tolerance) along the bone axis that lies nearest to the viewing direction; each cut is a chord of the part in the sagittal plane;
- * - at each station a plate stands across that axis: an `extruded` solid 0.004 mm thick whose profile is the drawn outline of the bone in that view (the union of its filled flat shapes) cut to the band the chord covers (cut by the outline itself, squeezed into the band, so the edge of a plate has the lobes of the drawing and no straight cut; a slender part that its squeezed outline misses is cut straight), so in the default pose every plate lies inside the drawn outline and below it in the paint order (`z` below the lowest shape of the bone): the drawing at rest is unchanged;
+ * - at each station a plate stands across that axis: an `extruded` solid 0.004 mm thick whose profile is the drawn outline of the bone in that view (the union of its filled flat shapes) cut to the band the chord covers (cut by the outline itself, scaled down about its middle to the height of the band, so a plate is a smaller figure of the same lobes and shows no straight cut; a slender part that its scaled outline misses is cut straight), so in the default pose every plate lies inside the drawn outline and below it in the paint order (`z` below the lowest shape of the bone): the drawing at rest is unchanged;
  * - in a turned pose the bone carries each plate at its own depth, so the plates show at the windward and lee edge what the sheet alone loses, and the three views stay one object.
  * - the drawn outline itself stays the sheet on top, but a sheet that shares its id with an elevation shape of its bone is carried by the engine at one depth (the middle of that twin) and then overshoots on the lee side; it takes the suffix `-mvs`, so the engine carries each of its vertices at the depth of the elevation silhouette of the bone there and the sheet never leaves the turned part.
  * - a bone that stands askew to the paper at rest (spread or twisted) has its elevation outline as a plate already (`rebind.ts`); its stations are cut from that profile, each plate is the drawn outline cut straight to the strip the chord covers and solved into the plane across the bone axis.
@@ -37,6 +37,7 @@ const scales = flag("scales")?.split(",");
 const tolerance: number = engine.toleranceM(asset);
 const COMPARED = ["body", "detail", "glazing"];
 const PREFIX = "mvc-";
+const AREA = Number(flag("area") ?? (tolerance / 4) ** 2);
 const SHEET = "-mvs";
 const THICK = 2e-6;
 const frames = restFrames(asset.rig) as Record<string, { frame: { o: number[]; u: number[]; v: number[]; w: number[] } }>;
@@ -144,6 +145,8 @@ function platesOf(asset: any, stations: number, key: string, view: View, bone: s
   const shapes: any[] = [];
   const along = outline.flat(2).map((p) => p[view === "front" ? 1 : 0]);
   const reach = [Math.min(...along), Math.max(...along)] as const;
+  const across = outline.flat(2).map((p) => p[lateral]);
+  const middle = (Math.min(...across) + Math.max(...across)) / 2;
   const B = 1e4;
   for (let k = 0; k < stations; k++) {
     const alpha = a0 + ((a1 - a0) * (1 - Math.cos((Math.PI * (k + 0.5)) / stations))) / 2;
@@ -163,7 +166,7 @@ function platesOf(asset: any, stations: number, key: string, view: View, bone: s
       const det = cross(tv, wv);
       const cut = withoutHoles(clipping.intersection(outline, [strip]), lateral)
         .map((ring) => thin(ring, tolerance / 8))
-        .filter((ring) => ring.length >= 3 && areaOf(ring) >= (tolerance / 4) ** 2)
+        .filter((ring) => ring.length >= 3 && areaOf(ring) >= AREA)
         .sort((p, q) => areaOf(q) - areaOf(p));
       cut.forEach((ring, n) => {
         const points = ring.map((p) => [round(cross([p[0] - ov[0], p[1] - ov[1]], wv) / det), round(cross(tv, [p[0] - ov[0], p[1] - ov[1]]) / det)]);
@@ -174,8 +177,8 @@ function platesOf(asset: any, stations: number, key: string, view: View, bone: s
     const at = (tau: number): number => o[c]! + alpha * a[c]! + tau * t[c]!;
     const [lo, hi] = [at(Math.min(...taus)), at(Math.max(...taus))].sort((p, q) => p - q) as [number, number];
     const [from, to] = [Math.max(lo, reach[0]), Math.min(hi, reach[1])];
-    const squeeze = (value: number): number => from + ((value - reach[0]) * (to - from)) / (reach[1] - reach[0]);
-    const squeezed: P[][][] = outline.map((polygon) => polygon.map((ring) => ring.map((p) => (view === "front" ? [p[0], squeeze(p[1])] : [squeeze(p[0]), p[1]]) as P)));
+    const scale = (to - from) / (reach[1] - reach[0]);
+    const squeezed: P[][][] = outline.map((polygon) => polygon.map((ring) => ring.map((p) => (view === "front" ? [middle + (p[0] - middle) * scale, from + (p[1] - reach[0]) * scale] : [from + (p[0] - reach[0]) * scale, middle + (p[1] - middle) * scale]) as P)));
     const lobed: P[][][] = to - from >= reach[1] - reach[0] - 1e-6 ? outline : clipping.intersection(outline, squeezed);
     const covered = lobed.flat(2).map((p) => p[view === "front" ? 1 : 0]);
     const band: P[][] = [view === "front" ? [[-B, lo], [B, lo], [B, hi], [-B, hi]] : [[lo, -B], [hi, -B], [hi, B], [lo, B]]];
@@ -190,7 +193,7 @@ function platesOf(asset: any, stations: number, key: string, view: View, bone: s
         }
       })
       .map((ring) => (ring.length > 1 && ring[0]![0] === ring[ring.length - 1]![0] && ring[0]![1] === ring[ring.length - 1]![1] ? ring.slice(0, -1) : ring))
-      .filter((ring) => ring.length >= 3 && areaOf(ring) >= (tolerance / 4) ** 2)
+      .filter((ring) => ring.length >= 3 && areaOf(ring) >= AREA)
       .sort((p, q) => areaOf(q) - areaOf(p));
     pieces.forEach((ring, n) => {
       const points = ring.map((p) => [round((p[c === 1 ? 1 : 0] - o[c]! - alpha * a[c]!) / t[c]!), round(p[lateral] - o[2]!)]);

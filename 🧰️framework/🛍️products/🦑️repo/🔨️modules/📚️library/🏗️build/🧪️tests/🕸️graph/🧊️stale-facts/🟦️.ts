@@ -10,6 +10,7 @@ import ts from"typescript";
 import{graphInventoryTextV1,graphRetryTextV1,graphSettleTextV1,graphDirtyTextV1,graphVolatileTextV1,membershipChangePathsV1,followedPathsV1,untoleratedFollowedPathsV1}from"../../../🕸️graph/📥️load/🧲️membership-follow/🟦️.ts";
 import{settleInventoryRoundsV1}from"../../../🕸️graph/📥️load/🔁️inventory-rounds/🟦️.ts";
 import{observeOwnerWithRetryV1,ownerWithheldTextV1}from"../../../🕸️graph/📥️load/🛟️owner-isolation/🟦️.ts";
+const pagesV1={admit:()=>undefined,facts:(entry:{facts:unknown})=>entry.facts,release:()=>undefined};
 
 const LOAD=process.env.R151_LOAD_SOURCE??fileURLToPath(new URL("../../../🕸️graph/📥️load/🟦️.ts",import.meta.url));
 const limits=JSON.parse(readFileSync(process.env.R151_SCHEMA??fileURLToPath(new URL("../../../🕸️graph/🧬️schema/🔣️.json",import.meta.url)),"utf8")) as {definitions:{Limits:{const:Record<string,number>};LimitsDescriptions:{const:{en:Record<string,string>;de:Record<string,string>}}}};
@@ -24,11 +25,11 @@ const extract=(name:string):string=>{
 
 type Row={kind:"file";path:string;fact:{version:number}};
 
-const world=(owners:number,scenario:{onDiscover?:(call:number,tree:Map<string,number>)=>void;digestAt?:(call:number)=>string;pinned?:ReadonlySet<string>}={})=>{
+const world=(owners:number,scenario:{onDiscover?:(call:number,tree:Map<string,number>)=>void;digestAt?:(call:number)=>string;pinned?:Set<string>;releasePinned?:boolean}={})=>{
  const tree=new Map<string,number>(),names=Array.from({length:owners},(_,index)=>"owner-"+index);
  for(const name of names)for(const file of["manifest","src"])tree.set(name+"/"+file,1);
  tree.set("tooling/shared.ts",1);tree.set("elsewhere/unrelated.ts",1);
- const lines:string[]=[],stack:Map<string,Row>[]=[],observed:Record<string,number>={},counts={closes:0,discovered:0,holds:0,memoWrites:0};
+ const lines:string[]=[],stack:Map<string,Row>[]=[],observed:Record<string,number>={},counts={closes:0,discovered:0,holds:0,memoWrites:0,evicted:0,forgotten:[] as string[]};
  const record=(path:string)=>{const row:Row={kind:"file",path,fact:{version:scenario.pinned?.has(path)?1:tree.get(path)??0}};for(const each of stack)each.set(path,row);};
   const observation={requirePinnedImplementationFactsV1:()=>{},
   observedFs:{readFileSync:(path:string|URL)=>{record(typeof path==="string"?path:path.pathname);return"";}},
@@ -51,8 +52,8 @@ const world=(owners:number,scenario:{onDiscover?:(call:number,tree:Map<string,nu
   createRequire:()=>(()=>observation),readBuildOwnerRegistryV1:(value:unknown)=>value,buildGraphScopeKeyV1:()=>"scope",ownerRegistryDigestV1:()=>"registry",askOwnerRegistryV1:()=>"registry",
   ownerRegistryInvalidationV1:{kind:"invalidated",reason:"owner-registry"},isOwnerRegistryInvalidationV1:(value:unknown)=>value===undefined?false:(value as{kind?:string})?.kind==="invalidated",
   buildGraphErrorCodeV1:(error:unknown)=>(error as{code?:string})?.code,
-  readAdmissionMemoV1:async()=>undefined,writeAdmissionMemoV1:async()=>{counts.memoWrites++;},
-  buildGraphProducerAuthorityV1:()=>true,loadedGraphModuleAuthorityV1:{implementation:"same",publication:"same"},loadedGraphAdmissionFormatV1:"same",selectedAdmissionFactsV1:{entries:()=>[],seed:()=>{}},packAdmissionMemoV1:(value:unknown)=>value,ownersOfAdmissionMemoV1:()=>[],
+  readForgottenPathsV1:()=>({paths:new Map(),listings:new Map()}),rowsForgottenV1:()=>false,forgetPersistedPathsV1:async(_file:string,paths:readonly string[])=>{counts.forgotten.push(...paths);return true;},readAdmissionMemoV1:async()=>undefined,writeAdmissionMemoV1:async()=>{counts.memoWrites++;},
+  buildGraphProducerAuthorityV1:()=>true,loadedGraphModuleAuthorityV1:{implementation:"same",publication:"same"},loadedGraphAdmissionFormatV1:"same",selectedAdmissionFactsV1:{entries:()=>[],suffixes:()=>[],seed:()=>{}},packAdmissionMemoV1:(value:unknown)=>value,ownersOfAdmissionMemoV1:()=>[],
   closeBuildOwnerAdmissionV1:async(_selection:unknown,_registry:unknown,inspect:(owner:{name:string},targets:string[],inputs:string[])=>Promise<unknown>)=>{counts.closes++;for(const name of names)await inspect({name},[],[]);return admitted();},
   buildGraphMembershipV1:async()=>scenario.digestAt?.(counts.discovered)??"membership",buildGraphMembersV1:(files:string[])=>files,workspaceBuildFilesV1:async()=>[],inventoryDirectoriesV1:new WeakMap(),
   readFile:async()=>{throw Object.assign(Error("absent"),{code:"ENOENT"});},
@@ -60,9 +61,9 @@ const world=(owners:number,scenario:{onDiscover?:(call:number,tree:Map<string,nu
   buildGraphSourceFactsHoldV1:async(rows:readonly Row[],_invocation?:unknown,onStale?:(row:Row)=>void)=>{counts.holds++;const stale=rows.filter(row=>(tree.get(row.path)??0)!==row.fact.version);for(const row of stale)onStale?.(row);return stale.length===0;},
   mkdir:async()=>{},writeFile:async()=>{},sealVerdictV1,reportSealV1,sliceReadStepV1:(_id:string,run:()=>unknown)=>run(),rename:async()=>{},rm:async()=>{},createHash:()=>({update:()=>({digest:()=>"digest"})}),randomUUID:()=>"nonce",
   graphSnapshotPolicyV1:{maximumSnapshotBytes:1<<30},portableInputs:async(_root:string,value:unknown)=>value,readBuildGraphV1:(value:unknown)=>value,
-  GRAPH_LIMITS_V1:limits.definitions.Limits.const,observeOwnerFactsMemoizedV1:undefined as unknown,evictOwnerFactsReferencingV1:()=>0,forgetOwnerFactsReferencingV1:()=>[],graphInventoryTextV1,graphRetryTextV1,graphSettleTextV1,graphDirtyTextV1,graphVolatileTextV1,membershipChangePathsV1,followedPathsV1,untoleratedFollowedPathsV1,settleInventoryRoundsV1,awaitPlannerQuietV1:async()=>{},ownerWithheldTextV1,
+  GRAPH_LIMITS_V1:limits.definitions.Limits.const,observeOwnerFactsMemoizedV1:undefined as unknown,evictOwnerFactsReferencingV1:(_scope:string,paths:readonly string[])=>{counts.evicted++;if(scenario.releasePinned&&counts.evicted>=2)for(const path of paths)scenario.pinned?.delete(path);return paths.length;},forgetOwnerFactsReferencingV1:()=>[],graphInventoryTextV1,graphRetryTextV1,graphSettleTextV1,graphDirtyTextV1,graphVolatileTextV1,membershipChangePathsV1,followedPathsV1,untoleratedFollowedPathsV1,settleInventoryRoundsV1,awaitPlannerQuietV1:async()=>{},ownerWithheldTextV1,
  };
- if(source.includes("function observeOwnerFactsMemoizedV1")){const owned=new Map();bindings.observeOwnerFactsMemoizedV1=Function("ownerFactsMemoV1","GRAPH_LIMITS_V1","observeOwnerWithRetryV1",extract("rememberOwnerFactsV1")+";"+extract("observeOwnerFactsMemoizedV1")+";return observeOwnerFactsMemoizedV1;")(owned,limits.definitions.Limits.const,observeOwnerWithRetryV1);const forget=Function("ownerFactsMemoV1","loadedGraphAdmissionFormatV1",extract("forgetOwnerFactsReferencingV1")+";return forgetOwnerFactsReferencingV1;")(owned,"same") as()=>string[];bindings.forgetOwnerFactsReferencingV1=forget;bindings.evictOwnerFactsReferencingV1=((...args:[])=>forget(...args).length)as()=>number;}
+ if(source.includes("function observeOwnerFactsMemoizedV1")){const owned=new Map();bindings.observeOwnerFactsMemoizedV1=Function("ownerFactsMemoV1","GRAPH_LIMITS_V1","observeOwnerWithRetryV1","ownerFactsPagesV1",extract("rememberOwnerFactsV1")+";"+extract("forgetOwnerFactV1")+";"+extract("observeOwnerFactsMemoizedV1")+";return observeOwnerFactsMemoizedV1;")(owned,limits.definitions.Limits.const,observeOwnerWithRetryV1,pagesV1);const forget=Function("ownerFactsMemoV1","loadedGraphAdmissionFormatV1","ownerFactsPagesV1",extract("forgetOwnerFactV1")+";"+extract("forgetOwnerFactsReferencingV1")+";return forgetOwnerFactsReferencingV1;")(owned,"same",pagesV1) as()=>string[];bindings.forgetOwnerFactsReferencingV1=forget;const counting=bindings.evictOwnerFactsReferencingV1 as(scope:string,paths:readonly string[])=>number;bindings.evictOwnerFactsReferencingV1=((scope:string,paths:readonly string[])=>{counting(scope,paths);return forget(scope,paths).length;})as()=>number;}
  const run=async()=>{const execute=Function(...Object.keys(bindings),extract("createGraphInventoryAwaitReportV1")+";"+extract("loadBuildGraphAttemptV1")+";return loadBuildGraphAttemptV1;")(...Object.values(bindings));return execute("/owned",{control:{signal:new AbortController().signal}},{},{selection:{kind:"tasks",tasks:[{project:"owner-0",target:"build"}]}},registry,"scope");};
  return{run,tree,observed,counts,names,lines};
 };
@@ -72,8 +73,21 @@ test("a repair that leaves the same stale source fact ends the attempt as a stal
  const state=world(4,{pinned:new Set(["owner-1/src"]),onDiscover:(call,tree)=>{if(call===1)tree.set("owner-1/src",2);}});
  const error=await state.run().then(()=>undefined,failure=>failure as{code?:string;message?:string});
  expect(error?.code).toBe("BUILD_AUTHORITY_CHANGED");expect(error?.message).toContain("owner-1/src");
- expect(state.counts.discovered).toBe(2);
+ expect(state.counts.discovered).toBe(3);
+ expect(state.counts.evicted).toBe(2);
+ expect(state.counts.forgotten).toEqual(["owner-1/src","owner-1/src"]);
  expect(state.lines.filter(line=>line.startsWith("[graph-repair] "))).toHaveLength(1);
+ expect(state.lines.filter(line=>line.includes('"reason":"refresh-facts"'))).toHaveLength(1);
+ expect(state.lines.filter(line=>line.includes('"reason":"unrefreshed-facts"'))).toHaveLength(1);
+});
+
+test("a fact that stays stale across one repair is refreshed once in a targeted way and the read then converges without a restart",async()=>{
+ const state=world(4,{pinned:new Set(["owner-1/src"]),releasePinned:true,onDiscover:(call,tree)=>{if(call===1)tree.set("owner-1/src",2);}});
+ expect(await state.run()).toBeDefined();
+ expect(state.counts.discovered).toBe(3);
+ expect(state.counts.evicted).toBe(2);
+ expect(state.lines.some(line=>line.includes('"reason":"refresh-facts"'))).toBe(true);
+ expect(state.lines.some(line=>line.includes('"reason":"unrefreshed-facts"'))).toBe(false);
 });
 
 test("a repair that refreshes the fact, or a fact that moves again at every round, is not mistaken for a stuck process",async()=>{

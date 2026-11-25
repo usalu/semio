@@ -3,6 +3,7 @@ import { cn } from "@semio-tech/ui/modules/class-name-composition";
 import { BoxIcon, AlertCircleIcon } from "@semio-tech/ui/elements/Icons";
 import type { UiLabel } from "@semio-tech/ui/elements/UiLabel";
 import { useLabel } from "@semio-tech/ui/elements/Label";
+import { SharedBorderRow, SharedBorderRowCell } from "@semio-tech/ui/elements/SharedBorderRow";
 
 // #region 🚦️StatusSurface
 // Tone-based status-surface kit: badges, status chips, stat tiles, and empty/error placeholders.
@@ -12,14 +13,14 @@ import { useLabel } from "@semio-tech/ui/elements/Label";
 export type StatusTone = "neutral" | "info" | "success" | "warning" | "danger";
 
 /**
- * 🎶️ STATUS_TONE_SURFACE_CLASS holds the border/background/foreground classes for a StatusTone.
+ * 🎶️ STATUS_TONE_SURFACE_CLASS holds the background/foreground classes for a StatusTone.
  **/
 const STATUS_TONE_SURFACE_CLASS: Record<StatusTone, string> = {
   neutral: "bg-muted text-muted-foreground",
-  info: "border-info-border bg-info-bg text-info-foreground",
-  success: "border-success-border bg-success-bg text-success-foreground",
-  warning: "border-warning-border bg-warning-bg text-warning-foreground",
-  danger: "border-destructive-border bg-destructive-bg text-destructive-foreground",
+  info: "bg-info-bg text-info-foreground",
+  success: "bg-success-bg text-success-foreground",
+  warning: "bg-warning-bg text-warning-foreground",
+  danger: "bg-destructive-bg text-destructive-foreground",
 };
 
 /**
@@ -46,7 +47,7 @@ export interface BadgeProps {
 /** 🏷️ Small tone-colored pill for inline status labels. */
 export function Badge({ id, tone = "neutral", text, icon }: BadgeProps): React.ReactElement {
   return (
-    <span id={id} data-slot="badge" className={cn("inline-flex items-center gap-single rounded-full border px-double py-0.5 text-xs font-medium", STATUS_TONE_SURFACE_CLASS[tone])}>
+    <span id={id} data-slot="badge" data-glass-chip="" className={cn("inline-flex items-center gap-single px-double py-0.5 text-xs font-medium", STATUS_TONE_SURFACE_CLASS[tone])}>
       {icon ? <span className="inline-flex shrink-0 items-center justify-center size-tiny [&_svg]:size-full">{icon}</span> : null}
       <span className="truncate">{text}</span>
     </span>
@@ -77,7 +78,7 @@ export function StatusChip({ id, status, label }: StatusChipProps): React.ReactE
   const tone = STATUS_CHIP_TONE[status];
   return (
     <span id={id} data-slot="status-chip" data-status={status} className="inline-flex items-center gap-half text-xs text-muted-foreground">
-      <span className={cn("size-tiny shrink-0 rounded-full", STATUS_TONE_DOT_CLASS[tone])} aria-hidden />
+      <span className={cn("size-tiny shrink-0", STATUS_TONE_DOT_CLASS[tone])} aria-hidden />
       <span className="truncate">{label}</span>
     </span>
   );
@@ -97,16 +98,18 @@ export interface StatCardProps {
 /** 📊️ Labelled metric tile with an optional tone-colored delta badge. */
 export function StatCard({ id, label, value, delta, icon }: StatCardProps): React.ReactElement {
   return (
-    <div id={id} data-slot="stat-card" className="flex flex-col gap-single border p-single">
-      <div className="flex items-center gap-single text-muted-foreground">
-        {icon ? <span className="inline-flex shrink-0 items-center justify-center size-small">{icon}</span> : null}
-        <span className="truncate text-xs">{label}</span>
-      </div>
-      <div className="flex items-baseline gap-single">
-        <span className="text-xl font-semibold text-foreground">{value}</span>
-        {delta ? <Badge tone={delta.tone} text={delta.value} /> : null}
-      </div>
-    </div>
+    <SharedBorderRow id={id} data-slot="stat-card" orientation="vertical">
+      <SharedBorderRowCell className="flex flex-col items-stretch gap-single p-single">
+        <div className="flex items-center gap-single text-muted-foreground">
+          {icon ? <span className="inline-flex shrink-0 items-center justify-center size-small">{icon}</span> : null}
+          <span className="truncate text-xs">{label}</span>
+        </div>
+        <div className="flex items-baseline gap-single">
+          <span className="text-xl font-semibold text-foreground">{value}</span>
+          {delta ? <Badge tone={delta.tone} text={delta.value} /> : null}
+        </div>
+      </SharedBorderRowCell>
+    </SharedBorderRow>
   );
 }
 

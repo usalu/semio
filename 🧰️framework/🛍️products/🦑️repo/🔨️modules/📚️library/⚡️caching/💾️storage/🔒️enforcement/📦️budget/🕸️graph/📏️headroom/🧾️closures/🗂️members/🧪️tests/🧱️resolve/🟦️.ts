@@ -12,7 +12,7 @@ import{indexBuildGraphMembersV1}from"../../🔎️scan/🟦️.ts";
 import closures from"../../../🧬️schema/🔣️.json";
 
 const hash=(value:string|Uint8Array)=>createHash("sha256").update(value).digest("hex"),P=closures.definitions.Protocol.const;
-const text=readFileSync(new URL("../../../🟦️.ts",import.meta.url),"utf8"),tree=ts.createSourceFile("closures.ts",text,ts.ScriptTarget.Latest,true);
+const text=readFileSync(new URL("../../../🏷️names/🟦️.ts",import.meta.url),"utf8")+"\n"+readFileSync(new URL("../../../🟦️.ts",import.meta.url),"utf8"),tree=ts.createSourceFile("closures.ts",text,ts.ScriptTarget.Latest,true);
 const declarations=(names:string[])=>tree.statements.filter(node=>ts.isFunctionDeclaration(node)&&Boolean(node.name&&names.includes(node.name.text))).map(node=>node.getText(tree).replace(/^export /u,"")).join("\n");
 const load=(ports:Record<string,unknown>)=>Function(...Object.keys(ports),ts.transpileModule(declarations(["role","acceptReferences","acceptLinks","resolveIncrementalRows"]),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.None}}).outputText+";return resolveIncrementalRows")(...Object.values(ports))as(proof:any)=>void;
 

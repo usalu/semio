@@ -109,12 +109,3 @@ fn brep_row_receivers_never_exceed_their_pinned_size() {
     assert!(over.is_empty(), "row receivers above their ceilings: {over:?}");
 }
 //#endregion 🧪️ForestBrepSeedBudget
-#[test]
-fn debug_nested_receivers() {
-    use semio_framework_dsl_record::RecordValue;
-    use semio_framework_value_native_owned::native_decoding::owned::NativeReceive;
-    use semio_s_artifact_stdio_semio_brep::schema::snapshot::*;
-    use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2,SemioPoint3};
-    fn r<T: NativeReceive<RecordValue>>() -> usize { std::mem::size_of::<<T as NativeReceive<RecordValue>>::Receiver>() }
-    eprintln!("[DEBUG] p3={} p2={} curve={} curve2={} surface={} optcurve2={} tuple={} string={} f64={} bool={} vecloopedge={} vecstring={} loopedge={} shellface={} vertex={} edge={} face={}", r::<SemioPoint3>(), r::<SemioPoint2>(), r::<BrepCurve>(), r::<BrepCurve2>(), r::<BrepSurface>(), r::<Option<BrepCurve2>>(), r::<(f64,f64)>(), r::<String>(), r::<f64>(), r::<bool>(), r::<Vec<BrepLoopEdge>>(), r::<Vec<String>>(), r::<BrepLoopEdge>(), r::<BrepShellFace>(), r::<BrepVertex>(), r::<BrepEdge>(), r::<BrepFace>());
-}

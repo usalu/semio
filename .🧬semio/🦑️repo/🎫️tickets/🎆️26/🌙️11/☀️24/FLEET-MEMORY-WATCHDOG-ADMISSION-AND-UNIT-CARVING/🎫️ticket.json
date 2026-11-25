@@ -1,9 +1,9 @@
 {
   "title": "Fleet Memory Watchdog Admission and Unit Carving",
   "emoji": "🚨",
-  "status": "open",
+  "status": "closed",
   "description": "Mac workers constantly run out of application memory and macOS pauses programs, blocking the whole worker. (1) Every memory-relevant process the repo launches is admitted against measured free memory with a predicted peak, watched while running and throttled/suspended/cancelled-and-requeued by a repo-owned watchdog in a declared order before the OS acts, with an alarm naming process, owner and action; per-worker swap visible in fleet status. (2) Carve packages so every compile unit fits a 16 GB worker, with a schema-declared per-unit memory ceiling and a law that fails when exceeded. (3) Prove with numbers on a real worker, language-agnostic tests with independent oracle, watchdog overhead measured.",
-  "summary": "Observe-only tick shortened from 15 s to 8 s so the Windows worker's record stays inside the 30 s freshness bound; results.md gained the four live interventions on g1-m10, g1-m02 and g1-m01 (all at OS pressure critical with heavy swap traffic, all back to calm after one or two cancels).",
+  "summary": "Measured the cad component final directly: 8,036 MB charged (phys_footprint) against 2,198 MB resident; thin-LTO start holds the closure's 6,259 MB of dependency bitcode until the end. No declared compiler setting brings it under 4,096 MB; the closure must shrink (largest libraries listed in carve-C3-final-memory.md). The broker now records units at the larger of resident and charged memory (unitPeakBytesV1, test with Python oracle), the cad carving entry carries 8,036 MB. cad and puzzle stay on the carving list; puzzle was not measured directly.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2798"
   },
@@ -125,6 +125,26 @@
       "client": "claude-code",
       "checkpoint": "",
       "prompt": "Live finding: on g1-m10 the final semio_hub_draw_component was cancelled by the warden a second time at about 2 GB after its pass restarted (cancel loop). The native-build broker admits against physical memory minus a reserve, not against measured available memory, so it restarts the same unit into the same shortage. Bound broker starts by measured available memory and by the warden's level."
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-24 23:40:59",
+      "author": "ueli",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "8d17d8ba3998690932b0032ea2ca41bce5c994b6",
+      "summary": "Measured the cad component final directly: 8,036 MB charged (phys_footprint) against 2,198 MB resident; thin-LTO start holds the closure's 6,259 MB of dependency bitcode until the end. No declared compiler setting brings it under 4,096 MB; the closure must shrink (largest libraries listed in carve-C3-final-memory.md). The broker now records units at the larger of resident and charged memory (unitPeakBytesV1, test with Python oracle), the cad carving entry carries 8,036 MB. cad and puzzle stay on the carving list; puzzle was not measured directly.",
+      "files": [
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🗃️🏃️process🗃️📦️artifacts🗃️🏗️nativebuild🗃️🎟️admission💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🗃️🏃️process🗃️📦️artifacts🗃️🏗️nativebuild🗃️🎟️admission🗃️🧪️tests🗃️🧯️available🗃️🎫️broker💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🗃️🏃️process🗃️📦️artifacts🗃️🏗️nativebuild🗃️🎟️admission🗃️🧬️schema⚙️🔣️"
+        }
+      ]
     }
   ]
 }

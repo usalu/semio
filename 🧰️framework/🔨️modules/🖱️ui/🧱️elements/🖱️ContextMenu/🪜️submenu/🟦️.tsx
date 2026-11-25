@@ -145,6 +145,7 @@ function ContextMenuSubmenuRow({ item, rowPath, ordinal, isActive, submenuOpen, 
     >
       <button
         {...sharedBorderlessBoxProps}
+        data-shared-border-cell=""
         id={item.id}
         ref={(node) => registerRow(pathKey, node)}
         aria-disabled={item.disabled || undefined}
@@ -189,12 +190,12 @@ export function renderFixedContextMenuItems(items: readonly ContextMenuItem[], p
     if (item.separator) {
       if (item.label) {
         return (
-          <div key={`${item.id}-sep`} className="select-none px-single pb-half pt-single text-xs text-muted-foreground" role="separator" aria-label={item.label}>
+          <div key={`${item.id}-sep`} {...sharedBorderlessBoxProps} className="flex min-h-(--chip-row-height)! select-none items-center px-single text-xs text-muted-foreground" role="separator" aria-label={item.label}>
             {item.label}
           </div>
         );
       }
-      return <div key={`${item.id}-sep`} className="h-px bg-border my-single" role="separator" />;
+      return <div key={`${item.id}-sep`} className="h-0" role="separator" />;
     }
     const ordinal = ordinals.get(item.id);
     const isActive = contextMenuPathsEqual(activePath, rowPath);

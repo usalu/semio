@@ -313,7 +313,7 @@ pub fn $create() -> semio_plugin::AppDefinition {
     let builder = canvas::window_kinds().into_iter().fold(builder, |builder, kind| builder.window_kind_def(kind));
     let builder = builder.window_kind_def(semio_s_artifact_stdio_contract::editing::snapshot_details_window_definition());
     let builder = builder.default_layout(canvas::document_layout(main::WINDOW_KIND_ID));
-    let mut definition = semio_s_artifact_stdio_contract::editing::snapshot_edit_actions_with(builder).build_definition();
+    let mut definition = semio_s_artifact_stdio_contract::editing::snapshot_edit_actions_with(canvas::edit_actions_with(builder)).build_definition();
     canvas::install_object_interaction(&mut definition);
     definition
 }

@@ -13,22 +13,118 @@
    "de": "Eine gebrauchte 16-Zoll-Orchesterbratsche (406 mm Korpus, 364 mm Mensur) mit ihrem 740-mm-Bogen in einem verblichenen pfeilförmigen Formetui von 0,80 m, wie ein Gebrauchtinstrumentenhandel sie anbietet: ein mit Leisten geleimter Riss im unteren Deckenbogen, Kolophoniumstaub unter den Saiten, abgegriffener Lack an der Schulter und abgestoßene Kofferecken, eingerichtet und gestimmt zum Weiterspielen. Offen gelagert, auf dem Rücken getragen und im Orchesterstuhl sitzend gespielt."
   },
   "tags": [
-   "used",
-   "instrument",
-   "music",
-   "second-hand",
-   "strings",
-   "viola",
-   "bowed",
-   "chordophone",
-   "orchestra",
-   "case",
-   "dart-case",
-   "bow",
-   "spruce",
-   "maple",
-   "ebony",
-   "music-school"
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "instrument",
+    "title": {
+     "en": "instrument",
+     "de": "Instrument"
+    }
+   },
+   {
+    "id": "music",
+    "title": {
+     "en": "music",
+     "de": "Musik"
+    }
+   },
+   {
+    "id": "second-hand",
+    "title": {
+     "en": "second-hand",
+     "de": "Second-Hand"
+    }
+   },
+   {
+    "id": "strings",
+    "title": {
+     "en": "strings",
+     "de": "Saiteninstrumente"
+    }
+   },
+   {
+    "id": "viola",
+    "title": {
+     "en": "viola",
+     "de": "Bratsche"
+    }
+   },
+   {
+    "id": "bowed",
+    "title": {
+     "en": "bowed",
+     "de": "gestrichen"
+    }
+   },
+   {
+    "id": "chordophone",
+    "title": {
+     "en": "chordophone",
+     "de": "Chordophon"
+    }
+   },
+   {
+    "id": "orchestra",
+    "title": {
+     "en": "orchestra",
+     "de": "Orchester"
+    }
+   },
+   {
+    "id": "case",
+    "title": {
+     "en": "case",
+     "de": "Koffer"
+    }
+   },
+   {
+    "id": "dart-case",
+    "title": {
+     "en": "dart case",
+     "de": "Dartkoffer"
+    }
+   },
+   {
+    "id": "bow",
+    "title": {
+     "en": "bow",
+     "de": "Bogen"
+    }
+   },
+   {
+    "id": "spruce",
+    "title": {
+     "en": "spruce",
+     "de": "Fichte"
+    }
+   },
+   {
+    "id": "maple",
+    "title": {
+     "en": "maple",
+     "de": "Ahorn"
+    }
+   },
+   {
+    "id": "ebony",
+    "title": {
+     "en": "ebony",
+     "de": "Ebenholz"
+    }
+   },
+   {
+    "id": "music-school",
+    "title": {
+     "en": "music school",
+     "de": "Musikschule"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content (used instruments wave, row 05)",
@@ -70547,8 +70643,1012 @@
     ]
    },
    "500": {
-    "status": "unavailable",
-    "denominator": 500
+    "status": "authored",
+    "denominator": 500,
+    "decisions": [
+     {
+      "en": "Body for the 75 mm feature: the open case keeps floor, wall ring, bed, lid ring and lid skin with their outlines reduced from 22 to 12 points (the rings are hollow parts judged by their overall extents, floor, bed and skin declared sheets), so the viola still shows in it; the viola is one 76 mm prism of its outline in 22 instead of 44 points (back, ribs and top merged), the neck with scroll and fingerboard one 75 mm bar, the bow its slender stick in two sections; the bow holders are below the feature and left out.",
+      "de": "Körper für das 75-mm-Merkmal: der offene Koffer behält Boden, Wandring, Bett, Deckelring und Deckelhaut mit von 22 auf 12 Punkte reduzierten Umrissen (die Ringe sind Hohlteile, nach ihren Gesamtmaßen beurteilt, Boden, Bett und Haut erklärte Platten), damit die Bratsche darin sichtbar bleibt; die Bratsche ist ein 76-mm-Prisma ihres Umrisses in 22 statt 44 Punkten (Boden, Zargen und Decke verschmolzen), der Hals mit Schnecke und Griffbrett ein 75-mm-Stab, der Bogen seine schlanke Stange in zwei Schnitten; die Bogenhalter liegen unter dem Merkmal und entfallen."
+     },
+     {
+      "en": "Thermal: the body solids in their regions by reference, the top as a shell of its layer on the prism, the fingerboard as a shell of its layer on the bar and one slender string.",
+      "de": "Thermik: die Körper in ihren Regionen als Verweis, die Decke als Schale ihrer Schicht auf dem Prisma, das Griffbrett als Schale seiner Schicht auf dem Stab und eine schlanke Saite."
+     },
+     {
+      "en": "Structure: the members by reference, the hinge and the two bow holders as 75 mm joints and four mass markers.",
+      "de": "Tragwerk: die Stäbe als Verweis, das Scharnier und die zwei Bogenhalter als 75-mm-Gelenke und vier Massenmarken."
+     }
+    ],
+    "body": [
+     {
+      "id": "base-floor",
+      "kind": "extrude",
+      "bone": "case",
+      "material": "case-fabric",
+      "role": "body",
+      "tone": 0.3,
+      "profile": [
+       [
+        -0.0646,
+        0.7426
+       ],
+       [
+        -0.0432,
+        0.7836
+       ],
+       [
+        0,
+        0.8
+       ],
+       [
+        0.0432,
+        0.7836
+       ],
+       [
+        0.0646,
+        0.7426
+       ],
+       [
+        0.1341,
+        0.1508
+       ],
+       [
+        0.1218,
+        0.0768
+       ],
+       [
+        0.072,
+        0.0208
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        -0.072,
+        0.0208
+       ],
+       [
+        -0.1218,
+        0.0768
+       ],
+       [
+        -0.1341,
+        0.1508
+       ]
+      ],
+      "plane": "zx",
+      "from": 0,
+      "to": 0.012,
+      "taperTo": [
+       0.97,
+       1
+      ],
+      "sheet": true
+     },
+     {
+      "id": "base-wall",
+      "kind": "extrude",
+      "bone": "case",
+      "material": "case-fabric",
+      "role": "body",
+      "tone": 0.3,
+      "profile": [
+       [
+        -0.0646,
+        0.7426
+       ],
+       [
+        -0.0432,
+        0.7836
+       ],
+       [
+        0,
+        0.8
+       ],
+       [
+        0.0432,
+        0.7836
+       ],
+       [
+        0.0646,
+        0.7426
+       ],
+       [
+        0.1341,
+        0.1508
+       ],
+       [
+        0.1218,
+        0.0768
+       ],
+       [
+        0.072,
+        0.0208
+       ],
+       [
+        0,
+        0
+       ],
+       [
+        -0.072,
+        0.0208
+       ],
+       [
+        -0.1218,
+        0.0768
+       ],
+       [
+        -0.1341,
+        0.1508
+       ]
+      ],
+      "plane": "zx",
+      "from": 0.0115,
+      "to": 0.092,
+      "holes": [
+       [
+        [
+         -0.0546,
+         0.7414
+        ],
+        [
+         -0.0366,
+         0.7761
+        ],
+        [
+         0,
+         0.79
+        ],
+        [
+         0.0366,
+         0.7761
+        ],
+        [
+         0.0546,
+         0.7414
+        ],
+        [
+         0.1241,
+         0.1496
+        ],
+        [
+         0.1128,
+         0.0811
+        ],
+        [
+         0.0667,
+         0.0293
+        ],
+        [
+         0,
+         0.01
+        ],
+        [
+         -0.0667,
+         0.0293
+        ],
+        [
+         -0.1128,
+         0.0811
+        ],
+        [
+         -0.1241,
+         0.1496
+        ]
+       ]
+      ]
+     },
+     {
+      "id": "bed",
+      "kind": "extrude",
+      "bone": "case",
+      "material": "velour",
+      "role": "body",
+      "tone": 0.85,
+      "profile": [
+       [
+        -0.0541,
+        0.7414
+       ],
+       [
+        -0.0362,
+        0.7757
+       ],
+       [
+        0,
+        0.7895
+       ],
+       [
+        0.0362,
+        0.7757
+       ],
+       [
+        0.0541,
+        0.7414
+       ],
+       [
+        0.1237,
+        0.1495
+       ],
+       [
+        0.1123,
+        0.0813
+       ],
+       [
+        0.0664,
+        0.0297
+       ],
+       [
+        0,
+        0.0105
+       ],
+       [
+        -0.0664,
+        0.0297
+       ],
+       [
+        -0.1123,
+        0.0813
+       ],
+       [
+        -0.1237,
+        0.1495
+       ]
+      ],
+      "plane": "zx",
+      "from": 0.0115,
+      "to": 0.0195,
+      "sheet": true
+     },
+     {
+      "id": "lid-wall",
+      "kind": "extrude",
+      "bone": "lid",
+      "material": "case-fabric",
+      "role": "body",
+      "tone": 0.3,
+      "profile": [
+       [
+        0.3911,
+        0.1282
+       ],
+       [
+        0.4293,
+        0.1022
+       ],
+       [
+        0.4406,
+        0.0574
+       ],
+       [
+        0.4193,
+        0.0164
+       ],
+       [
+        0.3761,
+        0
+       ],
+       [
+        -0.2198,
+        0
+       ],
+       [
+        -0.2918,
+        0.0208
+       ],
+       [
+        -0.3417,
+        0.0768
+       ],
+       [
+        -0.3539,
+        0.1508
+       ],
+       [
+        -0.3249,
+        0.2198
+       ],
+       [
+        -0.2634,
+        0.2628
+       ],
+       [
+        -0.1886,
+        0.2663
+       ]
+      ],
+      "plane": "zx",
+      "from": 0,
+      "to": 0.0485,
+      "holes": [
+       [
+        [
+         0.3888,
+         0.1185
+        ],
+        [
+         0.4211,
+         0.0965
+        ],
+        [
+         0.4307,
+         0.0586
+        ],
+        [
+         0.4126,
+         0.0239
+        ],
+        [
+         0.3761,
+         0.01
+        ],
+        [
+         -0.2198,
+         0.01
+        ],
+        [
+         -0.2865,
+         0.0293
+        ],
+        [
+         -0.3326,
+         0.0811
+        ],
+        [
+         -0.344,
+         0.1496
+        ],
+        [
+         -0.3171,
+         0.2136
+        ],
+        [
+         -0.2602,
+         0.2533
+        ],
+        [
+         -0.189,
+         0.2562
+        ]
+       ]
+      ]
+     },
+     {
+      "id": "lid-skin",
+      "kind": "extrude",
+      "bone": "lid",
+      "material": "case-fabric",
+      "role": "body",
+      "tone": 0.32,
+      "profile": [
+       [
+        0.3911,
+        0.1282
+       ],
+       [
+        0.4293,
+        0.1022
+       ],
+       [
+        0.4406,
+        0.0574
+       ],
+       [
+        0.4193,
+        0.0164
+       ],
+       [
+        0.3761,
+        0
+       ],
+       [
+        -0.2198,
+        0
+       ],
+       [
+        -0.2918,
+        0.0208
+       ],
+       [
+        -0.3417,
+        0.0768
+       ],
+       [
+        -0.3539,
+        0.1508
+       ],
+       [
+        -0.3249,
+        0.2198
+       ],
+       [
+        -0.2634,
+        0.2628
+       ],
+       [
+        -0.1886,
+        0.2663
+       ]
+      ],
+      "plane": "zx",
+      "from": 0.048,
+      "to": 0.058,
+      "taperTo": [
+       1,
+       0.97
+      ],
+      "sheet": true
+     },
+     {
+      "id": "viola-box",
+      "kind": "extrude",
+      "bone": "viola",
+      "material": "maple",
+      "role": "body",
+      "tone": 0.42,
+      "profile": [
+       [
+        0,
+        0.0085
+       ],
+       [
+        -0.0767,
+        0.0241
+       ],
+       [
+        -0.1077,
+        0.0619
+       ],
+       [
+        -0.115,
+        0.1109
+       ],
+       [
+        -0.1038,
+        0.1568
+       ],
+       [
+        -0.0741,
+        0.1844
+       ],
+       [
+        -0.0625,
+        0.2209
+       ],
+       [
+        -0.0714,
+        0.2564
+       ],
+       [
+        -0.0905,
+        0.2963
+       ],
+       [
+        -0.0847,
+        0.373
+       ],
+       [
+        -0.056,
+        0.4017
+       ],
+       [
+        0,
+        0.4095
+       ],
+       [
+        0.056,
+        0.4017
+       ],
+       [
+        0.0847,
+        0.373
+       ],
+       [
+        0.0905,
+        0.2963
+       ],
+       [
+        0.0714,
+        0.2564
+       ],
+       [
+        0.0625,
+        0.2209
+       ],
+       [
+        0.0741,
+        0.1844
+       ],
+       [
+        0.1038,
+        0.1568
+       ],
+       [
+        0.115,
+        0.1109
+       ],
+       [
+        0.1077,
+        0.0619
+       ],
+       [
+        0.0767,
+        0.0241
+       ]
+      ],
+      "plane": "zx",
+      "from": -0.035,
+      "to": 0.041
+     },
+     {
+      "id": "neck-bar",
+      "kind": "box",
+      "bone": "viola",
+      "material": "maple",
+      "role": "body",
+      "tone": 0.4,
+      "size": [
+       0.26,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.542,
+        0.003,
+        0
+       ]
+      }
+     },
+     {
+      "id": "bow-stick",
+      "kind": "loft",
+      "bone": "bow-stroke",
+      "material": "pernambuco",
+      "role": "body",
+      "tone": 0.42,
+      "sections": [
+       {
+        "at": [
+         -0.065,
+         0.0183,
+         0
+        ],
+        "rx": 0.0072,
+        "ry": 0.0042,
+        "exponent": 2,
+        "rotation": [
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ]
+       },
+       {
+        "at": [
+         0.66,
+         0.0132,
+         0
+        ],
+        "rx": 0.00562,
+        "ry": 0.00262,
+        "exponent": 2,
+        "rotation": [
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ]
+       }
+      ],
+      "capStart": true,
+      "capEnd": true,
+      "slender": true
+     }
+    ],
+    "thermal": [
+     {
+      "id": "th-base-floor",
+      "of": "base-floor",
+      "region": "case-cover",
+      "sectionFaces": [
+       "+v"
+      ]
+     },
+     {
+      "id": "th-base-wall",
+      "of": "base-wall",
+      "region": "case-cover"
+     },
+     {
+      "id": "th-bed",
+      "of": "bed",
+      "region": "case-lining",
+      "sectionFaces": [
+       "-v"
+      ]
+     },
+     {
+      "id": "th-lid-wall",
+      "of": "lid-wall",
+      "region": "case-cover"
+     },
+     {
+      "id": "th-lid-skin",
+      "of": "lid-skin",
+      "region": "case-cover",
+      "sectionFaces": [
+       "-v"
+      ]
+     },
+     {
+      "id": "th-viola-box",
+      "of": "viola-box",
+      "region": "viola-body"
+     },
+     {
+      "id": "th-neck-bar",
+      "of": "neck-bar",
+      "region": "viola-body"
+     },
+     {
+      "id": "th-bow-stick",
+      "of": "bow-stick",
+      "region": "bow"
+     },
+     {
+      "id": "th-top-plate",
+      "kind": "extrude",
+      "bone": "viola",
+      "material": "spruce",
+      "role": "body",
+      "tone": 0.66,
+      "profile": [
+       [
+        0,
+        0.0085
+       ],
+       [
+        -0.0767,
+        0.0241
+       ],
+       [
+        -0.1077,
+        0.0619
+       ],
+       [
+        -0.115,
+        0.1109
+       ],
+       [
+        -0.1038,
+        0.1568
+       ],
+       [
+        -0.0741,
+        0.1844
+       ],
+       [
+        -0.0625,
+        0.2209
+       ],
+       [
+        -0.0714,
+        0.2564
+       ],
+       [
+        -0.0905,
+        0.2963
+       ],
+       [
+        -0.0847,
+        0.373
+       ],
+       [
+        -0.056,
+        0.4017
+       ],
+       [
+        0,
+        0.4095
+       ],
+       [
+        0.056,
+        0.4017
+       ],
+       [
+        0.0847,
+        0.373
+       ],
+       [
+        0.0905,
+        0.2963
+       ],
+       [
+        0.0714,
+        0.2564
+       ],
+       [
+        0.0625,
+        0.2209
+       ],
+       [
+        0.0741,
+        0.1844
+       ],
+       [
+        0.1038,
+        0.1568
+       ],
+       [
+        0.115,
+        0.1109
+       ],
+       [
+        0.1077,
+        0.0619
+       ],
+       [
+        0.0767,
+        0.0241
+       ]
+      ],
+      "plane": "zx",
+      "from": 0.041,
+      "to": 0.044,
+      "region": "viola-top",
+      "layer": "spruce-plate"
+     },
+     {
+      "id": "th-fingerboard",
+      "kind": "box",
+      "bone": "viola",
+      "material": "ebony",
+      "role": "body",
+      "tone": 0.1,
+      "size": [
+       0.295,
+       0.01,
+       0.044
+      ],
+      "transform": {
+       "translation": [
+        0.4195,
+        0.0455,
+        0
+       ]
+      },
+      "region": "fittings",
+      "layer": "ebony-wall"
+     },
+     {
+      "id": "th-string",
+      "kind": "capsule",
+      "bone": "viola",
+      "material": "string-steel",
+      "role": "body",
+      "tone": 0.6,
+      "p0": [
+       0.197,
+       0.052,
+       0
+      ],
+      "p1": [
+       0.563,
+       0.052,
+       0
+      ],
+      "r0": 0.001,
+      "r1": 0.001,
+      "region": "strings",
+      "slender": true
+     }
+    ],
+    "structure": [
+     {
+      "id": "st-base-floor",
+      "of": "base-floor",
+      "member": "case",
+      "part": "member"
+     },
+     {
+      "id": "st-base-wall",
+      "of": "base-wall",
+      "member": "case",
+      "part": "member"
+     },
+     {
+      "id": "st-bed",
+      "of": "bed",
+      "member": "case",
+      "part": "member"
+     },
+     {
+      "id": "st-lid-wall",
+      "of": "lid-wall",
+      "member": "lid",
+      "part": "member"
+     },
+     {
+      "id": "st-lid-skin",
+      "of": "lid-skin",
+      "member": "lid",
+      "part": "member"
+     },
+     {
+      "id": "st-viola-box",
+      "of": "viola-box",
+      "member": "viola",
+      "part": "member"
+     },
+     {
+      "id": "st-neck-bar",
+      "of": "neck-bar",
+      "member": "viola",
+      "part": "member"
+     },
+     {
+      "id": "st-bow-stick",
+      "of": "bow-stick",
+      "member": "bow-stroke",
+      "part": "member"
+     },
+     {
+      "id": "st-hinge",
+      "kind": "box",
+      "bone": "lid",
+      "material": "case-fabric",
+      "role": "body",
+      "tone": 0.25,
+      "size": [
+       0.075,
+       0.075,
+       0.592
+      ],
+      "transform": {
+       "translation": [
+        0.0375,
+        0.0245,
+        0
+       ]
+      },
+      "member": "lid",
+      "part": "joint"
+     },
+     {
+      "id": "st-bow-holder-frog",
+      "kind": "box",
+      "bone": "lid",
+      "material": "ebony",
+      "role": "body",
+      "tone": 0.2,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.178,
+        0.0245,
+        -0.21
+       ]
+      },
+      "member": "lid",
+      "part": "joint"
+     },
+     {
+      "id": "st-bow-holder-tip",
+      "kind": "box",
+      "bone": "lid",
+      "material": "ebony",
+      "role": "body",
+      "tone": 0.2,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.078,
+        0.0245,
+        0.351
+       ]
+      },
+      "member": "lid",
+      "part": "joint"
+     },
+     {
+      "id": "st-mass-case",
+      "kind": "box",
+      "bone": "case",
+      "material": "case-shell",
+      "role": "detail",
+      "tone": 0.6,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.36,
+        0.04,
+        0
+       ]
+      },
+      "member": "case",
+      "part": "mass"
+     },
+     {
+      "id": "st-mass-lid",
+      "kind": "box",
+      "bone": "lid",
+      "material": "case-shell",
+      "role": "detail",
+      "tone": 0.6,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.115,
+        0.0245,
+        0
+       ]
+      },
+      "member": "lid",
+      "part": "mass"
+     },
+     {
+      "id": "st-mass-bow",
+      "kind": "box",
+      "bone": "bow-stroke",
+      "material": "pernambuco",
+      "role": "detail",
+      "tone": 0.6,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.26,
+        0.012,
+        0
+       ]
+      },
+      "member": "bow-stroke",
+      "part": "mass"
+     },
+     {
+      "id": "st-mass-viola",
+      "kind": "box",
+      "bone": "viola",
+      "material": "maple",
+      "role": "detail",
+      "tone": 0.6,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.2,
+        0.003,
+        0
+       ]
+      },
+      "member": "viola",
+      "part": "mass"
+     }
+    ]
    }
   },
   "presentation": {

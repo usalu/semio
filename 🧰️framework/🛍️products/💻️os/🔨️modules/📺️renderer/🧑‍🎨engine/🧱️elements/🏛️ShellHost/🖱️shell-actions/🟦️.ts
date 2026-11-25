@@ -95,7 +95,7 @@ export function useShellActions(core: ShellCoreAfterShellUriAndDocuments) {
     hostMode, mobile, defaults, dispatch, historyStore, exampleOptionsRef,
     localHistoryOrderRef, loadedPlugins, pluginSupervisorById, session, uiLocale, uiTerminology, applyHistoryPatch,
     applyLeftoverInteractionView, refreshHistorySnapshot, hostApp, hostControllerId, hostCatalogueTabId, spacePrograms,
-    syncCardKind, syncDraftPath, clipboardFragmentRef, extraWindowInstancesRef, awaitOperationSettle, sessionWorkRef,
+    syncCardKind, syncDraftPath, clipboardFragmentRef, clipboardQueue, extraWindowInstancesRef, awaitOperationSettle, sessionWorkRef,
     dropForSealedInstance, dropForRetiredInstance, treeWindowSchedulerRef, identityRef, verifiedSessionAuthorityRef,
     uiLocaleRef, uiTerminologyRef, showTransientNoticeRef, dispatchCheckpointRef, inferenceHistoryByRuntimeKeyRef,
     openDocumentSessionsRef, captureDialogOrigin, isCurrentDialogOrigin, captureEffectOwner, isCurrentEffectOwner,
@@ -147,7 +147,7 @@ export function useShellActions(core: ShellCoreAfterShellUriAndDocuments) {
         return { reason: "dispatch-failed", detail: text, diagnostic, draftDisposition };
       };
       try {
-        return await runShellInput({ clipboardFragmentRef, primaryPluginId, dispatch, reloadPlugin, uninstallPlugin, session, hubIdentityGateRef, showTransientNoticeRef, uiLocaleRef, hubIdentitySettleRef, spawnedIdsRef, panel, loadedPlugins, extraWindowInstancesRef, captureDialogOrigin, isCurrentDialogOrigin, captureEffectOwner, startTutorialRef, toggleTutorialRecordingRef, tutorialPlayingRef, tutorialDrivenRef, tutorialRecordingRef, tutorialRecorderRef, completeIntroductionInteraction, activeWindowIdRef, activeUtilityByWindowIdRef, writeUtilityRegister, activeToolIdRef, writeToolRegister, uiTerminologyRef, applyHistoryPatch, applyLeftoverInteractionView, isCurrentEffectOwner, applyHostEffects, clearAllWindowUtilities, dispatchCheckpointRef, browseSyncBackbonePath, syncCardKind, syncDraftPath, attachSyncTarget, detachSyncBackbone, hostMode, hostControllerId, spacePrograms, spawnProgram, hostApp, updateSpacePanel, mobile, inferenceHistoryByRuntimeKeyRef, openDocumentSessionsRef, historyCanUndo, localHistoryOrderRef, verifiedSessionAuthorityRef, ensureBackboneWorker, directBrowserActorForSession, dropForSealedInstance, uiLocale, uiTerminology, identityRef, treeWindowSchedulerRef, dispatchDirectBrowserActorCommand, sessionWorkRef, historyStore, exampleOptionsRef, defaults, refreshHistorySnapshot, observeLocalInteraction, awaitOperationSettle, dropForRetiredInstance, requested, refuse, applied, entry, submittedOrigin, core, requiredOperationOwner, onAction, propagateFailure, refusalReasonForError, lifecycle });
+        return await clipboardQueue.run(requested, () => runShellInput({ clipboardFragmentRef, primaryPluginId, dispatch, reloadPlugin, uninstallPlugin, session, hubIdentityGateRef, showTransientNoticeRef, uiLocaleRef, hubIdentitySettleRef, spawnedIdsRef, panel, loadedPlugins, extraWindowInstancesRef, captureDialogOrigin, isCurrentDialogOrigin, captureEffectOwner, startTutorialRef, toggleTutorialRecordingRef, tutorialPlayingRef, tutorialDrivenRef, tutorialRecordingRef, tutorialRecorderRef, completeIntroductionInteraction, activeWindowIdRef, activeUtilityByWindowIdRef, writeUtilityRegister, activeToolIdRef, writeToolRegister, uiTerminologyRef, applyHistoryPatch, applyLeftoverInteractionView, isCurrentEffectOwner, applyHostEffects, clearAllWindowUtilities, dispatchCheckpointRef, browseSyncBackbonePath, syncCardKind, syncDraftPath, attachSyncTarget, detachSyncBackbone, hostMode, hostControllerId, spacePrograms, spawnProgram, hostApp, updateSpacePanel, mobile, inferenceHistoryByRuntimeKeyRef, openDocumentSessionsRef, historyCanUndo, localHistoryOrderRef, verifiedSessionAuthorityRef, ensureBackboneWorker, directBrowserActorForSession, dropForSealedInstance, uiLocale, uiTerminology, identityRef, treeWindowSchedulerRef, dispatchDirectBrowserActorCommand, sessionWorkRef, historyStore, exampleOptionsRef, defaults, refreshHistorySnapshot, observeLocalInteraction, awaitOperationSettle, dropForRetiredInstance, requested, refuse, applied, entry, submittedOrigin, core, requiredOperationOwner, onAction, propagateFailure, refusalReasonForError, lifecycle }));
       } catch (unexpected) {
         const outcome = refuse("dispatch-failed", `unexpected: ${String(unexpected instanceof Error ? unexpected.message : unexpected)}`, false, unexpected instanceof SemioFaultError ? inputDiagnosticV1(unexpected.fault) : undefined, unexpected instanceof SemioFaultError ? historyInputDraftDispositionV1(unexpected.fault) : undefined);
         if (propagateFailure) throw unexpected;
@@ -171,6 +171,7 @@ export function useShellActions(core: ShellCoreAfterShellUriAndDocuments) {
       attachSyncTarget,
       browseSyncBackbonePath,
       clearAllWindowUtilities,
+      clipboardQueue,
       detachSyncBackbone,
       injectActiveUtility,
       loadedPlugins,

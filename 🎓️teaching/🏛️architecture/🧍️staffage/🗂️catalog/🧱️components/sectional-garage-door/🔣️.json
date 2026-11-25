@@ -13,13 +13,55 @@
       "de": "Ein gedämmtes, 2,5 m breites und 2,0 m hohes Sektionaltor aus vier 40-mm-PU-Sandwichpaneelen (etwa 56 kg) im Vertikalschnitt: gelenkig verbundene Paneele mit Rollen laufen in einer senkrechten, gebogenen (R 0,5 m) und waagerechten Schiene, ausgeglichen durch eine Torsionsfeder auf einer Seiltrommelwelle; Posen geschlossen, halb offen und offen sowie die vollständige Öffnungsbewegung."
     },
     "tags": [
-      "component",
-      "door",
-      "garage",
-      "sectional",
-      "mechanism",
-      "spring",
-      "conditioned"
+      {
+        "id": "component",
+        "title": {
+          "en": "component",
+          "de": "Bauteil"
+        }
+      },
+      {
+        "id": "door",
+        "title": {
+          "en": "door",
+          "de": "Tür"
+        }
+      },
+      {
+        "id": "garage",
+        "title": {
+          "en": "garage",
+          "de": "Garage"
+        }
+      },
+      {
+        "id": "sectional",
+        "title": {
+          "en": "sectional",
+          "de": "Sektionaltor"
+        }
+      },
+      {
+        "id": "mechanism",
+        "title": {
+          "en": "mechanism",
+          "de": "Mechanik"
+        }
+      },
+      {
+        "id": "spring",
+        "title": {
+          "en": "spring",
+          "de": "Feder"
+        }
+      },
+      {
+        "id": "conditioned",
+        "title": {
+          "en": "conditioned",
+          "de": "klimatisiert"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage component authors (NW-C)",
@@ -414,25 +456,51 @@
         }
       },
       {
-        "id": "cable-eye",
+        "id": "cable-eye-left",
         "bone": "panel-1",
         "x": 0.06,
         "y": 0.01,
+        "z": 1.178,
         "kind": "attachment",
         "title": {
-          "en": "Cable stud under the bottom roller carrier",
-          "de": "Seilbolzen unter dem unteren Rollenhalter"
+          "en": "Left cable stud under the bottom roller carrier",
+          "de": "Linker Seilbolzen unter dem unteren Rollenhalter"
         }
       },
       {
-        "id": "drum-cable",
+        "id": "cable-eye-right",
+        "bone": "panel-1",
+        "x": 0.06,
+        "y": 0.01,
+        "z": -1.178,
+        "kind": "attachment",
+        "title": {
+          "en": "Right cable stud under the bottom roller carrier",
+          "de": "Rechter Seilbolzen unter dem unteren Rollenhalter"
+        }
+      },
+      {
+        "id": "drum-cable-left",
         "bone": "spring-shaft",
         "x": -0.08,
         "y": 0,
+        "z": 1.185,
         "kind": "attachment",
         "title": {
-          "en": "Cable leaving the drum",
-          "de": "Seilabgang der Trommel"
+          "en": "Cable leaving the left drum",
+          "de": "Seilabgang der linken Trommel"
+        }
+      },
+      {
+        "id": "drum-cable-right",
+        "bone": "spring-shaft",
+        "x": -0.08,
+        "y": 0,
+        "z": -1.185,
+        "kind": "attachment",
+        "title": {
+          "en": "Cable leaving the right drum",
+          "de": "Seilabgang der rechten Trommel"
         }
       }
     ],
@@ -21665,27 +21733,51 @@
         },
         "loads": [
           {
-            "id": "cable-pull",
+            "id": "cable-pull-left",
             "kind": "equipment",
             "title": {
-              "en": "Spring cable pull on the bottom bracket",
-              "de": "Federseilzug am unteren Winkel"
+              "en": "Spring cable pull on the bottom bracket, left cable",
+              "de": "Federseilzug am unteren Winkel, linkes Seil"
             },
-            "anchor": "cable-eye",
+            "anchor": "cable-eye-left",
             "fxN": 0,
-            "fyN": 525.6198,
+            "fyN": 262.8099,
             "source": "authored-estimate"
           },
           {
-            "id": "cable-reaction",
+            "id": "cable-pull-right",
             "kind": "equipment",
             "title": {
-              "en": "Cable reaction at the drum",
-              "de": "Seilreaktion an der Trommel"
+              "en": "Spring cable pull on the bottom bracket, right cable",
+              "de": "Federseilzug am unteren Winkel, rechtes Seil"
             },
-            "anchor": "drum-cable",
+            "anchor": "cable-eye-right",
             "fxN": 0,
-            "fyN": -525.6198,
+            "fyN": 262.8099,
+            "source": "authored-estimate"
+          },
+          {
+            "id": "cable-reaction-left",
+            "kind": "equipment",
+            "title": {
+              "en": "Cable reaction at the drum, left cable",
+              "de": "Seilreaktion an der Trommel, linkes Seil"
+            },
+            "anchor": "drum-cable-left",
+            "fxN": 0,
+            "fyN": -262.8099,
+            "source": "authored-estimate"
+          },
+          {
+            "id": "cable-reaction-right",
+            "kind": "equipment",
+            "title": {
+              "en": "Cable reaction at the drum, right cable",
+              "de": "Seilreaktion an der Trommel, rechtes Seil"
+            },
+            "anchor": "drum-cable-right",
+            "fxN": 0,
+            "fyN": -262.8099,
             "source": "authored-estimate"
           }
         ]
@@ -21748,27 +21840,51 @@
         },
         "loads": [
           {
-            "id": "cable-pull",
+            "id": "cable-pull-left",
             "kind": "equipment",
             "title": {
-              "en": "Spring cable pull on the bottom bracket",
-              "de": "Federseilzug am unteren Winkel"
+              "en": "Spring cable pull on the bottom bracket, left cable",
+              "de": "Federseilzug am unteren Winkel, linkes Seil"
             },
-            "anchor": "cable-eye",
+            "anchor": "cable-eye-left",
             "fxN": 0,
-            "fyN": 304.84447,
+            "fyN": 152.42224,
             "source": "authored-estimate"
           },
           {
-            "id": "cable-reaction",
+            "id": "cable-pull-right",
             "kind": "equipment",
             "title": {
-              "en": "Cable reaction at the drum",
-              "de": "Seilreaktion an der Trommel"
+              "en": "Spring cable pull on the bottom bracket, right cable",
+              "de": "Federseilzug am unteren Winkel, rechtes Seil"
             },
-            "anchor": "drum-cable",
+            "anchor": "cable-eye-right",
             "fxN": 0,
-            "fyN": -304.84447,
+            "fyN": 152.42224,
+            "source": "authored-estimate"
+          },
+          {
+            "id": "cable-reaction-left",
+            "kind": "equipment",
+            "title": {
+              "en": "Cable reaction at the drum, left cable",
+              "de": "Seilreaktion an der Trommel, linkes Seil"
+            },
+            "anchor": "drum-cable-left",
+            "fxN": 0,
+            "fyN": -152.42224,
+            "source": "authored-estimate"
+          },
+          {
+            "id": "cable-reaction-right",
+            "kind": "equipment",
+            "title": {
+              "en": "Cable reaction at the drum, right cable",
+              "de": "Seilreaktion an der Trommel, rechtes Seil"
+            },
+            "anchor": "drum-cable-right",
+            "fxN": 0,
+            "fyN": -152.42224,
             "source": "authored-estimate"
           }
         ]
@@ -21831,25 +21947,49 @@
         },
         "loads": [
           {
-            "id": "cable-pull",
+            "id": "cable-pull-left",
             "kind": "equipment",
             "title": {
-              "en": "Spring cable pull on the bottom bracket",
-              "de": "Federseilzug am unteren Winkel"
+              "en": "Spring cable pull on the bottom bracket, left cable",
+              "de": "Federseilzug am unteren Winkel, linkes Seil"
             },
-            "anchor": "cable-eye",
+            "anchor": "cable-eye-left",
             "fxN": 0,
             "fyN": 0,
             "source": "authored-estimate"
           },
           {
-            "id": "cable-reaction",
+            "id": "cable-pull-right",
             "kind": "equipment",
             "title": {
-              "en": "Cable reaction at the drum",
-              "de": "Seilreaktion an der Trommel"
+              "en": "Spring cable pull on the bottom bracket, right cable",
+              "de": "Federseilzug am unteren Winkel, rechtes Seil"
             },
-            "anchor": "drum-cable",
+            "anchor": "cable-eye-right",
+            "fxN": 0,
+            "fyN": 0,
+            "source": "authored-estimate"
+          },
+          {
+            "id": "cable-reaction-left",
+            "kind": "equipment",
+            "title": {
+              "en": "Cable reaction at the drum, left cable",
+              "de": "Seilreaktion an der Trommel, linkes Seil"
+            },
+            "anchor": "drum-cable-left",
+            "fxN": 0,
+            "fyN": 0,
+            "source": "authored-estimate"
+          },
+          {
+            "id": "cable-reaction-right",
+            "kind": "equipment",
+            "title": {
+              "en": "Cable reaction at the drum, right cable",
+              "de": "Seilreaktion an der Trommel, rechtes Seil"
+            },
+            "anchor": "drum-cable-right",
             "fxN": 0,
             "fyN": 0,
             "source": "authored-estimate"
@@ -21914,27 +22054,51 @@
         },
         "loads": [
           {
-            "id": "cable-pull",
+            "id": "cable-pull-left",
             "kind": "equipment",
             "title": {
-              "en": "Spring cable pull on the bottom bracket",
-              "de": "Federseilzug am unteren Winkel"
+              "en": "Spring cable pull on the bottom bracket, left cable",
+              "de": "Federseilzug am unteren Winkel, linkes Seil"
             },
-            "anchor": "cable-eye",
+            "anchor": "cable-eye-left",
             "fxN": 0,
-            "fyN": 525.6198,
+            "fyN": 262.8099,
             "source": "authored-estimate"
           },
           {
-            "id": "cable-reaction",
+            "id": "cable-pull-right",
             "kind": "equipment",
             "title": {
-              "en": "Cable reaction at the drum",
-              "de": "Seilreaktion an der Trommel"
+              "en": "Spring cable pull on the bottom bracket, right cable",
+              "de": "Federseilzug am unteren Winkel, rechtes Seil"
             },
-            "anchor": "drum-cable",
+            "anchor": "cable-eye-right",
             "fxN": 0,
-            "fyN": -525.6198,
+            "fyN": 262.8099,
+            "source": "authored-estimate"
+          },
+          {
+            "id": "cable-reaction-left",
+            "kind": "equipment",
+            "title": {
+              "en": "Cable reaction at the drum, left cable",
+              "de": "Seilreaktion an der Trommel, linkes Seil"
+            },
+            "anchor": "drum-cable-left",
+            "fxN": 0,
+            "fyN": -262.8099,
+            "source": "authored-estimate"
+          },
+          {
+            "id": "cable-reaction-right",
+            "kind": "equipment",
+            "title": {
+              "en": "Cable reaction at the drum, right cable",
+              "de": "Seilreaktion an der Trommel, rechtes Seil"
+            },
+            "anchor": "drum-cable-right",
+            "fxN": 0,
+            "fyN": -262.8099,
             "source": "authored-estimate"
           },
           {
@@ -22050,27 +22214,51 @@
         },
         "loads": [
           {
-            "id": "cable-pull",
+            "id": "cable-pull-left",
             "kind": "equipment",
             "title": {
-              "en": "Spring cable pull on the bottom bracket",
-              "de": "Federseilzug am unteren Winkel"
+              "en": "Spring cable pull on the bottom bracket, left cable",
+              "de": "Federseilzug am unteren Winkel, linkes Seil"
             },
-            "anchor": "cable-eye",
+            "anchor": "cable-eye-left",
             "fxN": 0,
-            "fyN": 522.08587,
+            "fyN": 261.04293,
             "source": "authored-estimate"
           },
           {
-            "id": "cable-reaction",
+            "id": "cable-pull-right",
             "kind": "equipment",
             "title": {
-              "en": "Cable reaction at the drum",
-              "de": "Seilreaktion an der Trommel"
+              "en": "Spring cable pull on the bottom bracket, right cable",
+              "de": "Federseilzug am unteren Winkel, rechtes Seil"
             },
-            "anchor": "drum-cable",
+            "anchor": "cable-eye-right",
             "fxN": 0,
-            "fyN": -522.08587,
+            "fyN": 261.04293,
+            "source": "authored-estimate"
+          },
+          {
+            "id": "cable-reaction-left",
+            "kind": "equipment",
+            "title": {
+              "en": "Cable reaction at the drum, left cable",
+              "de": "Seilreaktion an der Trommel, linkes Seil"
+            },
+            "anchor": "drum-cable-left",
+            "fxN": 0,
+            "fyN": -261.04293,
+            "source": "authored-estimate"
+          },
+          {
+            "id": "cable-reaction-right",
+            "kind": "equipment",
+            "title": {
+              "en": "Cable reaction at the drum, right cable",
+              "de": "Seilreaktion an der Trommel, rechtes Seil"
+            },
+            "anchor": "drum-cable-right",
+            "fxN": 0,
+            "fyN": -261.04293,
             "source": "authored-estimate"
           }
         ]
@@ -22134,27 +22322,51 @@
         },
         "loads": [
           {
-            "id": "cable-pull",
+            "id": "cable-pull-left",
             "kind": "equipment",
             "title": {
-              "en": "Spring cable pull on the bottom bracket",
-              "de": "Federseilzug am unteren Winkel"
+              "en": "Spring cable pull on the bottom bracket, left cable",
+              "de": "Federseilzug am unteren Winkel, linkes Seil"
             },
-            "anchor": "cable-eye",
+            "anchor": "cable-eye-left",
             "fxN": 0,
-            "fyN": 479.80491,
+            "fyN": 239.90246,
             "source": "authored-estimate"
           },
           {
-            "id": "cable-reaction",
+            "id": "cable-pull-right",
             "kind": "equipment",
             "title": {
-              "en": "Cable reaction at the drum",
-              "de": "Seilreaktion an der Trommel"
+              "en": "Spring cable pull on the bottom bracket, right cable",
+              "de": "Federseilzug am unteren Winkel, rechtes Seil"
             },
-            "anchor": "drum-cable",
+            "anchor": "cable-eye-right",
             "fxN": 0,
-            "fyN": -479.80491,
+            "fyN": 239.90246,
+            "source": "authored-estimate"
+          },
+          {
+            "id": "cable-reaction-left",
+            "kind": "equipment",
+            "title": {
+              "en": "Cable reaction at the drum, left cable",
+              "de": "Seilreaktion an der Trommel, linkes Seil"
+            },
+            "anchor": "drum-cable-left",
+            "fxN": 0,
+            "fyN": -239.90246,
+            "source": "authored-estimate"
+          },
+          {
+            "id": "cable-reaction-right",
+            "kind": "equipment",
+            "title": {
+              "en": "Cable reaction at the drum, right cable",
+              "de": "Seilreaktion an der Trommel, rechtes Seil"
+            },
+            "anchor": "drum-cable-right",
+            "fxN": 0,
+            "fyN": -239.90246,
             "source": "authored-estimate"
           }
         ]
@@ -22218,27 +22430,51 @@
         },
         "loads": [
           {
-            "id": "cable-pull",
+            "id": "cable-pull-left",
             "kind": "equipment",
             "title": {
-              "en": "Spring cable pull on the bottom bracket",
-              "de": "Federseilzug am unteren Winkel"
+              "en": "Spring cable pull on the bottom bracket, left cable",
+              "de": "Federseilzug am unteren Winkel, linkes Seil"
             },
-            "anchor": "cable-eye",
+            "anchor": "cable-eye-left",
             "fxN": 0,
-            "fyN": 393.26266,
+            "fyN": 196.63133,
             "source": "authored-estimate"
           },
           {
-            "id": "cable-reaction",
+            "id": "cable-pull-right",
             "kind": "equipment",
             "title": {
-              "en": "Cable reaction at the drum",
-              "de": "Seilreaktion an der Trommel"
+              "en": "Spring cable pull on the bottom bracket, right cable",
+              "de": "Federseilzug am unteren Winkel, rechtes Seil"
             },
-            "anchor": "drum-cable",
+            "anchor": "cable-eye-right",
             "fxN": 0,
-            "fyN": -393.26266,
+            "fyN": 196.63133,
+            "source": "authored-estimate"
+          },
+          {
+            "id": "cable-reaction-left",
+            "kind": "equipment",
+            "title": {
+              "en": "Cable reaction at the drum, left cable",
+              "de": "Seilreaktion an der Trommel, linkes Seil"
+            },
+            "anchor": "drum-cable-left",
+            "fxN": 0,
+            "fyN": -196.63133,
+            "source": "authored-estimate"
+          },
+          {
+            "id": "cable-reaction-right",
+            "kind": "equipment",
+            "title": {
+              "en": "Cable reaction at the drum, right cable",
+              "de": "Seilreaktion an der Trommel, rechtes Seil"
+            },
+            "anchor": "drum-cable-right",
+            "fxN": 0,
+            "fyN": -196.63133,
             "source": "authored-estimate"
           }
         ]
@@ -22302,27 +22538,51 @@
         },
         "loads": [
           {
-            "id": "cable-pull",
+            "id": "cable-pull-left",
             "kind": "equipment",
             "title": {
-              "en": "Spring cable pull on the bottom bracket",
-              "de": "Federseilzug am unteren Winkel"
+              "en": "Spring cable pull on the bottom bracket, left cable",
+              "de": "Federseilzug am unteren Winkel, linkes Seil"
             },
-            "anchor": "cable-eye",
+            "anchor": "cable-eye-left",
             "fxN": 0,
-            "fyN": 304.84447,
+            "fyN": 152.42224,
             "source": "authored-estimate"
           },
           {
-            "id": "cable-reaction",
+            "id": "cable-pull-right",
             "kind": "equipment",
             "title": {
-              "en": "Cable reaction at the drum",
-              "de": "Seilreaktion an der Trommel"
+              "en": "Spring cable pull on the bottom bracket, right cable",
+              "de": "Federseilzug am unteren Winkel, rechtes Seil"
             },
-            "anchor": "drum-cable",
+            "anchor": "cable-eye-right",
             "fxN": 0,
-            "fyN": -304.84447,
+            "fyN": 152.42224,
+            "source": "authored-estimate"
+          },
+          {
+            "id": "cable-reaction-left",
+            "kind": "equipment",
+            "title": {
+              "en": "Cable reaction at the drum, left cable",
+              "de": "Seilreaktion an der Trommel, linkes Seil"
+            },
+            "anchor": "drum-cable-left",
+            "fxN": 0,
+            "fyN": -152.42224,
+            "source": "authored-estimate"
+          },
+          {
+            "id": "cable-reaction-right",
+            "kind": "equipment",
+            "title": {
+              "en": "Cable reaction at the drum, right cable",
+              "de": "Seilreaktion an der Trommel, rechtes Seil"
+            },
+            "anchor": "drum-cable-right",
+            "fxN": 0,
+            "fyN": -152.42224,
             "source": "authored-estimate"
           }
         ]
@@ -22386,27 +22646,51 @@
         },
         "loads": [
           {
-            "id": "cable-pull",
+            "id": "cable-pull-left",
             "kind": "equipment",
             "title": {
-              "en": "Spring cable pull on the bottom bracket",
-              "de": "Federseilzug am unteren Winkel"
+              "en": "Spring cable pull on the bottom bracket, left cable",
+              "de": "Federseilzug am unteren Winkel, linkes Seil"
             },
-            "anchor": "cable-eye",
+            "anchor": "cable-eye-left",
             "fxN": 0,
-            "fyN": 213.66525,
+            "fyN": 106.83262,
             "source": "authored-estimate"
           },
           {
-            "id": "cable-reaction",
+            "id": "cable-pull-right",
             "kind": "equipment",
             "title": {
-              "en": "Cable reaction at the drum",
-              "de": "Seilreaktion an der Trommel"
+              "en": "Spring cable pull on the bottom bracket, right cable",
+              "de": "Federseilzug am unteren Winkel, rechtes Seil"
             },
-            "anchor": "drum-cable",
+            "anchor": "cable-eye-right",
             "fxN": 0,
-            "fyN": -213.66525,
+            "fyN": 106.83262,
+            "source": "authored-estimate"
+          },
+          {
+            "id": "cable-reaction-left",
+            "kind": "equipment",
+            "title": {
+              "en": "Cable reaction at the drum, left cable",
+              "de": "Seilreaktion an der Trommel, linkes Seil"
+            },
+            "anchor": "drum-cable-left",
+            "fxN": 0,
+            "fyN": -106.83262,
+            "source": "authored-estimate"
+          },
+          {
+            "id": "cable-reaction-right",
+            "kind": "equipment",
+            "title": {
+              "en": "Cable reaction at the drum, right cable",
+              "de": "Seilreaktion an der Trommel, rechtes Seil"
+            },
+            "anchor": "drum-cable-right",
+            "fxN": 0,
+            "fyN": -106.83262,
             "source": "authored-estimate"
           }
         ]
@@ -22470,27 +22754,51 @@
         },
         "loads": [
           {
-            "id": "cable-pull",
+            "id": "cable-pull-left",
             "kind": "equipment",
             "title": {
-              "en": "Spring cable pull on the bottom bracket",
-              "de": "Federseilzug am unteren Winkel"
+              "en": "Spring cable pull on the bottom bracket, left cable",
+              "de": "Federseilzug am unteren Winkel, linkes Seil"
             },
-            "anchor": "cable-eye",
+            "anchor": "cable-eye-left",
             "fxN": 0,
-            "fyN": 121.69808,
+            "fyN": 60.84904,
             "source": "authored-estimate"
           },
           {
-            "id": "cable-reaction",
+            "id": "cable-pull-right",
             "kind": "equipment",
             "title": {
-              "en": "Cable reaction at the drum",
-              "de": "Seilreaktion an der Trommel"
+              "en": "Spring cable pull on the bottom bracket, right cable",
+              "de": "Federseilzug am unteren Winkel, rechtes Seil"
             },
-            "anchor": "drum-cable",
+            "anchor": "cable-eye-right",
             "fxN": 0,
-            "fyN": -121.69808,
+            "fyN": 60.84904,
+            "source": "authored-estimate"
+          },
+          {
+            "id": "cable-reaction-left",
+            "kind": "equipment",
+            "title": {
+              "en": "Cable reaction at the drum, left cable",
+              "de": "Seilreaktion an der Trommel, linkes Seil"
+            },
+            "anchor": "drum-cable-left",
+            "fxN": 0,
+            "fyN": -60.84904,
+            "source": "authored-estimate"
+          },
+          {
+            "id": "cable-reaction-right",
+            "kind": "equipment",
+            "title": {
+              "en": "Cable reaction at the drum, right cable",
+              "de": "Seilreaktion an der Trommel, rechtes Seil"
+            },
+            "anchor": "drum-cable-right",
+            "fxN": 0,
+            "fyN": -60.84904,
             "source": "authored-estimate"
           }
         ]
@@ -22554,27 +22862,51 @@
         },
         "loads": [
           {
-            "id": "cable-pull",
+            "id": "cable-pull-left",
             "kind": "equipment",
             "title": {
-              "en": "Spring cable pull on the bottom bracket",
-              "de": "Federseilzug am unteren Winkel"
+              "en": "Spring cable pull on the bottom bracket, left cable",
+              "de": "Federseilzug am unteren Winkel, linkes Seil"
             },
-            "anchor": "cable-eye",
+            "anchor": "cable-eye-left",
             "fxN": 0,
-            "fyN": 35.26581,
+            "fyN": 17.63291,
             "source": "authored-estimate"
           },
           {
-            "id": "cable-reaction",
+            "id": "cable-pull-right",
             "kind": "equipment",
             "title": {
-              "en": "Cable reaction at the drum",
-              "de": "Seilreaktion an der Trommel"
+              "en": "Spring cable pull on the bottom bracket, right cable",
+              "de": "Federseilzug am unteren Winkel, rechtes Seil"
             },
-            "anchor": "drum-cable",
+            "anchor": "cable-eye-right",
             "fxN": 0,
-            "fyN": -35.26581,
+            "fyN": 17.63291,
+            "source": "authored-estimate"
+          },
+          {
+            "id": "cable-reaction-left",
+            "kind": "equipment",
+            "title": {
+              "en": "Cable reaction at the drum, left cable",
+              "de": "Seilreaktion an der Trommel, linkes Seil"
+            },
+            "anchor": "drum-cable-left",
+            "fxN": 0,
+            "fyN": -17.63291,
+            "source": "authored-estimate"
+          },
+          {
+            "id": "cable-reaction-right",
+            "kind": "equipment",
+            "title": {
+              "en": "Cable reaction at the drum, right cable",
+              "de": "Seilreaktion an der Trommel, rechtes Seil"
+            },
+            "anchor": "drum-cable-right",
+            "fxN": 0,
+            "fyN": -17.63291,
             "source": "authored-estimate"
           }
         ]
@@ -22723,7 +23055,7 @@
         ],
         "tracks": [
           {
-            "target": "load:cable-pull",
+            "target": "load:cable-pull-left",
             "ease": "smooth",
             "keys": [
               {
@@ -22749,7 +23081,59 @@
             ]
           },
           {
-            "target": "load:cable-reaction",
+            "target": "load:cable-pull-right",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 8,
+                "v": 0.5
+              },
+              {
+                "t": 16,
+                "v": 0
+              },
+              {
+                "t": 24,
+                "v": 0.5
+              },
+              {
+                "t": 32,
+                "v": 1
+              }
+            ]
+          },
+          {
+            "target": "load:cable-reaction-left",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 8,
+                "v": 0.5
+              },
+              {
+                "t": 16,
+                "v": 0
+              },
+              {
+                "t": 24,
+                "v": 0.5
+              },
+              {
+                "t": 32,
+                "v": 1
+              }
+            ]
+          },
+          {
+            "target": "load:cable-reaction-right",
             "ease": "smooth",
             "keys": [
               {

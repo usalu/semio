@@ -207,7 +207,8 @@ describe("presentation interaction dom", () => {
     expect(globalsCssSource).toMatch(/\.presentation-pdf-page-nav\s*\{[^}]*gap:\s*0;/s);
     expect(globalsCssSource).not.toMatch(/\.presentation-pdf-page-nav\s*\{[^}]*\bborder:/s);
     expect(globalsCssSource).not.toMatch(/\.presentation-pdf-page-nav__button\s*\{[^}]*\bborder:/s);
-    expect(globalsCssSource).toMatch(/\.presentation-interaction-handle\s*\{[^}]*\bborder:\s*0;[^}]*box-shadow:/s);
+    expect(globalsCssSource).toMatch(/\.presentation-interaction-handle\s*\{[^}]*\bborder:\s*0;[^}]*outline:/s);
+    expect(globalsCssSource).not.toMatch(/box-shadow|border-radius:\s*var|border-(?:start|end)-(?:start|end)-radius/u);
     expect(globalsCssSource).toMatch(/section:has\(\.presentation-interactive-disposition--selected\)\s+\.presentation-interaction-slide-reset\s*\{[^}]*visibility:\s*hidden/s);
     const page = disposition.querySelector(".presentation-media-pdf canvas") as HTMLElement;
     expect(page.dataset.page).toBe("1");

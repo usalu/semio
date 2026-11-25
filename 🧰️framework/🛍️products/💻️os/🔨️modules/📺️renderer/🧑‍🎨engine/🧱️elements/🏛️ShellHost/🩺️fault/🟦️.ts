@@ -22,7 +22,23 @@ export type WindowFault = {
   readonly code: string | undefined;
   readonly origin: string | undefined;
   readonly message: string;
+  readonly notice?: WindowFaultNoticeV1;
 };
+
+/** 🌐️ The localized text a fault carries for the user, one entry per supported UI language. */
+export type WindowFaultNoticeV1 = Readonly<{ en: string; de: string }>;
+
+/** 🌐️ The text the fault card shows: the fault's localized notice in `locale`, else its diagnostic message; no language is assumed. */
+export function windowFaultTextV1(fault: WindowFault | null, message: string, locale: string): string {
+  const notice = fault?.notice;
+  return notice && (locale === "en" || locale === "de") ? notice[locale] : message;
+}
+
+/** 🔎️ Reads the localized notice an error carries, when it names one for every supported UI language. */
+function windowFaultNotice(value: unknown): WindowFaultNoticeV1 | undefined {
+  const notice = value as { readonly en?: unknown; readonly de?: unknown } | null | undefined;
+  return typeof notice?.en === "string" && typeof notice.de === "string" ? { en: notice.en, de: notice.de } : undefined;
+}
 
 /** 🩺 A crashed/quarantined supervisor outranks every code: the module never installed, so no
  * cleanup-loop cause it might also report describes the real failure. */
@@ -35,12 +51,13 @@ export function classifyWindowFault(code: string | undefined, supervisor?: strin
 /** 🩺 Reads `code`/`origin`/`message` off whatever the plugin bridge rejected with — a decoded
  * `Fault`, a `SemioFaultError` carrying one, or a bare `Error` — without ever losing the code. */
 export function windowFaultFromError(error: unknown, supervisor?: string): WindowFault {
-  const candidate = (error ?? {}) as { readonly code?: unknown; readonly origin?: unknown; readonly message?: unknown; readonly fault?: { readonly code?: unknown; readonly origin?: unknown; readonly message?: unknown } };
+  const candidate = (error ?? {}) as { readonly code?: unknown; readonly origin?: unknown; readonly message?: unknown; readonly notice?: unknown; readonly fault?: { readonly code?: unknown; readonly origin?: unknown; readonly message?: unknown } };
   const fault = candidate.fault ?? candidate;
   const code = typeof fault.code === "string" ? fault.code : undefined;
   const origin = typeof fault.origin === "string" ? fault.origin : undefined;
   const message = typeof candidate.message === "string" ? candidate.message : typeof fault.message === "string" ? fault.message : String(error);
-  return { class: classifyWindowFault(code, supervisor), code, origin, message };
+  const notice = windowFaultNotice(candidate.notice);
+  return { class: classifyWindowFault(code, supervisor), code, origin, message, ...(notice ? { notice } : {}) };
 }
 
 /** 🪦 The window fault a failed pass raises for a LIVE instance, or `null` when `retired` says the failure only means the

@@ -59,9 +59,9 @@ export function auditInteractiveJobClassificationDrift(pluginId: string, ownerRo
   const declared = rustInteractiveJobClassifications(ownerRoot);
   if (declared.size === 0) return [];
   const drift: string[] = [];
-  const manifest = descriptor.manifest as { apps?: readonly Record<string, any>[] } | undefined;
+  const manifest = descriptor.manifest as { apps?: readonly Record<string, any>[]; actionSets?: readonly { appIds: readonly string[]; actions: readonly Record<string, any>[] }[] } | undefined;
   for (const app of manifest?.apps ?? []) {
-    const rows = [...((app.actions ?? []) as readonly Record<string, any>[]), ...((app.windowKinds ?? []) as readonly Record<string, any>[]).flatMap((windowKind) => (windowKind.actions ?? []) as readonly Record<string, any>[])];
+    const rows = [...(manifest?.actionSets ?? []).filter((set) => set.appIds.includes(String(app.id))).flatMap((set) => set.actions), ...((app.actions ?? []) as readonly Record<string, any>[]), ...((app.windowKinds ?? []) as readonly Record<string, any>[]).flatMap((windowKind) => (windowKind.actions ?? []) as readonly Record<string, any>[])];
     for (const action of rows) {
       const committed = action.semantics?.execution?.interactiveJob as string | undefined;
       if (!committed || committed === "unclassified") continue;

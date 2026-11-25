@@ -23,5 +23,5 @@ for component in $components; do
   done
 done
 SEMIO_TECH_PLAY_PORT=6036 VERIFY_SIGNED_MODULES=1 PLAY_TEST_PICKER_ROUNDTRIP=1 PLAY_TEST_OBSERVE_ARCHIVES=1 \
-PLAY_TEST_REQUIRE_DRAW=1 PLAY_TEST_PICKER_WAIT_MS=120000 python3 "$T/probe-norm-base-companions.py" "$@" > "$G/routes-$tag.log" 2>&1
+PLAY_TEST_REQUIRE_DRAW=1 PLAY_TEST_PICKER_WAIT_MS=120000 repo "$T/probe-norm-base-companions.ts" "$@" > "$G/routes-$tag.log" 2>&1
 echo "[DEBUG] routes exit $?"

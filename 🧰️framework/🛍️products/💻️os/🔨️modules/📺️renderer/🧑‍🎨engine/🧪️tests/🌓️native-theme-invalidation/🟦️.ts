@@ -1,5 +1,6 @@
 
-import { chromium, type Browser, type Page } from "playwright";
+import { type Browser, type Page } from "playwright";
+import { launchChromium } from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🌐️chromium-launch/🟦️";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { resolveElementsSurfaceChromeDark } from "@semio-tech/ui-react";
 import { resolveWgpuHostAppearance, WGPU_PREFERS_DARK_MEDIA_QUERY } from "@semio-tech/framework-renderer-wgpu/boot-descriptor";
@@ -30,7 +31,7 @@ describe("🌓️ native theme invalidation oracle", () => {
     let page: Page;
 
     beforeAll(async () => {
-      browser = await chromium.launch({ headless: true });
+      browser = await launchChromium();
       page = await browser.newPage();
     }, 60_000);
 

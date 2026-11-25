@@ -7,7 +7,7 @@ import {join} from "node:path";
 import {parse as iarna} from "@iarna/toml";
 import Ajv from "ajv";
 import {parse as smol} from "smol-toml";
-import {readToml} from "../../🟨️.mjs";
+import {readToml,TOML_RETRY_MILLISECONDS_V1} from "../../🟨️.mjs";
 import corpus from "./🔣️.json";
 import corpusSchema from "./🧬️schema/🔣️.json";
 
@@ -64,4 +64,23 @@ test("a refused file reports an observation naming the file, its hash, its size 
   expect(String(observation.sourceLine).length).toBeLessThanOrEqual(512);
   expect(row.text.split(/\r?\n/u)[Number(observation.line)]).toBe(observation.sourceLine);
  }
+});
+
+test("a manifest caught in the middle of a rewrite is read again and parses once the rewrite is done (concurrent rewrite)",()=>{
+ const path=fileOf("[package\nname = ");const pauses:number[]=[];
+ const value=readToml(path,{milliseconds:[1,2,3],sleep:ms=>{pauses.push(ms);if(pauses.length===2)writeFileSync(path,'[package]\nname = "x"\n');}});
+ expect(plain(value)).toEqual(plain(smol('[package]\nname = "x"\n')));
+ expect(pauses).toEqual([1,2]);
+});
+
+test("a manifest that stays unparseable is refused after the last pause with the typed code and the observation of the last reading",()=>{
+ const path=fileOf("[package\nname = ");const pauses:number[]=[];
+ const failure=attempt(()=>readToml(path,{milliseconds:[1,2,3],sleep:ms=>{pauses.push(ms);}})).error as Error&{code?:string;tomlObservation?:{path:string}};
+ expect(failure.code).toBe("BUILD_SOURCE_UNPARSEABLE");expect(failure.tomlObservation!.path).toBe(path);expect(pauses).toEqual([1,2,3]);
+ expect(TOML_RETRY_MILLISECONDS_V1.length).toBeGreaterThan(0);
+});
+
+test("a valid manifest is read once without any pause",()=>{
+ const path=fileOf('[package]\nname = "y"\n');let paused=0;
+ readToml(path,{milliseconds:[1],sleep:()=>{paused++;}});expect(paused).toBe(0);
 });

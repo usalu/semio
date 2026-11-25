@@ -13,6 +13,7 @@ import {writeAttestationV1,attestPathV1} from "../../🩺️attest/🟦️.ts";
 import {writeHintV1} from "../../🎣️tiers/🟦️.ts";
 import outboundTail from "./🧫️fixtures/outbound-tail.json" with {type:"json"};
 import fixture from "../../🩺️attest/🧪️tests/🧫️fixtures/🔣️.json" with {type:"json"};
+import {readProcessStartV1} from "../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts";
 
 setDefaultTimeout(120_000);
 const scratch:string[]=[];
@@ -364,14 +365,14 @@ test("a lock of an earlier boot, of a silent holder, of a dead holder and a stea
  mkdirSync(join(worktree,".cache","f"),{recursive:true});
  const old=new Date(Date.now()-120_000),child=Bun.spawn(["sleep","30"]);
  try{
-  const alive=child.pid;
-  writeFileSync(lock,JSON.stringify({version:1,pid:alive,startedMs:1,originId:"a"}));utimesSync(lock,old,old);
+  const alive=child.pid,begun=(()=>{const read=readProcessStartV1(alive);return typeof read==="number"?read:1;})();
+  writeFileSync(lock,JSON.stringify({version:1,pid:alive,startMs:begun,originId:"a"}));utimesSync(lock,old,old);
   await expect(openReplicaV1(options)).rejects.toBeInstanceOf(ReplicaBusyV1);
-  writeFileSync(lock,JSON.stringify({version:1,pid:alive,startedMs:1,originId:"a",hb:true,bootMs:Date.now()}));utimesSync(lock,old,old);
+  writeFileSync(lock,JSON.stringify({version:1,pid:alive,startMs:begun,originId:"a",hb:true,bootMs:Date.now()}));utimesSync(lock,old,old);
   const silent=await openReplicaV1(options);await closeReplicaV1(silent);
-  writeFileSync(lock,JSON.stringify({version:1,pid:alive,startedMs:1,originId:"a",bootMs:Date.now()-10*86_400_000}));utimesSync(lock,old,old);
+  writeFileSync(lock,JSON.stringify({version:1,pid:alive,startMs:begun,originId:"a",bootMs:Date.now()-10*86_400_000}));utimesSync(lock,old,old);
   const rebooted=await openReplicaV1(options);await closeReplicaV1(rebooted);
-  writeFileSync(lock,JSON.stringify({version:1,pid:alive,startedMs:1,originId:"a",hb:true,bootMs:Date.now()}));
+  writeFileSync(lock,JSON.stringify({version:1,pid:alive,startMs:begun,originId:"a",hb:true,bootMs:Date.now()}));
   await expect(openReplicaV1(options)).rejects.toBeInstanceOf(ReplicaBusyV1);
  }finally{child.kill();}
  writeFileSync(lock,JSON.stringify({version:1,pid:2147483646,startedMs:1,originId:"a"}));

@@ -73,6 +73,20 @@ impl<M:protocol::OpBinaryReceiving+semio_framework_dsl_record::BorrowedDslVarian
  /// 🔢️ Registers a vocabulary whose persisted operations are `format | ordinal | record body`: the same borrowed variant is the original encoding source, so replacement and edit comparison re-encode the persisted bytes exactly.
  pub fn with_original_ordinal_binary_receiving(mut self)->Self{self.source=ordinal_pack_source::<M>;self.with_original_binary_receiving()}
 }
+#[repr(transparent)]
+struct EncodedOperation<M>(M);
+impl<M:protocol::OpBinary+Sync> super::ArtifactOperationEncoded for EncodedOperation<M>{
+ fn encode_once(&self)->Result<Vec<u8>,ValueError>{self.0.encode_op().map_err(|_|ValueError::literal(ValueRefusalKind::InvalidValue,"encoded operation refused its authored binary codec"))}
+}
+/// 🔢️ Borrows the authored `OpBinary::encode_op` bytes of one operation as its original encoding source.
+pub fn encoded_operation_source<M:protocol::OpBinary+Sync>(mutation:&M)->Option<super::ArtifactPreparedOperationSource<'_>>{
+ let body=unsafe{&*(std::ptr::from_ref(mutation).cast::<EncodedOperation<M>>())};
+ Some(super::ArtifactPreparedOperationSource::Encoded{body})
+}
+impl<M:protocol::OpBinaryReceiving+Send+Sync+'static> ArtifactOperationWire<M> where M::Receiving:Send{
+ /// 🔢️ Registers a vocabulary whose persisted operations are exactly its authored `OpBinary::encode_op` bytes: that same codec is the original encoding source (encoded once by the cursor, which pays and releases the frame's capacity and copies sixty-four bytes per turn), so replacement and edit comparison re-encode the persisted bytes exactly; the quoted extent is the authored length itself.
+ pub fn with_original_encoded_binary_receiving(mut self)->Self{self.source=encoded_operation_source::<M>;self.with_original_binary_receiving()}
+}
 impl<M:protocol::OpBinaryReceiving+ArtifactCanonicalJsonTree+Send+Sync+'static> ArtifactOperationWire<M> where M::Receiving:Send{
  /// 🎒️ Pairs a vocabulary's full Pack Value OpBinary decoder with its original typed comparison projection.
  pub fn with_original_pack_value_receiving(self)->Self{
@@ -94,5 +108,12 @@ pub trait ArtifactPersistedOperation:Sized+Send+Sync+'static{
 macro_rules! artifact_persisted_binary_operation{
  ($operation:ty)=>{impl $crate::lifted_prepared_operation_wire::ArtifactPersistedOperation for $operation{
   fn install_persisted_receiving(wire:$crate::lifted_prepared_operation_wire::ArtifactOperationWire<Self>)->$crate::lifted_prepared_operation_wire::ArtifactOperationWire<Self>{wire.with_original_binary_receiving()}
+ }};
+}
+/// 🔢️ Declares a vocabulary whose persisted operations are exactly its authored `OpBinary::encode_op` bytes, which are also the original encoding source of replacement and edit comparison.
+#[macro_export]
+macro_rules! artifact_persisted_encoded_binary_operation{
+ ($operation:ty)=>{impl $crate::lifted_prepared_operation_wire::ArtifactPersistedOperation for $operation{
+  fn install_persisted_receiving(wire:$crate::lifted_prepared_operation_wire::ArtifactOperationWire<Self>)->$crate::lifted_prepared_operation_wire::ArtifactOperationWire<Self>{wire.with_original_encoded_binary_receiving()}
  }};
 }

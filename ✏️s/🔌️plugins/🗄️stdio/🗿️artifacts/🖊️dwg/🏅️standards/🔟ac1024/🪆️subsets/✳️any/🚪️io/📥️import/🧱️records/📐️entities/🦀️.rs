@@ -6,21 +6,21 @@ use semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::sche
 use semio_s_artifact_stdio_dwg_snapshot_drawing::standards::v_ac1024::subsets::any::schema::snapshot::drawing::DwgLogicalDrawing;
 use crate::standards::v_ac1024::subsets::any::io::import::records::fields::{DwgObjectRelations, r2010_string_stream, read_object_handle};
 use semio_s_artifact_stdio_dwg_snapshot::standards::v_ac1024::subsets::any::schema::snapshot::*;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgAnnotationScale;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgDrawOrderEntry;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLayout;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLayoutOptions;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgPlaceholder;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgPlotArea;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgPlotOptions;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgPlotPaperUnit;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgPlotRotation;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgShadePlot;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgShadePlotResolution;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgSortEntitiesTable;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgStandardScale;
+use semio_s_artifact_stdio_dwg_snapshot_objects::DwgAnnotationScale;
+use semio_s_artifact_stdio_dwg_snapshot_objects::DwgDrawOrderEntry;
+use semio_s_artifact_stdio_dwg_snapshot_objects::DwgLayout;
+use semio_s_artifact_stdio_dwg_snapshot_objects::DwgLayoutOptions;
+use semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject;
+use semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody;
+use semio_s_artifact_stdio_dwg_snapshot_objects::DwgPlaceholder;
+use semio_s_artifact_stdio_dwg_snapshot_objects::DwgPlotArea;
+use semio_s_artifact_stdio_dwg_snapshot_objects::DwgPlotOptions;
+use semio_s_artifact_stdio_dwg_snapshot_objects::DwgPlotPaperUnit;
+use semio_s_artifact_stdio_dwg_snapshot_objects::DwgPlotRotation;
+use semio_s_artifact_stdio_dwg_snapshot_objects::DwgShadePlot;
+use semio_s_artifact_stdio_dwg_snapshot_objects::DwgShadePlotResolution;
+use semio_s_artifact_stdio_dwg_snapshot_objects::DwgSortEntitiesTable;
+use semio_s_artifact_stdio_dwg_snapshot_objects::DwgStandardScale;
 use semio_s_artifact_stdio_dwg_snapshot_document::standards::v_ac1024::subsets::any::schema::snapshot::document::DwgApplicationHistory;
 use semio_s_artifact_stdio_dwg_snapshot_document::standards::v_ac1024::subsets::any::schema::snapshot::document::DwgApplicationInfo;
 use semio_s_artifact_stdio_dwg_snapshot_document::standards::v_ac1024::subsets::any::schema::snapshot::document::DwgApplicationProperty;
@@ -40,178 +40,178 @@ use semio_s_artifact_stdio_dwg_snapshot_document::standards::v_ac1024::subsets::
 use semio_s_artifact_stdio_dwg_snapshot_document::standards::v_ac1024::subsets::any::schema::snapshot::document::DwgSummaryInfo;
 use semio_s_artifact_stdio_dwg_snapshot_document::standards::v_ac1024::subsets::any::schema::snapshot::document::DwgTemplate;
 use semio_s_artifact_stdio_dwg_snapshot_document::standards::v_ac1024::subsets::any::schema::snapshot::document::DwgVersionStamp;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgArcEntity;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgBlockBeginEntity;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgBlockEndEntity;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgCircleEntity;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgDefaultLightingType;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgDimensionEntityCommon;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgDimensionLineSpacingStyle;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgDimensionStatus;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgDimensionTextAttachment;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEllipseEntity;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEntityBody;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEntityColor;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEntityColorKind;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEntityCommon;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEntityMode;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEntityReferenceMode;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgFace3dEntity;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgInsertEntity;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgLineEntity;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgLinearDimensionEntity;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgLwPolylineEntity;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgLwPolylineVertex;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgOrthographicView;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgPointEntity;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgPolyfaceFaceEntity;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgPolyfaceMeshEntity;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgPolyline3dEntity;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgSequenceEndEntity;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgShadePlotMode;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgSplineEntity;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgTextEntity;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgVertexEntity;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgViewportEntity;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgViewportRenderMode;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgViewportStatusFlag;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::constraints::DwgAssoc2dConstraintGroup;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::constraints::DwgAxisConstraint;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::constraints::DwgConstrainedBoundedLine;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::constraints::DwgConstrainedDatumLine;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::constraints::DwgConstrainedImplicitPoint;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::constraints::DwgConstraintGeometry;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::constraints::DwgConstraintNode;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::constraints::DwgConstraintNodeCore;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::constraints::DwgDistanceConstraint;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::constraints::DwgExplicitConstraint;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::constraints::DwgGeometricConstraint;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgAssocNetwork;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgAssocNetworkMember;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgAssocNetworkMemberKind;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgAssociativeAction;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgAssociativeActionDependency;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgAssociativeActionStatus;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgAssociativeDependency;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgAssociativeDependencyStatus;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgAssociativeDimensionDependencyBody;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgAssociativeGeometryDependency;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgAssociativeValueDependency;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgAssociativeVariable;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgBlockGripLocationComponent;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgDynamicBlockProxyNode;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgEvaluationExpression;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgEvaluationExpressionValue;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgEvaluationGraph;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgEvaluationGraphEdge;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgEvaluationGraphNode;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgEvaluationVariant;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgNamedEvaluationNodeReference;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgPropertyExpressionReference;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockAction;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockActionConnection;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockActionCoordinateMode;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockActionDependency;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockActionWithBasePoint;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockAlignmentGrip;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockAlignmentParameter;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockBasePointParameter;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockElement;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockFlipAction;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockFlipGrip;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockFlipParameter;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockFlipValueSet;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockGrip;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockLinearConstraintParameter;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockLinearGrip;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockLinearParameter;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockMoveAction;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockMoveCoordinateMode;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockOnePointParameter;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockParameterAllowedValues;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockParameterBaseLocation;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockParameterConnection;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockParameterDependencyBody;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockParameterProperty;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockRepresentationData;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockScaleAction;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockScaleMode;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockStretchAction;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockTwoPointParameter;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockVisibilityGrip;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockVisibilityParameter;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgDynamicBlockPurgePreventer;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgStretchSelection;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgStretchSelector;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgVisibilityEvaluationHistory;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgVisibilityState;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgBlockHeaderTableRecord;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgBlockTableControl;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgComplexColor;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgComplexColorValue;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgDimensionBehavior;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgDimensionGeometry;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgDimensionR2010;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgDimensionStyleTableControl;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgDimensionStyleTableRecord;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgDimensionText;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgDimensionUnits;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgLayerTableRecord;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgLinetypeDash;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgLinetypeTableControl;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgLinetypeTableRecord;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgRegisteredApplicationTableRecord;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgTableControlBody;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgTableControlEntries;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgTableControlEntry;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgTableRecordBody;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgTableRecordCommon;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgTextStyleTableRecord;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgViewportTableRecord;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgCellBorder;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgCellBorders;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgCellContentFormat;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgCellMargins;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgCellStyle;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgMLeaderArrow;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgMLeaderAttachmentDirection;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgMLeaderBlockConnection;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgMLeaderBlockStyle;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgMLeaderContentType;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgMLeaderDogleg;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgMLeaderDrawOrder;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgMLeaderKind;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgMLeaderLanding;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgMLeaderLeaderOrder;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgMLeaderLeaderStyle;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgMLeaderStyle;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgMLeaderTextAlignment;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgMLeaderTextAngle;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgMLeaderTextAttachment;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgMLeaderTextStyle;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgMaterial;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgMaterialChannels;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgMaterialColor;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgMaterialMap;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgMaterialMapSource;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgMaterialProjection;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgMaterialTiling;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgMlineCaps;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgMlineLinetype;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgMlineStyle;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgMlineStyleElement;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgTableStyle;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgVisualStyle;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgVisualStyleProperties;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgVisualStyleProperty;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgVisualStylePropertyOperation;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::xrecord::DwgDictionaryBody;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::xrecord::DwgDictionaryVariable;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::xrecord::DwgExtendedEntityData;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::xrecord::DwgNamedReference;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::xrecord::DwgObjectCategory;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::xrecord::DwgXRecordBody;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::xrecord::DwgXRecordValue;
+use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgArcEntity;
+use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgBlockBeginEntity;
+use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgBlockEndEntity;
+use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgCircleEntity;
+use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgDefaultLightingType;
+use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgDimensionEntityCommon;
+use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgDimensionLineSpacingStyle;
+use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgDimensionStatus;
+use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgDimensionTextAttachment;
+use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgEllipseEntity;
+use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgEntityBody;
+use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgEntityColor;
+use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgEntityColorKind;
+use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgEntityCommon;
+use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgEntityMode;
+use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgEntityReferenceMode;
+use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgFace3dEntity;
+use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgInsertEntity;
+use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgLineEntity;
+use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgLinearDimensionEntity;
+use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgLwPolylineEntity;
+use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgLwPolylineVertex;
+use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgOrthographicView;
+use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgPointEntity;
+use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgPolyfaceFaceEntity;
+use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgPolyfaceMeshEntity;
+use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgPolyline3dEntity;
+use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgSequenceEndEntity;
+use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgShadePlotMode;
+use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgSplineEntity;
+use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgTextEntity;
+use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgVertexEntity;
+use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgViewportEntity;
+use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgViewportRenderMode;
+use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgViewportStatusFlag;
+use semio_s_artifact_stdio_dwg_snapshot_objects_constraints::DwgAssoc2dConstraintGroup;
+use semio_s_artifact_stdio_dwg_snapshot_objects_constraints::DwgAxisConstraint;
+use semio_s_artifact_stdio_dwg_snapshot_objects_constraints::DwgConstrainedBoundedLine;
+use semio_s_artifact_stdio_dwg_snapshot_objects_constraints::DwgConstrainedDatumLine;
+use semio_s_artifact_stdio_dwg_snapshot_objects_constraints::DwgConstrainedImplicitPoint;
+use semio_s_artifact_stdio_dwg_snapshot_objects_constraints::DwgConstraintGeometry;
+use semio_s_artifact_stdio_dwg_snapshot_objects_constraints::DwgConstraintNode;
+use semio_s_artifact_stdio_dwg_snapshot_objects_constraints::DwgConstraintNodeCore;
+use semio_s_artifact_stdio_dwg_snapshot_objects_constraints::DwgDistanceConstraint;
+use semio_s_artifact_stdio_dwg_snapshot_objects_constraints::DwgExplicitConstraint;
+use semio_s_artifact_stdio_dwg_snapshot_objects_constraints::DwgGeometricConstraint;
+use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgAssocNetwork;
+use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgAssocNetworkMember;
+use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgAssocNetworkMemberKind;
+use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgAssociativeAction;
+use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgAssociativeActionDependency;
+use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgAssociativeActionStatus;
+use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgAssociativeDependency;
+use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgAssociativeDependencyStatus;
+use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgAssociativeDimensionDependencyBody;
+use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgAssociativeGeometryDependency;
+use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgAssociativeValueDependency;
+use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgAssociativeVariable;
+use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgBlockGripLocationComponent;
+use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgDynamicBlockProxyNode;
+use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgEvaluationExpression;
+use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgEvaluationExpressionValue;
+use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgEvaluationGraph;
+use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgEvaluationGraphEdge;
+use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgEvaluationGraphNode;
+use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgEvaluationVariant;
+use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgNamedEvaluationNodeReference;
+use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgPropertyExpressionReference;
+use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockAction;
+use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockActionConnection;
+use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockActionCoordinateMode;
+use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockActionDependency;
+use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockActionWithBasePoint;
+use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockAlignmentGrip;
+use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockAlignmentParameter;
+use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockBasePointParameter;
+use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockElement;
+use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockFlipAction;
+use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockFlipGrip;
+use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockFlipParameter;
+use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockFlipValueSet;
+use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockGrip;
+use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockLinearConstraintParameter;
+use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockLinearGrip;
+use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockLinearParameter;
+use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockMoveAction;
+use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockMoveCoordinateMode;
+use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockOnePointParameter;
+use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockParameterAllowedValues;
+use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockParameterBaseLocation;
+use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockParameterConnection;
+use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockParameterDependencyBody;
+use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockParameterProperty;
+use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockRepresentationData;
+use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockScaleAction;
+use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockScaleMode;
+use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockStretchAction;
+use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockTwoPointParameter;
+use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockVisibilityGrip;
+use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockVisibilityParameter;
+use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgDynamicBlockPurgePreventer;
+use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgStretchSelection;
+use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgStretchSelector;
+use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgVisibilityEvaluationHistory;
+use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgVisibilityState;
+use semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgBlockHeaderTableRecord;
+use semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgBlockTableControl;
+use semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgComplexColor;
+use semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgComplexColorValue;
+use semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgDimensionBehavior;
+use semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgDimensionGeometry;
+use semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgDimensionR2010;
+use semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgDimensionStyleTableControl;
+use semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgDimensionStyleTableRecord;
+use semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgDimensionText;
+use semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgDimensionUnits;
+use semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgLayerTableRecord;
+use semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgLinetypeDash;
+use semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgLinetypeTableControl;
+use semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgLinetypeTableRecord;
+use semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgRegisteredApplicationTableRecord;
+use semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgTableControlBody;
+use semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgTableControlEntries;
+use semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgTableControlEntry;
+use semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgTableRecordBody;
+use semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgTableRecordCommon;
+use semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgTextStyleTableRecord;
+use semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgViewportTableRecord;
+use semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgCellBorder;
+use semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgCellBorders;
+use semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgCellContentFormat;
+use semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgCellMargins;
+use semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgCellStyle;
+use semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgMLeaderArrow;
+use semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgMLeaderAttachmentDirection;
+use semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgMLeaderBlockConnection;
+use semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgMLeaderBlockStyle;
+use semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgMLeaderContentType;
+use semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgMLeaderDogleg;
+use semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgMLeaderDrawOrder;
+use semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgMLeaderKind;
+use semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgMLeaderLanding;
+use semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgMLeaderLeaderOrder;
+use semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgMLeaderLeaderStyle;
+use semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgMLeaderStyle;
+use semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgMLeaderTextAlignment;
+use semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgMLeaderTextAngle;
+use semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgMLeaderTextAttachment;
+use semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgMLeaderTextStyle;
+use semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgMaterial;
+use semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgMaterialChannels;
+use semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgMaterialColor;
+use semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgMaterialMap;
+use semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgMaterialMapSource;
+use semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgMaterialProjection;
+use semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgMaterialTiling;
+use semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgMlineCaps;
+use semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgMlineLinetype;
+use semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgMlineStyle;
+use semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgMlineStyleElement;
+use semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgTableStyle;
+use semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgVisualStyle;
+use semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgVisualStyleProperties;
+use semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgVisualStyleProperty;
+use semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgVisualStylePropertyOperation;
+use semio_s_artifact_stdio_dwg_snapshot_objects_xrecord::DwgDictionaryBody;
+use semio_s_artifact_stdio_dwg_snapshot_objects_xrecord::DwgDictionaryVariable;
+use semio_s_artifact_stdio_dwg_snapshot_objects_xrecord::DwgExtendedEntityData;
+use semio_s_artifact_stdio_dwg_snapshot_objects_xrecord::DwgNamedReference;
+use semio_s_artifact_stdio_dwg_snapshot_objects_xrecord::DwgObjectCategory;
+use semio_s_artifact_stdio_dwg_snapshot_objects_xrecord::DwgXRecordBody;
+use semio_s_artifact_stdio_dwg_snapshot_objects_xrecord::DwgXRecordValue;
 use semio_s_artifact_stdio_dwg_snapshot_document::standards::v_ac1024::subsets::any::schema::snapshot::document::header::DwgHeaderSpaceGeometry;
 use semio_s_artifact_stdio_dwg_snapshot_document::standards::v_ac1024::subsets::any::schema::snapshot::document::header::DwgHeaderVariables;
 use semio_s_artifact_stdio_dwg_snapshot_drawing::standards::v_ac1024::subsets::any::schema::snapshot::drawing::geometry::DwgLogicalLayer;
@@ -730,8 +730,8 @@ pub fn decode_layer_projection(frame: &mut DwgObjectRecordFrame<'_>) -> Result<D
 //#endregion DwgObjects
 //#region DwgRead
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn dimension_attachment_logical(value: u16) -> Result<semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgDimensionTextAttachment, String> {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgDimensionTextAttachment::*;
+pub fn dimension_attachment_logical(value: u16) -> Result<semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgDimensionTextAttachment, String> {
+    use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgDimensionTextAttachment::*;
     match value {
         1 => Ok(TopCenter),
         2 => Ok(TopLeft),
@@ -746,16 +746,16 @@ pub fn dimension_attachment_logical(value: u16) -> Result<semio_s_artifact_stdio
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn dimension_spacing_logical(value: u16) -> Result<semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgDimensionLineSpacingStyle, String> {
+pub fn dimension_spacing_logical(value: u16) -> Result<semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgDimensionLineSpacingStyle, String> {
     match value {
-        1 => Ok(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgDimensionLineSpacingStyle::AtLeast),
-        2 => Ok(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgDimensionLineSpacingStyle::Exact),
+        1 => Ok(semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgDimensionLineSpacingStyle::AtLeast),
+        2 => Ok(semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgDimensionLineSpacingStyle::Exact),
         _ => Err(format!("dimension line-spacing style {value} is invalid")),
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn viewport_status_flags(mask: u32) -> Result<Vec<semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgViewportStatusFlag>, String> {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgViewportStatusFlag::*;
+pub fn viewport_status_flags(mask: u32) -> Result<Vec<semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgViewportStatusFlag>, String> {
+    use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgViewportStatusFlag::*;
     if mask & !0x003f_ffff != 0 {
         return Err(format!("VIEWPORT status contains unsupported bits {:#x}", mask & !0x003f_ffff));
     }
@@ -786,13 +786,13 @@ pub fn viewport_status_flags(mask: u32) -> Result<Vec<semio_s_artifact_stdio_dwg
     Ok(all.into_iter().enumerate().filter_map(|(bit, flag)| (mask & (1 << bit) != 0).then_some(flag)).collect())
 }
 pub struct DwgDecodedEntityCommon {
-    pub logical: semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEntityCommon,
+    pub logical: semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgEntityCommon,
     pub reactor_count: usize,
     pub extension_dictionary_missing: bool,
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn entity_mode(value: u8) -> semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEntityMode {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEntityMode;
+fn entity_mode(value: u8) -> semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgEntityMode {
+    use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgEntityMode;
     match value {
         0 => DwgEntityMode::ExplicitOwner,
         1 => DwgEntityMode::PaperSpace,
@@ -801,8 +801,8 @@ fn entity_mode(value: u8) -> semio_s_artifact_stdio_dwg_snapshot_objects::standa
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn entity_reference_mode(value: u8) -> semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEntityReferenceMode {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEntityReferenceMode;
+fn entity_reference_mode(value: u8) -> semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgEntityReferenceMode {
+    use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgEntityReferenceMode;
     match value {
         0 => DwgEntityReferenceMode::ByLayer,
         1 => DwgEntityReferenceMode::ByBlock,
@@ -827,9 +827,9 @@ pub fn decode_r2010_entity_common_main(data: &mut DwgBitReader<'_>) -> Result<Dw
 /// Off by those two bits, every subsequent field of a real AutoCAD entity decodes as noise.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn decode_entity_common_fields(data: &mut DwgBitReader<'_>, layout: DwgObjectLayout) -> Result<DwgDecodedEntityCommon, String> {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEntityColor;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEntityColorKind;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEntityCommon;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgEntityColor;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgEntityColorKind;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgEntityCommon;
     let mode = data.read_bb()?;
     let reactor_count = data.read_bl()? as usize;
     let extension_dictionary_missing = data.read_b()?;
@@ -889,9 +889,9 @@ fn decode_entity_common_fields(data: &mut DwgBitReader<'_>, layout: DwgObjectLay
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_r2010_entity_common_handles(decoded: &mut DwgDecodedEntityCommon, handles: &mut DwgBitReader<'_>, base: u64) -> Result<DwgObjectRelations, String> {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEntityColorKind;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEntityMode;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEntityReferenceMode;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgEntityColorKind;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgEntityMode;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgEntityReferenceMode;
     if decoded.logical.color.kind == DwgEntityColorKind::TrueColor && decoded.logical.color.rgb == 0 {
         decoded.logical.color.color_handle = read_object_handle(handles, base)?;
     }

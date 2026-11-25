@@ -1,9 +1,9 @@
 import { expect, it } from "vitest";
 
-import { chromium } from "playwright";
+import { launchChromium } from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🌐️chromium-launch/🟦️";
 import { renderScheduleAnimationFixture as fixture } from "@semio-tech/ui/testing/fixtures";
 it("browser animation ownership survives discarded candidates and clears on accepted static output", async () => {
-  const browser = await chromium.launch({ headless: true });
+  const browser = await launchChromium();
   try {
     const page = await browser.newPage();
     const observed = await page.evaluate(({ activity, primitives }) => {
@@ -36,7 +36,7 @@ it("browser animation ownership survives discarded candidates and clears on acce
 
 
 it("matches browser animation phase after long uptime and across the common wrap", async () => {
-  const browser = await chromium.launch({ headless: true });
+  const browser = await launchChromium();
   try {
     const page = await browser.newPage();
     const observed = await page.evaluate(({ shaderPeriodsUs, samples }) => {

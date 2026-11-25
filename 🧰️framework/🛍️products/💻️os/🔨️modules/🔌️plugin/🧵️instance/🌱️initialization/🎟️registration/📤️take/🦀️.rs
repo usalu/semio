@@ -1,6 +1,7 @@
 //! 📤️ Native registration donates its actual tools, ephemeral Stores and installed Store factory aliases together.
 use super::*;
-use semio_plugin_ownership::{bounded_ownership::{ArtifactFixedRegistry,original_registry_backing},store_lifecycle::ArtifactDocumentStoreDisposer};
+use semio_plugin_ownership::bounded_ownership::{ArtifactFixedRegistry,original_registry_backing};
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactDocumentStoreDisposer;
 impl<A,M,D> OriginalNativeRegistration<A,M,D>
 where A:OriginalArtifactAppBirth,M:ReferenceSpaceMember+MemberFactory+'static,D:OriginalInstanceDeclarations<A>{
  /// 📏️ The final private donation includes every actual fixed service birth and transferred source frame.

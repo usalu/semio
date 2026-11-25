@@ -7,7 +7,7 @@ import { stashOperationProgress, stashOperationPublication, WGPU_TYPED_OPERATION
 import { admitSpawnedJob, declareWgpuBootSubphase, forgetSpawnedJobs, leftoverFriendlyEffects, pendingTurnEffects, shellFrameAnswersACaller, stashLeftoverHostEffects, takeSpawnedJobs, WGPU_SPAWNED_JOB_ROUNDS, wgpuHostEffect, type WgpuSpawnedJobDrain } from "../../🎛️contributions-and-effects/🟦️.ts";
 import { getShardClient, serializeWgpuActorCall, submitTurn } from "../../🧵️shard-and-actor-calls/🟦️.ts";
 import { RETAINED_DOCUMENT_OPPORTUNITIES, type WgpuOwnedUiProjection, yieldWgpuUi } from "../../🍽️ui-intake-and-route/🟦️.ts";
-import { drainTypedOperationBatches, shellFrameBytes, type WireTurnResult } from "../../../../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🔖️turn-result/🟦️.ts";
+import { drainTypedOperationBatches, shellFrameBytes, type TypedOperationAckEvent, type WireTurnResult } from "../../../../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🔖️turn-result/🟦️.ts";
 import { driveSpawnedJob, spawnedJobCompletedEvent, type SpawnedJobPort } from "../../../../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🧵️spawned-job/🟦️.ts";
 import { createShardCommandIngressPages } from "@semio-tech/framework-actor/shard-client/wire";
 import type { createInstanceBookkeeping } from "../🪪️descriptor-and-instance-state/🟦️.ts";
@@ -120,9 +120,12 @@ export function createTurnDrivers({ requireUiRoute, executeFor, state, closingIn
    * arrives. Frames a poll uncovers are published on this instance's own outcome stream, where
    * `AppChannelClient`'s pump routes them exactly as a command reply's. */
   const drainingInstances = new Set<number>();
-  const drainTypedOperations = async (instanceId: number): Promise<void> => {
+  const pendingAcknowledgements = new Map<number, TypedOperationAckEvent[]>();
+  const drainTypedOperations = async (instanceId: number, acknowledgements: readonly TypedOperationAckEvent[] = []): Promise<void> => {
     const live = (): boolean => !state.disposing && !closingInstances.has(instanceId) && actorIdByInstance.has(instanceId);
-    if (drainingInstances.has(instanceId) || !live()) return;
+    if (!live()) return;
+    if (acknowledgements.length) pendingAcknowledgements.set(instanceId, [...(pendingAcknowledgements.get(instanceId) ?? []), ...acknowledgements]);
+    if (drainingInstances.has(instanceId)) return;
     drainingInstances.add(instanceId);
     const drive = new WgpuTypedOperationDrive(instanceId);
     try {
@@ -134,7 +137,9 @@ export function createTurnDrivers({ requireUiRoute, executeFor, state, closingIn
           const actorId = requireActorId(instanceId);
           const route = requireUiRoute(instanceId);
           const execute = executeFor(actorId);
-          const turn = await submitTurn(actorId, drive.takeAcknowledgements(), undefined, activation);
+          const owed = [...(pendingAcknowledgements.get(instanceId) ?? []), ...drive.takeAcknowledgements()];
+          pendingAcknowledgements.delete(instanceId);
+          const turn = await submitTurn(actorId, owed, undefined, activation);
           const accepted = [turn, ...await route.accept(turn, execute)];
           drive.observe(accepted);
           const frames: Uint8Array[] = [];
@@ -151,10 +156,12 @@ export function createTurnDrivers({ requireUiRoute, executeFor, state, closingIn
           frames.push(...jobDrain.frames);
           if (frames.length > 0) turnOutcomes.push({ instanceId, frames });
           const latest = jobDrain.last ?? accepted.at(-1);
-          return { status: drive.owesASettle(latest) ? "more-work" : latest?.status, nextWake: latest?.nextWake ?? null };
+          return { status: drive.owesASettle(latest) || pendingAcknowledgements.has(instanceId) ? "more-work" : latest?.status, nextWake: latest?.nextWake ?? null };
         }),
         yieldWgpuUi,
       );
+      const owed = drive.takeAcknowledgements();
+      if (owed.length) pendingAcknowledgements.set(instanceId, [...(pendingAcknowledgements.get(instanceId) ?? []), ...owed]);
       drive.report(`drain polls=${outcome.polls} stopped=${outcome.stopped}`);
     } catch (error) {
       console.error(`wgpu-bridge typed-operation drain failed for instance ${instanceId}`, error);
@@ -162,6 +169,8 @@ export function createTurnDrivers({ requireUiRoute, executeFor, state, closingIn
       turnOutcomes.push({ instanceId, error });
     } finally {
       drainingInstances.delete(instanceId);
+      if (pendingAcknowledgements.has(instanceId) && live()) void drainTypedOperations(instanceId);
+      else if (!live()) pendingAcknowledgements.delete(instanceId);
     }
   };
   const runQueuedTurnSerialized = async (instanceId: number, actorId: string, events: readonly Uint8Array[]): Promise<void> => {
@@ -229,7 +238,7 @@ export function createTurnDrivers({ requireUiRoute, executeFor, state, closingIn
       const leftoverFriendly = leftover.map((effect) => wgpuHostEffect(effect)).filter((effect): effect is Effect => effect !== null);
       drive.report("command");
       turnOutcomes.push({ instanceId, frames: outFrames });
-      if (drive.owesASettle(jobDrain.last ?? results.at(-1))) void drainTypedOperations(instanceId);
+      if (drive.owesASettle(jobDrain.last ?? results.at(-1))) void drainTypedOperations(instanceId, drive.takeAcknowledgements());
     } catch (error) {
       turnOutcomes.push({ instanceId, error });
     }

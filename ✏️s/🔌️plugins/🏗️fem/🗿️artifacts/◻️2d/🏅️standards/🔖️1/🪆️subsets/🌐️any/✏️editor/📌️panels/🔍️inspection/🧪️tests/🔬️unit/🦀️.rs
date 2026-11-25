@@ -215,7 +215,8 @@ async fn a_selected_combination_renders_one_factor_input_per_term_2d() {
     assert!(json.contains("term:dead"), "a factor input binds the term field its case names");
     assert!(json.contains("patchCombination"));
     assert_eq!(component_at(&json, "fem2d-play-inspection.combination.term.dead.input"), "input");
-    assert!(!json.contains("combination.add-term"), "every case is already superposed, so nothing is left to add");
+    assert_eq!(component_at(&json, "fem2d-play-inspection.combination.add-term.select"), "select", "the Add Term control stays present even when every case is already superposed");
+    assert!(json.contains("Add Term"), "{json}");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -280,6 +281,7 @@ async fn german_resolves_every_field_label_the_inspector_binds_2d() {
     assert!(panel(&doc, &["scope:1:6:region2:r1"], &view_state).contains("Netzweite"));
     assert!(panel(&doc, &["scope:1:8:loadCase4:live"], &view_state).contains("Eigengewicht"));
     assert!(panel(&doc, &[], &view_state).contains("Übersicht"));
+    assert!(panel(&doc, &["scope:1:11:combination3:uls"], &view_state).contains("Term hinzufügen"));
 }
 
 /// 🖼️ The panel reaches the shell through its body key, on the live app, with the real label
@@ -292,4 +294,18 @@ async fn the_body_key_routes_to_this_panel_on_the_live_app_2d() {
     let json = render_body(&mut app, BODY_KEY);
     assert!(json.contains("fem2d-play-inspection.summary.nodes"), "{json}");
     assert!(json.contains("12"), "the demo's twelve nodes are counted");
+}
+
+/// 🧮️ LAW: picking the tree's Analysis row selects the analysis settings and Inspection shows them, instead of staying on the previous entity or the document summary.
+#[semio_framework_async_macros::async_test]
+async fn the_analysis_row_selection_shows_the_analysis_settings_2d() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
+    let target = semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::fem2d_entity_target_id("analysis", "settings").expect("analysis target");
+    assert_eq!(semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::fem2d_entity_kind(&demo(), &target), Some("analysis"));
+    let json = english(&demo(), &[target.as_str()]);
+    for row in ["summary.modal-count", "summary.buckling-count", "summary.deformation-scale"] {
+        assert!(json.contains(row), "{row}: {json}");
+    }
+    assert!(!json.contains("summary.nodes"), "the analysis settings replace the document counts: {json}");
+    assert!(!json.contains(".actions.delete"), "analysis settings cannot be deleted: {json}");
 }

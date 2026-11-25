@@ -7,25 +7,15 @@
 //! typed lanes and content operators can name resources directly.
 
 use crate::standards::v1_7::subsets::base::io::error::PdfEngineError;
-use crate::standards::v1_7::subsets::base::modules::lexer::{dict_get, dict_name};
+use crate::standards::v1_7::subsets::base::modules::lexer::{dict_get, dict_name, CosGrant};
 use crate::standards::v1_7::subsets::base::schema::{graph_source::ObjectSource, snapshot::*, stream_roles::{PdfAdmittedStreamRole, PdfGraphIdentity, PdfGraphPath, PdfStreamRoleValue}};
 
-#[path = "🌳️page-tree/🦀️.rs"]
-mod page_tree;
-pub use page_tree::*;
+pub use semio_s_artifact_stdio_pdf_page_tree::{PageAttribute, PageInheritance, PageTreeCursor, PageTreeEvent, PageTreeLeaf, PageTreeReceipt};
 
-#[path = "🧩️lifter-and-document/🦀️.rs"]
-mod lifter_and_document;
-pub use lifter_and_document::*;
+pub use semio_s_artifact_stdio_pdf_lifter::{Category, DocumentLiftState, FontLift, FontStart, Lifter};
+pub use semio_s_artifact_stdio_pdf_page_content::{operator_bytes, project_content_bytes, PageContentBarrier, PageContentCursor, PageContentEvent, PageContentReceipt, PageProgramCursor};
+use semio_s_artifact_stdio_pdf_lifter::{lift_viewer_preferences, page_layout_from_name, page_mode_from_name, CATALOG_KEYS};
 
-#[path = "🪟️resources-and-fonts/🦀️.rs"]
-mod resources_and_fonts;
-use resources_and_fonts::*;
-
-#[path = "🧭️navigation-and-annotations/🦀️.rs"]
-mod navigation_and_annotations;
-use navigation_and_annotations::*;
-
-#[path = "📚️catalog-and-page-mode/🦀️.rs"]
-mod catalog_and_page_mode;
-pub use catalog_and_page_mode::*;
+#[path = "🧩️lifter-and-document/🧭️document-lift/🦀️.rs"]
+mod document_lift;
+pub use document_lift::*;

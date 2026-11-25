@@ -1,20 +1,23 @@
 import {execFile,spawn,spawnSync} from "node:child_process";
 import {createHash} from "node:crypto";
+import {readProcessStartV1} from "../../../../🔖️identity/🟦️.ts";
 import {appendFileSync,closeSync,mkdirSync,openSync,readdirSync,readFileSync,renameSync,rmSync,statSync,writeFileSync} from "node:fs";
 import {createRequire} from "node:module";
 import {join} from "node:path";
 import {fileURLToPath} from "node:url";
-import {currentHostProbeV1,readHostSampleV1,type HostSampleRecordV1} from "../../📡️sampling/🟦️.ts";
+import {currentHostProbeV1,observeTreeMegabytesV1,readHostSampleV1,readHostTextV1,readLinuxChargesV1,type HostSampleRecordV1,type HostTextReaderV1} from "../../📡️sampling/🟦️.ts";
+import {systemDarwinFootprintPortV1,type DarwinFootprintPortV1} from "../../🍏️native-footprint/🟦️.ts";
 import type {HostCapacityPolicyV1} from "../../📏️decision/🟦️.ts";
 import {readHostProcessRowsV1} from "../../🧺️unmanaged/🟦️.ts";
-import {HOST_WARDEN_PLATFORMS_V1,HOST_WARDEN_POLICY_V1,HOST_WARDEN_SWAP_V1,HOST_WARDEN_TABLES_V1,HOST_WARDEN_TABLE_V1,buildHostWardenAlarmV1,classifyWardenSubjectsV1,decideHostWardenV1,discoverWardenWorkspacesV1,parseWardenSwapV1,formatHostWardenNoticeV1,formatHostWardenStopReasonV1,isHostWardenV1,parseWardenProcessTableV1,planWardenSignalsV1,requireHostWardenV1,type HostWardenAlarmV1,type HostWardenCancelV1,type HostWardenHostV1,type HostWardenMirrorV1,type HostWardenPolicyV1,type HostWardenPreviousV1,type HostWardenStateV1,type HostWardenRowV1,type HostWardenSubjectV1,type HostWardenTablesV1} from "../🟦️.ts";
+import type {CompileBudgetPolicyV1} from "../../../../📦️artifacts/🏗️native-build/🎟️admission/🏔️ceiling/🟦️.ts";
+import {HOST_WARDEN_PLATFORMS_V1,HOST_WARDEN_POLICY_V1,HOST_WARDEN_SWAP_V1,HOST_WARDEN_TABLES_V1,HOST_WARDEN_TABLE_V1,buildHostWardenAlarmV1,classifyWardenSubjectsV1,decideHostWardenV1,discoverWardenWorkspacesV1,parseWardenSwapV1,formatHostWardenCancelFailureV1,formatHostWardenNoticeV1,formatHostWardenStopReasonV1,isHostWardenV1,parseWardenProcessTableV1,planWardenSignalsV1,requireHostWardenV1,topWardenOthersV1,type HostWardenAlarmV1,type HostWardenCancelV1,type HostWardenHostV1,type HostWardenMirrorV1,type HostWardenOtherV1,type HostWardenPolicyV1,type HostWardenPreviousV1,type HostWardenStateV1,type HostWardenRowV1,type HostWardenSubjectV1,type HostWardenTablesV1} from "../🟦️.ts";
 
 const MEGABYTE=1048576;
 
-/** 📡️ Everything the loop reaches the machine through, injectable: the host sample, the process table, signals, the clock, the standard error line, the directory of the warden, the sleep and the mode. */
-export type HostWardenPortsV1=Readonly<{sample:()=>Promise<HostWardenHostV1>;table:()=>Promise<readonly HostWardenRowV1[]>;signal:(pid:number,name:"SIGSTOP"|"SIGCONT"|"SIGKILL"|"SIGTERM")=>void;now:()=>number;write:(line:string)=>void;directory:string;sleep:(milliseconds:number,signal?:AbortSignal)=>Promise<void>;mode:()=>"observe"|"enforce"}>;
+/** 📡️ Everything the loop reaches the machine through, injectable: the host sample, the process table, the footprint of a process tree (what it holds including what the OS compressed or swapped out of it; absent: the resident set of the table is the measure), signals, the clock, the standard error line, the directory of the warden, the sleep and the mode. */
+export type HostWardenPortsV1=Readonly<{sample:()=>Promise<HostWardenHostV1>;table:()=>Promise<readonly HostWardenRowV1[]>;signal:(pid:number,name:"SIGSTOP"|"SIGCONT"|"SIGKILL"|"SIGTERM")=>void;now:()=>number;footprint?:(pid:number)=>Promise<number|null>;write:(line:string)=>void;directory:string;sleep:(milliseconds:number,signal?:AbortSignal)=>Promise<void>;mode:()=>"observe"|"enforce"}>;
 /** 🎛️ What one run of the loop may be told besides its ports. */
-export type HostWardenLoopOptionsV1=Readonly<{ports:HostWardenPortsV1;policy?:HostWardenPolicyV1;tables?:HostWardenTablesV1;workspaces?:readonly string[];within?:number;prefixes?:readonly string[];maxTicks?:number;signal?:AbortSignal;code?:string;platform?:NodeJS.Platform;sources?:()=>string|Promise<string>}>;
+export type HostWardenLoopOptionsV1=Readonly<{ports:HostWardenPortsV1;policy?:HostWardenPolicyV1;tables?:HostWardenTablesV1;workspaces?:readonly string[];within?:number;prefixes?:readonly string[];maxTicks?:number;signal?:AbortSignal;code?:string;platform?:NodeJS.Platform;sources?:()=>string|Promise<string>;ceilings?:CompileBudgetPolicyV1}>;
 /** 🏁️ How a run ended and what it did. */
 export type HostWardenLoopResultV1=Readonly<{reason:"idle"|"code"|"signal"|"locked"|"limit";ticks:number;counters:Readonly<{suspended:number;resumed:number;cancelled:number}>}>;
 
@@ -25,15 +28,15 @@ const wardenLocale=(platform:NodeJS.Platform):Record<string,string>=>{const loca
 
 /** ⏱️ Reads the start text of one process (`ps -o lstart= -p`); the empty text where the platform has no such command or the process is gone. */
 export function wardenProcessStartV1(pid:number,platform:NodeJS.Platform=process.platform):string{
- if(platform==="win32")return"";
- const table=HOST_WARDEN_TABLE_V1.start,done=spawnSync(table.command,[...table.arguments,String(pid)],{encoding:"utf8",env:{...process.env,...wardenLocale(platform)},timeout:POLICY.commandMilliseconds});
+ if(platform==="win32"){const read=readProcessStartV1(pid,platform);return typeof read==="number"?String(read):"";}
+ const table=HOST_WARDEN_TABLE_V1.start,done=spawnSync(table.command,[...table.arguments,String(pid)],{windowsHide:true,encoding:"utf8",env:{...process.env,...wardenLocale(platform)},timeout:POLICY.commandMilliseconds});
  return done.status===0?done.stdout.trim():"";
 }
 
-/** 🧬️ The digest of the sources of the warden (its pure module, its loop, its entry and its schema): a running warden whose digest differs from the code on disk ends itself, the next caller starts the new code. */
+/** 🧬️ The digest of the sources of the warden (its pure module, its loop, its entry, its schema, and the compile-memory policy and law of the admission it enforces as runtime ceilings): a running warden whose digest differs from the code on disk ends itself, the next caller starts the new code. */
 export function hostWardenCodeDigestV1():string{
  const hash=createHash("sha256");
- for(const path of["../🟦️.ts","🟦️.ts","../⌨️main/🟦️.ts","../🧬️schema/🔣️.json"])hash.update(readFileSync(fileURLToPath(new URL(path,import.meta.url))));
+ for(const path of["../🟦️.ts","🟦️.ts","../⌨️main/🟦️.ts","../🧬️schema/🔣️.json","../../../../📦️artifacts/🏗️native-build/🎟️admission/🏔️ceiling/🟦️.ts","../../../../📦️artifacts/🏗️native-build/🎟️admission/🧬️schema/🔣️.json"])hash.update(readFileSync(fileURLToPath(new URL(path,import.meta.url))));
  return hash.digest("hex").slice(0,16);
 }
 
@@ -77,6 +80,24 @@ export function readHostWardenCancelsSinceV1(sinceMs:number,directory?:string,no
  return listCancels(directory,nowMs).filter(record=>record.atMs>=sinceMs).sort((a,b)=>b.atMs-a.atMs);
 }
 
+/** 🧯️ Reads every cancel record written at or after `sinceMs` for a process below `ancestor` (newest first): the owner of a build tells the cancels that hit its own process tree by its pid, whatever the command lines say. */
+export function readHostWardenCancelsBelowV1(ancestor:number,sinceMs:number,directory?:string,nowMs:number=Date.now()):readonly HostWardenCancelV1[]{
+ return readHostWardenCancelsSinceV1(sinceMs,directory,nowMs).filter(record=>record.ancestors.includes(ancestor));
+}
+
+/** 🧯️ The typed failure of a build whose processes the warden cancelled (`code` `host-warden-cancelled`): its message is the English and the German text of `formatHostWardenCancelFailureV1`, `cancels` the records, so the caller ends with a clear message and never retries. */
+export class HostWardenCancelledErrorV1 extends Error{
+ readonly code="host-warden-cancelled" as const;
+ readonly cancels:readonly HostWardenCancelV1[];
+ constructor(cancels:readonly HostWardenCancelV1[]){super(["en","de"].map(language=>formatHostWardenCancelFailureV1(language as "en"|"de",cancels)).join("\n"));this.name="HostWardenCancelledErrorV1";this.cancels=cancels;}
+}
+
+/** 🧯️ Throws {@link HostWardenCancelledErrorV1} when the warden cancelled a process below `ancestor` since `sinceMs`; returns otherwise. */
+export function requireNoHostWardenCancelBelowV1(ancestor:number,sinceMs:number,directory?:string,nowMs:number=Date.now()):void{
+ const cancels=readHostWardenCancelsBelowV1(ancestor,sinceMs,directory,nowMs);
+ if(cancels.length>0)throw new HostWardenCancelledErrorV1(cancels);
+}
+
 /** 🪞️ The record a worker mirrors to the group store: the fresh state of the warden as written, else `{"version":1,"atMs":<now>,"absent":true}`, so the coordinator tells no warden from no record. */
 export function currentHostWardenMirrorV1(directory?:string,nowMs:number=Date.now()):HostWardenMirrorV1{
  return readHostWardenStateV1(directory,nowMs)??{version:1,atMs:nowMs,absent:true};
@@ -88,13 +109,27 @@ export function readHostWardenMirrorV1(path:string):HostWardenMirrorV1|null{
  return value!==undefined&&isHostWardenV1("Mirror",value)?value as HostWardenMirrorV1:null;
 }
 
-/** 🏭️ The default ports: the real machine. The host sample reads the counters through the authored host capacity policy (no `hdiutil`, no footprint: the loop must stay cheap), the table is one `ps` (the native process walk on Windows, which has no state, start or command line), signals go through `process.kill`, the mode is the content of the `mode` file or forced by `observe`. */
+/** 🏷️ Replaces the resident set a `ps` row carries by what the kernel charges the process (schema `ProcessRow`): on macOS the `phys_footprint` of every readable process through the native port (about two microseconds per process, a process it cannot read keeps its resident set), on Linux the proportional plus swapped proportional set size of the processes whose resident set reaches `chargeMinimumKilobytes` (the kernel walks the page tables per read, and below the minimum the difference is smaller than the noise of the cap), anywhere else the rows as they are. */
+export async function chargeWardenRowsV1(platform:NodeJS.Platform,rows:readonly HostWardenRowV1[],ports:Readonly<{darwin?:DarwinFootprintPortV1|null;read?:HostTextReaderV1;minimumKilobytes?:number}>={}):Promise<readonly HostWardenRowV1[]>{
+ if(platform==="darwin"){
+  const port=ports.darwin===undefined?systemDarwinFootprintPortV1(platform):ports.darwin;
+  if(port===null)return rows;
+  return rows.map(row=>{const bytes=port.footprint(row.pid);return bytes===null?row:{...row,memoryKilobytes:Math.floor(bytes/1024)};});
+ }
+ if(platform==="linux"){
+  const minimum=ports.minimumKilobytes??HOST_WARDEN_TABLE_V1.chargeMinimumKilobytes,charged=await readLinuxChargesV1(rows.filter(row=>row.memoryKilobytes>=minimum).map(row=>row.pid),ports.read??readHostTextV1);
+  return rows.map(row=>{const kilobytes=charged.get(row.pid);return kilobytes===undefined?row:{...row,memoryKilobytes:kilobytes};});
+ }
+ return rows;
+}
+
+/** 🏭️ The default ports: the real machine. The host sample reads the counters through the authored host capacity policy (no `hdiutil`, no `footprint` tool: the loop must stay cheap), the table is one `ps` whose resident sets are replaced by what the kernel charges (`chargeWardenRowsV1`; the native process walk on Windows, which has no state, start or command line, carries the private usage), signals go through `process.kill`, the mode is the content of the `mode` file or forced by `observe`. */
 export function defaultHostWardenPortsV1(options:Readonly<{hostPolicy:HostCapacityPolicyV1;directory?:string;observe?:boolean;platform?:NodeJS.Platform}>):HostWardenPortsV1{
  const platform=options.platform??process.platform,directory=hostWardenDirectoryV1(options.directory);
  let previous:Readonly<{atMs:number;swappedOutMegabytes:number|null}>|undefined,swapRead:Readonly<{atMs:number;facts:Pick<HostWardenHostV1,"swapFreeMegabytes"|"swapVolumeFreeMegabytes">}>|undefined;const commands=new Map<string,string>();
  const probe=currentHostProbeV1(),quick={...probe,run:(command:string,args:readonly string[],signal?:AbortSignal)=>command.endsWith("hdiutil")||args.includes("kern.num_files")?Promise.reject(Error("skipped")):probe.run(command,args,signal)};
  return Object.freeze({
-  directory,now:Date.now,sleep:defaultSleep,write:(line:string)=>{process.stderr.write(line+"\n");},
+  directory,now:Date.now,sleep:defaultSleep,footprint:pid=>observeTreeMegabytesV1(pid),write:(line:string)=>{process.stderr.write(line+"\n");},
   mode:()=>options.observe?"observe" as const:(()=>{try{const text=readFileSync(join(directory,POLICY.modeFile),"utf8").trim();if(text==="observe"||text==="enforce")return text;}catch{}return POLICY.defaultMode as "observe"|"enforce";})(),
   sample:async()=>{
    const record:HostSampleRecordV1=await readHostSampleV1(options.hostPolicy,quick,previous);
@@ -105,7 +140,7 @@ export function defaultHostWardenPortsV1(options:Readonly<{hostPolicy:HostCapaci
    return{totalMegabytes:host.totalMegabytes,availableMegabytes:host.availableMegabytes,swapUsedMegabytes:host.swapUsedMegabytes,swapOutMegabytesPerSecond:host.swapOutMegabytesPerSecond,compressedMegabytes:host.compressedMegabytes??null,pressure:host.pressure,...swapRead.facts};
   },
   table:async()=>{
-   if(platform==="win32")return(await readHostProcessRowsV1(platform)).map(row=>({pid:row.pid,parent:row.ppid,group:row.pid,rssKilobytes:row.kilobytes,stopped:false,elapsedSeconds:0,start:"",command:row.name}));
+   if(platform==="win32")return(await readHostProcessRowsV1(platform)).map(row=>({pid:row.pid,parent:row.ppid,group:row.pid,memoryKilobytes:row.kilobytes,stopped:false,elapsedSeconds:0,start:"",command:row.name}));
    const table=HOST_WARDEN_TABLE_V1,rows=parseWardenProcessTableV1(await runPs(table.quickArguments,platform)),key=(row:HostWardenRowV1)=>`${row.pid}.${row.start}`;
    const young=new Map<string,string>(),missing=rows.filter(row=>!commands.has(key(row)));
    if(missing.length>0){
@@ -114,7 +149,7 @@ export function defaultHostWardenPortsV1(options:Readonly<{hostPolicy:HostCapaci
     for(const row of missing){const command=found.get(row.pid)??"";if(row.elapsedSeconds>=table.commandSettledSeconds&&!command.startsWith("("))commands.set(key(row),command);else young.set(key(row),command);}
    }
    const live=new Set(rows.map(key));for(const known of[...commands.keys()])if(!live.has(known))commands.delete(known);
-   return rows.map(row=>({...row,command:commands.get(key(row))??young.get(key(row))??""}));
+   return chargeWardenRowsV1(platform,rows.map(row=>({...row,command:commands.get(key(row))??young.get(key(row))??""})));
   },
   signal:(pid:number,name:"SIGSTOP"|"SIGCONT"|"SIGKILL"|"SIGTERM")=>{try{process.kill(pid,name);}catch{}},
  });
@@ -132,7 +167,7 @@ export async function readWardenSwapV1(platform:NodeJS.Platform,probe:Readonly<{
  if(platform==="linux")return parseWardenSwapV1(platform,{meminfo:await probe.read(swap.linux.meminfo).catch(()=>null)});
  return parseWardenSwapV1(platform,{});
 }
-const runPs=(args:readonly string[],platform:NodeJS.Platform,vanished=false):Promise<string>=>new Promise((done,fail)=>execFile(HOST_WARDEN_TABLE_V1.command,[...args],{maxBuffer:64*MEGABYTE,encoding:"utf8",timeout:POLICY.commandMilliseconds,env:{...process.env,...wardenLocale(platform)}},(error,stdout)=>error&&stdout.length===0&&!vanished?fail(error):done(stdout)));
+const runPs=(args:readonly string[],platform:NodeJS.Platform,vanished=false):Promise<string>=>new Promise((done,fail)=>execFile(HOST_WARDEN_TABLE_V1.command,[...args],{windowsHide:true,maxBuffer:64*MEGABYTE,encoding:"utf8",timeout:POLICY.commandMilliseconds,env:{...process.env,...wardenLocale(platform)}},(error,stdout)=>error&&stdout.length===0&&!vanished?fail(error):done(stdout)));
 const percentile=(values:readonly number[],share:number):number=>{if(!values.length)return 0;const sorted=[...values].sort((a,b)=>a-b);return sorted[Math.min(sorted.length-1,Math.floor(sorted.length*share))]!;};
 const round=(value:number,digits=2):number=>Math.round(value*10**digits)/10**digits;
 
@@ -160,8 +195,8 @@ export async function runHostWardenLoopV1(options:HostWardenLoopOptionsV1):Promi
   return 0;
  })();
  if(locked!==undefined){for(const language of["en","de"] as const)ports.write(formatHostWardenNoticeV1(language,"locked",{pid:locked}));return done("locked",0,{suspended:0,resumed:0,cancelled:0});}
- const counters={suspended:0,resumed:0,cancelled:0,ticks:0},suspended=new Map<string,Record1>(),since=new Map<string,number>(),lastAlarms:HostWardenAlarmV1[]=[],durations:number[]=[],announced=new Set<string>(),marks:{wall:number;cpu:number}[]=[{wall:performance.now(),cpu:(process.cpuUsage().user+process.cpuUsage().system)/1000}];
- let previous:HostWardenPreviousV1={level:"calm",calmTicks:0},level:"calm"|"guard"|"danger"="calm",lastSubjectAt=ports.now(),lastCodeCheck=ports.now(),stopReason:HostWardenLoopResultV1["reason"]|undefined;
+ const reported=new Set<string>(),counters={suspended:0,resumed:0,cancelled:0,ticks:0},suspended=new Map<string,Record1>(),since=new Map<string,number>(),lastAlarms:HostWardenAlarmV1[]=[],durations:number[]=[],announced=new Set<string>(),marks:{wall:number;cpu:number}[]=[{wall:performance.now(),cpu:(process.cpuUsage().user+process.cpuUsage().system)/1000}];
+ let previous:HostWardenPreviousV1={level:"calm",calmTicks:0},nearCeiling=false,level:"calm"|"guard"|"danger"="calm",lastSubjectAt=ports.now(),lastCodeCheck=ports.now(),stopReason:HostWardenLoopResultV1["reason"]|undefined;
  const mode=():"observe"|"enforce"=>observeOnly?"observe":ports.mode();
  const exclusion=(rows:readonly HostWardenRowV1[]):Set<number>=>{const byPid=new Map(rows.map(row=>[row.pid,row] as const)),found=new Set<number>([process.pid]);for(let row=byPid.get(process.pid);row!==undefined&&!found.has(row.parent)&&row.parent>0;row=byPid.get(row.parent))found.add(row.parent);return found;};
  const signalTree=(rows:readonly HostWardenRowV1[],subject:Readonly<{pid:number;scope?:"process"|"group"|"tree"}>,names:readonly("SIGSTOP"|"SIGCONT"|"SIGKILL"|"SIGTERM")[]):void=>{
@@ -176,15 +211,43 @@ export async function runHostWardenLoopV1(options:HostWardenLoopOptionsV1):Promi
   lastAlarms.push(alarm);if(lastAlarms.length>policy.lastAlarms)lastAlarms.splice(0,lastAlarms.length-policy.lastAlarms);
   ports.write(alarm.text.en);ports.write(alarm.text.de);
  };
+ let others:readonly HostWardenOtherV1[]=[];
  let last:{host:HostWardenHostV1;decision:ReturnType<typeof decideHostWardenV1>;subjects:readonly HostWardenSubjectV1[]}|undefined;
- const writeState=(host:HostWardenHostV1,decision:Pick<ReturnType<typeof decideHostWardenV1>,"guardMegabytes"|"dangerMegabytes"|"resumeMegabytes"|"hold"|"swapRoomMegabytes"|"headroomMegabytes"|"headroomGuardMegabytes"|"headroomDangerMegabytes">,subjects:readonly HostWardenSubjectV1[]):void=>{
+ const writeState=(host:HostWardenHostV1,decision:Pick<ReturnType<typeof decideHostWardenV1>,"trigger"|"guardMegabytes"|"dangerMegabytes"|"resumeMegabytes"|"hold"|"swapRoomMegabytes"|"headroomMegabytes"|"headroomGuardMegabytes"|"headroomDangerMegabytes">,subjects:readonly HostWardenSubjectV1[]):void=>{
   const byKind:Record<string,{count:number;megabytes:number}>={};
   for(const subject of subjects){const row=byKind[subject.kind]??={count:0,megabytes:0};row.count++;row.megabytes+=subject.megabytes;}
   const wall=marks.length>1?marks.at(-1)!.wall-marks[0]!.wall:0,cpu=marks.length>1?marks.at(-1)!.cpu-marks[0]!.cpu:0;
-  const state={version:1,atMs:ports.now(),pid:process.pid,mode:mode(),code,host,level,hold:decision.hold,guardMegabytes:decision.guardMegabytes,dangerMegabytes:decision.dangerMegabytes,resumeMegabytes:decision.resumeMegabytes,swapRoomMegabytes:decision.swapRoomMegabytes,headroomMegabytes:decision.headroomMegabytes,headroomGuardMegabytes:decision.headroomGuardMegabytes,headroomDangerMegabytes:decision.headroomDangerMegabytes,subjects:{count:subjects.length,megabytes:subjects.reduce((sum,subject)=>sum+subject.megabytes,0),byKind},suspended:[...suspended.values()],counters:{suspended:counters.suspended,resumed:counters.resumed,cancelled:counters.cancelled,ticks:counters.ticks},lastAlarms:[...lastAlarms],overhead:{tickMillisecondsP50:round(percentile(durations,0.5)),tickMillisecondsP95:round(percentile(durations,0.95)),cpuBasisPoints:wall>0?round(cpu/wall*10000):0,residentMegabytes:round(process.memoryUsage().rss/MEGABYTE)}};
+  const state={version:1,atMs:ports.now(),pid:process.pid,mode:mode(),code,host,level,hold:decision.hold,trigger:decision.trigger,others,guardMegabytes:decision.guardMegabytes,dangerMegabytes:decision.dangerMegabytes,resumeMegabytes:decision.resumeMegabytes,swapRoomMegabytes:decision.swapRoomMegabytes,headroomMegabytes:decision.headroomMegabytes,headroomGuardMegabytes:decision.headroomGuardMegabytes,headroomDangerMegabytes:decision.headroomDangerMegabytes,subjects:{count:subjects.length,megabytes:subjects.reduce((sum,subject)=>sum+subject.megabytes,0),byKind},suspended:[...suspended.values()],counters:{suspended:counters.suspended,resumed:counters.resumed,cancelled:counters.cancelled,ticks:counters.ticks},lastAlarms:[...lastAlarms],overhead:{tickMillisecondsP50:round(percentile(durations,0.5)),tickMillisecondsP95:round(percentile(durations,0.95)),cpuBasisPoints:wall>0?round(cpu/wall*10000):0,residentMegabytes:round(process.memoryUsage().rss/MEGABYTE)}};
   if(!isHostWardenV1("State",state)){ports.write(`[warden] state invalid / Zustand ungültig: ${JSON.stringify(state).slice(0,200)}`);return;}
   try{writeAtomic(stateFile,JSON.stringify(state));}catch{}
  };
+ const flaps=new Map<string,{suspends:number[];resumedAtMs?:number}>();
+ const withHistory=(list:readonly HostWardenSubjectV1[],now:number):readonly HostWardenSubjectV1[]=>{
+  const live=new Set(list.map(subject=>subject.id));for(const id of[...flaps.keys()])if(!live.has(id))flaps.delete(id);
+  return list.map(subject=>{
+   const known=flaps.get(subject.id);if(known===undefined)return subject;
+   known.suspends=known.suspends.filter(at=>now-at<policy.flapWindowSeconds*1000);
+   const resumed=known.resumedAtMs===undefined?undefined:Math.max(0,Math.floor((now-known.resumedAtMs)/1000));
+   return{...subject,...known.suspends.length>0?{suspensions:known.suspends.length}:{},...resumed!==undefined&&resumed<policy.flapWindowSeconds?{resumedSeconds:resumed}:{}};
+  });
+ };
+ const footprints=new Map<string,Readonly<{atMs:number;megabytes:number}>>();
+ const measure=async(subjects:readonly HostWardenSubjectV1[],now:number):Promise<readonly HostWardenSubjectV1[]>=>{
+  const probe=ports.footprint;
+  if(probe===undefined)return subjects;
+  const due=subjects.filter(subject=>subject.capMegabytes!==undefined&&subject.canCancel).sort((left,right)=>right.megabytes-left.megabytes||left.pid-right.pid).slice(0,policy.capProbeMaximum);
+  const live=new Set(due.map(subject=>subject.id));
+  for(const id of[...footprints.keys()])if(!live.has(id))footprints.delete(id);
+  await Promise.all(due.map(async subject=>{
+   const known=footprints.get(subject.id);
+   const near=subject.ceiling!==undefined&&Math.max(subject.megabytes,known?.megabytes??0)*10000>=subject.ceiling.megabytes*policy.ceilingNearBasisPoints;
+   if(known!==undefined&&!near&&now>=known.atMs&&now-known.atMs<policy.capMilliseconds)return;
+   const megabytes=await probe(subject.pid).catch(()=>null);
+   if(megabytes!==null)footprints.set(subject.id,{atMs:now,megabytes});
+  }));
+  return subjects.map(subject=>{const known=footprints.get(subject.id);return known!==undefined&&known.megabytes>subject.megabytes?{...subject,megabytes:known.megabytes}:subject;});
+ };
+ const ancestorsOf=(rows:readonly HostWardenRowV1[],pid:number):number[]=>{const byPid=new Map(rows.map(row=>[row.pid,row] as const)),found:number[]=[];for(let at=byPid.get(byPid.get(pid)?.parent??0);at!==undefined&&at.pid>0&&found.length<64&&!found.includes(at.pid);at=byPid.get(at.parent))found.push(at.pid);return found;};
  const resumeAll=async(rows:readonly HostWardenRowV1[]):Promise<void>=>{
   for(const entry of[...suspended.values()]){
    const row=rows.find(candidate=>candidate.pid===entry.pid&&candidate.start===entry.start);
@@ -215,28 +278,33 @@ export async function runHostWardenLoopV1(options:HostWardenLoopOptionsV1):Promi
    const began=performance.now();
    try{
     const[host,rows]=await Promise.all([ports.sample(),ports.table()]),now=ports.now();
-    const protect=protectList(),subjects=classifyWardenSubjectsV1(rows,tables,{protect,workspaces:discoverWardenWorkspacesV1(rows,workspaces),...options.within===undefined?{}:{within:options.within},prefixes:options.prefixes??[],nowMs:now,suspendedSince:since});
+    const protect=protectList(),found=classifyWardenSubjectsV1(rows,tables,{protect,workspaces:discoverWardenWorkspacesV1(rows,workspaces),...options.within===undefined?{}:{within:options.within},prefixes:options.prefixes??[],nowMs:now,suspendedSince:since,...options.ceilings===undefined?{}:{ceilings:options.ceilings}}),subjects=withHistory(await measure(found,now),now);
     const ids=new Set(subjects.map(subject=>subject.id));
+    nearCeiling=subjects.some(subject=>subject.ceiling!==undefined&&subject.megabytes*10000>=subject.ceiling.megabytes*policy.ceilingNearBasisPoints);
     for(const subject of subjects){if(subject.suspended){if(!since.has(subject.id))since.set(subject.id,suspended.get(subject.id)?.sinceMs??now);}else since.delete(subject.id);}
     for(const id of[...since.keys()])if(!ids.has(id))since.delete(id);
     let dirty=false;
     for(const id of[...suspended.keys()]){const subject=subjects.find(candidate=>candidate.id===id);if(subject===undefined||!subject.suspended){suspended.delete(id);dirty=true;}}
     if(subjects.length>0)lastSubjectAt=now;
     const decision=decideHostWardenV1(policy,host,subjects,previous),effective=mode(),byId=new Map(subjects.map(subject=>[subject.id,subject] as const)),keys=new Set(decision.actions.map(action=>`${action.action}.${action.id}`));
-    level=decision.level;previous={level:decision.level,calmTicks:decision.calmTicks};last={host,decision,subjects:subjects};
+    level=decision.level;others=decision.level==="calm"?[]:topWardenOthersV1(rows,subjects,policy.othersMaximum,options.prefixes??[]);previous={level:decision.level,calmTicks:decision.calmTicks};last={host,decision,subjects:subjects};
     if(dirty)writeState(host,decision,subjects);
     for(const action of decision.actions){
      const subject=byId.get(action.id);if(subject===undefined)continue;
      const alarm=buildHostWardenAlarmV1({atMs:ports.now(),observed:effective==="observe",level:decision.level,action,subject,host,decision});
+     if(action.action==="report"){
+      if(!reported.has(subject.id)){reported.add(subject.id);appendAlarm(alarm);}
+      continue;
+     }
      if(effective==="enforce"){
       const start=subject.start??"",scope=subject.scope??"tree";
       if(action.action==="suspend"){
-       suspended.set(subject.id,{id:subject.id,pid:subject.pid,start,kind:subject.kind,sinceMs:now});since.set(subject.id,now);writeState(host,decision,subjects);
+       suspended.set(subject.id,{id:subject.id,pid:subject.pid,start,kind:subject.kind,sinceMs:now});since.set(subject.id,now);{const known=flaps.get(subject.id)??{suspends:[]};known.suspends.push(now);flaps.set(subject.id,known);}writeState(host,decision,subjects);
        signalTree(rows,{pid:subject.pid,scope},["SIGSTOP"]);counters.suspended++;
       }else if(action.action==="resume"){
-       signalTree(rows,{pid:subject.pid,scope},["SIGCONT"]);suspended.delete(subject.id);since.delete(subject.id);counters.resumed++;writeState(host,decision,subjects);
+       signalTree(rows,{pid:subject.pid,scope},["SIGCONT"]);suspended.delete(subject.id);since.delete(subject.id);counters.resumed++;{const known=flaps.get(subject.id)??{suspends:[]};known.resumedAtMs=now;flaps.set(subject.id,known);}writeState(host,decision,subjects);
       }else{
-       const record:HostWardenCancelV1={version:1,pid:subject.pid,start,kind:subject.kind,owner:subject.owner??"",command:(rows.find(row=>row.pid===subject.pid)?.command??"").slice(0,512),megabytes:subject.megabytes,atMs:now,reason:action.reason};
+       const record:HostWardenCancelV1={version:1,pid:subject.pid,start,kind:subject.kind,owner:subject.owner??"",command:(rows.find(row=>row.pid===subject.pid)?.command??"").slice(0,512),megabytes:subject.megabytes,atMs:now,reason:action.reason,ancestors:ancestorsOf(rows,subject.pid),...action.capMegabytes===undefined?{}:{capMegabytes:action.capMegabytes},...action.reason==="ceiling"&&subject.ceiling!==undefined?{ceiling:subject.ceiling}:{}};
        writeAtomic(join(cancelled,`${subject.pid}.${createHash("sha256").update(start).digest("hex").slice(0,8)}.json`),JSON.stringify(record));
        signalTree(rows,{pid:subject.pid,scope},["SIGCONT"]);signalTree(rows,{pid:subject.pid,scope},[subject.signal??"SIGKILL"]);
        suspended.delete(subject.id);since.delete(subject.id);counters.cancelled++;writeState(host,decision,subjects);
@@ -244,6 +312,7 @@ export async function runHostWardenLoopV1(options:HostWardenLoopOptionsV1):Promi
      }
      if(effective==="enforce"||!announced.has(`${action.action}.${action.id}`))appendAlarm(alarm);
     }
+    {const now=new Set(decision.actions.filter(action=>action.action==="report").map(action=>action.id));for(const id of[...reported])if(!now.has(id))reported.delete(id);}
     announced.clear();if(effective==="observe")for(const key of keys)announced.add(key);
     counters.ticks++;
     const elapsed=performance.now()-began;durations.push(elapsed);if(durations.length>policy.tickWindow)durations.shift();
@@ -257,7 +326,7 @@ export async function runHostWardenLoopV1(options:HostWardenLoopOptionsV1):Promi
      try{for(const name of readdirSync(cancelled)){const value=readJson(join(cancelled,name));if(!isHostWardenV1("Cancel",value)||ports.now()-(value as HostWardenCancelV1).atMs>policy.cancelRecordMaximumAgeMilliseconds)rmSync(join(cancelled,name),{force:true});}}catch{}
     }
    }catch(error){ports.write(`[warden] tick failed / Tick fehlgeschlagen: ${String((error as Error)?.message??error).split("\n")[0]}`);counters.ticks++;}
-   await ports.sleep(observeOnly?policy.observeOnlyMilliseconds:level==="calm"?policy.calmMilliseconds:policy.tightMilliseconds,options.signal);
+   await ports.sleep(observeOnly?policy.observeOnlyMilliseconds:level==="calm"&&!nearCeiling?policy.calmMilliseconds:policy.tightMilliseconds,options.signal);
   }
  }finally{
   if(mode()==="enforce"&&!observeOnly&&suspended.size>0){const rows=await ports.table().catch(()=>[] as readonly HostWardenRowV1[]);await resumeAll(rows);if(last!==undefined)writeState(last.host,last.decision,last.subjects);}

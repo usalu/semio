@@ -2,13 +2,13 @@
 
 use semio_plugin_decl_app::ArtifactApp;
 use semio_ui_runtime::ComponentTree;
-use semio_ui_layout::layout::{ContextMenuPoint, ContextMenuRequest, ContextMenuResponse, ContextMenuSurfaceTarget, UiMenuRef};
+use semio_ui_layout::layout::{ContextMenuItemSpec, ContextMenuPoint, ContextMenuRequest, ContextMenuResponse, ContextMenuSurfaceTarget, UiMenuRef};
 use serde::{Deserialize, Serialize};
 use semio_framework_value::{DslValue, FromValue, ToValue};
 use semio_framework::kernel::Effect;
 use semio_framework::{Fault, FaultFrom, ViewModel};
 use semio_plugin_reactor_app::PluginApp;
-use semio_plugin_plugin_program::{PluginProgram, decode_wire_serialized};
+use semio_plugin_plugin_program::{AppInstance, PluginProgram, decode_wire_serialized};
 use semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime;
 use serde_json::Value;
 use semio_plugin_runtime_ops_wire::find_instance;
@@ -43,7 +43,7 @@ pub async fn plugin_mount_surface<PA: PluginApp>(runtime: &PluginRuntime<PA>, in
     })
     .await
 }
-/// 🗑️ Every funded kernel turn retires one projection displaced by a surface mutation per live instance; `true` while any instance still holds one.
+/// 🗑️ Every funded kernel turn retires the projections displaced by surface mutations of each live instance for as long as the turn's grant funds them (`SurfaceContexts::retire_displaced_step`); `true` while any instance still holds one.
 #[doc(hidden)]
 pub fn plugin_drive_displaced_surfaces<PA: PluginApp>(runtime: &PluginRuntime<PA>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
     let instances = runtime.instances.try_borrow().map_err(|_| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "runtime instance authority is busy"))?;
@@ -352,23 +352,32 @@ pub struct ContextMenuWireRequest {
     pub point: Option<ContextMenuPoint>,
 }
 impl ContextMenuWireRequest {
-    pub fn into_parts(self) -> Result<(ContextMenuRequest, ViewModel), Fault> {
-        let view = match self.window_instance_id.as_deref() {
-            Some(window) => self.view_state.for_window_instance(window).ok_or_else(|| plugin_internal_fault(format!("unknown context-menu window instance {window}")))?,
-            None => self.view_state.for_panel(),
-        };
-        let request = ContextMenuRequest { menu: self.menu, surface: self.surface, window_instance_id: self.window_instance_id, point: self.point };
-        Ok((request, view))
+    /// 📦️ Splits the request from the decoded host view, whose ordered roots its caller must hand to retirement.
+    pub fn into_parts(self) -> (ContextMenuRequest, ViewModel) {
+        (ContextMenuRequest { menu: self.menu, surface: self.surface, window_instance_id: self.window_instance_id, point: self.point }, self.view_state)
     }
+}
+/// 🧭️ Reads the window or panel projection a context menu targets while the decoded host view keeps both ordered roots.
+pub fn with_context_menu_view<R>(request: &ContextMenuRequest, view: &ViewModel, read: impl FnOnce(&ViewModel) -> R) -> Result<R, Fault> {
+    match request.window_instance_id.as_deref() {
+        Some(window) => view.scope_window_instance(window).map(|scoped| read(&scoped)).ok_or_else(|| plugin_internal_fault(format!("unknown context-menu window instance {window}"))),
+        None => Ok(read(&view.scope_panel())),
+    }
+}
+/// 🧾️ Answers a context menu on its scoped projection, then displaces the host view into the instance's funded retirement on every path.
+pub fn answer_context_menu<PA: PluginApp>(instance: &mut AppInstance<PA>, request: &ContextMenuRequest, view: ViewModel) -> Result<Vec<ContextMenuItemSpec>, Fault> {
+    let items = with_context_menu_view(request, &view, |scoped| ::semio_framework_async::poll::resolve_ready(instance.app.context_menu(request, scoped)));
+    instance.surface_contexts.displace_view(view);
+    items
 }
 /// 🖱️ On-demand context-menu computation (WIT `context-menu` export's SDK entry point) — never
 /// cached, never part of `refresh_ui`. String-in/string-out JSON entry point for the WIT boundary.
 pub async fn plugin_context_menu<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, request_json: &str) -> Result<String, String> {
     let wire: ContextMenuWireRequest = serde_json::from_str(request_json).map_err(|error| error.to_string())?;
-    let (request, view_state) = wire.into_parts().map_err(|fault| fault.message)?;
+    let (request, view_state) = wire.into_parts();
     with_instances_mut(runtime, |list| {
         let mut instance = find_instance(list, instance_id)?;
-        let items = ::semio_framework_async::poll::resolve_ready(instance.app.context_menu(&request, &view_state));
+        let items = answer_context_menu(&mut instance, &request, view_state)?;
         Ok(serde_json::to_string(&ContextMenuResponse { items }).unwrap_or_else(|_| r#"{"items":[]}"#.into()))
     })
     .await

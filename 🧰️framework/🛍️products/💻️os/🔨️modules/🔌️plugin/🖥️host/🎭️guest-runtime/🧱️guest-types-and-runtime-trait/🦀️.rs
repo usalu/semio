@@ -20,8 +20,8 @@ use super::*;
 /// keys the compiled-artifact cache (`shared_engine_config_hash`/`compiled_cache_path` above).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PackageRef {
-    pub package: PackageId,
-    pub hash: PackageHash,
+ pub package: PackageId,
+ pub hash: PackageHash,
 }
 
 /// 🧩️ A compiled, not-yet-instantiated component. `component` is `None` for [`MockGuestRuntime`]
@@ -29,108 +29,108 @@ pub struct PackageRef {
 /// below).
 #[derive(Clone)]
 pub struct CompiledHandle {
-    pub package_hash: [u8; 32],
-    pub(crate) component: Option<Arc<Component>>,
-    pub(crate) owned: Option<OwnedCompiledGuest>,
+ pub package_hash: [u8; 32],
+ pub(crate) component: Option<Arc<Component>>,
+ pub(crate) owned: Option<OwnedCompiledGuest>,
 }
 
 impl CompiledHandle {
-    /// 🌱️ Prepares an opted-in guest before the compiled parent enters shared runtime custody.
-    pub fn prepare_owned_actor(&mut self, fuel: u64, progress: impl FnMut(u64) -> bool) -> Result<bool, PluginHostError> {
-        self.owned.as_mut().map_or(Ok(false), |owned| owned.prepare_actor(fuel, progress))
-    }
+ /// 🌱️ Prepares an opted-in guest before the compiled parent enters shared runtime custody.
+ pub fn prepare_owned_actor(&mut self, fuel: u64, progress: impl FnMut(u64) -> bool) -> Result<bool, PluginHostError> {
+  self.owned.as_mut().map_or(Ok(false), |owned| owned.prepare_actor(fuel, progress))
+ }
 
-    /// 🧊️ Attaches a retained preparation to the actual owned compiled actor.
-    pub fn restore_owned_actor(&mut self, component_sha256: [u8; 32], image: &[u8], maximum_bytes: usize, checkpoint: impl FnMut() -> bool) -> Result<(), PluginHostError> {
-        self.owned.as_mut().ok_or_else(|| PluginHostError::Plugin("prepared actor requires its owned runtime".into()))?
-            .restore_actor_preparation(component_sha256, image, maximum_bytes, checkpoint)
-    }
+ /// 🧊️ Attaches a retained preparation to the actual owned compiled actor.
+ pub fn restore_owned_actor(&mut self, component_sha256: [u8; 32], image: &[u8], maximum_bytes: usize, checkpoint: impl FnMut() -> bool) -> Result<(), PluginHostError> {
+  self.owned.as_mut().ok_or_else(|| PluginHostError::Plugin("prepared actor requires its owned runtime".into()))?
+   .restore_actor_preparation(component_sha256, image, maximum_bytes, checkpoint)
+ }
 
-    /// 🪪️ Compares the exact immutable compiled parents, not merely their package digest.
-    pub fn same_origin(&self,other:&Self)->bool {
-        self.package_hash==other.package_hash&&match (&self.component,&other.component,&self.owned,&other.owned){
-            (Some(a),Some(b),None,None)=>Arc::ptr_eq(a,b),
-            (None,None,Some(a),Some(b))=>a.same_origin(b),
-            _=>false,
-        }
-    }
+ /// 🪪️ Compares the exact immutable compiled parents, not merely their package digest.
+ pub fn same_origin(&self,other:&Self)->bool {
+  self.package_hash==other.package_hash&&match (&self.component,&other.component,&self.owned,&other.owned){
+   (Some(a),Some(b),None,None)=>Arc::ptr_eq(a,b),
+   (None,None,Some(a),Some(b))=>a.same_origin(b),
+   _=>false,
+  }
+ }
 
-    /// 🔌️ Whether a real wasmtime component was compiled; the backend type itself stays inside this implementation.
-    pub fn has_component(&self) -> bool {
-        self.component.is_some()
-    }
+ /// 🔌️ Whether a real wasmtime component was compiled; the backend type itself stays inside this implementation.
+ pub fn has_component(&self) -> bool {
+  self.component.is_some()
+ }
 
-    /// 📏️ The bytes this compiled guest holds beyond its parsed component: the owned interpreter's codec origin once a
-    /// codec call assembled it ([`OwnedCompiledGuest::codec_origin_bytes`]), else none. A residency budget charges a compiled
-    /// guest this on top of its component.
-    pub fn codec_origin_bytes(&self) -> u64 {
-        self.owned.as_ref().map_or(0, OwnedCompiledGuest::codec_origin_bytes)
-    }
+ /// 📏️ The bytes this compiled guest holds beyond its parsed component: the owned interpreter's codec origin once a
+ /// codec call assembled it ([`OwnedCompiledGuest::codec_origin_bytes`]), else none. A residency budget charges a compiled
+ /// guest this on top of its component.
+ pub fn codec_origin_bytes(&self) -> u64 {
+  self.owned.as_ref().map_or(0, OwnedCompiledGuest::codec_origin_bytes)
+ }
 }
 
 impl std::fmt::Debug for CompiledHandle {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("CompiledHandle").field("package_hash", &hex_encode(&self.package_hash)).field("has_component", &self.component.is_some()).field("has_owned_actor", &self.owned.is_some()).finish()
-    }
+ fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+  f.debug_struct("CompiledHandle").field("package_hash", &hex_encode(&self.package_hash)).field("has_component", &self.component.is_some()).field("has_owned_actor", &self.owned.is_some()).finish()
+ }
 }
 
 /// 🏃️ One running actor instance, host-owned. `Mock(..)` backs [`MockGuestRuntime`]; `Wasmtime(..)`
 /// backs [`WasmtimeRuntime`] (`//#region 🐎️WasmtimeRuntime` below).
 pub struct GuestInstance {
-    pub actor: RuntimeActorId,
-    pub state: GuestInstanceState,
+ pub actor: RuntimeActorId,
+ pub state: GuestInstanceState,
 }
 
 impl GuestInstance {
-    /// ⏱️ Binds execution to the actual live caller while lifetime retirement keeps its original source.
-    pub fn bind_original_clock(&mut self,cx:&semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{
-        cx.original_source_parent()?.validate_borrowed_context(cx)?;
-        match &mut self.state {
-            GuestInstanceState::Owned(state)=>state.bind_original_clock(cx).map_err(Into::into),
-            GuestInstanceState::Wasmtime(state)=>{let binding=cx.original_clock_binding().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original clock requires its genuine source binding"))?;state.store.data_mut().original_job_clock=Some((binding,cx.clock_source()));Ok(())},
-            _=>Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original clock requires a real guest instance").into()),
-        }
-    }
-    pub fn bind_original_clock_from_source(&mut self,source:&semio_framework_job::OriginalCallerSourceLoan)->Result<(),semio_framework_value::ValueError>{let(binding,clock,_)=source.original_clock_source()?;match &mut self.state{GuestInstanceState::Owned(state)=>state.bind_original_clock_from_source(source),GuestInstanceState::Wasmtime(state)=>{state.store.data_mut().original_job_clock=Some((binding,clock));Ok(())},_=>Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original clock provider requires its actual live guest"))}}
-    pub fn original_clock_observation(&self,binding:u64)->Option<u64>{match &self.state{GuestInstanceState::Owned(state)=>state.original_clock_observation(binding),GuestInstanceState::Wasmtime(state)=>state.store.data().original_job_clock.filter(|(original,_)|*original==binding).and_then(|(_,clock)|clock()),_=>None}}
-    pub fn release_original_clock(&mut self,binding:u64)->bool{match &mut self.state{GuestInstanceState::Owned(state)=>state.release_original_clock(binding),GuestInstanceState::Wasmtime(state)=>{let original=&mut state.store.data_mut().original_job_clock;if original.is_some_and(|source|source.0==binding){*original=None;true}else{false}},_=>false}}
-    /// 🎟️ The paid Core retains the exact supplied startup input without inferring it from the actor identifier.
-    /// 👁️ Borrows funded original memory while the complete instance remains owned.
-    pub fn original_memory(&self,index:u32)->Option<&[u8]>{match &self.state{GuestInstanceState::Owned(owner)=>owner.original_memory(index),_=>None}}
-    /// 🚪️ Reports the actual terminal state reached only by paid complete instance destruction.
-    pub fn is_closed(&self)->bool{matches!(self.state,GuestInstanceState::Closed)}
-    pub fn original_startup_input(&self)->Option<semio_framework_actor::RetainedTurnInput>{match &self.state{GuestInstanceState::Owned(state)=>state.original_startup_input(),_=>None}}
-    /// 🔁️ True while an owned `poll` has not completed — the guest yielded on its fuel or deadline
-    /// and owns the host's next call. A host that wants to submit NEW events must first resume with
-    /// none until this is false; `execute_actor_turn` refuses the alternative rather than dropping
-    /// them (ticket 26/09/18 slice A2). A compiled instance is never in flight: its turn is atomic.
-    pub fn turn_in_flight(&self) -> bool {
-        matches!(&self.state, GuestInstanceState::Owned(state) if state.turn_in_flight())
-    }
+ /// ⏱️ Binds execution to the actual live caller while lifetime retirement keeps its original source.
+ pub fn bind_original_clock(&mut self,cx:&semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{
+  cx.original_source_parent()?.validate_borrowed_context(cx)?;
+  match &mut self.state {
+   GuestInstanceState::Owned(state)=>state.bind_original_clock(cx).map_err(Into::into),
+   GuestInstanceState::Wasmtime(state)=>{let binding=cx.original_clock_binding().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original clock requires its genuine source binding"))?;state.store.data_mut().original_job_clock=Some((binding,cx.clock_source()));Ok(())},
+   _=>Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original clock requires a real guest instance").into()),
+  }
+ }
+ pub fn bind_original_clock_from_source(&mut self,source:&semio_framework_job::OriginalCallerSourceLoan)->Result<(),semio_framework_value::ValueError>{let(binding,clock,_)=source.original_clock_source()?;match &mut self.state{GuestInstanceState::Owned(state)=>state.bind_original_clock_from_source(source),GuestInstanceState::Wasmtime(state)=>{state.store.data_mut().original_job_clock=Some((binding,clock));Ok(())},_=>Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original clock provider requires its actual live guest"))}}
+ pub fn original_clock_observation(&self,binding:u64)->Option<u64>{match &self.state{GuestInstanceState::Owned(state)=>state.original_clock_observation(binding),GuestInstanceState::Wasmtime(state)=>state.store.data().original_job_clock.filter(|(original,_)|*original==binding).and_then(|(_,clock)|clock()),_=>None}}
+ pub fn release_original_clock(&mut self,binding:u64)->bool{match &mut self.state{GuestInstanceState::Owned(state)=>state.release_original_clock(binding),GuestInstanceState::Wasmtime(state)=>{let original=&mut state.store.data_mut().original_job_clock;if original.is_some_and(|source|source.0==binding){*original=None;true}else{false}},_=>false}}
+ /// 🎟️ The paid Core retains the exact supplied startup input without inferring it from the actor identifier.
+ /// 👁️ Borrows funded original memory while the complete instance remains owned.
+ pub fn original_memory(&self,index:u32)->Option<&[u8]>{match &self.state{GuestInstanceState::Owned(owner)=>owner.original_memory(index),_=>None}}
+ /// 🚪️ Reports the actual terminal state reached only by paid complete instance destruction.
+ pub fn is_closed(&self)->bool{matches!(self.state,GuestInstanceState::Closed)}
+ pub fn original_startup_input(&self)->Option<semio_framework_actor::RetainedTurnInput>{match &self.state{GuestInstanceState::Owned(state)=>state.original_startup_input(),_=>None}}
+ /// 🔁️ True while an owned `poll` has not completed — the guest yielded on its fuel or deadline
+ /// and owns the host's next call. A host that wants to submit NEW events must first resume with
+ /// none until this is false; `execute_actor_turn` refuses the alternative rather than dropping
+ /// them (ticket 26/09/18 slice A2). A compiled instance is never in flight: its turn is atomic.
+ pub fn turn_in_flight(&self) -> bool {
+  matches!(&self.state, GuestInstanceState::Owned(state) if state.turn_in_flight())
+ }
 
-    /// 📈️ The guest's linear-memory size in bytes, read off the store's own [`BudgetLimiter`]
-    /// witness — `None` for a mock instance, which owns no wasm memory. Wasm memory never shrinks,
-    /// so sampling this once per turn IS the growth curve a leak law needs.
-    pub fn guest_linear_memory_bytes(&self) -> Option<usize> {
-        match &self.state {
-            GuestInstanceState::Wasmtime(state) => Some(state.store.data().limiter.peak_memory_bytes),
-            GuestInstanceState::Mock(_) | GuestInstanceState::Owned(_) | GuestInstanceState::Closed => None,
-        }
-    }
+ /// 📈️ The guest's linear-memory size in bytes, read off the store's own [`BudgetLimiter`]
+ /// witness — `None` for a mock instance, which owns no wasm memory. Wasm memory never shrinks,
+ /// so sampling this once per turn IS the growth curve a leak law needs.
+ pub fn guest_linear_memory_bytes(&self) -> Option<usize> {
+  match &self.state {
+   GuestInstanceState::Wasmtime(state) => Some(state.store.data().limiter.peak_memory_bytes),
+   GuestInstanceState::Mock(_) | GuestInstanceState::Owned(_) | GuestInstanceState::Closed => None,
+  }
+ }
 
-    /// 🩺️ Everything this guest has written to `wasi:cli/stderr` so far — `None` unless the host's
-    /// own diagnostics were armed when the instance was built, because that is the only condition
-    /// under which the guest is given an environment that makes it print at all (see
-    /// [`guest_wasi_ctx`]). This is the wasm-hosted counterpart of reading the browser console: the
-    /// SAME `[TRACE]`/`[BUDGET]` lines the native in-process suites print, now observable from a
-    /// real `wasm32-wasip2` component.
-    pub fn guest_diagnostics_text(&self) -> Option<String> {
-        match &self.state {
-            GuestInstanceState::Wasmtime(state) => state.store.data().diagnostics.as_ref().map(|pipe| String::from_utf8_lossy(&pipe.contents()).into_owned()),
-            GuestInstanceState::Owned(state) => Some(String::from_utf8_lossy(state.diagnostics()).into_owned()),
-            GuestInstanceState::Mock(_) | GuestInstanceState::Closed => None,
-        }
-    }
+ /// 🩺️ Everything this guest has written to `wasi:cli/stderr` so far — `None` unless the host's
+ /// own diagnostics were armed when the instance was built, because that is the only condition
+ /// under which the guest is given an environment that makes it print at all (see
+ /// [`guest_wasi_ctx`]). This is the wasm-hosted counterpart of reading the browser console: the
+ /// SAME `[TRACE]`/`[BUDGET]` lines the native in-process suites print, now observable from a
+ /// real `wasm32-wasip2` component.
+ pub fn guest_diagnostics_text(&self) -> Option<String> {
+  match &self.state {
+   GuestInstanceState::Wasmtime(state) => state.store.data().diagnostics.as_ref().map(|pipe| String::from_utf8_lossy(&pipe.contents()).into_owned()),
+   GuestInstanceState::Owned(state) => Some(String::from_utf8_lossy(state.diagnostics()).into_owned()),
+   GuestInstanceState::Mock(_) | GuestInstanceState::Closed => None,
+  }
+ }
 }
 
 /// 🧬️ Shallow, actor-id-only — `WasmtimeInstanceState.store: Store<ActorHostState>` and
@@ -139,28 +139,28 @@ impl GuestInstance {
 /// through them. Callers (`Result::expect_err` on a `GuestInstance`-returning call, mainly) only ever
 /// need enough to identify WHICH instance failed.
 impl std::fmt::Debug for GuestInstance {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("GuestInstance").field("actor", &self.actor).finish()
-    }
+ fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+  f.debug_struct("GuestInstance").field("actor", &self.actor).finish()
+ }
 }
 
 pub enum GuestInstanceState {
-    Closed,
-    /// 🧪️ The mock variant keeps backend matches refutable in every build.
-    #[allow(dead_code)]
-    Mock(MockInstanceState),
-    Owned(OwnedGuestInstance),
-    Wasmtime(WasmtimeInstanceState),
+ Closed,
+ /// 🧪️ The mock variant keeps backend matches refutable in every build.
+ #[allow(dead_code)]
+ Mock(MockInstanceState),
+ Owned(OwnedGuestInstance),
+ Wasmtime(WasmtimeInstanceState),
 }
 
 /// 🧯️ A Wasmtime original-operation receive failure: a refused admission keeps its typed refusal, any other runtime error traps.
 pub(crate) fn receiving_turn_fault(error:semio_plugin_host_operation::ReceiveError)->TurnFault{match error{semio_plugin_host_operation::ReceiveError::Refused(error)=>identity_turn_fault(error),semio_plugin_host_operation::ReceiveError::Runtime(error)=>TurnFault::Trapped(error.to_string())}}
 
 pub(super) fn decode_guest_plugin_error(error: wit_types::PluginError) -> TurnFault {
-    match error {
-        wit_types::PluginError::Fault(bytes) => decode_guest_fault_bytes(&bytes),
-        wit_types::PluginError::OperationRefusal(code)=>identity_turn_fault(semio_plugin_guest_contract::operation_authority::refusal(code)),
-    }
+ match error {
+  wit_types::PluginError::Fault(bytes) => decode_guest_fault_bytes(&bytes),
+  wit_types::PluginError::OperationRefusal(code)=>identity_turn_fault(semio_plugin_guest_contract::operation_authority::refusal(code)),
+ }
 }
 
 /// ♻️ A guest lifecycle turn that ran past its own strict µs authority and RETAINED its receipt —
@@ -170,9 +170,9 @@ pub(super) fn decode_guest_plugin_error(error: wit_types::PluginError) -> TurnFa
 /// Unavoidable under the owned interpreter, which executes a lifecycle turn orders of magnitude
 /// slower than the JIT the contract was measured against.
 pub fn retryable_lifecycle_turn(fault: &TurnFault, events: &[Event]) -> bool {
-    matches!(fault, TurnFault::Guest(fault) if fault.code.0 == "plugin.reactor-turn-deadline" && fault.retryable)
-        && events.len() <= 1
-        && events.iter().all(|event| matches!(event, Event::InstanceOpen { .. } | Event::InstanceClose(_) | Event::InstanceLifecycleAck(_)))
+ matches!(fault, TurnFault::Guest(fault) if fault.code.0 == "plugin.reactor-turn-deadline" && fault.retryable)
+  && events.len() <= 1
+  && events.iter().all(|event| matches!(event, Event::InstanceOpen { .. } | Event::InstanceClose(_) | Event::InstanceLifecycleAck(_)))
 }
 
 /// 🐎️ Host-side driver for one actor's execution — `design-runtime.md` §2. `WasmtimeRuntime` (the
@@ -194,25 +194,25 @@ pub fn retryable_lifecycle_turn(fault: &TurnFault, events: &[Event]) -> bool {
 /// future and polls it through the process worker pool without parking a worker or holding the
 /// instance mutex across suspension.
 pub trait GuestRuntime: Send + Sync {
-    async fn compile(&self, package: &PackageRef, bytes: &[u8]) -> Result<CompiledHandle, PluginHostError>;
-    async fn instantiate(&self, compiled: &CompiledHandle, actor: RuntimeActorId, caps: &[BrokerCapabilityGrant], budget: &Budget) -> Result<GuestInstance, PluginHostError>;
-    async fn admit_actor_context(&self,inst:&mut GuestInstance,input:semio_framework::kernel::RetainedTurnInput,budget:Budget,identity:&mut semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<semio_framework_actor::retained_context::OriginalActorAdmissionReply,TurnFault>;
-    async fn close_actor_context(&self,inst:&mut GuestInstance,input:semio_framework::kernel::RetainedTurnInput,budget:Budget,identity:&mut semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<semio_framework_actor::retained_context::OriginalActorCloseReply,TurnFault>;
-    async fn execute_turn(&self, inst: &mut GuestInstance, events: &mut [Event], budget: Budget, identity: &mut semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<TurnResult, TurnFault>;
-    /// 📥️ A prepared original job source returns intact when guest admission refuses it.
-    async fn start_job(&self,inst:&mut GuestInstance,source:Option<OriginalJobSource>,budget:OriginalJobBudget,execution:OriginalGuestExecutionBudget)->OriginalGuestJobCall<OriginalJobStartReply>;
-    /// ▶️ The actual guest reply retains its descriptor and complete original spending tuple.
-    async fn step_job(&self,inst:&mut GuestInstance,job:u64,budget:OriginalJobBudget,execution:OriginalGuestExecutionBudget)->OriginalGuestJobCall<OriginalJobStepReply<OriginalJobOutcome>>;
-    /// 📦️ Bounded original output pages precede their paid source closure acknowledgement.
-    async fn read_job_output(&self,inst:&mut GuestInstance,job:u64,budget:OriginalJobBudget,execution:OriginalGuestExecutionBudget)->OriginalGuestJobCall<OriginalJobOutputReply>;
-    /// 🤝️ Only the actual offered output identity can acknowledge its guest owner.
-    async fn acknowledge_job_output(&self,inst:&mut GuestInstance,job:u64,budget:OriginalJobBudget,execution:OriginalGuestExecutionBudget)->OriginalGuestJobCall<OriginalJobOutputAckReply>;
-    /// 🛑️ Original cancellation admission returns all actual work and retained effects.
-    async fn cancel_job(&self,inst:&mut GuestInstance,job:u64,budget:OriginalJobBudget,execution:OriginalGuestExecutionBudget)->OriginalGuestJobCall<OriginalJobCancelReply>;
-    /// ♻️ Jobs and retained outputs close before their parent actor context.
-    async fn close_jobs(&self,inst:&mut GuestInstance,budget:OriginalJobBudget,execution:OriginalGuestExecutionBudget)->OriginalGuestJobCall<OriginalJobCancelReply>;
-    async fn checkpoint(&self, inst: &mut GuestInstance, identity: &mut semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<Vec<u8>, PluginHostError>;
-    async fn restore(&self, inst: &mut GuestInstance, state: &[u8], identity: &mut semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), PluginHostError>;
-    async fn drop_instance(&self, inst: GuestInstance);
+ async fn compile(&self, package: &PackageRef, bytes: &[u8]) -> Result<CompiledHandle, PluginHostError>;
+ async fn instantiate(&self, compiled: &CompiledHandle, actor: RuntimeActorId, caps: &[BrokerCapabilityGrant], budget: &Budget) -> Result<GuestInstance, PluginHostError>;
+ async fn admit_actor_context(&self,inst:&mut GuestInstance,input:semio_framework::kernel::RetainedTurnInput,budget:Budget,identity:&mut semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<semio_framework_actor::retained_context::OriginalActorAdmissionReply,TurnFault>;
+ async fn close_actor_context(&self,inst:&mut GuestInstance,input:semio_framework::kernel::RetainedTurnInput,budget:Budget,identity:&mut semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<semio_framework_actor::retained_context::OriginalActorCloseReply,TurnFault>;
+ async fn execute_turn(&self, inst: &mut GuestInstance, events: &mut [Event], budget: Budget, identity: &mut semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<TurnResult, TurnFault>;
+ /// 📥️ A prepared original job source returns intact when guest admission refuses it.
+ async fn start_job(&self,inst:&mut GuestInstance,source:Option<OriginalJobSource>,budget:OriginalJobBudget,execution:OriginalGuestExecutionBudget)->OriginalGuestJobCall<OriginalJobStartReply>;
+ /// ▶️ The actual guest reply retains its descriptor and complete original spending tuple.
+ async fn step_job(&self,inst:&mut GuestInstance,job:u64,budget:OriginalJobBudget,execution:OriginalGuestExecutionBudget)->OriginalGuestJobCall<OriginalJobStepReply<OriginalJobOutcome>>;
+ /// 📦️ Bounded original output pages precede their paid source closure acknowledgement.
+ async fn read_job_output(&self,inst:&mut GuestInstance,job:u64,budget:OriginalJobBudget,execution:OriginalGuestExecutionBudget)->OriginalGuestJobCall<OriginalJobOutputReply>;
+ /// 🤝️ Only the actual offered output identity can acknowledge its guest owner.
+ async fn acknowledge_job_output(&self,inst:&mut GuestInstance,job:u64,budget:OriginalJobBudget,execution:OriginalGuestExecutionBudget)->OriginalGuestJobCall<OriginalJobOutputAckReply>;
+ /// 🛑️ Original cancellation admission returns all actual work and retained effects.
+ async fn cancel_job(&self,inst:&mut GuestInstance,job:u64,budget:OriginalJobBudget,execution:OriginalGuestExecutionBudget)->OriginalGuestJobCall<OriginalJobCancelReply>;
+ /// ♻️ Jobs and retained outputs close before their parent actor context.
+ async fn close_jobs(&self,inst:&mut GuestInstance,budget:OriginalJobBudget,execution:OriginalGuestExecutionBudget)->OriginalGuestJobCall<OriginalJobCancelReply>;
+ async fn checkpoint(&self, inst: &mut GuestInstance, identity: &mut semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<Vec<u8>, PluginHostError>;
+ async fn restore(&self, inst: &mut GuestInstance, state: &[u8], identity: &mut semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), PluginHostError>;
+ async fn drop_instance(&self, inst: GuestInstance);
 }
 //#endregion 🎭️GuestRuntime

@@ -12,8 +12,8 @@ const commandIds = fixture.appCommandIds as readonly string[];
 
 describe("🔁️ host effect invocation", () => {
   for (const row of fixture.cases) {
-    test(`${row.action} re-enters the ${row.expect.kind} channel`, () => {
-      const answered = hostEffectInvocationV1(scope, commandIds, row.action, row.args as Record<string, unknown> | undefined);
+    test(`${row.action} re-enters the ${row.expect.kind} channel${row.args && "windowId" in row.args ? ` for ${row.args.windowId}` : ""}`, () => {
+      const answered = hostEffectInvocationV1({ ...scope, ...row.scope }, row.appCommandIds ?? commandIds, row.action, row.args, row.windowInstances);
       expect(answered.kind).toBe<string>(row.expect.kind);
       expect(JSON.parse(JSON.stringify(answered.invocation))).toEqual(row.expect.invocation);
     });

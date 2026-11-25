@@ -455,7 +455,7 @@ export function TimeTravelBand({ session, terminology, locale, controllerId, onA
   useControlKeybinding(TIME_TRAVEL_CHORD_IDS.discard, () => dispatch("discard"), { enabled: offered("discard"), preventDefault: true }, [session, controllerId]);
   useControlKeybinding(TIME_TRAVEL_CHORD_IDS.exit, () => dispatch("exit"), { enabled: offered("exit"), preventDefault: true }, [session, controllerId]);
   return (
-    <Surface level="panel" role="status" aria-live="polite" tabIndex={-1} aria-label={String(shellLabel("ui.timeTravel.band"))} data-semio-time-travel={session.stage} data-time-travel-generation={session.generation} className="pointer-events-auto flex max-w-[90vw] flex-wrap items-center gap-single rounded-sm border border-accent px-double py-single text-sm">
+    <Surface level="panel" role="status" aria-live="polite" tabIndex={-1} aria-label={String(shellLabel("ui.timeTravel.band"))} data-semio-time-travel={session.stage} data-time-travel-generation={session.generation} className="pointer-events-auto flex max-w-[90vw] flex-wrap items-center gap-single border border-accent px-double py-single text-sm">
       <Icon icon="clock" size="small" />
       <strong data-semio-time-travel-stage="">{text.stage}</strong>
       {text.target === null ? null : <span data-semio-time-travel-target="">{text.target}</span>}
@@ -501,7 +501,7 @@ export function HistoryReprojectionStatus({ reprojection, locale, sessionOpen, c
   if (announced.current?.key !== key) announced.current = { key, text: status.text };
   const control = historyReprojectionControlV1(reprojection, sessionOpen);
   return (
-    <Surface level="panel" data-semio-history-reprojection={kind} data-semio-history-reprojection-phase={phase} data-notice-code={status.fault ?? undefined} className="pointer-events-auto flex max-w-[90vw] flex-wrap items-center gap-single rounded-sm border border-normal px-double py-single text-sm">
+    <Surface level="panel" data-semio-history-reprojection={kind} data-semio-history-reprojection-phase={phase} data-notice-code={status.fault ?? undefined} className="pointer-events-auto flex max-w-[90vw] flex-wrap items-center gap-single border border-normal px-double py-single text-sm">
       <span role="status" aria-live="polite" aria-atomic="true" className="sr-only" data-semio-history-reprojection-announcement="">
         {`${status.title}: ${announced.current.text}`}
       </span>

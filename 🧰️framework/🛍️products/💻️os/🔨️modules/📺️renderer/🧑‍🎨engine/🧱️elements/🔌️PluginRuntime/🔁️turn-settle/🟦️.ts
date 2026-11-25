@@ -365,18 +365,23 @@ export async function settlePluginTurn(actorId: string, initial: WireTurnResult,
   let cancellationSent=false;
   const cancelled=()=>cancellation?.signal.aborted===true;
   const cancellationPending=()=>cancelled()&&!cancellationSent;
+  let deferredEvents = 0;
   const acknowledge = async (result: WireTurnResult): Promise<readonly ShardEventEnvelope[]> => {
+    deferredEvents = result.deferredEvents ?? deferredEvents;
     activation?.assertActive();
     retainTurnPresence(result);
     await call?.accept(result.effects);
     const accepted = await acceptPatches?.(result) ?? [];
     if (!isPluginPatchAcceptance(accepted)) return [...accepted, ...typedOperationAcknowledgements(result)];
-    for (const turn of accepted.turns) await call?.accept(turn.effects);
+    for (const turn of accepted.turns) {
+      deferredEvents = turn.deferredEvents ?? deferredEvents;
+      await call?.accept(turn.effects);
+    }
     results.push(...accepted.turns);
     return [...accepted.acknowledgements, ...typedOperationAcknowledgements(result), ...accepted.turns.flatMap(typedOperationAcknowledgements)];
   };
   /** ✂️ Events a cut batch left for the next crossing: the newest answer that reports `deferredEvents` says whether any remain. */
-  const deferredPending = () => (results.findLast((turn) => turn.deferredEvents !== undefined)?.deferredEvents ?? 0) > 0;
+  const deferredPending = () => deferredEvents > 0;
   const hasWork = () => (cancelled() || drainOperations || !hasRequiredUiPatches(results, requiredSurfaceIds)) && wireTurnStatusTag(results.at(-1)?.status) === "more-work";
   const outstanding = () => !cancelled()&&!hasRequiredUiPatches(results, requiredSurfaceIds);
   const owed = () => !cancelled()&&settleOwesRequestedSurfacesV1(results, requestedSurfaceIds);
@@ -389,18 +394,20 @@ export async function settlePluginTurn(actorId: string, initial: WireTurnResult,
   for (let continuation = 0; !quiesced && !sliced && (cancellationPending() || acknowledgements.length > 0 || hasWork() || deferredPending()) && continuation < PLUGIN_UI_CONTINUATION_LIMIT; continuation += 1) {
     continuations = continuation + 1;
     const collected = results.length;
+    const deferredBefore = deferredEvents;
     const cancellationEvents=cancellationPending()?cancellation!.events:[];
     cancellationSent||=cancelled();
     const continued = await submitPluginTurn(actorId, [...acknowledgements,...cancellationEvents], lane, undefined, undefined, activation);
     results.push(continued);
     acknowledgements = await hopTrace.timeAsync("turn.accept", { actorId, patches: continued.uiPatches.length }, () => acknowledge(continued));
     const closeDecide = hopTrace.open("turn.decide", { actorId, results: results.length });
-    const progressed = acknowledgements.length > 0 || results.slice(collected).some((turn) => turn.uiPatches.length > 0 || turn.effects.length > 0);
+    const progressed = deferredEvents < deferredBefore || acknowledgements.length > 0 || results.slice(collected).some((turn) => turn.uiPatches.length > 0 || turn.effects.length > 0);
     zeroProgress = progressed ? 0 : zeroProgress + 1;
-    if (zeroProgress >= PLUGIN_UI_QUIESCENT_CONTINUATIONS && !outstanding() && !cancelled()) quiesced = true;
+    const ingressOwed = acknowledgements.length > 0 || deferredPending();
+    if (zeroProgress >= PLUGIN_UI_QUIESCENT_CONTINUATIONS && !ingressOwed && !outstanding() && !cancelled()) quiesced = true;
     else if (zeroProgress >= PLUGIN_UI_ZERO_PROGRESS_CONTINUATION_LIMIT) { closeDecide(); throw pluginTurnStalledError(actorId, results, requiredSurfaceIds, zeroProgress, continuation + 1, call); }
-    sliced = !cancelled() && drainOperations && !quiesced && settleYieldsToRefreshV1(results, startedMs, performance.now(), acknowledgements.length > 0, outstanding(), owed());
-    const yielding = !quiesced && !sliced && (continuation + 1) % PLUGIN_UI_CONTINUATION_BATCH_SIZE === 0 && hasWork();
+    sliced = !cancelled() && drainOperations && !quiesced && settleYieldsToRefreshV1(results, startedMs, performance.now(), ingressOwed, outstanding(), owed());
+    const yielding = !quiesced && !sliced && (continuation + 1) % PLUGIN_UI_CONTINUATION_BATCH_SIZE === 0 && (hasWork() || ingressOwed);
     closeDecide();
     if (yielding) await hopTrace.timeAsync("turn.yield", { actorId }, () => yieldPluginUiContinuation());
   }

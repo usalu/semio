@@ -88,7 +88,7 @@ impl CoreInstance {
             globals.push(GlobalState { value, mutable: declaration.mutable });
         }
         validate_machine(&module, machine.as_ref())?;
-        Ok(Self { module, memories, tables, globals, data, elements, machine, next_host_call, preparation_storage: None })
+        Ok(Self { module, memories, tables, globals, data, elements, machine, pool: FramePool::default(), next_host_call, preparation_storage: None })
     }
 }
 

@@ -15,10 +15,6 @@ pub const NODE_GRAPH_FIT_REFUSED_CODE: &str = "shell.node-graph-fit.refused";
 /// 🔊️ Notice code of a refused row control focus (the row holds no cell to type into, or no window presents it).
 pub const ROW_CONTROL_FOCUS_REFUSED_CODE: &str = "shell.row-control-focus.refused";
 
-/// 🪲 Formats `[DEBUG] shell node-graph fit` with the `{x,y,zoom}` object the port probe parses.
-pub(super) fn shell_node_graph_fit_trace(x: f64, y: f64, zoom: f64) -> String {
-    format!("[DEBUG] shell node-graph fit {{\"x\":{x},\"y\":{y},\"zoom\":{zoom}}}")
-}
 
 impl<'ctx> ActionsCtx<'ctx> {
     /// 🎯️ Runs [`semio_framework::FOCUS_WINDOW_ACTION_ID`]: opens the window of the named kind when it is closed, raises it, takes the keyboard focus off any chrome control so the keyboard ring continues inside the window, and announces the result politely (the transient notice is a live status node of the accessibility tree) in the interface language. A kind the app never declared, a missing argument or a full topology queue is announced as a refusal and returned as the error.
@@ -131,19 +127,9 @@ impl<'ctx> ActionsCtx<'ctx> {
         self.settle.owe_settle();
         match persist {
             Some(descriptor) => {
-                let viewport = descriptor.args.as_ref().map(dsl_value_as_json).and_then(|args| args.get("viewport").cloned());
-                let (x, y, zoom) = viewport.as_ref().and_then(|value| {
-                    let x = value.get("x")?.as_f64()?;
-                    let y = value.get("y")?.as_f64()?;
-                    let zoom = value.get("zoom")?.as_f64()?;
-                    Some((x, y, zoom))
-                }).unwrap_or((0.0, 0.0, 1.0));
-                debug_log(&shell_node_graph_fit_trace(x, y, zoom));
                 self.dispatch_action(descriptor).await
             }
             None => {
-                let camera = semio_renderer_wgpu_engine_graph::node_graph::node_graph_current_camera(&host_id).unwrap_or([0.0, 0.0, 1.0]);
-                debug_log(&shell_node_graph_fit_trace(camera[0], camera[1], camera[2]));
                 Ok(())
             }
         }

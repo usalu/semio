@@ -13,14 +13,62 @@
    "de": "Ein europäischer Salonwagen der späten 1920er aus der Familie Voisin C7/C11 (4,45 m lang, 1,7 m breit, 1,7 m hoch, rund 1,3 t), wie er an der Villa Savoye stand: getrennte Sichelkotflügel, Trittbretter, ein seitlich montiertes Reserverad, eine lange Haube mit Luftschlitzen, eine stoffbespannte Kabine und rollende Speichenräder, in Ansicht und Grundriss, mit thermischen Regionen für Abgas, Reifen, Trommeln und Motor."
   },
   "tags": [
-   "vehicle",
-   "car",
-   "saloon",
-   "vintage",
-   "1929",
-   "petrol",
-   "villa-savoye",
-   "wheeled"
+   {
+    "id": "vehicle",
+    "title": {
+     "en": "vehicle",
+     "de": "Fahrzeug"
+    }
+   },
+   {
+    "id": "car",
+    "title": {
+     "en": "car",
+     "de": "Auto"
+    }
+   },
+   {
+    "id": "saloon",
+    "title": {
+     "en": "saloon",
+     "de": "Limousine"
+    }
+   },
+   {
+    "id": "vintage",
+    "title": {
+     "en": "vintage",
+     "de": "Vintage"
+    }
+   },
+   {
+    "id": "1929",
+    "title": {
+     "en": "1929",
+     "de": "1929"
+    }
+   },
+   {
+    "id": "petrol",
+    "title": {
+     "en": "petrol",
+     "de": "Benzin"
+    }
+   },
+   {
+    "id": "villa-savoye",
+    "title": {
+     "en": "Villa Savoye",
+     "de": "Villa Savoye"
+    }
+   },
+   {
+    "id": "wheeled",
+    "title": {
+     "en": "wheeled",
+     "de": "rollend"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content worker (vehicles, vintage)",
@@ -5134,7 +5182,7 @@
       },
       {
        "id": "tyre-rl",
-       "bone": "wheel-r",
+       "bone": "axle-r",
        "role": "body",
        "z": 3.9,
        "filled": true,
@@ -5212,7 +5260,7 @@
       },
       {
        "id": "tyre-rr",
-       "bone": "wheel-r",
+       "bone": "axle-r",
        "role": "body",
        "z": 3.9,
        "filled": true,
@@ -5290,7 +5338,7 @@
       },
       {
        "id": "tyre-fl",
-       "bone": "wheel-f",
+       "bone": "axle-f",
        "role": "body",
        "z": 4,
        "filled": true,
@@ -5368,7 +5416,7 @@
       },
       {
        "id": "drum-fl",
-       "bone": "wheel-f",
+       "bone": "axle-f",
        "role": "detail",
        "z": 3.95,
        "filled": true,
@@ -5414,7 +5462,7 @@
       },
       {
        "id": "hub-fl",
-       "bone": "wheel-f",
+       "bone": "axle-f",
        "role": "detail",
        "z": 3.8,
        "filled": true,
@@ -5488,7 +5536,7 @@
       },
       {
        "id": "tyre-fr",
-       "bone": "wheel-f",
+       "bone": "axle-f",
        "role": "body",
        "z": 4,
        "filled": true,
@@ -5566,7 +5614,7 @@
       },
       {
        "id": "drum-fr",
-       "bone": "wheel-f",
+       "bone": "axle-f",
        "role": "detail",
        "z": 3.95,
        "filled": true,
@@ -5612,7 +5660,7 @@
       },
       {
        "id": "hub-fr",
-       "bone": "wheel-f",
+       "bone": "axle-f",
        "role": "detail",
        "z": 3.8,
        "filled": true,
@@ -7073,6 +7121,70 @@
       }
      ],
      "plan": [
+      {
+       "id": "tyre-rr",
+       "bone": "axle-r",
+       "role": "body",
+       "z": 0.9,
+       "filled": true,
+       "tone": 0.08,
+       "region": "tyres",
+       "material": "rubber",
+       "kind": "rect",
+       "x": -1.87,
+       "y": -0.765,
+       "w": 0.74,
+       "h": 0.13,
+       "r": 0.05
+      },
+      {
+       "id": "tyre-rl",
+       "bone": "axle-r",
+       "role": "body",
+       "z": 0.9,
+       "filled": true,
+       "tone": 0.08,
+       "region": "tyres",
+       "material": "rubber",
+       "kind": "rect",
+       "x": -1.87,
+       "y": 0.635,
+       "w": 0.74,
+       "h": 0.13,
+       "r": 0.05
+      },
+      {
+       "id": "tyre-fr",
+       "bone": "axle-f",
+       "role": "body",
+       "z": 0.9,
+       "filled": true,
+       "tone": 0.08,
+       "region": "tyres",
+       "material": "rubber",
+       "kind": "rect",
+       "x": 1.33,
+       "y": -0.765,
+       "w": 0.74,
+       "h": 0.13,
+       "r": 0.05
+      },
+      {
+       "id": "tyre-fl",
+       "bone": "axle-f",
+       "role": "body",
+       "z": 0.9,
+       "filled": true,
+       "tone": 0.08,
+       "region": "tyres",
+       "material": "rubber",
+       "kind": "rect",
+       "x": 1.33,
+       "y": 0.635,
+       "w": 0.74,
+       "h": 0.13,
+       "r": 0.05
+      },
       {
        "id": "hood-catch-r",
        "bone": "chassis",
@@ -11354,7 +11466,7 @@
      "front": [
       {
        "id": "tyre-rl",
-       "bone": "wheel-r",
+       "bone": "axle-r",
        "role": "body",
        "z": 3.9,
        "filled": true,
@@ -11370,7 +11482,7 @@
       },
       {
        "id": "tyre-rr",
-       "bone": "wheel-r",
+       "bone": "axle-r",
        "role": "body",
        "z": 3.9,
        "filled": true,
@@ -11386,7 +11498,7 @@
       },
       {
        "id": "tyre-fl",
-       "bone": "wheel-f",
+       "bone": "axle-f",
        "role": "body",
        "z": 4,
        "filled": true,
@@ -11402,7 +11514,7 @@
       },
       {
        "id": "drum-fl",
-       "bone": "wheel-f",
+       "bone": "axle-f",
        "role": "detail",
        "z": 3.95,
        "filled": true,
@@ -11417,7 +11529,7 @@
       },
       {
        "id": "hub-fl",
-       "bone": "wheel-f",
+       "bone": "axle-f",
        "role": "detail",
        "z": 5.2,
        "filled": true,
@@ -11434,7 +11546,7 @@
       },
       {
        "id": "tyre-fr",
-       "bone": "wheel-f",
+       "bone": "axle-f",
        "role": "body",
        "z": 4,
        "filled": true,
@@ -11450,7 +11562,7 @@
       },
       {
        "id": "drum-fr",
-       "bone": "wheel-f",
+       "bone": "axle-f",
        "role": "detail",
        "z": 3.95,
        "filled": true,
@@ -11465,7 +11577,7 @@
       },
       {
        "id": "hub-fr",
-       "bone": "wheel-f",
+       "bone": "axle-f",
        "role": "detail",
        "z": 5.2,
        "filled": true,
@@ -14319,7 +14431,7 @@
      "front": [
       {
        "id": "tyre-rl",
-       "bone": "wheel-r",
+       "bone": "axle-r",
        "role": "body",
        "z": 3.9,
        "filled": true,
@@ -14335,7 +14447,7 @@
       },
       {
        "id": "tyre-rr",
-       "bone": "wheel-r",
+       "bone": "axle-r",
        "role": "body",
        "z": 3.9,
        "filled": true,
@@ -14351,7 +14463,7 @@
       },
       {
        "id": "tyre-fl",
-       "bone": "wheel-f",
+       "bone": "axle-f",
        "role": "body",
        "z": 4,
        "filled": true,
@@ -14367,7 +14479,7 @@
       },
       {
        "id": "tyre-fr",
-       "bone": "wheel-f",
+       "bone": "axle-f",
        "role": "body",
        "z": 4,
        "filled": true,
@@ -15768,7 +15880,7 @@
      "front": [
       {
        "id": "tyre-rl",
-       "bone": "wheel-r",
+       "bone": "axle-r",
        "role": "body",
        "z": 3.9,
        "filled": true,
@@ -15784,7 +15896,7 @@
       },
       {
        "id": "tyre-rr",
-       "bone": "wheel-r",
+       "bone": "axle-r",
        "role": "body",
        "z": 3.9,
        "filled": true,
@@ -15800,7 +15912,7 @@
       },
       {
        "id": "tyre-fl",
-       "bone": "wheel-f",
+       "bone": "axle-f",
        "role": "body",
        "z": 4,
        "filled": true,
@@ -15816,7 +15928,7 @@
       },
       {
        "id": "tyre-fr",
-       "bone": "wheel-f",
+       "bone": "axle-f",
        "role": "body",
        "z": 4,
        "filled": true,

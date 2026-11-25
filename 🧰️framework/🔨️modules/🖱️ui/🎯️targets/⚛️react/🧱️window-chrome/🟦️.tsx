@@ -48,7 +48,7 @@ export const windowRailChromeLabelActionClass = cn("flex h-medium w-auto items-c
 export const windowMeasuresStackInnerClass = "flex w-full min-w-0 flex-col gap-tiny";
 
 /** 🀄️ Single measure tile in the window rail — transparent so the {@link WindowChrome} body glass shows through, never a second glass layer of its own. */
-export const windowMeasureTileClass = cn("pointer-events-auto select-none bg-transparent w-full min-w-0 shrink-0 rounded-sm border", `${borderElementClass}/40`, "px-tiny py-tiny");
+export const windowMeasureTileClass = cn("pointer-events-auto select-none bg-transparent w-full min-w-0 shrink-0 border", `${borderElementClass}/40`, "px-tiny py-tiny");
 
 /** 🏷️ Optional measure caption above a control. */
 export const windowMeasureLabelClass = "text-muted-foreground mb-tiny block min-w-0 truncate text-2xs font-medium leading-none";
@@ -60,7 +60,7 @@ export const windowMeasureSectionClass = "text-muted-foreground w-full truncate 
 export const windowMeasureControlClass = "w-full min-w-0 max-w-full";
 
 /** 👥️ Compact disclosure header for a nested measure group. */
-export const windowMeasureGroupHeaderClass = "pointer-events-auto flex h-small w-full min-w-0 shrink-0 cursor-pointer select-none items-center gap-tiny rounded-sm px-tiny py-0 text-element hover:bg-hover-interactive-fill hover:text-emphasized";
+export const windowMeasureGroupHeaderClass = "pointer-events-auto flex h-small w-full min-w-0 shrink-0 cursor-pointer select-none items-center gap-tiny px-tiny py-0 text-element hover:bg-hover-interactive-fill hover:text-emphasized";
 
 /** 🌳️ Indented children under a measure group (minimal chrome). */
 export const windowMeasureGroupChildrenClass = "pointer-events-none flex w-full min-w-0 flex-col gap-0 border-s ps-tiny ms-tiny pb-0 pt-0";

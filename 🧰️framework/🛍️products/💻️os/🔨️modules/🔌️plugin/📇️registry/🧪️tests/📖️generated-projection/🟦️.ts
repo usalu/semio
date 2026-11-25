@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { afterAll, describe, expect, test } from "vitest";
 import { isHostPlaygroundFilter } from "../../🟦️.ts";
 import { type DeployedRegistryEntryV1, resolveRegistryPluginIdsForFilter } from "../../🔎️discovery/🟦️.ts";
-import { filterProjectedPluginRegistry, projectedHostPluginFilter, readGeneratedCatalogProjection } from "../../📖️catalog-view/🟦️.ts";
+import { catalogBuildInventoryV1, filterProjectedPluginRegistry, projectedHostPluginFilter, readGeneratedCatalogProjection, readRequiredCatalogProjectionV1, requiredRuntimeCatalogProjectionRootV1, runtimeCatalogBuildInventoryV1 } from "../../📖️catalog-view/🟦️.ts";
 import { parseDeployedRegistryEntryV1 } from "../../🔎️discovery/🧬️schema/🟦️.ts";
 import type { PlaygroundEntry } from "../../🎮️playground/📋️contract/🟦️.ts";
 import { emitRustArtifacts } from "../../📽️projection/🟦️.ts";
@@ -106,5 +106,32 @@ describe("registry rust artifacts projection", () => {
       if (previous === undefined) delete process.env.CARGO_TARGET_DIR;
       else process.env.CARGO_TARGET_DIR = previous;
     }
+  });
+});
+
+/** 🛑️ A missing catalog root refuses operations that need one, in both languages, while catalog-free callers keep the empty neutral catalog. */
+describe("required catalog root", () => {
+  const withCatalog = <T>(value: string | undefined, run: () => T): T => {
+    const before = process.env.SEMIO_PLUGIN_CATALOG;
+    if (value === undefined) delete process.env.SEMIO_PLUGIN_CATALOG;
+    else process.env.SEMIO_PLUGIN_CATALOG = value;
+    try { return run(); } finally { if (before === undefined) delete process.env.SEMIO_PLUGIN_CATALOG; else process.env.SEMIO_PLUGIN_CATALOG = before; }
+  };
+  test("activation and deployment inventory refuse an unset SEMIO_PLUGIN_CATALOG naming it in English and German", () => {
+    for (const refuse of [() => requiredRuntimeCatalogProjectionRootV1(), () => readRequiredCatalogProjectionV1(), () => runtimeCatalogBuildInventoryV1()]) {
+      const message = withCatalog(undefined, () => { try { refuse(); } catch (error) { return (error as Error).message; } return ""; });
+      expect(message).toContain("SEMIO_PLUGIN_CATALOG is not set");
+      expect(message).toContain("SEMIO_PLUGIN_CATALOG ist nicht gesetzt");
+    }
+  });
+  test("a catalog-free caller still receives the empty neutral catalog", () => {
+    expect(withCatalog(undefined, () => readGeneratedCatalogProjection())).toEqual({ entries: [], playgrounds: [] });
+  });
+  test("a supplied root is read exactly like the permissive reader", () => {
+    withCatalog(generatedDir, () => {
+      expect(requiredRuntimeCatalogProjectionRootV1()).toBe(generatedDir);
+      expect(readRequiredCatalogProjectionV1()).toEqual(readGeneratedCatalogProjection(generatedDir));
+      expect(runtimeCatalogBuildInventoryV1()).toEqual(catalogBuildInventoryV1(readGeneratedCatalogProjection(generatedDir)));
+    });
   });
 });

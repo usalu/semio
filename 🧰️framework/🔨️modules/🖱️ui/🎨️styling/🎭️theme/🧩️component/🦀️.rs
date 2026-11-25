@@ -49,8 +49,7 @@ impl Rgba {
 //#region 🔖️Level
 /// 🪜️ The unified 6-level UI surface axis (base..menu, both z-order and glass/shade formula input)
 /// — see `ui/styling/🔣️tokens.json`'s `levels` block and `.🧬semio/🦑️repo/🎫️tickets/26/07/27/UNIFIED-6-LEVEL-UI-SURFACE-SYSTEM/contract.txt`.
-/// Replaces the old unlinked level-name axis (canvas/window/panel/overlay/temporary) plus a
-/// separate glass-tier axis (panel/ribbon/menu/windowOptions) with one formula-derived enum.
+/// One formula-derived enum drives the fill, the glass alpha and the blur of every surface.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Level {
     Base,
@@ -204,6 +203,11 @@ pub struct Theme {
     /// counterpart of the `--color-warning` palette token, sitting between [`Theme::progress`]
     /// and [`Theme::error`].
     pub warning: Rgba,
+    /// 🖋️ Text inks of the four outcome roles, one per appearance, each at WCAG 4.5:1 on window, pane, chip and menu glass (React's `text-{info,success,warning,destructive}-foreground` and `-ink`); the plain outcome paints above stay the border and fill hues.
+    pub error_ink: Rgba,
+    pub warning_ink: Rgba,
+    pub success_ink: Rgba,
+    pub info_ink: Rgba,
     /// 🏔️ Plain per-level fill, indexed by `Level::index` — `ui-surface`'s wgpu counterpart, backing
     /// `Theme::surface`/`glass`. Populated from the generated `levelBase..levelMenu`
     /// chrome paints (see `from_chrome` below).
@@ -341,6 +345,10 @@ fn from_chrome(chrome: &ChromePalette, outcome: &OutcomePalette, diagram: &Diagr
         success: Rgba::from_token(&outcome.success),
         progress: Rgba::from_token(&outcome.progress),
         warning: Rgba::from_token(&outcome.warning),
+        error_ink: Rgba::from_token(&outcome.error_ink),
+        warning_ink: Rgba::from_token(&outcome.warning_ink),
+        success_ink: Rgba::from_token(&outcome.success_ink),
+        info_ink: Rgba::from_token(&outcome.info_ink),
         level_bg: [
             Rgba::from_token(&chrome.level_base),
             Rgba::from_token(&chrome.level_window),
@@ -395,14 +403,14 @@ impl Theme {
         chrome_px(9.0)
     }
 
-    /// 🚦️ The ink of a semantic tone — the four outcome roles React paints `text-info`, `text-success`, `text-warning` and
-    /// `text-destructive`; `None` for the neutral tone and the brand roles, which keep the surrounding text colour.
+    /// 🚦️ The ink of a semantic tone — the four outcome roles React paints `text-info-ink`, `text-success-ink`, `text-warning-ink` and
+    /// `text-destructive-foreground`; `None` for the neutral tone and the brand roles, which keep the surrounding text colour.
     pub fn tone_ink(&self, tone: semio_ui_contract::Tone) -> Option<Rgba> {
         match tone {
-            semio_ui_contract::Tone::Info => Some(Rgba::from_token(&colors::INFO)),
-            semio_ui_contract::Tone::Success => Some(self.success),
-            semio_ui_contract::Tone::Warning => Some(self.warning),
-            semio_ui_contract::Tone::Danger => Some(self.error),
+            semio_ui_contract::Tone::Info => Some(self.info_ink),
+            semio_ui_contract::Tone::Success => Some(self.success_ink),
+            semio_ui_contract::Tone::Warning => Some(self.warning_ink),
+            semio_ui_contract::Tone::Danger => Some(self.error_ink),
             semio_ui_contract::Tone::Neutral | semio_ui_contract::Tone::Primary | semio_ui_contract::Tone::Secondary | semio_ui_contract::Tone::Tertiary => None,
         }
     }
@@ -461,6 +469,21 @@ impl Theme {
         let alpha = 1.0 - (1.0 - glass.alpha) * (1.0 - veil);
         let fold = |tint: f32, text: f32| (veil * text + (1.0 - veil) * glass.alpha * tint) / alpha;
         GlassStyle { tint: Rgba::new(fold(glass.tint.r, self.text.r), fold(glass.tint.g, self.text.g), fold(glass.tint.b, self.text.b), glass.tint.a), alpha, ..glass }
+    }
+
+    /// 📏️ `--chip-row-height`: `max(1.5rem, 7 * ui-spacing)`, the height of a chip row, a Select row and a context menu row.
+    pub fn chip_row_height(&self) -> f32 {
+        self.panel_header_height.max(self.root_rem_pixels * 1.5)
+    }
+
+    /// 🔝️ Glass of the navbar and the footer: panel-level glass with the chip tint (`ui-glass` with `data-level="panel"` and `data-glass-chip` on React's `Navbar` and `Footer`), the glass of a chip over pane content, so the canvas shows through the band while it runs beneath it.
+    pub fn band_glass(&self) -> GlassStyle {
+        self.chip_glass(Level::Pane)
+    }
+
+    /// 👻️ Glass of the copy a drag carries with the pointer: menu-level glass with the chip tint (`ui-glass` with `data-level="menu"` and `data-glass-chip` on React's `[data-drag-ghost]`).
+    pub fn drag_ghost_glass(&self) -> GlassStyle {
+        self.chip_glass(Level::Menu)
     }
 
     /// 🌫️ Fullscreen modal scrim for `level` — `ui-veil`'s wgpu counterpart. React paints

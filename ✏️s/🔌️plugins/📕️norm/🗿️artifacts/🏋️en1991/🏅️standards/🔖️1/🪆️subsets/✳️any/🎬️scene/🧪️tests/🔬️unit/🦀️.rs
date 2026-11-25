@@ -1306,7 +1306,7 @@ fn the_hazard_diagrams_carry_the_hand_computed_required_values() {
     assert!((marker("derailment:forces", "assumed-derail-1").at.y - 1200.0).abs() < 1e-9);
     let pulse = charts.iter().find(|c| c.id == "impact:pulse").expect("pulse");
     let scene::Series::Polyline { points, .. } = &pulse.series[0] else { panic!("polyline") };
-    let (peak, end) = (points[1], points[2]);
+    let (peak, end) = (points[1].clone(), points[2].clone());
     let momentum = 1500.0 * 15.0;
     assert!((0.5 * (peak.y * 1000.0) * end.x - momentum).abs() < 1e-6 * momentum, "the pulse impulse equals the momentum m v");
 }

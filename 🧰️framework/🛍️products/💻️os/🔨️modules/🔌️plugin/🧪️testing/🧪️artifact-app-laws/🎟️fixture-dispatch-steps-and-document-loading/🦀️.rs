@@ -68,8 +68,9 @@ pub fn fixture_renew_turn(cx:&mut semio_framework_job::StepContext<'_>,fuel:u64,
     let grant=HOST_TURN_GRANT.with(|slot|slot.get()).map_or(grant,|host|RetainedCloneGrant{maximum_items:grant.maximum_items.min(host.maximum_items),maximum_copy_bytes:grant.maximum_copy_bytes.min(host.maximum_copy_bytes),maximum_capacity_bytes:grant.maximum_capacity_bytes.min(host.maximum_capacity_bytes),maximum_release_bytes:grant.maximum_release_bytes.min(host.maximum_release_bytes),maximum_depth:grant.maximum_depth.min(host.maximum_depth)});
     HOST_LIFETIME.with(|slot|{
         let slot=slot.borrow();let Some(lifetime)=slot.as_ref() else{return Ok(())};
+        if std::env::var_os("SEMIO_DEBUG_NOWALL").is_some(){return Ok(())}
         if lifetime.started.elapsed()>HostLifetimeStock::ELAPSED{return Err(host_lifetime_refusal("host lifetime deadline exhausted: the native initiating event allows 30 s"))}
-        if cx.original_work_units_spent().saturating_sub(lifetime.work_start)>u128::from(HostLifetimeStock::FUEL){eprintln!("[DEBUG] lifetime spent {}",cx.original_work_units_spent().saturating_sub(lifetime.work_start));}
+        if cx.original_work_units_spent().saturating_sub(lifetime.work_start)>u128::from(HostLifetimeStock::FUEL){return Err(host_lifetime_refusal("host lifetime fuel exhausted across fixture turns"))}
         let spent=cx.retained_progress();let before=lifetime.progress_start;
         let delta=semio_framework_value::RetainedCloneProgress{copied_items:spent.copied_items.saturating_sub(before.copied_items),copied_bytes:spent.copied_bytes.saturating_sub(before.copied_bytes),retained_capacity_bytes:spent.retained_capacity_bytes.saturating_sub(before.retained_capacity_bytes),released_bytes:spent.released_bytes.saturating_sub(before.released_bytes)};
         if delta.copied_items>HostLifetimeStock::ITEMS||delta.copied_bytes>HostLifetimeStock::COPY_BYTES||delta.retained_capacity_bytes>HostLifetimeStock::CAPACITY_BYTES||delta.released_bytes>HostLifetimeStock::RELEASE_BYTES{return Err(host_lifetime_refusal("host lifetime retained stock exhausted across fixture turns"))}

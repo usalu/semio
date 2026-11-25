@@ -248,4 +248,28 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
   });
   //#endregion 🪪️RetainedSurfaceHost
+
+  //#region 🔠️Headings
+  describe("🔠️ heading text", () => {
+    afterEach(() => cleanup());
+
+    it("renders a text component with a heading level as the matching real heading element and keeps plain text a paragraph", () => {
+      const root = container(0, "root", "plain", null, [1, 2, 3, 4]);
+      const view = mount([
+        root,
+        node(1, "title", { type: "text", value: "Pages", emphasize: true, dataAttributes: null, headingLevel: 2 }),
+        node(2, "deep", { type: "text", value: "Deep", emphasize: null, dataAttributes: null, headingLevel: 6 }),
+        node(3, "body", { type: "text", value: "Body", emphasize: null, dataAttributes: null }),
+        node(4, "clamped", { type: "text", value: "Clamped", emphasize: null, dataAttributes: null, headingLevel: 9 }),
+      ], 0);
+      const heading = (key: string) => view.container.querySelector(`[data-ui-node-key="${key}"]`) as HTMLElement;
+      expect(heading("title").tagName).toBe("H2");
+      expect(heading("title").textContent).toBe("Pages");
+      expect(heading("deep").tagName).toBe("H6");
+      expect(heading("clamped").tagName).toBe("H6");
+      expect(heading("body").tagName).toBe("P");
+      expect([...view.container.querySelectorAll("h1,h2,h3,h4,h5,h6")].map((element) => element.textContent)).toEqual(["Pages", "Deep", "Clamped"]);
+    });
+  });
+  //#endregion 🔠️Headings
 }

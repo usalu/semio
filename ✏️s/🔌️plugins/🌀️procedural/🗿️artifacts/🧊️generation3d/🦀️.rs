@@ -161,7 +161,10 @@ pub mod manifest {
 /// 🧱️ The manifest slice 1 of 5 of `create_generation3d_app`: its builder calls.
 fn create_generation3d_app_part_1(builder: semio_plugin::app::EditorBuilder) -> semio_plugin::app::EditorBuilder {
     builder.document(["semio", "procedural", "3d"])
-                .command(migrated_command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("flowEvalTick", LocalizedLabel::native("Evaluate Flow Tick", "Flow-Auswertungsschritt"), "runtime", ActionKind::View) }))
+                .command(migrated_command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("flowEvalTick", LocalizedLabel::native("Evaluate Flow Tick", "Flow-Auswertungsschritt"), "runtime", ActionKind::View).with_args([
+                    ActionArgDef::text("windowId", LocalizedLabel::native("Window ID", "Fenster-ID")),
+                    ActionArgDef::text("windowKindId", LocalizedLabel::native("Window Kind ID", "Fenstertyp-ID")),
+                ]) }))
                 .command(migrated_command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("flowEvalResolve", LocalizedLabel::native("Resolve Flow Evaluation", "Flow-Auswertung aufnehmen"), "runtime", ActionKind::View) }))
                 .command(migrated_command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("flowTessellateResolve", LocalizedLabel::native("Resolve Preview Tessellation", "Vorschau-Tessellierung aufnehmen"), "runtime", ActionKind::View) }))
                 .command(migrated_command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("flowEvalRelease", LocalizedLabel::native("Release Preview Kernel Work", "Vorschau-Kernelarbeit freigeben"), "runtime", ActionKind::View) }))

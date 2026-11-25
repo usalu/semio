@@ -1,0 +1,2330 @@
+[
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "tail",
+  "bone": "tail"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "tail-curl",
+  "bone": "tail"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "rump",
+  "bone": "trunk"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "far-scapulars",
+  "bone": "trunk"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "near-scapulars",
+  "bone": "trunk"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "far-thigh",
+  "bone": "thigh-f"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "near-thigh",
+  "bone": "thigh-n"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "far-drumstick",
+  "bone": "shank-f"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "near-drumstick",
+  "bone": "shank-n"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "far-shank",
+  "bone": "shank-f"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "near-shank",
+  "bone": "shank-n"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "far-tarsus",
+  "bone": "tarsus-f"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "near-tarsus",
+  "bone": "tarsus-n"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "far-foot",
+  "bone": "foot-f"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "near-foot",
+  "bone": "foot-n"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "far-hallux",
+  "bone": "foot-f"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "near-hallux",
+  "bone": "foot-n"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "far-toe-inner",
+  "bone": "foot-f"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "near-toe-inner",
+  "bone": "foot-n"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "far-toe-outer",
+  "bone": "foot-f"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "near-toe-outer",
+  "bone": "foot-n"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "far-toe-middle",
+  "bone": "foot-f"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "near-toe-middle",
+  "bone": "foot-n"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "neck-1",
+  "bone": "neck-1"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "neck-2",
+  "bone": "neck-2"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "body",
+  "bone": "trunk"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "breast",
+  "bone": "trunk"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "neck-3",
+  "bone": "neck-3"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "neck-ring",
+  "bone": "neck-2"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "head",
+  "bone": "head"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "bill",
+  "bone": "head"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "eye",
+  "bone": "head"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "eye-f",
+  "bone": "head",
+  "twin": "eye",
+  "twinBone": "head"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "far-vane-p1-1",
+  "bone": "p1-f"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "near-vane-p1-1",
+  "bone": "p1-n"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "far-vane-p1-2",
+  "bone": "p1-f"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "near-vane-p1-2",
+  "bone": "p1-n"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "far-vane-p2-1",
+  "bone": "p2-f"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "near-vane-p2-1",
+  "bone": "p2-n"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "far-vane-p2-2",
+  "bone": "p2-f"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "near-vane-p2-2",
+  "bone": "p2-n"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "far-vane-p3-1",
+  "bone": "p3-f"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "near-vane-p3-1",
+  "bone": "p3-n"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "far-vane-p3-2",
+  "bone": "p3-f"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "near-vane-p3-2",
+  "bone": "p3-n"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "far-vane-p4-1",
+  "bone": "p4-f"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "near-vane-p4-1",
+  "bone": "p4-n"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "far-vane-p4-2",
+  "bone": "p4-f"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "near-vane-p4-2",
+  "bone": "p4-n"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "far-vane-p5-1",
+  "bone": "p5-f"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "near-vane-p5-1",
+  "bone": "p5-n"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "far-vane-p5-2",
+  "bone": "p5-f"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "near-vane-p5-2",
+  "bone": "p5-n"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "far-vane-s1-1",
+  "bone": "s1-f"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "near-vane-s1-1",
+  "bone": "s1-n"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "far-vane-s1-2",
+  "bone": "s1-f"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "near-vane-s1-2",
+  "bone": "s1-n"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "far-vane-s2-1",
+  "bone": "s2-f"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "near-vane-s2-1",
+  "bone": "s2-n"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "far-vane-s2-2",
+  "bone": "s2-f"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "near-vane-s2-2",
+  "bone": "s2-n"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "far-vane-s3-1",
+  "bone": "s3-f"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "near-vane-s3-1",
+  "bone": "s3-n"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "far-vane-s3-2",
+  "bone": "s3-f"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "near-vane-s3-2",
+  "bone": "s3-n"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "far-vane-s4-1",
+  "bone": "s4-f"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "near-vane-s4-1",
+  "bone": "s4-n"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "far-vane-s4-2",
+  "bone": "s4-f"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "near-vane-s4-2",
+  "bone": "s4-n"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "far-vane-s5-1",
+  "bone": "s5-f"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "near-vane-s5-1",
+  "bone": "s5-n"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "far-vane-s5-2",
+  "bone": "s5-f"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "near-vane-s5-2",
+  "bone": "s5-n"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "far-vane-t1-1",
+  "bone": "t1-f"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "near-vane-t1-1",
+  "bone": "t1-n"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "far-vane-t1-2",
+  "bone": "t1-f"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "near-vane-t1-2",
+  "bone": "t1-n"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "far-foot",
+  "bone": "foot-f"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "near-foot",
+  "bone": "foot-n"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "far-hallux",
+  "bone": "foot-f"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "near-hallux",
+  "bone": "foot-n"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "far-toe-inner",
+  "bone": "foot-f"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "near-toe-inner",
+  "bone": "foot-n"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "far-toe-outer",
+  "bone": "foot-f"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "near-toe-outer",
+  "bone": "foot-n"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "far-toe-middle",
+  "bone": "foot-f"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "near-toe-middle",
+  "bone": "foot-n"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "far-tarsus",
+  "bone": "tarsus-f"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "near-tarsus",
+  "bone": "tarsus-n"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "far-shank",
+  "bone": "shank-f"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "near-shank",
+  "bone": "shank-n"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "far-drumstick",
+  "bone": "shank-f"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "near-drumstick",
+  "bone": "shank-n"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "far-thigh",
+  "bone": "thigh-f"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "near-thigh",
+  "bone": "thigh-n"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "tail",
+  "bone": "tail"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "neck-1",
+  "bone": "neck-1"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "rump",
+  "bone": "trunk"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "body",
+  "bone": "trunk"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "breast",
+  "bone": "trunk"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "tail-curl",
+  "bone": "tail"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "far-scapulars",
+  "bone": "trunk"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "near-scapulars",
+  "bone": "trunk"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "neck-2",
+  "bone": "neck-2"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "neck-ring",
+  "bone": "neck-2"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "neck-3",
+  "bone": "neck-3"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "bill",
+  "bone": "head"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "head",
+  "bone": "head"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "eye",
+  "bone": "head"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "eye-f",
+  "bone": "head",
+  "twin": "eye",
+  "twinBone": "head"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "far-vane-p1-1",
+  "bone": "p1-f"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "near-vane-p1-1",
+  "bone": "p1-n"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "far-vane-p1-2",
+  "bone": "p1-f"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "near-vane-p1-2",
+  "bone": "p1-n"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "far-vane-p2-1",
+  "bone": "p2-f"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "near-vane-p2-1",
+  "bone": "p2-n"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "far-vane-p2-2",
+  "bone": "p2-f"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "near-vane-p2-2",
+  "bone": "p2-n"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "far-vane-s1-1",
+  "bone": "s1-f"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "near-vane-s1-1",
+  "bone": "s1-n"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "far-vane-s1-2",
+  "bone": "s1-f"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "near-vane-s1-2",
+  "bone": "s1-n"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "far-vane-s2-1",
+  "bone": "s2-f"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "near-vane-s2-1",
+  "bone": "s2-n"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "far-vane-s2-2",
+  "bone": "s2-f"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "near-vane-s2-2",
+  "bone": "s2-n"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "far-vane-s3-1",
+  "bone": "s3-f"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "near-vane-s3-1",
+  "bone": "s3-n"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "far-vane-s3-2",
+  "bone": "s3-f"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "near-vane-s3-2",
+  "bone": "s3-n"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "far-vane-s4-1",
+  "bone": "s4-f"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "near-vane-s4-1",
+  "bone": "s4-n"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "far-vane-s4-2",
+  "bone": "s4-f"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "near-vane-s4-2",
+  "bone": "s4-n"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "far-vane-s5-1",
+  "bone": "s5-f"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "near-vane-s5-1",
+  "bone": "s5-n"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "far-vane-s5-2",
+  "bone": "s5-f"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "near-vane-s5-2",
+  "bone": "s5-n"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "far-vane-t1-1",
+  "bone": "t1-f"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "near-vane-t1-1",
+  "bone": "t1-n"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "far-vane-t1-2",
+  "bone": "t1-f"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "near-vane-t1-2",
+  "bone": "t1-n"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "tail",
+  "bone": "tail"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "rump",
+  "bone": "trunk"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "far-scapulars",
+  "bone": "trunk"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "near-scapulars",
+  "bone": "trunk"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "far-drumstick",
+  "bone": "shank-f"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "near-drumstick",
+  "bone": "shank-n"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "far-shank",
+  "bone": "shank-f"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "near-shank",
+  "bone": "shank-n"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "far-tarsus",
+  "bone": "tarsus-f"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "near-tarsus",
+  "bone": "tarsus-n"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "far-foot",
+  "bone": "foot-f"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "near-foot",
+  "bone": "foot-n"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "far-toe-middle",
+  "bone": "foot-f"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "near-toe-middle",
+  "bone": "foot-n"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "neck-lower",
+  "bone": "neck-1"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "body",
+  "bone": "trunk"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "breast",
+  "bone": "trunk"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "neck-upper",
+  "bone": "neck-3"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "head",
+  "bone": "head"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "bill",
+  "bone": "head"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "far-vane-p1-1",
+  "bone": "p1-f"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "near-vane-p1-1",
+  "bone": "p1-n"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "far-vane-p1-2",
+  "bone": "p1-f"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "near-vane-p1-2",
+  "bone": "p1-n"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "far-vane-p2-1",
+  "bone": "p2-f"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "near-vane-p2-1",
+  "bone": "p2-n"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "far-vane-p2-2",
+  "bone": "p2-f"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "near-vane-p2-2",
+  "bone": "p2-n"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "far-vane-p3-1",
+  "bone": "p3-f"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "near-vane-p3-1",
+  "bone": "p3-n"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "far-vane-p3-2",
+  "bone": "p3-f"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "near-vane-p3-2",
+  "bone": "p3-n"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "far-vane-p4-1",
+  "bone": "p4-f"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "near-vane-p4-1",
+  "bone": "p4-n"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "far-vane-p4-2",
+  "bone": "p4-f"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "near-vane-p4-2",
+  "bone": "p4-n"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "far-vane-p5-1",
+  "bone": "p5-f"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "near-vane-p5-1",
+  "bone": "p5-n"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "far-vane-p5-2",
+  "bone": "p5-f"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "near-vane-p5-2",
+  "bone": "p5-n"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "far-vane-s1-1",
+  "bone": "s1-f"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "near-vane-s1-1",
+  "bone": "s1-n"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "far-vane-s1-2",
+  "bone": "s1-f"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "near-vane-s1-2",
+  "bone": "s1-n"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "far-vane-s2-1",
+  "bone": "s2-f"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "near-vane-s2-1",
+  "bone": "s2-n"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "far-vane-s2-2",
+  "bone": "s2-f"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "near-vane-s2-2",
+  "bone": "s2-n"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "far-vane-s3-1",
+  "bone": "s3-f"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "near-vane-s3-1",
+  "bone": "s3-n"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "far-vane-s3-2",
+  "bone": "s3-f"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "near-vane-s3-2",
+  "bone": "s3-n"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "far-vane-s4-1",
+  "bone": "s4-f"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "near-vane-s4-1",
+  "bone": "s4-n"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "far-vane-s4-2",
+  "bone": "s4-f"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "near-vane-s4-2",
+  "bone": "s4-n"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "far-vane-s5-1",
+  "bone": "s5-f"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "near-vane-s5-1",
+  "bone": "s5-n"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "far-vane-s5-2",
+  "bone": "s5-f"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "near-vane-s5-2",
+  "bone": "s5-n"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "far-vane-t1-1",
+  "bone": "t1-f"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "near-vane-t1-1",
+  "bone": "t1-n"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "far-vane-t1-2",
+  "bone": "t1-f"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "near-vane-t1-2",
+  "bone": "t1-n"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "far-foot",
+  "bone": "foot-f"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "near-foot",
+  "bone": "foot-n"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "far-toe-middle",
+  "bone": "foot-f"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "near-toe-middle",
+  "bone": "foot-n"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "far-tarsus",
+  "bone": "tarsus-f"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "near-tarsus",
+  "bone": "tarsus-n"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "far-shank",
+  "bone": "shank-f"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "near-shank",
+  "bone": "shank-n"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "far-drumstick",
+  "bone": "shank-f"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "near-drumstick",
+  "bone": "shank-n"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "tail",
+  "bone": "tail"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "neck-lower",
+  "bone": "neck-1"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "rump",
+  "bone": "trunk"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "body",
+  "bone": "trunk"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "breast",
+  "bone": "trunk"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "far-scapulars",
+  "bone": "trunk"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "near-scapulars",
+  "bone": "trunk"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "neck-upper",
+  "bone": "neck-3"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "bill",
+  "bone": "head"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "head",
+  "bone": "head"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "far-vane-p1-1",
+  "bone": "p1-f"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "near-vane-p1-1",
+  "bone": "p1-n"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "far-vane-p1-2",
+  "bone": "p1-f"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "near-vane-p1-2",
+  "bone": "p1-n"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "far-vane-p2-1",
+  "bone": "p2-f"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "near-vane-p2-1",
+  "bone": "p2-n"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "far-vane-p2-2",
+  "bone": "p2-f"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "near-vane-p2-2",
+  "bone": "p2-n"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "far-vane-s1-1",
+  "bone": "s1-f"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "near-vane-s1-1",
+  "bone": "s1-n"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "far-vane-s1-2",
+  "bone": "s1-f"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "near-vane-s1-2",
+  "bone": "s1-n"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "far-vane-s2-1",
+  "bone": "s2-f"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "near-vane-s2-1",
+  "bone": "s2-n"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "far-vane-s2-2",
+  "bone": "s2-f"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "near-vane-s2-2",
+  "bone": "s2-n"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "far-vane-s3-1",
+  "bone": "s3-f"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "near-vane-s3-1",
+  "bone": "s3-n"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "far-vane-s3-2",
+  "bone": "s3-f"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "near-vane-s3-2",
+  "bone": "s3-n"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "far-vane-s4-1",
+  "bone": "s4-f"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "near-vane-s4-1",
+  "bone": "s4-n"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "far-vane-s4-2",
+  "bone": "s4-f"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "near-vane-s4-2",
+  "bone": "s4-n"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "far-vane-s5-1",
+  "bone": "s5-f"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "near-vane-s5-1",
+  "bone": "s5-n"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "far-vane-s5-2",
+  "bone": "s5-f"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "near-vane-s5-2",
+  "bone": "s5-n"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "far-vane-t1-1",
+  "bone": "t1-f"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "near-vane-t1-1",
+  "bone": "t1-n"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "far-vane-t1-2",
+  "bone": "t1-f"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "near-vane-t1-2",
+  "bone": "t1-n"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "front",
+  "id": "tail",
+  "bone": "tail"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "front",
+  "id": "far-scapulars",
+  "bone": "trunk"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "front",
+  "id": "near-scapulars",
+  "bone": "trunk"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "front",
+  "id": "far-drumstick",
+  "bone": "shank-f"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "front",
+  "id": "near-drumstick",
+  "bone": "shank-n"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "front",
+  "id": "far-shank",
+  "bone": "shank-f"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "front",
+  "id": "near-shank",
+  "bone": "shank-n"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "front",
+  "id": "far-tarsus",
+  "bone": "tarsus-f"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "front",
+  "id": "near-tarsus",
+  "bone": "tarsus-n"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "front",
+  "id": "far-foot",
+  "bone": "foot-f"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "front",
+  "id": "near-foot",
+  "bone": "foot-n"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "front",
+  "id": "neck-lower",
+  "bone": "neck-1"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "front",
+  "id": "body",
+  "bone": "trunk"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "front",
+  "id": "neck-upper",
+  "bone": "neck-3"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "front",
+  "id": "head",
+  "bone": "head"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "front",
+  "id": "bill",
+  "bone": "head"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "front",
+  "id": "far-vane-p1-1",
+  "bone": "p1-f"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "front",
+  "id": "near-vane-p1-1",
+  "bone": "p1-n"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "front",
+  "id": "far-vane-p1-2",
+  "bone": "p1-f"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "front",
+  "id": "near-vane-p1-2",
+  "bone": "p1-n"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "front",
+  "id": "far-vane-p3-1",
+  "bone": "p3-f"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "front",
+  "id": "near-vane-p3-1",
+  "bone": "p3-n"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "front",
+  "id": "far-vane-p3-2",
+  "bone": "p3-f"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "front",
+  "id": "near-vane-p3-2",
+  "bone": "p3-n"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "front",
+  "id": "far-vane-p5-1",
+  "bone": "p5-f"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "front",
+  "id": "near-vane-p5-1",
+  "bone": "p5-n"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "front",
+  "id": "far-vane-p5-2",
+  "bone": "p5-f"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "front",
+  "id": "near-vane-p5-2",
+  "bone": "p5-n"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "front",
+  "id": "far-vane-s1-1",
+  "bone": "s1-f"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "front",
+  "id": "far-vane-s1-2",
+  "bone": "s1-f"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "front",
+  "id": "far-vane-s3-1",
+  "bone": "s3-f"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "front",
+  "id": "near-vane-s3-1",
+  "bone": "s3-n"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "front",
+  "id": "far-vane-s3-2",
+  "bone": "s3-f"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "front",
+  "id": "near-vane-s3-2",
+  "bone": "s3-n"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "front",
+  "id": "far-vane-s5-1",
+  "bone": "s5-f"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "front",
+  "id": "near-vane-s5-1",
+  "bone": "s5-n"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "front",
+  "id": "far-vane-s5-2",
+  "bone": "s5-f"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "front",
+  "id": "near-vane-s5-2",
+  "bone": "s5-n"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "front",
+  "id": "far-vane-t1-1",
+  "bone": "t1-f"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "front",
+  "id": "far-vane-t1-2",
+  "bone": "t1-f"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "plan",
+  "id": "far-foot",
+  "bone": "foot-f"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "plan",
+  "id": "near-foot",
+  "bone": "foot-n"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "plan",
+  "id": "far-tarsus",
+  "bone": "tarsus-f"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "plan",
+  "id": "near-tarsus",
+  "bone": "tarsus-n"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "plan",
+  "id": "far-shank",
+  "bone": "shank-f"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "plan",
+  "id": "near-shank",
+  "bone": "shank-n"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "plan",
+  "id": "far-drumstick",
+  "bone": "shank-f"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "plan",
+  "id": "near-drumstick",
+  "bone": "shank-n"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "plan",
+  "id": "tail",
+  "bone": "tail"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "plan",
+  "id": "neck-lower",
+  "bone": "neck-1"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "plan",
+  "id": "body",
+  "bone": "trunk"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "plan",
+  "id": "far-scapulars",
+  "bone": "trunk"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "plan",
+  "id": "near-scapulars",
+  "bone": "trunk"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "plan",
+  "id": "neck-upper",
+  "bone": "neck-3"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "plan",
+  "id": "bill",
+  "bone": "head"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "plan",
+  "id": "head",
+  "bone": "head"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "plan",
+  "id": "far-vane-p1-1",
+  "bone": "p1-f"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "plan",
+  "id": "near-vane-p1-1",
+  "bone": "p1-n"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "plan",
+  "id": "far-vane-p1-2",
+  "bone": "p1-f"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "plan",
+  "id": "near-vane-p1-2",
+  "bone": "p1-n"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "plan",
+  "id": "near-vane-s1-1",
+  "bone": "s1-n"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "plan",
+  "id": "near-vane-s1-2",
+  "bone": "s1-n"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "plan",
+  "id": "far-vane-s3-1",
+  "bone": "s3-f"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "plan",
+  "id": "near-vane-s3-1",
+  "bone": "s3-n"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "plan",
+  "id": "far-vane-s3-2",
+  "bone": "s3-f"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "plan",
+  "id": "near-vane-s3-2",
+  "bone": "s3-n"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "plan",
+  "id": "far-vane-s5-1",
+  "bone": "s5-f"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "plan",
+  "id": "near-vane-s5-1",
+  "bone": "s5-n"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "plan",
+  "id": "far-vane-s5-2",
+  "bone": "s5-f"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "plan",
+  "id": "near-vane-s5-2",
+  "bone": "s5-n"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "plan",
+  "id": "far-vane-t1-1",
+  "bone": "t1-f"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "plan",
+  "id": "near-vane-t1-1",
+  "bone": "t1-n"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "plan",
+  "id": "far-vane-t1-2",
+  "bone": "t1-f"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "plan",
+  "id": "near-vane-t1-2",
+  "bone": "t1-n"
+ }
+]

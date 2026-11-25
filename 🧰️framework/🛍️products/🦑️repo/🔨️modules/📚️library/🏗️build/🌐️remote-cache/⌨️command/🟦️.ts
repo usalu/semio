@@ -138,7 +138,7 @@ export async function serveRemoteCacheV1(args:readonly string[],context:RemoteCa
   maximumEntryBytes:Math.min(policy.maximumEntryBytes,Math.floor(maximumBytes/2)),
   maximumAgeDays:policy.maximumAgeDays,
   graceMilliseconds:(flags["--grace-seconds"]===undefined?policy.graceSeconds:whole("--grace-seconds",flags["--grace-seconds"],0,604800))*1000,
-  defaultInstance:all.defaults.instance,
+  defaultInstance:all.defaults.instance,instances:[all.defaults.instance],
   tokens,readOnly,
   ...(parsed.flags.has("--no-mirror")||(flags["--mirror-directory"]===undefined)?{}:{mirror:{directory:where(context.root,flags["--mirror-directory"]??join(directory,"mirror"))}}),
   tls:certificate===undefined||key===undefined?undefined:{certificate:where(context.root,certificate),key:where(context.root,key)},
@@ -216,7 +216,7 @@ export async function remoteCacheStatusV1(args:readonly string[],context:RemoteC
  for(const tool of tools){renderings[tool.tool]=tool.render(contract,resolved.environment);probes.push(await probeRemoteCacheV1(contract,tool,call,context.signal));}
  const {server,fault:serverFault}=await askServerV1(contract,call,context.signal),sum=(field:"hits"|"misses"):number|null=>server===null?null:Object.values(server.counters).reduce((total,row)=>total+row[field],0);
  const status={version:1,configured:true,contract,effectiveUpload:remoteCacheEffectiveUploadV1(contract),token:{environment:contract.auth.tokenEnvironment,present:token!==undefined},renderings,probes,server,serverFault,store,
-  resolution:{endpointFrom:resolved.endpointFrom,tokenFrom:resolved.tokenFrom,factsGeneration:resolved.generation,factsState:found.refresh?.state??"none"},
+  resolution:{endpointFrom:resolved.endpointFrom,tokenFrom:resolved.tokenFrom,instanceFrom:resolved.instanceFrom,instanceRefused:resolved.instanceRefused,factsGeneration:resolved.generation,factsState:found.refresh?.state??"none"},
   remote:{endpoint:contract.endpoint,reachable:probes.some(probe=>probe.reachable),authorised:probes.length>0&&probes.every(probe=>probe.authorized),entries:server?.entries??null,bytes:server?.bytes??null,maximumBytes:server?.maximumBytes??null,hits:sum("hits"),misses:sum("misses"),fleetGeneration:resolved.generation}};
  requireRemoteCacheShapeV1("Status",status,"Closed remote cache status required");return status;
 }

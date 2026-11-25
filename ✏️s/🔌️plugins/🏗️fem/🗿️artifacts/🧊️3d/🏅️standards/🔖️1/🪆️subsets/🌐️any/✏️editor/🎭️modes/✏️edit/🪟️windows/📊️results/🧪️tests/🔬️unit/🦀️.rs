@@ -218,3 +218,75 @@ fn progress_stage_labels_are_monolingual_per_locale() {
         }
     }
 }
+
+/// 🔁️ Drives the mounted results jobs the way the host does: spawns, cancels and steps each registry job between renders.
+async fn pump_results(app: &mut Fem3dApp, drivers: &mut HashMap<u64, semio_plugin::reactor::jobs::registry_driver::RegistryJobDriver>, rounds: usize) -> String {
+    use semio_plugin::reactor::jobs::registry_driver::RegistryJobDriver;
+    for _ in 0..rounds {
+        let _ = render_body(app, FEM3D_BODY_RESULTS);
+        let view = crate::context::view(FEM3D_WINDOW_RESULTS);
+        let effects = semio_plugin::PluginApp::pending_effects(&mut app.0, Some(&view), app.1.cx()).await.expect("pending effects").unwrap_or_default();
+        for effect in effects {
+            match effect {
+                semio_plugin::Effect::SpawnJob { job, kind, input, .. } => { let mut driver = RegistryJobDriver::generous(job); driver.start(&kind, input, None).expect("job admission"); drivers.insert(job, driver); }
+                semio_plugin::Effect::CancelJob { job } => { if let Some(driver) = drivers.get_mut(&job) { driver.cancel().expect("job cancel"); } }
+                _ => {}
+            }
+        }
+        let mut ended = Vec::new();
+        for (job, driver) in drivers.iter_mut() { if !matches!(driver.step().expect("job step"), semio_plugin::reactor::jobs::JobStep::Running(_)) { ended.push(*job); } }
+        for job in ended { drivers.remove(&job); }
+        let _ = semio_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, crate::context::FEM3D_TEST_INSTANCE, semio_plugin::artifact_app_laws::fixture_mounted_policy(), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+    }
+    render_body(app, FEM3D_BODY_RESULTS)
+}
+
+/// 🧠️ LAW: an edit or undo that supersedes a solve in flight leaves the results settled on the latest revision, never on a pending stage.
+#[semio_framework_async_macros::async_test]
+async fn superseded_solve_settles_on_the_latest_revision_3d() {
+    let mut app = fem3d_app();
+    let mut drivers = HashMap::new();
+    let settled = pump_results(&mut app, &mut drivers, 4000).await;
+    assert!(!settled.contains("Preparing"), "initial solve settles: {settled}");
+    dispatch(&mut app, Fem3dCommand::AddNode(semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::add_node::AddNode { x: 1.0, y: 2.0, z: 3.0 })).await;
+    let _ = pump_results(&mut app, &mut drivers, 30).await;
+    dispatch(&mut app, Fem3dCommand::AddNode(semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::add_node::AddNode { x: 4.0, y: 5.0, z: 6.0 })).await;
+    let _ = pump_results(&mut app, &mut drivers, 30).await;
+    crate::context::history_verb(&mut app, "undo").await;
+    let json = pump_results(&mut app, &mut drivers, 4000).await;
+    assert!(!json.contains("Preparing") && !json.contains("queued") && !json.contains("Solving") && !json.contains("Generating") && !json.contains("Assembling"), "results settle on the latest revision: {json}");
+}
+
+/// 🧠️ LAW: a burst of edits with undo and redo, each superseding the solve still in flight, leaves the results settled on the latest revision with no job left running.
+#[semio_framework_async_macros::async_test]
+async fn burst_of_edits_with_undo_redo_settles_3d() {
+    let mut app = fem3d_app();
+    let mut drivers = HashMap::new();
+    let _ = pump_results(&mut app, &mut drivers, 4000).await;
+    for step in 0..6u32 {
+        let node = semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::add_node::AddNode { x: step as f64, y: 1.0, z: 2.0 };
+        dispatch(&mut app, Fem3dCommand::AddNode(node)).await;
+        let _ = pump_results(&mut app, &mut drivers, 2).await;
+    }
+    for verb in ["undo", "undo", "redo", "undo", "redo", "redo"] {
+        crate::context::history_verb(&mut app, verb).await;
+        let _ = pump_results(&mut app, &mut drivers, 1).await;
+    }
+    let json = pump_results(&mut app, &mut drivers, 4000).await;
+    assert!(!json.contains("Preparing") && !json.contains("queued") && !json.contains("Solving") && !json.contains("Generating") && !json.contains("Assembling"), "results settle after the burst: {json}");
+    assert!(drivers.is_empty(), "no superseded job stays running: {}", drivers.len());
+}
+
+/// 🧠️ LAW: switching the active example while a solve is in flight cancels it and settles the results on the new example.
+#[semio_framework_async_macros::async_test]
+async fn example_switch_during_a_running_solve_settles_on_the_new_example_3d() {
+    let mut app = fem3d_app();
+    let mut drivers = HashMap::new();
+    let _ = pump_results(&mut app, &mut drivers, 3).await;
+    dispatch(&mut app, Fem3dCommand::SetActiveExample(semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::set_active_example::SetActiveExample { example_id: semio_s_artifact_fem_3d_io::examples::house::ID.into() })).await;
+    let _ = pump_results(&mut app, &mut drivers, 20).await;
+    dispatch(&mut app, Fem3dCommand::SetActiveExample(semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::set_active_example::SetActiveExample { example_id: semio_s_artifact_fem_3d_io::examples::demo::ID.into() })).await;
+    let json = pump_results(&mut app, &mut drivers, 4000).await;
+    assert!(!json.contains("Preparing") && !json.contains("queued") && !json.contains("Solving") && !json.contains("Generating") && !json.contains("Assembling"), "results settle on the new example: {json}");
+    assert!(drivers.is_empty(), "the superseded solve is cancelled: {}", drivers.len());
+}

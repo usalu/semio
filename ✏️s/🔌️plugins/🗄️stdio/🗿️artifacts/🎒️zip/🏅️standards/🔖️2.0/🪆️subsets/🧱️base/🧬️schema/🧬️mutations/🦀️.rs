@@ -30,6 +30,7 @@ pub enum ZipMutation {
     SetEntryData(set_entry_data::SetEntryData),
 }
 dsl::original_pack_value_operation_receiving!(ZipMutation);
+dsl::artifact_persisted_binary_operation!(ZipMutation);
 //#endregion 🔖️Model
 
 //#region 🔖️Kinds

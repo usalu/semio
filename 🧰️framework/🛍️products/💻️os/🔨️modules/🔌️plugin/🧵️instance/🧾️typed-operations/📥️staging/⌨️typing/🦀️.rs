@@ -41,6 +41,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             let frozen=X::freezes_document(&*self.time_travel,&*self.tool_runs)&&matches!(tag,Some(ToolTag::Scrub(ScrubTag{phase:ScrubPhase::Tick{..}|ScrubPhase::Commit{..},..})));
             Host::<A>::admit(&self.tool_machines.presses,meta.view_state.as_deref(),frozen,&mut self.tool_machines.admissions.scrub,&mut self.tools.original_scrub_dispatch,cx)?;return Ok(None)
         }
+        if self.tools.original_tool_follow.as_ref().is_some_and(|follow|follow.reads_presses(&self.tool_machines)){self.as_render().follow_before_writer(cx,"scrub")?;return Ok(None)}
         self.tools.original_scrub_dispatch.as_mut().unwrap().advance(&mut self.tool_machines.presses,meta.view_state.as_deref(),tag,decision,cx)?;
         Ok(None)
     }
@@ -87,6 +88,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             3=>{
                 if typing.transaction.is_some(){typing.transition(4,cx)?;return Ok(false)}
                 let source=typing.after.as_ref().ok_or_else(invalid)?;
+                if typing.row.as_ref().is_none_or(|row|row.awaits_source())&&self.tools.original_tool_follow.as_ref().is_some_and(|follow|follow.reads_typing(&self.tool_machines)){self.as_render().follow_before_writer(cx,"typing commit")?;return Ok(false)}
                 if let Some(row)=typing.row.as_mut(){if row.ready(){if row.take_into(&self.tool_machines.typing,&mut typing.transaction,&mut typing.values,cx)?{typing.transition(4,cx)?;}}else{row.advance(&mut self.tool_machines.typing,source,cx)?;}}
                 else{OriginalTypingCommit::admit(&self.tool_machines.typing,typing.after.as_ref().ok_or_else(invalid)?,typing.key.ok_or_else(invalid)?,cx,&mut typing.birth,&mut typing.row)?;}
                 if typing.transaction.is_some(){typing.transition(4,cx)?;}

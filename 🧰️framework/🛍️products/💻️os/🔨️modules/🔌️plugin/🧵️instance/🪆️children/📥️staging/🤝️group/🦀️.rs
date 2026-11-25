@@ -16,7 +16,7 @@ use semio_plugin_ownership::bounded_ownership::plugin_grant_funds;
 use semio_plugin_ownership::sdk_fault::plugin_sdk_fault;
 use semio_plugin_decl_emission::Emit;
 use semio_framework::FaultFrom;
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use crate::children_components::ChildComposition;
 use std::future::Future;

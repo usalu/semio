@@ -251,3 +251,24 @@ fn public_json_snapshot_admission_refuses_invalid_owners_and_accepts_distinct_na
     assert!(control.owned_bytes() > 0, "semantic identity scratch carries original allocation authority");
     <Fem2dSnapshot as semio_framework_value::FromValue>::retire_decoded(snapshot);
 }
+
+/// 🗂️ LAW: the topology `selectAll` walks lists every selectable entity of the demo exactly once, each under the granularity `fem2d_entity_kind` resolves it to, elements first (the default Select All scope) — an empty topology made Select All a silent no-op.
+#[test]
+fn select_all_topology_lists_every_selectable_entity_2d() {
+    let doc = demo();
+    let topology = fem2d_interaction_topology(&doc);
+    let ordered = &topology.domains.get(FEM2D_INTERACTION_DOMAIN).expect("fem2d domain topology").ordered;
+    let count = |granularity: &str| ordered.iter().filter(|node| node.granularity == granularity).count();
+    assert_eq!(count(FEM2D_GRANULARITY_ELEMENT), doc.elements.len());
+    assert_eq!(count(FEM2D_GRANULARITY_NODE), doc.nodes.len());
+    assert_eq!(count(FEM2D_GRANULARITY_REGION), doc.regions.len());
+    assert_eq!(count(FEM2D_GRANULARITY_SUPPORT), doc.supports.len());
+    assert_eq!(count(FEM2D_GRANULARITY_LOAD), doc.load_cases.iter().map(|case| case.loads.len()).sum::<usize>());
+    assert_eq!(count(FEM2D_GRANULARITY_LOAD_CASE), doc.load_cases.len());
+    assert_eq!(count(FEM2D_GRANULARITY_COMBINATION), doc.combinations.len());
+    assert_eq!(count(FEM2D_GRANULARITY_ANALYSIS), 1);
+    assert!(!ordered.is_empty() && ordered[0].granularity == FEM2D_GRANULARITY_ELEMENT, "elements lead the topology");
+    assert!(ordered.iter().all(|node| fem2d_entity_kind(&doc, &node.id) == Some(node.granularity.as_str())), "every listed id resolves to its own granularity");
+    let unique: std::collections::BTreeSet<&str> = ordered.iter().map(|node| node.id.as_str()).collect();
+    assert_eq!(unique.len(), ordered.len(), "no id is listed twice");
+}

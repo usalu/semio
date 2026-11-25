@@ -12,13 +12,13 @@ import { type UiLabel } from "../🎗️UiLabel/🟦️.tsx";
 import { reactHostPort } from "../🔌️Ports/⚛️react/🟦️.ts";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { Scrollable } from "../📜️Scrollable/🟦️.tsx";
-import { borderNormalBottomClass } from "../../🔨️modules/📏️border-presentation/🟦️.ts";
 import { surfaceClass } from "../../🔨️modules/🌈️surface-presentation/🟦️.ts";
 import { useLabel } from "../🏷️Label/🟦️.tsx";
 import { interactiveActiveFillClass, interactiveControlTransitionClass, interactiveHoverClass } from "../../🔨️modules/🖱️interaction-presentation/🟦️.ts";
 import { useUiDriverDragSurface, useNativeDragArm } from "../🚗️UiDriver/🟦️.tsx";
 import { useSharedBorderFrameRef } from "../🗂️WindowChrome/shared-border.ts";
 import { DragHandle } from "../🧱️DragHandle/🟦️.tsx";
+import { beginNativeDragGhost, dragLabelOf, dragSourceAttributes, dropPlaceAttributes, useDndGhost } from "../../🔨️modules/🫳️pointer-drag/🟦️.tsx";
 import { ContextMenuTriggerButton } from "../🖱️ContextMenu/🔘️trigger/🟦️.tsx";
 // #endregion 🔌️Adapters
 
@@ -31,6 +31,9 @@ const tableRowInteractiveClass = cn("text-element", interactiveControlTransition
 
 /** 🔲️ Each table band owns its bottom seam and can share it with the state outline of the next row. */
 const tableBandBorder = { "data-shared-border-frame": "", "data-shared-border-edges": "bottom", "data-shared-border-delegate": "self" } as const;
+
+/** 📏️ The compositor paints the seam on the last pixel row of a band cell; half a hairline above and below keeps the cell content where the collapsed native border left it. */
+const tableSeamPadClass = "py-[calc(var(--stroke-hairline)/2)]";
 
 /** ☑️ Private selected table-row presentation. */
 const tableRowSelectedClass = interactiveActiveFillClass;
@@ -98,7 +101,6 @@ export interface DragDropConfig {
   onDragEnd?: (event: { active: string; over: string | null }) => void;
   canDrag?: (rowId: string) => boolean;
   canDrop?: (draggedId: string, targetId: string) => boolean;
-  renderDragOverlay?: (rowId: string) => React.ReactNode;
 }
 
 /**
@@ -192,12 +194,10 @@ function TableHtml5DragRow<T>({
   const wantsDrag = Boolean(dragProps.draggable || dragProps.onDragStart);
   const effectiveDraggable = wantsDrag && (driverSurfaceDrag || armed);
   const baseRowClassName = cn(
-    borderNormalBottomClass,
     rowHeightClass,
     tableRowInteractiveClass,
     isSelected && tableRowSelectedClass,
     wantsDrag && driverSurfaceDrag && "cursor-grab active:cursor-grabbing",
-    isDragging && "opacity-50",
     onRowClick && "cursor-selectable",
     customRowClassName,
   );
@@ -209,7 +209,12 @@ function TableHtml5DragRow<T>({
       {...tableBandBorder}
       data-shared-border-interactive={onRowClick ? "" : undefined}
       data-active={isSelected ? "true" : undefined}
+      {...dragSourceAttributes(isDragging)}
       {...restDragProps}
+      onDragStart={(event) => {
+        if (wantsDrag) beginNativeDragGhost(event, dragLabelOf(event.currentTarget));
+        restDragProps.onDragStart?.(event);
+      }}
       onClick={(e) => {
         if (e.detail >= 2) {
           onRowDoubleClick?.(row, index);
@@ -227,7 +232,7 @@ function TableHtml5DragRow<T>({
       data-row-id={rowId}
     >
       {visibleColumns.map((column, columnIndex) => (
-        <td key={column.id} className={`${rowHeightClass} ${column.cell === "row" ? "p-0" : "px-single"} py-0 align-middle text-sm [&_svg:not([class*='size-'])]:size-small [&_img]:size-small ${column.className || ""}`}>
+        <td key={column.id} className={`${rowHeightClass} ${column.cell === "row" ? "p-0" : "px-single"} ${tableSeamPadClass} align-middle text-sm [&_svg:not([class*='size-'])]:size-small [&_img]:size-small ${column.className || ""}`}>
           <div className={column.cell === "row" ? "flex h-full min-w-0 items-stretch" : "flex items-center h-full min-w-0 gap-1"}>
             {wantsDrag && !driverSurfaceDrag && columnIndex === 0 ? (
               <DragHandle labelId="ui.tree.drag.transfer" iconKind="move" onPointerDown={arm} onClick={(event) => event.stopPropagation()} />
@@ -248,7 +253,6 @@ function TableDraggableRow<T>({ row, rowId, index, isSelected, customRowClassNam
     attributes,
     listeners,
     setNodeRef: setDraggableRef,
-    transform,
     isDragging: isDraggingHook,
   } = useDraggable({
     id: rowId,
@@ -259,22 +263,22 @@ function TableDraggableRow<T>({ row, rowId, index, isSelected, customRowClassNam
     id: rowId,
     data: { row },
   });
-  const style = transform ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)` } : undefined;
   const combinedRef = (node: HTMLElement | null) => {
     setDraggableRef(node);
     setDroppableRef(node);
   };
-  const baseRowClassName = cn(borderNormalBottomClass, rowHeightClass, tableRowInteractiveClass, isSelected && tableRowSelectedClass, isOver && !isSelected && "bg-hover-interactive-fill text-emphasized");
+  const baseRowClassName = cn(rowHeightClass, tableRowInteractiveClass, isSelected && tableRowSelectedClass);
   const isDragging = activeId === rowId || isDraggingHook;
+  const dropPlace = activeId !== null && !isDragging && (dragDrop?.canDrop?.(activeId, rowId) ?? true) ? (isOver ? "active" : "available") : undefined;
   return (
     <tr
       ref={combinedRef}
-      style={style}
-      className={`${baseRowClassName} ${customRowClassName} ${isDragging ? "opacity-50" : ""} ${onRowClick ? "cursor-selectable" : ""}`}
+      {...dragSourceAttributes(isDragging)}
+      {...dropPlaceAttributes(dropPlace)}
+      className={`${baseRowClassName} ${customRowClassName} ${onRowClick ? "cursor-selectable" : ""}`}
       {...tableBandBorder}
       data-shared-border-interactive={onRowClick ? "" : undefined}
       data-active={isSelected ? "true" : undefined}
-      data-shared-border-state={isOver && !isSelected ? "active" : undefined}
       {...(canDragRow && driverSurfaceDrag ? { ...attributes, ...listeners } : canDragRow ? { ...attributes } : {})}
       onClick={(e) => {
         if (e.detail >= 2) {
@@ -293,7 +297,7 @@ function TableDraggableRow<T>({ row, rowId, index, isSelected, customRowClassNam
       data-row-id={rowId}
     >
       {visibleColumns.map((column, columnIndex) => (
-        <td key={column.id} className={`${rowHeightClass} ${column.cell === "row" ? "p-0" : "px-single"} py-0 align-middle text-sm [&_svg:not([class*='size-'])]:size-small [&_img]:size-small ${column.className || ""}`}>
+        <td key={column.id} className={`${rowHeightClass} ${column.cell === "row" ? "p-0" : "px-single"} ${tableSeamPadClass} align-middle text-sm [&_svg:not([class*='size-'])]:size-small [&_img]:size-small ${column.className || ""}`}>
           <div className={column.cell === "row" ? "flex h-full min-w-0 items-stretch" : "flex items-center h-full min-w-0 gap-1"}>
             {canDragRow && !driverSurfaceDrag && columnIndex === 0 ? (
               <DragHandle labelId="ui.tree.drag.sort" attributes={attributes} listeners={listeners} onClick={(event) => event.stopPropagation()} />
@@ -347,6 +351,7 @@ const Table = <T,>({
   const scrollAreaRef = reactHostPort.useRef<HTMLDivElement>(null);
   const headerRef = useSharedBorderFrameRef<HTMLTableSectionElement>();
   const [activeId, setActiveId] = reactHostPort.useState<string | null>(null);
+  const dragGhost = useDndGhost((rowId) => dragLabelOf(document.querySelector(`[data-row-id=${JSON.stringify(rowId)}]`)));
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -399,12 +404,14 @@ const Table = <T,>({
   const handleDragStart = (event: any) => {
     const id = event.active.id;
     setActiveId(id);
+    dragGhost.start(event);
     dragDrop?.onDragStart?.(id);
   };
 
   const handleDragEnd = (event: any) => {
     const { active, over } = event;
     setActiveId(null);
+    dragGhost.end();
     if (dragDrop?.onDragEnd) {
       dragDrop.onDragEnd({ active: active.id, over: over?.id || null });
     }
@@ -443,13 +450,13 @@ const Table = <T,>({
     return (
       <Scrollable ref={scrollAreaRef} className={`h-full w-full ${className}`}>
         <table className="w-full border-collapse">
-          <thead ref={headerRef} {...tableBandBorder} className={cn(surfaceClass, borderNormalBottomClass, stickyHeader && "sticky top-0 z-panel", headerClassName)}>
+          <thead ref={headerRef} {...tableBandBorder} className={cn(surfaceClass, stickyHeader && "sticky top-0 z-panel", headerClassName)}>
             <tr className="h-large">
               {visibleColumns.map((column) => (
                 <th
                   key={column.id}
                   aria-sort={tableSortAriaV1(column.id, sortColumn, sortDirection)}
-                  className={`text-start p-single font-medium h-large text-element ${column.headerClassName || column.className || ""}`}
+                  className={`text-start p-single pb-[calc(var(--spacing-single)+var(--stroke-hairline)/2)] font-medium h-large text-element ${column.headerClassName || column.className || ""}`}
                   style={{ width: column.width }}
                 >
                   {column.sortable && onSort ? (
@@ -533,8 +540,9 @@ const Table = <T,>({
 
   if (dragDrop?.enabled) {
     return (
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragMove={dragGhost.move} onDragCancel={() => { setActiveId(null); dragGhost.end(); }} onDragEnd={handleDragEnd}>
         {WrapperComponent ? <WrapperComponent>{content}</WrapperComponent> : content}
+        {dragGhost.ghost}
       </DndContext>
     );
   }
@@ -559,10 +567,10 @@ export interface TableSkeletonProps {
 export const TableSkeleton: React.FC<TableSkeletonProps> = ({ columns, rowCount = 5, className = "" }) => (
   <Scrollable className={`h-full w-full ${className}`}>
     <table className="w-full border-collapse">
-      <thead className={cn(surfaceClass, "sticky top-0 z-panel", borderNormalBottomClass)}>
+      <thead {...tableBandBorder} className={cn(surfaceClass, "sticky top-0 z-panel")}>
         <tr className="h-large">
           {columns.map((column) => (
-            <th key={column.id} className={`text-start p-single text-sm font-medium h-large ${column.className || ""}`} style={{ width: column.width }}>
+            <th key={column.id} className={`text-start p-single pb-[calc(var(--spacing-single)+var(--stroke-hairline)/2)] text-sm font-medium h-large ${column.className || ""}`} style={{ width: column.width }}>
               {column.header}
             </th>
           ))}
@@ -570,11 +578,11 @@ export const TableSkeleton: React.FC<TableSkeletonProps> = ({ columns, rowCount 
       </thead>
       <tbody>
         {Array.from({ length: rowCount }).map((_, index) => (
-          <tr key={index} className={cn(borderNormalBottomClass, "h-medium")}>
+          <tr key={index} {...tableBandBorder} className="h-medium">
             {columns.map((column) => (
-              <td key={column.id} className={`h-medium px-single py-0 align-middle text-sm [&_svg:not([class*='size-'])]:size-small [&_img]:size-small ${column.className || ""}`}>
+              <td key={column.id} className={`h-medium px-single ${tableSeamPadClass} align-middle text-sm [&_svg:not([class*='size-'])]:size-small [&_img]:size-small ${column.className || ""}`}>
                 <div className="flex items-center h-full min-w-0">
-                  <div className="h-small bg-muted-foreground/20 rounded animate-pulse w-full" />
+                  <div className="h-small bg-muted-foreground/20 animate-pulse w-full" />
                 </div>
               </td>
             ))}

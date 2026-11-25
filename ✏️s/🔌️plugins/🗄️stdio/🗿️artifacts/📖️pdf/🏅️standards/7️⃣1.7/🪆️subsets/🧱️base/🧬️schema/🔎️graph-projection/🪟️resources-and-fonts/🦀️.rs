@@ -186,7 +186,7 @@ impl Lifter<'_> {
                 image.intent=dict_name(dict,"Intent").map(str::to_string);
                 image.struct_parent=dict_i64(dict,"StructParent").map(|value|value as u32);
                 image.extra=extra_entries(dict,&["Type","Subtype","Width","Height","ColorSpace","BitsPerComponent","ImageMask","Decode","Interpolate","SMask","SMaskInData","Mask","Matte","Intent","OC","StructParent","Length","Filter","DecodeParms"]);
-                self.snapshot.images.push(image);
+                self.snapshot.images.push(*image);
                 for (mask_id, mask) in pending_masks {
                     self.lift_x_object_claimed(&mask_id, &mask);
                 }

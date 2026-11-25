@@ -1,0 +1,19 @@
+{
+  "asset": "storage-crate-stack",
+  "scale": 50,
+  "section": "front",
+  "host": "elevation",
+  "tolerancePaperMm": 0.001,
+  "apartPaperMm": 1,
+  "labels": [
+    { "en": "A-A", "de": "A-A", "reported": false },
+    { "en": "A", "de": "A", "reported": false },
+    { "en": "B–B", "de": "B–B", "reported": false },
+    { "en": "Longitudinal crate section", "de": "Kistenlängsschnitt", "reported": true },
+    { "en": "A-A", "de": "B-B", "reported": true },
+    { "en": "a-a", "de": "a-a", "reported": true },
+    { "en": "AA", "de": "AA", "reported": true }
+  ],
+  "letters": { "en": "A-A", "de": "A-A" },
+  "phrase": { "en": "Longitudinal crate section", "de": "Kistenlängsschnitt" }
+}

@@ -5,6 +5,7 @@
  *
  * @see ../🧍️figure/🟦️.tsx — the React consumer
  * @see ../📤️downloads/🟦️.ts — the export consumer
+ * @see ./🔤️text/🟦️.ts — the room the texts of a drawing take on the page
  */
 import { VIEWS } from "../../../../🔨️modules/🔗️contracts/🟦️.ts";
 import { defaultDepictionOptions, depict, resolveDepiction } from "../../../../🔨️modules/🎨️depiction/🟦️.ts";
@@ -12,6 +13,7 @@ import { evaluateDrawing } from "../../../../🔨️modules/🧮️evaluation/�
 import { solveStructure } from "../../../../🔨️modules/🏗️structure/🟦️.ts";
 import { solveThermal } from "../../../../🔨️modules/🌡️thermal/🟦️.ts";
 import { writeSvg } from "../../../../🔨️modules/📤️export/🖼️svg/🟦️.ts";
+import { textOverhang } from "./🔤️text/🟦️.ts";
 import type { Asset, DepictionOptions, DisplayRange, DrawingScene, DrawingScale, Environment, EvaluatedState, EvaluationQuery, FlowConditions, FlowLayer, FlowMarkDetail, ForceQuantity, Language, PrintProfile, RepresentationSelector, StructuralResult, ThermalField, ThermalQuantity, TransportField, View, Viewpoint } from "@teaching/staffage";
 
 /** 🖥️ The profile of an on-screen figure: the archive is read on a display, so pen and gap floors of a printer do not hide the drawing. A file exported from the site names this profile and does not claim a printer check. */
@@ -57,7 +59,14 @@ export type DepictionRequest = {
 export const DRAWN_FLOW_DEVELOP_S = 14;
 
 const CAPACITY = 512;
+
+/** ⚖️ The evaluated side-elevation points all kept instants of all assets may hold together, least recently asked first out; the newest instant is always kept. Measured on the 375-asset catalog: a kept instant holds its shapes, scenes and markup at about 370 B per point (walking commuter 875 points and 330 kB, sunflower 2069 points and 600 kB), so this budget is about 150 MB in the page and as much in the drawing worker. */
+export const STATE_BUDGET_POINTS = 400_000;
+
+type KeptState = { readonly cache: Map<string, EvaluatedState>; readonly key: string; readonly points: number };
 const states = new WeakMap<Asset, Map<string, EvaluatedState>>();
+const kept = new Map<EvaluatedState, KeptState>();
+let keptPoints = 0;
 const thermals = new WeakMap<EvaluatedState, Map<string, ThermalField>>();
 const structures = new WeakMap<EvaluatedState, StructuralResult>();
 const scenes = new WeakMap<EvaluatedState, Map<string, DrawingScene>>();
@@ -88,11 +97,37 @@ export function queryAt(query: EvaluationQuery, timeS: number | null): Evaluatio
   return timeS === null || query.kind === "pose" ? query : { ...query, timeS };
 }
 
-/** 🧮️ Evaluates (memoised) an asset at a query, projecting front and plan views on demand. A selector picks the authored drawing; without one the state carries rig and physics only. */
+/** 📊️ How many evaluated instants are kept and how many side-elevation points they hold. */
+export const evaluatedStateLoad = (): { readonly states: number; readonly points: number } => ({ states: kept.size, points: keptPoints });
+
+/** ⚖️ What an evaluated instant weighs: its side-elevation points, and one for the instant itself. The unit of {@link STATE_BUDGET_POINTS} and of the live budget of the previews.
+ * @see ../🖼️previews/🚦️live/🟦️.ts — `PREVIEW_LIVE_BUDGET_POINTS` */
+export const statePoints = (state: EvaluatedState): number => state.shapes.elevation.reduce((sum, shape) => sum + shape.rings.reduce((ring, at) => ring + at.length, 0), 1);
+
+/** 🧮️ Evaluates (memoised within {@link STATE_BUDGET_POINTS}) an asset at a query, projecting front and plan views on demand. A selector picks the authored drawing; without one the state carries rig and physics only. */
 export function evaluateState(asset: Asset, query: EvaluationQuery, selector?: RepresentationSelector): EvaluatedState {
   let cache = states.get(asset);
   if (cache === undefined) states.set(asset, (cache = new Map()));
-  return remember(cache, JSON.stringify([query, selector ?? null]), () => evaluateDrawing(asset, query, selector));
+  const key = JSON.stringify([query, selector ?? null]);
+  const hit = cache.get(key);
+  if (hit !== undefined) {
+    const entry = kept.get(hit)!;
+    kept.delete(hit);
+    kept.set(hit, entry);
+    return hit;
+  }
+  const state = evaluateDrawing(asset, query, selector);
+  const points = statePoints(state);
+  cache.set(key, state);
+  kept.set(state, { cache, key, points });
+  keptPoints += points;
+  for (const [oldest, entry] of kept) {
+    if (keptPoints <= STATE_BUDGET_POINTS || oldest === state) break;
+    kept.delete(oldest);
+    entry.cache.delete(entry.key);
+    keptPoints -= entry.points;
+  }
+  return state;
 }
 
 /** 🖨️ The same instant drawn with the representation the depiction asks for. */
@@ -184,8 +219,17 @@ const OWNED_ATTRIBUTES = /\s(?:width|height|viewBox|preserveAspectRatio|style|ro
 /** 🪟️ A paper-space window in millimetres relative to a scene's `metadata.origin` (x right, y down). */
 export type SceneFrame = { readonly minX: number; readonly minY: number; readonly maxX: number; readonly maxY: number };
 
-/** 🪟️ The extent of one scene relative to its origin. */
-export const sceneExtent = (scene: DrawingScene): SceneFrame => ({ minX: -scene.metadata.origin.xMm, minY: -scene.metadata.origin.yMm, maxX: scene.widthMm - scene.metadata.origin.xMm, maxY: scene.heightMm - scene.metadata.origin.yMm });
+/** 🪟️ The extent of one scene relative to its origin: its paper, widened by what its texts take past their reserved room in the faces of the page ({@link textOverhang}). */
+export function sceneExtent(scene: DrawingScene): SceneFrame {
+  const { left, right } = textOverhang(scene);
+  return { minX: -scene.metadata.origin.xMm - left, minY: -scene.metadata.origin.yMm, maxX: scene.widthMm - scene.metadata.origin.xMm + right, maxY: scene.heightMm - scene.metadata.origin.yMm };
+}
+
+/** 🪟️ The window a scene shown alone needs instead of its own paper: none while every text fits its room. */
+export function sceneWindow(scene: DrawingScene): SceneFrame | undefined {
+  const { left, right } = textOverhang(scene);
+  return left === 0 && right === 0 ? undefined : sceneExtent(scene);
+}
 
 /** 🪟️ The union frame around the shared origin of several scenes, so figures of different views keep the model fixed when they share it. */
 export function frameOf(scenes: readonly DrawingScene[]): SceneFrame {

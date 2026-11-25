@@ -194,6 +194,8 @@ export function wireEffectToFriendly(effect: WireVariant, decodePackValue: (byte
       return wireCancelJob(effect);
     case "load-document":
       return { loadDocument: { pack: Array.from(coerceWireBytes(val.docPack)), spr: Array.from(coerceWireBytes(val.spr)) } };
+    case "publish-event":
+      return { publishEvent: { topic: str("topic"), payload: Array.from(coerceWireBytes(val.payload)) } };
     case "set-panel":
       return { setPanel: { panelJson: str("panelJson") } };
     case "set-active-utility":

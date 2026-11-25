@@ -1,4 +1,5 @@
 #!/bin/zsh
+export PATH="/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🚪️shims:$PATH"  # managed cargo entry
 T="/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️07/☀️23/GET-PROCESS-WORKING-END-TO-END"
 cd "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/📸️snapshot/📦️packages/🦀️rust" || exit 1
 zsh "$T/stale-cargo.sh" "$1" test --manifest-path "$PWD/Cargo.toml" --lib

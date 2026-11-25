@@ -13,20 +13,104 @@
    "de": "Eine Palette mit acht ausgebauten Stahl-Plattenheizkörpern Typ 22, wie eine Bauteilbörse sie anbietet: jeder 600 mm hoch, 1000 mm lang und 100 mm tief (zwei profilierte Wasserplatten, zwei Konvektorlagen, Abdeckgitter und Seitenblenden, Ventilkompakt mit Anschlüssen G 3/4 unten im Abstand 50 mm), verblichene und vergilbte weiße Pulverbeschichtung mit Schrammen und einem alten Lageretikett, entleert und verschlossen. Sie stehen hochkant auf zwei Kanthölzern 80 x 80 mm in einem Rohrgestell, das auf eine Europalette 1200 x 800 mm geschraubt ist; sieben halten zwei Ratschengurte 50 mm zusammen, der achte steht lose davor, seine zwei Wandkonsolen auf die Front geklebt und den Thermostatkopf noch aufgesetzt; zusammen 269 kg. Posen: gelagert, der lose Heizkörper von Hand herausgehoben, und wieder eingebaut an seinen Konsolen 0,15 m über dem Boden, befüllt und mit 1600 W bei 75/65/20 °C heizend."
   },
   "tags": [
-   "component",
-   "reclaimed",
-   "used",
-   "hvac",
-   "heating",
-   "radiator",
-   "panel-radiator",
-   "type-22",
-   "steel",
-   "pallet",
-   "timber",
-   "stacked",
-   "operating",
-   "thermal"
+   {
+    "id": "component",
+    "title": {
+     "en": "component",
+     "de": "Bauteil"
+    }
+   },
+   {
+    "id": "reclaimed",
+    "title": {
+     "en": "reclaimed",
+     "de": "wiederverwendet"
+    }
+   },
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "hvac",
+    "title": {
+     "en": "HVAC",
+     "de": "HLK"
+    }
+   },
+   {
+    "id": "heating",
+    "title": {
+     "en": "heating",
+     "de": "Heizung"
+    }
+   },
+   {
+    "id": "radiator",
+    "title": {
+     "en": "radiator",
+     "de": "Heizkörper"
+    }
+   },
+   {
+    "id": "panel-radiator",
+    "title": {
+     "en": "panel radiator",
+     "de": "Plattenheizkörper"
+    }
+   },
+   {
+    "id": "type-22",
+    "title": {
+     "en": "type 22",
+     "de": "Typ 22"
+    }
+   },
+   {
+    "id": "steel",
+    "title": {
+     "en": "steel",
+     "de": "Stahl"
+    }
+   },
+   {
+    "id": "pallet",
+    "title": {
+     "en": "pallet",
+     "de": "Palette"
+    }
+   },
+   {
+    "id": "timber",
+    "title": {
+     "en": "timber",
+     "de": "Holz"
+    }
+   },
+   {
+    "id": "stacked",
+    "title": {
+     "en": "stacked",
+     "de": "gestapelt"
+    }
+   },
+   {
+    "id": "operating",
+    "title": {
+     "en": "operating",
+     "de": "Betrieb"
+    }
+   },
+   {
+    "id": "thermal",
+    "title": {
+     "en": "thermal",
+     "de": "thermisch"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage component authors (used HVAC wave, author 10)",
@@ -1205,7 +1289,7 @@
       "size": [
        0.0015,
        0.6,
-       0.1
+       0.099
       ],
       "transform": {
        "translation": [
@@ -1234,7 +1318,7 @@
       "size": [
        0.0015,
        0.6,
-       0.1
+       0.099
       ],
       "transform": {
        "translation": [
@@ -5491,8 +5575,542 @@
     ]
    },
    "500": {
-    "status": "unavailable",
-    "denominator": 500
+    "status": "authored",
+    "denominator": 500,
+    "decisions": [
+     {
+      "en": "Body for the 75 mm feature: the pallet as one 144 mm slab (deck and nine feet merged), the two 80 mm battens, each end frame of the rack as one 75 mm portal with its outer face on the pallet edge, the single radiator and the stack as their boxes and the valve with its head as one 75 mm cylinder; brackets, straps, caps and nipples are below the feature and left out (the brackets were the last 36 mm of the depth).",
+      "de": "Körper für das 75-mm-Merkmal: die Palette als eine 144-mm-Platte (Deck und neun Füße verschmolzen), die zwei 80-mm-Kanthölzer, jeder Endrahmen des Gestells als ein 75-mm-Portal mit der Außenfläche an der Palettenkante, der einzelne Heizkörper und der Stapel als ihre Quader und das Ventil mit seinem Kopf als ein 75-mm-Zylinder; Konsolen, Bänder, Kappen und Nippel liegen unter dem Merkmal und entfallen (die Konsolen waren die letzten 36 mm der Tiefe)."
+     },
+     {
+      "en": "Thermal: the body solids in their regions by reference; convector, valve body, brackets and straps as shells of their layer at true thickness and a 75 mm outlet patch over the radiator.",
+      "de": "Thermik: die Körper in ihren Regionen als Verweis; Konvektor, Ventilkörper, Konsolen und Bänder als Schalen ihrer Schicht in wahrer Dicke und eine 75-mm-Auslassfläche über dem Heizkörper."
+     },
+     {
+      "en": "Structure: the members by reference, the radiator spanning its carrier, two 75 mm pads on the battens and three mass markers.",
+      "de": "Tragwerk: die Stäbe als Verweis, der Heizkörper überspannt seinen Träger, zwei 75-mm-Auflagen auf den Kanthölzern und drei Massenmarken."
+     }
+    ],
+    "body": [
+     {
+      "id": "pallet-slab",
+      "kind": "box",
+      "bone": "pallet",
+      "material": "softwood",
+      "role": "body",
+      "tone": 0.63,
+      "size": [
+       1.2,
+       0.144,
+       0.8
+      ],
+      "transform": {
+       "translation": [
+        0.6,
+        -0.061,
+        0
+       ]
+      }
+     },
+     {
+      "id": "battens",
+      "kind": "box",
+      "bone": "pallet",
+      "material": "softwood",
+      "role": "body",
+      "tone": 0.7,
+      "size": [
+       0.08,
+       0.08,
+       0.8
+      ],
+      "transform": {
+       "translation": [
+        0.22,
+        0.051,
+        0
+       ]
+      },
+      "repeat": {
+       "count": 2,
+       "translation": [
+        0.68,
+        0,
+        0
+       ]
+      }
+     },
+     {
+      "id": "rack",
+      "kind": "extrude",
+      "bone": "pallet",
+      "material": "rack-steel",
+      "role": "body",
+      "tone": 0.3,
+      "profile": [
+       [
+        0.011,
+        -0.4
+       ],
+       [
+        0.667,
+        -0.4
+       ],
+       [
+        0.667,
+        0.4
+       ],
+       [
+        0.011,
+        0.4
+       ]
+      ],
+      "plane": "yz",
+      "from": 0,
+      "to": 0.075,
+      "holes": [
+       [
+        [
+         0.086,
+         -0.325
+        ],
+        [
+         0.592,
+         -0.325
+        ],
+        [
+         0.592,
+         0.325
+        ],
+        [
+         0.086,
+         0.325
+        ]
+       ]
+      ],
+      "repeat": {
+       "count": 2,
+       "translation": [
+        1.125,
+        0,
+        0
+       ]
+      }
+     },
+     {
+      "id": "radiator",
+      "kind": "box",
+      "bone": "radiator",
+      "material": "painted-steel",
+      "role": "body",
+      "tone": 0.86,
+      "size": [
+       1,
+       0.6,
+       0.1
+      ],
+      "transform": {
+       "translation": [
+        0.5,
+        0,
+        0
+       ]
+      }
+     },
+     {
+      "id": "stack",
+      "kind": "box",
+      "bone": "stack",
+      "material": "painted-steel",
+      "role": "body",
+      "tone": 0.86,
+      "size": [
+       1,
+       0.6,
+       0.7
+      ],
+      "transform": {
+       "translation": [
+        0.5,
+        0,
+        0
+       ]
+      }
+     },
+     {
+      "id": "valve-head",
+      "kind": "revolve",
+      "bone": "radiator",
+      "material": "abs-plastic",
+      "role": "body",
+      "tone": 0.9,
+      "profile": [
+       [
+        1,
+        0
+       ],
+       [
+        1,
+        0.0375
+       ],
+       [
+        1.09,
+        0.0375
+       ],
+       [
+        1.09,
+        0
+       ]
+      ],
+      "axis": [
+       1,
+       0,
+       0
+      ],
+      "origin": [
+       0,
+       0.24,
+       0
+      ]
+     }
+    ],
+    "thermal": [
+     {
+      "id": "th-pallet-slab",
+      "of": "pallet-slab",
+      "region": "pallet"
+     },
+     {
+      "id": "th-battens",
+      "of": "battens",
+      "region": "pallet"
+     },
+     {
+      "id": "th-rack",
+      "of": "rack",
+      "region": "rack"
+     },
+     {
+      "id": "th-radiator",
+      "of": "radiator",
+      "region": "radiator"
+     },
+     {
+      "id": "th-stack",
+      "of": "stack",
+      "region": "stack"
+     },
+     {
+      "id": "th-valve-head",
+      "of": "valve-head",
+      "region": "thermostat-head"
+     },
+     {
+      "id": "th-convector",
+      "kind": "box",
+      "bone": "radiator",
+      "material": "painted-steel",
+      "role": "body",
+      "tone": 0.55,
+      "size": [
+       0.997,
+       0.581,
+       0.06
+      ],
+      "transform": {
+       "translation": [
+        0.5005,
+        -0.0045,
+        0
+       ]
+      },
+      "region": "convector",
+      "layer": "fins"
+     },
+     {
+      "id": "th-valve-body",
+      "kind": "revolve",
+      "bone": "radiator",
+      "material": "brass",
+      "role": "body",
+      "tone": 0.35,
+      "profile": [
+       [
+        1,
+        0
+       ],
+       [
+        1,
+        0.015
+       ],
+       [
+        1.03,
+        0.015
+       ],
+       [
+        1.03,
+        0
+       ]
+      ],
+      "axis": [
+       1,
+       0,
+       0
+      ],
+      "origin": [
+       0,
+       0.24,
+       0
+      ],
+      "region": "valve",
+      "layer": "brass"
+     },
+     {
+      "id": "th-brackets",
+      "kind": "box",
+      "bone": "radiator",
+      "material": "painted-steel",
+      "role": "body",
+      "tone": 0.7,
+      "size": [
+       0.04,
+       0.16,
+       0.035
+      ],
+      "transform": {
+       "translation": [
+        0.15,
+        -0.19,
+        -0.0675
+       ]
+      },
+      "repeat": {
+       "count": 2,
+       "translation": [
+        0.7,
+        0,
+        0
+       ]
+      },
+      "region": "brackets",
+      "layer": "sheet"
+     },
+     {
+      "id": "th-straps-top",
+      "kind": "box",
+      "bone": "stack",
+      "material": "polyester",
+      "role": "body",
+      "tone": 0.2,
+      "size": [
+       0.05,
+       0.002,
+       0.704
+      ],
+      "transform": {
+       "translation": [
+        0.355,
+        0.301,
+        0
+       ]
+      },
+      "repeat": {
+       "count": 2,
+       "translation": [
+        0.32,
+        0,
+        0
+       ]
+      },
+      "region": "straps",
+      "layer": "web"
+     },
+     {
+      "id": "th-straps-near",
+      "kind": "box",
+      "bone": "stack",
+      "material": "polyester",
+      "role": "body",
+      "tone": 0.2,
+      "size": [
+       0.05,
+       0.6,
+       0.002
+      ],
+      "transform": {
+       "translation": [
+        0.355,
+        0,
+        -0.351
+       ]
+      },
+      "repeat": {
+       "count": 2,
+       "translation": [
+        0.32,
+        0,
+        0
+       ]
+      },
+      "region": "straps",
+      "layer": "web"
+     },
+     {
+      "id": "th-convection-outlet",
+      "kind": "box",
+      "bone": "radiator",
+      "material": "painted-steel",
+      "role": "detail",
+      "tone": 0.8,
+      "size": [
+       0.9,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.5,
+        0.3375,
+        0
+       ]
+      },
+      "region": "radiator",
+      "tags": [
+       "convection-outlet"
+      ]
+     }
+    ],
+    "structure": [
+     {
+      "id": "member-pallet-slab",
+      "of": "pallet-slab",
+      "member": "pallet",
+      "part": "member"
+     },
+     {
+      "id": "member-battens",
+      "of": "battens",
+      "member": "pallet",
+      "part": "member"
+     },
+     {
+      "id": "member-rack",
+      "of": "rack",
+      "member": "pallet",
+      "part": "member"
+     },
+     {
+      "id": "member-stack",
+      "of": "stack",
+      "member": "stack",
+      "part": "member"
+     },
+     {
+      "id": "member-radiator",
+      "of": "radiator",
+      "member": "radiator",
+      "part": "member",
+      "members": [
+       "carrier"
+      ]
+     },
+     {
+      "id": "joint-pads",
+      "kind": "box",
+      "bone": "pallet",
+      "material": "steel",
+      "role": "detail",
+      "tone": 0.5,
+      "size": [
+       0.08,
+       0.075,
+       0.8
+      ],
+      "transform": {
+       "translation": [
+        0.22,
+        0.091,
+        0
+       ]
+      },
+      "repeat": {
+       "count": 2,
+       "translation": [
+        0.68,
+        0,
+        0
+       ]
+      },
+      "member": "pallet",
+      "part": "joint"
+     },
+     {
+      "id": "mass-stack",
+      "kind": "box",
+      "bone": "stack",
+      "material": "painted-steel",
+      "role": "detail",
+      "tone": 0.5,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.5,
+        0,
+        0
+       ]
+      },
+      "member": "stack",
+      "part": "mass"
+     },
+     {
+      "id": "mass-radiator",
+      "kind": "box",
+      "bone": "radiator",
+      "material": "painted-steel",
+      "role": "detail",
+      "tone": 0.5,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.5,
+        0,
+        0
+       ]
+      },
+      "member": "radiator",
+      "part": "mass"
+     },
+     {
+      "id": "mass-pallet",
+      "kind": "box",
+      "bone": "pallet",
+      "material": "softwood",
+      "role": "detail",
+      "tone": 0.5,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.6,
+        -0.061,
+        0
+       ]
+      },
+      "member": "pallet",
+      "part": "mass"
+     }
+    ]
    }
   },
   "anchors": [

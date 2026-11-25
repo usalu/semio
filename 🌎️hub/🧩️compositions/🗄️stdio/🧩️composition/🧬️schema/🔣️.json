@@ -21,7 +21,8 @@
           "root",
           "enum",
           "label",
-          "main"
+          "main",
+          "shards"
         ],
         "properties": {
           "id": {
@@ -42,6 +43,37 @@
           },
           "main": {
             "type": "boolean"
+          },
+          "shards": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "root",
+                "enum",
+                "variants"
+              ],
+              "properties": {
+                "root": {
+                  "type": "string",
+                  "pattern": "^[^./][^\\\\]*\\/🦀️\\.rs$"
+                },
+                "enum": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+                },
+                "variants": {
+                  "type": "array",
+                  "minItems": 1,
+                  "uniqueItems": true,
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+                  }
+                }
+              }
+            }
           }
         }
       }

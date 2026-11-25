@@ -4,6 +4,7 @@ import { useShellScopeOptional, useShellFloatingSurfaceHost } from "../../🐚�
 import { createPortal } from "react-dom";
 import { ephemeralBox } from "@semio-tech/framework-transient";
 import type { TreeDataItem, TreeDataSection } from "../📋️data/🟦️.ts";
+import { dropPlaceAttributes, treeDropBand } from "../../../🔨️modules/🫳️pointer-drag/🟦️.tsx";
 
 /** 🖱️ Pointer-driven external drag when native `draggable` does not start inside scroll panels. */
 export interface TreePointerPaletteDragController {
@@ -39,7 +40,8 @@ export function isTreeReorderDragEvent(event: React.DragEvent): boolean {
   return !types.some((kind) => kind !== "application/vnd.code.tree.item" && kind.startsWith("application/"));
 }
 
-/** 👁️ Fixed overlay showing where a tree reorder drop will land. */
+/** 👁️ Fixed overlay showing where a tree reorder drop will land: the rectangle of the row the drop takes, as the active place of the drag.
+ * @see ../../../🔨️modules/🫳️pointer-drag/places.ts `treeDropBand` */
 export function TreeReorderDropPreview(props: { readonly preview: { readonly targetId: string; readonly position: TreeDropPosition } | null }): React.ReactElement | null {
   const [frame, setFrame] = reactHostPort.useState<DOMRect | null>(null);
   const shellScope = useShellScopeOptional();
@@ -54,14 +56,9 @@ export function TreeReorderDropPreview(props: { readonly preview: { readonly tar
   }, [props.preview, shellScope]);
   const portalTarget = useShellFloatingSurfaceHost();
   if (!props.preview || !frame || !portalTarget) return null;
-  if (props.preview.position === "before") {
-    return createPortal(<div data-slot="tree-drop-preview" className="pointer-events-none fixed z-tutorial h-0.5 bg-primary" style={{ left: frame.left, top: frame.top, width: frame.width }} />, portalTarget);
-  }
-  if (props.preview.position === "after") {
-    return createPortal(<div data-slot="tree-drop-preview" className="pointer-events-none fixed z-tutorial h-0.5 bg-primary" style={{ left: frame.left, top: frame.bottom - 2, width: frame.width }} />, portalTarget);
-  }
+  const band = treeDropBand({ left: frame.left, top: frame.top, right: frame.right, bottom: frame.bottom }, props.preview.position);
   return createPortal(
-    <div data-slot="tree-drop-preview" className="pointer-events-none fixed z-tutorial border-2 border-primary/80 bg-primary/10" style={{ left: frame.left, top: frame.top, width: frame.width, height: frame.height }} />,
+    <div data-slot="tree-drop-preview" aria-hidden="true" {...dropPlaceAttributes("active")} className="pointer-events-none fixed z-tutorial" style={{ left: band.left, top: band.top, width: band.right - band.left, height: band.bottom - band.top }} />,
     portalTarget,
   );
 }

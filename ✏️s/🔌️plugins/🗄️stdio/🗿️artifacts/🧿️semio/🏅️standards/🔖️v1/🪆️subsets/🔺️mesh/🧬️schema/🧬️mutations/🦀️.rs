@@ -145,6 +145,7 @@ pub enum SemioMeshMutation {
     MoveVertex(move_vertex::MoveVertex),
 }
 dsl::original_pack_value_operation_receiving!(SemioMeshMutation);
+dsl::artifact_persisted_binary_operation!(SemioMeshMutation);
 
 /// 🏷️ Kebab-case spelling of every `SemioMeshMutation` variant, in declaration order — the
 /// vocabulary the `semio-v1-mesh` mutation catalog (`../../🔣️oracle.json`) declares and

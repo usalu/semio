@@ -13,7 +13,7 @@ for f in files:
             continue
         status[cell["status"]] += 1
         if cell["status"] == "fail":
-            for name in {x.get("check", "?") for x in cell.get("failures", cell.get("findings", [])) or [{}]}:
+            for name in {x if isinstance(x, str) else x.get("check", "?") for x in cell.get("failures", cell.get("findings", [])) or ["?"]}:
                 checks[name] += 1
     if status:
         break

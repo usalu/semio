@@ -3,10 +3,24 @@
   "title": "Remote execution admission by unit",
   "definitions": {
     "Policy": {
-      "description": "How a worker admits one offloaded unit: a machine offers itself (headroom) when its smallest unit fits (`smallestMegabytes`), the free memory it reports is what a unit may still take above its floor, and a unit is admitted when its own predicted peak fits into that beside the part of their peaks the running units have not grown into yet. Raised memory pressure (`warn`) alone refuses only units above `warnMaximumMegabytes` and every unit while swap is growing; critical pressure refuses all. How many units a machine lends while its readiness stage runs is decided by measured memory alone (the stage keeps its own reserve through its claim): a fixed count of one unit per stage left every worker whose stage read for hours unable to take a component final although it had the memory.",
+      "description": "How a worker admits one offloaded unit: a machine offers itself (headroom) when its smallest unit fits (`smallestMegabytes`), the free memory it reports is what a unit may still take above its floor, and a unit is admitted when its own predicted peak fits into that beside the part of their peaks the running units have not grown into yet. Raised memory pressure (`warn`) alone refuses only units above `warnMaximumMegabytes` and every unit while swap is growing; critical pressure refuses all. How many units a machine lends while its readiness stage runs is decided by measured memory alone (the stage keeps its own reserve through its claim): a fixed count of one unit per stage left every worker whose stage read for hours unable to take a component final although it had the memory. CPU counts too: a machine whose one-minute load average per core is at or above `loadPerCoreCeilingPermille` (thousandths of a load per core) refuses with `load` and reports no headroom, so a saturated machine is never offered work. The coordinator (an origin ending in `coordinatorOriginSuffix`, the group server) keeps `coordinatorReservedSlots` of its slots for its own interactive work: it registers that many fewer.",
       "const": {
         "smallestMegabytes": 256,
-        "warnMaximumMegabytes": 1024
+        "warnMaximumMegabytes": 1024,
+        "loadPerCoreCeilingPermille": 1500,
+        "coordinatorOriginSuffix": "-server",
+        "coordinatorReservedSlots": 2
+      }
+    },
+    "Messages": {
+      "description": "The sentences of the CPU refusal, English and German: `load` is the one-minute load average of the machine, `cores` its core count and `ceiling` the declared load per core (`Policy.loadPerCoreCeilingPermille`) as a decimal.",
+      "const": {
+        "en": {
+          "load": "load {load} on {cores} cores is at or above the ceiling of {ceiling} per core: the machine is busy with its own work"
+        },
+        "de": {
+          "load": "Last {load} auf {cores} Kernen liegt auf oder über der Obergrenze von {ceiling} pro Kern: die Maschine ist mit eigener Arbeit ausgelastet"
+        }
       }
     }
   }

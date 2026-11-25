@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { chromium } from "playwright";
+import { launchChromium } from "../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🌐️chromium-launch/🟦️";
 import sharp from "sharp";
 import { describe, expect, it } from "vitest";
 
@@ -14,7 +14,7 @@ describe("📷️ Icon PNG export", () => {
   
 
   it("matches Canvas PNG publication for premultiplied framebuffer pixels", async () => {
-    const browser = await chromium.launch({ headless: true, args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader"] });
+    const browser = await launchChromium({ args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader"] });
     try {
       const page = await browser.newPage();
       const observed = await page.evaluate((rows: readonly { premultiplied: readonly [number, number, number, number] }[]) => {

@@ -13,13 +13,55 @@
    "de": "Eine frei gewachsene Roteiche von etwa 70 Jahren, 22 m hoch: Ein kurzer, kräftiger Stamm mit der flachrippigen, gefurchten Borke der Art teilt sich ab 3 m in vierzehn große, ausladende Äste, und die großen, grannig gelappten Blätter bilden eine breite, runde Krone von etwa 19 m Breite."
   },
   "tags": [
-   "tree",
-   "deciduous",
-   "broadleaf",
-   "broad-crown",
-   "park-tree",
-   "wind",
-   "transpiration"
+   {
+    "id": "tree",
+    "title": {
+     "en": "tree",
+     "de": "Baum"
+    }
+   },
+   {
+    "id": "deciduous",
+    "title": {
+     "en": "deciduous",
+     "de": "laubabwerfend"
+    }
+   },
+   {
+    "id": "broadleaf",
+    "title": {
+     "en": "broadleaf",
+     "de": "Laubholz"
+    }
+   },
+   {
+    "id": "broad-crown",
+    "title": {
+     "en": "broad crown",
+     "de": "breite Krone"
+    }
+   },
+   {
+    "id": "park-tree",
+    "title": {
+     "en": "park tree",
+     "de": "Parkbaum"
+    }
+   },
+   {
+    "id": "wind",
+    "title": {
+     "en": "wind",
+     "de": "Wind"
+    }
+   },
+   {
+    "id": "transpiration",
+    "title": {
+     "en": "transpiration",
+     "de": "Transpiration"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage plant worker PW-05",

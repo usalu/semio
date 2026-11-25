@@ -1,4 +1,4 @@
-//! 🧪 Canonical binding AST fixtures share derived attribute and local shadow contracts.
+/// 🧪 Canonical binding AST fixtures share derived attribute and local shadow contracts.
 static BINDING_READS: &[(&str, ExpressExpression)] = &[
     ("TrueNorth", ExpressExpression { kind: ExpressExpressionKind::Identifier, offset: 0, text: None, operator: None, name: Some("TRUENORTH"), operands: &[], entries: &[] }),
     (

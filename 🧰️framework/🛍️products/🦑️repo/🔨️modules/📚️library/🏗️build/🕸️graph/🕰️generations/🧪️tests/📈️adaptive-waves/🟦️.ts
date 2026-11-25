@@ -54,7 +54,7 @@ for(const condition of repairFixture.cases)test("targeted repair archive index "
 });
 
 test("the policy declares the budget, the maximum and the growth",()=>{
- expect(GENERATION_POLICY_V1.ownerWaveBudgetMilliseconds).toBe(300000);expect(GENERATION_POLICY_V1.ownerWaveMaximum).toBe(960);expect(GENERATION_POLICY_V1.ownerWaveGrowth).toBe(4);expect(BASE).toBe(48);
+ expect(GENERATION_POLICY_V1.ownerWaveBudgetMilliseconds).toBe(900000);expect(GENERATION_POLICY_V1.ownerWaveMaximum).toBe(960);expect(GENERATION_POLICY_V1.ownerWaveGrowth).toBe(4);expect(BASE).toBe(48);
 });
 
 for(const row of fixture.cases)test(row.name,()=>{
@@ -62,7 +62,7 @@ for(const row of fixture.cases)test(row.name,()=>{
 });
 
 test("an independent computation of the rule agrees on a grid",()=>{
- const base=BASE,maximum=960,growth=4,budget=300000;
+ const base=BASE,maximum=960,growth=4,budget=900000;
  for(const size of [48,96,192,500,960])for(const elapsed of [0,1000,60000,300000,900000,5000000])for(const inferred of [undefined,0,1,size/4,size/4+1]){
   const hit=inferred!==undefined&&inferred*4<=size,scaled=Math.floor(size*budget/Math.max(1,elapsed)),expected=hit?Math.max(base,Math.min(maximum,inferred===0?size*growth:size,scaled)):base;
   expect(nextOwnerWaveV1({size,elapsedMilliseconds:elapsed,inferred})).toBe(expected);
@@ -119,7 +119,7 @@ test("the elapsed time of a wave decides how far the next one grows",async()=>{
  try{
   await seed(dir,ringFiles(COUNT+3));
   let clock=0;
-  const world=createWorld(dir,{now:()=>clock,computeWrap:compute=>async(spec,signal)=>{const result=await compute(spec,signal);clock+=100000;return {...result,inferred:0};}});
+  const world=createWorld(dir,{now:()=>clock,computeWrap:compute=>async(spec,signal)=>{const result=await compute(spec,signal);clock+=300000;return {...result,inferred:0};}});
   await world.refresh();clock=0;
   await edit(dir,COUNT);
   world.log.length=0;

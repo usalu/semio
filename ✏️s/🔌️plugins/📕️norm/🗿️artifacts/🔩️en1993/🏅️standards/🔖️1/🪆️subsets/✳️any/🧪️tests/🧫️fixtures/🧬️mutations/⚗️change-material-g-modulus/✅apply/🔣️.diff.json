@@ -14,7 +14,8 @@
           "eModulus": null,
           "gModulus": 162000000000.0,
           "subgrade": null,
-          "kind": null
+          "kind": null,
+          "rambergOsgoodN": null
         }
       }
     ]

@@ -67,6 +67,18 @@ pub(crate) fn remove_scene_camera_deadline(host: &str) {
     if result.is_err() { SCENE_CAMERA_DISPATCH_FAULT.with(|fault| *fault.borrow_mut() = Some("scene camera removal credits exceeded")); }
 }
 
+/// 🪙️ A caller's turn grant narrowed to the installed bootstrap authority, because camera storage refuses any receiver that increases it.
+pub fn narrow_to_scene_camera_authority(grant: semio_framework_job::RetainedCloneGrant) -> Result<semio_framework_job::RetainedCloneGrant, semio_framework_value::ValueError> {
+    let installed = SCENE_CAMERA_DISPATCH_DEADLINES_MS.with(|cell| cell.borrow().received_grant())?;
+    Ok(semio_framework_job::RetainedCloneGrant {
+        maximum_items: grant.maximum_items.min(installed.maximum_items),
+        maximum_copy_bytes: grant.maximum_copy_bytes.min(installed.maximum_copy_bytes),
+        maximum_capacity_bytes: grant.maximum_capacity_bytes.min(installed.maximum_capacity_bytes),
+        maximum_release_bytes: grant.maximum_release_bytes.min(installed.maximum_release_bytes),
+        maximum_depth: grant.maximum_depth.min(installed.maximum_depth),
+    })
+}
+
 /// 🪙️ Receives the exact host bootstrap grant before any camera storage operation.
 pub fn install_scene_camera_authority(grant: semio_framework_job::RetainedCloneGrant) -> Result<(), semio_framework_value::ValueError> {
     SCENE_CAMERA_DISPATCH_DEADLINES_MS.with(|cell| cell.borrow_mut().install(grant))

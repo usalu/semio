@@ -4,7 +4,7 @@ import { pathEmojiStatuteFindings } from "@semio-tech/framework/identity/path";
 import { createTestKit, type ContractValidator, type TestDependencies, type TestSource } from "../🧰️test-kit/🟦️.ts";
 
 export async function registerVendorTransportTests(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: TestDependencies, source: TestSource): Promise<void> {
-  const { builtPluginModulesRootIn, DISTRIBUTION_LAYOUT, MODULE_EXTENSION_ROUTE, MODULE_PLUGIN_ROUTE, basename, checkDistributionBundle, cpSync, createHash, createReadStream, dirname, distributionFileWitness, distributionPathOrder, distributionStaticSourcePaths, existsSync, fileURLToPath, join, mkdirSync, mkdtempSync, defaultExtensionInstallRoot, patchPreview2ShimGuestLogClassification, patchPreview2ShimGuestLogLineRelease, moduleIdForDirectoryName, moduleRoutePath, parseDistributionManifest, parseDistributionStaticInputs, publishDistributionBundle, readFileSync, readdirSync, relative, repoRoot, resolve, rmSync, statSync, tmpdir, unlinkSync, writeFileSync } = dependencies;
+  const { builtPluginModulesRootIn, DISTRIBUTION_LAYOUT, MODULE_EXTENSION_ROUTE, MODULE_PLUGIN_ROUTE, basename, checkDistributionBundle, cpSync, createHash, createReadStream, dirname, distributionFileWitness, distributionPathOrder, distributionStaticSourcePaths, existsSync, fileURLToPath, join, mkdirSync, mkdtempSync, defaultExtensionInstallRoot, moduleIdForDirectoryName, moduleRoutePath, parseDistributionManifest, parseDistributionStaticInputs, publishDistributionBundle, readFileSync, readdirSync, relative, repoRoot, resolve, rmSync, statSync, tmpdir, unlinkSync, writeFileSync } = dependencies;
   const { describe, expect, it } = vitest;
   const pluginModulesRoot = builtPluginModulesRootIn(repoRoot, "prototype");
   const { contractModuleExport, devContractModule, itLong, underBun } = createTestKit(vitest, dependencies, source);
@@ -385,15 +385,7 @@ export async function registerVendorTransportTests(vitest: NonNullable<ImportMet
         const file = join(vendorRoot, filename), relativeFile = relative(repoRoot, file).replace(/\\/g, "/");
         const installed = readFileSync(join(repoRoot, "node_modules/@bytecodealliance/preview2-shim/dist/browser", filename));
         let expectedBytes = installed;
-        if (filename === "cli.js") {
-          const expectDir = mkdtempSync(join(tmpdir(), "semio-cli-expect-"));
-          const expectFile = join(expectDir, "cli.js");
-          writeFileSync(expectFile, installed);
-          patchPreview2ShimGuestLogClassification(expectFile);
-          patchPreview2ShimGuestLogLineRelease(expectFile);
-          expectedBytes = readFileSync(expectFile);
-          rmSync(expectDir, { recursive: true, force: true });
-        }
+        if (filename === "cli.js") expectedBytes = Buffer.from(underBun<{ readonly base64: string }>(`const { copyFileSync, mkdtempSync, readFileSync, rmSync } = await import("node:fs"), { join } = await import("node:path"), { tmpdir } = await import("node:os"); const patches = await import(process.argv[1]); const directory = mkdtempSync(join(tmpdir(), "semio-cli-expect-")), target = join(directory, "cli.js"); copyFileSync(process.argv[2], target); patches.patchPreview2ShimGuestLogClassification(target); patches.patchPreview2ShimGuestLogLineRelease(target); const base64 = readFileSync(target).toString("base64"); rmSync(directory, { recursive: true, force: true }); console.log(JSON.stringify({ base64 }));`, join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🩹️preview2-shim-patches/🟦️.ts"), join(repoRoot, "node_modules/@bytecodealliance/preview2-shim/dist/browser", filename)).base64, "base64");
         expect(readFileSync(file).equals(expectedBytes), filename).toBe(true);
         expect(fixedFilenameContractIdsForPath(relativeFile, taxonomy)).toEqual([`dev-vendor-${filename.slice(0, -3)}`]);
         for (const hostile of [relativeFile + ".bak", relativeFile.replace("🪞️vendor", "🪞️other"), relativeFile.replace("🪟️preview2-shim", "nested/🪟️preview2-shim")]) expect(fixedFilenameContractIdsForPath(hostile, taxonomy)).toEqual([]);

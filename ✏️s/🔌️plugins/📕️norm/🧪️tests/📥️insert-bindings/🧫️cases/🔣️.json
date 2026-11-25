@@ -729,7 +729,7 @@
       "selectors": [],
       "index": "index",
       "item": "anchor",
-      "source": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "source": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/🦀️.rs",
       "schema": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚓️insert-anchor/🧬️schema/🔣️.json"
     },
     {
@@ -741,7 +741,7 @@
       ],
       "index": "index",
       "item": "anchorAction",
-      "source": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "source": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/🦀️.rs",
       "schema": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏋️insert-anchor-action/🧬️schema/🔣️.json"
     },
     {
@@ -751,7 +751,7 @@
       "selectors": [],
       "index": "index",
       "item": "case",
-      "source": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "source": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/🦀️.rs",
       "schema": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-case/🧬️schema/🔣️.json"
     },
     {
@@ -761,7 +761,7 @@
       "selectors": [],
       "index": "index",
       "item": "concreteGrade",
-      "source": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "source": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/🦀️.rs",
       "schema": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️insert-concrete-grade/🧬️schema/🔣️.json"
     },
     {
@@ -771,7 +771,7 @@
       "selectors": [],
       "index": "index",
       "item": "member",
-      "source": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "source": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/🦀️.rs",
       "schema": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-member/🧬️schema/🔣️.json"
     },
     {
@@ -783,7 +783,7 @@
       ],
       "index": "index",
       "item": "action",
-      "source": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "source": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/🦀️.rs",
       "schema": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏋️insert-action/🧬️schema/🔣️.json"
     },
     {
@@ -795,7 +795,7 @@
       ],
       "index": "index",
       "item": "barPoint",
-      "source": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "source": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/🦀️.rs",
       "schema": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️insert-bar-point/🧬️schema/🔣️.json"
     },
     {
@@ -807,7 +807,7 @@
       ],
       "index": "index",
       "item": "barLayer",
-      "source": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "source": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/🦀️.rs",
       "schema": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⭕️insert-bar-layer/🧬️schema/🔣️.json"
     },
     {
@@ -819,7 +819,7 @@
       ],
       "index": "index",
       "item": "opening",
-      "source": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "source": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/🦀️.rs",
       "schema": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕳️insert-opening/🧬️schema/🔣️.json"
     },
     {
@@ -831,7 +831,7 @@
       ],
       "index": "index",
       "item": "sectionPoint",
-      "source": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "source": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/🦀️.rs",
       "schema": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️insert-section-point/🧬️schema/🔣️.json"
     },
     {
@@ -843,7 +843,7 @@
       ],
       "index": "index",
       "item": "studRow",
-      "source": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "source": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/🦀️.rs",
       "schema": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔩️insert-stud-row/🧬️schema/🔣️.json"
     },
     {
@@ -855,7 +855,7 @@
       ],
       "index": "index",
       "item": "tendonPoint",
-      "source": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "source": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/🦀️.rs",
       "schema": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧬️insert-tendon-point/🧬️schema/🔣️.json"
     },
     {
@@ -865,7 +865,7 @@
       "selectors": [],
       "index": "index",
       "item": "placement",
-      "source": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "source": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/🦀️.rs",
       "schema": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️insert-placement/🧬️schema/🔣️.json"
     },
     {
@@ -875,7 +875,7 @@
       "selectors": [],
       "index": "index",
       "item": "prestressSteel",
-      "source": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "source": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/🦀️.rs",
       "schema": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧵️insert-prestress-steel/🧬️schema/🔣️.json"
     },
     {
@@ -885,7 +885,7 @@
       "selectors": [],
       "index": "index",
       "item": "reinforcementGrade",
-      "source": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "source": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/🦀️.rs",
       "schema": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔩️insert-reinforcement-grade/🧬️schema/🔣️.json"
     },
     {
@@ -1431,7 +1431,7 @@
       "selectors": [],
       "index": "index",
       "item": "beam",
-      "source": "🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "source": "🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/🦀️.rs",
       "schema": "🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-beam/🧬️schema/🔣️.json"
     },
     {
@@ -1443,7 +1443,7 @@
       ],
       "index": "index",
       "item": "action",
-      "source": "🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "source": "🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/🦀️.rs",
       "schema": "🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏋️insert-beam-action/🧬️schema/🔣️.json"
     },
     {
@@ -1453,7 +1453,7 @@
       "selectors": [],
       "index": "index",
       "item": "case",
-      "source": "🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "source": "🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/🦀️.rs",
       "schema": "🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-case/🧬️schema/🔣️.json"
     },
     {
@@ -1463,7 +1463,7 @@
       "selectors": [],
       "index": "index",
       "item": "column",
-      "source": "🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "source": "🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/🦀️.rs",
       "schema": "🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➗️insert-column/🧬️schema/🔣️.json"
     },
     {
@@ -1475,7 +1475,7 @@
       ],
       "index": "index",
       "item": "action",
-      "source": "🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "source": "🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/🦀️.rs",
       "schema": "🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏛️insert-column-action/🧬️schema/🔣️.json"
     },
     {
@@ -1485,7 +1485,7 @@
       "selectors": [],
       "index": "index",
       "item": "item",
-      "source": "🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "source": "🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/🦀️.rs",
       "schema": "🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️insert-placement/🧬️schema/🔣️.json"
     },
     {
@@ -1495,7 +1495,7 @@
       "selectors": [],
       "index": "index",
       "item": "slab",
-      "source": "🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "source": "🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/🦀️.rs",
       "schema": "🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕insert-slab/🧬️schema/🔣️.json"
     },
     {
@@ -1507,7 +1507,7 @@
       ],
       "index": "index",
       "item": "action",
-      "source": "🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "source": "🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/🦀️.rs",
       "schema": "🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️insert-slab-action/🧬️schema/🔣️.json"
     },
     {
@@ -1517,7 +1517,7 @@
       "selectors": [],
       "index": "index",
       "item": "item",
-      "source": "🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs",
+      "source": "🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/🦀️.rs",
       "schema": "🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️insert-stud/🧬️schema/🔣️.json"
     },
     {

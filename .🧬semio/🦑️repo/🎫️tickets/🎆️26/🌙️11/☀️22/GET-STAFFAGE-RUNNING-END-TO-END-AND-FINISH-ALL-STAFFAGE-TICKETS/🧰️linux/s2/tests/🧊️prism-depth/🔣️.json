@@ -1,0 +1,20 @@
+{
+  "description": "A box of 0.40 x 0.20 x 0.006 m (a case bottom) on the left thigh of the sample figure, drawn as an extruded prism with each of the three sweeps; the profiles and spans describe the same kind of slab in the three conventions. Poses: the rest pose, the stride, the thigh spread by -30 degrees (as in the depth-order vectors) and the thigh rolled by -91 degrees about its own axis (the carried trumpet case of the request).",
+  "scale": 50,
+  "bone": "thigh-l",
+  "toleranceM": 1e-9,
+  "poses": [
+    { "id": "stand" },
+    { "id": "stride-left-forward" },
+    { "id": "spread-left-thigh", "offset": { "abductionDeg": -30 } },
+    { "id": "rolled-left-thigh", "offset": { "twistDeg": -91 } },
+    { "id": "rolled-and-spread", "offset": { "twistDeg": -91, "abductionDeg": 20, "angleDeg": 35 } }
+  ],
+  "prisms": [
+    { "id": "bottom-w", "solid": { "kind": "extruded", "sweep": "w", "z0": -0.1, "z1": 0.1 }, "points": [[0.02, 0.2], [0.42, 0.2], [0.42, 0.206], [0.02, 0.206]] },
+    { "id": "bottom-v", "solid": { "kind": "extruded", "sweep": "v", "z0": 0.2, "z1": 0.206 }, "points": [[0.02, -0.1], [0.42, -0.1], [0.42, 0.1], [0.02, 0.1]] },
+    { "id": "bottom-u", "solid": { "kind": "extruded", "sweep": "u", "z0": 0.02, "z1": 0.42 }, "points": [[0.2, -0.1], [0.206, -0.1], [0.206, 0.1], [0.2, 0.1]] },
+    { "id": "wedge-v", "solid": { "kind": "extruded", "sweep": "v", "z0": 0.2, "z1": 0.26, "zTip": [0.2, 0.206] }, "points": [[0.02, -0.1], [0.42, -0.05], [0.42, 0.05], [0.02, 0.1]] }
+  ],
+  "rolled": { "pose": "rolled-left-thigh", "prism": "bottom-v", "view": "elevation", "planeOfBoneOffM": 0.19 }
+}

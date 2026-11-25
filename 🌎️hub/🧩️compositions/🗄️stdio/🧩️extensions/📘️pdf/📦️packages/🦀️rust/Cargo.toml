@@ -21,6 +21,9 @@ path = "../../🦀️.rs"
 semio-framework-pack = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 # 🧩️ Composition Dependencies
 semio-s-artifact-stdio-pdf = { workspace = true }
+semio-hub-stdio-pdf-1-4 = { path = "../../🧩️shards/4️⃣1.4/📦️packages/🦀️rust" }
+semio-hub-stdio-pdf-1-7-editors = { path = "../../🧩️shards/7️⃣1.7/✏️editors/📦️packages/🦀️rust" }
+semio-hub-stdio-pdf-1-7-viewers = { path = "../../🧩️shards/7️⃣1.7/👁️viewers/📦️packages/🦀️rust" }
 # /🧩️ Composition Dependencies
 semio-s-artifact-stdio-contract = { workspace = true }
 semio-framework = { workspace = true }
@@ -29,6 +32,15 @@ semio-framework-job = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-os-kernel = { workspace = true }
 semio-plugin = { workspace = true }
+
+[dev-dependencies]
+semio-framework-async = { workspace = true }
+semio-framework-pack-json = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+serde_json = { workspace = true }
+
+[[test]]
+name = "committed_descriptor"
+path = "../../🧪️tests/🛂️committed-descriptor/🦀️.rs"
 
 [package.metadata.semio.preparation]
 script = "../../../../📦️packages/🦀️rust/📜️script.ts"

@@ -1,10 +1,12 @@
 import catalog from "./🔣️.json" with { type: "json" };
+import pipeline from "./🧫️pipeline.json" with { type: "json" };
 import { runtimeComponentClosure } from "@semio-tech/repo-lib/inventory/tooling";
 import { PLAYGROUND_BUILD_TARGETS } from "@semio-tech/s-dev-catalog-ts/generated/playgrounds";
+import { demonstratorShippedComponents } from "./📇️catalog/🟦️.ts";
 import { EXTENSION_TARGETS, PLUGIN_BUILD_TARGETS } from "@semio-tech/s-dev-catalog-ts/generated/plugins";
 import { MODULE_SHARD_DIRECTORY, MODULE_VENDOR_DIRECTORY } from "@semio-tech/plugin-registry/deployment";
 
-export { DEMONSTRATOR_HOST, DEMONSTRATOR_ASSETS_DIR, DEMONSTRATOR_RUNTIME_PANES, demonstratorPaneRuntimeVariant } from "./📇️catalog/🟦️.ts";
+export { DEMONSTRATOR_HOST, DEMONSTRATOR_ASSETS_DIR, DEMONSTRATOR_RUNTIME_PANES, demonstratorPaneRuntimeVariant, demonstratorShippedComponents } from "./📇️catalog/🟦️.ts";
 
 /** 🪪️ Resolves a runtime variant to its generated component identity. */
 export function demonstratorRuntimePluginId(variant: string): string {
@@ -35,7 +37,7 @@ export type DemonstratorRuntimeModuleLayout = {
 
 /** 🛣️ Maps the complete runtime closure to its authored public deployment directories. */
 export function demonstratorRuntimeModuleLayout(rootPluginIds: readonly string[]): DemonstratorRuntimeModuleLayout {
-  const components = [...PLUGIN_BUILD_TARGETS, ...EXTENSION_TARGETS], byId = new Map(components.map(row => [row.pluginId, row]));
+  const components = [...PLUGIN_BUILD_TARGETS, ...demonstratorShippedComponents(EXTENSION_TARGETS)], byId = new Map(components.map(row => [row.pluginId, row]));
   const ids = runtimeComponentClosure(components, rootPluginIds);
   return {
     pluginModuleDirNames: [MODULE_VENDOR_DIRECTORY, MODULE_SHARD_DIRECTORY, ...ids.filter(id => byId.get(id)!.role === "plugin").map(id => byId.get(id)!.directoryName)],
@@ -43,6 +45,6 @@ export function demonstratorRuntimeModuleLayout(rootPluginIds: readonly string[]
   };
 }
 
-const variants = new Set(catalog.panes.flatMap(row => [row.variant, row.runtimeVariant]));
+const variants = new Set([pipeline.primaryVariant, ...catalog.panes.map(row => row.runtimeVariant)]);
 export const DEMONSTRATOR_RUNTIME_TARGETS = PLAYGROUND_BUILD_TARGETS.filter(row => variants.has(row.variant));
 for (const variant of variants) runtimePluginId(variant);

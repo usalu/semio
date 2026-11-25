@@ -11,5 +11,8 @@ pub mod notify;
 #[path = "../🧭️protocol/🦀️.rs"]
 pub mod protocol;
 
+#[path = "../🧭️protocol/📄️tool-paging/🦀️.rs"]
+pub mod tool_paging;
+
 #[path = "../🧬️schema/📐️tool-shapes/🦀️.rs"]
 pub mod tool_shapes;

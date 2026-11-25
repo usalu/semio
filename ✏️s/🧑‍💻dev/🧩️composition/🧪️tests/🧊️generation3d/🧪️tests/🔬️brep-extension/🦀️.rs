@@ -102,7 +102,8 @@ pub fn serve(pending: &PendingExtensionInvocation) -> Result<Vec<u8>, Fault> {
             let target = request.get("operatorId").and_then(semio_framework_pack_json::Value::as_str)
                 .zip(request.get("nodeHash").and_then(semio_framework_pack_json::Value::as_u64));
             let (retired, pending) = cancel_brep_evaluations(target);
-            Ok(serde_json::to_vec(&serde_json::json!({"ok":true,"retired":retired,"pending":pending})).unwrap())
+            let value = crate::preview_reply::dto(serde_json::json!({"ok":true,"retired":retired,"pending":pending}));
+            Ok(semio_os_flow::os_pack::pack_rt::encode_wire_value(&value))
         }
         (BREP_EXTENSION_PLUGIN_ID, "tessellateCancel") => {
             let request = semio_framework_pack_json::parse(&pending.request_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| bad_request("tessellateCancel", error.to_string()))?;
@@ -110,7 +111,8 @@ pub fn serve(pending: &PendingExtensionInvocation) -> Result<Vec<u8>, Fault> {
                 (Some(handle), Some(tolerance)) => usize::from(crate::flow_operators::geometry_session().cancel_tessellation(handle, tolerance)),
                 _ => crate::flow_operators::geometry_session().cancel_all_tessellations(),
             };
-            Ok(semio_framework_pack_json::to_string(&semio_framework_pack_json::object([("ok".into(), semio_framework_pack_json::Value::Bool(true)), ("retired".into(), semio_framework_pack_json::Value::from(retired as u64))])).into_bytes())
+            let value = crate::preview_reply::dto(serde_json::json!({"ok":true,"retired":retired}));
+            Ok(semio_os_flow::os_pack::pack_rt::encode_wire_value(&value))
         }
         (extension, capability) => Err(Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.missing"), format!("no loaded plugin is addressed by '{extension}' (capability '{capability}')"))),
     }

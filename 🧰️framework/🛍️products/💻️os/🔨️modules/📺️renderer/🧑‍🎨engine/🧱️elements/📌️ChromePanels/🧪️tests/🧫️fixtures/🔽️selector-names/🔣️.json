@@ -1,0 +1,18 @@
+{
+  "locales": ["en", "de"],
+  "ids": [
+    "framework.settings.appearance",
+    "framework.settings.layout",
+    "framework.settings.driver",
+    "framework.settings.language",
+    "framework.settings.terminology",
+    "framework.settings.mergePolicy",
+    "framework.settings.driver.labels",
+    "framework.settings.driver.labelTier",
+    "framework.settings.driver.drag",
+    "framework.settings.driver.chrome",
+    "framework.settings.driver.gumball",
+    "framework.settings.driver.tooltips",
+    "framework.settings.driver.hotkeys"
+  ]
+}

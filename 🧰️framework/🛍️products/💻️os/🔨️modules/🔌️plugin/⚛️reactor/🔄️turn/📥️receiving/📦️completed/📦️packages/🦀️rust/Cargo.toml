@@ -1,0 +1,33 @@
+[package]
+name = "semio-plugin-reactor-receiving-completed"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+workspace = "../../../../../../../../../../.."
+
+[package.metadata.semio]
+role = "framework"
+id = "plugin-reactor-receiving-completed"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework = { path = "../../../../../../../../../../📦️packages/🦀️rust" }
+semio-framework-diagnostic = { path = "../../../../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
+semio-framework-job = { path = "../../../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust" }
+semio-framework-job-native-decode = { path = "../../../../../../../../../../🔨️modules/🧵️job/⏱️context/🛬️decode/📦️packages/🦀️rust" }
+semio-framework-pack = { path = "../../../../../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
+semio-framework-pack-json = { path = "../../../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-trace = { workspace = true }
+semio-framework-value = { path = "../../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-plugin-actor-host = { path = "../../../../../../🌐host/📦️packages/🦀️rust" }
+semio-plugin-reactor-receiving-source = { path = "../../../🎟️source/📦️packages/🦀️rust" }

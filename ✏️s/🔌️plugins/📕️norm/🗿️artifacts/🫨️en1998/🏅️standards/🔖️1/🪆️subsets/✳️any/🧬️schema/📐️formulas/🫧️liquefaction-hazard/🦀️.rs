@@ -68,7 +68,3 @@ pub fn pile_buckling_load_n(ei_nm2: f64, effective_length_m: f64) -> f64 {
 pub fn pile_unsupported_moment_nm(head_shear_n: f64, effective_length_m: f64, fixed_head: bool) -> f64 {
     head_shear_n.abs() * effective_length_m * if fixed_head { 0.5 } else { 1.0 }
 }
-
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;

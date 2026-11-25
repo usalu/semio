@@ -1,0 +1,2088 @@
+{
+  "version": 1,
+  "atMs": 1795593537942,
+  "workspace": "/Users/ueli/Documents/semio",
+  "summary": {
+    "running": 3,
+    "blocked": 0,
+    "waiting": 0,
+    "alerts": 6,
+    "warnings": 13
+  },
+  "memory": {
+    "totalMegabytes": 32768,
+    "availableMegabytes": 13992,
+    "floorMegabytes": 4096,
+    "spareMegabytes": 9896,
+    "pressure": "normal",
+    "swapUsedMegabytes": 1044,
+    "load": 21.75,
+    "sampleAgeSeconds": 0,
+    "cores": 10,
+    "admittedMegabytes": 12800,
+    "observedMegabytes": 4055,
+    "unobservedGrants": 0,
+    "overReservedMegabytes": 9244,
+    "underReservedMegabytes": 499,
+    "grants": 2,
+    "waiters": 0,
+    "warden": {
+      "origin": "ueli-mac.fritz.box",
+      "ageSeconds": 2,
+      "absent": false,
+      "mode": "observe",
+      "level": "calm",
+      "hold": false,
+      "guardMegabytes": 3276,
+      "dangerMegabytes": 1638,
+      "availableMegabytes": 13996,
+      "totalMegabytes": 32768,
+      "swapUsedMegabytes": 1044,
+      "swapOutMegabytesPerSecond": 0,
+      "compressedMegabytes": 1515,
+      "pressure": "normal",
+      "subjects": 4,
+      "subjectMegabytes": 4454,
+      "suspended": 0,
+      "counters": {
+        "suspended": 0,
+        "resumed": 0,
+        "cancelled": 0
+      },
+      "lastAlarm": {
+        "atMs": 1795586023548,
+        "action": "suspend",
+        "kind": "pool-child",
+        "pid": 32979,
+        "owner": "bun Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inferenc",
+        "megabytes": 1024,
+        "text": {
+          "en": "[warden] suspended pool-child pid 32979 (bun Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inferenc, 1024 MB): memory pressure is warn; host 8612 MB available (guard 3276 MB, danger 1638 MB), swap 16.9 MB/s, pressure warn, headroom 24996 MB (guard 8192 MB, danger 4096 MB) [observe mode: nothing was signalled]",
+          "de": "[Wächter] angehalten pool-child pid 32979 (bun Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inferenc, 1024 MB): der Speicherdruck ist Warnung; Host 8612 MB verfügbar (Wache 3276 MB, Gefahr 1638 MB), Swap 16.9 MB/s, Druck Warnung, Reserve 24996 MB (Wache 8192 MB, Gefahr 4096 MB) [Beobachtungsmodus: nichts wurde signalisiert]"
+        }
+      },
+      "overhead": {
+        "tickMillisecondsP95": 125.71,
+        "cpuBasisPoints": 81.19,
+        "residentMegabytes": 102.84
+      }
+    }
+  },
+  "runs": [
+    {
+      "pid": 42267,
+      "pids": [
+        42267
+      ],
+      "state": "running",
+      "ageSeconds": 1073,
+      "agent": "b7259958-a2bc-44f9-9f71-5d45d4cbea2b",
+      "session": "8015997530f4.a1sjuza5c0n",
+      "operation": "cargo",
+      "memory": {
+        "admittedMegabytes": 9728,
+        "observedMegabytes": 484,
+        "deltaMegabytes": -9244,
+        "jobs": 4
+      },
+      "exclusive": []
+    },
+    {
+      "pid": 54234,
+      "pids": [
+        54234,
+        54251
+      ],
+      "state": "running",
+      "ageSeconds": 396,
+      "agent": "default",
+      "session": "a3fba9d52db0.d",
+      "command": "fcb4b619225b457cb3ccd80981d8dda7d988468e11f7af887b94acf35d920c3f show projects",
+      "operation": "show",
+      "phase": "verification",
+      "done": 0,
+      "total": 4,
+      "etaSeconds": 1080,
+      "priority": "background",
+      "implementation": {
+        "state": "progressing",
+        "digest": "db35cb6176b5",
+        "ageSeconds": 395,
+        "freshness": "older"
+      },
+      "memory": {
+        "admittedMegabytes": 3072,
+        "observedMegabytes": 3571,
+        "deltaMegabytes": 499,
+        "jobs": 1
+      },
+      "exclusive": [
+        "…nts/semio/.cache/b/g/m/generations:49fd2cd0d7711a456f797a4d"
+      ]
+    },
+    {
+      "pid": 54700,
+      "pids": [
+        54700
+      ],
+      "state": "running",
+      "ageSeconds": 368,
+      "agent": "default",
+      "session": "a3fba9d52db0.d",
+      "command": "81450cc2fedc747acd8b8e2324c18e0e8fc8577a6e73b973f60fce5c441af45b cache gc --area",
+      "phase": "node",
+      "priority": "agent",
+      "implementation": {
+        "state": "progressing",
+        "digest": "638cc47197e2",
+        "ageSeconds": 372,
+        "freshness": "current"
+      },
+      "memory": {
+        "admittedMegabytes": null,
+        "observedMegabytes": null,
+        "deltaMegabytes": null,
+        "jobs": 0
+      },
+      "exclusive": [
+        "…sitory-graph-optional-collector:/Users/ueli/Documents/semio"
+      ]
+    }
+  ],
+  "queues": {
+    "graph": {
+      "builder": null,
+      "computers": 0,
+      "slots": 0,
+      "waiting": 0,
+      "longestWaitSeconds": 0,
+      "estimatedWaitSeconds": null
+    },
+    "capacity": {
+      "floorMegabytes": 4096,
+      "spareMegabytes": 9896,
+      "grants": 2,
+      "waiters": []
+    },
+    "leases": [],
+    "leasesOmitted": 0
+  },
+  "bazel": {
+    "slots": 0,
+    "live": 0,
+    "held": 0,
+    "rssMegabytes": 0,
+    "servers": []
+  },
+  "storage": {
+    "hostFreeBytes": 148100452352,
+    "hostFreeFloorBytes": 16106127360,
+    "machine": {
+      "totalBytes": 212937474048,
+      "effectiveTotalBytes": 212937474048,
+      "usedBytes": 72849551360,
+      "footprintBytes": 74755801088,
+      "overBytes": 0,
+      "evictBytes": 3674936935,
+      "blockedBytes": 0,
+      "source": "default"
+    },
+    "overAreas": [],
+    "images": [
+      {
+        "id": "control",
+        "kind": "control",
+        "state": "directory",
+        "usedBytes": null,
+        "capacityBytes": null,
+        "budgetBytes": null,
+        "source": "unknown",
+        "usedBasisPoints": null
+      },
+      {
+        "id": "dependencies",
+        "kind": "partition",
+        "state": "mounted",
+        "usedBytes": 27708219392,
+        "capacityBytes": 38653657088,
+        "budgetBytes": 38653657088,
+        "source": "statfs",
+        "usedBasisPoints": 7168
+      },
+      {
+        "id": "diagnostics",
+        "kind": "partition",
+        "state": "mounted",
+        "usedBytes": 626688,
+        "capacityBytes": 2146435072,
+        "budgetBytes": 2146435072,
+        "source": "statfs",
+        "usedBasisPoints": 2
+      },
+      {
+        "id": "fleet-state",
+        "kind": "control",
+        "state": "directory",
+        "usedBytes": 3580506112,
+        "capacityBytes": null,
+        "budgetBytes": null,
+        "source": "recorded",
+        "usedBasisPoints": null
+      },
+      {
+        "id": "graph",
+        "kind": "partition",
+        "state": "mounted",
+        "usedBytes": 19136819200,
+        "capacityBytes": 19326304256,
+        "budgetBytes": 6441402368,
+        "source": "statfs",
+        "usedBasisPoints": 9901
+      },
+      {
+        "id": "leases",
+        "kind": "partition",
+        "state": "mounted",
+        "usedBytes": 5013504,
+        "capacityBytes": 66019328,
+        "budgetBytes": 62914560,
+        "source": "statfs",
+        "usedBasisPoints": 759
+      },
+      {
+        "id": "nx",
+        "kind": "partition",
+        "state": "mounted",
+        "usedBytes": 446279680,
+        "capacityBytes": 1609564160,
+        "budgetBytes": 1609564160,
+        "source": "statfs",
+        "usedBasisPoints": 2772
+      },
+      {
+        "id": "products",
+        "kind": "partition",
+        "state": "mounted",
+        "usedBytes": 2075660288,
+        "capacityBytes": 25768755200,
+        "budgetBytes": 25768755200,
+        "source": "statfs",
+        "usedBasisPoints": 805
+      },
+      {
+        "id": "rust",
+        "kind": "partition",
+        "state": "mounted",
+        "usedBytes": 12208902144,
+        "capacityBytes": 42948624384,
+        "budgetBytes": 103079215104,
+        "source": "statfs",
+        "usedBasisPoints": 2842
+      },
+      {
+        "id": "tools",
+        "kind": "partition",
+        "state": "mounted",
+        "usedBytes": 4005572608,
+        "capacityBytes": 8588886016,
+        "budgetBytes": 8588886016,
+        "source": "statfs",
+        "usedBasisPoints": 4663
+      }
+    ]
+  },
+  "sealed": {
+    "mode": "live",
+    "drifted": 1,
+    "blocked": 0,
+    "entries": [
+      {
+        "entry": "🏛️sealed/🚪️entry",
+        "digest": "26f92099bb6d",
+        "files": 1520,
+        "bytes": 18626484,
+        "promotedAtMs": 1793007314893,
+        "ageSeconds": 2586223,
+        "fresh": false,
+        "changed": 2317,
+        "last": {
+          "atMs": 1793007314895,
+          "added": 4,
+          "removed": 0,
+          "changed": 11
+        }
+      }
+    ]
+  },
+  "generation": null,
+  "scheduler": {
+    "budgetMegabytes": 28672,
+    "reservedMegabytes": 0,
+    "running": 0,
+    "queued": 0,
+    "waiting": 0,
+    "longestWaitSeconds": 0,
+    "sharedTickets": 0,
+    "jobs": [],
+    "agents": [
+      {
+        "agent": "caf759d9-ccba-4796-9909-827125acd710",
+        "running": 0,
+        "queued": 0,
+        "served": 1,
+        "percent": 100
+      }
+    ]
+  },
+  "fleet": {
+    "scheduler": "http://192.168.178.70:8981",
+    "treeCode": "36d62b285841a7a0",
+    "machines": [
+      {
+        "origin": "g1-m01",
+        "platform": "macos-arm64-312cc5b2932fbb31",
+        "pressure": "normal",
+        "load": 11.23,
+        "cores": 12,
+        "running": 2,
+        "queued": 0,
+        "headroom": false,
+        "ageSeconds": 5,
+        "code": "36d62b285841a7a0",
+        "worker": "refusing",
+        "why": {
+          "code": "no-headroom",
+          "en": "the machine has no headroom for one more action (memory)",
+          "de": "die Maschine hat keinen Spielraum für eine weitere Aktion (memory)"
+        },
+        "offloadedIn": 533,
+        "offloadedOut": 0,
+        "refused": 9,
+        "cacheHit": 52806,
+        "cacheMiss": 196700,
+        "cacheSkipped": 61574,
+        "cacheSkipReasons": {
+          "upload-entry-gone": 10804,
+          "bypass-no-artifact-messages": 357,
+          "upload-failed": 14684,
+          "upload-expired-down": 339,
+          "publish-interface": 6,
+          "publish-refused": 24,
+          "diverged": 16,
+          "root-key-failed": 2,
+          "upload-expired-ok": 1,
+          "upload-expired": 13,
+          "key-incomplete": 7337,
+          "spool-full": 27743,
+          "path-dependent": 248
+        }
+      },
+      {
+        "origin": "g1-m02",
+        "platform": "macos-arm64-312cc5b2932fbb31",
+        "pressure": "normal",
+        "load": 9.59,
+        "cores": 10,
+        "running": 3,
+        "queued": 0,
+        "headroom": true,
+        "ageSeconds": 2,
+        "code": "36d62b285841a7a0",
+        "worker": "idle",
+        "offloadedIn": 466,
+        "offloadedOut": 69,
+        "refused": 6,
+        "cacheHit": 61553,
+        "cacheMiss": 276356,
+        "cacheSkipped": 80764,
+        "cacheSkipReasons": {
+          "upload-entry-gone": 2276,
+          "upload-refused": 1,
+          "bypass-no-artifact-messages": 614,
+          "upload-failed": 16599,
+          "upload-expired-down": 1158,
+          "publish-interface": 273,
+          "publish-refused": 12,
+          "diverged": 228,
+          "upload-expired": 698,
+          "key-incomplete": 4548,
+          "publish-error": 2,
+          "bypass-native-link": 7,
+          "breaker-down": 2,
+          "spool-full": 53450,
+          "path-dependent": 896
+        }
+      },
+      {
+        "origin": "g1-m03",
+        "platform": "macos-arm64-312cc5b2932fbb31",
+        "pressure": "normal",
+        "load": 8.91,
+        "cores": 10,
+        "running": 6,
+        "queued": 17,
+        "headroom": false,
+        "ageSeconds": 5,
+        "code": "36d62b285841a7a0",
+        "worker": "refusing",
+        "why": {
+          "code": "no-headroom",
+          "en": "the machine has no headroom for one more action (queue-order)",
+          "de": "die Maschine hat keinen Spielraum für eine weitere Aktion (queue-order)"
+        },
+        "offloadedIn": 91,
+        "offloadedOut": 0,
+        "refused": 1,
+        "cacheHit": 22375,
+        "cacheMiss": 30007,
+        "cacheSkipped": 8,
+        "cacheSkipReasons": {
+          "bypass-no-artifact-messages": 3,
+          "upload-failed": 1,
+          "diverged": 1,
+          "path-dependent": 3
+        }
+      },
+      {
+        "origin": "g1-m04",
+        "platform": "linux-amd64-e77b488815717bdf",
+        "pressure": "normal",
+        "load": 9.47,
+        "cores": 12,
+        "running": 0,
+        "queued": 0,
+        "headroom": true,
+        "ageSeconds": 5,
+        "code": "9a5947d500a861f1",
+        "worker": "idle",
+        "offloadedIn": 0,
+        "offloadedOut": 0,
+        "refused": 0,
+        "cacheHit": 15547,
+        "cacheMiss": 52909,
+        "cacheSkipped": 4436,
+        "cacheSkipReasons": {}
+      },
+      {
+        "origin": "g1-m05",
+        "platform": "windows-amd64-20b3468084db2170",
+        "pressure": "normal",
+        "load": 16,
+        "cores": 16,
+        "running": 4,
+        "queued": 0,
+        "headroom": true,
+        "ageSeconds": 1,
+        "code": "9511dcd9af5b3764",
+        "worker": "idle",
+        "offloadedIn": 0,
+        "offloadedOut": 0,
+        "refused": 0,
+        "cacheHit": 0,
+        "cacheMiss": 154,
+        "cacheSkipped": 521,
+        "cacheSkipReasons": {
+          "upload-expired": 521
+        }
+      },
+      {
+        "origin": "g1-m06",
+        "platform": "macos-arm64-312cc5b2932fbb31",
+        "pressure": "warn",
+        "load": 16.45,
+        "cores": 10,
+        "running": 0,
+        "queued": 0,
+        "headroom": true,
+        "ageSeconds": 3,
+        "code": "36d62b285841a7a0",
+        "worker": "idle",
+        "offloadedIn": 16,
+        "offloadedOut": 0,
+        "refused": 0,
+        "cacheHit": 70645,
+        "cacheMiss": 130221,
+        "cacheSkipped": 60740,
+        "cacheSkipReasons": {
+          "upload-entry-gone": 3320,
+          "upload-refused": 1,
+          "bypass-no-artifact-messages": 210,
+          "upload-failed": 3211,
+          "run-path-dependent": 4,
+          "upload-expired-down": 377,
+          "publish-interface": 305,
+          "publish-refused": 3,
+          "diverged": 16,
+          "root-key-failed": 3,
+          "upload-expired": 311,
+          "key-incomplete": 1661,
+          "bypass-native-link": 31,
+          "spool-full": 50412,
+          "path-dependent": 404,
+          "no-compiler-identity": 471
+        }
+      },
+      {
+        "origin": "g1-m07",
+        "platform": "macos-arm64-312cc5b2932fbb31",
+        "pressure": "normal",
+        "load": 20.64,
+        "cores": 10,
+        "running": 1,
+        "queued": 0,
+        "headroom": true,
+        "ageSeconds": 1,
+        "code": "36d62b285841a7a0",
+        "worker": "idle",
+        "offloadedIn": 123,
+        "offloadedOut": 0,
+        "refused": 6,
+        "cacheHit": 89387,
+        "cacheMiss": 121119,
+        "cacheSkipped": 49204,
+        "cacheSkipReasons": {
+          "bypass-no-artifact-messages": 209,
+          "upload-failed": 21294,
+          "upload-expired-down": 9113,
+          "publish-interface": 60,
+          "diverged": 76,
+          "root-key-failed": 4,
+          "upload-expired-ok": 1,
+          "upload-expired": 723,
+          "key-incomplete": 1555,
+          "spool-full": 15678,
+          "path-dependent": 491
+        }
+      },
+      {
+        "origin": "g1-m08",
+        "platform": "macos-arm64-312cc5b2932fbb31",
+        "pressure": "warn",
+        "load": 18.66,
+        "cores": 10,
+        "running": 1,
+        "queued": 0,
+        "headroom": false,
+        "ageSeconds": 3,
+        "code": "36d62b285841a7a0",
+        "worker": "refusing",
+        "why": {
+          "code": "no-headroom",
+          "en": "the machine has no headroom for one more action (memory)",
+          "de": "die Maschine hat keinen Spielraum für eine weitere Aktion (memory)"
+        },
+        "offloadedIn": 1,
+        "offloadedOut": 905,
+        "refused": 1,
+        "cacheHit": 247989,
+        "cacheMiss": 168135,
+        "cacheSkipped": 33735,
+        "cacheSkipReasons": {
+          "upload-entry-gone": 7412,
+          "bypass-no-artifact-messages": 288,
+          "upload-failed": 15500,
+          "upload-expired-down": 418,
+          "publish-interface": 6,
+          "publish-refused": 18,
+          "diverged": 23,
+          "upload-expired": 208,
+          "key-incomplete": 8894,
+          "publish-error": 1,
+          "spool-full": 471,
+          "unreadable-source": 1,
+          "path-dependent": 495
+        }
+      },
+      {
+        "origin": "g1-m10",
+        "platform": "macos-arm64-312cc5b2932fbb31",
+        "pressure": "normal",
+        "load": 5.11,
+        "cores": 10,
+        "running": 3,
+        "queued": 1,
+        "headroom": false,
+        "ageSeconds": 5,
+        "code": "36d62b285841a7a0",
+        "worker": "refusing",
+        "why": {
+          "code": "no-headroom",
+          "en": "the machine has no headroom for one more action (queue-order)",
+          "de": "die Maschine hat keinen Spielraum für eine weitere Aktion (queue-order)"
+        },
+        "offloadedIn": 0,
+        "offloadedOut": 0,
+        "refused": 0,
+        "cacheHit": 54896,
+        "cacheMiss": 124678,
+        "cacheSkipped": 16750,
+        "cacheSkipReasons": {
+          "upload-entry-gone": 2101,
+          "bypass-no-artifact-messages": 158,
+          "incremental": 1,
+          "upload-failed": 849,
+          "run-path-dependent": 1,
+          "diverged": 69,
+          "upload-expired": 513,
+          "key-incomplete": 2680,
+          "spool-full": 10292,
+          "path-dependent": 86
+        }
+      },
+      {
+        "origin": "g1-m11",
+        "platform": "macos-arm64-312cc5b2932fbb31",
+        "pressure": "normal",
+        "load": 6.68,
+        "cores": 10,
+        "running": 0,
+        "queued": 0,
+        "headroom": true,
+        "ageSeconds": 4,
+        "code": "36d62b285841a7a0",
+        "worker": "absent",
+        "why": {
+          "code": "partition-detached",
+          "en": "the cache partition of the worker home is not attached yet (The partition dependencies is not attached, so the area remote-execution-worker has no home yet)",
+          "de": "die Cache-Partition des Worker-Zuhauses ist noch nicht angehängt (The partition dependencies is not attached, so the area remote-execution-worker has no home yet)"
+        },
+        "offloadedIn": 0,
+        "offloadedOut": 0,
+        "refused": 0,
+        "cacheHit": 33866,
+        "cacheMiss": 97813,
+        "cacheSkipped": 30808,
+        "cacheSkipReasons": {
+          "upload-entry-gone": 9,
+          "bypass-no-artifact-messages": 106,
+          "upload-failed": 1265,
+          "publish-interface": 2,
+          "publish-refused": 2,
+          "diverged": 14,
+          "root-key-failed": 1,
+          "upload-expired": 524,
+          "key-incomplete": 1024,
+          "publish-error": 2,
+          "bypass-native-link": 8,
+          "spool-full": 27737,
+          "path-dependent": 114
+        }
+      },
+      {
+        "origin": "g1-m12",
+        "platform": "macos-arm64-312cc5b2932fbb31",
+        "pressure": "normal",
+        "load": 7.63,
+        "cores": 10,
+        "running": 0,
+        "queued": 0,
+        "headroom": true,
+        "ageSeconds": 5,
+        "code": "36d62b285841a7a0",
+        "worker": "idle",
+        "offloadedIn": 236,
+        "offloadedOut": 0,
+        "refused": 3,
+        "cacheHit": 49508,
+        "cacheMiss": 74933,
+        "cacheSkipped": 29498,
+        "cacheSkipReasons": {
+          "bypass-no-artifact-messages": 160,
+          "upload-failed": 2692,
+          "upload-expired-down": 711,
+          "publish-interface": 22,
+          "publish-refused": 4,
+          "diverged": 17,
+          "upload-breaker": 1,
+          "upload-expired": 652,
+          "key-incomplete": 1122,
+          "publish-no-outputs": 1,
+          "breaker-down": 238,
+          "spool-full": 23769,
+          "path-dependent": 109
+        }
+      },
+      {
+        "origin": "g1-m13",
+        "platform": "macos-arm64-312cc5b2932fbb31",
+        "pressure": "critical",
+        "load": 13.26,
+        "cores": 10,
+        "running": 0,
+        "queued": 0,
+        "headroom": false,
+        "ageSeconds": 4,
+        "code": "36d62b285841a7a0",
+        "worker": "refusing",
+        "why": {
+          "code": "no-headroom",
+          "en": "the machine has no headroom for one more action (pressure-critical)",
+          "de": "die Maschine hat keinen Spielraum für eine weitere Aktion (pressure-critical)"
+        },
+        "offloadedIn": 3,
+        "offloadedOut": 12,
+        "refused": 1,
+        "cacheHit": 1379,
+        "cacheMiss": 19778,
+        "cacheSkipped": 4489,
+        "cacheSkipReasons": {
+          "bypass-no-artifact-messages": 22,
+          "upload-failed": 3672,
+          "upload-expired": 590,
+          "key-incomplete": 170,
+          "path-dependent": 35
+        }
+      },
+      {
+        "origin": "g1-m14",
+        "platform": "macos-arm64-312cc5b2932fbb31",
+        "pressure": "normal",
+        "load": 7.1,
+        "cores": 10,
+        "running": 1,
+        "queued": 0,
+        "headroom": true,
+        "ageSeconds": 5,
+        "code": "36d62b285841a7a0",
+        "worker": "idle",
+        "offloadedIn": 20,
+        "offloadedOut": 16,
+        "refused": 1,
+        "cacheHit": 661,
+        "cacheMiss": 300,
+        "cacheSkipped": 8,
+        "cacheSkipReasons": {
+          "bypass-no-artifact-messages": 3,
+          "upload-failed": 1,
+          "diverged": 1,
+          "path-dependent": 3
+        }
+      },
+      {
+        "origin": "g1-server",
+        "platform": "macos-arm64-312cc5b2932fbb31",
+        "pressure": "normal",
+        "load": 21.75,
+        "cores": 10,
+        "running": 2,
+        "queued": 0,
+        "headroom": true,
+        "ageSeconds": 1,
+        "code": "36d62b285841a7a0",
+        "worker": "idle",
+        "offloadedIn": 2,
+        "offloadedOut": 461,
+        "refused": 0,
+        "cacheHit": 20133,
+        "cacheMiss": 40900,
+        "cacheSkipped": 5575,
+        "cacheSkipReasons": {
+          "upload-entry-gone": 64,
+          "bypass-no-artifact-messages": 49,
+          "incremental": 2,
+          "upload-failed": 137,
+          "publish-refused": 1,
+          "unreadable-extern": 1,
+          "upload-expired": 1,
+          "key-incomplete": 254,
+          "publish-no-outputs": 1,
+          "read-only": 5053,
+          "path-dependent": 12
+        }
+      }
+    ],
+    "queued": 0,
+    "executing": 0,
+    "offloadedIn": 1491,
+    "offloadedOut": 1463,
+    "refused": 28,
+    "declined": 5,
+    "retried": 32,
+    "cacheHit": 720745,
+    "cacheMiss": 1334003,
+    "cache": {
+      "hits": 2721941,
+      "misses": 410203,
+      "puts": 301197
+    },
+    "claims": {
+      "active": 56,
+      "waiting": 0,
+      "oldestSeconds": 1181
+    }
+  },
+  "workers": {
+    "offlineSeconds": 600,
+    "counts": {
+      "ready": 8,
+      "working": 5,
+      "idle": 0,
+      "silent": 0,
+      "offline": 0,
+      "absent": 2
+    },
+    "rows": [
+      {
+        "origin": "g1-m01",
+        "platform": "macos",
+        "liveness": "ready",
+        "recorded": "ready",
+        "stage": null,
+        "stageIndex": 0,
+        "stageCount": 5,
+        "attempts": 0,
+        "recordAgeSeconds": 24,
+        "heartbeatAgeSeconds": 1,
+        "refusal": null,
+        "recent": null,
+        "tree": {
+          "reference": "g1-server",
+          "files": 10,
+          "onlyThere": 10,
+          "onlyHere": 0,
+          "stale": true,
+          "verdict": "ok"
+        },
+        "memory": {
+          "origin": "g1-m01",
+          "ageSeconds": 0,
+          "absent": false,
+          "mode": "enforce",
+          "level": "guard",
+          "hold": true,
+          "guardMegabytes": 1638,
+          "dangerMegabytes": 819,
+          "availableMegabytes": 3561,
+          "totalMegabytes": 16384,
+          "swapUsedMegabytes": 1079,
+          "swapOutMegabytesPerSecond": 0,
+          "compressedMegabytes": 6148,
+          "pressure": "warn",
+          "subjects": 7,
+          "subjectMegabytes": 6125,
+          "suspended": 0,
+          "counters": {
+            "suspended": 6,
+            "resumed": 3,
+            "cancelled": 0
+          },
+          "lastAlarm": {
+            "atMs": 1795593148527,
+            "action": "report",
+            "kind": "remote-unit",
+            "pid": 97038,
+            "owner": "bun Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution",
+            "megabytes": 2375,
+            "text": {
+              "en": "[warden] reported remote-unit pid 97038 (bun Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution, 2375 MB): unit semio_plugin_actor_input|host peaked at 2375 MB, above its library ceiling of 1536 MB, and it is not on the carving list: carve it along the domain taxonomy so that it fits; host 5597 MB available (guard 1638 MB, danger 819 MB), swap 0 MB/s, pressure normal, headroom 13789 MB (guard 4096 MB, danger 2048 MB)",
+              "de": "[Wächter] gemeldet remote-unit pid 97038 (bun Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution, 2375 MB): Einheit semio_plugin_actor_input|host erreichte 2375 MB und liegt über ihrer Obergrenze Bibliothek von 1536 MB; sie steht nicht auf der Carving-Liste: entlang der Domänen-Taxonomie schneiden, damit sie passt; Host 5597 MB verfügbar (Wache 1638 MB, Gefahr 819 MB), Swap 0 MB/s, Druck normal, Reserve 13789 MB (Wache 4096 MB, Gefahr 2048 MB)"
+            }
+          },
+          "overhead": {
+            "tickMillisecondsP95": 107.93,
+            "cpuBasisPoints": 104.14,
+            "residentMegabytes": 50.97
+          }
+        }
+      },
+      {
+        "origin": "g1-m02",
+        "platform": "macos",
+        "liveness": "ready",
+        "recorded": "ready",
+        "stage": null,
+        "stageIndex": 0,
+        "stageCount": 5,
+        "attempts": 0,
+        "recordAgeSeconds": 15,
+        "heartbeatAgeSeconds": 1,
+        "refusal": null,
+        "recent": null,
+        "tree": {
+          "reference": "g1-server",
+          "files": 10,
+          "onlyThere": 10,
+          "onlyHere": 0,
+          "stale": true,
+          "verdict": "ok"
+        },
+        "memory": {
+          "origin": "g1-m02",
+          "ageSeconds": 4,
+          "absent": false,
+          "mode": "enforce",
+          "level": "calm",
+          "hold": false,
+          "guardMegabytes": 1638,
+          "dangerMegabytes": 819,
+          "availableMegabytes": 4813,
+          "totalMegabytes": 16384,
+          "swapUsedMegabytes": 1741,
+          "swapOutMegabytesPerSecond": 0,
+          "compressedMegabytes": 4812,
+          "pressure": "normal",
+          "subjects": 4,
+          "subjectMegabytes": 3241,
+          "suspended": 0,
+          "counters": {
+            "suspended": 19,
+            "resumed": 19,
+            "cancelled": 7
+          },
+          "lastAlarm": {
+            "atMs": 1795593351354,
+            "action": "resume",
+            "kind": "headless-browser",
+            "pid": 59491,
+            "owner": "bun react-journey-probe.mjs",
+            "megabytes": 919,
+            "text": {
+              "en": "[warden] resumed headless-browser pid 59491 (bun react-journey-probe.mjs, 919 MB): memory is calm again; host 2796 MB available (guard 1638 MB, danger 819 MB), swap 5.28 MB/s, pressure warn, headroom 10988 MB (guard 4096 MB, danger 2048 MB)",
+              "de": "[Wächter] fortgesetzt headless-browser pid 59491 (bun react-journey-probe.mjs, 919 MB): der Speicher ist wieder ruhig; Host 2796 MB verfügbar (Wache 1638 MB, Gefahr 819 MB), Swap 5.28 MB/s, Druck Warnung, Reserve 10988 MB (Wache 4096 MB, Gefahr 2048 MB)"
+            }
+          },
+          "overhead": {
+            "tickMillisecondsP95": 177.41,
+            "cpuBasisPoints": 105.95,
+            "residentMegabytes": 53.77
+          }
+        }
+      },
+      {
+        "origin": "g1-m03",
+        "platform": "macos",
+        "liveness": "ready",
+        "recorded": "ready",
+        "stage": null,
+        "stageIndex": 0,
+        "stageCount": 5,
+        "attempts": 0,
+        "recordAgeSeconds": 15,
+        "heartbeatAgeSeconds": 1,
+        "refusal": null,
+        "recent": null,
+        "tree": {
+          "reference": "g1-server",
+          "files": 9,
+          "onlyThere": 9,
+          "onlyHere": 0,
+          "stale": true,
+          "verdict": "ok"
+        },
+        "memory": {
+          "origin": "g1-m03",
+          "ageSeconds": 1,
+          "absent": false,
+          "mode": "enforce",
+          "level": "calm",
+          "hold": false,
+          "guardMegabytes": 1638,
+          "dangerMegabytes": 819,
+          "availableMegabytes": 6603,
+          "totalMegabytes": 16384,
+          "swapUsedMegabytes": 832,
+          "swapOutMegabytesPerSecond": 0,
+          "compressedMegabytes": 1135,
+          "pressure": "normal",
+          "subjects": 0,
+          "subjectMegabytes": 0,
+          "suspended": 0,
+          "counters": {
+            "suspended": 0,
+            "resumed": 0,
+            "cancelled": 0
+          },
+          "lastAlarm": {
+            "atMs": 1795590698806,
+            "action": "report",
+            "kind": "remote-unit",
+            "pid": 90898,
+            "owner": "bun Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution",
+            "megabytes": 1697,
+            "text": {
+              "en": "[warden] reported remote-unit pid 90898 (bun Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution, 1697 MB): unit semio_s_artifact_stdio_pdf_model|wasm32-unknown-unknown peaked at 1697 MB, above its library ceiling of 1536 MB, and it is not on the carving list: carve it along the domain taxonomy so that it fits; host 8779 MB available (guard 1638 MB, danger 819 MB), swap 0 MB/s, pressure normal, headroom 16971 MB (guard 4096 MB, danger 2048 MB)",
+              "de": "[Wächter] gemeldet remote-unit pid 90898 (bun Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution, 1697 MB): Einheit semio_s_artifact_stdio_pdf_model|wasm32-unknown-unknown erreichte 1697 MB und liegt über ihrer Obergrenze Bibliothek von 1536 MB; sie steht nicht auf der Carving-Liste: entlang der Domänen-Taxonomie schneiden, damit sie passt; Host 8779 MB verfügbar (Wache 1638 MB, Gefahr 819 MB), Swap 0 MB/s, Druck normal, Reserve 16971 MB (Wache 4096 MB, Gefahr 2048 MB)"
+            }
+          },
+          "overhead": {
+            "tickMillisecondsP95": 33.88,
+            "cpuBasisPoints": 60.68,
+            "residentMegabytes": 82.02
+          }
+        }
+      },
+      {
+        "origin": "g1-m04",
+        "platform": "linux",
+        "liveness": "working",
+        "recorded": "waiting",
+        "stage": "dependencies",
+        "stageIndex": 3,
+        "stageCount": 5,
+        "attempts": 21,
+        "recordAgeSeconds": 42,
+        "heartbeatAgeSeconds": 0,
+        "refusal": {
+          "code": "disk-unfit",
+          "en": "Worker is unfit (disk): stage dependencies needs 6144 MB free in /home/deck/semio/.cache but only 4317 MB are free after every derivable cache was collected, 1827 MB are missing. It is said once and not retried in a loop: the machine is checked again when 1024 MB more are free or after 6 h. Disk consumers and their collection commands: /home/deck/semio/.cache/b/r/m/cargo (2178 MB): `repo cache gc --area=cargo-store`.",
+          "de": "Arbeiter ist ungeeignet (Platte): Stufe dependencies braucht 6144 MB frei in /home/deck/semio/.cache, aber nur 4317 MB sind frei, nachdem jeder ableitbare Cache gesammelt wurde, 1827 MB fehlen. Das wird einmal gesagt und nicht in einer Schleife wiederholt: die Maschine wird erneut geprüft, wenn 1024 MB mehr frei sind oder nach 6 h. Plattenverbraucher und ihre Sammelbefehle: /home/deck/semio/.cache/b/r/m/cargo (2178 MB): `repo cache gc --area=cargo-store`."
+        },
+        "recent": null,
+        "tree": null,
+        "memory": {
+          "origin": "g1-m04",
+          "ageSeconds": 1,
+          "absent": false,
+          "mode": "enforce",
+          "level": "calm",
+          "hold": false,
+          "guardMegabytes": 1584,
+          "dangerMegabytes": 792,
+          "availableMegabytes": 7955,
+          "totalMegabytes": 15848,
+          "swapUsedMegabytes": 4361,
+          "swapOutMegabytesPerSecond": 0.49,
+          "compressedMegabytes": null,
+          "pressure": "normal",
+          "subjects": 3,
+          "subjectMegabytes": 2951,
+          "suspended": 0,
+          "counters": {
+            "suspended": 99,
+            "resumed": 85,
+            "cancelled": 15
+          },
+          "lastAlarm": {
+            "atMs": 1795592887105,
+            "action": "resume",
+            "kind": "pool-child",
+            "pid": 2158336,
+            "owner": "bun semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️projec",
+            "megabytes": 1238,
+            "text": {
+              "en": "[warden] resumed pool-child pid 2158336 (bun semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️projec, 1238 MB): memory is calm again; host 2307 MB available (guard 1584 MB, danger 792 MB), swap 13.75 MB/s, pressure warn, headroom 6176 MB (guard 3962 MB, danger 1981 MB)",
+              "de": "[Wächter] fortgesetzt pool-child pid 2158336 (bun semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️projec, 1238 MB): der Speicher ist wieder ruhig; Host 2307 MB verfügbar (Wache 1584 MB, Gefahr 792 MB), Swap 13.75 MB/s, Druck Warnung, Reserve 6176 MB (Wache 3962 MB, Gefahr 1981 MB)"
+            }
+          },
+          "overhead": {
+            "tickMillisecondsP95": 98.52,
+            "cpuBasisPoints": 273.02,
+            "residentMegabytes": 54.17
+          }
+        }
+      },
+      {
+        "origin": "g1-m05",
+        "platform": "windows",
+        "liveness": "working",
+        "recorded": "running",
+        "stage": "dependencies",
+        "stageIndex": 3,
+        "stageCount": 5,
+        "attempts": 43,
+        "recordAgeSeconds": 11,
+        "heartbeatAgeSeconds": 1,
+        "refusal": null,
+        "recent": {
+          "hours": 12,
+          "ok": 0,
+          "failed": 1,
+          "stalled": 3,
+          "timedOut": 0,
+          "seconds": 23891
+        },
+        "tree": {
+          "reference": "g1-server",
+          "files": 429,
+          "onlyThere": 336,
+          "onlyHere": 93,
+          "stale": true,
+          "verdict": "lagging"
+        },
+        "memory": {
+          "origin": "g1-m05",
+          "ageSeconds": 23,
+          "absent": false,
+          "mode": "observe",
+          "level": "calm",
+          "hold": false,
+          "guardMegabytes": 4096,
+          "dangerMegabytes": 2048,
+          "availableMegabytes": 15607,
+          "totalMegabytes": 65447,
+          "swapUsedMegabytes": null,
+          "swapOutMegabytesPerSecond": null,
+          "compressedMegabytes": null,
+          "pressure": "normal",
+          "subjects": 0,
+          "subjectMegabytes": 0,
+          "suspended": 0,
+          "counters": {
+            "suspended": 0,
+            "resumed": 0,
+            "cancelled": 0
+          },
+          "lastAlarm": null,
+          "overhead": {
+            "tickMillisecondsP95": 6280.21,
+            "cpuBasisPoints": 39.44,
+            "residentMegabytes": 57.12
+          }
+        }
+      },
+      {
+        "origin": "g1-m06",
+        "platform": "macos",
+        "liveness": "ready",
+        "recorded": "ready",
+        "stage": null,
+        "stageIndex": 0,
+        "stageCount": 5,
+        "attempts": 0,
+        "recordAgeSeconds": 12,
+        "heartbeatAgeSeconds": 0,
+        "refusal": null,
+        "recent": null,
+        "tree": {
+          "reference": "g1-server",
+          "files": 6,
+          "onlyThere": 5,
+          "onlyHere": 1,
+          "stale": true,
+          "verdict": "ok"
+        },
+        "memory": {
+          "origin": "g1-m06",
+          "ageSeconds": 4,
+          "absent": false,
+          "mode": "enforce",
+          "level": "guard",
+          "hold": true,
+          "guardMegabytes": 1638,
+          "dangerMegabytes": 819,
+          "availableMegabytes": 3931,
+          "totalMegabytes": 16384,
+          "swapUsedMegabytes": 2910,
+          "swapOutMegabytesPerSecond": 0,
+          "compressedMegabytes": 5963,
+          "pressure": "warn",
+          "subjects": 7,
+          "subjectMegabytes": 6687,
+          "suspended": 0,
+          "counters": {
+            "suspended": 12,
+            "resumed": 13,
+            "cancelled": 6
+          },
+          "lastAlarm": {
+            "atMs": 1795593021115,
+            "action": "report",
+            "kind": "remote-unit",
+            "pid": 87495,
+            "owner": "bun Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution",
+            "megabytes": 1548,
+            "text": {
+              "en": "[warden] reported remote-unit pid 87495 (bun Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution, 1548 MB): unit semio_framework_kernel|host peaked at 1548 MB, above its library ceiling of 1536 MB, and it is not on the carving list: carve it along the domain taxonomy so that it fits; host 5414 MB available (guard 1638 MB, danger 819 MB), swap 3.49 MB/s, pressure normal, headroom 11163 MB (guard 4096 MB, danger 2048 MB)",
+              "de": "[Wächter] gemeldet remote-unit pid 87495 (bun Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution, 1548 MB): Einheit semio_framework_kernel|host erreichte 1548 MB und liegt über ihrer Obergrenze Bibliothek von 1536 MB; sie steht nicht auf der Carving-Liste: entlang der Domänen-Taxonomie schneiden, damit sie passt; Host 5414 MB verfügbar (Wache 1638 MB, Gefahr 819 MB), Swap 3.49 MB/s, Druck normal, Reserve 11163 MB (Wache 4096 MB, Gefahr 2048 MB)"
+            }
+          },
+          "overhead": {
+            "tickMillisecondsP95": 331.61,
+            "cpuBasisPoints": 590.54,
+            "residentMegabytes": 45.14
+          }
+        }
+      },
+      {
+        "origin": "g1-m07",
+        "platform": "macos",
+        "liveness": "ready",
+        "recorded": "ready",
+        "stage": null,
+        "stageIndex": 0,
+        "stageCount": 5,
+        "attempts": 0,
+        "recordAgeSeconds": 97,
+        "heartbeatAgeSeconds": 2,
+        "refusal": null,
+        "recent": null,
+        "tree": {
+          "reference": "g1-server",
+          "files": 18,
+          "onlyThere": 5,
+          "onlyHere": 13,
+          "stale": true,
+          "verdict": "lagging"
+        },
+        "memory": {
+          "origin": "g1-m07",
+          "ageSeconds": 1,
+          "absent": true,
+          "mode": null,
+          "level": null,
+          "hold": null,
+          "guardMegabytes": null,
+          "dangerMegabytes": null,
+          "availableMegabytes": null,
+          "totalMegabytes": null,
+          "swapUsedMegabytes": null,
+          "swapOutMegabytesPerSecond": null,
+          "compressedMegabytes": null,
+          "pressure": null,
+          "subjects": null,
+          "subjectMegabytes": null,
+          "suspended": null,
+          "counters": null,
+          "lastAlarm": null,
+          "overhead": null
+        }
+      },
+      {
+        "origin": "g1-m08",
+        "platform": "macos",
+        "liveness": "working",
+        "recorded": "backoff",
+        "stage": "workspace",
+        "stageIndex": 5,
+        "stageCount": 5,
+        "attempts": 19,
+        "recordAgeSeconds": 63,
+        "heartbeatAgeSeconds": 1,
+        "refusal": {
+          "code": "stage-failed",
+          "en": "Stage workspace failed (exit status 143); retrying with back-off.",
+          "de": "Stufe workspace schlug fehl (Exit-Status 143); neuer Versuch mit Wartezeit."
+        },
+        "recent": {
+          "hours": 12,
+          "ok": 0,
+          "failed": 8,
+          "stalled": 4,
+          "timedOut": 0,
+          "seconds": 34910
+        },
+        "tree": {
+          "reference": "g1-server",
+          "files": 7,
+          "onlyThere": 7,
+          "onlyHere": 0,
+          "stale": true,
+          "verdict": "ok"
+        },
+        "memory": {
+          "origin": "g1-m08",
+          "ageSeconds": 1,
+          "absent": false,
+          "mode": "enforce",
+          "level": "guard",
+          "hold": true,
+          "guardMegabytes": 1638,
+          "dangerMegabytes": 819,
+          "availableMegabytes": 3719,
+          "totalMegabytes": 16384,
+          "swapUsedMegabytes": 2917,
+          "swapOutMegabytesPerSecond": 0,
+          "compressedMegabytes": 6242,
+          "pressure": "warn",
+          "subjects": 4,
+          "subjectMegabytes": 2481,
+          "suspended": 0,
+          "counters": {
+            "suspended": 118,
+            "resumed": 71,
+            "cancelled": 21
+          },
+          "lastAlarm": {
+            "atMs": 1795593476197,
+            "action": "resume",
+            "kind": "local-unit",
+            "pid": 75468,
+            "owner": "bun Documents/semio/.cache/b/r/m/u/sealed/1d0a0ec5487d62cb/🛍️products/🦑️repo/🔨️modules/📚️library",
+            "megabytes": 29,
+            "text": {
+              "en": "[warden] resumed local-unit pid 75468 (bun Documents/semio/.cache/b/r/m/u/sealed/1d0a0ec5487d62cb/🛍️products/🦑️repo/🔨️modules/📚️library, 29 MB): memory is calm again; host 5456 MB available (guard 1638 MB, danger 819 MB), swap 6.21 MB/s, pressure normal, headroom 13648 MB (guard 4096 MB, danger 2048 MB)",
+              "de": "[Wächter] fortgesetzt local-unit pid 75468 (bun Documents/semio/.cache/b/r/m/u/sealed/1d0a0ec5487d62cb/🛍️products/🦑️repo/🔨️modules/📚️library, 29 MB): der Speicher ist wieder ruhig; Host 5456 MB verfügbar (Wache 1638 MB, Gefahr 819 MB), Swap 6.21 MB/s, Druck normal, Reserve 13648 MB (Wache 4096 MB, Gefahr 2048 MB)"
+            }
+          },
+          "overhead": {
+            "tickMillisecondsP95": 206.56,
+            "cpuBasisPoints": 215.03,
+            "residentMegabytes": 43.58
+          }
+        }
+      },
+      {
+        "origin": "g1-m09",
+        "platform": null,
+        "liveness": "absent",
+        "recorded": null,
+        "stage": null,
+        "stageIndex": 0,
+        "stageCount": 0,
+        "attempts": 0,
+        "recordAgeSeconds": null,
+        "heartbeatAgeSeconds": null,
+        "refusal": null,
+        "recent": null,
+        "memory": null
+      },
+      {
+        "origin": "g1-m10",
+        "platform": "macos",
+        "liveness": "working",
+        "recorded": "running",
+        "stage": "workspace",
+        "stageIndex": 5,
+        "stageCount": 5,
+        "attempts": 25,
+        "recordAgeSeconds": 5,
+        "heartbeatAgeSeconds": 0,
+        "refusal": null,
+        "recent": {
+          "hours": 12,
+          "ok": 0,
+          "failed": 6,
+          "stalled": 0,
+          "timedOut": 0,
+          "seconds": 10191
+        },
+        "tree": {
+          "reference": "g1-server",
+          "files": 7,
+          "onlyThere": 7,
+          "onlyHere": 0,
+          "stale": true,
+          "verdict": "ok"
+        },
+        "memory": {
+          "origin": "g1-m10",
+          "ageSeconds": 2,
+          "absent": false,
+          "mode": "enforce",
+          "level": "calm",
+          "hold": false,
+          "guardMegabytes": 1638,
+          "dangerMegabytes": 819,
+          "availableMegabytes": 5687,
+          "totalMegabytes": 16384,
+          "swapUsedMegabytes": 2423,
+          "swapOutMegabytesPerSecond": 0,
+          "compressedMegabytes": 2458,
+          "pressure": "normal",
+          "subjects": 6,
+          "subjectMegabytes": 3255,
+          "suspended": 0,
+          "counters": {
+            "suspended": 3,
+            "resumed": 3,
+            "cancelled": 0
+          },
+          "lastAlarm": {
+            "atMs": 1795593335869,
+            "action": "report",
+            "kind": "local-unit",
+            "pid": 87905,
+            "owner": "semio-build-scheduler rustc --crate-name semio_s_artifact_stdio_dwg_snapshot_objects --edition=2",
+            "megabytes": 2339,
+            "text": {
+              "en": "[warden] reported local-unit pid 87905 (semio-build-scheduler rustc --crate-name semio_s_artifact_stdio_dwg_snapshot_objects --edition=2, 2339 MB): unit semio_s_artifact_stdio_dwg_snapshot_objects|wasm32-wasip2 peaked at 2339 MB, above its declared carving budget of 2300 MB (measured 2160 MB): carve it further, or measure it again and declare the new budget; host 5813 MB available (guard 1638 MB, danger 819 MB), swap 0 MB/s, pressure normal, headroom 14005 MB (guard 4096 MB, danger 2048 MB)",
+              "de": "[Wächter] gemeldet local-unit pid 87905 (semio-build-scheduler rustc --crate-name semio_s_artifact_stdio_dwg_snapshot_objects --edition=2, 2339 MB): Einheit semio_s_artifact_stdio_dwg_snapshot_objects|wasm32-wasip2 erreichte 2339 MB und liegt über ihrem erklärten Carving-Budget von 2300 MB (gemessen 2160 MB): weiter schneiden oder neu messen und das neue Budget eintragen; Host 5813 MB verfügbar (Wache 1638 MB, Gefahr 819 MB), Swap 0 MB/s, Druck normal, Reserve 14005 MB (Wache 4096 MB, Gefahr 2048 MB)"
+            }
+          },
+          "overhead": {
+            "tickMillisecondsP95": 91.28,
+            "cpuBasisPoints": 134.32,
+            "residentMegabytes": 124.45
+          }
+        }
+      },
+      {
+        "origin": "g1-m11",
+        "platform": "macos",
+        "liveness": "working",
+        "recorded": "backoff",
+        "stage": "dependencies",
+        "stageIndex": 3,
+        "stageCount": 5,
+        "attempts": 26,
+        "recordAgeSeconds": 52,
+        "heartbeatAgeSeconds": 1,
+        "refusal": {
+          "code": "stage-failed",
+          "en": "Stage dependencies failed (exit status 1); retrying with back-off.",
+          "de": "Stufe dependencies schlug fehl (Exit-Status 1); neuer Versuch mit Wartezeit."
+        },
+        "recent": {
+          "hours": 12,
+          "ok": 0,
+          "failed": 25,
+          "stalled": 0,
+          "timedOut": 0,
+          "seconds": 92
+        },
+        "tree": null,
+        "memory": {
+          "origin": "g1-m11",
+          "ageSeconds": 0,
+          "absent": false,
+          "mode": "enforce",
+          "level": "calm",
+          "hold": false,
+          "guardMegabytes": 1638,
+          "dangerMegabytes": 819,
+          "availableMegabytes": 4976,
+          "totalMegabytes": 16384,
+          "swapUsedMegabytes": 1792,
+          "swapOutMegabytesPerSecond": 0,
+          "compressedMegabytes": 4183,
+          "pressure": "normal",
+          "subjects": 0,
+          "subjectMegabytes": 0,
+          "suspended": 0,
+          "counters": {
+            "suspended": 0,
+            "resumed": 0,
+            "cancelled": 0
+          },
+          "lastAlarm": null,
+          "overhead": {
+            "tickMillisecondsP95": 44.75,
+            "cpuBasisPoints": 62.3,
+            "residentMegabytes": 62.98
+          }
+        }
+      },
+      {
+        "origin": "g1-m12",
+        "platform": "macos",
+        "liveness": "ready",
+        "recorded": "ready",
+        "stage": null,
+        "stageIndex": 0,
+        "stageCount": 5,
+        "attempts": 0,
+        "recordAgeSeconds": 15,
+        "heartbeatAgeSeconds": 0,
+        "refusal": null,
+        "recent": null,
+        "tree": {
+          "reference": "g1-server",
+          "files": 9,
+          "onlyThere": 9,
+          "onlyHere": 0,
+          "stale": true,
+          "verdict": "ok"
+        },
+        "memory": {
+          "origin": "g1-m12",
+          "ageSeconds": 3,
+          "absent": false,
+          "mode": "enforce",
+          "level": "calm",
+          "hold": false,
+          "guardMegabytes": 1638,
+          "dangerMegabytes": 819,
+          "availableMegabytes": 8469,
+          "totalMegabytes": 16384,
+          "swapUsedMegabytes": 1684,
+          "swapOutMegabytesPerSecond": 0,
+          "compressedMegabytes": 852,
+          "pressure": "normal",
+          "subjects": 3,
+          "subjectMegabytes": 2263,
+          "suspended": 0,
+          "counters": {
+            "suspended": 15,
+            "resumed": 15,
+            "cancelled": 3
+          },
+          "lastAlarm": {
+            "atMs": 1795592127134,
+            "action": "report",
+            "kind": "local-unit",
+            "pid": 71326,
+            "owner": "rustc --crate-name semio_s_artifact_stdio_pdf_model --edition=2021 🏅️standards/7️⃣1.7/🪆️subsets/",
+            "megabytes": 1560,
+            "text": {
+              "en": "[warden] reported local-unit pid 71326 (rustc --crate-name semio_s_artifact_stdio_pdf_model --edition=2021 🏅️standards/7️⃣1.7/🪆️subsets/, 1560 MB): unit semio_s_artifact_stdio_pdf_model|host peaked at 1560 MB, above its library ceiling of 1536 MB, and it is not on the carving list: carve it along the domain taxonomy so that it fits; host 6470 MB available (guard 1638 MB, danger 819 MB), swap 0 MB/s, pressure normal, headroom 14662 MB (guard 4096 MB, danger 2048 MB)",
+              "de": "[Wächter] gemeldet local-unit pid 71326 (rustc --crate-name semio_s_artifact_stdio_pdf_model --edition=2021 🏅️standards/7️⃣1.7/🪆️subsets/, 1560 MB): Einheit semio_s_artifact_stdio_pdf_model|host erreichte 1560 MB und liegt über ihrer Obergrenze Bibliothek von 1536 MB; sie steht nicht auf der Carving-Liste: entlang der Domänen-Taxonomie schneiden, damit sie passt; Host 6470 MB verfügbar (Wache 1638 MB, Gefahr 819 MB), Swap 0 MB/s, Druck normal, Reserve 14662 MB (Wache 4096 MB, Gefahr 2048 MB)"
+            }
+          },
+          "overhead": {
+            "tickMillisecondsP95": 73.11,
+            "cpuBasisPoints": 59.06,
+            "residentMegabytes": 101.08
+          }
+        }
+      },
+      {
+        "origin": "g1-m13",
+        "platform": "macos",
+        "liveness": "ready",
+        "recorded": "ready",
+        "stage": null,
+        "stageIndex": 0,
+        "stageCount": 5,
+        "attempts": 0,
+        "recordAgeSeconds": 13,
+        "heartbeatAgeSeconds": 1,
+        "refusal": null,
+        "recent": null,
+        "tree": {
+          "reference": "g1-server",
+          "files": 6,
+          "onlyThere": 4,
+          "onlyHere": 2,
+          "stale": true,
+          "verdict": "diverged"
+        },
+        "memory": {
+          "origin": "g1-m13",
+          "ageSeconds": 0,
+          "absent": false,
+          "mode": "enforce",
+          "level": "guard",
+          "hold": true,
+          "guardMegabytes": 1638,
+          "dangerMegabytes": 819,
+          "availableMegabytes": 4266,
+          "totalMegabytes": 16384,
+          "swapUsedMegabytes": 4492,
+          "swapOutMegabytesPerSecond": 35.25,
+          "compressedMegabytes": 6850,
+          "pressure": "warn",
+          "subjects": 1,
+          "subjectMegabytes": 1441,
+          "suspended": 0,
+          "counters": {
+            "suspended": 78,
+            "resumed": 73,
+            "cancelled": 52
+          },
+          "lastAlarm": {
+            "atMs": 1795593520759,
+            "action": "cancel",
+            "kind": "pool-child",
+            "pid": 74273,
+            "owner": "bun Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inferenc",
+            "megabytes": 1169,
+            "text": {
+              "en": "[warden] cancelled pool-child pid 74273 (bun Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inferenc, 1169 MB): compressed memory is above its danger line; host 1461 MB available (guard 1638 MB, danger 819 MB), swap 5.9 MB/s, pressure critical, headroom 9653 MB (guard 4096 MB, danger 2048 MB)",
+              "de": "[Wächter] abgebrochen pool-child pid 74273 (bun Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inferenc, 1169 MB): der komprimierte Speicher liegt über seiner Gefahrenlinie; Host 1461 MB verfügbar (Wache 1638 MB, Gefahr 819 MB), Swap 5.9 MB/s, Druck kritisch, Reserve 9653 MB (Wache 4096 MB, Gefahr 2048 MB)"
+            }
+          },
+          "overhead": {
+            "tickMillisecondsP95": 165.78,
+            "cpuBasisPoints": 233.4,
+            "residentMegabytes": 51.78
+          }
+        }
+      },
+      {
+        "origin": "g1-m14",
+        "platform": "macos",
+        "liveness": "ready",
+        "recorded": "ready",
+        "stage": null,
+        "stageIndex": 0,
+        "stageCount": 5,
+        "attempts": 0,
+        "recordAgeSeconds": 13,
+        "heartbeatAgeSeconds": 1,
+        "refusal": null,
+        "recent": null,
+        "tree": {
+          "reference": "g1-server",
+          "files": 4,
+          "onlyThere": 4,
+          "onlyHere": 0,
+          "stale": true,
+          "verdict": "diverged"
+        },
+        "memory": {
+          "origin": "g1-m14",
+          "ageSeconds": 5,
+          "absent": false,
+          "mode": "enforce",
+          "level": "calm",
+          "hold": false,
+          "guardMegabytes": 1638,
+          "dangerMegabytes": 819,
+          "availableMegabytes": 5145,
+          "totalMegabytes": 16384,
+          "swapUsedMegabytes": 1699,
+          "swapOutMegabytesPerSecond": 0,
+          "compressedMegabytes": 3613,
+          "pressure": "normal",
+          "subjects": 5,
+          "subjectMegabytes": 3176,
+          "suspended": 0,
+          "counters": {
+            "suspended": 47,
+            "resumed": 45,
+            "cancelled": 0
+          },
+          "lastAlarm": {
+            "atMs": 1795593179276,
+            "action": "resume",
+            "kind": "pool-child",
+            "pid": 11756,
+            "owner": "bun Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inferenc",
+            "megabytes": 1014,
+            "text": {
+              "en": "[warden] resumed pool-child pid 11756 (bun Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inferenc, 1014 MB): memory is calm again; host 5401 MB available (guard 1638 MB, danger 819 MB), swap 4.44 MB/s, pressure normal, headroom 13593 MB (guard 4096 MB, danger 2048 MB)",
+              "de": "[Wächter] fortgesetzt pool-child pid 11756 (bun Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inferenc, 1014 MB): der Speicher ist wieder ruhig; Host 5401 MB verfügbar (Wache 1638 MB, Gefahr 819 MB), Swap 4.44 MB/s, Druck normal, Reserve 13593 MB (Wache 4096 MB, Gefahr 2048 MB)"
+            }
+          },
+          "overhead": {
+            "tickMillisecondsP95": 107.09,
+            "cpuBasisPoints": 121.08,
+            "residentMegabytes": 63.8
+          }
+        }
+      },
+      {
+        "origin": "g1-server",
+        "platform": null,
+        "liveness": "absent",
+        "recorded": null,
+        "stage": null,
+        "stageIndex": 0,
+        "stageCount": 0,
+        "attempts": 0,
+        "recordAgeSeconds": null,
+        "heartbeatAgeSeconds": 1,
+        "refusal": null,
+        "recent": null,
+        "memory": null
+      }
+    ]
+  },
+  "cas": {
+    "root": "/Users/ueli/.cache/semio/cas",
+    "reserve": {
+      "reserveBytes": 79573006745,
+      "freeBytes": 148135329792,
+      "distanceBytes": 68562323047
+    },
+    "usedBytes": 54597310090,
+    "usedBasisPoints": 4440,
+    "capBytes": 274877906944,
+    "effectiveCapBytes": 122943438848,
+    "highWatermarkBytes": 110649094963,
+    "lowWatermarkBytes": 92207579136,
+    "incrementBytes": 2147483648,
+    "leases": {
+      "leased": 836,
+      "expired": 23,
+      "leasedBytes": 368382,
+      "expiredBytes": 3511
+    },
+    "lastCollection": {
+      "atMs": 1795593398496,
+      "ageSeconds": 139,
+      "bytes": 54597310090
+    }
+  },
+  "retention": {
+    "mode": "dry-run",
+    "sweptAt": 1795593370924,
+    "ageSeconds": 167,
+    "entries": 57462,
+    "judged": 56352,
+    "live": 49329,
+    "grace": 409,
+    "stale": 6614,
+    "staleByReason": {
+      "extern": 6457,
+      "edited": 136,
+      "deleted": 21
+    },
+    "unreached": 0,
+    "undeclared": 1110,
+    "retired": 0,
+    "refused": {
+      "would-refuse-stale-on-arrival": 18
+    }
+  },
+  "offload": {
+    "local": 0,
+    "fleet": 0,
+    "builds": [],
+    "out": 6291,
+    "refused": 895,
+    "fellBack": 2977,
+    "spool": {
+      "depth": 0,
+      "bound": 37405
+    },
+    "deadline": 11,
+    "lost": 0,
+    "silent": 0,
+    "reasons": {
+      "cheap": 2749,
+      "queue-timeout": 176,
+      "not-portable": 357,
+      "worker-policy": 227,
+      "pin-failed": 676,
+      "final-wait": 6,
+      "deadline": 11,
+      "unmapped-path": 3255,
+      "no-idle-machine": 180,
+      "incomplete-inputs": 164,
+      "local-slot": 5144,
+      "toolchain-missing": 1,
+      "infrastructure": 1616,
+      "unmeasured": 1052,
+      "inputs-too-large": 27,
+      "path-dependent-output": 5,
+      "unreadable-input": 53
+    }
+  },
+  "findings": [
+    {
+      "id": "worker-warden-intervened",
+      "severity": "alert",
+      "subject": "g1-m02",
+      "values": {
+        "origin": "g1-m02",
+        "suspended": 19,
+        "resumed": 19,
+        "cancelled": 7,
+        "alarm": "[warden] resumed headless-browser pid 59491 (bun react-journey-probe.mjs, 919 MB): memory is calm again; host 2796 MB available (guard 1638 MB, danger 819 MB), swap 5.28 MB/s, pressure warn, headroom 10988 MB (guard 4096 MB, danger 2048 MB)"
+      },
+      "text": "worker g1-m02: its warden intervened (19 suspended, 19 resumed, 7 cancelled); last: [warden] resumed headless-browser pid 59491 (bun react-journey-probe.mjs, 919 MB): memory is calm again; host 2796 MB available (guard 1638 MB, danger 819 MB), swap 5.28 MB/s, pressure warn, headroom 10988 MB (guard 4096 MB, danger 2048 MB)"
+    },
+    {
+      "id": "worker-warden-intervened",
+      "severity": "alert",
+      "subject": "g1-m04",
+      "values": {
+        "origin": "g1-m04",
+        "suspended": 99,
+        "resumed": 85,
+        "cancelled": 15,
+        "alarm": "[warden] resumed pool-child pid 2158336 (bun semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️projec, 1238 MB): memory is calm again; host 2307 MB available (guard 1584 MB, danger 792 MB), swap 13.75 MB/s, pressure warn, headroom 6176 MB (guard 3962 MB, danger 1981 MB)"
+      },
+      "text": "worker g1-m04: its warden intervened (99 suspended, 85 resumed, 15 cancelled); last: [warden] resumed pool-child pid 2158336 (bun semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️projec, 1238 MB): memory is calm again; host 2307 MB available (guard 1584 MB, danger 792 MB), swap 13.75 MB/s, pressure warn, headroom 6176 MB (guard 3962 MB, danger 1981 MB)"
+    },
+    {
+      "id": "worker-warden-intervened",
+      "severity": "alert",
+      "subject": "g1-m06",
+      "values": {
+        "origin": "g1-m06",
+        "suspended": 12,
+        "resumed": 13,
+        "cancelled": 6,
+        "alarm": "[warden] reported remote-unit pid 87495 (bun Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution, 1548 MB): unit semio_framework_kernel|host peaked at 1548 MB, above its library ceiling of 1536 MB, and it is not on the carving list: carve it along the domain taxonomy so that it fits; host 5414 MB available (guard 1638 MB, danger 819 MB), swap 3.49 MB/s, pressure normal, headroom 11163 MB (guard 4096 MB, danger 2048 MB)"
+      },
+      "text": "worker g1-m06: its warden intervened (12 suspended, 13 resumed, 6 cancelled); last: [warden] reported remote-unit pid 87495 (bun Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution, 1548 MB): unit semio_framework_kernel|host peaked at 1548 MB, above its library ceiling of 1536 MB, and it is not on the carving list: carve it along the domain taxonomy so that it fits; host 5414 MB available (guard 1638 MB, danger 819 MB), swap 3.49 MB/s, pressure normal, headroom 11163 MB (guard 4096 MB, danger 2048 MB)"
+    },
+    {
+      "id": "worker-warden-intervened",
+      "severity": "alert",
+      "subject": "g1-m08",
+      "values": {
+        "origin": "g1-m08",
+        "suspended": 118,
+        "resumed": 71,
+        "cancelled": 21,
+        "alarm": "[warden] resumed local-unit pid 75468 (bun Documents/semio/.cache/b/r/m/u/sealed/1d0a0ec5487d62cb/🛍️products/🦑️repo/🔨️modules/📚️library, 29 MB): memory is calm again; host 5456 MB available (guard 1638 MB, danger 819 MB), swap 6.21 MB/s, pressure normal, headroom 13648 MB (guard 4096 MB, danger 2048 MB)"
+      },
+      "text": "worker g1-m08: its warden intervened (118 suspended, 71 resumed, 21 cancelled); last: [warden] resumed local-unit pid 75468 (bun Documents/semio/.cache/b/r/m/u/sealed/1d0a0ec5487d62cb/🛍️products/🦑️repo/🔨️modules/📚️library, 29 MB): memory is calm again; host 5456 MB available (guard 1638 MB, danger 819 MB), swap 6.21 MB/s, pressure normal, headroom 13648 MB (guard 4096 MB, danger 2048 MB)"
+    },
+    {
+      "id": "worker-warden-intervened",
+      "severity": "alert",
+      "subject": "g1-m12",
+      "values": {
+        "origin": "g1-m12",
+        "suspended": 15,
+        "resumed": 15,
+        "cancelled": 3,
+        "alarm": "[warden] reported local-unit pid 71326 (rustc --crate-name semio_s_artifact_stdio_pdf_model --edition=2021 🏅️standards/7️⃣1.7/🪆️subsets/, 1560 MB): unit semio_s_artifact_stdio_pdf_model|host peaked at 1560 MB, above its library ceiling of 1536 MB, and it is not on the carving list: carve it along the domain taxonomy so that it fits; host 6470 MB available (guard 1638 MB, danger 819 MB), swap 0 MB/s, pressure normal, headroom 14662 MB (guard 4096 MB, danger 2048 MB)"
+      },
+      "text": "worker g1-m12: its warden intervened (15 suspended, 15 resumed, 3 cancelled); last: [warden] reported local-unit pid 71326 (rustc --crate-name semio_s_artifact_stdio_pdf_model --edition=2021 🏅️standards/7️⃣1.7/🪆️subsets/, 1560 MB): unit semio_s_artifact_stdio_pdf_model|host peaked at 1560 MB, above its library ceiling of 1536 MB, and it is not on the carving list: carve it along the domain taxonomy so that it fits; host 6470 MB available (guard 1638 MB, danger 819 MB), swap 0 MB/s, pressure normal, headroom 14662 MB (guard 4096 MB, danger 2048 MB)"
+    },
+    {
+      "id": "worker-warden-intervened",
+      "severity": "alert",
+      "subject": "g1-m13",
+      "values": {
+        "origin": "g1-m13",
+        "suspended": 78,
+        "resumed": 73,
+        "cancelled": 52,
+        "alarm": "[warden] cancelled pool-child pid 74273 (bun Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inferenc, 1169 MB): compressed memory is above its danger line; host 1461 MB available (guard 1638 MB, danger 819 MB), swap 5.9 MB/s, pressure critical, headroom 9653 MB (guard 4096 MB, danger 2048 MB)"
+      },
+      "text": "worker g1-m13: its warden intervened (78 suspended, 73 resumed, 52 cancelled); last: [warden] cancelled pool-child pid 74273 (bun Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inferenc, 1169 MB): compressed memory is above its danger line; host 1461 MB available (guard 1638 MB, danger 819 MB), swap 5.9 MB/s, pressure critical, headroom 9653 MB (guard 4096 MB, danger 2048 MB)"
+    },
+    {
+      "id": "image-full",
+      "severity": "warn",
+      "subject": "graph",
+      "values": {
+        "id": "graph",
+        "percent": 99
+      },
+      "text": "Image graph is 99% full"
+    },
+    {
+      "id": "unit-cache-read-only",
+      "severity": "warn",
+      "subject": "g1-server",
+      "values": {
+        "origin": "g1-server",
+        "count": 5053
+      },
+      "text": "g1-server may only read the fleet cache (5053 unit(s) compiled without sharing): everything it compiles stays local and never seeds the other machines"
+    },
+    {
+      "id": "worker-memory-tight",
+      "severity": "warn",
+      "subject": "g1-m01",
+      "values": {
+        "origin": "g1-m01",
+        "level": "guard",
+        "available": 3561,
+        "guard": 1638,
+        "danger": 819,
+        "swap": 1079,
+        "pressure": "warn"
+      },
+      "text": "worker g1-m01 is at memory level guard: 3561 MB available (guard 1638 MB, danger 819 MB), swap 1079 MB, pressure warn"
+    },
+    {
+      "id": "worker-memory-tight",
+      "severity": "warn",
+      "subject": "g1-m06",
+      "values": {
+        "origin": "g1-m06",
+        "level": "guard",
+        "available": 3931,
+        "guard": 1638,
+        "danger": 819,
+        "swap": 2910,
+        "pressure": "warn"
+      },
+      "text": "worker g1-m06 is at memory level guard: 3931 MB available (guard 1638 MB, danger 819 MB), swap 2910 MB, pressure warn"
+    },
+    {
+      "id": "worker-memory-tight",
+      "severity": "warn",
+      "subject": "g1-m08",
+      "values": {
+        "origin": "g1-m08",
+        "level": "guard",
+        "available": 3719,
+        "guard": 1638,
+        "danger": 819,
+        "swap": 2917,
+        "pressure": "warn"
+      },
+      "text": "worker g1-m08 is at memory level guard: 3719 MB available (guard 1638 MB, danger 819 MB), swap 2917 MB, pressure warn"
+    },
+    {
+      "id": "worker-memory-tight",
+      "severity": "warn",
+      "subject": "g1-m13",
+      "values": {
+        "origin": "g1-m13",
+        "level": "guard",
+        "available": 4266,
+        "guard": 1638,
+        "danger": 819,
+        "swap": 4492,
+        "pressure": "warn"
+      },
+      "text": "worker g1-m13 is at memory level guard: 4266 MB available (guard 1638 MB, danger 819 MB), swap 4492 MB, pressure warn"
+    },
+    {
+      "id": "worker-swap-high",
+      "severity": "warn",
+      "subject": "g1-m04",
+      "values": {
+        "origin": "g1-m04",
+        "swap": 4361,
+        "percent": 27,
+        "total": 15848
+      },
+      "text": "worker g1-m04 uses 4361 MB of swap, 27% of its 15848 MB memory"
+    },
+    {
+      "id": "worker-swap-high",
+      "severity": "warn",
+      "subject": "g1-m13",
+      "values": {
+        "origin": "g1-m13",
+        "swap": 4492,
+        "percent": 27,
+        "total": 16384
+      },
+      "text": "worker g1-m13 uses 4492 MB of swap, 27% of its 16384 MB memory"
+    },
+    {
+      "id": "worker-warden-absent",
+      "severity": "warn",
+      "subject": "g1-m07",
+      "values": {
+        "origin": "g1-m07",
+        "reason": "its warden writes no state"
+      },
+      "text": "worker g1-m07 lives but its warden is not visible: its warden writes no state"
+    },
+    {
+      "id": "worker-warden-intervened",
+      "severity": "warn",
+      "subject": "g1-m01",
+      "values": {
+        "origin": "g1-m01",
+        "suspended": 6,
+        "resumed": 3,
+        "cancelled": 0,
+        "alarm": "[warden] reported remote-unit pid 97038 (bun Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution, 2375 MB): unit semio_plugin_actor_input|host peaked at 2375 MB, above its library ceiling of 1536 MB, and it is not on the carving list: carve it along the domain taxonomy so that it fits; host 5597 MB available (guard 1638 MB, danger 819 MB), swap 0 MB/s, pressure normal, headroom 13789 MB (guard 4096 MB, danger 2048 MB)"
+      },
+      "text": "worker g1-m01: its warden intervened (6 suspended, 3 resumed, 0 cancelled); last: [warden] reported remote-unit pid 97038 (bun Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution, 2375 MB): unit semio_plugin_actor_input|host peaked at 2375 MB, above its library ceiling of 1536 MB, and it is not on the carving list: carve it along the domain taxonomy so that it fits; host 5597 MB available (guard 1638 MB, danger 819 MB), swap 0 MB/s, pressure normal, headroom 13789 MB (guard 4096 MB, danger 2048 MB)"
+    },
+    {
+      "id": "worker-warden-intervened",
+      "severity": "warn",
+      "subject": "g1-m10",
+      "values": {
+        "origin": "g1-m10",
+        "suspended": 3,
+        "resumed": 3,
+        "cancelled": 0,
+        "alarm": "[warden] reported local-unit pid 87905 (semio-build-scheduler rustc --crate-name semio_s_artifact_stdio_dwg_snapshot_objects --edition=2, 2339 MB): unit semio_s_artifact_stdio_dwg_snapshot_objects|wasm32-wasip2 peaked at 2339 MB, above its declared carving budget of 2300 MB (measured 2160 MB): carve it further, or measure it again and declare the new budget; host 5813 MB available (guard 1638 MB, danger 819 MB), swap 0 MB/s, pressure normal, headroom 14005 MB (guard 4096 MB, danger 2048 MB)"
+      },
+      "text": "worker g1-m10: its warden intervened (3 suspended, 3 resumed, 0 cancelled); last: [warden] reported local-unit pid 87905 (semio-build-scheduler rustc --crate-name semio_s_artifact_stdio_dwg_snapshot_objects --edition=2, 2339 MB): unit semio_s_artifact_stdio_dwg_snapshot_objects|wasm32-wasip2 peaked at 2339 MB, above its declared carving budget of 2300 MB (measured 2160 MB): carve it further, or measure it again and declare the new budget; host 5813 MB available (guard 1638 MB, danger 819 MB), swap 0 MB/s, pressure normal, headroom 14005 MB (guard 4096 MB, danger 2048 MB)"
+    },
+    {
+      "id": "worker-warden-intervened",
+      "severity": "warn",
+      "subject": "g1-m14",
+      "values": {
+        "origin": "g1-m14",
+        "suspended": 47,
+        "resumed": 45,
+        "cancelled": 0,
+        "alarm": "[warden] resumed pool-child pid 11756 (bun Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inferenc, 1014 MB): memory is calm again; host 5401 MB available (guard 1638 MB, danger 819 MB), swap 4.44 MB/s, pressure normal, headroom 13593 MB (guard 4096 MB, danger 2048 MB)"
+      },
+      "text": "worker g1-m14: its warden intervened (47 suspended, 45 resumed, 0 cancelled); last: [warden] resumed pool-child pid 11756 (bun Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inferenc, 1014 MB): memory is calm again; host 5401 MB available (guard 1638 MB, danger 819 MB), swap 4.44 MB/s, pressure normal, headroom 13593 MB (guard 4096 MB, danger 2048 MB)"
+    },
+    {
+      "id": "worker-warden-overhead",
+      "severity": "warn",
+      "subject": "g1-m06",
+      "values": {
+        "origin": "g1-m06",
+        "percent": 5,
+        "tick": 332,
+        "resident": 45
+      },
+      "text": "worker g1-m06: its warden takes 5% of one core (tick p95 332 ms, 45 MB resident)"
+    },
+    {
+      "id": "sealed-drifted",
+      "severity": "info",
+      "subject": "🏛️sealed/🚪️entry",
+      "values": {
+        "entry": "🏛️sealed/🚪️entry",
+        "changed": 2317
+      },
+      "text": "The live tree changed after snapshot 🏛️sealed/🚪️entry (2317 change(s))"
+    },
+    {
+      "id": "worker-absent",
+      "severity": "info",
+      "subject": "g1-m09",
+      "values": {
+        "origin": "g1-m09"
+      },
+      "text": "worker g1-m09 is enrolled but showed no sign of life and never wrote a readiness record"
+    },
+    {
+      "id": "worker-warden-observing",
+      "severity": "info",
+      "subject": "g1-m05",
+      "values": {
+        "origin": "g1-m05",
+        "level": "calm"
+      },
+      "text": "worker g1-m05: its warden only observes (level calm); it decides but does not act"
+    },
+    {
+      "id": "worker-warden-observing",
+      "severity": "info",
+      "subject": "ueli-mac.fritz.box",
+      "values": {
+        "origin": "ueli-mac.fritz.box",
+        "level": "calm"
+      },
+      "text": "worker ueli-mac.fritz.box: its warden only observes (level calm); it decides but does not act"
+    }
+  ],
+  "sources": [
+    {
+      "id": "leases",
+      "ok": true,
+      "milliseconds": 2224
+    },
+    {
+      "id": "capacity",
+      "ok": true,
+      "milliseconds": 2392
+    },
+    {
+      "id": "bazel",
+      "ok": true,
+      "milliseconds": 2412
+    },
+    {
+      "id": "storage",
+      "ok": true,
+      "milliseconds": 4830
+    },
+    {
+      "id": "sealed",
+      "ok": true,
+      "milliseconds": 1919
+    },
+    {
+      "id": "generation",
+      "ok": true,
+      "milliseconds": 1961
+    },
+    {
+      "id": "scheduler",
+      "ok": true,
+      "milliseconds": 2275
+    },
+    {
+      "id": "fleet",
+      "ok": true,
+      "milliseconds": 3901
+    },
+    {
+      "id": "workers",
+      "ok": true,
+      "milliseconds": 4863
+    },
+    {
+      "id": "memory",
+      "ok": true,
+      "milliseconds": 2345
+    },
+    {
+      "id": "cas",
+      "ok": true,
+      "milliseconds": 2515
+    },
+    {
+      "id": "offload",
+      "ok": true,
+      "milliseconds": 2486
+    }
+  ]
+}

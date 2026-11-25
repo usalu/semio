@@ -1914,8 +1914,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
-            "rejected"
+            "no-op"
           ],
           "productionDispatch": {
             "operation": "change-structure-kind",
@@ -1956,8 +1955,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
-            "rejected"
+            "no-op"
           ],
           "productionDispatch": {
             "operation": "change-fire-rating",
@@ -1998,8 +1996,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
-            "rejected"
+            "no-op"
           ],
           "productionDispatch": {
             "operation": "change-fatigue-detail",
@@ -2019,7 +2016,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -2040,7 +2036,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -2166,7 +2161,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -2187,7 +2181,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -2250,7 +2243,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -2271,7 +2263,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -3972,7 +3963,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -3993,7 +3983,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -4014,7 +4003,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -4035,7 +4023,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -4458,8 +4445,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
-            "rejected"
+            "no-op"
           ],
           "productionDispatch": {
             "operation": "change-structure-kind",
@@ -4500,8 +4486,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
-            "rejected"
+            "no-op"
           ],
           "productionDispatch": {
             "operation": "change-fire-rating",
@@ -4542,8 +4527,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
-            "rejected"
+            "no-op"
           ],
           "productionDispatch": {
             "operation": "change-fatigue-detail",
@@ -4563,7 +4547,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -4584,7 +4567,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -4710,7 +4692,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -4731,7 +4712,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -4794,7 +4774,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -4815,7 +4794,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -6516,7 +6494,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -6537,7 +6514,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -6558,7 +6534,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -6579,7 +6554,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -6950,7 +6924,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -6971,7 +6944,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -6992,7 +6964,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -7013,7 +6984,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -7034,7 +7004,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -7055,7 +7024,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -7128,8 +7096,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
-            "rejected"
+            "no-op"
           ],
           "productionDispatch": {
             "operation": "change-structure-kind",
@@ -7170,8 +7137,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
-            "rejected"
+            "no-op"
           ],
           "productionDispatch": {
             "operation": "change-fire-rating",
@@ -7212,8 +7178,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
-            "rejected"
+            "no-op"
           ],
           "productionDispatch": {
             "operation": "change-fatigue-detail",
@@ -7233,7 +7198,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -7254,7 +7218,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -7380,7 +7343,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -7401,7 +7363,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -7464,7 +7425,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -7485,7 +7445,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -9186,7 +9145,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -9207,7 +9165,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -9228,7 +9185,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -9249,7 +9205,6 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
             "rejected"
           ],
           "productionDispatch": {

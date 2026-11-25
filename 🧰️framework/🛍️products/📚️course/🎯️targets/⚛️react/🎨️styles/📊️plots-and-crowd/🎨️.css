@@ -113,6 +113,81 @@
   color: var(--active-base);
 }
 
+/* 🧱️ In a card much wider than the figure needs, the items stand side by side as tiles instead of in one tall column
+   with the rest of the card empty: every tile is an item with its columns beside it, and each column says below its
+   marks what it stands for, as in the folded figure. */
+@container course-records (min-width: 64rem) {
+  .course-plot {
+    display: block;
+    inline-size: 100%;
+  }
+
+  .course-plot > thead {
+    position: absolute;
+    display: block;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .course-plot > tbody {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(calc(14em + var(--course-plot-columns, 1) * 6em), 1fr));
+    column-gap: var(--spacing-double);
+  }
+
+  .course-plot > tbody > tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) repeat(var(--course-plot-columns, 1), minmax(3.5em, 6em));
+    align-items: end;
+    padding-block: var(--spacing-single);
+    border-block-end: var(--stroke-hairline) solid var(--border-normal-color);
+  }
+
+  .course-plot > tbody > tr > * {
+    display: block;
+    padding: 0 1px;
+  }
+
+  .course-plot > tbody > tr > .course-plot-item {
+    inline-size: auto;
+    align-self: center;
+    padding: var(--spacing-single);
+  }
+
+  .course-plot > tbody > tr > td[data-label]::after {
+    content: attr(data-label);
+    display: block;
+    color: var(--muted-foreground);
+    font-size: 0.625rem;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+  }
+
+  .course-plot[data-sparse] > tbody {
+    grid-template-columns: repeat(auto-fill, minmax(26em, 1fr));
+  }
+
+  .course-plot[data-sparse] > tbody > tr {
+    grid-template-columns: repeat(auto-fill, minmax(3rem, 1fr));
+    row-gap: var(--spacing-single);
+  }
+
+  .course-plot[data-sparse] > tbody > tr > .course-plot-item {
+    grid-column: 1 / -1;
+  }
+
+  .course-plot[data-sparse] > tbody > tr > td[data-empty] {
+    display: none;
+  }
+
+  .course-plot .course-column-cap {
+    font-size: 0.625rem;
+  }
+}
+
 @container course-records (max-width: 36em) {
   .course-plot {
     display: block;

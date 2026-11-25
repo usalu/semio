@@ -30,6 +30,16 @@ ports = { react = 6040, wgpu = 6140 }
 engines = ["./🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust"]
 
 [[package.metadata.semio.playground]]
+variant = "verfolgen"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
+app = "s.gis.gismap@1/*#editor"
+brand = "entwerfen-mit-bestand-verfolgen"
+devContribution = "♻️mit-bestand/🧺️demonstrator/🐚️shell/🧬️schema/🔣️.json"
+aliases = ["entwerfen-mit-bestand-verfolgen"]
+ports = { react = 6032, wgpu = 6132 }
+engines = ["./🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust"]
+
+[[package.metadata.semio.playground]]
 variant = "gis3d"
 devContribution = "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🧬️schema/🏔️terrain.json"
 compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"

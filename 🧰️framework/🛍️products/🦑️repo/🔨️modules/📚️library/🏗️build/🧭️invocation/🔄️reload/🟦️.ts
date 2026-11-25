@@ -1,8 +1,7 @@
 import {relative,resolve} from "node:path";
 import {fileURLToPath} from "node:url";
-import residentSchema from "../../🏡️resident/🧬️schema/🔣️.json" with {type:"json"};
 import {readSealedLoaderV1,readSealedPointerV1,readSealedReceiptV1,readSealedSnapshotV1,sealedEntryOfV1} from "../../🏛️sealed/🟦️.ts";
-import {hostImplementationV1} from "../🛰️plan/🟦️.ts";
+import {hostImplementationV1,hostServiceRevisionPathsV1} from "../🛰️plan/🟦️.ts";
 
 /** 🏷️ What the tree wants the host service to run: the digest of that implementation, and the reason it must not be loaded when it cannot be sealed (bilingual). */
 export type HostIdentityV1=Readonly<{implementation:string;blocked?:string}>;
@@ -29,7 +28,7 @@ export function hostReloadIdentityV1(root:string,environment:NodeJS.ProcessEnv,r
   }
   const wanted=hostImplementationV1(root,environment,ports.revision);
   if(wanted===running)return{implementation:wanted};
-  const paths=(residentSchema.definitions.HostPolicy.const.serviceRevisionFiles as string[]).map(path=>relative(root,resolve(library,path)).split("\\").join("/")),rows=await(ports.syntaxRows??(async(base,files)=>(await import("../../🏛️sealed/📤️promotion/🟦️.ts")).syntaxRowsOfPathsV1(base,files)))(root,paths);
+  const paths=hostServiceRevisionPathsV1().map(path=>relative(root,resolve(library,path)).split("\\").join("/")),rows=await(ports.syntaxRows??(async(base,files)=>(await import("../../🏛️sealed/📤️promotion/🟦️.ts")).syntaxRowsOfPathsV1(base,files)))(root,paths);
   return rows.length===0?{implementation:wanted}:{implementation:wanted,blocked:`${rows[0]!.path}:${rows[0]!.line}:${rows[0]!.column} ${rows[0]!.message}`};
  };
 }

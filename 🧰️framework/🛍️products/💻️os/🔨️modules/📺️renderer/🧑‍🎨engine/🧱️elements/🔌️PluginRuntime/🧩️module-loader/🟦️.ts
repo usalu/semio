@@ -30,14 +30,14 @@ import {
 import { DOCUMENT_BACKBONE_RETENTION_LIMITS } from "@semio-tech/framework/replication";
 import { DEFAULT_UI_DOCUMENT_LIMITS } from "../../📃️UiDocumentStore/🟦️.tsx";
 import { activationReasonForAppId, type AppDefinition } from "@semio-tech/framework";
-import { descriptorPackageAssets, fetchDescriptorManifest } from "@semio-tech/framework";
+import { descriptorPackageAssets, descriptorPackageComponents, fetchDescriptorManifest } from "@semio-tech/framework";
 import { type PluginWasmHandle as KernelPluginWasmHandle } from "@semio-tech/framework";
 import { settleFailedInstanceOpen } from "@semio-tech/framework/actor/shard-client/heartbeat";
 import { type ShardEventEnvelope } from "@semio-tech/framework/actor/shard-client/wire";
 import { OwnedUiInstance } from "@semio-tech/ui-contract/retained/instance";
 import { hopTrace } from "@semio-tech/framework-trace";
 import { continueOpeningTurns } from "@semio-tech/framework-actor/wire-turn/more-work-drive";
-import { driveInboundRequest, INBOUND_REQUEST_TURN_BUDGET } from "@semio-tech/framework/actor/wire-turn";
+import { driveInboundRequest, INBOUND_REQUEST_TURN_BUDGET, wireTurnStatusTag } from "@semio-tech/framework/actor/wire-turn";
 import { BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES } from "@semio-tech/framework/wire-contracts";
 import {
   ActorDocumentBindingV1,
@@ -87,7 +87,8 @@ function resolvePluginDescriptorAndRegistry(pluginId: string, moduleUrl: string,
     );
     notePluginLoadProgress(pluginId);
     const assets = descriptorPackageAssets(resolved.manifest);
-    resolved.runtime.registerManifest({ pluginId, moduleUrl, caps: [], ...(manifestPluginId === pluginId ? {} : { manifestPluginId }), ...(assets.length === 0 ? {} : { assets }) });
+    const components = descriptorPackageComponents(resolved.manifest);
+    resolved.runtime.registerManifest({ pluginId, moduleUrl, caps: [], ...(manifestPluginId === pluginId ? {} : { manifestPluginId }), ...(assets.length === 0 ? {} : { assets }), ...(components === undefined ? {} : { components }) });
     notePluginLoadProgress(pluginId);
     return resolved;
   });
@@ -114,7 +115,7 @@ function createKernelHandle(scope: PluginHandleScope, instances: ReturnType<type
       };
       const opening = Promise.resolve().then(async () => {
         requireOpening();
-        await registry.activate(pluginId, actorId, activationReasonForAppId(appId));
+        await registry.activate(pluginId, actorId, activationReasonForAppId(appId), appId);
         requireOpening();
         state.eventSeq += 1;
         const lease = shardClient.captureInstanceLifecycle(actorId, instanceId);
@@ -215,14 +216,15 @@ function createKernelHandle(scope: PluginHandleScope, instances: ReturnType<type
 function createRefreshUi(scope: PluginHandleScope, instances: ReturnType<typeof createInstanceTable>, ui: ReturnType<typeof createRetainedUiIntake>, jobs: ReturnType<typeof createSpawnedJobDriver>) {
   const { shardClient, state, documentBindings, uiSurfaceByInstance,appIdByInstance,manifest } = scope;
   const { requireActorId, submitTurn } = instances;
-  const { acceptUiPatches, ownedUiRefreshResponse } = ui;
+  const { acceptUiPatches, explainUiIntakeFailure, ownedUiRefreshResponse } = ui;
   const { routeHostEffects } = jobs;
   /** 🔁️ H1-react item 2 — window-body refresh no longer goes through `AppCommand::RefreshUi`
    * (deleted, channel v12): it submits `Event::SurfaceVisible` directly and reads back whatever this
    * SAME turn's `TurnResult.uiPatches` produced (or the retained tree if nothing changed — the
    * `PatchTracker` on the guest side emits nothing for an unchanged body). Every requested window is
    * identified by its schema-owned body key; continuations drain until all surfaces missing from the
-   * retained actor state publish their first patch. Panels use the same authored-body surface path. */
+   * retained actor state publish their first patch. Panels use the same authored-body surface path. A refresh that fails while a
+   * requested surface's last patch was refused by the intake fails with that refusal ({@link ../🧺️handle-ui-intake/rejection.ts}). */
   const refreshUi = async (instanceId: number, request: PluginUiRefreshRequest, control?: Readonly<{signal:AbortSignal}>): Promise<PluginUiRefreshResponse> => {
     if(control?.signal.aborted)throw control.signal.reason??new Error("staging.cancelled");
     const app=(manifest.apps as readonly AppDefinition[]).find(app=>app.id===appIdByInstance.get(instanceId));
@@ -268,7 +270,9 @@ function createRefreshUi(scope: PluginHandleScope, instances: ReturnType<typeof 
             control?{signal:control.signal,events:(request.forms??[]).map(target=>({kind:"surface-hidden",payload:{surface:pluginSurfaceRef(instanceId,target.key)}}))}:undefined,
           );
           return settled;
-        }));
+        }), false);
+      } catch (error) {
+        throw explainUiIntakeFailure(instanceId, requestedSurfaceIds, error);
       } finally {
         closeTurn();
       }
@@ -283,7 +287,7 @@ function createRefreshUi(scope: PluginHandleScope, instances: ReturnType<typeof 
 }
 
 /** 🔁️ Phase 10 of {@link loadPluginModule}: retains one completion's exact activation across evaluation, queueing and publication. */
-function createExtensionCompletionCapture(scope: PluginHandleScope, instances: ReturnType<typeof createInstanceTable>, ui: ReturnType<typeof createRetainedUiIntake>, jobs: ReturnType<typeof createSpawnedJobDriver>) {
+export function createExtensionCompletionCapture(scope: PluginHandleScope, instances: ReturnType<typeof createInstanceTable>, ui: ReturnType<typeof createRetainedUiIntake>, jobs: ReturnType<typeof createSpawnedJobDriver>, drainTypedOperations: (instanceId: number) => Promise<void>) {
   const { shardClient, documentBindings, turnOutcomes } = scope;
   const { requireActorId, submitTurn } = instances;
   const { acceptUiPatches } = ui;
@@ -335,6 +339,7 @@ function createExtensionCompletionCapture(scope: PluginHandleScope, instances: R
           else effects.push(effect);
         }
         turnOutcomes.push({ instanceId, frames });
+        if (wireTurnStatusTag(settled.status) === "more-work") void drainTypedOperations(instanceId);
         return invocationFromFrames(frames.map(decodeAppFrame), effects, "extension completion");
       }));
     };
@@ -506,7 +511,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
   });
 
   const refreshUi = createRefreshUi(scope, instances, ui, jobs);
-  const captureExtensionCompletion = createExtensionCompletionCapture(scope, instances, ui, jobs);
+  const captureExtensionCompletion = createExtensionCompletionCapture(scope, instances, ui, jobs, turns.drainTypedOperations);
   const invoke = createInboundInvoke(scope, instances, requestActors);
   const bindDocumentPort = createDocumentPortBinder(scope, instances, ui, jobs);
 

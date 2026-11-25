@@ -10,6 +10,7 @@ import type { ResizableJoinCornerSpec } from "../../↔️Resizable/🟦️.tsx"
 import { setSurfaceActiveRoot } from "../../🌈️Surface/🟦️.tsx";
 import { type WindowLayoutDropZone, type WindowLayoutNode, type WindowLayoutPath, type WindowStackCorner, WINDOW_STACK_CORNERS, applyWindowLayoutOp, collectWindowIds } from "@semio-tech/ui-layout";
 import { endWindowTemplateDrag } from "../🪟️template-drag/🟦️.ts";
+import { useDragEscape } from "../../../🔨️modules/🫳️pointer-drag/🟦️.tsx";
 import { applyModeSplitPercents, modePathEquals, modePathFromKey, modePathKey } from "../🗺️layout/🟦️.ts";
 import { type ModeDragState, type ModeStackDropTargets, applyModeDrop, computeModeDropZone } from "../🎯️drop/🟦️.ts";
 import { applyAxisGroupLayoutDelta, modeAxisGroupLayout, readModeAxis, readModeAxisPixelSize, resolveJoinCornerPeerCrossAxes, resolveJoinCornerResizeDeltas, safePanelGroupSetLayout } from "../🔗️join-corners/🟦️.ts";
@@ -140,6 +141,16 @@ export function useModeWindowCallbacks({ stackDropElementsRef, activeWindowId, s
 
 /** 🧲 Runs the pointer drag effects and builds the axis layout, group, element and join corner callbacks. */
 export function useModeDragEffectsAndAxisCallbacks({ pendingDrag, dragState, dragLayoutSnapshotRef, layoutStateRef, setDragState, setPendingDrag, refreshDropZone, finishDrag, dropZoneRef, setDropZone, setLayoutState, axisGroupRefsRef, axisGroupElementsRef, setTemplateDrag, templateDrag }: Pick<ReturnType<typeof useModeLayoutState>, "pendingDrag" | "dragState" | "dragLayoutSnapshotRef" | "layoutStateRef" | "setDragState" | "setPendingDrag" | "dropZoneRef" | "setDropZone" | "setLayoutState" | "axisGroupRefsRef" | "axisGroupElementsRef" | "setTemplateDrag" | "templateDrag"> & Pick<ReturnType<typeof useModeWindowCallbacks>, "refreshDropZone" | "finishDrag">) {
+  const cancelDrag = reactHostPort.useCallback(() => {
+    if (dragLayoutSnapshotRef.current) setLayoutState(dragLayoutSnapshotRef.current);
+    dragLayoutSnapshotRef.current = null;
+    setDragState(null);
+    setPendingDrag(null);
+    dropZoneRef.current = null;
+    setDropZone(null);
+  }, []);
+  useDragEscape(Boolean(dragState), cancelDrag);
+
   reactHostPort.useEffect(() => {
     if (!pendingDrag && !dragState) return;
     const handleMove = (event: PointerEvent) => {
@@ -177,32 +188,19 @@ export function useModeDragEffectsAndAxisCallbacks({ pendingDrag, dragState, dra
       dropZoneRef.current = null;
       setDropZone(null);
     };
+    const handleCancel = (event: PointerEvent) => {
+      if (event.pointerId === (dragState?.pointerId ?? pendingDrag?.pointerId)) cancelDrag();
+    };
     document.addEventListener("pointermove", handleMove);
     document.addEventListener("pointerup", handleUp);
+    document.addEventListener("pointercancel", handleCancel);
     return () => {
       document.removeEventListener("pointermove", handleMove);
       document.removeEventListener("pointerup", handleUp);
+      document.removeEventListener("pointercancel", handleCancel);
     };
-  }, [pendingDrag, dragState, finishDrag, refreshDropZone]);
+  }, [pendingDrag, dragState, finishDrag, refreshDropZone, cancelDrag]);
 
-  reactHostPort.useEffect(() => {
-    if (!dragState) return;
-    const cancelDrag = () => {
-      if (dragLayoutSnapshotRef.current) setLayoutState(dragLayoutSnapshotRef.current);
-      dragLayoutSnapshotRef.current = null;
-      setDragState(null);
-      setPendingDrag(null);
-      dropZoneRef.current = null;
-      setDropZone(null);
-    };
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== "Escape") return;
-      event.preventDefault();
-      cancelDrag();
-    };
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [dragState]);
 
   const onAxisLayoutChanged = reactHostPort.useCallback((axisPath: WindowLayoutPath, sizes: Record<string, number>) => {
     setLayoutState((prev) => applyModeSplitPercents(prev, axisPath, sizes));

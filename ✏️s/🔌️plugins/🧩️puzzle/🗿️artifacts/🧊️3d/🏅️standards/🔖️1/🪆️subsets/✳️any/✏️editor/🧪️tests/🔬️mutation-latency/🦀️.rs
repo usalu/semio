@@ -266,8 +266,6 @@ struct Puzzle3dTurnCensus {
     delete_turns: usize,
     delete_units: u64,
     delete_census: semio_plugin::app::TypedOperationUnitCensus,
-    translate_debug: String,
-    delete_debug: String,
 }
 
 impl Puzzle3dTurnCensus {
@@ -286,8 +284,8 @@ impl std::fmt::Display for Puzzle3dTurnCensus {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             formatter,
-            "label={} objects={} ladder={}/{}turns translate={}turns/{}units [{}] delete={}turns/{}units [{}] translate-histogram=({}) delete-histogram=({})",
-            self.label, self.objects, self.translate_ladder_turns(), self.delete_ladder_turns(), self.translate_turns, self.translate_units, self.translate_census, self.delete_turns, self.delete_units, self.delete_census, self.translate_debug, self.delete_debug
+            "label={} objects={} ladder={}/{}turns translate={}turns/{}units [{}] delete={}turns/{}units [{}]",
+            self.label, self.objects, self.translate_ladder_turns(), self.delete_ladder_turns(), self.translate_turns, self.translate_units, self.translate_census, self.delete_turns, self.delete_units, self.delete_census
         )
     }
 }
@@ -298,15 +296,11 @@ async fn turn_census(app: &mut Puzzle3dApp, label: &'static str) -> Puzzle3dTurn
     let objects = object_count(app);
     let victim = first_object_id(app);
     select_id(app, semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_GRANULARITY_OBJECT, &victim).await.expect("selection before translate");
-    semio_framework_value::debug_histogram::debug_units_reset();
     let (result, translated) = dispatch_reporting_with_items(app, "translateSelection", Some(&json!({ "ids": [victim.as_str()], "dx": 3.5, "dy": 0.0, "dz": 0.0 })), None, SETTLE_HOST_TURN_ITEMS).await;
-    let translate_debug = semio_framework_value::debug_histogram::debug_units_report();
     result.expect("translate dispatches");
     let victim = first_object_id(app);
     select_id(app, semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_GRANULARITY_OBJECT, &victim).await.expect("selection before delete");
-    semio_framework_value::debug_histogram::debug_units_reset();
     let (result, deleted) = dispatch_reporting_with_items(app, "deleteSelection", None, None, SETTLE_HOST_TURN_ITEMS).await;
-    let delete_debug = semio_framework_value::debug_histogram::debug_units_report();
     result.expect("delete dispatches");
     Puzzle3dTurnCensus {
         label,
@@ -317,8 +311,6 @@ async fn turn_census(app: &mut Puzzle3dApp, label: &'static str) -> Puzzle3dTurn
         delete_turns: deleted.turns,
         delete_units: deleted.census.units,
         delete_census: deleted.census,
-        translate_debug,
-        delete_debug,
     }
 }
 

@@ -1,0 +1,75 @@
+--- a/🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🔭️multiview-coverage/🧰️.ts
++++ b/🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🔭️multiview-coverage/🧰️.ts
+@@ -92,6 +92,12 @@
+ /** 🎯️ The D18 tolerance of a dimension: the larger of 15 mm and 2 % of it. */
+ export const d18 = (nominalM: number): number => Math.max(0.015, 0.02 * nominalM);
+ 
++/** 🧷️ The bound of the floating-point rounding of a comparison at a tolerance, in units in the last place of the largest number that entered it: a paper or model coordinate reaches the comparison through a few dozen rounded operations (the frames of the rig, the projection, the scale of the sheet), each at most half a unit in the last place. */
++export const ROUNDING_ULPS = 64;
++
++/** ⚖️ Whether a deviation exceeds its tolerance by more than the rounding of the numbers it was computed from ({@link ROUNDING_ULPS} units in the last place of `magnitude`, the largest absolute operand): a deviation that equals the tolerance is within it whatever the unit (metres or paper millimetres) and whatever the scale it is computed at, and a deviation that is not a number exceeds every tolerance. The bound is arithmetic, not a widening: at a magnitude of 1 m it is 1.4e-14 m, nine orders below the micrometre the documents are written in, so no drawing that differs from its tolerance by a representable authored amount changes its verdict. */
++export const exceeds = (deviation: number, tolerance: number, magnitude: number): boolean => !(deviation - tolerance <= ROUNDING_ULPS * Number.EPSILON * Math.abs(magnitude));
++
+ /** 💾️ The D18 tolerance of the synchrony checks: D18 of the largest dimension of the asset. */
+ export const toleranceM = (asset: Asset): number => d18(Math.max(asset.dimensions.heightM, asset.dimensions.widthM, asset.dimensions.depthM));
+ 
+@@ -386,7 +392,7 @@
+   const { elevation: e, front: f, plan: p } = extents;
+   const agree = (check: string, views: readonly PlanarViewpoint[], label: string, a: readonly [number, number], b: readonly [number, number]): void => {
+     const delta = Math.max(Math.abs(a[0] - b[0]), Math.abs(a[1] - b[1]));
+-    if (!(delta <= tolerance)) findings.push({ views, check, tier: "hard", message: `${label} differ: [${a[0].toFixed(3)}, ${a[1].toFixed(3)}] vs [${b[0].toFixed(3)}, ${b[1].toFixed(3)}] m (tolerance ${tolerance.toFixed(3)})`, delta: { deltaMm: delta * 1000, pair: views.join("/") } });
++    if (exceeds(delta, tolerance, Math.max(...a.map(Math.abs), ...b.map(Math.abs)))) findings.push({ views, check, tier: "hard", message: `${label} differ: [${a[0].toFixed(3)}, ${a[1].toFixed(3)}] vs [${b[0].toFixed(3)}, ${b[1].toFixed(3)}] m (tolerance ${tolerance.toFixed(3)})`, delta: { deltaMm: delta * 1000, pair: views.join("/") } });
+   };
+   if (e && p) agree("sync-forward", ["elevation", "plan"], "elevation x and plan x", [e.minX, e.maxX], [p.minX, p.maxX]);
+   if (e && f) agree("sync-height", ["elevation", "front"], "elevation y and front y", [e.minY, e.maxY], [f.minY, f.maxY]);
+@@ -394,21 +400,22 @@
+   for (const finding of boneSync(state, tolerance)) findings.push({ views: finding.pair.split("/") as PlanarViewpoint[], check: finding.check, tier: finding.tier === "bone" ? "hard" : "reported", message: finding.message, delta: { deltaMm: finding.deltaMm, pair: `${finding.pair} ${finding.bone}` }, bone: finding.bone });
+   for (const finding of anchorLandmarks(state, tolerance)) findings.push({ views: [finding.view], check: "anchor-landmark", tier: "hard", message: finding.message, delta: { deltaMm: finding.deltaMm, pair: `${finding.view} ${finding.anchor}` }, bone: finding.bone, anchor: finding.anchor, anchorKind: finding.kind });
+   if (!isDefault) return findings;
+-  const size = (check: string, view: PlanarViewpoint, label: string, measured: number, nominal: number): void => {
+-    if (!(Math.abs(measured - nominal) <= d18(nominal))) findings.push({ views: [view], check, tier: "hard", message: `${label} is ${measured.toFixed(3)} m but the dimensions say ${nominal.toFixed(3)} m`, delta: { deltaMm: Math.abs(measured - nominal) * 1000, pair: `${view} vs dimensions` } });
++  const size = (check: string, view: PlanarViewpoint, label: string, [low, high]: readonly [number, number], nominal: number): void => {
++    const measured = high - low;
++    if (exceeds(Math.abs(measured - nominal), d18(nominal), Math.max(Math.abs(low), Math.abs(high), nominal))) findings.push({ views: [view], check, tier: "hard", message: `${label} is ${measured.toFixed(3)} m but the dimensions say ${nominal.toFixed(3)} m`, delta: { deltaMm: Math.abs(measured - nominal) * 1000, pair: `${view} vs dimensions` } });
+   };
+   const d = asset.dimensions;
+   if (e) {
+-    size("dimension-elevation-width", "elevation", "elevation x extent (widthM)", e.maxX - e.minX, d.widthM);
+-    size("dimension-elevation-height", "elevation", "elevation height (heightM)", e.maxY - e.minY, d.heightM);
++    size("dimension-elevation-width", "elevation", "elevation x extent (widthM)", [e.minX, e.maxX], d.widthM);
++    size("dimension-elevation-height", "elevation", "elevation height (heightM)", [e.minY, e.maxY], d.heightM);
+   }
+   if (f) {
+-    size("dimension-front-width", "front", "front lateral extent (depthM)", f.maxX - f.minX, d.depthM);
+-    size("dimension-front-height", "front", "front height (heightM)", f.maxY - f.minY, d.heightM);
++    size("dimension-front-width", "front", "front lateral extent (depthM)", [f.minX, f.maxX], d.depthM);
++    size("dimension-front-height", "front", "front height (heightM)", [f.minY, f.maxY], d.heightM);
+   }
+   if (p) {
+-    size("dimension-plan-length", "plan", "plan x extent (widthM)", p.maxX - p.minX, d.widthM);
+-    size("dimension-plan-width", "plan", "plan lateral extent (depthM)", p.maxY - p.minY, d.depthM);
++    size("dimension-plan-length", "plan", "plan x extent (widthM)", [p.minX, p.maxX], d.widthM);
++    size("dimension-plan-width", "plan", "plan lateral extent (depthM)", [p.minY, p.maxY], d.depthM);
+   }
+   return findings;
+ }
+@@ -434,7 +441,7 @@
+   return `${mode}: ${lines.length} shapes: ${lines.slice(0, 6).join("; ")}`;
+ }
+ 
+-/** 📰️ The paper findings of the default pose of one view: the box of the drawn fills and outline runs ({@link paperBox}) against the dimensions at the scale of the scene, within D18. */
++/** 📰️ The paper findings of the default pose of one view: the box of the drawn fills and outline runs ({@link paperBox}) against the dimensions at the scale of the scene, within D18; a deviation that equals D18 is within it, as in the dimension checks in metres ({@link exceeds}). */
+ export function paperFindings(asset: Asset, view: PlanarViewpoint, scene: DrawingScene, shapes: readonly EvaluatedShape[]): { readonly check: "paper-width" | "paper-height"; readonly message: string; readonly delta: { readonly deltaMm: number; readonly pair: string } }[] {
+   const box = paperBox(scene, shapes);
+   if (box === undefined) return [];
+@@ -445,8 +452,8 @@
+   const gotH = box.maxY - box.minY;
+   const pair = `${view} paper vs dimensions`;
+   return [
+-    ...(Math.abs(gotW - w * k) > d18(w) * k ? [{ check: "paper-width" as const, message: `drawn width ${gotW.toFixed(2)} mm but ${w}·${k.toFixed(3)} = ${(w * k).toFixed(2)} mm`, delta: { deltaMm: (Math.abs(gotW - w * k) / k) * 1000, pair } }] : []),
+-    ...(Math.abs(gotH - h * k) > d18(h) * k ? [{ check: "paper-height" as const, message: `drawn height ${gotH.toFixed(2)} mm but ${h}·${k.toFixed(3)} = ${(h * k).toFixed(2)} mm`, delta: { deltaMm: (Math.abs(gotH - h * k) / k) * 1000, pair } }] : []),
++    ...(exceeds(Math.abs(gotW - w * k), d18(w) * k, Math.max(Math.abs(box.minX), Math.abs(box.maxX), w * k)) ? [{ check: "paper-width" as const, message: `drawn width ${gotW.toFixed(2)} mm but ${w}·${k.toFixed(3)} = ${(w * k).toFixed(2)} mm`, delta: { deltaMm: (Math.abs(gotW - w * k) / k) * 1000, pair } }] : []),
++    ...(exceeds(Math.abs(gotH - h * k), d18(h) * k, Math.max(Math.abs(box.minY), Math.abs(box.maxY), h * k)) ? [{ check: "paper-height" as const, message: `drawn height ${gotH.toFixed(2)} mm but ${h}·${k.toFixed(3)} = ${(h * k).toFixed(2)} mm`, delta: { deltaMm: (Math.abs(gotH - h * k) / k) * 1000, pair } }] : []),
+   ];
+ }
+ 

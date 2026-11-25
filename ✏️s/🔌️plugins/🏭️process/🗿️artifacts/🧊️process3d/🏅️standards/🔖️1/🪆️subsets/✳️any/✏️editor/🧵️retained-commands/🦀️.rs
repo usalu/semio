@@ -339,7 +339,7 @@ impl ArtifactOwnedToolJobFactory for Process3dBoundedCommandJobFactory {
     /// `reset_process3d_document_effect`, `exportModel` a `DownloadMediaExport`, `loadModelRequest` a
     /// `RequestFileOpen`) rather than a store edit; `Artifact` is every verb that emits a
     /// `Process3dMutation` against the timeline, the stock or the workshop, admitted by
-    /// `Process3dArtifactPreparationFactory`; `Config` is the viewer's replay cursor and the engagement line — view
+    /// `process3d_document_preparation_factory`; `Config` is the viewer's replay cursor and the engagement line — view
     /// state, never history — so the cursor verbs and `engagementSubmit` publish there only, and every verb that
     /// inserts or removes a step publishes BOTH lanes (the step, and the cursor moved past it).
     const PUBLICATION_CONTRACTS: &'static [semio_plugin::ArtifactToolPublicationContract] = &[

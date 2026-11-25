@@ -528,3 +528,21 @@ async fn an_empty_document_renders_placeholders() {
     assert!(json.contains("Nodes (0)"), "{json}");
 }
 //#endregion 🔖️Windows
+
+fn tree_icons(node: &BuiltNode, found: &mut std::collections::BTreeSet<String>) {
+    if let Component::TreeItem(props) = &node.component {
+        if let Some(icon) = props.icon.as_ref() { found.insert(icon.as_str().to_owned()); }
+    }
+    for child in node.children.iter() { tree_icons(child, found); }
+}
+
+/// 🖼️ LAW: every icon id the artifact tree renders is in the generated icon registry, so no row paints an icon id as literal text.
+#[semio_framework_async_macros::async_test]
+async fn every_tree_row_icon_id_is_registered_3d() {
+    let mut found = std::collections::BTreeSet::new();
+    tree_icons(&build(&demo(), english()), &mut found);
+    assert!(found.len() >= 10, "the demo tree uses a row icon per entity kind: {found:?}");
+    for icon in &found {
+        assert!(semio_plugin::IconName::from_str(icon).is_some(), "unregistered icon id '{icon}'");
+    }
+}

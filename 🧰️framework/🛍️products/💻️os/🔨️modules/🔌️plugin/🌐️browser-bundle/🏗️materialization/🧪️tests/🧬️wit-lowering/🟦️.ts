@@ -13,6 +13,7 @@ import { originalOperationWorkerSource } from "../../../../../../../../🔨️mo
 import { PLUGIN_HOST_SHIM_FILE } from "../../🧾️contract/🟦️.ts";
 import { pluginComponentBridgeSource } from "../../🌉️component-bridge-source/🟦️.ts";
 import { browserActorModuleSource } from "../../../🧩️actor-module/🟦️.ts";
+import { guestFactorySource, hostFactorySource, noCoreModule } from "../../../../🧪️tests/✂️worker-vm-source/🟦️.ts";
 
 type Member = { readonly name: string; readonly optional: boolean; readonly type: string };
 type Oracle = { readonly records: Map<string, Member[]>; readonly functions: Map<string, string[]>; readonly files: Map<string, string> };
@@ -120,12 +121,12 @@ test("the generated component bridge calls the reactor and jobs exports with exa
   const calls: [string, string, unknown[]][] = [];
   Object.assign(globalThis, { __witCalls: calls });
   try {
-    writeFileSync(join(directory, "guest.js"), guestSource(APP_CHANNEL_VERSION));
-    writeFileSync(join(directory, PLUGIN_HOST_SHIM_FILE), "export function __resolveEffect() {}\nexport function __rejectEffect() {}\nexport function __bindOriginalClock() {}\nexport function __checkoutOriginal() {}\nexport function __returnOriginal() {}\nexport function operationClockUs() { return 5n; }\n");
-    writeFileSync(join(directory, "bridge.mjs"), pluginComponentBridgeSource("guest", "guest.wasm"));
+    writeFileSync(join(directory, "guest.js"), guestFactorySource(guestSource(APP_CHANNEL_VERSION)));
+    writeFileSync(join(directory, PLUGIN_HOST_SHIM_FILE), hostFactorySource("__resolveEffect() {}, __rejectEffect() {}, __bindOriginalClock() {}, __checkoutOriginal() {}, __returnOriginal() {}, operationClockUs() { return 5n; }"));
+    writeFileSync(join(directory, "bridge.mjs"), pluginComponentBridgeSource("guest"));
     const { createActorApi } = (await import(pathToFileURL(join(directory, "bridge.mjs")).href)) as { createActorApi: (...args: unknown[]) => Promise<Record<string, (...args: unknown[]) => Promise<any>>> };
     const admission = { operation: 3n, generation: 1n, grant: { maximumItems: 64, maximumCopyBytes: 4096, maximumCapacityBytes: 4096, maximumReleaseBytes: 4096, maximumDepth: 8 }, fuel: 1000, maximumElapsedUs: 60_000_000n };
-    const api = await createActorApi("wit-actor", 1n, admission, () => 5n, { receipt() {}, hold() {} });
+    const api = await createActorApi("wit-actor", 1n, admission, () => 5n, { receipt() {}, hold() {}, succeed: async () => admission }, noCoreModule);
     await api.poll!([], undefined, undefined, SHAPE);
     await api.startJob!(7n, "semio.kind", new Uint8Array([9]));
     expect(await api.stepJob!(7n, { fuel: 1n, deadlineMs: 5 })).toEqual({ status: "done", value: new Uint8Array([1, 2, 3]) });
@@ -220,16 +221,16 @@ test("an input the guest refuses as a typed outcome holds nothing: the load job 
   const admission = { operation: 3n, generation: 1n, grant: { maximumItems: 64, maximumCopyBytes: 4096, maximumCapacityBytes: 4096, maximumReleaseBytes: 4096, maximumDepth: 8 }, fuel: 1000, maximumElapsedUs: 60_000_000n };
   const open = async (actor: string, held: unknown[]) => {
     const { createActorApi } = (await import(pathToFileURL(join(directory, "bridge.mjs")).href)) as { createActorApi: (...args: unknown[]) => Promise<Record<string, (...args: unknown[]) => Promise<any>>> };
-    return createActorApi(actor, 1n, admission, () => 5n, { receipt() {}, hold(failure: unknown) { held.push(failure); } });
+    return createActorApi(actor, 1n, admission, () => 5n, { receipt() {}, hold(failure: unknown) { held.push(failure); }, succeed: async () => admission }, noCoreModule);
   };
   try {
-    writeFileSync(join(directory, "guest.js"), guestSource(APP_CHANNEL_VERSION) + `
+    writeFileSync(join(directory, "guest.js"), guestFactorySource(guestSource(APP_CHANNEL_VERSION) + `
 const turnFailure = () => { const budget = staged; return Object.assign(Error("[object Object] (see error.payload)"), { payload: { input: budget.input, spent: zero, workUnitsSpent: 0n, failure: { tag: ${JSON.stringify(law.turnFailure.tag)} } } }); };
 const answered = reactor.poll;
 reactor.poll = async () => { if (globalThis.__thrownTurn) throw turnFailure(); return answered(); };
-`);
-    writeFileSync(join(directory, PLUGIN_HOST_SHIM_FILE), "export function __resolveEffect() {}\nexport function __rejectEffect() {}\nexport function __bindOriginalClock() {}\nexport function __checkoutOriginal() {}\nexport function __returnOriginal() {}\nexport function __takeActorFault() {}\nexport function operationClockUs() { return 5n; }\n");
-    writeFileSync(join(directory, "bridge.mjs"), pluginComponentBridgeSource("guest", "guest.wasm"));
+`));
+    writeFileSync(join(directory, PLUGIN_HOST_SHIM_FILE), hostFactorySource("__resolveEffect() {}, __rejectEffect() {}, __bindOriginalClock() {}, __checkoutOriginal() {}, __returnOriginal() {}, __takeActorFault() {}, operationClockUs() { return 5n; }"));
+    writeFileSync(join(directory, "bridge.mjs"), pluginComponentBridgeSource("guest"));
     const held: unknown[] = [];
     const typed = await open("typed-refusal", held);
     for (const call of law.afterRefusal as string[]) {

@@ -21,6 +21,7 @@ import{nativePlatformImageBackendV1}from"../../../../../../../../../🔨️modul
 import{nativeStorageBackendsV1,nativeStorageBackingFilenameV1,nativeStorageMountedAtV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🔌️backends/📋️contract/🟦️.ts";
 import {declareLibraryBuildTestEnvelopeV1} from "../../../../../🧪️testing/🪪️native-birth/🟦️.ts";
 declareLibraryBuildTestEnvelopeV1({suite:"storage-budget"});
+const CAP:number=({darwin:2**35,linux:2**37,win32:2**36} as Record<string,number>)[process.platform]??Number.MAX_SAFE_INTEGER;
 const repository=await privateRepositoryWorkspaceV1();
 
 test("cache backing and mount expectations agree with the neutral backend corpus",()=>{
@@ -164,7 +165,7 @@ test("a policy target changed after birth leaves an existing image at its own si
   {id:"unaligned",receipt:{maximumPhysicalBytes:8*2**30+1},expected:declared.capacityBytes},
   {id:"below-minimum",receipt:{maximumPhysicalBytes:unit},expected:declared.capacityBytes},
   {id:"not-a-number",receipt:{maximumPhysicalBytes:"8589934592"},expected:declared.capacityBytes},
-  {id:"no-receipt",receipt:null,expected:declared.capacityBytes},
+  {id:"no-receipt",receipt:null,expected:Math.min(declared.capacityBytes,CAP)},
   {id:"unreadable",receipt:"{",expected:declared.capacityBytes}
  ],model=`import json,sys
 d,rows=json.loads(sys.argv[1]),json.loads(sys.argv[2])
@@ -172,8 +173,8 @@ out={}
 for r in rows:
     v=r["bytes"]
     ok=isinstance(v,int) and not isinstance(v,bool) and v%1048576==0 and v>=33554432 and v<=d
-    out[r["id"]]=v if ok else d
-print(json.dumps(out))`,run=Bun.spawnSync(["python3","-I","-c",model,JSON.stringify(declared.capacityBytes),JSON.stringify(rows.map(row=>({id:row.id,bytes:row.receipt&&typeof row.receipt==="object"?row.receipt.maximumPhysicalBytes:null})))]);
+    out[r["id"]]=v if ok else (min(d,r["cap"]) if r["missing"] else d)
+print(json.dumps(out))`,run=Bun.spawnSync(["python3","-I","-c",model,JSON.stringify(declared.capacityBytes),JSON.stringify(rows.map(row=>({id:row.id,cap:CAP,missing:row.receipt===null,bytes:row.receipt&&typeof row.receipt==="object"?row.receipt.maximumPhysicalBytes:null})))]);
  expect(run.exitCode,run.stderr.toString()).toBe(0);const independent=JSON.parse(run.stdout.toString());
  const pinRust=(root:string)=>{mkdirSync(join(root,".cache","b"),{recursive:true});const rustDirectory=join(root,policy.partitions.rust.directory);mkdirSync(rustDirectory,{recursive:true});writeFileSync(join(rustDirectory,"image.json"),JSON.stringify({maximumPhysicalBytes:policy.partitions.rust.capacityBytes}));},control=mkdtempSync(join(tmpdir(),"budget-pin-")),base=(()=>{try{pinRust(control);return repositoryCacheBudgetV1(control);}finally{rmSync(control,{recursive:true,force:true});}})();
  for(const row of rows){
@@ -182,7 +183,7 @@ print(json.dumps(out))`,run=Bun.spawnSync(["python3","-I","-c",model,JSON.string
    pinRust(root);const directory=join(root,declared.directory);mkdirSync(directory,{recursive:true});
    if(row.receipt!==null)writeFileSync(join(directory,"image.json"),typeof row.receipt==="string"?row.receipt:JSON.stringify(row.receipt));
    expect(pinnedCapacityV1(directory,declared.capacityBytes),row.id).toBe(row.expected);expect(independent[row.id],row.id).toBe(row.expected);
-   const budget=repositoryCacheBudgetV1(root),partition=budget.partitions.dependencies,born=row.id==="no-receipt"?hostShareCapacityV1(declared.capacityBytes,declared.hostSharePercent,privateRepositoryHostFreeBytesV1,partitionNeedBytesV1(policy as never,"dependencies")):row.expected;
+   const budget=repositoryCacheBudgetV1(root),partition=budget.partitions.dependencies,born=row.id==="no-receipt"?hostShareCapacityV1(Math.min(declared.capacityBytes,CAP),declared.hostSharePercent,privateRepositoryHostFreeBytesV1,partitionNeedBytesV1(policy as never,"dependencies")):row.expected;
    expect(partition.capacityBytes,row.id).toBe(born);expect(partition.filesystemBytes,row.id).toBe(born-unit);
    expect(budget.partitionBytes-base.partitionBytes,row.id).toBe(born-base.partitions.dependencies.capacityBytes);
    expect(budget.maximumBytes-base.maximumBytes,row.id).toBe(born-base.partitions.dependencies.capacityBytes);
@@ -193,7 +194,7 @@ print(json.dumps(out))`,run=Bun.spawnSync(["python3","-I","-c",model,JSON.string
 
 /** 📐️ An elastic image honours its receipt like a pinned one: clamped down to the rule maximum, never snapped up to the declared minimum, and compared with an independent Python model. */
 test("elastic capacity reads image receipts like pinned capacity",()=>{
- const {effectiveCapacityV1}=require("../📐️elastic/🟦️.ts"),mib=1048576,minimum=64*mib,rule={needBytes:minimum,headroomPercent:0,hostFreeReservePercent:0,alignBytes:mib,maximumBytes:256*mib,automatic:true,pressureFreeBytes:0},
+ const {effectiveCapacityV1}=require("../📐️elastic/🟦️.ts"),mib=1048576,minimum=64*mib,rule={needBytes:minimum,headroomPercent:0,hostFreeReservePercent:0,growHostFreeFloorBytes:0,growHostFreeFloorPercent:0,alignBytes:mib,maximumBytes:256*mib,automatic:true,pressureFreeBytes:0},
  rows=[{id:"smaller",bytes:32*mib},{id:"between",bytes:128*mib},{id:"above-maximum",bytes:512*mib},{id:"unaligned",bytes:128*mib+1},{id:"below-floor",bytes:mib},{id:"text",bytes:"x"},{id:"malformed",bytes:null}],
  model=`import json,sys
 m,x,rows=int(sys.argv[1]),int(sys.argv[2]),json.loads(sys.argv[3])
@@ -249,22 +250,23 @@ test("a pressed elastic image grows by half within the host and the maximum, the
 rule,rows=json.loads(sys.argv[1]),json.loads(sys.argv[2])
 out=[]
 for c,f,a in rows:
-    ceiling=min(rule["maximumBytes"],(f+a)*(100-rule["hostFreeReservePercent"])//100)
+    total=f+a
+    ceiling=min(rule["maximumBytes"],rule["cap"],max(0,total-max(rule["growHostFreeFloorBytes"],total*rule["growHostFreeFloorPercent"]//100)))
     wanted=-(-(c*3//2)//rule["alignBytes"])*rule["alignBytes"]
     target=min(wanted,ceiling)//rule["alignBytes"]*rule["alignBytes"]
     out.append(max(c,target))
-print(json.dumps(out))`,run=Bun.spawnSync(["python3","-I","-c",model,JSON.stringify(rule),JSON.stringify(rows)]);
+print(json.dumps(out))`,run=Bun.spawnSync(["python3","-I","-c",model,JSON.stringify({...rule,cap:CAP}),JSON.stringify(rows)]);
   expect(run.exitCode,run.stderr.toString()).toBe(0);
   const independent=JSON.parse(run.stdout.toString()) as number[];
   rows.forEach(([c,f,a],i)=>expect(elasticGrowthV1(rule,c,f,a),name+" "+[c,f,a]).toBe(independent[i]));
  }
- const graph=policy.elastic.graph;expect(elasticGrowthV1(graph,12*GiB,400*GiB)).toBe(18*GiB);expect(elasticGrowthV1(graph,6*GiB,92*GiB)).toBe(7*GiB);expect(elasticGrowthV1(graph,24*GiB,500*GiB)).toBe(24*GiB);
+ const graph=policy.elastic.graph;expect(elasticGrowthV1(graph,12*GiB,400*GiB)).toBe(18*GiB);expect(elasticGrowthV1(graph,18*GiB,70*GiB,18*GiB)).toBe(27*GiB);expect(elasticGrowthV1(graph,6*GiB,92*GiB)).toBe(9*GiB);expect(elasticGrowthV1(graph,6*GiB,20*GiB)).toBe(6*GiB);expect(elasticGrowthV1(graph,32*GiB,500*GiB)).toBe(32*GiB);
  const root=mkdtempSync(join(tmpdir(),"elastic-growth-"));
  try{
   const directory=join(root,"g");mkdirSync(directory);mkdirSync(join(root,"c"));
   const born=effectiveCapacityV1(directory,graph.minimumBytes,graph);
   writeElasticGrowthV1(directory,born+6*GiB);
-  const allowed=Math.floor(privateRepositoryHostFreeBytesV1*(100-graph.hostFreeReservePercent)/100/graph.alignBytes)*graph.alignBytes;expect(effectiveCapacityV1(directory,graph.minimumBytes,graph)).toBe(Math.max(born,Math.min(born+6*GiB,graph.maximumBytes,allowed)));
+  const{elasticGrowthCeilingV1}=require("../📐️elastic/🟦️.ts"),allowed=Math.floor(elasticGrowthCeilingV1(graph,privateRepositoryHostFreeBytesV1)/graph.alignBytes)*graph.alignBytes;expect(effectiveCapacityV1(directory,graph.minimumBytes,graph)).toBe(Math.max(born,Math.min(born+6*GiB,graph.maximumBytes,allowed)));
   expect(effectiveCapacityV1(directory,graph.minimumBytes,graph)).toBeLessThanOrEqual(graph.maximumBytes);
  }finally{rmSync(root,{recursive:true,force:true});}
 });
@@ -275,7 +277,7 @@ test("every partition has a bloat rule, the common one is schema-valid, and the 
  for(const name of Object.keys(policy.partitions))expect(repositoryPartitionReclaimRuleV1(name)).toEqual((policy.elastic as Record<string,unknown>)[name]??policy.reclaim);
  expect(policy.elastic.rust.needBytes).toBeLessThan(policy.elastic.rust.maximumBytes);
  expect(elasticCapacityV1(policy.elastic.rust,policy.elastic.rust.minimumBytes,7*GiB)).toBe(policy.elastic.rust.minimumBytes);
- expect(elasticCapacityV1(policy.elastic.rust,policy.elastic.rust.minimumBytes,400*GiB)).toBe(40*GiB);
+ expect(elasticCapacityV1(policy.elastic.rust,policy.elastic.rust.minimumBytes,400*GiB)).toBe(Math.min(40*GiB,CAP));
 });
 
 /** 🧮️ The disk policy is declared as fractions of the host: no absolute minimum exceeds what the host can create, every logical limit fits its capacity, and the images born on a 16 GB / 60 GB, a 32 GB / 200 GB and a Windows 256 GB / 5 GB-free machine add up to less than the host's free bytes; the elastic minimum agrees with an independent Python model. */
@@ -296,21 +298,22 @@ for p in profiles:
             share=free*(100-rule["hostFreeReservePercent"])//100
             minimum=max(rule["floorBytes"],min(rule["minimumBytes"],share//rule["alignBytes"]*rule["alignBytes"]))
             wanted=-(-rule["needBytes"]*(100+rule["headroomPercent"])//100)
-            ceiling=min(rule["maximumBytes"],share)
+            ceiling=min(rule["maximumBytes"],pol["cap"],share)
             target=min(wanted,max(ceiling,minimum))
             total+=max(minimum,target//rule["alignBytes"]*rule["alignBytes"])
         else:
             share=free*part["hostSharePercent"]//100//1048576*1048576
             need=-(-part.get("needBytes",{}).get("darwin",0)//1048576)*1048576
-            total+=max(min(part["capacityBytes"],67108864),min(part["capacityBytes"],max(share,need)))
+            capacity=min(part["capacityBytes"],pol["cap"])//1048576*1048576
+            total+=max(min(capacity,67108864),min(capacity,max(share,need)))
     out[p["id"]]=total
-print(json.dumps(out))`,run=Bun.spawnSync(["python3","-I","-c",model,JSON.stringify(policy),JSON.stringify(profiles)]);
+print(json.dumps(out))`,run=Bun.spawnSync(["python3","-I","-c",model,JSON.stringify({...policy,cap:CAP}),JSON.stringify(profiles)]);
  expect(run.exitCode,run.stderr.toString()).toBe(0);const independent=JSON.parse(run.stdout.toString());
  for(const profile of profiles){
   let total=0;
   for(const[id,row]of Object.entries(policy.partitions)){
-   const rule=(policy.elastic as Record<string,typeof policy.elastic.rust>)[id],born=rule?elasticCapacityV1(rule,elasticMinimumV1(rule,rule.minimumBytes,profile.free),profile.free):hostShareCapacityV1(row.capacityBytes,(row as {hostSharePercent:number}).hostSharePercent,profile.free,partitionNeedBytesV1(policy as never,id,"darwin"));
-   expect(born%unit,profile.id+" "+id).toBe(0);expect(born,profile.id+" "+id).toBeLessThanOrEqual(rule?rule.maximumBytes:row.capacityBytes);total+=born;
+   const rule=(policy.elastic as Record<string,typeof policy.elastic.rust>)[id],born=rule?elasticCapacityV1(rule,elasticMinimumV1(rule,rule.minimumBytes,profile.free),profile.free):hostShareCapacityV1(Math.min(row.capacityBytes,CAP),(row as {hostSharePercent:number}).hostSharePercent,profile.free,partitionNeedBytesV1(policy as never,id,"darwin"));
+   expect(born%unit,profile.id+" "+id).toBe(0);expect(born,profile.id+" "+id).toBeLessThanOrEqual(Math.min(rule?rule.maximumBytes:row.capacityBytes,CAP));total+=born;
   }
   expect(total,profile.id).toBe(independent[profile.id]);if(profile.free>=90*GiB)expect(total,profile.id).toBeLessThanOrEqual(profile.free);if(profile.free===56*GiB)expect(total,profile.id).toBeGreaterThan(profile.free);
  }
@@ -389,9 +392,9 @@ for free in hosts:
     share=free*(100-r["hostFreeReservePercent"])//100
     minimum=max(r["floorBytes"],min(r["minimumBytes"],share//r["alignBytes"]*r["alignBytes"]))
     wanted=-(-r["needBytes"]*(100+r["headroomPercent"])//100)
-    target=min(wanted,max(min(r["maximumBytes"],share),minimum))
+    target=min(wanted,max(min(r["maximumBytes"],r["cap"],share),minimum))
     out.append(max(minimum,target//r["alignBytes"]*r["alignBytes"]))
-print(json.dumps(out))`,run=Bun.spawnSync(["python3","-I","-c",model,JSON.stringify(rule),JSON.stringify(hosts)]);
+print(json.dumps(out))`,run=Bun.spawnSync(["python3","-I","-c",model,JSON.stringify({...rule,cap:CAP}),JSON.stringify(hosts)]);
  expect(run.exitCode,run.stderr.toString()).toBe(0);const independent=JSON.parse(run.stdout.toString()) as number[];
  for(const[id,row]of Object.entries(policy.elastic))expect(row.floorBytes,id).toBeLessThanOrEqual(row.minimumBytes);
  const born=hosts.map(free=>elasticCapacityV1(rule,elasticMinimumV1(rule,rule.minimumBytes,free),free));expect(born).toEqual(independent);for(const bytes of born)expect(bytes).toBeGreaterThanOrEqual(rule.floorBytes);
@@ -409,4 +412,43 @@ print(json.dumps(out))`,run=Bun.spawnSync(["python3","-I","-c",model,JSON.string
  expect(()=>requireImageAtFloorV1("rust",rule.floorBytes,rule.floorBytes)).not.toThrow();
  const compiler=readFileSync(new URL("../../🏗️compiler/🟦️.ts",import.meta.url),"utf8");expect(compiler).toContain('requireImageAtFloorV1("rust",declaration.capacityBytes,repositoryPartitionNeedBytesV1("rust"))');expect(()=>requireImageAtFloorV1("tools",mib,0)).not.toThrow();
  expect([[4*GiB,12*GiB,0],[4*GiB,12*GiB,4*GiB],[4*GiB,1*GiB,0],[rule.floorBytes,1*GiB,0],["missing",40*GiB,0],[null,40*GiB,0]].map(([receipt,free,held])=>elasticBelowFloorDueV1(receipt as never,rule.floorBytes,free as number,held as number))).toEqual([false,true,false,false,false,false]);
+});
+
+/** 🧱️ No image is born or grown above the size its platform returns freed blocks from: the corpus rows are answered by the implementation and by an independent Python model (the platform limits are written from the shard schema, not read from the code), a live oversize image is flagged for its recreation, a Linux image keeps growing, and no declared policy of a platform that unmaps up to a limit sizes a newborn image above it. */
+test("image cap: no sizing rule produces an image above the platform limit, an oversize live image is flagged, and the model agrees",()=>{
+ const{imageCapBytesV1,imageOversizeV1,elasticGrowthV1,elasticCapacityV1}=require("../📐️elastic/🟦️.ts"),GiB=2**30,limits={darwin:2**35,linux:2**37,win32:2**36} as Record<string,number>;
+ const rows=fixture.imageCap as {id:string;platform:string;receipt:number|string|null;capBytes:number|null;oversize:boolean}[],growth=fixture.imageCapGrowth as {id:string;capacityBytes:number;hostFreeBytes:number;allocatedBytes:number;maximumBytes:number;platform:string;growthBytes:number}[];
+ const model=`import json,sys
+limits=json.loads(sys.argv[1]);rows=json.loads(sys.argv[2]);growth=json.loads(sys.argv[3]);out={"cap":{},"oversize":{},"growth":{}}
+for r in rows:
+    cap=limits.get(r["platform"])
+    out["cap"][r["id"]]=cap
+    v=r["receipt"]
+    out["oversize"][r["id"]]=isinstance(v,int) and cap is not None and v>cap
+for g in growth:
+    cap=limits[g["platform"]];total=g["hostFreeBytes"]+g["allocatedBytes"];kept=max(25*2**30,total*5//100)
+    ceiling=min(g["maximumBytes"],cap,max(0,total-kept));wanted=-(-(g["capacityBytes"]*3//2)//2**30)*2**30
+    out["growth"][g["id"]]=max(g["capacityBytes"],min(wanted,ceiling)//2**30*2**30)
+print(json.dumps(out))`,run=Bun.spawnSync(["python3","-I","-c",model,JSON.stringify(limits),JSON.stringify(rows),JSON.stringify(growth)]);
+ expect(run.exitCode,run.stderr.toString()).toBe(0);const independent=JSON.parse(run.stdout.toString());
+ for(const row of rows){
+  const cap=imageCapBytesV1(row.platform);expect(cap===Infinity?null:cap,row.id).toBe(row.capBytes);expect(row.capBytes,row.id).toBe(independent.cap[row.id]);
+  const receipt=row.receipt==="missing"?"missing":typeof row.receipt==="number"?row.receipt:null;
+  expect(imageOversizeV1(receipt,row.platform),row.id).toBe(row.oversize);expect(row.oversize,row.id).toBe(independent.oversize[row.id]);
+ }
+ const rule={...policy.elastic.rust,growHostFreeFloorBytes:25*GiB,growHostFreeFloorPercent:5};
+ for(const row of growth){
+  const platform=process.platform;if(platform!==row.platform)continue;
+  expect(elasticGrowthV1({...rule,maximumBytes:row.maximumBytes},row.capacityBytes,row.hostFreeBytes,row.allocatedBytes),row.id).toBe(row.growthBytes);expect(row.growthBytes,row.id).toBe(independent.growth[row.id]);
+ }
+ expect(imageCapBytesV1(process.platform)).toBe(limits[process.platform]??Infinity);
+ for(const[id,rule]of Object.entries(policy.elastic))for(const free of[8*GiB,64*GiB,186*GiB,2000*GiB])expect(elasticCapacityV1(rule as never,(rule as {minimumBytes:number}).minimumBytes,free),id+" "+free).toBeLessThanOrEqual(Math.max(imageCapBytesV1(),(rule as {minimumBytes:number}).minimumBytes));
+ for(const[id,row]of Object.entries(policy.partitions)){const born=pinnedCapacityV1(join(tmpdir(),"semio-cap-missing-"+id),row.capacityBytes);expect(born,id).toBeLessThanOrEqual(Math.max(imageCapBytesV1(),0));}
+});
+
+/** 🏋️ Only a receipt above the limit of its platform flags an image as oversize; a missing or unreadable receipt and a platform whose limit is higher never do (the regrow additionally requires the image to be bloated). */
+test("image cap: only a receipt above the platform limit is oversize",()=>{
+ const{imageOversizeV1}=require("../📐️elastic/🟦️.ts"),GiB=2**30;
+ expect([57982058496,32*GiB,"missing",null].map(receipt=>imageOversizeV1(receipt as never,"darwin"))).toEqual([true,false,false,false]);
+ expect([57982058496,200*GiB].map(receipt=>imageOversizeV1(receipt,"linux"))).toEqual([false,true]);
 });

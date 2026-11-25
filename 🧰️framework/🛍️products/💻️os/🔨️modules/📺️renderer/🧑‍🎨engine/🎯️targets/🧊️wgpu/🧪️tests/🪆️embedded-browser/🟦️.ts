@@ -2,6 +2,7 @@ import { strict as assert } from "node:assert";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import fixture from "../../../../🧪️tests/🧫️fixtures/🪆️embedded-browser/🔣️.json";
+import { launchChromium } from "../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🌐️chromium-launch/🟦️";
 
 type Configuration = { renderer: "react" | "wgpu"; serve: string; libraryModuleUrl: string; styleModuleUrl?: string; sessionFactoryModules?: { moduleUrl: string; exportName: string }[]; rendererModuleUrl?: string; rendererWasmUrl?: string; frameWorkerUrl?: string; roots: { rootId: string; plugins: { pluginId: string; moduleUrl: string }[] }[] };
 type State = { id: string; locale: string; ready: boolean; error: string | null; intro: boolean; palette: boolean; controls: { id: string; rect: number[] }[]; surfaces: string[]; text: string; canvases: number; layout: number[] };
@@ -52,8 +53,7 @@ export async function runEmbeddedBrowserAcceptance(args: readonly string[]): Pro
   assert.ok(options.has("--configuration") && options.has("--output"), "embedded acceptance requires --configuration and --output");
   const config = parseEmbeddedBrowserConfiguration(JSON.parse(readFileSync(resolve(options.get("--configuration")!), "utf8")));
   const output = resolve(options.get("--output")!); mkdirSync(output, { recursive: true });
-  const { chromium } = await import("playwright");
-  const browser = await chromium.launch({ headless: true, args: ["--enable-unsafe-webgpu", "--ignore-gpu-blocklist", `--use-angle=${process.platform === "darwin" ? "metal" : process.platform === "win32" ? "d3d11" : "vulkan"}`] });
+  const browser = await launchChromium({ args: ["--enable-unsafe-webgpu", "--ignore-gpu-blocklist", `--use-angle=${process.platform === "darwin" ? "metal" : process.platform === "win32" ? "d3d11" : "vulkan"}`] });
   const context = await browser.newContext({ viewport: { width: fixture.viewport.width, height: fixture.viewport.height }, deviceScaleFactor: fixture.viewport.deviceScaleFactor });
   const page = await context.newPage(); const logs: string[] = []; const receipts: Receipt[] = []; const workers = new Set<unknown>();
   const log = (message: string) => { logs.push(message); if (logs.length > 8192) logs.shift(); writeFileSync(resolve(output, `embedded-${config.renderer}.log`), logs.join("\n") + "\n"); };

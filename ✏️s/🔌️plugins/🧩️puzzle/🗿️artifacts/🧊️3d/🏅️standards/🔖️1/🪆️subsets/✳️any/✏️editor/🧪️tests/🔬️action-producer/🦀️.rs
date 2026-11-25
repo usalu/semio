@@ -32,6 +32,19 @@ async fn mounted(scope: &mut OriginalFixtureScope) -> Box<Puzzle3dMounted> {
     app
 }
 
+/// 🪟️ A host births every mounted Window's config partition on its first frame (`pending_effects` → `ensure_for_roster`) before any action reaches it, so the ledger measures the edit and never that one-time Window store genesis.
+fn birth_mounted_window(app: &mut Puzzle3dMounted, cx: &mut semio_plugin::StepContext<'static>) {
+    let view = window_view();
+    let fuel = semio_plugin::artifact_app_laws::OriginalFixtureCaller::turn_fuel();
+    for _ in 0..semio_plugin::artifact_app_laws::OriginalFixtureCaller::maximum_turns() {
+        let grant = cx.retained_grant();
+        semio_plugin::artifact_app_laws::fixture_renew_turn(cx, fuel, grant).expect("renew the window birth turn");
+        let before = cx.retained_progress();
+        if app.stores.window_config_store.ensure_for_roster(Some(&view), cx).expect("birth the mounted window config partition") && cx.retained_progress() == before { return; }
+    }
+    panic!("the mounted window config partition never settled");
+}
+
 fn target_volumes(app: &Puzzle3dMounted) -> usize {
     semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(app.snapshot().expect("snapshot").typed())).get("targetVolumes").and_then(|volumes| volumes.as_array()).map_or(0, Vec::len)
 }
@@ -61,6 +74,7 @@ async fn settlement_work_ledger_is_finite_and_progresses() {
     use semio_plugin::__job::testkit::renew_payload_page_grant;
     let mut scope = OriginalFixtureScope::admit();
     let mut app = mounted(&mut scope).await;
+    birth_mounted_window(&mut app, scope.cx());
     let action_meta = window_meta!("local");
     let args: semio_framework_value::DslValue = serde_json::json!({ "origin": [1.0, 2.0, 3.0] }).into();
     let policy = fixture_mounted_policy();

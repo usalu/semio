@@ -22,7 +22,7 @@ class PresentationContractTest(unittest.TestCase):
 
     def test_portable_order_locales_chrome_crop_and_timing(self):
         contract = self.presentation.presentation_contract()
-        for key in ("viewport", "chrome", "timing", "restoreTiming"):
+        for key in ("viewport", "chrome", "canvas", "timing", "restoreTiming"):
             self.assertEqual(contract[key], CASES[key])
         self.assertEqual(contract["sourceCrop"], CASES["crop"])
         self.assertEqual([topic["id"] for topic in contract["topics"]], [topic["id"] for topic in CASES["topics"]])
@@ -42,6 +42,16 @@ class PresentationContractTest(unittest.TestCase):
                 list(self.presentation.focus_viewport(width, height).values()),
                 np.array(list(CASES["focus"].values())) * scale,
             )
+
+    def test_frame_content_runs_beneath_the_chips_and_the_frame_tiles_the_canvas(self):
+        contract = self.presentation.presentation_contract()
+        chrome, canvas, focus = contract["chrome"], contract["canvas"], contract["focus"]
+        self.assertNotIn("inset", chrome)
+        self.assertEqual(canvas, {"x": 0, "y": chrome["navbarHeight"], "width": contract["viewport"]["width"],
+                                  "height": contract["viewport"]["height"] - chrome["navbarHeight"] - chrome["footerHeight"]})
+        self.assertEqual(focus["rect"], canvas)
+        self.assertEqual(focus["viewport"], focus["rect"])
+        self.assertEqual(focus["safeClearance"], {"top": chrome["titleHeight"], "right": 0, "bottom": 0, "left": 0})
 
     def test_energy_curriculum_has_five_topic_owned_videos_and_no_institute_intro_segments(self):
         runtime = importlib.import_module(MODULE + ".⚙️runtime.🐍️")

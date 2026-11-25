@@ -14,7 +14,7 @@
     ],
     "body": {
       "kind": "samples",
-      "values": [
+      "packed": [
         0
       ]
     }

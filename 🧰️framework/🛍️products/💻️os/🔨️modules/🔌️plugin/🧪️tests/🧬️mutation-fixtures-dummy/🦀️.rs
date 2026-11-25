@@ -282,7 +282,7 @@ impl ArtifactOwnedToolJobFactory for DummyFixtureFactory {
     fn latest_wins_target(_command: &DummyCommand) -> Option<&str> {
         None
     }
-    fn build_latest_wins_command_disposer() -> Option<Box<dyn semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer<DummyCommand>>> {
+    fn build_latest_wins_command_disposer() -> Option<Box<dyn semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer<DummyCommand>>> {
         None
     }
 }
@@ -354,19 +354,19 @@ impl ArtifactApp for DummyApp {
         Some(crate::testing_laws_unit_1::mutation_fixture::wire::admit_document_store_owners::<Self::Snapshot, Self::Mutation>("testkit-dummy-artifact-retained", grant))
     }
 
-    fn build_document_store_disposer() -> Option<Box<dyn semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
-        Some(semio_plugin_ownership::store_lifecycle::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
+    fn build_document_store_disposer() -> Option<Box<dyn semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+        Some(semio_plugin_store_lifecycle::store_lifecycle::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
     }
-    fn build_config_store_disposer() -> Option<Box<dyn semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
-        Some(semio_plugin_ownership::store_lifecycle::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
+    fn build_config_store_disposer() -> Option<Box<dyn semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+        Some(semio_plugin_store_lifecycle::store_lifecycle::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
     }
-    fn build_draft_store_disposer() -> Option<Box<dyn semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
-        Some(semio_plugin_ownership::store_lifecycle::bounded_document_store_disposer::<Self::Draft, Self::DraftMutation>())
+    fn build_draft_store_disposer() -> Option<Box<dyn semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
+        Some(semio_plugin_store_lifecycle::store_lifecycle::bounded_document_store_disposer::<Self::Draft, Self::DraftMutation>())
     }
-    fn build_presence_store_disposer() -> Option<Box<dyn semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
         Some(crate::testing_laws_unit_1::mutation_fixture::no_state::presence_store_disposer())
     }
-    fn build_transient_store_disposer() -> Option<Box<dyn semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+    fn build_transient_store_disposer() -> Option<Box<dyn semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
         Some(crate::testing_laws_unit_1::mutation_fixture::no_state::transient_store_disposer())
     }
     fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
@@ -517,7 +517,7 @@ impl store::os_store::document_store_owners::MemberStoreProducer<DummySnapshot,D
     }
 
     fn member_store_owners(&self,grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(store::os_store::document_store_owners::DocumentStoreOwners<DummySnapshot, DummyMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<DummySnapshot, DummyMutation>> {
-        semio_plugin_ownership::store_lifecycle::bounded_document_store_owners::<DummySnapshot, DummyMutation>(grant)
+        semio_plugin_store_lifecycle::store_lifecycle::bounded_document_store_owners::<DummySnapshot, DummyMutation>(grant)
     }
 }
 //#endregion 🧬️MembersRoster

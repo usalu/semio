@@ -218,7 +218,7 @@ async function placeFile(source:string,target:string,executable:boolean,mode:"cl
 function killTree(pid:number|undefined):void{
  if(pid===undefined)return;
  try{
-  if(process.platform==="win32")spawnSync("taskkill",["/pid",String(pid),"/T","/F"],{stdio:"ignore"});
+  if(process.platform==="win32")spawnSync("taskkill",["/pid",String(pid),"/T","/F"],{windowsHide:true,stdio:"ignore"});
   else process.kill(-pid,"SIGKILL");
  }catch{}
 }

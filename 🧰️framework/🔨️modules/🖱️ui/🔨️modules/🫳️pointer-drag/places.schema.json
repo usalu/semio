@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Drag Drop Place Cases",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["tint", "offset", "places", "ghost", "threshold", "keys", "insertSlots", "treeBands"],
+  "properties": {
+    "tint": { "type": "object", "additionalProperties": false, "required": ["available", "active"], "properties": { "available": { "type": "integer" }, "active": { "type": "integer" } } },
+    "offset": { "$ref": "#/$defs/point" },
+    "places": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["name", "places", "point", "active"], "properties": { "name": { "type": "string", "minLength": 1 }, "places": { "type": "array", "items": { "$ref": "#/$defs/place" } }, "point": { "$ref": "#/$defs/point" }, "active": { "type": ["string", "null"] } } } },
+    "ghost": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["name", "point", "position"], "properties": { "name": { "type": "string", "minLength": 1 }, "point": { "$ref": "#/$defs/point" }, "position": { "$ref": "#/$defs/point" } } } },
+    "threshold": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["name", "from", "to", "begins"], "properties": { "name": { "type": "string", "minLength": 1 }, "from": { "$ref": "#/$defs/point" }, "to": { "$ref": "#/$defs/point" }, "begins": { "type": "boolean" } } } },
+    "keys": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["key", "cancels"], "properties": { "key": { "type": "string" }, "cancels": { "type": "boolean" } } } },
+    "insertSlots": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["name", "row", "items", "index", "slot"], "properties": { "name": { "type": "string", "minLength": 1 }, "row": { "$ref": "#/$defs/rect" }, "items": { "type": "array", "items": { "$ref": "#/$defs/rect" } }, "index": { "type": "integer" }, "slot": { "$ref": "#/$defs/rect" } } } },
+    "treeBands": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["name", "row", "position", "band"], "properties": { "name": { "type": "string", "minLength": 1 }, "row": { "$ref": "#/$defs/rect" }, "position": { "enum": ["before", "after", "inside"] }, "band": { "$ref": "#/$defs/rect" } } } }
+  },
+  "$defs": {
+    "point": { "type": "object", "additionalProperties": false, "required": ["x", "y"], "properties": { "x": { "type": "number" }, "y": { "type": "number" } } },
+    "rect": { "type": "object", "additionalProperties": false, "required": ["left", "top", "right", "bottom"], "properties": { "left": { "type": "number" }, "top": { "type": "number" }, "right": { "type": "number" }, "bottom": { "type": "number" } } },
+    "place": { "type": "object", "additionalProperties": false, "required": ["id", "rect"], "properties": { "id": { "type": "string", "minLength": 1 }, "rect": { "$ref": "#/$defs/rect" } } }
+  }
+}

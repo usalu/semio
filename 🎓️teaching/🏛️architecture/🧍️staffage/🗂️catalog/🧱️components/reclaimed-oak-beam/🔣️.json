@@ -13,14 +13,62 @@
    "de": "Ein beilgehauener Eichenbalken 200 x 240 mm, 5,20 m lang, aus einem rückgebauten Fachwerkhaus, wie ihn eine Bauteilbörse auf zwei Kanthölzern lagert: vier Ständerzapfenlöcher und ein Strebenzapfenloch auf der Oberseite mit ihren Holznagellöchern von 25 mm, ein Blatt am einen Ende und der schräge Trennschnitt des Rückbaus am anderen; angehoben am Zweistranggehänge und wieder eingebaut als frei aufliegender Deckenbalken mit 5,00 m Stützweite."
   },
   "tags": [
-   "component",
-   "reclaimed",
-   "timber",
-   "oak",
-   "hardwood",
-   "beam",
-   "half-timbered",
-   "structural"
+   {
+    "id": "component",
+    "title": {
+     "en": "component",
+     "de": "Bauteil"
+    }
+   },
+   {
+    "id": "reclaimed",
+    "title": {
+     "en": "reclaimed",
+     "de": "wiederverwendet"
+    }
+   },
+   {
+    "id": "timber",
+    "title": {
+     "en": "timber",
+     "de": "Holz"
+    }
+   },
+   {
+    "id": "oak",
+    "title": {
+     "en": "oak",
+     "de": "Eiche"
+    }
+   },
+   {
+    "id": "hardwood",
+    "title": {
+     "en": "hardwood",
+     "de": "Laubholz"
+    }
+   },
+   {
+    "id": "beam",
+    "title": {
+     "en": "beam",
+     "de": "Balken"
+    }
+   },
+   {
+    "id": "half-timbered",
+    "title": {
+     "en": "half timbered",
+     "de": "Fachwerk"
+    }
+   },
+   {
+    "id": "structural",
+    "title": {
+     "en": "structural",
+     "de": "tragend"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage component authors",

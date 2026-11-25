@@ -301,9 +301,10 @@ where
             ArtifactCommand::CreateAlternative { name } => {
                 if self.log.envelope.vcs.checkpoints.is_empty() {
                     if self.log.applied_edit_ids.is_empty() {
-                        return Err(VcsError::NoCheckpoint);
+                        self.commit_baseline_checkpoint(identity).await?;
+                    } else {
+                        self.commit_pending_checkpoint(None, Vec::new(), identity).await?;
                     }
-                    self.commit_pending_checkpoint(None, Vec::new(), identity).await?;
                 }
                 let checkpoint_id = (*self.log.current_checkpoint_id).clone().or_else(|| self.log.envelope.vcs.checkpoints.last().map(|checkpoint| checkpoint.id.clone())).ok_or(VcsError::NoCheckpoint)?;
                 let alternative_id = identity.encode(|control|mint_alternative_id(&name, std::slice::from_ref(&checkpoint_id), control))?;

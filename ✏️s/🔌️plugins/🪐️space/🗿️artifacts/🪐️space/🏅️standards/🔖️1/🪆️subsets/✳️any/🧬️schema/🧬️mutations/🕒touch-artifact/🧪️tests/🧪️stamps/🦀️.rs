@@ -99,7 +99,8 @@ async fn produces_committed_diff() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
     let decoded = decode_value::<SSpaceDiff>((*DIFF));
-    let rows = decoded.artifacts.as_ref().expect("the committed touch diff carries the row vector");
+    let applied = protocol::apply_diff_cold(&decoded, &before()).expect("the committed touch diff applies to the before-index");
+    let rows = &applied.artifacts;
     assert_eq!((rows[1].updated_at_ms, rows[1].updated_by.as_str()), (2500, "user:grace"), "touch-artifact/stamps-artifact-1-with-a-new-editor: the untouched sibling keeps its own stamp inside the diff");
     let reencoded = encode_value(&decoded);
     let original = semio_framework_pack_json::parse((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff reparses");

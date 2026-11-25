@@ -28,6 +28,8 @@ impl OwnedGuestInstance{
  pub fn original_call_is_pending(&self)->bool{self.original_call.is_some()}
 }
 impl OwnedRuntime{
+ /// 📒️ Reads this instance's retained ledger by category.
+ pub fn original_retained_ledger(&self,state:&OwnedGuestInstance)->Option<[u64;20]>{state.original_core.as_ref().map(|core|core.retained_ledger_snapshot())}
  /// 🧮️ Quotes only a returned callee held by this Source-owned Core.
  pub fn original_returned_frame_demand(&self,state:&OwnedGuestInstance,cx:&StepContext<'_>)->Result<Option<semio_framework_value::RetirementDemand>,OriginalTurnFailure>{
   let core=state.original_core.as_ref().ok_or_else(||refused("original guest call has no actual paid Core"))?;

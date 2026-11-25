@@ -272,7 +272,7 @@ export function sliceLabLauncherBuildV1(root:string,home:string,go?:string):Read
    if(source.includes("📦️main")){copyFileSync(source,join(work,"cmd","main.go"));continue;}
    index++;copyFileSync(source,join(work,`s${index}.go`));
   }
-  const build=spawnSync(compiler,["build","-trimpath","-ldflags","-s -w","-o",join(work,"repo"),"./cmd"],{cwd:work,encoding:"utf8",env:{PATH:"/usr/bin:/bin",HOME:home,GOWORK:"off",GOTOOLCHAIN:"local",GOPROXY:"off",CGO_ENABLED:"0",TMPDIR:temporary,TEMP:temporary,TMP:temporary,GOCACHE:join(work,"gocache"),GOPATH:join(work,"gopath")}});
+  const build=spawnSync(compiler,["build","-trimpath","-ldflags","-s -w","-o",join(work,"repo"),"./cmd"],{windowsHide:true,cwd:work,encoding:"utf8",env:{PATH:"/usr/bin:/bin",HOME:home,GOWORK:"off",GOTOOLCHAIN:"local",GOPROXY:"off",CGO_ENABLED:"0",TMPDIR:temporary,TEMP:temporary,TMP:temporary,GOCACHE:join(work,"gocache"),GOPATH:join(work,"gopath")}});
   if(build.status!==0)throw Error(`Launcher build failed / Launcher-Bau fehlgeschlagen: ${build.error?.message??String(build.stderr).trim().slice(0,512)}`);
   if(process.platform==="darwin"){
    const signing=spawnSync("codesign",["-s","-","--identifier","tech.semio.repo","--force",join(work,"repo")],{encoding:"utf8"});

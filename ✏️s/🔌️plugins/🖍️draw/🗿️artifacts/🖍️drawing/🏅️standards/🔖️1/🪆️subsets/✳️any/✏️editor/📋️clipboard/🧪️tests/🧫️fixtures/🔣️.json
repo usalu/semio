@@ -33,6 +33,123 @@
       ]
     }
   ],
+  "recordCases": [
+    {
+      "name": "stroked path with gradient and dash",
+      "record": {
+        "schema": "drawing.clipboard.v1",
+        "roots": [
+          {
+            "kind": "path",
+            "id": "emblem-orange",
+            "name": "Orange Wedge",
+            "visible": true,
+            "locked": false,
+            "opacity": 1.0,
+            "blendMode": "normal",
+            "transform": {
+              "x": 0.0,
+              "y": 0.0,
+              "scaleX": 1.0,
+              "scaleY": 1.0,
+              "rotation": 0.0,
+              "shear": 0.0
+            },
+            "attributes": {
+              "fillRule": "evenodd",
+              "fill": {
+                "kind": "linearGradient",
+                "x1": 0.0,
+                "y1": 0.0,
+                "x2": 1.0,
+                "y2": 0.0,
+                "stops": [
+                  {
+                    "offset": 0.0,
+                    "color": [
+                      0.98,
+                      0.584,
+                      0.0,
+                      1.0
+                    ]
+                  },
+                  {
+                    "offset": 1.0,
+                    "color": [
+                      0.0,
+                      0.067,
+                      0.09,
+                      1.0
+                    ]
+                  }
+                ]
+              },
+              "stroke": {
+                "color": [
+                  0.0,
+                  0.067,
+                  0.09,
+                  1.0
+                ],
+                "width": 2.5,
+                "cap": "butt",
+                "join": "miter",
+                "dash": [
+                  4.0,
+                  2.0
+                ]
+              }
+            },
+            "segments": [
+              {
+                "kind": "move",
+                "to": [
+                  1.25,
+                  196.933
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  36.25,
+                  161.125
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  36.25,
+                  43.75
+                ]
+              },
+              {
+                "kind": "cubic",
+                "ctrl1": [
+                  30.0,
+                  43.75
+                ],
+                "ctrl2": [
+                  10.0,
+                  43.75
+                ],
+                "to": [
+                  1.25,
+                  43.75
+                ]
+              },
+              {
+                "kind": "close"
+              }
+            ]
+          }
+        ],
+        "selected": [
+          "emblem-orange"
+        ],
+        "assets": {}
+      }
+    }
+  ],
   "identityCases": [
     {
       "name": "cross-root Boolean",

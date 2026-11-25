@@ -13,18 +13,90 @@
    "de": "Eine rückgebaute kompakte Fernwärme-Übergabestation für 60 kW auf ihrem verzinkten Wandrahmen, auf zwei Kanthölzern stehend: gelöteter Plattenwärmeübertrager in der verbliebenen hinteren Halbschale, Differenzdruckregler, motorisches Regelventil, Ultraschall-Wärmezähler, Schmutzfänger und vier Kugelhähne, entleert, die vier Stutzen abgetrennt und verkappt. Sie lässt sich an zwei Rundschlingen anheben und an einer neuen Wand aufhängen, wo sie Fernwärme mit 90/50 °C an einen Heizkreis mit 70/50 °C überträgt."
   },
   "tags": [
-   "component",
-   "reclaimed",
-   "used",
-   "hvac",
-   "heating",
-   "controls",
-   "district-heating",
-   "substation",
-   "plate-heat-exchanger",
-   "steel",
-   "brass",
-   "timber"
+   {
+    "id": "component",
+    "title": {
+     "en": "component",
+     "de": "Bauteil"
+    }
+   },
+   {
+    "id": "reclaimed",
+    "title": {
+     "en": "reclaimed",
+     "de": "wiederverwendet"
+    }
+   },
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "hvac",
+    "title": {
+     "en": "HVAC",
+     "de": "HLK"
+    }
+   },
+   {
+    "id": "heating",
+    "title": {
+     "en": "heating",
+     "de": "Heizung"
+    }
+   },
+   {
+    "id": "controls",
+    "title": {
+     "en": "controls",
+     "de": "Bedienelemente"
+    }
+   },
+   {
+    "id": "district-heating",
+    "title": {
+     "en": "district heating",
+     "de": "Fernwärme"
+    }
+   },
+   {
+    "id": "substation",
+    "title": {
+     "en": "substation",
+     "de": "Umspannstation"
+    }
+   },
+   {
+    "id": "plate-heat-exchanger",
+    "title": {
+     "en": "plate heat exchanger",
+     "de": "Plattenwärmeübertrager"
+    }
+   },
+   {
+    "id": "steel",
+    "title": {
+     "en": "steel",
+     "de": "Stahl"
+    }
+   },
+   {
+    "id": "brass",
+    "title": {
+     "en": "brass",
+     "de": "Messing"
+    }
+   },
+   {
+    "id": "timber",
+    "title": {
+     "en": "timber",
+     "de": "Holz"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage component authors (used HVAC wave)",

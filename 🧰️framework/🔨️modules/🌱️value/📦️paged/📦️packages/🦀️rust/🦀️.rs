@@ -6,7 +6,7 @@ pub use native_encoding::{NativeEncodeControl,NativeEncodeContinuation,NativeSco
 pub mod refusal{pub use semio_framework_value_control_contract::{ValueError,ValueRefusalKind};}
 pub use refusal::{ValueError,ValueRefusalKind};
 pub use semio_framework_value_intrinsic::{equal_f32,equal_f64,DslValue,DslValueSource,Number,JsonInteger,json_integer,edit_through_value,ControlledValueHasher,DecodedValue,IntrinsicRetirement,FromValue,ToValue,ValueEdit,ValueShape};
-pub use semio_framework_value_intrinsic::{controlled_sequence,path_index,dsl_value,NativeDecodeControl,NativeDecodeProgress};
+pub use semio_framework_value_intrinsic::{controlled_map,controlled_sequence,path_index,dsl_value,NativeDecodeControl,NativeDecodeProgress};
 pub use semio_framework_value_retirement::retirement;
 pub use semio_framework_value_retirement::retirement_contract::RetirementPollExit;
 pub use semio_framework_value_retirement::retirement::RetireOwned;
@@ -25,3 +25,10 @@ pub mod retained_clone;
 #[path="../../🦀️.rs"]
 pub mod paged;
 pub use paged::*;
+#[cfg(test)]
+#[path="../../../🧬️retained-clone/🧬️contract/🧪️tests/⏱️effect/🦀️.rs"]
+mod effect_fixture;
+#[cfg(test)]
+use retained_clone::*;
+#[cfg(test)]
+use semio_framework_value_clone_source::RetainedCloneClose;

@@ -1,0 +1,2 @@
+# fourth fixer: light proof of every asset written after 11:00 and of person-cooking on the engine of 12:34 (2500 MB for vitest; peak measured)
+TAG=last "$here/in-prove.sh" person-hanging-laundry person-drinking-coffee person-eating-standing person-cooking

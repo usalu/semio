@@ -48,7 +48,7 @@ export type UIDialogProps<Arg extends ActionArgDef = ActionArgDef> = {
  * `aria-describedby`), the filled style for a primary tone, the outlined style otherwise. The class lands on the
  * button's group, so it reaches the button item through descendant selectors. */
 function dialogChoiceChrome(choice: DialogChoice): { readonly variant: "default" | "outline"; readonly className?: string } {
-  if (choice.destructive || choice.tone === "danger") return { variant: "outline", className: "text-destructive [&_[data-slot=button-group-item]]:text-destructive [&_[data-slot=button-group-item]]:!border-destructive/60 [&_[data-slot=button-group-item]:hover]:bg-destructive/10" };
+  if (choice.destructive || choice.tone === "danger") return { variant: "outline", className: "text-destructive-foreground [&_[data-slot=button-group-item]]:text-destructive-foreground [&_[data-slot=button-group-item]]:!border-destructive/60 [&_[data-slot=button-group-item]:hover]:bg-destructive/10" };
   return { variant: choice.tone === "primary" ? "default" : "outline" };
 }
 

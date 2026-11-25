@@ -38,14 +38,14 @@ impl<'ctx> OverlaysViewCtx<'ctx> {
                 if let Some(plan) = self.as_session().command_palette_plan(theme, width, height) {
                     overlay.push_glass([0.0, 0.0, width, height], 0.0, theme.veil_glass(Level::Dialog));
                     let rect = plan.dialog;
-                    open_chrome_overlay_glass_content(cursor, overlay, rect, theme.border_radius, theme.glass(Level::Dialog));
+                    open_chrome_overlay_glass_content(cursor, overlay, rect, theme.glass(Level::Dialog));
                     let title = shell_chrome_string(if plan.kind == ShellPaletteKind::Search { "search.title" } else { "find.title" }, self.prefs.locale_id == "de");
                     note_chrome_control_name(plan.kind.dialog_id(), Some(title));
                     input.register_hit(HitTarget { rect, event: None, control_id: Some(plan.kind.dialog_id().to_string()), kind: HitKind::Generic, drag_axis: None, drag_data: None });
                     cursor.rect = Some(rect);
                 } else if matches!(self.input.overlay_state, OverlayState::Dropdown(_)) {
                     let rect = Rect::new(width * 0.5 - 200.0, theme.navbar_height + 8.0, 400.0, height * 0.55);
-                    open_chrome_overlay_glass_content(cursor, overlay, rect, theme.border_radius, theme.glass(Level::Menu));
+                    open_chrome_overlay_glass_content(cursor, overlay, rect, theme.glass(Level::Menu));
                     cursor.rect = Some(rect);
                 }
                 cursor.phase = 1;
@@ -334,7 +334,7 @@ impl<'ctx> OverlaysViewCtx<'ctx> {
                 let (pill, rect) = (pill.clone(), *rect);
                 match cursor.scalar {
                     0 => {
-                        open_chrome_overlay_glass_content(cursor, overlay, rect, theme.border_radius, theme.glass(Level::Pane));
+                        open_chrome_overlay_glass_content(cursor, overlay, rect, theme.glass(Level::Pane));
                         cursor.scalar = 1;
                         return false;
                     }

@@ -1,6 +1,6 @@
 //! 🪷️ The instance components of `instance-ladders`: MaintenanceCursors, CloseCursors (WP6, plan section 7.3).
 use semio_plugin_decl_app::ArtifactApp;
-use semio_plugin_ownership::store_lifecycle::{ArtifactDisposal, ArtifactDocumentStoreDisposer, ArtifactOwnedDisposer};
+use semio_plugin_store_lifecycle::store_lifecycle::{ArtifactDisposal, ArtifactDocumentStoreDisposer, ArtifactOwnedDisposer};
 use pack::snapshot::ArtifactPack;
 use store::{ArtifactStore, ConfigStore, MemberFactory, Mutation, ReferenceSpaceMember};
 use semio_plugin_child::ChildMemberRetirement;

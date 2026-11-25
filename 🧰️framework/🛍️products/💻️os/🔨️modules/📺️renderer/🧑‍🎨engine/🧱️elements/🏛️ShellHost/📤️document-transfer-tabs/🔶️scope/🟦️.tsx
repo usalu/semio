@@ -1,5 +1,5 @@
 /** 🔶️ The scope phase of useDocumentTransferAndTabs. */
-import type { ProgramRetirementOwnerV1 } from "../../🚪️program-retirement/🟦️.ts";
+import { programRetirementKeepsDocumentV1, type ProgramRetirementOwnerV1 } from "../../🚪️program-retirement/🟦️.ts";
 import { NATURAL_FILE_PORT_ID, parseSurfaceAppId, type AppDefinition, type Severity } from "@semio-tech/framework";
 import { decodePackValue } from "@semio-tech/framework/packs";
 import { DOCUMENT_ARCHIVE_MAXIMUM_BYTES, decodeDocumentArchiveBytes, encodeDocumentArchiveBytes, type DocumentArchivePack } from "@semio-tech/framework/wire-contracts";
@@ -11,11 +11,14 @@ import { buildSpacePanelState, parsePanelState, studioPanelFocusingSpawned } fro
 import { type PluginWasmHandle } from "../../../🔌️PluginRuntime/🟦️.tsx";
 import { documentTransferTasksV1, type TaskManagerDocumentTransferV1 } from "../../../🧵️TaskManager/🟦️.tsx";
 import { openPickedFileV1, pickedFileRefusalCodeV1, pickedFileRefusalTextV1, readPickedFileHeadV1, readPickedFileRangeV1, routePickedFileV1 } from "../../📂️picked-file-opening/🟦️.ts";
-import { requiredHostPanelLeafId } from "../../🧱️built-node-stores/🟦️.ts";
+import { spacePanelOwnerLeafIdV1 } from "../../🧱️built-node-stores/🟦️.ts";
 import type { ShellCoreAfterThemeDriverSettings } from "../../🎨️theme-driver-settings/🟦️.tsx";
 import { admitLocalDocument, retireLocalDocument, type LocalDocument } from "@semio-tech/framework/config/mutations";
 import { keepArtifactOpeningV1 } from "../../🗂️local-catalog/📥️artifact/💾️opening/🟦️.ts";
-import { spawnedProgramViewStateV1 } from "../../🪟️spawned-program/🟦️.ts";
+import { programHistoryKeyV1, programHistoryProjectionV1, spawnedProgramViewStateV1 } from "../../🪟️spawned-program/🟦️.ts";
+import { shellUncommittedEditCountV1 } from "../../🏁️operation-settle/🟦️.ts";
+import { EMPTY_SHELL_HISTORY_PROJECTION_V1 } from "../../../🛠️ShellHelpers/🔩️plumbing/🟦️.ts";
+import { openedProgramPublicationV1 } from "../../📂️opened-program/🟦️.ts";
 import { localCatalogBindingV1 } from "../../🗂️local-catalog/🟦️.ts";
 import { LOCAL_CATALOG_WRITE_DEADLINE_MS_V1, sameLocalDocumentArchiveV1 } from "../../🗂️local-catalog/🟦️.ts";
 import { awaitVerifiedReadbackV1 } from "../../🗂️local-catalog/💾️acknowledgment/🟦️.ts";
@@ -30,7 +33,7 @@ export function buildScopeState({ core }: { readonly core: ShellCoreAfterThemeDr
   const {
     scope, localDocumentOwnerRegistry, hostMode, dispatch, loadedPlugins, session, uiLocale, uiTerminology,
     uiKeybindingOverrides, hostApp, landingAppId, hostAppId, spacePrograms, appLabelsOverlay, openWithFocusRole,
-    clipboardFragmentRef, panelTreeConfigCacheRef, treeWindowGeneration, treeWindowHost, agentBridge, uiLocaleRef,
+    clipboardFragmentRef, clipboardQueue, panelTreeConfigCacheRef, treeWindowGeneration, treeWindowHost, agentBridge, uiLocaleRef,
     showTransientNoticeRef, openDocumentSessionsRef, browserActorUiByRuntimeKeyRef, browserActorUiVersion,
     foldSpaceDirectoryRef, panel, focusedApp, focusedSpawnedId, focusedPanelBodyStores, focusedWindowInstancesRef,
     activeUtilityByWindowIdRef, activeToolIdRef, utilityGenerationFor, toolGeneration, activeWindowIdRef,
@@ -42,9 +45,9 @@ export function buildScopeState({ core }: { readonly core: ShellCoreAfterThemeDr
   //#region FrameworkOsShell
   //#region 📤️DocumentTransfer
   const transferInFlightRef = documentTransferFlightRef;
-  /** 🪟️ Focuses a freshly created program instance in the space panel, built from the latest panel at commit time; `false` when no session is mounted. */
+  /** 🪟️ Focuses a freshly created program instance in the space panel, built from the latest panel at commit time; `false` when no session is mounted. A standalone program host has no host app, so its first panel comes from the mounted session's own app. */
   const focusSpawnedProgram = (spawned: { readonly pluginId: string; readonly appId: string; readonly instanceId: number; readonly label: string | undefined; readonly breadcrumb: readonly string[] | undefined }): boolean =>
-    updateSpacePanelFrom((latest) => studioPanelFocusingSpawned(latest ?? buildSpacePanelState([], requiredHostPanelLeafId(hostApp)), {
+    updateSpacePanelFrom((latest) => studioPanelFocusingSpawned(latest ?? buildSpacePanelState([], spacePanelOwnerLeafIdV1(hostApp, core.sessionRef.current?.app)), {
       id: `${spawned.pluginId}-${spawned.instanceId}`,
       pluginId: spawned.pluginId,
       instanceId: spawned.instanceId,
@@ -52,6 +55,25 @@ export function buildScopeState({ core }: { readonly core: ShellCoreAfterThemeDr
       label: spawned.label ?? spawned.appId,
       breadcrumb: spawned.breadcrumb ?? [],
     }));
+  /** 📂️ Shows the program of a document the user opened ({@link openedProgramPublicationV1}): a host focuses it as a tab; a standalone program host adopts it as its one program through the session switch, which persists and retires the predecessor, so every window of the layout follows the opened document. The predecessor's uncommitted edits are checkpointed first, while it still owns the canvas: the check-in that runs once the session changed would address the program that replaced it and be refused. `false` when it could not be shown. */
+  const publishOpenedProgram = async (opened: Readonly<{ handle: PluginWasmHandle; app: AppDefinition; instanceId: number; label: string | undefined; breadcrumb: readonly string[] | undefined }>, task: Readonly<{ signal: AbortSignal; progress: (completed: number, total: number | null) => void }>, current: () => boolean): Promise<boolean> => {
+    const primary = core.sessionRef.current;
+    const publication = openedProgramPublicationV1(hostMode, primary === null ? null : { pluginId: primary.pluginId, appId: primary.app.id, instanceId: primary.instanceId }, { pluginId: opened.handle.pluginId, appId: opened.app.id, instanceId: opened.instanceId });
+    if (publication === "focus-tab") return focusSpawnedProgram({ pluginId: opened.handle.pluginId, appId: opened.app.id, instanceId: opened.instanceId, label: opened.label, breadcrumb: opened.breadcrumb });
+    if (publication === "already-primary") return true;
+    if (primary !== null && shellUncommittedEditCountV1(programHistoryProjectionV1(core.historyStore.get(), programHistoryKeyV1(primary), EMPTY_SHELL_HISTORY_PROJECTION_V1).entries) > 0) {
+      const identity = core.identityRef.current;
+      await onAction({ controllerId: primary.app.controllerId, action: "commitCheckpoint", args: { message: "auto", authors: identity ? [{ id: identity.userId, name: identity.displayName }] : [] } });
+      if (!current() || task.signal.aborted) return false;
+    }
+    let published = false;
+    await core.adoptPreparedPrimarySession(opened.app.id, {
+      handle: opened.handle, instanceId: opened.instanceId, current: () => current() && !task.signal.aborted,
+      retirement: { signal: task.signal, persist: (owner, signal) => persistProgramDocument(owner, { signal, progress: task.progress }) },
+      onPublished: () => { published = true; },
+    });
+    return published;
+  };
   const publishDocumentTransfers = (): void => {
     documentTransferTasksRef.current = documentTransferTasksV1([...documentTransfersRef.current.values()].map((entry) => entry.transfer));
     for (const listener of [...taskManagerListenersRef.current]) listener();
@@ -168,19 +190,8 @@ export function buildScopeState({ core }: { readonly core: ShellCoreAfterThemeDr
       if (!current() || task.signal.aborted) throw task.signal.reason ?? new Error("archive-file.owner-retired");
       await load(instanceId, archive, task.signal, (status) => task.progress(status.completed, status.total > 0 ? status.total : null));
       if (!current() || task.signal.aborted) throw task.signal.reason ?? new Error("archive-file.owner-retired");
-      if (hostMode) {
-        const program = spacePrograms.find((entry) => entry.pluginId === owned.target.pluginId && entry.appId === owned.target.app.id);
-        published = focusSpawnedProgram({ pluginId: owned.target.pluginId, appId: owned.target.app.id, instanceId, label: program?.label, breadcrumb: program?.breadcrumb });
-      } else {
-        await core.adoptPreparedPrimarySession(owned.target.app.id, {
-          handle: owned.handle, instanceId, current: () => current() && !task.signal.aborted,
-          retirement: {
-            signal: task.signal,
-            persist: (owner, signal) => persistProgramDocument(owner, { signal, progress: task.progress }),
-          },
-          onPublished: () => { published = true; },
-        });
-      }
+      const program = spacePrograms.find((entry) => entry.pluginId === owned.target.pluginId && entry.appId === owned.target.app.id);
+      published = await publishOpenedProgram({ handle: owned.handle, app: owned.target.app, instanceId, label: program?.label, breadcrumb: program?.breadcrumb }, task, current);
       if (!published) throw task.signal.reason ?? new Error("import.publication-unavailable");
       notifyDocumentTransfer("imported", picked.name, "info");
     } catch (error) {
@@ -192,7 +203,7 @@ export function buildScopeState({ core }: { readonly core: ShellCoreAfterThemeDr
       task.finish();
     }
   };
-  const keepProgramDocument = async (owner: Readonly<{ handle: PluginWasmHandle; app: AppDefinition }>, instanceId: number, name: string, task: Readonly<{ signal: AbortSignal; progress: (completed: number, total: number | null) => void }>, hostSession: ActiveSession | null, held: () => boolean, publish: () => boolean): Promise<boolean> => {
+  const keepProgramDocument = async (owner: Readonly<{ handle: PluginWasmHandle; app: AppDefinition }>, instanceId: number, name: string, task: Readonly<{ signal: AbortSignal; progress: (completed: number, total: number | null) => void }>, hostSession: ActiveSession | null, held: () => boolean, publish: (current: () => boolean) => boolean | Promise<boolean>): Promise<boolean> => {
     const current = (): boolean => {
       const host = core.sessionRef.current;
       return held() && hostSession !== null && host?.pluginId === hostSession.pluginId && host?.app.id === hostSession.app.id && host?.instanceId === hostSession.instanceId && core.loadedPluginsRef.current.some((entry) => entry.handle === owner.handle);
@@ -218,7 +229,7 @@ export function buildScopeState({ core }: { readonly core: ShellCoreAfterThemeDr
       },
       attach: (admission) => core.openDocumentRef.current({ documentId: admission.document.documentId, schema }, [admission.binding], { plugin: owner.handle, session: { pluginId: owner.handle.pluginId, app: owner.app, instanceId, viewState: spawnedProgramViewStateV1(hostSession!.viewState, owner.app) } }),
       record: async (document) => (await core.recordLocalCatalogRef.current(admitLocalDocument(document))) !== null,
-      publish,
+      publish: () => publish(current),
       close: async (receipt) => { core.closeDocumentRef.current(receipt.runtimeKey, receipt.clientInstanceId); await core.documentAttachmentLane(owner.handle, instanceId).drain(); },
       unlist: async (document) => { if ((await core.recordLocalCatalogRef.current(retireLocalDocument(document.documentId))) === null) throw new Error("natural-file.catalog-retirement-failed"); },
       report: (error) => console.error("[os-shell] imported document retirement failed", error),
@@ -296,8 +307,10 @@ export function buildScopeState({ core }: { readonly core: ShellCoreAfterThemeDr
     if (entries.length === 0) {
       const identity = await owner.handle.readAppDocumentIdentity(owner.session.instanceId);
       if (task.signal.aborted || !held()) throw task.signal.reason ?? new Error("program-retirement.owner-stale");
-      if (identity.parent_document_id === null) return;
+      if (!programRetirementKeepsDocumentV1(core.localDataDir, identity.parent_document_id)) return;
       await keepOrReattachProgramDocument({ handle: owner.handle, app: owner.session.app }, owner.session.instanceId, owner.name, task, core.sessionRef.current, held);
+      await core.documentAttachmentLane(owner.handle, owner.session.instanceId).drain();
+      if (task.signal.aborted || !held()) throw task.signal.reason ?? new Error("program-retirement.owner-stale");
     } else {
       const { runtimeKey, entry, expected, heldArchive } = await persistAttachedProgramDocument({ handle: owner.handle, target: owner.session }, task.signal);
       const archive = await readOwnedDocumentArchiveV1(owner.handle, entry, runtimeKey, core.openDocumentSessionsRef.current);
@@ -362,6 +375,8 @@ export function buildScopeState({ core }: { readonly core: ShellCoreAfterThemeDr
         };
         await keepOrReattachProgramDocument({ handle: owned.handle, app: owned.target.app }, owned.target.instanceId, file, task, hostOwner, held);
       }
+      await core.documentAttachmentLane(owned.handle, owned.target.instanceId).drain();
+      if (task.signal.aborted) throw task.signal.reason;
       const { runtimeKey, entry, expected, heldArchive } = await persistAttachedProgramDocument(owned, task.signal);
       const verifyDelivery = async (): Promise<void> => {
         if (!heldArchive()) throw new Error("natural-file.export-owner-retired");
@@ -400,12 +415,15 @@ export function buildScopeState({ core }: { readonly core: ShellCoreAfterThemeDr
     let receipt: Readonly<{ runtimeKey: string; clientInstanceId: string }> | null = null;
     let published = false;
     const surface = document.surface;
+    const keptOwnerHeld = (): boolean => {
+      const host = core.sessionRef.current;
+      const kept = core.localCatalogRef.current.documents.find((entry) => entry.documentId === document.documentId);
+      return surface !== undefined && hostOwner !== null && host?.pluginId === hostOwner.pluginId && host.app.id === hostOwner.app.id && host.instanceId === hostOwner.instanceId && kept?.schema === document.schema && kept.target === document.target && kept.admittedAtMs === document.admittedAtMs && kept.surface?.pluginId === surface.pluginId && kept.surface?.appId === surface.appId && (handle === null || core.loadedPluginsRef.current.some((entry) => entry.handle === handle));
+    };
     const checkpoint = (completed: number): void => {
       task.signal.throwIfAborted();
       if (surface !== undefined && core.pluginOpInFlightRef.current.has(surface.pluginId)) throw new Error("natural-file.program-retiring");
-      const host = core.sessionRef.current;
-      const kept = core.localCatalogRef.current.documents.find((entry) => entry.documentId === document.documentId);
-      if (surface === undefined || hostOwner === null || host?.pluginId !== hostOwner.pluginId || host?.app.id !== hostOwner.app.id || host?.instanceId !== hostOwner.instanceId || kept?.schema !== document.schema || kept.target !== document.target || kept.admittedAtMs !== document.admittedAtMs || kept.surface?.pluginId !== surface.pluginId || kept.surface?.appId !== surface.appId || (handle !== null && !core.loadedPluginsRef.current.some((entry) => entry.handle === handle))) throw new Error("natural-file.kept-owner-retired");
+      if (!keptOwnerHeld()) throw new Error("natural-file.kept-owner-retired");
       task.progress(completed, 4);
     };
     try {
@@ -420,7 +438,7 @@ export function buildScopeState({ core }: { readonly core: ShellCoreAfterThemeDr
       handle = owner.handle;
       const existing = core.openDocumentSessionsRef.current.get(document.documentId);
       if (existing !== undefined) {
-        if (existing.plugin !== handle || existing.session.app.id !== app.id || !focusSpawnedProgram({ pluginId: surface!.pluginId, appId: app.id, instanceId: existing.session.instanceId, label: document.name, breadcrumb: app.breadcrumb })) throw new Error("natural-file.kept-document-owner-mismatch");
+        if (existing.plugin !== handle || existing.session.app.id !== app.id || !await publishOpenedProgram({ handle, app, instanceId: existing.session.instanceId, label: document.name, breadcrumb: app.breadcrumb }, task, keptOwnerHeld)) throw new Error("natural-file.kept-document-owner-mismatch");
         published = true;
         return notifyDocumentTransfer("file-opened", document.name, "info");
       }
@@ -437,7 +455,7 @@ export function buildScopeState({ core }: { readonly core: ShellCoreAfterThemeDr
       if (identity.parent_document_id !== document.documentId) throw new Error("natural-file.kept-archive-identity-mismatch");
       receipt = await core.openDocumentRef.current({ documentId: document.documentId, schema: document.schema }, [localCatalogBindingV1(document)], { plugin: handle, session: { pluginId: surface!.pluginId, app, instanceId, viewState: spawnedProgramViewStateV1(hostOwner!.viewState, app) } });
       checkpoint(3);
-      if (receipt === null || !focusSpawnedProgram({ pluginId: surface!.pluginId, appId: app.id, instanceId, label: document.name, breadcrumb: app.breadcrumb })) throw new Error("natural-file.kept-open-refused");
+      if (receipt === null || !await publishOpenedProgram({ handle, app, instanceId, label: document.name, breadcrumb: app.breadcrumb }, task, keptOwnerHeld)) throw new Error("natural-file.kept-open-refused");
       published = true;
       task.progress(4, 4);
       notifyDocumentTransfer("file-opened", document.name, "info");
@@ -494,7 +512,7 @@ export function buildScopeState({ core }: { readonly core: ShellCoreAfterThemeDr
       commit: async (owner, instanceId, task) => {
         if (core.pluginOpInFlightRef.current.has(owner.handle.pluginId)) throw new Error("natural-file.program-retiring");
         const program = spacePrograms.find((entry) => entry.pluginId === owner.handle.pluginId && entry.appId === owner.app.id);
-        return keepProgramDocument(owner, instanceId, pickedName, task, hostSession, () => !core.pluginOpInFlightRef.current.has(owner.handle.pluginId), () => focusSpawnedProgram({ pluginId: owner.handle.pluginId, appId: owner.app.id, instanceId, label: program?.label, breadcrumb: program?.breadcrumb }));
+        return keepProgramDocument(owner, instanceId, pickedName, task, hostSession, () => !core.pluginOpInFlightRef.current.has(owner.handle.pluginId), (current) => publishOpenedProgram({ handle: owner.handle, app: owner.app, instanceId, label: program?.label, breadcrumb: program?.breadcrumb }, task, current));
       },
       destroy: (owner, instanceId) => owner.handle.destroyApp(instanceId),
       report: (message, error) => console.warn(`[os-shell] ${documentTransferNoticeCodeV1("file-open-failed")} ${message}`, error),
@@ -505,5 +523,5 @@ export function buildScopeState({ core }: { readonly core: ShellCoreAfterThemeDr
       },
     });
   };
-  return { openKeptFile, exportDocumentArchive, importDocumentArchive, exportMediaFile, saveNaturalFile, openNaturalFile, trackDocumentTransfer, notifyDocumentTransfer, dispatch, agentBridge, session, focusedApp, focusedWindowInstancesRef, activeWindowIdRef, focusedSpawnedId, effectiveModeLayoutRef, uiKeybindingOverrides, activeUtilityByWindowIdRef, onAction, utilityGenerationFor, activeToolIdRef, toolGeneration, appLabelsOverlay, uiTerminology, uiLocale, showTransientNotice, clipboardFragmentRef, actionPaneExpandedByWindowIdRef, actionPaneStagedArgsByKeyRef, scope, openDocumentSessionsRef, localDocumentOwnerRegistry, panel, foldSpaceDirectoryRef, browserActorUiByRuntimeKeyRef, browserActorUiVersion, onBrowserActorIntent, onActionStable, focusedPanelBodyStores, treeWindowHost, panelTreeConfigCacheRef, hostMode, hostAppId, openWithFocusRole, openArtifactWithAppRef, dispatchClearDefaultApp, dispatchSetDefaultApp, openWithEntries, treeWindowGeneration, frameworkSettingsTab };
+  return { openKeptFile, exportDocumentArchive, importDocumentArchive, exportMediaFile, saveNaturalFile, openNaturalFile, trackDocumentTransfer, notifyDocumentTransfer, dispatch, agentBridge, session, focusedApp, focusedWindowInstancesRef, activeWindowIdRef, focusedSpawnedId, effectiveModeLayoutRef, uiKeybindingOverrides, activeUtilityByWindowIdRef, onAction, utilityGenerationFor, activeToolIdRef, toolGeneration, appLabelsOverlay, uiTerminology, uiLocale, showTransientNotice, clipboardFragmentRef, clipboardQueue, actionPaneExpandedByWindowIdRef, actionPaneStagedArgsByKeyRef, scope, openDocumentSessionsRef, localDocumentOwnerRegistry, panel, foldSpaceDirectoryRef, browserActorUiByRuntimeKeyRef, browserActorUiVersion, onBrowserActorIntent, onActionStable, focusedPanelBodyStores, treeWindowHost, panelTreeConfigCacheRef, hostMode, hostAppId, openWithFocusRole, openArtifactWithAppRef, dispatchClearDefaultApp, dispatchSetDefaultApp, openWithEntries, treeWindowGeneration, frameworkSettingsTab };
 }

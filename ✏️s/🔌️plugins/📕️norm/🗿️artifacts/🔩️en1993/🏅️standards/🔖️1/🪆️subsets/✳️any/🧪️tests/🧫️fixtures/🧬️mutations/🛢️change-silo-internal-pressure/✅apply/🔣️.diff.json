@@ -90,7 +90,11 @@
           "courseElevation": null,
           "internalPressure": 1.5,
           "externalPressure": null,
-          "temperatureChange": null
+          "temperatureChange": null,
+          "ringSpacing": null,
+          "ringArea": null,
+          "ringInertia": null,
+          "ringOffset": null
         }
       }
     ]

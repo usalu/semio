@@ -87,7 +87,7 @@ fn config_mutation_wire_is_identical_to_the_former_named_variants() {
         let encoded: serde_json::Value = serde_json::from_str(&json).expect("the encoded wire is valid json");
         let historical: serde_json::Value = serde_json::from_str(literal).expect("the historical literal is valid json");
         assert_eq!(encoded, historical);
-        let parsed = semio_framework_pack_json::parse(literal, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the historical literal parses");
-        assert_eq!(<SpaceIndexConfigMutation as semio_framework_value::FromValue>::from_value(parsed).expect("the historical literal decodes"), mutation);
+        let parsed = semio_framework_pack_json::from_json_str::<SpaceIndexConfigMutation>(literal, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the historical literal decodes");
+        assert_eq!(parsed, mutation);
     }
 }

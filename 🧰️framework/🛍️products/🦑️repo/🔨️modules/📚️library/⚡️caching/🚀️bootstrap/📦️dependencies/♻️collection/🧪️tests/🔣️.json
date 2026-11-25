@@ -1,240 +1,277 @@
 {
- "cases": [
-  {
-   "name": "nothing to do",
-   "generations": [],
-   "held": [],
-   "bound": [],
-   "current": [],
-   "retained": [],
-   "pressure": false
-  },
-  {
-   "name": "referenced and held are kept",
-   "generations": [
+  "cases": [
     {
-     "key": "aaaaaaaaaaaaaaaaaaaa",
-     "ready": true,
-     "ageSeconds": 99999
+      "name": "nothing to do",
+      "generations": [],
+      "held": [],
+      "bound": [],
+      "current": [],
+      "retained": [],
+      "pressure": false
     },
     {
-     "key": "bbbbbbbbbbbbbbbbbbbb",
-     "ready": true,
-     "ageSeconds": 99999
+      "name": "referenced and held are kept",
+      "generations": [
+        {
+          "key": "aaaaaaaaaaaaaaaaaaaa",
+          "ready": true,
+          "ageSeconds": 99999
+        },
+        {
+          "key": "bbbbbbbbbbbbbbbbbbbb",
+          "ready": true,
+          "ageSeconds": 99999
+        },
+        {
+          "key": "cccccccccccccccccccc",
+          "ready": true,
+          "ageSeconds": 99999
+        }
+      ],
+      "held": [
+        "bbbbbbbbbbbbbbbbbbbb"
+      ],
+      "bound": [],
+      "current": [
+        "aaaaaaaaaaaaaaaaaaaa"
+      ],
+      "retained": [],
+      "pressure": false
     },
     {
-     "key": "cccccccccccccccccccc",
-     "ready": true,
-     "ageSeconds": 99999
+      "name": "grace per kind",
+      "generations": [
+        {
+          "key": "dddddddddddddddddddd",
+          "ready": true,
+          "ageSeconds": 3599
+        },
+        {
+          "key": "eeeeeeeeeeeeeeeeeeee",
+          "ready": true,
+          "ageSeconds": 3600
+        },
+        {
+          "key": "ffffffffffffffffffff",
+          "ready": false,
+          "ageSeconds": 21599
+        },
+        {
+          "key": "11111111111111111111",
+          "ready": false,
+          "ageSeconds": 21600
+        }
+      ],
+      "held": [],
+      "bound": [],
+      "current": [],
+      "retained": [],
+      "pressure": false
+    },
+    {
+      "name": "sorted by key",
+      "generations": [
+        {
+          "key": "99999999999999999999",
+          "ready": false,
+          "ageSeconds": 105626
+        },
+        {
+          "key": "22222222222222222222",
+          "ready": true,
+          "ageSeconds": 50000
+        }
+      ],
+      "held": [],
+      "bound": [],
+      "current": [],
+      "retained": [],
+      "pressure": false
+    },
+    {
+      "name": "bound by a checkout is kept even when unreferenced and unheld",
+      "generations": [
+        {
+          "key": "33333333333333333333",
+          "ready": true,
+          "ageSeconds": 99999
+        },
+        {
+          "key": "44444444444444444444",
+          "ready": true,
+          "ageSeconds": 99999
+        }
+      ],
+      "held": [],
+      "bound": [
+        "33333333333333333333"
+      ],
+      "current": [],
+      "retained": [],
+      "pressure": false
+    },
+    {
+      "name": "a retained generation rests its retention, the newest of a scope the rollback time",
+      "generations": [
+        {
+          "key": "aaaaaaaaaaaaaaaaaaaa",
+          "ready": true,
+          "ageSeconds": 99999
+        },
+        {
+          "key": "bbbbbbbbbbbbbbbbbbbb",
+          "ready": true,
+          "ageSeconds": 99999
+        },
+        {
+          "key": "cccccccccccccccccccc",
+          "ready": true,
+          "ageSeconds": 99999
+        },
+        {
+          "key": "dddddddddddddddddddd",
+          "ready": true,
+          "ageSeconds": 99999
+        }
+      ],
+      "current": [],
+      "held": [],
+      "bound": [],
+      "pressure": false,
+      "retained": [
+        {
+          "key": "aaaaaaaaaaaaaaaaaaaa",
+          "retiredSeconds": 21599,
+          "newest": false
+        },
+        {
+          "key": "bbbbbbbbbbbbbbbbbbbb",
+          "retiredSeconds": 21600,
+          "newest": false
+        },
+        {
+          "key": "cccccccccccccccccccc",
+          "retiredSeconds": 86399,
+          "newest": true
+        },
+        {
+          "key": "dddddddddddddddddddd",
+          "retiredSeconds": 86400,
+          "newest": true
+        }
+      ]
+    },
+    {
+      "name": "pressure makes every finished generation due at once but never an unfinished one, a current, held or bound one",
+      "generations": [
+        {
+          "key": "aaaaaaaaaaaaaaaaaaaa",
+          "ready": true,
+          "ageSeconds": 0
+        },
+        {
+          "key": "bbbbbbbbbbbbbbbbbbbb",
+          "ready": true,
+          "ageSeconds": 0
+        },
+        {
+          "key": "cccccccccccccccccccc",
+          "ready": true,
+          "ageSeconds": 0
+        },
+        {
+          "key": "dddddddddddddddddddd",
+          "ready": true,
+          "ageSeconds": 0
+        },
+        {
+          "key": "eeeeeeeeeeeeeeeeeeee",
+          "ready": true,
+          "ageSeconds": 0
+        },
+        {
+          "key": "ffffffffffffffffffff",
+          "ready": false,
+          "ageSeconds": 60
+        }
+      ],
+      "current": [
+        "aaaaaaaaaaaaaaaaaaaa"
+      ],
+      "held": [
+        "bbbbbbbbbbbbbbbbbbbb"
+      ],
+      "bound": [
+        "cccccccccccccccccccc"
+      ],
+      "pressure": true,
+      "retained": [
+        {
+          "key": "dddddddddddddddddddd",
+          "retiredSeconds": 0,
+          "newest": true
+        }
+      ]
+    },
+    {
+      "name": "a current generation of one scope that another scope retired is kept",
+      "generations": [
+        {
+          "key": "aaaaaaaaaaaaaaaaaaaa",
+          "ready": true,
+          "ageSeconds": 99999
+        }
+      ],
+      "current": [
+        "aaaaaaaaaaaaaaaaaaaa"
+      ],
+      "held": [],
+      "bound": [],
+      "pressure": true,
+      "retained": [
+        {
+          "key": "aaaaaaaaaaaaaaaaaaaa",
+          "retiredSeconds": 99999,
+          "newest": true
+        }
+      ]
+    },
+    {
+      "name": "under pressure unfinished generations rest their short grace except the newest one, which the next attempt resumes",
+      "generations": [
+        {
+          "key": "aaaaaaaaaaaaaaaaaaaa",
+          "ready": false,
+          "ageSeconds": 5000
+        },
+        {
+          "key": "bbbbbbbbbbbbbbbbbbbb",
+          "ready": false,
+          "ageSeconds": 700
+        },
+        {
+          "key": "cccccccccccccccccccc",
+          "ready": false,
+          "ageSeconds": 599
+        },
+        {
+          "key": "dddddddddddddddddddd",
+          "ready": false,
+          "ageSeconds": 100
+        },
+        {
+          "key": "eeeeeeeeeeeeeeeeeeee",
+          "ready": false,
+          "ageSeconds": 9000
+        }
+      ],
+      "held": [
+        "eeeeeeeeeeeeeeeeeeee"
+      ],
+      "bound": [],
+      "current": [],
+      "retained": [],
+      "pressure": true
     }
-   ],
-   "held": [
-    "bbbbbbbbbbbbbbbbbbbb"
-   ],
-   "bound": [],
-   "current": [
-    "aaaaaaaaaaaaaaaaaaaa"
-   ],
-   "retained": [],
-   "pressure": false
-  },
-  {
-   "name": "grace per kind",
-   "generations": [
-    {
-     "key": "dddddddddddddddddddd",
-     "ready": true,
-     "ageSeconds": 3599
-    },
-    {
-     "key": "eeeeeeeeeeeeeeeeeeee",
-     "ready": true,
-     "ageSeconds": 3600
-    },
-    {
-     "key": "ffffffffffffffffffff",
-     "ready": false,
-     "ageSeconds": 21599
-    },
-    {
-     "key": "11111111111111111111",
-     "ready": false,
-     "ageSeconds": 21600
-    }
-   ],
-   "held": [],
-   "bound": [],
-   "current": [],
-   "retained": [],
-   "pressure": false
-  },
-  {
-   "name": "sorted by key",
-   "generations": [
-    {
-     "key": "99999999999999999999",
-     "ready": false,
-     "ageSeconds": 105626
-    },
-    {
-     "key": "22222222222222222222",
-     "ready": true,
-     "ageSeconds": 50000
-    }
-   ],
-   "held": [],
-   "bound": [],
-   "current": [],
-   "retained": [],
-   "pressure": false
-  },
-  {
-   "name": "bound by a checkout is kept even when unreferenced and unheld",
-   "generations": [
-    {
-     "key": "33333333333333333333",
-     "ready": true,
-     "ageSeconds": 99999
-    },
-    {
-     "key": "44444444444444444444",
-     "ready": true,
-     "ageSeconds": 99999
-    }
-   ],
-   "held": [],
-   "bound": [
-    "33333333333333333333"
-   ],
-   "current": [],
-   "retained": [],
-   "pressure": false
-  },
-  {
-   "name": "a retained generation rests its retention, the newest of a scope the rollback time",
-   "generations": [
-    {
-     "key": "aaaaaaaaaaaaaaaaaaaa",
-     "ready": true,
-     "ageSeconds": 99999
-    },
-    {
-     "key": "bbbbbbbbbbbbbbbbbbbb",
-     "ready": true,
-     "ageSeconds": 99999
-    },
-    {
-     "key": "cccccccccccccccccccc",
-     "ready": true,
-     "ageSeconds": 99999
-    },
-    {
-     "key": "dddddddddddddddddddd",
-     "ready": true,
-     "ageSeconds": 99999
-    }
-   ],
-   "current": [],
-   "held": [],
-   "bound": [],
-   "pressure": false,
-   "retained": [
-    {
-     "key": "aaaaaaaaaaaaaaaaaaaa",
-     "retiredSeconds": 21599,
-     "newest": false
-    },
-    {
-     "key": "bbbbbbbbbbbbbbbbbbbb",
-     "retiredSeconds": 21600,
-     "newest": false
-    },
-    {
-     "key": "cccccccccccccccccccc",
-     "retiredSeconds": 86399,
-     "newest": true
-    },
-    {
-     "key": "dddddddddddddddddddd",
-     "retiredSeconds": 86400,
-     "newest": true
-    }
-   ]
-  },
-  {
-   "name": "pressure makes every finished generation due at once but never an unfinished one, a current, held or bound one",
-   "generations": [
-    {
-     "key": "aaaaaaaaaaaaaaaaaaaa",
-     "ready": true,
-     "ageSeconds": 0
-    },
-    {
-     "key": "bbbbbbbbbbbbbbbbbbbb",
-     "ready": true,
-     "ageSeconds": 0
-    },
-    {
-     "key": "cccccccccccccccccccc",
-     "ready": true,
-     "ageSeconds": 0
-    },
-    {
-     "key": "dddddddddddddddddddd",
-     "ready": true,
-     "ageSeconds": 0
-    },
-    {
-     "key": "eeeeeeeeeeeeeeeeeeee",
-     "ready": true,
-     "ageSeconds": 0
-    },
-    {
-     "key": "ffffffffffffffffffff",
-     "ready": false,
-     "ageSeconds": 60
-    }
-   ],
-   "current": [
-    "aaaaaaaaaaaaaaaaaaaa"
-   ],
-   "held": [
-    "bbbbbbbbbbbbbbbbbbbb"
-   ],
-   "bound": [
-    "cccccccccccccccccccc"
-   ],
-   "pressure": true,
-   "retained": [
-    {
-     "key": "dddddddddddddddddddd",
-     "retiredSeconds": 0,
-     "newest": true
-    }
-   ]
-  },
-  {
-   "name": "a current generation of one scope that another scope retired is kept",
-   "generations": [
-    {
-     "key": "aaaaaaaaaaaaaaaaaaaa",
-     "ready": true,
-     "ageSeconds": 99999
-    }
-   ],
-   "current": [
-    "aaaaaaaaaaaaaaaaaaaa"
-   ],
-   "held": [],
-   "bound": [],
-   "pressure": true,
-   "retained": [
-    {
-     "key": "aaaaaaaaaaaaaaaaaaaa",
-     "retiredSeconds": 99999,
-     "newest": true
-    }
-   ]
-  }
- ]
+  ]
 }

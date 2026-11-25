@@ -110,7 +110,8 @@ fn action_is_panel_eligible(action: &ActionDefinition) -> bool {
 /// [`AppDefinition::actions`] row that no window kind of this app claims for itself. An id declared
 /// by ANY window kind is that window's authored declaration and is never re-offered from the app
 /// roster. The plugin builder used to bake this union into every window kind by cloning, which made
-/// a package descriptor grow as `apps × window kinds × actions` — see `AppDefinition::actions`.
+/// a package descriptor grow as `apps × window kinds × actions` — see `AppDefinition::actions`. `app` is a
+/// RESOLVED app: the action sets of its plugin already belong to its roster (`PluginManifest::resolved_app`).
 /// TypeScript twin: `resolveWindowActions` (`🎯️action-bus/🟦️.ts`).
 pub fn window_kind_actions<'a>(app: &'a AppDefinition, window: &'a WindowKindDefinition) -> Vec<&'a ActionDefinition> {
     let claimed: std::collections::BTreeSet<&str> = app.window_kinds.iter().flat_map(|kind| kind.actions.iter().map(|action| action.id.as_str())).collect();

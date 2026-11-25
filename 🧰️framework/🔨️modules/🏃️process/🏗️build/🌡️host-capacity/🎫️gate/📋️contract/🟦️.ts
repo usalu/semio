@@ -5,6 +5,7 @@ import type {HostSampleRecordV1} from "../../📡️sampling/🟦️.ts";
 import type {HostPhaseResizeV1,HostPhaseSegmentV1,HostPhaseV1} from "../../🪜️phases/🟦️.ts";
 import type {checkResourceLeaseControl,ResourceLeaseControl} from "../../../../🔒️leases/🎛️control/🟦️.ts";
 import type {waitingDelayV1} from "../../../../🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🟦️.ts";
+import type {HostWardenStateV1} from "../../🛡️warden/🟦️.ts";
 import schema from "../../🧬️schema/🔣️.json" with {type:"json"};
 
 /** 🪪️ Who a process is for the handover: its id and the start time that tells a recycled id from the original. */
@@ -12,7 +13,7 @@ export type HostProcessIdentityV1=Readonly<{pid:number;started:string}>;
 /** ⏳️ The bounded wait facts from this request's actual host gate decision. */
 export type HostCapacityWaitV1=Readonly<{reason:Exclude<HostReasonV1,"fits"|"reduced"|"override"|"shrunk"|"lent">;waitedSeconds:number;active:number;queued:number;spareMegabytes:number;floorMegabytes:number;minimumMegabytes:number}>;
 /** 🔌️ The ports of one gate: time, process identity, host samples, process-tree observation, how long the process has only been waiting in queues, which child processes it has, the identity of its parent and the start time of itself; tests replace them. */
-export type HostCapacityPortsV1=Readonly<{onWait?:(facts:HostCapacityWaitV1)=>void;now?:()=>number;pid?:number;ppid?:number;parent?:()=>Promise<HostProcessIdentityV1|undefined>;self?:()=>Promise<string|undefined>;sample?:(previous?:Readonly<{atMs:number;swappedOutMegabytes:number|null}>)=>Promise<HostSampleRecordV1>;observe?:(pid:number)=>Promise<number|null>;markers?:(directory:string,id:string)=>ReadonlyMap<number,number>;tree?:(pid:number)=>ReadonlyMap<number,readonly number[]>|undefined;waited?:(nowMs:number)=>number;children?:(pid:number)=>readonly number[]|undefined}>;
+export type HostCapacityPortsV1=Readonly<{onWait?:(facts:HostCapacityWaitV1)=>void;warden?:()=>HostWardenStateV1|null;now?:()=>number;pid?:number;ppid?:number;parent?:()=>Promise<HostProcessIdentityV1|undefined>;self?:()=>Promise<string|undefined>;sample?:(previous?:Readonly<{atMs:number;swappedOutMegabytes:number|null}>)=>Promise<HostSampleRecordV1>;observe?:(pid:number)=>Promise<number|null>;markers?:(directory:string,id:string)=>ReadonlyMap<number,number>;tree?:(pid:number)=>ReadonlyMap<number,readonly number[]>|undefined;waited?:(nowMs:number)=>number;children?:(pid:number)=>readonly number[]|undefined}>;
 /** 🏁️ What the gate saw of one finished grant: the jobs it ran, the highest megabytes its process tree held at a heartbeat, how long it was actively working (not lent to a queue wait), after how much of that time the tree first came within 5 % of its peak, when it ended and whether its body completed, failed or was cancelled; `phases` are the segments of a run that marked its phases; `executed` says, for a forecast-aware run, whether work had to run (its grant was upgraded or a process of the run asked to start work). */
 export type HostRunV1=Readonly<{jobs:number;peakMegabytes:number;activeMilliseconds:number;peakAtMilliseconds:number;endedAtMs:number;status:HostRunStatusV1;phases?:readonly HostPhaseSegmentV1[];executed?:boolean;pressured?:boolean;limited?:boolean}>;
 /** ⚙️ Everything one admission needs. */

@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Pane Anchor Place Cases",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["host", "places", "pointers"],
+  "properties": {
+    "host": { "type": "object", "additionalProperties": false, "required": ["left", "top", "width", "height"], "properties": { "left": { "type": "number" }, "top": { "type": "number" }, "width": { "type": "number" }, "height": { "type": "number" } } },
+    "places": { "type": "object", "additionalProperties": false, "required": ["top-left", "top-middle", "top-right", "right-middle", "bottom-right", "bottom-middle", "bottom-left", "left-middle"], "patternProperties": { ".": { "type": "object", "additionalProperties": false, "required": ["left", "top", "right", "bottom"], "properties": { "left": { "type": "number" }, "top": { "type": "number" }, "right": { "type": "number" }, "bottom": { "type": "number" } } } } },
+    "pointers": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["name", "point", "anchor"], "properties": { "name": { "type": "string", "minLength": 1 }, "point": { "type": "object", "additionalProperties": false, "required": ["x", "y"], "properties": { "x": { "type": "number" }, "y": { "type": "number" } } }, "anchor": { "type": "string" } } } }
+  }
+}

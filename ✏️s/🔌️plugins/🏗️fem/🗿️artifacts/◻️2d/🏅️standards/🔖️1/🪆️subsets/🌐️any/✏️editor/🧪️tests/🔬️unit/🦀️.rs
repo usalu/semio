@@ -181,6 +181,25 @@ async fn retained_routes_cover_every_command_exactly_once() {
     }
 }
 
+/// 🖱️ LAW: both canvas windows open with Direct Select armed, so the first canvas click selects without picking a utility.
+#[test]
+fn canvas_windows_arm_direct_select_initially() {
+    let definition = create_fem2d_app();
+    for kind in [model_window::WINDOW_KIND_ID, results_window::WINDOW_KIND_ID] {
+        let window = definition.window_kinds.iter().find(|window| window.id == kind).unwrap_or_else(|| panic!("window kind {kind}"));
+        assert_eq!(window.initial_utility_id.as_ref().map(|id| id.as_str()), Some("selectDirect"), "{kind}");
+    }
+}
+
+/// ⌨️ LAW: undo binds Ctrl+Z and redo binds both Ctrl+Shift+Z and Ctrl+Y, the two redo chords desktop users reach for.
+#[test]
+fn history_keys_bind_undo_and_both_redo_chords() {
+    let definition = create_fem2d_app();
+    let bound = |action: &str| definition.keybindings.iter().filter(|binding| binding.action.action == action).map(|binding| binding.keys.as_str()).collect::<Vec<_>>();
+    assert_eq!(bound("undo"), ["mod+z"]);
+    assert_eq!(bound("redo"), ["mod+shift+z", "mod+y"]);
+}
+
 /// 🛣️ LAW: a route's declared lanes cover exactly what its own handler emits — the framework
 /// refuses a completion whose emitted lane is absent from the contract.
 #[semio_framework_async_macros::async_test]

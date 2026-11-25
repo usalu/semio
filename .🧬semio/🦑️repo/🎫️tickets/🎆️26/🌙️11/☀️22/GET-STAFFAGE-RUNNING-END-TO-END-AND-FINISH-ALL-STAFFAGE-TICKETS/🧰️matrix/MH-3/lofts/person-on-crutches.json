@@ -1,0 +1,5 @@
+[
+  { "scale": "500", "bone": "arm-l", "paint": "sleeve-up-l", "solids": ["sleeve-up-l"] },
+  { "scale": "500", "bone": "arm-r", "paint": "sleeve-up-r", "solids": ["sleeve-up-r"] },
+  { "scale": "500", "bone": "foot-r", "paint": "shoe-r", "solids": ["shoe-r"] }
+]

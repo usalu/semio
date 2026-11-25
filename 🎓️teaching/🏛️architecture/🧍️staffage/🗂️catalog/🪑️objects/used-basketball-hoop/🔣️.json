@@ -13,18 +13,90 @@
    "de": "Eine Streetball-Korbanlage vom Typ der kommunalen Kataloge am Rand eines Asphaltplatzes: ein verzinkter und moosgrün pulverbeschichteter Stahlpfosten 114,3 mm auf einem Klappfuß über einem Betonpunktfundament, ein 1,2 m Ausleger mit Strebe, ein Stahllochblech-Korbbrett 1,2 x 0,9 m und ein 18-mm-Vollstabring in 3,05 m Höhe mit verzinktem Kettennetz, etwa 135 kg über dem Fundament. Die Jahre des Spielens haben den Ring durch Dunks 2 Grad nach unten gebogen und bis auf blanken Stahl abgenutzt, das Kettennetz in einem Feld mit herabhängendem Ende zerrissen, Ballabdrücke, Tags und Aufkleber auf Brett und Pfosten, abblätternde Beschichtung und Rost am Fuß hinterlassen; der Bauhof legt ihn zum Netzwechsel um sein Gelenk nach vorn um, und Spieler hängen am Ring."
   },
   "tags": [
-   "used",
-   "park",
-   "public-space",
-   "sport",
-   "basketball",
-   "streetball",
-   "steel",
-   "galvanised-steel",
-   "perforated-steel",
-   "chain-net",
-   "street-furniture",
-   "weathered"
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "park",
+    "title": {
+     "en": "park",
+     "de": "Park"
+    }
+   },
+   {
+    "id": "public-space",
+    "title": {
+     "en": "public space",
+     "de": "öffentlicher Raum"
+    }
+   },
+   {
+    "id": "sport",
+    "title": {
+     "en": "sport",
+     "de": "Sport"
+    }
+   },
+   {
+    "id": "basketball",
+    "title": {
+     "en": "basketball",
+     "de": "Basketball"
+    }
+   },
+   {
+    "id": "streetball",
+    "title": {
+     "en": "streetball",
+     "de": "Streetball"
+    }
+   },
+   {
+    "id": "steel",
+    "title": {
+     "en": "steel",
+     "de": "Stahl"
+    }
+   },
+   {
+    "id": "galvanised-steel",
+    "title": {
+     "en": "galvanised steel",
+     "de": "verzinkter Stahl"
+    }
+   },
+   {
+    "id": "perforated-steel",
+    "title": {
+     "en": "perforated steel",
+     "de": "Lochstahl"
+    }
+   },
+   {
+    "id": "chain-net",
+    "title": {
+     "en": "chain net",
+     "de": "Kettennetz"
+    }
+   },
+   {
+    "id": "street-furniture",
+    "title": {
+     "en": "street furniture",
+     "de": "Stadtmobiliar"
+    }
+   },
+   {
+    "id": "weathered",
+    "title": {
+     "en": "weathered",
+     "de": "verwittert"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content (used park objects wave)",

@@ -1,5 +1,5 @@
 {
-  "mutation": "changezoneusageprofile",
+  "mutation": "changeZoneUsageProfile",
   "zoneId": "zone-living",
   "newUsageProfile": "WFH"
 }

@@ -1,0 +1,298 @@
+{
+  "title": "Apply the Shared Design System Across Semio",
+  "emoji": "🎨",
+  "status": "closed",
+  "description": "Complete and verify the consolidated design system across maintained web, native, animation, print, and clip surfaces.",
+  "summary": "Aligned maintained Semio web, native chrome, HTML animation, Python clips, and LaTeX print. Recorded rendering and focused test evidence, plus the full Rust package scheduling limits, in summary.md. Restored the MCP build catalogue.",
+  "goal": "RUNNING-FRAMEWORK/RUNNING-PRODUCTS",
+  "sessions": [
+    "ce9d5c3e-9e44-4d1e-a887-0fe3ff217658"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-25 19:04:50",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "system": "mac",
+      "client": "codex",
+      "checkpoint": "8d17d8ba3998690932b0032ea2ca41bce5c994b6",
+      "prompt": "Complete and verify the consolidated design system across maintained web, native, animation, print, and clip surfaces.",
+      "llm": "codex"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-25 19:41:17",
+      "author": "ueli",
+      "system": "mac",
+      "client": "codex",
+      "checkpoint": "8d17d8ba3998690932b0032ea2ca41bce5c994b6",
+      "summary": "Aligned maintained Semio web, native chrome, HTML animation, Python clips, and LaTeX print. Recorded rendering and focused test evidence, plus the full Rust package scheduling limits, in summary.md. Restored the MCP build catalogue.",
+      "files": [
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🗂️WindowChrome/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🗂️WindowChrome/frame-structure.test.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🗂️WindowChrome/surface-levels.feature"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎨️Canvas/⚓️dock/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎨️Canvas/🧪️tests/shared-border-dock.test.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🦴️Skeletons/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🦴️Skeletons/🧪️tests/🧩️component/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🔌️host-ports/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🔌️host-ports/shot-frame.feature"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🗿️framework-exports/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/📥️source/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🎨️chrome-class-names/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🖼️icon-render-camera/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧪️owned-locale-detector-retirement/📐️shell-components-4/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖥️chrome/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔽️Select/🎯️targets/🧊️wgpu/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔽️Select/🧪️tests/🧩️component/boundary.feature"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖌️paint/🔬️reference/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖌️paint/🎨️node-painting-with-driver/🎛️control-nodes/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-paint-unit/🔽️select-popup-drop-and-drag-paint-laws/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🧪️tests/🧩️suite/📐️geometry/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/📏️modelling/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧪️tests/📏️modelling/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧪️tests/📏️modelling/shared-rail.feature"
+        },
+        {
+          "path": "🌎️hub/🔨️modules/🛡️admin/🧱️elements/🔑️AdminSession/🟦️.tsx"
+        },
+        {
+          "path": "🌎️hub/🔨️modules/🛡️admin/🧪️tests/🛡️admin/🟦️.tsx"
+        },
+        {
+          "path": "♻️mit-bestand/🧺️demonstrator/⚛️footer.tsx"
+        },
+        {
+          "path": "♻️mit-bestand/🧺️demonstrator/🧪️tests/🏛️shell-brand/🟦️.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🔭️viewpoints/🪟️sheet/🟦️.tsx"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🧪️tests/🔭️viewpoints/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/🖥️mockup/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🎨️styles/🖥️mockups/🎨️.css"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🧪️tests/🖥️mockups/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📦️packages/🟦️typescript/📜️script.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📖️stories/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📖️stories/🎨️.css"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📖️stories/🐾️species-gallery/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📖️stories/🏟️sandbox/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🐾️pets/🧪️tests/🎨️stories-surface/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🐾️pets/🧪️tests/🎨️stories-surface/🔣️.json"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/📦️packages/🦀️rust/📋️project.json"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎨️presentation.css"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🧪️tests/🔬️compiler-unit/🦀️.rs"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🎨️semio-style/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🎨️semio-style/🔣️.cases.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🎨️surface/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🦗️grasshopper/🎬️clip/🎨️visuals/🦗️canvas/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🦗️grasshopper/🎬️clip/🧪️tests/🎭️presentation/🐍️.py"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📓️print/README.md"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-core.sty"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-window.sty"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-table.sty"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📓️print/🎮️commands/🧪️print-pipeline-verification/🧪️tests/🖨️pipeline/⚡️quick-pipeline-verification/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📓️print/🔨️modules/🎨print-design-token-paints/🧪️tests/🔣️.json"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📓️print/🔨️modules/🎨print-design-token-paints/🧪️tests/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📓️print/🧪️tests/🏷️page-chrome/🥒️.feature"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📓️print/🧪️tests/🏷️page-chrome/🔣️.json"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📓️print/🧪️tests/🏷️page-chrome/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📓️print/🧪️tests/🧩️frame-junctions/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📓️print/🧪️tests/🎓️thesis/🔣️.json"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📓️print/🧪️tests/🎓️thesis/🖨️rendering/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📓️print/🧪️tests/🎓️thesis/📤️publication/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📓️print/🧪️tests/🎓️thesis/📤️publication/🎨️paint/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📓️print/🧪️tests/🎓️thesis/📤️publication/🎨️paint/🧪️tests/🔣️.json"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📓️print/🧪️tests/🎓️thesis/📤️publication/🎨️paint/🧪️tests/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/🖼️assets/🏗️build-surface.json"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/audit.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/react-probe.html"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/react-probe.tsx"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/verify-react-browser.mjs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/verify-wgpu-row.mjs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/react-native-browser.config.mjs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/react-native-browser.setup.mjs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/web-audit.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/web-check.mjs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/animation-and-clips.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/animation-browser.mjs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/animation-manim.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/print.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/print-render.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/summary.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/print-chips.tex"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/animation-html-probe.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/world-overlay.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/world-overlay-vitest.config.mjs"
+        }
+      ]
+    }
+  ]
+}

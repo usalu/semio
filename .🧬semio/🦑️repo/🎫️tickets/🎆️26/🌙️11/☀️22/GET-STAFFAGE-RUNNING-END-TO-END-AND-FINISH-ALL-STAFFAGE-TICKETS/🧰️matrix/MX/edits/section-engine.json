@@ -1,0 +1,7 @@
+[
+ {
+  "name": "rule",
+  "old": "    if (rep.sections !== undefined && Object.keys(rep.sections).length === 0) add(`${path}.sections`, \"section-empty\",",
+  "new": "    for (const viewpoint of [\"elevation\", \"front\", \"plan\"] as const) {\n      const label = rep.sections?.[viewpoint]?.label;\n      if (label !== undefined && label.en !== label.de) add(`${path}.sections.${viewpoint}.label`, \"section-label-language\", `The section label \"${label.en}\" differs from its German form \"${label.de}\": a cut is named by letters (such as A-A), the same in every language; the caption adds \"Section\" or \"Plan section\" itself, and the letters stand beside the cut line, so a label of another width moves the whole drawing on the sheet of that language.`, `Die Schnittbezeichnung \"${label.de}\" weicht von ihrer englischen Form \"${label.en}\" ab: Ein Schnitt wird mit Buchstaben benannt (etwa A-A), in jeder Sprache gleich; die Bildunterschrift ergänzt \"Schnitt\" oder \"Grundriss-Schnitt\" selbst, und die Buchstaben stehen neben der Schnittlinie, sodass eine Bezeichnung anderer Breite die ganze Zeichnung auf dem Blatt dieser Sprache verschiebt.`);\n    }\n    if (rep.sections !== undefined && Object.keys(rep.sections).length === 0) add(`${path}.sections`, \"section-empty\","
+ }
+]

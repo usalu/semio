@@ -145,7 +145,3 @@ pub fn governing_ratio(r: &En1998CriticalRegion, d: &Detailing) -> f64 {
         .filter(|v| v.is_finite() || *v == f64::INFINITY)
         .fold(0.0, f64::max)
 }
-
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;

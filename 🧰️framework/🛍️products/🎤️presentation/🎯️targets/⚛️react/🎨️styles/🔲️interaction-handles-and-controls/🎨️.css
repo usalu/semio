@@ -7,10 +7,11 @@
 	width: var(--size-tiny);
 	height: var(--size-tiny);
 	margin: calc(-1 * var(--spacing-single)) 0 0 calc(-1 * var(--spacing-single));
-	border-radius: var(--spacing-single);
+	border-radius: 0;
 	background: var(--color-primary);
 	border: 0;
-	box-shadow: 0 0 0 var(--stroke-hairline) var(--base);
+	outline: var(--stroke-hairline) solid var(--base);
+	outline-offset: calc(-1 * var(--stroke-hairline));
 	pointer-events: auto;
 	box-sizing: border-box;
 }
@@ -89,7 +90,7 @@
 	align-items: center;
 	gap: 0;
 	box-sizing: border-box;
-	border-radius: var(--spacing-single);
+	border-radius: 0;
 	pointer-events: none;
 }
 
@@ -143,7 +144,7 @@
 	align-items: center;
 	gap: 0;
 	box-sizing: border-box;
-	border-radius: var(--spacing-single);
+	border-radius: 0;
 	transform: translateX(-50%);
 	pointer-events: auto;
 }
@@ -170,17 +171,7 @@
 	color: var(--foreground);
 }
 
-.reveal .presentation-pdf-page-nav__button:first-child,
-.reveal .presentation-interaction-actions > :first-child {
-	border-start-start-radius: var(--spacing-single);
-	border-end-start-radius: var(--spacing-single);
-}
 
-.reveal .presentation-pdf-page-nav__button:last-child,
-.reveal .presentation-interaction-actions > :last-child {
-	border-start-end-radius: var(--spacing-single);
-	border-end-end-radius: var(--spacing-single);
-}
 
 .reveal .presentation-pdf-page-nav__button:disabled {
 	opacity: 0.35;
@@ -203,7 +194,7 @@
 	right: var(--spacing-single);
 	z-index: 1;
 	display: flex;
-	border-radius: var(--spacing-single);
+	border-radius: 0;
 	pointer-events: none;
 }
 
@@ -212,7 +203,7 @@
 	height: 1.5rem;
 	padding: 0;
 	border: 0;
-	border-radius: var(--spacing-single);
+	border-radius: 0;
 	background: var(--panel);
 	color: var(--foreground);
 	font-size: 0.75rem;

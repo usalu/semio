@@ -2,7 +2,7 @@
 
 use semio_ui_arena::NodeId;
 use semio_ui_wgpu_layout::chrome::chrome_item_bg;
-use semio_ui_wgpu_layout::chrome::{foreground_on_fill, item_bg, item_text, push_control_border, push_icon, ICON_TINY, SIZE_TINY};
+use semio_ui_wgpu_layout::chrome::{foreground_on_fill, item_bg, item_text, push_chrome_row, push_control_border, push_icon, ICON_TINY, SIZE_TINY};
 use semio_ui_declaration::ui::{UiButtonNode, UiComponentSceneNode, UiExternalSlotNode, UiGroupNode, UiIconSelectNode, UiImageNode, UiInputNode, UiKeyValueNode, UiNumberStepperNode, UiRingNode, UiSelectItem, UiSelectNode, UiSliderNode, UiTextNode, UiToggleNode};
 use semio_ui_declaration::ui::{UiControlNode, UiFieldNode, UiNode, UiSectionNode, UiState, UiStatus, UiTreeItemNode, UiTreeNode, UI_INSPECTOR_MIXED_PLACEHOLDER};
 use semio_ui_draw_contract::{DrawList, IconAtlas};
@@ -299,7 +299,7 @@ pub fn paint_input(node: &UiInputNode, edit: Option<&EditState>, bounds: Rect, f
     push_control_border(draw, bounds, theme, border, theme.input_bg, if focused { semio_ui_draw_contract::SharedBorderState::Focus } else { semio_ui_draw_contract::SharedBorderState::Normal });
     let swatch = (node.input_kind == "color").then(|| color_input_swatch(bounds, edit.map_or(node.value.as_str(), |edit| edit.text.as_str()))).flatten();
     if let Some((swatch, color, _)) = swatch {
-        draw.push_rounded([swatch.x, swatch.y, swatch.w, swatch.h], color, 2.0);
+        draw.push_solid([swatch.x, swatch.y, swatch.w, swatch.h], color);
     }
     let text_x = swatch.map_or(bounds.x, |(_, _, text_bounds)| text_bounds.x) + 8.0;
     let text_baseline_y = bounds.y + (bounds.h + theme.font_size_body) * 0.5 - 2.0;
@@ -355,16 +355,15 @@ pub fn paint_select(node: &UiSelectNode, bounds: Rect, flags: NodeFlags, open: b
     let menu_h = semio_ui_select_behavior::select_menu_height(node.items.len(), theme);
     let menu_top = retained.map_or(bounds.h + semio_ui_select_behavior::SELECT_SIDE_OFFSET, |(tree, id)| select_menu_top_for(tree, id, bounds.h, node.items.len(), theme));
     let menu = Rect::new(bounds.x, bounds.y + menu_top, bounds.w, menu_h);
-    draw.push_glass([menu.x, menu.y, menu.w, menu.h], theme.border_radius, theme.glass(Level::Menu));
+    draw.push_glass([menu.x, menu.y, menu.w, menu.h], 0.0, theme.glass(Level::Menu));
     for (index, item) in node.items.iter().enumerate() {
         let relative = select_popup_row_rect(bounds.w, index, menu_top, theme);
         let row = Rect::new(bounds.x + relative.x, bounds.y + relative.y, relative.w, relative.h);
         let row_hovered = retained.zip(row_children.get(index)).is_some_and(|((tree, _), &row_id)| tree.node(row_id).is_some_and(|n| n.flags.contains(NodeFlags::HOVERED)));
         let highlighted = retained.is_some_and(|(tree, id)| tree.node(id).is_some_and(|select| select.state.highlighted == Some(index)));
-        if row_hovered || highlighted || item.value == node.value {
-            draw.push_rounded([row.x, row.y, row.w, row.h], theme.row_hover, theme.border_radius);
-        }
-        draw_text_on(draw, atlas, item.label.as_str(), row.x + theme.padding_standard, row.y + (row.h + theme.font_size_body) * 0.5 - 2.0, theme.font_size_body, theme.text);
+        let (fill, ink) = semio_ui_select_behavior::select_row_colors(theme, item.value == node.value, row_hovered || highlighted);
+        push_chrome_row(draw, row, fill, index > 0, theme);
+        draw_text_on(draw, atlas, item.label.as_str(), row.x + semio_ui_select_behavior::select_row_text_inset(theme), row.y + (row.h + theme.font_size_body) * 0.5 - 2.0, theme.font_size_body, ink);
     }
 }
 

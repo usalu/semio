@@ -13,15 +13,69 @@
    "de": "Eine 6,00 m lange Spannbeton-Hohlplatte 1,2 x 0,2 m, aus einer rückgebauten Decke gesägt: gesägte Enden mit sechs offenen Hohlräumen und fünf geschnittenen Litzen, Vergussreste an den profilierten Fugenflanken, eine gestrichene Untersicht und vier gebohrte Anschlagpunkte; auf zwei Kanthölzern an den Anschlagpunkten gelagert, an ihren Klappbügeln angehoben und als Decke mit 5,90 m Spannweite wieder eingebaut."
   },
   "tags": [
-   "component",
-   "reclaimed",
-   "concrete",
-   "precast",
-   "prestressed",
-   "hollow-core",
-   "slab",
-   "floor",
-   "structural"
+   {
+    "id": "component",
+    "title": {
+     "en": "component",
+     "de": "Bauteil"
+    }
+   },
+   {
+    "id": "reclaimed",
+    "title": {
+     "en": "reclaimed",
+     "de": "wiederverwendet"
+    }
+   },
+   {
+    "id": "concrete",
+    "title": {
+     "en": "concrete",
+     "de": "Beton"
+    }
+   },
+   {
+    "id": "precast",
+    "title": {
+     "en": "precast",
+     "de": "Fertigteil"
+    }
+   },
+   {
+    "id": "prestressed",
+    "title": {
+     "en": "prestressed",
+     "de": "vorgespannt"
+    }
+   },
+   {
+    "id": "hollow-core",
+    "title": {
+     "en": "hollow core",
+     "de": "Hohlkammer"
+    }
+   },
+   {
+    "id": "slab",
+    "title": {
+     "en": "slab",
+     "de": "Platte"
+    }
+   },
+   {
+    "id": "floor",
+    "title": {
+     "en": "floor",
+     "de": "Boden"
+    }
+   },
+   {
+    "id": "structural",
+    "title": {
+     "en": "structural",
+     "de": "tragend"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage component authors",

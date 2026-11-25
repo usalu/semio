@@ -3,7 +3,7 @@
 use super::original_custody::{self, GraphDigest, Stash, DIGEST_STEP_BYTES};
 use super::retained_graph::{admit_box, exact_position, ImportedGraphRetirement, PdfByteGraphEvent, PdfByteGraphReceipt, PdfFilePreparationCursor, PreparedPdfFile};
 use crate::standards::v1_7::subsets::base::modules::lexer::{CosGrant, CosStatus, PdfCosCursor};
-use crate::standards::v1_7::subsets::base::modules::lift::{ControlledDocumentLiftCursor, ControlledLiftBarrier, ControlledLiftEvent, DocumentLiftCursor};
+use crate::standards::v1_7::subsets::base::modules::lift::{ControlledDocumentLiftCursor, ControlledLiftEvent, DocumentLiftCursor};
 use crate::standards::v1_7::subsets::base::modules::xref::{XrefIndexStatus, XrefStreamError};
 use crate::standards::v1_7::subsets::base::schema::graph_source::GraphSource;
 use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfPage, PdfSnapshot, STDIO_PDF17_DOCUMENT_SCHEMA};
@@ -13,6 +13,10 @@ use std::mem::{size_of, take};
 use store::os_store::snapshot_read::{artifact_retirement_box_close_step, artifact_retirement_box_demands, settle_close_poll};
 
 const COPY_PER_WORK: usize = 128;
+/// 📏️ Stream body bytes one decode work unit covers: a body unit inflates, filters or moves one byte, which costs a small fraction of a token unit, so one contract unit is a run of this many bytes.
+const BODY_BYTES_PER_UNIT: usize = 64;
+/// 📏️ Copy one body byte costs: one byte into the filter's staging or history, one into the reserved output page; a lift run unit stands for the same two bytes.
+const BODY_COPY_PER_BYTE: usize = ControlledDocumentLiftCursor::RUN_UNIT_COPY;
 
 
 #[derive(Clone, Copy)]
@@ -135,7 +139,6 @@ struct NaturalPdfDecoder {
     progress: NaturalFileDecodeProgress,
     live_bytes: usize,
     next_release: usize,
-    deferred: Option<ControlledLiftBarrier>,
     blocked: Option<(PdfByteGraphEvent, usize)>,
     stall: u8,
     stall_at: Option<String>,
@@ -148,12 +151,12 @@ impl NaturalPdfDecoder {
         Self {
             phase: Phase::AllocateFile, source: PdfNaturalSource::Contiguous(Vec::new()), preparing: None, file: None, lifting: None,
             snapshot: None, partial_page: None, snapshot_retirement: None, trailer_retirement: None,
-            graph_retirement: Default::default(), contract, progress: Default::default(), live_bytes: 0, next_release: 0, deferred: None, blocked: None, stall: 0, stall_at: None,
+            graph_retirement: Default::default(), contract, progress: Default::default(), live_bytes: 0, next_release: 0, blocked: None, stall: 0, stall_at: None,
             stash: Stash::default(), digest: GraphDigest::default(),
         }
     }
 
-    fn next(&mut self, grant: CosGrant) -> Result<PdfByteGraphReceipt, MediaError> {
+    fn next(&mut self, grant: CosGrant, bodies: bool) -> Result<PdfByteGraphReceipt, MediaError> {
         use PdfByteGraphEvent as Event;
         match self.phase {
             Phase::AllocateFile => {
@@ -198,10 +201,11 @@ impl NaturalPdfDecoder {
                 let file = self.file.as_ref().expect("semantic PDF source");
                 let position = |id| exact_position(&file.graph.positions, id);
                 let mut source = GraphSource::with_positions(&file.graph.objects, &position);
-                let step = self.lifting.as_mut().expect("semantic PDF owner").advance(&file.trailer, file.header.version(), &mut source, grant, false);
+                let lifting = self.lifting.as_mut().expect("semantic PDF owner");
+                let step = if bodies { lifting.advance_bodies(&file.trailer, file.header.version(), &mut source, grant, false) } else { lifting.advance(&file.trailer, file.header.version(), &mut source, grant, false) };
                 let event = match step.event {
                     Ok(ControlledLiftEvent::Complete) => { self.phase = Phase::TransferLift; Ok(Event::More) }
-                    Ok(ControlledLiftEvent::Deferred(reason)) => { self.deferred = Some(reason); Ok(Event::ReferenceRequired) },
+                    Ok(ControlledLiftEvent::Deferred(_)) => Ok(Event::ReferenceRequired),
                     other => lift_event(other),
                 };
                 Ok(PdfByteGraphReceipt { event, work: step.work, allocated_bytes: step.allocated_bytes, released_bytes: step.released_bytes })
@@ -262,13 +266,30 @@ impl NaturalPdfDecoder {
         }.max(COPY_PER_WORK)
     }
 
-    fn copies_identity_bytes(&self) -> bool {
-        matches!(self.phase, Phase::PrepareFile) && self.preparing.as_ref().is_some_and(|owner| owner.copying_identity_bytes())
+    /// 🏃️ Whether the next call runs bodies: preparation decoding stream bodies, or a lift stage that moves image bytes or runs a page program.
+    fn decodes_body_bytes(&self) -> bool {
+        match self.phase {
+            Phase::PrepareFile => self.preparing.as_ref().is_some_and(|owner| owner.decoding_body_bytes()),
+            Phase::Lift => self.lifting.as_ref().is_some_and(|owner| owner.runs_bodies()),
+            _ => false,
+        }
     }
 
-    fn identity_units(&self, remaining_work: u64, fuel: u64, copy: usize) -> usize {
+    /// 📏️ The fewest body units a call may be granted: a lift run must fit its costliest step.
+    fn body_floor(&self) -> usize {
+        if matches!(self.phase, Phase::Lift) { ControlledDocumentLiftCursor::RUN_UNIT_MAXIMUM } else { 1 }
+    }
+
+    /// 📏️ The units one bulk call may run when each copies `unit_copy` bytes: the step's remaining units and fuel at [`BODY_BYTES_PER_UNIT`] each, and at most half the copy grant so the rest stays open for a page or history reservation.
+    fn body_bytes(&self, remaining_work: u64, fuel: u64, copy: usize, unit_copy: usize) -> usize {
         let units = usize::try_from(remaining_work.min(fuel)).unwrap_or(usize::MAX);
-        units.min(copy / 2).max(1)
+        units.saturating_mul(BODY_BYTES_PER_UNIT).min(copy / (2 * unit_copy)).max(1)
+    }
+
+    /// ✍️ Bytes the next preparation unit writes when it fills one index slot or queue entry, which it is charged instead of a token unit.
+    fn writing_bytes(&self) -> Option<usize> {
+        if !matches!(self.phase, Phase::PrepareFile) { return None; }
+        self.preparing.as_ref().and_then(|owner| owner.writing_bytes())
     }
 
     fn reserves_empty_output(&self) -> bool {
@@ -279,21 +300,23 @@ impl NaturalPdfDecoder {
         }
     }
 
-    fn record(&mut self, step: &PdfByteGraphReceipt, copy_body: usize, inline_item: bool, empty_output: bool, context: &mut StepContext<'_>) -> Result<(), MediaError> {
+    /// 🧾️ Charges one call: `copy_body` per reported cursor unit, the allocation as copy unless it only reserved empty output, and `per_unit` cursor units (body bytes) as one contract unit of fuel and progress.
+    fn record(&mut self, step: &PdfByteGraphReceipt, copy_body: usize, per_unit: usize, inline_item: bool, empty_output: bool, context: &mut StepContext<'_>) -> Result<(), MediaError> {
         let grant = context.retained_grant();
         let allocation_copy = if empty_output { 0 } else { step.allocated_bytes };
         let copied = allocation_copy.saturating_add(step.work.saturating_mul(copy_body));
+        let units = step.work.div_ceil(per_unit);
         let copied_items = usize::from(step.allocated_bytes != 0
             || inline_item && step.work != 0 && matches!(step.event, Ok(PdfByteGraphEvent::More))
             || matches!(step.event, Ok(PdfByteGraphEvent::Object | PdfByteGraphEvent::Complete)));
         if copied > grant.maximum_copy_bytes {
             return Err(failure("PDF decoder exceeded its admitted copy grant"));
         }
-        context.consume_fuel(step.work as u64);
+        context.consume_fuel(units as u64);
         context.consume_retained(RetainedCloneProgress {
             copied_items, copied_bytes: copied, retained_capacity_bytes: step.allocated_bytes, released_bytes: step.released_bytes, ..Default::default()
         }).map_err(|error| failure(&error.to_string()))?;
-        self.progress.completed_work_units = self.progress.completed_work_units.saturating_add(step.work as u64);
+        self.progress.completed_work_units = self.progress.completed_work_units.saturating_add(units as u64);
         self.live_bytes = self.live_bytes.saturating_add(step.allocated_bytes).checked_sub(step.released_bytes)
             .ok_or_else(|| failure("PDF decoder released backing it does not own"))?;
         Ok(())
@@ -366,21 +389,28 @@ impl NaturalFileDecodeCursor<PdfSnapshot> for NaturalPdfDecoder {
         use PdfByteGraphEvent as Event;
         let start = self.progress.completed_work_units;
         let max_work = self.contract.max_work_units_per_step;
+        static TURNS: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+        let turn = TURNS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        if turn % 16 == 0 { eprintln!("[DEBUG] turn={turn} units={start} max_work={max_work} fuel={} phase={} trace={} grant_copy={}", context.fuel_remaining(), phase_name(self.phase), self.preparing.as_ref().map(|cursor| cursor.trace()).unwrap_or_default(), context.retained_grant().maximum_copy_bytes); }
         let mut admitted = false;
         while !context.is_cancelled() && self.progress.completed_work_units - start < max_work {
             if admitted && context.should_yield() { break; }
             admitted = true;
             let grant = context.retained_grant();
             let inline_body = self.lifting.as_ref().map_or(0, |owner| owner.next_inline_body_bytes());
-            let identity = self.copies_identity_bytes();
-            let copy_body = if identity { 1 } else { self.copy_body().max(inline_body) };
+            let body = self.decodes_body_bytes();
+            let written = if body { None } else { self.writing_bytes() };
+            let copy_body = if body { BODY_COPY_PER_BYTE } else { written.map_or_else(|| self.copy_body().max(inline_body), |bytes| bytes.max(BODY_COPY_PER_BYTE)) };
             if grant.maximum_items == 0 || grant.maximum_depth == 0 || grant.maximum_copy_bytes < copy_body { break; }
             let empty_output = self.reserves_empty_output();
-            let work = if identity { self.identity_units(max_work - (self.progress.completed_work_units - start), context.fuel_remaining(), grant.maximum_copy_bytes) } else { 1 };
+            let remaining = max_work - (self.progress.completed_work_units - start);
+            let running = body || written.is_some() && self.blocked.is_none();
+            let work = if running { self.body_bytes(remaining, context.fuel_remaining(), grant.maximum_copy_bytes, copy_body) } else { 1 };
+            if work < self.body_floor() && body { break; }
             let allocation_boundary = if empty_output { grant.maximum_release_bytes } else { grant.maximum_copy_bytes - copy_body * work };
             let grant = CosGrant { work, allocation_bytes: grant.maximum_capacity_bytes.min(allocation_boundary), release_bytes: grant.maximum_release_bytes };
             let phase = self.phase;
-            let step = self.next(grant)?;
+            let step = self.next(grant, body)?;
             let idle = step.work == 0 && matches!(step.event, Ok(Event::More)) && std::mem::discriminant(&self.phase) == std::mem::discriminant(&phase);
             if idle {
                 let where_ = self.preparing.as_ref().map(|cursor| cursor.trace()).unwrap_or_else(|| "-".to_string());
@@ -396,7 +426,9 @@ impl NaturalFileDecodeCursor<PdfSnapshot> for NaturalPdfDecoder {
             }
             self.stall = 0;
             self.stall_at = None;
-            self.record(&step, copy_body, inline_body != 0, empty_output, context)?;
+            let before_units = self.progress.completed_work_units;
+            self.record(&step, copy_body, if running { BODY_BYTES_PER_UNIT } else { 1 }, inline_body != 0, empty_output, context)?;
+            if before_units / 5000 != self.progress.completed_work_units / 5000 { eprintln!("[DEBUG] units={} phase={} trace={} work={} running={running}", self.progress.completed_work_units, phase_name(self.phase), self.preparing.as_ref().map(|cursor| cursor.trace()).unwrap_or_default(), step.work); }
             if step.work != 0 { self.blocked = None; }
             match step.event {
                 Ok(Event::Object) => self.progress.decoded_items += 1,
@@ -409,15 +441,16 @@ impl NaturalFileDecodeCursor<PdfSnapshot> for NaturalPdfDecoder {
                     if self.progress.completed_work_units == start {
                         let available = if matches!(event, Event::NeedsAllocation { .. }) { grant.allocation_bytes } else { grant.release_bytes };
                         if self.blocked.replace((event, available)) == Some((event, available)) {
-                            return Err(failure(&format!("PDF decoder needs a {bytes}-byte backing grant")));
+                            let stage = self.lifting.as_ref().map_or_else(String::new, |owner| format!(" {} after {} pages", owner.stage_name(), owner.pages_lifted()));
+                            return Err(failure(&format!("PDF decoder needs a {bytes}-byte backing grant during {}{stage}", phase_name(self.phase))));
                         }
                         return Ok(NaturalFileDecodeStep::Yield);
                     }
                     break;
                 }
                 Ok(Event::ReferenceRequired) => {
-                    return Err(match self.deferred {
-                        Some(reason) => failure(&format!("PDF semantic import requires the reference reader for {reason:?}")),
+                    return Err(match self.lifting.as_ref().and_then(|owner| owner.deferred_detail()) {
+                        Some((reason, detail, pages)) => failure(&format!("PDF semantic import requires the reference reader for {reason:?} {detail} after {pages} pages")),
                         None => failure("PDF requires reference decoding for this file structure"),
                     });
                 }
@@ -544,4 +577,4 @@ fn xref_message(error: XrefStreamError) -> String {
     match error { XrefStreamError::Structure(reason) => reason.into(), XrefStreamError::Decode(error) => error.into_message() }
 }
 
-fn failure(reason: &str) -> MediaError { MediaError::Payload(NATURAL_FILE_PORT.into(), reason.into()) }
+fn failure(reason: &str) -> MediaError { eprintln!("[DEBUG] pdf decoder failure: {reason}"); MediaError::Payload(NATURAL_FILE_PORT.into(), reason.into()) }

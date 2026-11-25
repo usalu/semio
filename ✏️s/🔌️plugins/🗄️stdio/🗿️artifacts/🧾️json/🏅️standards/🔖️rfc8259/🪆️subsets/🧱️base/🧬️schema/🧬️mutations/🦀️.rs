@@ -23,6 +23,7 @@ pub enum JsonMutation {
     SetScalar(SetScalarMutation),
 }
 dsl::original_pack_value_operation_receiving!(JsonMutation);
+dsl::artifact_persisted_binary_operation!(JsonMutation);
 
 
 

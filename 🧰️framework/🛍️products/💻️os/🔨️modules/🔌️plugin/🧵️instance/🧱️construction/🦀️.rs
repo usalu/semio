@@ -17,7 +17,7 @@ use semio_plugin_reactor_app::OriginalPluginAppConstruction;
 use semio_plugin_reactor_app::OriginalPluginAppFactory;
 use semio_plugin_reactor_app::OriginalPluginAppSource;
 use semio_framework_job::OriginalSourceBinding;
-use semio_plugin_ownership::original_store_genesis::OriginalStoreInitialSource;
+use semio_plugin_store_lifecycle::original_store_genesis::OriginalStoreInitialSource;
 use semio_framework_job::OriginalTurnFailure;
 use semio_plugin_reactor_app::PluginApp;
 use semio_plugin_ownership::bounded_ownership::PluginLifecycleStep;

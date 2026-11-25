@@ -54,9 +54,9 @@ impl PdfDecodedStreamCursor {
         self.stages.is_some_and(|stages| self.stage + 1 >= stages)
     }
 
-    /// 📄️ Whether the next unit only moves one body byte of an uncompressed stream into its retained output.
-    pub fn copies_identity_bytes(&self) -> bool {
-        !self.cancelled && !self.closing && !self.complete && !self.finishing_stage && self.decoder.as_ref().is_some_and(PdfStreamDataCursor::copies_identity_bytes)
+    /// 📄️ Whether the active filter stage only decodes body bytes (see [`PdfStreamDataCursor::decodes_body_bytes`]); dictionary planning and stage handoff are token units.
+    pub fn decodes_body_bytes(&self) -> bool {
+        !self.cancelled && !self.closing && !self.complete && !self.finishing_stage && self.decoder.as_ref().is_some_and(PdfStreamDataCursor::decodes_body_bytes)
     }
 
     /// 🎚️ Quotes only the fresh history unit of the currently decoding filter.
@@ -124,8 +124,9 @@ impl PdfDecodedStreamCursor {
             return Ok(StreamDataStatus::More);
         };
         if self.checked_stages < stages {
-            if matches!(planned_filter(declaration, self.checked_stages)?, PlannedFilter::Dct)
-                && (stages != 1 || value(4, 4).and_then(PdfObject::as_name) != Some("Image")) {
+            let planned = planned_filter(declaration, self.checked_stages)?;
+            let image = value(4, 4).and_then(PdfObject::as_name) == Some("Image");
+            if matches!(planned, PlannedFilter::Dct | PlannedFilter::Ccitt | PlannedFilter::Jpx | PlannedFilter::Jbig2) && (self.checked_stages + 1 != stages || !image) {
                 return Err(unsupported());
             }
             self.checked_stages += 1;
@@ -151,7 +152,7 @@ impl PdfDecodedStreamCursor {
             PlannedFilter::Ascii85 => (PdfStreamDataCursor::ascii85(maximum_output), Some(PdfStreamFilter::Ascii85)),
             PlannedFilter::RunLength => (PdfStreamDataCursor::run_length(maximum_output), Some(PdfStreamFilter::RunLength)),
             PlannedFilter::Dct => {
-                if matches!(value(2, 3), Some(PdfObject::Array(parameters)) if parameters.len() != 1) { return Err(unsupported()); }
+                if matches!(value(2, 3), Some(PdfObject::Array(parameters)) if parameters.len() != stages) { return Err(unsupported()); }
                 let color_transform = match parameter {
                     None | Some(PdfObject::Null) => None,
                     Some(PdfObject::Dict(entries)) if entries.is_empty() => None,
@@ -165,6 +166,15 @@ impl PdfDecodedStreamCursor {
                     _ => return Err(unsupported()),
                 };
                 (PdfStreamDataCursor::identity(maximum_output), Some(PdfStreamFilter::Dct { color_transform }))
+            }
+            PlannedFilter::Ccitt => {
+                if parameter.is_some_and(|parameter| !matches!(parameter, PdfObject::Null | PdfObject::Dict(_))) { return Err(unsupported()); }
+                (PdfStreamDataCursor::identity(maximum_output), Some(PdfStreamFilter::Ccitt { parameters: super::ccitt_parameters(parameter.filter(|parameter| matches!(parameter, PdfObject::Dict(_)))) }))
+            }
+            PlannedFilter::Jpx => (PdfStreamDataCursor::identity(maximum_output), Some(PdfStreamFilter::Jpx)),
+            PlannedFilter::Jbig2 => {
+                if parameter.is_some_and(|parameter| !matches!(parameter, PdfObject::Null) && !matches!(parameter, PdfObject::Dict(entries) if entries.is_empty())) { return Err(unsupported()); }
+                (PdfStreamDataCursor::identity(maximum_output), Some(PdfStreamFilter::Jbig2 { globals: None }))
             }
             PlannedFilter::Flate | PlannedFilter::Lzw => {
                 if let Some(PdfObject::Dict(parameters)) = parameter {
@@ -295,7 +305,7 @@ fn invariant(reason: &'static str) -> ValueError {
     ValueError::literal(ValueRefusalKind::InvariantViolated, reason)
 }
 
-enum PlannedFilter { Identity, AsciiHex, Ascii85, RunLength, Flate, Lzw, Dct }
+enum PlannedFilter { Identity, AsciiHex, Ascii85, RunLength, Flate, Lzw, Dct, Ccitt, Jpx, Jbig2 }
 
 fn planned_filter(declaration: Option<&PdfObject>, stage: usize) -> Result<PlannedFilter, ValueError> {
     use PlannedFilter as Filter;
@@ -313,6 +323,9 @@ fn planned_filter(declaration: Option<&PdfObject>, stage: usize) -> Result<Plann
         "FlateDecode" | "Fl" => Ok(Filter::Flate),
         "LZWDecode" | "LZW" => Ok(Filter::Lzw),
         "DCTDecode" | "DCT" => Ok(Filter::Dct),
+        "CCITTFaxDecode" | "CCF" => Ok(Filter::Ccitt),
+        "JPXDecode" => Ok(Filter::Jpx),
+        "JBIG2Decode" => Ok(Filter::Jbig2),
         _ => Err(unsupported()),
     }
 }

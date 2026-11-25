@@ -14,16 +14,16 @@ fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated
 fn move_demand(bytes:usize)->RetirementDemand{RetirementDemand{copy_bytes:bytes,depth:1,..Default::default()}}
 fn receipt(d:RetirementDemand)->RetainedCloneProgress{RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,released_bytes:d.release_bytes}}
 fn original(d:RetirementDemand)->OriginalConstructionDemand{OriginalConstructionDemand{items:1,copy_bytes:d.copy_bytes,capacity_bytes:d.capacity_bytes,release_bytes:d.release_bytes,depth:d.depth}}
-/// 🧭️ Why one press settlement unit ran no step: the `phase` that waited, the `resource` of its quote that was short and the `demand` against the `grant` available.
+/// 🧭️ Why a press settlement unit ran no step: `resource` of `phase` was short, `demand` against `grant`.
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub struct PressWait{pub phase:&'static str,pub resource:&'static str,pub demand:u64,pub grant:u64}
-/// 💰️ Funds one quoted step of `phase` (`extra` copy bytes beyond `d`): the grant to lend it, the named wait while this turn cannot cover it, or a typed `WorkLimit` refusal when not even the largest turn grant ever could.
+/// 💰️ Funds one quoted step: its grant, the named wait while this turn cannot cover it, or a typed `WorkLimit` when no turn ever could.
 fn funding(cx:&StepContext<'_>,phase:&'static str,d:RetirementDemand,extra:usize)->Result<Result<RetainedCloneGrant,PressWait>,OriginalTurnFailure>{
- let need=RetirementDemand{copy_bytes:d.copy_bytes.checked_add(extra).ok_or_else(invalid)?,..d};
- if let Some((resource,demand,grant))=semio_plugin_ownership::bounded_ownership::plugin_grant_shortfall(need,cx.original_turn_ceiling().0){return Err(ValueError::new(ValueRefusalKind::WorkLimit,format!("original press settlement {phase} needs {demand} {resource} but no turn grants more than {grant}")).into())}
- if cx.retirement_should_yield()||cx.is_cancelled(){return Ok(Err(PressWait{phase,resource:"turn (yielded or cancelled)",demand:0,grant:0}))}
- let g=cx.retained_grant();
- if let Some((resource,demand,grant))=semio_plugin_ownership::bounded_ownership::plugin_grant_shortfall(need,g){return Ok(Err(PressWait{phase,resource,demand,grant}))}
+ let need=RetirementDemand{copy_bytes:d.copy_bytes.checked_add(extra).ok_or_else(invalid)?,..d};let g=cx.retained_grant();
+ let short=|g|semio_plugin_ownership::bounded_ownership::plugin_grant_shortfall(need,g);
+ if let Some((r,demand,grant))=short(cx.original_turn_ceiling().0){return Err(ValueError::new(ValueRefusalKind::WorkLimit,format!("press settlement {phase} needs {demand} {r}, turns grant {grant}")).into())}
+ if cx.retirement_should_yield()||cx.is_cancelled(){return Ok(Err(PressWait{phase,resource:"turn",demand:0,grant:0}))}
+ if let Some((resource,demand,grant))=short(g){return Ok(Err(PressWait{phase,resource,demand,grant}))}
  Ok(Ok(RetainedCloneGrant{maximum_copy_bytes:g.maximum_copy_bytes-extra,..g}))
 }
 fn post_header(cx:&mut StepContext<'_>,bytes:usize)->Result<(),OriginalTurnFailure>{cx.consume_retained(RetainedCloneProgress{copied_bytes:bytes,..Default::default()})?;Ok(())}

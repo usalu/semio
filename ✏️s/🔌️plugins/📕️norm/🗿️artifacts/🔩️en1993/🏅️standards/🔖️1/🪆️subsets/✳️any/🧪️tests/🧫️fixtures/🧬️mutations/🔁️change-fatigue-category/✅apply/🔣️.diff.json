@@ -47,7 +47,9 @@
           "memberId": null,
           "category": 91,
           "method": null,
-          "spectrum": null
+          "spectrum": null,
+          "stressHistory": null,
+          "consequence": null
         }
       }
     ]

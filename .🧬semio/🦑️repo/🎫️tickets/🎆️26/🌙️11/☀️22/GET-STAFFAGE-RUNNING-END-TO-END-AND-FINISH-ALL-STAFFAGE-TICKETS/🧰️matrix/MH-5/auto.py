@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """🤖️ The search for the repair of one person of batch MH-5: `python3 auto.py <id> [--scales 50,100] [--margin 0.93] [--fresh]`.
 
-It works on a copy (`$GEN/auto/<id>.json`, the catalog file with the ops of `ops/<id>.json` applied; the catalog is never written here). Round by round the model gate (`mgate.ts`) names the shapes whose three views disagree in the hard tier; for each of them a fixed list of candidate repairs is applied to copies in one `fit.ts --try` process, from the least to the most invasive: fit what the views do not show (`sync`), cut hidden length (`clip`), turn flat shapes into prisms (`convert`, the ops of `../MR/fit.ts`), make two or three views the same body (`copy` from a view that is a real solid, never from a plate thinner than 30 mm; a body of revolution also 6 to 20 % slimmer), then the same with a few millimetres of visible slack, for all views or for one view alone (`lock`); when none passes, the geometry the shape has in a neighbouring band (`copy-scale`). A candidate passes when the largest disagreement of the shape is below `margin` × tolerance in the model AND the silhouette guard of that scale (`sil.ts`, all three views) is still `OK`; of the passing candidates the one with the smallest disagreement (in steps of 10 mm, the earlier in the list among equals) is kept (the guard measures them four at a time in that order and stops at the first group with a passing one) and appended to `ops/<id>.json` (as `set` ops with the fitted geometry when applying the op twice would move it again). A shape without a passing candidate is reported as open and left as it was. Heavy processes run under the lock of `q.sh`. The log is `$GEN/auto/<id>.log`.
+It works on a copy (`$GEN/auto/<id>.json`, the backup of the asset as it was before this batch, with the ops of `ops/<id>.json` applied; the catalog is never written here). Round by round the model gate (`mgate.ts`) names the shapes whose three views disagree in the hard tier; for each of them a fixed list of candidate repairs is applied to copies in one `fit.ts --try` process, from the least to the most invasive: fit what the views do not show (`sync`), cut hidden length (`clip`), turn flat shapes into prisms (`convert`, the ops of `../MR/fit.ts`), make two or three views the same body (`copy` from a view that is a real solid, never from a plate thinner than 30 mm; a body of revolution also 6 to 20 % slimmer), then the same with a few millimetres of visible slack, for all views or for one view alone (`lock`); when none passes, the geometry the shape has in a neighbouring band (`copy-scale`). A candidate passes when the largest disagreement of the shape is below `margin` × tolerance in the model AND the silhouette guard of that scale (`sil.ts`, all three views) is still `OK`; of the passing candidates the one with the smallest disagreement (in steps of 10 mm, the earlier in the list among equals) is kept (the guard measures them four at a time in that order and stops at the first group with a passing one) and appended to `ops/<id>.json` (as `set` ops with the fitted geometry when applying the op twice would move it again). A shape without a passing candidate is reported as open and left as it was. Heavy processes run under the lock of `q.sh`. The log is `$GEN/auto/<id>.log`.
 """
 import json, os, re, shutil, subprocess, sys, glob
 
@@ -25,8 +25,8 @@ auto = GEN + "/auto"
 os.makedirs(auto, exist_ok=True)
 work = f"{auto}/{asset_id}.json"
 ops_file = f"{W}/ops/{asset_id}.json"
-log_file = open(f"{auto}/{asset_id}.log", "a")
-catalog = glob.glob(f"{S}/🗂️catalog/*/{asset_id}/🔣️.json")[0]
+log_file = open(f"{auto}/{asset_id}.log", "w" if "--fresh" in args else "a")
+backup = f"{GEN}/backup/{asset_id}.json"
 
 
 def say(text):
@@ -42,7 +42,7 @@ def run(cmd, cwd=T):
 def fit_try(source, candidates, prefix):
     path = prefix + ".candidates.json"
     json.dump(candidates, open(path, "w"))
-    out = run([B, W + "/fit.ts", source, "--try", path, "--prefix", prefix])
+    out = run([W + "/b.sh", W + "/fit.ts", source, "--try", path, "--prefix", prefix])
     result = {}
     for line in out.splitlines():
         parts = line.split("\t")
@@ -53,9 +53,9 @@ def fit_try(source, candidates, prefix):
 
 accepted = [] if "--fresh" in args or not os.path.exists(ops_file) else json.load(open(ops_file))
 if accepted:
-    run([B, W + "/fit.ts", asset_id, "--ops", ops_file, "--out", work])
+    run([W + "/b.sh", W + "/fit.ts", backup, "--ops", ops_file, "--out", work])
 else:
-    shutil.copy(catalog, work)
+    shutil.copy(backup, work)
 
 
 def shapes_of(scale, shape_id, bone):
@@ -106,11 +106,14 @@ def candidates_for(scale, shape_id, bone, phase=1):
             mr = {"front": {"op": "front-sweep", **base}, "plan": {"op": "plan-revolve", **base}}
             ex = {view: {"op": "extrude", **base, "view": view} for view in ("front", "plan")}
             present = [view for view in ("front", "plan") if kind[view] is not None]
+            full = {view: {**ex[view], "span": "full"} for view in ("front", "plan")}
             for view in present:
                 add("mr-" + view, mr[view], sync())
+                add("extrude-full-" + view, full[view], sync())
                 add("extrude-" + view, ex[view], sync())
             if len(present) == 2:
                 add("mr-both", mr["front"], mr["plan"], sync())
+                add("extrude-full-both", full["front"], full["plan"])
                 add("extrude-both", ex["front"], ex["plan"], sync())
                 add("mr-front-extrude-plan", mr["front"], ex["plan"], sync())
         if slack is not None:
@@ -143,7 +146,7 @@ def candidates_for(scale, shape_id, bone, phase=1):
 
 
 def model_hard():
-    out = run([B, W + "/mgate.ts", work] + (["--scales", only_scales] if only_scales else []))
+    out = run([W + "/b.sh", W + "/mgate.ts", work] + (["--scales", only_scales] if only_scales else []))
     found = []
     for line in out.splitlines():
         m = re.match(r"\S+ 1:(\d+) HARD (\w+) ([^/\s]+)/(\S+) (\d+) mm", line)

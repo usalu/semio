@@ -13,22 +13,118 @@
    "de": "Eine ausgebaute Trockenläufer-Inlinepumpe DN 80 PN 16 aus einem Heizungssteigstrang, wie sie eine Bauteilbörse anbietet: ein Spiralgehäuse aus Grauguss mit 360 mm Baulänge und zwei Flanschen nach EN 1092-1 von 200 mm, jeder mit einer angeschraubten Stahl-Blindscheibe 12 mm an vier der acht Schrauben M16 verschlossen, eine gegossene Laterne mit Gleitringdichtung, Kupplung und zwei Hebeösen, ein vierpoliger IE3-Motor 3 kW der Baugröße 100 mit verblichenem Lack, ein abgeschnittenes Kabel am Klemmenkasten und eine verbeulte Lüfterhaube; entleert steht die 81 kg schwere Pumpe auf ihrem Fuß zwischen zwei Keilhölzern auf einer Halbpalette 800 x 600 mm, zusammen 101 kg. Posen: auf der Palette gelagert, am Zweistranggehänge gehoben mit der Palette am Boden, und zwischen den Flanschen eines Steigstrangs wieder eingebaut, wo sie mit Heizwasser von 70 °C 50 m3/h gegen 14 m fördert."
   },
   "tags": [
-   "component",
-   "reclaimed",
-   "used",
-   "hvac",
-   "heating",
-   "plumbing",
-   "pump",
-   "inline-pump",
-   "dry-rotor",
-   "electric-motor",
-   "cast-iron",
-   "flange",
-   "pallet",
-   "timber",
-   "operating",
-   "thermal"
+   {
+    "id": "component",
+    "title": {
+     "en": "component",
+     "de": "Bauteil"
+    }
+   },
+   {
+    "id": "reclaimed",
+    "title": {
+     "en": "reclaimed",
+     "de": "wiederverwendet"
+    }
+   },
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "hvac",
+    "title": {
+     "en": "HVAC",
+     "de": "HLK"
+    }
+   },
+   {
+    "id": "heating",
+    "title": {
+     "en": "heating",
+     "de": "Heizung"
+    }
+   },
+   {
+    "id": "plumbing",
+    "title": {
+     "en": "plumbing",
+     "de": "Sanitär"
+    }
+   },
+   {
+    "id": "pump",
+    "title": {
+     "en": "pump",
+     "de": "Pumpe"
+    }
+   },
+   {
+    "id": "inline-pump",
+    "title": {
+     "en": "inline pump",
+     "de": "Inline-Pumpe"
+    }
+   },
+   {
+    "id": "dry-rotor",
+    "title": {
+     "en": "dry rotor",
+     "de": "Trockenläufer"
+    }
+   },
+   {
+    "id": "electric-motor",
+    "title": {
+     "en": "electric motor",
+     "de": "Elektromotor"
+    }
+   },
+   {
+    "id": "cast-iron",
+    "title": {
+     "en": "cast iron",
+     "de": "Gusseisen"
+    }
+   },
+   {
+    "id": "flange",
+    "title": {
+     "en": "flange",
+     "de": "Flansch"
+    }
+   },
+   {
+    "id": "pallet",
+    "title": {
+     "en": "pallet",
+     "de": "Palette"
+    }
+   },
+   {
+    "id": "timber",
+    "title": {
+     "en": "timber",
+     "de": "Holz"
+    }
+   },
+   {
+    "id": "operating",
+    "title": {
+     "en": "operating",
+     "de": "Betrieb"
+    }
+   },
+   {
+    "id": "thermal",
+    "title": {
+     "en": "thermal",
+     "de": "thermisch"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage component authors (used HVAC wave, author 16)",
@@ -5649,8 +5745,527 @@
     ]
    },
    "500": {
-    "status": "unavailable",
-    "denominator": 500
+    "status": "authored",
+    "denominator": 500,
+    "decisions": [
+     {
+      "en": "Body for the 75 mm feature: the pallet as one 144 mm slab; the pump as a stack of drums on its vertical axis: casing (foot, pedestal, volute and necks merged), lantern, motor with its flange as a 75 mm collar, fan cowl; each flange with its blanking plate is one 75 mm disc on the pipe axis, the terminal box keeps its 120 x 120 x 80 mm; chocks and lugs are below the feature and left out.",
+      "de": "Körper für das 75-mm-Merkmal: die Palette als eine 144-mm-Platte; die Pumpe als Stapel von Trommeln auf ihrer senkrechten Achse: Gehäuse (Fuß, Sockel, Spirale und Stutzen verschmolzen), Laterne, Motor mit seinem Flansch als 75-mm-Kragen, Lüfterhaube; jeder Flansch mit seiner Blindplatte ist eine 75-mm-Scheibe auf der Rohrachse, der Klemmenkasten behält seine 120 x 120 x 80 mm; Keile und Ösen liegen unter dem Merkmal und entfallen."
+     },
+     {
+      "en": "Thermal: the body solids in their regions by reference, the blanking plates as shells of their layer at true 30 mm on the flange discs and a 75 mm fan intake disc over the cowl.",
+      "de": "Thermik: die Körper in ihren Regionen als Verweis, die Blindplatten als Schalen ihrer Schicht in wahren 30 mm auf den Flanschscheiben und eine 75-mm-Ansaugscheibe über der Haube."
+     },
+     {
+      "en": "Structure: the members by reference, the blanking plates as 75 mm discs on their own bone, one bearing pad under the casing and two mass markers.",
+      "de": "Tragwerk: die Stäbe als Verweis, die Blindplatten als 75-mm-Scheiben an ihrem eigenen Knochen, eine Lagerplatte unter dem Gehäuse und zwei Massenmarken."
+     }
+    ],
+    "body": [
+     {
+      "id": "pallet-slab",
+      "kind": "box",
+      "bone": "pallet",
+      "material": "softwood",
+      "role": "body",
+      "tone": 0.6,
+      "size": [
+       0.8,
+       0.144,
+       0.6
+      ],
+      "transform": {
+       "translation": [
+        0.4,
+        0.072,
+        0
+       ]
+      }
+     },
+     {
+      "id": "casing",
+      "kind": "revolve",
+      "bone": "pump",
+      "material": "cast-iron",
+      "role": "body",
+      "tone": 0.32,
+      "profile": [
+       [
+        0,
+        0
+       ],
+       [
+        0,
+        0.138
+       ],
+       [
+        0.248,
+        0.138
+       ],
+       [
+        0.248,
+        0
+       ]
+      ],
+      "axis": [
+       0,
+       1,
+       0
+      ],
+      "origin": [
+       0.4,
+       0,
+       0
+      ]
+     },
+     {
+      "id": "flanges",
+      "kind": "revolve",
+      "bone": "pump",
+      "material": "cast-iron",
+      "role": "body",
+      "tone": 0.28,
+      "profile": [
+       [
+        0.19,
+        0
+       ],
+       [
+        0.19,
+        0.1
+       ],
+       [
+        0.265,
+        0.1
+       ],
+       [
+        0.265,
+        0
+       ]
+      ],
+      "axis": [
+       1,
+       0,
+       0
+      ],
+      "origin": [
+       0,
+       0.16,
+       0
+      ],
+      "repeat": {
+       "count": 2,
+       "translation": [
+        0.345,
+        0,
+        0
+       ]
+      }
+     },
+     {
+      "id": "lantern",
+      "kind": "revolve",
+      "bone": "pump",
+      "material": "cast-iron",
+      "role": "body",
+      "tone": 0.36,
+      "profile": [
+       [
+        0.248,
+        0
+       ],
+       [
+        0.248,
+        0.085
+       ],
+       [
+        0.362,
+        0.085
+       ],
+       [
+        0.362,
+        0
+       ]
+      ],
+      "axis": [
+       0,
+       1,
+       0
+      ],
+      "origin": [
+       0.4,
+       0,
+       0
+      ]
+     },
+     {
+      "id": "motor",
+      "kind": "revolve",
+      "bone": "pump",
+      "material": "painted-aluminium",
+      "role": "body",
+      "tone": 0.5,
+      "profile": [
+       [
+        0.362,
+        0
+       ],
+       [
+        0.362,
+        0.125
+       ],
+       [
+        0.437,
+        0.125
+       ],
+       [
+        0.437,
+        0.1
+       ],
+       [
+        0.656,
+        0.1
+       ],
+       [
+        0.656,
+        0
+       ]
+      ],
+      "axis": [
+       0,
+       1,
+       0
+      ],
+      "origin": [
+       0.4,
+       0,
+       0
+      ]
+     },
+     {
+      "id": "fan-cowl",
+      "kind": "revolve",
+      "bone": "pump",
+      "material": "steel-sheet",
+      "role": "body",
+      "tone": 0.42,
+      "profile": [
+       [
+        0.656,
+        0
+       ],
+       [
+        0.656,
+        0.104
+       ],
+       [
+        0.776,
+        0.104
+       ],
+       [
+        0.776,
+        0
+       ]
+      ],
+      "axis": [
+       0,
+       1,
+       0
+      ],
+      "origin": [
+       0.4,
+       0,
+       0
+      ]
+     },
+     {
+      "id": "terminal-box",
+      "kind": "box",
+      "bone": "pump",
+      "material": "painted-aluminium",
+      "role": "body",
+      "tone": 0.46,
+      "size": [
+       0.12,
+       0.12,
+       0.08
+      ],
+      "transform": {
+       "translation": [
+        0.4,
+        0.516,
+        -0.125
+       ]
+      }
+     }
+    ],
+    "thermal": [
+     {
+      "id": "th-pallet-slab",
+      "of": "pallet-slab",
+      "region": "pallet"
+     },
+     {
+      "id": "th-casing",
+      "of": "casing",
+      "region": "casing"
+     },
+     {
+      "id": "th-flanges",
+      "of": "flanges",
+      "region": "casing"
+     },
+     {
+      "id": "th-lantern",
+      "of": "lantern",
+      "region": "lantern"
+     },
+     {
+      "id": "th-motor",
+      "of": "motor",
+      "region": "motor"
+     },
+     {
+      "id": "th-fan-cowl",
+      "of": "fan-cowl",
+      "region": "fan-cowl"
+     },
+     {
+      "id": "th-terminal-box",
+      "of": "terminal-box",
+      "region": "terminal-box"
+     },
+     {
+      "id": "th-blanks",
+      "kind": "revolve",
+      "bone": "blanks",
+      "material": "steel",
+      "role": "body",
+      "tone": 0.2,
+      "profile": [
+       [
+        0.19,
+        0
+       ],
+       [
+        0.19,
+        0.1
+       ],
+       [
+        0.22,
+        0.1
+       ],
+       [
+        0.22,
+        0
+       ]
+      ],
+      "axis": [
+       1,
+       0,
+       0
+      ],
+      "origin": [
+       0,
+       0.16,
+       0
+      ],
+      "repeat": {
+       "count": 2,
+       "translation": [
+        0.39,
+        0,
+        0
+       ]
+      },
+      "region": "blanking-plates",
+      "layer": "plate"
+     },
+     {
+      "id": "th-fan-intake",
+      "kind": "revolve",
+      "bone": "pump",
+      "material": "steel-sheet",
+      "role": "detail",
+      "tone": 0.3,
+      "profile": [
+       [
+        0.776,
+        0
+       ],
+       [
+        0.776,
+        0.09
+       ],
+       [
+        0.851,
+        0.09
+       ],
+       [
+        0.851,
+        0
+       ]
+      ],
+      "axis": [
+       0,
+       1,
+       0
+      ],
+      "origin": [
+       0.4,
+       0,
+       0
+      ],
+      "region": "fan-cowl",
+      "tags": [
+       "motor-fan"
+      ]
+     }
+    ],
+    "structure": [
+     {
+      "id": "member-pallet-slab",
+      "of": "pallet-slab",
+      "member": "pallet",
+      "part": "member"
+     },
+     {
+      "id": "member-casing",
+      "of": "casing",
+      "member": "pump",
+      "part": "member"
+     },
+     {
+      "id": "member-flanges",
+      "of": "flanges",
+      "member": "pump",
+      "part": "member"
+     },
+     {
+      "id": "member-lantern",
+      "of": "lantern",
+      "member": "pump",
+      "part": "member"
+     },
+     {
+      "id": "member-motor",
+      "of": "motor",
+      "member": "pump",
+      "part": "member"
+     },
+     {
+      "id": "member-blanks",
+      "kind": "revolve",
+      "bone": "blanks",
+      "material": "steel",
+      "role": "body",
+      "tone": 0.2,
+      "profile": [
+       [
+        0.19,
+        0
+       ],
+       [
+        0.19,
+        0.1
+       ],
+       [
+        0.265,
+        0.1
+       ],
+       [
+        0.265,
+        0
+       ]
+      ],
+      "axis": [
+       1,
+       0,
+       0
+      ],
+      "origin": [
+       0,
+       0.16,
+       0
+      ],
+      "repeat": {
+       "count": 2,
+       "translation": [
+        0.345,
+        0,
+        0
+       ]
+      },
+      "member": "blanks",
+      "part": "member"
+     },
+     {
+      "id": "joint-foot",
+      "kind": "box",
+      "bone": "pump",
+      "material": "cast-iron",
+      "role": "detail",
+      "tone": 0.5,
+      "size": [
+       0.22,
+       0.075,
+       0.18
+      ],
+      "transform": {
+       "translation": [
+        0.4,
+        0.0375,
+        0
+       ]
+      },
+      "member": "pump",
+      "part": "joint"
+     },
+     {
+      "id": "mass-pump",
+      "kind": "box",
+      "bone": "pump",
+      "material": "cast-iron",
+      "role": "detail",
+      "tone": 0.5,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.4,
+        0.35,
+        0
+       ]
+      },
+      "member": "pump",
+      "part": "mass"
+     },
+     {
+      "id": "mass-pallet",
+      "kind": "box",
+      "bone": "pallet",
+      "material": "softwood",
+      "role": "detail",
+      "tone": 0.5,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.4,
+        0.072,
+        0
+       ]
+      },
+      "member": "pallet",
+      "part": "mass"
+     }
+    ]
    }
   },
   "anchors": [

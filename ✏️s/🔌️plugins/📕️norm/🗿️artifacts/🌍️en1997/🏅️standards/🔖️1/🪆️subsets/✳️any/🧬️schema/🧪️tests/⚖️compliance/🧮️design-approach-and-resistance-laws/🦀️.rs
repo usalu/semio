@@ -163,12 +163,7 @@ fn investigation_depth_rule() {
 
 #[test]
 fn compliant_demo_passes() {
-    let report = check_project(&compliant_demo());
-    assert!(
-        report.complies(),
-        "compliant demo must have no Fail; fails={:?}",
-        report.failing().map(|c| c.id.clone()).collect::<Vec<_>>()
-    );
+    assert_compliant_up_to_the_basis(&check_project(&compliant_demo()));
 }
 
 #[test]
@@ -233,14 +228,15 @@ fn remedy_law_pile_length_clears_compression() {
         apply_remedy_required(&mut doc, &r.target.path, r.required.value);
     }
     let mid = check_project(&doc);
-    if mid.checks.iter().find(|c| c.id == fail.id).map(|c| c.status) != Some(CheckStatus::Pass) {
+    if !mid.checks.iter().find(|c| c.id == fail.id).is_some_and(clears_up_to_the_basis) {
         let fail2 = mid.failing().find(|c| c.id == fail.id).or_else(|| mid.failing().find(|c| c.id.contains("compression"))).expect("still failing");
         let r = fail2.remedies.iter().find(|r| r.applicable && r.target.path.contains("count")).or(count_remedy).expect("count remedy");
         apply_remedy_required(&mut doc, &r.target.path, r.required.value);
     }
     let after = check_project(&doc);
     let after_check = after.checks.iter().find(|c| c.id == fail.id).expect("same check");
-    assert_eq!(after_check.status, CheckStatus::Pass, "pile compression must Pass; u={}", after_check.utilization);
+    assert!(clears_up_to_the_basis(after_check), "pile compression must Pass; u={}", after_check.utilization);
+    assert_verdict_up_to_the_basis(after_check, CheckStatus::Pass);
 }
 
 #[test]

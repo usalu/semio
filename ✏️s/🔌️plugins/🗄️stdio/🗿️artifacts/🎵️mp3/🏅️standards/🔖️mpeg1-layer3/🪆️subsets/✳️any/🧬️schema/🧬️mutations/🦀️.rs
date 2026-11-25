@@ -43,6 +43,7 @@ pub enum Mp3Mutation {
     RemoveId3Frame(remove_id3_frame::RemoveId3Frame),
 }
 dsl::original_pack_value_operation_receiving!(Mp3Mutation);
+dsl::artifact_persisted_binary_operation!(Mp3Mutation);
 
 
 

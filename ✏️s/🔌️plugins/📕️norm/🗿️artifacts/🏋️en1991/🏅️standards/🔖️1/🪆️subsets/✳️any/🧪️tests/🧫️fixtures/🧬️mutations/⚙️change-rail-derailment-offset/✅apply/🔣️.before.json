@@ -88,7 +88,7 @@
       "assumedPartitions": 800.5
     },
     {
-      "id": "duplicate",
+      "id": "duplicate-2",
       "category": "C2",
       "area": -2.5,
       "assumedQk": -3.25,
@@ -104,7 +104,7 @@
       "assumedGk": 6000.5
     },
     {
-      "id": "slab-rc",
+      "id": "slab-rc-2",
       "material": "steel\u0000Stahl",
       "thickness": -0.125,
       "assumedGk": -2.5
@@ -124,7 +124,7 @@
       "assumedSk": 1000.75
     },
     {
-      "id": "roof-main",
+      "id": "roof-main-2",
       "roofType": "flat",
       "pitchDeg": 0.0,
       "cE": -0.5,
@@ -150,7 +150,7 @@
       "assumedWp": 1200.25
     },
     {
-      "id": "facade-d",
+      "id": "facade-d-2",
       "zone": "E",
       "z": -2.5,
       "cPe10": -0.75,
@@ -191,7 +191,7 @@
       ]
     },
     {
-      "id": "事故\u0000case",
+      "id": "事故\u0000case-2",
       "impact": [],
       "explosion": []
     },

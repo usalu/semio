@@ -621,6 +621,22 @@ export async function registerTurnDispatchLifecycleTests(vitest: PluginRuntimeVi
         });
       });
 
+      it("delivers a deferred completion across quiet actor turns", async () => {
+        const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧪️tests/🧫️fixtures/📨️command-settlement.json");
+        const { default: equal } = await import("fast-deep-equal");
+        const row = fixture.deferredCompletion;
+        const pending = { uiPatches: [], effects: [], status: { tag: row.status }, deferredEvents: row.deferredEvents, nextWake: null };
+        let crossings = 0;
+        await withFakeShardClient(async () => {
+          if (++crossings < row.deferredEvents) return { ...pending, deferredEvents: row.deferredEvents - crossings };
+          return { ...pending, deferredEvents: 0, effects: fixture.receiptEffects };
+        }, async () => {
+          const result = await settlePluginTurn("deferred-completion#7", pending, "Interactive", new Set(), undefined, true);
+          expect(equal(result.effects, fixture.receiptEffects)).toBe(true);
+          expect(crossings).toBe(row.deferredEvents);
+        });
+      });
+
       it("returns completed command effects while unrelated actor work is still pending", async () => {
         const { default: equal } = await import("fast-deep-equal");
         const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧪️tests/🧫️fixtures/📨️command-settlement.json");

@@ -1,6 +1,6 @@
 //! 🌱️ Concrete App declarations authorize four original genesis sources and their own retained controller closure.
 use crate::ArtifactApp;
-use semio_plugin_ownership::original_store_genesis::OriginalStoreGenesisOwner;
+use semio_plugin_store_lifecycle::original_store_genesis::OriginalStoreGenesisOwner;
 use semio_plugin_interaction::mutations::InteractionConfigMutation;
 use semio_os_kernel as store;
 use semio_framework_job::{StepContext,OriginalTurnFailure};

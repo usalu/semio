@@ -51,7 +51,7 @@ pub(super) fn rates(document: &Din16798Snapshot, report: &CheckReport, zone: &Zo
             style: solid(Tone::Info),
         });
     }
-    series.push(Series::Limit { id: "supplied".into(), label: loc("Supplied outdoor air", "Zugeführte Außenluft"), axis: AxisRef::Y, value: zone.outdoor_air_supplied_m3_h, style: dashed(check_tone(report, &check)) });
+    series.push(Series::Limit { id: "supplied-limit".into(), label: loc("Supplied outdoor air", "Zugeführte Außenluft"), axis: AxisRef::Y, value: zone.outdoor_air_supplied_m3_h, style: dashed(check_tone(report, &check)) });
     let description = if categories.is_empty() {
         loc("See the report for the design basis required for this zone.", "Die erforderliche Auslegungsgrundlage für diese Zone steht im Bericht.")
     } else {

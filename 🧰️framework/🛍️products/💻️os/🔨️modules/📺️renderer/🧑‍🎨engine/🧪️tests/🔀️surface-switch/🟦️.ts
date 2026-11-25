@@ -40,6 +40,7 @@ import {
   shellSessionRouteV1,
   quiesceSessionWorkV1,
   resolveBootPrimaryAppV1,
+  roleButtonDisabledV1,
   roleSwitchTargetV1,
   runSessionAppSwitchV1,
   sealedInstanceDropTextV1,
@@ -615,6 +616,18 @@ async function driveSessionLaneScenarioV1(make: (applyRoute: (uri: string) => Pr
   }
   return { started, requests: await Promise.all(outcomes), idle: lane.idle() };
 }
+
+describe("navbar role buttons", () => {
+  it("disable only the other role during a switch or a hub refusal, never for pending session work — equal to a truth-table oracle", () => {
+    for (const isActive of [false, true]) for (const busy of [false, true]) for (const refused of [false, true])
+      assert.equal(roleButtonDisabledV1(isActive, busy, refused), [!isActive, busy || refused].every(Boolean), `${isActive}/${busy}/${refused}`);
+    const ledger = createSessionWorkLedgerV1();
+    const release = ledger.begin("plugin", 1, "typed-operation");
+    assert.equal(ledger.pending("plugin", 1), 1);
+    assert.equal(roleButtonDisabledV1(false, false, false), false);
+    release();
+  });
+});
 
 describe("shell session lane", () => {
   it("applies every route in request order, coalesces a waiting burst to the latest, keeps a re-establishment in its place and survives failures — equal to the p-limit oracle", async () => {

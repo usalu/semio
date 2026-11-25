@@ -11,7 +11,7 @@
   ],
   "properties": {
     "mutation": {
-      "const": "changeelementtiltdeg"
+      "const": "changeElementTiltDeg"
     },
     "elementId": {
       "type": "string",

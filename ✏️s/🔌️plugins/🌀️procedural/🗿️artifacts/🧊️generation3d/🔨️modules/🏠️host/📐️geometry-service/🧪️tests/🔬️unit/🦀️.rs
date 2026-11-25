@@ -119,8 +119,13 @@ fn the_request_and_result_fixtures_hold_in_rust_and_the_result_decodes_through_i
     let execution = once(&host, &payload, 1000);
     let stepped = once(&GeometryHost::default(), &payload, 2);
     let faulted = once(&GeometryHost::default(), &request_text(document(2.0, -1.0), None), 1000);
-    assert_eq!(serde_json::from_str::<serde_json::Value>(&payload).expect("the request is JSON"), fixture["request"], "the committed request is the encoding of the typed request");
-    assert_eq!(json(&execution), fixture["complete"], "the committed result is what the service answers");
+    let observed = serde_json::json!({
+        "request": serde_json::from_str::<serde_json::Value>(&payload).expect("the request is JSON"),
+        "complete": json(&execution),
+        "stepped": json(&stepped),
+        "faulted": json(&faulted),
+    });
+    assert_eq!(observed, fixture, "the service must reproduce all contract cases: {observed}");
     let result = typed(&execution);
     assert!(result.complete && result.cursor.is_none() && result.progress.completed == result.progress.total);
     assert_eq!(semio_framework_pack_json::to_json_string(&result), String::from_utf8(execution.canonical_payload.clone().expect("the execution carries its payload")).expect("UTF-8"), "the typed schema re-encodes byte for byte");

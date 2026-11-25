@@ -26,6 +26,12 @@ _sprites = importlib.import_module("🎓️teaching.🏛️architecture.🏢️n
 _keyed = importlib.import_module("🎓️teaching.🏛️architecture.🏢️nakagin.🎨️visuals.🖼️keyed")
 _scene_interop = importlib.import_module("🎓️teaching.🧰️interop.🎬️scene.🐍️")
 
+
+def _light_card(width: float, height: float, header: float):
+    """🧾 A light square card on the shared frame owner: one glass header chip across the top edge, rows below."""
+    return _draft._art.window_frame(width, height, color="#8A8A8A", stroke_width=_draft.W_THIN, fill_color="#FFFFFF", fill_opacity=0.95,
+                                    top_depth=header, top_chips=((0, width),), appearance="light")
+
 TRANSITIONS = Path(__file__).resolve().parent / "🔀️transitions" / "🔣️.json"
 RECAP = {5: "recap.orient-to-legend", 6: "recap.list-item-to-legend", 7: "recap.index-to-legend"}
 INK, MUTED, GOOD, WARN, DATA, SERV = (getattr(_visuals, name) for name in ("INK", "MUTED", "GOOD", "WARN", "DATA", "SERV"))
@@ -338,7 +344,7 @@ class Beat2_Capsule(_scene_interop.RefreshMoving, _visuals.ClipScene):
     def _tag(self, string, point, color=DARK, size=SMALL):
         """🏷️ A label chip for the light viewport."""
         label = self._say(string, point, size=size, color=color)
-        chip = _engine.RoundedRectangle(corner_radius=0.05, width=label.width + 0.16, height=label.height + 0.1, stroke_width=0, fill_color="#FFFFFF", fill_opacity=0.85).move_to(label)
+        chip = _engine.Rectangle(width=label.width + 0.16, height=label.height + 0.1, stroke_width=0, fill_color="#FFFFFF", fill_opacity=0.85).move_to(label)
         return _engine.VGroup(chip, label)
 
     def _solve(self):
@@ -684,8 +690,7 @@ class Beat2_Capsule(_scene_interop.RefreshMoving, _visuals.ClipScene):
     def _params_card(self, rows, at):
         """🧾 The live parameter card: every slider value with its unit, in the colour of its dimension line."""
         width, pitch = 3.9, 0.5
-        frame = _engine.RoundedRectangle(corner_radius=0.08, width=width, height=pitch * (len(rows) + 1) + 0.2, stroke_color="#8A8A8A", stroke_width=_draft.W_THIN,
-                                         fill_color="#FFFFFF", fill_opacity=0.95).move_to((*at, 0))
+        frame = _light_card(width, pitch * (len(rows) + 1) + 0.2, pitch + 0.1).move_to((*at, 0))
         group = _engine.VGroup(frame)
         top = at[1] + frame.height / 2 - 0.1 - pitch / 2
         group.add(self._say(self.tr("Parameters · live", "Parameter · live"), (at[0] - width / 2 + 0.2, top), color=DARK, edge="l"))
@@ -702,7 +707,7 @@ class Beat2_Capsule(_scene_interop.RefreshMoving, _visuals.ClipScene):
         width = sum(c[2] for c in columns) + 0.3
         pitch = 0.46
         height = pitch * (len(types) + 2) + 0.2
-        frame = _engine.RoundedRectangle(corner_radius=0.08, width=width, height=height, stroke_color="#8A8A8A", stroke_width=_draft.W_THIN, fill_color="#FFFFFF", fill_opacity=0.95).move_to((*at, 0))
+        frame = _light_card(width, height, 1.4 * pitch + 0.1).move_to((*at, 0))
         group = _engine.VGroup(frame)
         top = at[1] + height / 2 - 0.1 - pitch / 2
         group.rows = {}
@@ -1096,7 +1101,7 @@ class Beat2_Capsule(_scene_interop.RefreshMoving, _visuals.ClipScene):
                                   range_ready, (lambda: (hop("domains.range-to-edge", hold["range"], hold["edge"]),), 1.4), range_done), seconds=6.0)
 
         width_hi = d.obj("w").settings["max"]
-        limit_badge = self.badge(self.tr("limit reached", "Grenze erreicht") + " · " + self.quantity(width_hi, "m"), (-1.15, -1.6), color=WARN, size=SMALL, filled=False)
+        limit_badge = self.badge(self.tr("limit reached", "Grenze erreicht") + " · " + self.quantity(width_hi, "m"), (-1.15, -1.6), color=WARN, size=SMALL, filled=False, appearance="light")
         slider_box = sliders["w"].view.body
         red_box = _engine.Rectangle(width=slider_box.width + 0.1, height=slider_box.height + 0.1, stroke_color=RED, stroke_width=4, fill_opacity=0).move_to(slider_box.get_center())
         request = self._tag(self.tr("requested ", "angefragt ") + self.quantity(width_hi + 0.5, "m") + " → " + self.quantity(width_hi, "m"), (-1.15, -2.15, 0.0), color="#B3261E")
@@ -1253,8 +1258,7 @@ class Beat2_Capsule(_scene_interop.RefreshMoving, _visuals.ClipScene):
     def _card(self, rows, at):
         """🧾 The constraint card: one row per parameter with its colour, name and domain from the model."""
         width, pitch = 4.9, 0.55
-        frame = _engine.RoundedRectangle(corner_radius=0.08, width=width, height=pitch * (len(rows) + 1) + 0.25, stroke_color="#8A8A8A", stroke_width=_draft.W_THIN,
-                                         fill_color="#FFFFFF", fill_opacity=0.95).move_to((*at, 0))
+        frame = _light_card(width, pitch * (len(rows) + 1) + 0.25, pitch + 0.1).move_to((*at, 0))
         group = _engine.VGroup(frame)
         top = at[1] + frame.height / 2 - 0.1 - pitch / 2
         group.add(self._say(self.tr("Slider domain = design limit (teaching assumption)", "Slider-Domain = Entwurfsgrenze (Lehrannahme)"), (at[0] - width / 2 + 0.2, top), color=DARK, edge="l", width=width - 0.4))

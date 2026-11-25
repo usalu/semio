@@ -91,11 +91,14 @@ use entry_lifecycle_and_retirement::*;
 mod event_dispatch;
 use event_dispatch::*;
 
+#[path = "⏱️quiet-slice-turn/🦀️.rs"]
+mod quiet_slice_turn;
+use quiet_slice_turn::*;
+
 #[path = "⌨️command-ingress-turn/🦀️.rs"]
 mod command_ingress_turn;
 use command_ingress_turn::*;
 #[doc(hidden)]
-pub use command_ingress_turn::{command_idle_turn_limit, command_stalled, note_command_turn, set_command_idle_turn_limit, COMMAND_IDLE_TURN_LIMIT, COMMAND_STALLED_FAULT_CODE};
 
 #[path = "🎨️dirty-surface-render/🦀️.rs"]
 mod dirty_surface_render;

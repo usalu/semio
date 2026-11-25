@@ -15,7 +15,7 @@ use crate::editor::puzzle5d::view::Puzzle5dScene;
 use semio_plugin::{create_default_layout, Axis};
 use semio_ui_locale::LocalizedLabel;
 use semio_plugin::ModeDefinition;
-use semio_plugin::OriginalToolRunView;
+use semio_plugin::ToolRunPollView;
 use semio_plugin::WindowEngagement;
 use semio_plugin::WindowEngagementInput;
 use semio_plugin::WindowEngagementStatus;
@@ -53,7 +53,7 @@ fn puzzle5d_engagement_session_active(window: &str, active_utility: &str) -> boo
 /// [`crate::editor::puzzle5d::commands::engagement_submit::PUZZLE5D_ENGAGEMENT_VERBS`], so an advertised verb
 /// that no arm parses cannot exist. Escape aborts the live fill run of this document instance, and otherwise
 /// disarms the utility.
-pub fn puzzle5d_engagement(envelope: &Puzzle5dScene, window: &str, labels: &Puzzle5dLabels, tool_run: Option<OriginalToolRunView<'_>>) -> WindowEngagement {
+pub fn puzzle5d_engagement(envelope: &Puzzle5dScene, window: &str, labels: &Puzzle5dLabels, tool_run: Option<ToolRunPollView<'_>>) -> WindowEngagement {
     let part_count = envelope.document.parts.len();
     let fastener_count = envelope.document.fasteners.len();
     let active_utility = envelope.active_utility.as_str();

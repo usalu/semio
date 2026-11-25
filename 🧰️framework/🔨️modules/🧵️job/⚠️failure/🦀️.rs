@@ -74,6 +74,8 @@ impl OriginalTurnFailure{
  pub fn debit_original(primary:impl Into<OriginalTurnPrimary>,cx:&mut impl OriginalFailureContext)->Self{let primary=primary.into();Self{effects:primary.retained_progress(),receipt_refusal:cx.consume_retained(primary.retained_progress()).err(),context_refusal:None,work_refusal:None,primary}}
  /// 🧳️ Borrows the unchanged typed Source close cause.
  pub fn primary_source_close(&self)->Option<&OriginalSourceCloseFailure>{match &self.primary{OriginalTurnPrimary::SourceClose(source)=>Some(source),_=>None}}
+ /// 🧭️ The plain semantic fault of a refusal that spent and retained nothing and carries no receipt, context or work refusal, so a boundary can answer it as a typed refusal of one command instead of failing the whole turn.
+ pub fn plain_refusal(&self)->Option<&Fault>{let spent=&self.effects;match &self.primary{OriginalTurnPrimary::Fault(fault) if self.receipt_refusal.is_none()&&self.context_refusal.is_none()&&self.work_refusal.is_none()&&spent.copied_items==0&&spent.copied_bytes==0&&spent.retained_capacity_bytes==0&&spent.released_bytes==0=>Some(fault),_=>None}}
  /// 🫴️ Lends only the original native refusal when that is the retained primary.
  pub fn primary_value(&self)->Option<&ValueError>{match &self.primary{OriginalTurnPrimary::Value(error)=>Some(error),_=>None}}
  /// 🫱️ Lends the complete original diagnostic without weakening its owned fields.

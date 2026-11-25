@@ -13,17 +13,83 @@
    "de": "Eine gebrauchte Kommode aus Massivkiefer, 0,80 x 0,40 x 0,85 m und 28 kg, mit vier eingelassenen Schubkästen auf Holzlaufleisten: die gewachste Deckplatte ist abgenutzt und an einer Ecke abgeplatzt, ein verlorener Knopf wurde durch einen weißen Porzellanknopf ersetzt. Sie lagert auf einer gefalteten Möbeldecke, wird nach dem Stapeln der Schubkästen als leerer Korpus von zwei Personen getragen und steht wieder in Gebrauch in einem Schlafzimmer mit Kleidung in den Schubkästen."
   },
   "tags": [
-   "used",
-   "household",
-   "second-hand",
-   "bedroom",
-   "chest-of-drawers",
-   "storage",
-   "drawers",
-   "solid-wood",
-   "pine",
-   "waxed",
-   "interior"
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "household",
+    "title": {
+     "en": "household",
+     "de": "Haushalt"
+    }
+   },
+   {
+    "id": "second-hand",
+    "title": {
+     "en": "second-hand",
+     "de": "Second-Hand"
+    }
+   },
+   {
+    "id": "bedroom",
+    "title": {
+     "en": "bedroom",
+     "de": "Schlafzimmer"
+    }
+   },
+   {
+    "id": "chest-of-drawers",
+    "title": {
+     "en": "chest of drawers",
+     "de": "Kommode"
+    }
+   },
+   {
+    "id": "storage",
+    "title": {
+     "en": "storage",
+     "de": "Lagerung"
+    }
+   },
+   {
+    "id": "drawers",
+    "title": {
+     "en": "drawers",
+     "de": "Schubladen"
+    }
+   },
+   {
+    "id": "solid-wood",
+    "title": {
+     "en": "solid wood",
+     "de": "Massivholz"
+    }
+   },
+   {
+    "id": "pine",
+    "title": {
+     "en": "pine",
+     "de": "Kiefer"
+    }
+   },
+   {
+    "id": "waxed",
+    "title": {
+     "en": "waxed",
+     "de": "gewachst"
+    }
+   },
+   {
+    "id": "interior",
+    "title": {
+     "en": "interior",
+     "de": "Innenausbau"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content (used household objects)",

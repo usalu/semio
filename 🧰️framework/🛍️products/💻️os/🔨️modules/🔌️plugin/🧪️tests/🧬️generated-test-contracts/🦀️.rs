@@ -9,8 +9,12 @@ macro_rules! __semio_plugin_descriptor_fresh_test {
             __semio_install_plugin_bundle();
             let plugin_id = __SEMIO_PLUGIN_RUNTIME.with(|runtime| ::semio_framework_async::poll::resolve_ready($crate::plugin_runtime::plugin_manifest(runtime))).plugin_id;
             let assembled = __SEMIO_PLUGIN_RUNTIME.with(|runtime| ::semio_framework_async::poll::resolve_ready($describe(runtime)));
+            if let Some(directory) = std::env::var_os("SEMIO_DESCRIBE_EMIT_DIR") {
+                $crate::describe::emit_semantic_descriptor_pair(&std::path::Path::new(&directory).join(&plugin_id), &assembled).expect("emit the assembled semantic descriptor pair");
+            }
             $crate::plugin_runtime::extension_dispose_cold(&mut cx).expect("original descriptor caller retires any installed extension");
             assert!($crate::plugin_runtime::extension_terminal_is_empty());
+            __SEMIO_PLUGIN_RUNTIME.with(|runtime| $crate::plugin_runtime::dispose_plugin_bundle_cold(runtime, &mut cx)).expect("original descriptor caller retires the installed native definitions");
             let expected_path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🛂️.descriptor.semio");
             const DESCRIPTOR_MIGRATED_PLUGINS: &[&str] = &["note", "sequence", "vcs", "forms", "sourcing", "dag", "mathematical", "writer", "reasoning", "animate", "draw", "energy", "layout"];
             match std::fs::read(expected_path) {
@@ -39,6 +43,9 @@ macro_rules! __semio_extension_descriptor_fresh_test {
             __semio_install_extension_bundle();
             let extension_id = $crate::plugin_runtime::extension_manifest().await.extension_id;
             let assembled = $crate::describe::describe_extension().await;
+            if let Some(directory) = std::env::var_os("SEMIO_DESCRIBE_EMIT_DIR") {
+                $crate::describe::emit_semantic_descriptor_pair(&std::path::Path::new(&directory).join(&extension_id), &assembled).expect("emit the assembled semantic descriptor pair");
+            }
             $crate::plugin_runtime::extension_dispose_cold(&mut cx).expect("original descriptor caller retires the installed extension");
             let expected_path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🛂️.descriptor.semio");
             const DESCRIPTOR_MIGRATED_EXTENSIONS: &[&str] = &[];

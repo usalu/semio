@@ -134,10 +134,10 @@ fn inputs(now_ms: f64) -> FrameBuildInputs {
 /// `ActiveFrameBuild::advance` uses; without it the checked-out job is `None` and the directives
 /// this law reads are invisible.
 fn admit_deadline(job:FrameBuildJob,original:&mut semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1)->BatchJobSession<FrameBuildJob>{
-    let mut source=original.turn(|cx|semio_plugin_ownership::reserved_job_session::RefusedWorkerSource::pending(job,(cx.operation(),cx.generation())));
+    let mut source=original.turn_funded(1<<16,|cx|semio_plugin_ownership::reserved_job_session::RefusedWorkerSource::pending(job,(cx.operation(),cx.generation())));
     let mut admitted=None;
-    for _ in 0..32{
-        if original.turn(|cx|source.admit_pending_batch(BatchDriveConfig{retained:cx.retained_grant(),site:"original-frame-deadline-law",stage:InteractiveStage::InteractiveStep,fuel_per_step:1,step_budget_us:1000000},&mut admitted,cx)).expect("original deadline admission"){
+    for _ in 0..256{
+        if original.turn_funded(1<<16,|cx|source.admit_pending_batch(BatchDriveConfig{retained:cx.retained_grant(),site:"original-frame-deadline-law",stage:InteractiveStage::InteractiveStep,fuel_per_step:1,step_budget_us:1000000},&mut admitted,cx)).expect("original deadline admission"){
             assert!(source.terminal_is_empty());return admitted.take().expect("the completed admission hands its session to the caller");
         }
     }
@@ -149,12 +149,12 @@ fn retire_fixture_phase(phase:&mut ActiveFramePhase,original:&mut semio_renderer
 }
 
 fn compute(inputs: FrameBuildInputs) -> FrameDirectives {
-    let mut original=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(fixture_frame_grant());
+    let mut original=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::wide(fixture_frame_grant(),7);
     let mut session=admit_deadline(FrameBuildJob::new(inputs),&mut original);
     let mut directives=None;
     for _ in 0..32{
-        original.turn(|cx|session.step_on_original_caller(cx)).expect("same original deadline step");
-        assert!(session.checkout_outcome());
+        let poll=original.turn(|cx|session.step_on_original_caller(cx)).expect("same original deadline step");
+        if !matches!(poll,semio_framework_job_worker::WorkerJobPoll::Outcome|semio_framework_job_worker::WorkerJobPoll::Terminal)||!session.checkout_outcome(){continue}
         let(grant,receipt)=session.take_checked_out_retained_step_receipt().expect("exact original deadline receipt");
         assert!(receipt.fits(grant));
         let complete=matches!(session.checked_out_outcome().unwrap(),Some(JobOutcomeView::Complete{..}));
@@ -210,7 +210,7 @@ fn retained_frame_owner_turn_advances_once_and_charges_terminal_work() {
 
 #[test]
 fn cancellation_retires_deadline_apply_and_build_phases_to_terminal_empty() {
-    let mut original=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(fixture_frame_grant());
+    let mut original=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::wide(fixture_frame_grant(),7);
     let deadline=admit_deadline(FrameBuildJob::new(FrameBuildInputs{wheel_zoom_deadline_ms:0.0,now_ms:2.0}),&mut original);
     let mut phases=[ActiveFramePhase::Deadlines(deadline),ActiveFramePhase::ApplyPending(FrameDirectives{wheel_zoom_deadline_cleared:false})];
     for phase in &mut phases{
@@ -462,7 +462,7 @@ fn original_frame_directive_inline_retirement_preserves_the_full_independent_gra
     };
     let mut caller=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::with_identity(fixture_frame_grant(),OperationId(99),Generation(99));
     let mut job=FrameBuildJob::new(inputs(1_000.0));
-    caller.turn(|cx|{assert!(job.step_turn(cx).unwrap().is_none());assert_eq!(cx.retained_progress(),RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Option<FrameDirectives>>(),..Default::default()});});
+    caller.turn(|cx|assert!(job.step_turn(cx).unwrap().is_none()));assert_eq!(caller.receipt(),RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Option<FrameDirectives>>(),..Default::default()});
     job.begin_close();let original=job.complete.as_ref().unwrap()as*const FrameDirectives;
     assert_eq!(job.next_close_copy_byte_demand().unwrap(),size_of::<FrameDirectives>());assert_eq!(job.next_close_capacity_byte_demand(0).unwrap(),0);assert_eq!(job.next_close_release_byte_demand().unwrap(),0);assert_eq!(job.next_close_depth_demand().unwrap(),1);
     for short in [RetainedCloneGrant{maximum_items:0,..grant},RetainedCloneGrant{maximum_copy_bytes:0,..grant},RetainedCloneGrant{maximum_depth:0,..grant}]{
@@ -480,15 +480,14 @@ fn original_frame_directive_inline_retirement_preserves_the_full_independent_gra
 #[test]
 fn a_pending_frame_phase_admits_a_yield_that_the_job_borrows_back_and_acknowledges() {
     let (runtime, _witness) = runtime_with_presented_input_candidate();
-    let operation = OperationId(101);
+    let operation = OperationId(41);
     let generation = Generation(101);
-    let mut original=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::with_identity(fixture_frame_grant(),operation,generation);
+    let mut original=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::wide(fixture_frame_grant(),101);
     let mut active = ActiveFrameBuild::new(runtime, FrameBuildInputs::default(), operation, generation, original.alias(), fixture_frame_grant());
-    let mut descriptor=original.turn(|cx|active.step_turn(cx)).expect("first frame phase step").expect("a pending phase admits an explicit yield").into_descriptor();
+    let mut descriptor=original.turn_funded(1<<16,|cx|active.step_turn(cx)).expect("first frame phase step").expect("a pending phase admits an explicit yield").into_descriptor();
     assert_eq!(descriptor.kind(),JobOutcomeKind::Yield);
     assert!(matches!(active.borrow_outcome(&descriptor).expect("the frame job borrows its own yield"),JobOutcomeView::Yield{..}));
-    let step=original.turn(|cx|semio_framework_job::close_original_retained_step(cx,semio_framework_value::RetirementDemand{depth:1,..Default::default()},|grant|descriptor.acknowledge(grant))).expect("the yield acknowledgement is paid by the same caller");
-    assert_eq!(step.progress().copied_items,1);
+    original.turn(|cx|semio_framework_job::close_original_retained_step(cx,semio_framework_value::RetirementDemand{depth:1,..Default::default()},|grant|descriptor.acknowledge(grant))).expect("the funded descriptor acknowledgement");
     drop(descriptor);
     close_active_frame(active,&mut original);
 }
@@ -500,21 +499,34 @@ fn a_frame_build_survives_its_first_yield_and_resumes_the_same_session_for_furth
     let generation = Generation(103);
     let mut original=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::wide(fixture_frame_grant(),103);
     let mut handle = FrameBuildHandle::new();
-    let (mut births, mut yields, mut was_live, mut was_yield) = (0usize, 0usize, false, false);
-    for _ in 0..262_144 {
-        original.turn_funded(1<<16,|cx|handle.poll_runtime_on_original_caller(runtime.clone(),FrameBuildInputs::default(),generation,cx)).expect("every yield and resume is paid by the same original caller");
-        let live = handle.session.is_some();
-        births += usize::from(live && !was_live);
-        was_live = live;
-        let yielded = handle.original_outcome_kind == Some(JobOutcomeKind::Yield);
-        yields += usize::from(yielded && !was_yield);
-        was_yield = yielded;
-        if yields >= 3 { break; }
+    let inputs = FrameBuildInputs::default();
+    let (mut births, mut frames, mut yields, mut last_kind, mut kind_was_set) = (0usize, 0usize, 0usize, None::<JobOutcomeKind>, false);
+    let mut ends: Vec<(usize, usize, Option<JobOutcomeKind>, bool)> = Vec::new();
+    let mut session_frame = false;
+    for _ in 0..65_536 {
+        let had = handle.session.is_some();
+        let frame = original.turn_funded(1<<16,|cx|handle.poll_runtime_unit(&runtime,&inputs,generation,cx)).expect("every yield and resume is paid by the same original caller");
+        let has = handle.session.is_some();
+        if !had && has { births += 1; yields = 0; last_kind = None; session_frame = false; kind_was_set = false; }
+        session_frame |= frame.is_some();
+        frames += usize::from(frame.is_some());
+        match handle.original_outcome_kind {
+            Some(kind) => { yields += usize::from(kind == JobOutcomeKind::Yield && !kind_was_set); last_kind = Some(kind); kind_was_set = true; }
+            None => kind_was_set = false,
+        }
+        if had && !has { ends.push((births, yields, last_kind, session_frame)); }
+        if ends.len() >= 3 { break; }
     }
-    assert!(yields >= 3, "a frame build yields after each step and keeps stepping, saw {yields} yields");
-    assert_eq!(births, 1, "the yields resume one admitted session instead of closing it after its first step");
+    assert!(ends.len() >= 3, "the fixed poll budget lets frame builds complete: births {births}, frames {frames}, ends {ends:?}");
+    for (session, session_yields, kind, delivered) in &ends {
+        assert_eq!(*kind, Some(JobOutcomeKind::Complete), "session {session} ends only after a terminal Complete outcome, never after a yield or failure: {ends:?}");
+        assert!(*session_yields >= 2, "session {session} keeps its identity across several yields before it completes: {ends:?}");
+        assert!(*delivered, "session {session} completes with its frame, not superseded or discarded: {ends:?}");
+    }
+    assert_eq!(births, ends.len() + usize::from(handle.session.is_some()), "a new session is born only after the previous one ended: {ends:?}");
     for _ in 0..262_144 {
         if original.turn(|cx|handle.close_original_frame_step(cx)).expect("same original frame close") { break; }
     }
     assert!(handle.terminal_is_empty());
 }
+

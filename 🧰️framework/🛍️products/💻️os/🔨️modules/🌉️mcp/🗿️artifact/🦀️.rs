@@ -32,11 +32,11 @@ fn require_resolvable_export_plugin(workspace: &HeadlessWorkspace, artifact_id: 
     match plugin_ids.len() {
         0 => Err(GatewayError::new(GatewayErrorCode::PluginUnavailable, "no plugin-owned capability is registered in this workspace's catalog — nothing to export against").retryable()),
         1 => Ok(plugin_ids.into_iter().next().expect("exactly one plugin id checked above")),
-        _ => Err(GatewayError::new(
-            GatewayErrorCode::PluginUnavailable,
-            format!("artifact `{artifact_id}` cannot be matched to one of this workspace's {} registered plugins ({}) — no artifact-to-plugin mapping exists yet", plugin_ids.len(), plugin_ids.join(", ")),
+        count => Err(GatewayError::new(
+            GatewayErrorCode::PreconditionFailed,
+            format!("artifact `{artifact_id}` is not bound to any of this workspace's {count} registered plugins, so it has no export format — create or open it through a plugin-owned artifact kind first"),
         )
-        .retryable()),
+        .with_details(serde_json::json!({ "artifactId": artifact_id, "pluginCount": count }))),
     }
 }
 
@@ -165,7 +165,7 @@ fn artifact_open_handler(workspace: &Option<Arc<HeadlessWorkspace>>, arguments: 
             let structured = serde_json::json!({
                 "artifactId": artifact_id,
                 "kind": resolve_artifact_schema_id(workspace, &artifact_id),
-                "artifactKind": resolve_artifact_kind_id(workspace, &artifact_id),
+                "artifactKind": resolve_artifact_kind_id(workspace, &artifact_id).or_else(|| resolve_artifact_schema_id(workspace, &artifact_id).filter(|schema| schema == PROBE_SCHEMA)),
                 "revision": resolve_artifact_revision(workspace, &artifact_id),
                 "sizeBytes": pack.len() + spr.len(),
                 "sessionDocument": (bound || folder_bound).then(|| session_document_report(workspace, &artifact_id)).flatten(),
@@ -230,7 +230,7 @@ fn artifact_create_handler(workspace: &Option<Arc<HeadlessWorkspace>>, arguments
                 CallToolResult::ok(vec![ContentBlock::Text { text: format!("created {artifact_id} as {kind}") }], Some(structured))
             }
             Err(error) => {
-                let error = error.with_details(base);
+                let error = error.with_context(base);
                 jobs.fail(&job_id, error.clone());
                 CallToolResult::tool_error(&error)
             }
@@ -310,7 +310,12 @@ fn artifact_snapshot_handler(workspace: &Option<Arc<HeadlessWorkspace>>, argumen
         Err(error) => return CallToolResult::tool_error(&error),
     };
     if let Some(requested) = arguments.get("revision") {
-        let requested_stamp: Option<RevisionStamp> = serde_json::from_value(requested.clone()).ok();
+        let Some(requested_stamp) = serde_json::from_value::<RevisionStamp>(requested.clone()).ok().filter(|stamp| stamp.artifact_id == artifact_id) else {
+            return CallToolResult::tool_error(
+                &GatewayError::new(GatewayErrorCode::InputInvalid, format!("revision must be a full stamp {{ artifactId: \"{artifact_id}\", headEditId, cursor }} of this artifact")).with_details(serde_json::json!({ "field": "revision", "requested": requested })),
+            );
+        };
+        let requested_stamp = Some(requested_stamp);
         let current = resolve_artifact_revision(workspace, &artifact_id);
         if requested_stamp != current {
             return CallToolResult::tool_error(
@@ -336,6 +341,10 @@ fn artifact_export_handler(workspace: &Option<Arc<HeadlessWorkspace>>, arguments
         Ok(workspace) => workspace,
         Err(error) => return CallToolResult::tool_error(&error),
     };
+    let requested_format = arguments.get("format").and_then(serde_json::Value::as_str).map(str::to_string);
+    if let Some(error) = requested_format.as_deref().and_then(|format| unknown_export_format(workspace, format)) {
+        return CallToolResult::tool_error(&error);
+    }
     let plugin_id = match require_resolvable_export_plugin(workspace, &artifact_id) {
         Ok(plugin_id) => plugin_id,
         Err(error) => return CallToolResult::tool_error(&error),
@@ -345,7 +354,6 @@ fn artifact_export_handler(workspace: &Option<Arc<HeadlessWorkspace>>, arguments
         Ok(None) => return CallToolResult::tool_error(&GatewayError::new(GatewayErrorCode::NotFound, format!("no such artifact: {artifact_id}"))),
         Ok(Some(_)) => {}
     }
-    let requested_format = arguments.get("format").and_then(serde_json::Value::as_str).map(str::to_string);
     let ports = match export_ports_for(workspace, &artifact_id, &plugin_id) {
         Ok(ports) => ports,
         Err(error) => return CallToolResult::tool_error(&error),
@@ -395,6 +403,17 @@ fn artifact_export_handler(workspace: &Option<Arc<HeadlessWorkspace>>, arguments
         }
         Err(error) => CallToolResult::tool_error(&error),
     }
+}
+
+/// 🧾️ `format` names no output port any installed artifact kind declares: rejected before any plugin is
+/// resolved, with the closed set of known ports so the next call can be right.
+fn unknown_export_format(workspace: &Arc<HeadlessWorkspace>, format: &str) -> Option<GatewayError> {
+    let installed = workspace.installed_artifact_kinds().ok()?;
+    let known: std::collections::BTreeSet<&str> = installed.iter().flat_map(|row| row.media_out_ports.iter().map(String::as_str)).collect();
+    (!known.contains(format)).then(|| {
+        GatewayError::new(GatewayErrorCode::InputInvalid, format!("`{format}` is not an export format any installed artifact kind declares"))
+            .with_details(serde_json::json!({ "requestedFormat": format, "knownFormats": known }))
+    })
 }
 
 /// 📤️ The output ports `artifact_id` can actually be exported through: the ports declared by the app

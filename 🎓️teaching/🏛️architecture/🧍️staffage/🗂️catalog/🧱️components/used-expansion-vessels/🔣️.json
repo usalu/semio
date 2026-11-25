@@ -13,18 +13,90 @@
    "de": "Drei gebrauchte rote Membran-Ausdehnungsgefäße für geschlossene Heizungsanlagen, 80, 50 und 35 l, 6 bar, mit 1,5 bar vorgespannt, mit Klöpperböden, drei angeschweißten Füßen, verschlossenem R-3/4-Wasseranschluss und Gasfüllventil, das kleinste noch mit seiner Wandschelle; entleert stehen sie in einer verzinkten Gitterbox nach DIN 15155, werden mit ihr auf Gabelzinken angehoben und stehen wieder eingebaut, befüllt und in Betrieb auf einem Technikraumboden."
   },
   "tags": [
-   "component",
-   "reclaimed",
-   "used",
-   "hvac",
-   "heating",
-   "plumbing",
-   "steel",
-   "pressure-vessel",
-   "expansion-vessel",
-   "diaphragm",
-   "cage-pallet",
-   "storage"
+   {
+    "id": "component",
+    "title": {
+     "en": "component",
+     "de": "Bauteil"
+    }
+   },
+   {
+    "id": "reclaimed",
+    "title": {
+     "en": "reclaimed",
+     "de": "wiederverwendet"
+    }
+   },
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "hvac",
+    "title": {
+     "en": "HVAC",
+     "de": "HLK"
+    }
+   },
+   {
+    "id": "heating",
+    "title": {
+     "en": "heating",
+     "de": "Heizung"
+    }
+   },
+   {
+    "id": "plumbing",
+    "title": {
+     "en": "plumbing",
+     "de": "Sanitär"
+    }
+   },
+   {
+    "id": "steel",
+    "title": {
+     "en": "steel",
+     "de": "Stahl"
+    }
+   },
+   {
+    "id": "pressure-vessel",
+    "title": {
+     "en": "pressure vessel",
+     "de": "Druckbehälter"
+    }
+   },
+   {
+    "id": "expansion-vessel",
+    "title": {
+     "en": "expansion vessel",
+     "de": "Ausdehnungsgefäß"
+    }
+   },
+   {
+    "id": "diaphragm",
+    "title": {
+     "en": "diaphragm",
+     "de": "Membran"
+    }
+   },
+   {
+    "id": "cage-pallet",
+    "title": {
+     "en": "cage pallet",
+     "de": "Gitterboxpalette"
+    }
+   },
+   {
+    "id": "storage",
+    "title": {
+     "en": "storage",
+     "de": "Lagerung"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage component authors",

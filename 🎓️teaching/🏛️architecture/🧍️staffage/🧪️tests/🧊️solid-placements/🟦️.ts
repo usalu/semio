@@ -1,4 +1,4 @@
-/** 🧊️ Solid placements: front and plan shapes that are revolved (axisymmetric) or extruded (laterally prismatic) solids of their bone-local profile, placed with the full bone transform.
+/** 🧊️ Solid placements: front and plan shapes that are revolved (axisymmetric, or elliptic through `lateralScale`) or extruded (laterally prismatic) solids of their bone-local profile, placed with the full bone transform.
  *
  * THE REFERENCE is shapely (🐍️.py) and the hand-computed numbers of the vectors: a 0.45 m by 0.05 m profile on a thigh that hangs down at rest and is turned by 22 degrees in the stride.
  *
@@ -30,7 +30,7 @@ const sample = fixture<{ asset: Asset }>("👤️sample-figure").asset;
 const key = String(vectors.scale) as keyof Asset["representations"];
 const authored = sample.representations[key] as AuthoredRepresentation;
 const patched: Asset = { ...sample, representations: { ...sample.representations, [key]: { ...authored, geometry: { ...authored.geometry, ...vectors.shapes } } } as Asset["representations"] };
-const toleranceFor = (id: string): number => (id === "crown" ? vectors.ovalToleranceM : vectors.toleranceM);
+const toleranceFor = (id: string): number => (id.endsWith("crown") ? vectors.ovalToleranceM : vectors.toleranceM);
 
 function measured(pose: string): Record<"front" | "plan", Record<string, Extent>> {
   const state = evaluate(patched, { kind: "pose", pose }, { kind: "scale", scale: { denominator: vectors.scale } });

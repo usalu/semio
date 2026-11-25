@@ -103,27 +103,50 @@ pub struct Solution {
     pub supports: Vec<f64>,
 }
 
+/// 🧱️ The curvature integrals of the `CELLS` equal cells of one span: `turn[k] = ∫κ dx` and `moment[k] = ∫κ·x dx` over cell `k`.
 struct Cells {
     h: f64,
-    xs: Vec<f64>,
-    kappa: Vec<f64>,
+    turn: Vec<f64>,
+    moment: Vec<f64>,
 }
 
+const GAUSS: f64 = 0.288_675_134_594_812_9;
+
 impl Solution {
+    /// 🧮️ Integrates κ = M/EI exactly over every cell: the moment is quadratic and the stiffness constant between its steps, so the integrands κ and κ·x are polynomials of degree 2 and 3 and the two-point Gauss rule is exact; a cell that holds a stiffness step is split at the step first.
     fn cells(&self, span: usize, m_left: f64, m_right: f64) -> Cells {
         let l = self.layout.lengths[span];
         let h = l / CELLS as f64;
-        let xs: Vec<f64> = (0..CELLS).map(|k| (k as f64 + 0.5) * h).collect();
-        let kappa = xs.iter().map(|&x| moment_of(l, self.loads[span], m_left, m_right, x) / self.stiffness.at(&self.layout, span, x)).collect();
-        Cells { h, xs, kappa }
+        let zone = self.stiffness.cracked_fraction * l;
+        let steps = [zone, l - zone];
+        let mut turn = vec![0.0; CELLS];
+        let mut moment = vec![0.0; CELLS];
+        for k in 0..CELLS {
+            let (lo, hi) = (k as f64 * h, (k + 1) as f64 * h);
+            let mut cuts = vec![lo];
+            cuts.extend(steps.iter().copied().filter(|s| *s > lo + 1e-12 && *s < hi - 1e-12));
+            cuts.sort_by(f64::total_cmp);
+            cuts.push(hi);
+            for piece in cuts.windows(2) {
+                let (a, b) = (piece[0], piece[1]);
+                let ei = self.stiffness.at(&self.layout, span, 0.5 * (a + b));
+                for node in [-GAUSS, GAUSS] {
+                    let x = 0.5 * (a + b) + node * (b - a);
+                    let kappa = moment_of(l, self.loads[span], m_left, m_right, x) / ei;
+                    turn[k] += 0.5 * (b - a) * kappa;
+                    moment[k] += 0.5 * (b - a) * kappa * x;
+                }
+            }
+        }
+        Cells { h, turn, moment }
     }
 
     fn left_slope(cells: &Cells, l: f64) -> f64 {
-        -cells.xs.iter().zip(&cells.kappa).map(|(x, k)| (l - x) * k).sum::<f64>() * cells.h / l
+        -cells.turn.iter().zip(&cells.moment).map(|(t, m)| l * t - m).sum::<f64>() / l
     }
 
     fn turn(cells: &Cells) -> f64 {
-        cells.kappa.iter().sum::<f64>() * cells.h
+        cells.turn.iter().sum::<f64>()
     }
 
     /// 📐️ Moment [N·m] of span `span` at the span-local position `x`.
@@ -193,8 +216,8 @@ impl Solution {
                     out.push((origin + x, -(theta * x + x * a - b)));
                 }
                 if j < CELLS {
-                    a += cells.kappa[j] * cells.h;
-                    b += cells.kappa[j] * cells.xs[j] * cells.h;
+                    a += cells.turn[j];
+                    b += cells.moment[j];
                 }
             }
             slope_in = theta + Self::turn(&cells);

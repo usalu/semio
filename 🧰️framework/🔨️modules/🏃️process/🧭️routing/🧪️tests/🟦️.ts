@@ -243,6 +243,35 @@ test("actual neutral constructors, dispatch and main receive the original finite
   await expect(router.run(["authority", "cancelled"], invocation)).rejects.toThrow();
 });
 
+test("a lazy loader receives the segments after the command name and loads once", async () => {
+  const received: string[][] = [];
+  class SegmentCommand extends BundleScript { run(): void {} }
+  const router = new ScriptRouter("/future-owner", "/neutral-workspace").registerLazy("owned", async (_invocation, segments) => { received.push([...segments]); return SegmentCommand; });
+  const invocation = fixtureInvocation("loader-segments");
+  await router.run(["owned", "mcp", "stdio", "os"], invocation);
+  await router.run(["owned"], invocation);
+  expect(received).toEqual([["mcp", "stdio", "os"]]);
+  const bare = new ScriptRouter("/future-owner", "/neutral-workspace").registerLazy("owned", async (_invocation, segments) => { received.push([...segments]); return SegmentCommand; });
+  await bare.run(["owned"], invocation);
+  expect(received.at(-1)).toEqual([]);
+});
+
+test("a gated command runs its gate on every dispatch, loads once and retries a failed load", async () => {
+  const gated: string[][] = [];
+  let loads = 0;
+  class GatedCommand extends BundleScript { run(): void {} }
+  const router = new ScriptRouter("/future-owner", "/neutral-workspace").registerGated("owned", async (_invocation, segments) => { gated.push([...segments]); }, async () => {
+    if (++loads === 1) throw Error("transient load failure");
+    return GatedCommand;
+  });
+  const invocation = fixtureInvocation("gated-segments");
+  await expect(router.run(["owned", "storybook"], invocation)).rejects.toThrow("transient load failure");
+  await router.run(["owned", "mcp", "stdio", "os"], invocation);
+  await router.run(["owned"], invocation);
+  expect(gated).toEqual([["storybook"], ["mcp", "stdio", "os"], []]);
+  expect(loads).toBe(2);
+});
+
 test("missing incoming authority refuses before acquiring the selected command owner", async () => {
   let loads = 0, executions = 0;
   class AuthorityCommand extends BundleScript { run(): void { executions++; } }

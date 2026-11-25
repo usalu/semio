@@ -1,11 +1,11 @@
 import {frameworkOsEngineDeliveriesV1} from "./🕸️engines/🟦️.ts";
-import {flowBrowserPackageRequestV1} from "@semio-tech/framework-os/modules/flow/wasm/browser/publication/contract";
-import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
-import {fontAssetPublicationRootV1} from "@semio-tech/framework-canvas-ts/fonts/publication";
-import {runtimeAssetStageTrees} from "@semio-tech/framework-canvas-ts/runtime-assets/staging";
+import {flowBrowserPackageRequestV1} from "../../../../../📦️packages/🟦️typescript/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/📦️publication/📋️contract/🟦️.ts";
+import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+import {fontAssetPublicationRootV1} from "../../../../../../../🔨️modules/🖼️canvas/📦️packages/🟦️typescript/🔤️fonts/📦️publication/🟦️.ts";
+import {runtimeAssetStageTrees} from "../../../../../../../🔨️modules/🖼️canvas/📦️packages/🟦️typescript/🔌️runtime-assets/🚚️staging/🟦️.ts";
 import {rendererWasmPublicationV1} from "../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/🏗️compiler/🌐️wasm/📦️publication/🟦️.ts";
 import type { RepositoryArtifactRequestV1 } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️artifacts/🟦️.ts";
-import { fontsReadingSchema as fontSchema } from "@semio-tech/framework-os/modules/infinite/fonts/reading/schema";
+import { fontsReadingSchema as fontSchema } from "../../../../../📦️packages/🟦️typescript/🔨️modules/♾️infinite/🔤️fonts/👓️reading/🧬️schema/🟦️.ts";
 import { artifactsStorageSchema as publicationSchema } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️artifacts/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 const rendererOwner="🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust";

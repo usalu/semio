@@ -16,19 +16,38 @@
       {
         "id": "pile-P1",
         "patch": {
+          "pileType": null,
+          "diameter": null,
+          "length": null,
+          "count": null,
+          "alphaS": null,
+          "unitShaftResistance": null,
+          "unitBaseResistance": null,
+          "compressionPermanent": null,
+          "compressionVariable": null,
+          "tensionPermanent": null,
+          "tensionVariable": null,
+          "bendingStiffnessEi": null,
+          "horizontalSubgradeModulus": null,
           "lateralHeadLoad": 1.5,
-          "elasticModulus": 33000000000.0,
-          "settlingThickness": 0.0,
-          "negativeFrictionBeta": 0.0,
-          "dynamicTestCount": 0.0,
-          "dynamicResistanceMean": 0.0,
-          "dynamicResistanceMin": 0.0,
-          "hammerWeight": 0.0,
-          "dropHeight": 0.0,
-          "setPerBlow": 0.0,
-          "elasticCompression": 0.0,
-          "hammerEfficiency": 0.0,
-          "concreteClass": null
+          "elasticModulus": null,
+          "settlingThickness": null,
+          "negativeFrictionBeta": null,
+          "dynamicTestCount": null,
+          "dynamicResistanceMean": null,
+          "dynamicResistanceMin": null,
+          "hammerWeight": null,
+          "dropHeight": null,
+          "setPerBlow": null,
+          "elasticCompression": null,
+          "hammerEfficiency": null,
+          "concreteClass": null,
+          "testProfiles": {
+            "removed": [],
+            "inserted": [],
+            "moved": [],
+            "modified": []
+          }
         }
       }
     ]
@@ -41,6 +60,7 @@
   "pileGroups": null,
   "labTests": null,
   "layerWaters": null,
+  "placements": null,
   "cases": {
     "removed": [],
     "inserted": [],

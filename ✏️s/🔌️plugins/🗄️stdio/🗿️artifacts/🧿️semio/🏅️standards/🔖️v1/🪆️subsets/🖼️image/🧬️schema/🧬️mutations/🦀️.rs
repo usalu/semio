@@ -65,6 +65,7 @@ pub enum SemioImageMutation {
     RemoveMetadataEntry(remove_metadata_entry::RemoveMetadataEntry),
 }
 dsl::original_pack_value_operation_receiving!(SemioImageMutation);
+dsl::artifact_persisted_binary_operation!(SemioImageMutation);
 
 /// 🏷️ Kebab-case spelling of every `SemioImageMutation` variant, in declaration order — the
 /// vocabulary the `semio-v1-image` mutation catalog (`../../🔣️oracle.json`) declares and

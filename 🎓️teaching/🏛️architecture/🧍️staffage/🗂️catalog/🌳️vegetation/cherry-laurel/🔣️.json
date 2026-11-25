@@ -500,13 +500,55 @@
       "de": "Ein ungeschnittener Kirschlorbeer (Prunus laurocerasus), 3,0 m hoch und 3,6 mal 3,2 m breit: ein lockerer immergrüner Strauch aus fünf Stämmen aus einem Wurzelstock, jeder mit einer knolligen Masse großer, glänzender, ledriger Blätter; die Massen überlappen zu einer breiten Kuppel, die in den untersten 0,4 m offen bleibt, wo die gebogenen Stämme und das gemulchte Beet zu sehen sind."
     },
     "tags": [
-      "shrub",
-      "evergreen",
-      "broadleaf",
-      "unclipped",
-      "wind",
-      "snow",
-      "transpiration"
+      {
+        "id": "shrub",
+        "title": {
+          "en": "shrub",
+          "de": "Strauch"
+        }
+      },
+      {
+        "id": "evergreen",
+        "title": {
+          "en": "evergreen",
+          "de": "immergrün"
+        }
+      },
+      {
+        "id": "broadleaf",
+        "title": {
+          "en": "broadleaf",
+          "de": "Laubholz"
+        }
+      },
+      {
+        "id": "unclipped",
+        "title": {
+          "en": "unclipped",
+          "de": "ungeschnitten"
+        }
+      },
+      {
+        "id": "wind",
+        "title": {
+          "en": "wind",
+          "de": "Wind"
+        }
+      },
+      {
+        "id": "snow",
+        "title": {
+          "en": "snow",
+          "de": "Schnee"
+        }
+      },
+      {
+        "id": "transpiration",
+        "title": {
+          "en": "transpiration",
+          "de": "Transpiration"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage vegetation content worker PW-13",

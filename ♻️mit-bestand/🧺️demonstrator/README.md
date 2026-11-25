@@ -35,7 +35,7 @@ The demonstrator needs neither Docker nor a Linux host.
 
 | Command (`repo run …`) | What it does | Cache | Port |
 |---|---|---|---|
-| `@semio-tech/mit-bestand-demonstrator:prepare-prototype` | after the nine `@semio-tech/framework-os-dev:prepare-<lane>-react-prototype` tasks (`aggregator`, `aussuchen`, `bearbeiten`, `energy`, `fem3d`, `generation3d`, `generator`, `koordinator`, `verfolgen`) and the wasm tasks of surface, editor, node graph and puzzle: verifies every runtime component and every staged session (`Mismatched Demonstrator session` otherwise) | yes (output-free) | |
+| `@semio-tech/mit-bestand-demonstrator:prepare-prototype` | after the nine `@semio-tech/framework-os-dev:prepare-<lane>-react-prototype` tasks (`aussuchen`, `bearbeiten`, `cad`, `energy`, `fem3d`, `generation3d`, `generator`, `gis2d`, `puzzle3d`) and the wasm tasks of surface, editor, node graph and puzzle: verifies every runtime component and every staged session (`Mismatched Demonstrator session` otherwise) | yes (output-free) | |
 | `@semio-tech/mit-bestand-demonstrator:prepare-release` | the same for the profile `release` | yes (output-free) | |
 | `@semio-tech/mit-bestand-demonstrator:activate-lanes-prototype` | after `activate-energy-react-prototype`, `activate-fem3d-react-prototype` and `activate-generator-react-prototype`; a pure ordering node (`repo:noop`, no process) | not applicable | |
 | `@semio-tech/mit-bestand-demonstrator:activate-prototype` | after `prepare-prototype` and `activate-lanes-prototype`: reads the lane receipts and writes the union receipt `dist/♻️activation/prototype` | yes | |
@@ -104,7 +104,7 @@ Der Demonstrator braucht weder Docker noch einen Linux-Host.
 
 | Befehl (`repo run …`) | Was er tut | Cache | Port |
 |---|---|---|---|
-| `@semio-tech/mit-bestand-demonstrator:prepare-prototype` | nach den neun Tasks `@semio-tech/framework-os-dev:prepare-<Lane>-react-prototype` (`aggregator`, `aussuchen`, `bearbeiten`, `energy`, `fem3d`, `generation3d`, `generator`, `koordinator`, `verfolgen`) und den Wasm-Tasks von Surface, Editor, Node-Graph und Puzzle: prüft jede Laufzeitkomponente und jede bereitgestellte Sitzung (sonst `Mismatched Demonstrator session`) | ja (ohne Ausgabedateien) | |
+| `@semio-tech/mit-bestand-demonstrator:prepare-prototype` | nach den neun Tasks `@semio-tech/framework-os-dev:prepare-<Lane>-react-prototype` (`aussuchen`, `bearbeiten`, `cad`, `energy`, `fem3d`, `generation3d`, `generator`, `gis2d`, `puzzle3d`) und den Wasm-Tasks von Surface, Editor, Node-Graph und Puzzle: prüft jede Laufzeitkomponente und jede bereitgestellte Sitzung (sonst `Mismatched Demonstrator session`) | ja (ohne Ausgabedateien) | |
 | `@semio-tech/mit-bestand-demonstrator:prepare-release` | dasselbe für das Profil `release` | ja (ohne Ausgabedateien) | |
 | `@semio-tech/mit-bestand-demonstrator:activate-lanes-prototype` | nach `activate-energy-react-prototype`, `activate-fem3d-react-prototype` und `activate-generator-react-prototype`; ein reiner Ordnungsknoten (`repo:noop`, kein Prozess) | nicht anwendbar | |
 | `@semio-tech/mit-bestand-demonstrator:activate-prototype` | nach `prepare-prototype` und `activate-lanes-prototype`: liest die Lane-Quittungen und schreibt die Vereinigungsquittung `dist/♻️activation/prototype` | ja | |

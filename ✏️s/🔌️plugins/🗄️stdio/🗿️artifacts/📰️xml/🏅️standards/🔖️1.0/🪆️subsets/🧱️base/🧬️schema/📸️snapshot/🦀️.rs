@@ -1,9 +1,7 @@
-//! 🧬️ XmlSnapshot logical state and validation.
+//! 🧬️ XML document model, boundary validation and retained ownership shared by the snapshot crates.
 
-use crate::STDIO_XML_DOCUMENT_SCHEMA;
 #[path = "💡️markup-facts/🦀️.rs"]
 pub mod markup_facts;
-use framework_schema::ArtifactSchema;
 
 //#region 🔖️XmlModel
 /// 🏷️ XML attribute pair.
@@ -89,8 +87,6 @@ pub struct XmlDoctype {
 fn is_zero(value: &u64) -> bool {
     *value == 0
 }
-
-
 
 /// 🔗️ Standard SYSTEM or PUBLIC external identifier.
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -228,38 +224,6 @@ impl XmlDeclaration {
 
 //#endregion 🔖️XmlModel
 
-//#region 🔖️Snapshot
-/// 📸️ Persisted `stdio.xml` snapshot.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetainedClone)]
-#[value(rename_all = "camelCase")]
-#[artifact_schema(id = "s.stdio.xml")]
-pub struct XmlSnapshot {
-    #[state(artifact)]
-    pub schema: String,
-    #[state(artifact)]
-    #[value(default)]
-    pub doc: XmlDocument,
-}
-
-impl Default for XmlSnapshot {
-    fn default() -> Self {
-        Self { schema: STDIO_XML_DOCUMENT_SCHEMA.into(), doc: XmlDocument::default() }
-    }
-}
-
-impl XmlSnapshot {
-    /// 🪞️ Returns the lossless logical state used by diff and mutation laws.
-    pub fn semantic_projection(&self) -> Self {
-        self.clone()
-    }
-
-    /// 🌱️ A well-formed document holding exactly one empty `<root/>` element, the blank page a new XML editor starts from.
-    pub fn with_empty_root() -> Self {
-        Self { schema: STDIO_XML_DOCUMENT_SCHEMA.into(), doc: XmlDocument { root: Some(XmlNode::Element { name: "root".into(), attrs: Vec::new(), children: Vec::new() }), ..XmlDocument::default() } }
-    }
-
-}
-//#endregion 🔖️Snapshot
 
 /// 🛡️ Validates the authored XML declaration for UTF-8 publication.
 pub fn validate_xml_declaration_boundary(declaration:Option<&XmlDeclaration>)->Result<(),String>{
@@ -304,55 +268,14 @@ pub fn validate_xml_document_boundaries(doc: &XmlDocument) -> Result<(), String>
     Ok(())
 }
 
-
-
-//#region 🔖️HandcraftedArtifactCodecs
-
-
-
-//#endregion 🔖️HandcraftedArtifactCodecs
-
-//#region 🔖️Tests
-
-
-
-
-
-
-
-
-//#endregion 🔖️Tests
+#[path="🔤️lexemes/🦀️.rs"]
+pub mod lexemes;
 
 #[path="🧭️position/🦀️.rs"]
-pub(crate) mod position;
+pub mod position;
 
 #[path="🧬️retained/🦀️.rs"]
 pub mod retained;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 #[path="🧺️ownership/🦀️.rs"]
 pub mod ownership;

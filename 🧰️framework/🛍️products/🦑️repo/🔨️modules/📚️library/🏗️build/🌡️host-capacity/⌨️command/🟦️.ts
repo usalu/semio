@@ -1,10 +1,11 @@
 import {spawn} from "node:child_process";
-import {formatHostCapacityV1,requireHostCapacityV1,resolveHostCapacityLanguageV1,sizeHostRequestV1,type HostCapacityPolicyV1,type HostRequestV1} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📏️decision/🟦️.ts";
+import {formatHostCapacityV1,hostCapacityErrorV1,requireHostCapacityV1,resolveHostCapacityLanguageV1,sizeHostRequestV1,type HostCapacityPolicyV1,type HostRequestV1} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📏️decision/🟦️.ts";
 import type {HostCapacityPortsV1} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🎫️gate/🟦️.ts";
 import {hostCapacityDirectoryV1,readHostCapacityStatusV1} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🎫️gate/📖️status/🟦️.ts";
 import {readHostEstimateStoreV1} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📐️estimates/🟦️.ts";
 import {BUILD_HOST_CAPACITY_POLICY_V1,createCapacityControlV1} from "../🎛️control/🟦️.ts";
 import {writeDiagnosticLineV1} from "../../../../../../../🔨️modules/🏃️process/🏗️build/📤️output/🟦️.ts";
+import {terminateOwnedChildTreeGracefullyV1} from "../../../../../../../🔨️modules/🏃️process/🪓️termination/🟦️.ts";
 
 /** 🔌️ What the capacity command touches: the result writer, environment, directory and policy; tests replace them. The waiting lines of `capacity run` always go to the diagnostic stream. */
 export type CapacityCommandContextV1=HostCapacityPortsV1&Readonly<{environment:NodeJS.ProcessEnv;write:(line:string)=>void;directory?:string;policy?:HostCapacityPolicyV1}>;
@@ -22,14 +23,15 @@ const positive=(value:string|undefined,name:string):number|undefined=>{
 /** 📋️ Prints the machine's capacity: the sample, the floor, every running grant and every waiter, as lines or as one JSON document. */
 async function status(head:readonly string[],context:CapacityCommandContextV1,policy:HostCapacityPolicyV1,directory:string):Promise<number>{
  const {agentSessionCapacityRowsV1,agentSessionRegistryRootV1,renderAgentSessionCapacityV1}=await import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🪪️agent-sessions/🟦️.ts");
- const control=createCapacityControlV1();
+ const control=createCapacityControlV1(),{readHostWardenStateV1}=await import("../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🛡️warden/🔁️loop/🟦️.ts"),{formatHostWardenStatusV1}=await import("../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🛡️warden/🟦️.ts");
  try{
-  const now=context.now??Date.now,snapshot=await readHostCapacityStatusV1({...context,directory,policy,control:control.control});
+  const now=context.now??Date.now,warden=readHostWardenStateV1(directory,now()),snapshot=await readHostCapacityStatusV1({...context,directory,policy,control:control.control});
   const sessions=agentSessionCapacityRowsV1(snapshot,agentSessionRegistryRootV1(context.environment),context.now===undefined?{}:{now:context.now()});
-  if(head.includes("--json")){context.write(JSON.stringify({...snapshot,sessions,estimates:readHostEstimateStoreV1(directory)},null,2));return 0;}
+  if(head.includes("--json")){context.write(JSON.stringify({...snapshot,warden,sessions,estimates:readHostEstimateStoreV1(directory)},null,2));return 0;}
   const language=resolveHostCapacityLanguageV1(context.environment),host=snapshot.host;
   context.write(formatHostCapacityV1(language,"status",{available:host.availableMegabytes,total:host.totalMegabytes,floor:snapshot.evaluation.floorMegabytes,spare:snapshot.evaluation.headroomMegabytes,pressure:host.pressure,swap:host.swapUsedMegabytes??"n/a",load:host.load??"n/a",files:host.openFiles??"n/a",images:host.attachedImages??"n/a",grants:snapshot.grants.length,waiters:snapshot.waiters.length}));
   if(host.counters==="partial")context.write(formatHostCapacityV1(language,"countersPartial",{platform:host.platform,reason:language==="de"?"Probe fehlgeschlagen":"probe failed"}));
+  for(const line of formatHostWardenStatusV1(language,warden))context.write(line);
   for(const grant of snapshot.grants)context.write(formatHostCapacityV1(language,grant.lentSinceMs!==undefined?"grantLent":grant.quiet===true?"grantQuiet":"grant",{id:grant.id,operation:grant.operation,jobs:grant.jobs,cpu:grant.cpu,reserved:grant.reservedMegabytes,observed:grant.observedMegabytes??"n/a",pid:grant.pid,seconds:Math.round((now()-(grant.lentSinceMs??grant.admittedAtMs))/1000)})+(grant.phase===undefined?"":` [${grant.phase}]`));
   for(const waiter of snapshot.waiters)context.write(formatHostCapacityV1(language,waiter.upgrade===true?"waiterUpgrade":"waiter",{id:waiter.request.id,operation:waiter.request.operation,jobs:waiter.request.preferredJobs,need:waiter.request.fixedMegabytes+waiter.request.minimumJobs*waiter.request.perJobMegabytes,pid:waiter.pid,seconds:Math.round((now()-waiter.arrivedAtMs)/1000)}));
   for(const line of renderAgentSessionCapacityV1(sessions,language))context.write(line);
@@ -41,19 +43,40 @@ async function status(head:readonly string[],context:CapacityCommandContextV1,po
 async function run(head:readonly string[],command:readonly string[],context:CapacityCommandContextV1,policy:HostCapacityPolicyV1,directory:string):Promise<number>{
  if(command.length===0)throw Error("Capacity run requires a command after --");
  const {agentSessionAddressV1,currentAgentSessionV1}=await import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🪪️agent-sessions/🟦️.ts");
- const {newHostCapacityIdV1,withHostCapacityV1}=await import("../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🎫️gate/🟦️.ts");
+ const {newHostCapacityIdV1,readLiveHostCapacityReservationV1,withHostCapacityV1}=await import("../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🎫️gate/🟦️.ts");
  const memory=positive(flag(head,"memory"),"memory"),cpu=positive(flag(head,"cpu"),"cpu"),jobs=positive(flag(head,"jobs"),"jobs"),operation=flag(head,"operation")??"command";
- const sized:HostRequestV1|undefined=memory!==undefined?requireHostCapacityV1<HostRequestV1>("Request",{id:newHostCapacityIdV1(),operation:"command",priority:"batch",minimumJobs:1,preferredJobs:1,fixedMegabytes:memory,perJobMegabytes:0,cpuPerJob:cpu??1}):sizeHostRequestV1(policy,{id:newHostCapacityIdV1(),operation,...jobs!==undefined?{preferredJobs:jobs}:{}});
+ const sized:HostRequestV1|undefined=memory!==undefined?requireHostCapacityV1<HostRequestV1>("Request",{id:newHostCapacityIdV1(),operation:"command",priority:"batch",minimumJobs:1,preferredJobs:1,fixedMegabytes:memory,minimumMegabytes:memory,perJobMegabytes:0,cpuPerJob:cpu??1}):sizeHostRequestV1(policy,{id:newHostCapacityIdV1(),operation,...jobs!==undefined?{preferredJobs:jobs}:{}});
  if(!sized)throw Error(`Unknown capacity operation: ${operation}`);
  const waiting=createCapacityControlV1();
  try{
   const session=currentAgentSessionV1({environment:context.environment});
   return await withHostCapacityV1({...context,write:writeDiagnosticLineV1,directory,policy,request:sized,control:waiting.control,session:{address:agentSessionAddressV1(session),weight:session.budget.weight}},async handle=>{
+   const environment={...context.environment,...handle.environment,...handle.plan.jobs>0&&sized.perJobMegabytes>0?{SEMIO_BUILD_PARALLEL:String(handle.jobs)}:{}};
+   if(memory!==undefined){
+    const grant=handle.bypassed?undefined:readLiveHostCapacityReservationV1({...environment,SEMIO_HOST_CAPACITY_DIRECTORY:directory},policy);
+    if(grant?.id!==handle.id||grant.reservedMegabytes<memory||grant.cpu<sized.cpuPerJob){
+     throw hostCapacityErrorV1("exactGrantRequired",{minimum:memory,cores:sized.cpuPerJob,reserved:grant?.reservedMegabytes??0,availablecores:grant?.cpu??0},environment);
+    }
+   }
    waiting.dispose();
-   const child=spawn(command[0]!,command.slice(1),{stdio:"inherit",env:{...context.environment,...handle.environment,...handle.plan.jobs>0&&sized.perJobMegabytes>0?{SEMIO_BUILD_PARALLEL:String(handle.jobs)}:{}}}),forward=(name:NodeJS.Signals)=>()=>{child.kill(name);},handlers=(["SIGINT","SIGTERM"] as const).map(name=>[name,forward(name)] as const);
+   const child=spawn(command[0]!,command.slice(1),{windowsHide:true,stdio:"inherit",env:environment});
+   let stopping:Readonly<{signal:"SIGINT"|"SIGTERM";done:Promise<void>}>|undefined;
+   const handlers=(["SIGINT","SIGTERM"] as const).map(signal=>[signal,()=>{
+    stopping??={signal,done:terminateOwnedChildTreeGracefullyV1(child,{initialSignal:signal})};
+   }] as const);
    for(const [name,handler] of handlers)process.on(name,handler);
-   try{return await new Promise<number>((resolve,reject)=>{child.once("error",reject);child.once("exit",(code,signal)=>resolve(code??(signal===null?1:128+(signal==="SIGINT"?2:15))));});}
-   finally{for(const [name,handler] of handlers)process.removeListener(name,handler);}
+   try{
+    return await new Promise<number>((resolve,reject)=>{
+     child.once("error",reject);
+     child.once("exit",(code,signal)=>{
+      const interrupt=signal==="SIGINT"||signal==="SIGKILL"&&stopping?.signal==="SIGINT";
+      resolve(code??(signal===null?1:interrupt?130:143));
+     });
+    });
+   }finally{
+    try{await stopping?.done;}
+    finally{for(const [name,handler] of handlers)process.removeListener(name,handler);}
+   }
   });
  }finally{waiting.dispose();}
 }

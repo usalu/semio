@@ -528,7 +528,7 @@ async fn the_host_rehydration_lists_the_kept_studio_once_under_its_name() {
     let mut again = HomeCatalogWork::new("applyLocalCatalogDocument");
     assert!(matches!(again.advance(&rehydrate(&space_id, &pack, &spr), &doc), Ok(ArtifactCommandWorkStep::Progress { .. })));
     let second = again.advance(&rehydrate(&space_id, &pack, &spr), &doc);
-    assert!(matches!(second, Ok(ArtifactCommandWorkStep::Complete(_))), "handing the same pair back again completes: {:?}", second.as_ref().err());
+    assert!(matches!(&second, Err(fault) if fault.code.0.as_str() == "s.home.apply-local-catalog-document.catalog-refused" && fault.message.contains("never overwritten")), "the catalog never overwrites a kept studio: {:?}", second.as_ref().err());
     assert_eq!(listed(&space_id).len(), 1, "a repeated page re-lists nothing twice");
     let config = HomeConfig::default();
     let removal = delete_virtual_file_system_node::handle_with_row(&delete_virtual_file_system_node::DeleteVirtualFileSystemNode { node_id: format!("studio:{space_id}") }, &doc, &ConfigView { snapshot: &config, window: None }, None).expect("remove the kept studio from Home");
@@ -581,4 +581,4 @@ async fn the_import_commit_asks_the_host_to_keep_the_imported_studio() {
 }
 //#endregion 🗃️LocalCatalogLane
 
-semio_plugin::history_edit_acceptance_law!("space", crate::editor::home::HomeApp, || semio_plugin::App { definition: semio_plugin::app::history_edit_acceptance::block_on_acceptance(crate::editor::home::create_home_app()), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");
+semio_plugin::history_edit_acceptance_law!("space", crate::editor::home::HomeApp, || semio_plugin::App { definition: semio_plugin::app::history_edit_acceptance::block_on_acceptance(crate::editor::home::create_home_app()), examples: Vec::new() }, "../../..");

@@ -72,7 +72,7 @@
         },
         "turn": {
           "maximumItems": 1,
-          "maximumCopyBytes": 64,
+          "maximumCopyBytes": 4096,
           "maximumCapacityBytes": 1048576,
           "maximumReleaseBytes": 1048576,
           "maximumDepth": 256

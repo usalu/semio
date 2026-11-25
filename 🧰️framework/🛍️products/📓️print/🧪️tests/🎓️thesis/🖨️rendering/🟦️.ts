@@ -15,10 +15,8 @@ const body = String.raw`\begin{document}
 \makeatletter
 \convertcolorspec{named}{semio-chrome-text-normal}{HTML}{\SemioNormalHex}
 \typeout{THESIS-COLOR-NORMAL=\SemioNormalHex}
-\convertcolorspec{named}{\semio@heading@textcolor@chapter}{HTML}{\SemioOutlineHex}
-\typeout{THESIS-COLOR-OUTLINE=\SemioOutlineHex}
-\convertcolorspec{named}{\semio@heading@textcolor@section}{HTML}{\SemioFilledHex}
-\typeout{THESIS-COLOR-FILLED=\SemioFilledHex}
+\convertcolorspec{named}{\semio@heading@label@color}{HTML}{\SemioHeadingHex}
+\typeout{THESIS-COLOR-HEADING=\SemioHeadingHex}
 \convertcolorspec{named}{\@citecolor}{HTML}{\SemioLinkHex}
 \typeout{THESIS-COLOR-LINK=\SemioLinkHex}
 \makeatother
@@ -99,7 +97,8 @@ export async function verifyThesisRendering(execution: PrintExecutionV1): Promis
       }
       const themePaints = contrastFixture.actualThemes.find(theme => theme.theme === row.theme);
       assert.ok(themePaints);
-      for (const role of ["normal", "outline", "filled", "link"] as const) assert.ok(log.includes("THESIS-COLOR-" + role.toUpperCase() + "=" + themePaints[role]), row.theme + " actual semantic " + role + " paint");
+      for (const role of ["normal", "link"] as const) assert.ok(log.includes("THESIS-COLOR-" + role.toUpperCase() + "=" + themePaints[role]), row.theme + " actual semantic " + role + " paint");
+      assert.ok(log.includes("THESIS-COLOR-HEADING=" + themePaints.heading), row.theme + " heading chip foreground");
       const frontPage = Number(log.match(/THESIS-FRONT-PAGE=(\d+)/)?.[1]);
       assert.ok(frontPage > 1 && frontPage % 2 === 1, "Front matter preserves title page numbering and starts recto");
       const repeatedFrontPage = Number(log.match(/THESIS-REPEATED-FRONT-PAGE=(\d+)/)?.[1]);

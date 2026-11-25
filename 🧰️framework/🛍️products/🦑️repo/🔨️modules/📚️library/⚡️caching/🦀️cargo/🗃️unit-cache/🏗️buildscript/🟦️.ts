@@ -49,7 +49,7 @@ function runReal(real:string,args:readonly string[],environment:Environment,cwd:
  return new Promise((done,fail)=>{
   const jobs=jobserverPlanV1(environment),message=jobserverClosedMessageV1(jobs);
   if(message)process.stderr.write(message+"\n");
-  const child=spawn(real,[...args],{cwd,env:jobserverChildEnvironmentV1(environment,jobs),stdio:jobserverStdioV1(jobs.descriptors,capture)}),out:Buffer[]=[],err:Buffer[]=[];
+  const child=spawn(real,[...args],{windowsHide:true,cwd,env:jobserverChildEnvironmentV1(environment,jobs),stdio:jobserverStdioV1(jobs.descriptors,capture)}),out:Buffer[]=[],err:Buffer[]=[];
   for(const signal of["SIGINT","SIGTERM"] as const)process.once(signal,()=>child.kill(signal));
   if(capture){child.stdout!.on("data",chunk=>{out.push(chunk);process.stdout.write(chunk);});child.stderr!.on("data",chunk=>{err.push(chunk);process.stderr.write(chunk);});}
   child.on("error",fail);

@@ -20,7 +20,7 @@ import {graphProbeV1,newestImplementationMillisecondsV1} from "../../🔎️prob
 import {leasesProbeV1} from "../../🔎️probes/🔒️leases/🟦️.ts";
 import {processesProbeV1} from "../../🔎️probes/🏃️processes/🟦️.ts";
 import {sessionsProbeV1} from "../../🔎️probes/🪪️sessions/🟦️.ts";
-import {imageGrowPlanV1,imageRepairPlanV1,storageProbeV1} from "../../🔎️probes/💾️storage/🟦️.ts";
+import {elasticGrowTargetV1,imageGrowPlanV1,imageRepairPlanV1,storageProbeV1} from "../../🔎️probes/💾️storage/🟦️.ts";
 import {acquireResourceLease,requireMaterializedPathV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {toolsProbeV1} from "../../🔎️probes/🔧️tools/🟦️.ts";
 
@@ -140,6 +140,23 @@ test.skipIf(process.platform!=="darwin")("storage-images: a stray image moves ba
  }finally{releaseImage(image);}
  expect(imageRow(image)).toBeUndefined();
 },180000);
+
+test("storage-images: a bare mount point that writers filled is stranded to a sibling first, and a failed attach is never reported as repaired",async()=>{
+ const root=fresh(),directory=partitionDirectory(root,"dependencies");
+ write(join(directory,"image.json"),'{"version":1}');write(join(directory,"fixed.dmg"),"x".repeat(10));write(join(directory,"m","browser","a.txt"),"a");mkdirSync(join(directory,"m","modules"));
+ const real=realpathSync(directory),commands:string[]=[],empty='<?xml version="1.0" encoding="UTF-8"?><plist version="1.0"><dict><key>images</key><array/></dict></plist>';
+ const fake=ports(root,{platform:"darwin",command:async(program,args)=>{commands.push(program+" "+args.join(" "));if(program==="/sbin/mount")return "/dev/disk3s1 on / (apfs, local, journaled)\n";return empty;}});
+ const repair=DOCTOR_REPAIRS_V1.get("storage-images")!;
+ await expect(repair.run(fake,context(),false)).rejects.toThrow(/0 of 1 images repaired.*did not attach/u);
+ expect(commands.some(row=>/diskutil image attach .*--mountPoint /u.test(row))).toBe(true);
+ expect(readdirSync(join(directory,"m"))).toEqual([]);
+ const sibling=readdirSync(directory).filter(name=>/^m-stranded-\d+$/u.test(name));
+ expect(sibling).toHaveLength(1);
+ expect(readdirSync(join(directory,sibling[0]!)).sort()).toEqual(["browser","modules"]);
+ expect(readFileSync(join(real,sibling[0]!,"browser","a.txt"),"utf8")).toBe("a");
+ const report=await runDoctorV1(fake,{only:new Set(["storage"]),fix:true,probes:[storageProbeV1]});
+ expect(report.report.repairs.map(row=>[row.id,row.status])).toEqual([["storage-images","failed"]]);
+});
 
 test("storage: an image attached at a private scratch mount is an error with the exact fix and a detached image behind a dangling node_modules never claims that any command attaches it",async()=>{
  const root=fresh(),directory=partitionDirectory(root,"dependencies"),relative=(budget.partitions as Record<string,{directory:string}>).dependencies!.directory;
@@ -453,6 +470,28 @@ test("every probe is declared once, in contract order, and every area but doctor
  expect(new Set(areas).size).toBe(areas.length);
  expect(areas.sort()).toEqual(["tools","storage","leases","capacity","sessions","graph","dependencies","caches","processes"].sort());
  expect(DOCTOR_PROBES_V1.find(probe=>probe.area==="processes")!.phase).toBe(2);
+});
+
+test("storage-grow: a pressed elastic image is planned and grows to the elastic size of the growth rule, an unpressed one or a host without room stays; agrees with an independent Python model",()=>{
+ const GiB=2**30,MiB=1048576,part=(id:string,imageBytes:number,freeBytes:number)=>({id,state:"mounted" as const,capacityBytes:null,freeBytes,imageBytes,backing:"present" as const,publication:"none" as const,publicationAgeSeconds:null,image:"ok" as const,needBytes:null});
+ expect(imageGrowPlanV1({partitions:[part("graph",18*GiB,65*MiB),part("products",30*GiB,10*GiB),part("dependencies",30*GiB,1)]},40960,MiB,{graph:GiB,products:2*GiB})).toEqual(["graph"]);
+ const rule=(budget as unknown as {elastic:Record<string,Record<string,number>>}).elastic.graph,rows=[[18,65*MiB,70,18],[18,5*GiB,70,18],[18,65*MiB,20,18],[30,0,500,30],[32,0,500,32]].map(([c,f,h,a])=>[c*GiB-MiB,f,h*GiB,a*GiB]);
+ const model=`import json,sys
+rule,rows=json.loads(sys.argv[1]),json.loads(sys.argv[2]);M=1048576
+out=[]
+for fs,free,host,alloc in rows:
+    if free>=rule["pressureFreeBytes"]: out.append(None);continue
+    c=fs+M;total=host+alloc
+    ceiling=min(rule["maximumBytes"],max(0,total-max(rule["growHostFreeFloorBytes"],total*rule["growHostFreeFloorPercent"]//100)))
+    wanted=-(-(c*3//2)//rule["alignBytes"])*rule["alignBytes"]
+    grown=max(c,min(wanted,ceiling)//rule["alignBytes"]*rule["alignBytes"])-M
+    out.append(grown if grown>fs else None)
+print(json.dumps(out))`,run=Bun.spawnSync(["python3","-I","-c",model,JSON.stringify(rule),JSON.stringify(rows)]);
+ expect(run.exitCode,run.stderr.toString()).toBe(0);
+ const independent=JSON.parse(run.stdout.toString()) as (number|null)[];
+ rows.forEach(([fs,free,host,alloc],at)=>expect(elasticGrowTargetV1("graph",fs,free,host,alloc,MiB)??null).toBe(independent[at]));
+ expect(elasticGrowTargetV1("graph",18*GiB-MiB,65*MiB,70*GiB,18*GiB,MiB)).toBe(27*GiB-MiB);
+ expect(elasticGrowTargetV1("dependencies",18*GiB,0,70*GiB,18*GiB,MiB)).toBeUndefined();
 });
 
 test("storage-grow: the plan names the mounted images below the declared need and the doctor policy states the grow protocol's sizes",async()=>{

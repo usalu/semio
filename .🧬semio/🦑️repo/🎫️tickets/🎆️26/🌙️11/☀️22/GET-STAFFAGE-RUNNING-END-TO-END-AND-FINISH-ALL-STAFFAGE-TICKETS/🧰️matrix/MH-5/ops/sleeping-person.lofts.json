@@ -1,0 +1,204 @@
+[
+ {
+  "scale": "50",
+  "bone": "hand-l",
+  "paint": "hand-l",
+  "replace": [
+   "hand-l"
+  ],
+  "fit": [
+   {
+    "id": "hand-l",
+    "stations": 10
+   }
+  ]
+ },
+ {
+  "scale": "50",
+  "bone": "foot-l",
+  "paint": "foot-l",
+  "replace": [
+   "foot-l"
+  ],
+  "fit": [
+   {
+    "id": "foot-l",
+    "stations": 10
+   }
+  ]
+ },
+ {
+  "scale": "50",
+  "bone": "toe-l",
+  "paint": "toes-l",
+  "replace": [
+   "toes-l"
+  ],
+  "fit": [
+   {
+    "id": "toes-l",
+    "stations": 4
+   }
+  ]
+ },
+ {
+  "scale": "100",
+  "bone": "foot-l",
+  "paint": "foot-l"
+ },
+ {
+  "scale": "100",
+  "bone": "toe-l",
+  "paint": "toes-l"
+ },
+ {
+  "scale": "200",
+  "bone": "foot-l",
+  "paint": "foot-l"
+ },
+ {
+  "scale": "50",
+  "bone": "foot-r",
+  "paint": "foot-r",
+  "replace": [
+   "foot-r"
+  ],
+  "fit": [
+   {
+    "id": "foot-r",
+    "stations": 10
+   }
+  ]
+ },
+ {
+  "scale": "50",
+  "bone": "toe-r",
+  "paint": "toes-r",
+  "replace": [
+   "toes-r"
+  ],
+  "fit": [
+   {
+    "id": "toes-r",
+    "stations": 4
+   }
+  ]
+ },
+ {
+  "scale": "100",
+  "bone": "foot-r",
+  "paint": "foot-r"
+ },
+ {
+  "scale": "100",
+  "bone": "toe-r",
+  "paint": "toes-r"
+ },
+ {
+  "scale": "200",
+  "bone": "foot-r",
+  "paint": "foot-r"
+ },
+ {
+  "scale": "200",
+  "bone": "head",
+  "paint": "head",
+  "views": [
+   "elevation",
+   "plan"
+  ]
+ },
+ {
+  "scale": "500",
+  "bone": "head",
+  "paint": "head",
+  "views": [
+   "elevation",
+   "plan"
+  ]
+ },
+ {
+  "scale": "50",
+  "bone": "head",
+  "paint": "head",
+  "views": [
+   "elevation",
+   "plan"
+  ],
+  "solids": [
+   "head",
+   "nose"
+  ]
+ },
+ {
+  "scale": "50",
+  "bone": "head",
+  "paint": "hair",
+  "views": [
+   "elevation",
+   "plan"
+  ],
+  "solids": [
+   "hair"
+  ]
+ },
+ {
+  "scale": "50",
+  "bone": "neck",
+  "paint": "neck",
+  "views": [
+   "elevation",
+   "plan"
+  ]
+ },
+ {
+  "scale": "100",
+  "bone": "head",
+  "paint": "head",
+  "views": [
+   "elevation",
+   "plan"
+  ],
+  "solids": [
+   "head",
+   "nose"
+  ]
+ },
+ {
+  "scale": "100",
+  "bone": "head",
+  "paint": "hair",
+  "views": [
+   "elevation",
+   "plan"
+  ],
+  "solids": [
+   "hair",
+   "hair-spread"
+  ]
+ },
+ {
+  "scale": "100",
+  "bone": "neck",
+  "paint": "neck",
+  "views": [
+   "elevation",
+   "plan"
+  ]
+ },
+ {
+  "scale": "50",
+  "bone": "head",
+  "paint": "hair-spread",
+  "views": [
+   "elevation",
+   "plan"
+  ],
+  "solids": [
+   "hair-nape"
+  ],
+  "replace": [
+   "hair-spread"
+  ]
+ }
+]

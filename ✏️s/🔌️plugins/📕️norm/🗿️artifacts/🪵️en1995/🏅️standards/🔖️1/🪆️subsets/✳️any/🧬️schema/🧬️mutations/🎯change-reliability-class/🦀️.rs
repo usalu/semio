@@ -29,11 +29,11 @@ impl<Op> protocol::ColdMutationKind<En1995Snapshot, Op> for ChangeReliabilityCla
         crate::change_reliability_class::diff::diff(self, base)
     }
     fn inverse(&self, base: &En1995Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        crate::change_reliability_class::inverse::inverse(self, base)?
-    
-    })
-}
+        Ok(match crate::change_reliability_class::inverse::inverse(self, base) {
+            Some(inverse) => vec![Op::from(inverse)],
+            None => Vec::new(),
+        })
+    }
 }
 //#endregion 🔖️ChangeReliabilityClass
 

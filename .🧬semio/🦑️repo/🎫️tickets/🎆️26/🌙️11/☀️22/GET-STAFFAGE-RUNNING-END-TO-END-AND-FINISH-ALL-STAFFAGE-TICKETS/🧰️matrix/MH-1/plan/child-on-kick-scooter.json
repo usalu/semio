@@ -1,0 +1,10 @@
+[
+  {"op": "front-sweep", "scale": "500", "id": "foot-r", "twin": "shoe-r", "fixed": true},
+  {"op": "copy", "scale": "500", "id": "foot-r", "from": "front", "to": ["plan"], "fixed": true},
+  {"scale": "200", "label": "foot-r", "best": true, "choose": [
+    [{"op": "volume", "id": "foot-r", "ids": {"elevation": "shoe-r"}, "as": "prism-w"}],
+    [{"op": "volume", "id": "foot-r", "ids": {"elevation": "shoe-r"}, "as": "prism-v"}],
+    [{"op": "volume", "id": "foot-r", "ids": {"elevation": "shoe-r"}, "as": "prism-w", "profile": "elevation"}],
+    [{"op": "front-sweep", "id": "foot-r", "twin": "shoe-r"}, {"op": "copy", "id": "foot-r", "from": "front", "to": ["plan"]}]
+  ]}
+]

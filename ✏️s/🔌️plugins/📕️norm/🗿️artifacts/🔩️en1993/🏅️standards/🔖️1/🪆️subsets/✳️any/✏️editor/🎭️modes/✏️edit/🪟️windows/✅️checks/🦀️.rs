@@ -26,9 +26,3 @@ pub fn render(report: &CheckReport, selected: Option<u32>, windows: &TreeWindows
     render_checks_with(report, &state, &ChecksWindowSpec { controller_id, interaction_domain: Some(INTERACTION_DOMAIN), ..ChecksWindowSpec::default() }, windows, locale)
 }
 //#endregion 🔖️Render
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

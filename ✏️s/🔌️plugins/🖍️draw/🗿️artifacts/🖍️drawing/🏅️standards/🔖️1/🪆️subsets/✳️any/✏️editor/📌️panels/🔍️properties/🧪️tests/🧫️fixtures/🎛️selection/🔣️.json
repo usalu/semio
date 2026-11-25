@@ -34,7 +34,7 @@
     {
       "name": "tree-row-selection",
       "selection": [
-        "drawing-play-layers.shape.shape.a"
+        "shape.a"
       ],
       "expectedFields": [
         "name",

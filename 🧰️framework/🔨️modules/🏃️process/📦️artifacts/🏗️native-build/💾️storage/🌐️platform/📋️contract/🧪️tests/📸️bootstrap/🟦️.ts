@@ -21,7 +21,7 @@ import corpus from "./🔣️.json" with {type:"json"};
 import schema from "./🧬️schema.json" with {type:"json"};
 import work from "./🔣️work.json" with {type:"json"};
 
-declareBuildTestEnvelopeV1({owner:"test:native-maintenance-proof-cost",maximumElapsedMilliseconds:180000,capabilities:{}});
+declareBuildTestEnvelopeV1({owner:"test:native-maintenance-proof-cost",maximumElapsedMilliseconds:180000,capabilities:{artifacts:true}});
 
 function compile(name:string,_helpers:readonly string[],ports:Record<string,unknown>){
  return loadProductFunctionsSyncV1(new URL("../../../../🧱️fixed/🟦️.ts",import.meta.url),[name],ports)[name];

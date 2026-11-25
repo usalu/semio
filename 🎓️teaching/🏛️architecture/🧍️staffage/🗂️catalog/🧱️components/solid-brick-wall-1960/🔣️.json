@@ -13,12 +13,48 @@
       "de": "Eine ungedämmte Vollziegelwand von 1960 im Vertikalschnitt, 1 m hoch: 15 mm Innenputz, 365 mm Vollziegel und 20 mm Mineralputz, U = 1,43 W/(m² K) bei Innenraum 20 °C und R_si 0,13, R_se 0,04 m²K/W."
     },
     "tags": [
-      "component",
-      "thermal",
-      "wall",
-      "build-up",
-      "brick",
-      "uninsulated"
+      {
+        "id": "component",
+        "title": {
+          "en": "component",
+          "de": "Bauteil"
+        }
+      },
+      {
+        "id": "thermal",
+        "title": {
+          "en": "thermal",
+          "de": "thermisch"
+        }
+      },
+      {
+        "id": "wall",
+        "title": {
+          "en": "wall",
+          "de": "Wand"
+        }
+      },
+      {
+        "id": "build-up",
+        "title": {
+          "en": "build up",
+          "de": "Aufbau"
+        }
+      },
+      {
+        "id": "brick",
+        "title": {
+          "en": "brick",
+          "de": "Backstein"
+        }
+      },
+      {
+        "id": "uninsulated",
+        "title": {
+          "en": "uninsulated",
+          "de": "ungedämmt"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage component authors (W11 build)",

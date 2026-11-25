@@ -79,7 +79,10 @@
           "bendingMoment": null,
           "momentResistance": null,
           "sheetingStiffness": null,
-          "requiredRestraintStiffness": 1.5
+          "requiredRestraintStiffness": 1.5,
+          "purlinSpan": null,
+          "purlinLoad": null,
+          "purlinLateralRatio": null
         }
       }
     ]

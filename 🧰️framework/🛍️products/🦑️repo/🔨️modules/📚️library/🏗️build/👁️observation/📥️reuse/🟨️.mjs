@@ -1,6 +1,7 @@
 import{staleImplementationV1}from"../../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
 import{captureBoundedSourceRevisionV1,implementationPinnedV1,physicalSourceOriginV1}from"../../📥️inputs/🔏️revision/🟨️.mjs";
 import{fileURLToPath}from"node:url";
+import{AsyncLocalStorage}from"node:async_hooks";
 import{lstatSync,openSync,fstatSync,closeSync,constants}from"node:fs";
 import{resolve,join,parse,relative,sep}from"node:path";
 import{withRepositoryBuildGraphConsumerV1}from"../../📥️inputs/💾️storage/🟨️.mjs";
@@ -10,11 +11,12 @@ import{checkResourceLeaseControl}from"../../../../../../../🔨️modules/🏃�
 import{readInventoryRecordLeanV1,rememberInventoryRecordV1,inventoryRecordStillHoldsV1,inventoryRecordCorruptV1}from"../../📥️inputs/🪶️lean-inventory/🟨️.mjs";
 import{captureSourceInputInventoryV1,captureCargoLockInventoryV1}from"../../📥️inputs/📋️data/📥️load/🟨️.mjs";
 import{createPresenceCoalescerV1}from"./🧺️coalesce/🟨️.mjs";
+import{createVerifiedPresenceV1,inventoryLeafStampV1 as inventoryStampV1}from"./🎫️verified/🟨️.mjs";
 import{createInferenceInventoryTimingsV1}from"./⏱️timing/🟨️.mjs";
 import{observationRoundV1}from"../🟨️.mjs";
 import{nativeStorageMappingQueueV1}from"../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🔒️mapping/🟦️.ts";
 const epochURLs=[new URL(physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL)),new URL("./🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL)),new URL("../../📥️inputs/🧮️digest/📥️read/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL))],epochCaptures=epochURLs.map((url,index)=>index===0?captureBoundedSourceRevisionV1(fileURLToPath(url),8388608):captureBoundedSourceRevisionV1(fileURLToPath(url),65536,true)),loadedEpoch=epochCaptures.map(row=>row.sha256),revision=(url,index)=>captureBoundedSourceRevisionV1(fileURLToPath(url),index===0?8388608:65536).sha256,policy=Object.freeze({...JSON.parse(epochCaptures[1].text??"").definitions.Policy.const}),readPolicy=Object.freeze({...JSON.parse(epochCaptures[2].text??"").definitions.Policy.const});
-const reference=/^SEMIO_(?:SOURCE_CLOSURE|CARGO_LOCK)_[a-f0-9]{64}$/u,prefix=/^SEMIO_(?:SOURCE_CLOSURE|CARGO_LOCK)_/u;
+const reference=/^SEMIO_(?:SOURCE_CLOSURE|CARGO_LOCK)_[a-f0-9]{64}$/u,prefix=/^SEMIO_(?:SOURCE_CLOSURE|CARGO_LOCK)_/u,verifiedPresenceV1=createVerifiedPresenceV1({maximum:policy.verifiedNamesMaximum}),presenceBatchNamesV1=Math.min(512,policy.maximumReferences);
 
 /** 🧷️ Rejects a retained helper whose Source or privately captured policies changed. */
 export function requireCurrentInferenceInventoryReuseV1(){if(implementationPinnedV1())return;if(epochURLs.some((url,index)=>revision(url,index)!==loadedEpoch[index]))throw staleImplementationV1("Stale inference inventory reuse implementation; restart required");}
@@ -60,10 +62,11 @@ function inventoryParentsV1(storeRoot,directory,control){return inventoryAncestr
 /** 🫙️ Rechecks the ancestry of a namespace directory: an absent namespace directory must still be absent, one that appeared meanwhile is a typed change. */
 export function recheckInventoryAncestryV1(parents,check){for(const before of parents.rows){check();const row=lstatSync(before.path,{bigint:true});if(!row.isDirectory()||row.isSymbolicLink()||row.dev!==before.dev||row.ino!==before.ino||row.mode!==before.mode)throw inventoryChangedV1("Inference inventory ancestry changed");}if(parents.absent!==undefined){check();try{lstatSync(parents.absent,{bigint:true});}catch(error){if(inferenceInventoryLeafMissingV1(error?.code))return;throw error;}throw inventoryChangedV1("Inference inventory ancestry changed");}}
 function recheckInventoryParentsV1(parents,control){recheckInventoryAncestryV1(parents,()=>checkResourceLeaseControl(control));}
+/** 🪜️ The ancestry recheck of one ask over remembered names: every admitted ancestry the names share is rechecked once, no-follow, as a session rechecks it before it trusts a leaf */
+const verifiedAncestryV1=control=>{const held=new Set();return ancestry=>{if(held.has(ancestry))return;recheckInventoryParentsV1(ancestry,control);held.add(ancestry);};},verifiedScopesV1=new AsyncLocalStorage();
 /** 🪻️ A refusal that a concurrent writer of the store caused (a record appeared, was replaced or was removed while a batch looked at it): the batch is looked at again, and an owner whose look still changes is requeued by its reader.
  * @see ../../🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs */
 const inventoryChangedV1=text=>Object.assign(Error(text),{code:"BUILD_STORE_CHANGED"});
-const inventoryStampV1=row=>[row.dev,row.ino,row.mode,row.nlink,row.size,row.mtimeNs,row.ctimeNs].join(":");
 
 /** 🕳️ Classifies only the exact leaf ENOENT spelling; ancestry and custody proofs remain mandatory at the caller. */
 export function inferenceInventoryLeafMissingV1(code){return code==="ENOENT";}
@@ -114,7 +117,7 @@ async function missingInventoryNamesV1(root,names,control,withdraw,held){
     measure("fileChecks",()=>{
      recheckInventoryParentsV1(ancestry,actual);const after=lstatSync(path,{bigint:true});
      if(!after.isFile()||after.isSymbolicLink()||inventoryStampV1(after)!==inventoryStampV1(before))throw inventoryChangedV1("Inference inventory leaf changed");
-     if(corrupt)missing.push({name,path,ancestry,corrupt:inventoryStampV1(after)});else present.push({path,ancestry,stamp:inventoryStampV1(after)});
+     if(corrupt)missing.push({name,path,ancestry,corrupt:inventoryStampV1(after)});else present.push({name,path,ancestry,stamp:inventoryStampV1(after)});
     });
     if(++done%128===0){await recheck();await continuation();checkResourceLeaseControl(actual);}
    }
@@ -124,7 +127,7 @@ async function missingInventoryNamesV1(root,names,control,withdraw,held){
     for(const row of missing){if(row.corrupt===undefined){requireInventoryLeafAbsentV1(row.path,row.ancestry,actual);continue;}recheckInventoryParentsV1(row.ancestry,actual);const after=lstatSync(row.path,{bigint:true});if(!after.isFile()||after.isSymbolicLink()||inventoryStampV1(after)!==row.corrupt)throw inventoryChangedV1("Inference inventory corrupt leaf changed before delivery");}
     for(const row of present){recheckInventoryParentsV1(row.ancestry,actual);const after=lstatSync(row.path,{bigint:true});if(!after.isFile()||after.isSymbolicLink()||inventoryStampV1(after)!==row.stamp)throw inventoryChangedV1("Inference inventory leaf changed before delivery");}
    });
-   checkResourceLeaseControl(actual);measure("implementationCheck",()=>requireCurrentInferenceInventoryReuseV1());return new Set(missing.map(row=>row.name));
+   checkResourceLeaseControl(actual);measure("implementationCheck",()=>requireCurrentInferenceInventoryReuseV1());for(const row of present)verifiedPresenceV1.remember(row.name,row.path,row.stamp,row.ancestry);return new Set(missing.map(row=>row.name));
   },names,{say:inventoryLogV1});
   const result=held!==undefined?await body(held.store,held.actual):await withRepositoryBuildGraphConsumerV1(root,control,body,withdraw,phase,timings.native);
   return result??new Set(names);
@@ -145,7 +148,7 @@ export async function inventoryNamesSettledV1(run,names,{attempts=policy.changeA
 
 /** 🧺️ The presence coalescers of this process, one per storage control and workspace root: every look that asks while a batch is running joins the next batch instead of taking a lease of its own. */
 const presenceStatesV1=new WeakMap(),inventoryLogV1=line=>{try{process.stderr.write("[inventory] "+line+"\n");}catch{}};
-const presenceStateV1=(root,control)=>{let byRoot=presenceStatesV1.get(control);if(byRoot===undefined){byRoot=new Map();presenceStatesV1.set(control,byRoot);}let state=byRoot.get(root);if(state===undefined){state={timings:createInferenceInventoryTimingsV1(),coalescer:createPresenceCoalescerV1({run:(names,withdraw)=>missingInventoryNamesV1(root,names,control,withdraw,state.held),session:work=>presenceSessionV1(root,control,state,work),lingerMilliseconds:policy.sessionLingerMilliseconds,maximumSessionMilliseconds:policy.sessionMaximumMilliseconds,sessionOverheadFactor:policy.sessionOverheadFactor,sessionCeilingMilliseconds:policy.sessionCeilingMilliseconds,maximumNames:policy.maximumReferences>512?512:policy.maximumReferences})};byRoot.set(root,state);}return state;};
+const presenceStateV1=(root,control)=>{let byRoot=presenceStatesV1.get(control);if(byRoot===undefined){byRoot=new Map();presenceStatesV1.set(control,byRoot);}let state=byRoot.get(root);if(state===undefined){state={timings:createInferenceInventoryTimingsV1(),coalescer:createPresenceCoalescerV1({run:(names,withdraw)=>missingInventoryNamesV1(root,names,control,withdraw,state.held),session:work=>presenceSessionV1(root,control,state,work),lingerMilliseconds:policy.sessionLingerMilliseconds,maximumSessionMilliseconds:policy.sessionMaximumMilliseconds,sessionOverheadFactor:policy.sessionOverheadFactor,sessionCeilingMilliseconds:policy.sessionCeilingMilliseconds,maximumNames:presenceBatchNamesV1})};byRoot.set(root,state);}return state;};
 /** 🪟️ One storage consumer for the batches that follow each other: the consumer verifies the reservation of the mounted image before and after its body (15 s on a loaded 16 GB worker: 283 batches, 4,377,613 ms, against 15,310 ms of checks), so the batches of a take pass run inside one consumer while asks keep coming and every batch still rechecks the store identity itself; the consumer ends after the linger of the coalescer or its maximum, and the next asks open a new one.
  * @see ./🧺️coalesce/🟨️.mjs */
 function presenceSessionV1(root,control,state,work){
@@ -155,12 +158,24 @@ function presenceSessionV1(root,control,state,work){
 const presenceCoalescerV1=(root,control)=>presenceStateV1(root,control).coalescer;
 
 /** 📊️ How the inventory presence checks of `control` and `root` went: asked, answered from the memory of the round, batches that took a lease, names they checked, batches asked again caller by caller. */
-export function inferenceInventoryPresenceStatsV1(root,control){const state=presenceStatesV1.get(control)?.get(root),nativeVerification=state?.timings.verification(),bodyOperations=state?.timings.bodyOperations();return {...(state?.coalescer.stats()??{asked:0,remembered:0,batches:0,retried:0,names:0}),timings:(state?.timings??emptyPresenceTimingsV1).stats(),...bodyOperations?{bodyOperations}:{},...nativeVerification?{nativeVerification}:{},mappingQueue:nativeStorageMappingQueueV1()};}
+export function inferenceInventoryPresenceStatsV1(root,control){const state=presenceStatesV1.get(control)?.get(root),nativeVerification=state?.timings.verification(),bodyOperations=state?.timings.bodyOperations();return {...(state?.coalescer.stats()??{asked:0,remembered:0,batches:0,retried:0,names:0}),verified:verifiedPresenceV1.stats(),timings:(state?.timings??emptyPresenceTimingsV1).stats(),...bodyOperations?{bodyOperations}:{},...nativeVerification?{nativeVerification}:{},mappingQueue:nativeStorageMappingQueueV1()};}
 const emptyPresenceTimingsV1=createInferenceInventoryTimingsV1();
 
-/** 📥️ Whether every inventory record `value` names is stored: the names are captured once, answered from the memory of the running validation round when they were found before, else checked with the other looks that ask at the same time under one storage consumer. */
+/** 📥️ Whether every inventory record `value` names is stored: the names are captured once; inside a take pass ({@link withTakePassPresenceV1}) a name a session of this process found present is answered by one stat of its leaf while the leaf and its ancestry keep their stamps ({@link createVerifiedPresenceV1}), the others from the memory of the running validation round when they were found before, else checked with the other looks that ask at the same time under one storage consumer. */
 export async function inferenceInventoryReferencesHoldV1(root,value,control,withdraw){
- requireIssuedResourceControlV1(control);checkResourceLeaseControl(control);requireCurrentInferenceInventoryReuseV1();if(withdraw?.aborted)return false;const names=captureInferenceInventoryReferencesV1(value);if(!names.length)return true;
+ requireIssuedResourceControlV1(control);checkResourceLeaseControl(control);requireCurrentInferenceInventoryReuseV1();if(withdraw?.aborted)return false;const recheck=verifiedAncestryV1(control),names=verifiedScopesV1.getStore()===true?captureInferenceInventoryReferencesV1(value).filter(name=>!verifiedPresenceV1.holds(name,recheck)):captureInferenceInventoryReferencesV1(value);if(!names.length)return true;
  const holds=process.env.SEMIO_INVENTORY_COALESCE==="off"?(await missingInventoryNamesV1(root,names,control,withdraw)).size===0:await presenceCoalescerV1(root,control).ask(names,observationRoundV1(),withdraw);
  checkResourceLeaseControl(control);requireCurrentInferenceInventoryReuseV1();return !withdraw?.aborted&&holds;
 }
+
+/** 🧺️ Verifies `names` (inventory names of many stored records, a take pass before its looks) under the storage consumers of the presence coalescer in asks of at most one batch each, all at once, so they run as consecutive batches of one session; every name found present is remembered with its leaf stamp, and the looks that ask for it later answer from that memory without a consumer. Names already remembered and names that are no inventory reference are left out. Answers the names asked and those found present; a refused batch only loses its hint.
+ * @see ./🎫️verified/🟨️.mjs */
+export async function prefetchInferenceInventoryPresenceV1(root,names,control,withdraw){
+ requireIssuedResourceControlV1(control);checkResourceLeaseControl(control);requireCurrentInferenceInventoryReuseV1();
+ const recheck=verifiedAncestryV1(control),open=[...new Set(names)].filter(name=>typeof name==="string"&&reference.test(name)&&!verifiedPresenceV1.holds(name,recheck)).sort(),round={},coalescer=presenceCoalescerV1(root,control);
+ await Promise.allSettled(Array.from({length:Math.ceil(open.length/presenceBatchNamesV1)},(_,at)=>coalescer.ask(open.slice(at*presenceBatchNamesV1,(at+1)*presenceBatchNamesV1),round,withdraw)));
+ return Object.freeze({asked:open.length,present:open.filter(name=>verifiedPresenceV1.has(name)).length});
+}
+
+/** 🎟️ Runs `work` as one take pass of verified-once presence: inside it every look answers a name that a session of this process found present by one stat of its leaf (a pass is one snapshot of the store, as a validation round is one of the tree); outside it every ask goes to a session as before, so a look whose store changes while it looks is still refused by that session. */
+export function withTakePassPresenceV1(work){return verifiedScopesV1.run(true,work);}

@@ -16,6 +16,8 @@ role = "hub"
 path = "🦀️.rs"
 
 [dependencies]
+semio-hub-sourcing-editor-app = { workspace = true }
+semio-hub-sourcing-viewer-app = { workspace = true }
 semio-framework-pack = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-s-artifact-sourcing-curation = { workspace = true }
 semio-s-artifact-stdio-json = { workspace = true }

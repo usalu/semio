@@ -12,8 +12,22 @@ pub struct CoreInstance {
     pub data: Vec<Option<Vec<u8>>>,
     pub(super) elements: Vec<Option<Vec<Option<u32>>>>,
     pub(super) machine: Option<Machine>,
+    pub(super) pool: FramePool,
     pub(super) next_host_call: u64,
     pub(super) preparation_storage: Option<usize>,
+}
+
+/// 🏊️ Size classes of pooled vectors: capacities 1, 2, 4, ... 1024 elements.
+pub(super) const POOL_CLASSES: usize = 11;
+/// 🏊️ Declared bound of pooled vectors per kind and class, the call-depth bound of the pool.
+pub(super) const POOL_LIMIT: usize = 1024;
+
+/// 🏊️ Instance-owned empty frame vectors per kind and size class, reused last-in first-out; a stack's backing grows only through a paid step.
+#[derive(Clone, Debug, Default)]
+pub(super) struct FramePool {
+    pub(super) locals: [Vec<Vec<Value>>; POOL_CLASSES],
+    pub(super) controls: [Vec<Vec<ControlFrame>>; POOL_CLASSES],
+    pub(super) types: [Vec<Vec<ValueType>>; POOL_CLASSES],
 }
 
 #[derive(Clone, Debug)]
@@ -114,6 +128,7 @@ impl CoreInstance {
             elements: module.elements.iter().map(|segment| Some(segment.values.clone())).collect(),
             module,
             machine: None,
+            pool: FramePool::default(),
             next_host_call: 1,
             preparation_storage,
         };

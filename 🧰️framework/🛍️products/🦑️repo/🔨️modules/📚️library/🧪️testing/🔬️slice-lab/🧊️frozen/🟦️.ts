@@ -9,7 +9,7 @@ const F=schema.definitions.Policy.const.frozen,MEGABYTE=1048576,CLONE_SCRIPT="im
 export type FrozenRootV1=Readonly<{root:string;files:number;tracked:number;megabytes:number;seconds:number;excluded:number;vanished:number;linked:number;cloned:number;ambient:number;ambientDependencies:boolean;reused:boolean}>;
 
 const git=(root:string,args:readonly string[],input?:string):Buffer=>{
- const run=spawnSync("git",["-c","core.fsmonitor=false","-c","core.quotepath=off",...args],{cwd:root,maxBuffer:1024*MEGABYTE,...input===undefined?{}:{input}});
+ const run=spawnSync("git",["-c","core.fsmonitor=false","-c","core.quotepath=off",...args],{windowsHide:true,cwd:root,maxBuffer:1024*MEGABYTE,...input===undefined?{}:{input}});
  if(run.status!==0)throw Error(`git ${args[0]} failed in ${root}: ${String(run.stderr).trim().slice(0,300)}`);
  return run.stdout;
 };

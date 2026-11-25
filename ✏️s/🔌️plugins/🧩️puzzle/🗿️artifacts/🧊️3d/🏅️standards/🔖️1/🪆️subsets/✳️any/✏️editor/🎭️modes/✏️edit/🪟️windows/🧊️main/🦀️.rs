@@ -19,7 +19,7 @@ use super::utilities;
 use semio_s_artifact_puzzle_3d_editor_terminology::puzzle3d_localized;
 use semio_s_artifact_puzzle_3d_editor_terminology::Puzzle3dLabels;
 use {semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_action, semio_s_artifact_puzzle_3d_model::puzzle3d_vortex_full_id, semio_s_artifact_puzzle_3d_model::quat_rotate_vector, semio_s_artifact_puzzle_3d_editor_snapshot::target_volume_scale_json, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dSceneSnapshot, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dSceneMetadata, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dInteractionSnapshot, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dObject, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dScene, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dVortex, semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_INTERACTION_DOMAIN, semio_s_artifact_puzzle_3d_editor_config::PUZZLE3D_VORTEX_SHOW_ALWAYS};
-use {semio_plugin::world3d_camera_projection_json, semio_plugin::world3d_chunking_json, semio_plugin::world3d_environment_json, semio_plugin::world3d_fit_json, semio_plugin::World3dScene, semio_plugin::world3d_selection_json, semio_plugin::SurfaceKind, semio_plugin::WindowEngagement, semio_plugin::WindowEngagementInput, semio_plugin::WindowEngagementSlot, semio_plugin::WindowKindDefinition, semio_plugin::WindowMeasure, semio_plugin::WindowOptions, semio_plugin::OriginalToolRunView};
+use {semio_plugin::world3d_camera_projection_json, semio_plugin::world3d_chunking_json, semio_plugin::world3d_environment_json, semio_plugin::world3d_fit_json, semio_plugin::World3dScene, semio_plugin::world3d_selection_json, semio_plugin::SurfaceKind, semio_plugin::WindowEngagement, semio_plugin::WindowEngagementInput, semio_plugin::WindowEngagementSlot, semio_plugin::WindowKindDefinition, semio_plugin::WindowMeasure, semio_plugin::WindowOptions, semio_plugin::ToolRunPollView};
 use semio_s_artifact_puzzle_3d_precompute_brush::BrushSuggestionsFound;
 use semio_ui_contract::BuiltNode;
 use serde_json::json;
@@ -541,7 +541,7 @@ pub fn render(
 /// placement lives on the catalogue panel (drag-and-drop) and the shell menu (`openAddObjectDialog`).
 /// While a fill run is non-terminal, Escape in the input aborts that run (`toolRunAbort` with its current
 /// identity) instead of disarming the engagement.
-pub fn engagement(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels, tool_run: Option<OriginalToolRunView<'_>>) -> WindowEngagement {
+pub fn engagement(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels, tool_run: Option<ToolRunPollView<'_>>) -> WindowEngagement {
     let object_count = envelope.scene_snapshot.objects.len();
     let attraction_count = envelope.scene_snapshot.attractions.len();
     let active_utility = envelope.active_utility.as_str();

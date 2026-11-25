@@ -11,7 +11,7 @@ const entry = (id: string, category: ManifestEntry["category"], en: string, de: 
 const rows: readonly Row[] = [
   { entry: entry("english-oak", "vegetation", "English Oak", "Stieleiche", 18, ["thermal", "structural"], 0), status: "pending" },
   { entry: entry("park-bench", "objects", "Park Bench", "Parkbank", 0.85, ["structural"], 2000), status: "pending" },
-  { entry: entry("walking-commuter", "humans", "Walking Commuter", "Pendler zu Fuß", 1.78, ["thermal", "structural"], 110), status: "ready", asset: { ...walker, id: "walking-commuter", tags: ["walker", "commuter"], summary: { en: "An adult walking to work", de: "Ein Erwachsener auf dem Weg zur Arbeit" }, completion: "authored", dimensions: { ...walker.dimensions, massKg: 75 } } },
+  { entry: entry("walking-commuter", "humans", "Walking Commuter", "Pendler zu Fuß", 1.78, ["thermal", "structural"], 110), status: "ready", asset: { ...walker, id: "walking-commuter", tags: [{ id: "walker", title: { en: "walker", de: "Fußgänger" } }, { id: "commuter", title: { en: "commuter", de: "Pendler" } }], summary: { en: "An adult walking to work", de: "Ein Erwachsener auf dem Weg zur Arbeit" }, completion: "authored", dimensions: { ...walker.dimensions, massKg: 75 } } },
   { entry: entry("tower-crane", "vehicles", "Tower Crane", "Turmdrehkran", 40, ["thermal", "structural"], 7750), status: "missing" },
 ];
 const ids = (list: readonly Row[]): string[] => list.map((row) => row.entry.id);

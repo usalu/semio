@@ -119,12 +119,27 @@ pub(super) fn physical_policy(original:&super::WakeDriverState,policy:RetainedCl
  let available=operation.guest.physical_remaining(remaining)?;if retirement||operation.cleanup{return Ok(intersect(policy,available))}
  let deadline=original.root.remaining_work().absolute_deadline_us.saturating_sub(operation.reserve.maximum_microseconds);
  if original.root.clock_source()().is_none_or(|now|now>=deadline){return Err(spent("semantic deadline exhausted with original cleanup window retained"))}
- let available=consumable_remaining(available,operation.reserve.retained)?;
- let policy=intersect(policy,available);
+ let after_reserve=consumable_remaining(available,operation.reserve.retained)?;
+ let grant=policy.maximum_items;let policy=intersect(policy,after_reserve);
  if policy.maximum_items==0{
-  return Err(spent("semantic operation currency exhausted with cleanup reserve retained"))
+  return Err(items_exhausted(ItemsLedger{issued:original.treasury.policy().operation.maximum_items,remaining:remaining.maximum_items,guest_held:remaining.maximum_items.saturating_sub(available.maximum_items),reserve:operation.reserve.retained.maximum_items,grant},Some(guest_report(original)).as_deref()))
  }
  Ok(policy)
+}
+/// 📒️ The interpreter ledger and the copy the operation spent outside it, by poll stage.
+fn guest_report(original:&super::WakeDriverState)->String{
+ let spent=original.treasury.policy().operation.maximum_copy_bytes.saturating_sub(original.treasury.original_remaining().maximum_copy_bytes);
+ let mut text=original.guest_ledger.as_ref().map_or(String::from("no interpreter ledger"),|(snapshot,format)|format(snapshot));
+ text.push_str(&format!("; operation copy spent={spent}"));
+ for (stage,(items,copy)) in original.outside.iter().enumerate(){if *items!=0||*copy!=0{text.push_str(&format!("; outside interpreter, poll stage {stage}={items}/{copy}"));}}
+ text
+}
+#[derive(Clone,Copy,Debug,PartialEq,Eq)]
+pub(super) struct ItemsLedger{pub issued:usize,pub remaining:usize,pub guest_held:usize,pub reserve:usize,pub grant:usize}
+/// 🔢️ Names the exhausted retained-item dimension with issued, spent, held and reserved amounts so a client can size its request.
+pub(super) fn items_exhausted(ledger:ItemsLedger,guest:Option<&str>)->ValueError{
+ let ItemsLedger{issued,remaining,guest_held,reserve,grant}=ledger;
+ ValueError::new(ValueRefusalKind::WorkLimit,format!("semantic operation currency exhausted with cleanup reserve retained: dimension=retained items, issued={issued}, spent={}, remaining={remaining}, held by guest={guest_held}, cleanup reserve={reserve}, turn grant={grant}, spendable={}{}",issued.saturating_sub(remaining),remaining.saturating_sub(guest_held).saturating_sub(reserve),guest.map_or(String::new(),|ledger|format!("; {ledger}"))))
 }
 pub(super) fn scope_budget(original:&super::WakeDriverState,mut budget:semio_framework_job::StepBudget,retirement:bool)->Result<semio_framework_job::StepBudget,ValueError>{
  let Some(operation)=&original.operation else{return Ok(budget)};
@@ -136,6 +151,12 @@ pub(super) fn scope_budget(original:&super::WakeDriverState,mut budget:semio_fra
 impl GuestRelayWakeDriver {
  /// 🎚️ Request ceilings and the actual semantic deadline are DATA, never a minted Source callback.
  pub fn operation_request_limits(&self)->Result<(GuestRelayOperationRequest,u64),ValueError>{let original=self.original.try_lock().map_err(|_|invalid("request limits Source is borrowed"))?;let operation=original.operation.as_ref().ok_or_else(||invalid("request limits require their actual operation"))?;Ok((operation.request,original.root.remaining_work().absolute_deadline_us.saturating_sub(operation.reserve.maximum_microseconds)))}
+ /// 📒️ Keeps one guest instance's retained ledger so this driver's refusals can name its contributors.
+ pub fn note_original_guest_ledger(&self,snapshot:[u64;20],formatter:fn(&[u64;20])->String){if let Ok(mut original)=self.original.try_lock(){original.guest_ledger=Some((snapshot,formatter));}}
+ /// 📒️ Books what a poll stage posted to the operation treasury outside the interpreter ledger.
+ pub fn note_original_outside_post(&self,stage:usize,items:u64,copy_bytes:u64){if let Ok(mut original)=self.original.try_lock(){let slot=&mut original.outside[stage.min(15)];slot.0+=items;slot.1+=copy_bytes;}}
+ /// 📒️ Reads the retained ledger last noted for this driver's guest instance.
+ pub fn original_guest_ledger(&self)->Option<String>{let original=self.original.try_lock().ok()?;Some(guest_report(&original))}
  /// 🔎️ Reads the next ordinary operation drive grant from the same physical policy used at checkout.
  pub fn original_operation_drive_grant(&self)->Result<Option<RetainedCloneGrant>,ValueError>{
   let Ok(original)=self.original.try_lock() else { return Ok(None) };

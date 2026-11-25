@@ -2,7 +2,7 @@ import * as React from "../../../⚛️react-port/🟦️.ts";
 import type { LocalDocument } from "@semio-tech/framework/config/mutations";
 import { localizedLabelTextV1 } from "../../📣️replay-refusal/🟦️.ts";
 
-import { sharedBorderlessBoxProps } from "@semio-tech/ui-react";
+import { cn, glassClass, SharedBorderRow, sharedBorderlessBoxProps } from "@semio-tech/ui-react";
 const labels = {
   title: { en: "Files on this device", de: "Dateien auf diesem Gerät" },
   opening: { en: "Opening {name}…", de: "{name} wird geöffnet…" },
@@ -43,10 +43,10 @@ export function LocalFilesV1(props: Readonly<{
     }
   };
   if (documents.length === 0) return null;
-  return <section aria-label={text("title")} className="pointer-events-auto rounded-sm border bg-base px-double py-double text-sm">
+  return <SharedBorderRow as="section" orientation="vertical" aria-label={text("title")} data-level="pane" data-glass-chip="" className={cn("pointer-events-auto px-double py-double text-sm", glassClass)}>
     <h2 className="font-semibold">{text("title")}</h2>
     <ul>{documents.map(document => <li key={document.documentId}>
-      <button type="button" {...sharedBorderlessBoxProps} className="rounded-sm px-single py-single"
+      <button type="button" {...sharedBorderlessBoxProps} className="px-single py-single"
         data-semio-local-document-id={document.documentId}
         data-semio-local-persisted={props.persisted.has(document.documentId) ? "true" : "false"}
         aria-current={props.activeDocumentId === document.documentId ? "true" : undefined}
@@ -58,5 +58,5 @@ export function LocalFilesV1(props: Readonly<{
       <button {...sharedBorderlessBoxProps} type="button" onClick={() => request.current?.abort()}>{text("cancel")}</button>
     </div>}
     {failure === null ? null : <p role="alert">{failure}</p>}
-  </section>;
+  </SharedBorderRow>;
 }

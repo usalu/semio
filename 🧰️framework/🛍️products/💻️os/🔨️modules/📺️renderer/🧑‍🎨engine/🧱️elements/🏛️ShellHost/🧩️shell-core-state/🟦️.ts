@@ -74,8 +74,10 @@ import type { ViewModel } from "../../🔌️PluginRuntime/🧷️handle-contrac
 import { leftoverOverlayCarryingSelectionV1, leftoverOverlayCarryingUtilityV1, leftoverWorldArmedWindowOverlayV1, leftoverWorldSelectionOverlayV1, leftoverWorldWindowOverlayV1, publishLeftoverWorldSelectionV1 } from "../../🌐️World3dHost/🔗️instance-selection/🟦️.ts";
 import { clearPendingWorldProjections, World3dWindowViewRegistryV1 } from "../../🌐️World3dHost/🪟️window-view-store/🟦️.tsx";
 import { type CommittedExampleV1, navbarExampleIdFromHistoryUpserts } from "../../🛠️ShellHelpers/🔩️plumbing/🔀️example-switching/🟦️.ts";
+import { ClipboardActionQueue } from "../../🛠️ShellHelpers/🪟️window-panes/📋️clipboard-activation/🟦️.ts";
 import { interactionViewFromLeftoverOutput, leftoverInteractionStateV1 } from "../../🛠️ShellHelpers/🔩️plumbing/🎮️leftover-views/🟦️.ts";
 import { type DocumentTransferNoticeV1 } from "../../🛠️ShellHelpers/🧾️transfer-checkin-tutorial/🟦️.ts";
+import type { DocumentLoadEndV1 } from "../⏳️document-load-gate/🟦️.ts";
 import {
   createTreeWindowSchedulerV1,
   createTreeWindowContextV1,
@@ -113,6 +115,8 @@ export type ShellEffectOwnerForward = {
   plugin: PluginWasmHandle | null;
   creationCatalog: SpaceArtifactCreationCatalogAuthorityV1 | null;
   inputSeq: number | null;
+  /** 📥️ How this owner's whole-document load ended without a document: the action that carried it was not applied. */
+  documentLoad?: DocumentLoadEndV1;
   browserActor?: {
     readonly current: () => boolean;
     readonly refresh: (session: ActiveSession) => void;
@@ -230,8 +234,9 @@ export function useShellCoreState({
    * staleness guard compares against. Shell-wide it was the wrong question the moment two programs
    * are open: a spawned program's patch would cancel the session's in-flight snapshot and vice versa. */
   const historyOrderByProgramRef = useRef(new Map<string, number>());
-  const exampleOptionsRef = useRef<readonly { readonly id: string }[]>([]);
+  const exampleOptionsRef = useRef<readonly { readonly id: string; readonly label: string }[]>([]);
   const committedExamplesByProgramRef = useRef(new Map<string, CommittedExampleV1>());
+  const exampleBeforePickByProgramRef = useRef(new Map<string, string>());
   const focusedExampleProgramRef = useRef("");
   const localHistoryOrderRef = useRef(0);
   const { loadedPlugins, pluginStatusById, pluginSupervisorById, session, error, sessionFault, instanceFault } = shellState.pluginRuntime;
@@ -455,6 +460,7 @@ export function useShellCoreState({
   const refreshGenerationRef = useRef(0);
   const replaceBodiesGenerationRef = useRef(0);
   const clipboardFragmentRef = useRef<unknown>(undefined);
+  const [clipboardQueue] = useState(() => new ClipboardActionQueue());
   const appRegistrationsJsonRef = useRef<string | null>(null);
   const spawnedRefreshSlotsRef = useRef(new Map<string, SpawnedRefreshSlotV1>());
   const contributorInstancesRef = useRef<Map<string, ContributorInstance>>(new Map());
@@ -662,7 +668,7 @@ export function useShellCoreState({
     catalog, pluginFilter, plugins, surfaceSessionFactories, backboneWorkerFactory, documentServices, hostPorts, appId, appRole,
     brand, suppressAutoIntroduction, navbarTrailingItems, scope, localDocumentOwnerRegistry, shellContextMenuTitleLabel, hostConfig, hostMode,
     measuredDevice, mobile, locks, defaults, ephemeral, shellState, dispatch, localInteraction, localSourceRevisions, stagedActions, localSourceOwnerRef, localSourceRefreshRef, historyStore,
-    historyOrderRef, historyOrderByProgramRef, exampleOptionsRef, committedExamplesByProgramRef, focusedExampleProgramRef, localHistoryOrderRef,
+    historyOrderRef, historyOrderByProgramRef, exampleOptionsRef, committedExamplesByProgramRef, exampleBeforePickByProgramRef, focusedExampleProgramRef, localHistoryOrderRef,
     loadedPlugins, pluginStatusById, pluginSupervisorById, session, error, sessionFault, instanceFault, localPrograms,
     uiAppearance, uiLayout, uiDriverId, uiCustomDrivers, uiDriverDraft, uiLocale, uiTerminology, uiThemeId,
     uiCustomThemes, uiThemeDraft, uiKeybindingOverrides, applyHistoryPatch, leftoverInspectionEpoch,
@@ -679,7 +685,7 @@ export function useShellCoreState({
     liveDialogRef, activeTutorialId, tutorialPlaying, tutorialRate, tutorialMuted, tutorialCaptionsOn, tutorialRecording,
     tutorialDeviated, uiNamedLayouts, commitUiPreferenceRef, syncBackboneUri, syncCardKind, syncDraftPath,
     syncStatusByDocumentId, mergePolicy, selectedConflictId, inferencePortRuntimeKey, inferencePort,
-    refreshGenerationRef, replaceBodiesGenerationRef, clipboardFragmentRef, appRegistrationsJsonRef,
+    refreshGenerationRef, replaceBodiesGenerationRef, clipboardFragmentRef, clipboardQueue, appRegistrationsJsonRef,
     spawnedRefreshSlotsRef, contributorInstancesRef, contributorPassesRef, externalSlotNodesRef, layoutSeedKeyRef,
     extraWindowCounterRef, shellContextMenu, setShellContextMenu, extraWindowInstancesRef, settleOperation,
     awaitOperationSettle, sessionWorkRef, documentLoadGateRef, sealedInstancesRef, sessionSwitchGateRef, surfaceSwitchBusy,

@@ -62,7 +62,7 @@ use protocol::LOCAL_ACTOR_ID;
 use store::ArtifactStoreInitializationAuthority;
 use semio_framework::AppRole;
 #[cfg(test)]
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_plugin_app_builder::App;
 #[cfg(any(test, feature = "artifact-app-testing"))]
@@ -130,11 +130,11 @@ use semio_plugin_job::reserved_jobs::register_framework_reserved_factories;
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_plugin_ownership::sdk_fault::plugin_sdk_fault;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_plugin_ownership::store_lifecycle::ArtifactDisposal;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactDisposal;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_plugin_ownership::store_lifecycle::bounded_config_store_disposer;
+use semio_plugin_store_lifecycle::store_lifecycle::bounded_config_store_disposer;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_plugin_ownership::store_lifecycle::bounded_document_store_disposer;
+use semio_plugin_store_lifecycle::store_lifecycle::bounded_document_store_disposer;
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_plugin_decl_surface::ArtifactEditor;
 #[cfg(any(test, feature = "artifact-app-testing"))]

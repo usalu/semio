@@ -11,6 +11,33 @@ use semio_s_artifact_norm_en1997_model::En1997Snapshot;
 use std::path::PathBuf;
 use std::process::Command;
 
+/// 🧾️ A verdict up to the registry basis: the check holds `expected` or, when it rests on an NDP row the registry does not mark verified (every EN 1997 row is still unverified), `UnverifiedBasis` with the same side of the limit and that unverified row cited.
+fn assert_verdict_up_to_the_basis(check: &semio_s_plugin_norm_compliance::CheckResult, expected: CheckStatus) {
+    if check.status == expected {
+        return;
+    }
+    assert!(check.status == CheckStatus::UnverifiedBasis && matches!(expected, CheckStatus::Pass | CheckStatus::Warning), "{}: {:?} instead of {expected:?}", check.id, check.status);
+    assert!(check.unverified_basis(), "{} is unverified without an unverified NDP: {:?}", check.id, check.ndps);
+    assert_eq!(check.utilization <= 1.0 + 1e-9, expected == CheckStatus::Pass, "{}: utilisation {} contradicts {expected:?}", check.id, check.utilization);
+}
+
+/// 🧾️ The verdict law of a compliant document: no failing check, every utilisation within 1, and the report complies exactly when no check rests on an unverified NDP row.
+fn assert_compliant_up_to_the_basis(report: &semio_s_plugin_norm_compliance::CheckReport) {
+    let failing: Vec<_> = report.failing().map(|c| c.id.clone()).collect();
+    assert!(failing.is_empty(), "failing checks: {failing:?}");
+    let worst = report.checks.iter().filter(|c| c.status != CheckStatus::NotApplicable).max_by(|a, b| a.utilization.total_cmp(&b.utilization)).map(|c| (c.id.clone(), c.status, c.utilization));
+    assert!(report.worst_utilization() <= 1.0 + 1e-9, "worst utilisation {} (highest check {worst:?})", report.worst_utilization());
+    assert_eq!(report.complies(), report.unverified().next().is_none(), "complies exactly without an unverified basis");
+    for check in report.unverified() {
+        assert!(check.unverified_basis(), "{} is unverified without an unverified NDP: {:?}", check.id, check.ndps);
+    }
+}
+
+/// 🧾️ True when the check is cleared up to the registry basis: `Pass`, or `UnverifiedBasis` within the limit.
+fn clears_up_to_the_basis(check: &semio_s_plugin_norm_compliance::CheckResult) -> bool {
+    check.status == CheckStatus::Pass || (check.status == CheckStatus::UnverifiedBasis && check.utilization <= 1.0 + 1e-9)
+}
+
 include!("🧮️design-approach-and-resistance-laws/🦀️.rs");
 
 include!("🔮️oracle-and-remedy-laws/🦀️.rs");
@@ -21,7 +48,7 @@ include!("🌐️entity-check-laws/🦀️.rs");
 fn compliant_dsl_asset_complies() {
     let text = include_str!("../../../🖼️assets/🏗️compliant/🗣️.dsl.semio");
     let doc = decode_en1997_dsl(text).expect("decode compliant DSL");
-    assert!(check_project(&doc).complies(), "compliant DSL must Pass");
+    assert_compliant_up_to_the_basis(&check_project(&doc));
 }
 
 #[test]

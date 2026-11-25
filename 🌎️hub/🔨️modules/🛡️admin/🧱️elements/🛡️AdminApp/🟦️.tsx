@@ -41,6 +41,9 @@ function LocaleSwitch(): React.ReactElement {
   );
 }
 
+/** 🪟️ The navbar is a glass band over the pages: every page keeps this much clearance above its first band at rest and scrolls beneath the navbar. */
+const BAND_CLEARANCE = { "--admin-clear-top": "var(--navbar-band-height)" } as React.CSSProperties;
+
 /** 🛡️ The whole admin SPA's tab shell — Overview/Spaces/Users/Connections/Documents/Events/Observability, gated
  * behind `AdminSessionProvider`'s auth probe (contract §C2's admin surface). Locale switch lives in
  * the header, next to the tabs, always visible regardless of auth state. */
@@ -52,55 +55,61 @@ export function AdminApp(): React.ReactElement {
 
   if (status !== "authorized") {
     return (
-      <div className="flex h-full w-full flex-col">
-        <Navbar label={t("admin.session.title")} showFullscreenToggle={false} items={[navbarFillItem(), { key: "locale", content: <LocaleSwitch /> }]} />
-        <AdminAccessGate />
+      <div className="relative flex h-full w-full flex-col" style={BAND_CLEARANCE}>
+        <div className="absolute inset-x-0 top-0 z-40">
+          <Navbar label={t("admin.session.title")} showFullscreenToggle={false} items={[navbarFillItem(), { key: "locale", content: <LocaleSwitch /> }]} />
+        </div>
+        <div className="flex min-h-0 flex-1 flex-col pt-[var(--admin-clear-top)]">
+          <AdminAccessGate />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="flex h-full w-full flex-col">
+    <div className="relative flex h-full w-full flex-col" style={BAND_CLEARANCE}>
       <Tabs value={tab} onValueChange={(next) => setTab(next as AdminTab)} className="flex h-full w-full flex-col">
-        <Navbar
-          label={t("admin.session.title")}
-          showFullscreenToggle={false}
-          items={[
-            compact
-              ? {
-                  key: "tabs",
-                  content: (
-                    <Select id="admin-tab-select" value={tab} onValueChange={(next) => setTab(next as AdminTab)}>
-                      <SelectTrigger id="admin-tab-switch" aria-label={t("admin.session.title")} className="min-w-32">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
+        <div className="absolute inset-x-0 top-0 z-40">
+          <Navbar
+            label={t("admin.session.title")}
+            showFullscreenToggle={false}
+            items={[
+              compact
+                ? {
+                    key: "tabs",
+                    content: (
+                      <Select id="admin-tab-select" value={tab} onValueChange={(next) => setTab(next as AdminTab)}>
+                        <SelectTrigger id="admin-tab-switch" aria-label={t("admin.session.title")} className="min-w-32">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {ADMIN_TABS.map((candidate) => (
+                            <SelectItem key={candidate} value={candidate}>
+                              {t(`admin.nav.${candidate}` as AdminI18nKey)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ),
+                  }
+                : {
+                    key: "tabs",
+                    className: "shrink overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+                    content: (
+                      <TabsList>
                         {ADMIN_TABS.map((candidate) => (
-                          <SelectItem key={candidate} value={candidate}>
+                          <TabsTrigger key={candidate} value={candidate} id={`admin-tab-${candidate}`}>
                             {t(`admin.nav.${candidate}` as AdminI18nKey)}
-                          </SelectItem>
+                          </TabsTrigger>
                         ))}
-                      </SelectContent>
-                    </Select>
-                  ),
-                }
-              : {
-                  key: "tabs",
-                  className: "shrink overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
-                  content: (
-                    <TabsList>
-                      {ADMIN_TABS.map((candidate) => (
-                        <TabsTrigger key={candidate} value={candidate} id={`admin-tab-${candidate}`}>
-                          {t(`admin.nav.${candidate}` as AdminI18nKey)}
-                        </TabsTrigger>
-                      ))}
-                    </TabsList>
-                  ),
-                },
-            navbarFillItem(),
-            { key: "locale", content: <LocaleSwitch /> },
-          ]}
-        />
+                      </TabsList>
+                    ),
+                  },
+              navbarFillItem(),
+              { key: "locale", content: <LocaleSwitch /> },
+            ]}
+          />
+        </div>
         <div className="min-h-0 flex-1 overflow-hidden">
           <TabsContent value="overview" className="h-full">
             <OverviewPage />

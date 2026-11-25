@@ -1,0 +1,20 @@
+{
+ "policy": {
+  "minimumUtilisation": 0.5,
+  "calmWeight": 0.5,
+  "contendedRaiseWeight": 0,
+  "contendedLowerWeight": 0.5,
+  "learnContendedFirst": false
+ },
+ "cases": [
+  {"name": "first calm compile without measurements is recorded as it is", "before": null, "ranMilliseconds": 300, "provenance": null, "expected": 300},
+  {"name": "calm compile without measurements moves the record halfway", "before": 1000, "ranMilliseconds": 3000, "provenance": null, "expected": 2000},
+  {"name": "memory admission wait is excluded: the admitted run is the observation", "before": 496697, "ranMilliseconds": 1500000, "provenance": {"wallMilliseconds": 500000, "userMilliseconds": 480000, "systemMilliseconds": 20000}, "expected": 498349},
+  {"name": "hub-15 final: starved run never raises the record", "before": 496697, "ranMilliseconds": 2822325, "provenance": {"wallMilliseconds": 2700000, "userMilliseconds": 500000, "systemMilliseconds": 100000}, "expected": 496697},
+  {"name": "starved run that is cheaper than the record still lowers it", "before": 496697, "ranMilliseconds": 300000, "provenance": {"wallMilliseconds": 290000, "userMilliseconds": 40000, "systemMilliseconds": 10000}, "expected": 393349},
+  {"name": "starved first run teaches nothing", "before": null, "ranMilliseconds": 2822325, "provenance": {"wallMilliseconds": 2700000, "userMilliseconds": 500000, "systemMilliseconds": 100000}, "expected": null},
+  {"name": "utilisation exactly at the minimum is calm", "before": 1000, "ranMilliseconds": 9000, "provenance": {"wallMilliseconds": 3000, "userMilliseconds": 1000, "systemMilliseconds": 500}, "expected": 2000},
+  {"name": "just below the minimum is contended", "before": 1000, "ranMilliseconds": 9000, "provenance": {"wallMilliseconds": 3000, "userMilliseconds": 1000, "systemMilliseconds": 499}, "expected": 1000},
+  {"name": "an instant run has no utilisation and is calm", "before": 1000, "ranMilliseconds": 50, "provenance": {"wallMilliseconds": 0, "userMilliseconds": 0, "systemMilliseconds": 0}, "expected": 500}
+ ]
+}

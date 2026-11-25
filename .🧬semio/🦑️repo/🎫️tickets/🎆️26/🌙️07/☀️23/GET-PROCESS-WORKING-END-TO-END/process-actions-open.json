@@ -1,0 +1,19 @@
+[
+ {
+  "name": "wait for the initial document",
+  "js": "(async()=>'w')()",
+  "until": "(async()=>String(document.querySelectorAll('canvas').length>=1&&!/Loading document/.test(document.body.innerText)&&!!document.querySelector('[role=combobox]')))()",
+  "timeoutMs": 420000,
+  "settleMs": 2000
+ },
+ {
+  "name": "open Actions",
+  "js": "(async()=>{[...document.querySelectorAll('button,[role=tab]')].find(b=>(b.getAttribute('aria-label')||b.innerText).trim().startsWith(\"Actions\")).click();return \"a\"})()",
+  "settleMs": 3000
+ },
+ {
+  "name": "rects",
+  "js": "(async()=>{const sc=document.querySelector('[data-slot=window-dead-line-scroll]');const out=[];for(const ch of sc.children){const c=getComputedStyle(ch),r=ch.getBoundingClientRect();out.push([ch.tagName,ch.getAttribute('data-slot'),String(ch.className).slice(0,160),c.position,c.display,Math.round(r.y),Math.round(r.height),ch.innerText.slice(0,40)])}out.push(sc.className.slice(0,300));return JSON.stringify(out)})()",
+  "settleMs": 500
+ }
+]

@@ -21,7 +21,7 @@ import {ensureRepositoryBrowserPathV1} from "../../../../../🦑️repo/🔨️m
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import type { Browser, Page } from "playwright";
-import { PLAYWRIGHT_MODULE_SPECIFIER } from "../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🟦️.ts";
+import { launchBrowserV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🟦️.ts";
 import { awaitBeacon, click, clickUncovered, dismissIntroduction, readShell, seatLocale, withDevServe, witness } from "../🧮️program-matrix/🟦️.ts";
 import { acceptanceCheckResult, publishAcceptanceCheckResult, withAcceptanceRecord } from "@semio-tech/repo-test/acceptance/orchestration";
 
@@ -293,8 +293,7 @@ export async function runToolRunMatrix(repoRoot: string, options: ToolRunMatrixO
   mkdirSync(options.outDir, { recursive: true });
   const programs = readToolPrograms().filter((program) => options.only.length === 0 || options.only.some((entry) => `${program.pluginId}/${program.appId}`.includes(entry)));
   ensureRepositoryBrowserPathV1(repoRoot,process.env);
-  const { chromium }: typeof import("playwright") = await import(PLAYWRIGHT_MODULE_SPECIFIER);
-  const browser = await chromium.launch({ headless: true, args: ["--use-angle=metal", "--enable-unsafe-webgpu", "--ignore-gpu-blocklist"] });
+  const browser = await launchBrowserV1({ headless: true, args: ["--use-angle=metal", "--enable-unsafe-webgpu", "--ignore-gpu-blocklist"] });
   const report = { baseUrl: options.baseUrl, tag: options.tag, locale: options.locale, started: new Date().toISOString(), finished: null as string | null, rows: [] as ToolRunRow[], cancelled: false };
   const flush = (): void => writeFileSync(join(options.outDir, "tool-run.json"), JSON.stringify(report, null, 1));
   try {

@@ -2,7 +2,7 @@
 //!
 //! 🧪️ Fixture seam observes actual child publication and retained store owners.
 use semio_plugin_decl_app::ArtifactApp;
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use store::{ArtifactStore, MemberFactory, Mutation, SpaceMember};
 use semio_plugin_decl_emission::Emit;

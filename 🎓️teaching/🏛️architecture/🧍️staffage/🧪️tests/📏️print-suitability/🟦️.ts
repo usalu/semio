@@ -56,6 +56,33 @@ describe("📏️ print suitability", () => {
     expect(overlapping.violations.filter((v) => v.check === "gap")).toEqual([]);
   });
 
+  const printed = (denominator: number, shapes: readonly Shape[]) => {
+    const asset = rolesAssetWith((d) => (d === 50 ? shapes : defaultShapes()));
+    return measureSuitability(asset, asset.representations[50] as AuthoredRepresentation, denominator, DEFAULT_PRINT_PROFILE);
+  };
+
+  it("decides an ink gap of exactly zero as a join at every scale, however the coordinates round", () => {
+    for (const denominator of [20, 25, 30, 40, 50, 60, 75, 100, 125, 150, 200, 250, 300, 500]) {
+      const pen = 0.5;
+      for (const first of [0.25, 0.3, 0.1, 0.7]) {
+        const second = first + (pen * denominator) / 1000;
+        const result = printed(denominator, [rect("a", 0, first, 0.5, "body", { penMm: pen }), rect("b", second, 0.25, 0.5, "body", { penMm: pen })]);
+        expect(result.violations.filter((violation) => violation.check === "gap"), `1:${denominator} ink gap 0 at ${first}`).toEqual([]);
+      }
+    }
+  });
+
+  it("still reports an ink gap of 0.02 mm beside the join", () => {
+    for (const denominator of [20, 50, 100, 500]) {
+      const pen = 0.5;
+      const second = 0.25 + ((pen + 0.02) * denominator) / 1000;
+      const result = printed(denominator, [rect("a", 0, 0.25, 0.5, "body", { penMm: pen }), rect("b", second, 0.25, 0.5, "body", { penMm: pen })]);
+      const gaps = result.violations.filter((violation) => violation.check === "gap");
+      expect(gaps.map((gap) => gap.shapes), `1:${denominator}`).toEqual([["a", "b"]]);
+      expect(gaps[0]!.measuredMm).toBeCloseTo(0.02, 6);
+    }
+  });
+
   it("reports a white gap between separate shapes that is narrower than the minimum", () => {
     const result = measure(500, [rect("a", 0, 0.25), rect("b", 0.38, 0.25, 0.5, "detail")]);
     const gap = result.violations.find((v) => v.check === "gap" && v.shapes.includes("a") && v.shapes.includes("b"));

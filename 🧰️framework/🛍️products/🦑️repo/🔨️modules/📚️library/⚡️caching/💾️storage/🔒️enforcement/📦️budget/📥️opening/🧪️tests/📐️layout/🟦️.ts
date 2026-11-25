@@ -1,5 +1,5 @@
 import{test,expect}from"bun:test";
-import{loadProductFunctionsV1}from"@semio-tech/process/testing/extracted-function";
+import{loadProductFunctionsV1}from"../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧩️extracted-function/🟦️.ts";
 import{readFileSync,constants}from"node:fs";
 import{createHash,randomBytes}from"node:crypto";
 import{join}from"node:path";

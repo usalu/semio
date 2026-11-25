@@ -24,4 +24,7 @@ pub mod noncompliant;
 #[cfg(test)]
 #[path = "🚨️noncompliant/🧪️tests/🧩️example/🦀️.rs"]
 mod example_noncompliant;
+#[cfg(test)]
+#[path = "🧪️tests/🗜️pack-twins/🦀️.rs"]
+mod pack_twins;
 //#endregion 🪢️Mounts

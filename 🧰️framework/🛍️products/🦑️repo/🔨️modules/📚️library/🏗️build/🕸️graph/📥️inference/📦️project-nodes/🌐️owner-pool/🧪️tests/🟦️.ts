@@ -14,6 +14,7 @@ import schemaOfPool from"../🧬️schema/🔣️.json"with{type:"json"};
 import{createOwnerPoolStatusV1}from"../📊️status/🟦️.ts";
 import{acquireOwnerPoolGuardV1}from"../🔒️guard/🟦️.ts";
 import{runOwnerPoolV1}from"../🏃️runner/🟨️.mjs";
+import{ownerPoolFailureClassV1}from"../🟦️.ts";
 import{ownerPoolProcessStartV1}from"../🪦️reaper/🟦️.ts";
 import{OWNER_POOL_POLICY_V1 as P,ownerPoolSizingV1,ownerPoolChildLimitsV1,ownerPoolChildMegabytesV1,ownerPoolIdV1,ownerPoolOpenWavesV1,ownerPoolLiveChildrenV1,ownerPoolKeepWaveV1,ownerPoolReopenMillisecondsV1,ownerPoolRecycleV1,ownerPoolStagingDirectoryV1,writeOwnerPoolWaveFilesV1,ownerPoolRandomV1,ownerPoolSeedV1,ownerPoolTargetV1,publishOwnerPoolFailureV1,publishOwnerPoolV1,pullOwnerPoolV1,readOwnerPoolFailureV1,readOwnerPoolPointerV1,readOwnerPoolV1,type OwnerPoolHostV1,type OwnerPoolManifestV1,type OwnerPoolStatsV1}from"../🟦️.ts";
 
@@ -54,7 +55,7 @@ test("admission law: idle headroom is used by one child per core, the machine's 
  expect(ownerPoolTargetV1({host:idle(10,24000,{foreground:{cpu:10,unrealizedMegabytes:0,waiters:9}}),children:0,childMegabytes:800}).children).toBe(1);
  expect(ownerPoolTargetV1({host:idle(10,24000,{pressure:"critical"}),children:5,childMegabytes:800})).toEqual({children:0,reason:"pressure"});
  const memory=[1500,3000,6000,12000].map(available=>ownerPoolTargetV1({host:idle(10,available),children:0,childMegabytes:800}).children);
- expect(memory).toEqual([...memory].sort((a,b)=>a-b));expect(memory[0]).toBe(1);expect(memory[3]).toBeGreaterThanOrEqual(10);
+ expect(memory).toEqual([...memory].sort((a,b)=>a-b));expect(memory[0]).toBe(0);expect(memory[3]).toBeGreaterThanOrEqual(10);
  const loud=ownerPoolTargetV1({host:idle(10,24000,{load:42.7}),children:3,childMegabytes:800});
  expect(loud.children).toBe(Math.ceil(10*P.minimumShareBasisPoints/10000));expect(loud.reason).toBe("yielding");
  const own=ownerPoolTargetV1({host:idle(10,24000,{load:8}),children:8,childMegabytes:800});
@@ -316,14 +317,15 @@ test("a record that could not be stored reports the code of its true refusal, so
  expect(stats.failed).toBe(1);expect(seen).toEqual(["owner-0000|false|capacity|the record was not stored: the cache says no"]);
 });
 
-test("the pool yields to the machine's own waiting work: every child ends within seconds of a request that waits in the gate, the children come back when it is served, a child that finishes its owner is never waited for",async()=>{
- const {server,environment}=await world();
+test.each(["waiting","pressure"] as const)("the pool drains busy children on %s and resumes when capacity returns",async(reason)=>{
+ const {server,environment}=await world(),controller=new AbortController();
+ let running:Promise<void>|undefined;
  try{
   const root=temp("yield"),client=graphFleetClientV1(graphFleetSettingsV1(root,environment)!,{fetch:remoteCacheFetchV1(environment,{root})});
   const units=unitsOf(24).map(unit=>({...unit,expectedMilliseconds:60000})),manifest=manifestOf(units,"yield",Date.now());
   expect(await publishOwnerPoolV1({client,owner:"o",manifest:{...manifest,session:Buffer.from(JSON.stringify({burnMilliseconds:90000}))}})).toBe(true);
-  const store=temp("yield-store"),status=createOwnerPoolStatusV1({store,origin:"g1-yield",role:"puller"}),controller=new AbortController();let waiting=false;
-  const running=runOwnerPoolV1({root,environment:{...process.env,...environment},signal:controller.signal,capacity:async()=>waiting?{children:0,reason:"waiting"}:{children:3,reason:null},driver:driverPath,priority:0,targetPollMilliseconds:100,ramp:false,pollMilliseconds:500,status});
+  const store=temp("yield-store"),status=createOwnerPoolStatusV1({store,origin:"g1-yield",role:"puller"});let waiting=false;
+  running=runOwnerPoolV1({root,environment:{...process.env,...environment},signal:controller.signal,capacity:async()=>waiting?{children:0,reason}:{children:3,reason:null},driver:driverPath,priority:0,targetPollMilliseconds:100,ramp:false,pollMilliseconds:500,status});
   const until=async(test:()=>boolean,limit:number)=>{const began=Date.now();while(!test()&&Date.now()-began<limit)await new Promise<void>(done=>setTimeout(done,50));return Date.now()-began;};
   await until(()=>(status.current() as {children:number}).children===3,30000);
   expect((status.current() as {children:number}).children).toBe(3);
@@ -332,8 +334,9 @@ test("the pool yields to the machine's own waiting work: every child ends within
   expect((status.current() as {children:number}).children,"no child is left").toBe(0);expect(took,"within the yield kill limit and two looks").toBeLessThan(P.yieldKillMilliseconds+1500);
   waiting=false;await until(()=>(status.current() as {children:number}).children>0,20000);
   expect((status.current() as {children:number}).children,"the children come back").toBeGreaterThan(0);
-  controller.abort();await running;
- }finally{await server.stop();}
+  waiting=true;await until(()=>status.current().children===0,20000);
+  expect(status.current().children).toBe(0);
+ }finally{controller.abort();try{await running;}finally{await server.stop();}}
 },120000);
 
 test("the price of one more child does not jump with the last owners: light children with two giants among them price the next owner as a light one, and a child whose bare start is near the limit is not restarted after every owner",()=>{
@@ -474,4 +477,12 @@ test("a deterministic failure is published only when no live note for the record
  expect(body.indexOf("readOwnerPoolFailureV1(client, recordDigest, revision)")).toBeGreaterThan(-1);
  expect(body.indexOf("readOwnerPoolFailureV1(")).toBeLessThan(body.indexOf("publishOwnerPoolFailureV1("));
  expect(body).toContain("live === undefined");
+});
+
+test("a native dependency without a build project owner row is skipped under its own code and never filed as a deterministic failure note; every other failure keeps its code and determinism",()=>{
+ const text="semio-x: Native dependency has no build project owner: a/b (required by semio-x:build; candidates=3)";
+ expect(ownerPoolFailureClassV1({message:text,deterministic:true})).toEqual({code:"ownerless",deterministic:false,skipped:true});
+ expect(ownerPoolFailureClassV1({message:"boom",deterministic:true,code:"unshareable"})).toEqual({code:"unshareable",deterministic:true,skipped:false});
+ expect(ownerPoolFailureClassV1({message:text,deterministic:true,code:"no-record"})).toEqual({code:"no-record",deterministic:true,skipped:false});
+ expect(ownerPoolFailureClassV1({message:"boom",deterministic:false})).toEqual({code:"",deterministic:false,skipped:false});
 });

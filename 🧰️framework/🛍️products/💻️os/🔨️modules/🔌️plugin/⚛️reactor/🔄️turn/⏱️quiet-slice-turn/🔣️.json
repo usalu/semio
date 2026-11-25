@@ -1,0 +1,47 @@
+{
+  "$comment": "⏱️ Language-agnostic contract of the reactor's quiet slice: a turn keeps stepping work that moves nothing the host must see until a host-bound output, the yield signal, a lost clock or the slice ends it. Browser measurement 2026-11-25: one FEM 2D selection took 10 048 one-step turns.",
+  "sliceUs": 8000,
+  "open": [
+    { "name": "fresh turn", "hostBoundGrew": false, "yielding": false, "executingUs": 0, "open": true },
+    { "name": "just under the slice", "hostBoundGrew": false, "yielding": false, "executingUs": 7999, "open": true },
+    { "name": "at the slice", "hostBoundGrew": false, "yielding": false, "executingUs": 8000, "open": false },
+    { "name": "past the slice", "hostBoundGrew": false, "yielding": false, "executingUs": 20000, "open": false },
+    { "name": "host-bound output added", "hostBoundGrew": true, "yielding": false, "executingUs": 0, "open": false },
+    { "name": "yield signal", "hostBoundGrew": false, "yielding": true, "executingUs": 0, "open": false },
+    { "name": "clock lost", "hostBoundGrew": false, "yielding": false, "executingUs": null, "open": false }
+  ],
+  "opening": [
+    {"name":"advanced twice and captured once","steps":[
+      {"paid":1,"ready":false,"cancelled":false,"yielding":false,"elapsedUs":1},
+      {"paid":1,"ready":false,"cancelled":false,"yielding":false,"elapsedUs":2},
+      {"paid":1,"ready":true,"cancelled":false,"yielding":false,"elapsedUs":3},
+      {"paid":1,"ready":true,"cancelled":false,"yielding":false,"elapsedUs":4}
+    ],"outcome":[3,3,1]},
+    {"name":"parked without work","steps":[
+      {"paid":0,"ready":false,"cancelled":false,"yielding":false,"elapsedUs":1},
+      {"paid":1,"ready":true,"cancelled":false,"yielding":false,"elapsedUs":2}
+    ],"outcome":[1,0,0]},
+    {"name":"operation must yield","steps":[
+      {"paid":1,"ready":false,"cancelled":false,"yielding":true,"elapsedUs":1},
+      {"paid":1,"ready":true,"cancelled":false,"yielding":false,"elapsedUs":2}
+    ],"outcome":[1,1,0]},
+    {"name":"operation cancelled","steps":[
+      {"paid":1,"ready":false,"cancelled":true,"yielding":false,"elapsedUs":1},
+      {"paid":1,"ready":true,"cancelled":false,"yielding":false,"elapsedUs":2}
+    ],"outcome":[1,1,0]},
+    {"name":"quiet deadline reached","steps":[
+      {"paid":1,"ready":false,"cancelled":false,"yielding":false,"elapsedUs":8000},
+      {"paid":1,"ready":true,"cancelled":false,"yielding":false,"elapsedUs":8001}
+    ],"outcome":[1,1,0]},
+    {"name":"clock lost","steps":[
+      {"paid":1,"ready":false,"cancelled":false,"yielding":false,"elapsedUs":null},
+      {"paid":1,"ready":true,"cancelled":false,"yielding":false,"elapsedUs":2}
+    ],"outcome":[1,1,0]}
+  ],
+  "drain": [
+    { "name": "microsecond units share one turn", "units": 10048, "unitUs": 50, "turns": 63 },
+    { "name": "one and a half millisecond units share a slice of six", "units": 10048, "unitUs": 1500, "turns": 1675 },
+    { "name": "a unit longer than the slice still runs once per turn", "units": 5, "unitUs": 9000, "turns": 5 },
+    { "name": "no work spends no turn", "units": 0, "unitUs": 50, "turns": 0 }
+  ]
+}

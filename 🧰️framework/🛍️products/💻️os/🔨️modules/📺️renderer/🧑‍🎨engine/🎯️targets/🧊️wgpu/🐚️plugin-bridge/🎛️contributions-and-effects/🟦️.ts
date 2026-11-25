@@ -88,15 +88,25 @@ export function wgpuSetContributionsCommand(pluginId: string, appId: string, jso
 /** 🔁️ This target's half of {@link hostEffectInvocationV1}: the `(plugin, app, mode, window kind,
  * window instance)` a re-armed host effect is addressed in, read off the slim view state the
  * contributions crossing already carries. */
+export function wgpuEffectWindowInstances(viewState: Record<string, unknown>): { id: string; windowKindId: string }[] {
+  const instances = viewState.windowInstances ?? viewState.window_instances;
+  return Array.isArray(instances) ? instances.flatMap((entry) => {
+    const kind = entry?.windowKindId ?? entry?.window_kind_id;
+    return typeof entry?.id === "string" && typeof kind === "string" ? [{ id: entry.id, windowKindId: kind }] : [];
+  }) : [];
+}
+
 export function wgpuEffectDispatchScope(pluginId: string, appId: string, viewState: Record<string, unknown>): HostEffectDispatchScope {
   const text = (key: string, fallback: string): string => (typeof viewState[key] === "string" && (viewState[key] as string).length > 0 ? (viewState[key] as string) : fallback);
-  const windowKindId = text("activeWindowKindId", text("active_window_kind_id", ""));
+  const activeKind = text("activeWindowKindId", text("active_window_kind_id", ""));
+  const windowInstanceId = text("windowId", text("window_id", text("focusedWindowId", text("focused_window_id", activeKind))));
+  const windowKindId = wgpuEffectWindowInstances(viewState).find((entry) => entry.id === windowInstanceId)?.windowKindId ?? activeKind;
   return {
     pluginId,
     appId,
     modeId: text("activeModeId", text("active_mode_id", "")),
     windowKindId,
-    windowInstanceId: text("windowId", text("window_id", text("focusedWindowId", text("focused_window_id", windowKindId)))),
+    windowInstanceId,
   };
 }
 

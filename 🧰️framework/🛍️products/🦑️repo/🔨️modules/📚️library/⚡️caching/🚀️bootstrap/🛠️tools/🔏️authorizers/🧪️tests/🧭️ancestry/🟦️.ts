@@ -110,6 +110,19 @@ test("a data entry that vanishes between listing and probing is a membership cha
   writeFileSync(join(root,"entry.ts"),'import {x} from "./absent/leaf.ts"; export {x};\n');
   let attempts=0;
   await expect(captureNxAuthorizerSourcesV1(root,"entry.ts",signal,{probe:(kind,_path,attempt)=>{if(kind==="read")attempts=Math.max(attempts,attempt);}})).rejects.toMatchObject({code:"ENOENT"});
-  expect(attempts).toBe(4);
+  expect(attempts).toBe(6);
+ }finally{rmSync(root,{recursive:true,force:true});}
+});
+
+test("a source that is gone for the first walks and back after the replica settled is read after a pause, not refused",async()=>{
+ const root=tree(),reports:string[]=[];
+ try{
+  writeFileSync(join(root,"entry.ts"),'import {x} from "'+"."+'/late.ts"; export {x};\n');
+  const reads:number[]=[],started=performance.now(),captured=await captureNxAuthorizerSourcesV1(root,"entry.ts",signal,{report:text=>reports.push(text),probe:(kind,path,attempt)=>{if(kind!=="read"||path!=="late.ts")return;reads.push(attempt);if(attempt===3)writeFileSync(join(root,"late.ts"),"export const x=1;\n");}});
+  expect(captured.manifest.sources.map(row=>row.path)).toEqual(["entry.ts","late.ts"]);
+  expect(reads).toEqual([1,2,3]);
+  expect(reports.filter(text=>text.startsWith("sources moved while they were read")).length).toBe(2);
+  expect(reports.every(text=>text.includes(" / Quellen änderten sich"))).toBe(true);
+  expect(performance.now()-started).toBeGreaterThanOrEqual(45);
  }finally{rmSync(root,{recursive:true,force:true});}
 });

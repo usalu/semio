@@ -6,33 +6,23 @@
 use super::unit_tests::context::drawing_app;
 use semio_s_artifact_draw_drawing_editor::DrawingCommand;
 use semio_s_artifact_draw_drawing_editor_commands::set_active_example;
-use semio_plugin::{artifact_app_laws as artifact_laws, PluginApp};
+use semio_plugin::{artifact_app_laws as artifact_laws, MountedOwnerPolicyV1, PluginApp};
 use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 
 /// 🔁️ Drives one dispatched command to its published `LoadDocument` effect the way the host does.
 async fn published_load(app: &mut super::unit_tests::context::DrawingAppFixture, command: DrawingCommand, instance: u32) -> (Vec<u8>, Vec<u8>) {
     let meta = semio_plugin::ActionMeta { instance_id: instance, ..artifact_laws::meta("fixture") };
-    semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("example dispatch");
-    let mut loaded = None;
-    let grant = app.1.cx().retained_grant();
-    for _ in 0..100_000 {
-        semio_plugin::artifact_app_laws::fixture_renew_turn(app.1.cx(), semio_plugin::artifact_app_laws::OriginalFixtureCaller::turn_fuel(), grant).expect("example fixture turn");
-        app.0.maintenance_step(app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).unwrap();
-        app.0.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap();
-        if let Some(page) = artifact_laws::take_fixture_result_page(&mut app.0, instance, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation).unwrap() {
-            assert!(app.acknowledge_typed_operation_result(page.token).unwrap());
-        }
-        if let Some(semio_plugin::kernel::Effect::LoadDocument { pack, spr }) = app.take_typed_operation_effect() {
-            loaded = Some((pack, spr));
-        }
-        app.take_typed_operation_event();
-        app.take_typed_operation_ui_scope();
-        if !app.has_pending_typed_operations() {
-            break;
-        }
-        std::thread::yield_now();
-    }
-    loaded.expect("the example publishes a document load")
+    let policy = MountedOwnerPolicyV1::INTERACTIVE_COMPONENT;
+    let mut identity = artifact_laws::fixture_identity();
+    let result = artifact_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta, policy, &mut identity, app.1.cx()).await.expect("example dispatch");
+    let settled = artifact_laws::settle_registered_typed_operation(&mut app.0, instance, policy, &mut identity, app.1.cx()).await.expect("example settlement");
+    let mut loads = result.requested_effects.into_iter().chain(settled.effects).filter_map(|effect| match effect {
+        semio_plugin::kernel::Effect::LoadDocument { pack, spr } => Some((pack, spr)),
+        _ => None,
+    });
+    let loaded = loads.next().expect("the example publishes a document load");
+    assert!(loads.next().is_none(), "the example publishes exactly one document load");
+    loaded
 }
 
 async fn settle_archive(app: &mut super::unit_tests::context::DrawingAppFixture, operation: u64, parent_pack: Vec<u8>, parent_spr: Vec<u8>) -> protocol::DocumentArchiveLoadStatus {
@@ -70,12 +60,6 @@ async fn demo_example_load_settles_through_the_host_document_archive_door() {
     assert_eq!(initial, snapshot, "an edit-free load reads back its exact initial snapshot");
     let authored = semio_s_artifact_draw_drawing_model::io::text::snapshot::parse_dsl(semio_s_artifact_draw_drawing_examples::demo::PRIMARY_TEXT).expect("parse authored Demo");
     assert_eq!(initial, authored, "the archive preserves the authored emblem and its artboard");
-    for _ in 0..100_000 {
-        if app.close_terminal_is_empty() {
-            break;
-        }
-        app.0.close_step(app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).unwrap();
-        std::thread::yield_now();
-    }
+    artifact_laws::close_registered_fixture_app(&mut app.0, MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("archive close");
     assert!(app.close_terminal_is_empty());
 }

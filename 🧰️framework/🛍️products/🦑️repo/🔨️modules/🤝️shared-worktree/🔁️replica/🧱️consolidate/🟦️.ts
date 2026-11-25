@@ -6,6 +6,7 @@ import {GIT_PINS_V1,resolveGitV1,sweepGitGarbageV1} from "../../🌿️git/🟦�
 import {planPacksV1,readPackNamesV1} from "../🥾️bootstrap/🧺️packs/🟦️.ts";
 import {authorisePacksV1} from "../🧷️packgate/🟦️.ts";
 import {foldStoreV1,type ReplicaSinkV1} from "../🟦️.ts";
+import {ownProcessIdentityV1,parseProcessIdentityV1,processHolderAliveV1} from "../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts";
 
 /** 🧱️ What one consolidation run did. Schema: `./🧬️schema/🔣️.json#/definitions/Consolidation`. */
 export type ConsolidationV1=Readonly<{version:1;outcome:"nothing"|"planned"|"consolidated"|"locked"|"space"|"unpublished"|"failed";packsBefore:number;bytesBefore:number;packsAfter?:number;bytesAfter?:number;retired:number;bytesFreed:number;pack?:string;objects?:number}>;
@@ -44,14 +45,12 @@ async function volume(directory:string):Promise<Readonly<{free:number;total:numb
  try{const info=await statfs(directory);return {free:Number(info.bavail)*Number(info.bsize),total:Number(info.blocks)*Number(info.bsize)};}catch{return undefined;}
 }
 
-const alive=(pid:number):boolean=>{try{process.kill(pid,0);return true;}catch(error){return (error as {code?:string}).code==="EPERM";}};
-
 async function takeLock(path:string,now:number):Promise<boolean>{
- try{await mkdir(path);await writeFile(join(path,"pid"),String(process.pid));return true;}
+ try{await mkdir(path);await writeFile(join(path,"owner.json"),JSON.stringify(ownProcessIdentityV1()));return true;}
  catch(error){
   if((error as {code?:string}).code!=="EEXIST")throw error;
-  const info=await stat(path).catch(()=>undefined),holder=Number(await readFile(join(path,"pid"),"utf8").catch(()=>"0"));
-  if(info!==undefined&&(now-info.mtimeMs>lockStaleMilliseconds||holder>0&&!alive(holder))){await rm(path,{recursive:true,force:true});return takeLock(path,now);}
+  const info=await stat(path).catch(()=>undefined),holder=await readFile(join(path,"owner.json"),"utf8").then(text=>parseProcessIdentityV1(JSON.parse(text)),()=>undefined);
+  if(info!==undefined&&(now-info.mtimeMs>lockStaleMilliseconds||holder!==undefined&&!processHolderAliveV1(holder))){await rm(path,{recursive:true,force:true});return takeLock(path,now);}
   return false;
  }
 }
@@ -59,8 +58,8 @@ async function takeLock(path:string,now:number):Promise<boolean>{
 function writePack(executable:string,worktree:string,stage:string,signal:AbortSignal|undefined):Promise<string|undefined>{
  return new Promise(done=>{
   const environment={...process.env,GIT_OPTIONAL_LOCKS:"0"},pins=GIT_PINS_V1.flatMap(([key,value])=>["-c",`${key}=${value}`]);
-  const list=spawn(executable,["-C",worktree,...pins,"cat-file","--batch-all-objects","--batch-check=%(objectname)"],{stdio:["ignore","pipe","ignore"],env:environment,...signal===undefined?{}:{signal}});
-  const pack=spawn(executable,["-C",worktree,...pins,"pack-objects","--delta-base-offset","--window=0","--threads=2","--quiet",stage],{stdio:["pipe","pipe","ignore"],env:environment,...signal===undefined?{}:{signal}});
+  const list=spawn(executable,["-C",worktree,...pins,"cat-file","--batch-all-objects","--batch-check=%(objectname)"],{windowsHide:true,stdio:["ignore","pipe","ignore"],env:environment,...signal===undefined?{}:{signal}});
+  const pack=spawn(executable,["-C",worktree,...pins,"pack-objects","--delta-base-offset","--window=0","--threads=2","--quiet",stage],{windowsHide:true,stdio:["pipe","pipe","ignore"],env:environment,...signal===undefined?{}:{signal}});
   let out="",listed=0;
   pack.stdout.on("data",chunk=>{out+=String(chunk);});
   pack.stdin.on("error",()=>{});
@@ -100,7 +99,7 @@ export async function consolidateGitV1(options:ConsolidationOptionsV1):Promise<C
   if(hash===undefined){await discard(directory,"tmp_consolidate_");return {...base,outcome:"failed",retired:0,bytesFreed:0};}
   const staged=`${stage}-${hash}`,stem=`pack-${hash}`;
   if(options.verify!==false){
-   const verified=await new Promise<boolean>(done=>{const child=spawn(executable,["-C",options.worktree,"verify-pack",`${staged}.idx`],{stdio:"ignore",...signal===undefined?{}:{signal}});child.on("error",()=>done(false));child.on("close",code=>done(code===0));});
+   const verified=await new Promise<boolean>(done=>{const child=spawn(executable,["-C",options.worktree,"verify-pack",`${staged}.idx`],{windowsHide:true,stdio:"ignore",...signal===undefined?{}:{signal}});child.on("error",()=>done(false));child.on("close",code=>done(code===0));});
    if(!verified){await discard(directory,"tmp_consolidate_");return {...base,outcome:"failed",retired:0,bytesFreed:0};}
   }
   if(options.faults==="pack-written")throw new ConsolidationFaultV1("pack-written");

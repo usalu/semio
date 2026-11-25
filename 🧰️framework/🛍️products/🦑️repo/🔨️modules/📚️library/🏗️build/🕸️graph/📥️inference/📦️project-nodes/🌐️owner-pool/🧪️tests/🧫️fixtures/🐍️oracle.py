@@ -52,11 +52,10 @@ def sizing(case, p):
         kind = "memory"
     else:
         kind = "load" if by_load < by_cores else "cores"
-    own = fg["cpu"] > 0 or fg["waiters"] > 0 or ask is not None
     if children < 1:
-        if own and by_memory < 1:
+        if by_memory < 1:
             return {"children": 0, "reason": "nothing-fits", "limit": limit(kind, 0)}
-        return {"children": 1, "reason": "nothing-fits" if by_memory < 1 else "yielding", "limit": limit(kind, 1)}
+        return {"children": 1, "reason": "yielding", "limit": limit(kind, 1)}
     if children < wanted:
         return {"children": children, "reason": "nothing-fits" if kind == "memory" else "yielding", "limit": limit(kind, children)}
     return {"children": children, "reason": None, "limit": limit("none", children)}

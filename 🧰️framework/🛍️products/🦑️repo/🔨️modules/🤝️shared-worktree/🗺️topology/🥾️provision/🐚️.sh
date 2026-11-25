@@ -492,6 +492,14 @@ overlay_digest() {
   done
   printf '%s' "$best"
 }
+overlay_copy() {
+  local attempt
+  for attempt in 1 2 3 4 5; do
+    cp "$1" "$2" 2>/dev/null && return 0
+    sleep 1
+  done
+  return 1
+}
 overlay_stage() {
   local code=$1/bootstrap/code/$2 stage=$3 path bytes hash bit expected found
   OVERLAY_PROBLEM=""
@@ -505,7 +513,7 @@ overlay_stage() {
   while IFS=$'\t' read -r bit bytes hash path; do
     overlay_safe_path "$path" || { overlay_problem "unsafe path in the seal: $path / unsicherer Pfad im Siegel: $path"; return 1; }
     mkdir -p "$(dirname "$stage/files/$path")"
-    cp "$code/files/$path" "$stage/files/$path" 2>/dev/null || { overlay_problem "missing $path / fehlt $path"; return 1; }
+    overlay_copy "$code/files/$path" "$stage/files/$path" || { overlay_problem "missing $path / fehlt $path"; return 1; }
     { [ "$(wc -c < "$stage/files/$path" | tr -d ' ')" = "$bytes" ] && [ "$(sha256_of "$stage/files/$path")" = "$hash" ]; } || { overlay_problem "changed $path / geändert $path"; return 1; }
     printf '%s %s\n' "$bit" "$path" >> "$stage/list"
   done < "$stage/entries"

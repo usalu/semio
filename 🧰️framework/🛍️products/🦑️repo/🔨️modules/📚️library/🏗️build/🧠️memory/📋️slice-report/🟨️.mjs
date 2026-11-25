@@ -74,10 +74,24 @@ const fill=(text,fields)=>text.replace(/\{(\w+)\}/gu,(_,name)=>String(fields[nam
 /** 🪜️ Runs `run` as the step `id` of the read with its declared bound. The progress line names the innermost active step. The inventory step can supply timing diagnostics and completed owner checks. A step that ends or fails is removed.
  * @see ./🧬️schema/🔣️.json */
 export async function sliceReadStepV1(id,run,detail={},diagnostics){
+ const end=openSliceReadStepV1(id,detail,diagnostics);
+ try{return await run();}finally{end();}
+}
+
+/** ⏳️ Runs `run(leave)` as the step `id`, which ends when `run` calls `leave()` or ends, so a wait that is only the first part of a longer body is named while it lasts and no longer.
+ * @see ./🧬️schema/🔣️.json */
+export async function sliceReadWaitStepV1(id,run,detail={}){
+ const end=openSliceReadStepV1(id,detail);
+ try{return await run(end);}finally{end();}
+}
+
+/** ⏳️ Opens the step `id` and answers the function that ends it (ending twice is harmless); a caller that cannot wrap the whole step in one body uses it and ends the step in a `finally`.
+ * @see ./🧬️schema/🔣️.json */
+export function openSliceReadStepV1(id,detail={},diagnostics){
  const interned=readSliceReportSourceV1("caches")?.interned,row={id,startedMs:performance.now(),progressMs:performance.now(),progressSign:"",internedStart:Number.isSafeInteger(interned)?interned:0,detail,diagnostics,boundMilliseconds:detail.boundMilliseconds??STEPS.steps[id]?.boundMilliseconds};
  if(row.boundMilliseconds===undefined)throw Error("Declared slice read step required: "+id);
  steps.push(row);movedAt=performance.now();
- try{return await run();}finally{const at=steps.lastIndexOf(row);if(at>=0)steps.splice(at,1);movedAt=performance.now();}
+ return()=>{const at=steps.lastIndexOf(row);if(at>=0){steps.splice(at,1);movedAt=performance.now();}};
 }
 
 /** 🪧️ What the progress line says about the innermost running step: `{phase,done,total}` with the step in both languages, the seconds it has run as `done` (for the inventory step the seconds since it last made progress: an owner check, a verified memo row or an observation) and its bound as `total` (for the inventory step the stall bound), or undefined while no step runs. */
@@ -93,6 +107,7 @@ export function describeSliceReadStepV1(now=performance.now()){
    if(Number.isSafeInteger(checks)&&checks>(row.completedOwnerChecks??0))row.completedOwnerChecks=checks;
    const verified=discovery?.verifiedMemoRows;
    if(Number.isSafeInteger(verified)&&verified>(row.verifiedMemoRows??0))row.verifiedMemoRows=verified;
+   const named=sample?.active?.phase;if(typeof named==="string"&&STEPS.inventoryPhases[named]!==undefined)row.phaseName=named;
    const note=sample?.note;if(typeof note?.en==="string"&&typeof note?.de==="string")row.note={en:note.en.slice(0,480),de:note.de.slice(0,480)};
    const admitted=discovery?.admittedOwners;
    if(Number.isSafeInteger(admitted)&&admitted>(row.admittedOwners??0))row.admittedOwners=admitted;
@@ -108,7 +123,8 @@ export function describeSliceReadStepV1(now=performance.now()){
  const memoChecks=language=>row.verifiedMemoRows===undefined?"":" ("+fill(STEPS.inventoryMemoChecks[language],{rows:row.verifiedMemoRows})+")";
  const admittedOwners=language=>row.admittedOwners===undefined?"":" ("+fill(STEPS.inventoryAdmittedOwners[language],{rows:row.admittedOwners})+")";
  const followed=language=>row.note===undefined?"":" ["+row.note[language]+"]";
- const text=language=>fill(spec[language],fields)+observations(language)+ownerChecks(language)+memoChecks(language)+admittedOwners(language)+followed(language);
+ const named=language=>row.phaseName===undefined?"":": "+STEPS.inventoryPhases[row.phaseName][language];
+ const text=language=>fill(spec[language],fields)+named(language)+observations(language)+ownerChecks(language)+memoChecks(language)+admittedOwners(language)+followed(language);
  return{id:row.id,phase:text("en")+" / "+text("de"),done:seconds,total:bound};
 }
 
@@ -122,14 +138,14 @@ export function sliceReadMovedAtV1(){
 /** 🫀️ Whether this process has made progress within the idle bound of the schema (the heartbeat of a fleet claim asks it). */
 export function sliceReadActiveV1(now=performance.now()){return now-sliceReadMovedAtV1()<STEPS.idleMilliseconds;}
 
-/** 💓️ Tells `emit({phase:"taken",done,total})` every `milliseconds` while the owners source counts more owners decided (taken from the store or the fleet, or inferred) than the last time told. Later passes carry their own progress identity: a worker that takes thousands of owners shows work to whoever watches its output, which a worker that says nothing for ten minutes never does. Returns the function that stops it; the timer never keeps the process alive.
+/** 💓️ Tells `emit({phase:"taken",done,total})` every `milliseconds` while the owners source counts more owners decided (taken from the store or the fleet, or inferred) than the last time told, and also while the owners stay but the records the pass verified move (inventory names found present, `presence.verified.remembered`, and records seeded from the fleet, `fleet.seeded`): the phase then leads with that count (`takeVerified`, both languages) and still ends in `taken`, so a stall rule that compares lines sees the verification of a pass whose owners wait for one batch, and never a look or a poll that found nothing. Later passes carry their own progress identity: a worker that takes thousands of owners shows work to whoever watches its output, which a worker that says nothing for ten minutes never does. Returns the function that stops it; the timer never keeps the process alive.
  * @see ./🧬️schema/🔣️.json */
 export function startSliceProgressV1({emit,read=readSliceReportSourceV1,final=readFinalSliceReportSourceV1,milliseconds=P.progressMilliseconds}){
- let told,toldPass,finished;
+ let told,toldPass,toldVerified=0,finished;
  const timer=setInterval(()=>{
   const step=describeSliceReadStepV1(),live=read("owners"),sample=live??final("owners"),ledger=sample?.ledger,done=Number(ledger?.done),total=Number(ledger?.total);
-  const pass=Number.isSafeInteger(sample?.pass)&&sample.pass>1?sample.pass:1;
-  const valid=Number.isSafeInteger(done)&&Number.isSafeInteger(total)&&total>0,fresh=valid&&(live===undefined?finished!==ledger:done!==told||pass!==toldPass);
+  const pass=Number.isSafeInteger(sample?.pass)&&sample.pass>1?sample.pass:1,verified=(Number(sample?.presence?.verified?.remembered)||0)+(Number(sample?.fleet?.seeded)||0);
+  const valid=Number.isSafeInteger(done)&&Number.isSafeInteger(total)&&total>0,fresh=valid&&(live===undefined?finished!==ledger:done!==told||pass!==toldPass||verified!==toldVerified);
   if(step!==undefined&&!(step.id==="owners-round"&&fresh)){
    if(step.id!=="owners-round")told=undefined;
    try{emit({phase:step.phase,done:step.done,total:step.total,step:true});}catch{}
@@ -142,8 +158,8 @@ export function startSliceProgressV1({emit,read=readSliceReportSourceV1,final=re
    try{emit({phase:"owners done"+suffix,done,total});}catch{}
    return;
   }
-  finished=undefined;told=done;toldPass=pass;
-  try{emit({phase:"taken"+suffix,done,total});}catch{}
+  finished=undefined;told=done;toldPass=pass;toldVerified=verified;
+  try{emit({phase:(verified>0?STEPS.takeVerified.en.replace("{rows}",String(verified))+" / "+STEPS.takeVerified.de.replace("{rows}",String(verified))+"; ":"")+"taken"+suffix,done,total});}catch{}
  },milliseconds);
  timer.unref?.();
  return()=>clearInterval(timer);

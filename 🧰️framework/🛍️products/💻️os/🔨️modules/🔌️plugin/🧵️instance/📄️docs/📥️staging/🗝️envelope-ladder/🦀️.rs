@@ -3,7 +3,7 @@
 //! 🪜️ The envelope-decode frontier of one hosted app: worker jobs, returned field decoders and completed records
 //! retire one owner per turn under the caller's unchanged grant and exact per-axis quotes.
 use semio_plugin_decl_app::ArtifactApp;
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use semio_plugin_decl_emission::Emit;
 use crate::docs_components::EnvelopeJobs;

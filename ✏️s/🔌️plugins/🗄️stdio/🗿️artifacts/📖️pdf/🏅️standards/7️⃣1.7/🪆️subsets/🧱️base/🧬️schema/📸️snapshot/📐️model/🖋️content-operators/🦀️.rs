@@ -2,7 +2,7 @@
 
 use super::colour_and_graphics_state::PdfColorSpace;
 use super::object_model::{PdfDictEntry, PdfMatrix, PdfObject};
-use super::xobjects::PdfImageBody;
+use super::xobjects::{PdfImageBody, PdfPackedSamples};
 
 //#region 🔖️Content
 /// 🔤️ A string operand of a text-showing operator. `Text` is Unicode recovered through the
@@ -63,6 +63,17 @@ pub struct PdfInlineImage {
     pub body:PdfImageBody,
     #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub extra: Vec<PdfDictEntry>,
+}
+
+impl PdfInlineImage {
+    /// 🖌️ The colour components of one inline pixel: one for a stencil mask, else its colour space's.
+    pub fn components(&self)->u32 {if self.image_mask {1} else {self.color_space.as_ref().and_then(PdfColorSpace::components).unwrap_or(1)}}
+    /// 🎛️ The inline sample depth: one bit for a stencil mask, else its `BitsPerComponent`.
+    pub fn depth(&self)->u32 {if self.image_mask {1} else {self.bits_per_component}}
+    /// 🔬️ Views the inline packed body as logical samples; `None` for a foreign artifact body.
+    pub fn packed_samples(&self)->Option<Result<PdfPackedSamples<'_>,&'static str>> {
+        match &self.body {PdfImageBody::Samples {packed}=>Some(PdfPackedSamples::new(packed,self.width,self.height,self.components(),self.depth())),PdfImageBody::Artifact {..}=>None}
+    }
 }
 
 /// ✂️ Line cap style (§8.4.3.3).
@@ -155,7 +166,7 @@ pub enum PdfOp {
     SetFillCmyk { c: f64, m: f64, y: f64, k: f64 },
     PaintShading { name: String },
     PaintXObject { name: String },
-    InlineImage { image: PdfInlineImage },
+    InlineImage { image: Box<PdfInlineImage> },
     MarkedContentPoint { tag: String },
     MarkedContentPointWithProperties { tag: String, properties: PdfPropertyList },
     BeginMarkedContent { tag: String },

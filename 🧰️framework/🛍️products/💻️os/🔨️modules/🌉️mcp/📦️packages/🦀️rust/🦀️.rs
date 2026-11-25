@@ -5,10 +5,6 @@ extern crate semio_os_kernel as store;
 #[cfg(test)]
 use semio_framework_value_testing_allocator as _;
 
-#[cfg(test)]
-#[path = "../../../🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🪙️close/🦀️.rs"]
-mod original_close;
-
 #[path = "../../🏗️bootstrap/🦀️.rs"]
 pub mod entrypoint;
 

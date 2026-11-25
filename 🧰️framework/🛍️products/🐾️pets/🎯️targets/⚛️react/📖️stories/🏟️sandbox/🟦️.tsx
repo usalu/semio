@@ -213,12 +213,12 @@ export function Sandbox({ menagerie, text, director }: { readonly menagerie: Men
       <div className="workbench">
         <div className={`room room-${arrangement % 2}`}>
           <Card title={`${text.card} 1`} text={text} className="card-low">
-            <button type="button" className="tab">
+            <button type="button" className="edge-chip tab">
               {text.action}
             </button>
           </Card>
           <Card title={`${text.card} 2`} text={text} className="card-high">
-            <span className="note" data-pet-keepout="">
+            <span className="edge-chip note" data-pet-keepout="">
               {text.note}
             </span>
           </Card>
@@ -242,15 +242,15 @@ export function Sandbox({ menagerie, text, director }: { readonly menagerie: Men
         </div>
         <aside className="bench" aria-label={text.inspect}>
           <section>
-            <h2>{text.hand}</h2>
+            <h2 className="story-heading edge-chip">{text.hand}</h2>
             <p className="hand-hint">{text.handHint}</p>
           </section>
           <section>
-            <h2>{text.inspect}</h2>
+            <h2 className="story-heading edge-chip">{text.inspect}</h2>
             <Inspect menagerie={menagerie} reading={reading} inspector={inspector} handle={handle} text={text} scale={scale} />
           </section>
           <section>
-            <h2>{text.readout}</h2>
+            <h2 className="story-heading edge-chip">{text.readout}</h2>
             <Readout menagerie={menagerie} reading={reading} text={text} scale={scale} />
           </section>
         </aside>

@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Root Command Registry V1",
-  "description": "Every command of the root script `repo ./📜️script.ts <command>`: the module and export that implement it, what its process needs before it can start (`none`: it runs on a fresh clone with only Bun; `dependencies`: it needs the locked dependencies, which the router installs through `repo dependencies ensure` with progress before the module is loaded), and its help in every declared language. The `module` closure of a `none` row is held free of bare imports by the zero-touch law; every closure is held free of workspace package specifiers.",
+  "description": "Every command of the root script `repo ./📜️script.ts <command>`: the module and export that implement it, what its process needs before it can start (`none`: it runs on a fresh clone with only Bun; `dependencies`: it needs the locked dependencies, which the router installs through `repo dependencies ensure` with progress before the module is loaded; `staged`: it loads once the dependencies are installed and answers its own protocol at once while it ensures their freshness during its own staging, so the router installs them first only when they are absent), the routes whose need differs from the command's, and its help in every declared language. The `module` closure of a `none` row is held free of bare imports by the zero-touch law; every closure is held free of workspace package specifiers.",
   "type": "object",
   "additionalProperties": false,
   "required": ["version", "languages", "labels", "commands"],
@@ -20,11 +20,21 @@
       "required": ["en", "de"],
       "properties": { "en": { "type": "string", "minLength": 1 }, "de": { "type": "string", "minLength": 1 } }
     },
-    "Requires": { "enum": ["none", "dependencies"] },
+    "Requires": { "enum": ["none", "dependencies", "staged"] },
+    "Route": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["segments", "requires", "reason"],
+      "properties": {
+        "segments": { "type": "array", "minItems": 1, "items": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$", "maxLength": 32 } },
+        "requires": { "$ref": "#/definitions/Requires" },
+        "reason": { "$ref": "#/definitions/LocalizedText" }
+      }
+    },
     "Labels": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["tagline", "usage", "commands", "requires", "requiresNone", "requiresDependencies", "legend", "provisioning", "provisioned", "provisionFailed", "unknownCommand"],
+      "required": ["tagline", "usage", "commands", "requires", "requiresNone", "requiresDependencies", "requiresStaged", "legend", "provisioning", "provisioned", "provisionFailed", "unknownCommand"],
       "properties": {
         "tagline": { "$ref": "#/definitions/LocalizedText" },
         "usage": { "$ref": "#/definitions/LocalizedText" },
@@ -32,6 +42,7 @@
         "requires": { "$ref": "#/definitions/LocalizedText" },
         "requiresNone": { "$ref": "#/definitions/LocalizedText" },
         "requiresDependencies": { "$ref": "#/definitions/LocalizedText" },
+        "requiresStaged": { "$ref": "#/definitions/LocalizedText" },
         "legend": { "$ref": "#/definitions/LocalizedText" },
         "provisioning": { "$ref": "#/definitions/LocalizedText" },
         "provisioned": { "$ref": "#/definitions/LocalizedText" },
@@ -49,6 +60,7 @@
         "export": { "type": "string", "pattern": "^[A-Za-z_$][A-Za-z0-9_$]*$" },
         "requires": { "$ref": "#/definitions/Requires" },
         "reason": { "$ref": "#/definitions/LocalizedText" },
+        "routes": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/Route" } },
         "synopsis": { "type": "string", "minLength": 1 },
         "summary": { "$ref": "#/definitions/LocalizedText" }
       }

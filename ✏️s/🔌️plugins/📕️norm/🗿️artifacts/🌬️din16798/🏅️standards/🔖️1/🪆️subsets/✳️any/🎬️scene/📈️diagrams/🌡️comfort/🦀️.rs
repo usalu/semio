@@ -75,11 +75,11 @@ pub(super) fn operative(document: &Din16798Snapshot, report: &CheckReport, zone:
     let mut columns = vec![col("Comfort category", "Komfortkategorie", "1", limits.iter().map(|row| row.0).collect())];
     if !limits.is_empty() {
         let heating = loc("Winter heating minimum", "Heizminimum Winter");
-        series.push(Series::Polyline { id: "winter".into(), label: heating, points: limits.iter().map(|row| p(row.0, row.1)).collect(), style: solid(Tone::Info) });
+        series.push(Series::Polyline { id: "winter-minimum".into(), label: heating, points: limits.iter().map(|row| p(row.0, row.1)).collect(), style: solid(Tone::Info) });
         columns.push(col("Winter heating minimum", "Heizminimum Winter", "°C", limits.iter().map(|row| row.1).collect()));
         if !adaptive {
             let cooling = loc("Summer cooling maximum", "Kühlmaximum Sommer");
-            series.push(Series::Polyline { id: "summer".into(), label: cooling, points: limits.iter().map(|row| p(row.0, row.2)).collect(), style: solid(Tone::Warning) });
+            series.push(Series::Polyline { id: "summer-maximum".into(), label: cooling, points: limits.iter().map(|row| p(row.0, row.2)).collect(), style: solid(Tone::Warning) });
             columns.push(col("Summer cooling maximum", "Kühlmaximum Sommer", "°C", limits.iter().map(|row| row.2).collect()));
         }
     } else {

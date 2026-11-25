@@ -26,7 +26,7 @@ describe("Specific original catalog completion", () => {
     expect(audit.order).toHaveLength(owners.length);
     expect(audit.entries.find(({ pluginId }) => pluginId === "sequence")?.dependsOn).toEqual([]);
     expect(audit.entries.find(({ pluginId }) => pluginId === "raster")?.dependsOn).toEqual([]);
-    expect(audit.entries.find(({ pluginId }) => pluginId === "demonstrator")?.dependsOn).toEqual(["cad", "gis", "procedural", "process", "puzzle", "sourcing", "flow-extension-bim", "flow-extension-brep", "flow-extension-dictionary", "flow-extension-list", "flow-extension-logic", "flow-extension-math", "flow-extension-primitive", "flow-extension-text"]);
+    expect(audit.entries.find(({ pluginId }) => pluginId === "demonstrator")?.dependsOn).toEqual(["process", "sourcing"]);
     expect(audit.entries.find(({ pluginId }) => pluginId === "cad-extension-aec-building")?.dependsOn).toEqual(["cad"]);
     expect(audit.issues.filter(({ code }) => code === "dependency-invalid")).toEqual([]);
     expect(missing).toEqual([]);

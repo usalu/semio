@@ -4803,7 +4803,6 @@ dependencies = [
  "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-pack-json-source-sink",
- "semio-framework-trace-memory-testing",
  "semio-framework-value",
  "semio-framework-value-native-owned",
  "semio-os-pack",
@@ -5070,6 +5069,7 @@ dependencies = [
  "semio-plugin-runtime-exchange",
  "semio-plugin-runtime-instances",
  "semio-plugin-runtime-ops",
+ "semio-plugin-store-lifecycle",
  "semio-plugin-testing-acceptance",
  "semio-plugin-testing-instance-laws",
  "semio-plugin-testing-laws",
@@ -5079,6 +5079,7 @@ dependencies = [
  "semio-plugin-tool-machine",
  "semio-plugin-tool-run",
  "semio-plugin-tool-run-turns",
+ "semio-plugin-transient-publication",
  "semio-plugin-window-config",
  "semio-plugin-window-config-original",
  "semio-plugin-window-kits",
@@ -5191,6 +5192,7 @@ dependencies = [
  "semio-plugin-reactor-core",
  "semio-plugin-reactor-jobs",
  "semio-plugin-registration",
+ "semio-plugin-store-lifecycle",
  "semio-plugin-window-kits",
 ]
 
@@ -5236,6 +5238,7 @@ dependencies = [
  "semio-plugin-operation",
  "semio-plugin-ownership",
  "semio-plugin-scrub-host",
+ "semio-plugin-store-lifecycle",
  "semio-plugin-window-config",
  "semio-plugin-window-kits",
  "semio-plugin-window-kits-rich",
@@ -5330,6 +5333,8 @@ dependencies = [
  "semio-plugin-operation",
  "semio-plugin-original-job-ownership",
  "semio-plugin-ownership",
+ "semio-plugin-store-lifecycle",
+ "semio-plugin-transient-publication",
  "semio-plugin-window-config",
  "semio-plugin-window-kits",
  "semio-plugin-window-transient",
@@ -5376,6 +5381,7 @@ dependencies = [
  "semio-framework-value-persistent",
  "semio-plugin-decl-views",
  "semio-plugin-ownership",
+ "semio-plugin-store-lifecycle",
  "serde_json",
 ]
 
@@ -5422,6 +5428,7 @@ dependencies = [
  "semio-plugin-mounted-owner",
  "semio-plugin-ownership",
  "semio-plugin-reactor-app",
+ "semio-plugin-store-lifecycle",
  "semio-plugin-window-kits",
  "semio-ui-contract",
  "semio-ui-locale",
@@ -5456,6 +5463,8 @@ dependencies = [
  "semio-plugin-interaction",
  "semio-plugin-mounted-owner",
  "semio-plugin-ownership",
+ "semio-plugin-store-lifecycle",
+ "semio-plugin-transient-publication",
  "semio-plugin-window-config",
  "semio-plugin-window-kits",
  "semio-plugin-window-transient",
@@ -5476,6 +5485,7 @@ dependencies = [
  "semio-framework-value-persistent",
  "semio-plugin-mounted-owner",
  "semio-plugin-ownership",
+ "semio-plugin-store-lifecycle",
 ]
 
 [[package]]
@@ -5506,6 +5516,8 @@ dependencies = [
  "semio-plugin-mounted-owner",
  "semio-plugin-operation",
  "semio-plugin-ownership",
+ "semio-plugin-store-lifecycle",
+ "semio-plugin-transient-publication",
  "semio-plugin-window-config",
  "semio-plugin-window-config-registry",
  "semio-ui-contract",
@@ -5550,6 +5562,7 @@ dependencies = [
  "semio-plugin-decl-views",
  "semio-plugin-operation",
  "semio-plugin-ownership",
+ "semio-plugin-store-lifecycle",
  "semio-ui-contract",
 ]
 
@@ -5683,6 +5696,7 @@ dependencies = [
  "semio-plugin-reactor-app",
  "semio-plugin-reactor-jobs",
  "semio-plugin-retained-command",
+ "semio-plugin-store-lifecycle",
  "semio-plugin-time-travel",
  "semio-plugin-time-travel-panel",
  "semio-plugin-time-travel-turns",
@@ -5717,6 +5731,7 @@ dependencies = [
  "semio-plugin-ownership",
  "semio-plugin-publication-mounted",
  "semio-plugin-reactor-app",
+ "semio-plugin-store-lifecycle",
  "semio-plugin-time-travel",
  "semio-plugin-tool-run",
  "semio-plugin-window-kits-rich",
@@ -5761,6 +5776,7 @@ dependencies = [
  "semio-plugin-reactor-app",
  "semio-plugin-reactor-tasks",
  "semio-plugin-retained-command",
+ "semio-plugin-store-lifecycle",
  "semio-plugin-time-travel",
  "semio-plugin-time-travel-turns",
  "semio-plugin-tool-machine",
@@ -5787,6 +5803,7 @@ dependencies = [
  "semio-plugin-mounted-owner",
  "semio-plugin-ownership",
  "semio-plugin-reactor-app",
+ "semio-plugin-store-lifecycle",
  "semio-plugin-time-travel",
  "semio-plugin-tool-machine",
  "semio-plugin-tool-run",
@@ -5831,6 +5848,7 @@ dependencies = [
  "semio-plugin-reactor-app",
  "semio-plugin-reactor-tasks",
  "semio-plugin-retained-command",
+ "semio-plugin-store-lifecycle",
  "semio-plugin-time-travel",
  "semio-plugin-tool-machine",
  "semio-plugin-tool-run",
@@ -5875,6 +5893,7 @@ dependencies = [
  "semio-plugin-reactor-app",
  "semio-plugin-reactor-tasks",
  "semio-plugin-retained-command",
+ "semio-plugin-store-lifecycle",
  "semio-plugin-time-travel",
  "semio-ui-contract",
 ]
@@ -5898,6 +5917,7 @@ dependencies = [
  "semio-plugin-mounted-owner",
  "semio-plugin-ownership",
  "semio-plugin-reactor-app",
+ "semio-plugin-store-lifecycle",
  "semio-plugin-time-travel",
  "semio-plugin-tool-machine",
  "semio-plugin-tool-run",
@@ -5933,6 +5953,7 @@ dependencies = [
  "semio-plugin-reactor-app",
  "semio-plugin-reactor-tasks",
  "semio-plugin-retained-command",
+ "semio-plugin-store-lifecycle",
  "semio-plugin-time-travel",
  "semio-plugin-tool-run",
  "semio-plugin-window-config",
@@ -5966,9 +5987,11 @@ dependencies = [
  "semio-plugin-ownership",
  "semio-plugin-peer",
  "semio-plugin-reactor-app",
+ "semio-plugin-store-lifecycle",
  "semio-plugin-time-travel",
  "semio-plugin-tool-machine",
  "semio-plugin-tool-run",
+ "semio-plugin-transient-publication",
  "semio-plugin-window-config",
  "semio-plugin-window-kits",
  "semio-plugin-window-transient",
@@ -6010,6 +6033,7 @@ dependencies = [
  "semio-plugin-reactor-tasks",
  "semio-plugin-retained-command",
  "semio-plugin-scrub-host",
+ "semio-plugin-store-lifecycle",
  "semio-plugin-time-travel",
  "semio-plugin-tool-machine",
  "semio-plugin-tool-run",
@@ -6056,6 +6080,7 @@ dependencies = [
  "semio-plugin-peer",
  "semio-plugin-publication-mounted",
  "semio-plugin-reactor-app",
+ "semio-plugin-store-lifecycle",
  "semio-plugin-time-travel",
  "semio-plugin-time-travel-turns",
  "semio-plugin-tool-machine",
@@ -6116,6 +6141,7 @@ dependencies = [
  "semio-plugin-reactor-app",
  "semio-plugin-reactor-jobs",
  "semio-plugin-retained-command",
+ "semio-plugin-store-lifecycle",
  "semio-plugin-time-travel",
  "semio-plugin-time-travel-panel",
  "semio-plugin-time-travel-turns",
@@ -6174,6 +6200,7 @@ dependencies = [
  "semio-plugin-reactor-app",
  "semio-plugin-retained-command",
  "semio-plugin-scrub-host",
+ "semio-plugin-store-lifecycle",
  "semio-plugin-time-travel",
  "semio-plugin-tool-machine",
  "semio-plugin-tool-run",
@@ -6215,6 +6242,7 @@ dependencies = [
  "semio-plugin-peer",
  "semio-plugin-reactor-app",
  "semio-plugin-retained-command",
+ "semio-plugin-store-lifecycle",
  "semio-plugin-time-travel",
  "semio-plugin-tool-machine",
  "semio-plugin-tool-run",
@@ -6278,6 +6306,7 @@ dependencies = [
  "semio-plugin-reactor-tasks",
  "semio-plugin-retained-command",
  "semio-plugin-scrub-host",
+ "semio-plugin-store-lifecycle",
  "semio-plugin-time-travel",
  "semio-plugin-tool-machine",
  "semio-plugin-tool-run",
@@ -6304,6 +6333,7 @@ dependencies = [
  "semio-os-kernel",
  "semio-os-pack",
  "semio-plugin-ownership",
+ "semio-plugin-store-lifecycle",
  "semio-ui-contract",
  "semio-ui-locale",
  "semio-ui-runtime",
@@ -6345,6 +6375,7 @@ dependencies = [
  "semio-plugin-job-receiving",
  "semio-plugin-operation",
  "semio-plugin-ownership",
+ "semio-plugin-store-lifecycle",
  "semio-plugin-window-config",
  "semio-plugin-window-kits",
  "semio-plugin-window-transient",
@@ -6420,25 +6451,15 @@ name = "semio-plugin-ownership"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
- "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
- "semio-framework-dsl-record",
- "semio-framework-hash",
  "semio-framework-job",
  "semio-framework-job-worker",
  "semio-framework-job-worker-authority",
- "semio-framework-pack",
  "semio-framework-trace",
  "semio-framework-value",
- "semio-framework-value-factory",
- "semio-framework-value-native-owned",
  "semio-framework-value-ordered",
- "semio-framework-value-snapshot-projection",
- "semio-framework-value-snapshot-read",
  "semio-os-kernel",
- "semio-os-store-replay",
- "semio-os-store-replay-operation",
  "serde_json",
 ]
 
@@ -6480,6 +6501,7 @@ dependencies = [
  "semio-plugin-mounted-owner",
  "semio-plugin-ownership",
  "semio-plugin-reactor-app",
+ "semio-plugin-store-lifecycle",
  "semio-ui-contract",
 ]
 
@@ -6490,7 +6512,6 @@ dependencies = [
  "semio-framework",
  "semio-framework-hash",
  "semio-framework-job",
- "semio-framework-test-fixtures",
  "semio-framework-value",
  "semio-os-kernel",
  "semio-plugin-child",
@@ -6529,6 +6550,7 @@ dependencies = [
  "semio-plugin-operation",
  "semio-plugin-ownership",
  "semio-plugin-peer",
+ "semio-plugin-store-lifecycle",
  "semio-plugin-window-config",
  "semio-plugin-window-kits",
  "semio-plugin-window-transient",
@@ -6640,6 +6662,7 @@ dependencies = [
  "semio-plugin-plugin-program",
  "semio-plugin-reactor-app",
  "semio-plugin-reactor-tasks",
+ "semio-plugin-store-lifecycle",
  "semio-ui-contract",
  "semio-ui-runtime",
  "serde_json",
@@ -6657,6 +6680,22 @@ dependencies = [
  "semio-plugin-testing-caller",
  "semio-ui-contract",
  "semio-ui-runtime",
+]
+
+[[package]]
+name = "semio-plugin-reactor-receiving-completed"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-diagnostic",
+ "semio-framework-job",
+ "semio-framework-job-native-decode",
+ "semio-framework-pack",
+ "semio-framework-pack-json",
+ "semio-framework-trace",
+ "semio-framework-value",
+ "semio-plugin-actor-host",
+ "semio-plugin-reactor-receiving-source",
 ]
 
 [[package]]
@@ -6755,6 +6794,7 @@ dependencies = [
  "semio-plugin-reactor-core",
  "semio-plugin-reactor-lifecycle",
  "semio-plugin-reactor-patches",
+ "semio-plugin-reactor-receiving-completed",
  "semio-plugin-reactor-receiving-source",
  "semio-plugin-reactor-staged-forms",
  "semio-plugin-reactor-surfaces",
@@ -6854,6 +6894,7 @@ dependencies = [
  "semio-plugin-ownership",
  "semio-plugin-result-page",
  "semio-plugin-retained-work",
+ "semio-plugin-store-lifecycle",
  "semio-plugin-window-config",
  "semio-plugin-window-config-original",
  "semio-plugin-window-kits",
@@ -7063,6 +7104,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-plugin-store-lifecycle"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-artifact-reference",
+ "semio-framework-dsl-record",
+ "semio-framework-hash",
+ "semio-framework-job",
+ "semio-framework-pack",
+ "semio-framework-trace",
+ "semio-framework-value",
+ "semio-framework-value-native-owned",
+ "semio-os-kernel",
+ "semio-plugin-ownership",
+ "serde_json",
+]
+
+[[package]]
 name = "semio-plugin-testing-acceptance"
 version = "0.1.0"
 dependencies = [
@@ -7085,6 +7144,7 @@ dependencies = [
  "semio-plugin-ownership",
  "semio-plugin-reactor-app",
  "semio-plugin-reactor-jobs",
+ "semio-plugin-store-lifecycle",
  "semio-plugin-testing-instance-laws",
  "semio-plugin-testing-laws",
  "semio-plugin-time-travel",
@@ -7112,6 +7172,7 @@ dependencies = [
  "semio-plugin-decl-app",
  "semio-plugin-decl-emission",
  "semio-plugin-decl-tool-contract",
+ "semio-plugin-job-receiving",
  "semio-plugin-ownership",
  "semio-plugin-retained-command",
  "semio-ui-contract-values",
@@ -7168,6 +7229,7 @@ dependencies = [
  "semio-plugin-retained-command",
  "semio-plugin-runtime-exchange",
  "semio-plugin-runtime-ops",
+ "semio-plugin-store-lifecycle",
  "semio-plugin-testing-caller",
  "semio-plugin-testing-laws",
  "semio-plugin-window-config",
@@ -7230,6 +7292,7 @@ dependencies = [
  "semio-plugin-retained-command",
  "semio-plugin-runtime-exchange",
  "semio-plugin-runtime-ops",
+ "semio-plugin-store-lifecycle",
  "semio-plugin-testing-caller",
  "semio-plugin-window-config",
  "semio-plugin-window-kits",
@@ -7269,6 +7332,7 @@ dependencies = [
  "semio-plugin-decl-emission",
  "semio-plugin-decl-views",
  "semio-plugin-ownership",
+ "semio-plugin-store-lifecycle",
  "semio-plugin-time-travel-panel",
  "semio-plugin-tool-run",
  "semio-plugin-window-config",
@@ -7336,6 +7400,7 @@ dependencies = [
  "semio-plugin-mounted-owner",
  "semio-plugin-ownership",
  "semio-plugin-reactor-app",
+ "semio-plugin-store-lifecycle",
  "semio-plugin-time-travel",
  "semio-plugin-time-travel-panel",
  "semio-plugin-tool-machine",
@@ -7362,6 +7427,7 @@ dependencies = [
  "semio-plugin-decl-views",
  "semio-plugin-job-receiving",
  "semio-plugin-ownership",
+ "semio-plugin-store-lifecycle",
  "semio-plugin-tool-run-operations",
  "semio-plugin-window-config",
  "semio-plugin-window-config-original",
@@ -7400,6 +7466,7 @@ dependencies = [
  "semio-plugin-job",
  "semio-plugin-mounted-owner",
  "semio-plugin-ownership",
+ "semio-plugin-store-lifecycle",
  "semio-plugin-tool-run-operations",
  "semio-plugin-window-config",
  "semio-plugin-window-config-original",
@@ -7454,6 +7521,7 @@ dependencies = [
  "semio-plugin-mounted-owner",
  "semio-plugin-ownership",
  "semio-plugin-reactor-app",
+ "semio-plugin-store-lifecycle",
  "semio-plugin-time-travel",
  "semio-plugin-time-travel-panel",
  "semio-plugin-tool-machine",
@@ -7462,6 +7530,27 @@ dependencies = [
  "semio-ui-contract",
  "semio-ui-locale",
  "semio-ui-scene",
+]
+
+[[package]]
+name = "semio-plugin-transient-publication"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-diagnostic",
+ "semio-framework-job",
+ "semio-framework-pack",
+ "semio-framework-trace",
+ "semio-framework-value",
+ "semio-framework-value-factory",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-snapshot-projection",
+ "semio-framework-value-snapshot-read",
+ "semio-os-kernel",
+ "semio-os-store-replay-operation",
+ "semio-plugin-ownership",
+ "semio-plugin-store-lifecycle",
+ "serde_json",
 ]
 
 [[package]]
@@ -7500,6 +7589,7 @@ dependencies = [
  "semio-os-store-operation-wire",
  "semio-os-store-text-io",
  "semio-plugin-ownership",
+ "semio-plugin-store-lifecycle",
  "semio-plugin-window-config-contract",
  "semio-plugin-window-config-mutation",
  "semio-plugin-window-config-registry",
@@ -7520,7 +7610,7 @@ dependencies = [
  "semio-os-store-codec-registry",
  "semio-os-store-operation-wire",
  "semio-os-store-text-io",
- "semio-plugin-ownership",
+ "semio-plugin-store-lifecycle",
  "semio-plugin-window-config-mutation",
 ]
 
@@ -7552,6 +7642,7 @@ dependencies = [
  "semio-os-store-operation-wire",
  "semio-os-store-text-io",
  "semio-plugin-ownership",
+ "semio-plugin-store-lifecycle",
  "semio-plugin-window-config",
  "semio-plugin-window-config-mutation",
  "semio-plugin-window-config-registry",
@@ -7637,6 +7728,8 @@ dependencies = [
  "semio-os-kernel",
  "semio-plugin-interaction",
  "semio-plugin-ownership",
+ "semio-plugin-store-lifecycle",
+ "semio-plugin-transient-publication",
  "semio-plugin-window-config",
  "semio-plugin-window-config-mutation",
  "semio-plugin-window-config-original",
@@ -7711,12 +7804,14 @@ dependencies = [
  "semio-s-artifact-fem-2d-io",
  "semio-s-artifact-fem-2d-mesh-regions",
  "semio-s-artifact-fem-2d-mesh-sections",
+ "semio-s-artifact-fem-2d-mesh-topology",
  "semio-s-artifact-fem-2d-model",
  "semio-s-artifact-fem-2d-mutations",
  "semio-s-artifact-fem-2d-results-state",
  "semio-s-fem-analyses-model",
  "semio-s-fem-app-surface",
  "semio-s-fem-model",
+ "semio-s-fem-node",
  "semio-ui-contract",
  "semio-ui-locale",
 ]
@@ -8413,6 +8508,7 @@ dependencies = [
  "semio-s-artifact-fem-3d-editor-terminology",
  "semio-s-artifact-fem-3d-io",
  "semio-s-artifact-fem-3d-model",
+ "semio-s-fem-analyses-model",
  "semio-s-fem-app-surface",
  "semio-s-fem-material",
  "semio-s-fem-node",
@@ -9766,6 +9862,13 @@ dependencies = [
  "semio-s-artifact-stdio-dwg-snapshot-document",
  "semio-s-artifact-stdio-dwg-snapshot-drawing",
  "semio-s-artifact-stdio-dwg-snapshot-objects",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-associativity",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-blocks",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-constraints",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-entities",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-styles",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-tables",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-xrecord",
  "semio-s-artifact-stdio-dwg-sqlite-drawing",
  "semio-s-artifact-stdio-dwg-sqlite-entities",
  "semio-s-artifact-stdio-dwg-sqlite-objects",
@@ -9801,6 +9904,10 @@ dependencies = [
  "semio-os-kernel",
  "semio-s-artifact-stdio-dwg-geometry",
  "semio-s-artifact-stdio-dwg-snapshot-objects",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-entities",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-styles",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-tables",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-xrecord",
 ]
 
 [[package]]
@@ -9810,13 +9917,115 @@ dependencies = [
  "semio-framework-dsl-record",
  "semio-framework-dsl-record-derive",
  "semio-framework-pack-json",
- "semio-framework-schema",
- "semio-framework-schema-composition",
- "semio-framework-schema-state",
  "semio-framework-value",
  "semio-framework-value-derive",
  "semio-framework-value-native-owned",
- "semio-os-kernel",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-associativity",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-blocks",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-constraints",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-entities",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-metadata",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-styles",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-tables",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-xrecord",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-dwg-snapshot-objects-associativity"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-dsl-record",
+ "semio-framework-dsl-record-derive",
+ "semio-framework-pack-json",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-metadata",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-dwg-snapshot-objects-blocks"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-dsl-record",
+ "semio-framework-dsl-record-derive",
+ "semio-framework-pack-json",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-associativity",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-dwg-snapshot-objects-constraints"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-dsl-record",
+ "semio-framework-dsl-record-derive",
+ "semio-framework-pack-json",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-associativity",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-metadata",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-dwg-snapshot-objects-entities"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-dsl-record",
+ "semio-framework-dsl-record-derive",
+ "semio-framework-pack-json",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-metadata",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-tables",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-dwg-snapshot-objects-metadata"
+version = "0.1.0"
+
+[[package]]
+name = "semio-s-artifact-stdio-dwg-snapshot-objects-styles"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-dsl-record",
+ "semio-framework-dsl-record-derive",
+ "semio-framework-pack-json",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-metadata",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-tables",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-dwg-snapshot-objects-tables"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-dsl-record",
+ "semio-framework-dsl-record-derive",
+ "semio-framework-pack-json",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-metadata",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-dwg-snapshot-objects-xrecord"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-dsl-record",
+ "semio-framework-dsl-record-derive",
+ "semio-framework-pack-json",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-metadata",
 ]
 
 [[package]]
@@ -9834,6 +10043,10 @@ dependencies = [
  "semio-s-artifact-stdio-dwg-snapshot-document",
  "semio-s-artifact-stdio-dwg-snapshot-drawing",
  "semio-s-artifact-stdio-dwg-snapshot-objects",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-blocks",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-entities",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-styles",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-xrecord",
  "semio-s-artifact-stdio-dwg-sqlite-drawing-2",
  "semio-s-artifact-stdio-dwg-sqlite-objects",
 ]
@@ -9853,6 +10066,10 @@ dependencies = [
  "semio-s-artifact-stdio-dwg-snapshot-document",
  "semio-s-artifact-stdio-dwg-snapshot-drawing",
  "semio-s-artifact-stdio-dwg-snapshot-objects",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-associativity",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-constraints",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-styles",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-xrecord",
  "semio-s-artifact-stdio-dwg-sqlite-objects",
 ]
 
@@ -9869,6 +10086,7 @@ dependencies = [
  "semio-framework-value-derive",
  "semio-os-kernel",
  "semio-s-artifact-stdio-dwg-snapshot-objects",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-entities",
  "semio-s-artifact-stdio-dwg-sqlite-objects",
 ]
 
@@ -9885,6 +10103,10 @@ dependencies = [
  "semio-framework-value-derive",
  "semio-os-kernel",
  "semio-s-artifact-stdio-dwg-snapshot-objects",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-associativity",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-blocks",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-tables",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-xrecord",
 ]
 
 [[package]]
@@ -9908,6 +10130,13 @@ dependencies = [
  "semio-s-artifact-stdio-dwg-snapshot",
  "semio-s-artifact-stdio-dwg-snapshot-document",
  "semio-s-artifact-stdio-dwg-snapshot-objects",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-associativity",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-blocks",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-constraints",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-entities",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-styles",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-tables",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-xrecord",
  "semio-s-artifact-stdio-dwg-write-records",
 ]
 
@@ -9918,6 +10147,13 @@ dependencies = [
  "semio-s-artifact-stdio-dwg-snapshot",
  "semio-s-artifact-stdio-dwg-snapshot-document",
  "semio-s-artifact-stdio-dwg-snapshot-objects",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-associativity",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-blocks",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-constraints",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-entities",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-styles",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-tables",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-xrecord",
 ]
 
 [[package]]
@@ -12492,8 +12728,20 @@ dependencies = [
  "semio-plugin",
  "semio-s-artifact-stdio-contract",
  "semio-s-artifact-stdio-txt",
+ "semio-s-artifact-stdio-xml-snapshot-document",
  "semio-ui-locale",
  "serde_json",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-xml-snapshot-document"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-pack-json",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
 ]
 
 [[package]]

@@ -283,6 +283,10 @@ impl semio_s_plugin_norm_app_surface::NormRetainedEditor for En1990PlayApp {
         semio_s_artifact_norm_en1990_mutations::resolve_edit(document, edit)
     }
 
+    fn starter_row(document: &Self::Snapshot, path: &str, index: usize) -> Option<semio_framework_value::DslValue> {
+        semio_s_artifact_norm_en1990_mutations::starter_row(document, path, index)
+    }
+
     type Family = En1990Family;
 
     type ResultsWindowConfigOwner = checks::ChecksWindowConfigOwner;

@@ -157,7 +157,7 @@ async function runCapturedExtensionEffect(
       cancellation.finish();
     }
     completion.assertActive();
-    outcome = { ok: encodePackValue(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(raw))) };
+    outcome = { ok: raw };
   } catch (error) {
     completion.assertActive();
     const fault: Fault = error instanceof SemioFaultError ? error.fault : isShardLostError(error) ? {

@@ -4,8 +4,8 @@ export BATCH=MH-5
 source "${0:A:h}/../MR/env.sh"
 a="$1"; ops="${2:-$W/ops/$a.json}"; out="$GEN/try/$a.json"; mkdir -p "$GEN/try"
 cd "$T"
-"$B" "$W/fit.ts" "$a" --ops "$ops" --out "$out" | grep -v "^written" | cut -c1-${COLS:-330}
-"$B" "$W/fit.ts" "$out" --ops "$ops" | tail -1
-"$B" "$W/mgate.ts" "$out" | cut -c1-${COLS:-330}
+"$W/b.sh" "$W/fit.ts" "$GEN/backup/$a.json" --ops "$ops" --out "$out" | grep -v "^written" | cut -c1-${COLS:-330}
+"$W/b.sh" "$W/fit.ts" "$out" --ops "$ops" | tail -1
+"$W/b.sh" "$W/mgate.ts" "$out" | cut -c1-${COLS:-330}
 [[ "$MEASURE" == 0 ]] && exit 0
 cd "$S/📦️packages/🟦️typescript" && "$W/q.sh" timeout 1200 "$B" "$M/measure.ts" "$GEN/backup/$a.json" "$out" 2>&1 | grep -v "^ *$" | cut -c1-300

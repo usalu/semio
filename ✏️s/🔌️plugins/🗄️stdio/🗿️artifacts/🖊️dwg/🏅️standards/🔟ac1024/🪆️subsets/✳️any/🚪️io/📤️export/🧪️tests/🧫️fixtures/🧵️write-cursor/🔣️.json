@@ -1,0 +1,12 @@
+{
+  "phaseOrder": ["snapshot", "objects", "handles", "slots", "pages", "layout", "assemble", "seal"],
+  "oracleDrawing": "🖼️assets/🏛️architectural/🏛️architectural.dwg",
+  "oracleEntityCount": 68,
+  "cancelAfterSteps": 5,
+  "laws": {
+    "bytes": "identical to the one-shot writer",
+    "progress": "never decreases, below 1 until complete, 1 after",
+    "afterComplete": "refuses",
+    "afterCancel": "refuses with the cancellation"
+  }
+}

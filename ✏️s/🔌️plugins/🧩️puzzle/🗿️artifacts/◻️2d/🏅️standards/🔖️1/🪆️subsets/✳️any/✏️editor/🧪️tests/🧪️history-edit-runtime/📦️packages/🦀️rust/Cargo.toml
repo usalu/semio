@@ -81,6 +81,7 @@ wasm-bindgen = { workspace = true }
 
 [dev-dependencies]
 semio-framework-value = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-ui-contract-values = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/🌱️values/📦️packages/🦀️rust", features = ["testkit"] }
 semio-s-artifact-puzzle-2d-v1 = { path = "../../../../../../../📦️packages/🦀️rust", features = ["testkit"] }
 geo = { version = "0.31.0", default-features = false }
 semio-framework-async-macros = { workspace = true }

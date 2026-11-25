@@ -1,0 +1,31 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-hub-stdio-pdf-1-4"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Runtime shard of semio-hub-stdio-pdf: the PDF 1.4 editors and viewers"
+
+[lints]
+workspace = true
+
+# 🧱️ A runtime shard of `semio-hub-stdio-pdf` (`🧩️composition/🔣️.json` declares its apps): its apps close in this crate, so the
+# app-generic runtime of every app is instantiated once here instead of all twenty in the plugin crate.
+[package.metadata.semio]
+role = "hub"
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-pack = { path = "../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
+# 🧩️ Composition Dependencies
+semio-s-artifact-stdio-pdf = { workspace = true }
+# /🧩️ Composition Dependencies
+semio-s-artifact-stdio-contract = { workspace = true }
+semio-framework = { workspace = true }
+semio-framework-dispatch-macros = { workspace = true }
+semio-framework-job = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-os-kernel = { workspace = true }
+semio-plugin = { workspace = true }

@@ -4,7 +4,7 @@
 use semio_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS;
 use semio_plugin_decl_app::ArtifactApp;
 use semio_framework_artifact_reference::{ArtifactDialect, ArtifactRef};
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use semio_plugin_operation::original_catalog_constructor::{ArtifactStoreConstructorKind, ArtifactStoreConstructorPhase};
 use crate::stores_components::{ConstructorState, InstanceStores, LocalInteraction, PeerRoster};
@@ -89,7 +89,7 @@ impl<A: ArtifactApp> InstanceStores<A> {
         if grant.maximum_items==0||grant.maximum_copy_bytes<copied_bytes||grant.maximum_depth<2{return Ok(true)}
         let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-copied_bytes,maximum_depth:grant.maximum_depth-1,..grant};
         let (kind,mut receipt,done)=match constructor.constructor_lane {
-            0=>{let receipt=constructor.constructor_document.advance(&mut self.store,&mut effect.nested(child),A::build_document_store_owners)?;(ArtifactStoreConstructorKind::Document,receipt,constructor.constructor_document.terminal_is_empty())},
+            0=>{let receipt=constructor.constructor_document.advance(&mut self.store,&mut effect.nested(child),A::persisted_document_store_owners)?;(ArtifactStoreConstructorKind::Document,receipt,constructor.constructor_document.terminal_is_empty())},
             1=>{let receipt=constructor.constructor_config.advance(&mut self.config_store,&mut effect.nested(child),A::build_config_store_owners)?;(ArtifactStoreConstructorKind::Config,receipt,constructor.constructor_config.terminal_is_empty())},
             2=>{let receipt=constructor.constructor_draft.advance(&mut self.draft_store,&mut effect.nested(child),A::build_draft_store_owners)?;(ArtifactStoreConstructorKind::Draft,receipt,constructor.constructor_draft.terminal_is_empty())},
             _=>{let receipt=constructor.constructor_interaction.advance(&mut self.interaction_store,&mut effect.nested(child),|grant|Some(semio_plugin_interaction::retirement::interaction_store_owners(grant)))?;(ArtifactStoreConstructorKind::Interaction,receipt,constructor.constructor_interaction.terminal_is_empty())},

@@ -1,0 +1,234 @@
+{
+  "_comment": "Inputs hand-authored; every expect is computed by the independent Python oracle (python3 🐍️.py), never by the TypeScript implementation.",
+  "memory": {
+    "interactiveReserveBasisPoints": 2500,
+    "interactiveReserveMinimumMegabytes": 2048,
+    "interactiveReserveMaximumMegabytes": 8192,
+    "sessionCapBasisPoints": 4000
+  },
+  "host": {
+    "version": 1,
+    "atMs": 1000000,
+    "platform": "darwin",
+    "cores": 16,
+    "totalMegabytes": 16384,
+    "availableMegabytes": 16000,
+    "pressure": "normal",
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "load": 0,
+    "openFiles": 1000,
+    "openFilesMaximum": 245760,
+    "attachedImages": 0
+  },
+  "cases": [
+    {
+      "name": "no reserve declared: a 9000 MB request fits beside nothing",
+      "withPolicy": false,
+      "totalMegabytes": 16384,
+      "ledger": [],
+      "queue": [
+        {
+          "session": null,
+          "fixedMegabytes": 9000
+        }
+      ]
+    },
+    {
+      "name": "the reserve takes 4096 MB of a 16 GiB host out of the budget: the same request waits for memory",
+      "withPolicy": true,
+      "totalMegabytes": 16384,
+      "ledger": [],
+      "queue": [
+        {
+          "session": null,
+          "fixedMegabytes": 9000
+        }
+      ]
+    },
+    {
+      "name": "the reserve is bounded below on a small host (2048 MB of 4096)",
+      "withPolicy": true,
+      "totalMegabytes": 4096,
+      "availableMegabytes": 4000,
+      "ledger": [],
+      "queue": [
+        {
+          "session": null,
+          "fixedMegabytes": 800
+        }
+      ]
+    },
+    {
+      "name": "a session that holds 5000 MB cannot take 2000 MB more (cap 6553 MB) while a second session holds a grant and waits for 9000 MB",
+      "withPolicy": true,
+      "totalMegabytes": 16384,
+      "ledger": [
+        {
+          "session": "s1",
+          "reservedMegabytes": 5000
+        },
+        {
+          "session": "s2",
+          "reservedMegabytes": 500
+        }
+      ],
+      "queue": [
+        {
+          "session": "s1",
+          "fixedMegabytes": 2000
+        },
+        {
+          "session": "s2",
+          "fixedMegabytes": 9000
+        }
+      ]
+    },
+    {
+      "name": "work-conserving: the same session is not held back while the second session only holds a grant and waits for nothing",
+      "withPolicy": true,
+      "totalMegabytes": 16384,
+      "ledger": [
+        {
+          "session": "s1",
+          "reservedMegabytes": 5000
+        },
+        {
+          "session": "s2",
+          "reservedMegabytes": 500
+        }
+      ],
+      "queue": [
+        {
+          "session": "s1",
+          "fixedMegabytes": 2000
+        }
+      ]
+    },
+    {
+      "name": "another session is not held back by it",
+      "withPolicy": true,
+      "totalMegabytes": 16384,
+      "ledger": [
+        {
+          "session": "s1",
+          "reservedMegabytes": 5000
+        }
+      ],
+      "queue": [
+        {
+          "session": "s2",
+          "fixedMegabytes": 2000
+        }
+      ]
+    },
+    {
+      "name": "the same session may still take what stays under the cap",
+      "withPolicy": true,
+      "totalMegabytes": 16384,
+      "ledger": [
+        {
+          "session": "s1",
+          "reservedMegabytes": 5000
+        }
+      ],
+      "queue": [
+        {
+          "session": "s1",
+          "fixedMegabytes": 1500
+        }
+      ]
+    },
+    {
+      "name": "a session that holds nothing is served up to the room, whatever the cap",
+      "withPolicy": true,
+      "totalMegabytes": 16384,
+      "ledger": [],
+      "queue": [
+        {
+          "session": "s1",
+          "fixedMegabytes": 7000
+        }
+      ]
+    },
+    {
+      "name": "two requests of one session in one round: the second would pass the cap while a second session waits",
+      "withPolicy": true,
+      "totalMegabytes": 16384,
+      "ledger": [],
+      "queue": [
+        {
+          "session": "s1",
+          "fixedMegabytes": 4000
+        },
+        {
+          "session": "s1",
+          "fixedMegabytes": 3000
+        },
+        {
+          "session": "s2",
+          "fixedMegabytes": 1000
+        }
+      ]
+    },
+    {
+      "name": "alone on the host (a fleet worker) a session that holds 5000 MB still gets the 2000 MB graph read of its own command",
+      "withPolicy": true,
+      "totalMegabytes": 16384,
+      "ledger": [
+        {
+          "session": "s1",
+          "reservedMegabytes": 5000
+        }
+      ],
+      "queue": [
+        {
+          "session": "s1",
+          "fixedMegabytes": 2000
+        }
+      ]
+    },
+    {
+      "name": "a waiter of a second session makes the cap bind again",
+      "withPolicy": true,
+      "totalMegabytes": 16384,
+      "ledger": [
+        {
+          "session": "s1",
+          "reservedMegabytes": 5000
+        }
+      ],
+      "queue": [
+        {
+          "session": "s1",
+          "fixedMegabytes": 2000
+        },
+        {
+          "session": "s2",
+          "fixedMegabytes": 500
+        }
+      ]
+    },
+    {
+      "name": "a grant without a session is no second agent session",
+      "withPolicy": true,
+      "totalMegabytes": 16384,
+      "ledger": [
+        {
+          "session": "s1",
+          "reservedMegabytes": 5000
+        },
+        {
+          "session": null,
+          "reservedMegabytes": 500
+        }
+      ],
+      "queue": [
+        {
+          "session": "s1",
+          "fixedMegabytes": 2000
+        }
+      ]
+    }
+  ]
+}

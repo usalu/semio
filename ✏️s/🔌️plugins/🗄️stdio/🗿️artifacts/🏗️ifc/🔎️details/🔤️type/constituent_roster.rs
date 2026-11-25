@@ -825,7 +825,7 @@ impl ConstituentRoster {
                         *value = Some(self.inputs.take_argument(ordinal).ok_or_else(|| invalid("IFC supplied type argument missing"))?);
                         self.state.phase = 21;
                     } else {
-                        if value.is_some() || !value_cursor.terminal_is_empty() {
+                        if value.is_some() || value_cursor.output_ready() || value_cursor.close_started() {
                             return Err(invalid("IFC primary payload owner occupied").into());
                         }
                         self.state.phase = 19;

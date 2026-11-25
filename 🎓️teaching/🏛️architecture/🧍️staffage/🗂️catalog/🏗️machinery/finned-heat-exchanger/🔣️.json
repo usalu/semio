@@ -13,14 +13,62 @@
       "de": "Ein zweireihiges Lamellenrohr-Register mit 0,4 m mal 0,48 m Anströmfläche: Aluminiumlamellen auf 24 Kupferrohren mit Haarnadelbögen an einem Ende und zwei Sammlern mit Stutzen am anderen, in einem verzinkten Gehäuse mit Flanschen; kalt als Verdampfer oder Kühler, heiß als Verflüssiger oder Erhitzer; im Schnitt quer zu den Rohren gezeichnet."
     },
     "tags": [
-      "coil",
-      "heat-exchanger",
-      "evaporator",
-      "condenser",
-      "heating-coil",
-      "cooling-coil",
-      "fins",
-      "machinery"
+      {
+        "id": "coil",
+        "title": {
+          "en": "coil",
+          "de": "Spule"
+        }
+      },
+      {
+        "id": "heat-exchanger",
+        "title": {
+          "en": "heat exchanger",
+          "de": "Wärmeübertrager"
+        }
+      },
+      {
+        "id": "evaporator",
+        "title": {
+          "en": "evaporator",
+          "de": "Verdampfer"
+        }
+      },
+      {
+        "id": "condenser",
+        "title": {
+          "en": "condenser",
+          "de": "Kondensator"
+        }
+      },
+      {
+        "id": "heating-coil",
+        "title": {
+          "en": "heating coil",
+          "de": "Heizregister"
+        }
+      },
+      {
+        "id": "cooling-coil",
+        "title": {
+          "en": "cooling coil",
+          "de": "Kühlregister"
+        }
+      },
+      {
+        "id": "fins",
+        "title": {
+          "en": "fins",
+          "de": "Lamellen"
+        }
+      },
+      {
+        "id": "machinery",
+        "title": {
+          "en": "machinery",
+          "de": "Maschinen"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage content (G2)",

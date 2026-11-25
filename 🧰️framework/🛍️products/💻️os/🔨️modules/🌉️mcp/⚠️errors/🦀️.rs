@@ -44,6 +44,11 @@ pub enum GatewayErrorCode {
 }
 
 impl GatewayErrorCode {
+    /// 🏷️ The `SCREAMING_SNAKE_CASE` name this code carries on the wire.
+    pub fn wire_name(self) -> String {
+        serde_json::to_value(self).ok().and_then(|value| value.as_str().map(str::to_string)).unwrap_or_default()
+    }
+
     /// 🔢️ The nearest-fit JSON-RPC 2.0 standard error code for this gateway code when it surfaces as [Design notes](README.md#source-notes-53).
     pub fn json_rpc_code(self) -> i64 {
         match self {
@@ -106,6 +111,21 @@ impl GatewayError {
 
     pub fn with_details(mut self, details: serde_json::Value) -> Self {
         self.details = details;
+        self
+    }
+
+    /// 🧩️ Adds call context to the details this error already carries: existing keys (a typed cause such as `missingModel`) are kept, absent ones are filled, non-object details stay untouched.
+    pub fn with_context(mut self, context: serde_json::Value) -> Self {
+        self.details = match (std::mem::take(&mut self.details), context) {
+            (serde_json::Value::Null, context) => context,
+            (serde_json::Value::Object(mut own), serde_json::Value::Object(extra)) => {
+                for (key, value) in extra {
+                    own.entry(key).or_insert(value);
+                }
+                serde_json::Value::Object(own)
+            }
+            (own, _) => own,
+        };
         self
     }
 

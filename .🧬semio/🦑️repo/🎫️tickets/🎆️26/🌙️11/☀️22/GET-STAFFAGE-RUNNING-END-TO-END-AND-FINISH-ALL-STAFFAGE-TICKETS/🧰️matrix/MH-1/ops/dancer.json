@@ -1,0 +1,18 @@
+[
+  {"scale": "50", "op": "volume", "id": "shirt-waist", "as": "loft"},
+  {"op": "volume", "scale": "50", "id": "shoe-toe-r", "as": "prism-w"},
+  {"scale": "100", "op": "volume", "id": "shirt-waist", "as": "loft"},
+  {"op": "volume", "scale": "200", "id": "shoe-r", "as": "prism-v"},
+  {"op": "volume", "scale": "200", "id": "shank-r", "as": "revolved"},
+  {"scale": "200", "op": "volume", "id": "shorts", "as": "loft"},
+  {"op": "volume", "scale": "500", "id": "shank-l", "as": "prism-w"},
+  {"op": "volume", "scale": "500", "id": "shoe-toe-l", "as": "prism-w"},
+  {"op": "volume", "scale": "500", "id": "shank-r", "as": "revolved"},
+  {"op": "volume", "scale": "500", "id": "shoe-toe-r", "as": "prism-w", "profile": "elevation"},
+  {"op": "volume", "scale": "500", "id": "shoe-r", "as": "prism-v"},
+  {"scale": "100", "id": "shirt", "op": "volume", "views": ["front"], "as": "loft"},
+  {"scale": "50", "id": "sole-r", "solids": ["sole-r"], "op": "volume", "views": ["plan"], "as": "loft"},
+  {"scale": "50", "id": "shoe-r", "solids": ["shoe-r"], "op": "volume", "views": ["front", "plan"], "as": "loft"},
+  {"scale": "50", "id": "sole-l", "solids": ["sole-l"], "op": "volume", "views": ["front"], "as": "loft"},
+  {"scale": "200", "id": "shirt", "op": "volume", "as": "loft", "ids": {"plan": "shirt-core"}}
+]

@@ -443,6 +443,14 @@ pub struct OwnedCorePollLimits(u32, u32, u32, u32, u32, u64, u64, u64, u32, u32,
 impl OwnedCorePollLimits {
     pub const ARITY: usize = 11;
 
+    /// 🔢️ Validates the fixed unsigned scalars in canonical wire order.
+    pub fn from_scalars(scalars: [u64; Self::ARITY]) -> Option<Self> {
+        let [items, copy, capacity, release, depth, work_fuel, fuel, deadline_us, effects, patch, frames] = scalars;
+        let extent = |value| u32::try_from(value).ok();
+        Some(Self(extent(items)?, extent(copy)?, extent(capacity)?, extent(release)?, extent(depth)?,
+            work_fuel, fuel, deadline_us, extent(effects)?, extent(patch)?, extent(frames)?))
+    }
+
     /// 🔢️ Reads one unsigned scalar in canonical wire order for the streamed JSON writer.
     pub fn scalar_at(&self, index: usize) -> Option<u64> {
         Some(match index {

@@ -147,6 +147,14 @@
     "preparing": {
       "en": "Preparing extensions for this document (1 of 2)…",
       "de": "Erweiterungen für dieses Dokument werden vorbereitet (1 von 2)…"
+    },
+    "openingExample": {
+      "en": "Opening example Concrete Forest… Large examples can take a few minutes.",
+      "de": "Beispiel Concrete Forest wird geöffnet… Große Beispiele können einige Minuten dauern."
+    },
+    "exampleRefused": {
+      "en": "Example Concrete Forest could not be opened: The input could not be delivered.",
+      "de": "Beispiel Concrete Forest konnte nicht geöffnet werden: Die Eingabe konnte nicht zugestellt werden."
     }
   }
 }

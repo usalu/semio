@@ -90,6 +90,9 @@ fn read_opt_str_bin(reader: &mut store::ByteReader<'_>) -> Result<Option<String>
     }
 }
 
+protocol::original_decoded_operation_receiving!(EquationMutation);
+protocol::artifact_persisted_binary_operation!(EquationMutation);
+
 impl protocol::OpBinary for EquationMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {

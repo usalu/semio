@@ -21,7 +21,7 @@ export type DescriptionFinding = { capabilityId: string; problem: DescriptionPro
 type Label = Record<string, Record<string, string>>;
 type Declaration = { id: string; label: Label; kind: string; inPalette?: boolean; semantics?: { audience?: string; description?: Label } };
 type App = { id: string; windowKinds?: { actions?: Declaration[] }[]; actions?: Declaration[]; commands?: Declaration[]; modes?: { id: string; commands?: Declaration[] }[] };
-type Descriptor = { manifest: { pluginId: string; apps?: App[]; commands?: Declaration[] } };
+type Descriptor = { manifest: { pluginId: string; apps?: App[]; commands?: Declaration[]; actionSets?: { appIds: string[]; actions: Declaration[] }[] } };
 
 const read = (repoRoot: string, path: string): unknown => JSON.parse(readFileSync(resolve(repoRoot, path), "utf8"));
 
@@ -90,7 +90,8 @@ export function capabilityDescriptionCensus(repoRoot: string): DescriptionFindin
     for (const app of descriptor.manifest.apps ?? []) {
       const seen = new Set<string>();
       const actions: Declaration[] = [];
-      for (const action of [...(app.windowKinds ?? []).flatMap((windowKind) => windowKind.actions ?? []), ...(app.actions ?? [])]) {
+      const setActions = (descriptor.manifest.actionSets ?? []).filter((set) => set.appIds.includes(app.id)).flatMap((set) => set.actions);
+      for (const action of [...(app.windowKinds ?? []).flatMap((windowKind) => windowKind.actions ?? []), ...setActions, ...(app.actions ?? [])]) {
         if (seen.has(action.id)) continue;
         seen.add(action.id);
         actions.push(action);

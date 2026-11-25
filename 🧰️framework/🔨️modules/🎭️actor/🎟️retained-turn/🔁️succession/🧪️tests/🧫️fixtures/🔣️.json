@@ -202,6 +202,23 @@
       "accepted": false
     }
   ],
+  "offers": [
+    {
+      "name": "current worker",
+      "offered": "function",
+      "accepted": true
+    },
+    {
+      "name": "worker staged before succession",
+      "offered": "absent",
+      "accepted": false
+    },
+    {
+      "name": "worker that offers no callable",
+      "offered": "value",
+      "accepted": false
+    }
+  ],
   "run": {
     "stocks": 6,
     "command": {
@@ -212,5 +229,9 @@
       "work": 120
     },
     "jobEvery": 25
+  },
+  "retirement": {
+    "jobs": 1,
+    "liveSourcesAfterClose": 0
   }
 }

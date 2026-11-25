@@ -1,5 +1,6 @@
 {
   "contract": "semio.original.snapshot-source/v1",
+  "registryOwnerClose": { "underfundFinalCopyBy": 1, "heldOnDenial": true, "closedAfterFunding": true },
   "cases": [
     {
       "id": "held-empty",

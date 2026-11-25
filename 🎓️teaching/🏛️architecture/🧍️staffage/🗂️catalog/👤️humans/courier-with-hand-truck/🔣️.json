@@ -13,15 +13,69 @@
       "de": "Ein 34-jähriger Paketkurier von 1,82 m in Warnschutzjacke, Cargohose, Arbeitsstiefeln und Mütze, der eine Stahlrohr-Sackkarre (1,15 m hoch, 0,57 m breit, Lufträder 260 x 85 mm) mit drei Paketen (38 kg) bei 45 Grad auf den Rädern ausbalanciert schiebt. Posen: Warten, Last kippen, aufrecht abgestellt; Clips: Gehen mit Last und Zurückwiegen der Last über die Räder."
     },
     "tags": [
-      "human",
-      "adult",
-      "man",
-      "courier",
-      "delivery",
-      "hand-truck",
-      "load",
-      "workwear",
-      "walking"
+      {
+        "id": "human",
+        "title": {
+          "en": "human",
+          "de": "Mensch"
+        }
+      },
+      {
+        "id": "adult",
+        "title": {
+          "en": "adult",
+          "de": "erwachsen"
+        }
+      },
+      {
+        "id": "man",
+        "title": {
+          "en": "man",
+          "de": "Mann"
+        }
+      },
+      {
+        "id": "courier",
+        "title": {
+          "en": "courier",
+          "de": "Kurier"
+        }
+      },
+      {
+        "id": "delivery",
+        "title": {
+          "en": "delivery",
+          "de": "Lieferung"
+        }
+      },
+      {
+        "id": "hand-truck",
+        "title": {
+          "en": "hand truck",
+          "de": "Sackkarre"
+        }
+      },
+      {
+        "id": "load",
+        "title": {
+          "en": "load",
+          "de": "Last"
+        }
+      },
+      {
+        "id": "workwear",
+        "title": {
+          "en": "workwear",
+          "de": "Arbeitskleidung"
+        }
+      },
+      {
+        "id": "walking",
+        "title": {
+          "en": "walking",
+          "de": "Gehen"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage content worker NW-H3",

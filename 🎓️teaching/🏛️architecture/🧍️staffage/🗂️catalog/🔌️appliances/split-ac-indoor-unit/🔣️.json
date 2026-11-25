@@ -13,13 +13,55 @@
       "de": "Ein wandhängendes Innenteil eines Split-Klimageräts (0,85 m breit, 0,29 m hoch, 0,21 m tief, 9 kg) an einer Stahl-Wandplatte: Ansauggitter oben, Frontblende, gefalteter Verdampfer um einen Querstromlüfter und eine gewölbte Ausblasklappe, die unter der Front aufschwenkt: Nennkühlleistung 2,5 kW bei 0,7 kW elektrischer Aufnahme, ein Strahl von 450 m3/h, um 13 K abgekühlt."
     },
     "tags": [
-      "split-ac",
-      "air-conditioner",
-      "indoor-unit",
-      "cooling",
-      "wall-mounted",
-      "appliance",
-      "air-jet"
+      {
+        "id": "split-ac",
+        "title": {
+          "en": "split AC",
+          "de": "Split-Klimagerät"
+        }
+      },
+      {
+        "id": "air-conditioner",
+        "title": {
+          "en": "air conditioner",
+          "de": "Klimagerät"
+        }
+      },
+      {
+        "id": "indoor-unit",
+        "title": {
+          "en": "indoor unit",
+          "de": "Innengerät"
+        }
+      },
+      {
+        "id": "cooling",
+        "title": {
+          "en": "cooling",
+          "de": "Kühlung"
+        }
+      },
+      {
+        "id": "wall-mounted",
+        "title": {
+          "en": "wall mounted",
+          "de": "wandmontiert"
+        }
+      },
+      {
+        "id": "appliance",
+        "title": {
+          "en": "appliance",
+          "de": "Gerät"
+        }
+      },
+      {
+        "id": "air-jet",
+        "title": {
+          "en": "air jet",
+          "de": "Luftstrahl"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage content worker (appliances)",

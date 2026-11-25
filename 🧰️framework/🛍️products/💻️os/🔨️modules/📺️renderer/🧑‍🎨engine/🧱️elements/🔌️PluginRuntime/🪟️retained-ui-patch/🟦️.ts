@@ -97,8 +97,9 @@ export function ownedUiComponentToBuilt(component: RetainedUiNodeRecord["compone
  * the unverified-boundary caveat) into the friendly `Effect` union `🎠️kernel` already
  * declares — Rust `kernel::Effect`'s externally-tagged serde shape (`{effectName: {...fields}}` /
  * `"requestSync"`), which is what every downstream consumer (`applyHostEffects` and friends) already
- * expects. Covers the effect kinds this renderer actually branches on; an effect kind with no case
- * here degrades to an honest `[TRACE]`-logged drop rather than guessing an unverified shape. */
+ * expects. Covers the effect kinds this renderer actually branches on; every other tag goes to the
+ * actor-owned decoder, so a kind the guest returns (`publish-event`, the guest's `os.on-demand.request`
+ * ask) is never dropped here as a `null` only because this switch forgot it. */
 export function wireEffectToFriendly(effect: WireVariant): Effect | null {
   const val = (effect.val ?? {}) as Record<string, unknown>;
   const params = (val.params && typeof val.params === "object" ? val.params : {}) as Record<string, unknown>;
@@ -175,7 +176,8 @@ export function wireEffectToFriendly(effect: WireVariant): Effect | null {
       return null;
     }
     default:
-      return null;
+      if (effect.tag.startsWith("typed-operation-")) return null;
+      return actorWireEffectToFriendly(effect, (bytes) => decodeWirePack(bytes, "wire.params.args"));
   }
 }
 //#endregion 🔖️ActorAdapter

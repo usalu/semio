@@ -54,6 +54,9 @@ export type TreeWindowReportV1 = { readonly nodeKey: string; readonly offset: nu
 export type TreeWindowContextValue = {
   readonly bodyKey: string;
   readonly openStates: Readonly<Record<string, boolean>>;
+  /** 🔔️ Notifies a body's trees that a disclosure toggle changed {@link openStates}, so they re-derive their open rows even when the guest's answer to the toggle leaves the document unchanged. */
+  readonly subscribe?: (listener: () => void) => () => void;
+  readonly revision?: () => number;
   readonly setOpen: (nodeKey: string, open: boolean) => void;
   readonly setFormPage?: (windowId: string, page: number) => void;
   readonly reportWindows: (requests: readonly TreeWindowReportV1[], viewportRows: number) => void;
@@ -321,6 +324,26 @@ export type TreeWindowServedMemoryV1 = {
   readonly total: number;
 };
 
+/** 🧲️ Gives an off-screen container back the rows it already materialised when the body's node ledger still has room, nearest the viewport first. The neutral rule ({@link treeWindowBodyRequestsV1}) evicts them to zero for every host; evicting them here made a container's children vanish for the whole guest round trip once a toggle or scroll moved it, and re-streamed them seconds later while the guest was busy. */
+export function treeWindowKeepOffscreenRowsV1(requests: readonly TreeWindowRequest[], containers: readonly TreeWindowContainerMeasure[], visible: ReadonlyMap<string, unknown>): readonly TreeWindowRequest[] {
+  const cost = (entries: readonly TreeWindowRequest[]) => entries.length + entries.reduce((carry, entry) => carry + entry.rows, 0);
+  const next = [...requests];
+  let spare = TREE_WINDOW_BODY_NODE_BUDGET - cost(next);
+  const measured = new Map(containers.map((container) => [container.key, container] as const));
+  const evicted = next.flatMap((request, index) => {
+    const container = measured.get(request.key);
+    return container !== undefined && request.rows === 0 && !visible.has(request.key) && container.length > 0 ? [{ index, container }] : [];
+  }).sort((left, right) => Math.abs(left.container.top) - Math.abs(right.container.top));
+  for (const { index, container } of evicted) {
+    const total = Math.max(0, Math.floor(container.total));
+    const rows = Math.min(Math.floor(container.length), total, spare);
+    if (rows <= 0) continue;
+    spare -= rows;
+    next[index] = { key: container.key, offset: Math.min(Math.max(0, Math.floor(container.offset)), Math.max(0, total - rows)), rows };
+  }
+  return next;
+}
+
 /**
  * 🧠️ {@link treeWindowBodyRequestsV1}, spent where the guest can actually answer it.
  *
@@ -351,7 +374,7 @@ export function treeWindowServedRequestsV1(
   const visible = treeWindowVisibleRowsForViewport(containers, 0, viewportHeight);
   const measured = new Map(containers.map((container) => [container.key, container] as const));
   const next = new Map<string, TreeWindowServedMemoryV1>();
-  const requests = treeWindowBodyRequestsV1(containers, viewportHeight).map((request) => {
+  const requests = treeWindowKeepOffscreenRowsV1(treeWindowBodyRequestsV1(containers, viewportHeight), containers, visible).map((request) => {
     const container = measured.get(request.key);
     const total = Math.max(0, Math.floor(container?.total ?? 0));
     const offset = Math.max(0, Math.floor(container?.offset ?? 0));

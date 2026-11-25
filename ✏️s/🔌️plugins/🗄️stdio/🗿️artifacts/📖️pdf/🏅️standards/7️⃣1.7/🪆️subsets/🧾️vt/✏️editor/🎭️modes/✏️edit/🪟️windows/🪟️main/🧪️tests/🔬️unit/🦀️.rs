@@ -17,9 +17,12 @@ fn definition_declares_the_page_canvas() {
     let def = definition();
     assert_eq!(def.id, WINDOW_KIND_ID);
     assert_eq!(def.body_key, BODY_KEY);
-    assert!(def.actions.iter().any(|action| action.id == "insert-text"));
-    assert!(def.actions.iter().any(|action| action.id == "insert-rectangle"));
-    assert!(def.actions.iter().any(|action| action.id == "insert-image"));
+    assert!(def.actions.iter().any(|action| action.id == "canvasPointerDown"));
+    let edits = page::edit_action_definitions();
+    for id in ["insert-text", "insert-rectangle", "insert-image"] {
+        assert!(edits.iter().any(|action| action.id == id), "{id} is an app-roster edit verb");
+        assert!(!def.actions.iter().any(|action| action.id == id), "the page canvas does not claim the shared edit verb {id}");
+    }
 }
 
 #[test]

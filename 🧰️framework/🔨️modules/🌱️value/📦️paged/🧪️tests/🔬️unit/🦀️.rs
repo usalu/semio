@@ -79,3 +79,34 @@ fn paged_map_preserves_insertion_order_and_refuses_duplicate_owners() {
     assert_eq!(value.to_value(), input);
     assert!(PagedMap::<u64, 4>::from_value(DslValue::Object(vec![("same".into(), crate::dsl_value!(1u64)), ("same".into(), crate::dsl_value!(2u64))])).is_err());
 }
+
+#[test]
+fn paged_owners_construct_and_encode_under_one_admitted_control() {
+    fn law<T: FromValue + ToValue>(input: &serde_json::Value, accepted: bool) {
+        let source = DslValue::from(input);
+        let mut open = |_| true;
+        let mut admitted = crate::NativeDecodeControl::new(1 << 20, &mut open);
+        let native = T::from_value_controlled(&source, &mut admitted);
+        assert_eq!(native.is_ok(), accepted, "{input}");
+        if let Ok(value) = native {
+            let mut open = |_| true;
+            let output = value.to_value_controlled(&mut crate::NativeEncodeControl::new(1 << 20, &mut open)).unwrap();
+            assert_eq!(serde_json::Value::from(&output), *input);
+        }
+        let empty = input.as_str().is_some_and(str::is_empty) || input.as_array().is_some_and(Vec::is_empty) || input.as_object().is_some_and(serde_json::Map::is_empty);
+        let mut open = |_| true;
+        assert!(empty || T::from_value_controlled(&source, &mut crate::NativeDecodeControl::new(0, &mut open)).is_err());
+        let mut closed = |_| false;
+        assert!(T::from_value_controlled(&source, &mut crate::NativeDecodeControl::new(1 << 20, &mut closed)).is_err());
+    }
+    let corpus: serde_json::Value = serde_json::from_str(crate::text("📦️paged/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    for row in corpus["vectors"].as_array().unwrap() {
+        let (input, accepted) = (&row["input"], row["accepted"].as_bool().unwrap());
+        match row["kind"].as_str().unwrap() {
+            "text" => law::<PagedUtf8<2048>>(input, accepted),
+            "list" => law::<PagedList<u64, 8>>(input, accepted),
+            "map" => law::<PagedMap<u64, 4>>(input, accepted),
+            _ => {}
+        }
+    }
+}

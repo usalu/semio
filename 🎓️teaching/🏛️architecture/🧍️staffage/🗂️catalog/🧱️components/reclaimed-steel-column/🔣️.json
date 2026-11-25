@@ -13,14 +13,62 @@
    "de": "Eine 3,60 m lange Hallenstütze IPB 200 (HEB 200) aus St 37-2, rückgebaut und in einer Bauteilbörse gelagert: angeschweißte Fußplatte 400 x 300 x 25 mm mit zwei Rippen und vier unter der Platte bündig brenngeschnittenen M24-Ankerschrauben (Muttern und Scheiben noch darauf), Kopfplatte 240 x 220 x 20 mm mit vier Schraubenlöchern, zwei alte Laschenlöcher im Steg, der unregelmäßige Stummel eines abgetrennten Verbandsblechs und verwitterter Rostschutzanstrich. Sie liegt auf ihrem Unterflansch auf zwei Kanthölzern mit einer im markierten Schwerpunkt geschnürten Rundschlinge, wird an dieser Schlinge waagrecht angehoben und als Vordachstütze unter Normalkraft und Wind wieder aufrecht eingebaut."
   },
   "tags": [
-   "component",
-   "reclaimed",
-   "structural",
-   "steel",
-   "column",
-   "hot-rolled",
-   "base-plate",
-   "stored-on-bearers"
+   {
+    "id": "component",
+    "title": {
+     "en": "component",
+     "de": "Bauteil"
+    }
+   },
+   {
+    "id": "reclaimed",
+    "title": {
+     "en": "reclaimed",
+     "de": "wiederverwendet"
+    }
+   },
+   {
+    "id": "structural",
+    "title": {
+     "en": "structural",
+     "de": "tragend"
+    }
+   },
+   {
+    "id": "steel",
+    "title": {
+     "en": "steel",
+     "de": "Stahl"
+    }
+   },
+   {
+    "id": "column",
+    "title": {
+     "en": "column",
+     "de": "Stütze"
+    }
+   },
+   {
+    "id": "hot-rolled",
+    "title": {
+     "en": "hot rolled",
+     "de": "warmgewalzt"
+    }
+   },
+   {
+    "id": "base-plate",
+    "title": {
+     "en": "base plate",
+     "de": "Fußplatte"
+    }
+   },
+   {
+    "id": "stored-on-bearers",
+    "title": {
+     "en": "stored on bearers",
+     "de": "auf Kanthölzern gelagert"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage component authors",

@@ -56,6 +56,8 @@ semio-framework-job-worker-authority = { path = "../../../../../../🔨️module
 
 semio-framework-composition-admission = { path = "../../../../../../🔨️modules/🧬️schema/🧩️composition/📥️admission/📦️packages/🦀️rust" }
 semio-plugin-ownership = { path = "../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
+semio-plugin-store-lifecycle = { path = "../../♻️lifecycle/🧱️owner/📦️packages/🦀️rust" }
+semio-plugin-transient-publication = { path = "../../🫧️transient/🧱️owner/📦️packages/🦀️rust" }
 semio-framework-pack = { path = "../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-plugin-mounted-owner = { path = "../../🏇️mounted-owner/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }

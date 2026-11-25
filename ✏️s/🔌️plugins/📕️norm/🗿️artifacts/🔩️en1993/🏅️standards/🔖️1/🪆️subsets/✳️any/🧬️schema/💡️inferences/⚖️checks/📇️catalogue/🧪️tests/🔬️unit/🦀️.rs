@@ -1,5 +1,6 @@
 use super::*;
 use design_case::CaseCatalogue;
+use semio_framework_test_fixtures::fixture_text;
 
 fn run(id: &str) {
     let entry = design_case::entry::<En1993Cases>(id).expect("catalogue entry");
@@ -53,7 +54,7 @@ fn closed_stringer_table_8_8_fatigue() {
     use std::collections::BTreeMap;
 
     type Case = (String, BTreeMap<String, String>, BTreeMap<String, f64>, Vec<(f64, f64, String)>);
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../table-8-8.json")).expect("Table 8.8 fixture");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../📇️catalogue/🧪️tests/table-8-8.json")).expect("Table 8.8 fixture");
     for row in fixture["cases"].as_array().expect("fixture cases") {
         let (id, choices, numbers, expected): Case = serde_json::from_value(row.clone()).expect("fixture row");
         let entry = design_case::entry::<En1993Cases>(&id).expect("entry");
@@ -82,7 +83,7 @@ fn open_stringer_table_8_9_fatigue() {
     use std::collections::BTreeMap;
 
     type Case = (String, String, BTreeMap<String, f64>, Vec<(f64, f64, String)>);
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../table-8-9.json")).expect("Table 8.9 fixture");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../📇️catalogue/🧪️tests/table-8-9.json")).expect("Table 8.9 fixture");
     for row in fixture["cases"].as_array().expect("fixture cases") {
         let (id, basis, numbers, expected): Case = serde_json::from_value(row.clone()).expect("fixture row");
         let entry = design_case::entry::<En1993Cases>(&id).expect("entry");
@@ -112,7 +113,7 @@ fn runway_table_8_10_categories_and_applicability() {
     use semio_s_plugin_norm_compliance::CheckStatus;
 
     type TableCase = (String, String, String, f64, f64, f64, f64, f64, Option<f64>, Option<f64>, String, String);
-    let fixture = include_str!("../../table-8-10.json");
+    let fixture = fixture_text!("../../../📇️catalogue/🧪️tests/table-8-10.json");
     let document: serde_json::Value = serde_json::from_str(fixture).expect("Table 8.10 fixture");
     let entry = design_case::entry::<En1993Cases>("C93-18").expect("entry");
     let status = |value: &str| match value {
@@ -174,37 +175,37 @@ fn the_demo_cases_cover_every_entry_once() {
 
 #[test]
 fn hollow_section_table_8_6_categories_and_applicability() {
-    verify_member_fatigue_fixture("C93-26", include_str!("../../table-8-6.json"));
+    verify_member_fatigue_fixture("C93-26", fixture_text!("../../../📇️catalogue/🧪️tests/table-8-6.json"));
 }
 
 #[test]
 fn lattice_node_table_8_7_categories_and_applicability() {
-    verify_member_fatigue_fixture("C93-25", include_str!("../../table-8-7.json"));
+    verify_member_fatigue_fixture("C93-25", fixture_text!("../../../📇️catalogue/🧪️tests/table-8-7.json"));
 }
 
 #[test]
 fn load_carrying_weld_table_8_5_categories_and_applicability() {
-    verify_member_fatigue_fixture("C93-27", include_str!("../../table-8-5.json"));
+    verify_member_fatigue_fixture("C93-27", fixture_text!("../../../📇️catalogue/🧪️tests/table-8-5.json"));
 }
 
 #[test]
 fn weld_attachment_table_8_4_categories_and_applicability() {
-    verify_member_fatigue_fixture("C93-28", include_str!("../../table-8-4.json"));
+    verify_member_fatigue_fixture("C93-28", fixture_text!("../../../📇️catalogue/🧪️tests/table-8-4.json"));
 }
 
 #[test]
 fn transverse_butt_weld_table_8_3_categories_and_applicability() {
-    verify_member_fatigue_fixture("C93-29", include_str!("../../table-8-3.json"));
+    verify_member_fatigue_fixture("C93-29", fixture_text!("../../../📇️catalogue/🧪️tests/table-8-3.json"));
 }
 
 #[test]
 fn built_up_weld_table_8_2_categories_and_applicability() {
-    verify_member_fatigue_fixture("C93-30", include_str!("../../table-8-2.json"));
+    verify_member_fatigue_fixture("C93-30", fixture_text!("../../../📇️catalogue/🧪️tests/table-8-2.json"));
 }
 
 #[test]
 fn plain_and_fastened_table_8_1_categories_and_applicability() {
-    verify_member_fatigue_fixture("C93-31", include_str!("../../table-8-1.json"));
+    verify_member_fatigue_fixture("C93-31", fixture_text!("../../../📇️catalogue/🧪️tests/table-8-1.json"));
 }
 
 fn verify_member_fatigue_fixture(entry_id: &str, source: &str) {

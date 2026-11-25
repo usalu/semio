@@ -44,7 +44,6 @@ use semio_s_artifact_draw_drawing_mutations::DrawingMutation;
 use semio_s_artifact_draw_drawing_host::outcome::DrawingJobOutcomes;
 use semio_s_artifact_draw_drawing_editor_interaction::clipboard::media_type;
 use semio_framework::kernel::PasteAnchor;
-use semio_framework::kernel::ClipboardError;
 use semio_framework::kernel::ClipboardFragment;
 use semio_framework::kernel::PastePlacement;
 #[path="📋️metadata/🦀️.rs"]
@@ -72,7 +71,11 @@ pub const MAX_NATIVE_BYTES:usize=COPY_NATIVE_BYTES*2+MAX_BYTES*size_of::<DslValu
 macro_rules! source_doc{($workspace:expr)=>{$workspace.source.as_ref().expect("Drawing clipboard seals its source before any read").borrow().get()}}
 #[derive(RetireOwned)]
 #[value(send_only)]
-struct Workspace{source:Option<RetainedCloneSource<DrawingSnapshot,store::os_store::snapshot_read::SnapshotRead<DrawingSnapshot>>>,unsealed:Option<store::os_store::snapshot_read::SnapshotRead<DrawingSnapshot>>,sealing:store::os_store::snapshot_read::SnapshotReadSourceStaging<DrawingSnapshot>,input:Option<ArtifactReservedToolInput>,input_captured:bool,packet:Option<DrawingClipboard>,encoder:Option<semio_framework_pack_json::JsonWriteCursor<encode::ClipboardJsonSource>>,parser:Option<semio_framework_pack_json::JsonGrammarCursor<DslValue>>,hydration:Option<decode::ClipboardHydration>,placement:Option<semio_s_artifact_draw_drawing_scene_paint::placement::DrawingScenePlacementJob>,text:String,buffer_admitted:usize,roots:Vec<String>,retired_ids:Vec<String>,selected:Vec<String>,assets:Vec<String>,mutations:Vec<DrawingMutation>,effects:Vec<Effect>,interaction_writes:Vec<semio_plugin::InteractionWrite>,interaction_targets:Vec<protocol::InteractionTarget>,fragment:Option<ClipboardFragment>,pending_asset:Option<(String,DrawingImageAsset)>,rejected_completion:Option<crate::completion::RejectedCompletion>,parent:Option<String>,addresses:metadata::Table<DrawingLayerAddress>,visited:metadata::Table<()>,removed:metadata::Table<()>,identities:metadata::Table<String>,asset_identities:metadata::Table<String>,cycle_active:metadata::Table<()>,cycle_done:metadata::Table<()>,cycle_stack:Vec<(DrawingLayerAddress,usize)>,pending_native:NativeText,rejected_native:Option<NativeText>,retired_native:NativeRetired,target:NativeText}
+struct Workspace{source:Option<RetainedCloneSource<DrawingSnapshot,store::os_store::snapshot_read::SnapshotRead<DrawingSnapshot>>>,unsealed:Option<store::os_store::snapshot_read::SnapshotRead<DrawingSnapshot>>,sealing:store::os_store::snapshot_read::SnapshotReadSourceStaging<DrawingSnapshot>,input:Option<ArtifactReservedToolInput>,input_captured:bool,packet:Option<DrawingClipboard>,encoder:Option<semio_framework_pack_json::JsonWriteCursor<encode::ClipboardJsonSource>>,parser:Option<semio_framework_pack_json::JsonGrammarCursor<DslValue>>,hydration:Option<decode::ClipboardHydration>,placement:Option<Box<semio_s_artifact_draw_drawing_scene_paint::placement::DrawingScenePlacementJob>>,text:String,buffer_admitted:usize,roots:Vec<String>,retired_ids:Vec<String>,selected:Vec<String>,assets:Vec<String>,mutations:Vec<DrawingMutation>,effects:Vec<Effect>,interaction_writes:Vec<semio_plugin::InteractionWrite>,interaction_targets:Vec<protocol::InteractionTarget>,fragment:Option<ClipboardFragment>,pending_asset:Option<(String,DrawingImageAsset)>,rejected_completion:Option<crate::completion::RejectedCompletion>,parent:Option<String>,addresses:metadata::Table<DrawingLayerAddress>,visited:metadata::Table<()>,removed:metadata::Table<()>,identities:metadata::Table<String>,asset_identities:metadata::Table<String>,cycle_active:metadata::Table<()>,cycle_done:metadata::Table<()>,cycle_stack:Vec<(DrawingLayerAddress,usize)>,pending_native:NativeText,rejected_native:Option<NativeText>,retired_native:NativeRetired,target:NativeText}
+impl Workspace{
+    /// 📤️ A source whose publication is half done can neither be read nor retired until its staging hands over the last fields.
+    fn publishing_source(&self)->bool{self.source.as_ref().is_some_and(RetainedCloneSource::publication_pending)}
+}
 pub struct DrawingClipboardJob{owner:Option<Workspace>,retirement:RetainedCloneClose,outcomes:DrawingJobOutcomes,layer_clone:Option<Clone<DrawingLayerNode>>,asset_clone:Option<Clone<DrawingImageAsset>>,encoding:Option<NativeEncodeContinuation>,decoding:Option<NativeDecodeContinuation>,placement:PastePlacement,phase:u8,at:usize,closing:bool,complete:bool,locator:Option<DrawingLayerLocator>,footprint:Option<DrawingLayerCloneWorkAuthority>,source_root:Option<DrawingLayerAddress>,path:[usize;MAX_DEPTH],children:[usize;MAX_DEPTH],depth:usize,entered:bool,reference:usize,admitted_bytes:usize,normalize_other:usize,asset_append:usize,tree:Option<TreeCursor>,asset_search:usize,located_asset:Option<usize>,ordinal:usize,destination:[f64;6],inverse:[f64;6],offset:[f64;2],insertion:usize,scratch:[u8;MAX_ID_BYTES],material:[u8;MAX_ID_BYTES*2+64],mapped:[u8;76]}
 fn fault(error:impl std::fmt::Display)->semio_framework::Fault{semio_framework::Fault::from(error.to_string())}
 fn refused()->ValueError{ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"Invalid drawing clipboard input / Ungültige Zeichnungsdaten in der Zwischenablage")}
@@ -117,8 +120,8 @@ impl DrawingClipboardJob{
             let Some(DslValue::String(text))=property(fragment,"dslText")else{return Err(fault(refused()));};if text.len()>MAX_BYTES{return Err(fault("Drawing clipboard exceeds its declared byte capacity / Zeichnungszwischenablage überschreitet die zugelassene Größe"));}workspace.text=std::mem::take(text);
             workspace.parser=Some(semio_framework_pack_json::JsonGrammarCursor::new(semio_framework_pack_json::JsonMemberPolicy::Reject));self.phase=5;
         }else{
-            let Some(ArtifactReservedToolInput::Action{interaction,..})=workspace.input.as_ref()else{return Err(fault(refused()));};let selection=interaction.get().selection.get(semio_s_artifact_draw_drawing_editor_interaction::DRAWING_INTERACTION_DOMAIN).ok_or_else(||fault(ClipboardError::EmptySelection))?;
-            if selection.ids.len()>MAX_NODES{return Err(fault(refused()));}if selection.ids.is_empty(){return Err(fault(ClipboardError::EmptySelection));}
+            let Some(ArtifactReservedToolInput::Action{interaction,..})=workspace.input.as_ref()else{return Err(fault(refused()));};let selection=interaction.get().selection.get(semio_s_artifact_draw_drawing_editor_interaction::DRAWING_INTERACTION_DOMAIN).ok_or_else(||fault("Nothing is selected / Nichts ist ausgewählt"))?;
+            if selection.ids.len()>MAX_NODES{return Err(fault(refused()));}if selection.ids.is_empty(){return Err(fault("Nothing is selected / Nichts ist ausgewählt"));}
             initial_vec(&mut workspace.roots,MAX_NODES,&mut workspace.buffer_admitted,cx)?;initial_vec(&mut workspace.assets,MAX_NODES,&mut workspace.buffer_admitted,cx)?;initial_vec(&mut workspace.selected,selection.ids.len(),&mut workspace.buffer_admitted,cx)?;initial_vec(&mut workspace.retired_ids,MAX_NODES*2,&mut workspace.buffer_admitted,cx)?;
             workspace.packet=Some(DrawingClipboard{schema:copy_identity(SCHEMA,&mut workspace.buffer_admitted,cx)?,roots:Vec::new(),selected:Vec::new(),assets:Default::default()});self.phase=12;self.at=0;
         }
@@ -127,8 +130,8 @@ impl DrawingClipboardJob{
     /// 🧬️ Seals the captured snapshot read as the original clone source before any layer or asset is copied; true while the seal is still owed.
     fn seal_source(&mut self,request:&mut ArtifactReservedToolJobRequest<App>,cx:&mut StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         let workspace=self.owner.as_mut().ok_or_else(||ValueError::invariant("Clipboard owner is closing"))?;
-        if workspace.source.is_some(){return Ok(false);}
-        if workspace.unsealed.is_none()&&workspace.sealing.terminal_is_empty(){
+        if workspace.source.is_some()&&workspace.sealing.terminal_is_empty(){return Ok(false);}
+        if workspace.source.is_none()&&workspace.unsealed.is_none()&&workspace.sealing.terminal_is_empty(){
             let demand=store::os_store::snapshot_read::SnapshotRead::<DrawingSnapshot>::duplicate_original_demands();
             if cx.fuel_remaining()==0||!semio_framework_value::retained_clone::retained_clone_grant_admits(cx.retained_grant(),demand){return Ok(true);}
             let turn=request.snapshot_read.duplicate_original(&mut workspace.unsealed,cx.retained_grant());
@@ -159,7 +162,7 @@ impl DrawingClipboardJob{
         Ok(true)
     }
     fn advance(&mut self,request:&mut ArtifactReservedToolJobRequest<App>,cx:&mut StepContext<'_>)->Result<bool,semio_framework::Fault>{
-        if self.phase==0{self.prepare(request,cx)?;cx.consume_fuel(1);return Ok(false);}
+        if self.phase==0{self.prepare(request,cx)?;return Ok(false);}
         let workspace=self.owner.as_mut().ok_or_else(||fault("Clipboard owner is closing"))?;
         match self.phase{
             1=>{
@@ -282,7 +285,7 @@ impl DrawingClipboardJob{
             30=>{
                 cx.set_stage("clipboard-identities");
                 let packet=workspace.packet.as_ref().unwrap();
-                let Some(address)=self.tree.as_mut().unwrap().packet(packet)?else{self.tree=None;initial_vec(&mut workspace.cycle_stack,workspace.roots.len(),&mut workspace.buffer_admitted,cx)?;self.phase=38;self.at=0;return Ok(false);};
+                let Some(address)=self.tree.as_mut().unwrap().packet(packet)?else{self.tree=None;initial_vec(&mut workspace.cycle_stack,workspace.roots.len(),&mut workspace.buffer_admitted,cx)?;self.phase=40;self.at=0;return Ok(false);};
                 let node=packet_node(packet,address).ok_or_else(||fault(refused()))?;let base=layer_base(node);
                 if base.id.is_empty()||base.id.len()>MAX_ID_BYTES||workspace.roots.len()==MAX_NODES||!semio_s_artifact_draw_drawing_model::affine::drawing_transform_to_matrix(&base.transform).iter().all(|value|value.is_finite()){return Err(fault(refused()));}
                 let id=identity_text(&base.id,&mut self.scratch)?;if workspace.addresses.contains_key(&id){return Err(fault("Clipboard identities must be unique / Zwischenablagekennungen müssen eindeutig sein"));}workspace.addresses.insert(&id,address)?;workspace.roots.push(copy_identity(id,&mut workspace.buffer_admitted,cx)?);
@@ -296,7 +299,7 @@ impl DrawingClipboardJob{
                 if locator.found().is_some(){self.ordinal=self.ordinal.checked_add(1).ok_or_else(||fault(refused()))?;self.locator=None;return Ok(false);}
                 let mapped=identity_text(&workspace.target,&mut self.scratch)?;workspace.removed.insert_key(&mapped)?;workspace.identities.insert_text(id,&mapped)?;self.locator=None;self.ordinal=0;self.at+=1;
             },
-            38=>{
+            40=>{
                 cx.set_stage("clipboard-reference-validation");
                 let packet=workspace.packet.as_ref().unwrap();
                 if workspace.cycle_stack.is_empty(){if self.at==workspace.roots.len(){self.phase=31;self.at=0;return Ok(false);}let id=&workspace.roots[self.at];self.at+=1;if workspace.cycle_done.contains(id){return Ok(false);}workspace.cycle_active.insert_key(id)?;workspace.cycle_stack.push((workspace.addresses[id],0));return Ok(false);}
@@ -331,7 +334,7 @@ impl DrawingClipboardJob{
                 cx.set_stage("clipboard-placement");
                 let mut bounds=None;let mut centroid=[0.0;2];
                 if self.placement.position.is_some()&&!matches!(self.placement.anchor,PasteAnchor::Original){let source=ClipboardScene{packet:workspace.packet.as_ref().unwrap(),selected:&workspace.selected};
-                    if workspace.placement.is_none(){let prepared=semio_s_artifact_draw_drawing_scene_paint::placement::DrawingScenePlacementJob::new(&source,semio_s_artifact_draw_drawing_scene_mounted::limits(),semio_s_artifact_draw_drawing_scene_mounted::algorithms(),0.05).map_err(fault)?;let mut work=semio_framework_value::work::RetainedWorkLedger::new(cx.retained_grant());let Some(root)=work.enter()else{return Ok(false);};if !work.can_step(){work.exit();return Ok(false);}workspace.placement=Some(prepared);work.note_source(root);work.exit();cx.consume_retained(work.receipt()).map_err(fault)?;cx.consume_fuel(1);return Ok(false);}
+                    if workspace.placement.is_none(){let bytes=size_of::<semio_s_artifact_draw_drawing_scene_paint::placement::DrawingScenePlacementJob>();let grant=cx.retained_grant();if cx.fuel_remaining()==0||grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_capacity_bytes<bytes||grant.maximum_depth==0{return Ok(false);}let prepared=semio_s_artifact_draw_drawing_scene_paint::placement::DrawingScenePlacementJob::new(&source,semio_s_artifact_draw_drawing_scene_mounted::limits(),semio_s_artifact_draw_drawing_scene_mounted::algorithms(),0.05).map_err(fault)?;let mut work=semio_framework_value::work::RetainedWorkLedger::new(cx.retained_grant());let Some(root)=work.enter()else{return Ok(false);};if !work.can_step(){work.exit();return Ok(false);}workspace.placement=Some(Box::new(prepared));work.note_source(root);work.exit();cx.consume_retained(work.receipt()).map_err(fault)?;cx.consume_retained(semio_framework_value::retained_clone::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,retained_capacity_bytes:bytes,..Default::default()}).map_err(fault)?;cx.consume_fuel(1);return Ok(false);}
                     let job=workspace.placement.as_mut().ok_or_else(||fault(refused()))?;let progress=job.advance_original(&source,cx).map_err(|error|fault(semio_framework_job::OriginalDomainFailure::domain_message(&error)))?;if !progress.done||job.last_turn_work()>0{return Ok(false);}let output=job.result().map_err(fault)?;bounds=output.bounds;centroid=output.centroid;
                 }
 
@@ -364,19 +367,19 @@ impl DrawingClipboardJob{
             12=>{cx.set_stage("clipboard-selection");let Some(ArtifactReservedToolInput::Action{interaction,..})=workspace.input.as_ref()else{return Err(fault(refused()));};let ids=&interaction.get().selection[semio_s_artifact_draw_drawing_editor_interaction::DRAWING_INTERACTION_DOMAIN].ids;if self.at==ids.len(){self.phase=1;self.at=0;return Ok(false);}let id=&ids[self.at];if id.is_empty()||id.len()>MAX_ID_BYTES{return Err(fault(refused()));}if !workspace.selected.contains(id){workspace.selected.push(copy_identity(id,&mut workspace.buffer_admitted,cx)?);workspace.roots.push(copy_identity(id,&mut workspace.buffer_admitted,cx)?);}self.at+=1;},
             13=>{cx.set_stage("clipboard-selected-identities");if self.at==workspace.selected.len(){self.phase=2;self.at=0;return Ok(false);}let id=copy_identity(&workspace.selected[self.at],&mut workspace.buffer_admitted,cx)?;workspace.packet.as_mut().unwrap().selected.push(id);self.at+=1;},
             _=>return Err(fault(refused()))
-        };cx.consume_fuel(1);Ok(false)
+        };Ok(false)
     }
     fn publish(&mut self,request:&ArtifactReservedToolJobRequest<App>,result:Result<(),semio_framework::Fault>)->DrawingJobTurn{
         let workspace=self.owner.as_mut().unwrap();let emit=result.map(|()|{
             let mut emit=Emit::mutations(std::mem::take(&mut workspace.mutations));
             emit.effects=std::mem::take(&mut workspace.effects);emit.interaction_writes=std::mem::take(&mut workspace.interaction_writes);emit
         });
-        let failed=emit.is_err();let completion=&request.completion;
+        let completion=&request.completion;
         if let Err(rejected)=completion.complete(emit,EphemeralEmit::default()){
             workspace.rejected_completion=Some(crate::completion::RejectedCompletion::new(rejected));
             return self.outcomes.fault("drawing.clipboard-completion-rejected");
         }
-        self.complete=true;if failed{self.outcomes.fault("drawing.clipboard-refused")}else{DrawingJobTurn::Complete}
+        self.complete=true;DrawingJobTurn::Complete
     }
     fn traversal_close_bytes(&self) -> usize {
         usize::from(self.locator.is_some()) * size_of::<Option<DrawingLayerLocator>>()
@@ -406,14 +409,18 @@ impl DrawingClipboardJob{
         if self.decoding.is_some() {
             return self.retirement.next_owner_demands::<NativeDecodeContinuation>(true, &None, body);
         }
+        if let Some(workspace) = self.owner.as_ref().filter(|workspace| workspace.publishing_source()) {
+            return workspace.sealing.next_demand();
+        }
         self.retirement.next_owner_demands::<Workspace>(self.owner.is_some(), &None, body)
     }
 }
 impl DrawingClipboardJob{
+    /// ⛽️ A step that charged nothing of its own costs one unit, so no step ever charges past the fuel it was entered with.
     fn turn(&mut self,request:&mut ArtifactReservedToolJobRequest<App>,cx:&mut StepContext<'_>)->DrawingJobTurn{
         if self.outcomes.faulted(){return DrawingJobTurn::Fault;}
         if self.closing||cx.is_cancelled(){return DrawingJobTurn::Cancelled;}if self.complete{return DrawingJobTurn::Complete;}
-        while !cx.should_yield(){if cx.is_cancelled(){return DrawingJobTurn::Cancelled;}let effect_turn=matches!(self.phase,5|34);let fuel_before=cx.fuel_remaining();let result=self.advance(request,cx);if !effect_turn{cx.consume_fuel(1);}else if cx.fuel_remaining()==fuel_before&&matches!(&result,Ok(false)){return DrawingJobTurn::Yield;}match result{Ok(true)=>return self.publish(request,Ok(())),Ok(false)=>{},Err(error)=>return self.publish(request,Err(error))}}
+        while !cx.should_yield(){if cx.is_cancelled(){return DrawingJobTurn::Cancelled;}let effect_turn=matches!(self.phase,5|34);let fuel_before=cx.fuel_remaining();let result=self.advance(request,cx);if cx.fuel_remaining()==fuel_before{if effect_turn&&matches!(&result,Ok(false)){return DrawingJobTurn::Yield;}cx.consume_fuel(1);}match result{Ok(true)=>return self.publish(request,Ok(())),Ok(false)=>{},Err(error)=>return self.publish(request,Err(error))}}
         DrawingJobTurn::Yield
     }
 }
@@ -493,6 +500,12 @@ impl DrawingClipboardJob{
         }
         if !self.retirement.is_empty() {
             return self.retirement.step_granted(body, effect);
+        }
+        if self.encoding.is_none() && self.decoding.is_none() {
+            if let Some(workspace) = self.owner.as_mut().filter(|workspace| workspace.publishing_source()) {
+                let turn = workspace.sealing.step(&mut workspace.source, effect);
+                return RetainedWorkPoll::Complete(RetainedWorkOutcome { result: turn.result.map_err(Into::into), work: turn.work });
+            }
         }
         let turn = if self.encoding.is_some() {
             self.retirement.begin_granted(&mut self.encoding, effect)

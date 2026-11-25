@@ -23,9 +23,3 @@ pub fn render(host: &NormHost<En1994Family>, locale: semio_ui_locale::Locale) ->
     semio_s_plugin_norm_app_surface::render_summary(host, locale)
 }
 //#endregion 🔖️Render
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

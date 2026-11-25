@@ -24,6 +24,12 @@ name = "compliance_gate"
 path = "../../🧪️tests/🚦️compliance-gate/🦀️.rs"
 
 [dependencies]
+semio-hub-norm-eurocode-structural-en1992-editor = { workspace = true }
+semio-hub-norm-eurocode-structural-en1992-viewer = { workspace = true }
+semio-hub-norm-eurocode-structural-en1993-editor = { workspace = true }
+semio-hub-norm-eurocode-structural-en1993-viewer = { workspace = true }
+semio-hub-norm-eurocode-structural-en1994-editor = { workspace = true }
+semio-hub-norm-eurocode-structural-en1994-viewer = { workspace = true }
 semio-s-artifact-norm-en1992-viewer = { workspace = true }
 semio-s-artifact-norm-en1992-model = { workspace = true }
 semio-s-artifact-norm-en1992-editor = { workspace = true }

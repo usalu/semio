@@ -1753,6 +1753,7 @@
             "identity-unregistered",
             "no-toolchain",
             "provisioning",
+            "partition-detached",
             "sandbox-unavailable",
             "disk-full",
             "policy-off",

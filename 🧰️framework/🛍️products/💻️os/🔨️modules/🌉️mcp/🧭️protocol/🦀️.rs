@@ -558,10 +558,10 @@ impl CallToolResult {
     }
 
     /// 🚧️ A TOOL-execution failure — the JSON-RPC envelope stays a success; only `is_error` says the
-    /// tool itself failed. Content carries the human-readable message, `structuredContent` the full
+    /// tool itself failed. Content carries the human-readable message led by its `CODE` (clients that show only text still see the code), `structuredContent` the full
     /// [`GatewayError`] payload.
     pub fn tool_error(error: &GatewayError) -> Self {
-        Self { content: vec![ContentBlock::Text { text: error.message.clone() }], structured_content: Some(error.to_tool_error_payload()), is_error: true }
+        Self { content: vec![ContentBlock::Text { text: format!("{}: {}", error.code.wire_name(), error.message) }], structured_content: Some(error.to_tool_error_payload()), is_error: true }
     }
 }
 
@@ -583,6 +583,7 @@ type ToolHandler = Arc<dyn Fn(serde_json::Value) -> CallToolResult + Send + Sync
 pub struct InMemoryToolRegistry {
     pub tools: BTreeMap<String, Tool>,
     pub handlers: BTreeMap<String, ToolHandler>,
+    validators: BTreeMap<String, Arc<semio_framework_schema::OwnedJsonSchemaValidator>>,
 }
 
 impl InMemoryToolRegistry {
@@ -600,6 +601,9 @@ impl InMemoryToolRegistry {
         let mut tool = tool;
         convert_draft07_to_2020_12(&mut tool.input_schema);
         normalize_boolean_subschemas(&mut tool.input_schema);
+        let validator = semio_framework_schema::OwnedJsonSchemaValidator::compile(&tool.input_schema.to_string())
+            .map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("tool `{}` publishes an input schema its own validator rejects: {error}", tool.name)))?;
+        self.validators.insert(tool.name.clone(), Arc::new(validator));
         if let Some(output_schema) = tool.output_schema.as_mut() {
             convert_draft07_to_2020_12(output_schema);
             normalize_boolean_subschemas(output_schema);
@@ -611,6 +615,18 @@ impl InMemoryToolRegistry {
     }
 }
 
+/// 🚪️ The one generic gate before any tool body: `arguments` (an absent object is `{}`) must satisfy the
+/// tool's own published `inputSchema` — type, required, bounds and `additionalProperties` — so no
+/// handler re-checks what the schema already says. A violation is a typed `INPUT_INVALID`.
+fn rejected_arguments(name: &str, validator: &semio_framework_schema::OwnedJsonSchemaValidator, arguments: &serde_json::Value) -> Option<CallToolResult> {
+    let empty = serde_json::json!({});
+    let checked = if arguments.is_null() { &empty } else { arguments };
+    validator
+        .validate_json(&checked.to_string())
+        .err()
+        .map(|error| CallToolResult::tool_error(&GatewayError::new(GatewayErrorCode::InputInvalid, format!("invalid arguments for `{name}`: {error}")).with_details(serde_json::json!({ "tool": name }))))
+}
+
 impl ToolRegistry for InMemoryToolRegistry {
     fn list(&self) -> Vec<Tool> {
         self.tools.values().cloned().collect()
@@ -618,7 +634,7 @@ impl ToolRegistry for InMemoryToolRegistry {
 
     fn call(&self, name: &str, arguments: serde_json::Value) -> Result<CallToolResult, GatewayError> {
         match self.handlers.get(name) {
-            Some(handler) => Ok(handler(arguments)),
+            Some(handler) => Ok(self.validators.get(name).and_then(|validator| rejected_arguments(name, validator, &arguments)).unwrap_or_else(|| handler(arguments))),
             None => Err(GatewayError::new(GatewayErrorCode::NotFound, format!("unknown tool: {name}"))),
         }
     }

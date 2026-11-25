@@ -38,6 +38,7 @@ pub enum DeflateMutation {
     SetPayload(set_payload::SetPayload),
 }
 dsl::original_pack_value_operation_receiving!(DeflateMutation);
+dsl::artifact_persisted_binary_operation!(DeflateMutation);
 //#endregion 🔖️Mutations
 
 //#region 🔖️Kinds

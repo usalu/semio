@@ -1,0 +1,28 @@
+#!/bin/sh
+# 🎟️ MM job 3 (at most 20 min, at most 700 MB): the profile of saguaro-cactus, the identity of the final trial tree on finned-heat-exchanger, jogger and small vegetation, and, when it exists by then, the script phase2.sh of the scratch folder.
+M=/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️22/GET-STAFFAGE-RUNNING-END-TO-END-AND-FINISH-ALL-STAFFAGE-TICKETS/🧰️matrix/MM
+mv "$M/next.sh" "$M/next.3.ran" 2>/dev/null
+G="${M%/🧰️matrix/MM}/🗑️generated/matrix/MM"
+X=/private/tmp/claude-501/-Users-ueli-Documents-semio/26600f60-7314-4bf4-ab97-26644d4b8c37/scratchpad
+BUN=$(ls ~/Library/Caches/semio/runtimes/bun/*/bun | head -1)
+L="$G/n3"; mkdir -p "$L"; rm -f "$L/ended"
+cd "$X" || exit 1
+g() { name=$1; shift; sh "$M/guarded.sh" 700 "$L/$name.log" timeout "$@"; }
+S=🎓️teaching/🏛️architecture/🧍️staffage
+T2="$X/trial2/$S/🧪️tests/🔭️multiview-coverage"
+TB="$X/base/$S/🧪️tests/🔭️multiview-coverage"
+g hot 60 "$BUN" --smol "$M/hot.ts" --tree "$X/trial2" --only evaluate --count 4 jogger:50 saguaro-cactus:50
+g hot2 60 "$BUN" --smol "$M/hot.ts" --tree "$X/trial2" --only evaluate --count 2 cyclist:500 cyclist:50 dancer:50
+g prof-saguaro 60 "$BUN" --smol --cpu-prof --cpu-prof-dir "$L/prof-saguaro" "$M/hot.ts" --tree "$X/trial2" --only evaluate --count 4 saguaro-cactus:50
+g finned 60 "$BUN" "$M/one.ts" --snapshot cat/🏗️machinery/finned-heat-exchanger/🔣️.json --out "$L/finned.json" --suite "$T2"
+cmp "$L/finned.json" "$G/n1/finned-base.json" && echo "finned-heat-exchanger identical" >> "$L/same.txt"
+for id in boxwood-ball privet-hedge european-larch; do
+  g $id-trial 100 "$BUN" --smol "$M/one.ts" --snapshot cat/🌳️vegetation/$id/🔣️.json --out "$L/$id-trial.json" --suite "$T2"
+  [ -e "$L/$id-trial.json" ] && g $id-base 330 "$BUN" --smol "$M/one.ts" --snapshot cat/🌳️vegetation/$id/🔣️.json --out "$L/$id-base.json" --suite "$TB"
+  cmp "$L/$id-trial.json" "$L/$id-base.json" && echo "$id identical" >> "$L/same.txt"
+done
+if [ -e "$X/phase2.sh" ]; then timeout 420 sh "$X/phase2.sh"; else
+  g jogger 300 "$BUN" "$M/one.ts" --snapshot cat/👤️humans/jogger/🔣️.json --out "$L/jogger.json" --suite "$T2"
+  python3 "$M/same-cells.py" "$G/f-pair/cells/jogger.json" "$L/jogger.json" >> "$L/same.txt" 2>&1
+fi
+date > "$L/ended"

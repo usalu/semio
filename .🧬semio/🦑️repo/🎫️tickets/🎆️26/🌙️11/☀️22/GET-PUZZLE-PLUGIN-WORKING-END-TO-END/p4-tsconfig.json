@@ -1,0 +1,11 @@
+{
+  "extends": "../../../../../../../✏️s/tsconfig.json",
+  "compilerOptions": { "noEmit": true, "incremental": false, "skipLibCheck": true },
+  "include": [],
+  "files": [
+    "../../../../../../../✏️s/🧑‍💻dev/🧩️puzzle/📖️stories/🎭️2d-board/🧪️.story.tsx",
+    "../../../../../../../✏️s/🧑‍💻dev/🧩️puzzle/📖️stories/🎭️2d-fixtures/🧪️.story.tsx",
+    "../../../../../../../✏️s/🧑‍💻dev/🧩️puzzle/📖️stories/🎭️3d-world/🧪️.story.tsx",
+    "../../../../../../../✏️s/🧑‍💻dev/🧩️puzzle/📖️stories/🎭️5d-timeline/🧪️.story.tsx"
+  ]
+}

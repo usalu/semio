@@ -65,7 +65,10 @@ pub struct AppDefinition {
     /// every window kind because a copy made the package descriptor grow as
     /// `apps × window kinds × actions`: 21 distinct rows were stored 675 times in one plugin, and
     /// the duplicates were 31.9 % of every shipped descriptor's bytes (ticket
-    /// 26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END, slice DS1).
+    /// 26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END, slice DS1). In a descriptor this roster holds only the rows
+    /// this app declares for itself: rows several apps of the plugin share are stored once in
+    /// `PluginManifest::action_sets` and join the roster in `PluginManifest::resolved_app`, so every window resolution
+    /// runs on a resolved app.
     #[serde(default)]
     #[value(default)]
     pub actions: Vec<ActionDefinition>,

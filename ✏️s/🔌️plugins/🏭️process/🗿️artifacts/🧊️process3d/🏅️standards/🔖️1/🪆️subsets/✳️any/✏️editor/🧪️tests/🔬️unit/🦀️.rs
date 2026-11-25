@@ -1,7 +1,8 @@
 extern crate semio_os_kernel as protocol;
 extern crate semio_os_kernel as store;
-#[path = "../🧰️support/🦀️.rs"]
+#[path = "../../🧪️harness/🦀️.rs"]
 mod context;
+semio_plugin::history_edit_acceptance_law!("process", Process3dPlayApp, context::process3d_app_manifest_for_tests, "../../..");
 
 use semio_s_artifact_process_process3d_editor::*;
 use semio_s_artifact_process_process3d_kit::{axis_angle_from_up_to, catalog_machine, installable_contributions, installed_catalogs, process_json_envelope_is_bounded, PROCESS3D_CONFIG_CONTRIBUTIONS_BYTES, PROCESS3D_EXAMPLE_CONCRETE_FOREST, PROCESS3D_EXAMPLE_PLATE, PROCESS3D_EXAMPLE_TIMBER, PROCESS_3D_PLAY_APP_ID, PROCESS_CONTRIBUTION_MAX_BYTES, PROCESS_CONTRIBUTION_MAX_DEPTH, PROCESS_CONTRIBUTION_MAX_ITEMS, PROCESS_CONTRIBUTION_MAX_STRING_BYTES};

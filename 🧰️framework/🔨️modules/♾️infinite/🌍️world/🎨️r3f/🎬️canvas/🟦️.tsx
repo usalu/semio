@@ -3,6 +3,7 @@
  * 🧱️ Child module of {@link ../🟦️.tsx | r3f}, which re-exports every public name below so import specifiers stay unchanged.
  */
 
+import { releaseWorldOrbitMouseCapture } from "./🖱️pointer-capture/🟦️.ts";
 import { reactHostPort, ThreeOrbitControls } from "@semio-tech/ui-react";
 import { GestureRecognizer, applyPinchToOrbit, type PinchStep } from "@semio-tech/framework";
 import React, { type CSSProperties, type ReactElement, type ReactNode } from "react";
@@ -56,13 +57,14 @@ export function worldCameraReportTargetV1(controls: WorldOrbitControlsBinding | 
   return { x: target.x, y: target.y, z: target.z };
 }
 
-/** 🖱️ Default orbit mouse map: middle always pans; Alt+right orbits when rotation is enabled. */
-export function resolveWorldOrbitMouseButtonsIdle(_projection: OrbitCameraProjection = "perspective", _rotateEnabled = true): {
+/** 🖱️ Idle orbit mouse map: left and middle orbit (pan when the projection forbids rotation), right is assigned per press by {@link resolveWorldOrbitRightMouseAction}; Shift/Ctrl/Meta flip orbit and pan inside three. */
+export function resolveWorldOrbitMouseButtonsIdle(_projection: OrbitCameraProjection = "perspective", rotateEnabled = true): {
   readonly LEFT: number | null;
   readonly MIDDLE: number;
   readonly RIGHT: number | null;
 } {
-  return { LEFT: null, MIDDLE: MOUSE.PAN, RIGHT: null };
+  const primary = rotateEnabled ? MOUSE.ROTATE : MOUSE.PAN;
+  return { LEFT: primary, MIDDLE: primary, RIGHT: null };
 }
 
 /** 🖱️ Resets orbit mouse buttons to {@link resolveWorldOrbitMouseButtonsIdle}. */
@@ -74,24 +76,21 @@ export function applyWorldOrbitMouseButtonsIdle(controls: WorldOrbitControlsBind
   controls.update?.();
 }
 
-/** 🖱️ Maps right-button modifiers: plain right → context menu, Shift+right → pan, Alt+right → orbit. */
-export function resolveWorldOrbitRightMouseAction(event: Pick<PointerEvent, "button" | "altKey" | "shiftKey">, _projection: OrbitCameraProjection = "perspective"): number | null {
+/** 🖱️ The three action to assign one right press so its EFFECT is: plain and Shift+right pan, Alt+right orbits (three flips the assigned action under Shift/Ctrl/Meta). */
+export function resolveWorldOrbitRightMouseAction(event: Pick<PointerEvent, "button" | "altKey" | "shiftKey"> & Partial<Pick<PointerEvent, "ctrlKey" | "metaKey">>, _projection: OrbitCameraProjection = "perspective"): number | null {
   if (event.button !== 2) {
     return null;
   }
-  if (event.shiftKey) {
-    return MOUSE.PAN;
-  }
-  if (event.altKey) {
-    return MOUSE.ROTATE;
-  }
-  return null;
+  const flipped = event.shiftKey || event.ctrlKey === true || event.metaKey === true;
+  const orbits = event.altKey && !flipped;
+  return orbits !== flipped ? MOUSE.ROTATE : MOUSE.PAN;
 }
 
 export interface WorldOrbitRightMouseBindingsOptions {
   readonly projection?: OrbitCameraProjection;
   readonly rotateEnabled?: boolean;
   readonly onRightPointerDown?: (event: PointerEvent) => boolean;
+  readonly onLeftPointerDown?: (event: PointerEvent) => boolean;
   readonly onRightPointerDrag?: (event: PointerEvent, distancePx: number) => void;
   readonly onRightPointerUp?: (event: PointerEvent) => void;
   readonly dragThresholdPx?: number;
@@ -102,7 +101,7 @@ export function shouldAssignWorldOrbitRightMouse(event: PointerEvent, onRightPoi
   return onRightPointerDown?.(event) !== false;
 }
 
-/** 🖱️ Binds projection-aware Alt+right and Shift+right actions while leaving plain right click for context menus. */
+/** 🖱️ Binds the per-press left and right actions: right pans or orbits and a right drag swallows the trailing context menu, while a left press the host claims (marquee) is withheld from orbit. */
 export function useWorldOrbitRightMouseBindings(controls: WorldOrbitControlsBinding | null, domElement: HTMLElement | undefined, options?: WorldOrbitRightMouseBindingsOptions): void {
   const projection = options?.projection ?? "perspective";
   const rotateEnabled = options?.rotateEnabled ?? true;
@@ -117,20 +116,23 @@ export function useWorldOrbitRightMouseBindings(controls: WorldOrbitControlsBind
     if (!controls || !domElement) {
       return;
     }
-    const dragThresholdPx = options?.dragThresholdPx ?? 0;
+    const dragThresholdPx = options?.dragThresholdPx ?? 4;
     let rightPointer: { readonly pointerId: number; readonly x: number; readonly y: number } | null = null;
-    const assignRightMouse = (event: PointerEvent) => {
-      if (event.button !== 2) {
-        return;
-      }
-      controls.mouseButtons.RIGHT = (optionsRef.current?.rotateEnabled ?? true) ? resolveWorldOrbitRightMouseAction(event, optionsRef.current?.projection ?? "perspective") : event.shiftKey ? MOUSE.PAN : null;
-      controls.update?.();
-    };
-    const resetRightMouse = () => {
-      controls.mouseButtons.RIGHT = resolveWorldOrbitMouseButtonsIdle(optionsRef.current?.projection ?? "perspective", optionsRef.current?.rotateEnabled ?? true).RIGHT;
+    let rightDragged = false;
+    const resetButtons = () => {
+      const idle = resolveWorldOrbitMouseButtonsIdle(optionsRef.current?.projection ?? "perspective", optionsRef.current?.rotateEnabled ?? true);
+      controls.mouseButtons.LEFT = idle.LEFT;
+      controls.mouseButtons.RIGHT = idle.RIGHT;
       controls.update?.();
     };
     const onPointerDown = (event: PointerEvent) => {
+      if (event.button === 0) {
+        if (optionsRef.current?.onLeftPointerDown?.(event) === false) {
+          controls.mouseButtons.LEFT = null;
+          controls.update?.();
+        }
+        return;
+      }
       if (event.button !== 2) {
         return;
       }
@@ -138,7 +140,9 @@ export function useWorldOrbitRightMouseBindings(controls: WorldOrbitControlsBind
         return;
       }
       rightPointer = { pointerId: event.pointerId, x: event.clientX, y: event.clientY };
-      assignRightMouse(event);
+      rightDragged = false;
+      controls.mouseButtons.RIGHT = resolveWorldOrbitRightMouseAction(event, optionsRef.current?.projection ?? "perspective");
+      controls.update?.();
     };
     const onPointerMove = (event: PointerEvent) => {
       const start = rightPointer;
@@ -147,22 +151,36 @@ export function useWorldOrbitRightMouseBindings(controls: WorldOrbitControlsBind
       }
       const distancePx = Math.hypot(event.clientX - start.x, event.clientY - start.y);
       if (distancePx >= dragThresholdPx) {
+        rightDragged = true;
         optionsRef.current?.onRightPointerDrag?.(event, distancePx);
       }
     };
     const onPointerUp = (event: PointerEvent) => {
+      if (event.button === 0) {
+        resetButtons();
+        return;
+      }
       const start = rightPointer;
       if (!start || start.pointerId !== event.pointerId) {
         return;
       }
       rightPointer = null;
       optionsRef.current?.onRightPointerUp?.(event);
-      resetRightMouse();
+      resetButtons();
+    };
+    const onContextMenu = (event: MouseEvent) => {
+      if (!rightDragged) {
+        return;
+      }
+      rightDragged = false;
+      event.preventDefault();
+      event.stopPropagation();
     };
     const bindings = new WorldEventBindingController();
     bindings.listen(domElement, "pointerdown", onPointerDown as EventListener, true);
     bindings.listen(window, "pointermove", onPointerMove as EventListener);
     bindings.listen(window, "pointerup", onPointerUp as EventListener, true);
+    bindings.listen(window, "contextmenu", onContextMenu as EventListener, true);
     return () => bindings.dispose();
   }, [controls, domElement, options?.dragThresholdPx, projection]);
 }
@@ -222,6 +240,7 @@ export interface WorldOrbitGatedProps {
   readonly onCameraNavigate?: (active: boolean) => void;
   readonly controlsKey?: string | number;
   readonly onRightPointerDown?: (event: PointerEvent) => boolean;
+  readonly onLeftPointerDown?: (event: PointerEvent) => boolean;
   /** 🧭️ Reports which gestures (pan/zoom/orbit) a drag/scroll performed, classified between `start` and `end`. */
   readonly onNavigationGestures?: (gestures: readonly WorldNavigationGesture[]) => void;
 }
@@ -328,6 +347,8 @@ function WorldOrbitControlsBridge({
     const change = () => callbacksRef.current.onChange();
     const start = () => callbacksRef.current.onStart(controls);
     const end = () => callbacksRef.current.onEnd(controls);
+    const releaseMouseCapture = (event: PointerEvent) => void releaseWorldOrbitMouseCapture(pointerTarget, event);
+    pointerTarget.addEventListener("pointerdown", releaseMouseCapture);
     controls.addEventListener("change", change);
     controls.addEventListener("start", start);
     controls.addEventListener("end", end);
@@ -390,6 +411,7 @@ function WorldOrbitControlsBridge({
     return () => {
       pointerTarget.removeEventListener("keydown", onKeyZoom);
       pointerTarget.removeEventListener("pointerdown", onFocusPointer);
+      pointerTarget.removeEventListener("pointerdown", releaseMouseCapture);
       controls.stopListenToKeyEvents();
       pointerTarget.removeEventListener("pointerdown", onGestureDown, { capture: true });
       gestureDocument.removeEventListener("pointermove", onGestureMove, { capture: true });
@@ -431,7 +453,7 @@ export function WorldOrbitGated(props: WorldOrbitGatedProps): ReactElement | nul
   const projection = props.projection ?? (camera instanceof ThreeOrthographicCamera ? "orthographic" : "perspective");
   const rotateEnabled = props.constraints?.rotate ?? true;
   const mouseButtonsIdle = reactHostPort.useMemo(() => resolveWorldOrbitMouseButtonsIdle(projection, rotateEnabled), [projection, rotateEnabled]);
-  useWorldOrbitRightMouseBindings(controls, pointerTarget, { projection, rotateEnabled, onRightPointerDown: props.onRightPointerDown });
+  useWorldOrbitRightMouseBindings(controls, pointerTarget, { projection, rotateEnabled, onRightPointerDown: props.onRightPointerDown, onLeftPointerDown: props.onLeftPointerDown });
   const navigationSnapshotRef = reactHostPort.useRef<WorldNavigationSnapshot | null>(null);
   reactHostPort.useEffect(() => {
     invalidate();

@@ -73,7 +73,7 @@ use semio_plugin_ownership::bounded_ownership::plugin_demand_grant;
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_plugin_operation::ToolOperationKey;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_plugin_interaction::interaction_topology::INTERACTION_ACTION_IDS;
 use semio_plugin_decl_views::child_view::MemberKey;
@@ -235,8 +235,8 @@ pub const TYPED_OPERATION_MAXIMUM_RETRIES: u8 = 2;
 /// session — a Worker-stage typed operation or a live artifact-envelope decode.
 pub const INTERACTIVE_TURN_WORKER_PUMPS: usize = 256;
 
-/// ⏱️ Wall-clock slice one reactor turn spends driving one mounted worker session (half the interactive lane ceiling).
-pub const INTERACTIVE_TURN_WORKER_WALL_US: u64 = 50_000;
+/// ⏱️ Wall-clock slice one reactor turn spends driving one mounted worker session: half of the hard eight-millisecond step ceiling (`MAINTENANCE_LANE_WALL_US` is 4 ms). Measured on the 3D translate law (ticket 26/11/22 GET-PUZZLE-PLUGIN-WORKING-END-TO-END, `p1-3d.md`): no pump run ever stopped on this wall (`pump.stop.wall` absent), only on items, phase items and stage.
+pub const INTERACTIVE_TURN_WORKER_WALL_US: u64 = 4_000;
 
 /// 🏃️ Publication units one continuation unit may run before it hands its turn back, the exact twin of
 /// [`INTERACTIVE_TURN_WORKER_PUMPS`] for the publication ladder.

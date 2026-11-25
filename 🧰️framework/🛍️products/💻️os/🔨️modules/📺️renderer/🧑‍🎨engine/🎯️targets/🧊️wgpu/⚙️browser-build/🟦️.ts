@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { renderWgpuPackageArtifacts } from "../📽️projection/🟦️.ts";
 import { join, resolve } from "node:path";
-import { findWorkspaceRoot } from "@semio-tech/process/routing";
+import { findWorkspaceRoot } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runtimeIdentityV1 } from "../../../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
 import { runtimeBundleV1 } from "../../../../../../../../🔨️modules/⚙️runtime/🔬️source/🟦️.ts";
 

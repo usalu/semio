@@ -13,11 +13,41 @@
       "de": "Abfallbehälter aus HDPE mit Deckel auf einem Sockel; der Scharnierdeckel ist das einzige bewegliche Teil, Abfall im Vollzustand ist eine verteilte Bodenlast."
     },
     "tags": [
-      "waste-bin",
-      "litter",
-      "hdpe",
-      "lid",
-      "street-furniture"
+      {
+        "id": "waste-bin",
+        "title": {
+          "en": "waste bin",
+          "de": "Abfallbehälter"
+        }
+      },
+      {
+        "id": "litter",
+        "title": {
+          "en": "litter",
+          "de": "Abfall"
+        }
+      },
+      {
+        "id": "hdpe",
+        "title": {
+          "en": "HDPE",
+          "de": "HDPE"
+        }
+      },
+      {
+        "id": "lid",
+        "title": {
+          "en": "lid",
+          "de": "Deckel"
+        }
+      },
+      {
+        "id": "street-furniture",
+        "title": {
+          "en": "street furniture",
+          "de": "Stadtmobiliar"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage content (CV-FO)",

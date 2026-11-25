@@ -1,0 +1,70 @@
+{
+ "phase": "fleet",
+ "scope": "all",
+ "steps": [
+  {
+   "label": "bootstrap",
+   "wallS": 1.5,
+   "cpuS": 0.9,
+   "rssMB": 142,
+   "peakMB": 142,
+   "heapMB": 34
+  },
+  {
+   "label": "questions",
+   "wallS": 2,
+   "cpuS": 1.7,
+   "rssMB": 291,
+   "peakMB": 291,
+   "heapMB": 39,
+   "registry": 4872,
+   "projectOwners": 1607,
+   "cargoOwners": 3265,
+   "targets": 4107,
+   "distinctQuestions": 2572,
+   "failedTargets": 4
+  },
+  {
+   "label": "offer",
+   "wallS": 0,
+   "cpuS": 0,
+   "rssMB": 293,
+   "peakMB": 293,
+   "heapMB": 40,
+   "stored": false,
+   "head": "5f3a5d71c76ad4c46e4cc1fef81074326a8e1cf75c606320fcc03bdb8eb54223",
+   "chunks": 256,
+   "uploaded": 0,
+   "requests": 3,
+   "reason": "blob: the cache has no room left / der Flottenspeicher hat keinen Platz mehr"
+  },
+  {
+   "label": "offer-again",
+   "wallS": 0,
+   "cpuS": 0,
+   "rssMB": 293,
+   "peakMB": 293,
+   "heapMB": 40,
+   "stored": false,
+   "head": "5f3a5d71c76ad4c46e4cc1fef81074326a8e1cf75c606320fcc03bdb8eb54223",
+   "chunks": 256,
+   "uploaded": 0,
+   "requests": 3,
+   "reason": "blob: the cache has no room left / der Flottenspeicher hat keinen Platz mehr"
+  },
+  {
+   "label": "adopt-by-digests",
+   "wallS": 0,
+   "cpuS": 0,
+   "rssMB": 293,
+   "peakMB": 293,
+   "heapMB": 40,
+   "outcome": "miss",
+   "confirmed": 0,
+   "refused": 0,
+   "downloaded": 0,
+   "requests": 1,
+   "nodes": 0
+  }
+ ]
+}

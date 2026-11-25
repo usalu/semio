@@ -118,6 +118,7 @@ pub enum SemioDocumentMutation {
     SetImageBytes(set_image_bytes::SetImageBytes),
 }
 dsl::original_pack_value_operation_receiving!(SemioDocumentMutation);
+dsl::artifact_persisted_binary_operation!(SemioDocumentMutation);
 
 /// 🏷️ The declared mutation vocabulary of `stdio.semio.document`, in `SemioDocumentMutation`'s own
 /// declaration order and kebab-case spelling — the single source of truth for the binary op frame's

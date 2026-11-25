@@ -79,11 +79,11 @@ fn duplicate_ids_fail_for_the_new_collections() {
         let mut doc = base.clone();
         match table {
             "anchors" => doc.anchors.push(doc.anchors[0].clone()),
-            "tests" => doc.anchors[0].tests.push(doc.anchors[0].tests[0].clone()),
+            "tests" => { let row = doc.anchors[0].tests[0].clone(); doc.anchors[0].tests.push(row) }
             "embeddedWalls" => doc.embedded_walls.push(doc.embedded_walls[0].clone()),
             "pileGroups" => doc.pile_groups.push(doc.pile_groups[0].clone()),
             "labTests" => doc.lab_tests.push(doc.lab_tests[0].clone()),
-            "points" => doc.lab_tests[0].points.push(doc.lab_tests[0].points[0].clone()),
+            "points" => { let row = doc.lab_tests[0].points[0].clone(); doc.lab_tests[0].points.push(row) }
             _ => doc.layer_waters.push(doc.layer_waters[0].clone()),
         }
         let report = check_project(&doc);
@@ -164,7 +164,7 @@ fn settlement_plane_is_exact_for_a_plane_and_a_pair_beyond_the_limit_fails_with_
     doc.placements.iter_mut().find(|p| p.id == "footing-F2").expect("placement").x = 0.5;
     let near = check_project(&doc);
     let pair = near.checks.iter().find(|c| c.id == "en1997.6.6.angular.oed.footing-F1.footing-F2").expect("pair");
-    assert!(pair.utilization > 1.0 && !pair.remedies.is_empty(), "footings 0.5 m apart with different load: {}", pair.utilization);
+    assert!(pair.utilization > 1.0 && !pair.remedies.is_empty(), "footings 0.5 m apart with different load: {} ({:?}, {:?})", pair.utilization, pair.computed, pair.limit);
 }
 
 fn midpoint_rectangle(b: f64, l: f64, px: f64, py: f64, kernel: impl Fn(f64, f64) -> f64) -> f64 {
@@ -183,7 +183,7 @@ fn midpoint_rectangle(b: f64, l: f64, px: f64, py: f64, kernel: impl Fn(f64, f64
 #[test]
 fn corner_solutions_match_the_integrated_point_load_kernels_inside_and_outside_the_loaded_area() {
     use semio_s_artifact_norm_en1997_checks::catalogue::settlement as sl;
-    let (q, b, l, z, nu, e) = (100_000.0, 2.5, 4.0, 2.0, 0.3, 30e6);
+    let (q, b, l, z, nu, e): (f64, f64, f64, f64, f64, f64) = (100_000.0, 2.5, 4.0, 2.0, 0.3, 30e6);
     for (px, py) in [(0.0, 0.0), (0.7, -0.4), (3.0, 1.5), (-5.0, 2.0)] {
         let stress = midpoint_rectangle(b, l, px, py, |x, y| q * 3.0 * z.powi(3) / (2.0 * std::f64::consts::PI * (x * x + y * y + z * z).powf(2.5)));
         let exact = sl::sigma_z_rect_at(q, b, l, px, py, z);
@@ -212,7 +212,9 @@ fn neighbouring_footings_add_settlement_and_distant_ones_vanish() {
     use semio_s_artifact_norm_en1997_checks::sls_pairs::{footing_settlements, settlements_with_interaction};
     let doc = semio_s_artifact_norm_en1997_model::showcase_demo();
     let gwl = doc.groundwater_level;
-    let placed = |doc: &En1997Snapshot| doc.footings.iter().filter_map(|f| doc.placements.iter().find(|p| p.id == f.id).map(|p| (f, p))).collect::<Vec<_>>();
+    fn placed(doc: &En1997Snapshot) -> Vec<(&semio_s_artifact_norm_en1997_model::SpreadFoundation, &semio_s_artifact_norm_en1997_model::Placement)> {
+        doc.footings.iter().filter_map(|f| doc.placements.iter().find(|p| p.id == f.id).map(|p| (f, p))).collect()
+    }
     let near = settlements_with_interaction(&doc, &placed(&doc), gwl);
     assert!(near.len() >= 3);
     for ((footing, _), (oed, el)) in placed(&doc).into_iter().zip(&near) {
@@ -225,7 +227,7 @@ fn neighbouring_footings_add_settlement_and_distant_ones_vanish() {
     }
     for ((footing, _), (oed, el)) in placed(&far).into_iter().zip(settlements_with_interaction(&far, &placed(&far), gwl)) {
         let (alone_oed, alone_el) = footing_settlements(&far, footing, gwl);
-        assert!((oed - alone_oed).abs() < 1e-6 * alone_oed.abs().max(1e-9) && (el - alone_el).abs() < 1e-6 * alone_el.abs().max(1e-9), "{} far apart", footing.id);
+        assert!((oed - alone_oed).abs() < 1e-6 * alone_oed.abs().max(1e-9) && (el - alone_el).abs() < 1e-6 * alone_el.abs().max(1e-9), "{} far apart: {oed} against {alone_oed} and {el} against {alone_el}", footing.id);
     }
 }
 

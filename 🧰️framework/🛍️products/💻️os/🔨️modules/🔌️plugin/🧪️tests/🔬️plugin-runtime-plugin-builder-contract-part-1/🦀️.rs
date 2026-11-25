@@ -59,7 +59,7 @@ use semio_plugin_window_config::WindowConfigReplaceMutation;
 use semio_plugin_window_kits::WindowKit;
 use semio_plugin_window_transient::window_transient::WindowTransientOwner;
 use semio_plugin_tests_05::plugin_runtime_plugin_builder_contract_support_1::{RENDER_CONTEXT_PROBE, TestApp, app_maintenance_turn, close_member_admission_app, close_member_admission_fixture, contract_app_raw, meta, test_child_dialect, TestMembers};
-use semio_plugin_ownership::store_lifecycle::{ArtifactOwnedDisposer, bounded_document_store_disposer};
+use semio_plugin_store_lifecycle::store_lifecycle::{ArtifactOwnedDisposer, bounded_document_store_disposer};
 use semio_os_kernel::{ColdMutation as _, ReferenceSpaceMember as _};
 use semio_framework_artifact_reference::io::text::artifact_reference::ArtifactReferenceText as _;
 use semio_ui_contract::*;

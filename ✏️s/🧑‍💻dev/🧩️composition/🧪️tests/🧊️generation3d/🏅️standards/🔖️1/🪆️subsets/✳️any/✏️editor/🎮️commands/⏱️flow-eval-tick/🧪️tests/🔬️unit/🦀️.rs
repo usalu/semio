@@ -119,7 +119,9 @@ fn an_uncontributed_graph_arms_no_tick_while_a_served_one_keeps_its_chain() {
         assert_eq!(semio_s_artifact_procedural_3d_preview_eval::may_rearm(&graph), case.may_rearm, "{}: may_rearm disagrees with the fixture", case.id);
 
         let mut session = semio_os_flow::FlowEvalSession::new();
-        let outcome = semio_s_artifact_procedural_3d_preview_eval::evaluate_tick("procedural-preview-gate", semio_s_artifact_procedural_3d_mode_edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW, &graph, 0.1, &mut session, None, None);
+        let outcome = semio_framework_job::OriginalRetirementPump::new().turn(1 << 16, u64::MAX, || Some(0), crate::preview_reply::TURN).expect("preview tick turn").with_effect(|effect| {
+            semio_s_artifact_procedural_3d_preview_eval::evaluate_tick("procedural-preview-gate", semio_s_artifact_procedural_3d_mode_edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW, &graph, 0.1, &mut session, None, None, effect)
+        }).expect("preview tick effect").expect("preview tick authority").0.expect("preview tick");
         assert_eq!(session.pending(), case.unfinished_tick, "{}: the graph must be big enough that one tick cannot finish it", case.id);
         assert!(outcome.extension_invocations.is_empty(), "{}: an in-guest graph parks no extension work", case.id);
         let owed = usize::from(session.window_tick_owed("procedural-preview-gate"));

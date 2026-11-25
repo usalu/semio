@@ -39,6 +39,7 @@ import { createFrameworkOsHostPortsV1 } from "@semio-tech/framework-os-dev/host-
 import { DemonstratorCard } from "./⚛️demonstrator-card.tsx";
 import { aProjectOfLuhUdkFooterItem, fundedByZukunftBauFooterItem } from "./⚛️footer.tsx";
 import { DemonstratorLocalePicker, DemonstratorLocaleSwitcher } from "./⚛️locale-picker.tsx";
+import { demonstratorShippedComponents } from "./🔨️modules/🧩️runtime/📇️catalog/🟦️.ts";
 import { commitDemonstratorLocale, demonstratorUiLabel, readDemonstratorLocale } from "./🔨️modules/🌐️locale/⚛️.ts";
 import { demonstratorText, type DemonstratorLocale } from "./🔨️modules/🌐️locale/🟦️.ts";
 import { DEMONSTRATOR_PANES, ENTWERFEN_MIT_BESTAND_LOGO_SVG, demonstratorGeneralIntroduction, demonstratorPaneBootVariants, demonstratorPaneViews, type DemonstratorPaneView } from "./🪧️brand.ts";
@@ -88,6 +89,7 @@ function DemonstratorShell({ pane, locale, opened, onOverview }: { readonly pane
   const trailing = useMemo(() => (opened ? [{ key: "overview", content: <Button icon="layout-grid" text={overviewLabel} onClick={onOverview} aria-keyshortcuts="Escape" data-layered-overview-button="" /> }] : undefined), [opened, overviewLabel, onOverview]);
   const catalog = useMemo(() => composeSpecificOsCatalogV1(window.location.href, { maxBytes: 2097152, maxRows: 512, maxEdges: 4096, maxWork: 65536, deadlineMs: performance.now() + 30000, now: () => performance.now(), cancelled: () => false, progress: () => {} }).catalog, []);
   const runtimeBoot = useMemo(() => resolvePlaygroundBoot(catalog, variants.runtime), [catalog, variants.runtime]);
+  const plugins = useMemo(() => demonstratorShippedComponents(runtimeBoot.plugins), [runtimeBoot.plugins]);
   const manifestBoot = useMemo(() => resolvePlaygroundBoot(catalog, variants.manifest), [catalog, variants.manifest]);
   const locks = useMemo(() => resolveShellLocks(pane.brand.locks), [pane.brand.locks]);
   const defaults = useMemo(() => resolveShellDefaults(pane.brand, undefined), [pane.brand]);
@@ -96,7 +98,7 @@ function DemonstratorShell({ pane, locale, opened, onOverview }: { readonly pane
       <div className={opened ? "relative h-full min-h-0 flex-1" : "contents"}>
     <FrameworkOsShell catalog={catalog}
       pluginFilter={variants.runtime}
-      plugins={runtimeBoot.plugins}
+      plugins={plugins}
       surfaceSessionFactories={PUZZLE_BOARD_SESSION_FACTORIES}
       hostPorts={FRAMEWORK_OS_HOST_PORTS}
       appId={manifestBoot.defaultAppId}
@@ -122,7 +124,7 @@ const demonstratorPages = (views: readonly DemonstratorPaneView[], locale: Demon
 
 /** 🃏️ An app's card, filling its cell of the card grid edge to edge (when swiping, the overview centres it on its page itself). */
 const demonstratorCardRenderer = (views: readonly DemonstratorPaneView[]) => (page: LayeredPane, state: LayeredCardState) => {
-  const card = <DemonstratorCard pane={views.find((view) => view.id === page.id)!} lifted={state.revealed} onClick={state.open} />;
+  const card = <DemonstratorCard pane={views.find((view) => view.id === page.id)!} onClick={state.open} />;
   return state.mode === "swipe" ? card : <CardGridCell>{card}</CardGridCell>;
 };
 //#endregion 🎪️DemonstratorPages

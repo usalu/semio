@@ -97,11 +97,13 @@ impl MoveSelection {
     /// footprint plane or would collapse the height — a solid that cannot follow the transform.
     pub fn map_solid(&self, solid: &FemSolid) -> Option<FemSolid> {
         let lift = |point: &[f64; 2], w: f64| solid.axis.to_world(point[0], point[1], w);
+        let reach = solid.outline.iter().chain(solid.holes.iter().flatten()).fold(1.0_f64, |reach, point| reach.max(point[0].abs()).max(point[1].abs()));
+        let tolerance = 1e-6 * reach;
         let mut base: Option<f64> = None;
         let mut project = |point: &[f64; 2]| -> Option<[f64; 2]> {
             let (uv, w) = solid.axis.from_world(self.map(lift(point, solid.base_z)));
             match base {
-                Some(known) if (known - w).abs() > 1e-9 => return None,
+                Some(known) if (known - w).abs() > tolerance => return None,
                 None => base = Some(w),
                 _ => {}
             }

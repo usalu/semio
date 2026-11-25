@@ -441,6 +441,9 @@ describe("🧭️ the host mounts the modelling lanes", () => {
     attractionsJson: "[]",
   };
 
+  const attribution = { label: "Terrain source", url: "https://example.org/terrain" };
+  const terrainJson = JSON.stringify({ attribution });
+
   function mount(extra: Record<string, unknown>) {
     return render(createElement(World3dHost as never, { node: { type: "componentScene", surfaceId: "surface", controllerId: "controller", componentKind: "world-3d", world3d: { ...baseScene, ...extra } }, onAction: () => Promise.resolve() }));
   }
@@ -448,20 +451,35 @@ describe("🧭️ the host mounts the modelling lanes", () => {
   it("shows the legend, announces the heatmap and renders the annotation region", () => {
     const view = mount({
       annotations: mixed,
+      terrainJson,
       scalarField: parseWorld3dScalarField({ ...fixture.valid.find((entry) => entry.name === "scalar-vertex-inferno")!.value, values: [0, 0.3, 0.6, 1] }),
     });
     const host = view.container.querySelector(".semio-world-3d-host")!;
     expect(host.getAttribute("data-world-scalar-field")).toBe("mesh:part:applied");
     expect(host.getAttribute("data-world-annotation-count")).toBe("4");
-    expect(view.container.querySelector("[data-slot=world-scalar-legend]")).not.toBeNull();
+    const rail = view.container.querySelector("[data-world-lower-overlay-rail]")!;
+    const legend = view.getByRole("group", { name: /legend/i });
+    const link = view.getByRole("link", { name: attribution.label });
+    expect(rail.hasAttribute("data-shared-border-frame")).toBe(true);
+    expect(rail.hasAttribute("data-glass-chip")).toBe(true);
+    expect(rail.querySelectorAll("[data-glass-chip]")).toHaveLength(0);
+    expect(rail.contains(legend)).toBe(true);
+    expect(rail.contains(link)).toBe(true);
+    expect(link.getAttribute("href")).toBe(attribution.url);
+    expect(link.getAttribute("target")).toBe("_blank");
+    expect(link.getAttribute("rel")).toBe("noopener noreferrer");
+    expect(rail.querySelector("[data-slot=world-scalar-field-mismatch]")).toBeNull();
     expect(view.container.querySelectorAll("[data-slot=world-annotation-list] li").length).toBe(4);
   });
 
   it("says so, instead of painting a wrong heatmap, when the field does not fit the mesh", () => {
-    const view = mount({ scalarField: parseWorld3dScalarField({ ...fixture.valid.find((entry) => entry.name === "scalar-vertex-inferno")!.value, values: [0, 1] }) });
+    const view = mount({ terrainJson, scalarField: parseWorld3dScalarField({ ...fixture.valid.find((entry) => entry.name === "scalar-vertex-inferno")!.value, values: [0, 1] }) });
     expect(view.container.querySelector(".semio-world-3d-host")!.getAttribute("data-world-scalar-field")).toBe("mesh:part:mismatch");
     expect(view.container.querySelector("[data-slot=world-scalar-legend]")).toBeNull();
-    expect(view.container.querySelector("[data-slot=world-scalar-field-mismatch]")!.textContent).toBe("The scalar field does not match the mesh");
+    const rail = view.container.querySelector("[data-world-lower-overlay-rail]")!;
+    const status = rail.querySelector("[data-slot=world-scalar-field-mismatch][role=status]");
+    expect(status?.textContent).toBe("The scalar field does not match the mesh");
+    expect(rail.contains(view.getByRole("link", { name: attribution.label }))).toBe(true);
   });
 
   it.each(fixture.pickTargets)("constrains the published selection to the $filter filter", (row) => {

@@ -13,12 +13,48 @@
    "de": "Ein mittlerer Diesel-Kastenwagen (5,34 m, 2,0 t, 235/65 R16) mit Schiebetür, Hecktüren, Fahrerhausverglasung, Abgasstrahl, heißem Motor, Partikelfilter, Reifen und Bremsen."
   },
   "tags": [
-   "vehicle",
-   "van",
-   "delivery",
-   "diesel",
-   "logistics",
-   "wheeled"
+   {
+    "id": "vehicle",
+    "title": {
+     "en": "vehicle",
+     "de": "Fahrzeug"
+    }
+   },
+   {
+    "id": "van",
+    "title": {
+     "en": "van",
+     "de": "Transporter"
+    }
+   },
+   {
+    "id": "delivery",
+    "title": {
+     "en": "delivery",
+     "de": "Lieferung"
+    }
+   },
+   {
+    "id": "diesel",
+    "title": {
+     "en": "diesel",
+     "de": "Diesel"
+    }
+   },
+   {
+    "id": "logistics",
+    "title": {
+     "en": "logistics",
+     "de": "Logistik"
+    }
+   },
+   {
+    "id": "wheeled",
+    "title": {
+     "en": "wheeled",
+     "de": "rollend"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content worker NW-VE (vehicles)",
@@ -2396,7 +2432,7 @@
      "front": [
       {
        "id": "tyre-rl",
-       "bone": "wheel-r",
+       "bone": "axle-r",
        "role": "body",
        "z": 1.3,
        "filled": true,
@@ -2818,7 +2854,7 @@
       },
       {
        "id": "tyre-fl",
-       "bone": "wheel-f",
+       "bone": "axle-f",
        "role": "body",
        "z": 1.4,
        "filled": true,
@@ -2834,7 +2870,7 @@
       },
       {
        "id": "tyre-rr",
-       "bone": "wheel-r",
+       "bone": "axle-r",
        "role": "body",
        "z": 1.3,
        "filled": true,
@@ -2850,7 +2886,7 @@
       },
       {
        "id": "tyre-fr",
-       "bone": "wheel-f",
+       "bone": "axle-f",
        "role": "body",
        "z": 1.4,
        "filled": true,
@@ -4328,7 +4364,7 @@
      "plan": [
       {
        "id": "tyre-rl",
-       "bone": "wheel-r",
+       "bone": "axle-r",
        "role": "body",
        "z": 1,
        "filled": true,
@@ -4346,7 +4382,7 @@
       },
       {
        "id": "tyre-fl",
-       "bone": "wheel-f",
+       "bone": "axle-f",
        "role": "body",
        "z": 1,
        "filled": true,
@@ -4364,7 +4400,7 @@
       },
       {
        "id": "tyre-rr",
-       "bone": "wheel-r",
+       "bone": "axle-r",
        "role": "body",
        "z": 1,
        "filled": true,
@@ -4382,7 +4418,7 @@
       },
       {
        "id": "tyre-fr",
-       "bone": "wheel-f",
+       "bone": "axle-f",
        "role": "body",
        "z": 1,
        "filled": true,
@@ -6835,7 +6871,7 @@
      "front": [
       {
        "id": "tyre-rl",
-       "bone": "wheel-r",
+       "bone": "axle-r",
        "role": "body",
        "z": 1.3,
        "filled": true,
@@ -6851,7 +6887,7 @@
       },
       {
        "id": "tyre-fl",
-       "bone": "wheel-f",
+       "bone": "axle-f",
        "role": "body",
        "z": 1.4,
        "filled": true,
@@ -6867,7 +6903,7 @@
       },
       {
        "id": "tyre-rr",
-       "bone": "wheel-r",
+       "bone": "axle-r",
        "role": "body",
        "z": 1.3,
        "filled": true,
@@ -6883,7 +6919,7 @@
       },
       {
        "id": "tyre-fr",
-       "bone": "wheel-f",
+       "bone": "axle-f",
        "role": "body",
        "z": 1.4,
        "filled": true,
@@ -7496,7 +7532,7 @@
      "plan": [
       {
        "id": "tyre-rl",
-       "bone": "wheel-r",
+       "bone": "axle-r",
        "role": "body",
        "z": 1,
        "filled": true,
@@ -7514,7 +7550,7 @@
       },
       {
        "id": "tyre-fl",
-       "bone": "wheel-f",
+       "bone": "axle-f",
        "role": "body",
        "z": 1,
        "filled": true,
@@ -7532,7 +7568,7 @@
       },
       {
        "id": "tyre-rr",
-       "bone": "wheel-r",
+       "bone": "axle-r",
        "role": "body",
        "z": 1,
        "filled": true,
@@ -7550,7 +7586,7 @@
       },
       {
        "id": "tyre-fr",
-       "bone": "wheel-f",
+       "bone": "axle-f",
        "role": "body",
        "z": 1,
        "filled": true,
@@ -9070,7 +9106,7 @@
      "front": [
       {
        "id": "tyre-rl",
-       "bone": "wheel-r",
+       "bone": "axle-r",
        "role": "body",
        "z": 1.3,
        "filled": true,
@@ -9086,7 +9122,7 @@
       },
       {
        "id": "tyre-fl",
-       "bone": "wheel-f",
+       "bone": "axle-f",
        "role": "body",
        "z": 1.4,
        "filled": true,
@@ -9102,7 +9138,7 @@
       },
       {
        "id": "tyre-rr",
-       "bone": "wheel-r",
+       "bone": "axle-r",
        "role": "body",
        "z": 1.3,
        "filled": true,
@@ -9118,7 +9154,7 @@
       },
       {
        "id": "tyre-fr",
-       "bone": "wheel-f",
+       "bone": "axle-f",
        "role": "body",
        "z": 1.4,
        "filled": true,
@@ -9628,7 +9664,7 @@
      "plan": [
       {
        "id": "tyre-rl",
-       "bone": "wheel-r",
+       "bone": "axle-r",
        "role": "body",
        "z": 1,
        "filled": true,
@@ -9647,7 +9683,7 @@
       },
       {
        "id": "tyre-fl",
-       "bone": "wheel-f",
+       "bone": "axle-f",
        "role": "body",
        "z": 1,
        "filled": true,
@@ -9666,7 +9702,7 @@
       },
       {
        "id": "tyre-rr",
-       "bone": "wheel-r",
+       "bone": "axle-r",
        "role": "body",
        "z": 1,
        "filled": true,
@@ -9685,7 +9721,7 @@
       },
       {
        "id": "tyre-fr",
-       "bone": "wheel-f",
+       "bone": "axle-f",
        "role": "body",
        "z": 1,
        "filled": true,
@@ -10614,7 +10650,7 @@
      "front": [
       {
        "id": "tyre-rl",
-       "bone": "wheel-r",
+       "bone": "axle-r",
        "role": "body",
        "z": 1.3,
        "filled": true,
@@ -10630,7 +10666,7 @@
       },
       {
        "id": "tyre-fl",
-       "bone": "wheel-f",
+       "bone": "axle-f",
        "role": "body",
        "z": 1.4,
        "filled": true,
@@ -10646,7 +10682,7 @@
       },
       {
        "id": "tyre-rr",
-       "bone": "wheel-r",
+       "bone": "axle-r",
        "role": "body",
        "z": 1.3,
        "filled": true,
@@ -10662,7 +10698,7 @@
       },
       {
        "id": "tyre-fr",
-       "bone": "wheel-f",
+       "bone": "axle-f",
        "role": "body",
        "z": 1.4,
        "filled": true,
@@ -11045,7 +11081,7 @@
      "plan": [
       {
        "id": "tyres-r",
-       "bone": "wheel-r",
+       "bone": "axle-r",
        "role": "body",
        "z": 1,
        "filled": true,
@@ -11063,7 +11099,7 @@
       },
       {
        "id": "tyres-f",
-       "bone": "wheel-f",
+       "bone": "axle-f",
        "role": "body",
        "z": 1,
        "filled": true,

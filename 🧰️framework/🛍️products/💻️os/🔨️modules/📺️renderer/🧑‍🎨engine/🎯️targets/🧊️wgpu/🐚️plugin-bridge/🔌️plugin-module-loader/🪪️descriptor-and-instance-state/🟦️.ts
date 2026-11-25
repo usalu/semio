@@ -13,12 +13,12 @@ import { type WgpuActorExecutor, WgpuOwnedUiInstanceRoute } from "../../🍽️u
 /** 🆔️ Admits the package descriptor and binds the activation registry and the shard client. */
 export async function acquirePluginDescriptor({ signal, admittedDescriptor, pluginId, moduleUrl, host }: { readonly host?: string; readonly signal: AbortSignal | undefined; readonly admittedDescriptor: import("@semio-tech/framework").PluginPackageDescriptor | undefined; readonly pluginId: string; readonly moduleUrl: string }) {
   signal?.throwIfAborted();
-  const { manifest, packageId, componentSha256 } = admittedDescriptor ?? await fetchPackageDescriptor(pluginId, moduleUrl, componentPackageReceiptSource, signal);
+  const { manifest, packageId, componentSha256, components } = admittedDescriptor ?? await fetchPackageDescriptor(pluginId, moduleUrl, componentPackageReceiptSource, signal);
   signal?.throwIfAborted();
   if (manifest.pluginId !== pluginId) throw new Error(`plugin.descriptor-identity-mismatch: ${pluginId}`);
   contributionManifests.set(pluginId, manifest);
   const registry = getActivationRegistry();
-  registry.registerManifest({ pluginId, moduleUrl, caps: [], ...(host === undefined ? {} : { host }) });
+  registry.registerManifest({ pluginId, moduleUrl, caps: [], ...(host === undefined ? {} : { host }), ...(components === undefined ? {} : { components }) });
   const shardClient = getShardClient();
   return { registry, manifest, packageId, componentSha256, shardClient };
 }

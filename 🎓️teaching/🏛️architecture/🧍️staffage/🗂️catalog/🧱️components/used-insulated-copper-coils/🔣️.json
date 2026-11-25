@@ -13,21 +13,111 @@
    "de": "Ein gebrauchtes vorgedämmtes Kältemittel-Leitungspaar eines Split-Klimageräts, Kupfer 1/4 und 3/8 Zoll in je 13 mm schwarzer Synthesekautschuk-Dämmung, 5,07 m lang und 2,2208 kg schwer; abgesaugt und mit gequetschten Kupferenden freigeschnitten, ist es von Hand zu einer lockeren flachen Rolle von 736 mm gewickelt, von Kabelbindern gehalten, und steht hochkant zwischen zwei Leisten auf einer Halbpalette, wird an einem Haken durch sein Auge gehoben und verbindet im Wiedereinbau wieder Außen- und Innengerät."
   },
   "tags": [
-   "component",
-   "reclaimed",
-   "used",
-   "hvac",
-   "cooling",
-   "plumbing",
-   "copper",
-   "insulation",
-   "elastomeric-foam",
-   "refrigerant-line",
-   "line-set",
-   "pipe",
-   "coil",
-   "pallet",
-   "timber"
+   {
+    "id": "component",
+    "title": {
+     "en": "component",
+     "de": "Bauteil"
+    }
+   },
+   {
+    "id": "reclaimed",
+    "title": {
+     "en": "reclaimed",
+     "de": "wiederverwendet"
+    }
+   },
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "hvac",
+    "title": {
+     "en": "HVAC",
+     "de": "HLK"
+    }
+   },
+   {
+    "id": "cooling",
+    "title": {
+     "en": "cooling",
+     "de": "Kühlung"
+    }
+   },
+   {
+    "id": "plumbing",
+    "title": {
+     "en": "plumbing",
+     "de": "Sanitär"
+    }
+   },
+   {
+    "id": "copper",
+    "title": {
+     "en": "copper",
+     "de": "Kupfer"
+    }
+   },
+   {
+    "id": "insulation",
+    "title": {
+     "en": "insulation",
+     "de": "Dämmung"
+    }
+   },
+   {
+    "id": "elastomeric-foam",
+    "title": {
+     "en": "elastomeric foam",
+     "de": "Elastomerschaum"
+    }
+   },
+   {
+    "id": "refrigerant-line",
+    "title": {
+     "en": "refrigerant line",
+     "de": "Kältemittelleitung"
+    }
+   },
+   {
+    "id": "line-set",
+    "title": {
+     "en": "line set",
+     "de": "Leitungssatz"
+    }
+   },
+   {
+    "id": "pipe",
+    "title": {
+     "en": "pipe",
+     "de": "Rohr"
+    }
+   },
+   {
+    "id": "coil",
+    "title": {
+     "en": "coil",
+     "de": "Spule"
+    }
+   },
+   {
+    "id": "pallet",
+    "title": {
+     "en": "pallet",
+     "de": "Palette"
+    }
+   },
+   {
+    "id": "timber",
+    "title": {
+     "en": "timber",
+     "de": "Holz"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage component authors (used HVAC wave, author 18)",
@@ -64210,8 +64300,326 @@
     ]
    },
    "500": {
-    "status": "unavailable",
-    "denominator": 500
+    "status": "authored",
+    "denominator": 500,
+    "decisions": [
+     {
+      "en": "Body for the 75 mm feature: the pallet as one 144 mm slab, the two battens as one 75 mm cradle block, and the coil of the two insulated lines as one upright ring of 0.69 m outer and 0.40 m inner diameter and 75 mm width: the three turns of 32 and 36 mm tube lie 45 mm apart, under the feature, so the ring stands for the wound pair and no longer unrolls; the bare tails are left out.",
+      "de": "Körper für das 75-mm-Merkmal: die Palette als eine 144-mm-Platte, die zwei Kanthölzer als ein 75-mm-Lagerblock und der Ring der zwei gedämmten Leitungen als ein stehender Ring von 0,69 m Außen- und 0,40 m Innendurchmesser und 75 mm Breite: die drei Windungen aus 32- und 36-mm-Rohr liegen 45 mm auseinander, unter dem Merkmal, daher steht der Ring für das gewickelte Paar und rollt sich nicht mehr ab; die blanken Enden entfallen."
+     },
+     {
+      "en": "Thermal: pallet and cradle by reference, each line as its half of the ring as a shell of its foam layer, the copper ends as a texture face on the ring.",
+      "de": "Thermik: Palette und Lagerblock als Verweis, jede Leitung als ihre Hälfte des Rings als Schale ihrer Schaumschicht, die Kupferenden als Texturfläche am Ring."
+     },
+     {
+      "en": "Structure: slab, cradle and ring by reference, the ring spanning all 39 segment bones, and two mass markers.",
+      "de": "Tragwerk: Platte, Lagerblock und Ring als Verweis, der Ring überspannt alle 39 Segmentknochen, und zwei Massenmarken."
+     }
+    ],
+    "body": [
+     {
+      "id": "pallet-slab",
+      "kind": "box",
+      "bone": "pallet",
+      "material": "pallet-spruce",
+      "role": "body",
+      "tone": 0.6,
+      "size": [
+       0.8,
+       0.144,
+       0.6
+      ],
+      "transform": {
+       "translation": [
+        0.4,
+        0.072,
+        0
+       ]
+      }
+     },
+     {
+      "id": "cradle",
+      "kind": "box",
+      "bone": "pallet",
+      "material": "pallet-spruce",
+      "role": "body",
+      "tone": 0.66,
+      "size": [
+       0.3,
+       0.075,
+       0.148
+      ],
+      "transform": {
+       "translation": [
+        0.4,
+        0.1815,
+        -0.002
+       ]
+      }
+     },
+     {
+      "id": "coil",
+      "kind": "revolve",
+      "bone": "seg-00",
+      "material": "elastomer-foam",
+      "role": "body",
+      "tone": 0.18,
+      "profile": [
+       [
+        -0.0375,
+        0.2
+       ],
+       [
+        -0.0375,
+        0.345
+       ],
+       [
+        0.0375,
+        0.345
+       ],
+       [
+        0.0375,
+        0.2
+       ],
+       [
+        -0.0375,
+        0.2
+       ]
+      ],
+      "axis": [
+       0,
+       0,
+       1
+      ],
+      "origin": [
+       0.085,
+       0.332,
+       0
+      ]
+     }
+    ],
+    "thermal": [
+     {
+      "id": "th-pallet-slab",
+      "of": "pallet-slab",
+      "region": "pallet"
+     },
+     {
+      "id": "th-cradle",
+      "of": "cradle",
+      "region": "pallet"
+     },
+     {
+      "id": "th-liquid-line",
+      "kind": "revolve",
+      "bone": "seg-00",
+      "material": "elastomer-foam",
+      "role": "body",
+      "tone": 0.2,
+      "profile": [
+       [
+        0,
+        0.2
+       ],
+       [
+        0,
+        0.345
+       ],
+       [
+        0.0375,
+        0.345
+       ],
+       [
+        0.0375,
+        0.2
+       ],
+       [
+        0,
+        0.2
+       ]
+      ],
+      "axis": [
+       0,
+       0,
+       1
+      ],
+      "origin": [
+       0.085,
+       0.332,
+       0
+      ],
+      "region": "liquid-line",
+      "layer": "liquid-foam"
+     },
+     {
+      "id": "th-suction-line",
+      "kind": "revolve",
+      "bone": "seg-00",
+      "material": "elastomer-foam",
+      "role": "body",
+      "tone": 0.16,
+      "profile": [
+       [
+        -0.0375,
+        0.2
+       ],
+       [
+        -0.0375,
+        0.345
+       ],
+       [
+        0,
+        0.345
+       ],
+       [
+        0,
+        0.2
+       ],
+       [
+        -0.0375,
+        0.2
+       ]
+      ],
+      "axis": [
+       0,
+       0,
+       1
+      ],
+      "origin": [
+       0.085,
+       0.332,
+       0
+      ],
+      "region": "suction-line",
+      "layer": "suction-foam"
+     },
+     {
+      "id": "th-copper-ends",
+      "kind": "box",
+      "bone": "seg-00",
+      "material": "copper-oxidised",
+      "role": "texture",
+      "tone": 0.5,
+      "size": [
+       0.04,
+       0.001,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.02,
+        -0.0135,
+        0
+       ]
+      },
+      "texture": true,
+      "region": "copper-ends"
+     }
+    ],
+    "structure": [
+     {
+      "id": "member-pallet-slab",
+      "of": "pallet-slab",
+      "member": "pallet",
+      "part": "member"
+     },
+     {
+      "id": "member-cradle",
+      "of": "cradle",
+      "member": "pallet",
+      "part": "member"
+     },
+     {
+      "id": "member-coil",
+      "of": "coil",
+      "member": "seg-00",
+      "part": "member",
+      "members": [
+       "seg-01",
+       "seg-02",
+       "seg-03",
+       "seg-04",
+       "seg-05",
+       "seg-06",
+       "seg-07",
+       "seg-08",
+       "seg-09",
+       "seg-10",
+       "seg-11",
+       "seg-12",
+       "seg-13",
+       "seg-14",
+       "seg-15",
+       "seg-16",
+       "seg-17",
+       "seg-18",
+       "seg-19",
+       "seg-20",
+       "seg-21",
+       "seg-22",
+       "seg-23",
+       "seg-24",
+       "seg-25",
+       "seg-26",
+       "seg-27",
+       "seg-28",
+       "seg-29",
+       "seg-30",
+       "seg-31",
+       "seg-32",
+       "seg-33",
+       "seg-34",
+       "seg-35",
+       "seg-36",
+       "seg-37",
+       "seg-38"
+      ]
+     },
+     {
+      "id": "mass-coil",
+      "kind": "box",
+      "bone": "seg-00",
+      "material": "copper-tube",
+      "role": "detail",
+      "tone": 0.5,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.085,
+        0.06,
+        0
+       ]
+      },
+      "member": "seg-00",
+      "part": "mass"
+     },
+     {
+      "id": "mass-pallet",
+      "kind": "box",
+      "bone": "pallet",
+      "material": "pallet-spruce",
+      "role": "detail",
+      "tone": 0.5,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.4,
+        0.072,
+        0
+       ]
+      },
+      "member": "pallet",
+      "part": "mass"
+     }
+    ]
    }
   },
   "presentation": {

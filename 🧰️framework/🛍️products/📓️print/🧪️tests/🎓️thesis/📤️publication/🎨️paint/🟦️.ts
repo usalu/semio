@@ -4,7 +4,7 @@ import { printPdfArrayV1, printPdfGlyphsV1, type PrintPdfPageV1 } from "../../..
 import schema from "./🧬️schema/🔣️.json";
 
 export interface ThesisPaintRunV1 { readonly text: string; readonly color: string }
-export interface ThesisFilledHeadingV1 { readonly title: string; readonly number: string }
+export interface ThesisHeadingV1 { readonly title: string; readonly number: string }
 const compact = (value: string): string => value.normalize("NFC").replace(/\s+/g, "");
 
 /** 🎨️ Reads actual PDF text and filled-path paints through the retained page/control interface. */
@@ -30,8 +30,8 @@ export function thesisPdfPaintFactsV1(page: PrintPdfPageV1, control: ResourceLea
   return Object.freeze({ runs: Object.freeze(runs), fills: Object.freeze([...fills]) });
 }
 
-/** 🔢️ Requires every contiguous prefix/leaf numeral run after one filled title to use its actual ink. */
-export function thesisFilledHeadingNumberPaintV1(runs: readonly ThesisPaintRunV1[], heading: ThesisFilledHeadingV1, foreground: string): readonly ThesisPaintRunV1[] {
+/** 🔢️ Requires the heading title and all of its section number to use the expected foreground. */
+export function thesisHeadingNumberPaintV1(runs: readonly ThesisPaintRunV1[], heading: ThesisHeadingV1, foreground: string): readonly ThesisPaintRunV1[] {
   if (validateJsonSchemaSubset(schema, { runs, heading, foreground }).length) throw Error("Closed thesis heading paint facts required");
   let size = 0;
   const chunks = runs.flatMap((run, index) => {
@@ -46,17 +46,17 @@ export function thesisFilledHeadingNumberPaintV1(runs: readonly ThesisPaintRunV1
     const start = starts.get(cursor), end = ends.get(cursor + title.length);
     if (start !== undefined && end !== undefined) matches.push({ start, end });
   }
-  if (matches.length !== 1) throw Error("One actual filled heading title required: " + heading.title);
+  if (matches.length !== 1) throw Error("One actual heading title required: " + heading.title);
   const selected = matches[0]!;
-  for (let index = selected.start; index <= selected.end; index++) if (compact(runs[index]!.text) && runs[index]!.color.toLowerCase() !== ink) throw Error("Filled heading title ink mismatch: " + heading.title);
+  for (let index = selected.start; index <= selected.end; index++) if (compact(runs[index]!.text) && runs[index]!.color.toLowerCase() !== ink) throw Error("Heading title ink mismatch: " + heading.title);
   const numbers: ThesisPaintRunV1[] = [];
   for (let index = selected.end + 1; index < runs.length; index++) {
     const run = runs[index]!, value = compact(run.text);
     if (!value) continue;
     if (!/^[0-9.]+$/.test(value)) break;
     numbers.push(run);
-    if (run.color.toLowerCase() !== ink) throw Error("Filled heading numeral ink mismatch: " + heading.title + " / " + value + " / " + run.color);
+    if (run.color.toLowerCase() !== ink) throw Error("Heading numeral ink mismatch: " + heading.title + " / " + value + " / " + run.color);
   }
-  if (numbers.map(run => compact(run.text)).join("") !== heading.number) throw Error("Exact filled heading numeral required: " + heading.title + " / " + heading.number);
+  if (numbers.map(run => compact(run.text)).join("") !== heading.number) throw Error("Exact heading numeral required: " + heading.title + " / " + heading.number);
   return Object.freeze(numbers.map(run => Object.freeze({ ...run })));
 }

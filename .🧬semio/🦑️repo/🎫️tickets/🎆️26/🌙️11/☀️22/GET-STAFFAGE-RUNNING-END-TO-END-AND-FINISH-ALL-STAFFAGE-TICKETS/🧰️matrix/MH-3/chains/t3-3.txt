@@ -1,0 +1,20 @@
+# third fixer: person-hanging-laundry with the jacket plan prism fitted within 60 degrees (the variant whose gate over every subject is clean): silhouette, validate, sweep, suitability and sheets (800 MB)
+(cd "$S/📦️packages/🟦️typescript" && timeout 900 "$B" "$M/measure.ts" "$GEN/try/person-hanging-laundry.json") > "$GEN/measure/person-hanging-laundry.try.log" 2>&1; python3 "$here/silcmp.py" "$GEN/measure/person-hanging-laundry.before.log" "$GEN/measure/person-hanging-laundry.try.log"
+(cd "$S/📦️packages/🟦️typescript" && timeout 600 "$B" "$here/suit.ts" "$GEN/try/person-hanging-laundry.json") 2>&1 | grep -E "UNSUITABLE|^suitability:" | cut -c1-300
+"$here/in-look.sh" person-hanging-laundry:before:50 person-hanging-laundry:try:50 person-hanging-laundry:before:100 person-hanging-laundry:try:100 person-hanging-laundry:before:200 person-hanging-laundry:try:200 person-hanging-laundry:try:50:lifting-from-basket
+# third fixer: variants of the right hand and forearm of person-pushing-bicycle at 1:50 (1000 MB)
+MEASURE=1 "$here/in-var.sh" person-pushing-bicycle "$here/var/bicycle-b1.json" bicycle-b1 --scales 50
+(cd "$T" && timeout 900 "$B" "$M/gate.ts" "$GEN/var/bicycle-b1.json" --twins --scales 50 --poses) > "$GEN/var/bicycle-b1.gate-poses.log" 2>&1; grep -E "^hard|HARD" "$GEN/var/bicycle-b1.gate-poses.log" | cut -c1-250
+mkdir -p "$GEN/zoom"
+MEASURE=1 MSCALES=50 "$here/in-var.sh" person-pushing-bicycle "$here/var/bicycle-b7.json" bicycle-b7 --scales 50 --poses
+(cd "$T" && timeout 300 "$B" "$here/zoom.ts" "$GEN/var/bicycle-b7.json" 50 default "$GEN/zoom/bicycle-b7-50.png" '^(hand|forearm)-r$') 2>&1 | tail -2
+# crutches: the gate of the untouched document over every subject, and enlarged pictures at 1:500
+(cd "$T" && timeout 1200 "$B" "$M/gate.ts" "$GEN/backup/person-on-crutches.json" --twins) > "$GEN/gate/person-on-crutches.before-all.log" 2>&1; tail -1 "$GEN/gate/person-on-crutches.before-all.log"
+(cd "$T" && timeout 300 "$B" "$here/zoom.ts" "$GEN/backup/person-on-crutches.json" 500 default "$GEN/zoom/crutches-before-500.png" '^crutch') 2>&1 | tail -2
+(cd "$T" && timeout 300 "$B" "$here/zoom.ts" "$GEN/backup/person-on-crutches.json" 500 "pose crutches-forward" "$GEN/zoom/crutches-before-500-fwd.png" '^crutch') 2>&1 | tail -2
+(cd "$T" && timeout 300 "$B" "$here/zoom.ts" "$GEN/backup/person-on-crutches.json" 200 default "$GEN/zoom/crutches-before-200.png" '^crutch') 2>&1 | tail -2
+(cd "$T" && timeout 300 "$B" "$here/zoom.ts" "$GEN/try/person-on-crutches.json" 500 default "$GEN/zoom/crutches-try-500.png" '^crutch') 2>&1 | tail -2
+# write person-hanging-laundry (its trial copy is clean); simplify the traced 1:50 solids of person-eating-standing (5,498 vertices, 12 s per evaluated state) and write it when its dry run over every subject is clean
+"$here/in-apply.sh" person-hanging-laundry
+"$here/in-try-apply.sh" person-eating-standing
+"$here/in-look.sh" person-eating-standing:try:50

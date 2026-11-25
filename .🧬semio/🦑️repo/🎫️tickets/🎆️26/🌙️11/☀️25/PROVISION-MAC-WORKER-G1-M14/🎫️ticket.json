@@ -1,0 +1,51 @@
+{
+  "title": "Provision Mac Worker G1 M14",
+  "emoji": "🍎",
+  "status": "closed",
+  "description": "Adopt the existing macOS checkout of this Mac mini as group g1 origin g1-m14, install the replica and compaction services, verify replica, fleet and authenticated cache access, and follow native readiness through completion.",
+  "summary": "This Mac mini is fleet worker g1-m14 of group g1. ~/Documents/semio was adopted with 0 conflicts and the replica and compaction services run. The Documents consent is granted, native readiness reached ready yes (native-bootstrap.done exists), and the view digest matches g1-server. Two shared-code defects that blocked readiness on a fresh macOS worker were fixed with tests. First, the build agent wrote its work slot into the unattached dependency partition, so the native receiver refused it on every attempt. cacheAreaHomeV1 now refuses an unattached mount with CacheAreaDetachedError, and the agent waits with the new WorkerWhy reason partition-detached. Second, the capsule recheck failed when macOS TCC wrote com.apple.macl, which moves only ctime. The capsule directory is now compared by dev:ino:mode. The join report lists open coordinator items: preflight probes the closed 6090 cache port instead of ports.cache 6094, the sealed code snapshot is missing a runtime file, and stray replica/sa and -inf paths are staged across the fleet.",
+  "goal": "AI-OPTIMIZED-REPO",
+  "sessions": [
+    "8536270b-27bc-4fb8-80bd-469b3aabdca1"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-25 00:00:00",
+      "author": "",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Setup this worker as part of the fleet."
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-25 04:33:30",
+      "author": "ueli",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "8d17d8ba3998690932b0032ea2ca41bce5c994b6",
+      "summary": "This Mac mini is fleet worker g1-m14 of group g1. ~/Documents/semio was adopted with 0 conflicts and the replica and compaction services run. The Documents consent is granted, native readiness reached ready yes (native-bootstrap.done exists), and the view digest matches g1-server. Two shared-code defects that blocked readiness on a fresh macOS worker were fixed with tests. First, the build agent wrote its work slot into the unattached dependency partition, so the native receiver refused it on every attempt. cacheAreaHomeV1 now refuses an unattached mount with CacheAreaDetachedError, and the agent waits with the new WorkerWhy reason partition-detached. Second, the capsule recheck failed when macOS TCC wrote com.apple.macl, which moves only ctime. The capsule directory is now compared by dev:ino:mode. The join report lists open coordinator items: preflight probes the closed 6090 cache port instead of ports.cache 6094, the sealed code snapshot is missing a runtime file, and stray replica/sa and -inf paths are staged across the fleet.",
+      "files": [
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🏃️execution🗃️🧬️schema⚙️🌐️remoteexecution"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🌐️remoteexecution🗃️🛰️sidecar🗃️👷️agent💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🌐️remoteexecution🗃️🧪️tests🗃️🔎️why💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️⚡️caching🗃️💾️storage🗃️🧾️ledger💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️⚡️caching🗃️🚀️bootstrap🗃️📦️dependencies🗃️💾️storage💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🌐️remoteexecution🗃️🌡️load🗃️🔎️why💻🟦️"
+        }
+      ]
+    }
+  ]
+}

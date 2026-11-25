@@ -1,6 +1,6 @@
 import {frameworkOsEngineFacetV1} from "../../🏗️builder/🌐️vite/📥️artifacts/🕸️engines/🟦️.ts";
-import {scriptCompilerAdmissionControlV1} from "@semio-tech/process/compiler-capacity";
-import { repositoryCachePartitionRootDataV1 } from "@semio-tech/repo-lib/storage";
+import {scriptCompilerAdmissionControlV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import { repositoryCachePartitionRootDataV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/💾️storage/🟦️.ts";
 
 import {frameworkOsViteArtifactInputsV1} from "../../🏗️builder/🌐️vite/📥️artifacts/🟦️.ts";
 
@@ -19,12 +19,12 @@ import {existsSync} from "node:fs";
 import {join} from "node:path";
 
 
-import { runViteBunxDev, frameworkOsLockedPrefsEnv } from "@semio-tech/repo-lib/dev";
+import { runViteBunxDev, frameworkOsLockedPrefsEnv } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🎮️playground/🟦️.ts";
 import {BundleScript} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 
 
-import {playgroundCatalog, resolvePlaygroundFilter} from "@semio-tech/framework-plugin/build/plan";
+import {playgroundCatalog, resolvePlaygroundFilter} from "../../../🔌️plugin/📦️packages/🦀️rust/🏗️build/📋️plan/🟦️.ts";
 
 
 import {ActivationScript} from "../🏃️execution/🟦️.ts";

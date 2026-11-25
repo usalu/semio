@@ -1,0 +1,21 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-hub-norm-eurocode-structural-en1992-editor"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "The En1992 editor app of the Norm Eurocode Structural plugin, instantiated once"
+
+[lints]
+workspace = true
+
+[package.metadata.semio]
+role = "hub"
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-s-artifact-norm-en1992-editor = { workspace = true }
+semio-framework-dispatch-macros = { workspace = true }
+semio-plugin = { workspace = true }

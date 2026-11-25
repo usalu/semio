@@ -13,17 +13,83 @@
    "de": "Ein gebrauchter Heizungspufferspeicher aus Stahl mit 800 l, Ø 790 mm ohne Dämmung und 1,80 m hoch auf drei Rohrfüßen, leer 117 kg, entleert und seine acht Muffen 6/4 Zoll mit verzinkten Stopfen verschlossen; er liegt auf zwei Kanthölzern mit genagelten Keilen neben seinem gerollten und gegurteten Weichschaum-Dämmmantel, hängt beim Anheben an zwei Rundschlingen und steht im Wiedereinbau aufrecht, gefüllt und von 70 bis 35 °C geschichtet."
   },
   "tags": [
-   "component",
-   "reclaimed",
-   "used",
-   "hvac",
-   "heating",
-   "plumbing",
-   "steel",
-   "tank",
-   "buffer-tank",
-   "storage",
-   "insulation"
+   {
+    "id": "component",
+    "title": {
+     "en": "component",
+     "de": "Bauteil"
+    }
+   },
+   {
+    "id": "reclaimed",
+    "title": {
+     "en": "reclaimed",
+     "de": "wiederverwendet"
+    }
+   },
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "hvac",
+    "title": {
+     "en": "HVAC",
+     "de": "HLK"
+    }
+   },
+   {
+    "id": "heating",
+    "title": {
+     "en": "heating",
+     "de": "Heizung"
+    }
+   },
+   {
+    "id": "plumbing",
+    "title": {
+     "en": "plumbing",
+     "de": "Sanitär"
+    }
+   },
+   {
+    "id": "steel",
+    "title": {
+     "en": "steel",
+     "de": "Stahl"
+    }
+   },
+   {
+    "id": "tank",
+    "title": {
+     "en": "tank",
+     "de": "Tank"
+    }
+   },
+   {
+    "id": "buffer-tank",
+    "title": {
+     "en": "buffer tank",
+     "de": "Pufferspeicher"
+    }
+   },
+   {
+    "id": "storage",
+    "title": {
+     "en": "storage",
+     "de": "Lagerung"
+    }
+   },
+   {
+    "id": "insulation",
+    "title": {
+     "en": "insulation",
+     "de": "Dämmung"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage component authors",

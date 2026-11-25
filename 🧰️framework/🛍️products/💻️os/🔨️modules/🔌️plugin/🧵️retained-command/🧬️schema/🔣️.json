@@ -55,6 +55,17 @@
       "minimum": 0,
       "maximum": 9007199254740991
     },
+    "StalePublicationCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["staleAt", "committed", "faultCode", "nextGeneration"],
+      "properties": {
+        "staleAt": { "const": "preflight" },
+        "committed": { "const": false },
+        "faultCode": { "const": "interactive-job.stale" },
+        "nextGeneration": { "const": 1 }
+      }
+    },
     "ScalarConfigValue": {
       "anyOf": [
         {

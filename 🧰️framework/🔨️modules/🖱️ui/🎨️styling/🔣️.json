@@ -5,6 +5,12 @@
     "secondary": "#34d1bf",
     "tertiary": "#fa9500",
     "danger": "#a60009",
+    "danger-bright": "#ff8a90",
+    "danger-deep": "#8c0007",
+    "warning-deep": "#544300",
+    "success-deep": "#2d452d",
+    "success-bright": "#93c294",
+    "info-deep": "#483d32",
     "warning": "#fccf05",
     "info": "#dbbea1",
     "success": "#7eb77f",
@@ -828,6 +834,18 @@
         },
         "progress": {
           "token": "secondary"
+        },
+        "errorInk": {
+          "token": "danger-deep"
+        },
+        "warningInk": {
+          "token": "warning-deep"
+        },
+        "successInk": {
+          "token": "success-deep"
+        },
+        "infoInk": {
+          "token": "info-deep"
         }
       },
       "diagram": {
@@ -1205,6 +1223,18 @@
         },
         "progress": {
           "token": "secondary"
+        },
+        "errorInk": {
+          "token": "danger-bright"
+        },
+        "warningInk": {
+          "token": "warning"
+        },
+        "successInk": {
+          "token": "success-bright"
+        },
+        "infoInk": {
+          "token": "info"
         }
       },
       "diagram": {

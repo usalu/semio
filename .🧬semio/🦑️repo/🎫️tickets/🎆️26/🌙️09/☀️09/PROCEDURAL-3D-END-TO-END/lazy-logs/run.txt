@@ -1,0 +1,18 @@
+23:51:41 start semio-hub-flow-component
+00:10:23 end semio-hub-flow-component exit 0
+00:10:23 start semio-hub-procedural-component
+00:11:06 end semio-hub-procedural-component exit 0
+00:11:58 start semio-hub-flow-component try 1
+00:13:19 end semio-hub-flow-component try 1 exit 1
+00:13:19 start semio-hub-flow-component try 2
+00:17:59 end semio-hub-flow-component try 2 exit 1
+00:19:23 start semio-hub-flow-component try 1
+00:24:20 end semio-hub-flow-component try 1 exit 1
+00:24:20 start semio-hub-flow-component try 2
+00:24:45 end semio-hub-flow-component try 2 exit 1
+00:39:28 start semio-hub-flow-component try 1
+01:39:29 end semio-hub-flow-component try 1 exit 1
+01:42:33 start semio-hub-flow-component try 1
+03:35:51 end semio-hub-flow-component try 1 exit 0
+03:35:51 start semio-hub-procedural-component try 1
+04:09:41 end semio-hub-procedural-component try 1 exit 0

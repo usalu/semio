@@ -556,23 +556,46 @@ impl OpcPackage {
     }
 }
 
+/// 🔖️ Refuses a package that names one member twice.
+pub fn check_opc_member_names<'a>(names: impl IntoIterator<Item = &'a str>) -> Result<(), OpcError> {
+    let mut paths = HashSet::new();
+    for name in names {
+        if !paths.insert(name) {
+            return Err(OpcError::Malformed(format!("duplicate package member: {name}")));
+        }
+    }
+    Ok(())
+}
+
+/// 📇️ Reads the typed content-type table from its parsed `[Content_Types].xml`.
+pub fn opc_content_types_from_document(document: &XmlDocument) -> Result<OpcContentTypes, OpcError> {
+    OpcContentTypes::from_xml(document)
+}
+
+/// 🔗️ Reads one `*.rels` member into its owner path and typed relationship list.
+pub fn opc_relationships_from_document(document: &XmlDocument, part: &str) -> Result<(String, Vec<OpcRelationship>), OpcError> {
+    let relationships = relationships_from_xml(document, part)?;
+    let owner = owner_for_rels_path(part).ok_or_else(|| OpcError::Malformed(format!("relationship part at unexpected path: {part}")))?;
+    Ok((owner, relationships))
+}
+
+/// 🏷️ Resolves the declared content type of one content part.
+pub fn opc_part_content_type(content_types: &OpcContentTypes, part: &str) -> Result<String, OpcError> {
+    content_types.resolve(part).map(str::to_string).ok_or_else(|| OpcError::Malformed(format!("part {part} has no resolvable content type")))
+}
+
 /// 📦️ Decode OPC container bytes (a real zip archive) into a typed `OpcPackage`.
 /// Every zip entry becomes exactly one of: the typed `content_types` table, a typed
 /// relationship list, or a verbatim content `OpcPart`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_opc(data: &[u8]) -> Result<OpcPackage, OpcError> {
     let zip = crate::standards::v2_0::subsets::base::io::decode_zip(data).map_err(OpcError::Zip)?;
-    let mut paths = HashSet::with_capacity(zip.entries.len());
-    for entry in &zip.entries {
-        if !paths.insert(entry.name.as_str()) {
-            return Err(OpcError::Malformed(format!("duplicate package member: {}", entry.name)));
-        }
-    }
+    check_opc_member_names(zip.entries.iter().map(|entry| entry.name.as_str()))?;
 
     let ct_entry = zip.entries.iter().find(|e| e.name == CONTENT_TYPES_PART).ok_or(OpcError::MissingContentTypes)?;
     let ct_text = String::from_utf8(ct_entry.data.clone()).map_err(|_| OpcError::MalformedContentTypes("not valid utf-8".into()))?;
     let ct_doc = xml_document_from_text(&ct_text).map_err(|e| OpcError::Xml { part: CONTENT_TYPES_PART.into(), detail: e })?;
-    let content_types = OpcContentTypes::from_xml(&ct_doc)?;
+    let content_types = opc_content_types_from_document(&ct_doc)?;
 
     let mut parts = Vec::new();
     let mut relationships = OpcRelationshipOwners::new();
@@ -584,12 +607,11 @@ pub fn decode_opc(data: &[u8]) -> Result<OpcPackage, OpcError> {
         if entry.name.ends_with(".rels") {
             let text = String::from_utf8(entry.data.clone()).map_err(|_| OpcError::MalformedRelationships { part: entry.name.clone(), detail: "not valid utf-8".into() })?;
             let doc = xml_document_from_text(&text).map_err(|e| OpcError::Xml { part: entry.name.clone(), detail: e })?;
-            let rels = relationships_from_xml(&doc, &entry.name)?;
-            let owner = owner_for_rels_path(&entry.name).ok_or_else(|| OpcError::Malformed(format!("relationship part at unexpected path: {}", entry.name)))?;
+            let (owner, rels) = opc_relationships_from_document(&doc, &entry.name)?;
             relationships.replace_owner(owner, rels);
             continue;
         }
-        let content_type = content_types.resolve(&entry.name).ok_or_else(|| OpcError::Malformed(format!("part {} has no resolvable content type", entry.name)))?.to_string();
+        let content_type = opc_part_content_type(&content_types, &entry.name)?;
         parts.push(OpcPart { path: entry.name.clone(), content_type, bytes: entry.data.clone() });
     }
 

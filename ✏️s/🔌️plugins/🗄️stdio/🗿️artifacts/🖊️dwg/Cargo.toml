@@ -26,7 +26,15 @@ members = [
     "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust",
     "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/✏️drawing/📦️packages/🦀️rust",
     "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📄️document/📦️packages/🦀️rust",
+    "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️objects/🎛️metadata/📦️packages/🦀️rust",
+    "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️objects/🏷️xrecord/📦️packages/🦀️rust",
+    "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️objects/📏️constraints/📦️packages/🦀️rust",
+    "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️objects/📐️entities/📦️packages/🦀️rust",
     "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️objects/📦️packages/🦀️rust",
+    "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️objects/🔗️associativity/📦️packages/🦀️rust",
+    "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️objects/🖌️styles/📦️packages/🦀️rust",
+    "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️objects/🗃️tables/📦️packages/🦀️rust",
+    "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️objects/🧩️blocks/📦️packages/🦀️rust",
     "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust",
     "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/🔺️diff/📦️packages/🦀️rust",
     "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
@@ -161,6 +169,30 @@ path = "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📤�
 
 [workspace.dependencies.semio-s-artifact-stdio-dwg-geometry]
 path = "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-dwg-snapshot-objects-metadata]
+path = "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️objects/🎛️metadata/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-dwg-snapshot-objects-xrecord]
+path = "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️objects/🏷️xrecord/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-dwg-snapshot-objects-tables]
+path = "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️objects/🗃️tables/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-dwg-snapshot-objects-associativity]
+path = "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️objects/🔗️associativity/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-dwg-snapshot-objects-entities]
+path = "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️objects/📐️entities/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-dwg-snapshot-objects-styles]
+path = "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️objects/🖌️styles/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-dwg-snapshot-objects-constraints]
+path = "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️objects/📏️constraints/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-dwg-snapshot-objects-blocks]
+path = "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️objects/🧩️blocks/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-stdio-dwg-snapshot-objects]
 path = "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️objects/📦️packages/🦀️rust"

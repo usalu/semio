@@ -2,7 +2,7 @@
 import { useInitialExampleReadiness } from "../../../🐚️Shell/🎬️initial-example/🟦️.ts";
 import { type ReactNode, useCallback, useEffect, useMemo } from "../../../⚛️react-port/🟦️.ts";
 import { SET_ACTIVE_TOOL_ACTION_ID } from "@semio-tech/framework";
-import { type Anchor, cn, findPanelTabNode, navbarFillItem, type NavbarItem, PanelChromeTabBar, type PanelTabSelectionOptions, SemioLogo, ShellBrandLogo, ResponsiveLabel, shellChromeTitleClassName, Toggle } from "@semio-tech/ui-react";
+import { type Anchor, cn, findPanelTabNode, navbarFillItem, type NavbarItem, PanelChromeTabBar, type PanelTabSelectionOptions, SemioLogo, SharedBorderRow, ShellBrandLogo, ResponsiveLabel, shellChromeTitleClassName, Toggle } from "@semio-tech/ui-react";
 import { resolveBootExampleId } from "../../../🐚️Shell/🔒️boot-and-locks/🟦️.ts";
 import { appBreadcrumb, resolveAppBreadcrumb } from "../../../🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
 import { toolCategoryOpenPath, toolLeafInactiveRepress, toolPanelTreeContentRevision } from "../../../🛠️ShellHelpers/🎛️command-registry/🟦️.tsx";
@@ -115,9 +115,9 @@ export function useBrandState({ core }: { readonly core: ShellCoreAfterDockAssem
         <span data-slot="app-name" className={cn("px-single", shellChromeTitleClassName)}>
           <ResponsiveLabel full={brand?.windowTitle ?? appBreadcrumb(resolveAppBreadcrumb(focusedApp, uiTerminology, uiLocale))} short={brand?.shortWindowTitle} />
         </span>
-        <span data-slot="surface-role-chip" data-role={focusedApp.role} data-app-id={focusedApp.id} title={focusedApp.role === "viewer" ? viewerReadOnlyNoticeText(uiLocale) : undefined} className="rounded-sm border border-border px-single text-xs text-muted-foreground">
+        <SharedBorderRow as="span" data-slot="surface-role-chip" data-role={focusedApp.role} data-app-id={focusedApp.id} title={focusedApp.role === "viewer" ? viewerReadOnlyNoticeText(uiLocale) : undefined} className="px-single text-xs text-muted-foreground">
           {surfaceRoleChipText(focusedApp.role, uiLocale)}
-        </span>
+        </SharedBorderRow>
       </div>
     );
     const showExampleSelect = exampleOptions.length > 0 && !locks.exampleId && (!hostMode || focusedApp?.id !== landingAppId);

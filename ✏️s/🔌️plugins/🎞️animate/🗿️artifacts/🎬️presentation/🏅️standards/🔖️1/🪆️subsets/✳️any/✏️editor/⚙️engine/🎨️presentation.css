@@ -1,0 +1,30 @@
+:root {
+  color-scheme: light dark;
+  --base: light-dark(var(--color-light), var(--color-dark));
+  --foreground: light-dark(var(--color-dark), var(--color-light));
+  --border-normal-color: var(--color-gray);
+  background: var(--base);
+  color: var(--foreground);
+}
+
+html, body {
+  margin: 0;
+  height: 100%;
+}
+
+#animate-presentation-root {
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  height: 100%;
+  border: var(--presentation-hairline) solid var(--border-normal-color);
+  background: color-mix(in oklab, var(--base), var(--foreground) var(--level-shade-step));
+  --presentation-hairline: 1px;
+}
+
+#animate-presentation-canvas {
+  display: block;
+  width: min(100%, calc((100dvh - 2 * var(--presentation-hairline)) * 16 / 9));
+  height: auto;
+  aspect-ratio: 16 / 9;
+}

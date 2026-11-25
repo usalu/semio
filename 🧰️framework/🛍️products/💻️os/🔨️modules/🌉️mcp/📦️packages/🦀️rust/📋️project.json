@@ -35,6 +35,11 @@
   "targets": {
     "build": {
       "executor": "repo:script",
+      "dependsOn": [
+        "@semio-tech/assets:build",
+        "@semio-tech/framework-schema:generate",
+        "@semio-tech/ui-styling-tokens:generate"
+      ],
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
@@ -50,6 +55,11 @@
     },
     "build-release": {
       "executor": "repo:script",
+      "dependsOn": [
+        "@semio-tech/assets:build",
+        "@semio-tech/framework-schema:generate",
+        "@semio-tech/ui-styling-tokens:generate"
+      ],
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
@@ -84,6 +94,11 @@
     },
     "check": {
       "executor": "repo:script",
+      "dependsOn": [
+        "@semio-tech/assets:build",
+        "@semio-tech/framework-schema:generate",
+        "@semio-tech/ui-styling-tokens:generate"
+      ],
       "cache": true,
       "inputs": [
         "default",
@@ -99,6 +114,11 @@
     },
     "test": {
       "executor": "repo:script",
+      "dependsOn": [
+        "@semio-tech/assets:build",
+        "@semio-tech/framework-schema:generate",
+        "@semio-tech/ui-styling-tokens:generate"
+      ],
       "cache": true,
       "inputs": [
         "default",

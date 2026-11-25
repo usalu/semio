@@ -84,6 +84,7 @@ members = [
     "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/⚖️laws/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🎞️session/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🔎️read/✏️authoring/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🔎️read/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧱️flow-host-model/📦️packages/🦀️rust",
@@ -169,6 +170,7 @@ members = [
     "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🍎️bin-09/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🍯️bin-10/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🏙️bin-01/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🛑️original-batch-abort/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️snapshot-clone/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧭️cursor/📦️packages/🦀️rust",
@@ -330,6 +332,7 @@ members = [
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏯️tool-run/🧵️instance/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/♻️cancellation/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/♻️lifecycle/🏪️stores/🧪️tests/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/♻️lifecycle/🧱️owner/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/⏲️tasks/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🎟️context/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/📦️instances/📦️packages/🦀️rust",
@@ -345,6 +348,7 @@ members = [
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/📨️pending/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔄️turn/📥️receiving/🎟️source/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔄️turn/📥️receiving/📝️forms/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔄️turn/📥️receiving/📦️completed/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔄️turn/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔄️turn/🧯️retirement-drivers-and-turn-limits/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔌️app/📦️packages/🦀️rust",
@@ -497,6 +501,7 @@ members = [
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🧿️original/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪪️identity/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🫧️transient/🧱️owner/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧩️expand/📦️packages/🦀️rust",
@@ -1098,6 +1103,12 @@ redundant_clone = "warn"
 
 [workspace.dependencies.semio-plugin-ownership]
 path = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/🧱️owner/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-plugin-store-lifecycle]
+path = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/♻️lifecycle/🧱️owner/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-plugin-transient-publication]
+path = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🫧️transient/🧱️owner/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-framework-artifact-workflow-run-admission]
 path = "🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/⚡️admission/📦️packages/🦀️rust"

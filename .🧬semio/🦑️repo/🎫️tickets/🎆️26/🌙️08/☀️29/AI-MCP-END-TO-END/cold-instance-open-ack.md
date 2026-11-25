@@ -1,0 +1,31 @@
+# Instance Open Acknowledgment
+
+The managed Note journey reached `instance 0 waiting for idle` after the gateway had already processed earlier turns. The extended run reached the same phase at roughly 210 seconds and 1,332,079,458 cumulative execution fuel. The gateway's earlier loop used an empty event slice both while waiting for the first capture and after acknowledging a capture, so the phase label alone did not prove which happened. The local lifecycle contract does prove that waiting for actor-wide idle after a successful ACK is unnecessary.
+
+The guest creates the Captured receipt when it installs the native owner. `plugin_resume_actor_openings` can advance the original phased opening on subsequent turns, and `GuestLifecycleRegistry::has_work` classifies the pre-live slot as active. Prior to the receipt, a normal MoreWork answer can therefore require another empty Poll. An Idle answer with no Captured receipt leaves no valid opening proof.
+
+A real ACK takes the actual matching Captured receipt as its event. `prepare_atomic_document_turn` always admits this event to lifecycle focus, where `stage_ack` checks the exact receipt. `prepare_turn` then suppresses the staged receipt. After successfully preparing that result, `publish_turn_result` calls `finish_turn` and only publishes on success. That step requires a real guest execution-clock verdict below the lifecycle ceiling, clears the retained receipt, and changes Captured to Live. `live_instance_key` requires that Live state. The native transport returns the owned result to MCP only at `GuestPollSessionStatus::Complete` and decodes Faulted results as failures.
+
+The reactor computes MoreWork before `finish_turn` changes the cell to Live. `has_work` consequently marks an otherwise quiet ACK turn MoreWork because it still sees Captured during status computation. MoreWork also folds in actor-wide parked tasks, command ingress, UI retirement, reconciles, document and other lifecycle work. The gateway now completes precisely on a delivered successful ACK turn without a new lifecycle receipt. It checks the original instance, activation generation and request sequence in Captured, forwards that receipt unchanged, and retains phase-specific transport faults. Application commands enter through the ordinary command path after activation.
+
+The existing reactor law `reactor_native_lifecycle_output_failure_preserves_ack_and_owner` demonstrates that a failed output preparation keeps the original Captured receipt and the instance remains non-live. Existing picker and lifecycle laws send their next command immediately after a successful ACK. The gateway neutral law adds delayed capture, exact receipt forwarding, normal ACK with MoreWork, idle before capture, unexpected receipt after ACK, faulted ACK, and foreign identity cases.
+
+## Managed Note Lifecycle Replay
+
+`note-poll-bun.ts --tuple-limits --lifecycle-turns` ran the exact installed component, SHA-256 `55e0fb94f8b067813577d21a1a6e8dbf47f9c75951435b9be0bfd42215e8058d`, in Bun WebAssembly. The standalone issuer compares and settles finite guest work and escrow receipts, parses the actual ready JSON capsule, and continues through the component's paid CloseOutput calls. It uses the neutral editor wire and ordinary clock imports with the diagnostic issuer. It does not replay the gateway's native host scheduling or physical grants.
+
+| Zero-based kernel turns | Decoded status | Lifecycle receipt |
+| --- | --- | --- |
+| 0–39 | MoreWork | None |
+| 40 | MoreWork | Captured for instance 0, activation generation 1, guest lifetime 1, request sequence 1 |
+| 41 | MoreWork | None after acknowledging the exact Captured receipt |
+
+The real open event was consumed in turn 0. Turns 1–40 were empty inputs, and the only ACK was generated from the actual turn 40 capsule. All outputs reported no pending input or effect. The guest reported 67–87 logical fuel per kernel result. Across 42 turns the oracle completed 84 Input calls, 23,895 boot/input/poll/close epochs and 23,889 escrow revisions. The earlier host phase label therefore conflated a long wait for first capture with entirely different work after acknowledgment.
+
+The generated capsule emits its receipt's `requestSequence` as canonical quoted decimal, while the host-event ACK requires a bare numeric sequence. The current `KernelTurnJsonSource` emits that same quoted output. The native receipt receiver now validates the quoted sequence in the exact unsigned range, and the input ACK receiver still validates the bare sequence. The actual native reader accepted the neutral Captured capsule/ACK as the same identity and refused both crossed shapes and five malformed or out-of-range quotations. The kernel JSON source law adds a nonempty Captured capsule and compares the actual paid encoder with `serde_json` and the two native directional projections.
+
+## Opening Work Per Turn
+
+`plugin_resume_actor_openings` used to advance a single selected gate once per kernel turn. Its native VCS app factory deliberately retains each proper materialized owner or partial step and returns pending after admitting registration, actor, controller, store, child construction, or cleanup work. The original allocation-owned `PendingNativeCreation` also retains authority, app, source bind and handback phases. An empty outer Poll had to price a new JSON Input and output capsule for each gate. Those exact gates account for the 40 observed empty Polls. Raising time or fuel alone leaves that pacing in place.
+
+The reactor now reuses its existing 8 ms quiet interval for one selected pending opening. The runtime retains the same instance identity across up to 64 original-context steps in that turn. Each next step requires a change in the actual retained progress or original work observer and stops at completion, cancellation, cooperative yield, deadline, lost clock, or the fixed step cap. The original opening engine still executes each construction, checked admission and retirement step. Selecting a second instance and preparing or publishing a second receipt are outside the loop. The quiet scheduling law models completion with exactly one capture and rejection of an additional step when a request is parked, yielding, cancelled, or has reached or lost its clock. A rebuilt managed component is needed to measure the new count.

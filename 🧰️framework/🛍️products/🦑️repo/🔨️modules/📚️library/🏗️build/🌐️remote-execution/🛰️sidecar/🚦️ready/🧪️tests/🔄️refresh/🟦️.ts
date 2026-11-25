@@ -104,6 +104,19 @@ test("a re-verification that fails leaves Ready: backoff, not ready, failure rec
  const last=w.last();expect(last.state).toBe("backoff");expect(last.ready).toBe(false);expect(last.refreshing).toBe(false);
 });
 
+test("a supervisor that adopts a running refresh keeps the worker ready and refreshing, and only a failed re-verification clears Ready",async()=>{
+ const path=landingOn("workspace"),before=digestsOf(hashesOf({}));
+ const w=world({state:readyState(before),landing:{[path]:"2".repeat(64)}});
+ await runReadyV1({...w.ports,inflight:()=>"workspace"},w.controller.signal);
+ const during=w.store.seen[0]!;
+ expect(during.state).toBe("ready");expect(during.ready).toBe(true);expect(during.refreshing).toBe(true);expect(during.stage).toBe("workspace");
+ expect(w.updates.some(update=>update.ready===false)).toBe(false);
+ expect(w.store.state.readyMs).toBeGreaterThanOrEqual(5);
+ const failing=world({state:readyState(before),landing:{[path]:"2".repeat(64)},outcomes:[{exit:1}]});
+ let adopted=true;await runReadyV1({...failing.ports,inflight:()=>{const now=adopted?"workspace":null;return failing.store.calls.length>0?(adopted=false,null):now;}},failing.controller.signal);
+ expect(failing.last().ready).toBe(false);expect(failing.store.state.failure?.stage).toBe("workspace");
+});
+
 test("a worker that never was ready reports the stage as work, not as ready",async()=>{
  const path=landingOn("workspace"),before=digestsOf(hashesOf({}));
  const w=world({state:readyState(before,null),landing:{[path]:"2".repeat(64)}});

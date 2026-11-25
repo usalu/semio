@@ -46,7 +46,16 @@
     ]
   },
   "slabs": null,
+  "placements": null,
+  "studs": null,
   "fireRating": null,
   "insulationThicknessM": null,
-  "fatigueDetail": null
+  "fatigueDetail": null,
+  "reliabilityClass": null,
+  "cases": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  }
 }

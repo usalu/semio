@@ -18,7 +18,8 @@ pub use output::{ArtifactPreparedOperationOutput,ArtifactPreparedOperations,Arti
 mod replacement;
 pub use replacement::OriginalReplacementReceiving;
 pub use semio_os_store_one_item_publication::artifact_persisted_binary_operation;
-pub use semio_os_store_one_item_publication::lifted_prepared_operation_wire::{ArtifactOperationTargets, ArtifactOriginalOperationReceiving, ArtifactPersistedOperation, ArtifactCanonicalTreeSource, ArtifactOperationWire, ArtifactPreparedOperationError, ArtifactPreparedOperationSource, BatchDigestAdmission};
+pub use semio_os_store_one_item_publication::artifact_persisted_encoded_binary_operation;
+pub use semio_os_store_one_item_publication::lifted_prepared_operation_wire::{ArtifactOperationTargets, ArtifactOperationEncoded, encoded_operation_source, ArtifactOriginalOperationReceiving, ArtifactPersistedOperation, ArtifactCanonicalTreeSource, ArtifactOperationWire, ArtifactPreparedOperationError, ArtifactPreparedOperationSource, BatchDigestAdmission};
 
 /// 📏️ One admitted operation-wire turn, independent of allocation and release axes.
 #[derive(Default, Debug, PartialEq, Eq)]
@@ -39,6 +40,9 @@ fn text_failure(error:ArtifactPreparedOperationError,header_bytes:usize)->Artifa
 
 enum ArtifactCodecFrontier{Json(ArtifactCanonicalJsonCursor),Text(ArtifactOperationTextCursor),Pack(BorrowedProjectedPackCursor)}
 
+/// 🔢️ The authored frame the cursor owns once: its capacity is reported retained on the turn after the encode that created it, and released by the close that drops it.
+struct EncodedFrame{bytes:Vec<u8>,offset:usize,paid:bool,identity:usize}
+
 /// 🧭️ Inline traversal reborrows the exact prepared operation on every bounded copy turn.
 #[derive(Default)]
 pub struct ArtifactPreparedOperationCursor {
@@ -50,6 +54,7 @@ pub struct ArtifactPreparedOperationCursor {
     hex_low: bool,
     pub complete: bool,
     pack_started: bool,
+    encoded: Option<EncodedFrame>,
     codec:Option<ArtifactCodecFrontier>,
     pub closed: bool,
 }
@@ -123,6 +128,7 @@ impl ArtifactPreparedOperationCursor {
     pub fn advance(&mut self, source: ArtifactPreparedOperationSource<'_>, output: &mut [u8], effect: &mut RetainedAllocationEffect<'_>) -> Result<ArtifactPreparedOperationProgress, ArtifactPreparedOperationError> {
         let grant = effect.grant();
         if self.closed { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "prepared operation cursor is closed").into()); }
+        if let ArtifactPreparedOperationSource::Encoded { body } = source { return self.advance_encoded(body, output, grant); }
         if let Some(step)=self.admit_codec(source,grant)?{return Ok(step)}
         if let ArtifactPreparedOperationSource::Pack { tag, body, spec } = source {
             return self.advance_pack(tag,body,spec,output,effect);
@@ -133,7 +139,7 @@ impl ArtifactPreparedOperationCursor {
         if grant.maximum_items == 0 || maximum == 0 { return Ok(ArtifactPreparedOperationProgress::default()); }
         if grant.maximum_depth == 0 { return Err(ValueError::literal(ValueRefusalKind::DepthLimit, "prepared operation wrapper requires its original parent depth").into()); }
         let (header, prefix, body_pointer, mode) = match source {
-            ArtifactPreparedOperationSource::Pack { .. } => unreachable!(),
+            ArtifactPreparedOperationSource::Pack { .. } | ArtifactPreparedOperationSource::Encoded { .. } => unreachable!(),
             ArtifactPreparedOperationSource::Text { header, body } => (header, &b""[..], body as *const dyn ArtifactOperationText as *const () as usize, 2),
             ArtifactPreparedOperationSource::CanonicalJson { header, body } => (header, &b""[..], body as *const dyn ArtifactCanonicalJson as *const () as usize, 0),
             ArtifactPreparedOperationSource::HexJson { header, prefix, body } => (header, prefix, body as *const dyn ArtifactCanonicalJson as *const () as usize, 1),
@@ -196,6 +202,31 @@ impl ArtifactPreparedOperationCursor {
         Ok(ArtifactPreparedOperationProgress { processed_items: progress.copied_items, written_bytes: if hex { 0 } else { step.written_bytes }, copied_bytes: progress.copied_bytes + usize::from(hex && step.written_bytes != 0), retained_capacity_bytes: progress.retained_capacity_bytes, released_bytes: progress.released_bytes, complete: self.complete })
     }
 
+    fn advance_encoded(&mut self, body: &dyn ArtifactOperationEncoded, output: &mut [u8], grant: RetainedCloneGrant) -> Result<ArtifactPreparedOperationProgress, ArtifactPreparedOperationError> {
+        if grant.maximum_items == 0 || output.is_empty() { return Ok(Default::default()); }
+        let identity = body as *const dyn ArtifactOperationEncoded as *const () as usize;
+        if self.encoded.is_none() {
+            let copied_bytes = size_of::<EncodedFrame>();
+            if grant.maximum_copy_bytes < copied_bytes { return Ok(Default::default()); }
+            self.encoded = Some(EncodedFrame { bytes: body.encode_once()?, offset: 0, paid: false, identity });
+            return Ok(ArtifactPreparedOperationProgress { processed_items: 1, copied_bytes, ..Default::default() });
+        }
+        let frame = self.encoded.as_mut().expect("encoded frame was born above");
+        if frame.identity != identity { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "prepared encoded operation source changed before completion").into()); }
+        if !frame.paid {
+            let capacity = frame.bytes.capacity();
+            if grant.maximum_capacity_bytes < capacity || grant.maximum_copy_bytes < size_of::<bool>() { return Ok(Default::default()); }
+            frame.paid = true;
+            return Ok(ArtifactPreparedOperationProgress { processed_items: 1, copied_bytes: size_of::<bool>(), retained_capacity_bytes: capacity, ..Default::default() });
+        }
+        let count = (frame.bytes.len() - frame.offset).min(output.len()).min(grant.maximum_copy_bytes).min(64);
+        if count == 0 && frame.offset < frame.bytes.len() { return Ok(Default::default()); }
+        output[..count].copy_from_slice(&frame.bytes[frame.offset..frame.offset + count]);
+        frame.offset += count;
+        self.complete = frame.offset == frame.bytes.len();
+        Ok(ArtifactPreparedOperationProgress { processed_items: 1, written_bytes: count, copied_bytes: count, complete: self.complete, ..Default::default() })
+    }
+
     fn advance_pack(&mut self,tag:u64,body:&dyn FieldProjectionSource,spec:BorrowedRecordSpec,output:&mut[u8],effect:&mut RetainedAllocationEffect<'_>)->Result<ArtifactPreparedOperationProgress,ArtifactPreparedOperationError> {
         let grant=effect.grant();
         self.pack_started=true;
@@ -232,12 +263,13 @@ impl ArtifactPreparedOperationCursor {
     }
 
     /// 🪙️ The same retained phase exposes whole symbol backing before physical allocation/release.
-    pub fn next_capacity_byte_demand(&self) -> Result<usize,ValueError> { if self.source_identity.is_some_and(|identity|identity.5==3){self.pack().next_capacity_byte_demand()}else{Ok(0)} }
+    pub fn next_capacity_byte_demand(&self) -> Result<usize,ValueError> { if let Some(frame)=self.encoded.as_ref(){return Ok(if frame.paid{0}else{frame.bytes.capacity()})} if self.source_identity.is_some_and(|identity|identity.5==3){self.pack().next_capacity_byte_demand()}else{Ok(0)} }
     pub fn next_close_byte_demand(&self) -> Result<usize,ValueError> { if self.source_identity.is_some_and(|identity|identity.5==3){self.pack().next_close_byte_demand()}else{Ok(0)} }
     /// 🛌️ Only a Pack source ever births symbol or frame scaffolds, so every other source leaves its pack cursor unstarted.
     fn pack_idle(&self) -> bool { !self.pack_started }
     pub fn next_minimum_copy_bytes(&self) -> usize {
         if self.closed || self.complete { return 0; }
+        if self.encoded.is_some() { return size_of::<bool>(); }
         if self.codec.is_none(){return self.codec_birth_copy_bytes();}
         if self.source_identity.is_some_and(|identity|identity.5==3) && self.header_offset==self.pack_header_length { self.pack().next_minimum_copy_bytes() } else { 1 }
     }
@@ -245,6 +277,7 @@ impl ArtifactPreparedOperationCursor {
     /// 📏️ Prices only the retained codec frontier, keeping payload encoding separate.
     pub fn retirement_demands(&self) -> Result<semio_framework_value::RetirementDemand, ValueError> {
         if self.closed { return Ok(Default::default()); }
+        if let Some(frame)=self.encoded.as_ref(){return Ok(semio_framework_value::RetirementDemand{release_bytes:if frame.paid{frame.bytes.capacity()}else{0},depth:1,..Default::default()})}
         if !self.source_identity.is_some_and(|identity|identity.5==3){return Ok(semio_framework_value::RetirementDemand{depth:1,..Default::default()})}
         let mut demand = self.pack().retirement_demands()?;
         demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(ValueRefusalKind::DepthLimit, "operation codec retirement depth overflow"))?;
@@ -255,6 +288,12 @@ impl ArtifactPreparedOperationCursor {
     pub fn close(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> Result<ArtifactPreparedOperationProgress,ArtifactPreparedOperationError> {
         let grant = effect.grant();
         if self.closed { return Ok(ArtifactPreparedOperationProgress { complete: true, ..Default::default() }); }
+        if let Some(frame) = self.encoded.as_ref() {
+            let released_bytes = if frame.paid { frame.bytes.capacity() } else { 0 };
+            if grant.maximum_items == 0 || grant.maximum_release_bytes < released_bytes || grant.maximum_depth == 0 { return Ok(ArtifactPreparedOperationProgress::default()); }
+            self.encoded = None; self.source_identity = None; self.closed = true;
+            return Ok(ArtifactPreparedOperationProgress { processed_items: 1, released_bytes, complete: true, ..Default::default() });
+        }
         if self.pack_idle() { self.source_identity = None; self.closed = true; return Ok(ArtifactPreparedOperationProgress { complete: true, ..Default::default() }); }
         let demand = self.retirement_demands()?;
         if grant.maximum_items == 0 || grant.maximum_release_bytes < demand.release_bytes || grant.maximum_depth < demand.depth { return Ok(ArtifactPreparedOperationProgress::default()); }

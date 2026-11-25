@@ -1,0 +1,26 @@
+components	etics-brick-wall-12			100 front, 200 front, 50 front, 500 front	100 plan, 200 plan, 500 plan	
+components	etics-brick-wall-30			100 front, 200 front, 50 front, 500 front	100 plan, 200 plan, 500 plan	
+components	solid-brick-wall-1960			100 front, 200 front, 200 plan, 50 front, 500 front, 500 plan	100 plan, 200 plan, 500 plan	
+components	spiral-stair	2 / 6; flat; 8 other id		100 front, 100 plan, 200 front, 200 plan		
+components	stair-flight			100 front, 100 plan, 200 front, 50 plan		
+objects	bicycle-stand			100 front, 100 plan, 200 front, 200 plan, 50 front, 50 plan		
+machinery	heat-pump-outdoor-unit			100 plan, 200 plan, 50 plan, 500 plan		
+machinery	plate-heat-exchanger		9; off 9	100 plan, 200 plan		
+machinery	solar-thermal-collector		12; off 12	100 front, 100 plan, 50 front, 50 plan		
+furniture	used-coffee-table	0 / 11; flat; 4 extent	32; off 24, other bone 8	100 front, 200 front		
+furniture	used-folding-bookcase-ladder			200 front, 500 front		
+furniture	used-shoe-cabinet		12; descendant 8, other bone 4	200 plan, 500 plan		
+furniture	used-tv-sideboard	0 / 0; extent only; 3 extent		200 plan, 500 plan		
+furniture	used-wall-unit	0 / 0; extent only; 4 extent	4; off 3, descendant 1	100 plan, 200 plan, 500 plan		
+objects	tealight	2 / 4; flat; 6 other id		100 plan, 200 plan, 50 plan	100 front, 200 front, 50 front	100, 200, 50
+objects	used-bollard-light			200 plan, 500 plan	200 front, 500 front	100, 200, 50, 500
+appliances	pendant-lamp	0 / 4; flat			100 front, 200 front, 50 front	100, 200, 50
+appliances	ceiling-diffuser				100 front, 200 front, 50 front	
+objects	used-park-lantern				500 front	
+objects	used-playground-roundabout				200 front, 500 front	
+objects	waste-bin				500 front	
+appliances	electric-fan-heater		18; off 18			
+furniture	used-hinged-wardrobe	0 / 7; flat	58; descendant 52, off 3, other bone 3			
+objects	used-harmonium	
+components	used-towel-radiator	0 / 0; extent only; 9 extent	36; descendant 36			
+components	used-wall-hung-gas-boiler	0 / 0; extent only; 15 extent				

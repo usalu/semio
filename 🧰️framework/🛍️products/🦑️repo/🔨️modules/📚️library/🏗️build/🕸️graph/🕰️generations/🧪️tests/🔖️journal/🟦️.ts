@@ -6,8 +6,8 @@ import{dirname,join}from"node:path";
 import{fileURLToPath}from"node:url";
 import Ajv from"ajv";
 import journalSchema from"../../🔖️journal/🧬️schema/🔣️.json";
-import{BUILD_JOURNAL_V1,buildJournalKeyV1,decodeJournalRowsV1,encodeJournalRowsV1,readBuildJournalV1}from"../../🔖️journal/🟨️.mjs";
-import{GENERATION_POLICY_V1,canonicalJsonV1}from"../../🟨️.mjs";
+import{BUILD_JOURNAL_V1,buildJournalKeyV1,decodeJournalRowsV1,encodeJournalRowsV1,packJournalRowsV1,readBuildJournalV1,unpackJournalRowsV1}from"../../🔖️journal/🟨️.mjs";
+import{GENERATION_POLICY_V1,canonicalJsonV1,diskFullFailureV1}from"../../🟨️.mjs";
 import{createWorld,ringFiles,seed}from"../🏃️world/🟦️.ts";
 
 const here=dirname(fileURLToPath(import.meta.url)),oracle=join(here,"../🐍️.py"),python=Bun.which("python3")??Bun.which("python");
@@ -19,7 +19,7 @@ const journalFiles=(dir:string)=>{try{return readdirSync(join(dir,".gen","j"));}
 const killAt=(step:string,seen:string[])=>(done:string)=>{seen.push(done);if(done===step)throw new Error("killed after "+step);};
 
 test("the journal header is closed under its schema and its rows files round-trip, long lists in several lines",()=>{
- const ajv=new Ajv({strict:false}),header={version:1,key:hex("k"),state:"waves",parent:null,generation:0,identity:hex("i"),implementation:hex("m"),steps:[{step:"storing",inputs:hex("a"),output:hex("b")}],names:["a","b"],done:1,owners:{a:{root:"a"}},dropped:[],returned:["a"],derived:[],rows:[{file:hex("k")+".0.rows",sha256:hex("r"),bytes:12}],env:{digest:hex("e")}};
+ const ajv=new Ajv({strict:false}),header={version:1,key:hex("k"),state:"waves",parent:null,generation:0,identity:hex("i"),implementation:hex("m"),steps:[{step:"storing",inputs:hex("a"),output:hex("b")}],names:["a","b"],done:1,owners:{a:{root:"a"}},dropped:[],returned:["a"],derived:[],rows:[{file:hex("k")+".0.rows.br",sha256:hex("r"),bytes:12}],env:{digest:hex("e")}};
  expect(ajv.validate(journalSchema,header),JSON.stringify(ajv.errors?.slice(0,2))).toBe(true);
  expect(readBuildJournalV1(Buffer.from(JSON.stringify(header))).done).toBe(1);
  expect(ajv.validate(journalSchema,{...header,state:"half"})).toBe(false);
@@ -30,6 +30,16 @@ test("the journal header is closed under its schema and its rows files round-tri
  expect(bytes.toString("utf8").split("\n").filter(Boolean).length).toBe(5);
  expect(decodeJournalRowsV1(bytes)).toEqual([{name:"o",mode:"u",rows},{name:"e",mode:"a",rows:[]},{name:"o2",mode:"u",rows:rows.slice(0,3)}]);
  expect(()=>decodeJournalRowsV1(Buffer.from('{"o":"x","m":"z","r":[]}\n'))).toThrow();
+});
+
+test("a rows file is stored Brotli-packed, far below its plain JSON, and unpacks to the same canonical lines; agrees with the independent brotli command line tool when it is installed",()=>{
+ const rows=Array.from({length:BUILD_JOURNAL_V1.rowsPerLine*2},(_unused,at)=>({kind:"file",path:"p/"+at,fact:{size:at,mode:420}})),plain=encodeJournalRowsV1([{name:"o",mode:"u",rows}]),packed=packJournalRowsV1(plain);
+ expect(packed.length).toBeLessThan(plain.length/4);
+ expect(unpackJournalRowsV1(packed).equals(plain)).toBe(true);
+ expect(decodeJournalRowsV1(unpackJournalRowsV1(packed))).toEqual([{name:"o",mode:"u",rows}]);
+ expect(BUILD_JOURNAL_V1.rowsSuffix).toBe(".rows.br");
+ const tool=Bun.which("brotli");
+ if(tool){const run=Bun.spawnSync([tool,"-d","-c"],{stdin:packed});expect(run.exitCode).toBe(0);expect(Buffer.from(run.stdout).equals(plain)).toBe(true);}
 });
 
 test("a build killed after the index was kept is published by the next try without deriving, storing or indexing again, and the tree is checked against it",async()=>{
@@ -49,6 +59,19 @@ test("a build killed after the index was kept is published by the next try witho
   expect(journalFiles(dir)).toEqual([]);
   const{generation:_g,membership:_m,...rest}=await again.store.assemble(result.current,{});
   expect(JSON.parse(canonicalJsonV1(rest))).toEqual(pythonGraph(dir));
+ }finally{rmSync(dir,{recursive:true,force:true});}
+});
+
+test("a build that fails because the volume is full retires its own journal at once, any other failure keeps it for the resume",async()=>{
+ expect(diskFullFailureV1(Object.assign(new Error("x"),{code:"ENOSPC"}))).toBe(true);
+ expect(diskFullFailureV1(new Error("The disk is full: partition /"))).toBe(true);
+ expect(diskFullFailureV1(new Error("killed after indexing"))).toBe(false);
+ const dir=scratch();
+ try{
+  await seed(dir,ringFiles(COUNT));
+  const full=createWorld(dir,{stepped:step=>{if(step==="indexing")throw Object.assign(new Error("No space left on device"),{code:"ENOSPC"});}});
+  await expect(full.refresh()).rejects.toThrow("No space left");
+  expect(journalFiles(dir)).toEqual([]);
  }finally{rmSync(dir,{recursive:true,force:true});}
 });
 

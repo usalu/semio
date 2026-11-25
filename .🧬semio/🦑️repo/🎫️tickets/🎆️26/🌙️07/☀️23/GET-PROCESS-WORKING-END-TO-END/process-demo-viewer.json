@@ -1,0 +1,19 @@
+[
+ {
+  "name": "wait for the initial document",
+  "js": "(async()=>'w')()",
+  "until": "(async()=>String(document.querySelectorAll('canvas').length>=1&&!/Loading document/.test(document.body.innerText)&&!!document.querySelector('[role=combobox]')))()",
+  "timeoutMs": 420000,
+  "settleMs": 2000
+ },
+ {
+  "name": "switch to Viewer",
+  "js": "(async()=>{[...document.querySelectorAll('button,[role=tab]')].find(b=>(b.getAttribute('aria-label')||b.innerText).trim().startsWith(\"Viewer\")).click();return \"v\"})()",
+  "settleMs": 75000
+ },
+ {
+  "name": "state after editor",
+  "js": "(async()=>JSON.stringify([document.querySelectorAll('canvas').length,document.querySelector('[role=combobox]').innerText,[...document.querySelectorAll('canvas')].map(c=>[c.width,c.height])]))()",
+  "settleMs": 500
+ }
+]

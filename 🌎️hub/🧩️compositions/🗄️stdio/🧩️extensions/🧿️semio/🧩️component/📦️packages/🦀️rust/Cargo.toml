@@ -26,7 +26,7 @@ depends-on = ["stdio"]
 variant = "stdio-semio-brep"
 app = "s.stdio.semio@v1/brep#editor"
 aliases = ["stdio semio brep"]
-ports = { react = 6276, wgpu = 6376 }
+ports = { react = 6277, wgpu = 6377 }
 
 [[package.metadata.semio.playground]]
 variant = "stdio-semio-drawing"

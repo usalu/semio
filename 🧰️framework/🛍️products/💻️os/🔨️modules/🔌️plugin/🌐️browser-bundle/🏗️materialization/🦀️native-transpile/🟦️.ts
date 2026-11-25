@@ -1,6 +1,7 @@
 import { accessSync, constants, statSync } from "node:fs";
 import { join, resolve } from "node:path";
 import type { BuildMode } from "@semio-tech/process/build-mode";
+import { PLUGIN_HOST_IMPORT } from "../🧾️contract/🟦️.ts";
 
 /** 🦀️ Native executable name of the jco-identical component transpile for a platform. */
 export function nativeTranspileBinaryNameV1(platform: string = process.platform): string {
@@ -44,10 +45,10 @@ export function nativeTranspileBinaryV1(repoRoot: string, mode: BuildMode = "rel
   return path;
 }
 
-/** 🧾️ The command line of one component transpile: jco's `transpile <component> -o <dir> --name <name> --map ...` surface, executed natively. */
+/** 🧾️ The command line of one component transpile: jco's `transpile <component> -o <dir> --name <name> --instantiation async --map ...` surface, executed natively. The module is an explicit instantiation factory, so one parsed module serves every activation, each activation passes its own host and core modules, and no instance state lives in module scope where the browser's module map would keep it for the page's lifetime. */
 export function nativeTranspileArgsV1(component: string, outDir: string, componentBase: string, maps: readonly string[]): readonly string[] {
-  return ["transpile", component, "-o", outDir, "--name", componentBase, ...maps.flatMap((map) => ["--map", map])];
+  return ["transpile", component, "-o", outDir, "--name", componentBase, "--instantiation", "async", ...maps.flatMap((map) => ["--map", map])];
 }
 
 /** 🗺️ The import maps of every plugin component: the pure and host-async framework worlds share one shim module. */
-export const PLUGIN_COMPONENT_IMPORT_MAPS_V1: readonly string[] = ["semio:framework/pure=./🟨️.js", "semio:framework/host-async=./🟨️.js"];
+export const PLUGIN_COMPONENT_IMPORT_MAPS_V1: readonly string[] = [`semio:framework/pure=${PLUGIN_HOST_IMPORT}`, `semio:framework/host-async=${PLUGIN_HOST_IMPORT}`];

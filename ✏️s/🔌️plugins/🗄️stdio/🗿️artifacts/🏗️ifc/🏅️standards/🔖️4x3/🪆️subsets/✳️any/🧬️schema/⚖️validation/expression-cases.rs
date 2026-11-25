@@ -1,4 +1,4 @@
-//! 🧪 Native AST fixtures parsed from the shared language-neutral semantic cases.
+/// 🧪 Native AST fixtures parsed from the shared language-neutral semantic cases.
 const EXPRESSION_CASES_SHA256: &str = "89f67320dd3367badaf1d02d8098629bc4b9b6638358036b1b10b550bdeaa7ba";
 static EXPRESSION_CASES: &[(&str, ExpressExpression, &str, &str)] = &[
     (

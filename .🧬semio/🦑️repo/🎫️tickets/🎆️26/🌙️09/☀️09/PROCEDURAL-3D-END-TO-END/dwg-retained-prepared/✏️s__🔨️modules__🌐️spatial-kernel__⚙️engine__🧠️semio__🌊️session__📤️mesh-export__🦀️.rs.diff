@@ -1,0 +1,79 @@
+--- a/✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/📤️mesh-export/🦀️.rs
++++ b/✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/📤️mesh-export/🦀️.rs
+@@ -6,6 +6,36 @@
+ use semio_framework_value::retained_clone::retained_clone_grant_admits;
+ 
+ type Progress = RetainedCloneProgress;
++
++#[path = "🧵️dwg-export/🦀️.rs"]
++mod dwg_export;
++use dwg_export::DwgMeshExport;
++
++/// 💾️ The registered exchange outputs of one retained mesh export.
++#[derive(Clone, Copy)]
++pub enum MeshExchange { Obj, Stl, Dwg }
++semio_framework_value::artifact_retire_leaf!(MeshExchange);
++
++impl MeshExchange {
++    pub fn channel(self) -> &'static str { match self { Self::Obj => "obj", Self::Stl => "stl", Self::Dwg => "dwg" } }
++}
++
++#[derive(semio_framework_value::RetireOwned)]
++enum Writer { Text(MeshTextExport), Dwg(DwgMeshExport) }
++
++impl Writer {
++    fn new(mesh: &mut Option<semio_framework::MeshData>, format: MeshExchange) -> Result<Self, ValueError> {
++        match format {
++            MeshExchange::Obj => MeshTextExport::new(mesh, MeshTextFormat::Obj).map(Self::Text),
++            MeshExchange::Stl => MeshTextExport::new(mesh, MeshTextFormat::Stl).map(Self::Text),
++            MeshExchange::Dwg => DwgMeshExport::new(mesh).map(Self::Dwg),
++        }
++    }
++    fn ready(&self) -> bool { match self { Self::Text(writer) => writer.ready(), Self::Dwg(writer) => writer.ready() } }
++    fn take_output(&mut self) -> Option<String> { match self { Self::Text(writer) => writer.take_output(), Self::Dwg(writer) => writer.take_output() } }
++    fn demand(&self) -> RetirementDemand { match self { Self::Text(writer) => writer.demand(), Self::Dwg(writer) => writer.demand() } }
++    fn step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> Result<Progress, ValueError> { match self { Self::Text(writer) => writer.step(effect), Self::Dwg(writer) => writer.step(effect) } }
++}
+ 
+ #[derive(semio_framework_value::RetireOwned)]
+ enum Preview { Primitive(PrimitivePreviewJob), Planar(TessellationJob) }
+@@ -16,10 +46,10 @@
+     kernel: usize,
+     source: usize,
+     revision: u64,
+-    format: MeshTextFormat,
++    format: MeshExchange,
+     preview: Preview,
+     mesh: Option<semio_framework::MeshData>,
+-    writer: Option<MeshTextExport>,
++    writer: Option<Writer>,
+ }
+ 
+ impl NativeMeshExport {
+@@ -27,7 +57,7 @@
+     pub fn phase(&self) -> &'static str {
+         if self.writer.is_some() { "mesh-export-encoding" } else { "mesh-export-tessellation" }
+     }
+-    pub fn ready(&self) -> bool { self.writer.as_ref().is_some_and(MeshTextExport::ready) }
++    pub fn ready(&self) -> bool { self.writer.as_ref().is_some_and(Writer::ready) }
+     pub fn take_output(&mut self) -> Option<String> { self.writer.as_mut()?.take_output() }
+ 
+     fn check(&self, kernel: &Brep, handle: &str) -> Result<(), ValueError> {
+@@ -59,7 +89,7 @@
+         if self.mesh.is_some() {
+             if !effect.performed(1)? { return Ok(Progress::default()); }
+             let receipt = Progress { copied_items: 1, ..Default::default() };
+-            self.writer = Some(MeshTextExport::new(&mut self.mesh, self.format).map_err(|error| error.with_retained_progress(receipt))?);
++            self.writer = Some(Writer::new(&mut self.mesh, self.format).map_err(|error| error.with_retained_progress(receipt))?);
+             return Ok(receipt);
+         }
+         let (mesh, receipt) = match &mut self.preview {
+@@ -76,7 +106,7 @@
+ 
+ impl Session {
+     /// 🎟️ Admits export of one live analytic primitive or certified planar solid.
+-    pub fn plan_mesh_export(&self, handle: &str, tolerance: f64, format: MeshTextFormat) -> Result<NativeMeshExport, ValueError> {
++    pub fn plan_mesh_export(&self, handle: &str, tolerance: f64, format: MeshExchange) -> Result<NativeMeshExport, ValueError> {
+         if !tolerance.is_finite() || tolerance <= 0.0 {
+             return Err(ValueError::literal(ValueRefusalKind::InvalidValue, "mesh export requires positive finite deflection"));
+         }

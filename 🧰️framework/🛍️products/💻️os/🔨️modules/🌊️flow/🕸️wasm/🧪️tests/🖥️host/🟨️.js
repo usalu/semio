@@ -1,4 +1,6 @@
-import { FLOW_MAX_REQUEST_BYTES, FlowOperation, attachFlowSurface, createFlowFeatures, createFlowHost, createFlowPumpScheduler, decodeFlowMessage } from "../../🖥️host/🏃️runtime/🟨️.js";
+import { join } from "node:path";
+import { pathToFileURL } from "node:url";
+import { FLOW_RETAINED_GRANT, FLOW_MAX_REQUEST_BYTES, FlowOperation, attachFlowSurface, createFlowFeatures, createFlowHost, createFlowPumpScheduler, decodeFlowMessage } from "../../🖥️host/🏃️runtime/🟨️.js";
 import { createFlowBrowserRuntime } from "../../🌐️browser/🏃️runtime/🟨️.js";
 import * as flowBrowser from "../../🌐️browser/🏃️runtime/🟨️.js";
 import { readFile } from "node:fs/promises";
@@ -8,13 +10,15 @@ import { MockFlowBridge } from "../🎭️mock-flow-bridge/🟦️.ts";
 import { testFlowOpenOwnership } from "../🔓️open-ownership/🟦️.ts";
 
 const equal = (actual, expected, law) => { if (actual !== expected) throw new Error(`${law}: ${actual} !== ${expected}`); };
-const startup = JSON.parse(await readFile(new URL("../../🧫️fixtures/🚀️browser-startup/🔣️.json", import.meta.url), "utf8"));
-const sessionClose = JSON.parse(await readFile(new URL("../../🧫️fixtures/🧹️session-close/🔣️.json", import.meta.url), "utf8"));
+const contract = JSON.parse(await readFile(new URL("../../🧬️schema/📡️abi/🔣️.json", import.meta.url), "utf8"));
+deepStrictEqual(FLOW_RETAINED_GRANT, contract.retainedGrant.default);
+const startup = JSON.parse(await readFile(new URL("../🧫️fixtures/🚀️browser-startup/🔣️.json", import.meta.url), "utf8"));
+const sessionClose = JSON.parse(await readFile(new URL("../🧫️fixtures/🧹️session-close/🔣️.json", import.meta.url), "utf8"));
 equal(flowWasmContract("FlowRetainedSessionCloseV1")(sessionClose), true, "session-close-schema");
 equal(flowWasmContract("FlowBrowserStartupV1")(startup), true, "startup-schema");
 for (const law of startup.cases) equal(law.source === "exports" || law.initializer === "custom" || law.imports === "empty", law.accepted, "startup-independent-admission-oracle");
 const memory = new WebAssembly.Memory({ initial: 400 });
-const runtimeLifetime = JSON.parse(await readFile(new URL("../../🧫️fixtures/🧑‍🤝‍🧑browser-runtime/🔣️.json", import.meta.url), "utf8"));
+const runtimeLifetime = JSON.parse(await readFile(new URL("../🧫️fixtures/🧑‍🤝‍🧑browser-runtime/🔣️.json", import.meta.url), "utf8"));
 equal(flowWasmContract("FlowBrowserRuntimeLifetimeV1")(runtimeLifetime), true, "runtime-lifetime-schema");
 equal(typeof flowBrowser.createFlowBrowserRuntime, "function", "explicit-browser-runtime-owner");
 const sharedBridge = new MockFlowBridge(memory);
@@ -130,19 +134,6 @@ await Promise.all([pendingClose, externalEvent]);
 equal(eventObserved, sessionClose.browser.yieldsToEvents, "pending-close-yields-to-user-events");
 equal(closePolls, sessionClose.browser.pendingClosePolls, "bounded-close-poll-count");
 
-const integrated = await createFlowBrowserRuntime({ source: await readFile(new URL("../../../🎁️browser-package/🕸️bindings/flow_core_bg.wasm", import.meta.url)) });
-const integratedSession = integrated.openSession();
-const integratedSibling = integrated.openSession();
-const integratedCatalogue = await integratedSession.catalogueJson().result;
-equal(integratedCatalogue !== undefined, true, "compiled-flow-bridge");
-const integratedBurst = await Promise.all(Array.from({ length: sessionClose.browser.requestBurst }, () => integratedSession.catalogueJson().result));
-equal(integratedBurst.every((catalogue) => catalogue !== undefined), true, "compiled-flow-bridge-burst");
-equal(integrated.terminalIsEmpty(), sessionClose.browser.terminalBeforeClose, "compiled-session-retained-before-close");
-await integratedSession.close();
-await integratedSibling.catalogueJson().result;
-await integrated.close();
-equal(integrated.terminalIsEmpty(), sessionClose.browser.terminalAfterClose, "compiled-session-terminal-after-close");
-
 const fixtureTask = features.document.catalogueJson({});
 const events = [];
 fixtureTask.subscribe((event) => events.push(event.event));
@@ -214,6 +205,10 @@ let attachCancelled = false;
 try { await interruptedAttach.result; } catch { attachCancelled = true; }
 equal(attachCancelled, true, "cancelled-gpu-terminal");
 
+const maximumCatalogue = "ü".repeat((FLOW_MAX_REQUEST_BYTES - 12) / 2);
+equal(Buffer.byteLength(maximumCatalogue) + 12, FLOW_MAX_REQUEST_BYTES, "catalogue-fills-session-and-string-frame");
+await features.document.setCatalogueJson({ json: maximumCatalogue }).result;
+
 const before = host.state.nextRequest;
 let oversized = false;
 try { await host.start(FlowOperation.setCatalogueJson, { json: "x".repeat(FLOW_MAX_REQUEST_BYTES + 1) }, features.lifetime.session).result; } catch { oversized = true; }
@@ -270,3 +265,21 @@ await features.lifetime.close();
 await host.close();
 equal(host.terminalIsEmpty(), true, "terminal-empty");
 console.log(JSON.stringify({ reactive: "progress-cancel", surface: "generation-status", controls: "nine-rejected-then-valid", bytes: "max-plus-one", pump: "yields-to-due-timers", terminal: "empty" }));
+
+/** 🧪️ Exercises compiled Flow session ownership using the package selected by the build. */
+export async function testPublishedFlowHost(packageRoot) {
+  const wasm = await readFile(join(packageRoot, "flow_core_bg.wasm"));
+  const published = await import(pathToFileURL(join(packageRoot, "🌐️browser", "🟨️.js")).href);
+  const integrated = await published.createFlowBrowserRuntime({ source: wasm });
+  const integratedSession = integrated.openSession();
+  const integratedSibling = integrated.openSession();
+  const integratedCatalogue = await integratedSession.catalogueJson().result;
+  equal(integratedCatalogue !== undefined, true, "compiled-flow-bridge");
+  const integratedBurst = await Promise.all(Array.from({ length: sessionClose.browser.requestBurst }, () => integratedSession.catalogueJson().result));
+  equal(integratedBurst.every((catalogue) => catalogue !== undefined), true, "compiled-flow-bridge-burst");
+  equal(integrated.terminalIsEmpty(), sessionClose.browser.terminalBeforeClose, "compiled-session-retained-before-close");
+  await integratedSession.close();
+  await integratedSibling.catalogueJson().result;
+  await integrated.close();
+  equal(integrated.terminalIsEmpty(), sessionClose.browser.terminalAfterClose, "compiled-session-terminal-after-close");
+}

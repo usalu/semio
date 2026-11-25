@@ -1,0 +1,14 @@
+{
+  "owner": "WRITTEN_VERSION",
+  "stamp": "AC1024",
+  "release": "R2010",
+  "stampOffset": 0,
+  "stampLength": 6,
+  "readOnlyStamps": ["AC1018", "AC1021", "AC1027", "AC1032"],
+  "literalFreeSources": [
+    "🧬️schema/📸️snapshot/🦀️.rs#from_drawing",
+    "🧬️schema/📸️snapshot/🦀️.rs#demo_dwg_snapshot",
+    "🚪️io/📥️import/🦀️.rs#decode_dwg"
+  ],
+  "ownerSource": "🧬️schema/📸️snapshot/🦀️.rs"
+}

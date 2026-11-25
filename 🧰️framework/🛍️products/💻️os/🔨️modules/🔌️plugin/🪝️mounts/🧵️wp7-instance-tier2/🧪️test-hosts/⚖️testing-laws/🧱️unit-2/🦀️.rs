@@ -12,7 +12,7 @@ use pack::snapshot::ArtifactPack;
 use store::ArtifactStore;
 use store::ArtifactStoreInitializationAuthority;
 #[cfg(test)]
-use semio_plugin_ownership::store_lifecycle::ArtifactStoreInitializationJob;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactStoreInitializationJob;
 use std::collections::BTreeMap;
 use semio_ui_runtime::ComponentTree;
 use store::ConfigStore;
@@ -42,7 +42,7 @@ use semio_ui_locale::Terminology;
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_plugin_decl_app::tool_contract::TypedOperationResultLane;
 #[cfg(test)]
-use semio_plugin_ownership::store_lifecycle::bounded_document_store_initialization_job;
+use semio_plugin_store_lifecycle::store_lifecycle::bounded_document_store_initialization_job;
 use store::os_store::document_materialize::create_document_envelope;
 #[cfg(test)]
 use semio_plugin_window_kits::delete_selection;

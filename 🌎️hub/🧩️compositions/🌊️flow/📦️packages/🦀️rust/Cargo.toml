@@ -20,6 +20,8 @@ command = ["graph-generate"]
 path = "🦀️.rs"
 
 [dependencies]
+semio-hub-flow-editor-app = { workspace = true }
+semio-hub-flow-viewer-app = { workspace = true }
 semio-framework-pack = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }

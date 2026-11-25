@@ -10,6 +10,14 @@ fn clock()->Option<u64>{ORIGINAL_CLOCK.with(|clock|Some(clock.get()))}
 fn delta(before:RetainedCloneProgress,after:RetainedCloneProgress)->RetainedCloneProgress{RetainedCloneProgress{copied_items:after.copied_items-before.copied_items,copied_bytes:after.copied_bytes-before.copied_bytes,retained_capacity_bytes:after.retained_capacity_bytes-before.retained_capacity_bytes,released_bytes:after.released_bytes-before.released_bytes}}
 fn remaining(stock:RetainedCloneGrant,spent:RetainedCloneProgress)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:stock.maximum_items-spent.copied_items,maximum_copy_bytes:stock.maximum_copy_bytes-spent.copied_bytes,maximum_capacity_bytes:stock.maximum_capacity_bytes-spent.retained_capacity_bytes,maximum_release_bytes:stock.maximum_release_bytes-spent.released_bytes,maximum_depth:stock.maximum_depth}}
 #[test]
+fn pending_input_and_media_output_both_advance_without_crossing_present_barrier(){
+ let mut next_input=true;let mut queued=3;let mut output_steps=0;
+ for _ in 0..8{if browser_output_input_turn(&mut next_input,queued>0,false){queued-=1}else{output_steps+=1}}
+ assert_eq!(queued,0);assert!(output_steps>=4);
+ assert!(!browser_output_input_turn(&mut next_input,true,true));
+ assert!(browser_output_input_turn(&mut next_input,true,false));
+}
+#[test]
 fn original_browser_nonempty_output_same_media_system_denials_and_full_paid_close(){
  let law:serde_json::Value=serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🧊️wgpu/🌐️browser-worker/📤️output/🔣️.json")).unwrap();let stock:RetainedCloneGrant=serde_json::from_value(law["caller"]["stock"].clone()).unwrap();
  for copy in [1,3,64]{

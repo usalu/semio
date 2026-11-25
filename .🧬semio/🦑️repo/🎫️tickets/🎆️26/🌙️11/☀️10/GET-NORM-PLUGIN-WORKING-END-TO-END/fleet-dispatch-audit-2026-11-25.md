@@ -1,0 +1,5 @@
+# Fleet Dispatch Audit, 2026-11-25
+
+Read-only inspection; no jobs submitted. `repo fleet --help` offers status only, with no dispatch command. `repo remote-execution --help` documents offloading hermetic Bazel actions when `SEMIO_REMOTE_EXECUTION_ENDPOINT` is set, invoked through `repo --tool=bazel run <project:target>`. It is not whole-machine command dispatch. `repo remote-execution status` showed registered workers with network denied and advertised Rust compiler actions and command-1 node/wasm-opt actions. The status was a point-in-time observation.
+
+No supported action for a complete signed Playwright sweep or arbitrary remote repo test was identified. A sweep depending on a live networked Play server is not established as a hermetic eligible action. Remote Bazel actions do not establish that local project graph planning and its memory cost are bypassed. `repo test-file <path>` explicitly avoids reading the project graph according to `repo --help`, but runs locally. No job or SSH was started.

@@ -200,15 +200,15 @@ impl PngGraphEdit {
             copy_bytes: temporary + body, capacity_bytes: temporary + body, release_bytes: temporary,
             depth: 1,
         };
-        let work = demand.copy_bytes as u64;
-        if cx.fuel_remaining() < work || !admitted(cx, demand) { return Ok(false); }
+        if !admitted(cx, demand) { return Ok(false); }
         let placements = place_graph_png_named(
             self.placement, &self.writer, self.size.0, self.size.1, color.to_owned(), mask.map(str::to_owned),
         )?;
         let rows = self.rows.original_mut().and_then(Option::as_mut).expect("funded PDF PNG mutation pages");
+        let work = placements.len() as u64;
         for row in placements { assert!(rows.push(row).is_ok(), "funded PDF PNG placement row"); }
         cx.consume_retained(RetainedCloneProgress { released_bytes: temporary, ..progress(demand, temporary + body) })?;
-        cx.consume_fuel(work);
+        cx.consume_fuel(work.min(cx.fuel_remaining()));
         self.done = true;
         Ok(true)
     }

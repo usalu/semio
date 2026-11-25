@@ -23,6 +23,11 @@ export function gumballRayFromNdc(ndcX: number, ndcY: number, camera: THREE.Came
   return { origin: [origin.x, origin.y, origin.z], dir: [dir.x, dir.y, dir.z] };
 }
 
+/** 🎯️ The element gumball press hit-tests are bound to: the r3f event source when the canvas was given one (the canvas itself then has `pointer-events: none` and never receives a press), else the canvas — so a handle press is decided in the capture phase before any orbit listener on that element reacts. */
+export function gumballPressTarget(connected: unknown, canvas: HTMLElement): HTMLElement {
+  return typeof HTMLElement !== "undefined" && connected instanceof HTMLElement ? connected : canvas;
+}
+
 export function gumballNdcFromPointer(clientX: number, clientY: number, rect: DOMRect): { x: number; y: number } {
   return {
     x: ((clientX - rect.left) / rect.width) * 2 - 1,

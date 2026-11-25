@@ -1,0 +1,5 @@
+# fifth fixer: the matrix of the bicycle resumed (the run of 20:41 was ended by a SIGTERM from outside at 21:02 at scale entry 10 of 12; its finished records stay, so no --fresh; the catalog file is unchanged since 20:37, md5 printed before and after) (800 MB, figure of MM)
+md5 -q "$S/🗂️catalog/👤️humans/person-pushing-bicycle/🔣️.json"
+(cd "$T" && /usr/bin/time -l timeout 7200 "$B" 📊️matrix.ts --language en --out "$GEN/matrix-person-pushing-bicycle" --jobs 1 --assets person-pushing-bicycle) > "$GEN/proof/person-pushing-bicycle-matrix2.log" 2>&1; grep "matrix\|real\|maximum resident" "$GEN/proof/person-pushing-bicycle-matrix2.log" | cut -c1-250
+python3 "$here/cells-by-asset.py" "$GEN/matrix-person-pushing-bicycle" 2>&1 | cut -c1-300 | head -40
+md5 -q "$S/🗂️catalog/👤️humans/person-pushing-bicycle/🔣️.json"

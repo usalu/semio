@@ -42,8 +42,8 @@
       "capacityConstant": "ENGINE_CANVAS_FRAME_PACKET_CAPACITY",
       "capacity": 256,
       "elementType": "Option<EngineCanvasPacket>",
-      "elementSizeBytes": 384,
-      "ownerSizeBytes": 72
+      "elementSizeBytes": 1168,
+      "ownerSizeBytes": 312
     },
     {
       "guard": "renderer::kernel_runtime",

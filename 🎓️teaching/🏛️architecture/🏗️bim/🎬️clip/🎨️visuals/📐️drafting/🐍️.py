@@ -401,11 +401,11 @@ class Drafting:
             shape.label = label
         return shape
 
-    def badge(self, text: str, point=(0, 0, 0), *, color=GOOD, size=S_SMALL, filled: bool = True, anchor="c"):
-        """🔖 A small rounded status badge."""
+    def badge(self, text: str, point=(0, 0, 0), *, color=GOOD, size=S_SMALL, filled: bool = True, anchor="c", appearance: str = "dark"):
+        """🔖 A small square status badge: solid when filled, one glass chip otherwise (``appearance`` is the surface it lies on)."""
         label = self.text(text, (0, 0, 0), size=size, color=BACKGROUND if filled else color)
-        frame = _engine.RoundedRectangle(corner_radius=0.07, width=label.width + 0.24, height=label.height + 0.16, stroke_color=color,
-                                         stroke_width=W_THIN, fill_color=color, fill_opacity=0.95 if filled else 0.0)
+        frame = _engine.Rectangle(width=label.width + 0.24, height=label.height + 0.16, stroke_color=color, stroke_width=W_THIN,
+                                  fill_color=color, fill_opacity=0.95) if filled else _art.window_frame(label.width + 0.24, label.height + 0.16, color=color, stroke_width=W_THIN, glass=True, appearance=appearance)
         group = _engine.VGroup(frame, label.move_to(frame))
         group.frame, group.label = frame, label
         return place(group, point, anchor)

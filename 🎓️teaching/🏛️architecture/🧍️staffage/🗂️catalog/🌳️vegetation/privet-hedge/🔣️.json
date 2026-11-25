@@ -742,12 +742,48 @@
       "de": "Eine geschnittene Hecke aus Gewöhnlichem Liguster (Ligustrum vulgare), 4,0 m lang und 2,0 m hoch: acht Pflanzen zu einer dichten, flach abgeschlossenen Wand mit engen Schultern geschnitten, am Fuß 0,75 m dick und leicht auf 0,65 m geböscht, fast bis zum Boden belaubt; nur die untersten 0,20 m sind offen und zeigen drei schlanke Stämme je Pflanze über dem gemulchten Pflanzstreifen."
     },
     "tags": [
-      "hedge",
-      "semi-evergreen",
-      "broadleaf",
-      "clipped",
-      "wind",
-      "transpiration"
+      {
+        "id": "hedge",
+        "title": {
+          "en": "hedge",
+          "de": "Hecke"
+        }
+      },
+      {
+        "id": "semi-evergreen",
+        "title": {
+          "en": "semi evergreen",
+          "de": "halbimmergrün"
+        }
+      },
+      {
+        "id": "broadleaf",
+        "title": {
+          "en": "broadleaf",
+          "de": "Laubholz"
+        }
+      },
+      {
+        "id": "clipped",
+        "title": {
+          "en": "clipped",
+          "de": "geschnitten"
+        }
+      },
+      {
+        "id": "wind",
+        "title": {
+          "en": "wind",
+          "de": "Wind"
+        }
+      },
+      {
+        "id": "transpiration",
+        "title": {
+          "en": "transpiration",
+          "de": "Transpiration"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage vegetation content worker PW-13",

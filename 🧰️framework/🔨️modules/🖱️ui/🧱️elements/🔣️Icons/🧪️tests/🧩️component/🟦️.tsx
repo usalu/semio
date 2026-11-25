@@ -55,7 +55,7 @@ describe("named catalog chrome icons", () => {
     const icons = vector.svg === "" ? { ...savedTheme.icons, aliases: { ...savedTheme.icons?.aliases, [icon]: vector.alias } } : { ...savedTheme.icons, variants: { ...savedTheme.icons?.variants, [icon]: vector.svg } };
     act(() => setActiveUiTheme({ ...savedTheme, icons }));
     const markup = vector.svg || ICONS[vector.alias as IconName];
-    const reference = new DOMParser().parseFromString(markup, "text/html").querySelector("svg")!;
+    const reference = new DOMParser().parseFromString(markup.replace(/>\s+</g, "><").trim(), "text/html").querySelector("svg")!;
     expect(actual.querySelector("svg")!.outerHTML).toBe(reference.outerHTML);
     expect(actual.style.getPropertyValue("--icon-mask")).not.toBe(previous);
     expect(actual.getAttribute("data-icon")).toBe(icon);
@@ -68,5 +68,13 @@ describe("named catalog chrome icons", () => {
     const { container } = render(<Icon icon={decodeIcon(vector.icon)!} />);
     expect(container.firstElementChild!.getAttribute("data-icon-kind")).toBe(vector.kind);
     expect(container.textContent).toBe(vector.text);
+  });
+  it("clips an unknown icon id to its icon box so the fallback text never draws over a neighbouring label", () => {
+    const { container } = render(<Icon icon={"definitely-not-a-vendored-icon" as IconName} size="small" />);
+    const glyph = container.firstElementChild as HTMLElement;
+    expect(glyph.getAttribute("data-icon-kind")).toBe("text");
+    expect(glyph.className).toContain("size-small");
+    expect(glyph.className).toContain("overflow-hidden");
+    expect(glyph.className).toContain("whitespace-nowrap");
   });
 });

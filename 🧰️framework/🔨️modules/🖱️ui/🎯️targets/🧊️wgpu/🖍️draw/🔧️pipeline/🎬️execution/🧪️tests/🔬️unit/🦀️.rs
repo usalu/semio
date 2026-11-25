@@ -87,6 +87,26 @@ fn chip_glass_is_translucent_blurred_and_one_level_above_the_content_surface() {
     assert_eq!(theme.glass(Level::Base).blur_px, 0.0, "the content surface itself does not blur");
 }
 
+#[test]
+fn band_glass_is_the_chip_glass_over_pane_content_and_the_chip_row_is_at_least_one_and_a_half_rem() {
+    use crate::theme::Level;
+    let theme = crate::theme::Theme::default();
+    let (band, chip) = (theme.band_glass(), theme.chip_glass(Level::Pane));
+    assert_eq!((band.alpha, band.blur_px, band.tint.r), (chip.alpha, chip.blur_px, chip.tint.r), "the bands are panel glass with the chip tint");
+    assert!(band.alpha < 1.0, "the canvas shows through a band");
+    assert!(theme.chip_row_height() >= theme.root_rem_pixels * 1.5 && theme.chip_row_height() >= theme.panel_header_height);
+}
+
+#[test]
+fn the_drag_ghost_is_menu_glass_with_the_chip_tint() {
+    use crate::theme::Level;
+    let theme = crate::theme::Theme::default();
+    let (ghost, menu, chip) = (theme.drag_ghost_glass(), theme.glass(Level::Menu), theme.chip_glass(Level::Menu));
+    assert_eq!((ghost.alpha, ghost.blur_px, ghost.tint.r), (chip.alpha, chip.blur_px, chip.tint.r));
+    assert_eq!(ghost.blur_px, menu.blur_px, "the ghost blurs like a menu");
+    assert!(ghost.alpha < 1.0 && ghost.alpha > menu.alpha, "the ghost is translucent and tinted over the menu glass");
+}
+
 //#endregion FrameClipTests
 
 //#region ScanlineClipTests

@@ -26,6 +26,9 @@
   {
     "asset": "used-park-lantern",
     "view": "front",
+    "bands": [
+      "500"
+    ],
     "reason": {
       "en": "At 1:500 the 4.64 m lantern is 0.98 mm wide: the turned column, the lantern neck, the glazing and the roof are bodies of revolution about the column axis (`revolved` solids in the front) on a square foundation head. The door joint, the hinge knuckle and the chipped foundation corner that tell front from side at 1:50 to 1:200 are omitted at 1:500, where they are below 0.2 mm on paper.",
       "de": "Bei 1:500 ist die 4,64 m hohe Leuchte 0,98 mm breit: der gedrehte Mast, der Laternenhals, die Verglasung und das Dach sind Drehkörper um die Mastachse (`revolved`-Körper in der Vorderansicht) auf einem quadratischen Fundamentkopf. Türfuge, Gelenkauge und die abgeplatzte Fundamentecke, die bei 1:50 bis 1:200 vorn von der Seite unterscheiden, entfallen bei 1:500, wo sie unter 0,2 mm auf Papier liegen."
@@ -34,6 +37,10 @@
   {
     "asset": "used-playground-roundabout",
     "view": "front",
+    "bands": [
+      "200",
+      "500"
+    ],
     "reason": {
       "en": "A round platform on a round pit tray with a centre column, a ring handrail and four bent handrails 90 degrees apart: the rotor has four-fold rotational symmetry about the vertical bearing axis, so at 1:200 and 1:500, where the rust patches, the eyebolt, the hub and the tray seam are omitted, the front elevation is the side elevation by nature. Both are authored (normalised distance 0.008, not a copy).",
       "de": "Eine runde Plattform auf runder Grubenwanne mit Mittelsäule, Ringhandlauf und vier gebogenen Handläufen im Abstand von 90 Grad: der Rotor ist vierzählig drehsymmetrisch um die senkrechte Lagerachse, daher ist bei 1:200 und 1:500, wo Rostflecken, Ringschraube, Nabe und Wannennaht entfallen, die Vorderansicht von Natur aus die Seitenansicht. Beide sind gezeichnet (normierter Abstand 0,008, keine Kopie)."
@@ -42,6 +49,9 @@
   {
     "asset": "waste-bin",
     "view": "front",
+    "bands": [
+      "500"
+    ],
     "reason": {
       "en": "A tapered bin that is square in plan to 10 mm (0.51 m by 0.50 m at the rim, 0.40 m at the foot) under a flat lid: at 1:500 it is 1.0 mm wide and its two elevations are the same trapezium by nature. The lid handle, the hinge barrel and its brackets that tell front from side at 1:50 to 1:200 (normalised distance 0.06 to 0.11) are omitted at 1:500.",
       "de": "Ein konischer Behälter, im Grundriss bis auf 10 mm quadratisch (0,51 m mal 0,50 m am Rand, 0,40 m am Fuß) unter einem flachen Deckel: bei 1:500 ist er 1,0 mm breit und seine beiden Ansichten sind von Natur aus dasselbe Trapez. Der Deckelgriff, die Gelenkrolle und ihre Laschen, die bei 1:50 bis 1:200 vorn von der Seite unterscheiden (normierter Abstand 0,06 bis 0,11), entfallen bei 1:500."

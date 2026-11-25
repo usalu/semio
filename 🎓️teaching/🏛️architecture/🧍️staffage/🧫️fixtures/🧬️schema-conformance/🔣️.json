@@ -32,6 +32,7 @@
   "Hatch",
   "Joint",
   "JointType",
+  "LoftSection",
   "Manifest",
   "ManifestEntry",
   "Material",

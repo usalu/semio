@@ -116,7 +116,7 @@
     ]
   },
   "bounds": {
-    "maxFileBytes": 24546,
+    "maxFileBytes": 524288,
     "maxPixels": 4096
   },
   "png": "iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAFElEQVR4nGP4z8DwHwgbGMA0EAEAPdkHevpJ8dsAAAAASUVORK5CYII="

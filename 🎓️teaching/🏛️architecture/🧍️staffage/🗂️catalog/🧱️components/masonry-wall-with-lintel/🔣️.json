@@ -13,13 +13,55 @@
       "de": "Eine 3,0 m breite, 2,75 m hohe zweischalige Wand mit Kerndämmung (15 mm Putz, 175 mm Kalksandstein, 140 mm Mineralwolle, 115 mm Verblender im Läuferverband, U etwa 0.22 W/m2K) von außen gesehen, mit einer Öffnung von 1,26 x 1,33 m; darüber ein innerer Betonfertigsturz und ein sichtbarer äußerer Fertigteilsturz, 1,75 m lang mit 0,245 m Auflager und 80 mm Dämmung dazwischen (U etwa 0.38), darunter eine Betonwerkstein-Fensterbank mit 50 mm Überstand, Tropfnase und Gefälle (U etwa 0.36); Luftschichtanker, offene Stoßfugen und Ziegelschichten von 0,0833 m dort gezeichnet, wo sie druckbar sind; Decken- und Trägerlasten mit Gewölbewirkung über der Öffnung."
     },
     "tags": [
-      "component",
-      "structural",
-      "wall",
-      "masonry",
-      "lintel",
-      "opening",
-      "conditioned"
+      {
+        "id": "component",
+        "title": {
+          "en": "component",
+          "de": "Bauteil"
+        }
+      },
+      {
+        "id": "structural",
+        "title": {
+          "en": "structural",
+          "de": "tragend"
+        }
+      },
+      {
+        "id": "wall",
+        "title": {
+          "en": "wall",
+          "de": "Wand"
+        }
+      },
+      {
+        "id": "masonry",
+        "title": {
+          "en": "masonry",
+          "de": "Mauerwerk"
+        }
+      },
+      {
+        "id": "lintel",
+        "title": {
+          "en": "lintel",
+          "de": "Sturz"
+        }
+      },
+      {
+        "id": "opening",
+        "title": {
+          "en": "opening",
+          "de": "Öffnung"
+        }
+      },
+      {
+        "id": "conditioned",
+        "title": {
+          "en": "conditioned",
+          "de": "klimatisiert"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage component authors (NW-C)",

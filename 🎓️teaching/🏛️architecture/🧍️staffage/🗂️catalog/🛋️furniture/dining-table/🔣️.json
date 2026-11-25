@@ -13,12 +13,48 @@
       "de": "Ein 1,60 m langer Esstisch aus massiver Eiche, dessen Hälften auf Auszugsschienen auseinandergleiten, sodass eine 0,60 m lange Einlegeplatte einrastet (2,20 m); Posen geschlossen, ausgezogen, gedeckt und Prüflast."
     },
     "tags": [
-      "table",
-      "dining",
-      "timber",
-      "oak",
-      "extension",
-      "interior"
+      {
+        "id": "table",
+        "title": {
+          "en": "table",
+          "de": "Tisch"
+        }
+      },
+      {
+        "id": "dining",
+        "title": {
+          "en": "dining",
+          "de": "Essen"
+        }
+      },
+      {
+        "id": "timber",
+        "title": {
+          "en": "timber",
+          "de": "Holz"
+        }
+      },
+      {
+        "id": "oak",
+        "title": {
+          "en": "oak",
+          "de": "Eiche"
+        }
+      },
+      {
+        "id": "extension",
+        "title": {
+          "en": "extension",
+          "de": "Verlängerung"
+        }
+      },
+      {
+        "id": "interior",
+        "title": {
+          "en": "interior",
+          "de": "Innenausbau"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage content (NW-F)",

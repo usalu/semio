@@ -1,0 +1,142 @@
+[
+ {
+  "scale": "50",
+  "bone": "hood-yoke",
+  "paint": "hood",
+  "replace": [
+   "hood"
+  ],
+  "solids": [
+   "hood",
+   "hoodie-collar"
+  ],
+  "fit": [
+   {
+    "id": "hood-collar",
+    "solids": [
+     "hoodie-collar"
+    ],
+    "stations": 4
+   }
+  ]
+ },
+ {
+  "scale": "100",
+  "bone": "hood-yoke",
+  "paint": "hood",
+  "replace": [
+   "hood",
+   "hoodie",
+   "hoodie-under-1",
+   "hoodie-under-2",
+   "hoodie-under-3",
+   "hoodie-under-4",
+   "hoodie-under-5"
+  ],
+  "solids": [
+   "hood",
+   "hoodie-collar"
+  ],
+  "fit": [
+   {
+    "id": "hood-collar",
+    "solids": [
+     "hoodie-collar"
+    ],
+    "stations": 4
+   }
+  ]
+ },
+ {
+  "scale": "50",
+  "bone": "foot-r",
+  "paint": "shoe-r",
+  "fit": [
+   {
+    "id": "shoe-r",
+    "solids": [
+     "shoe-r",
+     "sole-r"
+    ],
+    "stations": 12
+   }
+  ],
+  "solids": [
+   "shoe-r",
+   "sole-r"
+  ]
+ },
+ {
+  "scale": "50",
+  "bone": "torso",
+  "paint": "hoodie",
+  "solids": [
+   "hoodie"
+  ]
+ },
+ {
+  "scale": "50",
+  "bone": "pelvis",
+  "paint": "trousers-seat",
+  "replace": [
+   "trousers-seat-l",
+   "trousers-seat-r"
+  ]
+ },
+ {
+  "scale": "100",
+  "bone": "pelvis",
+  "paint": "trousers-seat",
+  "replace": [
+   "trousers-seat-l",
+   "trousers-seat-r"
+  ]
+ },
+ {
+  "scale": "200",
+  "bone": "pelvis",
+  "paint": "trousers-seat",
+  "replace": [
+   "trousers-seat-l",
+   "trousers-seat-r"
+  ]
+ },
+ {
+  "scale": "500",
+  "bone": "pelvis",
+  "paint": "trousers-seat",
+  "replace": [
+   "trousers-seat-l",
+   "trousers-seat-r"
+  ]
+ },
+ {
+  "scale": "100",
+  "bone": "torso",
+  "paint": "hoodie",
+  "replace": [
+   "hood"
+  ]
+ },
+ {
+  "scale": "200",
+  "bone": "torso",
+  "paint": "hoodie",
+  "replace": [
+   "hoodie-low-l",
+   "hoodie-low-r",
+   "hoodie-low",
+   "hoodie-l",
+   "hoodie-r"
+  ]
+ },
+ {
+  "scale": "500",
+  "bone": "torso",
+  "paint": "hoodie",
+  "replace": [
+   "hoodie-l",
+   "hoodie-r"
+  ]
+ }
+]

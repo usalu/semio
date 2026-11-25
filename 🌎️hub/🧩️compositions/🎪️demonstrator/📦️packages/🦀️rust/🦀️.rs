@@ -1,12 +1,10 @@
-//! 🎪️ Entwerfen mit Bestand demonstrator — the six demonstrator panes (generator, koordinator,
-//! aggregator, aussuchen, bearbeiten, verfolgen) bundled as ONE hot-swappable WASM plugin instead of
-//! six separate ones, so they share one framework/kernel linkage and one plugin worker/module (see
-//! `acquirePluginModule`'s lease pool in framework core `🟦️.ts`) instead of statically
-//! duplicating the SDK six times over.
+//! 🎪️ Entwerfen mit Bestand demonstrator — the playground, aussuchen (sourcing) and bearbeiten
+//! (process) panes bundled as ONE hot-swappable WASM plugin. The generator, koordinator, aggregator
+//! and verfolgen panes run on their owners' own components through `runtimeVariant`.
 //!
 //! This crate also owns the minimal `🎪️playground` artifact (schema/snapshot/diff/dsl/op/spr — no
 //! engine, ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) so the demonstrator taxonomy
-//! slot is complete. Pane apps still come from the six source plugins.
+//! slot is complete. Pane apps still come from the sourcing and process plugins.
 //!
 //! WIRING ONLY. Every `mod` below points at exactly one taxonomy component file with a `#[path]`
 //! written in full, relative to THIS file's directory (`📦️packages/🦀️rust`, hence the `../../` climb

@@ -21,6 +21,12 @@ import schema from "../../🧬️schema/🔣️.json";
 import documentSchema from "../../../../🧬️schema/🔣️.json";
 const matrix=(value:ClipboardMatrix)=>new Matrix3().set(value[0],value[2],value[4],value[1],value[3],value[5],0,0,1);
 
+/** 📋️ Ajv admits every neutral copied record that the native hydration restores. */
+test("neutral clipboard records agree with the Ajv schema oracle",()=>{
+ const ajv=new Ajv({strict:false});ajv.addSchema(documentSchema);const validate=ajv.compile(schema);
+ for(const row of cases.recordCases)expect(validate(row.record)).toBe(true);
+});
+
 /** 📬️ JSON Patch independently preserves custody until the shared exact release boundary. */
 test("completion neutral custody corpus agrees with JSON Patch removal oracle",()=>{
  const validate=new Ajv({strict:false}).compile(completionCustodySchema);expect(validate(completionCustody)).toBe(true);

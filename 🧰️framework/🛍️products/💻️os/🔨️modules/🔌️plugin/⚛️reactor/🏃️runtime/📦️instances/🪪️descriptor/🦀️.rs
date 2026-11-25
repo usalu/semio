@@ -23,6 +23,17 @@ pub fn install_plugin_bundle_result<PA: PluginApp>(runtime: &PluginRuntime<PA>, 
         }
     }
 }
+/// ♻️ Closes the installed bundle's native definitions through the original caller before the bundle is dropped, so cold inspection callers never drop a committed native definition.
+pub fn dispose_plugin_bundle_cold<PA: PluginApp>(runtime: &PluginRuntime<PA>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<(), semio_framework_job::OriginalTurnFailure> {
+    let Some(mut plugin) = runtime.plugin.borrow_mut().take() else { return Ok(()) };
+    for _ in 0..cx.retained_grant().maximum_items {
+        if plugin.original_definitions_terminal_is_empty() {
+            return Ok(());
+        }
+        cx.with_original_retirement(|cx| plugin.close_original_definitions(cx))?;
+    }
+    Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit, "cold plugin disposal requires its remaining original caller authority").into())
+}
 /// 🩹️ Reports every guest panic through the WASI stderr stream before the target's abort trap ends
 /// the instance. The embedding crate's runtime ensure (`plugin_exports!`/`extension_exports!`)
 /// calls it once, before its bundle is assembled, so a panic during assembly is reported too.
@@ -43,7 +54,7 @@ pub async fn plugin_manifest<PA: PluginApp>(runtime: &PluginRuntime<PA>) -> Plug
             topic_contributions: vec![],
             commands: vec![],
             artifact_kinds: vec![],
-            hosted_artifact_kinds: Vec::new(),
+            hosted_artifact_kinds: Vec::new(), action_sets: Vec::new(),
             dependencies: vec![],
             contributions: vec![],
         };
@@ -59,7 +70,7 @@ pub async fn plugin_manifest<PA: PluginApp>(runtime: &PluginRuntime<PA>) -> Plug
             topic_contributions: vec![],
             commands: vec![],
             artifact_kinds: vec![],
-            hosted_artifact_kinds: Vec::new(),
+            hosted_artifact_kinds: Vec::new(), action_sets: Vec::new(),
             dependencies: vec![],
             contributions: vec![],
         },

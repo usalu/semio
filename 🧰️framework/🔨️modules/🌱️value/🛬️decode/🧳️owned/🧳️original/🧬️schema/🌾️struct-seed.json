@@ -3,23 +3,53 @@
   "title": "Derived Record Receiver Seed Parts",
   "type": "object",
   "additionalProperties": false,
-  "required": ["fixedParts", "partsPerField", "partsPerDefault", "cases"],
+  "required": [
+    "fixedParts",
+    "partsPerField",
+    "partsPerDefault",
+    "cases"
+  ],
   "properties": {
-    "fixedParts": {"type": "integer", "minimum": 1},
-    "partsPerField": {"type": "integer", "minimum": 1},
-    "partsPerDefault": {"type": "integer", "minimum": 1},
+    "fixedParts": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "partsPerField": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "partsPerDefault": {
+      "type": "integer",
+      "minimum": 0
+    },
     "cases": {
       "type": "array",
       "minItems": 1,
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["owner", "fields", "defaults", "parts"],
+        "required": [
+          "owner",
+          "fields",
+          "defaults",
+          "parts"
+        ],
         "properties": {
-          "owner": {"type": "string"},
-          "fields": {"type": "integer", "minimum": 0},
-          "defaults": {"type": "integer", "minimum": 0},
-          "parts": {"type": "integer", "minimum": 1}
+          "owner": {
+            "type": "string"
+          },
+          "fields": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "defaults": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "parts": {
+            "type": "integer",
+            "minimum": 1
+          }
         }
       }
     }

@@ -152,9 +152,10 @@ function floatingSurfacePaint(appearance: "light" | "dark"): FloatingSurfacePain
   const aliases: Record<string, string> = { "--base": declaration(base, "--base"), "--foreground": declaration(base, "--foreground") };
   const menu = cssBlock(ui, '[data-level="menu"] {', "--surface-bg:");
   const theme = cssBlock(ui, "@theme inline {", "--color-popover-foreground:");
-  const levelStep = Number.parseFloat(declaration(theme, "--level-shade-step")) / 100;
-  const elementStep = Number.parseFloat(declaration(theme, "--element-shade-step")) / 100;
-  const alphaStep = Number.parseFloat(declaration(theme, "--glass-alpha-step"));
+  const knobs = cssBlock(styleSheet("palette"), ":root {", "--level-shade-step:");
+  const levelStep = Number.parseFloat(declaration(knobs, "--level-shade-step")) / 100;
+  const elementStep = Number.parseFloat(declaration(knobs, "--element-shade-step")) / 100;
+  const alphaStep = Number.parseFloat(declaration(knobs, "--glass-alpha-step"));
   expect(declaration(theme, "--color-popover-foreground")).toBe("var(--border-element-color)");
   expect(ui).toContain("color: var(--hover-ink, var(--border-element-color))");
   expect(ui).toContain("--hover-ink: var(--color-emphasized)");

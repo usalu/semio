@@ -6637,6 +6637,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-plugin-reactor-receiving-completed"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-diagnostic",
+ "semio-framework-job",
+ "semio-framework-job-native-decode",
+ "semio-framework-pack",
+ "semio-framework-pack-json",
+ "semio-framework-trace",
+ "semio-framework-value",
+ "semio-plugin-actor-host",
+ "semio-plugin-reactor-receiving-source",
+]
+
+[[package]]
 name = "semio-plugin-reactor-receiving-source"
 version = "0.1.0"
 dependencies = [
@@ -6732,6 +6748,7 @@ dependencies = [
  "semio-plugin-reactor-core",
  "semio-plugin-reactor-lifecycle",
  "semio-plugin-reactor-patches",
+ "semio-plugin-reactor-receiving-completed",
  "semio-plugin-reactor-receiving-source",
  "semio-plugin-reactor-staged-forms",
  "semio-plugin-reactor-surfaces",
@@ -7668,6 +7685,7 @@ dependencies = [
  "semio-s-artifact-norm-en1997-schema",
  "semio-s-plugin-norm-app-surface",
  "semio-s-plugin-norm-compliance",
+ "semio-s-plugin-norm-mechanics",
  "semio-s-plugin-norm-results-config",
  "serde_json",
 ]
@@ -8701,6 +8719,7 @@ dependencies = [
  "semio-s-artifact-norm-en1997-mut-wall",
  "semio-s-artifact-norm-en1997-mut-wall-loads",
  "semio-s-artifact-norm-en1997-mut-wall-reinforcement",
+ "semio-s-artifact-norm-en1997-mutations",
  "semio-s-artifact-norm-en1997-mutations-graphql",
  "semio-s-artifact-norm-en1997-mutations-json-schema",
  "semio-s-artifact-norm-en1997-mutations-proto",
@@ -9232,6 +9251,7 @@ version = "0.1.0"
 name = "semio-s-plugin-norm-ndp"
 version = "0.1.0"
 dependencies = [
+ "semio-s-plugin-norm-ndp-din16798",
  "semio-s-plugin-norm-ndp-din4108",
  "semio-s-plugin-norm-ndp-en1990",
  "semio-s-plugin-norm-ndp-en1991",
@@ -9243,6 +9263,13 @@ dependencies = [
  "semio-s-plugin-norm-ndp-en1997",
  "semio-s-plugin-norm-ndp-en1998",
  "semio-s-plugin-norm-ndp-en1999",
+ "semio-s-plugin-norm-ndp-model",
+]
+
+[[package]]
+name = "semio-s-plugin-norm-ndp-din16798"
+version = "0.1.0"
+dependencies = [
  "semio-s-plugin-norm-ndp-model",
 ]
 

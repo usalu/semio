@@ -1,5 +1,5 @@
 //! 🌱️ Original Job admission retains every authored native Energy genesis field and decoder identity.
-use semio_plugin_ownership::original_store_genesis::{OriginalStoreBirth,OriginalStoreInitialSource};
+use semio_plugin_store_lifecycle::original_store_genesis::{OriginalStoreBirth,OriginalStoreInitialSource};
 use semio_framework_job::{StepContext,OriginalTurnFailure,OriginalSourceBinding,OriginalConstructionDemand,close_original_retained_step};
 use semio_framework_value::{RetainedWorkOutcome,RetainedWorkPoll,RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,ValueError,ValueRefusalKind};
 use semio_s_artifact_energy_model_snapshot::{EnergyModelSnapshot,original::genesis::EnergyModelInitialBirth};

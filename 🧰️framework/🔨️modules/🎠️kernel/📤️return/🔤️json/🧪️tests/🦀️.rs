@@ -19,6 +19,31 @@ fn fixture()->serde_json::Value{serde_json::from_str(include_str!("🔣️.json"
 fn retained_turn_borrows_the_actual_full_wire_graph_and_physically_closes_the_sink(){
  let _arena=semio_ui_contract_values::testkit::UiArenaFixture::new();let fixture=fixture();let row=&fixture["cases"][0];let input=serde_json::to_string(&row["input"]).unwrap();let turn:TurnResult=serde_json::from_str(&input).unwrap();let expected=row["expected"].as_str().unwrap();assert_eq!(serde_json::to_string(&Ok::<_,()>(&turn)).unwrap(),expected);let source=KernelTurnJsonSource::try_borrow(&turn).unwrap().unwrap();assert_eq!(write(&source),expected);
 }
+
+#[test]
+fn captured_poll_receipt_and_ack_admit_only_their_own_sequence_shape() {
+    use semio_framework_actor::instance_lifetime::{ActorInstanceLifecycleAck, ActorInstanceLifecycleReceipt};
+    use semio_framework_value::{DslValue, native_decoding::owned::tree::NativeScalarValue};
+
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
+    let law: serde_json::Value = serde_json::from_str(include_str!("lifecycle-capsule.json")).unwrap();
+    let ack: ActorInstanceLifecycleAck = serde_json::from_value(law["ack"].clone()).unwrap();
+    let mut turn: TurnResult = serde_json::from_value(fixture()["cases"][0]["input"].clone()).unwrap();
+    turn.lifecycle_receipt = Some(ack.receipt);
+    let source = KernelTurnJsonSource::try_borrow(&turn).unwrap().unwrap();
+    let output = write(&source);
+    let capsule: serde_json::Value = serde_json::from_str(&output).unwrap();
+    assert_eq!(capsule["Ok"]["lifecycleReceipt"], law["receipt"]);
+
+    let receipt = DslValue::from(&capsule["Ok"]["lifecycleReceipt"]);
+    let ack_input = DslValue::from(&law["ack"]);
+    assert_eq!(<ActorInstanceLifecycleReceipt as NativeScalarValue<DslValue>>::read(&receipt).unwrap(), ack.receipt);
+    assert_eq!(<ActorInstanceLifecycleAck as NativeScalarValue<DslValue>>::read(&ack_input).unwrap(), ack);
+    assert!(<ActorInstanceLifecycleReceipt as NativeScalarValue<DslValue>>::read(&DslValue::from(&law["ack"]["receipt"])).is_err());
+    let wrong_ack = serde_json::json!({"receipt": law["receipt"]});
+    assert!(<ActorInstanceLifecycleAck as NativeScalarValue<DslValue>>::read(&DslValue::from(&wrong_ack)).is_err());
+}
+
 #[test]
 fn ui_values_components_and_patch_pages_match_serde_without_cloning_the_retained_payload(){
  let _arena=semio_ui_contract_values::testkit::UiArenaFixture::new();let fixture=fixture();

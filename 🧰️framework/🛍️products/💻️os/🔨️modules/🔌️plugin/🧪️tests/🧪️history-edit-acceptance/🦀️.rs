@@ -31,7 +31,7 @@ use semio_plugin_decl_surface::{ArtifactEditor, ArtifactViewer};
 #[doc(hidden)]
 pub use semio_plugin_decl_surface::{ArtifactEditor as __ArtifactEditor, EditorApp as __EditorApp};
 #[cfg(test)]
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use pack::snapshot::ArtifactPack;
 #[cfg(any(test, feature = "artifact-app-testing"))]

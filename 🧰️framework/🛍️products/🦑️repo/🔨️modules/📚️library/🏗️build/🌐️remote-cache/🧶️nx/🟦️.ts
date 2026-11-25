@@ -41,6 +41,10 @@ export async function nxRemoteCacheEnvironmentV1(environment:Readonly<Record<str
    return preset===base&&environment[TOKEN]===token&&resolution.tokenFrom!=="fleet-identity"?{}:{[SERVER]:base,...(token===undefined?{}:{[TOKEN]:token}),...(resolution.tokenFrom==="fleet-identity"?{[SIGNED]:"1"}:{})};
   };
   const complain=async(outcome:AuthorisedRemoteCacheV1):Promise<void>=>{
+   if(outcome.resolution!==undefined&&outcome.resolution.instanceRefused!==null){
+    const {remoteCacheLanguagesV1,remoteCacheTextV1}=await import("../⌨️command/🟦️.ts"),refused=outcome.resolution;
+    (options.warn??(line=>{process.stderr.write(line+"\n");}))(remoteCacheLanguagesV1(undefined,environment).map(language=>remoteCacheTextV1(language,"warning.instance-refused",{refused:refused.instanceRefused!,instance:refused.contract.instance})).join("\n"));
+   }
    if(outcome.resolution===undefined||outcome.authorised)return;
    const {remoteCacheLanguagesV1,remoteCacheTextV1}=await import("../⌨️command/🟦️.ts"),text=remoteCacheLanguagesV1(undefined,environment).map(language=>remoteCacheTextV1(language,"warning.unreachable",{endpoint:outcome.resolution!.contract.endpoint})).join("\n");
    (options.warn??(line=>{process.stderr.write(line+"\n");}))(text);

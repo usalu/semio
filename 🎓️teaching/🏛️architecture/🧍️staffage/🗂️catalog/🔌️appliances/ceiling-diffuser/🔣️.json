@@ -13,15 +13,69 @@
       "de": "Ein quadratischer Vierwege-Deckenluftauslass von 0,595 m in der Seitenansicht: ein Flansch bündig mit der Decke, darunter Kegelstufen und darüber ein runder Kragen; er bläst 300 m3/h Luft von 18 °C ein, die sich links und rechts an der Decke entlang ausbreitet."
     },
     "tags": [
-      "diffuser",
-      "air-outlet",
-      "supply-air",
-      "ceiling",
-      "cooling",
-      "ventilation",
-      "air-conditioning",
-      "appliance",
-      "component"
+      {
+        "id": "diffuser",
+        "title": {
+          "en": "diffuser",
+          "de": "Diffusor"
+        }
+      },
+      {
+        "id": "air-outlet",
+        "title": {
+          "en": "air outlet",
+          "de": "Luftauslass"
+        }
+      },
+      {
+        "id": "supply-air",
+        "title": {
+          "en": "supply air",
+          "de": "Zuluft"
+        }
+      },
+      {
+        "id": "ceiling",
+        "title": {
+          "en": "ceiling",
+          "de": "Decke"
+        }
+      },
+      {
+        "id": "cooling",
+        "title": {
+          "en": "cooling",
+          "de": "Kühlung"
+        }
+      },
+      {
+        "id": "ventilation",
+        "title": {
+          "en": "ventilation",
+          "de": "Lüftung"
+        }
+      },
+      {
+        "id": "air-conditioning",
+        "title": {
+          "en": "air conditioning",
+          "de": "Klimatisierung"
+        }
+      },
+      {
+        "id": "appliance",
+        "title": {
+          "en": "appliance",
+          "de": "Gerät"
+        }
+      },
+      {
+        "id": "component",
+        "title": {
+          "en": "component",
+          "de": "Bauteil"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage content (G4)",

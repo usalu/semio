@@ -81,7 +81,7 @@ export function nodeGraphPickChannel(target: Pick<CanvasPickTarget, "domain" | "
   if (target?.domain !== "handle") return null;
   const boundary = target.id.lastIndexOf("@");
   if (boundary <= 0 || boundary === target.id.length - 1) return null;
-  return { nodeId: target.id.slice(0, boundary), portId: target.id.slice(boundary + 1) };
+  return { nodeId: target.id.slice(0, boundary), portId: target.id.slice(boundary + 1).replace(/%25|%40/gu, escape => escape === "%25" ? "%" : "@") };
 }
 
 /** 🧭️ Authored Flow channel selected by a side-specific native handle. */

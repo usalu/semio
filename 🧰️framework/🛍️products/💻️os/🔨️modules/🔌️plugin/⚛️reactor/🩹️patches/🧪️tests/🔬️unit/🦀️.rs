@@ -14,3 +14,4 @@ include!("🌪️stale-generation-resize-and-terminal-saturation/🦀️.rs");
 include!("♾️generation-exhaustion-and-abandoned-jobs/🦀️.rs");
 include!("🔓️reservation-release-and-registry-idle/🦀️.rs");
 include!("🏋️real-size-surfaces-and-producer-shell-denials/🦀️.rs");
+include!("🚨️reported-output-fault/🦀️.rs");

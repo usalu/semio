@@ -13,15 +13,69 @@
    "de": "Ein Stapel aus 120 gebrauchten Kiefernholz-Nut-und-Feder-Dielen 28 x 145 mm, etwa 4 m lang, in zwanzig Lagen zu sechs mit 24-mm-Stapellatten auf sechs Kantholz-Unterlegern, gehalten von zwei PET-Bändern und angeschlagen mit zwei Rundschlingen; alte Nagellöcher an den Dielenkanten und alte Fußbodenfarbe auf den Oberseiten zeigen den ersten Boden. Der Kran hebt ihn an den Schlingen 300 mm an, und seine oberste Lage aus sechs Dielen wird auf sieben Lagerhölzern unter 2 kN/m² Nutzlast und einer gehenden Person wiederverlegt. 1026 kg."
   },
   "tags": [
-   "component",
-   "reclaimed",
-   "timber",
-   "pine",
-   "floorboard",
-   "tongue-and-groove",
-   "flooring",
-   "stack",
-   "stickered"
+   {
+    "id": "component",
+    "title": {
+     "en": "component",
+     "de": "Bauteil"
+    }
+   },
+   {
+    "id": "reclaimed",
+    "title": {
+     "en": "reclaimed",
+     "de": "wiederverwendet"
+    }
+   },
+   {
+    "id": "timber",
+    "title": {
+     "en": "timber",
+     "de": "Holz"
+    }
+   },
+   {
+    "id": "pine",
+    "title": {
+     "en": "pine",
+     "de": "Kiefer"
+    }
+   },
+   {
+    "id": "floorboard",
+    "title": {
+     "en": "floorboard",
+     "de": "Dielenbrett"
+    }
+   },
+   {
+    "id": "tongue-and-groove",
+    "title": {
+     "en": "tongue and groove",
+     "de": "Nut und Feder"
+    }
+   },
+   {
+    "id": "flooring",
+    "title": {
+     "en": "flooring",
+     "de": "Bodenbelag"
+    }
+   },
+   {
+    "id": "stack",
+    "title": {
+     "en": "stack",
+     "de": "Stapel"
+    }
+   },
+   {
+    "id": "stickered",
+    "title": {
+     "en": "stickered",
+     "de": "gestapelt mit Stapellatten"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage component authors",

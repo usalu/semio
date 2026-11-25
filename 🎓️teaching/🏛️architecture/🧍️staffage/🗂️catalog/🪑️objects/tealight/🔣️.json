@@ -13,14 +13,62 @@
       "de": "Ein Teelicht von 38 mm Durchmesser und 16 mm Höhe in einem dünnen Aluminiumschälchen mit Baumwolldocht und einer 22 mm hohen Flamme (40,5 mm Gesamthöhe mit Flamme); brennend gibt es etwa 35 W als kleine Fahne ab."
     },
     "tags": [
-      "candle",
-      "tealight",
-      "flame",
-      "combustion",
-      "internal-gain",
-      "plume",
-      "decor",
-      "open-flame"
+      {
+        "id": "candle",
+        "title": {
+          "en": "candle",
+          "de": "Kerze"
+        }
+      },
+      {
+        "id": "tealight",
+        "title": {
+          "en": "tealight",
+          "de": "Teelicht"
+        }
+      },
+      {
+        "id": "flame",
+        "title": {
+          "en": "flame",
+          "de": "Flamme"
+        }
+      },
+      {
+        "id": "combustion",
+        "title": {
+          "en": "combustion",
+          "de": "Verbrennung"
+        }
+      },
+      {
+        "id": "internal-gain",
+        "title": {
+          "en": "internal gain",
+          "de": "innere Wärmelast"
+        }
+      },
+      {
+        "id": "plume",
+        "title": {
+          "en": "plume",
+          "de": "Fahne"
+        }
+      },
+      {
+        "id": "decor",
+        "title": {
+          "en": "decor",
+          "de": "Dekor"
+        }
+      },
+      {
+        "id": "open-flame",
+        "title": {
+          "en": "open flame",
+          "de": "offene Flamme"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage content (A10)",

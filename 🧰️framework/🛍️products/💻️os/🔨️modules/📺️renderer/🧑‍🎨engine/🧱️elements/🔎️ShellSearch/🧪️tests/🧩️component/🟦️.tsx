@@ -120,8 +120,12 @@ describe("ShellSearch React parity oracle", () => {
     expect(commandClass).toContain("data-[slot=command-input-wrapper]:h-large");
     expect(commandClass).toContain("[data-slot=command-item]]:py-tiny");
     expect(list.className).toContain("max-h-layout-command");
-    expect(screen.getByRole("group", { name: "Panels" }).className).toContain("p-single");
-    expect(screen.getByRole("option", { name: fixture.producer.stagedCommand.label }).className).toContain("p-single");
+    expect(screen.getByRole("group", { name: "Panels" }).className).not.toContain("p-single");
+    expect(list.getAttribute("data-shared-border-cells")).toBe("");
+    const stagedRow = screen.getByRole("option", { name: fixture.producer.stagedCommand.label });
+    expect(stagedRow.className).toContain("px-single");
+    expect(stagedRow.className).toContain("min-h-(--chip-row-height)!");
+    expect(stagedRow.getAttribute("data-shared-border-cell")).toBe("");
     const publishedIds = screen.getAllByRole("option").map((row) => row.getAttribute("data-command-item-id"));
     expect(publishedIds).toEqual([...fixture.producer.baseOrder, ...fixture.producer.hostSuffixOrder]);
     expect(publishedIds).not.toEqual(expect.arrayContaining(fixture.producer.forbiddenIds));

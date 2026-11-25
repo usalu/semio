@@ -352,11 +352,33 @@ pub fn run_mcp_entrypoint(services:Vec<RemoteInferenceProtocolV1>, credentials: 
         println!("semio-os-mcp audit: {} finding(s), {} description finding(s) over {} descriptor(s) under {folder}", findings.len(), undescribed.len(), source.descriptors.len());
         std::process::exit(if findings.is_empty() && undescribed.is_empty() { 0 } else { 1 });
     }
-    let result = match mode {
-        Mode::Stdio(options) => run_stdio(options),
-        Mode::Http(options) => run_http(options),
-        Mode::Audit { .. } => unreachable!("handled above"),
-    };
-    if let Err(error)=result{error.exit()}
-
+    serve_on_worker_stack(move || {
+        let result = match mode {
+            Mode::Stdio(options) => run_stdio(options),
+            Mode::Http(options) => run_http(options),
+            Mode::Audit { .. } => unreachable!("handled above"),
+        };
+        if let Err(error) = result {
+            error.exit()
+        }
+    });
 }
+
+/// 🪜️ Runs the serving mode on a thread that owns [`semio_framework_async::WORKER_STACK_BYTES`]: the operating system's main stack (8 MiB on macOS and Linux, 1 MiB on Windows) is smaller than one channel exchange needs.
+fn serve_on_worker_stack(serve: impl FnOnce() + Send + 'static) {
+    let serving = std::thread::Builder::new().name("semio-mcp-serve".to_string()).stack_size(semio_framework_async::WORKER_STACK_BYTES).spawn(serve);
+    let ended = match serving {
+        Ok(thread) => thread.join(),
+        Err(error) => {
+            eprintln!("[semio-os-mcp] the serving thread did not start: {error}");
+            std::process::exit(1);
+        }
+    };
+    if ended.is_err() {
+        std::process::exit(101);
+    }
+}
+
+#[cfg(test)]
+#[path = "🧪️tests/🪜️serving-stack/🦀️.rs"]
+mod serving_stack;

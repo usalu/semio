@@ -635,7 +635,7 @@ pub trait PluginApp: Send + 'static {
     fn accepts_original_structured_media(&self,_port:&str,_schema:&str,_media_type:&semio_framework::MediaType)->bool{false}
     /// 📄️ Borrows the media type under which the app's mounted natural-file codec imports bytes of this format; `None` when the codec is absent or foreign.
     fn original_natural_file_media_type(&self,_port:&str,_format_kind:&str)->Option<semio_framework::MediaType>{None}
-    /// 🎟️ Keeps an original media command open while its exact producer publishes and retires.
+    /// 🎟️ Keeps an original media command open while its exact producer publishes and retires; it acknowledges only a result page the host already presented to the shell, so every page reaches the shell exactly once.
     async fn advance_original_media_import(&mut self,_port:&str,_media:&mut Option<Media>,_meta:&ActionMeta,_progress:&mut OriginalMediaImport,_cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original media import is not implemented").into())}
     async fn import_media(&mut self,_port:&str,_media:&mut Option<Media>,_meta:&ActionMeta,_cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<InvocationResult>,semio_framework_job::OriginalTurnFailure>{
         Err(plugin_sdk_fault(MediaError::NotImplemented.to_string()).into())

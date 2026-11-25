@@ -67,6 +67,7 @@
           "thickness": null,
           "fy": null,
           "kSigma": null,
+          "actions": null,
           "stiffenerInertia": null,
           "stiffenerArea": null,
           "stiffenerEccentricity": null,
@@ -110,7 +111,8 @@
           "lateralPressure": null,
           "lateralPressureCoefficient": null,
           "steelGrade": null,
-          "steelSubgrade": "probe"
+          "steelSubgrade": "probe",
+          "designTemperature": null
         }
       }
     ]

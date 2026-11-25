@@ -1,5 +1,15 @@
 # Design Notes
 
+## Created content lives in the journal
+
+<a id="create-initial-content"></a>
+
+🌱️ `artifact_create{initial}` of `os.agent.probe/v1` commits `initial` as the artifact's first edit
+(cursor `1`). The canonical pair is a genesis pack plus an edit-journal spr, so a fresh snapshot
+answers `packBytes: 4` (`null`, the value before the first edit) and an spr whose journal carries the
+initial JSON text; a missing `initial` commits `{}`. Read the current value from the journal, never
+from the pack alone. Law: `🧪️tests/🧫️fixtures/🌱️create-initial-content-law.json`.
+
 ## Preserved Source Rationale
 
 <a id="source-notes-26"></a>

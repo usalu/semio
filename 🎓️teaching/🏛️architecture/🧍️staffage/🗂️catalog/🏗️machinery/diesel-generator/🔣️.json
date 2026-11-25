@@ -13,13 +13,55 @@
    "de": "Ein 400-kVA-Dieselaggregat im schallgedämmten 20-ft-Container in der Seitenansicht: Eintrittslamellen, Dachschalldämpfer mit Abgasrohr und Regenklappe sowie die Kühlerluft-Austrittshaube mit Wetterklappe. Abgasstrahl und Kühlerlüfterluft sind getrennte Emitter; die Klappen öffnen mit der Last."
   },
   "tags": [
-   "machine",
-   "generator",
-   "genset",
-   "diesel",
-   "container",
-   "silenced",
-   "power"
+   {
+    "id": "machine",
+    "title": {
+     "en": "machine",
+     "de": "Maschine"
+    }
+   },
+   {
+    "id": "generator",
+    "title": {
+     "en": "generator",
+     "de": "Generator"
+    }
+   },
+   {
+    "id": "genset",
+    "title": {
+     "en": "genset",
+     "de": "Stromaggregat"
+    }
+   },
+   {
+    "id": "diesel",
+    "title": {
+     "en": "diesel",
+     "de": "Diesel"
+    }
+   },
+   {
+    "id": "container",
+    "title": {
+     "en": "container",
+     "de": "Container"
+    }
+   },
+   {
+    "id": "silenced",
+    "title": {
+     "en": "silenced",
+     "de": "schallgedämpft"
+    }
+   },
+   {
+    "id": "power",
+    "title": {
+     "en": "power",
+     "de": "Leistung"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content worker NW-MA",
@@ -1626,7 +1668,7 @@
       },
       {
        "id": "outlet-flap-knuckle",
-       "bone": "outlet-flap",
+       "bone": "container",
        "role": "body",
        "z": 2.6,
        "tone": 0.5,
@@ -1678,59 +1720,63 @@
        "kind": "poly",
        "points": [
         [
-         -1.05,
-         3.4803
+         0.02,
+         0.035
         ],
         [
-         -1.0497,
-         3.435
+         0.3,
+         0.035
         ],
         [
-         -0.7503,
-         3.435
+         0.3,
+         -0.01
         ],
         [
-         -0.75,
-         3.48
+         0.28,
+         -0.045
         ],
         [
-         -0.7503,
-         3.4819
+         0.245,
+         -0.07
         ],
         [
-         -0.7522,
-         3.4834
+         0.2,
+         -0.088
         ],
         [
-         -0.7697,
-         3.5147
+         0.15,
+         -0.095
         ],
         [
-         -0.8047,
-         3.54
+         0.1,
+         -0.088
         ],
         [
-         -0.85,
-         3.5581
+         0.055,
+         -0.07
         ],
         [
-         -0.8988,
-         3.565
+         0.02,
+         -0.045
         ],
         [
-         -0.95,
-         3.5581
+         0,
+         -0.01
         ],
         [
-         -0.9953,
-         3.54
-        ],
-        [
-         -1.0303,
-         3.5147
+         0.02,
+         -0.01
         ]
        ],
-       "closed": true
+       "closed": true,
+       "solid": {
+        "kind": "revolved",
+        "axisBone": "cap-flap",
+        "axis": "v",
+        "axisX": -0.15,
+        "axisZ": -0.9,
+        "mirror": true
+       }
       },
       {
        "id": "exhaust-stack",
@@ -2192,7 +2238,7 @@
       },
       {
        "id": "outlet-flap-knuckle",
-       "bone": "outlet-flap",
+       "bone": "container",
        "role": "body",
        "z": 2.6,
        "tone": 0.5,
@@ -3587,6 +3633,8 @@
        "z": 2.7,
        "filled": true,
        "tone": 0.3,
+       "region": "rain-cap",
+       "material": "galvanised-steel",
        "kind": "poly",
        "points": [
         [
@@ -3639,14 +3687,13 @@
         ]
        ],
        "closed": true,
-       "region": "rain-cap",
-       "material": "galvanised-steel",
        "solid": {
         "kind": "revolved",
         "axisBone": "cap-flap",
         "axis": "v",
         "axisX": -0.15,
-        "axisZ": -0.9
+        "axisZ": -0.9,
+        "mirror": true
        }
       },
       {

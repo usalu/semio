@@ -262,25 +262,39 @@ fn check(snapshot: &XlsxSnapshot, subset: &str, control: &mut NativeEncodeContro
         diagnostic(&mut output, subset, "namespace-mismatch", Severity::Error, format_args!("xl/workbook.xml is missing or unparsable as XML -- cannot verify {iso} {title} conformance"), control)?;
         return Ok(output);
     }
-    let (mut xmlns, mut xmlns_r, mut conformance) = (None, None, None);
-    control.scoped_stage(|control| -> Result<(), ValueError> {
-        control.begin_stage(attrs.len())?;
-        for attr in attrs {
-            match attr.name.as_str() {
-                "xmlns" if xmlns.is_none() => xmlns = Some(attr.value.as_str()),
-                "xmlns:r" if xmlns_r.is_none() => xmlns_r = Some(attr.value.as_str()),
-                "conformance" if conformance.is_none() => conformance = Some(attr.value.as_str()),
-                _ => {}
-            }
-            control.step()?;
+    let conformance = attrs.iter().find(|attr| attr.name == "conformance").map(|attr| attr.value.as_str());
+    let (mut main_namespace, mut relationship_namespaces, mut unbound) = (String::new(), Vec::<String>::new(), None::<String>);
+    if let Some(root) = root {
+        use crate::standards::v_ecma_376::subsets::base::schema::vocabulary::{expanded_attribute_name, expanded_element_name, namespace_scope};
+        let root_scope = namespace_scope(&[], root);
+        match expanded_element_name(name, &root_scope) {
+            Ok((namespace, _)) => main_namespace = namespace,
+            Err(detail) => unbound = Some(detail),
         }
-        Ok(())
-    })?;
-    if !matches!(xmlns,Some(value)if equal(value,ns,control)?) {
-        diagnostic(&mut output, subset, "namespace-mismatch", Severity::Error, format_args!("xl/workbook.xml root xmlns is {xmlns:?}, expected the {title} SpreadsheetML namespace {ns:?} ({iso})"), control)?;
+        let mut pending = vec![(root, root_scope)];
+        while let Some((node, scope)) = pending.pop() {
+            control.checkpoint()?;
+            let XmlNode::Element { attrs, children, .. } = node else { continue };
+            for attribute in attrs.iter().filter(|attribute| attribute.name.contains(':') && !attribute.name.starts_with("xmlns:")) {
+                match expanded_attribute_name(&attribute.name, &scope) {
+                    Ok((namespace, local)) if local == "id" && !relationship_namespaces.contains(&namespace) => relationship_namespaces.push(namespace),
+                    Ok(_) => {}
+                    Err(detail) => unbound = unbound.or(Some(detail)),
+                }
+            }
+            pending.extend(children.iter().rev().map(|child| (child, namespace_scope(&scope, child))));
+        }
     }
-    if !matches!(xmlns_r,Some(value)if equal(value,rns,control)?) {
-        diagnostic(&mut output, subset, "relationships-namespace-mismatch", Severity::Error, format_args!("xl/workbook.xml root xmlns:r is {xmlns_r:?}, expected the {title} officeDocument relationships namespace {rns:?}"), control)?;
+    if !equal(&main_namespace, ns, control)? {
+        diagnostic(&mut output, subset, "namespace-mismatch", Severity::Error, format_args!("xl/workbook.xml root namespace is {main_namespace:?}, expected the {title} SpreadsheetML namespace {ns:?} ({iso})"), control)?;
+    }
+    for namespace in &relationship_namespaces {
+        if !equal(namespace, rns, control)? {
+            diagnostic(&mut output, subset, "relationships-namespace-mismatch", Severity::Error, format_args!("xl/workbook.xml relationship id attributes use the namespace {namespace:?}, expected the {title} officeDocument relationships namespace {rns:?}"), control)?;
+        }
+    }
+    if let Some(detail) = unbound {
+        diagnostic(&mut output, subset, "relationships-namespace-mismatch", Severity::Error, format_args!("xl/workbook.xml uses an undeclared namespace prefix: {detail}"), control)?;
     }
     if strict && conformance != Some("strict") {
         diagnostic(&mut output, subset, "conformance-attribute", Severity::Error, format_args!("xl/workbook.xml workbook@conformance is {conformance:?}, expected \"strict\" (ISO/IEC 29500-1 §12.3.24)"), control)?;

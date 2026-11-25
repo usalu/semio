@@ -584,5 +584,6 @@ fn the_open_context_menu_paints_its_submenu_beside_the_parent_row() {
     let glass: Vec<_> = ops.iter().filter_map(|op| if let ContextMenuPaintOp::Glass(rect) = op { Some(*rect) } else { None }).collect();
     assert_eq!(glass.len(), 2, "one region per open level");
     assert!(glass[1].x >= glass[0].x + glass[0].w, "the submenu sits beside the parent level");
-    assert!((glass[1].y - (glass[0].y + 4.0)).abs() < 0.01, "and at the parent row's top");
+    assert!((glass[1].y - glass[0].y).abs() < 0.01, "and at the parent row's top, which is the level's top: rows have no inset");
+    assert!((glass[1].x - (glass[0].x + glass[0].w)).abs() < 0.01, "abutting, no gap");
 }

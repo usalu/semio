@@ -642,7 +642,7 @@ type PdfImageMask {
 """Tagged union: exactly the fields of the variant `kind` names are populated."""
 type PdfImageBody {
   kind: String!
-  values: [Int!]
+  packed: [Int!]
   reference: PdfArtifactRef
 }
 
@@ -1506,7 +1506,7 @@ input PdfImageMaskInput {
 """Tagged union: exactly the fields of the variant `kind` names are populated."""
 input PdfImageBodyInput {
   kind: String!
-  values: [Int!]
+  packed: [Int!]
   reference: PdfArtifactRefInput
 }
 

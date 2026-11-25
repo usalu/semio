@@ -23,6 +23,17 @@
       {
         "id": "lab-T1",
         "patch": {
+          "layerId": null,
+          "kind": null,
+          "voidRatio": null,
+          "preloadStress": null,
+          "drainageHeight": null,
+          "consolidationTime": null,
+          "compressionIndex": null,
+          "swellingIndex": null,
+          "stressIncrement": null,
+          "secondaryCompressionIndex": null,
+          "designLife": null,
           "points": {
             "removed": [],
             "inserted": [],
@@ -31,6 +42,7 @@
               {
                 "id": "pt-1",
                 "patch": {
+                  "normalStress": null,
                   "shearStress": 65000.0
                 }
               }
@@ -41,6 +53,7 @@
     ]
   },
   "layerWaters": null,
+  "placements": null,
   "cases": {
     "removed": [],
     "inserted": [],

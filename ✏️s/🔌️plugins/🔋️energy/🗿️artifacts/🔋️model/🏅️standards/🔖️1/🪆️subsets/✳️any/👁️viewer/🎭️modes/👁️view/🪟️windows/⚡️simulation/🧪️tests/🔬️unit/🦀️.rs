@@ -13,6 +13,7 @@ fn viewer_is_structurally_read_only_and_localized() {
 
 #[test]
 fn the_viewer_renders_the_model_run_period_in_both_languages() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let model = crate::model::Model::default();
     let text = text(render(&model.run_period));
     assert!(text.contains("energy-viewer-run-period"));

@@ -8,9 +8,9 @@ import { usePublishCatalogueDragState } from "./🔸️publish-catalogue-drag/�
 import { useContextMenu } from "./🟠️context-menu/🟦️.tsx";
 
 export function Canvas2dHost({ node, onAction, requestContextMenu }: ComponentSceneHostProps) {
-  const { windowInstanceId, containerRef, cameraRef, readLayers, dragOverStateRef, dispatch, mapContextMenu, shellContextMenuFallback, setContextMenu, setViewportSize, scene, emptySceneLabel, onPresencePointerMove, onPresencePointerLeave, sessionFactory, activeUtility, viewportSize, presenceRuntimeKey, presenceWindowId, localPresenceActor, presenceCamera, contextMenuTitleLabel, contextMenu } = useSceneState({ node, onAction });
+  const { sessionRef, windowInstanceId, containerRef, cameraRef, readLayers, dragOverStateRef, dispatch, mapContextMenu, shellContextMenuFallback, setContextMenu, setViewportSize, scene, emptySceneLabel, onPresencePointerMove, onPresencePointerLeave, sessionFactory, activeUtility, viewportSize, presenceRuntimeKey, presenceWindowId, localPresenceActor, presenceCamera, contextMenuTitleLabel, contextMenu } = useSceneState({ node, onAction });
   const { handleDragOver, handleDragLeave, handleDrop } = usePublishCatalogueDragState({ windowInstanceId, containerRef, cameraRef, readLayers, dragOverStateRef, dispatch });
-  const { onContextMenu } = useContextMenu({ requestContextMenu, node, windowInstanceId, mapContextMenu, shellContextMenuFallback, setContextMenu, containerRef, setViewportSize });
+  const { onContextMenu } = useContextMenu({ sessionRef, requestContextMenu, node, windowInstanceId, mapContextMenu, shellContextMenuFallback, setContextMenu, containerRef, setViewportSize });
   if (!scene) return <div className="semio-canvas-2d-empty">{emptySceneLabel}</div>;
   return (
     <div

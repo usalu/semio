@@ -130,7 +130,7 @@ fn close_started(&self) -> bool { self.closing }
         if !source.check_binding(&self.source)? { return Ok(crate::RetirementDemand { copy_bytes: source.binding_copy_bytes(), depth: 1, ..Default::default() }); }
         if self.output_ready() { return Ok(Default::default()); }
         let length = source.get().len();
-        Ok(if self.bytes.capacity() < length { crate::RetirementDemand { capacity_bytes: self.bytes.next_capacity_allocation_bytes(length)?.ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "paged bytes capacity action absent"))?, depth: 1, ..Default::default() } } else { crate::RetirementDemand { copy_bytes: if self.bytes.len() < length { (length-self.bytes.len()).min(body.max(1)).min(PAGED_BYTES_CHUNK_BYTES) } else { size_of::<PagedBytes<N>>() }, depth: 1, ..Default::default() } })
+        Ok(if self.bytes.capacity() < length { crate::RetirementDemand { copy_bytes: self.bytes.next_capacity_copy_byte_demand(length).map_err(ValueError::from)?, capacity_bytes: self.bytes.next_capacity_allocation_bytes(length)?.ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "paged bytes capacity action absent"))?, depth: self.bytes.next_capacity_depth_demand(length).map_err(ValueError::from)?.max(1), ..Default::default() } } else { crate::RetirementDemand { copy_bytes: if self.bytes.len() < length { (length-self.bytes.len()).min(body.max(1)).min(PAGED_BYTES_CHUNK_BYTES) } else { size_of::<PagedBytes<N>>() }, depth: 1, ..Default::default() } })
     }
 
 

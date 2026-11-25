@@ -74,7 +74,7 @@ fn canonical_pack_borrowed_factories_preserve_real_paged_metadata() {
   };
   let error=match row["factory"].as_str().unwrap(){
    "refusal"=>PackRefusal::from_paged_refusal(PagedListError{kind,reason},"paged",71),
-   "allocation"=>PackRefusal::from_paged_allocation(PagedListAllocationError{kind,reason,allocated_bytes:usize::try_from(row["allocatedBytes"].as_u64().unwrap()).unwrap()},"paged",71),
+   "allocation"=>PackRefusal::from_paged_allocation(PagedListAllocationError{work:0,kind,reason,allocated_bytes:usize::try_from(row["allocatedBytes"].as_u64().unwrap()).unwrap()},"paged",71),
    _=>panic!("unknown source factory")
   };
   assert_eq!(Some(error.kind()),Some(authored_kind(row["expectedKind"].as_str().unwrap())));

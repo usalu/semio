@@ -325,7 +325,7 @@ export function deriveTypeScriptImportsV1(ts: typeof import("typescript"), optio
 /** 🏃️ Runs the compiler of the repository as a child process under the host's abort signal. */
 export function runTypeScriptCompilerV1(node: string, tsc: string, workspace: string, environment: Readonly<Record<string, string | undefined>>): TypeScriptUnitsHostV1["tsc"] {
   return (config, signal) => new Promise((resolve, reject) => {
-    const child = spawn(node, [tsc, "-p", config, "--pretty", "false"], {cwd: workspace, env: environment as NodeJS.ProcessEnv, signal}), chunks: Buffer[] = [];
+    const child = spawn(node, [tsc, "-p", config, "--pretty", "false"], {windowsHide:true,cwd: workspace, env: environment as NodeJS.ProcessEnv, signal}), chunks: Buffer[] = [];
     child.stdout.on("data", chunk => chunks.push(chunk)); child.stderr.on("data", chunk => chunks.push(chunk));
     child.on("error", reject); child.on("close", code => resolve({code: code ?? 1, output: Buffer.concat(chunks).toString("utf8")}));
   });

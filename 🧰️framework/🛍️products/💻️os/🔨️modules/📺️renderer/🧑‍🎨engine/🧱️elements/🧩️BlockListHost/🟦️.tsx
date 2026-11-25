@@ -68,7 +68,7 @@ function SelectionLabel({ id, target, selection, controllerId, onAction, childre
     type="button"
     aria-pressed={selection.selectedId === id}
     {...sharedBorderlessBoxProps}
-    className="min-w-0 flex-1 rounded text-left"
+    className="min-w-0 flex-1 text-left"
     onClick={(event) => {
       event.stopPropagation();
       dispatchBlockListAction(onAction, controllerId, "interactionSelect", { domainId: selection.domainId, targets: JSON.stringify([target]), merge: "replace", method: "pick" });

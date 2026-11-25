@@ -13,12 +13,48 @@
    "de": "Ein fahrerloses Long-John-Lastenrad mit Elektrounterstützung der Klasse Bakfiets.nl Cargobike Long: 26-Zoll-Hinterrad und 20-Zoll-Vorderrad auf 2,00 m Radstand, ein tiefer Aluminium-Hauptträger, der sich um das Vorderrad hochbiegt, eine Sperrholzbox mit Kinderbank zwischen Lenksäule und Vorderrad, Seilzuglenkung, Mittelmotor, Rahmenakku, Kurbel, ein Zweibeinständer unter der Box und zwei gestapelte Kisten; auf dem Ständer ist das Vorderrad angehoben und die Last liegt knapp hinter den Ständerfüßen."
   },
   "tags": [
-   "vehicle",
-   "bicycle",
-   "cargo-bike",
-   "long-john",
-   "e-assist",
-   "wheeled"
+   {
+    "id": "vehicle",
+    "title": {
+     "en": "vehicle",
+     "de": "Fahrzeug"
+    }
+   },
+   {
+    "id": "bicycle",
+    "title": {
+     "en": "bicycle",
+     "de": "Fahrrad"
+    }
+   },
+   {
+    "id": "cargo-bike",
+    "title": {
+     "en": "cargo bike",
+     "de": "Lastenrad"
+    }
+   },
+   {
+    "id": "long-john",
+    "title": {
+     "en": "long john",
+     "de": "Long John"
+    }
+   },
+   {
+    "id": "e-assist",
+    "title": {
+     "en": "e-assist",
+     "de": "Elektrounterstützung"
+    }
+   },
+   {
+    "id": "wheeled",
+    "title": {
+     "en": "wheeled",
+     "de": "rollend"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content worker (vehicles)",
@@ -502,20 +538,38 @@
     "frictionCoefficient": 0.7
    },
    {
-    "id": "stand-pad",
+    "id": "stand-pad-left",
     "bone": "stand",
     "x": 0.235,
     "y": 0,
     "kind": "contact",
     "title": {
-     "en": "Stand feet",
-     "de": "Ständerfüße"
+     "en": "Left stand foot",
+     "de": "Linker Ständerfuß"
     },
     "support": "contact",
     "normalDeg": 90,
     "footprintLengthM": 0.05,
-    "footprintWidthM": 0.46,
-    "frictionCoefficient": 0.6
+    "footprintWidthM": 0.052,
+    "frictionCoefficient": 0.6,
+    "z": 0.205
+   },
+   {
+    "id": "stand-pad-right",
+    "bone": "stand",
+    "x": 0.235,
+    "y": 0,
+    "kind": "contact",
+    "title": {
+     "en": "Right stand foot",
+     "de": "Rechter Ständerfuß"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.05,
+    "footprintWidthM": 0.052,
+    "frictionCoefficient": 0.6,
+    "z": -0.205
    },
    {
     "id": "crate-cog",
@@ -39464,7 +39518,8 @@
     "ground": "auto",
     "contacts": [
      "contact-r",
-     "stand-pad"
+     "stand-pad-left",
+     "stand-pad-right"
     ],
     "thermal": {
      "operating": {
@@ -39548,7 +39603,8 @@
     "ground": "auto",
     "contacts": [
      "contact-r",
-     "stand-pad"
+     "stand-pad-left",
+     "stand-pad-right"
     ],
     "thermal": {
      "operating": {
@@ -40178,7 +40234,12 @@
       "toS": 10
      },
      {
-      "anchor": "stand-pad",
+      "anchor": "stand-pad-left",
+      "fromS": 0,
+      "toS": 10
+     },
+     {
+      "anchor": "stand-pad-right",
       "fromS": 0,
       "toS": 10
      }

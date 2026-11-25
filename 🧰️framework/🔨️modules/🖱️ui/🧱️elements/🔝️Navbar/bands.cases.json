@@ -1,0 +1,42 @@
+{
+  "schema": "shell-bands/v1",
+  "bandGlass": { "level": "panel", "chipTint": true },
+  "cases": [
+    {
+      "id": "plain",
+      "client": { "w": 1000, "h": 600 },
+      "navbar": 30, "tutorial": 0, "footer": 30, "subfooter": 0,
+      "canvas": { "x": 0, "y": 0, "w": 1000, "h": 600 },
+      "body": { "x": 0, "y": 30, "w": 1000, "h": 540 },
+      "navbarRect": { "x": 0, "y": 0, "w": 1000, "h": 30 },
+      "footerRect": { "x": 0, "y": 570, "w": 1000, "h": 30 },
+      "navbarLine": { "x": 0, "y": 29, "w": 1000, "h": 1 },
+      "footerLine": { "x": 0, "y": 570, "w": 1000, "h": 1 },
+      "hits": [
+        { "x": 500, "y": 0, "winner": "navbar" },
+        { "x": 500, "y": 29.5, "winner": "navbar" },
+        { "x": 500, "y": 30, "winner": "body" },
+        { "x": 500, "y": 569.5, "winner": "body" },
+        { "x": 500, "y": 570, "winner": "footer" },
+        { "x": 500, "y": 599, "winner": "footer" }
+      ]
+    },
+    {
+      "id": "tutorial-bar-and-subfooter",
+      "client": { "w": 800, "h": 500 },
+      "navbar": 30, "tutorial": 20, "footer": 30, "subfooter": 16,
+      "canvas": { "x": 0, "y": 0, "w": 800, "h": 500 },
+      "body": { "x": 0, "y": 50, "w": 800, "h": 404 },
+      "navbarRect": { "x": 0, "y": 0, "w": 800, "h": 30 },
+      "footerRect": { "x": 0, "y": 454, "w": 800, "h": 30 },
+      "navbarLine": { "x": 0, "y": 29, "w": 800, "h": 1 },
+      "footerLine": { "x": 0, "y": 454, "w": 800, "h": 1 },
+      "hits": [
+        { "x": 10, "y": 29.5, "winner": "navbar" },
+        { "x": 10, "y": 50, "winner": "body" },
+        { "x": 10, "y": 453.9, "winner": "body" },
+        { "x": 10, "y": 454, "winner": "footer" }
+      ]
+    }
+  ]
+}

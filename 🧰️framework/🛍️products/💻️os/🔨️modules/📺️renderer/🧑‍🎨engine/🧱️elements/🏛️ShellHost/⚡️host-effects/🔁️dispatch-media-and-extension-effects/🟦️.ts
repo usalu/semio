@@ -76,8 +76,7 @@ export function applyInvokeExtensionEffect({ loadedPluginsRef, sessionRef, sessi
   }).catch((error) => {
     const { extensionId, capability, req } = effect.invokeExtension;
     if (sealedInstancesRef.current.sealed(requesterHandle, requester.pluginId, requester.instanceId)) return;
-    if (isPluginInstanceRetiredV1(error)) {
-      return;
-    }
+    if (isPluginInstanceRetiredV1(error)) return;
+    console.error(`[os-shell] extension ${extensionId}.${capability} request ${req} failed after its dispatch`, error);
   }).finally(releaseExtensionWork);
 }

@@ -70,6 +70,7 @@ pub enum PdfVtMutation {
     RemoveDpartMetadata(RemoveDpartMetadata),
 }
 dsl::original_pack_value_operation_receiving!(PdfVtMutation);
+dsl::artifact_persisted_binary_operation!(PdfVtMutation);
 //#endregion 🔖️Aggregate
 
 //#region 🔖️Codecs

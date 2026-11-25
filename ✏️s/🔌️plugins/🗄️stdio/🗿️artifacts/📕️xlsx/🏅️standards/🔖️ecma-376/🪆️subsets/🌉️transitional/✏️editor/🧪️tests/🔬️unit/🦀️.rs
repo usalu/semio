@@ -69,3 +69,86 @@ semio_plugin::history_edit_acceptance_law!(
     || semio_plugin::App { definition: super::create_xlsx_transitional_editor(), examples: Vec::new() },
     "../../../🧱️base"
 );
+
+/// 🔌️ The natural-file hooks of this editor pick the controlled decoder above one scheduler step and carry the dialect gate the whole-buffer decoder applies; the stepped paged intake itself is proven in the base subset's `controlled-import` laws, whose `admit_*`/`build_*` functions these hooks only parameterise.
+#[test]
+fn natural_decode_hooks_select_the_controlled_decoder_and_the_transitional_gate() {
+    use semio_s_artifact_stdio_xlsx_base::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_xlsx as decode_base_xlsx;
+    use semio_plugin::{NaturalFileDecodeOwner, ToolExecutionContract};
+    let contract = ToolExecutionContract::resumable(0, 8_192, 4_096, 32 << 20, 7_500, 1, 1);
+    assert_eq!(<XlsxTransitionalEditor as ArtifactEditor>::PAGED_NATURAL_SOURCE_MAXIMUM_BYTES, 16 * 1024 * 1024);
+    for input in [
+        &include_bytes!("../../../../🧱️base/🧪️tests/🧫️fixtures/📕️reuse-marketplaces.xlsx")[..],
+        &include_bytes!("../../../../🧱️base/🧪️tests/🧫️fixtures/📏️large-grid/📦️package.xlsx")[..],
+    ] {
+        assert!(matches!(XlsxTransitionalEditor::build_natural_file_decode_owner(input.to_vec(), contract).unwrap(), NaturalFileDecodeOwner::Controlled(_)));
+        assert!(matches!(XlsxTransitionalEditor::build_natural_file_decode_owner(vec![0; 4_096], contract).unwrap(), NaturalFileDecodeOwner::Synchronous(_)));
+        let decoded = decode_base_xlsx(input).unwrap();
+        io::natural_conformance(&decoded).expect("openpyxl and Excel workbooks are Transitional, whichever element declares the relationships prefix");
+        assert_eq!(XlsxTransitionalEditor::decode_natural_file(input).unwrap(), decoded);
+    }
+}
+
+#[test]
+fn the_transitional_gate_refuses_a_genuinely_wrong_namespace() {
+    use semio_s_artifact_stdio_xlsx_base::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_xlsx as decode_base_xlsx;
+    let input = include_bytes!("../../../../🧱️base/🧪️tests/🧫️fixtures/📏️large-grid/📦️package.xlsx");
+    let mut package = semio_s_artifact_stdio_zip::opc::decode_opc(input).unwrap();
+    let workbook = String::from_utf8(package.part_bytes("xl/workbook.xml").unwrap().to_vec()).unwrap();
+    let content_type = package.part("xl/workbook.xml").unwrap().content_type.clone();
+    package.set_part("xl/workbook.xml", &content_type, workbook.replace("http://schemas.openxmlformats.org/spreadsheetml/2006/main", "http://purl.oclc.org/ooxml/spreadsheetml/main").into_bytes());
+    let damaged = semio_s_artifact_stdio_zip::opc::encode_opc(&package).unwrap();
+    let refusal = io::natural_conformance(&decode_base_xlsx(&damaged).unwrap()).expect_err("the root namespace is Strict").to_string();
+    assert_eq!(io::decode_xlsx(&damaged).expect_err("the whole-buffer decoder applies the same gate").to_string(), refusal);
+}
+
+/// 📄️ Opens `input` through the paged natural route of this editor, exactly as the base subset's laws do, and returns what the controlled decoder published or refused.
+fn paged_natural_open(input: &[u8]) -> Result<XlsxSnapshot, String> {
+    use semio_framework_value::{RetainedCloneGrant, RetainedCloneStep, RetirementPollExit};
+    use semio_plugin::artifact_app_laws::OriginalWorkFixture;
+    use semio_plugin::{NaturalFileDecodeOwner, NaturalFileDecodeStep, NaturalFilePagedSource, ToolExecutionContract};
+    let contract = ToolExecutionContract::resumable(0, 8_192, 4_096, 32 << 20, 7_500, 1, 1);
+    let stock = OriginalWorkFixture::stock();
+    let mut scope = OriginalWorkFixture::hosted(1 << 44);
+    let mut source = Some(NaturalFilePagedSource::retain(semio_framework_value::paged::PagedBytes::try_from_slice(input).unwrap()));
+    let mut owner = None;
+    let denied = RetainedCloneGrant { maximum_items: 0, ..stock };
+    assert!(!scope.turn(denied, |cx| <XlsxTransitionalEditor as ArtifactEditor>::admit_paged_natural_file_decode_owner(&mut source, contract, &mut owner, cx)).unwrap());
+    assert!(scope.turn(stock, |cx| <XlsxTransitionalEditor as ArtifactEditor>::admit_paged_natural_file_decode_owner(&mut source, contract, &mut owner, cx)).unwrap());
+    let Some(NaturalFileDecodeOwner::Controlled(mut decoder)) = owner else { panic!("the workbook needs the controlled decoder") };
+    let mut turns = 0;
+    let outcome = loop {
+        turns += 1;
+        assert!(turns < 100_000, "the controlled decoder finishes");
+        match scope.turn(stock, |cx| Ok(decoder.advance(cx))).unwrap() {
+            Ok(NaturalFileDecodeStep::Complete { snapshot, .. }) => break Ok(snapshot),
+            Ok(_) => {}
+            Err(error) => break Err(error.to_string()),
+        }
+    };
+    decoder.begin_close();
+    for _ in 0..200_000 {
+        if decoder.terminal_is_empty() { break; }
+        scope.turn(stock, |cx| {
+            let demand = decoder.retirement_demands(cx.retained_grant().maximum_copy_bytes)?;
+            semio_plugin::__job::close_original_effect_step(cx, demand, |effect| {
+                let result = decoder.close_chained(effect).map(|step| RetainedCloneStep::Progress(step.progress().unwrap_or_default())).map_err(Into::into);
+                RetirementPollExit::settle(effect, result)
+            })?;
+            Ok(())
+        }).unwrap();
+    }
+    drop(decoder);
+    scope.finish();
+    outcome
+}
+
+#[test]
+fn paged_natural_route_opens_workbooks_larger_than_one_step_as_the_whole_buffer_decoder_does() {
+    for input in [
+        &include_bytes!("../../../../🧱️base/🧪️tests/🧫️fixtures/📕️reuse-marketplaces.xlsx")[..],
+        &include_bytes!("../../../../🧱️base/🧪️tests/🧫️fixtures/📏️large-grid/📦️package.xlsx")[..],
+    ] {
+        assert_eq!(paged_natural_open(input).unwrap(), XlsxTransitionalEditor::decode_natural_file(input).unwrap());
+    }
+}

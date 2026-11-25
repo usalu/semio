@@ -19,7 +19,9 @@ fn receiving_capacity(control:&NativeDecodeControl<'_>,bytes:usize)->Result<(),V
 /// impl Default for AllocatingDefault{fn default()->Self{Self("allocated".to_owned())}}
 /// let _=<AllocatingDefault as NativeDefault>::default_cursor();
 /// ```
-pub trait NativeDefault:RetireOwned+Sized{type Cursor:NativeDefaultCursor<Self>;/// 🌱️ Produces only a pure inline seed without allocating, releasing, calling out or unwinding.
+pub trait NativeDefault:RetireOwned+Sized{type Cursor:NativeDefaultCursor<Self>;/// 🪙️ True when the absent default owns no allocation, so a record may write it in one inline step.
+const PURE:bool=false;/// 🪙️ The allocation-free default of a pure owner.
+fn pure_default()->Option<Self>{None}/// 🌱️ Produces only a pure inline seed without allocating, releasing, calling out or unwinding.
 fn default_cursor()->Self::Cursor;}
 /// 🎮️ Normal work, owned output and cancellation expose independent actual CPU on every outcome.
 pub trait NativeDefaultCursor<T:RetireOwned>:Send+'static{
@@ -93,9 +95,9 @@ macro_rules! pure_default_methods{($value:expr)=>{
  fn admit_default<'reply>(output:&mut Option<Self>,effect:&mut crate::RetainedAllocationEffect<'_>,reply:crate::native_decoding::OriginalEffectReply<'reply,RetainedCloneStep,OriginalReceivingPrimary>)->Result<crate::native_decoding::OriginalEffectReplyComplete<'reply,RetainedCloneStep,OriginalReceivingPrimary>,ValueError>{if output.is_some(){return Ok(reply.complete(Err(invalid().into())))}let d=Self::default_demand();if !retained_clone_grant_admits(effect.grant(),d)||effect.maximum_work_units()==0{return Ok(reply.complete(Ok(RetainedCloneStep::Progress(Default::default()))))}if !effect.performed(1)?{return Ok(reply.complete(Err(ValueError::literal(crate::ValueRefusalKind::WorkLimit,"native default exceeded its work authority").into())))}*output=Some($value);Ok(reply.complete(Ok(RetainedCloneStep::Complete(receipt(d)))))}
  fn recover_default<'reply>(_:&mut Option<Self>,_:&mut crate::RetainedAllocationEffect<'_>,reply:crate::native_decoding::OriginalEffectReply<'reply,RetainedCloneStep,OriginalReceivingPrimary>)->Result<crate::native_decoding::OriginalEffectReplyComplete<'reply,RetainedCloneStep,OriginalReceivingPrimary>,ValueError>{Ok(reply.pending())}
 };}
-macro_rules! empty_default{($($ty:ty=>$value:expr),*$(,)?)=>{$(impl NativeDefaultValue for $ty{pure_default_methods!($value);}impl NativeDefault for $ty{type Cursor=NativeDefaultValueCursor<Self>;fn default_cursor()->Self::Cursor{NativeDefaultValueCursor::new()}})*};}
+macro_rules! empty_default{($($ty:ty=>$value:expr),*$(,)?)=>{$(impl NativeDefaultValue for $ty{pure_default_methods!($value);}impl NativeDefault for $ty{type Cursor=NativeDefaultValueCursor<Self>;const PURE:bool=true;fn pure_default()->Option<Self>{Some($value)}fn default_cursor()->Self::Cursor{NativeDefaultValueCursor::new()}})*};}
 empty_default!(()=>(),bool=>false,u8=>0,u16=>0,u32=>0,u64=>0,usize=>0,i8=>0,i16=>0,i32=>0,i64=>0,isize=>0,f32=>0.0,f64=>0.0,String=>String::new(),OrderedSet=>OrderedSet::new());
-macro_rules! generic_empty_default{(($($generic:tt)*),$ty:ty,$value:expr)=>{impl<$($generic)*> NativeDefaultValue for $ty{pure_default_methods!($value);}impl<$($generic)*> NativeDefault for $ty{type Cursor=NativeDefaultValueCursor<Self>;fn default_cursor()->Self::Cursor{NativeDefaultValueCursor::new()}}};}
+macro_rules! generic_empty_default{(($($generic:tt)*),$ty:ty,$value:expr)=>{impl<$($generic)*> NativeDefaultValue for $ty{pure_default_methods!($value);}impl<$($generic)*> NativeDefault for $ty{type Cursor=NativeDefaultValueCursor<Self>;const PURE:bool=true;fn pure_default()->Option<Self>{Some($value)}fn default_cursor()->Self::Cursor{NativeDefaultValueCursor::new()}}};}
 generic_empty_default!((T:RetireOwned),Vec<T>,Vec::new());
 generic_empty_default!((T:RetireOwned),Option<T>,None);
 generic_empty_default!((T:RetireOwned,const N:usize),semio_framework_value_paged_list::PagedList<T,N>,Self::new());

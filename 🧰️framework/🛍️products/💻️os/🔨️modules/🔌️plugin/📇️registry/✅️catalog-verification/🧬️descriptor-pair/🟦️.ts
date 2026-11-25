@@ -2,6 +2,7 @@
 import { createHash } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
 import { APP_CHANNEL_VERSION } from "../../../../../../../🔨️modules/🧾️app-channel/🔢️request-sequence/🟦️.ts";
+import { readPackageComponents } from "../../../../../../../🔨️modules/🎠️kernel/🧩️package-components/🟦️.ts";
 import { decodePackValue, encodePackValue, packValueToExactJson, type PackValue } from "../../../../../../../🔨️modules/🎁️packs/🟦️.ts";
 import { CATALOG_ID } from "../../🔎️discovery/🧬️schema/🟦️.ts";
 import { CATALOG_DESCRIPTOR_MAX_BYTES, CATALOG_DESCRIPTOR_TOP_LEVEL, CATALOG_MANIFEST_FIELDS, CATALOG_PACKAGE_ID, CATALOG_PLACEHOLDER_PLUGIN_IDS, CATALOG_PLACEHOLDER_VERSION, type CatalogDescriptorIdentity, type OwnerDescriptorPairV1 } from "../🟦️.ts";
@@ -34,6 +35,8 @@ function validateCatalogDescriptorShape(entry: CatalogDescriptorIdentity, descri
   for (const field of ["activationEvents", "capabilityRequests", "extensionPoints", "assets"] as const) if (record[field] !== undefined && !Array.isArray(record[field])) throw new Error(`${entry.pluginId}: descriptor.${field} must be an array`);
   if (!["declarative", "linked", "isolated", "exclusive", "cold"].includes(String(record.execution))) throw new Error(`${entry.pluginId}: descriptor execution mode does not decode`);
   validateCatalogExecutionProtocol(entry.pluginId, record.executionProtocol);
+  try { readPackageComponents(record, (manifestRecord.apps as { readonly id?: unknown }[]).map(app => String(app?.id))); }
+  catch (error) { throw new Error(`${entry.pluginId}: descriptor components ${boundedCatalogDiagnostic(error)}`); }
   if (record.quotas === null || typeof record.quotas !== "object" || Array.isArray(record.quotas) || record.contributions === null || typeof record.contributions !== "object" || Array.isArray(record.contributions)) throw new Error(`${entry.pluginId}: descriptor quotas/contributions must be objects`);
   if (entry.role === "extension" && (!entry.extends || entry.dependsOn[0] !== entry.extends)) throw new Error(`${entry.pluginId}: extension host must be its first dependency`);
   if (entry.role === "plugin" && entry.extends !== undefined) throw new Error(`${entry.pluginId}: plugin cannot declare an extension host`);

@@ -13,15 +13,69 @@
       "de": "Ein Tänzer für zeitgenössischen Tanz und Ballett von 1,82 m und 72 kg in eng anliegendem Oberteil, Tanzshorts, Knöchelsocken und Jazzschuhen mit geteilter Sohle: eine erste Arabeske auf dem flachen linken Fuß mit nach hinten gestrecktem rechtem Bein, ein Relevé in der ersten Position mit den Armen über dem Kopf, ein Passé auf halber Spitze und die Vorbereitung einer Pirouette in der vierten Position. Clips: eine Pirouette en dehors, die die ganze Figur einmal um den Ballen des Standfußes dreht, eine Schleife aus Plié und Relevé bei 5 met und eine Atemschleife."
     },
     "tags": [
-      "human",
-      "adult",
-      "standing",
-      "culture",
-      "dance",
-      "ballet",
-      "contemporary-dance",
-      "pirouette",
-      "balance"
+      {
+        "id": "human",
+        "title": {
+          "en": "human",
+          "de": "Mensch"
+        }
+      },
+      {
+        "id": "adult",
+        "title": {
+          "en": "adult",
+          "de": "erwachsen"
+        }
+      },
+      {
+        "id": "standing",
+        "title": {
+          "en": "standing",
+          "de": "Stehen"
+        }
+      },
+      {
+        "id": "culture",
+        "title": {
+          "en": "culture",
+          "de": "Kultur"
+        }
+      },
+      {
+        "id": "dance",
+        "title": {
+          "en": "dance",
+          "de": "Tanz"
+        }
+      },
+      {
+        "id": "ballet",
+        "title": {
+          "en": "ballet",
+          "de": "Ballett"
+        }
+      },
+      {
+        "id": "contemporary-dance",
+        "title": {
+          "en": "contemporary dance",
+          "de": "zeitgenössischer Tanz"
+        }
+      },
+      {
+        "id": "pirouette",
+        "title": {
+          "en": "pirouette",
+          "de": "Pirouette"
+        }
+      },
+      {
+        "id": "balance",
+        "title": {
+          "en": "balance",
+          "de": "Gleichgewicht"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage human worker HW-12",

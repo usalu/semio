@@ -13,13 +13,55 @@
    "de": "Ein frei gewachsener Tulpenbaum von etwa 80 Jahren, 30 m hoch: Ein gerader, säulenförmiger Stamm, astfrei bis 7 m, läuft als ein Leittrieb bis zur Spitze, siebzehn Äste verlassen ihn in einer Spirale und steigen nach oben immer steiler an, und die großen vierlappigen Blätter bilden eine dichte, säulenförmig-ovale Krone von etwa 14 m Breite."
   },
   "tags": [
-   "tree",
-   "deciduous",
-   "broadleaf",
-   "columnar-oval-crown",
-   "park-tree",
-   "wind",
-   "transpiration"
+   {
+    "id": "tree",
+    "title": {
+     "en": "tree",
+     "de": "Baum"
+    }
+   },
+   {
+    "id": "deciduous",
+    "title": {
+     "en": "deciduous",
+     "de": "laubabwerfend"
+    }
+   },
+   {
+    "id": "broadleaf",
+    "title": {
+     "en": "broadleaf",
+     "de": "Laubholz"
+    }
+   },
+   {
+    "id": "columnar-oval-crown",
+    "title": {
+     "en": "columnar oval crown",
+     "de": "säulenförmig-ovale Krone"
+    }
+   },
+   {
+    "id": "park-tree",
+    "title": {
+     "en": "park tree",
+     "de": "Parkbaum"
+    }
+   },
+   {
+    "id": "wind",
+    "title": {
+     "en": "wind",
+     "de": "Wind"
+    }
+   },
+   {
+    "id": "transpiration",
+    "title": {
+     "en": "transpiration",
+     "de": "Transpiration"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage plant worker PW-05",

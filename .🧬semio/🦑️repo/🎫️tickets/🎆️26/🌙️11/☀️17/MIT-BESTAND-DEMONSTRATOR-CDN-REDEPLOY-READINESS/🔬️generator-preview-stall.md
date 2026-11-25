@@ -49,3 +49,23 @@ Reading `preview_cancellation_step`: phase 2 resets EVERY window tick latch to `
 Fix (`generation3d/.../🧵️preview-eval/⏯️tool-run/🦀️.rs`, run step): when `resume_preview_evaluation()` lifts a cancellation (it was cancelled and the drain is finished), the run owes every attached window one evaluation again before it consults `next_preview_eval_hop`; while the drain is unfinished the hop is `Wait`.
 
 Unchecked: the composition workspace crate cannot be `cargo check`ed here (resolver panic); procedural rebuild is the check. If the pane still reads `Cancelled` after this, the drain itself is not completing (suspects: `SessionRetirement::admit` returning no progress, or the geometry port `cancel_step` in phase 4); the next probe belongs in `preview_cancellation_step`.
+
+## Follow-up 4: `[DEBUG] gen-preview` instrumentation (remove after the cause is known)
+
+`semio_os_flow::debug_gen_preview(String)` (defined in the session crate, `🔭️preview-tessellation-cancellation-and-status`) prints `[DEBUG] gen-preview <line>` through eprintln only when the line differs from the previous one on that thread. Call sites:
+- session: `cancel_preview_evaluation`; every `preview_cancellation_step` (phase, cursor, demand, grant items) and its `unfunded` early return; `resume_preview_evaluation` (refused while draining with phase/cursor, or lifted); `window_tick_owed` (per window, true/false, or false because cancelled).
+- run job (`generation3d/.../🧵️preview-eval/⏯️tool-run`): per step `run N hop=<Dispatch|Wait|Settled> nodes meshes tessellated ext_fault`; `drain_cancellation` outcome (still draining / turn failure / owner fault).
+- `⏱️tick-and-resolve`: mounted tick yielding to the drain; `finish_tick` (`more`, extension invocation count).
+- edit preview window `render`: `eval_text` bytes, `meshes`/`instances` JSON bytes, `cancelled`, session `eval_json` bytes.
+
+How to read one run: `cancel_preview_evaluation` then `cancellation_step phase=0..5` lines show whether the drain completes (a last line stuck on one phase or `unfunded` names the stall); `resume lifted` then `run N hop=Dispatch` then `finish_tick` then `render eval_text=Some(..)` shows the chain; if `render` prints `eval_text=None`/0 B while `session_eval` is non-zero the window renders from the retained transient text and the tick's publication never lands in it (the KNOWN GAP question: the edit `render` takes `preview_eval_text` from the transient, not from the session). Remove every `debug_gen_preview` call and the helper when done.
+
+## Follow-up 5: the cancellation drain never starts because the session queue has no reserved slot
+
+Trace: `generator-preview-trace.cjs` (full console, 90 s) -> `🗑️generated/preview-trace/console.txt`. The first run dispatches (`hop=Dispatch(0)`, `Dispatch(1)`) but finishes with `nodes=0 meshes=0` and `render eval_text=None`. At 25.7 s a restart calls `cancel_preview_evaluation`; from then on every line is `resume refused: draining phase=0 cursor=Some(0)` and `drain_cancellation ... -> owner fault app.message`, and NO `cancellation_step phase=0` line ever appears. So `next_preview_cancellation_demands` fails before the step runs, and the drain never leaves phase 0 (the pane stays `Cancelled`, `window_tick_owed ... (cancelled)`).
+
+Cause: phase 0 quotes `SessionRetirement::admission_demands`, which returns `OwnershipLimit "session retirement requires an admitted original queue slot"` when a retained root is present (an earlier handoff, e.g. the preceding eval-json reset) but the owner queue has no reserved slot. Nothing in production ever reserves that slot (`reserve_retirement_step` is only called by tests), so the error repeats forever and surfaces as an owner fault whose message (`app.message`) the run job swallows.
+
+Fix: `SessionRetirement` gains `slot_owed` / `slot_demands` / `reserve_slot` (`🧾️eval-session-state`); cancellation phase 0 quotes the slot reservation when owed and performs `reserve_step` as its step (phase stays 0), then admits on the next step. Test: `original_preview_cancel_reserves_its_own_queue_slot_when_a_retained_root_displaces_it` (`🧹️retirement/🧪️tests`), not compiled (crate not resolvable via `repo cargo -p`).
+
+Probes removed: `debug_gen_preview` helper, re-exports (`🎞️session`, `eval-session`, `📦️packages/🦀️rust`) and all call sites (session, run job, tick-and-resolve, edit preview window); no `follow unit` remains in source.

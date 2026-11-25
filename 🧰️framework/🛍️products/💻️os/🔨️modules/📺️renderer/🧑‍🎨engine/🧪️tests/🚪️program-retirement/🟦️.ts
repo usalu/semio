@@ -4,7 +4,7 @@ import Ajv from "ajv";
 import { LRUCache } from "lru-cache";
 import pLimit from "p-limit";
 import fixture from "./🔣️.json";
-import { admitProgramRetirementV1 } from "../../🧱️elements/🏛️ShellHost/🚪️program-retirement/🟦️.ts";
+import { admitProgramRetirementV1, programRetirementKeepsDocumentV1 } from "../../🧱️elements/🏛️ShellHost/🚪️program-retirement/🟦️.ts";
 it("validates neutral admission vectors", () => expect(new Ajv().validate(fixture.schema, fixture.cases)).toBe(true));
 for (const row of fixture.cases) it(row.id, async () => {
   const abort = new AbortController(), events: string[] = [];
@@ -60,3 +60,5 @@ it("matches neutral handle-isolation and resealing laws against independent LRU 
     }
   }
 });
+
+it.each([[undefined, "doc", false], ["", "doc", false], ["/data", null, false], ["/data", "doc", true]] as const)("keeps the retiring document only with a data folder and an identity (%s, %s)", (dataDir, id, keeps) => expect(programRetirementKeepsDocumentV1(dataDir, id)).toBe(keeps));

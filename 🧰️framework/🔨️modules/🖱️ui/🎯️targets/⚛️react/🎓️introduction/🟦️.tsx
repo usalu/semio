@@ -10,6 +10,7 @@ import { useSurfaceActive } from "@semio-tech/ui/elements/Surface";
 import { availableViewportHeightPx } from "@semio-tech/ui/device";
 import { useLabel } from "@semio-tech/ui/elements/Label";
 import { usePointerDrag } from "@semio-tech/ui/elements/Panel";
+import { useDragEscape } from "@semio-tech/ui/modules/pointer-drag";
 import { useControlKeybinding } from "@semio-tech/ui/modules/control-keybinding-context";
 import { veilClass } from "@semio-tech/ui/modules/surface-presentation";
 import { WindowChrome, windowChromeTitleChipClass } from "@semio-tech/ui/elements/WindowChrome";
@@ -181,7 +182,7 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
   dragPositionRef.current = dragPosition;
   const dragLayoutRef = reactHostPort.useRef({ placement: { top: 0, left: 0 }, boxSize, viewport });
   const surveyRef = reactHostPort.useRef<PlacementSurvey>({ key: "", values: new Map() });
-  const dragSessionRef = reactHostPort.useRef<{ startTop: number; startLeft: number; pointerX: number; pointerY: number } | null>(null);
+  const dragSessionRef = reactHostPort.useRef<{ startTop: number; startLeft: number; pointerX: number; pointerY: number; before: IntroductionInfoBoxPosition | null } | null>(null);
 
   reactHostPort.useEffect(() => {
     if (surfaceActive) setIntroductionActivated(true);
@@ -278,7 +279,7 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
       event.preventDefault();
       event.stopPropagation();
       const start = dragPositionRef.current ?? dragLayoutRef.current.placement;
-      dragSessionRef.current = { startTop: start.top, startLeft: start.left, pointerX: event.clientX, pointerY: event.clientY };
+      dragSessionRef.current = { startTop: start.top, startLeft: start.left, pointerX: event.clientX, pointerY: event.clientY, before: dragPositionRef.current };
       setDragging(true);
     },
     onMove: (event) => {
@@ -306,6 +307,14 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
       setDragging(false);
     },
   });
+
+  const abandonMove = reactHostPort.useCallback(() => {
+    const session = dragSessionRef.current;
+    dragSessionRef.current = null;
+    setDragging(false);
+    if (session) setDragPosition(session.before);
+  }, []);
+  useDragEscape(dragging, abandonMove);
 
   const naturalWidthRef = reactHostPort.useRef<{ readonly key: string; readonly width: number } | null>(null);
   const widthStretchedRef = reactHostPort.useRef(false);
@@ -431,7 +440,7 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
         }
         footerLeftChips={stepIndex > 0 ? <div data-shared-border-cells="" className="flex flex-1 items-stretch"><ButtonGroup className="w-full"><ButtonGroupItem id="ui.introduction.back" variant="ghost" icon="chevron-left" text={backLabel} className="flex-1 justify-between" onClick={back} /></ButtonGroup></div> : undefined}
         footerRightChips={advanceByButton ? <div data-shared-border-cells="" className="flex flex-1 items-stretch"><ButtonGroup className="w-full"><ButtonGroupItem id="ui.introduction.next" icon={isLast ? "check" : "chevron-right"} text={isLast ? doneLabel : nextLabel} className="flex-1 justify-between" onClick={next} /></ButtonGroup></div> : undefined}
-        bodyClassName="p-double shadow-lg"
+        bodyClassName="p-double"
       />
       {effectiveDemonstrations.length > 0 && <IntroductionDemonstrationOverlay key={step.id} demonstrations={effectiveDemonstrations} />}
     </>

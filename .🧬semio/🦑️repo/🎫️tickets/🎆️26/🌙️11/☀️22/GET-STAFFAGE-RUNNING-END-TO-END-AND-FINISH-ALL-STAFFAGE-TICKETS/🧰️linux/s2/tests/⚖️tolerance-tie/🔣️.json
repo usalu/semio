@@ -1,0 +1,16 @@
+{
+  "d18": { "absoluteM": "0.015", "relative": "0.02" },
+  "denominators": [20, 50, 75, 100, 150, 200, 500, 1000],
+  "originsMm": [0, 7.5, 12.345, 100.1, 297.3],
+  "cases": [
+    { "name": "used-harmonium section A-A: 1.127 m of 1.15 m, the deviation is D18 exactly", "measuredM": "1.127", "nominalM": "1.15" },
+    { "name": "the same deviation above the dimension", "measuredM": "1.173", "nominalM": "1.15" },
+    { "name": "one micrometre beyond D18", "measuredM": "1.126999", "nominalM": "1.15" },
+    { "name": "one nanometre beyond D18", "measuredM": "1.126999999", "nominalM": "1.15" },
+    { "name": "one nanometre inside D18", "measuredM": "1.127000001", "nominalM": "1.15" },
+    { "name": "the absolute branch of D18: 15 mm of 0.5 m exactly", "measuredM": "0.485", "nominalM": "0.5" },
+    { "name": "the absolute branch, one micrometre beyond", "measuredM": "0.484999", "nominalM": "0.5" },
+    { "name": "2 % of 3 m exactly", "measuredM": "2.94", "nominalM": "3" },
+    { "name": "2 % of 3 m and a tenth of a micrometre", "measuredM": "3.0600001", "nominalM": "3" }
+  ]
+}

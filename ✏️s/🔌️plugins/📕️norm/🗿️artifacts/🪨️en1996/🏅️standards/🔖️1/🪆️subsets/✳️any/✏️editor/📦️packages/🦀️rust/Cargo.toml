@@ -39,6 +39,7 @@ semio-s-artifact-norm-en1996-inferences = { workspace = true }
 semio-s-artifact-norm-en1996-io = { workspace = true }
 semio-s-artifact-norm-en1996-model = { workspace = true }
 semio-s-artifact-norm-en1996-mutations = { workspace = true }
+semio-s-artifact-norm-en1996-mutations-edit-rules = { workspace = true }
 semio-s-artifact-norm-en1996-scene = { workspace = true }
 semio-s-artifact-norm-en1996-scene-diagrams = { workspace = true }
 semio-s-artifact-norm-en1996-scene-kit = { workspace = true }

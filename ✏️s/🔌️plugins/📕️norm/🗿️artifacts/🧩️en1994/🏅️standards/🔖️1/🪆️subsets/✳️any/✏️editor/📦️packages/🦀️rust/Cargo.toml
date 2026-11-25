@@ -30,6 +30,9 @@ semio-framework-schema = { workspace = true }
 semio-ui-locale = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-framework-value-derive = { workspace = true }
+semio-s-artifact-norm-en1994-editor-family = { workspace = true }
+semio-s-artifact-norm-en1994-editor-surfaces = { workspace = true }
+semio-s-artifact-norm-en1994-editor-field-meta = { workspace = true }
 semio-s-artifact-norm-en1994-checks = { workspace = true }
 semio-s-artifact-norm-en1994-examples = { workspace = true }
 semio-s-artifact-norm-en1994-inferences = { workspace = true }

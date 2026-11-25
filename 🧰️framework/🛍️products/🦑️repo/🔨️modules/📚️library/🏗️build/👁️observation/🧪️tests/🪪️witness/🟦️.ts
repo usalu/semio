@@ -4,7 +4,7 @@ import{execFileSync}from"node:child_process";
 import{mkdirSync,mkdtempSync,realpathSync,renameSync,rmSync,symlinkSync,writeFileSync}from"node:fs";
 import{tmpdir}from"node:os";
 import{join}from"node:path";
-import{directoryFactOfV1,observationRowFreshV1,observationWitnessHoldsV1,observationWitnessV1,observeDetachedV1,observedFieldV1}from"../../🟨️.mjs";
+import{directoryFactOfV1,observationRowFreshV1,observationWitnessHoldsSyncV1,observationWitnessHoldsV1,observationWitnessV1,observeDetachedV1,observedFieldV1}from"../../🟨️.mjs";
 
 const git=(directory:string,...args:string[])=>execFileSync("git",["-C",directory,"-c","core.fsmonitor=false",...args],{encoding:"utf8"}).trim();
 const treeOf=(directory:string)=>{git(directory,"add","-A","-f");return git(directory,"write-tree");};
@@ -70,6 +70,7 @@ test("a witness never holds while a row it covers does not, whatever changes the
    const witness=observationWitnessV1(rows,{since:later()})!,before=treeOf(root);
    change(file);
    const moved=treeOf(root)!==before,rowsHold=holdsAll(rows),witnessHolds=await observationWitnessHoldsV1(witness);
+   expect(observationWitnessHoldsSyncV1(witness),"the synchronous verdict is the asynchronous one").toBe(witnessHolds);
    expect(moved,name).toBe(true);
    expect(rowsHold,name).toBe(false);
    expect(witnessHolds,name).toBe(false);

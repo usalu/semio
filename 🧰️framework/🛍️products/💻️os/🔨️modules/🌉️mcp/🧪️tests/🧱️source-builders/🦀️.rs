@@ -92,6 +92,7 @@ fn wrap_descriptor(package_id: &str, manifest: manifest::PluginManifest) -> Pack
         extension_points: Vec::new(),
         execution: ExecutionMode::Isolated,
         execution_protocol: manifest::ExecutionProtocol { app_channel_version: semio_os_kernel::os_spr::CHANNEL_VERSION },
+        components: Vec::new(),
         quotas: Default::default(),
         contributions: ContributionSet::default(),
         assets: Vec::new(),
@@ -243,7 +244,7 @@ pub fn cad_descriptor() -> PackageDescriptor {
         topic_contributions: Vec::new(),
         commands: Vec::new(),
         artifact_kinds: Vec::new(),
-        hosted_artifact_kinds: Vec::new(),
+        hosted_artifact_kinds: Vec::new(), action_sets: Vec::new(),
         dependencies: Vec::new(),
         contributions: Vec::new(),
     })
@@ -360,7 +361,7 @@ pub fn note_descriptor() -> PackageDescriptor {
         topic_contributions: Vec::new(),
         commands: Vec::new(),
         artifact_kinds: Vec::new(),
-        hosted_artifact_kinds: Vec::new(),
+        hosted_artifact_kinds: Vec::new(), action_sets: Vec::new(),
         dependencies: Vec::new(),
         contributions: Vec::new(),
     })
@@ -437,7 +438,7 @@ pub fn colliding_action_id_source() -> CatalogSource {
         topic_contributions: Vec::new(),
         commands: Vec::new(),
         artifact_kinds: Vec::new(),
-        hosted_artifact_kinds: Vec::new(),
+        hosted_artifact_kinds: Vec::new(), action_sets: Vec::new(),
         dependencies: Vec::new(),
         contributions: Vec::new(),
     });
@@ -451,7 +452,7 @@ pub fn colliding_action_id_source() -> CatalogSource {
         topic_contributions: Vec::new(),
         commands: Vec::new(),
         artifact_kinds: Vec::new(),
-        hosted_artifact_kinds: Vec::new(),
+        hosted_artifact_kinds: Vec::new(), action_sets: Vec::new(),
         dependencies: Vec::new(),
         contributions: Vec::new(),
     });
@@ -586,7 +587,7 @@ pub fn draw_descriptor() -> PackageDescriptor {
         topic_contributions: Vec::new(),
         commands: Vec::new(),
         artifact_kinds: Vec::new(),
-        hosted_artifact_kinds: Vec::new(),
+        hosted_artifact_kinds: Vec::new(), action_sets: Vec::new(),
         dependencies: Vec::new(),
         contributions: Vec::new(),
     })

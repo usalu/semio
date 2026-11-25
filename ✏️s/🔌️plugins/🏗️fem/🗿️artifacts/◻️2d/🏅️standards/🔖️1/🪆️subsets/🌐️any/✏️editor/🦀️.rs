@@ -193,6 +193,10 @@ pub use result_json_and_ports::{fem2d_geometry_in_port, fem2d_io, fem2d_results_
 mod fem_pack_envelope;
 fem_pack_envelope_decode_owner_bundle!(fem2d_envelope_decode_owner_bundle, fem_pack_envelope, Fem2dSnapshot, Fem2dMutation);
 
+#[path = "📋️clipboard/🦀️.rs"]
+mod clipboard;
+pub use clipboard::*;
+
 #[path = "🎛️play-app-editor/🦀️.rs"]
 mod play_app_editor;
 pub use play_app_editor::Fem2dPlayApp;

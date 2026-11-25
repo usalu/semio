@@ -84,6 +84,7 @@
           ],
           "outputToken": "@@semio-out@@",
           "laneToken": "@@semio-lane@@",
+          "generatedToken": "@@semio-gen@@",
           "extraToken": "@@semio-extra@@",
           "metadataCharacters": 16
         },
@@ -267,6 +268,10 @@
         "collectorFailed": {
           "en": "[repo cargo] the background unit cache collector could not be started: {reason}",
           "de": "[repo cargo] Der Unit-Cache-Sammler im Hintergrund konnte nicht gestartet werden: {reason}"
+        },
+        "missNearest": {
+          "en": "[units] miss {crate} nearest:{key} differs in {differs}",
+          "de": "[units] Fehlgriff {crate} nächster:{key} unterscheidet sich in {differs}"
         },
         "wrapperUnavailable": {
           "en": "[repo cargo] the unit cache is off for this Cargo process: no sealed compiler wrapper could be made ({reason}); compiles run without the shared cache",
@@ -1024,6 +1029,11 @@
           "minimum": 0
         },
         "incrementalBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "temporariesBytes": {
+          "description": "The part the lane's compiler temporaries directory holds (`-Z temps-dir`), counted in `bytes` and removed by the temporaries collector. / Der Teil des Compiler-Temporärverzeichnisses der Lane (`-Z temps-dir`), in `bytes` enthalten und vom Temporärdatei-Sammler entfernt.",
           "type": "integer",
           "minimum": 0
         },

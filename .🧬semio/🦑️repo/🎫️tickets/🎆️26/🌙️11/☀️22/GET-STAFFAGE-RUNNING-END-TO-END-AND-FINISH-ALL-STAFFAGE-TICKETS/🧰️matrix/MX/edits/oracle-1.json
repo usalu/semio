@@ -1,0 +1,32 @@
+[
+ {
+  "name": "doc in",
+  "old": "\"records\": [{ \"key\", \"path\" }], \"matrices\": [{ \"key\", \"path\" }] }`.\nOutput",
+  "new": "\"records\": [{ \"key\", \"path\" }], \"matrices\": [{ \"key\", \"path\" }], \"ties\": [{ \"key\", \"measured\", \"nominal\", \"scales\" }] }`.\nOutput"
+ },
+ {
+  "name": "doc out",
+  "old": "\"matrices\": {key: { \"assets\", \"cells\", \"statuses\", \"checks\" }} }`.",
+  "new": "\"matrices\": {key: { \"assets\", \"cells\", \"statuses\", \"checks\" }}, \"ties\": {key: [bool per scale]} }`."
+ },
+ {
+  "name": "doc line",
+  "old": "- The standard JSON parser reads a merged `matrix.json`,",
+  "new": "- Exact rational arithmetic (`fractions.Fraction` of the decimal texts) decides whether a measured length lies within D18 (the larger of 15 mm and 2 %) of its nominal one, in metres and in the paper millimetres of every scale: the verdict a tolerance comparison must give whatever the unit.\n- The standard JSON parser reads a merged `matrix.json`,"
+ },
+ {
+  "name": "import",
+  "old": "import xml.etree.ElementTree as ET\n",
+  "new": "import xml.etree.ElementTree as ET\nfrom fractions import Fraction\n"
+ },
+ {
+  "name": "function",
+  "old": "def hausdorff(a, b):",
+  "new": "def tie(measured, nominal, scales):\n    measured, nominal = Fraction(measured), Fraction(nominal)\n    tolerance = max(Fraction(15, 1000), nominal / 50)\n    return [abs(measured * Fraction(1000, scale) - nominal * Fraction(1000, scale)) <= tolerance * Fraction(1000, scale) for scale in scales]\n\n\ndef hausdorff(a, b):"
+ },
+ {
+  "name": "main",
+  "old": "        \"hausdorff\": {item[\"key\"]: hausdorff(item[\"a\"], item[\"b\"]) for item in job.get(\"hausdorff\", [])},",
+  "new": "        \"hausdorff\": {item[\"key\"]: hausdorff(item[\"a\"], item[\"b\"]) for item in job.get(\"hausdorff\", [])},\n        \"ties\": {item[\"key\"]: tie(item[\"measured\"], item[\"nominal\"], item[\"scales\"]) for item in job.get(\"ties\", [])},"
+ }
+]

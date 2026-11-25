@@ -91,6 +91,8 @@ pub struct JsonGrammarCursor<V:JsonParsedValue> {
 impl<V:JsonParsedValue> JsonGrammarCursor<V> {
     pub fn new(policy: JsonMemberPolicy) -> Self { Self { position:0, validated_position:0, limits:JsonReadLimits{maximum_bytes:u64::MAX,maximum_allocation_bytes:usize::MAX,maximum_depth:MAX_DEPTH as usize,maximum_items:u64::MAX}, policy, frames:Default::default(), lexeme:None, pending:None, result:None, retired:Default::default(),obsolete:None,complete:false,normal_step_progress:Default::default(),normal_step_work:0 } }
     pub fn position(&self) -> usize { self.position }
+    /// 🔬️ Reports how many source bytes the scalar validation frontier has already covered.
+    pub fn validated_position(&self) -> usize { self.validated_position }
     pub fn phase(&self)->&'static str {match &self.lexeme {Some(JsonLexeme::String(scan))=>if scan.writing {"materialize-string"}else {"measure-string"},Some(JsonLexeme::Number(_))=>"number",None=>match self.frames.last(){Some(frame) if frame.state==8=>if frame.object {"materialize-object"}else {"materialize-array"},Some(frame)=>if frame.object {"collect-object"}else {"collect-array"},None=>"grammar"}}}
     pub fn normal_step_progress(&self)->RetainedCloneProgress{self.normal_step_progress}
     pub fn last_turn_work(&self)->u64{self.normal_step_work}

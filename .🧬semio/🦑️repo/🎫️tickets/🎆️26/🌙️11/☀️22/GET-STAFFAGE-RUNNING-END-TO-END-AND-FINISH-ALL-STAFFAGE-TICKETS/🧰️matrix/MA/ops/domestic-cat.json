@@ -1,0 +1,540 @@
+[
+ {
+  "op": "solid",
+  "scale": "50",
+  "id": "far-thigh",
+  "view": "front",
+  "across": "plan"
+ },
+ {
+  "op": "solid",
+  "scale": "50",
+  "id": "far-thigh",
+  "view": "plan",
+  "across": "front",
+  "order": [
+   "extrude",
+   "revolve",
+   "view-sweep"
+  ]
+ },
+ {
+  "op": "solid",
+  "scale": "50",
+  "id": "far-shank",
+  "view": "front",
+  "across": "plan"
+ },
+ {
+  "op": "solid",
+  "scale": "50",
+  "id": "far-shank",
+  "view": "plan"
+ },
+ {
+  "op": "solid",
+  "scale": "50",
+  "id": "far-hock",
+  "view": "front",
+  "across": "plan"
+ },
+ {
+  "op": "solid",
+  "scale": "50",
+  "id": "far-hock",
+  "view": "plan",
+  "across": "front",
+  "order": [
+   "extrude",
+   "revolve",
+   "view-sweep"
+  ]
+ },
+ {
+  "op": "solid",
+  "scale": "50",
+  "id": "far-humerus",
+  "view": "front",
+  "across": "plan"
+ },
+ {
+  "op": "solid",
+  "scale": "50",
+  "id": "far-humerus",
+  "view": "plan"
+ },
+ {
+  "op": "solid",
+  "scale": "50",
+  "id": "far-forearm",
+  "view": "front",
+  "across": "plan"
+ },
+ {
+  "op": "solid",
+  "scale": "50",
+  "id": "far-forearm",
+  "view": "plan",
+  "across": "front",
+  "order": [
+   "extrude",
+   "revolve",
+   "view-sweep"
+  ]
+ },
+ {
+  "op": "solid",
+  "scale": "50",
+  "id": "near-thigh",
+  "view": "front",
+  "across": "plan",
+  "hull": true
+ },
+ {
+  "op": "solid",
+  "scale": "50",
+  "id": "near-thigh",
+  "view": "plan",
+  "across": "front",
+  "order": [
+   "extrude",
+   "revolve",
+   "view-sweep"
+  ]
+ },
+ {
+  "op": "solid",
+  "scale": "50",
+  "id": "near-shank",
+  "view": "front",
+  "across": "plan",
+  "hull": true
+ },
+ {
+  "op": "solid",
+  "scale": "50",
+  "id": "near-shank",
+  "view": "plan"
+ },
+ {
+  "op": "solid",
+  "scale": "50",
+  "id": "near-hock",
+  "view": "front",
+  "across": "plan"
+ },
+ {
+  "op": "solid",
+  "scale": "50",
+  "id": "near-hock",
+  "view": "plan",
+  "across": "front",
+  "order": [
+   "extrude",
+   "revolve",
+   "view-sweep"
+  ]
+ },
+ {
+  "op": "solid",
+  "scale": "50",
+  "id": "near-humerus",
+  "view": "front",
+  "across": "plan"
+ },
+ {
+  "op": "solid",
+  "scale": "50",
+  "id": "near-humerus",
+  "view": "plan"
+ },
+ {
+  "op": "solid",
+  "scale": "50",
+  "id": "near-forearm",
+  "view": "front",
+  "across": "plan"
+ },
+ {
+  "op": "solid",
+  "scale": "50",
+  "id": "near-forearm",
+  "view": "plan",
+  "across": "front",
+  "order": [
+   "extrude",
+   "revolve",
+   "view-sweep"
+  ]
+ },
+ {
+  "op": "solid",
+  "scale": "50",
+  "id": "hindbody",
+  "view": "front",
+  "across": "plan"
+ },
+ {
+  "op": "solid",
+  "scale": "50",
+  "id": "hindbody",
+  "view": "plan"
+ },
+ {
+  "op": "solid",
+  "scale": "50",
+  "id": "midbody",
+  "view": "front",
+  "across": "plan"
+ },
+ {
+  "op": "solid",
+  "scale": "50",
+  "id": "midbody",
+  "view": "plan"
+ },
+ {
+  "op": "solid",
+  "scale": "50",
+  "id": "chest",
+  "view": "front",
+  "across": "plan"
+ },
+ {
+  "op": "solid",
+  "scale": "50",
+  "id": "chest",
+  "view": "plan"
+ },
+ {
+  "op": "solid",
+  "scale": "50",
+  "id": "neck",
+  "view": "front",
+  "across": "plan"
+ },
+ {
+  "op": "solid",
+  "scale": "50",
+  "id": "neck",
+  "view": "plan",
+  "across": "front",
+  "order": [
+   "extrude",
+   "revolve",
+   "view-sweep"
+  ]
+ },
+ {
+  "op": "solid",
+  "scale": "50",
+  "id": "jaw",
+  "view": "front",
+  "across": "plan"
+ },
+ {
+  "op": "solid",
+  "scale": "50",
+  "id": "jaw",
+  "view": "plan"
+ },
+ {
+  "op": "solid",
+  "scale": "100",
+  "id": "far-thigh",
+  "view": "front",
+  "across": "plan"
+ },
+ {
+  "op": "solid",
+  "scale": "100",
+  "id": "far-thigh",
+  "view": "plan",
+  "across": "front",
+  "order": [
+   "extrude",
+   "revolve",
+   "view-sweep"
+  ]
+ },
+ {
+  "op": "solid",
+  "scale": "100",
+  "id": "far-shank",
+  "view": "front",
+  "across": "plan"
+ },
+ {
+  "op": "solid",
+  "scale": "100",
+  "id": "far-shank",
+  "view": "plan"
+ },
+ {
+  "op": "solid",
+  "scale": "100",
+  "id": "far-hock",
+  "view": "front",
+  "across": "plan"
+ },
+ {
+  "op": "solid",
+  "scale": "100",
+  "id": "far-hock",
+  "view": "plan",
+  "across": "front",
+  "order": [
+   "extrude",
+   "revolve",
+   "view-sweep"
+  ]
+ },
+ {
+  "op": "solid",
+  "scale": "100",
+  "id": "far-humerus",
+  "view": "front",
+  "across": "plan"
+ },
+ {
+  "op": "solid",
+  "scale": "100",
+  "id": "far-humerus",
+  "view": "plan"
+ },
+ {
+  "op": "solid",
+  "scale": "100",
+  "id": "far-forearm",
+  "view": "front",
+  "across": "plan"
+ },
+ {
+  "op": "solid",
+  "scale": "100",
+  "id": "far-forearm",
+  "view": "plan",
+  "across": "front",
+  "order": [
+   "extrude",
+   "revolve",
+   "view-sweep"
+  ]
+ },
+ {
+  "op": "solid",
+  "scale": "100",
+  "id": "near-thigh",
+  "view": "front",
+  "across": "plan"
+ },
+ {
+  "op": "solid",
+  "scale": "100",
+  "id": "near-thigh",
+  "view": "plan",
+  "across": "front",
+  "order": [
+   "extrude",
+   "revolve",
+   "view-sweep"
+  ]
+ },
+ {
+  "op": "solid",
+  "scale": "100",
+  "id": "near-shank",
+  "view": "front",
+  "across": "plan"
+ },
+ {
+  "op": "solid",
+  "scale": "100",
+  "id": "near-shank",
+  "view": "plan"
+ },
+ {
+  "op": "solid",
+  "scale": "100",
+  "id": "near-hock",
+  "view": "front",
+  "across": "plan"
+ },
+ {
+  "op": "solid",
+  "scale": "100",
+  "id": "near-hock",
+  "view": "plan",
+  "across": "front",
+  "order": [
+   "extrude",
+   "revolve",
+   "view-sweep"
+  ]
+ },
+ {
+  "op": "solid",
+  "scale": "100",
+  "id": "near-humerus",
+  "view": "front",
+  "across": "plan"
+ },
+ {
+  "op": "solid",
+  "scale": "100",
+  "id": "near-humerus",
+  "view": "plan"
+ },
+ {
+  "op": "solid",
+  "scale": "100",
+  "id": "near-forearm",
+  "view": "front",
+  "across": "plan"
+ },
+ {
+  "op": "solid",
+  "scale": "100",
+  "id": "near-forearm",
+  "view": "plan",
+  "across": "front",
+  "order": [
+   "extrude",
+   "revolve",
+   "view-sweep"
+  ]
+ },
+ {
+  "op": "solid",
+  "scale": "100",
+  "id": "hindbody",
+  "view": "front",
+  "across": "plan"
+ },
+ {
+  "op": "solid",
+  "scale": "100",
+  "id": "midbody",
+  "view": "front",
+  "across": "plan"
+ },
+ {
+  "op": "solid",
+  "scale": "100",
+  "id": "midbody",
+  "view": "plan"
+ },
+ {
+  "op": "solid",
+  "scale": "100",
+  "id": "chest",
+  "view": "front",
+  "across": "plan"
+ },
+ {
+  "op": "solid",
+  "scale": "100",
+  "id": "chest",
+  "view": "plan"
+ },
+ {
+  "op": "solid",
+  "scale": "100",
+  "id": "neck",
+  "view": "front",
+  "across": "plan"
+ },
+ {
+  "op": "solid",
+  "scale": "100",
+  "id": "neck",
+  "view": "plan",
+  "across": "front",
+  "order": [
+   "extrude",
+   "revolve",
+   "view-sweep"
+  ]
+ },
+ {
+  "op": "solid",
+  "scale": "100",
+  "id": "jaw",
+  "view": "front",
+  "across": "plan"
+ },
+ {
+  "op": "solid",
+  "scale": "100",
+  "id": "jaw",
+  "view": "plan"
+ },
+ {
+  "op": "solid",
+  "scale": "100",
+  "id": "far-ear",
+  "view": "front",
+  "across": "plan"
+ },
+ {
+  "op": "solid",
+  "scale": "100",
+  "id": "near-ear",
+  "view": "front",
+  "across": "plan"
+ },
+ {
+  "op": "solid",
+  "scale": "200",
+  "id": "hindbody",
+  "view": "front",
+  "across": "plan"
+ },
+ {
+  "op": "solid",
+  "scale": "200",
+  "id": "hindbody",
+  "view": "plan",
+  "strict": true,
+  "limit": 1
+ },
+ {
+  "op": "solid",
+  "scale": "200",
+  "id": "chest",
+  "view": "plan"
+ },
+ {
+  "op": "solid",
+  "scale": "200",
+  "id": "neck",
+  "view": "front",
+  "across": "plan"
+ },
+ {
+  "op": "solid",
+  "scale": "200",
+  "id": "neck",
+  "view": "plan",
+  "across": "front",
+  "order": [
+   "extrude",
+   "revolve",
+   "view-sweep"
+  ]
+ },
+ {
+  "op": "solid",
+  "scale": "200",
+  "id": "near-ear",
+  "view": "front",
+  "across": "plan"
+ },
+ {
+  "op": "solid",
+  "scale": "200",
+  "id": "far-ear",
+  "view": "front",
+  "across": "plan"
+ }
+]

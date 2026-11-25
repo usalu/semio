@@ -135,7 +135,7 @@ export async function registerLevelContextTests(vitest: Tests1Vitest, dependenci
       expect(shellFloorPaints({ level: "window", fill: "surface" })).toBe(true);
     });
 
-    it("Layout paints one continuous base floor; navbar, footer, canvas, and mode-body stay transparent over it", () => {
+    it("Layout paints one continuous base floor; navbar and footer are panel-level glass bands above it; canvas and mode-body stay transparent over it", () => {
       const { container } = render(
         <Layout
           navbar={<Navbar items={[{ key: "n", content: "Nav" }]} showFullscreenToggle={false} />}
@@ -147,12 +147,14 @@ export async function registerLevelContextTests(vitest: Tests1Vitest, dependenci
       expect(layout?.getAttribute("data-level")).toBe("base");
       expect(layout?.className).toContain("ui-surface");
       const navbar = container.querySelector('[data-slot="navbar"]');
-      expect(navbar?.getAttribute("data-level")).toBe("base");
-      expect(navbar?.className).toContain("bg-transparent");
+      expect(navbar?.getAttribute("data-level")).toBe("panel");
+      expect(navbar?.hasAttribute("data-glass-chip")).toBe(true);
+      expect(navbar?.className).toContain("ui-glass");
       expect(navbar?.className).not.toContain("ui-surface");
       const footer = container.querySelector('[data-slot="footer"]');
-      expect(footer?.getAttribute("data-level")).toBe("base");
-      expect(footer?.className).toContain("bg-transparent");
+      expect(footer?.getAttribute("data-level")).toBe("panel");
+      expect(footer?.hasAttribute("data-glass-chip")).toBe(true);
+      expect(footer?.className).toContain("ui-glass");
       expect(footer?.className).not.toContain("ui-surface");
       const modeBody = container.querySelector('[data-slot="mode-body"]');
       expect(modeBody?.getAttribute("data-level")).toBe("base");
@@ -160,9 +162,12 @@ export async function registerLevelContextTests(vitest: Tests1Vitest, dependenci
       expect(modeBody?.className).not.toContain("ui-surface");
     });
 
-    it("Navbar, Footer, Canvas, and Mode-body paint ui-surface at base when used standalone outside Layout", () => {
-      expect(renderToStaticMarkup(<Navbar items={[{ key: "n", content: "Nav" }]} showFullscreenToggle={false} />)).toContain("ui-surface");
-      expect(renderToStaticMarkup(<Footer items={[{ key: "f", content: "Foot" }]} />)).toContain("ui-surface");
+    it("Navbar and Footer paint ui-glass at panel level and Canvas and Mode-body paint ui-surface at base when used standalone outside Layout", () => {
+      for (const markup of [renderToStaticMarkup(<Navbar items={[{ key: "n", content: "Nav" }]} showFullscreenToggle={false} />), renderToStaticMarkup(<Footer items={[{ key: "f", content: "Foot" }]} />)]) {
+        expect(markup).toContain("ui-glass");
+        expect(markup).toContain('data-level="panel"');
+        expect(markup).not.toContain("ui-surface");
+      }
       expect(renderToStaticMarkup(<Canvas>c</Canvas>)).toContain("ui-surface");
       const { container } = render(<Mode windows={[{ id: "w", title: uiDataLabel("W"), iconId: "app-window", children: <div>Body</div> }]} activeWindowId="w" onActiveWindowChange={() => {}} />);
       expect(container.querySelector('[data-slot="mode-body"]')?.className).toContain("ui-surface");

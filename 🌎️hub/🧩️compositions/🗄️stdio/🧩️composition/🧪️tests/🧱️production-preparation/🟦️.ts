@@ -16,7 +16,7 @@ for (const row of cases.cases) test(`production preparation isolates examples: $
   const scratch = mkdtempSync(join(outputs, "stdio-production-"));
   try {
     const owners = JSON.parse(readFileSync(join(owner, "🧩️composition/🔣️.json"), "utf8")).owners;
-    const paths = ["🧩️composition/🔣️.json", "📇️publication/📜️native-catalog.json", "📇️publication/🔣️.json", CATALOG_MANIFEST, BRIDGE_MANIFEST, ...owners.flatMap((entry: { root: string; main: boolean }) => entry.main ? ["📦️packages/🦀️rust/Cargo.toml", COMPONENT_MANIFEST, "🧩️component/🦀️.rs"] : [join(dirname(entry.root), "📦️packages/🦀️rust/Cargo.toml"), join(dirname(entry.root), COMPONENT_MANIFEST), join(dirname(entry.root), "🧩️component/🦀️.rs")])];
+    const paths = ["🧩️composition/🔣️.json", "📇️publication/📜️native-catalog.json", "📇️publication/🔣️.json", CATALOG_MANIFEST, BRIDGE_MANIFEST, ...owners.flatMap((entry: { root: string; main: boolean }) => entry.main ? ["📦️packages/🦀️rust/Cargo.toml", COMPONENT_MANIFEST, "🧩️component/🦀️.rs"] : [join(dirname(entry.root), "📦️packages/🦀️rust/Cargo.toml"), join(dirname(entry.root), COMPONENT_MANIFEST), join(dirname(entry.root), "🧩️component/🦀️.rs")]), ...owners.flatMap((entry: { shards: { root: string }[] }) => entry.shards.map((shard) => join(dirname(shard.root), "📦️packages/🦀️rust/Cargo.toml")))];
     for (const path of paths) {
       const target = join(scratch, path);
       mkdirSync(dirname(target), { recursive: true });
@@ -61,5 +61,28 @@ for (const row of cases.cases) test(`production preparation isolates examples: $
     expect(writes).toBe(cases.expectedExampleWrites);
   } finally {
     rmSync(scratch, { recursive: true, force: true });
+  }
+});
+
+test("every runtime shard of an owner is one deployable component: the hub registers it by its crate name in shard order and its component crate builds its own cdylib", () => {
+  const owners = JSON.parse(readFileSync(join(owner, "🧩️composition/🔣️.json"), "utf8")).owners as { id: string; root: string; shards: { root: string; variants: string[] }[] }[];
+  const sharded = owners.filter(entry => entry.shards.length > 0);
+  expect(sharded.map(entry => entry.id)).toContain("stdio-pdf");
+  for (const entry of sharded) {
+    const hub = readFileSync(join(owner, entry.root), "utf8");
+    const registered = [...hub.matchAll(/builder = builder\.component\("([^"]+)"\);/gu)].map(match => match[1]!);
+    const crates = entry.shards.map(shard => (toml.parse(readFileSync(join(owner, dirname(shard.root), "📦️packages/🦀️rust/Cargo.toml"), "utf8")) as any).package.name as string);
+    expect(registered, entry.id).toEqual(crates);
+    for (const [index, shard] of entry.shards.entries()) {
+      const component = toml.parse(readFileSync(join(owner, dirname(shard.root), COMPONENT_MANIFEST), "utf8")) as any;
+      expect(component.package.name, entry.id).toBe(`${crates[index]}-component`);
+      expect(component.lib["crate-type"], entry.id).toEqual(["cdylib"]);
+      const entrypoint = readFileSync(join(owner, dirname(shard.root), "🧩️component/🦀️.rs"), "utf8");
+      expect(entrypoint, entry.id).toContain(`${crates[index]!.replaceAll("-", "_")}::plugin`);
+      const shardRoot = readFileSync(join(owner, shard.root), "utf8");
+      expect(shardRoot, entry.id).toContain(`builder.component(${JSON.stringify(crates[index])})`);
+      for (const variant of shard.variants) expect(shardRoot, `${entry.id} ${variant}`).toContain(`${variant}(`);
+    }
+    expect(new Set(registered).size, entry.id).toBe(registered.length);
   }
 });

@@ -115,9 +115,22 @@ describe("🧬️ schema conformance", () => {
     expect(schema.$defs.AssetDocument.properties.version.const).toBe(twin.SCHEMA_VERSION);
   });
 
-  it("builds Shape from exactly the six geometries (the five planar ones and the member)", () => {
+  it("builds Shape from exactly the seven geometries (the five planar ones, the member and the loft)", () => {
     const kinds = schema.$defs.Shape.oneOf.map((branch: any) => branch.properties.kind.const);
-    expect(kinds).toEqual(["capsule", "ellipse", "rect", "poly", "path", "member"]);
+    expect(kinds).toEqual(["capsule", "ellipse", "rect", "poly", "path", "member", "loft"]);
     for (const branch of schema.$defs.Shape.oneOf) for (const common of ["id", "bone", "role", "z", "filled", "tone"]) expect(branch.required).toContain(common);
+  });
+
+  it("accepts a loft of two or more sections in a catalog-shaped front shape, states its sections once for shapes and volumes and rejects a single section, a planar member or a solid hint on it", () => {
+    const sections = [{ at: [0, 0, 0], rx: 0.1, ry: 0.15, rotation: [0.5, 0.5, 0.5, 0.5] }, { at: [0.45, 0, 0], rx: 0.08, ry: 0.12, exponent: 3 }];
+    const loft = (value: Record<string, unknown>) => asset(patch(walker, [{ op: "replace", path: "/representations/50/geometry/front/id=torso", value: { id: "torso", kind: "loft", bone: "torso", role: "body", z: 1, filled: true, tone: 0.5, ...value } }]));
+    expect(loft({ sections })).toBe(true);
+    expect(loft({ sections, weights: [{ bone: "torso", weight: 1 }] })).toBe(true);
+    expect(loft({ sections: sections.slice(0, 1) })).toBe(false);
+    expect(loft({ sections, points: [[0, 0], [1, 0], [1, 1]] })).toBe(false);
+    expect(loft({ sections, solid: { kind: "extruded", sweep: "w", z0: -0.1, z1: 0.1 } })).toBe(false);
+    expect(loft({})).toBe(false);
+    for (const name of ["VolumeSolid", "ThermalSolid", "StructuralSolid"]) expect(schema.$defs[name].oneOf.find((branch: any) => branch.properties.kind.const === "loft").properties.sections.items, name).toEqual({ $ref: "#/$defs/LoftSection" });
+    expect(schema.$defs.Shape.oneOf.find((branch: any) => branch.properties.kind.const === "loft").properties.sections.items).toEqual({ $ref: "#/$defs/LoftSection" });
   });
 });

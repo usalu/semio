@@ -34,6 +34,7 @@ import {readOthersWantsV1,wantsLimitV1,writeWantsV1} from "./🩹️blobs/🟦�
 import {CompactTableV1,ReplicaBookV1,encoder,hashText,localPathsV1,pageBytes,racyMilliseconds,settleHeap,widen,type LocalPathsV1,type ReplicaStateEntryV1} from "./📇️book/🟦️.ts";
 export {CompactTableV1,ReplicaBookV1,localPathsV1,type LocalPathsV1} from "./📇️book/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
+import {parseProcessIdentityV1,processHolderAliveV1,ownProcessIdentityV1} from "../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts";
 
 /** 🎚️ The explicit inputs of every replica operation: both directories, the identity of this machine and the tunables that default to the topology's `replica` block. `modeless` (default: Windows) says that the volume cannot represent the executable bit: such a replica never reads the bit from disk, keeps the bit of the manifest entry when a file changes, takes it from the staged index entry for a new file and never writes it. */
 export type ReplicaOptionsV1=Readonly<{concurrentEditMilliseconds?:number;storeStuckRestartMilliseconds?:number;rescueMilliseconds?:number;rescueAgeMilliseconds?:number;gitCheckMilliseconds?:number;gitHealMilliseconds?:number;worktree:string;storeRoot:string;originId:string;groupId:string;pollMilliseconds?:number;scanSeconds?:number;debounceMilliseconds?:number;retentionDays?:number;concurrency?:number;persistMilliseconds?:number;modeless?:boolean;symlinks?:boolean;caseInsensitive?:boolean;lock?:boolean;now?:()=>number;attestMilliseconds?:number;restartStableMilliseconds?:number;codeRoot?:string;gitState?:(worktree:string,signal?:AbortSignal)=>Promise<AttesterGitV1>;gitGuards?:(worktree:string,signal?:AbortSignal)=>Promise<FleetGuardsV1|null>;guardsMilliseconds?:number;guardsMinimumMilliseconds?:number;gitView?:(worktree:string,signal?:AbortSignal)=>Promise<AttesterViewV1|null>;viewMilliseconds?:number;viewDebounceMilliseconds?:number;deltaDebounceMilliseconds?:number;deltaLimit?:number;watch?:boolean;hintMilliseconds?:number;hotMilliseconds?:number;sweepMilliseconds?:number;walkSeconds?:number;watchRoot?:string;selfCheck?:(digest:string,signal?:AbortSignal)=>Promise<RestartCheckV1>;selfCheckMilliseconds?:number;restartJitterMilliseconds?:number;minimumUptimeMilliseconds?:number;storeDeadlineMilliseconds?:number;storeProbe?:(storeRoot:string)=>Promise<boolean>;storeGate?:()=>Promise<void>;logFiles?:readonly string[];compaction?:CompactionSettingsV1;fallback?:FleetFallbackV1;admit?:(digest:string,signal?:AbortSignal)=>Promise<Readonly<{ok:true}>|Readonly<{ok:false;reason:string}>>;publishCodeMilliseconds?:number;entryDirectory?:string;entryMilliseconds?:number;codeKeep?:number;returnMilliseconds?:number;driftMilliseconds?:number;opened?:(replica:ReplicaV1)=>void;sidecars?:SidecarSettingsV1}>;
@@ -487,8 +488,6 @@ export class ReplicaBusyV1 extends Error{
  constructor(pid:number,file:string){super(`Another replica daemon (pid ${pid}) holds ${file}`);this.name="ReplicaBusyV1";this.pid=pid;}
 }
 
-const alive=(pid:number):boolean=>{try{process.kill(pid,0);return true;}catch(error){return code(error)==="EPERM";}};
-
 /** 🪪️ Raised when the origin id of this machine is already owned by another machine: `origins/<origin>/home.json` carries the key of the machine that published first. Two machines for one origin would truncate each other's journal, so the second one is refused instead. */
 export class OriginTakenV1 extends Error{
  readonly originId:string;
@@ -507,16 +506,16 @@ async function readLock(file:string):Promise<Readonly<{pid:number;stale:boolean}
  let text:string;
  try{text=await readFile(file,"utf8");}catch(error){if(gone(error))return undefined;throw error;}
  try{
-  const value=JSON.parse(text) as {pid?:unknown;startedMs?:unknown;bootMs?:unknown;hb?:unknown};
-  if(typeof value.pid==="number"&&Number.isSafeInteger(value.pid)&&value.pid>0){
-   const own=value.pid===process.pid;
-   let stale=own?typeof value.startedMs!=="number"||value.startedMs<Date.now()-process.uptime()*1000-1000:!alive(value.pid);
+  const value=JSON.parse(text) as {pid?:unknown;startMs?:unknown;bootMs?:unknown;hb?:unknown},holder=parseProcessIdentityV1(value);
+  if(holder!==undefined){
+   const own=holder.pid===process.pid;
+   let stale=!processHolderAliveV1(holder);
    if(!stale&&!own){
     const age=Date.now()-((await stat(file).catch(()=>undefined))?.mtimeMs??Date.now());
-    if(value.hb===true&&age>staleLockMilliseconds)stale=(await readBeatV1(dirname(dirname(dirname(file))),Date.now()))?.pid!==value.pid;
+    if(value.hb===true&&age>staleLockMilliseconds)stale=(await readBeatV1(dirname(dirname(dirname(file))),Date.now()))?.pid!==holder.pid;
     else if(typeof value.bootMs==="number"&&Math.abs(value.bootMs-bootMilliseconds())>120_000&&age>30_000)stale=true;
    }
-   return {pid:value.pid,stale};
+   return {pid:holder.pid,stale};
   }
  }catch{}
  const info=await stat(file).catch(()=>undefined);
@@ -535,7 +534,7 @@ async function takeSteal(file:string):Promise<boolean>{
 
 async function acquireLock(paths:LocalPathsV1,originId:string):Promise<()=>Promise<void>>{
  await mkdir(paths.directory,{recursive:true});
- const body=JSON.stringify({version:1,pid:process.pid,startedMs:Date.now(),originId,bootMs:bootMilliseconds(),hb:true}),steal=`${paths.lock}.steal`;
+ const body=JSON.stringify({version:1,...ownProcessIdentityV1(),originId,bootMs:bootMilliseconds(),hb:true}),steal=`${paths.lock}.steal`;
  for(let attempt=0;attempt<20;attempt++){
   try{
    const handle=await open(paths.lock,"wx");
@@ -3007,7 +3006,7 @@ export async function runV1(options:ReplicaOptionsV1,outer:AbortSignal,sink:Repl
   if(result.action.startsWith("refused"))noteOnce(replica,"entry-boot:update",{event:"error",stage:"entry",message:`${result.action}: ${result.reason??result.installed??""}`});
   else{resolved(replica,"entry-boot:update");if(result.action==="installed")replica.say({event:"sync",stage:"entry",result:`boot program ${result.version} installed`});if(options.entryDirectory===undefined)migrateAgentV1({home:homedir(),entryDirectory});}
   if(options.entryDirectory===undefined)keepService(entryDirectory);
-  if(options.entryDirectory===undefined&&process.platform==="darwin")try{ensureLauncherConsentV1({root:settings.worktree,probeScript:fileURLToPath(new URL("../../📚️library/🏗️build/🏡️resident/🔐️consent/🔎️probe/🟨️.mjs",import.meta.url)),run:(program,args)=>{const outcome=spawnSync(program,[...args],{encoding:"utf8",timeout:10_000});return{status:outcome.status??1,stdout:outcome.stdout??""};},waitMilliseconds:0});}catch{}
+  if(options.entryDirectory===undefined&&process.platform==="darwin")try{ensureLauncherConsentV1({root:settings.worktree,probeScript:fileURLToPath(new URL("../../📚️library/🏗️build/🏡️resident/🔐️consent/🔎️probe/🟨️.mjs",import.meta.url)),run:(program,args)=>{const outcome=spawnSync(program,[...args],{windowsHide:true,encoding:"utf8",timeout:10_000});return{status:outcome.status??1,stdout:outcome.stdout??""};},waitMilliseconds:0});}catch{}
  };
  void booted.then(()=>keepEntry()).catch(()=>{});
  const entryTimer=setInterval(()=>{void keepEntry().catch(()=>{});},options.entryMilliseconds??3_600_000);entryTimer.unref?.();

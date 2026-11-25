@@ -39,7 +39,7 @@ export function buildPluginHandle({ pluginId, manifest, packageId, componentSha2
         requireOpening();
         const phase = declareWgpuBootSubphase(`shell-boot:create-app:${pluginId}`);
         try {
-        await registry.activate(pluginId, actorId, activationReasonForAppId(appId));
+        await registry.activate(pluginId, actorId, activationReasonForAppId(appId), appId);
         requireOpening();
         state.eventSeq += 1;
         const lifecycle = shardClient.captureInstanceLifecycle(actorId, instanceId);

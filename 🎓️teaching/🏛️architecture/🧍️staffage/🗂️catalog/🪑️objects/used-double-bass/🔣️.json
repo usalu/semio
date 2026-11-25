@@ -13,21 +13,111 @@
    "de": "Ein gebrauchter 3/4-Orchesterkontrabass der Werkstattbauart mit flachem Boden, wie ihn ein Gebrauchtinstrumentenhandel anbietet: 1,80 m von der Stachelbuchse bis zur Schnecke, Korpus 1,10 m mit Bügen von 0,68, 0,38 und 0,51 m und 0,20 m Zargen, 1,05 m Mensur, etwa 10 kg, eingerichtet mit vier Stahlsaiten über einem 160-mm-Steg; er liegt auf der Bass-Zarge in seiner aufgezippten 20-mm-Polsterhülle mit dem am Stachel festgeklemmten Zwillings-Kontrabassrad, daneben sein höhenverstellbarer Kontrabasshocker. Kolophoniumstaub unter den Saiten, an Oberbug und Daumenlage durchgegriffener Lack, ein reparierter Riss im Unterbug, eine Randabplatzung, Lagenmarkierungen aus Klebeband auf dem Griffbrett, eine geflickte und abgestoßene Hülle und ein eingerissener Hockersitz sind, was sein Gebrauch hinterlassen hat."
   },
   "tags": [
-   "used",
-   "instrument",
-   "music",
-   "second-hand",
-   "strings",
-   "double-bass",
-   "bowed",
-   "orchestral",
-   "spruce",
-   "maple",
-   "ebony",
-   "gig-bag",
-   "bass-wheel",
-   "stool",
-   "passive"
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "instrument",
+    "title": {
+     "en": "instrument",
+     "de": "Instrument"
+    }
+   },
+   {
+    "id": "music",
+    "title": {
+     "en": "music",
+     "de": "Musik"
+    }
+   },
+   {
+    "id": "second-hand",
+    "title": {
+     "en": "second-hand",
+     "de": "Second-Hand"
+    }
+   },
+   {
+    "id": "strings",
+    "title": {
+     "en": "strings",
+     "de": "Saiteninstrumente"
+    }
+   },
+   {
+    "id": "double-bass",
+    "title": {
+     "en": "double bass",
+     "de": "Kontrabass"
+    }
+   },
+   {
+    "id": "bowed",
+    "title": {
+     "en": "bowed",
+     "de": "gestrichen"
+    }
+   },
+   {
+    "id": "orchestral",
+    "title": {
+     "en": "orchestral",
+     "de": "orchestral"
+    }
+   },
+   {
+    "id": "spruce",
+    "title": {
+     "en": "spruce",
+     "de": "Fichte"
+    }
+   },
+   {
+    "id": "maple",
+    "title": {
+     "en": "maple",
+     "de": "Ahorn"
+    }
+   },
+   {
+    "id": "ebony",
+    "title": {
+     "en": "ebony",
+     "de": "Ebenholz"
+    }
+   },
+   {
+    "id": "gig-bag",
+    "title": {
+     "en": "gig bag",
+     "de": "Gigbag"
+    }
+   },
+   {
+    "id": "bass-wheel",
+    "title": {
+     "en": "bass wheel",
+     "de": "Basswheel"
+    }
+   },
+   {
+    "id": "stool",
+    "title": {
+     "en": "stool",
+     "de": "Hocker"
+    }
+   },
+   {
+    "id": "passive",
+    "title": {
+     "en": "passive",
+     "de": "passiv"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage instrument authors (used instruments wave, row 07)",

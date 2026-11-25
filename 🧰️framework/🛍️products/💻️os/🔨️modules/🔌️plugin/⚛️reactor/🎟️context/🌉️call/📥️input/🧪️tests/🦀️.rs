@@ -38,7 +38,6 @@ fn check_bounded_actor_input() {
     let expected_open = &poll["wire"]["Poll"]["events"][0]["instanceOpen"];
     let stock = RetainedCloneGrant { maximum_items: 1_000_000, maximum_copy_bytes: 32_000_000, maximum_capacity_bytes: 32_000_000, maximum_release_bytes: 32_000_000, maximum_depth: 128 };
     let grant = RetainedCloneGrant { maximum_items: 256, maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 1 << 20, maximum_depth: 64 };
-    let initial = RetainedCloneGrant { maximum_copy_bytes: 131_072, maximum_capacity_bytes: 131_072, ..grant };
     let calls = [true, false].map(|batch| {
         let mut caller = OriginalJobFixtureCaller::admit(OperationId(945), Generation(2), stock, clock, 100_000_000, 10_000_000);
         caller.retain_dispatch().unwrap();
@@ -55,9 +54,8 @@ fn check_bounded_actor_input() {
         );
         let mut checked_capacity = false;
         let first_ready = (1..1000u32).find(|step| {
-            let turn_grant = if checked_capacity { grant } else { initial };
-            let admission = funded(&mut caller, turn_grant, |cx| {
-                if batch { receiver.advance_in_turn(&wire, cx) }
+            let admission = funded(&mut caller, grant, |cx| {
+                if batch && checked_capacity { receiver.advance_in_turn(&wire, cx) }
                 else { receiver.advance((!receiver.input_returned()).then_some(wire.as_slice()), cx) }
             });
             assert!(matches!(admission, InputAdmission::Pending | InputAdmission::Ready), "step {step}, batch {batch}, phase {:?}, value {:?}, receiving {:?}, settlement {:?}", receiver.decoder.receiver().map(|decoder| decoder.phase()), receiver.outcome().and_then(|raw| raw.value.as_ref().err()).map(|error| match error {
@@ -65,7 +63,7 @@ fn check_bounded_actor_input() {
                 OriginalJsonOutputFailure::Stored(_) => receiver.decoder.failure().and_then(|failure| failure.primary().primary.as_ref().or(failure.primary().quote_refusal.as_ref()).or(failure.primary().allocation_refusal.as_ref())).map_or("stored", |error| error.message.as_ref()),
             }), receiver.outcome().and_then(|raw| receiver.refusal(raw)).map(|error| error.primary.message()), receiver.settlement.as_ref().and_then(ControlledRetirement::original).and_then(|raw| raw.value.as_ref().err()).map(|error| error.message.as_ref()));
             if !checked_capacity {
-                if let Some(demand) = receiver.decoder.receiver().and_then(|decoder| decoder.demands(&wire, grant.maximum_copy_bytes, u64::MAX).ok()).filter(|demand| demand.capacity_bytes > initial.maximum_capacity_bytes) {
+                if let Some(demand) = receiver.decoder.receiver().and_then(|decoder| decoder.demands(&wire, grant.maximum_copy_bytes, u64::MAX).ok()).filter(|demand| demand.capacity_bytes > 0) {
                     let exact = RetainedCloneGrant { maximum_capacity_bytes: demand.capacity_bytes, ..grant };
                     let short = RetainedCloneGrant { maximum_capacity_bytes: demand.capacity_bytes - 1, ..exact };
                     assert_eq!(funded(&mut caller, short, |cx| receiver.advance_in_turn(&wire, cx)), InputAdmission::Pending);
@@ -355,8 +353,9 @@ fn check_compact_job_case(wire:&[u8], expected:Option<serde_json::Value>, cancel
         assert!(matches!(final_state,InputAdmission::Pending)&&reads>0&&reads<wire.len()-64);
     }else if let Some(expected)=expected {
         let job=expected["job"].as_u64().unwrap();
-        let expected:ActorInput=serde_json::from_value(serde_json::json!({"Job":expected})).unwrap();
-        assert_eq!(serde_json::to_value(receiver.input().unwrap()).unwrap(),serde_json::to_value(expected).unwrap());
+        let expected:semio_framework_actor::OriginalJobSource=serde_json::from_value(expected).unwrap();
+        let Some(ActorInput::Job(actual))=receiver.input()else{panic!("expected compact Job")};
+        assert_eq!(serde_json::to_value(actual).unwrap(),serde_json::to_value(expected).unwrap());
         if wire.len()>16_384 { assert!(items<1_000,"retained item count grew with the payload octets: {items}"); }
         let denied=RetainedCloneGrant{maximum_copy_bytes:0,..stock};
         assert!(!funded(&mut caller,denied,|cx|receiver.prepare_job(job,cx)));

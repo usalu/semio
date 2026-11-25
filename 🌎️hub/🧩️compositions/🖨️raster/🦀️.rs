@@ -12,8 +12,20 @@ pub use semio_s_artifact_raster_raster_editor::raster_mounted_owner_policy;
 semio_framework_dispatch_macros::dyn_enum_close! {
     /// 🗃️ Closed runtime app fleet for the raster editor and viewer surfaces.
     pub enum RasterApps: PluginApp {
-        RasterEditor(OriginalVcsApp<EditorApp<semio_s_artifact_raster_raster_editor::RasterPlayApp>,semio_s_artifact_stdio_semio::SemioMembers>),
-        RasterViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_raster_raster_viewer::RasterViewer>>),
+        RasterEditor(semio_hub_raster_editor_app::RasterEditorApps),
+        RasterViewer(semio_hub_raster_viewer_app::RasterViewerApps),
+    }
+}
+
+impl From<OriginalVcsApp<EditorApp<semio_s_artifact_raster_raster_editor::RasterPlayApp>,semio_s_artifact_stdio_semio::SemioMembers>> for RasterApps {
+    fn from(app: OriginalVcsApp<EditorApp<semio_s_artifact_raster_raster_editor::RasterPlayApp>,semio_s_artifact_stdio_semio::SemioMembers>) -> Self {
+        Self::RasterEditor(app.into())
+    }
+}
+
+impl From<VcsArtifactApp<ViewerApp<semio_s_artifact_raster_raster_viewer::RasterViewer>>> for RasterApps {
+    fn from(app: VcsArtifactApp<ViewerApp<semio_s_artifact_raster_raster_viewer::RasterViewer>>) -> Self {
+        Self::RasterViewer(app.into())
     }
 }
 //#endregion 🗃️Apps

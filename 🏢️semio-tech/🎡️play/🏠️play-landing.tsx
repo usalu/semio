@@ -107,7 +107,7 @@ const PLAY_SPECS = new Map(PLAY_PANES.map((pane) => [pane.id, pane]));
 
 /** 🃏️ An app's card, in its own cell of the card grid (when swiping, the overview centres it on its page itself). */
 function renderPlayCard(page: LayeredPane, state: LayeredCardState) {
-  const card = <PlayCard pane={PLAY_SPECS.get(page.id)!} lifted={state.revealed} onClick={state.open} />;
+  const card = <PlayCard pane={PLAY_SPECS.get(page.id)!} onClick={state.open} />;
   if (state.mode === "swipe") return card;
   const cell = PLAY_CELLS[page.id]!;
   return (

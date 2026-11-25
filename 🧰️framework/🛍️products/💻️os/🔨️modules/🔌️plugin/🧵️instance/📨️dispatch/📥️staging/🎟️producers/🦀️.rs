@@ -18,7 +18,7 @@ use semio_framework::FaultFrom;
 use semio_plugin_decl_emission::ActionMeta;
 use semio_plugin_decl_app::tool_contract::{ArtifactReservedToolJob, ArtifactToolCompletion};
 use semio_plugin_operation::{ArtifactDocumentAuthority, ToolCancellationLease, ToolOperationKey};
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use crate::dispatch_bundle::DispatchCtx;
 use semio_plugin_job::reserved_jobs::{FrameworkReservedCommitPermit, QualifiedToolView};

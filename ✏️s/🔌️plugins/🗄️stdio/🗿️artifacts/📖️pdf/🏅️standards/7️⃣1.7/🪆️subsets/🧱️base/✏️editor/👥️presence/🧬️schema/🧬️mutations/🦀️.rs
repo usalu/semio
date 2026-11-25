@@ -13,3 +13,4 @@ pub enum PdfPresenceMutation {
     SetPresence(SetPresence),
 }
 dsl::original_pack_value_operation_receiving!(PdfPresenceMutation);
+dsl::artifact_persisted_binary_operation!(PdfPresenceMutation);

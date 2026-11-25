@@ -1,4 +1,5 @@
 #!/bin/zsh
+export PATH="/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🚪️shims:$PATH"  # managed cargo entry
 # usage: residue-run.sh <label> <crate-dir-relative-to-modules> <cargo test args...>
 T="/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️07/☀️23/GET-PROCESS-WORKING-END-TO-END"
 M="/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules"

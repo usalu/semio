@@ -28,6 +28,8 @@ semio-os-kernel = { path = "../../../../../📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-plugin-interaction = { path = "../../../🕹️interaction/📦️packages/🦀️rust" }
 semio-plugin-ownership = { path = "../../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
+semio-plugin-store-lifecycle = { path = "../../../♻️lifecycle/🧱️owner/📦️packages/🦀️rust" }
+semio-plugin-transient-publication = { path = "../../../🫧️transient/🧱️owner/📦️packages/🦀️rust" }
 semio-plugin-window-config = { path = "../../🎚️config/📦️packages/🦀️rust" }
 semio-plugin-window-config-original = { path = "../../🎚️config/🧿️original/📦️packages/🦀️rust" }
 semio-plugin-window-config-registry = { path = "../../🎚️config/🗂️registry/📦️packages/🦀️rust" }

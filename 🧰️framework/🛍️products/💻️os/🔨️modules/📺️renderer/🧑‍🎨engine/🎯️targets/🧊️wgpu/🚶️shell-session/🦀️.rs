@@ -82,6 +82,7 @@ pub use staged_session__identity_and_types::*;
 mod staged_session__pointer_input;
 #[path = "../../../🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🚶️session/🖼️chrome-frame-and-main-window/🦀️.rs"]
 mod staged_session__chrome_frame_and_main_window;
+pub use staged_session__chrome_frame_and_main_window::*;
 #[path = "../../../🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🚶️session/🗨️chrome-overlays-and-tour/🦀️.rs"]
 mod staged_session__chrome_overlays_and_tour;
 pub use staged_session__chrome_overlays_and_tour::*;

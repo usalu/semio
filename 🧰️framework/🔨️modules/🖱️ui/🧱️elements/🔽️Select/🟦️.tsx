@@ -21,7 +21,7 @@ import { glassClass } from "../../🔨️modules/🌈️surface-presentation/�
 import { Label } from "../🏷️Label/🟦️.tsx";
 import { useShellFloatingSurfaceHost } from "../🐚️ShellScope/🟦️.tsx";
 import { SurfaceScope, useLevel } from "../🌈️Surface/🟦️.tsx";
-import { CheckIconAlt, ChevronDownIconAlt, ChevronUpIcon, type IconSource, Icon } from "../🔣️Icons/🟦️.tsx";
+import { ChevronDownIconAlt, ChevronUpIcon, type IconSource, Icon } from "../🔣️Icons/🟦️.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🔎️Select
@@ -78,7 +78,7 @@ export interface SelectContentProps extends Omit<React.HTMLAttributes<HTMLDivEle
 export type SelectGroupProps = React.HTMLAttributes<HTMLDivElement>;
 export type SelectLabelProps = React.HTMLAttributes<HTMLDivElement>;
 export type SelectSeparatorProps = React.HTMLAttributes<HTMLDivElement>;
-export type SelectScrollButtonProps = React.HTMLAttributes<HTMLDivElement>;
+type SelectScrollButtonProps = React.HTMLAttributes<HTMLDivElement>;
 
 export interface SelectItemProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "id"> {
   id?: string;
@@ -736,7 +736,7 @@ const SelectContent = React.forwardRef<HTMLDivElement, SelectContentProps>(funct
     >
       <SurfaceScope level="menu" fill="glass">
         <SelectScrollUpButton />
-        <div ref={context.viewportRef} data-slot="select-viewport" className={cn("max-h-(--semio-select-content-available-height) overflow-y-auto p-single", position === "popper" && "w-full min-w-(--semio-select-trigger-width) scroll-my-single")}>
+        <div ref={context.viewportRef} data-slot="select-viewport" data-shared-border-cells="" data-orientation="vertical" className={cn("flex max-h-(--semio-select-content-available-height) flex-col overflow-y-auto", position === "popper" && "w-full min-w-(--semio-select-trigger-width)")}>
           {children}
         </div>
         <SelectScrollDownButton />
@@ -764,7 +764,7 @@ const SelectGroup = React.forwardRef<HTMLDivElement, SelectGroupProps>(function 
 /** 🏷️ Labels the nearest owned option group. */
 const SelectLabel = React.forwardRef<HTMLDivElement, SelectLabelProps>(function SelectLabel({ className, id, ...props }, forwardedRef) {
   const groupLabelId = React.useContext(SelectGroupContext);
-  return <div {...props} ref={forwardedRef} id={id ?? groupLabelId ?? undefined} data-slot="select-label" className={cn("text-muted-foreground p-single text-xs", className)} />;
+  return <div {...props} ref={forwardedRef} id={id ?? groupLabelId ?? undefined} data-slot="select-label" data-shared-border-cell="" className={cn("text-muted-foreground p-single text-xs", className)} />;
 });
 
 /** ✅️ Renders one stable owned option and delegates value authority to its root. */
@@ -779,6 +779,7 @@ const SelectItem = React.forwardRef<HTMLDivElement, SelectItemProps>(function Se
       {...props}
       ref={forwardedRef}
       {...sharedBorderlessBoxProps}
+      data-shared-border-cell=""
       id={itemId}
       role="option"
       aria-selected={selected}
@@ -788,9 +789,11 @@ const SelectItem = React.forwardRef<HTMLDivElement, SelectItemProps>(function Se
       data-text-value={textValue ?? nodeText(children)}
       data-state={selected ? "checked" : "unchecked"}
       data-highlighted={active ? "" : undefined}
+      data-active={active || undefined}
+      data-selected={selected || undefined}
       data-disabled={disabled ? "true" : undefined}
       className={cn(
-        "focus:text-emphasized [&_svg:not([class*='text-'])]:text-muted-foreground relative flex w-full items-center gap-single rounded-sm py-single pe-medium ps-single text-sm outline-hidden select-none data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-tiny *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-single",
+        "focus:text-emphasized [&_svg:not([class*='text-'])]:text-muted-foreground relative flex w-full min-h-(--chip-row-height)! items-center gap-single px-double text-sm outline-hidden select-none data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-tiny *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-single",
         "cursor-selectable",
         menuListItemClassName,
         className,
@@ -812,9 +815,6 @@ const SelectItem = React.forwardRef<HTMLDivElement, SelectItemProps>(function Se
         if (!event.defaultPrevented && !disabled) context.selectValue(value);
       }}
     >
-      <span aria-hidden className="absolute end-2 flex size-tiny.5 items-center justify-center">
-        {selected ? <CheckIconAlt className="size-tiny" /> : null}
-      </span>
       {icon ? (
         <span data-slot="select-item-icon" className="inline-flex shrink-0">
           <Icon icon={icon} size="small" />
@@ -827,7 +827,7 @@ const SelectItem = React.forwardRef<HTMLDivElement, SelectItemProps>(function Se
 
 /** ➖️ Separates option groups without entering the active-descendant set. */
 const SelectSeparator = React.forwardRef<HTMLDivElement, SelectSeparatorProps>(function SelectSeparator({ className, ...props }, forwardedRef) {
-  return <div {...props} ref={forwardedRef} role="separator" aria-orientation="horizontal" data-slot="select-separator" className={cn("bg-border pointer-events-none -mx-single my-single h-px", className)} />;
+  return <div {...props} ref={forwardedRef} role="separator" aria-orientation="horizontal" data-slot="select-separator" className={cn("pointer-events-none h-0 shrink-0", className)} />;
 });
 
 function scrollSelectViewport(context: SelectContextValue, direction: -1 | 1): void {
@@ -885,5 +885,5 @@ const SelectScrollDownButton = React.forwardRef<HTMLDivElement, SelectScrollButt
 });
 // #endregion 📋️Collection
 
-export { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectScrollDownButton, SelectScrollUpButton, SelectSeparator, SelectTrigger, SelectValue };
+export { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue };
 // #endregion 🔎️Select

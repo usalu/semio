@@ -2,10 +2,12 @@
   "version": 1,
   "pane": "generation3d",
   "graph": "[data-host-snapshot-json]",
+  "inspectionTab": "framework.panel.inspection",
   "controlKey": "procedural-play-inspector.value.input",
   "focusKey": "ArrowDown",
   "selectKey": " ",
-  "commitKey": "Tab",
+  "editKey": "Enter",
+  "commitKey": "Enter",
   "increment": 0.1,
   "history": {
     "undo": "ControlOrMeta+z",

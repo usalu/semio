@@ -489,7 +489,7 @@ export function RadarChart(props: { readonly name: string; readonly axes: readon
       </svg>
       <details className="min-w-0 text-sm">
         <summary {...sharedBorderlessBoxProps} className="course-target flex cursor-pointer items-center">{text("course.radar.table")}</summary>
-        <Records fold={28}>
+        <Records cell={false} fold={28}>
           <table {...TABLE.table} className="course-fold w-full border-collapse text-sm">
             <caption className="sr-only">{text("course.radar.label", { name })}</caption>
             <thead {...TABLE.group}>

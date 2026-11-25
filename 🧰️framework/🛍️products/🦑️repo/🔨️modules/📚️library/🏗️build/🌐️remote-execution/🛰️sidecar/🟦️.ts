@@ -6,6 +6,7 @@ import {applyServicePriorityV1,servicePriorityTextV1} from "./🪜️priority/�
 import {startSidecarIdleCompactionV1} from "../../🧹️cache-gc/🛌️idle/⏲️loop/🟦️.ts";
 import type {RemoteExecutionSidecarContextV1,RemoteExecutionSidecarRoleV1,SidecarWorkV1} from "./🧰️shared/🟦️.ts";
 import {sidecarHandsOverV1} from "./🧰️shared/🟦️.ts";
+import {ownProcessIdentityV1} from "../../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts";
 
 export {remoteExecutionPortsV1,remoteExecutionWorkerApiV1,sidecarHandsOverV1,settleSidecarSuccessorV1} from "./🧰️shared/🟦️.ts";
 export type {RemoteExecutionSidecarContextV1,RemoteExecutionSidecarRoleV1,SidecarWorkV1} from "./🧰️shared/🟦️.ts";
@@ -135,7 +136,7 @@ export async function runRemoteExecutionSidecarLauncherV1(role:RemoteExecutionSi
   setInterval(()=>{if(protocol.sidecarLeaseExpiredV1(lease,Date.now(),expire,startedMs)){process.stderr.write(`${new Date().toISOString()} ${role} lease not renewed for ${Math.round(expire/1000)} s, leaving\n`);stop();}},2000).unref();
  }
  if(record!==undefined&&record!==""){
-  const entrySha256=protocol.sidecarEntryHashV1(entry)??"0".repeat(64),name=environment.SEMIO_FLEET_SIDECAR??role,beat=():void=>{try{protocol.writeSidecarRecordV1(record,{version:1,name,pid:process.pid,startedMs,wallMs:Date.now(),entrySha256});}catch{}};
+  const entrySha256=protocol.sidecarEntryHashV1(entry)??"0".repeat(64),name=environment.SEMIO_FLEET_SIDECAR??role,beat=():void=>{try{protocol.writeSidecarRecordV1(record,{version:1,name,...ownProcessIdentityV1(),startedMs,wallMs:Date.now(),entrySha256});}catch{}};
   beat();setInterval(beat,protocol.sidecarProtocolV1.recordMilliseconds).unref();
   process.on("exit",()=>{try{if(protocol.readSidecarRecordV1(record)?.pid===process.pid)rmSync(record,{force:true});}catch{}});
  }

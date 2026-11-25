@@ -195,7 +195,7 @@ describe("♿️ the draft editor is named, operable by keyboard alone and says 
     const view = mountHistoryBody(draftBody(true), () => undefined);
     const rowOf = (text: string) => [...view.container.querySelectorAll<HTMLElement>("*")].find((element) => element.childElementCount === 0 && element.textContent === text) ?? null;
     const toneOf = (text: string) => Object.values(TREE_ROW_TONE_CLASSES).find((name) => rowOf(text)?.closest(`.${name}`)) ?? null;
-    expect(["Warning: Partially applied", "Error: Target missing", "Edited", "Draft: Drag selection · Error: Target missing", "Editing a mutation: Drag selection · Error"].map(toneOf)).toEqual(["text-warning", "text-destructive", null, "text-destructive", "text-destructive"]);
+    expect(["Warning: Partially applied", "Error: Target missing", "Edited", "Draft: Drag selection · Error: Target missing", "Editing a mutation: Drag selection · Error"].map(toneOf)).toEqual(["text-warning-ink", "text-destructive", null, "text-destructive", "text-destructive"]);
     for (const text of ["Warning: Partially applied", "Error: Target missing"]) expect(rowOf(text)?.closest("[id]")?.querySelector("svg"), text).not.toBeNull();
   });
 

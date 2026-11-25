@@ -13,8 +13,20 @@
       "de": "Eine kleine vollständige v2-Testfigur mit vier Darstellungen, einem Symbol, geschichteten thermischen Regionen, Atmung und einem Gehzyklus."
     },
     "tags": [
-      "test",
-      "human"
+      {
+        "id": "test",
+        "title": {
+          "en": "test",
+          "de": "Test"
+        }
+      },
+      {
+        "id": "human",
+        "title": {
+          "en": "human",
+          "de": "Mensch"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage core engine",

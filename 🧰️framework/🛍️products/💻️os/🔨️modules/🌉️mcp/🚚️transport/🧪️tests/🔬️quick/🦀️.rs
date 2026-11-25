@@ -1,6 +1,7 @@
 //! 🧱️ Transport_quick of the http-transport crate: The Streamable HTTP and bridge websocket transport.
 
 use std::io::Cursor;
+use std::io::Read;
 use std::io::Write;
 use std::net::TcpListener;
 use std::net::TcpStream;
@@ -111,6 +112,25 @@ fn eof_ends_the_loop_cleanly() {
     let mut transport = StdioTransport::new(input, output.clone(), &mut log);
     assert!(transport.serve(fresh_server()).is_ok());
     assert!(output.is_empty());
+}
+
+#[test]
+fn the_handshake_is_answered_before_the_server_exists_and_replayed_silently_into_it() {
+    let input = Cursor::new(b"{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"2025-06-18\",\"capabilities\":{}}}\n{\"jsonrpc\":\"2.0\",\"method\":\"notifications/initialized\"}\n{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/list\"}\n".to_vec());
+    let output = SharedWriter::default();
+    let mut log = Vec::new();
+    let mut transport = StdioTransport::new(input, output.clone(), &mut log);
+    let handshake = transport.answer_handshake_while_building();
+    let started = std::time::Instant::now();
+    while output.is_empty() && started.elapsed() < std::time::Duration::from_secs(10) {
+        std::thread::sleep(std::time::Duration::from_millis(5));
+    }
+    let early = output.text();
+    assert_eq!(early.lines().count(), 1, "initialize is answered while no server has been built yet");
+    assert_eq!(serde_json::from_str::<serde_json::Value>(early.lines().next().unwrap()).unwrap()["id"], 1);
+    transport.serve_after_handshake(fresh_server(), handshake).unwrap();
+    let ids: Vec<serde_json::Value> = output.text().lines().map(|line| serde_json::from_str::<serde_json::Value>(line).unwrap()["id"].clone()).collect();
+    assert_eq!(ids, vec![serde_json::json!(1), serde_json::json!(2)], "the replayed handshake adds no second answer and the queued request is served in order");
 }
 
 //#endregion 🔖️Stdio

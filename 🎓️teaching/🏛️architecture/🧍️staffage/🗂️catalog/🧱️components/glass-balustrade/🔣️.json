@@ -13,11 +13,41 @@
       "de": "Ein 1,1 m hohes Brüstungsfeld aus Verbundglas (2 x 10 mm Glas mit PVB-Folie, 21,5 mm), über 100 mm zwischen zwei 15-mm-Stahlklemmblechen mit Elastomerstreifen und Durchgangsschrauben M12 im Abstand von 300 mm auf einer verankerten Fußplatte 300 x 15 mm eingespannt (DIN 18008-4 Kategorie B), bekrönt von einem geschlitzten Rohrhandlauf 42,4 mm; belastet durch Handlauf-Linienlast, Menschenanprall und Wind."
     },
     "tags": [
-      "component",
-      "structural",
-      "glass",
-      "balustrade",
-      "barrier"
+      {
+        "id": "component",
+        "title": {
+          "en": "component",
+          "de": "Bauteil"
+        }
+      },
+      {
+        "id": "structural",
+        "title": {
+          "en": "structural",
+          "de": "tragend"
+        }
+      },
+      {
+        "id": "glass",
+        "title": {
+          "en": "glass",
+          "de": "Glas"
+        }
+      },
+      {
+        "id": "balustrade",
+        "title": {
+          "en": "balustrade",
+          "de": "Balustrade"
+        }
+      },
+      {
+        "id": "barrier",
+        "title": {
+          "en": "barrier",
+          "de": "Absperrung"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage component authors",

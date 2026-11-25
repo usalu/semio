@@ -14,7 +14,19 @@
       {
         "id": "layer-sand",
         "patch": {
-          "cptQc": 16000000.0
+          "soilType": null,
+          "depthTop": null,
+          "depthBottom": null,
+          "gamma": null,
+          "gammaPrime": null,
+          "phiPrimeDeg": null,
+          "cohesionEffective": null,
+          "cohesionUndrained": null,
+          "oedometricModulus": null,
+          "poissonRatio": null,
+          "cptQc": 16000000.0,
+          "sptN": null,
+          "cptNkt": null
         }
       }
     ]
@@ -29,6 +41,7 @@
   "pileGroups": null,
   "labTests": null,
   "layerWaters": null,
+  "placements": null,
   "cases": {
     "removed": [],
     "inserted": [],

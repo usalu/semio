@@ -172,7 +172,7 @@ export function shellLayoutReducer(state: ShellLayoutState, action: ShellAction)
     case "RESET_DOCK": {
       const panels = {} as Record<Anchor, PanelState>;
       for (const anchor of ANCHORS) panels[anchor] = { visible: false, size: DEFAULT_PANEL_WIDTH_PX, path: [] };
-      return { ...state, dockOverride: null, panels, panelPathMemory: {}, treeOpenStates: {} };
+      return { ...state, dockOverride: null, shellLayout: null, panels, panelPathMemory: {}, treeOpenStates: {} };
     }
     case "SET_ACTIVE_WINDOW_ID":
       return withField(state, "activeWindowId", resolveUpdatable(action.value, state.activeWindowId));

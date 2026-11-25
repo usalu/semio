@@ -67,7 +67,11 @@ impl IfcCandidateRules for NativeCandidateRules {
                 true
             }
             1 => self.overlay.advance(source, mutations, cx)?,
-            2 => self.receiver.advance(&self.overlay, source, mutations, cx)?,
+            2 => match self.receiver.advance(&self.overlay, source, mutations, cx) {
+                Ok(complete) => complete,
+                Err(failure) if failure.primary_value().is_some_and(|error| error.message.starts_with("express.receive-")) => return Ok(IfcCandidateRuleStep::Invalid),
+                Err(failure) => return Err(failure),
+            },
             3 => {
                 let id = source.entities.get(candidate.position()).ok_or_else(|| refusal("express.local-source-row"))?.id;
                 let row = self.overlay.find(id).ok_or_else(|| refusal("express.local-overlay-row"))?;

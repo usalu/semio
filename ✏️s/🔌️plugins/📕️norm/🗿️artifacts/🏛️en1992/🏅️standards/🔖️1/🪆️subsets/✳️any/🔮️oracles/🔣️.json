@@ -2396,7 +2396,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-concrete-f-ck",
@@ -2416,7 +2417,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-reinforcement-f-yk",
@@ -2436,7 +2438,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-member",
@@ -2456,7 +2458,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-member",
@@ -2476,7 +2478,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-order",
@@ -2496,7 +2499,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-width",
@@ -2516,7 +2520,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-height",
@@ -2536,7 +2541,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-effective-depth",
@@ -2556,7 +2562,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-cover",
@@ -2576,7 +2583,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-bridge-delta-sigma-s",
@@ -2596,7 +2604,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-bridge-sigma-c",
@@ -2616,7 +2625,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-liquid-sr-max",
@@ -2636,7 +2646,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-liquid-f-ct-eff",
@@ -2656,7 +2667,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-liquid-rho-p-eff",
@@ -2676,7 +2688,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-liquid-sigma-s",
@@ -2696,7 +2709,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-hd-over-h",
@@ -2716,7 +2730,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-udl",
@@ -2736,7 +2751,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-buckling-length",
@@ -2756,7 +2772,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-relative-humidity",
@@ -2776,7 +2793,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-bearing-width",
@@ -2796,7 +2814,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-exposure",
@@ -2816,7 +2835,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-span",
@@ -2836,7 +2856,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-stirrup-spacing",
@@ -2856,7 +2877,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-axis-distance",
@@ -2876,7 +2898,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-fire-rating",
@@ -2896,7 +2919,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-tightness",
@@ -2916,7 +2940,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "clear-member-tightness",
@@ -2936,7 +2961,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-bar-layer-count",
@@ -2956,7 +2982,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-bar-layer-diameter",
@@ -2976,7 +3003,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-action-mk",
@@ -2996,7 +3024,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-action-nk",
@@ -3016,7 +3045,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-action-vk",
@@ -3036,7 +3066,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-anchor",
@@ -3056,7 +3086,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-anchor",
@@ -3076,7 +3106,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-h-ef",
@@ -3096,7 +3127,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-as",
@@ -3116,7 +3148,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-concrete-name",
@@ -3136,7 +3169,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-reinforcement-name",
@@ -3156,7 +3190,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-reinforcement-es",
@@ -3176,7 +3211,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-reinforcement-ductility",
@@ -3196,7 +3232,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-reinforcement-k",
@@ -3216,7 +3253,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-reinforcement-eps-uk",
@@ -3236,7 +3274,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-prestress-steel-name",
@@ -3256,7 +3295,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-prestress-steel-f-pk",
@@ -3276,7 +3316,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-prestress-steel-fp01k",
@@ -3296,7 +3337,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-label-en",
@@ -3316,7 +3358,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-label-de",
@@ -3336,7 +3379,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-kind",
@@ -3356,7 +3400,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-concrete-grade-id",
@@ -3376,7 +3421,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-rebar-grade-id",
@@ -3396,7 +3442,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-prestress-steel-id",
@@ -3416,7 +3463,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-support",
@@ -3436,7 +3484,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-stirrups-diameter",
@@ -3456,7 +3505,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-stirrups-legs",
@@ -3476,7 +3526,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-punch-column-width",
@@ -3496,7 +3547,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-punch-column-depth",
@@ -3516,7 +3568,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-punch-col-position",
@@ -3536,7 +3589,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-punching-asw",
@@ -3556,7 +3610,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-prestress-force",
@@ -3576,7 +3631,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-prestress-area",
@@ -3596,7 +3652,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-prestress-ecc",
@@ -3616,7 +3673,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-prestress-loss-ratio",
@@ -3636,7 +3694,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-fire-slab-system",
@@ -3656,7 +3715,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-use-fem",
@@ -3676,7 +3736,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-deflection-sensitive",
@@ -3696,7 +3757,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-bar-layer-position",
@@ -3716,7 +3778,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-bar-layer-anchorage-length",
@@ -3736,7 +3799,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-bar-layer-lap-length",
@@ -3756,7 +3820,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-bar-layer-bond-condition",
@@ -3776,7 +3841,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-bar-layer-aggregate-size",
@@ -3796,7 +3862,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-bar-layer-lap-share",
@@ -3816,7 +3883,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-action-kind",
@@ -3836,7 +3904,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-action-category",
@@ -3856,7 +3925,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-action-source",
@@ -3876,7 +3946,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-action-gk-line",
@@ -3896,7 +3967,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-action-qk-line",
@@ -3916,7 +3988,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-action-point-force",
@@ -3936,7 +4009,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-action-tk",
@@ -3956,7 +4030,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-action-vk-punch",
@@ -3976,7 +4051,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-section-point-y",
@@ -3996,7 +4072,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-section-point-z",
@@ -4016,7 +4093,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-bar-point-layer-id",
@@ -4036,7 +4114,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-bar-point-y",
@@ -4056,7 +4135,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-bar-point-z",
@@ -4076,7 +4156,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-bar-point-diameter",
@@ -4096,7 +4177,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-tendon-point-x",
@@ -4116,7 +4198,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-tendon-point-y",
@@ -4136,7 +4219,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-tendon-point-z",
@@ -4156,7 +4240,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-cracked",
@@ -4176,7 +4261,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-f-uk",
@@ -4196,7 +4282,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-f-yk",
@@ -4216,7 +4303,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-d",
@@ -4236,7 +4324,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-c1",
@@ -4256,7 +4345,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-f-ck",
@@ -4276,7 +4366,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-head-diameter",
@@ -4296,7 +4387,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-action-kind",
@@ -4316,7 +4408,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-action-category",
@@ -4336,7 +4429,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-action-source",
@@ -4356,7 +4450,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-action-gk-line",
@@ -4376,7 +4471,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-action-qk-line",
@@ -4396,7 +4492,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-action-point-force",
@@ -4416,7 +4513,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-action-mk",
@@ -4436,7 +4534,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-action-nk",
@@ -4456,7 +4555,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-action-vk",
@@ -4476,7 +4576,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-action-tk",
@@ -4496,7 +4597,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-action-vk-punch",
@@ -4516,7 +4618,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-concrete-grade",
@@ -4536,7 +4638,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-concrete-grade",
@@ -4556,7 +4658,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-reinforcement-grade",
@@ -4576,7 +4678,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-reinforcement-grade",
@@ -4596,7 +4698,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-prestress-steel",
@@ -4616,7 +4718,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-prestress-steel",
@@ -4636,7 +4738,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-bar-layer",
@@ -4656,7 +4758,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-bar-layer",
@@ -4676,7 +4778,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-action",
@@ -4696,7 +4798,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-action",
@@ -4716,7 +4818,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-section-point",
@@ -4736,7 +4838,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-section-point",
@@ -4756,7 +4858,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-bar-point",
@@ -4776,7 +4878,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-bar-point",
@@ -4796,7 +4898,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-tendon-point",
@@ -4816,7 +4918,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-tendon-point",
@@ -4836,7 +4938,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-anchor-action",
@@ -4856,7 +4958,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-anchor-action",
@@ -4876,7 +4978,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-placement-x",
@@ -4896,7 +4999,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-placement-y",
@@ -4916,7 +5020,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-placement-z",
@@ -4936,7 +5041,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-placement-yaw",
@@ -4956,7 +5062,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-placement",
@@ -4976,7 +5082,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-placement",
@@ -4996,7 +5102,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-case",
@@ -5016,7 +5122,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-case",
@@ -5036,7 +5142,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-case-number",
@@ -5056,7 +5162,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-case-text",
@@ -5076,7 +5182,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-case-label-en",
@@ -5096,7 +5202,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-case-label-de",
@@ -5116,7 +5222,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-case-entry-id",
@@ -5136,7 +5242,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-bar-point-length",
@@ -5156,7 +5263,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-bar-point-bend",
@@ -5306,7 +5414,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-concrete-f-ck",
@@ -5326,7 +5435,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-reinforcement-f-yk",
@@ -5346,7 +5456,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-member",
@@ -5366,7 +5476,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-member",
@@ -5386,7 +5496,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-order",
@@ -5406,7 +5517,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-width",
@@ -5426,7 +5538,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-height",
@@ -5446,7 +5559,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-effective-depth",
@@ -5466,7 +5580,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-cover",
@@ -5486,7 +5601,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-bridge-delta-sigma-s",
@@ -5506,7 +5622,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-bridge-sigma-c",
@@ -5526,7 +5643,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-liquid-sr-max",
@@ -5546,7 +5664,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-liquid-f-ct-eff",
@@ -5566,7 +5685,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-liquid-rho-p-eff",
@@ -5586,7 +5706,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-liquid-sigma-s",
@@ -5606,7 +5727,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-hd-over-h",
@@ -5626,7 +5748,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-udl",
@@ -5646,7 +5769,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-buckling-length",
@@ -5666,7 +5790,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-relative-humidity",
@@ -5686,7 +5811,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-bearing-width",
@@ -5706,7 +5832,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-exposure",
@@ -5726,7 +5853,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-span",
@@ -5746,7 +5874,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-stirrup-spacing",
@@ -5766,7 +5895,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-axis-distance",
@@ -5786,7 +5916,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-fire-rating",
@@ -5806,7 +5937,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-tightness",
@@ -5826,7 +5958,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "clear-member-tightness",
@@ -5846,7 +5979,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-bar-layer-count",
@@ -5866,7 +6000,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-bar-layer-diameter",
@@ -5886,7 +6021,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-action-mk",
@@ -5906,7 +6042,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-action-nk",
@@ -5926,7 +6063,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-action-vk",
@@ -5946,7 +6084,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-anchor",
@@ -5966,7 +6104,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-anchor",
@@ -5986,7 +6124,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-h-ef",
@@ -6006,7 +6145,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-as",
@@ -6026,7 +6166,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-concrete-name",
@@ -6046,7 +6187,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-reinforcement-name",
@@ -6066,7 +6208,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-reinforcement-es",
@@ -6086,7 +6229,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-reinforcement-ductility",
@@ -6106,7 +6250,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-reinforcement-k",
@@ -6126,7 +6271,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-reinforcement-eps-uk",
@@ -6146,7 +6292,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-prestress-steel-name",
@@ -6166,7 +6313,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-prestress-steel-f-pk",
@@ -6186,7 +6334,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-prestress-steel-fp01k",
@@ -6206,7 +6355,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-label-en",
@@ -6226,7 +6376,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-label-de",
@@ -6246,7 +6397,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-kind",
@@ -6266,7 +6418,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-concrete-grade-id",
@@ -6286,7 +6439,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-rebar-grade-id",
@@ -6306,7 +6460,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-prestress-steel-id",
@@ -6326,7 +6481,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-support",
@@ -6346,7 +6502,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-stirrups-diameter",
@@ -6366,7 +6523,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-stirrups-legs",
@@ -6386,7 +6544,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-punch-column-width",
@@ -6406,7 +6565,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-punch-column-depth",
@@ -6426,7 +6586,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-punch-col-position",
@@ -6446,7 +6607,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-punching-asw",
@@ -6466,7 +6628,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-prestress-force",
@@ -6486,7 +6649,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-prestress-area",
@@ -6506,7 +6670,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-prestress-ecc",
@@ -6526,7 +6691,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-prestress-loss-ratio",
@@ -6546,7 +6712,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-fire-slab-system",
@@ -6566,7 +6733,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-use-fem",
@@ -6586,7 +6754,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-deflection-sensitive",
@@ -6606,7 +6775,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-bar-layer-position",
@@ -6626,7 +6796,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-bar-layer-anchorage-length",
@@ -6646,7 +6817,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-bar-layer-lap-length",
@@ -6666,7 +6838,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-bar-layer-bond-condition",
@@ -6686,7 +6859,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-bar-layer-aggregate-size",
@@ -6706,7 +6880,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-bar-layer-lap-share",
@@ -6726,7 +6901,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-action-kind",
@@ -6746,7 +6922,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-action-category",
@@ -6766,7 +6943,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-action-source",
@@ -6786,7 +6964,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-action-gk-line",
@@ -6806,7 +6985,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-action-qk-line",
@@ -6826,7 +7006,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-action-point-force",
@@ -6846,7 +7027,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-action-tk",
@@ -6866,7 +7048,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-action-vk-punch",
@@ -6886,7 +7069,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-section-point-y",
@@ -6906,7 +7090,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-section-point-z",
@@ -6926,7 +7111,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-bar-point-layer-id",
@@ -6946,7 +7132,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-bar-point-y",
@@ -6966,7 +7153,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-bar-point-z",
@@ -6986,7 +7174,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-bar-point-diameter",
@@ -7006,7 +7195,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-tendon-point-x",
@@ -7026,7 +7216,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-tendon-point-y",
@@ -7046,7 +7237,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-tendon-point-z",
@@ -7066,7 +7258,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-cracked",
@@ -7086,7 +7279,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-f-uk",
@@ -7106,7 +7300,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-f-yk",
@@ -7126,7 +7321,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-d",
@@ -7146,7 +7342,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-c1",
@@ -7166,7 +7363,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-f-ck",
@@ -7186,7 +7384,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-head-diameter",
@@ -7206,7 +7405,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-action-kind",
@@ -7226,7 +7426,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-action-category",
@@ -7246,7 +7447,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-action-source",
@@ -7266,7 +7468,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-action-gk-line",
@@ -7286,7 +7489,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-action-qk-line",
@@ -7306,7 +7510,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-action-point-force",
@@ -7326,7 +7531,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-action-mk",
@@ -7346,7 +7552,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-action-nk",
@@ -7366,7 +7573,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-action-vk",
@@ -7386,7 +7594,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-action-tk",
@@ -7406,7 +7615,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-action-vk-punch",
@@ -7426,7 +7636,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-concrete-grade",
@@ -7446,7 +7656,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-concrete-grade",
@@ -7466,7 +7676,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-reinforcement-grade",
@@ -7486,7 +7696,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-reinforcement-grade",
@@ -7506,7 +7716,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-prestress-steel",
@@ -7526,7 +7736,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-prestress-steel",
@@ -7546,7 +7756,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-bar-layer",
@@ -7566,7 +7776,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-bar-layer",
@@ -7586,7 +7796,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-action",
@@ -7606,7 +7816,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-action",
@@ -7626,7 +7836,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-section-point",
@@ -7646,7 +7856,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-section-point",
@@ -7666,7 +7876,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-bar-point",
@@ -7686,7 +7896,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-bar-point",
@@ -7706,7 +7916,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-tendon-point",
@@ -7726,7 +7936,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-tendon-point",
@@ -7746,7 +7956,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-anchor-action",
@@ -7766,7 +7976,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-anchor-action",
@@ -7786,7 +7996,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-placement-x",
@@ -7806,7 +8017,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-placement-y",
@@ -7826,7 +8038,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-placement-z",
@@ -7846,7 +8059,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-placement-yaw",
@@ -7866,7 +8080,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-placement",
@@ -7886,7 +8100,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-placement",
@@ -7906,7 +8120,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-case",
@@ -7926,7 +8140,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-case",
@@ -7946,7 +8160,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-case-number",
@@ -7966,7 +8180,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-case-text",
@@ -7986,7 +8200,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-case-label-en",
@@ -8006,7 +8220,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-case-label-de",
@@ -8026,7 +8240,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-case-entry-id",
@@ -8046,7 +8260,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-bar-point-length",
@@ -8066,7 +8281,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-bar-point-bend",
@@ -8086,7 +8302,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-punching-beta-method",
@@ -8106,7 +8323,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-punching-moment-c1",
@@ -8126,7 +8344,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-punching-moment-c2",
@@ -8276,7 +8495,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-concrete-f-ck",
@@ -8296,7 +8516,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-reinforcement-f-yk",
@@ -8316,7 +8537,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-member",
@@ -8336,7 +8557,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-member",
@@ -8356,7 +8577,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-order",
@@ -8376,7 +8598,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-width",
@@ -8396,7 +8619,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-height",
@@ -8416,7 +8640,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-effective-depth",
@@ -8436,7 +8661,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-cover",
@@ -8456,7 +8682,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-bridge-delta-sigma-s",
@@ -8476,7 +8703,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-bridge-sigma-c",
@@ -8496,7 +8724,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-liquid-sr-max",
@@ -8516,7 +8745,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-liquid-f-ct-eff",
@@ -8536,7 +8766,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-liquid-rho-p-eff",
@@ -8556,7 +8787,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-liquid-sigma-s",
@@ -8576,7 +8808,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-hd-over-h",
@@ -8596,7 +8829,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-udl",
@@ -8616,7 +8850,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-buckling-length",
@@ -8636,7 +8871,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-relative-humidity",
@@ -8656,7 +8892,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-bearing-width",
@@ -8676,7 +8913,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-exposure",
@@ -8696,7 +8934,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-span",
@@ -8716,7 +8955,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-stirrup-spacing",
@@ -8736,7 +8976,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-axis-distance",
@@ -8756,7 +8997,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-fire-rating",
@@ -8776,7 +9018,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-tightness",
@@ -8796,7 +9039,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "clear-member-tightness",
@@ -8816,7 +9060,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-bar-layer-count",
@@ -8836,7 +9081,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-bar-layer-diameter",
@@ -8856,7 +9102,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-action-mk",
@@ -8876,7 +9123,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-action-nk",
@@ -8896,7 +9144,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-action-vk",
@@ -8916,7 +9165,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-anchor",
@@ -8936,7 +9185,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-anchor",
@@ -8956,7 +9205,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-h-ef",
@@ -8976,7 +9226,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-as",
@@ -8996,7 +9247,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-concrete-name",
@@ -9016,7 +9268,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-reinforcement-name",
@@ -9036,7 +9289,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-reinforcement-es",
@@ -9056,7 +9310,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-reinforcement-ductility",
@@ -9076,7 +9331,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-reinforcement-k",
@@ -9096,7 +9352,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-reinforcement-eps-uk",
@@ -9116,7 +9373,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-prestress-steel-name",
@@ -9136,7 +9394,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-prestress-steel-f-pk",
@@ -9156,7 +9415,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-prestress-steel-fp01k",
@@ -9176,7 +9436,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-label-en",
@@ -9196,7 +9457,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-label-de",
@@ -9216,7 +9478,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-kind",
@@ -9236,7 +9499,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-concrete-grade-id",
@@ -9256,7 +9520,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-rebar-grade-id",
@@ -9276,7 +9541,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-prestress-steel-id",
@@ -9296,7 +9562,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-support",
@@ -9316,7 +9583,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-stirrups-diameter",
@@ -9336,7 +9604,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-stirrups-legs",
@@ -9356,7 +9625,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-punch-column-width",
@@ -9376,7 +9646,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-punch-column-depth",
@@ -9396,7 +9667,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-punch-col-position",
@@ -9416,7 +9688,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-punching-asw",
@@ -9436,7 +9709,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-prestress-force",
@@ -9456,7 +9730,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-prestress-area",
@@ -9476,7 +9751,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-prestress-ecc",
@@ -9496,7 +9772,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-prestress-loss-ratio",
@@ -9516,7 +9793,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-fire-slab-system",
@@ -9536,7 +9814,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-use-fem",
@@ -9556,7 +9835,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-deflection-sensitive",
@@ -9576,7 +9856,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-bar-layer-position",
@@ -9596,7 +9877,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-bar-layer-anchorage-length",
@@ -9616,7 +9898,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-bar-layer-lap-length",
@@ -9636,7 +9919,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-bar-layer-bond-condition",
@@ -9656,7 +9940,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-bar-layer-aggregate-size",
@@ -9676,7 +9961,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-bar-layer-lap-share",
@@ -9696,7 +9982,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-action-kind",
@@ -9716,7 +10003,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-action-category",
@@ -9736,7 +10024,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-action-source",
@@ -9756,7 +10045,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-action-gk-line",
@@ -9776,7 +10066,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-action-qk-line",
@@ -9796,7 +10087,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-action-point-force",
@@ -9816,7 +10108,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-action-tk",
@@ -9836,7 +10129,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-action-vk-punch",
@@ -9856,7 +10150,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-section-point-y",
@@ -9876,7 +10171,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-section-point-z",
@@ -9896,7 +10192,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-bar-point-layer-id",
@@ -9916,7 +10213,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-bar-point-y",
@@ -9936,7 +10234,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-bar-point-z",
@@ -9956,7 +10255,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-bar-point-diameter",
@@ -9976,7 +10276,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-tendon-point-x",
@@ -9996,7 +10297,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-tendon-point-y",
@@ -10016,7 +10318,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-tendon-point-z",
@@ -10036,7 +10339,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-cracked",
@@ -10056,7 +10360,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-f-uk",
@@ -10076,7 +10381,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-f-yk",
@@ -10096,7 +10402,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-d",
@@ -10116,7 +10423,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-c1",
@@ -10136,7 +10444,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-f-ck",
@@ -10156,7 +10465,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-head-diameter",
@@ -10176,7 +10486,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-action-kind",
@@ -10196,7 +10507,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-action-category",
@@ -10216,7 +10528,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-action-source",
@@ -10236,7 +10549,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-action-gk-line",
@@ -10256,7 +10570,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-action-qk-line",
@@ -10276,7 +10591,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-action-point-force",
@@ -10296,7 +10612,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-action-mk",
@@ -10316,7 +10633,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-action-nk",
@@ -10336,7 +10654,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-action-vk",
@@ -10356,7 +10675,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-action-tk",
@@ -10376,7 +10696,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-action-vk-punch",
@@ -10396,7 +10717,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-concrete-grade",
@@ -10416,7 +10737,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-concrete-grade",
@@ -10436,7 +10757,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-reinforcement-grade",
@@ -10456,7 +10777,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-reinforcement-grade",
@@ -10476,7 +10797,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-prestress-steel",
@@ -10496,7 +10817,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-prestress-steel",
@@ -10516,7 +10837,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-bar-layer",
@@ -10536,7 +10857,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-bar-layer",
@@ -10556,7 +10877,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-action",
@@ -10576,7 +10897,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-action",
@@ -10596,7 +10917,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-section-point",
@@ -10616,7 +10937,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-section-point",
@@ -10636,7 +10957,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-bar-point",
@@ -10656,7 +10977,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-bar-point",
@@ -10676,7 +10997,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-tendon-point",
@@ -10696,7 +11017,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-tendon-point",
@@ -10716,7 +11037,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-anchor-action",
@@ -10736,7 +11057,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-anchor-action",
@@ -10756,7 +11077,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-placement-x",
@@ -10776,7 +11098,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-placement-y",
@@ -10796,7 +11119,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-placement-z",
@@ -10816,7 +11140,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-placement-yaw",
@@ -10836,7 +11161,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-placement",
@@ -10856,7 +11181,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-placement",
@@ -10876,7 +11201,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-case",
@@ -10896,7 +11221,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-case",
@@ -10916,7 +11241,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-case-number",
@@ -10936,7 +11261,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-case-text",
@@ -10956,7 +11281,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-case-label-en",
@@ -10976,7 +11301,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-case-label-de",
@@ -10996,7 +11321,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-case-entry-id",
@@ -11016,7 +11341,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-bar-point-length",
@@ -11036,7 +11362,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-bar-point-bend",
@@ -11056,7 +11383,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-opening-x",
@@ -11076,7 +11404,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-opening-y",
@@ -11096,7 +11425,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-opening-width",
@@ -11116,7 +11446,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-opening-depth",
@@ -11136,7 +11467,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-opening",
@@ -11156,7 +11487,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-opening",
@@ -11176,7 +11507,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-stud-row-angle",
@@ -11196,7 +11528,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-stud-row-count",
@@ -11216,7 +11549,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-stud-row-spacing-first",
@@ -11236,7 +11570,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-stud-row-spacing-radial",
@@ -11256,7 +11591,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-stud-row-diameter",
@@ -11276,7 +11612,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-stud-row",
@@ -11296,7 +11632,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-stud-row",
@@ -11446,7 +11782,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-concrete-f-ck",
@@ -11466,7 +11803,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-reinforcement-f-yk",
@@ -11486,7 +11824,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-member",
@@ -11506,7 +11844,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-member",
@@ -11526,7 +11864,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-order",
@@ -11546,7 +11885,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-width",
@@ -11566,7 +11906,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-height",
@@ -11586,7 +11927,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-effective-depth",
@@ -11606,7 +11948,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-cover",
@@ -11626,7 +11969,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-bridge-delta-sigma-s",
@@ -11646,7 +11990,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-bridge-sigma-c",
@@ -11666,7 +12011,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-liquid-sr-max",
@@ -11686,7 +12032,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-liquid-f-ct-eff",
@@ -11706,7 +12053,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-liquid-rho-p-eff",
@@ -11726,7 +12074,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-liquid-sigma-s",
@@ -11746,7 +12095,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-hd-over-h",
@@ -11766,7 +12116,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-udl",
@@ -11786,7 +12137,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-buckling-length",
@@ -11806,7 +12158,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-relative-humidity",
@@ -11826,7 +12179,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-bearing-width",
@@ -11846,7 +12200,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-exposure",
@@ -11866,7 +12221,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-span",
@@ -11886,7 +12242,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-stirrup-spacing",
@@ -11906,7 +12263,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-axis-distance",
@@ -11926,7 +12284,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-fire-rating",
@@ -11946,7 +12305,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-tightness",
@@ -11966,7 +12326,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "clear-member-tightness",
@@ -11986,7 +12347,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-bar-layer-count",
@@ -12006,7 +12368,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-bar-layer-diameter",
@@ -12026,7 +12389,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-action-mk",
@@ -12046,7 +12410,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-action-nk",
@@ -12066,7 +12431,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-action-vk",
@@ -12086,7 +12452,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-anchor",
@@ -12106,7 +12472,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-anchor",
@@ -12126,7 +12492,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-h-ef",
@@ -12146,7 +12513,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-as",
@@ -12166,7 +12534,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-concrete-name",
@@ -12186,7 +12555,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-reinforcement-name",
@@ -12206,7 +12576,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-reinforcement-es",
@@ -12226,7 +12597,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-reinforcement-ductility",
@@ -12246,7 +12618,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-reinforcement-k",
@@ -12266,7 +12639,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-reinforcement-eps-uk",
@@ -12286,7 +12660,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-prestress-steel-name",
@@ -12306,7 +12681,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-prestress-steel-f-pk",
@@ -12326,7 +12702,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-prestress-steel-fp01k",
@@ -12346,7 +12723,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-label-en",
@@ -12366,7 +12744,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-label-de",
@@ -12386,7 +12765,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-kind",
@@ -12406,7 +12786,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-concrete-grade-id",
@@ -12426,7 +12807,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-rebar-grade-id",
@@ -12446,7 +12828,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-prestress-steel-id",
@@ -12466,7 +12849,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-support",
@@ -12486,7 +12870,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-stirrups-diameter",
@@ -12506,7 +12891,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-stirrups-legs",
@@ -12526,7 +12912,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-punch-column-width",
@@ -12546,7 +12933,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-punch-column-depth",
@@ -12566,7 +12954,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-punch-col-position",
@@ -12586,7 +12975,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-punching-asw",
@@ -12606,7 +12996,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-prestress-force",
@@ -12626,7 +13017,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-prestress-area",
@@ -12646,7 +13038,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-prestress-ecc",
@@ -12666,7 +13059,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-prestress-loss-ratio",
@@ -12686,7 +13080,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-fire-slab-system",
@@ -12706,7 +13101,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-use-fem",
@@ -12726,7 +13122,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-member-deflection-sensitive",
@@ -12746,7 +13143,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-bar-layer-position",
@@ -12766,7 +13164,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-bar-layer-anchorage-length",
@@ -12786,7 +13185,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-bar-layer-lap-length",
@@ -12806,7 +13206,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-bar-layer-bond-condition",
@@ -12826,7 +13227,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-bar-layer-aggregate-size",
@@ -12846,7 +13248,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-bar-layer-lap-share",
@@ -12866,7 +13269,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-action-kind",
@@ -12886,7 +13290,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-action-category",
@@ -12906,7 +13311,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-action-source",
@@ -12926,7 +13332,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-action-gk-line",
@@ -12946,7 +13353,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-action-qk-line",
@@ -12966,7 +13374,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-action-point-force",
@@ -12986,7 +13395,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-action-tk",
@@ -13006,7 +13416,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-action-vk-punch",
@@ -13026,7 +13437,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-section-point-y",
@@ -13046,7 +13458,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-section-point-z",
@@ -13066,7 +13479,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-bar-point-layer-id",
@@ -13086,7 +13500,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-bar-point-y",
@@ -13106,7 +13521,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-bar-point-z",
@@ -13126,7 +13542,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-bar-point-diameter",
@@ -13146,7 +13563,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-tendon-point-x",
@@ -13166,7 +13584,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-tendon-point-y",
@@ -13186,7 +13605,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-tendon-point-z",
@@ -13206,7 +13626,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-cracked",
@@ -13226,7 +13647,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-f-uk",
@@ -13246,7 +13668,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-f-yk",
@@ -13266,7 +13689,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-d",
@@ -13286,7 +13710,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-c1",
@@ -13306,7 +13731,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-f-ck",
@@ -13326,7 +13752,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-head-diameter",
@@ -13346,7 +13773,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-action-kind",
@@ -13366,7 +13794,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-action-category",
@@ -13386,7 +13815,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-action-source",
@@ -13406,7 +13836,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-action-gk-line",
@@ -13426,7 +13857,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-action-qk-line",
@@ -13446,7 +13878,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-action-point-force",
@@ -13466,7 +13899,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-action-mk",
@@ -13486,7 +13920,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-action-nk",
@@ -13506,7 +13941,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-action-vk",
@@ -13526,7 +13962,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-action-tk",
@@ -13546,7 +13983,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-anchor-action-vk-punch",
@@ -13566,7 +14004,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-concrete-grade",
@@ -13586,7 +14024,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-concrete-grade",
@@ -13606,7 +14044,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-reinforcement-grade",
@@ -13626,7 +14064,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-reinforcement-grade",
@@ -13646,7 +14084,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-prestress-steel",
@@ -13666,7 +14104,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-prestress-steel",
@@ -13686,7 +14124,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-bar-layer",
@@ -13706,7 +14144,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-bar-layer",
@@ -13726,7 +14164,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-action",
@@ -13746,7 +14184,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-action",
@@ -13766,7 +14204,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-section-point",
@@ -13786,7 +14224,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-section-point",
@@ -13806,7 +14244,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-bar-point",
@@ -13826,7 +14264,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-bar-point",
@@ -13846,7 +14284,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-tendon-point",
@@ -13866,7 +14304,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-tendon-point",
@@ -13886,7 +14324,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-anchor-action",
@@ -13906,7 +14344,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-anchor-action",
@@ -13926,7 +14364,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-placement-x",
@@ -13946,7 +14385,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-placement-y",
@@ -13966,7 +14406,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-placement-z",
@@ -13986,7 +14427,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-placement-yaw",
@@ -14006,7 +14448,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-placement",
@@ -14026,7 +14468,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-placement",
@@ -14046,7 +14488,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-case",
@@ -14066,7 +14508,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-case",
@@ -14086,7 +14528,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-case-number",
@@ -14106,7 +14548,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-case-text",
@@ -14126,7 +14568,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-case-label-en",
@@ -14146,7 +14588,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-case-label-de",
@@ -14166,7 +14608,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-case-entry-id",
@@ -14186,7 +14628,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-bar-point-length",
@@ -14206,7 +14649,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-bar-point-bend",
@@ -14226,7 +14670,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-stud-row-angle",
@@ -14246,7 +14691,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-stud-row-count",
@@ -14266,7 +14712,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-stud-row-spacing-first",
@@ -14286,7 +14733,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-stud-row-spacing-radial",
@@ -14306,7 +14754,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-stud-row-diameter",
@@ -14326,7 +14775,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-stud-row",
@@ -14346,7 +14795,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-stud-row",
@@ -14366,7 +14815,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-opening-x",
@@ -14386,7 +14836,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-opening-y",
@@ -14406,7 +14857,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-opening-width",
@@ -14426,7 +14878,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-opening-depth",
@@ -14446,7 +14899,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "insert-opening",
@@ -14466,7 +14919,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-opening",

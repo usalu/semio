@@ -73,6 +73,11 @@ Feature: Every staffage is covered in the side elevation, the front elevation an
     When SVG, PDF and DXF of the three viewpoints are written
     Then the bytes are identical and the viewpoints differ
 
+  Scenario: A distance at the threshold is decided in whole millionths
+    Given a front elevation whose gusset tip lies exactly 0.03 of the longest side from the side elevation, once computed just above and once just below 0.03 in binary floating point
+    When derived-view detection runs
+    Then neither is flagged, and the same tip one millionth of the longest side lower is flagged
+
   Scenario: A derived view is detected
     Given a front that is a copy, mirror, 90 degree rotation or scaled copy of the elevation
     When derived-view detection runs
@@ -107,11 +112,32 @@ Feature: Every staffage is covered in the side elevation, the front elevation an
     Then the finished assets are skipped, an asset whose document changed is run again and shards of separate invocations merge
     And an asset that crashed or timed out fails its cells by name with the message, never as cell-missing
 
+  Scenario: The generator never holds the catalog
+    Given a catalog of asset documents and a run folder with a finished, a failed and a missing asset
+    When an asset is asked for by its id and the run folder is merged
+    Then one document is read for the asset, the heads of the assets carry only id, category, digest and scale entries
+    And the merge written asset by asset is byte for byte the matrix of all cells at once, with the same summary
+
   Scenario: The authors' gate checks one asset in seconds
     Given one asset and the check functions of the matrix
     When it is scanned
     Then every finding names its code, pose, scale, views and, where it has one, bone, anchor and delta
     And a row counts the findings per family, synchrony at rest and in other poses, and anchors by the place they lie
+
+  Scenario: A difference that equals the tolerance has one verdict
+    Given a drawing whose height differs from the declared height by exactly the D18 tolerance
+    When the height is checked in metres and on the paper of several scales
+    Then it is within the tolerance everywhere, and one micrometre more is a finding everywhere
+
+  Scenario: An unfilled outline is a drawn shape
+    Given a view or a symbol whose only shape is drawn as an unfilled outline
+    When the scene is asked whether it draws a shape of the view
+    Then the outline run counts as drawn, and a shape without pen and fill is named with its role and the pen of its representation or symbol
+
+  Scenario: A view that cannot differ in a band is allowlisted for that band
+    Given a view that equals another view of its own band in some bands for a physical reason
+    When the allowlist names the asset, the view and those bands
+    Then the in-band equality is no finding in the named bands and still one in every other band
 
   Scenario: A truthful band copy is allowlisted with its reason
     Given a view that is the same drawing in two bands because the part is prismatic or plain

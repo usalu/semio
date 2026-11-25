@@ -1,5 +1,6 @@
 /** 🧪️ Language-agnostic witness of the norm browser journey: the fixture meets its JSON Schema under Ajv, every region carries English and German names equal to the Rust focus-order catalogue, and the phase split matches the README (editor five windows, viewer three). */
 import { describe, expect, test } from "bun:test";
+import { JSDOM } from "jsdom";
 import { readFileSync } from "node:fs";
 import { semioSchemaAjvV1 } from "@semio-tech/framework/schema/oracles/validator";
 import fixture from "../🧫️fixtures/🔣️.json" with { type: "json" };
@@ -24,6 +25,14 @@ describe("norm browser journey", () => {
     expect(fixture.checks.filter(row => row.phase === "viewer").length).toBe(1);
     expect(fixture.checks.filter(row => row.phase === "editor").length).toBe(5);
     expect(regionSelectorV1("checks")).toContain("-checks");
+  });
+  test("outline descendants resolve to the member for either window id spelling", () => {
+    const member = fixture.member.idSuffix;
+    for (const separator of ["-", "."]) {
+      const document = new JSDOM(`<section data-surface-window-kind-id="editor${separator}outliner"><button role="treeitem" data-ui-node-key="${member}"></button></section><button role="treeitem" data-ui-node-key="${member}"></button>`).window.document;
+      const selector = `${regionSelectorV1("outliner")} [role="treeitem"][data-ui-node-key$="${member}"]`;
+      expect([...document.querySelectorAll(selector)]).toEqual([document.querySelector("section button")!]);
+    }
   });
   test("arguments are validated", () => {
     expect(() => validateNormBrowserArgumentsV1(args)).not.toThrow();

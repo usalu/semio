@@ -1666,7 +1666,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-element-u",

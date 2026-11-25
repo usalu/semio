@@ -6,7 +6,7 @@ use semio_framework::history_edit::HISTORY_EDIT_COMMIT_ACTION_ID;
 use semio_plugin_instance_extension::InstanceExtension;
 use semio_ui_contract::*;
 use semio_plugin_decl_app::ArtifactApp;
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use semio_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
 use pack::snapshot::ArtifactPack;
 use semio_plugin_decl_emission::Emit;

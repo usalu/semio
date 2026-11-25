@@ -1,0 +1,13 @@
+[
+  {"op": "anchor", "id": "pedal-spindle-r", "set": {"z": -0.13}, "fixed": true},
+  {"op": "anchor", "id": "pedal-spindle-l", "set": {"z": 0.13}, "fixed": true},
+  {"op": "volume", "scale": "50", "id": "thigh-l", "as": "auto"},
+  {"op": "volume", "scale": "50", "id": "thigh-r", "as": "auto"},
+  {"op": "volume", "scale": "100", "id": "thigh-l", "as": "auto"},
+  {"op": "volume", "scale": "100", "id": "jacket", "as": "auto"},
+  {"op": "volume", "scale": "200", "id": "jacket", "as": "auto"},
+  {"op": "volume", "scale": "500", "id": "thigh-l", "as": "auto"},
+  {"op": "volume", "scale": "500", "id": "thigh-r", "as": "auto"},
+  {"op": "volume", "scale": "500", "id": "shoe-rear-l", "as": "auto"},
+  {"op": "volume", "scale": "500", "id": "jacket", "as": "auto"}
+]

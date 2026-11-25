@@ -5,6 +5,7 @@ import {parseRemoteCacheActionResultV1,type RemoteCacheDigestV1} from "../🔬�
 import {SLOT_GRACE_MILLISECONDS_V1,type StaleCauseV1,type StalenessModeV1} from "../../🪢️slots/🟦️.ts";
 import {readRemoteCacheMetaV1,readRemoteCacheReferencesV1,removeRemoteCacheMetaV1,scanRemoteCacheMetaV1,type RemoteCacheMetaV1} from "../🏷️retention/🟦️.ts";
 import {judgeStalenessV1,stalenessReportV1,type StalenessVerdictV1,type TreeDigestsV1} from "../🏷️retention/🍂️staleness/🟦️.ts";
+import {ownProcessIdentityV1,parseProcessIdentityV1,processHolderAliveV1} from "../../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts";
 
 /** 📇️ One stored value as the collector sees it: its slash-separated key below the store root (`<namespace>/<kind>/<first two characters>/<name>`), its size and when it was last used. */
 export type RemoteCacheRowV1=Readonly<{key:string;size:number;accessed:number}>;
@@ -138,14 +139,15 @@ export async function scanRemoteCacheDirectoryV1(root:string,hooks:RemoteCacheWa
  await walk(root,0,[]);hooks.onProgress?.("scan",index.size,bytes);return index;
 }
 
-const alive=(pid:number):boolean=>{try{process.kill(pid,0);return true;}catch(error){return (error as NodeJS.ErrnoException).code==="EPERM";}};
+const lockBodyV1=():string=>{const own=ownProcessIdentityV1();return `${own.pid}\n${Date.now()}\n${own.startMs}\n`;};
+const lockHolderV1=(seen:string):Readonly<{pid:number;startMs:number;started:number}>|undefined=>{const [pid,started,startMs]=seen.split("\n").map(Number),holder=parseProcessIdentityV1({pid,startMs});return holder===undefined||!Number.isFinite(started)?undefined:{...holder,started};};
 
 /** 🔐️ The outcome of asking for a lock: another living process holds it, or it is ours until `release`. */
 export type RemoteCacheLockV1=Readonly<{held:true;lock:string}>|Readonly<{held:false;release():Promise<void>}>;
 
 /** 💾️ Takes a named lock of a store root: a file that appears atomically with the owner's process id and time already inside (written beside it and hard-linked into place, so no taker ever sees it empty). A lock of a dead process or older than six hours is taken over by renaming it away, which only one taker can do, and a lock held by a living process is reported instead of waited for. */
 export async function acquireRemoteCacheLockV1(root:string,name:string):Promise<RemoteCacheLockV1>{
- const lock=join(root,name),mine=join(root,`.${name}.${process.pid}.${randomUUID()}`),content=`${process.pid}\n${Date.now()}\n`;
+ const lock=join(root,name),mine=join(root,`.${name}.${process.pid}.${randomUUID()}`),content=lockBodyV1();
  await writeFile(mine,content);
  try{
   for(let attempt=0;attempt<3;attempt++){
@@ -153,8 +155,8 @@ export async function acquireRemoteCacheLockV1(root:string,name:string):Promise<
    catch(error){if((error as NodeJS.ErrnoException).code!=="EEXIST")throw error;}
    const seen=await readFile(lock,"utf8").catch(()=>undefined);
    if(seen===undefined)continue;
-   const [pid,started]=seen.split("\n").map(Number);
-   if(pid!==undefined&&started!==undefined&&Number.isSafeInteger(pid)&&pid>0&&alive(pid)&&Date.now()-started<STALE_LOCK_MILLISECONDS)return {held:true,lock};
+   const holder=lockHolderV1(seen);
+   if(holder!==undefined&&processHolderAliveV1(holder)&&Date.now()-holder.started<STALE_LOCK_MILLISECONDS)return {held:true,lock};
    const aside=`${lock}.stale-${randomUUID()}`;
    try{await rename(lock,aside);}catch{continue;}
    if(await readFile(aside,"utf8").catch(()=>undefined)===seen){await unlink(aside).catch(()=>{});continue;}
@@ -167,9 +169,9 @@ export async function acquireRemoteCacheLockV1(root:string,name:string):Promise<
 /** 💓️ Renews a lock this process owns, or takes it back when it names nobody alive (a handover that wrote another pid, a lock the six-hour rule discarded while this process ran): the file is replaced atomically with this process and the time now, so a server that runs for days is never mistaken for a dead one. Answers `false` when another living process owns the lock. */
 export async function renewRemoteCacheLockV1(root:string,name:string):Promise<boolean>{
  const lock=join(root,name),seen=await readFile(lock,"utf8").catch(()=>undefined);
- if(seen!==undefined){const pid=Number(seen.split("\n")[0]);if(pid!==process.pid&&Number.isSafeInteger(pid)&&pid>0&&alive(pid))return false;}
+ if(seen!==undefined){const holder=lockHolderV1(seen);if(holder!==undefined&&holder.pid!==process.pid&&processHolderAliveV1(holder))return false;}
  const temporary=join(root,`.${name}.${process.pid}.${randomUUID()}`);
- try{await writeFile(temporary,`${process.pid}\n${Date.now()}\n`);await rename(temporary,lock);return true;}catch{await unlink(temporary).catch(()=>{});return false;}
+ try{await writeFile(temporary,lockBodyV1());await rename(temporary,lock);return true;}catch{await unlink(temporary).catch(()=>{});return false;}
 }
 
 /** 🔎️ Finds the action results nobody can use any more: results that are malformed, or whose output blobs left the content store of their namespace. A server keeps its blobs in the host store, outside the directory: `hasBlobs` asks it, and without it a blob missing from the directory counts as gone. */
@@ -199,8 +201,8 @@ const fill=(rows:Iterable<{size:number}>):RemoteCacheFillV1=>{let entries=0,byte
 export async function remoteCacheServerRunningV1(root:string):Promise<boolean>{
  const seen=await readFile(join(root,REMOTE_CACHE_SERVER_LOCK_V1),"utf8").catch(()=>undefined);
  if(seen===undefined)return false;
- const [pid,started]=seen.split("\n").map(Number);
- return pid!==undefined&&started!==undefined&&Number.isSafeInteger(pid)&&pid>0&&alive(pid)&&Date.now()-started<STALE_LOCK_MILLISECONDS;
+ const holder=lockHolderV1(seen);
+ return holder!==undefined&&processHolderAliveV1(holder)&&Date.now()-holder.started<STALE_LOCK_MILLISECONDS;
 }
 
 /** 🗡️ Removes one planned value safely: a stale or budget value with a sidecar is re-checked right before it goes (its sidecar is unchanged, so no store or claim made it current meanwhile, and no claim holds it); the value goes first and its sidecar after, so a crash between the two leaves an orphan sidecar the next scan removes and never a value that is half gone. Answers `removed`, `kept` (re-check refused) or `gone`. */

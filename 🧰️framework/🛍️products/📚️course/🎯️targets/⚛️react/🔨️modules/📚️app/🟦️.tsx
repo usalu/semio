@@ -37,6 +37,7 @@ import type { RunScreen } from "../▶️run/🟦️.tsx";
 import type { ResultsScreen } from "../🏁️results/🟦️.tsx";
 import { LegalFooter, type CourseLegal } from "../⚖️legal/🟦️.tsx";
 import { ClipPostersProvider, type ClipPosters } from "../🎬️clips/🟦️.tsx";
+import { ScrollThumb } from "../🧷️scroll-thumb/🟦️.tsx";
 import { BodyButton, CardAction, CardIcon, CardSection, ProblemNote, CourseCard, cn, playTappedIcons } from "../🪟️chrome/🟦️.tsx";
 import { PresenceFooter, PresenceOverlay, PresenceProvider, useDocumentVisible, usePresencePointer } from "../👥️presence/🟦️.tsx";
 import { CoursePresence, presencePlace, presenceDrafts, sheetItemLabels } from "../👥️presence/🧭️rooms/🟦️.ts";
@@ -216,6 +217,7 @@ function publishBandHeights(root: HTMLDivElement | null): void {
 function Page(props: { readonly children: ReactNode }): ReactElement {
   return (
     <div className="course-page-scroll ui-scrollbar-hidden relative min-h-0 flex-1 overflow-auto">
+      <ScrollThumb />
       <CardStack className="course-page">
         {props.children}
       </CardStack>
@@ -464,12 +466,13 @@ function Client(props: ClientProps): ReactElement {
       }} onWheelCapture={(event) => { if (remote !== undefined) { event.stopPropagation(); follow.stop("interaction"); } }} data-pets={pets}>
         <a
           href="#course-main"
-          {...sharedBorderlessBoxProps} className="course-skip-link sr-only focus:not-sr-only focus:absolute focus:start-double focus:top-double focus:z-50 focus:bg-background focus:p-double focus:text-sm focus:text-foreground"
+          {...sharedBorderlessBoxProps} className="course-skip-link sr-only focus:not-sr-only focus:absolute focus:inline-flex focus:items-center focus:gap-single focus:start-double focus:top-double focus:z-50 focus:bg-background focus:p-double focus:text-sm focus:text-foreground"
           onClick={(event) => {
             event.preventDefault();
             main.current?.focus();
           }}
         >
+          <CardIcon icon="arrow-down" />
           {text("course.app.skip")}
         </a>
         <header className="shrink-0">
@@ -632,10 +635,8 @@ export function CourseApp(options: CourseOptions): ReactElement {
     );
   return (
     <div className="course-app relative flex min-h-0 flex-col overflow-x-hidden overflow-y-auto bg-background text-foreground" style={{ height: UI_AVAILABLE_HEIGHT }}>
-      <main id="course-main" className="relative flex min-h-0 flex-1 flex-col overflow-auto p-double">
-        <div className="mx-auto w-full max-w-xl">
-          <LanguageChoice onChoose={(chosen) => change({ ...preferences, locale: chosen })} />
-        </div>
+      <main id="course-main" className="relative flex min-h-0 flex-1 flex-col overflow-auto">
+        <LanguageChoice onChoose={(chosen) => change({ ...preferences, locale: chosen })} />
       </main>
       <LegalFooter legal={options.legal} locale={undefined} text={undefined} />
     </div>

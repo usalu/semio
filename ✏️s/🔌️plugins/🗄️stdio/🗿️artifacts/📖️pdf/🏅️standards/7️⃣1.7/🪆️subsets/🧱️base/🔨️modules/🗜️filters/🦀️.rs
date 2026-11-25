@@ -432,6 +432,17 @@ fn ccitt_parameters(parms: Option<&PdfObject>) -> PdfCcittParameters {
     PdfCcittParameters { k: int("K", 0) as i32, columns: int("Columns", 1728).max(1) as u32, rows: int("Rows", 0).max(0) as u32, black_is_1: flag("BlackIs1", false), encoded_byte_align: flag("EncodedByteAlign", false), end_of_line: flag("EndOfLine", false), end_of_block: flag("EndOfBlock", true), damaged_rows_before_error: int("DamagedRowsBeforeError", 0).max(0) as u32 }
 }
 
+/// 🧬️ Whether a stream dictionary declares a filter chain with at least one logical codec (Flate, LZW, ASCIIHex, ASCII85, RunLength): the retained graph keeps such a stream as its original encoded bytes with that chain until the semantic lift interprets it.
+pub fn declares_logical_codec(dict: &[PdfDictEntry]) -> bool {
+    let logical = |name: &str| matches!(name, "FlateDecode" | "Fl" | "LZWDecode" | "LZW" | "ASCIIHexDecode" | "AHx" | "ASCII85Decode" | "A85" | "RunLengthDecode" | "RL");
+    let declared = dict_get(dict, "Filter").or_else(|| dict_get(dict, "F").filter(|value| matches!(value, PdfObject::Name(_) | PdfObject::Array(_))));
+    match declared {
+        Some(PdfObject::Name(name)) => logical(name),
+        Some(PdfObject::Array(names)) => names.iter().filter_map(PdfObject::as_name).any(logical),
+        _ => false,
+    }
+}
+
 /// 🧾 The `/Filter` names and per-filter `/DecodeParms` of a stream dictionary (abbreviations
 /// included, §7.4 Table 6 and §8.9.7 Table 94).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

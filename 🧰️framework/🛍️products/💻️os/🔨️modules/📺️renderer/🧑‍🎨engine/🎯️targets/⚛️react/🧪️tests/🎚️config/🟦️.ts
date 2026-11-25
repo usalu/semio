@@ -1,6 +1,7 @@
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { configDefaults, defineConfig } from "vitest/config";
+import { playgroundFlowWasmDevStubPlugin } from "@semio-tech/ui-styling/builder/vite";
 import { testCacheDirectoryV1 } from "@semio-tech/process/vitest";
 
 const testRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../📦️packages/🟦️typescript");
@@ -8,6 +9,7 @@ const testRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../📦️
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../../📦️packages/🟦️typescript");
 const repoRoot = resolve(root, "../../../../../../../../../..");
 
+const flowSource = resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm");
 const wasmEngineStub = resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts");
 /** 🎯️ A bare package name matched exactly, so `@semio-tech/<package>/<subpath>` keeps resolving through that package's own `exports` map. */
 const exactPackage = (name: string) => new RegExp(`^${name.replace(/[.*+?^${}()|[\]\\/]/g, "\\$&")}$`, "u");
@@ -84,6 +86,7 @@ const engineTestSuites = [
   engineSuite("📥️inbound-request"),
   engineSuite("🔬️wgpu-extension-dispatch"),
   engineSuite("🔀️surface-switch"),
+  engineSuite("🔁️reset-dock-windows"),
   engineSuite("🧭️route-ledger"),
   engineSuite("🎭️actor-window-actions"),
   engineSuite("⌨️window-scope"),
@@ -121,6 +124,7 @@ const engineTestSuites = [
   engineSuite("💾️media-export-and-natural-files"),
   engineSuite("📤️checked-media-export"),
   engineSuite("💾️natural-scope", "tsx"),
+  engineSuite("📂️opened-program", "ts"),
   engineSuite("📂️picked-file-opening"),
   engineSuite("🗜️package-routing"),
   engineSuite("🧭️format-resolution"),
@@ -283,6 +287,12 @@ const exhaustiveTestSuites = [elementSuite("📃️UiDocumentStore", "🧪️sui
 
 export default defineConfig({
   root: testRoot,
+  plugins: [playgroundFlowWasmDevStubPlugin(repoRoot, {
+    version: 1,
+    kind: "source",
+    browser: resolve(flowSource, "🌐️browser/🏃️runtime/🟨️.js"),
+    host: resolve(flowSource, "🖥️host/🏃️runtime/🟨️.js"),
+  })],
   cacheDir: testCacheDirectoryV1(process.env, "renderer-react"),
   resolve: {
     alias: [
@@ -298,8 +308,6 @@ export default defineConfig({
       { find: exactPackage("@semio-tech/framework"), replacement: resolve(repoRoot, "./🧰️framework/📦️packages/🟦️typescript/🟦️.ts") },
       { find: exactPackage("@semio-tech/canvas-react-renderer"), replacement: resolve(repoRoot, "./🧰️framework/🔨️modules/🖼️canvas/🎨️react-renderer/📦️packages/🟦️typescript/🟦️.tsx") },
       { find: exactPackage("@semio-tech/infinite-world-r3f"), replacement: resolve(repoRoot, "./🧰️framework/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/🟦️.tsx") },
-      { find: "@semio-tech/flow-core/🌐️flow-browser.js", replacement: resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/🏃️runtime/🟨️.js") },
-      { find: packageTree("@semio-tech/flow-core"), replacement: wasmEngineStub },
     ],
   },
   test: {

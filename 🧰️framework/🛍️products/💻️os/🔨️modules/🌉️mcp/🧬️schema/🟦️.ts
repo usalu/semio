@@ -299,7 +299,7 @@ export type ArtifactInferenceRequestV1 = {
 export type ArtifactInferenceResultV1 = {
   readonly "actualCacheMode": ArtifactInferenceCacheModeV1;
   readonly "artifactKind": string;
-  readonly "canonicalPayload": readonly number[] | null;
+  readonly "canonicalPayload"?: readonly number[] | null;
   readonly "complete": boolean;
   readonly "generation": number;
   readonly "inferenceSchema": string;
@@ -528,10 +528,10 @@ export type HandleInput = {
 };
 
 export type HubInferenceApprovalRequestV1 = {
-  readonly "schema": "semio.hub.inference-approval/v1";
-  readonly "version": 1;
   readonly "jobId": string;
   readonly "proposalHash": string;
+  readonly "schema": "semio.hub.inference-approval/v1";
+  readonly "version": 1;
 };
 
 export type InferenceApproveInput = {
@@ -555,12 +555,17 @@ export type InferenceJobOutput = { readonly [key: string]: JsonValue };
 
 export type InferenceListInput = {
   readonly "artifactId"?: string;
+  readonly "cursor"?: string;
+  readonly "inferenceSchema"?: string;
+  readonly "limit"?: number;
 };
 
 export type InferenceListOutput = {
   readonly "artifactId"?: JsonValue;
   readonly "artifactKind"?: JsonValue;
   readonly "declared"?: readonly JsonValue[];
+  readonly "nextCursor"?: string | null;
+  readonly "total"?: number;
 };
 
 export type InferenceRetainedPolicy = {

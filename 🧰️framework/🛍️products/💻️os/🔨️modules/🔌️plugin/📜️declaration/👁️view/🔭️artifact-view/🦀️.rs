@@ -18,6 +18,7 @@ pub struct ArtifactView<'a, P> {
     snapshot_read: std::sync::Mutex<Option<store::os_store::snapshot_read::SnapshotRead<P>>>,
     tool_run: Option<ToolRunView>,
     original_tool_run:Option<semio_framework_tool_run_presentation::ToolRunView<'a>>,
+    tool_run_poll:Option<crate::ToolRunPollView<'a>>,
     operations: &'a [ArtifactOperationProgress],
     provisional_generation: u64,
     instance: Option<ArtifactInstanceOperationOwnerHandle>,
@@ -43,7 +44,7 @@ impl<'a, P> ArtifactView<'a, P> {
     /// shape every leaf app and test uses. Prefer this over a struct literal: lane views grow
     /// over time, and a constructor absorbs that growth without touching every call site.
     pub fn new(snapshot: &'a P, history: &'a HistoryView) -> Self {
-        Self { snapshot, history, children: ChildContentView::EMPTY, operation: None, render_operation: None, parent_document_id: None, snapshot_read: std::sync::Mutex::new(None), tool_run: None, original_tool_run:None, operations: &[], provisional_generation: 0, instance: None }
+        Self { snapshot, history, children: ChildContentView::EMPTY, operation: None, render_operation: None, parent_document_id: None, snapshot_read: std::sync::Mutex::new(None), tool_run: None, original_tool_run:None,tool_run_poll:None, operations: &[], provisional_generation: 0, instance: None }
     }
 
     /// 🪪️ Synchronous retained-worker view bound to one exact admitted operation.
@@ -56,7 +57,7 @@ impl<'a, P> ArtifactView<'a, P> {
             render_operation: None,
             parent_document_id: None,
             snapshot_read: std::sync::Mutex::new(None),
-            tool_run: None, original_tool_run:None,
+            tool_run: None, original_tool_run:None,tool_run_poll:None,
             operations: &[],
             provisional_generation: 0,
             instance: None,
@@ -67,7 +68,7 @@ impl<'a, P> ArtifactView<'a, P> {
     /// [`ArtifactOwnedToolJobContext::children`] rather than through a host render pass and so
     /// carries no render identity. Synchronous on purpose: it only moves owned fields.
     pub fn with_children(snapshot: &'a P, history: &'a HistoryView, children: ChildContentView) -> Self {
-        Self { snapshot, history, children, operation: None, render_operation: None, parent_document_id: None, snapshot_read: std::sync::Mutex::new(None), tool_run: None, original_tool_run:None, operations: &[], provisional_generation: 0, instance: None }
+        Self { snapshot, history, children, operation: None, render_operation: None, parent_document_id: None, snapshot_read: std::sync::Mutex::new(None), tool_run: None, original_tool_run:None,tool_run_poll:None, operations: &[], provisional_generation: 0, instance: None }
     }
 
     /// 🪪️ Binds a composing retained view to the exact admitted operation it runs under, so its handlers mint ids
@@ -92,7 +93,7 @@ impl<'a, P> ArtifactView<'a, P> {
             render_operation: Some(render_operation),
             parent_document_id: Some(parent_document_id),
             snapshot_read: std::sync::Mutex::new(snapshot_read),
-            tool_run: None, original_tool_run:None,
+            tool_run: None, original_tool_run:None,tool_run_poll:None,
             operations: &[],
             provisional_generation: 0,
             instance: None,
@@ -198,4 +199,8 @@ impl<'a,P> ArtifactView<'a,P>{
  pub fn with_original_tool_run(mut self,view:Option<semio_framework_tool_run_presentation::ToolRunView<'a>>)->Self{self.original_tool_run=view;self}
  /// 🔎️ Reads the same retained presentation that the native tick receiver published.
  pub fn original_tool_run(&self)->Option<semio_framework_tool_run_presentation::ToolRunView<'_>>{self.original_tool_run}
+ /// 🧭️ Binds the scalar identity of the run this window shows, which the ledger holds from `starting` on, before any presentation is published.
+ pub fn with_tool_run_poll(mut self,view:Option<crate::ToolRunPollView<'a>>)->Self{self.tool_run_poll=view;self}
+ /// 🧭️ The tool id, identity and state of the run this window shows from the moment the ledger admits it (`📋️tool-run-contract.md` §5 W1-F): run controls such as abort bind to it, the presentation is [`Self::original_tool_run`].
+ pub fn tool_run_poll(&self)->Option<crate::ToolRunPollView<'_>>{self.tool_run_poll}
 }

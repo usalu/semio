@@ -25,12 +25,18 @@ impl<T:NativeReceive<DslValue>+RetireOwned+Send+Sync+'static,R:GuestPollFailureR
  pub(super) fn fixture_guest_request(&self)->Option<(bool,OriginalJobBudget,GuestPollGuestLoan)>{
   Some((self.stage==4,self.guest?.budget(),self.request?))
  }
+ /// 📊️ Reports the last committed execution counters without driving or charging the pending operation.
+ pub fn pending_diagnostic(&self)->String{
+  let mut report = format!("poll stage={}, loan header={:?}, execution fuel spent={:?}", self.stage, self.request.map(|request|request.header_bytes), self.driver.original_execution_spent().ok());
+  if let Some(frozen) = self.frozen { report.push_str(&format!(", frozen {frozen:?} at {:?}", self.capture)); }
+  report
+ }
  #[cfg(test)]
  pub(super) fn fixture_execution_spent(&self)->u64{self.driver.original_execution_spent().unwrap()}
  #[cfg(test)]
  pub(super) fn fixture_drive_copy(&self)->usize{self.driver.original_operation_drive_grant().unwrap().unwrap().maximum_copy_bytes}
  #[cfg(test)]
- pub(super) fn fixture_drive_release(&self)->usize{self.driver.original_operation_drive_grant().unwrap().unwrap().maximum_release_bytes}
+ pub(super) fn fixture_drive_capacity(&self)->usize{self.driver.original_operation_drive_grant().unwrap().unwrap().maximum_capacity_bytes}
  #[cfg(test)]
  pub(super) fn fixture_guest_owner(&self)->OriginalNativeRecipientIdentity{self.guest.unwrap().producer_identity()}
 
@@ -90,10 +96,10 @@ impl<T:NativeReceive<DslValue>+RetireOwned+Send+Sync+'static,R:GuestPollFailureR
   let frontier=if self.frozen==Some(GuestPollFrozenKind::Input){FrozenReceiptFrontier::Unit}else{FrozenReceiptFrontier::Scalar};let history=self.history.as_mut().unwrap();let producer=self.producer.as_mut().unwrap();let result=self.driver.dispatch_operation_step(false,cleanup,|cx|{with_frozen_history_parts(history,producer,frontier,cx,receive)?;Ok(())});self.retain(result,cleanup)
  }
  fn acknowledge(&mut self,cleanup:bool)->Option<GuestPollSessionStatus>{
-  let producer=self.producer.as_mut().unwrap();let diagnostic=&mut self.diagnostic;let mut status=None;let mut request=None;let mut frozen=None;let mut awaiting_control=false;let mut result=self.driver.dispatch_operation_step(false,cleanup,|cx|{producer.with_native(cx,|home,cx|{home.with_native(cx,|_,_,_,poll,cx|{
+  let producer=self.producer.as_mut().unwrap();let diagnostic=&mut self.diagnostic;let mut status=None;let mut request=None;let mut frozen=None;let mut refusal=None;let mut awaiting_control=false;let mut result=self.driver.dispatch_operation_step(false,cleanup,|cx|{producer.with_native(cx,|home,cx|{home.with_native(cx,|_,_,_,poll,cx|{
    let actor_failure=poll.journal_identity.is_none()&&poll.actor_failure.is_some();
    if !cleanup&&(actor_failure||poll.scalar_progress().is_some_and(scalar_failed)||poll.failed&&poll.decoding_outcome().is_some()){
-    status=Some(GuestPollSessionStatus::Refused);return Ok(())
+    status=Some(GuestPollSessionStatus::Refused);refusal=Some(poll.refusal_cause());return Ok(())
    }
    if poll.transport_failure().is_some(){
     poll.take_transport_failure_step(cx,|failure,_,cx|receive_poll_turn_failure_step(diagnostic,failure,cleanup,cx))?;
@@ -110,8 +116,11 @@ impl<T:NativeReceive<DslValue>+RetireOwned+Send+Sync+'static,R:GuestPollFailureR
     }
     if actor_failure{return Err(invalid("Poll still owns its original actor failure reference"))}
    }
-   if poll.input_progress_pending(){awaiting_control=!poll.acknowledge_input_progress_step(cx)?;return Ok(())}if poll.scalar_progress().is_some(){poll.acknowledge_scalar_progress_step(cx)?;return Ok(())}if poll.scalar_result().is_some(){poll.acknowledge_scalar_result_step(cx)?;return Ok(())}if poll.raw_word().is_some(){poll.take_raw_word_step(cx)?;return Ok(())}
-   if poll.fixed_receipt().is_some(){poll.acknowledge_fixed_step(cx)?;return Ok(())}
+   if poll.input_progress_pending(){awaiting_control=!poll.acknowledge_input_progress_step(cx)?;return Ok(())}
+   if poll.scalar_progress().is_some(){awaiting_control=!poll.acknowledge_scalar_progress_step(cx)?;return Ok(())}
+   if poll.scalar_result().is_some(){awaiting_control=!poll.acknowledge_scalar_result_step(cx)?;return Ok(())}
+   if poll.raw_word().is_some(){awaiting_control=poll.take_raw_word_step(cx)?.is_none();return Ok(())}
+   if poll.fixed_receipt().is_some(){awaiting_control=!poll.acknowledge_fixed_step(cx)?;return Ok(())}
    if poll.outcome.is_some()||poll.settlement.is_some(){poll.retire_outcome_step(cx)?;return Ok(())}
    if poll.terminal_is_empty(){status=Some(GuestPollSessionStatus::Complete);return Ok(())}
    let Some(kind)=poll.frozen_kind_step(cx)? else { awaiting_control=true;return Ok(()) };
@@ -120,10 +129,13 @@ impl<T:NativeReceive<DslValue>+RetireOwned+Send+Sync+'static,R:GuestPollFailureR
    if frozen.is_none()&&self.guest.is_none(){let Some(next)=poll.next_guest_subloan_step(cx)? else { return Ok(()) };request=next;}
    status=Some(GuestPollSessionStatus::Pending);Ok(())
   })?;Ok(())})?;Ok(())});
+  if let Some(cause)=refusal.filter(|_|self.failure.is_none()&&self.cleanup_failure.is_none()){let fuel=self.driver.original_execution_spent().unwrap_or_default();let ledger=self.driver.original_guest_ledger().unwrap_or_default();self.retain(Err(ValueError::new(ValueRefusalKind::InvalidValue,format!("guest actor refused its ordinary turn: {cause}; execution fuel spent={fuel}; {ledger}")).into()),false);}
   if result.is_ok()&&awaiting_control&&!cleanup&&self.guest.is_some(){
    result=result.and_then(|progress|{
-    if self.driver.original_operation_drive_grant()?.is_some_and(|grant|grant.maximum_copy_bytes<control_bytes()){
-     return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"ordinary Poll copy budget cannot fund its acknowledgment frame").into())
+    let required = control_bytes();
+    if let Some(grant) = self.driver.original_operation_drive_grant()?.filter(|grant| grant.maximum_copy_bytes < required) {
+     let available = grant.maximum_copy_bytes;
+     return Err(ValueError::new(ValueRefusalKind::WorkLimit,format!("ordinary Poll copy budget cannot fund its acknowledgment frame: requires {required} bytes, grants {available} bytes{}",self.driver.original_guest_ledger().map_or(String::new(),|ledger|format!("; {ledger}")))).into())
     }
     Ok(progress)
    });
@@ -131,13 +143,14 @@ impl<T:NativeReceive<DslValue>+RetireOwned+Send+Sync+'static,R:GuestPollFailureR
   self.retain(result,cleanup);if let Some(frozen)=frozen{self.frozen=Some(frozen);self.stage=if matches!(frozen,GuestPollFrozenKind::Boot|GuestPollFrozenKind::CloseContext){9}else{10};}else if let Some(request)=request{self.request=Some(request);self.stage=1;}status
  }
  fn advance_native(&mut self,input:Option<&dyn JsonWriteSource>,cleanup:bool)->Option<GuestPollStatus>{
-  let mut returned_frame_demand=None;
-  let producer=self.producer.as_mut().unwrap();let budget=self.guest.map(|loan|loan.budget());let mut status=None;let result=self.driver.dispatch_operation_step(true,cleanup,|cx|{producer.with_native(cx,|home,cx|{home.with_native(cx,|runtime,instance,_,poll,cx|{
+  let mut returned_frame_demand=None;let mut guest_ledger:Option<[u64;20]>=None;let mut outside=(0u64,0u64);
+  let producer=self.producer.as_mut().unwrap();let budget=self.guest.map(|loan|loan.budget());let mut status=None;let result=self.driver.dispatch_operation_step(true,cleanup,|cx|{let posted_before=cx.retained_progress();let booked_before=GuestRuntimes::booked_on_this_thread();let outcome=producer.with_native(cx,|home,cx|{home.with_native(cx,|runtime,instance,_,poll,cx|{
    if poll.awaiting_input_budget{
     if cleanup&&poll.retire_interrupted_guest_step(runtime,instance,budget,cx)? { return Ok(()) }
     if let Some(budget)=budget{poll.repeat_input_step(runtime,instance,budget,cx)?;}
     return Ok(())
    }
+   guest_ledger=runtime.original_retained_ledger(instance);
    if !poll.prepare_step(runtime,instance,cx)?{return Ok(())}
    if poll.requires_execution(runtime,instance)?{
     let mut body=None;
@@ -158,11 +171,12 @@ impl<T:NativeReceive<DslValue>+RetireOwned+Send+Sync+'static,R:GuestPollFailureR
     status=Some(GuestPollStatus::Pending);
    }
    Ok(())
-  })?;Ok(())})?;Ok(())});
+  })?;Ok(())});let posted_after=cx.retained_progress();let booked_after=GuestRuntimes::booked_on_this_thread();outside=((posted_after.copied_items.saturating_sub(posted_before.copied_items) as u64).saturating_sub(booked_after.0-booked_before.0),(posted_after.copied_bytes.saturating_sub(posted_before.copied_bytes) as u64).saturating_sub(booked_after.1-booked_before.1));outcome?;Ok(())});
+  if let Some(ledger)=&guest_ledger{self.driver.note_original_guest_ledger(*ledger,GuestRuntimes::retained_ledger_formatter());}self.driver.note_original_outside_post(self.stage as usize,outside.0,outside.1);
   let result=result.and_then(|progress|{
    if let Some(demand)=returned_frame_demand{
-    if self.driver.original_operation_drive_grant()?.is_some_and(|grant|!semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand)){
-     return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"ordinary Poll budget cannot retire its returned Core frame").into())
+    if let Some(grant)=self.driver.original_operation_drive_grant()?.filter(|grant|!semio_framework_value::retained_clone::retained_clone_grant_admits(*grant,demand)){
+     return Err(ValueError::new(ValueRefusalKind::WorkLimit,format!("ordinary Poll budget cannot retire its returned Core frame: demand={demand:?}, grant={grant:?}{}",self.driver.original_guest_ledger().map_or(String::new(),|ledger|format!("; {ledger}")))).into())
     }
    }
    Ok(progress)

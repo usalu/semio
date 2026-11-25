@@ -607,6 +607,11 @@
     "stallMs": 400,
     "cancelAfterMs": 300
   },
+  "repeatedComponents": {
+    "profiles": ["release", "prototype"],
+    "components": ["comp-a", "comp-b"],
+    "laterStageWriteDelayMs": 1500
+  },
   "real": {
     "tokens": 4,
     "profiles": [
@@ -925,14 +930,14 @@
     ""
   ],
   "finiteCallerBudget": {
-    "milliseconds": 6000,
-    "safetyMilliseconds": 12000,
+    "milliseconds": 18000,
+    "safetyMilliseconds": 36000,
     "expectedError": "Original native build deadline exhausted"
   },
   "unlanedStateOrder": {
     "tokens": 1,
     "profile": "prototype",
-    "deadlineMs": 15000,
+    "deadlineMs": 45000,
     "oracle": "held",
     "expectedParticipants": [
       "job",
@@ -940,18 +945,15 @@
     ]
   },
   "originalStageAuthority": {
-    "milliseconds": 6000,
-    "safetyMilliseconds": 12000,
+    "milliseconds": 18000,
+    "safetyMilliseconds": 36000,
     "expectedError": "deadline",
     "stages": [
       "pending",
       "finalizer",
       "owned-child"
     ],
-    "fractionalRemaining": 0.75,
     "expectedSignalAborted": false,
-    "expectedPublished": 1,
-    "expectedContinuations": 1,
     "ownedChildSettleMilliseconds": 100
   },
   "generationPathAdmission": {

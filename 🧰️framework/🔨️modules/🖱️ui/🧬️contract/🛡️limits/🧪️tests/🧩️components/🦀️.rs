@@ -5,7 +5,7 @@ fn typed_wire_neutral_component_defaults_match_serde() {
     let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧵️retained/📦️wire/🧪️tests/🧫️fixtures/🧾️typed/🔣️.json")).expect("typed fixture");
     let rows = fixture["components"].as_array().expect("component vectors");
-    assert_eq!(rows.len(), 28);
+    assert_eq!(rows.len(), 29);
     for row in rows {
         let sparse: Component = serde_json::from_value(row["wire"].clone()).expect("native sparse component");
         let normalized: Component = serde_json::from_value(row["expected"].clone()).expect("native normalized component");
@@ -72,7 +72,7 @@ fn every_component_variant_round_trips() {
         default_open: Some(false),
         drop_overlay: Some(DropOverlaySpec { title: label("Drop"), hint: label("here"), accept: Some(ui_text("image/*")) }),
     }));
-    component_round_trips(Component::Text(TextProps { value: label("hi"), emphasize: Some(true), data_attributes: None }));
+    component_round_trips(Component::Text(TextProps { value: label("hi"), emphasize: Some(true), data_attributes: None, heading_level: None }));
     component_round_trips(Component::Button(ButtonProps { icon: ui_text("plus"), label: label("Add") }));
     component_round_trips(Component::Separator(SeparatorProps {}));
     component_round_trips(Component::Input(InputProps { kind: InputKind::Number, value: ui_text("3"), placeholder: None, commit: Some(ui_text("blur")), min: Some(0.0), max: Some(10.0), step: Some(1.0), accept: None, precision: Some(2), snaps: Default::default(), display_factor: None, limits: None, draft_target: Some(ui_text("fixture.number/value")), publication_revision: Some(crate::UiPublicationRevision(5)) }));

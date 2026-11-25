@@ -1,4 +1,60 @@
 {
+  "modes": [
+    {
+      "id": "held-mode",
+      "held": 16877,
+      "actual": 16877,
+      "expected": true
+    },
+    {
+      "id": "guarded-after-detach",
+      "held": 16877,
+      "actual": 16749,
+      "expected": true
+    },
+    {
+      "id": "guarded-private-directory",
+      "held": 16832,
+      "actual": 16704,
+      "expected": true
+    },
+    {
+      "id": "guarded-at-publication",
+      "held": 16749,
+      "actual": 16749,
+      "expected": true
+    },
+    {
+      "id": "widened-world-writable",
+      "held": 16877,
+      "actual": 16895,
+      "expected": false
+    },
+    {
+      "id": "narrowed-other-bits",
+      "held": 16877,
+      "actual": 16832,
+      "expected": false
+    },
+    {
+      "id": "re-widened-after-guarded-publication",
+      "held": 16749,
+      "actual": 16877,
+      "expected": false
+    },
+    {
+      "id": "other-type-same-permissions",
+      "held": 16877,
+      "actual": 33261,
+      "expected": false
+    },
+    {
+      "id": "other-type-guarded-permissions",
+      "held": 16877,
+      "actual": 33133,
+      "expected": false
+    }
+  ],
   "cases": [
     {
       "id": "same-live-device",

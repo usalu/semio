@@ -3,7 +3,7 @@ import {expect,test} from "bun:test";
 import {spawnSync} from "node:child_process";
 import {fileURLToPath} from "node:url";
 import Ajv from "ajv";
-import {NX_FAILURE_SUMMARY_POLICY_V1 as policy,nxFailureSummaryLinesV1,nxFailureSummaryOfTailV1,settleNxRunReportedV1} from "../../🟦️.ts";
+import {NX_FAILURE_SUMMARY_POLICY_V1 as policy,nxFailedTaskTailsV1,nxFailureSummaryLinesV1,nxFailureSummaryOfTailV1,nxFinalStatusV1,settleNxRunReportedV1} from "../../🟦️.ts";
 import schema from "../../🧬️schema/🔣️.json";
 import fixture from "./🔣️.json";
 
@@ -51,4 +51,33 @@ test("a failure that stands is reported once after its reruns, a classified fail
  const failure=await settleNxRunReportedV1(run(1,moved),"label",async()=>{reruns++;return run(1,moved);},options,line=>lines.push(line)).catch(error=>error as Error);
  expect(failure).toBeInstanceOf(Error);expect(reruns).toBeGreaterThan(0);expect(lines.filter(line=>line.startsWith("Nx run failed: 1 task(s) did not succeed after "+reruns+" rerun(s)"))).toHaveLength(1);
  const ok:string[]=[];expect(await settleNxRunReportedV1(run(1,moved),"label",async()=>run(0,""),options,line=>ok.push(line))).toBe(0);expect(ok).toEqual([]);
+});
+
+test("a failed task whose output carries no header is read from the output before the summary, with its error line kept, and a task without any output says so",()=>{
+ const warnings=Array.from({length:80},(_,index)=>"warning: unused "+index).join("\n"),text=warnings+"\nerror: failed to write `/x/invoked.timestamp`\nCaused by:\n  No such file or directory (os error 2)\n"+Array.from({length:12},(_,index)=>"  at frame "+index).join("\n")+"\n✔  nx run a:ok\n NX   failed\nFailed tasks:\n- a:build\n",rows=nxFailedTaskTailsV1(text,5)[0]!.lines;
+ expect(rows[0]).toContain((policy.texts.en as Record<string,string>).unattributed);
+ expect(rows).toContain("error: failed to write `/x/invoked.timestamp`");expect(rows).toContain("  No such file or directory (os error 2)");expect(rows.at(-1)).toBe("  at frame 11");
+ expect(nxFailedTaskTailsV1("✔  nx run a:ok\n NX   failed\nFailed tasks:\n- a:build\n")[0]!.lines.length).toBe(1);
+});
+test("a coloured transcript is read like a plain one: reason and the bounded own output tail of every failed task, colour codes and progress rows removed",()=>{
+ const text="\u001b[2m> \u001b[22mnx run a:build\n[script] cache:entry · x\n"+Array.from({length:70},(_,index)=>"\u001b[1mline "+index+"\u001b[0m").join("\n")+"\n\u001b[31merror\u001b[0m: boom\n\n NX   failed\nFailed tasks:\n- a:build\n- b:build\n",tails=nxFailedTaskTailsV1(text,5);
+ expect(tails.map(row=>row.task)).toEqual(["a:build","b:build"]);
+ expect(tails[0]!.lines).toEqual(["line 66","line 67","line 68","line 69","error: boom"]);expect(tails[1]!.lines).toEqual([(policy.texts.en as Record<string,string>).silent+" / "+(policy.texts.de as Record<string,string>).silent]);
+ expect(nxFailureSummaryOfTailV1(text)!.failed[0]!.reason).toBe("error: boom");
+ expect(nxFailedTaskTailsV1("no footer")).toEqual([]);
+ expect(nxFailedTaskTailsV1(text)[0]!.lines.length).toBeLessThanOrEqual(policy.maximumTailLines);
+});
+
+test("a signal that reaches the run after Nx ended in a failure is reported as a consequence and the failure keeps its status; a signal during the run keeps 130 or 143; the lines are bilingual",()=>{
+ const tail=fixture.cases[0]!.tail,reference=(row:{code:number;signal?:string;cancelledAtMs?:number;closedAtMs:number})=>row.signal===undefined?row.code:row.code!==0&&(row.cancelledAtMs??Infinity)>=row.closedAtMs?row.code:row.signal==="SIGINT"?130:143;
+ for(const row of [{code:1,signal:"SIGINT",cancelledAtMs:200,closedAtMs:100},{code:1,signal:"SIGINT",cancelledAtMs:50,closedAtMs:100},{code:1,signal:"SIGTERM",cancelledAtMs:50,closedAtMs:100},{code:0,signal:"SIGINT",cancelledAtMs:200,closedAtMs:100},{code:1,closedAtMs:100}]){
+  const own=nxFinalStatusV1({...row,tail},{});
+  expect(own.status,JSON.stringify(row)).toBe(reference(row));
+  expect(own.lines).toHaveLength(row.signal===undefined?0:2);
+ }
+ const late=nxFinalStatusV1({code:1,signal:"SIGINT",cancelledAtMs:200,closedAtMs:100,tail},{});
+ expect(late.lines[0]!.startsWith("[nx] SIGINT reached this run after Nx had already ended with exit status 1 (failed: ")).toBe(true);
+ expect(late.lines[0]).toContain("workspace:deps-cargo:prototype");
+ expect(late.lines[1]!.startsWith("[nx] SIGINT erreichte diesen Lauf, nachdem Nx schon mit Exit-Status 1 geendet hatte (fehlgeschlagen: ")).toBe(true);
+ expect(nxFinalStatusV1({code:1,signal:"SIGINT",cancelledAtMs:50,closedAtMs:100,tail},{}).lines[0]).toContain("exit status 130");
 });

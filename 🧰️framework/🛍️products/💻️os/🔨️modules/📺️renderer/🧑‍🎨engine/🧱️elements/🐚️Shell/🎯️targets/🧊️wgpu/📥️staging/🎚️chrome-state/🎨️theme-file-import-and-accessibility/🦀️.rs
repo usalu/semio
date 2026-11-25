@@ -298,10 +298,8 @@ pub struct ChromeParityIntroduction {
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ChromeParityPanelDrop {
-    pub insert_bar_width_px: f32,
     pub nest_min_fraction: f32,
     pub nest_max_fraction: f32,
-    pub nest_fill_alpha: f32,
     pub empty_zone_min_width_rem: f32,
 }
 

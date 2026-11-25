@@ -5,18 +5,18 @@
   "definitions": {
     "Policy": {
       "description": "EN: censusCaches is the number of the largest bounded caches named in the retained line. DE: censusCaches ist die Anzahl der größten begrenzten Zwischenspeicher, die die Zeile retained nennt.",
-      "const": { "version": 1, "censusCaches": 5 }
+      "const": { "version": 1, "censusCaches": 8 }
     },
     "Messages": {
       "description": "EN: The lines, one per language of the environment (English first, German second, no default language). DE: Die Zeilen, eine je Sprache der Umgebung (zuerst Englisch, dann Deutsch, keine Standardsprache).",
       "const": {
         "en": {
           "answered": "graph: plan answered, managed {managed} MB, resident {resident} MB (released {released} MB)",
-          "retained": "graph: after the wave managed {managed} MB, resident {resident} MB; largest bounded caches: {caches}"
+          "retained": "graph: after the wave managed {managed} MB, resident {resident} MB; largest collections: {caches}"
         },
         "de": {
           "answered": "Graph: Plan beantwortet, verwaltet {managed} MB, resident {resident} MB ({released} MB freigegeben)",
-          "retained": "Graph: nach der Welle verwaltet {managed} MB, resident {resident} MB; größte begrenzte Zwischenspeicher: {caches}"
+          "retained": "Graph: nach der Welle verwaltet {managed} MB, resident {resident} MB; größte Sammlungen: {caches}"
         }
       }
     },

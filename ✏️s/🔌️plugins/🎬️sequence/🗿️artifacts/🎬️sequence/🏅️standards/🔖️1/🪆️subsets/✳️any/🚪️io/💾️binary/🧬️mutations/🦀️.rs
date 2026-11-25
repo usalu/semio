@@ -17,4 +17,6 @@ impl protocol::OpBinary for SequenceMutation {
         Err(protocol::ProtocolError::Malformed { what: "sequence-mutation", offset: 0, detail: "a sequence has no parent-lane mutation; content edits are child-lane leaves".into() })
     }
 }
+semio_os_kernel::original_decoded_operation_receiving!(SequenceMutation);
+semio_os_kernel::artifact_persisted_encoded_binary_operation!(SequenceMutation);
 }

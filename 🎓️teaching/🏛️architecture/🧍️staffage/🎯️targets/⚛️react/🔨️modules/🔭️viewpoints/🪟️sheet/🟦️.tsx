@@ -9,6 +9,7 @@
 import { useId, useMemo, type ReactElement } from "react";
 import { CSS_PX_PER_MM, formatNumber, mmPerMetre } from "@teaching/staffage";
 import type { Asset, DrawingScale, EvaluationQuery, Language, PlanarViewpoint, View } from "@teaching/staffage";
+import { WindowChrome } from "@semio-tech/ui-react/chrome";
 import type { StaffageClock } from "../../⏱️clock/🧱️core/🟦️.ts";
 import { StaffageFigure, type StaffageFigureProps } from "../../🧍️figure/🟦️.tsx";
 import { useSize } from "../../🥞️levels/🟦️.tsx";
@@ -79,49 +80,57 @@ export function ThreeViewSheet(props: ThreeViewSheetProps): ReactElement {
             className="relative m-0 min-w-0 overflow-hidden"
             style={{ gridColumn: column(viewpoint), gridRow: cell.row, width: mm(cell.widthMm), height: mm(cell.heightMm) }}
           >
-            {resolution.available ? (
-              <FigureBoundary resetKey={asset} fallback={(message) => <Notice kind="error" compact title={phrase}>{message}</Notice>}>
-                <StaffageFigure
-                  asset={asset}
-                  {...(props.query === undefined ? {} : { query: props.query })}
-                  {...(props.clock === undefined ? {} : { clock: props.clock })}
-                  view={props.view}
-                  scale={props.scale}
-                  viewpoint={viewpoint}
-                  language={language}
-                  frame={cell.frame}
-                  zoom={zoom}
-                  fit="paper"
-                  live
-                  {...shared}
-                  {...(focused && onFlow !== undefined ? { onFlow } : {})}
-                  {...(focused && onEvaluated !== undefined ? { onEvaluated } : {})}
-                />
-              </FigureBoundary>
-            ) : (
-              <Notice kind="unavailable" plain live={false} className="h-full overflow-auto pt-6" title={viewpointWord("viewpoints.unavailable", language, { view: phrase })}>
-                <p className="m-0 text-foreground">{resolution.message[language]}</p>
-                {resolution.details === undefined ? null : (
-                  <details>
-                    <summary data-shared-border-frame="" data-shared-border-edges="">{viewpointWord("viewpoints.failedDetails", language)}</summary>
-                    <code className="font-mono">{resolution.details}</code>
-                  </details>
-                )}
-                <p className="m-0">{viewpointWord("viewpoints.nothingInstead", language)}</p>
-              </Notice>
-            )}
-            <button
-              type="button"
-              aria-pressed={focused}
-              data-shared-border-frame=""
-              onClick={() => onFocus?.(viewpoint)}
-              onPointerDown={(event) => event.stopPropagation()}
-              className={cn("absolute left-1 top-1 border border-border px-single text-[0.65rem] uppercase tracking-wide", focused ? "bg-active-base text-active-foreground" : "bg-panel text-muted-foreground hover:bg-hover-panel")}
-              aria-label={focused ? viewpointWord("viewpoints.focusPressed", language, { name }) : viewpointWord("viewpoints.focusAction", language, { name })}
-              title={viewpointWord("viewpoints.focus", language)}
-            >
-              {name}
-            </button>
+            <WindowChrome
+              level="window"
+              active={focused}
+              className="size-full"
+              titleChips={
+                <button
+                  type="button"
+                  aria-pressed={focused}
+                  onClick={() => onFocus?.(viewpoint)}
+                  onPointerDown={(event) => event.stopPropagation()}
+                  className={cn("min-w-0 truncate px-single text-[0.65rem] uppercase tracking-wide", focused ? "font-semibold text-foreground" : "text-muted-foreground hover:text-foreground")}
+                  aria-label={focused ? viewpointWord("viewpoints.focusPressed", language, { name }) : viewpointWord("viewpoints.focusAction", language, { name })}
+                  title={viewpointWord("viewpoints.focus", language)}
+                >
+                  {name}
+                </button>
+              }
+              body={resolution.available ? (
+                <div data-window-content-layout="edgeless" className="size-full">
+                  <FigureBoundary resetKey={asset} fallback={(message) => <Notice kind="error" compact title={phrase}>{message}</Notice>}>
+                    <StaffageFigure
+                      asset={asset}
+                      {...(props.query === undefined ? {} : { query: props.query })}
+                      {...(props.clock === undefined ? {} : { clock: props.clock })}
+                      view={props.view}
+                      scale={props.scale}
+                      viewpoint={viewpoint}
+                      language={language}
+                      frame={cell.frame}
+                      zoom={zoom}
+                      fit="paper"
+                      live
+                      {...shared}
+                      {...(focused && onFlow !== undefined ? { onFlow } : {})}
+                      {...(focused && onEvaluated !== undefined ? { onEvaluated } : {})}
+                    />
+                  </FigureBoundary>
+                </div>
+              ) : (
+                <Notice kind="unavailable" plain live={false} className="h-full overflow-auto" title={viewpointWord("viewpoints.unavailable", language, { view: phrase })}>
+                  <p className="m-0 text-foreground">{resolution.message[language]}</p>
+                  {resolution.details === undefined ? null : (
+                    <details>
+                      <summary data-shared-border-frame="" data-shared-border-edges="">{viewpointWord("viewpoints.failedDetails", language)}</summary>
+                      <code className="font-mono">{resolution.details}</code>
+                    </details>
+                  )}
+                  <p className="m-0">{viewpointWord("viewpoints.nothingInstead", language)}</p>
+                </Notice>
+              )}
+            />
           </figure>
         );
       })}

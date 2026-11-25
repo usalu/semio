@@ -1,5 +1,5 @@
 import {ensureRepositoryBrowserPathV1} from "../../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🧰️preparation/🟦️.ts";
-import {browserLaunchOptionsV1} from "../../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🟦️.ts";
+import { browserLaunchOptionsV1, launchBrowserV1 } from "../../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🟦️.ts";
 /** 🎪️ One locale pass and the whole run with its markdown report. */
 import { join } from "node:path";
 import { PLAYWRIGHT_MODULE_SPECIFIER } from "../../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🟦️.ts";
@@ -178,8 +178,7 @@ type RunSummary = { verdicts: number; passed: number; failed: number; uncaught: 
  * answers the counts the acceptance record carries. */
 export const runProbe = async (repoRoot:string): Promise<RunSummary> => {
   ensureRepositoryBrowserPathV1(repoRoot,process.env);
-  const { chromium }: typeof import("playwright") = await import(PLAYWRIGHT_MODULE_SPECIFIER);
-  setBrowser(await chromium.launch(browserLaunchOptionsV1()));
+  setBrowser(await launchBrowserV1(browserLaunchOptionsV1()));
   try {
     for (const locale of locales) {
       if (cancelled.aborted) break;

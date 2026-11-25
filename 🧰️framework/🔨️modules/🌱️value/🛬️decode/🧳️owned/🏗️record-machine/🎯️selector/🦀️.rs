@@ -9,10 +9,23 @@ impl<I:NativeValueSource+?Sized>NativeVariantSelector<I>{
  pub fn result(&self)->Option<NativeVariantSelection>{self.selection}
  pub fn validate_input(&self,input:RetainedCloneRef<'_,I>)->Result<(),ValueError>{input.check_binding(&self.binding)?;Ok(())}
  pub fn demands(&self,input:RetainedCloneRef<'_,I>,body:usize,maximum_work_units:u64)->Result<RetirementDemand,ValueError>{if self.closing{return Err(invalid())}if self.selection.is_some()||self.failed{return Ok(Default::default())}if !input.check_binding(&self.binding)?{return Ok(fixed(input.binding_copy_bytes()))}if let Some(matcher)=self.matcher.as_ref(){if self.phase==3{return self.settlement_demand(body)}if matcher.result().is_none(){return nested(matcher.demands(input,body,maximum_work_units)?,0)}}Ok(fixed(0))}
+ /// 🎯️ Resolves the variant straight from a plain-leaf schema and an ordinal-keyed or text source in one inline action; any other shape keeps the matcher path.
+ fn direct_probe(&self,input:RetainedCloneRef<'_,I>)->Result<Option<(NativeVariantSelection,u64)>,ValueError>{
+  let source=input.get();if source.variant_tag().is_some(){return Ok(None)}
+  let named=|fields:NativeSchemaFields,name:&str|->Option<usize>{for index in 0..self.spec.count{match fields.entry(index){Some(NativeRecordSchema::Leaf(leaf))if leaf.name==name=>return Some(leaf.ordinal as usize),Some(NativeRecordSchema::Leaf(_))|Some(NativeRecordSchema::Skip)=>{},_=>return None}}None};
+  let(name,work)=if let Some(tag)=self.spec.tag{
+   let Some(NativeRecordSchema::Leaf(leaf))=tag.entry(0)else{return Ok(None)};if tag.entry(1).is_some(){return Ok(None)}
+   let count=source.record_len()?;let mut found=None;
+   for index in 0..count{match source.record_key(index)?{NativeRecordKey::Ordinal(ordinal)=>{if u32::from(ordinal)==leaf.ordinal{if found.is_some(){return Ok(None)}found=Some(index)}},_=>return Ok(None)}}
+   let Some(at)=found else{return Ok(None)};let Ok(text)=source.record_child(at).and_then(|child|child.text())else{return Ok(None)};(text.as_str(),1+count as u64)
+  }else if source.tree_kind()==Some(NativeTreeKind::Text){let Ok(text)=source.text()else{return Ok(None)};(text.as_str(),2)}else{return Ok(None)};
+  let fields=if self.spec.tag.is_some(){self.spec.all}else{self.spec.units};
+  Ok(named(fields,name).filter(|index|*index<self.spec.count).map(|index|(NativeVariantSelection{index,direct:false},work)))
+ }
  /// 🧭️ Selects the resident matcher or the one separately funded local selector action.
  pub fn select_advance(&self,input:RetainedCloneRef<'_,I>,body:usize,maximum_work_units:u64)->Result<crate::NativeAdvanceSelection,ValueError>{
   if self.closing||self.failed||self.selection.is_some(){return Err(invalid())}
-  let work=if !input.check_binding(&self.binding)?{input.binding_work_demand(&self.binding)?}else if let Some(matcher)=self.matcher.as_ref(){if self.phase==3{self.settlement_work_demand(body)?}else if matcher.result().is_none(){return matcher.select_advance(input,body,maximum_work_units)}else{1}}else{1};
+  let work=if !input.check_binding(&self.binding)?{input.binding_work_demand(&self.binding)?}else if let Some(matcher)=self.matcher.as_ref(){if self.phase==3{self.settlement_work_demand(body)?}else if matcher.result().is_none(){return matcher.select_advance(input,body,maximum_work_units)}else{1}}else if self.phase==1{self.direct_probe(input)?.map_or(1,|(_,work)|work)}else{1};
   if work>maximum_work_units{return Err(ValueError::literal(crate::ValueRefusalKind::WorkLimit,"native variant action exceeds its original work ceiling"))}Ok(crate::NativeAdvanceSelection::Local{work})
  }
  /// ⏲️ Quotes the matcher Work selected beneath this variant's original discriminator.
@@ -31,6 +44,7 @@ impl<I:NativeValueSource+?Sized>NativeVariantSelector<I>{
   let d=self.demands(input,body,effect.maximum_work_units())?;if !retained_clone_grant_admits(effect.grant(),d){return Ok(reply.complete(Ok(RetainedCloneStep::Progress(Default::default()))))}
   if self.binding.is_none(){let turn=input.bind(&mut self.binding,effect);return Ok(reply.complete(turn.result.map(|p|RetainedCloneStep::Progress(p.unwrap_or_default())).map_err(Into::into)))}
   if self.phase==3&&self.matcher.is_some(){return self.settle_into(effect,reply)}
+  if self.phase==1&&self.matcher.is_none(){if let Some((selection,work))=self.direct_probe(input)?{if !effect.performed(work)?{return Ok(reply.complete(Err(ValueError::literal(crate::ValueRefusalKind::WorkLimit,"native variant action exceeded its original work").into())))}self.selection=Some(selection);self.phase=5;return Ok(reply.complete(Ok(RetainedCloneStep::Complete(receipt(fixed(0))))))}}
   let g=effect.grant();if let Some(matcher)=self.matcher.as_mut().filter(|matcher|matcher.result().is_none()){return matcher.advance_local(input,body,&mut effect.nested(child_grant(g,0)),reply)}
   if !effect.performed(1)?{return Ok(reply.complete(Err(ValueError::literal(crate::ValueRefusalKind::WorkLimit,"native variant action exceeded its original work").into())))}
   let result:Result<(),OriginalReceivingPrimary>=(||{match self.phase{

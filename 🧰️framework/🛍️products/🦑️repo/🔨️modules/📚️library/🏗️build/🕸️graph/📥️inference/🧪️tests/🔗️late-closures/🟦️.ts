@@ -44,7 +44,7 @@ test("a record names its closure; the closure moves without staling it unless th
   expect(rowsOfRecord,step.name).toBeLessThan(40);
   const{values,rows}=await api.resolve(Object.entries(value.closureRecipes)),roster=(values.get(value.inputs[0].closureRef) as string[]).map(path=>path.replace("{workspaceRoot}/","")).sort();
   expect(roster,step.name).toEqual(step.closure);
-  expect(rows.length,step.name).toBeGreaterThan(rowsOfRecord);
+  expect(rows.filter((row:any)=>row.kind==="global"&&JSON.parse(row.path)[0]==="closure-graph").length,step.name+": the closure names its walk by one closure-graph row").toBe(1);
   const independent=python(root,fixture.entry);
   expect(roster,step.name).toEqual(independent.closure);
   expect(value.answer,step.name).toBe(step.answer);expect(independent.answer,step.name).toBe(step.answer);

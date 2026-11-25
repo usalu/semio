@@ -3,8 +3,12 @@ import { cleanup, render } from "@testing-library/react";
 import { JSDOM } from "jsdom";
 import { afterEach, describe, expect, it } from "vitest";
 import { WindowChrome, measureWindowFrameMetrics, windowFrameChipLevel } from "./🟦️.tsx";
-import { LEVELS } from "../🌈️Surface/🟦️.tsx";
+import { LEVELS, useLevel, useSurface } from "../🌈️Surface/🟦️.tsx";
 import { windowFrameLines, windowFrameOutline } from "./shared-border.ts";
+import { Window } from "../🪟️Window/🟦️.tsx";
+import { Layout } from "../📐️Layout/🟦️.tsx";
+import { ContextMenuChrome } from "../🖱️ContextMenu/🥣️chrome/🟦️.tsx";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "../🔽️Select/🟦️.tsx";
 
 const rect = (left: number, top: number, width: number, height: number) => ({ left, top, right: left + width, bottom: top + height, width, height, x: left, y: top, toJSON: () => ({}) }) as DOMRect;
 
@@ -49,6 +53,16 @@ describe("🔲️ a window chrome stack is one rectangle with chip overlays insi
     expect(surface.className).toMatch(/(?:^|\s)inset-0(?:\s|$)/);
   });
 
+  it("paints an opaque body as a single full-frame layer", () => {
+    const { container } = render(<WindowChrome level="window" bodySurfaceFill="surface" titleChips={<span>t</span>} body={<p>b</p>} />);
+    const classes = container.querySelector<HTMLElement>('[data-slot="window-chrome-body-surface"]')!.className.split(/\s+/);
+    expect(classes).toContain("absolute");
+    expect(classes).toContain("inset-0");
+    expect(classes).not.toContain("relative");
+    expect(classes).toContain("ui-surface");
+    expect(container.querySelectorAll(".ui-surface")).toHaveLength(1);
+  });
+
   it("docks the cap row to the bottom edge for bottom-anchored panels", () => {
     const { container } = render(<WindowChrome capDock="bottom" titleChips={<span>t</span>} body={<p>b</p>} />);
     const row = container.querySelector<HTMLElement>('[data-slot="window-chrome-cap"]')!;
@@ -65,8 +79,46 @@ describe("🔲️ a window chrome stack is one rectangle with chip overlays insi
 });
 
 describe("🪜️ the chip level is one elevation above the content surface", () => {
+  afterEach(cleanup);
+
+  function SurfaceProbe({ region }: { region: string }) {
+    const level = useLevel();
+    const surface = useSurface();
+    return <output data-region={region}>{[level, surface?.level, surface?.fill].join("/")}</output>;
+  }
+
   it("steps every level up and stays on the topmost one", () => {
     expect(LEVELS.map(windowFrameChipLevel)).toEqual(["window", "pane", "panel", "dialog", "menu", "menu"]);
+  });
+
+  it("gives content and every edge chip the level and fill actually painted in its region", () => {
+    const { container } = render(
+      <WindowChrome
+        level="pane"
+        bodySurfaceLevel="window"
+        bodySurfaceFill="surface"
+        body={<SurfaceProbe region="body" />}
+        titleChips={<SurfaceProbe region="title" />}
+        capRightChips={<SurfaceProbe region="controls" />}
+        footerLeftChips={<SurfaceProbe region="left" />}
+        footerCenterChips={<SurfaceProbe region="center" />}
+        footerRightChips={<SurfaceProbe region="right" />}
+      />,
+    );
+    const body = container.querySelector('[data-region="body"]')!;
+    expect(body.textContent).toBe("window/window/surface");
+    expect(body.closest("[data-level]")?.getAttribute("data-level")).toBe("window");
+    const chips = [...container.querySelectorAll("[data-window-frame-chip] output")];
+    expect(chips.map(chip => chip.getAttribute("data-region"))).toEqual(["title", "controls", "left", "center", "right"]);
+    for (const chip of chips) {
+      expect(chip.textContent).toBe("pane/pane/glass");
+      expect(chip.closest("[data-level]")?.getAttribute("data-level")).toBe("pane");
+    }
+  });
+
+  it("gives the title of a chip-only frame the glass surface", () => {
+    const { container } = render(<WindowChrome chipOnly level="window" titleChips={<SurfaceProbe region="title" />} />);
+    expect(container.querySelector("output")?.textContent).toBe("pane/pane/glass");
   });
 });
 
@@ -104,5 +156,47 @@ describe("📏️ the compositor lines of a frame", () => {
       vertical: [{ x: 1, top: 1, bottom: 99 }, { x: 99, top: 1, bottom: 99 }, { x: 1, top: 1, bottom: 19 }, { x: 39, top: 1, bottom: 19 }],
       ys: [1, 99, 19],
     });
+  });
+});
+
+describe("🪟️ visual defects that markup alone hid", () => {
+  afterEach(cleanup);
+
+  it("makes a standalone window a frame and leaves the outline of a hosted window to its frame", () => {
+    const alone = render(<Window id="alone">body</Window>).container.querySelector<HTMLElement>('[data-slot="window"]')!;
+    expect(alone.getAttribute("data-shared-border-frame")).toBe("");
+    expect(alone.getAttribute("data-shared-border-edges")).toBe("top right bottom left");
+    cleanup();
+    const hosted = render(<WindowChrome level="window" titleChips={<span>t</span>} body={<Window id="hosted">body</Window>} />).container.querySelector<HTMLElement>('[data-slot="window"]')!;
+    expect(hosted.hasAttribute("data-shared-border-frame")).toBe(false);
+    expect(hosted.hasAttribute("data-shared-border-edges")).toBe(false);
+  });
+
+  it("keeps a floor under a layout whose canvas is a full-bleed layer, so a host of automatic height never collapses it onto its bands", () => {
+    const layout = render(<Layout canvas={<div />} navbar={<div />} footer={<div />} />).container.querySelector<HTMLElement>('[data-slot="layout"]')!;
+    expect(layout.style.minBlockSize).toBe("24rem");
+  });
+
+  it("renders the context menu body with no inline padding so its rows span the frame", () => {
+    const body = render(<ContextMenuChrome title="Actions" icon="list" ><div role="menu" /></ContextMenuChrome>).container.querySelector<HTMLElement>("[data-window-frame-content]")!;
+    const classes = body.className.split(/\s+/);
+    expect(classes).toContain("px-0");
+    expect(classes).not.toContain("w-fit");
+    expect(classes).not.toContain("p-single");
+  });
+
+  it("makes every option and label of a grouped select a cell of the popup, so a line separates each row", async () => {
+    const view = render(
+      <Select id="visual-select" defaultOpen defaultValue="one">
+        <SelectTrigger aria-label="Pick"><SelectValue /></SelectTrigger>
+        <SelectContent position="popper">
+          <SelectGroup><SelectLabel>Group</SelectLabel><SelectItem value="one">One</SelectItem><SelectItem value="two">Two</SelectItem></SelectGroup>
+        </SelectContent>
+      </Select>,
+    );
+    const listbox = await view.findByRole("listbox");
+    for (const element of listbox.querySelectorAll('[data-slot="select-item"], [data-slot="select-label"]')) expect(element.hasAttribute("data-shared-border-cell")).toBe(true);
+    expect(listbox.querySelectorAll('[data-slot="select-scroll-up-button"]')).toHaveLength(1);
+    expect(listbox.querySelectorAll('[data-slot="select-scroll-down-button"]')).toHaveLength(1);
   });
 });

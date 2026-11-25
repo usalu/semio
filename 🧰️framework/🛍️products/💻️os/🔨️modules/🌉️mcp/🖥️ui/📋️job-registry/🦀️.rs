@@ -22,6 +22,19 @@ fn now_ms() -> u64 {
 
 //#region 🔖️JobRegistry
 
+/// 🔎️ The typed `NOT_FOUND` of an unknown job id. The registry is in-memory and per server process, so an
+/// id minted by a process that has since exited (a reconnect starts a new one) is gone — the reply
+/// says so in both languages instead of leaving the caller to suspect a lost job.
+pub fn no_such_job_error(job_id: &str) -> GatewayError {
+    GatewayError::new(GatewayErrorCode::NotFound, format!("no such job: {job_id}")).with_details(serde_json::json!({
+        "jobId": job_id,
+        "remedy": {
+            "en": "Job ids live only in the server process that minted them; after a reconnect read the result of the call that returned the id instead.",
+            "de": "Job-Ids gelten nur im Serverprozess, der sie vergeben hat; nach einem Neuverbinden das Ergebnis des Aufrufs lesen, der die Id geliefert hat.",
+        },
+    }))
+}
+
 /// 🚦 One plugin-agnostic job's lifecycle — `Pending` (registered, not yet started), `Running`
 /// (progress may update), then exactly one terminal state.
 // 🌱️ `rename_all = "SCREAMING_SNAKE_CASE"` has no `#[value(rename_all = …)]` equivalent — spelled
@@ -183,7 +196,7 @@ impl JobRegistry {
         accepted
     }
 
-    /// 📈️ A terminal transition is the client's LAST progress row (1.0 for a success), then
+    /// 📈️ A terminal transition pushes no progress row — the response (or `job_get`) is the terminal signal — and
     /// the binding is released so a long-lived stdio process never accumulates one entry per
     /// job it ever ran.
     pub fn finish(&self, job_id: &str, status: JobStatus, result: Option<serde_json::Value>, error: Option<GatewayError>) -> bool {
@@ -212,9 +225,6 @@ impl JobRegistry {
         };
         drop(jobs);
         if accepted {
-            if status == JobStatus::Succeeded {
-                job_progress_changed(job_id, 1.0, Some("succeeded"));
-            }
             release_job_binding(job_id);
         }
         accepted
@@ -262,7 +272,7 @@ impl JobRegistry {
     /// `NOT_FOUND`/`PRECONDITION_FAILED` for an unknown or already-terminal id — never a silent no-op.
     pub fn request_cancel(&self, job_id: &str) -> Result<JobSnapshot, GatewayError> {
         let mut jobs = self.jobs.lock().expect("job registry lock poisoned");
-        let record = jobs.get_mut(job_id).ok_or_else(|| GatewayError::new(GatewayErrorCode::NotFound, format!("no such job: {job_id}")))?;
+        let record = jobs.get_mut(job_id).ok_or_else(|| no_such_job_error(job_id))?;
         if record.status.is_terminal() {
             return Err(GatewayError::new(GatewayErrorCode::PreconditionFailed, format!("job {job_id} already finished as {:?} — nothing to cancel", record.status)));
         }

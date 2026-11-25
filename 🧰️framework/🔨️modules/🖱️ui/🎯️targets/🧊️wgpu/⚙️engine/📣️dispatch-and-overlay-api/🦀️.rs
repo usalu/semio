@@ -1,7 +1,7 @@
 //! 📣️ Dispatch and overlay API: the layout queries, the paint census, the event, pointer and accessibility dispatch, the overlay API, the clock and the commands. See [`super`].
 
 use super::*;
-use semio_ui_wgpu_light::tree_drop::{tree_drag_kind, tree_drop_position, tree_drop_preview, TreeDropShape};
+use semio_ui_wgpu_light::tree_drop::{tree_drag_kind, tree_drop_position, tree_drop_preview};
 
 // #region engine
 //#region 🔖️Ui
@@ -217,7 +217,6 @@ impl Ui {
             router.set_control_gap(self.theme.gap_standard);
             let mut commands = router.set_tree_drag_policy(tree, driver_drag, metrics.with_inline(inline));
             commands.extend(router.dispatch_pointer(tree, root, pointer_id, &event));
-            eprintln!("[DEBUG] ptr window={window_id} presented={presented} down={} up={} overlays={} cmds={} root_children={:?}", matches!(&event, UiEvent::PointerDown { .. }), matches!(&event, UiEvent::PointerUp { .. }), router.open_overlays().len(), commands.len(), router.open_overlays().iter().map(|o| (o.root, o.kind)).collect::<Vec<_>>());
             router.synchronize_retained_caret(tree, reset_caret);
             semio_ui_wgpu_paint::sync_input_refusal_rows(tree, root);
             (commands, tree.take_disclosure_changed())
@@ -503,8 +502,8 @@ impl Ui {
         sessions
     }
 
-    /// 👁️ The drop preview of the drag in flight, clipped to the target row's scroll viewport and in the presented surface's local coordinates — React's `TreeReorderDropPreview` and `handleDragOverItem` accept rule: a row-reorder drag previews an insert line on an accepting row edge; a plain tree drag previews the line or the nest box; a palette drag previews nothing.
-    pub fn tree_drop_preview(&self, window_id: &str) -> Option<TreeDropShape> {
+    /// 👁️ The active drop place of the drag in flight: the band of the target row the drop lands in, clipped to the target row's scroll viewport and in the presented surface's local coordinates — React's `treeDropBand` and `handleDragOverItem` accept rule: a row-reorder drag lands in an edge band of an accepting row; a plain tree drag lands in an edge band or in the whole row; a palette drag has no place.
+    pub fn tree_drop_preview(&self, window_id: &str) -> Option<[f32; 4]> {
         let window = self.windows.get(window_id).filter(|window| window.presented_ready && window.closing.is_none())?;
         let drag = window.presented_router.drag_session()?;
         let target = drag.drop_target?;
@@ -515,16 +514,20 @@ impl Ui {
         let foreign = drag.payload.keys().any(|kind| kind != mime && kind.starts_with("application/"));
         let kind = tree_drag_kind(drag.payload.contains_key(mime), !foreign, foreign);
         let accepts = item.drag_data.as_ref().is_some_and(|data| data.contains_key(mime));
-        let shape = tree_drop_preview(kind, tree_drop_position(frame.y, frame.h, drag.pointer_y), accepts, target == drag.source, [frame.x, frame.y, frame.w, frame.h])?;
-        let clip = retained_node_clip(tree, target).unwrap_or(frame);
-        let clipped = |rect: [f32; 4]| {
-            let (left, top, right, bottom) = (rect[0].max(clip.x), rect[1].max(clip.y), (rect[0] + rect[2]).min(clip.x + clip.w), (rect[1] + rect[3]).min(clip.y + clip.h));
-            (left < right && top < bottom).then_some([left, top, right - left, bottom - top])
-        };
-        match shape {
-            TreeDropShape::Line(rect) => clipped(rect).map(TreeDropShape::Line),
-            TreeDropShape::Box(rect) => clipped(rect).map(TreeDropShape::Box),
-        }
+        let band = tree_drop_preview(kind, tree_drop_position(frame.y, frame.h, drag.pointer_y), accepts, target == drag.source, [frame.x, frame.y, frame.w, frame.h])?;
+        Self::clip_to(retained_node_clip(tree, target).unwrap_or(frame), band)
+    }
+
+    /// 🎯️ The rows the drag in flight can be dropped on, each clipped to its scroll viewport and in the presented surface's local coordinates: the available drop places, tinted at `DROP_TINT_AVAILABLE_PERCENT`.
+    pub fn tree_drop_places(&self, window_id: &str) -> Vec<[f32; 4]> {
+        let Some(window) = self.windows.get(window_id).filter(|window| window.presented_ready && window.closing.is_none()) else { return Vec::new() };
+        let tree = &window.presented_tree;
+        window.presented_router.tree_drop_places(tree).into_iter().filter_map(|(node, frame)| Self::clip_to(retained_node_clip(tree, node).unwrap_or(frame), [frame.x, frame.y, frame.w, frame.h])).collect()
+    }
+
+    fn clip_to(clip: semio_ui_theme::geometry::Rect, rect: [f32; 4]) -> Option<[f32; 4]> {
+        let (left, top, right, bottom) = (rect[0].max(clip.x), rect[1].max(clip.y), (rect[0] + rect[2]).min(clip.x + clip.w), (rect[1] + rect[3]).min(clip.y + clip.h));
+        (left < right && top < bottom).then_some([left, top, right - left, bottom - top])
     }
 
     /// 📏️ The band of tree row or section `node` a drop is resolved against, in `window_id`'s local coordinates.

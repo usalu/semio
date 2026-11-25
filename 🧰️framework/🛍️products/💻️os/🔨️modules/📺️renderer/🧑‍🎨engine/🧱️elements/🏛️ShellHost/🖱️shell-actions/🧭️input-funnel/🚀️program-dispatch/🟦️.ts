@@ -12,6 +12,7 @@ import { EMPTY_SHELL_HISTORY_PROJECTION_V1 } from "../../../../🛠️ShellHelpe
 import { viewerReadOnlyNoticeText } from "../../../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
 import { browserActorActionRefusalReasonV1 } from "@semio-tech/framework/browser-bundle/action-handoff/requests";
 import { startedTypedOperationV1, typedOperationCancellationActionV1 } from "../../../🏁️operation-settle/🟦️.ts";
+import { documentLoadRefusalDetailV1 } from "../../../⏳️document-load-gate/🟦️.ts";
 import { encodeWindowActionInvocation, windowActionInvocation } from "../../../📨️window-invocation/🟦️.ts";
 import { invokeProgramInputV1, programInputResultV1, settledProgramOutputV1 } from "../../../📨️program-invocation/🟦️.ts";
 import { OBSERVED_INTERACTION_ACTION_IDS } from "../../../🎬️tutorial-recorder/🟦️.tsx";
@@ -120,6 +121,8 @@ export async function dispatchProgramAction({ sessionWorkRef, isCurrentEffectOwn
     await applyHostEffects(response.requestedEffects ?? [], { ...targetSession, viewState: dispatchViewState }, resolveUiDirtyScope(response.uiScope), actionOwner);
     const completion = await awaitOperationSettle(targetSession.instanceId, startedOperation?.operation);
     if (needsHistoryRefresh) refreshHistorySnapshot({ pluginId: targetSession.pluginId, instanceId: targetSession.instanceId });
+    const loadRefusal = documentLoadRefusalDetailV1(actionOwner);
+    if (loadRefusal !== undefined) return programInputResultV1(refuse("not-applied", loadRefusal, true), settledProgramOutputV1(response.output, startedOperation !== undefined, completion));
     return programInputResultV1(applied(completion === null ? undefined : inputCommitReceiptV1(completion.operation, completion.revision)), settledProgramOutputV1(response.output, startedOperation !== undefined, completion));
   } catch (actionError) {
     let outcome: InputOutcomeV1;

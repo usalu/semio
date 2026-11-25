@@ -2,7 +2,7 @@
 
 extern crate semio_os_kernel as protocol;
 extern crate semio_os_kernel as store;
-extern crate semio_s_artifact_energy_model_mutations as mutations;
+extern crate semio_s_artifact_stdio_xlsx_base_mutations as mutations;
 
 #[path = "../../🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/💡️inferences/🧪️tests/🔬️unit/🦀️.rs"]
 mod inferences_tests;

@@ -29,6 +29,9 @@ pub mod glulam_footbridge;
 pub mod multi_fail_timber;
 #[path = "⚠️overloaded-footbridge/🦀️.rs"]
 pub mod overloaded_footbridge;
+#[cfg(test)]
+#[path = "🧪️tests/🗜️pack-twins/🦀️.rs"]
+mod pack_twins;
 //#endregion 🪢️Mounts
 
 /// 📚️ Every bundled EN 1995 example in catalogue order — compliant first, then non-compliant.

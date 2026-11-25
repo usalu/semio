@@ -1,6 +1,7 @@
 /** 🧱️ The below the fold seeding, inline control ids, duplicate key and range pick tests. */
 import { captureErrors } from "../🧰️tree-windows-test-kit/🟦️.tsx";
 import type { AnyRecord, TreeWindowsTestKit } from "../🧰️tree-windows-test-kit/🟦️.tsx";
+import { treeWindowKeepOffscreenRowsV1 } from "../../../🪟️tree-windows/🟦️.ts";
 
 /** 🗝 Registers the below the fold seeding, inline control ids, same key windows, duplicate key warning, body row cap and range pick tests. */
 export function registerFoldSeedingIdsAndDuplicateTests(kit: TreeWindowsTestKit): void {
@@ -33,6 +34,12 @@ export function registerFoldSeedingIdsAndDuplicateTests(kit: TreeWindowsTestKit)
    * (📓️f2-sdk-body-node-ledger.md §10). Under key identity the two containers would share one open state,
    * one window and each other's measurements; under PATH identity they are two windows that happen to name
    * the same entity, and the pick still dispatches the bare key. */
+  it("keeps the rows an off-screen container holds while the node ledger has room, nearest first", () => {
+    const measure = (key: string, top: number, length: number) => ({ key, rowExtent: "standard" as const, total: length, offset: 0, length, top, height: length * 24 });
+    const containers = [measure("here", 0, 2), measure("near", 5000, 2), measure("far", 9000, 200)];
+    const requests = [{ key: "here", offset: 0, rows: 2 }, { key: "near", offset: 0, rows: 0 }, { key: "far", offset: 0, rows: 0 }];
+    expect(treeWindowKeepOffscreenRowsV1(requests, containers, new Map([["here", true]]))).toEqual([{ key: "here", offset: 0, rows: 2 }, { key: "near", offset: 0, rows: 2 }, { key: "far", offset: 0, rows: 96 }]);
+  });
   it("gives every row's inline control its own DOM id — a node key is unique only among its siblings", () => {
     const commit = { trigger: "commit", action: { scope: "s.stdio.json@rfc8259/*#editor", name: "set-node", version: 1 }, args: { nodeId: "$", revision: "r" }, capability: null };
     const edit = (id: number, value: string) => node(id, "edit", { type: "input", kind: "text", value, commit: "blur" }, [], [commit]);
@@ -97,7 +104,7 @@ export function registerFoldSeedingIdsAndDuplicateTests(kit: TreeWindowsTestKit)
     const last=reports.at(-1);if(!last)throw Error("Actual tree window report required");
     expect(last.requests.map((request) => request.nodeKey)).toEqual(["left", leftShared, "right", rightShared]);
     expect(last.requests.find((request) => request.nodeKey === leftShared)!.rows).toBeGreaterThan(0);
-    expect(last.requests.find((request) => request.nodeKey === rightShared)).toEqual({ nodeKey: rightShared, offset: 0, rows: 0 });
+    expect(last.requests.find((request) => request.nodeKey === rightShared)).toEqual({ nodeKey: rightShared, offset: 0, rows: 1 });
     expect(shouted.filter((message) => message.includes("[tree-window] duplicate key"))).toEqual([]);
   });
   /** 🔑️ Two containers under one key share one open state and one window on both sides of the wire, and

@@ -13,16 +13,76 @@
       "de": "Ein 41-jähriger Lagerarbeiter von 1,82 m in Warnschutz-Softshelljacke, Cargohose, Sicherheitsschuhen, Arbeitshandschuhen und Mütze, der einen Handhubwagen mit der rechten Hand an der Deichsel hinter sich herzieht: 1,15 m Gabellänge, 520 mm über die Gabeln, Lenkräder 200 mm, 70 kg, beladen mit einer Europalette (1200 x 800 x 144 mm) und 324 kg gewickelten Kartons, 60 mm vom Boden gehoben. Posen: Ziehen, Deichsel pumpen, abgestellt mit abgesenkter Palette; Clips: Gehen mit der Last und Heben der Gabeln in drei Pumphüben."
     },
     "tags": [
-      "human",
-      "adult",
-      "man",
-      "warehouse",
-      "logistics",
-      "pallet-truck",
-      "pulling",
-      "load",
-      "workwear",
-      "walking"
+      {
+        "id": "human",
+        "title": {
+          "en": "human",
+          "de": "Mensch"
+        }
+      },
+      {
+        "id": "adult",
+        "title": {
+          "en": "adult",
+          "de": "erwachsen"
+        }
+      },
+      {
+        "id": "man",
+        "title": {
+          "en": "man",
+          "de": "Mann"
+        }
+      },
+      {
+        "id": "warehouse",
+        "title": {
+          "en": "warehouse",
+          "de": "Lager"
+        }
+      },
+      {
+        "id": "logistics",
+        "title": {
+          "en": "logistics",
+          "de": "Logistik"
+        }
+      },
+      {
+        "id": "pallet-truck",
+        "title": {
+          "en": "pallet truck",
+          "de": "Hubwagen"
+        }
+      },
+      {
+        "id": "pulling",
+        "title": {
+          "en": "pulling",
+          "de": "Ziehen"
+        }
+      },
+      {
+        "id": "load",
+        "title": {
+          "en": "load",
+          "de": "Last"
+        }
+      },
+      {
+        "id": "workwear",
+        "title": {
+          "en": "workwear",
+          "de": "Arbeitskleidung"
+        }
+      },
+      {
+        "id": "walking",
+        "title": {
+          "en": "walking",
+          "de": "Gehen"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage human worker HW-18",
@@ -13193,105 +13253,219 @@
           "elevation": [
             {
               "id": "sleeve-l",
+              "kind": "loft",
               "bone": "arm-l",
               "role": "body",
               "z": 0.5,
               "filled": true,
               "tone": 0.62,
               "region": "jacket",
-              "kind": "poly",
-              "points": [
-                [
-                  -0.042,
-                  0
-                ],
-                [
-                  -0.042,
-                  0.014
-                ],
-                [
-                  -0.034,
-                  0.038
-                ],
-                [
-                  0.004,
-                  0.059
-                ],
-                [
-                  0.04,
-                  0.062
-                ],
-                [
-                  0.19,
-                  0.057
-                ],
-                [
-                  0.3366,
-                  0.05
-                ],
-                [
-                  0.372,
-                  0.048
-                ],
-                [
-                  0.372,
-                  0
-                ]
-              ],
-              "closed": true,
-              "solid": {
-                "kind": "revolved",
-                "axisBone": "arm-l",
-                "axis": "u",
-                "axisX": 0,
-                "mirror": true,
-                "lateralScale": 0.9119
-              }
+              "sections": [
+                {
+                  "at": [
+                    -0.036,
+                    -0.004,
+                    -0.022
+                  ],
+                  "rx": 0.026,
+                  "ry": 0.032,
+                  "exponent": 2,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                },
+                {
+                  "at": [
+                    -0.024,
+                    -0.003,
+                    -0.013
+                  ],
+                  "rx": 0.045,
+                  "ry": 0.049,
+                  "exponent": 2,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                },
+                {
+                  "at": [
+                    -0.016,
+                    -0.002,
+                    -0.004
+                  ],
+                  "rx": 0.055,
+                  "ry": 0.056,
+                  "exponent": 2,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                },
+                {
+                  "at": [
+                    0.004,
+                    0,
+                    0.002
+                  ],
+                  "rx": 0.059,
+                  "ry": 0.059,
+                  "exponent": 2.2,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                },
+                {
+                  "at": [
+                    0.04,
+                    0.002,
+                    0.008
+                  ],
+                  "rx": 0.063,
+                  "ry": 0.062,
+                  "exponent": 2.2,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                },
+                {
+                  "at": [
+                    0.19,
+                    0.004,
+                    0.003
+                  ],
+                  "rx": 0.052,
+                  "ry": 0.057,
+                  "exponent": 2.2,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                },
+                {
+                  "at": [
+                    0.3366,
+                    -0.002,
+                    0
+                  ],
+                  "rx": 0.047,
+                  "ry": 0.05,
+                  "exponent": 2.2,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                },
+                {
+                  "at": [
+                    0.372,
+                    -0.002,
+                    0
+                  ],
+                  "rx": 0.046,
+                  "ry": 0.048,
+                  "exponent": 2.2,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                }
+              ]
             },
             {
               "id": "forearm-l",
+              "kind": "loft",
               "bone": "forearm-l",
               "role": "body",
               "z": 0.5,
               "filled": true,
               "tone": 0.62,
               "region": "jacket",
-              "kind": "poly",
-              "points": [
-                [
-                  -0.032,
-                  0
-                ],
-                [
-                  -0.032,
-                  0.046
-                ],
-                [
-                  0.04,
-                  0.044
-                ],
-                [
-                  0.18,
-                  0.035
-                ],
-                [
-                  0.25,
-                  0.031
-                ],
-                [
-                  0.25,
-                  0
-                ]
-              ],
-              "closed": true,
-              "solid": {
-                "kind": "revolved",
-                "axisBone": "forearm-l",
-                "axis": "u",
-                "axisX": 0,
-                "mirror": true,
-                "lateralScale": 1.0822
-              }
+              "sections": [
+                {
+                  "at": [
+                    -0.032,
+                    -0.002,
+                    0
+                  ],
+                  "rx": 0.044,
+                  "ry": 0.046,
+                  "exponent": 2.2,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                },
+                {
+                  "at": [
+                    0.04,
+                    0,
+                    0
+                  ],
+                  "rx": 0.047,
+                  "ry": 0.044,
+                  "exponent": 2.2,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                },
+                {
+                  "at": [
+                    0.18,
+                    0,
+                    0
+                  ],
+                  "rx": 0.04,
+                  "ry": 0.035,
+                  "exponent": 2.3,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                },
+                {
+                  "at": [
+                    0.25,
+                    0,
+                    0
+                  ],
+                  "rx": 0.036,
+                  "ry": 0.031,
+                  "exponent": 2.4,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                }
+              ]
             },
             {
               "id": "glove-l",
@@ -14214,105 +14388,219 @@
             },
             {
               "id": "sleeve-r",
+              "kind": "loft",
               "bone": "arm-r",
               "role": "body",
               "z": 6,
               "filled": true,
               "tone": 0.62,
               "region": "jacket",
-              "kind": "poly",
-              "points": [
-                [
-                  -0.042,
-                  0
-                ],
-                [
-                  -0.042,
-                  0.014
-                ],
-                [
-                  -0.034,
-                  0.038
-                ],
-                [
-                  0.004,
-                  0.059
-                ],
-                [
-                  0.04,
-                  0.062
-                ],
-                [
-                  0.19,
-                  0.057
-                ],
-                [
-                  0.3366,
-                  0.05
-                ],
-                [
-                  0.372,
-                  0.048
-                ],
-                [
-                  0.372,
-                  0
-                ]
-              ],
-              "closed": true,
-              "solid": {
-                "kind": "revolved",
-                "axisBone": "arm-r",
-                "axis": "u",
-                "axisX": 0,
-                "mirror": true,
-                "lateralScale": 0.9119
-              }
+              "sections": [
+                {
+                  "at": [
+                    -0.036,
+                    -0.004,
+                    0.022
+                  ],
+                  "rx": 0.026,
+                  "ry": 0.032,
+                  "exponent": 2,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                },
+                {
+                  "at": [
+                    -0.024,
+                    -0.003,
+                    0.013
+                  ],
+                  "rx": 0.045,
+                  "ry": 0.049,
+                  "exponent": 2,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                },
+                {
+                  "at": [
+                    -0.016,
+                    -0.002,
+                    0.004
+                  ],
+                  "rx": 0.055,
+                  "ry": 0.056,
+                  "exponent": 2,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                },
+                {
+                  "at": [
+                    0.004,
+                    0,
+                    -0.002
+                  ],
+                  "rx": 0.059,
+                  "ry": 0.059,
+                  "exponent": 2.2,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                },
+                {
+                  "at": [
+                    0.04,
+                    0.002,
+                    -0.008
+                  ],
+                  "rx": 0.063,
+                  "ry": 0.062,
+                  "exponent": 2.2,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                },
+                {
+                  "at": [
+                    0.19,
+                    0.004,
+                    -0.003
+                  ],
+                  "rx": 0.052,
+                  "ry": 0.057,
+                  "exponent": 2.2,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                },
+                {
+                  "at": [
+                    0.3366,
+                    -0.002,
+                    0
+                  ],
+                  "rx": 0.047,
+                  "ry": 0.05,
+                  "exponent": 2.2,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                },
+                {
+                  "at": [
+                    0.372,
+                    -0.002,
+                    0
+                  ],
+                  "rx": 0.046,
+                  "ry": 0.048,
+                  "exponent": 2.2,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                }
+              ]
             },
             {
               "id": "forearm-r",
+              "kind": "loft",
               "bone": "forearm-r",
               "role": "body",
               "z": 6,
               "filled": true,
               "tone": 0.62,
               "region": "jacket",
-              "kind": "poly",
-              "points": [
-                [
-                  -0.032,
-                  0
-                ],
-                [
-                  -0.032,
-                  0.046
-                ],
-                [
-                  0.04,
-                  0.044
-                ],
-                [
-                  0.18,
-                  0.035
-                ],
-                [
-                  0.25,
-                  0.031
-                ],
-                [
-                  0.25,
-                  0
-                ]
-              ],
-              "closed": true,
-              "solid": {
-                "kind": "revolved",
-                "axisBone": "forearm-r",
-                "axis": "u",
-                "axisX": 0,
-                "mirror": true,
-                "lateralScale": 1.0822
-              }
+              "sections": [
+                {
+                  "at": [
+                    -0.032,
+                    -0.002,
+                    0
+                  ],
+                  "rx": 0.044,
+                  "ry": 0.046,
+                  "exponent": 2.2,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                },
+                {
+                  "at": [
+                    0.04,
+                    0,
+                    0
+                  ],
+                  "rx": 0.047,
+                  "ry": 0.044,
+                  "exponent": 2.2,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                },
+                {
+                  "at": [
+                    0.18,
+                    0,
+                    0
+                  ],
+                  "rx": 0.04,
+                  "ry": 0.035,
+                  "exponent": 2.3,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                },
+                {
+                  "at": [
+                    0.25,
+                    0,
+                    0
+                  ],
+                  "rx": 0.036,
+                  "ry": 0.031,
+                  "exponent": 2.4,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                }
+              ]
             },
             {
               "id": "glove-r",
@@ -17481,208 +17769,436 @@
               "closed": true
             },
             {
-              "id": "upper-arm-l",
+              "id": "sleeve-l",
+              "kind": "loft",
               "bone": "arm-l",
               "role": "body",
               "z": 4.5,
               "filled": true,
               "tone": 0.62,
               "region": "jacket",
-              "kind": "poly",
-              "points": [
-                [
-                  -0.042,
-                  0
-                ],
-                [
-                  -0.042,
-                  0.014
-                ],
-                [
-                  -0.034,
-                  0.038
-                ],
-                [
-                  0.004,
-                  0.059
-                ],
-                [
-                  0.04,
-                  0.062
-                ],
-                [
-                  0.19,
-                  0.057
-                ],
-                [
-                  0.3366,
-                  0.05
-                ],
-                [
-                  0.372,
-                  0.048
-                ],
-                [
-                  0.372,
-                  0
-                ]
-              ],
-              "closed": true,
-              "solid": {
-                "kind": "revolved",
-                "axisBone": "arm-l",
-                "axis": "u",
-                "axisX": 0,
-                "mirror": true,
-                "lateralScale": 0.9119
-              }
+              "sections": [
+                {
+                  "at": [
+                    -0.036,
+                    -0.004,
+                    -0.022
+                  ],
+                  "rx": 0.026,
+                  "ry": 0.032,
+                  "exponent": 2,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                },
+                {
+                  "at": [
+                    -0.024,
+                    -0.003,
+                    -0.013
+                  ],
+                  "rx": 0.045,
+                  "ry": 0.049,
+                  "exponent": 2,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                },
+                {
+                  "at": [
+                    -0.016,
+                    -0.002,
+                    -0.004
+                  ],
+                  "rx": 0.055,
+                  "ry": 0.056,
+                  "exponent": 2,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                },
+                {
+                  "at": [
+                    0.004,
+                    0,
+                    0.002
+                  ],
+                  "rx": 0.059,
+                  "ry": 0.059,
+                  "exponent": 2.2,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                },
+                {
+                  "at": [
+                    0.04,
+                    0.002,
+                    0.008
+                  ],
+                  "rx": 0.063,
+                  "ry": 0.062,
+                  "exponent": 2.2,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                },
+                {
+                  "at": [
+                    0.19,
+                    0.004,
+                    0.003
+                  ],
+                  "rx": 0.052,
+                  "ry": 0.057,
+                  "exponent": 2.2,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                },
+                {
+                  "at": [
+                    0.3366,
+                    -0.002,
+                    0
+                  ],
+                  "rx": 0.047,
+                  "ry": 0.05,
+                  "exponent": 2.2,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                },
+                {
+                  "at": [
+                    0.372,
+                    -0.002,
+                    0
+                  ],
+                  "rx": 0.046,
+                  "ry": 0.048,
+                  "exponent": 2.2,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                }
+              ]
             },
             {
-              "id": "upper-arm-r",
+              "id": "sleeve-r",
+              "kind": "loft",
               "bone": "arm-r",
               "role": "body",
               "z": 4.5,
               "filled": true,
               "tone": 0.62,
               "region": "jacket",
-              "kind": "poly",
-              "points": [
-                [
-                  -0.042,
-                  0
-                ],
-                [
-                  -0.042,
-                  0.014
-                ],
-                [
-                  -0.034,
-                  0.038
-                ],
-                [
-                  0.004,
-                  0.059
-                ],
-                [
-                  0.04,
-                  0.062
-                ],
-                [
-                  0.19,
-                  0.057
-                ],
-                [
-                  0.3366,
-                  0.05
-                ],
-                [
-                  0.372,
-                  0.048
-                ],
-                [
-                  0.372,
-                  0
-                ]
-              ],
-              "closed": true,
-              "solid": {
-                "kind": "revolved",
-                "axisBone": "arm-r",
-                "axis": "u",
-                "axisX": 0,
-                "mirror": true,
-                "lateralScale": 0.9119
-              }
+              "sections": [
+                {
+                  "at": [
+                    -0.036,
+                    -0.004,
+                    0.022
+                  ],
+                  "rx": 0.026,
+                  "ry": 0.032,
+                  "exponent": 2,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                },
+                {
+                  "at": [
+                    -0.024,
+                    -0.003,
+                    0.013
+                  ],
+                  "rx": 0.045,
+                  "ry": 0.049,
+                  "exponent": 2,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                },
+                {
+                  "at": [
+                    -0.016,
+                    -0.002,
+                    0.004
+                  ],
+                  "rx": 0.055,
+                  "ry": 0.056,
+                  "exponent": 2,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                },
+                {
+                  "at": [
+                    0.004,
+                    0,
+                    -0.002
+                  ],
+                  "rx": 0.059,
+                  "ry": 0.059,
+                  "exponent": 2.2,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                },
+                {
+                  "at": [
+                    0.04,
+                    0.002,
+                    -0.008
+                  ],
+                  "rx": 0.063,
+                  "ry": 0.062,
+                  "exponent": 2.2,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                },
+                {
+                  "at": [
+                    0.19,
+                    0.004,
+                    -0.003
+                  ],
+                  "rx": 0.052,
+                  "ry": 0.057,
+                  "exponent": 2.2,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                },
+                {
+                  "at": [
+                    0.3366,
+                    -0.002,
+                    0
+                  ],
+                  "rx": 0.047,
+                  "ry": 0.05,
+                  "exponent": 2.2,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                },
+                {
+                  "at": [
+                    0.372,
+                    -0.002,
+                    0
+                  ],
+                  "rx": 0.046,
+                  "ry": 0.048,
+                  "exponent": 2.2,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                }
+              ]
             },
             {
               "id": "forearm-l",
+              "kind": "loft",
               "bone": "forearm-l",
               "role": "body",
               "z": 4.55,
               "filled": true,
               "tone": 0.62,
               "region": "jacket",
-              "kind": "poly",
-              "points": [
-                [
-                  -0.032,
-                  0
-                ],
-                [
-                  -0.032,
-                  0.046
-                ],
-                [
-                  0.04,
-                  0.044
-                ],
-                [
-                  0.18,
-                  0.035
-                ],
-                [
-                  0.25,
-                  0.031
-                ],
-                [
-                  0.25,
-                  0
-                ]
-              ],
-              "closed": true,
-              "solid": {
-                "kind": "revolved",
-                "axisBone": "forearm-l",
-                "axis": "u",
-                "axisX": 0,
-                "mirror": true,
-                "lateralScale": 1.0822
-              }
+              "sections": [
+                {
+                  "at": [
+                    -0.032,
+                    -0.002,
+                    0
+                  ],
+                  "rx": 0.044,
+                  "ry": 0.046,
+                  "exponent": 2.2,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                },
+                {
+                  "at": [
+                    0.04,
+                    0,
+                    0
+                  ],
+                  "rx": 0.047,
+                  "ry": 0.044,
+                  "exponent": 2.2,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                },
+                {
+                  "at": [
+                    0.18,
+                    0,
+                    0
+                  ],
+                  "rx": 0.04,
+                  "ry": 0.035,
+                  "exponent": 2.3,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                },
+                {
+                  "at": [
+                    0.25,
+                    0,
+                    0
+                  ],
+                  "rx": 0.036,
+                  "ry": 0.031,
+                  "exponent": 2.4,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                }
+              ]
             },
             {
               "id": "forearm-r",
+              "kind": "loft",
               "bone": "forearm-r",
               "role": "body",
               "z": 4.55,
               "filled": true,
               "tone": 0.62,
               "region": "jacket",
-              "kind": "poly",
-              "points": [
-                [
-                  -0.032,
-                  0
-                ],
-                [
-                  -0.032,
-                  0.046
-                ],
-                [
-                  0.04,
-                  0.044
-                ],
-                [
-                  0.18,
-                  0.035
-                ],
-                [
-                  0.25,
-                  0.031
-                ],
-                [
-                  0.25,
-                  0
-                ]
-              ],
-              "closed": true,
-              "solid": {
-                "kind": "revolved",
-                "axisBone": "forearm-r",
-                "axis": "u",
-                "axisX": 0,
-                "mirror": true,
-                "lateralScale": 1.0822
-              }
+              "sections": [
+                {
+                  "at": [
+                    -0.032,
+                    -0.002,
+                    0
+                  ],
+                  "rx": 0.044,
+                  "ry": 0.046,
+                  "exponent": 2.2,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                },
+                {
+                  "at": [
+                    0.04,
+                    0,
+                    0
+                  ],
+                  "rx": 0.047,
+                  "ry": 0.044,
+                  "exponent": 2.2,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                },
+                {
+                  "at": [
+                    0.18,
+                    0,
+                    0
+                  ],
+                  "rx": 0.04,
+                  "ry": 0.035,
+                  "exponent": 2.3,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                },
+                {
+                  "at": [
+                    0.25,
+                    0,
+                    0
+                  ],
+                  "rx": 0.036,
+                  "ry": 0.031,
+                  "exponent": 2.4,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                }
+              ]
             },
             {
               "id": "hand-l",
@@ -18446,208 +18962,436 @@
               "closed": true
             },
             {
-              "id": "upper-arm-l",
+              "id": "sleeve-l",
+              "kind": "loft",
               "bone": "arm-l",
               "role": "body",
               "z": 3,
               "filled": true,
               "tone": 0.62,
               "region": "jacket",
-              "kind": "poly",
-              "points": [
-                [
-                  -0.042,
-                  0
-                ],
-                [
-                  -0.042,
-                  0.014
-                ],
-                [
-                  -0.034,
-                  0.038
-                ],
-                [
-                  0.004,
-                  0.059
-                ],
-                [
-                  0.04,
-                  0.062
-                ],
-                [
-                  0.19,
-                  0.057
-                ],
-                [
-                  0.3366,
-                  0.05
-                ],
-                [
-                  0.372,
-                  0.048
-                ],
-                [
-                  0.372,
-                  0
-                ]
-              ],
-              "closed": true,
-              "solid": {
-                "kind": "revolved",
-                "axisBone": "arm-l",
-                "axis": "u",
-                "axisX": 0,
-                "mirror": true,
-                "lateralScale": 0.9119
-              }
+              "sections": [
+                {
+                  "at": [
+                    -0.036,
+                    -0.004,
+                    -0.022
+                  ],
+                  "rx": 0.026,
+                  "ry": 0.032,
+                  "exponent": 2,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                },
+                {
+                  "at": [
+                    -0.024,
+                    -0.003,
+                    -0.013
+                  ],
+                  "rx": 0.045,
+                  "ry": 0.049,
+                  "exponent": 2,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                },
+                {
+                  "at": [
+                    -0.016,
+                    -0.002,
+                    -0.004
+                  ],
+                  "rx": 0.055,
+                  "ry": 0.056,
+                  "exponent": 2,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                },
+                {
+                  "at": [
+                    0.004,
+                    0,
+                    0.002
+                  ],
+                  "rx": 0.059,
+                  "ry": 0.059,
+                  "exponent": 2.2,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                },
+                {
+                  "at": [
+                    0.04,
+                    0.002,
+                    0.008
+                  ],
+                  "rx": 0.063,
+                  "ry": 0.062,
+                  "exponent": 2.2,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                },
+                {
+                  "at": [
+                    0.19,
+                    0.004,
+                    0.003
+                  ],
+                  "rx": 0.052,
+                  "ry": 0.057,
+                  "exponent": 2.2,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                },
+                {
+                  "at": [
+                    0.3366,
+                    -0.002,
+                    0
+                  ],
+                  "rx": 0.047,
+                  "ry": 0.05,
+                  "exponent": 2.2,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                },
+                {
+                  "at": [
+                    0.372,
+                    -0.002,
+                    0
+                  ],
+                  "rx": 0.046,
+                  "ry": 0.048,
+                  "exponent": 2.2,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                }
+              ]
             },
             {
-              "id": "upper-arm-r",
+              "id": "sleeve-r",
+              "kind": "loft",
               "bone": "arm-r",
               "role": "body",
               "z": 3,
               "filled": true,
               "tone": 0.62,
               "region": "jacket",
-              "kind": "poly",
-              "points": [
-                [
-                  -0.042,
-                  0
-                ],
-                [
-                  -0.042,
-                  0.014
-                ],
-                [
-                  -0.034,
-                  0.038
-                ],
-                [
-                  0.004,
-                  0.059
-                ],
-                [
-                  0.04,
-                  0.062
-                ],
-                [
-                  0.19,
-                  0.057
-                ],
-                [
-                  0.3366,
-                  0.05
-                ],
-                [
-                  0.372,
-                  0.048
-                ],
-                [
-                  0.372,
-                  0
-                ]
-              ],
-              "closed": true,
-              "solid": {
-                "kind": "revolved",
-                "axisBone": "arm-r",
-                "axis": "u",
-                "axisX": 0,
-                "mirror": true,
-                "lateralScale": 0.9119
-              }
+              "sections": [
+                {
+                  "at": [
+                    -0.036,
+                    -0.004,
+                    0.022
+                  ],
+                  "rx": 0.026,
+                  "ry": 0.032,
+                  "exponent": 2,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                },
+                {
+                  "at": [
+                    -0.024,
+                    -0.003,
+                    0.013
+                  ],
+                  "rx": 0.045,
+                  "ry": 0.049,
+                  "exponent": 2,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                },
+                {
+                  "at": [
+                    -0.016,
+                    -0.002,
+                    0.004
+                  ],
+                  "rx": 0.055,
+                  "ry": 0.056,
+                  "exponent": 2,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                },
+                {
+                  "at": [
+                    0.004,
+                    0,
+                    -0.002
+                  ],
+                  "rx": 0.059,
+                  "ry": 0.059,
+                  "exponent": 2.2,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                },
+                {
+                  "at": [
+                    0.04,
+                    0.002,
+                    -0.008
+                  ],
+                  "rx": 0.063,
+                  "ry": 0.062,
+                  "exponent": 2.2,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                },
+                {
+                  "at": [
+                    0.19,
+                    0.004,
+                    -0.003
+                  ],
+                  "rx": 0.052,
+                  "ry": 0.057,
+                  "exponent": 2.2,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                },
+                {
+                  "at": [
+                    0.3366,
+                    -0.002,
+                    0
+                  ],
+                  "rx": 0.047,
+                  "ry": 0.05,
+                  "exponent": 2.2,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                },
+                {
+                  "at": [
+                    0.372,
+                    -0.002,
+                    0
+                  ],
+                  "rx": 0.046,
+                  "ry": 0.048,
+                  "exponent": 2.2,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                }
+              ]
             },
             {
               "id": "forearm-l",
+              "kind": "loft",
               "bone": "forearm-l",
               "role": "body",
               "z": 3.05,
               "filled": true,
               "tone": 0.62,
               "region": "jacket",
-              "kind": "poly",
-              "points": [
-                [
-                  -0.032,
-                  0
-                ],
-                [
-                  -0.032,
-                  0.046
-                ],
-                [
-                  0.04,
-                  0.044
-                ],
-                [
-                  0.18,
-                  0.035
-                ],
-                [
-                  0.25,
-                  0.031
-                ],
-                [
-                  0.25,
-                  0
-                ]
-              ],
-              "closed": true,
-              "solid": {
-                "kind": "revolved",
-                "axisBone": "forearm-l",
-                "axis": "u",
-                "axisX": 0,
-                "mirror": true,
-                "lateralScale": 1.0822
-              }
+              "sections": [
+                {
+                  "at": [
+                    -0.032,
+                    -0.002,
+                    0
+                  ],
+                  "rx": 0.044,
+                  "ry": 0.046,
+                  "exponent": 2.2,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                },
+                {
+                  "at": [
+                    0.04,
+                    0,
+                    0
+                  ],
+                  "rx": 0.047,
+                  "ry": 0.044,
+                  "exponent": 2.2,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                },
+                {
+                  "at": [
+                    0.18,
+                    0,
+                    0
+                  ],
+                  "rx": 0.04,
+                  "ry": 0.035,
+                  "exponent": 2.3,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                },
+                {
+                  "at": [
+                    0.25,
+                    0,
+                    0
+                  ],
+                  "rx": 0.036,
+                  "ry": 0.031,
+                  "exponent": 2.4,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                }
+              ]
             },
             {
               "id": "forearm-r",
+              "kind": "loft",
               "bone": "forearm-r",
               "role": "body",
               "z": 3.05,
               "filled": true,
               "tone": 0.62,
               "region": "jacket",
-              "kind": "poly",
-              "points": [
-                [
-                  -0.032,
-                  0
-                ],
-                [
-                  -0.032,
-                  0.046
-                ],
-                [
-                  0.04,
-                  0.044
-                ],
-                [
-                  0.18,
-                  0.035
-                ],
-                [
-                  0.25,
-                  0.031
-                ],
-                [
-                  0.25,
-                  0
-                ]
-              ],
-              "closed": true,
-              "solid": {
-                "kind": "revolved",
-                "axisBone": "forearm-r",
-                "axis": "u",
-                "axisX": 0,
-                "mirror": true,
-                "lateralScale": 1.0822
-              }
+              "sections": [
+                {
+                  "at": [
+                    -0.032,
+                    -0.002,
+                    0
+                  ],
+                  "rx": 0.044,
+                  "ry": 0.046,
+                  "exponent": 2.2,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                },
+                {
+                  "at": [
+                    0.04,
+                    0,
+                    0
+                  ],
+                  "rx": 0.047,
+                  "ry": 0.044,
+                  "exponent": 2.2,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                },
+                {
+                  "at": [
+                    0.18,
+                    0,
+                    0
+                  ],
+                  "rx": 0.04,
+                  "ry": 0.035,
+                  "exponent": 2.3,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                },
+                {
+                  "at": [
+                    0.25,
+                    0,
+                    0
+                  ],
+                  "rx": 0.036,
+                  "ry": 0.031,
+                  "exponent": 2.4,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                }
+              ]
             },
             {
               "id": "hand-l",
@@ -18885,113 +19629,176 @@
               "closed": true
             },
             {
-              "id": "trunk",
+              "id": "jacket",
+              "kind": "loft",
               "bone": "torso",
               "role": "body",
               "z": 3.95,
               "filled": true,
               "tone": 0.62,
               "region": "jacket",
-              "kind": "poly",
-              "points": [
-                [
-                  -0.0107,
-                  -0.1998
-                ],
-                [
-                  0.0408,
-                  -0.1918
-                ],
-                [
-                  0.0718,
-                  -0.1758
-                ],
-                [
-                  0.0958,
-                  -0.1508
-                ],
-                [
-                  0.129,
-                  -0.096
-                ],
-                [
-                  0.141,
-                  -0.054
-                ],
-                [
-                  0.145,
-                  0.001
-                ],
-                [
-                  0.141,
-                  0.053
-                ],
-                [
-                  0.129,
-                  0.096
-                ],
-                [
-                  0.0958,
-                  0.1507
-                ],
-                [
-                  0.0718,
-                  0.1757
-                ],
-                [
-                  0.0408,
-                  0.1917
-                ],
-                [
-                  -0.006,
-                  0.2
-                ],
-                [
-                  -0.045,
-                  0.193
-                ],
-                [
-                  -0.0727,
-                  0.1797
-                ],
-                [
-                  -0.1037,
-                  0.1507
-                ],
-                [
-                  -0.1247,
-                  0.1097
-                ],
-                [
-                  -0.137,
-                  0.051
-                ],
-                [
-                  -0.136,
-                  -0.062
-                ],
-                [
-                  -0.1247,
-                  -0.1088
-                ],
-                [
-                  -0.1077,
-                  -0.1448
-                ],
-                [
-                  -0.0827,
-                  -0.1728
-                ],
-                [
-                  -0.0707,
-                  -0.1808
-                ],
-                [
-                  -0.045,
-                  -0.193
-                ]
-              ],
-              "closed": true
+              "sections": [
+                {
+                  "at": [
+                    -0.13,
+                    0.004,
+                    0
+                  ],
+                  "rx": 0.194,
+                  "ry": 0.133,
+                  "exponent": 2.4,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                },
+                {
+                  "at": [
+                    -0.01,
+                    0,
+                    0
+                  ],
+                  "rx": 0.176,
+                  "ry": 0.122,
+                  "exponent": 2.3,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                },
+                {
+                  "at": [
+                    0.06,
+                    -0.002,
+                    0
+                  ],
+                  "rx": 0.164,
+                  "ry": 0.119,
+                  "exponent": 2.3,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                },
+                {
+                  "at": [
+                    0.25,
+                    -0.01,
+                    0
+                  ],
+                  "rx": 0.18,
+                  "ry": 0.134,
+                  "exponent": 2.25,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                },
+                {
+                  "at": [
+                    0.38,
+                    0.002,
+                    0
+                  ],
+                  "rx": 0.196,
+                  "ry": 0.124,
+                  "exponent": 2.2,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                },
+                {
+                  "at": [
+                    0.425,
+                    0.008,
+                    0
+                  ],
+                  "rx": 0.2,
+                  "ry": 0.11,
+                  "exponent": 2.15,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                },
+                {
+                  "at": [
+                    0.452,
+                    0.011,
+                    0
+                  ],
+                  "rx": 0.2,
+                  "ry": 0.097,
+                  "exponent": 2.1,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                },
+                {
+                  "at": [
+                    0.474,
+                    0.012,
+                    0
+                  ],
+                  "rx": 0.178,
+                  "ry": 0.085,
+                  "exponent": 2,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                },
+                {
+                  "at": [
+                    0.492,
+                    0.011,
+                    0
+                  ],
+                  "rx": 0.118,
+                  "ry": 0.075,
+                  "exponent": 2,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                },
+                {
+                  "at": [
+                    0.506,
+                    0.009,
+                    0
+                  ],
+                  "rx": 0.08,
+                  "ry": 0.069,
+                  "exponent": 2,
+                  "rotation": [
+                    0,
+                    -0.70711,
+                    0,
+                    0.70711
+                  ]
+                }
+              ]
             },
             {
               "id": "neck",

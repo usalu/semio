@@ -32,7 +32,6 @@
     "block/block5d": "addGripKind",
     "gis/gisterrain": "setExaggeration",
     "puzzle/puzzle3d": "duplicateSelection",
-    "demonstrator/puzzle3d": "duplicateSelection",
     "stdio/txt": "textEdit",
     "stdio/md": "textEdit",
     "stdio/html": "textEdit",
@@ -42,7 +41,6 @@
   },
   "kindPre": {
     "puzzle/puzzle3d": "selectAll",
-    "demonstrator/puzzle3d": "selectAll",
     "trinity/jack": "selectAll",
     "space/space": "createArtifact!",
     "stdio/csv": "setActiveExample!",
@@ -69,12 +67,8 @@
     "stdio-office/xlsx.set-cell": { "control": "input[aria-label=\"A1\"]", "value": "Matrix workbook" }
   },
   "kindOrigin": {
-    "demonstrator/generation3d": "procedural",
-    "demonstrator/cad": "cad",
-    "demonstrator/puzzle3d": "puzzle",
     "demonstrator/curation": "sourcing",
-    "demonstrator/process3d": "process",
-    "demonstrator/gismap": "gis"
+    "demonstrator/process3d": "process"
   },
   "hubKindVerbs": {"2d.wfcbitmap": "change-seed", "2d.wfcgrid2d": "create-tile", "3d.wfcgrid3d": "changeSeed", "s.gis.gismap": "addFeature", "2d.puzzle": "addNode", "3d.puzzle": "duplicateSelection", "text.document": "setText"},
   "hubKindPre": {"3d.puzzle": "selectAll"}

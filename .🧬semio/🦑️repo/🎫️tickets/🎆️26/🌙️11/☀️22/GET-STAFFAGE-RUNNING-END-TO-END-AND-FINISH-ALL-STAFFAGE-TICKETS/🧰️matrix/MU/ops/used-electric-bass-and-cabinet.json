@@ -1,0 +1,3 @@
+{
+ "solidify": [{ "scales": ["50", "100"], "bones": ["wheel-front-l", "wheel-front-r", "wheel-rear-l", "wheel-rear-r"], "mode": "w" }]
+}

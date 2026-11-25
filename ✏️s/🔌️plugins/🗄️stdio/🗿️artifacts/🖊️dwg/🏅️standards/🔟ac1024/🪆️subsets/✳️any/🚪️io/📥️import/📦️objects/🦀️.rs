@@ -39,7 +39,7 @@ pub mod styles;
 pub mod tables;
 
 /// 🗃️ Decoded object records and their common entity mode flags.
-pub type DwgObjectRecords = (Vec<semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject>, Vec<(u8, u8)>);
+pub type DwgObjectRecords = (Vec<semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject>, Vec<(u8, u8)>);
 //#region 🔖️DwgStructuralCodec
 //#region DwgRead
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -78,8 +78,8 @@ fn decode_r2004_object_records(bytes: &[u8], classes: &[semio_s_artifact_stdio_d
         let class_name = if fixed == "UNKNOWN" { classes.iter().find(|class| class.number == type_code).map_or_else(|| format!("CLASS_{type_code}"), |class| class.dxf_name.clone()) } else { fixed.to_string() };
         let category = object_category(type_code);
         let extended_data = decode_r2010_eed(&mut data, handle).map_err(|error| format!("object {handle:#x} EED: {error}"))?;
-        let mut object = semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject { handle, type_code, class_name, category, extended_data, ..Default::default() };
-        if category == semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::xrecord::DwgObjectCategory::Entity {
+        let mut object = semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject { handle, type_code, class_name, category, extended_data, ..Default::default() };
+        if category == semio_s_artifact_stdio_dwg_snapshot_objects_xrecord::DwgObjectCategory::Entity {
             if type_code == DWG_TYPE_BLOCK || type_code == DWG_TYPE_ENDBLK {
                 read_block_object_frame(handle, payload_size, payload, data_end_bit, &mut data, &mut handle_reader, type_code, &mut object, &mut block_names)?;
             } else if type_code == DWG_TYPE_INSERT {
@@ -96,7 +96,7 @@ fn decode_r2004_object_records(bytes: &[u8], classes: &[semio_s_artifact_stdio_d
                     object.owner_handle = owner;
                     object.reactor_handles = reactors;
                     object.extension_dictionary_handle = extension_dictionary;
-                    object.body = Some(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody::Entity(body));
+                    object.body = Some(semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody::Entity(body));
                 }
             }
             objects.push(object);
@@ -254,7 +254,7 @@ fn decode_r2004_object_records(bytes: &[u8], classes: &[semio_s_artifact_stdio_d
             .iter()
             .enumerate()
             .filter_map(|(index, object)| match object.body.as_ref() {
-                Some(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody::TableRecord(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgTableRecordBody::BlockHeader(header))) if header.block_entity_handle == block_handle => Some(index),
+                Some(semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody::TableRecord(semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgTableRecordBody::BlockHeader(header))) if header.block_entity_handle == block_handle => Some(index),
                 _ => None,
             })
             .collect::<Vec<_>>();
@@ -265,10 +265,10 @@ fn decode_r2004_object_records(bytes: &[u8], classes: &[semio_s_artifact_stdio_d
         let marker_owner = objects.iter().find(|object| object.handle == block_handle).and_then(|object| object.owner_handle);
         let header_handle = objects[header_index].handle;
         let ordinary_index = objects.iter().find_map(|object| match object.body.as_ref() {
-            Some(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody::TableControl(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgTableControlBody::Block(control))) => control.entry_handles.iter().position(|entry| entry.handle == Some(header_handle)),
+            Some(semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody::TableControl(semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgTableControlBody::Block(control))) => control.entry_handles.iter().position(|entry| entry.handle == Some(header_handle)),
             _ => None,
         });
-        let Some(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody::TableRecord(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgTableRecordBody::BlockHeader(header))) = objects[header_index].body.as_mut() else { unreachable!() };
+        let Some(semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody::TableRecord(semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgTableRecordBody::BlockHeader(header))) = objects[header_index].body.as_mut() else { unreachable!() };
         if let Some(owner) = marker_owner {
             if owner != header_handle {
                 return Err(format!("BLOCK {block_handle:#x} owner {owner:#x} differs from block header {header_handle:#x}"));
@@ -300,7 +300,7 @@ fn read_block_object_frame(
     data: &mut DwgBitReader<'_>,
     handle_reader: &mut DwgBitReader<'_>,
     type_code: u16,
-    object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject,
+    object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject,
     block_names: &mut Vec<(u64, String)>,
 ) -> Result<(), String> {
     let (mut strings, class_main_end) = r2010_string_stream(payload, data_end_bit).map_err(|error| format!("{} {handle:#x} string stream: {error}", if type_code == DWG_TYPE_BLOCK { "BLOCK" } else { "ENDBLK" }))?;
@@ -324,10 +324,10 @@ fn read_block_object_frame(
     object.owner_handle = owner;
     object.reactor_handles = reactors;
     object.extension_dictionary_handle = extension_dictionary;
-    object.body = Some(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody::Entity(if type_code == DWG_TYPE_BLOCK {
-        semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEntityBody::BlockBegin(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgBlockBeginEntity { common: common.logical })
+    object.body = Some(semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody::Entity(if type_code == DWG_TYPE_BLOCK {
+        semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgEntityBody::BlockBegin(semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgBlockBeginEntity { common: common.logical })
     } else {
-        semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEntityBody::BlockEnd(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgBlockEndEntity { common: common.logical })
+        semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgEntityBody::BlockEnd(semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgBlockEndEntity { common: common.logical })
     }));
     Ok(())
 }
@@ -339,7 +339,7 @@ fn read_insert_object_frame(
     data_end_bit: usize,
     data: &mut DwgBitReader<'_>,
     handle_reader: &mut DwgBitReader<'_>,
-    object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject,
+    object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject,
 ) -> Result<(), String> {
     let mut common = decode_r2010_entity_common_main(data).map_err(|error| format!("INSERT {handle:#x} common data: {error}"))?;
     let insertion = data.read_3bd().map_err(|error| format!("INSERT {handle:#x} insertion: {error}"))?;
@@ -377,7 +377,7 @@ fn read_insert_object_frame(
     object.owner_handle = owner;
     object.reactor_handles = reactors;
     object.extension_dictionary_handle = extension_dictionary;
-    object.body = Some(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody::Entity(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEntityBody::Insert(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgInsertEntity {
+    object.body = Some(semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody::Entity(semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgEntityBody::Insert(semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgInsertEntity {
         common: common.logical,
         insertion: insertion.to_vec(),
         scale: scale.to_vec(),
@@ -398,7 +398,7 @@ fn read_dimension_object_frame(
     data_end_bit: usize,
     data: &mut DwgBitReader<'_>,
     handle_reader: &mut DwgBitReader<'_>,
-    object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject,
+    object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject,
 ) -> Result<(), String> {
     let (mut strings, class_main_end) = r2010_string_stream(payload, data_end_bit).map_err(|error| format!("DIMENSION_LINEAR {handle:#x} string stream: {error}"))?;
     let mut common = decode_r2010_entity_common_main(data).map_err(|error| format!("DIMENSION_LINEAR {handle:#x} common data: {error}"))?;
@@ -450,13 +450,13 @@ fn read_dimension_object_frame(
     object.owner_handle = owner;
     object.reactor_handles = reactors;
     object.extension_dictionary_handle = extension_dictionary;
-    object.body = Some(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody::Entity(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEntityBody::DimensionLinear(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgLinearDimensionEntity {
-        dimension: semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgDimensionEntityCommon {
+    object.body = Some(semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody::Entity(semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgEntityBody::DimensionLinear(semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgLinearDimensionEntity {
+        dimension: semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgDimensionEntityCommon {
             common: common.logical,
             extrusion: extrusion.to_vec(),
             text_midpoint: text_midpoint.to_vec(),
             elevation,
-            status: semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgDimensionStatus { block_reference_is_exclusive, user_positioned_text },
+            status: semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgDimensionStatus { block_reference_is_exclusive, user_positioned_text },
             user_text,
             text_rotation,
             horizontal_direction,
@@ -489,16 +489,16 @@ fn read_viewport_object_frame(
     data_end_bit: usize,
     data: &mut DwgBitReader<'_>,
     handle_reader: &mut DwgBitReader<'_>,
-    object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject,
+    object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject,
 ) -> Result<(), String> {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgComplexColor;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgDefaultLightingType;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEntityBody;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgOrthographicView;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgShadePlotMode;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgViewportEntity;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgViewportRenderMode;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgComplexColor;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgDefaultLightingType;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgEntityBody;
+    use semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgOrthographicView;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgShadePlotMode;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgViewportEntity;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgViewportRenderMode;
     let (mut strings, class_main_end) = r2010_string_stream(payload, data_end_bit).map_err(|error| format!("VIEWPORT {handle:#x} string stream: {error}"))?;
     let mut common = decode_r2010_entity_common_main(data).map_err(|error| format!("VIEWPORT {handle:#x} common data: {error}"))?;
     let center = data.read_3bd()?;
@@ -640,18 +640,18 @@ fn read_viewport_object_frame(
     Ok(())
 }
 /// 🧩️ Decodes one layout object body from its main, string and handle streams.
-fn decode_layout_object(handle: u64, payload: &[u8], payload_size: usize, data_end_bit: usize, main_end_bit: usize, data: &mut DwgBitReader<'_>, handle_reader: &mut DwgBitReader<'_>, strings: &mut Option<DwgBitReader<'_>>, object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject) -> Result<(), String> {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLayout;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLayoutOptions;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgOrthographicView;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgPlotArea;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgPlotOptions;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgPlotPaperUnit;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgPlotRotation;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgShadePlot;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgShadePlotResolution;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgStandardScale;
+fn decode_layout_object(handle: u64, payload: &[u8], payload_size: usize, data_end_bit: usize, main_end_bit: usize, data: &mut DwgBitReader<'_>, handle_reader: &mut DwgBitReader<'_>, strings: &mut Option<DwgBitReader<'_>>, object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject) -> Result<(), String> {
+    use semio_s_artifact_stdio_dwg_snapshot_objects::DwgLayout;
+    use semio_s_artifact_stdio_dwg_snapshot_objects::DwgLayoutOptions;
+    use semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgOrthographicView;
+    use semio_s_artifact_stdio_dwg_snapshot_objects::DwgPlotArea;
+    use semio_s_artifact_stdio_dwg_snapshot_objects::DwgPlotOptions;
+    use semio_s_artifact_stdio_dwg_snapshot_objects::DwgPlotPaperUnit;
+    use semio_s_artifact_stdio_dwg_snapshot_objects::DwgPlotRotation;
+    use semio_s_artifact_stdio_dwg_snapshot_objects::DwgShadePlot;
+    use semio_s_artifact_stdio_dwg_snapshot_objects::DwgShadePlotResolution;
+    use semio_s_artifact_stdio_dwg_snapshot_objects::DwgStandardScale;
     let strings = strings.as_mut().ok_or_else(|| format!("LAYOUT {handle:#x} string stream missing"))?;
     let page_setup_name = strings.read_tu()?;
     let printer_configuration = strings.read_tu()?;
@@ -792,10 +792,10 @@ fn decode_layout_object(handle: u64, payload: &[u8], payload_size: usize, data_e
     Ok(())
 }
 /// 🧩️ Decodes one sort entities table object body from its main, string and handle streams.
-fn decode_sort_entities_table_object(handle: u64, payload_size: usize, data_end_bit: usize, main_end_bit: usize, data: &mut DwgBitReader<'_>, handle_reader: &mut DwgBitReader<'_>, object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject) -> Result<(), String> {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgDrawOrderEntry;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgSortEntitiesTable;
+fn decode_sort_entities_table_object(handle: u64, payload_size: usize, data_end_bit: usize, main_end_bit: usize, data: &mut DwgBitReader<'_>, handle_reader: &mut DwgBitReader<'_>, object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject) -> Result<(), String> {
+    use semio_s_artifact_stdio_dwg_snapshot_objects::DwgDrawOrderEntry;
+    use semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody;
+    use semio_s_artifact_stdio_dwg_snapshot_objects::DwgSortEntitiesTable;
     let count = data.read_bl()? as usize;
     if count > 50_000 {
         return Err(format!("SORTENTSTABLE {handle:#x} entry count {count} is invalid"));
@@ -829,9 +829,9 @@ fn decode_sort_entities_table_object(handle: u64, payload_size: usize, data_end_
     Ok(())
 }
 /// 🧩️ Decodes one scale object body from its main, string and handle streams.
-fn decode_scale_object(handle: u64, payload: &[u8], payload_size: usize, data_end_bit: usize, main_end_bit: usize, data: &mut DwgBitReader<'_>, handle_reader: &mut DwgBitReader<'_>, strings: &mut Option<DwgBitReader<'_>>, object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject) -> Result<(), String> {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgAnnotationScale;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody;
+fn decode_scale_object(handle: u64, payload: &[u8], payload_size: usize, data_end_bit: usize, main_end_bit: usize, data: &mut DwgBitReader<'_>, handle_reader: &mut DwgBitReader<'_>, strings: &mut Option<DwgBitReader<'_>>, object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject) -> Result<(), String> {
+    use semio_s_artifact_stdio_dwg_snapshot_objects::DwgAnnotationScale;
+    use semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody;
     if data.read_bs()? != 0 {
         return Err(format!("SCALE {handle:#x} native format flag is unsupported"));
     }
@@ -862,9 +862,9 @@ fn decode_scale_object(handle: u64, payload: &[u8], payload_size: usize, data_en
     Ok(())
 }
 /// 🧩️ Decodes one placeholder object body from its main, string and handle streams.
-fn decode_placeholder_object(handle: u64, payload_size: usize, data_end_bit: usize, main_end_bit: usize, data: &mut DwgBitReader<'_>, handle_reader: &mut DwgBitReader<'_>, object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject) -> Result<(), String> {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgPlaceholder;
+fn decode_placeholder_object(handle: u64, payload_size: usize, data_end_bit: usize, main_end_bit: usize, data: &mut DwgBitReader<'_>, handle_reader: &mut DwgBitReader<'_>, object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject) -> Result<(), String> {
+    use semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody;
+    use semio_s_artifact_stdio_dwg_snapshot_objects::DwgPlaceholder;
     if data.bit_position() != main_end_bit
         || main_end_bit + 1 != data_end_bit
         || object.owner_handle.is_none()
@@ -880,9 +880,9 @@ fn decode_placeholder_object(handle: u64, payload_size: usize, data_end_bit: usi
     Ok(())
 }
 /// 🧩️ Decodes one dictionary variable object body from its main, string and handle streams.
-fn decode_dictionary_variable_object(handle: u64, payload: &[u8], payload_size: usize, data_end_bit: usize, main_end_bit: usize, data: &mut DwgBitReader<'_>, handle_reader: &mut DwgBitReader<'_>, strings: &mut Option<DwgBitReader<'_>>, object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject) -> Result<(), String> {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::xrecord::DwgDictionaryVariable;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody;
+fn decode_dictionary_variable_object(handle: u64, payload: &[u8], payload_size: usize, data_end_bit: usize, main_end_bit: usize, data: &mut DwgBitReader<'_>, handle_reader: &mut DwgBitReader<'_>, strings: &mut Option<DwgBitReader<'_>>, object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject) -> Result<(), String> {
+    use semio_s_artifact_stdio_dwg_snapshot_objects_xrecord::DwgDictionaryVariable;
+    use semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody;
     if data.read_rc()? != 0 || data.bit_position() != main_end_bit {
         return Err(format!("DICTIONARYVAR {handle:#x} schema revision or main boundary is invalid"));
     }
@@ -900,7 +900,7 @@ fn decode_dictionary_variable_object(handle: u64, payload: &[u8], payload_size: 
     Ok(())
 }
 /// 🧩️ Decodes one dictionary with default object body from its main, string and handle streams.
-fn decode_dictionary_with_default_object(handle: u64, data: &mut DwgBitReader<'_>, handle_reader: &mut DwgBitReader<'_>, strings: &mut Option<DwgBitReader<'_>>, object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject) -> Result<(), String> {
+fn decode_dictionary_with_default_object(handle: u64, data: &mut DwgBitReader<'_>, handle_reader: &mut DwgBitReader<'_>, strings: &mut Option<DwgBitReader<'_>>, object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject) -> Result<(), String> {
     let item_count = data.read_bl().map_err(|error| format!("dictionary {handle:#x} item count: {error}"))? as usize;
     let cloning_flag = data.read_bs().map_err(|error| format!("dictionary {handle:#x} cloning flag: {error}"))?;
     let hard_owner = data.read_rc().map_err(|error| format!("dictionary {handle:#x} hard-owner flag: {error}"))? != 0;
@@ -908,15 +908,15 @@ fn decode_dictionary_with_default_object(handle: u64, data: &mut DwgBitReader<'_
     let mut entries = Vec::with_capacity(item_count);
     for name in names {
         let reference = read_object_handle(handle_reader, handle).map_err(|error| format!("dictionary {handle:#x} entry {name} handle: {error}"))?.ok_or_else(|| format!("dictionary {handle:#x} entry {name} has a null handle"))?;
-        entries.push(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::xrecord::DwgNamedReference { name, handle: reference });
+        entries.push(semio_s_artifact_stdio_dwg_snapshot_objects_xrecord::DwgNamedReference { name, handle: reference });
     }
     let default_entry_handle = if object.class_name == "ACDBDICTIONARYWDFLT" { read_object_handle(handle_reader, handle).map_err(|error| format!("dictionary {handle:#x} default entry handle: {error}"))? } else { None };
-    object.body = Some(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody::Dictionary(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::xrecord::DwgDictionaryBody { entries, cloning_flag, hard_owner, default_entry_handle }));
+    object.body = Some(semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody::Dictionary(semio_s_artifact_stdio_dwg_snapshot_objects_xrecord::DwgDictionaryBody { entries, cloning_flag, hard_owner, default_entry_handle }));
 
     Ok(())
 }
 /// 🧩️ Decodes one xrecord object body from its main, string and handle streams.
-fn decode_xrecord_object(handle: u64, payload_size: usize, main_end_bit: usize, data: &mut DwgBitReader<'_>, handle_reader: &mut DwgBitReader<'_>, object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject, xrecord_terminal_fills: &mut Vec<(u8, u8)>) -> Result<(), String> {
+fn decode_xrecord_object(handle: u64, payload_size: usize, main_end_bit: usize, data: &mut DwgBitReader<'_>, handle_reader: &mut DwgBitReader<'_>, object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject, xrecord_terminal_fills: &mut Vec<(u8, u8)>) -> Result<(), String> {
     let data_byte_count = data.read_bl().map_err(|error| format!("XRECORD {handle:#x} value byte count: {error}"))? as usize;
     let values = decode_xrecord_values(data, data_byte_count, main_end_bit).map_err(|error| format!("XRECORD {handle:#x}: {error}"))?;
     let cloning_flag = data.read_bs().map_err(|error| format!("XRECORD {handle:#x} cloning flag: {error}"))?;
@@ -949,12 +949,12 @@ fn decode_xrecord_object(handle: u64, payload_size: usize, main_end_bit: usize, 
         return Err(format!("XRECORD {handle:#x} terminal handle-stream fill is {padding_value:#x}, expected {expected_padding:#x}"));
     }
     xrecord_terminal_fills.push((terminal_padding as u8, padding_value));
-    object.body = Some(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody::XRecord(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::xrecord::DwgXRecordBody { values, object_id_handles, cloning_flag }));
+    object.body = Some(semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody::XRecord(semio_s_artifact_stdio_dwg_snapshot_objects_xrecord::DwgXRecordBody { values, object_id_handles, cloning_flag }));
 
     Ok(())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn decode_r2004_object_identities(bytes: &[u8], classes: &[semio_s_artifact_stdio_dwg_snapshot_document::standards::v_ac1024::subsets::any::schema::snapshot::document::DwgClass]) -> Result<Vec<semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject>, String> {
+pub fn decode_r2004_object_identities(bytes: &[u8], classes: &[semio_s_artifact_stdio_dwg_snapshot_document::standards::v_ac1024::subsets::any::schema::snapshot::document::DwgClass]) -> Result<Vec<semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject>, String> {
     decode_r2004_object_records(bytes, classes).map(|(objects, _)| objects)
 }
 //#endregion DwgRead

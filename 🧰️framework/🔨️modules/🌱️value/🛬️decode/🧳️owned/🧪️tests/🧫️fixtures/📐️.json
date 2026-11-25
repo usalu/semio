@@ -57,5 +57,63 @@
     "originalReceiver",
     "recordBeforeReturn",
     "recoverSameProducer"
-  ]
+  ],
+  "stepsPerRecord": {
+    "beforeSteps": 834,
+    "beforeCopyBytes": 594047,
+    "ceilingSteps": 812,
+    "ceilingCopyBytes": 582591
+  },
+  "forestRows": {
+    "before": {
+      "coedge": {
+        "steps": 350,
+        "copyBytes": 122044
+      },
+      "loopEdge": {
+        "steps": 82,
+        "copyBytes": 26163
+      },
+      "vertex": {
+        "steps": 89,
+        "copyBytes": 22300
+      },
+      "coedgeAbsentDefaults": {
+        "steps": 129,
+        "copyBytes": 97030
+      },
+      "loopOfFourEdges": {
+        "steps": 288,
+        "copyBytes": 53076
+      },
+      "faceOfThreeInnerLoops": {
+        "steps": 106,
+        "copyBytes": 37228
+      }
+    },
+    "coedge": {
+      "steps": 50,
+      "copyBytes": 4000
+    },
+    "loopEdge": {
+      "steps": 30,
+      "copyBytes": 3200
+    },
+    "vertex": {
+      "steps": 80,
+      "copyBytes": 4500
+    },
+    "coedgeAbsentDefaults": {
+      "steps": 60,
+      "copyBytes": 3800
+    },
+    "loopOfFourEdges": {
+      "steps": 200,
+      "copyBytes": 30000
+    },
+    "faceOfThreeInnerLoops": {
+      "steps": 100,
+      "copyBytes": 27000
+    }
+  }
 }

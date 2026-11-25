@@ -38,6 +38,15 @@ test("a closure changes only when a byte of a file it runs changes: touching, re
  const gone=createSidecarClosureWatchV1([join(root,"main.ts"),x],[join(root,"main.ts")],root);rmSync(shared);expect(gone.changed(),"a file of the closure disappeared").toBe(true);
 });
 
+test("the digest of a closure is the same on every operating system: each file is named by its path below the root with / separators, as python computes it from the bytes",async()=>{
+ const root=directory();
+ write(root,"main.ts",'import {a} from "./lib/a.ts";export const m=a;');write(root,"lib/a.ts",'import data from "./deep/data.json" with {type:"json"};export const a=data;');write(root,"lib/deep/data.json",'{"v":1}');
+ const closure=createSidecarClosureWatchV1([join(root,"main.ts")],[],root).closure();
+ const oracle=await python("import hashlib,os,sys\nroot=sys.argv[1]\nrows=[]\nfor base,_,names in os.walk(root):\n  for name in names:\n    path=os.path.join(base,name)\n    rows.append('/'+os.path.relpath(path,root).replace(os.sep,'/')+' '+hashlib.sha256(open(path,'rb').read()).hexdigest())\nprint(hashlib.sha256('\\n'.join(sorted(rows)).encode()).hexdigest())",root);
+ expect(closure.files.size).toBe(3);
+ expect(closure.digest).toBe(oracle[0]!);
+});
+
 test("the real roles have different closures: the agent runs no scheduler code and the cache runs no worker code, and the closure of a role is a small set",()=>{
  const names=(role:"agent"|"scheduler"|"cache")=>new Set([...remoteExecutionSidecarWatchV1(role).closure().files.keys()].map(path=>path.split("/").slice(-2).join("/")));
  const agent=names("agent"),scheduler=names("scheduler"),cache=names("cache");

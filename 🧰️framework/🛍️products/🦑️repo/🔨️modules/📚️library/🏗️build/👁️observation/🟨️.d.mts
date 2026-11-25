@@ -93,7 +93,9 @@ export function inferenceCacheSizesV1():{interned:number;rowStore:{rows:number;s
 /** 🗄️ Uses a machine store of source analyses (a directory shared by the processes of the machine), or none. */
 export function useSourceAnalysisStoreV1(store:{root:string;directory:string}|undefined):void;
 /** 🌐️ Registers the answer of one global fact a record may depend on. */
-export function registerGlobalFactV1(name:string,holds:(workspaceRoot:string,segments:readonly string[],fact:unknown)=>boolean):void;
+export function registerGlobalFactV1(name:string,holds:(workspaceRoot:string,segments:any,fact:unknown)=>boolean,prepare?:(rows:readonly {kind:string;path:string;fact?:unknown}[])=>Promise<void>):void;
+/** 🛎️ Gets the global fact resolvers with asynchronous preparation ready for the `global` rows among `rows`. */
+export function prepareGlobalFactsV1(rows:readonly {kind:string;path:string;fact?:unknown}[]):Promise<void>;
 /** ✍️ Records what the running inference read of one global fact. */
 export function observeGlobalFactV1(name:string,workspaceRoot:string,segments:readonly string[],fact:unknown):void;
 /** 🔭️ The collection of rows the running inference records into. */
@@ -111,6 +113,8 @@ export function observationRowFreshV1(row:unknown):boolean;
 export type ObservationWitnessV1 = Readonly<{paths:readonly string[];tuples:readonly string[];typed:readonly (readonly [string,string,unknown])[];code:readonly (readonly [string,string])[];live:readonly string[]}>;
 export function observationWitnessV1(rows:Iterable<unknown>,options?:{since?:number}):ObservationWitnessV1|undefined;
 export function observationWitnessHoldsV1(witness:ObservationWitnessV1,options?:{tuples?:Map<string,string>;verdicts?:Map<string,boolean>;step?:()=>Promise<void>}):Promise<boolean>;
+/** 🪪️ The same verdict without turns, for a synchronous judge. */
+export function observationWitnessHoldsSyncV1(witness:ObservationWitnessV1,options?:{tuples?:Map<string,string>;verdicts?:Map<string,boolean>}):boolean;
 /** 🏃️ The running validation round, if any. */
 export function observationRoundV1():object|undefined;
 export function forgetRoundReadsV1():void;
@@ -206,6 +210,7 @@ export function observationRowsHoldAsyncV1(rows:readonly unknown[],step:()=>Prom
 export function useStableDirectoriesV1(directories:ReadonlySet<string>):void;
 /** 🔢️ How many directory listings this process made. */
 export function observationProbeCountsV1():{readdir:number};
+export function observationCarriedCountsV1():{reused:number;probed:number};
 /** 📊️ How often the memo of directory facts answered by stamps, had to list again, remembered a fact or refused one, and how many facts it holds. */
 export function observationDirectoryFactCountsV1():{hits:number;misses:number;recorded:number;refused:number;entries:number};
 

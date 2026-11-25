@@ -54,6 +54,7 @@ pub enum SemioAudioMutation {
     SetTagValue(set_tag_value::SetTagValue),
 }
 dsl::original_pack_value_operation_receiving!(SemioAudioMutation);
+dsl::artifact_persisted_binary_operation!(SemioAudioMutation);
 
 /// 🏷️ The declared kebab-case mutation vocabulary of `s.stdio.semio.audio`, in enum declaration
 /// order — what the `🔊️mutate-semio-audio` case's completeness gate counts against and what

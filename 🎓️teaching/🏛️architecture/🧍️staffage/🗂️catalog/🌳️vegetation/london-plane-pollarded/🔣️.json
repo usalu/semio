@@ -12,7 +12,7 @@
     "en": "A street plane tree held as a pollard: a clear grey-cream mottled bole of 3.8 m ends in a knuckled head from which two summers of whippy shoots carry a dense upright crown of large palmate leaves.",
     "de": "Eine als Kopfbaum gehaltene Straßenplatane: Ein grau-cremefarben gescheckter Schaft von 3,8 m endet in einem knorrigen Kopf, aus dem die Triebe zweier Sommer eine dichte, aufrechte Krone aus großen, gelappten Blättern tragen."
   },
-  "tags": ["tree", "deciduous", "broadleaf", "pollard", "street-tree", "wind", "transpiration"],
+  "tags": [{"id":"tree","title":{"en":"tree","de":"Baum"}},{"id":"deciduous","title":{"en":"deciduous","de":"laubabwerfend"}},{"id":"broadleaf","title":{"en":"broadleaf","de":"Laubholz"}},{"id":"pollard","title":{"en":"pollard","de":"Kopfbaum"}},{"id":"street-tree","title":{"en":"street tree","de":"Straßenbaum"}},{"id":"wind","title":{"en":"wind","de":"Wind"}},{"id":"transpiration","title":{"en":"transpiration","de":"Transpiration"}}],
   "provenance": {
     "author": "Semio staffage vegetation content worker NW-V1",
     "method": "handcrafted",

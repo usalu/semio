@@ -1,7 +1,7 @@
 //! 🧵️ A Flow authoring command retains its original source binding, domain output and exact child closure.
 use super::{FlowAuthoringRequest,FlowAuthoringOutcome,FlowAuthoringSerials};
 use super::{remove::RemoveWork,add::AddWork,insert::InsertWork,connect::ConnectWork,reorganize::ReorganizeWork};
-use super::super::*;
+use super::*;
 use semio_framework_artifact_flow_flow::{FlowSnapshotSource,FlowSourceIdentity,FlowMutation};
 use semio_framework_job::{OriginalTurnFailure,StepContext};
 use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,RetirementDemand,ValueError,ValueRefusalKind};

@@ -9,9 +9,9 @@ use semio_s_artifact_stdio_dwg_write_records::standards::v_ac1024::subsets::any:
 //#region 🔖️DwgStructuralCodec
 //#region DwgRead
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn encode_r2010_table_control_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgTableControlBody;
-    let semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody::TableControl(control) = object.body.as_ref().ok_or_else(|| format!("table control {:#x} body missing", object.handle))? else {
+pub fn encode_r2010_table_control_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    use semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgTableControlBody;
+    let semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody::TableControl(control) = object.body.as_ref().ok_or_else(|| format!("table control {:#x} body missing", object.handle))? else {
         return Err(format!("object {:#x} is not a table control", object.handle));
     };
     let expected_type = match control {
@@ -77,10 +77,10 @@ pub fn encode_r2010_table_control_frame(object: &semio_s_artifact_stdio_dwg_snap
     finish_r2010_object_frame(&data, handles)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn encode_r2010_table_record_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgTableRecordBody;
+pub fn encode_r2010_table_record_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    use semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgTableRecordBody;
     let body = match object.body.as_ref() {
-        Some(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody::TableRecord(value)) => value,
+        Some(semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody::TableRecord(value)) => value,
         _ => return Err(format!("table record {:#x} body missing", object.handle)),
     };
     let (common, expected_type) = match body {
@@ -199,8 +199,8 @@ pub fn encode_r2010_table_record_frame(object: &semio_s_artifact_stdio_dwg_snaps
 
 /// 🧱️ Writes the main stream fields of a layer table record.
 fn write_layer_record(
-    value: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgLayerTableRecord,
-    object: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject,
+    value: &semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgLayerTableRecord,
+    object: &semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject,
     data: &mut DwgBitWriter,
     strings: &mut DwgBitWriter,
 ) -> Result<(), String> {
@@ -224,8 +224,8 @@ fn write_layer_record(
 
 /// 🪵️ Writes the main stream fields of a linetype table record.
 fn write_linetype_record(
-    value: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgLinetypeTableRecord,
-    object: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject,
+    value: &semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgLinetypeTableRecord,
+    object: &semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject,
     data: &mut DwgBitWriter,
     strings: &mut DwgBitWriter,
 ) -> Result<(), String> {
@@ -253,8 +253,8 @@ fn write_linetype_record(
 
 /// 🔩️ Writes the main stream fields of a block header table record.
 fn write_block_header_record(
-    value: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgBlockHeaderTableRecord,
-    object: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject,
+    value: &semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgBlockHeaderTableRecord,
+    object: &semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject,
     data: &mut DwgBitWriter,
     strings: &mut DwgBitWriter,
 ) -> Result<(), String> {
@@ -288,7 +288,7 @@ fn write_block_header_record(
 
 /// ⚙️ Writes the main stream fields of a viewport table record.
 fn write_viewport_record(
-    value: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgViewportTableRecord,
+    value: &semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgViewportTableRecord,
     data: &mut DwgBitWriter,
     strings: &mut DwgBitWriter,
 ) -> () {
@@ -346,11 +346,11 @@ fn write_viewport_record(
 
 /// 🧲️ Writes the main stream fields of a dimension style table record.
 fn write_dimension_style_record(
-    value: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgDimensionStyleTableRecord,
+    value: &semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgDimensionStyleTableRecord,
     data: &mut DwgBitWriter,
     strings: &mut DwgBitWriter,
 ) -> () {
-    let write_color = |data: &mut DwgBitWriter, strings: &mut DwgBitWriter, color: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgComplexColor| {
+    let write_color = |data: &mut DwgBitWriter, strings: &mut DwgBitWriter, color: &semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgComplexColor| {
         data.write_bs(color.index);
         data.write_bl(encode_complex_color_value(&color.value));
         data.write_rc(u8::from(color.name.is_some()) | (u8::from(color.book_name.is_some()) << 1));

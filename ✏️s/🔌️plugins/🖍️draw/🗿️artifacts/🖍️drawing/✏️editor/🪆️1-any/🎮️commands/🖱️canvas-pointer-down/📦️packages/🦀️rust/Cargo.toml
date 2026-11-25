@@ -45,6 +45,9 @@ semio-s-artifact-draw-drawing-structure = { workspace = true }
 semio-s-artifact-draw-drawing-transform = { workspace = true }
 semio-framework-pack = { path = "../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 
+[features]
+testkit = []
+
 [dev-dependencies]
 semio-s-artifact-draw-drawing-scene = { workspace = true, features = ["testkit"] }
 semio-framework-async-macros = { workspace = true }

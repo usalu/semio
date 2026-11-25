@@ -12,7 +12,7 @@ fn coded_image_preview_matches_mupdf() {
         let name = case["name"].as_str().unwrap();
         let input = base64_standard_decode(case["pdfBase64"].as_str().unwrap()).unwrap();
         let snapshot = decode_pdf(&input).unwrap_or_else(|error| panic!("{name}: {error}"));
-        let scene: Value = serde_json::from_str(&canvas_layers(&snapshot, None)).unwrap();
+        let scene: Value = serde_json::from_str(&canvas_layers(&snapshot, None, semio_ui_locale::Locale::En)).unwrap();
         let layer = scene.as_array().unwrap().iter().find(|layer| layer["kind"] == "image")
             .unwrap_or_else(|| panic!("{name}: no image layer"));
         let src = layer["image"]["src"].as_str().unwrap().strip_prefix("data:image/png;base64,").unwrap();

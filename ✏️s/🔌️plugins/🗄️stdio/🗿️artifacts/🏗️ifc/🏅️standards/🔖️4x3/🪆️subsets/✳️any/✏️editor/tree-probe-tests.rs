@@ -7,7 +7,6 @@ pub(crate) fn built_tree_serialization(root:&BuiltNode)->String{
     let mut frontier=vec![root];
     while let Some(node)=frontier.pop(){
         out.push_str(node.key.as_str());
-        if !node.rejected_children.is_empty(){eprintln!("[DEBUG] rejected children under {}: {}",node.key.as_str(),node.rejected_children.len());}
         out.push_str(&serde_json::to_string(&node.component).unwrap());
         out.push_str(&serde_json::to_string(&node.accessibility).unwrap());
         out.push_str(&serde_json::to_string(&node.bindings).unwrap());
@@ -26,5 +25,20 @@ pub(crate) fn retired_tree_serialization(root:BuiltNode)->String{
         let step=retirement.close_step(1,4096).expect("built-tree retirement remains valid");
         if !step.progressed{std::thread::yield_now();}
     }
+    while !semio_ui_contract::close_built_node_page_one(){}
     text
+}
+
+/// 🔥️ Publishes the built-child and UI-value retirement authorities, as a host does before its first tree.
+pub(crate) fn warm_ui() {
+    use semio_ui_contract::{UiMapBuilder, UiValue, UiValueRetirement};
+    semio_ui_contract::built_node_pages_are_terminal_empty();
+    let mut warm = UiMapBuilder::try_new().unwrap();
+    warm.try_insert("warm".into(), UiValue::Null).unwrap();
+    let mut value = UiValueRetirement::new(UiValue::Map(warm.finish()));
+    for _ in 0..16384 {
+        if value.terminal_is_empty() { break; }
+        value.close_step(1, 32768).unwrap();
+    }
+    assert!(value.terminal_is_empty());
 }

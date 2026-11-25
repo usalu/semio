@@ -45,6 +45,8 @@ semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️jo
 semio-os-kernel = { path = "../../../../../../📦️packages/🦀️rust" }
 semio-framework-pack = { path = "../../../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-plugin-ownership = { path = "../../../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
+semio-plugin-store-lifecycle = { path = "../../../../♻️lifecycle/🧱️owner/📦️packages/🦀️rust" }
+semio-plugin-transient-publication = { path = "../../../../🫧️transient/🧱️owner/📦️packages/🦀️rust" }
 semio-framework-schema-composition = { path = "../../../../../../../../🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }
 semio-framework-schema-registry = { path = "../../../../../../../../🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
 semio-framework-tool-machine = { workspace = true }

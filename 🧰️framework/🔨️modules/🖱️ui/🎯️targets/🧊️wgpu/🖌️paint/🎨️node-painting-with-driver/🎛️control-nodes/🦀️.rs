@@ -1,6 +1,7 @@
 //! 🎛️ Control nodes: the retained paint steps of the button, input, select, toggle and icon select nodes. See [`super`].
 
 use super::*;
+use semio_ui_wgpu_layout::chrome::push_chrome_row;
 use semio_ui_wgpu_paint_widgets::hover_owner;
 
 /// 🔘 Paints one step of a button node: chrome, border and label.
@@ -88,7 +89,7 @@ pub(super) fn paint_input_node_step(
             let result = retained_fixed_output_budgeted(draw, if file_chrome.is_some() { 64 } else { RETAINED_NODE_FIXED_OUTPUT_ITEMS }, |draw| {
                 push_control_border(draw, frame, theme, if refused { theme.error } else if ringed || focus_ring_visible(flags) { theme.selected } else { theme.border_normal }, theme.input_bg, if refused { semio_ui_draw_contract::SharedBorderState::Invalid } else if ringed || focus_ring_visible(flags) { semio_ui_draw_contract::SharedBorderState::Focus } else { semio_ui_draw_contract::SharedBorderState::Normal });
                 if let Some((swatch, color, _)) = swatch {
-                    draw.push_rounded([swatch.x, swatch.y, swatch.w, swatch.h], color, 2.0);
+                    draw.push_solid([swatch.x, swatch.y, swatch.w, swatch.h], color);
                     if let Some((caption, _)) = file_chrome {
                         draw_text_on(draw, atlas, caption, swatch.x + theme.padding_standard, swatch.y + swatch.h * 0.65, theme.font_size_small, theme.text);
                     }
@@ -210,7 +211,7 @@ pub(super) fn paint_select_node_step(
             let Some(popup) = node.state.select_popup.and_then(|popup| retained_select_popup_at_bounds(tree, id, bounds, popup)) else { return RetainedNodePaintStep::Fault };
             let mut opened = false;
             let result = retained_fixed_output(draw, |draw| {
-                let glass = draw.push_glass([popup.menu.x, popup.menu.y, popup.menu.w, popup.menu.h], theme.border_radius, theme.glass(Level::Menu));
+                let glass = draw.push_glass([popup.menu.x, popup.menu.y, popup.menu.w, popup.menu.h], 0.0, theme.glass(Level::Menu));
                 draw.begin_glass_content(glass);
                 push_chrome_border(draw, popup.menu, theme.stroke_hairline, theme.border_normal, true, true, true, true, semio_ui_draw_contract::SharedBorderState::Normal);
                 draw.push_scissor(semio_ui_select_behavior::select_popup_viewport_rect(popup));
@@ -235,10 +236,11 @@ pub(super) fn paint_select_node_step(
             let row = semio_ui_select_behavior::select_popup_row_rect(bounds, cursor.item, popup, theme);
             let item = &select.items[cursor.item];
             let highlighted = node.state.highlighted == Some(cursor.item);
+            let hovered = highlighted || tree.children(id).nth(cursor.item).and_then(|row_id| tree.node(row_id)).is_some_and(|row_node| row_node.flags.contains(NodeFlags::HOVERED));
+            let (fill, _) = semio_ui_select_behavior::select_row_colors(theme, item.value == select.value, hovered);
+            let first_row = node.state.select_popup.map_or(0, |popup| popup.first_row);
             let result = retained_fixed_output(draw, |draw| {
-                if highlighted || item.value == select.value {
-                    draw.push_rounded([row.x, row.y, row.w, row.h], theme.row_hover, theme.border_radius);
-                }
+                push_chrome_row(draw, row, fill, cursor.item > first_row, theme);
             });
             cursor.phase = 5;
             cursor.glyph.reset();
@@ -263,8 +265,11 @@ pub(super) fn paint_select_node_step(
                 return RetainedNodePaintStep::Fault;
             };
             let painted = semio_ui_select_behavior::select_popup_row_rect(bounds, cursor.item, popup, theme);
-            let row = Rect::new(painted.x + theme.padding_standard, painted.y, (painted.w - theme.padding_standard).max(0.0), painted.h);
-            match retained_text_node_step(item.label.as_str(), row, theme.font_size_body, theme.text, atlas, draw, cursor) {
+            let inset = semio_ui_select_behavior::select_row_text_inset(theme);
+            let row = Rect::new(painted.x + inset, painted.y, (painted.w - inset).max(0.0), painted.h);
+            let hovered = node.state.highlighted == Some(cursor.item) || tree.children(id).nth(cursor.item).and_then(|row_id| tree.node(row_id)).is_some_and(|row_node| row_node.flags.contains(NodeFlags::HOVERED));
+            let (_, ink) = semio_ui_select_behavior::select_row_colors(theme, item.value == select.value, hovered);
+            match retained_text_node_step(item.label.as_str(), row, theme.font_size_body, ink, atlas, draw, cursor) {
                 RetainedNodePaintStep::Complete => {
                     cursor.item += 1;
                     cursor.phase = 4;

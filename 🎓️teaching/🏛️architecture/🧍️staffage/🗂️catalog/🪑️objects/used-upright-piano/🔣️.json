@@ -13,21 +13,111 @@
    "de": "Ein gebrauchtes deutsches Klavier der 125-cm-Klasse aus den 1970er Jahren, 1,50 x 0,60 x 1,25 m und etwa 230 kg: nussbaumfurniertes Gehäuse mit 15 mm Gussplatte, 88 vergilbte Tasten, drei Messingpedale und eine Kunstlederbank. Der Deckel ist von der Sonne ausgebleicht und von Gläsern beringt, die Tastenklappe zerkratzt, ein Tastenbelag fehlt und alte Notenaufkleber kleben auf der Namensleiste. Im Lager steht es verzurrt auf einem Klavierroller, zwei Träger rollen es weg und kippen es über eine Türschwelle, und zurück in einem Wohnzimmer wird es mit offener Tastenklappe gespielt."
   },
   "tags": [
-   "used",
-   "household",
-   "second-hand",
-   "living",
-   "piano",
-   "upright-piano",
-   "musical-instrument",
-   "keyboard",
-   "walnut-veneer",
-   "chipboard",
-   "cast-iron",
-   "piano-dolly",
-   "ratchet-strap",
-   "bench",
-   "interior"
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "household",
+    "title": {
+     "en": "household",
+     "de": "Haushalt"
+    }
+   },
+   {
+    "id": "second-hand",
+    "title": {
+     "en": "second-hand",
+     "de": "Second-Hand"
+    }
+   },
+   {
+    "id": "living",
+    "title": {
+     "en": "living",
+     "de": "Wohnen"
+    }
+   },
+   {
+    "id": "piano",
+    "title": {
+     "en": "piano",
+     "de": "Klavier"
+    }
+   },
+   {
+    "id": "upright-piano",
+    "title": {
+     "en": "upright piano",
+     "de": "Pianino"
+    }
+   },
+   {
+    "id": "musical-instrument",
+    "title": {
+     "en": "musical instrument",
+     "de": "Musikinstrument"
+    }
+   },
+   {
+    "id": "keyboard",
+    "title": {
+     "en": "keyboard",
+     "de": "Tasteninstrument"
+    }
+   },
+   {
+    "id": "walnut-veneer",
+    "title": {
+     "en": "walnut veneer",
+     "de": "Nussbaumfurnier"
+    }
+   },
+   {
+    "id": "chipboard",
+    "title": {
+     "en": "chipboard",
+     "de": "Spanplatte"
+    }
+   },
+   {
+    "id": "cast-iron",
+    "title": {
+     "en": "cast iron",
+     "de": "Gusseisen"
+    }
+   },
+   {
+    "id": "piano-dolly",
+    "title": {
+     "en": "piano dolly",
+     "de": "Klaviertransporter"
+    }
+   },
+   {
+    "id": "ratchet-strap",
+    "title": {
+     "en": "ratchet strap",
+     "de": "Ratschengurt"
+    }
+   },
+   {
+    "id": "bench",
+    "title": {
+     "en": "bench",
+     "de": "Bank"
+    }
+   },
+   {
+    "id": "interior",
+    "title": {
+     "en": "interior",
+     "de": "Innenausbau"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content (used household objects)",

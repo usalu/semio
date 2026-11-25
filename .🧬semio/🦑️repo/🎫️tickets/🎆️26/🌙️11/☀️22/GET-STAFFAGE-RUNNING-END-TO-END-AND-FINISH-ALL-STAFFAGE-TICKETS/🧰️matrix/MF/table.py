@@ -22,7 +22,7 @@ def cells(asset):
     for cell in data if isinstance(data, list) else data.get("cells", []):
         status[cell["status"]] += 1
         if cell["status"] == "fail":
-            for name in {x.get("check", "?") for x in cell.get("failures", cell.get("findings", [])) or [{}]}:
+            for name in {x if isinstance(x, str) else x.get("check", "?") for x in cell.get("failures", cell.get("findings", [])) or ["?"]}:
                 checks[name] += 1
     text = ", ".join(f"{v} {k}" for k, v in sorted(status.items()))
     return text + (" (" + ", ".join(f"{k} {v}" for k, v in checks.items()) + ")" if checks else "")

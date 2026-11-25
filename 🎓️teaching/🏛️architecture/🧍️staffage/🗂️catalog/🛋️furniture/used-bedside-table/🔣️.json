@@ -13,19 +13,97 @@
    "de": "Ein Nachttisch der 1970er-Jahre aus teakfurnierter Spanplatte, 0,35 x 0,43 x 0,55 m und 8.9 kg, mit einer Schublade über einem offenen Fach auf vier gedrechselten Buchenbeinen, sonnengebleichter Platte mit Zigarettenbrandstelle, Glasrändern und abgeplatzter Ecke; auf einer gefalteten Möbeldecke gelagert, mit einer Hand an der Vorderkante der Platte getragen, wieder neben einem Bett mit Lampe und Büchern, Schublade gezogen."
   },
   "tags": [
-   "used",
-   "household",
-   "second-hand",
-   "bedroom",
-   "bedside-table",
-   "furniture",
-   "teak",
-   "veneer",
-   "chipboard",
-   "beech",
-   "drawer",
-   "1970s",
-   "interior"
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "household",
+    "title": {
+     "en": "household",
+     "de": "Haushalt"
+    }
+   },
+   {
+    "id": "second-hand",
+    "title": {
+     "en": "second-hand",
+     "de": "Second-Hand"
+    }
+   },
+   {
+    "id": "bedroom",
+    "title": {
+     "en": "bedroom",
+     "de": "Schlafzimmer"
+    }
+   },
+   {
+    "id": "bedside-table",
+    "title": {
+     "en": "bedside table",
+     "de": "Nachttisch"
+    }
+   },
+   {
+    "id": "furniture",
+    "title": {
+     "en": "furniture",
+     "de": "Möbel"
+    }
+   },
+   {
+    "id": "teak",
+    "title": {
+     "en": "teak",
+     "de": "Teak"
+    }
+   },
+   {
+    "id": "veneer",
+    "title": {
+     "en": "veneer",
+     "de": "Furnier"
+    }
+   },
+   {
+    "id": "chipboard",
+    "title": {
+     "en": "chipboard",
+     "de": "Spanplatte"
+    }
+   },
+   {
+    "id": "beech",
+    "title": {
+     "en": "beech",
+     "de": "Buche"
+    }
+   },
+   {
+    "id": "drawer",
+    "title": {
+     "en": "drawer",
+     "de": "Schublade"
+    }
+   },
+   {
+    "id": "1970s",
+    "title": {
+     "en": "1970s",
+     "de": "1970er"
+    }
+   },
+   {
+    "id": "interior",
+    "title": {
+     "en": "interior",
+     "de": "Innenausbau"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content (used household objects wave)",
@@ -7778,8 +7856,452 @@
     ]
    },
    "500": {
-    "status": "unavailable",
-    "denominator": 500
+    "status": "authored",
+    "denominator": 500,
+    "decisions": [
+     {
+      "en": "Body for the 75 mm feature: the cabinet is its frame with the open shelf as a through opening (top and drawer merged into the 145 mm above it, the 16 mm boards judged by the extents of the frame) before the back as its declared 3 mm sheet, on four 75 mm posts that keep the outer faces of the 36 mm legs, on the blanket as its declared 18 mm sheet.",
+      "de": "Körper für das 75-mm-Merkmal: der Korpus ist sein Rahmen mit dem offenen Fach als Durchbruch (Platte und Schublade in den 145 mm darüber verschmolzen, die 16-mm-Platten nach den Maßen des Rahmens beurteilt) vor der Rückwand als erklärter 3-mm-Platte, auf vier 75-mm-Pfosten, die die Außenflächen der 36-mm-Beine behalten, auf der Decke als erklärter 18-mm-Platte."
+     },
+     {
+      "en": "Thermal: blanket and posts by reference, the cabinet as region solids: a 75 mm top, the lower carcass as its frame around the open shelf, a 75 mm drawer block and the back as its declared 3 mm sheet.",
+      "de": "Thermik: Decke und Pfosten als Verweis, der Korpus als Regionskörper: eine 75-mm-Platte, der untere Korpus als Rahmen um das offene Fach, ein 75-mm-Schubladenblock und die Rückwand als erklärte 3-mm-Platte."
+     },
+     {
+      "en": "Structure: blanket, frame, back and posts by reference, the drawer as a 75 mm member, two 75 mm leg plates and three mass markers.",
+      "de": "Tragwerk: Decke, Rahmen, Rückwand und Pfosten als Verweis, die Schublade als 75-mm-Stab, zwei 75-mm-Beinplatten und drei Massenmarken."
+     }
+    ],
+    "body": [
+     {
+      "id": "blanket",
+      "kind": "box",
+      "bone": "blanket",
+      "material": "moving-blanket",
+      "role": "body",
+      "tone": 0.45,
+      "size": [
+       0.6666,
+       0.018,
+       0.75
+      ],
+      "transform": {
+       "translation": [
+        0.3333,
+        0.009,
+        0
+       ]
+      },
+      "sheet": true
+     },
+     {
+      "id": "cabinet",
+      "kind": "extrude",
+      "bone": "carcass",
+      "material": "teak-veneer-chipboard",
+      "role": "body",
+      "tone": 0.7,
+      "profile": [
+       [
+        -0.35,
+        -0.215
+       ],
+       [
+        0,
+        -0.215
+       ],
+       [
+        0,
+        0.215
+       ],
+       [
+        -0.35,
+        0.215
+       ]
+      ],
+      "plane": "yz",
+      "from": 0.003,
+      "to": 0.33,
+      "holes": [
+       [
+        [
+         -0.334,
+         -0.199
+        ],
+        [
+         -0.145,
+         -0.199
+        ],
+        [
+         -0.145,
+         0.199
+        ],
+        [
+         -0.334,
+         0.199
+        ]
+       ]
+      ]
+     },
+     {
+      "id": "back",
+      "kind": "box",
+      "bone": "carcass",
+      "material": "hardboard",
+      "role": "body",
+      "tone": 0.35,
+      "size": [
+       0.003,
+       0.35,
+       0.43
+      ],
+      "transform": {
+       "translation": [
+        0.0015,
+        -0.175,
+        0
+       ]
+      },
+      "sheet": true
+     },
+     {
+      "id": "legs-rear",
+      "kind": "box",
+      "bone": "carcass",
+      "material": "beech-stained",
+      "role": "body",
+      "tone": 0.55,
+      "size": [
+       0.075,
+       0.2,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.04,
+        -0.45,
+        0.1555
+       ]
+      },
+      "repeat": {
+       "count": 2,
+       "translation": [
+        0,
+        0,
+        -0.311
+       ]
+      }
+     },
+     {
+      "id": "legs-front",
+      "kind": "box",
+      "bone": "carcass",
+      "material": "beech-stained",
+      "role": "body",
+      "tone": 0.55,
+      "size": [
+       0.075,
+       0.2,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.29,
+        -0.45,
+        0.1555
+       ]
+      },
+      "repeat": {
+       "count": 2,
+       "translation": [
+        0,
+        0,
+        -0.311
+       ]
+      }
+     }
+    ],
+    "thermal": [
+     {
+      "id": "th-blanket",
+      "of": "blanket",
+      "region": "blanket"
+     },
+     {
+      "id": "th-legs-rear",
+      "of": "legs-rear",
+      "region": "legs"
+     },
+     {
+      "id": "th-legs-front",
+      "of": "legs-front",
+      "region": "legs"
+     },
+     {
+      "id": "th-top",
+      "kind": "box",
+      "bone": "carcass",
+      "material": "teak-top-faded",
+      "role": "body",
+      "tone": 0.84,
+      "size": [
+       0.33,
+       0.075,
+       0.43
+      ],
+      "transform": {
+       "translation": [
+        0.165,
+        -0.0375,
+        0
+       ]
+      },
+      "region": "top"
+     },
+     {
+      "id": "th-carcass",
+      "kind": "extrude",
+      "bone": "carcass",
+      "material": "teak-veneer-chipboard",
+      "role": "body",
+      "tone": 0.7,
+      "profile": [
+       [
+        -0.35,
+        -0.215
+       ],
+       [
+        -0.15,
+        -0.215
+       ],
+       [
+        -0.15,
+        0.215
+       ],
+       [
+        -0.35,
+        0.215
+       ]
+      ],
+      "plane": "yz",
+      "from": 0.003,
+      "to": 0.33,
+      "holes": [
+       [
+        [
+         -0.334,
+         -0.199
+        ],
+        [
+         -0.166,
+         -0.199
+        ],
+        [
+         -0.166,
+         0.199
+        ],
+        [
+         -0.334,
+         0.199
+        ]
+       ]
+      ],
+      "region": "carcass"
+     },
+     {
+      "id": "th-drawer",
+      "kind": "box",
+      "bone": "drawer",
+      "material": "teak-veneer-chipboard",
+      "role": "body",
+      "tone": 0.66,
+      "size": [
+       0.315,
+       0.075,
+       0.396
+      ],
+      "transform": {
+       "translation": [
+        0.1575,
+        0.0165,
+        0
+       ]
+      },
+      "region": "drawer"
+     },
+     {
+      "id": "th-back",
+      "kind": "box",
+      "bone": "carcass",
+      "material": "hardboard",
+      "role": "body",
+      "tone": 0.35,
+      "size": [
+       0.003,
+       0.275,
+       0.43
+      ],
+      "transform": {
+       "translation": [
+        0.0015,
+        -0.2125,
+        0
+       ]
+      },
+      "region": "back-panel",
+      "sheet": true
+     }
+    ],
+    "structure": [
+     {
+      "id": "m-blanket",
+      "of": "blanket",
+      "member": "blanket",
+      "part": "member"
+     },
+     {
+      "id": "m-cabinet",
+      "of": "cabinet",
+      "member": "carcass",
+      "part": "member"
+     },
+     {
+      "id": "m-back",
+      "of": "back",
+      "member": "carcass",
+      "part": "member"
+     },
+     {
+      "id": "m-legs-rear",
+      "of": "legs-rear",
+      "member": "carcass",
+      "part": "member"
+     },
+     {
+      "id": "m-legs-front",
+      "of": "legs-front",
+      "member": "carcass",
+      "part": "member"
+     },
+     {
+      "id": "m-drawer",
+      "kind": "box",
+      "bone": "drawer",
+      "material": "teak-veneer-chipboard",
+      "role": "body",
+      "tone": 0.66,
+      "size": [
+       0.315,
+       0.075,
+       0.396
+      ],
+      "transform": {
+       "translation": [
+        0.1575,
+        0.0165,
+        0
+       ]
+      },
+      "member": "drawer",
+      "part": "member"
+     },
+     {
+      "id": "j-leg-plates",
+      "kind": "box",
+      "bone": "carcass",
+      "material": "teak-veneer-chipboard",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.386
+      ],
+      "transform": {
+       "translation": [
+        0.04,
+        -0.3875,
+        0
+       ]
+      },
+      "repeat": {
+       "count": 2,
+       "translation": [
+        0.25,
+        0,
+        0
+       ]
+      },
+      "member": "carcass",
+      "part": "joint"
+     },
+     {
+      "id": "mass-carcass",
+      "kind": "box",
+      "bone": "carcass",
+      "material": "teak-veneer-chipboard",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.16,
+        -0.175,
+        0
+       ]
+      },
+      "member": "carcass",
+      "part": "mass"
+     },
+     {
+      "id": "mass-drawer",
+      "kind": "box",
+      "bone": "drawer",
+      "material": "pine-drawer",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.188,
+        0.0165,
+        0
+       ]
+      },
+      "member": "drawer",
+      "part": "mass"
+     },
+     {
+      "id": "mass-blanket",
+      "kind": "box",
+      "bone": "blanket",
+      "material": "moving-blanket",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.3333,
+        0.0375,
+        0
+       ]
+      },
+      "member": "blanket",
+      "part": "mass"
+     }
+    ]
    }
   },
   "presentation": {

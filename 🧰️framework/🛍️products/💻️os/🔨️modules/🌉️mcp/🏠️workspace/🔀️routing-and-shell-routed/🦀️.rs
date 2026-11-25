@@ -33,7 +33,7 @@ use semio_os_mcp_plugin_runtime::compiled_components::{ComponentBytes, activatio
 #[cfg(not(target_arch = "wasm32"))]
 use semio_os_mcp_plugin_runtime::plugin_artifact_channel::PluginArtifactChannel;
 #[cfg(not(target_arch = "wasm32"))]
-use semio_os_mcp_port::channel_port::{ACTIVATION_CANCELLED_FAULT_CODE, ActivationPhase};
+use semio_os_mcp_port::channel_port::{ACTIVATION_CANCELLED_FAULT_CODE, ActivationPhase, model_missing_fault};
 #[cfg(any(test, feature = "testkit"))]
 use semio_os_mcp_port::channel_port::MockArtifactChannel;
 
@@ -136,7 +136,8 @@ pub fn resolve_plugin_for_capability_in(catalog: &Catalog, capability_id: &str) 
 /// for everything else (the target plugin genuinely cannot be reached right now — retryable, matches
 /// `GatewayErrorCode::PluginUnavailable`).
 #[cfg(not(target_arch = "wasm32"))]
-fn routing_fault(error: GatewayError) -> Fault {
+pub fn routing_fault(error: GatewayError) -> Fault {
+    if let Some(fault) = model_missing_fault(&error) { return fault; }
     let code = match error.code {
         GatewayErrorCode::NotFound => "capability.not-found",
         GatewayErrorCode::Cancelled => ACTIVATION_CANCELLED_FAULT_CODE,
@@ -609,7 +610,7 @@ impl ArtifactChannel for RoutingArtifactChannel {
         };
         let mutates = commands.iter().any(|command| matches!(command, AppCommand::TransactionCommit { .. } | AppCommand::TransactionUndo { .. } | AppCommand::TransactionRedo { .. }));
         let frames = match seeded {
-            Ok(()) => channel.exchange(instance, commands).await,
+            Ok(()) => Box::pin(channel.exchange(instance, commands)).await,
             Err(fault) => Err(fault),
         };
         let egress = channel.drain_backbone_egress();
@@ -737,14 +738,14 @@ impl ArtifactChannel for ShellRoutedArtifactChannel {
     /// 💡️ An inference is not a shell command and never was: `ShellArtifactChannel` refuses See [design notes](README.md).
     async fn exchange(&mut self, instance: u32, commands: Vec<AppCommand>) -> Result<Vec<AppFrame>, Fault> {
         if matches!(commands.first(), Some(AppCommand::Infer(_))) {
-            return self.headless.exchange(instance, commands).await;
+            return Box::pin(self.headless.exchange(instance, commands)).await;
         }
         match self.binding.resolve() {
             ChannelKind::Shell => {
                 self.shell.pin_plugin(self.headless.plugin_id_for(instance, &commands).ok());
-                self.shell.exchange(instance, commands).await
+                Box::pin(self.shell.exchange(instance, commands)).await
             }
-            ChannelKind::Headless => self.headless.exchange(instance, commands).await,
+            ChannelKind::Headless => Box::pin(self.headless.exchange(instance, commands)).await,
         }
     }
 

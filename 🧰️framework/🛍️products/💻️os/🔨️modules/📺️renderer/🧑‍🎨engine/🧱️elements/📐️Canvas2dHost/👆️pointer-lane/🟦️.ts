@@ -1,10 +1,20 @@
 /** 👆️ Canvas2dHost pointer lane: the pointer sample and extras, the dispatch contract and the gesture sample lane that coalesces canvas pointer moves. */
 import { type CanvasInputModifiers } from "@semio-tech/framework/canvas/react-renderer";
+import type { MergeMode } from "@semio-tech/framework";
 import { createGestureSampleLaneV1, type GestureSampleLaneV1 } from "../../🏛️ShellHost/🎯️input-ledger/🟦️.ts";
 
 //#region 🔖️Canvas2dHost
 //#region JsonLayersCanvasSession
 //#region CanvasPointerGestureLane
+/** 🎚️ Applies the persistent selection mode (the Utilities rail radios) to the held keys: a non-selective mode overrides plain clicks as `marqueeModeFromModifiers` does, so the app's modifier-to-merge policy sees it (additive = Shift, subtractive = Ctrl, invertive = both). */
+export function modifiersForSelectionMode(modifiers: CanvasInputModifiers | undefined, mode: MergeMode | undefined): CanvasInputModifiers {
+  const held = { shift: modifiers?.shift ?? false, ctrl: modifiers?.ctrl ?? false, meta: modifiers?.meta ?? false, alt: modifiers?.alt ?? false };
+  if (mode === "additive") return { ...held, shift: true, ctrl: false, meta: false };
+  if (mode === "subtractive") return { ...held, shift: false, ctrl: true, meta: false };
+  if (mode === "invertive") return { ...held, shift: true, ctrl: true, meta: false };
+  return held;
+}
+
 /** 🖱️ One pointer sample: its logical CSS-pixel position, the keys held, and the WORLD position it maps to under the
  * camera at the moment it was sampled — a later camera move never re-maps a sample already taken. */
 export type CanvasPointerSample = readonly [number, number, CanvasInputModifiers, number, number];

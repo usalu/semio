@@ -14,7 +14,7 @@ import type { EvaluatedState } from "../🔗️contracts/🟦️.ts";
 import { VIEWPOINT_CAPTIONS } from "../🎨️depiction/✂️section/🟦️.ts";
 import { sampleClip, samplePose } from "../🎞️animation/🟦️.ts";
 import { evaluate, flattenGeometry } from "../🧮️evaluation/🟦️.ts";
-import { exportIssues, volumeIssues, weightIssues } from "./🧊️volume/🟦️.ts";
+import { exportIssues, loftShapeIssues, volumeIssues, weightIssues } from "./🧊️volume/🟦️.ts";
 import { POWER_TOLERANCE_W, totalPowerW } from "../🌡️thermal/⚡️power/🟦️.ts";
 import { analyticRules } from "./🧊️volumes/🧱️rules/🟦️.ts";
 import { copyMesh, repeatMaps } from "./🧊️volumes/🌓️silhouette/🟦️.ts";
@@ -174,13 +174,14 @@ const SHAPE_KIND_FIELDS: Readonly<Record<Shape["kind"], { readonly required: rea
   poly: { required: ["points", "closed"], optional: ["followTip"] },
   path: { required: ["d"], optional: [] },
   member: { required: ["from", "to", "section"], optional: [] },
+  loft: { required: ["sections"], optional: ["weights"] },
 };
 
 /** 🛃️ The members of one shape: exactly those the schema defines for its kind (`followTip` exists for capsule, rect and poly only, `closed` for poly only), none missing, none unknown, none `null`. */
 function shapeFieldIssues(shape: Shape, path: string, add: (path: string, code: string, en: string, de: string) => void): void {
   const entry = shape as unknown as Readonly<Record<string, unknown>>;
   const kind = SHAPE_KIND_FIELDS[shape.kind];
-  if (kind === undefined) return add(path, "shape-field", `Shape "${shape.id}" has the kind ${JSON.stringify(shape.kind)}, which is none of capsule, ellipse, rect, poly, path and member.`, `Form "${shape.id}" hat die Art ${JSON.stringify(shape.kind)}, die keine von capsule, ellipse, rect, poly, path und member ist.`);
+  if (kind === undefined) return add(path, "shape-field", `Shape "${shape.id}" has the kind ${JSON.stringify(shape.kind)}, which is none of capsule, ellipse, rect, poly, path, member and loft.`, `Form "${shape.id}" hat die Art ${JSON.stringify(shape.kind)}, die keine von capsule, ellipse, rect, poly, path, member und loft ist.`);
   const allowed = new Set([...SHAPE_REQUIRED, ...SHAPE_OPTIONAL, ...kind.required, ...kind.optional]);
   for (const key of Object.keys(entry)) {
     if (!allowed.has(key)) add(`${path}.${key}`, "shape-field", `Shape "${shape.id}" of kind ${shape.kind} has the member "${key}", which it does not define.`, `Form "${shape.id}" der Art ${shape.kind} hat das Mitglied "${key}", das sie nicht kennt.`);
@@ -405,6 +406,11 @@ export function validateAsset(source: Asset, context: AssetContext = {}): readon
         const same = (shape.from.bone ?? shape.bone) === (shape.to.bone ?? shape.bone);
         if (same && shape.from.x === shape.to.x && shape.from.y === shape.to.y && shape.from.z === shape.to.z) add(sp, "member-degenerate", `Member "${shape.id}" starts and ends at the same point.`, `Stab "${shape.id}" beginnt und endet am selben Punkt.`);
       }
+      if (shape.kind === "loft") {
+        if (shape.solid !== undefined) add(sp, "loft-solid", `Loft "${shape.id}" sets solid; a loft is itself a body and has no planar geometry.`, `Loft "${shape.id}" setzt solid; ein Loft ist selbst ein Körper und hat keine ebene Geometrie.`);
+        loftShapeIssues(shape, sp, add);
+        if (shape.weights) weightIssues({ id: shape.id, weights: shape.weights }, sp, bones, add);
+      }
       if (shape.solid !== undefined) {
         if (followTip) add(sp, "solid-follow-tip", `Shape "${shape.id}" sets both solid and followTip.`, `Form "${shape.id}" setzt sowohl solid als auch followTip.`);
         if (shape.solid.kind === "revolved") {
@@ -543,6 +549,10 @@ export function validateAsset(source: Asset, context: AssetContext = {}): readon
     const { minDenominator, maxDenominator } = rep.validRange;
     if (!(minDenominator <= denominator && denominator <= maxDenominator)) add(`${path}.validRange`, "valid-range", `The valid range ${minDenominator}…${maxDenominator} must contain the own denominator ${denominator}.`, `Der Gültigkeitsbereich ${minDenominator}…${maxDenominator} muss den eigenen Nenner ${denominator} enthalten.`);
     checkPens(path, rep.pens);
+    for (const viewpoint of ["elevation", "front", "plan"] as const) {
+      const label = rep.sections?.[viewpoint]?.label;
+      if (label !== undefined && label.en !== label.de) add(`${path}.sections.${viewpoint}.label`, "section-label-language", `The section label "${label.en}" differs from its German form "${label.de}": a cut is named by letters (such as A-A), the same in every language; the caption adds "Section" or "Plan section" itself, and the letters stand beside the cut line, so a label of another width moves the whole drawing on the sheet of that language.`, `Die Schnittbezeichnung "${label.de}" weicht von ihrer englischen Form "${label.en}" ab: Ein Schnitt wird mit Buchstaben benannt (etwa A-A), in jeder Sprache gleich; die Bildunterschrift ergänzt "Schnitt" oder "Grundriss-Schnitt" selbst, und die Buchstaben stehen neben der Schnittlinie, sodass eine Bezeichnung anderer Breite die ganze Zeichnung auf dem Blatt dieser Sprache verschiebt.`);
+    }
     if (rep.sections !== undefined && Object.keys(rep.sections).length === 0) add(`${path}.sections`, "section-empty", "The sections of a representation name at least one view; leave the member out for no section.", "Die Schnitte einer Darstellung nennen mindestens eine Ansicht; ohne Schnitt das Mitglied weglassen.");
     for (const hatch of rep.hatches) if (!(hatch.spacingMm >= PAPER_MIN_MM && hatch.spacingMm <= PAPER_MAX_SPACING_MM && hatch.penMm >= PAPER_MIN_MM && hatch.penMm <= PAPER_MAX_PEN_MM)) add(`${path}.hatches`, "pen-units", `Hatch "${hatch.id}" must be in paper millimetres (spacing ${PAPER_MIN_MM}…${PAPER_MAX_SPACING_MM}, pen ${PAPER_MIN_MM}…${PAPER_MAX_PEN_MM}).`, `Schraffur "${hatch.id}" muss in Papiermillimetern angegeben sein (Abstand ${PAPER_MIN_MM}…${PAPER_MAX_SPACING_MM}, Stift ${PAPER_MIN_MM}…${PAPER_MAX_PEN_MM}).`);
     for (const key of DECISION_KEYS) if (rep.decisions[key] === undefined) add(`${path}.decisions.${key}`, "decision-missing", `The decision "${key}" is missing.`, `Die Entscheidung "${key}" fehlt.`);
@@ -581,6 +591,7 @@ export function validateAsset(source: Asset, context: AssetContext = {}): readon
     const viewNames = { elevation: [VIEWPOINT_NAMES.elevation.en, VIEWPOINT_NAMES.elevation.de], front: [VIEWPOINT_NAMES.front.en, VIEWPOINT_NAMES.front.de], plan: [VIEWPOINT_NAMES.plan.en, VIEWPOINT_NAMES.plan.de] } as const;
     for (const viewpoint of PLANAR_VIEWPOINTS) if ((geometry[viewpoint] ?? []).length === 0) add(`${path}.geometry.${viewpoint}`, `symbol-${viewpoint}-missing`, `Symbol "${symbol.id}" has no ${viewNames[viewpoint][0]} geometry; every symbol is authored for elevation, front and plan (a symbol never borrows another view).`, `Symbol "${symbol.id}" hat keine Geometrie für die ${viewNames[viewpoint][1]}; jedes Symbol wird für Seitenansicht, Vorderansicht und Draufsicht gezeichnet (ein Symbol borgt nie eine andere Ansicht).`);
     if (symbol.units === "paper-mm") for (const shape of PLANAR_VIEWPOINTS.flatMap((viewpoint) => geometry[viewpoint] ?? [])) if (shape.kind === "member") add(`${path}.geometry`, "member-in-paper-symbol", `Symbol "${symbol.id}" has units paper-mm but shape "${shape.id}" is a member; a member is a bar of physical metres between bone-local points and nothing would be drawn in paper units.`, `Symbol "${symbol.id}" hat die Einheit paper-mm, aber die Form "${shape.id}" ist ein Stab; ein Stab ist ein Balken in physikalischen Metern zwischen knochenlokalen Punkten, und in Papiereinheiten würde nichts gezeichnet.`);
+    if (symbol.units === "paper-mm") for (const shape of PLANAR_VIEWPOINTS.flatMap((viewpoint) => geometry[viewpoint] ?? [])) if (shape.kind === "loft") add(`${path}.geometry`, "loft-in-paper-symbol", `Symbol "${symbol.id}" has units paper-mm but shape "${shape.id}" is a loft; a loft is a body of physical metres in the frame of its bone and nothing would be drawn in paper units.`, `Symbol "${symbol.id}" hat die Einheit paper-mm, aber die Form "${shape.id}" ist ein Loft; ein Loft ist ein Körper in physikalischen Metern im Bezugssystem seines Knochens, und in Papiereinheiten würde nichts gezeichnet.`);
     for (const shape of PLANAR_VIEWPOINTS.flatMap((viewpoint) => geometry[viewpoint] ?? [])) if (shape.bone !== asset.rig.root) add(`${path}.geometry`, "symbol-bone", `Symbol shape "${shape.id}" must be bound to the rig root "${asset.rig.root}" (symbols are static).`, `Symbolform "${shape.id}" muss an die Rig-Wurzel "${asset.rig.root}" gebunden sein (Symbole sind statisch).`);
     checkShapes(`${path}.geometry.elevation`, symbol.geometry.elevation, hatchIds, symbol.pens as unknown as Record<string, number | null>);
     checkShapes(`${path}.geometry.front`, geometry.front ?? [], hatchIds, symbol.pens as unknown as Record<string, number | null>);

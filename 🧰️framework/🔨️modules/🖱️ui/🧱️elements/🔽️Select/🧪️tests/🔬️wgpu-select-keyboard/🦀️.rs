@@ -74,13 +74,39 @@ async fn opening_highlights_the_selected_last_or_first_matching_row() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn row_metrics_are_the_css_line_box_plus_py_single_not_a_control_height() {
+async fn row_metrics_are_the_chip_row_height_without_viewport_padding() {
     let theme = Theme::light();
-    let expected_row = semio_ui_theme::metrics::line_height(theme.font_size_body) + theme.padding_standard * 2.0;
-    assert!((select_row_height(&theme) - expected_row).abs() < f32::EPSILON);
-    assert!((select_row_height(&theme) - 25.6).abs() < 0.01, "text-sm line box (19.2) + 2 × --spacing-single (3.2) = 25.6 px, got {}", select_row_height(&theme));
-    assert!((select_menu_height(3, &theme) - (expected_row * 3.0 + theme.padding_standard * 2.0)).abs() < f32::EPSILON);
-    assert!((select_menu_height(0, &theme) - theme.padding_standard * 2.0).abs() < f32::EPSILON);
+    assert!((select_row_height(&theme) - theme.chip_row_height()).abs() < f32::EPSILON, "a row is as high as a chip row");
+    assert!((select_menu_height(3, &theme) - select_row_height(&theme) * 3.0).abs() < f32::EPSILON);
+    assert!(select_menu_height(0, &theme).abs() < f32::EPSILON);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn popup_rows_follow_the_language_neutral_cases_without_inset_and_with_single_lines() {
+    let cases: serde_json::Value = serde_json::from_str(include_str!("../../🧭️behavior/popup-rows.cases.json")).expect("popup rows cases");
+    assert_eq!(cases["schema"], "select-popup-rows/v1");
+    assert_eq!(cases["rowInset"], 0);
+    let theme = Theme::light();
+    let row = select_row_height(&theme);
+    for case in cases["cases"].as_array().expect("cases") {
+        let items = case["items"].as_u64().expect("items") as usize;
+        let width = case["triggerWidth"].as_f64().expect("trigger width") as f32;
+        let top = case["menuTop"].as_f64().expect("menu top") as f32;
+        let id = case["id"].as_str().expect("id");
+        assert!((select_menu_height(items, &theme) - case["menuRows"].as_f64().expect("menu rows") as f32 * row).abs() < 0.001, "{id}: menu height");
+        for expected in case["rows"].as_array().expect("rows") {
+            let index = expected["index"].as_u64().expect("index") as usize;
+            let rect = select_row_rect(width, index, top, &theme);
+            assert!((rect.x - expected["x"].as_f64().expect("x") as f32).abs() < 0.001, "{id}: row {index} x");
+            assert!((rect.w - expected["width"].as_f64().expect("width") as f32).abs() < 0.001, "{id}: row {index} width");
+            assert!((rect.y - top - expected["yRows"].as_f64().expect("y rows") as f32 * row).abs() < 0.001, "{id}: row {index} y");
+            assert!((rect.h - row).abs() < 0.001, "{id}: row {index} height");
+        }
+        let trigger = Rect::new(0.0, 0.0, width, theme.control_height);
+        let popup = select_popup_geometry(trigger, items, &theme, 0.0, 0.0, 0.0);
+        let lines = (0..items).filter(|index| select_row_separator_y(popup, *index, items, &theme).is_some()).count();
+        assert_eq!(lines as u64, case["separators"].as_u64().expect("separators"), "{id}: single lines between rows only");
+    }
 }
 
 #[semio_framework_async_macros::async_test]
@@ -118,16 +144,31 @@ async fn the_popup_sits_below_the_trigger_until_the_viewport_runs_out_then_flips
 }
 
 #[semio_framework_async_macros::async_test]
-async fn row_rects_stack_from_the_resolved_popup_top_and_inset_by_the_viewport_padding() {
+async fn the_chosen_row_is_active_filled_and_the_hovered_row_filled_with_emphasised_text() {
+    let cases: serde_json::Value = serde_json::from_str(include_str!("../../🧭️behavior/popup-rows.cases.json")).expect("popup rows cases");
+    let paint = &cases["cases"][0]["paint"];
+    assert_eq!((paint["chosen"].as_str(), paint["hovered"].as_str(), paint["tick"].as_bool(), paint["chevron"].as_str()), (Some("active-fill"), Some("hover-fill-and-emphasised-text"), Some(false), Some("chevron-down")));
+    let theme = Theme::light();
+    let same = |a: semio_ui_theme::Rgba, b: semio_ui_theme::Rgba| (a.r, a.g, a.b, a.a) == (b.r, b.g, b.b, b.a);
+    let (fill, ink) = select_row_colors(&theme, true, true);
+    assert!(same(fill.expect("chosen fill"), theme.accent) && same(ink, theme.active_foreground), "the chosen row wins over hover");
+    let (fill, ink) = select_row_colors(&theme, false, true);
+    assert!(same(fill.expect("hover fill"), theme.row_hover) && same(ink, theme.border_emphasized), "hover is fill plus emphasised text");
+    let (fill, ink) = select_row_colors(&theme, false, false);
+    assert!(fill.is_none() && same(ink, theme.text), "a row at rest is unfilled");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn row_rects_stack_from_the_resolved_popup_top_and_span_the_trigger_width() {
     let theme = Theme::light();
     let menu_top = select_menu_top(0.0, theme.control_height, select_menu_height(3, &theme), 800.0);
     let first = select_row_rect(120.0, 0, menu_top, &theme);
     let second = select_row_rect(120.0, 1, menu_top, &theme);
-    assert!((first.x - theme.padding_standard).abs() < f32::EPSILON);
-    assert!((first.w - (120.0 - theme.padding_standard * 2.0)).abs() < f32::EPSILON);
-    assert!((first.y - (menu_top + theme.padding_standard)).abs() < f32::EPSILON);
-    assert!((second.y - first.y - select_row_height(&theme)).abs() < f32::EPSILON, "rows are exactly one row pitch apart");
-    assert!(select_row_rect(1.0, 0, menu_top, &theme).w >= 0.0, "a narrower-than-its-own-inset trigger clamps to a non-negative width");
+    assert!(first.x.abs() < f32::EPSILON);
+    assert!((first.w - 120.0).abs() < f32::EPSILON);
+    assert!((first.y - menu_top).abs() < f32::EPSILON);
+    assert!((second.y - first.y - select_row_height(&theme)).abs() < 0.001, "rows are exactly one row pitch apart");
+    assert!(select_row_rect(-1.0, 0, menu_top, &theme).w >= 0.0, "a negative width clamps to a non-negative width");
 }
 
 //#region 🔖️AvailableHeight
@@ -164,7 +205,7 @@ async fn the_visible_row_count_follows_the_painted_height_and_decides_whether_it
     let theme = Theme::light();
     let full = select_menu_height(4, &theme);
     assert_eq!(select_visible_rows(4, &theme, full), 4, "a popup at its natural height shows every row");
-    let clipped = theme.padding_standard * 2.0 + select_row_height(&theme) * 2.5;
+    let clipped = select_row_height(&theme) * 2.5;
     assert_eq!(select_visible_rows(4, &theme, clipped), 2, "a partial row is not a visible row");
     assert_eq!(select_visible_rows(4, &theme, 0.0), 0);
     assert_eq!(select_visible_rows(2, &theme, full), 2, "the count never exceeds the item count");
@@ -176,14 +217,14 @@ async fn a_scroll_button_moves_the_viewport_by_reacts_own_step_and_never_past_th
     assert_eq!(select_scroll_step(10.0), SELECT_SCROLL_MIN_STEP, "React floors the step at 24px");
     assert_eq!(select_scroll_step(100.0), 80.0);
     assert_eq!(select_scroll_step(101.0), 80.0, "the step is floored, not rounded");
-    let painted = theme.padding_standard * 2.0 + select_row_height(&theme) * 2.0;
+    let painted = select_row_height(&theme) * 2.0;
     let extent = select_row_height(&theme) * 8.0 - select_row_height(&theme) * 2.0;
     assert_eq!(select_clamped_scroll(8, &theme, painted, -10.0), 0.0);
     assert!((select_clamped_scroll(8, &theme, painted, 10_000.0) - extent).abs() < 0.001);
     assert_eq!(select_clamped_scroll(2, &theme, painted, 10_000.0), 0.0, "a popup that fits cannot scroll");
     let short_viewport = theme.padding_standard;
-    let short_maximum = select_row_height(&theme) * 8.0 + theme.padding_standard * 2.0 - short_viewport;
-    assert!((select_clamped_scroll(8, &theme, short_viewport, f32::MAX) - short_maximum).abs() < 0.001, "a viewport shorter than its padding still owns the DOM scrollHeight padding");
+    let short_maximum = select_row_height(&theme) * 8.0 - short_viewport;
+    assert!((select_clamped_scroll(8, &theme, short_viewport, f32::MAX) - short_maximum).abs() < 0.001, "a short viewport scrolls the whole content past itself");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -224,7 +265,7 @@ async fn nearest_reveal_keeps_an_oversized_first_row_at_its_visible_leading_edge
 async fn a_chevron_press_scrolls_the_popup_one_react_step_and_leaves_no_slot_behind() {
     let theme = Theme::light();
     let mut offsets: std::collections::HashMap<String, f32> = std::collections::HashMap::new();
-    let painted = theme.padding_standard * 2.0 + select_row_height(&theme) * 2.0;
+    let painted = select_row_height(&theme) * 2.0;
 
     assert!(!arm_select_scroll(&mut offsets, "sel"), "a plain control id is not a chevron");
     assert!(!arm_select_scroll(&mut offsets, "sel.item.alpha"), "an option row is not a chevron");

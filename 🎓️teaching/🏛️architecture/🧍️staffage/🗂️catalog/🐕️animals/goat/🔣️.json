@@ -13,14 +13,62 @@
       "de": "Eine erwachsene gehörnte Ziege von 55 kg mit 0,76 m Widerristhöhe: schlanke Tonne auf langen Beinen, zurückgeschwungene Hörner, Bart und aufrechte Ohren; aufmerksames Stehen, Aufrichten auf die Hinterbeine zum Äsen von Laub, Klettern über einen Absatz und ein Viertakt-Schritt; kurzes Sommerfell, Schwitzen und Hecheln, nackte Hörner und Ohren als thermische Fenster."
     },
     "tags": [
-      "goat",
-      "horned",
-      "livestock",
-      "browsing",
-      "climbing",
-      "quadruped",
-      "ruminant",
-      "hind-legs"
+      {
+        "id": "goat",
+        "title": {
+          "en": "goat",
+          "de": "Ziege"
+        }
+      },
+      {
+        "id": "horned",
+        "title": {
+          "en": "horned",
+          "de": "gehörnt"
+        }
+      },
+      {
+        "id": "livestock",
+        "title": {
+          "en": "livestock",
+          "de": "Nutztier"
+        }
+      },
+      {
+        "id": "browsing",
+        "title": {
+          "en": "browsing",
+          "de": "Äsen"
+        }
+      },
+      {
+        "id": "climbing",
+        "title": {
+          "en": "climbing",
+          "de": "Klettern"
+        }
+      },
+      {
+        "id": "quadruped",
+        "title": {
+          "en": "quadruped",
+          "de": "Vierbeiner"
+        }
+      },
+      {
+        "id": "ruminant",
+        "title": {
+          "en": "ruminant",
+          "de": "Wiederkäuer"
+        }
+      },
+      {
+        "id": "hind-legs",
+        "title": {
+          "en": "hind legs",
+          "de": "Hinterbeine"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage content worker NW-A1",

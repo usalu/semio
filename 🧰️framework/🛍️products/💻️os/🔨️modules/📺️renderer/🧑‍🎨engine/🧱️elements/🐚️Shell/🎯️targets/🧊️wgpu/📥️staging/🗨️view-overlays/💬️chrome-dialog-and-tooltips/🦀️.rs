@@ -25,19 +25,34 @@ pub enum ContextMenuPaintOp {
     Scroll(Rect),
     Scissor(Rect),
     Solid(Rect, Rgba),
-    Rounded(Rect, Rgba),
     Icon { id: String, x: f32, y: f32, size: f32, color: Rgba },
     Text { value: String, x: f32, y: f32, color: Rgba },
     Hit { row: Rect, path: Vec<usize> },
     EndLevel,
 }
 
+/// 📏️ A context menu row is as high as a chip row (`--chip-row-height`).
+pub fn context_menu_row_height(theme: &Theme) -> f32 {
+    theme.chip_row_height()
+}
+
+/// 🧮️ The row slot of every item (`context-menu-rows/v1`): a separator without a label has no height of its own, the line between its neighbours is the separator.
+pub fn context_menu_row_slots(items: &[ContextMenuItem]) -> Vec<Option<usize>> {
+    let mut next = 0usize;
+    items.iter().map(|item| (!item.separator || !item.label.is_empty()).then(|| { next += 1; next - 1 })).collect()
+}
+
+/// 🏔️ The height of one level's rows: no padding around them.
+pub fn context_menu_content_height(items: &[ContextMenuItem], theme: &Theme) -> f32 {
+    context_menu_row_slots(items).into_iter().flatten().count() as f32 * context_menu_row_height(theme)
+}
+
 fn context_menu_level_ops(ops: &mut Vec<ContextMenuPaintOp>, theme: &Theme, menu: &ContextMenuState, items: &[ContextMenuItem], path_prefix: &[usize], origin: (f32, f32), viewport: (f32, f32)) {
     let (viewport_w, viewport_h) = viewport;
-    let row_h = theme.control_height;
+    let row_h = context_menu_row_height(theme);
     let w = context_menu_level_width(items, theme);
-    let content_h = items.len() as f32 * row_h + 8.0;
-    let h = content_h.min((viewport_h - 8.0).max(row_h + 8.0));
+    let content_h = context_menu_content_height(items, theme);
+    let h = content_h.min(viewport_h.max(row_h));
     let scrollable = content_h > h + 0.5;
     let scroll = if scrollable { menu.scroll_offset.clamp(0.0, content_h - h) } else { 0.0 };
     let (x, y) = if path_prefix.is_empty() { (origin.0.clamp(0.0, (viewport_w - w).max(0.0)), origin.1.clamp(0.0, (viewport_h - h).max(0.0))) } else { origin };
@@ -49,18 +64,18 @@ fn context_menu_level_ops(ops: &mut Vec<ContextMenuPaintOp>, theme: &Theme, menu
     ops.push(ContextMenuPaintOp::Scissor(rect));
     let (icon_size, ordinal_gap, small) = (theme.font_size_body, theme.font_size_small * 0.85, theme.font_size_small);
     let mut children = Vec::new();
-    let (mut visual_row, mut ordinal) = (0usize, 0usize);
+    let slots = context_menu_row_slots(items);
+    let mut ordinal = 0usize;
     for (index, item) in items.iter().enumerate() {
-        let row_top = rect.y + 4.0 + visual_row as f32 * row_h - scroll;
+        let Some(slot) = slots[index] else { continue };
+        let row_top = rect.y + slot as f32 * row_h - scroll;
         let visible = row_top + row_h > rect.y && row_top < rect.y + rect.h;
-        visual_row += 1;
+        if visible && slot > 0 {
+            ops.push(ContextMenuPaintOp::Solid(Rect::new(rect.x, row_top, w, theme.stroke_hairline), theme.border_normal));
+        }
         if item.separator {
             if visible {
-                if item.label.is_empty() {
-                    ops.push(ContextMenuPaintOp::Solid(Rect::new(rect.x + 8.0, row_top + row_h * 0.5, w - 16.0, 1.0), theme.text_muted));
-                } else {
-                    ops.push(ContextMenuPaintOp::Text { value: item.label.clone(), x: rect.x + 8.0, y: row_top + (row_h + small) * 0.5 - 1.0, color: theme.text_muted });
-                }
+                ops.push(ContextMenuPaintOp::Text { value: item.label.clone(), x: rect.x + theme.padding_standard * 2.0, y: row_top + (row_h + small) * 0.5 - 1.0, color: theme.text_muted });
             }
             continue;
         }
@@ -70,13 +85,15 @@ fn context_menu_level_ops(ops: &mut Vec<ContextMenuPaintOp>, theme: &Theme, menu
         let has_children = !item.children.is_empty();
         let collapsed = menu.submenu_collapsed_at.as_deref().is_some_and(|at| context_menu_paths_equal(at, &row_path));
         let submenu_open = (context_menu_submenu_open(&menu.active, &row_path, is_active, has_children) || (is_active && has_children)) && !collapsed;
-        let row = Rect::new(rect.x + 4.0, row_top, w - 8.0, row_h);
+        let row = Rect::new(rect.x, row_top, w, row_h);
         if visible {
-            let (bg, fg) = if is_active { (theme.accent, theme.active_foreground) } else { (theme.button, theme.text) };
+            let fg = if is_active { theme.border_emphasized } else { theme.text };
             let ink = if item.disabled { theme.text_muted } else { fg };
             let baseline = row.y + (row.h + small) * 0.5 - 1.0;
-            ops.push(ContextMenuPaintOp::Rounded(row, bg));
-            let mut text_x = row.x + 8.0;
+            if is_active {
+                ops.push(ContextMenuPaintOp::Solid(row, theme.row_hover));
+            }
+            let mut text_x = row.x + theme.padding_standard * 2.0;
             if ordinal <= 9 {
                 ops.push(ContextMenuPaintOp::Text { value: ordinal.to_string(), x: text_x, y: baseline, color: theme.text_muted });
                 text_x += ordinal_gap;
@@ -86,13 +103,13 @@ fn context_menu_level_ops(ops: &mut Vec<ContextMenuPaintOp>, theme: &Theme, menu
             ops.push(ContextMenuPaintOp::Text { value: item.painted_label(), x: text_x, y: baseline, color: ink });
             if let Some(shortcut) = item.shortcut.as_deref() {
                 let shortcut_w = shortcut.chars().count() as f32 * small * 0.55;
-                ops.push(ContextMenuPaintOp::Text { value: shortcut.to_string(), x: row.x + row.w - 8.0 - shortcut_w, y: baseline, color: theme.text_muted });
+                ops.push(ContextMenuPaintOp::Text { value: shortcut.to_string(), x: row.x + row.w - theme.padding_standard * 2.0 - shortcut_w, y: baseline, color: theme.text_muted });
             }
             ops.push(ContextMenuPaintOp::Hit { row, path: row_path.clone() });
         }
         if submenu_open {
             let child_w = context_menu_level_width(&item.children, theme);
-            let child_x = if row.x + row.w + 4.0 + child_w > viewport_w { (row.x - child_w - 4.0).max(0.0) } else { row.x + row.w + 4.0 };
+            let child_x = if row.x + row.w + child_w > viewport_w { (row.x - child_w).max(0.0) } else { row.x + row.w };
             children.push((row_path, (child_x, row.y)));
         }
     }
@@ -148,7 +165,7 @@ impl<'ctx> OverlaysViewCtx<'ctx> {
                 let card_w = (width - theme.padding_standard * 4.0).clamp(320.0, 960.0);
                 let card_h = (height - theme.navbar_height - theme.footer_height - theme.padding_standard * 4.0).clamp(240.0, 760.0);
                 let rect = if recovery_page { canvas } else { Rect::new((width - card_w) * 0.5, (height - card_h) * 0.5, card_w, card_h) };
-                open_chrome_overlay_glass_content(cursor, overlay, rect, if recovery_page { 0.0 } else { theme.border_radius }, theme.glass(Level::Dialog));
+                open_chrome_overlay_glass_content(cursor, overlay, rect, theme.glass(Level::Dialog));
                 cursor.rect = Some(rect);
                 cursor.phase = 1;
             }
@@ -220,7 +237,7 @@ impl<'ctx> OverlaysViewCtx<'ctx> {
             return true;
         };
         match op {
-            Op::Sheet(rect) => open_chrome_overlay_glass_content(cursor, overlay, *rect, theme.border_radius, theme.glass(Level::Dialog)),
+            Op::Sheet(rect) => open_chrome_overlay_glass_content(cursor, overlay, *rect, theme.glass(Level::Dialog)),
             Op::Fill { rect, color } => overlay.push_rounded([rect.x, rect.y, rect.w, rect.h], *color, theme.border_radius),
             Op::Text { value, x, y, max_w, size, color } => match chrome_text_complete_step(overlay, atlas, value, *x, *y, *max_w, *size, *color, &mut cursor.glyph) {
                 Ok(false) => return false,
@@ -266,7 +283,7 @@ impl<'ctx> OverlaysViewCtx<'ctx> {
             AgentApprovalPaintOp::Scrim => {
                 overlay.push_glass([0.0, 0.0, width, height], 0.0, theme.veil_glass(Level::Dialog));
             }
-            AgentApprovalPaintOp::Modal(rect) => open_chrome_overlay_glass_content(cursor, overlay, *rect, theme.border_radius, theme.glass(Level::Dialog)),
+            AgentApprovalPaintOp::Modal(rect) => open_chrome_overlay_glass_content(cursor, overlay, *rect, theme.glass(Level::Dialog)),
             AgentApprovalPaintOp::Fill { rect, color } => overlay.push_rounded([rect.x, rect.y, rect.w, rect.h], *color, theme.border_radius),
             AgentApprovalPaintOp::Text { value, x, y, max_w, size, color } => match chrome_text_complete_step(overlay, atlas, value, *x, *y, *max_w, *size, *color, &mut cursor.glyph) {
                 Ok(false) => return false,
@@ -368,11 +385,10 @@ impl<'ctx> OverlaysViewCtx<'ctx> {
         };
         let small = theme.font_size_small;
         match op {
-            ContextMenuPaintOp::Glass(rect) => open_chrome_overlay_glass_content(cursor, overlay, *rect, theme.border_radius, theme.glass(Level::Menu)),
+            ContextMenuPaintOp::Glass(rect) => open_chrome_overlay_glass_content(cursor, overlay, *rect, theme.glass(Level::Menu)),
             ContextMenuPaintOp::Scroll(rect) => input.register_hit(HitTarget { rect: *rect, event: None, control_id: Some("shell.context.menu.scroll".into()), kind: HitKind::ScrollRegion, drag_axis: None, drag_data: None }),
             ContextMenuPaintOp::Scissor(rect) => overlay.push_scissor(*rect),
             ContextMenuPaintOp::Solid(rect, color) => overlay.push_solid([rect.x, rect.y, rect.w, rect.h], *color),
-            ContextMenuPaintOp::Rounded(rect, color) => overlay.push_rounded([rect.x, rect.y, rect.w, rect.h], *color, theme.border_radius),
             ContextMenuPaintOp::Icon { id, x, y, size, color } => chrome_icon(overlay, icons, id, *x, *y, *size, *color),
             ContextMenuPaintOp::Text { value, x, y, color } => match chrome_text_complete_step(overlay, atlas, value, *x, *y, (width - *x).max(1.0), small, *color, &mut cursor.glyph) {
                 Ok(false) => return false,
@@ -461,7 +477,7 @@ impl<'ctx> OverlaysViewCtx<'ctx> {
             ChromeDialogPaintOp::Scrim => {
                 overlay.push_glass([0.0, 0.0, width, height], 0.0, faded(theme.veil_glass(Level::Dialog)));
             }
-            ChromeDialogPaintOp::Modal(rect) => open_chrome_overlay_glass_content(cursor, overlay, zoom(*rect), theme.border_radius * scale, faded(theme.glass(Level::Dialog))),
+            ChromeDialogPaintOp::Modal(rect) => open_chrome_overlay_glass_content(cursor, overlay, zoom(*rect), faded(theme.glass(Level::Dialog))),
             ChromeDialogPaintOp::Fill { rect, color } => {
                 let rect = zoom(*rect);
                 overlay.push_rounded([rect.x, rect.y, rect.w, rect.h], color.with_alpha(color.a * enter), theme.border_radius * scale)
@@ -510,7 +526,7 @@ impl<'ctx> OverlaysViewCtx<'ctx> {
                     overlay.push_glass([0.0, 0.0, width, height], 0.0, theme.veil_glass(Level::Dialog));
                 }
                 ChromeDialogPaintOp::Modal(rect) => {
-                    let region = overlay.push_glass([rect.x, rect.y, rect.w, rect.h], theme.border_radius, theme.glass(Level::Dialog));
+                    let region = overlay.push_glass([rect.x, rect.y, rect.w, rect.h], 0.0, theme.glass(Level::Dialog));
                     overlay.begin_glass_content(region);
                 }
                 ChromeDialogPaintOp::Fill { rect, color } => overlay.push_rounded([rect.x, rect.y, rect.w, rect.h], *color, theme.border_radius),
@@ -621,7 +637,7 @@ impl<'ctx> OverlaysViewCtx<'ctx> {
                 }
             }
             1 => {
-                cursor.depth = overlay.push_glass([card.x, card.y, card.w, card.h], theme.border_radius, theme.glass(Level::Dialog)).saturating_add(1);
+                cursor.depth = overlay.push_glass([card.x, card.y, card.w, card.h], 0.0, theme.glass(Level::Dialog)).saturating_add(1);
                 overlay.begin_glass_content(cursor.depth.saturating_sub(1));
             }
             2 => {
@@ -735,7 +751,7 @@ impl<'ctx> OverlaysViewCtx<'ctx> {
             return true;
         };
         match cursor.scalar {
-            0 => open_chrome_overlay_glass_content(cursor, overlay, rect, theme.border_radius, theme.glass(Level::Dialog)),
+            0 => open_chrome_overlay_glass_content(cursor, overlay, rect, theme.glass(Level::Dialog)),
             1 => match chrome_text_wrapped_complete_step(overlay, atlas, &text, text_rect, theme.font_size_body, theme.text, &mut cursor.glyph) {
                 Ok(false) => return false,
                 Ok(true) => {}
@@ -795,7 +811,7 @@ impl<'ctx> OverlaysViewCtx<'ctx> {
             semio_ui_wgpu_events::OverlayKind::Tooltip.default_placement(),
             ui_contract::FlowInline::Ltr,
         );
-        let region = overlay.push_glass([x, y, content_w, content_h], theme.border_radius, theme.glass(Level::Menu));
+        let region = overlay.push_glass([x, y, content_w, content_h], 0.0, theme.glass(Level::Menu));
         overlay.begin_glass_content(region);
         chrome_text(overlay, atlas, input, theme, &text, x + padding, y + (content_h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, theme.text);
         overlay.end_glass_content();
@@ -1049,16 +1065,15 @@ pub fn render_context_menu_level(
     viewport_w: f32,
     viewport_h: f32,
 ) {
-    let row_h = theme.control_height;
+    let row_h = context_menu_row_height(theme);
     let w = context_menu_level_width(items, theme);
-    let content_h = items.len() as f32 * row_h + 8.0;
-    let available_h = (viewport_h - 8.0).max(row_h + 8.0);
-    let h = content_h.min(available_h);
+    let content_h = context_menu_content_height(items, theme);
+    let h = content_h.min(viewport_h.max(row_h));
     let scrollable = content_h > h + 0.5;
     let scroll = if scrollable { menu.scroll_offset.clamp(0.0, content_h - h) } else { 0.0 };
     let (x, y) = if path_prefix.is_empty() { (origin_x.clamp(0.0, (viewport_w - w).max(0.0)), origin_y.clamp(0.0, (viewport_h - h).max(0.0))) } else { (origin_x, origin_y) };
     let rect = Rect::new(x, y, w, h);
-    let glass_region = overlay.push_glass([rect.x, rect.y, rect.w, rect.h], theme.border_radius, theme.glass(Level::Menu));
+    let glass_region = overlay.push_glass([rect.x, rect.y, rect.w, rect.h], 0.0, theme.glass(Level::Menu));
     overlay.begin_glass_content(glass_region);
     if scrollable {
         input.register_hit(HitTarget { rect, event: None, control_id: Some("shell.context.menu.scroll".into()), kind: HitKind::ScrollRegion, drag_axis: None, drag_data: None });
@@ -1066,20 +1081,19 @@ pub fn render_context_menu_level(
     let icon_size = theme.font_size_body;
     let ordinal_gap = theme.font_size_small * 0.85;
     overlay.push_scissor(rect);
-    let mut visual_row = 0usize;
+    let slots = context_menu_row_slots(items);
     let mut ordinal = 0usize;
     for (index, item) in items.iter().enumerate() {
-        let row_top = rect.y + 4.0 + visual_row as f32 * row_h - scroll;
+        let Some(slot) = slots[index] else { continue };
+        let row_top = rect.y + slot as f32 * row_h - scroll;
         let row_visible = row_top + row_h > rect.y && row_top < rect.y + rect.h;
+        if row_visible && slot > 0 {
+            overlay.push_solid([rect.x, row_top, w, theme.stroke_hairline], theme.border_normal);
+        }
         if item.separator {
             if row_visible {
-                if item.label.is_empty() {
-                    overlay.push_solid([rect.x + 8.0, row_top + row_h * 0.5, w - 16.0, 1.0], theme.text_muted);
-                } else {
-                    chrome_text(overlay, atlas, input, theme, &item.label, rect.x + 8.0, row_top + (row_h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, theme.text_muted);
-                }
+                chrome_text(overlay, atlas, input, theme, &item.label, rect.x + theme.padding_standard * 2.0, row_top + (row_h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, theme.text_muted);
             }
-            visual_row += 1;
             continue;
         }
         ordinal += 1;
@@ -1088,12 +1102,13 @@ pub fn render_context_menu_level(
         let has_children = !item.children.is_empty();
         let submenu_collapsed = menu.submenu_collapsed_at.as_deref().is_some_and(|collapsed| context_menu_paths_equal(collapsed, &row_path));
         let submenu_open = (context_menu_submenu_open(&menu.active, &row_path, is_active, has_children) || (is_active && has_children)) && !submenu_collapsed;
-        let row = Rect::new(rect.x + 4.0, row_top, w - 8.0, row_h);
-        visual_row += 1;
+        let row = Rect::new(rect.x, row_top, w, row_h);
         if row_visible {
-            let (bg, fg) = if is_active { (theme.accent, theme.active_foreground) } else { (theme.button, theme.text) };
-            overlay.push_rounded([row.x, row.y, row.w, row.h], bg, theme.border_radius);
-            let mut text_x = row.x + 8.0;
+            let fg = if is_active { theme.border_emphasized } else { theme.text };
+            if is_active {
+                overlay.push_solid([row.x, row.y, row.w, row.h], theme.row_hover);
+            }
+            let mut text_x = row.x + theme.padding_standard * 2.0;
             if ordinal <= 9 {
                 let badge = format!("{ordinal}");
                 chrome_text(overlay, atlas, input, theme, &badge, text_x, row.y + (row.h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, theme.text_muted);
@@ -1105,14 +1120,14 @@ pub fn render_context_menu_level(
             chrome_text(overlay, atlas, input, theme, &item.painted_label(), text_x, row.y + (row.h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, if item.disabled { theme.text_muted } else { fg });
             if let Some(shortcut) = item.shortcut.as_deref() {
                 let shortcut_w = shortcut.chars().count() as f32 * theme.font_size_small * 0.55;
-                chrome_text(overlay, atlas, input, theme, shortcut, row.x + row.w - 8.0 - shortcut_w, row.y + (row.h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, theme.text_muted);
+                chrome_text(overlay, atlas, input, theme, shortcut, row.x + row.w - theme.padding_standard * 2.0 - shortcut_w, row.y + (row.h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, theme.text_muted);
             }
             item.register_hit(row, input);
         }
         if submenu_open {
             let child_w = context_menu_level_width(&item.children, theme);
-            let opens_left = row.x + row.w + 4.0 + child_w > viewport_w;
-            let child_x = if opens_left { (row.x - child_w - 4.0).max(0.0) } else { row.x + row.w + 4.0 };
+            let opens_left = row.x + row.w + child_w > viewport_w;
+            let child_x = if opens_left { (row.x - child_w).max(0.0) } else { row.x + row.w };
             overlay.pop_scissor();
             overlay.end_glass_content();
             render_context_menu_level(overlay, atlas, icons, input, theme, menu, &item.children, &row_path, child_x, row.y, viewport_w, viewport_h);

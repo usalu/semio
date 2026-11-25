@@ -58,7 +58,7 @@ test("Every platform reads through injected ports, so Linux and Windows parse on
  const calls:string[]=[],run:HostCommandRunnerV1=async(command,args)=>{calls.push([command,...args].join(" "));return command==="vm_stat"?fixture.darwin[0]!.vmStat:command==="/usr/bin/hdiutil"?fixture.darwin[0]!.imageInfo!:args.includes("kern.num_files")?fixture.darwin[0]!.filesTable:args.includes("vm.swapusage")?fixture.darwin[0]!.swapUsage:fixture.darwin[0]!.pressureLevel;};
  expect(await readHostCountersV1({platform:"darwin",run,read:async()=>null})).toEqual(fixture.darwin[0]!.expect as never);
  expect(calls.sort()).toEqual(["/usr/bin/hdiutil info","sysctl -n kern.memorystatus_vm_pressure_level","sysctl -n vm.swapusage","sysctl kern.num_files kern.maxfiles","vm_stat"]);
- expect(await observeTreeMegabytesV1(102,async()=>fixture.tree.table,"darwin")).toBe(22);
+ expect(await observeTreeMegabytesV1(102,async()=>fixture.tree.table,"darwin",undefined,undefined,undefined,undefined,undefined,null)).toBe(22);
  expect(await observeTreeMegabytesV1(102,undefined,"win32",undefined,()=>undefined,"footprint",{memory:()=>({known:false,reason:"unsupported",call:"x",error:0,detail:"",text:{en:"x",de:"x"}}),processes:()=>({known:false,reason:"unsupported",call:"x",error:0,detail:"",text:{en:"x",de:"x"}})})).toBeNull();
 });
 
@@ -114,4 +114,13 @@ test("A process in a memory-limited cgroup samples the whole machine through the
  const limited=await readHostCountersV1(probe),whole=await readHostCountersV1(wholeHostProbeV1(probe));
  expect(limited.constrainedBytes).not.toBeNull();expect(whole.constrainedBytes).toBeNull();
  expect(whole.availableBytes).toBeGreaterThanOrEqual(limited.availableBytes!);
+});
+
+test("on macOS the tree is priced by the kernel footprint of every member through the native port, a refused member keeps its resident set, a port that reads nothing leaves the footprint tool",async()=>{
+ const bytes=new Map<number,number>([[102,10*1048576],[105,524288]]),calls:number[]=[],port={footprint:(pid:number)=>{calls.push(pid);return bytes.get(pid)??null;}};
+ const native=await observeTreeMegabytesV1(102,async()=>fixture.tree.table,"darwin",undefined,undefined,undefined,undefined,undefined,port);
+ expect(native,"10 MB + 2 MB resident of the refused member + 0.5 MB").toBe(12);expect(calls.sort()).toEqual([102,104,105]);
+ const tooled:string[]=[],run:HostCommandRunnerV1=async(command)=>{tooled.push(command);return command==="ps"?fixture.tree.table:"";};
+ expect(await observeTreeMegabytesV1(102,run,"darwin",undefined,()=>undefined,undefined,undefined,undefined,{footprint:()=>null})).toBe(22);
+ expect(tooled).toContain("footprint");
 });

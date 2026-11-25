@@ -37,8 +37,8 @@ fn replay_candidate_uses_actual_original_control_and_refuses_foreign_caller(){
  let mutation=RasterMutation::RenameLayer(rename_layer::RenameLayer{layer_id:"paint".into(),new_name:row["renamed"].as_str().unwrap().into()});let context=store::os_store::ArtifactReplayPreparationContext{mode:store::os_store::ArtifactReplayPreparationMode::Prefix,operation_index:row["operationIndex"].as_u64().unwrap()as u32,generation:row["generation"].as_u64().unwrap(),base_revision:[row["revisionByte"].as_u64().unwrap()as u8;32]};let mut apply=RasterOneItemApply::new();let mut caller=OriginalWorkFixture::new();let mut foreign=OriginalWorkFixture::new();let mut prepared=None;
  for index in 0..10000{
   let d=apply.advance_demands(&source,&mutation,32768).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};
-  caller.work_turn(grant,256,|cx|{let mut work=0;let result=cx.with_native_receiving::<_,ValueError>(|control|{let turn=apply.advance_replay_controlled(&source,&mutation,context,grant,control);work=turn.work;turn.result});let receipt=result.as_ref().map(|(_,p)|*p).unwrap_or_else(|error|error.retained_progress());cx.consume_work(work);cx.consume_receiving_retained(grant,receipt)?;let(post,_)=result?;prepared=post;Ok(())}).unwrap();
-  if index==0{foreign.work_turn(grant,256,|cx|{let mut work=0;let result=cx.with_native_receiving::<_,ValueError>(|control|{let turn=apply.advance_replay_controlled(&source,&mutation,context,grant,control);work=turn.work;turn.result});cx.consume_work(work);assert_eq!(result.is_err(),row["foreignCallerRefused"].as_bool().unwrap());assert_eq!(work,0);Ok(())}).unwrap();}
+  caller.work_turn(grant,256,|cx|{let issued=cx.retained_grant();let mut work=0;let mut stepped=None;let mut scope=None;if !cx.with_native_receiving(&mut scope,|control,_|{let turn=apply.advance_replay_controlled(&source,&mutation,context,grant,control);work=turn.work;stepped=Some(turn.result);Ok(())})?{return Ok(())}let result=stepped.expect("the opened original receiving scope ran its step");let receipt=result.as_ref().map(|(_,p)|*p).unwrap_or_else(|error|error.retained_progress());cx.consume_work(work);cx.consume_receiving_retained(issued,receipt)?;let(post,_)=result?;prepared=post;Ok(())}).unwrap();
+  if index==0{foreign.work_turn(grant,256,|cx|{let mut work=0;let mut refused=false;let mut scope=None;let ran=cx.with_native_receiving(&mut scope,|control,_|{let turn=apply.advance_replay_controlled(&source,&mutation,context,grant,control);work=turn.work;refused=turn.result.is_err();Ok(())});refused|=ran.is_err()||scope.as_ref().is_some_and(|scope|scope.source_refusal.is_some()||scope.call.is_err());cx.consume_work(work);let _=cx.settle_receiving_scope();assert_eq!(refused,row["foreignCallerRefused"].as_bool().unwrap());assert_eq!(work,0);Ok(())}).unwrap();}
   if prepared.is_some(){break}
  }
  assert!(apply.terminal_is_empty());let prepared=prepared.unwrap();assert_eq!(prepared.inverse.as_ref().unwrap().len(),row["inverseRows"].as_u64().unwrap()as usize);assert_eq!(semio_s_artifact_raster_raster_model::layer_name(prepared.snapshot.layers.last().unwrap()),row["renamed"].as_str().unwrap());caller.retire_owned(prepared,RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32768,..test_wallet()});caller.finish();foreign.finish();retire_raster_value_cold(source);retire_raster_value_cold(mutation);
@@ -64,7 +64,7 @@ fn prepared_pixel_inverses_restore_exact_roots_within_declared_row_bounds(){
         let mut source=pixel_source(&fixture);let image=semio_s_artifact_raster_raster_model::semio_image_from_rgba8(1,1,vec![0;4]);
         for index in 1..row["assets"].as_u64().unwrap(){let key=format!("unused-{index}");source.assets.insert(key.clone(),semio_s_artifact_raster_raster_model::mint_raster_image_child(&key,&image)).unwrap();}
         if row["shared"].as_bool().unwrap(){let mut other=source.layers.last().unwrap().clone();let RasterLayerNode::Pixel{id,..}=&mut other else{unreachable!()};*id="other".into();source.layers.push(other);}
-        let mutation=apply_filter::apply_filter("paint",row["filter"].as_str().unwrap(),0.0);assert!(mutation.inverse_rows()>=4);
+        let mutation:RasterMutation=apply_filter::apply_filter("paint",row["filter"].as_str().unwrap(),0.0);assert!(mutation.inverse_rows()>=4);
         let prepared=prepared_mutation(&source,&mutation);let inverse=prepared.inverse.unwrap();assert_eq!(inverse.len(),row["rows"].as_u64().unwrap() as usize);assert!(inverse.len()<=mutation.inverse_rows());let mut restored=prepared.snapshot;
         for operation in &inverse{let prepared=prepared_mutation(&restored,operation);retire_raster_value_cold(restored);if let Some(inverse)=prepared.inverse{retire_raster_value_cold(inverse);}restored=prepared.snapshot;}
         assert_eq!(restored,source,"{}",row["name"]);
@@ -184,7 +184,7 @@ fn exclusive_pixel_replacement_uses_the_released_asset_slot() {
     assert!(!outcome.messages().iter().any(|message|matches!(message.level,semio_framework_diagnostic::Severity::Error|semio_framework_diagnostic::Severity::Fatal)));
     let(diff,_)=outcome.into_parts();let next=protocol::apply_diff_cold(&diff,&source).unwrap();
     assert_eq!(next.assets.len(),semio_s_artifact_raster_raster_model::RASTER_OWNED_MAP_CAPACITY);assert!(!next.assets.contains_key("source"));assert!(source.assets.contains_key("source"));
-    let inverse=mutation.inverse(&source).unwrap();assert_eq!(inverse.len(),4);
+    let inverse=::semio_os_kernel::ColdMutation::inverse(&mutation,&source).unwrap();assert_eq!(inverse.len(),4);
     let mut restored=next;
     for step in &inverse{let outcome=::semio_os_kernel::ColdMutation::diff(step,&restored);let(diff,_)=outcome.into_parts();let next=protocol::apply_diff_cold(&diff,&restored).unwrap();protocol::MutationDiff::retire_cold(diff);retire_raster_value_cold(restored);restored=next;}
     assert_eq!(restored,source);
@@ -210,7 +210,7 @@ fn six_pixel_computations_share_bounded_candidates_and_explicit_cancellation() {
 
 #[test]
 fn decoded_image_copy_preserves_profiles_metadata_frames_and_replacement_ownership() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔑️content-hash/🧪️tests/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔑️content-hash/🧪️tests/🔣️.json")).unwrap();
     let source: semio_s_artifact_raster_raster_model::SemioImageSnapshot = semio_framework_pack_json::from_json_str(&fixture["image"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for replace in [false,true] {
         let mut replacement = replace.then(|| semio_framework_pixels::RasterImage { width:source.width,height:source.height,pixels:vec![255;8] });

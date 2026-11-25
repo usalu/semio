@@ -27,33 +27,12 @@
       "imports": [{ "id": "step", "verb": "loadRawRequest", "via": "picker", "from": "step" }],
       "reach": ["applyTransformation", "saveInPlay", "saveSelected", "importCadFile"]
     },
-    "demonstrator/cad": {
-      "exports": [
-        { "id": "step", "verb": "saveCurrent", "args": { "format": "step" }, "format": "step" },
-        { "id": "obj", "verb": "saveCurrent", "args": { "format": "obj" }, "format": "obj" }
-      ],
-      "imports": [{ "id": "step", "verb": "loadRawRequest", "via": "picker", "from": "step" }],
-      "reach": ["applyTransformation", "saveInPlay", "saveSelected"]
-    },
-    "demonstrator/generation3d": {
-      "exports": [
-        { "id": "obj", "verb": "exportDocument", "args": { "format": "obj" }, "format": "obj" },
-        { "id": "stl", "verb": "exportDocument", "args": { "format": "stl" }, "format": "stl" }
-      ],
-      "imports": [{ "id": "obj", "verb": "importDocumentRequest", "via": "picker", "from": "obj" }],
-      "reach": []
-    },
     "demonstrator/process3d": {
       "exports": [
         { "id": "step", "verb": "exportModel", "args": { "format": "step" }, "format": "step" },
         { "id": "obj", "verb": "exportModel", "args": { "format": "obj" }, "format": "obj" }
       ],
       "imports": [{ "id": "obj", "verb": "loadModelRequest", "via": "picker", "from": "obj" }],
-      "reach": []
-    },
-    "demonstrator/puzzle3d": {
-      "exports": [{ "id": "json", "verb": "exportSnapshot", "format": "json" }],
-      "imports": [{ "id": "json", "verb": "openImportSnapshot", "via": "picker", "from": "json" }],
       "reach": []
     },
     "draw/drawing": {

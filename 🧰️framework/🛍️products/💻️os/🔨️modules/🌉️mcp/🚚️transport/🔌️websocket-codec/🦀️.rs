@@ -106,7 +106,7 @@ fn base64(bytes: &[u8]) -> String {
 }
 
 #[derive(Clone, Copy)]
-pub(super) struct ClientWebSocketFrame {
+pub(crate) struct ClientWebSocketFrame {
     pub(crate) opcode: u8,
     payload_start: usize,
     pub(crate) payload_len: usize,

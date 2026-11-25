@@ -1,8 +1,9 @@
 {
   "title": "Fix Phantom Build-Flyer Target Admission for Print",
   "emoji": "🕸️",
-  "status": "open",
+  "status": "closed",
   "description": "`repo run @semio-tech/print:test -- quick` fails with BUILD_OWNER_FAILED (Unknown admitted build target: @semio-tech/print:build-flyer) and `repo run @semio-tech/print:test-assignment` hangs in dependencies:store-input-replay/current-input. Find why the build graph admits build-flyer for print, fix at the source, make both targets run, and make the print README advertise only existing targets.",
+  "summary": "`build-flyer` is a real target synthesized from the Print catalogue; owner discovery did not merge catalogue targets, so admission refused it. Fixing that exposed five more blockers on the repo route, all fixed: generated deps applied before catalogue synthesis (project-nodes), Windows directory fsync EPERM in graph publication, Tectonic \"App data directories not supported\" under a redirected USERPROFILE, a stale Print command-boundary contract, and a Windows scheduler-lock EPERM. Verified: `repo run @semio-tech/print:test-assignment` exit 0 (20 pass) and `repo run @semio-tech/print:test -- quick` exit 0 (test plus 14 dependencies). README: German id list gained `thesis`; `build-thesis` exists. Details in 🔎️root-cause.md.",
   "goal": "🎯runningprint",
   "sessions": [
     "bb5fccc7-87a9-4bb4-a3a4-e06515100be2"
@@ -17,6 +18,15 @@
       "checkpoint": "",
       "prompt": "`repo run @semio-tech/print:test -- quick` fails with BUILD_OWNER_FAILED (Unknown admitted build target: @semio-tech/print:build-flyer) and `repo run @semio-tech/print:test-assignment` hangs in dependencies:store-input-replay/current-input. Find why the build graph admits build-flyer for print, fix at the source, make both targets run, and make the print README advertise only existing targets.",
       "llm": "opus-5-5"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-25 01:27:40",
+      "author": "ueli",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "8d17d8ba3998690932b0032ea2ca41bce5c994b6",
+      "summary": "`build-flyer` is a real target synthesized from the Print catalogue; owner discovery did not merge catalogue targets, so admission refused it. Fixing that exposed five more blockers on the repo route, all fixed: generated deps applied before catalogue synthesis (project-nodes), Windows directory fsync EPERM in graph publication, Tectonic \"App data directories not supported\" under a redirected USERPROFILE, a stale Print command-boundary contract, and a Windows scheduler-lock EPERM. Verified: `repo run @semio-tech/print:test-assignment` exit 0 (20 pass) and `repo run @semio-tech/print:test -- quick` exit 0 (test plus 14 dependencies). README: German id list gained `thesis`; `build-thesis` exists. Details in 🔎️root-cause.md."
     }
   ]
 }

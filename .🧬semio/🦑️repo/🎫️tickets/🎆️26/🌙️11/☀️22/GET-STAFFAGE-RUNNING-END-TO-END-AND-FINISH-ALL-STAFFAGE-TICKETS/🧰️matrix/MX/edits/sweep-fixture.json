@@ -1,0 +1,7 @@
+[
+ {
+  "name": "depth",
+  "old": "  \"refused\": [",
+  "new": "  \"depth\": {\n    \"description\": \"The depth a solid is ranked by for the paint order (`shapeDepth`): the nearest point of the profile carried at the middle of its span along the sweep axis, in the same placement that draws it. A rect profile (first coordinate 0..0.45, second 0.1..0.3) with the span -0.02..0.04 (middle 0.01) on the same hanging thigh (u down, v ahead, w left), relative to the bone origin: the front ranks by the position ahead (world x), the plan by the height (world y). sweep `u`: the profile lies in (v, w) and the span along u, so the foremost point is the profile's 0.45 along v and the highest the middle of the span, 0.01 below the origin. sweep `w`: the profile lies in (u, v), foremost 0.3 along v, highest at the origin. sweep `v`: the profile lies in (u, w) and the span along v, foremost the middle of the span 0.01, highest at the origin.\",\n    \"profile\": { \"kind\": \"rect\", \"x\": 0, \"y\": 0.1, \"w\": 0.45, \"h\": 0.2 },\n    \"span\": { \"z0\": -0.02, \"z1\": 0.04 },\n    \"toleranceM\": 1e-9,\n    \"cases\": [\n      { \"sweep\": \"u\", \"front\": 0.45, \"plan\": -0.01 },\n      { \"sweep\": \"w\", \"front\": 0.3, \"plan\": 0 },\n      { \"sweep\": \"v\", \"front\": 0.01, \"plan\": 0 }\n    ]\n  },\n  \"refused\": ["
+ }
+]

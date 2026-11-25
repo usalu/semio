@@ -13,21 +13,111 @@
    "de": "Ein gebrauchtes klappbares Leiterregal aus massiver Kiefer, 0,60 m breit und 1,80 m hoch, mit fünf gestaffelten Böden von 30 bis 10 cm Tiefe, die an den angelehnten Vorderholmen angelenkt sind und hinten auf Buchenleisten der an der Wand stehenden Hinterholme liegen. Es stammt aus einer Haushaltsauflösung, mit grau abgestoßenen Füßen, einer abgeplatzten Vorderecke am zweiten Boden, einer nicht passenden Sechskantschraube statt einer Gelenkschraube, einem Preisaufkleber und sonnengebleichten oberen Böden; gelagert wird es flach zusammengeklappt, angelehnt auf einer gefalteten Möbeldecke mit dem abgeschraubten Wandankerklotz daneben, getragen von einer Person an zwei Griffstellen und an einer Wand mit Büchern und Pflanzen wieder aufgestellt."
   },
   "tags": [
-   "used",
-   "household",
-   "second-hand",
-   "living",
-   "furniture",
-   "shelf",
-   "ladder-shelf",
-   "folding",
-   "bookcase",
-   "pine",
-   "solid-wood",
-   "storage",
-   "interior",
-   "flat-clearance",
-   "anti-tip"
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "household",
+    "title": {
+     "en": "household",
+     "de": "Haushalt"
+    }
+   },
+   {
+    "id": "second-hand",
+    "title": {
+     "en": "second-hand",
+     "de": "Second-Hand"
+    }
+   },
+   {
+    "id": "living",
+    "title": {
+     "en": "living",
+     "de": "Wohnen"
+    }
+   },
+   {
+    "id": "furniture",
+    "title": {
+     "en": "furniture",
+     "de": "Möbel"
+    }
+   },
+   {
+    "id": "shelf",
+    "title": {
+     "en": "shelf",
+     "de": "Regalboden"
+    }
+   },
+   {
+    "id": "ladder-shelf",
+    "title": {
+     "en": "ladder shelf",
+     "de": "Leiterregal"
+    }
+   },
+   {
+    "id": "folding",
+    "title": {
+     "en": "folding",
+     "de": "klappbar"
+    }
+   },
+   {
+    "id": "bookcase",
+    "title": {
+     "en": "bookcase",
+     "de": "Bücherregal"
+    }
+   },
+   {
+    "id": "pine",
+    "title": {
+     "en": "pine",
+     "de": "Kiefer"
+    }
+   },
+   {
+    "id": "solid-wood",
+    "title": {
+     "en": "solid wood",
+     "de": "Massivholz"
+    }
+   },
+   {
+    "id": "storage",
+    "title": {
+     "en": "storage",
+     "de": "Lagerung"
+    }
+   },
+   {
+    "id": "interior",
+    "title": {
+     "en": "interior",
+     "de": "Innenausbau"
+    }
+   },
+   {
+    "id": "flat-clearance",
+    "title": {
+     "en": "flat clearance",
+     "de": "flache Freihaltung"
+    }
+   },
+   {
+    "id": "anti-tip",
+    "title": {
+     "en": "anti-tip",
+     "de": "Kippsicherung"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content (used household objects wave, row 20)",

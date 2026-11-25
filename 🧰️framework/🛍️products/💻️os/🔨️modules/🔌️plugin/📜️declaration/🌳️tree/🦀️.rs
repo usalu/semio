@@ -41,7 +41,7 @@ use semio_plugin_identity::ArtifactLocale;
 use semio_plugin_ownership::sdk_fault::PluginAssemblyError;
 use semio_plugin_identity::preflight_artifact_identity;
 use crate::artifact_inference::ArtifactInferenceService;
-use semio_plugin_ownership::store_lifecycle::OwnerMutationRoster;
+use semio_plugin_store_lifecycle::store_lifecycle::OwnerMutationRoster;
 use semio_plugin_decl_surface::ArtifactCodecTableV1;
 use semio_plugin_decl_surface::ArtifactEditor;
 use semio_plugin_decl_surface::ArtifactViewer;

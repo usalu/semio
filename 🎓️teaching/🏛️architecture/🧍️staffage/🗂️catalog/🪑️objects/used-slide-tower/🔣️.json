@@ -13,18 +13,90 @@
    "de": "Ein kommunaler Spielturm nach Jahren in einem deutschen Park: vier vergraute Lärchenpfosten 120 mm auf verzinkten H-Ankern in Punktfundamenten, ein 1,2 m großes Podest auf 1,50 m mit 0,75 m hohen Bretterbrüstungen, eine 70-Grad-Sprossenleiter mit abgetretenen Robiniensprossen, ein Satteldach mit Moos auf der Nordseite und eine Edelstahlrutsche aus 2-mm-Blech mit 35-Grad-Abschnitt und 0,5 m Auslauf auf 0,30 m, ihr Bett vom Gebrauch zerkratzt und poliert; 5.91 m lang, 1679 kg mit Fundamenten. Der Bauhof hebt das Dach mit dem Kran ab; Kinder klettern, sitzen am Start und rutschen; in der Sommersonne ist das Edelstahlbett die heiße Fläche."
   },
   "tags": [
-   "used",
-   "park",
-   "public-space",
-   "play",
-   "playground",
-   "slide",
-   "tower",
-   "timber",
-   "larch",
-   "stainless-steel",
-   "galvanised-steel",
-   "footing"
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "park",
+    "title": {
+     "en": "park",
+     "de": "Park"
+    }
+   },
+   {
+    "id": "public-space",
+    "title": {
+     "en": "public space",
+     "de": "öffentlicher Raum"
+    }
+   },
+   {
+    "id": "play",
+    "title": {
+     "en": "play",
+     "de": "Spiel"
+    }
+   },
+   {
+    "id": "playground",
+    "title": {
+     "en": "playground",
+     "de": "Spielplatz"
+    }
+   },
+   {
+    "id": "slide",
+    "title": {
+     "en": "slide",
+     "de": "Rutsche"
+    }
+   },
+   {
+    "id": "tower",
+    "title": {
+     "en": "tower",
+     "de": "Turm"
+    }
+   },
+   {
+    "id": "timber",
+    "title": {
+     "en": "timber",
+     "de": "Holz"
+    }
+   },
+   {
+    "id": "larch",
+    "title": {
+     "en": "larch",
+     "de": "Lärche"
+    }
+   },
+   {
+    "id": "stainless-steel",
+    "title": {
+     "en": "stainless steel",
+     "de": "Edelstahl"
+    }
+   },
+   {
+    "id": "galvanised-steel",
+    "title": {
+     "en": "galvanised steel",
+     "de": "verzinkter Stahl"
+    }
+   },
+   {
+    "id": "footing",
+    "title": {
+     "en": "footing",
+     "de": "Fundament"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content (used park objects wave)",

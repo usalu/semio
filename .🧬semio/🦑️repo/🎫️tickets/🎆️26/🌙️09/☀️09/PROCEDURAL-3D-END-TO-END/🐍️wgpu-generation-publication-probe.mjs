@@ -11,6 +11,7 @@
 import { chromium } from "playwright";
 import { writeFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
+import { PNG } from "pngjs";
 
 const origin = process.env.SEMIO_PROBE_ORIGIN ?? "http://127.0.0.1:6118";
 const outDir = join(import.meta.dir, "🗑️generated", process.env.SEMIO_PROBE_OUT ?? "wgpu-generation/run-1");
@@ -22,6 +23,22 @@ mkdirSync(outDir, { recursive: true });
 
 const browser = await chromium.launch({ headless: true, args: ["--enable-unsafe-webgpu", "--ignore-gpu-blocklist", "--use-angle=metal"] });
 const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+await page.addInitScript(() => {
+  const trace = [];
+  globalThis.__pointerAudit = trace;
+  const inputs = new Set();
+  for (const type of ["pointermove", "pointerdown", "pointerup"]) window.addEventListener(type, event => {
+    const rect = event.target instanceof Element ? event.target.getBoundingClientRect() : null;
+    if (type === "pointermove" && event.clientX < 10) return;
+    trace.push({ kind: type, x: event.clientX, y: event.clientY, target: event.target?.tagName, dpr: devicePixelRatio, rect: rect && [rect.x, rect.y, rect.width, rect.height] });
+    if (trace.length > 200) trace.shift();
+  }, true);
+  const Native = globalThis.Worker;
+  globalThis.Worker = class extends Native {
+    constructor(...args) { super(...args); this.addEventListener("message", event => { if (["fault", "worker-error"].includes(event.data?.kind) || (event.data?.kind === "batch-accepted" && inputs.has(event.data.inputSequence))) trace.push({ direction: "down", kind: event.data.kind, sequence: event.data.inputSequence }); }); }
+    postMessage(data, transfer) { if (data?.kind === "batch" && data.events?.length) { inputs.add(data.inputSequence); trace.push({ direction: "up", kind: "batch", sequence: data.inputSequence, events: data.events }); if (trace.length > 200) trace.shift(); } return super.postMessage(data, transfer); }
+  };
+});
 if (process.env.SEMIO_PROBE_GUEST_DIAGNOSTICS === "1") await page.addInitScript(() => { try { globalThis.localStorage?.setItem("SEMIO_RUNTIME_DIAGNOSTICS", "1"); } catch {} });
 const lines = [];
 const t0 = Date.now();
@@ -69,7 +86,8 @@ const dockPlan = () => {
 const pump = async (seconds) => {
   for (let tick = 0; tick < seconds * 5; tick += 1) {
     await page.waitForTimeout(200);
-    await page.mouse.move(3 + (tick % 2), 3).catch(() => {});
+    const interval = Number(process.env.SEMIO_PROBE_PUMP_TICKS ?? 1);
+    if (tick % interval === 0) await page.mouse.move(3 + (Math.floor(tick / interval) % 2), 3).catch(() => {});
   }
 };
 
@@ -152,6 +170,11 @@ const renameEditor = (snapshot) => (snapshot?.per?.["generation3d-generations"]?
 const url = `${origin}/?plugin=generation3d&mode=generate&example=${encodeURIComponent(example)}`;
 await page.goto(url, { waitUntil: "domcontentloaded" }).catch((error) => lines.push(`${at()} gotoerror ${String(error).slice(0, 400)}`));
 await pump(settleSeconds);
+const screenshot = await page.screenshot({ path: join(outDir, "before.png") });
+const pixels = PNG.sync.read(screenshot).data;
+let painted = false;
+for (let i = 4; i < pixels.length; i += 4) if (pixels[i] !== pixels[0] || pixels[i + 1] !== pixels[1] || pixels[i + 2] !== pixels[2]) { painted = true; break; }
+lines.push(`${at()} PROBE paintedBefore ${painted}`);
 
 const before = await dumpAll();
 const plan = dockPlan();
@@ -167,7 +190,7 @@ const target = (() => {
       if (!path.includes(rowNeedle)) continue;
       const [rx, ry, rw, rh] = node.rect ?? [0, 0, 0, 0];
       if (rw <= 0 || rh <= 0) continue;
-      return { windowId: id, path, rect: node.rect, page: [body.x + rx + rw / 2, body.y + ry + rh / 2] };
+      return { windowId: id, path, rect: node.rect, page: [body.x + rx + rw / 2, body.y + Number(process.env.SEMIO_PROBE_BODY_INSET_Y ?? 0) + ry + rh / 2] };
     }
   }
   return null;
@@ -176,7 +199,7 @@ lines.push(`${at()} PROBE target ${JSON.stringify(target)}`);
 
 const mark = lines.length;
 let clicked = null;
-if (target) {
+if (target && (process.env.SEMIO_PROBE_REQUIRE_PAINT !== "1" || painted)) {
   await page.mouse.move(target.page[0], target.page[1]);
   await page.waitForTimeout(300);
   await page.mouse.click(target.page[0], target.page[1]);
@@ -227,6 +250,8 @@ if (process.env.SEMIO_PROBE_JOURNEY === "1" && roster(after).length > roster(bef
 const sincePress = lines.slice(mark);
 const grab = (needle) => sincePress.filter((line) => line.includes(needle)).slice(0, 40);
 const verdicts = {
+  paintedBefore: painted,
+  clicked,
   retainedPress: grab("retained press").length,
   typedOperation: grab("typed-operation").length,
   renderSurface: grab("renderSurface").length,
@@ -240,6 +265,7 @@ const verdicts = {
   world3d: world3dTraces(),
   selected: grab("addGeneration").slice(0, 20),
   journey,
+  pointerAudit: await page.evaluate(() => globalThis.__pointerAudit ?? []),
 };
 writeFileSync(join(outDir, "console.txt"), lines.join("\n"));
 writeFileSync(join(outDir, "since-press.txt"), sincePress.join("\n"));

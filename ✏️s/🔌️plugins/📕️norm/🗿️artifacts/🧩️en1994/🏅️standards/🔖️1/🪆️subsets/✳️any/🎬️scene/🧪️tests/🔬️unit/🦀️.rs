@@ -294,12 +294,14 @@ fn deflection_overlay_follows_the_deflection_check() {
     }
 }
 
+const MOVE_GRIPS: usize = 3;
+
 #[test]
 fn handles_are_advertised_resolvable_and_round_trip() {
     let document = En1994Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De);
     let (scene, _) = project_of(&document);
     let mut all = Vec::new();
-    for (entity, count) in [("beam-B1", 16 + 1 + 3 * document.studs.len()), ("col-C1", 9), ("slab-S1", 7)] {
+    for (entity, count) in [("beam-B1", 16 + 1 + 3 * document.studs.len() + MOVE_GRIPS), ("col-C1", 9 + MOVE_GRIPS), ("slab-S1", 7 + MOVE_GRIPS)] {
         let selection = [scene::EntityRef::new(scene::EntityKind::Member, entity, format!("x[id={entity}]"))];
         let list = handles(&document, &[], &selection);
         assert_handle_laws(&list);
@@ -546,18 +548,26 @@ fn the_mode_track_reveals_one_eigenform_layer_per_keyframe() {
 #[test]
 fn a_document_with_a_single_mode_gets_neither_mode_entities_nor_a_track() {
     let (scene, _) = project_of(&En1994Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De));
-    assert!(scene.tracks.is_empty() && scene.entities.iter().all(|e| !e.layer.starts_with("mode-")));
+    assert!(scene.tracks.iter().all(|t| t.id != "mode") && scene.entities.iter().all(|e| !e.layer.starts_with("mode-")));
 }
 
 #[test]
 fn the_critical_loads_match_the_closed_forms() {
     let document = En1994Snapshot::unpropped_building();
-    let facts = facts::ColumnFacts::of(&document, &document.columns[0]);
-    let c = &facts.column;
-    let ei = checks::part_column::ei_eff_nmm2(c, facts.annex, checks::catalogue::ecm_pa(c.concrete_f_ck_pa));
-    let (ncr, _) = tracks::column_buckling(&facts).expect("column mode");
-    let euler = std::f64::consts::PI.powi(2) * ei / c.length_m.powi(2);
-    assert!((ncr - euler).abs() <= 2e-3 * euler, "{ncr} vs {euler}");
+    for (length, steel_scale, f_ck) in [(3.5, 1.0, 30.0e6), (7.0, 1.0, 30.0e6), (3.5, 1.6, 45.0e6), (7.0, 1.6, 45.0e6)] {
+        let mut column = document.columns[0].clone();
+        column.length_m = length;
+        column.steel_a_m2 *= steel_scale;
+        column.concrete_f_ck_pa = f_ck;
+        let facts = facts::ColumnFacts::of(&document, &column);
+        let c = &facts.column;
+        let ei = checks::part_column::ei_eff_nmm2(c, facts.annex, checks::catalogue::ecm_pa(c.concrete_f_ck_pa));
+        let (ncr, shape) = eigen_modes::column_buckling(&facts).expect("column mode");
+        let euler = std::f64::consts::PI.powi(2) * ei / c.length_m.powi(2);
+        assert!((ncr - euler).abs() <= 2e-3 * euler, "L = {length}: {ncr} vs {euler}");
+        let lateral = shape.iter().map(|(_, u)| u[1].abs().max(u[2].abs())).fold(0.0, f64::max);
+        assert!((lateral - 1.0).abs() < 1e-9, "the first mode is a translation (planar flexural buckling), not a twist: {lateral}");
+    }
     let mut beam = document.beams[0].clone();
     beam.ltb_length_m = 0.0;
     let f = facts::BeamFacts::of(&document, &beam);
@@ -567,7 +577,7 @@ fn the_critical_loads_match_the_closed_forms() {
     let iw = iz * (h - tf).powi(2) / 4.0;
     let pi = std::f64::consts::PI;
     let mcr = pi / l * (e * iz * g * j * (1.0 + pi * pi * e * iw / (g * j * l * l))).sqrt();
-    let (kernel, _) = tracks::girder_ltb(&f).expect("ltb mode");
+    let (kernel, _) = eigen_modes::girder_ltb(&f).expect("ltb mode");
     assert!((kernel - mcr).abs() <= 5e-3 * mcr, "{kernel} vs {mcr}");
 }
 
@@ -888,7 +898,7 @@ fn the_placement_plan_has_one_dragging_marker_per_placement_and_only_without_a_f
     let mut document = En1994Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De);
     document.placements = vec![model::Placement { id: "beam-B1".into(), x: 1.5, y: -2.0, z: 0.25, yaw: std::f64::consts::FRAC_PI_2 }];
     let report = semio_s_artifact_norm_en1994_inferences::evaluate(&document);
-    let plan = diagrams(&document, &report, None).into_iter().find(|d| d.id == "placements").unwrap();
+    let plan = diagrams(&document, &report, None).into_iter().find(|d| d.id == "placements:document").unwrap();
     assert_eq!((plan.markers.len(), plan.table_twin.columns.len()), (1, 4));
     assert_eq!((plan.markers[0].at.x, plan.markers[0].at.y), (1.5, -2.0));
     assert_eq!(plan.markers[0].binding.as_ref().map(|b| b.path.as_str()), Some("placements[id=beam-B1].x"));
@@ -915,4 +925,21 @@ fn the_basis_badge_follows_the_document_annex_in_the_scene_and_every_diagram() {
         let (scene, report) = project_of(&document);
         (scene, diagrams(&document, &report, None))
     });
+}
+
+#[test]
+fn a_beam_the_steel_carries_alone_still_transfers_the_elastic_slab_force_through_its_studs() {
+    let document = En1994Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De);
+    let f = facts::BeamFacts::of(&document, &document.beams[0]);
+    assert!(f.m_ed < f.m_pla, "the example moment {} is below the steel plastic moment {}", f.m_ed, f.m_pla);
+    let n = checks::catalogue::constants::E_A / f.beam.concrete_e_cm_pa;
+    let (a_s, i_s, h) = (f.steel.a_m2, f.steel.i_y_m4, f.steel.height_m);
+    let (a_c, y_c, y_s) = (f.b_eff * f.hc / n, f.hc / 2.0, f.beam.slab_thickness_m + h / 2.0);
+    let y_na = (a_c * y_c + a_s * y_s) / (a_c + a_s);
+    let i = i_s + a_s * (y_s - y_na).powi(2) + f.b_eff * f.hc.powi(3) / 12.0 / n + a_c * (y_na - y_c).powi(2);
+    let expected = f.m_ed * a_c * (y_na - y_c) / i;
+    let force = diagrams::elastic_slab_force_n(&f);
+    assert!(force > 0.0 && (force - expected).abs() <= 1e-9 * expected, "{force} vs {expected}");
+    let (peak, _) = diagrams::slip_inputs(&f);
+    assert!((peak - 4.0 * expected / f.beam.span_m / 1e3).abs() <= 1e-9 * peak, "{peak}");
 }

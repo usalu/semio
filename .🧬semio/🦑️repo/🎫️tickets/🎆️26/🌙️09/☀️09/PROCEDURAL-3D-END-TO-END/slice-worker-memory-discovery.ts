@@ -1,0 +1,14 @@
+import {heapStats} from "bun:jsc";
+const G="/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build",root="/Users/ueli/Documents/semio";
+const [project="semio-hub-flow-component",limitMb="3500",gcEvery="0"]=process.argv.slice(2);
+const obs=await import(G+"/👁️observation/🟨️.mjs"),producer=await import(G+"/🕸️graph/📥️inference/🟨️.mjs"),{readBuildOwnerRegistryV1}=await import(G+"/🕸️graph/🚪️admission/🟦️.ts");
+await producer.libraryBootstrap;producer.prepareSourceAnalysesV1();
+const registry=readBuildOwnerRegistryV1(JSON.parse(producer.readBuildOwnerRegistrySourceV1(root))),selection={kind:"tasks",tasks:[{project,target:"component"}]};
+const owner=registry.owners.find((o:any)=>o.name===project)!;
+const mb=(n:number)=>Math.round(n/1048576),top=()=>{const c=heapStats().objectTypeCounts as Record<string,number>;return ["Array","string","Object","Map","Set","WeakRef"].map(k=>k+"="+Math.round((c[k]??0)/1000)+"k").join(" ")};
+const line=(name:string)=>{const m=process.memoryUsage();console.log(name.padEnd(10),"t",Math.round(performance.now()/1000)+"s","heap",mb(m.heapUsed),"rss",mb(m.rss),"ext",mb(m.external),top());};
+line("start");
+const timer=setInterval(()=>{if(gcEvery!=="0")Bun.gc(true);line("tick");if(process.memoryUsage().rss>Number(limitMb)*1048576){console.log("limit");process.exit(2);}},3000);
+const r=await obs.captureObservedSourceInputsV1(()=>producer.discoverBuildOwnerAdmissionFactsV1(owner,["component"],registry,{workspaceRoot:root,selection,nativeCache:new Map(),nativeClosures:new Map(),preparationControl:{advance:async()=>{}}},[]),undefined,false);
+clearInterval(timer);Bun.gc(true);line("done rows "+r.observations.length);
+console.log("collections",JSON.stringify(obs.observationCollectionsV1().map((c:any)=>[c.name.slice(0,40),c.entries,Math.round((c.estimatedBytes??0)/1048576)]).filter((c:any)=>c[2]>0||c[1]>1000)));

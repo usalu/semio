@@ -1,0 +1,5 @@
+# SDK and Schema Sanity Check
+
+The configured SDK check reads the configured command and arguments, removes the binary override, and asserts workspace discovery, both locale results and the invalid-input error. The restart SDK check launches two direct executable instances against one isolated folder and compares both returned encoded byte strings. Its direct executable and disabled bridge do not test configured-launcher restart. Neither script asserts the child's exit status through the SDK transport; the report states this limitation for the configured check.
+
+The mirror verifier obtains the schema document from the supplied executable, compares the JSON bytes, renders TypeScript using the production renderer and compares those bytes, and resolves every definition with Ajv. This establishes parity with that executable, not independently with subsequently edited Rust source. The reported contract tests and successful runs were not independently rerun here. An attempted read-only rerun through `repo tools exec bun` failed before execution when the sandbox denied creation of the host-capacity queue file. No finding contradicts the stated limited results.

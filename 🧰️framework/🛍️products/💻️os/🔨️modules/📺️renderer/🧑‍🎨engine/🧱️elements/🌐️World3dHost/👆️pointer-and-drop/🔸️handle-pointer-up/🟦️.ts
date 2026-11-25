@@ -3,7 +3,7 @@ import * as React from "../../../⚛️react-port/🟦️.ts";
 import { useCallback, useEffect } from "../../../⚛️react-port/🟦️.ts";
 import { getActiveCatalogueDragPayload } from "@semio-tech/ui-react";
 import { celebrateWorldInstances } from "../../🎨️mesh-render/🎊️instance-celebration/🟦️.ts";
-import { clientPointOverHost, hoveredInteractionTargetV1, worldInstancePickBlocked } from "../../🔗️instance-selection/🟦️.ts";
+import { clientPointOverHost, hoveredInteractionTargetV1, world3dLeftReleaseIsDrag, worldInstancePickBlocked } from "../../🔗️instance-selection/🟦️.ts";
 import { paneSuffixFromSurfaceId, resolveClickInstanceId, resolveWorldMergeMode } from "../../🎯️marquee-and-bridges/🟦️.tsx";
 import { clearWorldCatalogueDropPreview, parsePuzzle3dCatalogueDragPayload, resolveCatalogueDropOrigin, setWorldCatalogueDropPreview, worldCatalogueDropHostContainsPoint } from "../../🗂️catalogue-drop/🟦️.tsx";
 import { axisDragParam } from "../../🪟️window-view-store/🟦️.tsx";
@@ -47,7 +47,11 @@ export function useHandlePointerUpState({ gestureRecognizer, setMarqueePath, mar
         return;
       }
       finalizeMarqueeSelection();
-      if (wholePickEnabled && !marqueeDragActiveRef.current && !paintMode && !selection.engagementSessionActive && !worldInstancePickBlocked(activeUtility)) {
+      const pressStart = marqueeStartRef.current;
+      const releaseLocal = toLocalPoint(event);
+      const orbitDragged = pressStart !== null && world3dLeftReleaseIsDrag(pressStart.x, pressStart.y, releaseLocal.x, releaseLocal.y);
+      if (orbitDragged) wasMarqueeDragRef.current = true;
+      if (wholePickEnabled && !orbitDragged && !marqueeDragActiveRef.current && !paintMode && !selection.engagementSessionActive && !worldInstancePickBlocked(activeUtility)) {
         const host = hostRef.current;
         const camera = cameraRef.current;
         if (host && camera) {

@@ -10,7 +10,7 @@ use std::sync::Arc;
 use semio_plugin_decl_app::{ArtifactApp, ArtifactOwnedContextHandle, viewer_rejects_action};
 use semio_plugin_operation::{ArtifactDocumentAuthority, CANCEL_TYPED_OPERATION_ACTION_ID, ToolOperationKey};
 use semio_plugin_decl_media::ArtifactOutputChunks;
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use semio_plugin_decl_app::tool_contract::{ArtifactOwnedToolJobContext, ArtifactOwnedToolJobInputs, ArtifactOwnedToolJobRequest, ArtifactOwnedToolJobSnapshots, ArtifactToolCompletion, ArtifactToolRawInput};
 use pack::snapshot::ArtifactPack;
 use semio_plugin_decl_views::ArtifactView;

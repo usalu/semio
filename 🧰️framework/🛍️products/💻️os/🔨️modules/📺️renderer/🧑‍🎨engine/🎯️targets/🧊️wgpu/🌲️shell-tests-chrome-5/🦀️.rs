@@ -75,6 +75,9 @@ mod browser_prefs_persistence_tests;
 #[path = "../../../🧱️elements/🐚️Shell/🧪️tests/🧭️wgpu-navbar-footer-parity/🦀️.rs"]
 mod navbar_footer_parity_tests;
 #[cfg(all(test, not(target_arch = "wasm32")))]
+#[path = "../../../🧱️elements/🐚️Shell/🧪️tests/🔝️wgpu-shell-bands/🦀️.rs"]
+mod shell_bands_tests;
+#[cfg(all(test, not(target_arch = "wasm32")))]
 #[path = "../../../🧱️elements/🐚️Shell/🧪️tests/🖥️wgpu-display-conflicts-marketplace/🦀️.rs"]
 mod display_conflicts_marketplace_tests;
 #[path = "../../../🧱️elements/🐚️Shell/🧪️tests/⚙️settings-general-layout/🦀️.rs"]

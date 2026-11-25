@@ -1,4 +1,4 @@
-//! 🧪️ Registration: 2 tests covering every declared quota axis preserves none and explicit zero; descriptor registration deduplicates exact owned rows and consumes all fields.
+//! 🧪️ Registration: 3 tests covering every declared quota axis preserves none and explicit zero; descriptor registration deduplicates exact owned rows and consumes all fields; component registrations follow the language-neutral package component cases.
 use super::*;
 
 #[test]
@@ -6,7 +6,7 @@ fn every_declared_quota_axis_preserves_none_and_explicit_zero() {
     let rows:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/📦️units/🧪️registration.json")).unwrap();
     for row in rows.as_array().unwrap(){
         let field=row["field"].as_str().unwrap();
-        macro_rules! axis {($field:ident)=>{if field==stringify!($field){let mut owner=PluginDescriptorRegistration::default();let mut base=QuotaSchema::default();base.$field=Some(row["base"].as_u64().unwrap());owner.quota(base);let mut incoming=QuotaSchema::default();incoming.$field=row["incoming"].as_u64();owner.quota(incoming);assert_eq!(owner.into_parts().quotas.$field,Some(row["expected"].as_u64().unwrap()));}}}
+        macro_rules! axis {($field:ident)=>{if field==stringify!($field){let mut owner=PluginDescriptorRegistration::default();let mut base=QuotaSchema::default();base.$field=Some(row["base"].as_u64().unwrap());owner.quota(base);let mut incoming=QuotaSchema::default();incoming.$field=row["incoming"].as_u64();owner.quota(incoming);assert_eq!(owner.into_parts(&[]).unwrap().quotas.$field,Some(row["expected"].as_u64().unwrap()));}}}
         axis!(memory_bytes);axis!(fuel_per_turn);axis!(turn_deadline_ms);axis!(tables);axis!(mailbox_len);axis!(message_bytes);axis!(outstanding_requests);axis!(timers);axis!(storage_bytes);axis!(network_bytes_per_min);axis!(ui_nodes);axis!(patch_bytes);axis!(patch_hz);axis!(blob_resident_bytes);axis!(gpu_ms_per_frame);axis!(background_ms_per_min);axis!(log_bytes_per_min);
     }
 }
@@ -22,6 +22,29 @@ fn descriptor_registration_deduplicates_exact_owned_rows_and_consumes_all_fields
     owner.extension_point(extension.clone());owner.extension_point(extension.clone());
     let asset=AssetDeclaration{name:"asset".into(),media_type:semio_framework::MediaType{class:semio_framework::MediaClass::Text,form:semio_framework::MediaForm::Document},size_bytes:7,sha256:"digest".into()};
     owner.asset(asset.clone());owner.asset(asset.clone());owner.execution(ExecutionMode::Linked);
-    let parts=owner.into_parts();
+    let parts=owner.into_parts(&[]).unwrap();
     assert_eq!(parts.activation_events,vec![event]);assert_eq!(parts.capability_requests,vec![request]);assert_eq!(parts.extension_points,vec![extension]);assert_eq!(parts.assets,vec![asset]);assert_eq!(parts.execution,ExecutionMode::Linked);assert_eq!(parts.quotas,QuotaSchema::default());
+}
+
+#[test]
+fn component_registrations_follow_the_language_neutral_package_component_cases() {
+    let cases:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../🔨️modules/🎠️kernel/🧩️package-components/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let text=|value:&serde_json::Value|value.as_str().unwrap().to_string();
+    for row in cases["registrations"].as_array().unwrap(){
+        let id=row["id"].as_str().unwrap();
+        let mut owner=PluginDescriptorRegistration::default();
+        let mut apps:Vec<String>=Vec::new();
+        for step in row["steps"].as_array().unwrap(){
+            if let Some(component)=step["component"].as_str(){owner.component(component.to_string(),apps.len());}
+            apps.extend(step["apps"].as_array().unwrap().iter().map(text));
+        }
+        match owner.into_parts(&apps){
+            Ok(parts)=>{
+                assert!(row.get("refusal").is_none(),"{id}: assembled although the case refuses it");
+                let expected:Vec<ComponentDeclaration>=row["components"].as_array().map(|rows|rows.iter().map(|declaration|ComponentDeclaration{id:text(&declaration["id"]),apps:declaration["apps"].as_array().unwrap().iter().map(text).collect()}).collect()).unwrap_or_default();
+                assert_eq!(parts.components,expected,"{id}");
+            }
+            Err(error)=>{let refusal=row["refusal"].as_str().unwrap_or_else(||panic!("{id}: refused: {error}"));assert!(error.contains(refusal),"{id}: {error}");}
+        }
+    }
 }

@@ -13,12 +13,48 @@
    "de": "Ein freistehender 40-m-Gitterturmdrehkran mit 55 m Ausleger und 16,5 m Gegenausleger: Die Laufkatze fährt am Ausleger, der Hakenflaschenzug hängt an einem teleskopierenden Seil und trägt einen Betonkübel; das Fußmoment ändert sich mit der Katzposition, das feste Fundament ist das einzige Lager."
   },
   "tags": [
-   "machine",
-   "crane",
-   "tower-crane",
-   "lattice",
-   "electric",
-   "construction"
+   {
+    "id": "machine",
+    "title": {
+     "en": "machine",
+     "de": "Maschine"
+    }
+   },
+   {
+    "id": "crane",
+    "title": {
+     "en": "crane",
+     "de": "Kran"
+    }
+   },
+   {
+    "id": "tower-crane",
+    "title": {
+     "en": "tower crane",
+     "de": "Turmdrehkran"
+    }
+   },
+   {
+    "id": "lattice",
+    "title": {
+     "en": "lattice",
+     "de": "Gitterwerk"
+    }
+   },
+   {
+    "id": "electric",
+    "title": {
+     "en": "electric",
+     "de": "elektrisch"
+    }
+   },
+   {
+    "id": "construction",
+    "title": {
+     "en": "construction",
+     "de": "Bau"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content worker (vehicles)",

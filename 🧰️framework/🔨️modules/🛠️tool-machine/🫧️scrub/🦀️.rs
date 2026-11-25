@@ -272,9 +272,11 @@ impl<M: Clone + 'static> Scrub<M> {
 
 /// 🗂️ Every window's open scrub (at most one per window) plus the press each window last closed, so a late tick of
 /// a settled or cancelled press leaves zero trace. Pure: the runtime keeps one per app instance and overlays
-/// [`Self::provisional`] on the committed document for every render.
+/// [`Self::provisional`] on the committed document for every render. A host abort that meets a row lent to a retained read
+/// or to the original writer is deferred on the row (law `🔗️read/🧪️tests/⏸️deferred`): the scrub is ended at once for
+/// every reader of the ledger, and [`ScrubLedger::settle_deferred_aborts`] drops it once the row is released.
 #[derive(Debug,PartialEq)]
-pub(super) struct ScrubWindow<M>{key:semio_framework_value::SharedUtf8,state:RetainedOriginalSlot<ScrubState<M>>,closed:Option<String>}
+pub(super) struct ScrubWindow<M>{key:semio_framework_value::SharedUtf8,state:RetainedOriginalSlot<ScrubState<M>>,closed:Option<String>,deferred:Option<ToolAbortReason>}
 #[derive(Debug,PartialEq)]
 pub struct ScrubLedger<M>{pub(super) source_revision:u64,pub(super) live_windows:usize,pub(super) windows:Vec<ScrubWindow<M>>,pub(super) writing:bool}
 impl<M> Default for ScrubLedger<M>{fn default()->Self{Self{source_revision:0,live_windows:0,windows:Vec::new(),writing:false}}}
@@ -282,7 +284,7 @@ impl<M> ScrubLedger<M>{
  fn position(&self,window:&str)->Result<usize,usize>{self.windows.binary_search_by(|row|row.key.as_str().cmp(window))}
  pub(crate) fn slot(&self,window:&str)->Option<&RetainedOriginalSlot<ScrubState<M>>>{self.position(window).ok().map(|index|&self.windows[index].state)}
  pub(crate) fn slot_mut(&mut self,window:&str)->Option<&mut RetainedOriginalSlot<ScrubState<M>>>{let index=self.position(window).ok()?;Some(&mut self.windows[index].state)}
- fn cold_resident(&mut self,window:&str)->&mut ScrubWindow<M>{let index=match self.position(window){Ok(index)=>index,Err(index)=>{self.windows.insert(index,ScrubWindow{key:window.to_string().into(),state:RetainedOriginalSlot::vacant(),closed:None});index}};&mut self.windows[index]}
+ fn cold_resident(&mut self,window:&str)->&mut ScrubWindow<M>{let index=match self.position(window){Ok(index)=>index,Err(index)=>{self.windows.insert(index,ScrubWindow{key:window.to_string().into(),state:RetainedOriginalSlot::vacant(),closed:None,deferred:None});index}};&mut self.windows[index]}
  fn cold_take(&mut self,window:&str)->Option<ScrubState<M>>{let row=self.slot_mut(window)?;if row.is_empty()||row.has_read(){return None}let original=std::mem::replace(row,RetainedOriginalSlot::vacant());Some(original.try_into_original().unwrap_or_else(|_|unreachable!("unissued original scrub row")))}
  fn cold_install(&mut self,window:&str,state:ScrubState<M>){self.cold_resident(window).state=RetainedOriginalSlot::new(state)}
  fn cold_close_gesture(&mut self,window:&str,gesture:String){self.cold_resident(window).closed=Some(gesture)}
@@ -293,7 +295,8 @@ impl<M> ScrubLedger<M>{
 impl<M: 'static> ScrubLedger<M> {
     /// 🪪️ Identifies the original provisional source across a multi-turn complete-prefix refold.
     pub fn source_revision(&self)->u64{self.source_revision}
-    fn update_live_windows(&mut self,window:&str,was_open:bool){let open=self.open(window).is_some();if open&&!was_open{self.live_windows+=1;}else if was_open&&!open{self.live_windows-=1;}}
+    fn resident(&self,window:&str)->bool{self.slot(window).is_some_and(|slot|!slot.is_empty())}
+    fn update_live_windows(&mut self,window:&str,was_open:bool){let open=self.resident(window);if open&&!was_open{self.live_windows+=1;}else if was_open&&!open{self.live_windows-=1;}}
     fn change_source_revision(&mut self){self.source_revision=self.source_revision.checked_add(1).expect("original tool source revision exhausted");}
 
     /// 🛋️ Whether no window holds an open scrub.
@@ -301,14 +304,14 @@ impl<M: 'static> ScrubLedger<M> {
         self.live_windows==0
     }
 
-    /// 🔎️ The open scrub of `window`.
+    /// 🔎️ The open scrub of `window`; a scrub whose abort waits on its row is already ended.
     pub fn open(&self, window: &str) -> Option<&ScrubState<M>> {
-        self.slot(window).filter(|slot|!slot.is_empty()).map(RetainedOriginalSlot::get)
+        self.position(window).ok().map(|index|&self.windows[index]).filter(|row|!row.state.is_empty()&&row.deferred.is_none()).map(|row|row.state.get())
     }
 
     /// 🪟️ The windows holding an open scrub, in window id order.
     pub fn windows(&self) -> impl Iterator<Item = &str> {
-        self.windows.iter().filter(|row|!row.state.is_empty()).map(|row|row.key.as_str())
+        self.windows.iter().filter(|row|!row.state.is_empty()&&row.deferred.is_none()).map(|row|row.key.as_str())
     }
 
     /// 👁️ Every open scrub's provisional leaves, window by window in window id order — the overlay a render applies
@@ -324,6 +327,7 @@ impl<M: 'static> ScrubLedger<M> {
     /// so a retry or a host abort decides.
     pub fn send(&mut self, window: &str, tool: &str, actor: &ActorId, base_revision: &str, input: &mut Option<ScrubInput<M>>, clock: HybridLogicalTimestamp) -> Result<ToolStep<M>, ToolRefusal> where M:Clone {
         if self.writing||self.slot(window).is_some_and(RetainedOriginalSlot::has_read){return Err(ToolRefusal::Unclosed);}
+        self.settle_deferred(window);
         let (gesture, release) = match input.as_ref().ok_or(ToolRefusal::Closed)? {
             ScrubInput::Abort { reason } => return Ok(self.abort(window, None, *reason)),
             ScrubInput::Tick { gesture, .. } => (gesture.clone(), false),
@@ -332,7 +336,7 @@ impl<M: 'static> ScrubLedger<M> {
         if self.closed(window)==Some(gesture.as_str()) {
             return Ok(ToolStep::Idle);
         }
-        let was_open=self.open(window).is_some();
+        let was_open=self.resident(window);
         let previous = self.cold_take(window);
         let mut scrub = match previous.clone().filter(|state| state.tool == tool && state.base_revision == base_revision).map(Scrub::resume) {
             Some(Ok(scrub)) => scrub,
@@ -357,18 +361,23 @@ impl<M: 'static> ScrubLedger<M> {
     }
 
     /// 🛑️ Host cancel of `window`'s open scrub (only of the press `gesture` when named): zero trace, and the press is
-    /// closed so its late ticks stay silent. `Aborted(ref, reason)`, or `Idle` when no such scrub was open.
+    /// closed so its late ticks stay silent. `Aborted(ref, reason)`, or `Idle` when no such scrub was open. A row lent to a
+    /// retained read or to the original writer keeps the fact (the first one wins) and [`Self::settle_deferred_aborts`]
+    /// ends its scrub once the row is released; the original writer's row keeps its press as the writer leaves it.
     pub fn abort(&mut self, window: &str, gesture: Option<&str>, reason: ToolAbortReason) -> ToolStep<M> {
-        if self.writing{return ToolStep::Idle}
+        if self.writing||self.slot(window).is_some_and(RetainedOriginalSlot::has_read){
+            self.defer_abort(window,gesture,reason);
+            return ToolStep::Idle;
+        }
         if let Some(gesture) = gesture {
             self.cold_close_gesture(window,gesture.to_string());
         }
-        if self.slot(window).is_some_and(RetainedOriginalSlot::has_read){return ToolStep::Idle;}
+        let deferred=self.position(window).ok().and_then(|index|self.windows[index].deferred.take());
         match self.cold_take(window) {
-            Some(state) if gesture.is_none_or(|gesture| gesture == state.gesture) => {
+            Some(state) if deferred.is_some()||gesture.is_none_or(|gesture| gesture == state.gesture) => {
                 self.live_windows-=1;self.change_source_revision();
                 self.cold_close_gesture(window,state.gesture);
-                ToolStep::Aborted(state.transaction, reason)
+                ToolStep::Aborted(state.transaction, deferred.unwrap_or(reason))
             }
             Some(state) => {
                 self.cold_install(window,state);
@@ -376,6 +385,34 @@ impl<M: 'static> ScrubLedger<M> {
             }
             None => ToolStep::Idle,
         }
+    }
+
+    fn defer_abort(&mut self,window:&str,gesture:Option<&str>,reason:ToolAbortReason){
+        let writing=self.writing;
+        let Ok(index)=self.position(window) else { return };
+        let row=&mut self.windows[index];
+        if let Some(gesture)=gesture.filter(|_|!writing){row.closed=Some(gesture.to_string());}
+        if row.deferred.is_some()||row.state.is_empty(){return}
+        if gesture.is_none_or(|gesture|!writing&&gesture==row.state.get().gesture){row.deferred=Some(reason);}
+    }
+
+    fn settle_deferred(&mut self,window:&str)->Option<ToolStep<M>>{
+        let index=self.position(window).ok()?;
+        if self.writing||self.windows[index].state.has_read()||self.windows[index].deferred.is_none(){return None}
+        Some(self.abort(window,None,ToolAbortReason::Tool))
+    }
+
+    /// ⏯️ Ends every scrub whose host abort waited on a row since released by its retained read and the original writer:
+    /// one `Aborted` step per scrub with the deferred fact's reason, in window id order.
+    pub fn settle_deferred_aborts(&mut self) -> Vec<ToolStep<M>> {
+        if self.writing{return Vec::new()}
+        let ready:Vec<semio_framework_value::SharedUtf8>=self.windows.iter().filter(|row|row.deferred.is_some()&&!row.state.has_read()).map(|row|row.key.clone()).collect();
+        ready.iter().filter_map(|window|self.settle_deferred(window)).filter(|step|!matches!(step,ToolStep::Idle)).collect()
+    }
+
+    /// ⏸️ Whether a host abort of `window` waits on its row.
+    pub fn abort_deferred(&self, window: &str) -> bool {
+        self.position(window).is_ok_and(|index|self.windows[index].deferred.is_some())
     }
 
     /// 🧊️ Host cancel of every open scrub (a time-travel freeze): zero trace. Answers one `Aborted` step per scrub.
@@ -396,7 +433,7 @@ impl<M: 'static> ScrubLedger<M> {
 
 
 #[cfg(feature="testkit")]
-impl<M:Clone> ScrubLedger<M>{pub fn reference_fork(&self)->Self{assert!(self.windows.iter().all(|row|!row.state.has_read()));Self{source_revision:self.source_revision,live_windows:self.live_windows,writing:false,windows:self.windows.iter().map(|row|ScrubWindow{key:row.key.clone(),closed:row.closed.clone(),state:if row.state.is_empty(){RetainedOriginalSlot::vacant()}else{RetainedOriginalSlot::new(row.state.get().clone())}}).collect()}}}
+impl<M:Clone> ScrubLedger<M>{pub fn reference_fork(&self)->Self{assert!(self.windows.iter().all(|row|!row.state.has_read()));Self{source_revision:self.source_revision,live_windows:self.live_windows,writing:false,windows:self.windows.iter().map(|row|ScrubWindow{key:row.key.clone(),closed:row.closed.clone(),deferred:row.deferred,state:if row.state.is_empty(){RetainedOriginalSlot::vacant()}else{RetainedOriginalSlot::new(row.state.get().clone())}}).collect()}}}
 
 
 impl<M:Send+Sync+'static> ScrubLedger<M>{

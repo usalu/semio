@@ -1,4 +1,5 @@
 import type { Asset, DepictionOptions, EvaluationQuery } from "@teaching/staffage";
+import { packedAsset } from "../../📚️catalog/🗜️payload/🟦️.ts";
 import { drawFigure, type Drawing, type DrawingReply, type DrawingRequest } from "./🟦️.ts";
 
 type AssetReference = { readonly id: number; count: number };
@@ -43,7 +44,8 @@ export class DrawingQueue {
     let reference = this.#assets.get(asset);
     if (!reference) {
       this.#assets.set(asset, (reference = { id: ++this.#sequence, count: 0 }));
-      this.#port?.postMessage({ kind: "asset", id: reference.id, asset });
+      const packed = packedAsset(asset);
+      this.#port?.postMessage(packed === undefined ? { kind: "asset", id: reference.id, asset } : { kind: "packed", id: reference.id, packed });
     }
     reference.count++;
     const lease: Lease = { asset, reference, options, wrapLoops, receive, fail, key: "" };

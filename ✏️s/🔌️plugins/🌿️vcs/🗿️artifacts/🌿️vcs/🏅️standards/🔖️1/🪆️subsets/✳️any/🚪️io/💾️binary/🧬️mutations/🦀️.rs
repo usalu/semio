@@ -40,4 +40,6 @@ impl protocol::OpBinary for VcsDemoMutation {
         dsl::variants_binary::decode_op(bytes)
     }
 }
+dsl::original_decoded_operation_receiving!(VcsDemoMutation);
+dsl::artifact_persisted_encoded_binary_operation!(VcsDemoMutation);
 }

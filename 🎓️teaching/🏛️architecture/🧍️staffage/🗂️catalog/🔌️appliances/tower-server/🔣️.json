@@ -13,12 +13,48 @@
       "de": "Ein einzelner Büro-Tower-Server, 0,45 m hoch und 0,45 m tief: etwa 90 W bei typischer Last und 200 W Nennlast, ein Viertel davon über die Gehäuseflächen, der Rest mit der Abluft des Rücklüfters, 6 W im Bereitschaftsbetrieb."
     },
     "tags": [
-      "server",
-      "computer",
-      "office-equipment",
-      "internal-gain",
-      "electrical",
-      "heat-source"
+      {
+        "id": "server",
+        "title": {
+          "en": "server",
+          "de": "Server"
+        }
+      },
+      {
+        "id": "computer",
+        "title": {
+          "en": "computer",
+          "de": "Computer"
+        }
+      },
+      {
+        "id": "office-equipment",
+        "title": {
+          "en": "office equipment",
+          "de": "Büroausstattung"
+        }
+      },
+      {
+        "id": "internal-gain",
+        "title": {
+          "en": "internal gain",
+          "de": "innere Wärmelast"
+        }
+      },
+      {
+        "id": "electrical",
+        "title": {
+          "en": "electrical",
+          "de": "Elektro"
+        }
+      },
+      {
+        "id": "heat-source",
+        "title": {
+          "en": "heat source",
+          "de": "Wärmequelle"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage content (pp)",

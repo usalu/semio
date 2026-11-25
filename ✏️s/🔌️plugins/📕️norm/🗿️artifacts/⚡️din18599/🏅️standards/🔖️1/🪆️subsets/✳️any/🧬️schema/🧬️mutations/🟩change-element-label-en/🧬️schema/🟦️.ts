@@ -4,9 +4,9 @@
 import { normWireLiteral, normWireObject, type NormWireReader, normWireRequired, normWireString } from "@semio-tech/norm-js/registry/contract";
 
 export interface ChangeElementLabelEn {
-  mutation: "changeelementlabelen";
+  mutation: "changeElementLabelEn";
   elementId: string;
   newLabelEn: string;
 }
 
-export const parseChangeElementLabelEn: NormWireReader<ChangeElementLabelEn> = normWireObject<ChangeElementLabelEn>({ mutation: normWireRequired(normWireLiteral("changeelementlabelen")), elementId: normWireRequired(normWireString), newLabelEn: normWireRequired(normWireString) });
+export const parseChangeElementLabelEn: NormWireReader<ChangeElementLabelEn> = normWireObject<ChangeElementLabelEn>({ mutation: normWireRequired(normWireLiteral("changeElementLabelEn")), elementId: normWireRequired(normWireString), newLabelEn: normWireRequired(normWireString) });

@@ -11,6 +11,11 @@
     "label": "Demo"
   },
   "exampleLayer": "emblem-orange",
+  "bootPaint": {
+    "color": [250, 149, 0],
+    "tolerance": 24,
+    "minimumPixels": 200
+  },
   "emptyExample": {
     "labels": {
       "en": "No example",
@@ -54,6 +59,9 @@
     "boot",
     "blank",
     "example",
+    "copy",
+    "paste",
+    "cut",
     "attach",
     "rectangle",
     "undo",

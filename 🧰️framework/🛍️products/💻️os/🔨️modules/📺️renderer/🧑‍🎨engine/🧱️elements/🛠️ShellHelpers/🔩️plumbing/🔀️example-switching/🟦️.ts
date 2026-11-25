@@ -57,6 +57,11 @@ export function rememberedExampleIdFromDispatchV1(action: { readonly action: str
 
 export type CommittedExampleV1 = Readonly<{ exampleId: string; inputSeq: number }>;
 
+/** 🎨️ What the picker and the committed memory return to when the load an example pick started ended without a document: the example before that pick, at the pick's own input; nothing to restore when the pick never committed. */
+export function exampleRestoredAfterUnappliedLoadV1(before: string | undefined, committed: CommittedExampleV1 | undefined): { readonly memory: CommittedExampleV1; readonly visibleExampleId: string } | undefined {
+  return before === undefined ? undefined : { memory: { exampleId: before, inputSeq: committed?.inputSeq ?? 0 }, visibleExampleId: before };
+}
+
 /** 🧾️ Applies an example only after its input settles, keeping the last successful explicit example for redo. */
 export function exampleSelectionAfterInputV1(
   action: { readonly action: string; readonly args?: unknown },

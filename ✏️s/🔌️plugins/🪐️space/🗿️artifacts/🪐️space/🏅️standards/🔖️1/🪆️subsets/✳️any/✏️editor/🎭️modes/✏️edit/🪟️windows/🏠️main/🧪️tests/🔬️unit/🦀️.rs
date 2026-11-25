@@ -41,6 +41,7 @@ async fn render_produces_a_node_for_the_default_document() {
 
 #[semio_framework_async_macros::async_test]
 async fn render_reflects_live_presence_for_a_row() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     use crate::editor::space_index::config::SpaceIndexArtifactPresence;
     use crate::standards::v1::subsets::any::schema::snapshot::{SpaceArtifactDialect, SpaceArtifactRow};
     let document = SSpaceSnapshot::default();
@@ -58,6 +59,7 @@ async fn render_reflects_live_presence_for_a_row() {
 /// id — per ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS lane 3-F.
 #[semio_framework_async_macros::async_test]
 async fn a_directory_row_stamps_the_artifact_row_id_and_carries_only_the_safe_open_button() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     use crate::standards::v1::subsets::any::schema::snapshot::{SpaceArtifactDialect, SpaceArtifactRow};
     let config = SpaceIndexConfig {
         indexed_artifacts: vec![SpaceArtifactRow { id: "artifact-1".into(), name: "First".into(), dialect: SpaceArtifactDialect { artifact_kind: "s.draw.draw".into(), standard: "1".into(), subset: "*".into() }, ..Default::default() }],

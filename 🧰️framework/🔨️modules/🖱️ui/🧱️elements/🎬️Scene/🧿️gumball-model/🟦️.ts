@@ -221,3 +221,13 @@ export function gumballResolveDragSnaps(config: GumballConfig, shiftKey: boolean
     scaleSnap: gumballEffectiveSnapValue(config.scaleSnap, shiftKey, config.shiftScaleSnap ?? GUMBALL_DEFAULT_SHIFT_SCALE_SNAP),
   };
 }
+
+/** 🧹️ Pointer highlight state once a drag has ended: nothing stays active or hovered, because the handle's pointer-out is swallowed while it is dragged and the axis guide would otherwise stay drawn until the pointer next crosses a handle. */
+export function gumballDragEndPointerState(): { readonly active: null; readonly hovered: null } {
+  return { active: null, hovered: null };
+}
+
+/** 🧭️ The handle whose interaction preview (axis guide) is drawn: the dragged one, else the hovered one. */
+export function gumballHighlightKind(active: GumballHandleKind | null, hovered: GumballHandleKind | null): GumballHandleKind | null {
+  return active ?? hovered;
+}

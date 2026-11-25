@@ -58,8 +58,8 @@
       "scope": "checkout",
       "owner": "build-tools",
       "title": {
-        "en": "Whole-build custody pins held shared (the pinned graph snapshot and the Rust compiler code): the only exclusive requests for them cannot wait, because retention tries them without waiting and a publication writes a digest nobody can hold yet, so no task ever waits for a pin holder, a pin is in no deadlock cycle and constrains no order",
-        "de": "Geteilt gehaltene Obhuts-Pins für einen ganzen Build (der gepinnte Graph-Schnappschuss und der Rust-Compiler-Code): die einzigen exklusiven Anforderungen darauf können nicht warten, weil die Aufbewahrung sie ohne Warten versucht und eine Veröffentlichung einen Digest schreibt, den noch niemand halten kann; daher wartet nie eine Task auf einen Pin-Halter, ein Pin liegt in keinem Verklemmungszyklus und legt keine Reihenfolge fest"
+        "en": "Whole-build custody pins held shared (the pinned graph snapshot, the Rust compiler code and a JavaScript dependency generation a reader uses): the only exclusive requests for them cannot wait, because retention tries them without waiting and a publication writes a digest nobody can hold yet, so no task ever waits for a pin holder, a pin is in no deadlock cycle and constrains no order",
+        "de": "Geteilt gehaltene Obhuts-Pins für einen ganzen Build (der gepinnte Graph-Schnappschuss, der Rust-Compiler-Code und eine JavaScript-Abhängigkeitsgeneration, die ein Leser verwendet): die einzigen exklusiven Anforderungen darauf können nicht warten, weil die Aufbewahrung sie ohne Warten versucht und eine Veröffentlichung einen Digest schreibt, den noch niemand halten kann; daher wartet nie eine Task auf einen Pin-Halter, ein Pin liegt in keinem Verklemmungszyklus und legt keine Reihenfolge fest"
       },
       "match": [
         {
@@ -69,6 +69,10 @@
         {
           "kind": "prefix",
           "value": "rust-code:"
+        },
+        {
+          "kind": "prefix",
+          "value": "javascript-dependency-pin:"
         }
       ]
     },
@@ -539,6 +543,18 @@
       "reason": {
         "en": "A graph holder reads the pinned graph snapshot or the Rust compiler code under a shared lease; they are held exclusively only by a retention sweep that never waits, so waiting for them cannot close a cycle (the cycle detector still enforces that).",
         "de": "Ein Graph-Halter liest den gepinnten Graph-Schnappschuss oder den Rust-Compiler-Code unter einer geteilten Lease; exklusiv hält sie nur eine Aufbewahrungsrunde, die nie wartet, daher kann das Warten keinen Zyklus schließen (der Zyklusdetektor erzwingt das weiterhin)."
+      }
+    },
+    {
+      "from": "namespace",
+      "to": "pin",
+      "binding": {
+        "kind": "held-prefix",
+        "fromPrefix": "javascript-dependency-"
+      },
+      "reason": {
+        "en": "The dependency store producer pins the generations it is about to use while it holds the dependency build lease of its checkout; a pin is held exclusively only by the store collector, which tries it without waiting and removes one superseded generation under it, so the producer waits for a collector that waits for nothing and the wait cannot close a cycle (the cycle detector still enforces that). Refusing it failed a Windows dependencies stage after 42 minutes of work because an idle collection was deleting that generation.",
+        "de": "Der Erzeuger des Abhängigkeitsspeichers pinnt die Generationen, die er gleich verwendet, während er die Abhängigkeits-Build-Lease seines Checkouts hält; exklusiv hält einen Pin nur der Speicher-Sammler, der ihn ohne Warten versucht und darunter eine abgelöste Generation entfernt, der Erzeuger wartet also auf einen Sammler, der auf nichts wartet, und das Warten kann keinen Zyklus schließen (der Zyklusdetektor erzwingt das weiterhin). Die Ablehnung ließ eine Windows-Stufe dependencies nach 42 Minuten Arbeit scheitern, weil eine Leerlauf-Sammlung genau diese Generation löschte."
       }
     },
     {

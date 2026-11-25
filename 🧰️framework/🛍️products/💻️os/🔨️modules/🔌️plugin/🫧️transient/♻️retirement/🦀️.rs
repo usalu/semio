@@ -1,9 +1,9 @@
 //! 🫧️ Exact zero-payload transient closure through tracked read retirement.
 
-use semio_plugin_ownership::transient_publication::transient_store_disposer;
+use semio_plugin_transient_publication::transient_publication::transient_store_disposer;
 use crate::store::TransientStore;
 use crate::store;
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use crate::NoTransient;
 use crate::NoTransientMutation;
 use semio_framework_value::{OwnedValueRetirementFactory, SharedValueRetirementFactory};

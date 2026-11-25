@@ -334,7 +334,7 @@
         "decode": [],
         "body": {
           "kind": "samples",
-          "values": [
+          "packed": [
             0,
             127,
             255

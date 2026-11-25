@@ -9,7 +9,7 @@ const port = 9333;
 const browser = await chromium.launch({ headless: true, args: ["--enable-unsafe-webgpu", "--ignore-gpu-blocklist", "--use-angle=metal", `--remote-debugging-port=${port}`] });
 const page = await (await browser.newContext({ viewport: { width: 1280, height: 800 } })).newPage();
 await page.goto(url, { waitUntil: "load" });
-await page.waitForTimeout(Number(process.env.SMOKE_MS ?? 28000));
+for (let elapsed = 0; elapsed < Number(process.env.SMOKE_MS ?? 28000); elapsed += 5000) { await page.mouse.move(3 + Math.floor(elapsed / 5000) % 2, 3); await page.waitForTimeout(5000); }
 const version = await (await fetch(`http://127.0.0.1:${port}/json/version`)).json();
 const ws = new WebSocket(version.webSocketDebuggerUrl);
 await new Promise(r => ws.addEventListener("open", r));

@@ -63,7 +63,7 @@ use serde_json::json;
 use crate::editor::page::{inspector};
 use crate::editor::page::*;
 use crate::standards::v1_7::subsets::base::io::mutation_bridge::apply_pdf_mutation;
-use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfAnnotationKind, PdfImage, PdfOp, PdfPage, PdfPageLayout, PdfPageMode, PdfTextString};
+use crate::standards::v1_7::subsets::base::schema::snapshot::{pack_samples, PdfAnnotationKind, PdfImage, PdfOp, PdfPage, PdfPageLayout, PdfPageMode, PdfTextString};
 
 fn apply(snapshot: &mut PdfSnapshot, edit: PdfPageEdit) {
     let mutations = apply_payload(snapshot, &edit.action, &edit.payload).expect("page edit");
@@ -112,7 +112,7 @@ fn page_lists_text_vector_and_image() {
     assert!((vector.width - 30.0).abs() < 0.01 && (vector.height - 40.0).abs() < 0.01);
     assert!((image.x - 60.0).abs() < 0.01 && (image.y - 70.0).abs() < 0.01);
     assert!((image.width - 50.0).abs() < 0.01 && (image.height - 40.0).abs() < 0.01);
-    let layers = canvas_layers(&snapshot, Some(&text.id));
+    let layers = canvas_layers(&snapshot, Some(&text.id), semio_ui_locale::Locale::En);
     assert!(layers.contains(&format!("\"id\":\"{}\"", text.id)));
     assert!(layers.contains(&format!("{}.selection", text.id)));
     assert!(layers.contains(&image.id));
@@ -129,6 +129,48 @@ fn set_text_replaces_the_run_and_keeps_the_rectangle() {
     apply(&mut snapshot, edit);
     assert_eq!(snapshot.pages[0].text(), "World");
     assert!(snapshot.pages[0].content.iter().any(|op| matches!(op, PdfOp::Rectangle { .. })));
+}
+
+#[test]
+fn set_text_refuses_glyphs_the_font_lacks_with_a_localized_notice_and_changes_nothing() {
+    let snapshot = sample();
+    let text = objects(&snapshot).into_iter().find(|object| object.kind == ObjectKind::Text).expect("text");
+    let edit = edit_from_action("set-text", Some(&args(vec![("page", semio_framework_value::DslValue::float(1.0)), ("object", semio_framework_value::DslValue::String(text.id.clone())), ("text", semio_framework_value::DslValue::String("日本".into()))]))).expect("edit");
+    let fault = apply_payload(&snapshot, &edit.action, &edit.payload).expect_err("the font has no CJK glyphs");
+    assert_eq!(fault.code.as_str(), PdfFault::GlyphsMissing.code());
+    assert_eq!(fault.param("font"), Some(text.font.as_str()));
+    let (_, label) = pdf_fault_notices().iter().find(|(code, _)| *code == fault.code.as_str()).expect("a notice for the fault code");
+    for (locale, expected) in [(Locale::En, "The font"), (Locale::De, "Die Schrift")] {
+        let notice = label.resolve(semio_ui_locale::Terminology::Native, locale).replace("{font}", fault.param("font").unwrap());
+        assert!(notice.starts_with(expected) && notice.contains(&text.font) && !notice.contains('{'), "{locale:?}: {notice}");
+    }
+}
+
+/// 🫥️ LAW: content the canvas keeps but cannot paint (an XObject without a typed body, an operator the editor keeps verbatim) leaves the document unchanged, shows a localized notice at the top of its page and in the canvas's accessible description, and refuses every edit of the undisplayed object with a localized fault naming the page; displayed objects stay editable.
+#[test]
+fn preserved_but_undisplayed_content_shows_a_localized_notice_and_refuses_edits() {
+    let mut snapshot = sample();
+    snapshot.pages[0].content.push(PdfOp::PaintXObject { name: "Missing".into() });
+    snapshot.pages[0].content.push(PdfOp::Unknown { operator: "zz".into(), operands: Vec::new() });
+    let hidden = objects(&snapshot).into_iter().find(|object| object.kind == ObjectKind::Form && object.text == "Missing").expect("the unknown XObject is an addressable object");
+    assert!(!object_displayed(&snapshot, &hidden.id));
+    for (locale, expected, description) in [(Locale::En, "Some content on this page is preserved", "not displayed or editable here: 1."), (Locale::De, "Ein Teil des Inhalts dieser Seite bleibt erhalten", "nicht angezeigt oder bearbeitet wird: 1.")] {
+        let paint = canvas_paint(&snapshot, None, locale);
+        assert_eq!(paint.preserved_pages, vec![0]);
+        let notice = paint.layers.iter().find(|layer| layer["id"] == "p0:preserved").expect("a notice layer on page 1");
+        assert!(notice["text"]["content"].as_str().unwrap().starts_with(expected), "{locale:?}");
+        assert!(paint.description(locale).contains(description), "{locale:?}: {}", paint.description(locale));
+    }
+    let fault = apply_payload(&snapshot, "move", &edit_from_action("move", Some(&args(vec![("page", semio_framework_value::DslValue::float(1.0)), ("object", semio_framework_value::DslValue::String(hidden.id.clone())), ("x", semio_framework_value::DslValue::float(5.0)), ("y", semio_framework_value::DslValue::float(5.0))]))).expect("edit").payload).expect_err("an undisplayed object is not editable");
+    assert_eq!((fault.code.as_str(), fault.param("page")), (PdfFault::ContentPreserved.code(), Some("1")));
+    let (_, label) = pdf_fault_notices().iter().find(|(code, _)| *code == fault.code.as_str()).expect("a notice for the fault code");
+    for (locale, expected) in [(Locale::En, "This content on page 1"), (Locale::De, "Dieser Inhalt auf Seite 1")] {
+        let notice = label.resolve(semio_ui_locale::Terminology::Native, locale).replace("{page}", fault.param("page").unwrap());
+        assert!(notice.starts_with(expected) && !notice.contains('{'), "{locale:?}: {notice}");
+    }
+    let text = objects(&snapshot).into_iter().find(|object| object.kind == ObjectKind::Text).expect("text");
+    assert!(object_displayed(&snapshot, &text.id));
+    assert!(canvas_paint(&sample(), None, Locale::En).preserved_pages.is_empty(), "a fully painted document carries no notice");
 }
 
 #[test]
@@ -199,7 +241,7 @@ fn set_image_replaces_samples_and_keeps_the_placement() {
     )
     .expect("edit");
     apply(&mut snapshot, edit);
-    assert_eq!(snapshot.images[0].body,crate::standards::v1_7::subsets::base::schema::snapshot::PdfImageBody::Samples {values:vec![255,0,0,0,255,0,0,0,255,255,0,0]});
+    assert_eq!(snapshot.images[0].body,crate::standards::v1_7::subsets::base::schema::snapshot::PdfImageBody::Samples {packed:vec![255,0,0,0,255,0,0,0,255,255,0,0]});
     let image = objects(&snapshot).into_iter().find(|object| object.kind == ObjectKind::Image).expect("image");
     assert!((image.x - 60.0).abs() < 0.01 && (image.y - 70.0).abs() < 0.01);
 }
@@ -270,7 +312,7 @@ fn page_viewing_settings_publish_onto_the_document() {
     assert_eq!(snapshot.page_layout, Some(PdfPageLayout::TwoColumnLeft));
     apply(&mut snapshot, edit_from_action("set-page-mode", Some(&args(vec![("text", semio_framework_value::DslValue::String("useOutlines".into()))]))).unwrap());
     assert_eq!(snapshot.page_mode, Some(PdfPageMode::UseOutlines));
-    let layers = canvas_layers(&snapshot, None);
+    let layers = canvas_layers(&snapshot, None, semio_ui_locale::Locale::En);
     assert!(layers.contains("p0:paper"));
 }
 
@@ -311,12 +353,14 @@ fn mesh_move_shifts_the_decode_range() {
     use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfColorSpace, PdfShading, PdfShadingKind};
     let mut snapshot = sample();
     snapshot.pages[0].content.push(PdfOp::PaintShading { name: "ShM".into() });
-    snapshot.shadings.push(PdfShading { id: "ShM".into(), color_space: PdfColorSpace::DeviceRgb, kind: PdfShadingKind::Mesh { shading_type: 4, bits_per_coordinate: 8, bits_per_component: 8, bits_per_flag: None, vertices_per_row: None, decode: vec![0.0, 10.0, 0.0, 10.0], function: None, reference: semio_framework_artifact_reference::ArtifactRef { artifact_id: "fixture:mesh".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.binary".into(), standard: "raw".into(), subset: "*".into() } } }, background: None, bbox: Some([0.0, 0.0, 10.0, 10.0]), anti_alias: false, extra: Vec::new() });
+    let triangle = [0, 0, 0, 255, 0, 0, 0, 255, 0, 0, 255, 0, 0, 0, 255, 0, 0, 255];
+    let mesh = crate::standards::v1_7::subsets::base::io::foreign_artifacts::admit_pdf_artifact(&mut snapshot, "s.stdio.binary", crate::standards::v1_7::subsets::base::schema::snapshot::PdfObject::Stream { dict: Vec::new(), data: crate::standards::v1_7::subsets::base::schema::snapshot::stream_bytes(&triangle), filters: Vec::new() }).unwrap();
+    snapshot.shadings.push(PdfShading { id: "ShM".into(), color_space: PdfColorSpace::DeviceRgb, kind: PdfShadingKind::Mesh { shading_type: 4, bits_per_coordinate: 8, bits_per_component: 8, bits_per_flag: None, vertices_per_row: None, decode: vec![0.0, 10.0, 0.0, 10.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0], function: None, reference: mesh.clone() }, background: None, bbox: Some([0.0, 0.0, 10.0, 10.0]), anti_alias: false, extra: Vec::new() });
     let shading = objects(&snapshot).into_iter().find(|object| object.kind == ObjectKind::Shading).expect("mesh");
     apply(&mut snapshot, edit_from_action("move", Some(&args(vec![("page", semio_framework_value::DslValue::float(1.0)), ("object", semio_framework_value::DslValue::String(shading.id)), ("x", semio_framework_value::DslValue::float(2.0)), ("y", semio_framework_value::DslValue::float(3.0))]))).unwrap());
     let PdfShadingKind::Mesh { decode, reference, .. } = &snapshot.shadings[0].kind else { panic!("mesh") };
-    assert_eq!(decode, &vec![2.0, 12.0, 3.0, 13.0]);
-    assert_eq!(reference.artifact_id, "fixture:mesh");
+    assert_eq!(decode, &vec![2.0, 12.0, 3.0, 13.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0]);
+    assert_eq!(reference, &mesh);
     assert_eq!(snapshot.shadings[0].bbox, Some([2.0, 3.0, 12.0, 13.0]));
 }
 
@@ -592,6 +636,51 @@ fn page_window_declares_object_selection() {
     assert_eq!(inspector.body_key, INSPECTOR_BODY_KEY);
 }
 
+/// 🧾️ Every action id a pane's bindings name, collected from the rendered tree.
+fn bound_actions(node: &semio_ui_contract::BuiltNode, names: &mut std::collections::BTreeSet<String>) {
+    names.extend(node.bindings.iter().map(|binding| binding.action.name.as_str().to_string()));
+    node.children.iter().for_each(|child| bound_actions(child, names));
+}
+
+/// 🪟️ LAW: every binding the Object pane renders (every object of the sample selected, the page view of every page and of no selection, in English and German) and every binding of the thumbnail strip resolves through the window kind the shell addresses the commit to (`window_kind_actions`), for the base editor and for a kit-built subset editor; no pane claims a document edit verb, so each verb is declared exactly once per app (on its roster) instead of being copied into every pane.
+#[test]
+fn every_binding_a_pdf17_pane_renders_resolves_through_its_own_window() {
+    let _ui_arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
+    let snapshot = sample();
+    let edits: Vec<String> = edit_action_definitions().into_iter().map(|action| action.id).collect();
+    let mut selections: Vec<Option<String>> = objects(&snapshot).into_iter().map(|object| Some(object.id)).collect();
+    selections.push(None);
+    selections.extend((0..snapshot.pages.len()).map(|page| Some(format!("p{page}:paper"))));
+    for definition in [crate::editor::pdf17::create_pdf17_editor(), crate::editor::pdf17a::create_pdf17_a_editor()] {
+        let resolves = |window_kind: &str| -> std::collections::BTreeSet<String> {
+            let window = definition.window_kinds.iter().find(|window| window.id == window_kind).unwrap_or_else(|| panic!("{} declares {window_kind}", definition.id));
+            semio_plugin::window_kind_actions(&definition, window).into_iter().map(|action| action.id.clone()).collect()
+        };
+        for window in definition.window_kinds.iter() {
+            let claimed: Vec<&str> = window.actions.iter().map(|action| action.id.as_str()).filter(|id| edits.iter().any(|edit| edit == id)).collect();
+            assert!(claimed.is_empty(), "{} window {} copies the shared edit verbs {claimed:?}", definition.id, window.id);
+        }
+        assert_eq!(definition.actions.iter().filter(|action| action.id == "set-info-field").count(), 1, "{} declares set-info-field once", definition.id);
+        let (inspector, strip) = (resolves(INSPECTOR_WINDOW_KIND_ID), resolves(THUMBNAILS_WINDOW_KIND_ID));
+        for locale in [Locale::En, Locale::De] {
+            for selected in &selections {
+                let node = render_inspector(&snapshot, selected.as_deref(), &definition.controller_id, semio_plugin::UiPublicationRevision(17), locale).expect("inspector");
+                let mut names = std::collections::BTreeSet::new();
+                semio_plugin::artifact_app_laws::observe_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node), |node| bound_actions(node, &mut names));
+                assert!(!names.is_empty(), "the Object pane of {selected:?} commits something");
+                let refused: Vec<&String> = names.iter().filter(|name| !inspector.contains(*name)).collect();
+                assert!(refused.is_empty(), "{} Object pane ({selected:?}, {locale:?}) binds actions its window does not resolve: {refused:?}", definition.id);
+            }
+            let strip_node = render_thumbnail_strip(&snapshot, &definition.controller_id, OBJECT_DOMAIN, locale).expect("thumbnail strip");
+            let mut names = std::collections::BTreeSet::new();
+            semio_plugin::artifact_app_laws::observe_and_retire_fixture_tree(semio_plugin::built_to_component_tree(strip_node), |node| bound_actions(node, &mut names));
+            assert!(names.contains("move-page"), "the strip reorders by dropping a page");
+            let refused: Vec<&String> = names.iter().filter(|name| !strip.contains(*name)).collect();
+            assert!(refused.is_empty(), "{} thumbnail strip binds actions its window does not resolve: {refused:?}", definition.id);
+        }
+    }
+}
+
 #[test]
 fn selected_object_fields_commit_through_the_value_argument() {
     let _ui_arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
@@ -657,7 +746,7 @@ fn canvas_vector_paint_matches_document_paths() {
     let stream = fixture["content"].as_array().unwrap().iter().map(|line| line.as_str().unwrap()).collect::<Vec<_>>().join("\n");
     let pdf = pdf_with_content(fixture["width"].as_u64().unwrap(), fixture["height"].as_u64().unwrap(), &stream);
     let snapshot = crate::standards::v1_7::subsets::base::io::import::decode_pdf(pdf.as_bytes()).unwrap();
-    let scene: Value = serde_json::from_str(&canvas_layers(&snapshot, None)).unwrap();
+    let scene: Value = serde_json::from_str(&canvas_layers(&snapshot, None, semio_ui_locale::Locale::En)).unwrap();
     let layers = &scene.as_array().unwrap()[1..];
     let paths = fixture["paths"].as_array().unwrap();
     assert_eq!(layers.len(), paths.len(), "an unpainted path is not an editor object");
@@ -748,7 +837,7 @@ fn canvas_repaints_image_samples_after_replacement() {
     snapshot.images.push(PdfImage::rgb8("Im1", width, height, bytes("before")));
     let object = objects(&snapshot).into_iter().find(|object| object.kind == ObjectKind::Image).unwrap();
     let verify = |snapshot: &PdfSnapshot, expected: Vec<u8>| {
-        let canvas: Value = serde_json::from_str(&canvas_layers(snapshot, Some(&object.id))).unwrap();
+        let canvas: Value = serde_json::from_str(&canvas_layers(snapshot, Some(&object.id), semio_ui_locale::Locale::En)).unwrap();
         let image = canvas.as_array().unwrap().iter().find(|layer| layer["id"] == object.id.as_str()).unwrap();
         assert_eq!(image["kind"], "image");
         for (index, key) in ["x", "y", "width", "height"].into_iter().enumerate() {
@@ -782,8 +871,9 @@ fn canvas_repaints_image_samples_after_replacement() {
         }
         let kind = case["kind"].as_str().unwrap();
         let number = |key: &str| case[key].as_u64().unwrap().try_into().unwrap();
-        let mut mask = PdfImage::samples("Mask1", number("width"), number("height"), PdfColorSpace::DeviceGray,
-            number("bits"), serde_json::from_value(case["samples"].clone()).unwrap());
+        let samples: Vec<u32> = serde_json::from_value(case["samples"].clone()).unwrap();
+        let mut mask = PdfImage::packed("Mask1", number("width"), number("height"), PdfColorSpace::DeviceGray, number("bits"),
+            pack_samples(number("width"), number("height"), 1, number("bits"), &samples).unwrap());
         mask.image_mask = kind == "stencil";
         if mask.image_mask {
             mask.color_space = None;
@@ -825,7 +915,7 @@ fn canvas_paints_base14_glyph_outlines_at_the_pdf_baseline() {
     let mut snapshot = PdfSnapshot::default();
     snapshot.pages.push(page);
     snapshot.fonts.push(PdfFont::standard("F1", fixture["baseFont"].as_str().unwrap()));
-    let scene: Value = serde_json::from_str(&canvas_layers(&snapshot, None)).unwrap();
+    let scene: Value = serde_json::from_str(&canvas_layers(&snapshot, None, semio_ui_locale::Locale::En)).unwrap();
     let layer = &scene[1];
     assert_eq!(layer["fillRule"], expected["fillRule"]);
     let segments = layer["segments"].as_array().expect("Base 14 outline paths");
@@ -890,7 +980,7 @@ fn canvas_paints_nested_form_content_at_its_pdf_placement() {
     let selectable = objects(&snapshot);
     assert_eq!(selectable.len(), 1);
     assert_eq!(selectable[0].kind, ObjectKind::Form);
-    let scene: Value = serde_json::from_str(&canvas_layers(&snapshot, None)).unwrap();
+    let scene: Value = serde_json::from_str(&canvas_layers(&snapshot, None, semio_ui_locale::Locale::En)).unwrap();
     assert_eq!(scene.as_array().unwrap().len(), 3);
     for (layer, form) in scene.as_array().unwrap()[1..].iter().zip(forms) {
         assert!(layer["id"].as_str().unwrap().starts_with(&selectable[0].id));
@@ -940,7 +1030,7 @@ fn canvas_viewport_crops_page_paint_and_hit_testing() {
             snapshot.pages.push(PdfPage::new(100.0, 100.0));
 
             let id = objects(&snapshot)[0].id.clone();
-            let scene: Value = serde_json::from_str(&canvas_layers(&snapshot, Some(&id))).unwrap();
+            let scene: Value = serde_json::from_str(&canvas_layers(&snapshot, Some(&id), semio_ui_locale::Locale::En)).unwrap();
             let [width, height] = point(&case["size"]);
             assert_point(&scene[0]["segments"][2]["to"], &case["size"]);
             assert_layer_point(&scene[2], &scene[2]["segments"][0]["to"], &case["firstPoint"]);
@@ -1019,7 +1109,7 @@ fn canvas_projects_axial_shading_with_unextended_ends() {
     ];
     let bytes = pdf_objects_bytes(&objects);
     let snapshot = crate::standards::v1_7::subsets::base::io::import::decode_pdf(bytes.as_bytes()).unwrap();
-    let scene: Value = serde_json::from_str(&canvas_layers(&snapshot, None)).unwrap();
+    let scene: Value = serde_json::from_str(&canvas_layers(&snapshot, None, semio_ui_locale::Locale::En)).unwrap();
     let layer = &scene[1];
     let fill = &layer["fill"];
     assert_eq!(fill["kind"], "linearGradient");
@@ -1099,7 +1189,7 @@ fn canvas_clips_a_skewed_pdf_form_to_its_transformed_corners() {
     ];
     let bytes = pdf_objects_bytes(&objects);
     let snapshot = crate::standards::v1_7::subsets::base::io::import::decode_pdf(bytes.as_bytes()).unwrap();
-    let scene: Value = serde_json::from_str(&canvas_layers(&snapshot, None)).unwrap();
+    let scene: Value = serde_json::from_str(&canvas_layers(&snapshot, None, semio_ui_locale::Locale::En)).unwrap();
     assert_eq!(scene[1]["clipPolygons"].as_array().unwrap().len(), 1);
     for point in 0..4 {
         assert_point(&scene[1]["clipPolygons"][0][point], &fixture["polygon"][point]);
@@ -1125,7 +1215,7 @@ fn resizing_a_transformed_curve_moves_its_control_points() {
         ("width", semio_framework_value::DslValue::float(80.0)), ("height", semio_framework_value::DslValue::float(20.0)),
     ]))).unwrap();
     apply(&mut doc, edit);
-    assert_eq!(canvas_layers(&doc, None), canvas_layers(&open(&case["after"]), None));
+    assert_eq!(canvas_layers(&doc, None, semio_ui_locale::Locale::En), canvas_layers(&open(&case["after"]), None, semio_ui_locale::Locale::En));
 }
 
 #[test]
@@ -1255,7 +1345,7 @@ fn text_render_modes_select_fill_stroke_and_invisible_text() {
     }
     ops.push(PdfOp::EndText);
     doc.pages[0].content = ops;
-    let scene: Value = serde_json::from_str(&canvas_layers(&doc, None)).unwrap();
+    let scene: Value = serde_json::from_str(&canvas_layers(&doc, None, semio_ui_locale::Locale::En)).unwrap();
     assert_eq!(objects(&doc).len(), 8);
     for mode in fixture["modes"].as_array().unwrap() {
         let id = objects(&doc).into_iter().find(|object| object.text == mode["label"].as_str().unwrap()).map(|object| object.id).unwrap();
@@ -1351,7 +1441,7 @@ fn compound_pdf_clips_preserve_fill_rule_order_and_hit_testing() {
     }).collect();
     let mut snapshot = PdfSnapshot::default();
     snapshot.pages.push(page);
-    let scene: Value = serde_json::from_str(&canvas_layers(&snapshot, None)).unwrap();
+    let scene: Value = serde_json::from_str(&canvas_layers(&snapshot, None, semio_ui_locale::Locale::En)).unwrap();
     let expected = fixture["layers"].as_array().unwrap();
     let scene = &scene.as_array().unwrap()[1..];
     assert_eq!(scene.len(), expected.len());
@@ -1374,7 +1464,7 @@ fn authored_strokes_round_trip_from_pdf_to_scene_and_selection() {
     let fixture: Value = serde_json::from_str(include_str!("🧪️stroke-style.json")).unwrap();
     let pdf = pdf_with_content(fixture["width"].as_u64().unwrap(), fixture["height"].as_u64().unwrap(), fixture["ops"].as_str().unwrap());
     let snapshot = crate::standards::v1_7::subsets::base::io::import::decode_pdf(pdf.as_bytes()).unwrap();
-    let scene: Value = serde_json::from_str(&canvas_layers(&snapshot, None)).unwrap();
+    let scene: Value = serde_json::from_str(&canvas_layers(&snapshot, None, semio_ui_locale::Locale::En)).unwrap();
     let layers = &scene.as_array().unwrap()[1..];
     let reference = fixture["layers"].as_array().unwrap();
     assert_eq!(layers.len(), reference.len());
@@ -1420,7 +1510,7 @@ fn canvas_paints_selected_annotation_appearance_at_the_authored_rect() {
         stream("unselected"),
     ]);
     let mut snapshot = crate::standards::v1_7::subsets::base::io::import::decode_pdf(pdf.as_bytes()).unwrap();
-    let scene: Value = serde_json::from_str(&canvas_layers(&snapshot, None)).unwrap();
+    let scene: Value = serde_json::from_str(&canvas_layers(&snapshot, None, semio_ui_locale::Locale::En)).unwrap();
     assert_eq!(scene.as_array().unwrap().len(), 2);
     assert!(scene[1]["id"].as_str().unwrap().starts_with("p0:a0/"));
     assert_eq!(scene[1]["fill"]["color"], serde_json::json!([1.0, 0.0, 0.0, 1.0]));
@@ -1429,7 +1519,7 @@ fn canvas_paints_selected_annotation_appearance_at_the_authored_rect() {
     for axis in 0..4 { assert_eq!(scene[1]["clipRect"][axis].as_f64(), fixture["clip"][axis].as_f64()); }
     assert_eq!(hit_test(&snapshot, 100.0, 80.0).as_deref(), Some("p0:a0"));
     snapshot.pages[0].annotations[0].flags |= 32;
-    let hidden: Value = serde_json::from_str(&canvas_layers(&snapshot, None)).unwrap();
+    let hidden: Value = serde_json::from_str(&canvas_layers(&snapshot, None, semio_ui_locale::Locale::En)).unwrap();
     assert_eq!(hidden.as_array().unwrap().len(), 1);
     assert_eq!(hit_test(&snapshot, 100.0, 80.0), None);
 }
@@ -1452,7 +1542,7 @@ fn canvas_paints_authored_type3_glyphs_and_pdf_text_adjustments() {
     }
     let input = pdf_objects_bytes(&rows);
     let snapshot = crate::standards::v1_7::subsets::base::io::import::decode_pdf(input.as_bytes()).unwrap();
-    let scene: Value = serde_json::from_str(&canvas_layers(&snapshot, None)).unwrap();
+    let scene: Value = serde_json::from_str(&canvas_layers(&snapshot, None, semio_ui_locale::Locale::En)).unwrap();
     let scene = scene.as_array().unwrap();
     assert_eq!(scene.len(), 3);
     for glyph in 0..2 {
@@ -1467,7 +1557,7 @@ fn canvas_paints_authored_type3_glyphs_and_pdf_text_adjustments() {
         rows[3] = stream(&content);
         let input = pdf_objects_bytes(&rows);
         let decoded = crate::standards::v1_7::subsets::base::io::import::decode_pdf(input.as_bytes()).unwrap();
-        let actual: Vec<Value> = serde_json::from_str(&canvas_layers(&decoded, None)).unwrap();
+        let actual: Vec<Value> = serde_json::from_str(&canvas_layers(&decoded, None, semio_ui_locale::Locale::En)).unwrap();
         if rendering["visible"].as_bool().unwrap() {
             assert_eq!(&actual, scene);
         } else {
@@ -1500,7 +1590,7 @@ fn canvas_paints_the_embedded_true_type_program_as_curved_outlines() {
     let decode = |content: &str| crate::standards::v1_7::subsets::base::io::import::decode_pdf(pdf(content).as_bytes()).unwrap();
     let decoded = decode(&content);
     assert_eq!(decoded.pages[0].text(), case["paintText"].as_str().unwrap());
-    let scene: Value = serde_json::from_str(&canvas_layers(&decoded, None)).unwrap();
+    let scene: Value = serde_json::from_str(&canvas_layers(&decoded, None, semio_ui_locale::Locale::En)).unwrap();
     assert_eq!(scene[1]["id"].as_str(), Some("p0:t0"));
     assert!(scene[1].get("text").is_none());
     let matrix = |value: &Value| serde_json::from_value::<[f64; 6]>(value.clone()).unwrap();
@@ -1509,7 +1599,7 @@ fn canvas_paints_the_embedded_true_type_program_as_curved_outlines() {
     assert!(segments.len() >= 32);
     assert!(segments.iter().any(|segment| segment["kind"] == "cubic"));
     let clip = decode(case["clip"]["content"].as_str().unwrap());
-    let scene: Value = serde_json::from_str(&canvas_layers(&clip, None)).unwrap();
+    let scene: Value = serde_json::from_str(&canvas_layers(&clip, None, semio_ui_locale::Locale::En)).unwrap();
     let layers = scene.as_array().unwrap();
     assert_eq!(layers.len(), 3, "clip-only glyphs themselves do not paint");
     let paths = layers[1]["clipPaths"].as_array().unwrap();
@@ -1577,12 +1667,12 @@ fn zoom_modes_and_steps_match_the_fixture() {
         assert_eq!(zoom_out(pair[0].as_f64().unwrap()), pair[1].as_f64().unwrap());
     }
     let view = ViewState { mode: ZoomMode::Factor(2.0), page: 1, ..ViewState::default() };
-    let scene = scene_for_view(&snapshot, &canvas_layers(&snapshot, None), &view, viewport, Vec::new());
+    let scene = scene_for_view(&snapshot, &canvas_layers(&snapshot, None, semio_ui_locale::Locale::En), &view, viewport, Vec::new());
     assert_eq!((scene.zoom, scene.camera_x, scene.camera_y), (2.0, 300.0, page_top(&snapshot, 1) + 200.0));
     assert!(scene.framing.is_none());
-    let fit = scene_for_view(&snapshot, &canvas_layers(&snapshot, None), &ViewState { mode: ZoomMode::FitPage, page: 1, revision: 4, ..ViewState::default() }, viewport, Vec::new()).framing.unwrap();
+    let fit = scene_for_view(&snapshot, &canvas_layers(&snapshot, None, semio_ui_locale::Locale::En), &ViewState { mode: ZoomMode::FitPage, page: 1, revision: 4, ..ViewState::default() }, viewport, Vec::new()).framing.unwrap();
     assert_eq!((fit.revision, fit.bounds[2], fit.bounds[3] - fit.bounds[1]), (4, 600.0, 400.0));
-    let width = scene_for_view(&snapshot, &canvas_layers(&snapshot, None), &ViewState { mode: ZoomMode::FitWidth, ..ViewState::default() }, viewport, Vec::new()).framing.unwrap();
+    let width = scene_for_view(&snapshot, &canvas_layers(&snapshot, None, semio_ui_locale::Locale::En), &ViewState { mode: ZoomMode::FitWidth, ..ViewState::default() }, viewport, Vec::new()).framing.unwrap();
     assert_eq!(width.bounds[3], width.bounds[1]);
     assert!(page_top(&snapshot, 1) > 300.0);
 }
@@ -1621,6 +1711,14 @@ fn hit_navigation_wraps_and_highlights_layer_per_hit() {
     assert_ne!(layers[0]["fill"]["color"], layers[1]["fill"]["color"]);
 }
 
+/// 🌳️ The rows of a strip whose tree holds exactly one tree section, `None` for any other shape: a tree renders only its sections, so rows placed directly under the tree root show as "No data".
+fn strip_shape(root: &semio_ui_contract::BuiltNode) -> Option<usize> {
+    let semio_ui_contract::Component::Tree(_) = &root.component else { return None };
+    if root.children.len() != 1 { return None }
+    let section = root.children.get(0)?;
+    matches!(section.component, semio_ui_contract::Component::TreeSection(_)).then(|| section.children.len())
+}
+
 #[test]
 fn thumbnails_scale_each_page_and_reorder_through_move_page() {
     let (fixture, snapshot) = navigation_fixture();
@@ -1635,7 +1733,7 @@ fn thumbnails_scale_each_page_and_reorder_through_move_page() {
     let _ui_arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     for locale in [Locale::En, Locale::De] {
         let strip = render_thumbnail_strip(&snapshot, "s.stdio.pdf@1.7/*#editor", OBJECT_DOMAIN, locale).expect("thumbnail strip");
-        semio_plugin::artifact_app_laws::observe_and_retire_fixture_tree(semio_plugin::built_to_component_tree(strip), |_| ());
+        assert_eq!(semio_plugin::artifact_app_laws::observe_and_retire_fixture_tree(semio_plugin::built_to_component_tree(strip), strip_shape), Some(snapshot.pages.len()), "one tree section holds one row per page");
     }
 }
 
@@ -1648,8 +1746,72 @@ fn the_thumbnail_strip_of_a_document_without_pages_renders() {
     let _ui_arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     for locale in [Locale::En, Locale::De] {
         let strip = render_thumbnail_strip(&snapshot, "s.stdio.pdf@1.7/*#editor", OBJECT_DOMAIN, locale).expect("an empty thumbnail strip");
-        semio_plugin::artifact_app_laws::observe_and_retire_fixture_tree(semio_plugin::built_to_component_tree(strip), |_| ());
+        assert_eq!(semio_plugin::artifact_app_laws::observe_and_retire_fixture_tree(semio_plugin::built_to_component_tree(strip), strip_shape), Some(1), "one tree section holds the empty-state row");
     }
+}
+
+/// ⌨️ LAW: every page row of the strip is a collapsed tree item with its own activation target and holds only the moves that stay inside the document, each named after its page; the shared tree pattern then expands it with ArrowRight and activates a move with Enter.
+#[test]
+fn thumbnail_move_rows_are_collapsed_named_and_keyboard_reachable_children() {
+    let (_, snapshot) = navigation_fixture();
+    let count = snapshot.pages.len();
+    assert!(count >= 3, "the fixture holds a first, a middle and a last page");
+    let _ui_arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
+    for locale in [Locale::En, Locale::De] {
+        let strip = render_thumbnail_strip(&snapshot, "s.stdio.pdf@1.7/*#editor", OBJECT_DOMAIN, locale).expect("thumbnail strip");
+        let rows = semio_plugin::artifact_app_laws::observe_and_retire_fixture_tree(semio_plugin::built_to_component_tree(strip), |strip| {
+            strip.children.get(0).expect("one tree section").children.iter().map(|row| {
+                let semio_ui_contract::Component::TreeItem(props) = &row.component else { panic!("a page row is a tree item") };
+                let moves: Vec<(String, bool)> = row.children.iter().map(|child| {
+                    let semio_ui_contract::Component::TreeItem(child_props) = &child.component else { panic!("a move row is a tree item") };
+                    (child_props.label.0.as_str().to_string(), child_props.target.is_some())
+                }).collect();
+                (props.default_open, props.target.is_some(), props.draggable, moves)
+            }).collect::<Vec<_>>()
+        });
+        assert_eq!(rows.len(), count);
+        for (page, (default_open, has_target, draggable, moves)) in rows.iter().enumerate() {
+            assert_eq!((*default_open, *has_target, *draggable), (Some(false), true, Some(true)), "page {page}: collapsed, activatable and draggable");
+            let expected: Vec<String> = [(page > 0).then(|| move_label(locale, page, false)), (page + 1 < count).then(|| move_label(locale, page, true))].into_iter().flatten().collect();
+            assert_eq!(moves.iter().map(|(label, _)| label.clone()).collect::<Vec<_>>(), expected, "page {page}: only the moves that stay inside the document");
+            assert!(moves.iter().all(|(label, activatable)| *activatable && label.contains(&page_number(page).to_string())), "page {page}: every move row is activatable and names its page");
+        }
+    }
+    assert_eq!((move_label(Locale::En, 2, false), move_label(Locale::De, 2, true)), ("Move page 3 earlier".to_string(), "Seite 3 nach hinten verschieben".to_string()));
+}
+
+fn collect_headings(node: &semio_ui_contract::BuiltNode, headings: &mut Vec<(String, u16, String)>) {
+    if let semio_ui_contract::Component::Text(text) = &node.component {
+        if let Some(level) = text.heading_level {
+            headings.push((node.key.as_str().to_string(), level, text.value.0.as_str().to_string()));
+        }
+    }
+    node.children.iter().for_each(|child| collect_headings(child, headings));
+}
+
+/// 🔠️ LAW: the inspector's section titles are real headings in both languages, the object kind at level 2 and every key-value group below it at level 3, and never plain emphasized text.
+#[test]
+fn inspector_titles_are_headings_with_levels_and_never_emphasized_text() {
+    let _ui_arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
+    let snapshot = sample();
+    let mut selections: Vec<Option<String>> = objects(&snapshot).into_iter().map(|object| Some(object.id)).collect();
+    selections.push(None);
+    let mut groups = 0;
+    for locale in [Locale::En, Locale::De] {
+        for selected in &selections {
+            let node = render_inspector(&snapshot, selected.as_deref(), "s.stdio.pdf@1.7/*#editor", semio_plugin::UiPublicationRevision(17), locale).expect("inspector");
+            let mut headings = Vec::new();
+            semio_plugin::artifact_app_laws::observe_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node), |node| collect_headings(node, &mut headings));
+            assert!(!headings.is_empty(), "the Object pane of {selected:?} has a heading");
+            for (key, level, value) in &headings {
+                assert!(!value.is_empty(), "{key}: a heading is named");
+                let expected = if key == "pdf-object-kind" { 2 } else if key.starts_with("pdf-entries-") && key.ends_with("-heading") { 3 } else { panic!("{key}: unexpected heading") };
+                assert_eq!(*level, expected, "{key}: heading level");
+            }
+            groups += headings.iter().filter(|(key, ..)| key != "pdf-object-kind").count();
+        }
+    }
+    assert!(groups > 0, "at least one key-value group is a level-3 heading");
 }
 
 #[test]
@@ -1817,7 +1979,7 @@ fn insert_text_on_page_one_of_a_one_page_document_succeeds_in_every_language() {
         assert!(snapshot.pages[0].text().contains("Added") && !before.contains("Added"), "{locale:?}");
         let added = objects(&snapshot).into_iter().find(|object| object.kind == ObjectKind::Text && object.text == "Added").expect("the inserted text is a page object");
         assert!((added.x - 4.5).abs() < 1e-9, "{locale:?}");
-        assert!(canvas_layers(&snapshot, None).contains(&added.id), "the canvas scene shows the inserted text right after the edit");
+        assert!(canvas_layers(&snapshot, None, semio_ui_locale::Locale::En).contains(&added.id), "the canvas scene shows the inserted text right after the edit");
     }
 }
 

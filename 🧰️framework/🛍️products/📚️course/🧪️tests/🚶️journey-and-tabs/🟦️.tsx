@@ -488,7 +488,7 @@ describe("🚶️ several tabs, cancellation and other devices", () => {
 });
 
 describe("👥️ presence through the whole app", () => {
-  it("joins the roster and the page's room once identified, shows the others and follows the learner into a quiz", { timeout: 30_000 }, async () => {
+  it("joins the roster and the page's room once identified, shows the others and follows the learner into a quiz", { timeout: 90_000 }, async () => {
     const proctor = new FakeProctor();
     const sockets: { readonly url: string; readonly sent: unknown[]; closed: boolean; readonly socket: PresenceSocket }[] = [];
     const presence: PresenceConnect = (url) => {

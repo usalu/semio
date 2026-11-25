@@ -5,16 +5,16 @@ use serde_json::Value;
 use semio_ui_contract::column;
 use semio_os_kernel::store_schema::ArtifactCommand;
 use semio_plugin_decl_tool_contract::EmptyArtifactInstanceOperationOwner;
-use semio_plugin_ownership::store_lifecycle::bounded_config_store_disposer;
-use semio_plugin_ownership::store_lifecycle::bounded_document_store_owners;
+use semio_plugin_store_lifecycle::store_lifecycle::bounded_config_store_disposer;
+use semio_plugin_store_lifecycle::store_lifecycle::bounded_document_store_owners;
 use semio_plugin_decl_emission::ArtifactMutationOutcome;
 use semio_framework_value::ValueError;
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use semio_plugin_ownership::sdk_fault::PluginAssemblyError;
-use semio_plugin_ownership::store_lifecycle::bounded_document_store_disposer;
+use semio_plugin_store_lifecycle::store_lifecycle::bounded_document_store_disposer;
 use semio_framework_value::RetainedCloneProgress;
 use semio_os_kernel::ArtifactStore;
-use semio_plugin_ownership::store_lifecycle::bounded_config_store_owners;
+use semio_plugin_store_lifecycle::store_lifecycle::bounded_config_store_owners;
 use semio_framework_value::RetainedCloneStep;
 use semio_plugin_decl_emission::{ActionMeta, AsyncTaskRun, AsyncTaskSource, Emit, ToolCommandCatalog};
 use semio_plugin_app_builder::App;
@@ -52,7 +52,7 @@ use semio_plugin_window_transient::{built_text_to_component_tree, built_to_compo
 use semio_os_kernel::io;
 #[cfg(test)]
 use semio_plugin_testing_fixtures::test_app_mutation_fixture;
-use semio_plugin_ownership::transient_publication::transient_store_disposer;
+use semio_plugin_transient_publication::transient_publication::transient_store_disposer;
 use semio_framework::*;
 use semio_plugin_testing_fixtures::test_app_mutation_fixture::config::mutations::change_test_config_selection::ChangeTestConfigSelection;
 use semio_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::set_count::SetCount;
@@ -68,8 +68,28 @@ use store::os_store::backbone::Backbone;
 use crate::tool_run_support_1::original_toy_operation::OriginalToyOperationSource;
 use crate::tool_run_support_1::original_toy_unit::OriginalToyUnit;
 use crate::tool_run_support_1::original_toy_emission::OriginalToyEmission;
+use semio_plugin_ownership::bounded_ownership::{plugin_effect_turn, plugin_settle_value};
 
 
+/// 🪙️ Runs one fixture closer inside the close effect and settles its work, so a progressing step is never free.
+#[doc(hidden)]
+pub fn settled_close(cx:&mut semio_framework_job::StepContext<'_>,demand:RetirementDemand,close:impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+    semio_framework_job::close_original_effect_step(cx,demand,|effect|{let result=close(effect).map_err(semio_framework_value::RetirementPollExit::from);semio_framework_value::RetirementPollExit::settle(effect,result)})
+}
+
+/// 🧾️ Folds one settled retirement step of a fixture owner into a plain close step.
+#[doc(hidden)]
+pub fn settle_step(step:semio_framework_value::retirement::RetirementStep)->Result<RetainedCloneStep,ValueError>{
+    use semio_framework_value::retirement::RetirementStep as R;
+    match step{R::Progress(progress,_)|R::ChildProgress(_,progress,_)=>Ok(RetainedCloneStep::Progress(progress)),R::Complete(_)=>Ok(RetainedCloneStep::Complete(Default::default())),R::Failure(failure,_)=>Err(semio_plugin_ownership::bounded_ownership::plugin_failure_error(failure)),_=>Ok(RetainedCloneStep::Progress(Default::default()))}
+}
+
+/// 🪜️ The step every fixture job shares: its run, wrapped as the one callback the job protocol returns.
+macro_rules! toy_job_step {
+    ()=>{
+        fn step<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>,_:&mut semio_framework_job::OriginalJobReturnClaim<'_>)->semio_framework_job::InteractiveJobStep<'a>{semio_framework_job::InteractiveJobStep::from_callback(self.run(cx))}
+    };
+}
 #[cfg(test)]
 #[path = "🪝️boxed-work/🦀️.rs"]
 mod boxed_work;
@@ -187,13 +207,14 @@ impl ToyRunJob {
     pub fn auxiliary_demands(&self,body:usize)->Result<Option<RetirementDemand>,ValueError>{
      let child=if !self.unit.terminal_is_empty(){Some(self.unit.retirement_demands()?)}else if !self.emission.terminal_is_empty(){Some(self.emission.retirement_demands()?)}else if let Some(owner)=self.writer_retirement.as_ref(){Some(Self::retirement_demand(owner,body)?)}else if let Some(owner)=self.progress_retirement.as_ref(){Some(Self::retirement_demand(owner,body)?)}else if self.successor.is_some()||self.progress_source.is_some()||self.counter_source.is_some()||self.trace_source.is_some()||self.payload_source_ready||self.payload_position>0||self.retraction.is_some()||self.phase!=0{Some(RetirementDemand{depth:1,..Default::default()})}else{None};child.map(|mut demand|{demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"original Toy auxiliary depth overflow"))?;Ok(demand)}).transpose()
     }
-    pub fn auxiliary_close_step(&mut self,grant:RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneStep,ValueError>{
-     use semio_framework_value::RetainedCloneStep as S;let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};if !self.unit.terminal_is_empty(){return self.unit.close_step(child)}if !self.emission.terminal_is_empty(){return self.emission.close_step(child)}if let Some(owner)=self.writer_retirement.as_mut(){if !owner.terminal_is_empty(){return owner.step(child)}drop(self.writer_retirement.take());return Ok(S::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}if let Some(owner)=self.progress_retirement.as_mut(){if !owner.terminal_is_empty(){return owner.step(child)}drop(self.progress_retirement.take());return Ok(S::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}if self.successor.is_some(){drop(self.successor.take());return Ok(S::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}if let Some(original)=self.progress_source.take(){match semio_framework_value::retirement::controlled::ControlledRetirement::new(original){Ok(owner)=>self.progress_retirement=Some(owner),Err((error,original))=>{self.progress_source=Some(original);return Err(error)}}return Ok(S::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}if self.counter_source.take().is_some()||self.trace_source.take().is_some(){return Ok(S::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}self.payload_source_ready=false;self.payload_position=0;self.retraction=None;self.phase=0;Ok(S::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))
+    pub fn auxiliary_close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<semio_framework_value::RetainedCloneStep,ValueError>{
+     use semio_framework_value::RetainedCloneStep as S;let grant=effect.grant();let body=grant.maximum_copy_bytes;let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};if !self.unit.terminal_is_empty(){return self.unit.close_step(&mut effect.nested(child))}if !self.emission.terminal_is_empty(){return self.emission.close_step(&mut effect.nested(child))}if let Some(owner)=self.writer_retirement.as_mut(){if !owner.terminal_is_empty(){return plugin_settle_value(owner.step(body,&mut effect.nested(child)))}drop(self.writer_retirement.take());return Ok(S::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}if let Some(owner)=self.progress_retirement.as_mut(){if !owner.terminal_is_empty(){return plugin_settle_value(owner.step(body,&mut effect.nested(child)))}drop(self.progress_retirement.take());return Ok(S::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}if self.successor.is_some(){drop(self.successor.take());return Ok(S::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}if let Some(original)=self.progress_source.take(){match semio_framework_value::retirement::controlled::ControlledRetirement::new(original){Ok(owner)=>self.progress_retirement=Some(owner),Err((error,original))=>{self.progress_source=Some(original);return Err(error)}}return Ok(S::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}if self.counter_source.take().is_some()||self.trace_source.take().is_some(){return Ok(S::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}self.payload_source_ready=false;self.payload_position=0;self.retraction=None;self.phase=0;Ok(S::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))
     }
     pub fn original_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if let Some(demand)=self.auxiliary_demands(body)?{return Ok(demand)}if let Some(owner)=self.original_close.as_ref(){if owner.terminal_is_empty(){return Ok(RetirementDemand{depth:1,..Default::default()});}return Ok({let mut demand=owner.next_demand(body)?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"toy original writer depth overflow"))?;demand});}Ok(if self.original_live{RetirementDemand{depth:1,..Default::default()}}else{Default::default()})}
 
     pub fn metadata(cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,ValueError>{let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;Ok(true)}
     pub fn receive(cx:&mut semio_framework_job::StepContext<'_>,result:Result<semio_framework_value::RetainedCloneStep,ValueError>)->Result<bool,semio_framework_job::OriginalTurnFailure>{match result{Ok(step)=>{cx.consume_retained(step.progress())?;Ok(matches!(step,semio_framework_value::RetainedCloneStep::Complete(_)))},Err(original)=>{Err(semio_framework_job::OriginalTurnFailure::debit_original(original,cx))}}}
+    pub fn run<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure>{if cx.is_cancelled(){return semio_framework_job::JobOutcomeBorrow::admit_cancelled(cx).map_err(semio_framework_job::OriginalTurnFailure::from)}self.run_step(cx).map_err(semio_framework_job::OriginalTurnFailure::from)}
     pub fn run_step<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure>{
      let grant=cx.retained_grant();match self.phase{
       0=>{if self.purpose==ToolRunJobPurpose::Revalidate{if self.scan==self.original.provisional_counts.len(){if Self::metadata(cx)?{self.finished=true;self.phase=12;}return Ok(None)}let valid=self.original.provisional_counts[self.scan]==self.base_count.checked_add(self.scan as i32+1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original revalidation count overflow"))?;if Self::metadata(cx)?{if valid{self.scan+=1;}else{self.retraction=Some((self.scan as u32).checked_mul(2).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original revalidation index overflow"))?);self.phase=13;}}return Ok(None)}
@@ -207,8 +228,8 @@ impl ToyRunJob {
       5=>{let original=self.emission.advance_preview(&self.original.writer,cx)?;if original.is_some(){self.phase=6;}return Ok(original)}
       6=>{if self.emission.close_in_context(cx)?{self.phase=7;}}
       7=>{if let Some((successor,progress))=self.original.writer.admit_original_successor(grant)?{cx.consume_retained(progress)?;self.successor=Some(successor);self.phase=8;}}
-      8=>{if Self::metadata(cx)?{let original=std::mem::replace(&mut self.original.writer,self.successor.take().unwrap());match semio_framework_value::retirement::controlled::ControlledRetirement::new(original){Ok(owner)=>{self.writer_retirement=Some(owner);self.phase=9;},Err((error,original))=>{self.successor=Some(std::mem::replace(&mut self.original.writer,original));return Err(error)}}}}
-      9=>{let owner=self.writer_retirement.as_mut().unwrap();if owner.terminal_is_empty(){if Self::metadata(cx)?{drop(self.writer_retirement.take());self.phase=if self.purpose==ToolRunJobPurpose::Run{10}else{12};}}else{let result=owner.step(grant);Self::receive(cx,result)?;}}
+      8=>{if Self::metadata(cx)?{let original=std::mem::replace(&mut self.original.writer,self.successor.take().unwrap());match semio_framework_value::retirement::controlled::ControlledRetirement::new(original){Ok(owner)=>{self.writer_retirement=Some(owner);self.phase=9;},Err((error,original))=>{self.successor=Some(std::mem::replace(&mut self.original.writer,original));return Err(error.into())}}}}
+      9=>{let owner=self.writer_retirement.as_mut().unwrap();if owner.terminal_is_empty(){if Self::metadata(cx)?{drop(self.writer_retirement.take());self.phase=if self.purpose==ToolRunJobPurpose::Run{10}else{12};}}else{plugin_effect_turn(cx,|effect|plugin_settle_value(owner.step(grant.maximum_copy_bytes,effect)))?;}}
       10=>{let original=self.emission.advance_checkpoint(self.done,cx)?;if original.is_some(){self.phase=11;}return Ok(original)}
       11=>{if self.emission.close_in_context(cx)?{self.phase=0;self.batch_units=0;self.payload_position=0;self.payload_source_ready=false;}}
       12=>return semio_framework_job::JobOutcomeBorrow::admit_complete(cx,None,None).map_err(semio_framework_job::OriginalTurnFailure::from),
@@ -221,7 +242,7 @@ impl ToyRunJob {
 }
 
 impl semio_framework_job::InteractiveJob for ToyRunJob {
-    fn step<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure>{if cx.is_cancelled(){return semio_framework_job::JobOutcomeBorrow::admit_cancelled(cx).map_err(semio_framework_job::OriginalTurnFailure::from)}self.run_step(cx).map_err(semio_framework_job::OriginalTurnFailure::from)}
+    toy_job_step!();
     fn borrow_outcome<'a>(&'a self,descriptor:&'a semio_framework_job::JobOutcomeDescriptor)->Result<semio_framework_job::JobOutcomeView<'a>,ValueError>{self.emission.borrow_outcome(descriptor)}
 
     fn begin_close(&mut self) {
@@ -234,10 +255,10 @@ impl semio_framework_job::InteractiveJob for ToyRunJob {
     fn next_close_depth_demand(&self)->Result<usize,ValueError>{Ok(self.original_demands(0)?.depth)}
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
         if self.terminal_is_empty(){return Ok(semio_framework_job::InteractiveJobCloseStep::Complete{progress:Default::default()})}if !self.closing{return Ok(semio_framework_job::InteractiveJobCloseStep::Pending{progress:Default::default()})}
-        let demand=self.original_demands(cx.retained_grant().maximum_copy_bytes)?;semio_framework_job::close_original_retained_step(cx,demand,|grant|{
-        let empty=Default::default();if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty));}if !self.closing||(grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth){return Ok(RetainedCloneStep::Progress(empty));}
-        if self.auxiliary_demands(grant.maximum_copy_bytes).ok().flatten().is_some(){return match self.auxiliary_close_step(grant){Ok(step)=>Ok(RetainedCloneStep::Progress(step.progress())),Err(original)=>Err(original)};}
-        if let Some(owner)=self.original_close.as_mut(){if owner.terminal_is_empty(){drop(self.original_close.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}));}let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};return match owner.step(child).and_then(|step|semio_framework_value::retained_clone::admit_retained_clone_close(child,step,owner.terminal_is_empty(),"original toy writer and counts")){Ok(step)=>Ok(RetainedCloneStep::Progress(step.progress())),Err(error)=>Err(error)};}
+        let demand=self.original_demands(cx.retained_grant().maximum_copy_bytes)?;settled_close(cx,demand,|effect|{
+        let grant=effect.grant();let empty=Default::default();if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty));}if !self.closing||(grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth){return Ok(RetainedCloneStep::Progress(empty));}
+        if self.auxiliary_demands(grant.maximum_copy_bytes).ok().flatten().is_some(){return self.auxiliary_close_step(effect).map(|step|RetainedCloneStep::Progress(step.progress()));}
+        if let Some(owner)=self.original_close.as_mut(){if owner.terminal_is_empty(){drop(self.original_close.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}));}let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};return plugin_settle_value(owner.step(grant.maximum_copy_bytes,&mut effect.nested(child))).and_then(|step|semio_framework_value::retained_clone::admit_retained_clone_close(child,step,owner.terminal_is_empty(),"original toy writer and counts")).map(|step|RetainedCloneStep::Progress(step.progress()));}
         let original=unsafe{std::mem::ManuallyDrop::take(&mut self.original)};match semio_framework_value::retirement::controlled::ControlledRetirement::new(original){Ok(owner)=>{self.original_close=Some(owner);self.original_live=false;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}))},Err((error,original))=>{self.original=std::mem::ManuallyDrop::new(original);Err(error)}}
     })
     }
@@ -274,7 +295,7 @@ pub struct ToyPortJobCustody {
 }
 impl ToyPortJobCustody {
     pub fn new(writer:ToolRunTickWriter,port:ToolRunJobPort)->Self{Self{unit:OriginalToyUnit::new(),emission:OriginalToyEmission::new(),successor:None,entity:None,trace:None,action:None,effect:std::mem::ManuallyDrop::new(None),action_close:None,writer:std::mem::ManuallyDrop::new(writer),writer_live:true,writer_close:None,port:std::mem::ManuallyDrop::new(Some(port)),port_close:None}}
-    pub fn reset_writer(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{let grant=cx.retained_grant();if let Some(owner)=self.writer_close.as_mut(){if !owner.terminal_is_empty(){let result=owner.step(grant);ToyRunJob::receive(cx,result)?;return Ok(false)}if ToyRunJob::metadata(cx)?{drop(self.writer_close.take());return Ok(true)}return Ok(false)}if let Some(successor)=self.successor.as_ref(){let _=successor;if ToyRunJob::metadata(cx)?{let original=std::mem::replace(&mut *self.writer,self.successor.take().unwrap());match semio_framework_value::retirement::controlled::ControlledRetirement::new(original){Ok(owner)=>self.writer_close=Some(owner),Err((error,original))=>{self.successor=Some(std::mem::replace(&mut *self.writer,original));return Err(error.into())}}}return Ok(false)}if let Some((successor,progress))=self.writer.admit_original_successor(grant)?{cx.consume_retained(progress)?;self.successor=Some(successor);}Ok(false)}
+    pub fn reset_writer(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{let grant=cx.retained_grant();if let Some(owner)=self.writer_close.as_mut(){if !owner.terminal_is_empty(){plugin_effect_turn(cx,|effect|plugin_settle_value(owner.step(grant.maximum_copy_bytes,effect)))?;return Ok(false)}if ToyRunJob::metadata(cx)?{drop(self.writer_close.take());return Ok(true)}return Ok(false)}if let Some(successor)=self.successor.as_ref(){let _=successor;if ToyRunJob::metadata(cx)?{let original=std::mem::replace(&mut *self.writer,self.successor.take().unwrap());match semio_framework_value::retirement::controlled::ControlledRetirement::new(original){Ok(owner)=>self.writer_close=Some(owner),Err((error,original))=>{self.successor=Some(std::mem::replace(&mut *self.writer,original));return Err(error.into())}}}return Ok(false)}if let Some((successor,progress))=self.writer.admit_original_successor(grant)?{cx.consume_retained(progress)?;self.successor=Some(successor);}Ok(false)}
     pub fn port(&self)->&ToolRunJobPort{self.port.as_ref().expect("live toy port")}
     pub fn demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
         let auxiliary=if !self.unit.terminal_is_empty(){Some(self.unit.retirement_demands()?)}else if !self.emission.terminal_is_empty(){Some(self.emission.retirement_demands()?)}else if let Some(owner)=self.action_close.as_ref(){Some(ToyRunJob::retirement_demand(owner,body)?)}else if self.successor.is_some()||self.entity.is_some()||self.trace.is_some()||self.action.is_some()||self.effect.is_some(){Some(RetirementDemand{depth:1,..Default::default()})}else{None};if let Some(mut demand)=auxiliary{demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"original toy port auxiliary depth overflow"))?;return Ok(demand)}
@@ -285,14 +306,14 @@ impl ToyPortJobCustody {
         Ok(Default::default())
     }
     pub fn terminal_is_empty(&self)->bool{self.unit.terminal_is_empty()&&self.emission.terminal_is_empty()&&self.successor.is_none()&&self.entity.is_none()&&self.trace.is_none()&&self.action.is_none()&&self.effect.is_none()&&self.action_close.is_none()&&!self.writer_live&&self.writer_close.is_none()&&self.port.is_none()&&self.port_close.is_none()}
-    pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
-        let empty=Default::default();if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty));}let demand=match self.demands(grant.maximum_copy_bytes){Ok(d)=>d,Err(e)=>return Err(e)};if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(RetainedCloneStep::Progress(empty));}
-        let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};if !self.unit.terminal_is_empty()||!self.emission.terminal_is_empty(){let result=if !self.unit.terminal_is_empty(){self.unit.close_step(child)}else{self.emission.close_step(child)};return match result{Ok(step)=>Ok(RetainedCloneStep::Progress(step.progress())),Err(error)=>Err(error)};}if self.successor.is_some(){drop(self.successor.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}));}
-        if let Some(owner)=self.action_close.as_mut(){if owner.terminal_is_empty(){drop(self.action_close.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}))}return match owner.step(child){Ok(step)=>Ok(RetainedCloneStep::Progress(step.progress())),Err(error)=>Err(error)};}if self.effect.is_some(){match self.effect.take().unwrap(){Effect::DispatchAction{action,args:None,..}=>self.action=Some(action),original=>{*self.effect=Some(original);return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original Toy effect retains its missing typed retirement cursor"))}}return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}));}if let Some(original)=self.action.take(){match semio_framework_value::retirement::controlled::ControlledRetirement::new(original){Ok(owner)=>self.action_close=Some(owner),Err((error,original))=>{self.action=Some(original);return Err(error)}}return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}));}if self.entity.take().is_some()||self.trace.take().is_some(){return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}));}
-        if let Some(owner)=self.writer_close.as_mut(){if owner.terminal_is_empty(){drop(self.writer_close.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}));}let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};return match owner.step(child).and_then(|step|semio_framework_value::retained_clone::admit_retained_clone_close(child,step,owner.terminal_is_empty(),"original toy port writer")){Ok(step)=>Ok(RetainedCloneStep::Progress(step.progress())),Err(e)=>Err(e)};}
+    pub fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{
+        let grant=effect.grant();let empty=Default::default();if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty));}let demand=match self.demands(grant.maximum_copy_bytes){Ok(d)=>d,Err(e)=>return Err(e)};if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(RetainedCloneStep::Progress(empty));}
+        let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};if !self.unit.terminal_is_empty()||!self.emission.terminal_is_empty(){let result=if !self.unit.terminal_is_empty(){self.unit.close_step(&mut effect.nested(child))}else{self.emission.close_step(&mut effect.nested(child))};return match result{Ok(step)=>Ok(RetainedCloneStep::Progress(step.progress())),Err(error)=>Err(error)};}if self.successor.is_some(){drop(self.successor.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}));}
+        if let Some(owner)=self.action_close.as_mut(){if owner.terminal_is_empty(){drop(self.action_close.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}))}return plugin_settle_value(owner.step(grant.maximum_copy_bytes,&mut effect.nested(child))).map(|step|RetainedCloneStep::Progress(step.progress()));}if self.effect.is_some(){match self.effect.take().unwrap(){Effect::DispatchAction{action,args:None,..}=>self.action=Some(action),original=>{*self.effect=Some(original);return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original Toy effect retains its missing typed retirement cursor"))}}return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}));}if let Some(original)=self.action.take(){match semio_framework_value::retirement::controlled::ControlledRetirement::new(original){Ok(owner)=>self.action_close=Some(owner),Err((error,original))=>{self.action=Some(original);return Err(error)}}return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}));}if self.entity.take().is_some()||self.trace.take().is_some(){return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}));}
+        if let Some(owner)=self.writer_close.as_mut(){if owner.terminal_is_empty(){drop(self.writer_close.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}));}let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};return plugin_settle_value(owner.step(grant.maximum_copy_bytes,&mut effect.nested(child))).and_then(|step|semio_framework_value::retained_clone::admit_retained_clone_close(child,step,owner.terminal_is_empty(),"original toy port writer")).map(|step|RetainedCloneStep::Progress(step.progress()));}
         if self.writer_live{let original=unsafe{std::mem::ManuallyDrop::take(&mut self.writer)};return match semio_framework_value::retirement::controlled::ControlledRetirement::new(original){Ok(owner)=>{self.writer_close=Some(owner);self.writer_live=false;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}))},Err((e,original))=>{self.writer=std::mem::ManuallyDrop::new(original);Err(e)}};}
         let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};
-        if let Some(owner)=self.port_close.as_mut(){if owner.terminal_is_empty(){drop(self.port_close.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}));}return match owner.close_step(child).and_then(|step|semio_framework_value::retained_clone::admit_retained_clone_close(child,step,owner.terminal_is_empty(),"original toy port lease")){Ok(step)=>Ok(RetainedCloneStep::Progress(step.progress())),Err(e)=>Err(e)};}
+        if let Some(owner)=self.port_close.as_mut(){if owner.terminal_is_empty(){drop(self.port_close.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}));}return settle_step(owner.close_step(grant.maximum_copy_bytes,&mut effect.nested(child))).and_then(|step|semio_framework_value::retained_clone::admit_retained_clone_close(child,step,owner.terminal_is_empty(),"original toy port lease")).map(|step|RetainedCloneStep::Progress(step.progress()));}
         match ToolRunJobPort::admit_original_close(&mut self.port,child){Ok(Some((owner,progress)))=>{self.port_close=Some(owner);Ok(RetainedCloneStep::Progress(progress))},Ok(None)=>Ok(RetainedCloneStep::Progress(empty)),Err(e)=>Err(e)}
     }
 }
@@ -304,14 +325,17 @@ macro_rules! toy_port_job_close {
         fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{Ok(self.original.demands(body)?.capacity_bytes)}
         fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.original.demands(0)?.release_bytes)}
         fn next_close_depth_demand(&self)->Result<usize,ValueError>{Ok(self.original.demands(0)?.depth)}
-        fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{if !self.closing{return Ok(semio_framework_job::InteractiveJobCloseStep::Pending{progress:Default::default()})}if self.original.terminal_is_empty(){return Ok(semio_framework_job::InteractiveJobCloseStep::Complete{progress:Default::default()})}let demand=self.original.demands(cx.retained_grant().maximum_copy_bytes)?;semio_framework_job::close_original_retained_step(cx,demand,|grant|self.original.close_step(grant))}
+        fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{if !self.closing{return Ok(semio_framework_job::InteractiveJobCloseStep::Pending{progress:Default::default()})}if self.original.terminal_is_empty(){return Ok(semio_framework_job::InteractiveJobCloseStep::Complete{progress:Default::default()})}let demand=self.original.demands(cx.retained_grant().maximum_copy_bytes)?;settled_close(cx,demand,|effect|self.original.close_step(effect))}
         fn terminal_is_empty(&self)->bool{self.closing&&self.original.terminal_is_empty()}
     };
 }
 #[doc(hidden)]
+#[path="🧸️member-job/🦀️.rs"]
+pub mod member_job;
+#[doc(hidden)]
 pub struct ToyCompactJob {pub original:ToyPortJobCustody,pub stage:usize,pub phase:u8,pub initial:i32,pub counts:[i32;3],pub closing:bool}
-impl semio_framework_job::InteractiveJob for ToyCompactJob{
- fn step<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure>{
+impl ToyCompactJob{
+ fn run<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure>{
   if cx.is_cancelled(){return semio_framework_job::JobOutcomeBorrow::admit_cancelled(cx).map_err(semio_framework_job::OriginalTurnFailure::from)}if self.original.port().is_waiting(){return Ok(None)}let grant=cx.retained_grant();match self.phase{
    0=>{if self.stage>=4{return semio_framework_job::JobOutcomeBorrow::admit_complete(cx,None,None).map_err(semio_framework_job::OriginalTurnFailure::from)}if self.stage==1{let result=self.original.writer.admit_original_retraction(0,grant);let complete=ToyRunJob::receive(cx,result)?;if complete&&cx.retained_progress().copied_items==0&&!ToyRunJob::metadata(cx)?{return Ok(None)}if complete{self.phase=1;}}else if ToyRunJob::metadata(cx)?{self.phase=1;}}
    1=>{let value=if self.stage==0{self.initial}else{self.counts[self.stage-1]};if self.original.unit.advance_count(&mut self.original.writer,value,cx)?{self.phase=if self.stage==0{2}else{4};}}
@@ -326,6 +350,9 @@ impl semio_framework_job::InteractiveJob for ToyCompactJob{
    _=>return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original compact phase absent").into()),
   }Ok(None)
  }
+}
+impl semio_framework_job::InteractiveJob for ToyCompactJob{
+ toy_job_step!();
  fn borrow_outcome<'a>(&'a self,descriptor:&'a semio_framework_job::JobOutcomeDescriptor)->Result<semio_framework_job::JobOutcomeView<'a>,ValueError>{self.original.emission.borrow_outcome(descriptor)}
  toy_port_job_close!();
 }
@@ -340,8 +367,8 @@ thread_local! {
 /// algorithm units live in another component.
 #[doc(hidden)]
 pub struct ToyWaitJob {pub original:ToyPortJobCustody,pub hops:u64,pub dispatched:u64,pub answered:u64,pub phase:u8,pub action_position:usize,pub closing:bool}
-impl semio_framework_job::InteractiveJob for ToyWaitJob{
- fn step<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure>{
+impl ToyWaitJob{
+ fn run<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure>{
   if cx.is_cancelled(){return semio_framework_job::JobOutcomeBorrow::admit_cancelled(cx).map_err(semio_framework_job::OriginalTurnFailure::from)}let grant=cx.retained_grant();match self.phase{
    0=>{if self.dispatched>self.answered{if ToyRunJob::metadata(cx)?{let answered=self.dispatched;self.original.trace=Some(semio_framework_tool_run::ToolRunTraceOp::Upsert{key:answered,verdict:ToolRunVerdict::Success,reason:1,subject:ToolRunTraceSubject::Entity{entity:answered}});self.phase=1;}}else if self.dispatched==self.hops{return semio_framework_job::JobOutcomeBorrow::admit_complete(cx,None,None).map_err(semio_framework_job::OriginalTurnFailure::from)}else if ToyRunJob::metadata(cx)?{self.original.action=Some(String::new());self.action_position=0;self.phase=5;}}
    1=>{let result=self.original.writer.admit_original_trace(&mut self.original.trace,grant);if ToyRunJob::receive(cx,result)?{self.phase=2;}}
@@ -354,6 +381,9 @@ impl semio_framework_job::InteractiveJob for ToyWaitJob{
    _=>return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original wait phase absent").into()),
   }Ok(None)
  }
+}
+impl semio_framework_job::InteractiveJob for ToyWaitJob{
+ toy_job_step!();
  fn borrow_outcome<'a>(&'a self,descriptor:&'a semio_framework_job::JobOutcomeDescriptor)->Result<semio_framework_job::JobOutcomeView<'a>,ValueError>{self.original.emission.borrow_outcome(descriptor)}
  toy_port_job_close!();
 }
@@ -450,7 +480,7 @@ impl ArtifactApp for ToyRunApp {
         if request.tool_id=="originalReadonlyPreview"{return Ok(Some(Box::new(original_readonly_preview::OriginalReadonlyPreview::new(request.identity))))}
         TOY_REQUEST_WINDOWS.with(|windows| windows.borrow_mut().push((request.tool_id.to_string(), request.window_id.map(str::to_string), request.window_config.is_some())));
         if request.tool_id == text(&fixture()["member"]["toolId"]) {
-            return Ok(Some(Box::new(member::toy_member_job(request)?)));
+            return Ok(Some(Box::new(member_job::toy_member_job(request)?)));
         }
         if request.tool_id == text(&fixture()["compact"]["toolId"]) {
             return Ok(Some(Box::new(ToyCompactJob { original:ToyPortJobCustody::new(ToolRunTickWriter::with_provisional_base(request.identity,request.provisional.len()as u32),request.port),stage:0,phase:0,initial:number(&fixture()["compact"]["initialCount"])as i32,counts:std::array::from_fn(|index|number(&fixture()["compact"]["compactCounts"][index])as i32),closing:false })));
@@ -462,7 +492,7 @@ impl ArtifactApp for ToyRunApp {
         Ok(Some(Box::new(toy_run_job(request))))
     }
 
-    fn reference_birth()->Option<fn()->Result<TestSnapshot,semio_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<TestSnapshot,Fault>>{Some(||{
         Ok(TestSnapshot::default())
     })}
 
@@ -524,7 +554,7 @@ impl ArtifactApp for ToyRunApp {
     }
 
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
-        Some(store::mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
+        Some(store::cold_mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
     }
 
     fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
@@ -631,7 +661,7 @@ pub async fn toy_manifest() -> App {
         })
         .await;
     tools.push(ToolRef::new(undeclared).await);
-    builder=builder.tool(ToolDefinition{run:Some(ToolRunDefinition{mutating:false,revalidate_job:None,counters:(0..9).map(|index|semio_framework_tool_run::ToolRunCounterDefinition{id:format!("actual{index}"),label:LocalizedLabel::native(format!("Actual {index}"),format!("Ist {index}"))}).collect(),..toy_definition(ToolRunRebasePolicy::Restart)}),..ToolDefinition::new("originalReadonlyPreview",LocalizedLabel::native("Original preview","Originalvorschau"),IconName::PaintBucket).await}).await;
+    builder=builder.tool(ToolDefinition{run:Some(ToolRunDefinition{mutating:false,revalidate_job:None,counters:(0..9).map(|index|semio_framework_tool_run::ToolRunCounterDefinition{id:format!("actual{index}"),label:LocalizedLabel::native(&format!("Actual {index}"),&format!("Ist {index}"))}).collect(),..toy_definition(ToolRunRebasePolicy::Restart)}),..ToolDefinition::new("originalReadonlyPreview",LocalizedLabel::native("Original preview","Originalvorschau"),IconName::PaintBucket).await}).await;
     tools.push(ToolRef::new("originalReadonlyPreview").await);
     let read_only = text(&fixture["readOnlyRun"]["toolId"]);
     builder = builder
@@ -689,8 +719,8 @@ pub fn toy_meta() -> ActionMeta {
 
 #[doc(hidden)]
 pub async fn tool_run_action(app: &mut ToyApp, action: &str, arguments: Vec<(String, DslValue)>, caller:&mut ToyFixtureCaller<'_,'_,'_>) -> DslValue {
-    let mut source=Some(DslValue::Object(arguments));
-    for _ in 0..semio_plugin_testing_caller::OriginalFixtureCaller::maximum_turns(){if let Some(result)=app.handle_action(action,&mut source,&toy_meta(),&mut caller.identity,caller.context).await.unwrap_or_else(|fault|panic!("{action} dispatch: {fault:?}")){return result.output}}
+    let mut source=Some(DslValue::Object(arguments));let mut meta=Some(toy_meta());
+    for _ in 0..semio_plugin_testing_caller::OriginalFixtureCaller::maximum_turns(){if let Some(result)=app.handle_action(action,&mut source,&mut meta,&mut caller.identity,caller.context).await.unwrap_or_else(|fault|panic!("{action} dispatch: {fault:?}")){return result.output}}
     panic!("{action} did not settle under the original fixture caller")
 }
 

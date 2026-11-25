@@ -3,10 +3,12 @@
   "emoji": "🪟",
   "status": "closed",
   "description": "UI inconsistencies seen on the architecture and technology course site but affecting the UI in general. (1) All chips are conceptually one layer higher than the element they sit on: they need a different, tinted glass background through which the content below stays visible; e.g. on the cards overview the chips currently have the same background as the card. (2) The hover effect currently adds an additional border around an element. This must never happen: emphasis only ever happens on existing borders and on the foreground (text, icon) of a UI element.",
-  "summary": "Ten UI laws fixed in the shared UI module and the course site: chips carry a foreground-veil glass tint; hover recolours existing lines and never adds one; pages, grids and dialogs tile edge to edge; navbar and footer are panel-level glass bands the content scrolls beneath; a dragged task element is detached with all drop places shown; clip posters fill the card under the chips; no rounded corner or shadow, native tick boxes drawn square; the challenge is a chip-titled card of toggle cells and switches are toggle cells; every shared course control requires an icon; a line shared with a band is painted by the band. Verified: TypeScript border law and compositor tests pass (9, 16, 13, 45, 11), each law checked in the browser on the course site. Not verified: all Rust changes (outline law, Theme::chip_glass, wgpu chip sites) are uncompiled, the graph test run failed twice on infrastructure (stale dependency receipt, then dependencies image out of space); no TypeScript type check; DOM component suites not run; several course screens not opened. See summary.md in the ticket folder.",
+  "summary": "Dropdowns follow the menu law in both implementations. The native select picker icon is the catalog chevron (an inline mask that turns while the list is open), and native options are drawn like context-menu rows (hover fill, active fill, no tick). The React Select viewport is a vertical cells owner without padding, so the compositor draws the lines between rows; rows are chip-row height with no radius or tick and carry data-active and data-selected. The native picker was checked in the browser. The Select and WindowChrome vitest suites pass (8 files, 129 tests), with updated expectations for the Select contract and the hover law. Not checked: the React Select visually (it is not mounted on the course) and the wgpu Select target. See summary.md section 12.",
   "goal": "🎯runningframework",
   "sessions": [
-    "82f8c751-6ce3-4727-abc2-a22fa48b70a2"
+    "82f8c751-6ce3-4727-abc2-a22fa48b70a2",
+    "7503d732-9fbe-413c-9f21-a8250f4b2103",
+    "99ff23d1-95fc-4030-b1f6-9bc7652f2aa8"
   ],
   "interactions": [
     {
@@ -33,6 +35,66 @@
         },
         {
           "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🎯️targets🗃️⚛️react🗃️🔨️modules🗃️📖️quizpage💻🟦️"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-24 22:50:46",
+      "author": "",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Canvas border emphasis painted over the navbar band; dropdown pickers (e.g. quiz selects) must sit one level above as menu-level surfaces like context menus.",
+      "llm": "opus-5-5"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-24 22:57:17",
+      "author": "ueli",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "8d17d8ba3998690932b0032ea2ca41bce5c994b6",
+      "summary": "Two more laws. The canvas never paints above a band: the course main area is an isolated stacking context, so stated border overlays (z 41) no longer rise above the navbar and footer (z 40). Native select pickers open one level above, as menu-level glass (base-select), with a hairline outline, line-separated options, a filled chosen row and text-only hover. Both were checked in the browser: 0 of 106 canvas overlays stack outside main, and the picker computes menu-level alpha 0.4 and blur 40 px. Still open: the base-select triangle is not a design-system icon, the custom React selects were not reviewed, and the earlier Rust verification is still blocked. See summary.md sections 11 and 12.",
+      "files": [
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🎨️styling🗃️🖌️ui💻🎨️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🎯️targets🗃️⚛️react🗃️🎨️styles🗃️⚖️footerandforcedcolors💻🎨️"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-24 23:27:10",
+      "author": "",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Replace the base-select triangle with the design-system chevron icon and bring the React select menus (select-content) to menu level like the native picker.",
+      "llm": "opus-5-5"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-24 23:43:35",
+      "author": "ueli",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "8d17d8ba3998690932b0032ea2ca41bce5c994b6",
+      "summary": "Dropdowns follow the menu law in both implementations. The native select picker icon is the catalog chevron (an inline mask that turns while the list is open), and native options are drawn like context-menu rows (hover fill, active fill, no tick). The React Select viewport is a vertical cells owner without padding, so the compositor draws the lines between rows; rows are chip-row height with no radius or tick and carry data-active and data-selected. The native picker was checked in the browser. The Select and WindowChrome vitest suites pass (8 files, 129 tests), with updated expectations for the Select contract and the hover law. Not checked: the React Select visually (it is not mounted on the course) and the wgpu Select target. See summary.md section 12.",
+      "files": [
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🎨️styling🗃️🖌️ui💻🎨️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🧱️elements🗃️🔽️select💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🧱️elements🗃️🔽️select🗃️🧪️tests🗃️🧩️component🗃️🔸️keepsmeasuredpopupminimum💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🧱️elements🗃️🗂️windowchrome🥼sharedbordertest"
         }
       ]
     }

@@ -1,0 +1,4 @@
+# fifth fixer (third takeover, 19:00): the crutches chain of t4-6 that the queue never admitted: dry run, write when clean, sheets, check CLI and matrix (1000 MB)
+"$here/in-try-apply.sh" person-on-crutches
+"$here/in-look.sh" person-on-crutches:before:500 person-on-crutches:now:500 person-on-crutches:before:200 person-on-crutches:now:200 person-on-crutches:before:50 person-on-crutches:now:50 person-on-crutches:now:500:crutches-forward
+"$here/in-final.sh" person-on-crutches

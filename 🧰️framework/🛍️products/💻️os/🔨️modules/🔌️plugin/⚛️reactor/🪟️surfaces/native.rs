@@ -90,25 +90,32 @@ impl OriginalSurfaceRefresh{
  pub fn release_demand()->RetirementDemand{RetirementDemand{release_bytes:size_of::<Self>(),depth:1,..Default::default()}}
 }
 impl Drop for OriginalSurfaceRefresh{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original surface refresh requires paid physical closure")}}
+/// 🔢️ Retirement units one surface retirement call may spend: bounded, so one call can never monopolize a turn even under a wide grant, and large enough that a displaced view retires within a turn or two.
+pub const SURFACE_RETIREMENT_UNITS_PER_STEP: usize = 4_096;
 impl SurfaceContexts{
  /// 🩺️ One line naming the capture lease and the displaced projections, for stall reports.
- /// 🗑️ Replaced, removed and refused projections retire one at a time; `true` once none is pending.
+ pub fn close_census(&self)->String{format!("capture={:?} source={} captured_slot={:?} slots={} view={} displaced={} retiring={} retirement_empty={} closing_slot={}",self.cached_capture,self.cached_source.is_some(),self.captured_slot,self.slots.iter().filter(|slot|slot.is_some()).count(),self.view_state.is_some(),self.displaced.len(),self.retiring.is_some(),self.retirement.is_empty(),self.closing_slot)}
+ /// 🗑️ Replaced, removed and refused projections retire unit by unit for as long as the caller's grant funds them, at most [`SURFACE_RETIREMENT_UNITS_PER_STEP`] units; `true` once none is pending. One unit per host turn left a refreshing pane displacing views faster than they retired, so the backlog grew without bound and a close waited thousands of turns for it.
  pub fn retire_displaced_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
+  for _ in 0..SURFACE_RETIREMENT_UNITS_PER_STEP{if cx.should_yield(){return Ok(false)}let before=cx.retained_progress();if self.retire_displaced_unit(cx)?{return Ok(true)}if cx.retained_progress()==before{return Ok(false)}}Ok(false)
+ }
+ fn retire_displaced_unit(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   if self.displaced.is_empty()&&self.retiring.is_none()&&self.retirement.is_empty(){return Ok(true)}
   if self.cached_capture.is_some(){return Ok(false)}
-  if self.closing_body.is_none(){let body=cx.retained_grant().maximum_copy_bytes;read::retire_metadata(cx,demand::<Option<usize>>(),||self.closing_body=Some(body))?;return Ok(false)}
-  let body=self.closing_body.unwrap();
+  let body=cx.retained_grant().maximum_copy_bytes;
   if !self.retirement.is_empty(){let d=self.retirement.demands(body)?;retired_poll(cx,d,|effect|self.retirement.step_granted(body,effect))?;return Ok(false)}
   if self.retiring.is_some(){let d=self.retirement.next_owner_demands::<Displaced>(true,&None,body)?;begun(cx,d,|effect|self.retirement.begin_granted(&mut self.retiring,effect))?;return Ok(false)}
   read::retire_metadata(cx,demand::<Option<Displaced>>(),||self.retiring=self.displaced.pop())?;Ok(false)
  }
- /// 🪦️ Cached projections retire one genuine binding and one original view at a time.
+ /// 🪦️ Cached projections retire one genuine binding and one original view at a time, as many units as the caller's grant funds (at most [`SURFACE_RETIREMENT_UNITS_PER_STEP`]); `true` once every projection is retired.
  pub fn close_original_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
+  for _ in 0..SURFACE_RETIREMENT_UNITS_PER_STEP{if cx.should_yield(){return Ok(false)}let before=cx.retained_progress();if self.close_original_unit(cx)?{return Ok(true)}if cx.retained_progress()==before{return Ok(false)}}Ok(false)
+ }
+ fn close_original_unit(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   if self.cached_capture.is_some(){return Ok(false)}
-  if self.closing_body.is_none(){let body=cx.retained_grant().maximum_copy_bytes;read::retire_metadata(cx,demand::<Option<usize>>(),||self.closing_body=Some(body))?;return Ok(false)}
-  let body=self.closing_body.unwrap();
+  let body=cx.retained_grant().maximum_copy_bytes;
   if !self.retirement.is_empty(){let d=self.retirement.demands(body)?;retired_poll(cx,d,|effect|self.retirement.step_granted(body,effect))?;return Ok(false)}
-  if self.retiring.is_some()||!self.displaced.is_empty(){self.retire_displaced_step(cx)?;return Ok(false)}
+  if self.retiring.is_some()||!self.displaced.is_empty(){self.retire_displaced_unit(cx)?;return Ok(false)}
   if self.closing_slot<self.slots.len(){
    let slot=&mut self.slots[self.closing_slot];
    if slot.is_some(){

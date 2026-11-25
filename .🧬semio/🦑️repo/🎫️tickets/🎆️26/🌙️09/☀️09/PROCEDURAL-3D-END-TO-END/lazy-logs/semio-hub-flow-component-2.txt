@@ -1,0 +1,20 @@
+[capacity] run: sized at 37% of the default from 1 earlier run(s) of its class
+[capacity] admitted run: 1 job(s), 512 MB reserved (7789 MB available, 2048 MB floor)
+[script] {"owner":"repository:build","command":"repo","stage":"loading"}
+[script] {"owner":"repository:build","command":"repo","stage":"running"}
+Planning 1 targets.
+Reading the project graph slice (2 s).
+[repo] still working after 5 s; last phase started: door.script
+Reading the project graph slice (4 s).
+Reading the project graph slice (6 s).
+Reading the project graph slice (8 s).
+[repo] still working after 10 s; last phase started: door.script
+Reading the project graph slice (10 s).
+Reading the project graph slice (12 s).
+Reading the project graph slice (14 s).
+Reading the project graph slice (16 s).
+Reading the project graph slice (18 s).
+[repo] still working after 20 s; last phase started: door.script
+The resident service met an unexpected failure (reference eaf2cb13): Error: Slice worker exited with code null: [script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"boot-recovery:observe:0/0","mode":"exclusive","elapsedMs":19}}
+  at <anonymous> (semio-source:/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/🟨️.mjs:294:38)
+  at processTicksAndRejections (native:7:39); try again, the details under that reference are in the service log /var/folders/1s/pfk8j2p90t94v1nx_gf8zq3w0000gn/T/semio-repo/501/host-414d793198c0.log.

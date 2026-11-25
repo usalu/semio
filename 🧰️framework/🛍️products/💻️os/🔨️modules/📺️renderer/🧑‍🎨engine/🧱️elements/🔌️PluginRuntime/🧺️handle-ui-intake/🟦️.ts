@@ -21,6 +21,7 @@ import { yieldPluginUiContinuation } from "../⏩️continuation-yield/🟦️.t
 import { retainedUiRefreshEffects, sectionValueFromBuiltNode, uiRefreshSectionTargets, uiRefreshSectionUnchanged } from "../🖼️surface-refresh/🟦️.ts";
 import { createInstanceTable, type PluginHandleScope } from "../🪢️handle-scope/🟦️.ts";
 import {createAcknowledgedUiSurfaceLeases} from './lease.ts';
+import { createPluginUiIntakeRejectionLedgerV1, pluginUiIntakeRejectionV1 } from './rejection.ts';
 
 const UI_INTAKE_GRANT=Object.freeze({maxItems:256,maxBytes:65536});
 
@@ -30,6 +31,7 @@ const UI_INTAKE_GRANT=Object.freeze({maxItems:256,maxBytes:65536});
 function createUiPatchAdmission(scope: PluginHandleScope, instances: ReturnType<typeof createInstanceTable>, reads:ReturnType<typeof createAcknowledgedUiSurfaceLeases>) {
   const { pluginId, lifecycleByInstance, uiOwnerByInstance, uiSurfaceByInstance, uiIntakesByInstance } = scope;
   const { requireActorId } = instances;
+  const rejections = createPluginUiIntakeRejectionLedgerV1((error) => console.error(`[os-shell] ${pluginId}#${error.origin}: guest UI patch refused`, error.rejection));
   /** 🩺️ When each retained surface last became CURRENT — the instant its newest patch finished
    * installing. The projection that first carries that surface onward closes `patch.paint` against it,
    * which is what makes "the guest published it" → "the shell holds it" a measured interval rather
@@ -105,7 +107,7 @@ function createUiPatchAdmission(scope: PluginHandleScope, instances: ReturnType<
       if (!surface) throw new Error("plugin-ui.surface-missing");
       if(!scope.state.disposing&&!scope.closingInstances.has(instanceId)&&lifecycleByInstance.get(instanceId)===lease&&uiOwnerByInstance.get(instanceId)===owner&&scope.actorIdByInstance.get(instanceId)===lease.activation.actorId){
         const surfaces=uiSurfaceByInstance.get(instanceId)??new Map<string,OwnedUiInstanceSurface>(),previous=surfaces.get(surfaceId);surfaces.set(surfaceId,surface);uiSurfaceByInstance.set(instanceId,surfaces);
-        if(reads.install(instanceId,surfaceId,surface,intake)){const installedAtMs=performance.now();uiSurfaceInstalledAtMs.set(`${instanceId}:${surfaceId}`,installedAtMs);hopTrace.record("patch.install",startedMs,installedAtMs-startedMs,{instanceId,surfaceId});installed.push(surfaceId);}
+        if(reads.install(instanceId,surfaceId,surface,intake)){rejections.clear(instanceId,surfaceId);const installedAtMs=performance.now();uiSurfaceInstalledAtMs.set(`${instanceId}:${surfaceId}`,installedAtMs);hopTrace.record("patch.install",startedMs,installedAtMs-startedMs,{instanceId,surfaceId});installed.push(surfaceId);}
         else if(uiSurfaceByInstance.get(instanceId)===surfaces&&surfaces.get(surfaceId)===surface){if(previous)surfaces.set(surfaceId,previous);else surfaces.delete(surfaceId);}
       }
       await closeIntake(instanceId, intake);
@@ -158,7 +160,7 @@ function createUiPatchAdmission(scope: PluginHandleScope, instances: ReturnType<
             if (step > PLUGIN_UI_INTAKE_STEP_CEILING) throw new Error(`plugin-ui.intake-budget-exhausted:${surfaceId}:${PLUGIN_UI_INTAKE_STEP_CEILING}`);
             const current = intake.advance(uiGrant);
             token = intake.peekAcknowledgement();
-            if (current.kind === "rejected") throw new Error(`plugin-ui.intake-rejected:${current.phase}:${intake.failure ?? "unknown"}`);
+            if (current.kind === "rejected") throw rejections.record(instanceId, pluginUiIntakeRejectionV1(surfaceId, current.phase, intake.failure));
             if (current.kind === "blocked" && token === null) throw new Error(`plugin-ui.intake-blocked:${current.phase}`);
             if (uiIntakeOwesYieldV1(step)) await yieldPluginUiContinuation();
           }
@@ -180,7 +182,7 @@ function createUiPatchAdmission(scope: PluginHandleScope, instances: ReturnType<
     }
     return { acknowledgements: [], turns: supplemental };
   };
-  return { uiGrant, uiSurfaceInstalledAtMs, serializeInstanceUiIntake, closeIntake, acceptUiPatches };
+  return { uiGrant, uiSurfaceInstalledAtMs, serializeInstanceUiIntake, closeIntake, acceptUiPatches, rejections };
 }
 
 /** 🧺️ Phase 4b of {@link loadPluginModule}: reads the retained surfaces back as built nodes and answers a refresh request. */
@@ -287,7 +289,7 @@ function createUiSurfaceProjection(scope: PluginHandleScope, admission: ReturnTy
 /** 🧺️ Phase 4c of {@link loadPluginModule}: retires one instance — its UI owner behind the intake queue, then its lifecycle lease. */
 function createUiInstanceClose(scope: PluginHandleScope, admission: ReturnType<typeof createUiPatchAdmission>,reads:ReturnType<typeof createAcknowledgedUiSurfaceLeases>) {
   const { uiRetirementByInstance, uiSurfaceByInstance, uiIntakesByInstance, uiReadsByInstance } = scope;
-  const { uiGrant, serializeInstanceUiIntake, closeIntake } = admission;
+  const { uiGrant, serializeInstanceUiIntake, closeIntake, rejections } = admission;
   const closeUiOwner = (instanceId: number, owner: OwnedUiInstance): Promise<OwnedUiInstanceRetirement> => serializeInstanceUiIntake(instanceId, () => closeOwnedUiInstance(instanceId, owner));
   /** 🧹 Runs inside {@link serializeInstanceUiIntake}: a hot swap can never tear an instance's surfaces
    * down while one of its patches is mid-admission. */
@@ -314,6 +316,7 @@ function createUiInstanceClose(scope: PluginHandleScope, admission: ReturnType<t
     }
     const witness = owner.takeRetirementWitness();
     if (!witness) throw new Error("plugin-ui.retirement-witness-missing");
+    rejections.forget(instanceId);
     uiRetirementByInstance.set(instanceId, witness);
     return witness;
   };
@@ -360,5 +363,5 @@ export function createRetainedUiIntake(scope: PluginHandleScope, instances: Retu
   const admission = createUiPatchAdmission(scope, instances,reads);
   const { ownedUiRefreshResponse } = createUiSurfaceProjection(scope, admission,reads);
   const { retireInstanceLifecycle } = createUiInstanceClose(scope, admission,reads);
-  return { acceptUiPatches: admission.acceptUiPatches, ownedUiRefreshResponse, retireInstanceLifecycle,acquireOwnedUiSurface:reads.acquireOwnedUiSurface,beginOwnedUiSurfaceClose:reads.beginClose };
+  return { acceptUiPatches: admission.acceptUiPatches, explainUiIntakeFailure: admission.rejections.explain, ownedUiRefreshResponse, retireInstanceLifecycle,acquireOwnedUiSurface:reads.acquireOwnedUiSurface,beginOwnedUiSurfaceClose:reads.beginClose };
 }

@@ -14,6 +14,7 @@ use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
 use protocol::OpBinary;
 
 dsl::original_tagged_operation_receiving!(RewriteRuleMutation, COMPONENT_PROTOCOL_SEMIO);
+dsl::artifact_persisted_binary_operation!(RewriteRuleMutation);
 
 /// 🪝️ Admits native publication and replay owners for the declared mutation protocol.
 pub fn build_document_store_owners(

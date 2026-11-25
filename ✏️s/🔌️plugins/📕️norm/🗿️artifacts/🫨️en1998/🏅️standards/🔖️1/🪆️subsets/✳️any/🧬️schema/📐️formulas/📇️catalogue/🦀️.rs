@@ -131,7 +131,3 @@ pub fn evaluate_design_case(case: &DesignCase, annex: AnnexChoice) -> Vec<CheckR
 pub fn catalogue_demo_cases() -> Vec<CaseRow> {
     En1998Cases::entries().iter().map(|entry| CaseRow::from(&design_case::seed::<En1998Cases>(entry, &format!("case-{}", entry.id.to_ascii_lowercase())))).collect()
 }
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

@@ -5,10 +5,10 @@
  * (c) one equals the other with all coordinates multiplied by one common factor (a scaled copy; the factors tried are the denominator ratio and the ratio of the drawn extents; the geometry parameters are scaled before flattening, paths with arcs are not scaled).
  *
  * @see ../../🗂️catalog/🟦️.ts — issue `representation-copied`
- * @see ../../🧮️evaluation/🟦️.ts — `flattenGeometry`
+ * @see ../../🧮️evaluation/🟦️.ts — `flattenGeometry`, `loftRings`
  */
 import { PLANAR_VIEWPOINTS, type AuthoredRepresentation, type Shape, type Viewpoint } from "../../../🧬️schema/🟦️.ts";
-import { flattenGeometry } from "../../🧮️evaluation/🟦️.ts";
+import { flattenGeometry, loftRings } from "../../🧮️evaluation/🟦️.ts";
 
 /** 🔗️ How two representations relate: `identical` (same shapes), `subset` (all shapes of `coarse` occur identically in `fine`), `scaled` (equal up to a common factor) or `distinct`. */
 export type Similarity = { readonly kind: "identical" | "subset" | "scaled" | "distinct"; readonly sharedShapes: number; readonly coarseShapes: number; readonly fineShapes: number; readonly factor?: number };
@@ -35,6 +35,7 @@ function scaled(shape: Shape, factor: number): Shape {
   for (const key of ["x0", "y0", "x1", "y1", "r0", "r1", "cx", "cy", "rx", "ry", "x", "y", "w", "h", "r"]) if (typeof out[key] === "number") out[key] = (out[key] as number) * factor;
   if (shape.kind === "poly") out.points = shape.points.map(([x, y]) => [x * factor, y * factor]);
   if (shape.kind === "path") out.d = scaledPath(shape.d, factor);
+  if (shape.kind === "loft") out.sections = shape.sections.map((section) => ({ ...section, at: section.at.map((value) => value * factor), rx: section.rx * factor, ry: section.ry * factor }));
   return out as Shape;
 }
 
@@ -45,8 +46,9 @@ function placed(rep: AuthoredRepresentation): Placed[] {
 }
 
 function signature({ shape, viewpoint }: Placed, factor: number): string {
-  const flat = flattenGeometry(scaled(shape, factor));
-  const rounded = flat.rings.map((ring) => ring.map((p) => `${Math.round(p.x / ROUND_M)},${Math.round(p.y / ROUND_M)}`).join(";")).join("|");
+  const sized = scaled(shape, factor);
+  const flat = flattenGeometry(sized);
+  const rounded = sized.kind === "loft" ? loftRings(sized).map((ring) => ring.map((p) => p.map((value) => Math.round(value / ROUND_M)).join(",")).join(";")).join("|") : flat.rings.map((ring) => ring.map((p) => `${Math.round(p.x / ROUND_M)},${Math.round(p.y / ROUND_M)}`).join(";")).join("|");
   return `${viewpoint}/${shape.bone}/${shape.role}/${flat.closed ? "c" : "o"}/${rounded}`;
 }
 
@@ -57,6 +59,7 @@ function signatures(shapes: readonly Placed[], factor = 1): string[] {
 function extentOf(shapes: readonly Placed[]): number {
   let max = 0;
   for (const { shape } of shapes) for (const ring of flattenGeometry(shape).rings) for (const p of ring) max = Math.max(max, Math.abs(p.x), Math.abs(p.y));
+  for (const { shape } of shapes) if (shape.kind === "loft") for (const ring of loftRings(shape)) for (const p of ring) max = Math.max(max, Math.abs(p[0]), Math.abs(p[1]), Math.abs(p[2]));
   return max;
 }
 

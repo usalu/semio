@@ -15,6 +15,18 @@ use store::TextError;
 
 pub use semio_s_plugin_norm_compliance_core::*;
 
+#[doc(hidden)]
+pub use semio_framework_dsl_record_derive as __dsl_record_derive;
+#[doc(hidden)]
+pub use semio_framework_value as __value;
+#[doc(hidden)]
+pub use semio_framework_value_derive as __value_derive;
+#[doc(hidden)]
+pub use semio_os_kernel as __kernel;
+
+#[path = "🩹️row-patch/🦀️.rs"]
+mod row_patch;
+
 #[path = "📊️normal-distribution/🦀️.rs"]
 pub mod normal_distribution;
 

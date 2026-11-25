@@ -5,6 +5,7 @@ import {readdir,readFile} from "node:fs/promises";
 import {dirname,join} from "node:path";
 import {compileJsonSchemaSubset,type CompiledJsonSchemaSubset} from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
+import {processHolderAliveV1} from "../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts";
 
 /** 🧷️ One child the replica daemon supervises, as the topology declares it: a script below the worktree with its arguments, the machines it runs on (`member`: every machine, `server`: the group server only) and what it needs (`platform-peer`: at least one other machine of the same platform has attested). */
 export type SidecarChildV1=Readonly<{name:string;script:string;arguments:readonly string[];roles:readonly ("member"|"server")[];requires:"none"|"platform-peer";enabled:boolean}>;
@@ -22,7 +23,7 @@ export type SidecarFactsV1=Readonly<{worktree:string;storeRoot:string;originId:s
 export type SidecarsV1=Readonly<{tick:(healthy:boolean)=>void;report:()=>readonly SidecarStateV1[];stop:()=>Promise<void>;release:()=>void}>;
 
 /** 🪪️ What the launcher of a sidecar keeps fresh in `.cache/f/sidecars/<name>.json` (see `🧬️schema/🔣️.json`): who runs, since when, when it last wrote, and the hash of the entry script it runs. */
-export type SidecarRecordV1=Readonly<{version:1;name:string;pid:number;startedMs:number;wallMs:number;entrySha256:string}>;
+export type SidecarRecordV1=Readonly<{version:1;name:string;pid:number;startMs:number;startedMs:number;wallMs:number;entrySha256:string}>;
 
 /** 🎫️ What the daemon keeps fresh in `.cache/f/sidecars/<name>.lease` while it owns the sidecar. */
 export type SidecarLeaseV1=Readonly<{version:1;pid:number;wallMs:number}>;
@@ -72,10 +73,8 @@ export function sidecarLeaseExpiredV1(file:string,now:number,expireMilliseconds:
  catch{return now-sinceMs>expireMilliseconds;}
 }
 
-/** 🫀️ Whether a process with this id exists (a permission error counts as existing). */
-export function processLivesV1(pid:number):boolean{
- try{process.kill(pid,0);return true;}catch(error){return (error as {code?:string}).code==="EPERM";}
-}
+/** 🫀️ Whether the launcher named by a record still lives (pid with creation time; a reused pid is another process). */
+export function sidecarRecordLivesV1(record:Readonly<{pid:number;startMs:number}>):boolean{return processHolderAliveV1(record);}
 
 /** ⏱️ The restart delay after `failures` consecutive failed runs: the first delay doubled per failure up to the ceiling. */
 export function sidecarBackoffMillisecondsV1(restart:SidecarSettingsV1["restart"],failures:number):number{
@@ -161,13 +160,13 @@ export function createSidecarsV1(options:Readonly<{settings:SidecarSettingsV1;fa
  const adopt=(slot:Slot,record:SidecarRecordV1):void=>{
   slot.pid=record.pid;slot.startedMs=record.startedMs;slot.nextStartMs=null;slot.lastExit=null;set(slot,"running");renew(slot);
   slot.ending=new Promise<void>(finish=>{
-   slot.adopted=setInterval(()=>{if(!processLivesV1(record.pid)){settle(slot,"adopted process ended");finish();}},200);
+   slot.adopted=setInterval(()=>{if(!sidecarRecordLivesV1(record)){settle(slot,"adopted process ended");finish();}},200);
    slot.adopted.unref?.();
   });
  };
  const claim=(slot:Slot,at:number):"adopted"|"waiting"|"free"=>{
   const record=readSidecarRecordV1(sidecarFilesV1(options.facts.worktree,slot.spec.name).record);
-  if(record===undefined||record.name!==slot.spec.name||!processLivesV1(record.pid))return "free";
+  if(record===undefined||record.name!==slot.spec.name||!sidecarRecordLivesV1(record))return "free";
   if(Date.now()-record.wallMs>protocol.aliveMilliseconds)return "free";
   if(record.entrySha256===sidecarEntryHashV1(entryOf(slot))){adopt(slot,record);return "adopted";}
   const first=retiring.get(record.pid);

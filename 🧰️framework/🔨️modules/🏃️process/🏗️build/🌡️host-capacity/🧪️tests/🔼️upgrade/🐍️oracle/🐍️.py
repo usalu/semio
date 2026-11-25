@@ -14,12 +14,13 @@ def floor_mb(policy,total):
     m=policy["memory"];share=total*m["floorBasisPoints"]//10000
     return min(total,max(m["floorMinimumMegabytes"],min(m["floorMaximumMegabytes"],share)))
 
-def order(waiters,ledger):
+def order(waiters,ledger,now=0,aging=float('inf')):
+    def starving(w):return now-w["arrivedAtMs"]>=aging
     def held(w):return 0 if w.get("session") is None else sum(g["reservedMegabytes"] for g in ledger if g.get("session")==w["session"])
     def weight(w):return w.get("weight",1)
     def cmp(a,b):
         ra=2 if a.get("grow") is True or a["request"].get("elastic") is True else 0 if a["request"]["priority"]=="interactive" else 1;rb=2 if b.get("grow") is True or b["request"].get("elastic") is True else 0 if b["request"]["priority"]=="interactive" else 1
-        for left,right in ((ra,rb),(held(a)*weight(b),held(b)*weight(a)),(a["arrivedAtMs"],b["arrivedAtMs"]),(a["request"]["id"],b["request"]["id"])):
+        for left,right in ((ra,rb),(0 if starving(a) else 1,0 if starving(b) else 1),((0,0) if starving(a) and starving(b) else (held(a)*weight(b),held(b)*weight(a))),(a["arrivedAtMs"],b["arrivedAtMs"]),(a["request"]["id"],b["request"]["id"])):
             if left!=right:return -1 if left<right else 1
         return 0
     return sorted(waiters,key=functools.cmp_to_key(cmp))
@@ -61,7 +62,7 @@ def evaluate(policy,host,ledger,waiters,now):
     growing={w["request"]["id"] for w in waiters if w.get("upgrade") is True}
     decisions=[];heads=[];state={"blocked":False,"waits":False,"admitted":0,"own":ledger_cpu,"rampers":len([g for g in active if g.get("rampSlot") is True and ramping(g)]),"quiet_left":policy["memory"]["maximumQuiet"]-len([g for g in active if g.get("quiet") is True]),"soft_left":policy["memory"].get("quietSoftStopGrants",0)-len([g for g in active if g.get("quiet") is True]),"room_observed":room_observed,"room_budget":room_budget,"load_room":load_room,"sessions":set()}
     w_=policy["wait"]
-    ordered=order(aged,active)
+    ordered=order(aged,[{"session":g.get("session"),"reservedMegabytes":committed_of(g)} for g in active],now,policy["wait"]["agingMilliseconds"])
     for at,waiter in enumerate(ordered):
         r=waiter["request"];quiet=r.get("quiet") is True;avoids=quiet and state["soft_left"]>0;pause=None if avoids else soft;grows=waiter.get("grow") is True and waiter.get("upgrade") is True;elastic=r.get("elastic") is True
         def need(jobs):return min(r["fixedMegabytes"]+jobs*r["perJobMegabytes"],cap)

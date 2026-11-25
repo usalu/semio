@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# one builder.sh exec per package so the build lock is free between packages
+T="/home/deck/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️22/GET-PUZZLE-PLUGIN-WORKING-END-TO-END"
+SKIP="${1:-0}"
+i=0
+for spec in 'semio-s-artifact-puzzle-2d-v1' 'semio-s-artifact-puzzle-2d-board-host' 'semio-s-artifact-puzzle-2d-engine' 'semio-s-artifact-puzzle-2d-tambour-single-storey' 'semio-s-artifact-puzzle-2d-tambour-end-storeys' 'semio-s-artifact-puzzle-2d-interaction' 'semio-s-artifact-puzzle-2d-v1-editor-tests' 'semio-s-artifact-puzzle-2d-unit-tests' 'semio-s-artifact-puzzle-2d-history-edit-runtime-tests' 'semio-s-artifact-puzzle-2d-retained-panels' 'semio-s-artifact-puzzle-2d-retained' 'semio-s-artifact-puzzle-2d-window' 'semio-s-artifact-puzzle-2d-inferences' 'semio-s-artifact-puzzle-2d-schema' 'semio-s-artifact-puzzle-2d-snapshot' 'semio-s-artifact-puzzle-2d-mutations' 'semio-s-artifact-puzzle-2d-mut-any-10' 'semio-s-artifact-puzzle-2d-mut-any-8' 'semio-s-artifact-puzzle-2d-mut-any-3' 'semio-s-artifact-puzzle-2d-mut-any-9' 'semio-s-artifact-puzzle-2d-mut-any' 'semio-s-artifact-puzzle-2d-connect-handles-preparation' 'semio-s-artifact-puzzle-2d-tests' 'semio-s-artifact-puzzle-2d-mut-any-4' 'semio-s-artifact-puzzle-2d-text-inverse' 'semio-s-artifact-puzzle-2d-mut-any-7' 'semio-s-artifact-puzzle-2d-mut-any-2' 'semio-s-artifact-puzzle-2d-mut-any-6' 'semio-s-artifact-puzzle-2d-mut-any-5' 'semio-s-artifact-puzzle-2d-records' 'semio-s-artifact-puzzle-2d|--features component-app-assembly' 'semio-s-artifact-puzzle-2d-graph-manifest'; do
+  i=$((i+1)); [ "$i" -le "$SKIP" ] && continue
+  "$T/builder.sh" exec "cd '✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d' && P2_JOBS=3 bash $T/p2-2d-group2.sh 2d '$spec'"
+done
+echo "P2_ALL_DONE"

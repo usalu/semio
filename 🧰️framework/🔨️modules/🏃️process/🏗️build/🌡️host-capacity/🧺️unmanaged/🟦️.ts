@@ -4,7 +4,7 @@ import {systemWindowsMemoryPortV1,type WindowsMemoryPortV1} from "../🪟️nati
 
 const RULES=schema.definitions.Unmanaged.const;
 
-/** 🧾️ One process of the machine: id, parent, resident kilobytes and executable name. */
+/** 🧾️ One process of the machine: id, parent, kilobytes and executable name; on Windows the kilobytes are the private usage the kernel charges the process (the working set where it is unknown), elsewhere the resident set `ps` prints. */
 export type HostProcessRowV1=Readonly<{pid:number;ppid:number;kilobytes:number;name:string}>;
 /** 📊️ The processes of one class that run beside the gate and the memory they hold. */
 export type HostUnmanagedClassV1=Readonly<{name:string;processes:number;megabytes:number}>;
@@ -31,7 +31,7 @@ export function censusUnmanagedHostV1(rows:readonly HostProcessRowV1[],grantRoot
 
 /** 🖥️ Reads the process table of this machine: the native process walk on Windows (a blind walk is an empty table), the command of the schema elsewhere. */
 export function readHostProcessRowsV1(platform:NodeJS.Platform=process.platform,windows?:WindowsMemoryPortV1):Promise<readonly HostProcessRowV1[]>{
- if(platform==="win32"){const table=(windows??systemWindowsMemoryPortV1()).processes();return Promise.resolve(table.known?table.rows.map(row=>({pid:row.pid,ppid:row.parent,kilobytes:Math.floor((row.workingSetBytes??0)/1024),name:row.name})):[]);}
+ if(platform==="win32"){const table=(windows??systemWindowsMemoryPortV1()).processes();return Promise.resolve(table.known?table.rows.map(row=>({pid:row.pid,ppid:row.parent,kilobytes:Math.floor((row.privateBytes??row.workingSetBytes??0)/1024),name:row.name})):[]);}
  const row=RULES.table.unix;
  return new Promise(done=>execFile(row.command,[...row.arguments],{maxBuffer:64*1048576,windowsHide:true},(error,stdout)=>done(error?[]:parseHostProcessRowsV1(stdout))));
 }

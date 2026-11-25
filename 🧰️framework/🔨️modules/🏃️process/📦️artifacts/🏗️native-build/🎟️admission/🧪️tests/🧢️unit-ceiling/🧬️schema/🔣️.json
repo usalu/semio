@@ -1,10 +1,14 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "schema://repo.build/UnitCeilingCorpusV1",
-  "title": "Unit ceiling corpus: ledger rows per case",
+  "title": "Compile-memory budget corpus: ledger rows per case, freshness cases and compiler command lines",
   "type": "object",
   "additionalProperties": false,
-  "required": ["cases"],
+  "required": [
+    "cases",
+    "freshCases",
+    "commands"
+  ],
   "properties": {
     "cases": {
       "type": "array",
@@ -12,20 +16,102 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["id", "observations"],
+        "required": [
+          "id",
+          "observations"
+        ],
         "properties": {
-          "id": { "type": "string", "minLength": 1 },
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
           "observations": {
             "type": "array",
             "items": {
               "type": "object",
               "additionalProperties": false,
-              "required": ["key", "peakRssBytes"],
+              "required": [
+                "key",
+                "peakRssBytes"
+              ],
               "properties": {
-                "key": { "type": "string" },
-                "peakRssBytes": { "type": "integer", "minimum": 0 }
+                "key": {
+                  "type": "string"
+                },
+                "peakRssBytes": {
+                  "type": "integer",
+                  "minimum": 0
+                }
               }
             }
+          }
+        }
+      }
+    },
+    "freshCases": {
+      "type": "array",
+      "minItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "rows"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "rows": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "key",
+                "peakRssBytes",
+                "atMs"
+              ],
+              "properties": {
+                "key": {
+                  "type": "string"
+                },
+                "peakRssBytes": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "atMs": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "lines": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "commands": {
+      "type": "array",
+      "minItems": 12,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "command"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "command": {
+            "type": "string"
           }
         }
       }

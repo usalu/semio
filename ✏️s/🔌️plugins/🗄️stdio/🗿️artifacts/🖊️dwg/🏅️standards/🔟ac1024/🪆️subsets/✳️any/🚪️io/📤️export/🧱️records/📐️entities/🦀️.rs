@@ -6,8 +6,8 @@ use crate::standards::v_ac1024::subsets::any::io::export::records::fields::{appe
 //#region 🔖️DwgStructuralCodec
 //#region DwgRead
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn entity_mode_bits(value: semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEntityMode) -> u8 {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEntityMode;
+fn entity_mode_bits(value: semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgEntityMode) -> u8 {
+    use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgEntityMode;
     match value {
         DwgEntityMode::ExplicitOwner => 0,
         DwgEntityMode::PaperSpace => 1,
@@ -16,8 +16,8 @@ fn entity_mode_bits(value: semio_s_artifact_stdio_dwg_snapshot_objects::standard
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn entity_reference_bits(value: semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEntityReferenceMode) -> u8 {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEntityReferenceMode;
+fn entity_reference_bits(value: semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgEntityReferenceMode) -> u8 {
+    use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgEntityReferenceMode;
     match value {
         DwgEntityReferenceMode::ByLayer => 0,
         DwgEntityReferenceMode::ByBlock => 1,
@@ -26,8 +26,8 @@ fn entity_reference_bits(value: semio_s_artifact_stdio_dwg_snapshot_objects::sta
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_r2010_entity_common_main(data: &mut DwgBitWriter, object: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject, common: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEntityCommon) -> Result<(), String> {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEntityColorKind;
+fn encode_r2010_entity_common_main(data: &mut DwgBitWriter, object: &semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject, common: &semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgEntityCommon) -> Result<(), String> {
+    use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgEntityColorKind;
     data.write_b(false);
     data.write_bb(entity_mode_bits(common.mode));
     data.write_bl(object.reactor_handles.len() as u32);
@@ -52,10 +52,10 @@ fn encode_r2010_entity_common_main(data: &mut DwgBitWriter, object: &semio_s_art
     Ok(())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_r2010_entity_common_handles(handles: &mut DwgBitWriter, object: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject, common: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEntityCommon) -> Result<(), String> {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEntityColorKind;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEntityMode;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEntityReferenceMode;
+fn encode_r2010_entity_common_handles(handles: &mut DwgBitWriter, object: &semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject, common: &semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgEntityCommon) -> Result<(), String> {
+    use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgEntityColorKind;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgEntityMode;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgEntityReferenceMode;
     if common.color.kind == DwgEntityColorKind::TrueColor {
         handles.write_handle(5, common.color.color_handle.unwrap_or_default());
     }
@@ -95,8 +95,8 @@ fn encode_r2010_entity_common_handles(handles: &mut DwgBitWriter, object: &semio
     Ok(())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dimension_attachment_wire(value: semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgDimensionTextAttachment) -> u16 {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgDimensionTextAttachment::*;
+fn dimension_attachment_wire(value: semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgDimensionTextAttachment) -> u16 {
+    use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgDimensionTextAttachment::*;
     match value {
         TopCenter => 1,
         TopLeft => 2,
@@ -110,15 +110,15 @@ fn dimension_attachment_wire(value: semio_s_artifact_stdio_dwg_snapshot_objects:
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dimension_spacing_wire(value: semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgDimensionLineSpacingStyle) -> u16 {
+fn dimension_spacing_wire(value: semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgDimensionLineSpacingStyle) -> u16 {
     match value {
-        semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgDimensionLineSpacingStyle::AtLeast => 1,
-        semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgDimensionLineSpacingStyle::Exact => 2,
+        semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgDimensionLineSpacingStyle::AtLeast => 1,
+        semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgDimensionLineSpacingStyle::Exact => 2,
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn encode_r2010_block_begin_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject, name: &str) -> Result<Vec<u8>, String> {
-    let Some(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody::Entity(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEntityBody::BlockBegin(block))) = object.body.as_ref() else {
+pub fn encode_r2010_block_begin_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject, name: &str) -> Result<Vec<u8>, String> {
+    let Some(semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody::Entity(semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgEntityBody::BlockBegin(block))) = object.body.as_ref() else {
         return Err(format!("BLOCK {:#x} typed body missing", object.handle));
     };
     let mut data = DwgBitWriter::new();
@@ -134,8 +134,8 @@ pub fn encode_r2010_block_begin_frame(object: &semio_s_artifact_stdio_dwg_snapsh
     finish_r2010_object_frame(&data, handles)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn encode_r2010_block_end_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    let Some(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody::Entity(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEntityBody::BlockEnd(block))) = object.body.as_ref() else {
+pub fn encode_r2010_block_end_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    let Some(semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody::Entity(semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgEntityBody::BlockEnd(block))) = object.body.as_ref() else {
         return Err(format!("ENDBLK {:#x} typed body missing", object.handle));
     };
     let mut data = DwgBitWriter::new();
@@ -149,8 +149,8 @@ pub fn encode_r2010_block_end_frame(object: &semio_s_artifact_stdio_dwg_snapshot
     finish_r2010_object_frame(&data, handles)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn encode_r2010_insert_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    let Some(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody::Entity(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEntityBody::Insert(insert))) = object.body.as_ref() else {
+pub fn encode_r2010_insert_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    let Some(semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody::Entity(semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgEntityBody::Insert(insert))) = object.body.as_ref() else {
         return Err(format!("INSERT {:#x} typed body missing", object.handle));
     };
     let insertion = logical_point3(&insert.insertion, "INSERT insertion")?;
@@ -203,8 +203,8 @@ pub fn encode_r2010_insert_frame(object: &semio_s_artifact_stdio_dwg_snapshot_ob
     finish_r2010_object_frame(&data, handles)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn encode_r2010_dimension_linear_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    let Some(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody::Entity(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEntityBody::DimensionLinear(linear))) = object.body.as_ref() else {
+pub fn encode_r2010_dimension_linear_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    let Some(semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody::Entity(semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgEntityBody::DimensionLinear(linear))) = object.body.as_ref() else {
         return Err(format!("DIMENSION_LINEAR {:#x} typed body missing", object.handle));
     };
     let dimension = &linear.dimension;
@@ -262,8 +262,8 @@ pub fn encode_r2010_dimension_linear_frame(object: &semio_s_artifact_stdio_dwg_s
     finish_r2010_object_frame(&data, handles)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn viewport_status_mask(flags: &[semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgViewportStatusFlag]) -> Result<u32, String> {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgViewportStatusFlag::*;
+fn viewport_status_mask(flags: &[semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgViewportStatusFlag]) -> Result<u32, String> {
+    use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgViewportStatusFlag::*;
     let mut mask = 0u32;
     for flag in flags {
         let bit = match flag {
@@ -298,13 +298,13 @@ fn viewport_status_mask(flags: &[semio_s_artifact_stdio_dwg_snapshot_objects::st
     Ok(mask)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn encode_r2010_viewport_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgDefaultLightingType;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEntityBody;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgOrthographicView;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgShadePlotMode;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgViewportRenderMode;
+pub fn encode_r2010_viewport_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgDefaultLightingType;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgEntityBody;
+    use semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgOrthographicView;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgShadePlotMode;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgViewportRenderMode;
     let Some(DwgLogicalObjectBody::Entity(DwgEntityBody::Viewport(viewport))) = object.body.as_ref() else {
         return Err(format!("VIEWPORT {:#x} body missing", object.handle));
     };
@@ -393,8 +393,8 @@ pub fn encode_r2010_viewport_frame(object: &semio_s_artifact_stdio_dwg_snapshot_
     finish_r2010_object_frame(&data, handles)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn encode_r2010_line_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    let Some(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody::Entity(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEntityBody::Line(line))) = object.body.as_ref() else {
+pub fn encode_r2010_line_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    let Some(semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody::Entity(semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgEntityBody::Line(line))) = object.body.as_ref() else {
         return Err(format!("LINE {:#x} typed body missing", object.handle));
     };
     let start = logical_point3(&line.start, "LINE start")?;
@@ -426,8 +426,8 @@ pub fn encode_r2010_line_frame(object: &semio_s_artifact_stdio_dwg_snapshot_obje
     finish_r2010_object_frame(&data, handles)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn encode_r2010_arc_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    let Some(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody::Entity(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEntityBody::Arc(arc))) = object.body.as_ref() else {
+pub fn encode_r2010_arc_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    let Some(semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody::Entity(semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgEntityBody::Arc(arc))) = object.body.as_ref() else {
         return Err(format!("ARC {:#x} typed body missing", object.handle));
     };
     let center = logical_point3(&arc.center, "ARC center")?;
@@ -452,8 +452,8 @@ pub fn encode_r2010_arc_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objec
     finish_r2010_object_frame(&data, handles)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn encode_r2010_lwpolyline_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    let Some(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody::Entity(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEntityBody::LwPolyline(polyline))) = object.body.as_ref() else {
+pub fn encode_r2010_lwpolyline_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    let Some(semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody::Entity(semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgEntityBody::LwPolyline(polyline))) = object.body.as_ref() else {
         return Err(format!("LWPOLYLINE {:#x} typed body missing", object.handle));
     };
     if polyline.vertices.is_empty() || polyline.vertices.len() > 20_000 {
@@ -540,8 +540,8 @@ pub fn encode_r2010_lwpolyline_frame(object: &semio_s_artifact_stdio_dwg_snapsho
 /// main-stream fields (and strings), then the common handle references and `references`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn encode_r2010_entity_frame(
-    object: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject,
-    common: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEntityCommon,
+    object: &semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject,
+    common: &semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgEntityCommon,
     body: impl FnOnce(&mut DwgBitWriter, &mut DwgBitWriter) -> Result<(), String>,
     references: impl FnOnce(&mut DwgBitWriter),
 ) -> Result<Vec<u8>, String> {
@@ -562,9 +562,9 @@ fn encode_r2010_entity_frame(
 /// (their VERTEX_3D, VERTEX_PFACE, VERTEX_PFACE_FACE and SEQEND sub-entities), field for field as
 /// ODA §20.4 lays them out for R2010.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn encode_r2010_entity_body_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEntityBody;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody;
+pub fn encode_r2010_entity_body_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgEntityBody;
+    use semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody;
     let Some(DwgLogicalObjectBody::Entity(body)) = object.body.as_ref() else { return Err(format!("{} {:#x} typed body missing", object.class_name, object.handle)) };
     let name = object.class_name.as_str();
     let finite = |values: &[f64]| values.iter().all(|value| value.is_finite());

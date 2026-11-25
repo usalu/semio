@@ -183,7 +183,6 @@ impl PluginArtifactChannel {
                     if let Some(egress) = document_backbone_payload(&channel.actor_label, effect) { channel.backbone_egress.push(egress.to_vec()); }
                     if let Some(fault) = shell_lane_fault(instance, effect) { return Err(fault); }
                 }
-                if let semio_framework::kernel::TurnStatus::Faulted(detail) = &turn.status { return Err(decode_guest_fault(detail)); }
                 Ok((turn.lifecycle_receipt, matches!(turn.status, semio_framework::kernel::TurnStatus::Idle)))
             });
             if outcome.is_err() { self.discard_instance(instance); }

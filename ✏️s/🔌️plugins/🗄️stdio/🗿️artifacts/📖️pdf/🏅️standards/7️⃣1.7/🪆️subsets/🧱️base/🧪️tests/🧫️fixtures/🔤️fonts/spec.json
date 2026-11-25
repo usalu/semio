@@ -1,0 +1,47 @@
+{
+  "pages": [
+    {
+      "fonts": [
+        "CM",
+        "TT",
+        "T3"
+      ],
+      "kinds": [
+        "Type1",
+        "TrueType",
+        "Type3"
+      ],
+      "text": [
+        "ABCDEF",
+        "1+2=3",
+        "ABCDEFILOPRS"
+      ]
+    },
+    {
+      "fonts": [
+        "MP",
+        "CJ",
+        "CX"
+      ],
+      "kinds": [
+        "Type1",
+        "Type0",
+        "Type0"
+      ],
+      "text": [
+        "Basic chart",
+        "Yes",
+        "ABCDEF"
+      ]
+    }
+  ],
+  "fontCount": 6,
+  "programs": {
+    "T3": null,
+    "CM": "FontFile",
+    "TT": "FontFile2",
+    "MP": "FontFile3",
+    "CJ": null,
+    "CX": "FontFile2"
+  }
+}

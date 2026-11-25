@@ -13,14 +13,62 @@
       "de": "Ein alter, knorriger Ölbaum (Olea europaea) von 6,9 m mit einem mächtigen, rissigen Stamm von 0,70 m, der sich in 1,4 m in schwere Leitäste gabelt, und einer breiten, silbergrünen immergrünen Krone von 8,2 m Durchmesser; der Olivenbehang wird als jahreszeitliche Pose und Last geführt, vom grünen Fruchtansatz bis zur vollen Herbsternte, in heißem, trockenem Sommerklima."
     },
     "tags": [
-      "tree",
-      "evergreen",
-      "mediterranean",
-      "fruit-tree",
-      "fruit-load",
-      "drought-tolerant",
-      "wind",
-      "transpiration"
+      {
+        "id": "tree",
+        "title": {
+          "en": "tree",
+          "de": "Baum"
+        }
+      },
+      {
+        "id": "evergreen",
+        "title": {
+          "en": "evergreen",
+          "de": "immergrün"
+        }
+      },
+      {
+        "id": "mediterranean",
+        "title": {
+          "en": "mediterranean",
+          "de": "mediterran"
+        }
+      },
+      {
+        "id": "fruit-tree",
+        "title": {
+          "en": "fruit tree",
+          "de": "Obstbaum"
+        }
+      },
+      {
+        "id": "fruit-load",
+        "title": {
+          "en": "fruit load",
+          "de": "Fruchtbehang"
+        }
+      },
+      {
+        "id": "drought-tolerant",
+        "title": {
+          "en": "drought tolerant",
+          "de": "trockenheitsverträglich"
+        }
+      },
+      {
+        "id": "wind",
+        "title": {
+          "en": "wind",
+          "de": "Wind"
+        }
+      },
+      {
+        "id": "transpiration",
+        "title": {
+          "en": "transpiration",
+          "de": "Transpiration"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage vegetation content worker PW-09",

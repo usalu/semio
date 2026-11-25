@@ -9,7 +9,7 @@ use crate::standards::v1_7::subsets::base::modules::lexer::{is_ws, number_text, 
 #[allow(unused_imports)]
 use crate::standards::v1_7::subsets::base::io::error::{PResult, PdfEngineError};
 #[allow(unused_imports)]
-use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfDictEntry, PdfInlineImage, PdfImageBody, PdfLineCap, PdfLineJoin, PdfObject, PdfOp, PdfPropertyList, PdfTextArrayItem, PdfTextString};
+use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfDictEntry, PdfInlineImage, PdfLineCap, PdfLineJoin, PdfObject, PdfOp, PdfPropertyList, PdfTextArrayItem, PdfTextString};
 #[allow(unused_imports)]
 use std::collections::HashMap;
 use crate::standards::v1_7::subsets::base::modules::content::*;
@@ -35,9 +35,9 @@ fn inline_image_framing_matches_pdf_sample_fixture() {
         }
         let ops = result.unwrap_or_else(|error| panic!("{}: {error}", field("name")));
         let [PdfOp::Save, _, PdfOp::InlineImage { image }, PdfOp::Restore] = ops.as_slice() else { panic!("{}", field("name")) };
-        let PdfImageBody::Samples { values } = &image.body else { panic!("{}", field("name")) };
+        let Some(Ok(samples)) = image.packed_samples() else { panic!("{}", field("name")) };
         let expected: Vec<_> = case["samples"].as_array().unwrap().iter().map(|sample| sample.as_u64().unwrap() as u32).collect();
-        assert_eq!(values, &expected, "{}", field("name"));
+        assert_eq!(samples.iter().collect::<Vec<_>>(), expected, "{}", field("name"));
         let exported = print_content(&ops, &NoFonts).unwrap();
         assert_eq!(parse_content(&exported, &NoFonts, &mut resources).unwrap(), ops);
     }

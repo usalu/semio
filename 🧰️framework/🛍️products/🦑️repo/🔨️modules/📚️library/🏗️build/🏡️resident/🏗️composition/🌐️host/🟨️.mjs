@@ -115,7 +115,7 @@ export function spawnHostServiceV1({command,environment=process.env,cwd=process.
   if(remembered)process.stderr.write("The graph service runs under the access of the calling app: the launchd route was refused for "+(remembered.place||cwd)+" earlier since this machine started / Der Graphdienst läuft mit dem Zugriff der aufrufenden App: die launchd-Route wurde für "+(remembered.place||cwd)+" seit dem Start dieses Rechners bereits abgewiesen\n");
   if(required&&!route)refuseDirect();
   if(route){
-   const run=launchd.run??((program,args)=>{const result=spawnSync(program,args,{encoding:"utf8",timeout:10000});return{status:result.status??1,stdout:result.stdout??""};});
+   const run=launchd.run??((program,args)=>{const result=spawnSync(program,args,{windowsHide:true,encoding:"utf8",timeout:10000});return{status:result.status??1,stdout:result.stdout??""};});
    const consent=(launchd.ensure??ensureLauncherConsentV1)({root:cwd,probeScript:fileURLToPath(new URL("../../🔐️consent/🔎️probe/🟨️.mjs",import.meta.url)),run,environment,...launchd.consent});
    if(required&&consent.state!=="ready")refuseDirect();
    if(consent.state==="waiting"){

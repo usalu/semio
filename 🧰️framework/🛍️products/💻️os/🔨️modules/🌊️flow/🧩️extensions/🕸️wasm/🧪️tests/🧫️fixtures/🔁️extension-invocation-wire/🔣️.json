@@ -1,5 +1,6 @@
 {
   "capability": "evaluate",
+  "answerEncoding": "pack",
   "note": "The evaluate capability owns initial input/dependency source once in its existing retained map. Compact resume requests use resume:true, empty inputJson/dependencyJson, and the exact parked operator/node hash/version/cancellation header. Full changed sources are replacement requests. Language-agnostic rows define the ordinary unaddressed wire and retainedAdmission defines bounded addressed admission.",
   "requestFields": [
     "neuronId",

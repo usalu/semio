@@ -65,6 +65,7 @@ pub enum SemioValueMutation {
     RemoveNode(remove_node::RemoveNode),
 }
 dsl::original_pack_value_operation_receiving!(SemioValueMutation);
+dsl::artifact_persisted_binary_operation!(SemioValueMutation);
 
 /// 🏷️ Kebab-case spelling of every `SemioValueMutation` variant, in declaration order — the
 /// vocabulary the `semio-v1-value` mutation catalog (`../../🔣️oracle.json`) declares and

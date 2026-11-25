@@ -25,8 +25,6 @@ fn release_page(cx:&mut StepContext<'_>,release:impl FnOnce(&mut semio_framework
   Err(semio_framework_value::PagedListReleaseFailure::Work(error))=>Err(error.into()),
  }
 }
-#[doc(hidden)]
-pub fn metadata(cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{if cx.should_yield()||cx.retained_grant().maximum_items==0||cx.retained_grant().maximum_depth==0{return Ok(false)}cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);Ok(true)}
 /// 🎟️ One resident birth frame for the Source owners an input constructs, retired with its admission.
 #[doc(hidden)]
 #[derive(Default)]
@@ -38,10 +36,7 @@ impl BirthFrame{
   Ok(true)
  }
 }
-type ResponseFields=(Option<String>,Option<semio_framework_value::DslValue>,Option<semio_framework::Fault>);
-#[doc(hidden)]
-#[path="📦️completed/🦀️.rs"]
-pub mod completed;
+use semio_plugin_reactor_receiving_completed::{self as completed, ResponseFields, metadata};
 pub use semio_plugin_reactor_staged_forms::staged;
 #[doc(hidden)]
 pub struct RetainedResponse{pub birth:BirthFrame,pub metadata:ManuallyDrop<Option<Box<semio_plugin_runtime_ops::ops_typed_operations::OriginalResponseActionSource>>>,pub instance:Option<u32>,pub key:Option<instance_lifetime::NativeCloseKey>,pub witness:ReceivingSource,pub request:Option<semio_framework::kernel::RequestId>,pub input:ManuallyDrop<Option<completed::CompletedInput>>,pub fields:ManuallyDrop<Option<ResponseFields>>,pub request_result:ManuallyDrop<Option<Result<Vec<u8>,semio_framework::Fault>>>,pub request_closing:ManuallyDrop<Option<ControlledRetirement<Result<Vec<u8>,semio_framework::Fault>>>>,pub closing:ManuallyDrop<Option<ControlledRetirement<ResponseFields>>>,pub output:ManuallyDrop<Option<semio_plugin_runtime_ops::ops_ingress::PluginExchangeOutput>>,pub failure:ManuallyDrop<Option<OriginalTurnFailure>>,pub finished:bool}

@@ -24,6 +24,7 @@ pub fn domains(document: &En1992Snapshot) -> [(f64, f64); 2] {
 /// 🎨️ Adds the grade field entity of every member whose concrete and reinforcement grade resolve, and the two scalar legends once.
 pub fn project(input: &SceneInput, layout: &Layout, out: &mut Out) {
     let d = input.document;
+    swatches(d, out);
     let titles = [(CONCRETE_FIELD, "Concrete grade f_ck (MPa)", "Betongüte f_ck (MPa)"), (REINFORCEMENT_FIELD, "Reinforcement grade f_yk (MPa)", "Bewehrungsgüte f_yk (MPa)")];
     for m in &d.members {
         if !out.wants(&m.id) {
@@ -93,4 +94,20 @@ pub fn legend_diagram(document: &En1992Snapshot) -> Option<Diagram2d> {
         legend: true,
         table_twin: DataTable { columns: vec![column("Position", "Lage", "1", index), column("Strength", "Festigkeit", "MPa", strength), column("Members using it", "Verwendende Bauteile", "1", members)] },
     })
+}
+
+/// 🧩️ One swatch per grade row in front of the members (concrete, reinforcement and prestressing steel in rows of their own): the scene entity a check of the grade belongs to, used by a member or not.
+fn swatches(d: &En1992Snapshot, out: &mut Out) {
+    let rows: [(&str, MaterialRole, Vec<(&str, &str)>); 3] = [
+        ("concreteGrades", MaterialRole::Concrete, d.concrete_grades.iter().map(|g| (g.id.as_str(), g.name.as_str())).collect()),
+        ("reinforcementGrades", MaterialRole::Rebar, d.reinforcement_grades.iter().map(|g| (g.id.as_str(), g.name.as_str())).collect()),
+        ("prestressSteels", MaterialRole::Rebar, d.prestress_steels.iter().map(|g| (g.id.as_str(), g.name.as_str())).collect()),
+    ];
+    for (row, (collection, role, grades)) in rows.into_iter().enumerate() {
+        for (index, (id, name)) in grades.into_iter().enumerate() {
+            let at = Vec3::new(1.5 * index as f64, -4.0 - 1.5 * row as f64, 0.0);
+            let geometry = Geometry::Solid(SolidGeometry { shape: SolidShape::Box { frame: super::scene::projection_kit::world_frame(at.clone()), size: Vec3::new(1.0, 1.0, 0.3) } });
+            out.push(Spec::new(EntityKind::Solid, id, format!("{collection}[id={id}]"), geometry, role.clone(), LAYER_GRADES, loc(&format!("Grade {name}"), &format!("Güte {name}")), loc(&format!("strength grade {id}"), &format!("Festigkeitsklasse {id}"))), &[at]);
+        }
+    }
 }

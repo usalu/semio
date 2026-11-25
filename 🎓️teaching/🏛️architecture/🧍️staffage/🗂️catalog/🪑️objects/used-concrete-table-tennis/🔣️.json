@@ -13,16 +13,76 @@
    "de": "Eine Fertigteil-Tischtennisplatte aus Beton nach vielen Parksommern: die ITTF-Spielfläche von 2,74 x 1,525 m auf 0,76 m auf einer 60-mm-Stahlbetonplatte, in einem Stück mit zwei geneigten 120-mm-Fußscheiben gegossen, und ein 6-mm-Lochblechnetz an den Plattenkanten, etwa 1.07 t, verdübelt auf zwei Streifenfundamenten, deren Oberkanten bündig mit einer wassergebundenen Decke liegen. Ihr Gebrauch zeigt sich in fünf abgeplatzten Kanten, der an beiden Enden durchgescheuerten ausgeblichenen grünen Beschichtung, unterbrochenen weißen Linien, Kaugummi, einer Mäherabplatzung, Algen, einem Graffiti-Tag, einer verbogenen Netzkante und den in den Kies getretenen Mulden, wo die Spieler stehen; der Bauhof hebt sie an ihren vier Transportankern mit dem Kran aus, und zwei Spieler stützen sich auf ihre Enden."
   },
   "tags": [
-   "used",
-   "park",
-   "public-space",
-   "sport",
-   "play",
-   "table-tennis",
-   "precast-concrete",
-   "concrete",
-   "steel",
-   "street-furniture"
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "park",
+    "title": {
+     "en": "park",
+     "de": "Park"
+    }
+   },
+   {
+    "id": "public-space",
+    "title": {
+     "en": "public space",
+     "de": "öffentlicher Raum"
+    }
+   },
+   {
+    "id": "sport",
+    "title": {
+     "en": "sport",
+     "de": "Sport"
+    }
+   },
+   {
+    "id": "play",
+    "title": {
+     "en": "play",
+     "de": "Spiel"
+    }
+   },
+   {
+    "id": "table-tennis",
+    "title": {
+     "en": "table tennis",
+     "de": "Tischtennis"
+    }
+   },
+   {
+    "id": "precast-concrete",
+    "title": {
+     "en": "precast concrete",
+     "de": "Betonfertigteil"
+    }
+   },
+   {
+    "id": "concrete",
+    "title": {
+     "en": "concrete",
+     "de": "Beton"
+    }
+   },
+   {
+    "id": "steel",
+    "title": {
+     "en": "steel",
+     "de": "Stahl"
+    }
+   },
+   {
+    "id": "street-furniture",
+    "title": {
+     "en": "street furniture",
+     "de": "Stadtmobiliar"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content (used park objects wave)",

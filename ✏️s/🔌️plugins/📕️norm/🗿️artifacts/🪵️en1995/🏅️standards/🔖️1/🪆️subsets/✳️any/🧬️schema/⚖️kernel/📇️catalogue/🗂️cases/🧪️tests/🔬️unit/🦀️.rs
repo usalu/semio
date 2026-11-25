@@ -1,4 +1,5 @@
 use super::*;
+use semio_framework_test_fixtures::fixture_text;
 
 #[test]
 fn demo_case_ids_are_unique_and_addressable() {
@@ -23,7 +24,7 @@ fn every_demo_case_evaluates_its_entry_instead_of_reporting_missing_or_invalid_i
 
 #[test]
 fn the_committed_demo_document_equals_the_seeded_cases_and_covers_the_registry() {
-    let fixture = include_str!("../../../../../../🧪️tests/🧫️fixtures/📇️catalogue/📚️demo-document/🔣️.json");
+    let fixture = fixture_text!("../../../../🧪️tests/🧫️fixtures/📇️catalogue/📚️demo-document/🔣️.json");
     let rows = catalogue_demo_cases();
     assert_eq!(fixture.matches("\"entryId\":").count(), rows.len(), "the demo document has a different number of cases than the seeded demo");
     for row in &rows {

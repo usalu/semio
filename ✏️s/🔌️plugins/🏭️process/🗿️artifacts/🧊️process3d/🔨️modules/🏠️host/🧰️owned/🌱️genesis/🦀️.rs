@@ -4,7 +4,7 @@ use super::*;
 use semio_framework_artifact_reference::Dialect;
 use semio_framework_dsl_record::{native_encoding::FieldProjectionSource, BorrowedDslRecord, BorrowedRecordSpec};
 use semio_framework_value::{retained_clone::RetainedCloneBirthDemand, RetainedCloneGrant, RetainedCloneProgress, RetirementDemand, ValueError, ValueRefusalKind};
-use semio_plugin_ownership::original_store_genesis::{FixedStoreInitial, OriginalFixedStoreInitial, OriginalStoreGenesisOwner};
+use semio_plugin_store_lifecycle::original_store_genesis::{FixedStoreInitial, OriginalFixedStoreInitial, OriginalStoreGenesisOwner};
 use semio_s_artifact_process_process3d_model::snapshot::{empty_process3d_snapshot, PROCESS3D_DIALECT, PROCESS_3D_SCHEMA};
 use std::mem::size_of;
 use store::os_store::document_store_owners::{BoundedArtifactRetirementFactory, DocumentStoreOwnerProducer, DocumentStoreOwners, DocumentStoreOwnersAdmissionError};
@@ -26,7 +26,7 @@ impl DocumentStoreOwnerProducer<Process3dSnapshot, Process3dMutation> for Proces
     }
 
     fn admit_sources(grant: RetainedCloneGrant) -> Result<(Owners, RetainedCloneProgress), DocumentStoreOwnersAdmissionError<Process3dSnapshot, Process3dMutation>> {
-        Owners::admit_source_constructor_with_shared_semantic_preparation(grant, NO_CHILDREN, 0, || (SnapshotRetirement::new(), SnapshotRetirement::new(), MutationRetirement::new(), Disposer::new(), Preparation::default())).map(|(mut owners, progress)| {
+        Owners::admit_source_constructor_with_shared_semantic_preparation(grant, NO_CHILDREN, 0, || (SnapshotRetirement::new(), SnapshotRetirement::new(), MutationRetirement::new(), Disposer::new(), process3d_document_preparation_factory())).map(|(mut owners, progress)| {
             owners.operation_wire = semio_os_store_operation_wire::original_edit::with_original_edit_message(store::ArtifactOperationWire::canonical().with_original_receiving().with_original_target(store::whole_document_target));
             (owners.with_batch_digest(), progress)
         })
@@ -77,3 +77,7 @@ impl OriginalFixedStoreInitial for Process3dDocumentGenesis {
         Ok((empty_process3d_snapshot(), RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, retained_capacity_bytes: demand.capacity_bytes, ..Default::default() }))
     }
 }
+
+#[cfg(test)]
+#[path = "🧪️tests/🦀️.rs"]
+mod tests;

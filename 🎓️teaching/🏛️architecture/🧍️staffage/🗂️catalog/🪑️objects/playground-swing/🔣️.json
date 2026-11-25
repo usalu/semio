@@ -13,11 +13,41 @@
       "de": "Einfeldschaukel aus verzinktem Stahl: zwei A-Böcke auf Fußplatten tragen einen 1,9 m langen Holm mit zwei Schaukelgelenken, zwei Rundstahlketten und einen flachen Gummisitz; der Sitz schwingt als Pendel von 1,9 m Länge mit einer Periode von 2,77 s."
     },
     "tags": [
-      "swing",
-      "playground",
-      "pendulum",
-      "steel",
-      "rubber"
+      {
+        "id": "swing",
+        "title": {
+          "en": "swing",
+          "de": "Schaukel"
+        }
+      },
+      {
+        "id": "playground",
+        "title": {
+          "en": "playground",
+          "de": "Spielplatz"
+        }
+      },
+      {
+        "id": "pendulum",
+        "title": {
+          "en": "pendulum",
+          "de": "Pendel"
+        }
+      },
+      {
+        "id": "steel",
+        "title": {
+          "en": "steel",
+          "de": "Stahl"
+        }
+      },
+      {
+        "id": "rubber",
+        "title": {
+          "en": "rubber",
+          "de": "Gummi"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage content (CV-FO)",

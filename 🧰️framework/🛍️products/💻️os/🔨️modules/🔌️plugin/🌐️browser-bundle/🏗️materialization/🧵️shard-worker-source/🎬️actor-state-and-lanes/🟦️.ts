@@ -40,11 +40,25 @@ const GUEST_TURN_COST_MS = ${SHARD_TURN_GUEST_COST_MS};
 const DRIVE_STEP_CEILING = ${SHARD_TURN_DRIVE_STEP_CEILING};
 let progressHandle = null;
 let inFlightRequests = 0;
-// 📬️ Every message the host posts bumps this, and a drive that started at one value crosses back the
-// moment it sees another — that is the whole "a host-owned input interrupts the drive" contract. It
-// counts messages rather than naming kinds on purpose: a kind this worker has never heard of is still
-// the host speaking, and the drive must never be the reason it waits.
+//#region drive-input-scope
+// 📬️ Host input interrupts a worker-owned drive, scoped by who it is addressed to. One worker serves
+// several actors (procedural, its request actors), so a counter bumped by every message cut a request
+// actor's drive to one pump per crossing whenever any OTHER actor was talking (brep: polls=1,
+// stopped=input, 64 turns spent). A message addressed to an actor moves only that actor's counter; a
+// message addressed to no actor (a heartbeat, a kind this worker has never heard of) is still the host
+// speaking and moves the shared counter every drive reads. The drive's step ceiling still bounds it.
 let hostInputSeq = 0;
+const hostActorInputSeq = new Map();
+function noteHostInput(actorId) {
+  if (typeof actorId !== "string") { hostInputSeq += 1; return { shared: hostInputSeq, actor: 0 }; }
+  const actor = (hostActorInputSeq.get(actorId) ?? 0) + 1;
+  hostActorInputSeq.set(actorId, actor);
+  return { shared: hostInputSeq, actor };
+}
+function hostInputMoved(mark, actorId) {
+  return hostInputSeq !== mark.shared || (hostActorInputSeq.get(actorId) ?? 0) !== mark.actor;
+}
+//#endregion drive-input-scope
 
 // 📨️ terra-web-shardframe: ShardFrame::Grant/Envelope support — see this file's own header doc.
 const MAINTENANCE_LANE_DEFAULT_BUDGET = { fuel: 80000000, wallMs: 200, memoryBytes: 256 * 1024 * 1024, uiNodes: 4000, mailboxLen: 1024, maxEffects: 512, maxPatchBytes: 2097152,maxFrames:8 };

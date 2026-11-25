@@ -3,7 +3,7 @@ use semio_plugin_operation::CANCEL_TYPED_OPERATION_ACTION_ID;
 use semio_plugin_operation::ArtifactOperationProgress;
 use semio_plugin_decl_app::ArtifactApp;
 #[cfg(test)]
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 #[cfg(test)]
 use semio_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
 use pack::snapshot::ArtifactPack;

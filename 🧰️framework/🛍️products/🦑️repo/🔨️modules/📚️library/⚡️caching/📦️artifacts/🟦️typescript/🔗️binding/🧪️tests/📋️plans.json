@@ -303,6 +303,174 @@
    "valid": false
   }
  ],
+ "links": [
+  {
+   "name": "the dist link of a lost receipt names the prototype output: prototype (g1-m08, g1-m10)",
+   "index": 0,
+   "mode": "prototype",
+   "link": true,
+   "text": "/generated/products/a/ts/e6e47bd925ccef535dc6774fe84e3921/prototype/out",
+   "outputs": {
+    "prototype": "/generated/products/a/ts/e6e47bd925ccef535dc6774fe84e3921/prototype/out",
+    "release": "/generated/products/a/ts/e6e47bd925ccef535dc6774fe84e3921/release/out"
+   },
+   "expected": "prototype"
+  },
+  {
+   "name": "the dist link of a lost receipt names the release output while prototype binds: release",
+   "index": 0,
+   "mode": "prototype",
+   "link": true,
+   "text": "/generated/products/a/ts/e6e47bd925ccef535dc6774fe84e3921/release/out",
+   "outputs": {
+    "prototype": "/generated/products/a/ts/e6e47bd925ccef535dc6774fe84e3921/prototype/out",
+    "release": "/generated/products/a/ts/e6e47bd925ccef535dc6774fe84e3921/release/out"
+   },
+   "expected": "release"
+  },
+  {
+   "name": "the mode link of a lost receipt names its own output: that mode",
+   "index": 1,
+   "mode": "release",
+   "link": true,
+   "text": "/generated/products/a/ts/e6e47bd925ccef535dc6774fe84e3921/release/out",
+   "outputs": {
+    "prototype": "/generated/products/a/ts/e6e47bd925ccef535dc6774fe84e3921/prototype/out",
+    "release": "/generated/products/a/ts/e6e47bd925ccef535dc6774fe84e3921/release/out"
+   },
+   "expected": "release"
+  },
+  {
+   "name": "the mode link of a lost receipt names the other mode's output: foreign",
+   "index": 1,
+   "mode": "release",
+   "link": true,
+   "text": "/generated/products/a/ts/e6e47bd925ccef535dc6774fe84e3921/prototype/out",
+   "outputs": {
+    "prototype": "/generated/products/a/ts/e6e47bd925ccef535dc6774fe84e3921/prototype/out",
+    "release": "/generated/products/a/ts/e6e47bd925ccef535dc6774fe84e3921/release/out"
+   },
+   "expected": null
+  },
+  {
+   "name": "a link of a lost receipt elsewhere: foreign",
+   "index": 0,
+   "mode": "prototype",
+   "link": true,
+   "text": "/elsewhere/out",
+   "outputs": {
+    "prototype": "/generated/products/a/ts/e6e47bd925ccef535dc6774fe84e3921/prototype/out",
+    "release": "/generated/products/a/ts/e6e47bd925ccef535dc6774fe84e3921/release/out"
+   },
+   "expected": null
+  },
+  {
+   "name": "a link of a lost receipt one character off the output: foreign",
+   "index": 0,
+   "mode": "prototype",
+   "link": true,
+   "text": "/generated/products/a/ts/e6e47bd925ccef535dc6774fe84e3921/prototype/out/",
+   "outputs": {
+    "prototype": "/generated/products/a/ts/e6e47bd925ccef535dc6774fe84e3921/prototype/out",
+    "release": "/generated/products/a/ts/e6e47bd925ccef535dc6774fe84e3921/release/out"
+   },
+   "expected": null
+  },
+  {
+   "name": "a directory where the dist link belongs: foreign, receipt or not",
+   "index": 0,
+   "mode": "prototype",
+   "link": false,
+   "receipt": {
+    "activeMode": "prototype",
+    "modes": [
+     "prototype"
+    ]
+   },
+   "outputs": {
+    "prototype": "/generated/products/a/ts/e6e47bd925ccef535dc6774fe84e3921/prototype/out",
+    "release": "/generated/products/a/ts/e6e47bd925ccef535dc6774fe84e3921/release/out"
+   },
+   "expected": null
+  },
+  {
+   "name": "a file where the mode link belongs: foreign",
+   "index": 1,
+   "mode": "prototype",
+   "link": false,
+   "outputs": {
+    "prototype": "/generated/products/a/ts/e6e47bd925ccef535dc6774fe84e3921/prototype/out",
+    "release": "/generated/products/a/ts/e6e47bd925ccef535dc6774fe84e3921/release/out"
+   },
+   "expected": null
+  },
+  {
+   "name": "the receipt records the active mode of dist: that mode, whatever the text",
+   "index": 0,
+   "mode": "release",
+   "link": true,
+   "text": "/elsewhere/out",
+   "receipt": {
+    "activeMode": "prototype",
+    "modes": [
+     "prototype",
+     "release"
+    ]
+   },
+   "outputs": {
+    "prototype": "/generated/products/a/ts/e6e47bd925ccef535dc6774fe84e3921/prototype/out",
+    "release": "/generated/products/a/ts/e6e47bd925ccef535dc6774fe84e3921/release/out"
+   },
+   "expected": "prototype"
+  },
+  {
+   "name": "the receipt does not record the mode of the mode link, its text names it: that mode",
+   "index": 1,
+   "mode": "release",
+   "link": true,
+   "text": "/generated/products/a/ts/e6e47bd925ccef535dc6774fe84e3921/release/out",
+   "receipt": {
+    "activeMode": "prototype",
+    "modes": [
+     "prototype"
+    ]
+   },
+   "outputs": {
+    "prototype": "/generated/products/a/ts/e6e47bd925ccef535dc6774fe84e3921/prototype/out",
+    "release": "/generated/products/a/ts/e6e47bd925ccef535dc6774fe84e3921/release/out"
+   },
+   "expected": "release"
+  },
+  {
+   "name": "the receipt does not record the mode of the mode link, its text is elsewhere: foreign",
+   "index": 1,
+   "mode": "release",
+   "link": true,
+   "text": "/elsewhere/out",
+   "receipt": {
+    "activeMode": "prototype",
+    "modes": [
+     "prototype"
+    ]
+   },
+   "outputs": {
+    "prototype": "/generated/products/a/ts/e6e47bd925ccef535dc6774fe84e3921/prototype/out",
+    "release": "/generated/products/a/ts/e6e47bd925ccef535dc6774fe84e3921/release/out"
+   },
+   "expected": null
+  },
+  {
+   "name": "a lost receipt where the output of a mode cannot be planned: only the plannable mode is derivable",
+   "index": 0,
+   "mode": "prototype",
+   "link": true,
+   "text": "/generated/products/a/ts/e6e47bd925ccef535dc6774fe84e3921/release/out",
+   "outputs": {
+    "prototype": "/generated/products/a/ts/e6e47bd925ccef535dc6774fe84e3921/prototype/out"
+   },
+   "expected": null
+  }
+ ],
  "capacity": {
   "workspace": "/repo",
   "products": "/generated/products",

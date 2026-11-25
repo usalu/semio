@@ -1,13 +1,13 @@
 /** ⚓️ Neutral text placement vectors compared with Chromium's native canvas. */
+import { launchChromium } from "../../../../🖱️ui/🧪️tests/🌐️chromium-launch/🟦️.ts";
 import { expect, test } from "vitest";
 import { build } from "esbuild";
-import { chromium } from "playwright";
 import { resolve } from "node:path";
 import fixture from "../🧫️fixtures/⚓️alignment/🔣️.json";
 
 test("scene text placement matches native canvas pixels", async () => {
   const bundle = await build({ entryPoints: [resolve(import.meta.dirname, "../../../🟦️.ts")], bundle: true, write: false, format: "iife", globalName: "drawing", platform: "browser", define: { "import.meta.vitest": "false" } });
-  const browser = await chromium.launch({ headless: true });
+  const browser = await launchChromium();
   try {
     const page = await browser.newPage();
     await page.addScriptTag({ content: bundle.outputFiles![0]!.text });

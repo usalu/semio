@@ -64,10 +64,12 @@ pub struct PluginBuilder<State, PA: PluginApp = semio_plugin_reactor_app::NoPlug
     /// `try_build`, once it is known to be final.
     pub contributions: Vec<ArtifactContribution>,
     pub topic_contributions: Vec<semio_framework::TopicContribution>,
+    /// 🧺️ Action tables declared once for the apps that share them — see [`Self::action_set`].
+    action_sets: Vec<(&'static str, fn(&semio_framework::AppDefinition) -> bool)>,
     /// 📖️ One non-capturing `(artifact_schema, kinds)` provider per `.document_app_mutation_roster::
     /// <A>()`/`.viewer_mutation_roster::<V>()`/`.editor_mutation_roster::<E>()` call — committed into
     /// the process-wide owner mutation roster by `try_build`.
-    owner_mutation_rosters: Vec<semio_plugin_ownership::store_lifecycle::OwnerMutationRoster>,
+    owner_mutation_rosters: Vec<semio_plugin_store_lifecycle::store_lifecycle::OwnerMutationRoster>,
     pub app_defs: Vec<(App, semio_plugin_decl_registry::plugin_program::AppFactory<PA>)>,
     pub app_schema_descriptors: Vec<fn() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor>>,
     document_app_ids: Vec<String>,
@@ -107,6 +109,7 @@ impl<PA: PluginApp> PluginBuilder<NeedsLabel, PA> {
             dependencies: Vec::new(),
             contributions: Vec::new(),
             topic_contributions: Vec::new(),
+            action_sets: Vec::new(),
             owner_mutation_rosters: Vec::new(),
             app_defs: Vec::new(),
             app_schema_descriptors: Vec::new(),
@@ -139,6 +142,7 @@ impl<PA: PluginApp> PluginBuilder<NeedsLabel, PA> {
             dependencies: self.dependencies,
             contributions: self.contributions,
             topic_contributions: self.topic_contributions,
+            action_sets: self.action_sets,
             owner_mutation_rosters: self.owner_mutation_rosters,
             app_defs: self.app_defs,
             app_schema_descriptors: self.app_schema_descriptors,
@@ -173,6 +177,7 @@ impl<PA: PluginApp> PluginBuilder<NeedsVersion, PA> {
             dependencies: self.dependencies,
             contributions: self.contributions,
             topic_contributions: self.topic_contributions,
+            action_sets: self.action_sets,
             owner_mutation_rosters: self.owner_mutation_rosters,
             app_defs: self.app_defs,
             app_schema_descriptors: self.app_schema_descriptors,
@@ -280,6 +285,12 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
     /// route without manufacturing a second synchronous executable.
     pub fn routed_inference(mut self, metadata: ArtifactInferenceServiceMetadata) -> Self {
         self.routed_inferences.push(metadata);
+        self
+    }
+
+    /// 🧺️ Declares an action table for the apps `member` accepts: once every app is registered, the rows all members declare identically move out of their rosters into one table the descriptor stores once (`PluginManifest::share_actions`). Sets are formed in declaration order, so declare the widest first; ids are unique. Apps still declare their rows through their own builders, and their runtime definitions keep them.
+    pub fn action_set(mut self, id: &'static str, member: fn(&semio_framework::AppDefinition) -> bool) -> Self {
+        self.action_sets.push((id, member));
         self
     }
 
@@ -559,6 +570,15 @@ pub fn quota(mut self, schema: QuotaSchema) -> Self {
         self
     }
 
+    /// 🧩️ Opens the deployable component `id`: every app registered after this call and before the next one closes in that component,
+    /// and the descriptor's `components` maps each to it, so a host loads only the component of the app it opens. A plugin that calls it
+    /// once must register every app after a call; one that never calls it is a single component.
+pub fn component(mut self, id: impl Into<String>) -> Self {
+        let first_app = self.app_defs.len();
+        self.descriptor.component(id.into(), first_app);
+        self
+    }
+
     /// 🚦️ Sets how this plugin's actor runs — default `Isolated` (`📓️design-abi.md` §5).
 pub fn execution(mut self, mode: ExecutionMode) -> Self {
         self.descriptor.execution(mode);
@@ -625,6 +645,7 @@ pub fn asset(mut self, declaration: AssetDeclaration) -> Self {
             dependencies,
             contributions,
             topic_contributions,
+            action_sets,
             owner_mutation_rosters,
             mut app_defs,
             mut app_schema_descriptors,
@@ -647,7 +668,11 @@ pub fn asset(mut self, declaration: AssetDeclaration) -> Self {
             return Err(PluginAssemblyError::new("plugin-assembly.package-id", "component package identity must exactly match semio:<plugin-id> in canonical lowercase form"));
         }
         semio_plugin_extension::preflight_artifact_declarations(&plugin_id, &declared_artifacts)?;
+        let component_app_ids: Vec<String> = app_defs.iter().map(|(app, _)| app.definition.id.clone()).collect();
         let declared_registration = semio_plugin_decl_registry::declarations::project_artifact_declarations(&declared_artifacts).map_err(PluginAssemblyError::from_fault)?;
+        if descriptor.declares_components() && !declared_registration.app_defs.is_empty() {
+            return Err(PluginAssemblyError::new("plugin-assembly.components", "an app projected from an artifact declaration closes in no declared component"));
+        }
         app_defs.extend(declared_registration.app_defs);
         app_schema_descriptors.extend(declared_registration.app_schema_descriptors);
         capabilities.extend(declared_registration.capabilities);
@@ -745,6 +770,9 @@ pub fn asset(mut self, declaration: AssetDeclaration) -> Self {
         for (app, factory) in app_defs {
             plugin = plugin.register_app_factory(app, factory);
         }
+        for (id, member) in action_sets {
+            plugin.manifest.share_actions(id, member).map_err(|fault| PluginAssemblyError::new("plugin-assembly.action-set", fault))?;
+        }
         if let Some(breach) = semio_plugin_decl_registry::artifact_registration::surface_dependency_breaches(&plugin.manifest).into_iter().next() {
             return Err(PluginAssemblyError::new("plugin-assembly.surface-dependency-gate", breach));
         }
@@ -752,8 +780,8 @@ pub fn asset(mut self, declaration: AssetDeclaration) -> Self {
         let assembly = semio_framework_schema_registry::assembly::begin().map_err(|error| PluginAssemblyError::new("plugin-assembly.unavailable", error.to_string()))?;
         semio_plugin_decl_registry::artifact_registration::commit_artifact_registration_plan(&assembly, registry_plan)?;
         plugin.commit_original_producers();
-        let PluginDescriptorParts{activation_events,capability_requests,extension_points,execution,quotas,assets}=descriptor.into_parts();
-        Ok(plugin.with_descriptor_extras(semio_plugin_plugin_program::PluginDescriptorExtras { package_id, activation_events, capability_requests, extension_points, execution, quotas, assets }))
+        let PluginDescriptorParts{activation_events,capability_requests,extension_points,execution,quotas,assets,components}=descriptor.into_parts(&component_app_ids).map_err(|error| PluginAssemblyError::new("plugin-assembly.components", error))?;
+        Ok(plugin.with_descriptor_extras(semio_plugin_plugin_program::PluginDescriptorExtras { package_id, activation_events, capability_requests, extension_points, execution, quotas, assets, components }))
     }
 }
 

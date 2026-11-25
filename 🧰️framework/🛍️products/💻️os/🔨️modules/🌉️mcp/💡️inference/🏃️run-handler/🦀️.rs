@@ -57,7 +57,7 @@ pub(super) fn run_guest_inference(workspace: &Arc<HeadlessWorkspace>, actions: &
     let artifact_document = match resolve_inference_artifact_document(workspace, item, artifact_id, job_id, cancel.activation().cancel()) {
         Ok(document) => document,
         Err(_) if jobs.is_cancel_requested(job_id) => return Ok(None),
-        Err(error) => return Err(error.with_details(serde_json::json!({ "field": "artifactId" }))),
+        Err(error) => return Err(error.with_context(serde_json::json!({ "field": "artifactId" }))),
     };
     let activation_job = job_id.to_owned();
     let cancel = cancel.with_activation_report(move |phase, fraction| {
@@ -174,7 +174,7 @@ pub(super) fn inference_run_handler(context: &InferenceToolContext<'_>, argument
         }
         Err(error) => {
             let field = inference_error_field(&error);
-            let error = error.with_details(merge_inference_run_fields(base, serde_json::json!({ "field": field })));
+            let error = error.with_context(merge_inference_run_fields(base, serde_json::json!({ "field": field })));
             jobs.fail(&job_id, error.clone());
             CallToolResult::tool_error(&error)
         }

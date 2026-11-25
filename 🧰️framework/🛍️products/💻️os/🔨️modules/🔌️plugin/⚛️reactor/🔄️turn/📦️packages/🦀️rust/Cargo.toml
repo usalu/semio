@@ -24,6 +24,7 @@ path = "../../🦀️.rs"
 [dependencies]
 semio-plugin-reactor-receiving-source = { path = "../../📥️receiving/🎟️source/📦️packages/🦀️rust" }
 semio-plugin-reactor-staged-forms = { path = "../../📥️receiving/📝️forms/📦️packages/🦀️rust" }
+semio-plugin-reactor-receiving-completed = { path = "../../📥️receiving/📦️completed/📦️packages/🦀️rust" }
 semio-ui-contract-validation = { path = "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🛡️limits/📦️packages/🦀️rust" }
 
 semio-plugin-abi = { path = "../../../../🚪️io/📦️packages/🦀️rust" }

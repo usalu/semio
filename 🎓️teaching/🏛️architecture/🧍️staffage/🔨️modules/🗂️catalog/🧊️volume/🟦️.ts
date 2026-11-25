@@ -13,7 +13,7 @@
  * @see ../🟦️.ts — `validateAsset`, which runs these rules
  */
 import { SECTION_FACES, VOLUME_LISTS, VOLUME_REPEAT_MAX, VOLUME_WEIGHTS_MAX } from "../../../🧬️schema/🟦️.ts";
-import type { Asset, ExportFormat, Text, Vector2, VolumeList, VolumeSolid, VolumeSolidKind } from "../../../🧬️schema/🟦️.ts";
+import type { Asset, ExportFormat, LoftSection, Text, Vector2, VolumeList, VolumeSolid, VolumeSolidKind } from "../../../🧬️schema/🟦️.ts";
 import type { Issue } from "../🟦️.ts";
 import { authoredVolumes, isReference } from "../🧊️volumes/🧱️lists/🟦️.ts";
 import * as portable from "../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🧮️math/🎯️portable/🟦️.ts";
@@ -33,6 +33,7 @@ const positive = (value: unknown): boolean => finite(value) && value > 0;
 const vector = (value: readonly unknown[] | undefined, length: number): value is readonly number[] => Array.isArray(value) && value.length === length && value.every(finite);
 const norm = (v: readonly number[]): number => portable.hypot(...v);
 const distance = (p: Vector2, q: Vector2): number => portable.hypot(p[0] - q[0], p[1] - q[1]);
+const coincident = (p: readonly number[], q: readonly number[]): boolean => vector(p, 3) && vector(q, 3) && !(norm(p.map((value, i) => value - q[i]!)) > EPS);
 
 const cross = (o: Vector2, a: Vector2, b: Vector2): number => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
 const within = (a: number, b: number, c: number): boolean => Math.min(a, b) - EPS <= c && c <= Math.max(a, b) + EPS;
@@ -235,6 +236,32 @@ function fieldIssues(solid: object, list: VolumeList, p: string, label: string, 
   for (const key of required) if (entry[key] === undefined) add(`${p}.${key}`, "volume-field", `${label} lacks the member "${key}", which ${what} requires.`, `${bez} fehlt das Mitglied "${key}", das ${was} verlangt.`);
 }
 
+/** 🪡️ The findings of the sections of a `loft` shape of a drawing, the same demands the `loft` solid of a volume meets, at the shape path `p`: `loft-sections` (fewer than two sections, or two consecutive sections at the same centre, where the path has no direction), `loft-section` (a centre that is not three finite numbers, a half extent or an exponent that is not positive, a rotation that is no unit quaternion) and `loft-fold` (consecutive sections that overlap: the path turns back or bends tighter than the section is wide, judged by the kernel's `loftFault`). */
+export function loftShapeIssues(loft: { readonly id: string; readonly sections: readonly LoftSection[] }, p: string, add: Add): void {
+  const label = `Loft "${loft.id}"`;
+  const sections = Array.isArray(loft.sections) ? loft.sections : [];
+  if (sections.length < 2) add(`${p}.sections`, "loft-sections", `${label} needs at least two sections, got ${sections.length}.`, `${label} braucht mindestens zwei Schnitte, erhielt ${sections.length}.`);
+  let sound = sections.length >= 2;
+  sections.forEach((section, k) => {
+    const flaw = (member: string, en: string, de: string): void => {
+      sound = false;
+      add(`${p}.sections[${k}]${member}`, "loft-section", `${label} has section ${k} ${en}`, `${label} hat Schnitt ${k} ${de}`);
+    };
+    if (!vector(section.at, 3)) flaw(".at", "without a centre of three finite numbers [u, v, w].", "ohne Mittelpunkt aus drei endlichen Zahlen [u, v, w].");
+    if (!(positive(section.rx) && positive(section.ry))) flaw("", `with rx ${section.rx} and ry ${section.ry}; both are positive.`, `mit rx ${section.rx} und ry ${section.ry}; beide sind positiv.`);
+    if (section.exponent !== undefined && !positive(section.exponent)) flaw(".exponent", `with exponent ${section.exponent}; it is positive.`, `mit Exponent ${section.exponent}; er ist positiv.`);
+    if (!unit(section.rotation)) flaw(".rotation", "with a rotation that is not a unit quaternion.", "mit einer Drehung, die kein Einheitsquaternion ist.");
+    const next = sections[k + 1];
+    if (next !== undefined && coincident(section.at, next.at)) {
+      sound = false;
+      add(`${p}.sections[${k + 1}].at`, "loft-sections", `${label} has sections ${k} and ${k + 1} at the same centre; the path has no direction there.`, `${label} hat die Schnitte ${k} und ${k + 1} am selben Mittelpunkt; der Pfad hat dort keine Richtung.`);
+    }
+  });
+  if (!sound) return;
+  const fold = loftFault(sections);
+  if (fold !== null) add(`${p}.sections[${fold[1]}]`, "loft-fold", `${label} has sections ${fold[0]} and ${fold[1]} that overlap: the path turns back or bends tighter than the section is wide, so the body crosses itself.`, `${label} hat die Schnitte ${fold[0]} und ${fold[1]}, die sich überlappen: der Pfad kehrt um oder biegt enger, als der Schnitt breit ist, der Körper durchdringt sich selbst.`);
+}
+
 export function weightIssues(solid: Pick<VolumeSolid, "id" | "weights">, p: string, bones: ReadonlySet<string>, add: Add): void {
   const weights = solid.weights;
   if (weights === undefined) return;
@@ -334,7 +361,7 @@ function geometryIssues(solid: VolumeSolid, p: string, add: Add): void {
         if (section.exponent !== undefined && !positive(section.exponent)) size(`sections[${k}].exponent`, `has section ${k} with exponent ${section.exponent}; it is positive.`, `hat Schnitt ${k} mit Exponent ${section.exponent}; er ist positiv.`);
         if (!unit(section.rotation)) add(`${p}.sections[${k}].rotation`, "volume-transform", `${label} has section ${k} with a rotation that is not a unit quaternion.`, `${bez} hat Schnitt ${k} mit einer Drehung, die kein Einheitsquaternion ist.`);
         const next = solid.sections[k + 1];
-        if (next !== undefined && vector(section.at, 3) && vector(next.at, 3) && !(norm(section.at.map((value, i) => value - next.at[i]!)) > EPS)) add(`${p}.sections[${k + 1}].at`, "volume-loft-sections", `${label} has sections ${k} and ${k + 1} at the same centre; the path has no direction there.`, `${bez} hat die Schnitte ${k} und ${k + 1} am selben Mittelpunkt; der Pfad hat dort keine Richtung.`);
+        if (next !== undefined && coincident(section.at, next.at)) add(`${p}.sections[${k + 1}].at`, "volume-loft-sections", `${label} has sections ${k} and ${k + 1} at the same centre; the path has no direction there.`, `${bez} hat die Schnitte ${k} und ${k + 1} am selben Mittelpunkt; der Pfad hat dort keine Richtung.`);
       });
       break;
     }

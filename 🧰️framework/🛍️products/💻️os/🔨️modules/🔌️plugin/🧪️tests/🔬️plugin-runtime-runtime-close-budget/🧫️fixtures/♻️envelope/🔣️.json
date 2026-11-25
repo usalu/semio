@@ -5,6 +5,12 @@
   "currencies": ["items", "copy", "capacity", "release", "depth"],
   "grant": [1, 4096, 65536, 262144, 64],
   "childProgress": [1, 31, 64, 128],
+  "partialReturn": {
+    "childTerminal": false,
+    "parentTerminal": false,
+    "reclaimOwner": false,
+    "parentProgress": [1, 31, 64, 128]
+  },
   "pureQuote": true,
   "sameGrant": true,
   "childCompleteIsParentProgress": true,

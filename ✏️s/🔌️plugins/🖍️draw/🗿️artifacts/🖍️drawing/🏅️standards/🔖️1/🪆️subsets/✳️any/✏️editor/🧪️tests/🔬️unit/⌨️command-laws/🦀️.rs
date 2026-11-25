@@ -155,18 +155,16 @@ async fn every_command_row_prints_starting_with_its_wire_keyword() {
 //#endregion 🔖️WireGuards
 
 //#region 🔖️CommandSurface
-/// ⚖️ The dispatch law: the two owned factories partition the command enum exactly, every route
-/// carries a publication contract, and every proof row has an owner. A regression in any of the
-/// four lists below is exactly the class of defect that made twenty of draw's twenty-six commands
-/// unreachable from the client.
+/// ⚖️ Registered factories partition the command enum exactly, every route carries a publication contract, and every proof row has an owner.
 #[semio_framework_async_macros::async_test]
 async fn retained_route_dispositions_are_exact_and_exhaustive() {
     use semio_plugin::ArtifactOwnedToolJobFactory as _;
+    use semio_s_artifact_draw_drawing_editor::export_job::DrawingExportCommandJobFactory;
 
     assert_eq!(DRAWING_GESTURE_TOOL_IDS.len(), 6);
     assert_eq!(DRAWING_PATH_TOOL_IDS.len(), 1);
     assert_eq!(DRAWING_IMAGE_TOOL_IDS.len(), 1);
-    let mut routes = DRAWING_GESTURE_TOOL_IDS.iter().chain(DRAWING_BOUNDED_TOOL_IDS).chain(DRAWING_PATH_TOOL_IDS).chain(DRAWING_IMAGE_TOOL_IDS).copied().collect::<Vec<_>>();
+    let mut routes = DRAWING_GESTURE_TOOL_IDS.iter().chain(DRAWING_BOUNDED_TOOL_IDS).chain(DRAWING_PATH_TOOL_IDS).chain(DRAWING_IMAGE_TOOL_IDS).chain(DrawingExportCommandJobFactory::TOOL_IDS).copied().collect::<Vec<_>>();
     routes.sort_unstable();
     let mut declared = every_command().into_iter().map(|command| command.command_id()).collect::<Vec<_>>();
     declared.sort_unstable();
@@ -175,7 +173,7 @@ async fn retained_route_dispositions_are_exact_and_exhaustive() {
 
     assert_eq!(DrawingGestureOperationJobFactory::PUBLICATION_CONTRACTS.len(), DRAWING_GESTURE_TOOL_IDS.len());
     assert_eq!(DrawingBoundedCommandJobFactory::PUBLICATION_CONTRACTS.len(), DRAWING_BOUNDED_TOOL_IDS.len());
-    for contract in DrawingGestureOperationJobFactory::PUBLICATION_CONTRACTS.iter().chain(DrawingBoundedCommandJobFactory::PUBLICATION_CONTRACTS).chain(DrawingPathCommandJobFactory::PUBLICATION_CONTRACTS).chain(DrawingImageCommandJobFactory::PUBLICATION_CONTRACTS) {
+    for contract in DrawingGestureOperationJobFactory::PUBLICATION_CONTRACTS.iter().chain(DrawingBoundedCommandJobFactory::PUBLICATION_CONTRACTS).chain(DrawingPathCommandJobFactory::PUBLICATION_CONTRACTS).chain(DrawingImageCommandJobFactory::PUBLICATION_CONTRACTS).chain(DrawingExportCommandJobFactory::PUBLICATION_CONTRACTS) {
         assert!(routes.contains(&contract.tool_id), "{} publishes without owning a route", contract.tool_id);
         assert!(!contract.lanes.is_empty(), "{} declares no publication lane", contract.tool_id);
         assert!(!contract.lanes.contains(&semio_plugin::ArtifactToolPublicationLane::HostOnly) || contract.lanes.len() == 1, "{} pairs HostOnly with another lane, which the registry rejects", contract.tool_id);
@@ -223,9 +221,12 @@ async fn set_active_example_resolves_the_registered_catalogue() {
     for source in examples {
         let emit = set_active_example::handle(&set_active_example::SetActiveExample { example_id: source.id().into() }, &view, &cfg, &mut session).expect("a registered example id loads its document");
         assert_eq!(emit.effects.len(), 1, "{} must load exactly one document", source.id());
+        assert_eq!(emit.interaction_writes.len(), 2);
     }
     let reset = set_active_example::handle(&set_active_example::SetActiveExample { example_id: String::new() }, &view, &cfg, &mut session).expect("the empty id resets to a blank drawing");
     assert_eq!(reset.effects.len(), 1);
+    assert_eq!(reset.interaction_writes.iter().map(|write| write.domain.as_str()).collect::<Vec<_>>(), [DRAWING_INTERACTION_DOMAIN, DRAWING_POINT_DOMAIN]);
+    assert!(reset.interaction_writes.iter().all(|write| write.targets.is_empty() && write.merge == protocol::MergeMode::Replace));
     assert!(set_active_example::handle(&set_active_example::SetActiveExample { example_id: "semio".into() }, &view, &cfg, &mut session).is_err(), "an unregistered id faults instead of silently doing nothing");
 }
 //#endregion 🔖️CommandSurface

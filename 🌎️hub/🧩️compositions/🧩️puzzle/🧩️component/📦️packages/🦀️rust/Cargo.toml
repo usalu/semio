@@ -47,6 +47,15 @@ aliases = ["3d", "puzzle 3d"]
 ports = { react = 6013, wgpu = 6113 }
 
 [[package.metadata.semio.playground]]
+variant = "aggregator"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
+app = "s.puzzle.puzzle3d@1/*#editor"
+brand = "entwerfen-mit-bestand-aggregator"
+devContribution = "♻️mit-bestand/🧺️demonstrator/🐚️shell/🧬️schema/🔣️.json"
+aliases = ["mit-bestand", "entwerfen-mit-bestand"]
+ports = { react = 6023, wgpu = 6123 }
+
+[[package.metadata.semio.playground]]
 variant = "puzzle5d"
 compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 devContribution = "✏️s/🧑‍💻dev/🎭️variants/🧩️puzzle/🧬️schema/🔣️.json"

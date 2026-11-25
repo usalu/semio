@@ -27,7 +27,7 @@ import { type DimensionExtent, dimensionLine, legendBlock, scaleBar, titleBlock 
 import { Canvas, type Ctx, Labels, labelBudget } from "./🧱️canvas/🟦️.ts";
 import { type DiagramKind, diagramPolygons, forceList, forcesView, momentsView, peakOf } from "./🏗️structural-view/🟦️.ts";
 import { type Theme, THEMES, toneColour, tx } from "./🖍️palette/🟦️.ts";
-import { type AnalyticView, type Prepared, type Source, baseStyle, drawShapes, outlineRuns, prepare, selectRoles, sourceOf, themeOf } from "./🧩️shapes/🟦️.ts";
+import { type AnalyticView, type Prepared, type Shared, type Source, baseStyle, drawShapes, outlineRuns, prepare, selectRoles, sharedOf, sourceOf, themeOf } from "./🧩️shapes/🟦️.ts";
 import { arrowOutline, commandsOf } from "./📐️geometry/🟦️.ts";
 import { ViewMissingError, axonometricCamera, project, projectionOf } from "./🔭️views/🟦️.ts";
 import type { AxonometricFigure } from "./🧊️axonometric/🟦️.ts";
@@ -176,6 +176,11 @@ export function depict(state: EvaluatedState, options: DepictionOptions, analysi
   return drive(depictSteps(state, options, analysis), control);
 }
 
+/** 🪢️ {@link depict} with the resolution {@link resolveDepiction} gave for the same representation, scale and profile, so a caller that draws several viewpoints, modes or languages of one state measures the print suitability once. `shared` holds what those drawings have in common ({@link Shared}). */
+export function depictResolved(state: EvaluatedState, options: DepictionOptions, resolution: Extract<RepresentationResolution, { readonly kind: "authored" | "symbol" }>, analysis: Analysis = {}, shared: Shared = sharedOf()): DrawingScene {
+  return drive(depictSteps(state, options, analysis, resolution, shared));
+}
+
 /** 🦄 {@link depict} as a promise that yields to the event loop between the steps of an axonometric depiction, so a long one neither blocks the thread nor a cancellation through `control.signal`; the planar viewpoints finish in one step. */
 export async function depictAsync(state: EvaluatedState, options: DepictionOptions, analysis: Analysis = {}, control?: JobControl): Promise<DrawingScene> {
   if (options.viewpoint === "axonometric") await loadAxonometric();
@@ -224,8 +229,7 @@ export function shownFlow(state: Pick<EvaluatedState, "asset" | "query" | "bones
   return from === undefined || to === undefined ? flow : moveFlow(flow, { x: from.x - to.x, y: from.y - to.y, z: from.z - to.z });
 }
 
-function* depictSteps(state: EvaluatedState, options: DepictionOptions, analysis: Analysis): Generator<Checkpoint, DrawingScene> {
-  const resolution = resolveDepiction(state.asset, options);
+function* depictSteps(state: EvaluatedState, options: DepictionOptions, analysis: Analysis, resolution = resolveDepiction(state.asset, options), shared: Shared = sharedOf()): Generator<Checkpoint, DrawingScene> {
   checkState(state, options, resolution);
   const k = mmPerMetre(options.scale);
   const theme = themeOf(options.view, options.theme);
@@ -249,7 +253,7 @@ function* depictSteps(state: EvaluatedState, options: DepictionOptions, analysis
   } else {
     const viewpoint = options.viewpoint as PlanarViewpoint;
     if (state.shapes[viewpoint].length === 0) throw new ViewMissingError(state.asset.id, viewpoint);
-    everything = prepare(state, viewpoint, source, k);
+    everything = shared.prepared(state, viewpoint, source, k);
     shapes = options.roles === undefined ? everything : selectRoles(everything, options.roles);
     if (metric && options.viewpoint === "elevation") for (const corner of [{ x: b.minX, y: b.minY }, { x: b.maxX, y: b.maxY }]) canvas.reach(ctx.paper(corner));
     for (const p of everything) {
@@ -268,7 +272,7 @@ function* depictSteps(state: EvaluatedState, options: DepictionOptions, analysis
       : options.view === "moments" ? momentsView(ctx, shapes, structure!)
       : null;
 
-    drawShapes(canvas, ctx, shapes, analytic ? analytic.styleOf : baseStyle(options.view, theme, options.scale.denominator <= 100), options.view.endsWith("-line"));
+    drawShapes(canvas, ctx, shapes, shared, analytic ? analytic.styleOf : baseStyle(options.view, theme, options.scale.denominator <= 100), options.view.endsWith("-line"));
     analytic?.overlay(canvas);
   }
   if ((options.viewpoint === "elevation" || options.viewpoint === "plan") && metric && options.annotations.labels && options.scale.denominator <= SECTION_MARKER_MAX_DENOMINATOR && resolution.kind === "authored" && resolution.representation.sections !== undefined) drawSectionMarkers(canvas, ctx, resolution.representation.sections, b, options.viewpoint);

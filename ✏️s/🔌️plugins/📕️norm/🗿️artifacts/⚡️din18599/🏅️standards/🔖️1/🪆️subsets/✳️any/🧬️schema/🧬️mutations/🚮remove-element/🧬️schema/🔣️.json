@@ -10,7 +10,7 @@
   ],
   "properties": {
     "mutation": {
-      "const": "removeelement"
+      "const": "removeElement"
     },
     "id": {
       "type": "string",

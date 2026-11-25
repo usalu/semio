@@ -228,7 +228,7 @@ class Beat1_Anatomy(_live_scene.RefreshMoving, _visuals.ClipScene):
 
     def _tag(self, text, point, color=DARK, anchor="c"):
         """🔖 An outlined chip on the light canvas."""
-        return self.badge(text, point, color=color, size=SMALL, filled=False, anchor=anchor)
+        return self.badge(text, point, color=color, size=SMALL, filled=False, anchor=anchor, appearance="light")
 
     def _reach(self, a, b, text, color=DARK):
         """➖ A thin leader from a label to a point."""

@@ -31,7 +31,6 @@ def admission(policy,total,holder,available,waited,hard):
     room=min(available-floor,capacity-holder)
     starved=policy["wait"]["starvedMilliseconds"]
     if hard:
-        if waited>=policy["wait"]["deadlineBatchMilliseconds"] and room>=minimum:return ["admit",min(fixed,room),"shrunk"]
         return ["wait",0,"starved" if waited>=starved else "pressure-critical"]
     if fixed<=room:return ["admit",fixed,"fits"]
     if room>=minimum:return ["admit",min(fixed,room),"shrunk"]

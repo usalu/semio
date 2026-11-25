@@ -18,9 +18,6 @@ pub const INTERPRETER_SOURCE: &str = concat!(
     include_str!("⚙️instruction-execution/🦀️.rs"),
     include_str!("💾️memory-and-bulk-execution/🦀️.rs"),
     include_str!("🧮️numeric-execution/🦀️.rs"),
-    include_str!("🔢️numeric-semantics/🦀️.rs"),
-    include_str!("🔢️numeric-semantics/🧮️execution/🦀️.rs"),
-    include_str!("🔢️numeric-semantics/🧱️types/🦀️.rs"),
     include_str!("📸️checkpoint-codec/🦀️.rs"),
     include_str!("🏗️instance/🦀️.rs"),
     include_str!("🏗️instance/🧊️prepared/🦀️.rs"),
@@ -35,7 +32,7 @@ use std::sync::Arc;
 #[path = "🧱️core-types-and-module-model/🦀️.rs"]
 mod core_types_and_module_model;
 pub use core_types_and_module_model::{CoreModule, CoreStepOutcome, ExportKind, FunctionType, HostCall, MemoryLimits, StepControl, TableLimits};
-pub use semio_plugin_interpreter_numeric::{CoreError, Value, ValueType};
+pub use semio_plugin_interpreter_numeric::{CoreError, Value, ValueType, NUMERIC_SOURCE};
 use core_types_and_module_model::{CHECKPOINT_MAGIC, CHECKPOINT_VERSION, ConstExpr, ControlBounds, DataDecl, ElementDecl, FunctionDecl, GlobalDecl, SegmentMode, WASM_PAGE_BYTES};
 
 #[path = "🧩️component-artifact/🦀️.rs"]
@@ -56,8 +53,11 @@ use instruction_shape::{analyze_controls, decode_block_type};
 
 #[path = "🏛️instance-state/🦀️.rs"]
 mod instance_state;
+#[path="📒️retained-ledger/🦀️.rs"]
+mod retained_ledger;
+pub use retained_ledger::{format_retained_snapshot,tally,thread_booked,LedgerScope,RetainedCategory,RetainedLedger};
 pub use instance_state::CoreInstance;
-use instance_state::{ControlFrame, ControlKind, Frame, GlobalState, InstructionProgress, Machine, MemoryState, PendingHost, TableState};
+use instance_state::{ControlFrame, ControlKind, Frame, FramePool, GlobalState, POOL_CLASSES, POOL_LIMIT, InstructionProgress, Machine, MemoryState, PendingHost, TableState};
 
 #[path = "⚙️instruction-execution/🦀️.rs"]
 mod instruction_execution;

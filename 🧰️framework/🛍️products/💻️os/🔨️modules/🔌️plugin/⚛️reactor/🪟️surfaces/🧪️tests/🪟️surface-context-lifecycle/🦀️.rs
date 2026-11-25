@@ -279,3 +279,19 @@ async fn document_surfaces_name_every_window_and_every_panel() {
     assert!(contexts.background_surfaces().len() < surfaces.len(), "background work still addresses windows only");
     drain(contexts);drain(view);
 }
+
+#[test]
+fn context_menu_projections_return_their_aliases_and_the_host_view_retires_through_displacement(){
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🪟️surface-context-lifecycle/🔣️.json")).unwrap();
+    let view:ViewModel=serde_json::from_value(fixture["view"].clone()).unwrap();assert!(view.active_utility_by_window_id.get("left").is_some());
+    let mut contexts=SurfaceContexts::default();
+    for _ in 0..64{
+        for surface in fixture["surfaces"].as_array().unwrap(){
+            let scoped=match surface["windowId"].as_str(){Some(window)=>view.scope_window_instance(window).unwrap(),None=>view.scope_panel()};
+            assert_eq!(scoped.window_id.as_deref(),surface["windowId"].as_str());assert_eq!(scoped.active_utility_id.as_deref(),surface["activeUtilityId"].as_str());
+        }
+        assert!(view.scope_window_instance("unknown").is_none());
+        contexts.displace_view(view.clone());
+    }
+    drain(contexts);drain(view);
+}

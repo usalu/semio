@@ -65,16 +65,38 @@ const setEngagement = async open => {
 };
 const state = () => page.evaluate(selector => {
   const status = document.querySelector(selector)?.textContent?.match(/(\d+) (?:layers?|Ebenen?) · (\d+) (?:selected|ausgewählt)/);
-  return { ready: document.documentElement.dataset.semioOsReady, error: document.documentElement.dataset.semioOsError, layers: status ? Number(status[1]) : null, locale: status ? (status[0].includes("ausgewählt") ? "de" : "en") : null };
+  return { ready: document.documentElement.dataset.semioOsReady, error: document.documentElement.dataset.semioOsError, layers: status ? Number(status[1]) : null, selected: status ? Number(status[2]) : null, locale: status ? (status[0].includes("ausgewählt") ? "de" : "en") : null };
 }, statusSelector);
-const waitLayers = async (expected, minimum = false) => {
+const waitStatus = async (field, expected, minimum = false) => {
   const deadline = Date.now() + 30000;
-  for (let layers = null; ;) {
-    if (minimum ? layers >= expected && layers !== null : layers === expected) return;
-    if (Date.now() >= deadline) throw Error(`Expected ${minimum ? "at least " : ""}${expected} layers, last read ${layers}`);
+  let observed = null;
+  do {
+    assert.equal(errors.length, 0, errors.join("\n"));
     await setEngagement(true);
+    observed = (await state())[field];
+    if (observed !== null && (minimum ? observed >= expected : observed === expected)) return;
     await delay(100, undefined, { signal: cancellation.signal });
-    layers = (await state()).layers;
+  } while (Date.now() < deadline);
+  throw Error(`Expected ${minimum ? "at least " : ""}${expected} ${field}, last read ${observed}`);
+};
+const waitLayers = (expected, minimum) => waitStatus("layers", expected, minimum);
+const waitSelected = expected => waitStatus("selected", expected);
+const paintedPixels = async (surface, { color, tolerance }) => page.evaluate(async ({ png, color, tolerance }) => {
+  const image = await createImageBitmap(await (await fetch(`data:image/png;base64,${png}`)).blob());
+  const context = new OffscreenCanvas(image.width, image.height).getContext("2d");
+  context.drawImage(image, 0, 0);
+  const { data } = context.getImageData(0, 0, image.width, image.height);
+  let pixels = 0;
+  for (let index = 0; index < data.length; index += 4) if (color.every((value, channel) => Math.abs(data[index + channel] - value) <= tolerance)) pixels += 1;
+  return pixels;
+}, { png: (await surface.screenshot()).toString("base64"), color, tolerance });
+const waitPainted = async (surface, expected) => {
+  const deadline = Date.now() + 30000;
+  for (;;) {
+    const pixels = await paintedPixels(surface, expected);
+    if (pixels >= expected.minimumPixels) return pixels;
+    if (Date.now() >= deadline) throw Error(`Expected ${expected.minimumPixels} pixels of ${expected.color}, last counted ${pixels}`);
+    await delay(250, undefined, { signal: cancellation.signal });
   }
 };
 const initialEventLogBytes = async path => {
@@ -113,7 +135,6 @@ const note = async step => {
   assert.equal(current.locale, report.locale, "Draw must render the explicitly requested language");
   report.steps.push({ step, ...current });
   writeFileSync(join(output, "report.json"), JSON.stringify(report, null, 2));
-  await setEngagement(false);
   if (step === "rectangle" || step === "reload") await page.screenshot({ path: join(output, `${step}.png`) });
   console.log(`[draw-browser] ${step}`);
 };
@@ -160,6 +181,8 @@ try {
   await waitLayers(fixture.minimumBootLayers, true);
   const before = (await state()).layers;
   await setEngagement(false);
+  const canvasSurface = page.locator('[data-surface-role="editor"] [data-ui-node-key="drawing.play.composite"]').first();
+  report.bootPixels = await waitPainted(canvasSurface, fixture.bootPaint);
   const labels = report.locale === "de"
     ? { artifact: "Dokument", catalogue: "Katalog", inspection: "Inspektion", addPath: "Pfad hinzufügen", path: "Pfad" }
     : { artifact: "Artifact", catalogue: "Catalogue", inspection: "Inspection", addPath: "Add Path", path: "Path" };
@@ -173,8 +196,9 @@ try {
   };
   const layersPanel = await openPanel("framework.panel.artifact", labels.artifact);
   await layersPanel.getByText(labels.addPath, { exact: true }).first().waitFor({ state: "visible", timeout: 15000 });
-  const layerRow = layersPanel.locator(`[role="treeitem"][id="panel:framework.panel.artifact/drawing-play-layers.path.${fixture.exampleLayer}"]`);
+  const layerRow = layersPanel.locator(`[role="treeitem"][id="panel:framework.panel.artifact/${fixture.exampleLayer}"]`);
   await layerRow.click({ timeout: 15000 });
+  await waitSelected(1);
   const inspectionPanel = await openPanel("framework.panel.inspection", labels.inspection);
   await inspectionPanel.locator(`[id*="/drawing-inspector."]`).first().waitFor({ state: "visible", timeout: 15000 });
   const cataloguePanel = await openPanel("framework.panel.catalogue", labels.catalogue);
@@ -186,12 +210,31 @@ try {
   assert.deepEqual((await page.getByRole("option").allInnerTexts()).map(text => text.trim()), [fixture.emptyExample.labels[report.locale], fixture.example.label, fixture.blankExample.labels[report.locale]], "Draw advertises the empty document, Demo and Blank Drawing");
   await page.getByRole("option", { name: fixture.blankExample.labels[report.locale], exact: true }).click({ timeout: 15000 });
   await waitLayers(0);
+  await waitSelected(0);
   await note("blank");
   await picker.click({ timeout: 15000 });
   await page.getByRole("option", { name: fixture.example.label, exact: true }).click({ timeout: 15000 });
   await waitLayers(before);
+  await waitSelected(0);
   assert((await picker.innerText()).includes(fixture.example.label));
   await note("example");
+  const mod = process.platform === "darwin" ? "Meta" : "Control";
+  const press = async key => {
+    await canvasSurface.focus();
+    await page.keyboard.press(`${mod}+${key}`);
+  };
+  await layerRow.click({ timeout: 15000 });
+  await waitSelected(1);
+  await press("c");
+  await note("copy");
+  await press("v");
+  await waitLayers(before + fixture.layerDelta);
+  await waitSelected(1);
+  await note("paste");
+  await press("x");
+  await waitLayers(before);
+  await waitSelected(0);
+  await note("cut");
   await openFolderCard();
   await page.locator('[id="framework.sync.folder.path"]').fill(folder);
   await page.getByRole("button", { name: /^(attach|verbinden)$/i }).click({ timeout: 15000 });
@@ -220,14 +263,10 @@ try {
   await page.mouse.up();
   await waitLayers(before + fixture.layerDelta);
   await note("rectangle");
-  const canvasSurface = page.locator('[data-surface-role="editor"] [data-ui-node-key="drawing.play.composite"]').first();
-  const mod = process.platform === "darwin" ? "Meta" : "Control";
-  await canvasSurface.focus();
-  await page.keyboard.press(`${mod}+z`);
+  await press("z");
   await waitLayers(before);
   await note("undo");
-  await canvasSurface.focus();
-  await page.keyboard.press(`${mod}+Shift+z`);
+  await press("Shift+z");
   await waitLayers(before + fixture.layerDelta);
   await note("redo");
   await openFolderCard();

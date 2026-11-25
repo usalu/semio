@@ -328,7 +328,7 @@ where
             return Ok(demand);
         }
         if !self.resident_backings_terminal_is_empty() { return Ok(RetirementDemand { release_bytes: self.next_resident_backing_byte_demand()?, depth: 2, ..Default::default() }); }
-        if !self.owners.snapshot_read_leases.closed() { return Ok(RetirementDemand { release_bytes: self.owners.snapshot_read_leases.custody_byte_demand()?, depth: 2, ..Default::default() }); }
+        if !self.owners.snapshot_read_leases.closed() { return Ok(RetirementDemand { depth: 2, ..self.owners.snapshot_read_leases.custody_demands()? }); }
         if self.factory_aliases_present() { return Ok(RetirementDemand { depth: 1, ..Default::default() }); }
         if !self.owners.factory_retirement_tickets.terminal_is_empty() {
             let mut demand = self.owners.factory_retirement_tickets.demands(maximum_body_bytes)?;

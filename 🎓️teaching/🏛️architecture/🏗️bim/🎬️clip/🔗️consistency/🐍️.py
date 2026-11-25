@@ -235,22 +235,21 @@ class Beat6_Consistency(_visuals.ClipScene):
         """📝 Left-aligned lines of text, one per row."""
         return _engine.VGroup(*[self.text(line, (point[0], point[1] - pitch * index, 0), size=size, color=color, anchor=anchor) for index, line in enumerate(lines)])
 
-    def panel(self, width, height, point, color=MUTED):
-        """🔲 Dark panel frame."""
-        return _panels.frame_box(width, height, color).move_to(_d.P(point))
+    def panel(self, width, height, point, color=MUTED, top_depth=0.0):
+        """🔲 Dark panel frame; a ``top_depth`` title row is one glass chip."""
+        return _panels.frame_box(width, height, color, top_depth=top_depth).move_to(_d.P(point))
 
     def card(self, rows, point, width, title=None, color=GOOD, value_width=3.0, mono=()):
         """🗂️ Key-value card; rows are ``(name, value)`` or ``(name, value, basis)`` and assumed values carry an asterisk."""
         pitch = 0.36
         height = len(rows) * pitch + 0.22 + (0.46 if title else 0.0)
-        frame = self.panel(width, height, point, color)
+        frame = self.panel(width, height, point, color, top_depth=0.46 if title else 0.0)
         group = _engine.VGroup(frame)
         group.values = []
         y = frame.get_top()[1] - 0.12
         left, right = frame.get_left()[0] + 0.16, frame.get_right()[0] - 0.3
         if title:
-            group.add(self.text(title, (left, y - 0.2, 0), size=S_LABEL, color=color, anchor="l", width=width - 0.3),
-                      _d.segments([((frame.get_left()[0], y - 0.44, 0), (frame.get_right()[0], y - 0.44, 0))], color, _d.W_THIN))
+            group.add(self.text(title, (left, frame.get_top()[1] - 0.23, 0), size=S_LABEL, color=color, anchor="l", width=width - 0.3))
             y -= 0.46
         for index, row in enumerate(rows):
             name, value, basis = (tuple(row) + (None,))[:3]
@@ -294,7 +293,7 @@ class Beat6_Consistency(_visuals.ClipScene):
 
     def backed(self, label, color=None):
         """🎴 A label on an opaque background chip so the drawing below never runs through it."""
-        chip = _engine.RoundedRectangle(corner_radius=0.04, width=label.width + 0.12, height=label.height + 0.1, stroke_color=color or BG, stroke_width=_d.W_THIN if color else 0,
+        chip = _engine.Rectangle(width=label.width + 0.12, height=label.height + 0.1, stroke_color=color or BG, stroke_width=_d.W_THIN if color else 0,
                                         fill_color=BG, fill_opacity=1).move_to(label)
         return _engine.VGroup(chip, label)
 

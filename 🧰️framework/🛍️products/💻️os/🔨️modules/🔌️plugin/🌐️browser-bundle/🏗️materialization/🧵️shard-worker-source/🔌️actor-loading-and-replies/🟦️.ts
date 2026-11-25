@@ -1,5 +1,6 @@
 /** 🔌️ The shard worker reply, runtime diagnostics and actor loading text. */
 import { SHARD_RUNTIME_DIAGNOSTICS_KEY, SHARD_WORKER_DIAGNOSTICS_PARAM } from "../../🧾️contract/🟦️.ts";
+import { ShardCoreModules } from "../../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/📮️shard-client/🧊️core-modules/🟦️.ts";
 
 /** 📦 Returns the worker text of the reply helpers, the runtime diagnostics and the actor loading and closing. */
 export function shardWorkerActorLoadingSource(): string {
@@ -114,7 +115,25 @@ function settleSuccession(msg) {
   else pending.reject(msg.refusal);
 }
 
-async function loadActor(actorId, activationGeneration, moduleUrl, originalAdmission) {
+// 🧊️ Every core module this worker compiled, keyed by its served URL and held per activation: an
+// activation reuses a module another activation of this worker compiled, adopts the seed the page
+// handed over from another worker, or compiles it from the streamed response once. The page learns
+// every hold so it can seed later activations on other workers, and a closed activation releases its
+// holds, so the module and every closure of its instance become collectable.
+${ShardCoreModules.toString()}
+const coreModules = new ShardCoreModules((url) => WebAssembly.compileStreaming(fetch(url)));
+const coreModuleHolder = (actorId, activationGeneration) => actorId + "#" + activationGeneration;
+function actorCoreModules(actorId, activationGeneration, seeds) {
+  const holder = coreModuleHolder(actorId, activationGeneration);
+  const seeded = new Map(Array.isArray(seeds) ? seeds : []);
+  return async (url) => {
+    const module = await coreModules.acquire(holder, url, seeded.get(url));
+    self.postMessage({ kind: "core-module", actorId, activationGeneration, url, module });
+    return module;
+  };
+}
+
+async function loadActor(actorId, activationGeneration, moduleUrl, component, originalAdmission, seeds) {
   if (typeof activationGeneration !== "bigint" || activationGeneration <= lastActivationGeneration || activationGeneration > 0xffffffffffffffffn) throw new Error("actor-close.invalid-activation-generation");
   if (actors.has(actorId) || activatingActors.has(actorId)) throw new Error("actor-close.activation-already-owned");
   lastActivationGeneration = activationGeneration;
@@ -131,12 +150,15 @@ async function loadActor(actorId, activationGeneration, moduleUrl, originalAdmis
     const bridge = await import(/* @vite-ignore */ moduleUrl);
     faultPhase = "instantiate";
     postBeat("module-ready");
-    const api = await bridge.createActorApi(actorId, activationGeneration, originalAdmission, operationClockUs, { receipt: receipt => self.postMessage({ kind: "original-turn-receipt", actorId, activationGeneration, receipt }), hold: refusal => self.postMessage({ kind: "original-producer-held", actorId, activationGeneration, operation: originalAdmission.operation, generation: originalAdmission.generation, refusal }), succeed: () => requestSuccession(actorId, activationGeneration, originalAdmission) });
+    const api = await bridge.createActorApi(actorId, activationGeneration, originalAdmission, operationClockUs, { receipt: receipt => self.postMessage({ kind: "original-turn-receipt", actorId, activationGeneration, receipt }), hold: refusal => self.postMessage({ kind: "original-producer-held", actorId, activationGeneration, operation: originalAdmission.operation, generation: originalAdmission.generation, refusal }), succeed: () => requestSuccession(actorId, activationGeneration, originalAdmission) }, actorCoreModules(actorId, activationGeneration, seeds), component);
     faultPhase = "actor-ready";
     postBeat("actor-ready");
-    const entry = { api, moduleUrl, activationGeneration, pendingAssets: [] };
+    const entry = { api, moduleUrl, component, activationGeneration, pendingAssets: [] };
     actors.set(actorId, entry);
     return entry;
+  } catch (failure) {
+    coreModules.release(coreModuleHolder(actorId, activationGeneration));
+    throw failure;
   } finally {
     activatingActors.delete(actorId);
   }
@@ -156,16 +178,23 @@ function deliverEffectResult(actorId, activationGeneration, envelope) {
   else if (kind === "effect-error") actor.api.rejectEffect(payload.requestId, payload.message);
 }
 
+// 🧹️ A disposed activation never runs again (the host revoked its operations and routing before it
+// posted \`dispose\`, and nothing retries a close), so the worker drops the instance whether or not the
+// guest closed its original source: an unclosed source stays held in the kernel's stock, which the
+// \`sourceClosed: false\` report says, but its instance, linear memory and core module holds go.
 async function closeOriginalActor(actorId, activationGeneration) {
   const actor = actors.get(actorId);
   if (!actor || actor.activationGeneration !== activationGeneration) return;
+  let closed;
   try {
-    const closed = await actor.api.closeOriginal();
-    if (closed.sourceClosed) { actors.delete(actorId); grantedBudgets.delete(actorId); }
-    self.postMessage({ kind: "original-source-close", actorId, activationGeneration, ...closed });
+    closed = await actor.api.closeOriginal();
   } catch (failure) {
-    self.postMessage({ kind: "original-source-close", actorId, activationGeneration, operation: actor.api.originalSource.operation, generation: actor.api.originalSource.generation, sourceClosed: false });
+    closed = { operation: actor.api.originalSource.operation, generation: actor.api.originalSource.generation, sourceClosed: false };
+  } finally {
+    if (actors.get(actorId) === actor) { actors.delete(actorId); grantedBudgets.delete(actorId); }
+    coreModules.release(coreModuleHolder(actorId, activationGeneration));
   }
+  self.postMessage({ kind: "original-source-close", actorId, activationGeneration, ...closed });
 }
 
 // 🪶️ GUESTSLIM (design-runtime.md §3): world \`actor\` exports NO \`activate\` function — activation is

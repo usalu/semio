@@ -1,5 +1,5 @@
 /** 🪟️ Native owned form controls keep their captured action scope inside the shell dialog. */
-import {Button,SharedBorderRow,useSharedBorderFrameRef} from "@semio-tech/ui-react";
+import {Button,glassClass,SharedBorderRow,useSharedBorderFrameRef} from "@semio-tech/ui-react";
 import {useId,useLayoutEffect,useRef,useSyncExternalStore} from "../../⚛️react-port/🟦️.ts";
 import {OwnedStagedBodyView} from "../../🗣️Interpreter/🎛️control-port/owned.tsx";
 import type {StagedActionHost} from "./session.ts";
@@ -11,7 +11,7 @@ export function StagedActionDialog({host}:{readonly host:StagedActionHost}){
  useLayoutEffect(()=>{if(!visible)return;const dialog=ref.current;if(!dialog)return;dialog.showModal();return()=>{if(dialog.open)dialog.close();};},[visible]);
  if(!state)return null;
  const text=labels[state.locale];
- return <dialog ref={frameRef} data-shared-border-frame="" data-shared-border-edges="top right bottom left" aria-labelledby={titleId} onCancel={event=>{event.preventDefault();host.cancel();}} className="max-h-[90vh] w-[min(42rem,90vw)] overflow-visible bg-menu p-0 text-foreground shadow-xl">
+ return <dialog ref={frameRef} data-shared-border-frame="" data-shared-border-edges="top right bottom left" aria-labelledby={titleId} onCancel={event=>{event.preventDefault();host.cancel();}} data-level="pane" className={"max-h-[90vh] w-[min(42rem,90vw)] overflow-visible p-0 text-foreground "+glassClass}>
   <div className="flex max-h-[90vh] flex-col">
   <div className="min-h-0 overflow-auto p-double"><h2 id={titleId}>{text.title}</h2>
   {state.pending||state.executing||state.closing?<div role="status" aria-live="polite"><progress aria-label={state.closing?text.closing:state.executing?text.executing:text.pending}/><span>{state.closing?text.closing:state.executing?text.executing:text.pending}</span></div>:null}

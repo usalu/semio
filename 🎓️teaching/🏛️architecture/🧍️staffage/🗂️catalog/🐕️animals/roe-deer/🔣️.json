@@ -13,16 +13,76 @@
       "de": "Ein erwachsener Rehbock (Capreolus capreolus) von 25 kg mit 0,75 m Widerristhöhe im kurzen roten Sommerhaar: zehenspitzengängiges Skelett mit langen schlanken Mittelfußknochen, getrennten Gliedmaßenketten der nahen und fernen Seite, biegsamer Wirbelsäule, langem Hals, Unterkiefer, großen Lauschern, kleinem Gehörn und weißem Spiegel; Schritt im Viertakt, ein langsamer Sprung-Clip, eine Schreckstarre mit Kopfruck und angehobenem Vorderlauf, Äsen und ein Wärmemodell für das Sommerhaar."
     },
     "tags": [
-      "animal",
-      "deer",
-      "roe-deer",
-      "ungulate",
-      "quadruped",
-      "unguligrade",
-      "mammal",
-      "wildlife",
-      "gait",
-      "alarm"
+      {
+        "id": "animal",
+        "title": {
+          "en": "animal",
+          "de": "Tier"
+        }
+      },
+      {
+        "id": "deer",
+        "title": {
+          "en": "deer",
+          "de": "Hirsch"
+        }
+      },
+      {
+        "id": "roe-deer",
+        "title": {
+          "en": "roe deer",
+          "de": "Reh"
+        }
+      },
+      {
+        "id": "ungulate",
+        "title": {
+          "en": "ungulate",
+          "de": "Huftier"
+        }
+      },
+      {
+        "id": "quadruped",
+        "title": {
+          "en": "quadruped",
+          "de": "Vierbeiner"
+        }
+      },
+      {
+        "id": "unguligrade",
+        "title": {
+          "en": "unguligrade",
+          "de": "Zehenspitzengänger"
+        }
+      },
+      {
+        "id": "mammal",
+        "title": {
+          "en": "mammal",
+          "de": "Säugetier"
+        }
+      },
+      {
+        "id": "wildlife",
+        "title": {
+          "en": "wildlife",
+          "de": "Wildtier"
+        }
+      },
+      {
+        "id": "gait",
+        "title": {
+          "en": "gait",
+          "de": "Gangart"
+        }
+      },
+      {
+        "id": "alarm",
+        "title": {
+          "en": "alarm",
+          "de": "Alarm"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage content worker (animals)",

@@ -14,6 +14,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"os"
+	"os/exec"
 	"strings"
 	"syscall"
 	"unicode/utf16"
@@ -28,6 +29,7 @@ var (
 	setInformationJobObject  = kernel32.NewProc("SetInformationJobObject")
 	assignProcessToJobObject = kernel32.NewProc("AssignProcessToJobObject")
 	getFinalPathNameByHandle = kernel32.NewProc("GetFinalPathNameByHandleW")
+	getConsoleWindow         = kernel32.NewProc("GetConsoleWindow")
 )
 
 // 🧾️Win32 constants of the job, process and file calls below. See https://learn.microsoft.com/windows/win32/api/winnt/ns-winnt-jobobject_basic_limit_information
@@ -38,7 +40,22 @@ const (
 	processSetQuota                   = 0x0100
 	processTerminate                  = 0x0001
 	errorSharingViolation             = syscall.Errno(32)
+	createNoWindow                    = 0x08000000
 )
+
+// 🫥️hideChild starts the child without a console window: CREATE_NO_WINDOW and a hidden window, so no terminal flashes when the launcher itself runs windowless (a scheduled task, a detached service). A child that shares the console of an interactive launcher keeps it. See https://learn.microsoft.com/windows/win32/procthread/process-creation-flags
+func hideChild(command *exec.Cmd, shareConsole bool) {
+	if shareConsole {
+		if window, _, _ := getConsoleWindow.Call(); window != 0 {
+			return
+		}
+	}
+	if command.SysProcAttr == nil {
+		command.SysProcAttr = &syscall.SysProcAttr{}
+	}
+	command.SysProcAttr.HideWindow = true
+	command.SysProcAttr.CreationFlags |= createNoWindow
+}
 
 // 📐️jobExtendedLimit is JOBOBJECT_EXTENDED_LIMIT_INFORMATION; Go lays the fields out as C does (144 bytes on 64-bit Windows).
 type jobExtendedLimit struct {

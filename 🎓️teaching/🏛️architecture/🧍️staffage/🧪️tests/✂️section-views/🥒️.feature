@@ -32,6 +32,12 @@ Feature: Sectioned side, front and plan views are named as sections and marked i
     When the asset is validated
     Then the issue section-plane-outside is reported in English and German
 
+  Scenario: A section label that differs between the languages is rejected
+    Given the sliding door with a plan section labelled "Longitudinal door section" in English and "Türlängsschnitt" in German
+    When the asset is validated and its side elevation is drawn in both languages
+    Then the issue section-label-language is reported in English and German, because the label stands beside the cut line and the two sheets place the same shapes differently
+    And the label "B-B" in both languages is accepted and both sheets place the shapes alike
+
   Scenario: The cast index records the section
     Given a cast of the sliding door plan
     When it is exported

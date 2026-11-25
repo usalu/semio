@@ -68,6 +68,7 @@ pub fn validate_descriptor(record: &TrustedBundlePackageV1, descriptor: &Package
             return Err(catalog("decoded manifest hosted kind's owner is not a declared dependency present in the catalog"));
         }
     }
+    descriptor.manifest.validate_action_sets().map_err(catalog_error)?;
     Ok(())
 }
 

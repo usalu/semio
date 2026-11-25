@@ -90,6 +90,8 @@ export function unfoundedWithheldOwnersV1(index:Pick<FactIndexV1,"owners"|"rows"
 
 /** 🔌️ Admits bounded consumer external input references. */
 export function readGenerationExternalInputsV1(value:unknown):readonly string[];
+/** 💽️ Whether a build failed because the volume has no room left. */
+export function diskFullFailureV1(error:unknown):boolean;
 /** 🏷️ Resolves one reference to its exact sealed external node key. */
 export function resolveGenerationExternalInputV1(nodes:Readonly<Record<string,unknown>>|undefined,name:string):string|undefined;
 export function scaledOwnerWaveV1(ownerWave:number,basisPoints:unknown):number;

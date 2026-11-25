@@ -29,7 +29,7 @@ fn semantic_aggregate_quota_faults_before_key_or_record_clone() {
     let _guard = registry_guard();
     let mut data_attributes = ui_contract::UiFixedMap::default();
     data_attributes.try_push(ui_text("semantic"), ui_text("payload")).expect("bounded fixture attribute");
-    let node = crate::TreeNode::try_new("exact", ui_contract::Component::Text(ui_contract::TextProps { value: ui_contract::Label(ui_text("value")), emphasize: None, data_attributes: Some(data_attributes) })).expect("bounded fixture node");
+    let node = crate::TreeNode::try_new("exact", ui_contract::Component::Text(ui_contract::TextProps { value: ui_contract::Label(ui_text("value")), emphasize: None, data_attributes: Some(data_attributes), heading_level: None })).expect("bounded fixture node");
     let current = SurfaceShadow::from_text("s");
     let limits = SurfaceReconcileLimits { max_bytes: SURFACE_RECONCILE_PAGE_BYTES, ..Default::default() };
     let mut cursor = SurfaceReconcileCursor::new_with_limits(tree(node), &current, limits);
@@ -107,7 +107,7 @@ fn changing_one_leaf_text_emits_exactly_one_op_naming_exactly_that_node() {
     match &patch.ops[0] {
         ui_contract::UiPatchOp::SetComponent { id, component } => {
             assert_eq!(*id, target_id);
-            assert_eq!(component, &ui_contract::Component::Text(ui_contract::TextProps { value: ui_contract::Label::try_from("world").expect("bounded fixture label"), emphasize: None, data_attributes: None }));
+            assert_eq!(component, &ui_contract::Component::Text(ui_contract::TextProps { value: ui_contract::Label::try_from("world").expect("bounded fixture label"), emphasize: None, data_attributes: None, heading_level: None }));
         }
         other => panic!("expected SetComponent (not Upsert), got {other:?}"),
     }

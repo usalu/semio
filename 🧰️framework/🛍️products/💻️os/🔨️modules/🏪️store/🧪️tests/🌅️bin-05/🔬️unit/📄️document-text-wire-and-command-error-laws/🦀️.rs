@@ -261,14 +261,18 @@ async fn malformed_alternative_checkpoint_pin_is_rejected_at_construction() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn create_alternative_with_no_edits_and_no_checkpoints_is_rejected() {
+async fn create_alternative_with_no_edits_and_no_checkpoints_branches_from_a_baseline_checkpoint() {
     const IDENTITY_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
     let mut identity:semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
     let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let mut store = ArtifactStore::new(envelope, &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
-    let error = store.dispatch(ArtifactCommand::CreateAlternative { name: "x".into() }, &mut identity).await.unwrap_err();
-    assert_eq!(error, VcsError::NoCheckpoint, "the auto-commit has nothing pending, so there is still no checkpoint to branch from");
+    store.dispatch(ArtifactCommand::CreateAlternative { name: "x".into() }, &mut identity).await.expect("a document without any checkpoint still branches from a baseline checkpoint");
+    assert_eq!(store.envelope().vcs.checkpoints.len(), 1, "the baseline checkpoint is the branch point");
+    let named: Vec<_> = store.envelope().vcs.alternatives.iter().filter(|alternative| alternative.name == "x").collect();
+    assert_eq!(named.len(), 1, "exactly one alternative named x: {:?}", store.envelope().vcs.alternatives.iter().map(|alternative| alternative.name.clone()).collect::<Vec<_>>());
+    assert_eq!(named[0].checkpoint_ids, vec![store.envelope().vcs.checkpoints[0].id.clone()]);
+    assert!(store.envelope().active_alternative_id.is_some());
     identity.encode(|control| { assert!(control.owned_bytes() <= IDENTITY_CEILING); Ok::<(), semio_framework_value::ValueError>(()) }).expect("same original cumulative identity observation");
     drop(identity.pause().expect("original Unit cumulative identity receipt"));
 }

@@ -13,14 +13,62 @@
       "de": "Eine ausgewachsene Japanische Blütenkirsche (Prunus serrulata 'Kanzan') in voller Blüte: ein kopfveredelter Hochstamm mit 1,9 m Stammhöhe und der Veredelungswulst unter der Verzweigung, fünf Leitäste, die steil trichterförmig aufsteigen und in eine breite, flach gewölbte Vasenkrone überbiegen, behängt mit Büscheln gefüllter rosa Blüten zwischen dem jungen bronzefarbenen Laub."
     },
     "tags": [
-      "tree",
-      "deciduous",
-      "ornamental",
-      "flowering-tree",
-      "blossom",
-      "street-tree",
-      "wind",
-      "transpiration"
+      {
+        "id": "tree",
+        "title": {
+          "en": "tree",
+          "de": "Baum"
+        }
+      },
+      {
+        "id": "deciduous",
+        "title": {
+          "en": "deciduous",
+          "de": "laubabwerfend"
+        }
+      },
+      {
+        "id": "ornamental",
+        "title": {
+          "en": "ornamental",
+          "de": "Zier-"
+        }
+      },
+      {
+        "id": "flowering-tree",
+        "title": {
+          "en": "flowering tree",
+          "de": "Blütenbaum"
+        }
+      },
+      {
+        "id": "blossom",
+        "title": {
+          "en": "blossom",
+          "de": "Blüte"
+        }
+      },
+      {
+        "id": "street-tree",
+        "title": {
+          "en": "street tree",
+          "de": "Straßenbaum"
+        }
+      },
+      {
+        "id": "wind",
+        "title": {
+          "en": "wind",
+          "de": "Wind"
+        }
+      },
+      {
+        "id": "transpiration",
+        "title": {
+          "en": "transpiration",
+          "de": "Transpiration"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage plant worker PW-03",

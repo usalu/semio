@@ -1,6 +1,6 @@
 /** 🪟️ InkCanvasHost overlays: the selection chrome with its resize handles, the viewport grid and the text and table cell editor overlays. */
 import { useEffect, useRef } from "../../⚛️react-port/🟦️.ts";
-import { Input, SharedBorderRow, useLabel } from "@semio-tech/ui-react";
+import { cn, glassClass, Input, SharedBorderRow, useLabel } from "@semio-tech/ui-react";
 import type { InkBounds, InkTableItem, InkTextItem, InkTextParagraph } from "../🧾️ink-model/🟦️.ts";
 import { inkHtmlToParagraphs, inkParagraphsToHtml } from "../🌳️ink-document-ops/🟦️.ts";
 
@@ -33,7 +33,7 @@ export function InkTextEditorOverlay({ block, screenBounds, onCommit, onCancel }
     return () => editor.removeEventListener("keydown", onKeyDown);
   }, [onCancel]);
   return (
-    <SharedBorderRow data-ink-editor-overlay="" orientation="vertical" className="bg-background/95 absolute z-30 shadow-sm" style={{ left: screenBounds.x, top: screenBounds.y, width: screenBounds.width, height: screenBounds.height }}>
+    <SharedBorderRow data-ink-editor-overlay="" orientation="vertical" data-level="pane" data-glass-chip="" className={cn("absolute z-30", glassClass)} style={{ left: screenBounds.x, top: screenBounds.y, width: screenBounds.width, height: screenBounds.height }}>
       <SharedBorderRow className="shrink-0">
         <button
           type="button"

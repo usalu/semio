@@ -8,7 +8,7 @@
  * @see ../../🔗️contracts/🟦️.ts — {@link EvaluatedShape}
  */
 import type { Hatch, PenSet, Shape, ShapeRole, Slug, PlanarViewpoint } from "../../../🧬️schema/🟦️.ts";
-import type { EvaluatedState, Fill, ItemValue, LayerId, Legend, View } from "../../🔗️contracts/🟦️.ts";
+import type { EvaluatedState, Fill, ItemValue, LayerId, Legend, PathCommand, View } from "../../🔗️contracts/🟦️.ts";
 import type { Canvas, Ctx } from "../🧱️canvas/🟦️.ts";
 import { type Theme, THEMES, toneColour } from "../🖍️palette/🟦️.ts";
 import { depthOrder } from "../🧊️depth/🟦️.ts";
@@ -99,6 +99,32 @@ export function prepare(state: EvaluatedState, viewpoint: PlanarViewpoint, sourc
   }));
 }
 
+/** 🗄️ What the drawings of one state have in common whatever their mode and language: the prepared shapes of a viewpoint at a scale, and of prepared shapes the hatches and the visible outline runs. It belongs to one caller that draws one state several times and ends with it. */
+export type Shared = {
+  readonly prepared: (state: EvaluatedState, viewpoint: PlanarViewpoint, source: Source, k: number) => Prepared[];
+  readonly hatch: (shapes: readonly Prepared[], p: Prepared, hatch: Hatch) => HatchInk;
+  readonly runs: (shapes: readonly Prepared[], includeFilled: boolean) => readonly OutlineRun[];
+};
+
+/** 🧺️ A new, empty {@link Shared}. */
+export function sharedOf(): Shared {
+  const prepared = new Map<EvaluatedState["shapes"], Map<string, Prepared[]>>();
+  const hatches = new Map<readonly Prepared[], Map<Prepared, HatchInk>>();
+  const runs = new Map<readonly Prepared[], Map<boolean, readonly OutlineRun[]>>();
+  const held = <K, V>(map: Map<K, V>, key: K, make: () => V): V => {
+    const known = map.get(key);
+    if (known !== undefined) return known;
+    const made = make();
+    map.set(key, made);
+    return made;
+  };
+  return {
+    prepared: (state, viewpoint, source, k) => held(held(prepared, state.shapes, () => new Map<string, Prepared[]>()), `${viewpoint}|${k}`, () => prepare(state, viewpoint, source, k)),
+    hatch: (shapes, p, hatch) => held(held(hatches, shapes, () => new Map<Prepared, HatchInk>()), p, () => hatchInk(shapes, p, hatch)),
+    runs: (shapes, includeFilled) => held(held(runs, shapes, () => new Map<boolean, readonly OutlineRun[]>()), includeFilled, () => [...outlineRuns(shapes, includeFilled)]),
+  };
+}
+
 /** 🧊️ The shapes a level of detail draws: those of the `roles`, plus, for every thermal region the roles would leave unpainted, its largest dropped shape, so a heatmap keeps every value it carries. Order and z order stay those of {@link prepare}. */
 export function selectRoles(shapes: readonly Prepared[], roles: readonly ShapeRole[]): Prepared[] {
   const keep = new Set(shapes.filter((p) => roles.includes(p.shape.role)));
@@ -171,8 +197,19 @@ export function hatchOf(rings: readonly Ring[], hatch: Hatch, id: string): { rea
   return { lines: [], dots };
 }
 
+type HatchInk = { readonly commands: readonly PathCommand[]; readonly dots: readonly Vec[] };
+
+function hatchInk(shapes: readonly Prepared[], p: Prepared, hatch: Hatch): HatchInk {
+  const hiders = shapes.flatMap((q) => (q.occluder !== null && q.order > p.order ? [q.occluder] : []));
+  const { lines, dots } = hatchOf(p.rings, hatch, p.shape.id);
+  return {
+    commands: lines.flatMap(([a, b]) => visibleRuns([a, b], false, hiders, CLIP_EPS_MM).flatMap((run) => commandsOf(run.points, false))),
+    dots: dots.filter((d) => !hiders.some((h) => d.x >= h.box.minX && d.x <= h.box.maxX && d.y >= h.box.minY && d.y <= h.box.maxY && pointInside(d, h.rings))),
+  };
+}
+
 /** 🖌️ Paints fills (one item per filled closed shape), hatches (graphic views only, clipped to their shape and hidden behind higher-z filled shapes) and, where requested, role-pen outlines with hidden lines removed. */
-export function drawShapes(canvas: Canvas, ctx: Ctx, shapes: readonly Prepared[], styleOf: (p: Prepared) => Style, outlineAll: boolean): void {
+export function drawShapes(canvas: Canvas, ctx: Ctx, shapes: readonly Prepared[], shared: Shared, styleOf: (p: Prepared) => Style, outlineAll: boolean): void {
   const ink = ctx.colours.ink;
   for (const p of shapes) {
     const filled = p.closed && p.shape.filled;
@@ -191,17 +228,14 @@ export function drawShapes(canvas: Canvas, ctx: Ctx, shapes: readonly Prepared[]
     const solid = ctx.options.view.endsWith("-solid");
     for (const p of shapes) {
       if (p.hatch === null || !p.closed || !p.shape.filled || p.shape.role === "glazing") continue;
-      const hiders = shapes.flatMap((q) => (q.occluder !== null && q.order > p.order ? [q.occluder] : []));
-      const { lines, dots } = hatchOf(p.rings, p.hatch, p.shape.id);
-      const commands = lines.flatMap(([a, b]) => visibleRuns([a, b], false, hiders, CLIP_EPS_MM).flatMap((run) => commandsOf(run.points, false)));
+      const { commands, dots } = shared.hatch(shapes, p, p.hatch);
       const identity = { bone: p.shape.bone, ...(p.shape.region ? { region: p.shape.region } : {}) };
       if (commands.length > 0) canvas.path("texture", `hatch:${p.shape.id}`, commands, { stroke: { color: ink, widthMm: p.hatch.penMm, cap: "butt", ...(solid ? { opacity: 0.55 } : {}) }, ...identity });
       const radius = p.hatch.penMm / 2;
-      const visible = dots.filter((d) => !hiders.some((h) => d.x >= h.box.minX && d.x <= h.box.maxX && d.y >= h.box.minY && d.y <= h.box.maxY && pointInside(d, h.rings)));
-      if (visible.length > 0) canvas.path("texture", `hatch-dots:${p.shape.id}`, visible.flatMap((d) => circleCommands(d, radius)), { fill: { color: ink, ...(solid ? { opacity: 0.55 } : {}) }, ...identity });
+      if (dots.length > 0) canvas.path("texture", `hatch-dots:${p.shape.id}`, dots.flatMap((d) => circleCommands(d, radius)), { fill: { color: ink, ...(solid ? { opacity: 0.55 } : {}) }, ...identity });
     }
   }
-  for (const { p, run, n } of outlineRuns(shapes, outlineAll))
+  for (const { p, run, n } of shared.runs(shapes, outlineAll))
     canvas.path(ROLE_LAYER[p.shape.role], `outline:${p.shape.id}:${n}`, commandsOf(run.points, run.closed), {
       stroke: { color: ink, widthMm: p.weightMm, cap: "round", join: "round" },
       bone: p.shape.bone,
@@ -209,10 +243,12 @@ export function drawShapes(canvas: Canvas, ctx: Ctx, shapes: readonly Prepared[]
     });
 }
 
+type OutlineRun = { readonly p: Prepared; readonly run: Run; readonly n: number };
+
 const joined = (a: Prepared, b: Prepared): boolean => a.shape.region !== undefined && a.shape.region === b.shape.region && (a.shape.bone === b.shape.bone || a.parent === b.shape.bone || b.parent === a.shape.bone);
 
 /** ✂️ The visible outline runs of every shape (filled closed shapes only when `includeFilled`): hidden lines behind higher-z filled shapes are removed, and filled shapes of one region on the same or adjacent bones hide each other's inner outlines so they read as one silhouette. Unfilled strokes (lines, paths, unfilled rings and rects) take no part in that merge: a drawn detail inside a same-region body survives unless a nearer filled shape genuinely covers it. */
-export function* outlineRuns(shapes: readonly Prepared[], includeFilled: boolean): Generator<{ readonly p: Prepared; readonly run: Run; readonly n: number }> {
+export function* outlineRuns(shapes: readonly Prepared[], includeFilled: boolean): Generator<OutlineRun> {
   for (const p of shapes) {
     if (p.closed && p.shape.filled && !includeFilled) continue;
     const merges = p.closed && p.shape.filled;

@@ -118,6 +118,8 @@ pub fn fem2d_canvas_meta_utility_layer(utility: &str) -> semio_framework_pack_js
         "id": "meta:utility",
         "role": "meta",
         "utility": utility,
+        "leftDragPans": utility == FEM2D_UTILITY_SELECT_DIRECT,
+        "rightDragPans": true,
     })
 }
 

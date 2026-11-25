@@ -195,7 +195,7 @@ function anchorSelector(anchor: string): string {
 /** 🫣️ How far (px) a name label keeps from the control that has focus (WCAG 2.2 SC 2.4.11, focus not obscured). */
 export const PEER_LABEL_CLEARANCE_PX = 24;
 
-const LABEL_OFFSET = { cursor: { left: 16, top: 24 }, focus: { left: -2, top: -20 } } as const;
+const LABEL_OFFSET = { cursor: { left: 16, top: 24 }, focus: { left: 0, top: 0 } } as const;
 
 /** ⌨️ The box of the control that has focus in the document, if any. */
 function focusedBox(): DOMRect | undefined {
@@ -273,7 +273,7 @@ function PeerMarks(props: { readonly peers: readonly PeerCursor[]; readonly item
           <div key={peer.session} style={paintStyle(peer.colour)}>
             {peer.focus === undefined ? null : (
               <div data-peer="focus" data-anchor={peer.focus} data-tag={peer.tag} hidden className="course-peer-focus">
-                <span className="course-peer-label">{peer.label}</span>
+                <span data-glass-chip="" className="course-peer-label">{peer.label}</span>
               </div>
             )}
             {peer.cursor === undefined ? null : (

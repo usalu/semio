@@ -1,53 +1,52 @@
-import { artifactsStorageSchema as publicationSchema } from "@semio-tech/repo-lib/artifacts";
+import { artifactsStorageSchema as publicationSchema } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️artifacts/🟦️.ts";
 import {createRequestedIssuedResourceControlV1,type ScriptInvocation} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {scriptCompilerAdmissionControlV1} from "@semio-tech/process/compiler-capacity";
-import { readNativeCallerAuthorityV1, withRepositoryArtifactV1, withRepositoryArtifactTaskV1, withArtifactScratchV1, withArtifactDestinationTaskV1, withRepositoryArtifactDestinationV1, stageRepositoryArtifacts } from "@semio-tech/repo-lib/artifacts";
-import { withRepositoryCacheStoreV1 } from "@semio-tech/repo-lib/storage";
+import {scriptCompilerAdmissionControlV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import { readNativeCallerAuthorityV1, withRepositoryArtifactV1, withRepositoryArtifactTaskV1, withArtifactScratchV1, withArtifactDestinationTaskV1, withRepositoryArtifactDestinationV1, stageRepositoryArtifacts } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️artifacts/🟦️.ts";
+import { withRepositoryCacheStoreV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/💾️storage/🟦️.ts";
 /** 🧩️ Semantic activation installation owner. */
 
-import { artifactFiles } from "@semio-tech/framework-plugin/browser-bundle/distribution/inventory";
+import { artifactFiles } from "../../../🔌️plugin/📦️packages/🦀️rust/🌐️browser-bundle/📦️distribution/📋️inventory/🟦️.ts";
 
 
 import { constants as fsConstants, createWriteStream, copyFileSync, cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, rmdirSync, unlinkSync, watch, writeFileSync } from "node:fs";
 
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 
-import { generatePluginRegistry, type DeployedRegistryEntryV1 } from "@semio-tech/plugin-registry/discovery";
+import { generatePluginRegistry, type DeployedRegistryEntryV1 } from "../../../🔌️plugin/📇️registry/🔎️discovery/🟦️.ts";
 
 import {
   ensurePreview2ShimVendorAt,
-} from "@semio-tech/framework-plugin/browser-bundle/materialization/preview2-shim-patches";
+} from "../../../🔌️plugin/📦️packages/🦀️rust/🌐️browser-bundle/🏗️materialization/🩹️preview2-shim-patches/🟦️.ts";
 import {
   hostShimSource,
-} from "@semio-tech/framework-plugin/browser-bundle/materialization/host-shim-source";
+} from "../../../🔌️plugin/📦️packages/🦀️rust/🌐️browser-bundle/🏗️materialization/🪢️host-shim-source/🟦️.ts";
 import {
   PLUGIN_HOST_SHIM_FILE,
   GUESTSLIM_FONT_RELATIVE,
   SHARD_WORKER_FILE,
   type PluginWebMaterializeContext,
-} from "@semio-tech/framework-plugin/browser-bundle/materialization/contract";
+} from "../../../🔌️plugin/📦️packages/🦀️rust/🌐️browser-bundle/🏗️materialization/🧾️contract/🟦️.ts";
 import {
   PREVIEW2_VENDOR_RELATIVE,
   rewritePreview2ShimImportSource,
-} from "@semio-tech/framework-plugin/browser-bundle/imports";
+} from "../../../🔌️plugin/📦️packages/🦀️rust/🌐️browser-bundle/🕸️imports/🟦️.ts";
 import {
   pluginComponentBridgeSource,
-} from "@semio-tech/framework-plugin/browser-bundle/materialization/component-bridge-source";
+} from "../../../🔌️plugin/📦️packages/🦀️rust/🌐️browser-bundle/🏗️materialization/🌉️component-bridge-source/🟦️.ts";
 import {
-  rewriteJcoComponentAssetUrls,
   rewriteJcoAsyncResultLifting,
-} from "@semio-tech/framework-plugin/browser-bundle/materialization/jco-module-rewrites";
+} from "../../../🔌️plugin/📦️packages/🦀️rust/🌐️browser-bundle/🏗️materialization/🧬️jco-module-rewrites/🟦️.ts";
 import {
   shardWorkerSource,
-} from "@semio-tech/framework-plugin/browser-bundle/materialization/shard-worker-source";
+} from "../../../🔌️plugin/📦️packages/🦀️rust/🌐️browser-bundle/🏗️materialization/🧵️shard-worker-source/🟦️.ts";
 import {
   rewritePreview2ShimImports,
   transpilePluginComponentAsync,
-} from "@semio-tech/framework-plugin/browser-bundle/materialization";
+} from "../../../🔌️plugin/📦️packages/🦀️rust/🌐️browser-bundle/🏗️materialization/🟦️.ts";
 
 import { defaultExtensionInstallRoot, EXTENSION_INSTALL_META, EXTENSION_WATCH_MARKER } from "../../../🔌️plugin/🏪️store/📥️installation/🟦️.ts";
 
-import { MODULE_BRIDGE_FILE, MODULE_SHARD_DIRECTORY, MODULE_HOT_SWAP_FILE, MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, moduleDirectoryName, parseModuleDirectories, moduleIdForDirectoryName, moduleRoutePath,componentModuleOwnerV1 } from "@semio-tech/plugin-registry/deployment";
+import { MODULE_BRIDGE_FILE, MODULE_SHARD_DIRECTORY, MODULE_HOT_SWAP_FILE, MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, moduleDirectoryName, parseModuleDirectories, moduleIdForDirectoryName, moduleRoutePath,componentModuleOwnerV1 } from "../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 
 
 

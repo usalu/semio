@@ -1,0 +1,27 @@
+[
+ {
+  "name": "table",
+  "old": "  function bands(samples: boolean[]) {\n    return samples.filter((inside, index) => inside && !samples[index - 1]).length;\n  }\n",
+  "new": "  function bands(samples: boolean[]) {\n    return samples.filter((inside, index) => inside && !samples[index - 1]).length;\n  }\n\n  /** 🔥️ What the body of each band of the heater resolves (D52). `volumes-feature` allows no solid dimension below the smallest feature of the band (7.5, 15, 30, 75 mm), and the bands state their choice in `volumes.<scale>.decisions`: the eight 1.5 mm slats at a pitch of 20 mm are kept at 1:50 (texture) and stand as four 15 mm slats at 1:100 (the thermal list keeps them at their gauge between the two 5 mm rails of the cassette, six bands on the ray); the 26 mm opening of the carry grip is kept down to 1:100 and is a solid lug from 1:200 on, where the outlet is one panel; the 44 mm dial leaves the body at 1:500 and stays in the thermal list. */\n  const HEATER_RESOLVES: Readonly<Record<50 | 100 | 200 | 500, { readonly gripOpen: boolean; readonly louvres: Readonly<Record<\"light-solid\" | \"thermal\", number>>; readonly dial: Readonly<Record<\"light-solid\" | \"thermal\", boolean>> }>> = {\n    50: { gripOpen: true, louvres: { \"light-solid\": 8, thermal: 8 }, dial: { \"light-solid\": true, thermal: true } },\n    100: { gripOpen: true, louvres: { \"light-solid\": 4, thermal: 6 }, dial: { \"light-solid\": true, thermal: true } },\n    200: { gripOpen: false, louvres: { \"light-solid\": 1, thermal: 1 }, dial: { \"light-solid\": true, thermal: true } },\n    500: { gripOpen: false, louvres: { \"light-solid\": 1, thermal: 1 }, dial: { \"light-solid\": false, thermal: true } },\n  };\n"
+ },
+ {
+  "name": "case",
+  "old": "  it.each([50, 100, 200, 500] as const)(\"keeps the carry grip open and resolves the heater outlet at 1:%i\", async (scale) => {",
+  "new": "  it.each([50, 100, 200, 500] as const)(\"keeps the carry bar and resolves the grip opening, the outlet louvres and the dial of the heater as the band of 1:%i states\", async (scale) => {\n    const resolves = HEATER_RESOLVES[scale];"
+ },
+ {
+  "name": "clear",
+  "old": "        expect(hit(across(0.286, z), face), `${view} hand clearance ${z}`).toBe(false);",
+  "new": "        expect(hit(across(0.286, z), face), `${view} hand clearance ${z}`).toBe(!resolves.gripOpen);"
+ },
+ {
+  "name": "dial",
+  "old": "`end of the 44 mm control dial in ${view}`).toBe(true);",
+  "new": "`end of the 44 mm control dial in ${view}`).toBe(resolves.dial[view]);"
+ },
+ {
+  "name": "bands",
+  "old": "        expect(bands(aperture), `${view} louvre bands across outlet`).toBe(8);",
+  "new": "        expect(bands(aperture), `${view} louvre bands across outlet`).toBe(resolves.louvres[view]);"
+ }
+]

@@ -137,42 +137,57 @@ impl R2004Section {
     }
 }
 
-fn materialize_r2004_sections(snapshot: &DwgSnapshot) -> Result<[R2004Section; 13], String> {
-    let (objects, pairs) = materialize_r2010_objects(&snapshot.drawing.objects)?;
-    let handles = materialize_r2004_handles(&pairs)?;
-    Ok([
-        R2004Section::stored(9, "AcDb:SummaryInfo", encode_summary_info(&snapshot.summary)?, 128, 0),
-        R2004Section::stored(10, "AcDb:Preview", encode_indexed_preview(&snapshot.preview, 0x1c0)?, 87_040, 0),
-        R2004Section::stored(11, "AcDb:AppInfo", encode_application_info(&snapshot.application)?, 768, 0),
-        R2004Section::stored(12, "AcDb:AppInfoHistory", encode_application_history(&snapshot.application_history)?, 1_408, 0),
-        R2004Section::stored(13, "AcDb:FileDepList", encode_dependencies(&snapshot.dependencies)?, 768, 2),
-        R2004Section::compressed(8, "AcDb:RevHistory", encode_revision_history(&snapshot.revision_history)?),
-        R2004Section::compressed(7, "AcDb:AcDbObjects", objects),
-        R2004Section::compressed(6, "AcDb:ObjFreeSpace", encode_object_free_space(&snapshot.auxiliary_header.updated_at)),
-        R2004Section::compressed(5, "AcDb:Template", encode_template(&snapshot.template)?),
-        R2004Section::compressed(4, "AcDb:Handles", handles),
-        R2004Section::compressed(3, "AcDb:Classes", encode_r2010_classes_section(&snapshot.classes)?),
-        R2004Section::compressed(2, "AcDb:AuxHeader", encode_auxiliary_header(&snapshot.auxiliary_header)?),
-        R2004Section::compressed(1, "AcDb:Header", encode_r2010_header_section(&snapshot.header)?),
-    ])
+const SECTION_SLOTS: usize = 13;
+const OBJECTS_SLOT: usize = 6;
+const HANDLES_SLOT: usize = 9;
+
+fn encode_slot(snapshot: &DwgSnapshot, slot: usize) -> Result<R2004Section, String> {
+    Ok(match slot {
+        0 => R2004Section::stored(9, "AcDb:SummaryInfo", encode_summary_info(&snapshot.summary)?, 128, 0),
+        1 => R2004Section::stored(10, "AcDb:Preview", encode_indexed_preview(&snapshot.preview, 0x1c0)?, 87_040, 0),
+        2 => R2004Section::stored(11, "AcDb:AppInfo", encode_application_info(&snapshot.application)?, 768, 0),
+        3 => R2004Section::stored(12, "AcDb:AppInfoHistory", encode_application_history(&snapshot.application_history)?, 1_408, 0),
+        4 => R2004Section::stored(13, "AcDb:FileDepList", encode_dependencies(&snapshot.dependencies)?, 768, 2),
+        5 => R2004Section::compressed(8, "AcDb:RevHistory", encode_revision_history(&snapshot.revision_history)?),
+        7 => R2004Section::compressed(6, "AcDb:ObjFreeSpace", encode_object_free_space(&snapshot.auxiliary_header.updated_at)),
+        8 => R2004Section::compressed(5, "AcDb:Template", encode_template(&snapshot.template)?),
+        10 => R2004Section::compressed(3, "AcDb:Classes", encode_r2010_classes_section(&snapshot.classes)?),
+        11 => R2004Section::compressed(2, "AcDb:AuxHeader", encode_auxiliary_header(&snapshot.auxiliary_header)?),
+        12 => R2004Section::compressed(1, "AcDb:Header", encode_r2010_header_section(&snapshot.header)?),
+        _ => return Err(format!("section slot {slot} carries streamed content")),
+    })
 }
 
-/// 🏗️ Materializes a canonical R2004-family directory from logical AC1024 section descriptors.
-/// Section payloads are serialization products and are never retained in the artifact schema.
+fn streamed_slot(slot: usize, content: Vec<u8>) -> R2004Section {
+    if slot == OBJECTS_SLOT { R2004Section::compressed(7, "AcDb:AcDbObjects", content) } else { R2004Section::compressed(4, "AcDb:Handles", content) }
+}
+
+fn materialize_r2004_sections(snapshot: &DwgSnapshot) -> Result<Vec<R2004Section>, String> {
+    let (objects, pairs) = materialize_r2010_objects(&snapshot.drawing.objects)?;
+    let handles = materialize_r2004_handles(&pairs)?;
+    let (mut objects, mut handles) = (Some(objects), Some(handles));
+    (0..SECTION_SLOTS).map(|slot| match slot {
+        OBJECTS_SLOT => Ok(streamed_slot(slot, objects.take().unwrap_or_default())),
+        HANDLES_SLOT => Ok(streamed_slot(slot, handles.take().unwrap_or_default())),
+        other => encode_slot(snapshot, other),
+    }).collect()
+}
+
+/// 🗺️ The container bytes that depend only on the finished pages: the preamble, both system pages and the file header inputs.
+struct R2004Layout {
+    prefix: Vec<u8>,
+    section_info: Vec<u8>,
+    page_map: Vec<u8>,
+    section_info_allocation: usize,
+    section_map_allocation: usize,
+    section_map_page_number: u32,
+    last_page_number: u32,
+}
+
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_r2004_canonical(snapshot: &DwgSnapshot) -> Result<Vec<u8>, String> {
+fn layout_r2004(snapshot: &DwgSnapshot, mut descriptors: Vec<R2004SectionDescriptor>, pages: &[EncodedR2004Page], application_history: &[u8]) -> Result<R2004Layout, String> {
     if snapshot.version.len() != 6 {
         return Err("version sentinel must contain six bytes".into());
-    }
-    let mut pages = Vec::new();
-    let mut descriptors = Vec::with_capacity(14);
-    let mut application_history = Vec::new();
-    for section in materialize_r2004_sections(snapshot)? {
-        descriptors.push(section.descriptor());
-        section.append_pages(&mut pages)?;
-        if section.id == 12 {
-            application_history = section.content;
-        }
     }
     let last_page_number = u32::try_from(pages.len()).map_err(|_| "R2004 page count exceeds u32")?;
     let section_info_page_number = last_page_number + 3;
@@ -181,7 +196,7 @@ fn encode_r2004_canonical(snapshot: &DwgSnapshot) -> Result<Vec<u8>, String> {
     descriptors.insert(0, R2004Section::compressed(0, "", Vec::new()).descriptor());
     let page_map_with = |section_info_allocation: u32, section_map_allocation: u32| {
         let mut page_map = Vec::new();
-        for page in &pages {
+        for page in pages {
             push_u32(&mut page_map, page.page_number as u32);
             push_u32(&mut page_map, page.allocation_size);
         }
@@ -197,36 +212,41 @@ fn encode_r2004_canonical(snapshot: &DwgSnapshot) -> Result<Vec<u8>, String> {
     let reserved_len = reserved_source.len().min(64);
     reserved_name[..reserved_len].copy_from_slice(&reserved_source[..reserved_len]);
     reserved_name[0] = 0;
-    let section_info = encode_r2004_section_info(&descriptors, &pages, &reserved_name, &application_history)?;
+    let section_info = encode_r2004_section_info(&descriptors, pages, &reserved_name, application_history)?;
     let section_info_allocation = align_r2004(40 + compress_r2004_section(&section_info)?.len()).max(1_024);
     let page_map = page_map_with(section_info_allocation as u32, 1_600);
     let section_map_allocation = align_r2004(40 + compress_r2004_section(&page_map)?.len()).max(1_600);
     let page_map = page_map_with(section_info_allocation as u32, section_map_allocation as u32);
 
-    let mut output = vec![0u8; 0x100];
-    output[0..6].copy_from_slice(snapshot.version.as_bytes());
-    output[0x0b] = 2;
-    output[0x0c] = 3;
+    let mut prefix = vec![0u8; 0x100];
+    prefix[0..6].copy_from_slice(snapshot.version.as_bytes());
+    prefix[0x0b] = 2;
+    prefix[0x0c] = 3;
     let preview_address = pages.iter().find(|page| page.section_id == 10).ok_or("Preview page missing")?.address as u32 + 32;
-    output[0x0d..0x11].copy_from_slice(&preview_address.to_le_bytes());
-    output[0x11] = 0x1d;
-    output[0x12] = snapshot.maintenance_version;
-    output[0x13..0x15].copy_from_slice(&snapshot.codepage.to_le_bytes());
-    output[0x16] = 0x1d;
-    output[0x17] = snapshot.maintenance_version;
+    prefix[0x0d..0x11].copy_from_slice(&preview_address.to_le_bytes());
+    prefix[0x11] = 0x1d;
+    prefix[0x12] = snapshot.maintenance_version;
+    prefix[0x13..0x15].copy_from_slice(&snapshot.codepage.to_le_bytes());
+    prefix[0x16] = 0x1d;
+    prefix[0x17] = snapshot.maintenance_version;
     let summary_address = pages.iter().find(|page| page.section_id == 9).ok_or("SummaryInfo page missing")?.address as u32 + 32;
-    output[0x20..0x24].copy_from_slice(&summary_address.to_le_bytes());
-    output[0x28..0x2c].copy_from_slice(&0x80u32.to_le_bytes());
+    prefix[0x20..0x24].copy_from_slice(&summary_address.to_le_bytes());
+    prefix[0x28..0x2c].copy_from_slice(&0x80u32.to_le_bytes());
     let application_address = pages.iter().find(|page| page.section_id == 11).ok_or("AppInfo page missing")?.address as u32 + 32;
-    output[0x2c..0x30].copy_from_slice(&application_address.to_le_bytes());
+    prefix[0x2c..0x30].copy_from_slice(&application_address.to_le_bytes());
     let application_history_address = pages.iter().find(|page| page.section_id == 12).ok_or("AppInfoHistory page missing")?.address as u32 + 32;
-    output[0x30..0x34].copy_from_slice(&application_history_address.to_le_bytes());
-    for page in &pages {
-        write_data_page(&mut output, page)?;
-    }
-    write_r2004_system_page(&mut output, 0x4163003b, &section_info, Some(section_info_allocation), 1)?;
+    prefix[0x30..0x34].copy_from_slice(&application_history_address.to_le_bytes());
+    Ok(R2004Layout { prefix, section_info, page_map, section_info_allocation, section_map_allocation, section_map_page_number, last_page_number })
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn seal_r2004(layout: &R2004Layout, mut output: Vec<u8>) -> Result<Vec<u8>, String> {
+    let R2004Layout { section_info, page_map, section_info_allocation, section_map_allocation, section_map_page_number, last_page_number, .. } = layout;
+    let (section_info_allocation, section_map_allocation, section_map_page_number, last_page_number) = (*section_info_allocation, *section_map_allocation, *section_map_page_number, *last_page_number);
+    let section_info_page_number = last_page_number + 3;
+    write_r2004_system_page(&mut output, 0x4163003b, section_info, Some(section_info_allocation), 1)?;
     let page_map_address = output.len();
-    write_r2004_system_page(&mut output, 0x41630e3b, &page_map, None, 0)?;
+    write_r2004_system_page(&mut output, 0x41630e3b, page_map, None, 0)?;
     let second_header_address = output.len() as u64;
 
     let mut file_header = vec![0u8; R2004_HEADER_LEN];
@@ -255,6 +275,31 @@ fn encode_r2004_canonical(snapshot: &DwgSnapshot) -> Result<Vec<u8>, String> {
     output.extend_from_slice(&encrypted_header);
     Ok(output)
 }
+
+/// 🏗️ Materializes a canonical R2004-family directory from logical AC1024 section descriptors.
+/// Section payloads are serialization products and are never retained in the artifact schema.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_r2004_canonical(snapshot: &DwgSnapshot) -> Result<Vec<u8>, String> {
+    if snapshot.version.len() != 6 {
+        return Err("version sentinel must contain six bytes".into());
+    }
+    let mut pages = Vec::new();
+    let mut descriptors = Vec::with_capacity(14);
+    let mut application_history = Vec::new();
+    for section in materialize_r2004_sections(snapshot)? {
+        descriptors.push(section.descriptor());
+        section.append_pages(&mut pages)?;
+        if section.id == 12 {
+            application_history = section.content;
+        }
+    }
+    let layout = layout_r2004(snapshot, descriptors, &pages, &application_history)?;
+    let mut output = layout.prefix.clone();
+    for page in &pages {
+        write_data_page(&mut output, page)?;
+    }
+    seal_r2004(&layout, output)
+}
 /// 🧱️ Deterministically materializes AC1024 from logical drawing and section state.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn encode_r2004_snapshot(snapshot: &DwgSnapshot) -> Result<Vec<u8>, String> {
@@ -274,6 +319,9 @@ pub fn dwg_to_bytes(drawing: &DwgDrawing) -> Result<Vec<u8>, String> {
 //#endregion DwgWrite
 //#endregion 🔖️DwgStructuralCodec
 //#region 🧪️Tests
+#[path = "🧵️write-cursor/🦀️.rs"]
+mod write_cursor;
+pub use write_cursor::{DwgWriteCursor, DwgWriteStep};
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;

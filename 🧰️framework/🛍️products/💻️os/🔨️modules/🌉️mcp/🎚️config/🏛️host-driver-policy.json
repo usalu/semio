@@ -7,7 +7,7 @@
     "maximumDepth": 64
   },
   "drive": {
-    "maximumItems": 4096,
+    "maximumItems": 16384,
     "maximumCopyBytes": 1048576,
     "maximumCapacityBytes": 134217728,
     "maximumReleaseBytes": 536870912,
@@ -30,8 +30,8 @@
   "root": {
     "operation": 71,
     "generation": 3,
-    "turnFuel": 4096,
-    "operationFuel": 1000000000,
+    "turnFuel": 262144,
+    "operationFuel": 4000000000,
     "maximumTurnMicroseconds": 2000000,
     "turnExecutionFuel": 1000000,
     "operationExecutionFuel": 500000000000,

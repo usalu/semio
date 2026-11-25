@@ -202,7 +202,8 @@ fn handles_are_lawful_and_write_document_leaves() {
     let area = all.iter().find(|h| h.id == "zone-office:floor-area").expect("area grip");
     assert!((area.writes[0].value_at(area.anchor.x) - document.zones[0].floor_area_m2).abs() < 1e-9);
     let airflow = all.iter().find(|h| h.id == "vent-central:design-airflow").expect("airflow grip");
-    assert!((airflow.writes[0].value_at(airflow.anchor.x) - document.vent_systems[0].design_airflow_m3_h).abs() < 1e-9);
+    let (written, stored) = (airflow.writes[0].map.base + airflow.writes[0].map.k * airflow.anchor.x, document.vent_systems[0].design_airflow_m3_h);
+    assert!((written - stored).abs() < 1e-9, "the airflow grip rests on the stored value: {written} against {stored}");
 }
 
 #[test]

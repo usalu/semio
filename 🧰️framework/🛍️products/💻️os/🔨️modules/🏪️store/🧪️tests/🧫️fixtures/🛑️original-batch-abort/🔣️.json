@@ -1,0 +1,18 @@
+{
+  "schema": "semio.store.original-batch-abort/v1",
+  "initial": 5,
+  "abandoned": 6,
+  "next": 7,
+  "expect": {
+    "handoffRefused": true,
+    "genericCloseRefused": true,
+    "custodyReturned": true,
+    "handedOffWithoutCustody": true,
+    "generationUnchanged": true,
+    "revisionUnchanged": true,
+    "historyUnchanged": true,
+    "snapshotUnchanged": true,
+    "maintenanceQueued": true,
+    "nextAdmitted": true
+  }
+}

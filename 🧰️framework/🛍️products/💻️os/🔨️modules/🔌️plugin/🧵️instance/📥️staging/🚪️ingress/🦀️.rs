@@ -5,7 +5,7 @@ use semio_plugin_window_kits::AppActionRegistry;
 use semio_plugin_decl_app::ArtifactApp;
 use store::os_store::store_schema::ArtifactCommand;
 use semio_plugin_decl_tool_contract::ArtifactInstanceOperationOwnerHandle;
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use store::{ArtifactStore, ConfigStore, create_config_envelope, MemberFactory, Mutation, ReferenceSpaceMember};
 use semio_plugin_decl_app::tool_contract::{ArtifactToolFactoryRegistry, ArtifactToolPublicContract, ArtifactToolPublicationLane};
@@ -90,7 +90,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> VcsArtif
         let interaction_id = format!("{}-interaction", app_id);
         let interaction_envelope = create_document_envelope::<protocol::InteractionState, InteractionConfigMutation>("framework.interaction", &interaction_id, protocol::InteractionState::default(), None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
         let mut store = ArtifactStore::new::<::semio_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, actor.clone()).await.expect("failed to create document store");
-        store.install_operation_wire(store::ArtifactOperationWire::semantic::<A::Snapshot>().with_batch_digest());
+        store.install_operation_wire(A::persisted_operation_wire());
         store.enable_convergence_early_exit();
         store.defer_remote_replays(Some(time_travel::time_travel_replay_turn_budget()));
         store.defer_local_replays(Some(time_travel::time_travel_replay_turn_budget()));

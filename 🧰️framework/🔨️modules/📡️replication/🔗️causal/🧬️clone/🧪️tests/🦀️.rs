@@ -4,7 +4,7 @@ use semio_framework_value::{FromValue,ToValue,RetainedCloneSource,RetainedCloneG
 use semio_framework_value_clone_source_testing::{FixtureSource,FixtureSourceBirth,FixtureCloseStep,drive};
 const WORK:u64=1<<20;
 const BODY:usize=4096;
-fn grant(d:RetirementDemand)->RetainedCloneGrant{assert!(d.copy_bytes+d.capacity_bytes<=4096,"native envelope clone indivisible body {:?}",d);RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth.max(1)}}
+fn grant(d:RetirementDemand)->RetainedCloneGrant{assert!(d.copy_bytes<=2*BODY&&d.capacity_bytes<=2*BODY,"native envelope clone indivisible body {:?}",d);RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth.max(1)}}
 fn stage<T:Sync+'static+RetireOwned>(value:T)->FixtureSource<T>{<RetainedCloneSource<T> as FixtureSourceBirth<T>>::from_owner(value)}
 fn heap(progress:RetainedCloneProgress)->(usize,usize){(progress.retained_capacity_bytes,progress.released_bytes)}
 /// 🚗️ Runs one controlled retirement turn under a real original Work action; the action itself proves the heap equals the receipt.

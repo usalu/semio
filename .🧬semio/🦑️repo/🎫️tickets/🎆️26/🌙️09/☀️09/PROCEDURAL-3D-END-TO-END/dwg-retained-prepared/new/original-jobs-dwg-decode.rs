@@ -1,0 +1,162 @@
+//! 🖊️ Retained DWG decoding: strict base64 chunks, the resumable drawing reader and the mesh projection, ending in a triangle import cursor.
+//!
+//! @see <https://www.opendesign.com/files/guestdownloads/OpenDesign_Specification_for_.dwg_files.pdf> — §4 R2004 file structure
+
+use super::*;
+use semio_framework_3d_brep_engine::MeshImportCursor;
+use semio_framework_value::{base64_standard_decode, RetainedAllocationEffect, RetainedCloneProgress, RetainedCloneStep, RetirementDemand};
+use semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::{DwgMeshProjection, DwgMeshProjectionStep};
+use semio_s_artifact_stdio_dwg_read::standards::v_ac1024::subsets::any::io::import::{DwgDrawingRead, DwgDrawingReadStep};
+
+const CHUNK: usize = 4096;
+const PAGE_BYTES: usize = 0x7400;
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum Phase { Reserve, Decode, Open, Read, Project, Ready, Taken }
+
+/// 🧾️ One borrowed base64 text decoded and projected one bounded unit per retained event.
+pub struct DwgDecode {
+    phase: Phase,
+    offset: usize,
+    source_address: usize,
+    source_length: usize,
+    text_length: usize,
+    tolerance: f64,
+    bytes: Vec<u8>,
+    reader: Option<DwgDrawingRead<Vec<u8>>>,
+    projection: Option<DwgMeshProjection<std::vec::IntoIter<semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::DwgEntity>>>,
+    mesh: Option<(Vec<f32>, Vec<f32>, Vec<u32>)>,
+}
+
+fn invalid(reason: impl std::fmt::Display) -> ValueError {
+    ValueError::literal(ValueRefusalKind::InvalidValue, format!("DWG import failed: {reason}"))
+}
+
+impl DwgDecode {
+    /// 🎟️ Opens a bounded decoder before borrowing or copying document text.
+    pub fn new(source: &str, tolerance: f64) -> Result<Self, ValueError> {
+        if source.trim().len() % 4 != 0 || source.trim().is_empty() || !tolerance.is_finite() || tolerance <= 0.0 { return Err(invalid("the text is not whole base64 quanta")); }
+        Ok(Self { phase: Phase::Reserve, offset: 0, source_address: source.as_ptr() as usize, source_length: source.len(), text_length: source.trim().len(), tolerance, bytes: Vec::new(), reader: None, projection: None, mesh: None })
+    }
+
+    pub fn ready(&self) -> bool { self.phase == Phase::Ready }
+    pub fn phase(&self) -> &'static str {
+        match self.phase { Phase::Reserve | Phase::Decode => "dwg-transport", Phase::Open | Phase::Read => "dwg-drawing", Phase::Project => "dwg-projection", Phase::Ready | Phase::Taken => "mesh-decoding" }
+    }
+
+    /// 📏️ Quotes one text chunk, one exact reservation, one drawing or projection unit.
+    pub fn demand(&self) -> RetirementDemand {
+        let (copy_bytes, capacity_bytes) = match self.phase {
+            Phase::Reserve => (0, self.text_length / 4 * 3),
+            Phase::Decode => (CHUNK + CHUNK / 4 * 3, 0),
+            Phase::Open => (size_of::<DwgDrawingRead<Vec<u8>>>(), 0),
+            Phase::Read => (PAGE_BYTES, 0),
+            Phase::Project => (size_of::<[f64; 4]>(), 0),
+            Phase::Ready => (size_of::<(Vec<f32>, Vec<f32>, Vec<u32>)>(), 0),
+            Phase::Taken => (0, 0),
+        };
+        RetirementDemand { copy_bytes, capacity_bytes, depth: 1, ..Default::default() }
+    }
+
+    /// ⏱️ Runs one funded unit over the same borrowed text.
+    pub fn step(&mut self, source: &str, effect: &mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneProgress, ValueError> {
+        if source.as_ptr() as usize != self.source_address || source.len() != self.source_length {
+            return Err(ValueError::invariant("original DWG source changed"));
+        }
+        let grant = effect.grant();
+        let text = source.trim();
+        let demand = self.demand();
+        if matches!(self.phase, Phase::Ready | Phase::Taken) || grant.maximum_items == 0 || !retained_clone_grant_admits(grant, demand) || !effect.performed(1)? {
+            return Ok(RetainedCloneProgress::default());
+        }
+        let mut receipt = RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() };
+        self.advance(text, &mut receipt).map_err(|error| error.with_retained_progress(receipt))?;
+        if !receipt.fits(grant) {
+            return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit, "DWG import exceeded its grant").with_retained_progress(receipt));
+        }
+        Ok(receipt)
+    }
+
+    fn advance(&mut self, text: &str, receipt: &mut RetainedCloneProgress) -> Result<(), ValueError> {
+        match self.phase {
+            Phase::Reserve => {
+                self.bytes.try_reserve_exact(text.len() / 4 * 3).map_err(|_| ValueError::literal(ValueRefusalKind::AllocationFailed, "DWG byte allocation failed"))?;
+                receipt.retained_capacity_bytes = self.bytes.capacity();
+                self.phase = Phase::Decode;
+            }
+            Phase::Decode => {
+                let end = (self.offset + CHUNK).min(text.len());
+                let chunk = text.get(self.offset..end).ok_or_else(|| invalid("the text is not ASCII"))?;
+                if end < text.len() && chunk.contains('=') { return Err(invalid("padding before the end of the text")); }
+                self.bytes.extend(base64_standard_decode(chunk).map_err(invalid)?);
+                self.offset = end;
+                if end == text.len() { self.phase = Phase::Open; }
+            }
+            Phase::Open => {
+                self.reader = Some(DwgDrawingRead::open(std::mem::take(&mut self.bytes)).map_err(invalid)?);
+                self.phase = Phase::Read;
+            }
+            Phase::Read => {
+                let reader = self.reader.as_mut().ok_or_else(|| invalid("the drawing reader is missing"))?;
+                if let DwgDrawingReadStep::Complete(drawing) = reader.step().map_err(invalid)? {
+                    self.projection = Some(DwgMeshProjection::new(drawing.entities.into_iter()));
+                    self.reader = None;
+                    self.phase = Phase::Project;
+                }
+            }
+            Phase::Project => {
+                let projection = self.projection.as_mut().ok_or_else(|| invalid("the mesh projection is missing"))?;
+                if let DwgMeshProjectionStep::Complete = projection.step().map_err(invalid)? {
+                    let mesh = projection.take_mesh().ok_or_else(|| invalid("the mesh projection is incomplete"))?;
+                    self.mesh = Some((mesh.positions, mesh.normals, mesh.indices));
+                    self.projection = None;
+                    self.phase = Phase::Ready;
+                }
+            }
+            Phase::Ready | Phase::Taken => unreachable!("ready DWG is transferred separately"),
+        }
+        Ok(())
+    }
+
+    /// 📈️ The completed fraction, for the job's progress report.
+    pub fn progress(&self) -> f32 {
+        match self.phase {
+            Phase::Reserve => 0.0,
+            Phase::Decode => 0.1,
+            Phase::Open => 0.2,
+            Phase::Read => 0.2 + 0.4 * self.reader.as_ref().map_or(0.0, |reader| reader.progress()),
+            Phase::Project => 0.6 + 0.4 * self.projection.as_ref().map_or(0.0, |projection| projection.progress()),
+            Phase::Ready | Phase::Taken => 1.0,
+        }
+    }
+
+    /// 🫴️ Transfers the filled triangle buffers without cloning their entries.
+    pub fn into_cursor(&mut self) -> Result<MeshImportCursor, ValueError> {
+        if !self.ready() { return Err(ValueError::invariant("original DWG decoder has not completed")); }
+        self.phase = Phase::Taken;
+        let (positions, normals, indices) = self.mesh.take().ok_or_else(|| ValueError::invariant("decoded DWG mesh was already transferred"))?;
+        MeshImportCursor::new(positions, normals, indices, self.tolerance).map_err(invalid)
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.bytes.capacity() == 0 && self.reader.is_none() && self.projection.is_none() && self.mesh.is_none()
+    }
+
+    /// 🧹️ Quotes the release of the unfinished buffers and readers as one unit.
+    pub fn close_demand(&self) -> RetirementDemand {
+        let mesh = self.mesh.as_ref().map_or(0, |(p, n, i)| p.capacity() * size_of::<f32>() + n.capacity() * size_of::<f32>() + i.capacity() * size_of::<u32>());
+        let state = size_of::<DwgDrawingRead<Vec<u8>>>() * usize::from(self.reader.is_some()) + size_of_val(&self.projection) * usize::from(self.projection.is_some());
+        RetirementDemand { release_bytes: self.bytes.capacity() + mesh + state, depth: 1, ..Default::default() }
+    }
+
+    /// ♻️ Releases every unfinished owner in one funded unit.
+    pub fn close(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError> {
+        let demand = self.close_demand();
+        if effect.grant().maximum_items == 0 || !retained_clone_grant_admits(effect.grant(), demand) || !effect.performed(1)? {
+            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));
+        }
+        self.bytes = Vec::new();
+        (self.reader, self.projection, self.mesh) = (None, None, None);
+        Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, released_bytes: demand.release_bytes, ..Default::default() }))
+    }
+}

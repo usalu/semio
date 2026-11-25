@@ -11,7 +11,7 @@
   ],
   "properties": {
     "mutation": {
-      "const": "changezoneaream2"
+      "const": "changeZoneAreaM2"
     },
     "zoneId": {
       "type": "string",

@@ -59,6 +59,9 @@ impl ClassicSectionCursor {
         ClassicSectionReceipt { event, work: receipt.work, allocated_bytes: 0, released_bytes: 0 }
     }
 
+    /// 🏃️ Whether the next unit scans one row byte, before the trailer dictionary starts.
+    pub fn scans_rows(&self) -> bool { self.trailer.is_none() && !self.closing && !self.cancelled }
+
     pub fn ready_trailer(&self) -> Option<&[PdfDictEntry]> {
         if self.closing || self.cancelled { return None; }
         self.trailer.as_ref()?.ready_value()?.as_dict()

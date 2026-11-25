@@ -34,6 +34,9 @@ macro_rules! original_tagged_operation_receiving{
 }
 #[path="📦️pack-value/🦀️.rs"]
 mod pack_value;
+#[path="🧾️decoded/🦀️.rs"]
+mod decoded;
+pub use decoded::{DecodedOperationRetirement,OriginalDecodedOperationReceiving};
 pub use pack_value::{OriginalPackValueReceiving,OriginalTaggedPackValueReceiving,PackValueRetirement,decoded_value_retained_bytes,pack_value_conversion_quote};
 pub struct OriginalOperationReceiving<M:DslOwnedReceivingVariants+BorrowedDslVariants>{
  source:(usize,usize),range:(usize,usize),position:usize,phase:u8,tag:u64,shift:u8,tags:Option<&'static[u64]>,ordinal:usize,

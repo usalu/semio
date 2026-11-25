@@ -51,6 +51,21 @@ test("the first machine reads and publishes, a second machine on the same tree i
  expect([...records.inferences.values()].every(count=>count===1)).toBe(true);
 });
 
+test("the head names the module graph the reading machine offered, a machine that takes the head adopts that graph before it judges the owners, and a newer graph alone publishes the head again",async()=>{
+ const{fleet,machines:[a,b]}=world(6,["a","b"]) as {fleet:FleetV1;machines:[MachineV1,MachineV1]};
+ const offered=sha("graph-head-1"),adopted:string[]=[],order:string[]=[];
+ const first=await run(fleet,a!,{graph:{offer:async()=>offered,adopt:async()=>{throw new Error("the reader adopts nothing");}}});
+ expect(first.published).toBe(true);
+ const decoded=decodeProtobufV1(REAPI_V1.actionResult,await fleet.client("a").getResult(selectedHeadKeyV1({scope,platform})) as Uint8Array) as {stdout_raw:Uint8Array};
+ expect(JSON.parse(Buffer.from(decoded.stdout_raw).toString("utf8")).closureGraph).toBe(offered);
+ const install=b!.install;
+ const second=await run(fleet,b!,{graph:{offer:async()=>undefined,adopt:async head=>{adopted.push(head);order.push("adopt");return{outcome:"adopted",confirmed:5,refused:1};}},install:async plan=>{order.push("install");await install(plan);}});
+ expect(second.outcome).toBe("installed");expect(adopted).toEqual([offered]);expect(order).toEqual(["adopt","install"]);
+ const sealed=await a!.read(undefined),held=JSON.parse(Buffer.from(decoded.stdout_raw).toString("utf8"));
+ expect(await publishSelectedGenerationV1({client:fleet.client("a"),scope,platform,host:a!.host,sealed:sealed!,ownerOf:ownerOfV1,held,closureGraph:offered})).toMatchObject({stored:false,reason:"current"});
+ expect((await publishSelectedGenerationV1({client:fleet.client("a"),scope,platform,host:a!.host,sealed:sealed!,ownerOf:ownerOfV1,held,closureGraph:sha("graph-head-2")})).stored).toBe(true);
+});
+
 test("k changed owners: exactly those are read again, the other owners are held, and the fleet converges on the newest head",async()=>{
  const{fleet,machines:[a,b,c],records}=world(40,["a","b","c"]) as {fleet:FleetV1;machines:[MachineV1,MachineV1,MachineV1];records:RecordsV1};
  await run(fleet,a!);

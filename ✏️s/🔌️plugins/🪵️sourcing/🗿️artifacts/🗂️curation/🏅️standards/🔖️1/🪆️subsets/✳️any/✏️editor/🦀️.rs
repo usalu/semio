@@ -172,6 +172,12 @@ pub use self::config_store_preparation::*;
 mod artifact_store_preparation;
 pub use self::artifact_store_preparation::*;
 
+#[path = "📋️clipboard/🦀️.rs"]
+pub mod clipboard;
+
+#[path = "🕹️selection/🦀️.rs"]
+pub mod selection;
+
 #[path = "🧩️sourcing-app/🦀️.rs"]
 mod sourcing_app;
 pub use self::sourcing_app::*;

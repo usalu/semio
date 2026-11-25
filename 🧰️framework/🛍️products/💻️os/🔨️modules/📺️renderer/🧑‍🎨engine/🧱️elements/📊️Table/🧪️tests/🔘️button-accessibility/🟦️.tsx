@@ -2,7 +2,7 @@
 
 import Ajv2020 from "ajv/dist/2020.js";
 import { cleanup, fireEvent, render, screen } from "@semio-tech/ui-react/test";
-import { chromium } from "playwright";
+import { launchChromium } from "../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🌐️chromium-launch/🟦️";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createAccessibilityMirror } from "@semio-tech/framework-renderer-wgpu/accessibility-mirror";
 import { TableHost } from "../../🟦️.tsx";
@@ -83,7 +83,7 @@ describe("Table row button accessibility", () => {
   });
 
   it("matches Chromium's fractional segment ownership and two-axis overflow clipping", async () => {
-    const browser = await chromium.launch({ headless: true });
+    const browser = await launchChromium();
     const page = await browser.newPage({ viewport: { width: 128, height: 128 }, deviceScaleFactor: 8 });
     try {
       for (const geometry of fixture.geometryCases) {

@@ -37,3 +37,44 @@ fn exact_semantic_ceiling_keeps_final_metadata_fundable_after_a_denied_turn(){
  for _ in 0..law["maxTurns"].as_u64().unwrap(){let p=wallet.turn_effect(1,|work,effect|job.advance(1,work,effect)).unwrap();if p.work==exact&&!p.done{reached=true;break}}assert!(reached);assert!(job.settlement_pending());let mut zero=semio_framework_value::work::RetainedWorkLedger::new(RetainedCloneGrant{maximum_items:law["deniedItems"].as_u64().unwrap()as usize,..Default::default()});let p=semio_s_artifact_draw_drawing_scene::preparation::testkit::effect_turn(RetainedCloneGrant{maximum_items:0,maximum_depth:usize::MAX,..Default::default()},|effect|job.advance(1,&mut zero,effect)).unwrap();assert_eq!(p.work,exact);assert!(!p.done);assert_eq!(job.last_turn_work(),0);assert_eq!(job.last_turn_semantic_work(),0);assert_eq!(zero.receipt(),Default::default());let mut done=false;
  for _ in 0..100{let p=wallet.turn_effect(law["resumeItems"].as_u64().unwrap()as usize,|work,effect|job.advance(1,work,effect)).unwrap();assert_eq!(p.work,exact);assert_eq!(job.last_turn_semantic_work(),law["expectedSemanticDelta"].as_u64().unwrap());assert_eq!(job.last_turn_work(),law["expectedCpu"].as_u64().unwrap());if p.done{done=true;break}}assert!(done);assert_eq!(job.result().unwrap().counts,counts);let(mut owner,output)=job.into_retirement();semio_s_artifact_draw_drawing_scene::draw_scene_funded_close!(owner,wallet,1);wallet.close_owned(output.unwrap());
 }
+fn finish_reusing(plan:DocumentScenePlan,source:&mut PreparedScene,grant:usize)->(scene_funding::Funded<PreparedScene>,usize,u64){let mut job=ScenePaintJob::new(plan,0.001,limits());let mut ledger=test_work();let(mut work,mut done)=(0,false);for _ in 0..2000000{let shared:&PreparedScene=&*source;let p=ledger.turn_effect(grant,|work,effect|job.advance_reusing(Some(shared),grant,work,effect)).unwrap();work=p.work;if p.done{done=true;break;}assert!(job.result().is_err());}assert!(done);let reused=job.reused_count();assert!(job.adopt_reused(source));assert_eq!(job.reused_count(),0);let(mut close,output)=job.into_retirement();semio_s_artifact_draw_drawing_scene::draw_scene_funded_close!(close,ledger,grant);assert!(close.terminal_is_empty());(scene_funding::Funded::from_parts(output.unwrap(),ledger),reused,work)}
+fn reuse_chain(plans:Vec<DocumentScenePlan>,grant:usize)->Vec<usize>{let mut plans=plans.into_iter();let first=plans.next().unwrap();let(scene,_)=finish(first,grant,limits());let(mut previous,mut wallet)=scene.into_parts();let mut counts=Vec::new();for next in plans{let(full,full_work)=finish(next.clone(),grant,limits());let(scene,reused,work)=finish_reusing(next,&mut previous,grant);assert_eq!(scene.geometry,full.geometry);assert_eq!(scene.counts,full.counts);assert_eq!(scene.flatness,full.flatness);assert_eq!(scene.plan.nodes.len(),full.plan.nodes.len());if reused>0{assert!(work<full_work,"{work} {full_work}");}else{assert_eq!(work,full_work);}counts.push(reused);close(full,grant);close(scene_funding::Funded::from_parts(previous,wallet),grant);let(scene,next_wallet)=scene.into_parts();previous=scene;wallet=next_wallet;}close(scene_funding::Funded::from_parts(previous,wallet),grant);counts}
+fn rectangles(layers:&[(&str,f64)])->DocumentScenePlan{let mut base=plan("rectangle");let template=base.nodes.remove(0);base.nodes=layers.iter().map(|(id,x)|{let mut node=template.clone();node.id=id.to_string();node.transform=[1.,0.,0.,1.,*x,0.];node}).collect();base}
+fn edited(mut source:DocumentScenePlan,id:&str)->DocumentScenePlan{for node in &mut source.nodes{if node.id==id{if let DocumentSceneContent::Path{segments,..}=&mut node.content{segments[1]=semio_s_artifact_draw_drawing_model::PathSegment::Line{to:[3.,0.]};}}}source}
+#[test]
+fn reused_layer_geometry_equals_a_from_scratch_recompute(){
+ for grant in [7,4096]{
+  let base=||rectangles(&[("a",0.),("b",10.),("c",20.)]);
+  assert_eq!(reuse_chain(vec![base(),base()],grant),[3],"unchanged");
+  assert_eq!(reuse_chain(vec![base(),rectangles(&[("a",0.),("b",10.),("c",20.),("d",30.)])],grant),[3],"add");
+  assert_eq!(reuse_chain(vec![base(),edited(base(),"b")],grant),[2],"edit");
+  let mut moved=base();moved.nodes[1].transform[4]+=1.;
+  assert_eq!(reuse_chain(vec![base(),moved],grant),[2],"move");
+  let mut reordered=base();reordered.nodes.swap(0,2);
+  assert_eq!(reuse_chain(vec![base(),reordered],grant),[3],"reorder");
+  let mut grouped=base();for node in &mut grouped.nodes[1..]{node.transform=[2.,0.,0.,2.,node.transform[4]+5.,3.];}
+  assert_eq!(reuse_chain(vec![base(),grouped],grant),[1],"group transform");
+  assert_eq!(reuse_chain(vec![base(),edited(base(),"b"),base()],grant),[2,2],"undo");
+  let mut hidden=base();hidden.nodes[0].visible=false;
+  assert_eq!(reuse_chain(vec![base(),hidden],grant),[2],"hidden");
+  let group=plan("group full affine");let mut shifted=group.clone();for node in shifted.nodes.iter_mut().skip(1){node.transform[4]+=3.;}
+  reuse_chain(vec![group,shifted],grant);
+  let boolean=plan("complete referenced difference");let paths=|source:&DocumentScenePlan|source.nodes.iter().filter(|node|node.visible&&matches!(node.content,DocumentSceneContent::Path{..})).count();
+  let mut operand=boolean.clone();let target=operand.nodes.iter().position(|node|node.visible&&matches!(&node.content,DocumentSceneContent::Path{segments,..}if matches!(segments.first(),Some(semio_s_artifact_draw_drawing_model::PathSegment::Move{..}))));
+  if let Some(at)=target{if let DocumentSceneContent::Path{segments,..}=&mut operand.nodes[at].content{if let semio_s_artifact_draw_drawing_model::PathSegment::Move{to}=&mut segments[0]{to[0]+=1.;}}}
+  let expected=paths(&boolean)-usize::from(target.is_some());
+  assert_eq!(reuse_chain(vec![boolean,operand],grant),[expected],"boolean operand edit");
+ }
+}
+#[test]
+fn forgone_reuse_repaints_every_node_identically(){
+ for grant in [7,4096]{
+  let before=rectangles(&[("a",0.),("b",10.),("c",20.)]);let after=edited(before.clone(),"b");
+  let(source,_)=finish(before,grant,limits());let(mut source,source_wallet)=source.into_parts();let(full,_)=finish(after.clone(),grant,limits());
+  let mut job=ScenePaintJob::new(after,0.001,limits());let mut ledger=test_work();let(mut forgone,mut done)=(false,false);
+  for _ in 0..4000000{let shared:&PreparedScene=&source;let p=ledger.turn_effect(grant,|work,effect|job.advance_reusing(Some(shared),grant,work,effect)).unwrap();if p.done{if !forgone{assert_eq!(job.reused_count(),2);assert!(job.forgo_reuse());forgone=true;continue;}done=true;break;}}
+  assert!(forgone&&done);assert_eq!(job.reused_count(),0);let scene=job.result().unwrap();assert_eq!(scene.geometry,full.geometry);assert_eq!(scene.counts,full.counts);
+  let(mut retire,output)=job.into_retirement();semio_s_artifact_draw_drawing_scene::draw_scene_funded_close!(retire,ledger,grant);assert!(retire.terminal_is_empty());
+  close(scene_funding::Funded::from_parts(output.unwrap(),ledger),grant);close(full,grant);close(scene_funding::Funded::from_parts(source,source_wallet),grant);
+ }
+}

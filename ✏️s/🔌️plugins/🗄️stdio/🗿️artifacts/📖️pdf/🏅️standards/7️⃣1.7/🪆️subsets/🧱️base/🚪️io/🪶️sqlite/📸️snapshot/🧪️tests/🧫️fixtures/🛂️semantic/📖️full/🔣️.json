@@ -2,7 +2,7 @@
   "fixture": "snapshot/sqlite/full-domain",
   "schema": "owned PDF 世界\u0000",
   "repeat": 16384,
-  "bytes": 337504,
+  "bytes": 337411,
   "counts": {
     "pdf_acro_field": 5,
     "pdf_acro_font": 2,
@@ -88,11 +88,9 @@
     "pdf_image": 5,
     "pdf_image_color_key": 4,
     "pdf_image_real": 10,
-    "pdf_image_sample": 2,
     "pdf_indirect_object": 2,
     "pdf_inline_decode": 2,
     "pdf_inline_image": 1,
-    "pdf_inline_sample": 1,
     "pdf_mark_info": 1,
     "pdf_mesh_decode": 4,
     "pdf_mesh_shading": 1,
@@ -130,5 +128,5 @@
     "pdf_unknown_operand": 2,
     "pdf_viewer_preferences": 1
   },
-  "rows": 1289
+  "rows": 1286
 }

@@ -13,12 +13,48 @@
    "de": "Ein klappbarer Elektro-Tretroller ohne Fahrer (8,5-Zoll-Räder, 250-W-Nabenmotor vorn, Akku im Trittbrett, hintere Scheibenbremse): Fahr- und Klappzustand, rollende Räder, Wärme von Nabenmotor, Akku, Bremse und Laden."
   },
   "tags": [
-   "vehicle",
-   "scooter",
-   "electric",
-   "micromobility",
-   "folding",
-   "wheeled"
+   {
+    "id": "vehicle",
+    "title": {
+     "en": "vehicle",
+     "de": "Fahrzeug"
+    }
+   },
+   {
+    "id": "scooter",
+    "title": {
+     "en": "scooter",
+     "de": "Roller"
+    }
+   },
+   {
+    "id": "electric",
+    "title": {
+     "en": "electric",
+     "de": "elektrisch"
+    }
+   },
+   {
+    "id": "micromobility",
+    "title": {
+     "en": "micromobility",
+     "de": "Mikromobilität"
+    }
+   },
+   {
+    "id": "folding",
+    "title": {
+     "en": "folding",
+     "de": "klappbar"
+    }
+   },
+   {
+    "id": "wheeled",
+    "title": {
+     "en": "wheeled",
+     "de": "rollend"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content worker NW-VE (vehicles)",
@@ -9077,7 +9113,7 @@
        ],
        "closed": true,
        "id": "wheel-r",
-       "bone": "wheel-r",
+       "bone": "deck",
        "role": "body",
        "z": 1,
        "filled": true,

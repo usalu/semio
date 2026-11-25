@@ -116,6 +116,7 @@ pub enum XmlValidMutation {
     SetText(set_text::SetText),
 }
 dsl::original_pack_value_operation_receiving!(XmlValidMutation);
+dsl::artifact_persisted_binary_operation!(XmlValidMutation);
 
 /// 📇️ Kebab-case spelling of every `XmlValidMutation` variant, in declaration order — the exact
 /// `kinds` list `../../🔮️oracles/🔣️.json`'s `mutationCatalogs` entry declares. The framework

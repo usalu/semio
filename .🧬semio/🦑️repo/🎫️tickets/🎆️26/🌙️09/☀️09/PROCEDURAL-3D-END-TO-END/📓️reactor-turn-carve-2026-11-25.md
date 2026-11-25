@@ -1,0 +1,7 @@
+# Reactor Turn Carve (2026-11-25)
+
+- Owner: only `semio-plugin-reactor-turn` compiles the 🔄️turn tree. `semio-plugin-reactor-core` does not mount it (it is a dependency of turn); consumers (context, wit-bridge, companions) depend on turn by Cargo path only. The admission log names `618/733 semio-plugin-reactor-turn` as the refused unit.
+- Measured as the admission does (cfg-evaluated mount tree plus the one `include_str` json): turn 265261 B before (admission: 264676 at 11:27), 234549 B after; headroom 27595 B of 262144.
+- Cut: 📥️receiving/📦️completed (completed, fault, failure; 38264 B) became `semio-plugin-reactor-receiving-completed`, files unchanged in place, new manifest under its 📦️packages/🦀️rust. No cycle: it depends on receiving-source only; `metadata` and `ResponseFields` moved into it and turn re-exports them (`original_receiving::completed`, `original_receiving::metadata` stay valid).
+- Registered: root Cargo.toml and 🧰️framework/Cargo.toml members, turn Cargo.toml dependency, 📋️build-owners.json, root Cargo.lock (cargo via repo), 131 artifact Cargo.lock files by hand (33 older stale ones lacking receiving-source were left for their own builds).
+- Checks: `repo cargo ... check -p receiving-completed -p reactor-turn` host and `--target wasm32-wasip2` both green. Unit tests (tests-05-3, tests-05-2) not run to completion: first attempt hit an unrelated peer edit in semio-os-kernel (store), the retry was stopped on main's memory hold.

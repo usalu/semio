@@ -45,8 +45,7 @@ export function selectFieldTargets(document:DrawingArtifact,ids:readonly string[
  const remaining=new Set(ids),selected:DrawingLayerNode[]=[];
  const visit=(layers:readonly DrawingLayerNode[]):void=>{
   for(const layer of layers) {
-   const row="drawing-play-layers."+layer.kind+"."+layer.id;
-   if(remaining.delete(layer.id)||remaining.has(row)){selected.push(layer);remaining.delete(row);}
+   if(remaining.delete(layer.id))selected.push(layer);
    if(layer.kind==="group")visit(layer.children);
   }
  };

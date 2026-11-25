@@ -1,0 +1,10 @@
+[
+ {"name":"install heartbeat","js":"(async()=>{window.__hb=[];let last=performance.now();setInterval(()=>{const n=performance.now();window.__hb.push([Math.round(n),Math.round(n-last)]);last=n;if(window.__hb.length>400)window.__hb.shift()},250);return 'ok'})()","settleMs":300},
+ {"name":"wait for the initial document","js":"(async()=>'w')()","until":"(async()=>String(document.querySelectorAll('canvas').length>=1&&!/Loading document/.test(document.body.innerText)&&!!document.querySelector('[role=combobox]')))()","timeoutMs":420000,"settleMs":2000},
+ {"name":"switch to Viewer","js":"(async()=>{window.__t0=performance.now();[...document.querySelectorAll('button,[role=tab]')].find(b=>(b.getAttribute('aria-label')||b.innerText).trim().startsWith('Viewer')).click();return 'v'})()","settleMs":100},
+ {"name":"probe1","js":"(async()=>JSON.stringify([Math.round(performance.now()-window.__t0),Math.max(...window.__hb.slice(-40).map(x=>x[1])),document.body.innerText.slice(0,200)]))()","settleMs":10000},
+ {"name":"probe2","js":"(async()=>JSON.stringify([Math.round(performance.now()-window.__t0),Math.max(...window.__hb.slice(-40).map(x=>x[1]))]))()","settleMs":10000},
+ {"name":"probe3","js":"(async()=>JSON.stringify([Math.round(performance.now()-window.__t0),Math.max(...window.__hb.slice(-40).map(x=>x[1]))]))()","settleMs":10000},
+ {"name":"probe4","js":"(async()=>JSON.stringify([Math.round(performance.now()-window.__t0),Math.max(...window.__hb.slice(-40).map(x=>x[1]))]))()","settleMs":10000},
+ {"name":"probe5","js":"(async()=>JSON.stringify([Math.round(performance.now()-window.__t0),Math.max(...window.__hb.slice(-40).map(x=>x[1])),document.body.innerText.slice(0,300)]))()","settleMs":10000}
+]

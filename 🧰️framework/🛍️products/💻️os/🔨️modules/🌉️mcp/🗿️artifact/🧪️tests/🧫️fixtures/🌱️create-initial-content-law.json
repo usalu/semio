@@ -1,0 +1,11 @@
+{
+  "law": "artifact_create{initial} for os.agent.probe/v1 commits `initial` as the artifact's first edit. The canonical pair is genesis pack plus edit-journal spr: the pack stays the JSON text `null` (the value before the first edit) and the journal in the spr carries the initial value as that edit, so a snapshot answers packBytes 4 and a spr that holds the initial JSON text. Creating twice is refused and an omitted initial commits `{}`.",
+  "kind": "os.agent.probe/v1",
+  "artifactId": "initial-content-law",
+  "initial": { "note": "initial-content-canary" },
+  "initialJsonText": "{\"note\":\"initial-content-canary\"}",
+  "genesisPackText": "null",
+  "revisionCursor": "1",
+  "omittedInitialJsonText": "{}",
+  "duplicateCode": "PRECONDITION_FAILED"
+}

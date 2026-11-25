@@ -763,7 +763,7 @@
         "wilson2014"
       ],
       "firstBodyMarker": "Research findings can only be checked",
-      "filledHeadings": [
+      "headings": [
         {
           "title": "Research Question",
           "number": "1.1"
@@ -800,7 +800,7 @@
         "dissertation2026"
       ],
       "firstBodyMarker": "A dissertation is a",
-      "filledHeadings": [
+      "headings": [
         {
           "title": "Scope",
           "number": "1.1"

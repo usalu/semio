@@ -3,9 +3,8 @@
 use semio_os_mcp_bridge::session::AgentConversation;
 use semio_os_mcp_bridge::shell_command_dispatch::BridgeSlot;
 use semio_os_mcp_capabilities::core_capabilities::{build_catalog, gateway_only_catalog};
-use semio_os_mcp_catalog::capability_tools::{to_schema_search_hit, tool_from_capability};
-use semio_os_mcp_catalog::catalog::{CapabilityKind, Catalog};
-use semio_os_mcp_catalog::search::{SearchFilters, search};
+use semio_os_mcp_catalog::capability_tools::tool_from_capability;
+use semio_os_mcp_catalog::catalog::Catalog;
 use semio_os_mcp_consent::approval_coordinator::ApprovalCoordinator;
 use semio_os_mcp_consent::elicitation::ElicitationSlot;
 use semio_os_mcp_dispatch::actions::ActionAdapter;
@@ -14,7 +13,7 @@ use semio_os_mcp_foundation::audit::{AuditSinks, ClientInfo, FileAuditSink, defa
 use semio_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
 use semio_os_mcp_foundation::handles::{HandleTable, IdempotencyStore, SessionHandle};
 use semio_os_mcp_foundation::rendezvous::{BridgeOffer, BridgeOfferScope, PublishedBridgeOffer, RENDEZVOUS_SCHEMA_VERSION, live_os_sessions, mint_admission_proof, publish_offer};
-use semio_os_mcp_foundation::reports::{RevisionStamp, SearchHit};
+use semio_os_mcp_foundation::reports::RevisionStamp;
 use semio_os_mcp_http_transport::transport::{HttpTransport, HttpTransportOptions, HttpTransportRun};
 use semio_os_mcp_plugin_runtime::plugin_binding_and_activation::WorkspaceOrigin;
 use semio_os_mcp_port::channel_port::{InvokeRequest, UnboundArtifactChannel};
@@ -26,6 +25,7 @@ use semio_os_mcp_server::stdio_transport::{McpTransport, StdioTransport};
 use semio_os_mcp_shell_channel::context_resolve::{mint_session_id, resolve_context};
 use semio_os_mcp_shell_channel::shell_channel::SessionChannelBinding;
 use semio_os_mcp_tools_gateway::artifact::register_artifact_tools;
+use semio_os_mcp_tools_gateway::discovery_tools::{capabilities_describe_handler, capabilities_search_handler};
 use semio_os_mcp_tools_gateway::context::WorkspaceResourceRegistry;
 use semio_os_mcp_tools_gateway::prompts::build_prompt_registry;
 use semio_os_mcp_tools_gateway::ui::{register_conversation_tools, register_ui_tools};
@@ -41,69 +41,6 @@ use semio_os_mcp_routing::routing_and_shell_routed::capability_instance_slot;
 
 
 pub use semio_os_mcp_process_arena::ProcessRunFailure;
-
-fn parse_capability_kind(raw: &str) -> Option<CapabilityKind> {
-    match raw.to_ascii_lowercase().as_str() {
-        "mutation" => Some(CapabilityKind::Mutation),
-        "view" => Some(CapabilityKind::View),
-        "history" => Some(CapabilityKind::History),
-        "clipboard" => Some(CapabilityKind::Clipboard),
-        "shell" => Some(CapabilityKind::Shell),
-        "interaction" => Some(CapabilityKind::Interaction),
-        "query" => Some(CapabilityKind::Query),
-        "job" => Some(CapabilityKind::Job),
-        "ui" => Some(CapabilityKind::Ui),
-        "meta" => Some(CapabilityKind::Meta),
-        _ => None,
-    }
-}
-
-fn search_filters_from_arguments(arguments: &serde_json::Value) -> SearchFilters {
-    let kind = arguments.get("kind").and_then(serde_json::Value::as_array).map(|values| values.iter().filter_map(serde_json::Value::as_str).filter_map(parse_capability_kind).collect()).unwrap_or_default();
-    SearchFilters {
-        kind,
-        owner: arguments.get("owner").and_then(serde_json::Value::as_str).map(str::to_string),
-        artifact_kind: arguments.get("artifactKind").and_then(serde_json::Value::as_str).map(str::to_string),
-        requires_scope: arguments.get("requiresScope").and_then(serde_json::Value::as_str).map(str::to_string),
-        audience: Vec::new(),
-    }
-}
-
-/// 📄️ Requested page size clamped to the declared minimum and maximum.
-const SEARCH_PAGE_DEFAULT: usize = 20;
-
-const SEARCH_PAGE_MAX: usize = 100;
-
-fn search_page_size(arguments: &serde_json::Value) -> usize {
-    arguments.get("limit").and_then(serde_json::Value::as_u64).map(|limit| (limit as usize).clamp(1, SEARCH_PAGE_MAX)).unwrap_or(SEARCH_PAGE_DEFAULT)
-}
-
-/// 📄️ Decimal result offset; malformed cursors restart at the first page.
-fn search_offset(arguments: &serde_json::Value) -> usize {
-    arguments.get("cursor").and_then(serde_json::Value::as_str).and_then(|cursor| cursor.parse::<usize>().ok()).unwrap_or(0)
-}
-
-fn capabilities_search_handler(catalog: &Catalog, arguments: serde_json::Value) -> CallToolResult {
-    let query = arguments.get("query").and_then(serde_json::Value::as_str).unwrap_or("").to_string();
-    let filters = search_filters_from_arguments(&arguments);
-    let hits = search(catalog, &query, &filters);
-    let total = hits.len();
-    let offset = search_offset(&arguments).min(total);
-    let page_size = search_page_size(&arguments);
-    let search_hits: Vec<SearchHit> = hits.iter().skip(offset).take(page_size).filter_map(|hit| catalog.get(&hit.capability_id).map(|capability| to_schema_search_hit(capability, hit.score))).collect();
-    let next_offset = offset + search_hits.len();
-    let next_cursor = if next_offset < total { serde_json::Value::String(next_offset.to_string()) } else { serde_json::Value::Null };
-    let structured = serde_json::json!({ "results": search_hits, "total": total, "nextCursor": next_cursor });
-    CallToolResult::ok(vec![ContentBlock::Text { text: format!("{} of {total} result(s) for {query:?}", search_hits.len()) }], Some(structured))
-}
-
-fn capabilities_describe_handler(catalog: &Catalog, arguments: serde_json::Value) -> CallToolResult {
-    let id = arguments.get("capabilityId").and_then(serde_json::Value::as_str).unwrap_or("");
-    match catalog.get(id) {
-        Some(capability) => CallToolResult::ok(vec![ContentBlock::Text { text: capability.title.clone() }], Some(serde_json::to_value(capability).unwrap_or(serde_json::Value::Null))),
-        None => CallToolResult::tool_error(&GatewayError::new(GatewayErrorCode::NotFound, format!("no such capability: {id}"))),
-    }
-}
 
 fn caller_locale(arguments: &serde_json::Value) -> Result<&str, GatewayError> {
     match arguments.get("locale").and_then(serde_json::Value::as_str) {
@@ -600,9 +537,11 @@ pub fn hub_open_retry_backoff_ms(error: &GatewayError, attempts_made: u32) -> Op
 /// 🏠️ Builds the real `McpServer` for a `--folder`/`--hub`-bound session: opens a real [Design notes](README.md#source-notes-604).
 fn server_for_workspace_options(mut principal: AgentPrincipal, audit: std::sync::Arc<AuditSinks>, folder: Option<&str>, hub: Option<&HubOptions>, mut runtime: GatewayRuntime, host_driver_policy:semio_plugin_host_wake::GuestRelayDriverPolicy, operation_policy:semio_os_mcp_port::channel_port::HostOperationPolicy) -> Result<(McpServer, String), GatewayError> {
     let origin_label;
+    let mut folder_catalog = None;
     let workspace = if let Some(folder) = folder {
         origin_label = format!("folder {folder}");
         let catalog = std::sync::Arc::new(build_catalog());
+        folder_catalog = Some(std::sync::Arc::clone(&catalog));
         std::sync::Arc::new(HeadlessWorkspace::open_folder(std::path::PathBuf::from(folder), principal.id.clone(), principal.scopes.iter().map(|scope| scope.0.clone()).collect(), catalog, host_driver_policy, operation_policy)?)
     } else if let Some(hub) = hub {
         origin_label = format!("hub {}/{}", hub.base_url, hub.space_id);
@@ -637,7 +576,7 @@ fn server_for_workspace_options(mut principal: AgentPrincipal, audit: std::sync:
     eprintln!("[semio-os-mcp] real per-capability ArtifactChannel routing bound for {origin_label}");
     let binding = std::sync::Arc::new(SessionChannelBinding::for_principal(&principal, runtime.bridge.clone()));
     runtime.channel_binding = Some(std::sync::Arc::clone(&binding));
-    let catalog = std::sync::Arc::new(build_catalog());
+    let catalog = folder_catalog.unwrap_or_else(|| std::sync::Arc::new(build_catalog()));
     workspace.bind_shell_route(std::sync::Arc::clone(&binding), std::sync::Arc::clone(&catalog));
     let channel: Box<ArtifactChannels> = Box::new(ArtifactChannels::Shell(ShellRoutedArtifactChannel::new(binding, catalog, workspace.open_routing_channel())));
     let principal_id = principal.id.clone();
@@ -746,16 +685,16 @@ fn run_stdio_serving(options: StdioOptions) -> Result<(), GatewayError> {
     let elicitation: ElicitationSlot = std::sync::Arc::new(std::sync::OnceLock::new());
     let listener = start_stdio_bridge(&options, &bridge_slot);
     let runtime = GatewayRuntime { bridge: listener.as_ref().map(|_| bridge_slot.clone()), elicitation: Some(elicitation.clone()), auto_approve: options.auto_approve, channel_binding: None };
+    let notifications = notification_slot();
+    let mut transport = StdioTransport::new(std::io::BufReader::new(std::io::stdin()), std::io::stdout(), std::io::stderr()).publishing_notifications_into(notifications.clone());
+    let handshake = transport.answer_handshake_while_building();
     let (server, principal_id) = server_for_workspace_options(principal, audit, options.folder.as_deref(), options.hub.as_ref(), runtime, options.host_driver_policy, options.operation_policy)?;
     let scope = options.hub.as_ref().map_or(BridgeOfferScope::Local, |hub| BridgeOfferScope::Hub { hub_origin: hub.base_url.clone(), space_id: hub.space_id.clone() });
     let attachment = listener.and_then(|listener| publish_stdio_bridge_offer(listener, principal_id, scope));
     let features = server.client_features();
-    let notifications = notification_slot();
-    let server = server.publishing_notifications_into(notifications.clone());
-    let mut transport = StdioTransport::new(std::io::BufReader::new(std::io::stdin()), std::io::stdout(), std::io::stderr())
-        .publishing_elicitation_into(elicitation, features)
-        .publishing_notifications_into(notifications);
-    let result = transport.serve(server);
+    let server = server.publishing_notifications_into(notifications);
+    let mut transport = transport.publishing_elicitation_into(elicitation, features);
+    let result = transport.serve_after_handshake(server, handshake);
     if let Some(attachment)=attachment.as_ref(){attachment.run.cancel();attachment.run.completion().wait();}
     drop(attachment);
     result

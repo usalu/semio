@@ -13,12 +13,48 @@
       "de": "Ein 100-Liter-Einkaufswagen aus verzinktem Draht auf vier Rollen, 1,05 m lang und 1,0 m hoch: leer, mit 30 kg Einkäufen beladen und mit hochgeschwenkter hinterer Nesting-Klappe; ein zweiter Wagen wird nicht gezeichnet."
     },
     "tags": [
-      "shopping-trolley",
-      "wire-basket",
-      "castors",
-      "retail",
-      "nesting",
-      "carried-load"
+      {
+        "id": "shopping-trolley",
+        "title": {
+          "en": "shopping trolley",
+          "de": "Einkaufswagen"
+        }
+      },
+      {
+        "id": "wire-basket",
+        "title": {
+          "en": "wire basket",
+          "de": "Drahtkorb"
+        }
+      },
+      {
+        "id": "castors",
+        "title": {
+          "en": "castors",
+          "de": "Lenkrollen"
+        }
+      },
+      {
+        "id": "retail",
+        "title": {
+          "en": "retail",
+          "de": "Einzelhandel"
+        }
+      },
+      {
+        "id": "nesting",
+        "title": {
+          "en": "nesting",
+          "de": "Nisten"
+        }
+      },
+      {
+        "id": "carried-load",
+        "title": {
+          "en": "carried load",
+          "de": "getragene Last"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage content (NW-O)",

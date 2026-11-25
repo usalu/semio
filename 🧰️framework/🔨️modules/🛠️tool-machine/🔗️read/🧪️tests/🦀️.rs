@@ -39,6 +39,9 @@ macro_rules! transfer_law{($ledger:expr,$ledger_type:ty,$field:ident)=>{{
 #[path="🧵️scrub/🦀️.rs"]
 mod original_scrub_write_laws;
 
+#[path="⏸️deferred/🦀️.rs"]
+mod deferred_abort_laws;
+
 /// 🪟️ Issued native readers retain the exact source while sorted prefix windows force resident backing growth.
 #[test]
 fn typing_reader_survives_resident_growth_and_prefix_insertion(){

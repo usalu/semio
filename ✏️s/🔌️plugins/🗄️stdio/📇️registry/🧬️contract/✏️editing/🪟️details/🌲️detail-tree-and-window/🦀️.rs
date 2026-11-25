@@ -244,6 +244,17 @@ fn item_controls(
     control_group(&format!("{id}-controls"), controls)
 }
 
+/// 🧾️ Pays the node records of a row's own fixed controls out of the window ledger; a row the ledger cannot pay for is refused with `ui.fixed-capacity`, which ends its window with a shorter run (see `semio_plugin::tree_window_indexed_item`).
+fn charge_fixed_nodes(windows: &TreeWindows<'_>, node: &BuiltNode) -> UiAssemblyResult<()> {
+    let mut records = 0usize;
+    let mut frontier = vec![node];
+    while let Some(next) = frontier.pop() {
+        records += 1;
+        frontier.extend(next.children.iter());
+    }
+    if windows.try_debit_unreserved(records) { Ok(()) } else { Err(PluginAssemblyError::new("ui.fixed-capacity", "snapshot details row controls exceed the body node ledger")) }
+}
+
 fn detail_node<P: SnapshotDetailsProvider + ?Sized>(
     provider: &P,
     path: &[SnapshotDetailPathSegment],
@@ -272,9 +283,10 @@ fn detail_node<P: SnapshotDetailsProvider + ?Sized>(
     } else {
         text_draft(&format!("{id}-source-fallback"), provider.source().ok_or_else(|| error("ui.snapshot-details.unbindable-path-without-source"))?, None, labels, publication_revision)?
     };
+    charge_fixed_nodes(windows, &controls)?;
     let presentation = provider.presentation(path, labels.locale);
     let title = presentation.as_ref().map_or(title, |presentation| presentation.label.as_str());
-    let mut builder = ui_contract::tree_item(label(title)?).default_open(is_collection).try_id(&id).map_err(|_| error("ui.snapshot-details.item-id"))?.try_child(controls).map_err(|_| error("ui.snapshot-details.item-controls"))?;
+    let mut builder = ui_contract::tree_item(label(title)?).default_open(is_collection && provider.default_open(path)).try_id(&id).map_err(|_| error("ui.snapshot-details.item-id"))?.try_child(controls).map_err(|_| error("ui.snapshot-details.item-controls"))?;
     if let Some(description) = presentation.and_then(|presentation| presentation.description) {
         builder = builder.description(UiText::clipped(&description));
     }
@@ -284,7 +296,7 @@ fn detail_node<P: SnapshotDetailsProvider + ?Sized>(
         }
         let count = provider.child_count(path);
         let children_id = format!("{id}-children");
-        return tree_window_indexed_item(windows, builder, &children_id, true, count, |index| detail_child(provider, path, &value, index, count, labels, controller_id, windows, publication_revision));
+        return tree_window_indexed_item(windows, builder, &children_id, provider.default_open(path), count, |index| detail_child(provider, path, &value, index, count, labels, controller_id, windows, publication_revision));
     }
     builder.try_build().map_err(|_| error("ui.snapshot-details.item"))
 }

@@ -1,4 +1,4 @@
-//! 🧪 Native statement AST fixtures share the language-neutral control-flow contract.
+/// 🧪 Native statement AST fixtures share the language-neutral control-flow contract.
 const STATEMENT_CASES_SHA256: &str = "3b6a924e6ff3ead2a90707292e7348081932e87b32aad5f72f7926926deb19e6";
 static STATEMENT_PROGRAM: ExpressProgram = ExpressProgram {
     schema: "IFC4X3_ADD2",

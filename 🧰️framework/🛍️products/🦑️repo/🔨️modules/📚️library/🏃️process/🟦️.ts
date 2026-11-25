@@ -149,7 +149,7 @@ function runCmdInternal(cmd: string, args: string[], opts: RunCmdOpts): number {
     ? routeRegisteredCommandV1(runtimeCommandNameV1(), [CARGO_RELAY_SCRIPT, "relay", ...formattedArgs], where, { ...(opts.env ?? process.env), [CARGO_RELAY_BUDGET_ENV]: String(budgetMs) })
     : opts.shell ? { command: cmd, arguments: formattedArgs, environment: opts.env ?? process.env } : routeRegisteredCommandV1(cmd, formattedArgs, where, opts.env ?? process.env);
   const result = relayed
-    ? spawnSync(routed.command, [...routed.arguments], {
+    ? spawnSync(routed.command, [...routed.arguments], {windowsHide:true,
         stdio: "inherit",
         cwd: opts.cwd,
         env: routed.environment as NodeJS.ProcessEnv,
@@ -157,7 +157,7 @@ function runCmdInternal(cmd: string, args: string[], opts: RunCmdOpts): number {
         killSignal: "SIGTERM",
         shell: false,
       })
-    : spawnSync(routed.command, [...routed.arguments], {
+    : spawnSync(routed.command, [...routed.arguments], {windowsHide:true,
         stdio: "inherit",
         cwd: opts.cwd,
         env: routed.environment as NodeJS.ProcessEnv,

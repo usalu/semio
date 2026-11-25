@@ -4,7 +4,7 @@
 //! retire one owner per turn under the caller's unchanged grant and exact per-axis quotes.
 use semio_plugin_ownership::bounded_ownership::{ARTIFACT_LIVE_OUTPUT_SLOTS, PluginLifecycleStep, plugin_turn_admitted};
 use semio_plugin_decl_app::ArtifactApp;
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use semio_plugin_decl_emission::Emit;
 use semio_framework::{Fault, FaultCode, FaultFrom, FaultOrigin};
@@ -79,9 +79,10 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                 .ingest.envelope_field_decoder_retirements
                 .get_mut(id)
                 .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.field-retirement-authority"), "returned envelope field decoder changed during one bounded maintenance step"))?;
-            let RetainedCloneStep::Complete(progress) = erased_step(cx, retirement, grant)? else {
+            let step = erased_step(cx, retirement, grant)?;
+            let RetainedCloneStep::Complete(progress) = step else {
                 *cursor = index;
-                return Ok(PluginLifecycleStep::Progress(empty));
+                return Ok(PluginLifecycleStep::Progress(step.progress()));
             };
             if !store::ErasedSnapshotRetirement::terminal_is_empty(retirement) {
                 return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.field-retirement-false-terminal"), "returned envelope field decoder reported Complete without terminal-empty ownership").into());
@@ -135,9 +136,10 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                 .ingest.envelope_completed_record_retirements
                 .get_mut(id)
                 .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.completed-retirement-authority"), "completed envelope changed during one bounded maintenance step"))?;
-            let RetainedCloneStep::Complete(progress) = completed_step(cx, retirement.as_mut(), grant)? else {
+            let step = completed_step(cx, retirement.as_mut(), grant)?;
+            let RetainedCloneStep::Complete(progress) = step else {
                 *cursor = index;
-                return Ok(PluginLifecycleStep::Progress(empty));
+                return Ok(PluginLifecycleStep::Progress(step.progress()));
             };
             if !retirement.terminal_is_empty() {
                 return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.completed-retirement-false-terminal"), "completed envelope reported Complete without terminal-empty ownership").into());

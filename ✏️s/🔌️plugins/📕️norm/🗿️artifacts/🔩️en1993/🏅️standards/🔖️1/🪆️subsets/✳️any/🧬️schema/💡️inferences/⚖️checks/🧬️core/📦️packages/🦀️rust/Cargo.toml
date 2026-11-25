@@ -27,3 +27,7 @@ semio-s-artifact-norm-en1993-model = { workspace = true }
 semio-s-artifact-norm-en1993-parts = { workspace = true }
 semio-s-plugin-norm-compliance = { workspace = true }
 semio-s-plugin-norm-mechanics = { workspace = true }
+
+[dev-dependencies]
+semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
+serde_json = { workspace = true }

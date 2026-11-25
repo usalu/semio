@@ -1,0 +1,1030 @@
+[
+ {
+  "op": "set",
+  "scale": "500",
+  "view": "front",
+  "id": "coat",
+  "set": {
+   "points": [
+    [
+     0.2115,
+     0.5565
+    ],
+    [
+     0.1945,
+     0.9385
+    ],
+    [
+     0.1935,
+     0.9515
+    ],
+    [
+     0.1865,
+     0.9725
+    ],
+    [
+     0.1875,
+     0.9755
+    ],
+    [
+     0.1915,
+     0.9785
+    ],
+    [
+     0.1775,
+     1.0965
+    ],
+    [
+     0.1715,
+     1.2425
+    ],
+    [
+     0.1795,
+     1.3605
+    ],
+    [
+     0.2125,
+     1.4555
+    ],
+    [
+     0.1625,
+     1.5095
+    ],
+    [
+     0.0925,
+     1.5535
+    ],
+    [
+     -0.0925,
+     1.5535
+    ],
+    [
+     -0.1625,
+     1.5095
+    ],
+    [
+     -0.2125,
+     1.4555
+    ],
+    [
+     -0.1795,
+     1.3605
+    ],
+    [
+     -0.1715,
+     1.2425
+    ],
+    [
+     -0.1775,
+     1.0965
+    ],
+    [
+     -0.1915,
+     0.9785
+    ],
+    [
+     -0.1875,
+     0.9755
+    ],
+    [
+     -0.1865,
+     0.9725
+    ],
+    [
+     -0.1935,
+     0.9515
+    ],
+    [
+     -0.1945,
+     0.9385
+    ],
+    [
+     -0.2115,
+     0.5565
+    ]
+   ]
+  },
+  "why": "the front drew the coat in three pieces on torso, lumbar and pelvis (coat, coat-waist, coat-skirt) while elevation and plan draw one coat on the torso: bone torso 681 mm apart at rest (sync-bone-height). One outline on the torso again, the union of the three pieces"
+ },
+ {
+  "op": "remove",
+  "scale": "500",
+  "view": "front",
+  "id": "coat-waist",
+  "why": "part of the one front coat now"
+ },
+ {
+  "op": "remove",
+  "scale": "500",
+  "view": "front",
+  "id": "coat-skirt",
+  "why": "part of the one front coat now"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "50",
+  "id": "sleeve-l",
+  "why": "arm-l: flat/None/flat: revolved about the bone axis"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "50",
+  "id": "sleeve-r",
+  "range": "stretch",
+  "why": "arm-r: flat/rev/None: the revolved plan body stretched to the length of the elevation outline",
+  "reach": 0.2
+ },
+ {
+  "op": "copy",
+  "scale": "50",
+  "id": "sleeve-r",
+  "from": "plan",
+  "to": [
+   "front"
+  ],
+  "why": "arm-r: flat/rev/None: the same revolved body in the front"
+ },
+ {
+  "op": "prism",
+  "scale": "50",
+  "id": "hand-l",
+  "view": "front",
+  "why": "hand-l: flat front shape on a hand that swings with the arm: prism that keeps the outline (the elevation outline swept laterally moved the front silhouette of the default pose to 33.8 mm against the limit of 15.0)"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "50",
+  "id": "shank-l",
+  "why": "shank-l: flat/flat/flat: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "50",
+  "id": "shank-l",
+  "why": "shank-l: flat/flat/flat: revolved about the bone axis"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "50",
+  "id": "shank-r",
+  "why": "shank-r: flat/flat/flat: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "50",
+  "id": "shank-r",
+  "why": "shank-r: flat/flat/flat: revolved about the bone axis"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "50",
+  "id": "thigh-l",
+  "why": "thigh-l: flat/flat/flat: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "50",
+  "id": "thigh-l",
+  "why": "thigh-l: flat/flat/flat: revolved about the bone axis"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "50",
+  "id": "thigh-r",
+  "why": "thigh-r: flat/flat/flat: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "50",
+  "id": "thigh-r",
+  "why": "thigh-r: flat/flat/flat: revolved about the bone axis"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "100",
+  "id": "sleeve-l",
+  "why": "arm-l: flat/None/flat: revolved about the bone axis"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "100",
+  "id": "sleeve-r",
+  "range": "stretch",
+  "why": "arm-r: flat/rev/None: the revolved plan body stretched to the length of the elevation outline",
+  "reach": 0.5
+ },
+ {
+  "op": "copy",
+  "scale": "100",
+  "id": "sleeve-r",
+  "from": "plan",
+  "to": [
+   "front"
+  ],
+  "why": "arm-r: flat/rev/None: the same revolved body in the front"
+ },
+ {
+  "op": "extrude",
+  "scale": "100",
+  "id": "shoe-rear-l",
+  "view": "front",
+  "taper": false,
+  "why": "foot-l: flat/flat/None: a foot that rolls, the elevation outline swept laterally"
+ },
+ {
+  "op": "extrude",
+  "scale": "100",
+  "id": "shoe-rear-r",
+  "view": "front",
+  "taper": false,
+  "why": "foot-r: flat/flat/None: a foot that rolls, the elevation outline swept laterally"
+ },
+ {
+  "op": "prism",
+  "scale": "100",
+  "id": "hand-l",
+  "view": "front",
+  "why": "hand-l: flat front shape on a hand that swings with the arm: prism that keeps the outline (the elevation outline swept laterally moved the front silhouette of the default pose to 33.8 mm against the limit of 15.0)"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "100",
+  "id": "shank-l",
+  "why": "shank-l: flat/flat/flat: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "100",
+  "id": "shank-l",
+  "why": "shank-l: flat/flat/flat: revolved about the bone axis"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "100",
+  "id": "shank-r",
+  "why": "shank-r: flat/flat/flat: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "100",
+  "id": "shank-r",
+  "why": "shank-r: flat/flat/flat: revolved about the bone axis"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "100",
+  "id": "thigh-l",
+  "why": "thigh-l: flat/flat/flat: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "100",
+  "id": "thigh-l",
+  "why": "thigh-l: flat/flat/flat: revolved about the bone axis"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "100",
+  "id": "thigh-r",
+  "why": "thigh-r: flat/flat/flat: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "100",
+  "id": "thigh-r",
+  "why": "thigh-r: flat/flat/flat: revolved about the bone axis"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "200",
+  "id": "sleeve-l",
+  "why": "arm-l: flat/None/flat: revolved about the bone axis"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "200",
+  "id": "sleeve-r",
+  "range": "stretch",
+  "why": "arm-r: flat/rev/None: the revolved plan body stretched to the length of the elevation outline",
+  "reach": 0.5
+ },
+ {
+  "op": "copy",
+  "scale": "200",
+  "id": "sleeve-r",
+  "from": "plan",
+  "to": [
+   "front"
+  ],
+  "why": "arm-r: flat/rev/None: the same revolved body in the front"
+ },
+ {
+  "op": "extrude",
+  "scale": "200",
+  "id": "shoe-rear-l",
+  "view": "front",
+  "taper": false,
+  "why": "foot-l: flat/flat/None: a foot that rolls, the elevation outline swept laterally"
+ },
+ {
+  "op": "extrude",
+  "scale": "200",
+  "id": "shoe-rear-r",
+  "view": "front",
+  "taper": false,
+  "why": "foot-r: flat/flat/None: a foot that rolls, the elevation outline swept laterally"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "200",
+  "id": "forearm-l",
+  "why": "forearm-l: flat/None/flat: revolved about the bone axis"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "200",
+  "id": "forearm-r",
+  "range": "stretch",
+  "why": "forearm-r: flat/rev/rev: the revolved plan body stretched to the length of the elevation outline"
+ },
+ {
+  "op": "copy",
+  "scale": "200",
+  "id": "forearm-r",
+  "from": "plan",
+  "to": [
+   "front"
+  ],
+  "why": "forearm-r: flat/rev/rev: the same revolved body in the front"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "200",
+  "id": "shank-l",
+  "why": "shank-l: flat/flat/flat: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "200",
+  "id": "shank-l",
+  "why": "shank-l: flat/flat/flat: revolved about the bone axis"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "200",
+  "id": "shank-r",
+  "why": "shank-r: flat/flat/flat: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "200",
+  "id": "shank-r",
+  "why": "shank-r: flat/flat/flat: revolved about the bone axis"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "200",
+  "id": "thigh-l",
+  "why": "thigh-l: flat/flat/flat: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "200",
+  "id": "thigh-l",
+  "why": "thigh-l: flat/flat/flat: revolved about the bone axis"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "200",
+  "id": "thigh-r",
+  "why": "thigh-r: flat/flat/flat: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "200",
+  "id": "thigh-r",
+  "why": "thigh-r: flat/flat/flat: revolved about the bone axis"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "500",
+  "id": "sleeve-l",
+  "why": "arm-l: flat/None/flat: revolved about the bone axis"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "500",
+  "id": "sleeve-r",
+  "range": "stretch",
+  "why": "arm-r: flat/rev/None: the revolved plan body stretched to the length of the elevation outline",
+  "reach": 0.5
+ },
+ {
+  "op": "copy",
+  "scale": "500",
+  "id": "sleeve-r",
+  "from": "plan",
+  "to": [
+   "front"
+  ],
+  "why": "arm-r: flat/rev/None: the same revolved body in the front"
+ },
+ {
+  "op": "extrude",
+  "scale": "500",
+  "id": "shoe-l",
+  "view": "front",
+  "taper": false,
+  "why": "foot-l: flat/flat/flat: a foot that rolls, the elevation outline swept laterally"
+ },
+ {
+  "op": "extrude",
+  "scale": "500",
+  "id": "shoe-l",
+  "view": "plan",
+  "taper": false,
+  "why": "foot-l: flat/flat/flat: a foot that rolls, the elevation outline swept laterally"
+ },
+ {
+  "op": "extrude",
+  "scale": "500",
+  "id": "shoe-r",
+  "view": "front",
+  "taper": false,
+  "why": "foot-r: flat/flat/flat: a foot that rolls, the elevation outline swept laterally"
+ },
+ {
+  "op": "extrude",
+  "scale": "500",
+  "id": "shoe-r",
+  "view": "plan",
+  "taper": false,
+  "why": "foot-r: flat/flat/flat: a foot that rolls, the elevation outline swept laterally"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "500",
+  "id": "forearm-l",
+  "why": "forearm-l: flat/None/flat: revolved about the bone axis"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "500",
+  "id": "forearm-r",
+  "range": "stretch",
+  "why": "forearm-r: flat/rev/rev: the revolved plan body stretched to the length of the elevation outline"
+ },
+ {
+  "op": "copy",
+  "scale": "500",
+  "id": "forearm-r",
+  "from": "plan",
+  "to": [
+   "front"
+  ],
+  "why": "forearm-r: flat/rev/rev: the same revolved body in the front"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "500",
+  "id": "shank-l",
+  "why": "shank-l: flat/flat/flat: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "500",
+  "id": "shank-l",
+  "why": "shank-l: flat/flat/flat: revolved about the bone axis"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "500",
+  "id": "shank-r",
+  "why": "shank-r: flat/flat/flat: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "500",
+  "id": "shank-r",
+  "why": "shank-r: flat/flat/flat: revolved about the bone axis"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "500",
+  "id": "thigh-l",
+  "why": "thigh-l: flat/flat/flat: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "500",
+  "id": "thigh-l",
+  "why": "thigh-l: flat/flat/flat: revolved about the bone axis"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "500",
+  "id": "thigh-r",
+  "why": "thigh-r: flat/flat/flat: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "500",
+  "id": "thigh-r",
+  "why": "thigh-r: flat/flat/flat: revolved about the bone axis"
+ },
+ {
+  "op": "prism",
+  "scale": "500",
+  "id": "coat",
+  "view": "front",
+  "why": "torso: flat/flat/None: prism that keeps the outline"
+ },
+ {
+  "op": "copy",
+  "scale": "50",
+  "id": "letter",
+  "from": "elevation",
+  "to": [
+   "front",
+   "plan"
+  ],
+  "create": "only",
+  "why": "the letter had no front and plan shape of its own; handed over it reaches 130 to 227 mm beyond everything the plan drew (sync-forward): the body of the elevation, a sheet 2 mm thick"
+ },
+ {
+  "op": "copy",
+  "scale": "100",
+  "id": "letter",
+  "from": "elevation",
+  "to": [
+   "front",
+   "plan"
+  ],
+  "create": "only",
+  "why": "the letter had no front and plan shape of its own; handed over it reaches 130 to 227 mm beyond everything the plan drew (sync-forward): the body of the elevation, a sheet 2 mm thick"
+ },
+ {
+  "op": "copy",
+  "scale": "200",
+  "id": "letter",
+  "from": "elevation",
+  "to": [
+   "front",
+   "plan"
+  ],
+  "create": "only",
+  "why": "the letter had no front and plan shape of its own; handed over it reaches 130 to 227 mm beyond everything the plan drew (sync-forward): the body of the elevation, a sheet 2 mm thick; at this scale the sheet is thinner than the 0.2 mm of the print profile as a filled shape, so it is drawn as an outline",
+  "paint": {
+   "filled": false
+  }
+ },
+ {
+  "op": "copy",
+  "scale": "500",
+  "id": "letter",
+  "from": "elevation",
+  "to": [
+   "front",
+   "plan"
+  ],
+  "create": "only",
+  "why": "the letter had no front and plan shape of its own; handed over it reaches 130 to 227 mm beyond everything the plan drew (sync-forward): the body of the elevation, a sheet 2 mm thick; at this scale the sheet is thinner than the 0.2 mm of the print profile as a filled shape, so it is drawn as an outline",
+  "paint": {
+   "filled": false
+  }
+ },
+ {
+  "op": "remove",
+  "scale": "50",
+  "view": "front",
+  "id": "letter-sil",
+  "why": "stand-in for the letter at the place it has in the default pose, bound to the forearm: replaced by the letter itself"
+ },
+ {
+  "op": "remove",
+  "scale": "50",
+  "view": "plan",
+  "id": "letter-sil",
+  "why": "stand-in for the letter at the place it has in the default pose, bound to the upper arm: replaced by the letter itself"
+ },
+ {
+  "mh4": 1,
+  "op": "copy",
+  "scale": "50",
+  "id": "shoe-sole-l",
+  "from": "elevation",
+  "to": [
+   "plan"
+  ],
+  "create": "only",
+  "why": "the sole had no plan shape; with the heel lifted in the walk it reaches 43 mm further back than the flat plan shoe (sync-forward)"
+ },
+ {
+  "mh4": 1,
+  "op": "set",
+  "scale": "50",
+  "view": "plan",
+  "id": "shoe-sole-l",
+  "set": {
+   "kind": "poly",
+   "points": [
+    [
+     -0.0055,
+     -0.1177
+    ],
+    [
+     0.2001,
+     0.002
+    ],
+    [
+     0.1945,
+     0.0116
+    ],
+    [
+     0.0563,
+     -0.0689
+    ],
+    [
+     0.0494,
+     -0.057
+    ],
+    [
+     -0.018,
+     -0.0962
+    ]
+   ],
+   "closed": true,
+   "solid": {
+    "kind": "extruded",
+    "sweep": "w",
+    "z0": 0.0555,
+    "z1": 0.1235
+   }
+  },
+  "why": "the plan sole as a slab: the elevation outline swept laterally, 20 mm inside the width of the front sole on each side so that it stays under the upper while the foot is flat"
+ },
+ {
+  "mh4": 1,
+  "op": "copy",
+  "scale": "50",
+  "id": "shoe-sole-r",
+  "from": "elevation",
+  "to": [
+   "plan"
+  ],
+  "create": "only",
+  "why": "the sole had no plan shape; with the heel lifted in the walk it reaches 43 mm further back than the flat plan shoe (sync-forward)"
+ },
+ {
+  "mh4": 1,
+  "op": "set",
+  "scale": "50",
+  "view": "plan",
+  "id": "shoe-sole-r",
+  "set": {
+   "kind": "poly",
+   "points": [
+    [
+     -0.0055,
+     -0.1177
+    ],
+    [
+     0.2001,
+     0.002
+    ],
+    [
+     0.1945,
+     0.0116
+    ],
+    [
+     0.0563,
+     -0.0689
+    ],
+    [
+     0.0494,
+     -0.057
+    ],
+    [
+     -0.018,
+     -0.0962
+    ]
+   ],
+   "closed": true,
+   "solid": {
+    "kind": "extruded",
+    "sweep": "w",
+    "z0": -0.1235,
+    "z1": -0.0555
+   }
+  },
+  "why": "the plan sole as a slab: the elevation outline swept laterally, 20 mm inside the width of the front sole on each side so that it stays under the upper while the foot is flat"
+ },
+ {
+  "mh4": 4,
+  "op": "prism",
+  "scale": "200",
+  "id": "hand-l",
+  "view": "plan",
+  "why": "hand-l: flat plan shape on the hand that swings with the arm in the walk (73 to 79 mm): prism that keeps the outline"
+ },
+ {
+  "mh4": 4,
+  "op": "prism",
+  "scale": "500",
+  "id": "hand-l",
+  "view": "plan",
+  "why": "hand-l: flat plan shape on the hand that swings with the arm in the walk (73 to 79 mm): prism that keeps the outline"
+ },
+ {
+  "mh4": 4,
+  "op": "copy",
+  "scale": "50",
+  "id": "hand-l",
+  "from": "elevation",
+  "to": [
+   "plan"
+  ],
+  "as": "hand-l-body",
+  "create": "only",
+  "paint": {
+   "z": 3.15
+  },
+  "why": "hand-l: the plan hand is the flat top view of the default pose and did not follow the swing of the arm (72 to 73 mm against the elevation hand, sync-forward 58 mm): the palm of the elevation outline as a body under the plan hand, as person-with-arm-sling has it for the same hand"
+ },
+ {
+  "mh4": 4,
+  "op": "set",
+  "scale": "50",
+  "view": "plan",
+  "id": "hand-l-body",
+  "set": {
+   "kind": "poly",
+   "points": [
+    [
+     -0.004,
+     -0.0275
+    ],
+    [
+     0.0337,
+     -0.0409
+    ],
+    [
+     0.0954,
+     -0.0411
+    ],
+    [
+     0.14,
+     -0.0233
+    ],
+    [
+     0.14,
+     0.016
+    ],
+    [
+     0.0949,
+     0.0377
+    ],
+    [
+     0.0621,
+     0.0452
+    ],
+    [
+     0.0117,
+     0.0347
+    ],
+    [
+     -0.0036,
+     0.0291
+    ]
+   ],
+   "closed": true,
+   "z": 3.15,
+   "solid": {
+    "kind": "extruded",
+    "sweep": "w",
+    "z0": 0.205,
+    "z1": 0.237
+   }
+  },
+  "why": "the part of the elevation outline it carries, swept over a lateral strip that lies under the flat plan hand in the default pose"
+ },
+ {
+  "mh4": 4,
+  "op": "copy",
+  "scale": "50",
+  "id": "hand-l",
+  "from": "elevation",
+  "to": [
+   "plan"
+  ],
+  "as": "hand-l-fingers",
+  "create": "only",
+  "paint": {
+   "z": 3.14
+  },
+  "why": "hand-l: the fingers of the elevation hand had no body in the plan (the plan hand is the flat top view of the default pose; with the arm swung forward the elevation hand reached 58 mm beyond everything the plan drew, sync-forward): the finger part of the elevation outline as a body under the plan hand, as hand-l-body carries the palm"
+ },
+ {
+  "mh4": 4,
+  "op": "set",
+  "scale": "50",
+  "view": "plan",
+  "id": "hand-l-fingers",
+  "set": {
+   "kind": "poly",
+   "points": [
+    [
+     0.13,
+     -0.0233
+    ],
+    [
+     0.1549,
+     -0.0225
+    ],
+    [
+     0.1609,
+     -0.0177
+    ],
+    [
+     0.1598,
+     -0.0108
+    ],
+    [
+     0.1701,
+     0.0002
+    ],
+    [
+     0.1778,
+     0.0083
+    ],
+    [
+     0.1708,
+     0.0156
+    ],
+    [
+     0.1715,
+     0.022
+    ],
+    [
+     0.13,
+     0.022
+    ]
+   ],
+   "closed": true,
+   "z": 3.14,
+   "solid": {
+    "kind": "extruded",
+    "sweep": "w",
+    "z0": 0.204,
+    "z1": 0.218
+   }
+  },
+  "why": "the finger part of the elevation outline up to v 0.022 (what lies beyond would leave the plan hand of the default pose), swept over a strip 14 mm wide that lies under the plan hand and covers none of the gaps between its fingers (a strip at z 0.172 to 0.200 closed such a gap: plan guard 8.4 to 26.3 mm at 1:50)"
+ },
+ {
+  "mh4": 4,
+  "op": "copy",
+  "scale": "100",
+  "id": "hand-l",
+  "from": "elevation",
+  "to": [
+   "plan"
+  ],
+  "as": "hand-l-body",
+  "create": "only",
+  "paint": {
+   "z": 3.15
+  },
+  "why": "hand-l: the plan hand is the flat top view of the default pose and did not follow the swing of the arm (72 to 73 mm against the elevation hand, sync-forward 58 mm): the palm of the elevation outline as a body under the plan hand, as person-with-arm-sling has it for the same hand"
+ },
+ {
+  "mh4": 4,
+  "op": "set",
+  "scale": "100",
+  "view": "plan",
+  "id": "hand-l-body",
+  "set": {
+   "kind": "poly",
+   "points": [
+    [
+     -0.004,
+     -0.0275
+    ],
+    [
+     0.0337,
+     -0.0409
+    ],
+    [
+     0.0954,
+     -0.0411
+    ],
+    [
+     0.14,
+     -0.0233
+    ],
+    [
+     0.14,
+     0.016
+    ],
+    [
+     0.0949,
+     0.0377
+    ],
+    [
+     0.0621,
+     0.0452
+    ],
+    [
+     0.0117,
+     0.0347
+    ],
+    [
+     -0.0036,
+     0.0291
+    ]
+   ],
+   "closed": true,
+   "z": 3.15,
+   "solid": {
+    "kind": "extruded",
+    "sweep": "w",
+    "z0": 0.205,
+    "z1": 0.237
+   }
+  },
+  "why": "the part of the elevation outline it carries, swept over a lateral strip that lies under the flat plan hand in the default pose"
+ },
+ {
+  "mh4": 4,
+  "op": "copy",
+  "scale": "100",
+  "id": "hand-l",
+  "from": "elevation",
+  "to": [
+   "plan"
+  ],
+  "as": "hand-l-fingers",
+  "create": "only",
+  "paint": {
+   "z": 3.14
+  },
+  "why": "hand-l: the fingers of the elevation hand had no body in the plan (the plan hand is the flat top view of the default pose; with the arm swung forward the elevation hand reached 58 mm beyond everything the plan drew, sync-forward): the finger part of the elevation outline as a body under the plan hand, as hand-l-body carries the palm"
+ },
+ {
+  "mh4": 4,
+  "op": "set",
+  "scale": "100",
+  "view": "plan",
+  "id": "hand-l-fingers",
+  "set": {
+   "kind": "poly",
+   "points": [
+    [
+     0.13,
+     -0.0233
+    ],
+    [
+     0.1549,
+     -0.0225
+    ],
+    [
+     0.1609,
+     -0.0177
+    ],
+    [
+     0.1598,
+     -0.0108
+    ],
+    [
+     0.1701,
+     0.0002
+    ],
+    [
+     0.1778,
+     0.0083
+    ],
+    [
+     0.1708,
+     0.0156
+    ],
+    [
+     0.1715,
+     0.022
+    ],
+    [
+     0.13,
+     0.022
+    ]
+   ],
+   "closed": true,
+   "z": 3.14,
+   "solid": {
+    "kind": "extruded",
+    "sweep": "w",
+    "z0": 0.204,
+    "z1": 0.218
+   }
+  },
+  "why": "the finger part of the elevation outline up to v 0.022 (what lies beyond would leave the plan hand of the default pose), swept over a strip 14 mm wide that lies under the plan hand and covers none of the gaps between its fingers (a strip at z 0.172 to 0.200 closed such a gap: plan guard 8.4 to 26.3 mm at 1:50)"
+ }
+]

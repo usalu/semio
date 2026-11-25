@@ -13,19 +13,97 @@
    "de": "Gebrauchte schwarze mittelschwere Gewinderohre EN 10255 in Längen von 6 m in einem lackierten Kragarmregal aus drei Stützen IPE 160 mit Kragarmen IPE 100: ein umreiftes Bündel aus sieben Rohren DN 50 auf den unteren Armen und eine lose Lage aus Rohren DN 40, DN 32 und DN 25 mit Schnittenden, Gewindeausläufen und einer Muffe, einem Winkel und einem Nippel auf den oberen Armen; zusammen 603 kg. Das Bündel wird mit der Gabel ausgelagert und als Hauptleitungen eines Technikraumstrangs mit 70/55 °C heizend wieder eingebaut."
   },
   "tags": [
-   "component",
-   "reclaimed",
-   "used",
-   "hvac",
-   "heating",
-   "plumbing",
-   "steel",
-   "pipe",
-   "threaded-pipe",
-   "black-steel",
-   "cantilever-rack",
-   "storage",
-   "rolled-section"
+   {
+    "id": "component",
+    "title": {
+     "en": "component",
+     "de": "Bauteil"
+    }
+   },
+   {
+    "id": "reclaimed",
+    "title": {
+     "en": "reclaimed",
+     "de": "wiederverwendet"
+    }
+   },
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "hvac",
+    "title": {
+     "en": "HVAC",
+     "de": "HLK"
+    }
+   },
+   {
+    "id": "heating",
+    "title": {
+     "en": "heating",
+     "de": "Heizung"
+    }
+   },
+   {
+    "id": "plumbing",
+    "title": {
+     "en": "plumbing",
+     "de": "Sanitär"
+    }
+   },
+   {
+    "id": "steel",
+    "title": {
+     "en": "steel",
+     "de": "Stahl"
+    }
+   },
+   {
+    "id": "pipe",
+    "title": {
+     "en": "pipe",
+     "de": "Rohr"
+    }
+   },
+   {
+    "id": "threaded-pipe",
+    "title": {
+     "en": "threaded pipe",
+     "de": "Gewinderohr"
+    }
+   },
+   {
+    "id": "black-steel",
+    "title": {
+     "en": "black steel",
+     "de": "Schwarzstahl"
+    }
+   },
+   {
+    "id": "cantilever-rack",
+    "title": {
+     "en": "cantilever rack",
+     "de": "Kragarmregal"
+    }
+   },
+   {
+    "id": "storage",
+    "title": {
+     "en": "storage",
+     "de": "Lagerung"
+    }
+   },
+   {
+    "id": "rolled-section",
+    "title": {
+     "en": "rolled section",
+     "de": "Walzprofil"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage component authors (used HVAC wave, author 17)",

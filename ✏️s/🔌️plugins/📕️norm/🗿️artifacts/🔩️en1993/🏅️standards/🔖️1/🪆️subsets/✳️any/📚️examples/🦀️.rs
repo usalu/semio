@@ -19,4 +19,7 @@ pub mod heb240_compliant;
 mod example_heb240_compliant;
 #[path = "🔩️high-strength-connection/🦀️.rs"]
 pub mod high_strength_connection;
+#[cfg(test)]
+#[path = "🧪️tests/🗜️pack-twins/🦀️.rs"]
+mod pack_twins;
 //#endregion 🪢️Mounts

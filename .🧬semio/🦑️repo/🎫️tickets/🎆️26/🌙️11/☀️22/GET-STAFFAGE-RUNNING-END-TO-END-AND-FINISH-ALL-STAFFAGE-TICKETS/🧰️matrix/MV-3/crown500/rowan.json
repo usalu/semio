@@ -1,0 +1,27 @@
+{
+ "target": "leader",
+ "groups": "^fol-",
+ "points": 32,
+ "decisions": {
+  "silhouette": {
+   "en": "At 1:500 (1 m is 2 mm) the rowan is an ovoid crown, 12 mm wide and 15 mm high, of the ten foliage masses of this tree (one per limb and the top), above a slim light stem with its root flare; every mass is drawn as the true outline of its 1:500 solid. The masses stand where their limbs carry them, so the front elevation is another drawing than the side elevation. Plan: the masses from above; the stem is hidden.",
+   "de": "Bei 1:500 (1 m sind 2 mm) ist die Eberesche eine eiförmige Krone von 12 mm Breite und 15 mm Höhe aus den zehn Laubmassen dieses Baums (eine je Ast und der Gipfel) über einem schlanken hellen Stamm mit Wurzelanlauf; jede Masse ist als wahrer Umriss ihres 1:500-Körpers gezeichnet. Die Massen stehen dort, wo ihre Äste sie tragen, daher ist die Vorderansicht eine andere Zeichnung als die Seitenansicht. Draufsicht: die Massen von oben; der Stamm ist verdeckt."
+  },
+  "retained": {
+   "en": "Retained: stem with root flare and the outlines of the ten foliage masses; the leader runs on into the crown for a clean join.",
+   "de": "Beibehalten: Stamm mit Wurzelanlauf und die Umrisse der zehn Laubmassen; der Leittrieb läuft für einen sauberen Anschluss in die Krone weiter."
+  },
+  "merged": {
+   "en": "Merged into the masses: the foliage of each limb, the limbs and the berries (as merged regions).",
+   "de": "In den Massen zusammengefasst: das Laub jedes Asts, die Äste und die Beeren (als zusammengefasste Regionen)."
+  },
+  "omitted": {
+   "en": "Omitted: single limbs, corymbs (14 cm is 0.28 mm), lenticels; the only internal edges are the outlines of the masses.",
+   "de": "Weggelassen: einzelne Äste, Dolden (14 cm sind 0,28 mm), Korkporen; die einzigen inneren Kanten sind die Umrisse der Massen."
+  }
+ },
+ "volume": {
+  "en": "Body at 1:500: root flare, stem and leader as three plain lofts and the crown as ten masses bound to the leader as the drawing binds it: one ellipsoid per foliage bone of the 1:200 body (nine limb masses and the top), each with the reach of that foliage to every side; the limbs, the upper leader and the berries lie inside the crown and are not part of the body.",
+  "de": "Körper bei 1:500: Wurzelanlauf, Stamm und Leittrieb als drei einfache Lofts und die Krone als zehn Massen, an den Leittrieb gebunden wie in der Zeichnung: ein Ellipsoid je Laubknochen des 1:200-Körpers (neun Astmassen und der Gipfel), jedes mit der Ausladung dieses Laubs nach jeder Seite; Äste, oberer Leittrieb und Beeren liegen in der Krone und gehören nicht zum Körper."
+ }
+}

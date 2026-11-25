@@ -1,12 +1,5 @@
 [
-  {"op": "copy", "scale": "50", "id": "forearm-l", "from": "front", "to": ["elevation"]},
   {"op": "copy", "scale": "500", "id": "forearm-r", "from": "front", "to": ["elevation"]},
-  {"op": "copy", "scale": "50", "id": "hand-l", "from": "elevation", "to": ["front", "plan"]},
   {"op": "copy", "scale": "50", "id": "neck", "from": "front", "to": ["plan"]},
-  {"op": "copy", "scale": "100", "id": "neck", "from": "front", "to": ["plan"]},
-  {"op": "front-sweep", "scale": "500", "id": "shirt"},
-  {"op": "plan-prism", "scale": "50", "id": "shirt"},
-  {"op": "extrude", "scale": "50", "id": "shirt-core", "twin": "shirt", "view": "plan"},
-  {"op": "plan-prism", "scale": "500", "id": "shirt"},
-  {"op": "extrude", "scale": "500", "id": "shirt-core", "twin": "shirt", "view": "plan"}
+  {"op": "copy", "scale": "100", "id": "neck", "from": "front", "to": ["plan"]}
 ]

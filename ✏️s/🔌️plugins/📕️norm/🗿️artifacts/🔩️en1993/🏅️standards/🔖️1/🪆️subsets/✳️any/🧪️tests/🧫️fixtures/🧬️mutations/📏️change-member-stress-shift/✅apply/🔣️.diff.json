@@ -41,7 +41,11 @@
           "stressShift": 1.5,
           "marginShift": null,
           "strainRateShift": null,
-          "coldFormingRadius": null
+          "coldFormingRadius": null,
+          "webMaterialId": null,
+          "torsionLoad": null,
+          "torquePosition": null,
+          "warpingSupport": null
         }
       }
     ]

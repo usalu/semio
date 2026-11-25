@@ -9,7 +9,9 @@ test("original math values produce actual scalar outputs on one finite caller",a
  for(const item of fixture.cases)expect(JSON.parse(JSON.stringify(item.input))).toEqual(item.output);
  const source=await Bun.file(new URL("../../../⚙️compute/🎟️original/🦀️.rs",import.meta.url)).text();
  expect(source).toContain("cx.original_source_parent()?.source_identity()?");
- expect(source).toContain("Insert::admit(map,key,value,grant)");
+ expect(source).toContain("Insert::new(map,key,value)");
+ expect(source).toContain("insert_advance(insertion,cx)");
+ expect(source).toContain("insert_close(insertion,cx)");
  expect(source).toContain("ControlledRetirement::new");
  expect(source).not.toContain("new_cold");
  expect(source).not.toContain("finish(");

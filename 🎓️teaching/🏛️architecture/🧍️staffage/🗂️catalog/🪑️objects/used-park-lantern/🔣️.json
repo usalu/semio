@@ -13,17 +13,83 @@
    "de": "Eine 4 m hohe Nostalgie-Aufsatzleuchte aus Aluminiumguss auf einem Klappfuss, mit einem 30-W-LED-Modul nachgerüstet, auf ihrem Fertigteilfundament nach Jahrzehnten in einem städtischen Park: verkreideter tannengrüner Lack mit Abplatzern, Graffiti, Aufkleberresten und Algen, eine vergilbte Verglasung mit einer ersetzten Scheibe; der Bauhof senkt ihren Kopf um das Gelenk ab, in der Dämmerung schaltet sie ein."
   },
   "tags": [
-   "used",
-   "park",
-   "public-space",
-   "lighting",
-   "lantern",
-   "street-lamp",
-   "cast-aluminium",
-   "led",
-   "heritage",
-   "hinged-column",
-   "street-furniture"
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "park",
+    "title": {
+     "en": "park",
+     "de": "Park"
+    }
+   },
+   {
+    "id": "public-space",
+    "title": {
+     "en": "public space",
+     "de": "öffentlicher Raum"
+    }
+   },
+   {
+    "id": "lighting",
+    "title": {
+     "en": "lighting",
+     "de": "Beleuchtung"
+    }
+   },
+   {
+    "id": "lantern",
+    "title": {
+     "en": "lantern",
+     "de": "Laterne"
+    }
+   },
+   {
+    "id": "street-lamp",
+    "title": {
+     "en": "street lamp",
+     "de": "Straßenlaterne"
+    }
+   },
+   {
+    "id": "cast-aluminium",
+    "title": {
+     "en": "cast aluminium",
+     "de": "Aluminiumguss"
+    }
+   },
+   {
+    "id": "led",
+    "title": {
+     "en": "LED",
+     "de": "LED"
+    }
+   },
+   {
+    "id": "heritage",
+    "title": {
+     "en": "heritage",
+     "de": "Denkmal"
+    }
+   },
+   {
+    "id": "hinged-column",
+    "title": {
+     "en": "hinged column",
+     "de": "Pendelstütze"
+    }
+   },
+   {
+    "id": "street-furniture",
+    "title": {
+     "en": "street furniture",
+     "de": "Stadtmobiliar"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content (used park objects wave)",

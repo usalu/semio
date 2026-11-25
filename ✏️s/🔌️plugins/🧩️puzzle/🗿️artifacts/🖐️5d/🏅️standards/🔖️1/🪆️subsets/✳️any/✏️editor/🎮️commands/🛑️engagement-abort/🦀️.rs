@@ -23,7 +23,7 @@ pub fn engagement_abort(ctx: &mut Puzzle5dActionCtx<'_>, _args: Option<&Value>) 
     ctx.scene.runtime.engagement_input_by_window.insert(ctx.window_id.to_string(), String::new());
     ctx.scene.runtime.brush_candidate_index = 0;
     if puzzle5d_fill_tool_active(ctx.view_state) || ctx.scene.active_utility == fill_tool::TOOL_ID {
-        if let Some(run) = fill_tool::live_fill_run(ctx.tool_run) {
+        if let Some(run) = fill_tool::live_fill_run(ctx.tool_run.map(semio_plugin::ToolRunPollView::from)) {
             ctx.effects.push(Effect::DispatchAction {
                 req: semio_plugin::RequestId(semio_framework_job::allocate_operation_id().0),
                 action: TOOL_RUN_ABORT_ACTION_ID.into(),

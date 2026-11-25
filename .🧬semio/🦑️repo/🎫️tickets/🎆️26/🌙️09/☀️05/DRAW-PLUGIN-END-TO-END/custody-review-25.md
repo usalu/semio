@@ -1,0 +1,5 @@
+# Snapshot Registry Custody Review
+
+Read-only review of the new snapshot-read `custody_demands`, artifact store close, initialization read close, and `captured-retirement.rs` against the historical Draw export exact-grant regression found no concrete identity or grant mismatch in these paths. The demand now quotes the alias state, including the final wrapper-slot copy; the store's depth 2 matches its nested step and the alias's current depth 1. The initialization close advances `close_active` before its read phase, preserving the active returned owner after its registry count becomes zero. The captured source fixture checks original pointer and lease generation across shared and last-owner cases.
+
+The new `registry_owner_quotes_the_terminal_copy` law exercises an empty sole registry and checks copy-underfund refusal and eventual closure. It does not itself measure physical allocation and release, test an outstanding shared read, or exercise the Draw export consumer. The real `original_export_read_returns_under_exact_physical_grants` and store close regressions remain needed to prove that integration. This is a source review, not a runtime pass.

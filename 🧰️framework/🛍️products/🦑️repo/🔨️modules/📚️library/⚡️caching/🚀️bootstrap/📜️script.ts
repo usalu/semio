@@ -19,7 +19,7 @@ import {readWorkerPolicyV1,planWorkersV1,currentWorkerHostV1,readWorkerSwitchV1}
 import {nxBatchCapableV1,nxWorkerSettingsV1} from "./🛠️tools/👷️workers/🟦️.ts";
 import {resolveRemoteCacheV1} from "../../🏗️build/🌐️remote-cache/🛰️fleet/🟦️.ts";
 import {nxRemoteCacheV1} from "./🛠️tools/🌐️remote-cache/🟦️.ts";
-import {createNxFailureTailV1,settleNxRunReportedV1,type NxFailureTailV1} from "../../🏗️build/🔧️tools/🧶️nx/🪵️failure-tail/🟦️.ts";
+import {createNxFailureTailV1,nxFinalStatusV1,settleNxRunReportedV1,type NxFailureTailV1} from "../../🏗️build/🔧️tools/🧶️nx/🪵️failure-tail/🟦️.ts";
 import {readBuildCountersV1,unitLedgerLinesV1,unitLedgerV1} from "../🦀️cargo/🗃️unit-cache/🛰️fleet/📊️counters/🟦️.ts";
 import {withRepositoryNxStorageV1,boundedNxNamespaceV1,boundedNxSocketNamespaceV1,type BoundNxNamespaceV1} from "../💾️storage/🔒️enforcement/🔌️nx/🟦️.ts";
 import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
@@ -464,7 +464,7 @@ export class NxScript extends Script {
     if(bind){const namespace=await bind(toolingIdentity,env.SEMIO_BUILD_GRAPH_DIGEST??null,implementationIdentity);hold.release=namespace.release;Object.assign(env,namespace.environment);}
     if(env.NX_DAEMON===undefined&&!invocation.watch&&invocation.args[0]!=="watch"){const admission=await import("../🕸️graph/🏁️startup/🚏️admission/🟦️.ts").then(owner=>owner.nxDaemonAdmissionV1(this.root,env,actualPhase.signal)).catch(()=>({enabled:false,reason:"refused"}));env.NX_DAEMON=admission.enabled?"true":"false";if(profileBootstrap)console.log(`[nx] Daemon ${admission.enabled?"enabled":"off"} (${admission.reason})`);}
     const{projectOwnedNxProcessEnvelopeV1}=await import("../../🏗️build/🔧️tools/🧶️nx/📨️envelope/🟦️.ts"),carried=projectOwnedNxProcessEnvelopeV1(this.root,this.invocation,invocation.args);env[SCRIPT_PROCESS_INVOCATION_ENV]=scriptProcessEnvironment(carried,env)[SCRIPT_PROCESS_INVOCATION_ENV];
-    let cancelled: NodeJS.Signals | undefined, cancellationDeadline = 0, watchFailure = 0, finishing = false;
+    let cancelled: NodeJS.Signals | undefined, cancellationDeadline = 0, watchFailure = 0, finishing = false, cancelledAtMs: number | undefined;
     let pendingGeneration:import("../🕸️graph/🔏️seal/📌️generation/🟦️.ts").NxGenerationClaimV1|undefined,nxFleet:import("../../🏗️build/🪪️graph-state/🧶️nx/🟦️.ts").NxFleetV1|undefined,receiptWritten=false;
     let force: ReturnType<typeof setTimeout> | undefined, watcher: ReturnType<typeof spawnNxProcess> | undefined;
     const descendants = new Set<number>();
@@ -492,6 +492,7 @@ export class NxScript extends Script {
     const stop = (signal: NodeJS.Signals): void => {
       if (cancelled) return;
       cancelled = signal;
+      cancelledAtMs = Date.now();
       cancellationDeadline = Date.now() + 5000;
       try { captureDescendants(); }
       catch (error) { sayBootstrapV1("nx.could-not-inspect-descendants-stopping",{error:String(error instanceof Error ? error.message : String(error))},"error"); }
@@ -505,7 +506,7 @@ export class NxScript extends Script {
       const original=readScriptProcessEnvelope(JSON.parse(environment[SCRIPT_PROCESS_INVOCATION_ENV]!),Date.now()),ownedEnvironment=nativeNxChildEnvironmentV1(this.root,issueSelectedNxCallerEnvelopeV1(this.root,original,args),args,environment);
       const spooled = Boolean(outputLog) && !capture && !invocation.watch;
       const monitored = !invocation.watch;
-      const child = spawnNxProcess(tooling.bun, [nxCli, ...args], { cwd: this.root, env: {...nxChildEnvironment(ownedEnvironment, args, Boolean(invocation.watch)),SEMIO_BUILD_INVOCATION_PIDS:leaseInvocationChainV1(ownedEnvironment)}, stdio: spooled || monitored ? ["inherit", "pipe", "pipe"] : capture ? ["inherit", "pipe", "inherit"] : "inherit", detached: process.platform !== "win32" });
+      const child = spawnNxProcess(tooling.bun, [nxCli, ...args], {windowsHide:true, cwd: this.root, env: {...nxChildEnvironment(ownedEnvironment, args, Boolean(invocation.watch)),SEMIO_BUILD_INVOCATION_PIDS:leaseInvocationChainV1(ownedEnvironment)}, stdio: spooled || monitored ? ["inherit", "pipe", "pipe"] : capture ? ["inherit", "pipe", "inherit"] : "inherit", detached: process.platform !== "win32" });
       if (monitored) {
         const state = { changed: false, slotsTaken: false, executing: false, tail: "", output: createNxFailureTailV1() }; graphChanges.set(child, state);
         const started = Date.now(), progress = setInterval(() => { if (!state.executing) sayBootstrapV1("nx.graph-and-hash-preparation-running",{elapsedMs:String(Date.now() - started)}); }, 10000);
@@ -595,6 +596,7 @@ export class NxScript extends Script {
           const next = await new Promise<number>((accept, reject) => { completed.once("error", reject); completed.once("close", (value, signal) => accept(nxCloseCodeV1(value, signal, cancelled))); });
           return { code: next, tail: graphChanges.get(completed)?.output.text() ?? "" };
         }, { signal: actualPhase.signal });
+        const closedAtMs=Date.now();
         if(pendingGeneration!==undefined&&code===0&&!cancelled&&!invocation.watch){
           const{withNxGraphAuxiliaryCapacityV1}=await import("../💾️storage/🔒️enforcement/🔌️nx/📦️graph/🟦️.ts"),generationOwner=await import("../🕸️graph/🔏️seal/📌️generation/🟦️.ts"),claim=pendingGeneration;
           const written=await withNxGraphAuxiliaryCapacityV1(this.root,env,{version:1,extraBytes:8192},()=>generationOwner.writeNxGenerationReceiptV1(this.root,env.NX_WORKSPACE_DATA_DIRECTORY!,claim,actualPhase.signal)).catch(error=>{if(profileBootstrap)sayBootstrapV1("nx.generation-receipt-refused",{reason:String(error instanceof Error?error.message:String(error))});return false;});
@@ -603,7 +605,9 @@ export class NxScript extends Script {
         }
         await nxFleet?.finish(receiptWritten).catch(()=>undefined);
         await Promise.all(spooling);
-        process.exitCode=watchFailure||(cancelled?cancelled==="SIGINT"?130:143:code);
+        const finalStatus=nxFinalStatusV1({code,signal:cancelled,cancelledAtMs,closedAtMs,tail:graphChanges.get(completed)?.output.text()??""});
+        for(const line of finalStatus.lines)console.error(line);
+        process.exitCode=watchFailure||(cancelled?finalStatus.status:code);
       } else process.exitCode=cancelled==="SIGINT"?130:143;
     } catch (error) {
       if (cancelled) process.exitCode = cancelled === "SIGINT" ? 130 : 143;

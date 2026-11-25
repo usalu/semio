@@ -87,7 +87,7 @@ export function straceCommandV1(log: string, command: readonly string[]): string
 /** 🔌️ Whether Landlock works (the launcher probes the kernel) and whether strace can name the refused reads. */
 export function linuxAvailableV1(launcher: string, python: string, platform: NodeJS.Platform = process.platform): {available: boolean; reason?: string; abi?: number; trace: boolean} {
   if (platform !== "linux") return {available: false, reason: readOracleBothV1("landlockPlatform", {platform}, " / "), trace: false};
-  const trace = spawnSync("strace", ["-V"], {encoding: "utf8"}).status === 0, probe = spawnSync(python, ["-I", launcher, "--probe"], {encoding: "utf8"});
+  const trace = spawnSync("strace", ["-V"], {encoding: "utf8"}).status === 0, probe = spawnSync(python, ["-I", launcher, "--probe"], {windowsHide:true,encoding: "utf8"});
   return probe.status === 0 ? {available: true, abi: Number.parseInt(probe.stdout, 10), trace} : {available: false, reason: (probe.stderr || String(probe.error ?? "")).trim().slice(0, document.policy.reasonCharacters), trace};
 }
 

@@ -87,6 +87,8 @@ export function readTopologyV1(value:unknown=topologyJson):FleetTopologyV1{
   for(const linked of Object.keys(group.links??{}))if(!Object.hasOwn(group.peers,linked))throw Error(`Closed fleet topology required: ${group.id} links ${linked}, which it does not mount as a peer`);
   for(const [linked,link] of Object.entries(group.links??{}))if(link.transport==="relayed"&&(link.endpoints?.length??0)>0)throw Error(`Closed fleet topology required: ${group.id} lists endpoints for the relayed link to ${linked}`);
   const {server}=group,refuse=(reason:string):never=>{throw Error(`Closed fleet topology required: ${group.id} ${reason}`);};
+  if(group.cache.instance!==buildPolicy.remoteCache.defaults.instance)refuse(`needs cache.instance to be the policy instance ${buildPolicy.remoteCache.defaults.instance}, the one namespace every reader of the fleet uses / braucht cache.instance gleich der Instanz der Richtlinie ${buildPolicy.remoteCache.defaults.instance}, dem einen Namensraum aller Leser der Flotte`);
+  if(group.ports!==undefined&&new URL(group.cache.endpoint).port!==String(group.ports.cache))refuse(`needs the port of cache.endpoint to be ports.cache ${group.ports.cache}`);
   if(server.protocol==="smb"&&server.platform!=="windows")refuse("shares over smb, which only a windows server does");
   if(server.platform==="windows"){
    if(server.directory===undefined)refuse("needs server.directory, the local folder of the share, on a windows server");
@@ -198,7 +200,7 @@ const smbCacheCommand=`Set-SmbClientConfiguration ${Object.entries(WINDOWS_SMB_C
 const nfsCacheCommands=[`New-Item -Path ${WINDOWS_NFS_KEY} -Force | Out-Null`,...Object.entries(WINDOWS_NFS_CACHE).map(([name,value])=>`New-ItemProperty -Path ${WINDOWS_NFS_KEY} -Name ${name} -Value ${value} -PropertyType DWord -Force | Out-Null`),"nfsadmin client stop","nfsadmin client start"].join("\n");
 /** 🪟️ `mount.exe` of the Client for NFS applies only the first entry of a comma-separated `-o` list (the rest is dropped without an error, which leaves locking on and the mount soft), so every option travels behind its own `-o`. */
 const windowsMountFlags=(options:string):string=>options.split(",").map(option=>`-o ${option}`).join(" ");
-const portOf=(group:FleetGroupV1):string=>new URL(group.cache.endpoint).port||(group.cache.endpoint.startsWith("https")?"443":"80");
+const portOf=(group:FleetGroupV1):string=>group.ports===undefined?new URL(group.cache.endpoint).port||(group.cache.endpoint.startsWith("https")?"443":"80"):String(group.ports.cache);
 
 /** 🧱️ The named pieces of the worker mount plan: Linux `fstab`, `commands`, `sysctl-path` and `sysctl` (the inotify limits of the ~122k directories); macOS `command`, `plist-path` and `plist`; Windows over NFS `feature`, `cache`, `mount` and `task`, over SMB `credential`, `cache`, `mount` and `task` (`cache` sets the attribute and name cache of the client, see `mountPlanV1`). The mount options follow the protocol that `clientProtocolV1` names. */
 export function mountPartsV1(topology:FleetTopologyV1,groupId:string,platform:FleetPlatformV1):Readonly<Record<string,string>>{
@@ -259,6 +261,9 @@ const KEEP_ALIVE=["<key>RunAtLoad</key><true/>","<key>KeepAlive</key><true/>","<
  UNLIMITED_STARTS="StartLimitIntervalSec=0",
  STOP_BOUND=["KillMode=mixed","TimeoutStopSec=30"];
 /** 🙈️ One Windows scheduled task of the signed-in user. The action runs under `conhost.exe --headless`: an interactive task that starts a console program directly opens a terminal window on every start (once a minute for the mount task), and the headless host gives the program and its children one console without a window. See https://learn.microsoft.com/windows/console/creating-a-pseudoconsole-session */
+/** 🔁️ The PowerShell script that keeps a Windows service running under the headless console host: `conhost.exe --headless` always exits 0, so the `RestartOnFailure` of Task Scheduler never sees a crash; the script reruns the program five seconds after every exit with a non-zero status and ends only when the program exits 0. `--%` hands the arguments over verbatim. See https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_parsing */
+export const windowsSuperviseScriptV1=(executable:string,args:string):string=>`do{& ${executable} --% ${args};$c=$LASTEXITCODE;if($c -eq 0){exit 0};Start-Sleep -Seconds 5}while($true)`;
+const hostedOf=(settings:string,executable:string,args:string):string=>settings.includes("<RestartOnFailure>")?`powershell.exe -NoProfile -ExecutionPolicy Bypass -EncodedCommand ${Buffer.from(windowsSuperviseScriptV1(executable,args),"utf16le").toString("base64")}`:`${executable} ${args}`;
 const taskOf=(description:string,trigger:string,settings:string,directory:string,executable:string,args:string):string=>[
  '<?xml version="1.0" encoding="UTF-16"?>',
  '<Task version="1.3" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">',
@@ -266,7 +271,7 @@ const taskOf=(description:string,trigger:string,settings:string,directory:string
  `<Triggers>${trigger}</Triggers>`,
  '<Principals><Principal id="Author"><LogonType>InteractiveToken</LogonType><RunLevel>LeastPrivilege</RunLevel></Principal></Principals>',
  `<Settings><MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy><DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries><StopIfGoingOnBatteries>false</StopIfGoingOnBatteries><StartWhenAvailable>true</StartWhenAvailable><RunOnlyIfNetworkAvailable>false</RunOnlyIfNetworkAvailable><AllowStartOnDemand>true</AllowStartOnDemand><WakeToRun>false</WakeToRun>${settings}</Settings>`,
- '<Actions Context="Author"><Exec>',"<Command>conhost.exe</Command>",`<Arguments>${xml(`--headless ${executable} ${args}`)}</Arguments>`,...directory===""?[]:[`<WorkingDirectory>${directory}</WorkingDirectory>`],"</Exec></Actions>",
+ '<Actions Context="Author"><Exec>',"<Command>conhost.exe</Command>",`<Arguments>${xml(`--headless ${hostedOf(settings,executable,args)}`)}</Arguments>`,...directory===""?[]:[`<WorkingDirectory>${directory}</WorkingDirectory>`],"</Exec></Actions>",
  "</Task>"
 ].join("\n");
 const priorityOf=(service:string):string=>taskPriorityXmlV1(servicePriorityOfServiceV1(service));

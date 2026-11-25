@@ -4,7 +4,10 @@
   "targets": {
     "generate": {
       "executor": "repo:script",
-      "outputs": [],
+      "outputs": [
+        "{projectRoot}/../../🤖️generated/🏷️entity-kinds/🦀️.rs",
+        "{projectRoot}/../../🤖️generated/🏷️entity-kinds/🟦️.ts"
+      ],
       "metadata": {
         "semio": {
           "cache": {

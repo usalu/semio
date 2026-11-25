@@ -1,7 +1,9 @@
 {
   "calleeLocals": 512,
-  "ordinaryReleaseBytes": 2048,
-  "maximumPollStepsAfterLoan": 96,
+  "executionFuelPerTurn": 1,
+  "calleeEntryInstructions": 1,
+  "ordinaryCapacityBytes": 0,
+  "maximumPollStepsAfterLoan": 4096,
   "ordinaryStatus": "Refused",
   "oracleOutput": true,
   "refusal": "ordinary Poll budget cannot retire its returned Core frame"

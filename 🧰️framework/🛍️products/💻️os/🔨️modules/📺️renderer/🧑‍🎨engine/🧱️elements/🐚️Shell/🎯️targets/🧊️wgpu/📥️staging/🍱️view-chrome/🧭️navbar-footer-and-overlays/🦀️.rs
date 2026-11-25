@@ -6,20 +6,31 @@ use super::*;
 
 //#region ShellChrome
 impl<'ctx> ChromeViewCtx<'ctx> {
+    /// 🔝️ The navbar is a glass band above the canvas (`Theme::band_glass`); its content is the glass's foreground, opened and closed around every opportunity of the walk.
     pub fn render_navbar_step(&mut self, cursor: &mut ShellChromeChildCursor, draw: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32) -> bool {
+        if cursor.band_glass == 0 {
+            cursor.band_glass = draw.push_glass([0.0, 0.0, width, theme.navbar_height], 0.0, theme.band_glass()).saturating_add(1);
+        }
+        draw.begin_glass_content(cursor.band_glass - 1);
+        let complete = self.render_navbar_content_step(cursor, draw, atlas, icons, input, theme, width);
+        draw.end_glass_content();
+        complete
+    }
+
+    fn render_navbar_content_step(&mut self, cursor: &mut ShellChromeChildCursor, draw: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32) -> bool {
         let btn_h = theme.control_height;
         let btn_y = (theme.navbar_height - btn_h) * 0.5;
         let mobile = self.chrome.mobile_panel_active();
         match cursor.phase {
             0 => {
-                draw.push_solid([0.0, 0.0, width, theme.navbar_height], theme.navbar);
                 cursor.x = theme.padding_standard;
                 cursor.right = width - theme.padding_standard;
                 cursor.phase = 1;
             }
             1 => {
                 let hovered = Rect::new(0.0, 0.0, width, theme.navbar_height).contains(input.pointer_x, input.pointer_y);
-                draw.push_solid([0.0, theme.navbar_height - theme.stroke_hairline, width, theme.stroke_hairline], if hovered { theme.border_emphasized } else { theme.border_normal });
+                let line = semio_renderer_wgpu_shell_session::shell_navbar_line_rect(width, theme);
+                draw.push_solid([line.x, line.y, line.w, line.h], if hovered { theme.border_emphasized } else { theme.border_normal });
                 cursor.item = 0;
                 cursor.rect = None;
                 cursor.phase = 10;

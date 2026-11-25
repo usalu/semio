@@ -3,7 +3,7 @@ use semio_plugin_decl_emission::{ActionMeta, Emit};
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use std::sync::Arc;
 use semio_plugin_decl_app::ArtifactApp;
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use semio_plugin_instance_commands::command_bundle::CommandCtx;
 use semio_plugin_instance_dispatch::dispatch_bundle::DispatchCtx;

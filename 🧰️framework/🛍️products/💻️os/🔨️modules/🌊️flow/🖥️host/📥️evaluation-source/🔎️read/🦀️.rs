@@ -208,16 +208,6 @@ impl FlowSourceRead{
  pub fn test_diagnostic(&self)->FlowSourceReadDiagnostic{FlowSourceReadDiagnostic{phase:self.phase,widget:self.widget,scan:self.scan,offset:self.offset,binding:self.binding,origin:self.origin,failure:self.failure}}
 }
 
-/// ✏️ Original borrowed authoring derives retained domain leaves without constructing a host.
-#[path="✏️authoring/🦀️.rs"]
-pub mod authoring;
-pub use authoring::{FlowAuthoringWork,FlowAuthoringRequest,FlowAuthoringOutcome,FlowTextCopyWork,FlowSynapseFieldsWork};
-use semio_os_flow_host_core::authoring_layout::DagLayoutOptions;
-
-#[cfg(test)]
-#[path="✏️authoring/🧪️laws/🎮️controller/🦀️.rs"]
-mod authoring_controller_laws;
-
 /// 🗺️ Actual owned layout entries use the shared funded ordered producer.
 pub type FlowLayoutEntryWork=semio_framework_value_ordered::ordered::OriginalOwnedEntry<semio_framework_artifact_flow_flow::WidgetLayout>;
 

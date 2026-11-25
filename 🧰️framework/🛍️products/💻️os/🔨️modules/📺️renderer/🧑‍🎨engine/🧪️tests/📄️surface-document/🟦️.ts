@@ -3,7 +3,7 @@ import { expect,it } from "vitest";
 import { applyPatch } from "fast-json-patch";
 import fixture from "../../🧱️elements/🏛️ShellHost/🔀️surface-switch/📄️document/🧪️tests/🧫️fixtures/🔣️.json";
 import { runSessionAppSwitchV1 } from "../../🧱️elements/🏛️ShellHost/🔀️surface-switch/🟦️.ts";
-import { prepareDocumentSurfaceV1 } from "../../🧱️elements/🏛️ShellHost/🔀️surface-switch/📄️document/🟦️.ts";
+import { prepareDocumentSurfaceV1, restoreDocumentSurfaceV1 } from "../../🧱️elements/🏛️ShellHost/🔀️surface-switch/📄️document/🟦️.ts";
 for (const law of fixture.cases) it(law.name,async () => {
   const events: string[] = [];
   let current = !("initiallyCurrent" in law) || law.initiallyCurrent === true;
@@ -115,4 +115,42 @@ for (const refused of [false,true]) it(`prepares the archive inside the real swi
     expect(documents.get(2)).toEqual(fixture.archive);
     expect(events).toEqual(["capture","create","restore","attach","retire","publish"]);
   }
+});
+
+it("restores through a task that reports the load's progress, ends its row and rolls the unpublished successor back when cancelled", async () => {
+  const progress: [number, number | null][] = [];
+  const control = new AbortController();
+  let finished = 0;
+  const released: number[] = [];
+  let attached = false;
+  const task = { signal: control.signal, progress: (completed: number, total: number | null) => { progress.push([completed, total]); }, finish: () => { finished += 1; } };
+  const preparation = prepareDocumentSurfaceV1({
+    current: () => true,
+    capture: async () => fixture.archive,
+    create: async () => 17,
+    restore: (_id, archive) => restoreDocumentSurfaceV1(task, async (captured, signal, report) => {
+      expect(captured).toBe(archive);
+      report({ completed: 1, total: 0 });
+      report({ completed: 5, total: 9 });
+      await new Promise<void>((_resolve, reject) => { signal.addEventListener("abort", () => reject(signal.reason), { once: true }); });
+    }, archive),
+    attach: async () => { attached = true; },
+    release: async (id) => { released.push(id); },
+  });
+  const settled = preparation.then(() => null, (error: unknown) => error);
+  for (let turn = 0; turn < 50 && progress.length < 2; turn += 1) await new Promise(resolve => setTimeout(resolve, 0));
+  expect(progress).toEqual([[1, null], [5, 9]]);
+  expect(finished).toBe(0);
+  control.abort();
+  expect(await settled).toMatchObject({ name: "AbortError" });
+  expect(finished).toBe(1);
+  expect(released).toEqual([17]);
+  expect(attached).toBe(false);
+});
+
+it("ends the task row when the load completes", async () => {
+  let finished = 0;
+  const task = { signal: new AbortController().signal, progress: () => {}, finish: () => { finished += 1; } };
+  await restoreDocumentSurfaceV1(task, async () => {}, fixture.archive);
+  expect(finished).toBe(1);
 });

@@ -7,7 +7,7 @@ import Ajv from "ajv";
 import {acquireConcurrentPinsV1}from "../../🚦️concurrent/💾️storage/🟦️.ts";
 import {concurrentPinResourceV1,concurrentProtocolV1}from "../../🚦️concurrent/🟦️.ts";
 import {acquireResourceLease}from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
-import {danglingDependencyEntryV1,discardDependencyGenerationsV1,planDependencyGenerationCollectionV1,collectUnpinnedDependencyGenerationsV1,collectDependencyGenerationsV1,dependencyGenerationCollectionPolicyV1 as policy,holdDependencyGenerationsV1,planDependencyGenerationRetirementV1,readBoundDependencyGenerationsV1,readHeldDependencyGenerationsV1} from "../🟦️.ts";
+import {dependencyGenerationsInUseV1,danglingDependencyEntryV1,discardDependencyGenerationsV1,planDependencyGenerationCollectionV1,collectUnpinnedDependencyGenerationsV1,collectDependencyGenerationsV1,dependencyGenerationCollectionPolicyV1 as policy,holdDependencyGenerationsV1,planDependencyGenerationRetirementV1,readBoundDependencyGenerationsV1,readHeldDependencyGenerationsV1} from "../🟦️.ts";
 import schema from "../🧬️schema/🔣️.json";
 import {javascriptDependencyBindingsV1} from "../../💾️storage/🟦️.ts";
 import cases from "./🔣️.json";
@@ -33,8 +33,8 @@ test("retires unfinished and superseded generations that no live process holds, 
   make(K("a"),true,99999);make(K("b"),true,99999);make(K("c"),true,99999);make(K("d"),true,99999);make(K("e"),false,99999);make(K("f"),false,60);make(K("1"),true,30);
   holdDependencyGenerationsV1(root,[K("d")],process.pid);
   expect(readHeldDependencyGenerationsV1(root)).toEqual([K("d")]);
-  const dry=(await collectDependencyGenerationsV1(root,{freeFraction:()=>1,dryRun:true}));expect(dry.retired.map(row=>row.key)).toEqual([K("c"),K("e")]);expect(readdirSync(join(root,"j")).length).toBe(7);
-  const done=(await collectDependencyGenerationsV1(root,{freeFraction:()=>1,dryRun:false}));
+  const dry=(await collectDependencyGenerationsV1(root,{commands:()=>[],freeFraction:()=>1,dryRun:true}));expect(dry.retired.map(row=>row.key)).toEqual([K("c"),K("e")]);expect(readdirSync(join(root,"j")).length).toBe(7);
+  const done=(await collectDependencyGenerationsV1(root,{commands:()=>[],freeFraction:()=>1,dryRun:false}));
   expect(done.retired).toEqual([{key:K("c"),reason:"superseded"},{key:K("e"),reason:"unfinished"}]);
   expect(readdirSync(join(root,"j")).sort()).toEqual([K("1"),K("a"),K("b"),K("d"),K("f")].sort());
  }finally{rmSync(root,{recursive:true,force:true});}
@@ -48,19 +48,50 @@ test("a hold of a dead process protects nothing and is removed; the hold file sa
   const file=join(root,policy.holdDirectory,K("c")+".424242.json");expect(existsSync(file)).toBe(true);
   expect(validate("Hold",JSON.parse(require("node:fs").readFileSync(file,"utf8")))).toBe(true);
   expect(readHeldDependencyGenerationsV1(root,pid=>pid===process.pid)).toEqual([]);expect(existsSync(file)).toBe(false);
-  expect((await collectDependencyGenerationsV1(root,{freeFraction:()=>1,dryRun:false,alive:()=>false})).retired.map(row=>row.key)).toEqual([K("c")]);
+  expect((await collectDependencyGenerationsV1(root,{commands:()=>[],freeFraction:()=>1,dryRun:false,alive:()=>false})).retired.map(row=>row.key)).toEqual([K("c")]);
  }finally{rmSync(root,{recursive:true,force:true});}
 });
+
+test("a generation that a live process runs from survives without hold, pointer or pin, whatever the separator and case, and goes once the process is gone; an unreadable process table retires nothing",async()=>{
+ const{root,make}=store();
+ try{
+  make(K("c"),true,99999);make(K("d"),true,99999);make(K("e"),true,99999);
+  const server="bun C:/semio/.cache/b/d/m/j/"+K("c")+"/node_modules/vite/bin/vite.js",other=["node D:","store","J",K("d").toUpperCase(),"node_modules","x.js"].join(String.fromCharCode(92));
+  expect([...dependencyGenerationsInUseV1([K("c"),K("d"),K("e")],()=>[server])!]).toEqual([K("c")]);
+  expect([...dependencyGenerationsInUseV1([K("d")],()=>[other])!]).toEqual([K("d")]);
+  expect([...dependencyGenerationsInUseV1([K("c")],()=>["bun /j/"+K("c")+"f/x.js"])!]).toEqual([]);
+  expect(dependencyGenerationsInUseV1([K("c")],()=>undefined)).toBeUndefined();
+  const running=await collectDependencyGenerationsV1(root,{freeFraction:()=>1,dryRun:false,commands:()=>[server,other]});
+  expect(running.retired.map(row=>row.key)).toEqual([K("e")]);expect(readdirSync(join(root,"j")).sort()).toEqual([K("c"),K("d")]);
+  const blind=await collectDependencyGenerationsV1(root,{freeFraction:()=>1,dryRun:false,commands:()=>undefined});
+  expect(blind.retired).toEqual([]);expect(blind.refused).toContain("process table");expect(readdirSync(join(root,"j")).sort()).toEqual([K("c"),K("d")]);
+  const gone=await collectDependencyGenerationsV1(root,{freeFraction:()=>1,dryRun:false,commands:()=>[]});
+  expect(gone.retired.map(row=>row.key)).toEqual([K("c"),K("d")]);
+ }finally{rmSync(root,{recursive:true,force:true});}
+});
+
+test("a real process started from a generation directory keeps it through the real process table",async()=>{
+ const{root,make}=store();
+ try{
+  make(K("c"),true,99999);make(K("d"),true,99999);
+  const child=require("node:child_process").spawn(process.execPath,["-e","setTimeout(()=>{},60000)",join(root,"j",K("c"),"node_modules","vite","bin","vite.js")],{stdio:"ignore",windowsHide:true});
+  try{
+   await new Promise(accept=>setTimeout(accept,500));
+   const live=await collectDependencyGenerationsV1(root,{freeFraction:()=>1,dryRun:true});
+   expect(live.refused).toBeUndefined();expect(live.retired.map(row=>row.key)).toEqual([K("d")]);
+  }finally{child.kill();}
+ }finally{rmSync(root,{recursive:true,force:true});}
+},60000);
 
 test("nothing is retired when no pointer can be read, and a cancellation stops between generations",async()=>{
  const{root,make}=store();
  try{
   make(K("c"),true,99999);make(K("e"),false,99999);
   const stop=new AbortController();stop.abort();
-  await expect(collectDependencyGenerationsV1(root,{freeFraction:()=>1,dryRun:false,signal:stop.signal})).rejects.toThrow();
+  await expect(collectDependencyGenerationsV1(root,{commands:()=>[],freeFraction:()=>1,dryRun:false,signal:stop.signal})).rejects.toThrow();
   expect(readdirSync(join(root,"j")).length).toBe(2);
   rmSync(join(root,"pointer"),{recursive:true});
-  const refused=(await collectDependencyGenerationsV1(root,{freeFraction:()=>1,dryRun:false}));expect(refused.retired).toEqual([]);expect(refused.refused).toContain("pointer");expect(readdirSync(join(root,"j")).length).toBe(2);
+  const refused=(await collectDependencyGenerationsV1(root,{commands:()=>[],freeFraction:()=>1,dryRun:false}));expect(refused.retired).toEqual([]);expect(refused.refused).toContain("pointer");expect(readdirSync(join(root,"j")).length).toBe(2);
  }finally{rmSync(root,{recursive:true,force:true});}
 });
 
@@ -71,9 +102,9 @@ test("an installer holds its generation from the first byte, so a live unfinishe
   make("9".repeat(20),false,99999);make(K("e"),false,99999);
   javascriptDependencyBindingsV1(workspace,root,"scope",["../shared","local"],generation);
   expect(readHeldDependencyGenerationsV1(root)).toEqual(["9".repeat(20)]);
-  expect((await collectDependencyGenerationsV1(root,{freeFraction:()=>1,dryRun:false})).retired.map(row=>row.key)).toEqual([K("e")]);
+  expect((await collectDependencyGenerationsV1(root,{commands:()=>[],freeFraction:()=>1,dryRun:false})).retired.map(row=>row.key)).toEqual([K("e")]);
   expect(existsSync(join(root,"j","9".repeat(20)))).toBe(true);
-  expect((await collectDependencyGenerationsV1(root,{freeFraction:()=>1,dryRun:false,alive:()=>false})).retired.map(row=>row.key)).toEqual(["9".repeat(20)]);
+  expect((await collectDependencyGenerationsV1(root,{commands:()=>[],freeFraction:()=>1,dryRun:false,alive:()=>false})).retired.map(row=>row.key)).toEqual(["9".repeat(20)]);
  }finally{rmSync(root,{recursive:true,force:true});rmSync(workspace,{recursive:true,force:true});}
 });
 
@@ -86,10 +117,10 @@ test("a generation that a checkout still binds survives without pointer and with
   writeFileSync(join(root,"j",K("8"),policy.readyMarker),JSON.stringify({bindings:[{sourceDirectory:plain,targetDirectory:join(root,"j",K("8"),"node_modules")}]}));
   const old=new Date(Date.now()-99999000);utimesSync(join(root,"j",K("7")),old,old);utimesSync(join(root,"j",K("8")),old,old);utimesSync(join(root,"j",K("7"),policy.readyMarker),old,old);utimesSync(join(root,"j",K("8"),policy.readyMarker),old,old);
   expect(readBoundDependencyGenerationsV1(root)).toEqual([K("7")]);
-  expect((await collectDependencyGenerationsV1(root,{freeFraction:()=>1,dryRun:false})).retired.map(row=>row.key)).toEqual([K("8"),K("c")]);
+  expect((await collectDependencyGenerationsV1(root,{commands:()=>[],freeFraction:()=>1,dryRun:false})).retired.map(row=>row.key)).toEqual([K("8"),K("c")]);
   expect(readdirSync(join(root,"j"))).toEqual([K("7")]);
   unlinkSync(link);
-  expect((await collectDependencyGenerationsV1(root,{freeFraction:()=>1,dryRun:false})).retired.map(row=>row.key)).toEqual([K("7")]);
+  expect((await collectDependencyGenerationsV1(root,{commands:()=>[],freeFraction:()=>1,dryRun:false})).retired.map(row=>row.key)).toEqual([K("7")]);
  }finally{rmSync(root,{recursive:true,force:true});rmSync(workspace,{recursive:true,force:true});}
 });
 
@@ -98,11 +129,11 @@ test("nothing is retired when a binding record cannot be read, and a recently wr
  try{
   make(K("c"),true,99999);make(K("e"),false,99999);
   writeFileSync(join(root,"j",K("c"),policy.readyMarker),"{not json");
-  const refused=(await collectDependencyGenerationsV1(root,{freeFraction:()=>1,dryRun:false}));expect(refused.retired).toEqual([]);expect(refused.refused).toContain("binding");
+  const refused=(await collectDependencyGenerationsV1(root,{commands:()=>[],freeFraction:()=>1,dryRun:false}));expect(refused.retired).toEqual([]);expect(refused.refused).toContain("binding");
   writeFileSync(join(root,"j",K("c"),policy.readyMarker),"{}");
   const old=new Date(Date.now()-99999000);utimesSync(join(root,"j",K("c"),policy.readyMarker),old,old);utimesSync(join(root,"j",K("c")),old,old);
   writeFileSync(join(root,"j",K("e"),"node_modules","y.js"),"2");utimesSync(join(root,"j",K("e")),old,old);
-  expect((await collectDependencyGenerationsV1(root,{freeFraction:()=>1,dryRun:false})).retired.map(row=>row.key)).toEqual([K("c")]);
+  expect((await collectDependencyGenerationsV1(root,{commands:()=>[],freeFraction:()=>1,dryRun:false})).retired.map(row=>row.key)).toEqual([K("c")]);
   expect(existsSync(join(root,"j",K("e")))).toBe(true);
  }finally{rmSync(root,{recursive:true,force:true});}
 });
@@ -112,12 +143,12 @@ test("a live shared pin lease keeps a generation, an unreadable lease registry r
  try{
   make(K("c"),true,99999);make(K("d"),true,99999);
   const released:string[]=[],claim=(pinned:Set<string>)=>async(key:string)=>pinned.has(key)?null:{release:()=>{released.push(key);}};
-  const done=await collectUnpinnedDependencyGenerationsV1(root,{freeFraction:()=>1,dryRun:false,acquire:claim(new Set([K("c")]))});
+  const done=await collectUnpinnedDependencyGenerationsV1(root,{commands:()=>[],freeFraction:()=>1,dryRun:false,acquire:claim(new Set([K("c")]))});
   expect(done.retired.map(row=>row.key)).toEqual([K("d")]);expect(readdirSync(join(root,"j")).sort()).toEqual([K("c")]);expect(released).toEqual([K("d")]);
   make(K("e"),true,99999);released.length=0;
-  const broken=await collectUnpinnedDependencyGenerationsV1(root,{freeFraction:()=>1,dryRun:false,acquire:async key=>{if(key===K("e"))throw Error("registry unreadable");return{release:()=>{released.push(key);}};}});
+  const broken=await collectUnpinnedDependencyGenerationsV1(root,{commands:()=>[],freeFraction:()=>1,dryRun:false,acquire:async key=>{if(key===K("e"))throw Error("registry unreadable");return{release:()=>{released.push(key);}};}});
   expect(broken.retired).toEqual([]);expect(broken.refused).toContain("lease");expect(readdirSync(join(root,"j")).sort()).toEqual([K("c"),K("e")]);
-  const dry=await collectUnpinnedDependencyGenerationsV1(root,{freeFraction:()=>1,dryRun:true,acquire:claim(new Set())});expect(dry.retired.map(row=>row.key)).toEqual([K("c"),K("e")]);expect(readdirSync(join(root,"j")).length).toBe(2);
+  const dry=await collectUnpinnedDependencyGenerationsV1(root,{commands:()=>[],freeFraction:()=>1,dryRun:true,acquire:claim(new Set())});expect(dry.retired.map(row=>row.key)).toEqual([K("c"),K("e")]);expect(readdirSync(join(root,"j")).length).toBe(2);
  }finally{rmSync(root,{recursive:true,force:true});}
 });
 
@@ -127,10 +158,10 @@ test("real pin leases: a reader of an older binary that holds the shared pin kee
   make(K("c"),true,99999);make(K("d"),true,99999);
   const reader=await acquireConcurrentPinsV1(directory,workspace,[K("c")+"0".repeat(44)],undefined,signal);
   const acquire=async(key:string)=>{try{return await acquireResourceLease({directory,resource:concurrentPinResourceV1(workspace,key),mode:"exclusive",signal,timeoutMs:0});}catch(error){if(/timed out/iu.test(String((error as Error).message)))return null;throw error;}};
-  expect((await collectUnpinnedDependencyGenerationsV1(root,{freeFraction:()=>1,dryRun:false,acquire})).retired.map(row=>row.key)).toEqual([K("d")]);
+  expect((await collectUnpinnedDependencyGenerationsV1(root,{commands:()=>[],freeFraction:()=>1,dryRun:false,acquire})).retired.map(row=>row.key)).toEqual([K("d")]);
   expect(readdirSync(join(root,"j"))).toEqual([K("c")]);
   for(const lease of reader)lease.release();
-  expect((await collectUnpinnedDependencyGenerationsV1(root,{freeFraction:()=>1,dryRun:false,acquire})).retired.map(row=>row.key)).toEqual([K("c")]);
+  expect((await collectUnpinnedDependencyGenerationsV1(root,{commands:()=>[],freeFraction:()=>1,dryRun:false,acquire})).retired.map(row=>row.key)).toEqual([K("c")]);
  }finally{rmSync(root,{recursive:true,force:true});rmSync(directory,{recursive:true,force:true});rmSync(workspace,{recursive:true,force:true});}
 });
 
@@ -176,11 +207,11 @@ test("a retained generation goes after its retention, the newest of a scope afte
  try{
   for(const c of ["b","c","d","e"])make(K(c),true,99999);
   setPointer(root,[{generation:K("b"),atMs:now-7*H},{generation:K("c"),atMs:now-8*H},{generation:K("d"),atMs:now-30*H}]);
-  const plan=(freeFraction:number)=>planDependencyGenerationCollectionV1(root,{freeFraction:()=>freeFraction,now:()=>now}).retire.map(row=>row.key);
+  const plan=(freeFraction:number)=>planDependencyGenerationCollectionV1(root,{commands:()=>[],freeFraction:()=>freeFraction,now:()=>now}).retire.map(row=>row.key);
   expect(plan(1)).toEqual([K("c"),K("d"),K("e")]);
   expect(plan(0.1)).toEqual([K("b"),K("c"),K("d"),K("e")]);
   setPointer(root,[{generation:K("b"),atMs:now-25*H}]);expect(plan(1)).toEqual([K("b"),K("c"),K("d"),K("e")]);
-  expect(planDependencyGenerationCollectionV1(root,{freeFraction:()=>0.1,now:()=>now}).pressure).toBe(true);expect(planDependencyGenerationCollectionV1(root,{freeFraction:()=>0.25,now:()=>now}).pressure).toBe(false);
+  expect(planDependencyGenerationCollectionV1(root,{commands:()=>[],freeFraction:()=>0.1,now:()=>now}).pressure).toBe(true);expect(planDependencyGenerationCollectionV1(root,{commands:()=>[],freeFraction:()=>0.25,now:()=>now}).pressure).toBe(false);
  }finally{rmSync(root,{recursive:true,force:true});}
 });
 
@@ -189,7 +220,7 @@ test("a store of any size is paged through in bounded batches with progress and 
  try{
   for(const c of ["c","d","e"]){make(K(c),true,99999);fat(root,K(c),250);}
   const total=entriesOf(join(root,"j")),rows:number[]=[];
-  const result=await collectDependencyGenerationsV1(root,{freeFraction:()=>1,dryRun:false,batchEntries:128,progress:row=>{rows.push(row.entries);}});
+  const result=await collectDependencyGenerationsV1(root,{commands:()=>[],freeFraction:()=>1,dryRun:false,batchEntries:128,progress:row=>{rows.push(row.entries);}});
   expect(result.retired.map(row=>row.key)).toEqual([K("c"),K("d"),K("e")]);expect(result.more).toBe(false);expect(result.finished).toEqual([]);
   expect(result.entries).toBeGreaterThan(4096*3);expect(result.entries).toBe(total-3);
   expect(rows.length).toBeGreaterThan(Math.floor(result.entries/128));expect(rows).toEqual([...rows].sort((left,right)=>left-right));
@@ -202,11 +233,11 @@ test("a cancelled removal leaves a tombstone that the next run finishes first, e
  try{
   make(K("c"),true,99999);fat(root,K("c"),60);
   const total=entriesOf(join(root,"j")),stop=new AbortController();let last=0,ticks=0;
-  await expect(collectDependencyGenerationsV1(root,{freeFraction:()=>1,dryRun:false,batchEntries:128,signal:stop.signal,progress:row=>{last=row.entries;if(++ticks===3)stop.abort();}})).rejects.toThrow();
+  await expect(collectDependencyGenerationsV1(root,{commands:()=>[],freeFraction:()=>1,dryRun:false,batchEntries:128,signal:stop.signal,progress:row=>{last=row.entries;if(++ticks===3)stop.abort();}})).rejects.toThrow();
   expect(readdirSync(join(root,"j"))).toEqual([policy.tombstonePrefix+K("c")]);expect(last).toBe(384);
-  expect(planDependencyGenerationCollectionV1(root,{freeFraction:()=>1}).tombstones).toEqual([K("c")]);
-  const dry=await collectDependencyGenerationsV1(root,{freeFraction:()=>1,dryRun:true});expect(dry.finished).toEqual([K("c")]);expect(readdirSync(join(root,"j")).length).toBe(1);
-  const again=await collectDependencyGenerationsV1(root,{freeFraction:()=>1,dryRun:false,batchEntries:128});
+  expect(planDependencyGenerationCollectionV1(root,{commands:()=>[],freeFraction:()=>1}).tombstones).toEqual([K("c")]);
+  const dry=await collectDependencyGenerationsV1(root,{commands:()=>[],freeFraction:()=>1,dryRun:true});expect(dry.finished).toEqual([K("c")]);expect(readdirSync(join(root,"j")).length).toBe(1);
+  const again=await collectDependencyGenerationsV1(root,{commands:()=>[],freeFraction:()=>1,dryRun:false,batchEntries:128});
   expect(again.finished).toEqual([K("c")]);expect(again.retired).toEqual([]);expect(again.entries+last+1).toBe(total);expect(readdirSync(join(root,"j"))).toEqual([]);
  }finally{rmSync(root,{recursive:true,force:true});}
 });
@@ -215,9 +246,9 @@ test("a time budget stops between batches without losing anything, says more fol
  const{root,make}=store();
  try{
   make(K("c"),true,99999);make(K("d"),true,99999);fat(root,K("c"),40);fat(root,K("d"),40);
-  let time=0;const first=await collectDependencyGenerationsV1(root,{freeFraction:()=>1,dryRun:false,batchEntries:64,maximumMilliseconds:25,clock:()=>time,progress:()=>{time+=10;}});
+  let time=0;const first=await collectDependencyGenerationsV1(root,{commands:()=>[],freeFraction:()=>1,dryRun:false,batchEntries:64,maximumMilliseconds:25,clock:()=>time,progress:()=>{time+=10;}});
   expect(first.more).toBe(true);expect(first.retired).toEqual([]);expect(readdirSync(join(root,"j")).sort()).toEqual([policy.tombstonePrefix+K("c"),K("d")]);
-  const second=await collectDependencyGenerationsV1(root,{freeFraction:()=>1,dryRun:false});
+  const second=await collectDependencyGenerationsV1(root,{commands:()=>[],freeFraction:()=>1,dryRun:false});
   expect(second.more).toBe(false);expect(second.finished).toEqual([K("c")]);expect(second.retired.map(row=>row.key)).toEqual([K("d")]);expect(readdirSync(join(root,"j"))).toEqual([]);
  }finally{rmSync(root,{recursive:true,force:true});}
 });
@@ -227,8 +258,8 @@ test("under pressure the retired generations of a pointer are collected, a held 
  try{
   make(K("a"),true,99999);make(K("b"),true,99999);make(K("c"),true,99999);
   setPointer(root,[{generation:K("b"),atMs:now-1000},{generation:K("c"),atMs:now-2000}]);holdDependencyGenerationsV1(root,[K("c")],process.pid);
-  expect((await collectDependencyGenerationsV1(root,{freeFraction:()=>1,dryRun:false})).retired).toEqual([]);
-  const done=await collectDependencyGenerationsV1(root,{freeFraction:()=>0.05,dryRun:false});
+  expect((await collectDependencyGenerationsV1(root,{commands:()=>[],freeFraction:()=>1,dryRun:false})).retired).toEqual([]);
+  const done=await collectDependencyGenerationsV1(root,{commands:()=>[],freeFraction:()=>0.05,dryRun:false});
   expect(done.pressure).toBe(true);expect(done.retired.map(row=>row.key)).toEqual([K("b")]);
   const gone=spawnSync("python3",["-I","-c","import os,sys\nprint(sorted(os.listdir(sys.argv[1])))",join(root,"j")],{encoding:"utf8"}).stdout.trim();
   expect(gone).toBe("['"+K("a")+"', '"+K("c")+"']");

@@ -47,14 +47,54 @@ pub fn create_fem3d_app() -> AppDefinition {
                 ActionArgDef::number("z", LocalizedLabel::data("Z")).required(),
             ])
             .mutation("addBar", LocalizedLabel::native("Add Bar", "Stab hinzufügen"))
+            .action_args("addBar", vec![
+                ActionArgDef::text("start", LocalizedLabel::native("Start Node", "Startknoten")).required(),
+                ActionArgDef::text("end", LocalizedLabel::native("End Node", "Endknoten")).required(),
+                ActionArgDef::text("materialId", LocalizedLabel::native("Material", "Material")).required(),
+                ActionArgDef::text("sectionId", LocalizedLabel::native("Section", "Querschnitt")).required(),
+            ])
             .mutation("addFrame", LocalizedLabel::native("Add Frame", "Rahmen hinzufügen"))
+            .action_args("addFrame", vec![
+                ActionArgDef::text("start", LocalizedLabel::native("Start Node", "Startknoten")).required(),
+                ActionArgDef::text("end", LocalizedLabel::native("End Node", "Endknoten")).required(),
+                ActionArgDef::text("materialId", LocalizedLabel::native("Material", "Material")).required(),
+                ActionArgDef::text("sectionId", LocalizedLabel::native("Section", "Querschnitt")).required(),
+                ActionArgDef::number("roll", LocalizedLabel::native("Roll", "Rollwinkel")).default_value(&0.0),
+            ])
             .mutation("addMaterial", LocalizedLabel::native("Add Material", "Material hinzufügen"))
+            .action_args("addMaterial", vec![
+                ActionArgDef::text("name", LocalizedLabel::native("Name", "Name")).required(),
+                ActionArgDef::number("e", LocalizedLabel::native("Young's Modulus", "Elastizitätsmodul")).default_value(&2.1e11),
+                ActionArgDef::number("g", LocalizedLabel::native("Shear Modulus", "Schubmodul")).default_value(&8.1e10),
+            ])
             .mutation("addSection", LocalizedLabel::native("Add Section", "Querschnitt hinzufügen"))
+            .action_args("addSection", vec![
+                ActionArgDef::text("name", LocalizedLabel::native("Name", "Name")).required(),
+                ActionArgDef::number("area", LocalizedLabel::native("Area", "Fläche")).required(),
+                ActionArgDef::number("iy", LocalizedLabel::native("Second Moment Y", "Flächenträgheitsmoment Y")).required(),
+                ActionArgDef::number("iz", LocalizedLabel::native("Second Moment Z", "Flächenträgheitsmoment Z")).required(),
+                ActionArgDef::number("j", LocalizedLabel::native("Torsion Constant", "Torsionskonstante")).required(),
+            ])
             .mutation("addSupport", LocalizedLabel::native("Add Support", "Lager hinzufügen"))
+            .action_args("addSupport", vec![
+                ActionArgDef::text("nodeId", LocalizedLabel::native("Node", "Knoten")).required(),
+                ActionArgDef::text("fixed", LocalizedLabel::native("Fixed Degrees of Freedom", "Gesperrte Freiheitsgrade")).default_value(&"tx,ty,tz,rx,ry,rz"),
+            ])
             .mutation("addNodalLoad", LocalizedLabel::native("Add Nodal Load", "Knotenlast hinzufügen"))
-            .action_args("addNodalLoad", vec![ActionArgDef::text("caseId", LocalizedLabel::native("Case", "Lastfall"))])
+            .action_args("addNodalLoad", vec![
+                ActionArgDef::text("nodeId", LocalizedLabel::native("Node", "Knoten")).required(),
+                ActionArgDef::select("dof", LocalizedLabel::native("Degree of Freedom", "Freiheitsgrad"), vec![ActionArgOption::new("tx", LocalizedLabel::data("Tx")), ActionArgOption::new("ty", LocalizedLabel::data("Ty")), ActionArgOption::new("tz", LocalizedLabel::data("Tz")), ActionArgOption::new("rx", LocalizedLabel::data("Rx")), ActionArgOption::new("ry", LocalizedLabel::data("Ry")), ActionArgOption::new("rz", LocalizedLabel::data("Rz"))]).default_value(&"tz"),
+                ActionArgDef::number("value", LocalizedLabel::native("Value", "Wert")).required(),
+                ActionArgDef::text("caseId", LocalizedLabel::native("Case", "Lastfall")),
+            ])
             .mutation("addMemberUdl", LocalizedLabel::native("Add Member UDL", "Streckenlast hinzufügen"))
-            .action_args("addMemberUdl", vec![ActionArgDef::text("caseId", LocalizedLabel::native("Case", "Lastfall"))])
+            .action_args("addMemberUdl", vec![
+                ActionArgDef::text("elementId", LocalizedLabel::native("Element", "Element")).required(),
+                ActionArgDef::number("wx", LocalizedLabel::native("Wx", "Wx")).default_value(&0.0),
+                ActionArgDef::number("wy", LocalizedLabel::native("Wy", "Wy")).required(),
+                ActionArgDef::number("wz", LocalizedLabel::native("Wz", "Wz")).default_value(&0.0),
+                ActionArgDef::text("caseId", LocalizedLabel::native("Case", "Lastfall")),
+            ])
             .mutation("addAreaLoad", LocalizedLabel::native("Add Area Load", "Flächenlast hinzufügen"))
             .action_args("addAreaLoad", vec![
                 ActionArgDef::text("solidId", LocalizedLabel::native("Solid", "Volumenkörper")).required(),
@@ -82,7 +122,7 @@ pub fn create_fem3d_app() -> AppDefinition {
             .mutation("addCombination", LocalizedLabel::native("Add Combination", "Kombination hinzufügen"))
             .action_args("addCombination", vec![
                 ActionArgDef::text("name", LocalizedLabel::data("Name")).required(),
-                ActionArgDef::text("terms", LocalizedLabel::native("Terms", "Terme")).required(),
+                ActionArgDef::json_text("terms", LocalizedLabel::native("Terms", "Terme")).describe(LocalizedLabel::native("Load case ids with factors, for example dead:1.35, live:1.5 or 1.35 dead + 1.5 live or JSON [[\"dead\", 1.35], [\"live\", 1.5]]", "Lastfall-Kennungen mit Faktoren, zum Beispiel dead:1.35, live:1.5 oder 1.35 dead + 1.5 live oder JSON [[\"dead\", 1.35], [\"live\", 1.5]]")).required(),
             ])
             .mutation("setSelfWeight", LocalizedLabel::native("Set Self Weight", "Eigengewicht festlegen"))
             .action_args("setSelfWeight", vec![
@@ -144,7 +184,7 @@ pub fn create_fem3d_app() -> AppDefinition {
                 ]),
                 ActionArgDef::select("waveform", LocalizedLabel::native("Waveform", "Wellenform"), vec![ActionArgOption::new("ramp", LocalizedLabel::native("Ramp", "Rampe")), ActionArgOption::new("sine", LocalizedLabel::native("Sine", "Sinus"))]),
             ])
-            .action_with(semio_plugin::ActionDefinition { in_palette: false, ..semio_plugin::ActionDefinition::new("resultAnimationTick", LocalizedLabel::native("Result Animation Tick", "Ergebnisanimation Takt"), semio_plugin::ActionKind::View, "timer") })
+            .action_with(semio_plugin::ActionDefinition { in_palette: false, ..semio_plugin::ActionDefinition::new("resultAnimationTick", LocalizedLabel::native("Result Animation Tick", "Ergebnisanimation Takt"), semio_plugin::ActionKind::View, "clock") })
             .action_with(semio_plugin::ActionDefinition { in_palette: false, ..semio_plugin::ActionDefinition::new("focusEntity", LocalizedLabel::native("Focus Entity", "Element fokussieren"), semio_plugin::ActionKind::View, "focus") })
             .action_args("focusEntity", vec![ActionArgDef::text("id", LocalizedLabel::native("Entity", "Element")).required()])
             .mutation("translateSelection", LocalizedLabel::native("Translate Selection", "Auswahl verschieben"))
@@ -197,6 +237,7 @@ pub fn create_fem3d_app() -> AppDefinition {
             .panel_tab_def(results_panel::definition())
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
+            .keybinding("mod+y", "redo")
             .keybinding("delete", "removeSelection")
             .keybinding("backspace", "removeSelection")
             .keybinding("space", "setResultAnimation")

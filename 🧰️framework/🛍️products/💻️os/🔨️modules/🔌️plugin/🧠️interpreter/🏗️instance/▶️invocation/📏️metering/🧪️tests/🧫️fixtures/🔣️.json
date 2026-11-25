@@ -1,0 +1,403 @@
+{
+  "version": 1,
+  "workBytesPerUnit": 64,
+  "cases": [
+    {
+      "name": "scalar instructions post work only",
+      "moduleHex": "0061736d010000000105016000017f030201000504010101020606017f0141000b0707010372756e00000c01020a1c011a01017f410741056a220041036c2400230020006a0141e3001a0b0b12020041000b0661626364656601046768696a",
+      "static": [
+        "i32.const",
+        "i32.const",
+        "i32.add",
+        "local.tee",
+        "i32.const",
+        "i32.mul",
+        "global.set",
+        "global.get",
+        "local.get",
+        "i32.add",
+        "nop",
+        "i32.const",
+        "drop",
+        "end"
+      ],
+      "kinds": [
+        "i32.const",
+        "i32.const",
+        "i32.add",
+        "local.tee",
+        "i32.const",
+        "i32.mul",
+        "global.set",
+        "global.get",
+        "local.get",
+        "i32.add",
+        "nop",
+        "i32.const",
+        "drop",
+        "end"
+      ],
+      "instructions": 14,
+      "stackPeak": 2,
+      "labelVectors": 1,
+      "retained": [],
+      "moved": [],
+      "workUnits": 0,
+      "items": 0,
+      "copyBytes": 0,
+      "expected": 48
+    },
+    {
+      "name": "select is a scalar instruction",
+      "moduleHex": "0061736d010000000105016000017f030201000504010101020606017f0141000b0707010372756e00000c01020a0b010900410b411641001b0b0b12020041000b0661626364656601046768696a",
+      "static": [
+        "i32.const",
+        "i32.const",
+        "i32.const",
+        "select",
+        "end"
+      ],
+      "kinds": [
+        "i32.const",
+        "i32.const",
+        "i32.const",
+        "select",
+        "end"
+      ],
+      "instructions": 5,
+      "stackPeak": 3,
+      "labelVectors": 1,
+      "retained": [],
+      "moved": [],
+      "workUnits": 0,
+      "items": 0,
+      "copyBytes": 0,
+      "expected": 22
+    },
+    {
+      "name": "loads and stores into born linear memory post work only",
+      "moduleHex": "0061736d010000000105016000017f030201000504010101020606017f0141000b0707010372756e00000c01020a3d013b0041084184868808360200410828020041092d00006a41104288ef99abc5e88c91113703004110290300a76a412841ab013a000041282d00006a0b0b12020041000b0661626364656601046768696a",
+      "static": [
+        "i32.const",
+        "i32.const",
+        "i32.store",
+        "i32.const",
+        "i32.load",
+        "i32.const",
+        "i32.load8_u",
+        "i32.add",
+        "i32.const",
+        "i64.const",
+        "i64.store",
+        "i32.const",
+        "i64.load",
+        "i32.wrap_i64",
+        "i32.add",
+        "i32.const",
+        "i32.const",
+        "i32.store8",
+        "i32.const",
+        "i32.load8_u",
+        "i32.add",
+        "end"
+      ],
+      "kinds": [
+        "i32.const",
+        "i32.const",
+        "i32.store",
+        "i32.const",
+        "i32.load",
+        "i32.const",
+        "i32.load8_u",
+        "i32.add",
+        "i32.const",
+        "i64.const",
+        "i64.store",
+        "i32.const",
+        "i64.load",
+        "i32.wrap_i64",
+        "i32.add",
+        "i32.const",
+        "i32.const",
+        "i32.store8",
+        "i32.const",
+        "i32.load8_u",
+        "i32.add",
+        "end"
+      ],
+      "instructions": 22,
+      "stackPeak": 3,
+      "labelVectors": 1,
+      "retained": [],
+      "moved": [],
+      "workUnits": 0,
+      "items": 0,
+      "copyBytes": 0,
+      "expected": 1449687866
+    },
+    {
+      "name": "untaken if and untaken br_if move nothing",
+      "moduleHex": "0061736d010000000105016000017f030201000504010101020606017f0141000b0707010372756e00000c01020a120110004100044041011a0b410541000d000b0b12020041000b0661626364656601046768696a",
+      "static": [
+        "i32.const",
+        "if",
+        "i32.const",
+        "drop",
+        "end",
+        "i32.const",
+        "i32.const",
+        "br_if",
+        "end"
+      ],
+      "kinds": [
+        "i32.const",
+        "if",
+        "i32.const",
+        "i32.const",
+        "br_if",
+        "end"
+      ],
+      "instructions": 6,
+      "stackPeak": 2,
+      "labelVectors": 1,
+      "retained": [],
+      "moved": [],
+      "workUnits": 0,
+      "items": 0,
+      "copyBytes": 0,
+      "expected": 5
+    },
+    {
+      "name": "taken branch to the function label with its result in place",
+      "moduleHex": "0061736d010000000105016000017f030201000504010101020606017f0141000b0707010372756e00000c01020a0801060041050c000b0b12020041000b0661626364656601046768696a",
+      "static": [
+        "i32.const",
+        "br",
+        "end"
+      ],
+      "kinds": [
+        "i32.const",
+        "br"
+      ],
+      "instructions": 2,
+      "stackPeak": 1,
+      "labelVectors": 1,
+      "retained": [],
+      "moved": [],
+      "workUnits": 0,
+      "items": 0,
+      "copyBytes": 0,
+      "expected": 5
+    },
+    {
+      "name": "return with its result in place",
+      "moduleHex": "0061736d010000000105016000017f030201000504010101020606017f0141000b0707010372756e00000c01020a0701050041070f0b0b12020041000b0661626364656601046768696a",
+      "static": [
+        "i32.const",
+        "return",
+        "end"
+      ],
+      "kinds": [
+        "i32.const",
+        "return"
+      ],
+      "instructions": 2,
+      "stackPeak": 1,
+      "labelVectors": 1,
+      "retained": [],
+      "moved": [],
+      "workUnits": 0,
+      "items": 0,
+      "copyBytes": 0,
+      "expected": 7
+    },
+    {
+      "name": "br_table to the function label with its result in place",
+      "moduleHex": "0061736d010000000105016000017f030201000504010101020606017f0141000b0707010372756e00000c01020a0c010a00410641010e0100000b0b12020041000b0661626364656601046768696a",
+      "static": [
+        "i32.const",
+        "i32.const",
+        "br_table",
+        "end"
+      ],
+      "kinds": [
+        "i32.const",
+        "i32.const",
+        "br_table"
+      ],
+      "instructions": 3,
+      "stackPeak": 2,
+      "labelVectors": 1,
+      "retained": [],
+      "moved": [],
+      "workUnits": 0,
+      "items": 0,
+      "copyBytes": 0,
+      "expected": 6
+    },
+    {
+      "name": "bulk memory pays the actual length and data.drop pays its release",
+      "moduleHex": "0061736d010000000105016000017f030201000504010101020606017f0141000b0707010372756e00000c01020a36013400410041e10041e400fc0b0041c801410041c000fc0a000041900341004104fc080100fc090141cd012d00004190032d00006a0b0b12020041000b0661626364656601046768696a",
+      "static": [
+        "i32.const",
+        "i32.const",
+        "i32.const",
+        "memory.fill",
+        "i32.const",
+        "i32.const",
+        "i32.const",
+        "memory.copy",
+        "i32.const",
+        "i32.const",
+        "i32.const",
+        "memory.init",
+        "data.drop",
+        "i32.const",
+        "i32.load8_u",
+        "i32.const",
+        "i32.load8_u",
+        "i32.add",
+        "end"
+      ],
+      "kinds": [
+        "i32.const",
+        "i32.const",
+        "i32.const",
+        "memory.fill",
+        "i32.const",
+        "i32.const",
+        "i32.const",
+        "memory.copy",
+        "i32.const",
+        "i32.const",
+        "i32.const",
+        "memory.init",
+        "data.drop",
+        "i32.const",
+        "i32.load8_u",
+        "i32.const",
+        "i32.load8_u",
+        "i32.add",
+        "end"
+      ],
+      "instructions": 19,
+      "stackPeak": 3,
+      "labelVectors": 1,
+      "retained": [
+        {
+          "kind": "data.drop",
+          "bytes": 0
+        }
+      ],
+      "moved": [
+        {
+          "kind": "memory.fill",
+          "bytes": 100
+        },
+        {
+          "kind": "memory.copy",
+          "bytes": 64
+        },
+        {
+          "kind": "memory.init",
+          "bytes": 4
+        }
+      ],
+      "workUnits": 4,
+      "items": 1,
+      "copyBytes": 0,
+      "expected": 200
+    },
+    {
+      "name": "a large fill is bounded by work, not by the copy ledger",
+      "moduleHex": "0061736d010000000105016000017f030201000504010101020606017f0141000b0707010372756e00000c01020a150113004100410741e0d403fc0b0041e4002d00000b0b12020041000b0661626364656601046768696a",
+      "static": [
+        "i32.const",
+        "i32.const",
+        "i32.const",
+        "memory.fill",
+        "i32.const",
+        "i32.load8_u",
+        "end"
+      ],
+      "kinds": [
+        "i32.const",
+        "i32.const",
+        "i32.const",
+        "memory.fill",
+        "i32.const",
+        "i32.load8_u",
+        "end"
+      ],
+      "instructions": 7,
+      "stackPeak": 3,
+      "labelVectors": 1,
+      "retained": [],
+      "moved": [
+        {
+          "kind": "memory.fill",
+          "bytes": 60000
+        }
+      ],
+      "workUnits": 938,
+      "items": 0,
+      "copyBytes": 0,
+      "expected": 7
+    },
+    {
+      "name": "zero length bulk, memory.size and trivial memory.grow post work only",
+      "moduleHex": "0061736d010000000105016000017f030201000504010101020606017f0141000b0707010372756e00000c01020a19011700410041004100fc0b003f00410040006a410940006a0b0b12020041000b0661626364656601046768696a",
+      "static": [
+        "i32.const",
+        "i32.const",
+        "i32.const",
+        "memory.fill",
+        "memory.size",
+        "i32.const",
+        "memory.grow",
+        "i32.add",
+        "i32.const",
+        "memory.grow",
+        "i32.add",
+        "end"
+      ],
+      "kinds": [
+        "i32.const",
+        "i32.const",
+        "i32.const",
+        "memory.fill",
+        "memory.size",
+        "i32.const",
+        "memory.grow",
+        "i32.add",
+        "i32.const",
+        "memory.grow",
+        "i32.add",
+        "end"
+      ],
+      "instructions": 12,
+      "stackPeak": 3,
+      "labelVectors": 1,
+      "retained": [],
+      "moved": [],
+      "workUnits": 0,
+      "items": 0,
+      "copyBytes": 0,
+      "expected": 1
+    }
+  ],
+  "calls": [
+    {
+      "name": "1 sequential calls of one function",
+      "count": 1,
+      "moduleHex": "0061736d01000000010a026000017f60017f017f03030200010707010372756e00000a10020600410010010b0700200041016a0b",
+      "expected": 1
+    },
+    {
+      "name": "50 sequential calls of one function",
+      "count": 50,
+      "moduleHex": "0061736d01000000010a026000017f60017f017f03030200010707010372756e00000a720268004100100110011001100110011001100110011001100110011001100110011001100110011001100110011001100110011001100110011001100110011001100110011001100110011001100110011001100110011001100110011001100110011001100110010b0700200041016a0b",
+      "expected": 50
+    }
+  ]
+}

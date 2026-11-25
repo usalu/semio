@@ -18,6 +18,7 @@ import { createAccessibilityMirror } from "@semio-tech/framework-renderer-wgpu/a
 import { AppChannelClient, AppChannelRequestSequence, decodeAppCommand, decodeAppFrame, encodeAppCommand, encodeAppFrame, type AppFrameValue } from "../../../../../🟦️.ts";
 import { createTurnOutcomeBroadcast, type TurnOutcome } from "@semio-tech/framework";
 import { channelDocumentIdentitySchemaUrl } from "../../../../📡️spr/🧪️tests/🧫️fixtures/🟦️.ts";
+import { launchChromium } from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🌐️chromium-launch/🟦️";
 
 const testDirectory = dirname(fileURLToPath(import.meta.url));
 const fixture = JSON.parse(readFileSync(resolve(testDirectory, "../../🎬️media/🌐️browser/🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));
@@ -347,9 +348,9 @@ describe("trusted app document identity", () => {
 
 for (const kind of ["audio", "video"] as const) it(`runs the production browser ${kind} host handlers and Chromium decoder`, async () => {
   const video = kind === "video" ? readFileSync(resolve(testDirectory, "../../../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🎬️.mp4" )).toString("base64") : null;
-  const [{ build }, { chromium }] = await Promise.all([import("esbuild"), import("playwright")]);
+  const { build } = await import("esbuild");
   const bundle = await build({ entryPoints: [resolve(testDirectory, "../../🎬️media/🌐️browser/🎛️host/🟦️.ts")], bundle: true, format: "iife", globalName: "MediaHostModule", platform: "browser", target: "chrome120", write: false, logLevel: "silent", define: { "import.meta.vitest": "undefined" } });
-  const browser = await chromium.launch({ headless: true });
+  const browser = await launchChromium();
   const page = await browser.newPage();
   try {
     await page.setContent('<div id="root" style="position:relative;width:800px;height:600px"></div>');

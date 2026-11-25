@@ -47,11 +47,11 @@ pub(super) async fn arm_context_menu<PA: PluginApp>(
 ) -> Result<(), semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     let protocol::AppCommand::ContextMenu { seq, request } = command else { unreachable!("arm_context_menu is dispatched only for its own command") };
     let seq=*seq;
-    match decode_wire_serialized::<ContextMenuWireRequest>(&request).await.and_then(ContextMenuWireRequest::into_parts) {
+    match decode_wire_serialized::<ContextMenuWireRequest>(&request).await.map(ContextMenuWireRequest::into_parts) {
         Ok((request, view_state)) => {
             let outcome = with_instances_mut(runtime, |list| {
                 let mut instance = find_instance(list, instance_id)?;
-                Ok(::semio_framework_async::poll::resolve_ready(instance.app.context_menu(&request, &view_state)))
+                answer_context_menu(&mut instance, &request, view_state)
             });
             match outcome.await {
                 Ok(items) => frames.push(protocol::AppFrame::ContextMenu { in_reply_to: seq, items: encode_wire_serialized(&items) }),

@@ -59,6 +59,9 @@ pub use box_cursor::*;
 mod tuple_cursors;
 pub use tuple_cursors::*;
 
+#[path = "🏗️record-cursor/🦀️.rs"]
+pub mod record;
+
 #[cfg(test)]
 #[path="../🧮️scalar/🧪️tests/🦀️.rs"]
 mod scalar_authority_tests;

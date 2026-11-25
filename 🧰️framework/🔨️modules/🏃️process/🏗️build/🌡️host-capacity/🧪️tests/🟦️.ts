@@ -117,6 +117,14 @@ test("Waiters are served interactive first, then by arrival, then by id",()=>{
  expect(orderHostWaitersV1(waiters).map(row=>row.request.id)).toEqual(["cccccccc1","dddddddd1","aaaaaaaa1","bbbbbbbb1"]);
 });
 
+test("Starving waiters head their class by arrival whatever their session holds; the others keep the fair share order",()=>{
+ const base=fixture.cases[0]!.queue[0]!.request,make=(id:string,arrivedAtMs:number,session:string):HostWaiterV1=>({request:{...base,id,priority:"batch"} as never,arrivedAtMs,pid:1,session});
+ const waiters=[make("light001",50,"light"),make("heavy001",10,"heavy"),make("heavy002",20,"heavy"),make("light002",60,"light")],ledger=[{session:"heavy",reservedMegabytes:4000},{session:"light",reservedMegabytes:100}] as never;
+ expect(orderHostWaitersV1(waiters,ledger).map(row=>row.request.id),"fair share: the lighter session first").toEqual(["light001","light002","heavy001","heavy002"]);
+ expect(orderHostWaitersV1(waiters,ledger,row=>row.arrivedAtMs<=20).map(row=>row.request.id),"the starving first, by arrival, then the fair share").toEqual(["heavy001","heavy002","light001","light002"]);
+ expect(orderHostWaitersV1(waiters,ledger,()=>true).map(row=>row.request.id),"all starving: plain arrival").toEqual(["heavy001","heavy002","light001","light002"]);
+});
+
 test("Elastic waiters stay behind every other request but are served interactive first, then by arrival, among themselves",()=>{
  const base=fixture.cases[0]!.queue[0]!.request,make=(id:string,arrivedAtMs:number,extra:object):HostWaiterV1=>({request:{...base,id,...extra} as never,arrivedAtMs,pid:1});
  const waiters=[make("eeeeeeee1",1,{elastic:true}),make("ffffffff1",9,{elastic:true,priority:"interactive"}),make("gggggggg1",2,{elastic:true}),make("hhhhhhhh1",8,{elastic:false,priority:"batch"})];
@@ -166,7 +174,7 @@ test("Every refusal has an English and a German message with the same placeholde
  const english=schema.definitions.Messages.const.en.errors,german=schema.definitions.Messages.const.de.errors,names=Object.keys(english) as (keyof typeof english)[];
  expect(Object.keys(german).sort()).toEqual([...names].sort());
  const placeholders=(text:string)=>[...text.matchAll(/\{([a-z]+)\}/gu)].map(match=>match[1]).sort();
- const values={definition:"Grant",detail:"missing id",platform:"plan9",operation:"graph-plan",minimum:2048,total:16384,floor:2048,capacity:14336,needed:4096,spare:952,seconds:120,holders:"--language (running, 1 job(s), 3054 MB)"};
+ const values={definition:"Grant",detail:"missing id",platform:"plan9",operation:"graph-plan",total:16384,floor:2048,capacity:14336,needed:4096,spare:952,seconds:120,holders:"--language (running, 1 job(s), 3054 MB)",minimum:2048,cores:4,reserved:1024,availablecores:2};
  for(const name of names){
   expect(placeholders(german[name]),name).toEqual(placeholders(english[name]));
   for(const language of ["en","de"] as const)expect(formatHostCapacityErrorV1(language,name,values),`${language} ${name}`).not.toMatch(/\{[a-z]+\}/u);

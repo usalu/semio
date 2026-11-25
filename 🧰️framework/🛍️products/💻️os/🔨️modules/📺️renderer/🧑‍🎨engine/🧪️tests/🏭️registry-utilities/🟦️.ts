@@ -43,6 +43,14 @@ describe("registry-derived utilities and activation (P5)", () => {
     expect(brush && brush.kind === "toggle" && "onChange" in brush ? brush.onChange : undefined).toEqual({ controllerId: "draw", action: "setActiveUtility", args: { utilityId: "brush", windowId: "w1" } });
   });
 
+  it("shows the window kind's authored initial utility pressed until the register is written, and keeps an explicit clear cleared", () => {
+    const kind = { utilities: [], initialUtilityId: "select" } as unknown as Pick<AppWindowKindDefinition, "utilities" | "initialUtilityId">;
+    const pressedIds = (active: string | null | undefined) => resolveUtilityNodes(app, kind, active, "w1").flatMap((node) => (node.kind === "collection" ? node.children : [node])).filter((node) => node.kind === "toggle" && node.pressed).map((node) => node.id);
+    expect(pressedIds(undefined)).toEqual(["select"]);
+    expect(pressedIds("brush")).toEqual(["brush"]);
+    expect(pressedIds(null)).toEqual([]);
+  });
+
   it("deriveUtilityNodes twin marks exactly the active utility pressed", () => {
     const nodes = deriveUtilityNodes(
       "draw",

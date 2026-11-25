@@ -204,10 +204,12 @@ describe("AdminSessionProvider", () => {
         </AdminSessionProvider>
       </AdminLocaleProvider>,
     );
-    await screen.findByRole("alert");
+    const alert = await screen.findByRole("alert");
+    expect(alert.querySelector('[data-window-frame][data-level="window"]')).not.toBeNull();
+    expect(screen.getByRole("heading", { level: 1 }).closest('[data-window-frame-chip][data-level="pane"]')).not.toBeNull();
     expect(window.location.hash).toBe("");
     expect(fetchMock).not.toHaveBeenCalled();
-    expect(screen.getByText(/dev-secure-admin/)).toBeTruthy();
+    expect(screen.getByText(/dev-secure-admin/).closest("[data-window-frame-content]")).not.toBeNull();
   });
 });
 //#endregion 🔑️AdminBootstrap
@@ -498,6 +500,28 @@ describe("Flush pages", () => {
     }
   });
 
+  it("lays the navbar as a glass band over the pages, which keep its clearance at rest and scroll beneath it", async () => {
+    mockFetch({ "/admin/api/overview": OVERVIEW_BODY });
+    render(
+      <AdminLocaleProvider>
+        <AdminSessionProvider baseUrl="http://hub.test">
+          <AdminApp />
+        </AdminSessionProvider>
+      </AdminLocaleProvider>,
+    );
+    await waitFor(() => expect(document.querySelector('[data-slot="admin-overview"]')).not.toBeNull());
+    const navbar = document.querySelector('[data-slot="navbar"]')!;
+    const band = navbar.parentElement!;
+    expect(band.classList.contains("absolute")).toBe(true);
+    expect(band.classList.contains("top-0")).toBe(true);
+    expect(band.classList.contains("inset-x-0")).toBe(true);
+    expect(navbar.hasAttribute("data-glass-chip")).toBe(true);
+    const page = document.querySelector<HTMLElement>('[data-slot="admin-overview"]')!;
+    expect(page.className).toContain("pt-[var(--admin-clear-top,0px)]");
+    expect(page.className).toContain("scroll-pt-[var(--admin-clear-top,0px)]");
+    expect(band.parentElement!.parentElement!.style.getPropertyValue("--admin-clear-top")).toBe("var(--navbar-band-height)");
+  });
+
   it("hands table action cells to flush groups instead of inset framed buttons", async () => {
     mockFetch({
       "/admin/api/overview": OVERVIEW_BODY,
@@ -519,7 +543,10 @@ describe("Flush pages", () => {
     expect(cell.className).not.toContain("!");
     expect(cell.firstElementChild!.className).toContain("items-stretch");
     expect(cell.firstElementChild!.className).not.toContain("gap-1");
-    expect(ownFrames(document.querySelector("tbody")!)).toHaveLength(0);
+    expect(ownFrames(cell)).toHaveLength(0);
+    const rows = [...document.querySelectorAll("tbody > tr")];
+    expect(rows.length).toBeGreaterThan(0);
+    for (const row of rows) expect(row.getAttribute("data-shared-border-edges")).toBe("bottom");
   });
 
   it("scrolls the tab bar inside its navbar cell so no tab clips at the viewport edge", async () => {

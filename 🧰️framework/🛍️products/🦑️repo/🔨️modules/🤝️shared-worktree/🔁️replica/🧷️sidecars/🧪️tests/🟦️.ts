@@ -5,6 +5,7 @@ import {existsSync,mkdirSync,mkdtempSync,readFileSync,rmSync,writeFileSync} from
 import {tmpdir} from "node:os";
 import {join,relative} from "node:path";
 import {countPlatformPeersV1,createSidecarsV1,sidecarBackoffMillisecondsV1,wantedSidecarsV1,type SidecarChildV1,type SidecarSettingsV1} from "../🟦️.ts";
+import {ownProcessIdentityV1} from "../../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts";
 
 const here=import.meta.dir,scratch:string[]=[],stoppers:(()=>Promise<void>)[]=[];
 afterEach(async()=>{for(const stop of stoppers.splice(0))await stop();for(const path of scratch.splice(0))rmSync(path,{recursive:true,force:true});});
@@ -191,7 +192,7 @@ test("a record that nobody refreshes is not adopted even when its process id liv
  const box=adoption();
  mkdirSync(join(box.worktree,".cache","f","sidecars"),{recursive:true});
  const hash=createHash("sha256").update(readFileSync(box.entry)).digest("hex");
- writeFileSync(box.record,JSON.stringify({version:1,name:"role",pid:process.pid,startedMs:Date.now()-60000,wallMs:Date.now()-60000,entrySha256:hash}));
+ writeFileSync(box.record,JSON.stringify({version:1,name:"role",...ownProcessIdentityV1(),startedMs:Date.now()-60000,wallMs:Date.now()-60000,entrySha256:hash}));
  const first=box.daemon(2500);
  await until(()=>first.supervisor.report()[0]!.state==="running"&&box.lines().length>=2,30000,"a fresh sidecar started");
  const pid=first.supervisor.report()[0]!.pid!;

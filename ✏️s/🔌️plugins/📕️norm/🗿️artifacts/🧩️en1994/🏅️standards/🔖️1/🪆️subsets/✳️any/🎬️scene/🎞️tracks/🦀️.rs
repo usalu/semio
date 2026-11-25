@@ -5,51 +5,14 @@ use super::columns::steel_section;
 use super::facts::{BeamFacts, ColumnFacts};
 use super::kit::*;
 use super::layout::Layout;
-use super::mechanics as mech;
+use super::eigen_modes::{column_buckling, girder_ltb};
 use super::scene::*;
 use super::SceneInput;
 
 
 pub(crate) const MODES: [(&str, &str, &str); 2] = [(LAYER_MODE_BUCKLING, "Column buckling", "Stützenknicken"), (LAYER_MODE_LTB, "Lateral-torsional buckling", "Biegedrillknicken")];
 
-const STEEL_E: f64 = 210.0e9;
-const STEEL_G: f64 = 81.0e9;
 const AMPLITUDE: f64 = 0.04;
-
-/// 🌀️ The critical load of a pinned composite column, the Euler load of its effective stiffness (EN 1994-1-1, 6.7.3.3), with the first eigenform.
-pub(crate) fn column_buckling(f: &ColumnFacts) -> Option<(f64, Vec<(f64, [f64; 3])>)> {
-    let c = &f.column;
-    let ei = super::checks::part_column::ei_eff_nmm2(c, f.annex, super::checks::catalogue::ecm_pa(c.concrete_f_ck_pa));
-    mech::member_modes::buckling(&mech::member_modes::Props { length: c.length_m.max(0.1), e: ei, g: 1.0, a: 1.0, iy: 1.0, iz: 1.0, j: 1.0 }, mech::member_modes::Ends::Pinned).ok()
-}
-
-/// 🦋️ The critical moment of the bare steel girder under uniform moment between fork ends, braced every `ltb_length_m`, with the first eigenform as `(at, lateral)`.
-pub(crate) fn girder_ltb(f: &BeamFacts) -> Option<(f64, Vec<(f64, f64)>)> {
-    let (s, l) = (&f.steel, f.l_total);
-    let (h, b, tw, tf) = (s.height_m, s.width_m, s.tw_m, s.tf_m);
-    let iz = 2.0 * tf * b.powi(3) / 12.0 + (h - 2.0 * tf) * tw.powi(3) / 12.0;
-    let spacing = f.beam.ltb_length_m;
-    let restraints = if spacing > 1e-6 && spacing < l - 1e-6 { (1..).map(|k| k as f64 * spacing).take_while(|x| *x < l - 1e-6).map(|x| mech::LtbRestraint { x, lateral: true, twist: true }).collect() } else { Vec::new() };
-    let member = mech::LtbMember {
-        length: l,
-        e: STEEL_E,
-        g: STEEL_G,
-        iz,
-        iw: iz * (h - tf).powi(2) / 4.0,
-        j: (2.0 * b * tf.powi(3) + (h - 2.0 * tf) * tw.powi(3)) / 3.0,
-        polar_radius_sq: (s.i_y_m4 + iz) / s.a_m2.max(1e-9),
-        end_i: mech::ltb::fork_end(),
-        end_j: mech::ltb::fork_end(),
-        restraints,
-        moment: mech::ltb::uniform_moment(1.0, l),
-        elements: 32,
-        ..Default::default()
-    };
-    let result = mech::ltb::ltb_analyze(&member, &mech::Control::none()).ok()?;
-    let last = result.shape.len().saturating_sub(1);
-    let shape = result.shape.iter().enumerate().filter(|(i, _)| i % 4 == 0 || *i == last).map(|(_, p)| (p.x / l, p.lateral + p.twist * h / 2.0)).collect();
-    Some((result.mcr, shape))
-}
 
 fn overlay(index: u32, load_factor: Option<f64>, length: f64, samples: Vec<DisplacementSample>) -> DeformationOverlay {
     DeformationOverlay { surface: Vec::new(), motion: Motion::Harmonic, load_factor: load_factor.filter(|a| a.is_finite() && *a > 0.0), kind: DeformationKind::Mode, index, frequency: None, participation: 1.0, scale: AMPLITUDE * length, samples }

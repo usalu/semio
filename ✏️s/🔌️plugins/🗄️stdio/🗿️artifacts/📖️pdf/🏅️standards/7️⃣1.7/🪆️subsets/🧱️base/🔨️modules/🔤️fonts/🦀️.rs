@@ -275,6 +275,8 @@ pub struct FontCodec {
     code_to_gid: BTreeMap<u32, u16>,
     to_unicode: Option<PdfToUnicode>,
     pub type3_matrix: Option<[f64; 6]>,
+    defined_codes: Option<std::collections::BTreeSet<u32>>,
+    unicode_codes: bool,
 }
 
 use crate::standards::v1_7::subsets::base::io::foreign_artifacts::PdfArtifactResourcePort;
@@ -513,7 +515,7 @@ fn zapf_unicode(name: &str) -> Option<&'static str> {
 impl FontCodec {
     /// 🏗️ Builds the codec for `font`.
     pub fn new(font: &PdfFont,resources:&dyn PdfArtifactResourcePort) -> PResult<Self> {
-        let mut codec = Self { composite: false, cid_codec: None, code_to_text: BTreeMap::new(), text_to_code: HashMap::new(), simple_widths: BTreeMap::new(), default_width: 0.0, cid_widths: BTreeMap::new(), cid_to_gid: BTreeMap::new(), cid_to_gid_identity: true, program: None, raw_cff: None, code_to_gid: BTreeMap::new(), to_unicode: font.to_unicode.clone(), type3_matrix: None };
+        let mut codec = Self { composite: false, cid_codec: None, code_to_text: BTreeMap::new(), text_to_code: HashMap::new(), simple_widths: BTreeMap::new(), default_width: 0.0, cid_widths: BTreeMap::new(), cid_to_gid: BTreeMap::new(), cid_to_gid_identity: true, program: None, raw_cff: None, code_to_gid: BTreeMap::new(), to_unicode: font.to_unicode.clone(), type3_matrix: None, defined_codes: None, unicode_codes: false };
         match &font.kind {
             PdfFontKind::Type1 { base_font, encoding, first_char, widths, descriptor, program } => {
                 let standard = standard_font(base_font);
@@ -530,6 +532,10 @@ impl FontCodec {
                     _ => standard_font(base_font).filter(|f| f.symbolic).map(|f| f.builtin_encoding.iter().map(|(c, n)| (*c, n.to_string())).collect()).unwrap_or_default(),
                 };
                 let names = simple_names(encoding, &builtin, (raw.is_none() || program.is_none()) && symbolic && !builtin.is_empty());
+                if let (Some(PdfFontProgram::Type1 { .. }), Some(char_set)) = (program, descriptor.as_ref().and_then(|descriptor| descriptor.char_set.as_deref())) {
+                    let defined: std::collections::HashSet<&str> = char_set.split('/').map(str::trim).filter(|name| !name.is_empty()).collect();
+                    codec.defined_codes = Some(names.iter().filter(|(_, name)| defined.contains(name.as_str())).map(|(code, _)| *code).collect());
+                }
                 if let Some(cff) = cff {
                     let mut glyphs = BTreeMap::new();
                     if cff.visit_glyph_names(|name, id| { glyphs.insert(name, id); }).is_some() {
@@ -592,15 +598,19 @@ impl FontCodec {
                 }
                 codec.program = parsed;
             }
-            PdfFontKind::Type3 { font_matrix, encoding, first_char, widths, .. } => {
+            PdfFontKind::Type3 { font_matrix, encoding, first_char, widths, char_procs, .. } => {
                 let names = simple_names(encoding, &[], true);
+                codec.defined_codes = Some(names.iter().filter(|(_, name)| char_procs.iter().any(|glyph| glyph.name == **name)).map(|(code, _)| *code).collect());
                 codec.install_simple(&names, *first_char, widths, None, None, false);
                 codec.type3_matrix = Some(*font_matrix);
             }
             PdfFontKind::Type0 { cmap: encoding, descendant, .. } => {
                 codec.composite = true;
                 codec.cid_codec = Some(match encoding {
-                    PdfCMap::Predefined { name } => cmap::CidCodec::identity(name.ends_with("-V")),
+                    PdfCMap::Predefined { name } => {
+                        codec.unicode_codes = name.contains("-UCS2-") || name.contains("-UTF16-");
+                        cmap::CidCodec::identity(name.ends_with("-V"))
+                    }
                     PdfCMap::Embedded { cmap } => cmap::CidCodec::embedded(cmap),
                 });
                 codec.default_width = descendant.default_width;
@@ -760,9 +770,11 @@ impl FontCodec {
         }
     }
 
+    /// 🔤️ The Unicode text of a code: its ToUnicode mapping, the codec's own glyph-name text, or, for a predefined UCS-2 / UTF-16 CMap, the code itself (a basic-plane scalar).
     fn text_for_code(&self, code: u32) -> Option<Cow<'_, str>> {
         self.to_unicode.as_ref().and_then(|map| cmap::to_unicode_text(map, code))
             .or_else(|| self.code_to_text.get(&code).map(|text| Cow::Borrowed(text.as_str())))
+            .or_else(|| self.unicode_codes.then(|| char::from_u32(code)).flatten().map(|character| Cow::Owned(character.to_string())))
     }
 
     /// 📦️ Publishes logical codes using the current physical font codespace.
@@ -790,7 +802,8 @@ impl FontCodec {
             let mut matched = false;
             for length in (1..=cursor.chars().take(4).count()).rev() {
                 let candidate: String = cursor.chars().take(length).collect();
-                let mapped=self.to_unicode.as_ref().and_then(|map|cmap::to_unicode_reverse(map,&candidate).map(|code|(code,self.cid_codec.as_ref().map_or(1,|codec|codec.width_of(code))))).or_else(||self.text_to_code.get(&candidate).copied());
+                let mapped=self.to_unicode.as_ref().and_then(|map|cmap::to_unicode_reverse(map,&candidate).map(|code|(code,self.cid_codec.as_ref().map_or(1,|codec|codec.width_of(code))))).or_else(||self.text_to_code.get(&candidate).copied())
+                    .or_else(|| { let mut characters = candidate.chars(); match (characters.next(), characters.next()) { (Some(character), None) if self.unicode_codes && u32::from(character) <= 0xFFFF => Some((u32::from(character), 2)), _ => None } });
                 if let Some((code,width))=mapped {
                     if self.composite {
                         cmap::CidCodec::push_code(&mut out, code, width);
@@ -809,9 +822,12 @@ impl FontCodec {
         Some(out)
     }
 
-    /// 🖋️ Checks that the encoded run has known glyphs when the font includes a program.
+    /// 🖋️ Checks that the encoded run has known glyphs: a glyph procedure of a Type 3 font, a glyph named by a Type 1 subset's `/CharSet`, a glyph of an embedded outline program.
     pub fn shows_text(&self, text: &str) -> bool {
         let Some(bytes) = self.encode(text) else { return false; };
+        if let Some(defined) = &self.defined_codes {
+            if !cmap::codes(self.cid_codec.as_ref(), &bytes).all(|(code, _)| defined.contains(&code)) { return false; }
+        }
         if self.program.is_none() && self.raw_cff.is_none() { return true; }
         let mut codes = cmap::codes(self.cid_codec.as_ref(), &bytes);
         codes.all(|(code, _)| {

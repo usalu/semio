@@ -1,0 +1,3 @@
+# Desktop MCP Reload Audit
+
+The enabled tool catalog contains no desktop action for restarting an MCP server, reloading its configuration, or substituting project configuration in the current session. Desktop actions cover chats, projects, panels, automations and plugin management; JavaScript reset actions reset only their own execution kernels. The MCP resource and template inventory exposes no semio server registration or control surface. Thus no supported noninteractive current-session reload path was found through the exposed tools. This is an observation of the available interfaces, not a claim about unexposed desktop capabilities. No protected configuration was edited and no approval was requested.

@@ -495,7 +495,7 @@
 \newcommand{\semio@table@long@part@overlay}{%
   \begingroup
     \sbox{\semio@table@long@part@chip@box}{%
-      \semio@chip@muted{lb}{\semio@table@long@part@number}%
+      \semio@chip@pane{lb}{\semio@table@long@part@number}%
     }%
     \nointerlineskip
     \hbox to 0pt{%
@@ -643,7 +643,7 @@
   #4%
   \end{longtable}%
   \semio@table@long@parts@record
-  \semio@frame@close{\semio@spacing@table@outer}%
+  \semio@frame@seal{\semio@spacing@table@outer}%
   \endgroup
   \global\semio@table@long@mode=0\relax
   \global\semio@table@row@startedfalse
@@ -1149,7 +1149,7 @@
 % path ? consumed by the register ? is re-established explicitly afterwards.
 \newcommand{\SemioProjectHeadingSilent}[2]{%
   \begingroup
-    \long\def\semio@heading@frame##1##2##3##4##5{}%
+    \long\def\semio@heading@frame##1##2##3{}%
     \subsection{#1}\label{#2}%
   \endgroup
   \@ifundefined{semio@hierarchy@path@set}{}{\semio@hierarchy@path@set{\thesubsection}}%
@@ -1377,7 +1377,7 @@
   #3%
   \end{tabular}%
   \par
-  \semio@frame@close{\semio@spacing@table@outer}%
+  \semio@frame@seal{\semio@spacing@table@outer}%
   \endgroup
   \global\semio@table@long@mode=0\relax
   \global\semio@table@row@startedfalse
@@ -1393,7 +1393,7 @@
 % back there like every other hierarchy key chip. This number reaches the title
 % chrome raw rather than through \semio_kind_chip_number:nn, so both the link and
 % the colour are attached here: the explicit \textcolor restates the muted tone
-% \semio@chip@muted applies anyway, which hyperref's colorlinks would
+% \semio@chip@pane applies anyway, which hyperref's colorlinks would
 % otherwise override. Robust, because the key is carried to the chrome row
 % through a \protected@edef and a further \edef before it is ever typeset.
 \NewDocumentCommand \semio@project@key@chip { m } {%

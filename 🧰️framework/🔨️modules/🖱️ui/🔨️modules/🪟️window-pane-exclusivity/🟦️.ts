@@ -19,3 +19,33 @@ export function resolveWindowPaneExpansion(open: WindowPaneOpen, last: WindowPan
 export function windowQuickActionsCovered(expanded: WindowPaneOpen, exclusive: boolean): boolean {
   return exclusive && (expanded.search || expanded.measures);
 }
+
+/** 📐️ The horizontal span one open pane covers, in pixels from the left edge of the window body. */
+export type WindowPaneSpanV1 = { readonly leftPx: number; readonly rightPx: number };
+
+/** 🧱️ The padding that keeps a window's viewport beside its open panes. */
+export type WindowViewportInsetV1 = { readonly leftPx: number; readonly rightPx: number };
+
+/** 🔭️ A viewport narrower than this is not worth keeping beside the panes; they overlay it instead. */
+export const windowViewportMinWidthPx = 160;
+
+/** 🔭️ A pane or panel only claims the viewport's side when it covers at least this share of the window body's height; shorter ones overlay it. */
+export const windowViewportCoverMinShare = 0.5;
+
+/** 🔭️ Where a window's viewport keeps rendering while panes are open: the widest strip of the body that no pane covers, or no inset when that strip is narrower than {@link windowViewportMinWidthPx}. */
+export function windowViewportInsetV1(bodyWidthPx: number, panes: readonly WindowPaneSpanV1[], minViewportPx: number = windowViewportMinWidthPx): WindowViewportInsetV1 {
+  const none: WindowViewportInsetV1 = { leftPx: 0, rightPx: 0 };
+  const covered = panes
+    .map((pane) => ({ from: Math.max(0, pane.leftPx), to: Math.min(bodyWidthPx, pane.rightPx) }))
+    .filter((span) => span.to > span.from)
+    .sort((a, b) => a.from - b.from);
+  if (covered.length === 0) return none;
+  let best = { from: 0, to: 0 };
+  let cursor = 0;
+  for (const span of covered) {
+    if (span.from - cursor > best.to - best.from) best = { from: cursor, to: span.from };
+    cursor = Math.max(cursor, span.to);
+  }
+  if (bodyWidthPx - cursor > best.to - best.from) best = { from: cursor, to: bodyWidthPx };
+  return best.to - best.from < minViewportPx ? none : { leftPx: Math.round(best.from), rightPx: Math.round(bodyWidthPx - best.to) };
+}

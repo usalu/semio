@@ -1198,7 +1198,7 @@ async function captureCargoArtifacts(manifest: string, args: string[], policy: C
     throw error;
   }
   checkResourceLeaseControl(control);
-  const endCargo=phaseLedgerV1().begin("cargo"),cargoStartedMs=Date.now();const child = spawn(commandPort.command, [...commandPort.args, options.command ?? "build", "--locked", "--manifest-path", path, ...cargoArgs, ...cargoTimingsArgumentsV1(options.command,environment), "--message-format=json-render-diagnostics", ...compilerArgs], {
+  const endCargo=phaseLedgerV1().begin("cargo"),cargoStartedMs=Date.now();const child = spawn(commandPort.command, [...commandPort.args, options.command ?? "build", "--locked", "--manifest-path", path, ...cargoArgs, ...cargoTimingsArgumentsV1(options.command,environment), "--message-format=json-render-diagnostics", ...compilerArgs], {windowsHide:true,
     cwd: policy.cwd,
     env: { ...(options.environment ?? process.env), SEMIO_COMPILER_RESOURCE_ROOT: join(policy.buildDirectory, COMPILER_RESOURCE_DIRECTORY_V1), CARGO_TARGET_DIR:targetDirectory, CARGO_BUILD_BUILD_DIR: policy.buildDirectory },
     detached: process.platform !== "win32",

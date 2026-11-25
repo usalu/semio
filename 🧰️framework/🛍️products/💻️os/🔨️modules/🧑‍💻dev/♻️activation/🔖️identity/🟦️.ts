@@ -1,6 +1,6 @@
 import { createReadStream, statSync } from "node:fs";
 import { createHash } from "node:crypto";
-import { writeStagedSourceFreshness } from "@semio-tech/framework-plugin/build/freshness";
+import { writeStagedSourceFreshness } from "../../../🔌️plugin/📦️packages/🦀️rust/🏗️build/🔍️freshness/🟦️.ts";
 import type { ActivationArtifact } from "../🟦️.ts";
 
 /** 🔏️ Includes every completed module/support byte in its runtime activation identity. */

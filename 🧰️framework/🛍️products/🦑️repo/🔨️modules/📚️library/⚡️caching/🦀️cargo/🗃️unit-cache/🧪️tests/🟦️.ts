@@ -252,6 +252,14 @@ test("a compiler failure is returned unchanged and publishes nothing", async()=>
  expect(statSync(join(cache,"e")).isDirectory()).toBe(true);
 },120000);
 
+/** ⏱️ The `publish` event times the publication alone: a unit whose compile takes 1.5 s reports a publish far below it, never compile plus publish. */
+test("the publish event measures the publication, not the compile before it", async()=>{
+ const directory=scratch(),workspace=join(directory,"ws"),cache=join(directory,"cache");writeWorkspace(workspace,["l1"],false);
+ const run=await session(workspace,cache,"p1",["-p","l1"],{SEMIO_UNIT_CACHE_INNER:JSON.stringify([process.execPath,slow,"l1","1500","--","rustc"])});expect(run.code,run.output).toBe(0);
+ const rows=events(cache,"p1") as (Event&{milliseconds:number})[],miss=rows.find(row=>row.kind==="miss"&&row.crate==="l1"),publish=rows.find(row=>row.kind==="publish"&&row.crate==="l1");
+ expect(miss!.milliseconds).toBeGreaterThanOrEqual(1500);expect(publish!.milliseconds).toBeLessThan(miss!.milliseconds-1000);
+},120000);
+
 test("cleanup removes by recency inside its bounds, keeps a lane with a live marker, drops entries of removed objects and leaves the cache usable", async()=>{
  const directory=scratch(),workspace=join(directory,"ws"),cache=join(directory,"cache");writeWorkspace(workspace,["l1"],false);
  const inner={SEMIO_UNIT_CACHE_INNER:JSON.stringify(["rustc"])};

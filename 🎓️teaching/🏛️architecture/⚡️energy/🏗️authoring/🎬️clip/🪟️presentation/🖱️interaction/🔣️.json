@@ -91,7 +91,6 @@
   },
   "control": {
     "size": 22.4,
-    "inset": 3.2,
     "iconSize": 16,
     "titleHeight": 24,
     "placement": "cap-right",

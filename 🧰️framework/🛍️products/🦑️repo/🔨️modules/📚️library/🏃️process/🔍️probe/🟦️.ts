@@ -29,7 +29,7 @@ const { readFileSync, writeFileSync } = await import("node:fs");
 const { spawnSync } = await import("node:child_process");
 const spec = JSON.parse(readFileSync(process.env.SEMIO_PROCESS_CAPTURE_SPEC, "utf8"));
 const input = spec.input === undefined ? undefined : Buffer.from(spec.input, "base64");
-const result = spawnSync(spec.cmd, spec.args, { cwd: spec.cwd, env: spec.env, timeout: spec.timeout, killSignal: spec.killSignal, stdio: [input === undefined ? "ignore" : "pipe", "pipe", "pipe"], ...(input === undefined ? {} : { input }), maxBuffer: 536870912 });
+const result = spawnSync(spec.cmd, spec.args, { windowsHide: true, cwd: spec.cwd, env: spec.env, timeout: spec.timeout, killSignal: spec.killSignal, stdio: [input === undefined ? "ignore" : "pipe", "pipe", "pipe"], ...(input === undefined ? {} : { input }), maxBuffer: 536870912 });
 writeFileSync(spec.stdoutPath, result.stdout ?? Buffer.alloc(0));
 writeFileSync(spec.stderrPath, result.stderr ?? Buffer.alloc(0));
 const sourceError = result.error;

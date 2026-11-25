@@ -37,6 +37,12 @@ test("configured stock funds the measured typed Note readiness frontier", () => 
       expect(actual, axis).toBeGreaterThan(0);
     }
     expect(policy.drive.maximumItems).toBeGreaterThanOrEqual(typedNoteOpen.driveItems);
+    const operation = JSON.parse(readFileSync(MCP_HOST_OPERATION_POLICY_PATH, "utf8"));
+    const crossing = typedNoteOpen.infrastructureCrossing;
+    const available = database.query<{ remaining: number }, [number, number]>("select ?1 - ?2 as remaining");
+    expect(available.get(operation.infrastructure.retained.maximumItems, crossing.itemsSpent)?.remaining).toBeGreaterThanOrEqual(crossing.itemsRequired);
+    expect(available.get(operation.infrastructure.retained.maximumCopyBytes, crossing.copyBytesSpent)?.remaining).toBeGreaterThanOrEqual(crossing.copyBytesRequired);
+    expect(policy.root.operationFuel).toBeGreaterThan(typedNoteOpen.physicalWorkRefused);
   } finally {
     database.close();
   }

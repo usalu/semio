@@ -5,7 +5,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { compile } from "@tailwindcss/node";
 import Ajv2020 from "ajv/dist/2020.js";
-import { chromium } from "playwright";
+import { launchChromium } from "../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🌐️chromium-launch/🟦️";
 import { afterEach, describe, expect, it } from "vitest";
 import { cleanup, render } from "@semio-tech/ui-react/test";
 import { GraphTimelineHost } from "../../🟦️.tsx";
@@ -54,7 +54,7 @@ describe("GraphTimeline styled layout", () => {
     const compiler = await compile(readFileSync(stylesPath, "utf8"), { base: dirname(stylesPath), from: stylesPath, onDependency: () => {} });
     const candidates = [...new Set([...view.container.querySelectorAll("[class]")].flatMap((element) => [...element.classList]))];
     const css = compiler.build(candidates).replace(/url\("\/🖼️assets\/([^"\n]+)"\)/gu, (_, path: string) => `url("data:font/woff2;base64,${readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🖼️assets", path)).toString("base64")}")`);
-    const browser = await chromium.launch({ headless: true });
+    const browser = await launchChromium();
     try {
       const page = await browser.newPage({ viewport: fixture.viewport });
       await page.setContent(`<div class="semio-scope" style="width:${fixture.viewport.width}px;height:${fixture.viewport.height}px">${view.container.innerHTML}</div>`);

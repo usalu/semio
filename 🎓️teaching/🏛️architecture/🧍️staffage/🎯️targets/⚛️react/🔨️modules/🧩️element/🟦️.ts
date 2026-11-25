@@ -21,7 +21,7 @@ import type { ModelStage, StageOptions } from "../🧊️spatial/🖥️stage/�
 import { DEFAULT_CAMERA, isCameraPreset } from "../🧊️spatial/🟦️.ts";
 import { StaffageClock } from "../⏱️clock/🧱️core/🟦️.ts";
 import { describeScene, isView, valueText, valuedItems, word } from "../🗣️labels/🟦️.ts";
-import { defaultQuery, figureFrame, inlineSvg, queryAt, sceneExtent } from "../🧮️pipeline/🟦️.ts";
+import { defaultQuery, figureFrame, inlineSvg, queryAt, sceneExtent, sceneWindow } from "../🧮️pipeline/🟦️.ts";
 import { ensureViewpoint, viewpointReady } from "../🧮️pipeline/🦥️lazy/🟦️.ts";
 import type { DepictionRequest, SceneFrame, StaffageFrame } from "../🧮️pipeline/🟦️.ts";
 import { SHEET_ORDER, VIEWPOINT_NAMES, VIEWPOINT_PHRASES, refusalOf, sheetOf, viewpointWord } from "../🔭️viewpoints/🟦️.ts";
@@ -298,7 +298,7 @@ export function defineStaffageElement(catalog: StaffageCatalog, name = "staffage
         return;
       }
       const { scene } = frame;
-      const window = flowing ? unionFrame(sceneExtent(scene), flowFrameOf(frame.state, viewpoint!, scene.metadata.mmPerMetre, viewpoint === "axonometric" ? axonometricCamera() : undefined)) : undefined;
+      const window = flowing ? unionFrame(sceneExtent(scene), flowFrameOf(frame.state, viewpoint!, scene.metadata.mmPerMetre, viewpoint === "axonometric" ? axonometricCamera() : undefined)) : sceneWindow(scene);
       const [widthMm, heightMm] = window === undefined ? [scene.widthMm, scene.heightMm] : [window.maxX - window.minX, window.maxY - window.minY];
       const size = fit === "paper" ? `width:${widthMm * zoom}mm;height:${heightMm * zoom}mm` : `width:100%;height:100%;aspect-ratio:${widthMm} / ${heightMm}`;
       const items = valuedItems(scene);

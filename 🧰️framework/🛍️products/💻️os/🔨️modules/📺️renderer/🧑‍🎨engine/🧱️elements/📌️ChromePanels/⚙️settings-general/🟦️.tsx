@@ -107,9 +107,10 @@ export function buildSettingsGeneralTree(host: SettingsHostApi): TreePanelConfig
                 {
                   id: "framework.settings.appearance",
                   label: shellLabel("ui.settings.tab.appearance"),
+                  labelId: "framework.settings.appearance.label",
                   control: (
                     <Select id="framework.settings.appearance" value={host.appearance} onValueChange={(value) => host.setAppearance(value)}>
-                <SelectTrigger id="framework.settings.appearance" className="h-small w-32" size="sm">
+                      <SelectTrigger id="framework.settings.appearance" aria-labelledby="framework.settings.appearance.label" className="h-small w-32" size="sm">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -124,11 +125,12 @@ export function buildSettingsGeneralTree(host: SettingsHostApi): TreePanelConfig
           {
             id: "framework.settings.layout",
             label: shellLabel("ui.settings.tab.layout"),
+            labelId: "framework.settings.layout.label",
             control: host.mobileActive ? (
               <span className="text-sm text-muted-foreground">{shellLabel("settings.layout.mobile")}</span>
             ) : (
               <Select id="framework.settings.layout" value={host.layout} onValueChange={(value) => host.setLayout(value === "tablet" ? "tablet" : "desktop")}>
-                <SelectTrigger id="framework.settings.layout" className="h-small w-32" size="sm">
+                <SelectTrigger id="framework.settings.layout" aria-labelledby="framework.settings.layout.label" className="h-small w-32" size="sm">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -141,9 +143,10 @@ export function buildSettingsGeneralTree(host: SettingsHostApi): TreePanelConfig
           {
             id: "framework.settings.driver",
             label: shellLabel("ui.settings.tab.driver"),
+            labelId: "framework.settings.driver.label",
             control: (
               <Select id="framework.settings.driver" value={host.driverId} onValueChange={(value) => host.setDriverId(value)}>
-                <SelectTrigger id="framework.settings.driver" className="h-small w-32" size="sm">
+                <SelectTrigger id="framework.settings.driver" aria-labelledby="framework.settings.driver.label" className="h-small w-32" size="sm">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -162,9 +165,10 @@ export function buildSettingsGeneralTree(host: SettingsHostApi): TreePanelConfig
                 {
                   id: "framework.settings.language",
                   label: shellLabel("ui.settings.tab.language"),
+                  labelId: "framework.settings.language.label",
                   control: (
                     <Select id="framework.settings.language" value={host.locale} onValueChange={(value) => host.setLocale(value === "de" ? "de" : "en")}>
-                <SelectTrigger id="framework.settings.language" className="h-small w-32" size="sm">
+                      <SelectTrigger id="framework.settings.language" aria-labelledby="framework.settings.language.label" className="h-small w-32" size="sm">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -181,9 +185,10 @@ export function buildSettingsGeneralTree(host: SettingsHostApi): TreePanelConfig
                 {
                   id: "framework.settings.terminology",
                   label: shellLabel("ui.settings.tab.terminology"),
+                  labelId: "framework.settings.terminology.label",
                   control: (
                     <Select id="framework.settings.terminology" value={host.terminology} onValueChange={(value) => host.setTerminology(value)}>
-                <SelectTrigger id="framework.settings.terminology" className="h-small w-32" size="sm">
+                      <SelectTrigger id="framework.settings.terminology" aria-labelledby="framework.settings.terminology.label" className="h-small w-32" size="sm">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -202,9 +207,10 @@ export function buildSettingsGeneralTree(host: SettingsHostApi): TreePanelConfig
                 {
                   id: "framework.settings.mergePolicy",
                   label: shellLabel("ui.mutation.policy.setting.label"),
+                  labelId: "framework.settings.mergePolicy.label",
                   control: (
                     <Select id="framework.settings.mergePolicy" value={host.mergePolicy} onValueChange={(value) => host.setMergePolicy?.(value as MergePolicy)}>
-                <SelectTrigger id="framework.settings.mergePolicy" className="h-small w-32" size="sm">
+                      <SelectTrigger id="framework.settings.mergePolicy" aria-labelledby="framework.settings.mergePolicy.label" className="h-small w-32" size="sm">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -317,12 +323,15 @@ function driverAxisSelectRow<K extends keyof Omit<UiDriver, "id" | "label">>(
   options: readonly { readonly value: string; readonly label: string }[],
   onChange: (next: string) => void,
 ): TreeDataItem {
+  const id = `framework.settings.driver.${key}`;
+  const labelId = `${id}.label`;
   return {
-    id: `framework.settings.driver.${key}`,
+    id,
     label,
+    labelId,
     control: (
-      <Select id={`framework.settings.driver.${key}`} value={value as string} onValueChange={onChange}>
-                <SelectTrigger id={`framework.settings.driver.${key}`} className="h-small w-32" size="sm">
+      <Select id={id} value={value as string} onValueChange={onChange}>
+        <SelectTrigger id={id} aria-labelledby={labelId} className="h-small w-32" size="sm">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

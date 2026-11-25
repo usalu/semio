@@ -1,11 +1,10 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
-  "required": ["snaps", "gaps"],
+  "required": ["snaps"],
   "additionalProperties": false,
   "properties": {
     "$schema": { "type": "string" },
-    "snaps": { "type": "array", "items": { "type": "object", "required": ["height", "pixel", "expected"], "additionalProperties": false, "properties": { "height": { "type": "number", "minimum": 0 }, "pixel": { "type": "number", "exclusiveMinimum": 0 }, "expected": { "type": "number" } } } },
-    "gaps": { "type": "array", "items": { "type": "object", "required": ["gap", "sliver"], "additionalProperties": false, "properties": { "gap": { "type": "number" }, "sliver": { "type": "boolean" } } } }
+    "snaps": { "type": "array", "items": { "type": "object", "required": ["height", "pixel", "expected"], "additionalProperties": false, "properties": { "height": { "type": "number", "minimum": 0 }, "pixel": { "type": "number", "exclusiveMinimum": 0 }, "expected": { "type": "number" } } } }
   }
 }

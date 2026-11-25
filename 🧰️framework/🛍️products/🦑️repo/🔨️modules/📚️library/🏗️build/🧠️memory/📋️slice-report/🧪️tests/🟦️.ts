@@ -88,7 +88,7 @@ test("real process: a worker that reads writes the report while it works, the mo
  const root=temp("real"),script=join(root,"worker.mjs");
  writeFileSync(script,`import{registerSliceReportSourceV1,startSliceReportV1,noteSliceReportPhaseV1,noteSliceReportStopV1}from${JSON.stringify(join(import.meta.dir,"..","🟨️.mjs"))};
 registerSliceReportSourceV1("owners",()=>({jobs:5}));const r=startSliceReportV1({root:process.argv[2],footprint:{self:async()=>200*1048576,tree:async()=>300*1048576},intervalMilliseconds:50});
-noteSliceReportPhaseV1({phase:"inference",done:3,total:5});await new Promise(done=>setTimeout(done,200));
+noteSliceReportPhaseV1({phase:"inference",done:3,total:5});await new Promise(done=>setTimeout(done,200));for(const until=Date.now()+20000;Date.now()<until&&JSON.parse(r.read()??"{}").footprintMegabytes===undefined;)await new Promise(done=>setTimeout(done,50));
 noteSliceReportStopV1({stage:"inference",operation:"inference",usedMegabytes:9933,budgetMegabytes:6553});r.now("plan-stop");
 import{readFileSync}from"node:fs";console.log(JSON.parse(readFileSync(process.argv[2]+"/${P.directory}/${P.name}","utf8")).reason);r.stop();`);
  const run=spawnSync(process.execPath,[script,root],{encoding:"utf8"});
@@ -211,7 +211,7 @@ test("a process table names the descendants of a process by role with their resi
 
 test("real processes: the children of this process are found with their roles and the resident size that ps reports for each of them",async()=>{
  if(process.platform==="win32")return;
- const root=temp("census"),script=join(root,"probe-kid.mjs");writeFileSync(script,"const keep=new Uint8Array(24*1048576).fill(1);setTimeout(()=>keep.length,30000);");
+ const root=temp("census"),script=join(root,"probe-kid.mjs");writeFileSync(script,"const keep=new Uint8Array(24*1048576).fill(1);setInterval(()=>keep.fill(keep[0]^1),100);setTimeout(()=>process.exit(0),30000);");
  const kids=[spawn(process.execPath,[script],{stdio:"ignore"}),spawn(process.execPath,[script],{stdio:"ignore"})];
  try{
   await new Promise(resolve=>setTimeout(resolve,1500));

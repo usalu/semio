@@ -10382,6 +10382,56 @@
       "verb": "change"
     },
     {
+      "aggregateVariant": "ChangeZoneUnoccupiedVentilation",
+      "artifact": "🌬️din16798",
+      "edit": {
+        "rule": "set-field",
+        "path": "zones[].unoccupiedVentilation",
+        "selectors": [
+          {
+            "kind": "id",
+            "key": "zoneId"
+          }
+        ],
+        "value": "newUnoccupiedVentilation"
+      },
+      "entity": "zone-unoccupied-ventilation",
+      "kind": "change-zone-unoccupied-ventilation",
+      "module": "🌛️change-zone-unoccupied-ventilation",
+      "physicalLayout": "direct",
+      "record": "ChangedZoneUnoccupiedVentilation",
+      "source": "🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌛️change-zone-unoccupied-ventilation/🦀️.rs",
+      "standard": "🔖️1",
+      "subset": "✳️any",
+      "type": "ChangeZoneUnoccupiedVentilation",
+      "verb": "change"
+    },
+    {
+      "aggregateVariant": "ClearZoneUnoccupiedVentilation",
+      "artifact": "🌬️din16798",
+      "edit": {
+        "rule": "set-field",
+        "path": "zones[].unoccupiedVentilation",
+        "selectors": [
+          {
+            "kind": "id",
+            "key": "zoneId"
+          }
+        ],
+        "value": ""
+      },
+      "entity": "zone-unoccupied-ventilation",
+      "kind": "clear-zone-unoccupied-ventilation",
+      "module": "🌜️clear-zone-unoccupied-ventilation",
+      "physicalLayout": "direct",
+      "record": "ClearedZoneUnoccupiedVentilation",
+      "source": "🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌜️clear-zone-unoccupied-ventilation/🦀️.rs",
+      "standard": "🔖️1",
+      "subset": "✳️any",
+      "type": "ClearZoneUnoccupiedVentilation",
+      "verb": "clear"
+    },
+    {
       "aggregateVariant": "ChangeAssumedCraneHorizontal",
       "artifact": "🏋️en1991",
       "edit": {

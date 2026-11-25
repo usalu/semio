@@ -1,0 +1,20 @@
+--- a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📤️export/🧪️tests/🔬️unit/🦀️.rs
++++ b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📤️export/🧪️tests/🔬️unit/🦀️.rs
+@@ -138,7 +138,7 @@
+     let mut previous_steps = 0;
+     for drawing in drawings {
+         let expected = dwg_to_bytes(&drawing).expect("one-shot write");
+-        let (bytes, steps) = drain_cursor(DwgWriteCursor::new(drawing));
++        let (bytes, steps) = drain_cursor(DwgWriteCursor::from_drawing(&drawing).unwrap());
+         assert!(bytes == expected, "stepped bytes differ from the one-shot writer");
+         assert!(steps >= phases, "{steps} steps cannot cover {phases} phases");
+         assert!(steps >= previous_steps, "a larger drawing needs at least as many steps");
+@@ -152,7 +152,7 @@
+     let snapshot = DwgSnapshot::from_drawing(&super::acadrust_oracle_tests::every_entity_kind()).unwrap();
+     let (bytes, _) = drain_cursor(DwgWriteCursor::from_snapshot(snapshot.clone()));
+     assert!(bytes == encode_r2004_snapshot(&snapshot).unwrap());
+-    let mut cursor = DwgWriteCursor::new(super::acadrust_oracle_tests::every_entity_kind());
++    let mut cursor = DwgWriteCursor::from_drawing(&super::acadrust_oracle_tests::every_entity_kind()).unwrap();
+     for _ in 0..case["cancelAfterSteps"].as_u64().unwrap() {
+         assert!(matches!(cursor.step().unwrap(), DwgWriteStep::Working));
+     }

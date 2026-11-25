@@ -743,7 +743,6 @@ fn retained_edit_control_case(
             break;
         }
     }
-    if !work.terminal_is_empty() { eprintln!("[DEBUG] residue {}", work.debug_residue()); }
     assert!(work.terminal_is_empty());
     let fuel = cx.fuel_remaining();
     drop(cx);

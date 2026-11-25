@@ -13,18 +13,90 @@
    "de": "Ein gebrauchtes Marschtrommelpaar aus dem Lager eines Musikvereins: eine kleine Trommel 14 x 12 Zoll mit Spannschrauben, verblasster Perlmuttfolie und abgeriebenen Chromreifen und eine große Trommel 24 x 14 Zoll mit Kalbfellen, einem gerissenen und gelaschten Buchenreifen und angelaufenen Flügelschrauben, jede an ihrem Aluminium-Schultergestell mit Schaumschlingen, 20,4 kg mit dem Rohrbock, auf dem die große Trommel lagert; gelagert, getragen und auf dem Marsch gespielt."
   },
   "tags": [
-   "used",
-   "instrument",
-   "music",
-   "second-hand",
-   "percussion",
-   "marching",
-   "snare-drum",
-   "bass-drum",
-   "membranophone",
-   "calfskin",
-   "carrier",
-   "band"
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "instrument",
+    "title": {
+     "en": "instrument",
+     "de": "Instrument"
+    }
+   },
+   {
+    "id": "music",
+    "title": {
+     "en": "music",
+     "de": "Musik"
+    }
+   },
+   {
+    "id": "second-hand",
+    "title": {
+     "en": "second-hand",
+     "de": "Second-Hand"
+    }
+   },
+   {
+    "id": "percussion",
+    "title": {
+     "en": "percussion",
+     "de": "Schlaginstrumente"
+    }
+   },
+   {
+    "id": "marching",
+    "title": {
+     "en": "marching",
+     "de": "Marschieren"
+    }
+   },
+   {
+    "id": "snare-drum",
+    "title": {
+     "en": "snare drum",
+     "de": "kleine Trommel"
+    }
+   },
+   {
+    "id": "bass-drum",
+    "title": {
+     "en": "bass drum",
+     "de": "Bassdrum"
+    }
+   },
+   {
+    "id": "membranophone",
+    "title": {
+     "en": "membranophone",
+     "de": "Membranophon"
+    }
+   },
+   {
+    "id": "calfskin",
+    "title": {
+     "en": "calfskin",
+     "de": "Kalbsfell"
+    }
+   },
+   {
+    "id": "carrier",
+    "title": {
+     "en": "carrier",
+     "de": "Träger"
+    }
+   },
+   {
+    "id": "band",
+    "title": {
+     "en": "band",
+     "de": "Kapelle"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content (used instruments wave)",

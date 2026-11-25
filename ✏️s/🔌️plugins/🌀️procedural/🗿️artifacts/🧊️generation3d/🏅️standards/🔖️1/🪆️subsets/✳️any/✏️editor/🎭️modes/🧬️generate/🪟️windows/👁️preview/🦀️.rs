@@ -75,7 +75,7 @@ pub fn window_measures(config: &Generation3dConfig, is_de: bool, procedural_acti
 /// `hosts=[]` and no window a status could ever appear on — measured on 6018 as 189 s of
 /// `[data-status-json]`-less generate mode (`🗑️generated/journey-3/results.json`, ticket
 /// 26/09/09/PROCEDURAL-3D-END-TO-END). A hint is a state of this window, not a different window.
-fn generate_preview_status_json(session: &FlowEvalSession, run: Option<&semio_plugin::ToolRunView>, payload: &PreviewPayload, preview_status: Option<String>, hint: Option<&str>) -> Option<String> {
+fn generate_preview_status_json(session: &FlowEvalSession, run: Option<semio_plugin::ToolRunPollView<'_>>, payload: &PreviewPayload, preview_status: Option<String>, hint: Option<&str>) -> Option<String> {
     preview_window_status_json(Some(session), run, preview_status, &PreviewStatusDebug { meshes_json: &payload.meshes_json, instances_json: &payload.instances_json }, hint)
 }
 
@@ -90,7 +90,7 @@ pub fn render(
     active_utility: &str,
     marks: &PreviewInteractionMarks,
     session: &FlowEvalSession,
-    run: Option<&semio_plugin::ToolRunView>,
+    run: Option<semio_plugin::ToolRunPollView<'_>>,
     windows: &semio_plugin::TreeWindows<'_>,
     locale: semio_plugin::Locale,
     hover_groups: &mut Option<semio_s_artifact_procedural_3d_preview_eval::PreviewHoverGroups>,

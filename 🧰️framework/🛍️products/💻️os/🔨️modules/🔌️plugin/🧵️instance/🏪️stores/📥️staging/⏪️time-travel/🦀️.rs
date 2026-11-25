@@ -4,7 +4,7 @@
 //! [`TimeTravelExtension`] that registers them with the instance through [`InstanceExtension`].
 use semio_plugin_decl_app::ArtifactApp;
 use semio_os_kernel as store;
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use semio_plugin_decl_emission::Emit;
 use semio_framework::FaultFrom;

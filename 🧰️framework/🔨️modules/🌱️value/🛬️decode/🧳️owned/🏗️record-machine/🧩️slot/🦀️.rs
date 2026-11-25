@@ -2,6 +2,7 @@
 use super::{NativeReceive,OwnedFrame,SharedFrame,native_close_settle};
 use super::tree::{NativeValueSource,invalid};
 use crate::native_decoding::NativeReceivingFailure;
+use crate::retained_clone::RetainedCloneRef;
 use crate::{NativeDecodeControl,OriginalReceivingPrimary,OriginalRetirementCloseLoan,OriginalRetirementPoll,OriginalSourceTurnWitness,RetainedAllocationEffect,RetainedCloneGrant,RetainedWorkOutcome,RetainedWorkPoll,RetirementDemand,ValueError};
 use semio_framework_value_native_record_machine::machine::{RecordSlot,RecordSlotView,Source,Frame,Step,Close,progress,close_plan_of};
 use super::tree::NativeReceiveSlot;
@@ -17,9 +18,9 @@ impl<T:NativeReceive<dyn NativeValueSource>> RecordSlotView for NativeReceiveSlo
  fn view_birth_step(&mut self,original:&mut OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->OriginalRetirementPoll{self.close_original_birth_step(original,grant)}
 }
 impl<T:NativeReceive<dyn NativeValueSource>> RecordSlot<T> for NativeReceiveSlot<dyn NativeValueSource,T,$frame>{
- fn slot_work(&self,source:&Source,body:usize)->Result<u64,ValueError>{self.advance_work_demand(source.as_ref().ok_or_else(invalid)?.borrow()?,body)}
- fn slot_nested(&mut self,source:&Source,control:&mut NativeDecodeControl<'_>,witness:OriginalSourceTurnWitness<'_>,body:usize,maximum:u64,grant:RetainedCloneGrant)->RetainedWorkPoll<Step,NativeReceivingFailure>{
-  let source=match source.as_ref().ok_or_else(invalid).and_then(|s|s.borrow()){Ok(s)=>s,Err(error)=>return RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(error.into()),work:0})};
+ fn slot_work(&self,source:Option<RetainedCloneRef<'_,dyn NativeValueSource>>,body:usize)->Result<u64,ValueError>{self.advance_work_demand(source.ok_or_else(invalid)?,body)}
+ fn slot_nested(&mut self,source:Option<RetainedCloneRef<'_,dyn NativeValueSource>>,control:&mut NativeDecodeControl<'_>,witness:OriginalSourceTurnWitness<'_>,body:usize,maximum:u64,grant:RetainedCloneGrant)->RetainedWorkPoll<Step,NativeReceivingFailure>{
+  let source=match source.ok_or_else(invalid){Ok(s)=>s,Err(error)=>return RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(error.into()),work:0})};
   self.advance(source,control,witness,body,maximum,grant).map(|s|Step::Progress(s.progress()))}
  fn slot_retire(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->Close{native_close_settle(effect,|effect,reply|self.close_into(body,effect,reply)).map(progress)}
  fn slot_begin(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Close{native_close_settle(effect,|effect,reply|self.begin_close_into(effect,reply)).map(progress)}

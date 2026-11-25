@@ -131,7 +131,12 @@
           "designMoment": null,
           "backToBack": null,
           "minRadius": null,
-          "chainSpacing": null
+          "chainSpacing": null,
+          "chordShape": null,
+          "chordDepth": null,
+          "chordWidth": null,
+          "chordFlangeThickness": null,
+          "chordWebThickness": null
         }
       }
     ]

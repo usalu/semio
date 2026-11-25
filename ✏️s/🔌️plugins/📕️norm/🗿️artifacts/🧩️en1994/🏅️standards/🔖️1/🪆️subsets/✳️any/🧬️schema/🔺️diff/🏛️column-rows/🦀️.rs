@@ -16,9 +16,26 @@ protocol::list_delta! {
 nested_patch! {
     /// 🩹️ Sparse patch of the `columns` row addressed by its key.
     En1994ColumnsPatch for semio_s_artifact_norm_en1994_model::CompositeColumn {
-        set { kind: semio_s_artifact_norm_en1994_model::ColumnKind, length_m: f64, outer_size_m: f64, wall_thickness_m: f64, steel_a_m2: f64, steel_f_y_pa: f64, concrete_a_m2: f64, concrete_f_ck_pa: f64, reinforcement_as_m2: f64, reinforcement_f_yk_pa: f64, i_m4: f64, buckling_curve: semio_s_artifact_norm_en1994_model::BucklingCurve, introduced_force_n: f64, section_height_m: f64, section_width_m: f64, section_tw_m: f64, section_tf_m: f64, rebar_cover_m: f64, reinforcement_product: semio_s_artifact_norm_en1994_model::ReinforcementProduct }
-        within {  }
-        rows { actions: En1994ColumnsActionsRows = "actions" }
+        leaf kind: semio_s_artifact_norm_en1994_model::ColumnKind,
+        leaf length_m: f64,
+        leaf outer_size_m: f64,
+        leaf wall_thickness_m: f64,
+        leaf steel_a_m2: f64,
+        leaf steel_f_y_pa: f64,
+        leaf concrete_a_m2: f64,
+        leaf concrete_f_ck_pa: f64,
+        leaf reinforcement_as_m2: f64,
+        leaf reinforcement_f_yk_pa: f64,
+        leaf i_m4: f64,
+        leaf buckling_curve: semio_s_artifact_norm_en1994_model::BucklingCurve,
+        leaf introduced_force_n: f64,
+        leaf section_height_m: f64,
+        leaf section_width_m: f64,
+        leaf section_tw_m: f64,
+        leaf section_tf_m: f64,
+        leaf rebar_cover_m: f64,
+        leaf reinforcement_product: semio_s_artifact_norm_en1994_model::ReinforcementProduct,
+        rows actions: En1994ColumnsActionsRows = "actions",
     }
 }
 

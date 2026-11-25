@@ -1,0 +1,2 @@
+# fifth fixer: the light proof of the crutches (written 19:02) and the bicycle (written 20:37) in one grant: official scan, guard, validate, sweep, suitability, the six test files with the name filter in ONE vitest process (2500 MB: three-views peaks at 1,719 MB); replaces t5-3, which waited 90 minutes for the crutches alone
+TAG=last2 "$here/in-prove.sh" person-on-crutches person-pushing-bicycle

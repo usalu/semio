@@ -1,0 +1,85 @@
+/** 🧵️ `used-sewing-machine`: the handcrafted volume of 1:500, simplified by hand from its 1:200 volume. usage: used-sewing-machine.ts <asset document> [--force] */
+import { type Script, box, main, of, rev } from "./lib.ts";
+
+const cube = [0.075, 0.075, 0.075] as const;
+const across = { repeat: { count: 2, translation: [0, 0, -0.465] } };
+
+const script: Script = {
+  id: "used-sewing-machine",
+  volumes: {
+    "500": {
+      status: "authored",
+      denominator: 500,
+      decisions: [
+        { en: "Body for the 75 mm feature: the table is its top as the declared 25 mm sheet, the four aprons as one 90 mm block under it and four legs thickened from 45 to 75 mm with their outer faces in place; the machine keeps its C-frame in three boxes (pillar, arm, head with the face cover) on one base block that takes base board and bed in; the hood is one closed block with the handle as a 75 mm block that keeps its height, the pedal with its cable coil one 75 mm block and the blanket its declared 12 mm sheet; handwheel, dials, spool, needle and fabric are below the feature and left out.", de: "Körper für das 75-mm-Merkmal: der Tisch ist seine Platte als erklärte 25-mm-Platte, die vier Zargen als ein 90-mm-Block darunter und vier von 45 auf 75 mm verdickte Beine mit den Außenflächen am Ort; die Maschine behält ihren C-Rahmen in drei Quadern (Ständer, Arm, Kopf mit Stirndeckel) auf einem Sockelblock, der Grundbrett und Bett aufnimmt; die Haube ist ein geschlossener Block mit dem Griff als 75-mm-Block, der seine Höhe behält, das Pedal mit seinem Kabelring ein 75-mm-Block und die Decke ihre erklärte 12-mm-Platte; Handrad, Wähler, Garnrolle, Nadel und Stoff liegen unter dem Merkmal und entfallen." },
+        { en: "Thermal: the body solids in their regions by reference; lamp cover, handwheel, dials, needle foot, spool, fabric and cable coil as shells of their layer at true size, a 75 mm motor vent outlet.", de: "Thermik: die Körper in ihren Regionen als Verweis; Lampendeckel, Handrad, Wähler, Nähfuß, Garnrolle, Stoff und Kabelring als Schalen ihrer Schicht in wahrer Größe, ein 75-mm-Motorluftauslass." },
+        { en: "Structure: the members by reference, the joints as 75 mm blocks, four 75 mm floor supports under the legs and six mass markers.", de: "Tragwerk: die Stäbe als Verweis, die Verbindungen als 75-mm-Blöcke, vier 75-mm-Bodenauflager unter den Beinen und sechs Massenmarken." },
+      ],
+      body: [
+        box(["table-top", "table", "laminate-chipboard", 0.6], [0.8, 0.025, 0.6], [0.4, -0.0125, 0], { sheet: true }),
+        box(["table-apron", "table", "beech-lacquered", 0.5], [0.74, 0.09, 0.54], [0.4, -0.07, 0]),
+        box(["table-legs-front", "table", "beech-lacquered", 0.5], [0.075, 0.725, 0.075], [0.7325, -0.3875, 0.2325], across),
+        box(["table-legs-rear", "table", "beech-lacquered", 0.5], [0.075, 0.725, 0.075], [0.0675, -0.3875, 0.2325], across),
+        box(["blanket", "blanket", "felt-blanket", 0.3], [0.72, 0.012, 0.56], [0.36, 0, 0], { sheet: true }),
+        box(["base", "case", "vinyl-chipboard", 0.55], [0.24, 0.099, 0.45], [0.12, 0.0335, 0]),
+        box(["pillar", "machine", "cast-aluminium", 0.82], [0.15, 0.141, 0.125], [0.085, 0.1075, 0.1225]),
+        box(["arm", "machine", "cast-aluminium", 0.86], [0.12, 0.075, 0.295], [0.08, 0.2155, 0.0375]),
+        box(["head", "machine", "cast-aluminium", 0.84], [0.14, 0.165, 0.095], [0.085, 0.1705, -0.1525]),
+        box(["hood", "hood", "abs-ivory", 0.78], [0.24, 0.35, 0.45], [0.12, 0, 0]),
+        box(["hood-handle", "hood", "abs-brown", 0.3], [0.075, 0.075, 0.16], [0.12, 0.1695, 0]),
+        box(["pedal", "pedal", "abs-brown", 0.28], [0.12, 0.075, 0.101], [0.06, 0.0205, -0.0225]),
+      ],
+      thermal: [
+        of("th-table-top", "table-top", { region: "table-top" }),
+        of("th-table-apron", "table-apron", { region: "table-frame" }),
+        of("th-table-legs-front", "table-legs-front", { region: "table-frame" }),
+        of("th-table-legs-rear", "table-legs-rear", { region: "table-frame" }),
+        of("th-blanket", "blanket", { region: "blanket" }),
+        of("th-base", "base", { region: "base-board" }),
+        of("th-pillar", "pillar", { region: "housing" }),
+        of("th-arm", "arm", { region: "housing" }),
+        of("th-head", "head", { region: "housing" }),
+        of("th-hood", "hood", { region: "hood" }),
+        of("th-hood-handle", "hood-handle", { region: "hood" }),
+        of("th-pedal", "pedal", { region: "pedal" }),
+        box(["th-face-cover", "machine", "cast-aluminium", 0.9], [0.14, 0.165, 0.03], [0.085, 0.1705, -0.185], { region: "lamp-cover", layer: "cover" }),
+        rev(["th-handwheel", "handwheel", "chromed-zinc", 0.7], [0, 0, 1], [0, 0, 0], [[0.175, 0], [0.175, 0.035], [0.205, 0.035], [0.205, 0]], { region: "handwheel", layer: "rim" }),
+        box(["th-dials", "machine", "abs-brown", 0.3], [0.03, 0.11, 0.05], [0.16, 0.098, 0.123], { region: "dials", layer: "knob" }),
+        box(["th-presser-foot", "presser", "chromed-steel", 0.72], [0.04, 0.048, 0.03], [0, 0.021, -0.15], { region: "needle-foot", layer: "steel" }),
+        rev(["th-spool", "machine", "thread", 0.45], [0, 1, 0], [0.07, 0, 0.09], [[0.253, 0], [0.253, 0.016], [0.293, 0.016], [0.293, 0]], { region: "thread-spool", layer: "thread" }),
+        box(["th-fabric", "fabric", "cotton", 0.4], [0.13, 0.002, 0.11], [0, 0, -0.143], { region: "fabric", layer: "cloth", sheet: true }),
+        rev(["th-cable-coil", "cable", "pvc-cable", 0.15], [0, 1, 0], [0, 0, -0.0225], [[-0.008, 0], [-0.008, 0.05], [0.022, 0.05], [0.022, 0]], { region: "cable", layer: "sheath" }),
+        box(["motor-vent-outlet", "machine", "cast-aluminium", 0.4, "detail"], cube, [-0.0275, 0.113, 0.12], { region: "housing", tags: ["emitter", "motor-vent"] }),
+      ],
+      structure: [
+        of("m-table-top", "table-top", { member: "table", part: "member" }),
+        of("m-table-apron", "table-apron", { member: "table", part: "member" }),
+        of("m-table-legs-front", "table-legs-front", { member: "table", part: "member" }),
+        of("m-table-legs-rear", "table-legs-rear", { member: "table", part: "member" }),
+        of("m-blanket", "blanket", { member: "blanket", part: "member" }),
+        of("m-base", "base", { member: "case", part: "member" }),
+        of("m-pillar", "pillar", { member: "machine", part: "member" }),
+        of("m-arm", "arm", { member: "machine", part: "member" }),
+        of("m-head", "head", { member: "machine", part: "member" }),
+        of("m-hood", "hood", { member: "hood", part: "member" }),
+        of("m-hood-handle", "hood-handle", { member: "hood", part: "member" }),
+        of("m-pedal", "pedal", { member: "pedal", part: "member" }),
+        box(["j-machine-base", "machine", "chromed-steel", 0.3, "detail"], cube, [0.09, -0.0005, -0.15], { repeat: { count: 2, translation: [0, 0, 0.3] }, member: "machine", part: "joint" }),
+        box(["j-handle", "hood", "chromed-steel", 0.3, "detail"], cube, [0.12, 0.1695, -0.071], { repeat: { count: 2, translation: [0, 0, 0.142] }, member: "hood", part: "joint" }),
+        box(["j-tread-hinge", "pedal", "chromed-steel", 0.3, "detail"], cube, [0.0825, 0.0205, -0.023], { member: "pedal", part: "joint" }),
+        box(["support-floor-fl", "table", "rubber", 0.2, "ground"], cube, [0.7325, -0.7125, 0.2325], { member: "table", part: "support", anchor: "floor-fl" }),
+        box(["support-floor-fr", "table", "rubber", 0.2, "ground"], cube, [0.7325, -0.7125, -0.2325], { member: "table", part: "support", anchor: "floor-fr" }),
+        box(["support-floor-rl", "table", "rubber", 0.2, "ground"], cube, [0.0675, -0.7125, 0.2325], { member: "table", part: "support", anchor: "floor-rl" }),
+        box(["support-floor-rr", "table", "rubber", 0.2, "ground"], cube, [0.0675, -0.7125, -0.2325], { member: "table", part: "support", anchor: "floor-rr" }),
+        box(["mass-table", "table", "beech-lacquered", 0.3, "detail"], [0.075, 0.075, 0.075], [0.4, -0.07, 0], { member: "table", part: "mass" }),
+        box(["mass-blanket", "blanket", "felt-blanket", 0.3, "detail"], [0.075, 0.075, 0.075], [0.36, 0, 0], { member: "blanket", part: "mass" }),
+        box(["mass-case", "case", "vinyl-chipboard", 0.3, "detail"], [0.075, 0.075, 0.075], [0.12, 0.03, 0], { member: "case", part: "mass" }),
+        box(["mass-machine", "machine", "cast-aluminium", 0.3, "detail"], [0.075, 0.075, 0.075], [0.085, 0.15, 0.1], { member: "machine", part: "mass" }),
+        box(["mass-hood", "hood", "abs-ivory", 0.3, "detail"], [0.075, 0.075, 0.075], [0.12, 0, 0], { member: "hood", part: "mass" }),
+        box(["mass-pedal", "pedal", "abs-brown", 0.3, "detail"], [0.075, 0.075, 0.075], [0.06, 0.02, -0.02], { member: "pedal", part: "mass" }),
+      ],
+    },
+  },
+};
+export default script;
+if (import.meta.main) main(script);

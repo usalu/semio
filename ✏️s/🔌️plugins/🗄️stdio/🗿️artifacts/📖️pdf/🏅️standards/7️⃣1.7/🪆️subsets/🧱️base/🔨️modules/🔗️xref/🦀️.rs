@@ -6,7 +6,7 @@
 
 use crate::standards::v1_7::subsets::base::schema::graph_source::ObjectSource;
 use crate::standards::v1_7::subsets::base::modules::encryption::Decryptor;
-use crate::standards::v1_7::subsets::base::modules::filters::decode_stream_admitted;
+use crate::standards::v1_7::subsets::base::modules::filters::{declares_logical_codec, decode_stream_admitted};
 use crate::standards::v1_7::subsets::base::modules::lexer::{dict_i64, find_last_subslice, frame_indirect_with_length, ObjectScanCursor, ObjectScanStep, NormalObject, PdfHeader, PdfIndirectLengthCursor, PdfStreamDictionaryCursor, retain_stream_entry, CosGrant, CosLimits, CosStatus, Lexer};
 use crate::standards::v1_7::subsets::base::io::error::{malformed, PResult, PdfEngineError};
 use crate::standards::v1_7::subsets::base::schema::snapshot::{stream_bytes, ObjRef, PdfDictEntry, PdfIndirectObject, PdfObject, PdfStreamBytes, PdfStreamFilter};
@@ -585,7 +585,7 @@ fn normalize_stream(dict: Vec<PdfDictEntry>, data: PdfStreamBytes, filters: Vec<
 }
 
 fn normalize_framed_stream(dict: Vec<PdfDictEntry>, raw: &[u8]) -> PResult<PdfObject> {
-    let (data, filters, normalized) = retained_stream_data(&dict, std::borrow::Cow::Borrowed(raw))?;
+    let (data, filters, normalized) = if declares_logical_codec(&dict) { (raw.to_vec(), Vec::new(), false) } else { retained_stream_data(&dict, std::borrow::Cow::Borrowed(raw))? };
     let data = stream_bytes(&data);
     let mut cursor = PdfStreamDictionaryCursor::new(dict, normalized);
     let grant = CosGrant { work: 4096, allocation_bytes: usize::MAX, release_bytes: usize::MAX };
@@ -720,20 +720,27 @@ mod retained_graph_tests {
     }
 
     #[test]
-    fn projected_graph_retains_decoded_bytes_and_the_typed_filter_pipeline() {
+    fn projected_graph_retains_encoded_bytes_whose_normalization_yields_the_typed_filter_pipeline() {
         let source = include_bytes!("../🗜️filters/🪣️stream-data/🧪️tests/🔬️unit/🧪️streams.pdf");
         let index = build_xref(source).unwrap();
         let ResolvedGraph { objects: graph, positions } = Resolver::new(source, index.entries).resolve_all(None).unwrap();
         for (offset, object) in graph.iter().enumerate() {
             assert_eq!(positions.get(&object.id.num), Some(&XrefEntry::Normal { offset, gen: object.id.gen }));
         }
-        let bytes = |number| match &graph.iter().find(|object| object.id.num == number).unwrap().value {
-            PdfObject::Stream { data, filters, dict } => {
-                assert_eq!(filters.len(), 1);
-                assert!(!dict.iter().any(|entry| entry.key == "Filter" || entry.key == "Length"));
-                data.to_vec_owner()
+        let bytes = |number| {
+            let retained = &graph.iter().find(|object| object.id.num == number).unwrap().value;
+            let PdfObject::Stream { data: encoded, filters, dict } = retained else { panic!("fixture object is a stream") };
+            assert!(filters.is_empty() && declares_logical_codec(dict) && !dict.iter().any(|entry| entry.key == "Length"), "the retained graph keeps the encoded body with its declared chain");
+            let body = encoded.to_vec_owner();
+            assert!(source.windows(body.len()).any(|window| window == body.as_slice()), "the encoded body is the file's own bytes");
+            match normalize_pdf_object(retained.clone()).unwrap() {
+                PdfObject::Stream { data, filters, dict } => {
+                    assert_eq!(filters.len(), 1);
+                    assert!(!dict.iter().any(|entry| entry.key == "Filter" || entry.key == "Length"));
+                    data.to_vec_owner()
+                }
+                _ => panic!("normalized fixture object is a stream"),
             }
-            _ => panic!("fixture object is a stream"),
         };
         assert_eq!(bytes(4), b"0 0 m 1 1 l S\n".repeat(192));
         assert_eq!(bytes(5), [10, 30, 50, 20, 40, 60]);

@@ -193,6 +193,10 @@
       "en": "The remote cache is off: set SEMIO_REMOTE_CACHE_ENDPOINT to an http or https origin.",
       "de": "Der Remote-Cache ist aus: Setze SEMIO_REMOTE_CACHE_ENDPOINT auf einen http- oder https-Ursprung."
     },
+    "warning.instance-refused": {
+      "en": "Warning: the environment names the cache instance {refused}, but the fleet facts name {instance}; the facts win, because entries written to another instance are invisible to every other reader. Remove SEMIO_REMOTE_CACHE_INSTANCE from this machine's profile.",
+      "de": "Warnung: Die Umgebung nennt die Cache-Instanz {refused}, die Flottenfakten aber {instance}; die Fakten gelten, weil Einträge in einer anderen Instanz für alle anderen Leser unsichtbar sind. Entferne SEMIO_REMOTE_CACHE_INSTANCE aus dem Profil dieser Maschine."
+    },
     "warning.unreachable": {
       "en": "Warning: the remote cache {endpoint} is unreachable or refuses access; this run uses the local cache only.",
       "de": "Warnung: Der Remote-Cache {endpoint} ist nicht erreichbar oder verweigert den Zugriff; dieser Lauf nutzt nur den lokalen Cache."

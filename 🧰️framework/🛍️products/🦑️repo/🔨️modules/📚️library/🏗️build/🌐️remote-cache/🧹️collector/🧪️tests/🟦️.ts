@@ -11,6 +11,7 @@ import {cacheRunnerPortsV1,collectCacheV1} from "../../../🧹️cache-gc/🏃�
 import {collectRemoteCacheForLedgerV1} from "../../⌨️command/🟦️.ts";
 import {RemoteCacheStoreV1} from "../../💾️store/🟦️.ts";
 import {acquireRemoteCacheLockV1,collectRemoteCacheDirectoryV1,findDanglingRemoteCacheResultsV1,planRemoteCacheCollectionV1,REMOTE_CACHE_COLLECTOR_LOCK_V1,scanRemoteCacheDirectoryV1,type RemoteCacheDropV1,type RemoteCacheRowV1} from "../🟦️.ts";
+import {ownProcessIdentityV1,readProcessStartV1} from "../../../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts";
 
 const python=testPythonV1(),oracle=join(import.meta.dir,"../../🔬️action-result/🧪️tests/🐍️oracle/🐍️.py"),scratch:string[]=[];
 const directory=(label:string)=>{const path=mkdtempSync(join(tmpdir(),`rcache-gc-${label}-`));scratch.push(path);return path;};
@@ -91,9 +92,9 @@ test("only one collector works on a store at a time; a lock of a dead process or
  const refused=await collectRemoteCacheDirectoryV1(request);expect(refused).toEqual({locked:true,lock:join(root,REMOTE_CACHE_COLLECTOR_LOCK_V1)});
  expect((await collectRemoteCacheDirectoryV1({...request,dryRun:true})).locked,"a plan needs no lock").toBe(false);
  if(!mine.held)await mine.release();expect(existsSync(join(root,REMOTE_CACHE_COLLECTOR_LOCK_V1))).toBe(false);
- writeFileSync(join(root,REMOTE_CACHE_COLLECTOR_LOCK_V1),`2147483646\n${Date.now()}\n`);
+ writeFileSync(join(root,REMOTE_CACHE_COLLECTOR_LOCK_V1),`2147483646\n${Date.now()}\n1\n`);
  expect((await collectRemoteCacheDirectoryV1(request)).locked,"the owner is dead").toBe(false);
- writeFileSync(join(root,REMOTE_CACHE_COLLECTOR_LOCK_V1),`${process.pid}\n${Date.now()-7*3600_000}\n`);
+ writeFileSync(join(root,REMOTE_CACHE_COLLECTOR_LOCK_V1),`${process.pid}\n${Date.now()-7*3600_000}\n${ownProcessIdentityV1().startMs}\n`);
  expect((await collectRemoteCacheDirectoryV1(request)).locked,"older than six hours").toBe(false);
  writeFileSync(join(root,REMOTE_CACHE_COLLECTOR_LOCK_V1),"garbage");
  expect((await collectRemoteCacheDirectoryV1(request)).locked,"unreadable lock content").toBe(false);

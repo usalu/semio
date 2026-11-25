@@ -85,7 +85,19 @@ impl GuestLedger{
  fn logical_remaining(&self,purpose:GuestRelayGuestPurpose,total:RetainedCloneGrant)->Result<RetainedCloneGrant,ValueError>{consumable_remaining(total,self.accounts[purpose.index()].usage()?.add(if purpose==GuestRelayGuestPurpose::Infrastructure{self.bootstrap_held}else{GuestUsage::default()})?.policy())}
  fn logical_fuel(&self,purpose:GuestRelayGuestPurpose,total:u64)->Result<u64,ValueError>{total.checked_sub(self.accounts[purpose.index()].usage()?.add(if purpose==GuestRelayGuestPurpose::Infrastructure{self.bootstrap_held}else{GuestUsage::default()})?.work).ok_or_else(||spent("requested guest purpose work is exhausted"))}
 }
-fn check_core_wire_grant(grant:RetainedCloneGrant,fuel:u64,header:usize)->Result<(),ValueError>{for(items,demand,work)in std::iter::once(semio_plugin_guest_contract::original_actor_context::original_core_first_response_reserve(header)?).chain((header==200).then(semio_plugin_guest_contract::original_actor_context::OriginalActorBootstrapReceipt::first_bootstrap_response_reserve)){if grant.maximum_items<items||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"guest Core wire reserve exceeds its actual grant"))}if fuel<work{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"guest Core wire reserve exceeds its actual work"))}}Ok(())}
+fn check_core_wire_grant(grant:RetainedCloneGrant,fuel:u64,header:usize,purpose:GuestRelayGuestPurpose,scope:&str)->Result<(),ValueError>{
+ use semio_framework_value::ValueRefusalKind::{OwnershipLimit,WorkLimit};
+ use semio_plugin_guest_contract::original_actor_context::{original_core_first_response_reserve,OriginalActorBootstrapReceipt};
+ for(items,demand,work)in std::iter::once(original_core_first_response_reserve(header)?).chain((header==200).then(OriginalActorBootstrapReceipt::first_bootstrap_response_reserve)){
+  let refusal=if grant.maximum_items<items||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{
+   Some((OwnershipLimit,"grant"))
+  }else if fuel<work{Some((WorkLimit,"work"))}else{None};
+  if let Some((kind,limit))=refusal{
+   return Err(ValueError::new(kind,format!("guest Core wire reserve exceeds its actual {limit}: purpose={purpose:?}, scope={scope}, headerBytes={header}; required items={items}, copyBytes={}, capacityBytes={}, releaseBytes={}, depth={}, work={work}; available items={}, copyBytes={}, capacityBytes={}, releaseBytes={}, depth={}, work={fuel}",demand.copy_bytes,demand.capacity_bytes,demand.release_bytes,demand.depth,grant.maximum_items,grant.maximum_copy_bytes,grant.maximum_capacity_bytes,grant.maximum_release_bytes,grant.maximum_depth)));
+  }
+ }
+ Ok(())
+}
 impl GuestRelayWakeDriver{
  /// 🤝️ Lends this Driver's actual ledger only within its paid original Source callback.
  pub fn dispatch_escrow_reconciliation_step(&self,cleanup:bool,produce:impl FnOnce(&mut semio_framework_job::StepContext<'_>,GuestEscrowReconcile<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>)->Result<bool,super::GuestRelayAdmissionFailure>{self.dispatch_guest_reconcile_step(cleanup,|cx,ledger|{let parent=cx.original_source_parent()?;parent.validate_borrowed_context(cx)?;let source=parent.source_identity()?;let binding=semio_framework_job::OriginalSourceBinding::borrow(cx);produce(cx,GuestEscrowReconcile{ledger,source,binding})})}
@@ -103,15 +115,18 @@ impl GuestRelayWakeDriver{
   if original.checkout.is_some(){return Ok(None)}let cancelled=(original.cancelled)()||self.operation_abandoned();if cancelled&&!cleanup{return Err(spent("a cancelled operation cannot start another guest crossing").into())}
   let operation=original.operation.as_ref().ok_or_else(||invalid("guest reservation requires an actual per-operation Source"))?;
   if operation.closed||operation.cleanup&&!cleanup{return Err(invalid("guest semantic admission cannot follow Source cleanup").into())}if operation.guest.pending(){return Err(invalid("guest crossing still owes its exact fixed receipt").into())}
-  let physical=operation.guest.physical_remaining(original.treasury.original_remaining())?;let available=consumable_remaining(consumable_remaining(physical,operation.reserve.retained)?,operation.transit.retained)?;
+  let physical=operation.guest.physical_remaining(original.treasury.original_remaining())?;
+  let beside_cleanup=consumable_remaining(physical,operation.reserve.retained)?;
+  let available=if cleanup{beside_cleanup}else{consumable_remaining(beside_cleanup,operation.transit.retained)?};
   let mut semantic=operation.guest.logical_remaining(GuestRelayGuestPurpose::Semantic,operation.request.retained)?;if cleanup{semantic.maximum_items=0;semantic.maximum_copy_bytes=0;semantic.maximum_capacity_bytes=0;semantic.maximum_release_bytes=0;}let infrastructure=operation.guest.logical_remaining(GuestRelayGuestPurpose::Infrastructure,operation.infrastructure.retained)?;
   let total=GuestUsage::reservation(semantic,0).add(GuestUsage::reservation(infrastructure,0))?;let header_grant=intersect(available,RetainedCloneGrant{maximum_depth:semantic.maximum_depth.max(infrastructure.maximum_depth),..total.policy()});
   let grant=intersect(header_grant,match purpose{GuestRelayGuestPurpose::Semantic=>semantic,GuestRelayGuestPurpose::Infrastructure=>infrastructure});
-  let physical_fuel=operation.guest.physical_fuel(original.root.fuel_remaining())?.checked_sub(operation.reserve.work_fuel).and_then(|fuel|fuel.checked_sub(operation.transit.work_fuel)).ok_or_else(||spent("guest reservation cannot consume cleanup or transport work"))?;
+  let transit_work=if cleanup{0}else{operation.transit.work_fuel};
+  let physical_fuel=operation.guest.physical_fuel(original.root.fuel_remaining())?.checked_sub(operation.reserve.work_fuel).and_then(|fuel|fuel.checked_sub(transit_work)).ok_or_else(||spent("guest reservation cannot consume cleanup or transport work"))?;
   let semantic_fuel=if cleanup{0}else{operation.guest.logical_fuel(GuestRelayGuestPurpose::Semantic,operation.request.work_units)?};let infrastructure_fuel=operation.guest.logical_fuel(GuestRelayGuestPurpose::Infrastructure,operation.infrastructure.work_fuel)?;
   let header_fuel=semantic_fuel.checked_add(infrastructure_fuel).ok_or_else(||invalid("guest total work overflow"))?.min(physical_fuel);let fuel=header_fuel.min(match purpose{GuestRelayGuestPurpose::Semantic=>semantic_fuel,GuestRelayGuestPurpose::Infrastructure=>infrastructure_fuel});if fuel==0||grant.maximum_items==0{return Err(spent("no guest purpose stock remains beside host cleanup and transport").into())}
   let root_work=original.root.remaining_work();let now=original.root.clock_source()().ok_or_else(||invalid("guest admission requires its original clock"))?;let deadline=if cleanup{let host_window=operation.reserve.maximum_microseconds.checked_sub(operation.infrastructure.maximum_cleanup_microseconds).ok_or_else(||invalid("guest cleanup exceeds its authored window"))?;let host_deadline=root_work.absolute_deadline_us.checked_sub(host_window).ok_or_else(||invalid("host cleanup window exceeds its deadline"))?;now.checked_add(operation.infrastructure.maximum_cleanup_microseconds).ok_or_else(||invalid("guest cleanup deadline overflow"))?.min(host_deadline)}else{root_work.absolute_deadline_us.checked_sub(operation.reserve.maximum_microseconds).ok_or_else(||invalid("guest deadline cannot remove its original cleanup window"))?};if now>=deadline{return Err(spent("guest admission reached its original deadline").into())}
-  if let Some(header)=wire_header{check_core_wire_grant(grant,fuel,header)?;check_core_wire_grant(header_grant,header_fuel,header)?;}let epoch=original.treasury.issue_guest_epoch()?;let input=RetainedTurnInput{operation:original.root.policy().operation,generation:original.root.policy().generation,epoch,work:OriginalActorTurnWork{fuel:header_fuel,..root_work},grant:header_grant};input.validate()?;
+  if let Some(header)=wire_header{check_core_wire_grant(grant,fuel,header,purpose,"purpose")?;check_core_wire_grant(header_grant,header_fuel,header,purpose,"enclosing")?;}let epoch=original.treasury.issue_guest_epoch()?;let input=RetainedTurnInput{operation:original.root.policy().operation,generation:original.root.policy().generation,epoch,work:OriginalActorTurnWork{fuel:header_fuel,..root_work},grant:header_grant};input.validate()?;
   let descriptor=GuestRelayGuestSubloan{serial:semio_framework_trace::allocate_operation_id().0,purpose,budget:OriginalJobBudget{input,retained_policy:grant,fuel,deadline_us:deadline,cancelled},producer:identity};
   let operation=original.operation.as_mut().unwrap();if cleanup{operation.cleanup=true}operation.guest.hold=Some(GuestHold{descriptor,producer:identity});Ok(Some(descriptor))
  }
@@ -162,7 +177,34 @@ mod tests{
 
  #[test]
  fn wire_grant_refuses_each_unfunded_scope(){
-  for header in [144,152,184]{let(items,demand,work)=semio_plugin_guest_contract::original_actor_context::original_core_first_response_reserve(header).unwrap();let grant=RetainedCloneGrant{maximum_items:items,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};assert!(check_core_wire_grant(grant,work,header).is_ok());for denied in [RetainedCloneGrant{maximum_items:items-1,..grant},RetainedCloneGrant{maximum_copy_bytes:demand.copy_bytes-1,..grant},RetainedCloneGrant{maximum_capacity_bytes:demand.capacity_bytes-1,..grant},RetainedCloneGrant{maximum_release_bytes:demand.release_bytes-1,..grant},RetainedCloneGrant{maximum_depth:0,..grant}]{assert!(check_core_wire_grant(denied,work,header).is_err())}assert!(check_core_wire_grant(grant,work-1,header).is_err());assert!(check_core_wire_grant(grant,work,136).is_err());}
+  use semio_framework_value::ValueRefusalKind::{OwnershipLimit,WorkLimit};
+  for header in [144,152,184]{
+   let(items,demand,work)=semio_plugin_guest_contract::original_actor_context::original_core_first_response_reserve(header).unwrap();
+   let grant=RetainedCloneGrant{maximum_items:items,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};
+   let purpose=GuestRelayGuestPurpose::Infrastructure;
+   assert!(check_core_wire_grant(grant,work,header,purpose,"purpose").is_ok());
+   for (denied,axis,required,available) in [
+    (RetainedCloneGrant{maximum_items:items-1,..grant},"items",items,items-1),
+    (RetainedCloneGrant{maximum_copy_bytes:demand.copy_bytes-1,..grant},"copyBytes",demand.copy_bytes,demand.copy_bytes-1),
+    (RetainedCloneGrant{maximum_capacity_bytes:demand.capacity_bytes-1,..grant},"capacityBytes",demand.capacity_bytes,demand.capacity_bytes-1),
+    (RetainedCloneGrant{maximum_release_bytes:demand.release_bytes-1,..grant},"releaseBytes",demand.release_bytes,demand.release_bytes-1),
+    (RetainedCloneGrant{maximum_depth:0,..grant},"depth",demand.depth,0),
+   ]{
+    let error=check_core_wire_grant(denied,work,header,purpose,"purpose").unwrap_err();
+    assert_eq!(error.kind,OwnershipLimit);
+    let (required_stock,available_stock)=error.message.split_once("; available ").unwrap();
+    assert!(required_stock.contains(&format!("purpose=Infrastructure, scope=purpose, headerBytes={header}")));
+    assert!(required_stock.contains(&format!("{axis}={required}")));
+    assert!(available_stock.contains(&format!("{axis}={available}")));
+   }
+   let error=check_core_wire_grant(grant,work-1,header,purpose,"enclosing").unwrap_err();
+   assert_eq!(error.kind,WorkLimit);
+   let (required_stock,available_stock)=error.message.split_once("; available ").unwrap();
+   assert!(required_stock.contains("scope=enclosing"));
+   assert!(required_stock.ends_with(&format!("work={work}")));
+   assert!(available_stock.ends_with(&format!("work={}",work-1)));
+   assert!(check_core_wire_grant(grant,work,136,purpose,"purpose").is_err());
+  }
  }
  #[test]
  fn five_axis_escrow_conserves_purpose_stock(){

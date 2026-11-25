@@ -32,7 +32,7 @@ export function runBazelProbeV1(run:BazelProbeRunV1,base:string=tmpdir()):number
  write(join(workspace,"MODULE.bazel.lock"),run.options.lock);write(join(workspace,"fixture.path"),run.fixture);
  const read=(file:string)=>{try{return readFileSync(join(run.fixture,file));}catch{return undefined;}};
  for(const[path,text]of Object.entries(bazelProbeDigestsV1(run.specification,read,run.environment,randomUUID())))write(join(workspace,path),text);
- const child=spawnSync(run.options.executable,bazelProbeArgumentsV1(run.options,run.specification,workspace,run.task),{cwd:workspace,stdio:"inherit",env:{...process.env,LC_ALL:"en_US.UTF-8",LANG:"en_US.UTF-8"}});
+ const child=spawnSync(run.options.executable,bazelProbeArgumentsV1(run.options,run.specification,workspace,run.task),{windowsHide:true,cwd:workspace,stdio:"inherit",env:{...process.env,LC_ALL:"en_US.UTF-8",LANG:"en_US.UTF-8"}});
  if(child.status!==0)return child.status??1;
  const produced=join(workspace,"bazel-bin",run.task+"_out");
  for(const output of target.outputs){const destination=join(run.fixture,output);if(existsSync(destination))makeWritable(destination);rmSync(destination,{recursive:true,force:true});if(existsSync(join(produced,output)))restoreTree(join(produced,output),destination);}

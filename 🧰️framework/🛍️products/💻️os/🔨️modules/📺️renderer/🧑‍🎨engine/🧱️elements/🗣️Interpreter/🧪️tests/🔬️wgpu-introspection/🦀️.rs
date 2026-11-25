@@ -10,9 +10,6 @@ use semio_ui_retained_tree::tree::NodeKey;
 use semio_ui_retained_tree::tree::WidgetSpec;
 use semio_ui_theme::Theme;
 
-/// 🎟️ Unbounded retained grant: the pre-migration step budget carried no retained limit.
-const UNBOUNDED_STEP_GRANT: semio_framework_job::RetainedCloneGrant = semio_framework_job::RetainedCloneGrant { maximum_items: usize::MAX, maximum_copy_bytes: usize::MAX, maximum_capacity_bytes: usize::MAX, maximum_release_bytes: usize::MAX, maximum_depth: usize::MAX };
-
 fn text_node(value: &str) -> UiNode {
     UiNode::Text(UiTextNode { value: Label::data(value), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None })
 }
@@ -307,30 +304,14 @@ impl semio_ui_wgpu_hosting::scene_slots::SceneHost for NoSceneHost {
 /// window fails here instead of in a screenshot (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY).
 #[test]
 fn a_painted_chrome_window_reports_draw_calls_quads_and_glyphs() {
-    let mut engine = semio_ui_wgpu_engine::Ui::new(semio_ui_locale::Locale::En);
+    let mut engine = semio_ui_wgpu_engine::testkit::UiFixture::new(semio_ui_locale::Locale::En);
     let window_id = "chrome-law";
     engine.apply_tree(window_id, &stack_node(Some("root"), vec![text_node("Puzzle 3D"), text_node("Catalogue")]));
     engine.set_viewport(window_id, 640.0, 360.0);
 
     let mut atlas = semio_ui_text::FontAtlas::from_bytes(&[]).expect("the deterministic builtin bitmap atlas");
     let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));
-    let operation = semio_framework_job::allocate_operation_id();
-    let cancel = semio_framework_job::CancelToken::root_now();
-    let mut preview_sequence = 0;
-    for _ in 0..64 {
-        for _ in 0..16_384 {
-            let mut cx_retained = semio_framework_job::RetainedCloneProgress::default();
-            let mut cx = semio_framework_job::StepContext::new(operation, semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(1, u64::MAX, UNBOUNDED_STEP_GRANT), cancel.clone(), || Some(0), &mut preview_sequence, &mut cx_retained);
-            if matches!(engine.step_layouts(&pool, &mut atlas, &mut cx), semio_ui_wgpu_engine_surface::UiLayoutStep::Idle) {
-                break;
-            }
-        }
-        if !engine.layout_is_dirty(window_id) {
-            break;
-        }
-        engine.request_layout(window_id);
-    }
-    assert!(!engine.layout_is_dirty(window_id), "layout never settled");
+    assert!(engine.settle_layout(window_id, &pool, &mut atlas), "layout never settled");
 
     let mut painted = false;
     for _ in 0..131_072 {

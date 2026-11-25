@@ -4,9 +4,9 @@ fn optional(c:&mut Census<'_,'_>,v:&D,visit:fn(&mut Census<'_,'_>,&D)->Result<()
 fn array<'a>(v:&'a D,n:usize)->Result<Cells<'a>,ValueError>{if matches!(v,D::Null){Ok(Cells::from(&[Null;16][..n]))}else{let a=list(v)?;if a.len()!=n{return Err(invalid())}{let mut cells=Cells::new();for value in a{cells.push(real(value)?);}Ok(cells)}}}
 pub(super) fn group(c:&mut Census<'_,'_>,v:&D)->Result<(),ValueError>{let color=optional(c,field(v,"colorSpace")?,colors::color)?;c.row("pdf_transparency_group",&[color,Int,Int])}
 pub(super) fn image(c:&mut Census<'_,'_>,v:&D)->Result<(),ValueError>{
- let color=optional(c,field(v,"colorSpace")?,colors::color)?;let body=field(v,"body")?;let tag=kind(body)?;let reference=match tag {"artifact"=>{artifact_reference(c,field(body,"reference")?)?;Int},"samples"=>{for value in list(field(body,"values")?)? {c.row("pdf_image_sample",&[Int,Int,integer(value)?])?;}Null},_=>return Err(invalid())};
+ let color=optional(c,field(v,"colorSpace")?,colors::color)?;let body=field(v,"body")?;let tag=kind(body)?;let (reference,packed)=match tag {"artifact"=>{artifact_reference(c,field(body,"reference")?)?;(Int,Null)},"samples"=>(Null,c.blob(field(body,"packed")?)?),_=>return Err(invalid())};
  objects::dictionary(c,field(v,"extra")?)?;let mask=field(v,"mask")?;let (mask_kind,stencil)=if matches!(mask,D::Null){(Null,Null)}else{let k=kind(mask)?;(Text(k),if k=="stencil"{Text(text(field(mask,"image")?)?)}else{Null})};
- c.row("pdf_image",&[Text(text(field(v,"id")?)?),Int,Int,color,Int,Int,Int,Text(tag),reference,optional_text(field(v,"softMask")?)?,integer(field(v,"softMaskInData")?)?,mask_kind,stencil,Int,optional_text(field(v,"intent")?)?,optional_text(field(v,"optionalContent")?)?,integer(field(v,"structParent")?)?,Int])?;
+ c.row("pdf_image",&[Text(text(field(v,"id")?)?),Int,Int,color,Int,Int,Int,Text(tag),reference,optional_text(field(v,"softMask")?)?,integer(field(v,"softMaskInData")?)?,mask_kind,stencil,Int,optional_text(field(v,"intent")?)?,optional_text(field(v,"optionalContent")?)?,integer(field(v,"structParent")?)?,Int,packed])?;
  colors::reals(c,"pdf_image_real","decode",field(v,"decode")?)?;colors::reals(c,"pdf_image_real","matte",field(v,"matte")?)?;
  if matches!(mask_kind,Text("colorKey")){for value in list(field(mask,"ranges")?)?{c.row("pdf_image_color_key",&[Int,Int,integer(value)?])?;}}Ok(())
 }

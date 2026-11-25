@@ -1,5 +1,5 @@
 //! 🗑️ Bounded deletion authoring retains original text and output leaves through cancellation.
-use super::super::*;
+use super::*;
 use semio_framework_artifact_flow_flow::{FlowMutation,RemoveSynapse,RemoveWidget,ChangeLayout,FlowLayoutEntry,widget_id_for};
 use super::{compare::TextCompare,text::FundedText};
 use semio_framework_job::{OriginalConstructionDemand,OriginalTurnFailure,StepContext};

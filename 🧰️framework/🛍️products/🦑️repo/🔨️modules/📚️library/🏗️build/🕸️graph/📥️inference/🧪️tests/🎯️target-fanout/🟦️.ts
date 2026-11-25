@@ -1,6 +1,7 @@
 /** 🎯️ Contract: one owner that declares many targets whose commands differ only in their arguments (the playground variants of the development package) stores the closure of their script once, every target gets the roster an independent Python walker finds, and the managed heap after a collection stays flat across the targets once each target releases what its owner left behind. */
 import{afterAll,expect,test}from"bun:test";
-import{mkdirSync,readdirSync,rmSync,writeFileSync}from"node:fs";
+import{mkdirSync,mkdtempSync,readdirSync,realpathSync,rmSync,writeFileSync}from"node:fs";
+import{tmpdir}from"node:os";
 import{dirname,join}from"node:path";
 import{fileURLToPath}from"node:url";
 import{heapStats}from"bun:jsc";
@@ -43,14 +44,15 @@ test("targets that differ only in their arguments share one stored closure value
   }
   for(let at=0;at<32;at++)scriptInputs.releaseOwnerStateV1(shared);
   expect([shared.files,shared.closures,shared.commandDependencies,shared.declared,shared.paths].map(memo=>memo.size)).toEqual([0,0,0,0,0]);
-  shared.reachState={graph:new Map()};
-  while(shared.reachState!==undefined)scriptInputs.releaseOwnerStateV1(shared,{shrink:true});
-  shared.files.set("pressure",1);shared.reachState={graph:new Map()};
-  const reach=shared.reachState;
+  shared.sharedBytes=5;
+  for(let at=0;at<64&&shared.sharedBytes!==0;at++)scriptInputs.releaseOwnerStateV1(shared,{shrink:true});
+  expect(shared.sharedBytes).toBe(0);
+  shared.files.set("pressure",1);shared.sharedBytes=5;
+  const graph=shared.closureGraph;
   scriptInputs.releaseOwnerStateV1(shared,{shrink:true});
-  expect([shared.files.size,shared.reachState]).toEqual([0,reach]);
+  expect([shared.files.size,shared.sharedBytes]).toEqual([0,5]);
   for(let at=0;at<7;at++)scriptInputs.releaseOwnerStateV1(shared,{shrink:true});
-  expect(shared.reachState).toBeUndefined();
+  expect(shared.sharedBytes).toBe(0);expect(shared.closureGraph,"the module graph outlives every release").toBe(graph);
   stored=readdirSync(join(scriptInputs.closureStoreDirectoryV1(root),"v")).length;
  });
  expect(rosterOf!).toEqual(python(root,"owner/📜️script.ts").closure.sort());
@@ -61,10 +63,14 @@ test("targets that differ only in their arguments share one stored closure value
  expect(growth).toBeLessThan(fixture.maximumGrowthMegabytes);expect(slope).toBeLessThan(fixture.maximumSlopeKilobytesPerTarget);
 }),600000);
 
-test("a walk that builds the shared reach state is credited to the cache and the running owner scope",async()=>{
- const cache:any={reachState:{graph:new Map()}},owner=await import("../../../../🧠️memory/🎯️owner-scope/🟨️.mjs") as any,scope=owner.createOwnerScopeV1("owner");
- const kept:unknown[]=[];
- await owner.runInOwnerScopeV1(scope,()=>scriptInputs.chargedToSharedV1(cache,async()=>{kept.push(new Array(2_000_000).fill(0).map((_,at)=>"s"+at));cache.reachState.graph.set(1,{});}));
- expect(cache.sharedBytes).toBeGreaterThan(0);expect(scope.credited).toBe(cache.sharedBytes);
- const idle:any={reachState:{graph:new Map()}};await scriptInputs.chargedToSharedV1(idle,async()=>{kept.push(new Array(1000).fill(0));});expect(idle.sharedBytes).toBeUndefined();
+test("a graph pass that builds nodes is credited to the cache and the running owner scope, an answer from the round is not",async()=>{
+ const root=mkdtempSync(join(realpathSync(tmpdir()),"fanout-credit-"));
+ try{
+  const files:Record<string,string>={"package.json":'{"name":"credit"}\n'};for(let at=0;at<400;at++)files["m"+at+".ts"]=(at<399?'import "./m'+(at+1)+'.ts";\n':"")+"export const v"+at+"="+at+";\n".repeat(20);
+  for(const[name,text]of Object.entries(files))writeFileSync(join(root,name),text);
+  const inference=await import("../../🟨️.mjs") as any,owner=await import("../../../../🧠️memory/🎯️owner-scope/🟨️.mjs") as any,scope=owner.createOwnerScopeV1("owner"),cache=inference.createScriptInputCache({workspaceRoot:root});cache.generatedOutput=()=>undefined;cache.pass={};
+  await owner.runInOwnerScopeV1(scope,()=>scriptInputs.closureGraphAnswerV1(cache,root,{roots:[join(root,"m0.ts")]}));
+  expect(cache.sharedBytes).toBeGreaterThan(0);expect(scope.credited).toBe(cache.sharedBytes);
+  const held=cache.sharedBytes;await scriptInputs.closureGraphAnswerV1(cache,root,{roots:[join(root,"m0.ts")]});expect(cache.sharedBytes).toBe(held);
+ }finally{rmSync(root,{recursive:true,force:true});}
 });

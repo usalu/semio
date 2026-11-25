@@ -179,7 +179,7 @@ test("incremental decisions equal the Python tables",()=>{
 
 /** 🧷 Verifies that a moved directory descriptor aborts the first observation and lets a new exact observation start. */
 test("incremental dependency sync retries an exact descriptor refusal with fresh custody",async()=>{
- const {withArtifactRelativeDirectoryV1}=await import("@semio-tech/framework-filesystem/observation/descriptor"),root=scratch(),message=process.platform==="win32"?"Current exact Windows relative path descriptor changed":"Current exact relative path descriptor changed";
+ const {withArtifactRelativeDirectoryV1,artifactRelativeRefusalV1}=await import("@semio-tech/framework-filesystem/observation/descriptor"),root=scratch(),message=process.platform==="win32"?"Current exact Windows relative path descriptor changed":"Current exact relative path descriptor changed";
  try{
   mkdirSync(join(root,"child"));
   let entered=0;
@@ -190,7 +190,7 @@ test("incremental dependency sync retries an exact descriptor refusal with fresh
    await directory.withDirectoryPath([{name:"child",identity}],async child=>{entered++;expect(await child.names()).toEqual(["new"]);});
   });
   let observed:string|undefined;
-  try{await capture(true);}catch(error){observed=(error as Error).message;}
+  try{await capture(true);}catch(error){observed=artifactRelativeRefusalV1(error);}
   expect(observed).toBe(message);expect(entered).toBe(0);
   expect(core.retryableSyncFailureV1(observed!,{aborted:false,unresolved:false,attempt:0})).toBe(true);
   await capture(false);expect(entered).toBe(1);

@@ -46,6 +46,11 @@ fn kind_of_unit(unit: &str) -> QuantityKind {
         Some(UnitFamily::Mass) => QuantityKind::Mass,
         Some(UnitFamily::Force) => QuantityKind::Force,
         Some(UnitFamily::Energy) => QuantityKind::Energy,
+        Some(UnitFamily::VolumeFlow) => QuantityKind::VentilationRate,
+        Some(UnitFamily::HeatTransfer) => QuantityKind::HeatTransferCoefficient,
+        Some(UnitFamily::Power) => QuantityKind::Power,
+        Some(UnitFamily::Velocity) => QuantityKind::Velocity,
+        Some(UnitFamily::Moment) => QuantityKind::Moment,
         _ => QuantityKind::Dimensionless,
     }
 }
@@ -103,7 +108,7 @@ fn curve_diagram(document: &Vdi3805Snapshot, report: &CheckReport, product: &Cat
         }
     }
     Diagram2d {
-        id: format!("curve:{}:{id}", product.id),
+        id: format!("curve:{}/{id}", product.id),
         title: loc(&format!("Characteristic curve {id} of {}", product.id), &format!("Kennlinie {id} von {}", product.id)),
         description: loc("The catalogue characteristic curve with linear interpolation between its points; dragging a point changes its value.", "Die Katalog-Kennlinie mit linearer Interpolation zwischen ihren Punkten; das Ziehen eines Punkts ändert seinen Wert."),
         axes: vec![axis("Curve argument", "Kennlinienargument", kind_of_unit(&xu), &xu), axis("Curve value", "Kennlinienwert", kind_of_unit(&yu), &yu)],

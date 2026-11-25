@@ -3,7 +3,7 @@
 use crate::store::{Mutation, PresenceStore, PresenceStoreRetirement};
 use semio_framework_value::{RetirementPollExit, SharedValueRetirementFactory};
 use semio_plugin_ownership::bounded_ownership::PluginLifecycleStep;
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use semio_framework::Fault;
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
 use std::sync::Arc;

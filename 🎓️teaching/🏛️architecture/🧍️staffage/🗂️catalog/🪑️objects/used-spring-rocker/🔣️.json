@@ -13,21 +13,111 @@
    "de": "Ein Federwipptier für Kleinkinder aus zwei ausgeblichenen roten 19-mm-HDPE-Platten auf einer Schraubenfeder aus 20-mm-Draht, auf die Ankerplatte eines Punktfundaments von 0,50 m im Rasen geschraubt; das rechte Ohr abgeplatzt, das rechte Griffstück gerissen und am Ende abgebrochen, Graffiti und Aufkleberreste, die Farbe der Feder blättert mit Rost ab. Der Bauhof hebt es an einem Gehänge von der Ankerplatte, um die Feder zu tauschen; ein Kleinkind wippt es mit einer Periode von 0.74 s."
   },
   "tags": [
-   "used",
-   "park",
-   "public-space",
-   "play",
-   "maintenance",
-   "spring-rocker",
-   "rocking",
-   "playground",
-   "toddler",
-   "hdpe",
-   "coil-spring",
-   "spring-steel",
-   "steel",
-   "concrete",
-   "footing"
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "park",
+    "title": {
+     "en": "park",
+     "de": "Park"
+    }
+   },
+   {
+    "id": "public-space",
+    "title": {
+     "en": "public space",
+     "de": "öffentlicher Raum"
+    }
+   },
+   {
+    "id": "play",
+    "title": {
+     "en": "play",
+     "de": "Spiel"
+    }
+   },
+   {
+    "id": "maintenance",
+    "title": {
+     "en": "maintenance",
+     "de": "Wartung"
+    }
+   },
+   {
+    "id": "spring-rocker",
+    "title": {
+     "en": "spring rocker",
+     "de": "Federwippe"
+    }
+   },
+   {
+    "id": "rocking",
+    "title": {
+     "en": "rocking",
+     "de": "Wippen"
+    }
+   },
+   {
+    "id": "playground",
+    "title": {
+     "en": "playground",
+     "de": "Spielplatz"
+    }
+   },
+   {
+    "id": "toddler",
+    "title": {
+     "en": "toddler",
+     "de": "Kleinkind"
+    }
+   },
+   {
+    "id": "hdpe",
+    "title": {
+     "en": "HDPE",
+     "de": "HDPE"
+    }
+   },
+   {
+    "id": "coil-spring",
+    "title": {
+     "en": "coil spring",
+     "de": "Schraubenfeder"
+    }
+   },
+   {
+    "id": "spring-steel",
+    "title": {
+     "en": "spring steel",
+     "de": "Federstahl"
+    }
+   },
+   {
+    "id": "steel",
+    "title": {
+     "en": "steel",
+     "de": "Stahl"
+    }
+   },
+   {
+    "id": "concrete",
+    "title": {
+     "en": "concrete",
+     "de": "Beton"
+    }
+   },
+   {
+    "id": "footing",
+    "title": {
+     "en": "footing",
+     "de": "Fundament"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content (used park objects wave)",
@@ -38067,8 +38157,621 @@
     ]
    },
    "500": {
-    "status": "unavailable",
-    "denominator": 500
+    "status": "authored",
+    "denominator": 500,
+    "decisions": [
+     {
+      "en": "Body for the 75 mm feature: the footing block as it is; the spring with its three plates as one envelope cylinder of 0.20 m from the footing to the seat (it stands for the three envelope pieces of 1:200 and no longer bends); the two panels keep their 19 mm as declared sheets with the horse outline reduced from 22 to 14 points; bottom board, spacer and seat board are one block between the panels; handle and footrest with their grips are round 75 mm bars across the panels.",
+      "de": "Körper für das 75-mm-Merkmal: der Fundamentblock wie er ist; die Feder mit ihren drei Platten als ein Hüllzylinder von 0,20 m vom Fundament bis zum Sitz (er steht für die drei Hüllstücke von 1:200 und biegt sich nicht mehr); die zwei Wangen behalten ihre 19 mm als erklärte Platten mit dem von 22 auf 14 Punkte reduzierten Pferdeumriss; Bodenbrett, Abstandhalter und Sitzbrett sind ein Block zwischen den Wangen; Griff und Fußstütze mit ihren Griffen sind runde 75-mm-Stäbe quer durch die Wangen."
+     },
+     {
+      "en": "Thermal: the body solids in their regions by reference (the envelope cylinder gives the spring its coverage and stays out of the area sums), the anchor plate and the handle tube as shells of their layer at true size.",
+      "de": "Thermik: die Körper in ihren Regionen als Verweis (der Hüllzylinder gibt der Feder ihre Abdeckung und bleibt aus den Flächensummen), die Ankerplatte und das Griffrohr als Schalen ihrer Schicht in wahrer Größe."
+     },
+     {
+      "en": "Structure: the members by reference, the cylinder spanning the three spring bones, the seat block as the body joint, two spring joints, the footing support and five mass markers.",
+      "de": "Tragwerk: die Stäbe als Verweis, der Zylinder überspannt die drei Federknochen, der Sitzblock als Gelenk des Körpers, zwei Federgelenke, das Fundamentauflager und fünf Massenmarken."
+     }
+    ],
+    "body": [
+     {
+      "id": "footing-block",
+      "kind": "box",
+      "bone": "footing",
+      "material": "concrete-c20-25",
+      "role": "body",
+      "tone": 0.86,
+      "size": [
+       0.4,
+       0.5,
+       0.5
+      ],
+      "transform": {
+       "translation": [
+        0.2,
+        0,
+        0
+       ]
+      }
+     },
+     {
+      "id": "coil",
+      "kind": "revolve",
+      "bone": "spring-1",
+      "material": "spring-steel-painted",
+      "role": "body",
+      "tone": 0.27,
+      "profile": [
+       [
+        -0.018,
+        0
+       ],
+       [
+        -0.018,
+        0.1
+       ],
+       [
+        0.302,
+        0.1
+       ],
+       [
+        0.302,
+        0
+       ]
+      ],
+      "axis": [
+       1,
+       0,
+       0
+      ],
+      "origin": [
+       0,
+       0,
+       0
+      ],
+      "envelope": true
+     },
+     {
+      "id": "panel-left",
+      "kind": "extrude",
+      "bone": "body",
+      "material": "hdpe-red-faded",
+      "role": "body",
+      "tone": 0.56,
+      "profile": [
+       [
+        -0.22,
+        0
+       ],
+       [
+        0.22,
+        0
+       ],
+       [
+        0.3,
+        0.06
+       ],
+       [
+        0.36,
+        0.26
+       ],
+       [
+        0.47,
+        0.28
+       ],
+       [
+        0.5,
+        0.335
+       ],
+       [
+        0.29,
+        0.455
+       ],
+       [
+        0.27,
+        0.5
+       ],
+       [
+        0.13,
+        0.22
+       ],
+       [
+        -0.13,
+        0.21
+       ],
+       [
+        -0.35,
+        0.24
+       ],
+       [
+        -0.45,
+        0.24
+       ],
+       [
+        -0.34,
+        0.17
+       ],
+       [
+        -0.3,
+        0.06
+       ]
+      ],
+      "plane": "xy",
+      "from": 0.08,
+      "to": 0.099,
+      "sheet": true
+     },
+     {
+      "id": "panel-right",
+      "kind": "extrude",
+      "bone": "body",
+      "material": "hdpe-red-faded",
+      "role": "body",
+      "tone": 0.5,
+      "profile": [
+       [
+        -0.22,
+        0
+       ],
+       [
+        0.22,
+        0
+       ],
+       [
+        0.3,
+        0.06
+       ],
+       [
+        0.36,
+        0.26
+       ],
+       [
+        0.47,
+        0.28
+       ],
+       [
+        0.5,
+        0.335
+       ],
+       [
+        0.29,
+        0.455
+       ],
+       [
+        0.27,
+        0.5
+       ],
+       [
+        0.13,
+        0.22
+       ],
+       [
+        -0.13,
+        0.21
+       ],
+       [
+        -0.35,
+        0.24
+       ],
+       [
+        -0.45,
+        0.24
+       ],
+       [
+        -0.34,
+        0.17
+       ],
+       [
+        -0.3,
+        0.06
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.099,
+      "to": -0.08,
+      "sheet": true
+     },
+     {
+      "id": "seat-block",
+      "kind": "box",
+      "bone": "body",
+      "material": "hdpe-blue-faded",
+      "role": "body",
+      "tone": 0.42,
+      "size": [
+       0.3,
+       0.21,
+       0.16
+      ],
+      "transform": {
+       "translation": [
+        0,
+        0.105,
+        0
+       ]
+      }
+     },
+     {
+      "id": "handle",
+      "kind": "revolve",
+      "bone": "body",
+      "material": "hdpe-green-faded",
+      "role": "body",
+      "tone": 0.32,
+      "profile": [
+       [
+        -0.2,
+        0
+       ],
+       [
+        -0.2,
+        0.0375
+       ],
+       [
+        0.2,
+        0.0375
+       ],
+       [
+        0.2,
+        0
+       ]
+      ],
+      "axis": [
+       0,
+       0,
+       1
+      ],
+      "origin": [
+       0.27,
+       0.34,
+       0
+      ]
+     },
+     {
+      "id": "footrest",
+      "kind": "revolve",
+      "bone": "body",
+      "material": "hdpe-green-faded",
+      "role": "body",
+      "tone": 0.32,
+      "profile": [
+       [
+        -0.2,
+        0
+       ],
+       [
+        -0.2,
+        0.0375
+       ],
+       [
+        0.2,
+        0.0375
+       ],
+       [
+        0.2,
+        0
+       ]
+      ],
+      "axis": [
+       0,
+       0,
+       1
+      ],
+      "origin": [
+       0.13,
+       0.025,
+       0
+      ]
+     }
+    ],
+    "thermal": [
+     {
+      "id": "th-footing-block",
+      "of": "footing-block",
+      "region": "footing-concrete"
+     },
+     {
+      "id": "th-coil",
+      "of": "coil",
+      "region": "spring-steel"
+     },
+     {
+      "id": "th-panel-left",
+      "of": "panel-left",
+      "region": "panels-hdpe"
+     },
+     {
+      "id": "th-panel-right",
+      "of": "panel-right",
+      "region": "panels-hdpe"
+     },
+     {
+      "id": "th-seat-block",
+      "of": "seat-block",
+      "region": "seat-hdpe"
+     },
+     {
+      "id": "th-handle",
+      "of": "handle",
+      "region": "grips-hdpe"
+     },
+     {
+      "id": "th-footrest",
+      "of": "footrest",
+      "region": "grips-hdpe"
+     },
+     {
+      "id": "th-anchor-plate",
+      "kind": "box",
+      "bone": "footing",
+      "material": "steel-galvanised-weathered",
+      "role": "body",
+      "tone": 0.6,
+      "size": [
+       0.01,
+       0.3,
+       0.3
+      ],
+      "transform": {
+       "translation": [
+        0.405,
+        0,
+        0
+       ]
+      },
+      "region": "plates-steel",
+      "layer": "plate"
+     },
+     {
+      "id": "th-handle-tube",
+      "kind": "revolve",
+      "bone": "body",
+      "material": "steel-galvanised-weathered",
+      "role": "body",
+      "tone": 0.66,
+      "profile": [
+       [
+        -0.099,
+        0
+       ],
+       [
+        -0.099,
+        0.017
+       ],
+       [
+        0.099,
+        0.017
+       ],
+       [
+        0.099,
+        0
+       ]
+      ],
+      "axis": [
+       0,
+       0,
+       1
+      ],
+      "origin": [
+       0.27,
+       0.34,
+       0
+      ],
+      "region": "tubes-steel",
+      "layer": "tube"
+     }
+    ],
+    "structure": [
+     {
+      "id": "st-footing",
+      "of": "footing-block",
+      "member": "footing",
+      "part": "member"
+     },
+     {
+      "id": "st-coil",
+      "of": "coil",
+      "member": "spring-1",
+      "part": "member",
+      "members": [
+       "spring-2",
+       "spring-3"
+      ]
+     },
+     {
+      "id": "st-panel-left",
+      "of": "panel-left",
+      "member": "body",
+      "part": "member"
+     },
+     {
+      "id": "st-panel-right",
+      "of": "panel-right",
+      "member": "body",
+      "part": "member"
+     },
+     {
+      "id": "st-handle",
+      "of": "handle",
+      "member": "body",
+      "part": "member"
+     },
+     {
+      "id": "st-footrest",
+      "of": "footrest",
+      "member": "body",
+      "part": "member"
+     },
+     {
+      "id": "st-body-joint",
+      "of": "seat-block",
+      "member": "body",
+      "part": "joint"
+     },
+     {
+      "id": "st-joint-2",
+      "kind": "ellipsoid",
+      "bone": "spring-2",
+      "material": "spring-steel-painted",
+      "role": "detail",
+      "tone": 0.2,
+      "radii": [
+       0.048,
+       0.048,
+       0.048
+      ],
+      "member": "spring-2",
+      "part": "joint"
+     },
+     {
+      "id": "st-joint-3",
+      "kind": "ellipsoid",
+      "bone": "spring-3",
+      "material": "spring-steel-painted",
+      "role": "detail",
+      "tone": 0.2,
+      "radii": [
+       0.048,
+       0.048,
+       0.048
+      ],
+      "member": "spring-3",
+      "part": "joint"
+     },
+     {
+      "id": "st-support-footing",
+      "kind": "box",
+      "bone": "footing",
+      "material": "concrete-c20-25",
+      "role": "ground",
+      "tone": 0.15,
+      "size": [
+       0.075,
+       0.12,
+       0.12
+      ],
+      "transform": {
+       "translation": [
+        0.3625,
+        0,
+        0
+       ]
+      },
+      "member": "footing",
+      "part": "support",
+      "anchor": "footing-ground"
+     },
+     {
+      "id": "st-mass-footing",
+      "kind": "ellipsoid",
+      "bone": "footing",
+      "material": "steel-galvanised-weathered",
+      "role": "detail",
+      "tone": 0.2,
+      "radii": [
+       0.042,
+       0.042,
+       0.042
+      ],
+      "transform": {
+       "translation": [
+        0.206,
+        0,
+        0
+       ]
+      },
+      "member": "footing",
+      "part": "mass"
+     },
+     {
+      "id": "st-mass-spring-1",
+      "kind": "ellipsoid",
+      "bone": "spring-1",
+      "material": "steel-galvanised-weathered",
+      "role": "detail",
+      "tone": 0.2,
+      "radii": [
+       0.042,
+       0.042,
+       0.042
+      ],
+      "transform": {
+       "translation": [
+        0.048,
+        0,
+        0
+       ]
+      },
+      "member": "spring-1",
+      "part": "mass"
+     },
+     {
+      "id": "st-mass-spring-2",
+      "kind": "ellipsoid",
+      "bone": "spring-2",
+      "material": "steel-galvanised-weathered",
+      "role": "detail",
+      "tone": 0.2,
+      "radii": [
+       0.042,
+       0.042,
+       0.042
+      ],
+      "transform": {
+       "translation": [
+        0.046,
+        0,
+        0
+       ]
+      },
+      "member": "spring-2",
+      "part": "mass"
+     },
+     {
+      "id": "st-mass-spring-3",
+      "kind": "ellipsoid",
+      "bone": "spring-3",
+      "material": "steel-galvanised-weathered",
+      "role": "detail",
+      "tone": 0.2,
+      "radii": [
+       0.042,
+       0.042,
+       0.042
+      ],
+      "transform": {
+       "translation": [
+        0.06,
+        0,
+        0
+       ]
+      },
+      "member": "spring-3",
+      "part": "mass"
+     },
+     {
+      "id": "st-mass-body",
+      "kind": "ellipsoid",
+      "bone": "body",
+      "material": "steel-galvanised-weathered",
+      "role": "detail",
+      "tone": 0.2,
+      "radii": [
+       0.042,
+       0.042,
+       0.042
+      ],
+      "transform": {
+       "translation": [
+        0.066,
+        0.157,
+        0
+       ]
+      },
+      "member": "body",
+      "part": "mass"
+     }
+    ]
    }
   },
   "presentation": {

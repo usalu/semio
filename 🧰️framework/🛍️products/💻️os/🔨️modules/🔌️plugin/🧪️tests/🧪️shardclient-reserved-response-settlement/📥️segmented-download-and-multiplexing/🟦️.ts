@@ -81,6 +81,7 @@ export function registerSegmentedDownloadAndMultiplexingTests(kit: ShardClientSe
     it("unwraps the guest's tagged option in the generated bridge bytes, so no hop ever sees [object Object]", async () => {
       const { PLUGIN_HOST_SHIM_FILE } = await import("../../../🌐️browser-bundle/🏗️materialization/🧾️contract/🟦️.ts");
       const { pluginComponentBridgeSource } = await import("../../../🌐️browser-bundle/🏗️materialization/🌉️component-bridge-source/🟦️.ts");
+      const { guestFactorySource, hostFactorySource, noCoreModule } = await import("../../✂️worker-vm-source/🟦️.ts");
       const { APP_CHANNEL_VERSION } = await import("@semio-tech/framework-os");
       const { mkdtempSync, writeFileSync } = await import("node:fs");
       const { tmpdir } = await import("node:os");
@@ -89,11 +90,12 @@ export function registerSegmentedDownloadAndMultiplexingTests(kit: ShardClientSe
       const directory = mkdtempSync(join(tmpdir(), "semio-segmented-bridge-"));
       const chunk = new Uint8Array(SEGMENTED_DOWNLOAD_CONTRACT.chunkBytes).fill(7);
       (globalThis as Record<string, unknown>).__segmentedLifted = [{ tag: "some", val: chunk }, { tag: "none" }];
-      writeFileSync(join(directory, "guest.js"), `export const reactor = { channelVersion: async () => ${APP_CHANNEL_VERSION} };\nexport const jobs = { takeSegmentedDownloadChunk: async () => globalThis.__segmentedLifted.shift() };\nexport const checkpoint = {};\nexport const describe = {};\n`);
-      writeFileSync(join(directory, PLUGIN_HOST_SHIM_FILE), "export function __resolveEffect() {}\nexport function __rejectEffect() {}\nexport function __bindOriginalClock() {}\nexport function operationClockUs() { return 0n; }\n");
-      writeFileSync(join(directory, "bridge.mjs"), pluginComponentBridgeSource("guest", "guest.wasm"));
-      const { createActorApi } = (await import(pathToFileURL(join(directory, "bridge.mjs")).href)) as { createActorApi: (actorId: string, generation: bigint, originalAdmission: unknown, operationClockUs: () => bigint, originalReturn: { receipt(receipt: unknown): void; hold(call: unknown): void }) => Promise<{ takeSegmentedDownloadChunk: (instanceId: number, operationId: bigint) => Promise<unknown> }> };
-      const api = await createActorApi("segmented-actor", 1n, await fixtureOriginalWorkStock().admit(), () => 0n, { receipt() {}, hold() {} });
+      writeFileSync(join(directory, "guest.js"), guestFactorySource(`export const reactor = { channelVersion: async () => ${APP_CHANNEL_VERSION} };\nexport const jobs = { takeSegmentedDownloadChunk: async () => globalThis.__segmentedLifted.shift() };`));
+      writeFileSync(join(directory, PLUGIN_HOST_SHIM_FILE), hostFactorySource("__resolveEffect() {}, __rejectEffect() {}, __bindOriginalClock() {}, operationClockUs() { return 0n; }"));
+      writeFileSync(join(directory, "bridge.mjs"), pluginComponentBridgeSource("guest"));
+      const { createActorApi } = (await import(pathToFileURL(join(directory, "bridge.mjs")).href)) as { createActorApi: (actorId: string, generation: bigint, originalAdmission: unknown, operationClockUs: () => bigint, originalReturn: { receipt(receipt: unknown): void; hold(call: unknown): void }, coreModule: (url: string) => Promise<never>) => Promise<{ takeSegmentedDownloadChunk: (instanceId: number, operationId: bigint) => Promise<unknown> }> };
+      const stock = fixtureOriginalWorkStock(), admission = await stock.admit();
+      const api = await createActorApi("segmented-actor", 1n, admission, () => 0n, { receipt() {}, hold() {}, succeed: async () => stock.succeed(admission) }, noCoreModule);
       const first = await api.takeSegmentedDownloadChunk(1, 91n);
       expect(Object.prototype.toString.call(first)).toBe("[object Uint8Array]");
       expect(admitSegmentedDownloadChunk(first)).toBe(first);

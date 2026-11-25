@@ -2,7 +2,7 @@
 use super::*;
 use semio_plugin_reactor_app::{OriginalPluginAppConstruction,OriginalPluginAppFactory,OriginalPluginAppSource};
 use semio_plugin_window_kits::RegisteredDefinitionSource;
-use semio_plugin_ownership::original_store_genesis::{OriginalStoreBirth,OriginalStoreInitialSource};
+use semio_plugin_store_lifecycle::original_store_genesis::{OriginalStoreBirth,OriginalStoreInitialSource};
 use semio_framework_value::retirement::controlled::ControlledRetirement;
 #[derive(Clone,Copy,PartialEq,Eq)]
 struct NativeOpeningIdentity{instance_id:u32,definition:(usize,usize),actor:(usize,usize),registration:usize,policy:semio_plugin_mounted_owner::MountedOwnerPolicyV1}

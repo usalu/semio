@@ -204,6 +204,26 @@ impl ArtifactEditor for Fem2dPlayApp {
         Some(fem2d_io())
     }
 
+    fn interaction_topology(doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<semio_framework::InteractionTopology, semio_framework_value::ValueError> {
+        Ok(semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::fem2d_interaction_topology(doc.snapshot))
+    }
+
+    fn clipboard_media_type() -> Option<MediaType> {
+        Some(fem2d_clipboard_media_type())
+    }
+
+    fn copy_fragment(doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, NoConfig>, interaction: &InteractionView<'_>) -> Result<semio_framework::kernel::ClipboardFragment, semio_framework::kernel::ClipboardError> {
+        fem2d_copy_fragment(doc.snapshot, &interaction.selection(FEM2D_INTERACTION_DOMAIN).ids)
+    }
+
+    fn cut_operations(doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, NoConfig>, interaction: &InteractionView<'_>) -> Vec<Fem2dMutation> {
+        fem2d_cut_operations(doc, &interaction.selection(FEM2D_INTERACTION_DOMAIN).ids)
+    }
+
+    fn paste_operations(doc: &ArtifactView<'_, Fem2dSnapshot>, fragment: &semio_framework::kernel::ClipboardFragment, placement: &semio_framework::kernel::PastePlacement) -> Result<Vec<Fem2dMutation>, semio_framework::kernel::ClipboardError> {
+        fem2d_paste_operations(doc, fragment, placement)
+    }
+
     fn mounted_job_maintenance_phase(instance_id: u32) -> Option<semio_plugin::MountedOwnerPhaseV1> {
         semio_s_artifact_fem_2d_editor_session::editor::fem2d::session::maintenance_pending(instance_id).then_some(semio_plugin::MountedOwnerPhaseV1::Maintenance)
     }
@@ -472,7 +492,7 @@ impl ArtifactEditor for Fem2dPlayApp {
         _engines: &EngineHandles,
     ) -> Result<Emit<Fem2dMutation, NoConfigMutation, Self::DraftMutation>, Fault> {
         match command {
-            Fem2dCommand::RemoveSelection(payload) if payload.ids.is_empty() => remove_selection::handle(&remove_selection::RemoveSelection { ids: interaction.selection(FEM2D_INTERACTION_DOMAIN).ids.clone() }, doc, cfg),
+            Fem2dCommand::RemoveSelection(payload) => remove_selection::handle(&remove_selection::with_selection(payload, &interaction.selection(FEM2D_INTERACTION_DOMAIN).ids), doc, cfg),
             Fem2dCommand::TranslateSelection(payload) => {
                 let payload = if payload.ids.is_empty() {
                     translate_selection::TranslateSelection { ids: interaction.selection(FEM2D_INTERACTION_DOMAIN).ids.clone(), ..payload.clone() }
@@ -500,7 +520,7 @@ impl ArtifactEditor for Fem2dPlayApp {
             Fem2dCommand::SetTransformGumballFlag(payload) => set_transform_gumball_flag::handle_window(payload, view_state.ok_or_else(|| Fault::from("fem2d.gumball-flag.window-context-required"))?),
             Fem2dCommand::SetCamera(payload) => set_camera::handle_window(payload, cfg, view_state.ok_or_else(|| Fault::from("fem2d.camera.window-context-required"))?),
             Fem2dCommand::SetResultDisplay(payload) => {
-                set_result_display::handle_window(payload, cfg, view_state.ok_or_else(|| Fault::from("fem2d.results.window-context-required"))?)
+                set_result_display::handle_window(&set_result_display::resolved(payload, doc), cfg, view_state.ok_or_else(|| Fault::from("fem2d.results.window-context-required"))?)
             },
             Fem2dCommand::CanvasPointerDown(payload) => canvas_pointer_down::handle_window(payload, doc, cfg, view_state.ok_or_else(|| Fault::from("fem2d.pointer.window-context-required"))?),
             Fem2dCommand::CanvasPointerMove(payload) => canvas_pointer_move::handle_window(payload, doc, cfg, view_state.ok_or_else(|| Fault::from("fem2d.pointer.window-context-required"))?),
@@ -599,6 +619,7 @@ impl Fem2dPlayApp {
                 })
             }
             results_window::BODY_KEY => {
+                if let Some(captured) = cfg.window.filter(|snapshot| snapshot.window_kind_id() == results_window::WINDOW_KIND_ID) { results_window::config::remember(captured.window_id(), &results_window::config::current(cfg)); }
                 let window = results_window::config::effective(&results_window::config::current(cfg), clock.as_ref());
                 let window_id = semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::canvas_gesture::fem2d_gesture_window_id_for_render(view_state, results_window::WINDOW_KIND_ID);
                 let active_utility = semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::canvas_gesture::fem2d_active_utility(view_state);
@@ -618,7 +639,11 @@ impl Fem2dPlayApp {
             }
             artifact_panel::BODY_KEY => artifact_panel::render(doc.snapshot, &interaction, labels, &semio_plugin::TreeWindows::for_body(view_state, artifact_panel::BODY_KEY)),
             inspection_panel::BODY_KEY => inspection_panel::render(doc.snapshot, &interaction, labels, &semio_plugin::TreeWindows::for_body(view_state, inspection_panel::BODY_KEY)),
-            results_panel::BODY_KEY => results_panel::render(doc.snapshot, results_window::config::captured(cfg).as_ref(), clock.as_ref(), &results_window_instance_id(view_state).unwrap_or_default(), labels),
+            results_panel::BODY_KEY => {
+                let window_id = results_window_instance_id(view_state).unwrap_or_default();
+                let window = results_window::config::captured(cfg).or_else(|| results_window::config::remembered(&window_id));
+                results_panel::render(doc.snapshot, window.as_ref(), clock.as_ref(), &window_id, labels)
+            }
             _ => built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "fem2d unknown-body label admission failed")),
         }
         .map(semio_plugin::built_to_component_tree)

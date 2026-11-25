@@ -13,13 +13,14 @@ import { GENERATED_PLAYGROUNDS_PROJECTION, GENERATED_PLUGINS_PROJECTION, readGen
 import { ACTIVATION_RECEIPT_FILE, builtPluginModulesRootIn, developmentRuntimeRoot, playgroundSessionsRootV1, preparedComponentVerdict, type PreparedComponentFacts } from "../../../../../../💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts";
 import { frameworkOsEngineDeliveriesV1, frameworkOsEngineFacetV1 } from "../../../../../../💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/📥️artifacts/🕸️engines/🟦️.ts";
 import { loadDevContribution } from "../../../../../../💻️os/🔨️modules/🧑‍💻dev/🧩️contribution/📥️loading/🟦️.ts";
-import { playgroundCatalog, resolvePlaygroundFilter } from "@semio-tech/framework-plugin/build/plan";
-import { MODULE_SHARD_DIRECTORY } from "@semio-tech/plugin-registry/deployment";
-import { SHARD_WORKER_FILE } from "@semio-tech/framework-plugin/browser-bundle/materialization/contract";
-import { PREVIEW2_VENDOR_RELATIVE } from "@semio-tech/framework-plugin/browser-bundle/imports";
-import { FONT_ASSET } from "@semio-tech/framework-canvas-ts/fonts";
-import { fontAssetPublicationRootV1 } from "@semio-tech/framework-canvas-ts/fonts/publication";
-import { publishedCargoArtifactDirectoryV1 } from "@semio-tech/process/artifacts/native-build/published";
+import { playgroundCatalog, resolvePlaygroundFilter } from "../../../../../../💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/🏗️build/📋️plan/🟦️.ts";
+import { MODULE_SHARD_DIRECTORY } from "../../../../../../💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
+import { SHARD_WORKER_FILE } from "../../../../../../💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/🌐️browser-bundle/🏗️materialization/🧾️contract/🟦️.ts";
+import { shardWorkerPublicationV1 } from "../../../../../../💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/🌐️browser-bundle/🏗️materialization/🧵️shard-worker-source/🟦️.ts";
+import { PREVIEW2_VENDOR_RELATIVE } from "../../../../../../💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/🌐️browser-bundle/🕸️imports/🟦️.ts";
+import { FONT_ASSET } from "../../../../../../../🔨️modules/🖼️canvas/📦️packages/🟦️typescript/🔤️fonts/🟦️.ts";
+import { fontAssetPublicationRootV1 } from "../../../../../../../🔨️modules/🖼️canvas/📦️packages/🟦️typescript/🔤️fonts/📦️publication/🟦️.ts";
+import { publishedCargoArtifactDirectoryV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/📤️published/🟦️.ts";
 import { repositoryCachePartitionRootDataV1 } from "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📂️paths/🟦️.ts";
 import { rootDevPlaygroundRequestV1 } from "../🌱️birth/🟦️.ts";
 import { nativeHostFilesystemViewV1, nativeHostTaskV1 } from "../../../🎮️playground/🖥️native-host/🟦️.ts";
@@ -69,7 +70,7 @@ async function ensureCatalog(workspace: string, invocation: ScriptInvocation): P
 
 async function ensureBrowserSupport(workspace: string, invocation: ScriptInvocation, mode: "prototype" | "release"): Promise<void> {
   const moduleRoot = builtPluginModulesRootIn(workspace, mode);
-  if (publicationMissing(moduleRoot, [join(PREVIEW2_VENDOR_RELATIVE, ".semio-artifact.json"), join(MODULE_SHARD_DIRECTORY, SHARD_WORKER_FILE)])) {
+  if (publicationMissing(moduleRoot, [join(PREVIEW2_VENDOR_RELATIVE, ".semio-artifact.json"), join(MODULE_SHARD_DIRECTORY, SHARD_WORKER_FILE)]) || shardWorkerPublicationV1(readFileSync(join(moduleRoot, MODULE_SHARD_DIRECTORY, SHARD_WORKER_FILE), "utf8")) !== "current") {
     const { SupportScript } = await import("../../../../../../💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🚀️commands/🟦️.ts");
     const support = join(workspace, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript");
     await new SupportScript(support, workspace, invocation).run([]);
@@ -136,7 +137,7 @@ async function preparePlaygroundModels(workspace: string, invocation: ScriptInvo
     await buildDescriptorEmitterV1(workspace, invocation,
       scriptCompilerAdmissionControlV1(invocation, "playground:descriptor-emitter", 0));
   }
-  const { repositoryCargoNetworkV1 } = await import("@semio-tech/repo-lib/cargo");
+  const { repositoryCargoNetworkV1 } = await import("../../../📦️packages/🟦️typescript/🦀️cargo/🟦️.ts");
   await buildComponentClosureV1(workspace, missing, {
     facet, invocation, prepareCargoOwners: true,
     network: repositoryCargoNetworkV1(invocation, workspace),
@@ -199,7 +200,7 @@ async function serveWgpuPlayground(workspace: string, invocation: ScriptInvocati
 }
 
 async function buildPlaygroundNativeHost(workspace: string, invocation: ScriptInvocation, mode: "prototype" | "release", host: unknown): Promise<void> {
-  const { repositoryCargoNetworkV1 } = await import("@semio-tech/repo-lib/cargo");
+  const { repositoryCargoNetworkV1 } = await import("../../../📦️packages/🟦️typescript/🦀️cargo/🟦️.ts");
   if (host === undefined) {
     const { buildNativeRenderer } = await import("../../../../../../💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🏗️compiler/🦀️native/📜️script.ts");
     const rust = join(workspace, WGPU_RENDERER, "📦️packages/🦀️rust");

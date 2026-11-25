@@ -60,6 +60,7 @@ pub enum StlMutation {
     SetTriangleVertices(set_triangle_vertices::SetTriangleVertices),
 }
 dsl::original_pack_value_operation_receiving!(StlMutation);
+dsl::artifact_persisted_binary_operation!(StlMutation);
 //#endregion 🔖️Mutations
 
 //#region 🔖️Kinds

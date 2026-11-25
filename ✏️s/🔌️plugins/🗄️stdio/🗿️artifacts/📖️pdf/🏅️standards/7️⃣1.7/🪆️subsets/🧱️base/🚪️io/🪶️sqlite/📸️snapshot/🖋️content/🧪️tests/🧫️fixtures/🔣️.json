@@ -500,7 +500,7 @@
         "extra": [],
         "body": {
           "kind": "samples",
-          "values": [
+          "packed": [
             0,
             255,
             128

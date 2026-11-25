@@ -9,7 +9,7 @@ export async function scanListingV1({root,binary,exclude,filter,threads=8}){
   const args=["scan","--root",root,"--threads",String(threads)];
   args.push(...nativeExclusionArgumentsV1(exclude));
   const bytes=await new Promise((resolve,reject)=>{
-   const child=spawn(binary,args,{stdio:["ignore","pipe","inherit"]}),chunks=[];
+   const child=spawn(binary,args,{windowsHide:true,stdio:["ignore","pipe","inherit"]}),chunks=[];
    child.stdout.on("data",chunk=>chunks.push(chunk));child.once("error",reject);
    child.once("exit",code=>code===0?resolve(Buffer.concat(chunks)):reject(new Error("scan exited with "+code)));
   });

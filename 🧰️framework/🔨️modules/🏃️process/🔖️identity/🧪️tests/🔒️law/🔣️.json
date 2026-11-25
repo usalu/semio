@@ -1,0 +1,194 @@
+{
+ "description": "Production files that still judge a process by pid alone (process.kill(pid, 0)); the law test lets this list only shrink. Convert a file to the identity module (processHolderAliveV1 with a persisted {pid, startMs}) and lower or remove its entry.",
+ "sites": {
+  "🌎️hub/🚀️local-bootstrap/🏃️execution/🟦️.ts": {
+   "count": 1
+  },
+  "🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/📤️export/🎭️cast/🟦️.ts": {
+   "count": 1
+  },
+  "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🏁️settlement/🟦️.ts": {
+   "count": 1
+  },
+  "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🎫️gate/📖️status/🟦️.ts": {
+   "count": 1
+  },
+  "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🙋️asks/🟦️.ts": {
+   "count": 1
+  },
+  "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🛡️warden/🔁️loop/🟦️.ts": {
+   "count": 1
+  },
+  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/🎛️command/🟦️.ts": {
+   "count": 1
+  },
+  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts": {
+   "count": 1
+  },
+  "🧰️framework/🔨️modules/🏃️process/🔒️leases/📈️standing/🤝️yield/🟦️.ts": {
+   "count": 1
+  },
+  "🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts": {
+   "count": 1
+  },
+  "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧭️order/🗂️registry/🟦️.ts": {
+   "count": 1
+  },
+  "🧰️framework/🔨️modules/🏃️process/🧪️testing/🏖️sandbox/📐️layout/🟦️.ts": {
+   "count": 1
+  },
+  "🧰️framework/🔨️modules/🏃️process/🧪️testing/🏖️sandbox/🧹️image-sweep/🟦️.ts": {
+   "count": 1
+  },
+  "🧰️framework/🔨️modules/🏃️process/🧪️testing/🟨️bun/🪦️orphans/👷️parent/🟦️.ts": {
+   "count": 1
+  },
+  "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🟦️.ts": {
+   "count": 1
+  },
+  "🧰️framework/🔨️modules/🏃️process/🪓️termination/🟦️.ts": {
+   "count": 1
+  },
+  "🧰️framework/🔨️modules/🏃️process/🪪️agent-sessions/🗄️store/🟦️.ts": {
+   "count": 1
+  },
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🔐️lease/🟦️.ts": {
+   "count": 2
+  },
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🛰️agent-bridge-rendezvous/🟦️.ts": {
+   "count": 1
+  },
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚀️local-hub/🏃️execution/🟦️.ts": {
+   "count": 1
+  },
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/⚙️setup/💰️funding/🟦️.ts": {
+   "count": 1
+  },
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🏷️names/🟦️.ts": {
+   "count": 1
+  },
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🗂️members/🔎️scan/🟦️.ts": {
+   "count": 1
+  },
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts": {
+   "count": 2
+  },
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/♻️collection/🟦️.ts": {
+   "count": 1
+  },
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/👷️worker/🟦️.ts": {
+   "count": 1
+  },
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🛰️sidecar/🕸️graph/🔭️read/🟦️.ts": {
+   "count": 1
+  },
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🛰️sidecar/🚦️ready/🟦️.ts": {
+   "count": 2
+  },
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/🧹️disk-recovery/🔌️real/🟦️.ts": {
+   "count": 1
+  },
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/🔀️partition/📌️retention/🟦️.ts": {
+   "count": 1
+  },
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏞️task-view/🟦️.ts": {
+   "count": 1
+  },
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/🧹️reap/🟨️.mjs": {
+   "count": 2
+  },
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/🟨️.mjs": {
+   "count": 1
+  },
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏛️service/🌐️host/🟨️.mjs": {
+   "count": 1
+  },
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/📜️journal/🟦️.ts": {
+   "count": 1
+  },
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/📜️journal/🧹️abandoned/🟦️.ts": {
+   "count": 1
+  },
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🧾️exit-log/🟨️.mjs": {
+   "count": 1
+  },
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🪦️producer-publications/🟨️.mjs": {
+   "count": 1
+  },
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/⚙️operations/🟦️.ts": {
+   "count": 1
+  },
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧵️sessions/📖️status/🟦️.ts": {
+   "count": 1
+  },
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧵️sessions/🔌️port/🟦️.ts": {
+   "count": 2
+  },
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🐙️semio/🗄️store/🟦️.ts": {
+   "count": 1
+  },
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🌐️owner-pool/🔒️guard/🟦️.ts": {
+   "count": 1
+  },
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🌐️owner-pool/🪦️reaper/🟦️.ts": {
+   "count": 1
+  },
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/🏊️pool/🟨️.mjs": {
+   "count": 1
+  },
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/🐕️watchdog/🟨️.mjs": {
+   "count": 1
+  },
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/📥️take/🟨️.mjs": {
+   "count": 1
+  },
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs": {
+   "count": 1
+  },
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🗃️file-ports/🟨️.mjs": {
+   "count": 1
+  },
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🗃️row-log/🟨️.mjs": {
+   "count": 1
+  },
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧩️claims/🟨️.mjs": {
+   "count": 1
+  },
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧷️pin/🟨️.mjs": {
+   "count": 1
+  },
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🪧️door-board/🟨️.mjs": {
+   "count": 1
+  },
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧹️cache-gc/🏃️runner/🟦️.ts": {
+   "count": 1
+  },
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️doctor/🔌️ports/🟦️.ts": {
+   "count": 1
+  },
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️agent-sessions/⌨️command/🟦️.ts": {
+   "count": 1
+  },
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/📍️cursor/🟦️.ts": {
+   "count": 1
+  },
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/📥️replica/🟦️.ts": {
+   "count": 1
+  },
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/📦️project-records/🚚️entry-lane/🟦️.ts": {
+   "count": 1
+  },
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔄️transactions/🧪️verification/🏃️shard-execution/🟦️.ts": {
+   "count": 1
+  },
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🔐️transaction-lease/🟦️.ts": {
+   "count": 1
+  },
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🥾️entry/🟨️.mjs": {
+   "count": 1
+  },
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🔐️run-lease/🟦️.ts": {
+   "count": 1
+  }
+ }
+}

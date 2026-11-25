@@ -23,4 +23,5 @@ impl OpBinary for BinaryMutation {
         dsl::variants_binary::decode_tagged_op(crate::standards::v_raw::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO, bytes)
     }
 }
+
 }

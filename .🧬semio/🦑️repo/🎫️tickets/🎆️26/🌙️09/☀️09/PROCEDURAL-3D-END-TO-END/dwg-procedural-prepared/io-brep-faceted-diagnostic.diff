@@ -1,0 +1,10 @@
+--- a/io.rs	2026-11-25 08:58:55
++++ b/io.rs	2026-11-25 08:59:02
+@@ -164,6 +164,7 @@
+             if format != "gltf" && supported.contains(&name) && meshes.iter().any(|mesh| mesh.attributes.values().filter(|attribute| attribute.semantic == semantic).count() > 1) { add(code, format!("{} retains one {name} channel. Additional sets remain in the Semio Text document.",format.to_uppercase()), format!("{} erhält einen {name}-Kanal. Zusätzliche Sätze bleiben im Semio-Text-Dokument.",format.to_uppercase())); }
+         }
+         if matches!(format,"stl"|"ply"|"las"|"dwg") && meshes.len() > 1 { add("part-grouping","This format combines surface parts and their identities. The editable graph retains each part.".into(),"Dieses Format verbindet Oberflächenteile und ihre Kennungen. Der bearbeitbare Graph erhält jedes Teil.".into()); }
++        if format == "dwg" && !meshes.is_empty() { add("brep-faceted","DWG carries the faceted surface only. Exact curved faces, edges and topology stay in the Semio document; STEP retains them.".into(),"DWG enthält nur die facettierte Oberfläche. Exakte gekrümmte Flächen, Kanten und Topologie bleiben im Semio-Dokument; STEP erhält sie.".into()); }
+         if format == "las" && meshes.iter().any(|mesh| !mesh.indices.is_empty()) { add("topology","LAS exports points and cannot retain face connectivity.".into(),"LAS exportiert Punkte und kann die Flächenverbindungen nicht erhalten.".into()); }
+         let levels = match format { "ply" => 255.0, "las" => 65535.0, _ => 0.0 };
+         let mut color_precision = false;

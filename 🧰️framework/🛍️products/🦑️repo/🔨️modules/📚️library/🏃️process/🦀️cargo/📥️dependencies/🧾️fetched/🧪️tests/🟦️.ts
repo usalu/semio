@@ -5,7 +5,7 @@ import {existsSync,mkdirSync,mkdtempSync,readdirSync,readFileSync,renameSync,rmS
 import {tmpdir} from "node:os";
 import {dirname,join} from "node:path";
 import fixture from "./🔣️.json" with {type:"json"};
-import {captureFetchedV1,classifyFetchedLockV1,fetchedArchiveFilesV1,fetchedListingV1,fetchedHoldsV1,fetchedLockedV1,fetchedSourcesV1,fetchedLockPathV1,fetchedPackagesV1,readFetchedReceiptV1,type FetchedPortV1,type FetchedReceiptV1} from "../🟦️.ts";
+import {captureFetchedV1,fetchedArchivesHoldV1,fetchedReceiptRowsV1,classifyFetchedLockV1,fetchedArchiveFilesV1,fetchedListingV1,fetchedHoldsV1,fetchedLockedV1,fetchedSourcesV1,fetchedLockPathV1,fetchedPackagesV1,readFetchedReceiptV1,type FetchedPortV1,type FetchedReceiptV1} from "../🟦️.ts";
 import {installUnpackedV1} from "../🧱️install/🟦️.ts";
 
 const request="a".repeat(64),pause=()=>new Promise<void>(done=>setTimeout(done,15));
@@ -51,7 +51,7 @@ test("fetched receipt: follows the lockfile and the locked archive content throu
  try{
   mkdirSync(join(workspace,"app"),{recursive:true});writeFileSync(join(workspace,"Cargo.toml"),"[workspace]\nmembers = [\"app\"]\n");writeFileSync(join(workspace,"app","Cargo.toml"),"[package]\nname = \"app\"\nversion = \"0.1.0\"\n");
   for(const index of["idx","idx2"]){mkdirSync(join(home,"registry","cache",index),{recursive:true});mkdirSync(join(home,"registry","src",index),{recursive:true});}
-  const port=portOf(workspace,home);let receipt:FetchedReceiptV1|undefined,lock="registry";writeFileSync(join(workspace,"Cargo.lock"),lockOf(lock));
+  const port=portOf(workspace,home);let receipt:FetchedReceiptV1|undefined,rows:Awaited<ReturnType<typeof fetchedReceiptRowsV1>>,lock="registry";writeFileSync(join(workspace,"Cargo.lock"),lockOf(lock));
   for(const step of fixture.sequence as Array<{op:string;lock?:string;defined?:boolean;expect?:boolean;name?:string;index?:string;to?:string}>){
    await pause();
    const crate=()=>join(home,"registry","cache",step.index??"idx",step.name!);
@@ -63,8 +63,9 @@ test("fetched receipt: follows the lockfile and the locked archive content throu
    else if(step.op==="moveCrate")renameSync(crate(),join(home,"registry","cache",step.to!,step.name!));
    else if(step.op==="removeCrate")rmSync(crate());
    else if(step.op==="addSource")mkdirSync(join(home,"registry","src","idx",step.name!));
-   else if(step.op==="capture"){writeFileSync(join(workspace,"Cargo.lock"),lockOf(step.lock!));const got=await captureFetchedV1({request,manifests:["app/Cargo.toml"],home},port);expect(got!==undefined).toBe(step.defined!);if(got){receipt=got;lock=step.lock!;if(python){const independent=JSON.parse(spawnSync(python,["-I","-c",oracleSource,workspace,home,JSON.stringify(got)],{encoding:"utf8"}).stdout);expect(independent.locks.map((row:{digest:string})=>row.digest)).toEqual(got.locks.map(row=>row.digest));expect(independent.registry).toEqual(got.registry);}}}
+   else if(step.op==="capture"){writeFileSync(join(workspace,"Cargo.lock"),lockOf(step.lock!));const got=await captureFetchedV1({request,manifests:["app/Cargo.toml"],home},port);expect(got!==undefined).toBe(step.defined!);if(got){receipt=got;rows=await fetchedReceiptRowsV1(got,port);lock=step.lock!;if(python){const independent=JSON.parse(spawnSync(python,["-I","-c",oracleSource,workspace,home,JSON.stringify(got)],{encoding:"utf8"}).stdout);expect(independent.locks.map((row:{digest:string})=>row.digest)).toEqual(got.locks.map(row=>row.digest));expect(independent.registry).toEqual(got.registry);}}}
    else if(step.op==="holds")expect(await fetchedHoldsV1(receipt!,home,port)).toBe(step.expect!);
+   else if(step.op==="archives")expect(await fetchedArchivesHoldV1(receipt!,rows!,home,port)).toBe(step.expect!);
   }
  }finally{rmSync(workspace,{recursive:true,force:true});rmSync(home,{recursive:true,force:true});}
 });

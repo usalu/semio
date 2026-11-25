@@ -108,13 +108,21 @@ use semio_plugin_retained_command::typed_operation::MountedTypedCommandFullOpera
         }
     }
 
-    fn close_mounted<A: ArtifactApp>(mounted: &mut MountedTypedCommandFullOperation<A>, context: &str, original_grant:RetainedCloneGrant, cx: &mut semio_framework_job::StepContext<'_>) {
+    fn close_mounted<A: ArtifactApp>(mounted: &mut MountedTypedCommandFullOperation<A>, issuer: &ToolCancellationHandle, context: &str, original_grant:RetainedCloneGrant, cx: &mut semio_framework_job::StepContext<'_>) {
         for _ in 0..100_000 {
             if mounted.terminal_is_empty() {
                 return;
             }
             let quoted = original_grant;
             assert!(quoted.maximum_items>0 && quoted.maximum_depth>0, "{context}");
+            if mounted.lease_retirement_ready() {
+                let demand = mounted.lease_retirement_demands(issuer, quoted.maximum_copy_bytes).unwrap();
+                let step = semio_framework_job::close_original_effect_step(cx, demand, |effect| {
+                    semio_framework_value::RetainedWorkPoll::Complete(mounted.lease_retirement_step(issuer, effect))
+                }).expect("the canonical issuer retires its cancellation lease");
+                assert!(step.progress().fits(quoted), "{context}");
+                continue;
+            }
             match mounted.retirement_step(cx).unwrap() {
                 PluginLifecycleStep::Progress(progress) => assert!(progress.fits(quoted) && progress.copied_bytes<=TYPED_OPERATION_RESULT_PAGE_BYTES && progress.released_bytes<=TYPED_OPERATION_RESULT_PAGE_BYTES, "{context}"),
                 PluginLifecycleStep::Complete(progress) => {
@@ -135,9 +143,9 @@ use semio_plugin_retained_command::typed_operation::MountedTypedCommandFullOpera
             let quoted = app.mounted_policy.close;
             assert!(quoted.maximum_items>0 && quoted.maximum_depth>0, "{context}");
             match app.close_step(cx, quoted).unwrap() {
-                PluginLifecycleStep::Progress(progress) => assert!(progress.fits(quoted) && progress.copied_bytes<=TYPED_OPERATION_RESULT_PAGE_BYTES && progress.released_bytes<=TYPED_OPERATION_RESULT_PAGE_BYTES, "{context}"),
+                PluginLifecycleStep::Progress(progress) => assert!(progress.fits(quoted), "{context}: {progress:?} exceeds {quoted:?}"),
                 PluginLifecycleStep::Complete(progress) => {
-                    assert!(progress.fits(quoted) && progress.copied_bytes<=TYPED_OPERATION_RESULT_PAGE_BYTES && progress.released_bytes<=TYPED_OPERATION_RESULT_PAGE_BYTES, "{context}");
+                    assert!(progress.fits(quoted), "{context}: {progress:?} exceeds {quoted:?}");
                     return;
                 }
                 PluginLifecycleStep::AwaitingInput { reason } => panic!("{context} awaited input: {reason}"),

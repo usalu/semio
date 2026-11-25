@@ -1,4 +1,4 @@
-/** 🪽️ Contract: a query over command closures that finds a layer of a held entry gone from the store (the collector removed it, a peer superseded the entry) reads the entry anew and answers from one state, at most the declared attempts, saying why in English and German; layers and entries that are only added never touch it; a real second process that adds layers and entries in a loop and removes the held entry once does not make the query exit. */
+/** 🪽️ Contract (on an entry whose layer is a TypeScript program, compared by its values, its derived facts and its graph and analysis rows (the reads of the provider designation are memoized per process and recorded by the first derivation only); a command walk is a `closure-graph` row, no layer): a query over command closures that finds a layer of a held entry gone from the store (the collector removed it, a peer superseded the entry) reads the entry anew and answers from one state, at most the declared attempts, saying why in English and German; layers and entries that are only added never touch it; a real second process that adds layers and entries in a loop and removes the held entry once does not make the query exit. */
 import{afterAll,expect,spyOn,test}from"bun:test";
 import{existsSync,mkdirSync,readdirSync,readFileSync,rmSync,writeFileSync}from"node:fs";
 import{brotliDecompressSync}from"node:zlib";
@@ -8,6 +8,8 @@ import{privateRepositoryWorkspaceV1}from"../../../../../../🧪️testing/🧫�
 import{declareLibraryBuildTestEnvelopeV1}from"../../../../../../🧪️testing/🪪️native-birth/🟦️.ts";
 import{INFERENCE_LIMITS_V1}from"../../../🧬️schema/🟨️.mjs";
 import schema from"../../../🧬️schema/🔣️.json";
+import walks from"../../../🧪️tests/✂️derived-walks/🔣️.json";
+const program=walks.program as {projectRoot:string;files:Record<string,string>};
 import{markReadParentV1}from"../../../../../👁️observation/🚧️read-parent/🟨️.mjs";
 const repository=await privateRepositoryWorkspaceV1("graph");
 declareLibraryBuildTestEnvelopeV1({suite:"build-inference-script-inputs"});
@@ -20,14 +22,14 @@ const roots:string[]=[];
 afterAll(()=>{for(const root of roots)rmSync(root,{recursive:true,force:true});});
 const write=(root:string,files:Readonly<Record<string,string>>)=>{for(const[path,text]of Object.entries(files)){mkdirSync(dirname(join(root,path)),{recursive:true});writeFileSync(join(root,path),text);}};
 const lost=(digest?:string)=>Object.assign(Error("closure layer lost"),{closureLayerLost:true,storeChanged:true,layerDigest:digest});
-const answer=(resolved:any)=>JSON.stringify([[...resolved.values],resolved.rows,resolved.derived]);
+const answer=(resolved:any)=>JSON.stringify([[...resolved.values],resolved.rows.filter((row:any)=>row.kind==="global"||row.kind==="analysis"),resolved.derived]);
 const named=(entries:string)=>readdirSync(entries).flatMap(name=>(JSON.parse(brotliDecompressSync(readFileSync(join(entries,name))).toString()).layers as string[]));
 const setup=async()=>{
  const root=await repository.scratch("layer-lost-");roots.push(root);
- write(root,{"tools/a.mjs":'import "./b.mjs";\nexport const a=1;\n',"tools/b.mjs":"export const b=2;\n"});
+ write(root,program.files);
  scriptInputs.resetClosureEntriesV1();scriptInputs.bindClosureStoreV1(root,join(root,".ce"),true);
  const scripts=createScriptInputCache({workspaceRoot:root,lateClosures:true}),api=scriptInputs.closureApiV1(scripts,root);
- const handle=scriptInputs.closureHandleOfV1(await api.closureOf([join(root,"tools/a.mjs")],[],"test-discovery"));
+ const handle=scriptInputs.closureHandleOfV1(await api.genericTargetCommandInputs({options:{cwd:program.projectRoot,command:"repo ./📜️script.ts check "+program.projectRoot},metadata:{semio:{closure:{typescript:["{projectRoot}/tsconfig.json"]}}}},program.projectRoot));
  return{root,api,recipes:[[handle.key,handle.recipe]],layers:join(root,".ce","l"),entries:join(root,".ce","e")};
 };
 
@@ -68,6 +70,7 @@ test("a held entry whose layers the collector removed is derived again and the q
  const{api,recipes,layers,entries}=await setup(),said:string[]=[],spy=spyOn(process.stderr,"write").mockImplementation(((chunk:unknown)=>{said.push(String(chunk));return true;})as never);
  try{
   await scriptInputs.withClosurePassV1(async()=>{
+   await api.resolve(recipes);
    const first=answer(await api.resolve(recipes));
    const stored=readdirSync(layers);expect(stored.length).toBeGreaterThan(0);
    for(const name of stored)rmSync(join(layers,name));
@@ -97,6 +100,7 @@ test("layers and entries that are only added never touch a query, even while a r
   }
   console.log(JSON.stringify({count,removed}));`;
  await scriptInputs.withClosurePassV1(async()=>{
+  await api.resolve(recipes);
   const first=answer(await api.resolve(recipes)),before=readdirSync(layers).length;expect(before).toBeGreaterThan(0);
   const child=Bun.spawn([process.execPath,"-e",code],{stdout:"pipe",stderr:"pipe"});
   let rounds=0,exited=false;void child.exited.then(()=>{exited=true;});

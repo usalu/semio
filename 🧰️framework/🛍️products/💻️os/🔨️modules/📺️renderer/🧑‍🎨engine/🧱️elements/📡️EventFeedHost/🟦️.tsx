@@ -19,8 +19,8 @@ import { formatHostTemporalValueV1 } from "@semio-tech/ui-contract/presentation/
 //#region Helpers
 const FEED_TONE_CLASS: Record<string, string> = {
   info: "text-foreground",
-  success: "text-success",
-  warning: "text-warning",
+  success: "text-success-ink",
+  warning: "text-warning-ink",
   error: "text-destructive",
   /** ⚖️ `Severity::Fatal` (contract freeze `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-
    * CLASS-CONFLICTS` §C1) — bolder than plain `error` since a fatal outcome never partially applied. */
@@ -104,7 +104,7 @@ export function EventFeedHost({ node, onAction, requestContextMenu }: ComponentS
       {entries.map((entry) => (
         <div
           key={entry.id}
-          className={cn("flex items-start gap-single rounded-md p-single", activateAction && cn(interactiveHoverFillClass, "cursor-pointer"))}
+          className={cn("flex items-start gap-single p-single", activateAction && cn(interactiveHoverFillClass, "cursor-pointer"))}
           role={activateAction ? "button" : "paragraph"}
           tabIndex={activateAction ? 0 : undefined}
           onClick={

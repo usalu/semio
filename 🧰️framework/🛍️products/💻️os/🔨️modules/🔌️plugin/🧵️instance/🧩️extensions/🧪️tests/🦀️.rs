@@ -1,6 +1,6 @@
 //! 🧪️ The instance extension list honours every registered entry, in registration order, and an empty list routes nothing.
 use semio_plugin_decl_app::ArtifactApp;
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use semio_plugin_decl_emission::Emit;
 use semio_framework::FaultFrom;

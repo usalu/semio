@@ -92,9 +92,11 @@
     }
   ],
   "surface": {
-    "opacity": 0.82,
-    "glass": "semio-chrome-window",
-    "opaque": "semio-chrome-window",
+    "level": "window",
+    "frameLevel": "pane",
+    "veil": "semio-chrome-foreground",
+    "flatten": "semio-chrome-canvas",
+    "label": "semio-chrome-foreground",
     "switch": "semio@chip@glass"
   },
   "frame": {

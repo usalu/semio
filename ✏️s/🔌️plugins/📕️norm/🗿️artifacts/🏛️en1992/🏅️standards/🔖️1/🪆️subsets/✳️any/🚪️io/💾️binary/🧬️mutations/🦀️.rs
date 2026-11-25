@@ -23,4 +23,5 @@ pub fn decode_op(bytes: &[u8]) -> Result<En1992Mutation, protocol::ProtocolError
     En1992Mutation::decode_op(bytes)
 }
 
-semio_os_kernel::original_pack_value_operation_receiving!(En1992Mutation);
+semio_os_kernel::original_decoded_operation_receiving!(En1992Mutation);
+semio_os_kernel::artifact_persisted_binary_operation!(En1992Mutation);

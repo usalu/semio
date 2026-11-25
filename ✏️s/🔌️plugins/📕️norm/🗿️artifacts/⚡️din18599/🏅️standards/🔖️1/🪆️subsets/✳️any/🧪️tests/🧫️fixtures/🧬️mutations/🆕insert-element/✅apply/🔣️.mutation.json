@@ -1,5 +1,5 @@
 {
-  "mutation": "insertelement",
+  "mutation": "insertElement",
   "index": 1,
   "element": {
     "id": "element-extra",

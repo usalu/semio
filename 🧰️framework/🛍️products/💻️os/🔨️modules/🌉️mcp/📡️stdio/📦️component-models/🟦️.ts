@@ -1,12 +1,12 @@
 import { lstat, readFile } from "node:fs/promises";
 import { isAbsolute, join, resolve } from "node:path";
-import { validateJsonSchemaSubset } from "@semio-tech/schema-validator-ts";
-import { readNativeCallerAuthorityV1, withRepositoryArtifactGroupTaskV1, withRepositoryArtifactGroupV1 } from "@semio-tech/repo-lib/artifacts";
-import { repositoryCachePartitionDirectoryV1, withRepositoryCacheStoreV1 } from "@semio-tech/repo-lib/storage";
-import { requireIssuedResourceControlInvocationV1, type ScriptInvocation } from "@semio-tech/process/routing";
+import { validateJsonSchemaSubset } from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+import { readNativeCallerAuthorityV1, withRepositoryArtifactGroupTaskV1, withRepositoryArtifactGroupV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️artifacts/🟦️.ts";
+import { repositoryCachePartitionDirectoryV1, withRepositoryCacheStoreV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/💾️storage/🟦️.ts";
+import { requireIssuedResourceControlInvocationV1, type ScriptInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import type { ResourceLeaseControl } from "@semio-tech/process/leases";
-import { componentModelDirectoryKeyV1, componentModelRequestV1, readComponentModelIntentV1 } from "@semio-tech/framework-plugin/model/contract";
-import { readRetainedComponentModelV1 } from "@semio-tech/framework-plugin/model/reading";
+import { componentModelDirectoryKeyV1, componentModelRequestV1, readComponentModelIntentV1 } from "../../../🔌️plugin/📦️packages/🦀️rust/📦️model/📋️contract/🟦️.ts";
+import { readRetainedComponentModelV1 } from "../../../🔌️plugin/📦️packages/🦀️rust/📦️model/👓️reading/🟦️.ts";
 import { readNativeCatalogV1 } from "../../../🔌️plugin/📇️registry/📥️runtime/🟦️.ts";
 import schema from "./🔣️.json" with { type: "json" };
 
@@ -80,4 +80,16 @@ export async function withMcpComponentEnvironmentV1<T>(workspace: string, invoca
         return body(childEnvironment, retained.control);
       }));
   });
+}
+
+/** 🏗️ Builds and publishes the component model of one plugin through the owning component driver (facet "model"); a failed or cancelled build rejects. */
+export async function buildMcpComponentModelV1(workspace: string, invocation: ScriptInvocation, pluginId: string, progress: (line: string) => void, signal: AbortSignal): Promise<void> {
+  const [{ buildComponentClosureV1 }, { repositoryCargoNetworkV1 }, { scriptCompilerAdmissionControlV1 }] = await Promise.all([
+    import("../../../🔌️plugin/🏗️build/🧩️driver-stages/🟦️.ts"),
+    import("../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🦀️cargo/🟦️.ts"),
+    import("../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts"),
+  ]);
+  signal.throwIfAborted();
+  await buildComponentClosureV1(workspace, new Set([pluginId]), { invocation, facet: "model", network: repositoryCargoNetworkV1(invocation, workspace), control: scriptCompilerAdmissionControlV1(invocation, `mcp:component-model:${pluginId}`, 0, signal), log: progress });
+  signal.throwIfAborted();
 }

@@ -9,6 +9,9 @@ pub(super) fn payload_edit(action: &str, page: Option<u32>, object: String, text
 
 pub(super) fn edit_object(snapshot: &PdfSnapshot, action: &str, object_id: &str, x: f64, y: f64, width: f64, height: f64, red: f64, green: f64, blue: f64, text: &str) -> Result<Vec<PdfMutation>, Fault> {
     let object = find_object(snapshot, object_id).ok_or_else(|| fault(format!("pdf object '{object_id}' is not on the page")))?;
+    if !object_displayed(snapshot, object_id) {
+        return Err(refuse(PdfFault::ContentPreserved, format!("PDF object {object_id} is preserved but not displayed")).with_param("page", (object.page + 1).to_string()));
+    }
     if object.kind == ObjectKind::Annotation {
         use semio_s_artifact_stdio_pdf_mut_family_8::standards::v1_7::subsets::base::schema::mutations::RemoveAnnotation;
         let (at, mut annotation) = annotation_at(snapshot, object.page, object_id)?;
@@ -32,7 +35,7 @@ pub(super) fn edit_object(snapshot: &PdfSnapshot, action: &str, object_id: &str,
         "set-text" if object.kind == ObjectKind::Text => {
             let mut fonts = FontMeasurements::new(snapshot);
             let valid = fonts.codec(&object.font).map_or_else(|| text.bytes().all(|byte| (0x20..=0x7E).contains(&byte)), |font| font.shows_text(text));
-            if !valid { return Err(fault("the active PDF font cannot show the requested text")); }
+            if !valid { return Err(refuse(PdfFault::GlyphsMissing, format!("PDF font {} cannot show the requested text", object.font)).with_param("font", object.font.clone())); }
             replace_shown_text(&mut content, &object, text)?;
         }
         "set-font-size" if object.kind == ObjectKind::Text => {
@@ -116,13 +119,13 @@ pub(super) fn replace_image_samples(snapshot: &PdfSnapshot, object_id: &str, wid
     }
     let pixel_width = width.max(1.0).round() as u32;
     let pixel_height = height.max(1.0).round() as u32;
-    let values=hex.split(|character:char|character==','||character.is_whitespace()).filter(|part|!part.is_empty()).map(|part|part.parse::<u8>().map(u32::from).map_err(|_|fault("image samples must be logical values from 0 to 255"))).collect::<Result<Vec<_>,_>>()?;
-    let color_space = image_color_space(pixel_width, pixel_height, values.len())?;
+    let packed=hex.split(|character:char|character==','||character.is_whitespace()).filter(|part|!part.is_empty()).map(|part|part.parse::<u8>().map_err(|_|fault("image samples must be logical values from 0 to 255"))).collect::<Result<Vec<_>,_>>()?;
+    let color_space = image_color_space(pixel_width, pixel_height, packed.len())?;
     if let Some(image) = snapshot.images.iter().find(|image| image.id == object.text) {
         let mut image = image.clone();
         image.width = pixel_width;
         image.height = pixel_height;
-        image.body=PdfImageBody::Samples {values};
+        image.body=PdfImageBody::Samples {packed:packed.clone()};
         image.bits_per_component = 8;
         image.color_space = Some(color_space);
         return Ok(vec![PdfMutation::SetImage(SetImage { image, index: None })]);
@@ -132,7 +135,7 @@ pub(super) fn replace_image_samples(snapshot: &PdfSnapshot, object_id: &str, wid
     let Some(PdfOp::InlineImage { image }) = content.get_mut(object.end) else { return Err(fault(format!("pdf image '{object_id}' is not a stored image"))) };
     image.width = pixel_width;
     image.height = pixel_height;
-    image.body=PdfImageBody::Samples {values};
+    image.body=PdfImageBody::Samples {packed};
     image.bits_per_component = 8;
     image.color_space = Some(color_space);
     Ok(vec![PdfMutation::SetPageContent(SetPageContent { index: object.page, content })])

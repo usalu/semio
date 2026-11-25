@@ -327,7 +327,7 @@ use semio_framework_value::ToValue;
     if package.descriptor_version != 1 || package.manifest.plugin_id != plugin_id || receipt.binds(semio_os_kernel::os_component_receipt::ComponentProfileV1::Release, plugin_id, &package.package_id, &receipt.wasm_sha256, &semio_framework_hash::sha256_hex(wire)).is_err() {
         return Err((format!("hub execution-target descriptor identity mismatch: {plugin_id}")).into());
     }
-    ProgramBridgeEntry::from_wasm(plugin_id.to_string(), Some(package.package_id), Some(receipt.wasm_sha256.clone()), component.to_path_buf(), package.manifest)
+    ProgramBridgeEntry::from_wasm(plugin_id.to_string(), Some(package.package_id), Some(receipt.wasm_sha256.clone()), component.to_path_buf(), package.manifest.resolved())
 }
 
 /// 📏️ The native runtime manifest's own bound (`NativeRuntimeManifest::read` refuses more).

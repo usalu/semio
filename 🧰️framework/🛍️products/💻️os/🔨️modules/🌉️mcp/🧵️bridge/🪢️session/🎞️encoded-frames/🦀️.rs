@@ -140,12 +140,12 @@ impl BridgeEncodedFrame {
         written
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     pub(crate) fn page_count(&self) -> usize {
         self.pages.iter().filter(|page| page.is_some()).count()
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     pub(crate) fn decode(&self) -> GatewayToShell {
         let mut bytes = Vec::new();
         bytes.try_reserve_exact(self.len).expect("bridge test decode reservation failed");

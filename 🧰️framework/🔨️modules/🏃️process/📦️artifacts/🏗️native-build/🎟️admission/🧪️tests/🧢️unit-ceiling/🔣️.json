@@ -240,6 +240,400 @@
      "peakRssBytes": 6291456000
     }
    ]
+  },
+  {
+   "id": "library-exactly-at-budget",
+   "observations": [
+    {
+     "key": "semio-a@semio_a|wasm32-wasip2|prototype|lib",
+     "peakRssBytes": 1610612736
+    }
+   ]
+  },
+  {
+   "id": "library-one-mib-above-unlisted",
+   "observations": [
+    {
+     "key": "semio-a@semio_a|wasm32-wasip2|prototype|lib",
+     "peakRssBytes": 1611661312
+    }
+   ]
+  },
+  {
+   "id": "library-one-byte-above-rounds-up",
+   "observations": [
+    {
+     "key": "semio-a@semio_a|wasm32-wasip2|prototype|lib",
+     "peakRssBytes": 1610612737
+    }
+   ]
+  },
+  {
+   "id": "library-in-final-budget-is-exceeded",
+   "observations": [
+    {
+     "key": "semio-a@semio_a|wasm32-wasip2|prototype|lib",
+     "peakRssBytes": 3145728000
+    },
+    {
+     "key": "semio-a@semio_a|wasm32-wasip2|prototype|cdylib",
+     "peakRssBytes": 3145728000
+    }
+   ]
+  },
+  {
+   "id": "final-between-budgets-fits",
+   "observations": [
+    {
+     "key": "semio-a@semio_a|wasm32-wasip2|prototype|cdylib",
+     "peakRssBytes": 4294967296
+    },
+    {
+     "key": "semio-a@semio_a|wasm32-wasip2|prototype|lib",
+     "peakRssBytes": 104857600
+    }
+   ]
+  },
+  {
+   "id": "mixed-kinds-one-crate-listed-library-fits",
+   "observations": [
+    {
+     "key": "semio-hub-cad-component@semio_hub_cad_component|wasm32-wasip2|prototype|lib",
+     "peakRssBytes": 1048576000
+    },
+    {
+     "key": "semio-hub-cad-component@semio_hub_cad_component|wasm32-wasip2|prototype|cdylib",
+     "peakRssBytes": 3145728000
+    }
+   ]
+  },
+  {
+   "id": "listed-library-exceeds-and-final-fits",
+   "observations": [
+    {
+     "key": "semio-hub-cad-component@semio_hub_cad_component|wasm32-wasip2|prototype|lib",
+     "peakRssBytes": 2097152000
+    },
+    {
+     "key": "semio-hub-cad-component@semio_hub_cad_component|wasm32-wasip2|prototype|cdylib",
+     "peakRssBytes": 3145728000
+    }
+   ]
+  },
+  {
+   "id": "host-proc-macro-is-a-library",
+   "observations": [
+    {
+     "key": "semio-m@semio_m|host|prototype|proc-macro",
+     "peakRssBytes": 1677721600
+    },
+    {
+     "key": "semio-n@semio_n|host|prototype|bin",
+     "peakRssBytes": 1572864000
+    }
+   ]
+  },
+  {
+   "id": "listed-dwg-library-fits-again",
+   "observations": [
+    {
+     "key": "semio-s-artifact-stdio-dwg-snapshot-objects@semio_s_artifact_stdio_dwg_snapshot_objects|wasm32-unknown-unknown|prototype|lib",
+     "peakRssBytes": 1610612736
+    }
+   ]
+  }
+ ],
+ "freshCases": [
+  {
+   "id": "fresh-empty",
+   "rows": []
+  },
+  {
+   "id": "fresh-rows-without-lines-are-stale",
+   "rows": [
+    {
+     "key": "semio-a@semio_a|wasm32-wasip2|prototype|lib",
+     "peakRssBytes": 3145728000,
+     "atMs": 1
+    },
+    {
+     "key": "semio-a@semio_a|wasm32-wasip2|prototype|lib",
+     "peakRssBytes": 524288000,
+     "atMs": 2,
+     "lines": 100
+    }
+   ]
+  },
+  {
+   "id": "fresh-only-without-lines-leaves-nothing",
+   "rows": [
+    {
+     "key": "semio-a@semio_a|wasm32-wasip2|prototype|lib",
+     "peakRssBytes": 3145728000,
+     "atMs": 1
+    },
+    {
+     "key": "semio-a@semio_a|wasm32-wasip2|prototype|lib",
+     "peakRssBytes": 3145728000,
+     "atMs": 2
+    }
+   ]
+  },
+  {
+   "id": "fresh-split-source-drops-old-peaks",
+   "rows": [
+    {
+     "key": "semio-a@semio_a|wasm32-wasip2|prototype|lib",
+     "peakRssBytes": 5242880000,
+     "atMs": 1,
+     "lines": 30000
+    },
+    {
+     "key": "semio-a@semio_a|wasm32-wasip2|prototype|lib",
+     "peakRssBytes": 943718400,
+     "atMs": 2,
+     "lines": 1000
+    },
+    {
+     "key": "semio-a@semio_a|wasm32-wasip2|prototype|lib",
+     "peakRssBytes": 838860800,
+     "atMs": 3,
+     "lines": 1100
+    }
+   ]
+  },
+  {
+   "id": "fresh-tolerance-boundary-is-inclusive",
+   "rows": [
+    {
+     "key": "semio-a@semio_a|wasm32-wasip2|prototype|lib",
+     "peakRssBytes": 104857600,
+     "atMs": 1,
+     "lines": 100
+    },
+    {
+     "key": "semio-a@semio_a|wasm32-wasip2|prototype|lib",
+     "peakRssBytes": 209715200,
+     "atMs": 2,
+     "lines": 125
+    },
+    {
+     "key": "semio-a@semio_a|wasm32-wasip2|prototype|lib",
+     "peakRssBytes": 314572800,
+     "atMs": 3,
+     "lines": 125
+    }
+   ]
+  },
+  {
+   "id": "fresh-just-outside-tolerance",
+   "rows": [
+    {
+     "key": "semio-a@semio_a|wasm32-wasip2|prototype|lib",
+     "peakRssBytes": 104857600,
+     "atMs": 1,
+     "lines": 100
+    },
+    {
+     "key": "semio-a@semio_a|wasm32-wasip2|prototype|lib",
+     "peakRssBytes": 209715200,
+     "atMs": 2,
+     "lines": 126
+    }
+   ]
+  },
+  {
+   "id": "fresh-zero-lines-matches-only-zero",
+   "rows": [
+    {
+     "key": "semio-a@semio_a|wasm32-wasip2|prototype|lib",
+     "peakRssBytes": 314572800,
+     "atMs": 1,
+     "lines": 5
+    },
+    {
+     "key": "semio-a@semio_a|wasm32-wasip2|prototype|lib",
+     "peakRssBytes": 104857600,
+     "atMs": 2,
+     "lines": 0
+    },
+    {
+     "key": "semio-a@semio_a|wasm32-wasip2|prototype|lib",
+     "peakRssBytes": 209715200,
+     "atMs": 3,
+     "lines": 0
+    }
+   ]
+  },
+  {
+   "id": "fresh-keys-are-independent",
+   "rows": [
+    {
+     "key": "semio-a@semio_a|wasm32-wasip2|prototype|lib",
+     "peakRssBytes": 104857600,
+     "atMs": 1,
+     "lines": 10
+    },
+    {
+     "key": "semio-b@semio_b|wasm32-wasip2|prototype|lib",
+     "peakRssBytes": 209715200,
+     "atMs": 2,
+     "lines": 10000
+    },
+    {
+     "key": "semio-b@semio_b|wasm32-wasip2|prototype|lib",
+     "peakRssBytes": 314572800,
+     "atMs": 3,
+     "lines": 10100
+    },
+    {
+     "key": "semio-a@semio_a|wasm32-wasip2|prototype|lib",
+     "peakRssBytes": 419430400,
+     "atMs": 4,
+     "lines": 50
+    }
+   ]
+  },
+  {
+   "id": "fresh-latest-wins-over-file-order",
+   "rows": [
+    {
+     "key": "semio-a@semio_a|wasm32-wasip2|prototype|lib",
+     "peakRssBytes": 104857600,
+     "atMs": 9,
+     "lines": 40
+    },
+    {
+     "key": "semio-a@semio_a|wasm32-wasip2|prototype|lib",
+     "peakRssBytes": 209715200,
+     "atMs": 1,
+     "lines": 1000
+    },
+    {
+     "key": "semio-a@semio_a|wasm32-wasip2|prototype|lib",
+     "peakRssBytes": 314572800,
+     "atMs": 2,
+     "lines": 1000
+    }
+   ]
+  }
+ ],
+ "commands": [
+  {
+   "id": "unlisted-library-wasm",
+   "command": "rustc --crate-name semio_plain --edition=2021 /w/a.rs --crate-type lib --target wasm32-wasip2"
+  },
+  {
+   "id": "unlisted-library-host",
+   "command": "rustc --crate-name semio_plain --crate-type lib /w/a.rs"
+  },
+  {
+   "id": "listed-library-declared-budget",
+   "command": "rustc --crate-name semio_s_artifact_sourcing_curation --crate-type lib --target wasm32-wasip2 /w/b.rs"
+  },
+  {
+   "id": "listed-crate-other-target-is-unlisted",
+   "command": "rustc --crate-name semio_s_artifact_stdio_semio_brep_member --crate-type lib /w/b.rs"
+  },
+  {
+   "id": "listed-final-declared-budget",
+   "command": "rustc --crate-name semio_hub_sourcing_component --crate-type cdylib --target=wasm32-wasip2 /w/c.rs"
+  },
+  {
+   "id": "unlisted-final-budget",
+   "command": "rustc --crate-name semio_new_hub --crate-type=lib,cdylib --target wasm32-wasip2 /w/d.rs"
+  },
+  {
+   "id": "listed-hub-sourcing-equals-form",
+   "command": "rustc --crate-name=semio_hub_sourcing --crate-type=lib --target=wasm32-wasip2 /w/f.rs"
+  },
+  {
+   "id": "proc-macro-is-a-library",
+   "command": "rustc --crate-name semio_macros --crate-type proc-macro /w/e.rs"
+  },
+  {
+   "id": "bin-and-build-script-are-libraries",
+   "command": "rustc --crate-name build_script_build --crate-type bin /w/build.rs"
+  },
+  {
+   "id": "no-crate-type-is-a-library",
+   "command": "rustc --crate-name semio_test_target --test /w/t.rs --target wasm32-wasip2"
+  },
+  {
+   "id": "two-crate-type-flags-with-cdylib",
+   "command": "rustc --crate-name semio_two --crate-type rlib --crate-type cdylib --target wasm32-wasip2 /w/g.rs"
+  },
+  {
+   "id": "rustdoc-and-clippy-driver-count",
+   "command": "clippy-driver rustc --crate-name semio_plain --crate-type lib --target wasm32-wasip2"
+  },
+  {
+   "id": "probe-without-a-crate-name",
+   "command": "rustc -vV"
+  },
+  {
+   "id": "empty-crate-name-value",
+   "command": "rustc --crate-name= --crate-type lib"
+  },
+  {
+   "id": "flag-without-value-at-the-end",
+   "command": "rustc --crate-type lib --crate-name"
+  },
+  {
+   "id": "listed-dwg-objects-other-target",
+   "command": "rustc --crate-name semio_s_artifact_stdio_dwg_snapshot_objects --crate-type lib --target wasm32-unknown-unknown /w/h.rs"
+  },
+  {
+   "id": "listed-cad-final-budget-above-final-ceiling",
+   "command": "rustc --crate-name semio_hub_cad_component --crate-type cdylib --target wasm32-wasip2 /w/i.rs"
+  },
+  {
+   "id": "unlisted-test-executable-host",
+   "command": "rustc --crate-name kernel_event_receiving --edition=2021 /w/t.rs --test --emit=dep-info,link"
+  },
+  {
+   "id": "unlisted-bin-host",
+   "command": "rustc --crate-name semio_tool --edition=2021 /w/m.rs --crate-type bin"
+  },
+  {
+   "id": "unlisted-staticlib-wasm",
+   "command": "rustc --crate-name semio_static --crate-type staticlib --target wasm32-wasip2 /w/s.rs"
+  },
+  {
+   "id": "listed-hub-aggregate-library-declared-budget",
+   "command": "rustc --crate-name semio_hub_stdio --edition=2021 /w/h.rs --crate-type lib --target wasm32-wasip2"
+  },
+  {
+   "id": "listed-hub-office-aggregate-rlib-declared-budget",
+   "command": "rustc --crate-name semio_hub_stdio_office --edition=2021 /w/o.rs --crate-type rlib --target wasm32-wasip2"
+  },
+  {
+   "id": "listed-hub-aggregate-above-previous-budget-still-library",
+   "command": "rustc --crate-name semio_hub_stdio --crate-type lib --target wasm32-wasip2 /w/h2.rs"
+  },
+  {
+   "id": "listed-hub-office-aggregate-dual-crate-type-is-final",
+   "command": "rustc --crate-name semio_hub_stdio_office --crate-type rlib,cdylib --target wasm32-wasip2 /w/o2.rs"
+  },
+  {
+   "id": "listed-hub-stdio-component-final-declared-budget",
+   "command": "rustc --crate-name semio_hub_stdio_component --edition=2021 /w/sc.rs --crate-type cdylib --target wasm32-wasip2"
+  },
+  {
+   "id": "unlisted-hub-stdio-office-component-final-until-measured",
+   "command": "rustc --crate-name semio_hub_stdio_office_component --edition=2021 /w/oc.rs --crate-type cdylib --target wasm32-wasip2"
+  },
+  {
+   "id": "listed-hub-space-component-final-declared-budget",
+   "command": "rustc --crate-name semio_hub_space_component --edition=2021 /w/c.rs --crate-type cdylib --target wasm32-wasip2"
+  },
+  {
+   "id": "listed-pdf-model-drifted-budget",
+   "command": "rustc --crate-name semio_s_artifact_stdio_pdf_model --edition=2021 /w/p.rs --crate-type lib --target wasm32-wasip2"
+  },
+  {
+   "id": "listed-bim-model-snapshot-library-declared-budget",
+   "command": "rustc --crate-name semio_s_artifact_bim_model_snapshot --edition=2021 /w/b.rs --crate-type lib --target wasm32-wasip2"
   }
  ]
 }

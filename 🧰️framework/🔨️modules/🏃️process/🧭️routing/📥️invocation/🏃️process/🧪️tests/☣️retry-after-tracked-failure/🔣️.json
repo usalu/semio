@@ -1,0 +1,6 @@
+{
+  "rows": [
+    {"id": "vanished-path-closes-the-owner", "failure": "ENOENT", "closes": true},
+    {"id": "absent-publication-answers-the-caller", "failure": "PublishedArtifactAbsent", "closes": false}
+  ]
+}

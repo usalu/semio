@@ -164,7 +164,7 @@ class Beat2_References(_live_scene.RefreshMoving, _visuals.ClipScene):
 
     def _padlock(self, reference, side):
         """🔒 A small padlock hovering on the column (left) or row (right) part of a reference token."""
-        body = _m.RoundedRectangle(corner_radius=0.025, width=0.17, height=0.13, stroke_color=WARN, stroke_width=1.5, fill_color=WARN, fill_opacity=0.9)
+        body = _m.Rectangle(width=0.17, height=0.13, stroke_color=WARN, stroke_width=1.5, fill_color=WARN, fill_opacity=0.9)
         shackle = _m.Arc(radius=0.055, start_angle=0, angle=_m.PI, stroke_color=WARN, stroke_width=2.2).next_to(body, _m.UP, buff=-0.01)
         lock = _m.VGroup(body, shackle)
         x = reference.get_left()[0] + 0.1 if side == "l" else reference.get_right()[0] - 0.1
@@ -212,9 +212,10 @@ class Beat2_References(_live_scene.RefreshMoving, _visuals.ClipScene):
         self.remove(*rows)
         card.add(*rows)
 
-    def _card(self, width, height, point):
-        """🃏 A dark rounded card behind the right-hand explanations."""
-        return _m.RoundedRectangle(corner_radius=0.12, width=width, height=height, fill_color=BACKGROUND, fill_opacity=0.92, stroke_color=MUTED, stroke_width=1.2).move_to([point[0], point[1], 0])
+    def _card(self, width, height, point, top_depth=0.0):
+        """🃏 A dark square card behind the right-hand explanations; a ``top_depth`` heading row is one glass chip."""
+        return _visuals._art.window_frame(width, height, color=MUTED, stroke_width=1.2, fill_color=BACKGROUND, fill_opacity=0.92, top_depth=top_depth,
+                                          top_chips=((0, width),) if top_depth else ()).move_to([point[0], point[1], 0])
 
     def _say(self, string, point, *, size=LABEL, color=INK, edge="c", width=None):
         """💬 A text label placed by an edge."""
@@ -292,11 +293,11 @@ class Beat2_References(_live_scene.RefreshMoving, _visuals.ClipScene):
     def _formula_card(self, formulas, point, *, caption=None, width=5.4, colors=None):
         """🧾 A card with one or more coloured formulas below an optional caption."""
         height = 0.55 + 0.52 * len(formulas) + (0.4 if caption else 0)
-        card = self._card(width, height, point)
+        card = self._card(width, height, point, top_depth=0.5 if caption else 0.0)
         group = _m.VGroup(card)
         y = point[1] + height / 2 - 0.3
         if caption:
-            group.add(self._say(caption, (point[0] - width / 2 + 0.25, y), size=SMALL, color=MUTED, edge="l"))
+            group.add(self._say(caption, (point[0] - width / 2 + 0.25, y + 0.05), size=SMALL, color=MUTED, edge="l"))
             y -= 0.42
         for formula in formulas:
             tag, text, *note = formula if isinstance(formula, tuple) else ("", formula)
@@ -828,12 +829,12 @@ class Beat2_References(_live_scene.RefreshMoving, _visuals.ClipScene):
         vv = _xl.evaluate(base0)
         named = self._window(_S["b_name"], SHEET, "C:G", (2, 12), "G3")
         named.edit("=F3*(theta_i-theta_e)")
-        manager = _m.VGroup(self._card(5.4, 2.0, (RIGHT_X, -0.35)), self._say(self.tr("Name Manager", "Namens-Manager"), (RIGHT_X - 2.5, 0.5), size=SMALL, color=DATA, edge="l"))
+        manager = _m.VGroup(self._card(5.4, 2.2, (RIGHT_X, -0.45), top_depth=0.48), self._say(self.tr("Name Manager", "Namens-Manager"), (RIGHT_X - 2.5, 0.41), size=SMALL, color=DATA, edge="l"))
         for x, head in ((-2.5, self.tr("Name", "Name")), (-0.6, self.tr("Refers to", "Bezieht sich auf")), (2.5, self.tr("Value", "Wert"))):
-            manager.add(self._say(head, (RIGHT_X + x, 0.15), size=SMALL, color=MUTED, edge="l" if x < 2 else "r"))
+            manager.add(self._say(head, (RIGHT_X + x, 0.0), size=SMALL, color=MUTED, edge="l" if x < 2 else "r"))
         for index, name in enumerate(("theta_i", "theta_e")):
             ref = _xl.parse_ref(base0.names[name])
-            y = -0.3 - index * 0.5
+            y = -0.4 - index * 0.5
             manager.add(self._say(name, (RIGHT_X - 2.5, y), size=SMALL, edge="l"),
                         self._say(_xl.localize("=" + base0.names[name], lang, base0)[1:], (RIGHT_X - 0.6, y), size=SMALL, edge="l"),
                         self._say(self._cell(base0, _xl.address(ref.col, ref.row), ref.sheet, vv), (RIGHT_X + 2.5, y), size=SMALL, color=GOOD, edge="r"))

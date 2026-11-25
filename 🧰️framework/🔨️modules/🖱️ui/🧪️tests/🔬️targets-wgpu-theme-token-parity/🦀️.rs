@@ -80,6 +80,10 @@ fn outcome_paints_decode_to_the_same_hex_react_paints() {
     for (appearance, theme) in [("light", Theme::light()), ("dark", Theme::dark())] {
         for (field, value, token) in [
             ("error", theme.error, "danger"),
+            ("error_ink", theme.error_ink, if appearance == "light" { "danger-deep" } else { "danger-bright" }),
+            ("warning_ink", theme.warning_ink, if appearance == "light" { "warning-deep" } else { "warning" }),
+            ("success_ink", theme.success_ink, if appearance == "light" { "success-deep" } else { "success-bright" }),
+            ("info_ink", theme.info_ink, if appearance == "light" { "info-deep" } else { "info" }),
             ("diff_added", theme.diff_added, "diff-added"),
             ("success", theme.success, "success"),
             ("warning", theme.warning, "warning"),

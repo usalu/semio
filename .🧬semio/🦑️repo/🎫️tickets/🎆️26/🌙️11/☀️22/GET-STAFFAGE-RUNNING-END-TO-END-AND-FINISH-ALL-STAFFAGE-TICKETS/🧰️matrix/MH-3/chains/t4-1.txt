@@ -1,0 +1,3 @@
+# fourth fixer: the evaluation time per subject of the slow 1:50 of person-eating-standing and person-pushing-bicycle; the left hand of person-drinking-coffee at 1:500 in the drawing it has now and in its backup (800 MB)
+(cd "$T" && timeout 1500 "$B" "$here/../MV-3/timing.ts" person-eating-standing 50) 2>&1 | tail -3
+(cd "$S/📦️packages/🟦️typescript" && timeout 600 "$B" "$here/suit.ts" person-drinking-coffee "$GEN/backup/person-drinking-coffee.json") 2>&1 | cut -c1-400

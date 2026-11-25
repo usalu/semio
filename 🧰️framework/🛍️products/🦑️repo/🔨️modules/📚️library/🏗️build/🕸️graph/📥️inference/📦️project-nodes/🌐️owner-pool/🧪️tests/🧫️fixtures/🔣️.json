@@ -277,7 +277,7 @@
    "childMegabytes": 800
   },
   {
-   "name": "nothing available keeps one child and says why",
+   "name": "nothing available holds the pool and reports memory",
    "host": {
     "cores": 8,
     "totalMegabytes": 16384,
@@ -597,7 +597,7 @@
    "childMegabytes": 1000
   },
   {
-   "name": "below the floor one child still runs and the free number is zero",
+   "name": "below the floor the last child drains and free memory reports zero",
    "host": {
     "cores": 8,
     "totalMegabytes": 16384,
@@ -1089,7 +1089,7 @@
     "reason": "yielding"
    },
    {
-    "children": 1,
+    "children": 0,
     "reason": "nothing-fits"
    },
    {
@@ -1157,7 +1157,7 @@
     "reason": null
    },
    {
-    "children": 1,
+    "children": 0,
     "reason": "nothing-fits"
    },
    {

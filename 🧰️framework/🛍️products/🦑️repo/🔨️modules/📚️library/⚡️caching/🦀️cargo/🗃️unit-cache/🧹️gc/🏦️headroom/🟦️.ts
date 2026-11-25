@@ -10,6 +10,7 @@ import {beginAdmissionWaitV1,enterScriptProcessWaitV1} from "../../../../../../.
 import {nativeImageAvailabilityCorrectionMillisecondsV1,nativeImageContainerFreeBytesSyncV1,nativeImageEffectiveAvailableBytesV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/⚖️availability/🟦️.ts";
 import {nativeFreeSpaceSyncV1,nativeImageBackingFilenameV1,nativeImageRootV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
+import {parseProcessIdentityV1,processIdentityForPidV1} from "../../../../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts";
 
 const policy=schema.definitions.Policy.const,messages=schema.definitions.Messages.const,layout=UNIT_CACHE_POLICY_V1.layout,GIB=1024**3;
 /** 📐️ The authored policy of the image headroom admission.
@@ -100,7 +101,7 @@ export function recordHeadroomSampleV1(history:HeadroomHistoryV1,names:readonly 
  return Object.freeze({version:1,classes:Object.freeze(Object.fromEntries(kept.sort().map(name=>[name,classes[name]!])))});
 }
 
-type RecordV1=Readonly<HeadroomRowV1&{version:1;pid:number;label:string}>;
+type RecordV1=Readonly<HeadroomRowV1&{version:1;pid:number;startMs:number;label:string}>;
 
 function readRows(directory:string,realMs:number):HeadroomRowV1[]{
  let all:string[];try{all=readdirSync(directory);}catch{return[];}
@@ -110,8 +111,9 @@ function readRows(directory:string,realMs:number):HeadroomRowV1[]{
   const path=join(directory,name);
   try{
    const age=realMs-statSync(path).mtimeMs,row=JSON.parse(readFileSync(path,"utf8")) as RecordV1;
-   if(age>policy.abandonedMilliseconds||age>policy.staleMilliseconds&&!processAliveV1(row.pid)){rmSync(path,{force:true});continue;}
-   if(age<=policy.staleMilliseconds&&processAliveV1(row.pid)&&typeof row.id==="string"&&(row.state==="waiting"||row.state==="running")&&Number.isSafeInteger(row.reservedBytes)&&Number.isSafeInteger(row.rampMilliseconds)&&Number.isSafeInteger(row.arrivedMs))rows.push({id:row.id,state:row.state,reservedBytes:row.reservedBytes,rampMilliseconds:row.rampMilliseconds,arrivedMs:row.arrivedMs,admittedMs:Number.isSafeInteger(row.admittedMs)?row.admittedMs:null});
+   const holder=parseProcessIdentityV1(row);
+   if(age>policy.abandonedMilliseconds||holder===undefined||age>policy.staleMilliseconds&&!processAliveV1(holder)){rmSync(path,{force:true});continue;}
+   if(age<=policy.staleMilliseconds&&processAliveV1(holder)&&typeof row.id==="string"&&(row.state==="waiting"||row.state==="running")&&Number.isSafeInteger(row.reservedBytes)&&Number.isSafeInteger(row.rampMilliseconds)&&Number.isSafeInteger(row.arrivedMs))rows.push({id:row.id,state:row.state,reservedBytes:row.reservedBytes,rampMilliseconds:row.rampMilliseconds,arrivedMs:row.arrivedMs,admittedMs:Number.isSafeInteger(row.admittedMs)?row.admittedMs:null});
   }catch{}
  }
  return rows;
@@ -195,11 +197,11 @@ export async function admitImageHeadroomV1(options:Readonly<{root:string;capacit
   try{await requestRustImageReclaimV1({root:options.root,capacityBytes:options.capacityBytes,rule:options.softReclaim,language:options.language,report:options.report,signal:options.signal,measure,...options.softPorts});}
   catch(error){if(options.signal?.aborted)throw error;}
  };
- const id=options.id??randomBytes(8).toString("hex"),file=join(directory,id+".json"),arrivedMs=now(),pid=options.pid??process.pid;
+ const id=options.id??randomBytes(8).toString("hex"),file=join(directory,id+".json"),arrivedMs=now(),identity=processIdentityForPidV1(options.pid??process.pid),pid=identity.pid;
  const admissionFile=join(directory,policy.latestAdmissionFile),admissionToken=randomBytes(12).toString("hex");let uncontendedAtAdmission=false;
  const imageWriteUncontended=():boolean=>{try{return uncontendedAtAdmission&&readRows(directory,Date.now()).every(row=>row.id===id)&&readFileSync(admissionFile,"utf8")===admissionToken;}catch{return false;}};
  ensureBallastV1(options.root);
- const write=(state:"waiting"|"running",admittedMs:number|null)=>roomy(options.root,()=>(options.writeRecord??writeAtomic)(file,JSON.stringify({version:1,pid,label:options.label.slice(0,200),id,state,reservedBytes:estimate.reservedBytes,rampMilliseconds:estimate.rampMilliseconds,arrivedMs,admittedMs})));
+ const write=(state:"waiting"|"running",admittedMs:number|null)=>roomy(options.root,()=>(options.writeRecord??writeAtomic)(file,JSON.stringify({version:1,pid,startMs:identity.startMs,label:options.label.slice(0,200),id,state,reservedBytes:estimate.reservedBytes,rampMilliseconds:estimate.rampMilliseconds,arrivedMs,admittedMs})));
  let beat:ReturnType<typeof setInterval>|undefined,deferredAttempts=0;
  const deferFull=(error:unknown)=>{if(++deferredAttempts>=policy.claimAttempts)throw error;};
  let poll=policy.pollMilliseconds,reclaimed=false,nextReclaim=-Infinity,lastProgress=-Infinity,monitor:ReturnType<typeof setInterval>|undefined,admittedMs=0;

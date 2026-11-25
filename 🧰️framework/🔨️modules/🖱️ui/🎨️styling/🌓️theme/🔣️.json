@@ -130,10 +130,7 @@
     "disabledPanelMixAlpha": 128,
     "labelHaloAlpha": 200,
     "selectionPreviewStrokeAlpha": 180,
-    "handleFillTransparent": 0,
-    "glassPanelAlpha": 0.58,
-    "glassMenuAlpha": 0.36,
-    "glassWindowOptionsAlpha": 0.22
+    "handleFillTransparent": 0
   },
   "metrics": {
     "camera": {
@@ -284,8 +281,6 @@
       "paddingStandardUiSpacing": 1,
       "panelInsetUiSpacing": 1,
       "glassBlurPx": 24,
-      "glassPanelBlurPx": 40,
-      "glassWindowOptionsBlurPx": 14,
       "glassSaturate": 1.45
     },
     "typography": {
@@ -670,6 +665,18 @@
         },
         "progress": {
           "token": "secondary"
+        },
+        "errorInk": {
+          "token": "danger"
+        },
+        "warningInk": {
+          "token": "danger"
+        },
+        "successInk": {
+          "token": "danger"
+        },
+        "infoInk": {
+          "token": "danger"
         }
       },
       "diagram": {
@@ -1047,6 +1054,18 @@
         },
         "progress": {
           "token": "secondary"
+        },
+        "errorInk": {
+          "token": "warning"
+        },
+        "warningInk": {
+          "token": "warning"
+        },
+        "successInk": {
+          "token": "warning"
+        },
+        "infoInk": {
+          "token": "info"
         }
       },
       "diagram": {

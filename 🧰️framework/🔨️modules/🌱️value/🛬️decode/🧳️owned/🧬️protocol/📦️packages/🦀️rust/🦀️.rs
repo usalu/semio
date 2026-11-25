@@ -32,6 +32,8 @@ pub trait SlotFrame:Default+std::ops::DerefMut<Target=NativeReceivingChild<Origi
  fn frame_pending(&self)->bool;
  /// 🫙️ Reports that the resident action holds no custody.
  fn frame_idle(&self)->bool{!self.frame_pending()}
+ /// 🔗️ Whether the slot lives under a record slot whose own alias already keeps the original source resident, so it checks the captured source coordinates instead of binding another alias.
+ const BORROWED:bool=false;
 }
 /// 🏠️ The action is owned by its slot.
 #[derive(Default)]
@@ -49,7 +51,7 @@ impl SharedFrame{
 }
 impl std::ops::Deref for SharedFrame{type Target=NativeReceivingChild<OriginalReceivingPrimary>;fn deref(&self)->&Self::Target{unsafe{&*self.target()}}}
 impl std::ops::DerefMut for SharedFrame{fn deref_mut(&mut self)->&mut Self::Target{unsafe{&mut *self.target()}}}
-impl SlotFrame for SharedFrame{fn frame_pending(&self)->bool{self.anchored&&std::ops::Deref::deref(self).pending()}}
+impl SlotFrame for SharedFrame{const BORROWED:bool=true;fn frame_pending(&self)->bool{self.anchored&&std::ops::Deref::deref(self).pending()}}
 impl<E:semio_framework_value_native_decoding::native_decoding::NativeReceivingEffectError> NativeReceivingChild<E>{
  pub fn pending(&self)->bool{self.request.is_some()||self.demand.is_some()||self.effect.phase()!=semio_framework_value_native_decoding::native_decoding::NativeReceivingEffectPhase::Empty}
  pub fn terminal_is_empty(&self)->bool{!self.pending()}
@@ -135,6 +137,10 @@ pub trait NativeReceiver<I:?Sized,T>:Send+'static{
  fn terminal_is_empty(&self)->bool;
  /// ♻️ Supplies explicit evidence only for this actual empty receiver's bounded native destructor.
  fn native_terminal_release(&self)->Option<RetainedCursorRelease<Self>> where Self:Sized{None}
+ /// 🪙️ Quotes the whole remaining close as one funded release when this finished receiver keeps no custody beyond returnable aliases and idle fields; `None` keeps the rung ladder.
+ fn flat_close_demand(&self)->Option<(RetirementDemand,u64)>{None}
+ /// 🪙️ Performs the quoted flat close and leaves the receiver terminal-empty.
+ fn flat_close(&mut self,_:&mut crate::RetainedAllocationEffect<'_>)->Result<RetainedCloneProgress,ValueError>{Err(ValueError::invariant("native receiver has no flat close"))}
 }
 
 pub struct NativeReceivingBatch{left:RetainedCloneGrant,progress:RetainedCloneProgress,work:u128}
@@ -315,23 +321,15 @@ let g=$effect.grant();
 let d=match $s.close_demands($body){Ok(d)=>d,Err(error)=>return Ok($reply.complete(Err(error.into())))};
 if !retained_clone_grant_admits(g,d){return $crate::native_close_denied($reply)}
 
-if let Some(query)=$s.query.as_mut(){
-if !query.close_started(){if $recover{return Err(invalid())}let turn=query.begin_close_paid($effect);return Ok($reply.complete(turn.result.map_err(Into::into)))}
-if !query.terminal_is_empty(){let mut nested=$effect.nested(child_grant(g,0));return if $recover{query.recover_close_into($body,&mut nested,$reply.progress())}else{query.close_into($body,&mut nested,$reply.progress())}}
-if $recover||$effect.remaining_work_units()?==0{return if $recover{Err(invalid())}else{$crate::native_close_denied($reply)}}
-if !$effect.performed(1)?{return Ok($reply.complete(Err(ValueError::literal(crate::ValueRefusalKind::WorkLimit,"optional query header exceeded its work authority").into())))}
-*$s.query=None;return Ok($reply.complete(Ok(RetainedCloneStep::Progress(receipt(d)))))}
 if !$s.child.terminal_is_empty(){let mut nested=$effect.nested(g);if !$s.child.is_closing(){return if $recover{$s.child.recover_begin_close_into(&mut nested,$reply)}else{$s.child.begin_close_into(&mut nested,$reply)}}return if $recover{$s.child.recover_close_into($body,&mut nested,$reply)}else{$s.child.close_into($body,&mut nested,$reply)}}
 if !$s.retirement.is_empty(){return if $recover{$s.retirement.recover_step_into($body,$effect,$reply)}else{$s.retirement.step_into($body,$effect,$reply)}}
 if $recover{return Err(invalid())}
-if $s.query_output.is_some(){return $crate::native_close_begun($s.retirement.begin_granted(&mut $s.query_output,$effect),$reply)}
 if $s.staged.is_some(){return $crate::native_close_begun($s.retirement.begin_granted(&mut $s.staged,$effect),$reply)}
 RetainedCloneBinding::close_into(&mut $s.binding,$body,$effect,$reply)
 }};}
 #[doc(hidden)]
 #[macro_export]
 macro_rules! option_original_close_route{($s:ident,$original:ident,$body:ident,$effect:ident,$reply:ident,$recover:expr)=>{{
-if let Some(query)=$s.query.as_mut(){if !query.terminal_is_empty()&&query.requires_original_control(){let g=$effect.grant();if g.maximum_items==0||g.maximum_depth==0{return $crate::native_close_denied($reply)}let mut nested=$effect.nested(child_grant(g,0));return if $recover{query.recover_close_original_into($original,$body,&mut nested,$reply)}else{query.close_original_into($original,$body,&mut nested,$reply)}}}
 if !$s.child.terminal_is_empty()&&$s.child.requires_original_control(){return if $recover{$s.child.recover_close_original_into($original,$body,$effect,$reply)}else{$s.child.close_original_into($original,$body,$effect,$reply)}}
 if !$s.retirement.is_empty()&&$s.retirement.requires_original_control(){return if $recover{$s.retirement.recover_step_original_into($original,$body,$effect,$reply)}else{$s.retirement.step_original_into($original,$body,$effect,$reply)}}
 if $recover{$s.recover_close_step($body,$effect,$reply)}else{$s.close_step($body,$effect,$reply)}
@@ -401,13 +399,13 @@ macro_rules! scalar_close_engine{()=>{ fn close_demands(&self,body:usize)->Resul
 #[doc(hidden)]
 #[macro_export]
 macro_rules! option_close_engine{()=>{
- fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if let Some(query)=self.query.as_ref(){if !query.close_started(){return Ok(query.begin_close_demand())}if !query.terminal_is_empty(){return nested(query.close_demand(body)?,0)}return Ok(fixed(std::mem::size_of::<Option<NativeScalarQueryFrame<I>>>()))}if !self.child.terminal_is_empty(){return if self.child.is_closing(){self.child.close_demands(body)}else{self.child.begin_close_demand()}}if !self.retirement.is_empty(){return self.retirement.next_owner_demands::<T>(false,&None,body)}if self.query_output.is_some(){return self.retirement.next_owner_demands::<Result<NativeSourceScalar,ValueError>>(true,&None,body)}if self.staged.is_some(){return self.retirement.next_owner_demands::<T>(true,&None,body)}RetainedCloneBinding::close_demand(&self.binding,body)}
- fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{if let Some(query)=self.query.as_ref(){if !query.close_started(){return Ok(query.begin_close_work_demand())}if !query.terminal_is_empty(){return query.close_work_demand(body)}return Ok(1)}if !self.child.terminal_is_empty(){return if self.child.is_closing(){self.child.close_work_demand(body)}else{self.child.begin_close_work_demand()}}if !self.retirement.is_empty(){return self.retirement.next_owner_work::<T>(false,&None,body)}if self.query_output.is_some(){return self.retirement.next_owner_work::<Result<NativeSourceScalar,ValueError>>(true,&None,body)}if self.staged.is_some(){return self.retirement.next_owner_work::<T>(true,&None,body)}RetainedCloneBinding::close_work_demand(&self.binding,body)}
+ fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if !self.child.terminal_is_empty(){return if self.child.is_closing(){self.child.close_demands(body)}else{self.child.begin_close_demand()}}if !self.retirement.is_empty(){return self.retirement.next_owner_demands::<T>(false,&None,body)}if self.staged.is_some(){return self.retirement.next_owner_demands::<T>(true,&None,body)}RetainedCloneBinding::close_demand(&self.binding,body)}
+ fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{if !self.child.terminal_is_empty(){return if self.child.is_closing(){self.child.close_work_demand(body)}else{self.child.begin_close_work_demand()}}if !self.retirement.is_empty(){return self.retirement.next_owner_work::<T>(false,&None,body)}if self.staged.is_some(){return self.retirement.next_owner_work::<T>(true,&None,body)}RetainedCloneBinding::close_work_demand(&self.binding,body)}
  fn close_step<'reply>(&mut self,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,reply:$crate::OriginalEffectReply<'reply,$crate::RetainedCloneStep,$crate::OriginalRetirementFailure>)->Result<$crate::OriginalEffectReplyComplete<'reply,$crate::RetainedCloneStep,$crate::OriginalRetirementFailure>,$crate::ValueError>{$crate::option_close_route!(self,body,effect,reply,false)}
  fn recover_close_step<'reply>(&mut self,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,reply:$crate::OriginalEffectReply<'reply,$crate::RetainedCloneStep,$crate::OriginalRetirementFailure>)->Result<$crate::OriginalEffectReplyComplete<'reply,$crate::RetainedCloneStep,$crate::OriginalRetirementFailure>,$crate::ValueError>{$crate::option_close_route!(self,body,effect,reply,true)}
- fn requires_original_birth(&self)->bool{if let Some(query)=self.query.as_ref(){return !query.terminal_is_empty()&&query.requires_original_birth()}if !self.child.terminal_is_empty(){self.child.requires_original_birth()}else{self.retirement.requires_original_birth()}}
- fn close_original_birth_step(&mut self,original:&mut crate::OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->crate::OriginalRetirementPoll{if let Some(query)=self.query.as_mut(){if !query.terminal_is_empty(){if grant.maximum_items==0||grant.maximum_depth==0{return crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0})}return query.close_original_birth_step(original,child_grant(grant,0))}}if !self.child.terminal_is_empty(){self.child.close_original_birth_step(original,grant)}else{self.retirement.step_original_birth(original,grant)}}
- fn requires_original_control(&self)->bool{if let Some(query)=self.query.as_ref(){return !query.terminal_is_empty()&&query.requires_original_control()}if !self.child.terminal_is_empty(){self.child.requires_original_control()}else{self.retirement.requires_original_control()}}
+ fn requires_original_birth(&self)->bool{if !self.child.terminal_is_empty(){self.child.requires_original_birth()}else{self.retirement.requires_original_birth()}}
+ fn close_original_birth_step(&mut self,original:&mut crate::OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->crate::OriginalRetirementPoll{if !self.child.terminal_is_empty(){self.child.close_original_birth_step(original,grant)}else{self.retirement.step_original_birth(original,grant)}}
+ fn requires_original_control(&self)->bool{if !self.child.terminal_is_empty(){self.child.requires_original_control()}else{self.retirement.requires_original_control()}}
  fn close_original_step<'reply>(&mut self,original:&mut crate::OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,reply:$crate::OriginalEffectReply<'reply,$crate::RetainedCloneStep,$crate::OriginalRetirementFailure>)->Result<$crate::OriginalEffectReplyComplete<'reply,$crate::RetainedCloneStep,$crate::OriginalRetirementFailure>,$crate::ValueError>{$crate::option_original_close_route!(self,original,body,effect,reply,false)}
  fn recover_close_original_step<'reply>(&mut self,original:&mut crate::OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,reply:$crate::OriginalEffectReply<'reply,$crate::RetainedCloneStep,$crate::OriginalRetirementFailure>)->Result<$crate::OriginalEffectReplyComplete<'reply,$crate::RetainedCloneStep,$crate::OriginalRetirementFailure>,$crate::ValueError>{$crate::option_original_close_route!(self,original,body,effect,reply,true)}};}
 

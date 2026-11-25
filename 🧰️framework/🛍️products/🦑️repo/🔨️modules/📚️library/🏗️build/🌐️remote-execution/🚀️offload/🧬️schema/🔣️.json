@@ -37,6 +37,7 @@
         "unmeasured",
         "final-wait",
         "pin-failed",
+        "beyond-host-refused",
         "cancelled"
       ]
     },
@@ -49,6 +50,7 @@
         "limits",
         "timeouts",
         "deadline",
+        "cost",
         "virtual",
         "property",
         "tool",
@@ -58,6 +60,7 @@
         "wasm",
         "peak",
         "finals",
+        "beyondHost",
         "link"
       ],
       "properties": {
@@ -318,6 +321,43 @@
             }
           }
         },
+        "cost": {
+          "description": "How a local compile moves the recorded local cost of a unit, which feeds the offload deadline and the worth of a round trip. The record is the cost of a calm compile: the observation is the run after memory admission (never the wait for it), and a run whose CPU time over its wall time is below minimumUtilisation (the compiler was starved of memory, swapped or waited for cores) only upper-bounds the cost, so it moves the record by contendedRaiseWeight when it is above it (0: never raises) and by contendedLowerWeight when it is below it; a unit without a record learns from a starved run only when learnContendedFirst. A calm run moves the record by calmWeight of the difference.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "minimumUtilisation",
+            "calmWeight",
+            "contendedRaiseWeight",
+            "contendedLowerWeight",
+            "learnContendedFirst"
+          ],
+          "properties": {
+            "minimumUtilisation": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "calmWeight": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "contendedRaiseWeight": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "contendedLowerWeight": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "learnContendedFirst": {
+              "type": "boolean"
+            }
+          }
+        },
         "virtual": {
           "type": "object",
           "additionalProperties": false,
@@ -527,6 +567,17 @@
                 "minimumCrates": {"type": "integer", "minimum": 1}
               }
             }
+          }
+        },
+        "beyondHost": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "A unit beyond the host of its requester (known to need more memory than a machine of the requester's class carries, see `unitBeyondHostV1`) never compiles on the requester: it waits for a machine that can carry it, up to `timeoutMilliseconds`, and reports its place in the queue, who holds the machine and when it can start every `progressMilliseconds`, in English and German; after the timeout, or when no machine can take it, it fails with the refusal `beyond-host-refused`. A requester that is itself a large host compiles it locally.",
+          "required": ["timeoutMilliseconds", "progressMilliseconds", "retryMilliseconds"],
+          "properties": {
+            "timeoutMilliseconds": {"type": "integer", "minimum": 1},
+            "progressMilliseconds": {"type": "integer", "minimum": 1},
+            "retryMilliseconds": {"type": "integer", "minimum": 1}
           }
         },
         "finals": {
@@ -866,10 +917,17 @@
       "floorMilliseconds": 60000,
       "capMilliseconds": 900000,
       "unknownMilliseconds": 240000,
-      "linkedCapMilliseconds": 3600000,
-      "linkedUnknownMilliseconds": 2400000,
+      "linkedCapMilliseconds": 1200000,
+      "linkedUnknownMilliseconds": 1200000,
       "silenceMilliseconds": 20000,
       "reattachMilliseconds": 10000
+    },
+    "cost": {
+      "minimumUtilisation": 0.5,
+      "calmWeight": 0.5,
+      "contendedRaiseWeight": 0,
+      "contendedLowerWeight": 0.5,
+      "learnContendedFirst": false
     },
     "virtual": {
       "base": ".semio-offload",
@@ -1004,6 +1062,11 @@
         "minimumCrates": 3
       }
     },
+    "beyondHost": {
+      "timeoutMilliseconds": 3600000,
+      "progressMilliseconds": 30000,
+      "retryMilliseconds": 5000
+    },
     "finals": {
       "minimumMilliseconds": 120000,
       "minimumMegabytes": 4096,
@@ -1135,6 +1198,9 @@
       "reason.local-slot": "a compile slot of this machine is free",
       "reason.unmeasured": "its local cost is not measured yet, so it compiles here first",
       "reason.final-wait": "it is expensive but no other machine had the memory for it in time",
+      "reason.beyond-host-refused": "it needs more memory than this machine carries and no larger machine took it",
+      "beyondHost.waiting": "Unit {crate} needs more memory than this machine carries and waits for a larger one: {queued} waiting in the queue, running on {holders}, typically {typical} s, at most {remaining} min more.",
+      "beyondHost.refused": "Unit {crate} needs more memory than this machine carries and no larger machine took it ({reason}): it is not compiled here to spare this machine.",
       "reason.pin-failed": "the pinned machine could not take or finish it"
     },
     "de": {
@@ -1167,6 +1233,9 @@
       "reason.local-slot": "ein Kompilierplatz dieser Maschine ist frei",
       "reason.unmeasured": "ihre lokalen Kosten sind noch nicht gemessen, daher wird sie zuerst hier kompiliert",
       "reason.final-wait": "sie ist teuer, aber keine andere Maschine hatte rechtzeitig den Speicher dafür",
+      "reason.beyond-host-refused": "sie braucht mehr Speicher als diese Maschine hat und keine größere Maschine hat sie übernommen",
+      "beyondHost.waiting": "Einheit {crate} braucht mehr Speicher als diese Maschine hat und wartet auf eine größere: {queued} in der Warteschlange, es laufen {holders}, üblich {typical} s, höchstens {remaining} min weiter.",
+      "beyondHost.refused": "Einheit {crate} braucht mehr Speicher als diese Maschine hat und keine größere Maschine hat sie übernommen ({reason}): sie wird hier nicht gebaut, um diese Maschine zu schonen.",
       "reason.pin-failed": "die festgelegte Maschine konnte sie nicht annehmen oder nicht beenden"
     }
   }

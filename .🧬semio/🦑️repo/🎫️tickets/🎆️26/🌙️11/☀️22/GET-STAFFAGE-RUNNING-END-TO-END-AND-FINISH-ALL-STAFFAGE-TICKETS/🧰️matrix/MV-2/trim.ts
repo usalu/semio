@@ -1,4 +1,4 @@
-/** ✂️ Cuts hidden length off flat front shapes: `bun trim.ts <id> [--scales 200] [--limit 0.5]` writes `set` ops into `ops/<id>.json`. Where a bone draws one flat filled polygon in the front and its twin of the same id in the side elevation, and the front polygon is taller at rest than the twin by more than `limit` × tolerance (cause G: the front part runs on behind its neighbour, the elevation part ends where the neighbour begins), the front polygon is cut at the lowest and highest height of the elevation twin. Only hidden length goes; the rest of the outline stays where it was.
+/** ✂️ Cuts hidden length off flat front shapes: `bun trim.ts <id> [--scales 200] [--limit 0.5]` writes `set` ops into `ops/<id>.json`. Where a bone draws one flat filled polygon (or straight-edged path) in the front and its twin of the same id in the side elevation, and the front polygon is taller at rest than the twin by more than `limit` × tolerance (cause G: the front part runs on behind its neighbour, the elevation part ends where the neighbour begins), the front polygon is cut at the lowest and highest height of the elevation twin. Only hidden length goes; the rest of the outline stays where it was.
  * @see ./apply.ts */
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -33,18 +33,19 @@ for (const scale of Object.keys(asset.representations)) {
   if (geometry === undefined || (scales !== undefined && !scales.includes(scale))) continue;
   const count = (view: string, bone: string): number => geometry[view].filter((shape: any) => shape.bone === bone && shape.role !== "ground").length;
   for (const shape of geometry.front) {
-    if (shape.kind !== "poly" || shape.filled !== true || shape.solid !== undefined || count("front", shape.bone) !== 1 || count("elevation", shape.bone) !== 1) continue;
+    if ((shape.kind !== "poly" && !(shape.kind === "path" && /^[MLZ\s\d.eE+-]*$/.test(shape.d))) || shape.filled !== true || shape.solid !== undefined || count("front", shape.bone) !== 1 || count("elevation", shape.bone) !== 1) continue;
     const twin = geometry.elevation.find((candidate: any) => candidate.id === shape.id && candidate.bone === shape.bone && candidate.kind === "poly");
     if (twin === undefined) continue;
     const { o, u, v } = rest[shape.bone]!.frame;
     const heights = twin.points.map(([x, y]: P) => o[1]! + x * u[1]! + y * v[1]!);
     const [lo, hi] = [Math.min(...heights), Math.max(...heights)];
-    const ys = shape.points.map((p: P) => p[1]);
+    const rings: P[][] = shape.kind === "poly" ? [shape.points] : shape.d.split("M").filter((part: string) => part.trim() !== "").map((part: string) => { const n = (part.match(/-?\d+\.?\d*(?:[eE][+-]?\d+)?/g) ?? []).map(Number); return n.flatMap((x: number, i: number) => (i % 2 === 0 ? [[x, n[i + 1]!] as P] : [])); });
+    const ys = rings.flat().map((p: P) => p[1]);
     const over = Math.max(lo - Math.min(...ys), Math.max(...ys) - hi);
     if (over <= LIMIT * tolerance) continue;
-    const points = cut(cut(shape.points, hi, true), lo, false);
-    console.log(`1:${scale} front ${shape.id} on ${shape.bone}: [${Math.min(...ys).toFixed(3)}, ${Math.max(...ys).toFixed(3)}] cut to the elevation twin [${lo.toFixed(3)}, ${hi.toFixed(3)}], ${shape.points.length} -> ${points.length} points`);
-    ops.push({ op: "set", scale, view: "front", id: shape.id, bone: shape.bone, set: { points } });
+    const trimmed = rings.map((ring) => cut(cut(ring, hi, true), lo, false)).filter((ring) => ring.length >= 3);
+    console.log(`1:${scale} front ${shape.id} on ${shape.bone}: [${Math.min(...ys).toFixed(3)}, ${Math.max(...ys).toFixed(3)}] cut to the elevation twin [${lo.toFixed(3)}, ${hi.toFixed(3)}], ${rings.flat().length} -> ${trimmed.flat().length} points`);
+    ops.push({ op: "set", scale, view: "front", id: shape.id, bone: shape.bone, set: shape.kind === "poly" ? { points: trimmed[0] } : { d: trimmed.map((ring) => `M ${ring.map((p) => `${p[0]} ${p[1]}`).join(" L ")} Z`).join(" ") } });
   }
 }
 const file = flag("ops") ?? join(import.meta.dir, "ops", `${id}.json`);

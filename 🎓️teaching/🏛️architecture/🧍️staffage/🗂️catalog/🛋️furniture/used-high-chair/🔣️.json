@@ -13,17 +13,83 @@
    "de": "Ein gebrauchter, mitwachsender Treppenhochstuhl aus lackierter Buche: zwei geneigte genutete Wangen auf Kufen, Sitz- und Fußplatte in ihren Nuten, zwei Rückenleisten und ein aufklipsbarer Essbügel, mit Essensflecken, Zahnabdrücken, vergilbtem Lack und einem Filzpolster anstelle eines verlorenen Gleiters; gelagert auf der EVA-Bodenmatte, mit der er kam, von einer Person getragen und in Gebrauch mit einem Kleinkind beim Essen."
   },
   "tags": [
-   "used",
-   "household",
-   "second-hand",
-   "children",
-   "kitchen",
-   "high-chair",
-   "seating",
-   "beech",
-   "timber",
-   "grows-with-child",
-   "tray"
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "household",
+    "title": {
+     "en": "household",
+     "de": "Haushalt"
+    }
+   },
+   {
+    "id": "second-hand",
+    "title": {
+     "en": "second-hand",
+     "de": "Second-Hand"
+    }
+   },
+   {
+    "id": "children",
+    "title": {
+     "en": "children",
+     "de": "Kinder"
+    }
+   },
+   {
+    "id": "kitchen",
+    "title": {
+     "en": "kitchen",
+     "de": "Küche"
+    }
+   },
+   {
+    "id": "high-chair",
+    "title": {
+     "en": "high chair",
+     "de": "Hochstuhl"
+    }
+   },
+   {
+    "id": "seating",
+    "title": {
+     "en": "seating",
+     "de": "Sitzmöbel"
+    }
+   },
+   {
+    "id": "beech",
+    "title": {
+     "en": "beech",
+     "de": "Buche"
+    }
+   },
+   {
+    "id": "timber",
+    "title": {
+     "en": "timber",
+     "de": "Holz"
+    }
+   },
+   {
+    "id": "grows-with-child",
+    "title": {
+     "en": "grows with child",
+     "de": "wächst mit"
+    }
+   },
+   {
+    "id": "tray",
+    "title": {
+     "en": "tray",
+     "de": "Tablett"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content (used household objects wave)",
@@ -15890,8 +15956,796 @@
     ]
    },
    "500": {
-    "status": "unavailable",
-    "denominator": 500
+    "status": "authored",
+    "denominator": 500,
+    "decisions": [
+     {
+      "en": "Body for the 75 mm feature: each side frame keeps its runner and its leaning upright with the level top cut, thickened inwards from 30 to 75 mm with the outer faces in place and the runner raised to 75 mm; backrest band, seat plate, footplate and stretcher are 75 mm bars between the frames with their top faces at the true heights; the bow is its rear bar and the tray one 75 mm slab in front of it; the tile is its declared 12 mm sheet.",
+      "de": "Körper für das 75-mm-Merkmal: jeder Seitenrahmen behält Kufe und geneigten Holm mit dem waagrechten Kopfschnitt, von 30 auf 75 mm nach innen verdickt mit den Außenflächen am Ort und der Kufe auf 75 mm erhöht; Rückenband, Sitzplatte, Fußplatte und Querstab sind 75-mm-Balken zwischen den Rahmen mit ihren Oberseiten auf wahrer Höhe; der Bügel ist sein hinterer Stab und das Tablett eine 75-mm-Platte davor; die Fliese ist ihre erklärte 12-mm-Platte."
+     },
+     {
+      "en": "Thermal: one surface per body solid by reference in its region.",
+      "de": "Thermik: eine Oberfläche je Körper als Verweis in seiner Region."
+     },
+     {
+      "en": "Structure: the members by reference, the twelve joints as 75 mm blocks in the frames and ten mass markers.",
+      "de": "Tragwerk: die Stäbe als Verweis, die zwölf Verbindungen als 75-mm-Blöcke in den Rahmen und zehn Massenmarken."
+     }
+    ],
+    "body": [
+     {
+      "id": "tile",
+      "kind": "box",
+      "bone": "mat",
+      "material": "eva-foam",
+      "role": "body",
+      "tone": 0.42,
+      "size": [
+       0.6,
+       0.012,
+       0.6
+      ],
+      "transform": {
+       "translation": [
+        0.306,
+        0.006,
+        0.006
+       ]
+      },
+      "sheet": true
+     },
+     {
+      "id": "runner-r",
+      "kind": "box",
+      "bone": "runner-r",
+      "material": "beech-lacquered",
+      "role": "body",
+      "tone": 0.68,
+      "size": [
+       0.49,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.245,
+        0.0295,
+        -0.1945
+       ]
+      }
+     },
+     {
+      "id": "runner-l",
+      "kind": "box",
+      "bone": "runner-l",
+      "material": "beech-lacquered",
+      "role": "body",
+      "tone": 0.68,
+      "size": [
+       0.49,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.245,
+        0.0295,
+        0.1945
+       ]
+      }
+     },
+     {
+      "id": "upright-r",
+      "kind": "extrude",
+      "bone": "upright-r",
+      "material": "beech-lacquered",
+      "role": "body",
+      "tone": 0.74,
+      "profile": [
+       [
+        0.04,
+        -0.038
+       ],
+       [
+        0.8181,
+        -0.038
+       ],
+       [
+        0.8457,
+        0.038
+       ],
+       [
+        0.04,
+        0.038
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.232,
+      "to": -0.157
+     },
+     {
+      "id": "upright-l",
+      "kind": "extrude",
+      "bone": "upright-l",
+      "material": "beech-lacquered",
+      "role": "body",
+      "tone": 0.74,
+      "profile": [
+       [
+        0.04,
+        -0.038
+       ],
+       [
+        0.8181,
+        -0.038
+       ],
+       [
+        0.8457,
+        0.038
+       ],
+       [
+        0.04,
+        0.038
+       ]
+      ],
+      "plane": "xy",
+      "from": 0.157,
+      "to": 0.232
+     },
+     {
+      "id": "backrest-band",
+      "kind": "box",
+      "bone": "backrest",
+      "material": "beech-lacquered",
+      "role": "body",
+      "tone": 0.72,
+      "size": [
+       0.236,
+       0.075,
+       0.314
+      ],
+      "transform": {
+       "translation": [
+        0.11,
+        -0.0075,
+        0
+       ]
+      }
+     },
+     {
+      "id": "stretcher",
+      "kind": "box",
+      "bone": "stretcher",
+      "material": "beech-lacquered",
+      "role": "body",
+      "tone": 0.66,
+      "size": [
+       0.075,
+       0.075,
+       0.314
+      ],
+      "transform": {
+       "translation": [
+        0.0125,
+        0,
+        0
+       ]
+      }
+     },
+     {
+      "id": "seat-plate",
+      "kind": "box",
+      "bone": "seat",
+      "material": "beech-plywood",
+      "role": "body",
+      "tone": 0.62,
+      "size": [
+       0.2,
+       0.075,
+       0.314
+      ],
+      "transform": {
+       "translation": [
+        0.1,
+        -0.0195,
+        0
+       ]
+      }
+     },
+     {
+      "id": "footplate",
+      "kind": "box",
+      "bone": "footplate",
+      "material": "beech-plywood",
+      "role": "body",
+      "tone": 0.6,
+      "size": [
+       0.22,
+       0.075,
+       0.314
+      ],
+      "transform": {
+       "translation": [
+        0.11,
+        -0.0195,
+        0
+       ]
+      }
+     },
+     {
+      "id": "bow",
+      "kind": "box",
+      "bone": "bow",
+      "material": "beech-lacquered",
+      "role": "body",
+      "tone": 0.7,
+      "size": [
+       0.09,
+       0.075,
+       0.38
+      ],
+      "transform": {
+       "translation": [
+        0.045,
+        0.0225,
+        0
+       ]
+      }
+     },
+     {
+      "id": "tray",
+      "kind": "box",
+      "bone": "bow",
+      "material": "polypropylene",
+      "role": "body",
+      "tone": 0.9,
+      "size": [
+       0.24,
+       0.075,
+       0.38
+      ],
+      "transform": {
+       "translation": [
+        0.21,
+        0.0225,
+        0
+       ]
+      }
+     }
+    ],
+    "thermal": [
+     {
+      "id": "th-tile",
+      "of": "tile",
+      "region": "mat"
+     },
+     {
+      "id": "th-runner-r",
+      "of": "runner-r",
+      "region": "frame"
+     },
+     {
+      "id": "th-runner-l",
+      "of": "runner-l",
+      "region": "frame"
+     },
+     {
+      "id": "th-upright-r",
+      "of": "upright-r",
+      "region": "frame"
+     },
+     {
+      "id": "th-upright-l",
+      "of": "upright-l",
+      "region": "frame"
+     },
+     {
+      "id": "th-backrest-band",
+      "of": "backrest-band",
+      "region": "frame"
+     },
+     {
+      "id": "th-stretcher",
+      "of": "stretcher",
+      "region": "frame"
+     },
+     {
+      "id": "th-seat-plate",
+      "of": "seat-plate",
+      "region": "seat-plate"
+     },
+     {
+      "id": "th-footplate",
+      "of": "footplate",
+      "region": "footplate"
+     },
+     {
+      "id": "th-bow",
+      "of": "bow",
+      "region": "bow"
+     },
+     {
+      "id": "th-tray",
+      "of": "tray",
+      "region": "tray"
+     }
+    ],
+    "structure": [
+     {
+      "id": "m-tile",
+      "of": "tile",
+      "member": "mat",
+      "part": "member"
+     },
+     {
+      "id": "m-runner-r",
+      "of": "runner-r",
+      "member": "runner-r",
+      "part": "member"
+     },
+     {
+      "id": "m-runner-l",
+      "of": "runner-l",
+      "member": "runner-l",
+      "part": "member"
+     },
+     {
+      "id": "m-upright-r",
+      "of": "upright-r",
+      "member": "upright-r",
+      "part": "member"
+     },
+     {
+      "id": "m-upright-l",
+      "of": "upright-l",
+      "member": "upright-l",
+      "part": "member"
+     },
+     {
+      "id": "m-backrest-band",
+      "of": "backrest-band",
+      "member": "backrest",
+      "part": "member"
+     },
+     {
+      "id": "m-stretcher",
+      "of": "stretcher",
+      "member": "stretcher",
+      "part": "member"
+     },
+     {
+      "id": "m-seat-plate",
+      "of": "seat-plate",
+      "member": "seat",
+      "part": "member"
+     },
+     {
+      "id": "m-footplate",
+      "of": "footplate",
+      "member": "footplate",
+      "part": "member"
+     },
+     {
+      "id": "m-bow",
+      "of": "bow",
+      "member": "bow",
+      "part": "member"
+     },
+     {
+      "id": "j-foot-r",
+      "kind": "box",
+      "bone": "upright-r",
+      "material": "beech-lacquered",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.0775,
+        0,
+        -0.1945
+       ]
+      },
+      "member": "upright-r",
+      "part": "joint"
+     },
+     {
+      "id": "j-foot-l",
+      "kind": "box",
+      "bone": "upright-l",
+      "material": "beech-lacquered",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.0775,
+        0,
+        0.1945
+       ]
+      },
+      "member": "upright-l",
+      "part": "joint"
+     },
+     {
+      "id": "j-seat",
+      "kind": "box",
+      "bone": "seat",
+      "material": "beech-lacquered",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.0375,
+        -0.0195,
+        -0.1945
+       ]
+      },
+      "repeat": {
+       "count": 2,
+       "translation": [
+        0,
+        0,
+        0.389
+       ]
+      },
+      "member": "seat",
+      "part": "joint"
+     },
+     {
+      "id": "j-foot-plate",
+      "kind": "box",
+      "bone": "footplate",
+      "material": "beech-lacquered",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.047,
+        -0.0195,
+        -0.1945
+       ]
+      },
+      "repeat": {
+       "count": 2,
+       "translation": [
+        0,
+        0,
+        0.389
+       ]
+      },
+      "member": "footplate",
+      "part": "joint"
+     },
+     {
+      "id": "j-back",
+      "kind": "box",
+      "bone": "backrest",
+      "material": "beech-lacquered",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.2,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.111,
+        -0.0075,
+        -0.1945
+       ]
+      },
+      "repeat": {
+       "count": 2,
+       "translation": [
+        0,
+        0,
+        0.389
+       ]
+      },
+      "member": "backrest",
+      "part": "joint"
+     },
+     {
+      "id": "j-bow",
+      "kind": "box",
+      "bone": "bow",
+      "material": "beech-lacquered",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.0375,
+        0.0225,
+        -0.1945
+       ]
+      },
+      "repeat": {
+       "count": 2,
+       "translation": [
+        0,
+        0,
+        0.389
+       ]
+      },
+      "member": "bow",
+      "part": "joint"
+     },
+     {
+      "id": "j-rod",
+      "kind": "box",
+      "bone": "stretcher",
+      "material": "beech-lacquered",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.0125,
+        0,
+        -0.1945
+       ]
+      },
+      "repeat": {
+       "count": 2,
+       "translation": [
+        0,
+        0,
+        0.389
+       ]
+      },
+      "member": "stretcher",
+      "part": "joint"
+     },
+     {
+      "id": "mass-runner-r",
+      "kind": "box",
+      "bone": "runner-r",
+      "material": "beech-lacquered",
+      "role": "detail",
+      "tone": 0.4,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.243,
+        0.0295,
+        -0.1945
+       ]
+      },
+      "member": "runner-r",
+      "part": "mass"
+     },
+     {
+      "id": "mass-upright-r",
+      "kind": "box",
+      "bone": "upright-r",
+      "material": "beech-lacquered",
+      "role": "detail",
+      "tone": 0.4,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.441,
+        0,
+        -0.1945
+       ]
+      },
+      "member": "upright-r",
+      "part": "mass"
+     },
+     {
+      "id": "mass-runner-l",
+      "kind": "box",
+      "bone": "runner-l",
+      "material": "beech-lacquered",
+      "role": "detail",
+      "tone": 0.4,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.247,
+        0.0295,
+        0.1945
+       ]
+      },
+      "member": "runner-l",
+      "part": "mass"
+     },
+     {
+      "id": "mass-upright-l",
+      "kind": "box",
+      "bone": "upright-l",
+      "material": "beech-lacquered",
+      "role": "detail",
+      "tone": 0.4,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.441,
+        0,
+        0.1945
+       ]
+      },
+      "member": "upright-l",
+      "part": "mass"
+     },
+     {
+      "id": "mass-backrest",
+      "kind": "box",
+      "bone": "backrest",
+      "material": "beech-lacquered",
+      "role": "detail",
+      "tone": 0.4,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.112,
+        -0.0075,
+        0
+       ]
+      },
+      "member": "backrest",
+      "part": "mass"
+     },
+     {
+      "id": "mass-stretcher",
+      "kind": "box",
+      "bone": "stretcher",
+      "material": "beech-lacquered",
+      "role": "detail",
+      "tone": 0.4,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.0125,
+        0,
+        0
+       ]
+      },
+      "member": "stretcher",
+      "part": "mass"
+     },
+     {
+      "id": "mass-seat",
+      "kind": "box",
+      "bone": "seat",
+      "material": "beech-lacquered",
+      "role": "detail",
+      "tone": 0.4,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.1,
+        -0.0195,
+        0
+       ]
+      },
+      "member": "seat",
+      "part": "mass"
+     },
+     {
+      "id": "mass-footplate",
+      "kind": "box",
+      "bone": "footplate",
+      "material": "beech-lacquered",
+      "role": "detail",
+      "tone": 0.4,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.11,
+        -0.0195,
+        0
+       ]
+      },
+      "member": "footplate",
+      "part": "mass"
+     },
+     {
+      "id": "mass-bow",
+      "kind": "box",
+      "bone": "bow",
+      "material": "beech-lacquered",
+      "role": "detail",
+      "tone": 0.4,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.045,
+        0.0225,
+        0
+       ]
+      },
+      "member": "bow",
+      "part": "mass"
+     },
+     {
+      "id": "mass-mat",
+      "kind": "box",
+      "bone": "mat",
+      "material": "beech-lacquered",
+      "role": "detail",
+      "tone": 0.4,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.306,
+        0.0375,
+        0.006
+       ]
+      },
+      "member": "mat",
+      "part": "mass"
+     }
+    ]
    }
   },
   "presentation": {

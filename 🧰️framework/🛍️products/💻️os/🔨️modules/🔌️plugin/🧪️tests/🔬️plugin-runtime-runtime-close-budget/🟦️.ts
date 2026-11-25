@@ -298,7 +298,33 @@ test("envelope and initializer handbacks admit one original full turn without fo
 test("envelope return pumps preserve every original currency and separate owner metadata removal",()=>{
  const db=new Database(":memory:");try{db.run("CREATE TABLE returns(owner TEXT,phase INTEGER,capacity INTEGER,release INTEGER)");for(const owner of ["field","completed"]){db.query("INSERT INTO returns VALUES(?,?,?,?)").run(owner,0,64,0);db.query("INSERT INTO returns VALUES(?,?,?,?)").run(owner,1,0,128);db.query("INSERT INTO returns VALUES(?,?,?,?)").run(owner,2,0,0);}expect(db.query("SELECT sum(capacity) AS capacity,sum(release) AS release FROM returns").get()).toEqual({capacity:128,release:256});}finally{db.close();}
  const source=pluginFamilyText();for(const [name,step] of [["drive_envelope_field_decoder_returns","erased_step(cx, retirement, grant)"],["drive_envelope_completed_record_returns","completed_step(cx, retirement.as_mut(), grant)"]]){const start=source.indexOf(`fn ${name}(`),body=source.slice(start,source.indexOf("\n    }\n",start));expect(start>=0).toBe(true);expect(body.includes("grant: RetainedCloneGrant")).toBe(true);expect(body.includes("Result<PluginLifecycleStep, semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>")).toBe(true);expect(body.includes("SnapshotRetirementStep")).toBe(false);expect(body.includes(step)).toBe(true);expect(body.includes("plugin_turn_admitted(handoff_demand(), grant)?")).toBe(true);expect(body.includes("PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: progress.copied_items.max(1), ..progress })")).toBe(true);expect(body.includes("PluginLifecycleStep::Complete(empty)")).toBe(true);}
- const fundsStart=source.indexOf("pub fn plugin_grant_funds("),funds=source.slice(fundsStart,source.indexOf("\n}\n",fundsStart));for(const field of ["maximum_items","maximum_copy_bytes","maximum_capacity_bytes","maximum_release_bytes","maximum_depth"])expect(funds.includes(field)).toBe(true);for(const helper of ["fn erased_step<","fn completed_step<"]){const start=source.indexOf(helper),body=source.slice(start,source.indexOf("\n}\n",start));expect(body).toContain("original_lifecycle_effect_step(cx, grant, demand, |_, effect|");expect(body).toContain("let child = effect.grant()");expect(body).toContain("admit_retained_clone_close(child, step,");}
+ const fundsStart=source.indexOf("pub fn plugin_grant_funds("),funds=source.slice(fundsStart,source.indexOf("\n}\n",fundsStart));expect(funds).toContain("plugin_grant_shortfall(demand, grant).is_none()");
+ const shortfallStart=source.indexOf("pub fn plugin_grant_shortfall("),shortfall=source.slice(shortfallStart,source.indexOf("\n}\n",shortfallStart));for(const field of ["maximum_items","maximum_copy_bytes","maximum_capacity_bytes","maximum_release_bytes","maximum_depth"])expect(shortfall).toContain(field);
+ for(const helper of ["fn erased_step<","fn completed_step<"]){const start=source.indexOf(helper),body=source.slice(start,source.indexOf("\n}\n",start));expect(body).toContain("original_lifecycle_effect_step(cx, grant, demand, |_, effect|");expect(body).toContain("let child = effect.grant()");expect(body).toContain("admit_retained_clone_close(child, step,");}
+});
+
+test("partial envelope returns forward already posted receipts and keep the original owner", async () => {
+  const law = await Bun.file(new URL("🧫️fixtures/♻️envelope/🔣️.json", import.meta.url)).json();
+  const db = new Database(":memory:");
+  try {
+    const receipt = db.query(`SELECT json_array(?1, ?2, ?3, ?4) AS progress,
+      ?5 AS "reclaimOwner", 0 AS "parentTerminal"`);
+    const row = receipt.get(...law.childProgress, Number(law.partialReturn.childTerminal)) as {
+      progress: string; reclaimOwner: number; parentTerminal: number;
+    };
+    expect(JSON.parse(row.progress)).toEqual(law.partialReturn.parentProgress);
+    expect(Boolean(row.reclaimOwner)).toBe(law.partialReturn.reclaimOwner);
+    expect(Boolean(row.parentTerminal)).toBe(law.partialReturn.parentTerminal);
+  } finally { db.close(); }
+
+  const source = pluginFamilyText();
+  for (const name of ["drive_envelope_field_decoder_returns", "drive_envelope_completed_record_returns"]) {
+    const start = source.indexOf(`fn ${name}(`);
+    const body = source.slice(start, source.indexOf("\n    }\n", start));
+    const partial = body.match(/let RetainedCloneStep::Complete\(progress\) = step else \{([^}]+)\}/)?.[1];
+    expect(partial).toContain("*cursor = index");
+    expect(partial).toContain("PluginLifecycleStep::Progress(step.progress())");
+  }
 });
 
 test("independent lifecycle release preserves original empty allocation extents and fixed refusal",async()=>{

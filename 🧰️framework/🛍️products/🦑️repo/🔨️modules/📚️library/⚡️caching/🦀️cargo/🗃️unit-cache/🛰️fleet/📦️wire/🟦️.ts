@@ -88,8 +88,12 @@ export function readUnitSlotV1(bytes:Uint8Array):string|undefined{
  try{const slot=decodeActionResultV1(bytes).slot;return slot!==undefined&&HEX.test(slot)?slot:undefined;}catch{return undefined;}
 }
 
+/** 🧾️ The named inputs of a unit's key as digests, stored in its manifest so keys of one slot can be diffed from the cache alone.
+ * @see ../🧬️schema/🔣️.json */
+export type KeyComponentsV1=Readonly<{origin:string;components:Readonly<Record<string,string>>;values?:Readonly<Record<string,string>>}>;
+
 /** 📜️ One unit as it travels: the portable form of a local cache entry. */
-export type RemoteUnitV1={version:1;key:string;localKey:string;slot:string;crate:string;platform:PlatformV1;createdMs:number;costMs:number;dependencies:{path:string;sha256:string|null}[];environment:{name:string;value:string|null}[];outputs:{name:string;sha256:string;bytes:number;executable:boolean;template?:boolean}[];stdout:string|null;stderr:string|null;retention?:DeclarationV1};
+export type RemoteUnitV1={version:1;key:string;localKey:string;slot:string;crate:string;platform:PlatformV1;createdMs:number;costMs:number;dependencies:{path:string;sha256:string|null}[];environment:{name:string;value:string|null}[];outputs:{name:string;sha256:string;bytes:number;executable:boolean;template?:boolean}[];stdout:string|null;stderr:string|null;keyComponents?:KeyComponentsV1;retention?:DeclarationV1};
 
 const isDigest=(value:unknown):value is string=>typeof value==="string"&&HEX.test(value);
 const isInteger=(value:unknown):value is number=>typeof value==="number"&&Number.isSafeInteger(value)&&value>=0;
@@ -109,6 +113,10 @@ export function parseRemoteUnitV1(bytes:Uint8Array,expected:Readonly<{key:string
   names.add(row.name);
  }
  if(!(value.stdout===null||isDigest(value.stdout))||!(value.stderr===null||isDigest(value.stderr)))throw Error("stream invalid");
+ if(value.keyComponents!==undefined){
+  const row=value.keyComponents;
+  if(!isObject(row)||typeof row.origin!=="string"||row.origin===""||!isObject(row.components)||Object.keys(row.components).length>512||!Object.values(row.components).every(item=>typeof item==="string"&&/^[a-f0-9]{8,64}$/u.test(item))||!(row.values===undefined||(isObject(row.values)&&Object.keys(row.values).length<=32&&Object.values(row.values).every(item=>typeof item==="string"))))throw Error("key components invalid");
+ }
  if(value.retention!==undefined){try{requireSlotShapeV1("Declaration",value.retention,"retention");}catch{throw Error("retention invalid");}}
  return value as unknown as RemoteUnitV1;
 }

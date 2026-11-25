@@ -2,10 +2,6 @@
 
 use super::*;
 
-/// 🫳️ The insert-preview pill's width — React's `panelTabInsertPreviewClass`'s `w-0.5`
-/// (`🧭️PanelTabBar/🟦️.tsx`), the 2 logical px Tailwind's `0.5` step resolves to.
-pub const TAB_INSERT_PREVIEW_WIDTH_PX: f32 = 2.0;
-
 //#region 🔖️IdentityPure
 /// 👤️ The name a peer's roster shows for this shell — the twin of React's `presenceClientIdentity`
 /// (`🛠️ShellHelpers/🟦️.tsx`): the signed-in person's display name, else a guest named after the actor's tail.

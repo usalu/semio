@@ -7,6 +7,76 @@
         "terminationMilliseconds": 250,
         "killMilliseconds": 250
       }
+    },
+    "Handshake": {
+      "description": "How long a replacement native server may take to answer the gateway's initialize handshake before the refresh is abandoned: the candidate is stopped and the serving server stays.",
+      "const": {
+        "candidateMilliseconds": 60000
+      }
+    },
+    "DiscoveryHold": {
+      "description": "How long the gateway holds a discovery request (tools/list, resources/list, resources/templates/list, prompts/list) while a native server is being started, so the client receives the real lists in the reply instead of empty ones it may never refetch. It stays well below a client's connect and request timeouts. Past the bound, or when no native server can be ready soon, the empty lists of WarmDiscovery answer and list_changed follows.",
+      "const": {
+        "maximumMilliseconds": 20000
+      }
+    },
+    "Refresh": {
+      "description": "How a gateway that already serves a usable published native server treats the background refresh: a failed refresh is logged and serving continues, an unchanged refresh does nothing, a changed refresh swaps a freshly handshaken server in for new requests while the replaced server finishes the requests it already holds (its own requests and notifications are forwarded under gateway-unique request ids so both servers can mint the same ids, a stale response is dropped with the logged line, the client's logging level, resource subscriptions and roots change are replayed to the new server before it takes over, and a replaced server that exits early fails the requests it still held).",
+      "const": {
+        "failedPrefix": "[semio-os-mcp] refresh failed:",
+        "droppedFrame": "[semio-os-mcp] dropped a frame from a replaced server",
+        "replacedExit": "the replaced server exited with"
+      }
+    },
+    "Supervision": {
+      "description": "How a gateway treats an unexpected exit of the serving native server while it is ready (non-zero status or a signal; a clean exit and a client close are not crashes): its held requests are answered with a retryable JSON-RPC error (code -32603, data.cause server-exited, the exit and the en + de summary, `{exit}` is replaced by `status N` or `signal NAME`), a replacement server is started through the refresh handshake and replay path while the staging continues, requests arriving meanwhile queue and the replacement announces list_changed. At most maximumRestarts restarts (crashes and replacements that failed their handshake) are made within windowMilliseconds; beyond that the session fails as for a clean server loss.",
+      "const": {
+        "maximumRestarts": 3,
+        "windowMilliseconds": 60000,
+        "restartingPrefix": "[semio-os-mcp] the native server exited unexpectedly, restarting it:",
+        "exhaustedPrefix": "[semio-os-mcp] the native server keeps exiting, giving up:",
+        "recoveredLine": "[semio-os-mcp] the native server was restarted",
+        "message": "the native server exited with {exit}; the request was not completed and may be retried",
+        "cause": "server-exited",
+        "summary": {
+          "en": "The native server exited with {exit} and is restarting; the request was not completed, retry it.",
+          "de": "Der native Server wurde mit {exit} beendet und startet neu; die Anfrage wurde nicht abgeschlossen, bitte erneut senden."
+        }
+      }
+    },
+    "Models": {
+      "description": "How a gateway that relays a typed missing-model refusal from the serving native server (schema 📦️component-models, definition MissingModel) reacts: it asks its launcher to build that plugin's component model once per plugin and session (one build at a time, cancelled with the session), logs the stages with these prefixes, and, when the launcher published a changed model set, swaps a freshly handshaken server in behind the client, which sees the model through its environment. A failed build is logged and may be retried by the next refusal.",
+      "const": {
+        "preparingPrefix": "[semio-os-mcp] building the component model of plugin",
+        "readyPrefix": "[semio-os-mcp] component model published for plugin",
+        "unchangedPrefix": "[semio-os-mcp] component model unchanged for plugin",
+        "failedPrefix": "[semio-os-mcp] component model failed for plugin"
+      }
+    },
+    "WarmDiscovery": {
+      "description": "The answers to discovery while no native server can be ready within DiscoveryHold, or once that bound passed: empty lists, because a client bounds discovery by its request timeout and staging can outlast it. The native catalog replaces them through the list_changed notifications the gateway announces once the native server is ready.",
+      "const": {
+        "tools/list": {
+          "tools": []
+        },
+        "resources/list": {
+          "resources": []
+        },
+        "resources/templates/list": {
+          "resourceTemplates": []
+        },
+        "prompts/list": {
+          "prompts": []
+        }
+      }
+    },
+    "ClientReadiness": {
+      "description": "How long a client of a warming gateway waits for the native catalog announcement (notifications/tools/list_changed) before it gives up: a cold checkout provisions dependencies and compiles the native server first.",
+      "const": {
+        "maximumMilliseconds": 1200000,
+        "pollMilliseconds": 250,
+        "unavailablePrefix": "[semio-os-mcp] unavailable:"
+      }
     }
   }
 }

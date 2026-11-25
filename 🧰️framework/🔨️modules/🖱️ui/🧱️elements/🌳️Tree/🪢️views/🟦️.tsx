@@ -89,7 +89,7 @@ const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: { r
       dragInitiation="handle"
       transferPointerDown={palettePointerProps.onPointerDown}
       dragData={item.dragData}
-      isDropReady={draggedIds.length > 0 && !isDragging && Boolean(dragAndDropController?.handleDrop)}
+      dropPlace={draggedIds.length > 0 && !isDragging && Boolean(dragAndDropController?.handleDrop) && (!reorderMime || Boolean(item.dragData?.[reorderMime])) ? "available" : undefined}
       layoutKind={propertyLayout ? "property" : undefined}
       activatable={Boolean(item.onClick)}
       headerControl={hasControl && hasNestedTreeItems ? item.control : undefined}
@@ -170,7 +170,8 @@ export const TreeDataSectionView = reactHostPort.memo(function TreeDataSectionVi
       id={section.id}
       label={section.label}
       icon={section.icon}
-      className={cn(section.className, sectionDragging && "opacity-40")}
+      className={section.className}
+      isDragging={sectionDragging}
       defaultOpen={section.defaultOpen}
       open={treeOpenState.open}
       onOpenChange={treeOpenState.setOpen}
@@ -198,7 +199,7 @@ export const TreeDataSectionView = reactHostPort.memo(function TreeDataSectionVi
         handleDropOnSection(event, section);
       }}
       isLastSection={isLastSection}
-      isDropReady={sectionDropReady}
+      dropPlace={sectionDropReady ? "available" : undefined}
       windowAttributes={treeWindowDomAttributes(childWindow, items.length, section.windowKey, section.windowPath)}
     >
       {renderTreeWindowSpacer(direction === "up" ? spacerRows.trailing : spacerRows.leading, direction === "up" ? "trailing" : "leading", childWindow?.rowExtent)}

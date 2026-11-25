@@ -13,13 +13,55 @@
    "de": "Eine Geigenfeige (Ficus lyrata) von 1,8 m Höhe in einem Terrakottatopf von 0,32 m auf einem Untersetzer: ein einzelner schlanker, im unteren Meter kahler Stamm trägt zweiundzwanzig große, ledrige, glänzende Blätter in einer Spirale, geigenförmig mit breiter runder Spitze, Taille und herzförmigem Grund, 20 bis 40 cm lang an kurzen Stielen; die unteren Blätter hängen, die jungen oben stehen aufrecht. Eine beliebte Solitärpflanze heller Wohnräume."
   },
   "tags": [
-   "ficus",
-   "fig",
-   "indoor",
-   "potted",
-   "houseplant",
-   "broad-leaf",
-   "terracotta"
+   {
+    "id": "ficus",
+    "title": {
+     "en": "ficus",
+     "de": "Ficus"
+    }
+   },
+   {
+    "id": "fig",
+    "title": {
+     "en": "fig",
+     "de": "Feige"
+    }
+   },
+   {
+    "id": "indoor",
+    "title": {
+     "en": "indoor",
+     "de": "Innenraum"
+    }
+   },
+   {
+    "id": "potted",
+    "title": {
+     "en": "potted",
+     "de": "getopft"
+    }
+   },
+   {
+    "id": "houseplant",
+    "title": {
+     "en": "houseplant",
+     "de": "Zimmerpflanze"
+    }
+   },
+   {
+    "id": "broad-leaf",
+    "title": {
+     "en": "broad leaf",
+     "de": "breitblättrig"
+    }
+   },
+   {
+    "id": "terracotta",
+    "title": {
+     "en": "terracotta",
+     "de": "Terrakotta"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage plant worker PW-17",

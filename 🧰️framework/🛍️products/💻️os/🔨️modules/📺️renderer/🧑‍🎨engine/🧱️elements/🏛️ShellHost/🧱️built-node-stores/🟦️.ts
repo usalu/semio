@@ -59,6 +59,11 @@ export function requiredHostPanelLeafId(app: AppDefinition | undefined): string 
   if (!leaf) throw new Error("configured host app has no panel leaf");
   return panelTabKindId(leaf.kind);
 }
+
+/** 🪟️ The first panel leaf of the app that owns the space panel: the configured host app, or — in a standalone program host, which has no host app — the mounted session's own app. */
+export function spacePanelOwnerLeafIdV1(hostApp: AppDefinition | undefined, sessionApp: AppDefinition | undefined): string {
+  return requiredHostPanelLeafId(hostApp ?? sessionApp);
+}
 //#endregion 🔖️BuiltNodeReconciler
 
 //#region FrameworkOsShell

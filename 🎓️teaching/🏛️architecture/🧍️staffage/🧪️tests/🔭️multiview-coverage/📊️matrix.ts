@@ -1,19 +1,21 @@
 /** 📊️ Generates the multiview coverage matrix and survives long runs: `bun 📊️matrix.ts --language en|de --out <dir> [options]`.
  *
  * Every asset runs in a process of its own and writes one record `<out>/cells/<asset>.json` when it ends ({@link ./🗃️cells.ts}). Nothing is held until the end, so a cut loses only the assets that were running.
+ * No process holds the catalog: an asset process reads its own document (and an alternative asset when it is asked for), the generator keeps a head per asset (id, category, digest, scale entries) and the merge streams asset by asset into `matrix.json`.
  *
  * - `--language en|de` (required): the language of the progress and summary lines; no language is assumed.
  * - `--out <dir>` (required): the run folder.
  * - `--assets a,b` and `--categories humans,vegetation`: the selection (default: the whole catalog).
  * - `--shard i/n`: runs only every n-th asset of the selection starting at i (0-based), for invocations on several machines; a shard does not merge.
- * - `--jobs N`: asset processes at a time (default 2; one process holds up to 1.7 GB).
+ * - `--jobs N`: asset processes at a time (default 2). An asset process held 0.26 GB resident for a rigid asset, 0.37 GB for a person and 1.2 GB for a tree (finned-heat-exchanger, jogger, olive-tree on 2026-11-25); the generator itself reads one document at a time and keeps its head.
+ * - `--progress <file>`: where the progress is written (default `<out>/progress.json`); invocations that run side by side in one run folder (the lanes of `full.sh`) each name their own.
  * - `--timeout-s N`: the most seconds one asset may take (default 7200); an asset that takes longer is stopped and recorded as the named failure `asset-timeout`.
  * - Resume: a rerun skips every asset that has a current record. `--retry-failed` also reruns the assets recorded as `asset-crashed` or `asset-timeout`; `--fresh` reruns the whole selection. A record of an asset document that changed since is stale and is run again.
  * - `--merge-only`: runs nothing and merges the records. `--from dirA,dirB`: further run folders (shards produced by separate invocations) to merge with `--out`.
  *
  * The merge writes `matrix.json` (every cell of the selection exactly once) and `summary.json` (counts per category, view and check, and the assets that are done, failed by name or missing) into `--out`.
  * A crash or a timeout inside one asset fails its cells as `asset-crashed` or `asset-timeout` with the message; only an asset no folder holds is `cell-missing`.
- * Progress goes to stderr (one line per ended asset with the estimated remaining time) and to `<out>/progress.json`; SIGINT and SIGTERM cancel: the running assets are stopped, the finished records stay and the next run resumes. Exit code 0 when the run ended, 130 when it was cancelled, 2 on wrong usage.
+ * Progress goes to stderr (one line per ended asset with its seconds, the peak resident memory of its process and the estimated remaining time) and to `<out>/progress.json`, which is rewritten when an asset starts or ends and when a running asset reaches its next scale entry; SIGINT and SIGTERM cancel: the running assets are stopped, the finished records stay and the next run resumes. An asset process whose generator vanished (SIGKILL, a crash) ends by itself at its next scale entry and leaves no record. Exit code 0 when the run ended, 130 when it was cancelled, 2 on wrong usage.
  *
  * @see ./🧰️.ts — the engine
  * @see ./🗃️cells.ts — the records
@@ -23,16 +25,17 @@ import { spawn, type ChildProcess } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, renameSync, statSync, writeFileSync, writeSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import type { Asset, Language } from "../../🧬️schema/🟦️.ts";
-import { EXTREME_PROBES, MODE_LIST, UNIFORM_INSTANTS, VIEWPOINT_LIST, loadCatalog, runAsset, summarise } from "./🧰️.ts";
-import { failedRecord, mergeRecords, pendingAssets, recordPath, runGuarded, writeRecord } from "./🗃️cells.ts";
+import type { Language } from "../../🧬️schema/🟦️.ts";
+import { EXTREME_PROBES, MODE_LIST, UNIFORM_INSTANTS, VIEWPOINT_LIST, catalogLookup, loadAsset, runAsset } from "./🧰️.ts";
+import { catalogHeads, failedRecord, pendingAssets, recordPath, runGuarded, writeMatrix, writeRecord, type AssetHead } from "./🗃️cells.ts";
 
 const TEXT = {
-  usage: { en: "usage: bun 📊️matrix.ts --language en|de --out <dir> [--assets a,b] [--categories c,d] [--shard i/n] [--jobs N] [--timeout-s N] [--retry-failed] [--fresh] [--merge-only] [--from dirA,dirB]", de: "Aufruf: bun 📊️matrix.ts --language en|de --out <Ordner> [--assets a,b] [--categories c,d] [--shard i/n] [--jobs N] [--timeout-s N] [--retry-failed] [--fresh] [--merge-only] [--from OrdnerA,OrdnerB]" },
+  usage: { en: "usage: bun 📊️matrix.ts --language en|de --out <dir> [--assets a,b] [--categories c,d] [--shard i/n] [--jobs N] [--timeout-s N] [--progress <file>] [--retry-failed] [--fresh] [--merge-only] [--from dirA,dirB]", de: "Aufruf: bun 📊️matrix.ts --language en|de --out <Ordner> [--assets a,b] [--categories c,d] [--shard i/n] [--jobs N] [--timeout-s N] [--progress <Datei>] [--retry-failed] [--fresh] [--merge-only] [--from OrdnerA,OrdnerB]" },
   plan: { en: (n: number, skipped: number, jobs: number) => `${n} assets to run, ${skipped} finished ones skipped, ${jobs} at a time`, de: (n: number, skipped: number, jobs: number) => `${n} Assets zu rechnen, ${skipped} fertige übersprungen, ${jobs} gleichzeitig` },
   done: { en: "done", de: "fertig" },
   failed: { en: "failed", de: "fehlgeschlagen" },
   remaining: { en: "remaining about", de: "verbleibend etwa" },
+  peak: { en: "peak", de: "Spitze" },
   running: { en: "running", de: "läuft" },
   cancelled: { en: "cancelled: the finished records stay, the next run resumes", de: "abgebrochen: die fertigen Datensätze bleiben, der nächste Lauf setzt fort" },
   timeout: { en: (s: number, at: string) => `the asset did not end within ${s} s (${at})`, de: (s: number, at: string) => `das Asset wurde nicht innerhalb von ${s} s fertig (${at})` },
@@ -55,23 +58,30 @@ if ((language !== "en" && language !== "de") || flag("out") === undefined) {
   process.exit(2);
 }
 const out = resolve(flag("out")!);
-const only = flag("assets")?.split(",");
-const categories = flag("categories")?.split(",");
-const catalog = loadCatalog();
-const catalogById = new Map(catalog.map((asset) => [asset.id, asset]));
-const selection = catalog.filter((asset) => (only === undefined || only.includes(asset.id)) && (categories === undefined || categories.includes(asset.category)));
-const clock = (seconds: number): string => `${String(Math.floor(seconds / 3600)).padStart(2, "0")}:${String(Math.floor((seconds % 3600) / 60)).padStart(2, "0")}:${String(Math.floor(seconds % 60)).padStart(2, "0")}`;
 
 const single = flag("asset");
 if (single !== undefined) {
-  const asset = catalogById.get(single);
+  const asset = loadAsset(single);
   if (asset === undefined) {
     console.error(`no asset "${single}"`);
     process.exit(2);
   }
-  writeRecord(out, runGuarded(asset, (target) => runAsset(target, catalogById, (index, count, scale) => void writeSync(1, `entry ${index + 1} ${count} ${scale}\n`))));
+  const parent = process.ppid;
+  const record = runGuarded(asset, (target) =>
+    runAsset(target, catalogLookup(), (index, count, scale) => {
+      if (process.ppid !== parent) process.exit(1);
+      writeSync(1, `entry ${index + 1} ${count} ${scale}\n`);
+    }),
+  );
+  writeRecord(out, record);
+  writeSync(1, `peak ${Math.round(process.resourceUsage().maxRSS / 1024)}\n`);
   process.exit(0);
 }
+
+const only = flag("assets")?.split(",");
+const categories = flag("categories")?.split(",");
+const selection = catalogHeads(only).filter((head) => categories === undefined || categories.includes(head.category));
+const clock = (seconds: number): string => `${String(Math.floor(seconds / 3600)).padStart(2, "0")}:${String(Math.floor((seconds % 3600) / 60)).padStart(2, "0")}:${String(Math.floor(seconds % 60)).padStart(2, "0")}`;
 
 mkdirSync(out, { recursive: true });
 let cancelled = false;
@@ -84,14 +94,15 @@ if (!has("merge-only")) {
   const jobs = Math.max(1, Math.min(Number(flag("jobs") ?? 2), Math.max(1, todo.length)));
   const timeoutS = Number(flag("timeout-s") ?? 7200);
   const script = fileURLToPath(import.meta.url);
+  const progressFile = resolve(flag("progress") ?? join(out, "progress.json"));
   const started = Date.now();
-  const running = new Map<ChildProcess, { asset: Asset; started: number; entry: readonly [number, number, string] | null }>();
+  const running = new Map<ChildProcess, { asset: AssetHead; started: number; entry: readonly [number, number, string] | null; peakMb?: number }>();
   const entryText = (entry: readonly [number, number, string] | null, lang: Language): string => (entry === null ? TEXT.noEntry[lang] : TEXT.entry[lang](...entry));
   const ended: { asset: string; outcome: "done" | "failed"; seconds: number }[] = [];
   const queue = [...todo];
   const progress = (): void => {
-    writeFileSync(join(out, "progress.json.part"), JSON.stringify({ total: todo.length, done: ended.filter((e) => e.outcome === "done").length, failed: ended.filter((e) => e.outcome === "failed").map((e) => e.asset), pending: queue.length, running: [...running.values()].map((r) => ({ asset: r.asset.id, entry: entryText(r.entry, language), seconds: Math.round((Date.now() - r.started) / 1000) })), elapsedS: Math.round((Date.now() - started) / 1000), cancelled }, null, 2));
-    renameSync(join(out, "progress.json.part"), join(out, "progress.json"));
+    writeFileSync(`${progressFile}.part`, JSON.stringify({ total: todo.length, done: ended.filter((e) => e.outcome === "done").length, failed: ended.filter((e) => e.outcome === "failed").map((e) => e.asset), pending: queue.length, running: [...running.values()].map((r) => ({ asset: r.asset.id, entry: entryText(r.entry, language), seconds: Math.round((Date.now() - r.started) / 1000) })), elapsedS: Math.round((Date.now() - started) / 1000), cancelled }, null, 2));
+    renameSync(`${progressFile}.part`, progressFile);
   };
   console.error(`[matrix] ${TEXT.plan[language](todo.length, mine.length - todo.length, jobs)}`);
   await new Promise<void>((finish) => {
@@ -100,9 +111,9 @@ if (!has("merge-only")) {
       progress();
       if (running.size === 0 && (cancelled || queue.length === 0)) finish();
     };
-    const start = (asset: Asset): void => {
+    const start = (asset: AssetHead): void => {
       const child = spawn(process.execPath, [script, "--language", language, "--out", out, "--asset", asset.id], { stdio: ["ignore", "pipe", "pipe"] });
-      const state: { asset: Asset; started: number; entry: readonly [number, number, string] | null } = { asset, started: Date.now(), entry: null };
+      const state: { asset: AssetHead; started: number; entry: readonly [number, number, string] | null; peakMb?: number } = { asset, started: Date.now(), entry: null };
       running.set(child, state);
       let timedOut = false;
       let tail = "";
@@ -113,7 +124,10 @@ if (!has("merge-only")) {
       child.stdout!.on("data", (chunk: Buffer) => {
         for (const line of chunk.toString("utf8").split("\n")) {
           const [word, i, n, ...scale] = line.split(" ");
-          if (word === "entry") state.entry = [Number(i), Number(n), scale.join(" ")];
+          if (word === "peak") state.peakMb = Number(i);
+          if (word !== "entry") continue;
+          state.entry = [Number(i), Number(n), scale.join(" ")];
+          progress();
         }
       });
       child.stderr!.on("data", (chunk: Buffer) => void (tail = (tail + chunk.toString("utf8")).slice(-2000)));
@@ -130,7 +144,7 @@ if (!has("merge-only")) {
           ended.push({ asset: asset.id, outcome, seconds });
           const mean = ended.reduce((sum, e) => sum + e.seconds, 0) / ended.length;
           const left = ((queue.length + running.size) * mean) / jobs;
-          console.error(`[matrix] [${ended.length}/${todo.length}] ${TEXT[outcome][language]} ${asset.id} ${seconds.toFixed(0)} s · ${TEXT.running[language]} ${running.size} · ${TEXT.remaining[language]} ${clock(left)}`);
+          console.error(`[matrix] [${ended.length}/${todo.length}] ${TEXT[outcome][language]} ${asset.id} ${seconds.toFixed(0)} s${state.peakMb === undefined ? "" : ` · ${TEXT.peak[language]} ${state.peakMb} MB`} · ${TEXT.running[language]} ${running.size} · ${TEXT.remaining[language]} ${clock(left)}`);
         }
         next();
       });
@@ -163,9 +177,6 @@ function existsFailure(path: string): boolean {
   }
 }
 
-const current = loadCatalog().filter((asset) => selection.some((selected) => selected.id === asset.id));
-const merged = mergeRecords(current, [out, ...(flag("from")?.split(",").map((folder) => resolve(folder)) ?? [])]);
-const summary = summarise(merged.cells);
 const coverage = {
   exhaustive: ["representation decisions of every preset and declared key", "valid-range band edges of every authored representation", "unavailable declarations: reason, limiting feature and size, alternatives and their targets", "geometry of every pose in the three viewpoints", "cross-view synchrony of every evaluated instant (forward, height, lateral)", "default-pose dimensions against widthM, depthM, heightM", "loop closure of every looping clip", "all seven modes of every pose at every scale entry"],
   sampled: [
@@ -178,7 +189,6 @@ const coverage = {
   viewpoints: VIEWPOINT_LIST,
   modes: MODE_LIST,
 };
-const run = { done: merged.done.length, failed: merged.failed, missing: merged.missing, seconds: merged.seconds };
-writeFileSync(join(out, "matrix.json"), JSON.stringify({ version: "semio.staffage.coverage/v1", assets: current.length, coverage, summary, run, cells: merged.cells }));
-writeFileSync(join(out, "summary.json"), JSON.stringify({ coverage, summary, run }, null, 2));
-console.error(`[matrix] ${TEXT.merged[language](merged.cells.length, summary.total.ok, summary.total.unavailable, summary.total.fail, merged.done.length, merged.failed.length, merged.missing.length)}`);
+const current = catalogHeads(selection.map((head) => head.id));
+const { summary, run, cells } = writeMatrix(out, current, [out, ...(flag("from")?.split(",").map((folder) => resolve(folder)) ?? [])], coverage);
+console.error(`[matrix] ${TEXT.merged[language](cells, summary.total.ok, summary.total.unavailable, summary.total.fail, run.done, run.failed.length, run.missing.length)}`);

@@ -58,7 +58,7 @@ async fn composed_replacement_candidate(
     envelope.dialect = Some(parent_dialect);
     let mut candidate = store::ArtifactStore::new::<::semio_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, app.stores.store.local_actor_id().clone()).await.expect("candidate parent store");
     store::install_unscheduled_catalog(&mut candidate, funded_recursive_fixture_owners::<ComposedParentSnapshot>("recursive-parent")).expect("candidate parent catalog installs");
-    let job = semio_plugin_ownership::store_lifecycle::ArtifactStoreInitializationJob::new(Box::new(ReadyComposedParentInitialization::from_candidate(candidate)));
+    let job = semio_plugin_store_lifecycle::store_lifecycle::ArtifactStoreInitializationJob::new(Box::new(ReadyComposedParentInitialization::from_candidate(candidate)));
     let operation = semio_framework_job::OperationId(operation);
     app.ingest.store_replacement_jobs.insert_admitted(operation.0, semio_plugin_document_media::ActiveArtifactStoreReplacement::new(operation, generation, app.child_composition.child_content_generation, job, (cx.operation(),cx.generation())));
     semio_plugin_document_media::ArtifactEnvelopeDecodeOperationHandle { operation, generation }
@@ -68,7 +68,6 @@ async fn composed_replacement_candidate(
 fn composed_maintenance_turn<A: PluginApp>(app: &mut A, body: usize, cx:&mut semio_framework_job::StepContext<'_>) -> Result<semio_plugin_ownership::bounded_ownership::PluginLifecycleStep, semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     assert_eq!(body,COMPOSITION_MAINTENANCE_GRANT.maximum_copy_bytes);
     let demand = app.maintenance_retirement_demands(body,cx.fuel_remaining())?;
-    eprintln!("[DEBUG] maint demand {demand:?} cxgrant {:?} fuel {} yield {}",cx.retained_grant(),cx.fuel_remaining(),cx.retirement_should_yield());
     semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,COMPOSITION_MAINTENANCE_GRANT,demand,|same,grant|Ok((app.maintenance_step(same,grant)?,app.maintenance_terminal_is_empty())))
 }
 

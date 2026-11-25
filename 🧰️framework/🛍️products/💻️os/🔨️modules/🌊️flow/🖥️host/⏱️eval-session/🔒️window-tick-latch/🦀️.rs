@@ -51,10 +51,11 @@ impl FlowEvalSession {
     /// 🔎️ Reports unfinished, unarmed work with no extension answer in flight.
     pub fn window_tick_owed(&self, window_id: &str) -> bool {
         if self.preview_cancelled{return false}
-        match self.window_tick_latches.get(&flow_eval_window_key(window_id)) {
+        let owed = match self.window_tick_latches.get(&flow_eval_window_key(window_id)) {
             None => true,
             Some(latch) => latch.unfinished && !latch.armed && latch.in_flight == 0,
-        }
+        };
+        owed
     }
 
     /// 🔒️ Arms only the tick that the window currently owes.

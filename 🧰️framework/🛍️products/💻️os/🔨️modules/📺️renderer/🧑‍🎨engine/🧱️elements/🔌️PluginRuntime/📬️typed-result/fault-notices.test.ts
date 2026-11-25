@@ -84,9 +84,24 @@ describe("typed-operation fault pages become SemioFaultErrors the shell tells in
     }
   });
 
+  for (const row of fixture.cases) {
+    test(`${row.id}: a window refresh that first observes an action's fault page neither adopts nor throws it, and the instance's notice reads in en and de`, async () => {
+      const published: SemioFaultError[] = [];
+      const reported: string[] = [];
+      const router = new TypedOperationRouter((code) => reported.push(code), () => {}, (_receiver, error) => { published.push(error); return true; });
+      const refresh = router.open("refresh-ui", false);
+      expect(consumeTypedOperationEffects([page(fixture.faultLane, JSON.stringify(row.page), 0)] as never, refresh).map((effect) => effect.tag)).toEqual([]);
+      expect(published.length).toBe(1);
+      expect(reported).toEqual([]);
+      for (const locale of ["en", "de"] as const) expect(surfaced(published[0]!, locale)).toEqual(row.expected[locale]);
+      const actorId = `fault-notice-refresh#${fixture.receiver}`;
+      await expect(withTypedOperationCall(actorId, "refresh-ui", async (call) => call.observe(token(0)), false)).resolves.toBe(false);
+    });
+  }
+
   test("a successful operation raises and publishes nothing", () => {
     const published: SemioFaultError[] = [];
-    const call = new TypedOperationRouter(() => {}, () => {}, (_receiver, error) => published.push(error)).open("fixture");
+    const call = new TypedOperationRouter(() => {}, () => {}, (_receiver, error) => { published.push(error); return true; }).open("fixture");
     const consumed = consumeTypedOperationEffects([page(fixture.terminalLane, "typed-operation-complete", 0)] as never, call);
     expect(consumed.map((effect) => effect.tag)).toEqual(["typed-operation-terminal-seen"]);
     expect(published).toEqual([]);

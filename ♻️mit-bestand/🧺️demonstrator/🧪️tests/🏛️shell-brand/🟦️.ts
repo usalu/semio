@@ -130,6 +130,11 @@ describe("demonstrator shell brands", () => {
   });
 
   it("mit-bestand/demonstrator footer credits render the funding/partner logos, links, and locale text", () => {
+    for (const item of [fundedByZukunftBauFooterItem("fundedBy", "en", false), aProjectOfLuhUdkFooterItem("partners", "en", false)]) {
+      const markup = renderToStaticMarkup(item.content);
+      expect(markup).toContain('data-shared-border-edges=""');
+      expect(markup).not.toMatch(/\brounded(?:-\w+)?\b/u);
+    }
     const fundedByMarkup = renderToStaticMarkup(createElement(Footer, { items: [navbarFillItem("fillLeft"), fundedByZukunftBauFooterItem("fundedByEn", "en", false), navbarFillItem("fillRight")] }));
     expect(fundedByMarkup).toContain("<a ");
     expect(fundedByMarkup).toContain(`href="${ZUKUNFT_BAU_PROJECT_URL}"`);

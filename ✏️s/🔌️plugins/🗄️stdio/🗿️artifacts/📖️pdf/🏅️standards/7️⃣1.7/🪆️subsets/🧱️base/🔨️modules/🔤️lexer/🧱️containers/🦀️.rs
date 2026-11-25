@@ -55,6 +55,22 @@ pub struct CosReceipt {
     pub released_bytes: usize,
 }
 
+/// 📈️ Net bytes `table` grows by so that `additional` more items fit: at least doubling and at least four slots, zero while its capacity already holds them. A table is grown only when a document needs it, never reserved for a maximum ahead.
+pub fn table_growth<T>(table: &Vec<T>, additional: usize) -> usize {
+    growth_slots(table, additional) * size_of::<T>()
+}
+
+/// 📥️ Makes room for `additional` more items exactly as [`table_growth`] quoted; false when the allocator refuses.
+pub fn grow_table<T>(table: &mut Vec<T>, additional: usize) -> bool {
+    let slots = growth_slots(table, additional);
+    slots == 0 || table.try_reserve_exact(table.capacity() - table.len() + slots).is_ok()
+}
+
+fn growth_slots<T>(table: &Vec<T>, additional: usize) -> usize {
+    let free = table.capacity() - table.len();
+    if additional <= free { 0 } else { (additional - free).max(table.capacity()).max(4) }
+}
+
 struct Turn {
     grant: CosGrant,
     work: usize,
@@ -151,6 +167,37 @@ impl PdfCosCursor {
             lifecycle: Lifecycle::Active, token: None, integers: [None; 2], attachment: None,
             value: None, retiring: None, retiring_scanner: false,
         }
+    }
+
+    /// 💤️ A settled cursor that owns nothing, kept by a caller that parses many small values and re-arms it for each.
+    pub fn idle() -> Self {
+        let mut cursor = Self::new(0, CosLimits::default());
+        cursor.lifecycle = Lifecycle::Closed;
+        cursor
+    }
+
+    /// 🔁️ Re-arms a settled cursor in place for the value at `offset`, resetting its scalar state instead of building a whole cursor (every frame of a settled cursor is already empty, the reader's atom is scratch); false while it still owns anything.
+    pub fn rearm(&mut self, offset: usize, limits: CosLimits) -> bool {
+        if !self.terminal_is_empty() || self.depth != 0 { return false; }
+        self.reader.rearm(offset);
+        self.limits = limits;
+        self.lifecycle = Lifecycle::Active;
+        self.token = None;
+        self.integers = [None; 2];
+        self.attachment = None;
+        self.value = None;
+        self.retiring = None;
+        self.retiring_scanner = false;
+        true
+    }
+
+    /// 🪦️ Re-arms a settled cursor in place to retire a parsed value, like [`Self::retire_parsed_value`] without building a cursor; hands the value back while the cursor still owns anything.
+    pub fn rearm_retiring(&mut self, value: PdfObject) -> Result<(), PdfObject> {
+        if !self.rearm(0, CosLimits::default()) { return Err(value); }
+        self.retiring = Some(value);
+        self.retiring_scanner = true;
+        self.lifecycle = Lifecycle::Closing;
+        Ok(())
     }
 
     /// 📍 Latest inspected source position. The completion receipt carries the exact value end.

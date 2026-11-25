@@ -21,7 +21,7 @@ import { resolvePopoverPlacement } from "../🗨️Popover/🟦️.tsx";
 export const CHROME_CONTROL_TOOLTIP_DELAY_MS = 400;
 
 const chromeControlTooltipSurfaceClass = cn(
-  "pointer-events-none fixed z-menu w-max max-w-sm border p-single text-xs text-balance text-popover-foreground shadow-lg",
+  "pointer-events-none fixed z-menu w-max max-w-sm p-single text-xs text-balance text-popover-foreground",
   glassClass,
 );
 
@@ -93,6 +93,7 @@ export function ChromeControlHint({ id, text, always = false, children }: { read
             role="tooltip"
             data-slot="tooltip-content"
             data-level="menu"
+            data-glass-chip=""
             dir={flow.inline === "rtl" ? "rtl" : undefined}
             className={chromeControlTooltipSurfaceClass}
             style={
@@ -219,6 +220,7 @@ export function DisabledReasonHint({ id, reason, children, bare = false }: { rea
             data-slot="row-action-reason"
             data-revealed=""
             data-level="menu"
+            data-glass-chip=""
             dir={flow.inline === "rtl" ? "rtl" : undefined}
             className={chromeControlTooltipSurfaceClass}
             style={placement ? { left: placement.left, top: placement.top, transformOrigin: placement.transformOrigin, visibility: "visible" } : { left: 0, top: 0, visibility: "hidden" }}

@@ -45,3 +45,19 @@ fn focus_entity_re_aims_the_addressed_window_orbit() {
     let results = handle_window(&FocusEntity { id: semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3d_entity_target("solid", "sol1").unwrap() }, &view_doc, &cfg, &view(results::FEM3D_WINDOW_RESULTS)).expect("focus on results");
     assert_eq!(results.window_config_mutations[0].window_id(), "results-left");
 }
+
+/// 🎯️ LAW: a panel's Focus button carries no window of its own; the focused pane is the one addressed and its camera re-aimed, instead of faulting with "window-required".
+#[test]
+fn focus_entity_from_a_panel_recentres_the_focused_pane_3d() {
+    let doc = demo();
+    let history = HistoryView::empty();
+    let view_doc = ArtifactView::new(&*doc, &history);
+    let config = NoConfig::default();
+    let cfg = ConfigView { snapshot: &config, window: None };
+    let panel = semio_plugin::ViewModel { window_id: None, focused_window_id: Some("model-left".into()), ..view(model::FEM3D_WINDOW_MODEL) };
+    let emit = handle_window(&FocusEntity { id: semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3d_entity_target("node", "n20_l1").unwrap() }, &view_doc, &cfg, &panel).expect("panel focus");
+    assert_eq!(emit.window_config_mutations.len(), 1);
+    assert_eq!(emit.window_config_mutations[0].window_id(), "model-left");
+    let none = semio_plugin::ViewModel { window_id: None, focused_window_id: None, ..view(model::FEM3D_WINDOW_MODEL) };
+    assert!(handle_window(&FocusEntity { id: semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3d_entity_target("node", "n20_l1").unwrap() }, &view_doc, &cfg, &none).is_err());
+}

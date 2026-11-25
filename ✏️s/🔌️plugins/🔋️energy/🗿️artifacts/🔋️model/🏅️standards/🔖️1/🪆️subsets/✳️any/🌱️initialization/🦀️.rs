@@ -1,6 +1,6 @@
 //! 🌱️ Energy document genesis retains its authored native fields and actual semantic Store authorities.
 use semio_os_kernel as store;
-use semio_plugin_ownership::original_store_genesis::{OriginalStoreGenesisOwner};
+use semio_plugin_store_lifecycle::original_store_genesis::{OriginalStoreGenesisOwner};
 use semio_framework_value::{RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,ValueError,retained_clone::RetainedCloneBirthDemand};
 use semio_s_artifact_energy_model_snapshot::EnergyModelSnapshot;
 use semio_s_artifact_energy_model_mutations::EnergyModelMutation;

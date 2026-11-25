@@ -27,9 +27,3 @@ pub fn render(host: &crate::Host, selection: &NormSelection, locale: Locale, con
     render_outliner_document(&semio_framework_value::ToValue::to_value(host.document()), &collections, Some(crate::field_meta::en1994_field_meta), &OutlinerContext { report, locale, controller_id, windows, state: &state })
 }
 //#endregion 🔖️Render
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

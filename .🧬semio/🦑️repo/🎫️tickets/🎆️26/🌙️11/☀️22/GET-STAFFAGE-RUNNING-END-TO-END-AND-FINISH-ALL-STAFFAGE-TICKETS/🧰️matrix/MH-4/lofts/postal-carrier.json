@@ -1,0 +1,10 @@
+[
+  {"scale": "50", "bone": "thumb-metacarpal-l", "paint": "hand-l", "swell": {"hand-l-thumb-metacarpal": 0.003}},
+  {"scale": "50", "bone": "thumb-proximal-l", "paint": "hand-l", "swell": {"hand-l-thumb-proximal": 0.003}},
+  {"scale": "50", "bone": "thumb-distal-l", "paint": "hand-l", "swell": {"hand-l-thumb-distal": 0.003}},
+  {"scale": "50", "bone": "hand-l", "paint": "hand-l", "replace": ["hand-l"], "fit": [{"id": "hand-l-fingers", "stations": 6, "solids": [], "across": ["index-proximal-l", "middle-proximal-l", "ring-proximal-l", "little-proximal-l"]}, {"id": "hand-l-fingertips", "stations": 6, "solids": [], "across": ["index-middle-l", "index-distal-l", "middle-middle-l", "middle-distal-l", "ring-middle-l", "ring-distal-l", "little-middle-l", "little-distal-l"]}]},
+  {"scale": "100", "bone": "thumb-metacarpal-l", "paint": "hand-l", "swell": {"hand-l-thumb-metacarpal": 0.003}},
+  {"scale": "100", "bone": "thumb-proximal-l", "paint": "hand-l", "swell": {"hand-l-thumb-proximal": 0.003}},
+  {"scale": "100", "bone": "thumb-distal-l", "paint": "hand-l", "swell": {"hand-l-thumb-distal": 0.003}},
+  {"scale": "100", "bone": "hand-l", "paint": "hand-l", "replace": ["hand-l"], "fit": [{"id": "hand-l-fingers", "stations": 6, "solids": [], "across": ["index-proximal-l", "middle-proximal-l", "ring-proximal-l", "little-proximal-l"]}, {"id": "hand-l-fingertips", "stations": 6, "solids": [], "across": ["index-middle-l", "index-distal-l", "middle-middle-l", "middle-distal-l", "ring-middle-l", "ring-distal-l", "little-middle-l", "little-distal-l"]}]}
+]

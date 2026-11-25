@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { chromium } from "playwright";
+import { launchChromium } from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🌐️chromium-launch/🟦️";
 import { describe, expect, it } from "vitest";
 const engine = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const world = resolve(engine, "../../♾️infinite/🌍️world");
@@ -12,7 +12,7 @@ const fixture = JSON.parse(readFileSync(resolve(world, "🧪️tests/🧫️fixt
 describe("🛑️ Exact asset request cancellation", () => {
   
   it("matches browser abort isolation before and during an active request", async () => {
-    const browser = await chromium.launch({ headless: true });
+    const browser = await launchChromium();
     try {
       const page = await browser.newPage();
       const observed = await page.evaluate((stages: readonly string[]) => stages.map((stage) => {

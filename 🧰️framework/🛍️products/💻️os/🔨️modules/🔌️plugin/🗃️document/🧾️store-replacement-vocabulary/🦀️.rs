@@ -19,6 +19,26 @@ pub enum ActiveArtifactStoreReplacementState {
     Complete,
 }
 
+/// 📊️ How many ordered stages a successful store replacement walks after its fold, which the archive load reports as progress.
+pub const STORE_REPLACEMENT_STAGES: u64 = 8;
+
+impl ActiveArtifactStoreReplacementState {
+    /// 📊️ The stage this state has reached on the success path: the fold is counted by its own operations, every later state by one stage; a refusal path reports its furthest stage.
+    pub fn stage(self) -> u64 {
+        match self {
+            Self::Initializing => 0,
+            Self::AwaitingMembers => 1,
+            Self::OpeningMembers | Self::ClosingRejectedMember => 2,
+            Self::ValidatingClosure => 3,
+            Self::PreparingCandidateViews => 4,
+            Self::CandidateReady => 5,
+            Self::RetiringRejectedMembers | Self::RetiringCommittedMembers => 6,
+            Self::RetiringCommittedStore | Self::RetiringRejectedCandidate => 7,
+            Self::Complete => STORE_REPLACEMENT_STAGES,
+        }
+    }
+}
+
 /// 🧭️ Which leg of a document-archive replacement refused the candidate, and with what
 /// evidence. An atomic replacement validates three of them in order — the owned-member set
 /// (`members`), the recursive ownership `closure`, and the `retained-publication` guard plus the
@@ -179,7 +199,7 @@ where
 {
     pub operation: semio_framework_job::OperationId,
     pub generation: semio_framework_job::Generation,
-    pub publication_token: semio_plugin_ownership::store_lifecycle::DocumentStorePublicationToken,
+    pub publication_token: semio_plugin_store_lifecycle::store_lifecycle::DocumentStorePublicationToken,
     pub base_child_content_generation: u64,
     pub cancel: ManuallyDrop<Option<semio_framework_job::CancelToken>>,
     pub cancel_signal: ManuallyDrop<Option<std::sync::Arc<std::sync::atomic::AtomicBool>>>,
@@ -219,5 +239,23 @@ where
     pub refusal: Option<ArtifactStoreReplacementRefusal>,
     /// 📈️ The initializer's last reported `(operations folded, operations to fold)` (gap N17), kept after its handoff.
     pub fold_progress: (u64, u64),
+    /// 📈️ The records the replacement's own steps decoded so far (items its initializer, member opens, closure and candidate views paid): the live progress of the long phase, which no stage or member count moves inside.
+    pub decoded: u64,
     pub state: ActiveArtifactStoreReplacementState,
+}
+
+#[cfg(test)]
+mod stage_laws {
+    use super::*;
+
+    /// 📊️ LAW: along the success path the replacement stage never decreases and ends at the announced stage count, so the archive load's `completed` stays monotonic and never exceeds its `total`.
+    #[test]
+    fn the_success_path_walks_monotonic_stages_ending_at_the_announced_count() {
+        use ActiveArtifactStoreReplacementState::*;
+        let path = [Initializing, AwaitingMembers, OpeningMembers, ValidatingClosure, PreparingCandidateViews, CandidateReady, RetiringCommittedMembers, RetiringCommittedStore, Complete];
+        let stages = path.map(ActiveArtifactStoreReplacementState::stage);
+        assert!(stages.windows(2).all(|pair| pair[0] <= pair[1]), "{stages:?}");
+        assert_eq!(stages.last().copied(), Some(STORE_REPLACEMENT_STAGES));
+        assert!(stages.iter().all(|stage| *stage <= STORE_REPLACEMENT_STAGES));
+    }
 }

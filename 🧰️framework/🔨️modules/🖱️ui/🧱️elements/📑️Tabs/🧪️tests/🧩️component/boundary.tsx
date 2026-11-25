@@ -1,28 +1,39 @@
 import * as React from "react";
 import { fireEvent, render } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../🟦️.tsx";
 
 describe("tabs painted boundary discovery", () => {
-  it.each(["horizontal", "vertical"] as const)("registers only painted chips in a %s group", (orientation) => {
+  it.each(["horizontal", "vertical"] as const)("registers the list as a cells chip whose tabs are its cells in a %s group", (orientation) => {
     const { getByRole } = render(<Tabs defaultValue="alpha" orientation={orientation}><TabsList><TabsTrigger value="alpha">Alpha</TabsTrigger><TabsTrigger value="beta">Beta</TabsTrigger></TabsList></Tabs>);
     const list = getByRole("tablist");
     const alpha = getByRole("tab", { name: "Alpha" });
     const beta = getByRole("tab", { name: "Beta" });
-    expect(list.getAttribute("data-shared-border-group")).toBe("");
     expect(list.getAttribute("data-orientation")).toBe(orientation);
-    expect(list.hasAttribute("data-shared-border-frame")).toBe(false);
-    expect(alpha.getAttribute("data-shared-border-edges")).toBe(orientation === "horizontal" ? "right bottom left" : "top right bottom");
-    expect(alpha.getAttribute("data-shared-border-frame")).toBe("");
+    expect(list.hasAttribute("data-shared-border-cells")).toBe(true);
+    expect(list.getAttribute("data-shared-border-edges")).toBe("right bottom");
+    expect([alpha, beta].every((tab) => tab.hasAttribute("data-shared-border-frame") && tab.getAttribute("data-shared-border-edges") === "")).toBe(true);
     expect(alpha.getAttribute("data-shared-border-state")).toBe("active");
+    expect(beta.hasAttribute("data-shared-border-state")).toBe(false);
     expect(alpha.className.split(" ")).toContain("relative");
-    expect(beta.hasAttribute("data-shared-border-frame")).toBe(false);
-    expect(list.querySelector("[data-shared-border-cell], [data-shared-border-attached]")).toBeNull();
     alpha.focus();
     fireEvent.keyDown(alpha, { key: orientation === "horizontal" ? "ArrowRight" : "ArrowDown" });
     expect(document.activeElement).toBe(beta);
-    expect(beta.getAttribute("data-shared-border-frame")).toBe("");
-    expect(alpha.hasAttribute("data-shared-border-frame")).toBe(false);
+    expect(beta.getAttribute("data-shared-border-state")).toBe("active");
+    expect(alpha.hasAttribute("data-shared-border-state")).toBe(false);
+  });
+
+  it("draws the inner chip edges on the end side in right-to-left flow", () => {
+    const { getByRole } = render(<Tabs defaultValue="alpha" dir="rtl"><TabsList><TabsTrigger value="alpha">Alpha</TabsTrigger></TabsList></Tabs>);
+    expect(getByRole("tablist").getAttribute("data-shared-border-edges")).toBe("left bottom");
+  });
+
+  it("publishes the list extent as the clearance of the panel, however the parts are attached", () => {
+    const rect = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (this: HTMLElement) { return this.getAttribute("role") === "tablist" ? new DOMRect(0, 0, 120, 28) : new DOMRect(); });
+    try {
+      const { container } = render(<Tabs defaultValue="alpha"><TabsList><TabsTrigger value="alpha">Alpha</TabsTrigger></TabsList><TabsContent value="alpha">Body</TabsContent></Tabs>);
+      expect(container.querySelector<HTMLElement>('[data-slot="tabs"]')!.style.getPropertyValue("--tabs-list-clearance")).toBe("28px");
+    } finally { rect.mockRestore(); }
   });
 
   it("is one rectangle: the tab list is a glass chip inside it and the panel spans the whole frame under the list", () => {
@@ -34,6 +45,8 @@ describe("tabs painted boundary discovery", () => {
     expect(root.contains(list)).toBe(true);
     expect(list.className.split(" ")).toContain("absolute");
     expect(list.hasAttribute("data-tabs-chip")).toBe(true);
+    expect(list.getAttribute("data-glass-chip")).toBe("");
+    expect(list.className.split(" ")).toContain("ui-glass");
     expect(panel.parentElement).toBe(root);
     expect(panel.style.paddingBlockStart).toBe("var(--tabs-list-clearance, 0px)");
   });

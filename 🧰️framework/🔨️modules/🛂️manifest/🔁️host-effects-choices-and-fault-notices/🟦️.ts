@@ -33,19 +33,28 @@ export type HostEffectDispatchScope = {
  * whole of a computation React offers one for at t=5.3 s
  * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-regressions-sweep-2026-09-15.md`).
  *
- * Fixture: `🧰️framework/🔨️modules/🛂️manifest/🧫️fixtures/🔁️host-effect-invocation/🔣️.json`. */
+ * 🎯️ A window action may name its target instance in its arguments. The live roster supplies that
+ * instance's kind when available. An explicitly addressed background window keeps its declared kind
+ * and instance even while absent from the visible roster.
+ *
+ * Fixture: `🧰️framework/🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/🔁️host-effect-invocation/🔣️.json`. */
 export function hostEffectInvocationV1(
   scope: HostEffectDispatchScope,
   appCommandIds: readonly string[],
   action: string,
   args?: Record<string, unknown>,
+  windowInstances?: readonly { readonly id: string; readonly windowKindId: string }[],
 ): { readonly kind: "command"; readonly invocation: CommandInvocation } | { readonly kind: "action"; readonly invocation: ActionInvocation } {
   if (appCommandIds.includes(action)) {
     return { kind: "command", invocation: { address: { owner: { app: { pluginId: scope.pluginId, appId: scope.appId } }, commandId: action }, arguments: { ...args } } as CommandInvocation };
   }
+  const explicitWindowId = typeof args?.windowId === "string" ? args.windowId : "";
+  const declaredKindId = explicitWindowId && typeof args?.windowKindId === "string" ? args.windowKindId : "";
+  const windowInstanceId = explicitWindowId || scope.windowInstanceId;
+  const windowKindId = windowInstances?.find((window) => window.id === windowInstanceId)?.windowKindId ?? (declaredKindId || scope.windowKindId);
   const invocation = {
-    address: { pluginId: scope.pluginId, appId: scope.appId, modeId: scope.modeId, windowKindId: scope.windowKindId, windowInstanceId: scope.windowInstanceId, actionId: action },
-    arguments: { ...args, windowId: scope.windowInstanceId },
+    address: { pluginId: scope.pluginId, appId: scope.appId, modeId: scope.modeId, windowKindId, windowInstanceId, actionId: action },
+    arguments: { ...args, windowId: windowInstanceId },
   } as ActionInvocation;
   return { kind: "action", invocation };
 }

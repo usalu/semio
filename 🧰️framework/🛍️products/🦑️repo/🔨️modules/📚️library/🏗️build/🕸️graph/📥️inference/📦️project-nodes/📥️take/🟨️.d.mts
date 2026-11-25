@@ -1,5 +1,5 @@
 export type TakeOutcomeV1 = "present" | "fetched" | "stale" | "miss" | "fault";
-export type TakePolicyV1 = Readonly<{ concurrency: number; lookFloorConcurrency: number; fetchConcurrency: number; claimStaleMilliseconds: number; claimPollMilliseconds: number; pollFirstMilliseconds: number; pollGrowthPercent: number; pollMaximumMilliseconds: number; pollBatch: number; faultRetries: number; faultWaitMilliseconds: number; progressMilliseconds: number; passBoundMilliseconds: number; releaseMilliseconds: number; noProgressMilliseconds: number; tailReportMilliseconds: number; watchMilliseconds: number; strongMemoryMegabytes: number; strongCores: number; cpuProgressPercent: number; hotRetryMilliseconds: number; adoptConcurrency: number; hotNamesMilliseconds: number; adoptReportMilliseconds: number; adoptStaleMilliseconds: number; adoptRetryMilliseconds: number }>;
+export type TakePolicyV1 = Readonly<{ concurrency: number; lookFloorConcurrency: number; fetchConcurrency: number; claimStaleMilliseconds: number; claimPollMilliseconds: number; pollFirstMilliseconds: number; pollGrowthPercent: number; pollMaximumMilliseconds: number; pollBatch: number; faultRetries: number; faultWaitMilliseconds: number; progressMilliseconds: number; passBoundMilliseconds: number; releaseMilliseconds: number; noProgressMilliseconds: number; tailReportMilliseconds: number; watchMilliseconds: number; strongMemoryMegabytes: number; strongCores: number; cpuProgressPercent: number; hotRetryMilliseconds: number; adoptConcurrency: number; hotNamesMilliseconds: number; adoptReportMilliseconds: number; adoptStaleMilliseconds: number; adoptRetryMilliseconds: number; prefetchRecordsPerAsk: number; prefetchAsksInFlight: number; lookMaximumMilliseconds: number; abandonedLooksMaximum: number }>;
 export type TakeCountsV1 = Readonly<{ total: number; present: number; fetched: number; here: number; stale: number; running: number; wanted: number; done: number; missing: number }>;
 /** ⚙️ The authored numbers of the take pass. */
 export const TAKE_POLICY_V1: TakePolicyV1;
@@ -17,6 +17,14 @@ export function createProgressWatchV1(input?: Readonly<{ now?(): number; windowM
 export function takeCpuMillisecondsV1(text: string): number;
 export function takeTreeCpuMillisecondsV1(rows: readonly Readonly<{ pid: number; parent: number; milliseconds: number }>[], root: number): number;
 export function takeChildrenCpuV1(root?: number, run?: (...input: any[]) => unknown): Promise<number | undefined>;
+export function takeLoadStretchV1(load: number, cores: number, policy?: Readonly<Record<string, number>>): number;
+export function takeNoProgressWindowV1(): number;
+export function takeHostLoadV1(): Readonly<{ load: number; cores: number }>;
+export function takeStopVerdictV1(input: Readonly<{ silentMilliseconds: number; windowMilliseconds: number; load: number; cores: number; cpuDeltaMilliseconds?: number }>, policy?: Readonly<Record<string, number>>): Readonly<{ stop: boolean; reason: "ceiling" | "stretched" | "alive" | "stuck" | "starved" }>;
+export function takeQuarantineReadV1(path: string, now?: number, policy?: Readonly<Record<string, number>>): string[];
+export function takeQuarantineWriteV1(path: string, names: readonly string[], reason: string, now?: number, policy?: Readonly<Record<string, number>>): boolean;
+export function takeOwnCpuV1(usage?: Readonly<{ user: number; system: number }>): number;
+export function takeWorkCpuV1(root?: number, run?: (...input: any[]) => unknown, usage?: Readonly<{ user: number; system: number }>): Promise<number | undefined>;
 export function createCpuProgressV1(input: Readonly<{ sample(): Promise<number | undefined> | number | undefined; now?(): number; policy?: Readonly<{ cpuProgressPercent: number }> }>): Readonly<{ tick(): Promise<number> }>;
 /** 🗣️ The plain text of a read that stopped for lack of progress. */
 export function takeNoProgressTextV1(language: string, fields: Readonly<Record<string, string | number>>): string;
@@ -37,10 +45,12 @@ export function takeAdmittedV1<Name, Outcome>(attempt: (name: Name, signal?: Abo
 export function takeLanesV1(names: readonly string[], isPresent: (name: string) => boolean, isPublished?: (name: string) => boolean): string[][];
 /** 🐘️ The names of a pass in the light group and the heavy group (looked at one at a time, after the light ones). */
 export function takeSplitV1(names: readonly string[], isHeavy: (name: string) => boolean): Readonly<{ light: string[]; heavy: string[] }>;
-export function takePassV1(input: Readonly<{ names: readonly string[]; attempt(name: string, signal?: AbortSignal): Promise<TakeOutcomeV1>; concurrency?: number; faultRetries?: number; faultWaitMilliseconds?: number; sleep?(milliseconds: number): Promise<void>; signal?: AbortSignal; mark?(name: string, outcome: TakeOutcomeV1): void }>): Promise<ReadonlyMap<string, TakeOutcomeV1>>;
+/** ⏳️ The outcome of one look, or "miss" once it has not answered within the bound while fewer than `maximum` set-aside looks run. */
+export function takeBoundedLookV1(look: Promise<TakeOutcomeV1>, milliseconds: number, state?: { count: number }, maximum?: number): Promise<TakeOutcomeV1>;
+export function takePassV1(input: Readonly<{ names: readonly string[]; attempt(name: string, signal?: AbortSignal): Promise<TakeOutcomeV1>; concurrency?: number; faultRetries?: number; faultWaitMilliseconds?: number; lookMaximumMilliseconds?: number; abandoned?: { count: number }; abandonedMaximum?: number; sleep?(milliseconds: number): Promise<void>; signal?: AbortSignal; mark?(name: string, outcome: TakeOutcomeV1): void }>): Promise<ReadonlyMap<string, TakeOutcomeV1>>;
 /** 🔁️ Looks again at the cache for the owners that are still missing, with a growing pause. */
 /** 📣️ The names the pools of the fleet say they stored. */
-export function fleetPublishedNamesV1(store: string | undefined, now?: number, policy?: Readonly<{ publishedMaximumAgeMilliseconds: number }>): Set<string>;
+export function fleetPublishedNamesV1(store: string | undefined, now?: number, policy?: Readonly<{ publishedMaximumAgeMilliseconds: number; publishedScanConcurrency: number }>, globals?: unknown): Promise<Set<string>>;
 export function takePollV1(input: Readonly<{ hot?(): ReadonlySet<string> | undefined; hotOnly?: boolean; now?(): number; concurrency?: number; queue(): readonly string[]; attempt(name: string, signal?: AbortSignal): Promise<TakeOutcomeV1>; arrived(name: string, outcome: TakeOutcomeV1): void | Promise<void>; stop(): boolean; signal?: AbortSignal; sleep?(milliseconds: number, signal?: AbortSignal): Promise<void>; policy?: TakePolicyV1 }>): Promise<Readonly<{ looks: number; found: number }>>;
 /** 🚀️ Runs the take pass and the inference of the owners beside each other: the inference is released when the pass ends or after `releaseMilliseconds`, never later, and the warm pass is stopped then. */
 export function runTakeBesideInferV1(input: Readonly<{ take(): Promise<unknown>; warm?(): Promise<unknown>; stopWarm?(): void; release(): void; infer(): Promise<unknown>; end?(): void; releaseMilliseconds?: number; sleep?(milliseconds: number, signal?: AbortSignal): Promise<void> }>): Promise<void>;
@@ -64,7 +74,7 @@ export function takeFetchFirstV1(input: Readonly<{ lanes: readonly (readonly str
 /** 📊️ The counters of the adopt and poll path of a read. */
 export type AdoptCountsV1 = Readonly<{ listed: number; looks: number; adoptLooks: number; inferLooks: number; passLooks: number; fetched: number; present: number; adopted: number; stale: number; staleKinds: Readonly<Record<string, number>>; incomplete: number; miss: number; fault: number; skippedInferring: number; gateWaits: number; gateMilliseconds: number; gateSeconds: number; inferredListed: number }>;
 export function createAdoptCountersV1(): Readonly<{ list(names: Iterable<string>): void; look(lane: "adopt" | "infer" | "pass" | "poll"): void; outcome(outcome: string): void; staleRow(kind: string | undefined): void; skipInferring(name: string): void; gateWait(milliseconds: number): void; inferredListed(): void; counts(): AdoptCountsV1; line(language: string): string }>;
-/** 🔥️ The names the fleet lists as stored, read at most once per interval. */
-export function createHotNamesV1(input: Readonly<{ read(): ReadonlySet<string>; counters?: Readonly<{ list(names: Iterable<string>): void }>; now?(): number; policy?: TakePolicyV1 }>): () => ReadonlySet<string>;
+/** 🔥️ The names the fleet lists as stored, scanned in the background at most once per interval after the last scan ended. */
+export function createHotNamesV1(input: Readonly<{ read(): Promise<ReadonlySet<string>>; counters?: Readonly<{ list(names: Iterable<string>): void }>; now?(): number; policy?: TakePolicyV1 }>): (() => ReadonlySet<string>) & Readonly<{ settled(): Promise<void> }>;
 /** 🥇️ The decision before a local inference: a listed owner is looked at first and adopted when its look serves the record. */
 export function takeBeforeInferV1(input: Readonly<{ name: string; listed(name: string): boolean; taken: ReadonlySet<string>; look(name: string): Promise<string>; counters?: Readonly<{ inferredListed(): void }> }>): Promise<"present" | "fetched" | undefined>;

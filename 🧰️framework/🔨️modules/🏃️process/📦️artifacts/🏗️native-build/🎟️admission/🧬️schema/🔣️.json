@@ -34,7 +34,7 @@
           ".git"
         ],
         "available": {
-          "description": "Admission against the measured available memory of the host, on top of the resident-set budget: a unit starts only when its predicted peak fits the available bytes less the margin (a share of total memory) and less what running units have yet to realize; the host warden's guard and danger levels hold every start; a machine that never has the room starts one unit after the wait (twice the wait for a unit the warden cancelled, whose prediction is raised to the cancelled megabytes times the factor).",
+          "description": "Admission against available host memory on top of the resident-set budget. Warden guard, warden danger and swap-out above the freeze threshold hold every start. Otherwise a unit starts when available memory is unknown or its predicted peak fits the available bytes less the margin and the unrealized share of running units. An idle broker with insufficient room starts one unit after the wait only while the warden is calm. A prior warden cancellation doubles the wait.",
           "marginBasisPoints": 1500,
           "waitMilliseconds": 180000,
           "pollMilliseconds": 1000,
@@ -42,26 +42,323 @@
           "cancelledMemoryMilliseconds": 3600000
         },
         "unitCeiling": {
-          "description": "The most one compile unit may hold at its peak so that it fits a 16 GB worker that also runs its own stage. `carving` is the closed list of units known to exceed it, each with its measured peak and the reduction it waits for; the list may only shrink.",
-          "megabytes": 4096,
-          "hostMegabytes": 16384,
+          "description": "The compile-memory budget per worker class: the most one compile unit may hold at its peak so that it fits the smallest worker (a 16 GB Mac that runs several agents). A library unit (everything but a `cdylib`) stays within `libraryMegabytes`; only a final `cdylib` link unit may use the higher `finalMegabytes`, and it must use the serial back end. `workerClass` names the class the fleet is carved for. `carving` is the closed list of units known to exceed their budget, each with its measured peak and the reduction it waits for; the list may only shrink. Every carving entry declares `budgetMegabytes`, the budget the host warden enforces at runtime for that unit (at least its measured peak, at most 10 percent above it): a unit on the list is cancelled while it runs once its resident footprint exceeds it; an unlisted unit is cancelled above the budget of its kind.",
+          "workerClass": "16g",
+          "classes": {
+            "16g": {
+              "hostMegabytes": 16384,
+              "libraryMegabytes": 1536,
+              "finalMegabytes": 4096,
+              "finalBackend": "serial"
+            }
+          },
           "carving": [
+            {
+              "crate": "semio_os_mcp",
+              "target": "host",
+              "measuredMegabytes": 3819,
+              "budgetMegabytes": 4200,
+              "action": "split-families"
+            },
+            {
+              "crate": "semio_os_mcp_plugin_runtime",
+              "target": "host",
+              "measuredMegabytes": 2711,
+              "budgetMegabytes": 2980,
+              "action": "split-families"
+            },
             {
               "crate": "semio_hub_cad_component",
               "target": "wasm32-wasip2",
-              "measuredMegabytes": 6550,
+              "measuredMegabytes": 8036,
+              "budgetMegabytes": 8500,
               "action": "thin-lto-closure"
             },
             {
               "crate": "semio_hub_puzzle_component",
               "target": "wasm32-wasip2",
               "measuredMegabytes": 6148,
+              "budgetMegabytes": 6500,
               "action": "thin-lto-closure"
             },
             {
               "crate": "semio_s_artifact_stdio_dwg_snapshot_objects",
               "target": "wasm32-unknown-unknown",
               "measuredMegabytes": 4894,
+              "budgetMegabytes": 5200,
+              "action": "split-families"
+            },
+            {
+              "crate": "semio_hub_flow",
+              "target": "wasm32-wasip2",
+              "measuredMegabytes": 3925,
+              "budgetMegabytes": 4200,
+              "action": "split-app-fleet"
+            },
+            {
+              "crate": "semio_s_artifact_flow_flow_unit_tests",
+              "target": "wasm32-wasip2",
+              "measuredMegabytes": 4010,
+              "budgetMegabytes": 4300,
+              "action": "split-tests"
+            },
+            {
+              "crate": "semio_s_artifact_stdio_pdf_model",
+              "target": "wasm32-wasip2",
+              "measuredMegabytes": 3330,
+              "budgetMegabytes": 3500,
+              "action": "split-families"
+            },
+            {
+              "crate": "semio_s_artifact_stdio_txt_tests",
+              "target": "wasm32-wasip2",
+              "measuredMegabytes": 2705,
+              "budgetMegabytes": 2900,
+              "action": "split-app-fleet"
+            },
+            {
+              "crate": "semio_s_artifact_stdio_binary_io_registry",
+              "target": "wasm32-wasip2",
+              "measuredMegabytes": 2925,
+              "budgetMegabytes": 3100,
+              "action": "split-app-fleet"
+            },
+            {
+              "crate": "semio_plugin_actor_input",
+              "target": "wasm32-wasip2",
+              "measuredMegabytes": 2366,
+              "budgetMegabytes": 2500,
+              "action": "split-families"
+            },
+            {
+              "crate": "semio_s_artifact_stdio_semio_presentation_member",
+              "target": "wasm32-wasip2",
+              "measuredMegabytes": 2318,
+              "budgetMegabytes": 2500,
+              "action": "split-store"
+            },
+            {
+              "crate": "semio_s_artifact_stdio_gltf_model_snapshot",
+              "target": "wasm32-wasip2",
+              "measuredMegabytes": 2201,
+              "budgetMegabytes": 2400,
+              "action": "split-families"
+            },
+            {
+              "crate": "semio_s_artifact_raster_raster_editor_session",
+              "target": "wasm32-wasip2",
+              "measuredMegabytes": 2179,
+              "budgetMegabytes": 2300,
+              "action": "split-families"
+            },
+            {
+              "crate": "semio_s_artifact_stdio_dwg_snapshot_objects",
+              "target": "wasm32-wasip2",
+              "measuredMegabytes": 2160,
+              "budgetMegabytes": 2300,
+              "action": "split-families"
+            },
+            {
+              "crate": "semio_s_artifact_stdio_dwg_snapshot_document",
+              "target": "wasm32-wasip2",
+              "measuredMegabytes": 2012,
+              "budgetMegabytes": 2200,
+              "action": "split-families"
+            },
+            {
+              "crate": "semio_framework_artifact_flow_flow_model",
+              "target": "wasm32-wasip2",
+              "measuredMegabytes": 1940,
+              "budgetMegabytes": 2100,
+              "action": "split-families"
+            },
+            {
+              "crate": "semio_s_artifact_raster_raster_editor",
+              "target": "wasm32-wasip2",
+              "measuredMegabytes": 1848,
+              "budgetMegabytes": 2000,
+              "action": "split-families"
+            },
+            {
+              "crate": "semio_s_artifact_stdio_semio_model_member",
+              "target": "wasm32-wasip2",
+              "measuredMegabytes": 2376,
+              "budgetMegabytes": 2500,
+              "action": "split-store"
+            },
+            {
+              "crate": "semio_s_artifact_stdio_semio_cad_member",
+              "target": "wasm32-wasip2",
+              "measuredMegabytes": 1712,
+              "budgetMegabytes": 1800,
+              "action": "split-store"
+            },
+            {
+              "crate": "semio_s_artifact_stdio_semio_graph_editor",
+              "target": "wasm32-wasip2",
+              "measuredMegabytes": 2116,
+              "budgetMegabytes": 2300,
+              "action": "split-families"
+            },
+            {
+              "crate": "semio_s_artifact_stdio_semio_animation_member",
+              "target": "wasm32-wasip2",
+              "measuredMegabytes": 1845,
+              "budgetMegabytes": 2000,
+              "action": "split-store"
+            },
+            {
+              "crate": "semio_os_flow_host_core",
+              "target": "wasm32-wasip2",
+              "measuredMegabytes": 1598,
+              "budgetMegabytes": 1700,
+              "action": "split-families"
+            },
+            {
+              "crate": "semio_hub_raster_component",
+              "target": "wasm32-wasip2",
+              "measuredMegabytes": 6062,
+              "budgetMegabytes": 6400,
+              "action": "serial-backend"
+            },
+            {
+              "crate": "semio_hub_flow_component",
+              "target": "wasm32-wasip2",
+              "measuredMegabytes": 4147,
+              "budgetMegabytes": 4400,
+              "action": "serial-backend"
+            },
+            {
+              "crate": "semio_hub_sourcing_component",
+              "target": "wasm32-wasip2",
+              "measuredMegabytes": 5519,
+              "budgetMegabytes": 5600,
+              "action": "thin-lto-closure"
+            },
+            {
+              "crate": "semio_hub_sourcing",
+              "target": "wasm32-wasip2",
+              "measuredMegabytes": 4273,
+              "budgetMegabytes": 4500,
+              "action": "split-app-fleet"
+            },
+            {
+              "crate": "curation_unit",
+              "target": "host",
+              "measuredMegabytes": 7737,
+              "budgetMegabytes": 8200,
+              "action": "split-tests"
+            },
+            {
+              "crate": "semio_s_artifact_sourcing_curation",
+              "target": "wasm32-wasip2",
+              "measuredMegabytes": 3653,
+              "budgetMegabytes": 3900,
+              "action": "split-families"
+            },
+            {
+              "crate": "semio_s_artifact_stdio_semio_brep_member",
+              "target": "wasm32-wasip2",
+              "measuredMegabytes": 2285,
+              "budgetMegabytes": 2400,
+              "action": "split-store"
+            },
+            {
+              "crate": "semio_s_artifact_stdio_semio_table_member",
+              "target": "wasm32-wasip2",
+              "measuredMegabytes": 1839,
+              "budgetMegabytes": 2000,
+              "action": "split-store"
+            },
+            {
+              "crate": "semio_s_artifact_stdio_semio_document_member",
+              "target": "wasm32-wasip2",
+              "measuredMegabytes": 1770,
+              "budgetMegabytes": 1900,
+              "action": "split-store"
+            },
+            {
+              "crate": "semio_s_artifact_stdio_semio_value_member",
+              "target": "wasm32-wasip2",
+              "measuredMegabytes": 1747,
+              "budgetMegabytes": 1900,
+              "action": "split-store"
+            },
+            {
+              "crate": "semio_s_artifact_stdio_semio_kit_member",
+              "target": "wasm32-wasip2",
+              "measuredMegabytes": 1616,
+              "budgetMegabytes": 1700,
+              "action": "split-store"
+            },
+            {
+              "crate": "semio_plugin_tool_machine",
+              "target": "wasm32-wasip2",
+              "measuredMegabytes": 1600,
+              "budgetMegabytes": 1700,
+              "action": "split-families"
+            },
+            {
+              "crate": "semio_plugin_scrub_host",
+              "target": "wasm32-wasip2",
+              "measuredMegabytes": 1578,
+              "budgetMegabytes": 1700,
+              "action": "split-families"
+            },
+            {
+              "crate": "semio_s_plugin_sourcing_slabs_component",
+              "target": "wasm32-wasip2",
+              "measuredMegabytes": 4196,
+              "budgetMegabytes": 4400,
+              "action": "thin-lto-closure"
+            },
+            {
+              "crate": "semio_s_plugin_sourcing_windows_component",
+              "target": "wasm32-wasip2",
+              "measuredMegabytes": 4116,
+              "budgetMegabytes": 4300,
+              "action": "thin-lto-closure"
+            },
+            {
+              "crate": "semio_s_artifact_sourcing_curation_inferences",
+              "target": "wasm32-wasip2",
+              "measuredMegabytes": 1546,
+              "budgetMegabytes": 1700,
+              "action": "split-families"
+            },
+            {
+              "crate": "semio_hub_stdio",
+              "target": "wasm32-wasip2",
+              "measuredMegabytes": 8953,
+              "budgetMegabytes": 9450,
+              "action": "split-app-fleet"
+            },
+            {
+              "crate": "semio_hub_stdio_office",
+              "target": "wasm32-wasip2",
+              "measuredMegabytes": 7939,
+              "budgetMegabytes": 8400,
+              "action": "split-app-fleet"
+            },
+            {
+              "crate": "semio_hub_space_component",
+              "target": "wasm32-wasip2",
+              "measuredMegabytes": 5055,
+              "budgetMegabytes": 5300,
+              "action": "serial-backend"
+            },
+            {
+              "crate": "semio_hub_stdio_component",
+              "target": "wasm32-wasip2",
+              "measuredMegabytes": 8792,
+              "budgetMegabytes": 9300,
+              "action": "serial-backend"
+            },
+            {
+              "crate": "semio_s_artifact_bim_model_snapshot",
+              "target": "wasm32-wasip2",
+              "measuredMegabytes": 2772,
+              "budgetMegabytes": 2900,
               "action": "split-families"
             }
           ]
@@ -69,12 +366,14 @@
       }
     },
     "UnitCeilingVerdictV1": {
-      "description": "The unit ceiling applied to recorded observations: every unit above the ceiling (listed on the carving list or not), every carving entry that no longer exceeds it, and whether the ledger is within the law.",
+      "description": "The compile-memory budget applied to recorded observations: every unit above the budget of its kind (listed on the carving list or not), every carving entry that fits its budget again, and whether the ledger is within the law.",
       "type": "object",
       "additionalProperties": false,
       "required": [
         "version",
-        "ceilingMegabytes",
+        "workerClass",
+        "libraryMegabytes",
+        "finalMegabytes",
         "exceeded",
         "resolved",
         "ok"
@@ -83,7 +382,17 @@
         "version": {
           "const": 1
         },
-        "ceilingMegabytes": {
+        "workerClass": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 32
+        },
+        "libraryMegabytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "finalMegabytes": {
           "type": "integer",
           "minimum": 1,
           "maximum": 9007199254740991
@@ -97,7 +406,9 @@
               "key",
               "crate",
               "target",
+              "kind",
               "peakMegabytes",
+              "budgetMegabytes",
               "listed"
             ],
             "properties": {
@@ -116,9 +427,20 @@
                 "minLength": 1,
                 "maxLength": 256
               },
+              "kind": {
+                "enum": [
+                  "library",
+                  "final"
+                ]
+              },
               "peakMegabytes": {
                 "type": "integer",
                 "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "budgetMegabytes": {
+                "type": "integer",
+                "minimum": 1,
                 "maximum": 9007199254740991
               },
               "listed": {
@@ -135,7 +457,8 @@
             "required": [
               "crate",
               "target",
-              "peakMegabytes"
+              "peakMegabytes",
+              "budgetMegabytes"
             ],
             "properties": {
               "crate": {
@@ -152,6 +475,11 @@
                 "type": "integer",
                 "minimum": 0,
                 "maximum": 9007199254740991
+              },
+              "budgetMegabytes": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 9007199254740991
               }
             }
           }
@@ -167,22 +495,34 @@
           "held": {
             "available": "unit {unit} is held back: it needs about {predicted} MB, the host has {available} MB available with a margin of {margin} MB (warden level {level}); waited {seconds} s",
             "warden": "unit {unit} is held back: the host warden is at level {level} ({available} MB available, it needs about {predicted} MB); waited {seconds} s",
+            "swap": "unit {unit} is held back: the host is actively swapping (it needs about {predicted} MB); waited {seconds} s",
             "cancelled": "unit {unit} was cancelled by the host warden before and is held back until it fits: it needs about {predicted} MB, the host has {available} MB available with a margin of {margin} MB (warden level {level}); waited {seconds} s"
           },
           "unitCeiling": {
-            "exceeded": "unit {key} peaked at {peak} MB, above the unit ceiling of {ceiling} MB (16 GB class); it is not on the carving list: reduce it or declare it",
-            "resolved": "carving entry {crate} now peaks at {peak} MB, at or below the ceiling of {ceiling} MB: remove it from the carving list"
+            "kinds": {
+              "library": "library",
+              "final": "final link"
+            },
+            "exceeded": "unit {key} peaked at {peak} MB, above the {kind} budget of {budget} MB ({class} worker class); it is not on the carving list: carve it along the domain taxonomy or declare it",
+            "cold": "unit {key} has no measured peak and its cold estimate is {peak} MB, above the {kind} budget of {budget} MB ({class} worker class): carve it before it builds on a small worker",
+            "resolved": "carving entry {crate} now peaks at {peak} MB, within its budget of {budget} MB: remove it from the carving list"
           }
         },
         "de": {
           "held": {
             "available": "Einheit {unit} wird zurückgehalten: sie braucht etwa {predicted} MB, der Host hat {available} MB verfügbar bei einem Abstand von {margin} MB (Warden-Stufe {level}); {seconds} s gewartet",
             "warden": "Einheit {unit} wird zurückgehalten: der Host-Warden steht auf Stufe {level} ({available} MB verfügbar, sie braucht etwa {predicted} MB); {seconds} s gewartet",
+            "swap": "Einheit {unit} wird zurückgehalten: der Host lagert aktiv Speicher aus (die Einheit braucht etwa {predicted} MB); {seconds} s gewartet",
             "cancelled": "Einheit {unit} wurde zuvor vom Host-Warden abgebrochen und wird zurückgehalten, bis sie passt: sie braucht etwa {predicted} MB, der Host hat {available} MB verfügbar bei einem Abstand von {margin} MB (Warden-Stufe {level}); {seconds} s gewartet"
           },
           "unitCeiling": {
-            "exceeded": "Einheit {key} erreichte {peak} MB und liegt über der Einheiten-Obergrenze von {ceiling} MB (16-GB-Klasse); sie steht nicht auf der Carving-Liste: verkleinern oder eintragen",
-            "resolved": "Carving-Eintrag {crate} erreicht jetzt {peak} MB, höchstens die Obergrenze von {ceiling} MB: aus der Carving-Liste entfernen"
+            "kinds": {
+              "library": "Bibliothek",
+              "final": "Final-Link"
+            },
+            "exceeded": "Einheit {key} erreichte {peak} MB und liegt über dem Budget {kind} von {budget} MB (Worker-Klasse {class}); sie steht nicht auf der Carving-Liste: entlang der Domänen-Taxonomie schneiden oder eintragen",
+            "cold": "Einheit {key} hat keinen gemessenen Spitzenwert und ihre Kaltschätzung beträgt {peak} MB, über dem Budget {kind} von {budget} MB (Worker-Klasse {class}): schneiden, bevor sie auf einem kleinen Worker gebaut wird",
+            "resolved": "Carving-Eintrag {crate} erreicht jetzt {peak} MB, innerhalb seines Budgets von {budget} MB: aus der Carving-Liste entfernen"
           }
         }
       }
@@ -295,38 +635,158 @@
     "ProvenanceV1": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["peakRssBytes", "userMs", "sysMs", "wallMs", "rmetaOffsetMs"],
+      "required": [
+        "peakRssBytes",
+        "userMs",
+        "sysMs",
+        "wallMs",
+        "rmetaOffsetMs"
+      ],
       "properties": {
-        "peakRssBytes": {"type": "integer", "minimum": 0},
-        "userMs": {"type": "integer", "minimum": 0},
-        "sysMs": {"type": "integer", "minimum": 0},
-        "wallMs": {"type": "integer", "minimum": 0},
-        "rmetaOffsetMs": {"anyOf": [{"type": "integer", "minimum": 0}, {"type": "null"}]}
+        "peakRssBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "userMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "sysMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "wallMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "rmetaOffsetMs": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
       }
     },
     "CachedRequestV1": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["v", "op", "pass", "pid", "crate", "package", "version", "target", "crateTypes", "outDir", "extraFilename", "source", "manifestDir", "primary", "buildScriptOutDir", "externs", "cacheKey", "provenance"],
+      "required": [
+        "v",
+        "op",
+        "pass",
+        "pid",
+        "crate",
+        "package",
+        "version",
+        "target",
+        "crateTypes",
+        "outDir",
+        "extraFilename",
+        "source",
+        "manifestDir",
+        "primary",
+        "buildScriptOutDir",
+        "externs",
+        "cacheKey",
+        "provenance"
+      ],
       "properties": {
-        "v": {"const": 1},
-        "op": {"const": "cached"},
-        "pass": {"type": "string", "pattern": "^[A-Za-z0-9_.:-]{1,128}$"},
-        "pid": {"type": "integer", "minimum": 1},
-        "crate": {"type": "string", "pattern": "^[A-Za-z0-9_]{1,128}$"},
-        "package": {"type": "string", "maxLength": 128},
-        "version": {"type": "string", "maxLength": 128},
-        "target": {"type": "string", "pattern": "^[A-Za-z0-9_.-]{1,128}$"},
-        "crateTypes": {"type": "array", "minItems": 1, "items": {"enum": ["lib", "rlib", "dylib", "cdylib", "staticlib", "proc-macro", "bin"]}},
-        "outDir": {"$ref": "#/definitions/Path"},
-        "extraFilename": {"type": "string", "maxLength": 128},
-        "source": {"$ref": "#/definitions/Path"},
-        "manifestDir": {"$ref": "#/definitions/Path"},
-        "primary": {"type": "boolean"},
-        "buildScriptOutDir": {"anyOf": [{"$ref": "#/definitions/Path"}, {"type": "null"}]},
-        "externs": {"type": "array", "items": {"$ref": "#/definitions/Path"}},
-        "cacheKey": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
-        "provenance": {"anyOf": [{"$ref": "#/definitions/ProvenanceV1"}, {"type": "null"}]}
+        "v": {
+          "const": 1
+        },
+        "op": {
+          "const": "cached"
+        },
+        "pass": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_.:-]{1,128}$"
+        },
+        "pid": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "crate": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_]{1,128}$"
+        },
+        "package": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "version": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "target": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_.-]{1,128}$"
+        },
+        "crateTypes": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "enum": [
+              "lib",
+              "rlib",
+              "dylib",
+              "cdylib",
+              "staticlib",
+              "proc-macro",
+              "bin"
+            ]
+          }
+        },
+        "outDir": {
+          "$ref": "#/definitions/Path"
+        },
+        "extraFilename": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "source": {
+          "$ref": "#/definitions/Path"
+        },
+        "manifestDir": {
+          "$ref": "#/definitions/Path"
+        },
+        "primary": {
+          "type": "boolean"
+        },
+        "buildScriptOutDir": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Path"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "externs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Path"
+          }
+        },
+        "cacheKey": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "provenance": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ProvenanceV1"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
       }
     },
     "HeadroomV1": {
@@ -352,14 +812,36 @@
     "RecallRequestV1": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["v", "op", "pass", "crate", "outDir", "extraFilename"],
+      "required": [
+        "v",
+        "op",
+        "pass",
+        "crate",
+        "outDir",
+        "extraFilename"
+      ],
       "properties": {
-        "v": {"const": 1},
-        "op": {"const": "recall"},
-        "pass": {"type": "string", "pattern": "^[A-Za-z0-9_.:-]{1,128}$"},
-        "crate": {"type": "string", "pattern": "^[A-Za-z0-9_]{1,128}$"},
-        "outDir": {"$ref": "#/definitions/Path"},
-        "extraFilename": {"type": "string", "maxLength": 128}
+        "v": {
+          "const": 1
+        },
+        "op": {
+          "const": "recall"
+        },
+        "pass": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_.:-]{1,128}$"
+        },
+        "crate": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_]{1,128}$"
+        },
+        "outDir": {
+          "$ref": "#/definitions/Path"
+        },
+        "extraFilename": {
+          "type": "string",
+          "maxLength": 128
+        }
       }
     },
     "VerdictV1": {
@@ -489,6 +971,7 @@
           "maxLength": 512
         },
         "peakRssBytes": {
+          "description": "The larger of the unit's peak resident bytes and its largest charged sample (phys_footprint on macOS): what the OS charges the compiler with, also when its pages are compressed or swapped.",
           "type": "integer",
           "minimum": 0
         },

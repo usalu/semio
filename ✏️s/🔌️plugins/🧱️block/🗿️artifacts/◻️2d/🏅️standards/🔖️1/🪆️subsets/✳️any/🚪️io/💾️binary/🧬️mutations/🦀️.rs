@@ -31,6 +31,9 @@ mod native_codec {
 use semio_s_artifact_block_2d_mutations::Block2dMutation;
 #[cfg(test)] use semio_s_artifact_block_2d_mutations::inverse_block2d_mutation;
 
+dsl::original_decoded_operation_receiving!(Block2dMutation);
+dsl::artifact_persisted_binary_operation!(Block2dMutation);
+
 impl protocol::OpBinary for Block2dMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         dsl::variants_binary::encode_tagged_op(include_str!("📡️.protocol.semio"), self)

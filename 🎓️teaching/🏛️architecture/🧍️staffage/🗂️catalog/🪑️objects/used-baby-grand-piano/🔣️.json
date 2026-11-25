@@ -13,21 +13,111 @@
    "de": "Ein gebrauchter schwarz lackierter Stutzflügel, 1,50 m lang, 1,45 m breit und bei geschlossenem Deckel 0,99 m hoch, 277 kg, mit craqueliertem Lack, vergilbten Tasten, abgeplatzter Vorderdeckelecke und durchgegriffenem Lack, wo die Hände aufliegen. Beim Händler liegt er auf seiner Rast verzurrt auf einem gepolsterten Brett, Beine und Lyra daneben; vier Möbelpacker tragen ihn, und aufgestellt wird er mit dem Deckel auf dem langen oder kurzen Stab gespielt, das Fortepedal arbeitet."
   },
   "tags": [
-   "used",
-   "instrument",
-   "music",
-   "second-hand",
-   "keyboard",
-   "piano",
-   "grand-piano",
-   "baby-grand",
-   "chordophone",
-   "lacquer",
-   "cast-iron",
-   "spruce",
-   "brass",
-   "skid",
-   "strapped"
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "instrument",
+    "title": {
+     "en": "instrument",
+     "de": "Instrument"
+    }
+   },
+   {
+    "id": "music",
+    "title": {
+     "en": "music",
+     "de": "Musik"
+    }
+   },
+   {
+    "id": "second-hand",
+    "title": {
+     "en": "second-hand",
+     "de": "Second-Hand"
+    }
+   },
+   {
+    "id": "keyboard",
+    "title": {
+     "en": "keyboard",
+     "de": "Tasteninstrument"
+    }
+   },
+   {
+    "id": "piano",
+    "title": {
+     "en": "piano",
+     "de": "Klavier"
+    }
+   },
+   {
+    "id": "grand-piano",
+    "title": {
+     "en": "grand piano",
+     "de": "Flügel"
+    }
+   },
+   {
+    "id": "baby-grand",
+    "title": {
+     "en": "baby grand",
+     "de": "Stutzflügel"
+    }
+   },
+   {
+    "id": "chordophone",
+    "title": {
+     "en": "chordophone",
+     "de": "Chordophon"
+    }
+   },
+   {
+    "id": "lacquer",
+    "title": {
+     "en": "lacquer",
+     "de": "Lack"
+    }
+   },
+   {
+    "id": "cast-iron",
+    "title": {
+     "en": "cast iron",
+     "de": "Gusseisen"
+    }
+   },
+   {
+    "id": "spruce",
+    "title": {
+     "en": "spruce",
+     "de": "Fichte"
+    }
+   },
+   {
+    "id": "brass",
+    "title": {
+     "en": "brass",
+     "de": "Messing"
+    }
+   },
+   {
+    "id": "skid",
+    "title": {
+     "en": "skid",
+     "de": "Kufe"
+    }
+   },
+   {
+    "id": "strapped",
+    "title": {
+     "en": "strapped",
+     "de": "gurtgesichert"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content (used instruments wave)",

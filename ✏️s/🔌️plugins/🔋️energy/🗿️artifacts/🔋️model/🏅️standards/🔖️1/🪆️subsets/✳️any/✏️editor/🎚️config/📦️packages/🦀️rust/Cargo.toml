@@ -21,7 +21,7 @@ semio-os-command = { path = "../../../../../../../../../../../../../🧰️frame
 semio-framework-value-native-owned = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 semio-os-store-operation-wire = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/📦️packages/🦀️rust" }
 semio-os-store-codec-registry = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/📦️packages/🦀️rust" }
-semio-plugin-ownership = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
+semio-plugin-store-lifecycle = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/♻️lifecycle/🧱️owner/📦️packages/🦀️rust" }
 pack = { workspace = true }
 semio-framework-async-macros = { workspace = true }
 semio-framework-diagnostic = { workspace = true }

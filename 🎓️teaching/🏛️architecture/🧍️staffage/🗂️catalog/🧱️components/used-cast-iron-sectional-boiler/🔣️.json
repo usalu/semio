@@ -13,20 +13,104 @@
    "de": "Ein ausgebauter bodenstehender Guss-Gliederkessel der 1970er Jahre, wie ihn eine Bauteilbörse anbietet: sechs Gussglieder (Vorder-, vier Mittel-, Hinterglied; Block 0,74 m) für 45 kW Leistung bei 50 kW Öl- oder Gas-Wärmebelastung, in einem verblichen orange emaillierten Stahlblechmantel 1 mm von 0,80 x 0,80 x 0,62 m mit 25 mm Mineralwolle, ein schräges Schaltfeld mit ausgebauten Reglern, die gusseiserne Brennertür mit abgebautem Brenner und einer angeschraubten Blindplatte 12 mm über der Öffnung, der untere Reinigungsdeckel, ein abgesägter Abgasstutzen 150 mm hinten, Vor- und Rücklaufstutzen abgetrennt und verschlossen, ein KFE-Hahn, zwei Ringschrauben M16 und zwei Grundschienen U 50; entleert, 297 kg mit seinen zwei Nadelholz-Kanthölzern 100 x 100 mm. Posen: auf den Kanthölzern gelagert, am Kettengehänge gehoben, wobei die Kanthölzer liegen bleiben, und wieder eingebaut auf dem Boden eines Heizraums, befüllt und mit 90/70 °C befeuert, das Abgas verlässt den Stutzen."
   },
   "tags": [
-   "component",
-   "reclaimed",
-   "used",
-   "hvac",
-   "heating",
-   "boiler",
-   "cast-iron",
-   "sectional-boiler",
-   "oil",
-   "gas",
-   "sheet-steel",
-   "timber",
-   "operating",
-   "thermal"
+   {
+    "id": "component",
+    "title": {
+     "en": "component",
+     "de": "Bauteil"
+    }
+   },
+   {
+    "id": "reclaimed",
+    "title": {
+     "en": "reclaimed",
+     "de": "wiederverwendet"
+    }
+   },
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "hvac",
+    "title": {
+     "en": "HVAC",
+     "de": "HLK"
+    }
+   },
+   {
+    "id": "heating",
+    "title": {
+     "en": "heating",
+     "de": "Heizung"
+    }
+   },
+   {
+    "id": "boiler",
+    "title": {
+     "en": "boiler",
+     "de": "Heizkessel"
+    }
+   },
+   {
+    "id": "cast-iron",
+    "title": {
+     "en": "cast iron",
+     "de": "Gusseisen"
+    }
+   },
+   {
+    "id": "sectional-boiler",
+    "title": {
+     "en": "sectional boiler",
+     "de": "Gliederkessel"
+    }
+   },
+   {
+    "id": "oil",
+    "title": {
+     "en": "oil",
+     "de": "Öl"
+    }
+   },
+   {
+    "id": "gas",
+    "title": {
+     "en": "gas",
+     "de": "Gas"
+    }
+   },
+   {
+    "id": "sheet-steel",
+    "title": {
+     "en": "sheet steel",
+     "de": "Stahlblech"
+    }
+   },
+   {
+    "id": "timber",
+    "title": {
+     "en": "timber",
+     "de": "Holz"
+    }
+   },
+   {
+    "id": "operating",
+    "title": {
+     "en": "operating",
+     "de": "Betrieb"
+    }
+   },
+   {
+    "id": "thermal",
+    "title": {
+     "en": "thermal",
+     "de": "thermisch"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage component authors (used HVAC wave, author 01)",
@@ -1620,7 +1704,7 @@
       "role": "body",
       "tone": 0.25,
       "size": [
-       0.12,
+       0.119,
        0.73,
        0.52
       ],
@@ -1897,7 +1981,7 @@
       "role": "body",
       "tone": 0.3,
       "size": [
-       0.12,
+       0.119,
        0.73,
        0.52
       ],
@@ -2864,7 +2948,7 @@
       "role": "body",
       "tone": 0.25,
       "size": [
-       0.12,
+       0.119,
        0.73,
        0.52
       ],
@@ -3550,7 +3634,7 @@
       "role": "body",
       "tone": 0.25,
       "size": [
-       0.12,
+       0.119,
        0.73,
        0.52
       ],
@@ -3893,8 +3977,556 @@
     ]
    },
    "500": {
-    "status": "unavailable",
-    "denominator": 500
+    "status": "authored",
+    "denominator": 500,
+    "decisions": [
+     {
+      "en": "Body for the 75 mm feature: the two bearers at their true 100 mm section, the boiler as one block from the bearers to the jacket top (base band and jacket merged), the control panel as its 100 mm box, burner door and blanking plate as one 75 mm boss on the front, the cleaning door below it as a 75 mm block that stands its true 30 mm proud, and the flue spigot as a solid 150 mm cylinder at the back; stubs, eye bolts and lugs are below the feature and left out.",
+      "de": "Körper für das 75-mm-Merkmal: die zwei Kanthölzer im wahren 100-mm-Querschnitt, der Kessel als ein Block von den Hölzern bis zur Manteloberkante (Grundrahmen und Mantel verschmolzen), das Schaltfeld als sein 100-mm-Kasten, Brennertür und Blindplatte als ein 75-mm-Vorsprung an der Front, die Putztür darunter als 75-mm-Block, der seine wahren 30 mm vorsteht, und der Abgasstutzen als voller 150-mm-Zylinder an der Rückseite; Stutzen, Ringschrauben und Laschen liegen unter dem Merkmal und entfallen."
+     },
+     {
+      "en": "Thermal: bearers, jacket, panel, door boss and spigot by reference; blanking plate, cleaning cover, stubs and base band as shells of their layer at true thickness; the hidden block as one casting inside; a 75 mm flue outlet at the spigot mouth and a 75 mm plume patch on the jacket top.",
+      "de": "Thermik: Hölzer, Mantel, Schaltfeld, Türvorsprung und Stutzen als Verweis; Blindplatte, Putzdeckel, Stutzen und Grundrahmen als Schalen ihrer Schicht in wahrer Dicke; der verdeckte Block als ein Gussteil im Inneren; ein 75-mm-Abgasauslass an der Stutzenmündung und eine 75-mm-Auftriebsfläche auf dem Mantel."
+     },
+     {
+      "en": "Structure: the bearers by reference, the cast block as the member of the boiler, four 75 mm bearing pads and two mass markers.",
+      "de": "Tragwerk: die Hölzer als Verweis, der Gussblock als Stab des Kessels, vier 75-mm-Lagerplatten und zwei Massenmarken."
+     }
+    ],
+    "body": [
+     {
+      "id": "bearers",
+      "kind": "box",
+      "bone": "bearers",
+      "material": "softwood",
+      "role": "body",
+      "tone": 0.62,
+      "size": [
+       1,
+       0.1,
+       0.1
+      ],
+      "transform": {
+       "translation": [
+        0.48,
+        0.05,
+        -0.22
+       ]
+      },
+      "repeat": {
+       "count": 2,
+       "translation": [
+        0,
+        0,
+        0.44
+       ]
+      }
+     },
+     {
+      "id": "boiler-block",
+      "kind": "box",
+      "bone": "boiler",
+      "material": "painted-steel",
+      "role": "body",
+      "tone": 0.74,
+      "size": [
+       0.8,
+       0.85,
+       0.62
+      ],
+      "transform": {
+       "translation": [
+        0.5,
+        0.425,
+        0
+       ]
+      }
+     },
+     {
+      "id": "control-panel",
+      "kind": "box",
+      "bone": "boiler",
+      "material": "painted-steel",
+      "role": "body",
+      "tone": 0.5,
+      "size": [
+       0.2,
+       0.1,
+       0.6
+      ],
+      "transform": {
+       "translation": [
+        0.8,
+        0.9,
+        0
+       ]
+      }
+     },
+     {
+      "id": "door-boss",
+      "kind": "box",
+      "bone": "boiler",
+      "material": "cast-iron",
+      "role": "body",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.36,
+       0.4
+      ],
+      "transform": {
+       "translation": [
+        0.9375,
+        0.6,
+        0
+       ]
+      }
+     },
+     {
+      "id": "cleaning-door",
+      "kind": "box",
+      "bone": "boiler",
+      "material": "cast-iron",
+      "role": "body",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.14,
+       0.4
+      ],
+      "transform": {
+       "translation": [
+        0.8925,
+        0.17,
+        0
+       ]
+      }
+     },
+     {
+      "id": "flue-spigot",
+      "kind": "revolve",
+      "bone": "boiler",
+      "material": "flue-steel",
+      "role": "body",
+      "tone": 0.34,
+      "profile": [
+       [
+        -0.03,
+        0
+       ],
+       [
+        -0.03,
+        0.075
+       ],
+       [
+        0.1,
+        0.075
+       ],
+       [
+        0.1,
+        0
+       ]
+      ],
+      "axis": [
+       1,
+       0,
+       0
+      ],
+      "origin": [
+       0,
+       0.68,
+       0
+      ]
+     }
+    ],
+    "thermal": [
+     {
+      "id": "th-bearers",
+      "of": "bearers",
+      "region": "bearers"
+     },
+     {
+      "id": "th-jacket",
+      "of": "boiler-block",
+      "region": "jacket"
+     },
+     {
+      "id": "th-control-panel",
+      "of": "control-panel",
+      "region": "control-panel"
+     },
+     {
+      "id": "th-door-boss",
+      "of": "door-boss",
+      "region": "doors"
+     },
+     {
+      "id": "th-flue-spigot",
+      "of": "flue-spigot",
+      "region": "flue-spigot"
+     },
+     {
+      "id": "th-blanking-plate",
+      "kind": "box",
+      "bone": "boiler",
+      "material": "steel",
+      "role": "body",
+      "tone": 0.2,
+      "size": [
+       0.03,
+       0.24,
+       0.24
+      ],
+      "transform": {
+       "translation": [
+        0.99,
+        0.6,
+        0
+       ]
+      },
+      "region": "blanking-plate",
+      "layer": "plate"
+     },
+     {
+      "id": "th-cleaning-cover",
+      "kind": "box",
+      "bone": "boiler",
+      "material": "cast-iron",
+      "role": "body",
+      "tone": 0.3,
+      "size": [
+       0.03,
+       0.14,
+       0.4
+      ],
+      "transform": {
+       "translation": [
+        0.915,
+        0.17,
+        0
+       ]
+      },
+      "region": "doors",
+      "layer": "casting"
+     },
+     {
+      "id": "th-flow-stub",
+      "kind": "revolve",
+      "bone": "boiler",
+      "material": "steel",
+      "role": "body",
+      "tone": 0.4,
+      "profile": [
+       [
+        0.85,
+        0
+       ],
+       [
+        0.85,
+        0.026
+       ],
+       [
+        0.925,
+        0.026
+       ],
+       [
+        0.925,
+        0
+       ]
+      ],
+      "axis": [
+       0,
+       1,
+       0
+      ],
+      "origin": [
+       0.22,
+       0,
+       0.15
+      ],
+      "region": "stubs",
+      "layer": "tube"
+     },
+     {
+      "id": "th-return-stub",
+      "kind": "revolve",
+      "bone": "boiler",
+      "material": "steel",
+      "role": "body",
+      "tone": 0.4,
+      "profile": [
+       [
+        0.025,
+        0
+       ],
+       [
+        0.025,
+        0.026
+       ],
+       [
+        0.1,
+        0.026
+       ],
+       [
+        0.1,
+        0
+       ]
+      ],
+      "axis": [
+       1,
+       0,
+       0
+      ],
+      "origin": [
+       0,
+       0.2,
+       -0.15
+      ],
+      "region": "stubs",
+      "layer": "tube"
+     },
+     {
+      "id": "th-base-frame",
+      "kind": "box",
+      "bone": "boiler",
+      "material": "steel",
+      "role": "body",
+      "tone": 0.28,
+      "size": [
+       0.76,
+       0.05,
+       0.48
+      ],
+      "transform": {
+       "translation": [
+        0.5,
+        0.025,
+        0
+       ]
+      },
+      "region": "steelwork",
+      "layer": "steel"
+     },
+     {
+      "id": "th-block",
+      "kind": "box",
+      "bone": "boiler",
+      "material": "cast-iron",
+      "role": "body",
+      "tone": 0.25,
+      "size": [
+       0.74,
+       0.73,
+       0.52
+      ],
+      "transform": {
+       "translation": [
+        0.5,
+        0.415,
+        0
+       ]
+      },
+      "region": "block"
+     },
+     {
+      "id": "th-flue-outlet",
+      "kind": "revolve",
+      "bone": "boiler",
+      "material": "flue-steel",
+      "role": "detail",
+      "tone": 0.2,
+      "profile": [
+       [
+        -0.105,
+        0
+       ],
+       [
+        -0.105,
+        0.06
+       ],
+       [
+        -0.03,
+        0.06
+       ],
+       [
+        -0.03,
+        0
+       ]
+      ],
+      "axis": [
+       1,
+       0,
+       0
+      ],
+      "origin": [
+       0,
+       0.68,
+       0
+      ],
+      "region": "flue-spigot",
+      "tags": [
+       "flue-gas"
+      ]
+     },
+     {
+      "id": "th-jacket-plume",
+      "kind": "box",
+      "bone": "boiler",
+      "material": "painted-steel",
+      "role": "detail",
+      "tone": 0.74,
+      "size": [
+       0.36,
+       0.075,
+       0.4
+      ],
+      "transform": {
+       "translation": [
+        0.45,
+        0.8875,
+        0
+       ]
+      },
+      "region": "jacket",
+      "tags": [
+       "jacket-plume"
+      ]
+     }
+    ],
+    "structure": [
+     {
+      "id": "member-bearers",
+      "of": "bearers",
+      "member": "bearers",
+      "part": "member"
+     },
+     {
+      "id": "member-block",
+      "kind": "box",
+      "bone": "boiler",
+      "material": "cast-iron",
+      "role": "body",
+      "tone": 0.3,
+      "size": [
+       0.74,
+       0.73,
+       0.52
+      ],
+      "transform": {
+       "translation": [
+        0.5,
+        0.415,
+        0
+       ]
+      },
+      "member": "boiler",
+      "part": "member"
+     },
+     {
+      "id": "joint-bearing-right",
+      "kind": "box",
+      "bone": "boiler",
+      "material": "steel",
+      "role": "detail",
+      "tone": 0.5,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.16,
+        0.0375,
+        -0.221
+       ]
+      },
+      "repeat": {
+       "count": 2,
+       "translation": [
+        0.68,
+        0,
+        0
+       ]
+      },
+      "member": "boiler",
+      "part": "joint"
+     },
+     {
+      "id": "joint-bearing-left",
+      "kind": "box",
+      "bone": "boiler",
+      "material": "steel",
+      "role": "detail",
+      "tone": 0.5,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.16,
+        0.0375,
+        0.221
+       ]
+      },
+      "repeat": {
+       "count": 2,
+       "translation": [
+        0.68,
+        0,
+        0
+       ]
+      },
+      "member": "boiler",
+      "part": "joint"
+     },
+     {
+      "id": "mass-boiler",
+      "kind": "box",
+      "bone": "boiler",
+      "material": "cast-iron",
+      "role": "detail",
+      "tone": 0.5,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.549,
+        0.423,
+        0
+       ]
+      },
+      "member": "boiler",
+      "part": "mass"
+     },
+     {
+      "id": "mass-bearers",
+      "kind": "box",
+      "bone": "bearers",
+      "material": "softwood",
+      "role": "detail",
+      "tone": 0.5,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.48,
+        0.05,
+        -0.22
+       ]
+      },
+      "member": "bearers",
+      "part": "mass"
+     }
+    ]
    }
   },
   "anchors": [

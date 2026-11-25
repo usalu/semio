@@ -2,7 +2,7 @@
 use super::*;
 use std::mem::{size_of,ManuallyDrop};
 use semio_os_store_replay_operation::native::ReplyStash;
-use semio_framework_value::retained_clone::RetainedOwnedProjectionAdmission;
+use semio_framework_value::retained_clone::{RetainedOwnedProjectionAdmission,OriginalEffectAction,OriginalProjectionFrame,OriginalProjectionFramePhase};
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory,FactoryAuthority,ErasedSnapshotRetirement,OriginalRetirementControl,RetainedCloneSource,RetainedOwnedProjection,retained_clone::{RetainedCloneClose,RetainedCloneSourceAdmission,retained_clone_grant_admits}};
 use semio_framework_value_factory::owned::FactoryOwnedSourceAuthority;
 use semio_framework_value_snapshot_read::{SnapshotRead,CapturedSnapshotSource};
@@ -18,7 +18,9 @@ struct Preparation<P:Send+Sync+'static,M:Send+Sync+'static>{
  captured:ManuallyDrop<Option<CapturedSnapshotSource<P>>>,retirement:RetainedCloneClose,active:ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
  snapshots:ManuallyDrop<Option<Arc<dyn ArtifactOwnedValueRetirementFactory<P>>>>,mutations:ManuallyDrop<Option<Arc<dyn ArtifactOwnedValueRetirementFactory<M>>>>,semantics:ManuallyDrop<Option<Arc<dyn ArtifactReplayPreparationFactory<P,M>>>>,factories:[Option<FactoryAuthority>;5],
  context:ArtifactReplayPreparationContext,checkpoint:store::os_store::one_item::ArtifactStoreOneItemCheckpoint,original:Option<(semio_framework_value_native_owned::NativeAllocationIdentity,Option<u64>)>,phase:u8,closing:bool,
+ projection:Option<OriginalProjectionFrame<M,FactoryOwnedSourceAuthority<M>>>,projection_action:Option<OriginalEffectAction<RetainedCloneStep,ValueError>>,
 }
+fn staged_outcome(poll:semio_framework_value::RetainedWorkPoll<RetainedCloneStep,ValueError>)->semio_framework_value::RetainedWorkOutcome{match poll{semio_framework_value::RetainedWorkPoll::Complete(turn)=>turn,semio_framework_value::RetainedWorkPoll::Pending{work}=>semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work}}}
 fn value_poll<E:Into<semio_framework_value::RetirementPollExit>>(poll:semio_framework_value::RetainedWorkPoll<RetainedCloneStep,E>)->Result<RetainedCloneStep,semio_framework_value::RetirementPollExit>{match poll{semio_framework_value::RetainedWorkPoll::Pending{work}=>Err(semio_framework_value::RetirementPollExit::Pending(work)),semio_framework_value::RetainedWorkPoll::Complete(turn)=>turn.result.map_err(Into::into)}}
 fn invalid(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,message)}
 fn header<T>()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<T>(),depth:1,..Default::default()}}
@@ -27,7 +29,7 @@ impl<P:Send+Sync+'static,M:Send+Sync+'static> Factory<P,M>{
  fn construct(&self,request:store::ArtifactEphemeralOneItemPreparationRequest<P,M>)->Result<Preparation<P,M>,store::ArtifactEphemeralOneItemPreparationRequest<P,M>>{
   if matches!(request.base.0,store::ArtifactEphemeralBaseOwner::Transient(_)){return Err(request);}
   let base=match request.base.0{store::ArtifactEphemeralBaseOwner::Presence(read)|store::ArtifactEphemeralBaseOwner::TransientRead(read)=>read,store::ArtifactEphemeralBaseOwner::Transient(_)=>unreachable!()};
-  Ok(Preparation{base:ManuallyDrop::new(Some(base)),mutation:ManuallyDrop::new(Some(request.mutation)),authority:ManuallyDrop::new(None),admission:ManuallyDrop::new(None),source:ManuallyDrop::new(None),input:ManuallyDrop::new(None),projecting:Default::default(),reply:Default::default(),take_reply:Default::default(),native:ManuallyDrop::new(None),prepared:ManuallyDrop::new(None),captured:ManuallyDrop::new(None),retirement:Default::default(),active:ManuallyDrop::new(None),snapshots:ManuallyDrop::new(Some(Arc::clone(&self.snapshots))),mutations:ManuallyDrop::new(Some(Arc::clone(&self.mutations))),semantics:ManuallyDrop::new(Some(Arc::clone(&self.semantics))),factories:Default::default(),context:ArtifactReplayPreparationContext{mode:ArtifactReplayPreparationMode::Prefix,operation_index:0,generation:request.generation.0,base_revision:[0;32]},checkpoint:Default::default(),original:None,phase:0,closing:false})
+  Ok(Preparation{base:ManuallyDrop::new(Some(base)),mutation:ManuallyDrop::new(Some(request.mutation)),authority:ManuallyDrop::new(None),admission:ManuallyDrop::new(None),source:ManuallyDrop::new(None),input:ManuallyDrop::new(None),projecting:Default::default(),reply:Default::default(),take_reply:Default::default(),native:ManuallyDrop::new(None),prepared:ManuallyDrop::new(None),captured:ManuallyDrop::new(None),retirement:Default::default(),active:ManuallyDrop::new(None),snapshots:ManuallyDrop::new(Some(Arc::clone(&self.snapshots))),mutations:ManuallyDrop::new(Some(Arc::clone(&self.mutations))),semantics:ManuallyDrop::new(Some(Arc::clone(&self.semantics))),factories:Default::default(),context:ArtifactReplayPreparationContext{mode:ArtifactReplayPreparationMode::Prefix,operation_index:0,generation:request.generation.0,base_revision:[0;32]},checkpoint:Default::default(),original:None,phase:0,closing:false,projection:None,projection_action:None})
  }
 }
 impl<P:Send+Sync+'static,M: ::semio_os_kernel::StoreMutationFor<P>> store::ArtifactEphemeralOneItemPreparationFactory<P,M> for Factory<P,M>{
@@ -38,7 +40,7 @@ impl<P:Send+Sync+'static,M:Send+Sync+'static> Preparation<P,M>{
  fn demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
   Ok(match self.phase{
    0=>header::<FactoryOwnedSourceAuthority<M>>(),
-   1=>self.admission.as_ref().ok_or_else(||invalid("ephemeral original source admission absent"))?.next_demand()?,
+   1=>self.admission_demand()?,
    2=>self.projecting.demand(self.source.as_ref().ok_or_else(||invalid("transient publication source is absent"))?.try_borrow()?)?,
    7=>self.projecting.take_demand()?,
    3=>{let mut d=self.semantics.as_ref().ok_or_else(||invalid("ephemeral original semantic issuer absent"))?.preparation_birth_demand();d.copy_bytes+=size_of::<ArtifactDerivedOperation<P,M>>()+size_of::<ArtifactReplayPreparationRequest<P,M>>();Ok::<_,ValueError>(d)?},
@@ -47,15 +49,43 @@ impl<P:Send+Sync+'static,M:Send+Sync+'static> Preparation<P,M>{
    _=>Default::default(),
   })
  }
- fn empty(&self)->bool{self.base.is_none()&&self.mutation.is_none()&&self.authority.is_none()&&self.admission.is_none()&&self.source.is_none()&&self.input.is_none()&&self.projecting.terminal_is_empty()&&self.native.is_none()&&self.prepared.is_none()&&self.captured.is_none()&&self.retirement.is_empty()&&self.active.is_none()&&self.snapshots.is_none()&&self.mutations.is_none()&&self.semantics.is_none()&&self.factories.iter().all(Option::is_none)}
+
+ /// 🪜️ Quotes the next admission action: a staged projection stage, the original refusal's handback, the published source or the next bounded admission.
+ fn admission_demand(&self)->Result<RetirementDemand,ValueError>{
+  let a=self.admission.as_ref().ok_or_else(||invalid("ephemeral original source admission absent"))?;
+  if let Some(stage)=a.projection_stage(&self.projection)?{return Ok(a.projection_stage_quote(&self.projection,stage)?.0)}
+  if a.projection_result()==Some(false){return Ok(a.take_projection_failure_demand())}
+  a.next_demand()
+ }
+ /// ↩️ Quotes the close of the admission, including any projection the cancelled turn left in flight.
+ fn admission_close_demand(&self)->Result<RetirementDemand,ValueError>{
+  let a=self.admission.as_ref().ok_or_else(||invalid("ephemeral original source admission absent"))?;
+  if let Some(frame)=self.projection.as_ref(){return match frame.phase()?{
+   OriginalProjectionFramePhase::Drive if self.projection_action.is_some()=>Ok(frame.projection_demand()),
+   OriginalProjectionFramePhase::Drive|OriginalProjectionFramePhase::TransferProducer=>frame.producer_transfer_demand(),
+   OriginalProjectionFramePhase::AcceptAnswer=>a.projection_answer_demand(frame),
+   OriginalProjectionFramePhase::ReturnOwner=>a.return_projection_owner_demand(frame),
+   OriginalProjectionFramePhase::Finish=>Ok(a.finish_projection_demand()),
+  }}
+  if a.phase()=="ready"{return a.next_demand()}
+  match a.projection_result(){Some(true)=>return Ok(a.discard_projection_demand()),Some(false)=>return Ok(a.take_projection_failure_demand()),None=>{}}
+  a.next_return_demand()
+ }
+ /// 🧯️ Hands the original refusal of a failed projection back to the caller.
+ fn projected_failure(admission:&mut RetainedCloneSourceAdmission<M,FactoryOwnedSourceAuthority<M>>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::RetainedWorkOutcome{
+  let mut failure=None;
+  let turn=admission.take_projection_failure(&mut failure,effect);
+  semio_framework_value::RetainedWorkOutcome{result:turn.result.and_then(|step|match failure{Some(error)=>Err(error.with_retained_progress(step.progress())),None=>Ok(step)}),work:turn.work}
+ }
+ fn empty(&self)->bool{self.base.is_none()&&self.mutation.is_none()&&self.authority.is_none()&&self.admission.is_none()&&self.source.is_none()&&self.input.is_none()&&self.projecting.terminal_is_empty()&&self.projection.is_none()&&self.projection_action.is_none()&&self.native.is_none()&&self.prepared.is_none()&&self.captured.is_none()&&self.retirement.is_empty()&&self.active.is_none()&&self.snapshots.is_none()&&self.mutations.is_none()&&self.semantics.is_none()&&self.factories.iter().all(Option::is_none)}
  fn close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{
   if let Some(owner)=self.native.as_ref(){return if owner.terminal_is_empty(){Ok(header::<Option<ArtifactDerivedOperation<P,M>>>())}else{owner.demands(self.context.generation,self.context.base_revision,body,u64::MAX)};}
   if let Some(owner)=self.active.as_ref(){return semio_framework_value::factory_ticket_demands(owner,body);}
   if !self.retirement.is_empty(){return self.retirement.next_owner_demands::<CapturedSnapshotSource<P>>(false,&None,body);}
   if !self.projecting.terminal_is_empty(){return self.projecting.close_demand(body);}
   if let Some(owner)=self.input.as_ref(){return if owner.terminal_is_empty(){Ok(header::<Option<RetainedOwnedProjection<M>>>())}else{owner.close_demand(body)};}
-  if let Some(owner)=self.source.as_ref(){return if owner.terminal_is_empty(){Ok(header::<Option<RetainedCloneSource<M,FactoryOwnedSourceAuthority<M>>>>())}else{owner.next_close_demand(body)};}
-  if let Some(a)=self.admission.as_ref(){return if a.phase()=="ready"{a.next_demand()}else{a.next_return_demand()};}
+  if let Some(owner)=self.source.as_ref().filter(|_|self.admission.is_none()){return if owner.terminal_is_empty(){Ok(header::<Option<RetainedCloneSource<M,FactoryOwnedSourceAuthority<M>>>>())}else{owner.next_close_demand(body)};}
+  if self.admission.is_some(){return self.admission_close_demand();}
   if self.authority.is_some(){return self.retirement.next_owner_demands::<FactoryOwnedSourceAuthority<M>>(true,&None,body);}
   if self.base.is_some(){return Ok(CapturedSnapshotSource::<P>::constructor_demand());}
   if self.captured.is_some(){return self.retirement.next_owner_demands::<CapturedSnapshotSource<P>>(true,&None,body);}
@@ -77,8 +107,8 @@ impl<P:Send+Sync+'static,M:Send+Sync+'static> Preparation<P,M>{
   if !self.retirement.is_empty(){return Exit::resume(self.retirement.step_granted(body,effect));}
   if !self.projecting.terminal_is_empty(){return Exit::resume(self.projecting.close_step(body,effect)).map(|step|RetainedCloneStep::Progress(step.progress()));}
   if let Some(owner)=self.input.as_mut(){if owner.terminal_is_empty(){self.input.take();Exit::pay(effect,1)?;return Ok(RetainedCloneStep::Progress(progress(demand)));}return Exit::resume(owner.close_step(body,effect));}
-  if let Some(owner)=self.source.as_mut(){if owner.terminal_is_empty(){self.source.take();Exit::pay(effect,1)?;return Ok(RetainedCloneStep::Progress(progress(demand)));}return Exit::resume(owner.close_step(body,effect));}
-  if let Some(a)=self.admission.as_mut(){if a.phase()=="ready"{let mut output=None;let turn=a.take_output(&mut output,effect);Exit::pay(effect,turn.work)?;let step=turn.result?;if let Some(source)=output{*self.source=Some(source);self.admission.take();}return Ok(RetainedCloneStep::Progress(step.progress()));}let mut back=None;let turn=a.return_inputs(&mut back,effect);let step=turn.result?;if let Some((authority,()))=back{*self.authority=Some(authority);self.admission.take();}return Ok(RetainedCloneStep::Progress(step.progress()));}
+  if let Some(owner)=self.source.as_mut().filter(|_|self.admission.is_none()){if owner.terminal_is_empty(){self.source.take();Exit::pay(effect,1)?;return Ok(RetainedCloneStep::Progress(progress(demand)));}return Exit::resume(owner.close_step(body,effect));}
+  if let Some(a)=self.admission.as_mut(){if let Some(frame)=self.projection.as_mut(){let turn=match frame.phase()?{OriginalProjectionFramePhase::Drive if self.projection_action.is_some()=>staged_outcome(a.project_staged(&mut self.projection,&mut self.projection_action,2,effect)),OriginalProjectionFramePhase::Drive|OriginalProjectionFramePhase::TransferProducer=>{let turn=frame.transfer_producer(effect);semio_framework_value::RetainedWorkOutcome{result:turn.result.map(|p|RetainedCloneStep::Progress(p.unwrap_or_default())),work:turn.work}},OriginalProjectionFramePhase::AcceptAnswer=>a.accept_projection(frame,effect),OriginalProjectionFramePhase::ReturnOwner=>a.return_projection_owner(frame,effect),OriginalProjectionFramePhase::Finish=>a.finish_projection(&mut self.projection,effect)};Exit::pay(effect,turn.work)?;return Ok(RetainedCloneStep::Progress(turn.result?.progress()));}if let Some(success)=a.projection_result().filter(|_|a.phase()!="ready"){let turn=if success{a.discard_projection(effect)}else{Self::projected_failure(a,effect)};Exit::pay(effect,turn.work)?;return Ok(RetainedCloneStep::Progress(turn.result?.progress()));}if a.phase()=="ready"{let turn=a.take_output(&mut self.source,effect);Exit::pay(effect,turn.work)?;let step=turn.result?;if a.terminal_is_empty(){self.admission.take();}return Ok(RetainedCloneStep::Progress(step.progress()));}let mut back=None;let turn=a.return_inputs(&mut back,effect);let step=turn.result?;if let Some((authority,()))=back{*self.authority=Some(authority);self.admission.take();}return Ok(RetainedCloneStep::Progress(step.progress()));}
   if let Some(step)=self.retirement.begin_granted(&mut self.authority,effect).result?{return Ok(step);}
   if self.base.is_some(){let turn=CapturedSnapshotSource::admit(&mut self.base,self.snapshots.as_ref().unwrap(),effect);let Some((owner,receipt))=turn.result?else{return Ok(RetainedCloneStep::Progress(Default::default()));};*self.captured=Some(owner);return Ok(RetainedCloneStep::Progress(receipt));}
   if let Some(step)=self.retirement.begin_granted(&mut self.captured,effect).result?{return Ok(step);}
@@ -101,7 +131,7 @@ impl<P:Send+Sync+'static,M:Send+Sync+'static> store::ArtifactEphemeralOneItemPre
   if !matches!(self.phase,1|2|4|7){receiving.admit_turn_capacity(grant.maximum_capacity_bytes)?;receiving.charge(demand.capacity_bytes)?;}
   let receipt=match self.phase{
    0=>{*self.admission=Some(RetainedCloneSource::admission_borrowed(FactoryOwnedSourceAuthority::new(self.mutation.take().ok_or_else(||invalid("transient publication mutation is absent"))?,Arc::clone(self.mutations.as_ref().ok_or_else(||invalid("transient publication mutations are absent"))?))));self.phase=1;progress(demand)},
-   1=>{let admission=self.admission.as_mut().ok_or_else(||invalid("ephemeral original source admission absent"))?;let ready=admission.phase()=="ready";let output=&mut self.source;match receiving.with_allocated_effect(demand,1<<20,|_,effect|if ready{admission.take_output(&mut **output,effect)}else{admission.advance(effect)})?{Some(turn)=>{let step=turn.result?;if ready&&self.source.is_some(){self.admission.take();self.phase=2;}step.progress()},None=>return Ok(Step::Blocked)}},
+   1=>{let admission=self.admission.as_mut().ok_or_else(||invalid("ephemeral original source admission absent"))?;let ready=admission.phase()=="ready";let output=&mut self.source;let frame=&mut self.projection;let action=&mut self.projection_action;let work=match admission.projection_stage(&*frame)?{Some(stage)=>admission.projection_stage_quote(&*frame,stage)?.1,None=>1<<20};match receiving.with_allocated_effect(demand,work,|_,effect|match admission.projection_stage(&*frame){Err(error)=>semio_framework_value::RetainedWorkOutcome{result:Err(error),work:0},Ok(Some(stage))=>staged_outcome(admission.project_staged(frame,action,stage,effect)),Ok(None)=>if admission.projection_result()==Some(false){Self::projected_failure(admission,effect)}else if ready{admission.take_output(&mut **output,effect)}else{admission.advance(effect)}})?{Some(turn)=>{let step=turn.result?;if ready&&self.admission.as_ref().is_some_and(|admission|admission.terminal_is_empty()){self.admission.take();self.phase=2;}step.progress()},None=>return Ok(Step::Blocked)}},
    2=>{let source=self.source.as_ref().ok_or_else(||invalid("transient publication source is absent"))?;let original=source.try_borrow()?;let admission=&mut self.projecting;let stash=&mut self.reply;let Some(answer)=receiving.with_allocated_effect(demand,1<<20,|_,effect|stash.run(|reply,recover|(if recover{admission.recover_admit(reply)}else{admission.admit(original,effect,reply)}).map(drop)))? else{return Ok(Step::Blocked)};let Some(answer)=answer? else{return Ok(Step::Blocked)};let step=answer?;if matches!(step,RetainedCloneStep::Complete(_)){self.phase=7;}step.progress()},
    7=>{let admission=&mut self.projecting;let stash=&mut self.take_reply;let slot=&mut *self.input;let Some(answer)=receiving.with_allocated_effect(demand,1<<20,|_,effect|stash.run(|reply,recover|(if recover{admission.recover_take(reply)}else{admission.take(slot,effect,reply)}).map(drop)))? else{return Ok(Step::Blocked)};let Some(answer)=answer? else{return Ok(Step::Blocked)};let step=answer?;if matches!(step,RetainedCloneStep::Complete(_)){self.phase=3;}step.progress()},
    3=>{
@@ -110,7 +140,7 @@ impl<P:Send+Sync+'static,M:Send+Sync+'static> store::ArtifactEphemeralOneItemPre
     let request=ArtifactReplayPreparationRequest{base:self.base.take().unwrap(),input:self.input.take().unwrap(),context:self.context,snapshots:Arc::clone(self.snapshots.as_ref().unwrap()),mutations:Arc::clone(self.mutations.as_ref().unwrap())};
     match factory.begin(request,child){Ok((cursor,mut receipt))=>{let mut owner=ArtifactDerivedOperation{last_work:0,base:ManuallyDrop::new(None),producer:ManuallyDrop::new(None),registry:None,context:self.context,failed_read:ManuallyDrop::new(None),failed_input:ManuallyDrop::new(None),registry_close:ManuallyDrop::new(None),mode:ArtifactDerivedOperationMode::Provisional,policy:protocol::MergePolicy::default(),task:ManuallyDrop::new(None),task_close:ManuallyDrop::new(None),prepared:ManuallyDrop::new(None),mutation:ManuallyDrop::new(None),retirement:ManuallyDrop::new(None),snapshots:ManuallyDrop::new(Some(Arc::clone(self.snapshots.as_ref().unwrap()))),mutations:ManuallyDrop::new(Some(Arc::clone(self.mutations.as_ref().unwrap()))),factory_close:Default::default(),message:0,accepted:true,ready:false,finished:false,closing:false,progress:Default::default()};*owner.task=Some(ArtifactReplayPreparationTask::new(self.context,cursor));*self.native=Some(owner);self.phase=4;receipt.copied_bytes+=parent;receipt},Err((error,request))=>{*self.base=Some(request.base);*self.input=Some(request.input);self.factories[3]=Some(FactoryAuthority::new(request.snapshots));self.factories[4]=Some(FactoryAuthority::new(request.mutations));return Err(error);}}
    },
-   4=>{let owner=self.native.as_mut().unwrap();let step=owner.step(self.context.generation,self.context.base_revision,grant.maximum_copy_bytes,grant,receiving,&mut||false).map_err(crate::bounded_ownership::plugin_failure_error)?;if owner.is_finished(){self.phase=5;}step.progress()},
+   4=>{let owner=self.native.as_mut().unwrap();let step=owner.step(self.context.generation,self.context.base_revision,grant.maximum_copy_bytes,grant,receiving,&mut||false).map_err(semio_plugin_ownership::bounded_ownership::plugin_failure_error)?;if owner.is_finished(){self.phase=5;}step.progress()},
    5=>{let owner=self.native.as_mut().unwrap();let next=owner.prepared.as_mut().and_then(|prepared|prepared.next.take());owner.cancel();if let Some(next_root)=next{*self.prepared=Some(store::ArtifactEphemeralOneItemPrepared{next_root});self.phase=6;}else{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"ephemeral original retained semantics refused its captured base"));}progress(demand)},
    _=>return Err(invalid("ephemeral native preparation has an invalid frontier")),
   };

@@ -25,7 +25,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
         };
 
         if let Some(mounted) = self.tools.tool_operations.get(operation.operation.0) {
-            let awaiting_page = mounted.result_page.as_ref().filter(|_| mounted.stage == MountedTypedCommandFullOperationStage::AwaitingAck);
+            let awaiting_page = mounted.result_page.as_ref().filter(|_| mounted.stage == MountedTypedCommandFullOperationStage::AwaitingAck && mounted.result_page_presented);
             if progress.terminal.is_none() {
                 if let Some(terminal) = mounted.terminal_publication() {
                     let copy_bytes = size_of_val(&progress.terminal);

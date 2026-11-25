@@ -1,33 +1,5 @@
 [
  {
-  "op": "copy",
-  "scale": "50",
-  "id": "hand-l",
-  "from": "elevation",
-  "to": [
-   "front"
-  ],
-  "why": "hand-l: sww/swu/None: the body of the elevation in every view"
- },
- {
-  "op": "copy",
-  "scale": "50",
-  "id": "hand-r",
-  "from": "elevation",
-  "to": [
-   "front"
-  ],
-  "why": "hand-r: sww/swu/None: the body of the elevation in every view"
- },
- {
-  "op": "extrude",
-  "scale": "50",
-  "id": "coat",
-  "view": "plan",
-  "across": "front",
-  "why": "torso: flat plan shape on a trunk that leans up to 54 degrees over the rollator; a prism of the plan outline is a box and reaches 53 to 100 mm too far when it leans: the elevation outline swept over the width of the front twin"
- },
- {
   "op": "extrude",
   "scale": "100",
   "id": "shoe-l",
@@ -74,14 +46,6 @@
   "scale": "100",
   "id": "shank-r",
   "why": "shank-r: flat/None/flat: revolved about the bone axis"
- },
- {
-  "op": "extrude",
-  "scale": "100",
-  "id": "coat",
-  "view": "plan",
-  "across": "front",
-  "why": "torso: flat plan shape on a trunk that leans up to 54 degrees over the rollator; a prism of the plan outline is a box and reaches 53 to 100 mm too far when it leans: the elevation outline swept over the width of the front twin"
  },
  {
   "op": "extrude",
@@ -136,18 +100,11 @@
   "why": "shank-r: flat/flat/flat: revolved about the bone axis"
  },
  {
-  "op": "front-sweep",
-  "scale": "200",
-  "id": "coat",
-  "why": "torso: flat front shape, 35 mm longer below than the elevation coat: cut to its length and swept along v"
- },
- {
   "op": "extrude",
   "scale": "200",
   "id": "coat",
-  "view": "plan",
-  "across": "front",
-  "why": "torso: flat plan shape on a trunk that leans up to 54 degrees over the rollator; a prism of the plan outline is a box and reaches 53 to 100 mm too far when it leans: the elevation outline swept over the width of the front twin"
+  "view": "front",
+  "why": "torso: flat front shape; a prism along v of the front outline misses the leaning side outline by 50 mm: the elevation outline swept over the width of the front outline with its taper"
  },
  {
   "op": "extrude",
@@ -190,10 +147,11 @@
   "why": "shank-r: flat/None/flat: revolved about the bone axis"
  },
  {
-  "op": "front-sweep",
+  "op": "extrude",
   "scale": "500",
   "id": "coat",
-  "why": "torso: flat front shape, 35 mm longer below than the elevation coat: cut to its length and swept along v"
+  "view": "front",
+  "why": "torso: flat front shape; a prism along v of the front outline misses the leaning side outline by 50 mm: the elevation outline swept over the width of the front outline with its taper"
  },
  {
   "op": "extrude",

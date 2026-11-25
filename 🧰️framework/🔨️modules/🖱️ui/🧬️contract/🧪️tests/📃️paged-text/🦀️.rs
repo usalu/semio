@@ -21,7 +21,7 @@ fn record(value: &serde_json::Value) -> UiNodeRecord {
         Some(leaf) => crate::Component::Text(crate::TextProps {
             value: crate::Label(text(leaf["value"].as_str().expect("leaf value"))),
             emphasize: None,
-            data_attributes: leaf.get("dataAttributes").map(|attributes| serde_json::from_value(attributes.clone()).expect("packed attributes")),
+            data_attributes: leaf.get("dataAttributes").map(|attributes| serde_json::from_value(attributes.clone()).expect("packed attributes")), heading_level: None,
         }),
         None => crate::Component::Container(crate::ContainerProps { role: crate::ContainerRole::Plain, label: None, description: None, required: None, error: None, default_open: None, drop_overlay: None }),
     };

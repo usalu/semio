@@ -118,7 +118,7 @@ impl StepContext<'_>{
   if budget.scope_observation(loan)?.is_none(){budget.enter_scope(loan)?;budget.finish_scope(loan,Amounts::default(),true,Default::default(),Default::default(),0,false)?}
   self.observe_scope_loan(held)?;Ok(held.is_none())
  }
- /// ♻️ Owners retire one row each, so many owners on one Source leave tombstones; recycles one acknowledged tombstone before a new owner's claim refuses. `true` while a reclaimable slot remains to retry against.
+ /// ♻️ Recycles one acknowledged tombstone of an earlier owner before a new owner's claim refuses; `true` while a reclaimable slot remains to retry against.
  fn reclaim_original_escrow_slot(&mut self)->Result<bool,Failure>{
   let copy=semio_framework_job_payload::ORIGINAL_RETURN_ESCROW_RECLAIM_COPY_BYTES;let grant=self.retained_grant();let funded=self.fuel_remaining()>0&&grant.maximum_items>0&&grant.maximum_depth>0&&grant.maximum_copy_bytes>=copy;let Some(table)=self.return_budget.as_mut().and_then(|b|b.get_mut().table_mut())else{return Ok(false)};
   if !table.has_reclaimable(){return Ok(false)}if !funded||!table.reclaim_one()?{return Ok(true)}
@@ -129,25 +129,25 @@ impl StepContext<'_>{
   let loan=self.original_decoder.as_deref().and_then(|owner|owner.scope.as_ref()).ok_or_else(||ValueError::invariant("Source scope loan absent"))?;let budget=self.return_budget.as_mut().ok_or_else(||ValueError::invariant("Source scope budget absent"))?.get_mut();
   budget.enter_scope(loan)?;budget.finish_scope(loan,Amounts{items:control.copied_items as u64,copy_bytes:control.copied_bytes as u64,capacity_bytes:0,release_bytes:0,work:control_work},false,P::default(),control,control_work,false)?;self.observe_native_scope()
  }
- /// 🏛️ Resident birth service entry: claims the first receiving scope of the attached decoder at quantum one under reserved service work, so the callback's first receiving call claims nothing and charges neither its fuel nor its receipt; false while the decoder, the table, the turn grant or the stock cannot yet fund it.
+ /// 🏛️ Resident birth service entry: claims the decoder's first receiving scope at quantum one under reserved service work, so the callback's first receiving call claims and charges nothing; false while decoder, table, grant or stock cannot fund it.
  pub fn admit_original_receiving_scope(&mut self)->Result<bool,Failure>{
   let Some(owner)=self.original_decoder.as_deref()else{return Ok(false)};
   if !owner.admission_complete()||owner.scope.is_some()||owner.state.has_pending_receiving()||owner.state.pending_work()!=0||self.return_budget.as_ref().is_none_or(|b|b.get().table().is_none())||self.is_cancelled()||self.deadline_exceeded(){return Ok(false)}
-  let local=self.return_budget.as_ref().unwrap().get().delivery==stock::OriginalReturnDelivery::LocalWitness;
+  let local=self.return_budget.as_ref().unwrap().get().acknowledges_locally();
   let whole=self.native_scope_quantum();let share=unquoted_receiving_grant(whole);let quantum=G{maximum_items:share.maximum_items.max(RESERVED_BODY_ITEMS),..share};let quantum_work=unquoted_receiving_work(self.fuel_remaining);
   let Some(plan)=stock::OriginalReturnScopePlan::quote::<Input>(self.retained_grant(),quantum,self.fuel_remaining(),quantum_work,Amounts::default(),false,0,false,false,local,Outcome::<[u8;RESERVED_OUTCOME_BYTES]>::placement(),0)?else{return Ok(false)};
   if !plan.ready||quantum.maximum_items==0||quantum.maximum_depth==0||quantum_work==0{return Ok(false)}
-  let work_before=self.original_work_units_spent();let kept=self.retained_progress();let epoch=self.original_source_epoch().unwrap_or(0);
+  let birth=self.original_birth_baseline();let epoch=self.original_source_epoch().unwrap_or(0);
   let admitted={let Self{original_decoder,return_budget,..}=self;return_budget.as_mut().unwrap().get_mut().admit_scope(&mut original_decoder.as_deref_mut().unwrap().scope,plan.wanted,epoch)?};
   let Some((progress,work))=admitted else{return Ok(false)};
-  let posted=self.consume_retained(progress);self.consume_fuel(work);posted?;self.pay_original_scope_control(plan.control,plan.control_work)?;self.exclude_original_birth(work_before,kept);Ok(true)
+  let posted=self.consume_retained(progress);self.consume_fuel(work);posted?;self.pay_original_scope_control(plan.control,plan.control_work)?;self.exclude_original_birth(birth);Ok(true)
  }
  pub(super) fn original_receiving_outcome<T>(&mut self,out:&mut Option<Outcome<T>>,quote:Option<(G,u64)>,operation:Operation<'_,T>)->Result<bool,Failure>{
   let retirement=operation.is_retirement();let typed=operation.is_typed();let placement=if typed{Outcome::<T>::typed_placement()?}else{Outcome::<T>::placement()};let placement_work=if typed{Outcome::<T>::typed_placement_work()?}else{0};if out.is_some(){return Err(ValueError::invariant("receiving destination occupied").into())}self.original_decoder.as_deref().ok_or_else(||ValueError::invariant("receiving decoder absent"))?;if !retirement&&!self.original_decoder.as_deref().is_some_and(|owner|owner.admission_complete()){let owner=self.original_decoder.take().ok_or_else(||ValueError::invariant("receiving decoder absent"))?;let admitted=owner.admit_step(self);self.original_decoder=Some(owner);admitted?;return Ok(false)}self.original_decoder.as_deref().unwrap().validate_source(self,retirement)?;
   if self.return_budget.as_ref().is_none_or(|b|b.get().table().is_none()){self.admit_original_return_table()?;return Ok(false)}
   self.observe_native_scope()?;
   if (!retirement&&(self.is_cancelled()||self.deadline_exceeded()))||(retirement&&!self.original_retirement&&self.deadline_exceeded())||(retirement&&self.loan_deadline_us.is_some_and(|held|self.now_us().is_none_or(|now|now>=held))){return Ok(false)}
-  let local=self.return_budget.as_ref().unwrap().get().delivery==stock::OriginalReturnDelivery::LocalWitness;let owner=self.original_decoder.as_deref().unwrap();let owner_loaned=owner.scope.is_some();let existing=match owner.scope.as_ref(){Some(loan)=>self.return_budget.as_ref().unwrap().get().scope_remaining(loan)?,None=>Amounts::default()};let whole=self.native_scope_quantum();
+  let local=self.return_budget.as_ref().unwrap().get().acknowledges_locally();let owner=self.original_decoder.as_deref().unwrap();let owner_loaned=owner.scope.is_some();let existing=match owner.scope.as_ref(){Some(loan)=>self.return_budget.as_ref().unwrap().get().scope_remaining(loan)?,None=>Amounts::default()};let whole=self.native_scope_quantum();
   let (quantum, quantum_work) = match quote {
       Some((grant, work)) => (G { maximum_depth: if whole.maximum_depth==0 { grant.maximum_depth } else { grant.maximum_depth.min(whole.maximum_depth) }, ..grant }, work),
       None => (unquoted_receiving_grant(whole), unquoted_receiving_work(self.fuel_remaining)),

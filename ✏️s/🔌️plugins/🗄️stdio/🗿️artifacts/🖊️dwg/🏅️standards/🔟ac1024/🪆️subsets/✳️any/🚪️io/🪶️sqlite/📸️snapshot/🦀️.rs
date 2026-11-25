@@ -6,7 +6,7 @@ pub mod encoding;
 use semio_os_kernel::sqlite_snapshot::SnapshotEncoding;
 use semio_os_kernel::sqlite_snapshot::composition::{sqlite_schema_bytes, sqlite_schema_len, sqlite_schema_text};
 use crate::standards::v_ac1024::subsets::any::schema::snapshot::*;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody;
+use semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody;
 use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::number;
 use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader;
 #[path="📄️document/🦀️.rs"]

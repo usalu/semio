@@ -18,7 +18,14 @@
       {
         "id": "slope-S1",
         "patch": {
-          "length": 28.0
+          "angleDeg": null,
+          "height": null,
+          "length": 28.0,
+          "governingLayerId": null,
+          "circleCentreX": null,
+          "circleCentreZ": null,
+          "circleRadius": null,
+          "width": null
         }
       }
     ]
@@ -29,6 +36,7 @@
   "pileGroups": null,
   "labTests": null,
   "layerWaters": null,
+  "placements": null,
   "cases": {
     "removed": [],
     "inserted": [],

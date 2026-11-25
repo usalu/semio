@@ -16,7 +16,8 @@
         "sessionLingerMilliseconds": 150,
         "sessionMaximumMilliseconds": 20000,
         "sessionOverheadFactor": 4,
-        "sessionCeilingMilliseconds": 120000
+        "sessionCeilingMilliseconds": 120000,
+        "verifiedNamesMaximum": 65536
       }
     },
     "ConsumerTimings": {

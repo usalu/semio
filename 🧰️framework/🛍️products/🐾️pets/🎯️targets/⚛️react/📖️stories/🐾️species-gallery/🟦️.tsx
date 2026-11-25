@@ -150,7 +150,7 @@ function SpeciesPage({ species, language, text, zoom, facing }: { readonly speci
   return (
     <section className="story" id={species.id} data-species={species.id}>
       <header className="story-head">
-        <h2>{species.name[language]}</h2>
+        <h2 className="story-heading edge-chip">{species.name[language]}</h2>
         <p>
           <code>{species.id}</code> · {species.thing[language]} · {species.size.width} × {species.size.height} px · {text.gait} {gait}, {speed} px/s{hover === undefined ? "" : ` · ${text.hover} ${hover} px`} · {text.grip} {species.grip} px · {text.reach} {species.reach} px · {text.gear} {species.gear.length === 0 ? text.none : species.gear.join(", ")}
           {species.canopy === undefined ? "" : ` · ${text.canopy}`} · {text.rests} {species.mood} · {text.counts} {species.states.length} · {species.tricks.length} · {species.emitters.length}
@@ -161,7 +161,7 @@ function SpeciesPage({ species, language, text, zoom, facing }: { readonly speci
       </header>
       {sections.map((section) => (
         <section key={section.id} className="story-section" data-section={section.id}>
-          <h3>{section.title}</h3>
+          <h3 className="story-heading edge-chip">{section.title}</h3>
           {section.note === null ? null : <p className="story-note">{section.note}</p>}
           {GROUNDS.map((ground) => (
             <div key={ground} className={`ground ground-${ground}`} data-ground={ground} aria-label={ground === "light" ? text.light : text.darkGround}>

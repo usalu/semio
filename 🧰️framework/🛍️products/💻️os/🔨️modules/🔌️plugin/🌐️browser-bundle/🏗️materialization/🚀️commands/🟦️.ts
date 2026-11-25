@@ -27,11 +27,11 @@ import { ensurePreview2ShimVendorAt } from "../🩹️preview2-shim-patches/🟦
 import { hostShimSource } from "../🪢️host-shim-source/🟦️.ts";
 import { optimizePluginCoreModuleAsync, pluginCoreModuleFilesV1, pluginWasmOptToolV1 } from "../🪶️wasm-opt/🟦️.ts";
 import { PLUGIN_HOST_SHIM_FILE, SHARD_WORKER_FILE } from "../🧾️contract/🟦️.ts";
-import { pluginComponentBridgeSource } from "../🌉️component-bridge-source/🟦️.ts";
+import { monolithicComponentTable, pluginComponentBridgeSource } from "../🌉️component-bridge-source/🟦️.ts";
 import { PREVIEW2_VENDOR_RELATIVE } from "../../🕸️imports/🟦️.ts";
 import { rewritePreview2ShimImports, transpilePluginComponentModulesAsync } from "../🟦️.ts";
 import { nativeTranspileArgsV1, nativeTranspileBinaryV1, PLUGIN_COMPONENT_IMPORT_MAPS_V1 } from "../🦀️native-transpile/🟦️.ts";
-import { rewriteJcoAsyncResultLiftingAt, rewriteJcoComponentAssetUrlsAt } from "../🧬️jco-module-rewrites/🟦️.ts";
+import { rewriteJcoAsyncResultLiftingAt, rewriteJcoComponentFactoryAt } from "../🧬️jco-module-rewrites/🟦️.ts";
 import { shardWorkerSource } from "../🧵️shard-worker-source/🟦️.ts";
 import { captureOwnedCommandV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { STAGE_CACHE_POLICY_V1, stageCacheV1, type StageCacheV1, type StageRemoteV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🗃️stage-cache/🟦️.ts";
@@ -170,7 +170,7 @@ export function transpileStageRemoteV1(work: ComponentModuleWorkV1, binary: stri
       if (outcome.kind !== "done") return false;
     } finally { rmSync(scratch, { recursive: true, force: true }); }
     rewriteJcoAsyncResultLiftingAt(join(directory, `${base}.js`));
-    rewriteJcoComponentAssetUrlsAt(join(directory, `${base}.js`));
+    rewriteJcoComponentFactoryAt(join(directory, `${base}.js`));
     return true;
   });
 }
@@ -261,7 +261,7 @@ async function publishComponentModuleV1(work: ComponentModuleWorkV1, module: str
   const mode=readNativeCallerAuthorityV1(work.invocation.capabilities).original.buildMode,output=join(builtPluginModulesRootIn(work.repoRoot,mode),work.target.directoryName!),base=componentBaseV1(work.target);
   if(receipt.profile!==mode)throw Error("Component receipt must match its actual Original mode");
     if (createHash("sha256").update(semantic).digest("hex") !== receipt.semanticDescriptorSha256) throw new Error(`${work.target.pluginId}: the module's describe() is not the semantic descriptor its receipt names`);
-    const descriptor=finalizePluginDescriptor(semantic,work.target.pluginId),payload=new Map<string,Uint8Array|string>([["🛂️.descriptor.semio",descriptor.pack],["🔣️.json",descriptor.json],[MODULE_BRIDGE_FILE,pluginComponentBridgeSource(base,work.target.wasmOut)],[COMPONENT_RECEIPT_FILE,encodeComponentReceiptV1(receipt)]]),existing=artifactFiles(module,maximumFiles,maximumBytes);let bytes=0,count=existing.size;
+    const descriptor=finalizePluginDescriptor(semantic,work.target.pluginId),payload=new Map<string,Uint8Array|string>([["🛂️.descriptor.semio",descriptor.pack],["🔣️.json",descriptor.json],[MODULE_BRIDGE_FILE,pluginComponentBridgeSource(base,monolithicComponentTable(JSON.parse(descriptor.json),base))],[COMPONENT_RECEIPT_FILE,encodeComponentReceiptV1(receipt)]]),existing=artifactFiles(module,maximumFiles,maximumBytes);let bytes=0,count=existing.size;
     for(const[name,path]of existing)if(!payload.has(name))bytes+=lstatSync(path).size;for(const[name,value]of payload){if(!existing.has(name))count++;bytes+=typeof value==="string"?Buffer.byteLength(value):value.byteLength;}if(count>maximumFiles||bytes>maximumBytes)throw Error("Final browser module exceeds combined scratch grant");for(const[name,value]of payload)writeFileSync(join(module,name),value);
     work.control.signal?.throwIfAborted();
     const files=artifactFiles(module);

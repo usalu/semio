@@ -13,20 +13,104 @@
    "de": "Ein gebrauchtes L-förmiges Stoff-Ecksofa, 2,60 x 1,90 m, aus einer Haushaltsauflösung: ein Zweisitzerteil mit Kastenarmlehne und ein Longchair mit langer äußerer Armlehne, die losen Rückenkissen zusammengesackt, der Platz an der Armlehne und der Longchair durchgesessen, die Armlehnen von der Sonne ausgebleicht. In zwei Teilen auf zwei Möbeldecken eingelagert, die acht Füße abgeschraubt in einer Tasche, von vier Trägern in zwei Teilen getragen und in einem Wohnzimmer mit drei sitzenden Personen wieder aufgebaut."
   },
   "tags": [
-   "used",
-   "household",
-   "second-hand",
-   "living",
-   "sofa",
-   "corner-sofa",
-   "chaise",
-   "seating",
-   "upholstery",
-   "foam",
-   "fabric",
-   "chipboard",
-   "moving-blanket",
-   "two-part"
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "household",
+    "title": {
+     "en": "household",
+     "de": "Haushalt"
+    }
+   },
+   {
+    "id": "second-hand",
+    "title": {
+     "en": "second-hand",
+     "de": "Second-Hand"
+    }
+   },
+   {
+    "id": "living",
+    "title": {
+     "en": "living",
+     "de": "Wohnen"
+    }
+   },
+   {
+    "id": "sofa",
+    "title": {
+     "en": "sofa",
+     "de": "Sofa"
+    }
+   },
+   {
+    "id": "corner-sofa",
+    "title": {
+     "en": "corner sofa",
+     "de": "Ecksofa"
+    }
+   },
+   {
+    "id": "chaise",
+    "title": {
+     "en": "chaise",
+     "de": "Chaiselongue"
+    }
+   },
+   {
+    "id": "seating",
+    "title": {
+     "en": "seating",
+     "de": "Sitzmöbel"
+    }
+   },
+   {
+    "id": "upholstery",
+    "title": {
+     "en": "upholstery",
+     "de": "Polster"
+    }
+   },
+   {
+    "id": "foam",
+    "title": {
+     "en": "foam",
+     "de": "Schaumstoff"
+    }
+   },
+   {
+    "id": "fabric",
+    "title": {
+     "en": "fabric",
+     "de": "Stoff"
+    }
+   },
+   {
+    "id": "chipboard",
+    "title": {
+     "en": "chipboard",
+     "de": "Spanplatte"
+    }
+   },
+   {
+    "id": "moving-blanket",
+    "title": {
+     "en": "moving blanket",
+     "de": "Umzugsdecke"
+    }
+   },
+   {
+    "id": "two-part",
+    "title": {
+     "en": "two part",
+     "de": "zweiteilig"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content (used household objects wave)",

@@ -1,0 +1,27 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-hub-procedural-generation2d-viewer-app"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "App fleet of the generation2d viewer surface of semio-hub-procedural"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework = { workspace = true }
+semio-framework-dispatch-macros = { workspace = true }
+semio-framework-hash = { workspace = true }
+semio-framework-job = { workspace = true }
+semio-framework-tool-run = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-os-kernel = { workspace = true }
+semio-plugin = { workspace = true }
+semio-s-artifact-procedural-2d-viewer = { workspace = true }

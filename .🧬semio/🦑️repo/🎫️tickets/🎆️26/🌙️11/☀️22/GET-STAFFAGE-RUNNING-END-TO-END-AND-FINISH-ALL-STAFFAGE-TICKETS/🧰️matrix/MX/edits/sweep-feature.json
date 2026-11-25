@@ -1,0 +1,7 @@
+[
+ {
+  "name": "scenario",
+  "old": "  Scenario: A missing or unknown sweep is refused",
+  "new": "  Scenario: The paint depth of a swept solid follows its sweep\n    Given a profile on a hanging thigh swept along u, along v and along w\n    When the depth that ranks the shape in the front and in the plan is read\n    Then it is the nearest point of the profile placed in the plane of its sweep at the middle of its span, as gl-matrix carries it\n\n  Scenario: A missing or unknown sweep is refused"
+ }
+]

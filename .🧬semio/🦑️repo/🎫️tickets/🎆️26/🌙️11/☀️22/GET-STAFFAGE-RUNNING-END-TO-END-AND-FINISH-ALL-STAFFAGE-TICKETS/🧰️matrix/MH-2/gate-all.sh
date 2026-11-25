@@ -5,6 +5,6 @@ d="$GEN/${DIR:-gate}"; mkdir -p "$d"
 ids=("$@"); [[ ${#ids} -eq 0 ]] && ids=($(cut -f2 "$U/🧰️matrix/batches/MH-2.tsv"))
 for a in $ids; do
   s=$SECONDS
-  (cd "$T" && timeout 1800 "$B" "$M/gate.ts" "${SRC:+$GEN/$SRC/}$a${SRC:+.json}" --twins ${=GATE_ARGS}) > "$d/$a.log" 2>&1
+  ("$W/q.sh" 2500 1800 "$T" "$B" "$M/gate.ts" "${SRC:+$GEN/$SRC/}$a${SRC:+.json}" --twins ${=GATE_ARGS}) > "$d/$a.log" 2>&1
   echo "$a exit $? $((SECONDS-s))s $(tail -1 "$d/$a.log")"
 done

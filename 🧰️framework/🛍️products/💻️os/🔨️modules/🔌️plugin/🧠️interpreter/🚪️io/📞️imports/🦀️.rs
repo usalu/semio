@@ -55,8 +55,8 @@ mod original_host{
  }
  /// ▶️ Host work follows its actual VM call receipt; no instruction budget or Source is issued here.
  pub fn advance(state:&mut OriginalHostState,core:&mut CoreInstanceOpening,module:&Arc<CoreModule>,receiver:Option<&mut dyn OriginalOperationReceiving>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
-  let mut before=source_clock_reply_frontier(state);
-  if advance_once(state,core,module,receiver,cx)?{return Ok(true)}
+  let _ledger=core.ledger_scope();let mut before=source_clock_reply_frontier(state);
+  let first=advance_once(state,core,module,receiver,cx)?;if first{return Ok(true)}
   for _ in 0..2{
    let after=source_clock_reply_frontier(state);
    if after.is_none()||after==before||cx.retained_grant().maximum_items==0||cx.fuel_remaining()==0{return Ok(false)}
@@ -110,7 +110,7 @@ mod original_host{
  fn argument_i32(call:&CoreOriginalHostCall<'_>,index:usize)->Result<i32,ValueError>{match call.arguments.get(index){Some(Value::I32(value))=>Ok(*value),_=>Err(refused("original host import requires its declared i32 argument"))}}
  fn argument_u64(call:&CoreOriginalHostCall<'_>,index:usize)->Result<u64,ValueError>{match call.arguments.get(index){Some(Value::I64(value))=>Ok(*value as u64),_=>Err(refused("original host import requires its declared u64 argument"))}}
  fn argument_size(call:&CoreOriginalHostCall<'_>,index:usize)->Result<usize,ValueError>{usize::try_from(argument_u64(call,index)?).map_err(|_|refused("original host extent exceeds native address space"))}
- fn charge(cx:&mut StepContext<'_>,copy:usize,capacity:usize,release:usize,retirement:bool)->Result<bool,OriginalTurnFailure>{let grant=cx.retained_grant();let work=1u64.saturating_add(u64::try_from(copy.div_ceil(64)).unwrap_or(u64::MAX));if cx.fuel_remaining()<work||(if retirement{cx.retirement_should_yield()}else{cx.should_yield()})||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<copy||grant.maximum_capacity_bytes<capacity||grant.maximum_release_bytes<release{return Ok(false)}cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:copy,retained_capacity_bytes:capacity,released_bytes:release})?;cx.consume_fuel(work);Ok(true)}
+ fn charge(cx:&mut StepContext<'_>,copy:usize,capacity:usize,release:usize,retirement:bool)->Result<bool,OriginalTurnFailure>{let grant=cx.retained_grant();let work=1u64.saturating_add(u64::try_from(copy.div_ceil(64)).unwrap_or(u64::MAX));if cx.fuel_remaining()<work||(if retirement{cx.retirement_should_yield()}else{cx.should_yield()})||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<copy||grant.maximum_capacity_bytes<capacity||grant.maximum_release_bytes<release{return Ok(false)}cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:copy,retained_capacity_bytes:capacity,released_bytes:release})?;cx.consume_fuel(work);semio_plugin_interpreter::tally(if retirement{semio_plugin_interpreter::RetainedCategory::Retirement}else{semio_plugin_interpreter::RetainedCategory::HostResults},copy);Ok(true)}
  fn refused(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::UnsupportedOwner,message)}
 }
 

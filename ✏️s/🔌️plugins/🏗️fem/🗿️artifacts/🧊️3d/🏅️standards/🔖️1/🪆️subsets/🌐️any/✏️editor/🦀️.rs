@@ -189,6 +189,10 @@ fem_pack_envelope_decode_owner_bundle!(fem3d_envelope_decode_owner_bundle, fem_p
 mod json_io_and_arg_helpers;
 pub use json_io_and_arg_helpers::*;
 
+#[path = "📋️clipboard/🦀️.rs"]
+mod clipboard;
+pub use clipboard::*;
+
 //#region 🔖️Fem3dPlayApp
 
 #[path = "🖥️play-app/🦀️.rs"]

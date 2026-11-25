@@ -172,19 +172,30 @@ impl TracePointerJob {
     }
 
     /// 🪪️ Every granted step and eventual publication refers to the exact complete cache.
-    pub fn validate_cache(&self,borrowed:&MountedSceneQuery<'_>)->Result<(),Fault>{
-        let live=PreparedSceneIdentity{source:borrowed.source,build:borrowed.build,flatness:borrowed.scene.flatness};
+    pub fn validate_cache(&self,borrowed:&MountedSceneQuery<'_>)->Result<(),Fault>{self.validate_scene(borrowed.scene,borrowed.source,borrowed.build)}
+
+    fn validate_scene(&self,scene:&semio_s_artifact_draw_drawing_scene_paint::scene::PreparedScene,source:semio_s_artifact_draw_drawing_scene::identity::SceneIdentity,build:u64)->Result<(),Fault>{
+        let live=PreparedSceneIdentity{source,build,flatness:scene.flatness};
         if self.cache_identity!=Some(live) {return Err(Fault::from("Drawing geometry changed during the pointer query"));}
         if let Some(error)=&self.failure {return Err(Fault::from(error.clone()));}
         Ok(())
     }
 
-    pub fn advance(&mut self,document:&DrawingSnapshot,borrowed:&MountedSceneQuery<'_>)->bool {
+    pub fn advance(&mut self,document:&DrawingSnapshot,borrowed:&MountedSceneQuery<'_>)->bool {self.advance_scene(document,borrowed.scene,borrowed.source,borrowed.build)}
+
+    /// 🧪️ The same checked step over the loose parts of a mounted query, for laws that cannot name the mounted query type of this crate's own dependency build.
+    #[cfg(feature="testkit")]
+    pub fn testkit_advance(&mut self,document:&DrawingSnapshot,scene:&semio_s_artifact_draw_drawing_scene_paint::scene::PreparedScene,source:semio_s_artifact_draw_drawing_scene::identity::SceneIdentity,build:u64)->bool{self.advance_scene(document,scene,source,build)}
+
+    /// 🧪️ The cache identity check over the loose parts of a mounted query.
+    #[cfg(feature="testkit")]
+    pub fn testkit_validate(&self,scene:&semio_s_artifact_draw_drawing_scene_paint::scene::PreparedScene,source:semio_s_artifact_draw_drawing_scene::identity::SceneIdentity,build:u64)->Result<(),Fault>{self.validate_scene(scene,source,build)}
+
+    fn advance_scene(&mut self,document:&DrawingSnapshot,scene:&semio_s_artifact_draw_drawing_scene_paint::scene::PreparedScene,source:semio_s_artifact_draw_drawing_scene::identity::SceneIdentity,build:u64)->bool {
         if self.overflowed{return true;}
-        let live=PreparedSceneIdentity{source:borrowed.source,build:borrowed.build,flatness:borrowed.scene.flatness};
+        let live=PreparedSceneIdentity{source,build,flatness:scene.flatness};
         if self.cache_identity.is_none(){self.cache_identity=Some(live);}
-        if let Err(error)=self.validate_cache(borrowed){self.failure=Some(error.message);self.overflowed=true;return true;}
-        let scene=borrowed.scene;
+        if let Err(error)=self.validate_scene(scene,source,build){self.failure=Some(error.message);self.overflowed=true;return true;}
         for _ in 0..TRACE_POINTER_WORK_PER_STEP {
             let Some(work)=self.work.pop()else{return true};self.completed_work+=1;
             let step=(||->Result<(),Fault>{

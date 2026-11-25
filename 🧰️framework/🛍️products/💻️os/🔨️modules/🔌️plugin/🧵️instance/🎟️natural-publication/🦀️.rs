@@ -12,6 +12,9 @@ use semio_plugin_decl_media::original_media::natural_source_gate::NaturalSourceD
 use std::future::Future;
 use semio_plugin_ownership::bounded_ownership::{PluginLifecycleFailure, PluginLifecycleStep, original_lifecycle_delta, original_lifecycle_step};
 
+#[path = "🎟️picker/🦀️.rs"]
+pub mod picker;
+
 pub struct NaturalFilePublication {
     pub source: OriginalSourceBinding,
     pub meta: Option<ActionMeta>,

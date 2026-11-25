@@ -4,6 +4,7 @@ import { expect, it } from "vitest";
 import { nextFrameSequence } from "@semio-tech/framework-renderer-wgpu/frame-turn-scheduler";
 import { COMPONENT_CLOSE_TURN_FIXTURE, FRAME_TURN_FIXTURE, TwoKindFrameTurnScheduler } from "../🧰️step-budget-fixtures/🟦️.ts";
 import type { WorkerTurnOwner } from "../🧰️step-budget-fixtures/🟦️.ts";
+import { launchChromium } from "../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🌐️chromium-launch/🟦️";
 
 /** 🎟 Registers the two kind scheduler contract, component close, frame and asset decode owner alternation and yielded owner close tests. */
 export function registerSchedulerContractAndOwnershipTests(): void {
@@ -37,8 +38,7 @@ export function registerSchedulerContractAndOwnershipTests(): void {
     expect(fixture.closeHost).not.toBe(fixture.liveHost);
     expect(fixture.maxCloseUnitsPerTurn).toBe(1);
 
-    const { chromium } = await import("playwright");
-    const browser = await chromium.launch({ headless: true });
+    const browser = await launchChromium();
     try {
       const page = await browser.newPage();
       const observed = await page.evaluate(async (law) => {

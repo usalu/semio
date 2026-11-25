@@ -51,6 +51,15 @@ export function accessibilityProjectionSelfTests(): number {
   }
   assert.equal(components.size, 19, "the fixture covers every one of the contract's 19 components");
 
+  const headings = (fixture as unknown as { readonly headings: readonly { readonly id: string; readonly component: Component; readonly role: string; readonly level: number | null }[] }).headings;
+  for (const [index, row] of headings.entries()) {
+    const node = uiAccessibilityProjectionNodeV1({ id: index, key: `#heading-${index}`, component: row.component, layout: { kind: "leaf", width: "hug", height: "hug" }, style: {}, activity: "idle", accessibility: {} } as UiNodeRecord, 4);
+    assert.equal(node.role, row.role, `${row.id}: role`);
+    assert.equal(node.level, row.level, `${row.id}: level`);
+    assert.equal(node.focusable, false, `${row.id}: a heading takes no focus of its own`);
+    checks += 3;
+  }
+
   const toggles = JSON.parse(readFileSync(fileURLToPath(new URL("../🧫️fixtures/♿️retained-toggle-semantics/🔣️.json", import.meta.url)), "utf8")) as { readonly cases: readonly ToggleCase[] };
   for (const [index, row] of toggles.cases.entries()) {
     const record = {

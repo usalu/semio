@@ -380,11 +380,12 @@ function nestedCargoGeneratedPrestate(repoRoot: string, path: string, generatorI
   } catch { return false; }
 }
 
-export function validateGeneratorContractsAgainstWorkspace(repoRoot: string, taxonomy: Taxonomy = readTaxonomyUnchecked()): string[] {
+export function validateGeneratorContractsAgainstWorkspace(repoRoot: string, taxonomy: Taxonomy = readTaxonomyUnchecked(), selected?: ReadonlySet<string>): string[] {
   const problems: string[] = [];
   const root = resolve(repoRoot);
   const catalog = semanticExactOwnedFileCatalog(root, taxonomy);
   for (const [id, contract] of Object.entries(taxonomy.generatorContracts ?? {})) {
+    if (selected && !selected.has(id)) continue;
     for (const consumer of contract.nativeConsumers ?? []) if (!existsSync(join(root, consumer, "Cargo.toml"))) problems.push(`generatorContracts[${JSON.stringify(id)}].nativeConsumers has no Cargo project at ${JSON.stringify(consumer)}.`);
     if (contract.target) {
       if (!contract.ownerPath) {

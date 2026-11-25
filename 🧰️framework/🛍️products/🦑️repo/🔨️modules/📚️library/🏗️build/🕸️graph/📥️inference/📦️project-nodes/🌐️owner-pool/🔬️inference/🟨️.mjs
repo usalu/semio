@@ -22,6 +22,10 @@ export const ownerPoolRevisionV1 = () => projectRecordKeyTextV1(null);
  * @see ../🧬️schema/🔣️.json */
 export const ownerPoolClosureStoreV1 = (fleetRoot, policy = P) => ({ directory: machinePathV1(fleetRoot, ".cache", "f", policy.closureStoreDirectory), limits: { closureStoreMaximumEntries: policy.closureStoreMaximumEntries, closureStoreMaximumLayers: policy.closureStoreMaximumLayers, closureStoreMaximumValues: policy.closureStoreMaximumValues } });
 
+/** 🧾️ The inference session of one pool child: what the publisher sent, under this machine's root, its shared closure store and the source analysis store beside that store. Every machine path of the session is this machine's own: the closure store path the publisher sent names a directory of the publisher (another platform's spelling, such as `C:\semio\…\ce` read on macOS, whose `dirname` is the working directory), so nothing is derived from it.
+ * @see ../../🟨️.mjs `analysisStoreDirectoryOfV1` */
+export const ownerPoolSessionV1 = ({ sent, root, shared, base }) => ({ ...sent, workspaceRoot: root, closureStore: shared.directory, closureStoreWritable: true, closureStoreLimits: shared.limits, analysisStore: analysisStoreDirectoryOfV1(shared.directory), stagingBase: base, authority: undefined });
+
 /** 🧷️ The fleet port of one pool child: the leaves of a record are read from the staging directory the child infers into first, then from the store of the machine, because the child removes its staging directory after the publication and the store of the machine never holds what the child inferred. */
 export const ownerPoolFleetPortV1 = ({ root, environment, client, staging }) => createProjectFleetPortV1({ root, environment, client, leaves: stagedLeafPortV1(staging, workspaceClosurePortV1(root)) });
 
@@ -36,7 +40,7 @@ export async function openOwnerPoolInferenceV1({ root, fleetRoot = root, environ
   ownerPoolStagingSweepV1({ parents: [realpathSync(tmpdir()), machinePathV1(fleetRoot, ".cache", "f", P.stagingFallbackDirectory)], own: base, io: ownerPoolStagingIoV1 });
   const sent = deserialize(bytes), shared = ownerPoolClosureStoreV1(fleetRoot);
   mkdirSync(shared.directory, { recursive: true });
-  const session = { ...sent, workspaceRoot: root, closureStore: shared.directory, closureStoreWritable: true, closureStoreLimits: shared.limits, analysisStore: analysisStoreDirectoryOfV1(sent.closureStore), stagingBase: base, authority: undefined };
+  const session = ownerPoolSessionV1({ sent, root, shared, base });
   await service.open(session, { slot: 0, generation: 1 });
   const port = ownerPoolFleetPortV1({ root, environment, client, staging: service.stagingDirectoryV1() });
   if (port === undefined) throw new Error("no fleet port");

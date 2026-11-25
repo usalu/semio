@@ -1,0 +1,460 @@
+{
+  "schema": "semio.os.mcp.component-models/1",
+  "rule": "A native child that lacks the retained component model of a plugin answers a retryable PLUGIN_UNAVAILABLE whose details name it as defined by the MissingModel and MissingModelDetails definitions of the component model schema (typed cause, plugin id, crate path, en + de summary). A launcher recognizes exactly that shape, in a tool error or a JSON-RPC error, and nothing else. The launcher compares the model manifest of the serving environment with the refreshed and with the on-demand rebuilt one: a different manifest marks the refresh changed (a swap is due) and makes an on-demand build report a changed model set.",
+  "missing": [
+    {
+      "name": "note",
+      "pluginId": "note",
+      "cratePath": "plugins/note/packages/rust",
+      "payload": {
+        "code": "PLUGIN_UNAVAILABLE",
+        "message": "Plugin `note` has no component model yet; the launcher is preparing it, retry in a moment.",
+        "details": {
+          "cause": "model-missing",
+          "missingModel": {
+            "pluginId": "note",
+            "cratePath": "plugins/note/packages/rust"
+          },
+          "summary": {
+            "en": "Plugin `note` has no component model yet; the launcher is preparing it, retry in a moment.",
+            "de": "Das Plugin `note` hat noch kein Komponentenmodell; der Starter bereitet es vor, gleich erneut versuchen."
+          }
+        },
+        "retryable": true
+      }
+    },
+    {
+      "name": "wfc-bitmap",
+      "pluginId": "wfc-bitmap",
+      "cratePath": "plugins/wfc/artifacts/bitmap/packages/rust",
+      "payload": {
+        "code": "PLUGIN_UNAVAILABLE",
+        "message": "Plugin `wfc-bitmap` has no component model yet; the launcher is preparing it, retry in a moment.",
+        "details": {
+          "cause": "model-missing",
+          "missingModel": {
+            "pluginId": "wfc-bitmap",
+            "cratePath": "plugins/wfc/artifacts/bitmap/packages/rust"
+          },
+          "summary": {
+            "en": "Plugin `wfc-bitmap` has no component model yet; the launcher is preparing it, retry in a moment.",
+            "de": "Das Plugin `wfc-bitmap` hat noch kein Komponentenmodell; der Starter bereitet es vor, gleich erneut versuchen."
+          }
+        },
+        "retryable": true
+      }
+    }
+  ],
+  "reads": [
+    {
+      "name": "tool-error",
+      "frame": {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "result": {
+          "isError": true,
+          "content": [
+            {
+              "type": "text",
+              "text": "Plugin `note` has no component model yet; the launcher is preparing it, retry in a moment."
+            }
+          ],
+          "structuredContent": {
+            "code": "PLUGIN_UNAVAILABLE",
+            "message": "Plugin `note` has no component model yet; the launcher is preparing it, retry in a moment.",
+            "details": {
+              "cause": "model-missing",
+              "missingModel": {
+                "pluginId": "note",
+                "cratePath": "plugins/note/packages/rust"
+              },
+              "summary": {
+                "en": "Plugin `note` has no component model yet; the launcher is preparing it, retry in a moment.",
+                "de": "Das Plugin `note` hat noch kein Komponentenmodell; der Starter bereitet es vor, gleich erneut versuchen."
+              }
+            },
+            "retryable": true
+          }
+        }
+      },
+      "read": {
+        "pluginId": "note",
+        "cratePath": "plugins/note/packages/rust"
+      }
+    },
+    {
+      "name": "json-rpc-error",
+      "frame": {
+        "jsonrpc": "2.0",
+        "id": 2,
+        "error": {
+          "code": -32603,
+          "message": "Plugin `note` has no component model yet; the launcher is preparing it, retry in a moment.",
+          "data": {
+            "gatewayCode": "PLUGIN_UNAVAILABLE",
+            "details": {
+              "cause": "model-missing",
+              "missingModel": {
+                "pluginId": "note",
+                "cratePath": "plugins/note/packages/rust"
+              },
+              "summary": {
+                "en": "Plugin `note` has no component model yet; the launcher is preparing it, retry in a moment.",
+                "de": "Das Plugin `note` hat noch kein Komponentenmodell; der Starter bereitet es vor, gleich erneut versuchen."
+              }
+            },
+            "retryable": true
+          }
+        }
+      },
+      "read": {
+        "pluginId": "note",
+        "cratePath": "plugins/note/packages/rust"
+      }
+    },
+    {
+      "name": "successful-result",
+      "frame": {
+        "jsonrpc": "2.0",
+        "id": 3,
+        "result": {
+          "content": [],
+          "structuredContent": {
+            "code": "PLUGIN_UNAVAILABLE",
+            "message": "Plugin `note` has no component model yet; the launcher is preparing it, retry in a moment.",
+            "details": {
+              "cause": "model-missing",
+              "missingModel": {
+                "pluginId": "note",
+                "cratePath": "plugins/note/packages/rust"
+              },
+              "summary": {
+                "en": "Plugin `note` has no component model yet; the launcher is preparing it, retry in a moment.",
+                "de": "Das Plugin `note` hat noch kein Komponentenmodell; der Starter bereitet es vor, gleich erneut versuchen."
+              }
+            },
+            "retryable": true
+          }
+        }
+      },
+      "read": null
+    },
+    {
+      "name": "other-unavailable-cause",
+      "frame": {
+        "jsonrpc": "2.0",
+        "id": 4,
+        "result": {
+          "isError": true,
+          "content": [],
+          "structuredContent": {
+            "code": "PLUGIN_UNAVAILABLE",
+            "message": "no shell is attached",
+            "details": {
+              "cause": "hub-unreachable",
+              "summary": {
+                "en": "x",
+                "de": "y"
+              }
+            },
+            "retryable": true
+          }
+        }
+      },
+      "read": null
+    },
+    {
+      "name": "malformed-plugin-id",
+      "frame": {
+        "jsonrpc": "2.0",
+        "id": 5,
+        "result": {
+          "isError": true,
+          "content": [],
+          "structuredContent": {
+            "code": "PLUGIN_UNAVAILABLE",
+            "message": "Plugin `note` has no component model yet; the launcher is preparing it, retry in a moment.",
+            "details": {
+              "cause": "model-missing",
+              "missingModel": {
+                "pluginId": "Note",
+                "cratePath": "plugins/note/packages/rust"
+              },
+              "summary": {
+                "en": "Plugin `note` has no component model yet; the launcher is preparing it, retry in a moment.",
+                "de": "Das Plugin `note` hat noch kein Komponentenmodell; der Starter bereitet es vor, gleich erneut versuchen."
+              }
+            },
+            "retryable": true
+          }
+        }
+      },
+      "read": null
+    },
+    {
+      "name": "other-gateway-code",
+      "frame": {
+        "jsonrpc": "2.0",
+        "id": 6,
+        "result": {
+          "isError": true,
+          "content": [],
+          "structuredContent": {
+            "code": "INTERNAL",
+            "message": "Plugin `note` has no component model yet; the launcher is preparing it, retry in a moment.",
+            "details": {
+              "cause": "model-missing",
+              "missingModel": {
+                "pluginId": "note",
+                "cratePath": "plugins/note/packages/rust"
+              },
+              "summary": {
+                "en": "Plugin `note` has no component model yet; the launcher is preparing it, retry in a moment.",
+                "de": "Das Plugin `note` hat noch kein Komponentenmodell; der Starter bereitet es vor, gleich erneut versuchen."
+              }
+            },
+            "retryable": true
+          }
+        }
+      },
+      "read": null
+    },
+    {
+      "name": "open-details",
+      "frame": {
+        "jsonrpc": "2.0",
+        "id": 7,
+        "result": {
+          "isError": true,
+          "content": [],
+          "structuredContent": {
+            "code": "PLUGIN_UNAVAILABLE",
+            "message": "Plugin `note` has no component model yet; the launcher is preparing it, retry in a moment.",
+            "details": {
+              "cause": "model-missing",
+              "missingModel": {
+                "pluginId": "note",
+                "cratePath": "plugins/note/packages/rust",
+                "root": "/x"
+              },
+              "summary": {
+                "en": "Plugin `note` has no component model yet; the launcher is preparing it, retry in a moment.",
+                "de": "Das Plugin `note` hat noch kein Komponentenmodell; der Starter bereitet es vor, gleich erneut versuchen."
+              }
+            },
+            "retryable": true
+          }
+        }
+      },
+      "read": null
+    },
+    {
+      "name": "no-details",
+      "frame": {
+        "jsonrpc": "2.0",
+        "id": 8,
+        "result": {
+          "isError": true,
+          "content": [],
+          "structuredContent": {
+            "code": "PLUGIN_UNAVAILABLE",
+            "message": "x",
+            "retryable": true
+          }
+        }
+      },
+      "read": null
+    },
+    {
+      "name": "path-artifact_create",
+      "frame": {
+        "jsonrpc": "2.0",
+        "id": 20,
+        "result": {
+          "isError": true,
+          "content": [
+            {
+              "type": "text",
+              "text": "Plugin `note` has no component model yet; the launcher is preparing it, retry in a moment."
+            }
+          ],
+          "structuredContent": {
+            "code": "PLUGIN_UNAVAILABLE",
+            "message": "Plugin `note` has no component model yet; the launcher is preparing it, retry in a moment.",
+            "details": {
+              "cause": "model-missing",
+              "missingModel": {
+                "pluginId": "note",
+                "cratePath": "plugins/note/packages/rust"
+              },
+              "summary": {
+                "en": "Plugin `note` has no component model yet; the launcher is preparing it, retry in a moment.",
+                "de": "Das Plugin `note` hat noch kein Komponentenmodell; der Starter bereitet es vor, gleich erneut versuchen."
+              },
+              "jobId": "job-1",
+              "artifactId": "a1",
+              "kind": "s.note.note",
+              "pluginId": "note",
+              "appId": "note"
+            },
+            "retryable": true
+          }
+        }
+      },
+      "read": {
+        "pluginId": "note",
+        "cratePath": "plugins/note/packages/rust"
+      }
+    },
+    {
+      "name": "path-inference_run",
+      "frame": {
+        "jsonrpc": "2.0",
+        "id": 20,
+        "result": {
+          "isError": true,
+          "content": [
+            {
+              "type": "text",
+              "text": "Plugin `note` has no component model yet; the launcher is preparing it, retry in a moment."
+            }
+          ],
+          "structuredContent": {
+            "code": "PLUGIN_UNAVAILABLE",
+            "message": "Plugin `note` has no component model yet; the launcher is preparing it, retry in a moment.",
+            "details": {
+              "cause": "model-missing",
+              "missingModel": {
+                "pluginId": "note",
+                "cratePath": "plugins/note/packages/rust"
+              },
+              "summary": {
+                "en": "Plugin `note` has no component model yet; the launcher is preparing it, retry in a moment.",
+                "de": "Das Plugin `note` hat noch kein Komponentenmodell; der Starter bereitet es vor, gleich erneut versuchen."
+              },
+              "field": "artifactId"
+            },
+            "retryable": true
+          }
+        }
+      },
+      "read": {
+        "pluginId": "note",
+        "cratePath": "plugins/note/packages/rust"
+      }
+    },
+    {
+      "name": "path-artifact_export",
+      "frame": {
+        "jsonrpc": "2.0",
+        "id": 20,
+        "result": {
+          "isError": true,
+          "content": [
+            {
+              "type": "text",
+              "text": "Plugin `note` has no component model yet; the launcher is preparing it, retry in a moment."
+            }
+          ],
+          "structuredContent": {
+            "code": "PLUGIN_UNAVAILABLE",
+            "message": "Plugin `note` has no component model yet; the launcher is preparing it, retry in a moment.",
+            "details": {
+              "cause": "model-missing",
+              "missingModel": {
+                "pluginId": "note",
+                "cratePath": "plugins/note/packages/rust"
+              },
+              "summary": {
+                "en": "Plugin `note` has no component model yet; the launcher is preparing it, retry in a moment.",
+                "de": "Das Plugin `note` hat noch kein Komponentenmodell; der Starter bereitet es vor, gleich erneut versuchen."
+              },
+              "pluginId": "note"
+            },
+            "retryable": true
+          }
+        }
+      },
+      "read": {
+        "pluginId": "note",
+        "cratePath": "plugins/note/packages/rust"
+      }
+    }
+  ],
+  "launches": [
+    {
+      "name": "model-built-on-demand-changes-the-model-set",
+      "atServe": null,
+      "atRefresh": null,
+      "afterBuild": "m1",
+      "built": true,
+      "changedAfterRefresh": false
+    },
+    {
+      "name": "model-appearing-in-the-background-marks-the-refresh-changed",
+      "atServe": null,
+      "atRefresh": "m1",
+      "afterBuild": "m1",
+      "built": false,
+      "changedAfterRefresh": true
+    },
+    {
+      "name": "same-model-set-is-unchanged",
+      "atServe": "m1",
+      "atRefresh": "m1",
+      "afterBuild": "m1",
+      "built": false,
+      "changedAfterRefresh": false
+    },
+    {
+      "name": "second-model-extends-the-set",
+      "atServe": "m1",
+      "atRefresh": "m1",
+      "afterBuild": "m2",
+      "built": true,
+      "changedAfterRefresh": false
+    }
+  ],
+  "paths": [
+    {
+      "name": "action_prepare",
+      "viaFault": true,
+      "context": null
+    },
+    {
+      "name": "artifact_create",
+      "viaFault": false,
+      "context": {
+        "jobId": "job-1",
+        "artifactId": "a1",
+        "kind": "s.note.note",
+        "pluginId": "note",
+        "appId": "note"
+      }
+    },
+    {
+      "name": "inference_run",
+      "viaFault": true,
+      "context": {
+        "field": "artifactId"
+      }
+    },
+    {
+      "name": "artifact_export",
+      "viaFault": false,
+      "context": {
+        "pluginId": "note"
+      }
+    },
+    {
+      "name": "artifact_validate",
+      "viaFault": false,
+      "context": null
+    },
+    {
+      "name": "artifact_open",
+      "viaFault": false,
+      "context": null
+    }
+  ]
+}

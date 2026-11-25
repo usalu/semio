@@ -77,7 +77,6 @@ fn retained_map_key_replacement_and_removal_retire_the_old_gesture_without_input
 
 #[test]
 fn retained_map_same_host_sibling_rebase_retires_engine_interaction_owner() {
-    let mut caller=crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     let _guard = engine_surface_law_guard();
     let contract: Value = serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🪪️scene-pointer-owner/🔣️.json")).expect("scene pointer owner contract");
     let fixture = fixture();
@@ -135,14 +134,7 @@ fn retained_map_same_host_sibling_rebase_retires_engine_interaction_owner() {
     for host in hosts {
         drop_engine_surface(&host);
     }
-    assert!(semio_renderer_wgpu_ui_engine::retained_ui_engine::request_ui_document_close(window_id));
-    for _ in 0..262_144 {
-        if !semio_renderer_wgpu_ui_engine::retained_ui_engine::ui_document_close_pending() {
-            break;
-        }
-        caller.turn(|cx|semio_renderer_wgpu_ui_engine::retained_ui_engine::close_ui_document_one(cx)).expect("original fixture caller turn");
-        semio_renderer_wgpu_host_winit::os_host::finish_retired_cpu_only_map_fixture_close();
-    }
+    retire_surface_caller_window(window_id, semio_renderer_wgpu_host_winit::os_host::finish_retired_cpu_only_map_fixture_close);
     assert!(!semio_renderer_wgpu_ui_engine::retained_ui_engine::ui_document_close_pending(), "the retained Map window returns every bounded owner");
     for mut document in documents {
         while !document.close_step() {}
@@ -153,7 +145,6 @@ fn retained_map_same_host_sibling_rebase_retires_engine_interaction_owner() {
     assert!(gesture_retired, "the accepted same-host identity retires the local Map gesture");
     assert!(!gesture_live, "the accepted retirement clears the local Map gesture");
     assert!(!duplicate_retired, "the same retirement already consumed the EngineCanvas interaction owner");
-    caller.finish();
 }
 
 /// 🔗️ `map_tile_url` is React's own `urlTemplate.replace("{z}", …).replace("{x}", …).replace("{y}", …)`.
@@ -226,7 +217,7 @@ fn map_device_loss_recovery_restores_the_live_camera_on_retry() {
         }).collect();
         assert_eq!(serde_json::to_value(&states).unwrap(), case["states"], "{}", case["name"]);
         let restored = record.retry();
-        assert_eq!(restored.map(|camera| serde_json::json!(camera)), (!case["restored"].is_null()).then(|| case["restored"].clone()), "{}", case["name"]);
+        assert_eq!(restored, serde_json::from_value::<Option<[f64; 3]>>(case["restored"].clone()).expect("restored camera"), "{}", case["name"]);
         if restored.is_some() {
             assert_eq!(record.state, MapRendererState::Running);
         }

@@ -13,18 +13,90 @@
    "de": "Eine Schrankwand der 1980er Jahre in Eichenoptik aus drei 0,90-m-Teilen, 2,70 x 0,53 x 2,00 m und 254 kg, bei einer Haushaltsauflösung zerlegt und auf gefalteten Möbeldecken gelagert: ein zweitüriger Wäscheschrank, ein Mittelteil mit zwei Schubkästen, einer verspiegelten Bar hinter einer Klappe, deren 35-W-Licht beim Öffnen angeht, und einer Glasvitrine, sowie ein TV-Teil mit offener Nische. Die Sonne hat die rechte Seite ausgebleicht, ein Knopf fehlt, ein Schubkastengriff wurde ersetzt und auf dem Glas klebt ein Preisetikett."
   },
   "tags": [
-   "used",
-   "household",
-   "second-hand",
-   "living",
-   "wall-unit",
-   "storage",
-   "chipboard",
-   "oak-decor",
-   "display-cabinet",
-   "bar-compartment",
-   "1980s",
-   "interior"
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "household",
+    "title": {
+     "en": "household",
+     "de": "Haushalt"
+    }
+   },
+   {
+    "id": "second-hand",
+    "title": {
+     "en": "second-hand",
+     "de": "Second-Hand"
+    }
+   },
+   {
+    "id": "living",
+    "title": {
+     "en": "living",
+     "de": "Wohnen"
+    }
+   },
+   {
+    "id": "wall-unit",
+    "title": {
+     "en": "wall unit",
+     "de": "Wandschrank"
+    }
+   },
+   {
+    "id": "storage",
+    "title": {
+     "en": "storage",
+     "de": "Lagerung"
+    }
+   },
+   {
+    "id": "chipboard",
+    "title": {
+     "en": "chipboard",
+     "de": "Spanplatte"
+    }
+   },
+   {
+    "id": "oak-decor",
+    "title": {
+     "en": "oak decor",
+     "de": "Eichendekor"
+    }
+   },
+   {
+    "id": "display-cabinet",
+    "title": {
+     "en": "display cabinet",
+     "de": "Vitrine"
+    }
+   },
+   {
+    "id": "bar-compartment",
+    "title": {
+     "en": "bar compartment",
+     "de": "Barfach"
+    }
+   },
+   {
+    "id": "1980s",
+    "title": {
+     "en": "1980s",
+     "de": "1980er"
+    }
+   },
+   {
+    "id": "interior",
+    "title": {
+     "en": "interior",
+     "de": "Innenausbau"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content (used household objects wave)",

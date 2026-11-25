@@ -21,13 +21,13 @@ test("Native JSON resource admission uses the canonical owned Binary64 domain",a
   const pattern=parsePdfPattern(pdfPatternFromNativeJson(fixture.pattern));if(pattern.kind.kind!=="tiling")throw new Error("Fixture pattern");expect(pattern.kind.xStep).toEqual({bits:0x3ff0000000000000n});
 });
 
-test("PDF image resources preserve logical samples and foreign artifact references, masks and complete semantic fields",async()=>{
+test("PDF image resources preserve native packed rows and foreign artifact references, masks and complete semantic fields",async()=>{
   const fixture=JSON.parse(await Bun.file(new URL("../../🖼️resource/🧪️tests/🧫️fixtures/🔣️.json",import.meta.url)).text(),(key,value)=>key==="bits"?BigInt(value):value);
   for(const [index,body]of(fixture.bodies as PdfImageBody[]).entries()){
     const mask:PdfImageMask|null=fixture.masks[index%fixture.masks.length];const value:PdfImage={...fixture.image,body,mask,matte:index%2===0?null:[]};
     const out=await PdfProjection.create(PDF17_SQLITE_SCHEMA,{},pdfResourceNumberColumns);const root=await writePdfImage(out,value);const bytes=await exportSqliteDatabase(await out.finish());const sql=Database.deserialize(bytes);
     expect(sql.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});expect(sql.query("PRAGMA foreign_key_check").all()).toEqual([]);
-    expect(sql.query("SELECT resource_name,CAST(width AS TEXT) AS width,body_kind,matte_present FROM pdf_image").get()).toEqual({resource_name:value.id,width:"4294967295",body_kind:body.kind,matte_present:index%2});
+    expect(sql.query("SELECT resource_name,CAST(width AS TEXT) AS width,body_kind,matte_present,hex(packed) AS packed FROM pdf_image").get()).toEqual({resource_name:value.id,width:"4294967295",body_kind:body.kind,matte_present:index%2,packed:body.kind==="samples"?Buffer.from(body.packed).toString("hex").toUpperCase():""});expect(()=>sql.exec(body.kind==="samples"?"UPDATE pdf_image SET packed=NULL":"UPDATE pdf_image SET packed=X'00'")).toThrow("CHECK constraint failed");
     const reader=await PdfReader.create(await importSqliteDatabase(bytes),PDF17_SQLITE_SCHEMA,{},pdfResourceNumberColumns);expect(await readPdfImage(reader,root)).toEqual(value);await reader.finish();sql.close();
   }
 },{timeout:30_000});

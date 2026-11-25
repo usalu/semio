@@ -42,6 +42,15 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     while (cursor.closeStep({ maxItems: 1, maxBytes: 4096 }).kind !== "complete") {}
   });
 
+  it("carries a text heading level exactly and refuses a level outside 1 to 6", () => {
+    const owner = prepared("component", { type: "text", value: "Pages", emphasize: true, headingLevel: 2 });
+    expect(owner.value).toEqual({ type: "text", value: "Pages", emphasize: true, dataAttributes: null, headingLevel: 2 });
+    const retirement = owner.beginClose();
+    while (!retirement.terminalIsEmpty()) retirement.advance({ maxItems: 1, maxBytes: 4096 });
+    expect(prepared("component", { type: "text", value: "Body" }).value).toEqual({ type: "text", value: "Body", emphasize: null, dataAttributes: null });
+    for (const headingLevel of [0, 7, 1.5, "2"]) expect(() => prepared("component", { type: "text", value: "Bad", headingLevel })).toThrow();
+  });
+
   it("preserves the retained image source byte count and inline image default", () => {
     const oracle = new Ajv().compile({ type: "object", required: ["type", "src"], additionalProperties: false, properties: { type: { const: "image" }, src: { type: "string" }, sourceBodyBytes: { type: "integer", minimum: 0, maximum: 4294967295 } } });
     for (const row of typedFixture.components.filter(candidate => candidate.wire.type === "image")) {

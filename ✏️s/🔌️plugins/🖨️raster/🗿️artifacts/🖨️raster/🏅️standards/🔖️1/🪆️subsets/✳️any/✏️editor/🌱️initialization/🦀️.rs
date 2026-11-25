@@ -6,7 +6,7 @@ use crate::{RasterPlayApp,config::initialization::RasterConfigGenesis,store_prep
 use semio_s_artifact_raster_raster_model::{snapshot::RasterSnapshot as State,RASTER_DOCUMENT_SCHEMA,RASTER_DIALECT};
 use semio_s_artifact_raster_raster_mutations::RasterMutation as Mutation;
 use semio_s_artifact_raster_raster_host::{RasterSnapshotRetirementFactory,RasterMutationRetirementFactory};
-use semio_plugin_ownership::original_store_genesis::{OriginalStoreGenesisOwner,OriginalFixedStoreInitial,FixedStoreInitial};
+use semio_plugin_store_lifecycle::original_store_genesis::{OriginalStoreGenesisOwner,OriginalFixedStoreInitial,FixedStoreInitial};
 use semio_framework_value::{RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,ValueError,ValueRefusalKind,retained_clone::RetainedCloneBirthDemand};
 use semio_framework_dsl_record::{BorrowedDslRecord,BorrowedRecordSpec,native_encoding::{FieldProjectionSource,FieldProjectionView}};
 use std::mem::size_of;

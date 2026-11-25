@@ -7,5 +7,8 @@ pub fn diff(payload: &InsertColumn, base: &En1994Snapshot) -> protocol::Mutation
     if payload.index > base.columns.len() {
         return protocol::MutationOutcome::error("mutation.target-missing", "index out of range", [payload.index.to_string()]);
     }
+    if base.columns.iter().any(|row| row.id == payload.column.id) {
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A column with id '{}' already exists.", payload.column.id), [payload.column.id.clone()]);
+    }
     protocol::MutationOutcome::new(En1994Diff { columns: Some(En1994ColumnsRows::insertion(payload.index, payload.column.clone())), ..Default::default() })
 }

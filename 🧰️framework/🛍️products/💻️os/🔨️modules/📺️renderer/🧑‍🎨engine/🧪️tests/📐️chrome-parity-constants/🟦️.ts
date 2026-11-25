@@ -37,10 +37,11 @@ describe("📐️ chrome parity constants", () => {
     expect(constants.toast.maxWidthFraction).toBe(0.5);
   });
 
-  test("the panel tab bar paints the insert bar and the nest fill the schema names", () => {
+  test("the panel tab bar's insert slot and nest are drop places, tinted by the shared places cases", () => {
     const bar = uiSource("🧱️elements", "🧭️PanelTabBar", "🟦️.tsx");
-    expect(bar).toContain(`w-${constants.panelDrop.insertBarWidthPx / 4} `);
-    expect(bar).toContain(`bg-accent/${constants.panelDrop.nestFillAlpha * 100}`);
+    expect(bar).toContain("dropPlaceAttributes(");
+    expect(bar).toContain("insertSlot(");
+    expect(bar).not.toMatch(/\bw-0\.5\b|bg-accent\/20/);
     expect(uiSource("🔨️modules", "🎨️chrome-class-names", "🟦️.ts")).toContain("--accent-secondary");
   });
 

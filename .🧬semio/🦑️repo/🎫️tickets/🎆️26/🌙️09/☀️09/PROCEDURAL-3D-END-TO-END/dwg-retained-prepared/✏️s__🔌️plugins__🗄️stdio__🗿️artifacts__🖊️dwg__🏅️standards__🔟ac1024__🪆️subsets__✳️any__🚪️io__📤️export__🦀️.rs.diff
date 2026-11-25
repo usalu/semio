@@ -1,0 +1,18 @@
+--- a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📤️export/🦀️.rs
++++ b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📤️export/🦀️.rs
+@@ -90,6 +90,7 @@
+     content: Vec<u8>,
+     stored: Option<(u32, u32)>,
+ }
++semio_framework_value::artifact_retire_struct!(R2004Section { id, name, content, stored });
+ 
+ impl R2004Section {
+     fn compressed(id: u32, name: &'static str, content: Vec<u8>) -> Self {
+@@ -183,6 +184,7 @@
+     section_map_page_number: u32,
+     last_page_number: u32,
+ }
++semio_framework_value::artifact_retire_struct!(R2004Layout { prefix, section_info, page_map, section_info_allocation, section_map_allocation, section_map_page_number, last_page_number });
+ 
+ // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+ fn layout_r2004(snapshot: &DwgSnapshot, mut descriptors: Vec<R2004SectionDescriptor>, pages: &[EncodedR2004Page], application_history: &[u8]) -> Result<R2004Layout, String> {

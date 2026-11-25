@@ -1,7 +1,7 @@
 //! 🎚️ Test host of `window_config`: the laws that name the facade test fixtures run in the facade test build.
 use semio_plugin_window_config::retained::ErasedWindowConfigPackLoad;
 use semio_plugin_window_config::WindowConfigOwner;
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use semio_plugin_ownership::bounded_ownership::PluginLifecycleStep;
 use semio_os_kernel as protocol;
 use semio_os_kernel as store;

@@ -5,10 +5,10 @@ import { normWireLiteral, normWireNumber, normWireObject, normWireRange, type No
 import { parseThermalMassClass, type ThermalMassClass } from "../../../📸️snapshot/🟦️.ts";
 
 export interface ChangeZoneThermalMass {
-  mutation: "changezonethermalmass";
+  mutation: "changeZoneThermalMass";
   zoneId: string;
   newThermalMassClass: ThermalMassClass;
   newCWirkWhM2k: number;
 }
 
-export const parseChangeZoneThermalMass: NormWireReader<ChangeZoneThermalMass> = normWireObject<ChangeZoneThermalMass>({ mutation: normWireRequired(normWireLiteral("changezonethermalmass")), zoneId: normWireRequired(normWireString), newThermalMassClass: normWireRequired(parseThermalMassClass), newCWirkWhM2k: normWireRequired(normWireRange(normWireNumber, {"maximum":1000,"exclusiveMinimum":0})) });
+export const parseChangeZoneThermalMass: NormWireReader<ChangeZoneThermalMass> = normWireObject<ChangeZoneThermalMass>({ mutation: normWireRequired(normWireLiteral("changeZoneThermalMass")), zoneId: normWireRequired(normWireString), newThermalMassClass: normWireRequired(parseThermalMassClass), newCWirkWhM2k: normWireRequired(normWireRange(normWireNumber, {"maximum":1000,"exclusiveMinimum":0})) });

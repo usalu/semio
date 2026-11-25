@@ -44,7 +44,8 @@
           "coldFormingRadius": null,
           "webMaterialId": null,
           "torsionLoad": "Point",
-          "torquePosition": null
+          "torquePosition": null,
+          "warpingSupport": null
         }
       }
     ]

@@ -1,4 +1,4 @@
 [
-  {"op": "front-sweep", "scale": "100", "id": "shirt"},
+  {"op": "extrude", "scale": "100", "id": "shirt", "view": "front", "fit": true},
   {"op": "copy", "scale": "100", "id": "shirt", "from": "front", "to": ["plan"]}
 ]

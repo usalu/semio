@@ -1,0 +1,22 @@
+sliding-door | exit 0 | 20 s | peak 476 MB | status {'ok': 252} 
+storage-crate-stack | exit 0 | 97 s | peak 271 MB | status {'ok': 252} 
+glulam-beam | exit 0 | 11 s | peak 479 MB | status {'ok': 252} 
+reclaimed-cast-iron-column | exit 0 | 397 s | peak 273 MB | status {'ok': 252} 
+reclaimed-precast-stair | exit 0 | 72 s | peak 591 MB | status {'ok': 252} 
+reclaimed-trapezoidal-sheet-stack | exit 0 | 41 s | peak 627 MB | status {'ok': 252} 
+sectional-garage-door | exit 0 | 593 s | peak 526 MB | status {'group-drift': 56, 'ok': 196} 
+used-air-water-heat-pump-monobloc | exit 0 | 52 s | peak 438 MB | status {'ok': 252} 
+used-forced-draught-oil-burner | exit 0 | 54 s | peak 312 MB | status {'unavailable': 21, 'ok': 231} 
+used-pellet-boiler | exit 0 | 158 s | peak 392 MB | status {'ok': 252} 
+used-towel-radiator | exit 0 | 155 s | peak 258 MB | status {'unavailable': 21, 'ok': 231} 
+used-wall-hung-gas-boiler | exit 0 | 109 s | peak 323 MB | status {'unavailable': 21, 'ok': 231} 
+diesel-generator | exit 0 | 156 s | peak 551 MB | status {'ok': 224, 'group-drift': 28} 
+evaporative-humidifier | exit 0 | 27 s | peak 227 MB | status {'unavailable': 21, 'ok': 175, 'group-drift': 56} 
+forklift | exit 0 | 264 s | peak 615 MB | status {'ok': 84, 'group-drift': 147, 'range-end': 21} 
+scroll-compressor | exit 0 | 20 s | peak 256 MB | status {'unavailable': 21, 'ok': 231} 
+cargo-bike | exit 0 | 611 s | peak 543 MB | status {'ok': 210, 'group-drift': 42} 
+city-bicycle | exit 0 | 849 s | peak 540 MB | status {'unavailable': 21, 'ok': 231} 
+city-bus | exit 0 | 192 s | peak 714 MB | status {'ok': 140, 'group-drift': 112} 
+city-car | exit 0 | 195 s | peak 762 MB | status {'ok': 210, 'group-drift': 42} 
+motor-scooter | exit 0 | 493 s | peak 403 MB | status {'ok': 224, 'group-drift': 28} 
+vintage-car-1929 | exit 0 | 183 s | peak 705 MB | status {'ok': 196, 'group-drift': 56} 

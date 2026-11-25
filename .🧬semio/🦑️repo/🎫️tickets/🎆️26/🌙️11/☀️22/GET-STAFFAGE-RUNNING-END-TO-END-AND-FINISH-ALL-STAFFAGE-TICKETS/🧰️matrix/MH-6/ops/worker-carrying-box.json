@@ -1,9 +1,7 @@
 [
-  {"op": "thicken", "scale": "50", "view": "plan", "id": "upper-arm-l"},
   {"op": "plan-revolve", "scale": "50", "id": "thigh-l"},
   {"op": "plan-revolve", "scale": "50", "id": "shank-l"},
   {"op": "front-sweep", "scale": "50", "id": "neck"},
-  {"op": "thicken", "scale": "50", "view": "plan", "id": "upper-arm-r"},
   {"op": "front-sweep", "scale": "100", "id": "thigh-l"},
   {"op": "plan-revolve", "scale": "100", "id": "thigh-l"},
   {"op": "front-sweep", "scale": "100", "id": "shank-l"},
@@ -31,8 +29,6 @@
   {"op": "front-sweep", "scale": "500", "id": "shank-r"},
   {"op": "plan-revolve", "scale": "500", "id": "shank-r"},
   {"op": "plan-prism", "scale": "500", "id": "pelvis"},
-  {"op": "copy", "scale": "50", "id": "hand-l", "from": "elevation", "to": ["front"]},
-  {"op": "copy", "scale": "50", "id": "hand-r", "from": "elevation", "to": ["front"]},
   {"op": "front-sweep", "scale": "500", "id": "helmet", "twin": ["helmet", "head"]},
   {"op": "core", "scale": "100", "id": "vest"},
   {"op": "core", "scale": "100", "id": "pelvis"}

@@ -17,7 +17,9 @@ pub struct ClockStride {
 }
 
 impl ClockStride {
-    pub const TARGET_READ_INTERVAL_US: u64 = 64;
+    /// 🪜️ The ONE bound of the stride: a real read lands about this many µs of work apart, and a deadline is overshot by at most this much (plus one unit). It was 64 µs, which in the browser guest is one jco async task per 64 µs of work: `operationClockUs` measured 14.4% inclusive of a 20 s guest turn (`📓️guest-turns-2026-11-25.md`).
+    pub const TARGET_READ_INTERVAL_US: u64 = 512;
+    /// 🧮️ The most calls (and, through [`ClockStride::note_work`], declared work units) a calibrated stride may answer from its last reading.
     pub const MAXIMUM_STRIDE: u32 = 4_096;
 
     pub const fn new() -> Self {
@@ -51,6 +53,12 @@ impl ClockStride {
         self.last_read_us = Some(now);
         self.remaining = self.stride - 1;
         Some(now)
+    }
+
+    /// ⚖️ Charges a unit that DECLARES `units` of work against the stride: it answers `units` calls from the last reading, not one, so a unit dearer than the calibration (a stride grown on cheap units meeting an expensive one) forces the next call to read the real clock instead of overshooting by `stride x unit cost`. Never reads the clock itself.
+    pub fn note_work(&mut self, units: u64) {
+        let extra = units.saturating_sub(1).min(u64::from(self.remaining));
+        self.remaining -= extra as u32;
     }
 
     /// 🕰️ The last reading, without reading the clock.

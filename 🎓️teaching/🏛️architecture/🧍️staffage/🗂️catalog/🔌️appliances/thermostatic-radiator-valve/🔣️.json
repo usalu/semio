@@ -13,15 +13,69 @@
       "de": "Ein Thermostat-Winkeleckventil DN 15 in Richtung der Kopfachse gesehen: der Messingkörper mit dem von unten kommenden Rohr und der Verschraubung mit Schraubnippel zum Heizkörper sowie ein Thermostatkopf von 53 mm, dessen Handrad von der Frostschutzstufe auf Stufe 5 dreht, wobei Durchfluss und Kopfwärme ihm folgen."
     },
     "tags": [
-      "valve",
-      "thermostatic-valve",
-      "radiator-valve",
-      "hydronic",
-      "hydraulic-balancing",
-      "heating-control",
-      "component",
-      "hot-water",
-      "dial"
+      {
+        "id": "valve",
+        "title": {
+          "en": "valve",
+          "de": "Ventil"
+        }
+      },
+      {
+        "id": "thermostatic-valve",
+        "title": {
+          "en": "thermostatic valve",
+          "de": "Thermostatventil"
+        }
+      },
+      {
+        "id": "radiator-valve",
+        "title": {
+          "en": "radiator valve",
+          "de": "Heizkörperventil"
+        }
+      },
+      {
+        "id": "hydronic",
+        "title": {
+          "en": "hydronic",
+          "de": "wasserführend"
+        }
+      },
+      {
+        "id": "hydraulic-balancing",
+        "title": {
+          "en": "hydraulic balancing",
+          "de": "hydraulischer Abgleich"
+        }
+      },
+      {
+        "id": "heating-control",
+        "title": {
+          "en": "heating control",
+          "de": "Heizungsregelung"
+        }
+      },
+      {
+        "id": "component",
+        "title": {
+          "en": "component",
+          "de": "Bauteil"
+        }
+      },
+      {
+        "id": "hot-water",
+        "title": {
+          "en": "hot water",
+          "de": "Warmwasser"
+        }
+      },
+      {
+        "id": "dial",
+        "title": {
+          "en": "dial",
+          "de": "Drehregler"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage content (G1)",

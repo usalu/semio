@@ -3,6 +3,7 @@ import { join } from "node:path";
 
 /** 🛠️ [DEBUG] Native activation of the standalone XLSX pane, mirroring `ActivationScript` without the issued invocation: support digest, per-component digests and the receipt. */
 const root = "/Users/ueli/Documents/semio";
+process.env.SEMIO_PLUGIN_CATALOG ??= join(root, "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated");
 const variant = "stdio-xlsx", profile = "prototype" as const;
 const dev = join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev");
 const activation = await import(join(dev, "♻️activation/🟦️.ts"));

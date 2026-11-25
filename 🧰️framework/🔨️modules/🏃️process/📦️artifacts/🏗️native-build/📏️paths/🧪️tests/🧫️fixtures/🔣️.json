@@ -1957,6 +1957,18 @@
       "profile": "prototype"
     },
     {
+      "packageName": "semio-plugin-store-lifecycle",
+      "crateName": "semio_plugin_store_lifecycle",
+      "platform": "wasm32-wasip2",
+      "profile": "prototype"
+    },
+    {
+      "packageName": "semio-plugin-transient-publication",
+      "crateName": "semio_plugin_transient_publication",
+      "platform": "wasm32-wasip2",
+      "profile": "prototype"
+    },
+    {
       "packageName": "semio-plugin-peer",
       "crateName": "semio_plugin_peer",
       "platform": "wasm32-wasip2",
@@ -3625,6 +3637,54 @@
       "profile": "prototype"
     },
     {
+      "packageName": "semio-s-artifact-stdio-dwg-snapshot-objects-metadata",
+      "crateName": "semio_s_artifact_stdio_dwg_snapshot_objects_metadata",
+      "platform": "wasm32-wasip2",
+      "profile": "prototype"
+    },
+    {
+      "packageName": "semio-s-artifact-stdio-dwg-snapshot-objects-xrecord",
+      "crateName": "semio_s_artifact_stdio_dwg_snapshot_objects_xrecord",
+      "platform": "wasm32-wasip2",
+      "profile": "prototype"
+    },
+    {
+      "packageName": "semio-s-artifact-stdio-dwg-snapshot-objects-tables",
+      "crateName": "semio_s_artifact_stdio_dwg_snapshot_objects_tables",
+      "platform": "wasm32-wasip2",
+      "profile": "prototype"
+    },
+    {
+      "packageName": "semio-s-artifact-stdio-dwg-snapshot-objects-associativity",
+      "crateName": "semio_s_artifact_stdio_dwg_snapshot_objects_associativity",
+      "platform": "wasm32-wasip2",
+      "profile": "prototype"
+    },
+    {
+      "packageName": "semio-s-artifact-stdio-dwg-snapshot-objects-entities",
+      "crateName": "semio_s_artifact_stdio_dwg_snapshot_objects_entities",
+      "platform": "wasm32-wasip2",
+      "profile": "prototype"
+    },
+    {
+      "packageName": "semio-s-artifact-stdio-dwg-snapshot-objects-styles",
+      "crateName": "semio_s_artifact_stdio_dwg_snapshot_objects_styles",
+      "platform": "wasm32-wasip2",
+      "profile": "prototype"
+    },
+    {
+      "packageName": "semio-s-artifact-stdio-dwg-snapshot-objects-constraints",
+      "crateName": "semio_s_artifact_stdio_dwg_snapshot_objects_constraints",
+      "platform": "wasm32-wasip2",
+      "profile": "prototype"
+    },
+    {
+      "packageName": "semio-s-artifact-stdio-dwg-snapshot-objects-blocks",
+      "crateName": "semio_s_artifact_stdio_dwg_snapshot_objects_blocks",
+      "platform": "wasm32-wasip2",
+      "profile": "prototype"
+    },
+    {
       "packageName": "semio-s-artifact-stdio-dwg-snapshot-objects",
       "crateName": "semio_s_artifact_stdio_dwg_snapshot_objects",
       "platform": "wasm32-wasip2",
@@ -4549,6 +4609,12 @@
       "profile": "prototype"
     },
     {
+      "packageName": "semio-s-artifact-stdio-pdf-lifter",
+      "crateName": "semio_s_artifact_stdio_pdf_lifter",
+      "platform": "wasm32-wasip2",
+      "profile": "prototype"
+    },
+    {
       "packageName": "semio-s-artifact-stdio-pdf-lower",
       "crateName": "semio_s_artifact_stdio_pdf_lower",
       "platform": "wasm32-wasip2",
@@ -4737,6 +4803,18 @@
     {
       "packageName": "semio-s-artifact-stdio-pdf-mutations-2",
       "crateName": "semio_s_artifact_stdio_pdf_mutations_2",
+      "platform": "wasm32-wasip2",
+      "profile": "prototype"
+    },
+    {
+      "packageName": "semio-s-artifact-stdio-pdf-page-content",
+      "crateName": "semio_s_artifact_stdio_pdf_page_content",
+      "platform": "wasm32-wasip2",
+      "profile": "prototype"
+    },
+    {
+      "packageName": "semio-s-artifact-stdio-pdf-page-tree",
+      "crateName": "semio_s_artifact_stdio_pdf_page_tree",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },

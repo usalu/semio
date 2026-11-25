@@ -88,7 +88,7 @@ fn utilisation_colouring_follows_the_governing_check() {
     let (scene, report) = scene_of(&compliant(), &[]);
     let member = entity(&scene, "member-b1");
     let binding = member.utilisation.as_ref().expect("binding");
-    let expected = report.checks.iter().filter(|c| c.status != norm::CheckStatus::NotApplicable).filter(|c| ["member-b1", "fat-1", "fire-1", "br-1", "tw-1", "crane-1"].contains(&c.subject.entity_id.as_str())).map(|c| c.utilization).fold(0.0_f64, f64::max);
+    let expected = report.checks.iter().filter(|c| !matches!(c.status, norm::CheckStatus::NotApplicable | norm::CheckStatus::Info)).filter(|c| ["member-b1", "fat-1", "fire-1", "br-1", "tw-1", "crane-1"].contains(&c.subject.entity_id.as_str())).map(|c| c.utilization).fold(0.0_f64, f64::max);
     assert!((binding.ratio - expected).abs() < 1e-12);
     assert_eq!(member.appearance.channel, scene::ColourChannel::Utilisation);
 }
@@ -275,7 +275,8 @@ fn focus_narrows_the_diagram_set() {
     let document = compliant();
     let report = checks::check_full_steel_structure(&document);
     let fatigue_only = diagrams(&document, &report, Some("fat-1"));
-    assert_eq!(fatigue_only.iter().map(|d| d.id.as_str()).collect::<Vec<_>>(), vec!["sn:fat-1"]);
+    let ids: Vec<&str> = fatigue_only.iter().map(|d| d.id.as_str()).collect();
+    assert!(ids.contains(&"sn:fat-1") && ids.iter().all(|id| id.ends_with(":fat-1")), "{ids:?}");
     assert!(diagrams(&document, &report, Some("nothing")).is_empty());
 }
 
@@ -758,7 +759,7 @@ fn every_check_carrying_collection_gets_a_utilisation_ladder() {
     }
     for diagram in all.iter().filter(|d| d.id.starts_with("ladder:")) {
         assert_eq!(diagram.validate(), Ok(()), "{}", diagram.id);
-        assert_eq!(diagram.table_twin.columns[1].values.len(), diagram.annotations.len());
+        assert_eq!(diagram.table_twin.columns[1].values.len(), diagram.plotted_notes().count());
     }
 }
 

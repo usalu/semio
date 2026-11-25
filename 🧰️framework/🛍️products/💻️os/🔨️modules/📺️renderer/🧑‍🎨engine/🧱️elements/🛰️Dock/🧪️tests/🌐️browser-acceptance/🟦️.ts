@@ -2,7 +2,8 @@
 import assert from "node:assert/strict";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { isAbsolute, join } from "node:path";
-import { chromium, type Browser, type Page } from "playwright";
+import { type Browser, type Page } from "playwright";
+import { launchChromium } from "../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🌐️chromium-launch/🟦️";
 
 type Renderer = "react" | "wgpu";
 type Rect = [number, number, number, number];
@@ -704,7 +705,7 @@ async function runCase(browser: Browser, renderer: Renderer, url: string, author
 
 async function run(renderer: Renderer, url: string, output: string, suite: "docking" | "widgets"): Promise<void> {
   mkdirSync(output, { recursive: true });
-  const browser = await chromium.launch({ headless: process.env.SEMIO_DOCK_HEADED !== "1", args: ["--enable-unsafe-webgpu", "--enable-features=Vulkan,WebGPU", "--ignore-gpu-blocklist", ...(process.platform === "darwin" ? ["--use-angle=metal"] : [])] });
+  const browser = await launchChromium({ headless: process.env.SEMIO_DOCK_HEADED !== "1", args: ["--enable-unsafe-webgpu", "--enable-features=Vulkan,WebGPU", "--ignore-gpu-blocklist", ...(process.platform === "darwin" ? ["--use-angle=metal"] : [])] });
   const receipt = { version: fixture.version, renderer, url, suite, startedAt: new Date().toISOString(), cases: [] as unknown[] };
   try {
     const only = (process.env.SEMIO_DOCK_CASES ?? "").split(",").filter(Boolean);
@@ -744,7 +745,7 @@ async function testContract(): Promise<void> {
     assert.equal(contains([100, 100, 400, 300], splitPoint([100, 100, 400, 300], authored.side)), true);
   }
 
-  const browser = await chromium.launch({ headless: true });
+  const browser = await launchChromium();
   const page = await browser.newPage({ viewport: { width: 520, height: 240 } });
   try {
     await page.setContent('<div id="source" draggable="true" style="position:absolute;left:20px;top:20px;width:50px;height:50px"></div><div id="drop" style="position:absolute;left:220px;top:30px;width:140px;height:120px"></div><div id="pointer" style="position:absolute;left:20px;top:170px;width:50px;height:50px"></div>');

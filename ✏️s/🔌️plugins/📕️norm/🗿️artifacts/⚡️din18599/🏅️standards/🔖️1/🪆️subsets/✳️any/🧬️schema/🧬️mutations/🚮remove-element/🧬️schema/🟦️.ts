@@ -4,8 +4,8 @@
 import { normWireLiteral, normWireObject, type NormWireReader, normWireRequired, normWireString } from "@semio-tech/norm-js/registry/contract";
 
 export interface RemoveElement {
-  mutation: "removeelement";
+  mutation: "removeElement";
   id: string;
 }
 
-export const parseRemoveElement: NormWireReader<RemoveElement> = normWireObject<RemoveElement>({ mutation: normWireRequired(normWireLiteral("removeelement")), id: normWireRequired(normWireString) });
+export const parseRemoveElement: NormWireReader<RemoveElement> = normWireObject<RemoveElement>({ mutation: normWireRequired(normWireLiteral("removeElement")), id: normWireRequired(normWireString) });

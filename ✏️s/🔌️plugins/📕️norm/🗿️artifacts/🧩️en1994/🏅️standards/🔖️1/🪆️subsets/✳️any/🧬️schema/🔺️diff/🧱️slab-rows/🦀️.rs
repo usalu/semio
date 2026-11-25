@@ -16,9 +16,19 @@ protocol::list_delta! {
 nested_patch! {
     /// 🩹️ Sparse patch of the `slabs` row addressed by its key.
     En1994SlabsPatch for semio_s_artifact_norm_en1994_model::CompositeSlab {
-        set { span_m: f64, support: semio_s_artifact_norm_en1994_model::SupportCondition, concrete_thickness_m: f64, f_ck_pa: f64, m_factor: f64, k_factor: f64, as_m2_per_m: f64 }
-        within { sheeting_profile => sheeting . profile : semio_s_artifact_norm_en1994_model::SheetingProfile, sheeting_height_m => sheeting . height_m : f64, sheeting_rib_width_m => sheeting . rib_width_m : f64, sheeting_thickness_m => sheeting . thickness_m : f64, sheeting_ribs_parallel_to_beam => sheeting . ribs_parallel_to_beam : bool }
-        rows { actions: En1994SlabsActionsRows = "actions" }
+        leaf span_m: f64,
+        leaf support: semio_s_artifact_norm_en1994_model::SupportCondition,
+        nested sheeting_profile: semio_s_artifact_norm_en1994_model::SheetingProfile = (sheeting.profile),
+        nested sheeting_height_m: f64 = (sheeting.height_m),
+        nested sheeting_rib_width_m: f64 = (sheeting.rib_width_m),
+        nested sheeting_thickness_m: f64 = (sheeting.thickness_m),
+        nested sheeting_ribs_parallel_to_beam: bool = (sheeting.ribs_parallel_to_beam),
+        leaf concrete_thickness_m: f64,
+        leaf f_ck_pa: f64,
+        leaf m_factor: f64,
+        leaf k_factor: f64,
+        leaf as_m2_per_m: f64,
+        rows actions: En1994SlabsActionsRows = "actions",
     }
 }
 

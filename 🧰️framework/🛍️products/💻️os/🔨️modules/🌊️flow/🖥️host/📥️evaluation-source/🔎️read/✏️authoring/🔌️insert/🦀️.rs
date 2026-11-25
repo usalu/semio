@@ -1,5 +1,5 @@
 //! 🔌️ Original variadic insertion retains the widget and changed synapse fields as funded leaves.
-use super::super::*;
+use super::*;
 use super::{text::FundedText,compare::TextCompare,unsigned::UnsignedWork,widget::{WidgetWork,WidgetPlan},synapse::SynapseWork};
 use semio_framework_artifact_flow_flow::{FlowSnapshotSource,Widget,FlowMutation,SynapseSpec,ChangeWidget,ChangeSynapse,widget_id_for};
 use semio_framework_job::{OriginalConstructionDemand,OriginalTurnFailure,StepContext};

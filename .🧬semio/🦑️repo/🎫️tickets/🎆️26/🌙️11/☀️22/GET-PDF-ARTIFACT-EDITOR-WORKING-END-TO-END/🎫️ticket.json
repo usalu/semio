@@ -3,9 +3,14 @@
   "emoji": "📕",
   "status": "open",
   "description": "Get pdf artifact editor working end to end. In parallel the shared work fleet mechanism is being developed; if it doesn't work fall back to native tools. Coordinate with Opus, dispatch Sonnet agents for implementation and Haiku agents for exploration/audits. Fix fundamental unrelated issues found along the way. Treat the goal end to end.",
+  "summary": "Round 4 (see 🌐️pdf-browser-journey.md, \"End-to-end verification, round 4\"): wasm build made reliable within memory (root cause -Z threads=0 parallel front end; hub crate 10.0 GB + SIGKILLed component before, 5.9/8.8 GB and linked after with threads=1 target override; FIFO cargo gate; quiet-tree waiter). Incremental Save cause corrected: MediaIn already fills custody (new native law through the real PluginRuntime passes); the PDF 1.7 editor never declared its artifact:native output port so the shell used the compact reference route — fixed (declare_native_save + law), then the native Save failed on a stale revision while the keep/attach archive load was still running — fixed by draining the attachment lane before Save. Shell: guest UI patch rejections now surface as a typed, localized boot/render error with code, rule and node (rejection.ts + fixture/schema/feature bun tests); refreshes no longer adopt and throw action refusals, so range and unknown-field notices are localized and announced. Final journey 18/24 (was 14/22); open: strip bound to the host instance after Open File, opened-file Save still compact in the browser after keep/reload.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2799"
+  },
   "goal": "🎯runningpdf",
   "sessions": [
-    "18f1aa4b-dca9-4d89-b552-8bd0b6a3f94a"
+    "18f1aa4b-dca9-4d89-b552-8bd0b6a3f94a",
+    "a8f76b42-37b0-49a1-a847-7cc53a874845"
   ],
   "interactions": [
     {
@@ -18,6 +23,49 @@
       "prompt": "Get pdf artifact editor working end to end. In parallel the shared work fleet mechanism is being developed; if it doesn't work fall back to native tools. Coordinate with Opus, dispatch Sonnet agents for implementation and Haiku agents for exploration/audits. Fix fundamental unrelated issues found along the way. Treat the goal end to end.",
       "llm": "opus-5-5",
       "effort": "medium"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-25 07:00:32",
+      "author": "ueli",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "8d17d8ba3998690932b0032ea2ca41bce5c994b6",
+      "summary": "Round 4 (see 🌐️pdf-browser-journey.md, \"End-to-end verification, round 4\"): wasm build made reliable within memory (root cause -Z threads=0 parallel front end; hub crate 10.0 GB + SIGKILLed component before, 5.9/8.8 GB and linked after with threads=1 target override; FIFO cargo gate; quiet-tree waiter). Incremental Save cause corrected: MediaIn already fills custody (new native law through the real PluginRuntime passes); the PDF 1.7 editor never declared its artifact:native output port so the shell used the compact reference route — fixed (declare_native_save + law), then the native Save failed on a stale revision while the keep/attach archive load was still running — fixed by draining the attachment lane before Save. Shell: guest UI patch rejections now surface as a typed, localized boot/render error with code, rule and node (rejection.ts + fixture/schema/feature bun tests); refreshes no longer adopt and throw action refusals, so range and unknown-field notices are localized and announced. Final journey 18/24 (was 14/22); open: strip bound to the host instance after Open File, opened-file Save still compact in the browser after keep/reload.",
+      "files": [
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🧱️elements🗃️🏛️shellhost🗃️📤️documenttransfertabs🗃️🔶️scope💻🟦️"
+        },
+        {
+          "path": "🛅✏️s🗃️🔌️plugins🛅🗄️stdio🗃️🗿️artifacts🛅📖️pdf🗃️🏅️standards🗃️7️⃣17🗃️🪆️subsets🗃️🧱️base🗃️✏️editor🗃️💾️nativesave💻🏭️factory"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🧱️elements🗃️🔌️pluginruntime🗃️📬️typedresult🥼faultnoticestest"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🧱️elements🗃️🔌️pluginruntime🗃️📬️typedresult💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️📺️renderer🗃️🧑‍🎨engine🗃️🧱️elements🗃️🔌️pluginruntime🗃️🧩️moduleloader💻🟦️"
+        },
+        {
+          "path": "🛅✏️s🗃️🔌️plugins🛅🗄️stdio🗃️🗿️artifacts🛅📖️pdf🗃️🏅️standards🗃️7️⃣17🗃️🪆️subsets🗃️🧱️base🗃️✏️editor💻🦀️"
+        },
+        {
+          "path": "🛅✏️s🗃️🔌️plugins🛅🗄️stdio🗃️🗿️artifacts🛅📖️pdf🗃️🏅️standards🗃️7️⃣17🗃️🪆️subsets🗃️🧱️base🗃️✏️editor🗃️🧪️tests🗃️🔬️unit💻🦀️"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-25 07:01:33",
+      "author": "",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Continue the PDF editor end-to-end work: a subagent closed the ticket prematurely after browser journey round 4 (18 of 24 checks). Open items: page list after Open File bound to the wrong instance, append-only save of opened files in the browser, descriptor regeneration, instance retirement, image picker publication, real-world PDFs through the browser route.",
+      "llm": "fable-5-2",
+      "effort": "low"
     }
   ]
 }

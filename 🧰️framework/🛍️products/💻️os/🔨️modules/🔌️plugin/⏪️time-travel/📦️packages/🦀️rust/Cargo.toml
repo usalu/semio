@@ -30,6 +30,7 @@ semio-plugin-command = { path = "../../../🎮️command/📦️packages/🦀️
 semio-plugin-time-travel-panel = { path = "../../🪟️panel/📦️packages/🦀️rust" }
 semio-plugin-tool-run = { path = "../../../⏯️tool-run/📦️packages/🦀️rust" }
 semio-plugin-ownership = { path = "../../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
+semio-plugin-store-lifecycle = { path = "../../../♻️lifecycle/🧱️owner/📦️packages/🦀️rust" }
 semio-framework-job = { path = "../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust" }
 semio-framework-job-payload = { path = "../../../../../../../🔨️modules/🧵️job/📬️outcome/📦️builder/📦️packages/🦀️rust" }
 semio-framework = { path = "../../../../../../../📦️packages/🦀️rust" }

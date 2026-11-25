@@ -276,10 +276,10 @@ fn owner_of(spec: &Spec) -> EntityRef {
     entity_ref(kind, id, &format!("{collection}[id={id}]"))
 }
 
-/// 🆔️ Every document entity in outliner order: the members, then the anchors, then the cases `declared` accepts; their sub-entities (`id:tag`) are projected with them.
+/// 🆔️ Every document entity in outliner order: the members, the anchors, the grade rows (concrete, reinforcement, prestressing steel), then the cases `declared` accepts; their sub-entities (`id:tag`) are projected with them.
 pub fn entities_where(document: &En1992Snapshot, declared: impl Fn(&CaseRow) -> bool) -> Vec<EntityRef> {
     let of = |collection: &'static str, ids: Vec<&str>| ENTITY_KINDS.iter().find(|k| k.collection == collection).map_or_else(Vec::new, |k| ids.into_iter().map(|id| entity_ref(k.scene_kind, id, &format!("{collection}[id={id}]"))).collect::<Vec<_>>());
-    [of("members", document.members.iter().map(|e| e.id.as_str()).collect()), of("anchors", document.anchors.iter().map(|e| e.id.as_str()).collect()), of("cases", document.cases.iter().filter(|e| declared(e)).map(|e| e.id.as_str()).collect())].concat()
+    [of("members", document.members.iter().map(|e| e.id.as_str()).collect()), of("anchors", document.anchors.iter().map(|e| e.id.as_str()).collect()), of("concreteGrades", document.concrete_grades.iter().map(|e| e.id.as_str()).collect()), of("reinforcementGrades", document.reinforcement_grades.iter().map(|e| e.id.as_str()).collect()), of("prestressSteels", document.prestress_steels.iter().map(|e| e.id.as_str()).collect()), of("cases", document.cases.iter().filter(|e| declared(e)).map(|e| e.id.as_str()).collect())].concat()
 }
 
 /// 🏁️ The global parts of the merged scene: used layers, the utilisation and role legends in front of the field legends of the fragments and the description; the field tracks are added by the scene root.

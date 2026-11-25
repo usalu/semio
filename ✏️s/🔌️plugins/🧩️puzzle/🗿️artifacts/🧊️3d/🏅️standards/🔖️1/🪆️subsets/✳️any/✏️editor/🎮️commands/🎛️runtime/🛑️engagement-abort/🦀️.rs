@@ -17,7 +17,7 @@ pub fn engagement_abort(ctx: &mut Puzzle3dActionCtx<'_>) {
     ctx.scene.runtime.engagement_input = String::new();
     ctx.scene.runtime.brush_candidate_index = 0;
     if puzzle3d_fill_tool_active(ctx.config) || ctx.scene.active_utility == semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_FILL_TOOL_ID {
-        if let Some(run) = fill_tool::live_fill_run(ctx.tool_run) {
+        if let Some(run) = fill_tool::live_fill_run(ctx.tool_run.map(semio_plugin::ToolRunPollView::from)) {
             let args = semio_framework::dsl_value!({ TOOL_RUN_ARG_RUN_ID: run.identity.id.run.to_string(), TOOL_RUN_ARG_GENERATION: run.identity.generation });
             ctx.effects.push(Effect::DispatchAction { req: semio_plugin::RequestId(semio_framework_job::allocate_operation_id().0), action: TOOL_RUN_ABORT_ACTION_ID.into(), args: Some(args), delay_ms: 0 });
         }

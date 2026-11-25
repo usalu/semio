@@ -40,17 +40,18 @@ Feature: The 3D model has the extent of the asset and of its 2D views
     Then the 60.4 mm tube enters the 60.6 mm sleeve bore over 130 mm
     And the terminal cover has a 10 mm lock and a 12 mm wide latch crosses the luminaire gear-cover seam
 
-  Scenario Outline: A heater has a through-grip and eight outlet louvres at every scale
+  Scenario Outline: A heater keeps its carry bar and resolves its grip opening, louvres and dial as its band states
     Given the electric fan heater at scale <scale>
-    Then the carry bar clears the cover across an 80 mm span in body, temperature and forces
-    And eight distinct louvres cross the outlet in body and temperature
-    And the physical rotary dial matches the thermally modelled control
-    Examples:
-      | scale |
-      | 50    |
-      | 100   |
-      | 200   |
-      | 500   |
+    Then the carry bar stands above the cover across an 80 mm span in body, temperature and forces
+    And the 26 mm opening under the bar is <grip> in body, temperature and forces
+    And <body louvres> distinct louvre bands cross the outlet in the body and <thermal louvres> in temperature
+    And the rotary dial is <body dial> in the body and present in temperature
+    Examples: no solid dimension below the smallest feature of the band (7.5, 15, 30, 75 mm)
+      | scale | grip   | body louvres | thermal louvres | body dial |
+      | 50    | open   | 8            | 8               | present   |
+      | 100   | open   | 4            | 6               | present   |
+      | 200   | closed | 1            | 1               | present   |
+      | 500   | closed | 1            | 1               | left out  |
 
   Scenario Outline: A park bench has three separate load-bearing back slats
     Given the park bench at scale <scale>

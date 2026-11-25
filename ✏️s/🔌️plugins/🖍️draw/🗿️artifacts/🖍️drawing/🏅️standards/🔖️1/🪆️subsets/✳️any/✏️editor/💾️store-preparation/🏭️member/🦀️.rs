@@ -13,7 +13,14 @@ impl DrawingMemberStoreProducer{
 }
 impl DocumentStoreOwnerProducer<DrawingSnapshot,DrawingMutation> for DrawingMemberStoreProducer{
  fn source_demands()->Result<RetirementDemand,ValueError>{bounded_artifact_store_owners_shared_semantic_source_demands::<DrawingSnapshot,DrawingMutation,DrawingArtifactStorePreparationFactory>(Self::wire_birth(),Self::wire_copy())}
- fn admit_sources(g:RetainedCloneGrant)->Result<(DocumentStoreOwners<DrawingSnapshot,DrawingMutation>,RetainedCloneProgress),DocumentStoreOwnersAdmissionError<DrawingSnapshot,DrawingMutation>>{bounded_artifact_store_owners_with_shared_semantic_preparation(g,Self::wire_birth(),Self::wire_copy(),DrawingArtifactStorePreparationFactory::default).map(|(mut owners,p)|{let typed=Arc::clone(owners.one_item_preparation.as_ref().expect("admitted shared Drawing semantic issuer"));owners.one_item_wire_preparation=Some(Arc::new(DrawingMemberWirePreparationFactory{typed}));(owners,p)})}
+ fn admit_sources(g:RetainedCloneGrant)->Result<(DocumentStoreOwners<DrawingSnapshot,DrawingMutation>,RetainedCloneProgress),DocumentStoreOwnersAdmissionError<DrawingSnapshot,DrawingMutation>>{
+    bounded_artifact_store_owners_with_shared_semantic_preparation(g,Self::wire_birth(),Self::wire_copy(),DrawingArtifactStorePreparationFactory::default).map(|(mut owners,p)|{
+        let typed=Arc::clone(owners.one_item_preparation.as_ref().expect("admitted shared Drawing semantic issuer"));
+        owners.one_item_wire_preparation=Some(Arc::new(DrawingMemberWirePreparationFactory{typed}));
+        owners.operation_wire=super::drawing_history_wire(owners.operation_wire);
+        (owners,p)
+    })
+ }
 }
 impl MemberStoreProducer<DrawingSnapshot,DrawingMutation> for DrawingMemberStoreProducer{
  type SnapshotOpen=store::os_store::OriginalRecordMemberSnapshotOpen<DrawingSnapshot>;

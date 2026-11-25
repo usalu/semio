@@ -321,6 +321,11 @@
             "rustc",
             "rustdoc"
           ]
+        },
+        "composition": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+          "maxLength": 128
         }
       },
       "anyOf": [
@@ -407,6 +412,13 @@
           "browser-canvas": "browser",
           "browser-module": "browser"
         },
+        "leanCompositions": [
+          "semio-hub-draw-component",
+          "semio-hub-sourcing-component",
+          "semio-s-plugin-sourcing-beams-component",
+          "semio-s-plugin-sourcing-slabs-component",
+          "semio-s-plugin-sourcing-windows-component"
+        ],
         "evidence": {
           "dev": "authored:interactive-native-package-constraints",
           "wasm-prototype": "authored:interactive-wasm-package-constraints",
@@ -434,6 +446,13 @@
             "codegenUnits": 16,
             "incremental": false,
             "lto": "thin"
+          },
+          "prototype-component-lean": {
+            "optLevel": "s",
+            "debug": 0,
+            "codegenUnits": 16,
+            "incremental": false,
+            "lto": "off"
           },
           "prototype-wasm": {
             "optLevel": "1",

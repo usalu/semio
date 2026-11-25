@@ -7,7 +7,9 @@ import { type DocumentOpeningReceiptV1 } from "../../🗨️dialog-origin/🛂�
 import { canonicalSurfaceId } from "../../🔐️identity-binding/🟦️.ts";
 import { spawnedProgramViewStateV1 } from "../../🪟️spawned-program/🟦️.ts";
 import { quiesceSessionWorkV1, surfaceSwitchBusyTextV1 } from "../../🔀️surface-switch/🟦️.ts";
-import { prepareDocumentSurfaceV1 } from "../../🔀️surface-switch/📄️document/🟦️.ts";
+import { prepareDocumentSurfaceV1, restoreDocumentSurfaceV1 } from "../../🔀️surface-switch/📄️document/🟦️.ts";
+import { documentLoadCancelledV1 } from "../../../🛠️ShellHelpers/🧾️transfer-checkin-tutorial/🟦️.ts";
+import { resolveManifestLabel } from "../../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
 import type { useDocumentServicesState } from "../🔶️document-services/🟦️.ts";
 import type { useUpdateSpacePanelState } from "../🔸️update-space-panel/🟦️.ts";
 
@@ -32,12 +34,12 @@ export function replaceSpawnedSurfaceV1(panel: SpacePanelState, source: SpawnedA
 type SpawnedRolePorts = Pick<ReturnType<typeof useDocumentServicesState>,
   "shellStateRef" | "loadedPluginsRef" | "openDocumentSessionsRef" | "openDocumentRef" | "closeDocumentRef"
   | "documentAttachmentLanesRef" | "sessionWorkRef" | "sealedInstancesRef" | "sessionSwitchGateRef"
-  | "setSurfaceSwitchBusy" | "dispatch" | "showTransientNoticeRef" | "uiLocale" | "ensureBackboneWorker" | "browserActorUiByRuntimeKeyRef">
+  | "setSurfaceSwitchBusy" | "dispatch" | "showTransientNoticeRef" | "uiLocale" | "uiTerminology" | "documentTransfer" | "ensureBackboneWorker" | "browserActorUiByRuntimeKeyRef">
   & Pick<ReturnType<typeof useUpdateSpacePanelState>, "retireSessionInstance">;
 
 /** 👁️ Switches the same mounted Workflow document through the shared document-surface preparation. */
 export function useSwitchSpawnedRole({ shellStateRef, loadedPluginsRef, openDocumentSessionsRef, openDocumentRef, closeDocumentRef, documentAttachmentLanesRef,
-  sessionWorkRef, sealedInstancesRef, sessionSwitchGateRef, setSurfaceSwitchBusy, dispatch, showTransientNoticeRef, uiLocale, ensureBackboneWorker, browserActorUiByRuntimeKeyRef, retireSessionInstance }: SpawnedRolePorts) {
+  sessionWorkRef, sealedInstancesRef, sessionSwitchGateRef, setSurfaceSwitchBusy, dispatch, showTransientNoticeRef, uiLocale, uiTerminology, documentTransfer, ensureBackboneWorker, browserActorUiByRuntimeKeyRef, retireSessionInstance }: SpawnedRolePorts) {
   return useCallback(async (source: SpawnedAppEntry, app: AppDefinition): Promise<void> => {
     const host = shellStateRef.current.pluginRuntime.session;
     const pluginEntry = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === source.pluginId);
@@ -63,6 +65,7 @@ export function useSwitchSpawnedRole({ shellStateRef, loadedPluginsRef, openDocu
     const predecessor: ActiveSession = { pluginId: source.pluginId, instanceId: source.instanceId, app: predecessorApp, viewState: spawnedProgramViewStateV1(host.viewState, predecessorApp) };
     const targetState = spawnedProgramViewStateV1(host.viewState, app);
     const targetSurfaceId = canonicalSurfaceId(app.dialect, app.role);
+    const documentFile = resolveManifestLabel(app.label, uiTerminology, uiLocale) || app.id;
     const bindings = owner.persistenceBindings.map((binding) => binding.kind === "hub" ? { ...binding, requestedSurfaceId: targetSurfaceId } : binding);
     setSurfaceSwitchBusy(true);
     try {
@@ -85,7 +88,7 @@ export function useSwitchSpawnedRole({ shellStateRef, loadedPluginsRef, openDocu
               return null;
             },
             create: () => handle.createApp(app.id),
-            restore: async (instanceId, archive) => { if (archive !== null) await loadAppDocumentArchive!(instanceId, archive); },
+            restore: async (instanceId, archive) => { if (archive !== null) await restoreDocumentSurfaceV1(documentTransfer().trackDocumentTransfer(documentFile, source.pluginId), (captured, signal, progress) => loadAppDocumentArchive!(instanceId, captured, signal, progress), archive); },
             attach: async (instanceId) => {
               const session: ActiveSession = { pluginId: source.pluginId, instanceId, app, viewState: targetState, ...(scope === undefined ? { documentInitialized: true } : {}) };
               receipt = await openDocumentRef.current(owner.openingReference, bindings, { plugin: handle, session, current, predecessorClientInstanceId: owner.clientInstanceId });
@@ -119,8 +122,11 @@ export function useSwitchSpawnedRole({ shellStateRef, loadedPluginsRef, openDocu
         refresh: async () => {},
       }, { pluginId: source.pluginId, appId: app.id });
       if (outcome.status === "draining") showTransientNoticeRef.current(surfaceSwitchBusyTextV1(uiLocale), "info");
+    } catch (switchError) {
+      if (!documentLoadCancelledV1(switchError)) throw switchError;
+      documentTransfer().notifyDocumentTransfer("load-cancelled", documentFile, "info");
     } finally {
       setSurfaceSwitchBusy(false);
     }
-  }, [dispatch, ensureBackboneWorker, retireSessionInstance, setSurfaceSwitchBusy, uiLocale]);
+  }, [dispatch, ensureBackboneWorker, retireSessionInstance, setSurfaceSwitchBusy, uiLocale, uiTerminology]);
 }

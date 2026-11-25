@@ -298,3 +298,75 @@ fn document_authored_content_reaches_an_agent_only_inside_the_untrusted_envelope
     let listed = serde_json::to_string(&workspace.list_resources().expect("lists")).expect("serializes");
     assert!(!names_canary(&listed, &needles), "resources/list forwarded document content: {listed}");
 }
+
+/// 🌱️ `artifact_create{initial}` of the probe kind lands as the first journal edit, never dropped: the pack is the genesis value and the spr journal carries `initial`; see [`create-initial-content-law.json`](../🧫️fixtures/🌱️create-initial-content-law.json).
+#[test]
+fn artifact_create_commits_initial_as_the_first_journal_edit() {
+    let law: serde_json::Value = serde_json::from_str(fixture_text!("../../../🗿️artifact/🧪️tests/🧫️fixtures/🌱️create-initial-content-law.json")).expect("law fixture parses");
+    let dir = store::test_support::tempdir().expect("tempdir");
+    let workspace = Arc::new(HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), empty_catalog(), serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/host-driver-policy.json")).expect("explicit host test policy"), serde_json::from_str(include_str!("../../../🎚️config/💡️host-operation-policy.json")).expect("explicit host funding policy")).expect("opens"));
+    let mut registry = InMemoryToolRegistry::new();
+    register_artifact_tools(&mut registry, Some(workspace), full_principal());
+    let id = law["artifactId"].as_str().unwrap();
+    let created = registry.call("artifact_create", serde_json::json!({ "artifactId": id, "kind": law["kind"], "initial": law["initial"] })).unwrap();
+    assert!(!created.is_error, "{created:?}");
+    assert_eq!(created.structured_content.unwrap()["revision"]["cursor"], law["revisionCursor"]);
+    let snapshot = registry.call("artifact_snapshot", serde_json::json!({ "artifactId": id })).unwrap();
+    assert!(!snapshot.is_error, "{snapshot:?}");
+    let content = &snapshot.structured_content.unwrap()["untrusted"]["content"];
+    let genesis = law["genesisPackText"].as_str().unwrap();
+    assert_eq!(content["packBase64"], base64_encode(genesis.as_bytes()), "the pack is the genesis value, not the edit");
+    let spr = content["sprBase64"].as_str().unwrap();
+    assert!(names_canary(spr, &canary_needles(law["initialJsonText"].as_str().unwrap())), "the journal in the spr must carry the initial value: {spr}");
+
+    let omitted = registry.call("artifact_create", serde_json::json!({ "artifactId": "initial-content-omitted", "kind": law["kind"] })).unwrap();
+    assert!(!omitted.is_error, "{omitted:?}");
+    let omitted_snapshot = registry.call("artifact_snapshot", serde_json::json!({ "artifactId": "initial-content-omitted" })).unwrap();
+    let omitted_spr = omitted_snapshot.structured_content.unwrap()["untrusted"]["content"]["sprBase64"].as_str().unwrap().to_string();
+    assert!(names_canary(&omitted_spr, &canary_needles(law["omittedInitialJsonText"].as_str().unwrap())), "an omitted initial commits an empty object");
+
+    let duplicate = registry.call("artifact_create", serde_json::json!({ "artifactId": id, "kind": law["kind"], "initial": law["initial"] })).unwrap();
+    assert_eq!(duplicate.structured_content.unwrap()["code"], law["duplicateCode"]);
+}
+
+#[test]
+fn artifact_create_hands_out_a_job_id_the_job_registry_can_read_and_open_names_the_probe_kind() {
+    let dir = store::test_support::tempdir().expect("tempdir");
+    let workspace = Arc::new(HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), empty_catalog(), serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/host-driver-policy.json")).expect("policy"), serde_json::from_str(include_str!("../../../🎚️config/💡️host-operation-policy.json")).expect("policy")).expect("workspace"));
+    let mut registry = InMemoryToolRegistry::new();
+    register_artifact_tools(&mut registry, Some(workspace), full_principal());
+    let created = registry.call("artifact_create", serde_json::json!({ "artifactId": "doc-job", "kind": PROBE_SCHEMA })).unwrap().structured_content.expect("structured content");
+    let job = semio_os_mcp_wire::job_registry::job_registry().snapshot(created["jobId"].as_str().expect("job id")).expect("the minted job id is readable in the same process");
+    assert_eq!(job.to_json()["status"], "SUCCEEDED");
+    let opened = registry.call("artifact_open", serde_json::json!({ "artifactId": "doc-job" })).unwrap().structured_content.expect("structured content");
+    assert_eq!(opened["kind"], PROBE_SCHEMA);
+    assert_eq!(opened["artifactKind"], PROBE_SCHEMA, "kind and artifactKind must not disagree: {opened}");
+}
+
+#[test]
+fn artifact_export_rejects_a_format_no_installed_kind_declares_before_resolving_any_plugin() {
+    let dir = store::test_support::tempdir().expect("tempdir");
+    let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), single_plugin_catalog("test-plugin"), serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/host-driver-policy.json")).expect("policy"), serde_json::from_str(include_str!("../../../🎚️config/💡️host-operation-policy.json")).expect("policy")).expect("workspace");
+    ::semio_framework_async::poll::resolve_ready(workspace.ensure_probe_artifact("doc-5", serde_json::json!({}).into())).expect("seed");
+    let mut registry = InMemoryToolRegistry::new();
+    register_artifact_tools(&mut registry, Some(Arc::new(workspace)), full_principal());
+    let structured = registry.call("artifact_export", serde_json::json!({ "artifactId": "doc-5", "format": "no-such-format" })).unwrap().structured_content.expect("structured content");
+    assert_eq!(structured["code"], "INPUT_INVALID");
+    assert_eq!(structured["details"]["requestedFormat"], "no-such-format");
+    assert!(structured["message"].as_str().unwrap().len() < 200, "{structured}");
+}
+
+#[test]
+fn artifact_snapshot_refuses_a_partial_or_foreign_revision_stamp_at_once() {
+    let dir = store::test_support::tempdir().expect("tempdir");
+    let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), empty_catalog(), serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/host-driver-policy.json")).expect("policy"), serde_json::from_str(include_str!("../../../🎚️config/💡️host-operation-policy.json")).expect("policy")).expect("workspace");
+    ::semio_framework_async::poll::resolve_ready(workspace.ensure_probe_artifact("doc-6", serde_json::json!({}).into())).expect("seed");
+    let mut registry = InMemoryToolRegistry::new();
+    register_artifact_tools(&mut registry, Some(Arc::new(workspace)), full_principal());
+    for revision in [serde_json::json!({ "cursor": "999" }), serde_json::json!({ "artifactId": "other", "headEditId": "e", "cursor": "1" })] {
+        let started = std::time::Instant::now();
+        let structured = registry.call("artifact_snapshot", serde_json::json!({ "artifactId": "doc-6", "revision": revision })).unwrap().structured_content.expect("structured content");
+        assert_eq!(structured["code"], "INPUT_INVALID", "{structured}");
+        assert!(started.elapsed() < std::time::Duration::from_secs(2));
+    }
+}

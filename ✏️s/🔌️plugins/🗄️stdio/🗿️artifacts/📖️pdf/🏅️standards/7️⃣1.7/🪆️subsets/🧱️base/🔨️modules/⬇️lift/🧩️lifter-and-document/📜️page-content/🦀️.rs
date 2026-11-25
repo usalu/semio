@@ -8,7 +8,7 @@ pub use controlled::{PageContentBarrier, PageContentCursor, PageContentEvent, Pa
 
 #[path = "🧺️program/🦀️.rs"]
 mod program;
-pub use program::PageProgramCursor;
+pub use program::{operator_bytes, PageProgramCursor};
 
 enum Member { Reference(ObjRef), Inline(usize) }
 

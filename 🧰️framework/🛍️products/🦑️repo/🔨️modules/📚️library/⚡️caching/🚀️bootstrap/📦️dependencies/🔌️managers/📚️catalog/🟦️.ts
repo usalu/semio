@@ -17,7 +17,7 @@ export const packageManagerRegistryV1:PackageManagerRegistryV1=builtInPackageMan
 export const selectPackageManagerV1=(ecosystem:string,environment:Readonly<Record<string,string|undefined>>=process.env):PackageManagerV1=>packageManagerRegistryV1.select(ecosystem,environment);
 /** 🔬️ Asks the tool itself for its version through a child process. */
 /** 🖥️ Describes the running host for keys and runtime identity; the version map is the process's own, so embedded managers answer without a probe. */
-export const spawnProbeV1:NonNullable<HostPortV1["probe"]>=(executable,args)=>{const result=spawnSync(executable,[...args],{encoding:"utf8"});return result.status===0?result.stdout:undefined;};
+export const spawnProbeV1:NonNullable<HostPortV1["probe"]>=(executable,args)=>{const result=spawnSync(executable,[...args],{windowsHide:true,encoding:"utf8"});return result.status===0?result.stdout:undefined;};
 export function currentHostV1(probe:HostPortV1["probe"]=spawnProbeV1):HostPortV1{return Object.freeze({platform:process.platform,arch:process.arch,versions:process.versions,probe});}
 
 /** 🔏️ Names every defining module and descriptor of the ESM registry for observed source identities. */

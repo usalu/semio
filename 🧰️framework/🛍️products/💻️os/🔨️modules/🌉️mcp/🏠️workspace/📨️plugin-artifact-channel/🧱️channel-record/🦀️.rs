@@ -76,6 +76,10 @@ impl Drop for PluginArtifactChannel {
         for instance in self.instances.keys().copied().collect::<Vec<_>>() {
             self.discard_instance(instance);
         }
+        for (instance, guest) in std::mem::take(&mut self.instances) {
+            eprintln!("[semio-os-mcp] instance {instance} keeps its unretired guest Source until this process ends: {:?}", guest.failure().or_else(|| guest.cleanup_failure()));
+            std::mem::forget(guest);
+        }
         self.close_inference_origin_source();
     }
 }

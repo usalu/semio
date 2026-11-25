@@ -5,5 +5,5 @@
   "expectedInstructions": 6,
   "address": 16,
   "width": 8,
-  "deniedCopyBytes": 7
+  "deniedFuel": 0
 }

@@ -1,7 +1,7 @@
 //! 🧵️ Bounded transient publication plus lease-aware exact-store disposal.
 
-use crate::store_lifecycle::ArtifactOwnedDisposer;
-use crate::bounded_ownership::PluginLifecycleStep;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_ownership::bounded_ownership::PluginLifecycleStep;
 use crate::{protocol, store};
 use semio_framework::{Fault, FaultCode, FaultOrigin};
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind, retained_clone::{RetainedCloneBirthDemand, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
@@ -421,7 +421,7 @@ where P: Send + Sync + 'static, M: protocol::Mutation<P> + Send + 'static {
             return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }));
         }
         if let Some(retirement) = self.retirement.as_mut() {
-            let step = crate::bounded_ownership::plugin_settle_value(retirement.close_step(grant.maximum_copy_bytes, effect)).map_err(|error| Fault::from(error.into_message()))?;
+            let step = semio_plugin_ownership::bounded_ownership::plugin_settle_value(retirement.close_step(grant.maximum_copy_bytes, effect)).map_err(|error| Fault::from(error.into_message()))?;
             let step = semio_framework_value::retained_clone::admit_retained_clone_close(grant, step, retirement.terminal_is_empty(), "original transient store retirement").map_err(|error| Fault::from(error.into_message()))?;
             if retirement.terminal_is_empty() { self.retirement = None; }
             return Ok(PluginLifecycleStep::Progress(step.progress()));
@@ -432,7 +432,7 @@ where P: Send + Sync + 'static, M: protocol::Mutation<P> + Send + 'static {
             return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }));
         }
         let factory = self.factory_close.as_mut().expect("original transient issuer close remains");
-        let step = crate::bounded_ownership::plugin_settle_value(factory.step(grant.maximum_copy_bytes, effect)).map_err(|error| Fault::from(error.into_message()))?;
+        let step = semio_plugin_ownership::bounded_ownership::plugin_settle_value(factory.step(grant.maximum_copy_bytes, effect)).map_err(|error| Fault::from(error.into_message()))?;
         let step = semio_framework_value::retained_clone::admit_retained_clone_close(grant, step, factory.terminal_is_empty(), "original transient disposer issuer").map_err(|error| Fault::from(error.into_message()))?;
         if factory.terminal_is_empty() { self.factory_close = None; }
         Ok(PluginLifecycleStep::retained(step, self.terminal_is_empty(owner)))

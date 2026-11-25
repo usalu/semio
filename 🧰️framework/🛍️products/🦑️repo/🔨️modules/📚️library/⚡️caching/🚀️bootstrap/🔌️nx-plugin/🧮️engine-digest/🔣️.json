@@ -78,6 +78,22 @@
     "en": "The reload of an invocation only computes the path of the sealed entry to find the sealed store that holds its snapshot and reads its pointer; it never imports the entry, and the entry never runs an Nx task, so the entry and everything only it reaches cannot change the bytes of a task.",
     "de": "Das Neuladen eines Aufrufs berechnet nur den Pfad des versiegelten Einstiegs, um den versiegelten Speicher mit seinem Schnappschuss zu finden und dessen Zeiger zu lesen; es importiert den Einstieg nie, und der Einstieg führt nie eine Nx-Task aus, daher können der Einstieg und alles, was nur er erreicht, die Bytes einer Task nicht ändern."
    }
+  },
+  {
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/🧹️disk-recovery/🔌️real/🟦️.ts",
+   "reference": "../../../📜️script.ts",
+   "contract": {
+    "en": "The disk recovery starts the repo build script as a child that runs a cache garbage collection or a cache reset target. That child only reclaims bytes and never runs an Nx task, so the script and everything only it reaches cannot change the bytes of a task.",
+    "de": "Die Plattenwiederherstellung startet das Repo-Build-Skript als Kindprozess, der eine Cache-Müllsammlung oder ein Cache-Zurücksetzen ausführt. Dieses Kind gibt nur Bytes frei und führt nie eine Nx-Task aus, daher können das Skript und alles, was nur es erreicht, die Bytes einer Task nicht ändern."
+   }
+  },
+  {
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧹️cache-gc/🛌️idle/⏲️loop/🟦️.ts",
+   "reference": "../../../📜️script.ts",
+   "contract": {
+    "en": "The idle compaction loop starts the repo build script as a detached maintenance child that compacts caches while the host is idle. That child never runs an Nx task, so the script and everything only it reaches cannot change the bytes of a task.",
+    "de": "Die Leerlauf-Verdichtungsschleife startet das Repo-Build-Skript als losgelösten Wartungs-Kindprozess, der Caches verdichtet, solange der Rechner ruht. Dieses Kind führt nie eine Nx-Task aus, daher können das Skript und alles, was nur es erreicht, die Bytes einer Task nicht ändern."
+   }
   }
  ]
 }

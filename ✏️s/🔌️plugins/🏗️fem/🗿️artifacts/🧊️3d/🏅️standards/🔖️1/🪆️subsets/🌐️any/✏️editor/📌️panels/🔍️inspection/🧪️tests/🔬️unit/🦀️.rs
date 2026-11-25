@@ -92,6 +92,7 @@ fn selecting(doc: &Fem3dSnapshot, ids: &[&str]) -> Fem3dInteractionSnapshot {
             else if doc.sections.iter().any(|section| section.id == *id) { "section" }
             else if doc.load_cases.iter().any(|case| case.id == *id) { "loadCase" }
             else if doc.combinations.iter().any(|combination| combination.id == *id) { "combination" }
+            else if *id == "settings" { "analysis" }
             else { "node" };
         semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3d_entity_target(kind, id).unwrap()
     });
@@ -248,7 +249,11 @@ async fn a_selected_combination_renders_one_factor_input_per_term_3d() {
     assert_eq!(component_at(&json, "fem3d-play-inspection.combination.term.live.input"), "input");
     assert!(json.contains("term:dead"), "a factor input binds the term field its case names");
     assert!(json.contains("patchCombination"));
-    assert!(!json.contains("combination.add-term"), "every case is already superposed, so nothing is left to add");
+    assert_eq!(component_at(&json, "fem3d-play-inspection.combination.add-term.select"), "select", "the Add Term control stays present even when every case is already superposed");
+    assert!(json.contains("Add Term"), "{json}");
+    let de = panel(&demo(), &["uls"], &ViewModel::new(Locale::De, Terminology::Native));
+    assert_eq!(component_at(&de, "fem3d-play-inspection.combination.add-term.select"), "select");
+    assert!(de.contains("Term hinzufügen"), "{de}");
     assert_eq!(component_at(&json, "fem3d-play-inspection.combination.remove-term.select"), "select", "a term can be dropped");
     let mut doc = demo();
     doc.combinations[0].terms.remove("live");
@@ -312,6 +317,19 @@ async fn german_resolves_every_field_label_the_inspector_binds_3d() {
     assert!(panel(&doc, &["sol1"], &view_state).contains("Netzweite"));
     assert!(panel(&doc, &["live"], &view_state).contains("Eigengewicht"));
     assert!(panel(&doc, &[], &view_state).contains("Übersicht"));
+}
+
+/// 🧮️ LAW: picking the tree's Analysis row selects the analysis settings and Inspection shows them, instead of staying on the previous entity or the document summary.
+#[semio_framework_async_macros::async_test]
+async fn the_analysis_row_selection_shows_the_analysis_settings_3d() {
+    let target = semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3d_entity_target("analysis", "settings").expect("analysis target");
+    assert_eq!(fem3d_entity_kind(&demo(), &target), Some("analysis"));
+    let json = english(&demo(), &["settings"]);
+    for row in ["summary.modal-count", "summary.buckling-count", "summary.deformation-scale"] {
+        assert!(json.contains(row), "{row}: {json}");
+    }
+    assert!(!json.contains("summary.nodes"), "the analysis settings replace the document counts: {json}");
+    assert!(!json.contains(".actions.delete"), "analysis settings cannot be deleted: {json}");
 }
 
 /// 🖼️ The panel reaches the shell through its body key, on the live app — `render` with no request

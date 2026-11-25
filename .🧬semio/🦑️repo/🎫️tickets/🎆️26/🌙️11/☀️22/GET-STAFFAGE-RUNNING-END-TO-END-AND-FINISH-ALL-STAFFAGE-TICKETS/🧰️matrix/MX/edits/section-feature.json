@@ -1,0 +1,7 @@
+[
+ {
+  "name": "scenario",
+  "old": "  Scenario: The cast index records the section",
+  "new": "  Scenario: A section label that differs between the languages is rejected\n    Given the sliding door with a plan section labelled \"Longitudinal door section\" in English and \"Türlängsschnitt\" in German\n    When the asset is validated and its side elevation is drawn in both languages\n    Then the issue section-label-language is reported in English and German, because the label stands beside the cut line and the two sheets place the same shapes differently\n    And the label \"B-B\" in both languages is accepted and both sheets place the shapes alike\n\n  Scenario: The cast index records the section"
+ }
+]

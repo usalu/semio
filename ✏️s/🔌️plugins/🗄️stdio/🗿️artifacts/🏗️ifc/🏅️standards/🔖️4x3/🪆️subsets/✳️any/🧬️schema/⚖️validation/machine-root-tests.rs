@@ -178,7 +178,7 @@ fn native_prepared_custom_alias_laws_keep_original_identity_and_returned_owner()
         let mut caller = OriginalWorkFixture::with_identity(semio_framework_job::OperationId(948), semio_framework_job::Generation(index as u64 + 1));
         let (mut overlay, mut receiver) = prepare(&source, &mut caller);
         let env = MachineEnvironment { source: Some(&source), overlay: Some(&overlay), receiver: Some(&receiver), mutations: &[] };
-        let mut machine = RetainedMachine::new(PROBES[index]);
+        let mut machine = RetainedMachine::new(probes()[index]);
         let result = query(&mut machine, expression, &env, &mut caller);
         if data["cases"][index]["expected"]["kind"] == "error" {
             assert_eq!(result.unwrap_err().primary.message(),"express.unsupported-call");

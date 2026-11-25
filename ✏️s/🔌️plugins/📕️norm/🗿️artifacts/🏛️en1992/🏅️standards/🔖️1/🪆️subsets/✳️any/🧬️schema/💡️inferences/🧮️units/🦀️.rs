@@ -15,7 +15,7 @@ const SHARED_READS: [&str; 9] = ["annex", "reliabilityClass", "title", "designWo
 impl UnitSource for En1992Units {
     type Document = En1992Snapshot;
 
-    const OWNERS: semio_s_plugin_norm_compliance::Owners = semio_s_plugin_norm_compliance::Owners::new(&["members", "anchors", "cases"], &["en1992.annex.", "en1992.integrity."]);
+    const OWNERS: semio_s_plugin_norm_compliance::Owners = semio_s_plugin_norm_compliance::Owners::new(&["members", "anchors", "cases", "concreteGrades", "reinforcementGrades", "prestressSteels"], &["en1992.annex.", "en1992.integrity."]);
 
     fn units(d: &En1992Snapshot) -> Vec<CheckUnit<En1992Snapshot>> {
         let mut rows = Rows::new(SHARED_READS).global_reading(&GLOBAL_READS, |d: &En1992Snapshot| evaluate_scoped(d, Scope::Globals).checks);

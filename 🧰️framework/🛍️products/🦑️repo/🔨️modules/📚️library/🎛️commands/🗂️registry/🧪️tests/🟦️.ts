@@ -7,8 +7,8 @@ import { dirname, join, posix, resolve } from "node:path";
 import { pythonEnvironmentInterpreterV1, pythonEnvironmentOfProjectV1 } from "../../../../../../../🔨️modules/🏃️process/🏗️build/🧰️toolchains/🟦️.ts";
 import { createScriptProcessEnvelope, Script, ScriptRouter, withScriptProcessEnvelope, type ScriptInvocation } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { diskZeroTouchTreeV1, scanModuleSpecifiersV1 } from "../../../🏗️build/📥️source/🛗️zero-touch/🟦️.ts";
-import { readRootCommandHelpRequestV1, readRootCommandRegistryV1, registerRootCommandsV1, renderRootCommandHelpV1, rootCommandHelpV1, rootCommandRegistryV1, type RootCommandV1 } from "../🟦️.ts";
-import { buildOwnedInvocationV1, dependencyGateV1, dependencyProvisionPortsV1, provisionEnvironmentV1, type DependencyProvisionPortsV1 } from "../🥾️provision/🟦️.ts";
+import { readRootCommandHelpRequestV1, readRootCommandRegistryV1, registerRootCommandsV1, renderRootCommandHelpV1, rootCommandHelpV1, rootCommandRegistryV1, rootCommandRequirementV1, type RootCommandRequiresV1, type RootCommandRouteV1, type RootCommandV1 } from "../🟦️.ts";
+import { buildOwnedInvocationV1, dependencyGateV1, dependencyProvisionPortsV1, ensureRootDependenciesV1, provisionEnvironmentV1, type DependencyProvisionPortsV1 } from "../🥾️provision/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with { type: "json" };
 import data from "../🔣️.json" with { type: "json" };
 import fixture from "./🔣️.json" with { type: "json" };
@@ -45,8 +45,18 @@ test("the registry satisfies its schema for the independent validator and for ou
 
 test("the registry declares exactly the expected commands and the expected requirements", () => {
   expect(registry.commands.map((command) => command.id)).toEqual(fixture.expectedIds);
-  for (const requires of ["none", "dependencies"] as const) expect(registry.commands.filter((command) => command.requires === requires).map((command) => command.id)).toEqual(fixture.expectedRequires[requires]);
+  for (const requires of ["none", "dependencies", "staged"] as const) expect(registry.commands.filter((command) => command.requires === requires).map((command) => command.id)).toEqual(fixture.expectedRequires[requires]);
+  expect(Object.fromEntries(registry.commands.filter((command) => command.routes !== undefined).map((command) => [command.id, command.routes!.map((route) => ({ segments: route.segments, requires: route.requires }))]))).toEqual(fixture.expectedRoutes);
 });
+
+const reasonOf = (reason: RootCommandRouteV1["reason"] = { en: "x", de: "x" }) => reason;
+
+for (const row of fixture.routeRequirements) {
+  test(`route requirement: ${row.name}`, () => {
+    const command = { ...registry.commands.find((candidate) => candidate.id === "verify")!, requires: row.requires, routes: row.routes.map((route) => ({ ...route, reason: reasonOf() })) } as RootCommandV1;
+    expect(rootCommandRequirementV1(command, row.segments)).toBe(row.expected as RootCommandRequiresV1);
+  });
+}
 
 for (const row of fixture.invalidRegistries) {
   test(`an invalid registry is refused: ${row.name}`, () => {
@@ -111,8 +121,10 @@ test("help renders every command, its requirement and its summary in every decla
       expect(top.includes(command.summary[language]!), `${language} ${command.id} summary`).toBe(true);
       const own = renderRootCommandHelpV1(registry, command.id, language);
       expect(own.split("\n")[0]).toBe(`${command.id} - ${command.summary[language]}`);
-      expect(own.includes(registry.labels[command.requires === "none" ? "requiresNone" : "requiresDependencies"]![language]!), `${language} ${command.id} requirement`).toBe(true);
-      expect(top.split("\n").some((line) => line.startsWith(`  ${command.id}${command.requires === "dependencies" ? " *" : " "}`)), `${language} ${command.id} marker`).toBe(true);
+      const label = { none: "requiresNone", dependencies: "requiresDependencies", staged: "requiresStaged" } as const;
+      expect(own.includes(`${registry.labels.requires![language]}: ${registry.labels[label[command.requires]]![language]}`), `${language} ${command.id} requirement`).toBe(true);
+      for (const route of command.routes ?? []) expect(own.split("\n").includes(`  ${command.id} ${route.segments.join(" ")}: ${registry.labels[label[route.requires]]![language]}`), `${language} ${command.id} route ${route.segments.join(" ")}`).toBe(true);
+      expect(top.split("\n").some((line) => line.startsWith(`  ${command.id}${command.requires === "none" ? " " : " *"}`)), `${language} ${command.id} marker`).toBe(true);
     }
   }
   expect(() => renderRootCommandHelpV1(registry, "nonexistent", "en")).toThrow("Unknown command: nonexistent");
@@ -127,6 +139,9 @@ test("the router runs the gate before it loads a command and the loaders must ma
   const router = registerRootCommandsV1(new ScriptRouter(root, root), small, loaders, async (command) => { order.push(`gate ${command.id}`); });
   await run({}, async (invocation) => { await router.run(["repo"], invocation); });
   expect(order).toEqual(["gate repo", "load repo", "run"]);
+  const seen: string[] = [], routed = registerRootCommandsV1(new ScriptRouter(root, root), small, loaders, async (command, segments) => { seen.push(`${command.id}:${segments.join(",")}`); });
+  await run({}, async (invocation) => { await routed.run(["os", "mcp", "stdio", "os"], invocation); });
+  expect(seen).toEqual(["os:mcp,stdio,os"]);
   expect(() => registerRootCommandsV1(new ScriptRouter(root, root), small, { repo: loaders.repo }, async () => {})).toThrow("missing: os");
   expect(() => registerRootCommandsV1(new ScriptRouter(root, root), small, { ...loaders, extra: loaders.os }, async () => {})).toThrow("unknown: extra");
 });
@@ -155,10 +170,10 @@ for (const row of fixture.gate) {
       now: () => clock,
     };
     const environment = { PATH: "/bin", SEMIO_LANGUAGE: "en", SEMIO_SCRIPT_PROCESS_INVOCATION: "{}", ...("environment" in row ? row.environment : {}) };
-    const command = { ...registry.commands.find((candidate) => candidate.id === "verify")!, requires: row.requires } as RootCommandV1;
+    const command = { ...registry.commands.find((candidate) => candidate.id === "verify")!, requires: row.requires, routes: ("routes" in row ? row.routes : []).map((route: { segments: string[]; requires: string }) => ({ ...route, reason: reasonOf() })) } as RootCommandV1;
     const capabilities = JSON.parse(JSON.stringify(row.capabilities).replaceAll("@root", root.replaceAll("\\", "\\\\")));
     const gate = dependencyGateV1(root, registry, environment, ports);
-    const attempt = run(capabilities, (invocation) => gate(command, invocation));
+    const attempt = run(capabilities, (invocation) => gate(command, row.segments, invocation));
     if ("fail" in row && row.fail) {
       const error = await attempt.then(() => undefined, (failure: Error) => failure);
       for (const part of fixture.gateFailure) expect(error?.message.includes(part), part).toBe(true);
@@ -200,10 +215,21 @@ test("dependencies without a synchronized Python environment are not available, 
   }
 });
 
+test("disconnect preserves the staging signal reason while a provisioning child stops", async () => {
+  const controller = new AbortController();
+  const ports: DependencyProvisionPortsV1 = { ...dependencyProvisionPortsV1, write: () => {}, run: (command, _args, cwd, label, environment, signal) => {
+    const pending = dependencyProvisionPortsV1.run(command, ["-e", "setInterval(() => {}, 1000)"], cwd, label, environment, signal);
+    controller.abort(new Error("client EOF"));
+    return pending;
+  } };
+  const failure = await ensureRootDependenciesV1(root, registry, "dev", controller.signal, { SEMIO_LANGUAGE: "en" }, ports).catch(error => error);
+  expect(failure).toBe(controller.signal.reason);
+});
+
 test("an aborted invocation stops before anything is provisioned", async () => {
   const controller = new AbortController(), calls: string[] = [], ports: DependencyProvisionPortsV1 = { ...dependencyProvisionPortsV1, run: async () => { calls.push("run"); }, write: () => {}, now: () => 0 };
   const command = registry.commands.find((candidate) => candidate.id === "verify")!, gate = dependencyGateV1(root, registry, { SEMIO_LANGUAGE: "en" }, ports);
-  const error = await run({}, async (invocation) => { controller.abort(); return gate(command, { ...invocation, control: { ...invocation.control, signal: controller.signal } }); }).then(() => undefined, (failure: Error) => failure);
+  const error = await run({}, async (invocation) => { controller.abort(); return gate(command, [], { ...invocation, control: { ...invocation.control, signal: controller.signal } }); }).then(() => undefined, (failure: Error) => failure);
   expect(error).toBeDefined();
   expect(calls).toEqual([]);
 });
@@ -212,7 +238,7 @@ test("a dependent command without any language refuses before it provisions anyt
   const calls: string[] = [], ports: DependencyProvisionPortsV1 = { ...dependencyProvisionPortsV1, run: async () => { calls.push("run"); }, write: (line) => { calls.push(line); }, now: () => 0 };
   const command = { ...registry.commands.find((candidate) => candidate.id === "verify")!, requires: "dependencies" } as RootCommandV1;
   const gate = dependencyGateV1(root, registry, { PATH: "/bin" }, ports, () => []);
-  const error = await run({}, (invocation) => gate(command, invocation)).then(() => undefined, (failure: Error) => failure);
+  const error = await run({}, (invocation) => gate(command, [], invocation)).then(() => undefined, (failure: Error) => failure);
   expect(error?.message).toContain("No language selected");
   expect(error?.message).toContain("Keine Sprache");
   expect(calls).toEqual([]);
@@ -222,6 +248,7 @@ test("the registry data points at its schema and every reason is written in ever
   expect(join(import.meta.dir, "..", data.$schema)).toBe(join(import.meta.dir, "..", "🧬️schema/🔣️.json"));
   expect(JSON.parse(readFileSync(join(import.meta.dir, "..", data.$schema), "utf8"))).toEqual(schema);
   for (const command of registry.commands) for (const language of registry.languages) expect(command.reason[language]?.length, `${command.id} ${language}`).toBeGreaterThan(8);
+  for (const command of registry.commands) for (const route of command.routes ?? []) for (const language of registry.languages) expect(route.reason[language]?.length, `${command.id} ${route.segments.join(" ")} ${language}`).toBeGreaterThan(8);
 });
 
 test("the default provisioning ports keep stdout clean for the command that follows, such as an MCP stdio server", async () => {

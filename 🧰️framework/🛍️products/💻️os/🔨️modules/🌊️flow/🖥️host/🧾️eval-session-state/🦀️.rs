@@ -367,6 +367,10 @@ pub(super) struct SessionRetirement {
 
 impl SessionRetirement {
     pub(super) fn terminal_is_empty(&self)->bool{self.root.is_none()&&self.owners.terminal_is_empty()}
+    /// 🎰️ Whether the next handoff first needs the original queue slot that a retained root displaces.
+    pub(super) fn slot_owed(&self)->bool{self.root.is_some()&&!self.owners.has_reserved_slot()}
+    pub(super) fn slot_demands(&self)->Result<RetirementDemand,ValueError>{self.owners.reserve_demand()}
+    pub(super) fn reserve_slot(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneProgress,ValueError>{self.owners.reserve_step(effect).result}
     pub(super) fn admission_demands(&self)->Result<RetirementDemand,ValueError>{
         if self.root.is_none(){return Ok(RetirementDemand{depth:1,..Default::default()})}
         if !self.owners.has_reserved_slot(){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"session retirement requires an admitted original queue slot"))}

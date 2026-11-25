@@ -7,6 +7,7 @@
 use semio_plugin_guest_contract::{decode_guest_fault_bytes, identity_turn_fault, operation_authority, original_actor_context, sqlite_wire, validate_cold_page, GuestCallCancellation, GuestDocumentMirror, GuestDocumentPair, JobBudget, JobStep, PluginHostError, TurnFault};
 use semio_plugin_interpreter::{CoreError, CoreStepOutcome, HostCall, OwnedSemioArtifact, OwnedSemioInstance, StepControl, Value};
 pub use semio_plugin_interpreter::OwnedSemioExport;
+pub use semio_plugin_interpreter::{format_retained_snapshot,thread_booked};
 use semio_framework::kernel::{Budget, Event, TurnResult};
 pub use semio_os_kernel::os_vcs::io::binary::entity_identity::control::OriginalOperationReceiving;
 use semio_framework_value_derive::{FromValue, ToValue};

@@ -104,7 +104,7 @@ pub fn preview_window_measures(config: &Generation3dConfig, is_de: bool, procedu
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document: &Generation3dSnapshot, config: &Generation3dConfig, preview_eval_text: Option<&str>, session: &FlowEvalSession, run: Option<&semio_plugin::ToolRunView>, active_utility: &str, marks: &PreviewInteractionMarks, labels: &Generation3dLabels, windows: &semio_plugin::TreeWindows<'_>, locale: semio_plugin::Locale, hover_groups: &mut Option<semio_s_artifact_procedural_3d_preview_eval::PreviewHoverGroups>) -> semio_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(document: &Generation3dSnapshot, config: &Generation3dConfig, preview_eval_text: Option<&str>, session: &FlowEvalSession, run: Option<semio_plugin::ToolRunPollView<'_>>, active_utility: &str, marks: &PreviewInteractionMarks, labels: &Generation3dLabels, windows: &semio_plugin::TreeWindows<'_>, locale: semio_plugin::Locale, hover_groups: &mut Option<semio_s_artifact_procedural_3d_preview_eval::PreviewHoverGroups>) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let evaluation = PreviewEvaluation::from_json(preview_eval_text.unwrap_or_default());
     let mut payload = preview_payload(&evaluation, &document.host_snapshot, config, Some(session), marks);
     *hover_groups = Some(std::mem::take(&mut payload.hover_groups));

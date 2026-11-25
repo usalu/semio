@@ -4,6 +4,7 @@ import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/�
 import {REAPI_V1,decodeProtobufV1,encodeProtobufV1} from "../../../🌐️remote-execution/📡️wire/📦️protobuf/🟦️.ts";
 import {neutralizeRootV1,expandRootV1,packGraphDocumentV1,unpackGraphDocumentsV1,graphDocumentLimitV1,graphRetentionManifestV1,type GraphDocumentV1,type GraphFleetClientV1} from "../../../🪪️graph-state/🛰️exchange/🟦️.ts";
 import {neutralRowsV1,localizeRowsV1,portableRowsPolicyV1,type HostV1,type ObservationRowV1} from "../../../🪪️graph-state/📦️project-records/🧳️portable/🟦️.ts";
+import {streamSelectedDocumentsV1} from "./🌊️streamed/🟦️.ts";
 
 /** 🏛️ The declared policy of the exchange of sealed selected generations: the semantics revision (part of every head key), the claim lease, the bounded wait and the limits.
  * @see ./🧬️schema/🔣️.json */
@@ -19,7 +20,9 @@ export type SelectedAdmissionEntryV1=Readonly<{owner:string;suffix:string;facts:
 /** 🧾️ What a sealed read hands to the exchange: the graph text, the rows its owners were sealed for, the membership digest, the admission facts it consumed. */
 export type SelectedSealedV1=Readonly<{graph:string;rows:readonly ObservationRowV1[];membership:string;admission:readonly SelectedAdmissionEntryV1[]}>;
 /** 🏷️ The head a machine publishes: see the schema definition `Head`. */
-export type SelectedHeadV1=Readonly<{version:1;revision:number;scope:string;platform:string;createdMs:number;membership:string;owners:Readonly<Record<string,string>>;documents:readonly Readonly<{name:string;hash:string;size:number}>[]}>;
+export type SelectedHeadV1=Readonly<{version:1;revision:number;scope:string;platform:string;createdMs:number;membership:string;owners:Readonly<Record<string,string>>;documents:readonly Readonly<{name:string;hash:string;size:number}>[];closureGraph?:string}>;
+/** 🌳️ The module closure graph exchange of the machine a selection is read on: `offer` hands the fleet the machine's graph and answers its head digest, `adopt` takes the graph a head names into the machine's graph by digests (`../../📥️inference/🧭️script-inputs/🌳️closure-graph/🛰️fleet`). */
+export type SelectedClosureGraphV1=Readonly<{offer():Promise<string|undefined>;adopt(head:string):Promise<Readonly<{outcome:string;confirmed:number;refused:number}>>}>;
 /** 📥️ The generation of a head as the reader's machine installs it: the graph text at its own root, the rows of every owner in its own spelling. */
 export type SelectedFetchedV1=Readonly<{head:SelectedHeadV1;graph:string;rowsByOwner:ReadonlyMap<string,readonly ObservationRowV1[]>;admission:readonly SelectedAdmissionEntryV1[]}>;
 
@@ -61,7 +64,7 @@ const swapped=async(client:GraphFleetClientV1,key:string,result:Uint8Array,slot:
 };
 
 /** 🏗️ The head and the documents of one sealed read for one machine: the root of the machine is replaced by the token everywhere, the rows are neutral, the owner digests are computed from them. Machines of different roots and homes produce the same bytes for the same content. */
-export function buildSelectedGenerationV1(input:Readonly<{scope:string;platform:string;host:HostV1;sealed:SelectedSealedV1;ownerOf:(relative:string)=>string|undefined;now:number}>):Readonly<{head:SelectedHeadV1;documents:readonly GraphDocumentV1[]}>{
+export function buildSelectedGenerationV1(input:Readonly<{scope:string;platform:string;host:HostV1;sealed:SelectedSealedV1;ownerOf:(relative:string)=>string|undefined;now:number;closureGraph?:string}>):Readonly<{head:SelectedHeadV1;documents:readonly GraphDocumentV1[]}>{
  const groups=selectedRowsByOwnerV1(input.sealed.rows,input.host,input.ownerOf),owners=selectedOwnerDigestsV1(groups);
  const move=(value:unknown)=>neutralizeRootV1(encode(value),input.host.root);
  const index=new Map<string,number>(),shared:ObservationRowV1[]=[],entries=input.sealed.admission.map(entry=>({owner:entry.owner,suffix:entry.suffix,facts:entry.facts,rows:neutralRowsV1(entry.rows,input.host).map(row=>{const key=JSON.stringify(row),held=index.get(key);if(held!==undefined)return held;index.set(key,shared.length);shared.push(row);return shared.length-1;})}));
@@ -71,7 +74,7 @@ export function buildSelectedGenerationV1(input:Readonly<{scope:string;platform:
   {name:"admission",bytes:move({version:2,rows:shared,entries})}
  ];
  const blobs=documents.flatMap(document=>packGraphDocumentV1(document)).map(blob=>({name:blob.name,hash:sha(blob.bytes),size:blob.bytes.length}));
- return{head:{version:1,revision:policy.revision,scope:input.scope,platform:input.platform,createdMs:input.now,membership:input.sealed.membership,owners,documents:blobs},documents};
+ return{head:{version:1,revision:policy.revision,scope:input.scope,platform:input.platform,createdMs:input.now,membership:input.sealed.membership,owners,documents:blobs,...input.closureGraph===undefined?{}:{closureGraph:input.closureGraph}},documents};
 }
 
 /** 📌️ The manifest that declares a head to the cache server as an entry of the protected graph class (kind `graph`): never stale, kept in the class budget however many unit outputs press, replaced only by a newer head of its slot, so the head the whole fleet waits for outlives the churn of compile units.
@@ -102,21 +105,17 @@ export async function redeclareSelectedHeadV1(input:Readonly<{client:GraphFleetC
  }catch{return false;}
 }
 
-/** ⬆️ Offers a sealed generation to the fleet: the blobs first (those the cache lacks), the head last by compare-and-swap, so a reader never finds a head without its blobs and the newest writer wins. A head whose owner digests equal the held head is not written again. A machine without upload rights, an unreachable cache or an oversized generation never throws. */
-export async function publishSelectedGenerationV1(input:Readonly<{client:GraphFleetClientV1;scope:string;platform:string;host:HostV1;sealed:SelectedSealedV1;ownerOf:(relative:string)=>string|undefined;now?:()=>number;held?:SelectedHeadV1}>):Promise<Readonly<{stored:boolean;head?:SelectedHeadV1;reason?:string}>>{
+/** ⬆️ Offers a sealed generation to the fleet: the blobs first, streamed one document at a time (`./🌊️streamed`, those the cache lacks), the head last by compare-and-swap, naming the module graph the machine offered (`closureGraph`), so a reader never finds a head without its blobs and the newest writer wins. A head whose owner digests equal the held head is not written again. A machine without upload rights, an unreachable cache or an oversized generation never throws. */
+export async function publishSelectedGenerationV1(input:Readonly<{client:GraphFleetClientV1;scope:string;platform:string;host:HostV1;sealed:SelectedSealedV1;ownerOf:(relative:string)=>string|undefined;now?:()=>number;held?:SelectedHeadV1;closureGraph?:string}>):Promise<Readonly<{stored:boolean;head?:SelectedHeadV1;reason?:string}>>{
  const {client}=input;
  try{
   if(!client.settings.upload)return{stored:false,reason:"no-upload"};
   if(!client.usable())return{stored:false,reason:"breaker"};
-  const built=buildSelectedGenerationV1({scope:input.scope,platform:input.platform,host:input.host,sealed:input.sealed,ownerOf:input.ownerOf,now:(input.now??Date.now)()});
-  const same=input.held!==undefined&&JSON.stringify(input.held.owners)===JSON.stringify(built.head.owners)&&input.held.membership===built.head.membership;
-  if(same&&await declaredAsKeptV1(client,selectedHeadKeyV1(input)))return{stored:false,head:input.held,reason:"current"};
-  if(Object.keys(built.head.owners).length>policy.maximumOwners)return{stored:false,reason:"limit-owners"};
-  const limit=graphDocumentLimitV1(built.documents);if(limit!==undefined)return{stored:false,reason:limit.code};
-  for(const blob of built.documents.flatMap(document=>packGraphDocumentV1(document))){
-   if(await client.hasBlob(sha(blob.bytes))===true)continue;
-   const put=await client.putBlob(sha(blob.bytes),blob.bytes);if(!put.stored)return{stored:false,reason:"blob: "+put.refusal.text.slice(0,100)};
-  }
+  const streamed=await streamSelectedDocumentsV1({host:input.host,sealed:input.sealed,ownerOf:input.ownerOf,current:async owners=>input.held!==undefined&&JSON.stringify(input.held.owners)===JSON.stringify(owners)&&input.held.membership===input.sealed.membership&&input.held.closureGraph===input.closureGraph&&await declaredAsKeptV1(client,selectedHeadKeyV1(input)),put:async blob=>{const hash=sha(blob.bytes);return await client.hasBlob(hash)===true||(await client.putBlob(hash,blob.bytes)).stored;}});
+  if("refusal" in streamed)return{stored:false,reason:streamed.refusal==="blob"?"blob: "+streamed.text.slice(0,100):streamed.refusal};
+  if(streamed.current)return{stored:false,head:input.held,reason:"current"};
+  if(Object.keys(streamed.owners).length>policy.maximumOwners)return{stored:false,reason:"limit-owners"};
+  const built={head:{version:1,revision:policy.revision,scope:input.scope,platform:input.platform,createdMs:(input.now??Date.now)(),membership:input.sealed.membership,owners:streamed.owners,documents:streamed.blobs,...input.closureGraph===undefined?{}:{closureGraph:input.closureGraph}} as SelectedHeadV1};
   const kept=retentionManifestV1();
   if(await client.hasBlob(kept.hash)!==true){const put=await client.putBlob(kept.hash,kept.bytes);if(!put.stored)return{stored:false,reason:"blob: "+put.refusal.text.slice(0,100)};}
   const result=encodeProtobufV1(REAPI_V1.actionResult,{output_files:[...built.head.documents.map(row=>({path:row.name,digest:{hash:row.hash,size_bytes:row.size}})),{path:policy.retentionManifest,digest:{hash:kept.hash,size_bytes:kept.bytes.length}}],stdout_raw:Buffer.from(JSON.stringify(built.head))});
@@ -200,19 +199,22 @@ export async function selectedGenerationV1(input:Readonly<{
  install:(plan:Readonly<{fetched:SelectedFetchedV1;matching:readonly string[];differing:readonly string[];complete:boolean}>)=>Promise<void>;
  read:(differing:readonly string[]|undefined)=>Promise<SelectedSealedV1|undefined>;
  say?:Say;now?:()=>number;sleep?:(milliseconds:number)=>Promise<void>;signal?:AbortSignal;
- alive?:()=>boolean;step?:SelectedStepV1;
+ alive?:()=>boolean;step?:SelectedStepV1;graph?:SelectedClosureGraphV1;
  claimTtlMilliseconds?:number;claimHeartbeatMilliseconds?:number;waitMaximumMilliseconds?:number;waitSliceMilliseconds?:number;lookMaximumMilliseconds?:number;readBesideMegabytes?:number}>):Promise<SelectedOutcomeV1>{
  const {client}=input,now=input.now??Date.now,started=now(),key=selectedHeadKeyV1(input),ttl=input.claimTtlMilliseconds??policy.claimTtlMilliseconds,beat=input.claimHeartbeatMilliseconds??policy.claimHeartbeatMilliseconds,limit=input.waitMaximumMilliseconds??policy.waitMaximumMilliseconds,slice=input.waitSliceMilliseconds??policy.waitSliceMilliseconds;
  const say=input.say??(()=>undefined),step:SelectedStepV1=input.step??((_id,run)=>run()),alive=input.alive??(()=>true),seconds=()=>Math.round((now()-started)/1000);
  const finish=(outcome:SelectedOutcomeV1["outcome"],held:number,differing:readonly string[],published:boolean):SelectedOutcomeV1=>({outcome,held,differing,waitedMilliseconds:now()-started,published});
  const publish=async(sealed:SelectedSealedV1|undefined,held:SelectedHeadV1|undefined)=>{
   if(sealed===undefined)return false;
-  const stored=await step("exchange-publish",()=>publishSelectedGenerationV1({client,scope:input.scope,platform:input.platform,host:input.host,sealed,ownerOf:input.ownerOf,now,held}));
+  const closureGraph=await input.graph?.offer().catch(()=>undefined);
+  const stored=await step("exchange-publish",()=>publishSelectedGenerationV1({client,scope:input.scope,platform:input.platform,host:input.host,sealed,ownerOf:input.ownerOf,now,held,...closureGraph===undefined?{}:{closureGraph}}));
   if(stored.stored)say("published",{owners:Object.keys(stored.head!.owners).length});
   else if(stored.reason!==undefined&&stored.reason!=="current")say("not-published",{reason:stored.reason});
   return stored.stored;
  };
  const take=async(fetched:SelectedFetchedV1,through:"installed"|"waited"|"taken-over"):Promise<SelectedOutcomeV1>=>{
+  const named=fetched.head.closureGraph;
+  if(named!==undefined&&input.graph!==undefined){const adopted=await input.graph.adopt(named).catch(()=>undefined);if(adopted!==undefined)say("graph-adopted",{confirmed:adopted.confirmed,refused:adopted.refused});}
   const verdict=await acceptSelectedOwnersV1({fetched,holds:input.holds,own:input.own?.(),owners:input.owners?.()}),differing=[...verdict.differing,...verdict.added].sort(),complete=differing.length===0&&verdict.removed.length===0;
   await step("exchange-install",()=>input.install({fetched,matching:verdict.matching,differing,complete}));
   if(complete){say("installed",{owners:verdict.matching.length,seconds:seconds()});return finish(through==="installed"?"installed":through,verdict.matching.length,[],false);}

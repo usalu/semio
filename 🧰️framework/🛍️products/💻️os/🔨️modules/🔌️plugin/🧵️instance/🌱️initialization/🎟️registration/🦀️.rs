@@ -13,7 +13,7 @@ use semio_plugin_window_kits::RegisteredDefinitionSource;
 use semio_framework_value::retirement::controlled::ControlledRetirement;
 use semio_os_kernel::os_store::owned_schema_decode::{ArtifactEnvelopeFieldDecoderRegistry,ArtifactEnvelopeCompletedRecordRegistry,ArtifactEnvelopeRegistryOwner};
 use semio_plugin_peer::PeerPresenceRootRetirement;
-use semio_plugin_ownership::original_store_genesis::OriginalStoreBirth;
+use semio_plugin_store_lifecycle::original_store_genesis::OriginalStoreBirth;
 use std::marker::PhantomData;
 type Fields<A>=ArtifactEnvelopeFieldDecoderRegistry<<A as ArtifactApp>::Snapshot,<A as ArtifactApp>::Mutation>;
 type Records<A>=ArtifactEnvelopeCompletedRecordRegistry<<A as ArtifactApp>::Snapshot,<A as ArtifactApp>::Mutation>;
@@ -55,7 +55,7 @@ where A:OriginalArtifactAppBirth,M:ReferenceSpaceMember+MemberFactory+'static,D:
 }
 impl<A,M,D> OriginalInstanceRegistration<A,M> for OriginalNativeRegistration<A,M,D>
 where A:OriginalArtifactAppBirth,M:ReferenceSpaceMember+MemberFactory+'static,D:OriginalInstanceDeclarations<A>{
- fn admit(source:RegisteredDefinitionSource<'_>,registration:&dyn OriginalPluginAppRegistration,actor:&protocol::ActorId,policy:semio_plugin_mounted_owner::MountedOwnerPolicyV1,cx:&mut StepContext<'_>,birth:&mut semio_plugin_ownership::original_store_genesis::OriginalStoreBirth,output:&mut Option<Box<Self>>)->Result<bool,OriginalTurnFailure>{
+ fn admit(source:RegisteredDefinitionSource<'_>,registration:&dyn OriginalPluginAppRegistration,actor:&protocol::ActorId,policy:semio_plugin_mounted_owner::MountedOwnerPolicyV1,cx:&mut StepContext<'_>,birth:&mut semio_plugin_store_lifecycle::original_store_genesis::OriginalStoreBirth,output:&mut Option<Box<Self>>)->Result<bool,OriginalTurnFailure>{
   if output.is_some(){return Err(invalid("original Window registration recipient is occupied").into())}
   let catalog=registration.as_any().downcast_ref::<OriginalDeclaredTools>().and_then(OriginalDeclaredTools::source).ok_or_else(||invalid("native Window registration requires its actual committed declared tool producer"))?;
   if source.id!=catalog.controller_id{return Err(invalid("original Window registration changed its declared controller").into())}

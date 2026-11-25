@@ -50,7 +50,7 @@ impl StagedScalarCursor {
             StagedScalarKind::Text{value}=>Component::Input(InputProps{value:text(value)?,kind:InputKind::Text,draft_target:Some(UiText::try_format(format_args!("stage.control.{}",spec.address)).ok_or_else(resource)?),..Default::default()}),
             StagedScalarKind::Choice{value,choices}=>{if choices.len()>32{return Err(resource());}Component::Select(SelectProps{value:text(value)?,items:Default::default(),placeholder:Some(label.clone()),appearance:SelectAppearance::Menu})},
             StagedScalarKind::Button{..}=>Component::Button(ButtonProps{icon:UiText::default(),label:label.clone()}),
-            StagedScalarKind::ReadOnly{value}=>Component::Text(TextProps{value:Label(text(value)?),emphasize:None,data_attributes:None}),
+            StagedScalarKind::ReadOnly{value}=>Component::Text(TextProps{value:Label(text(value)?),emphasize:None,data_attributes:None, heading_level: None}),
             StagedScalarKind::Status=>Component::Extension(ExtensionProps{extension:text(semio_framework::action_staging::STAGED_FORM_STATUS_EXTENSION)?,props:UiValue::Null}),
         };
         let key=UiText::try_format(format_args!("stage.control.{}",spec.address)).ok_or_else(resource)?;

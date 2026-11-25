@@ -159,7 +159,7 @@ pub(super) async fn retained_document_cancellation<A: ArtifactApp + Default>(fac
                 assert_eq!(actual, expected, "{boundary}, delayed ACK={delayed_ack}");
                 let final_token = artifact_app_laws::close_fixture_result_page(&mut final_page, mounted_policy.close);
                  assert!(mounted.acknowledge_result_page(final_token).unwrap());
-                close_mounted(&mut mounted, "document cancellation close", mounted_policy.close, cx);
+                close_mounted(&mut mounted, &app.tools.tool_cancellations, "document cancellation close", mounted_policy.close, cx);
                 assert!(mounted.terminal_is_empty());
                 drop(before);
                 close_app(&mut app, "document cancellation app close", cx);

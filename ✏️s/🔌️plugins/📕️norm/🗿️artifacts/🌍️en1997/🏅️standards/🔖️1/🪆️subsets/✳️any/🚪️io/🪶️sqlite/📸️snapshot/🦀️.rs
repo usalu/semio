@@ -85,7 +85,7 @@ impl En1997Snapshot{
   for(n,v)in self.characteristic_bases.iter().enumerate(){p.insert_float("en1997_characteristic_basis",&[Cell::Integer(1),ordinal(n)?,Cell::Text(&v.id),Cell::Text(&v.layer_id),Cell::Text(characteristic_parameter_text(v.parameter)),Cell::Text(parameter_basis_text(v.basis))],&[])?;}
   Ok(())
  }
- fn admit_sqlite_values(&self,c:&mut SqliteSnapshotControl<'_>,phase:SqliteSnapshotPhase)->Result<(),ValueError>{semio_s_artifact_norm_contract::sqlite_native::schema(En1997Snapshot::SQLITE_SCHEMA,23,96,c)?;let mut p=RowWriter::borrowed(c,phase)?;self.write_sqlite_rows(&mut p)?;p.finish_borrowed()}
+ fn admit_sqlite_values(&self,c:&mut SqliteSnapshotControl<'_>,phase:SqliteSnapshotPhase)->Result<(),ValueError>{semio_s_artifact_norm_contract::sqlite_native::schema(En1997Snapshot::SQLITE_SCHEMA,23,76,c)?;let mut p=RowWriter::borrowed(c,phase)?;self.write_sqlite_rows(&mut p)?;p.finish_borrowed()}
 }
 impl ArtifactSqliteSnapshotHost for En1997Snapshot{
  

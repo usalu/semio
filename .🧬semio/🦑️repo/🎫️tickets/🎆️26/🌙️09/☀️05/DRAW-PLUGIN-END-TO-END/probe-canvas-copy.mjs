@@ -1,0 +1,24 @@
+/** 🖱️ Picks a layer on the canvas, reads the status line, copies by menu and prints every debug class the copy produced. */
+import { createRequire } from "node:module";
+import { resolve } from "node:path";
+const require = createRequire(resolve("✏️s/🔌️plugins/🖍️draw/🧪️tests/🌐️browser/🟦️.mjs"));
+const { chromium } = require("playwright");
+const browser = await chromium.launch({ headless: true, args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-unsafe-webgpu"] });
+const page = await (await browser.newContext({ locale: "en", viewport: { width: 1600, height: 1000 } })).newPage();
+await page.routeWebSocket(address => address.searchParams.has("token"), () => undefined);
+const t0 = performance.now(), at = () => Math.round((performance.now() - t0) / 100) / 10;
+const seen = new Map();
+page.on("console", message => { const text = message.text(); if (at() > 19 || /clip |fault|refus|lost|stall/i.test(text)) { const key = text.replace(/\d+/g, "#").slice(0, 90); const count = (seen.get(key) ?? 0) + 1; seen.set(key, count); if (count === 1) console.log(at(), message.type(), text.slice(0, 1200)); } });
+await page.goto("http://127.0.0.1:6064/?plugin=draw");
+await page.waitForFunction(() => document.documentElement.dataset.semioOsReady, undefined, { timeout: 90000 });
+await page.waitForTimeout(8000);
+await page.mouse.click(410, 200);
+await page.waitForTimeout(4000);
+await page.locator('[id^="framework.window."][id$=".engagement.toggle"]').first().click();
+await page.waitForTimeout(1500);
+console.log(at(), "status", await page.locator('[id="drawing-composite"] [data-slot="engagement-status"]').textContent());
+await page.locator('[id="action.copy"]').first().click({ timeout: 8000 }).catch(error => console.log("no copy", String(error).slice(0, 100)));
+await page.waitForTimeout(15000);
+console.log(at(), "status", await page.locator('[id="drawing-composite"] [data-slot="engagement-status"]').textContent().catch(() => null));
+await page.screenshot({ path: resolve(process.argv[2]) });
+await browser.close();

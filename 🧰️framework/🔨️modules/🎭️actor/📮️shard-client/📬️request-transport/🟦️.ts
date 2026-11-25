@@ -76,10 +76,16 @@ export class ShardRequestTransport {
       void drawn.then((admission) => slot.worker.postMessage({ kind: "original-succession-result", request: message.request, admission }), (refusal) => slot.worker.postMessage({ kind: "original-succession-result", request: message.request, refusal }));
       return;
     }
+    if (message.kind === "core-module") {
+      const activation = this.state.actorActivations.get(message.actorId);
+      if (activation && activation.available && activation.slot === slot && activation.generation === message.activationGeneration) void this.state.coreModules.acquire(String(activation.generation), message.url, message.module);
+      return;
+    }
     if (message.kind === "original-source-close") {
       const original = this.state.originalClosures.get(message.operation);
-      if (!original || original.slot !== slot || original.actorId !== message.actorId || original.generation !== message.activationGeneration || original.originalAdmission.generation !== message.generation || message.sourceClosed !== true) return;
-      void (this.state.originalReturns.get(message.operation) ?? Promise.resolve()).then(() => this.state.originalWorkStock.returnClosed(original.originalAdmission, true)).then(() => { this.state.originalClosures.delete(message.operation); this.state.originalReturns.delete(message.operation); }).catch(() => {});
+      if (!original || original.slot !== slot || original.actorId !== message.actorId || original.generation !== message.activationGeneration || original.originalAdmission.generation !== message.generation) return;
+      if (message.sourceClosed !== true) { this.hub.routing.recycleIdle(slot, message.operation); return; }
+      void (this.state.originalReturns.get(message.operation) ?? Promise.resolve()).then(() => this.state.originalWorkStock.returnClosed(original.originalAdmission, true)).then(() => { this.state.originalClosures.delete(message.operation); this.state.originalReturns.delete(message.operation); this.hub.routing.recycleIdle(slot, message.operation); }).catch(() => {});
       return;
     }
     const entry = this.state.pending.get(message.requestId);
@@ -130,6 +136,7 @@ export class ShardRequestTransport {
       const activation = this.state.actorActivations.get(actorId);
       if (activation?.slot === slot) {
         activation.available = false;
+        this.state.coreModules.release(String(activation.generation));
         if (activation.instance) activation.instance.failure = "worker-lost";
       }
       this.state.actorShard.delete(actorId);

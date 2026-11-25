@@ -25,6 +25,7 @@ mod native_codec {
 use crate::EnergyModelMutation;
 
 dsl::original_pack_value_operation_receiving!(EnergyModelMutation);
+dsl::artifact_persisted_binary_operation!(EnergyModelMutation);
 
 impl protocol::OpBinary for EnergyModelMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

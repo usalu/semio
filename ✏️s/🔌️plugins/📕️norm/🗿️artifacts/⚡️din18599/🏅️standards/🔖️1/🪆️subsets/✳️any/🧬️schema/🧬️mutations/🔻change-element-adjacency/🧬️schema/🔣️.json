@@ -11,7 +11,7 @@
   ],
   "properties": {
     "mutation": {
-      "const": "changeelementadjacency"
+      "const": "changeElementAdjacency"
     },
     "elementId": {
       "type": "string",

@@ -303,7 +303,7 @@ impl ArtifactOwnedToolJobFactory for TxnFixtureFactory {
     fn latest_wins_target(_command: &TxnCommand) -> Option<&str> {
         None
     }
-    fn build_latest_wins_command_disposer() -> Option<Box<dyn semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer<TxnCommand>>> {
+    fn build_latest_wins_command_disposer() -> Option<Box<dyn semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer<TxnCommand>>> {
         None
     }
 }
@@ -398,19 +398,19 @@ impl ArtifactApp for TxnApp {
         Some(crate::testing_laws_unit_1::mutation_fixture::wire::admit_document_store_owners::<Self::Snapshot, Self::Mutation>("testkit-txn-artifact-retained", grant))
     }
 
-    fn build_document_store_disposer() -> Option<Box<dyn semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
-        Some(semio_plugin_ownership::store_lifecycle::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
+    fn build_document_store_disposer() -> Option<Box<dyn semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+        Some(semio_plugin_store_lifecycle::store_lifecycle::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
     }
-    fn build_config_store_disposer() -> Option<Box<dyn semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
-        Some(semio_plugin_ownership::store_lifecycle::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
+    fn build_config_store_disposer() -> Option<Box<dyn semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+        Some(semio_plugin_store_lifecycle::store_lifecycle::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
     }
-    fn build_draft_store_disposer() -> Option<Box<dyn semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
-        Some(semio_plugin_ownership::store_lifecycle::bounded_document_store_disposer::<Self::Draft, Self::DraftMutation>())
+    fn build_draft_store_disposer() -> Option<Box<dyn semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
+        Some(semio_plugin_store_lifecycle::store_lifecycle::bounded_document_store_disposer::<Self::Draft, Self::DraftMutation>())
     }
-    fn build_presence_store_disposer() -> Option<Box<dyn semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
         Some(crate::testing_laws_unit_1::mutation_fixture::no_state::presence_store_disposer())
     }
-    fn build_transient_store_disposer() -> Option<Box<dyn semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+    fn build_transient_store_disposer() -> Option<Box<dyn semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
         Some(crate::testing_laws_unit_1::mutation_fixture::no_state::transient_store_disposer())
     }
     fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {

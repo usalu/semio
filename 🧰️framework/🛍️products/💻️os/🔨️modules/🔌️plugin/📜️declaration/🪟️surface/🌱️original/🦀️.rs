@@ -1,6 +1,6 @@
 //! 🌱️ Native surface declarations retain actual authored genesis sources and the paid controller identity.
 use super::*;
-use semio_plugin_ownership::original_store_genesis::OriginalStoreGenesisOwner;
+use semio_plugin_store_lifecycle::original_store_genesis::OriginalStoreGenesisOwner;
 use semio_plugin_decl_app::OriginalArtifactAppBirth;
 use semio_framework_value::retirement::RetireOwned;
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedAllocationEffect};

@@ -131,7 +131,8 @@
         "maximumRequestBytes": 65536,
         "maximumClosurePasses": 2,
         "maximumResultBytes": 16777216,
-        "maximumRetirementBatch": 64
+        "maximumRetirementBatch": 64,
+        "temporaryOrphanSeconds": 3600
       }
     },
     "Fixture": {

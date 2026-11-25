@@ -15,7 +15,7 @@ async fn manifest(plugin_id: &str, version: &str, dependencies: Vec<PluginDepend
         topic_contributions: Vec::new(),
         commands: Vec::new(),
         artifact_kinds: Vec::new(),
-        hosted_artifact_kinds: Vec::new(),
+        hosted_artifact_kinds: Vec::new(), action_sets: Vec::new(),
         dependencies,
         contributions: Vec::new(),
     }

@@ -304,9 +304,19 @@ export async function registerTests3(vitest: NonNullable<ImportMeta["vitest"]>, 
       if (typeof chrome?.glassAlphaStep === "number") {
         expect(root.style.getPropertyValue("--glass-alpha-step")).toBe(`${chrome.glassAlphaStep}`);
       }
+      if (typeof chrome?.chipTintPercent === "number") {
+        expect(root.style.getPropertyValue("--chip-tint")).toBe(`${chrome.chipTintPercent}%`);
+      }
       for (const deleted of ["--glass-panel-blur", "--glass-panel-alpha", "--glass-menu-alpha", "--glass-window-options-blur", "--glass-window-options-alpha"]) {
         expect(root.style.getPropertyValue(deleted)).toBe("");
       }
+    });
+
+    it("applyUiThemeToRoot lets a theme override the chip tint", () => {
+      const root = document.createElement("div");
+      const theme = semioTheme();
+      applyUiThemeToRoot(root, { ...theme, metrics: { ...theme.metrics, chrome: { ...theme.metrics.chrome, chipTintPercent: 17 } } });
+      expect(root.style.getPropertyValue("--chip-tint")).toBe("17%");
     });
 
     it("retains mounted geometry and active identity for invalid geometry publication", () => {

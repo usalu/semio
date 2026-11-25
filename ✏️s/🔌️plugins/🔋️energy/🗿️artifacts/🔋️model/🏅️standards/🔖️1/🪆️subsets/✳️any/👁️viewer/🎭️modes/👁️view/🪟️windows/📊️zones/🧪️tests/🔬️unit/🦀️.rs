@@ -20,13 +20,18 @@ fn rows(table: &BuiltNode) -> Vec<serde_json::Value> {
 
 #[semio_framework_async_macros::async_test]
 async fn render_lists_one_row_per_zone() {
-    let empty = render(&EnergyModelSnapshot::empty().unwrap(), semio_plugin::Locale::En).expect("the empty table window assembles");
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
+    let blank = EnergyModelSnapshot::empty().unwrap();
+    let empty = render(&blank, semio_plugin::Locale::En).expect("the empty table window assembles");
     assert_eq!(empty.key.as_str(), WINDOW_KIND_ID);
     assert!(rows(&empty).is_empty());
-    let mut document = EnergyModelSnapshot::empty().unwrap();
-    document.model.zones = vec![zone(1, "Ground floor"), zone(2, "Attic")];
+    let mut model = crate::model::Model::default();
+    model.zones = vec![zone(1, "Ground floor"), zone(2, "Attic")];
+    let document = EnergyModelSnapshot::from_model(&model).unwrap();
     let rows = rows(&render(&document, semio_plugin::Locale::En).expect("the table window assembles"));
     assert_eq!(rows.len(), 2);
     assert_eq!((rows[0]["0"].as_str(), rows[0]["1"].as_str()), (Some("1"), Some("Ground floor")));
     assert_eq!((rows[1]["0"].as_str(), rows[1]["1"].as_str()), (Some("2"), Some("Attic")));
+    blank.retire().expect("the empty document retires");
+    document.retire().expect("the document retires");
 }

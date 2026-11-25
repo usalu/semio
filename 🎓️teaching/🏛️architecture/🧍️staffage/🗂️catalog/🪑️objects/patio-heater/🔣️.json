@@ -13,12 +13,48 @@
       "de": "Ein freistehender Propan-Heizpilz von 13 kW, 2,25 m hoch mit 0,80 m Haube: die Flasche steht im Sockelgehäuse, der Regelknopf sitzt am Kopf unter dem Strahlergitter; die Betriebsstufen Aus, Klein (6 kW) und Groß (13 kW) heizen Strahlergitter und Haube und schicken eine heiße Abgasfahne unter der Haube nach oben."
     },
     "tags": [
-      "patio-heater",
-      "propane",
-      "radiant-heater",
-      "outdoor",
-      "burner",
-      "flue"
+      {
+        "id": "patio-heater",
+        "title": {
+          "en": "patio heater",
+          "de": "Terrassenstrahler"
+        }
+      },
+      {
+        "id": "propane",
+        "title": {
+          "en": "propane",
+          "de": "Propan"
+        }
+      },
+      {
+        "id": "radiant-heater",
+        "title": {
+          "en": "radiant heater",
+          "de": "Heizstrahler"
+        }
+      },
+      {
+        "id": "outdoor",
+        "title": {
+          "en": "outdoor",
+          "de": "Außenbereich"
+        }
+      },
+      {
+        "id": "burner",
+        "title": {
+          "en": "burner",
+          "de": "Brenner"
+        }
+      },
+      {
+        "id": "flue",
+        "title": {
+          "en": "flue",
+          "de": "Abgasrohr"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage content (NW-O)",

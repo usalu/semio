@@ -5,7 +5,7 @@
   "description": "Language-agnostic cases for the pure binding plan of a TypeScript package (owner, fixed links, output and receipt locations), the binding receipt and a path capacity sweep over package directory name lengths.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["version", "cases", "receipts", "capacity"],
+  "required": ["version", "cases", "receipts", "links", "capacity"],
   "properties": {
     "version": { "const": 1 },
     "cases": {
@@ -19,6 +19,7 @@
       }
     },
     "receipts": { "type": "array", "minItems": 1, "items": { "type": "object", "additionalProperties": false, "required": ["name", "value", "valid"], "properties": { "name": { "type": "string", "minLength": 1 }, "value": { "type": "object" }, "valid": { "type": "boolean" } } } },
+    "links": { "description": "Which mode an existing fixed link is bound to (`typeScriptPackageLinkModeV1`): from the receipt, or from the link text alone when it is exactly the private output of a mode; `expected` null is a foreign link.", "type": "array", "minItems": 1, "items": { "type": "object", "additionalProperties": false, "required": ["name", "index", "mode", "link", "outputs", "expected"], "properties": { "name": { "type": "string", "minLength": 1 }, "index": { "enum": [0, 1] }, "mode": { "enum": ["prototype", "release"] }, "link": { "type": "boolean" }, "text": { "type": "string" }, "receipt": { "type": "object", "additionalProperties": false, "required": ["activeMode", "modes"], "properties": { "activeMode": { "enum": ["prototype", "release"] }, "modes": { "type": "array", "items": { "enum": ["prototype", "release"] } } } }, "outputs": { "type": "object", "additionalProperties": false, "properties": { "prototype": { "type": "string" }, "release": { "type": "string" } } }, "expected": { "anyOf": [{ "enum": ["prototype", "release"] }, { "type": "null" }] } } } },
     "capacity": { "type": "object", "additionalProperties": false, "required": ["workspace", "products", "from", "to"], "properties": { "workspace": { "type": "string" }, "products": { "type": "string" }, "from": { "type": "integer", "minimum": 1 }, "to": { "type": "integer", "minimum": 1 } } }
   }
 }

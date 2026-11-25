@@ -37,6 +37,10 @@ use serde_json::{json, Value};
 mod model;
 pub use self::model::*;
 
+#[path = "../../../🗣️labels/🦀️.rs"]
+mod labels;
+pub use self::labels::*;
+
 #[path = "../../../🗺️scene/🦀️.rs"]
 mod scene;
 pub use self::scene::*;

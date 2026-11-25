@@ -7,6 +7,7 @@
       "{workspaceRoot}/🌎️hub/🧩️compositions/🖍️draw/🧩️component/🔣️.json",
       "{workspaceRoot}/🌎️hub/🧩️compositions/🖍️draw/🧪️tests/🌐️guest/*.json",
       "{workspaceRoot}/🌎️hub/🧩️compositions/🖍️draw/🧪️tests/🌐️guest/*.ts",
+      "{workspaceRoot}/🌎️hub/🧩️compositions/🖍️draw/🧪️tests/🔬️surface/*.json",
       "{projectRoot}/**/*"
     ]
   },

@@ -1,6 +1,6 @@
 /** 🔶️ The scene phase of Canvas2dHost. */
 import { useCallback, useContext, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "../../⚛️react-port/🟦️.ts";
-import { useLabel } from "@semio-tech/ui-react";
+import { useLabel, useShellScopeOptional } from "@semio-tech/ui-react";
 import { WindowInstanceIdContext } from "../../🗣️Interpreter/🌉️scene-host-contract/🟦️.ts";
 import { useMapContextMenuSpecs, useShellContextMenuFallback, type SurfaceContextMenuResult } from "../../🗣️Interpreter/🖱️surface-menu/🟦️.ts";
 import { useLocalPresenceActorIdV1, usePresenceRuntimeKeyV1 } from "../../👕️canvas-presence/🟦️.tsx";
@@ -83,6 +83,7 @@ export function useSceneState({ node, onAction }: { readonly node: import("../..
   );
   const mapContextMenu = useMapContextMenuSpecs(dispatch);
   const shellContextMenuFallback = useShellContextMenuFallback();
+  const shellScope = useShellScopeOptional();
   const sessionFactory = useMemo(() => {
     return () => {
       const session = new JsonLayersCanvasSession(
@@ -98,11 +99,12 @@ export function useSceneState({ node, onAction }: { readonly node: import("../..
         },
         (action, args) => dispatch(action, args),
         () => framingRef.current,
+        () => shellScope?.selection.get(),
       );
       sessionRef.current = session;
       return session;
     };
-  }, [dispatch, publishCanvasPresenceView]);
+  }, [dispatch, publishCanvasPresenceView, shellScope]);
 
   useEffect(() => {
     return () => {
@@ -136,5 +138,5 @@ export function useSceneState({ node, onAction }: { readonly node: import("../..
     layersCacheRef.current = { json, layers };
     return layers;
   }, []);
-  return { windowInstanceId, containerRef, cameraRef, readLayers, dragOverStateRef, dispatch, mapContextMenu, shellContextMenuFallback, setContextMenu, setViewportSize, scene, emptySceneLabel, onPresencePointerMove, onPresencePointerLeave, sessionFactory, activeUtility, viewportSize, presenceRuntimeKey, presenceWindowId, localPresenceActor, presenceCamera, contextMenuTitleLabel, contextMenu };
+  return { sessionRef, windowInstanceId, containerRef, cameraRef, readLayers, dragOverStateRef, dispatch, mapContextMenu, shellContextMenuFallback, setContextMenu, setViewportSize, scene, emptySceneLabel, onPresencePointerMove, onPresencePointerLeave, sessionFactory, activeUtility, viewportSize, presenceRuntimeKey, presenceWindowId, localPresenceActor, presenceCamera, contextMenuTitleLabel, contextMenu };
 }

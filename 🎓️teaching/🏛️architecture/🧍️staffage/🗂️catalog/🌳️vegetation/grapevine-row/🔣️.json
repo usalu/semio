@@ -809,15 +809,69 @@
    "de": "Ein Abschnitt von 4 m einer Weinbergzeile aus Weinreben (Vitis vinifera), als zweiarmige Kordons an einem Drahtrahmen mit senkrechter Triebführung erzogen: zwei Kiefern-Rundpfähle von 1,8 m Höhe, ein Biegedraht in 0,8 m, zwei Heftdrahtpaare und ein Kopfdraht. Vier Rebstöcke im Abstand von 1,0 m tragen eine gestutzte Laubwand von 0,56 m Dicke vom Kordon bis 1,8 m und je zwei Trauben in der offenen Traubenzone. Drahtrahmen und Reben sind ein Asset."
   },
   "tags": [
-   "grapevine",
-   "vineyard",
-   "climber",
-   "trellis",
-   "crop",
-   "fruit",
-   "deciduous",
-   "wind",
-   "transpiration"
+   {
+    "id": "grapevine",
+    "title": {
+     "en": "grapevine",
+     "de": "Weinrebe"
+    }
+   },
+   {
+    "id": "vineyard",
+    "title": {
+     "en": "vineyard",
+     "de": "Weinberg"
+    }
+   },
+   {
+    "id": "climber",
+    "title": {
+     "en": "climber",
+     "de": "Kletterer"
+    }
+   },
+   {
+    "id": "trellis",
+    "title": {
+     "en": "trellis",
+     "de": "Rankgitter"
+    }
+   },
+   {
+    "id": "crop",
+    "title": {
+     "en": "crop",
+     "de": "Nutzpflanze"
+    }
+   },
+   {
+    "id": "fruit",
+    "title": {
+     "en": "fruit",
+     "de": "Obst"
+    }
+   },
+   {
+    "id": "deciduous",
+    "title": {
+     "en": "deciduous",
+     "de": "laubabwerfend"
+    }
+   },
+   {
+    "id": "wind",
+    "title": {
+     "en": "wind",
+     "de": "Wind"
+    }
+   },
+   {
+    "id": "transpiration",
+    "title": {
+     "en": "transpiration",
+     "de": "Transpiration"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage plant worker PW-16",

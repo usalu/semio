@@ -123,6 +123,15 @@ impl XrefAssemblyCursor {
         response(event, step.work, step.allocated_bytes, step.released_bytes)
     }
 
+    /// 🏃️ Bytes the next unit writes when it is a run unit: one scanned table byte, or one index slot it fills, rehashes or merges; `None` for every other action.
+    pub fn run_write_bytes(&self) -> Option<usize> {
+        match self.phase {
+            Phase::Insert { .. } | Phase::Merge => Some(std::mem::size_of::<Option<super::XrefRow>>()),
+            Phase::Read => self.revisions.scans_bytes().then_some(1),
+            _ => None,
+        }
+    }
+
     /// 📂️ Moves the latest validated primary trailer while retaining the original index rows.
     pub fn take_primary_trailer(&mut self) -> Option<Vec<PdfDictEntry>> {
         if !matches!(self.phase, Phase::Trailer) { return None; }

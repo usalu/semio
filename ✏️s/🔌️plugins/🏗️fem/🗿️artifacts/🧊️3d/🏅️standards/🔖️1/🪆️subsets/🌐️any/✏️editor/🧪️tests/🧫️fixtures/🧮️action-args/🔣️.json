@@ -1,0 +1,234 @@
+{
+  "addNode": {
+    "payloadRequired": [
+      "x",
+      "y",
+      "z"
+    ],
+    "args": [
+      "x",
+      "y",
+      "z"
+    ],
+    "required": [
+      "x",
+      "y",
+      "z"
+    ]
+  },
+  "addBar": {
+    "payloadRequired": [
+      "start",
+      "end",
+      "materialId",
+      "sectionId"
+    ],
+    "args": [
+      "start",
+      "end",
+      "materialId",
+      "sectionId"
+    ],
+    "required": [
+      "start",
+      "end",
+      "materialId",
+      "sectionId"
+    ]
+  },
+  "addFrame": {
+    "payloadRequired": [
+      "start",
+      "end",
+      "materialId",
+      "sectionId",
+      "roll"
+    ],
+    "args": [
+      "start",
+      "end",
+      "materialId",
+      "sectionId",
+      "roll"
+    ],
+    "required": [
+      "start",
+      "end",
+      "materialId",
+      "sectionId"
+    ]
+  },
+  "addMaterial": {
+    "payloadRequired": [
+      "name",
+      "e",
+      "g"
+    ],
+    "args": [
+      "name",
+      "e",
+      "g"
+    ],
+    "required": [
+      "name"
+    ]
+  },
+  "addSection": {
+    "payloadRequired": [
+      "name",
+      "area",
+      "iy",
+      "iz",
+      "j"
+    ],
+    "args": [
+      "name",
+      "area",
+      "iy",
+      "iz",
+      "j"
+    ],
+    "required": [
+      "name",
+      "area",
+      "iy",
+      "iz",
+      "j"
+    ]
+  },
+  "addSupport": {
+    "payloadRequired": [
+      "nodeId",
+      "fixed"
+    ],
+    "args": [
+      "nodeId",
+      "fixed"
+    ],
+    "required": [
+      "nodeId"
+    ]
+  },
+  "addNodalLoad": {
+    "payloadRequired": [
+      "nodeId",
+      "dof",
+      "value"
+    ],
+    "args": [
+      "nodeId",
+      "dof",
+      "value",
+      "caseId"
+    ],
+    "required": [
+      "nodeId",
+      "value"
+    ]
+  },
+  "addMemberUdl": {
+    "payloadRequired": [
+      "elementId",
+      "wx",
+      "wy",
+      "wz"
+    ],
+    "args": [
+      "elementId",
+      "wx",
+      "wy",
+      "wz",
+      "caseId"
+    ],
+    "required": [
+      "elementId",
+      "wy"
+    ]
+  },
+  "addAreaLoad": {
+    "payloadRequired": [
+      "solidId",
+      "pressure"
+    ],
+    "args": [
+      "solidId",
+      "pressure",
+      "caseId"
+    ],
+    "required": [
+      "solidId",
+      "pressure"
+    ]
+  },
+  "addSolid": {
+    "payloadRequired": [
+      "x",
+      "y",
+      "width",
+      "depth",
+      "height",
+      "materialId"
+    ],
+    "args": [
+      "x",
+      "y",
+      "width",
+      "depth",
+      "height",
+      "materialId",
+      "baseZ",
+      "layers",
+      "meshSize",
+      "axis"
+    ],
+    "required": [
+      "x",
+      "y",
+      "width",
+      "depth",
+      "height",
+      "materialId"
+    ]
+  },
+  "addLoadCase": {
+    "payloadRequired": [
+      "name",
+      "selfWeight"
+    ],
+    "args": [
+      "name",
+      "selfWeight"
+    ],
+    "required": [
+      "name"
+    ]
+  },
+  "addCombination": {
+    "payloadRequired": [
+      "name",
+      "terms"
+    ],
+    "args": [
+      "name",
+      "terms"
+    ],
+    "required": [
+      "name",
+      "terms"
+    ]
+  },
+  "setSelfWeight": {
+    "payloadRequired": [
+      "caseId",
+      "enabled"
+    ],
+    "args": [
+      "caseId",
+      "enabled"
+    ],
+    "required": [
+      "caseId",
+      "enabled"
+    ]
+  }
+}

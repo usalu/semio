@@ -72,36 +72,47 @@ function planLeafStructs(modules: readonly SchemaModule[], index: ReadonlyMap<st
 }
 
 /** 🏠️ The Rust file that holds the structs of a record module: the `🦀️.rs` beside its schema, else the one of the folder above (`🧬️schema`). */
-function recordHome(module: SchemaModule): string | undefined {
-  return [join(module.dir, TWIN_FILE.rust), join(dirname(module.dir), TWIN_FILE.rust)].find((path) => existsSync(path) && !FOREIGN_BANNER.test(readFileSync(path, "utf8")));
+function recordHome(module: SchemaModule, source: (path: string) => string | undefined = (path) => existsSync(path) ? readFileSync(path, "utf8") : undefined): string | undefined {
+  return [join(module.dir, TWIN_FILE.rust), join(dirname(module.dir), TWIN_FILE.rust)].find((path) => { const text = source(path); return text !== undefined && !FOREIGN_BANNER.test(text); });
 }
 
-/** 🧱️ The `🦀️.rs` files whose record structs the schemas annotate (`x-semio-rust.derive`), each struct regenerated from its record. A file named by several modules is planned once. */
+/** 🧱️ The `🦀️.rs` files whose record structs the schemas annotate (`x-semio-rust.derive`), each struct regenerated from its record; `x-semio-rust.file` selects a file relative to the schema. */
 function planRecordStructs(modules: readonly SchemaModule[], index: ReadonlyMap<string, SchemaModule>): TwinPlan[] {
   const texts = new Map<string, { module: SchemaModule; text: string }>();
   const problems: TwinPlan[] = [];
+  const sources = new Map<string, string | undefined>();
+  const source = (path: string): string | undefined => {
+    if (!sources.has(path)) sources.set(path, existsSync(path) ? readFileSync(path, "utf8") : undefined);
+    return sources.get(path);
+  };
   for (const module of modules) {
     const dialect = dialectOf(module);
     if (dialect === undefined || !dialect.enabled || leafDescriptor(module) !== undefined || ownedElsewhere(module)) continue;
-    const path = recordHome(module);
+    const path = recordHome(module, source);
     if (path === undefined) continue;
-    const before = texts.get(path)?.text ?? readFileSync(path, "utf8");
-    let text = before;
     const keys: (string | undefined)[] = [...(module.schema["x-semio-rust"]?.derive === undefined ? [] : [undefined]), ...[...module.definitions].filter(([, node]) => node["x-semio-rust"]?.derive !== undefined).map(([key]) => key)];
-    let previous: string | undefined;
+    const staged = new Map<string, { module: SchemaModule; text: string }>();
+    const previous = new Map<string, string>();
     try {
       for (const key of keys) {
+        const node = key === undefined ? module.schema : module.definitions.get(key)!;
+        const file = node["x-semio-rust"]?.file;
+        if (file !== undefined && (typeof file !== "string" || isAbsolute(file) || /^[A-Za-z]:/u.test(file) || file.split(/[\\/]/u).some((part: string) => part === ".." || part === "" || part === ".") || file.split(/[\\/]/u).at(-1) !== TWIN_FILE.rust)) throw new Error(`[schema twins] ${module.jsonPath}: invalid Rust record file for ${key ?? "root"}.`);
+        const target = file === undefined ? path : join(module.dir, ...file.split(/[\\/]/u));
+        const original = source(target);
+        if (original === undefined || FOREIGN_BANNER.test(original)) throw new Error(`[schema twins] ${module.jsonPath}: Rust record file for ${key ?? "root"} is missing or owned elsewhere.`);
+        const before = staged.get(target)?.text ?? texts.get(target)?.text ?? original;
         const generated = renderRecordStruct(module, index, key);
         if (generated === undefined) throw new Error(`[schema twins] ${module.jsonPath}: record ${key ?? "root"} is annotated for Rust but a property has no Rust type.`);
         const name = rustName(module, key);
-        text = spliceStruct(text, name, generated) ?? insertStruct(text, previous, generated);
-        previous = name;
+        staged.set(target, { module, text: spliceStruct(before, name, generated) ?? insertStruct(before, previous.get(target), generated) });
+        previous.set(target, name);
       }
     } catch (error) {
-      problems.push({ module, language: "rust", path, text: before, problem: (error as Error).message });
+      problems.push({ module, language: "rust", path, text: texts.get(path)?.text ?? source(path)!, problem: (error as Error).message });
       continue;
     }
-    if (keys.length > 0) texts.set(path, { module, text });
+    for (const [target, plan] of staged) texts.set(target, plan);
   }
   return [...[...texts].map(([path, { module, text }]) => ({ module, language: "rust" as const, path, text })), ...problems];
 }

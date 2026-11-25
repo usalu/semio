@@ -501,9 +501,8 @@
       "budgetMs": 160000,
       "typecheck": "none",
       "files": [
-        "📦️artifacts/🏗️native-build/🧩️component-pass/🧪️tests/🟦️.ts"
+        "📦️artifacts/🏗️native-build/🧩️component-pass/🧪️tests/♻️reclaim/🟦️.ts"
       ],
-      "testNamePattern": "^reclaim preserves Cargo",
       "platforms": [
         "darwin",
         "linux",
@@ -566,9 +565,8 @@
       "budgetMs": 300000,
       "typecheck": "none",
       "files": [
-        "📦️artifacts/🏗️native-build/🧩️component-pass/🧪️tests/🟦️.ts"
+        "📦️artifacts/🏗️native-build/🧩️component-pass/🧪️tests/🛑️cancellation/🟦️.ts"
       ],
-      "testNamePattern": "queued exclusive compiler cancellation|unit graph compilation cancellation|native build plan is schema-first|profile mode selection|unlaned same-profile Cargo jobs|the original finite caller budget",
       "platforms": [
         "darwin",
         "linux",
@@ -653,6 +651,335 @@
         "📦️artifacts/🏗️native-build/📏️path-envelope/🧪️tests/🟦️.ts",
         "📦️artifacts/🏗️native-build/📏️path-envelope/📐️budget/🧪️tests/🟦️.ts",
         "📦️artifacts/🕸️wasm-build/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
+      ],
+      "launches": [
+        {
+          "command": "cargo",
+          "arguments": [
+            "--store=shared",
+            "--configuration=prototype",
+            "--",
+            "build",
+            "--bins",
+            "--examples",
+            "--message-format=json",
+            "--manifest-path"
+          ],
+          "paths": [
+            "📦️artifacts/🏗️native-build/🎟️admission/📦️packages/🦀️rust/Cargo.toml"
+          ]
+        },
+        {
+          "command": "cargo",
+          "arguments": [
+            "--store=shared",
+            "--configuration=release",
+            "--",
+            "build",
+            "--bins",
+            "--examples",
+            "--message-format=json",
+            "--manifest-path"
+          ],
+          "paths": [
+            "📦️artifacts/🏗️native-build/🎟️admission/📦️packages/🦀️rust/Cargo.toml"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "native-component-streaming",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "📦️artifacts/🏗️native-build/🧩️component-pass/🧪️tests/🌊️streaming/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
+      ],
+      "launches": [
+        {
+          "command": "cargo",
+          "arguments": [
+            "--store=shared",
+            "--configuration=prototype",
+            "--",
+            "build",
+            "--bins",
+            "--examples",
+            "--message-format=json",
+            "--manifest-path"
+          ],
+          "paths": [
+            "📦️artifacts/🏗️native-build/🎟️admission/📦️packages/🦀️rust/Cargo.toml"
+          ]
+        },
+        {
+          "command": "cargo",
+          "arguments": [
+            "--store=shared",
+            "--configuration=release",
+            "--",
+            "build",
+            "--bins",
+            "--examples",
+            "--message-format=json",
+            "--manifest-path"
+          ],
+          "paths": [
+            "📦️artifacts/🏗️native-build/🎟️admission/📦️packages/🦀️rust/Cargo.toml"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "native-component-jobs",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "📦️artifacts/🏗️native-build/🧩️component-pass/🧪️tests/🏃️jobs/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
+      ],
+      "launches": [
+        {
+          "command": "cargo",
+          "arguments": [
+            "--store=shared",
+            "--configuration=prototype",
+            "--",
+            "build",
+            "--bins",
+            "--examples",
+            "--message-format=json",
+            "--manifest-path"
+          ],
+          "paths": [
+            "📦️artifacts/🏗️native-build/🎟️admission/📦️packages/🦀️rust/Cargo.toml"
+          ]
+        },
+        {
+          "command": "cargo",
+          "arguments": [
+            "--store=shared",
+            "--configuration=release",
+            "--",
+            "build",
+            "--bins",
+            "--examples",
+            "--message-format=json",
+            "--manifest-path"
+          ],
+          "paths": [
+            "📦️artifacts/🏗️native-build/🎟️admission/📦️packages/🦀️rust/Cargo.toml"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "native-component-retry",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "📦️artifacts/🏗️native-build/🧩️component-pass/🧪️tests/🔁️retry/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
+      ],
+      "launches": [
+        {
+          "command": "cargo",
+          "arguments": [
+            "--store=shared",
+            "--configuration=prototype",
+            "--",
+            "build",
+            "--bins",
+            "--examples",
+            "--message-format=json",
+            "--manifest-path"
+          ],
+          "paths": [
+            "📦️artifacts/🏗️native-build/🎟️admission/📦️packages/🦀️rust/Cargo.toml"
+          ]
+        },
+        {
+          "command": "cargo",
+          "arguments": [
+            "--store=shared",
+            "--configuration=release",
+            "--",
+            "build",
+            "--bins",
+            "--examples",
+            "--message-format=json",
+            "--manifest-path"
+          ],
+          "paths": [
+            "📦️artifacts/🏗️native-build/🎟️admission/📦️packages/🦀️rust/Cargo.toml"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "native-component-seal",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "📦️artifacts/🏗️native-build/🧩️component-pass/🧪️tests/🔏️seal/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
+      ],
+      "launches": [
+        {
+          "command": "cargo",
+          "arguments": [
+            "--store=shared",
+            "--configuration=prototype",
+            "--",
+            "build",
+            "--bins",
+            "--examples",
+            "--message-format=json",
+            "--manifest-path"
+          ],
+          "paths": [
+            "📦️artifacts/🏗️native-build/🎟️admission/📦️packages/🦀️rust/Cargo.toml"
+          ]
+        },
+        {
+          "command": "cargo",
+          "arguments": [
+            "--store=shared",
+            "--configuration=release",
+            "--",
+            "build",
+            "--bins",
+            "--examples",
+            "--message-format=json",
+            "--manifest-path"
+          ],
+          "paths": [
+            "📦️artifacts/🏗️native-build/🎟️admission/📦️packages/🦀️rust/Cargo.toml"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "native-component-closure",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "📦️artifacts/🏗️native-build/🧩️component-pass/🧪️tests/🧩️closure/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
+      ],
+      "launches": [
+        {
+          "command": "cargo",
+          "arguments": [
+            "--store=shared",
+            "--configuration=prototype",
+            "--",
+            "build",
+            "--bins",
+            "--examples",
+            "--message-format=json",
+            "--manifest-path"
+          ],
+          "paths": [
+            "📦️artifacts/🏗️native-build/🎟️admission/📦️packages/🦀️rust/Cargo.toml"
+          ]
+        },
+        {
+          "command": "cargo",
+          "arguments": [
+            "--store=shared",
+            "--configuration=release",
+            "--",
+            "build",
+            "--bins",
+            "--examples",
+            "--message-format=json",
+            "--manifest-path"
+          ],
+          "paths": [
+            "📦️artifacts/🏗️native-build/🎟️admission/📦️packages/🦀️rust/Cargo.toml"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "native-component-failures",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "📦️artifacts/🏗️native-build/🧩️component-pass/🧪️tests/💥️failures/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
+      ],
+      "launches": [
+        {
+          "command": "cargo",
+          "arguments": [
+            "--store=shared",
+            "--configuration=prototype",
+            "--",
+            "build",
+            "--bins",
+            "--examples",
+            "--message-format=json",
+            "--manifest-path"
+          ],
+          "paths": [
+            "📦️artifacts/🏗️native-build/🎟️admission/📦️packages/🦀️rust/Cargo.toml"
+          ]
+        },
+        {
+          "command": "cargo",
+          "arguments": [
+            "--store=shared",
+            "--configuration=release",
+            "--",
+            "build",
+            "--bins",
+            "--examples",
+            "--message-format=json",
+            "--manifest-path"
+          ],
+          "paths": [
+            "📦️artifacts/🏗️native-build/🎟️admission/📦️packages/🦀️rust/Cargo.toml"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "native-component-real",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "📦️artifacts/🏗️native-build/🧩️component-pass/🧪️tests/🦀️real/🟦️.ts"
       ],
       "platforms": [
         "darwin",
@@ -950,6 +1277,9 @@
       "trees": [
         "📦️artifacts/🏗️native-build/💾️storage"
       ],
+      "capabilities": {
+        "artifacts": true
+      },
       "platforms": [
         "darwin",
         "linux",

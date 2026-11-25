@@ -25,9 +25,9 @@ export const CATALOG_SHA256 = /^[0-9a-f]{64}$/;
 
 export const CATALOG_DESCRIPTOR_PACK_FILENAME = "🛂️.descriptor.semio";
 
-export const CATALOG_DESCRIPTOR_TOP_LEVEL = new Set(["descriptorVersion", "packageId", "role", "manifest", "activationEvents", "capabilityRequests", "extensionPoints", "execution", "executionProtocol", "quotas", "contributions", "assets"]);
+export const CATALOG_DESCRIPTOR_TOP_LEVEL = new Set(["descriptorVersion", "packageId", "role", "manifest", "activationEvents", "capabilityRequests", "extensionPoints", "execution", "executionProtocol", "components", "quotas", "contributions", "assets"]);
 
-export const CATALOG_MANIFEST_FIELDS = new Set(["pluginId", "label", "version", "apps", "examples", "capabilities", "topicContributions", "commands", "artifactKinds", "hostedArtifactKinds", "dependencies", "contributions"]);
+export const CATALOG_MANIFEST_FIELDS = new Set(["pluginId", "label", "version", "apps", "examples", "capabilities", "topicContributions", "commands", "artifactKinds", "hostedArtifactKinds", "dependencies", "contributions", "actionSets"]);
 
 export type CatalogVerificationNode = {
   readonly pluginId: string;

@@ -4,9 +4,9 @@
 import { normWireLiteral, normWireNumber, normWireObject, normWireRange, type NormWireReader, normWireRequired, normWireString } from "@semio-tech/norm-js/registry/contract";
 
 export interface ChangeElementAreaM2 {
-  mutation: "changeelementaream2";
+  mutation: "changeElementAreaM2";
   elementId: string;
   newAreaM2: number;
 }
 
-export const parseChangeElementAreaM2: NormWireReader<ChangeElementAreaM2> = normWireObject<ChangeElementAreaM2>({ mutation: normWireRequired(normWireLiteral("changeelementaream2")), elementId: normWireRequired(normWireString), newAreaM2: normWireRequired(normWireRange(normWireNumber, {"maximum":100000,"exclusiveMinimum":0})) });
+export const parseChangeElementAreaM2: NormWireReader<ChangeElementAreaM2> = normWireObject<ChangeElementAreaM2>({ mutation: normWireRequired(normWireLiteral("changeElementAreaM2")), elementId: normWireRequired(normWireString), newAreaM2: normWireRequired(normWireRange(normWireNumber, {"maximum":100000,"exclusiveMinimum":0})) });

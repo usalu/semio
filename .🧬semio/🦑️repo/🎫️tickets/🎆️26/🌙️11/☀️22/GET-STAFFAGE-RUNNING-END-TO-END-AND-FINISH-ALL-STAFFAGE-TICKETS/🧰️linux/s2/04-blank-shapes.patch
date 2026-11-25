@@ -1,0 +1,47 @@
+--- a/🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🔭️multiview-coverage/🧰️.ts
++++ b/🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🔭️multiview-coverage/🧰️.ts
+@@ -190,6 +190,17 @@
+   return ids;
+ }
+ 
++/** 🖋️ Whether a path item leaves ink: a fill, or a stroke of a width above zero that is not fully transparent. */
++const inked = (item: { readonly fill?: unknown; readonly stroke?: { readonly widthMm: number; readonly opacity?: number } }): boolean => item.fill !== undefined || (item.stroke !== undefined && item.stroke.widthMm > 0 && item.stroke.opacity !== 0);
++
++/** 🖍️ The ids of the path items that draw the non-ground shapes of a view with ink ({@link paperIds} without the items that have neither a fill nor a visible stroke): what makes a view not blank, whether a shape is drawn filled or as an unfilled outline. */
++export function drawnIds(scene: DrawingScene, shapes: readonly EvaluatedShape[]): Set<string> {
++  const ids = paperIds(scene, shapes);
++  const drawn = new Set<string>();
++  for (const layer of scene.layers) for (const item of layer.items) if (item.kind === "path" && ids.has(item.id) && inked(item)) drawn.add(item.id);
++  return drawn;
++}
++
+ /** 📃️ The paper box in millimetres of the shapes of a view: fills and outline runs ({@link paperIds}), or undefined when none is drawn. */
+ export const paperBox = (scene: DrawingScene, shapes: readonly EvaluatedShape[]): Extent | undefined => sceneBox(scene, paperIds(scene, shapes));
+ 
+@@ -417,10 +428,12 @@
+   for (const finding of geometryFindings(asset, state, subject.isDefault)) collector.fail(finding.views, MODE_LIST, finding.check, subject.id, finding.message, finding.delta);
+ }
+ 
+-/** 🕳️ Why a scene draws none of the shapes of a view: per shape its role, pen and filled flag, then the reason class (`zero-pen`, `degenerate`, `occluded-or-unexplained`). */
++/** 🕳️ Why a scene draws none of the shapes of a view: per shape its role, pen (of the shape, else of the authored scale or of the symbol the state was evaluated with) and filled flag, then the reason class (`zero-pen`, `degenerate`, `occluded-or-unexplained`). */
+ export function blankReason(state: EvaluatedState, view: PlanarViewpoint, mode: View): string {
+-  const rep = state.representation.kind === "scale" ? state.asset.representations[`${state.representation.denominator}` as keyof Asset["representations"]] : undefined;
+-  const pens = rep?.status === "authored" ? (rep.pens as unknown as Record<string, number | null>) : undefined;
++  const representation = state.representation;
++  const rep = representation.kind === "scale" ? state.asset.representations[`${representation.denominator}` as keyof Asset["representations"]] : undefined;
++  const symbol = representation.kind === "symbol" ? state.asset.symbols.find((candidate) => candidate.id === representation.symbol) : undefined;
++  const pens = (rep?.status === "authored" ? rep.pens : symbol?.pens) as unknown as Record<string, number | null> | undefined;
+   const lines = state.shapes[view]
+     .filter((e) => e.shape.role !== "ground")
+     .map((e) => {
+@@ -459,9 +472,8 @@
+   if (JSON.stringify(m.query) !== JSON.stringify(state.query)) fail("scene-query", "scene query differs from the state query");
+   if (m.scale.denominator !== requested) fail("scene-scale", `scene scale 1:${m.scale.denominator} differs from the requested 1:${requested}`);
+   if (!(Number.isFinite(scene.widthMm) && Number.isFinite(scene.heightMm) && scene.widthMm > 0 && scene.heightMm > 0)) fail("scene-size", `scene size ${scene.widthMm} x ${scene.heightMm} mm`);
+-  const ids = new Set(state.shapes[view].filter((evaluated) => evaluated.shape.role !== "ground").map((evaluated) => `shape:${evaluated.shape.id}`));
+   const box = sceneBox(scene);
+-  const named = sceneBox(scene, ids);
++  const named = sceneBox(scene, drawnIds(scene, state.shapes[view]));
+   if (box === undefined) return fail("blank", "the scene draws no path");
+   if (!finite(box)) return fail("scene-bounds", "the scene has non-finite coordinates");
+   if (named === undefined && mode !== "forces" && mode !== "moments") fail("blank-shapes", `no ${view} shape of the representation is drawn: ${blankReason(state, view, mode)}`);

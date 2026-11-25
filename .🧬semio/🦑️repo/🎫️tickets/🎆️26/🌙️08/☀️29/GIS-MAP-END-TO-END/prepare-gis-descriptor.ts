@@ -7,7 +7,7 @@ const root = process.cwd();
 const materialize = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization";
 const source = name => pathToFileURL(resolve(root, materialize, name)).href;
 const [
-  { rewriteJcoAsyncResultLiftingAt, rewriteJcoComponentAssetUrlsAt },
+  { rewriteJcoAsyncResultLiftingAt, rewriteJcoComponentFactoryAt },
   { rewritePreview2ShimImports },
   { hostShimSource },
   { PLUGIN_HOST_SHIM_FILE },
@@ -41,7 +41,7 @@ await Promise.all([
 ]);
 const module = join(moduleDir, base + ".js");
 rewriteJcoAsyncResultLiftingAt(module);
-rewriteJcoComponentAssetUrlsAt(module);
+rewriteJcoComponentFactoryAt(module);
 rewritePreview2ShimImports(module, vendor);
 console.log("[DEBUG] Isolated module:", module);
 console.log("[DEBUG] Canonical prototype vendor:", selected);

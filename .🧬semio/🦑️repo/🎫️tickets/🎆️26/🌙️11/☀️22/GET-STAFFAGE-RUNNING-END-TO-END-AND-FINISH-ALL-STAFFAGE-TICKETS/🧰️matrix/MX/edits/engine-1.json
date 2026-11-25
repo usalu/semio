@@ -1,0 +1,62 @@
+[
+ {
+  "name": "helpers",
+  "old": "/** 💾️ The D18 tolerance of the synchrony checks",
+  "new": "/** 🪙️ A length in whole micrometres: the unit every dimension and extent comparison is decided in (D50), so a difference that equals its tolerance is the same integer on both sides whatever the unit or the scale it was computed in. */\nexport const micrometres = (lengthM: number): number => Math.round(lengthM * 1e6);\n\n/** ⚖️ Whether a measured length lies within D18 of its nominal one, decided in whole micrometres (D50): a difference of exactly the tolerance is within it, one micrometre more is not. */\nexport const withinD18 = (measuredM: number, nominalM: number): boolean => Math.abs(micrometres(measuredM) - micrometres(nominalM)) <= micrometres(d18(nominalM));\n\n/** 💾️ The D18 tolerance of the synchrony checks"
+ },
+ {
+  "name": "agree",
+  "old": "    const delta = Math.max(Math.abs(a[0] - b[0]), Math.abs(a[1] - b[1]));\n    if (!(delta <= tolerance)) findings.push",
+  "new": "    const delta = Math.max(Math.abs(a[0] - b[0]), Math.abs(a[1] - b[1]));\n    if (!(micrometres(delta) <= micrometres(tolerance))) findings.push"
+ },
+ {
+  "name": "size",
+  "old": "    if (!(Math.abs(measured - nominal) <= d18(nominal))) findings.push",
+  "new": "    if (!withinD18(measured, nominal)) findings.push"
+ },
+ {
+  "name": "blankReason",
+  "old": "/** 🕳️ Why a scene draws none of the shapes of a view: per shape its role, pen and filled flag, then the reason class (`zero-pen`, `degenerate`, `occluded-or-unexplained`). */\nexport function blankReason(state: EvaluatedState, view: PlanarViewpoint, mode: View): string {\n  const rep = state.representation.kind === \"scale\" ? state.asset.representations[`${state.representation.denominator}` as keyof Asset[\"representations\"]] : undefined;\n  const pens = rep?.status === \"authored\" ? (rep.pens as unknown as Record<string, number | null>) : undefined;",
+  "new": "/** 🕳️ Why a scene draws none of the shapes of a view: per shape its role, pen (the shape's own, else the pen of its role in the representation or the symbol that is drawn) and filled flag, then the reason class (`zero-pen`, `degenerate`, `occluded-or-unexplained`). */\nexport function blankReason(state: EvaluatedState, view: PlanarViewpoint, mode: View): string {\n  const drawn = state.representation;\n  const rep = drawn.kind === \"scale\" ? state.asset.representations[`${drawn.denominator}` as keyof Asset[\"representations\"]] : undefined;\n  const source = drawn.kind === \"symbol\" ? state.asset.symbols.find((symbol) => symbol.id === drawn.symbol) : rep?.status === \"authored\" ? rep : undefined;\n  const pens = source?.pens as unknown as Record<string, number | null> | undefined;"
+ },
+ {
+  "name": "blankFinding",
+  "old": "/** 📰️ The paper findings of the default pose of one view",
+  "new": "/** 🫥️ The blank finding of a scene of a line, solid or thermal mode: no non-ground shape of the view is drawn, neither by its fill nor by an outline run ({@link paperIds}), so a part or a symbol drawn as an unfilled outline is drawn; the forces and moments modes draw the structure and are not asked. */\nexport function blankFinding(state: EvaluatedState, view: PlanarViewpoint, mode: View, scene: DrawingScene): { readonly check: \"blank-shapes\"; readonly message: string } | undefined {\n  if (mode === \"forces\" || mode === \"moments\" || paperIds(scene, state.shapes[view]).size > 0) return undefined;\n  return { check: \"blank-shapes\", message: `no ${view} shape of the representation is drawn: ${blankReason(state, view, mode)}` };\n}\n\n/** 📰️ The paper findings of the default pose of one view"
+ },
+ {
+  "name": "paper",
+  "old": "    ...(Math.abs(gotW - w * k) > d18(w) * k ? [{ check: \"paper-width\" as const,",
+  "new": "    ...(!withinD18(gotW / k, w) ? [{ check: \"paper-width\" as const,"
+ },
+ {
+  "name": "paper2",
+  "old": "    ...(Math.abs(gotH - h * k) > d18(h) * k ? [{ check: \"paper-height\" as const,",
+  "new": "    ...(!withinD18(gotH / k, h) ? [{ check: \"paper-height\" as const,"
+ },
+ {
+  "name": "paper doc",
+  "old": "against the dimensions at the scale of the scene, within D18. */",
+  "new": "against the dimensions at the scale of the scene, within D18 as {@link withinD18} decides it. */"
+ },
+ {
+  "name": "checkScene",
+  "old": "  const ids = new Set(state.shapes[view].filter((evaluated) => evaluated.shape.role !== \"ground\").map((evaluated) => `shape:${evaluated.shape.id}`));\n  const box = sceneBox(scene);\n  const named = sceneBox(scene, ids);\n  if (box === undefined) return fail(\"blank\", \"the scene draws no path\");\n  if (!finite(box)) return fail(\"scene-bounds\", \"the scene has non-finite coordinates\");\n  if (named === undefined && mode !== \"forces\" && mode !== \"moments\") fail(\"blank-shapes\", `no ${view} shape of the representation is drawn: ${blankReason(state, view, mode)}`);",
+  "new": "  const box = sceneBox(scene);\n  if (box === undefined) return fail(\"blank\", \"the scene draws no path\");\n  if (!finite(box)) return fail(\"scene-bounds\", \"the scene has non-finite coordinates\");\n  const blank = blankFinding(state, view, mode, scene);\n  if (blank !== undefined) fail(blank.check, blank.message);"
+ },
+ {
+  "name": "allowance type",
+  "old": "/** 📷️ One allowlisted symmetric view: the asset, the viewpoint and the physical reason in English and German (a body of revolution has the same front and side by nature). */\nexport type DerivedAllowance = { readonly asset: string; readonly view: PlanarViewpoint; readonly reason: { readonly en: string; readonly de: string } };",
+  "new": "/** 📷️ One allowlisted symmetric view: the asset, the viewpoint and the physical reason in English and German (a body of revolution has the same front and side by nature); with `bands` (one or more scale keys) the allowance holds in those bands only (D51: a slender body whose two views differ by less than the measure can resolve in the coarse bands), without it in every band. */\nexport type DerivedAllowance = { readonly asset: string; readonly view: PlanarViewpoint; readonly bands?: readonly string[]; readonly reason: { readonly en: string; readonly de: string } };"
+ },
+ {
+  "name": "allowed",
+  "old": " : symmetric.some((allowance) => allowance.view === flag.view);",
+  "new": " : symmetric.some((allowance) => allowance.view === flag.view && (allowance.bands === undefined || allowance.bands.includes(representation)));"
+ },
+ {
+  "name": "derived doc",
+  "old": "unless an allowlist names the asset and view (for a band copy also the two bands) with a physical reason",
+  "new": "unless an allowlist names the asset and view (for a band copy the two bands, for an in-band view optionally the bands it holds in) with a physical reason"
+ }
+]

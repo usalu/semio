@@ -139,7 +139,7 @@ PICTOGRAMS = {
     "air-room": _air_room, "thermometer": _thermometer, "window": _window, "house": _house, "wall": _wall, "bars": _bars,
     "balance": _balance, "label": _label, "droplets": _droplets,
     "sun": _icon("sun"), "flame": _icon("flame"), "factory": _icon("factory"),
-    "mvhr": _staffage("shared-mvhr-normal"), "person": _staffage("shared-person-neutral"), "heat-pump": _staffage("shared-heat-pump-heating-sweep"),
+    "mvhr": _staffage("shared-mvhr-normal"), "person": _staffage("shared-person-neutral"), "heat-pump": _staffage("shared-heat-pump-heating-modulation"),
     "office-worker": _staffage("heating-internal-gains-office-worker"), "radiator": _staffage("shared-radiator-winter"),
     "kettle": _staffage("physics-fundamentals-kettle"), "pot": _staffage("physics-fundamentals-pot"),
     "meter": _staffage("shared-gas-meter-run"), "blind": _staffage("cooling-summer-strategy-blind"),
@@ -152,7 +152,7 @@ PICTOGRAMS = {
 def _chip(text: str, color: str):
     """🔖 Typeset hand-over chip naming the quantity that moves between two videos."""
     label = math_label(text, size=BODY_FONT_SIZE, color=color)
-    return VGroup(SurroundingRectangle(label, color=color, corner_radius=0, buff=_theme.UI_SPACING, stroke_width=_theme.CHROME_BORDER), label)
+    return _visuals.window_chip(label, color=color)
 
 
 def _pair(value):
@@ -203,10 +203,10 @@ def build_roadmap(scene, narration, steps, *, heading, bracket=None, handovers=(
     cards, shades, receives = [], [], []
     for i, (x, color, step) in enumerate(zip(xs, colors, steps)):
         frame = Rectangle(width=card_w, height=CARD_HEIGHT, color=color, stroke_width=_theme.CHROME_BORDER).move_to(np.array([x, ROW_Y, 0.0]))
-        badge = VGroup(Circle(radius=0.19, color=color, stroke_width=2, fill_color=color, fill_opacity=1.0),
-                       body_text(str(i + 1), font_size=LABEL_FONT_SIZE, color=_visuals.P_DEEP_DARK))
-        badge[1].move_to(badge[0].get_center())
-        badge.move_to(np.array([x, ROW_Y + CARD_HEIGHT / 2 - 0.4, 0.0]))
+        number = body_text(str(i + 1), font_size=LABEL_FONT_SIZE, color=color)
+        chip_width, chip_depth = number.width + 4 * _theme.UI_SPACING, number.height + 2 * _theme.UI_SPACING
+        badge = VGroup(_visuals.frame_chips(card_w, CARD_HEIGHT, top_depth=chip_depth, top_chips=(((card_w - chip_width) / 2, (card_w + chip_width) / 2),), color=color, center=frame.get_center()), number)
+        number.move_to(np.array([x, ROW_Y + CARD_HEIGHT / 2 - chip_depth / 2, 0.0]))
         name = body_text(_pair(step["name"]), font_size=name_size, color=color)
         name.move_to(np.array([x, ROW_Y + CARD_HEIGHT / 2 - 0.88, 0.0]))
         pic = PICTOGRAMS[step["pictogram"]](color, card_w - 0.6, 0.9, np.array([x, ROW_Y - 0.12, 0.0]))

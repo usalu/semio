@@ -28,9 +28,9 @@ pub(crate) struct BridgeOutboxState {
     pub(crate) reserved_items: usize,
     pub(crate) reserved_bytes: usize,
     pub closed: bool,
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     pub(crate) encode_count: usize,
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     pub(crate) waker: Option<std::task::Waker>,
 }
 
@@ -45,9 +45,9 @@ impl BridgeOutboxState {
             reserved_items: 0,
             reserved_bytes: 0,
             closed: false,
-            #[cfg(test)]
+            #[cfg(any(test, feature = "testkit"))]
             encode_count: 0,
-            #[cfg(test)]
+            #[cfg(any(test, feature = "testkit"))]
             waker: None,
         }
     }
@@ -77,12 +77,12 @@ impl BridgeOutboxState {
         let index = (self.head + self.len) % BRIDGE_OUTBOX_MAX_ITEMS;
         self.len += 1;
         self.bytes += grant.bytes;
-        #[cfg(test)]
+        #[cfg(any(test, feature = "testkit"))]
         {
             self.encode_count += 1;
         }
         self.slots[index] = Some(BridgeOutboxItem { lease: BridgeEncodedLease { generation: grant.generation, encoded }, bytes: grant.bytes });
-        #[cfg(test)]
+        #[cfg(any(test, feature = "testkit"))]
         if let Some(waker) = self.waker.take() {
             waker.wake();
         }
@@ -152,7 +152,7 @@ impl BridgeOutbox {
         state.generation = state.generation.wrapping_add(1);
         state.reserved_items = 0;
         state.reserved_bytes = 0;
-        #[cfg(test)]
+        #[cfg(any(test, feature = "testkit"))]
         if let Some(waker) = state.waker.take() {
             waker.wake();
         }
@@ -162,7 +162,7 @@ impl BridgeOutbox {
 pub struct BridgeOutboxReceiver(pub Arc<BridgeOutbox>);
 
 impl BridgeOutboxReceiver {
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     pub async fn recv(&mut self) -> Option<GatewayToShell> {
         std::future::poll_fn(|context| {
             let mut state = self.0.state.lock().expect("bridge outbox lock poisoned");
@@ -181,7 +181,7 @@ impl BridgeOutboxReceiver {
         .await
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     pub fn try_recv(&mut self) -> Option<GatewayToShell> {
         self.0.try_recv().map(|item| item.lease.encoded.decode())
     }

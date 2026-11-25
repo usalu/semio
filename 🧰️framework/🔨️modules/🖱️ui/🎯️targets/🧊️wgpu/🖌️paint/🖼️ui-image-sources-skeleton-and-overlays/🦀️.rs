@@ -489,15 +489,15 @@ pub fn paint_media_overlay_row(draw: &mut DrawList, row: &MediaOverlayRow, theme
     let [x, y, w, h] = row.rect;
     let fill = if row.focused { theme.selected } else { theme.muted };
     match row.shape {
-        MediaOverlayShape::Button => draw.push_rounded([x, y, w, h], if row.enabled { fill } else { theme.panel }, theme.border_radius),
+        MediaOverlayShape::Button => draw.push_solid([x, y, w, h], if row.enabled { fill } else { theme.panel }),
         MediaOverlayShape::Slider => {
             let track = [x, y + h * 0.5 - 2.0, w, 4.0];
-            draw.push_rounded(track, theme.muted, 2.0);
+            draw.push_solid(track, theme.muted);
             let filled = row.fraction.unwrap_or(0.0).clamp(0.0, 1.0);
-            draw.push_rounded([x, track[1], w * filled, 4.0], theme.accent, 2.0);
-            draw.push_rounded([x + w * filled - 4.0, y + h * 0.5 - 4.0, 8.0, 8.0], if row.focused { theme.accent_hover } else { theme.accent }, 4.0);
+            draw.push_solid([x, track[1], w * filled, 4.0], theme.accent);
+            draw.push_solid([x + w * filled - 4.0, y + h * 0.5 - 4.0, 8.0, 8.0], if row.focused { theme.accent_hover } else { theme.accent });
         }
-        MediaOverlayShape::Alert => draw.push_rounded([x, y, w, h], theme.panel, theme.border_radius),
+        MediaOverlayShape::Alert => draw.push_solid([x, y, w, h], theme.panel),
         MediaOverlayShape::Text => {}
     }
 }

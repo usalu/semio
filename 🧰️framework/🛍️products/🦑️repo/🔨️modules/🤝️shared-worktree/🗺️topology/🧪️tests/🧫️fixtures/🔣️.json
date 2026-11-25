@@ -6,7 +6,7 @@
   "storeMount": {"linux": "/mnt/semio-store", "macos": "/Volumes/semio-store", "windows": "S:\\"},
   "groups": [
    {"id": "a1", "nfs": {"host": "nfs.a1.example.test", "export": "/srv/store-a"}, "server": {"platform": "linux", "protocol": "nfs", "network": "10.1.0.0/24"}, "cache": {"endpoint": "http://cache.a1.example.test:6090", "instance": "main"}, "peers": {"b2": "/mnt/peers/b2", "c3": "/mnt/peers/c3"}},
-   {"id": "b2", "nfs": {"host": "nfs.b2.example.test", "export": "/Users/Shared/store-b"}, "server": {"platform": "macos", "protocol": "nfs", "network": "10.2.0.0/16"}, "cache": {"endpoint": "http://cache.b2.example.test:7000", "instance": "alt"}, "peers": {"a1": "/mnt/peers/a1", "c3": "/mnt/peers/c3"}},
+   {"id": "b2", "nfs": {"host": "nfs.b2.example.test", "export": "/Users/Shared/store-b"}, "server": {"platform": "macos", "protocol": "nfs", "network": "10.2.0.0/16"}, "cache": {"endpoint": "http://cache.b2.example.test:7000", "instance": "main"}, "peers": {"a1": "/mnt/peers/a1", "c3": "/mnt/peers/c3"}},
    {"id": "c3", "nfs": {"host": "nfs.c3.example.test", "export": "/store-c"}, "server": {"platform": "windows", "protocol": "nfs", "network": "10.3.0.0/24", "directory": "C:\\store-c"}, "cache": {"endpoint": "https://cache.c3.example.test", "instance": "main"}, "peers": {"a1": "/mnt/peers/a1", "b2": "/mnt/peers/b2"}}
   ],
   "replica": {"pollMilliseconds": 250, "scanSeconds": 90, "debounceMilliseconds": 150, "retentionDays": 14, "bootstrapMinutes": 60, "compaction": {"automatic": false, "snapshotEvents": 100000, "safetyHours": 3, "staleHours": 12, "catchUpEvents": 20000}}

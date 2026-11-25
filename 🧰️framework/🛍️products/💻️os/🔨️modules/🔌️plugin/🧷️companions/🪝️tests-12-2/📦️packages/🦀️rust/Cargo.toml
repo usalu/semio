@@ -22,6 +22,10 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
+[[test]]
+name = "publication-boundaries"
+path = "../../../../🧪️tests/🔬️app-typed-command-full-operation/🏁️publication-boundaries/🦀️.rs"
+
 [dependencies]
 
 [dev-dependencies]

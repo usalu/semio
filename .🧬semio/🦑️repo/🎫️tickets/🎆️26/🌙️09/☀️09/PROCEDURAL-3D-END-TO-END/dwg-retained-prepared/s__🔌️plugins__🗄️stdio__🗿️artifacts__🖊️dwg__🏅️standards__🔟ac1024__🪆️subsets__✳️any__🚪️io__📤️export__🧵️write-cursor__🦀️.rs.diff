@@ -1,0 +1,115 @@
+--- a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📤️export/🧵️write-cursor/🦀️.rs
++++ b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📤️export/🧵️write-cursor/🦀️.rs
+@@ -14,8 +14,8 @@
+     Complete(Vec<u8>),
+ }
+ 
++#[derive(Clone, Copy, PartialEq, Eq)]
+ enum Phase {
+-    Snapshot,
+     Objects,
+     Handles,
+     Slots,
+@@ -24,13 +24,14 @@
+     Assemble,
+     Seal,
+     Taken,
+-    Failed(String),
+-}
++    Failed,
++}
++semio_framework_value::artifact_retire_leaf!(Phase);
+ 
+ /// ✍️ Resumable writer over one drawing or snapshot. Cancelling or failing drops every buffer at once.
+ pub struct DwgWriteCursor {
+     phase: Phase,
+-    drawing: Option<DwgDrawing>,
++    failure: String,
+     snapshot: Option<DwgSnapshot>,
+     records: Option<ObjectRecords>,
+     objects: Vec<u8>,
+@@ -49,19 +50,24 @@
+     output: Vec<u8>,
+     written: usize,
+ }
++semio_framework_value::artifact_retire_struct!(DwgWriteCursor { phase, failure, snapshot, records, objects, pairs, sorted, handle_blocks, handles, handle_next, slots, slot_next, sections, page_section, page_offset, pages, layout, output, written });
+ 
+ impl DwgWriteCursor {
+     fn empty(phase: Phase) -> Self {
+         Self {
+-            phase, drawing: None, snapshot: None, records: None, objects: Vec::new(), pairs: Vec::new(), sorted: false,
++            phase, failure: String::new(), snapshot: None, records: None, objects: Vec::new(), pairs: Vec::new(), sorted: false,
+             handle_blocks: None, handles: Vec::new(), handle_next: 0, slots: Vec::new(), slot_next: 0, sections: Vec::new(),
+             page_section: 0, page_offset: 0, pages: Vec::new(), layout: None, output: Vec::new(), written: 0,
+         }
+     }
+ 
+-    /// 🎟️ Starts a new AC1024 document holding `drawing`, as [`dwg_to_bytes`] does.
+-    pub fn new(drawing: DwgDrawing) -> Self {
+-        Self { drawing: Some(drawing), ..Self::empty(Phase::Snapshot) }
++    /// 🎟️ Starts a new AC1024 document holding `drawing`, as [`dwg_to_bytes`] does. Building the logical snapshot is the one unit this call performs.
++    pub fn from_drawing(drawing: &DwgDrawing) -> Result<Self, String> {
++        Ok(Self::begin_objects(DwgSnapshot::from_drawing(drawing)?))
++    }
++
++    fn failed(failure: String) -> Self {
++        Self { failure, ..Self::empty(Phase::Failed) }
+     }
+ 
+     /// 🎟️ Starts from an existing logical document, as [`encode_r2004_snapshot`] does.
+@@ -77,8 +83,7 @@
+     /// 📈️ Completed fraction in `0.0..=1.0`, never decreasing.
+     pub fn progress(&self) -> f32 {
+         let fraction = |done: usize, total: usize| (done as f32 / total.max(1) as f32).clamp(0.0, 1.0);
+-        match &self.phase {
+-            Phase::Snapshot => 0.0,
++        match self.phase {
+             Phase::Objects => {
+                 let total = self.snapshot.as_ref().map_or(0, |snapshot| snapshot.drawing.objects.len());
+                 0.05 + 0.4 * fraction(self.pairs.len(), total)
+@@ -90,13 +95,13 @@
+             Phase::Assemble => 0.86 + 0.12 * fraction(self.written, self.pages.len()),
+             Phase::Seal => 0.99,
+             Phase::Taken => 1.0,
+-            Phase::Failed(_) => 0.0,
++            Phase::Failed => 0.0,
+         }
+     }
+ 
+     /// 🛑️ Drops all work; every later step reports the cancellation.
+     pub fn cancel(&mut self) {
+-        *self = Self::empty(Phase::Failed("DWG write cancelled".into()));
++        *self = Self::failed("DWG write cancelled".into());
+     }
+ 
+     /// ⏱️ Runs one unit. An error is terminal and releases every buffer.
+@@ -104,18 +109,14 @@
+         match self.advance() {
+             Ok(step) => Ok(step),
+             Err(error) => {
+-                *self = Self::empty(Phase::Failed(error.clone()));
++                *self = Self::failed(error.clone());
+                 Err(error)
+             }
+         }
+     }
+ 
+     fn advance(&mut self) -> Result<DwgWriteStep, String> {
+-        match &self.phase {
+-            Phase::Snapshot => {
+-                let drawing = self.drawing.take().ok_or("DWG write source missing")?;
+-                *self = Self::begin_objects(DwgSnapshot::from_drawing(&drawing)?);
+-            }
++        match self.phase {
+             Phase::Objects => self.step_objects()?,
+             Phase::Handles => self.step_handles()?,
+             Phase::Slots => self.step_slots()?,
+@@ -129,7 +130,7 @@
+                 return Ok(DwgWriteStep::Complete(bytes));
+             }
+             Phase::Taken => return Err("DWG write already complete".into()),
+-            Phase::Failed(error) => return Err(error.clone()),
++            Phase::Failed => return Err(self.failure.clone()),
+         }
+         Ok(DwgWriteStep::Working)
+     }

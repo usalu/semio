@@ -52,6 +52,24 @@ impl Default for DrawingPlayApp {
 impl ArtifactEditor for DrawingPlayApp {
     fn completion_retirement_demand(value:&semio_plugin::ArtifactToolCompletionValue<semio_plugin::EditorApp<Self>>)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{completion::demand(value)}
     fn admit_completion_retirement(value:&mut Option<semio_plugin::ArtifactToolCompletionValue<semio_plugin::EditorApp<Self>>>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::RetainedWorkOutcome<Option<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,semio_framework_value::retained_clone::RetainedCloneProgress)>>{completion::admit(value,effect)}
+    /// 🎯️ What a selection or hover of the canvas domains repaints; the framework default never refreshes engagements, and the status line counts the selection.
+    fn interaction_scope(verb: semio_plugin::InteractionVerb, domains: &[&str]) -> Option<semio_framework::kernel::UiDirtyScope> {
+        use semio_plugin::InteractionVerb;
+        if domains.is_empty() || domains.iter().any(|domain| ![DRAWING_INTERACTION_DOMAIN, DRAWING_POINT_DOMAIN].contains(domain)) {
+            return None;
+        }
+        let moved = matches!(verb, InteractionVerb::Select | InteractionVerb::ClearSelection | InteractionVerb::SelectAll);
+        Some(semio_framework::kernel::UiDirtyScope::Partial {
+            window_bodies: vec![DRAWING_PLAY_BODY_COMPOSITE.to_string()],
+            panel_bodies: if moved { vec![DRAWING_PLAY_BODY_LAYERS.to_string(), DRAWING_PLAY_BODY_PROPERTIES.to_string()] } else { Vec::new() },
+            utilities: false,
+            tools: false,
+            engagements: moved,
+            measures: verb != InteractionVerb::Hover,
+            labels: false,
+        })
+    }
+
     /// 📢️ The localized notices of the retained gesture owner's refusals (design §20.12).
     fn fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
         drawing_fault_notices()

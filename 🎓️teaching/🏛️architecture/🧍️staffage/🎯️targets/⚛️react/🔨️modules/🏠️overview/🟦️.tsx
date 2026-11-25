@@ -55,7 +55,8 @@ const LANE_CYCLES = 2;
 
 type Item = { readonly row: Row; readonly x: number; readonly lane: number | null; readonly width: number };
 
-/** 🧍️ A frieze: figures side by side on one ground line at one scale, walkers travelling along their lane; metre ticks name the scale. */
+/** 🧍️ A frieze: figures side by side on one ground line at one scale, walkers travelling along their lane; metre ticks name the scale. Its figures are previews: the live set of the page decides which of them follow the clock.
+ * @see ../🖼️previews/🚦️live/🟦️.ts */
 export function Frieze(props: { readonly rows: readonly Row[]; readonly viewpoint?: PlanarViewpoint; readonly label: string; readonly maxPxPerM?: number; readonly ticks?: boolean; readonly travel?: boolean; readonly className?: string }): ReactElement {
   const { rows, label, maxPxPerM = 160, ticks = true, travel = false, className } = props;
   const { language, ambient, t } = useArchive();
@@ -92,7 +93,7 @@ export function Frieze(props: { readonly rows: readonly Row[]; readonly viewpoin
     <div ref={attach} role="group" aria-label={label} data-frieze="" data-border-probe-art="" className={cn("relative min-h-24 w-full flex-1 overflow-hidden", className)}>
       {viewpoint === "elevation" ? null : <p data-frieze-note="" className="absolute left-1 top-1 z-10 m-0 max-w-[90%] bg-background/80 px-single text-[0.65rem] text-muted-foreground">{viewpointWord("viewpoints.friezeNote", language, { view: VIEWPOINT_PHRASES[viewpoint][language] })}</p>}
       {size.width === 0 ? null : items.map((item, index) => (
-        <PlacedFigure key={item.row.entry.id} asset={item.row.asset!} selection={null} clock={ambient} view={surfaceView(dark)} viewpoint={viewpoint} scale={scale} language={language} pxPerMm={pxPerMm} xPx={offset + item.x * pxPerM} groundPx={ground} travel={item.lane === null ? undefined : { laneM: item.lane, phaseM: (index * 0.9) % item.lane }} />
+        <PlacedFigure key={item.row.entry.id} preview asset={item.row.asset!} selection={null} clock={ambient} view={surfaceView(dark)} viewpoint={viewpoint} scale={scale} language={language} pxPerMm={pxPerMm} xPx={offset + item.x * pxPerM} groundPx={ground} travel={item.lane === null ? undefined : { laneM: item.lane, phaseM: (index * 0.9) % item.lane }} />
       ))}
       <div aria-hidden="true" className="absolute inset-x-0 border-t border-foreground/50" style={{ top: ground }} />
       {ticks ? (

@@ -24,9 +24,3 @@ pub fn render(host: &NormHost<En1994Family>, selected_check_index: Option<u32>, 
     semio_s_plugin_norm_app_surface::render_inspection(host.report(), selected_check_index, locale, controller_id)
 }
 //#endregion 🔖️Render
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

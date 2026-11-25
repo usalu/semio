@@ -8,6 +8,7 @@ import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/m
 import { renderWgpuTextured } from "../🧊️wgpu-shading-renderers/🟦️.ts";
 import { runtimeBundleV1 } from "../../../../../../../../🔨️modules/⚙️runtime/🔬️source/🟦️.ts";
 import { runtimeResolveV1 } from "../../../../../../../../🔨️modules/⚙️runtime/🚀️process/🟦️.ts";
+import { launchChromium } from "../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🌐️chromium-launch/🟦️";
 
 declare const THREE: any;
 declare const worldSurfaceMaterial: (name: string, material: any, vertexColors: boolean) => any;
@@ -113,8 +114,7 @@ export async function runAuthoredSurfaceOracle(repoRoot: string, output: string)
     builder.onLoad({ filter: /.*/, namespace: "oracle" }, () => ({ contents: source, loader: "tsx" }));
   } }] });
   if (!build.success) throw new Error(build.logs.map(String).join("\n"));
-  const { chromium } = await import("playwright");
-  const browser = await chromium.launch({ headless: true, args: ["--ignore-gpu-blocklist", ...(process.platform === "darwin" ? ["--use-angle=metal"] : [])] });
+  const browser = await launchChromium({ args: ["--ignore-gpu-blocklist", ...(process.platform === "darwin" ? ["--use-angle=metal"] : [])] });
   try {
     const page = await browser.newPage({ viewport: { width: 64, height: 64 }, deviceScaleFactor: 1 });
     const errors: string[] = [];

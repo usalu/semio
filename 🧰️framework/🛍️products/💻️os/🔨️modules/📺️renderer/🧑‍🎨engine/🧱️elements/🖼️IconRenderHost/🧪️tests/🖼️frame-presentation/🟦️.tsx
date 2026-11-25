@@ -5,7 +5,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { compile } from "@tailwindcss/node";
 import Ajv2020 from "ajv/dist/2020.js";
-import { chromium } from "playwright";
+import { launchChromium } from "../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🌐️chromium-launch/🟦️";
 import { cleanup, render, waitFor } from "@semio-tech/ui-react/test";
 import { configureHostPorts, uiI18n } from "@semio-tech/ui-react";
 import { afterEach, expect, it } from "vitest";
@@ -21,7 +21,7 @@ it("measures actual IconRenderHost frame, content and footer in Chromium", async
   const stylesPath = resolve(dirname(fileURLToPath(import.meta.url)), "../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🖌️ui/🎨️.css");
   const compiler = await compile(readFileSync(stylesPath, "utf8"), { base: dirname(stylesPath), from: stylesPath, onDependency: () => {} });
   const fonts = [["Anta", "🚀️anta/🏛️latin/📖️regular"], ["Share Tech Mono", "⌨️share-tech-mono/🏛️latin/📖️regular"]].map(([family, path]) => ({ family, data: readFileSync(resolve(dirname(stylesPath), "../../../🖼️assets/🔤️fonts", path, "🔤️outline.ttf")).toString("base64") }));
-  const browser = await chromium.launch({ headless: true, args: ["--font-render-hinting=none"] });
+  const browser = await launchChromium({ args: ["--font-render-hinting=none"] });
   try {
     const page = await browser.newPage();
     for (const sample of fixture.cases) {
@@ -116,7 +116,7 @@ it("measures actual IconRenderHost frame, content and footer in Chromium", async
 it("renders the production World mask and scene clear without painting outside the Icon viewport", async () => {
   const path = resolve(dirname(fileURLToPath(import.meta.url)), "../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🎨️shaders/🦀️.rs");
   const shader = readModuleTreeSource(path).match(/pub const WORLD3D_POSTPROCESS_SHADER: &str = r#"([\s\S]*?)"#;/)![1];
-  const browser = await chromium.launch({ headless: true, args: ["--enable-unsafe-webgpu", "--use-angle=swiftshader"] });
+  const browser = await launchChromium({ args: ["--enable-unsafe-webgpu", "--use-angle=swiftshader"] });
   try {
     const page = await browser.newPage();
     await page.route("https://renderer.test/**", route => route.fulfill({ contentType: "text/html", body: "<!doctype html><title>World mask fixture</title>" }));
@@ -194,7 +194,7 @@ it("renders the production World mask and scene clear without painting outside t
 it("renders the production UI shader with the same ellipse badge clipping as Chromium", async () => {
   const path = resolve(dirname(fileURLToPath(import.meta.url)), "../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🎨️shaders/🦀️.rs");
   const shader = readModuleTreeSource(path).match(/pub const UI_SHADER: &str = r#"([\s\S]*?)"#;/)![1];
-  const browser = await chromium.launch({ headless: true, args: ["--enable-unsafe-webgpu", "--use-angle=swiftshader"] });
+  const browser = await launchChromium({ args: ["--enable-unsafe-webgpu", "--use-angle=swiftshader"] });
   try {
     const page = await browser.newPage();
     await page.route("https://renderer.test/**", route => route.fulfill({ contentType: "text/html", body: "<!doctype html><title>UI shader fixture</title>" }));

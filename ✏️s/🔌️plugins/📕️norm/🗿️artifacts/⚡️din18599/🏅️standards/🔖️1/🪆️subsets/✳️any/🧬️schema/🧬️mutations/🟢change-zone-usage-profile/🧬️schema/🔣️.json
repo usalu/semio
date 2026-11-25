@@ -11,7 +11,7 @@
   ],
   "properties": {
     "mutation": {
-      "const": "changezoneusageprofile"
+      "const": "changeZoneUsageProfile"
     },
     "zoneId": {
       "type": "string",

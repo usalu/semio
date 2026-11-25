@@ -21,7 +21,7 @@ export function healReplicaAgentV1(options:Readonly<{platform?:string;home?:stri
   if(age>=0&&age<(options.minimumMilliseconds??60_000))return"skipped";
  }catch{}
  try{mkdirSync(dirname(stamp),{recursive:true,mode:0o700});const descriptor=openSync(stamp,"a");closeSync(descriptor);utimesSync(stamp,new Date(now()),new Date(now()));}catch{writeFileSync(stamp,"",{flag:"a"});}
- const run=options.run??((program,args)=>{const result=spawnSync(program,[...args],{encoding:"utf8",timeout:3000});return{status:result.status??1,stdout:result.stdout??""};});
+ const run=options.run??((program,args)=>{const result=spawnSync(program,[...args],{windowsHide:true,encoding:"utf8",timeout:3000});return{status:result.status??1,stdout:result.stdout??""};});
  const target=`gui/${uid}/${REPLICA_AGENT_LABEL_V1}`,state=run("launchctl",["print",target]);
  if(state.status!==0)return"unloaded";
  if(/\bstate = running\b/u.test(state.stdout))return"running";

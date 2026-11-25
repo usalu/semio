@@ -5,9 +5,9 @@ import { normWireInteger, normWireLiteral, normWireObject, normWireRange, type N
 import { type EnvelopeElement, parseEnvelopeElement } from "../../../📸️snapshot/🟦️.ts";
 
 export interface InsertElement {
-  mutation: "insertelement";
+  mutation: "insertElement";
   index: number;
   element: EnvelopeElement;
 }
 
-export const parseInsertElement: NormWireReader<InsertElement> = normWireObject<InsertElement>({ mutation: normWireRequired(normWireLiteral("insertelement")), index: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), element: normWireRequired(parseEnvelopeElement) });
+export const parseInsertElement: NormWireReader<InsertElement> = normWireObject<InsertElement>({ mutation: normWireRequired(normWireLiteral("insertElement")), index: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), element: normWireRequired(parseEnvelopeElement) });

@@ -13,14 +13,62 @@
       "de": "Ein erwachsener Labrador Retriever von 30 kg mit 0,57 m Widerristhöhe: zehengängiges vierbeiniges Skelett mit getrennten Gliedmaßenketten der nahen und fernen Seite, gegliederter Rute, biegsamer Wirbelsäule, Unterkiefer und Ohren; Schritt und Trab mit Fußfolge nach Hildebrand (1976), Sitzpose, Schnüffeln, Hecheln und ein Wärmemodell für kurzes Fell."
     },
     "tags": [
-      "animal",
-      "dog",
-      "quadruped",
-      "digitigrade",
-      "mammal",
-      "pet",
-      "gait",
-      "panting"
+      {
+        "id": "animal",
+        "title": {
+          "en": "animal",
+          "de": "Tier"
+        }
+      },
+      {
+        "id": "dog",
+        "title": {
+          "en": "dog",
+          "de": "Hund"
+        }
+      },
+      {
+        "id": "quadruped",
+        "title": {
+          "en": "quadruped",
+          "de": "Vierbeiner"
+        }
+      },
+      {
+        "id": "digitigrade",
+        "title": {
+          "en": "digitigrade",
+          "de": "Zehengänger"
+        }
+      },
+      {
+        "id": "mammal",
+        "title": {
+          "en": "mammal",
+          "de": "Säugetier"
+        }
+      },
+      {
+        "id": "pet",
+        "title": {
+          "en": "pet",
+          "de": "Haustier"
+        }
+      },
+      {
+        "id": "gait",
+        "title": {
+          "en": "gait",
+          "de": "Gangart"
+        }
+      },
+      {
+        "id": "panting",
+        "title": {
+          "en": "panting",
+          "de": "Hecheln"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage content worker (animals)",

@@ -1,7 +1,3 @@
 [
-  {"op": "thicken", "scale": "50", "view": "front", "id": "sleeve-l"},
-  {"op": "thicken", "scale": "50", "view": "plan", "id": "sleeve-l"},
-  {"op": "thicken", "scale": "50", "view": "front", "id": "sleeve-r"},
-  {"op": "thicken", "scale": "50", "view": "plan", "id": "sleeve-r"},
-  {"op": "thicken", "scale": "50", "view": "plan", "id": "hand-r"}
+  {"op": "copy", "scale": "50", "id": "sleeve-r", "from": "plan", "to": ["front"]}
 ]

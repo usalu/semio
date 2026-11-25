@@ -47,7 +47,9 @@
           "memberId": null,
           "category": null,
           "method": "SafeLife",
-          "spectrum": null
+          "spectrum": null,
+          "stressHistory": null,
+          "consequence": null
         }
       }
     ]

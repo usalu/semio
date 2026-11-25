@@ -17,8 +17,8 @@ export ZIG_GLOBAL_CACHE_DIR=/tmp/zig ZIG_LOCAL_CACHE_DIR=/tmp/zig-local
 while IFS= read -r line; do
   [ -z "$line" ] && continue
   echo "L12-STEP $line"
-  for a in 1 2; do eval "cargo test --no-run --jobs 2 --offline $line" && break; echo "L12-BUILD-RETRY $a"; done
-  eval "cargo test --no-fail-fast --jobs 2 --offline $line" || echo "L12-EXIT $?"
+  for a in 1 2 3 4 5; do eval "cargo test --no-run --jobs ${L12_JOBS:-2} --offline $line" && break; echo "L12-BUILD-RETRY $a"; done
+  eval "cargo test --no-fail-fast --jobs ${L12_JOBS:-2} --offline $line" || echo "L12-EXIT $?"
   find /tmp/build/b/debug/build -path "*/semio-s-artifact-puzzle-*/out/*" -type f -perm -u+x ! -name "*.so" ! -name "*.rlib" ! -name "*.rmeta" ! -name "build_script*" ! -name "build-script*" -delete 2>/dev/null || true
   df -h /tmp | tail -1
 done < "$L12_STEPS"
@@ -30,8 +30,8 @@ while :; do
   while IFS= read -r line; do
     [ -z "$line" ] && continue
     echo "L12-STEP $line"
-    for a in 1 2; do eval "cargo test --no-run --jobs 2 --offline $line" && break; echo "L12-BUILD-RETRY $a"; done
-    eval "cargo test --no-fail-fast --jobs 2 --offline $line" || echo "L12-EXIT $?"
+    for a in 1 2 3 4 5; do eval "cargo test --no-run --jobs ${L12_JOBS:-2} --offline $line" && break; echo "L12-BUILD-RETRY $a"; done
+    eval "cargo test --no-fail-fast --jobs ${L12_JOBS:-2} --offline $line" || echo "L12-EXIT $?"
     find /tmp/build/b/debug/build -path "*/semio-s-artifact-puzzle-*/out/*" -type f -perm -u+x ! -name "*.so" ! -name "*.rlib" ! -name "*.rmeta" ! -name "build_script*" ! -name "build-script*" -delete 2>/dev/null || true
   done < "$L12_REQ.cur"
   echo L12-DONE

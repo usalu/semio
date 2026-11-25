@@ -34,7 +34,9 @@ geometry  { schema, state: "pending" | "ready", metrics,
 contains(geometry, x, y) = point in frame
 ```
 
-Removed without replacement: outline polygons, `contentClipPath`, `contentPath`, `bodyRegion`, `contentRegions`, gap regions, full-span snapping, outline violations, context menu fusion metrics, junction cases, stencil union masks, gap pass-through hit testing.
+Removed without replacement: outline polygons, `contentClipPath`, `contentPath`, `bodyRegion`, `contentRegions`, gap regions, outline violations, context menu fusion metrics, stencil union masks, gap pass-through hit testing.
+
+Kept: the junction resolver and the snap of `WindowFrame/shared-border.ts` (`junctions.*`, `snap.*`). They resolve where the edges of abutting frames and chips meet, which the rectangle model needs as much as the silhouette did; `WindowChrome/shared-border.ts` (the compositor) consumes them, and the geometry lives in `WindowFrame`.
 
 ## Naming
 

@@ -13,12 +13,48 @@
       "de": "Eine 1,4 m breite Stahlbeton-Zugangsrampe, die in zwei 3,6 m langen Läufen mit 1:12 (8,3 %) um 0,60 m ansteigt, mit ebenerdigem Podest, Zwischenpodest und oberem Podest von je 1,5 m, 0,10 m hohen Radabweisern und durchgehenden Stahlhandläufen in 0,85 m Höhe auf beiden Seiten mit 0,30 m Verlängerung. 1:12 ist das ADA-Maximum; DIN 18040-1 verlangt höchstens 6 %."
     },
     "tags": [
-      "component",
-      "structural",
-      "ramp",
-      "accessibility",
-      "handrail",
-      "concrete"
+      {
+        "id": "component",
+        "title": {
+          "en": "component",
+          "de": "Bauteil"
+        }
+      },
+      {
+        "id": "structural",
+        "title": {
+          "en": "structural",
+          "de": "tragend"
+        }
+      },
+      {
+        "id": "ramp",
+        "title": {
+          "en": "ramp",
+          "de": "Rampe"
+        }
+      },
+      {
+        "id": "accessibility",
+        "title": {
+          "en": "accessibility",
+          "de": "Barrierefreiheit"
+        }
+      },
+      {
+        "id": "handrail",
+        "title": {
+          "en": "handrail",
+          "de": "Handlauf"
+        }
+      },
+      {
+        "id": "concrete",
+        "title": {
+          "en": "concrete",
+          "de": "Beton"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage component authors (NW-C)",

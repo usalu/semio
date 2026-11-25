@@ -171,7 +171,7 @@ export function registryCatalogInputPaths(repoRoot: string, taxonomy: Taxonomy =
       const [scope = "", name = "", ...subpath] = specifier.split("/");
       if (manifest.name !== scope + "/" + name || manifest.exports?.[subpath.length ? "./" + subpath.join("/") : "."] !== "./" + relative(dirname(binding.manifestPath), binding.entryPath).replaceAll("\\", "/")) throw new Error(`Registry workspace import binding drifted: ${specifier}`);
       inputs.add(binding.manifestPath);
-      visit(binding.entryPath, "implementation-entry", path);
+      visit(binding.entryPath, binding.entryPath.endsWith(".json") ? "static-import" : "implementation-entry", path);
     }
   };
   for (const path of authority.implementationEntryPaths) visit(path, "implementation-entry");

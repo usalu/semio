@@ -13,17 +13,83 @@
    "de": "Eine kommunale Wegepollerleuchte der 1990er-Jahre, 0,90 m über dem Boden: ein Aluminiumrohr von 200 mm mit Lamellenkopf aus vier kegeligen Ringen um eine vergilbte opale Abdeckung, nachgerüstet mit einem LED-Modul von 15 W, verschraubt auf einem Ankerkorb 4 x M12 in einem sandverfüllten Betonköcher von 0,60 m Tiefe; gekreidete anthrazitfarbene Beschichtung, Kratzer, Aufkleberreste und eine Mäherdelle von 10 mm in 0,15 m Höhe. In der Sonne stehend, in der Dämmerung eingeschaltet, angelehnt, vom Mäher getroffen und von zwei Bauhofmitarbeitern mit dem Ankerkorb herausgehoben."
   },
   "tags": [
-   "used",
-   "park",
-   "public-space",
-   "lighting",
-   "bollard-light",
-   "louvre",
-   "aluminium",
-   "powder-coat",
-   "led-retrofit",
-   "anchor-cage",
-   "path"
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "park",
+    "title": {
+     "en": "park",
+     "de": "Park"
+    }
+   },
+   {
+    "id": "public-space",
+    "title": {
+     "en": "public space",
+     "de": "öffentlicher Raum"
+    }
+   },
+   {
+    "id": "lighting",
+    "title": {
+     "en": "lighting",
+     "de": "Beleuchtung"
+    }
+   },
+   {
+    "id": "bollard-light",
+    "title": {
+     "en": "bollard light",
+     "de": "Pollerleuchte"
+    }
+   },
+   {
+    "id": "louvre",
+    "title": {
+     "en": "louvre",
+     "de": "Lamelle"
+    }
+   },
+   {
+    "id": "aluminium",
+    "title": {
+     "en": "aluminium",
+     "de": "Aluminium"
+    }
+   },
+   {
+    "id": "powder-coat",
+    "title": {
+     "en": "powder coat",
+     "de": "Pulverbeschichtung"
+    }
+   },
+   {
+    "id": "led-retrofit",
+    "title": {
+     "en": "LED retrofit",
+     "de": "LED-Nachrüstung"
+    }
+   },
+   {
+    "id": "anchor-cage",
+    "title": {
+     "en": "anchor cage",
+     "de": "Ankerkorb"
+    }
+   },
+   {
+    "id": "path",
+    "title": {
+     "en": "path",
+     "de": "Weg"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content (used park objects wave, row 13)",

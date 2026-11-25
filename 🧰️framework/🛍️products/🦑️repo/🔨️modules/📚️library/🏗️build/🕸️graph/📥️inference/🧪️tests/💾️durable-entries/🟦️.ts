@@ -51,7 +51,7 @@ test("closure entries are durable memo nodes vouched by their observed rows",asy
 });
 }));
 
-test("a loaded entry gives exactly the support rows, walk facts and resolution of a freshly derived one",async()=>repository.invoke(async()=>{
+test("a loaded entry gives exactly the rows, closure-graph rows and resolution of a freshly derived one",async()=>repository.invoke(async()=>{
  const root=await repository.scratch("durable-differential-"),stage=await repository.scratch("durable-diff-stage-");roots.push(root,stage);
  const{entry,modules,extras}=fixture.differential,names=Array.from({length:modules},(_,at)=>"tools/m"+at+".mjs");
  write(root,{[entry]:names.map(name=>'import "./'+name.slice(6)+'";\n').join(""),...Object.fromEntries(names.map((name,at)=>[name,"export const m"+at+" = "+at+";\n"]))});
@@ -69,7 +69,7 @@ test("a loaded entry gives exactly the support rows, walk facts and resolution o
   scriptInputs.resetClosureEntriesV1();
   const loaded=await image(),countsLoaded=scriptInputs.closureEntryCountsV1();
   expect(countsDerived.derived).toBe(2);expect(countsLoaded.derived).toBe(0);expect(countsLoaded.loaded).toBe(2);
-  expect(JSON.parse(derived).derived.length).toBeGreaterThan(0);
+  expect(JSON.parse(derived).rows.filter((row:any)=>row.kind==="global"&&JSON.parse(row.path)[0]==="closure-graph").length,"the walks are named by closure-graph rows").toBeGreaterThan(0);
   expect(loaded).toBe(derived);
  });
 }));

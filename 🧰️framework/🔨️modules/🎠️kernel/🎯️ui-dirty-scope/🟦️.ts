@@ -3,7 +3,7 @@
  * 🧱️ Child module of `🎠️kernel`; importers import this module directly, and the kernel package entry {@link ../📦️packages/🟦️typescript/🟦️.ts} lists its public names.
  */
 
-import { type WindowLayoutNode, collectWindowIds } from "@semio-tech/ui-layout";
+import { type WindowLayoutNode, collectWindowIds } from "../../🖱️ui/🧬️contract/🖼️presentation/📐️layout/🟦️.ts";
 
 // #region 🎠️Kernel
 //#region InvocationResponse

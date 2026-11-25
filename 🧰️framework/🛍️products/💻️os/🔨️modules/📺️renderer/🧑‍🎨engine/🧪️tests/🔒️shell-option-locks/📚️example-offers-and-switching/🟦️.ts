@@ -1,10 +1,13 @@
 /** 📚️ The example offer, ownership and switching tests. */
-import { EMPTY_EXAMPLE_ID, SET_ACTIVE_EXAMPLE_ACTION_ID, appSwitchesExamples, appOffersRegisteredExamples, buildActiveExampleAction, exampleSelectionAfterInputV1, frameworkOwnsExampleSwitch, navbarExampleIdFromHistoryUpserts, rememberedExampleIdFromDispatchV1 } from "../../../🧱️elements/🛠️ShellHelpers/🔩️plumbing/🔀️example-switching/🟦️.ts";
+import { EMPTY_EXAMPLE_ID, SET_ACTIVE_EXAMPLE_ACTION_ID, appSwitchesExamples, appOffersRegisteredExamples, buildActiveExampleAction, exampleRestoredAfterUnappliedLoadV1, exampleSelectionAfterInputV1, frameworkOwnsExampleSwitch, navbarExampleIdFromHistoryUpserts, rememberedExampleIdFromDispatchV1 } from "../../../🧱️elements/🛠️ShellHelpers/🔩️plumbing/🔀️example-switching/🟦️.ts";
 import settlementFixture from "./settlement.json";
 import historyFixture from "./history.json";
 import exampleOfferFixture from "../../../🧱️elements/🐚️Shell/🧪️tests/🧫️fixtures/📚️example-offer/🔣️.json";
 import exampleOfferSchema from "../../../🧱️elements/🐚️Shell/📚️example-offer/🔣️.json";
 import Ajv2020 from "ajv/dist/2020";
+import { readFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { expect, it } from "vitest";
 
 /** 🔀 Registers the example offer, neutral ownership vector, switch admission and remembered example tests. */
@@ -68,14 +71,19 @@ export function registerExampleOffersAndSwitchingTests(): void {
     expect(navbarExampleIdFromHistoryUpserts(live, undefined, "concrete-forest")).toBeUndefined();
     expect(navbarExampleIdFromHistoryUpserts(live, EMPTY_EXAMPLE_ID, "concrete-forest")).toBe(EMPTY_EXAMPLE_ID);
   });
-  it("keeps the empty document selected through settle, undo and redo, and offers it first-class on every picker", async () => {
+  it("keeps the empty document selected through settle, undo and redo, and offers it first-class on every picker", () => {
     const empty = exampleSelectionAfterInputV1({ action: SET_ACTIVE_EXAMPLE_ACTION_ID, args: { exampleId: EMPTY_EXAMPLE_ID } }, { kind: "applied", inputSeq: 5 }, { exampleId: "demo", inputSeq: 4 }, "demo", true);
     expect(empty).toEqual({ memory: { exampleId: EMPTY_EXAMPLE_ID, inputSeq: 5 }, visibleExampleId: EMPTY_EXAMPLE_ID });
     const back = exampleSelectionAfterInputV1({ action: SET_ACTIVE_EXAMPLE_ACTION_ID, args: { exampleId: "demo" } }, { kind: "applied", inputSeq: 6 }, empty!.memory, "demo", true);
     expect(back?.visibleExampleId).toBe("demo");
     expect(buildActiveExampleAction("c", EMPTY_EXAMPLE_ID).args).toEqual({ exampleId: EMPTY_EXAMPLE_ID });
-    const scope = await Bun.file(new URL("../../../🧱️elements/🏛️ShellHost/🔎️command-bar/🔶️scope/🟦️.tsx", import.meta.url)).text();
+    const scope = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../../🧱️elements/🏛️ShellHost/🔎️command-bar/🔶️scope/🟦️.tsx"), "utf8");
     expect(scope).toMatch(/<NavbarExampleSelect[^>]*\bincludeNoExample\b/s);
+  });
+  it("returns the picker and the committed memory to the example before the pick when its load ended without a document", () => {
+    expect(exampleRestoredAfterUnappliedLoadV1("demo", { exampleId: "concrete-forest", inputSeq: 4 })).toEqual({ memory: { exampleId: "demo", inputSeq: 4 }, visibleExampleId: "demo" });
+    expect(exampleRestoredAfterUnappliedLoadV1(EMPTY_EXAMPLE_ID, { exampleId: "demo", inputSeq: 6 })?.visibleExampleId).toBe(EMPTY_EXAMPLE_ID);
+    expect(exampleRestoredAfterUnappliedLoadV1(undefined, { exampleId: "demo", inputSeq: 6 })).toBeUndefined();
   });
   it("keeps the picker unchanged for history from another action", () => {
     expect(navbarExampleIdFromHistoryUpserts([{ actionId: "shell.windowResize", editId: "resize", applied: false }], "nakagin", "forest")).toBeUndefined();

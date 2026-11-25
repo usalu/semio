@@ -250,7 +250,7 @@ export function runLawProcess(command: string, args: readonly string[], options:
   return new Promise((resolveExit) => {
     const lines: string[] = [];
     const tails = { stdout: "", stderr: "" };
-    const child = spawn(command, [...args], { cwd: options.cwd, env: options.env, stdio: ["ignore", "pipe", "pipe"] });
+    const child = spawn(command, [...args], { windowsHide: true, cwd: options.cwd, env: options.env, stdio: ["ignore", "pipe", "pipe"] });
     const interrupt = (): void => {
       onInterrupt?.();
       child.kill("SIGINT");

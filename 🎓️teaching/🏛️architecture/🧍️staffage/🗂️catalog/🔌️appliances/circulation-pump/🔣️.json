@@ -13,15 +13,69 @@
       "de": "Eine Nassläufer-Heizungsumwälzpumpe der Klasse 25-60/180 in ihrem Rohrstrang, gesehen längs der Motorwelle: gegossenes Spiralgehäuse mit zwei Gewindestutzen im Abstand von 180 mm, Messingverschraubungen und Kupfer-Einlegeteilen, der angeflanschte Motorkopf mit vier Schrauben, Schauglas und drehender Anzeige, oben der Klemmenkasten; 5 W auf kleiner Stufe und 45 W bei voller Drehzahl, davon erwärmen etwa 30 W den Raum."
     },
     "tags": [
-      "circulation-pump",
-      "circulator",
-      "wet-rotor",
-      "heating",
-      "hydronic",
-      "pump",
-      "internal-gain",
-      "electrical",
-      "pipe"
+      {
+        "id": "circulation-pump",
+        "title": {
+          "en": "circulation pump",
+          "de": "Umwälzpumpe"
+        }
+      },
+      {
+        "id": "circulator",
+        "title": {
+          "en": "circulator",
+          "de": "Zirkulator"
+        }
+      },
+      {
+        "id": "wet-rotor",
+        "title": {
+          "en": "wet rotor",
+          "de": "Nassläufer"
+        }
+      },
+      {
+        "id": "heating",
+        "title": {
+          "en": "heating",
+          "de": "Heizung"
+        }
+      },
+      {
+        "id": "hydronic",
+        "title": {
+          "en": "hydronic",
+          "de": "wasserführend"
+        }
+      },
+      {
+        "id": "pump",
+        "title": {
+          "en": "pump",
+          "de": "Pumpe"
+        }
+      },
+      {
+        "id": "internal-gain",
+        "title": {
+          "en": "internal gain",
+          "de": "innere Wärmelast"
+        }
+      },
+      {
+        "id": "electrical",
+        "title": {
+          "en": "electrical",
+          "de": "Elektro"
+        }
+      },
+      {
+        "id": "pipe",
+        "title": {
+          "en": "pipe",
+          "de": "Rohr"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage content (A9)",

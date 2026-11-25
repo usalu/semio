@@ -1,0 +1,39 @@
+{
+  "request": {"activationGeneration":"1","instanceId":7,"requestSequence":8},
+  "captured": {"kind":"captured","lifetime":{"activationGeneration":"1","instanceId":7,"guestLifetime":"31"},"requestSequence":8},
+  "cases": {
+    "capture may take multiple turns and a committed ack may return more work": [
+      {"status":"moreWork","receipt":null,"progress":"wait"},
+      {"status":"moreWork","receipt":null,"progress":"wait"},
+      {"status":"moreWork","receipt":"captured","progress":"ack"},
+      {"status":"moreWork","receipt":null,"progress":"live"}
+    ],
+    "captured is never readiness even when reported idle": [
+      {"status":"idle","receipt":"captured","progress":"ack"},
+      {"status":"idle","receipt":null,"progress":"live"}
+    ],
+    "idle without a captured receipt": [
+      {"status":"idle","receipt":null,"progress":"refused"}
+    ],
+    "receipt still retained after an ack turn": [
+      {"status":"moreWork","receipt":"captured","progress":"ack"},
+      {"status":"moreWork","receipt":"captured","progress":"refused"}
+    ],
+    "faulted ack never commits locally": [
+      {"status":"moreWork","receipt":"captured","progress":"ack"},
+      {"status":{"faulted":[1]},"receipt":null,"progress":"refused"}
+    ],
+    "wrong instance": [
+      {"status":"moreWork","receipt":{"kind":"captured","lifetime":{"activationGeneration":"1","instanceId":6,"guestLifetime":"31"},"requestSequence":8},"progress":"refused"}
+    ],
+    "wrong generation": [
+      {"status":"moreWork","receipt":{"kind":"captured","lifetime":{"activationGeneration":"2","instanceId":7,"guestLifetime":"31"},"requestSequence":8},"progress":"refused"}
+    ],
+    "wrong request sequence": [
+      {"status":"moreWork","receipt":{"kind":"captured","lifetime":{"activationGeneration":"1","instanceId":7,"guestLifetime":"31"},"requestSequence":9},"progress":"refused"}
+    ],
+    "close receipt from same instance": [
+      {"status":"moreWork","receipt":{"kind":"accepted","lifetime":{"activationGeneration":"1","instanceId":7,"guestLifetime":"31"},"requestSequence":8,"closeGeneration":"2"},"progress":"refused"}
+    ]
+  }
+}

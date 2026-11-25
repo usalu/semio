@@ -2,7 +2,7 @@ import * as ui from "@semio-tech/ui-react/source";
 import type { TestSource, Tests1Vitest, Tests1Dependencies } from "../🧰️harness/🟦️.ts";
 
 export async function registerShellComponents5Tests(vitest: Tests1Vitest, dependencies: Tests1Dependencies, testSource: TestSource): Promise<void> {
-  const { Mode, applyAxisGroupLayoutDelta, applyModeDrop, applyModeJoinCornerResize, computeModeSplitPreviewInBody, computeTabInsertPreview, modeDockTabsWithInsertPreview, modeJoinCornerSpecsForCrossSeparator, modeJoinCornerSpecsForSeparator, modePerpendicularJoinSeparators, reactHostPort, readResizableJoinCornerSpec, resolveJoinCornerPeerCrossAxes, resolveModeSplitSideInBody, uiDataLabel } = dependencies;
+  const { Mode, applyAxisGroupLayoutDelta, applyModeDrop, applyModeJoinCornerResize, computeModeSplitPreviewInBody, modeDockTabsWithInsertPreview, modeJoinCornerSpecsForCrossSeparator, modeJoinCornerSpecsForSeparator, modePerpendicularJoinSeparators, reactHostPort, readResizableJoinCornerSpec, resolveJoinCornerPeerCrossAxes, resolveModeSplitSideInBody, uiDataLabel } = dependencies;
   type ResizableJoinCornerSpec = any;
   type WindowLayoutNode = any;
   const { describe, expect, it, vi } = vitest;
@@ -55,7 +55,7 @@ describe("Shell components", () => {
       expect(activeTabButton?.getAttribute("aria-selected")).toBe("true");
       expect(activeTabButton?.getAttribute("aria-controls")).toBe(stack.querySelector('[role="tabpanel"]')?.id);
       expect(stack.querySelector('[role="tabpanel"]')?.getAttribute("aria-labelledby")).toBe(activeTabButton?.id);
-      expect(stackBody.getAttribute("data-level")).toBe("base");
+      expect(stackBody.getAttribute("data-level")).toBe("window");
       fireEvent.keyDown(activeTabButton!, { key: "ArrowLeft" });
       expect(document.activeElement).toBe(inactiveTabButton);
       fireEvent.keyDown(inactiveTabButton!, { key: "Enter" });
@@ -155,24 +155,6 @@ describe("Shell components", () => {
       const merged = next.kind === "stack" ? next : next.kind === "split" ? next.children.find((child) => child.kind === "stack" && child.children.some((window) => window.windowKindId === "c")) : null;
       expect(merged?.kind).toBe("stack");
       if (merged?.kind === "stack") expect(merged.children.map((child) => child.windowKindId)).toEqual(["a", "b", "c"]);
-    });
-
-    it("computeTabInsertPreview resolves slot geometry at tab boundaries", () => {
-      const tabBar = document.createElement("div");
-      tabBar.setAttribute("data-slot", "mode-dock-tabbar");
-      const tabA = document.createElement("div");
-      tabA.setAttribute("data-slot", "mode-dock-tab");
-      tabA.getBoundingClientRect = () => ({ left: 0, right: 80, top: 0, bottom: 24, width: 80, height: 24 }) as DOMRect;
-      const tabB = document.createElement("div");
-      tabB.setAttribute("data-slot", "mode-dock-tab");
-      tabB.getBoundingClientRect = () => ({ left: 80, right: 160, top: 0, bottom: 24, width: 80, height: 24 }) as DOMRect;
-      tabBar.appendChild(tabA);
-      tabBar.appendChild(tabB);
-      tabBar.getBoundingClientRect = () => ({ left: 0, right: 160, top: 0, bottom: 24, width: 160, height: 24 }) as DOMRect;
-      const between = computeTabInsertPreview(tabBar, 1);
-      expect(between?.insertX).toBe(80);
-      const end = computeTabInsertPreview(tabBar, 2);
-      expect(end?.insertX).toBe(160);
     });
 
     it("computeModeSplitPreviewInBody covers half the stack body on each side", () => {

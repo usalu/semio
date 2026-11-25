@@ -13,17 +13,83 @@
    "de": "Ein gebrauchter eichenfurnierter Couchtisch 1,10 x 0,60 x 0,45 m mit Zwischenboden, Wasserrändern, sonnengebleichter Platte und abgebrochener Ecke, kopfüber auf einer Möbeldecke auf einem Lagertisch gelagert, von einer Person an den Stirnseiten getragen und in einem Wohnzimmer wieder aufgestellt."
   },
   "tags": [
-   "used",
-   "household",
-   "second-hand",
-   "living",
-   "table",
-   "coffee-table",
-   "oak",
-   "veneer",
-   "chipboard",
-   "interior",
-   "reuse-depot"
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "household",
+    "title": {
+     "en": "household",
+     "de": "Haushalt"
+    }
+   },
+   {
+    "id": "second-hand",
+    "title": {
+     "en": "second-hand",
+     "de": "Second-Hand"
+    }
+   },
+   {
+    "id": "living",
+    "title": {
+     "en": "living",
+     "de": "Wohnen"
+    }
+   },
+   {
+    "id": "table",
+    "title": {
+     "en": "table",
+     "de": "Tisch"
+    }
+   },
+   {
+    "id": "coffee-table",
+    "title": {
+     "en": "coffee table",
+     "de": "Couchtisch"
+    }
+   },
+   {
+    "id": "oak",
+    "title": {
+     "en": "oak",
+     "de": "Eiche"
+    }
+   },
+   {
+    "id": "veneer",
+    "title": {
+     "en": "veneer",
+     "de": "Furnier"
+    }
+   },
+   {
+    "id": "chipboard",
+    "title": {
+     "en": "chipboard",
+     "de": "Spanplatte"
+    }
+   },
+   {
+    "id": "interior",
+    "title": {
+     "en": "interior",
+     "de": "Innenausbau"
+    }
+   },
+   {
+    "id": "reuse-depot",
+    "title": {
+     "en": "reuse depot",
+     "de": "Wiederverwendungslager"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content (used household objects wave)",

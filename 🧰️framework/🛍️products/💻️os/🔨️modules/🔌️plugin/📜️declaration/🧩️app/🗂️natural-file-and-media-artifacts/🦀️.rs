@@ -157,10 +157,8 @@ pub fn mount_natural_file_actions(definition: &mut AppDefinition, codec: Natural
         definition.io.import_formats.push(codec.format_kind.to_string());
     }
     for action in natural_file_action_definitions(codec) {
-        for window in definition.window_kinds.iter_mut() {
-            if !window.actions.iter().any(|entry| entry.id == action.id) {
-                window.actions.push(action.clone());
-            }
+        if !definition.actions.iter().chain(definition.window_kinds.iter().flat_map(|window| window.actions.iter())).any(|entry| entry.id == action.id) {
+            definition.actions.push(action);
         }
     }
 }

@@ -24,7 +24,7 @@ export const ContextMenuChrome = reactHostPort.forwardRef<HTMLDivElement, { read
           </div>
         }
         body={children}
-        bodyClassName="pointer-events-auto w-fit p-single"
+        bodyClassName="pointer-events-auto px-0"
       />
     );
   },
@@ -42,7 +42,7 @@ export const ContextMenuWingFrame = reactHostPort.forwardRef<HTMLDivElement, { r
       className={cn("z-menu w-fit min-w-[10rem]", className)}
       style={style}
       body={children}
-      bodyClassName="pointer-events-auto w-fit p-single"
+      bodyClassName="pointer-events-auto px-0"
     />
   ),
 );

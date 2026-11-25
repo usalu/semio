@@ -24,9 +24,3 @@ pub fn render(host: &crate::Host, selection: &NormSelection, locale: Locale, con
     render_inspector(host, locale, controller_id, Some(crate::field_meta::en1993_field_meta), windows, &options)
 }
 //#endregion 🔖️Render
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

@@ -1,0 +1,101 @@
+{
+ "phase": "adopt",
+ "scope": "all",
+ "steps": [
+  {
+   "label": "bootstrap",
+   "wallS": 0.8,
+   "cpuS": 0.7,
+   "rssMB": 146,
+   "peakMB": 146,
+   "heapMB": 34
+  },
+  {
+   "label": "questions",
+   "wallS": 1.7,
+   "cpuS": 1.4,
+   "rssMB": 297,
+   "peakMB": 297,
+   "heapMB": 40,
+   "registry": 4872,
+   "projectOwners": 1607,
+   "cargoOwners": 3265,
+   "targets": 4107,
+   "distinctQuestions": 2572,
+   "failedTargets": 4
+  },
+  {
+   "label": "load",
+   "wallS": 2.5,
+   "cpuS": 2.7,
+   "rssMB": 883,
+   "peakMB": 883,
+   "heapMB": 564,
+   "nodes": 76983,
+   "edges": 288852
+  },
+  {
+   "label": "trust",
+   "wallS": 8,
+   "cpuS": 3.8,
+   "rssMB": 1224,
+   "peakMB": 1224,
+   "heapMB": 564,
+   "trusted": 76978,
+   "untrusted": 5
+  },
+  {
+   "label": "adopt-module-pass",
+   "wallS": 1.4,
+   "cpuS": 1.7,
+   "rssMB": 1344,
+   "peakMB": 1344,
+   "heapMB": 471,
+   "built": 1,
+   "visited": 68641
+  },
+  {
+   "label": "adopt-cargo-pass",
+   "wallS": 0.9,
+   "cpuS": 1,
+   "rssMB": 1779,
+   "peakMB": 1779,
+   "heapMB": 471,
+   "nodes": 66963,
+   "refused": 0
+  },
+  {
+   "label": "compare",
+   "wallS": 0.4,
+   "cpuS": 0.3,
+   "rssMB": 1958,
+   "peakMB": 1959,
+   "heapMB": 471,
+   "owners": 4872,
+   "equal": 2172
+  },
+  {
+   "label": "module-edit-pass",
+   "wallS": 1.3,
+   "cpuS": 1.6,
+   "rssMB": 2000,
+   "peakMB": 2078,
+   "heapMB": 546,
+   "edited": "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
+   "built": 2,
+   "questionsMoved": 0
+  },
+  {
+   "label": "rust-edit-pass",
+   "wallS": 0.9,
+   "cpuS": 0.8,
+   "rssMB": 1877,
+   "peakMB": 2078,
+   "heapMB": 546,
+   "edited": "{workspaceRoot}/🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🧠️native-registry/🏗️solid-transaction/🧿️annular-boundary/🪜️double-shoulder/🦀️.rs",
+   "nodes": 66963,
+   "refused": 0,
+   "ownersMoved": 0
+  }
+ ]
+}

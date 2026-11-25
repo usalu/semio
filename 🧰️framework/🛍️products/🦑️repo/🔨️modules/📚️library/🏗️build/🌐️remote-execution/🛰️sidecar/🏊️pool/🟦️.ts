@@ -23,7 +23,12 @@ export async function runPool(context:RemoteExecutionSidecarContextV1):Promise<v
  const guard=await acquireOwnerPoolGuardV1({root:context.root,say:pid=>{context.write(`owner pool: another pool process of this machine (pid ${pid}) is alive, waiting for it / ein anderer Pool-Prozess dieser Maschine (pid ${pid}) lebt, warte auf ihn`);}});
  if(!guard.acquired){status.update({state:"idle",siblings:1,lastError:`another pool process (pid ${guard.sibling}) is alive / ein anderer Pool-Prozess (pid ${guard.sibling}) lebt`});status.flush();return;}
 let sampled=cpus();
- const capacity=async(input:Readonly<{children:number;childMegabytes:number}>):Promise<OwnerPoolTargetV1>=>{try{const now=cpus(),idleCores=ownerPoolIdleCoresV1(sampled,now);sampled=now;return ownerPoolSizingV1({host:{...ownerPoolHostOfV1(await readRemoteExecutionHostViewV1(context.environment)),idleCores},...input});}catch{return{children:1,reason:null};}};
+ const capacity=async(input:Readonly<{children:number;childMegabytes:number}>):Promise<OwnerPoolTargetV1>=>{
+  const now=cpus(),idleCores=ownerPoolIdleCoresV1(sampled,now);
+  sampled=now;
+  const host=ownerPoolHostOfV1(await readRemoteExecutionHostViewV1(context.environment));
+  return ownerPoolSizingV1({host:{...host,idleCores},...input});
+ };
  const server=origin.endsWith("-server");
  let revision:string|undefined;
  if(server){try{revision=((await import("../../../👁️observation/🟨️.mjs")) as {projectRecordKeyTextV1(key:null):string}).projectRecordKeyTextV1(null);}catch{}}

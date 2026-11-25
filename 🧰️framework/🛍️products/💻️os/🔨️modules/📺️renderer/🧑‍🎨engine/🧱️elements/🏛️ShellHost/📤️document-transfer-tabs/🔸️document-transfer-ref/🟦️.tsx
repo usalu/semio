@@ -14,7 +14,7 @@ import { resolveAppLabel, resolveManifestLabel } from "../../../🛠️ShellHelp
 import { panelAnchorForGroup } from "../../../🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
 import type { BrowserActorPanelHostV1 } from "../../../🛠️ShellHelpers/🌳️tree-windows/🟦️.tsx";
 import { uiIntentToActionDescriptor } from "../../../🗣️Interpreter/🎬️intent-descriptor/🟦️.ts";
-import { pasteActionWithRetainedFragment, type ClipboardActionDescriptor, pasteArgsFragment } from "../../../🛠️ShellHelpers/🪟️window-panes/📋️clipboard-activation/🟦️.ts";
+import { workspacePasteKeybinding } from "../../../🛠️ShellHelpers/🪟️window-panes/📋️clipboard-activation/🟦️.ts";
 import { FRAMEWORK_CHAT_PANEL_ID } from "../../../📌️ChromePanels/🆔️panel-ids/🟦️.ts";
 import { focusAgentApprovalV1 } from "../../../🤖️AgentApprovals/🟦️.tsx";
 import type { ShellCoreAfterThemeDriverSettings } from "../../🎨️theme-driver-settings/🟦️.tsx";
@@ -22,7 +22,7 @@ import type { buildScopeState } from "../🔶️scope/🟦️.tsx";
 import { installNaturalFileDropV1 } from "../../🛬️natural-file-drop/🟦️.ts";
 
 /** 🔹 Builds documentTransferRef, revealAgentApproval, revealedApprovalIdsRef, handleAppKeydown of useDocumentTransferAndTabs. */
-export function useDocumentTransferRefState({ exportDocumentArchive, importDocumentArchive, exportMediaFile, saveNaturalFile, openNaturalFile, trackDocumentTransfer, notifyDocumentTransfer, core, dispatch, agentBridge, session, focusedApp, focusedWindowInstancesRef, activeWindowIdRef, focusedSpawnedId, effectiveModeLayoutRef, uiKeybindingOverrides, activeUtilityByWindowIdRef, onAction, utilityGenerationFor, activeToolIdRef, toolGeneration, appLabelsOverlay, uiTerminology, uiLocale, showTransientNotice, clipboardFragmentRef, actionPaneExpandedByWindowIdRef, actionPaneStagedArgsByKeyRef, scope, openDocumentSessionsRef, localDocumentOwnerRegistry, panel, foldSpaceDirectoryRef, browserActorUiByRuntimeKeyRef, browserActorUiVersion, onBrowserActorIntent, onActionStable }: Pick<ReturnType<typeof buildScopeState>, "exportDocumentArchive" | "importDocumentArchive" | "exportMediaFile" | "saveNaturalFile" | "openNaturalFile" | "trackDocumentTransfer" | "notifyDocumentTransfer" | "dispatch" | "agentBridge" | "session" | "focusedApp" | "focusedWindowInstancesRef" | "activeWindowIdRef" | "focusedSpawnedId" | "effectiveModeLayoutRef" | "uiKeybindingOverrides" | "activeUtilityByWindowIdRef" | "onAction" | "utilityGenerationFor" | "activeToolIdRef" | "toolGeneration" | "appLabelsOverlay" | "uiTerminology" | "uiLocale" | "showTransientNotice" | "clipboardFragmentRef" | "actionPaneExpandedByWindowIdRef" | "actionPaneStagedArgsByKeyRef" | "scope" | "openDocumentSessionsRef" | "localDocumentOwnerRegistry" | "panel" | "foldSpaceDirectoryRef" | "browserActorUiByRuntimeKeyRef" | "browserActorUiVersion" | "onBrowserActorIntent" | "onActionStable"> & { readonly core: ShellCoreAfterThemeDriverSettings }) {
+export function useDocumentTransferRefState({ exportDocumentArchive, importDocumentArchive, exportMediaFile, saveNaturalFile, openNaturalFile, trackDocumentTransfer, notifyDocumentTransfer, core, dispatch, agentBridge, session, focusedApp, focusedWindowInstancesRef, activeWindowIdRef, focusedSpawnedId, effectiveModeLayoutRef, uiKeybindingOverrides, activeUtilityByWindowIdRef, onAction, utilityGenerationFor, activeToolIdRef, toolGeneration, appLabelsOverlay, uiTerminology, uiLocale, showTransientNotice, clipboardFragmentRef, clipboardQueue, actionPaneExpandedByWindowIdRef, actionPaneStagedArgsByKeyRef, scope, openDocumentSessionsRef, localDocumentOwnerRegistry, panel, foldSpaceDirectoryRef, browserActorUiByRuntimeKeyRef, browserActorUiVersion, onBrowserActorIntent, onActionStable }: Pick<ReturnType<typeof buildScopeState>, "exportDocumentArchive" | "importDocumentArchive" | "exportMediaFile" | "saveNaturalFile" | "openNaturalFile" | "trackDocumentTransfer" | "notifyDocumentTransfer" | "dispatch" | "agentBridge" | "session" | "focusedApp" | "focusedWindowInstancesRef" | "activeWindowIdRef" | "focusedSpawnedId" | "effectiveModeLayoutRef" | "uiKeybindingOverrides" | "activeUtilityByWindowIdRef" | "onAction" | "utilityGenerationFor" | "activeToolIdRef" | "toolGeneration" | "appLabelsOverlay" | "uiTerminology" | "uiLocale" | "showTransientNotice" | "clipboardFragmentRef" | "clipboardQueue" | "actionPaneExpandedByWindowIdRef" | "actionPaneStagedArgsByKeyRef" | "scope" | "openDocumentSessionsRef" | "localDocumentOwnerRegistry" | "panel" | "foldSpaceDirectoryRef" | "browserActorUiByRuntimeKeyRef" | "browserActorUiVersion" | "onBrowserActorIntent" | "onActionStable"> & { readonly core: ShellCoreAfterThemeDriverSettings }) {
   const documentTransferRef = useRef({ exportDocumentArchive, importDocumentArchive, exportMediaFile, saveNaturalFile, openNaturalFile, trackDocumentTransfer, notifyDocumentTransfer });
   core.documentTransferRef = documentTransferRef;
   documentTransferRef.current = { exportDocumentArchive, importDocumentArchive, exportMediaFile, saveNaturalFile, openNaturalFile, trackDocumentTransfer, notifyDocumentTransfer };
@@ -117,10 +117,9 @@ export function useDocumentTransferRefState({ exportDocumentArchive, importDocum
           if (!definition) return;
           if (target.kind === "owner") dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: targetWindowId });
           if (actionRequiresStagedForm(definition)) {
-            const retainedPaste = pasteActionWithRetainedFragment<ClipboardActionDescriptor>({ action: definition.id }, clipboardFragmentRef.current);
-            const retainedArgs = retainedPaste.args;
-            if (pasteArgsFragment(retainedPaste) !== undefined) {
-              onAction({ controllerId: keyApp.controllerId, action: retainedPaste.action, args: { ...(typeof retainedArgs === "object" && retainedArgs !== null ? retainedArgs : {}), windowId: targetWindowId } });
+            const paste = workspacePasteKeybinding(definition.id, targetWindowId, clipboardQueue.pending, clipboardFragmentRef.current);
+            if (paste) {
+              onAction({ controllerId: keyApp.controllerId, ...paste });
               return;
             }
             const expanded = actionPaneExpandedByWindowIdRef.current[targetWindowId] ?? null;

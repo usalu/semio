@@ -1,0 +1,32 @@
+{
+  "title": "Deferred Tool Aborts Survive the Follow Read",
+  "emoji": "🧷️",
+  "status": "closed",
+  "description": "Make host aborts of open gestures, presses and typing runs survive the tool follow's retained read instead of being silently dropped. GestureLedger::abort and the typing ledger's abort/lapse return Idle when the slot has_read(), so end_window_gesture loses a blur and freeze_tool_machines' abort_all skips read rows. Record the abort while the read is held and apply it once the follow returns the read (or drive the follow first via follow_before_writer). Add laws next to every_writer_waiting_on_a_follow_read_drives_the_follow plus ledger unit tests. Done when a blur or freeze arriving during a follow read ends the gesture or run once the read returns, tests pass natively, and the FEM 2D smoke still passes. Follow-up of ticket 26/11/22/GET-FEM-PLUGIN-WORKING-END-TO-END.",
+  "summary": "Host aborts of open gestures, presses and typing runs that meet a slot the tool follow holds a retained read on are now deferred by their ledger instead of dropped. Each ledger keeps the fact (first wins, no source-revision change; the slot is hidden from open/windows and a gesture's press closes at once) and applies it via settle_deferred_aborts once the read returns; every writer of the slot applies it first. The render context settles all three ledgers after every follow step that may return a read, in follow_tool_machines and before settle_gesture_slot; blur and freeze request the refold that makes the follow return the read. New data-driven ledger law (🔗️read/🧪️tests/⏸️deferred, 14 cases, schema 📐️.json) and plugin source law a_host_abort_during_a_follow_read_ends_its_slot_once_the_follow_returns_the_read. Native: tool-machine 12/12, companion 40/40, plugin follow laws 4/4; FEM wasm rebuilt; FEM 2D smoke rc=0 (36/512 → 49/512, Ty 12000 N). See deferred-aborts.md and verification.md.",
+  "goal": "runningframework",
+  "sessions": [
+    "f8bcfa0e-3972-4341-815a-98c68ad14e7a"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-24 22:32:59",
+      "author": "",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Make host aborts of open gestures, presses and typing runs survive the tool follow's retained read instead of being silently dropped. GestureLedger::abort and the typing ledger's abort/lapse return Idle when the slot has_read(), so end_window_gesture loses a blur and freeze_tool_machines' abort_all skips read rows. Record the abort while the read is held and apply it once the follow returns the read (or drive the follow first via follow_before_writer). Add laws next to every_writer_waiting_on_a_follow_read_drives_the_follow plus ledger unit tests. Done when a blur or freeze arriving during a follow read ends the gesture or run once the read returns, tests pass natively, and the FEM 2D smoke still passes. Follow-up of ticket 26/11/22/GET-FEM-PLUGIN-WORKING-END-TO-END.",
+      "llm": "opus-5-5"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-25 01:14:10",
+      "author": "ueli",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "8d17d8ba3998690932b0032ea2ca41bce5c994b6",
+      "summary": "Host aborts of open gestures, presses and typing runs that meet a slot the tool follow holds a retained read on are now deferred by their ledger instead of dropped. Each ledger keeps the fact (first wins, no source-revision change; the slot is hidden from open/windows and a gesture's press closes at once) and applies it via settle_deferred_aborts once the read returns; every writer of the slot applies it first. The render context settles all three ledgers after every follow step that may return a read, in follow_tool_machines and before settle_gesture_slot; blur and freeze request the refold that makes the follow return the read. New data-driven ledger law (🔗️read/🧪️tests/⏸️deferred, 14 cases, schema 📐️.json) and plugin source law a_host_abort_during_a_follow_read_ends_its_slot_once_the_follow_returns_the_read. Native: tool-machine 12/12, companion 40/40, plugin follow laws 4/4; FEM wasm rebuilt; FEM 2D smoke rc=0 (36/512 → 49/512, Ty 12000 N). See deferred-aborts.md and verification.md."
+    }
+  ]
+}

@@ -36,7 +36,7 @@ test("the retained line names the largest bounded caches and is quiet without a 
  const lines:string[]=[],stats=()=>[{name:"a",entries:1,bytes:5*MB},{name:"b",entries:9,bytes:50*MB},{name:"c",entries:0,bytes:0}];
  reportRetainedGraphMemoryV1({limitBytes:Infinity,environment:{},report:line=>lines.push(line),stats});expect(lines).toEqual([]);
  reportRetainedGraphMemoryV1({limitBytes:4915*MB,environment:{},report:line=>lines.push(line),stats,ports:{sample:()=>100*MB,collect:()=>undefined},resident:()=>200*MB});
- expect(lines[0]).toBe("graph: after the wave managed 100 MB, resident 200 MB; largest bounded caches: b 9 entries 50 MB, a 1 entries 5 MB");
+ expect(lines[0]).toBe("graph: after the wave managed 100 MB, resident 200 MB; largest collections: b 9 entries 50 MB, a 1 entries 5 MB");
 });
 
 test("REAL heap: 200 MB of garbage a plan left is gone after a settling (managed falls by most of it)",async()=>{
@@ -45,4 +45,11 @@ test("REAL heap: 200 MB of garbage a plan left is gone after a settling (managed
  const result=await settleGraphMemoryV1({force:true,environment:{},report:()=>undefined,release:()=>{released=garbage!.length;garbage=undefined;}});
  expect(released).toBe(3_000_000);expect(result!.managedBeforeMegabytes).toBeGreaterThan(Math.round(before/MB)-5);
  expect(result!.managedBeforeMegabytes-result!.managedMegabytes).toBeGreaterThan(80);
+});
+
+test("the default retained census names the registered collections of the whole read next to the bounded caches",async()=>{
+ const{registerSliceCollectionsV1}=await import("../../📋️slice-report/🟨️.mjs"),lines:string[]=[];
+ registerSliceCollectionsV1("test-wave-census",()=>[{name:"test:per-owner",entries:7,bytes:300*MB}]);
+ reportRetainedGraphMemoryV1({limitBytes:4915*MB,environment:{},report:line=>lines.push(line),ports:{sample:()=>100*MB,collect:()=>undefined},resident:()=>200*MB});
+ expect(lines[0]).toContain("largest collections: test:per-owner 7 entries 300 MB");
 });

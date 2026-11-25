@@ -54,6 +54,7 @@ pub enum CsvMutation {
     SetField(set_field::SetField),
 }
 dsl::original_pack_value_operation_receiving!(CsvMutation);
+dsl::artifact_persisted_binary_operation!(CsvMutation);
 
 /// 🧾️ Kebab-case spelling of every `CsvMutation` variant, in declaration order — the exhaustive
 /// mutation catalog `csv-rfc4180-any` (`../../🔣️oracle.json`) is measured against

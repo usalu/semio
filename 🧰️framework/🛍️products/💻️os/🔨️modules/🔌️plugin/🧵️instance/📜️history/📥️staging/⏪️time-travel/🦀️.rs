@@ -12,7 +12,7 @@ use semio_plugin_time_travel::SupersedeRole;
 use semio_os_kernel as protocol;
 use semio_os_kernel as store;
 use semio_os_kernel as vcs;
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use semio_plugin_decl_emission::Emit;
 use semio_framework::FaultFrom;

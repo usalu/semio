@@ -1,0 +1,9 @@
+
+## 5. Open
+
+- No asset of the batch has a hard scan finding, a failing matrix cell or a red proof line (section 1).
+- Drawing quality in wind poses (no failing cell, judged on the sheets, section 4): the depth plates of `carry.ts` show straight cut edges and lobes in `gale` and `storm`, most on `black-alder` (294 plates), less on `field-maple` (170) and `hawthorn` (198). A cleaner repair is a real solid per foliage mass (one loft whose side and front profiles are the two outlines) instead of plates; that is a new tool, not done in this batch.
+- `black-locust`: the bone `ld2` draws different parts in the elevation (6 shapes) and in front and plan (2 shapes); the matrix reports it as group drift (2350 mm in the default pose, reported tier, no failing cell). The 14 elevation shapes of the limb `l9` stay on the stem bone (edge-on plane).
+- Reported tier (group drift) remains on eight plants, see the matrix column of section 1 (cells with status `group-drift` are not `fail`).
+- Declared dimensions were not touched; none of the repairs changes a default-pose extent.
+- The coordinator named `rowan` and `saucer-magnolia` as leftovers: they are assets of batch MV-3 (`🧰️matrix/batches/MV-3.tsv`), not of MV-1; they were not touched here.

@@ -431,7 +431,7 @@ export function World3dAnnotationOverlay({ layer, store, locale, toneHex = resol
             aria-hidden="true"
             data-slot="world-annotation-label"
             data-annotation-id={item.id}
-            className="absolute whitespace-nowrap rounded-sm bg-background/80 px-1 text-xs"
+            data-glass-chip="" className="ui-glass absolute whitespace-nowrap px-1 text-xs"
             style={{ left: 0, top: 0, transform: `translate(${label.x}px, ${label.y}px) translate(${shift}, -50%)`, color: toneHex(item.tone) }}
           >
             {resolveWorld3dText(item.text, language)}
@@ -471,7 +471,7 @@ export function world3dLegendLines(field: World3dScalarField, locale: string | u
 
 /** 🏷️ The on-screen legend of a scalar field: title, unit, a ramp gradient and the evenly spaced tick values as an accessible list
  * (the gradient is decorative; the list carries the scale). */
-export function World3dScalarLegendView({ field, locale, className }: { readonly field: World3dScalarField; readonly locale?: string; readonly className?: string }): ReactElement {
+export function World3dScalarLegendView({ field, locale }: { readonly field: World3dScalarField; readonly locale?: string }): ReactElement {
   const strings = world3dModellingStrings(locale);
   const language = locale ?? "en";
   const ticks = useMemo(() => world3dScalarLegend(field), [field]);
@@ -479,7 +479,7 @@ export function World3dScalarLegendView({ field, locale, className }: { readonly
   const unit = field.legend.unit;
   const hasNoData = field.values.some((value) => value === null);
   return (
-    <div role="group" aria-label={`${strings.legend}: ${title}`} data-slot="world-scalar-legend" data-ramp={field.ramp} data-mesh-id={field.meshId} className={className ?? "pointer-events-none absolute bottom-2 left-2 z-40 rounded px-single py-half text-xs shadow-sm"}>
+    <div role="group" aria-label={`${strings.legend}: ${title}`} data-slot="world-scalar-legend" data-ramp={field.ramp} data-mesh-id={field.meshId}>
       <div data-slot="world-scalar-legend-title" className="font-medium">
         {unit ? `${title} (${unit})` : title}
       </div>

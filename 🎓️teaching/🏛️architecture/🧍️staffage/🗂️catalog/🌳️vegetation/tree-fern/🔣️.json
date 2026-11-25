@@ -1480,14 +1480,62 @@
    "de": "Ein ausgewachsener Tasmanischer Baumfarn (Dicksonia antarctica): ein Stamm von 4 m und etwa 50 cm, der kein Holz ist, sondern ein schlankes Rhizom in einem dicken, wasserspeichernden Mantel aus braunen faserigen Wurzeln, am Fuß auf fast 90 cm verbreitert, und eine Krone aus achtzehn überhängenden doppelt gefiederten Wedeln von 2 bis 2,5 m in vier Kränzen, etwa 5 m weit ausladend, mit sich entrollenden Farnschnecken in der Mitte und einem Rock aus fünf toten braunen Wedeln, die am Stamm hängen."
   },
   "tags": [
-   "tree-fern",
-   "fern",
-   "evergreen",
-   "unbranched",
-   "shade",
-   "exotic-garden",
-   "wind",
-   "transpiration"
+   {
+    "id": "tree-fern",
+    "title": {
+     "en": "tree fern",
+     "de": "Baumfarn"
+    }
+   },
+   {
+    "id": "fern",
+    "title": {
+     "en": "fern",
+     "de": "Farn"
+    }
+   },
+   {
+    "id": "evergreen",
+    "title": {
+     "en": "evergreen",
+     "de": "immergrün"
+    }
+   },
+   {
+    "id": "unbranched",
+    "title": {
+     "en": "unbranched",
+     "de": "unverzweigt"
+    }
+   },
+   {
+    "id": "shade",
+    "title": {
+     "en": "shade",
+     "de": "Schatten"
+    }
+   },
+   {
+    "id": "exotic-garden",
+    "title": {
+     "en": "exotic garden",
+     "de": "Exotengarten"
+    }
+   },
+   {
+    "id": "wind",
+    "title": {
+     "en": "wind",
+     "de": "Wind"
+    }
+   },
+   {
+    "id": "transpiration",
+    "title": {
+     "en": "transpiration",
+     "de": "Transpiration"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage vegetation content worker PW-10",

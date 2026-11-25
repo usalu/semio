@@ -5,7 +5,7 @@ use semio_framework::{ActionKind, Fault, FaultCode, FaultFrom, FaultOrigin};
 use semio_plugin_decl_emission::{ActionMeta, Emit};
 use semio_framework::kernel::{AppEvent, Effect, InvocationId, InvocationResult, UiDirtyScope, UndoGroup};
 use semio_plugin_decl_app::ArtifactApp;
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use semio_plugin_instance_history::history_components::{CommandHistory, HostEvents};
 use semio_plugin_command::{CommandLogAppend, HISTORY_ROW_OPERATION_PREVIEW, HistoryRowReads, history_intent_label, history_leaf_row_label, history_row_applied, history_row_is_recorded, runtime_verb_label};

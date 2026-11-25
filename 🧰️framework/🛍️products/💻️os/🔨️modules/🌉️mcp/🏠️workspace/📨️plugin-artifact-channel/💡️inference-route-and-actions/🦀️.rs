@@ -84,11 +84,11 @@ impl PluginArtifactChannel {
         let origin=origin.ok_or_else(||Self::not_wired("inference origin registration","settled without an origin"))?;
         let router=semio_plugin_host::ArtifactInferenceRouter::new();
         let registered = match activation.checkpoint() {
-            Ok(()) => router.register_plugin(&self.plugin_id, &self.descriptor.manifest.dependencies, semio_plugin_host::PluginRegistration { actor, origin }, &roster_bytes).await.map_err(|error| Self::not_wired("inference route registration", error)),
+            Ok(()) => Box::pin(router.register_plugin(&self.plugin_id, &self.descriptor.manifest.dependencies, semio_plugin_host::PluginRegistration { actor, origin }, &roster_bytes)).await.map_err(|error| Self::not_wired("inference route registration", error)),
             Err(fault) => Err(fault),
         };
         let result=match registered{
-            Ok(())=>router.infer(&request_bytes,&drivers).await.map_err(|error|Fault{code:"app.command.rejected".into(),message:format!("inference refused: {error}")}),
+            Ok(())=>Box::pin(router.infer(&request_bytes,&drivers)).await.map_err(|error|Fault{code:"app.command.rejected".into(),message:format!("inference refused: {error}")}),
             Err(fault)=>Err(fault),
         };
         drop(router);

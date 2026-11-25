@@ -1,0 +1,18 @@
+[
+  {"op": "volume", "scale": "100", "id": "sleeve-l", "as": "revolved", "fixed": true},
+  {"op": "volume", "scale": "200", "id": "forearm-r", "as": "revolved", "fixed": true},
+  {"op": "volume", "scale": "200", "id": "forearm-l", "as": "revolved", "fixed": true},
+  {"op": "volume", "scale": "200", "id": "sleeve-l", "as": "prism-w", "profile": "elevation", "fixed": true},
+  {"op": "volume", "scale": "200", "id": "hand-r", "as": "revolved", "fixed": true},
+  {"op": "volume", "scale": "200", "id": "sleeve-r", "as": "revolved", "fixed": true},
+  {"op": "volume", "scale": "500", "id": "forearm-r", "as": "prism-v", "fixed": true},
+  {"op": "volume", "scale": "500", "id": "forearm-l", "as": "prism-w", "fixed": true},
+  {"op": "volume", "scale": "500", "id": "hand-l", "as": "prism-w", "fixed": true},
+  {"op": "volume", "scale": "500", "id": "sleeve-r", "as": "revolved", "fixed": true},
+  {"search": true, "scale": "50", "id": "sleeve-l"},
+  {"search": true, "scale": "50", "id": "hand-r"},
+  {"search": true, "scale": "100", "id": "hand-r"},
+  {"search": true, "scale": "100", "id": "hand-l"},
+  {"search": true, "scale": "200", "id": "hand-l"},
+  {"search": true, "scale": "500", "id": "sleeve-l"}
+]

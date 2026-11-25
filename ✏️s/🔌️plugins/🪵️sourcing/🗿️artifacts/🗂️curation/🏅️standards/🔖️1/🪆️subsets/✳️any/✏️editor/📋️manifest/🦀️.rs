@@ -1,7 +1,7 @@
 //! 📋️ Manifest: the hidden operation and view action builders and `create_sourcing_curation_app`.
 
 use super::*;
-use crate::editor::sourcing::editor_vocabulary::{DEMO_STOCK_EXAMPLE_ID, SOURCING_OBJECT_GRANULARITY, SOURCING_ROWS_DOMAIN, sourcing_curation_io};
+use crate::editor::sourcing::editor_vocabulary::{DEMO_STOCK_EXAMPLE_ID, EMPTY_EXAMPLE_ID, SOURCING_OBJECT_GRANULARITY, SOURCING_ROWS_DOMAIN, sourcing_curation_io};
 
 //#region 🔖️Manifest
 /// 🙈️ An internal document operation kept out of the command palette — the curation/DnD arms that mutate
@@ -81,9 +81,9 @@ pub fn create_sourcing_curation_app() -> AppDefinition {
                 hierarchy: HierarchyProvider::Flat,
                 hover: HoverSpec::default(),
                 selection: SelectionSpec {
-                    modes: vec![SelectionMode::Single],
-                    methods: vec![SelectionMethod::Pick],
-                    merges: vec![MergeMode::Replace],
+                    modes: vec![SelectionMode::Single, SelectionMode::Multiple],
+                    methods: vec![SelectionMethod::Pick, SelectionMethod::Rectangle, SelectionMethod::Lasso],
+                    merges: vec![MergeMode::Replace, MergeMode::Additive, MergeMode::Subtractive, MergeMode::Invertive, MergeMode::Range],
                     transitive: false,
                     broadcast: true,
                 },
@@ -116,7 +116,7 @@ pub fn create_sourcing_curation_app() -> AppDefinition {
                 vec![ActionArgDef::select(
                     "exampleId",
                     LocalizedLabel::native("Example", "Beispiel"),
-                    crate::editor::sourcing::editor_vocabulary::examples().iter().map(|example| ActionArgOption::new(example.id(), example.label().clone())).collect(),
+                    std::iter::once(ActionArgOption::new(EMPTY_EXAMPLE_ID, LocalizedLabel::native("No example", "Kein Beispiel"))).chain(crate::editor::sourcing::editor_vocabulary::examples().iter().map(|example| ActionArgOption::new(example.id(), example.label().clone()))).collect(),
                 )
                 .default_value(&DEMO_STOCK_EXAMPLE_ID)],
             )

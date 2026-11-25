@@ -45,8 +45,15 @@
 }
 
 .course-peer-focus > .course-peer-label {
-  top: -1.25rem;
-  left: -2px;
+  top: 0;
+  left: 0;
+}
+
+@media (forced-colors: none) {
+  .course-peer-focus > .course-peer-label {
+    background-color: color-mix(in srgb, var(--course-peer) 88%, transparent);
+    backdrop-filter: blur(var(--glass-blur-step)) saturate(var(--glass-saturate));
+  }
 }
 
 /* 🫣️ A name label that would cover the control with keyboard focus steps aside; the pointer or frame stays. */

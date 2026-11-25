@@ -72,7 +72,7 @@ fn record(id: u64, key: &str, component: ui_contract::Component, children: &[u64
 }
 
 fn text_component(value: &str) -> ui_contract::Component {
-    ui_contract::Component::Text(ui_contract::TextProps { value: ui_contract::Label(ui_contract::UiText::try_from_str(value).expect("catalogue leaf label")), emphasize: None, data_attributes: None })
+    ui_contract::Component::Text(ui_contract::TextProps { value: ui_contract::Label(ui_contract::UiText::try_from_str(value).expect("catalogue leaf label")), emphasize: None, data_attributes: None, heading_level: None })
 }
 
 fn container_component() -> ui_contract::Component {

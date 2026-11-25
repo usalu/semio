@@ -13,15 +13,69 @@
    "de": "Zwölf gebrauchte Nadelholzsparren 80 x 160 mm, 4,50 m lang mit Lotschnittenden, je zwei Kerven und den Nagellöchern von Lattung und Sparrenpfettenankern, hochkant in zwei gelatteten Lagen auf zwei Kantholz-Unterlegern gestapelt und zweimal umreift; an zwei geschnürten Rundschlingen angehoben, und ein Sparren in einem 40-Grad-Pfettendach auf Fuß- und Firstpfette wiedereingebaut unter Dachdeckung, Schnee und einem Dachdecker."
   },
   "tags": [
-   "component",
-   "reclaimed",
-   "structural",
-   "timber",
-   "softwood",
-   "rafter",
-   "roof",
-   "bundle",
-   "stored"
+   {
+    "id": "component",
+    "title": {
+     "en": "component",
+     "de": "Bauteil"
+    }
+   },
+   {
+    "id": "reclaimed",
+    "title": {
+     "en": "reclaimed",
+     "de": "wiederverwendet"
+    }
+   },
+   {
+    "id": "structural",
+    "title": {
+     "en": "structural",
+     "de": "tragend"
+    }
+   },
+   {
+    "id": "timber",
+    "title": {
+     "en": "timber",
+     "de": "Holz"
+    }
+   },
+   {
+    "id": "softwood",
+    "title": {
+     "en": "softwood",
+     "de": "Nadelholz"
+    }
+   },
+   {
+    "id": "rafter",
+    "title": {
+     "en": "rafter",
+     "de": "Sparren"
+    }
+   },
+   {
+    "id": "roof",
+    "title": {
+     "en": "roof",
+     "de": "Dach"
+    }
+   },
+   {
+    "id": "bundle",
+    "title": {
+     "en": "bundle",
+     "de": "Bündel"
+    }
+   },
+   {
+    "id": "stored",
+    "title": {
+     "en": "stored",
+     "de": "eingelagert"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage component authors",

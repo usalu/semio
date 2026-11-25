@@ -15,7 +15,7 @@ fn scalar_controller_value(input: &serde_json::Value) -> IfcValue {
 }
 #[test]
 fn scalar_type_inputs_use_the_original_controller_and_keep_empty_strings_and_signed_values_editable() {
-    let _arena=semio_plugin::artifact_app_laws::FixtureUiArena::admit();semio_ui_contract::built_node_pages_are_terminal_empty();
+    let _arena=semio_plugin::artifact_app_laws::FixtureUiArena::admit();crate::editor::tree_probe::warm_ui();
     use semio_plugin::{AppRenderOperationContext, ChildContentView};
     use semio_ui_contract::{Component, ContainerRole, OriginalBuiltTreeRetirement};
     use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::{IfcComplexType, IfcEntity};
@@ -65,7 +65,7 @@ fn scalar_type_inputs_use_the_original_controller_and_keep_empty_strings_and_sig
                     break;
                 }
                 Ok(None) => {}
-                Err(_) => panic!("scalar neutral guidance refuses"),
+                Err(error)=>panic!("{error:?}: scalar neutral guidance refuses"),
             }
         }
         let tree = output.take().expect("original scalar input body");

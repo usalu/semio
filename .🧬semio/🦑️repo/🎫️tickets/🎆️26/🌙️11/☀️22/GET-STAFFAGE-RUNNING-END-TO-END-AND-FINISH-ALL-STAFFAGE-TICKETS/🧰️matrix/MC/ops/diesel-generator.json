@@ -1,0 +1,6 @@
+[
+{"op": "shape", "scale": "50", "view": "front", "id": "rain-cap", "shape": {"id": "rain-cap", "bone": "cap-flap", "role": "body", "z": 2.7, "tone": 0.3, "region": "rain-cap", "material": "galvanised-steel", "filled": true, "kind": "poly", "points": [[0.02, 0.035], [0.3, 0.035], [0.3, -0.01], [0.28, -0.045], [0.245, -0.07], [0.2, -0.088], [0.15, -0.095], [0.1, -0.088], [0.055, -0.07], [0.02, -0.045], [0, -0.01], [0.02, -0.01]], "closed": true, "solid": {"kind": "revolved", "axisBone": "cap-flap", "axis": "v", "axisX": -0.15, "axisZ": -0.9, "mirror": true}}},
+{"op": "shape", "scale": "100", "view": "front", "id": "rain-cap", "shape": {"id": "rain-cap", "bone": "cap-flap", "role": "body", "z": 2.7, "filled": true, "tone": 0.3, "region": "rain-cap", "material": "galvanised-steel", "kind": "poly", "points": [[0.02, 0.035], [0.3, 0.035], [0.3, -0.01], [0.28, -0.045], [0.245, -0.07], [0.2, -0.088], [0.15, -0.095], [0.1, -0.088], [0.055, -0.07], [0.02, -0.045], [0, -0.01], [0.02, -0.01]], "closed": true, "solid": {"kind": "revolved", "axisBone": "cap-flap", "axis": "v", "axisX": -0.15, "axisZ": -0.9, "mirror": true}}},
+{"op": "shape-set", "scale": "50", "view": "front", "id": "outlet-flap-knuckle", "set": {"bone": "container"}},
+{"op": "shape-set", "scale": "50", "view": "plan", "id": "outlet-flap-knuckle", "set": {"bone": "container"}}
+]

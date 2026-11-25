@@ -28,17 +28,16 @@ export function pdfContentNumberColumns(table: string): readonly Ieee754Column[]
 export async function writePdfInlineImage(out: PdfProjection, image: PdfInlineImage): Promise<bigint> {
   const color = image.colorSpace == null ? null : await writePdfColorSpace(out, image.colorSpace);
   const reference=image.body.kind==="artifact"?await writePdfArtifactReference(out,image.body.reference):null; const extra = await writePdfDictionary(out, image.extra ?? []);
-  const key = await out.insert("pdf_inline_image", [pdfInteger(image.width), pdfInteger(image.height), pdfInteger(image.bitsPerComponent ?? 0), color, image.imageMask ? 1n : 0n, image.interpolate ? 1n : 0n, image.body.kind,reference, extra]);
+  const key = await out.insert("pdf_inline_image", [pdfInteger(image.width), pdfInteger(image.height), pdfInteger(image.bitsPerComponent ?? 0), color, image.imageMask ? 1n : 0n, image.interpolate ? 1n : 0n, image.body.kind,reference, extra, image.body.kind==="samples"?await out.bytes(image.body.packed):null]);
   out.checkRowsAdditional(image.decode?.length ?? 0);
-  if(image.body.kind==="samples"){out.checkRowsAdditional(image.body.values.length);for(const[ordinal,value]of image.body.values.entries())await out.insert("pdf_inline_sample",[key,BigInt(ordinal),pdfInteger(value,16)]);}
   for (const [ordinal, value] of (image.decode ?? []).entries()) await out.insert("pdf_inline_decode", [key, BigInt(ordinal), value]);
   return key;
 }
 /** 📥️ Restore intrinsic inline image bytes and exact IEEE decode words. */
 export async function readPdfInlineImage(reader: PdfReader, key: bigint): Promise<PdfInlineImage> {
-  const row = await reader.take("pdf_inline_image", key, 10); const decode: Binary64[] = [];
+  const row = await reader.take("pdf_inline_image", key, 11); const decode: Binary64[] = [];
   for (const child of await reader.children("pdf_inline_decode",1,2,key)) { const row = await reader.take("pdf_inline_decode",child.rowid,4); decode.push(reader.real("pdf_inline_decode",row,3)); }
-  let body:PdfImageBody;switch(artifactSqliteText(row,7)){case "samples":{reader.nullExcept("pdf_inline_image",row,8,9,[]);const values:number[]=[];for(const child of await reader.children("pdf_inline_sample",1,2,key)){const value=await reader.take("pdf_inline_sample",child.rowid,4);values.push(pdfNumber(value,3,16));}body={kind:"samples",values};break;}case "artifact":body={kind:"artifact",reference:await readPdfArtifactReference(reader,artifactSqliteInteger(row,8))};break;default:throw new Error("Unknown PDF inline image body");}
+  let body:PdfImageBody;switch(artifactSqliteText(row,7)){case "samples":reader.nullExcept("pdf_inline_image",row,8,9,[]);body={kind:"samples",packed:await reader.bytes(row,10)};break;case "artifact":reader.nullExcept("pdf_inline_image",row,10,11,[]);body={kind:"artifact",reference:await readPdfArtifactReference(reader,artifactSqliteInteger(row,8))};break;default:throw new Error("Unknown PDF inline image body");}
   return { width:pdfNumber(row,1),height:pdfNumber(row,2),bitsPerComponent:pdfNumber(row,3),colorSpace:row.values[4] === null ? null : await readPdfColorSpace(reader,artifactSqliteInteger(row,4)),imageMask:pdfBoolean(row,5),interpolate:pdfBoolean(row,6),body,extra:await readPdfDictionary(reader,artifactSqliteInteger(row,9)),decode };
 }
 

@@ -1,0 +1,62 @@
+[
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "eye-f",
+  "bone": "head",
+  "twin": "eye",
+  "twinBone": "head"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "breast",
+  "bone": "trunk"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "eye-f",
+  "bone": "head",
+  "twin": "eye",
+  "twinBone": "head"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "breast",
+  "bone": "trunk"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "head",
+  "bone": "head"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "rump",
+  "bone": "trunk"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "breast",
+  "bone": "trunk"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "plan",
+  "id": "body",
+  "bone": "trunk"
+ }
+]

@@ -3,7 +3,7 @@ extern crate semio_os_kernel as protocol;
 extern crate semio_os_kernel as store;
 extern crate semio_os_kernel as pack;
 
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use semio_framework::Fault;
 use std::any::Any;
 use semio_plugin_window_config_mutation as window_mutation;

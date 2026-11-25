@@ -445,7 +445,7 @@ fn world_drag_and_paint_plans_reserve_before_exact_mutation() {
     let mut state = World3dState::new("surface".into(), "controller".into());
     let original_target = state.camera.orbit.target;
     let modifiers = PointerModifiers { shift: false, ctrl: false, alt: false, meta: false, repeat: false };
-    let mut drag = plan_world3d_drag(&state.session, &state.camera, 3, 8.0, -4.0, 1, &modifiers).expect("middle drag plan");
+    let mut drag = plan_world3d_drag(&state.session, &state.camera, 3, 8.0, -4.0, 1, &PointerModifiers { shift: true, ..modifiers }).expect("shift+middle drag plan");
     let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     let step = with_world_step_context(1, |context| publish_world3d_plan_step(&mut state.session, &mut state.camera, &mut state.selection, &mut state.scene, &mut drag, 3, &mut input, context)).unwrap();
     assert_eq!(step, WorldInteractionStep::Pending);
@@ -721,4 +721,25 @@ fn world_saturation_owner_blocks_new_ingress_until_exact_fifo_transfer() {
         assert!(authority.queue.retire_front(generation));
     }
     assert!(authority.queue.front().is_none());
+}
+
+/// 🖱️ The left-press decision both renderers share: a plain press orbits unless a merge modifier, the `select` marquee, a brush or fill utility, a paint stroke or an engagement session owns the button.
+#[test]
+fn a_plain_left_press_orbits_unless_something_owns_the_left_button() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
+    let mut state = World3dState::new("surface".into(), "controller".into());
+    let plain = PointerModifiers::default();
+    for (utility, orbits) in [("", true), ("transform", true), ("select", false), ("fill", false), ("worldRelocate", false), ("brush", false), ("volumeBrush", false), ("surfaceBrush", false)] {
+        state.session.active_utility = utility.into();
+        assert_eq!(semio_os_infinite_world_interaction::world3d_left_press_orbits(&state.session, &state.selection, &plain), orbits, "utility {utility:?}");
+    }
+    state.session.active_utility = "transform".into();
+    for modifiers in [PointerModifiers { shift: true, ..plain }, PointerModifiers { ctrl: true, ..plain }, PointerModifiers { meta: true, ..plain }] {
+        assert!(!semio_os_infinite_world_interaction::world3d_left_press_orbits(&state.session, &state.selection, &modifiers));
+    }
+    state.selection.interaction_mode = "paint".into();
+    assert!(!semio_os_infinite_world_interaction::world3d_left_press_orbits(&state.session, &state.selection, &plain));
+    state.selection.interaction_mode = "select".into();
+    state.selection.engagement_session_active = true;
+    assert!(!semio_os_infinite_world_interaction::world3d_left_press_orbits(&state.session, &state.selection, &plain));
 }

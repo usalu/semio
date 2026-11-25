@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "cases": [
+    {"code": "EEXIST", "platform": "linux", "contended": true},
+    {"code": "EEXIST", "platform": "win32", "contended": true},
+    {"code": "EPERM", "platform": "win32", "contended": true},
+    {"code": "EACCES", "platform": "win32", "contended": true},
+    {"code": "EPERM", "platform": "linux", "contended": false},
+    {"code": "EACCES", "platform": "darwin", "contended": false},
+    {"code": "ENOSPC", "platform": "win32", "contended": false},
+    {"code": "ENOENT", "platform": "linux", "contended": false}
+  ]
+}

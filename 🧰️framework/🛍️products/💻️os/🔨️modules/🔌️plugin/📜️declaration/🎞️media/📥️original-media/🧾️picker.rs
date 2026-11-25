@@ -176,7 +176,7 @@ impl<T: Copy, const N: usize> RawPicker<T, N> {
         self.last.filter(|last| last.transport == transport && last.phase == phase).map(|last| last.result)
     }
 
-    /// 🎮 Handles controls only after the reactor authenticates the exact live instance and caller.
+    /// 🎮 Handles controls only after the reactor authenticates the exact live instance and caller; another transfer under a loan that already delivered its file, or whose document moved, is `Stale`, never a malformed `Refused`.
     pub fn control<'a>(
         &'a mut self, offered: OriginalMediaLoan<'a>, current: OriginalMediaLoan<'_>, transport: Transport,
         control: Control<'_>, cx: &mut StepContext<'_>,
@@ -185,6 +185,11 @@ impl<T: Copy, const N: usize> RawPicker<T, N> {
         let reject = |result| Ack { loan: offered, transport, phase, result };
         if self.issued_loan() != Some(offered) { return Ok(reject(ResultCode::Stale)); }
         self.validate_source(cx)?;
+        if self.active.is_some_and(|active| active != transport)
+            && (self.format_result == Some(FormatResult::Published) || self.invalidated || self.issued_loan() != Some(current))
+        {
+            return Ok(reject(ResultCode::Stale));
+        }
         if transport.owner != u64::from(offered.instance_id) || transport.seq == 0 || transport.kind != self.kind ||
             transport.extent as usize > self.maximum || self.active.is_some_and(|active| active != transport)
         {

@@ -35,7 +35,7 @@ where
         Self {
             operation,
             generation,
-            publication_token: semio_plugin_ownership::store_lifecycle::DocumentStorePublicationToken::mint(operation, generation, base_child_content_generation),
+            publication_token: semio_plugin_store_lifecycle::store_lifecycle::DocumentStorePublicationToken::mint(operation, generation, base_child_content_generation),
             base_child_content_generation,
             cancel: ManuallyDrop::new(Some(cancel)),
             cancel_signal: ManuallyDrop::new(Some(cancel_signal)),
@@ -74,6 +74,7 @@ where
             mounted_genesis: None,
             refusal: None,
             fold_progress: (0, 0),
+            decoded: 0,
             state: ActiveArtifactStoreReplacementState::Initializing,
         }
     }
@@ -250,6 +251,11 @@ where
 
     pub fn closure_demands(&self) -> RetirementDemand {
         RetirementDemand { copy_bytes: store::MEMBER_OPEN_IDENTITY_BYTES, depth: 1, ..Default::default() }
+    }
+
+    /// 📈️ Members opened plus candidate views prepared so far: the load reports them as the items done of its two member passes.
+    pub fn member_progress(&self) -> u64 {
+        (self.next_member_ordinal + self.view_member_ordinal) as u64
     }
 
     pub fn candidate_views_demands(&self) -> RetirementDemand {

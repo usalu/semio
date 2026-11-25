@@ -13,17 +13,83 @@
    "de": "Eine Person von 1.80 m (82 kg) leitet einen Workshop: in Softshelljacke über dem Hemd, Chinohose, Kappe und mit Ausweis am Band steht sie neben einem Dreibein-Flipchart (Tafel 0,70 × 1,00 m von 1,00 bis 2,00 m), den Marker an ein Wort auf dem Blatt erhoben, die freie Hand offen zur Gruppe. Posen für Vortragen, Schreiben und Zuhören; Schleifen für Erklären, eine Zeile schreiben und ruhiges Atmen; 1,3 bis 1,6 met mit Sprechatmung, innen bei 21 °C."
   },
   "tags": [
-   "human",
-   "adult",
-   "standing",
-   "office",
-   "workshop",
-   "presenter",
-   "flipchart",
-   "marker",
-   "gesture",
-   "speech",
-   "workplace"
+   {
+    "id": "human",
+    "title": {
+     "en": "human",
+     "de": "Mensch"
+    }
+   },
+   {
+    "id": "adult",
+    "title": {
+     "en": "adult",
+     "de": "erwachsen"
+    }
+   },
+   {
+    "id": "standing",
+    "title": {
+     "en": "standing",
+     "de": "Stehen"
+    }
+   },
+   {
+    "id": "office",
+    "title": {
+     "en": "office",
+     "de": "Büro"
+    }
+   },
+   {
+    "id": "workshop",
+    "title": {
+     "en": "workshop",
+     "de": "Werkstatt"
+    }
+   },
+   {
+    "id": "presenter",
+    "title": {
+     "en": "presenter",
+     "de": "Vortragender"
+    }
+   },
+   {
+    "id": "flipchart",
+    "title": {
+     "en": "flipchart",
+     "de": "Flipchart"
+    }
+   },
+   {
+    "id": "marker",
+    "title": {
+     "en": "marker",
+     "de": "Filzstift"
+    }
+   },
+   {
+    "id": "gesture",
+    "title": {
+     "en": "gesture",
+     "de": "Geste"
+    }
+   },
+   {
+    "id": "speech",
+    "title": {
+     "en": "speech",
+     "de": "Sprechen"
+    }
+   },
+   {
+    "id": "workplace",
+    "title": {
+     "en": "workplace",
+     "de": "Arbeitsplatz"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage human worker HW-01",

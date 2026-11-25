@@ -1,0 +1,32 @@
+[
+ {
+  "op": "front-sweep",
+  "scale": "200",
+  "id": "foot-r",
+  "twin": "shoe-r"
+ },
+ {
+  "op": "copy",
+  "scale": "200",
+  "id": "foot-r",
+  "from": "front",
+  "to": [
+   "plan"
+  ]
+ },
+ {
+  "op": "front-sweep",
+  "scale": "500",
+  "id": "foot-r",
+  "twin": "shoe-r"
+ },
+ {
+  "op": "copy",
+  "scale": "500",
+  "id": "foot-r",
+  "from": "front",
+  "to": [
+   "plan"
+  ]
+ }
+]

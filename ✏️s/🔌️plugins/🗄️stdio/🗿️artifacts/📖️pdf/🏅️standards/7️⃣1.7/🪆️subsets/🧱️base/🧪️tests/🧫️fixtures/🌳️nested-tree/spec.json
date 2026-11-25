@@ -1,0 +1,20 @@
+{
+  "pageCount": 5,
+  "texts": [
+    "Nested page 1",
+    "Nested page 2",
+    "Nested page 3",
+    "Nested page 4",
+    "Nested page 5"
+  ],
+  "nodes": [
+    3,
+    2
+  ],
+  "outline": [
+    [
+      "Second node",
+      4
+    ]
+  ]
+}

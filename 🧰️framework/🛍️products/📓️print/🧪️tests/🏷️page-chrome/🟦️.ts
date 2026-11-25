@@ -68,24 +68,38 @@ export function verifyChipFrameModel(): void {
   const table = readFileSync(new URL("../../🖋️latex/semio-table.sty", import.meta.url), "utf8");
   for (const name of fixture.frame.removed) assert.ok(!text.includes(name) && !table.includes(name), name);
   assert.ok(!text.includes("toprule=0pt") && !text.includes("toprule~at~break=0pt"));
+  const fill = definition(text, "semio@chip@fill"), layer = definition(text, "semio@chip@layer");
   assert.equal((text.match(/\\pgfsetfillopacity/g) ?? []).length, 1);
-  const fill = definition(text, "semio@chip@fill");
-  assert.ok(fill.includes("\\ifsemio@chip@glass") && fill.includes("\\pgfsetfillopacity{\\semio@chip@opacity}"));
-  assert.ok(text.includes("\\newif\\ifsemio@chip@glass") && text.includes("\\newcommand{\\semio@chip@opacity}{" + fixture.surface.opacity + "}"));
-  assert.ok(text.includes("\\newcommand{\\semio@chip@surface}{" + fixture.surface.opaque + "}"));
-  assert.equal(fixture.surface.glass, fixture.surface.opaque);
-  assert.ok(fixture.surface.opacity > 0 && fixture.surface.opacity < 1);
+  assert.ok(layer.includes("\\pgfsetfillopacity{#1}"));
+  assert.ok(fill.includes("\\ifsemio@chip@glass"));
+  assert.ok(fill.includes("\\semio@chip@layer{\\semio@chip@alpha}{#1}"));
+  assert.ok(fill.includes("\\semio@chip@layer{\\semio@chip@tint}{" + fixture.surface.veil + "}"));
+  assert.ok(fill.includes("#1!\\semio@chip@alpha@pct!" + fixture.surface.flatten + "!\\semio@chip@tint@rest@pct!" + fixture.surface.veil));
+  assert.ok(text.includes("\\newcommand{\\semio@chip@level}{" + fixture.surface.level + "}"));
+  assert.ok(text.includes("\\newcommand{\\semio@chip@surface}{semio-chrome-\\semio@chip@level}"));
+  const pane = definition(text, "semio@chip@pane");
+  assert.ok(pane.includes("\\renewcommand{\\semio@chip@level}{" + fixture.surface.frameLevel + "}"));
+  assert.ok(pane.includes("\\color{" + fixture.surface.label + "}"));
+  const core = readFileSync(new URL("../../🖋️latex/semio-core.sty", import.meta.url), "utf8");
+  assert.ok(core.includes("\\semio@tocline@link {#1} { \\textcolor { " + fixture.surface.label + " } {#1} }"));
+  assert.ok(text.includes("\\newif\\ifsemio@chip@glass") && text.includes("\\newcommand{\\SemioChipTransparency}"));
+  assert.ok(!text.includes("\\semio@chip@opacity") && !/\\newcommand\{\\semio@(chip|glass)@(opacity|alpha|tint)[^}]*\}\{[0-9.]+\}/.test(text), "no hand-typed glass value in the package");
+  verifyChipGlassTokens();
   const letters: Record<string, string> = { top: "t", bottom: "b", left: "l", right: "r" };
   const overlay = definition(text, "semio@window@chips@overlay");
-  assert.ok(overlay.includes("\\semio@chip@muted{" + fixture.frame.edges.title.map((e: string) => letters[e]).join("") + "}"));
-  assert.ok(overlay.includes("\\semio@chip@muted{" + fixture.frame.edges.number.map((e: string) => letters[e]).join("") + "}"));
+  assert.ok(overlay.includes("\\semio@chip@pane{" + fixture.frame.edges.title.map((e: string) => letters[e]).join("") + "}"));
+  assert.ok(overlay.includes("\\semio@chip@pane{" + fixture.frame.edges.number.map((e: string) => letters[e]).join("") + "}"));
   assert.ok(overlay.includes("frame.north west") && overlay.includes("frame.north east"));
   for (const hook of ["finish~unbroken", "finish~first", "finish~middle", "finish~last"]) assert.match(text, new RegExp(hook + "=\\{\\\\semio@window@chips@overlay\\}"));
   assert.match(text, /toprule=\\semio@stroke@hairline/);
   assert.match(text, /toprule~at~break=\\semio@stroke@hairline/);
   const heading = definition(text, "semio@heading@frame");
-  assert.ok(heading.includes("\\semio@chip@box{" + fixture.frame.edges.heading.title.map((e: string) => letters[e]).join("") + "}"));
-  assert.ok(heading.includes("\\semio@chip@box{" + fixture.frame.edges.heading.number.map((e: string) => letters[e]).join("") + "}"));
+  for (const edges of [fixture.frame.edges.heading.title, fixture.frame.edges.heading.number]) {
+    const edge = edges.map((name: string) => letters[name]).join("");
+    assert.ok(heading.includes("\\semio@chip@box{" + edge + "}{\\semio@chip@surface}{#1}{\\semio@chip@inset}"));
+  }
+  assert.ok(text.includes("\\newcommand{\\semio@heading@label@color}{" + fixture.surface.label + "}"));
+  assert.equal(heading.split("\\color{\\semio@heading@label@color}").length - 1, 2);
   const validator = new Ajv({strict:true}).compile({type:"array",uniqueItems:true,items:{enum:["top","bottom","left","right"]}});
   for (const edges of [fixture.frame.edges.title, fixture.frame.edges.number, fixture.frame.edges.heading.title, fixture.frame.edges.heading.number]) assert.equal(validator(edges), true);
   assert.ok(!fixture.frame.edges.title.includes("top") && !fixture.frame.edges.number.includes("top"));
@@ -140,5 +154,28 @@ export function verifyPageChromeHeader(): void {
     assert.ok(source.includes("course={" + row.labels.left + "}"));
     assert.ok(source.indexOf("\\SemioHeaderSetup") < source.indexOf("\\begin{document}"));
     assert.equal(Object.keys(actual).length, 3);
+  }
+}
+
+/** 🧊 The chip glass macros equal independent arithmetic on the token source: level alpha `1 - k * step`, veil at the chip tint, and the flattened share of each layer. */
+export function verifyChipGlassTokens(): void {
+  const tokens = JSON.parse(readFileSync(new URL("../../../../🔨️modules/🖱️ui/🎨️styling/🔣️.json", import.meta.url), "utf8")) as { levels: { names: string[]; glassAlphaStep: number; chipTintPercent: number } };
+  const sty = readFileSync(new URL("../../🖋️latex/semio-tokens.sty", import.meta.url), "utf8");
+  const macro = (name: string): number => {
+    const match = sty.match(new RegExp("\\\\newcommand\\{\\\\" + name + "\\}\\{([0-9.]+)\\}"));
+    assert.ok(match, name);
+    return Number(match[1]);
+  };
+  const { names, glassAlphaStep, chipTintPercent } = tokens.levels;
+  names.forEach((name, index) => {
+    assert.ok(Math.abs(macro("semio@glass@alpha@" + name) - Number(evaluate("1 - k * step", { k: index, step: glassAlphaStep }))) < 1e-9, name);
+    assert.ok(Math.abs(macro("semio@glass@alpha@" + name + "@pct") - Number(evaluate("100 * (1 - k * step)", { k: index, step: glassAlphaStep }))) < 1e-9, name);
+  });
+  assert.ok(Math.abs(macro("semio@chip@tint") - Number(evaluate("t / 100", { t: chipTintPercent }))) < 1e-9);
+  assert.ok(Math.abs(macro("semio@chip@tint@pct") + macro("semio@chip@tint@rest@pct") - 100) < 1e-9);
+  for (const [level, above] of [[fixture.surface.level, 1], [fixture.surface.frameLevel, 2]] as const) {
+    assert.equal(names.indexOf(level), above);
+    const seen = Number(evaluate("(1 - a) * (1 - t)", { a: 1 - above * glassAlphaStep, t: chipTintPercent / 100 }));
+    assert.ok(seen > 0.05 && seen < 0.5, level + " chips let 5 to 50 percent of the content beneath through");
   }
 }

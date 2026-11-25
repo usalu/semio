@@ -19,6 +19,6 @@
   {"op": "copy", "scale": "50", "id": "cap-lower", "from": "elevation", "to": ["plan"], "create": true},
   {"op": "copy", "scale": "100", "id": "rail-lower", "from": "elevation", "to": ["plan"], "create": true},
   {"op": "copy", "scale": "100", "id": "foot-lower", "from": "elevation", "to": ["plan"], "create": true},
-  {"op": "set", "scale": "100", "view": "plan", "id": "sleeve-l", "set": {"solid": {"kind": "extruded", "sweep": "u", "z0": -0.04, "z1": 0.33}}},
-  {"op": "set", "scale": "200", "view": "plan", "id": "sleeve-l", "set": {"solid": {"kind": "extruded", "sweep": "u", "z0": -0.04, "z1": 0.33}}}
+  {"op": "set", "scale": "100", "view": "plan", "id": "sleeve-l", "set": {"solid": {"kind": "extruded", "sweep": "u", "z0": 0.08, "z1": 0.2}}},
+  {"op": "set", "scale": "200", "view": "plan", "id": "sleeve-l", "set": {"solid": {"kind": "extruded", "sweep": "u", "z0": 0.08, "z1": 0.2}}}
 ]

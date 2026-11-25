@@ -42,7 +42,7 @@ A browser plugin actor draws every turn, command and job from one finite stock i
 | `cargo check -p semio-plugin-reactor-context --target wasm32-wasip2` | passes, export bindings included |
 
 ## Not measured, not done
-- **No component was built and nothing ran in a browser.** A guest must be rebuilt before the new bridge reaches its low water: an older guest answers `ready` without the succession receipt and is held with a message that says to rebuild. The app-channel version was not bumped.
+- At the time of this section no component was built and nothing ran in a browser; see "Browser run on guest r37" below. A guest must be rebuilt before the new bridge reaches its low water: an older guest answers `ready` without the succession receipt and is held with a message that says to rebuild. The app-channel version was not bumped.
 - Rate after renewal (cost of two extra crossings per stock, about 7 minutes apart at the measured rate) was not timed.
 - **No job slot, as asked:** an actor whose job slots are never all empty between low water and floor (12 % to 25 % of a stock) still gets the typed fault; it is not deferred. Because the Source identity is kept, a parked job looks renewable in principle; that was not tested and is not claimed.
 - The wgpu frame Worker (`OriginalBrowserFrame`) and the document child (`OriginalSelfIssuedTurns`) own separate sources and do not renew. The child faults typed and is re-reserved as before.
@@ -52,3 +52,30 @@ A browser plugin actor draws every turn, command and job from one finite stock i
 - `semio-framework-actor-retained-context`: 11 older tests fail. They expect four admission epochs and a decoder loan born during admission; `context/🦀️.rs` at HEAD already admits prepare, backing and publish separately. Not run on an untouched tree, but none of them reaches a changed line other than the added `tenure` field.
 - `⚛️reactor/🎟️context` TypeScript source-text tests: `🌉️call/🧪️tests` (2), `💼️job/📤️receipt` (1), `📤️failure` (1), `📤️output` (1), `⚖️failure-debit` (9) look for text that moved to other owners.
 - The `semio-plugin-guest-contract` test target exceeds the 32-file source boundary with or without this change, so its tests cannot be built; the entry law lives in the reactor context crate for that reason.
+
+## Browser run on guest r37 (evening of 2026-11-24)
+**Cause of "never renewed":** the playground served `🧵️shard/🟨️shard-worker.js` published on 21 Nov 15:51 (43,087 bytes, no `requestSuccession`) with a bridge of 24 Nov 20:27. The kernel link therefore had no `succeed`; `advance()` ran at low water with every gate clear (no jobs, nothing held, nothing outstanding), got `TypeError: this[#kernel].succeed is not a function`, and stored it as a kernel refusal. The native chain (`component`, `prepare`, `activate`) has no `support` stage, and `prepare` and the playground launch only checked that the worker file exists. None of the four suspects was the cause.
+
+**Fixed**
+- `OriginalStockSuccession` refuses a kernel link without `succeed` when the actor is built: `original-turn.succession-unoffered … run repo run @semio-tech/framework-plugin-web:support`. Fixture rows `offers`.
+- `shardWorkerPublicationV1` classifies a published worker as missing, stale or current by comparing its text with what the sources generate. `prepare` refuses a stale one; the playground launch republishes it. Fixture and schema in `🏗️materialization/🧪️tests/🔖️worker-freshness`.
+- A refused `startJob` no longer stays in the host's job set (found by reading, suspect 1; not the cause here).
+- Test doubles that build an actor now offer `succeed`.
+
+**Browser runs** (`probe-succession-gates.mjs`; worker, bridge and stock routed into the page, nothing republished; guest r37)
+| Run | Result |
+| --- | --- |
+| r37 bridge, served worker, 2^28 | `succeed is not a function` at low water; no request sent |
+| r37 bridge, current worker, 2^28 | a job was running at low water; the guest then faulted `plugin.internal.zero-progress` in the cleanup pump with 18.9 M capacity left (floor 16.8 M) |
+| r37 bridge, current worker, 2^29 | one succession (tenure 2) at 75.7 s, next two shapes added; guest out of memory at 91 s |
+| new bridge, served worker | boot fails with `succession-unoffered` and the command to run |
+| new bridge, current worker, 2^29 | one succession (tenure 2) at 81.3 s, two more shapes added and one more job settled; guest out of memory at 94.7 s |
+| r37 bridge, current worker, 2^31 (full stock, no succession) | guest out of memory at 97.8 s, with the same tenth shape |
+
+**Open**
+- **Guest memory.** Linear memory grew from 231 MiB after boot to 512 MiB at the tenth shape and never shrank. The full-stock control has no succession, so this is not from renewal. It ends the session before a full stock reaches low water (1.70 G of 2.15 G capacity left). Not diagnosed.
+- **A single crossing larger than the floor** faults in the guest (`zero-progress`, or `original close demand exceeds the remaining Source grant` in the 2^28 runs) and not as `plugin.original-stock-exhausted`. Seen only at 2^28, where one Draw job costs as much as the window from low water to floor.
+- More than one succession in a browser session was not reached, because of the memory limit.
+- A worker published by one runtime and compared by another was not tested; both publishing and checking run in Bun.
+- The staged worker was not republished here, because the running playground serves that folder.
+- `🧑‍💻os-dev-composition-ownership` (7 fail) and `🧪️ticket-owned-browser-host-staging` (syntax error in `🚚️distribution/🏗️compiler/🟦️.ts:45`, dated 19 Nov) fail on files this change does not touch; the second one's test kit was edited but could not be run.

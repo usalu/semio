@@ -15,6 +15,10 @@ pub use mirror::*;
 mod page_content_contracts;
 
 #[cfg(test)]
+#[path = "../../../../🔨️modules/⬇️lift/🧩️lifter-and-document/🧭️document-lift/🧭️controlled/🧪️tests/🔬️unit/🦀️.rs"]
+mod controlled_real_world;
+
+#[cfg(test)]
 mod document_contracts {
     use crate::standards::v1_7::subsets::base::{
         io::text::snapshot::retained_text::admit_retained_text,

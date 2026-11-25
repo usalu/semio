@@ -277,6 +277,31 @@ class CanvasWidgets(unittest.TestCase):
                 self.assertIsNotNone(scene.gh_viewport().body)
                 self.assertIsNotNone(scene.gh_group([component, slider], "Group").body)
 
+    def test_ribbon_tabs_share_the_ribbon_frame_and_divider(self):
+        from manim import Line, Polygon
+        from shapely.geometry import LineString, box
+        from shapely.ops import unary_union
+
+        VISUALS._fonts.register_fonts()
+        scene = VISUALS.ClipScene.__new__(VISUALS.ClipScene)
+        ribbon = scene.gh_ribbon(tabs=("Params", "Sets"), active="Sets")
+        frame, tabs = ribbon.body, list(ribbon.parts["tabs"].values())
+        self.assertIsInstance(frame, Polygon)
+        self.assertTrue(all(tab.get_stroke_width() == 0 for tab in tabs))
+        self.assertTrue(all(abs(tab.get_top()[1] - frame.get_top()[1]) < 1e-6 for tab in tabs))
+        self.assertAlmostEqual(tabs[0].get_right()[0], tabs[1].get_left()[0])
+        self.assertAlmostEqual(tabs[0].get_left()[0], frame.get_left()[0])
+        self.assertAlmostEqual(tabs[1].get_right()[0], frame.get_right()[0])
+        def bounds(shape):
+            return tuple(round(value, 6) for value in (shape.get_left()[0], shape.get_bottom()[1], shape.get_right()[0], shape.get_top()[1]))
+
+        outline = box(*bounds(frame)).exterior
+        paths = [box(*bounds(tab)).exterior for tab in tabs]
+        expected = unary_union(paths).difference(outline)
+        rendered = [LineString([line.get_start()[:2], line.get_end()[:2]]) for line in frame if isinstance(line, Line)]
+        self.assertLess(unary_union(rendered).hausdorff_distance(expected), 1e-6)
+        self.assertAlmostEqual(sum(line.length for line in rendered), expected.length, delta=1e-6)
+
     def test_every_engine_view_builds(self):
         """🕸️ Every named view of the five engine canvases builds in English (and in German where a message bubble is shown): all objects and wires present, widgets inside the frame, readable scale, wire kinds from the data, bubbles for warnings and errors."""
         engine = importlib.import_module(PACKAGE + ".🧱️model.🐍️")

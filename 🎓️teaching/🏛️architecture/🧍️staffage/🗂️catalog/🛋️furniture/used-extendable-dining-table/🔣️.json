@@ -13,18 +13,90 @@
    "de": "Ein gebrauchter Ausziehtisch aus massiver Buche, 1,40 m geschlossen und 1,80 m mit seiner selbstverstauenden Klappeinlage, mit vergilbter Platte, Hitze- und Glasrändern, ausgebrochener Ecke und einem wackelnden kurzen Bein auf einem Pappkeil; abgestellt, von zwei Personen getragen, ausgezogen und zu Hause für sechs gedeckt."
   },
   "tags": [
-   "used",
-   "household",
-   "second-hand",
-   "living",
-   "kitchen",
-   "table",
-   "dining",
-   "extendable",
-   "butterfly-leaf",
-   "timber",
-   "beech",
-   "furniture"
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "household",
+    "title": {
+     "en": "household",
+     "de": "Haushalt"
+    }
+   },
+   {
+    "id": "second-hand",
+    "title": {
+     "en": "second-hand",
+     "de": "Second-Hand"
+    }
+   },
+   {
+    "id": "living",
+    "title": {
+     "en": "living",
+     "de": "Wohnen"
+    }
+   },
+   {
+    "id": "kitchen",
+    "title": {
+     "en": "kitchen",
+     "de": "Küche"
+    }
+   },
+   {
+    "id": "table",
+    "title": {
+     "en": "table",
+     "de": "Tisch"
+    }
+   },
+   {
+    "id": "dining",
+    "title": {
+     "en": "dining",
+     "de": "Essen"
+    }
+   },
+   {
+    "id": "extendable",
+    "title": {
+     "en": "extendable",
+     "de": "ausziehbar"
+    }
+   },
+   {
+    "id": "butterfly-leaf",
+    "title": {
+     "en": "butterfly leaf",
+     "de": "Klappflügel"
+    }
+   },
+   {
+    "id": "timber",
+    "title": {
+     "en": "timber",
+     "de": "Holz"
+    }
+   },
+   {
+    "id": "beech",
+    "title": {
+     "en": "beech",
+     "de": "Buche"
+    }
+   },
+   {
+    "id": "furniture",
+    "title": {
+     "en": "furniture",
+     "de": "Möbel"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content (used household objects wave)",

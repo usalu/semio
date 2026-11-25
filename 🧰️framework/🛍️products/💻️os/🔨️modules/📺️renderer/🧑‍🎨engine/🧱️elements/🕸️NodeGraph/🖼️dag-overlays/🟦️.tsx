@@ -823,7 +823,7 @@ export function alignModeToDag(mode: string): string {
 
 export function SelectionAlignChrome({ bounds, onAlign }: { readonly bounds: DagSelectionBounds; readonly onAlign: (mode: string) => void }) {
   return (
-    <SharedBorderRow className={cn("pointer-events-auto absolute z-50 shadow-sm", glassClass)} data-level="pane" style={{ left: bounds.x, top: Math.max(0, bounds.y - 28) }}>
+    <SharedBorderRow className={cn("pointer-events-auto absolute z-50", glassClass)} data-level="pane" data-glass-chip="" style={{ left: bounds.x, top: Math.max(0, bounds.y - 28) }}>
       {ALIGN_MODES.map((mode) => (
         <button key={mode.id} type="button" data-shared-border-cell="" className="size-5 text-xs hover:bg-active-base" aria-label={mode.id} onPointerDown={(event) => event.stopPropagation()} onClick={() => onAlign(mode.id)}>
           {mode.label}

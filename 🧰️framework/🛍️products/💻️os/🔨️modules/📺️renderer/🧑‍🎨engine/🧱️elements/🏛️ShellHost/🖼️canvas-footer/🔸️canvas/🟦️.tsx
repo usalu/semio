@@ -18,6 +18,7 @@ import { withLocalizedWindowKindLabels } from "../../🧱️built-node-stores/�
 import type { buildPluginFilterState } from "../🔶️plugin-filter/🟦️.tsx";
 import { LocalFilesV1 } from "../../🗂️local-catalog/📂️files/🟦️.tsx";
 import { deriveSavedStateV1 } from "../../../🛠️ShellHelpers/💾️saved-state/🟦️.ts";
+import { windowFaultTextV1 } from "../../🩺️fault/🟦️.ts";
 
 /** 🔹 Builds canvas of useCanvasAndFooter. */
 export function useCanvas({ hostMode, notFoundPath, navigateShellUri, primaryPluginId, pluginSupervisorById, dispatch, reloadPlugin, uninstallPlugin, error, sessionFault, session, initialExampleReady, uiTerminology, hostAppId, panel, onAction, openSpaceIdRef, loadedPlugins, appLabelsOverlay, uiLocale, applyModeChange, mobile, modeWindows, effectiveModeLayout, activeWindowId, handleActiveWindowChange, handleModeLayoutChange, handleTemplateDrop, noteShellCommand, effectiveModeLayoutRef, updateSpacePanel, world3dWindowViewRegistry, writeUtilityRegister, extraWindowInstancesRef, spawnedIds, extraWindowCounterRef, refreshUi, reportRefreshFault, localCatalog, shellStateRef, currentDocumentRuntimeKey, openKeptFile, sessionRef, admitProgramRetirementRef, requestCloseDocument, openDocumentSessionsRef, updateSpacePanelFrom }: Pick<ReturnType<typeof buildPluginFilterState>, "hostMode" | "notFoundPath" | "navigateShellUri" | "primaryPluginId" | "pluginSupervisorById" | "dispatch" | "reloadPlugin" | "uninstallPlugin" | "error" | "sessionFault" | "session" | "initialExampleReady" | "uiTerminology" | "hostAppId" | "panel" | "onAction" | "openSpaceIdRef" | "loadedPlugins" | "appLabelsOverlay" | "uiLocale" | "applyModeChange" | "mobile" | "modeWindows" | "effectiveModeLayout" | "activeWindowId" | "handleActiveWindowChange" | "handleModeLayoutChange" | "handleTemplateDrop" | "noteShellCommand" | "effectiveModeLayoutRef" | "updateSpacePanel" | "world3dWindowViewRegistry" | "writeUtilityRegister" | "extraWindowInstancesRef" | "spawnedIds" | "extraWindowCounterRef" | "refreshUi" | "reportRefreshFault" | "localCatalog" | "shellStateRef" | "currentDocumentRuntimeKey" | "openKeptFile" | "sessionRef" | "admitProgramRetirementRef" | "requestCloseDocument" | "openDocumentSessionsRef" | "updateSpacePanelFrom">) {
@@ -52,8 +53,8 @@ export function useCanvas({ hostMode, notFoundPath, navigateShellUri, primaryPlu
     }
     if (error)
       return (
-        <p className="p-double text-sm text-destructive" role="alert" data-semio-os-shell-error="" data-semio-window-fault={sessionFault?.class ?? "unknown"} data-semio-window-fault-code={sessionFault?.code ?? ""}>
-          {uiDataLabel(error)}
+        <p className="p-double text-sm text-destructive" role="alert" data-semio-os-shell-error="" data-semio-window-fault={sessionFault?.class ?? "unknown"} data-semio-window-fault-code={sessionFault?.code ?? ""} data-semio-window-fault-origin={sessionFault?.origin ?? ""} title={sessionFault?.notice ? error : undefined}>
+          {uiDataLabel(windowFaultTextV1(sessionFault, error, uiLocale))}
         </p>
       );
     if (!session || !initialExampleReady) return <CanvasSkeleton label={shellLabel("ui.common.loadingPlugins")} className={cn(loadingBorderClass, "h-full w-full")} />;

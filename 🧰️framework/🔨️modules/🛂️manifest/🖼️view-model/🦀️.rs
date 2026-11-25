@@ -116,7 +116,7 @@ pub struct ViewModel {
     pub window_instances: Vec<ViewWindowInstance>,
 }
 
-/// 🔒️ Lends a window projection while retaining the original ownership of both ordered roots.
+/// 🔒️ Lends a window or panel projection while retaining the original ownership of both ordered roots; its drop returns the projection's aliases, so no projected root is ever dropped live.
 pub struct ScopedWindowView<'a> {
     original: &'a ViewModel,
     view: ViewModel,
@@ -247,6 +247,11 @@ impl ViewModel {
     /// 🪟️ Reads one window without transferring the ownership of its host view.
     pub fn scope_window_instance(&self, window_id: &str) -> Option<ScopedWindowView<'_>> {
         self.for_window_instance(window_id).map(|view| ScopedWindowView { original: self, view })
+    }
+
+    /// 🎛️ Reads the panel projection without transferring the ownership of its host view.
+    pub fn scope_panel(&self) -> ScopedWindowView<'_> {
+        ScopedWindowView { original: self, view: self.for_panel() }
     }
 
     /// 🪛️ Resolves the addressed, focused and call-level utility while honoring explicit clears.

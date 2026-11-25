@@ -1,0 +1,8 @@
+[
+  {"op": "volume", "scale": "50", "id": "hand-r", "as": "prism-v", "fixed": true},
+  {"op": "volume", "scale": "500", "id": "hand-r", "as": "revolved", "fixed": true},
+  {"search": true, "scale": "50", "id": "shorts", "subsets": [["plan"], ["front"], ["front", "plan"]]},
+  {"search": true, "scale": "100", "id": "shirt", "subsets": [["plan"], ["front"], ["front", "plan"]]},
+  {"search": true, "scale": "50", "id": "shirt", "subsets": [["plan"]]},
+  {"search": true, "scale": "500", "id": "shirt", "subsets": [["plan"]]}
+]

@@ -80,6 +80,19 @@ fn drawing_clipboard_native_codec_matches_serde_and_resumes_large_text(){
     let mut cancelled=decode::ClipboardHydration::new(packet.to_value());for _ in 0..32{assert!(!cancelled.step(&mut control).unwrap());}retire(cancelled);
 }
 #[test]
+fn drawing_clipboard_neutral_records_hydrate_to_their_serde_packets(){
+    use semio_framework_value::DslValue;
+    use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../../📋️clipboard/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    for row in fixture["recordCases"].as_array().unwrap(){
+        let expected:DrawingClipboard=serde_json::from_value(row["record"].clone()).unwrap();
+        let mut accepted=|_|true;let mut control=NativeDecodeControl::new(job::MAX_NATIVE_BYTES,&mut accepted);
+        let mut hydration=decode::ClipboardHydration::new(DslValue::from(&row["record"]));let mut turns=0;
+        while !hydration.step(&mut control).unwrap(){turns+=1;assert!(turns<1000);}
+        assert_eq!(hydration.packet,expected,"{}",row["name"]);retire(hydration);
+    }
+}
+#[test]
 fn drawing_clipboard_boolean_operand_displacement_survives_parent_change(){
     let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../../📋️clipboard/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let expected=&fixture["booleanPlacements"][0];
     let mut a=shape("a");layer_base_mut(&mut a).transform.x=3.0;

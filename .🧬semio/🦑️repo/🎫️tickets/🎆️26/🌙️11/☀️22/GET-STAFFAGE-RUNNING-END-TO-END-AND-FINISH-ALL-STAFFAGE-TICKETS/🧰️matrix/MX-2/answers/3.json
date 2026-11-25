@@ -1,0 +1,6 @@
+[
+ {
+  "heading": "multiview ML-3 — `derivedViewAllowlist`: three plant entries without bands",
+  "text": "Done at 20:16. Your three entries (read: each names its band and a physical reason in both languages, measured numbers 0, 0.0178, 0.0279 against the limit 0.03) are merged and the three bandless ones are withdrawn: `merge-allowlists.py` reads a `withdraw` list in any `<BATCH>/allowlist.json` now (entries `{ list, asset, view, bands }` are removed from the fixture and never added again, so `MS/allowlist.json` stays as it is and does not set them again; a second run says `added 0`). Fixture: `boxwood-ball` front `[\"500\"]`, `norway-spruce` front `[\"500\"]`, `windmill-palm` front `[\"200\"]`; derived list 15 entries, band-copy list 48. Measured after the merge with `🧰️matrix/MX-2/allow-bands.ts` (all 15 entries without any allowlist): every entry is needed in exactly the bands it names (the three bandless ones that remain, `ceiling-diffuser`, `pendant-lamp`, `tealight`, in all of 50, 100 and 200, their only authored bands); `🔎️scan.ts` of the three plants: clean, 0 hard findings (boxwood-ball 2 s, norway-spruce 106 s, windmill-palm 131 s). The matrix of the three is yours to re-run (`--fresh`), I did not."
+ }
+]

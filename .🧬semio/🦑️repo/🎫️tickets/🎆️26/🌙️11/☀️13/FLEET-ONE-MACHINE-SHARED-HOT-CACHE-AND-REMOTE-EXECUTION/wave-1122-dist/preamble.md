@@ -43,3 +43,9 @@ Repo: `/Users/ueli/Documents/semio` — ONE shared live worktree replicated to 5
 
 ## Binding addendum 02:15 on 2026-11-24 (disk freed with the user's approval)
 - The coordinator has ~175 GiB free (80.8 %). The 21:55 rule is relaxed: ONE scratch build at a time may run on the coordinator, scratch under 15 GiB, abort if `df -h /` shows less than 100 GiB free, delete the scratch and its host-CAS holder file when done. Still: never write inside `/Users/ueli/.sinc/play`, never touch the play build's processes, restart nothing.
+
+## Binding addendum 08:55 on 2026-11-25 (two watchdog panics at 00:59 and 01:16)
+- The coordinator panicked twice from userspace starvation (load 150: editor git storms, nfsd, fleet launcher boot). Check `uptime` before every heavy step: if the 1-minute load is above 30, wait (poll at most every 60 s) and do only reading meanwhile.
+- Never run git commands that touch the index (`git add`, `git restore --staged`, …) and never `git status` over the whole tree: 450k files.
+- No scratch builds on the coordinator. Worker-side diagnosis goes through worker records, `repo fleet status`, and the coordinator's copies under `.cache` (read-only).
+- New agents run on Opus 5.5, medium effort.

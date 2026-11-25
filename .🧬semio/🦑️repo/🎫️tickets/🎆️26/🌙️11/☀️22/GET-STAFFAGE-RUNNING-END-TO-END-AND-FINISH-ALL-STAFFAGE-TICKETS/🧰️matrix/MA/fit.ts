@@ -2,7 +2,7 @@
  *
  * Ops (`scale` is the representation key, `id` the shape id in the target view, `bone` only when the id is not unique):
  * - `{ "op": "front-sweep", scale, id }`: the front shape becomes (or stays) an `extruded` solid with `sweep: "v"`; its outline is kept (a flat front outline is first re-expressed in the bone-local (u, w) plane), cut along the bone to the u-range of the elevation twin (stretched to it where it falls short; `"range": "stretch"` only stretches, `"keep"` leaves it; `"lateral": "plan"` cuts it the same way across the bone to the lateral range of the plan twin), and `z0`, `z1`, `zTip` are fitted so that the (u, v) footprint of the prism has the support function of the elevation outline in every direction (so the heights agree at every sagittal angle).
- * - `{ "op": "view-sweep", scale, view, id }` (added for the animals of batch MA): the front or plan shape keeps its own outline and becomes an `extruded` solid swept along the bone axis nearest to the view direction (`u` for a bone that points at the viewer: the outline is its cross-section in (v, w); `v` for a bone seen from its normal: the outline in (u, w)); the outline is cut to the range of the elevation twin on its first axis and `z0`, `z1`, `zTip` are fitted to the (u, v) footprint of the elevation twin (`"taper": false` fits no `zTip`, `"lateral": "front" | "plan"` cuts the outline across the bone to the lateral range of the twin of that view, `"sweep"` forces the axis).
+ * - `{ "op": "view-sweep", scale, view, id }` (added for the animals of batch MA): the front or plan shape keeps its own outline and becomes an `extruded` solid swept along the bone axis nearest to the view direction (`u` for a bone that points at the viewer: the outline is its cross-section in (v, w); `v` for a bone seen from its normal: the outline in (u, w)); the outline is cut to the range of the elevation twin on its first axis and `z0`, `z1`, `zTip` are fitted to the (u, v) footprint of the elevation twin (`"taper": false` fits no `zTip`, `"lateral": "front" | "plan"` cuts the outline across the bone to the lateral range of the twin of that view, `"sweep"` forces the axis, `"share": s` keeps the share s of the fitted span about its middle: a flap such as an ear, whose side outline shows its face and not its thickness).
  * - `{ "op": "solid", scale, view, id }` (batch MA): `view-sweep` where its footprint mismatch stays within `"limit"` (share of the tolerance of the asset, default 0.4), else `extrude`; `"across": "plan" | "front"` gives `extrude` the lateral taper of the twin of that view.
  * - `{ "op": "extrude", scale, id, "view": "front" | "plan" }`: the exact alternative for a part whose front outline is a plain taper (and for the plan of a part that is a prism): the shape takes the elevation outline as its profile and becomes an `extruded` solid with `sweep: "w"` whose lateral span `z0`, `z1`, `zTip` is fitted to the (u, w) footprint the shape had; elevation and this view then agree at every pose by construction, and the view draws the hull of the swept outline instead of its own outline. It is also the op for a bone that points at the viewer of the front view (a foot, a toe): there no front outline can be swept along v and `front-sweep` refuses.
  * - `{ "op": "plan-revolve", scale, id }`: the plan shape becomes (or stays) a `revolved` solid about the bone axis. An elevation twin that is itself revolved is copied (one body in three views). Else an existing revolved profile is kept in shape, cut or stretched to the u-range of the elevation twin, and its axis offset and radius scale are fitted to the (u, v) footprint of the elevation twin and the (u, w) footprint of the front twin; a flat plan shape gets a new profile of the mean half thickness of the two twins at nine stations (`"stations": n`).
@@ -63,6 +63,13 @@ function footprint(shape: any, view: string, frame: Frame, length: number, plane
     return points.flatMap(([u]) => {
       const t = solid.zTip === undefined || length <= 0 ? 0 : Math.min(Math.max(u / length, 0), 1);
       return [[u, solid.z0 + ((solid.zTip?.[0] ?? solid.z0) - solid.z0) * t] as const, [u, solid.z1 + ((solid.zTip?.[1] ?? solid.z1) - solid.z1) * t] as const];
+    });
+  }
+  if (solid?.kind === "extruded" && solid.sweep === "u") {
+    if (plane === 2) return undefined;
+    return points.flatMap(([v]) => {
+      const t = solid.zTip === undefined || length <= 0 ? 0 : Math.min(Math.max(v / length, 0), 1);
+      return [[solid.z0 + ((solid.zTip?.[0] ?? solid.z0) - solid.z0) * t, v] as const, [solid.z1 + ((solid.zTip?.[1] ?? solid.z1) - solid.z1) * t, v] as const];
     });
   }
   if (solid?.kind === "extruded" && solid.sweep === "w") return plane === 1 ? points : points.flatMap(([u]) => [[u, solid.z0 - frame.o[2]] as const, [u, solid.z1 - frame.o[2]] as const]);
@@ -168,7 +175,7 @@ function frontSweep(op: any): string {
   const shape = need(op.scale, "front", op.id, op.bone);
   const frame = frames[shape.bone]!.frame;
   const length = lengthOf(shape.bone);
-  const twin = find(op.scale, "elevation", op.twin ?? op.id, shape.bone);
+  const twin = find(op.scale, "elevation", op.twin ?? op.id, op.twinBone ?? shape.bone);
   if (twin === undefined) throw new Error(`1:${op.scale} "${op.id}" has no elevation twin on ${shape.bone}`);
   const target = footprint(twin, "elevation", frame, length, 1);
   if (target === undefined || twin.solid?.kind === "revolved") throw new Error(`1:${op.scale} "${op.id}": the elevation twin is a revolved solid, use the op "copy"`);
@@ -216,7 +223,7 @@ function viewSweep(op: any): string {
   const shape = need(op.scale, view, op.id, op.bone);
   const frame = frames[shape.bone]!.frame;
   const length = lengthOf(shape.bone);
-  const twin = find(op.scale, "elevation", op.twin ?? op.id, shape.bone);
+  const twin = find(op.scale, "elevation", op.twin ?? op.id, op.twinBone ?? shape.bone);
   if (twin === undefined) throw new Error(`1:${op.scale} "${op.id}" has no elevation twin on ${shape.bone}`);
   if (twin.solid?.kind === "revolved") throw new Error(`1:${op.scale} "${op.id}": the elevation twin is a revolved solid, use the op "copy"`);
   const target = footprint(twin, "elevation", frame, length, 1)!;
@@ -250,6 +257,7 @@ function viewSweep(op: any): string {
   const taper = op.taper !== false;
   const fitted = search([s0, s1, s0, s1], (p) => mismatch(prism(taper ? p : [p[0]!, p[1]!, p[0]!, p[1]!]), target) + (p[0]! >= p[1]! - 0.002 || p[2]! >= p[3]! - 0.002 ? 1 : 0));
   if (!taper) [fitted[2], fitted[3]] = [fitted[0]!, fitted[1]!];
+  if (typeof op.share === "number") for (const i of [0, 2]) [fitted[i], fitted[i + 1]] = [(fitted[i]! + fitted[i + 1]!) / 2 - ((fitted[i + 1]! - fitted[i]!) / 2) * op.share, (fitted[i]! + fitted[i + 1]!) / 2 + ((fitted[i + 1]! - fitted[i]!) / 2) * op.share];
   for (const key of GEOMETRY_KEYS) if (key !== "closed") delete shape[key];
   Object.assign(shape, { kind: "poly", points: profile.map(([x, y]) => [round(x, 4), round(y, 4)]), closed: true, solid: { kind: "extruded", sweep, z0: round(fitted[0]!), z1: round(fitted[1]!), ...(taper ? { zTip: [round(fitted[2]!), round(fitted[3]!)] } : {}) } });
   const left = mismatch(prism(fitted), target);
@@ -297,7 +305,7 @@ function frontExtrude(op: any): string {
   const shape = need(op.scale, op.view ?? "front", op.id, op.bone);
   const frame = frames[shape.bone]!.frame;
   const length = lengthOf(shape.bone);
-  const twin = find(op.scale, "elevation", op.twin ?? op.id, shape.bone);
+  const twin = find(op.scale, "elevation", op.twin ?? op.id, op.twinBone ?? shape.bone);
   if (twin === undefined || twin.solid?.kind === "revolved") throw new Error(`1:${op.scale} "${op.id}" needs a flat or extruded elevation twin on ${shape.bone}`);
   const before = snapshot(shape);
   const profile = hullOf(pointsOf(twin)).map(([u, v]) => [round(u, 5), round(v, 5)] as const);
@@ -341,7 +349,7 @@ function planRevolve(op: any): string {
   const shape = need(op.scale, view, op.id, op.bone);
   const frame = frames[shape.bone]!.frame;
   const length = lengthOf(shape.bone);
-  const twin = find(op.scale, "elevation", op.twin ?? op.id, shape.bone);
+  const twin = find(op.scale, "elevation", op.twin ?? op.id, op.twinBone ?? shape.bone);
   if (twin === undefined) throw new Error(`1:${op.scale} "${op.id}" has no elevation twin on ${shape.bone}`);
   const before = snapshot(shape);
   if (twin.solid?.kind === "revolved") {
@@ -419,14 +427,28 @@ const LIMIT = Number(flag("limit") ?? 0.4);
 
 function solidOp(op: any): string {
   const shape = need(op.scale, op.view, op.id, op.bone);
-  if (shape.solid !== undefined) return "unchanged: a solid already";
+  if (shape.solid !== undefined && op.redo !== true) return "unchanged: a solid already";
+  const limit = (op.limit ?? LIMIT) * toleranceM * 1000;
+  const driftLimit = (op.drift ?? 1) * 0.15 * Number(op.scale);
+  const original = structuredClone(shape);
+  let held: number | undefined;
+  if (shape.solid !== undefined) {
+    const frame = frames[shape.bone]!.frame;
+    const twin = find(op.scale, "elevation", op.twin ?? op.id, op.twinBone ?? shape.bone);
+    const now = twin === undefined || (shape.solid.kind === "revolved" && shape.solid.axis !== "u") ? undefined : footprint(shape, op.view, frame, lengthOf(shape.bone), 1);
+    const target = twin === undefined || twin.solid?.kind === "revolved" ? undefined : footprint(twin, "elevation", frame, lengthOf(shape.bone), 1);
+    aim(shape.bone, frame);
+    held = now === undefined || target === undefined ? Number.POSITIVE_INFINITY : mismatch(now, target) * 1000;
+    if (held <= limit) return `unchanged: the solid keeps the footprint within ${held.toFixed(0)} mm`;
+    const outline = restOutline(op.scale, op.view, shape);
+    for (const key of GEOMETRY_KEYS) if (key !== "closed") delete shape[key];
+    Object.assign(shape, { kind: "poly", points: outline, closed: true });
+  }
   const kept = structuredClone(shape);
   const restore = (): void => {
     for (const key of Object.keys(shape)) delete shape[key];
     Object.assign(shape, structuredClone(kept));
   };
-  const limit = (op.limit ?? LIMIT) * toleranceM * 1000;
-  const driftLimit = (op.drift ?? 1) * 0.15 * Number(op.scale);
   const was = restRings(op.scale, op.view, shape);
   const tried: { kind: string; state: any; score: number; note: string }[] = [];
   for (const kind of (op.order ?? ["view-sweep", "revolve", "extrude"]) as string[]) {
@@ -443,10 +465,61 @@ function solidOp(op: any): string {
     restore();
   }
   const best = tried.filter((entry) => entry.state !== undefined).sort((x, y) => x.score - y.score)[0];
+  if (held !== undefined && (best === undefined || op.strict === true || best.score > (0.9 * held) / limit)) {
+    for (const key of Object.keys(shape)) delete shape[key];
+    Object.assign(shape, original);
+    return `unchanged: the solid it is (footprint ${held.toFixed(0)} mm) is not improved (${tried.map((entry) => entry.note).join("; ")})`;
+  }
   if (best === undefined || op.strict === true) return `unchanged: no construction within footprint ${limit.toFixed(0)} mm and rest outline ${driftLimit.toFixed(0)} mm (${tried.map((entry) => entry.note).join("; ")})`;
   for (const key of Object.keys(shape)) delete shape[key];
   Object.assign(shape, best.state);
   return `fitted, COMPROMISE: ${best.note}; not ${tried.filter((entry) => entry !== best).map((entry) => entry.note).join("; not ")}`;
+}
+
+/** 🛌️ The outline a shape draws in a view with every bone at rest, in the coordinates a flat shape of that view is authored in (the largest ring; the evaluator draws it in a probe pose without offsets and the shift of the root is taken out). */
+function restOutline(scale: string, view: "front" | "plan", shape: any): number[][] {
+  const base = asset.poses.find((pose: any) => pose.id === asset.presentation.defaultPose);
+  asset.poses.push({ ...structuredClone(base), id: "rest-probe", bones: {} });
+  try {
+    const state = evaluate(asset, { kind: "pose", pose: "rest-probe" }, coverage.scaleSelector(Number(scale)));
+    const drawn = state.shapes[view].find((entry: any) => entry.shape === shape);
+    const now = state.bones[shape.bone].frame.o;
+    const rest = frames[shape.bone]!.frame.o;
+    const shift = view === "front" ? [now.z - rest[2], now.y - rest[1]] : [now.x - rest[0], now.z - rest[2]];
+    const area = (ring: any[]): number => Math.abs(ring.reduce((sum, p, i) => sum + p.x * ring[(i + 1) % ring.length].y - ring[(i + 1) % ring.length].x * p.y, 0));
+    const ring = [...drawn.rings].sort((x: any[], y: any[]) => area(y) - area(x))[0] as any[];
+    return ring.map((p) => [round(p.x - shift[0]!, 5), round(p.y - shift[1]!, 5)]);
+  } finally {
+    asset.poses.pop();
+  }
+}
+
+/** ↔️ The op `lateral-match`: the plan twin takes the lateral range its front twin draws in the default pose (or `"to": "plan"` the other way round) when the two differ by more than `"over"` (share of the tolerance, default 0.4): a lateral prism moves its span, a prism of its own outline is scaled across the bone; a revolved solid is refused. */
+function lateralMatch(op: any): string {
+  const target = op.to === "plan" ? "plan" : "front";
+  const moved = target === "front" ? "plan" : "front";
+  const shape = need(op.scale, moved, op.id, op.bone);
+  const other = need(op.scale, target, op.otherId ?? op.id, shape.bone);
+  const axis = (view: string, item: any): [number, number] => {
+    const values = restRings(op.scale, view, item).flat().map((p) => (view === "front" ? p[0] : p[1]));
+    return [Math.min(...values), Math.max(...values)];
+  };
+  const [from, to] = [axis(moved, shape), axis(target, other)];
+  const off = Math.max(Math.abs(from[0] - to[0]), Math.abs(from[1] - to[1]));
+  if (off <= (op.over ?? 0.4) * toleranceM) return `unchanged: lateral ranges agree within ${(off * 1000).toFixed(0)} mm`;
+  const k = from[1] === from[0] ? 1 : (to[1] - to[0]) / (from[1] - from[0]);
+  const map = (z: number): number => round(to[0] + (z - from[0]) * k, 5);
+  if (shape.solid?.kind === "extruded" && shape.solid.sweep === "w") {
+    const base = from[0] - Math.min(shape.solid.z0, shape.solid.zTip?.[0] ?? shape.solid.z0);
+    const at = (z: number): number => map(z + base) - base;
+    Object.assign(shape.solid, { z0: at(shape.solid.z0), z1: at(shape.solid.z1), ...(shape.solid.zTip ? { zTip: [at(shape.solid.zTip[0]), at(shape.solid.zTip[1])] } : {}) });
+  } else if (shape.solid?.kind === "extruded") {
+    const [lo, hi] = rangeOf(shape.points as P2[], 1);
+    const centreFrom = (from[0] + from[1]) / 2 - (lo + hi) / 2;
+    shape.points = (shape.points as P2[]).map(([a, w]) => [a, round(map(w + centreFrom) - centreFrom - ((to[0] + to[1]) / 2 - (from[0] + from[1]) / 2) + ((to[0] + to[1]) / 2 - (from[0] + from[1]) / 2), 5)]);
+  } else throw new Error(`1:${op.scale} ${moved} "${op.id}" is ${shape.solid ? `a ${shape.solid.kind} solid` : "flat"}: its lateral range cannot be set alone`);
+  const left = axis(moved, shape);
+  return `matched: ${moved} lateral [${from.map((v) => v.toFixed(3))}] to the ${target} [${to.map((v) => v.toFixed(3))}], now [${left.map((v) => v.toFixed(3))}]`;
 }
 
 /** 🖼️ The rings a shape draws in a view in the default pose, by the evaluator itself. */
@@ -486,6 +559,7 @@ function hausdorff(a: readonly P2[][], b: readonly P2[][]): number {
 function apply(op: any): string {
   switch (op.op) {
     case "solid": return solidOp(op);
+    case "lateral-match": return lateralMatch(op);
     case "front-sweep": return frontSweep(op);
     case "view-sweep": return viewSweep(op);
     case "plan-revolve": return planRevolve(op);

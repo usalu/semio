@@ -12,7 +12,7 @@
       "en": "A brass thermostatic expansion valve of a small heat pump as it sits in the pipework: warm liquid rises through the flare nut, is throttled in the body and leaves to the right as a very cold two-phase mixture; the element on top is steered through the coiled capillary by the bulb strapped on the suction line, so body, outlet, bulb and suction line cool below room temperature.",
       "de": "Ein thermostatisches Expansionsventil aus Messing einer kleinen Wärmepumpe, wie es im Rohrnetz sitzt: Warme Flüssigkeit steigt durch die Bördelmutter auf, wird im Körper gedrosselt und verlässt ihn nach rechts als sehr kaltes Zweiphasengemisch; das Element oben wird über die aufgewickelte Kapillare vom Fühler gesteuert, der auf die Saugleitung gespannt ist, sodass Körper, Ausgang, Fühler und Saugleitung unter Raumtemperatur abkühlen."
     },
-    "tags": ["expansion-valve", "txv", "heat-pump", "refrigeration", "throttling", "cold", "machinery"],
+    "tags": [{"id":"expansion-valve","title":{"en":"expansion valve","de":"Expansionsventil"}},{"id":"txv","title":{"en":"TXV","de":"thermostatisches Expansionsventil"}},{"id":"heat-pump","title":{"en":"heat pump","de":"Wärmepumpe"}},{"id":"refrigeration","title":{"en":"refrigeration","de":"Kältetechnik"}},{"id":"throttling","title":{"en":"throttling","de":"Drosselung"}},{"id":"cold","title":{"en":"cold","de":"kalt"}},{"id":"machinery","title":{"en":"machinery","de":"Maschinen"}}],
     "provenance": {
       "author": "Semio staffage content (G2)",
       "method": "handcrafted",

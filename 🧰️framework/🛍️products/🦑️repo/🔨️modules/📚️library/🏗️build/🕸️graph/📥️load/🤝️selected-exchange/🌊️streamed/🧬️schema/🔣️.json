@@ -1,0 +1,11 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Streamed publication of a sealed selected read / Gestreamte Veröffentlichung eines versiegelten Auswahl-Lesens",
+  "description": "EN: The documents of a sealed selected read (graph, owners, admission) are written part by part into one brotli stream each and handed to the fleet blob by blob, one document after the other. Measured at worker size (269,385 distinct rows, 2,800 admission entries, 978,830 row references, 28 MB graph): building the three documents at once added 2.6 GB to the resident size of the process (1.8 GB -> 4.4 GB), the same step that the memory warden cancelled at 5,273 MB on g1-m08. On the fixture of the peak law the exchange's build adds 2,806 MB, the streamed publication 1,168 MB. DE: Die Dokumente eines versiegelten Auswahl-Lesens (Graph, Eigentümer, Zulassung) werden Teil für Teil in je einen Brotli-Strom geschrieben und der Flotte Blob für Blob übergeben, ein Dokument nach dem anderen. Gemessen in Worker-Größe (269 385 verschiedene Zeilen, 2 800 Zulassungseinträge, 978 830 Zeilenverweise, 28 MB Graph): das gleichzeitige Bauen der drei Dokumente fügte dem residenten Speicher des Prozesses 2,6 GB hinzu (1,8 GB -> 4,4 GB), derselbe Schritt, den der Speicherwächter auf g1-m08 bei 5 273 MB abbrach. Auf der Vorlage des Spitzengesetzes fügt der Bau der Austauschs 2 806 MB hinzu, die gestreamte Veröffentlichung 1 168 MB.",
+  "definitions": {
+    "Policy": {
+      "description": "EN: partCharacters: characters one part of a document gathers before it is encoded and compressed (about 2 to 4 MB of bytes); peakMegabytes: the most resident memory the streamed publication may add to the process for the worker-size fixture of its law (the peak of a child that holds the sealed read, minus its resident size before the publication). DE: partCharacters: Zeichen, die ein Teil eines Dokuments sammelt, bevor er kodiert und komprimiert wird (etwa 2 bis 4 MB Bytes); peakMegabytes: der meiste residente Speicher, den die gestreamte Veröffentlichung dem Prozess für die Worker-große Vorlage ihres Gesetzes hinzufügen darf (Spitze eines Kindes, das das versiegelte Lesen hält, abzüglich seiner residenten Größe vor der Veröffentlichung).",
+      "const": {"version": 1, "partCharacters": 1048576, "peakMegabytes": 1300}
+    }
+  }
+}

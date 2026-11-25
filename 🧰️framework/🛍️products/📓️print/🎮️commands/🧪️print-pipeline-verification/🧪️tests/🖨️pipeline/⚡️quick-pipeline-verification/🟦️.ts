@@ -131,7 +131,9 @@ export async function verifyPrintPipelineSourcesV1(): Promise<void> {
     assert.match(windowSource, /bottomrule~at~break=\\semio@stroke@hairline/);
     assert.match(windowSource, /toprule~at~break=\\semio@stroke@hairline/);
     assert.match(windowSource, /\\newcommand\{\\semio@window@chips@overlay\}/);
-    assert.match(windowSource, /\\newcommand\{\\semio@chip@muted\}/);
+    assert.match(windowSource, /\\newcommand\{\\semio@chip@pane\}/);
+    assert.match(windowSource, /\\newcommand\{\\semio@chip@fill\}[\s\S]*?\\semio@chip@layer\{\\semio@chip@alpha\}[\s\S]*?\\semio@chip@layer\{\\semio@chip@tint\}\{semio-chrome-foreground\}/);
+    assert.doesNotMatch(windowSource, /semio@chip@opacity/);
     assert.match(windowSource, /toprule=\\semio@stroke@hairline/);
     assert.match(tableSource, /\\semio@table@long@title@chrome@row[\s\S]*?\\semio@window@header@invoke/);
     assert.match(tableSource, /\\NewDocumentCommand \\SemioTableHeaderRow \{ m \} \{[\s\S]*?\\semio@table@row@sep/);

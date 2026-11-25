@@ -6,7 +6,7 @@ use semio_plugin_decl_emission::{ActionMeta, Emit, InteractionWrite};
 use semio_plugin_interaction::interaction_topology::{AppliedInteractionVerb, INLINE_INTERACTION_VERB_DIAGNOSTIC_CODE, InlineInteractionFold, InteractionRevalidateOrigin, derive_path_delimited_topology, interaction_after_document_change_v1, interaction_domain_id_arg, interaction_selection_loss_v1, leftover_after_app_selection_write_v1, leftover_gumball_active_v1, leftover_selected_ids_of, parse_interaction_hover_targets, parse_interaction_targets, parse_merge_mode, parse_selection_mode, report_interaction_selection_loss, resolve_interaction_hover_group};
 use semio_plugin_decl_app::ArtifactApp;
 use store::os_store::store_schema::{ArtifactCommand, HistoryLane};
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use semio_plugin_decl_views::{ArtifactView, ConfigView, InteractionHoverState};
 use std::collections::{BTreeMap, HashSet};

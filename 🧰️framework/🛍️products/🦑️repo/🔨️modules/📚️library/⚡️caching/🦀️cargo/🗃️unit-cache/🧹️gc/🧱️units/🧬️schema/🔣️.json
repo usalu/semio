@@ -5,7 +5,7 @@
     "Policy": {
       "const": {
         "minimumAgeMilliseconds": 1800000,
-        "busyMinimumAgeMilliseconds": 10800000,
+        "heldGraceMilliseconds": 10800000,
         "idleMilliseconds": 86400000,
         "keepNewestPerCrate": 2,
         "bases": [
@@ -53,8 +53,7 @@
         "profile",
         "bytes",
         "lastUsedMs",
-        "held",
-        "busy"
+        "held"
       ],
       "properties": {
         "path": {
@@ -78,9 +77,6 @@
           "minimum": 0
         },
         "held": {
-          "type": "boolean"
-        },
-        "busy": {
           "type": "boolean"
         }
       }
@@ -179,8 +175,8 @@
           "de": "[repo cache] Build-Einheit {path} behalten: ein laufender Compiler hält ihre Sperre"
         },
         "busyProfile": {
-          "en": "[repo cache] profile {profile} of {directory} is held by running compilers: only superseded units idle for {hours} h go",
-          "de": "[repo cache] Profil {profile} von {directory} wird von laufenden Compilern gehalten: nur abgelöste, seit {hours} h ungenutzte Einheiten gehen"
+          "en": "[repo cache] profile {profile} of {directory} is held by running compilers: none of its units goes",
+          "de": "[repo cache] Profil {profile} von {directory} wird von laufenden Compilern gehalten: keine seiner Einheiten geht"
         },
         "summaryPlan": {
           "en": "[repo cache] build units: would remove {count} of {total} ({bytes}); {held} held by running compilers, {kept} kept",

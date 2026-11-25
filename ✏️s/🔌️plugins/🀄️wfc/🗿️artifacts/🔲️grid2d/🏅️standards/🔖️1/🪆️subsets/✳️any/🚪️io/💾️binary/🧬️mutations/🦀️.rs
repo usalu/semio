@@ -14,6 +14,8 @@ use crate::standards::v1::subsets::any::io::text::mutations::{operation_from_dsl
 use crate::schema::mutations::Grid2dMutation;
 use protocol::OpBinary;
 
+dsl::artifact_persisted_binary_operation!(Grid2dMutation);
+
 #[path = "🛬️original/🦀️.rs"]
 mod original;
 

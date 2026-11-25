@@ -64,8 +64,16 @@ fn an_element_draws_its_layers_with_their_real_thicknesses() {
 fn the_failing_check_colours_its_element() {
     let mut document = Din4108Snapshot::default();
     document.elements[0].layers[2].thickness_m = 0.005;
-    let scene = scene_of(&document);
-    assert_eq!(entity(&scene, "wall-north").appearance.style, scene::StyleState::Error);
+    let report = inferences::evaluate(&document);
+    let scene = project(&SceneInput { document: &document, report: &report, revision: revision() });
+    let wall = entity(&scene, "wall-north");
+    let governing = wall.utilisation.as_ref().expect("wall check binding");
+    let mass = report.checks.iter().find(|check| check.id == "din4108-2.mass.wall-north").expect("surface mass check");
+    assert_eq!(mass.status, norm::CheckStatus::Pass);
+    assert!(mass.utilization > governing.ratio);
+    assert_eq!(governing.status, scene::CheckStatus::Fail);
+    assert_eq!(wall.appearance.style, scene::StyleState::Error);
+    assert_eq!(wall.appearance.hatch, Some(scene::Hatch::Diagonal));
 }
 
 #[test]
@@ -272,7 +280,7 @@ fn the_cross_check_temperature_factor_uses_the_standard_surface_resistance() {
     let vectors = cross_checks();
     for case in vectors["fRsi"].as_array().expect("fRsi") {
         let name = case["id"].as_str().expect("id");
-        let element = model::EnvelopeElement { id: name.into(), kind: "wall".into(), zone_id: String::new(), orientation_deg: 0.0, inclination_deg: 90.0, adjacent: "exterior".into(), area_m2: 10.0, delta_u_g: 0.0, delta_u_f: 0.0, delta_u_r: 0.0, layers: stack_of(case) };
+        let element = model::EnvelopeElement { id: name.into(), kind: "wall".into(), zone_id: String::new(), orientation_deg: 0.0, inclination_deg: 90.0, adjacent: "exterior".into(), area_m2: 10.0, delta_u_g: 0.0, delta_u_f: 0.0, delta_u_r: 0.0, layers: vec![vector_layer(&serde_json::json!({ "thicknessM": 1.0, "lambda": 1.0 / case["rLayers"].as_f64().expect("rLayers") }))] };
         let result = checks::part_2::check_f_rsi(&element, checks::MOULD_T_INT_C, checks::MOULD_RH_INT);
         assert!((result.computed.value - case["fRsi"].as_f64().expect("fRsi")).abs() <= 1e-12, "{name}: f_Rsi {}", result.computed.value);
         assert_eq!(result.status == norm::CheckStatus::Pass, case["passes"].as_bool().expect("passes"), "{name}");

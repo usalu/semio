@@ -1,0 +1,17 @@
+[
+ {
+  "name": "depth",
+  "old": "    if (shape.solid !== undefined) return local(p, shape.solid.kind === \"extruded\" ? (shape.solid.z0 + shape.solid.z1) / 2 - rest.frame.o[2] : 0);",
+  "new": "    if (shape.solid?.kind === \"extruded\") {\n      const { sweep, z0, z1, zTip } = shape.solid;\n      const t = zTip === undefined || !(length > 0) ? 0 : Math.min(Math.max(p.x / length, 0), 1);\n      const middle = zTip === undefined ? (z0 + z1) / 2 : (z0 + (zTip[0] - z0) * t + z1 + (zTip[1] - z1) * t) / 2;\n      return sweep === \"u\" ? at(middle, p.x, p.y) : sweep === \"v\" ? at(p.x, middle, p.y) : at(p.x, p.y, middle - rest.frame.o[2]);\n    }\n    if (shape.solid !== undefined) return local(p, 0);"
+ },
+ {
+  "name": "local",
+  "old": "  const local = (p: Point, c: number): Vec3 => [now.o[0] + p.x * now.u[0] + p.y * now.v[0] + c * now.w[0], now.o[1] + p.x * now.u[1] + p.y * now.v[1] + c * now.w[1], now.o[2] + p.x * now.u[2] + p.y * now.v[2] + c * now.w[2]];",
+  "new": "  const at = (a: number, b: number, c: number): Vec3 => [now.o[0] + a * now.u[0] + b * now.v[0] + c * now.w[0], now.o[1] + a * now.u[1] + b * now.v[1] + c * now.w[1], now.o[2] + a * now.u[2] + b * now.v[2] + c * now.w[2]];\n  const local = (p: Point, c: number): Vec3 => at(p.x, p.y, c);\n  const length = boneOf(asset, shape.bone).lengthM;"
+ },
+ {
+  "name": "doc",
+  "old": "A `solid` is carried at the plane of its profile; a flat shape at the depth profile it was placed with. */",
+  "new": "An extruded `solid` is carried as {@link solid3} places it, its profile in the plane of its `sweep` (`w`: (u, v), `v`: (u, w), `u`: (v, w)) at the middle of its span, tapered to `zTip` along the first profile coordinate; a revolved one at the plane of its profile; a flat shape at the depth profile it was placed with. */"
+ }
+]

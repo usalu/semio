@@ -193,7 +193,7 @@ export function everyLanguage(label: CourseLabelKey): string {
 export function LanguageChoice(props: { readonly onChoose: (locale: CourseLocale) => void }): ReactElement {
   const id = useId();
   return (
-    <CourseCard flush id={id} card="language" headingLevel={1} focusableHeading icon={<CardIcon icon="globe" />} title={<EveryLanguage label="course.preferences.language" />}>
+    <CourseCard flush id={id} card="language" className="w-full flex-1" headingLevel={1} focusableHeading icon={<CardIcon icon="globe" />} title={<EveryLanguage label="course.preferences.language" />}>
       <RowList>
         {COURSE_LOCALES.map((locale) => (
           <li key={locale} lang={locale} {...CELL} className="flex flex-col">

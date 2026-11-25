@@ -33,6 +33,8 @@ pub const FEM2D_GRANULARITY_MATERIAL: &str = "material";
 pub const FEM2D_GRANULARITY_SECTION: &str = "section";
 pub const FEM2D_GRANULARITY_LOAD_CASE: &str = "loadCase";
 pub const FEM2D_GRANULARITY_COMBINATION: &str = "combination";
+pub const FEM2D_GRANULARITY_ANALYSIS: &str = "analysis";
+pub const FEM2D_ANALYSIS_ID: &str = "settings";
 pub const FEM2D_POINTER_CHANNEL: &str = "pointer";
 //#endregion 🔖️Constants
 
@@ -45,17 +47,18 @@ pub fn fem2d_interaction_definition() -> InteractionDefinition {
         id: FEM2D_INTERACTION_DOMAIN.into(),
         label: LocalizedLabel::native("Structure", "Tragwerk"),
         granularities: vec![
-            granularity(FEM2D_GRANULARITY_NODE, "Node", "Knoten", "circle-dot"),
             granularity(FEM2D_GRANULARITY_ELEMENT, "Element", "Element", "minus"),
+            granularity(FEM2D_GRANULARITY_NODE, "Node", "Knoten", "circle-dot"),
             granularity(FEM2D_GRANULARITY_REGION, "Region", "Bereich", "square"),
-            granularity(FEM2D_GRANULARITY_SUPPORT, "Support", "Lager", "anchor"),
+            granularity(FEM2D_GRANULARITY_SUPPORT, "Support", "Lager", "triangle"),
             granularity(FEM2D_GRANULARITY_LOAD, "Load", "Last", "arrow-down"),
             granularity(FEM2D_GRANULARITY_MATERIAL, "Material", "Material", "layers"),
-            granularity(FEM2D_GRANULARITY_SECTION, "Section", "Querschnitt", "ruler"),
+            granularity(FEM2D_GRANULARITY_SECTION, "Section", "Querschnitt", "beam"),
             granularity(FEM2D_GRANULARITY_LOAD_CASE, "Load Case", "Lastfall", "list"),
             granularity(FEM2D_GRANULARITY_COMBINATION, "Combination", "Kombination", "link"),
+            granularity(FEM2D_GRANULARITY_ANALYSIS, "Analysis", "Analyse", "settings-2"),
         ],
-        hierarchy: HierarchyProvider::Flat,
+        hierarchy: HierarchyProvider::Topology,
         hover: HoverSpec { enabled: true, transitive: false, channels: vec![FEM2D_POINTER_CHANNEL.into()], broadcast: true },
         selection: SelectionSpec {
             modes: vec![SelectionMode::Multiple, SelectionMode::Single],
@@ -65,6 +68,24 @@ pub fn fem2d_interaction_definition() -> InteractionDefinition {
             broadcast: true,
         },
     }
+}
+
+/// 🌳️ Every selectable entity of one document as a flat topology in granularity order (elements first, the default Select All scope) — the universe `selectAll` and range selection walk, and the ids revalidation keeps.
+pub fn fem2d_interaction_topology(doc: &Fem2dSnapshot) -> semio_framework::InteractionTopology {
+    let node = |granularity: &str, identity: Result<String, protocol::wire::ScopedIdentityError>| identity.ok().map(|id| semio_framework::TopologyNode { id, granularity: granularity.into(), parent: None });
+    let target = |granularity: &str, id: &str| node(granularity, fem2d_entity_target_id(granularity, id));
+    let ordered = doc.elements.iter().filter_map(|element| target(FEM2D_GRANULARITY_ELEMENT, &element_id(element)))
+        .chain(doc.nodes.iter().filter_map(|item| target(FEM2D_GRANULARITY_NODE, item.id.as_str())))
+        .chain(doc.regions.iter().filter_map(|item| target(FEM2D_GRANULARITY_REGION, &item.id)))
+        .chain(doc.supports.iter().filter_map(|item| target(FEM2D_GRANULARITY_SUPPORT, &item.id)))
+        .chain(doc.load_cases.iter().flat_map(|case| case.loads.iter().filter_map(|load| node(FEM2D_GRANULARITY_LOAD, fem2d_load_target_id(&case.id, &semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::load_id(load))))))
+        .chain(doc.materials.iter().filter_map(|item| target(FEM2D_GRANULARITY_MATERIAL, item.id.as_str())))
+        .chain(doc.sections.iter().filter_map(|item| target(FEM2D_GRANULARITY_SECTION, &item.id)))
+        .chain(doc.load_cases.iter().filter_map(|item| target(FEM2D_GRANULARITY_LOAD_CASE, &item.id)))
+        .chain(doc.combinations.iter().filter_map(|item| target(FEM2D_GRANULARITY_COMBINATION, &item.id)))
+        .chain(target(FEM2D_GRANULARITY_ANALYSIS, FEM2D_ANALYSIS_ID))
+        .collect();
+    semio_framework::InteractionTopology { domains: std::collections::BTreeMap::from([(FEM2D_INTERACTION_DOMAIN.to_string(), semio_framework::DomainTopology { ordered })]) }
 }
 //#endregion 🔖️Definition
 
@@ -208,6 +229,7 @@ pub fn fem2d_entity_kind(doc: &Fem2dSnapshot, target: &str) -> Option<&'static s
         [FEM2D_GRANULARITY_SECTION, id] if doc.sections.iter().any(|row| row.id == *id) => Some(FEM2D_GRANULARITY_SECTION),
         [FEM2D_GRANULARITY_LOAD_CASE, id] if doc.load_cases.iter().any(|row| row.id == *id) => Some(FEM2D_GRANULARITY_LOAD_CASE),
         [FEM2D_GRANULARITY_COMBINATION, id] if doc.combinations.iter().any(|row| row.id == *id) => Some(FEM2D_GRANULARITY_COMBINATION),
+        [FEM2D_GRANULARITY_ANALYSIS, FEM2D_ANALYSIS_ID] => Some(FEM2D_GRANULARITY_ANALYSIS),
         [FEM2D_GRANULARITY_LOAD, _, _] if fem2d_load_owner(doc, target).is_some() => Some(FEM2D_GRANULARITY_LOAD),
         _ => None,
     }

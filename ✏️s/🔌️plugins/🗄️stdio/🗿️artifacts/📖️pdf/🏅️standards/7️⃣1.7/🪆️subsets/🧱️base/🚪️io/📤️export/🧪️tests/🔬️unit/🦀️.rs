@@ -141,7 +141,7 @@ fn rich_document() -> PdfSnapshot {
         PdfOp::Transform { matrix: [40.0, 0.0, 0.0, 30.0, 100.0, 100.0] },
         PdfOp::PaintXObject { name: "Im1".into() },
         PdfOp::PaintXObject { name: "Fm1".into() },
-        PdfOp::InlineImage { image: PdfInlineImage { width: 2, height: 1, bits_per_component: 8, color_space: Some(PdfColorSpace::DeviceGray), image_mask: false, decode: Vec::new(), interpolate: false, body:PdfImageBody::Samples {values:vec![0,255]}, extra: Vec::new() } },
+        PdfOp::InlineImage { image: Box::new(PdfInlineImage { width: 2, height: 1, bits_per_component: 8, color_space: Some(PdfColorSpace::DeviceGray), image_mask: false, decode: Vec::new(), interpolate: false, body:PdfImageBody::Samples {packed:vec![0,255]}, extra: Vec::new() }) },
         PdfOp::BeginMarkedContentWithProperties { tag: "Span".into(), properties: PdfPropertyList::Named { name: "MC0".into() } },
         PdfOp::BeginText,
         PdfOp::SetFont { name: "Synth".into(), size: 14.0 },

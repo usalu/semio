@@ -20,6 +20,10 @@
   },
   "activationFaults": [
     {
+      "fault": { "code": "budget.exceeded", "message": "guest poll: guest Core wire reserve exceeds its actual grant" },
+      "wire": { "code": "BUDGET_EXCEEDED", "message": "guest poll: guest Core wire reserve exceeds its actual grant", "details": null, "retryable": true }
+    },
+    {
       "fault": { "code": "budget.exceeded", "message": "guest poll reached its wall budget before it settled" },
       "wire": { "code": "BUDGET_EXCEEDED", "message": "guest poll reached its wall budget before it settled", "details": null, "retryable": true }
     },

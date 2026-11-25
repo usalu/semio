@@ -77,6 +77,14 @@ export function runtimeCatalogProjectionRootV1():string|undefined{
   if(!path||path.includes("\0"))throw Error("Explicit catalog root required");
   return path;
 }
+/** 🛑️ The catalog root an operation that cannot run without a catalog must name: refuses with an English and German error that names `SEMIO_PLUGIN_CATALOG` when the caller supplied none. */
+export function requiredRuntimeCatalogProjectionRootV1():string{
+  const path=runtimeCatalogProjectionRootV1();
+  if(path===undefined)throw Error("📇️registry: SEMIO_PLUGIN_CATALOG is not set; this operation needs the generated plugin catalog, so point SEMIO_PLUGIN_CATALOG at the catalog directory. / SEMIO_PLUGIN_CATALOG ist nicht gesetzt; diese Operation braucht den generierten Plugin-Katalog, setze SEMIO_PLUGIN_CATALOG auf das Katalogverzeichnis.");
+  return path;
+}
+/** 📚️ Reads the projected catalog for operations that require one (activation, deployment inventory); callers without a catalog use [[readGeneratedCatalogProjection]] and receive the empty neutral catalog. */
+export function readRequiredCatalogProjectionV1(generatedDir=requiredRuntimeCatalogProjectionRootV1()):GeneratedCatalogProjection{return readGeneratedCatalogProjection(generatedDir);}
 /** 🧩️ Derives deployment inventory from supplied rows without application constants. */
 export function catalogBuildInventoryV1(projection:GeneratedCatalogProjection){
   const plugins=projection.entries.filter(row=>row.role==="plugin"),extensions=projection.entries.filter(row=>row.role==="extension");
@@ -85,7 +93,7 @@ export function catalogBuildInventoryV1(projection:GeneratedCatalogProjection){
   if(defaults.length>1)throw Error("Catalog declares multiple defaults");
   return {plugins,extensions,hosts,playgrounds:projection.playgrounds,moduleDirectories:registryModuleDirectories(projection.entries),defaultVariant:defaults[0]?.variant};
 }
-export function runtimeCatalogBuildInventoryV1(){return catalogBuildInventoryV1(readGeneratedCatalogProjection());}
+export function runtimeCatalogBuildInventoryV1(){return catalogBuildInventoryV1(readRequiredCatalogProjectionV1());}
 export type PluginBuildTarget=import("../🔎️discovery/🧬️schema/🟦️.ts").PluginBuildTargetV1;
 export type PlaygroundBuildTarget=PlaygroundEntry;
 

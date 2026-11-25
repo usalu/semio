@@ -4,7 +4,7 @@ use semio_plugin_instance_extension::InstanceExtension;
 use semio_framework_tool_run::TOOL_RUN_ACTION_IDS;
 use semio_ui_contract::*;
 use semio_plugin_decl_app::ArtifactApp;
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use semio_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
 use pack::snapshot::ArtifactPack;
 use semio_plugin_decl_emission::Emit;

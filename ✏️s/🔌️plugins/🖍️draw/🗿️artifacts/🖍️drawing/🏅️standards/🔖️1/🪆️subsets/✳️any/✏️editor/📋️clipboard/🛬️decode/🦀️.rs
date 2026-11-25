@@ -33,6 +33,7 @@ impl ClipboardHydration{
         while !self.tasks.has_reserved_slot(){let bytes=match self.tasks.next_allocation_bytes(){Ok(bytes)=>bytes,Err(error)=>{self.rejected_task=Some(original);return Err(error.into());}};if let Err(error)=control.charge(bytes){self.rejected_task=Some(original);return Err(error);}if let Err(error)=self.tasks.reserve_one_cold(bytes){self.rejected_task=Some(original);return Err(error.refusal().into());}}
         self.tasks.push_reserved(original).map_err(|task|{self.rejected_task=Some(task);invalid()})
     }
+    fn refusal(&mut self)->ValueError{if self.rejected_error.as_ref().is_some_and(|error|error.kind!=ValueRefusalKind::InvalidValue){self.rejected_error.take().unwrap_or_else(invalid)}else{invalid()}}
     fn strip(&mut self,path:&[usize],entries:&mut[(String,DslValue)],key:&'static str,kind:Kind,control:&mut NativeDecodeControl<'_>)->Result<(),ValueError>{if let Some((_,value))=entries.iter_mut().find(|(name,_)|name==key){let source=std::mem::replace(value,match kind{Kind::Text(_)=>DslValue::String(String::new()),_=>DslValue::Array(Vec::new())});self.queue(path,kind,source,control)?;}Ok(())}
     fn layer(&mut self,path:&[usize],mut source:DslValue,control:&mut NativeDecodeControl<'_>)->Result<(),ValueError>{
         if path.len()>MAX_DEPTH||self.nodes==MAX_NODES{self.rejected=Some(source);return Err(invalid());}self.nodes+=1;
@@ -52,7 +53,7 @@ impl ClipboardHydration{
             if let Some((_,DslValue::Object(stroke)))=attributes.iter_mut().find(|(key,_)|key=="stroke"){self.strip(path,stroke,"dash",Kind::Dash,control)?;}
         }
         if !bounded(&source,&mut 128){self.queue(path,Kind::Layer,source,control)?;return Err(invalid());}
-        let node=DrawingLayerNode::from_value_controlled(&source,control);match node{Ok(node)=>self.pending_node=Some(node),Err(error)=>self.rejected_error=Some(error)}self.queue(path,Kind::Retired,source,control)?;if self.rejected_error.is_some(){return Err(invalid());}
+        let node=DrawingLayerNode::from_value_controlled(&source,control);match node{Ok(node)=>self.pending_node=Some(node),Err(error)=>self.rejected_error=Some(error)}self.queue(path,Kind::Retired,source,control)?;if self.rejected_error.is_some(){return Err(self.refusal());}
         if path.len()==1{if path[0]!=self.packet.roots.len(){return Err(invalid());}reserve(&mut self.packet.roots,control)?;self.packet.roots.push(self.pending_node.take().ok_or_else(invalid)?);}else{
             let parent=node_mut(&mut self.packet,&path[..path.len()-1])?;let DrawingLayerNode::Group(parent)=parent else{return Err(invalid());};
             if *path.last().unwrap()!=parent.children.len(){return Err(invalid());}while !parent.children.has_reserved_slot(){let bytes=parent.children.next_allocation_bytes()?;control.charge(bytes)?;parent.children.reserve_one_cold(bytes).map_err(|error|ValueError::from(error.refusal()))?;}parent.children.push_reserved(self.pending_node.take().ok_or_else(invalid)?).map_err(|node|{self.pending_node=Some(node);invalid()})?;
@@ -93,7 +94,7 @@ impl ClipboardHydration{
                 let DslValue::Object(fields)=value else{return Err(invalid());};if fields.len()!=3||fields.iter().any(|(key,_)|!matches!(key.as_str(),"width"|"height"|"samples"))||!fields.iter().any(|(key,_)|key=="samples"){return Err(invalid());}
                 let sample_id=control.copy_text(id)?;let samples=take(fields,"samples").ok_or_else(invalid)?;if let Some((_,value))=fields.iter_mut().find(|(key,_)|key=="samples"){*value=DslValue::Array(Vec::new());}
                 let asset=if bounded(value,&mut 16){DrawingImageAsset::from_value_controlled(value,control)}else{Err(invalid())};
-                let id=std::mem::take(id);task.at+=1;match asset{Ok(asset)=>{self.pending_asset=Some((id,asset));self.queue(&[],Kind::Samples(sample_id),samples,control)?;},Err(error)=>{self.rejected_error=Some(error);self.retired_key=Some(id);self.queue(&[],Kind::Samples(sample_id),samples,control)?;return Err(invalid());}}
+                let id=std::mem::take(id);task.at+=1;match asset{Ok(asset)=>{self.pending_asset=Some((id,asset));self.queue(&[],Kind::Samples(sample_id),samples,control)?;},Err(error)=>{self.rejected_error=Some(error);self.retired_key=Some(id);self.queue(&[],Kind::Samples(sample_id),samples,control)?;return Err(self.refusal());}}
             },
             Kind::Text(field)=>{
                 let DslValue::String(source)=&task.source else{return Err(invalid());};if *field!="content"&&*field!="name"&&source.len()>MAX_ID_BYTES{return Err(invalid());}let mut end=(task.at+1024).min(source.len());while !source.is_char_boundary(end){end-=1;}

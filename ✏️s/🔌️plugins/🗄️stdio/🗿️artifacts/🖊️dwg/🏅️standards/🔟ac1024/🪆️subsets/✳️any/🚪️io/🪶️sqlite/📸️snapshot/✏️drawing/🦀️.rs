@@ -2,12 +2,12 @@
 /// 🗄️ The DDL of the tables this module projects.
 pub const SQL: &str = include_str!("🗄️.sql");
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::xrecord::DwgExtendedEntityData;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::xrecord::DwgObjectCategory;
+use semio_s_artifact_stdio_dwg_snapshot_objects_xrecord::DwgExtendedEntityData;
+use semio_s_artifact_stdio_dwg_snapshot_objects_xrecord::DwgObjectCategory;
 use semio_s_artifact_stdio_dwg_snapshot_drawing::standards::v_ac1024::subsets::any::schema::snapshot::drawing::DwgLogicalDrawing;
 use semio_s_artifact_stdio_dwg_snapshot_drawing::standards::v_ac1024::subsets::any::schema::snapshot::drawing::geometry::DwgLogicalLayer;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody;
+use semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject;
+use semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody;
 use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::byte;
 use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::document;
 use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::full_unsigned;

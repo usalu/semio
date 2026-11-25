@@ -13,13 +13,55 @@
       "de": "Ein fahrbarer Operationstisch von 2,0 m Länge mit einer fünfteiligen gepolsterten Platte von 0,5 m Breite (0,56 m über die Zubehörschienen) auf 0,90 m, auf einer Teleskopsäule und einem H-förmigen Rollenfahrgestell, und eine fahrbare Operationsleuchte, deren 0,8 m langer Federarm einen 120-W-Leuchtenkopf von 0,5 m über den Tisch trägt; die Platte kippt in Kopftieflage, der Leuchtenkopf ist die einzige warme Fläche."
     },
     "tags": [
-      "operating-table",
-      "operating-theatre",
-      "surgical-light",
-      "hospital",
-      "furniture",
-      "internal-gain",
-      "electrical"
+      {
+        "id": "operating-table",
+        "title": {
+          "en": "operating table",
+          "de": "Operationstisch"
+        }
+      },
+      {
+        "id": "operating-theatre",
+        "title": {
+          "en": "operating theatre",
+          "de": "Operationssaal"
+        }
+      },
+      {
+        "id": "surgical-light",
+        "title": {
+          "en": "surgical light",
+          "de": "OP-Leuchte"
+        }
+      },
+      {
+        "id": "hospital",
+        "title": {
+          "en": "hospital",
+          "de": "Krankenhaus"
+        }
+      },
+      {
+        "id": "furniture",
+        "title": {
+          "en": "furniture",
+          "de": "Möbel"
+        }
+      },
+      {
+        "id": "internal-gain",
+        "title": {
+          "en": "internal gain",
+          "de": "innere Wärmelast"
+        }
+      },
+      {
+        "id": "electrical",
+        "title": {
+          "en": "electrical",
+          "de": "Elektro"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage content (A8)",

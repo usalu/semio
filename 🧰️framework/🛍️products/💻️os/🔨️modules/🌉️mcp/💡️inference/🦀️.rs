@@ -18,6 +18,7 @@ use semio_os_mcp_port::channel_port::{ActivationScope, ArtifactDocumentBinding, 
 use semio_os_mcp_port::policy::{AgentPrincipal, PolicyEngine};
 use semio_os_mcp_probe_document::probe_document::PROBE_SCHEMA;
 use semio_os_mcp_wire::job_registry::job_registry;
+use semio_os_mcp_wire::tool_paging::page_window;
 use semio_os_mcp_wire::protocol::{CallToolResult, ContentBlock, GatewayBackend, InMemoryToolRegistry, Resource, ResourceContent};
 use semio_os_mcp_workspace::headless_workspace_state::HeadlessWorkspace;
 #[cfg(not(target_arch = "wasm32"))]

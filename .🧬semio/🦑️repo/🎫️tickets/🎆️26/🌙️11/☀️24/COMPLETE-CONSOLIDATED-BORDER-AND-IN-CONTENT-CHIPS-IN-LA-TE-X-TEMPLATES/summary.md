@@ -14,6 +14,9 @@ The LaTeX packages now follow the design system's splitting logic: a page is spl
 | Window rows and columns | Tiles overlap by one hairline instead of leaving a gap. An arrangement is a frame towards its neighbours. |
 | Lists | `itemize`, `enumerate` and `description` are split into one cell per point: a hairline opens the list, separates neighbouring points and closes it. Inside a window the lines run to the window border. A frame after a list shares the closing line. |
 | Header and footer chips | Chips lie flush inside their band and share dividers. Another session on the shared tree closed the bands into full rectangles while this ticket ran; that work was kept, checked at high zoom against the design, and its page chrome test passes. |
+| Page ends | A window, table, list cell or list that ends a page closes on the footer rule. Every bottom edge records where it is shipped (`\pdfsavepos` into the aux file), and each page records the bottom of its text area. On the next pass an edge that landed within 2 pt of that bottom keeps its glue but draws no hairline, so the layout is identical between passes. This holds for natural, later and forced breaks and whatever anchors, writes or colour changes follow the frame. It replaces an output-routine trim that could not pass the whatsits a following heading or window emits (found on `viz-api` p38 and p57, where a figure kept its bottom edge 4.7 pt above the footer rule). |
+| Assignment tables | A titled `AssignmentParameterMatrix` lays its chips inside the header row instead of in a band above it, so every column divider runs up to the top edge and each header cell is a closed rectangle; the header row grows by one chip height. Both assignment tables draw their rules one frame hairline wide (they were 0.4 pt), so their outer rules coincide with the column sides. `semio-window.sty` exposes the chip row's chips as `\semio@window@chips@store` and `\semio@window@chips@band`. |
+| Page-filling arrangement and flyer | A `WindowArrangement` as tall as the text area fills its page and runs onto the footer rule; the flyer is built from one. |
 
 ## How it works
 
@@ -32,7 +35,10 @@ The LaTeX packages now follow the design system's splitting logic: a page is spl
 - `🧰️framework/🛍️products/📓️print/🖋️latex/semio-assignment.sty`
 - `🧰️framework/🛍️products/📓️print/🧪️tests/🧩️frame-junctions/` (`🥒️.feature`, `🔣️.json`, `🟦️.ts`), new
 - `🧰️framework/🛍️products/📓️print/🎮️commands/🧪️print-pipeline-verification/🧪️tests/🖨️pipeline/⚡️quick-pipeline-verification/🟦️.ts` (runs the new test)
-- `🧰️framework/🛍️products/📓️print/README.md` (section "Shared borders", English and German)
+- `🧰️framework/🛍️products/📓️print/README.md` (sections "Shared borders" and "The assignment kind", English and German)
+- `🧰️framework/🛍️products/📓️print/🖋️latex/semio-components.sty` (DOI cover cell)
+- `🧰️framework/🛍️products/📓️print/🧾️template/📰️flyer/🧩️flyer.content.tex`
+- `🧰️framework/🛍️products/📓️print/🧪️tests/📝️assignment/` (`🥒️.feature`, `🟦️.ts`)
 - `🧰️framework/🛍️products/📓️print/🧪️tests/🏷️page-chrome/🔣️.json` (heading chip edges)
 
 ## Verified
@@ -53,15 +59,19 @@ Compiled with the pinned tectonic through `build.ts` (it stages sources the way 
 | Page chrome test (`run-page-chrome-test.ts`) | Passes after its fixture was updated to the in-content heading chips (title: right and bottom, number: left and bottom). The header and footer bands, closed into rectangles by another session, were checked at high zoom: chips lie inside the band, share dividers, and the navbar rule is shared with the first frame. |
 | Quick pipeline verification (`run-quick-verification.ts`) | Passes after one pinned overlay assertion was updated to the shared top edge. |
 | Assignment test (`bun test` on `🧪️tests/📝️assignment`) | 20 of 20 pass. |
+| Final round (after the page-end and assignment changes) | All 98 documents rebuilt without errors; overfull boxes identical to the unmodified packages (`viz-api` 105, gallery 61, 35, 34, 6, 70, 55). `frame-audit.py` on every non-gallery PDF: 0 erased, 0 open frame edges, 0 non-neutral frame edges, 0 doubled edges. The only remaining hits are content: the shape icons of the parametrization matrices, the energy cover line art, `viz-api` chart marks on p30 and p44 and its canvas-coloured rules on p26. Images: `evidence/param-matrix-closed-header.png`, `evidence/vizapi-figure-closed-by-footer.png`, `evidence/energy-list-to-listing.png`. |
+| Tests, final round | `run-junction-test.ts` (with the new edge-reach vectors checked against mathjs), `run-page-chrome-test.ts`, `run-quick-verification.ts` and the assignment test (20 of 20) pass. |
 
 Images: `evidence/`.
 
 ## Not verified
 
-- The `repo` test targets could not run: `repo run @semio-tech/print:test-assignment` timed out after 25 minutes in the dependency stage, and `repo run @semio-tech/print:test -- quick` failed with `BUILD_OWNER_FAILED: Unknown admitted build target: @semio-tech/print:build-flyer`, which `repo` reports as reproducing on unchanged inputs. No tracked project file names that target, so the cause is in the `repo` build graph, not in the print sources. The tests those targets run were executed directly with bun, as listed above.
+- The `repo` test targets could not run. In the final round `repo run @semio-tech/print:test-assignment` again stayed in "Preparing build tools" until it was stopped after 28 minutes. Earlier: `repo run @semio-tech/print:test-assignment` timed out after 25 minutes in the dependency stage, and `repo run @semio-tech/print:test -- quick` failed with `BUILD_OWNER_FAILED: Unknown admitted build target: @semio-tech/print:build-flyer`, which `repo` reports as reproducing on unchanged inputs. No tracked project file names that target, so the cause is in the `repo` build graph, not in the print sources. The tests those targets run were executed directly with bun, as listed above.
 
 ## Notes
 
 - The pinned tectonic loops on its in-memory rerun for `paper`, `phd` and Zukunft Bau on this Windows machine (confirmed with the unmodified packages for `paper`). Running the passes one by one with `--reruns 0 --keep-intermediates` converges; `build.ts` does that.
 - The footer rule closes the column one body padding below the text area, so prose never touches it; a window part that breaks at the page end is drawn across that padding onto the rule.
 - A long table that breaks across pages stays open at the break: the rule below its last row on the page is taken back (a zero-height longtable foot), so that row runs down to the footer rule; the table's real last row keeps its rule.
+
+- The graticule figure of `viz-api` (section 9.5) renders an empty canvas; its frame is correct. That is a viz rendering matter outside this ticket.

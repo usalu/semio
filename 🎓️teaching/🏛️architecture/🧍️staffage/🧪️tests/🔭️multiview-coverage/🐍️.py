@@ -5,15 +5,18 @@
 - scipy computes the symmetric Hausdorff distance (`directed_hausdorff`) of point sets the test passes.
 - shapely measures the distance between two polygons, the distance from a point to the nearest of several polygons (0 inside) and the bounds of point sets.
 - The standard JSON parser reads the record of one asset of a matrix run and counts its cells by status and by failing check.
+- Exact rational arithmetic (`fractions.Fraction` of the decimal texts) decides whether a measured length lies within D18 (the larger of 15 mm and 2 %) of its nominal one, in metres and in the paper millimetres of every scale: the verdict a tolerance comparison must give whatever the unit.
+- The standard JSON parser reads a merged `matrix.json`, which the generator writes as a stream, and counts its assets and its cells by status and by failing check.
 
-Input: path of a JSON document `{ "svgs": [{ "key", "svg", "ids"? }], "patterns": [{ "key", "svg" }], "hausdorff": [{ "key", "a", "b" }], "distances": [{ "key", "a", "b" }], "pointDistances": [{ "key", "point", "polygons" }], "bounds": [{ "key", "points" }], "records": [{ "key", "path" }] }`.
-Output on stdout: JSON `{ "svgs": {key: [minX, minY, maxX, maxY] | null}, "patterns": {key: [{ "pattern", "box" }]}, "hausdorff": {key: number}, "distances": {key: number}, "pointDistances": {key: number}, "bounds": {key: [minX, minY, maxX, maxY]}, "records": {key: { "asset", "outcome", "statuses", "checks" }} }`.
+Input: path of a JSON document `{ "svgs": [{ "key", "svg", "ids"? }], "patterns": [{ "key", "svg" }], "hausdorff": [{ "key", "a", "b" }], "distances": [{ "key", "a", "b" }], "pointDistances": [{ "key", "point", "polygons" }], "bounds": [{ "key", "points" }], "records": [{ "key", "path" }], "matrices": [{ "key", "path" }], "ties": [{ "key", "measured", "nominal", "scales" }] }`.
+Output on stdout: JSON `{ "svgs": {key: [minX, minY, maxX, maxY] | null}, "patterns": {key: [{ "pattern", "box" }]}, "hausdorff": {key: number}, "distances": {key: number}, "pointDistances": {key: number}, "bounds": {key: [minX, minY, maxX, maxY]}, "records": {key: { "asset", "outcome", "statuses", "checks" }}, "matrices": {key: { "assets", "cells", "statuses", "checks" }}, "ties": {key: [bool per scale]} }`.
 """
 
 import json
 import re
 import sys
 import xml.etree.ElementTree as ET
+from fractions import Fraction
 
 import numpy as np
 from scipy.spatial.distance import directed_hausdorff
@@ -68,16 +71,32 @@ def point_distance(point, polygons):
     return min(Polygon(polygon).distance(Point(point)) for polygon in polygons)
 
 
-def record(path):
-    with open(path, encoding="utf-8") as handle:
-        document = json.load(handle)
+def counts(cells):
     statuses = {}
     checks = {}
-    for cell in document.get("cells", []):
+    for cell in cells:
         statuses[cell["status"]] = statuses.get(cell["status"], 0) + 1
         for check in cell["failures"]:
             checks[check] = checks.get(check, 0) + 1
-    return {"asset": document["asset"], "outcome": document["outcome"], "statuses": statuses, "checks": checks}
+    return {"statuses": statuses, "checks": checks}
+
+
+def record(path):
+    with open(path, encoding="utf-8") as handle:
+        document = json.load(handle)
+    return {"asset": document["asset"], "outcome": document["outcome"], **counts(document.get("cells", []))}
+
+
+def matrix(path):
+    with open(path, encoding="utf-8") as handle:
+        document = json.load(handle)
+    return {"assets": document["assets"], "cells": len(document["cells"]), **counts(document["cells"])}
+
+
+def tie(measured, nominal, scales):
+    measured, nominal = Fraction(measured), Fraction(nominal)
+    tolerance = max(Fraction(15, 1000), nominal / 50)
+    return [abs(measured * Fraction(1000, scale) - nominal * Fraction(1000, scale)) <= tolerance * Fraction(1000, scale) for scale in scales]
 
 
 def hausdorff(a, b):
@@ -95,7 +114,9 @@ def main():
         "pointDistances": {item["key"]: point_distance(item["point"], item["polygons"]) for item in job.get("pointDistances", [])},
         "bounds": {item["key"]: list(MultiPoint(item["points"]).bounds) for item in job.get("bounds", [])},
         "records": {item["key"]: record(item["path"]) for item in job.get("records", [])},
+        "matrices": {item["key"]: matrix(item["path"]) for item in job.get("matrices", [])},
         "hausdorff": {item["key"]: hausdorff(item["a"], item["b"]) for item in job.get("hausdorff", [])},
+        "ties": {item["key"]: tie(item["measured"], item["nominal"], item["scales"]) for item in job.get("ties", [])},
         "distances": {item["key"]: Polygon(item["a"]).distance(Polygon(item["b"])) for item in job.get("distances", [])},
     }
     print(json.dumps(out))

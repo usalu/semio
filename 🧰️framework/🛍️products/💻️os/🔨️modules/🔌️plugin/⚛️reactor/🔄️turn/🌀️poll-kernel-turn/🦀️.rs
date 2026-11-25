@@ -31,7 +31,9 @@ pub(super) async fn poll_kernel_turn<PA: semio_plugin_reactor_app::PluginApp, T,
     let mut effects: Vec<Effect> = Vec::new();
     trace_turn_phase_retention("lifecycle");
     let close_cleanup_work = drive_turn_retirement(runtime, cx)?;
-    semio_plugin_runtime_instances::inst_opening::plugin_resume_actor_openings(runtime,identity,cx).await?;
+    semio_plugin_runtime_instances::inst_opening::plugin_resume_actor_openings(runtime, identity, cx, |ready, progressed, cx| {
+        opening_slice_open(ready, progressed, cx.is_cancelled(), cx.should_yield(), guest_turn_executing_us())
+    }).await?;
     PATCHES.with(|patches| redirty_acknowledged_deferred_surfaces(patches, &mut dirty,cx))?;
     redirty_arena_starved_surfaces(&mut dirty)?;
     let folder_archive = events.as_ref().is_some_and(semio_plugin_runtime_ops::ops_raw_media::is_folder_archive_event);
@@ -44,7 +46,13 @@ pub(super) async fn poll_kernel_turn<PA: semio_plugin_reactor_app::PluginApp, T,
     let close_cleanup_work = close_cleanup_work || extension_retirement_work;
     let cold_pair_ingress = drive_cold_pair_ingress(runtime, cold_pair_page, identity, cx).await;
     let cold_pair_loading = matches!(cold_pair_ingress, semio_framework::kernel::ColdPairIngressStatus::Loading(_));
-    let document_load_work = step_restored_document_loads(runtime, &mut effects, identity, cx).await || COLD_PAIR_DOCUMENT_LOAD.with(|slot| slot.borrow().is_some());
+    let document_host_bound = effects.len();
+    let restored_load_work = loop {
+        let before = (cx.fuel_remaining(), cx.retained_progress());
+        let pending = step_restored_document_loads(runtime, &mut effects, identity, cx).await;
+        if !pending || (cx.fuel_remaining(), cx.retained_progress()) == before || !quiet_slice_open(effects.len() != document_host_bound, cx.should_yield(), guest_turn_executing_us()) { break pending }
+    };
+    let document_load_work = restored_load_work || COLD_PAIR_DOCUMENT_LOAD.with(|slot| slot.borrow().is_some());
     let media_ingress = semio_plugin_runtime_ops::ops_raw_media::drive_raw_media(runtime, events, command_page, &close_instances, identity, cx)?;
     let media_priority = match media_ingress.as_ref() {
         Some(semio_framework::kernel::CommandIngressStatus::OriginalMediaAck(ack))
@@ -80,11 +88,14 @@ pub(super) async fn poll_kernel_turn<PA: semio_plugin_reactor_app::PluginApp, T,
 
     trace_turn_phase_retention("ingress");
     let picker_runnable = semio_plugin_runtime_ops::ops_raw_media::continue_original_picker_effects(runtime, cx)?;
-    let (continuation, typed_operation_scan) = semio_plugin_runtime_ops::ops_typed_operations::plugin_continue_typed_operations(runtime, semio_plugin_runtime_ops::ops_typed_operations::TypedOperationGrant::turn(budget,cx), identity,cx).await?;
-    let typed_operation_contended = typed_operation_scan.contended;
-    if let Some((instance, output)) = continuation {
+    let (mut continuation, mut typed_operation_scan) = semio_plugin_runtime_ops::ops_typed_operations::plugin_continue_typed_operations(runtime, semio_plugin_runtime_ops::ops_typed_operations::TypedOperationGrant::turn(budget,cx), identity,cx).await?;
+    while let Some((instance, output)) = continuation.take() {
+        let host_bound = effects.len();
         route_exchange_output(instance, output, &mut effects,cx)?;
+        if !typed_operation_scan.runnable || !quiet_slice_open(effects.len() != host_bound, cx.should_yield(), guest_turn_executing_us()) { break }
+        (continuation, typed_operation_scan) = semio_plugin_runtime_ops::ops_typed_operations::plugin_continue_typed_operations(runtime, semio_plugin_runtime_ops::ops_typed_operations::TypedOperationGrant::turn(budget,cx), identity,cx).await?;
     }
+    let typed_operation_contended = typed_operation_scan.contended;
 
     trace_turn_phase_retention("continuation");
     let result_page_work=semio_plugin_reactor_lifecycle::result_publication::plugin_drive_result_pages(runtime,&mut effects,budget.max_effects as usize,cx)?;

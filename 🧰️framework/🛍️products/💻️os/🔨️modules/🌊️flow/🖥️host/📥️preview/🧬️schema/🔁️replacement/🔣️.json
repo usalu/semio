@@ -13,11 +13,13 @@
     "sourceEpochs",
     "foreignEpochEffects",
     "borrowedSourceOnly",
-    "caller"
+    "caller",
+    "toleranceRounds",
+    "admission"
   ],
   "properties": {
     "rounds": {
-      "const": 2
+      "const": 3
     },
     "expectedEntries": {
       "const": 1
@@ -45,7 +47,8 @@
       "const": [
         0,
         1,
-        2
+        2,
+        3
       ]
     },
     "foreignEpochEffects": {
@@ -79,6 +82,44 @@
           "maximumCapacityBytes": 1048576,
           "maximumReleaseBytes": 268435456,
           "maximumDepth": 4096
+        }
+      }
+    },
+    "toleranceRounds": {
+      "const": [
+        0.15,
+        0.02,
+        0.15
+      ]
+    },
+    "admission": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "resident",
+          "requested",
+          "inFlight",
+          "admitted"
+        ],
+        "properties": {
+          "resident": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "requested": {
+            "type": "number"
+          },
+          "inFlight": {
+            "type": "boolean"
+          },
+          "admitted": {
+            "type": "boolean"
+          }
         }
       }
     }

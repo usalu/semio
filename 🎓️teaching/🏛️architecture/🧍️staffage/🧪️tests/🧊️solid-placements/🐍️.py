@@ -1,4 +1,4 @@
-"""🧊️ Oracle of the solid placements: shapely rotates the rectangle profile (0.45 m along the bone, 0.05 m to its side) by the world angle of the bone and builds the mirrored, circular and rectangular solids.
+"""🧊️ Oracle of the solid placements: shapely rotates the rectangle profile (0.45 m along the bone, 0.05 m to its side) by the world angle of the bone and builds the mirrored, circular, elliptic (`lateralScale`) and rectangular solids.
 
 Input: the path of a JSON document with the fixture `shapes`, `bones` and `cases`. Output: JSON `{pose: {"front"|"plan": {shape: extent}}}`.
 """
@@ -20,10 +20,11 @@ def solid(view, shape, profile):
     minx, miny, maxx, maxy = profile.bounds
     if s["kind"] == "extruded":
         return box(s["z0"], miny, s["z1"], maxy) if view == "front" else box(minx, s["z0"], maxx, s["z1"])
+    lateral = s.get("lateralScale", 1)
     if view == "plan":
         reach = max(abs(minx - s["axisX"]), abs(maxx - s["axisX"]))
-        return Point(s["axisX"], s.get("axisZ", 0)).buffer(reach, 256)
-    moved = affinity.translate(profile, -s["axisX"], 0)
+        return affinity.scale(Point(s["axisX"], s.get("axisZ", 0)).buffer(reach, 256), yfact=lateral, origin=(s["axisX"], s.get("axisZ", 0)))
+    moved = affinity.scale(affinity.translate(profile, -s["axisX"], 0), xfact=lateral, origin=(0, 0))
     return unary_union([moved, affinity.scale(moved, xfact=-1, origin=(0, 0))]) if s.get("mirror") else moved
 
 

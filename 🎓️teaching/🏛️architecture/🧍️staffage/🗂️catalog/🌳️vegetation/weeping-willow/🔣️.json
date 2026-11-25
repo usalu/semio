@@ -720,12 +720,48 @@
       "de": "Eine ausgewachsene Trauerweide (Salix alba 'Tristis') von etwa 12 m: kurzer, mächtiger, wulstiger Stamm, der sich in 3,5 m Höhe in Bogenäste teilt, von denen acht lange Vorhänge aus hängenden Ruten und Blättern bis fast zum Boden fallen und eine weite, glockenförmige Krone bilden."
     },
     "tags": [
-      "tree",
-      "deciduous",
-      "broadleaf",
-      "pendulous",
-      "wind",
-      "transpiration"
+      {
+        "id": "tree",
+        "title": {
+          "en": "tree",
+          "de": "Baum"
+        }
+      },
+      {
+        "id": "deciduous",
+        "title": {
+          "en": "deciduous",
+          "de": "laubabwerfend"
+        }
+      },
+      {
+        "id": "broadleaf",
+        "title": {
+          "en": "broadleaf",
+          "de": "Laubholz"
+        }
+      },
+      {
+        "id": "pendulous",
+        "title": {
+          "en": "pendulous",
+          "de": "hängend"
+        }
+      },
+      {
+        "id": "wind",
+        "title": {
+          "en": "wind",
+          "de": "Wind"
+        }
+      },
+      {
+        "id": "transpiration",
+        "title": {
+          "en": "transpiration",
+          "de": "Transpiration"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage vegetation content worker",

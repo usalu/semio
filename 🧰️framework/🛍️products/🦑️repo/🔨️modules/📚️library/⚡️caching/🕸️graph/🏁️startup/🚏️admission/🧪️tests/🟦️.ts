@@ -31,9 +31,9 @@ test("the resident-memory census of a checkout equals the independent model: dea
  const root=mkdtempSync(join(artifacts,"nx-daemon-resident-")),leases=join(root,"lease"),directory=nxDaemonResidentDirectoryV1(leases),section=fixture.resident;
  try{
   mkdirSync(directory,{recursive:true});
-  for(const row of section.records)writeFileSync(join(directory,row.file),JSON.stringify({version:1,pid:row.pid,kind:row.kind,rssBytes:row.rssBytes,atMs:row.atMs}));
+  for(const row of section.records)writeFileSync(join(directory,row.file),JSON.stringify({version:1,pid:row.pid,startMs:1,kind:row.kind,rssBytes:row.rssBytes,atMs:row.atMs}));
   writeFileSync(join(directory,"700.json"),"{broken");writeFileSync(join(directory,"note.txt"),"x");
-  const alive=new Map<number,boolean>(section.records.map((row:any)=>[row.pid,row.alive])),found=await readNxDaemonResidentV1(leases,section.now,pid=>alive.get(pid)??false);
+  const alive=new Map<number,boolean>(section.records.map((row:any)=>[row.pid,row.alive])),found=await readNxDaemonResidentV1(leases,section.now,holder=>alive.get(holder.pid)??false);
   expect(found.daemons.map(row=>row.pid)).toEqual(section.expectedPids);expect(found.totalBytes).toBe(section.expectedTotalBytes);
   expect({pids:found.daemons.map(row=>row.pid),totalBytes:found.totalBytes}).toEqual({pids:model.resident.pids,totalBytes:model.resident.totalBytes});
   expect((await readNxDaemonResidentV1(join(root,"nothing"),section.now)).totalBytes).toBe(0);
@@ -43,10 +43,10 @@ test("the resident-memory census of a checkout equals the independent model: dea
 test("a daemon publishes its resident memory atomically, the writer clears records of dead daemons, and the record is withdrawn at the end",async()=>{
  const root=mkdtempSync(join(artifacts,"nx-daemon-resident-write-")),leases=join(root,"lease"),directory=nxDaemonResidentDirectoryV1(leases);
  try{
-  await writeNxDaemonResidentV1(leases,{version:1,pid:4242,kind:"finite",rssBytes:111,atMs:1000},()=>true);
-  await writeNxDaemonResidentV1(leases,{version:1,pid:4243,kind:"watch",rssBytes:222,atMs:1000},pid=>pid===4243);
+  await writeNxDaemonResidentV1(leases,{version:1,pid:4242,startMs:1,kind:"finite",rssBytes:111,atMs:1000},()=>true);
+  await writeNxDaemonResidentV1(leases,{version:1,pid:4243,startMs:1,kind:"watch",rssBytes:222,atMs:1000},holder=>holder.pid===4243);
   expect(readdirSync(directory).sort()).toEqual(["4243.json"]);
-  await writeNxDaemonResidentV1(leases,{version:1,pid:4243,kind:"watch",rssBytes:333,atMs:2000},pid=>pid===4243);
+  await writeNxDaemonResidentV1(leases,{version:1,pid:4243,startMs:1,kind:"watch",rssBytes:333,atMs:2000},holder=>holder.pid===4243);
   expect((await readNxDaemonResidentV1(leases,2000,()=>true)).totalBytes).toBe(333);expect(readdirSync(directory).some(name=>name.endsWith(".tmp"))).toBe(false);
   await removeNxDaemonResidentV1(leases,4243);expect(existsSync(join(directory,"4243.json"))).toBe(false);expect((await readNxDaemonResidentV1(leases,2000,()=>true)).totalBytes).toBe(0);
   await removeNxDaemonResidentV1(leases,4243);
@@ -104,7 +104,7 @@ test("source: finite daemons idle out through the pure rule and the timer is cle
  expect(service).toContain("activity.open++;activity.last=Date.now();");expect(service).toContain("activity.open--;activity.last=Date.now();");
 });
 test("source: the daemon publishes its resident memory on every tick, retires once idle over its budget and withdraws the record with the service",()=>{
- expect(service).toContain("writeNxDaemonResidentV1(leaseDirectory,{version:1,pid:process.pid,kind,rssBytes,atMs:Date.now()})");
+ expect(service).toContain("writeNxDaemonResidentV1(leaseDirectory,{version:1,...ownProcessIdentityV1(),kind,rssBytes,atMs:Date.now()})");
  expect(service).toContain("nxDaemonRetireV1({kind,openRequests:activity.open+attachedClients(),residentBytes,limitBytes:limits.residentBytes})");
  expect(service).toContain("removeNxDaemonResidentV1(leaseDirectory,process.pid)");expect(service.indexOf("removeNxDaemonResidentV1(leaseDirectory")).toBeGreaterThan(service.indexOf("finally{clearInterval(idleTimer);"));
 });

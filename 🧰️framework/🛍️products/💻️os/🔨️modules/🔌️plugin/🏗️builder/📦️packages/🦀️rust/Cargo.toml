@@ -45,6 +45,7 @@ semio-framework-async = { path = "../../../../../../../🔨️modules/⏳️asyn
 semio-framework-canvas-assets = { path = "../../../../../../../🔨️modules/🖼️canvas/🔌️runtime-assets/📦️packages/🦀️rust", optional = true }
 semio-os-kernel = { path = "../../../../../📦️packages/🦀️rust" }
 semio-plugin-ownership = { path = "../../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
+semio-plugin-store-lifecycle = { path = "../../../♻️lifecycle/🧱️owner/📦️packages/🦀️rust" }
 semio-framework-schema-registry = { path = "../../../../../../../🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
 semio-plugin-mounted-owner = { path = "../../../🏇️mounted-owner/📦️packages/🦀️rust" }
 semio-plugin-reactor-core = { path = "../../../⚛️reactor/📦️packages/🦀️rust" }

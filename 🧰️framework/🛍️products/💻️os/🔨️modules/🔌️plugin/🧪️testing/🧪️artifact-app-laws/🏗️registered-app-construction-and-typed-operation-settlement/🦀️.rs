@@ -368,7 +368,7 @@ fn typed_operation_settlement_refusal<P: PluginApp>(app: &P, cx: &semio_framewor
     let message = format!(
         "original fixture settlement stopped after {turns} turns (fuel {}, deadline exceeded {}, pending {}, maintenance empty {}, stage {stage}, demand {demand:?}, grant {grant:?}, close owner {})",
         cx.fuel_remaining(), cx.deadline_exceeded(), app.has_pending_typed_operations(), app.maintenance_terminal_is_empty(), app.close_diagnostic(),
-    );
+    ) + &format!(", typed operations [{}]", app.typed_operation_diagnostic());
     semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit, message).into()
 }
 
@@ -444,11 +444,7 @@ pub struct SettledExtensionInvocations {
     pub effects: Vec<semio_framework::kernel::Effect>,
 }
 
-/// 📦️ Exactly what `runCapturedExtensionEffect` (`🏛️ShellHost/🟦️.tsx`) does with the
-/// capability's own JSON answer before it crosses the ABI:
-/// `encodePackValue(JSON.parse(outputJson))`. A fixture that handed the raw JSON
-/// bytes over instead was green against a shape the shell never sends
-/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+/// 📦️ Passes the capability's Pack answer through unchanged, as the shell does across the ABI.
 pub async fn settle_extension_invocations<P: PluginApp>(
     app: &mut P,
     receiver: u32,
@@ -460,12 +456,7 @@ pub async fn settle_extension_invocations<P: PluginApp>(
     for effect in semio_plugin_reactor_tasks::tasks_extension_continuation::drain_queued_effects(receiver) {
         let semio_framework::kernel::Effect::InvokeExtension { req, extension_id, capability, request_json, .. } = effect else { continue };
         let pending = PendingExtensionInvocation { extension_id, capability, request_json };
-        let outcome = serve(&pending).and_then(|json| {
-            let text = String::from_utf8(json).map_err(|error| semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("extension.answer-not-json"), error.to_string()))?;
-            let value = semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(&text, semio_framework_pack_json::JsonMemberPolicy::Reject)
-                .map_err(|error| semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("extension.answer-not-json"), format!("the served capability answer is not JSON: {error}")))?;
-            Ok(store::pack_rt::encode_wire_value(&value))
-        });
+        let outcome = serve(&pending);
         let Ok((instance, action, args, original_fault)) = semio_plugin_reactor_tasks::tasks_extension_continuation::take_extension_response(req, outcome) else { continue };
         let meta = ActionMeta { instance_id: instance, ..action_meta.clone() };
         dispatch_fixture_response_action(app,&action,Some(args),original_fault,&mut Some(meta),identity,cx,mounted_policy.close).await?;

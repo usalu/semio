@@ -504,7 +504,9 @@ func (q ProvisionRequest) extract(row Distribution, archive, executable string) 
 func (q ProvisionRequest) probe(ctx context.Context, executable string) error {
 	deadline, stop := context.WithTimeout(ctx, 30*time.Second)
 	defer stop()
-	output, err := exec.CommandContext(deadline, executable, q.Runtime.Probe.Arguments...).Output()
+	command := exec.CommandContext(deadline, executable, q.Runtime.Probe.Arguments...)
+	hideChild(command, false)
+	output, err := command.Output()
 	actual := strings.TrimSpace(string(output))
 	if err != nil {
 		actual = err.Error()

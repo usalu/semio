@@ -7,10 +7,13 @@ extern crate semio_os_kernel as store;
 #[doc(hidden)]
 #[path = "../📥️natural-file/🦀️.rs"]
 pub mod natural_file_import;
+#[doc(hidden)]
+#[path = "../📋️clipboard/🦀️.rs"]
+pub mod clipboard_work;
 use semio_plugin_mounted_owner::MountedOwnerPhaseV1;
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_plugin_mounted_owner::MountedOwnerTurnV1;
-use semio_plugin_ownership::transient_publication::bounded_transient_store_disposer;
+use semio_plugin_transient_publication::transient_publication::bounded_transient_store_disposer;
 use semio_plugin_window_config::WindowConfigOwnerRegistry;
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_plugin_window_config::WindowConfigPack;
@@ -139,13 +142,13 @@ use semio_plugin_ownership::bounded_ownership::PluginLifecycleStep;
 use semio_plugin_decl_app::media_contract::ArtifactMediaExportJobRequest;
 use semio_plugin_decl_app::tool_contract::ArtifactReservedToolJob;
 use semio_plugin_ownership::sdk_fault::plugin_sdk_fault;
-use semio_plugin_ownership::store_lifecycle::ArtifactDisposal;
-use semio_plugin_ownership::store_lifecycle::ArtifactInitializationAdmission;
-use semio_plugin_ownership::store_lifecycle::{DocumentStoreLivePublication, DocumentStorePublicationToken};
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactDisposal;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactInitializationAdmission;
+use semio_plugin_store_lifecycle::store_lifecycle::{DocumentStoreLivePublication, DocumentStorePublicationToken};
 use semio_plugin_decl_emission::ArtifactMutationOutcome;
-use semio_plugin_ownership::store_lifecycle::bounded_config_store_disposer;
-use semio_plugin_ownership::store_lifecycle::bounded_document_store_disposer;
-use semio_plugin_ownership::store_lifecycle::bounded_document_store_initialization_job;
+use semio_plugin_store_lifecycle::store_lifecycle::bounded_config_store_disposer;
+use semio_plugin_store_lifecycle::store_lifecycle::bounded_document_store_disposer;
+use semio_plugin_store_lifecycle::store_lifecycle::bounded_document_store_initialization_job;
 use semio_plugin_decl_app::tool_contract::ArtifactBoundedFirstStepProof;
 use semio_plugin_decl_tool_contract::ArtifactInstanceOperationOwner;
 use semio_plugin_decl_tool_contract::ArtifactInstanceOperationOwnerHandle;

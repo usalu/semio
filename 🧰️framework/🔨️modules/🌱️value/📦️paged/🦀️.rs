@@ -159,6 +159,10 @@ impl<const N: usize> ToValue for PagedBytes<N> {
         DslValue::Bytes(self.to_vec_owner())
     }
 
+    fn to_value_controlled(&self, control: &mut crate::NativeEncodeControl<'_>) -> Result<DslValue, ValueError> {
+        self.to_vec_owner_controlled(control).map(DslValue::Bytes)
+    }
+
     fn value_at_path(&self, path: &[&str]) -> Result<DslValue, ValueError> {
         if path.is_empty() { Ok(self.to_value()) } else { Err(ValueError::new(crate::ValueRefusalKind::InvalidValue, format!("octets have no child `{}`", path[0]))) }
     }
@@ -175,6 +179,35 @@ impl<const N: usize> FromValue for PagedBytes<N> {
             value @ DslValue::Array(_) => crate::bytes::from_value(value).and_then(|value| Self::try_from_slice(&value)),
             other => Err(ValueError::new(crate::ValueRefusalKind::InvalidValue, format!("expected intrinsic octets or their JSON array projection, found {other:?}"))),
         }
+    }
+
+    fn from_value_controlled(value: &DslValue, control: &mut crate::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
+        control.checkpoint()?;
+        let items = match value {
+            DslValue::Bytes(items) => items,
+            DslValue::Array(_) => return PagedList::from_value_controlled(value, control).map(Self::from_retained_bytes),
+            _ => return Err(ValueError::literal(crate::ValueRefusalKind::InvalidValue, "expected intrinsic octets or their JSON array projection")),
+        };
+        if items.len() > N {
+            return Err(ValueError::literal(crate::ValueRefusalKind::InvalidValue, "octets exceed their paged capacity"));
+        }
+        control.scoped_stage(|control| {
+            control.begin_stage(items.len())?;
+            let mut output = Self::default();
+            while output.len() < items.len() {
+                let bytes = output.cold_reservation_bytes()?;
+                control.charge(bytes)?;
+                output.cold_reserve_page(bytes)?;
+                let placed = output.cold_push_slice(&items[output.len()..]);
+                control.advance(placed)?;
+            }
+            Ok(output)
+        })
+    }
+
+    fn default_value_controlled(control: &mut crate::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
+        control.checkpoint()?;
+        Ok(Self::default())
     }
 
     fn edit_value_at_path(&mut self, path: &[&str], edit: ValueEdit) -> Result<(), ValueError> {
@@ -470,6 +503,14 @@ impl<const N: usize> ToValue for PagedUtf8<N> {
         DslValue::String(self.to_string_owner())
     }
 
+    fn to_value_controlled(&self, control: &mut crate::NativeEncodeControl<'_>) -> Result<DslValue, ValueError> {
+        self.to_string_owner_controlled(control).map(DslValue::String)
+    }
+
+    fn to_object_key_controlled(&self, control: &mut crate::NativeEncodeControl<'_>) -> Result<String, ValueError> {
+        self.to_string_owner_controlled(control)
+    }
+
     fn value_at_path(&self, path: &[&str]) -> Result<DslValue, ValueError> {
         if path.is_empty() { Ok(self.to_value()) } else { Err(ValueError::new(crate::ValueRefusalKind::InvalidValue, format!("string has no child `{}`", path[0]))) }
     }
@@ -493,6 +534,16 @@ impl<const N: usize> FromValue for PagedUtf8<N> {
             DslValue::String(value) => Self::try_from_str_controlled(value, control),
             other => Err(ValueError::new(crate::ValueRefusalKind::InvalidValue, format!("expected a string, found {other:?}"))),
         }
+    }
+
+    fn from_object_key_controlled(key: &str, control: &mut crate::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
+        control.checkpoint()?;
+        Self::try_from_str_controlled(key, control)
+    }
+
+    fn default_value_controlled(control: &mut crate::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
+        control.checkpoint()?;
+        Ok(Self::default())
     }
 
     fn edit_value_at_path(&mut self, path: &[&str], edit: ValueEdit) -> Result<(), ValueError> {
@@ -683,6 +734,10 @@ impl<V: ToValue, const N: usize> ToValue for PagedMap<V, N> {
         DslValue::Object(self.iter().map(|(key, value)| (key.to_string_owner(), value.to_value())).collect())
     }
 
+    fn to_value_controlled(&self, control: &mut crate::NativeEncodeControl<'_>) -> Result<DslValue, ValueError> {
+        crate::controlled_map(self.iter(), control)
+    }
+
     fn value_at_path(&self, path: &[&str]) -> Result<DslValue, ValueError> {
         let Some((segment, rest)) = path.split_first() else { return Ok(self.to_value()) };
         self.get(*segment).ok_or_else(|| ValueError::new(crate::ValueRefusalKind::InvalidValue, format!("missing object key `{segment}`")))?.value_at_path(rest).map_err(|error| error.under(segment))
@@ -717,6 +772,47 @@ impl<V: FromValue, const N: usize> FromValue for PagedMap<V, N> {
             append_cold(&mut output, (PagedUtf8::try_from_str(&key)?, V::from_value(value).map_err(|error| error.under(key))?))?;
         }
         Self::from_retained_entries(output)
+    }
+
+    fn from_value_controlled(value: &DslValue, control: &mut crate::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
+        control.checkpoint()?;
+        let DslValue::Object(entries) = value else { return Err(ValueError::literal(crate::ValueRefusalKind::InvalidValue, "expected object")) };
+        if entries.len() > N {
+            return Err(ValueError::literal(crate::ValueRefusalKind::InvalidValue, "object exceeds its paged capacity"));
+        }
+        control.scoped_stage(|control| {
+            control.begin_stage(entries.len())?;
+            let mut output = Self::default().guard_decoded();
+            for (key, value) in entries {
+                if output.get().get(key.as_str()).is_some() {
+                    return Err(ValueError::literal(crate::ValueRefusalKind::InvalidValue, "duplicate object key").under(key));
+                }
+                let key_owner = PagedUtf8::try_from_str_controlled(key, control)?;
+                let child = V::from_value_controlled(value, control).map_err(|error| error.under(key))?.guard_decoded();
+                while !output.get().entries.has_reserved_slot() {
+                    let bytes = output.get().entries.next_allocation_bytes()?;
+                    control.charge(bytes)?;
+                    output.get_mut().entries.reserve_one_cold(bytes).map_err(|error| ValueError::from(error.refusal()))?;
+                }
+                output.get_mut().entries.push_reserved((key_owner, child.take())).map_err(|(_, value)| {
+                    V::retire_decoded(value);
+                    ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "paged map controlled append rejected its admitted slot")
+                })?;
+                control.step()?;
+            }
+            Ok(output.take())
+        })
+    }
+
+    fn default_value_controlled(control: &mut crate::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
+        control.checkpoint()?;
+        Ok(Self::default())
+    }
+
+    fn retire_decoded(mut self) {
+        while let Some((_, value)) = self.entries.pop() {
+            V::retire_decoded(value);
+        }
     }
 
     fn edit_value_at_path(&mut self, path: &[&str], edit: ValueEdit) -> Result<(), ValueError> {

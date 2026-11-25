@@ -3,7 +3,7 @@ import { spawn } from "node:child_process";
 import { mkdirSync, mkdtempSync, renameSync, rmSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
-import { validateJsonSchemaSubset } from "@semio-tech/schema-validator-ts";
+import { validateJsonSchemaSubset } from "../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 
 export interface SvgVideoRequestV1 {
@@ -85,7 +85,7 @@ export async function exportSvgVideoV1(input: SvgVideoRequestV1, control: SvgVid
     mkdirSync(request.artifactRoot, { recursive: true });
     staging = mkdtempSync(join(resolve(request.artifactRoot), "svg-video-stage-"));
     const artifact = join(staging, "animation.mp4");
-    encoder = spawn(control.encoderExecutable, ["-nostdin", "-loglevel", "error", "-y", "-f", "image2pipe", "-vcodec", "png", "-r", String(fps), "-i", "-", "-c:v", "libx264", "-pix_fmt", "yuv420p", artifact], { stdio: ["pipe", "ignore", "inherit"] });
+    encoder = spawn(control.encoderExecutable, ["-nostdin", "-loglevel", "error", "-y", "-f", "image2pipe", "-vcodec", "png", "-r", String(fps), "-i", "-", "-c:v", "libx264", "-pix_fmt", "yuv420p", artifact], { windowsHide: true, stdio: ["pipe", "ignore", "inherit"] });
     encoded = new Promise((accept) => { encoder!.once("error", accept); encoder!.once("close", (code) => accept(code === 0 ? undefined : new Error(`ffmpeg exited with code ${code}`))); });
     encoder.stdin!.on("error", () => {});
     options.progress?.({ completed: 0, total });

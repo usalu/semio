@@ -13,14 +13,62 @@
       "de": "Eine erwachsene Silbermöwe (Larus argentatus, 1,0 kg, Spannweite 1,45 m): aufrechtes Stehen, Segeln mit gespreizten Flügeln und ein Landeanflug bis zum Aufsetzen; Rig mit an den Hüften gelagertem Rumpf, zweiteiligem Hals, dreiteiligen Flügeln (Oberarm, Unterarm, Hand), die sich im wirklichen Z falten, Schwimmbeinen; Gefieder-Wärmemodell (41 Grad Kern), Nasenatmung, Rückenfahne, Atemmuster für Ruhe, Segeln und Abfangen. Jede Ansicht ist eine Projektion derselben räumlichen Kette, so sind gespreizte Flügel im Seitenaufriss verkürzt."
     },
     "tags": [
-      "animal",
-      "bird",
-      "gull",
-      "coastal",
-      "flight",
-      "glide",
-      "landing",
-      "urban"
+      {
+        "id": "animal",
+        "title": {
+          "en": "animal",
+          "de": "Tier"
+        }
+      },
+      {
+        "id": "bird",
+        "title": {
+          "en": "bird",
+          "de": "Vogel"
+        }
+      },
+      {
+        "id": "gull",
+        "title": {
+          "en": "gull",
+          "de": "Möwe"
+        }
+      },
+      {
+        "id": "coastal",
+        "title": {
+          "en": "coastal",
+          "de": "Küste"
+        }
+      },
+      {
+        "id": "flight",
+        "title": {
+          "en": "flight",
+          "de": "Flug"
+        }
+      },
+      {
+        "id": "glide",
+        "title": {
+          "en": "glide",
+          "de": "Gleitflug"
+        }
+      },
+      {
+        "id": "landing",
+        "title": {
+          "en": "landing",
+          "de": "Podest"
+        }
+      },
+      {
+        "id": "urban",
+        "title": {
+          "en": "urban",
+          "de": "urban"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage content worker NW-A2 (animals)",

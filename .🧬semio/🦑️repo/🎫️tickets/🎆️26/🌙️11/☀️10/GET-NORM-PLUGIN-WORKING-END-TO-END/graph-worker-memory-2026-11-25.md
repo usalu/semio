@@ -1,0 +1,11 @@
+# Fleet graph workers and desktop memory
+
+The graph-worker pool forced a first child when no local repository work was active. A 16 GiB fixture with just 1 MiB above the 2 GiB floor therefore started a worker estimated at 500 MiB or more. A second path started a child when the host capacity sampler threw. Both paths reproduced before correction. These findings explain how additional memory demand could be admitted. The available incident records do not identify the process that triggered the macOS application pause.
+
+The pool now enforces the same memory floor when serving remote work, includes running children in its calculation, and retries failed host samples on the next poll with zero new workers. A sampling error is recorded in pool status. On critical pressure or swap rates high enough to stop the pool, all of its children drain together. A busy child that misses the existing three-second grace period is terminated. The same decision loop resumes work after capacity recovers.
+
+Eight focused tests covered sizing, fit and recovery, an unavailable sampler, fixture agreement with an independent Python implementation, and the live runner using a stub launcher. Two further tests used three small graph workers, exercised foreground waiting and memory pressure independently, and verified the worker count fell to zero before resuming. These tests exercised the production code. The incident was never recreated on the host.
+
+At 20:23 CET, the macOS filesystem event daemon showed roughly 5.3 GiB RSS while the browser sweep was still waiting. Its allocation varied markedly across samples. The system diagnostic directory had earlier disk-write reports for Bun and bsdtar, and no November 25 jetsam report was found there. The archive report attributed 2.15 GB of file-backed writes over 140 seconds to bsdtar and recorded its footprint at roughly 10 MB. This evidence does not attribute the desktop pause to bsdtar, the event daemon, or any individual repository process. No operating system service was terminated.
+
+The CLI capacity help now describes the computed floor and hard pressure stops in English and German. Four stale remote-execution help snapshots also needed refreshing after the cancellation command was added. The bilingual snapshot check passed 175 assertions.

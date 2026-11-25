@@ -42,7 +42,7 @@ semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️
 semio-framework-value-derive = { path = "../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust" }
 
 [dev-dependencies]
-semio-plugin-ownership = { path = "../../../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
+semio-plugin-store-lifecycle = { path = "../../../../♻️lifecycle/🧱️owner/📦️packages/🦀️rust" }
 
 [features]
 artifact-app-testing = []

@@ -100,7 +100,7 @@ export async function runOwnerPoolV1({ totalMegabytes, root, environment, signal
     if (line.t === "ready") child.ready = true;
     if (line.t === "beat") { child.running = line.running ?? 0; if (line.stats) child.stats = line.stats; if (line.port) child.port = line.port; }
     else if (line.t === "done") { child.owners++; if (line.ok) { finishedAt.push(now()); shareStep("published"); } if (line.rss > 0) samples.push(line.rss); if (samples.length > 64) samples.splice(0, samples.length - 64); }
-    else if (line.t === "fail") { if (typeof line.code === "string" && line.code !== "") failures[line.code] = (failures[line.code] ?? 0) + 1; if (line.code === "unshareable" && shareStep("unshareable")) { say(ownerPoolTextV1("reasonUnshareable", { count: shareless.count, minutes: Math.round(P.unshareablePauseMilliseconds / 60000) })); } status?.update({ lastError: `${line.name}: ${line.message}`.slice(0, 300), failures: { ...failures } }); }
+    else if (line.t === "fail") { if (typeof line.code === "string" && line.code !== "") failures[line.code] = (failures[line.code] ?? 0) + 1; if (line.code === "unshareable" && shareStep("unshareable")) { say(ownerPoolTextV1("reasonUnshareable", { count: shareless.count, minutes: Math.round(P.unshareablePauseMilliseconds / 60000) })); } status?.update({ lastError: `${line.skipped === true ? "skipped, no build owner row / übersprungen, keine Build-Owner-Zeile: " : ""}${line.name}: ${line.message}`.slice(0, 300), failures: { ...failures } }); }
     else if (line.t === "end") { child.stats = line.stats ?? child.stats; child.port = line.port ?? child.port; child.reason = line.reason; child.message = line.message; }
   };
   const record = (child, code, target) => {
@@ -144,12 +144,18 @@ export async function runOwnerPoolV1({ totalMegabytes, root, environment, signal
       const open = active(), passed = orphans();
       let target = { children: 0, reason: null };
       if (work?.restartPending === true) target = { children: 0, reason: null };
-      else if (open.length > 0) { try { target = await capacity({ children: children.size + passed, childMegabytes: childMegabytes() }); } catch { target = { children: 1, reason: null }; } }
+      else if (open.length > 0) {
+        try { target = await capacity({ children: children.size + passed, childMegabytes: childMegabytes() }); }
+        catch (error) {
+          target = { children: 0, reason: "nothing-fits" };
+          status?.update({ lastError: String(error?.message ?? error).slice(0, 200) });
+        }
+      }
       shareStep("tick");
       if (shareless.until > 0) target = { children: 0, reason: "unshareable", minutes: Math.ceil((shareless.until - now()) / 60000) };
       lastTarget = target;
       const have = [...children].filter(child => !child.drained);
-      if (target.reason === "waiting" || target.reason === "unshareable") {
+      if (target.reason === "waiting" || target.reason === "unshareable" || target.reason === "pressure") {
         for (const child of children) {
           if (!child.drained) drain(child);
           child.yieldedMs ??= now();

@@ -624,7 +624,7 @@ message PdfImageMask {
 
 message PdfImageBody {
   string kind = 1;
-  repeated uint32 values = 2;
+  bytes packed = 2;
   PdfArtifactRef reference = 3;
 }
 

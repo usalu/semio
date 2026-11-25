@@ -228,11 +228,9 @@ async fn undo_redo_round_trips_through_the_wrapper() {
     crate::unit_tests::context::dispatch(&mut app, Iso16757Command::SetField(set_field::SetField { path: "selection.classId".into(), value_json: "\"class-wave3\"".to_string() })).await;
     let edited = app.snapshot().expect("projection");
     assert_ne!(edited, base, "the concrete setter moved the document");
-    semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "undo", None, &semio_plugin::artifact_app_laws::meta("local"), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("undo");
-    crate::unit_tests::context::settle(&mut app).await;
+    semio_plugin::artifact_app_laws::settle_history_verb(&mut app.0, "undo", semio_plugin::artifact_app_laws::meta("local").instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
     assert_eq!(app.snapshot().expect("projection"), base);
-    semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "redo", None, &semio_plugin::artifact_app_laws::meta("local"), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("redo");
-    crate::unit_tests::context::settle(&mut app).await;
+    semio_plugin::artifact_app_laws::settle_history_verb(&mut app.0, "redo", semio_plugin::artifact_app_laws::meta("local").instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
     assert_eq!(app.snapshot().expect("projection"), edited);
     crate::unit_tests::context::close(&mut app);
 }

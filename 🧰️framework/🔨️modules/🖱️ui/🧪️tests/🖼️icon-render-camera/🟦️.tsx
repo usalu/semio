@@ -1,6 +1,8 @@
 import type { IconRenderRequest } from "@semio-tech/ui-styling";
 import * as ui from "@semio-tech/ui-react/source";
 import Ajv from "ajv";
+import { render } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
 import fixture from "../🧫️fixtures/🖼️icon-render-camera/🔣️.json";
 /** 📐️ three.js itself, the oracle the icon camera is measured against (a test of the ui module, the library's interface owner). */
 import * as THREE from "three";
@@ -88,3 +90,24 @@ export async function registerIconRenderCameraTests(vitest: NonNullable<ImportMe
 }
 
 await registerIconRenderCameraTests(await import("vitest"), ui);
+
+describe("icon shot guide chrome", () => {
+  it.each(["rectangle", "ellipse"] as const)("docks the dimensions inside a %s crop", (shape) => {
+    const view = render(
+      <ui.LevelProvider level="pane">
+        <ui.IconShotFrame width={256} height={128} shape={shape} />
+      </ui.LevelProvider>,
+    );
+    const frame = view.container.querySelector("[data-icon-shot-frame]")!;
+    const chip = frame.querySelector("[data-glass-chip]")!;
+    expect(frame.getAttribute("data-icon-shot-shape")).toBe(shape);
+    expect(frame.classList.contains("overflow-hidden")).toBe(true);
+    expect(chip.getAttribute("data-level")).toBe("panel");
+    expect(chip.classList.contains("bottom-0")).toBe(true);
+    expect(chip.classList.contains("ui-glass")).toBe(true);
+    expect(chip.textContent).toBe("256×128");
+    view.rerender(<ui.IconShotFrame width={256} height={128} shape={shape} badge={false} />);
+    expect(view.container.querySelector("[data-glass-chip]")).toBeNull();
+    view.unmount();
+  });
+});

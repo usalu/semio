@@ -191,6 +191,32 @@ async fn results_window_renders_buckling_mode_shape_2d() {
     assert!(!scene.layers_json.contains("Buckling analysis error"), "unexpected buckling error: {}", scene.layers_json);
 }
 
+/// 🏷️ LAW: every results caption sits above the model's scene bounds and the stress legend to its
+/// right, so neither covers the structure or its reaction read-outs.
+#[semio_framework_async_macros::async_test]
+async fn results_captions_and_legend_sit_beside_the_model() {
+    let doc = demo();
+    let (left, top, right) = model_scene_bounds(&doc);
+    let dead = Some(semio_s_fem_analyses_model::encode_result_source_parts("loadCase", "dead").unwrap());
+    let mut checked = 0;
+    for display in [ResultDisplay { source_id: None, mode: DisplayMode::Modal(0) }, ResultDisplay { source_id: dead.clone(), mode: DisplayMode::Buckling(0) }, ResultDisplay { source_id: dead, mode: DisplayMode::Static }] {
+        let scene = results_scene(&doc, &display, &config::Fem2dResultsWindowConfig::default());
+        let layers: Vec<serde_json::Value> = serde_json::from_str(&scene.layers_json).expect("layers json");
+        for layer in &layers {
+            let id = layer["id"].as_str().unwrap_or("");
+            let (x, y) = (layer["transform"][4].as_f64().unwrap_or(f64::NAN), layer["transform"][5].as_f64().unwrap_or(f64::NAN));
+            if ["analysis-progress", "modal-caption", "buckling-caption", "eigen-result", "playback-caption"].contains(&id) {
+                assert!(y < top && x >= left, "{id} at ({x}, {y}) must sit above the model top {top}");
+                checked += 1;
+            }
+            if id.starts_with("legend-label") {
+                assert!(x > right, "{id} at x {x} must sit right of the model {right}");
+            }
+        }
+    }
+    assert!(checked >= 2, "the modal and buckling captions were checked");
+}
+
 #[semio_framework_async_macros::async_test]
 async fn interpolate_at_value_falls_back_to_midpoint_when_values_equal() {
     let (point, value) = interpolate_at_value(((0.0, 0.0), 5.0), ((10.0, 20.0), 5.0), 5.0);

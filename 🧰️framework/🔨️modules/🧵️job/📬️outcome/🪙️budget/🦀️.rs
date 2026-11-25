@@ -240,6 +240,8 @@ impl<I:OriginalReturnOrigin> OriginalReturnBudget<I>{
  pub fn origin(&self)->Option<I>{self.visible_origin().copied()}
  fn visible_origin(&self)->Option<&I>{if self.origin_commit.is_some(){self.origin_prior.as_ref()}else{self.origin.as_ref()}}
  /// 👁️ Borrows the committed table, never its pending birth owner.
+ /// 🏠️ Whether this Source acknowledges its own settled rows: local delivery, or a host that never hands published headers back.
+ pub fn acknowledges_locally(&self)->bool{self.delivery==OriginalReturnDelivery::LocalWitness||self.local_acknowledgement}
  pub fn table(&self)->Option<&OriginalReturnEscrowTable>{if self.table_commit.is_some(){None}else{self.table.as_deref()}}
  pub fn table_mut(&mut self)->Option<&mut OriginalReturnEscrowTable>{if self.table_commit.is_some(){None}else{self.table.as_deref_mut()}}
  /// 👁️ Borrows the table only with its exact accepted publication proof.

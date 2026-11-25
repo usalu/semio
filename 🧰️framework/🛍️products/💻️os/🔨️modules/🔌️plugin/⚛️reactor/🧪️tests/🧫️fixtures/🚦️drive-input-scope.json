@@ -1,0 +1,15 @@
+{
+  "$comment": "🚦️ Language-agnostic contract of the shard worker's host-input counter. One worker serves several actors; a worker-owned MoreWork drive of actor A must be cut by input addressed to A (a turn, a cancel, a dispose) and by input addressed to no actor (a heartbeat, an unknown kind), and must NOT be cut by traffic addressed to another actor. The step ceiling still bounds every drive, so another actor never starves. Owner: 📓️effect-loss-2026-11-25.md (brep's request actor ran one pump per crossing behind procedural's traffic).",
+  "driving": "flow-extension-brep#request",
+  "other": "procedural#1",
+  "rows": [
+    { "name": "no traffic leaves the drive alone", "traffic": [], "cut": false },
+    { "name": "traffic for another actor does not cut it", "traffic": [{ "actorId": "procedural#1", "kind": "turn" }, { "actorId": "procedural#1", "kind": "turn" }, { "actorId": "procedural#1", "kind": "dispose" }], "cut": false },
+    { "name": "input for the driving actor cuts it", "traffic": [{ "actorId": "flow-extension-brep#request", "kind": "turn" }], "cut": true },
+    { "name": "a cancel of the driving actor cuts it", "traffic": [{ "actorId": "flow-extension-brep#request", "kind": "cancelJob" }], "cut": true },
+    { "name": "a dispose of the driving actor cuts it", "traffic": [{ "actorId": "flow-extension-brep#request", "kind": "dispose" }], "cut": true },
+    { "name": "a message addressed to no actor cuts every drive", "traffic": [{ "kind": "attachHeartbeatSab" }], "cut": true },
+    { "name": "other traffic followed by own input still cuts it", "traffic": [{ "actorId": "procedural#1", "kind": "turn" }, { "actorId": "flow-extension-brep#request", "kind": "turn" }], "cut": true }
+  ],
+  "fairness": { "stepCeilingStillBoundsDrive": true }
+}

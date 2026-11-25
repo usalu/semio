@@ -198,8 +198,12 @@ fn inference_approval_encoding_consumes_the_framework_owned_contract() {
     let contract = hub_inference_approval_request_schema();
     let approval = HubInferenceApprovalRequestV1::new("00112233445566778899aabbccddeeff", &"ab".repeat(32));
     let validator = compile_validator(&contract).unwrap();
-    validate(&validator, &serde_json::to_value(&approval).unwrap()).unwrap();
-    let mut hostile = serde_json::to_value(&approval).unwrap();
+    let mut intent = serde_json::to_value(&approval).unwrap();
+    assert!(validate(&validator, &intent).is_err(), "the neutral arguments alone are not the owner-bound intent");
+    intent["schema"] = serde_json::json!("semio.hub.inference-approval/v1");
+    intent["version"] = serde_json::json!(1);
+    validate(&validator, &intent).unwrap();
+    let mut hostile = intent.clone();
     hostile["proposal"] = serde_json::json!("private bytes");
     assert!(validate(&validator, &hostile).is_err());
 }

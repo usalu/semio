@@ -1,0 +1,5 @@
+{
+  "request": { "kindId": "fixture.unknown", "input": {} },
+  "answer": { "error": "unknown kind: fixture.unknown" },
+  "wireHex": "011d756e6b6e6f776e206b696e643a20666978747572652e756e6b6e6f776e010111100107056572726f720600"
+}

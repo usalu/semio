@@ -8,11 +8,12 @@
  * @see ../🖨️representation/🟦️.ts — scale resolution
  * @see ../🗂️catalog/🟦️.ts — the availability rules `validateAsset` enforces
  */
-import { PLANAR_VIEWPOINTS, type Alternative, type Asset, type Slug, type Text, type UnavailableCause, type Viewpoint } from "../../🧬️schema/🟦️.ts";
+import { PLANAR_VIEWPOINTS, type Alternative, type Asset, type PrintProfile, type Slug, type Text, type UnavailableCause, type Viewpoint } from "../../🧬️schema/🟦️.ts";
 import type { DepictionOptions, DrawingScene, Fidelity, EvaluatedState, EvaluationQuery, RepresentationResolution, RepresentationSelector, View } from "../🔗️contracts/🟦️.ts";
-import { type Analysis, depict, resolveDepiction, transportOf } from "../🎨️depiction/🟦️.ts";
+import { type Analysis, depictResolved, resolveDepiction, transportOf } from "../🎨️depiction/🟦️.ts";
+import { type Shared, sharedOf } from "../🎨️depiction/🧩️shapes/🟦️.ts";
 import { ViewMissingError } from "../🎨️depiction/🔭️views/🟦️.ts";
-import { evaluate } from "../🧮️evaluation/🟦️.ts";
+import { evaluate, restated } from "../🧮️evaluation/🟦️.ts";
 import { RepresentationError } from "../🖨️representation/🟦️.ts";
 import { solveStructure } from "../🏗️structure/🟦️.ts";
 import { solveThermalAt } from "../🌡️thermal/🟦️.ts";
@@ -21,6 +22,9 @@ import { solveThermalAt } from "../🌡️thermal/🟦️.ts";
 export type DrawingSource = { readonly kind: "scale"; readonly denominator: number } | { readonly kind: "symbol"; readonly symbol: Slug; readonly denominator: number };
 
 
+
+/** 📽️ The viewpoints of one asset at one query, drawn from a source in a mode with options; see {@link drawingsOf}. */
+export type Drawings = (viewpoints: readonly Viewpoint[], source: DrawingSource, mode: View, options: DrawOptions) => MultiView;
 
 type Distributive<T, K extends PropertyKey> = T extends unknown ? Omit<T, K> : never;
 
@@ -71,14 +75,14 @@ function allUnavailable(mode: View, unavailable: Omit<DrawingUnavailable, "viewp
   return { state: null, analysis: {}, views: Object.fromEntries(viewpoints.map((viewpoint) => [viewpoint, { ...unavailable, viewpoint, mode }])) as Record<Viewpoint, DrawingUnavailable> };
 }
 
-function probe(asset: Asset, source: DrawingSource, mode: View, options: DrawOptions, viewpoints: readonly Viewpoint[]): { readonly resolution: Extract<RepresentationResolution, { readonly kind: "authored" | "symbol" }> } | { readonly refusal: MultiView } {
+function probe(asset: Asset, source: DrawingSource, mode: View, options: DrawOptions, viewpoints: readonly Viewpoint[], common: Common): { readonly resolution: Resolution } | { readonly refusal: MultiView } {
   if (source.kind === "symbol") {
     const symbol = asset.symbols.find((candidate) => candidate.id === source.symbol);
     if (symbol === undefined) return { refusal: allUnavailable(mode, { kind: "unavailable", code: "symbol-unknown", requested: source.denominator, cause: "no-such-symbol", reason: text(`Asset "${asset.id}" has no symbol "${source.symbol}".`, `Asset "${asset.id}" hat kein Symbol "${source.symbol}".`), limitingFeature: null, limitingSizeM: null, alternatives: [] }, viewpoints) };
     if (!(symbol.denominators as readonly number[]).includes(source.denominator)) return { refusal: allUnavailable(mode, { kind: "unavailable", code: "symbol-scale", requested: source.denominator, cause: "symbol-not-offered", reason: text(`Symbol "${symbol.id}" is offered at 1:${symbol.denominators.join(", 1:")}, not at 1:${source.denominator}.`, `Symbol "${symbol.id}" wird bei 1:${symbol.denominators.join(", 1:")} angeboten, nicht bei 1:${source.denominator}.`), limitingFeature: null, limitingSizeM: null, alternatives: [] }, viewpoints) };
   }
   try {
-    return { resolution: resolveDepiction(asset, { ...options, view: mode, viewpoint: "elevation", scale: { denominator: source.denominator }, representation: selectorOf(source) } as DepictionOptions) };
+    return { resolution: common.resolution(() => resolveDepiction(asset, { ...options, view: mode, viewpoint: "elevation", scale: { denominator: source.denominator }, representation: selectorOf(source) } as DepictionOptions)) };
   } catch (error) {
     if (!(error instanceof RepresentationError)) throw error;
     const r = error.resolution;
@@ -87,20 +91,83 @@ function probe(asset: Asset, source: DrawingSource, mode: View, options: DrawOpt
   }
 }
 
-function run(asset: Asset, query: EvaluationQuery, viewpoints: readonly Viewpoint[], source: DrawingSource, mode: View, options: DrawOptions): MultiView {
-  const picked = probe(asset, source, mode, options, viewpoints);
+type Resolution = Extract<RepresentationResolution, { readonly kind: "authored" | "symbol" }>;
+
+type Environment = DrawOptions["environmentTimeline"] | DrawOptions["environment"];
+
+/** 🧰️ What a drawing asks of the query it belongs to. */
+type Common = {
+  readonly shared: Shared;
+  readonly state: () => EvaluatedState;
+  readonly thermal: (environment: Environment) => ReturnType<typeof solveThermalAt>;
+  readonly structure: (state: EvaluatedState) => ReturnType<typeof solveStructure>;
+  readonly resolution: (make: () => Resolution) => Resolution;
+};
+
+/** 🧷️ A computation remembered by key with its outcome, the value or the error it throws. */
+function once<K, V>(): (key: K, make: () => V) => V {
+  const known = new Map<K, { readonly value: V } | { readonly error: unknown }>();
+  return (key, make) => {
+    let outcome = known.get(key);
+    if (outcome === undefined) {
+      try {
+        outcome = { value: make() };
+      } catch (error) {
+        outcome = { error };
+      }
+      known.set(key, outcome);
+    }
+    if ("error" in outcome) throw outcome.error;
+    return outcome.value;
+  };
+}
+
+/** 🗃️ The drawings of ONE query of an asset that is not written meanwhile, for a caller that draws it in several modes, languages or scales: the state is evaluated once per authored representation (every scale of its valid range draws the same shapes), the thermal field is solved once per environment, the structure once, the print suitability is asked once per scale and profile, and the prepared shapes, hatches and visible outlines are shared by the modes. Every drawing equals the one {@link resolveViewpoints} gives; what is remembered ends with the returned function. */
+export function drawingsOf(asset: Asset, query: EvaluationQuery): Drawings {
+  const shared = sharedOf();
+  const evaluated: EvaluatedState[] = [];
+  const stateOf = once<string, EvaluatedState>();
+  const thermalOf = once<Environment, ReturnType<typeof solveThermalAt>>();
+  const structureOf = once<EvaluatedState["shapes"], ReturnType<typeof solveStructure>>();
+  const resolutionOf = once<PrintProfile, (source: string, make: () => Resolution) => Resolution>();
+  return (viewpoints, source, mode, options) => {
+    const name = `${source.kind === "symbol" ? source.symbol : ""} 1:${source.denominator}`;
+    const resolve = resolutionOf(options.profile, () => once<string, Resolution>());
+    const selector = selectorOf(source);
+    const state = (): EvaluatedState => {
+      if (selector.kind === "scale")
+        for (const known of evaluated) {
+          const same = restated(known, selector);
+          if (same !== undefined) return same;
+        }
+      const fresh = evaluate(asset, query, selector);
+      evaluated.push(fresh);
+      return fresh;
+    };
+    return run(asset, query, viewpoints, source, mode, options, {
+      shared,
+      state: () => stateOf(selector.kind === "symbol" ? selector.symbol : name, state),
+      thermal: (environment) => thermalOf(environment, () => solveThermalAt(asset, query, environment)),
+      structure: (from) => structureOf(from.shapes, () => solveStructure(from)),
+      resolution: (make) => resolve(name, make),
+    });
+  };
+}
+
+function run(asset: Asset, query: EvaluationQuery, viewpoints: readonly Viewpoint[], source: DrawingSource, mode: View, options: DrawOptions, common: Common): MultiView {
+  const picked = probe(asset, source, mode, options, viewpoints, common);
   if ("refusal" in picked) return picked.refusal;
   const representation = selectorOf(source);
-  const state = evaluate(asset, query, representation);
+  const state = common.state();
   const environment = options.environmentTimeline ?? options.environment;
-  const thermal = mode === "thermal" ? solveThermalAt(asset, query, environment) : undefined;
-  const structure = mode === "forces" || mode === "moments" ? solveStructure(state) : undefined;
+  const thermal = mode === "thermal" ? common.thermal(environment) : undefined;
+  const structure = mode === "forces" || mode === "moments" ? common.structure(state) : undefined;
   const transport = (options.flow?.length ?? 0) > 0 ? transportOf({ asset, query }, options) : undefined;
   const analysis: Analysis = { ...(thermal ? { thermal } : {}), ...(structure ? { structure } : {}), ...(transport ? { transport } : {}) };
   const views = Object.fromEntries(
     viewpoints.map((viewpoint): [Viewpoint, ResolvedDrawing | DrawingUnavailable] => {
       try {
-        const scene = depict(state, { ...options, view: mode, viewpoint, scale: { denominator: source.denominator }, representation } as DepictionOptions, analysis);
+        const scene = depictResolved(state, { ...options, view: mode, viewpoint, scale: { denominator: source.denominator }, representation } as DepictionOptions, picked.resolution, analysis, common.shared);
         return [viewpoint, { kind: "drawing", viewpoint, mode, fidelity: scene.metadata.fidelity, resolution: picked.resolution, scene, state }];
       } catch (error) {
         if (!(error instanceof ViewMissingError)) throw error;
@@ -113,17 +180,17 @@ function run(asset: Asset, query: EvaluationQuery, viewpoints: readonly Viewpoin
 
 /** 🎥️ The three viewpoints of the asset at the query from one evaluated state and one analysis solve; each is a drawing or a typed unavailability. Throws only for programmer errors (unknown pose or clip, malformed asset). */
 export function resolveViews(asset: Asset, query: EvaluationQuery, source: DrawingSource, mode: View, options: DrawOptions): MultiView {
-  return run(asset, query, PLANAR_VIEWPOINTS, source, mode, options);
+  return drawingsOf(asset, query)(PLANAR_VIEWPOINTS, source, mode, options);
 }
 
 /** 🧊️ The axonometric view of the asset at the query together with any of the planar viewpoints, from one evaluated state and one analysis solve (the four-cell multiview sheet is composed from this): as {@link resolveViews}, for `viewpoints` chosen freely. `options.axonometric` picks the camera of the axonometric view. */
 export function resolveViewpoints(asset: Asset, query: EvaluationQuery, viewpoints: readonly Viewpoint[], source: DrawingSource, mode: View, options: DrawOptions): MultiView {
-  return run(asset, query, viewpoints, source, mode, options);
+  return drawingsOf(asset, query)(viewpoints, source, mode, options);
 }
 
 /** 🖼️ One viewpoint of the asset at the query, through the same single-state path as {@link resolveViews}: `resolveDrawing(asset, query, viewpoint, source, mode, options)`. */
 export function resolveDrawing(asset: Asset, query: EvaluationQuery, viewpoint: Viewpoint, source: DrawingSource, mode: View, options: DrawOptions): ResolvedDrawing | DrawingUnavailable {
-  return run(asset, query, [viewpoint], source, mode, options).views[viewpoint];
+  return drawingsOf(asset, query)([viewpoint], source, mode, options).views[viewpoint];
 }
 
 export { ViewMissingError } from "../🎨️depiction/🔭️views/🟦️.ts";

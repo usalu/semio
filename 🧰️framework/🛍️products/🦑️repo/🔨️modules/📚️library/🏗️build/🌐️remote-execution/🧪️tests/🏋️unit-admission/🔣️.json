@@ -7822,7 +7822,7 @@
    "megabytes": 256,
    "pressure": "normal",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 3904,
+   "spareMegabytes": 2144,
    "verdict": "admit"
   },
   {
@@ -7845,7 +7845,7 @@
    "megabytes": 256,
    "pressure": "warn",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 3904,
+   "spareMegabytes": 2144,
    "verdict": "admit"
   },
   {
@@ -7868,7 +7868,7 @@
    "megabytes": 256,
    "pressure": "warn",
    "swapOutMegabytesPerSecond": 52,
-   "spareMegabytes": 3904,
+   "spareMegabytes": 2144,
    "verdict": "pressure-warn"
   },
   {
@@ -7891,7 +7891,7 @@
    "megabytes": 256,
    "pressure": "critical",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 3904,
+   "spareMegabytes": 2144,
    "verdict": "pressure-critical"
   },
   {
@@ -7914,7 +7914,7 @@
    "megabytes": 512,
    "pressure": "normal",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 3904,
+   "spareMegabytes": 2144,
    "verdict": "admit"
   },
   {
@@ -7937,7 +7937,7 @@
    "megabytes": 512,
    "pressure": "warn",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 3904,
+   "spareMegabytes": 2144,
    "verdict": "admit"
   },
   {
@@ -7960,7 +7960,7 @@
    "megabytes": 512,
    "pressure": "warn",
    "swapOutMegabytesPerSecond": 52,
-   "spareMegabytes": 3904,
+   "spareMegabytes": 2144,
    "verdict": "pressure-warn"
   },
   {
@@ -7983,7 +7983,7 @@
    "megabytes": 512,
    "pressure": "critical",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 3904,
+   "spareMegabytes": 2144,
    "verdict": "pressure-critical"
   },
   {
@@ -8006,7 +8006,7 @@
    "megabytes": 1024,
    "pressure": "normal",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 3904,
+   "spareMegabytes": 2144,
    "verdict": "admit"
   },
   {
@@ -8029,7 +8029,7 @@
    "megabytes": 1024,
    "pressure": "warn",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 3904,
+   "spareMegabytes": 2144,
    "verdict": "admit"
   },
   {
@@ -8052,7 +8052,7 @@
    "megabytes": 1024,
    "pressure": "warn",
    "swapOutMegabytesPerSecond": 52,
-   "spareMegabytes": 3904,
+   "spareMegabytes": 2144,
    "verdict": "pressure-warn"
   },
   {
@@ -8075,7 +8075,7 @@
    "megabytes": 1024,
    "pressure": "critical",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 3904,
+   "spareMegabytes": 2144,
    "verdict": "pressure-critical"
   },
   {
@@ -8098,7 +8098,7 @@
    "megabytes": 2048,
    "pressure": "normal",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 3904,
+   "spareMegabytes": 2144,
    "verdict": "admit"
   },
   {
@@ -8121,7 +8121,7 @@
    "megabytes": 2048,
    "pressure": "warn",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 3904,
+   "spareMegabytes": 2144,
    "verdict": "pressure-warn"
   },
   {
@@ -8144,7 +8144,7 @@
    "megabytes": 2048,
    "pressure": "warn",
    "swapOutMegabytesPerSecond": 52,
-   "spareMegabytes": 3904,
+   "spareMegabytes": 2144,
    "verdict": "pressure-warn"
   },
   {
@@ -8167,7 +8167,7 @@
    "megabytes": 2048,
    "pressure": "critical",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 3904,
+   "spareMegabytes": 2144,
    "verdict": "pressure-critical"
   },
   {
@@ -8190,7 +8190,7 @@
    "megabytes": 6144,
    "pressure": "normal",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 3904,
+   "spareMegabytes": 2144,
    "verdict": "memory"
   },
   {
@@ -8213,7 +8213,7 @@
    "megabytes": 6144,
    "pressure": "warn",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 3904,
+   "spareMegabytes": 2144,
    "verdict": "pressure-warn"
   },
   {
@@ -8236,7 +8236,7 @@
    "megabytes": 6144,
    "pressure": "warn",
    "swapOutMegabytesPerSecond": 52,
-   "spareMegabytes": 3904,
+   "spareMegabytes": 2144,
    "verdict": "pressure-warn"
   },
   {
@@ -8259,7 +8259,7 @@
    "megabytes": 6144,
    "pressure": "critical",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 3904,
+   "spareMegabytes": 2144,
    "verdict": "pressure-critical"
   },
   {
@@ -9074,7 +9074,7 @@
    "megabytes": 256,
    "pressure": "normal",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 6808,
+   "spareMegabytes": 4096,
    "verdict": "admit"
   },
   {
@@ -9089,7 +9089,7 @@
    "megabytes": 256,
    "pressure": "warn",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 6808,
+   "spareMegabytes": 4096,
    "verdict": "admit"
   },
   {
@@ -9104,7 +9104,7 @@
    "megabytes": 256,
    "pressure": "warn",
    "swapOutMegabytesPerSecond": 52,
-   "spareMegabytes": 6808,
+   "spareMegabytes": 4096,
    "verdict": "pressure-warn"
   },
   {
@@ -9119,7 +9119,7 @@
    "megabytes": 256,
    "pressure": "critical",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 6808,
+   "spareMegabytes": 4096,
    "verdict": "pressure-critical"
   },
   {
@@ -9134,7 +9134,7 @@
    "megabytes": 512,
    "pressure": "normal",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 6808,
+   "spareMegabytes": 4096,
    "verdict": "admit"
   },
   {
@@ -9149,7 +9149,7 @@
    "megabytes": 512,
    "pressure": "warn",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 6808,
+   "spareMegabytes": 4096,
    "verdict": "admit"
   },
   {
@@ -9164,7 +9164,7 @@
    "megabytes": 512,
    "pressure": "warn",
    "swapOutMegabytesPerSecond": 52,
-   "spareMegabytes": 6808,
+   "spareMegabytes": 4096,
    "verdict": "pressure-warn"
   },
   {
@@ -9179,7 +9179,7 @@
    "megabytes": 512,
    "pressure": "critical",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 6808,
+   "spareMegabytes": 4096,
    "verdict": "pressure-critical"
   },
   {
@@ -9194,7 +9194,7 @@
    "megabytes": 1024,
    "pressure": "normal",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 6808,
+   "spareMegabytes": 4096,
    "verdict": "admit"
   },
   {
@@ -9209,7 +9209,7 @@
    "megabytes": 1024,
    "pressure": "warn",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 6808,
+   "spareMegabytes": 4096,
    "verdict": "admit"
   },
   {
@@ -9224,7 +9224,7 @@
    "megabytes": 1024,
    "pressure": "warn",
    "swapOutMegabytesPerSecond": 52,
-   "spareMegabytes": 6808,
+   "spareMegabytes": 4096,
    "verdict": "pressure-warn"
   },
   {
@@ -9239,7 +9239,7 @@
    "megabytes": 1024,
    "pressure": "critical",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 6808,
+   "spareMegabytes": 4096,
    "verdict": "pressure-critical"
   },
   {
@@ -9254,7 +9254,7 @@
    "megabytes": 2048,
    "pressure": "normal",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 6808,
+   "spareMegabytes": 4096,
    "verdict": "admit"
   },
   {
@@ -9269,7 +9269,7 @@
    "megabytes": 2048,
    "pressure": "warn",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 6808,
+   "spareMegabytes": 4096,
    "verdict": "pressure-warn"
   },
   {
@@ -9284,7 +9284,7 @@
    "megabytes": 2048,
    "pressure": "warn",
    "swapOutMegabytesPerSecond": 52,
-   "spareMegabytes": 6808,
+   "spareMegabytes": 4096,
    "verdict": "pressure-warn"
   },
   {
@@ -9299,7 +9299,7 @@
    "megabytes": 2048,
    "pressure": "critical",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 6808,
+   "spareMegabytes": 4096,
    "verdict": "pressure-critical"
   },
   {
@@ -9314,8 +9314,8 @@
    "megabytes": 6144,
    "pressure": "normal",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 6808,
-   "verdict": "admit"
+   "spareMegabytes": 4096,
+   "verdict": "memory"
   },
   {
    "totalMegabytes": 16384,
@@ -9329,7 +9329,7 @@
    "megabytes": 6144,
    "pressure": "warn",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 6808,
+   "spareMegabytes": 4096,
    "verdict": "pressure-warn"
   },
   {
@@ -9344,7 +9344,7 @@
    "megabytes": 6144,
    "pressure": "warn",
    "swapOutMegabytesPerSecond": 52,
-   "spareMegabytes": 6808,
+   "spareMegabytes": 4096,
    "verdict": "pressure-warn"
   },
   {
@@ -9359,7 +9359,7 @@
    "megabytes": 6144,
    "pressure": "critical",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 6808,
+   "spareMegabytes": 4096,
    "verdict": "pressure-critical"
   },
   {
@@ -9378,7 +9378,7 @@
    "megabytes": 256,
    "pressure": "normal",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 9540,
+   "spareMegabytes": 9216,
    "verdict": "admit"
   },
   {
@@ -9397,7 +9397,7 @@
    "megabytes": 256,
    "pressure": "warn",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 9540,
+   "spareMegabytes": 9216,
    "verdict": "admit"
   },
   {
@@ -9416,7 +9416,7 @@
    "megabytes": 256,
    "pressure": "warn",
    "swapOutMegabytesPerSecond": 52,
-   "spareMegabytes": 9540,
+   "spareMegabytes": 9216,
    "verdict": "pressure-warn"
   },
   {
@@ -9435,7 +9435,7 @@
    "megabytes": 256,
    "pressure": "critical",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 9540,
+   "spareMegabytes": 9216,
    "verdict": "pressure-critical"
   },
   {
@@ -9454,7 +9454,7 @@
    "megabytes": 512,
    "pressure": "normal",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 9540,
+   "spareMegabytes": 9216,
    "verdict": "admit"
   },
   {
@@ -9473,7 +9473,7 @@
    "megabytes": 512,
    "pressure": "warn",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 9540,
+   "spareMegabytes": 9216,
    "verdict": "admit"
   },
   {
@@ -9492,7 +9492,7 @@
    "megabytes": 512,
    "pressure": "warn",
    "swapOutMegabytesPerSecond": 52,
-   "spareMegabytes": 9540,
+   "spareMegabytes": 9216,
    "verdict": "pressure-warn"
   },
   {
@@ -9511,7 +9511,7 @@
    "megabytes": 512,
    "pressure": "critical",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 9540,
+   "spareMegabytes": 9216,
    "verdict": "pressure-critical"
   },
   {
@@ -9530,7 +9530,7 @@
    "megabytes": 1024,
    "pressure": "normal",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 9540,
+   "spareMegabytes": 9216,
    "verdict": "admit"
   },
   {
@@ -9549,7 +9549,7 @@
    "megabytes": 1024,
    "pressure": "warn",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 9540,
+   "spareMegabytes": 9216,
    "verdict": "admit"
   },
   {
@@ -9568,7 +9568,7 @@
    "megabytes": 1024,
    "pressure": "warn",
    "swapOutMegabytesPerSecond": 52,
-   "spareMegabytes": 9540,
+   "spareMegabytes": 9216,
    "verdict": "pressure-warn"
   },
   {
@@ -9587,7 +9587,7 @@
    "megabytes": 1024,
    "pressure": "critical",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 9540,
+   "spareMegabytes": 9216,
    "verdict": "pressure-critical"
   },
   {
@@ -9606,7 +9606,7 @@
    "megabytes": 2048,
    "pressure": "normal",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 9540,
+   "spareMegabytes": 9216,
    "verdict": "admit"
   },
   {
@@ -9625,7 +9625,7 @@
    "megabytes": 2048,
    "pressure": "warn",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 9540,
+   "spareMegabytes": 9216,
    "verdict": "pressure-warn"
   },
   {
@@ -9644,7 +9644,7 @@
    "megabytes": 2048,
    "pressure": "warn",
    "swapOutMegabytesPerSecond": 52,
-   "spareMegabytes": 9540,
+   "spareMegabytes": 9216,
    "verdict": "pressure-warn"
   },
   {
@@ -9663,27 +9663,8 @@
    "megabytes": 2048,
    "pressure": "critical",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 9540,
+   "spareMegabytes": 9216,
    "verdict": "pressure-critical"
-  },
-  {
-   "totalMegabytes": 16384,
-   "availableMegabytes": 12000,
-   "held": [
-    {
-     "megabytes": 512,
-     "usedMegabytes": 512
-    },
-    {
-     "megabytes": 512,
-     "usedMegabytes": 100
-    }
-   ],
-   "megabytes": 6144,
-   "pressure": "normal",
-   "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 9540,
-   "verdict": "admit"
   },
   {
    "totalMegabytes": 16384,
@@ -9699,10 +9680,10 @@
     }
    ],
    "megabytes": 6144,
-   "pressure": "warn",
+   "pressure": "normal",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 9540,
-   "verdict": "pressure-warn"
+   "spareMegabytes": 9216,
+   "verdict": "admit"
   },
   {
    "totalMegabytes": 16384,
@@ -9719,8 +9700,27 @@
    ],
    "megabytes": 6144,
    "pressure": "warn",
+   "swapOutMegabytesPerSecond": 0,
+   "spareMegabytes": 9216,
+   "verdict": "pressure-warn"
+  },
+  {
+   "totalMegabytes": 16384,
+   "availableMegabytes": 12000,
+   "held": [
+    {
+     "megabytes": 512,
+     "usedMegabytes": 512
+    },
+    {
+     "megabytes": 512,
+     "usedMegabytes": 100
+    }
+   ],
+   "megabytes": 6144,
+   "pressure": "warn",
    "swapOutMegabytesPerSecond": 52,
-   "spareMegabytes": 9540,
+   "spareMegabytes": 9216,
    "verdict": "pressure-warn"
   },
   {
@@ -9739,7 +9739,7 @@
    "megabytes": 6144,
    "pressure": "critical",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 9540,
+   "spareMegabytes": 9216,
    "verdict": "pressure-critical"
   },
   {
@@ -9762,7 +9762,7 @@
    "megabytes": 256,
    "pressure": "normal",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 6240,
+   "spareMegabytes": 2144,
    "verdict": "admit"
   },
   {
@@ -9785,7 +9785,7 @@
    "megabytes": 256,
    "pressure": "warn",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 6240,
+   "spareMegabytes": 2144,
    "verdict": "admit"
   },
   {
@@ -9808,7 +9808,7 @@
    "megabytes": 256,
    "pressure": "warn",
    "swapOutMegabytesPerSecond": 52,
-   "spareMegabytes": 6240,
+   "spareMegabytes": 2144,
    "verdict": "pressure-warn"
   },
   {
@@ -9831,7 +9831,7 @@
    "megabytes": 256,
    "pressure": "critical",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 6240,
+   "spareMegabytes": 2144,
    "verdict": "pressure-critical"
   },
   {
@@ -9854,7 +9854,7 @@
    "megabytes": 512,
    "pressure": "normal",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 6240,
+   "spareMegabytes": 2144,
    "verdict": "admit"
   },
   {
@@ -9877,7 +9877,7 @@
    "megabytes": 512,
    "pressure": "warn",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 6240,
+   "spareMegabytes": 2144,
    "verdict": "admit"
   },
   {
@@ -9900,7 +9900,7 @@
    "megabytes": 512,
    "pressure": "warn",
    "swapOutMegabytesPerSecond": 52,
-   "spareMegabytes": 6240,
+   "spareMegabytes": 2144,
    "verdict": "pressure-warn"
   },
   {
@@ -9923,7 +9923,7 @@
    "megabytes": 512,
    "pressure": "critical",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 6240,
+   "spareMegabytes": 2144,
    "verdict": "pressure-critical"
   },
   {
@@ -9946,7 +9946,7 @@
    "megabytes": 1024,
    "pressure": "normal",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 6240,
+   "spareMegabytes": 2144,
    "verdict": "admit"
   },
   {
@@ -9969,7 +9969,7 @@
    "megabytes": 1024,
    "pressure": "warn",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 6240,
+   "spareMegabytes": 2144,
    "verdict": "admit"
   },
   {
@@ -9992,7 +9992,7 @@
    "megabytes": 1024,
    "pressure": "warn",
    "swapOutMegabytesPerSecond": 52,
-   "spareMegabytes": 6240,
+   "spareMegabytes": 2144,
    "verdict": "pressure-warn"
   },
   {
@@ -10015,7 +10015,7 @@
    "megabytes": 1024,
    "pressure": "critical",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 6240,
+   "spareMegabytes": 2144,
    "verdict": "pressure-critical"
   },
   {
@@ -10038,7 +10038,7 @@
    "megabytes": 2048,
    "pressure": "normal",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 6240,
+   "spareMegabytes": 2144,
    "verdict": "admit"
   },
   {
@@ -10061,7 +10061,7 @@
    "megabytes": 2048,
    "pressure": "warn",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 6240,
+   "spareMegabytes": 2144,
    "verdict": "pressure-warn"
   },
   {
@@ -10084,7 +10084,7 @@
    "megabytes": 2048,
    "pressure": "warn",
    "swapOutMegabytesPerSecond": 52,
-   "spareMegabytes": 6240,
+   "spareMegabytes": 2144,
    "verdict": "pressure-warn"
   },
   {
@@ -10107,31 +10107,8 @@
    "megabytes": 2048,
    "pressure": "critical",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 6240,
+   "spareMegabytes": 2144,
    "verdict": "pressure-critical"
-  },
-  {
-   "totalMegabytes": 16384,
-   "availableMegabytes": 12000,
-   "held": [
-    {
-     "megabytes": 2048,
-     "usedMegabytes": 0
-    },
-    {
-     "megabytes": 2048,
-     "usedMegabytes": 2048
-    },
-    {
-     "megabytes": 2048,
-     "usedMegabytes": 4000
-    }
-   ],
-   "megabytes": 6144,
-   "pressure": "normal",
-   "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 6240,
-   "verdict": "admit"
   },
   {
    "totalMegabytes": 16384,
@@ -10151,10 +10128,10 @@
     }
    ],
    "megabytes": 6144,
-   "pressure": "warn",
+   "pressure": "normal",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 6240,
-   "verdict": "pressure-warn"
+   "spareMegabytes": 2144,
+   "verdict": "memory"
   },
   {
    "totalMegabytes": 16384,
@@ -10175,8 +10152,31 @@
    ],
    "megabytes": 6144,
    "pressure": "warn",
+   "swapOutMegabytesPerSecond": 0,
+   "spareMegabytes": 2144,
+   "verdict": "pressure-warn"
+  },
+  {
+   "totalMegabytes": 16384,
+   "availableMegabytes": 12000,
+   "held": [
+    {
+     "megabytes": 2048,
+     "usedMegabytes": 0
+    },
+    {
+     "megabytes": 2048,
+     "usedMegabytes": 2048
+    },
+    {
+     "megabytes": 2048,
+     "usedMegabytes": 4000
+    }
+   ],
+   "megabytes": 6144,
+   "pressure": "warn",
    "swapOutMegabytesPerSecond": 52,
-   "spareMegabytes": 6240,
+   "spareMegabytes": 2144,
    "verdict": "pressure-warn"
   },
   {
@@ -10199,7 +10199,7 @@
    "megabytes": 6144,
    "pressure": "critical",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 6240,
+   "spareMegabytes": 2144,
    "verdict": "pressure-critical"
   },
   {
@@ -10214,7 +10214,7 @@
    "megabytes": 256,
    "pressure": "normal",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 6138,
+   "spareMegabytes": 5226,
    "verdict": "admit"
   },
   {
@@ -10229,7 +10229,7 @@
    "megabytes": 256,
    "pressure": "warn",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 6138,
+   "spareMegabytes": 5226,
    "verdict": "admit"
   },
   {
@@ -10244,7 +10244,7 @@
    "megabytes": 256,
    "pressure": "warn",
    "swapOutMegabytesPerSecond": 52,
-   "spareMegabytes": 6138,
+   "spareMegabytes": 5226,
    "verdict": "pressure-warn"
   },
   {
@@ -10259,7 +10259,7 @@
    "megabytes": 256,
    "pressure": "critical",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 6138,
+   "spareMegabytes": 5226,
    "verdict": "pressure-critical"
   },
   {
@@ -10274,7 +10274,7 @@
    "megabytes": 512,
    "pressure": "normal",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 6138,
+   "spareMegabytes": 5226,
    "verdict": "admit"
   },
   {
@@ -10289,7 +10289,7 @@
    "megabytes": 512,
    "pressure": "warn",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 6138,
+   "spareMegabytes": 5226,
    "verdict": "admit"
   },
   {
@@ -10304,7 +10304,7 @@
    "megabytes": 512,
    "pressure": "warn",
    "swapOutMegabytesPerSecond": 52,
-   "spareMegabytes": 6138,
+   "spareMegabytes": 5226,
    "verdict": "pressure-warn"
   },
   {
@@ -10319,7 +10319,7 @@
    "megabytes": 512,
    "pressure": "critical",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 6138,
+   "spareMegabytes": 5226,
    "verdict": "pressure-critical"
   },
   {
@@ -10334,7 +10334,7 @@
    "megabytes": 1024,
    "pressure": "normal",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 6138,
+   "spareMegabytes": 5226,
    "verdict": "admit"
   },
   {
@@ -10349,7 +10349,7 @@
    "megabytes": 1024,
    "pressure": "warn",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 6138,
+   "spareMegabytes": 5226,
    "verdict": "admit"
   },
   {
@@ -10364,7 +10364,7 @@
    "megabytes": 1024,
    "pressure": "warn",
    "swapOutMegabytesPerSecond": 52,
-   "spareMegabytes": 6138,
+   "spareMegabytes": 5226,
    "verdict": "pressure-warn"
   },
   {
@@ -10379,7 +10379,7 @@
    "megabytes": 1024,
    "pressure": "critical",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 6138,
+   "spareMegabytes": 5226,
    "verdict": "pressure-critical"
   },
   {
@@ -10394,7 +10394,7 @@
    "megabytes": 2048,
    "pressure": "normal",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 6138,
+   "spareMegabytes": 5226,
    "verdict": "admit"
   },
   {
@@ -10409,7 +10409,7 @@
    "megabytes": 2048,
    "pressure": "warn",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 6138,
+   "spareMegabytes": 5226,
    "verdict": "pressure-warn"
   },
   {
@@ -10424,7 +10424,7 @@
    "megabytes": 2048,
    "pressure": "warn",
    "swapOutMegabytesPerSecond": 52,
-   "spareMegabytes": 6138,
+   "spareMegabytes": 5226,
    "verdict": "pressure-warn"
   },
   {
@@ -10439,7 +10439,7 @@
    "megabytes": 2048,
    "pressure": "critical",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 6138,
+   "spareMegabytes": 5226,
    "verdict": "pressure-critical"
   },
   {
@@ -10454,7 +10454,7 @@
    "megabytes": 6144,
    "pressure": "normal",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 6138,
+   "spareMegabytes": 5226,
    "verdict": "memory"
   },
   {
@@ -10469,7 +10469,7 @@
    "megabytes": 6144,
    "pressure": "warn",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 6138,
+   "spareMegabytes": 5226,
    "verdict": "pressure-warn"
   },
   {
@@ -10484,7 +10484,7 @@
    "megabytes": 6144,
    "pressure": "warn",
    "swapOutMegabytesPerSecond": 52,
-   "spareMegabytes": 6138,
+   "spareMegabytes": 5226,
    "verdict": "pressure-warn"
   },
   {
@@ -10499,7 +10499,7 @@
    "megabytes": 6144,
    "pressure": "critical",
    "swapOutMegabytesPerSecond": 0,
-   "spareMegabytes": 6138,
+   "spareMegabytes": 5226,
    "verdict": "pressure-critical"
   }
  ],

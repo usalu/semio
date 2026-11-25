@@ -27,7 +27,7 @@ import type { Asset, Language, PlanarViewpoint } from "../../🧬️schema/🟦�
 import type { EvaluatedState, View } from "../../🔨️modules/🔗️contracts/🟦️.ts";
 import { evaluate } from "../../🔨️modules/🧮️evaluation/🟦️.ts";
 import { resolveViews } from "../../🔨️modules/🔭️multiview/🟦️.ts";
-import { UNHATCHED_PERCENT, VIEWPOINT_LIST, authoredOf, cueFinding, derivedFindings, drawOptions, geometryFindings, loadCatalog, paperFindings, scaleSelector, toleranceM } from "./🧰️.ts";
+import { UNHATCHED_PERCENT, VIEWPOINT_LIST, authoredOf, cueFinding, derivedFindings, drawOptions, geometryFindings, loadAsset, mapCatalog, paperFindings, scaleSelector, toleranceM } from "./🧰️.ts";
 import { distanceToShapes } from "./⚓️landmarks.ts";
 
 /** 🏷️ The version of a report file. */
@@ -220,13 +220,13 @@ async function main(): Promise<number> {
     console.error(`${TEXT.usage.en}\n${TEXT.usage.de}`);
     return 2;
   }
-  const catalog = loadCatalog();
-  const unknown = ids.filter((id) => !catalog.some((asset) => asset.id === id));
+  const listed = mapCatalog((asset) => ({ id: asset.id, category: asset.category }), ids.length === 0 ? undefined : ids);
+  const unknown = ids.filter((id) => !listed.some((asset) => asset.id === id));
   if (unknown.length > 0) {
     console.error(`${TEXT.unknown[language]}: ${unknown.join(", ")}`);
     return 2;
   }
-  const selection = catalog.filter((asset) => (ids.length === 0 || ids.includes(asset.id)) && (categories === undefined || categories.includes(asset.category)));
+  const selection = listed.filter((asset) => categories === undefined || categories.includes(asset.category));
   const out = options.get("out") === undefined ? undefined : resolve(options.get("out")!);
   if (out !== undefined && switches.has("fresh")) writeFileSync(out, "");
   const known = new Map<string, ScanRow>(out !== undefined && existsSync(out) ? readFileSync(out, "utf8").split("\n").filter(Boolean).map((line) => JSON.parse(line) as ScanRow).map((row) => [row.id, row]) : []);
@@ -237,9 +237,14 @@ async function main(): Promise<number> {
   const rows: ScanRow[] = [];
   const clock = (seconds: number): string => `${String(Math.floor(seconds / 3600)).padStart(2, "0")}:${String(Math.floor((seconds % 3600) / 60)).padStart(2, "0")}:${String(Math.floor(seconds % 60)).padStart(2, "0")}`;
   if (selection.length > todo.length) console.error(`[scan] ${selection.length - todo.length} ${TEXT.skipped[language]}`);
-  for (const [index, asset] of todo.entries()) {
+  for (const [index, { id }] of todo.entries()) {
     await new Promise<void>((turn) => setImmediate(turn));
     if (cancelled) break;
+    const asset = loadAsset(id);
+    if (asset === undefined) {
+      console.error(`${TEXT.unknown[language]}: ${id}`);
+      return 2;
+    }
     const row = scanAsset(asset);
     rows.push(row);
     known.set(row.id, row);

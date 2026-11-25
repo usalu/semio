@@ -3,7 +3,7 @@ import {frameworkOsViteArtifactPathsV1} from "@semio-tech/framework-os-dev/build
 import { builtPluginModulesRootIn } from "@semio-tech/framework-os-dev/activation";
 import { COMPONENT_MODULE_DIRECTORIES } from "@semio-tech/s-dev-catalog-ts/generated/plugins";
 import { join } from "node:path";
-import { DEMONSTRATOR_RUNTIME_TARGETS } from "../🟦️.ts";
+import { DEMONSTRATOR_RUNTIME_TARGETS, demonstratorShippedComponents } from "../🟦️.ts";
 import { runtimeComponentClosure } from "@semio-tech/repo-lib/inventory/tooling";
 import { PLUGIN_BUILD_TARGETS, EXTENSION_TARGETS } from "@semio-tech/s-dev-catalog-ts/generated/plugins";
 import { MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, MODULE_VENDOR_DIRECTORY, MODULE_SHARD_DIRECTORY, moduleDirectoryName, componentModuleOwnerV1 } from "@semio-tech/plugin-registry/deployment";
@@ -12,7 +12,7 @@ import type { BrowserArtifactSource } from "@semio-tech/framework-plugin/browser
 
 /** 🧩️ Resolves the complete component union shared by distribution and development activation. */
 export function demonstratorRuntimeComponentIds(): string[] {
-  return runtimeComponentClosure([...PLUGIN_BUILD_TARGETS, ...EXTENSION_TARGETS], DEMONSTRATOR_RUNTIME_TARGETS.map(row => row.pluginId));
+  return runtimeComponentClosure([...PLUGIN_BUILD_TARGETS, ...demonstratorShippedComponents(EXTENSION_TARGETS)], DEMONSTRATOR_RUNTIME_TARGETS.map(row => row.pluginId));
 }
 
 /** 🎪️ Selects only immutable component, browser-support and font outputs for the Demonstrator. */

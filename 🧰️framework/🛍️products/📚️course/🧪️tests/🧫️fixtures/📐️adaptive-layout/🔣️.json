@@ -15,7 +15,7 @@
     { "part": "course-sort", "room": "course-rows", "from": 56, "below": "what a guess reads as below its field", "above": "what a guess reads as beside its field, in a column that is always there" },
     { "part": "course-slot", "room": "course-rows", "from": 30, "below": "the select and the remove button below the label", "above": "the label left, the select and the remove button right of one line" },
     { "part": "course-match", "room": "course-task", "from": 64, "below": "the value cards above the rows", "above": "the value cards in a column beside the rows" },
-    { "part": "course-result", "room": "course-card", "from": 84, "below": "a task's figures below its tables", "above": "a task's figures beside its tables" },
+    { "part": "course-plot", "room": "course-records", "from": 64, "below": "a figure's items below each other, a row each", "above": "a figure's items side by side as tiles" },
     { "part": "course-tiles", "room": "course-card", "from": 28, "below": "the pets' deeds in two columns", "above": "the pets' deeds in four columns" },
     { "part": "course-kinds", "room": "course-card", "from": 44, "below": "the ways to appear below each other", "above": "the ways to appear side by side" },
     { "part": "course-kinds", "room": "course-card", "from": 64, "below": "three ways to appear side by side", "above": "the four challenges side by side" }

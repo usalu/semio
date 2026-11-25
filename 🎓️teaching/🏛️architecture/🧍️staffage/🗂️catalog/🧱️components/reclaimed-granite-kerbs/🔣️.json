@@ -13,14 +13,62 @@
    "de": "Acht gebrauchte Granitbordsteine der historischen DIN 482 Form A, 150 x 300 mm und 0,80 bis 1,20 m lang, mit gestockter Oberseite und Ansichtsfläche, abgenutzten Kanten und Krusten des alten Bettungsbetons, stehend in zwei Lagen auf Kanthölzern gelagert; einer wird in einer Scheren-Bordsteinzange gehoben, drei sind als Reihe in einem neuen Betonbett mit Rückenstütze unter einem Rad von 45 kN versetzt."
   },
   "tags": [
-   "component",
-   "reclaimed",
-   "granite",
-   "natural-stone",
-   "kerb",
-   "paving",
-   "landscape",
-   "lifting"
+   {
+    "id": "component",
+    "title": {
+     "en": "component",
+     "de": "Bauteil"
+    }
+   },
+   {
+    "id": "reclaimed",
+    "title": {
+     "en": "reclaimed",
+     "de": "wiederverwendet"
+    }
+   },
+   {
+    "id": "granite",
+    "title": {
+     "en": "granite",
+     "de": "Granit"
+    }
+   },
+   {
+    "id": "natural-stone",
+    "title": {
+     "en": "natural stone",
+     "de": "Naturstein"
+    }
+   },
+   {
+    "id": "kerb",
+    "title": {
+     "en": "kerb",
+     "de": "Bordstein"
+    }
+   },
+   {
+    "id": "paving",
+    "title": {
+     "en": "paving",
+     "de": "Pflaster"
+    }
+   },
+   {
+    "id": "landscape",
+    "title": {
+     "en": "landscape",
+     "de": "Landschaft"
+    }
+   },
+   {
+    "id": "lifting",
+    "title": {
+     "en": "lifting",
+     "de": "Heben"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage component authors",

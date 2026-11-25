@@ -1,0 +1,4 @@
+#!/bin/zsh
+# 🚌️ One grant of the machine-wide memory queue for a chain of tool processes that run strictly one after the other (the queue is crowded: a dry run of six small processes would wait six times): `QMEM=<MB> QTIME=<s> qsh <script.sh> <args…>` runs `repo capacity run --memory=<MB> -- timeout <s> zsh <script.sh> <args…>` from the repo root with the caller's working directory restored and MH3_GRANT=1 set; the scripts `in-*.sh` of this folder refuse to run without it. Reserve the need of the heaviest process of the chain (2500 MB for gate, measure, vitest; 5000 for the check CLI; 7000 for the matrix). Defaults: 2500 MB, 3600 s.
+dir="$PWD"
+cd /Users/ueli/Documents/semio && exec repo capacity run --memory=${QMEM:-2500} -- timeout ${QTIME:-3600} /usr/bin/env MH3_GRANT=1 /bin/zsh -c 'cd "$1" && shift && exec /bin/zsh "$@"' _ "$dir" "$@"

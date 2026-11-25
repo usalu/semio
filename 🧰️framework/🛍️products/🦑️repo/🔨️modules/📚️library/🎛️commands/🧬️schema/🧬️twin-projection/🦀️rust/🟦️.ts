@@ -1,6 +1,6 @@
 /** 🦀️ Renders the Rust structs of a schema module from its JSON Schema and splices them into the module's `🦀️.rs`, leaving every other item (impls, enums, mounts) untouched: the payload struct of a mutation leaf (the leaf template) and every record struct a schema annotates with `x-semio-rust.derive` (root, snapshot, diff and shared records).
  *
- * Extension keywords: `x-semio-rust` on a record (`doc`, `derive`, `attributes`, `name`) and on a property (`doc`, `attributes`, `type`, `name`); `x-semio-dsl` on a record (`keyword`, `id`, `layout`) and on a property (`unit`, `table`, `statements`, `block`) rendered as `#[dsl(..)]`; `x-semio-state` on a property rendered as `#[state(..)]`. A property states a Rust type that is not derivable (a crate path, an enum) with `x-semio-rust: { "type": "…" }`.
+ * Extension keywords: `x-semio-rust` on a record (`doc`, `derive`, `attributes`, `name`, `file`) and on a property (`doc`, `attributes`, `type`, `name`); `file` selects the record's Rust file relative to the schema. `x-semio-dsl` on a record (`keyword`, `id`, `layout`) and on a property (`unit`, `table`, `statements`, `block`) renders as `#[dsl(..)]`; `x-semio-state` on a property renders as `#[state(..)]`. A property states a Rust type that is not derivable (a crate path, an enum) with `x-semio-rust: { "type": "…" }`.
  * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧬️schema/🧬️twin-projection/🟦️.ts
  */
 import { sep } from "node:path";

@@ -1,0 +1,20 @@
+\documentclass[type=report,theme=dark,language=en]{semio}
+\title{Print chip specimen}
+\author{Semio}
+\begin{document}
+\part{Glass and opaque chips}
+\chapter{Glass chips}
+\section{Section with glass}
+The heading shares the frame and its number remains linked.
+\subsubsection{Nested heading parent}
+\begin{SemioNest}
+\paragraph{Nested glass chip}
+A nested chip carries the complete number in the appearance foreground.
+\end{SemioNest}
+\newpage
+\SemioChipTransparency{false}
+\section{Opaque section}
+The opaque surface uses the same level and foreground veil flattened onto the canvas.
+\SemioProjectHeadingSilent{Silent project heading}{project-chip-probe}
+\SemioTableLong{Opaque table}{0.5,0.5}{Title & Number}{\SemioTableRow{First & 1}}
+\end{document}

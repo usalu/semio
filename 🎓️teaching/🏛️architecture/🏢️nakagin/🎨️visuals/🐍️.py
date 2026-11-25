@@ -1687,7 +1687,7 @@ class NakaginDrawing:
 
     def _chip(self, string: str, point, color=DATA):
         label = self._text(string, point, color=color)
-        chip = _engine.RoundedRectangle(corner_radius=0.05, width=label.width + 0.14, height=label.height + 0.1, stroke_width=0, fill_color=BACKGROUND, fill_opacity=0.82).move_to(label)
+        chip = _art.window_frame(label.width + 0.14, label.height + 0.1, color=color, stroke_width=_d.W_HAIR, glass=True).move_to(label)
         return _engine.VGroup(chip, label)
 
     def analytical_box_axon(self, width, length, height, *, at=(0, 0, 0), scale=.62, view="axon", dims=False, base=CAPSULE):

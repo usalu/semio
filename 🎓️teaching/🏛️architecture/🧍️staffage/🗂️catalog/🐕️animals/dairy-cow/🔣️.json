@@ -13,17 +13,83 @@
       "de": "Eine erwachsene Holstein-Friesian-Milchkuh von 650 kg mit 1,45 m Widerristhöhe: zehenspitzengängiges Paarhufer-Skelett mit getrennten Gliedmaßenketten der nahen und fernen Seite, gegliedertem Hals, Unterkiefer, Ohren und Schwanz mit Quaste, schwerem Rumpf mit Pansenflanke, Euter mit eigener Hautregion und Triel; Schritt im Viertakt, Wiederkäuen, Weiden, Abliegen und eine Liegepose auf Brustbein, Vorderfußwurzel und Sprunggelenken, mit dem Wärmemodell einer Hochleistungskuh."
     },
     "tags": [
-      "animal",
-      "cattle",
-      "cow",
-      "dairy",
-      "quadruped",
-      "unguligrade",
-      "cloven-hoof",
-      "mammal",
-      "ruminant",
-      "gait",
-      "lying"
+      {
+        "id": "animal",
+        "title": {
+          "en": "animal",
+          "de": "Tier"
+        }
+      },
+      {
+        "id": "cattle",
+        "title": {
+          "en": "cattle",
+          "de": "Rind"
+        }
+      },
+      {
+        "id": "cow",
+        "title": {
+          "en": "cow",
+          "de": "Kuh"
+        }
+      },
+      {
+        "id": "dairy",
+        "title": {
+          "en": "dairy",
+          "de": "Milchvieh"
+        }
+      },
+      {
+        "id": "quadruped",
+        "title": {
+          "en": "quadruped",
+          "de": "Vierbeiner"
+        }
+      },
+      {
+        "id": "unguligrade",
+        "title": {
+          "en": "unguligrade",
+          "de": "Zehenspitzengänger"
+        }
+      },
+      {
+        "id": "cloven-hoof",
+        "title": {
+          "en": "cloven hoof",
+          "de": "Spalthuf"
+        }
+      },
+      {
+        "id": "mammal",
+        "title": {
+          "en": "mammal",
+          "de": "Säugetier"
+        }
+      },
+      {
+        "id": "ruminant",
+        "title": {
+          "en": "ruminant",
+          "de": "Wiederkäuer"
+        }
+      },
+      {
+        "id": "gait",
+        "title": {
+          "en": "gait",
+          "de": "Gangart"
+        }
+      },
+      {
+        "id": "lying",
+        "title": {
+          "en": "lying",
+          "de": "liegend"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage content worker (animals)",

@@ -1,5 +1,5 @@
 {
-  "mutation": "changezoneinternalgainswm2",
+  "mutation": "changeZoneInternalGainsWM2",
   "zoneId": "zone-living",
   "newInternalGainsWM2": 3.5
 }

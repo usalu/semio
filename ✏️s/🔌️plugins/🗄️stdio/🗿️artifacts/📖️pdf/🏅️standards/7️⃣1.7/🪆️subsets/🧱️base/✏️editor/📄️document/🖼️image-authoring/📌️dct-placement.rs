@@ -61,7 +61,7 @@ fn place(
         PdfDctImageColor::Rgb { .. } => PdfColorSpace::DeviceRgb,
     };
     let id = image_names(snapshot).next().expect("available image XObject id");
-    let mut image = PdfImage::samples(&id, u32::from(width), u32::from(height), color, 8, Vec::new());
+    let mut image = PdfImage::packed(&id, u32::from(width), u32::from(height), color, 8, Vec::new());
     image.body = PdfImageBody::Artifact { reference: resource.reference() };
     Ok([PdfMutation::SetImage(SetImage { image, index: None }), paint_image(page, placement, id)])
 }

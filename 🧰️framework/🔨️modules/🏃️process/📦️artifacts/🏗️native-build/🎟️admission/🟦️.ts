@@ -21,6 +21,7 @@ import { terminateOwnedChildTree } from "../../../🪓️termination/🟦️.ts"
 import { validateJsonSchemaSubset } from "../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import { hostAvailableBytesV1 } from "../../../🏗️build/🌡️host-capacity/📡️sampling/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with { type: "json" };
+import { unitBudgetKindV1, unitBudgetMegabytesV1, unitKeyPartsV1, type CompileBudgetKindV1, type CompileBudgetPolicyV1 } from "./🏔️ceiling/🟦️.ts";
 
 type WardenModuleV1 = typeof import("../../../🏗️build/🌡️host-capacity/🛡️warden/🔁️loop/🟦️.ts");
 let wardenLoading: Promise<WardenModuleV1 | null> | undefined, wardenLoaded: WardenModuleV1 | null = null;
@@ -63,8 +64,11 @@ export type CachedRequestV1 = Readonly<Omit<AdmitRequestV1, "op"> & { op: "cache
 /** 🔭️ A wrapper's question for the finished record of the unit its scheduler just reported (`RecallRequestV1`). */
 export type RecallRequestV1 = Readonly<{ v: 1; op: "recall"; pass: string; crate: string; outDir: string; extraFilename: string }>;
 
-/** 🏔️ The unit ceiling applied to recorded observations (`UnitCeilingVerdictV1`). */
-export type UnitCeilingVerdictV1 = Readonly<{ version: 1; ceilingMegabytes: number; exceeded: readonly Readonly<{ key: string; crate: string; target: string; peakMegabytes: number; listed: boolean }>[]; resolved: readonly Readonly<{ crate: string; target: string; peakMegabytes: number }>[]; ok: boolean }>;
+export type {CompileBudgetClassV1,CompileBudgetKindV1,CompileBudgetPolicyV1,CompileCarvingEntryV1,RuntimeCeilingV1} from "./🏔️ceiling/🟦️.ts";
+export {UNIT_CEILING_POLICY_V1,compileUnitOfCommandV1,runtimeCeilingOfCommandV1,unitBudgetKindV1,unitBeyondHostV1,unitBudgetMegabytesV1,unitKeyPartsV1} from "./🏔️ceiling/🟦️.ts";
+
+/** 🏔️ The compile-memory budget applied to recorded observations (`UnitCeilingVerdictV1`). */
+export type UnitCeilingVerdictV1 = Readonly<{ version: 1; workerClass: string; libraryMegabytes: number; finalMegabytes: number; exceeded: readonly Readonly<{ key: string; crate: string; target: string; kind: CompileBudgetKindV1; peakMegabytes: number; budgetMegabytes: number; listed: boolean }>[]; resolved: readonly Readonly<{ crate: string; target: string; peakMegabytes: number; budgetMegabytes: number }>[]; ok: boolean }>;
 
 /** 📒️ One recorded observation of a unit key (`ObservationV1`), the scheduling knowledge `units.jsonl` keeps. */
 export type UnitObservationV1 = Readonly<{ v: 1; key: string; peakRssBytes: number; outputBytes: number; wallMs: number; cpuMs: number; remainingMs: number; atMs: number; lines?: number }>;
@@ -136,42 +140,64 @@ export function componentFinalCratePeaksV1(history: ReadonlyMap<string, readonly
   return crates;
 }
 
-/** 🚧️ The crate and target of a unit key (`<package>@<crate>|<target>|<profile>|<crate types>`), or `null` for a malformed key. */
-export function unitKeyPartsV1(key: string): Readonly<{ crate: string; target: string }> | null {
-  const [identity = "", target = "", profile, types, ...rest] = key.split("|"), crate = identity.slice(identity.indexOf("@") + 1);
-  return identity.includes("@") && crate && target && profile !== undefined && types !== undefined && !rest.length ? { crate, target } : null;
+/** 🧊️ The rows of the ledger that still describe the source: per unit key only rows that record the source size (`lines`) and lie within the policy tolerance of the latest such row, because a row without it, or one of a source that was split or has grown, measured another unit. */
+export function freshUnitObservationsV1<T extends Pick<UnitObservationV1, "key" | "atMs" | "lines">>(observations: readonly T[]): T[] {
+  const byKey = new Map<string, T[]>();
+  for (const row of observations) if (row.lines !== undefined) byKey.set(row.key, [...byKey.get(row.key) ?? [], row]);
+  return [...byKey.values()].flatMap((rows) => {
+    const latest = rows.reduce((left, right) => right.atMs >= left.atMs ? right : left);
+    return forecastHistoryV1(rows as unknown as UnitObservationV1[], latest.lines!) as unknown as T[];
+  });
 }
 
-/** 🗻️ The unit ceiling of the policy applied to ledger rows: the largest peak per unit key (rounded up to megabytes), the units above the ceiling (`listed` when on the carving list), the carving entries that no longer exceed it, and `ok` when no unlisted unit exceeds it and no entry is stale (the list may only shrink). Rows with a malformed key are ignored; order is peak descending, then key. */
-export function unitCeilingVerdictV1(policy: Readonly<{ megabytes: number; carving: readonly Readonly<{ crate: string; target: string }>[] }>, observations: readonly Pick<UnitObservationV1, "key" | "peakRssBytes">[]): UnitCeilingVerdictV1 {
-  const peaks = new Map<string, number>(), crates = new Map<string, number>();
+/** 🗜️ The peak a completed unit is recorded with: the larger of its peak resident bytes and its largest charged sample (`phys_footprint` on macOS). Under memory pressure the OS compresses and swaps a compiler's pages, so resident stays far below what the process is charged with and killed for: the cad component final of 2026-11-24 peaked at 2198 MB resident and 8036 MB charged.
+ * @see ./🧪️tests/🗜️charged-peak/🟦️.ts */
+export function unitPeakBytesV1(peakRssBytes: number, peakChargedBytes: number): number { return Math.max(peakRssBytes, peakChargedBytes); }
+
+/** 🗻️ The compile-memory budget of the policy applied to ledger rows: the largest peak per unit key (rounded up to megabytes), the units above the budget of their kind (`listed` when on the carving list), the carving entries whose units fit again, and `ok` when no unlisted unit exceeds its budget and no entry is stale (the list may only shrink). Rows with a malformed key are ignored; order is peak descending, then key. */
+export function unitCeilingVerdictV1(policy: CompileBudgetPolicyV1, observations: readonly Pick<UnitObservationV1, "key" | "peakRssBytes">[]): UnitCeilingVerdictV1 {
+  const budget = policy.classes[policy.workerClass];
+  if (!budget) throw Error(`Unknown worker class ${policy.workerClass}`);
+  const peaks = new Map<string, number>(), crates = new Map<string, { peak: number; budget: number; fits: boolean }>();
   for (const row of observations) {
     const parts = unitKeyPartsV1(row.key), megabytes = Math.ceil(row.peakRssBytes / 1048576);
     if (!parts || !Number.isFinite(megabytes)) continue;
     peaks.set(row.key, Math.max(peaks.get(row.key) ?? 0, megabytes));
-    crates.set(`${parts.crate}|${parts.target}`, Math.max(crates.get(`${parts.crate}|${parts.target}`) ?? 0, megabytes));
+  }
+  for (const [key, peak] of peaks) {
+    const { crate, target } = unitKeyPartsV1(key)!, group = `${crate}|${target}`, own = unitBudgetMegabytesV1(policy, key), before = crates.get(group);
+    crates.set(group, { peak: Math.max(before?.peak ?? 0, peak), budget: Math.max(before?.budget ?? 0, own), fits: (before?.fits ?? true) && peak <= own });
   }
   const listed = (crate: string, target: string) => policy.carving.some((entry) => entry.crate === crate && entry.target === target);
-  const exceeded = [...peaks].filter(([, peak]) => peak > policy.megabytes).map(([key, peak]) => { const { crate, target } = unitKeyPartsV1(key)!; return { key, crate, target, peakMegabytes: peak, listed: listed(crate, target) }; })
+  const exceeded = [...peaks].filter(([key, peak]) => peak > unitBudgetMegabytesV1(policy, key)).map(([key, peak]) => { const { crate, target } = unitKeyPartsV1(key)!; return { key, crate, target, kind: unitBudgetKindV1(key), peakMegabytes: peak, budgetMegabytes: unitBudgetMegabytesV1(policy, key), listed: listed(crate, target) }; })
     .sort((left, right) => right.peakMegabytes - left.peakMegabytes || (left.key < right.key ? -1 : left.key > right.key ? 1 : 0));
-  const resolved = policy.carving.flatMap((entry) => { const peak = crates.get(`${entry.crate}|${entry.target}`); return peak !== undefined && peak <= policy.megabytes ? [{ crate: entry.crate, target: entry.target, peakMegabytes: peak }] : []; })
+  const resolved = policy.carving.flatMap((entry) => { const group = crates.get(`${entry.crate}|${entry.target}`); return group !== undefined && group.fits ? [{ crate: entry.crate, target: entry.target, peakMegabytes: group.peak, budgetMegabytes: group.budget }] : []; })
     .sort((left, right) => right.peakMegabytes - left.peakMegabytes || (left.crate < right.crate ? -1 : left.crate > right.crate ? 1 : left.target < right.target ? -1 : left.target > right.target ? 1 : 0));
-  return { version: 1, ceilingMegabytes: policy.megabytes, exceeded, resolved, ok: exceeded.every((unit) => unit.listed) && !resolved.length };
+  return { version: 1, workerClass: policy.workerClass, libraryMegabytes: budget.libraryMegabytes, finalMegabytes: budget.finalMegabytes, exceeded, resolved, ok: exceeded.every((unit) => unit.listed) && !resolved.length };
 }
 
-/** 🔔️ The lines that name what breaks the unit ceiling (every unlisted unit above it, every stale carving entry) in `language`; empty when the verdict is `ok`. */
+const fillMessageV1 = (line: string, values: Readonly<Record<string, string | number>>) => line.replace(/\{([a-z]+)\}/gu, (match, name: string) => name in values ? String(values[name]) : match);
+
+/** 🔔️ The lines that name what breaks the compile-memory budget (every unlisted unit above its budget, every stale carving entry) in `language`; empty when the verdict is `ok`. */
 export function formatUnitCeilingV1(language: "en" | "de", verdict: UnitCeilingVerdictV1): string[] {
-  const text = schema.definitions.Messages.const[language].unitCeiling, fill = (line: string, values: Readonly<Record<string, string | number>>) => line.replace(/\{([a-z]+)\}/gu, (match, name: string) => name in values ? String(values[name]) : match);
+  const text = schema.definitions.Messages.const[language].unitCeiling;
   return [
-    ...verdict.exceeded.filter((unit) => !unit.listed).map((unit) => fill(text.exceeded, { key: unit.key, peak: unit.peakMegabytes, ceiling: verdict.ceilingMegabytes })),
-    ...verdict.resolved.map((entry) => fill(text.resolved, { crate: entry.crate, peak: entry.peakMegabytes, ceiling: verdict.ceilingMegabytes })),
+    ...verdict.exceeded.filter((unit) => !unit.listed).map((unit) => fillMessageV1(text.exceeded, { key: unit.key, peak: unit.peakMegabytes, kind: text.kinds[unit.kind], budget: unit.budgetMegabytes, class: verdict.workerClass })),
+    ...verdict.resolved.map((entry) => fillMessageV1(text.resolved, { crate: entry.crate, peak: entry.peakMegabytes, budget: entry.budgetMegabytes })),
   ];
 }
 
-/** 🛎️ The one bilingual line (English first, German second) a completed unit raises when its own peak is above the unit ceiling and it is not on the carving list, or `null`. */
-export function unitCeilingAlarmV1(policy: Parameters<typeof unitCeilingVerdictV1>[0], row: Pick<UnitObservationV1, "key" | "peakRssBytes">): string | null {
+/** 🛎️ The one bilingual line (English first, German second) a completed unit raises when its own peak is above its budget and it is not on the carving list, or `null`. */
+export function unitCeilingAlarmV1(policy: CompileBudgetPolicyV1, row: Pick<UnitObservationV1, "key" | "peakRssBytes">): string | null {
   const verdict = unitCeilingVerdictV1(policy, [row]), unit = verdict.exceeded.find((one) => !one.listed);
   return unit ? (["en", "de"] as const).map((language) => formatUnitCeilingV1(language, { ...verdict, exceeded: [unit], resolved: [] })[0]!).join(" / ") : null;
+}
+
+/** 🥶️ The one bilingual line (English first, German second) a unit without fresh history raises when its cold estimate (`predictedBytes` of the cold prior) is above its budget and it is not on the carving list, or `null`: a warning, never a refusal. */
+export function coldBudgetWarningV1(policy: CompileBudgetPolicyV1, key: string, predictedBytes: number): string | null {
+  const parts = unitKeyPartsV1(key), budget = unitBudgetMegabytesV1(policy, key), peak = Math.ceil(predictedBytes / 1048576);
+  if (!parts || peak <= budget || policy.carving.some((entry) => entry.crate === parts.crate && entry.target === parts.target)) return null;
+  return (["en", "de"] as const).map((language) => { const text = schema.definitions.Messages.const[language].unitCeiling; return fillMessageV1(text.cold, { key, peak, kind: text.kinds[unitBudgetKindV1(key)], budget, class: policy.workerClass }); }).join(" / ");
 }
 
 /** 🔮️ Predicted peak resident bytes of a unit: `max(headroom × p95(last window peaks), floor)`; without history the cold-start model. A component final (`component` = recorded peaks of its kind) without history is predicted from that evidence, `max(headroom × quantile(peaks, componentColdQuantile), floor)`, or the `componentFinalBytes` bound while fewer than `componentColdMinimumRows` were recorded. */
@@ -235,28 +261,31 @@ export function admissionWouldWaitV1(state: AdmissionStateV1, waiting: readonly 
 
 /** 🧊️ Admission freeze with hysteresis: freeze when measured rustc memory exceeds the budget or swap-out exceeds its rate; resume below the resume fraction. */
 export function admissionFrozenV1(wasFrozen: boolean, sample: Readonly<{ actualBytes: number; budgetBytes: number; swapOutBytesPerSecond: number | null }>): boolean {
-  const policy = ADMISSION_POLICY_V1, swapping = (sample.swapOutBytesPerSecond ?? 0) > policy.swapOutBytesPerSecond;
-  if (sample.actualBytes > sample.budgetBytes || swapping) return true;
+  const policy = ADMISSION_POLICY_V1;
+  if (sample.actualBytes > sample.budgetBytes || admissionSwappingV1(sample.swapOutBytesPerSecond)) return true;
   return wasFrozen && sample.actualBytes >= policy.resumeFraction * sample.budgetBytes;
 }
 
-/** 🌡️ The verdict of the available-memory law: whether a unit starts now, and why (`fits` it fits the room, `available` it waits for room, `warden` the host warden is at guard or danger, `waited-out` the wait bound ended on an idle broker, `unknown` the host reports no availability). */
-export type AvailableAdmissionV1 = Readonly<{ admit: boolean; reason: "fits" | "available" | "warden" | "waited-out" | "unknown" }>;
+const admissionSwappingV1 = (rate: number | null | undefined): boolean => (rate ?? 0) > ADMISSION_POLICY_V1.swapOutBytesPerSecond;
+
+/** 🌡️ The reason a compiler unit starts or waits under the host memory policy. */
+export type AvailableAdmissionV1 = Readonly<{ admit: boolean; reason: "fits" | "available" | "warden" | "swap" | "waited-out" | "unknown" }>;
 
 /** 🌡️ The inputs of `availableAdmissionV1`: `runningUnits` counts the units of this broker that run, `cancelled` marks a unit the host warden cancelled before (its wait bound doubles). */
-export type AvailableAdmissionInputV1 = Readonly<{ predictedBytes: number; availableBytes: number | undefined; totalBytes: number; runningUnrealizedBytes: number; runningUnits: number; waitedMilliseconds: number; wardenLevel: "calm" | "guard" | "danger" | undefined; cancelled?: boolean; policy: Pick<typeof ADMISSION_POLICY_V1.available, "marginBasisPoints" | "waitMilliseconds"> }>;
+export type AvailableAdmissionInputV1 = Readonly<{ predictedBytes: number; availableBytes: number | undefined; totalBytes: number; runningUnrealizedBytes: number; runningUnits: number; waitedMilliseconds: number; wardenLevel: "calm" | "guard" | "danger" | undefined; swapOutBytesPerSecond?: number | null; cancelled?: boolean; policy: Pick<typeof ADMISSION_POLICY_V1.available, "marginBasisPoints" | "waitMilliseconds"> }>;
 
-/** 🌡️ Admits a unit against the measured available memory: unknown availability admits; a warden at guard or danger holds (the wait bound never overrides it); otherwise the unit starts when its predicted peak fits the available bytes less the margin share of total memory less the unrealized remainder of the running units, or when it waited the policy bound (twice for a cancelled unit) with nothing running.
+/** 🌡️ Holds a unit while the warden is at guard or danger or while the host swap-out rate is above the freeze threshold. Otherwise allows unknown available memory or a prediction that fits. An idle broker with insufficient memory can start one unit after the wait bound only while the warden is calm.
  * @see ../../../🏗️build/🌡️host-capacity/🛡️warden/🔁️loop/🟦️.ts (`readHostWardenStateV1`) */
 export function availableAdmissionV1(input: AvailableAdmissionInputV1): AvailableAdmissionV1 {
-  if (input.availableBytes === undefined) return { admit: true, reason: "unknown" };
   if (input.wardenLevel === "guard" || input.wardenLevel === "danger") return { admit: false, reason: "warden" };
+  if (admissionSwappingV1(input.swapOutBytesPerSecond)) return { admit: false, reason: "swap" };
+  if (input.availableBytes === undefined) return { admit: true, reason: "unknown" };
   if (input.predictedBytes <= input.availableBytes - Math.floor(input.totalBytes * input.policy.marginBasisPoints / 10000) - input.runningUnrealizedBytes) return { admit: true, reason: "fits" };
-  return input.runningUnits === 0 && input.waitedMilliseconds >= input.policy.waitMilliseconds * (input.cancelled ? 2 : 1) ? { admit: true, reason: "waited-out" } : { admit: false, reason: "available" };
+  return input.wardenLevel === "calm" && input.runningUnits === 0 && input.waitedMilliseconds >= input.policy.waitMilliseconds * (input.cancelled ? 2 : 1) ? { admit: true, reason: "waited-out" } : { admit: false, reason: "available" };
 }
 
-/** 📣️ The line (`language`) that says why a unit is held back: `available` (not enough room), `warden` (the host warden suspends or cancels) or `cancelled` (the warden cancelled this unit before). */
-export function formatAdmissionHeldV1(language: "en" | "de", kind: "available" | "warden" | "cancelled", values: Readonly<Record<"unit" | "predicted" | "available" | "margin" | "level" | "seconds", string | number>>): string {
+/** 📣️ Describes why a compiler unit is waiting. */
+export function formatAdmissionHeldV1(language: "en" | "de", kind: "available" | "warden" | "swap" | "cancelled", values: Readonly<Record<"unit" | "predicted" | "available" | "margin" | "level" | "seconds", string | number>>): string {
   return schema.definitions.Messages.const[language].held[kind].replace(/\{([a-z]+)\}/gu, (match, name: string) => name in values ? String(values[name as keyof typeof values]) : match);
 }
 
@@ -374,11 +403,11 @@ export interface AdmissionBrokerV1 {
   close(): Promise<void>;
 }
 
-type Entry = { request: AdmitRequestV1; key: string; lines: number; profile: string; predictedBytes: number; expectedWallMs: number | null; remainingMs: number; arrival: number; requestMs: number; admittedMs: number; rssBytes: number; chargedBytes: number; cancelled: boolean; heldLoggedMs: number; socket: Socket };
+type Entry = { request: AdmitRequestV1; key: string; lines: number; profile: string; predictedBytes: number; expectedWallMs: number | null; remainingMs: number; arrival: number; requestMs: number; admittedMs: number; rssBytes: number; chargedBytes: number; peakChargedBytes: number; cancelled: boolean; heldLoggedMs: number; socket: Socket };
 
 /** ▶️ Starts the admission broker: wrappers connect, ask for admission, stream resident memory and report completion.
  * The budget is `physical − reserve − rolling maximum of the driver's other children`; measured overshoot or swap-out freezes admission. */
-export async function startAdmissionBrokerV1(options: Readonly<{ physicalBytes: number; history: ReadonlyMap<string, readonly UnitObservationV1[]>; endpoint?: string; now?: () => number; onCompleted?: (unit: UnitRecordV1) => void; totalBytes?: number; available?: () => number | undefined; warden?: () => "calm" | "guard" | "danger" | undefined; cancels?: (sinceMs: number) => readonly Readonly<{ command: string; megabytes: number }>[] | Promise<readonly Readonly<{ command: string; megabytes: number }>[]>; log?: (line: string) => void }>): Promise<AdmissionBrokerV1> {
+export async function startAdmissionBrokerV1(options: Readonly<{ physicalBytes: number; history: ReadonlyMap<string, readonly UnitObservationV1[]>; endpoint?: string; now?: () => number; onCompleted?: (unit: UnitRecordV1) => void; totalBytes?: number; available?: () => number | undefined; warden?: () => "calm" | "guard" | "danger" | undefined; cancels?: (sinceMs: number) => readonly Readonly<{ command: string; megabytes: number; reason?: string }>[] | Promise<readonly Readonly<{ command: string; megabytes: number; reason?: string }>[]>; log?: (line: string) => void }>): Promise<AdmissionBrokerV1> {
   const now = options.now ?? Date.now, endpoint = options.endpoint ?? brokerEndpointV1(), passes = new Map<string, BrokerPassV1>();
   const waiting: Entry[] = [], running = new Set<Entry>(), completed: UnitRecordV1[] = [], nonRustc: { atMs: number; bytes: number }[] = [];
   const availablePolicy = ADMISSION_POLICY_V1.available, totalBytes = options.totalBytes ?? admissionMemoryBytesV1(), heldLogMs = Math.max(availablePolicy.pollMilliseconds, Math.floor(availablePolicy.waitMilliseconds / 6));
@@ -402,12 +431,12 @@ export async function startAdmissionBrokerV1(options: Readonly<{ physicalBytes: 
       const availableBytes = safely(readAvailable), wardenLevel = safely(readLevel), margin = Math.floor(totalBytes * availablePolicy.marginBasisPoints / 10000);
       for (const index of admitted) {
         const entry = ordered[index]!, atMs = now(), unrealized = [...running].reduce((sum, row) => sum + Math.max(0, row.predictedBytes - row.chargedBytes), 0);
-        const decision = availableAdmissionV1({ predictedBytes: entry.predictedBytes, availableBytes, totalBytes, runningUnrealizedBytes: unrealized, runningUnits: running.size, waitedMilliseconds: atMs - entry.requestMs, wardenLevel, cancelled: entry.cancelled, policy: availablePolicy });
+        const decision = availableAdmissionV1({ predictedBytes: entry.predictedBytes, availableBytes, totalBytes, runningUnrealizedBytes: unrealized, runningUnits: running.size, waitedMilliseconds: atMs - entry.requestMs, wardenLevel, swapOutBytesPerSecond, cancelled: entry.cancelled, policy: availablePolicy });
         if (!decision.admit) {
           held = true;
           if (options.log && atMs - entry.heldLoggedMs >= heldLogMs) {
             entry.heldLoggedMs = atMs;
-            const megabytes = (bytes: number): number => Math.round(bytes / 1048576), kind = decision.reason === "warden" ? "warden" : entry.cancelled ? "cancelled" : "available";
+            const megabytes = (bytes: number): number => Math.round(bytes / 1048576), kind = decision.reason === "warden" || decision.reason === "swap" ? decision.reason : entry.cancelled ? "cancelled" : "available";
             const values = { unit: entry.request.crate, predicted: megabytes(entry.predictedBytes), available: availableBytes === undefined ? "?" : megabytes(availableBytes), margin: megabytes(margin), level: wardenLevel ?? "unknown", seconds: Math.round((atMs - entry.requestMs) / 1000) };
             try { options.log(`[admission] ${formatAdmissionHeldV1("en", kind, values)} / ${formatAdmissionHeldV1("de", kind, values)}`); } catch { held = true; }
           }
@@ -430,11 +459,14 @@ export async function startAdmissionBrokerV1(options: Readonly<{ physicalBytes: 
     schedule();
   };
   const componentPeaks = new Map<string, readonly number[]>();
+  const coldWarned = new Set<string>();
   const predict = async (request: AdmitRequestV1, pass: BrokerPassV1): Promise<Readonly<{ key: string; history: readonly UnitObservationV1[]; lines: number; predictedBytes: number; cancelled: boolean }>> => {
     const key = unitKeyV1(request, pass.profile), kloc = await sourceKlocV1(request.source), lines = Math.round(kloc * 1000), history = forecastHistoryV1(options.history.get(key) ?? [], lines), componentFinal = request.crateTypes.includes("cdylib") && request.target !== "host";
     if (componentFinal && !componentPeaks.has(pass.profile)) componentPeaks.set(pass.profile, componentFinalPeaksV1(options.history, pass.profile));
     const predicted = predictPeakBytesV1(history.map((row) => row.peakRssBytes), { kloc: history.length || componentFinal ? 0 : kloc, component: componentFinal ? componentPeaks.get(pass.profile)! : null });
-    const records = await Promise.resolve().then(() => readCancels(now() - availablePolicy.cancelledMemoryMilliseconds)).catch(() => []), needle = `--crate-name ${request.crate} `, named = records.filter((record) => record.command.includes(needle));
+    const coldWarning = history.length || componentFinal || coldWarned.has(key) ? null : coldBudgetWarningV1(ADMISSION_POLICY_V1.unitCeiling, key, predicted);
+    if (coldWarning) { coldWarned.add(key); options.log?.(`[native-build] ${coldWarning}`); }
+    const records = await Promise.resolve().then(() => readCancels(now() - availablePolicy.cancelledMemoryMilliseconds)).catch(() => []), needle = `--crate-name ${request.crate} `, named = records.filter((record) => record.reason !== "ceiling" && record.command.includes(needle));
     return { key, history, lines, cancelled: named.length > 0, predictedBytes: named.length ? Math.max(predicted, Math.ceil(Math.max(...named.map((record) => record.megabytes)) * 1048576 * availablePolicy.cancelledFactorBasisPoints / 10000)) : predicted };
   };
   const server = createServer((socket) => {
@@ -477,7 +509,7 @@ export async function startAdmissionBrokerV1(options: Readonly<{ physicalBytes: 
           const request = admitDefinition<AdmitRequestV1>("AdmitRequestV1", message), pass = passes.get(request.pass);
           if (!pass) throw Error(`Unknown build pass ${request.pass}`);
           const { key, history, lines, predictedBytes, cancelled } = await predict(request, pass);
-          entry = { request, key, lines, profile: pass.profile, predictedBytes, expectedWallMs: expectedWallMsV1(history), remainingMs: history.at(-1)?.remainingMs ?? 0, arrival: arrivals++, requestMs: now(), admittedMs: 0, rssBytes: 0, chargedBytes: 0, cancelled, heldLoggedMs: -Infinity, socket };
+          entry = { request, key, lines, profile: pass.profile, predictedBytes, expectedWallMs: expectedWallMsV1(history), remainingMs: history.at(-1)?.remainingMs ?? 0, arrival: arrivals++, requestMs: now(), admittedMs: 0, rssBytes: 0, chargedBytes: 0, peakChargedBytes: 0, cancelled, heldLoggedMs: -Infinity, socket };
           waiting.push(entry);
           lastActivityMs = entry.requestMs;
           schedule();
@@ -486,6 +518,7 @@ export async function startAdmissionBrokerV1(options: Readonly<{ physicalBytes: 
           const sample = admitDefinition<{ bytes: number; chargedBytes: number }>("RssReportV1", message);
           entry.rssBytes = sample.bytes;
           entry.chargedBytes = sample.chargedBytes;
+          entry.peakChargedBytes = Math.max(entry.peakChargedBytes, sample.chargedBytes);
           schedule();
         } else if (message.op === "done" && entry && running.has(entry)) {
           const done = admitDefinition<DoneReportV1>("DoneReportV1", message), request = entry.request;
@@ -493,7 +526,7 @@ export async function startAdmissionBrokerV1(options: Readonly<{ physicalBytes: 
           running.delete(entry);
           lastActivityMs = now();
           socket.end();
-          completed.push(Object.freeze({ key: entry.key, pass: request.pass, profile: entry.profile, target: request.target, crate: request.crate, package: request.package, version: request.version, crateTypes: request.crateTypes, primary: request.primary, artifact: unitArtifactV1(request), dependencies: request.externs.map((path) => { const extern = externArtifactsV1(path); return { artifacts: extern.candidates, edge: extern.edge }; }), buildScriptOutDir: request.buildScriptOutDir, lines: entry.lines, predictedBytes: entry.predictedBytes, requestMs: entry.requestMs, admittedMs: entry.admittedMs, startMs: done.startMs, endMs: done.endMs, rmetaMs: done.rmetaMs, peakRssBytes: done.peakRssBytes, userMs: done.userMs, sysMs: done.sysMs, exit: done.exit }));
+          completed.push(Object.freeze({ key: entry.key, pass: request.pass, profile: entry.profile, target: request.target, crate: request.crate, package: request.package, version: request.version, crateTypes: request.crateTypes, primary: request.primary, artifact: unitArtifactV1(request), dependencies: request.externs.map((path) => { const extern = externArtifactsV1(path); return { artifacts: extern.candidates, edge: extern.edge }; }), buildScriptOutDir: request.buildScriptOutDir, lines: entry.lines, predictedBytes: entry.predictedBytes, requestMs: entry.requestMs, admittedMs: entry.admittedMs, startMs: done.startMs, endMs: done.endMs, rmetaMs: done.rmetaMs, peakRssBytes: unitPeakBytesV1(done.peakRssBytes, entry.peakChargedBytes), userMs: done.userMs, sysMs: done.sysMs, exit: done.exit }));
           try { options.onCompleted?.(completed[completed.length - 1]!); } catch (error) { console.error(`[admission] ${error instanceof Error ? error.message : String(error)}`); }
           schedule();
         } else throw Error(`Unexpected broker message ${line.slice(0, 200)}`);
@@ -558,7 +591,7 @@ export async function buildSchedulerV1(options: Readonly<{ cwd: string; targetDi
   const selection=schedulerCargoSelectionV1(options.examples),manifest=selection.manifest,args=options.arguments??selection.args;
   const receiptFile=join(options.targetDirectory,schedulerReceiptFileV1()),identity=options.toolchain&&!options.examples?schedulerIdentityV1(options.toolchain,options.environment):undefined,held=identity?schedulerReceiptHoldsV1(readSchedulerReceiptV1(receiptFile),identity,manifest):undefined;if(held)return held;
   const graph=await captureCargoCompilationGraphV1({workspaceRoot:options.cwd,cwd:options.cwd,program:"cargo",prefix:[],args,environment:options.environment,maximumOutputBytes:cargoPlanningOutputBytesV1},options.control,actualCargoCompilerPlanningPortV1());await admitCargoSourceBoundariesV1(graph,options.cwd,options.sourceBoundary,options.control,actualCargoSourceAdmissionPortV1(options.environment,options.cwd,options.storage));await options.storage.recheck();
-  const child = spawn(registeredToolExecutableV1("cargo"), [...args,"--message-format=json-render-diagnostics"], { cwd: options.cwd, env: { ...options.environment, CARGO_TARGET_DIR: options.targetDirectory, CARGO_BUILD_BUILD_DIR: options.buildDirectory, RUSTC_WRAPPER: "", CARGO_BUILD_RUSTC_WRAPPER: "" }, stdio: ["ignore", "pipe", "pipe"], detached: process.platform !== "win32" });
+  const child = spawn(registeredToolExecutableV1("cargo"), [...args,"--message-format=json-render-diagnostics"], {windowsHide:true, cwd: options.cwd, env: { ...options.environment, CARGO_TARGET_DIR: options.targetDirectory, CARGO_BUILD_BUILD_DIR: options.buildDirectory, RUSTC_WRAPPER: "", CARGO_BUILD_RUSTC_WRAPPER: "" }, stdio: ["ignore", "pipe", "pipe"], detached: process.platform !== "win32" });
   const cancel = (): void => terminateOwnedChildTree(child);
   const stopDeadline = watchResourceLeaseControlDeadlineV1(options.control, () => cancel());
   signal.addEventListener("abort", cancel, { once: true });

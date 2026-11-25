@@ -13,14 +13,62 @@
       "de": "Ein erwachsenes Europäisches Eichhörnchen (Sciurus vulgaris, 0,30 kg, Kopf-Rumpf-Länge 0,21 m, Schwanz mit Haar 0,19 m): zweiteilige Wirbelsäule, buschiger zweiteiliger Schwanz, Vorderglieder mit langen Fingern und lange Hinterfüße eines Sohlengängers; aufrecht sitzend beim Nussfressen, ein Sprunglauf und Klettern an einem senkrechten Stamm (der Stamm ist nicht Teil des Assets: die Krallen sind Auflager mit Rindenreibung 1,5); Fell-Wärmemodell mit 38,5 Grad Kern, Nasenatmung und Rückenfahne."
     },
     "tags": [
-      "animal",
-      "mammal",
-      "rodent",
-      "squirrel",
-      "climbing",
-      "bounding",
-      "park",
-      "wood"
+      {
+        "id": "animal",
+        "title": {
+          "en": "animal",
+          "de": "Tier"
+        }
+      },
+      {
+        "id": "mammal",
+        "title": {
+          "en": "mammal",
+          "de": "Säugetier"
+        }
+      },
+      {
+        "id": "rodent",
+        "title": {
+          "en": "rodent",
+          "de": "Nagetier"
+        }
+      },
+      {
+        "id": "squirrel",
+        "title": {
+          "en": "squirrel",
+          "de": "Eichhörnchen"
+        }
+      },
+      {
+        "id": "climbing",
+        "title": {
+          "en": "climbing",
+          "de": "Klettern"
+        }
+      },
+      {
+        "id": "bounding",
+        "title": {
+          "en": "bounding",
+          "de": "Springlauf"
+        }
+      },
+      {
+        "id": "park",
+        "title": {
+          "en": "park",
+          "de": "Park"
+        }
+      },
+      {
+        "id": "wood",
+        "title": {
+          "en": "wood",
+          "de": "Holz"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage content worker NW-A2 (animals)",

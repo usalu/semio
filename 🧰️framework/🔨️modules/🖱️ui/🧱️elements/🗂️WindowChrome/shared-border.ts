@@ -418,6 +418,14 @@ export class BorderCompositor {
     this.watched.delete(element);
     this.frames.delete(element);
   }
+  /** 📐️ The range a line of `owner` can take and still be seen: an owner that clips its own overflow cuts the half of a seam centred on its edge, so such a line is held one frame inset inside the clip. An owner that does not clip keeps the seam centred. */
+  private insideOwner(owner: string, windows: ReadonlyMap<string, Registration>, frames: ReadonlyMap<string, { element: HTMLElement }>, horizontal: boolean): { readonly low: number; readonly high: number } | null {
+    const element = windows.get(owner)?.element ?? frames.get(owner)?.element;
+    const clip = element ? this.clipOf(element) : null;
+    if (!clip || !(horizontal ? clip.clipsY : clip.clipsX)) return null;
+    const [low, high] = horizontal ? [clip.top, clip.bottom] : [clip.left, clip.right];
+    return high - low > 2 * WINDOW_FRAME_PATH_INSET ? { low: low + WINDOW_FRAME_PATH_INSET, high: high - WINDOW_FRAME_PATH_INSET } : null;
+  }
   private commit = () => {
     this.frame = 0;
     if (this.disposed) return;
@@ -573,6 +581,17 @@ export class BorderCompositor {
       for (let parent = box.parent; parent; parent = parent.parent) if (parent.kind === "chip" && parent.paint) return windowTransforms.get(parent.paint) ?? null;
       return null;
     };
+    const restDrawn = new Map<Box, readonly BorderSide[]>();
+    const restSides = (box: Box): readonly BorderSide[] => {
+      const known = restDrawn.get(box);
+      if (known) return known;
+      const outer = flushParent(box);
+      const own = { id: box.id, parent: outer?.id ?? null, owner: box.id, rect: flushRect(box, this.measure(box.element).snapped), edges: declared(box), state: "normal" } as const;
+      const parent = outer ? { id: outer.id, parent: null, owner: outer.id, rect: this.measure(outer.element).snapped, edges: restSides(outer), state: "normal" } as const : undefined;
+      const sides = boxDrawnSides(own, parent);
+      restDrawn.set(box, sides);
+      return sides;
+    };
     for (const box of boxes) {
       const geo = box.paint && geometry.get(box.paint), frame = box.paint && this.frames.get(box.paint);
       if (!box.paint || !geo || !frame) continue;
@@ -605,7 +624,7 @@ export class BorderCompositor {
       const kept = edges.flatMap(edge => {
         const side = allSides[Number(edge.id.slice(edge.id.lastIndexOf(":") + 1))]!;
         if (!drawn.includes(side)) return [];
-        if (!normalSides.includes(side) && state === "hover") emphasis.add(edge.id);
+        if (state === "hover" && !restSides(box).includes(side)) emphasis.add(edge.id);
         return [chipWindow || !normalSides.includes(side) ? { ...edge, follows: true as const } : edge];
       });
       sources.push(...(state === "normal" ? this.visibleSources(box.kind === "cell" ? box.element : box.paint, kept, box.paint) : kept));
@@ -616,6 +635,7 @@ export class BorderCompositor {
     const raised = new Map<string, boolean>();
     for (const [id, entry] of this.windows) raised.set(id, entry.element.closest("[data-elevation-root]") !== null);
     for (const [element, frame] of this.frames) raised.set(frame.id, element.closest("[data-elevation-root]") !== null);
+    const windowsById = this.windows;
     const resolved = withoutLoneEmphasis(resolveBorderSegments(sources), id => emphasis.has(id.split(":", 2).join(":"))).map(segment => {
       if (raised.get(segment.owner)) return segment;
       const upper = segment.contributors.map(id => byId.get(id)!).find(source => raised.get(source.owner));
@@ -651,10 +671,13 @@ export class BorderCompositor {
         return (horizontal ? t.top : t.left) + edge.paintFrom[normal] * (horizontal ? t.scaleY : t.scaleX);
       });
       const centerline = lead.length === 1 ? lineOf.get(`${lead[0]}:${horizontal}`) ?? (Math.min(...values) + Math.max(...values)) / 2 : (Math.min(...values) + Math.max(...values)) / 2;
-      const from = junction(segment.from), to = junction(segment.to);
+      const room = this.insideOwner(segment.owner, windowsById, frameSources, horizontal);
+      const line = room ? Math.min(Math.max(centerline, room.low), room.high) : centerline;
+      const joined = junction(segment.from), joinedTo = junction(segment.to);
+      const from = line === centerline ? joined : { ...joined, [normal]: line }, to = line === centerline ? joinedTo : { ...joinedTo, [normal]: line };
       const originalNormal = (horizontal ? source.transform.top : source.transform.left) + source.paintFrom[normal] * (horizontal ? source.transform.scaleY : source.transform.scaleX);
-      if (centerline !== originalNormal || from[normal] !== centerline || to[normal] !== centerline) interacting.add(segment.owner);
-      const points = sharedBorderPaintPoints(from, to, normal, centerline);
+      if (line !== originalNormal || from[normal] !== line || to[normal] !== line) interacting.add(segment.owner);
+      const points = sharedBorderPaintPoints(from, to, normal, line);
       if (points.length === 0) { interacting.add(segment.owner); continue; }
       const list = output.get(segment.owner) ?? [];
       const paintSegment: SharedBorderPaintSegment = { d: points.map(local).map((point, index) => `${index ? "L" : "M"} ${point.x} ${point.y}`).join(" "), state: segment.state, ...disabledBoxes.has(segment.id.split(":")[0]!) ? { disabled: true as const } : {} };

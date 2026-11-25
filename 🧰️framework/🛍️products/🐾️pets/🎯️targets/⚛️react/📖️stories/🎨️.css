@@ -1,10 +1,15 @@
+@import "../../../../../🔨️modules/🖱️ui/🎨️styling/🎨️palette/🎨️.css";
+
 /* 📖️ The look of the stories gallery: a dev page, styled on its own and never loaded by the package. The page's
    theme is `.dark` on the root; a ground sets its own foreground, so a species can be judged on both at once. */
 
 :root {
-  --page: #f7f3e3;
-  --foreground: #001117;
-  --panel: #c9c8bd;
+  --stories-light: var(--color-light, #f7f3e3);
+  --stories-dark: var(--color-dark, #001117);
+  --page: var(--stories-light);
+  --foreground: var(--stories-dark);
+  --surface-level: 0;
+  --panel: color-mix(in oklab, var(--page), var(--foreground) calc(3 * var(--level-shade-step)));
   --line: rgb(0 17 23 / 0.22);
   --accent: #ff344f;
   --stroke-hairline: 1px;
@@ -12,9 +17,8 @@
 }
 
 :root.dark {
-  --page: #001117;
-  --foreground: #f7f3e3;
-  --panel: #1d2b2f;
+  --page: var(--stories-dark);
+  --foreground: var(--stories-light);
   --line: rgb(247 243 227 / 0.28);
   color-scheme: dark;
 }
@@ -41,7 +45,7 @@ code {
   align-items: center;
   gap: 8px 16px;
   padding: 8px 16px;
-  border-bottom: 1px solid var(--line);
+  border-block-end: var(--stroke-hairline) solid var(--line);
   background: var(--page);
 }
 
@@ -58,8 +62,13 @@ code {
 
 .control {
   display: inline-flex;
+  max-inline-size: 100%;
   align-items: center;
   gap: 6px;
+}
+
+.control select {
+  min-inline-size: 0;
 }
 
 .control output {
@@ -67,15 +76,22 @@ code {
   font-variant-numeric: tabular-nums;
 }
 
-.action,
-.card button {
+.action {
   padding: 4px 10px;
-  border: 1px solid var(--foreground);
-  border-radius: 6px;
+  border: var(--stroke-hairline) solid var(--foreground);
+  border-radius: 0;
   background: transparent;
   color: inherit;
   font: inherit;
   cursor: pointer;
+}
+
+.action-group {
+  display: flex;
+}
+
+.action-group .action + .action {
+  border-inline-start: 0;
 }
 
 .action[aria-pressed="true"] {
@@ -92,22 +108,30 @@ code {
 /* Species */
 
 .ground-light {
-  --foreground: #001117;
-  --panel: #c9c8bd;
+  --page: var(--stories-light);
+  --foreground: var(--stories-dark);
+  --panel: color-mix(in oklab, var(--page), var(--foreground) calc(3 * var(--level-shade-step)));
   --line: rgb(0 17 23 / 0.22);
-  background: #f7f3e3;
-  color: #001117;
+  background: var(--page);
+  color: var(--foreground);
 }
 
 .ground-dark {
-  --foreground: #f7f3e3;
-  --panel: #1d2b2f;
+  --page: var(--stories-dark);
+  --foreground: var(--stories-light);
+  --panel: color-mix(in oklab, var(--page), var(--foreground) calc(3 * var(--level-shade-step)));
   --line: rgb(247 243 227 / 0.28);
-  background: #001117;
-  color: #f7f3e3;
+  background: var(--page);
+  color: var(--foreground);
 }
 
-.roster,
+.roster {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  border-inline-start: var(--stroke-hairline) solid var(--line);
+}
+
 .ground {
   display: flex;
   flex-wrap: wrap;
@@ -117,49 +141,58 @@ code {
 }
 
 .roster a {
-  border: var(--stroke-hairline) solid transparent;
+  display: flex;
+  flex: 1 1 7rem;
+  align-items: end;
+  justify-content: center;
+  padding: 8px 12px;
+  border-inline-end: var(--stroke-hairline) solid var(--line);
+  border-block-end: var(--stroke-hairline) solid var(--line);
   color: inherit;
   text-decoration: none;
-  border-radius: 6px;
 }
 
 .roster a:hover,
 .roster a:focus-visible {
-  border-color: var(--foreground);
+  background: color-mix(in oklab, var(--page), var(--foreground) var(--hover-shade-step));
 }
 
 .roster a[aria-current="page"] {
-  border-color: var(--accent);
+  background: color-mix(in oklab, var(--page), var(--accent) var(--chip-tint));
 }
 
 .roster a:focus-visible {
-  outline: none;
   text-decoration: underline;
 }
 
 .story {
-  border-top: 1px solid var(--line);
+  border-inline: var(--stroke-hairline) solid var(--line);
+  border-block-end: var(--stroke-hairline) solid var(--line);
   scroll-margin-top: 56px;
 }
 
-.story-head {
-  padding: 12px 16px 4px;
+.story-section {
+  --surface-level: 1;
+  border-block-start: var(--stroke-hairline) solid var(--line);
+  background: color-mix(in oklab, var(--page), var(--foreground) var(--level-shade-step));
+}
+
+.story-heading {
+  inline-size: fit-content;
+  margin: 0;
+  padding: 4px 16px;
+  border-inline-end: var(--stroke-hairline) solid var(--line);
+  border-block-end: var(--stroke-hairline) solid var(--line);
+  font-size: 14px;
 }
 
 .story-head h2 {
-  margin: 0;
   font-size: 16px;
 }
 
 .story-head p {
-  margin: 2px 0 0;
-}
-
-.story-section h3 {
   margin: 0;
-  padding: 12px 16px 4px;
-  font-size: 14px;
-  border-top: 1px dashed var(--line);
+  padding: 8px 16px;
 }
 
 .story-note {
@@ -175,7 +208,7 @@ code {
   height: 12px;
   margin-left: 6px;
   border: 1px solid var(--foreground);
-  border-radius: 50%;
+  border-radius: 0;
   vertical-align: middle;
 }
 
@@ -262,11 +295,12 @@ code {
 }
 
 .card {
+  --surface-level: 3;
   position: relative;
   min-height: 120px;
   padding: 12px 16px;
   border: var(--stroke-hairline) solid var(--line);
-  border-radius: 10px;
+  border-radius: 0;
   background: var(--panel);
 }
 
@@ -325,35 +359,40 @@ code {
 
 .props {
   display: grid;
-  gap: 6px;
   margin: 8px 0 0;
   padding: 0;
+  border: var(--stroke-hairline) solid var(--line);
   list-style: none;
 }
 
 .prop {
   padding: 4px 8px;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  background: var(--page);
+  background: color-mix(in oklab, var(--page), var(--foreground) calc(4 * var(--level-shade-step)));
+}
+
+.prop + .prop {
+  border-block-start: var(--stroke-hairline) solid var(--line);
 }
 
 .bench {
+  --surface-level: 1;
   position: sticky;
   top: 48px;
   z-index: 50;
   display: grid;
-  gap: 12px;
   max-height: calc(100vh - 56px);
   overflow: auto;
-  padding: 12px 16px;
-  border-left: 1px solid var(--line);
-  background: var(--page);
+  border-inline: var(--stroke-hairline) solid var(--line);
+  border-block-end: var(--stroke-hairline) solid var(--line);
+  background: color-mix(in oklab, var(--page), var(--foreground) var(--level-shade-step));
 }
 
-.bench h2 {
-  margin: 0 0 4px;
-  font-size: 14px;
+.bench section + section {
+  border-block-start: var(--stroke-hairline) solid var(--line);
+}
+
+.bench section > :not(h2) {
+  margin: 8px 16px 12px;
 }
 
 .hand-hint,
@@ -423,44 +462,56 @@ code {
   font-weight: 700;
 }
 
-.card .tab {
+.edge-chip {
+  --chip-level: calc(var(--surface-level) + 1);
+  --chip-surface: color-mix(in oklab, var(--page), var(--foreground) calc(var(--chip-level) * var(--level-shade-step)));
+  --chip-veil: color-mix(in srgb, var(--foreground) var(--chip-tint), transparent);
+  background-color: color-mix(in oklab, var(--chip-surface) calc((1 - var(--chip-level) * var(--glass-alpha-step)) * 100%), transparent);
+  background-image: linear-gradient(var(--chip-veil), var(--chip-veil));
+  color: inherit;
+  -webkit-backdrop-filter: blur(calc(var(--chip-level) * var(--glass-blur-step))) saturate(var(--glass-saturate));
+  backdrop-filter: blur(calc(var(--chip-level) * var(--glass-blur-step))) saturate(var(--glass-saturate));
+}
+
+.card :is(.tab, .note) {
   position: absolute;
-  top: 0;
-  right: 0;
+  inset-block-start: 0;
+  inset-inline-end: 0;
   margin: 0;
   padding: 2px 8px;
   border: 0 solid var(--line);
-  border-width: 0 0 var(--stroke-hairline) var(--stroke-hairline);
-  border-radius: 0 9px 0 0;
-  background: color-mix(in srgb, var(--foreground) 10%, transparent);
-  color: inherit;
+  border-block-end-width: var(--stroke-hairline);
+  border-inline-start-width: var(--stroke-hairline);
+  border-radius: 0;
   font: inherit;
-  backdrop-filter: blur(8px);
+}
+
+.card .tab {
+  cursor: pointer;
 }
 
 @media (prefers-reduced-transparency: reduce) {
-  .card .tab {
-    background: color-mix(in srgb, var(--foreground) 10%, var(--panel));
+  .edge-chip {
+    background-color: var(--chip-surface);
+    -webkit-backdrop-filter: none;
     backdrop-filter: none;
   }
 }
 
 @media (forced-colors: active) {
-  .card .tab {
-    background: Canvas;
+  .edge-chip {
+    background-color: Canvas;
+    background-image: none;
     border-color: CanvasText;
+    -webkit-backdrop-filter: none;
     backdrop-filter: none;
   }
 }
 
 .card .note {
-  position: absolute;
-  bottom: 100%;
-  left: 40%;
-  padding: 2px 8px;
-  border: 1px dashed var(--foreground);
-  border-bottom: 0;
-  border-radius: 6px 6px 0 0;
+  inset-inline-end: auto;
+  inset-inline-start: 40%;
+  border-inline-end-width: var(--stroke-hairline);
 }
 
 .shelf {
@@ -471,9 +522,32 @@ code {
   padding: 56px 16px 16px;
   overflow: auto;
   border: 1px dashed var(--line);
-  border-radius: 10px;
+  border-radius: 0;
 }
 
 .room-1 .shelf {
   grid-column: 1 / span 3;
+}
+
+@media (max-width: 55rem) {
+  .workbench {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .room {
+    column-gap: clamp(4px, 2vw, 24px);
+    padding-inline: clamp(4px, 2vw, 24px);
+  }
+
+  .card {
+    padding-inline: clamp(4px, 1vw, 12px);
+    overflow-wrap: anywhere;
+  }
+
+  .bench {
+    position: relative;
+    inset-block-start: auto;
+    max-height: none;
+    border-block-start: var(--stroke-hairline) solid var(--line);
+  }
 }

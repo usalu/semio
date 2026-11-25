@@ -1,0 +1,149 @@
+[
+ {
+  "name": "wait for the initial document",
+  "js": "(async()=>'w')()",
+  "until": "(async()=>String(document.querySelectorAll('canvas').length>=1&&!/Loading document/.test(document.body.innerText)&&!!document.querySelector('[role=combobox]')))()",
+  "timeoutMs": 420000,
+  "settleMs": 2000
+ },
+ {
+  "name": "probe pre",
+  "js": "(async()=>JSON.stringify([document.querySelectorAll('canvas').length,(document.body.innerText.match(/(Loading|Opening|Restor)[^\\n]*/)||[''])[0],document.querySelector('[role=combobox]')?.innerText,[...document.querySelectorAll('button')].filter(b=>b.getAttribute('aria-pressed')==='true'||b.getAttribute('aria-selected')==='true').map(b=>b.innerText.slice(0,10))]))()",
+  "settleMs": 500
+ },
+ {
+  "name": "switch to Viewer",
+  "js": "(async()=>{[...document.querySelectorAll('button,[role=tab]')].find(b=>(b.getAttribute('aria-label')||b.innerText).trim().startsWith(\"Viewer\")).click();return \"v\"})()",
+  "settleMs": 3000
+ },
+ {
+  "name": "probe viewer +9s",
+  "js": "(async()=>JSON.stringify([document.querySelectorAll('canvas').length,(document.body.innerText.match(/(Loading|Opening|Restor)[^\\n]*/)||[''])[0],document.querySelector('[role=combobox]')?.innerText,[...document.querySelectorAll('button')].filter(b=>b.getAttribute('aria-pressed')==='true'||b.getAttribute('aria-selected')==='true').map(b=>b.innerText.slice(0,10))]))()",
+  "settleMs": 6000
+ },
+ {
+  "name": "probe viewer +18s",
+  "js": "(async()=>JSON.stringify([document.querySelectorAll('canvas').length,(document.body.innerText.match(/(Loading|Opening|Restor)[^\\n]*/)||[''])[0],document.querySelector('[role=combobox]')?.innerText,[...document.querySelectorAll('button')].filter(b=>b.getAttribute('aria-pressed')==='true'||b.getAttribute('aria-selected')==='true').map(b=>b.innerText.slice(0,10))]))()",
+  "settleMs": 6000
+ },
+ {
+  "name": "probe viewer +27s",
+  "js": "(async()=>JSON.stringify([document.querySelectorAll('canvas').length,(document.body.innerText.match(/(Loading|Opening|Restor)[^\\n]*/)||[''])[0],document.querySelector('[role=combobox]')?.innerText,[...document.querySelectorAll('button')].filter(b=>b.getAttribute('aria-pressed')==='true'||b.getAttribute('aria-selected')==='true').map(b=>b.innerText.slice(0,10))]))()",
+  "settleMs": 6000
+ },
+ {
+  "name": "probe viewer +36s",
+  "js": "(async()=>JSON.stringify([document.querySelectorAll('canvas').length,(document.body.innerText.match(/(Loading|Opening|Restor)[^\\n]*/)||[''])[0],document.querySelector('[role=combobox]')?.innerText,[...document.querySelectorAll('button')].filter(b=>b.getAttribute('aria-pressed')==='true'||b.getAttribute('aria-selected')==='true').map(b=>b.innerText.slice(0,10))]))()",
+  "settleMs": 6000
+ },
+ {
+  "name": "probe viewer +45s",
+  "js": "(async()=>JSON.stringify([document.querySelectorAll('canvas').length,(document.body.innerText.match(/(Loading|Opening|Restor)[^\\n]*/)||[''])[0],document.querySelector('[role=combobox]')?.innerText,[...document.querySelectorAll('button')].filter(b=>b.getAttribute('aria-pressed')==='true'||b.getAttribute('aria-selected')==='true').map(b=>b.innerText.slice(0,10))]))()",
+  "settleMs": 6000
+ },
+ {
+  "name": "probe viewer +54s",
+  "js": "(async()=>JSON.stringify([document.querySelectorAll('canvas').length,(document.body.innerText.match(/(Loading|Opening|Restor)[^\\n]*/)||[''])[0],document.querySelector('[role=combobox]')?.innerText,[...document.querySelectorAll('button')].filter(b=>b.getAttribute('aria-pressed')==='true'||b.getAttribute('aria-selected')==='true').map(b=>b.innerText.slice(0,10))]))()",
+  "settleMs": 6000
+ },
+ {
+  "name": "probe viewer +63s",
+  "js": "(async()=>JSON.stringify([document.querySelectorAll('canvas').length,(document.body.innerText.match(/(Loading|Opening|Restor)[^\\n]*/)||[''])[0],document.querySelector('[role=combobox]')?.innerText,[...document.querySelectorAll('button')].filter(b=>b.getAttribute('aria-pressed')==='true'||b.getAttribute('aria-selected')==='true').map(b=>b.innerText.slice(0,10))]))()",
+  "settleMs": 6000
+ },
+ {
+  "name": "probe viewer +72s",
+  "js": "(async()=>JSON.stringify([document.querySelectorAll('canvas').length,(document.body.innerText.match(/(Loading|Opening|Restor)[^\\n]*/)||[''])[0],document.querySelector('[role=combobox]')?.innerText,[...document.querySelectorAll('button')].filter(b=>b.getAttribute('aria-pressed')==='true'||b.getAttribute('aria-selected')==='true').map(b=>b.innerText.slice(0,10))]))()",
+  "settleMs": 6000
+ },
+ {
+  "name": "probe viewer +81s",
+  "js": "(async()=>JSON.stringify([document.querySelectorAll('canvas').length,(document.body.innerText.match(/(Loading|Opening|Restor)[^\\n]*/)||[''])[0],document.querySelector('[role=combobox]')?.innerText,[...document.querySelectorAll('button')].filter(b=>b.getAttribute('aria-pressed')==='true'||b.getAttribute('aria-selected')==='true').map(b=>b.innerText.slice(0,10))]))()",
+  "settleMs": 6000
+ },
+ {
+  "name": "probe viewer +90s",
+  "js": "(async()=>JSON.stringify([document.querySelectorAll('canvas').length,(document.body.innerText.match(/(Loading|Opening|Restor)[^\\n]*/)||[''])[0],document.querySelector('[role=combobox]')?.innerText,[...document.querySelectorAll('button')].filter(b=>b.getAttribute('aria-pressed')==='true'||b.getAttribute('aria-selected')==='true').map(b=>b.innerText.slice(0,10))]))()",
+  "settleMs": 6000
+ },
+ {
+  "name": "probe viewer +99s",
+  "js": "(async()=>JSON.stringify([document.querySelectorAll('canvas').length,(document.body.innerText.match(/(Loading|Opening|Restor)[^\\n]*/)||[''])[0],document.querySelector('[role=combobox]')?.innerText,[...document.querySelectorAll('button')].filter(b=>b.getAttribute('aria-pressed')==='true'||b.getAttribute('aria-selected')==='true').map(b=>b.innerText.slice(0,10))]))()",
+  "settleMs": 6000
+ },
+ {
+  "name": "probe viewer +108s",
+  "js": "(async()=>JSON.stringify([document.querySelectorAll('canvas').length,(document.body.innerText.match(/(Loading|Opening|Restor)[^\\n]*/)||[''])[0],document.querySelector('[role=combobox]')?.innerText,[...document.querySelectorAll('button')].filter(b=>b.getAttribute('aria-pressed')==='true'||b.getAttribute('aria-selected')==='true').map(b=>b.innerText.slice(0,10))]))()",
+  "settleMs": 6000
+ },
+ {
+  "name": "switch back to Editor",
+  "js": "(async()=>{[...document.querySelectorAll('button,[role=tab]')].find(b=>(b.getAttribute('aria-label')||b.innerText).trim().startsWith(\"Editor\")).click();return \"e\"})()",
+  "settleMs": 3000
+ },
+ {
+  "name": "probe editor +9s",
+  "js": "(async()=>JSON.stringify([document.querySelectorAll('canvas').length,(document.body.innerText.match(/(Loading|Opening|Restor)[^\\n]*/)||[''])[0],document.querySelector('[role=combobox]')?.innerText,[...document.querySelectorAll('button')].filter(b=>b.getAttribute('aria-pressed')==='true'||b.getAttribute('aria-selected')==='true').map(b=>b.innerText.slice(0,10))]))()",
+  "settleMs": 6000
+ },
+ {
+  "name": "probe editor +18s",
+  "js": "(async()=>JSON.stringify([document.querySelectorAll('canvas').length,(document.body.innerText.match(/(Loading|Opening|Restor)[^\\n]*/)||[''])[0],document.querySelector('[role=combobox]')?.innerText,[...document.querySelectorAll('button')].filter(b=>b.getAttribute('aria-pressed')==='true'||b.getAttribute('aria-selected')==='true').map(b=>b.innerText.slice(0,10))]))()",
+  "settleMs": 6000
+ },
+ {
+  "name": "probe editor +27s",
+  "js": "(async()=>JSON.stringify([document.querySelectorAll('canvas').length,(document.body.innerText.match(/(Loading|Opening|Restor)[^\\n]*/)||[''])[0],document.querySelector('[role=combobox]')?.innerText,[...document.querySelectorAll('button')].filter(b=>b.getAttribute('aria-pressed')==='true'||b.getAttribute('aria-selected')==='true').map(b=>b.innerText.slice(0,10))]))()",
+  "settleMs": 6000
+ },
+ {
+  "name": "probe editor +36s",
+  "js": "(async()=>JSON.stringify([document.querySelectorAll('canvas').length,(document.body.innerText.match(/(Loading|Opening|Restor)[^\\n]*/)||[''])[0],document.querySelector('[role=combobox]')?.innerText,[...document.querySelectorAll('button')].filter(b=>b.getAttribute('aria-pressed')==='true'||b.getAttribute('aria-selected')==='true').map(b=>b.innerText.slice(0,10))]))()",
+  "settleMs": 6000
+ },
+ {
+  "name": "probe editor +45s",
+  "js": "(async()=>JSON.stringify([document.querySelectorAll('canvas').length,(document.body.innerText.match(/(Loading|Opening|Restor)[^\\n]*/)||[''])[0],document.querySelector('[role=combobox]')?.innerText,[...document.querySelectorAll('button')].filter(b=>b.getAttribute('aria-pressed')==='true'||b.getAttribute('aria-selected')==='true').map(b=>b.innerText.slice(0,10))]))()",
+  "settleMs": 6000
+ },
+ {
+  "name": "probe editor +54s",
+  "js": "(async()=>JSON.stringify([document.querySelectorAll('canvas').length,(document.body.innerText.match(/(Loading|Opening|Restor)[^\\n]*/)||[''])[0],document.querySelector('[role=combobox]')?.innerText,[...document.querySelectorAll('button')].filter(b=>b.getAttribute('aria-pressed')==='true'||b.getAttribute('aria-selected')==='true').map(b=>b.innerText.slice(0,10))]))()",
+  "settleMs": 6000
+ },
+ {
+  "name": "probe editor +63s",
+  "js": "(async()=>JSON.stringify([document.querySelectorAll('canvas').length,(document.body.innerText.match(/(Loading|Opening|Restor)[^\\n]*/)||[''])[0],document.querySelector('[role=combobox]')?.innerText,[...document.querySelectorAll('button')].filter(b=>b.getAttribute('aria-pressed')==='true'||b.getAttribute('aria-selected')==='true').map(b=>b.innerText.slice(0,10))]))()",
+  "settleMs": 6000
+ },
+ {
+  "name": "probe editor +72s",
+  "js": "(async()=>JSON.stringify([document.querySelectorAll('canvas').length,(document.body.innerText.match(/(Loading|Opening|Restor)[^\\n]*/)||[''])[0],document.querySelector('[role=combobox]')?.innerText,[...document.querySelectorAll('button')].filter(b=>b.getAttribute('aria-pressed')==='true'||b.getAttribute('aria-selected')==='true').map(b=>b.innerText.slice(0,10))]))()",
+  "settleMs": 6000
+ },
+ {
+  "name": "probe editor +81s",
+  "js": "(async()=>JSON.stringify([document.querySelectorAll('canvas').length,(document.body.innerText.match(/(Loading|Opening|Restor)[^\\n]*/)||[''])[0],document.querySelector('[role=combobox]')?.innerText,[...document.querySelectorAll('button')].filter(b=>b.getAttribute('aria-pressed')==='true'||b.getAttribute('aria-selected')==='true').map(b=>b.innerText.slice(0,10))]))()",
+  "settleMs": 6000
+ },
+ {
+  "name": "probe editor +90s",
+  "js": "(async()=>JSON.stringify([document.querySelectorAll('canvas').length,(document.body.innerText.match(/(Loading|Opening|Restor)[^\\n]*/)||[''])[0],document.querySelector('[role=combobox]')?.innerText,[...document.querySelectorAll('button')].filter(b=>b.getAttribute('aria-pressed')==='true'||b.getAttribute('aria-selected')==='true').map(b=>b.innerText.slice(0,10))]))()",
+  "settleMs": 6000
+ },
+ {
+  "name": "probe editor +99s",
+  "js": "(async()=>JSON.stringify([document.querySelectorAll('canvas').length,(document.body.innerText.match(/(Loading|Opening|Restor)[^\\n]*/)||[''])[0],document.querySelector('[role=combobox]')?.innerText,[...document.querySelectorAll('button')].filter(b=>b.getAttribute('aria-pressed')==='true'||b.getAttribute('aria-selected')==='true').map(b=>b.innerText.slice(0,10))]))()",
+  "settleMs": 6000
+ },
+ {
+  "name": "probe editor +108s",
+  "js": "(async()=>JSON.stringify([document.querySelectorAll('canvas').length,(document.body.innerText.match(/(Loading|Opening|Restor)[^\\n]*/)||[''])[0],document.querySelector('[role=combobox]')?.innerText,[...document.querySelectorAll('button')].filter(b=>b.getAttribute('aria-pressed')==='true'||b.getAttribute('aria-selected')==='true').map(b=>b.innerText.slice(0,10))]))()",
+  "settleMs": 6000
+ },
+ {
+  "name": "state after editor",
+  "js": "(async()=>JSON.stringify([document.querySelectorAll('canvas').length,document.querySelector('[role=combobox]')?.innerText,[...document.querySelectorAll('canvas')].map(c=>{const g=c.getContext('webgl2')||c.getContext('webgl');return [c.width,c.height,g?g.isContextLost():'nogl']}),window.__ctx||[],!!document.querySelector('.semio-world-3d-empty')]))()",
+  "settleMs": 500
+ }
+]

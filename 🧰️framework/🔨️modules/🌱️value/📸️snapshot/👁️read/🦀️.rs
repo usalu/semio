@@ -494,8 +494,8 @@ impl SnapshotReadLeaseRegistryOwner {
     pub fn occupied_count(&self) -> usize { self.live().map_or(0, |owner| owner.occupied_count()) }
     pub fn empty_backing_demands(&self) -> Result<semio_framework_value::RetirementDemand, ValueError> { self.live().map_or(Ok(Default::default()), |owner| owner.empty_backing_demands()) }
     pub fn close_empty_backing_step(&self,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome{self.live().map_or(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0},|owner|owner.close_empty_backing_step(effect))}
-    /// 📚️ Quotes the next release of the registry's own custody: its Arc frame, then, once sole, each generation page.
-    pub fn custody_byte_demand(&self) -> Result<usize, ValueError> { self.0.as_ref().map_or(Ok(0), |owner| owner.custody_byte_demand()) }
+    /// 📚️ Quotes the next step of registry retirement, including the final move out of its owner slot.
+    pub fn custody_demands(&self) -> Result<semio_framework_value::RetirementDemand, ValueError> { snapshot_registry_alias_demands(&self.0) }
     /// 🪜️ Releases the registry's own custody one frame or page at a time once it is the sole terminal owner.
     pub fn close_custody_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll {
         if self.0.as_ref().is_some_and(|owner| !owner.closed() && (owner.strong_count() != 1 || !SnapshotReadLeaseRegistry::terminal_is_empty(owner))) { return RetainedWorkPoll::Complete(RetainedWorkOutcome { result: Ok(RetainedCloneStep::Progress(Default::default())), work: 0 }); }

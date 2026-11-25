@@ -20,11 +20,17 @@ def floor_of(total):
     m=HOST["memory"]
     return min(total,max(m["floorMinimumMegabytes"],min(m["floorMaximumMegabytes"],total*m["floorBasisPoints"]//10000)))
 
+def reserve_of(total):
+    m=HOST["memory"]
+    if "interactiveReserveBasisPoints" not in m:return 0
+    share=total*m["interactiveReserveBasisPoints"]//10000
+    return min(total,max(m.get("interactiveReserveMinimumMegabytes",0),min(m.get("interactiveReserveMaximumMegabytes",total),share)))
+
 def spare_and_verdict(total,available,held,megabytes,pressure,swap_out):
-    """A running unit is charged once: what it holds now (used) is in the available memory, the part of its peak it has not grown into yet is kept free."""
+    """The memory kept for the interactive apps of the host (`interactiveReserve*` of the memory policy) counts as unmanaged memory at least. A running unit is charged once: what it holds now (used) is in the available memory, the part of its peak it has not grown into yet is kept free."""
     floor=floor_of(total);cap=max(0,total-floor)
     used=sum(row["usedMegabytes"] for row in held);growth=sum(max(0,row["megabytes"]-row["usedMegabytes"]) for row in held);committed=sum(max(row["megabytes"],row["usedMegabytes"]) for row in held)
-    unmanaged=max(0,total-available-used)
+    unmanaged=max(max(0,total-available-used),reserve_of(total))
     share=max(0,cap-unmanaged)
     budget=share*HOST["memory"]["budgetBasisPoints"]//10000-committed
     observed=available-floor-growth

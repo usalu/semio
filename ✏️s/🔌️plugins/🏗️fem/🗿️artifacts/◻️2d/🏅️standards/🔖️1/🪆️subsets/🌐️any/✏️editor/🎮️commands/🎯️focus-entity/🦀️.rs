@@ -4,7 +4,8 @@
 use crate::editor::fem2d::commands::set_camera::SetCamera;
 use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::fem2d_entity_model_point;
 use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::screen_2d;
-use crate::editor::fem2d::modes::edit::fem2d_addressed_camera;
+use semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::modes::edit::windows::model as model_window;
+use semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results as results_window;
 use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 use semio_plugin::ArtifactView;
 use semio_plugin::ConfigView;
@@ -31,12 +32,19 @@ pub fn handle(_payload: &FocusEntity, _doc: &ArtifactView<'_, Fem2dSnapshot>, _c
 
 /// 🎯️ Centres the addressed window's camera on the entity — its own point for a node, the midpoint for
 /// a member, the outline centroid for a region, the carrying node for a support or a nodal load — at
-/// the zoom the window already has, written through the one `setCamera` window-config path.
+/// the zoom the window already has, written through the one `setCamera` window-config path. A panel
+/// button carries no window of its own, so the pane the user last touched is the one addressed.
 pub fn handle_window(payload: &FocusEntity, doc: &ArtifactView<'_, Fem2dSnapshot>, cfg: &ConfigView<'_, NoConfig>, view: &semio_plugin::ViewModel) -> Result<Emit<Fem2dMutation, NoConfigMutation>, Fault> {
-    let camera = fem2d_addressed_camera(cfg, view, "fem2d.focus-entity")?;
+    let id = view.window_id.as_deref().or(view.focused_window_id.as_deref()).ok_or_else(|| Fault::from("fem2d.focus-entity.window-required"))?;
+    let kind = view.window_instances.iter().find(|window| window.id == id).map(|window| window.window_kind_id.as_str()).ok_or_else(|| Fault::from("fem2d.focus-entity.window-stale"))?;
+    let camera = match kind {
+        model_window::WINDOW_KIND_ID => model_window::config::current(cfg).camera,
+        results_window::WINDOW_KIND_ID => results_window::config::current(cfg).camera,
+        _ => return Err(Fault::from("fem2d.focus-entity.window-kind")),
+    };
     let point = fem2d_entity_model_point(doc.snapshot, &payload.id).ok_or_else(|| Fault::from("fem2d.focus-entity.unknown-entity"))?;
     let (x, y) = screen_2d(point.0, point.1);
-    set_camera::handle_window(&SetCamera { x, y, zoom: camera.zoom }, cfg, view)
+    set_camera::camera_in_window(&SetCamera { x, y, zoom: camera.zoom }, cfg, view, id)
 }
 //#endregion 🔖️FocusEntity
 

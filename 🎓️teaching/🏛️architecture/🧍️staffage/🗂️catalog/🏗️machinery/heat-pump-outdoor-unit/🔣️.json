@@ -13,13 +13,55 @@
       "de": "Ein Luft-Wasser-Monoblock-Wärmepumpen-Außengerät von 12 kW, 1,10 m breit, 0,45 m tief und 1,45 m hoch, in der Seitenansicht: der Lamellenschutz über dem L-förmigen Wärmetauscher an der rechten Seite und der Rückseite, das gewölbte Gitter des einzelnen Frontlüfters neben der geschlossenen Verdichtersäule, die Bodenwanne auf zwei Gummifüßen und die hinten angeschlagene Abdeckhaube für die Wartung. Im Heizbetrieb bläst der Lüfter um 5 K abgekühlte Luft, im Kühlbetrieb um 7 K erwärmte; ein Abtauzyklus setzt Dampf vom Wärmetauscher frei."
     },
     "tags": [
-      "machine",
-      "heat-pump",
-      "outdoor-unit",
-      "air-source",
-      "hvac",
-      "fan",
-      "defrost"
+      {
+        "id": "machine",
+        "title": {
+          "en": "machine",
+          "de": "Maschine"
+        }
+      },
+      {
+        "id": "heat-pump",
+        "title": {
+          "en": "heat pump",
+          "de": "Wärmepumpe"
+        }
+      },
+      {
+        "id": "outdoor-unit",
+        "title": {
+          "en": "outdoor unit",
+          "de": "Außengerät"
+        }
+      },
+      {
+        "id": "air-source",
+        "title": {
+          "en": "air source",
+          "de": "Luftquelle"
+        }
+      },
+      {
+        "id": "hvac",
+        "title": {
+          "en": "HVAC",
+          "de": "HLK"
+        }
+      },
+      {
+        "id": "fan",
+        "title": {
+          "en": "fan",
+          "de": "Ventilator"
+        }
+      },
+      {
+        "id": "defrost",
+        "title": {
+          "en": "defrost",
+          "de": "Abtauen"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage content worker NW-MA",

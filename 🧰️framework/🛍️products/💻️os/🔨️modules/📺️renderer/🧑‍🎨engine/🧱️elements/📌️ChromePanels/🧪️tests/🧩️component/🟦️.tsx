@@ -2,7 +2,9 @@ import { cleanup, fireEvent, render } from "@semio-tech/ui-react/test";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createFrameworkSettingsPanelTab } from "../../🟦️.tsx";
 import { createFrameworkDisplayPanelTabs, type DisplayHostApi } from "../../🖥️display-panel/🟦️.tsx";
-import { type SettingsHostApi } from "../../⚙️settings-general/🟦️.tsx";
+import { buildSettingsGeneralTree, type SettingsHostApi } from "../../⚙️settings-general/🟦️.tsx";
+import { syncShellLabelLocale } from "../../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
+import selectorNames from "../🧫️fixtures/🔽️selector-names/🔣️.json";
 import { themeAlphaInput, themeContrastBadgeText, themeContrastRatioFormatter, themeNumberInputRow, themeTextInputRow } from "../../🎨️settings-theme/🟦️.tsx";
 import { keybindingCaptureStepV1, type KeybindingCaptureKeyV1 } from "../../⌨️settings-keybindings/🟦️.tsx";
 import { type ConflictsHostApi } from "../../📱️settings-defaults-and-conflicts/🟦️.tsx";
@@ -19,6 +21,31 @@ import { inlineTreeControlsFixtureUrl } from "@semio-tech/ui/testing/fixtures";
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
+});
+
+describe("Settings selector names", () => {
+  it("exposes each visible setting label as its combobox name in both locales", () => {
+    try {
+      for (const locale of selectorNames.locales) {
+        syncShellLabelLocale(locale);
+        const host = {
+          locale, locks: {}, layout: "desktop", appearance: "system", terminology: "native", terminologies: ["native"],
+          driverId: "default", drivers: [], driverSaveLabel: "", mergePolicy: "Normal", setMergePolicy: vi.fn(),
+          driver: { labels: "full", labelTier: "normal", drag: "handle", chrome: "hover", gumball: "always", tooltips: "full", hotkeys: "inline" },
+        } as unknown as SettingsHostApi;
+        const config = buildSettingsGeneralTree(host);
+        const view = render(<Tree {...config} sections={config.sections.map((section) => ({ ...section, defaultOpen: true }))} />);
+        for (const id of selectorNames.ids) {
+          const row = config.sections.flatMap((section) => section.items ?? []).find((item) => item.id === id);
+          expect(row, id).toBeDefined();
+          expect(view.getByRole("combobox", { name: String(row!.label) })).toHaveProperty("id", id);
+        }
+        view.unmount();
+      }
+    } finally {
+      syncShellLabelLocale("en");
+    }
+  });
 });
 
 describe("ChromePanels theme inputs", () => {

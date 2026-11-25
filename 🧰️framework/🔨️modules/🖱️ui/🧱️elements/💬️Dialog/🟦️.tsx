@@ -569,7 +569,7 @@ const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps>(funct
       <SurfaceScope level="dialog" fill="glass">
         {children}
         {showCloseButton && (
-          <DialogClose {...sharedBorderlessBoxProps} className="data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-medium right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-small">
+          <DialogClose {...sharedBorderlessBoxProps} className="data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-medium right-4 opacity-70 transition-opacity hover:opacity-100 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-small">
             <CloseIconAlt />
             <span className="sr-only">{closeLabel}</span>
           </DialogClose>

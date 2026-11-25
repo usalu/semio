@@ -26,7 +26,12 @@ impl ArtifactCompletionFault{
 pub fn borrowed_report(origin:FaultOrigin,code:&str,severity:Severity,message:&str,retryable:bool)->ArtifactBoundedToolFault{
  let origin=match origin{FaultOrigin::Edge=>"edge",FaultOrigin::Renderer=>"renderer",FaultOrigin::Os=>"os",FaultOrigin::Module=>"module",FaultOrigin::Plugin=>"plugin",FaultOrigin::App=>"app",FaultOrigin::Extension=>"extension",FaultOrigin::Framework=>"framework"};
  let severity=match severity{Severity::Info=>"info",Severity::Warning=>"warning",Severity::Error=>"error",Severity::Fatal=>"fatal"};
- let mut frame=Frame{bytes:[0;480],len:0};frame.write(b"{\"origin\":");frame.string(origin,16);frame.write(b",\"code\":");let code_start=frame.len;if !frame.string(code,128){frame.len=code_start;frame.string("interactive-job.fault-capacity",128);}frame.write(b",\"severity\":");frame.string(severity,16);frame.write(b",\"message\":");frame.string(message,224);frame.write(b",\"scope\":{},\"retryable\":");frame.write(if retryable{b"true"}else{b"false"});frame.write(b"}");ArtifactBoundedToolFault::from_inline_report(frame.bytes,frame.len)
+ let mut frame=Frame{bytes:[0;480],len:0};frame.write(b"{\"origin\":");frame.string(origin,16);frame.write(b",\"code\":");let code_start=frame.len;if !frame.string(code,128){frame.len=code_start;frame.string("interactive-job.fault-capacity",128);}frame.write(b",\"severity\":");frame.string(severity,16);frame.write(b",\"message\":");
+ let suffix=b",\"scope\":{},\"retainedProgress\":{\"copiedItems\":0,\"copiedBytes\":0,\"retainedCapacityBytes\":0,\"releasedBytes\":0},\"retryable\":";
+ let retryable:&[u8]=if retryable{b"true}"}else{b"false}"};
+ let message_limit=224.min(frame.bytes.len()-frame.len-suffix.len()-retryable.len()-2);
+ frame.string(message,message_limit);frame.write(suffix);frame.write(retryable);
+ ArtifactBoundedToolFault::from_inline_report(frame.bytes,frame.len)
 }
 /// 🧮️ Prices transfer of every byte in the concrete bounded report carrier, including its inline frame and length.
 pub const fn borrowed_report_copy_bytes()->usize{size_of::<ArtifactBoundedToolFault>()}

@@ -6,13 +6,13 @@ use crate::observe_retirement_allocations;
 use crate::observe_retirement_allocations as observe;
 
 struct ScalarClose{cursor:crate::retained_clone::ScalarCursor<u64>}
-#[derive(Clone,Copy)]enum Operation{Start,Close(usize)}
+#[derive(Clone,Copy)]enum Operation{Start,Close(usize),Poll(usize)}
 impl OriginalEffectProducer for ScalarClose{
  type Output=RetainedCloneStep;type Failure=OriginalRetirementFailure;type Context<'a,'b>=Operation where 'b:'a;
  fn validate_context<'a,'b>(&self,_:&Operation)->Result<(),ValueError>where 'b:'a{Ok(())}
  fn source_turn<'a,'b>(&self,_:&Operation)->Option<OriginalSourceTurnIdentity>where 'b:'a{None}
- fn receive<'r,'a,'b>(&mut self,op:&mut Operation,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'r,Self::Output,Self::Failure>)->Result<OriginalEffectReplyComplete<'r,Self::Output,Self::Failure>,ValueError>where 'b:'a{match op{Operation::Start=>self.cursor.begin_close_into(effect,reply),Operation::Close(body)=>self.cursor.close_into(*body,effect,reply)}}
- fn recover<'r,'a,'b>(&mut self,op:&mut Operation,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'r,Self::Output,Self::Failure>)->Result<OriginalEffectReplyComplete<'r,Self::Output,Self::Failure>,ValueError>where 'b:'a{match op{Operation::Start=>self.cursor.recover_begin_close_into(effect,reply),Operation::Close(body)=>self.cursor.recover_close_into(*body,effect,reply)}}
+ fn receive<'r,'a,'b>(&mut self,op:&mut Operation,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'r,Self::Output,Self::Failure>)->Result<OriginalEffectReplyComplete<'r,Self::Output,Self::Failure>,ValueError>where 'b:'a{match op{Operation::Start=>self.cursor.begin_close_into(effect,reply),Operation::Close(body)=>self.cursor.close_into(*body,effect,reply),Operation::Poll(body)=>match RetainedCloneCursor::close_step(&mut self.cursor,*body,effect){RetainedWorkPoll::Complete(turn)=>Ok(reply.complete(turn.result)),RetainedWorkPoll::Pending{..}=>Ok(reply.pending())}}}
+ fn recover<'r,'a,'b>(&mut self,op:&mut Operation,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'r,Self::Output,Self::Failure>)->Result<OriginalEffectReplyComplete<'r,Self::Output,Self::Failure>,ValueError>where 'b:'a{match op{Operation::Start=>self.cursor.recover_begin_close_into(effect,reply),Operation::Close(body)|Operation::Poll(body)=>self.cursor.recover_close_into(*body,effect,reply)}}
 }
 fn run(bank:&mut EffectBank,authority:&mut OriginalEffectAuthority<ScalarClose>,op:Operation,grant:RetainedCloneGrant,units:u64)->(RetainedCloneStep,(usize,usize)){
  let mut action=None;let mut answer=None;let mut operation=op;let ((poll,actual),heap)=observe_retirement_allocations(||bank.run(grant,units,|effect|{let before=effect.performed_work();let ready=authority.drive(&mut operation,effect,&mut action);let work=effect.performed_work()-before;match ready{Ok(true)=>RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok::<_,ValueError>(()),work}),Ok(false)=>RetainedWorkPoll::Pending{work},Err(error)=>RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(error),work})}}));
@@ -31,6 +31,19 @@ fn retained_clone_close_depth_observes_pending_birth_and_preserves_owner_on_refu
  assert!(authority.as_ref().unwrap().inspect(|p|p.cursor.terminal_is_empty()));assert_eq!(authority.as_ref().unwrap().inspect(|p|p.cursor.next_close_depth_demand().unwrap()),law["terminalDepth"].as_u64().unwrap()as usize);
  let mut producer=None;let d=OriginalEffectAuthority::<ScalarClose>::producer_transfer_demand().unwrap();let issued=grant(d);let ((poll,actual),heap)=observe_retirement_allocations(||bank.run(issued,1,|effect|RetainedWorkPoll::Complete(OriginalEffectAuthority::transfer_producer(&mut authority,&Operation::Close(4096),&mut producer,effect))));let RetainedWorkPoll::Complete(turn)=poll else{panic!("scalar producer transfer pending")};let progress=turn.result.unwrap().unwrap();if let Some(actual)=actual{assert_eq!(actual,heap.0)}assert_eq!(bank.take_admitted(),Some(true));bank.post(progress,issued,heap);
  let witness=unsafe{RetainedCursorRelease::native(|p:&ScalarClose|p.cursor.native_terminal_release().is_some_and(|witness|witness.validates(&p.cursor)))};assert!(witness.validates(producer.as_ref().unwrap()));let issued=grant(witness.inline_demand());let mut reply=None;let ((poll,actual),heap)=observe_retirement_allocations(||bank.run(issued,witness.inline_work(),|effect|{let before=effect.performed_work();let complete=witness.inline_into(&mut producer,effect,OriginalEffectReply::borrow(&mut reply).unwrap()).unwrap();drop(complete);RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok::<_,ValueError>(()),work:effect.performed_work()-before})}));let RetainedWorkPoll::Complete(turn)=poll else{panic!("scalar producer release pending")};turn.result.unwrap();let progress=reply.take().unwrap().unwrap().progress();if let Some(actual)=actual{assert_eq!(actual,heap.0)}assert_eq!(bank.take_admitted(),Some(true));bank.post(progress,issued,heap);assert!(producer.is_none());
+}
+
+/// 🪜️ The poll form of a close settles the same reply producer as the reply form.
+#[test]
+fn polled_close_settles_the_reply_producer(){
+ let stock=RetainedCloneGrant{maximum_items:1048576,maximum_copy_bytes:16777216,maximum_capacity_bytes:16777216,maximum_release_bytes:33554432,maximum_depth:256};
+ let mut bank=EffectBank::new(Wallet::new(stock,1048576));
+ let mut cursor=crate::retained_clone::ScalarCursor::<u64>::default();cursor.value=Some(7);
+ let mut authority=OriginalEffectAuthority::new(ScalarClose{cursor});
+ let demand=authority.inspect(|producer|producer.cursor.begin_close_demand().unwrap());let work=authority.inspect(|producer|producer.cursor.begin_close_work_demand().unwrap());
+ run(&mut bank,&mut authority,Operation::Start,grant(demand),work);
+ for _ in 0..64{if authority.inspect(|producer|producer.cursor.terminal_is_empty()){break}let issued=grant(authority.inspect(|producer|producer.cursor.close_demands(4096).unwrap()));let units=authority.inspect(|producer|producer.cursor.close_work_demand(4096).unwrap());let(step,heap)=run(&mut bank,&mut authority,Operation::Poll(4096),issued,units);assert!(step.progress().fits(issued));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));}
+ assert!(authority.inspect(|producer|producer.cursor.terminal_is_empty()));assert!(authority.inspect(|producer|producer.cursor.value.is_none()));
 }
 
 #[derive(Clone,Copy)]enum CapturedOp{First,Second,Proof,CloseFirst,CloseSecond,TakeFirst,ClearOutput}

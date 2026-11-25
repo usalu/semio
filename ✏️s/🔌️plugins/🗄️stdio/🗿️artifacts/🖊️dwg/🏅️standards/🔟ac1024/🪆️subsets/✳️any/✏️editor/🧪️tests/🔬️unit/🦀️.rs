@@ -64,8 +64,8 @@ async fn invalid_natural_dwg_files_are_refused_with_a_payload_error() {
 }
 
 fn layer_records(snapshot: &DwgSnapshot) -> Vec<(u64, String)> {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgTableRecordBody;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgTableRecordBody;
+    use semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody;
     snapshot
         .drawing
         .objects
@@ -78,8 +78,8 @@ fn layer_records(snapshot: &DwgSnapshot) -> Vec<(u64, String)> {
 }
 
 fn layer_control_entries(snapshot: &DwgSnapshot) -> Vec<u64> {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgTableControlBody;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgTableControlBody;
+    use semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody;
     snapshot
         .drawing
         .objects

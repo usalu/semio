@@ -55,8 +55,14 @@ members = [
     "🧩️compositions/🀄️wfc/📦️packages/🦀️rust",
     "🧩️compositions/🀄️wfc/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/🌀️procedural/📦️packages/🦀️rust",
+    "🧩️compositions/🌀️procedural/🗃️apps/✏️procedural-generation2d-editor/📦️packages/🦀️rust",
+    "🧩️compositions/🌀️procedural/🗃️apps/✏️procedural-generation3d-editor/📦️packages/🦀️rust",
+    "🧩️compositions/🌀️procedural/🗃️apps/👁️procedural-generation2d-viewer/📦️packages/🦀️rust",
+    "🧩️compositions/🌀️procedural/🗃️apps/👁️procedural-generation3d-viewer/📦️packages/🦀️rust",
     "🧩️compositions/🌀️procedural/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/🌊️flow/📦️packages/🦀️rust",
+    "🧩️compositions/🌊️flow/🗃️apps/✏️flow-editor/📦️packages/🦀️rust",
+    "🧩️compositions/🌊️flow/🗃️apps/👁️flow-viewer/📦️packages/🦀️rust",
     "🧩️compositions/🌊️flow/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/🌍️gis/📦️packages/🦀️rust",
     "🧩️compositions/🌍️gis/🧩️component/📦️packages/🦀️rust",
@@ -93,6 +99,12 @@ members = [
     "🧩️compositions/📕️norm/🧩️extensions/📒️energy/📦️packages/🦀️rust",
     "🧩️compositions/📕️norm/🧩️extensions/📒️energy/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/📕️norm/🧩️extensions/📓️eurocode-structural/📦️packages/🦀️rust",
+    "🧩️compositions/📕️norm/🧩️extensions/📓️eurocode-structural/🗃️apps/🏛️en1992/✏️editor/📦️packages/🦀️rust",
+    "🧩️compositions/📕️norm/🧩️extensions/📓️eurocode-structural/🗃️apps/🏛️en1992/👁️viewer/📦️packages/🦀️rust",
+    "🧩️compositions/📕️norm/🧩️extensions/📓️eurocode-structural/🗃️apps/🔩️en1993/✏️editor/📦️packages/🦀️rust",
+    "🧩️compositions/📕️norm/🧩️extensions/📓️eurocode-structural/🗃️apps/🔩️en1993/👁️viewer/📦️packages/🦀️rust",
+    "🧩️compositions/📕️norm/🧩️extensions/📓️eurocode-structural/🗃️apps/🧩️en1994/✏️editor/📦️packages/🦀️rust",
+    "🧩️compositions/📕️norm/🧩️extensions/📓️eurocode-structural/🗃️apps/🧩️en1994/👁️viewer/📦️packages/🦀️rust",
     "🧩️compositions/📕️norm/🧩️extensions/📓️eurocode-structural/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/📕️norm/🧩️extensions/📗️eurocode/📦️packages/🦀️rust",
     "🧩️compositions/📕️norm/🧩️extensions/📗️eurocode/🧩️component/📦️packages/🦀️rust",
@@ -113,6 +125,8 @@ members = [
     "🧩️compositions/🖍️draw/📦️packages/🦀️rust",
     "🧩️compositions/🖍️draw/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/🖨️raster/📦️packages/🦀️rust",
+    "🧩️compositions/🖨️raster/🗃️apps/✏️raster-editor/📦️packages/🦀️rust",
+    "🧩️compositions/🖨️raster/🗃️apps/👁️raster-viewer/📦️packages/🦀️rust",
     "🧩️compositions/🖨️raster/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/🗄️stdio/🏭️bridge/📦️packages/🦀️rust",
     "🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
@@ -128,6 +142,12 @@ members = [
     "🧩️compositions/🗄️stdio/🧩️extensions/💼️office/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/🗄️stdio/🧩️extensions/📘️pdf/📦️packages/🦀️rust",
     "🧩️compositions/🗄️stdio/🧩️extensions/📘️pdf/🧩️component/📦️packages/🦀️rust",
+    "🧩️compositions/🗄️stdio/🧩️extensions/📘️pdf/🧩️shards/4️⃣1.4/📦️packages/🦀️rust",
+    "🧩️compositions/🗄️stdio/🧩️extensions/📘️pdf/🧩️shards/4️⃣1.4/🧩️component/📦️packages/🦀️rust",
+    "🧩️compositions/🗄️stdio/🧩️extensions/📘️pdf/🧩️shards/7️⃣1.7/✏️editors/📦️packages/🦀️rust",
+    "🧩️compositions/🗄️stdio/🧩️extensions/📘️pdf/🧩️shards/7️⃣1.7/✏️editors/🧩️component/📦️packages/🦀️rust",
+    "🧩️compositions/🗄️stdio/🧩️extensions/📘️pdf/🧩️shards/7️⃣1.7/👁️viewers/📦️packages/🦀️rust",
+    "🧩️compositions/🗄️stdio/🧩️extensions/📘️pdf/🧩️shards/7️⃣1.7/👁️viewers/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/🗄️stdio/🧩️extensions/🔢️binary/📦️packages/🦀️rust",
     "🧩️compositions/🗄️stdio/🧩️extensions/🔢️binary/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/🗄️stdio/🧩️extensions/🔺️mesh/📦️packages/🦀️rust",
@@ -153,6 +173,8 @@ members = [
     "🧩️compositions/🪐️space/📦️packages/🦀️rust",
     "🧩️compositions/🪐️space/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/🪵️sourcing/📦️packages/🦀️rust",
+    "🧩️compositions/🪵️sourcing/🗃️apps/✏️sourcing-editor/📦️packages/🦀️rust",
+    "🧩️compositions/🪵️sourcing/🗃️apps/👁️sourcing-viewer/📦️packages/🦀️rust",
     "🧩️compositions/🪵️sourcing/🧩️component/📦️packages/🦀️rust",
     "🧪️tests/🔏️trusted-catalog-profile/📦️packages/🦀️rust",
     "🧪️tests/🔬️bin-unit/🎲️hostile-input/🏛️laws/📦️packages/🦀️rust",
@@ -183,6 +205,17 @@ edition = "2021"
 rust-version = "1.95"
 
 [workspace.dependencies]
+semio-plugin-instance-construction = { path = "../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🧱️construction/📦️packages/🦀️rust" }
+semio-hub-raster-editor-app = { path = "🧩️compositions/🖨️raster/🗃️apps/✏️raster-editor/📦️packages/🦀️rust" }
+semio-hub-raster-viewer-app = { path = "🧩️compositions/🖨️raster/🗃️apps/👁️raster-viewer/📦️packages/🦀️rust" }
+semio-hub-procedural-generation2d-editor-app = { path = "🧩️compositions/🌀️procedural/🗃️apps/✏️procedural-generation2d-editor/📦️packages/🦀️rust" }
+semio-hub-procedural-generation2d-viewer-app = { path = "🧩️compositions/🌀️procedural/🗃️apps/👁️procedural-generation2d-viewer/📦️packages/🦀️rust" }
+semio-hub-procedural-generation3d-editor-app = { path = "🧩️compositions/🌀️procedural/🗃️apps/✏️procedural-generation3d-editor/📦️packages/🦀️rust" }
+semio-hub-procedural-generation3d-viewer-app = { path = "🧩️compositions/🌀️procedural/🗃️apps/👁️procedural-generation3d-viewer/📦️packages/🦀️rust" }
+semio-hub-flow-editor-app = { path = "🧩️compositions/🌊️flow/🗃️apps/✏️flow-editor/📦️packages/🦀️rust" }
+semio-hub-flow-viewer-app = { path = "🧩️compositions/🌊️flow/🗃️apps/👁️flow-viewer/📦️packages/🦀️rust" }
+semio-hub-sourcing-editor-app = { path = "🧩️compositions/🪵️sourcing/🗃️apps/✏️sourcing-editor/📦️packages/🦀️rust" }
+semio-hub-sourcing-viewer-app = { path = "🧩️compositions/🪵️sourcing/🗃️apps/👁️sourcing-viewer/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-idf = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/⚡️idf/📦️packages/🦀️rust" }
 semio-s-artifact-procedural-2d-viewer = { path = "../✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/📦️packages/🦀️rust" }
 semio-s-artifact-procedural-2d-model = { path = "../✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust" }
@@ -240,6 +273,12 @@ semio-s-artifact-norm-vdi3805-model = { path = "../✏️s/🔌️plugins/📕�
 semio-s-artifact-norm-vdi3805-examples = { path = "../✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📦️packages/🦀️rust" }
 semio-s-artifact-norm-vdi3805-examples-failing = { path = "../✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/❌️failing/📦️packages/🦀️rust" }
 semio-s-artifact-norm-vdi3805-editor = { path = "../✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust" }
+semio-hub-norm-eurocode-structural-en1992-editor = { path = "🧩️compositions/📕️norm/🧩️extensions/📓️eurocode-structural/🗃️apps/🏛️en1992/✏️editor/📦️packages/🦀️rust" }
+semio-hub-norm-eurocode-structural-en1992-viewer = { path = "🧩️compositions/📕️norm/🧩️extensions/📓️eurocode-structural/🗃️apps/🏛️en1992/👁️viewer/📦️packages/🦀️rust" }
+semio-hub-norm-eurocode-structural-en1993-editor = { path = "🧩️compositions/📕️norm/🧩️extensions/📓️eurocode-structural/🗃️apps/🔩️en1993/✏️editor/📦️packages/🦀️rust" }
+semio-hub-norm-eurocode-structural-en1993-viewer = { path = "🧩️compositions/📕️norm/🧩️extensions/📓️eurocode-structural/🗃️apps/🔩️en1993/👁️viewer/📦️packages/🦀️rust" }
+semio-hub-norm-eurocode-structural-en1994-editor = { path = "🧩️compositions/📕️norm/🧩️extensions/📓️eurocode-structural/🗃️apps/🧩️en1994/✏️editor/📦️packages/🦀️rust" }
+semio-hub-norm-eurocode-structural-en1994-viewer = { path = "🧩️compositions/📕️norm/🧩️extensions/📓️eurocode-structural/🗃️apps/🧩️en1994/👁️viewer/📦️packages/🦀️rust" }
 semio-s-artifact-norm-en1992-viewer = { path = "../✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/📦️packages/🦀️rust" }
 semio-s-artifact-norm-en1992-model = { path = "../✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust" }
 semio-s-artifact-norm-en1992-examples = { path = "../✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📦️packages/🦀️rust" }

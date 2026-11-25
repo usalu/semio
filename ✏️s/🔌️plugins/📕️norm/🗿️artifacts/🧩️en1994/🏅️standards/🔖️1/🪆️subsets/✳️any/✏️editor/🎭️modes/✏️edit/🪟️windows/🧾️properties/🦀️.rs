@@ -24,9 +24,3 @@ pub fn render(host: &crate::Host, selection: &NormSelection, locale: Locale, con
     render_inspector_with_cases::<crate::En1994Family, semio_s_artifact_norm_en1994_checks::case_catalogue::En1994Cases>(host, locale, controller_id, Some(crate::field_meta::en1994_field_meta), windows, &options)
 }
 //#endregion 🔖️Render
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

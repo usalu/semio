@@ -1,0 +1,40 @@
+IN WORK
+
+# 🧍️ Multiview Fixer MH-6: Eleven People (takeover 2026-11-25)
+
+Takeover of the batch at 08:52 on 2026-11-25. The report of the predecessor (00:02) is kept as `🧰️matrix/MH-6/report-predecessor-0002.md.txt`; this file is rewritten as one report when the batch ends.
+
+## State measured at the takeover (scan `T/🔎️scan.ts --language en`, 09:03, on the catalog files as they are)
+
+| Asset | Catalog file | Scan hard | Matrix of the predecessor (run to its end) |
+|---|---|---|---|
+| `teenager-with-headphones` | written, = trial copy | 0 | 0 fail (24th, 21:29) |
+| `tennis-player` | was untouched (= backup); trial copy landed 09:04 | 10 before landing | none |
+| `tour-guide` | written, = trial copy | 1 | none (queue refused 7000 MB) |
+| `traveller-with-rolling-suitcase` | written, = trial copy | 9 | 112 fail (06:23) |
+| `waiter-with-tray` | written, = trial copy | 0 | none (queue refused 7000 MB) |
+| `walking-toddler` | written | 0 | 0 fail (24th, 17:53) |
+| `waving-person` | written, = trial copy | 2 | none (queue refused 7000 MB) |
+| `wheelchair-user` | written, = trial copy | 0 | 0 fail (00:02) |
+| `worker-carrying-box` | written, = trial copy | 12 | 42 fail (02:30) |
+| `worker-with-jackhammer` | written, = trial copy | 0 | 21 fail (03:54) |
+| `worker-with-pallet-jack` | written | 0 | 0 fail (24th, 21:03) |
+
+## Progress of the takeover (interim, rewritten at the end)
+
+- New tools in `🧰️matrix/MH-6/`: `bodies.ts` (a part traced as a thin plate per view is redrawn in the three views as the tightest prism around each volume solid of its band, or as one body of revolution fitted to the volume), `where.ts` (where the silhouette guard finds its largest distance), `edge.ts`, `part.py`, `diag.sh`, `full.sh`, `mx.sh`, `rss.sh`; `land.sh` runs `bodies.ts` after `fit.ts` where `ops/<id>.bodies.json` exists.
+- 09:04 `tennis-player`: trial copy of the predecessor landed (gate 184 → 62).
+- 10:05 `worker-with-jackhammer`: both hands at 1:50 drawn as bodies from the volume solids; gate at 1:50 0 hard (was 16), silhouette guard OK (elevation 14.3, front 15.0, plan 15.0 mm), validate 0, sweep 0. Landed; full proof queued.
+- 10:18 `waving-person`: plan `sil-arm-l` at 1:500 a body of revolution fitted to the volume; gate at 1:500 0 hard (was 22), plan IoU 0.9259 (before 0.9254). Landed; full proof queued.
+- Running: matrix of `waiter-with-tray`. Trials in work: `worker-carrying-box`, `tour-guide`, `tennis-player`, `traveller-with-rolling-suitcase`.
+- 11:14 `waiter-with-tray`: matrix run to its end, 252 cells, 0 fail (63 ok, 42 range-end, 147 group-drift); peak of the matrix run 462 MB. Clean with all proofs.
+- 10:30 `worker-carrying-box`: hands at 1:50 as bodies in the three views, plan upper arms the body of revolution of the front; gate at 1:50 0 hard (was 137), guard OK (13.5, 13.1, 14.3 mm). Landed; proof queued.
+- 11:10 `tour-guide`: plan `sleeve-l` at 1:50 a body of revolution fitted to the volume, plan `hand-r` the seven bodies the front draws; gate at 1:50 0 hard (was 25), guard OK (11.9, 12.0, 11.9 mm). Landed; proof queued.
+- 11:47 `traveller-with-rolling-suitcase`: plan `handle-grip` at 1:50 and 1:100 the prism of its volume capsule, at 1:200 the elevation body; the left hand at 1:50 (one flat outline per view) as bodies of its 18 volume solids on the hand and finger bones; gate at 1:50 and 1:200 0 hard (was 164 over three scales), guard OK (14.6, 15.0, 14.6 mm), prints. Landed; proof queued.
+- `worker-with-jackhammer`: the scan found `unavailable-scale-unsuitable` at 1:50 after the hand bodies (thumb and finger 0.4 to 5 mm apart, gap rule of the print profile); a variant with those bodies drawn touching is being measured. Its proofs were stopped.
+- 11:55 Coordinator: engine changed at 11:10 (MX), every matrix older than that is repeated with `--fresh`; `tour-guide` is frozen for MX-2 (it was written here at 11:09 and is only measured from now on); no further repairs of the six people. All eleven proofs are run anew on the present files.
+- 12:13 `waving-person`: every proof run to its end on the present file: gate 0, scan clean, silhouette OK, validate 0, sweep 0, check ✓, the six test files as before, matrix 252 cells 0 fail (70 ok, 182 group-drift). Clean.
+- 16:15 Second takeover. Read in logs that ran to their end: matrix `traveller-with-rolling-suitcase` 252 cells 0 fail (14:00), `worker-with-jackhammer` 0 fail (15:11), `worker-carrying-box` 0 fail (15:31), `tour-guide` 0 fail (15:56, measured only, MX-2 owns the file). The chains `q.sh`, `q2.sh` are stopped (stale: `worker-carrying-box` fails the silhouette guard at 1:50 since the engine reads `lateralScale`, front and plan 16.9 mm; the matrix of `tennis-player` would have proven a file that changes). New tools `lane.sh` (one grant for a series of small runs), `small-proof.sh`, `lateral-list.py`. Trials waiting: `tennis-player` (shirt and left hand as `loft`), `worker-carrying-box` (arms).
+- 19:00 Third takeover (Fable 5.2). No process of the batch was left. Read in logs that ran to their end (`🗑️generated/matrix/MH-6/proof/<id>.out`, lane of 16:29 to 18:11): `tennis-player` (file `20fcc703586d`, shirt, left forearm, hand and fingers as lofts at 1:50, shirt at 1:500), `worker-carrying-box` (`217fdc8e72c9`, both arms and glove cuffs as lofts at 1:50) and `worker-with-pallet-jack` (`7d084467fdcd`, arms and plan jacket as lofts at 1:100) were landed at 17:25 and each has gate 0, scan clean, silhouette OK, validate 0, sweep 0, check ✓ and a matrix of 252 cells with 0 fail on that file; `traveller-with-rolling-suitcase`, `worker-with-jackhammer`, `waiter-with-tray` the same small proof at 16:48 to 17:47 on files whose matrix ran to 0 fail before. Not run on the present files: the six test files (the request of 2500 MB waited out at 18:5x) for ten assets, and gate, scan and matrix of `teenager-with-headphones`, `walking-toddler`, `wheelchair-user` since the 24th and of `tour-guide` since MX-2 wrote it at 17:13. Queued now: lane (small proof and matrix of those four, the chain `land.sh` on a copy of all eleven, prints of all eleven) and the six test files over all eleven ids in one grant.
+- 20:25 Lane of 19:00 to 20:21 ran to its end. `walking-toddler` (file `68abfa9bdc63`), `wheelchair-user` (`87db8564b984`), `tour-guide` (`623c5db0a6f9`): gate 0, scan clean, silhouette OK, validate 0, sweep 0, check ✓, matrix 252 cells 0 fail, file unchanged during proof and matrix. The chain `land.sh` on a copy changes nothing for ten assets; for `tour-guide` it would (MX-2's lofts are not in this folder's ops; repaired below). Found: a catalog-wide pass rewrote all eleven files at 19:09:31 (343 asset files in that minute; `asset.tags` from strings to `{ id, title }`, nothing else differs from the proven copies of six assets compared). The matrix of `teenager-with-headphones` ran across that rewrite and is void (252 "no runner produced this cell", file changed during the run). Queued anew on the present files: small proof and matrix of the eight assets proven before 19:09. The six test files still wait in the queue (2500 MB, 82 minutes).
+- 21:08 Re-proof on the files of 19:09 read to its end for seven assets: `teenager-with-headphones` (`21a1df8cbf5e`, matrix 0 fail 20:31), `traveller-with-rolling-suitcase` (`32cc2fef3427`, 0 fail 20:41), `waving-person` (`5ec04069bcd1`, 0 fail 20:50), `worker-with-jackhammer` (`7259c7b150fd`, 0 fail 20:57), each with gate 0, scan clean, silhouette OK, validate 0, sweep 0, check ✓; `tennis-player` (`2f293f0fdcc0`), `worker-carrying-box` (`e0c96d865d65`), `worker-with-pallet-jack` (`fe2a46d3963a`) the small proof (their matrices of 18:01 to 18:11 ran on files that differ from these in `asset.tags` only; repeated below). At 21:03:31 the lane and the waiting test request were ended from outside (SIGTERM, not by this lane) in the middle of `waiter-with-tray`, whose file was rewritten once more at 20:35 (`f3c911286a78`, again `asset.tags` only). Resubmitted: the lane (rest of its jobs) and the six test files as a chain of single grants at MM's figures of 20:20 (`vt-chain.sh`).

@@ -32,7 +32,7 @@ pub fn lateral_pile(pile: &Pile) -> Option<LateralPile> {
     let (ei, k, d, h) = (pile.bending_stiffness_ei, pile.horizontal_subgrade_modulus, pile.diameter, pile.lateral_head_load);
     (ei > 0.0 && k > 0.0 && d > 0.0 && h > 0.0).then(|| {
         let lambda = piles::lateral_lambda(k, d, ei);
-        LateralPile { lambda, head_deflection: piles::lateral_deflection(h, lambda, k, d, 0.0), max_moment: 0.322 * h / lambda, long_pile: lambda * pile.length >= std::f64::consts::PI }
+        LateralPile { lambda, head_deflection: piles::lateral_head_deflection(h, lambda, k, d, pile.length), max_moment: 0.322 * h / lambda, long_pile: lambda * pile.length >= std::f64::consts::PI }
     })
 }
 
@@ -61,7 +61,16 @@ pub fn check_pile(doc: &En1997Snapshot, pile: &Pile, approach: DesignApproach, a
     if let Some(state) = lateral_pile(pile) {
         let limit = lateral_deflection_limit(annex);
         let lateral = case(doc, &pile.id).with_n("d", pile.diameter).with_n("h_d", pile.lateral_head_load).with_n("k_s", pile.horizontal_subgrade_modulus).with_n("ei", pile.bending_stiffness_ei).with_n("y_lim", limit);
-        let mut results = retarget(outcomes_to_results("PILE-04", &lateral, evaluate_standalone("PILE-04", &lateral)), "piles", &pile.id, &en, &de);
+        let finite = evaluate_standalone("PILE-04", &lateral).map(|list| {
+            list.into_iter()
+                .map(|o| match o.key.as_str() {
+                    "deflection" => Outcome::limit(o.kind, &o.key, &o.en, &o.de, state.head_deflection, o.capacity),
+                    "y0" => Outcome::info(o.kind, &o.key, &o.en, &o.de, state.head_deflection),
+                    _ => o,
+                })
+                .collect()
+        });
+        let mut results = retarget(outcomes_to_results("PILE-04", &lateral, finite), "piles", &pile.id, &en, &de);
         for result in results.iter_mut().filter(|r| r.id.starts_with("en1997.pile-04.deflection.") && r.utilization > 1.0) {
             let required = pile.bending_stiffness_ei * (state.head_deflection / limit).powi(4);
             result.remedies.push(Remedy::at_least(

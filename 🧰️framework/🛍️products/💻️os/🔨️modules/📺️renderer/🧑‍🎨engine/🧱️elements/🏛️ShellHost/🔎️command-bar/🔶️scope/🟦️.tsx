@@ -1,7 +1,8 @@
 /** 🔶️ The scope phase of useCommandBar. */
-import { useCallback, useLayoutEffect, useMemo, useRef, useSyncExternalStore } from "../../../⚛️react-port/🟦️.ts";
-import { type AppDefinition, type AppRole, examplesForApp, type LocalizedLabel, openExampleAfterActivation, resolveWindowActions } from "@semio-tech/framework";
-import { MODE_STEP_CONTROL_IDS, SURFACE_ROLE_CONTROL_IDS, SURFACE_ROLE_ORDER, surfaceRoleAppsV1 } from "../../🔀️surface-switch/🟦️.ts";
+import { useCallback, useLayoutEffect, useMemo, useRef } from "../../../⚛️react-port/🟦️.ts";
+import { type AppDefinition, type AppRole, documentActivationLabel, examplesForApp, type LocalizedLabel, openExampleAfterActivation, resolveWindowActions } from "@semio-tech/framework";
+import { inputRefusalNoticeTextV1 } from "../../🎯️input-ledger/🟦️.ts";
+import { MODE_STEP_CONTROL_IDS, SURFACE_ROLE_CONTROL_IDS, SURFACE_ROLE_ORDER, roleButtonDisabledV1, surfaceRoleAppsV1 } from "../../🔀️surface-switch/🟦️.ts";
 import { spawnedProgramWindowInstancesV1 } from "../../🪟️spawned-program/🟦️.ts";
 import { ButtonGroup, ButtonGroupItem, cn, ariaKeyshortcutsText, type IconName, interactiveActiveFillClass, NavbarExampleSelect } from "@semio-tech/ui-react";
 import { sharedDocumentRoleSwitchRefusedV1 } from "../../🧭️opening/🟦️.ts";
@@ -22,7 +23,7 @@ export function useScopeState({ core }: { readonly core: ShellCoreAfterCheckInAn
     scope, hostMode, mobile, locks, dispatch, historyStore, exampleOptionsRef, loadedPlugins,
     session, localPrograms, uiLocale, uiTerminology, applyHistoryPatch, applyLeftoverInteractionView, landingAppId,
     appLabelsOverlay, actionPaneStagedArgsByKey, commandStagedArgsByCommandId, activeExampleId, extraWindowInstances,
-    surfaceSwitchBusy, sessionWorkRef, uiTerminologyRef, replayShellOwnedCommandRef, openDocumentSessionsRef, captureDialogOrigin,
+    surfaceSwitchBusy, uiTerminologyRef, replayShellOwnedCommandRef, openDocumentSessionsRef, captureDialogOrigin,
     isCurrentDialogOrigin, captureEffectOwner, isCurrentEffectOwner, sharedSpaceAccessRef, sharedSpaceAccessVersion,
     navigateHistory, dockLayoutStore, dockUiStateStore, panel, focusedProgram, focusedApp, focusedModeId,
     toolMeasuresByToolIdRef, startTutorialRef, toggleTutorialRecordingRef, tutorialDrivenRef, tutorialRecordingRef,
@@ -51,7 +52,6 @@ export function useScopeState({ core }: { readonly core: ShellCoreAfterCheckInAn
   const exampleActivationRef = useRef<AbortController | null>(null);
   const dispatchActiveExample = useCallback(
     (exampleId: string) => {
-      console.error("[DEBUG] dispatchActiveExample", exampleId, !!session, !!focusedApp, !!focusedProgram);
       if (!session || !focusedApp || !focusedProgram) return;
       const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === focusedProgram.pluginId)?.handle;
       if (!plugin) return;
@@ -60,10 +60,23 @@ export function useScopeState({ core }: { readonly core: ShellCoreAfterCheckInAn
       return openExampleAfterActivation({
         examples: focusedPluginManifest?.examples ?? [], exampleId, activator: { request: activateOnDemand }, locale: uiLocale, signal: activation.signal,
         notify: (notice) => showTransientNotice(notice.text, notice.announcement.role === "alert" ? "error" : "info", `on-demand.example.${exampleId}`),
-        handoff: () => { console.error("[DEBUG] example handoff", exampleId); return onAction(buildActiveExampleAction(focusedApp.controllerId, exampleId)); },
-      }).then((result) => { console.error("[DEBUG] example opened", exampleId, result.state); return result; }, (error) => { console.error("[DEBUG] example failed", exampleId, String(error)); throw error; });
+        handoff: async () => {
+          const example = exampleOptionsRef.current.find((option) => option.id === exampleId)?.label ?? exampleId;
+          const code = `example.${exampleId}`;
+          if (exampleId !== "") showTransientNotice(documentActivationLabel("openingExample", uiLocale, { example }), "info", code);
+          const failed = (reason: string) => showTransientNotice(documentActivationLabel("exampleRefused", uiLocale, { example, reason }), "error", code);
+          try {
+            const outcome = await onAction(buildActiveExampleAction(focusedApp.controllerId, exampleId));
+            if (outcome.kind === "refused") failed(inputRefusalNoticeTextV1(outcome.reason, uiLocale));
+            return outcome;
+          } catch (error) {
+            failed(error instanceof Error ? error.message : String(error));
+            throw error;
+          }
+        },
+      });
     },
-    [loadedPlugins, onAction, session, focusedApp, focusedProgram, focusedPluginManifest, activateOnDemand, uiLocale, showTransientNotice],
+    [loadedPlugins, onAction, session, focusedApp, focusedProgram, focusedPluginManifest, activateOnDemand, uiLocale, showTransientNotice, exampleOptionsRef],
   );
 
   /** 🎛️ Shared by the desktop navbar center cluster and the mobile panel's synthetic "App" tab (see `mobilePanelTabs`). */
@@ -76,7 +89,7 @@ export function useScopeState({ core }: { readonly core: ShellCoreAfterCheckInAn
         value={activeExampleId}
         options={exampleOptions}
         includeNoExample
-        onValueChange={(exampleId) => { void dispatchActiveExample(exampleId); }}
+        onValueChange={(exampleId) => { void dispatchActiveExample(exampleId)?.catch(() => undefined); }}
       />
     );
   }, [session, focusedApp, exampleOptions, locks.exampleId, hostMode, landingAppId, activeExampleId, dispatchActiveExample]);
@@ -117,13 +130,6 @@ export function useScopeState({ core }: { readonly core: ShellCoreAfterCheckInAn
   }, [loadedPlugins, focusedProgram, focusedApp]);
   const roleDocument = focusedProgram === null ? undefined : [...openDocumentSessionsRef.current.values()].find((entry) =>
     entry.session.pluginId === focusedProgram.pluginId && entry.session.instanceId === focusedProgram.instanceId && entry.session.app.id === focusedProgram.appId);
-  const sessionWork = sessionWorkRef.current;
-  const sourceBusy = useSyncExternalStore(
-    sessionWork.subscribe,
-    () => focusedProgram !== null && sessionWork.pending(focusedProgram.pluginId, focusedProgram.instanceId) > 0,
-    () => false,
-  );
-  const roleSwitchBlocked = surfaceSwitchBusy || sourceBusy;
 
   /** 🔸️ Navbar role group — the in-shell control that makes `…#viewer` reachable without a
    * reload (`📓️audit-window-inventory-2026-09-12.md` §4 P0 item 2). Labels come from each target
@@ -147,7 +153,7 @@ export function useScopeState({ core }: { readonly core: ShellCoreAfterCheckInAn
               data-state={isActive ? "on" : undefined}
               data-role={role}
               aria-pressed={isActive}
-              disabled={(roleSwitchBlocked && !isActive) || refused(role, isActive)}
+              disabled={roleButtonDisabledV1(isActive, surfaceSwitchBusy, refused(role, isActive))}
               aria-description={refused(role, isActive) ? replayRefusalNoticeTextV1("view-only-access", uiLocale) : undefined}
               aria-keyshortcuts={ariaKeyshortcutsText(controlKeybindings.get(SURFACE_ROLE_CONTROL_IDS[role]))}
               onClick={() => void switchToSessionRole(role).catch((switchError) => console.error(`role switch to ${role} failed`, switchError))}
@@ -158,7 +164,7 @@ export function useScopeState({ core }: { readonly core: ShellCoreAfterCheckInAn
         })}
       </ButtonGroup>
     );
-  }, [focusedProgram, focusedApp, roleDocument, sessionRoleApps, surfaceSwitchBusy, roleSwitchBlocked, switchToSessionRole, controlKeybindings, uiTerminology, uiLocale, sharedSpaceAccessVersion]);
+  }, [focusedProgram, focusedApp, roleDocument, sessionRoleApps, surfaceSwitchBusy, switchToSessionRole, controlKeybindings, uiTerminology, uiLocale, sharedSpaceAccessVersion]);
 
   const resolvedCommands = useMemo(() => {
     const resolved = resolveCommands(osCommands, activePluginManifest, session?.app, activeModeId, appLabelsOverlay, uiTerminology, uiLocale, localPrograms.map((entry) => entry.manifest), selectedSpaceArtifactKinds);

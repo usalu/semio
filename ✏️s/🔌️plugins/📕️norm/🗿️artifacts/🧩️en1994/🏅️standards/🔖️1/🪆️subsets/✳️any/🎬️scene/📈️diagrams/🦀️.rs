@@ -308,11 +308,21 @@ pub fn slip_at(f: &BeamFacts, peak_kn_per_m: f64, p_rk_kn: f64, x: f64) -> f64 {
     if f.span_fraction(x) < 0.5 { slip } else { -slip }
 }
 
-/// 🔩️ Peak elastic shear flow in kN/m at the support, `4·η_req·N_cf/L`, and the characteristic stud resistance P_Rk in kN: the inputs of [`slip_at`].
+/// 🔩️ The longitudinal force `M_Ed·S/I` in N that the studs transfer over a half span in the elastic composite section (the integral of the elastic shear flow `V_Ed·S/I`, EN 1994-1-1 6.6.2), `S` the first moment of the transformed slab about the neutral axis of the uncracked section.
+pub fn elastic_slab_force_n(f: &BeamFacts) -> f64 {
+    let n = cat::modular_ratio(f.beam.concrete_e_cm_pa, 0.0, 0.0);
+    let section = part_1_1::isection(&f.beam.steel);
+    let transformed = cat::transformed(&section, f.beam.slab_thickness_m, f.b_eff, f.hc, n);
+    let slab_area = f.b_eff * f.hc / n;
+    f.m_ed * slab_area * (transformed.y_na - f.hc / 2.0) / transformed.i
+}
+
+/// 🔩️ Peak elastic shear flow in kN/m at the support, `4·N_c/L` with `N_c = η_req·N_cf` when the steel alone cannot carry the moment and the elastic slab force of the uncracked transformed section otherwise (the studs transfer it although no connection is required), and the characteristic stud resistance P_Rk in kN: the inputs of [`slip_at`].
 pub fn slip_inputs(f: &BeamFacts) -> (f64, f64) {
     let n_cf = (f.beam.steel.a_m2 * f.fy / f.params.gamma_m0).min(0.85 * f.beam.concrete_f_ck_pa / f.params.gamma_c * f.b_eff * f.hc);
     let eta_req = ((f.m_ed - f.m_pla) / (f.m_pl_rd - f.m_pla).max(1e-9)).clamp(0.0, 1.0);
-    (4.0 * eta_req * n_cf / f.beam.span_m.max(1e-9) / 1e3, f.p_rd / 1e3 * f.params.gamma_v)
+    let n_c = if eta_req > 0.0 { eta_req * n_cf } else { elastic_slab_force_n(f).clamp(0.0, n_cf) };
+    (4.0 * n_c / f.beam.span_m.max(1e-9) / 1e3, f.p_rd / 1e3 * f.params.gamma_v)
 }
 
 /// 🔩️ The slip capacity δ_uk in mm (EN 1994-1-1, 6.6.1.1).

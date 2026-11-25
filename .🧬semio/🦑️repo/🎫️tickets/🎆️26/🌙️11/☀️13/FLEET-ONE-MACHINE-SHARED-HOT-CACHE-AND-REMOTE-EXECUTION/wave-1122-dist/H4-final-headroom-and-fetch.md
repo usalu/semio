@@ -52,8 +52,11 @@ Answer: with measured peaks, no margin, above the warden's suspend line (10 %), 
 ## 4. Restart safety
 The agents restart themselves (closure watch, 300 s quiet, max deferral 30 min) and drain: `createSidecarRestartV1` (`RE🛰️sidecar/🟦️.ts:63-72`) calls `drain()`, the agent's `drainWhenIdleV1` (`RE🛰️agent/🟦️.ts:23-31`) sets `draining` (every new admission refuses) and aborts only when `state.running === 0`; served remote actions are never aborted, the bound is `drainMaximumMilliseconds` 7,200,000 (2 h). A running final is therefore finished before its worker restarts. The scheduler closure was not touched.
 
-## 5. After landing (play log)
-(see the appended observation lines)
+## 5. After landing (play log), 18:40 to 18:53
+- The play chain started a new `site-build` at 18:30:38 (supervisor.out); at 18:52 it stood at 535 units compiled, 0/73 components staged. Its plan line (18:42): "3 component jobs at once = 1 local slot + 2 fleet slots (2 worker slots fit one 3655 MB final)". No component final was offloaded in the window, so the remote final count and final fetch time after the landing are **not observed yet** (the previous attempt reached its finals about 100 minutes after start: expect them about 20:10).
+- Workers run the new code: the first action results with `type.semio.dev/input-fetch` appeared at 18:38 (28 by 18:53; the first: 8 cached files 12.0 MB, 4 fetched 50 KB). No running final was interrupted (no final was running remotely during the restarts).
+- Scheduler slots after landing (18:53, `/v1/fleet/idle`): 72 at 0 MB, 17 at 1024, 8 at 2048, 2 at 3072, 1 at 4096, 0 from 5120. Worker spare 1.1 to 4.2 GB on the Macs: the binding term for finals is now available memory against the pinned requester's x1.25 demand (section 1.3), not the stage count.
+- What to read when the finals come: `offload.jsonl` worker fetch per final and the `input-fetch` entry of its AC record (cached/local/fetched bytes), and the number of finals with overlapping start/end times on distinct workers.
 
 ## Tests (`repo test-file`, one at a time)
 unit-admission 12/0 (oracle: 600 admissions with held units at used/peak, 42 thread vectors), single-charge 8/0, stage-claim 8/0, why 11/0, refusal-reason 3/0, worker 17/0 (2 new: local-store source + fetch metadata, blob bound vs Python oracle 48 cases), worker retirement 4/0, codegen 3/0, remote-execution main 17/0, sidecar drain 6/0, offload main 41/0, disk 8/0 (2 of 4 runs 7/1 on the collect-before-refuse race), unit-cache main 27/1 (slot FIFO timing, untouched). tsc on the touched files: no new errors.

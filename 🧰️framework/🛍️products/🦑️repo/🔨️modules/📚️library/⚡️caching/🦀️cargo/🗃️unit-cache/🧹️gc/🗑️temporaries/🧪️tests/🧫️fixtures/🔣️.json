@@ -1,0 +1,255 @@
+{
+  "version": 1,
+  "vectors": [
+    {
+      "name": "an idle lane loses its files older than the idle grace before now, never a fresh one",
+      "input": {
+        "nowMs": 20000000,
+        "lanes": [
+          {
+            "id": "a1",
+            "holders": [],
+            "files": [
+              {
+                "path": "/z/d.o",
+                "bytes": 8,
+                "mtimeMs": 19999999
+              },
+              {
+                "path": "/z/c.o",
+                "bytes": 4,
+                "mtimeMs": 18200000
+              },
+              {
+                "path": "/z/b.o",
+                "bytes": 2,
+                "mtimeMs": 18199999
+              },
+              {
+                "path": "/z/a.o",
+                "bytes": 1,
+                "mtimeMs": 5
+              }
+            ]
+          }
+        ]
+      },
+      "remove": [
+        {
+          "lane": "a1",
+          "path": "/z/a.o",
+          "bytes": 1
+        },
+        {
+          "lane": "a1",
+          "path": "/z/b.o",
+          "bytes": 2
+        }
+      ]
+    },
+    {
+      "name": "a live lane keeps the files from the grace before its oldest holder's start on",
+      "input": {
+        "nowMs": 20000000,
+        "lanes": [
+          {
+            "id": "l1",
+            "holders": [
+              {
+                "startedMs": 10000000
+              }
+            ],
+            "files": [
+              {
+                "path": "/z/old.o",
+                "bytes": 1,
+                "mtimeMs": 9000000
+              },
+              {
+                "path": "/z/edge.o",
+                "bytes": 2,
+                "mtimeMs": 9400000
+              },
+              {
+                "path": "/z/new.o",
+                "bytes": 4,
+                "mtimeMs": 9900000
+              },
+              {
+                "path": "/z/after.o",
+                "bytes": 8,
+                "mtimeMs": 10500000
+              }
+            ]
+          }
+        ]
+      },
+      "remove": [
+        {
+          "lane": "l1",
+          "path": "/z/old.o",
+          "bytes": 1
+        }
+      ]
+    },
+    {
+      "name": "the oldest of several holders sets the cutoff",
+      "input": {
+        "nowMs": 20000000,
+        "lanes": [
+          {
+            "id": "l1",
+            "holders": [
+              {
+                "startedMs": 10000000
+              },
+              {
+                "startedMs": 5000000
+              }
+            ],
+            "files": [
+              {
+                "path": "/z/a.o",
+                "bytes": 1,
+                "mtimeMs": 4399999
+              },
+              {
+                "path": "/z/b.o",
+                "bytes": 2,
+                "mtimeMs": 4400000
+              },
+              {
+                "path": "/z/c.o",
+                "bytes": 4,
+                "mtimeMs": 7000000
+              }
+            ]
+          }
+        ]
+      },
+      "remove": [
+        {
+          "lane": "l1",
+          "path": "/z/a.o",
+          "bytes": 1
+        }
+      ]
+    },
+    {
+      "name": "a holder of unknown start keeps everything of its lane",
+      "input": {
+        "nowMs": 20000000,
+        "lanes": [
+          {
+            "id": "l1",
+            "holders": [
+              {
+                "startedMs": null
+              },
+              {
+                "startedMs": 10000000
+              }
+            ],
+            "files": [
+              {
+                "path": "/z/a.o",
+                "bytes": 1,
+                "mtimeMs": 1
+              },
+              {
+                "path": "/z/b.o",
+                "bytes": 2,
+                "mtimeMs": 2
+              }
+            ]
+          }
+        ]
+      },
+      "remove": []
+    },
+    {
+      "name": "lanes are decided one by one and listed by lane then path",
+      "input": {
+        "nowMs": 20000000,
+        "lanes": [
+          {
+            "id": "b2",
+            "holders": [],
+            "files": [
+              {
+                "path": "/b/y.o",
+                "bytes": 3,
+                "mtimeMs": 7
+              },
+              {
+                "path": "/b/x.o",
+                "bytes": 2,
+                "mtimeMs": 7
+              }
+            ]
+          },
+          {
+            "id": "a1",
+            "holders": [
+              {
+                "startedMs": null
+              }
+            ],
+            "files": [
+              {
+                "path": "/a/x.o",
+                "bytes": 1,
+                "mtimeMs": 1
+              }
+            ]
+          },
+          {
+            "id": "c3",
+            "holders": [
+              {
+                "startedMs": 10000000
+              }
+            ],
+            "files": [
+              {
+                "path": "/c/x.o",
+                "bytes": 5,
+                "mtimeMs": 1
+              },
+              {
+                "path": "/c/y.o",
+                "bytes": 6,
+                "mtimeMs": 9999999
+              }
+            ]
+          }
+        ]
+      },
+      "remove": [
+        {
+          "lane": "b2",
+          "path": "/b/x.o",
+          "bytes": 2
+        },
+        {
+          "lane": "b2",
+          "path": "/b/y.o",
+          "bytes": 3
+        },
+        {
+          "lane": "c3",
+          "path": "/c/x.o",
+          "bytes": 5
+        }
+      ]
+    },
+    {
+      "name": "an empty cache has nothing to remove",
+      "input": {
+        "nowMs": 20000000,
+        "lanes": []
+      },
+      "remove": []
+    }
+  ]
+}

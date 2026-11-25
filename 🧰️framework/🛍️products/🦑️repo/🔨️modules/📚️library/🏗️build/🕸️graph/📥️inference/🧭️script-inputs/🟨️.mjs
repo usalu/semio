@@ -26,7 +26,7 @@ import { createHash } from "node:crypto";
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { activeTypeScriptProgramReuseV1, sharedSourceFilesV1 } from "./♨️reuse/🟨️.mjs";
-import { memoizedObservedAsyncComputationV1, memoizedObservedComputationV1, observedSourceAnalysisV1, observedRequireResolve, observedTypeScriptHost, observedFs, observeDetachedV1, shareObservationRowsV1, detachedFailureV1, retainDetachedFailureV1, observationLayerHoldsV1, observationRoundV1, observationRowsHoldV1, recordClosureFactV1, registerClosureProviderV1, observedFieldV1, registerFieldExtractorV1, retainObservedRowsV1, observeDetachedSyncV1, withObservationPassRoundV1 , registerProjectClosureTravelV1, observationLayerHoldsAsyncV1, observationRowsHoldAsyncV1, observationRowFreshV1, observationWitnessV1, observationWitnessHoldsV1, OBSERVATION_LIMITS_V1 } from "../../../../🏗️build/👁️observation/🟨️.mjs";
+import { memoizedObservedAsyncComputationV1, memoizedObservedComputationV1, observedSourceAnalysisV1, observedRequireResolve, observedTypeScriptHost, observedFs, observeDetachedV1, shareObservationRowsV1, detachedFailureV1, retainDetachedFailureV1, observationLayerHoldsV1, observationRoundV1, observationRowsHoldV1, recordClosureFactV1, registerClosureProviderV1, observedFieldV1, registerFieldExtractorV1, observeDetachedSyncV1, retainObservedRowsV1, withObservationPassRoundV1 , registerProjectClosureTravelV1, observeGlobalFactV1, registerGlobalFactV1, prepareGlobalFactsV1, observationWitnessHoldsSyncV1, observationLayerHoldsAsyncV1, observationRowsHoldAsyncV1, observationRowFreshV1, observationWitnessV1, observationWitnessHoldsV1, OBSERVATION_LIMITS_V1 } from "../../../../🏗️build/👁️observation/🟨️.mjs";
 import { sourceTreeFilterV1 } from "../../../../🏗️build/👁️observation/📂️source-names/🟨️.mjs";
 import { readCargoExecutionContractV1, selectCargoExecutionOperationV1 } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️execution/🟦️.ts";
 import { REVISION_POLICY_V1 } from "../../../📥️inputs/🔏️revision/🟨️.mjs";
@@ -43,7 +43,9 @@ import { buildSchedulingPrefixesV1 } from "../../../📥️source/🔏️closure
 import { WALK_VIEW_POLICY_V1, closureRoleViewV1, walkViewAnswerV1, walkViewOfRecipeV1, walkViewPrefixesV1 } from "./👓️walk-views/🟨️.mjs";
 import { PROVIDER_CLOSURE_POLICY_V1, expandClosureValueV1, joinWithProviderViewV1, providerGroupNameV1, providerProjectNameV1, providerReferenceV1, sharedReferencesOfV1, toolGroupNameV1, toolReferenceV1 } from "./🔌️provider-closures/🟨️.mjs";
 import { createStringTableV1 } from "../../../👁️observation/🔢️row-table/🟨️.mjs";
-import { createReachSetsV1 } from "./🧠️reach-memo/🟨️.mjs";
+import { CLOSURE_GRAPH_FACT_V1, CLOSURE_GRAPH_POLICY_V1, createClosureGraphV1, loadClosureGraphSyncV1, moduleNodeDigestV1, saveClosureGraphV1 } from "./🌳️closure-graph/🟨️.mjs";
+import { pathStampV1 } from "./🌳️closure-graph/🍃️leaves/🟨️.mjs";
+import { machinePathV1 } from "../../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 const { existsSync, statSync } = observedFs;
 
 /** 🚧️ Turns an import of a command closure that resolves to nothing into the withheld-project failure of its importing source, so one broken file withholds its own project instead of aborting the whole graph. */
@@ -439,29 +441,29 @@ export function resolutionConfigsV1(compiler, host, workspaceRoot, modules) {
   return [...found].sort();
 }
 
-/** 🧠️ Tracks literal relative command imports through the existing TypeScript tooling boundary, up to the script provider ports: a module that defines ports adds the designated ports to the walk's ports (`cache.walkPorts`) instead of the provider modules, so a walk and its derived fact never contain a provider's files; a router script named in `commands` (absolute path to the registered command words it is run with) contributes only the imports those commands need, and every router this reading does not fully understand keeps all of its imports. */
+/** 🧠️ Tracks literal relative command imports through the existing TypeScript tooling boundary, up to the script provider ports: a module that defines ports adds the designated ports to the walk's ports (`cache.walkPorts`) instead of the provider modules, so a walk and its derived fact never contain a provider's files; a router script named in `commands` (absolute path to the registered command words it is run with) contributes only the imports those commands need, and every router this reading does not fully understand keeps all of its imports. What the walk read is ONE `closure-graph` global row: its question (with the view of the closure recipe being derived, `./👓️walk-views`) and what the module graph of the tree answers for it ({@link closureGraphAnswerV1}: the closure digest and the answer through the view), never the rows of the modules it visited (the walk and the graph pass run detached, only the reasons of a failure join the caller), so a closure entry or a project that used the walk is valid while that digest holds, or while the answer through its view is the same after the digest moved; the files are walked again only when the digest moved. */
 async function boundedScriptInputsV1(entries, workspaceRoot, cache = createScriptInputCache(), requiredSources=false, resourceEntries=[], commands=new Map(), stops=[]) {
-  const resources=new Set(resourceEntries.map(path=>resolve(path))),resourceKey=memoDigestV1([...resources].sort()),selectors=new Map([...commands].map(([path,words])=>[resolve(path),[...new Set(words)].sort()])),selectorKey=memoDigestV1([...selectors].sort(([a],[b])=>a<b?-1:a>b?1:0)),roots = [...new Set(entries.map(entry => resolve(entry)))].sort(), stopMap = new Map(stops), key = memoDigestV1(resolve(workspaceRoot), roots, requiredSources,resourceKey,selectorKey,...(stops.length?[stopDigestV1(stops)]:[]));
-  let steps=0;const checkpoint=(force=false)=>yieldInferenceV1(cache.context,"build:command-source-imports",++steps,force);
-  let memberParts=[];
-  const walked=await memoizedObservedAsyncComputationV1(cache.closures,key,async()=>{
-  const compiler = parserTypescriptV1(), host = observedTypeScriptHost(compiler.sys);
-  const walk = await reachWalkV1({ roots, workspaceRoot, cache, requiredSources, resources, selectors, checkpoint, compiler, host, stops: stopMap });
-  cache.compiledNames.set(walk.result, new Set([...walk.compiled].map((file) => closurePathNameV1(cache, workspaceRoot, file))));
-  cache.walkPorts.set(walk.result, [...walk.defined].sort());
-  cache.walkTools.set(walk.result, [...walk.tools].sort());
-  memberParts = walk.members;
-  return walk.result;
-  },checkpoint);
-  const stored=cache.closures.get(key);
-  if(stored){
-   const question=walkQuestionV1(cache,workspaceRoot,roots,requiredSources,resources,selectors,undefined,stops);
-   if(!walkFactsV1.has(stored.observations))walkFactsV1.set(stored.observations,{row:{kind:"derived",path:question,fact:walkAnswerV1(cache,workspaceRoot,walked)},views:Object.fromEntries(Object.keys(WALK_VIEW_POLICY_V1.views).map(view=>[view,{kind:"derived",path:walkQuestionV1(cache,workspaceRoot,roots,requiredSources,resources,selectors,view,stops),fact:walkAnswerV1(cache,workspaceRoot,walked,view)}]))});
-   for(const part of memberParts){let walks=walkMembersV1.get(part);if(!walks)walkMembersV1.set(part,walks=new Set());walks.add(question);}
-   if(memberParts.length)walkPartsV1.set(walked,memberParts);
-   if(cache.pass?.transient)cache.closures.delete(key);
-  }
-  return walked;
+  const question = { roots: [...new Set(entries.map(entry => resolve(entry)))].sort(), requiredSources: Boolean(requiredSources), resources: [...new Set(resourceEntries.map(path => resolve(path)))].sort(), selectors: [...commands].map(([path, words]) => [resolve(path), [...new Set(words)].sort()]).sort(byNameV1), stops, view: closureViewScopeV1.getStore() };
+  const pass = closureWalkPassV1(cache), key = memoDigestV1(resolve(workspaceRoot), question.roots, question.requiredSources, question.resources, question.selectors, ...(stops.length ? [stopDigestV1(stops)] : []));
+  let answered;
+  try {
+    answered = (await observeDetachedV1(async () => {
+      const fact = await closureGraphAnswerV1(cache, workspaceRoot, question, pass);
+      let held = cache.closures.get(key);
+      if (held?.digest !== fact.digest) {
+        let steps = 0;
+        const compiler = parserTypescriptV1(), checkpoint = (force = false) => yieldInferenceV1(cache.context, "build:command-source-imports", ++steps, force);
+        const walk = await reachWalkV1({ roots: question.roots, workspaceRoot, cache, requiredSources: question.requiredSources, resources: new Set(question.resources), selectors: new Map(question.selectors), checkpoint, compiler, host: observedTypeScriptHost(compiler.sys), stops: new Map(stops), pass });
+        cache.compiledNames.set(walk.result, new Set([...walk.compiled].map((file) => closurePathNameV1(cache, workspaceRoot, file))));
+        cache.walkPorts.set(walk.result, [...walk.defined].sort());
+        cache.walkTools.set(walk.result, [...walk.tools].sort());
+        cache.closures.set(key, held = { digest: fact.digest, value: walk.result });
+      }
+      return { fact, value: held.value, segments: closureGraphSegmentsV1(cache, workspaceRoot, question) };
+    })).value;
+  } catch (error) { retainDetachedFailureV1(error); throw error; }
+  observeGlobalFactV1(CLOSURE_GRAPH_FACT_V1, resolve(workspaceRoot), answered.segments, answered.fact);
+  return answered.value;
 }
 
 /** 🧭️ The edges of one module: the designated ports it defines, its command imports (through the router selectors of the walk, the workspace packages, the runtime and the TypeScript resolution), its runtime references and its literal URLs, resolved to the files they name. */
@@ -501,8 +503,8 @@ async function walkImportsV1({ cache, workspaceRoot, requiredSources, selectors,
       return imports;
 }
 
-/** 🕸️ One module of the command walk as a graph node: what visiting `path` (as a source module or as a resource) observed and the edges it resolved; built once per cache and pass, so a closure is a walk over nodes that are already in memory and its support is the nodes' rows by reference.
- * @see ../../../../👁️observation/🟨️.mjs `retainObservedRowsV1` */
+/** 🕸️ One module of the command walk as a graph node: what visiting `path` (as a source module or as a resource) observed and the edges it resolved; built once per cache and pass, so a closure is a walk over nodes that are already in memory, and the node of the module closure graph ({@link closureGraphPassV1}) is made from it with the witness of its rows.
+ * @see ./🌳️closure-graph/🟨️.mjs */
 async function walkNodeV1(env, path, source) {
   const { cache, workspaceRoot, requiredSources, selectors, compiler, host, checkpoint } = env, nodes = cache.walkNodes ??= new Map();
   const key = walkKeyV1(env, path, source);
@@ -577,11 +579,11 @@ async function walkConfigNodeV1(env, directory) {
   return entry.node;
 }
 
-/** 🌳️ The command walk over graph nodes: depth first over `(path, source)` pairs, the same visiting rules as the inline walk, every node's rows merged by reference into the closure's scope; a module that is the entry of a declared tool in `stops` (path to tool name) and no root of the walk is not visited, the walk names the tool in `tools` instead and none of the tool's rows is a row of the walk. */
-async function reachWalkV1({ roots, workspaceRoot, cache, requiredSources, resources, selectors, checkpoint, compiler, host, stops }) {
-  const env = { cache, workspaceRoot, requiredSources, selectors, compiler, host, checkpoint, pass: cache.pass ?? {} };
+/** 🌳️ The command walk over graph nodes: depth first over `(path, source)` pairs, the same visiting rules as the inline walk; no row of a node joins the caller's scope (the walk is named by its `closure-graph` row, see {@link boundedScriptInputsV1}); a module that is the entry of a declared tool in `stops` (path to tool name) and no root of the walk is not visited, the walk names the tool in `tools` instead and none of the tool's rows is a row of the walk. */
+async function reachWalkV1({ roots, workspaceRoot, cache, requiredSources, resources, selectors, checkpoint, compiler, host, stops, pass = closureWalkPassV1(cache) }) {
+  const env = { cache, workspaceRoot, requiredSources, selectors, compiler, host, checkpoint, pass };
   env.pass.valid ??= new WeakSet();
-  const files = new Set(), compiled = new Set(), defined = new Set(), seen = new Set(), stack = roots.map((path) => [path, true]), directories = new Set(), members = new Set(), crossed = new Set();
+  const files = new Set(), compiled = new Set(), defined = new Set(), seen = new Set(), stack = roots.map((path) => [path, true]), directories = new Set(), crossed = new Set();
   let steps = 0;
   const drain = async () => {
     while (stack.length) {
@@ -592,8 +594,6 @@ async function reachWalkV1({ roots, workspaceRoot, cache, requiredSources, resou
       const tool = source && stops?.get(path);
       if (tool && !roots.includes(path) && !selectors.has(path)) { crossed.add(tool); continue; }
       const node = await walkNodeV1(env, path, source);
-      for (const part of node.parts) { retainObservedRowsV1(part); members.add(part); }
-      for (const part of node.shared) { retainObservedRowsV1(part); members.add(part); }
       if (node.kind === "skip") continue;
       files.add(path);
       if (node.kind === "missing") continue;
@@ -609,142 +609,310 @@ async function reachWalkV1({ roots, workspaceRoot, cache, requiredSources, resou
   };
   await drain();
   const configs = new Set();
-  for (const directory of directories) { const node = await walkConfigNodeV1(env, directory); for (const part of node.parts) { retainObservedRowsV1(part); members.add(part); } for (const config of node.configs) configs.add(config); }
+  for (const directory of directories) for (const config of (await walkConfigNodeV1(env, directory)).configs) configs.add(config);
   for (const config of [...configs].sort()) stack.push([config, false]);
   await drain();
-  return { result: [...files].map((file) => closurePathNameV1(cache, workspaceRoot, file)).sort(), compiled, defined, members: [...members], tools: crossed };
+  return { result: [...files].map((file) => closurePathNameV1(cache, workspaceRoot, file)).sort(), compiled, defined, tools: crossed };
 }
 
-const MEMO_SLOT_V1 = 2 ** 22;
 const moduleKeyV1 = (cache, text) => (cache.moduleKeys ??= createStringTableV1()).id(text);
 const walkKeyV1 = (env, path, source) => moduleKeyV1(env.cache, JSON.stringify([resolve(env.workspaceRoot), path, env.requiredSources, env.cache.providerDesignation ?? null, env.selectors.get(path) ?? null, source]));
 
-/** 🧮️ The module graph of one cache with the reach set of every node: the dense bitset of the node numbers reachable from it (strongly connected components share one set), persistent across passes. A pass first checks which nodes its journal dirty set (or, without one, the files) can have changed, drops those and every node that reaches them, and rebuilds only those: an edit of one module recomputes its reverse-import path once and every closure over untouched nodes stays a lookup.
- * @returns {{graph:Map<number,{node:object;targets:number[]}>;reverse:Map<number,Set<number>>;reaches:Map<number,Uint32Array>;nodes:Map<number,object>;pass:object|undefined}} */
-const reachStateV1 = (cache) => cache.reachState ??= { graph: new Map(), reverse: new Map(), reaches: new Map(), resources: new Map(), sets: createReachSetsV1(), nodes: new Map(), pass: undefined };
-
-async function reachPassV1(env, state) {
-  const { pass, workspaceRoot } = env;
-  if (state.pass === pass) return;
-  state.pass = pass;
-  pass.valid ??= new WeakSet();
-  const touched = [];
-  for (const [key, entry] of state.graph) {
-    const { node } = entry, config = node.config?.node;
-    if (!walkPartsHoldV1(pass, [...node.parts, ...node.shared, ...(config?.parts ?? [])], workspaceRoot)) touched.push(key);
-  }
-  const stale = new Set(touched), queue = [...touched];
-  while (queue.length) for (const above of state.reverse.get(queue.pop()) ?? []) if (!stale.has(above)) { stale.add(above); queue.push(above); }
-  for (const key of stale) state.graph.delete(key);
-  for (const key of touched) env.cache.walkNodes?.delete(key);
-  for (const memoKey of [...state.reaches.keys()]) if (stale.has(memoKey % MEMO_SLOT_V1)) state.reaches.delete(memoKey);
-  if (stale.size) state.sets.retain(new Set(state.reaches.values()));
-}
-
-/** 🤝️ Runs a walk that may build the module graph and reach sets every owner after it reads, and credits what that build kept to the cache (`sharedBytes`) and the running owner scope instead of the owner: a warm-up rebuilt after a release is shared memory, never the growth of the project that happened to pay it first. */
-export async function chargedToSharedV1(cache, work) {
-  const before = cache.reachState?.graph.size ?? 0, bytes = managedBytesV1();
-  try { return await work(); } finally {
-    if ((cache.reachState?.graph.size ?? 0) > before) { const credit = Math.max(0, managedBytesV1() - bytes); cache.sharedBytes = (cache.sharedBytes ?? 0) + credit; creditOwnerSharedV1(credit); }
-  }
-}
-
 const managedBytesV1 = () => { const usage = process.memoryUsage(); return usage.heapUsed + usage.external; };
 
-/** 🧮️ The files a command walk reaches from `entries` as a union of per-node reach sets (see `reachStateV1`). The sets are built without router selectors, so every walk shares them; a router named by a selector keeps only the imports its commands need, so the walk expands exactly the nodes that can reach such a router (their own edges, the router through its selected node) and takes every other subtree as one set. The answer, the compiled modules, the ports and the support parts are those of the walk over the same nodes (`reachWalkV1`); a differential law holds them equal.
- * @returns {Promise<{result:string[];compiled:Set<string>;defined:Set<string>;parts:Set<readonly unknown[]>}>} */
-async function reachClosureV1({ roots, workspaceRoot, cache, requiredSources, resources, selectors, checkpoint, compiler, host }) {
-  const pass = cache.pass ?? {}, base = { cache, workspaceRoot, requiredSources, selectors: new Map(), compiler, host, checkpoint, pass }, chosen = { ...base, selectors }, state = reachStateV1(cache);
-  pass.valid ??= new WeakSet();
-  await reachPassV1(base, state);
-  const resourceKey = [...resources].sort().join("\0"), { graph, reverse, reaches, nodes, sets } = state, slot = state.resources.get(resourceKey) ?? state.resources.set(resourceKey, state.resources.size).get(resourceKey), memoKey = key => { if (key >= MEMO_SLOT_V1) throw Error("Module key space exhausted"); return slot * MEMO_SLOT_V1 + key; };
-  const configsOf = async (env, node) => { if (node.kind !== "module") return []; const have = node.config?.pass === pass ? node.config.node : (node.config = { pass, node: await walkConfigNodeV1(env, dirname(node.path)) }).node; return have.configs; };
-  const targetsOf = (node, configs) => {
-    const out = [];
-    for (const imported of node.imports) {
-      if (imported.port !== undefined) continue;
-      const resource = imported.url && resources.has(resolve(imported.path));
-      if (imported.url && !resource && !imported.file) continue;
-      out.push([imported.path, imported.source && !resource]);
-    }
-    for (const config of configs) out.push([config, false]);
-    return out;
-  };
-  let steps = 0;
-  const recordOf = async (env, path, source) => {
-    const key = walkKeyV1(env, path, source);
-    if (env === base) { let record = graph.get(key); if (record !== undefined) return record; }
-    const cached = cache.walkNodes?.get(key), node = cached?.node !== undefined && cached.pass === pass ? cached.node : await walkNodeV1(env, path, source);
-    nodes.set(node.no, node);
-    const targets = targetsOf(node, await configsOf(env, node)), record = { node, targets: targets.map(([target, targetSource]) => walkKeyV1(base, target, targetSource)), edges: targets };
-    if (env === base) { graph.set(key, record); for (const target of record.targets) { let above = reverse.get(target); if (above === undefined) reverse.set(target, above = new Set()); above.add(key); } }
-    return record;
-  };
-  const build = async entry => {
-    const queue = [entry], seen = new Set();
-    while (queue.length) {
-      const [path, source] = queue.pop(), key = walkKeyV1(base, path, source);
-      if (reaches.has(memoKey(key)) || seen.has(key)) continue;
-      seen.add(key);
-      if (++steps % 64 === 0) await checkpoint();
-      const record = await recordOf(base, path, source);
-      for (const target of record.edges) queue.push(target);
-    }
-  };
-  const reachOf = async (path, source) => {
-    const key = walkKeyV1(base, path, source);
-    if (!reaches.has(memoKey(key))) {
-      await build([path, source]);
-      const order = new Map(), low = new Map(), onStack = new Set(), stack = []; let counter = 0;
-      const visit = at => {
-        order.set(at, counter); low.set(at, counter); counter++; stack.push(at); onStack.add(at);
-        for (const target of graph.get(at).targets) {
-          if (reaches.has(memoKey(target))) continue;
-          if (!order.has(target)) { visit(target); low.set(at, Math.min(low.get(at), low.get(target))); }
-          else if (onStack.has(target)) low.set(at, Math.min(low.get(at), order.get(target)));
-        }
-        if (low.get(at) === order.get(at)) {
-          const members = []; let top;
-          do { top = stack.pop(); onStack.delete(top); members.push(top); } while (top !== at);
-          const lists = [sets.of(members.map(member => graph.get(member).node.no))];
-          for (const member of members) for (const target of graph.get(member).targets) { const done = reaches.get(memoKey(target)); if (done !== undefined) lists.push(done); }
-          const reach = sets.union(lists);
-          for (const member of members) reaches.set(memoKey(member), reach);
-        }
-      };
-      visit(key);
-    }
-    return reaches.get(memoKey(key));
-  };
-  const lists = [], individual = [];
-  if (selectors.size === 0) for (const path of roots) lists.push(await reachOf(path, true));
-  else {
-    const listed = [];
-    for (const path of selectors.keys()) { await reachOf(path, true); const record = graph.get(walkKeyV1(base, path, true)); if (record !== undefined) listed.push(record.node.no); }
-    const visited = new Set(), queue = roots.map(path => [path, true]);
-    while (queue.length) {
-      const [path, source] = queue.pop(), key = walkKeyV1(chosen, path, source);
-      if (visited.has(key)) continue;
-      visited.add(key);
-      if (selectors.has(path) && source) { const record = await recordOf(chosen, path, true); individual.push(record.node); for (const target of record.edges) queue.push(target); continue; }
-      const reach = await reachOf(path, source);
-      if (!listed.some(no => sets.has(reach, no))) { lists.push(reach); continue; }
-      const record = await recordOf(base, path, source); individual.push(record.node); for (const target of record.edges) queue.push(target);
-    }
-  }
-  const merged = sets.members(sets.union([...lists, sets.of(individual.map(node => node.no))])), files = [], compiled = new Set(), defined = new Set(), parts = new Set();
-  for (const no of merged) {
-    const node = nodes.get(no);
-    for (const part of node.parts) parts.add(part);
-    for (const part of node.shared) parts.add(part);
-    if (node.kind === "skip") continue;
-    files.push(node.name);
-    if (node.kind === "module") { compiled.add(node.name); for (const imported of node.imports) if (imported.port !== undefined) defined.add(imported.port); for (const part of node.config?.node?.parts ?? []) parts.add(part); }
-  }
-  return { result: [...new Set(files)].sort(), compiled, defined, parts };
+/** 📏️ How many rows a row array shared by nodes needs to be a layer of its own: the compile index of generated outputs has thousands, the lookups of one import a handful. */
+const WITNESS_LAYER_ROWS_V1 = 64;
+const partIdsV1 = new WeakMap();
+let partCounterV1 = 0;
+/** 🪪️ The witness of one graph node as two layers: what the node read itself (`parts`, its configuration) and, as its `base`, what every node of one pass shares by identity (the row arrays of `shared`, such as the compile index of generated outputs, thousands of rows that each node used to repeat), computed once per distinct set of shared arrays in `layers` (one per pass, so its stamps are of the moment of the pass) and stored once by the graph.
+ * @see ./🌳️closure-graph/🟨️.mjs */
+function layeredWitnessV1(layers, node, config) {
+  const wide = node.shared.filter(part => part.length >= WITNESS_LAYER_ROWS_V1), narrow = node.shared.filter(part => part.length < WITNESS_LAYER_ROWS_V1);
+  const own = observationWitnessV1([...new Set([...node.parts, ...narrow, ...config?.parts ?? []].flat())]);
+  if (own === undefined) return null;
+  if (!wide.length) return own;
+  const key = wide.map(part => { let id = partIdsV1.get(part); if (id === undefined) partIdsV1.set(part, id = ++partCounterV1); return id; }).join(",");
+  let layer = layers.get(key);
+  if (layer === undefined) layers.set(key, layer = observationWitnessV1([...new Set(wide.flat())]) ?? null);
+  return layer === null ? null : { ...own, base: layer };
 }
 
-/** 🌐️ The full command closure of `entries` as a process loads it: the bounded walk and, for every script provider port it names, the designation, its schema and the provider's own bounded walk, transitively; composed from the bounded walks, so each provider walk is computed once and every caller holds the same walk facts. Callers that list files read this (owner discovery, component targets, input precision, a whole-walk closure such as the test discovery); a command closure read through a view names its providers by reference instead (`./🔌️provider-closures`). */
+/** 🌳️ One pass of the module closure graph (`./🌳️closure-graph`) over walk `questions` (`{roots, requiredSources, resources, selectors, stops}` as {@link boundedScriptInputsV1} takes them): every node a question reaches is visited through the same graph nodes as the walk (`walkNodeV1`, valid while its rows hold in `cache.pass`, so a pass with a journal dirty set rebuilds only the touched modules), put once per pass into `graph` keyed by its workspace name, source flag, required flag, selected router words and, only for a module whose URL imports a question's resources change, that resource set (its importers reach it through a redirect, so a resource set never copies the graph); a node object and config unchanged since an earlier pass reuse their record (no digest or witness taken again); its digest over kind, name, resolved edges, ports, configs, generated imports and the provider designation; the answer of each question is its closure digest (tools cut, selected routers redirected). A node unchanged since the last pass moves no digest, so a warm pass after an edit recomputes only the components above the edited module. `witness` keeps `{witness, urls}` as the node's stored data: the witness of its rows (`observationWitnessV1`) and the names its URL imports point at; `prune` drops every node no question of a whole pass reached; `trusted` (see {@link closureGraphWitnessedV1}) names the stored nodes whose witness held this round, which are followed through their stored edges without building their walk node (a module whose stored URL imports meet the question's resources only through its record of that resource set: a module whose URL imports change stops being trusted, so a trusted plain record is never the wrong variant). Answers `{digests, visited, built, pruned, graph}`; `progress({done,total})` after each question, `signal` cancels between nodes. A question whose walk fails (a module that does not parse or resolve) leaves the rows of every node it visited on the way in the caller's scope before the error goes on, so whoever withholds work because of it holds what can lift it.
+ * @see ./🌳️closure-graph/🧪️tests */
+export async function closureGraphPassV1(cache, workspaceRoot, questions, { graph = cache.closureGraph ??= createClosureGraphV1(), signal, progress, witness = false, prune = false, trusted, pass = closureWalkPassV1(cache) } = {}) {
+  const compiler = parserTypescriptV1(), host = observedTypeScriptHost(compiler.sys), done = new Set(), answers = [], put = new Map(), memo = cache.closureGraphRecords ??= new WeakMap();
+  pass.valid ??= new WeakSet();
+  const layers = new Map();
+  let steps = 0, visited = 0, built = 0;
+  const checkpoint = (force = false) => { signal?.throwIfAborted(); return yieldInferenceV1(cache.context, "build:closure-graph", ++steps, force); };
+  const nameOf = path => closurePathNameV1(cache, workspaceRoot, path);
+  for (const [at, question] of questions.entries()) {
+    const required = Boolean(question.requiredSources), resources = new Set((question.resources ?? []).map(path => resolve(path))), resourceKey = [...resources].sort().map(nameOf).join("\0"), selectors = new Map([...(question.selectors ?? [])].map(([path, words]) => [resolve(path), [...new Set(words)].sort()])), roots = [...new Set(question.roots.map(path => resolve(path)))].sort();
+    const env = { cache, workspaceRoot, requiredSources: required, selectors, compiler, host, checkpoint, pass }, keyOf = (path, source, words, resource = "") => JSON.stringify([nameOf(path), source ? 1 : 0, required ? 1 : 0, resource, words ?? null]), whole = resources.size > 0;
+    const stops = new Map(), redirect = new Map(), seen = new Set(), stack = roots.map(path => [path, true]);
+    for (const [path, tool] of question.stops ?? []) if (!roots.includes(resolve(path)) && !selectors.has(resolve(path))) stops.set(keyOf(resolve(path), true), tool);
+    for (const [path, words] of selectors) for (const source of [true, false]) redirect.set(keyOf(path, source), keyOf(path, source, words));
+    const walk = async full => {
+      while (stack.length) {
+        const [path, source] = stack.pop(), plain = keyOf(path, source), selected = keyOf(path, source, selectors.get(path));
+        if (seen.has(selected) || source && stops.has(plain)) continue;
+        seen.add(selected); visited++;
+        if (visited % 64 === 0) await checkpoint();
+        if (!full && !whole && done.has(selected)) continue;
+        const held = closureHeldRecordV1(graph, trusted, selected, whole ? keyOf(path, source, selectors.get(path), resourceKey) : undefined, name => resources.has(resolve(workspaceRoot, name.slice("{workspaceRoot}/".length))));
+        if (held !== undefined) { done.add(selected); if (held.key !== plain) redirect.set(plain, held.key); for (const edge of held.edges) { const [name, flag] = JSON.parse(edge); stack.push([resolve(workspaceRoot, name.slice("{workspaceRoot}/".length)), flag === 1]); } continue; }
+        const known = cache.walkNodes?.get(walkKeyV1(env, path, source)), node = await walkNodeV1(env, path, source);
+        reached.push(node);
+        if (known?.node !== node) built++;
+        const affected = node.kind === "module" && node.imports.some(imported => imported.url && resources.has(resolve(imported.path))), key = affected ? keyOf(path, source, selectors.get(path), resourceKey) : selected;
+        if (key !== plain) redirect.set(plain, key);
+        const config = node.kind === "module" ? await walkConfigNodeV1(env, dirname(path)) : undefined, targets = [];
+        if (node.kind === "module") for (const imported of node.imports) { if (imported.port !== undefined) continue; const resource = imported.url && resources.has(resolve(imported.path)); if (imported.url && !resource && !imported.file) continue; targets.push([imported.path, Boolean(imported.source && !resource)]); }
+        for (const file of config?.configs ?? []) targets.push([file, false]);
+        let mine = memo.get(node); if (mine === undefined) memo.set(node, mine = new Map());
+        const kept = mine.get(key);
+        let record = kept !== undefined && kept.config === config && (!witness || kept.record.extra?.witness) ? kept.record : undefined;
+        if (record === undefined) {
+          const content = { kind: node.kind, name: node.name, source: source ? 1 : 0, designation: cache.providerDesignation ?? null, ...node.kind === "module" ? { imports: targets.map(([target, flag]) => nameOf(target) + "\0" + (flag ? 1 : 0)).sort(), ports: [...new Set(node.imports.filter(imported => imported.port !== undefined).map(imported => imported.port))].sort(), generated: cache.generatedImports.get(path) ?? [], words: selectors.get(path) ?? null } : {} };
+          record = { key, name: node.name, kind: node.kind, digest: moduleNodeDigestV1(content), edges: targets.map(([target, flag]) => keyOf(target, flag)), extra: witness ? { witness: layeredWitnessV1(layers, node, config), urls: node.kind === "module" ? [...new Set(node.imports.filter(imported => imported.url).map(imported => nameOf(imported.path)))].sort() : [], sha256: node.kind === "module" || node.kind === "resource" ? fileSha256V1(path) : null, provider: closureProviderNameV1(cache, workspaceRoot), ...content.ports?.length ? { ports: content.ports } : {}, ...content.generated?.length ? { generated: content.generated } : {} } : null };
+          mine.set(key, { config, record });
+        }
+        put.set(key, record);
+        done.add(selected);
+        for (const target of targets) stack.push(target);
+      }
+    };
+    const reached = [];
+    try { await walk(false); }
+    catch (error) {
+      for (const node of reached) for (const part of [...node.parts, ...node.shared, ...node.kind === "module" ? (await walkConfigNodeV1(env, dirname(node.path)).catch(() => undefined))?.parts ?? [] : []]) retainObservedRowsV1(part);
+      throw error;
+    }
+    if (put.size) { graph.update(put.values()); put.clear(); }
+    const options = { stops, redirect }, rootKeys = roots.map(path => { const plain = keyOf(path, true); return redirect.get(plain) ?? plain; });
+    let digest = graph.closureDigest(rootKeys, options);
+    if (digest === undefined) { seen.clear(); stack.push(...roots.map(path => [path, true])); await walk(true); graph.update(put.values()); put.clear(); digest = graph.closureDigest(rootKeys, options); }
+    answers.push(digest);
+    await progress?.({ done: at + 1, total: questions.length });
+  }
+  const pruned = prune ? [...graph.records()].filter(record => !done.has(record.key)).map(record => record.key) : [];
+  if (pruned.length) graph.update([], pruned);
+  return { digests: answers, visited, built, pruned: pruned.length, graph };
+}
+
+/** 🪪️ The keys of the stored nodes of `graph` whose witness (`extra.witness`, see {@link closureGraphPassV1} `witness`) holds now: one stat per distinct path and one probe per distinct live row for the whole graph (shared memos), so a process that loads the machine's graph trusts every unchanged module without reading or parsing it; the parsers are registered first (a fresh process would otherwise find the parser of every module's `analysis` row unregistered and trust no module); a node without a witness is never trusted. `step` is awaited between nodes. */
+export async function closureGraphWitnessedV1(graph, { step } = {}) {
+  const trusted = new Set(), memos = { tuples: new Map(), verdicts: new Map(), step };
+  preparedAnalysesV1();
+  for (const record of graph.records()) { const witness = record.extra?.witness; if (witness !== null && typeof witness === "object" && await observationWitnessHoldsV1(witness, memos)) trusted.add(record.key); await step?.(); }
+  return trusted;
+}
+
+const WORKSPACE_NAME_V1 = "{workspaceRoot}/";
+/** 🔏️ The SHA-256 of the bytes of a file (null when it cannot be read): what another machine compares with its own bytes before it trusts a node of this graph (`./🌳️closure-graph/🛰️fleet`). */
+const fileSha256V1 = path => { try { return createHash("sha256").update(vReadV1(path)).digest("hex"); } catch { return null; } };
+const closureRoundV1 = () => { const round = closurePassV1 ?? observationRoundV1(); return round !== null && typeof round === "object" ? round : undefined; };
+/** 🗃️ The table of the running validation round in `tables` (made by `make` on first use), undefined outside a round. */
+const roundTableV1 = (tables, make) => { const round = closureRoundV1(); if (round === undefined) return undefined; let table = tables.get(round); if (table === undefined) tables.set(round, table = make()); return table; };
+let turnAnswersV1;
+/** 🗃️ The answers a judge of `closure-graph` rows may take without a pass: those of the running round, and those of the running turn of the event loop (an asynchronous judge prepares and then judges in one turn); `ready` makes the tables, otherwise an absent table is undefined. */
+const judgeAnswerTablesV1 = ready => [roundTableV1(graphAnswersV1, () => new Map()), ready ? turnAnswersV1 ??= (setImmediate(() => { turnAnswersV1 = undefined; }), new Map()) : turnAnswersV1].filter(table => table !== undefined);
+const graphAnswersV1 = new WeakMap(), passAnswersV1 = new WeakMap(), graphTrustV1 = new WeakMap(), storedGraphsV1 = createBoundedCacheV1({ name: "inference:closure-graphs", maxEntries: 4, maxBytes: 4 }), latestGraphsV1 = createBoundedCacheV1({ name: "inference:closure-graphs-latest", maxEntries: 8, maxBytes: 8 }), closureGraphSavesV1 = new Set();
+
+/** 🧭️ The pass the walks and the module graph of a cache share in the running validation round: `cache.pass` when a caller set one (a generation deriver), else one per round, so a node is checked once per round and an answer of the round stays its answer; outside a round every walk has its own. */
+function closureWalkPassV1(cache) {
+  if (cache.pass !== undefined) return cache.pass;
+  const passes = cache.roundPasses ??= new WeakMap(), round = closureRoundV1();
+  if (round === undefined) return {};
+  let pass = passes.get(round);
+  if (pass === undefined) passes.set(round, pass = {});
+  return pass;
+}
+
+/** 🏷️ The script provider designation a cache walks with, as a workspace name (null without one): the ports a module defines resolve through it, so a node is only ever trusted by a walk under the same designation. */
+const closureProviderNameV1 = (cache, workspaceRoot) => cache.providerDesignation ? closurePathNameV1(cache, workspaceRoot, resolve(cache.providerDesignation)) : null;
+/** 🏷️ A walk question as the segments of its `closure-graph` row (with the provider designation it is walked under): workspace names only (`{workspaceRoot}/…`), so the row travels between machines and checkouts unchanged. */
+function closureGraphSegmentsV1(cache, workspaceRoot, question) {
+  const nameOf = path => closurePathNameV1(cache, workspaceRoot, path);
+  return { roots: question.roots.map(nameOf), requiredSources: Boolean(question.requiredSources), resources: (question.resources ?? []).map(nameOf), selectors: [...(question.selectors ?? [])].map(([path, words]) => [nameOf(path), [...words]]), stops: (question.stops ?? []).map(([path, tool]) => [nameOf(path), tool]), view: question.view ?? null, provider: closureProviderNameV1(cache, workspaceRoot) };
+}
+const workspaceNameAdmittedV1 = name => typeof name === "string" && name.startsWith(WORKSPACE_NAME_V1) && !name.split("/").includes("..");
+/** 🚏️ Whether the segments of a `closure-graph` row are a walk question: the roots, resources and routers as workspace names inside the checkout, selector words and tool names as strings; a tool entry the walk is cut at is a workspace name that may lie outside (it is never read). */
+const closureGraphSegmentsAdmittedV1 = segments => segments !== null && typeof segments === "object" && Array.isArray(segments.roots) && segments.roots.every(workspaceNameAdmittedV1) && typeof segments.requiredSources === "boolean" && Array.isArray(segments.resources) && segments.resources.every(workspaceNameAdmittedV1) && Array.isArray(segments.selectors) && segments.selectors.every(row => Array.isArray(row) && row.length === 2 && workspaceNameAdmittedV1(row[0]) && Array.isArray(row[1]) && row[1].every(word => typeof word === "string")) && Array.isArray(segments.stops) && segments.stops.every(row => Array.isArray(row) && row.length === 2 && typeof row[0] === "string" && row[0].startsWith(WORKSPACE_NAME_V1) && typeof row[1] === "string") && (segments.view === null || Object.hasOwn(WALK_VIEW_POLICY_V1.views, segments.view)) && (segments.provider === null || typeof segments.provider === "string" && segments.provider.startsWith(WORKSPACE_NAME_V1));
+/** 🧭️ The walk question the segments of a `closure-graph` row name, in the paths of `workspaceRoot`. */
+function closureGraphQuestionOfV1(workspaceRoot, segments) {
+  const local = name => resolve(workspaceRoot, name.slice(WORKSPACE_NAME_V1.length));
+  return { roots: segments.roots.map(local), requiredSources: segments.requiredSources, resources: segments.resources.map(local), selectors: segments.selectors.map(([name, words]) => [local(name), words]), stops: segments.stops.map(([name, tool]) => [local(name), tool]), view: segments.view ?? undefined };
+}
+
+/** 🗄️ The directory the module graph of a workspace is kept in on this machine (`.cache/f/<directory>` of the machine state, whatever closure store a process binds), shared by every process of the machine: the read, its farm and its pool children, and the graph another machine offered once it is adopted here. */
+export function closureGraphDirectoryV1(workspaceRoot) { return machinePathV1(resolve(workspaceRoot), ".cache", "f", CLOSURE_GRAPH_POLICY_V1.directory); }
+/** 🗄️ The module graph of one script input cache: the graph another cache of the process uses for the workspace under the same designation, else, for the repository's own designation, the machine's stored graph when the cache first needs one (a damaged store counts as none), kept current by every pass of the cache (a graph is the tree's, whatever cache asks); a walk under another designation keeps a graph of its own process, so the machine's graph is loaded once per process; the graph a cache of the workspace last used is what a judge of a `closure-graph` row consults when no cache is bound for the workspace. */
+function machineClosureGraphV1(cache, workspaceRoot) {
+  if (cache.closureGraph === undefined) {
+    const directory = cache.providerDesignation === undefined ? closureGraphDirectoryV1(workspaceRoot) : undefined;
+    let graph = latestGraphsV1.get(workspaceRoot + "\0" + closureProviderNameV1(cache, workspaceRoot));
+    if (graph === undefined) try { graph = directory === undefined ? undefined : loadClosureGraphSyncV1(directory); } catch {}
+    cache.closureGraph = graph ?? createClosureGraphV1();
+  }
+  latestGraphsV1.set(workspaceRoot + "\0" + closureProviderNameV1(cache, workspaceRoot), cache.closureGraph);
+  return cache.closureGraph;
+}
+/** 🗄️ The machine's stored module graph of a workspace for a process that binds no script input cache (a reader that only judges records), loaded again when its head was replaced. */
+function storedClosureGraphV1(workspaceRoot) {
+  const directory = closureGraphDirectoryV1(workspaceRoot);
+  if (directory === undefined) return undefined;
+  let mtime; try { mtime = vLstatV1(join(directory, "head.json")).mtimeMs; } catch { return undefined; }
+  const held = storedGraphsV1.get(directory);
+  if (held?.mtime === mtime) return held.graph;
+  let graph; try { graph = loadClosureGraphSyncV1(directory); } catch { return undefined; }
+  if (graph !== undefined) storedGraphsV1.set(directory, { mtime, graph });
+  return graph;
+}
+/** 🪪️ The stored nodes of `graph` a pass may use without visiting them: those whose witness holds, each judged once per round (one stat per distinct path and one probe per distinct live row, shared by every node and graph of the round). */
+function storedTrustV1(graph, workspaceRoot, provider) {
+  const memo = roundTableV1(graphTrustV1, () => ({ tuples: new Map(), verdicts: new Map(), nodes: new WeakMap() })) ?? { tuples: new Map(), verdicts: new Map(), nodes: new WeakMap() };
+  preparedAnalysesV1();
+  return { has(key) { const record = graph.get(key); if (record === undefined) return false; let holds = memo.nodes.get(record); if (holds === undefined) { const witness = record.extra?.witness, adopted = record.extra?.adopted; holds = (record.extra?.provider ?? null) === provider && (witness !== null && typeof witness === "object" ? observationWitnessHoldsSyncV1(witness, memo) : typeof adopted === "string" && adoptedNodeHoldsV1(workspaceRoot, record, adopted, memo)); memo.nodes.set(record, holds); } return holds; } };
+}
+
+/** 🛰️ Whether a node this machine adopted from another machine's graph (`extra.adopted`, the local stamp of its file when its bytes were found equal, see `./🌳️closure-graph/🛰️fleet`) still stands for the disk: the file has that stamp now. */
+function adoptedNodeHoldsV1(workspaceRoot, record, adopted, memo) {
+  if (!workspaceNameAdmittedV1(record.name)) return false;
+  const path = resolve(workspaceRoot, record.name.slice(WORKSPACE_NAME_V1.length));
+  let now = memo.tuples.get("\0adopted\0" + path);
+  if (now === undefined) { now = pathStampV1(path, Number.POSITIVE_INFINITY, 0) ?? "?"; memo.tuples.set("\0adopted\0" + path, now); }
+  return now === adopted;
+}
+
+/** 👓️ The view a closure recipe reads its walks through (`./👓️walk-views`), undefined for a whole walk or a recipe that names none. */
+const recipeViewV1 = recipe => { try { return walkViewOfRecipeV1(recipe); } catch { return undefined; } };
+/** 👓️ The view of the closure recipe whose derivation is running: every walk the derivation asks records its `closure-graph` row through it. */
+const closureViewScopeV1 = new AsyncLocalStorage();
+
+/** 🆔️ What a project reads of a walk, from the nodes it reached: the answer digest of `./👓️walk-views` (the roster, the compiled modules, the generated outputs they import and the provider ports, through `view`), the same function of the same inputs a walk over the files gives. */
+function closureGraphViewAnswerV1(graph, keys, view) {
+  const files = new Set(), compiled = new Map(), ports = new Set();
+  for (const key of keys) {
+    const record = graph.get(key);
+    if (record.kind === "skip") continue;
+    files.add(record.name);
+    if (record.kind !== "module") continue;
+    if (!compiled.has(record.name)) compiled.set(record.name, record.extra?.generated ?? []);
+    for (const port of record.extra?.ports ?? []) ports.add(port);
+  }
+  const names = [...compiled.keys()].sort();
+  return walkViewAnswerV1([...files].sort(), names, names.map(name => [name, compiled.get(name)]), view, [...ports].sort());
+}
+
+/** 🌳️ What the module graph of the tree answers for one walk question, once per walk pass (`pass`: one per validation round, the one a caller set, or a fresh one): `digest` the closure digest of the question, `answer` the answer through its view ({@link closureGraphViewAnswerV1}); the machine's stored graph is the start, a stored node whose witness holds is used as it is, every other node is visited through the walk's own nodes ({@link closureGraphPassV1}), and a graph that changed is saved for the next process of the machine; a question that fails is passed again without stored nodes, so the failure names every node on its way. The memory a pass that built nodes kept is credited to the cache (`sharedBytes`) and the running owner scope: the graph is what every owner after it reads, never the growth of the owner that happened to pay it. */
+export async function closureGraphAnswerV1(cache, workspaceRoot, question, pass = closureWalkPassV1(cache)) {
+  const root = resolve(workspaceRoot), id = root + "\0" + JSON.stringify(closureGraphSegmentsV1(cache, root, question)), answers = passAnswersV1.get(pass) ?? passAnswersV1.set(pass, new Map()).get(pass), held = answers.get(id);
+  if (held !== undefined) return held;
+  const graph = machineClosureGraphV1(cache, root), bytes = managedBytesV1(), { digests: [digest], built } = await closureGraphPassV1(cache, root, [question], { graph, witness: true, trusted: storedTrustV1(graph, root, closureProviderNameV1(cache, root)), pass }).catch(() => closureGraphPassV1(cache, root, [question], { graph, witness: true, pass }));
+  if (built > 0) { const credit = Math.max(0, managedBytesV1() - bytes); cache.sharedBytes = (cache.sharedBytes ?? 0) + credit; creditOwnerSharedV1(credit); }
+  if (digest === undefined) throw refuseBuildV1("missing", "closure.graph-incomplete", { key: String(question.roots[0] ?? "").slice(0, 160) });
+  const reached = closureGraphDigestSyncV1(graph, closureGraphSegmentsV1(cache, root, question), { has: key => graph.has(key) });
+  if (reached === undefined) throw refuseBuildV1("missing", "closure.graph-incomplete", { key: String(question.roots[0] ?? "").slice(0, 160) });
+  const fact = { digest, answer: closureGraphViewAnswerV1(graph, reached.keys, question.view) };
+  answers.set(id, fact);
+  for (const table of judgeAnswerTablesV1(true)) table.set(id, fact);
+  if (built > 0) scheduleClosureGraphSaveV1(cache, root);
+  return fact;
+}
+
+/** 🔑️ The stored record a trusted node of a walk question is followed through, the one derivation of {@link closureGraphPassV1} and {@link closureGraphDigestSyncV1}: the record of the resource-varied key (`varied`, set when the question has resources) when it is trusted, since a module whose URL imports meet the question's resources is stored under that key alone; else the plain record of `selected` when it is trusted and none of its stored URL imports `hits`; else undefined (the node must be visited). `trusted` is undefined when nothing is trusted.
+ * @see ./🌳️closure-graph/🧪️tests/🔑️resource-key */
+function closureHeldRecordV1(graph, trusted, selected, varied, hits) {
+  if (trusted === undefined) return undefined;
+  if (varied !== undefined && trusted.has(varied)) return graph.get(varied);
+  if (!trusted.has(selected)) return undefined;
+  const base = graph.get(selected);
+  return varied !== undefined && base.extra?.urls?.some(hits) ? undefined : base;
+}
+
+/** 🌳️ The closure digest and the reached keys of a walk question from the stored nodes of `graph` alone, without visiting a module: the traversal of {@link closureGraphPassV1} where every reached node is trusted (`trusted.has`); undefined as soon as a reached node is missing or not trusted (the question must then be passed). */
+function closureGraphDigestSyncV1(graph, segments, trusted) {
+  const required = segments.requiredSources ? 1 : 0, words = new Map(segments.selectors), resources = new Set(segments.resources), resourceKey = [...resources].sort().join("\0"), whole = resources.size > 0, roots = segments.roots;
+  const keyOf = (name, source, chosen, resource = "") => JSON.stringify([name, source ? 1 : 0, required, resource, chosen ?? null]), stops = new Map(), redirect = new Map(), seen = new Set(), stack = roots.map(name => [name, true]);
+  for (const [name, tool] of segments.stops) if (!roots.includes(name) && !words.has(name)) stops.set(keyOf(name, true), tool);
+  for (const [name, chosen] of words) for (const source of [true, false]) redirect.set(keyOf(name, source), keyOf(name, source, chosen));
+  while (stack.length) {
+    const [name, source] = stack.pop(), plain = keyOf(name, source), selected = keyOf(name, source, words.get(name));
+    if (seen.has(selected) || source && stops.has(plain)) continue;
+    seen.add(selected);
+    const held = closureHeldRecordV1(graph, trusted, selected, whole ? keyOf(name, source, words.get(name), resourceKey) : undefined, url => resources.has(url));
+    if (held === undefined) return undefined;
+    if (held.key !== plain) redirect.set(plain, held.key);
+    for (const edge of held.edges) { const [target, flag] = JSON.parse(edge); stack.push([target, flag === 1]); }
+  }
+  const options = { stops, redirect }, rootKeys = roots.map(name => redirect.get(keyOf(name, true)) ?? keyOf(name, true));
+  return { digest: graph.closureDigest(rootKeys, options), keys: graph.reach(rootKeys, options).keys };
+}
+
+/** 🪪️ Whether the `closure-graph` row of a walk still holds: what the running round answered for its question, else what the stored nodes of the machine's graph give while every node the question reaches is witnessed ({@link closureGraphDigestSyncV1}); it holds while the closure digest is the recorded one, or, after the digest moved, while the answer through the row's view is the recorded one (an edit the view leaves out). A question that cannot be decided without visiting modules does not hold here (an asynchronous judge prepares it first, {@link prepareClosureGraphRowsV1}), so the verdict is never wrong, at worst an entry is derived again. */
+function closureGraphFactHoldsV1(workspaceRoot, segments, fact) {
+  if (!closureGraphSegmentsAdmittedV1(segments) || typeof fact?.digest !== "string" || typeof fact.answer !== "string") return false;
+  const id = workspaceRoot + "\0" + JSON.stringify(segments), tables = judgeAnswerTablesV1(false);
+  let now = tables.map(table => table.get(id)).find(fact => fact !== undefined);
+  if (now === undefined) {
+    const scripts = closureScriptsV1.get(workspaceRoot), provider = segments.provider ?? null, graph = scripts !== undefined && closureProviderNameV1(scripts, workspaceRoot) === provider ? machineClosureGraphV1(scripts, workspaceRoot) : latestGraphsV1.get(workspaceRoot + "\0" + provider) ?? storedClosureGraphV1(workspaceRoot), reached = graph === undefined ? undefined : closureGraphDigestSyncV1(graph, segments, storedTrustV1(graph, workspaceRoot, provider));
+    if (reached === undefined) return false;
+    now = { digest: reached.digest, answer: closureGraphViewAnswerV1(graph, reached.keys, segments.view ?? undefined) };
+    tables[0]?.set(id, now);
+  }
+  return now.digest === fact.digest || now.answer === fact.answer;
+}
+/** 🛎️ Gets the `closure-graph` rows among `rows` answered for the running round, each question once, through the script input cache bound for its workspace; a question whose workspace binds none, or that cannot be walked, is left to {@link closureGraphFactHoldsV1}. */
+async function prepareClosureGraphRowsV1(rows) {
+  for (const row of rows) {
+    let workspaceRoot, segments;
+    try { [, workspaceRoot, segments] = JSON.parse(row.path); } catch { continue; }
+    const scripts = closureScriptsV1.get(workspaceRoot);
+    if (scripts === undefined || !closureGraphSegmentsAdmittedV1(segments) || closureProviderNameV1(scripts, workspaceRoot) !== (segments.provider ?? null)) continue;
+    try { await closureGraphAnswerV1(scripts, workspaceRoot, closureGraphQuestionOfV1(workspaceRoot, segments)); } catch {}
+  }
+}
+registerGlobalFactV1(CLOSURE_GRAPH_FACT_V1, closureGraphFactHoldsV1, prepareClosureGraphRowsV1);
+const CLOSURE_GRAPH_PATH_V1 = JSON.stringify([CLOSURE_GRAPH_FACT_V1]).slice(0, -1) + ",";
+/** 🪪️ The `closure-graph` rows among the own rows of an entry or a bundle, prepared and judged in one turn before anything else is (a long row check gives the event loop turns), and the other rows for the caller to judge. */
+async function closureGraphRowsHoldV1(rows) {
+  const graph = rows.filter(row => row.kind === "global" && row.path.startsWith(CLOSURE_GRAPH_PATH_V1));
+  if (!graph.length) return { holds: true, rest: rows };
+  await prepareGlobalFactsV1(graph);
+  return { holds: observationRowsHoldV1(graph), rest: rows.filter(row => !graph.includes(row)) };
+}
+
+/** 💾️ Saves the module graph of a cache walking under the repository's own designation into the machine's directory `saveDelayMilliseconds` after it changed, one save at a time and again when it changed meanwhile, and at the latest before the process exits ({@link flushClosureGraphsV1}); a process that only reads the store (a worker child) never writes it, nor does a walk under another designation. */
+function scheduleClosureGraphSaveV1(cache, workspaceRoot) {
+  const bound = closureStoreBindingsV1.get(workspaceRoot), directory = closureGraphDirectoryV1(workspaceRoot);
+  if (directory === undefined || cache.providerDesignation !== undefined || bound !== undefined && !bound.writable) return;
+  const state = cache.closureGraphSave ??= { directory, cache, dirty: false, timer: undefined, running: undefined };
+  state.dirty = true;
+  closureGraphSavesV1.add(state);
+  if (!closureGraphSavesV1.registered) { closureGraphSavesV1.registered = true; process.once("beforeExit", () => { void flushClosureGraphsV1(); }); }
+  if (state.timer !== undefined || state.running !== undefined) return;
+  state.timer = setTimeout(() => { state.timer = undefined; void saveClosureGraphStateV1(state); }, CLOSURE_GRAPH_POLICY_V1.saveDelayMilliseconds);
+  state.timer.unref?.();
+}
+async function saveClosureGraphStateV1(state) {
+  while (state.dirty) { state.dirty = false; state.running = saveClosureGraphV1(state.cache.closureGraph, state.directory).catch(() => undefined); await state.running; state.running = undefined; }
+  closureGraphSavesV1.delete(state);
+}
+/** 💾️ Saves now every module graph of this process that changed since its last save. */
+export async function flushClosureGraphsV1() {
+  for (const state of [...closureGraphSavesV1]) { if (state.timer !== undefined) { clearTimeout(state.timer); state.timer = undefined; } await state.running; await saveClosureGraphStateV1(state); }
+}
+
+/** 🧭️ The walk question of one target's command entries as {@link targetScriptSources} asks it for an owner record (`cover` "queries"): the script entries no declared tool covers, the router selectors, the resources and the declared tool stops; the declared module inputs a target adds after its first walk are not part of it. */
+export async function targetClosureQuestionV1(target, workspaceRoot, scripts, projectRoot = ".", nativeManifest) {
+  const { resources, entries, words } = await targetScriptEntriesV1(target, workspaceRoot, projectRoot, nativeManifest), tools = toolCoverV1(scripts, target, entries, words, resources, false);
+  for (const entry of tools.covered) entries.delete(entry);
+  if (!entries.size) return undefined;
+  return { roots: [...entries], requiredSources: true, resources, selectors: [...words].filter(([, known]) => known).map(([script, known]) => [script, [...known]]), stops: toolStopsV1(scripts, false) };
+}
+
+/** 🌐️ The full command closure of `entries` as a process loads it: the bounded walk and, for every script provider port it names,the designation, its schema and the provider's own bounded walk, transitively; composed from the bounded walks, so each provider walk is computed once and every caller holds the same walk facts. Callers that list files read this (owner discovery, component targets, input precision, a whole-walk closure such as the test discovery); a command closure read through a view names its providers by reference instead (`./🔌️provider-closures`). */
 export async function relativeScriptInputs(entries, workspaceRoot, cache = createScriptInputCache(), requiredSources=false, resourceEntries=[], commands=new Map()) {
   const own = await boundedScriptInputsV1(entries, workspaceRoot, cache, requiredSources, resourceEntries, commands), pending = [...(cache.walkPorts.get(own) ?? [])];
   if (!pending.length) return own;
@@ -766,7 +934,7 @@ async function providerWalksV1(cache, workspaceRoot, ports, designation = provid
   return walks;
 }
 
-/** 🪢️ The derived fact of every command walk whose stored observations a project can reuse, by those observations: the question the walk answered and the digest of its answer, so a project names the walk by one row instead of by the thousands of rows it read; `views` holds the same walk asked through each declared view (`./👓️walk-views`), the fact a project holds when every consumer of its recipe reads the walk through that view. */
+/** 🪢️ The derived fact of every repository walk and TypeScript program whose stored observations a project can reuse, by those observations: the question it answered and the digest of its answer, so a project names it by one row instead of by the rows it read (a command walk is named by its `closure-graph` row instead, see {@link boundedScriptInputsV1}). */
 const walkFactsV1 = new WeakMap();
 
 /** 🗝️ The digest of the answer of a repository walk: what a project that used the walk depends on. */
@@ -788,25 +956,7 @@ async function derivedWalkV1(workspaceRoot, recipe, scripts) {
   return value;
 }
 
-/** ✍️ The stored observations of every file a command walk visited, by the questions of the walks that visited it: they are part of those walks' observations, so a project that names such a walk by its derived fact does not carry them again. */
-const walkMembersV1 = new WeakMap();
-
-/** 🧱️ The row arrays (node parts and shared computations) the walk that produced a result visited: the support of its derived fact, by reference. */
-const walkPartsV1 = new WeakMap();
-
-/** 🛤️ The canonical question one command walk answers: the workspace, the entry files, whether sources are required, the resource files, the router selectors and the script provider designation; nothing else decides the walk. A view names the declared view its answer is read through (`./👓️walk-views`); the whole walk names none. */
-function walkQuestionV1(cache, workspaceRoot, roots, requiredSources, resources, selectors, view, stops) {
-  return JSON.stringify({ walk: 1, workspaceRoot: resolve(workspaceRoot), roots, requiredSources: Boolean(requiredSources), resources: [...resources].sort(), selectors: [...selectors].sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0), provider: cache.providerDesignation ?? null, ...(stops?.length ? { stops } : {}), ...(view === undefined ? {} : { view }) });
-}
-
-/** 🆔️ The digest of everything a project reads from one walk, through a view when one is named: the roster, the modules it compiled and the generated outputs those modules import. */
-function walkAnswerV1(cache, workspaceRoot, value, view) {
-  const compiled = [...(cache.compiledNames.get(value) ?? [])].sort();
-  const generated = compiled.map(name => [name, cache.generatedImports.get(resolve(workspaceRoot, name.slice("{workspaceRoot}/".length))) ?? []]);
-  return walkViewAnswerV1(value, compiled, generated, view, cache.walkPorts.get(value) ?? []);
-}
-
-/** 🔁️ Asks a derived fact of the command closure again against the live files (a command walk or a TypeScript program): its answer digest and every observation the computation read, for a generation that decides whether the projects holding the fact stay valid. */
+/** 🔁️ Asks a derived fact of the command closure again against the live files (a repository walk or a TypeScript program): its answer digest and every observation the computation read, for a generation that decides whether the projects holding the fact stay valid. */
 export async function deriveClosureFactV1(row, cache, pass = {}) {
   assertNotReadParentV1("walk", row?.path ?? row?.kind ?? "");
   cache.pass = pass;
@@ -828,20 +978,7 @@ async function deriveClosureFactInRoundV1(row, cache) {
     const asked = await observeDetachedV1(() => derivedWalkV1(question.workspaceRoot, recipe, cache));
     return { fact: derivedWalkAnswerV1(asked.value), rows: support(asked) };
   }
-  if (question?.walk !== 1 || !Array.isArray(question.roots) || !Array.isArray(question.resources) || !Array.isArray(question.selectors) || question.stops !== undefined && !toolStopsAdmittedV1(question.stops) || question.view !== undefined && !Object.hasOwn(WALK_VIEW_POLICY_V1.views, question.view)) throw refuse();
-  if ((question.provider ?? null) !== (cache.providerDesignation ?? null)) throw refuseBuildV1("invalid", "closure.derived-provider-differs", { provider: String(question.provider) });
-  if (cache.pass?.transient === true && !question.stops?.length) {
-    const compiler = parserTypescriptV1(), host = observedTypeScriptHost(compiler.sys), resources = new Set(question.resources.map((path) => resolve(path))), selectors = new Map(question.selectors.map(([path, words]) => [resolve(path), [...new Set(words)].sort()])), roots = [...new Set(question.roots.map((entry) => resolve(entry)))].sort();
-    let steps = 0;
-    const walk = await chargedToSharedV1(cache, () => reachClosureV1({ roots, workspaceRoot: question.workspaceRoot, cache, requiredSources: Boolean(question.requiredSources), resources, selectors, checkpoint: (force = false) => yieldInferenceV1(cache.context, "build:command-source-imports", ++steps, force), compiler, host }));
-    cache.compiledNames.set(walk.result, walk.compiled);
-    cache.walkPorts.set(walk.result, [...walk.defined].sort());
-    const reached = { fact: walkAnswerV1(cache, question.workspaceRoot, walk.result, question.view), parts: [...walk.parts] };
-    return Object.defineProperties(reached, { rows: { get: () => [...new Set(reached.parts.flat())], enumerable: true }, files: { value: walk.result } });
-  }
-  const asked = await observeDetachedV1(() => boundedScriptInputsV1(question.roots, question.workspaceRoot, cache, question.requiredSources, question.resources, new Map(question.selectors), question.stops ?? []));
-  const answer = { fact: walkAnswerV1(cache, question.workspaceRoot, asked.value, question.view), parts: [asked.rows, ...(walkPartsV1.get(asked.value) ?? asked.layers)] };
-  return Object.defineProperties(answer, { rows: { get: () => support(asked), enumerable: true }, files: { value: asked.value } });
+  throw refuse();
 }
 
 /** 🙈️ The resources the build policy declares presentation-only (progress labels): their edits never change a command's behavior, so they are not command inputs. The policy is read once per script input cache and the facts of that read are replayed into every receiving project, so the rows of a project never depend on which project of the same process asked first. */
@@ -906,10 +1043,6 @@ function toolStopsV1(scripts, packages) {
   return kept.get(Boolean(packages));
 }
 
-/** 🚏️ Whether the stops a walk question names are pairs of an absolute path and a tool name. */
-function toolStopsAdmittedV1(stops) {
-  return Array.isArray(stops) && stops.every(row => Array.isArray(row) && row.length === 2 && row.every(item => typeof item === "string"));
-}
 /** 🛞️ The declared tool commands of the providers project by the absolute path of each entry module and by name: where a command's script entry is one of them, the command closure names the tool's group instead of walking the script again.
  * @see ./🔌️provider-closures/🔣️.json */
 function toolTableV1(scripts) {
@@ -1185,38 +1318,23 @@ export function closureEntryCountsV1() { return { ...closureCountsV1 }; }
 /** 🔢️ How many in-process closure entries still hold their parsed layers: only derived entries that no durable store saved. */
 export function closureEntriesWithLayersV1() { return closureEntriesV1.keys().filter(key => closureEntriesV1.peek(key)?.layers !== undefined).length; }
 const closureEntryBytesV1 = entry => JSON.stringify([entry.value, entry.rows]).length + closureLayerChargeV1(entry.layers);
-const closureSidecarV1 = layers => ({ facts: layers.map(layer => walkFactsV1.get(layer) ?? null), members: layers.map(layer => { const walks = walkMembersV1.get(layer); return walks ? [...walks] : null; }) });
-const walkFactsByDigestV1 = createBoundedCacheV1({ name: "inference:closure-walk-facts", maxEntries: 65536, maxBytes: 65536 }), walkMembersByDigestV1 = createBoundedCacheV1({ name: "inference:closure-walk-members", maxEntries: 65536, maxBytes: 65536 }), layerListsV1 = new WeakMap();
-const seededMembersV1 = new WeakSet(), someMemberV1 = (members, test) => { for (const member of members) if (test(member)) return true; return false; };
-/** 🧬️ Adds the walk members of one stored layer to the table by layer digest: the first list is held as it is (the instance the loaded entries share), a different list adds the members the table lacks; true when the table changed. A list that was merged once is never merged again (the caller remembers it), so a resolution does not walk every member of every layer of an entry again. */
-export function mergeWalkMembersV1(table, digest, members) {
-  const held = table.get(digest);
-  if (held === undefined) { table.set(digest, members); return true; }
-  if (held === members) return false;
-  const wider = new Set(members);
-  if (members.length >= held.length && held.every(walk => wider.has(walk))) { table.set(digest, members); return members.length > held.length; }
-  const have = new Set(held), extra = members.filter(walk => !have.has(walk));
-  if (extra.length === 0) return false;
-  table.set(digest, [...held, ...extra]);
-  return true;
-}
-/** 🌱️ Hands the walk facts and members of a derived entry's layers to the digest tables before the entry drops its parsed arrays, so the stored shape answers the same questions. */
+const closureSidecarV1 = layers => ({ facts: layers.map(layer => walkFactsV1.get(layer) ?? null) });
+const walkFactsByDigestV1 = createBoundedCacheV1({ name: "inference:closure-walk-facts", maxEntries: 65536, maxBytes: 65536 }), layerListsV1 = new WeakMap();
+/** 🌱️ Hands the derived facts of a derived entry's layers to the digest table before the entry drops its parsed arrays, so the stored shape answers the same questions. */
 const seedLayerDigestsV1 = entry => entry.layers.forEach((layer, at) => {
-  const digest = entry.digests[at], fact = walkFactsV1.get(layer), members = walkMembersV1.get(layer);
+  const digest = entry.digests[at], fact = walkFactsV1.get(layer);
   if (fact && !walkFactsByDigestV1.has(digest)) walkFactsByDigestV1.set(digest, fact);
-  if (members) mergeWalkMembersV1(walkMembersByDigestV1, digest, [...members]);
 });
 /** 🪩️ The refusal of a layer an entry names that the store no longer has (the collector removes a layer no entry names after the grace, a peer or a pool child supersedes an entry the running read still holds): tagged so that {@link answeredAgainstLiveLayersV1} reads the entry anew, not so that the command fails. Only a lost layer counts: layers and entries that are added do not touch a query that did not read them. */
 const layerLostRefusalV1 = digest => Object.assign(refuseBuildV1("invalid", "closure.provider-entry-stale", { port: "layers" }), { closureLayerLost: true, storeChanged: true, layerDigest: digest });
-/** 🧱️ The shared layers of an entry as views: a derived entry names its parsed arrays, a stored entry only the digests of its layers (read from the store when a view is consumed, never cached parsed) with the walk facts and members its sidecar and every other stored entry of the process recorded for them. */
+/** 🧱️ The shared layers of an entry as views: a derived entry names its parsed arrays, a stored entry only the digests of its layers (read from the store when a view is consumed, never cached parsed) with the derived facts its sidecar and every other stored entry of the process recorded for them. */
 const closureLayerViewsV1 = entry => {
-  if (entry.layers) return entry.layers.map(layer => ({ key: layer, rows: layer, fact: walkFactsV1.get(layer), members: walkMembersV1.get(layer) }));
+  if (entry.layers) return entry.layers.map(layer => ({ key: layer, rows: layer, fact: walkFactsV1.get(layer) }));
   if (entry.digests === undefined) throw layerLostRefusalV1(undefined);
   return entry.digests.map((digest, at) => {
-    const fact = entry.sidecar?.facts[at], members = entry.sidecar?.members[at];
+    const fact = entry.sidecar?.facts[at];
     if (fact && !walkFactsByDigestV1.has(digest)) walkFactsByDigestV1.set(digest, fact);
-    if (members && (!seededMembersV1.has(members) || !walkMembersByDigestV1.has(digest))) { seededMembersV1.add(members); mergeWalkMembersV1(walkMembersByDigestV1, digest, members); }
-    return { key: digest, digest, store: entry.store, fact: walkFactsByDigestV1.get(digest), members: walkMembersByDigestV1.get(digest) };
+    return { key: digest, digest, store: entry.store, fact: walkFactsByDigestV1.get(digest) };
   });
 };
 /** 🚰️ The batches of one layer view: its array, or the batches the store streams. */
@@ -1267,12 +1385,6 @@ const closureStoreOfV1 = workspaceRoot => {
 const closureBundlesV1 = createBoundedCacheV1({ name: "inference:closure-bundles", maxEntries: 512, maxBytes: INFERENCE_LIMITS_V1.closureBundleCacheBytes, sizeOf: row => INFERENCE_LIMITS_V1.closureEntryBaseBytes + INFERENCE_LIMITS_V1.closureEntryRowBytes * (row.bundle.rows.length + row.layerCount) });
 /** 🌊️ The entry of a store as a bundle whose layers are read from the store one at a time while it is iterated: nothing of the layers is held, however many there are. */
 const lazyBundleV1 = (store, entry) => ({ version: 1, recipe: entry.recipe, value: entry.value, rows: entry.rows, sidecar: entry.sidecar, layers: { [Symbol.iterator]: () => store.layersSync(entry.digests) } });
-/** 🔢️ The sidecar of an exported bundle as a function of the entry: the walk members of each layer are the walks that include it which the process knew (every walk it derived or loaded before, so another machine knows another set); only the walks that are facts of this entry's own layers can matter when the entry is resolved, so the exported members are those, in code unit order, and two machines that derived the entry after different prior walks export the same bytes. */
-export function canonicalSidecarV1(sidecar) {
-  if (sidecar === null || sidecar === undefined || !Array.isArray(sidecar.members)) return sidecar;
-  const own = new Set((sidecar.facts ?? []).flatMap(fact => fact?.row?.path === undefined ? [] : [fact.row.path]));
-  return { ...sidecar, members: sidecar.members.map(list => list ? list.filter(walk => own.has(walk)).sort() : list) };
-}
 const TRAVEL_DIGEST_V1 = /^[0-9a-f]{64}$/u;
 /** 🚫️ The first own row of a shipped closure entry that did not hold in this tree when the entry was refused at the intake (the entry is then not stored here), by entry id, bounded: a take that later finds no entry names the refusing row instead of "no moved row found".
  * @see ./🧪️tests/🚫️import-refused */
@@ -1286,7 +1398,8 @@ export function rememberImportRefusalV1(id, bundle) {
 async function bundleRowsHoldV1(workspaceRoot, bundle) {
   const scripts = closureScriptsV1.get(workspaceRoot);
   if (!scripts) return true;
-  return observationRowsHoldAsyncV1(bundle.rows, cooperativeStepV1(scripts, "build:closure-entry-rows"));
+  const own = await closureGraphRowsHoldV1(bundle.rows);
+  return own.holds && observationRowsHoldAsyncV1(own.rest, cooperativeStepV1(scripts, "build:closure-entry-rows"));
 }
 /** 🧪️ Whether the layers of a bundle hold in this tree (false while no scripts are bound, where nothing can be decided and nothing is stamped). */
 async function bundleLayersHoldV1(workspaceRoot, bundle) {
@@ -1300,8 +1413,8 @@ async function bundleLayersHoldV1(workspaceRoot, bundle) {
 async function bundleHoldsV1(workspaceRoot, bundle) {
   const scripts = closureScriptsV1.get(workspaceRoot);
   if (!scripts) return true;
-  const step = cooperativeStepV1(scripts, "build:closure-entry-rows");
-  if (!await observationRowsHoldAsyncV1(bundle.rows, step)) return false;
+  const step = cooperativeStepV1(scripts, "build:closure-entry-rows"), own = await closureGraphRowsHoldV1(bundle.rows);
+  if (!own.holds || !await observationRowsHoldAsyncV1(own.rest, step)) return false;
   for (const layer of bundle.layers) if (!await observationLayerHoldsAsyncV1(layer, step)) return false;
   return true;
 }
@@ -1347,7 +1460,7 @@ export const closureTravelV1 = Object.freeze({
       for (const reference of sharedReferencesOfV1(described.bundle.value)) await visit(reference.recipe);
     };
     for (const recipe of Object.values(table ?? {})) await visit(recipe);
-    return [...seen].filter(([, described]) => described !== undefined).map(([recipeKey, described]) => ({ recipeKey, stamp: described.stamp, bundle: { ...described.bundle, sidecar: canonicalSidecarV1(described.bundle.sidecar) } }));
+    return [...seen].filter(([, described]) => described !== undefined).map(([recipeKey, described]) => ({ recipeKey, stamp: described.stamp, bundle: described.bundle }));
   },
   async import(workspaceRoot, bundles) {
     const bound = closureStoreBindingsV1.get(workspaceRoot), directory = bound?.directory ?? closureStoreDirectoryV1(workspaceRoot);
@@ -1398,7 +1511,7 @@ registerProjectClosureTravelV1(closureTravelV1);
 export function bindClosureScriptsV1(workspaceRoot, scripts) { closureScriptsV1.set(workspaceRoot, scripts); }
 
 /** 🧽️ Forgets every in-process entry, as a process that starts later has none; `entryBytes` sets the byte budget of the in-process entries for the new process (the declared limit by default). */
-export function resetClosureEntriesV1(entryBytes = INFERENCE_LIMITS_V1.closureEntryCacheBytes) { closureScriptsV1.clear(); closureEntriesV1.clear(); closureEntriesV1 = closureEntryCacheV1(entryBytes); closureInflightV1.clear(); closureFailuresV1.clear(); knownClosureRecipesV1.clear(); knownClosureInputsV1.clear(); closureStoresV1.clear(); walkFactsByDigestV1.clear(); walkMembersByDigestV1.clear(); closureCountsV1.derived = closureCountsV1.loaded = closureCountsV1.stale = closureCountsV1.checked = closureCountsV1.fetched = 0; }
+export function resetClosureEntriesV1(entryBytes = INFERENCE_LIMITS_V1.closureEntryCacheBytes) { closureScriptsV1.clear(); closureEntriesV1.clear(); closureEntriesV1 = closureEntryCacheV1(entryBytes); closureInflightV1.clear(); closureFailuresV1.clear(); knownClosureRecipesV1.clear(); knownClosureInputsV1.clear(); closureStoresV1.clear(); walkFactsByDigestV1.clear(); closureCountsV1.derived = closureCountsV1.loaded = closureCountsV1.stale = closureCountsV1.checked = closureCountsV1.fetched = 0; }
 
 /** 🌃️ Produces what one recipe stands for, with the same functions the direct inference calls. */
 async function produceClosureRecipeV1(recipe, workspaceRoot, scripts) {
@@ -1441,7 +1554,7 @@ function cooperativeStepV1(scripts, phase) {
 const verdictMapsV1 = createWeakCollectionTrackerV1(), trackVerdictsV1 = round => { const map = new Map(); layerVerdictsV1.set(round, map); verdictMapsV1.track(map); return map; };
 /** 🧮️ The layer verdict maps of the live validation rounds, for the slice memory report. */
 export function closureCollectionsV1() { let entries = 0, alive = 0, largest; for (const map of verdictMapsV1) { alive++; entries += map.size; if (largest === undefined || map.size > largest.size) largest = map; } const spread = (cache, map) => { const keys = cache.keys(), step = Math.max(1, Math.floor(keys.length / 16)); return { entries: keys.length, sample: () => keys.filter((_key, at) => at % step === 0).slice(0, 16).map(key => map(cache.peek(key))) }; };
-  const part = key => ({ name: "closure:entries." + key, ...spread(closureEntriesV1, entry => key === "answers" ? [...entry.answers ?? []] : entry[key]) }), once = (name, cache, pick) => { const seen = new Set(); let bytes = 0, entries = 0; for (const key of cache.keys()) { const value = cache.peek(key); if (value === undefined) continue; entries++; bytes += 8 + sharedBytesV1(pick(value), seen); } return { name, entries, bytes }; }, real = [part("value"), part("rows"), once("closure:entries.digests", closureEntriesV1, entry => entry.digests), once("closure:entries.sidecar", closureEntriesV1, entry => entry.sidecar), part("answers"), part("recipe"), part("layers"), { name: "closure:walkFacts (real)", ...spread(walkFactsByDigestV1, fact => fact) }, once("closure:walkMembers (real)", walkMembersByDigestV1, list => list), { name: "closure:recipes (real)", ...spread(knownClosureRecipesV1, recipe => recipe) }];
+  const part = key => ({ name: "closure:entries." + key, ...spread(closureEntriesV1, entry => key === "answers" ? [...entry.answers ?? []] : entry[key]) }), once = (name, cache, pick) => { const seen = new Set(); let bytes = 0, entries = 0; for (const key of cache.keys()) { const value = cache.peek(key); if (value === undefined) continue; entries++; bytes += 8 + sharedBytesV1(pick(value), seen); } return { name, entries, bytes }; }, real = [part("value"), part("rows"), once("closure:entries.digests", closureEntriesV1, entry => entry.digests), once("closure:entries.sidecar", closureEntriesV1, entry => entry.sidecar), part("answers"), part("recipe"), part("layers"), { name: "closure:walkFacts (real)", ...spread(walkFactsByDigestV1, fact => fact) }, { name: "closure:recipes (real)", ...spread(knownClosureRecipesV1, recipe => recipe) }];
   return [...real, ...alive === 0 ? [] : [{ name: "closure:layerVerdicts (" + alive + " rounds)", entries, bytes: entries * 96 }]]; }
 /** 🗂️ The verdicts of one read, shared by every process of it: the first process that verifies a stored closure layer or entry writes a small verdict file named by its digest into a directory of the validation round it ran in, every other look of that round (the parent, farm children, pool children) reads the file instead of probing the rows again; a round is one snapshot of the tree, so a new round has a new directory and sees an edit at once. Without a round there is no directory and nothing is shared. A child joins the round of its parent with \`withClosurePassV1(compute, { verdicts })\`.
  * @see ./🧪️tests/🧬️read-verdicts */
@@ -1641,8 +1754,8 @@ async function closureEntryHoldsAsyncV1(entry, scripts) {
   const entryFile = verdictFileV1("e", entry.digest), filed = readVerdictV1(entryFile);
   if (filed !== undefined) { verdictCountsV1.read++; if (round) entry.checked = { round, holds: filed }; return filed; }
   closureCountsV1.checked++;
-  const step = cooperativeStepV1(scripts, "build:closure-entry-rows");
-  let holds = (entry.layers !== undefined || entry.digests !== undefined) && await observationRowsHoldAsyncV1(entry.rows, step);
+  const step = cooperativeStepV1(scripts, "build:closure-entry-rows"), own = await closureGraphRowsHoldV1(entry.rows);
+  let holds = (entry.layers !== undefined || entry.digests !== undefined) && own.holds && await observationRowsHoldAsyncV1(own.rest, step);
   if (holds && entry.layers) for (const layer of entry.layers) if (!await observationLayerHoldsAsyncV1(layer, step)) { holds = false; break; }
   if (holds && !entry.layers && !await entryStampHoldsV1(entry, round, step)) {
     const started = Date.now();
@@ -1669,16 +1782,16 @@ const closureEntryHoldsV1 = entry => {
 
 /** 🗃️ The entry of one recipe: computed once with its observations detached from the project that asked, kept while those observations hold, shared by every project and every verification. A recipe whose sources do not parse fails the same way for every project while the facts it read hold; each asking project records those facts, because they are the reason it is withheld and the only thing that can lift it. */
 /** 🏭️ The detached walk of one recipe, `{ value, rows, layers }`, as a walk child runs it (see `offloadClosureRecipeV1`). */
-export function deriveClosureRecipeV1(workspaceRoot, recipe, scripts) { return observeDetachedV1(() => produceClosureRecipeV1(recipe, workspaceRoot, scripts)); }
+export function deriveClosureRecipeV1(workspaceRoot, recipe, scripts) { return observeDetachedV1(() => closureViewScopeV1.run(recipeViewV1(recipe), () => produceClosureRecipeV1(recipe, workspaceRoot, scripts))); }
 
-/** 🏭️ The walk of a child with the facts and members the walks recorded for the layers (identity data of the process that walked them, so they travel beside the layers). */
+/** 🏭️ The walk of a child with the derived facts its walks recorded for the layers (identity data of the process that walked them, so they travel beside the layers). */
 export async function deriveClosureRecipeForChildV1(workspaceRoot, recipe, scripts) { const walked = await deriveClosureRecipeV1(workspaceRoot, recipe, scripts); return { ...walked, sidecar: closureSidecarV1(walked.layers) }; }
 
-/** 🏭️ The walk of one recipe in a walk child while one is granted, else on this thread: the owners that wait for a shared entry wait on the child, this thread parses the answer and hands the walk facts and members of the layers back to the process. */
+/** 🏭️ The walk of one recipe in a walk child while one is granted, else on this thread: the owners that wait for a shared entry wait on the child, this thread parses the answer and hands the derived facts of the layers back to the process. */
 async function walkClosureRecipeV1(workspaceRoot, recipe, scripts, { farmOnly = false } = {}) {
   const farmed = await offloadClosureRecipeV1(workspaceRoot, recipe, farmOnly ? { after: 0 } : {});
   if (farmed === undefined) return farmOnly ? undefined : deriveClosureRecipeV1(workspaceRoot, recipe, scripts);
-  farmed.layers.forEach((layer, at) => { const fact = farmed.sidecar?.facts[at], members = farmed.sidecar?.members[at]; if (fact) walkFactsV1.set(layer, fact); if (members) walkMembersV1.set(layer, new Set(members)); });
+  farmed.layers.forEach((layer, at) => { const fact = farmed.sidecar?.facts[at]; if (fact) walkFactsV1.set(layer, fact); });
   return farmed;
 }
 
@@ -1779,8 +1892,8 @@ const staleTakesV1 = new WeakMap();
 
 /** ♻️ The entry of one recipe from the cache, a flight in progress, or a new detached computation; an unparseable source is remembered as a failure for as long as the facts it rests on hold. */
 const closureFleetLanesV1 = new Map(), closureOffersFlushV1 = { registered: false };
-/** 📤️ Waits until the offers this process queued for the fleet are stored (or refused), for a caller that is about to end the process; the owners never wait for them. */
-export async function flushClosureOffersV1() { for (const lane of [...closureFleetLanesV1.values()]) await (await lane)?.flush().catch(() => undefined); }
+/** 📤️ Waits until the offers this process queued for the fleet are stored (or refused) and its changed module graphs are saved into the machine's directory, for a caller that is about to end the process; the owners never wait for them. */
+export async function flushClosureOffersV1() { for (const lane of [...closureFleetLanesV1.values()]) await (await lane)?.flush().catch(() => undefined); await flushClosureGraphsV1(); }
 /** 🧶️ The fleet lane of closure entries of one workspace (see `🪪️graph-state/📦️project-records/🚚️entry-lane`), or undefined when no fleet cache is configured here or `SEMIO_CLOSURE_FLEET=off`; opened once. */
 export function closureFleetLaneV1(workspaceRoot) {
   if (process.env.SEMIO_CLOSURE_FLEET === "off") return Promise.resolve(undefined);
@@ -1860,11 +1973,11 @@ async function produceClosureEntryV1(workspaceRoot, recipe) {
 /** 🔢️ How many finished owners share the walks of the command closures before the cache they fill is released: the walk of a closure of hundreds of modules costs more than the rest of an owner, so releasing it after every owner made each crate cost five times its own work, while the cache grows by a few megabytes per owner. */
 const OWNERS_PER_RELEASE_V1 = INFERENCE_LIMITS_V1.ownersPerRelease;
 
-/** 🔢️ How many finished owners keep the walk state they share while the host is short of memory: the module graph and its reach sets cost more than the owners that read them, so dropping them after every owner under a lasting shortage made each owner rebuild them (every project of a plan grew by the same several gigabytes); the per-owner state is dropped after every owner meanwhile. */
+/** 🔢️ How many finished owners keep the walk state they share while the host is short of memory: the walk nodes cost more than the owners that read them, so dropping them after every owner under a lasting shortage made each owner rebuild them (every project of a plan grew by the same several gigabytes); the per-owner state is dropped after every owner meanwhile. */
 const OWNERS_PER_SHRINK_RELEASE_V1 = INFERENCE_LIMITS_V1.ownersPerShrinkRelease;
 const FINISHED_OWNERS_V1 = new WeakMap();
 
-/** 🫧️ Releases what finished owners left behind in the cache shared by the owners, so the memory of the owner phase stays bounded: every `OWNERS_PER_RELEASE_V1` owners, or after every owner while `shrink` (the host is short of memory), the source reads, the reach sets of the module graph (rebuilt by the next walk), closure walks, command dependency memos, declared module and TypeScript program memos and workspace path names are dropped and, when `shrink`, half of the in-process closure entries, which a later owner reads again from the durable store; the shared provider designation and the generated imports stay. The interval does not wait for the footprint: a worker that ran every owner of a plan below the soft share of its grant held 4.4 GB of managed memory after 262 owners (about 15 MB left by each) while the footprint of its host read 623 MB, so only `shrink` and the spill of entries follow the footprint. Shrinking after every owner under a lasting shortage unpacked and parsed the stored entries again for each owner (two thirds of the time of a refresh in a profile). */
+/** 🫧️ Releases what finished owners left behind in the cache shared by the owners, so the memory of the owner phase stays bounded: every `OWNERS_PER_RELEASE_V1` owners, or after every owner while `shrink` (the host is short of memory), the source reads, the walk nodes (the module closure graph of the cache stays: it is what every later walk looks its answer up in, and its nodes are judged by their witnesses), closure walks, command dependency memos, declared module and TypeScript program memos and workspace path names are dropped and, when `shrink`, half of the in-process closure entries, which a later owner reads again from the durable store; the shared provider designation and the generated imports stay. The interval does not wait for the footprint: a worker that ran every owner of a plan below the soft share of its grant held 4.4 GB of managed memory after 262 owners (about 15 MB left by each) while the footprint of its host read 623 MB, so only `shrink` and the spill of entries follow the footprint. Shrinking after every owner under a lasting shortage unpacked and parsed the stored entries again for each owner (two thirds of the time of a refresh in a profile). */
 export function releaseOwnerStateV1(scripts, { shrink = false, gate = footprintGateV1(), now = false } = {}) {
   const grant = gate?.grantBytes(), share = grant > 0 ? decideFootprintV1({ footprintBytes: gate.footprintBytes(), grantBytes: grant }) : undefined;
   if (share !== undefined) shrink = share === "wait";
@@ -1872,7 +1985,7 @@ export function releaseOwnerStateV1(scripts, { shrink = false, gate = footprintG
   if (shrink) { scripts.files.clear(); scripts.closures.clear(); scripts.commandDependencies.clear(); scripts.groupLists?.clear(); }
   if (!now && finished < (shrink ? OWNERS_PER_SHRINK_RELEASE_V1 : OWNERS_PER_RELEASE_V1)) { FINISHED_OWNERS_V1.set(scripts, finished); return; }
   FINISHED_OWNERS_V1.set(scripts, 0);
-  scripts.reachState = undefined; scripts.sharedBytes = 0;
+  scripts.sharedBytes = 0;
   scripts.files.clear(); scripts.closures.clear(); scripts.commandDependencies.clear(); scripts.groupLists?.clear(); scripts.declared.clear(); scripts.paths.clear(); scripts.walkNodes?.clear(); scripts.toolGroups?.clear(); sharedSourceFilesV1.clear();
   if (shrink) closureEntriesV1.shrink(0.5);
 }
@@ -2109,23 +2222,23 @@ export function closureApiV1(scripts, workspaceRoot) {
     },
     resolve(recipes, log) {
       return answeredAgainstLiveLayersV1(workspaceRoot, async () => {
-      const values = new Map(), derived = new Map(), walked = new Set(), layers = new Map(), seen = new Set(), rows = [], take = row => { const key = rowKeyV1(row); if (!seen.has(key)) { seen.add(key); rows.push(row); } };
+      const values = new Map(), derived = new Map(), layers = new Map(), seen = new Set(), rows = [], take = row => { const key = rowKeyV1(row); if (!seen.has(key)) { seen.add(key); rows.push(row); } };
       const builder = log?.builder(), addRows = items => { if (builder) builder.add(items); else for (const row of items) take(row); }, addLayer = view => { if (builder) builder.addList(closureLayerListV1(log, view)); else for (const batch of closureLayerBatchesV1(view)) addRows(batch); }, supportOf = view => log ? closureLayerListV1(log, view) : view.rows ?? [...closureLayerBatchesV1(view)].flat();
       const entries = [];
-      for (const [key, recipe] of recipes) { const entry = await ensureClosureEntryV1(workspaceRoot, recipe), view = walkViewOfRecipeV1(recipe); values.set(key, entry.value); entries.push(entry); for (const layer of closureLayerViewsV1(entry)) { layers.set(layer.key, layer); if (layer.fact) { const row = view === undefined ? layer.fact.row : layer.fact.views?.[view] ?? layer.fact.row; derived.set(row.path, { row, support: supportOf(layer) }); walked.add(layer.fact.row.path); } } }
+      for (const [key, recipe] of recipes) { const entry = await ensureClosureEntryV1(workspaceRoot, recipe), view = walkViewOfRecipeV1(recipe); values.set(key, entry.value); entries.push(entry); for (const layer of closureLayerViewsV1(entry)) { layers.set(layer.key, layer); if (layer.fact) { const row = view === undefined ? layer.fact.row : layer.fact.views?.[view] ?? layer.fact.row; derived.set(row.path, { row, support: supportOf(layer) }); } } }
       for (const { row, support } of derived.values()) { if (row.path.startsWith('{"program":')) continue; if (builder) builder.exclude(support); else for (const supported of support) seen.add(rowKeyV1(supported)); }
       for (const entry of entries) addRows(entry.rows);
-      for (const layer of layers.values()) { if (layer.fact) continue; if (!layer.members || !someMemberV1(layer.members, question => walked.has(question))) addLayer(layer); }
+      for (const layer of layers.values()) if (!layer.fact) addLayer(layer);
       return { values, rows: builder ? builder.finish() : rows, derived: [...derived.values()] };
       });
     },
     /** 🫗️ The shape of {@link resolve} for a process that writes no row log: the values of the recipes and, instead of rows, the plan a log is made from (the rows of the entries, the digests of the stored layers to add, the digests whose rows a derived fact stands for, the derived facts with the digest of their layer), so that the process that owns the log lists the rows from the closure store without opening one entry. Undefined when a layer is not stored (it has no digest). */
     plan(recipes) {
       return answeredAgainstLiveLayersV1(workspaceRoot, async () => {
-      const values = new Map(), derived = new Map(), layers = new Map(), walked = new Set(), entries = [];
-      for (const [key, recipe] of recipes) { const entry = await ensureClosureEntryV1(workspaceRoot, recipe), view = walkViewOfRecipeV1(recipe); values.set(key, entry.value); entries.push(entry); for (const layer of closureLayerViewsV1(entry)) { if (typeof layer.digest !== "string") return undefined; layers.set(layer.key, layer); if (layer.fact) { const row = view === undefined ? layer.fact.row : layer.fact.views?.[view] ?? layer.fact.row; derived.set(row.path, { row, digest: layer.digest }); walked.add(layer.fact.row.path); } } }
+      const values = new Map(), derived = new Map(), layers = new Map(), entries = [];
+      for (const [key, recipe] of recipes) { const entry = await ensureClosureEntryV1(workspaceRoot, recipe), view = walkViewOfRecipeV1(recipe); values.set(key, entry.value); entries.push(entry); for (const layer of closureLayerViewsV1(entry)) { if (typeof layer.digest !== "string") return undefined; layers.set(layer.key, layer); if (layer.fact) { const row = view === undefined ? layer.fact.row : layer.fact.views?.[view] ?? layer.fact.row; derived.set(row.path, { row, digest: layer.digest }); } } }
       const entryRows = []; for (const entry of entries) for (const row of entry.rows) entryRows.push(row);
-      return { values, plan: { entryRows, excluded: [...derived.values()].filter(({ row }) => !row.path.startsWith('{"program":')).map(({ digest }) => digest), layers: [...layers.values()].filter(layer => !layer.fact && (!layer.members || !someMemberV1(layer.members, question => walked.has(question)))).map(layer => layer.digest), derived: [...derived.values()] } };
+      return { values, plan: { entryRows, excluded: [...derived.values()].filter(({ row }) => !row.path.startsWith('{"program":')).map(({ digest }) => digest), layers: [...layers.values()].filter(layer => !layer.fact).map(layer => layer.digest), derived: [...derived.values()] } };
       });
     },
     /** 🫗️ The rows and derived facts of a {@link plan} as lists of `log`, the layers listed once per log from the stored ids (no entry is loaded, nothing is derived); throws when a stored layer is gone, so the caller resolves itself. */

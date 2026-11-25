@@ -1,10 +1,10 @@
-/** 🔗️ Contract: the binding plan of a TypeScript package names the owner, the two fixed links, the generated output and the receipt exactly like an independent Python derivation, for the unit's own fixture in `./🔣️.json`, the cases in `./📋️plans.json` and every package directory length around the path capacity; the receipt schema is the one ajv reads. */
+/** 🔗️ Contract: the binding plan of a TypeScript package names the owner, the two fixed links, the generated output and the receipt exactly like an independent Python derivation, for the unit's own fixture in `./🔣️.json`, the cases in `./📋️plans.json` and every package directory length around the path capacity; the receipt schema is the one ajv reads; and the mode an existing fixed link is bound to (`./📋️plans.json` `links`) like the same oracle. */
 import {expect,test,setDefaultTimeout} from "bun:test";
 import {spawnSync} from "node:child_process";
 import {join,resolve} from "node:path";
 import Ajv from "ajv";
 import {requireTestToolV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
-import {typeScriptPackageBindingPlanV1} from "../🟦️.ts";
+import {typeScriptPackageBindingPlanV1,typeScriptPackageLinkModeV1} from "../🟦️.ts";
 import receiptSchema from "../🧬️schema/🔣️.json";
 import layoutSchema from "../../../💾️storage/🧬️schema/🔣️.json";
 import own from "./🔣️.json";
@@ -57,4 +57,10 @@ test.skipIf(!posix)("the path capacity boundary of every package directory lengt
  expect([...refused].sort()).toEqual(["Closed TypeScript artifact layout required","Package binding path capacity exceeded"]);
  const first=rows.findIndex((_,index)=>answers[index].error),last=rows.length-1;
  expect(first).toBeGreaterThan(0);for(let index=first;index<=last;index++)expect(answers[index].error,"monotonic "+index).toBeDefined();
+});
+
+test("an existing fixed link is bound to the mode its receipt records, or, with the receipt lost or silent, to the mode whose private output its text names exactly, like the Python derivation",()=>{
+ const run=spawnSync(python,["-I",oracleFile],{input:JSON.stringify({links:corpus.links}),encoding:"utf8"});expect(run.status,run.stderr).toBe(0);
+ const answers=JSON.parse(run.stdout);
+ for(const[index,row]of corpus.links.entries()){expect(typeScriptPackageLinkModeV1(row as never)??null,row.name).toBe(row.expected as never);expect(answers[index],row.name).toBe(row.expected);}
 });

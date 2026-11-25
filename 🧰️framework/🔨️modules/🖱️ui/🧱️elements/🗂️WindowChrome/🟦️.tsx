@@ -7,10 +7,9 @@
 
 // #region 🔌️Adapters
 import * as React from "react";
-import { observeChipRowAbuts } from "./chip-abut.ts";
 import { deviceSnappedRect, paintSharedWindowBorder, useSharedWindowBorder, sizeSharedBorderOverlay, type SharedBorderPaintSegment } from "./shared-border.ts";
 import { reactHostPort } from "../🔌️Ports/⚛️react/🟦️.ts";
-import { LEVELS, SurfaceScope, useLevel, type Level, type SurfaceActiveBindProps } from "../🌈️Surface/🟦️.tsx";
+import { LEVELS, SurfaceScope, surfaceFillClass, useLevel, type Level, type SurfaceActiveBindProps, type SurfaceFill } from "../🌈️Surface/🟦️.tsx";
 import {
   WINDOW_FRAME_CHIP_EPSILON,
   createWindowFrameGeometry,
@@ -209,6 +208,9 @@ export const WINDOW_CHROME_BODY_PLANE_STYLE: React.CSSProperties = { zIndex: 1 }
 //#endregion 🗂️WindowFrameBorder
 
 //#region 🗂️WindowChrome
+/** 🪟️ True beneath a {@link WindowChrome} body: the enclosing frame already draws the outline of any window it hosts, so that window draws none of its own. */
+export const WindowFrameHostContext = reactHostPort.createContext(false);
+
 /** 🎛️ Optional right-cap control on {@link WindowChrome} (enlarge / close). */
 export interface WindowChromeControlAction {
   readonly id: string;
@@ -218,7 +220,7 @@ export interface WindowChromeControlAction {
   readonly onClick: () => void;
 }
 
-/** 🔤️ Title chip in the window-chrome cap row (name + optional drag) — transparent and
+/** 🔤️ Title chip in the window-chrome chip row (name + optional drag) — transparent and
  * borderless so the painted chip glass shows through and the frame border remains the sole outline. */
 export const windowChromeTitleChipClass = cn(modeDockTabClassName, "relative z-30 box-border min-h-chip-row shrink-0 border-0 bg-transparent");
 
@@ -228,9 +230,10 @@ export interface WindowChromeProps {
   readonly className?: string;
   readonly stackClassName?: string;
   readonly bodyClassName?: string;
-  readonly bodySurfaceClassName?: string;
+  /** 🎨️ Fill painted by the frame beneath its content. */
+  readonly bodySurfaceFill?: SurfaceFill;
   readonly bodySurfaceLevel?: Level;
-  /** 🎈️ Stamps `data-level={level}` on the chrome stack and wraps its content in a {@link LevelProvider}; cap/controls/body all render {@link glassClass} so one level is one appearance. */
+  /** 🎈️ Sets the frame level and supplies the content level when no body override is given. */
   readonly level?: Level;
   readonly style?: React.CSSProperties;
   readonly stackRef?: React.Ref<HTMLDivElement>;
@@ -254,11 +257,11 @@ export interface WindowChromeProps {
   readonly borderKind?: WindowFrameBorderKind;
   readonly stackBindProps?: SurfaceActiveBindProps;
   readonly stackDataAttrs?: Record<string, string | undefined>;
-  /** 💸️ Cap row shrink-wraps to its chips (context menus). */
+  /** 💸️ Chip row shrink-wraps to its chips (context menus). */
   readonly capFitContent?: boolean;
-  /** 🔗️ Which frame edge the cap row docks to — `"bottom"` for panels that grow upward from a bottom anchor. */
+  /** 🔗️ Which frame edge the chip row docks to — `"bottom"` for panels that grow upward from a bottom anchor. */
   readonly capDock?: "top" | "bottom";
-  /** ↔ Inline layout overrides for the cap row (e.g. chrome-hosted trailing navbar reserve). */
+  /** ↔ Inline layout overrides for the chip row (e.g. chrome-hosted trailing navbar reserve). */
   readonly capRowStyle?: React.CSSProperties;
   readonly capSlot?: string;
   readonly chipSlot?: string;
@@ -370,7 +373,7 @@ export const WindowChromeFrameBorder: React.FC<{
   );
 };
 
-/** 🟢️ Window chrome: one rectangular frame whose content plane fills it edge to edge. The cap row (title chip, optional controls) and the footer row are absolutely positioned overlays inside the frame, above the content; each chip carries its own glass one level above the content surface, and the space of a row no chip covers belongs to the content. */
+/** 🟢️ Window chrome: one rectangular frame whose content plane fills it edge to edge. The chip row (title chip, optional controls) and the footer row are absolutely positioned overlays inside the frame, above the content; each chip carries its own glass one level above the content surface, and the space of a row no chip covers belongs to the content. */
 export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChromeProps>(
   (
     {
@@ -379,7 +382,7 @@ export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChrom
       className,
       stackClassName,
       bodyClassName,
-      bodySurfaceClassName,
+      bodySurfaceFill = "glass",
       bodySurfaceLevel,
       level,
       style,
@@ -428,13 +431,10 @@ export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChrom
     const contentLevel = bodySurfaceLevel ?? level ?? inheritedLevel;
     const chipLevel = windowFrameChipLevel(contentLevel);
     const chipSurfaceClass = cn(windowCapFrameClass, glassClass);
-    const bodySurfaceClass = cn("pointer-events-none absolute inset-0 z-0 border-0", bodySurfaceClassName ?? glassClass);
+    const bodySurfaceClass = cn(surfaceFillClass(bodySurfaceFill), "pointer-events-none absolute inset-0 z-0 border-0");
     const controlsSurfaceClass = cn(windowControlsCapClass, glassClass);
-    const [capEl, setCapEl] = reactHostPort.useState<HTMLDivElement | null>(null);
-    const [footerEl, setFooterEl] = reactHostPort.useState<HTMLDivElement | null>(null);
     const setCapRef = reactHostPort.useCallback(
       (element: HTMLDivElement | null) => {
-        setCapEl(element);
         if (typeof capRef === "function") capRef(element);
         else if (capRef) (capRef as React.MutableRefObject<HTMLDivElement | null>).current = element;
       },
@@ -442,38 +442,28 @@ export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChrom
     );
     const setFooterRef = reactHostPort.useCallback(
       (element: HTMLDivElement | null) => {
-        setFooterEl(element);
         if (typeof footerRef === "function") footerRef(element);
         else if (footerRef) (footerRef as React.MutableRefObject<HTMLDivElement | null>).current = element;
       },
       [footerRef],
     );
-    reactHostPort.useLayoutEffect(() => (capEl ? observeChipRowAbuts(capEl) : undefined), [capEl]);
-    reactHostPort.useLayoutEffect(() => (footerEl ? observeChipRowAbuts(footerEl) : undefined), [footerEl]);
     const geometry = useWindowFrameGeometry(stackEl, true, chipOnly);
     const frameVars = {
       "--window-frame-top-clearance": `${geometry.safeClearances.top}px`,
       "--window-frame-bottom-clearance": `${geometry.safeClearances.bottom}px`,
     } as React.CSSProperties;
-    const wrapLevel = (node: React.ReactNode): React.ReactNode =>
-      level ? (
-        <SurfaceScope level={level} fill="glass">
-          {node}
-        </SurfaceScope>
-      ) : (
-        node
-      );
+    const chipContent = (node: React.ReactNode) => <SurfaceScope level={chipLevel} fill="glass">{node}</SurfaceScope>;
 
     if (chipOnly) {
-      return wrapLevel(
+      return (
         <div ref={setStackRef} data-slot={stackSlot} data-window-frame data-frame-state={geometry.state} data-level={level} className={cn("relative inline-flex min-w-0 bg-transparent", className, stackClassName)} style={style} {...stackDataAttrs}>
           <WindowChromeFrameBorder stack={stackEl} geometry={geometry} active={active} borderKind={borderKind} frameBorderSlot={frameBorderSlot} />
           {titleChips ? (
             <div data-slot={chipSlot} data-window-frame-chip data-dock={capDock} data-level={chipLevel} data-ui-reveal-region="window-cap" data-dim className={cn("relative flex min-h-chip-row min-w-0 shrink items-stretch", chipSurfaceClass)}>
-              {titleChips}
+              {chipContent(titleChips)}
             </div>
           ) : null}
-        </div>,
+        </div>
       );
     }
 
@@ -491,41 +481,43 @@ export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChrom
         >
           {titleChips ? (
             <div data-slot={chipSlot} data-window-frame-chip data-chip-reach="next" data-dock={capDock} data-level={chipLevel} className={cn("relative flex min-h-chip-row min-w-0 shrink items-stretch", chipSurfaceClass)}>
-              {titleChips}
+              {chipContent(titleChips)}
             </div>
           ) : null}
           {capRightChips || enlarge || close ? (
             <div data-slot={controlsSlot} data-window-frame-chip data-dock={capDock} data-level={chipLevel} className={cn("ms-auto flex shrink-0 items-stretch", controlsSurfaceClass)}>
-              {capRightChips}
-              {enlarge ? (
-                <button
-                  type="button"
-                  id={enlarge.id}
-                  data-slot={enlarge.slot}
-                  className={cn("flex min-h-medium w-auto items-center justify-center self-stretch border-0 bg-transparent transition-colors px-single gap-single text-element", interactiveHoverClass)}
-                  onClick={enlarge.onClick}
-                >
-                  {enlarge.icon}
-                  <span className="text-tiny whitespace-nowrap">{enlarge.label}</span>
-                </button>
-              ) : null}
-              {close ? (
-                <button
-                  type="button"
-                  id={close.id}
-                  data-slot={close.slot}
-                  className={cn("flex min-h-medium w-auto items-center justify-center self-stretch border-0 bg-transparent transition-colors px-single gap-single text-element", interactiveHoverClass)}
-                  onClick={close.onClick}
-                >
-                  {close.icon}
-                  <span className="text-tiny whitespace-nowrap">{close.label}</span>
-                </button>
-              ) : null}
+              <SurfaceScope level={chipLevel} fill="glass">
+                {capRightChips}
+                {enlarge ? (
+                  <button
+                    type="button"
+                    id={enlarge.id}
+                    data-slot={enlarge.slot}
+                    className={cn("flex min-h-chip-row w-auto items-center justify-center self-stretch border-0 bg-transparent transition-colors px-single gap-single text-element", interactiveHoverClass)}
+                    onClick={enlarge.onClick}
+                  >
+                    {enlarge.icon}
+                    <span className="text-tiny whitespace-nowrap">{enlarge.label}</span>
+                  </button>
+                ) : null}
+                {close ? (
+                  <button
+                    type="button"
+                    id={close.id}
+                    data-slot={close.slot}
+                    className={cn("flex min-h-chip-row w-auto items-center justify-center self-stretch border-0 bg-transparent transition-colors px-single gap-single text-element", interactiveHoverClass)}
+                    onClick={close.onClick}
+                  >
+                    {close.icon}
+                    <span className="text-tiny whitespace-nowrap">{close.label}</span>
+                  </button>
+                ) : null}
+              </SurfaceScope>
             </div>
           ) : null}
           </div>
     );
-    return wrapLevel(
+    return (
       <div
         ref={setStackRef}
         data-slot={stackSlot}
@@ -551,7 +543,9 @@ export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChrom
           className={cn("window-frame-content-plane relative min-h-0 flex-1 border-0", bodyClassName)}
           style={{ ...bodyStyle, ...WINDOW_CHROME_BODY_PLANE_STYLE }}
         >
-          {body}
+          <SurfaceScope level={contentLevel} fill={bodySurfaceFill}>
+            <WindowFrameHostContext.Provider value={true}>{body}</WindowFrameHostContext.Provider>
+          </SurfaceScope>
         </div>
         {capDock === "bottom" ? capRow : null}
         {hasFooter ? (
@@ -559,15 +553,15 @@ export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChrom
             <div ref={setFooterRef} data-slot="window-chrome-footer" data-dock="bottom" data-dim className="pointer-events-none absolute inset-x-0 bottom-0 grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-stretch bg-transparent" style={WINDOW_CHROME_CHIP_ROW_STYLE}>
               {footerLeftChips ? (
                 <div data-slot="window-chrome-footer-left" data-window-frame-chip data-chip-reach="next" data-dock="bottom" data-level={chipLevel} className={cn("col-start-1 justify-self-start", footerChipClass)}>
-                  {footerLeftChips}
+                  {chipContent(footerLeftChips)}
                 </div>
               ) : null}
               <div data-slot="window-chrome-footer-center" data-window-frame-chip data-dock="bottom" data-level={chipLevel} className={cn("col-start-2 justify-self-center", footerChipClass)}>
-                {footerCenterChips}
+                {chipContent(footerCenterChips)}
               </div>
               {footerRightChips ? (
                 <div data-slot="window-chrome-footer-right" data-window-frame-chip data-chip-reach="prev" data-dock="bottom" data-level={chipLevel} className={cn("col-start-3 justify-self-end", footerChipClass)}>
-                  {footerRightChips}
+                  {chipContent(footerRightChips)}
                 </div>
               ) : null}
             </div>
@@ -582,18 +576,18 @@ export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChrom
             >
               {footerLeftChips ? (
                 <div data-slot="window-chrome-footer-left" data-window-frame-chip data-chip-reach="next" data-dock="bottom" data-level={chipLevel} className={footerChipClass}>
-                  {footerLeftChips}
+                  {chipContent(footerLeftChips)}
                 </div>
               ) : null}
               {footerRightChips ? (
                 <div data-slot="window-chrome-footer-right" data-window-frame-chip data-chip-reach="prev" data-dock="bottom" data-level={chipLevel} className={cn("ms-auto", footerChipClass)}>
-                  {footerRightChips}
+                  {chipContent(footerRightChips)}
                 </div>
               ) : null}
             </div>
           )
         ) : null}
-      </div>,
+      </div>
     );
   },
 );

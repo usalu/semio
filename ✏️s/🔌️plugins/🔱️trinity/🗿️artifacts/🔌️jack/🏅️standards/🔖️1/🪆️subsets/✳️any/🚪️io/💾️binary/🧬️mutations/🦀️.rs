@@ -19,6 +19,7 @@ use protocol::OpBinary;
 
 dsl::original_tagged_operation_receiving!(TrinityGraphOperationDsl, COMPONENT_PROTOCOL_SEMIO);
 dsl::original_mirrored_operation_receiving!(TrinityGraphMutation, TrinityGraphOperationDsl, trinity_graph_operation_from_dsl);
+dsl::artifact_persisted_binary_operation!(TrinityGraphMutation);
 
 //#region 🔖️DslMirrors
 

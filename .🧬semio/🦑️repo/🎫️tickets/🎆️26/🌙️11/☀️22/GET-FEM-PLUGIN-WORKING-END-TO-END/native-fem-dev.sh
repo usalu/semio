@@ -7,7 +7,7 @@
 T="/c/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️22/GET-FEM-PLUGIN-WORKING-END-TO-END"
 G="$T/🗑️generated"
 R=/c/semio
-VITE=$(ls -dt "$R"/.cache/b/d/m/j/*/node_modules/vite/bin/vite.js | head -1)
+VITE=$(for d in $(ls -dt "$R"/.cache/b/d/m/j/*/); do [ -f "$d/node_modules/vite/dist/client/client.mjs" ] && [ -d "$d/node_modules/react" ] && { echo "$d/node_modules/vite/bin/vite.js"; break; }; done)
 mkdir -p "$G" /c/t/wd /c/t/wdb /c/t/wdtmp
 
 case "$1" in

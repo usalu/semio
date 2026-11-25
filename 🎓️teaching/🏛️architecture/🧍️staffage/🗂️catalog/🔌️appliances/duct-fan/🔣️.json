@@ -13,16 +13,76 @@
       "de": "Ein quadratischer Axial-Wandventilator von 0,22 m zur Abluft, vom Raum aus gesehen: eine Platte mit Einlaufdüse und fünf gepfeilten, angestellten Flügeln an einem Außenläufermotor, den ein vierarmiger Stern hält; er saugt 180 m3/h bei 28 W ab."
     },
     "tags": [
-      "fan",
-      "axial-fan",
-      "extract-air",
-      "ventilation",
-      "wall-mounted",
-      "bathroom",
-      "appliance",
-      "internal-gain",
-      "electrical",
-      "rotating"
+      {
+        "id": "fan",
+        "title": {
+          "en": "fan",
+          "de": "Ventilator"
+        }
+      },
+      {
+        "id": "axial-fan",
+        "title": {
+          "en": "axial fan",
+          "de": "Axialventilator"
+        }
+      },
+      {
+        "id": "extract-air",
+        "title": {
+          "en": "extract air",
+          "de": "Abluft"
+        }
+      },
+      {
+        "id": "ventilation",
+        "title": {
+          "en": "ventilation",
+          "de": "Lüftung"
+        }
+      },
+      {
+        "id": "wall-mounted",
+        "title": {
+          "en": "wall mounted",
+          "de": "wandmontiert"
+        }
+      },
+      {
+        "id": "bathroom",
+        "title": {
+          "en": "bathroom",
+          "de": "Badezimmer"
+        }
+      },
+      {
+        "id": "appliance",
+        "title": {
+          "en": "appliance",
+          "de": "Gerät"
+        }
+      },
+      {
+        "id": "internal-gain",
+        "title": {
+          "en": "internal gain",
+          "de": "innere Wärmelast"
+        }
+      },
+      {
+        "id": "electrical",
+        "title": {
+          "en": "electrical",
+          "de": "Elektro"
+        }
+      },
+      {
+        "id": "rotating",
+        "title": {
+          "en": "rotating",
+          "de": "rotierend"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage content (A10)",

@@ -1,15 +1,20 @@
 import {mkdirSync,readFileSync,writeFileSync} from "node:fs";
 import {basename,dirname,join} from "node:path";
 import {nativeImageReclaimDueV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/♻️reclaim/🟦️.ts";
+import {nativeImageShardCapBytesV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🧩️shard/🟦️.ts";
 import {nativeFreeSpaceSyncV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 
 /** 🔄️ The partitions whose image is sized elastically when it is created (`elastic` of the policy). */
 export type ElasticPartitionIdV1="graph"|"products"|"rust";
 /** 📐️ The elastic sizing rule of an image (`elastic.<partition>` of the policy). */
-export type ElasticRuleV1=Readonly<{needBytes:number;floorBytes:number;headroomPercent:number;hostFreeReservePercent:number;alignBytes:number;maximumBytes:number;minimumBytes:number;reclaimFloorBytes:number;reclaimRatioPercent:number;reclaimTightHostFreeBytes:number;automatic:boolean;pressureFreeBytes:number}>;
+export type ElasticRuleV1=Readonly<{needBytes:number;floorBytes:number;headroomPercent:number;hostFreeReservePercent:number;growHostFreeFloorBytes:number;growHostFreeFloorPercent:number;alignBytes:number;maximumBytes:number;minimumBytes:number;reclaimFloorBytes:number;reclaimRatioPercent:number;reclaimTightHostFreeBytes:number;automatic:boolean;pressureFreeBytes:number}>;
+/** 🧱️ The most bytes one image may be born or grown with on a platform: the measured limit up to which the platform returns freed blocks of a mounted image to the host (macOS unmaps APFS containers only up to 2^35 bytes), `Infinity` for a platform without a limit. An image above it can never give blocks back, so no sizing rule may produce one. Pure and language-agnostic. @see ../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🧩️shard/🧬️schema/🔣️.json */
+export function imageCapBytesV1(platform:string=process.platform):number{return nativeImageShardCapBytesV1(platform)||Infinity;}
+/** 🏋️ Whether a live image was born above the cap of its platform (it can never return freed blocks and is retired at the next quiescent moment once it is bloated). Pure and language-agnostic. */
+export function imageOversizeV1(receiptBytes:number|null|"missing",platform:string=process.platform):boolean{return typeof receiptBytes==="number"&&receiptBytes>imageCapBytesV1(platform);}
 /** 🖼️ Sizes a new image from its working set and the host: need times headroom, capped by the rule's maximum and by what the host volume may give (its free bytes minus the reserve), aligned down, never below the given minimum (the rule's `minimumBytes`, not the declared capacity: a host with less free space than the declared capacity still gets an image that fits). */
 export function elasticCapacityV1(rule:ElasticRuleV1,minimumBytes:number,hostFreeBytes:number):number{
- const wanted=Math.ceil(rule.needBytes*(100+rule.headroomPercent)/100),ceiling=Math.min(rule.maximumBytes,Math.floor(hostFreeBytes*(100-rule.hostFreeReservePercent)/100)),target=Math.min(wanted,Math.max(ceiling,minimumBytes));
+ const wanted=Math.ceil(rule.needBytes*(100+rule.headroomPercent)/100),ceiling=Math.min(rule.maximumBytes,imageCapBytesV1(),Math.floor(hostFreeBytes*(100-rule.hostFreeReservePercent)/100)),target=Math.min(wanted,Math.max(ceiling,minimumBytes));
  return Math.max(minimumBytes,Math.floor(target/rule.alignBytes)*rule.alignBytes);
 }
 /** 🧮️ The smallest image a host of `hostFreeBytes` is born with for a rule: the rule's `minimumBytes` cut down to the share the host may give (`100 - hostFreeReservePercent` of its free bytes, aligned down to the rule's alignment), but never below the rule's `floorBytes`, the smallest image that still works (a compile needs its workspaces): the shares of all partitions add up to less than the host (see `hostSharePercentV1`) unless a floor needs more, and a host that cannot give the floor is refused up front (`requireImageFitsHostV1`) instead of getting an image that exhausts its storage mid-command. */
@@ -66,9 +71,14 @@ export function readImageReceiptBytesV1(directory:string):number|null|"missing"{
   return Number.isSafeInteger(bytes)&&(bytes as number)%1048576===0&&(bytes as number)>=33554432?bytes as number:null;
  }catch(error){return (error as NodeJS.ErrnoException)?.code==="ENOENT"?"missing":null;}
 }
-/** 📈️ The size a pressed image is recreated at: half again its capacity (at least the next alignment step), never above the rule's maximum or what the host volume may give (its free bytes minus the reserve, plus the image's own host allocation that its removal returns); a capacity that cannot grow answers itself. */
+/** 🏔️ The largest size an existing image may grow to: the host's free bytes plus the image's own host allocation, less the larger of the absolute floor `growHostFreeFloorBytes` and `growHostFreeFloorPercent` of that sum (the host keeps that much free even when the image fills up), never above the rule's maximum. Pure and language-agnostic. */
+export function elasticGrowthCeilingV1(rule:Pick<ElasticRuleV1,"growHostFreeFloorBytes"|"growHostFreeFloorPercent"|"maximumBytes">,hostFreeBytes:number,allocatedBytes:number=0):number{
+ const total=hostFreeBytes+allocatedBytes,kept=Math.max(rule.growHostFreeFloorBytes,Math.floor(total*rule.growHostFreeFloorPercent/100));
+ return Math.min(rule.maximumBytes,imageCapBytesV1(),Math.max(0,total-kept));
+}
+/** 📈️ The size a pressed image grows to: half again its capacity (at least the next alignment step), never above the growth ceiling (`elasticGrowthCeilingV1`); a capacity that cannot grow answers itself. The same size serves the in-place growth of a mounted-out image and the birth of a recreated one. */
 export function elasticGrowthV1(rule:ElasticRuleV1,capacityBytes:number,hostFreeBytes:number,allocatedBytes:number=0):number{
- const ceiling=Math.min(rule.maximumBytes,Math.floor((hostFreeBytes+allocatedBytes)*(100-rule.hostFreeReservePercent)/100)),wanted=Math.ceil(capacityBytes*3/2/rule.alignBytes)*rule.alignBytes,target=Math.floor(Math.min(wanted,ceiling)/rule.alignBytes)*rule.alignBytes;
+ const ceiling=elasticGrowthCeilingV1(rule,hostFreeBytes,allocatedBytes),wanted=Math.ceil(capacityBytes*3/2/rule.alignBytes)*rule.alignBytes,target=Math.floor(Math.min(wanted,ceiling)/rule.alignBytes)*rule.alignBytes;
  return Math.max(capacityBytes,target);
 }
 /** 🧷️ Where the grown size of an elastic image waits for the next image (the control storage beside the images, one file for every partition): the reset removes the image directory together with its receipt, so the size must live outside it. */
@@ -100,15 +110,16 @@ export function effectiveCapacityV1(directory:string,minimumBytes:number,rule:El
  if(receipt!=="missing")return Math.min(receipt,rule.maximumBytes);
  const host=hostFreeForSizingV1(directory);if(!host)return minimumBytes;
  const base=elasticCapacityV1(rule,elasticMinimumV1(rule,minimumBytes,host.availableBytes),host.availableBytes),grown=readElasticGrowthV1(directory);
- return Math.max(base,Math.min(grown,rule.maximumBytes,Math.floor(host.availableBytes*(100-rule.hostFreeReservePercent)/100/rule.alignBytes)*rule.alignBytes));
+ return Math.max(base,Math.min(grown,rule.maximumBytes,imageCapBytesV1(),Math.floor(elasticGrowthCeilingV1(rule,host.availableBytes)/rule.alignBytes)*rule.alignBytes));
 }
 /** 📌️ The capacity of a partition without an elastic rule: the one its receipt pins when an image exists and fits the declared capacity (an image keeps the size it was born with, a larger declaration takes effect only through the explicit reset that births a new image), else the declared capacity cut down to the host share of a fixed partition (`hostSharePercent`) when the image is not born yet; a larger or unreadable receipt keeps the declared capacity so the receiver refuses it as before. */
 export function pinnedCapacityV1(directory:string,declaredBytes:number,hostSharePercent?:number,needBytes:number=0):number{
  const receipt=readImageReceiptBytesV1(directory);
  if(typeof receipt==="number"&&receipt<=declaredBytes)return receipt;
- if(receipt!=="missing"||hostSharePercent===undefined)return declaredBytes;
+ const born=receipt==="missing"?Math.floor(Math.min(declaredBytes,imageCapBytesV1())/1048576)*1048576:declaredBytes;
+ if(receipt!=="missing"||hostSharePercent===undefined)return born;
  const host=hostFreeForSizingV1(directory);
- return host?hostShareCapacityV1(declaredBytes,hostSharePercent,host.availableBytes,needBytes):declaredBytes;
+ return host?hostShareCapacityV1(born,hostSharePercent,host.availableBytes,needBytes):born;
 }
 
 /** 🧲️ Whether an image holds host blocks it no longer uses: the host allocation is compared with the bytes used inside (at least the ratio and at least the floor, an eighth of the floor while the host volume is nearly full). The decision is the framework's `nativeImageReclaimDueV1`; the rule only carries the three numbers. */

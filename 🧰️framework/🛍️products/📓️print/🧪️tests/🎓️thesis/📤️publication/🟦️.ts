@@ -8,8 +8,7 @@ import { inspectPrintPdfV1, rasterPrintPdfV1 } from "../../../📦️artifacts/�
 import { withPrintScratchV1, type PrintExecutionV1 } from "../../../📦️artifacts/🎛️operation/🟦️.ts";
 import fixture from "../🔣️.json";
 import contrast from "../../../🔨️modules/🎨print-design-token-paints/🧪️tests/🔣️.json";
-import { loadPrintDesignTokens } from "../../../🔨️modules/🎨print-design-token-paints/🧮️resolution/🟦️.ts";
-import { thesisPdfPaintFactsV1, thesisFilledHeadingNumberPaintV1 } from "./🎨️paint/🟦️.ts";
+import { thesisPdfPaintFactsV1, thesisHeadingNumberPaintV1 } from "./🎨️paint/🟦️.ts";
 import { contrastRatio } from "@semio-tech/ui-styling";
 import { colord, extend } from "colord";
 import a11yPlugin from "colord/plugins/a11y";
@@ -84,17 +83,17 @@ export async function verifyThesisPublication(execution: PrintExecutionV1): Prom
           for (const key of row.citationKeys) assert.ok(!normalized.includes(key), name + " resolves citation " + key);
           const body = pdf.pages.findIndex((page, index) => normalize(pages[index]!.text).includes(normalize(row.firstBodyMarker)) && page.items.some(item => "str" in item && item.str.trim() === "1" && item.transform[5] < page.height / 4));
           assert.ok(body > 0, name + " has its first Arabic body page");
-          const theme = name.includes("-dark") ? "dark" : "light", inks = contrast.actualThemes.find(row => row.theme === theme), surface = loadPrintDesignTokens().colors.secondary;
-          assert.ok(inks && surface);
+          const theme = name.includes("-dark") ? "dark" : "light", inks = contrast.actualThemes.find(row => row.theme === theme), chip = contrast.chips.find(row => row.theme === theme && row.level === "window");
+          assert.ok(inks && chip);
           const paint = thesisPdfPaintFactsV1(pdf.pages[body]!, artifact.control), paintProof = JSON.stringify({ canonicalWorkspaceProduct: false, page: body + 1, ...paint });
           assert.ok(Buffer.byteLength(paintProof) <= fixture.publicationProof.maximumTextBytes);
           await exportFile("private-" + name.replace(/\.pdf$/, "-paint.json"), paintProof + "\n");
-          assert.ok(paint.fills.includes(surface.toLowerCase()), name + " actual filled section surface");
-          const filledHeadings = row.filledHeadings.map(heading => {
-            const runs = thesisFilledHeadingNumberPaintV1(paint.runs, heading, "#" + inks.filled);
-            const numerals = runs.map(run => ({ ...run, ratio: contrastRatio(run.color, surface), oracleRatio: colord(run.color).contrast(surface) }));
+          assert.ok(paint.fills.includes(chip.glass), name + " actual window glass fill");
+          const headings = row.headings.map(heading => {
+            const runs = thesisHeadingNumberPaintV1(paint.runs, heading, "#" + inks.heading);
+            const numerals = runs.map(run => ({ ...run, ratio: contrastRatio(run.color, chip.canvasComposite), oracleRatio: colord(run.color).contrast(chip.canvasComposite) }));
             for (const numeral of numerals) {
-              assert.ok(numeral.ratio >= contrast.minimum, name + " filled numeral contrast: " + heading.title + " / " + numeral.text);
+              assert.ok(numeral.ratio >= contrast.minimum, name + " heading numeral contrast: " + heading.title + " / " + numeral.text);
               assert.ok(Math.abs(numeral.ratio - numeral.oracleRatio) < 0.011);
             }
             return { ...heading, numerals };
@@ -105,7 +104,7 @@ export async function verifyThesisPublication(execution: PrintExecutionV1): Prom
             await exportFile(file, image.png);
             previews.push({ file, page: image.page, width: image.width, height: image.height, sha256: image.sha256 });
           }
-          proofs.push({ file: "private-" + name, pages: pdf.pages.length, sha256: createHash("sha256").update(bytes).digest("hex"), firstArabicBodyPage: body + 1, textFile, filledHeadings, previews });
+          proofs.push({ file: "private-" + name, pages: pdf.pages.length, sha256: createHash("sha256").update(bytes).digest("hex"), firstArabicBodyPage: body + 1, textFile, headings, previews });
           console.log("[print] Privately published, consumed and exported " + name + " PASS");
         }
         await artifact.recheck();

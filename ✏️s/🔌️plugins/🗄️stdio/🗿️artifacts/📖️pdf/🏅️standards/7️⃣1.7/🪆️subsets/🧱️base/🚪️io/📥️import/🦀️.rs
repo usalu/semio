@@ -5,6 +5,7 @@
 use crate::standards::v1_7::subsets::base::modules::encryption::open_standard_security;
 use crate::standards::v1_7::subsets::base::modules::fonts::FontCodec;
 use crate::standards::v1_7::subsets::base::modules::lexer::{dict_get, pdf_header, CosGrant};
+use semio_s_artifact_stdio_pdf_inferences::standards::v1_7::subsets::base::modules::filters::declares_logical_codec;
 use crate::standards::v1_7::subsets::base::io::foreign_artifacts;
 use crate::standards::v1_7::subsets::base::io::error::{PResult, PdfEngineError};
 use crate::standards::v1_7::subsets::base::modules::lift::lift_document_with;
@@ -19,6 +20,9 @@ use retained_graph::{PdfByteGraph, PdfByteGraphCursor, PdfByteGraphEvent};
 
 #[path = "🗃️original-custody/🦀️.rs"]
 pub mod original_custody;
+
+#[path = "📖️interpreted-streams/🦀️.rs"]
+pub mod interpreted_streams;
 
 #[path = "🔁️controlled/🦀️.rs"]
 mod controlled;
@@ -68,6 +72,7 @@ pub fn decode_pdf_with_password(data: &[u8], password: &str) -> PResult<PdfSnaps
         return Err(PdfEngineError::Malformed("PDF /Root does not identify a catalog".into()));
     }
     crate::standards::v1_7::subsets::base::io::text::snapshot::retained_text::admit_retained_text(&mut objects, &mut trailer, &position).map_err(|reason| PdfEngineError::Malformed(reason.into()))?;
+    interpreted_streams::admit_interpreted_streams(&mut objects, &trailer, &position).map_err(|reason| PdfEngineError::Malformed(reason.into()))?;
     let mut source = GraphSource::with_positions(&objects, &position);
     let lifter = lift_document_with(&trailer, &declared_version, &mut source);
     if let Some(error)=lifter.admission_error {return Err(error);}
@@ -107,7 +112,8 @@ fn read_clear_pdf_graph(data: &[u8]) -> PResult<Option<PdfByteGraph>> {
                     if matches!(&object.value, PdfObject::Stream { dict, filters, .. }
                         if filters.is_empty()
                             && dict_get(dict, "Subtype").and_then(PdfObject::as_name) == Some("Image")
-                            && dict.iter().any(|entry| matches!(entry.key.as_str(), "Filter" | "F"))) {
+                            && dict.iter().any(|entry| matches!(entry.key.as_str(), "Filter" | "F"))
+                            && !declares_logical_codec(dict)) {
                         object.value = normalize_pdf_object(std::mem::replace(&mut object.value, PdfObject::Null))?;
                     }
                 }

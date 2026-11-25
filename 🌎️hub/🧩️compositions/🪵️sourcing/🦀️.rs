@@ -8,11 +8,22 @@ use semio_plugin::PluginBuilder;
 
 //#region 🗃️Apps
 semio_framework_dispatch_macros::dyn_enum_close! {
-    /// 🗃️ Closed runtime app fleet for the sourcing editor and viewer surfaces — over `SemioMembers`, the
-    /// roster that opens the composed `s.stdio.semio` kit catalogue child every curation carries.
+    /// 🗃️ Closed runtime app fleet for the sourcing editor and viewer surfaces; each surface owns its own app crate so the app machinery is never instantiated in one compilation unit.
     pub enum SourcingApps: PluginApp {
-        Editor(VcsArtifactApp<EditorApp<crate::editor::sourcing::SourcingCurationApp>, semio_s_artifact_stdio_semio::SemioMembers>),
-        Viewer(VcsArtifactApp<ViewerApp<crate::viewer::sourcing::SourcingViewer>, semio_s_artifact_stdio_semio::SemioMembers>),
+        Editor(semio_hub_sourcing_editor_app::SourcingEditorApps),
+        Viewer(semio_hub_sourcing_viewer_app::SourcingViewerApps),
+    }
+}
+
+impl From<VcsArtifactApp<EditorApp<crate::editor::sourcing::SourcingCurationApp>, semio_s_artifact_stdio_semio::SemioMembers>> for SourcingApps {
+    fn from(app: VcsArtifactApp<EditorApp<crate::editor::sourcing::SourcingCurationApp>, semio_s_artifact_stdio_semio::SemioMembers>) -> Self {
+        Self::Editor(app.into())
+    }
+}
+
+impl From<VcsArtifactApp<ViewerApp<crate::viewer::sourcing::SourcingViewer>, semio_s_artifact_stdio_semio::SemioMembers>> for SourcingApps {
+    fn from(app: VcsArtifactApp<ViewerApp<crate::viewer::sourcing::SourcingViewer>, semio_s_artifact_stdio_semio::SemioMembers>) -> Self {
+        Self::Viewer(app.into())
     }
 }
 //#endregion 🗃️Apps

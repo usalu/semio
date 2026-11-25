@@ -19,8 +19,8 @@ pub fn write_object_handle(writer: &mut DwgBitWriter, base: u64, target: Option<
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn encode_xrecord_values(values: &[semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::xrecord::DwgXRecordValue]) -> Result<DwgBitWriter, String> {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::xrecord::DwgXRecordValue;
+pub fn encode_xrecord_values(values: &[semio_s_artifact_stdio_dwg_snapshot_objects_xrecord::DwgXRecordValue]) -> Result<DwgBitWriter, String> {
+    use semio_s_artifact_stdio_dwg_snapshot_objects_xrecord::DwgXRecordValue;
     let mut data = DwgBitWriter::new();
     for value in values {
         value.validate()?;
@@ -69,8 +69,8 @@ pub fn encode_xrecord_values(values: &[semio_s_artifact_stdio_dwg_snapshot_objec
     Ok(data)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn encode_r2010_eed(writer: &mut DwgBitWriter, _base: u64, records: &[semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::xrecord::DwgExtendedEntityData]) -> Result<(), String> {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::xrecord::DwgXRecordValue;
+pub fn encode_r2010_eed(writer: &mut DwgBitWriter, _base: u64, records: &[semio_s_artifact_stdio_dwg_snapshot_objects_xrecord::DwgExtendedEntityData]) -> Result<(), String> {
+    use semio_s_artifact_stdio_dwg_snapshot_objects_xrecord::DwgXRecordValue;
     for record in records {
         let mut values = DwgBitWriter::new();
         for value in &record.values {
@@ -196,8 +196,8 @@ pub fn append_r2010_string_stream(data: &mut DwgBitWriter, strings: &DwgBitWrite
     Ok(())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn write_visual_style_operation(data: &mut DwgBitWriter, operation: semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgVisualStylePropertyOperation) {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgVisualStylePropertyOperation;
+pub fn write_visual_style_operation(data: &mut DwgBitWriter, operation: semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgVisualStylePropertyOperation) {
+    use semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgVisualStylePropertyOperation;
     data.write_bs(match operation {
         DwgVisualStylePropertyOperation::Inherit => 0,
         DwgVisualStylePropertyOperation::Set => 1,
@@ -206,7 +206,7 @@ pub fn write_visual_style_operation(data: &mut DwgBitWriter, operation: semio_s_
     });
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn write_visual_style_color(data: &mut DwgBitWriter, strings: &mut DwgBitWriter, property: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgVisualStyleProperty<semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgComplexColor>) {
+pub fn write_visual_style_color(data: &mut DwgBitWriter, strings: &mut DwgBitWriter, property: &semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgVisualStyleProperty<semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgComplexColor>) {
     data.write_bs(property.value.index);
     data.write_bl(encode_complex_color_value(&property.value.value));
     let flags = u8::from(property.value.name.is_some()) | (u8::from(property.value.book_name.is_some()) << 1);
@@ -220,7 +220,7 @@ pub fn write_visual_style_color(data: &mut DwgBitWriter, strings: &mut DwgBitWri
     write_visual_style_operation(data, property.operation);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn write_table_style_color(data: &mut DwgBitWriter, color: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgComplexColor) -> Result<(), String> {
+pub fn write_table_style_color(data: &mut DwgBitWriter, color: &semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgComplexColor) -> Result<(), String> {
     if color.name.is_some() || color.book_name.is_some() {
         return Err("TABLESTYLE named colors are unsupported".into());
     }
@@ -230,11 +230,11 @@ pub fn write_table_style_color(data: &mut DwgBitWriter, color: &semio_s_artifact
     Ok(())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn table_style_borders(borders: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgCellBorders) -> [(u32, Option<&semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgCellBorder>); 6] {
+fn table_style_borders(borders: &semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgCellBorders) -> [(u32, Option<&semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgCellBorder>); 6] {
     [(1, borders.top.as_ref()), (2, borders.horizontal_inside.as_ref()), (4, borders.bottom.as_ref()), (8, borders.left.as_ref()), (16, borders.vertical_inside.as_ref()), (32, borders.right.as_ref())]
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn encode_r2010_cell_style(data: &mut DwgBitWriter, strings: &mut DwgBitWriter, handles: &mut DwgBitWriter, style: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgCellStyle) -> Result<(), String> {
+pub fn encode_r2010_cell_style(data: &mut DwgBitWriter, strings: &mut DwgBitWriter, handles: &mut DwgBitWriter, style: &semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgCellStyle) -> Result<(), String> {
     data.write_bl(5);
     data.write_bs(1);
     data.write_bl(style.property_override_flags);
@@ -275,7 +275,7 @@ pub fn encode_r2010_cell_style(data: &mut DwgBitWriter, strings: &mut DwgBitWrit
     Ok(())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn write_material_color(data: &mut DwgBitWriter, color: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgMaterialColor) {
+pub fn write_material_color(data: &mut DwgBitWriter, color: &semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgMaterialColor) {
     data.write_rc(u8::from(color.override_rgb.is_some()));
     data.write_bd(color.factor);
     if let Some(rgb) = color.override_rgb {
@@ -283,10 +283,10 @@ pub fn write_material_color(data: &mut DwgBitWriter, color: &semio_s_artifact_st
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn write_material_map(data: &mut DwgBitWriter, strings: &mut DwgBitWriter, map: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgMaterialMap) -> Result<(), String> {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgMaterialMapSource;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgMaterialProjection;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgMaterialTiling;
+pub fn write_material_map(data: &mut DwgBitWriter, strings: &mut DwgBitWriter, map: &semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgMaterialMap) -> Result<(), String> {
+    use semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgMaterialMapSource;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgMaterialProjection;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgMaterialTiling;
     if map.transform.len() != 16 || map.transform.iter().any(|value| !value.is_finite()) {
         return Err("MATERIAL mapper transform must contain sixteen finite values".into());
     }
@@ -326,9 +326,9 @@ pub fn constraint_point3(values: &[f64], role: &str) -> Result<[f64; 3], String>
     Ok([values[0], values[1], values[2]])
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn encode_r2010_constraint_node(node: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::constraints::DwgConstraintNode, data: &mut DwgBitWriter, strings: &mut DwgBitWriter, handles: &mut DwgBitWriter) -> Result<(), String> {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::constraints::DwgConstraintNode;
-    fn core(data: &mut DwgBitWriter, node: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::constraints::DwgConstraintNodeCore) -> Result<(), String> {
+pub fn encode_r2010_constraint_node(node: &semio_s_artifact_stdio_dwg_snapshot_objects_constraints::DwgConstraintNode, data: &mut DwgBitWriter, strings: &mut DwgBitWriter, handles: &mut DwgBitWriter) -> Result<(), String> {
+    use semio_s_artifact_stdio_dwg_snapshot_objects_constraints::DwgConstraintNode;
+    fn core(data: &mut DwgBitWriter, node: &semio_s_artifact_stdio_dwg_snapshot_objects_constraints::DwgConstraintNodeCore) -> Result<(), String> {
         if node.id < 0 || node.connected_node_ids.len() > 10_000 {
             return Err("constraint node ID or connection count is invalid".into());
         }
@@ -339,7 +339,7 @@ pub fn encode_r2010_constraint_node(node: &semio_s_artifact_stdio_dwg_snapshot_o
         }
         Ok(())
     }
-    fn geometric(data: &mut DwgBitWriter, value: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::constraints::DwgGeometricConstraint) -> Result<(), String> {
+    fn geometric(data: &mut DwgBitWriter, value: &semio_s_artifact_stdio_dwg_snapshot_objects_constraints::DwgGeometricConstraint) -> Result<(), String> {
         if !value.active {
             return Err("AC1024 geometric constraint must be active".into());
         }
@@ -348,13 +348,13 @@ pub fn encode_r2010_constraint_node(node: &semio_s_artifact_stdio_dwg_snapshot_o
         data.write_b(value.implied);
         Ok(())
     }
-    fn geometry(data: &mut DwgBitWriter, handles: &mut DwgBitWriter, value: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::constraints::DwgConstraintGeometry) -> Result<(), String> {
+    fn geometry(data: &mut DwgBitWriter, handles: &mut DwgBitWriter, value: &semio_s_artifact_stdio_dwg_snapshot_objects_constraints::DwgConstraintGeometry) -> Result<(), String> {
         core(data, &value.node)?;
         handles.write_handle(4, value.geometry_dependency_handle.unwrap_or_default());
         data.write_bl(value.geometry_node_id);
         Ok(())
     }
-    fn explicit(data: &mut DwgBitWriter, handles: &mut DwgBitWriter, value: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::constraints::DwgExplicitConstraint) -> Result<(), String> {
+    fn explicit(data: &mut DwgBitWriter, handles: &mut DwgBitWriter, value: &semio_s_artifact_stdio_dwg_snapshot_objects_constraints::DwgExplicitConstraint) -> Result<(), String> {
         geometric(data, &value.geometric)?;
         if value.value_dependency_handle == 0 || value.dimension_dependency_handle == 0 {
             return Err("explicit constraint dependency handles must be nonnull".into());
@@ -451,8 +451,8 @@ pub fn encode_r2010_constraint_node(node: &semio_s_artifact_stdio_dwg_snapshot_o
     Ok(())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn encode_r2010_block_element(data: &mut DwgBitWriter, strings: &mut DwgBitWriter, element: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockElement, class_name: &str) -> Result<(), String> {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgEvaluationExpressionValue;
+pub fn encode_r2010_block_element(data: &mut DwgBitWriter, strings: &mut DwgBitWriter, element: &semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockElement, class_name: &str) -> Result<(), String> {
+    use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgEvaluationExpressionValue;
     let expression = &element.evaluation_expression;
     if expression.parent_id != -1 || expression.major_version != 29 || expression.minor_version != 2 || !matches!(expression.value, DwgEvaluationExpressionValue::Empty) || element.name.is_empty() {
         return Err(format!("{class_name} block-element state is invalid"));
@@ -469,7 +469,7 @@ pub fn encode_r2010_block_element(data: &mut DwgBitWriter, strings: &mut DwgBitW
     Ok(())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn encode_r2010_block_grip(data: &mut DwgBitWriter, strings: &mut DwgBitWriter, grip: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockGrip, x_role: &str, y_role: &str, class_name: &str) -> Result<(), String> {
+pub fn encode_r2010_block_grip(data: &mut DwgBitWriter, strings: &mut DwgBitWriter, grip: &semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockGrip, x_role: &str, y_role: &str, class_name: &str) -> Result<(), String> {
     if grip.location.len() != 3 || grip.location.iter().any(|value| !value.is_finite()) || grip.updated_x.expression_name != x_role || grip.updated_y.expression_name != y_role {
         return Err(format!("{class_name} grip state is invalid"));
     }
@@ -482,8 +482,8 @@ pub fn encode_r2010_block_grip(data: &mut DwgBitWriter, strings: &mut DwgBitWrit
     Ok(())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn encode_r2010_two_point_parameter(data: &mut DwgBitWriter, strings: &mut DwgBitWriter, parameter: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockTwoPointParameter, property_node_ids: [u32; 4], class_name: &str) -> Result<(), String> {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockParameterBaseLocation;
+pub fn encode_r2010_two_point_parameter(data: &mut DwgBitWriter, strings: &mut DwgBitWriter, parameter: &semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockTwoPointParameter, property_node_ids: [u32; 4], class_name: &str) -> Result<(), String> {
+    use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockParameterBaseLocation;
     if parameter.definition_base.len() != 3 || parameter.definition_end.len() != 3 || parameter.properties.len() != 4 || parameter.definition_base.iter().chain(&parameter.definition_end).any(|value| !value.is_finite()) {
         return Err(format!("{class_name} two-point parameter is invalid"));
     }
@@ -509,8 +509,8 @@ pub fn encode_r2010_two_point_parameter(data: &mut DwgBitWriter, strings: &mut D
     Ok(())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn encode_r2010_block_action(data: &mut DwgBitWriter, strings: &mut DwgBitWriter, handles: &mut DwgBitWriter, action: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockAction, class_name: &str) -> Result<(), String> {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockElement;
+pub fn encode_r2010_block_action(data: &mut DwgBitWriter, strings: &mut DwgBitWriter, handles: &mut DwgBitWriter, action: &semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockAction, class_name: &str) -> Result<(), String> {
+    use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockElement;
     if action.display_location.len() != 3 || action.display_location.iter().any(|value| !value.is_finite()) || action.name.is_empty() {
         return Err(format!("{class_name} action is invalid"));
     }
@@ -530,7 +530,7 @@ pub fn encode_r2010_block_action(data: &mut DwgBitWriter, strings: &mut DwgBitWr
     Ok(())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn write_r2010_action_connection(data: &mut DwgBitWriter, strings: &mut DwgBitWriter, connection: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockActionConnection) -> Result<(), String> {
+pub fn write_r2010_action_connection(data: &mut DwgBitWriter, strings: &mut DwgBitWriter, connection: &semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockActionConnection) -> Result<(), String> {
     if connection.name.is_empty() {
         return Err("block-action connection name is empty".into());
     }
@@ -557,8 +557,8 @@ pub fn write_r2004_signed_modular_char(output: &mut Vec<u8>, value: i64) {
     output.push(magnitude as u8 | if negative { 0x40 } else { 0 });
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn encode_complex_color_value(value: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgComplexColorValue) -> u32 {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgComplexColorValue;
+pub fn encode_complex_color_value(value: &semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgComplexColorValue) -> u32 {
+    use semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgComplexColorValue;
     match value {
         DwgComplexColorValue::ByLayer => 0xc000_0000,
         DwgComplexColorValue::ByBlock => 0xc100_0000,

@@ -1,0 +1,36 @@
+{
+  "ops": [
+    {
+      "op": "solid-from",
+      "scale": "50",
+      "view": "front",
+      "id": "leg-rear-tube-0",
+      "from": "plan"
+    },
+    {
+      "op": "solid-from",
+      "scale": "50",
+      "view": "front",
+      "id": "back-post-0",
+      "from": "plan",
+      "paint": "leg-rear-tube-0",
+      "after": "leg-rear-tube-0"
+    },
+    {
+      "op": "solid-from",
+      "scale": "50",
+      "view": "front",
+      "id": "leg-rear-tube-1",
+      "from": "plan"
+    },
+    {
+      "op": "solid-from",
+      "scale": "50",
+      "view": "front",
+      "id": "back-post-1",
+      "from": "plan",
+      "paint": "leg-rear-tube-1",
+      "after": "leg-rear-tube-1"
+    }
+  ]
+}

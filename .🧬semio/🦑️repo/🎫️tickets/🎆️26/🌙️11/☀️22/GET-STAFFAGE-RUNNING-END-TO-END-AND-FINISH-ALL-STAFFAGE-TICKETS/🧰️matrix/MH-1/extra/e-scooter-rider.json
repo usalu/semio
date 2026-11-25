@@ -1,23 +1,5 @@
 [
  {
-  "op": "plan-along",
-  "scale": "100",
-  "id": "jacket",
-  "clip": true
- },
- {
-  "op": "plan-along",
-  "scale": "200",
-  "id": "jacket",
-  "clip": true
- },
- {
-  "op": "plan-along",
-  "scale": "500",
-  "id": "jacket",
-  "clip": true
- },
- {
   "op": "plan-revolve",
   "scale": "50",
   "id": "thigh-l"
@@ -88,5 +70,62 @@
   "to": [
    "plan"
   ]
+ },
+ {
+  "choose": [
+   [
+    {
+     "op": "plan-along",
+     "id": "jacket",
+     "clip": true
+    }
+   ],
+   [
+    {
+     "op": "plan-along",
+     "id": "jacket"
+    }
+   ]
+  ],
+  "scale": "100",
+  "label": "jacket-plan"
+ },
+ {
+  "choose": [
+   [
+    {
+     "op": "plan-along",
+     "id": "jacket",
+     "clip": true
+    }
+   ],
+   [
+    {
+     "op": "plan-along",
+     "id": "jacket"
+    }
+   ]
+  ],
+  "scale": "200",
+  "label": "jacket-plan"
+ },
+ {
+  "choose": [
+   [
+    {
+     "op": "plan-along",
+     "id": "jacket",
+     "clip": true
+    }
+   ],
+   [
+    {
+     "op": "plan-along",
+     "id": "jacket"
+    }
+   ]
+  ],
+  "scale": "500",
+  "label": "jacket-plan"
  }
 ]

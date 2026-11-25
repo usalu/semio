@@ -24,7 +24,7 @@ import {
   type SelectionMarqueeMethod,
   SelectionMarquee,
   CanvasPickMenu,
-  type ContextMenuItem, sharedBorderlessBoxProps } from "@semio-tech/ui-react";
+  type ContextMenuItem, cn, glassClass, SharedBorderRow, sharedBorderlessBoxProps } from "@semio-tech/ui-react";
 import { syncSessionCanvasTheme } from "@semio-tech/ui-styling";
 import { createDemandFrameScheduler, frameDemandingSessionV1 } from "@semio-tech/framework/canvas/react-renderer";
 import { GestureRecognizer, type ComponentSceneHostProps, type Paint2dScene, type ActionDescriptor, type MergeMode, type UiComponentSceneNode, type PluginContextMenuRequest, type ContextMenuItemSpec } from "@semio-tech/framework";
@@ -803,11 +803,11 @@ function Paint2dWasmCanvas({ sessionFactory, onSessionReady }: { readonly sessio
   return (
     <div ref={containerRef} className="absolute inset-0">
       <canvas ref={canvasRef} className="block h-full w-full touch-none" />
-      {text&&progress.pending&&<div className="absolute bottom-2 left-2 z-50 flex items-center gap-2 rounded bg-background p-2 text-sm" role="status">
+      {text&&progress.pending&&<SharedBorderRow data-level="menu" data-glass-chip="" className={cn("absolute bottom-2 left-2 z-50 items-center gap-2 p-2 text-sm",glassClass)} role="status">
         <span>{text.rendering}</span><progress aria-label={text.rendering} max={Math.max(1,progress.total)} value={progress.completed}/>
         <button {...sharedBorderlessBoxProps} type="button" onClick={()=>cancelRef.current()}>{text.cancel}</button>
-      </div>}
-      {text&&progress.error&&<div className="absolute bottom-2 left-2 z-50 rounded bg-background p-2 text-sm" role="alert">{text.failed}: {progress.error}</div>}
+      </SharedBorderRow>}
+      {text&&progress.error&&<SharedBorderRow data-level="menu" data-glass-chip="" className={cn("absolute bottom-2 left-2 z-50 p-2 text-sm",glassClass)} role="alert">{text.failed}: {progress.error}</SharedBorderRow>}
     </div>
   );
 }

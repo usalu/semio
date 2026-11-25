@@ -1,5 +1,5 @@
 /** 📏️ The declared limits of the build journal. */
-export const BUILD_JOURNAL_V1:Readonly<{directory:string;version:1;rowsPerLine:number;maximumOwners:number}>;
+export const BUILD_JOURNAL_V1:Readonly<{directory:string;version:1;rowsPerLine:number;maximumOwners:number;rowsSuffix:string;brotliQuality:number}>;
 /** 🧾️ The marker a finished step leaves. */
 export interface BuildJournalStepV1{step:string;inputs:string;output:string}
 /** 🔖️ The header of one build journal. */
@@ -10,6 +10,10 @@ export function buildJournalKeyV1(input:unknown):string;
 export function readBuildJournalV1(bytes:Uint8Array):BuildJournalV1;
 /** 🧾️ Writes the rows of the owners of one wave. */
 export function encodeJournalRowsV1(entries:readonly {name:string;mode:"u"|"a";rows:readonly unknown[]}[]):Buffer;
+/** 🗜️ Packs the text of one rows file into its stored form. */
+export function packJournalRowsV1(bytes:Uint8Array):Buffer;
+/** 🗜️ Unpacks the stored form of one rows file. */
+export function unpackJournalRowsV1(bytes:Uint8Array):Buffer;
 /** 🧾️ Reads the rows of the owners of one wave back. */
 export function decodeJournalRowsV1(bytes:Uint8Array):{name:string;mode:"u"|"a";rows:unknown[]}[];
 /** 🔖️ The journal of the build that is under way, on the file port of the store. */

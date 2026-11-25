@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 import { createElement } from "react";
 import Ajv2020 from "ajv/dist/2020.js";
 import { compile } from "@tailwindcss/node";
-import { chromium } from "playwright";
+import { launchChromium } from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🌐️chromium-launch/🟦️";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type * as AccessibilityOracle from "dom-accessibility-api" with { "resolution-mode": "require" };
 import { cleanup, render } from "@semio-tech/ui-react/test";
@@ -73,7 +73,7 @@ afterEach(() => {
 
 describe("retained Toggle semantics", () => {
   it("keeps checked TreeCheckbox paint inside the same compact control without a selection outline", async () => {
-    const browser = await chromium.launch({ headless: true });
+    const browser = await launchChromium();
     try {
       const page = await browser.newPage();
       const stylesPath = resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🖌️ui/🎨️.css");

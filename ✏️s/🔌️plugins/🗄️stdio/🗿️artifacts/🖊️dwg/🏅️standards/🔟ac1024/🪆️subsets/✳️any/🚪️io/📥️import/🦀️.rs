@@ -21,6 +21,7 @@ use semio_s_artifact_stdio_dwg_snapshot_drawing::standards::v_ac1024::subsets::a
 use semio_s_artifact_stdio_dwg_snapshot::standards::v_ac1024::subsets::any::schema::snapshot::DwgSnapshot;
 use semio_s_artifact_stdio_dwg_snapshot::standards::v_ac1024::subsets::any::schema::snapshot::DWG_PREAMBLE_LEN;
 use semio_s_artifact_stdio_dwg_snapshot::standards::v_ac1024::subsets::any::schema::snapshot::STDIO_DWG_DOCUMENT_SCHEMA;
+use semio_s_artifact_stdio_dwg_snapshot::standards::v_ac1024::subsets::any::schema::snapshot::WRITTEN_VERSION;
 use semio_s_artifact_stdio_dwg_read_records::standards::v_ac1024::subsets::any::io::import::records::container::decode_r2004_sections;
 use semio_s_artifact_stdio_dwg_read_records::standards::v_ac1024::subsets::any::io::import::records::container::DwgDrawingSectionStep;
 use semio_s_artifact_stdio_dwg_read_records::standards::v_ac1024::subsets::any::io::import::records::container::DwgDrawingSections;
@@ -32,13 +33,13 @@ use semio_s_artifact_stdio_dwg_read_records::standards::v_ac1024::subsets::any::
 use semio_s_artifact_stdio_dwg_read_records::standards::v_ac1024::subsets::any::io::import::records::entities::{DwgObjectFrames, DwgObjectRecordFrame};
 use semio_s_artifact_stdio_dwg_read_records::standards::v_ac1024::subsets::any::io::import::records::entities::decode_layer_projection;
 use semio_s_artifact_stdio_dwg_read_records::standards::v_ac1024::subsets::any::io::import::records::fields::HandleMapRows;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgLayerTableRecord;
+use semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgLayerTableRecord;
 use semio_s_artifact_stdio_dwg_snapshot_drawing::standards::v_ac1024::subsets::any::schema::snapshot::drawing::geometry::DwgLogicalLayer;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::xrecord::DwgObjectCategory;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgTableRecordBody;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgTableRecordCommon;
+use semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject;
+use semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody;
+use semio_s_artifact_stdio_dwg_snapshot_objects_xrecord::DwgObjectCategory;
+use semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgTableRecordBody;
+use semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgTableRecordCommon;
 use semio_s_artifact_stdio_dwg_read_objects::standards::v_ac1024::subsets::any::io::import::objects::decode_r2004_object_identities;
 
 
@@ -247,7 +248,7 @@ pub fn decode_dwg(bytes: &[u8]) -> Result<DwgSnapshot, String> {
     if bytes.len() == DWG_PREAMBLE_LEN {
         return Ok(DwgSnapshot { schema: STDIO_DWG_DOCUMENT_SCHEMA.into(), version, maintenance_version, codepage, ..Default::default() });
     }
-    if version != "AC1024" {
+    if version != WRITTEN_VERSION {
         return DwgSnapshot::from_drawing(&dwg_from_bytes(bytes)?);
     }
     let mut drawing = decode_drawing(bytes)?;

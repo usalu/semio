@@ -1,0 +1,30 @@
+import{createHash}from"node:crypto";
+import{createReadStream,statSync}from"node:fs";
+import{pathToFileURL}from"node:url";
+
+const [loadPath,memoPath,input,output,scope]=process.argv.slice(2) as [string,string,string,string,string];
+const load=await import(pathToFileURL(loadPath).href),memo=await import(pathToFileURL(memoPath).href);
+const mb=(value:number)=>Math.round(value/1048576);
+let peak=0,peakRss=0;
+const sample=()=>{const usage=process.memoryUsage();peak=Math.max(peak,usage.heapUsed+usage.external);peakRss=Math.max(peakRss,usage.rss);};
+const timer=setInterval(sample,10);
+const settle=()=>{Bun.gc(true);Bun.gc(true);const usage=process.memoryUsage();return mb(usage.heapUsed+usage.external);};
+const base=settle();
+const started=performance.now(),phases:Record<string,number>={},mark=(name:string)=>{phases[name]=Math.round(performance.now()-started)/1000;sample();phases[name+"PeakMB"]=mb(peak)-base;};
+const lent=await memo.readAdmissionMemoV1(input,scope,()=>true);
+if(lent===undefined)throw Error("memo miss");mark("read");
+let seeded=0;
+const known=new Set<string>(load.selectedAdmissionFactsV1.suffixes?.(scope)??load.selectedAdmissionFactsV1.entries(scope).map((entry:{suffix:string})=>entry.suffix));
+for await(const owner of memo.ownersOfAdmissionMemoV1(lent,known)){load.selectedAdmissionFactsV1.seed(scope,owner.suffix,owner.facts,owner.rows);seeded++;}
+await lent.close?.();mark("seed");
+const afterSeed=settle();
+const observations=lent.observations;
+const packed=memo.packAdmissionMemoV1({format:lent.format,scope,admission:lent.admission,observations,owners:load.selectedAdmissionFactsV1.entries(scope)});
+mark("pack");const wrote=await memo.writeAdmissionMemoV1(output,packed,2**32);
+mark("write");
+const afterWrite=settle();
+clearInterval(timer);
+const sha=createHash("sha256");
+await new Promise<void>((resolve,reject)=>createReadStream(output).on("data",chunk=>sha.update(chunk)).on("end",()=>resolve()).on("error",reject));
+console.log(JSON.stringify({loadPath:loadPath.slice(-40),owners:seeded,observations:observations.length,inputMB:mb(statSync(input).size),outputMB:mb(statSync(output).size),wrote,sha256:sha.digest("hex"),baselineMB:base,retainedAfterSeedMB:afterSeed-base,retainedAfterWriteMB:afterWrite-base,peakMB:mb(peak)-base,peakRssMB:mb(peakRss),seconds:Math.round((performance.now()-started)/100)/10,phases}));
+process.exit(0);

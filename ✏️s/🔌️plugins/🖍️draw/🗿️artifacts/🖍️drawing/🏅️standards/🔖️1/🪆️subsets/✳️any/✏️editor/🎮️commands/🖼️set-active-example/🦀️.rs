@@ -6,7 +6,8 @@ use semio_s_artifact_draw_drawing_model::default_drawing_document;
 use semio_s_artifact_draw_drawing_examples::examples;
 use pack::snapshot::ArtifactDsl;
 use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
-use semio_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin, InteractionWrite};
+use semio_s_artifact_draw_drawing_editor_interaction::{drawing_reset_document_effect, DRAWING_INTERACTION_DOMAIN, DRAWING_POINT_DOMAIN};
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "active-example")]
@@ -31,5 +32,13 @@ pub fn handle(
         let source = examples().iter().find(|source| source.id() == payload.example_id).ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("drawing.example.unknown"), format!("Drawing declares no example '{}'", payload.example_id)))?;
         DrawingSnapshot::parse_dsl(&source.document_json()).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("drawing.example.parse"), format!("Drawing example '{}' does not parse as a drawing document: {error:?}", payload.example_id)))?
     };
-    Ok(Emit { effects: vec![semio_s_artifact_draw_drawing_editor_interaction::drawing_reset_document_effect(&next)], ..Default::default() })
+    Ok(Emit {
+        effects: vec![drawing_reset_document_effect(&next)],
+        interaction_writes: [DRAWING_INTERACTION_DOMAIN, DRAWING_POINT_DOMAIN].into_iter().map(|domain| InteractionWrite {
+            domain: domain.into(),
+            targets: Vec::new(),
+            merge: protocol::MergeMode::Replace,
+        }).collect(),
+        ..Default::default()
+    })
 }

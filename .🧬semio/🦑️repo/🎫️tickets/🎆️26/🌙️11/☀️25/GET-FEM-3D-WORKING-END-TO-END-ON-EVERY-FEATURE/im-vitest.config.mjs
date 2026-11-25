@@ -1,0 +1,1 @@
+export default { root: "C:/semio", test: { environment: "jsdom", include: ["🧰️framework/**/🧱️elements/../🧪️tests/🚪️program-retirement/🟦️.ts"], exclude: ["**/node_modules/**", ".cache/**"], testTimeout: 60000 } };

@@ -65,3 +65,37 @@ for (const sample of fixture.cases) test(sample.name, async () => {
   expect(submitted).toBe(sample.turns.length);
   expect(observed).toBe(sample.accepted);
 });
+
+test("extension completion hands an owed page acknowledgement to its background drain", async () => {
+  const source = ts.transpileModule([definition("../../../🧾️typed-operations-and-handle/🟦️.ts", "WgpuTypedOperationDrive"), definition("../../📞️extension-and-request-actors/🟦️.ts", "createExtensionCompletion")].join("\n"), { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
+  let handoff: readonly unknown[] | undefined;
+  const ports = {
+    scanTypedOperationPages, wireTurnStatusTag, WGPU_TYPED_OPERATION_SETTLE_LIMIT: 0,
+    GUEST_HOST_ANSWER_CEILING_BYTES: 1024, guestAnswerPages: (answer: Uint8Array) => ({ prologue: [], terminal: answer }),
+    pendingTurnEffects: new Map(), wgpuHostEffect: () => null, shellFrameBytes: () => null, admitSpawnedJob: () => false,
+    serializeWgpuActorCall: (_actor: string, work: () => Promise<unknown>) => work(),
+    submitTurn: async () => ({ status: "more-work", deferredEvents: 0, uiPatches: [], effects: [typedPage()] }),
+  };
+  const create = new Function(...Object.keys(ports), source + ";return createExtensionCompletion;")(...Object.values(ports));
+  const completion = create({ requireActorId: () => "actor", requireUiRoute: () => ({ accept: async () => [] }), executeFor: () => undefined, drainSpawnedJobs: async () => ({ frames: [] }), turnOutcomes: { push() {} }, drainTypedOperations: (_id: number, acknowledgements: readonly unknown[]) => { handoff = acknowledgements; } });
+  await completion.captureExtensionCompletion(7, 1n).complete({ ok: Uint8Array.of(1) });
+  expect(handoff).toHaveLength(1);
+});
+
+test("background drain submits a handed-off acknowledgement once", async () => {
+  const ack = { kind: "fixture-ack" };
+  const submitted: unknown[][] = [];
+  const ports = {
+    WGPU_TYPED_OPERATION_DRAIN_BUDGET: 4, WGPU_TYPED_OPERATION_EFFECT_CAPACITY: 4, WGPU_SPAWNED_JOB_ROUNDS: 2,
+    scanTypedOperationPages, wireTurnStatusTag, createTurnOutcomeBroadcast: () => ({ push() {}, stream: null }),
+    drainTypedOperationBatches: async (_budget: number, _live: unknown, step: () => Promise<unknown>) => { await step(); return { polls: 1, stopped: "idle" }; },
+    serializeWgpuActorCall: (_actor: string, work: () => Promise<unknown>) => work(), yieldWgpuUi: async () => {},
+    getShardClient: () => ({}), takeSpawnedJobs: () => [], forgetSpawnedJobs: () => {}, shellFrameBytes: () => null,
+    pendingTurnEffects: new Map(), stashLeftoverHostEffects: () => {},
+    submitTurn: async (_actor: string, events: unknown[]) => { submitted.push(events); return { status: "idle", uiPatches: [], effects: [], deferredEvents: 0 }; },
+  };
+  const create = new Function(...Object.keys(ports), program + ";return createTurnDrivers;")(...Object.values(ports));
+  const driver = create({ requireUiRoute: () => ({ lifecycle: { activation: {} }, accept: async () => [] }), requireActorId: () => "actor", executeFor: () => undefined, state: {}, closingInstances: new Set(), actorIdByInstance: new Map([[7, "actor"]]), pluginId: "fixture" });
+  await driver.drainTypedOperations(7, [ack]);
+  expect(submitted).toEqual([[ack]]);
+});

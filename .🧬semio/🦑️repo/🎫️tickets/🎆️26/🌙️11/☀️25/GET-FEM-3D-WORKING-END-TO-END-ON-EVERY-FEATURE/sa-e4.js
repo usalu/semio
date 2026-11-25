@@ -1,0 +1,12 @@
+const o={};
+o.boot=await until(async()=>/Case: dead/.test(await txt()),150000,3000);
+globalThis.__hx=[];
+await openForm("addSolid");
+await runForm("addSolid",{materialId:"nonexistent",x:"0",y:"0",width:"1",depth:"1",height:"1"});
+await page.waitForTimeout(3000);
+o.hxSolid=__hx.slice();
+const n=__hx.length;
+await closeAct(); await page.waitForTimeout(500);
+await actClick("clearSelection"); await page.waitForTimeout(2500);
+o.hxClear=__hx.slice(n);
+return o;

@@ -1,0 +1,11 @@
+--- a/🧰️framework/🔨️modules/🧵️job/⏱️context/🦀️.rs
++++ b/🧰️framework/🔨️modules/🧵️job/⏱️context/🦀️.rs
+@@ -353,7 +353,7 @@
+     pub fn with_original_source_effect<R>(&mut self,grant:RetainedCloneGrant,run:impl FnOnce(&mut Self,&mut semio_framework_value_control_contract::RetainedAllocationEffect<'_>)->R)->Result<Option<(R,u128)>,ValueError>{let turn=self.original_source_turn_identity().ok_or_else(||ValueError::invariant("original Source turn is absent"))?;self.with_original_effect_at(Some(turn),grant,run)}
+     fn with_original_effect_at<R>(&mut self,source:Option<OriginalSourceTurnIdentity>,grant:RetainedCloneGrant,run:impl FnOnce(&mut Self,&mut semio_framework_value_control_contract::RetainedAllocationEffect<'_>)->R)->Result<Option<(R,u128)>,ValueError>{
+         use semio_framework_value_control_contract::{OriginalWork,OriginalWorkAuthority,OriginalWorkSink,RetainedAllocationEffect};
+-        let fuel=self.fuel_remaining;let maximum=fuel;let retirement=self.original_retirement;let deadline=self.deadline_us;let now=self.now_us;
++        let fuel=self.fuel_remaining();let maximum=fuel;let retirement=self.original_retirement;let deadline=self.deadline_us;let now=self.now_us;
+         let mut ready=move||retirement||now().is_some_and(|value|value<deadline);
+         let mut authority=OriginalWorkAuthority::new(semio_framework_job_receiving::OriginalJobWorkDriver);
+         let result=authority.with_loan(&mut semio_framework_job_receiving::OriginalJobWorkRecipient::new(&fuel,&mut ready).with_source(source),|loan|{

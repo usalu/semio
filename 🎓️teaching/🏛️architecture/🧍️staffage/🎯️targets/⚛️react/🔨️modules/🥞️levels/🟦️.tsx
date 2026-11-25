@@ -3,6 +3,7 @@
  * The reference experience of the course site is reused as is — glass veil, pointer parallax, hover reveal, swipe on phones, Escape to the parent. This module only supplies what the archive decides:
  * the cards, the grid they stand on, the layout mode for larger screens, the one pointer shared by every nested grid, and the address as the single source of the opened page.
  * Only the deepest grid handles input; the grids behind it stay live and inert.
+ * Only a grid on the reader's path mounts pages: the grid the reader is on warms up to its budget, a grid with an opened page keeps what it holds, and a grid behind the glass mounts none of its own, so the pages of an idle overview are bounded by one budget and not by one per nested grid.
  *
  * @see ../../../../../../🧰️framework/🔨️modules/🖱️ui/🧱️elements/🥞️LayeredOverview/🟦️.tsx — the element
  * @see ../../../../../../🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/🏠️home/🟦️.tsx — the reference use
@@ -153,7 +154,7 @@ export function Level(props: LevelProps): ReactElement {
         camera={interactive ? undefined : inherited}
         onCameraChange={interactive ? (point) => bus?.publish(point) : undefined}
         onOpenedIdChange={onOpen}
-        lifecycle={{ budget }}
+        lifecycle={{ budget: interactive || openedId !== null ? budget : 0 }}
         reducedMotion={reducedMotion ? "always" : "never"}
         labels={{
           grid: label,

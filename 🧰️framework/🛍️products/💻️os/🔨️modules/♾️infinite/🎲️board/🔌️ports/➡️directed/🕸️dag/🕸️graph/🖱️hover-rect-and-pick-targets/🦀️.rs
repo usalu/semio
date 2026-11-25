@@ -75,7 +75,7 @@ pub fn dag_pick_targets_at_screen_json(viewport: &DagViewportState, graph: &DagG
     };
     let handle_row = |id, generality| graph.decode_channel_ref(id).map(|channel| Row {
         domain: "handle".into(),
-        id: format!("{}@{}", channel.widget_id, channel.port),
+        id: semio_os_infinite_directed_presentation::dag_endpoint(&channel.widget_id, &channel.port),
         generality,
         label: Some(format!("{} · {}", channel.widget_id, channel.port)),
         channel: Some(channel),

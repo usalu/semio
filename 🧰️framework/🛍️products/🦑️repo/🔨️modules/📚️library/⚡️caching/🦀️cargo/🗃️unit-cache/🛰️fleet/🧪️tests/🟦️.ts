@@ -12,9 +12,10 @@ import {stretchedBudgetMillisecondsV1} from "../../../../../../../../../🔨️m
 import {cargoScratchBaseV1} from "../../🧪️tests/🏖️scratch/🟦️.ts";
 import {drainUploadsV1,spoolLengthV1} from "../📤️uploader/🟦️.ts";
 import {createFleetClientV1,readFleetSettingsV1} from "../📡️client/🟦️.ts";
-import {obtainFleetUnitV1,type FleetUnitV1} from "../🟦️.ts";
+import {explainFleetMissV1,keyComponentsOfV1,obtainFleetUnitV1,type FleetUnitV1} from "../🟦️.ts";
 import {FLEET_POLICY_V1} from "../🪪️identity/🟦️.ts";
-import {decodeActionResultV1,encodeActionResultV1,parseRemoteUnitV1,readUnitSlotV1,wireDigestOfV1} from "../📦️wire/🟦️.ts";
+import {decodeActionResultV1,encodeActionResultV1,packUnitV1,parseRemoteUnitV1,readUnitSlotV1,wireDigestOfV1,type RemoteUnitV1} from "../📦️wire/🟦️.ts";
+import {portableRootsV1} from "../🪪️identity/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import unitSchema from "../../🧬️schema/🔣️.json" with {type:"json"};
 process.env.SEMIO_UNIT_CACHE_UPLOADER_IDLE_MS="1500";
@@ -71,9 +72,14 @@ async function settled(m:Machine,environment:Record<string,string|undefined>):Pr
   if(result!=="busy"&&spoolLengthV1(m.cache)===0)return;
   await new Promise(done=>setTimeout(done,150));
  }
- throw Error("uploads did not settle");
+ throw Error("uploads did not settle: "+uploaderState(m));
 }
-const waitForUploader=async(m:Machine)=>{const deadline=Date.now()+stretchedBudgetMillisecondsV1(60000);while(Date.now()<deadline){if(spoolLengthV1(m.cache)===0&&!existsSync(join(m.cache,fleet.layout.state,"uploader.lock")))return;await new Promise(done=>setTimeout(done,200));}throw Error("the upload worker did not finish");};
+function uploaderState(m:Machine):string{
+ const state=join(m.cache,fleet.layout.state),spool=join(state,fleet.layout.spool),waiting=existsSync(spool)?readdirSync(spool).filter(name=>name.endsWith(".json")).map(name=>{const job=JSON.parse(readFileSync(join(spool,name),"utf8")) as {crate:string;attempts?:number;notBeforeMs?:number;deferredBy?:string};return `${job.crate} try ${job.attempts??0} due ${Math.round(((job.notBeforeMs??0)-Date.now())/1000)} s${job.deferredBy===undefined?"":" deferred"}`;}):[];
+ let holder="none";try{const pid=(JSON.parse(readFileSync(join(state,"uploader.lock"),"utf8")) as {pid:number}).pid;let alive=true;try{process.kill(pid,0);}catch{alive=false;}holder=`pid ${pid} ${alive?"alive":"gone"}, beat ${Math.round(Date.now()-statSync(join(state,"uploader.lock")).mtimeMs)} ms ago`;}catch{}
+ return "waiting: "+(waiting.join("; ")||"none")+" | lock holder: "+holder+" | last uploader events: "+events(m,"uploader").slice(-6).map(row=>row.crate+" "+(row.reason??row.kind)).join("; ");
+}
+const waitForUploader=async(m:Machine)=>{const deadline=Date.now()+stretchedBudgetMillisecondsV1(60000);while(Date.now()<deadline){if(spoolLengthV1(m.cache)===0&&!existsSync(join(m.cache,fleet.layout.state,"uploader.lock")))return;await new Promise(done=>setTimeout(done,200));}throw Error("the upload worker did not finish: "+uploaderState(m));};
 
 test("the schema is closed and the manifest, platform, spool job and counters validate against it",()=>{
  const ajv=new Ajv({strict:false});ajv.addSchema(schema);
@@ -82,6 +88,11 @@ test("the schema is closed and the manifest, platform, spool job and counters va
  expect(validator("Platform")(platform)).toBe(true);expect(validator("Platform")({...platform,extra:1})).toBe(false);
  const unit={version:1,key:"b".repeat(64),localKey:"c".repeat(64),slot:"d".repeat(64),crate:"core",platform,createdMs:1,costMs:2,dependencies:[{path:"src/lib.rs",sha256:"e".repeat(64)}],environment:[{name:"CARGO_PKG_NAME",value:"core"}],outputs:[{name:"libcore.rlib",sha256:"f".repeat(64),bytes:3,executable:false}],stdout:null,stderr:null};
  expect(validator("RemoteUnit")(unit)).toBe(true);expect(validator("RemoteUnit")({...unit,outputs:[]})).toBe(false);
+ const components={origin:"m-1",components:{source:"a".repeat(16),"args.codegen":"b".repeat(16)},values:{"args.codegen":"-C=lto=off"}};
+ expect(validator("RemoteUnit")({...unit,keyComponents:components})).toBe(true);expect(validator("RemoteUnit")({...unit,keyComponents:{...components,components:{source:"zz"}}})).toBe(false);
+ expect(parseRemoteUnitV1(new TextEncoder().encode(JSON.stringify({...unit,keyComponents:components})),{key:unit.key}).keyComponents?.origin).toBe("m-1");
+ expect(()=>parseRemoteUnitV1(new TextEncoder().encode(JSON.stringify({...unit,keyComponents:{origin:"m",components:{source:"not hex"}}})),{key:unit.key})).toThrow();
+ expect(validator("SlotKeys")({slot:"a".repeat(64),keys:[{key:"b".repeat(64),storedAtMs:1}]})).toBe(true);expect(validator("SlotKeys")({slot:"a",keys:[]})).toBe(false);
  expect(parseRemoteUnitV1(new TextEncoder().encode(JSON.stringify(unit)),{key:unit.key}).crate).toBe("core");
  expect(()=>parseRemoteUnitV1(new TextEncoder().encode(JSON.stringify(unit)),{key:"0".repeat(64)})).toThrow();
  expect(()=>parseRemoteUnitV1(new TextEncoder().encode(JSON.stringify({...unit,outputs:[{...unit.outputs[0],name:"../x"}]})),{key:unit.key})).toThrow();
@@ -339,3 +350,36 @@ test("the contract's timeoutSeconds and retries bound every call and the ride-th
   }
  }finally{stub.stop(true);}
 },30000);
+
+test("the key components of one unit are equal under two checkout paths and name the input that differs",()=>{
+ const input=(source:string,args:string[])=>({toolchain:"rustc 1.99.0-nightly",normalized:args,sourceSha256:source,externs:[{name:"core",sha256:"c".repeat(64)}],environment:[["CARGO_PKG_NAME","itoa"],["CARGO_MANIFEST_DIR",""]] as [string,string][]});
+ const platform={version:1 as const,os:"darwin" as const,arch:"arm64",host:"aarch64-apple-darwin",rustc:"a".repeat(64),toolchain:"t",linker:"",cpu:""};
+ const at=(root:string,source:string,extra:string[]=[])=>keyComponentsOfV1(input(source,["--crate-name=itoa","--edition=2021","-C","codegen-units=256","--remap-path-prefix="+root+"/ws=ws",root+"/ws/src/lib.rs",...extra]),portableRootsV1({cwd:root+"/ws",workspace:root+"/ws"}),platform)!;
+ const one=at("/Users/a/Documents/semio","1".repeat(64)),two=at("/Volumes/b/work/semio","1".repeat(64));
+ expect(two.components).toEqual(one.components);expect(JSON.stringify(one)).not.toContain("/Users/a");
+ expect(Object.keys(one.components)).toEqual(expect.arrayContaining(["toolchain","source","platform","extern:core","env:CARGO_PKG_NAME","args.codegen"]));
+ const edited=at("/Users/a/Documents/semio","2".repeat(64),["-C","debug-assertions=on"]);
+ expect(Object.keys(edited.components).filter(name=>edited.components[name]!==one.components[name]).sort()).toEqual(["args.codegen","source"]);
+});
+
+test("the cache lists the action results of a slot newest first and a lookup miss names the stored unit it is nearest to and the inputs that differ",async()=>{
+ const server=await serve(),settings=readFleetSettingsV1(directory("explain"),{SEMIO_REMOTE_CACHE_ENDPOINT:server.url,SEMIO_REMOTE_CACHE_INSTANCE:"main",SEMIO_REMOTE_CACHE_ACCESS:"read-write",SEMIO_REMOTE_CACHE_TOKEN:"w-token"})!,client=createFleetClientV1(settings);
+ const platform={version:1 as const,os:"darwin" as const,arch:"arm64",host:"aarch64-apple-darwin",rustc:"a".repeat(64),toolchain:"t",linker:"",cpu:""},slot="5".repeat(64),otherSlot="6".repeat(64);
+ const parts={source:"1".repeat(16),toolchain:"2".repeat(16),platform:"3".repeat(16),"args.codegen":"4".repeat(16)};
+ const publish=async(key:string,origin:string,components:Record<string,string>,into=slot)=>{
+  const bytes=new TextEncoder().encode("rlib "+key),hash=createHash("sha256").update(bytes).digest("hex"),unit:RemoteUnitV1={version:1,key,localKey:key,slot:into,crate:"itoa",platform,createdMs:1,costMs:1,dependencies:[],environment:[],outputs:[{name:"libitoa.rlib",sha256:hash,bytes:bytes.length,executable:false}],stdout:null,stderr:null,keyComponents:{origin,components}};
+  const upload=packUnitV1(unit,new Map([[hash,bytes]]));
+  for(const [digest,blob] of upload.blobs)expect(await client.putBlob(digest,blob)).toBe(true);
+  expect(await client.putResult(key,upload.result,into)).toBe(true);await new Promise(done=>setTimeout(done,15));
+ };
+ await publish("a".repeat(64),"m-2",{...parts,"args.codegen":"9".repeat(16)});
+ await publish("b".repeat(64),"m-3",{...parts,source:"8".repeat(16),"args.codegen":"9".repeat(16)});
+ await publish("c".repeat(64),"m-4",parts,otherSlot);
+ expect((await client.slotKeys!(slot))!.map(row=>row.key)).toEqual(["b".repeat(64),"a".repeat(64)]);
+ expect((await client.slotKeys!("7".repeat(64)))).toEqual([]);
+ const unit={client,key:"d".repeat(64),slot,keyComponents:{origin:"m-1",components:parts}} as unknown as FleetUnitV1;
+ const nearest=await explainFleetMissV1(unit);
+ expect(nearest).toEqual({key:"a".repeat(64),origin:"m-2",differs:["args.codegen"]});
+ expect(await explainFleetMissV1({...unit,keyComponents:undefined} as unknown as FleetUnitV1)).toBeUndefined();
+ expect(await explainFleetMissV1({...unit,slot:"7".repeat(64)} as unknown as FleetUnitV1)).toBeUndefined();
+},60000);

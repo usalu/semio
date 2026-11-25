@@ -5,7 +5,7 @@ export const FLOW_MAX_PAGE_BYTES = 65_536;
 export const FLOW_MAX_TRANSFER_BYTES = 16_777_216;
 export const FLOW_MAX_ENCODED_MESSAGE_BYTES = FLOW_MAX_REQUEST_BYTES + 32;
 export const FLOW_MAX_IN_FLIGHT = 256;
-export const FLOW_RETAINED_GRANT = Object.freeze({maximumItems:1,maximumCopyBytes:4096,maximumCapacityBytes:0xffff_ffff,maximumReleaseBytes:0xffff_ffff,maximumDepth:4096});
+export const FLOW_RETAINED_GRANT = Object.freeze({maximumItems:1,maximumCopyBytes:FLOW_MAX_REQUEST_BYTES,maximumCapacityBytes:0xffff_ffff,maximumReleaseBytes:0xffff_ffff,maximumDepth:4096});
 
 export const FlowOperation = Object.freeze({
   open:2500,vcsCheckpoint:2501,vcsFault:2502,vcsRetryCheckpoint:2503,catalogueJson:2504,setCatalogueJson:2505,setNeuronKindInfosJson:2506,addInputPort:2507,removeInputPort:2508,addOutputPort:2509,removeOutputPort:2510,connectPorts:2511,compiledWireLiteral:2512,applyEvalOutputsJson:2513,setComputingProgress:2514,setNodeStatuses:2515,clearComputingWidgetIds:2516,previewText:2517,selectedWidgetIds:2518,selectedEdgeIds:2519,selectionDomainsJson:2520,hoveredWidgetId:2521,hoveredChannelJson:2522,selectedChannelsJson:2523,previewOffWidgetIds:2524,setSelection:2525,setHover:2526,setHoverChannel:2527,setSelectedChannels:2528,setPreviewOff:2529,togglePreview:2530,collapseSelection:2531,explodeCluster:2532,takePendingExportClick:2533,exportPayloadJson:2534,takePendingClusterExplode:2535,setSliderValue:2536,sliderOverlayStateJson:2537,setNoteText:2538,beginNoteEdit:2539,noteInsertText:2540,noteBackspace:2541,noteDeleteForward:2542,noteMoveCaret:2543,noteCommitEdit:2544,setNoteCaretVisible:2545,setImageSrc:2546,schemasJson:2547,setVariableName:2548,setVariableSchema:2549,addWidget:2550,setGhostWidget:2551,clearGhostWidget:2552,removeWidget:2553,moveWidget:2554,insertBetween:2555,makeSpace:2556,setNeuronParams:2557,connect:2558,disconnect:2559,undo:2560,redo:2561,canUndo:2562,canRedo:2563,worldFromScreen:2564,setCamera:2565,viewport:2566,wheelScreen:2567,setWheelZoomActive:2568,lodScaleJson:2569,setAutomaticLod:2570,setProximityDistance:2571,setForcedDrawLodLabel:2572,drawLodLabel:2573,labelOverlayPaintStateJson:2574,attachSurface:2575,surfaceStatus:2576,gpuReady:2577,setSize:2578,setCanvasThemeJson:2579,reorganize:2580,renderFrame:2581,pointerDownScreen:2582,pointerMoveScreen:2583,pickTargetsAtScreenJson:2584,entityScreenJson:2585,widgetDragActive:2586,pointerUpScreen:2587,setSelectionOptions:2588,selectionPreviewPointsJson:2589,selectionPreviewCrossing:2590,selectionPreviewMethod:2591,selectionUnionBoundsScreenJson:2592,alignSelection:2593,preselectWidgetIdsJson:2594,cancelAreaSelect:2595,deleteSelection:2596,hasSelection:2597,selectAll:2598,tessellate:2599,renderDrawingScene:2600,exportDrawingSvg:2601,exportDrawingPdf:2602,traceDrawingBitmap:2605,booleanDrawingSegments:2606,dispose:2607,pointerCancelScreen:2608,snapshotJson:2609,synchronizeSnapshotJson:2610,
@@ -424,19 +424,20 @@ export function decodeFlowMessage(bytes) {
 }
 
 class Writer {
-  constructor() { this.values = []; }
-  u8(value) { this.values.push(unsigned(value, 0xff, "u8")); }
+  constructor() { this.chunks = []; this.length = 0; }
+  append(bytes) { this.chunks.push(bytes); this.length += bytes.length; }
+  u8(value) { this.append(Uint8Array.of(unsigned(value, 0xff, "u8"))); }
   u16(value) { this.number(2, (v) => v.setUint16(0, value, true)); }
   u32(value) { this.number(4, (v) => v.setUint32(0, unsigned(value, 0xffff_ffff, "u32"), true)); }
   u64(value) { this.number(8, (v) => v.setBigUint64(0, unsigned64(value), true)); }
   f64(value) { if (!Number.isFinite(value)) throw new Error("Flow number must be finite"); this.number(8, (v) => v.setFloat64(0, value, true)); }
   bool(value) { this.u8(value ? 1 : 0); }
-  bytes(value) { this.u32(value.length); this.values.push(...value); }
+  bytes(value) { this.u32(value.length); this.append(value); }
   text(value) { this.bytes(encoder.encode(value)); }
   optionalText(value) { if (value === undefined || value === null) this.u8(0); else { this.u8(1); this.text(required(value, "optional", "string")); } }
   handle(value) { this.u32(value.slot); this.u32(value.generation); }
-  number(length, write) { const bytes = new Uint8Array(length); write(new DataView(bytes.buffer)); this.values.push(...bytes); }
-  finish() { return Uint8Array.from(this.values); }
+  number(length, write) { const bytes = new Uint8Array(length); write(new DataView(bytes.buffer)); this.append(bytes); }
+  finish() { return join(this.chunks, this.length); }
 }
 
 class Reader {

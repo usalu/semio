@@ -13,7 +13,7 @@ export type EffectDispatchOne = (action: string, args?: Record<string, unknown>)
 /** 🎯️ Encodes a host-effect callback as the same fully scoped JSON `ActionInvocation` every other
  * renderer action uses; pack-base64 belongs inside the worker channel, never at `handleAction`'s edge. */
 export function encodeEffectActionInvocation(baseSession: ActiveSession, action: string, args?: Record<string, unknown>): string {
-  return JSON.stringify(hostEffectInvocationV1(effectDispatchScope(baseSession), [], action, args).invocation);
+  return JSON.stringify(hostEffectInvocationV1(effectDispatchScope(baseSession), [], action, args, baseSession.viewState.windowInstances).invocation);
 }
 
 /** 🎯️ Encodes a recursively requested app command with its manifest owner. */
@@ -37,7 +37,7 @@ function effectDispatchScope(baseSession: ActiveSession): HostEffectDispatchScop
 /** 🎛️ Resolves the declared app command or exact window action a host callback should invoke. */
 export function ownedEffectInvocationV1(baseSession: ActiveSession, action: string, args?: Record<string, unknown>) {
   const commands = (baseSession.app.commands ?? []).some(command => command.id === action) ? [action] : [];
-  return hostEffectInvocationV1(effectDispatchScope(baseSession), commands, action, args).invocation;
+  return hostEffectInvocationV1(effectDispatchScope(baseSession), commands, action, args, baseSession.viewState.windowInstances).invocation;
 }
 
 /** 🔁️ Builds an {@link EffectDispatchOne} bound to one plugin instance + `applyHostEffects` closure;
@@ -70,11 +70,12 @@ export function makeEffectDispatchOne(
   return async (action, args) => {
     if (!isCurrent()) return;
     const viewState = resolveViewState(baseSession);
+    const targetSession = { ...baseSession, viewState };
     const isAppCommand = (baseSession.app.commands ?? []).some((command) => command.id === action);
     const response = isAppCommand && pluginEntry.handle.handleCommand
-      ? await pluginEntry.handle.handleCommand(baseSession.instanceId, encodeEffectCommandInvocation(baseSession, action, args), viewState, dispatch)
-      : await pluginEntry.handle.handleAction(baseSession.instanceId, encodeEffectActionInvocation(baseSession, action, args), viewState, dispatch);
-    if (isCurrent()) await applyEffects(response.requestedEffects ?? [], { ...baseSession, viewState }, resolveUiDirtyScope(response.uiScope));
+      ? await pluginEntry.handle.handleCommand(baseSession.instanceId, encodeEffectCommandInvocation(targetSession, action, args), viewState, dispatch)
+      : await pluginEntry.handle.handleAction(baseSession.instanceId, encodeEffectActionInvocation(targetSession, action, args), viewState, dispatch);
+    if (isCurrent()) await applyEffects(response.requestedEffects ?? [], targetSession, resolveUiDirtyScope(response.uiScope));
   };
 }
 //#endregion ShellHelpers

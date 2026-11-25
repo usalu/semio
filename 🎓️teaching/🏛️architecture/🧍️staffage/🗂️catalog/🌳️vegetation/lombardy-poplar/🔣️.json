@@ -1530,7 +1530,7 @@
     "en": "A mature Lombardy poplar (Populus nigra 'Italica'): a single straight stem carrying steeply ascending, fastigiate branches in tiers that form a narrow, flame-shaped column of foliage down to about 3 m above the ground.",
     "de": "Eine ausgewachsene Pyramidenpappel (Populus nigra 'Italica'): ein einzelner, gerader Stamm mit steil aufsteigenden, säulenförmigen Ästen in Stufen, die eine schmale, flammenförmige Laubsäule bis etwa 3 m über dem Boden bilden."
   },
-  "tags": ["tree", "deciduous", "broadleaf", "columnar", "fastigiate", "wind", "transpiration"],
+  "tags": [{"id":"tree","title":{"en":"tree","de":"Baum"}},{"id":"deciduous","title":{"en":"deciduous","de":"laubabwerfend"}},{"id":"broadleaf","title":{"en":"broadleaf","de":"Laubholz"}},{"id":"columnar","title":{"en":"columnar","de":"säulenförmig"}},{"id":"fastigiate","title":{"en":"fastigiate","de":"schmal aufrecht"}},{"id":"wind","title":{"en":"wind","de":"Wind"}},{"id":"transpiration","title":{"en":"transpiration","de":"Transpiration"}}],
   "provenance": {
     "author": "Semio staffage vegetation content worker",
     "method": "handcrafted",

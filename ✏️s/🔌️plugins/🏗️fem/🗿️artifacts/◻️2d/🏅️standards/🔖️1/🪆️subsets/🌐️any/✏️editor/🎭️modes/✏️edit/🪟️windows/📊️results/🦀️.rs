@@ -29,6 +29,7 @@ use semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::modes::edit::win
 use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::fem2d_element_endpoints;
 use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::find_node_2d;
 use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::screen_2d;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::ORIGIN_2D;
 use semio_s_artifact_fem_2d_editor_session::editor::fem2d::session::MountedFieldsView;
 use semio_s_fem_model::ElementResult;
 use semio_s_fem_model::Dof;
@@ -45,7 +46,26 @@ use std::collections::{HashMap, HashSet};
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = "fem2d-results";
 pub const BODY_KEY: &str = "fem2d.play.results";
+const CAPTION_LINE: f64 = 16.0;
+const LEGEND_GAP: f64 = 24.0;
 //#endregion 🔖️Constants
+
+/// 🧭️ Scene-space `(left, top, right)` of the model's nodes, so captions and legends sit beside the
+/// structure instead of on top of it or its reaction read-outs.
+pub fn model_scene_bounds(doc: &Fem2dSnapshot) -> (f64, f64, f64) {
+    doc.nodes.iter().map(|node| screen_2d(node.x, node.y)).fold(None, |bounds: Option<(f64, f64, f64)>, (x, y)| Some(bounds.map_or((x, y, x), |(left, top, right)| (left.min(x), top.min(y), right.max(x))))).unwrap_or((ORIGIN_2D, ORIGIN_2D, ORIGIN_2D))
+}
+
+/// 🏷️ Scene position of caption `row`, counted upward from the line just above the model.
+pub fn caption_position(doc: &Fem2dSnapshot, row: usize) -> (f64, f64) {
+    let (left, top, _) = model_scene_bounds(doc);
+    (left, top - CAPTION_LINE * (row as f64 + 2.0))
+}
+
+fn caption_layer(doc: &Fem2dSnapshot, id: &str, row: usize, content: &str, size: f64) -> Value {
+    let (x, y) = caption_position(doc, row);
+    fem2d_canvas_text_layer(id, x, y, content, size)
+}
 
 //#region 🔖️StressContourHelpers
 /// 🌡️ A filled-triangle Canvas2d path layer (`segments` + `fill`, evenodd) for a contour cell —
@@ -122,16 +142,18 @@ fn clip_by_value(poly: &[ValuedPoint], threshold: f64, keep_above: bool) -> Vec<
 }
 
 /// 🌡️ A stress-contour legend: a small vertical stack of `VON_MISES_BANDS` swatches plus min/max text
-/// labels, anchored near the canvas origin.
-fn von_mises_legend_layers(min: f64, max: f64) -> Vec<Value> {
+/// labels, anchored to the right of the model's scene bounds.
+fn von_mises_legend_layers(doc: &Fem2dSnapshot, min: f64, max: f64) -> Vec<Value> {
+    let (_, top, right) = model_scene_bounds(doc);
+    let left = right + LEGEND_GAP;
     let mut layers = Vec::with_capacity(VON_MISES_BANDS.len() + 2);
     for (i, color) in VON_MISES_BANDS.iter().enumerate() {
-        let y = 20.0 + i as f64 * 14.0;
-        layers.push(filled_triangle_layer(&format!("legend-swatch-{i}-a"), (10.0, y), (26.0, y), (26.0, y + 14.0), color, 1.0));
-        layers.push(filled_triangle_layer(&format!("legend-swatch-{i}-b"), (10.0, y), (26.0, y + 14.0), (10.0, y + 14.0), color, 1.0));
+        let y = top + i as f64 * 14.0;
+        layers.push(filled_triangle_layer(&format!("legend-swatch-{i}-a"), (left, y), (left + 16.0, y), (left + 16.0, y + 14.0), color, 1.0));
+        layers.push(filled_triangle_layer(&format!("legend-swatch-{i}-b"), (left, y), (left + 16.0, y + 14.0), (left, y + 14.0), color, 1.0));
     }
-    layers.push(fem2d_canvas_text_layer("legend-label-min", 30.0, 20.0 + VON_MISES_BANDS.len() as f64 * 14.0, &format!("{min:.1} Pa"), 11.0));
-    layers.push(fem2d_canvas_text_layer("legend-label-max", 30.0, 28.0, &format!("{max:.1} Pa"), 11.0));
+    layers.push(fem2d_canvas_text_layer("legend-label-min", left + 20.0, top + VON_MISES_BANDS.len() as f64 * 14.0, &format!("{min:.1} Pa"), 11.0));
+    layers.push(fem2d_canvas_text_layer("legend-label-max", left + 20.0, top + 8.0, &format!("{max:.1} Pa"), 11.0));
     layers
 }
 //#endregion 🔖️StressContourHelpers
@@ -351,7 +373,7 @@ fn render_mounted(
                 } else {
                     format!("{} {number}: {eigenvalue:.3}", labels.buckling_mode.as_str())
                 };
-                layers.push(fem2d_canvas_text_layer("eigen-result", 10.0, 52.0, &caption, 12.0));
+                layers.push(caption_layer(doc, "eigen-result", 2, &caption, 12.0));
             }
             let status = if matches!(visual.state, semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::modes::edit::windows::model::FemVisualState::FaultedCancelled) { labels.failed.as_str() } else if visual.validated_final { labels.converged.as_str() } else { labels.pending.as_str() };
             let retained = if view.retained { labels.previous_results.as_str() } else { "" };
@@ -360,11 +382,11 @@ fn render_mounted(
             } else {
                 format!("{status} · {} / {} · {} {:.3e} {retained}", visual.progress_completed, visual.progress_total, labels.residual.as_str(), visual.residual_norm)
             };
-            layers.push(fem2d_canvas_text_layer("analysis-progress", 10.0, 20.0, caption.trim_end(), 11.0));
+            layers.push(caption_layer(doc, "analysis-progress", 0, caption.trim_end(), 11.0));
         } else {
-            layers.push(fem2d_canvas_text_layer("analysis-progress", 10.0, 20.0, labels.pending.as_str(), 11.0));
+            layers.push(caption_layer(doc, "analysis-progress", 0, labels.pending.as_str(), 11.0));
         }
-        layers.extend(playback_caption_layer(animation, labels));
+        layers.extend(playback_caption_layer(doc, animation, labels));
         layers
     });
     let layers_json = finish_results_layers(doc, interaction, layers, window_instance_id, active_utility);
@@ -380,9 +402,9 @@ pub fn mode_shape_scale(doc: &Fem2dSnapshot, amplitude: f64) -> f64 {
 
 /// ⏯️ The transport read-out a running window carries in its own corner — silent while stopped, so a
 /// still results window looks exactly as it always did.
-fn playback_caption_layer(animation: &semio_s_fem_app_surface::FemResultsAnimation, labels: &semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::Fem2dLabels) -> Option<Value> {
+fn playback_caption_layer(doc: &Fem2dSnapshot, animation: &semio_s_fem_app_surface::FemResultsAnimation, labels: &semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::Fem2dLabels) -> Option<Value> {
     animation.playing.then(|| {
-        fem2d_canvas_text_layer("playback-caption", 10.0, 36.0, &format!("{} {:.2} · \u{25b6} {} Hz", labels.phase.as_str(), animation.phase, animation.speed), 11.0)
+        caption_layer(doc, "playback-caption", 1, &format!("{} {:.2} · \u{25b6} {} Hz", labels.phase.as_str(), animation.phase, animation.speed), 11.0)
     })
 }
 
@@ -532,7 +554,7 @@ fn static_layers(
         disp_map.insert(d.node_id.clone(), d.values);
     }
     layers.extend(fem2d_deformed_shape_layers(doc, &disp_map, doc.analysis.deformation_scale * amplitude));
-    layers.extend(playback_caption_layer(animation, labels));
+    layers.extend(playback_caption_layer(doc, animation, labels));
 
     layers.extend(reaction_labels(doc, result.reactions.iter().map(|value| (value.node_id.as_str(), value.dof, value.value)), amplitude));
 
@@ -596,7 +618,7 @@ fn static_layers(
                 }
             }
         }
-        layers.extend(von_mises_legend_layers(min, max));
+        layers.extend(von_mises_legend_layers(doc, min, max));
     }
     //#endregion 🔖️StressContour
 
@@ -622,8 +644,8 @@ fn render_modal(
     let mode = with_mode_values(doc, key, ModeKey::Modal(mode_index), |(freq_hz, disp_map)| {
         let mut layers = fem2d_structure_layers_with(doc, "#334155", "#334155", "#334155", interaction);
         layers.extend(fem2d_deformed_shape_layers(doc, disp_map, scale));
-        layers.push(fem2d_canvas_text_layer("modal-caption", 10.0, 20.0, &format!("{} {}: {freq_hz:.3} Hz", labels.mode_shape.as_str(), mode_index + 1), 12.0));
-        layers.extend(playback_caption_layer(animation, labels));
+        layers.push(caption_layer(doc, "modal-caption", 0, &format!("{} {}: {freq_hz:.3} Hz", labels.mode_shape.as_str(), mode_index + 1), 12.0));
+        layers.extend(playback_caption_layer(doc, animation, labels));
         layers
     });
     let layers = match mode {
@@ -664,8 +686,8 @@ fn render_buckling(
     let mode = with_mode_values(doc, key, ModeKey::Buckling(case_id, mode_index), |(factor, disp_map)| {
         let mut layers = fem2d_structure_layers_with(doc, "#334155", "#334155", "#334155", interaction);
         layers.extend(fem2d_deformed_shape_layers(doc, disp_map, scale));
-        layers.push(fem2d_canvas_text_layer("buckling-caption", 10.0, 20.0, &format!("{} {}: {} {factor:.3}", labels.buckling_mode.as_str(), mode_index + 1, labels.factor.as_str()), 12.0));
-        layers.extend(playback_caption_layer(animation, labels));
+        layers.push(caption_layer(doc, "buckling-caption", 0, &format!("{} {}: {} {factor:.3}", labels.buckling_mode.as_str(), mode_index + 1, labels.factor.as_str()), 12.0));
+        layers.extend(playback_caption_layer(doc, animation, labels));
         layers
     });
     let layers = match mode {

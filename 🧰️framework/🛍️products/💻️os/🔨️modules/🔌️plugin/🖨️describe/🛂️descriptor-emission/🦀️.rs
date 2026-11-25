@@ -566,6 +566,7 @@ async fn describe_model_component(wasm_path: &Path, out_dir: &Path, prepare_acto
     if !identity_faults.is_empty() {
         return Err(DescribeError(format!("refusing to write the descriptor of {}: {}", wasm_path.display(), identity_faults.join("; "))));
     }
+    descriptor.manifest.validate_action_sets().map_err(|fault| DescribeError(format!("refusing to write the descriptor of {}: {fault}", wasm_path.display())))?;
     let pairs = declared_artifact_kind_pairs(&descriptor);
     if !pairs.is_empty() {
         if let Err(faults) = first_owned_codec(&runtime, &compiled, &pairs).await {

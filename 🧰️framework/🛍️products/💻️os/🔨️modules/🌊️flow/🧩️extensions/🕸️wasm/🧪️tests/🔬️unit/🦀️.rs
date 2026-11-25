@@ -100,6 +100,7 @@ fn evaluate_round_trips_dictionary() {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct ExtensionInvocationWireFixture {
     capability: String,
+    answer_encoding: String,
     note: String,
     request_fields: Vec<String>,
     optional_request_fields: Vec<String>,
@@ -170,7 +171,7 @@ fn fixture_raw_turn(owner:&mut FixtureRegistry,request:&[u8])->Result<Vec<u8>,se
 }
 fn fixture_pack_tree(bytes:&[u8])->serde_json::Value{let value=semio_os_kernel::pack_rt::decode_wire_value(bytes).unwrap();let logical=serde_json::Value::from(&value);evaluation_retire_cold(value);logical}
 
-fn echo_registry(operator_id: &str, output_channel: &str) -> FixtureRegistry {
+fn echo_registry_source(operator_id: &str, output_channel: &str) -> Registry {
     let mut registry = Registry::new();
     registry.register_operator(
         OperatorInfo {
@@ -187,6 +188,10 @@ fn echo_registry(operator_id: &str, output_channel: &str) -> FixtureRegistry {
         vec![OperatorImpl { schemas: vec![], operator: Box::new(Echo) }],
         &[],
     );
+    registry
+}
+fn echo_registry(operator_id: &str, output_channel: &str) -> FixtureRegistry {
+    let registry = echo_registry_source(operator_id, output_channel);
     let mut fixture=FixtureRegistry {owner:ExtensionEvaluationResources::new(registry),caller:std::sync::Mutex::new(Some(sdk_fixture_caller()))};
     for turn in 0..65536 {
         let source=fixture.caller.get_mut().unwrap().as_mut().unwrap();
@@ -198,7 +203,7 @@ fn echo_registry(operator_id: &str, output_channel: &str) -> FixtureRegistry {
 
 #[test]
 fn the_evaluate_wire_answers_every_fixture_row(){
- let fixture:ExtensionInvocationWireFixture=serde_json::from_str(read_node("🧪️tests/🧫️fixtures/🔁️extension-invocation-wire/🔣️.json")).unwrap();assert_eq!(fixture.capability,"evaluate");assert_eq!(fixture.request_fields,["neuronId","operatorId","inputJson"]);assert_eq!(fixture.envelope_fields,["done","cancellable","phase","unitsDone","unitsTotal","output"]);let mut registry=echo_registry(&fixture.operator_id,&fixture.output_channel);
+ let fixture:ExtensionInvocationWireFixture=serde_json::from_str(read_node("🧪️tests/🧫️fixtures/🔁️extension-invocation-wire/🔣️.json")).unwrap();assert_eq!(fixture.capability,"evaluate");assert_eq!(fixture.answer_encoding,"pack");assert_eq!(fixture.request_fields,["neuronId","operatorId","inputJson"]);assert_eq!(fixture.envelope_fields,["done","cancellable","phase","unitsDone","unitsTotal","output"]);let mut registry=echo_registry(&fixture.operator_id,&fixture.output_channel);
  for row in &fixture.rows{match fixture_raw_turn(&mut registry,row.request_json.as_bytes()){
   Ok(bytes)=>{assert_eq!(row.outcome,"ok");let envelope=fixture_pack_tree(&bytes);assert_eq!(envelope["done"],row.done);assert_eq!(envelope["phase"],row.phase);let output=envelope["output"].as_object().unwrap();assert_eq!(output.keys().cloned().collect::<Vec<_>>(),row.output_keys);assert_eq!(output.values().next().is_some_and(|body|body.as_object().is_some_and(|body|body.is_empty())),row.output_empty);registry.close_owned(bytes);},
   Err(original)=>{assert_eq!(row.outcome,"fault");assert!(original.primary.message().contains(row.fault.as_ref().unwrap()));registry.close_owned(original);}
@@ -226,3 +231,15 @@ fn retained_evaluation_input_preserves_canonical_identity_and_bounded_owned_bind
     let invalid=law["invalidInputText"].as_str().unwrap();assert!(serde_json::from_str::<serde_json::Value>(invalid).unwrap()["bad"].is_array());let mut candidate=EvaluationInputPreparation::new(invalid.into(),dependency_text,"test.echo".into(),"test-v1".into());let mut fault_turns=0;loop {fault_turns+=1;assert!(fault_turns<250000);match candidate.step(1,3,SDK_NORMAL_TEST_POLICY){Ok((None,_))=>{},Err(_)=>break,Ok((Some((value,_)),_))=>{drop(ColdOwner::new(value));panic!("malformed typed input admitted");}}}candidate.cancel();while !candidate.terminal_is_empty(){candidate.close_step(SDK_NORMAL_TEST_POLICY).unwrap();}
 }
 
+
+/// 🔁️ One operator invoked through the real entry answers although every paid turn is a new Source epoch, as the actor lends them.
+#[test]
+fn one_evaluate_invocation_responds_across_new_source_epochs(){
+ use semio_plugin::ExtensionResourceOwner;
+ let fixture:ExtensionInvocationWireFixture=serde_json::from_str(read_node("🧪️tests/🧫️fixtures/🔁️extension-invocation-wire/🔣️.json")).unwrap();let row=&fixture.rows[0];
+ let mut owner=ExtensionEvaluationResources::new(echo_registry_source(&fixture.operator_id,&fixture.output_channel));let mut caller=sdk_fixture_caller();let mut answer=None;
+ for turn in 0..65536u64{let reply=caller.turn(SDK_NORMAL_TEST_POLICY,|cx|{cx.bind_original_source_epoch(turn+1)?;evaluate_invoke_json(&mut owner,row.request_json.as_bytes(),cx).map_err(Into::into)}).unwrap();assert!(reply.refusal.is_none(),"turn {turn}: {:?}",reply.refusal);if let Some(bytes)=reply.payload{answer=Some(bytes);break}}
+ let bytes=answer.expect("one evaluate invocation responded");assert_eq!(fixture_pack_tree(&bytes)["done"],row.done);
+ let mut closing=Some(bytes);owner.begin_close();caller.cancel().cancel_now();for turn in 0..65536u64{if owner.terminal_is_empty()&&closing.is_none(){break}caller.turn(SDK_NORMAL_TEST_POLICY,|cx|{cx.bind_original_source_epoch(100000+turn)?;if owner.terminal_is_empty(){closing.take().map(evaluation_retire_cold);return Ok(())}owner.close_step(cx).map(|_|())}).unwrap()}
+ let stock=caller.stock();caller.retire(stock);
+}

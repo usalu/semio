@@ -5,7 +5,7 @@ use semio_plugin_abi::{ArtifactAnalysis, ArtifactAnalyzer, ArtifactBuilder, Arti
 use semio_plugin_decl_app::{ArtifactApp, NaturalFileDecodeCursor};
 use semio_plugin_decl_surface::{ArtifactEditor, ArtifactViewer};
 use semio_plugin_decl_tool_contract::ArtifactInstanceOperationOwner;
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use semio_plugin_decl_app::tool_contract::{ArtifactOwnedToolJobFactory, ArtifactReservedJob};
 use semio_os_kernel::ArtifactStoreInitializationAuthority;
 use semio_plugin_decl_emission::{AsyncTaskRun, AsyncTaskSource, Emit, ToolCommandCatalog};

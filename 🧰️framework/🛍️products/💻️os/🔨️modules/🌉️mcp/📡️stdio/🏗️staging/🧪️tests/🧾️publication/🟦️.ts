@@ -11,6 +11,7 @@ import vectors from "./🧫️fixtures/🔣️.json";
 import componentCustody from "../🧫️fixtures/component-custody.json";
 import stagingSchema from "../../🧬️schema/🔣️.json";
 import componentSchema from "../../../📦️component-models/🔣️.json";
+import componentModels from "../../../📦️component-models/🧪️tests/🔣️.json";
 
 const mcp = readFileSync(new URL("../../../../🟦️.ts", import.meta.url), "utf8");
 const binary = readFileSync(new URL("../../../../📦️binary/🟦️.ts", import.meta.url), "utf8");
@@ -140,6 +141,39 @@ test("catalog component custody stays live through native stdio with either bina
       expect(readers.size).toBe(0);
       expect(env[modelEnv]).toBe("ambient");
     }
+  } finally { db.close(); }
+});
+
+for (const row of componentModels.launches) test("actual launcher admits models built on demand and fingerprints them: " + row.name, async () => {
+  const owner = declarations(["servePublishedMcpStdioV1"])[0];
+  if (!owner) throw Error("Actual publication owner required");
+  const source = owner.getText(ast).replace(/^\s*const \{[^\n]+await import\([^\n]+$/gmu, "");
+  const modelEnv = componentSchema.definitions.Protocol.const.environment;
+  const db = new Database(":memory:");
+  try {
+    const oracle = db.query("select ?1 is not ?2 refreshed, ?2 is not ?3 built").get(row.atServe, row.atRefresh, row.afterBuild) as { refreshed: number; built: number };
+    expect([Boolean(oracle.refreshed), Boolean(oracle.built)]).toEqual([row.changedAfterRefresh, row.built]);
+    const manifests = [row.atServe, row.atRefresh, row.afterBuild], builds: string[] = [], released: boolean[] = [];
+    let admissions = 0;
+    const components = (_root: string, _invocation: unknown, _phase: unknown, _env: NodeJS.ProcessEnv, consume: (env: NodeJS.ProcessEnv) => Promise<unknown>) => {
+      const manifest = manifests[Math.min(admissions++, manifests.length - 1)];
+      return consume(manifest === null ? {} : { [modelEnv]: manifest });
+    };
+    const probe = { usable: () => true, fingerprint: () => "same", snapshot: (path: string) => path, discard: () => {} };
+    const gateway = async (launch: { stage: (progress: () => void, signal: AbortSignal, serving: () => void) => Promise<number>; changed: () => boolean; models: (model: { pluginId: string; cratePath: string }, progress: () => void, signal: AbortSignal) => Promise<boolean>; env: NodeJS.ProcessEnv }) => {
+      expect(await launch.stage(() => {}, new AbortController().signal, () => {})).toBe(0);
+      expect(launch.changed()).toBe(row.changedAfterRefresh);
+      expect(launch.env[modelEnv]).toBe(row.atRefresh ?? undefined);
+      expect(await launch.models({ pluginId: "note", cratePath: "plugins/note/packages/rust" }, () => {}, new AbortController().signal)).toBe(row.built);
+      expect(builds).toEqual(["note"]);
+      expect(launch.env[modelEnv]).toBe(row.afterBuild);
+      released.push(admissions === 3);
+      return 0;
+    };
+    const actual = new Function("withAdmittedPublishedCargoExecutableV1", "withMcpComponentEnvironmentV1", "readBuildMode", "createRequestedIssuedResourceControlV1", "serveWarmMcpGateway", "withMcpHostDriverPolicy", "requireMcpBinary", "MCP_MANIFEST_REL", "MCP_BINARY_NAME", "MCP_BINARY_TARGET", "MCP_STDIO_BUILD_MODE_V1", "process", "MCP_COMPONENT_MODELS_ENV", compile(source) + ";return servePublishedMcpStdioV1;")(undefined, components, (mode: string) => mode, (_parent: unknown, _time: number, signal: AbortSignal) => ({ signal }), gateway, (args: string[]) => args, () => "independent/semio-os-mcp", "owner/Cargo.toml", "semio-os-mcp", "mcp:build", "prototype", { platform: "linux" }, modelEnv);
+    const env = { SEMIO_OS_MCP_BIN: "independent/semio-os-mcp" };
+    expect(await actual("repo", [], {}, {}, env, undefined, async () => 0, undefined, probe, async (pluginId: string) => { builds.push(pluginId); })).toBe(0);
+    expect(released).toEqual([true]);
   } finally { db.close(); }
 });
 

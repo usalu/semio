@@ -7,28 +7,52 @@ pub(super) fn workspace_binding_required(what: &str) -> GatewayError {
     GatewayError::new(GatewayErrorCode::PluginUnavailable, format!("`{what}` needs a live workspace — bind one with `--folder <path>` or `--hub <url> --space <id>`")).with_details(serde_json::json!({ "bindWith": ["--folder", "--hub"] })).retryable()
 }
 
+const INFERENCE_PAGE_DEFAULT: usize = 20;
+
+const INFERENCE_PAGE_MAX: usize = 100;
+
+/// 📄️ One page of declared services. The full payload contract (input and output schema text) rides only
+/// when the call is already narrowed to one artifact or one service; the roster-wide listing is
+/// metadata, and `inference_get` or `capabilities_describe` return the contract of a single service.
+fn declared_page(mut declared: Vec<DeclaredInference>, arguments: &serde_json::Value, narrowed: bool) -> Result<(Vec<DeclaredInference>, usize, Option<String>), GatewayError> {
+    let window = page_window(arguments, INFERENCE_PAGE_DEFAULT, INFERENCE_PAGE_MAX)?;
+    let total = declared.len();
+    let mut rows: Vec<DeclaredInference> = declared.drain(..).skip(window.offset).take(window.size).collect();
+    if !narrowed {
+        rows.iter_mut().for_each(|row| row.payload = None);
+    }
+    Ok((rows, total, window.next_cursor(total)))
+}
+
 fn inference_list_handler(workspace: Option<&Arc<HeadlessWorkspace>>, arguments: serde_json::Value) -> CallToolResult {
     let Some(workspace) = workspace else {
         return CallToolResult::tool_error(&workspace_binding_required("inference_list"));
     };
-    match arguments.get("artifactId").and_then(serde_json::Value::as_str) {
-        Some(artifact_id) => match declared_inferences_for_artifact(workspace, artifact_id) {
-            Ok((schema, declared)) => {
-                let count = declared.len();
-                let structured = serde_json::json!({ "artifactId": artifact_id, "artifactKind": schema, "declared": declared });
-                CallToolResult::ok(vec![ContentBlock::Text { text: format!("{count} declared inference(s) for {artifact_id}") }], Some(structured))
-            }
-            Err(error) => CallToolResult::tool_error(&error),
-        },
-        None => match declared_inferences_for_workspace(workspace) {
-            Ok(declared) => {
-                let count = declared.len();
-                let structured = serde_json::json!({ "declared": declared });
-                CallToolResult::ok(vec![ContentBlock::Text { text: format!("{count} declared inference(s) in this workspace") }], Some(structured))
-            }
-            Err(error) => CallToolResult::tool_error(&error),
-        },
+    let service = arguments.get("inferenceSchema").and_then(serde_json::Value::as_str);
+    let artifact_id = arguments.get("artifactId").and_then(serde_json::Value::as_str);
+    let listed = match artifact_id {
+        Some(artifact_id) => declared_inferences_for_artifact(workspace, artifact_id).map(|(schema, declared)| (Some(schema), declared)),
+        None => declared_inferences_for_workspace(workspace).map(|declared| (None, declared)),
+    };
+    let (kind, declared) = match listed {
+        Ok(listed) => listed,
+        Err(error) => return CallToolResult::tool_error(&error),
+    };
+    let declared: Vec<DeclaredInference> = declared.into_iter().filter(|item| service.is_none_or(|service| item.inference_schema == service)).collect();
+    let (rows, total, next_cursor) = match declared_page(declared, &arguments, artifact_id.is_some() || service.is_some()) {
+        Ok(page) => page,
+        Err(error) => return CallToolResult::tool_error(&error),
+    };
+    let text = match artifact_id {
+        Some(artifact_id) => format!("{} of {total} declared inference(s) for {artifact_id}", rows.len()),
+        None => format!("{} of {total} declared inference(s) in this workspace", rows.len()),
+    };
+    let mut structured = serde_json::json!({ "declared": rows, "total": total, "nextCursor": next_cursor });
+    if let (Some(artifact_id), Some(kind)) = (artifact_id, kind) {
+        structured["artifactId"] = serde_json::json!(artifact_id);
+        structured["artifactKind"] = serde_json::json!(kind);
     }
+    CallToolResult::ok(vec![ContentBlock::Text { text }], Some(structured))
 }
 
 fn inference_get_handler(workspace: Option<&Arc<HeadlessWorkspace>>, arguments: serde_json::Value) -> CallToolResult {

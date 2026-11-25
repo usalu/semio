@@ -131,6 +131,7 @@ pub enum BcfMutation {
     SetParts(set_parts::SetParts),
 }
 dsl::original_pack_value_operation_receiving!(BcfMutation);
+dsl::artifact_persisted_binary_operation!(BcfMutation);
 
 /// 📇️ Kebab-case spelling of every `BcfMutation` variant, in declaration order -- the exhaustive
 /// mutation catalog `../../🔣️oracle.json`'s `kinds` array is required to match verbatim

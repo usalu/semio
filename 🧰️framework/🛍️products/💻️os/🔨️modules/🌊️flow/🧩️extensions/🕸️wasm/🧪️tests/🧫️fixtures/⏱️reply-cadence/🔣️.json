@@ -1,0 +1,37 @@
+{
+  "defaultUnits": 256,
+  "maximumUnits": 4096,
+  "maximumElapsedUs": 2000000,
+  "cases": [
+    {
+      "name": "default accumulates retained work across polls",
+      "requestedUnits": 0,
+      "startedUs": 100000,
+      "polls": [[16, 105000, false], [239, 150000, false], [1, 160000, true]]
+    },
+    {
+      "name": "a one-unit request publishes after one unit",
+      "requestedUnits": 1,
+      "startedUs": 50,
+      "polls": [[1, 51, true]]
+    },
+    {
+      "name": "an explicit bound can exceed the default",
+      "requestedUnits": 1024,
+      "startedUs": 100000,
+      "polls": [[256, 110000, false], [767, 120000, false], [1, 130000, true]]
+    },
+    {
+      "name": "the work ceiling holds without a wall sample",
+      "requestedUnits": 9000,
+      "startedUs": null,
+      "polls": [[4095, null, false], [1, null, true]]
+    },
+    {
+      "name": "recorded wall time can end a round before the work ceiling",
+      "requestedUnits": 4096,
+      "startedUs": 50,
+      "polls": [[1, 2000049, false], [1, 2000050, true]]
+    }
+  ]
+}

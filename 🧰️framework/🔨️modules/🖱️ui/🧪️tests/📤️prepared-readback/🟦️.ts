@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { chromium } from "playwright";
+import { launchChromium } from "../🌐️chromium-launch/🟦️";
 import sharp from "sharp";
 import { describe, expect, it } from "vitest";
 
@@ -25,7 +25,7 @@ describe("📤️ Prepared target readback", () => {
   });
 
   it("reads exact unaligned rows and encoded sRGB bytes from Chromium WebGPU", async () => {
-    const browser = await chromium.launch({ headless: true, args: ["--enable-unsafe-webgpu", "--use-angle=swiftshader"] });
+    const browser = await launchChromium({ args: ["--enable-unsafe-webgpu", "--use-angle=swiftshader"] });
     try {
       const page = await browser.newPage();
       await page.route("https://renderer.test/**", (route) => route.fulfill({ contentType: "text/html", body: "<!doctype html><title>Prepared target readback</title>" }));

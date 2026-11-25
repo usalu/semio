@@ -112,10 +112,25 @@ async fn plugin_advance_actor_opening<PA:PluginApp>(runtime:&PluginRuntime<PA>,i
  let launch = opening.natural_launch.take();
  let actor=opening.authority.take().ok_or_else(||plugin_internal_fault("original opening actor authority missing"))?;let app=opening.app.take().unwrap();let cell=std::sync::Arc::new(RuntimeAppCell::new(AppInstance{id:instance_id,app,surface_contexts:Default::default()},runtime.mounted_policy));let lease=PluginInstanceCloseLease::from_cell(instance_id,&cell);let owner=semio_plugin_reactor_lifecycle::instance_lifetime::NativeLifetimeOwner::from_lease(slot.cell.lifetime(),lease).expect("preflighted exact native lifetime");slot.cell.install_owner(owner).unwrap_or_else(|_|panic!("preflighted opening owner slot"));instances.insert_admitted(instance_id,cell);actors.insert_admitted(instance_id,actor);if let Some(launch)=launch{slot.install_natural_source_launch(launch);}slot.native_created=true;slot.pending_creation.take();cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);Ok(true)
 }
-/// 🔁️ Resumes the original allocation-bound opening once per supplied caller turn without running its factory again.
+const MAX_OPENING_STEPS_PER_TURN: usize = 64;
+
+/// 🔁️ Keeps one original allocation-bound opening in the caller's quiet slice while it makes paid progress.
 #[doc(hidden)]
-pub async fn plugin_resume_actor_openings<PA:PluginApp>(runtime:&PluginRuntime<PA>,identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{
- let instance={let lifetimes=runtime.guest_lifetimes.try_borrow().map_err(|_|plugin_internal_fault("lifecycle authority busy"))?;lifetimes.pending_opening()};if let Some(instance)=instance{plugin_resume_actor_opening(runtime,instance,identity,cx).await?;}Ok(())
+pub async fn plugin_resume_actor_openings<PA: PluginApp>(
+    runtime: &PluginRuntime<PA>,
+    identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,
+    cx: &mut semio_framework_job::StepContext<'_>,
+    slice_open: impl Fn(bool, bool, &semio_framework_job::StepContext<'_>) -> bool,
+) -> Result<(), semio_framework_job::OriginalTurnFailure> {
+    let instance = runtime.guest_lifetimes.try_borrow().map_err(|_| plugin_internal_fault("lifecycle authority busy"))?.pending_opening();
+    let Some(instance) = instance else { return Ok(()) };
+    for _ in 0..MAX_OPENING_STEPS_PER_TURN {
+        let before = (cx.retained_progress(), cx.original_work_units_spent());
+        let ready = plugin_resume_actor_opening(runtime, instance, identity, cx).await?;
+        let progressed = before != (cx.retained_progress(), cx.original_work_units_spent());
+        if !slice_open(ready, progressed, cx) { break }
+    }
+    Ok(())
 }
 pub async fn plugin_create_app<PA: PluginApp>(runtime: &PluginRuntime<PA>, app_id: &str, actor: protocol::ActorId, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<u32, Fault> {
     plugin_create_app_with_id(runtime, NEXT_INSTANCE_ID.fetch_add(1, Ordering::SeqCst), app_id, actor, identity).await

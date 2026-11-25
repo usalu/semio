@@ -13,24 +13,132 @@
    "de": "Ein gebrauchtes Stagepiano der 2010er-Jahre mit 88 Tasten, 1,33 m lang und 17,5 kg, mit zusammengeklapptem einstrebigem X-Ständer, Haltepedal in Klavierform, 12-V-Netzteil und gepolstertem Softcase, wie es ein Gebrauchtinstrumentenhändler zeigt: gereinigt, die Tasten vergilbt und in den mittleren Oktaven blank gespielt, ein Preisetikett und Klebebandreste auf dem Bedienfeld, abgeschürfte Wangen und Case-Ecken, abgeplatzte Beschichtung am Ständer. Es wird zugezippt im Case von einer Person getragen und auf dem geöffneten Ständer mit den Tasten auf 0,74 m gespielt und nimmt dabei 12 W auf."
   },
   "tags": [
-   "used",
-   "instrument",
-   "music",
-   "second-hand",
-   "keyboard",
-   "stage",
-   "amplification",
-   "stage-piano",
-   "digital-piano",
-   "electrophone",
-   "x-stand",
-   "soft-case",
-   "sustain-pedal",
-   "steel",
-   "nylon",
-   "abs",
-   "electrical",
-   "internal-gain"
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "instrument",
+    "title": {
+     "en": "instrument",
+     "de": "Instrument"
+    }
+   },
+   {
+    "id": "music",
+    "title": {
+     "en": "music",
+     "de": "Musik"
+    }
+   },
+   {
+    "id": "second-hand",
+    "title": {
+     "en": "second-hand",
+     "de": "Second-Hand"
+    }
+   },
+   {
+    "id": "keyboard",
+    "title": {
+     "en": "keyboard",
+     "de": "Tasteninstrument"
+    }
+   },
+   {
+    "id": "stage",
+    "title": {
+     "en": "stage",
+     "de": "Bühne"
+    }
+   },
+   {
+    "id": "amplification",
+    "title": {
+     "en": "amplification",
+     "de": "Verstärkung"
+    }
+   },
+   {
+    "id": "stage-piano",
+    "title": {
+     "en": "stage piano",
+     "de": "Stagepiano"
+    }
+   },
+   {
+    "id": "digital-piano",
+    "title": {
+     "en": "digital piano",
+     "de": "Digitalpiano"
+    }
+   },
+   {
+    "id": "electrophone",
+    "title": {
+     "en": "electrophone",
+     "de": "Elektrophon"
+    }
+   },
+   {
+    "id": "x-stand",
+    "title": {
+     "en": "X stand",
+     "de": "X-Ständer"
+    }
+   },
+   {
+    "id": "soft-case",
+    "title": {
+     "en": "soft case",
+     "de": "Weichtasche"
+    }
+   },
+   {
+    "id": "sustain-pedal",
+    "title": {
+     "en": "sustain pedal",
+     "de": "Haltepedal"
+    }
+   },
+   {
+    "id": "steel",
+    "title": {
+     "en": "steel",
+     "de": "Stahl"
+    }
+   },
+   {
+    "id": "nylon",
+    "title": {
+     "en": "nylon",
+     "de": "Nylon"
+    }
+   },
+   {
+    "id": "abs",
+    "title": {
+     "en": "ABS",
+     "de": "ABS"
+    }
+   },
+   {
+    "id": "electrical",
+    "title": {
+     "en": "electrical",
+     "de": "Elektro"
+    }
+   },
+   {
+    "id": "internal-gain",
+    "title": {
+     "en": "internal gain",
+     "de": "innere Wärmelast"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content (used instruments wave, row 11)",

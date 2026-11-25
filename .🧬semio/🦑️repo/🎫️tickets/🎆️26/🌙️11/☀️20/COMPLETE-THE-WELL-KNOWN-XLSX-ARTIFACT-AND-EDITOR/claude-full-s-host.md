@@ -62,13 +62,18 @@ Then the existing gates against the same host: `repo ./✏️s/🔌️plugins/�
 
 ## Journey verdicts
 
+Run 2026-11-25 17:10 (`🗑️generated/claude-full-s/journey-en.log`, `journey-de.log`) against 6070 with the Space, Stdio and Stdio Office wasm published and activated. The shell boots (`ready:s`), the plugin catalog lists, and the stdio-office wasm of that run predates the XML namespace fix, so every workbook open fails with `xlsx: xml in xl/workbook.xml: unbound XML namespace prefix in attribute xmlns:r`. A re-run after the rebuild is pending (see `claude-standalone-pane.md`, blockers).
+
 | Journey | en | de |
 | --- | --- | --- |
-| Open File (Transitional, Strict) | not run | not run |
-| OS file drop | not run | not run |
-| Subset editors mount | not run | not run |
-| Edit cell, save keeps name, reopen shows edit | not run | not run |
-| Refusal notice for a foreign file | not run | not run |
+| Shell boot and locale | pass | pass |
+| Open File picker (Transitional, Strict) | fail: no `openArtifactFile` rail row without an open document | fail: same |
+| OS file drop (Transitional, Strict) | fail: file-open-failed (xmlns:r defect, fixed in source, wasm pending) | same |
+| Subset editors mount | not reached | not reached |
+| Edit cell, save keeps name, reopen shows edit | not reached | not reached |
+| Refusal notice for a foreign docx, a non-zip and an unknown extension (drop entry) | pass (3 of 3 localized) | pass (3 of 3 localized, German text) |
+| Refusal notice (picker entry) | fail: no `openArtifactFile` rail row | fail: same |
+| Stdio artifact-acceptance browser gate | not run | not run |
 | Hub I/O matrix `stdio-office/xlsx` | not run | n/a (matrix runs `en`) |
 
 ## Files

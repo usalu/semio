@@ -13,15 +13,69 @@
    "de": "Dreißig geschachtelte feuerverzinkte Trapezbleche 35/207, 0,75 mm, 6,00 x 1,07 m, von einem alten Dach genommen: Schraublöcher der alten Befestigung in den Obergurten, die Randrippe an der Traufecke zurückgeschnitten, bewittertes Zink; mit vier Kanthölzern auf vier Unterlegern umreift, an zwei geschnürten Rundschlingen gehoben und das oberste Blech auf vier Pfettenlinien unter Schnee und Windsog wieder eingebaut."
   },
   "tags": [
-   "component",
-   "reclaimed",
-   "steel",
-   "galvanised",
-   "sheet-metal",
-   "roofing",
-   "trapezoidal-sheet",
-   "stack",
-   "timber"
+   {
+    "id": "component",
+    "title": {
+     "en": "component",
+     "de": "Bauteil"
+    }
+   },
+   {
+    "id": "reclaimed",
+    "title": {
+     "en": "reclaimed",
+     "de": "wiederverwendet"
+    }
+   },
+   {
+    "id": "steel",
+    "title": {
+     "en": "steel",
+     "de": "Stahl"
+    }
+   },
+   {
+    "id": "galvanised",
+    "title": {
+     "en": "galvanised",
+     "de": "verzinkt"
+    }
+   },
+   {
+    "id": "sheet-metal",
+    "title": {
+     "en": "sheet metal",
+     "de": "Blech"
+    }
+   },
+   {
+    "id": "roofing",
+    "title": {
+     "en": "roofing",
+     "de": "Dacheindeckung"
+    }
+   },
+   {
+    "id": "trapezoidal-sheet",
+    "title": {
+     "en": "trapezoidal sheet",
+     "de": "Trapezblech"
+    }
+   },
+   {
+    "id": "stack",
+    "title": {
+     "en": "stack",
+     "de": "Stapel"
+    }
+   },
+   {
+    "id": "timber",
+    "title": {
+     "en": "timber",
+     "de": "Holz"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage component authors",
@@ -100,7 +154,7 @@
   },
   "dimensions": {
    "heightM": 0.2795,
-   "widthM": 6.0,
+   "widthM": 6,
    "depthM": 1.2,
    "massKg": 1359.41
   },
@@ -116,8 +170,8 @@
     "densityKgM3": 7850,
     "conductivityWmK": 50,
     "specificHeatJKgK": 460,
-    "elasticModulusPa": 210000000000.0,
-    "strengthPa": 280000000.0,
+    "elasticModulusPa": 210000000000,
+    "strengthPa": 280000000,
     "source": "literature",
     "reference": "ashrae-2021-radiation"
    },
@@ -132,8 +186,8 @@
     "densityKgM3": 450,
     "conductivityWmK": 0.13,
     "specificHeatJKgK": 1600,
-    "elasticModulusPa": 11000000000.0,
-    "strengthPa": 24000000.0,
+    "elasticModulusPa": 11000000000,
+    "strengthPa": 24000000,
     "source": "literature",
     "reference": "en-338"
    },
@@ -177,8 +231,8 @@
       "en": "Yard ground frame (massless)",
       "de": "Lagerplatz-Bezugsrahmen (masselos)"
      },
-     "x": 0.0,
-     "y": 0.0,
+     "x": 0,
+     "y": 0,
      "angleDeg": 0,
      "lengthM": 0,
      "joint": {
@@ -192,19 +246,19 @@
       "en": "Bundle of sheets 1 to 29",
       "de": "Paket der Bleche 1 bis 29"
      },
-     "x": 0.0,
+     "x": 0,
      "y": 0.1,
      "angleDeg": 0,
-     "lengthM": 6.0,
+     "lengthM": 6,
      "joint": {
       "type": "prismatic",
       "axisDeg": 90,
       "minM": 0,
-      "maxM": 2.0
+      "maxM": 2
      },
      "mass": {
       "kg": 1273.525,
-      "comX": 3.0,
+      "comX": 3,
       "comY": 0.0385,
       "distribution": "uniform",
       "source": "literature",
@@ -212,7 +266,7 @@
      },
      "section": {
       "areaM2": 0.027057776000000002,
-      "secondMomentM4": 3.7818899999999995e-06,
+      "secondMomentM4": 0.0000037818899999999995,
       "extremeFibreM": 0.023006,
       "material": "galvanised-steel-weathered",
       "title": {
@@ -235,7 +289,7 @@
      "joint": {
       "type": "prismatic",
       "axisDeg": 90,
-      "minM": -2.0,
+      "minM": -2,
       "maxM": 0
      },
      "mass": {
@@ -248,7 +302,7 @@
      },
      "section": {
       "areaM2": 0.01,
-      "secondMomentM4": 8.333333333000001e-06,
+      "secondMomentM4": 0.000008333333333000001,
       "extremeFibreM": 0.05,
       "material": "softwood-weathered",
       "title": {
@@ -271,7 +325,7 @@
      "joint": {
       "type": "prismatic",
       "axisDeg": 90,
-      "minM": -2.0,
+      "minM": -2,
       "maxM": 0
      },
      "mass": {
@@ -284,7 +338,7 @@
      },
      "section": {
       "areaM2": 0.01,
-      "secondMomentM4": 8.333333333000001e-06,
+      "secondMomentM4": 0.000008333333333000001,
       "extremeFibreM": 0.05,
       "material": "softwood-weathered",
       "title": {
@@ -307,7 +361,7 @@
      "joint": {
       "type": "prismatic",
       "axisDeg": 90,
-      "minM": -2.0,
+      "minM": -2,
       "maxM": 0
      },
      "mass": {
@@ -320,7 +374,7 @@
      },
      "section": {
       "areaM2": 0.01,
-      "secondMomentM4": 8.333333333000001e-06,
+      "secondMomentM4": 0.000008333333333000001,
       "extremeFibreM": 0.05,
       "material": "softwood-weathered",
       "title": {
@@ -343,7 +397,7 @@
      "joint": {
       "type": "prismatic",
       "axisDeg": 90,
-      "minM": -2.0,
+      "minM": -2,
       "maxM": 0
      },
      "mass": {
@@ -356,7 +410,7 @@
      },
      "section": {
       "areaM2": 0.01,
-      "secondMomentM4": 8.333333333000001e-06,
+      "secondMomentM4": 0.000008333333333000001,
       "extremeFibreM": 0.05,
       "material": "softwood-weathered",
       "title": {
@@ -372,8 +426,8 @@
       "en": "Battens, straps, edge protectors and sling chokes",
       "de": "Kanthölzer, Umreifung, Kantenschutz und Schlingenschnürung"
      },
-     "x": 3.0,
-     "y": 0.0,
+     "x": 3,
+     "y": 0,
      "angleDeg": 0,
      "lengthM": 0,
      "joint": {
@@ -384,7 +438,7 @@
      },
      "mass": {
       "kg": 19.72,
-      "comX": 0.0,
+      "comX": 0,
       "comY": 0.0785,
       "distribution": "point",
       "source": "authored-estimate",
@@ -398,10 +452,10 @@
       "en": "Sheet 30, the top sheet that is reinstalled",
       "de": "Blech 30, das oberste, wieder eingebaute Blech"
      },
-     "x": 0.0,
+     "x": 0,
      "y": 0.0435,
      "angleDeg": 0,
-     "lengthM": 6.0,
+     "lengthM": 6,
      "joint": {
       "type": "prismatic",
       "axisDeg": 90,
@@ -410,7 +464,7 @@
      },
      "mass": {
       "kg": 43.915,
-      "comX": 3.0,
+      "comX": 3,
       "comY": 0.011994,
       "distribution": "uniform",
       "source": "literature",
@@ -418,7 +472,7 @@
      },
      "section": {
       "areaM2": 0.000933,
-      "secondMomentM4": 1.3041e-07,
+      "secondMomentM4": 1.3041e-7,
       "extremeFibreM": 0.023006,
       "material": "galvanised-steel-weathered",
       "title": {
@@ -446,14 +500,14 @@
      "mass": {
       "kg": 0.325,
       "comX": 0.36875,
-      "comY": 0.0,
+      "comY": 0,
       "distribution": "uniform",
       "source": "authored-estimate",
       "reference": "en-1492-2"
      },
      "section": {
       "areaM2": 0.0008,
-      "secondMomentM4": 1.7067e-08,
+      "secondMomentM4": 1.7067e-8,
       "extremeFibreM": 0.008,
       "material": "polyester-round-sling",
       "title": {
@@ -481,14 +535,14 @@
      "mass": {
       "kg": 0.325,
       "comX": 0.36875,
-      "comY": 0.0,
+      "comY": 0,
       "distribution": "uniform",
       "source": "authored-estimate",
       "reference": "en-1492-2"
      },
      "section": {
       "areaM2": 0.0008,
-      "secondMomentM4": 1.7067e-08,
+      "secondMomentM4": 1.7067e-8,
       "extremeFibreM": 0.008,
       "material": "polyester-round-sling",
       "title": {
@@ -689,8 +743,8 @@
        "material": "softwood-weathered",
        "hatch": "end-grain",
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.1,
        "h": 0.1
       },
@@ -705,8 +759,8 @@
        "material": "softwood-weathered",
        "hatch": "end-grain",
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.1,
        "h": 0.1
       },
@@ -721,8 +775,8 @@
        "material": "softwood-weathered",
        "hatch": "end-grain",
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.1,
        "h": 0.1
       },
@@ -737,8 +791,8 @@
        "material": "softwood-weathered",
        "hatch": "end-grain",
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.1,
        "h": 0.1
       },
@@ -752,9 +806,9 @@
        "region": "bundle-sheets",
        "material": "galvanised-steel-weathered",
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
-       "w": 6.0,
+       "x": 0,
+       "y": 0,
+       "w": 6,
        "h": 0.077
       },
       {
@@ -772,7 +826,7 @@
          0.03425
         ],
         [
-         6.0,
+         6,
          0.03425
         ]
        ],
@@ -814,7 +868,7 @@
          0.0485
         ],
         [
-         6.0,
+         6,
          0.0485
         ]
        ],
@@ -835,7 +889,7 @@
          0.0635
         ],
         [
-         6.0,
+         6,
          0.0635
         ]
        ],
@@ -851,9 +905,9 @@
        "region": "top-sheet",
        "material": "galvanised-steel-weathered",
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
-       "w": 6.0,
+       "x": 0,
+       "y": 0,
+       "w": 6,
        "h": 0.035
       },
       {
@@ -871,7 +925,7 @@
          0.03425
         ],
         [
-         6.0,
+         6,
          0.03425
         ]
        ],
@@ -1122,7 +1176,7 @@
        "region": "round-slings",
        "material": "polyester-round-sling",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.008,
        "w": 0.7375,
        "h": 0.016
@@ -1137,7 +1191,7 @@
        "region": "round-slings",
        "material": "polyester-round-sling",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.008,
        "w": 0.7375,
        "h": 0.016
@@ -1155,7 +1209,7 @@
        "material": "softwood-weathered",
        "kind": "rect",
        "x": -0.6,
-       "y": 0.0,
+       "y": 0,
        "w": 1.2,
        "h": 0.1
       },
@@ -1170,7 +1224,7 @@
        "material": "softwood-weathered",
        "kind": "rect",
        "x": -0.6,
-       "y": 0.0,
+       "y": 0,
        "w": 1.2,
        "h": 0.1
       },
@@ -1185,7 +1239,7 @@
        "material": "softwood-weathered",
        "kind": "rect",
        "x": -0.6,
-       "y": 0.0,
+       "y": 0,
        "w": 1.2,
        "h": 0.1
       },
@@ -1200,7 +1254,7 @@
        "material": "softwood-weathered",
        "kind": "rect",
        "x": -0.6,
-       "y": 0.0,
+       "y": 0,
        "w": 1.2,
        "h": 0.1
       },
@@ -1616,10 +1670,16 @@
        "region": "round-slings",
        "material": "polyester-round-sling",
        "kind": "rect",
-       "x": -0.025,
-       "y": 0.1785,
-       "w": 0.05,
-       "h": 0.016
+       "x": 0,
+       "y": -0.008,
+       "w": 0.7375,
+       "h": 0.016,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.025,
+        "z1": 0.025
+       }
       },
       {
        "id": "sling-leg-b-end",
@@ -1631,10 +1691,16 @@
        "region": "round-slings",
        "material": "polyester-round-sling",
        "kind": "rect",
-       "x": -0.025,
-       "y": 0.1785,
-       "w": 0.05,
-       "h": 0.016
+       "x": 0,
+       "y": -0.008,
+       "w": 0.7375,
+       "h": 0.016,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.025,
+        "z1": 0.025
+       }
       }
      ],
      "plan": [
@@ -1710,7 +1776,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.5
         ],
         [
@@ -1722,15 +1788,15 @@
          -0.535
         ],
         [
-         6.0,
+         6,
          -0.535
         ],
         [
-         6.0,
+         6,
          0.535
         ],
         [
-         0.0,
+         0,
          0.535
         ]
        ],
@@ -1748,7 +1814,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.5
         ],
         [
@@ -1760,15 +1826,15 @@
          -0.535
         ],
         [
-         6.0,
+         6,
          -0.535
         ],
         [
-         6.0,
+         6,
          0.535
         ],
         [
-         0.0,
+         0,
          0.535
         ]
        ],
@@ -1789,7 +1855,7 @@
          -0.5
         ],
         [
-         6.0,
+         6,
          -0.5
         ]
        ],
@@ -1806,11 +1872,11 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.328
         ],
         [
-         6.0,
+         6,
          -0.328
         ]
        ],
@@ -1827,11 +1893,11 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.293
         ],
         [
-         6.0,
+         6,
          -0.293
         ]
        ],
@@ -1848,11 +1914,11 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.121
         ],
         [
-         6.0,
+         6,
          -0.121
         ]
        ],
@@ -1869,11 +1935,11 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.086
         ],
         [
-         6.0,
+         6,
          -0.086
         ]
        ],
@@ -1890,11 +1956,11 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.086
         ],
         [
-         6.0,
+         6,
          0.086
         ]
        ],
@@ -1911,11 +1977,11 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.121
         ],
         [
-         6.0,
+         6,
          0.121
         ]
        ],
@@ -1932,11 +1998,11 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.293
         ],
         [
-         6.0,
+         6,
          0.293
         ]
        ],
@@ -1953,11 +2019,11 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.328
         ],
         [
-         6.0,
+         6,
          0.328
         ]
        ],
@@ -1974,11 +2040,11 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.5
         ],
         [
-         6.0,
+         6,
          0.5
         ]
        ],
@@ -2105,7 +2171,7 @@
        "tone": 0.2,
        "region": "top-sheet",
        "kind": "ellipse",
-       "cx": 3.0,
+       "cx": 3,
        "cy": -0.5175,
        "rx": 0.00325,
        "ry": 0.00325
@@ -2119,7 +2185,7 @@
        "tone": 0.2,
        "region": "top-sheet",
        "kind": "ellipse",
-       "cx": 3.0,
+       "cx": 3,
        "cy": -0.1035,
        "rx": 0.00325,
        "ry": 0.00325
@@ -2133,7 +2199,7 @@
        "tone": 0.2,
        "region": "top-sheet",
        "kind": "ellipse",
-       "cx": 3.0,
+       "cx": 3,
        "cy": 0.3105,
        "rx": 0.00325,
        "ry": 0.00325
@@ -2544,10 +2610,16 @@
        "region": "round-slings",
        "material": "polyester-round-sling",
        "kind": "rect",
-       "x": 0.75,
-       "y": -0.025,
+       "x": 0,
+       "y": -0.008,
        "w": 0.7375,
-       "h": 0.05
+       "h": 0.016,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.025,
+        "z1": 0.025
+       }
       },
       {
        "id": "sling-leg-b-top",
@@ -2559,10 +2631,16 @@
        "region": "round-slings",
        "material": "polyester-round-sling",
        "kind": "rect",
-       "x": 4.5125,
-       "y": -0.025,
+       "x": 0,
+       "y": -0.008,
        "w": 0.7375,
-       "h": 0.05
+       "h": 0.016,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.025,
+        "z1": 0.025
+       }
       }
      ]
     },
@@ -2628,8 +2706,8 @@
        "region": "bearers",
        "material": "softwood-weathered",
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.1,
        "h": 0.1
       },
@@ -2643,8 +2721,8 @@
        "region": "bearers",
        "material": "softwood-weathered",
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.1,
        "h": 0.1
       },
@@ -2658,8 +2736,8 @@
        "region": "bearers",
        "material": "softwood-weathered",
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.1,
        "h": 0.1
       },
@@ -2673,8 +2751,8 @@
        "region": "bearers",
        "material": "softwood-weathered",
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.1,
        "h": 0.1
       },
@@ -2688,9 +2766,9 @@
        "region": "bundle-sheets",
        "material": "galvanised-steel-weathered",
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
-       "w": 6.0,
+       "x": 0,
+       "y": 0,
+       "w": 6,
        "h": 0.077
       },
       {
@@ -2704,11 +2782,11 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.03425
         ],
         [
-         6.0,
+         6,
          0.03425
         ]
        ],
@@ -2724,9 +2802,9 @@
        "region": "top-sheet",
        "material": "galvanised-steel-weathered",
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
-       "w": 6.0,
+       "x": 0,
+       "y": 0,
+       "w": 6,
        "h": 0.035
       },
       {
@@ -2949,7 +3027,7 @@
        "region": "round-slings",
        "material": "polyester-round-sling",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.008,
        "w": 0.7375,
        "h": 0.016
@@ -2964,7 +3042,7 @@
        "region": "round-slings",
        "material": "polyester-round-sling",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.008,
        "w": 0.7375,
        "h": 0.016
@@ -2982,7 +3060,7 @@
        "material": "softwood-weathered",
        "kind": "rect",
        "x": -0.6,
-       "y": 0.0,
+       "y": 0,
        "w": 1.2,
        "h": 0.1
       },
@@ -2997,7 +3075,7 @@
        "material": "softwood-weathered",
        "kind": "rect",
        "x": -0.6,
-       "y": 0.0,
+       "y": 0,
        "w": 1.2,
        "h": 0.1
       },
@@ -3012,7 +3090,7 @@
        "material": "softwood-weathered",
        "kind": "rect",
        "x": -0.6,
-       "y": 0.0,
+       "y": 0,
        "w": 1.2,
        "h": 0.1
       },
@@ -3027,7 +3105,7 @@
        "material": "softwood-weathered",
        "kind": "rect",
        "x": -0.6,
-       "y": 0.0,
+       "y": 0,
        "w": 1.2,
        "h": 0.1
       },
@@ -3442,10 +3520,16 @@
        "region": "round-slings",
        "material": "polyester-round-sling",
        "kind": "rect",
-       "x": -0.025,
-       "y": 0.1785,
-       "w": 0.05,
-       "h": 0.016
+       "x": 0,
+       "y": -0.008,
+       "w": 0.7375,
+       "h": 0.016,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.025,
+        "z1": 0.025
+       }
       },
       {
        "id": "sling-leg-b-end",
@@ -3457,10 +3541,16 @@
        "region": "round-slings",
        "material": "polyester-round-sling",
        "kind": "rect",
-       "x": -0.025,
-       "y": 0.1785,
-       "w": 0.05,
-       "h": 0.016
+       "x": 0,
+       "y": -0.008,
+       "w": 0.7375,
+       "h": 0.016,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.025,
+        "z1": 0.025
+       }
       }
      ],
      "plan": [
@@ -3536,7 +3626,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.5
         ],
         [
@@ -3548,15 +3638,15 @@
          -0.535
         ],
         [
-         6.0,
+         6,
          -0.535
         ],
         [
-         6.0,
+         6,
          0.535
         ],
         [
-         0.0,
+         0,
          0.535
         ]
        ],
@@ -3574,7 +3664,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.5
         ],
         [
@@ -3586,15 +3676,15 @@
          -0.535
         ],
         [
-         6.0,
+         6,
          -0.535
         ],
         [
-         6.0,
+         6,
          0.535
         ],
         [
-         0.0,
+         0,
          0.535
         ]
        ],
@@ -3615,7 +3705,7 @@
          -0.5175
         ],
         [
-         6.0,
+         6,
          -0.5175
         ]
        ],
@@ -3632,11 +3722,11 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.3105
         ],
         [
-         6.0,
+         6,
          -0.3105
         ]
        ],
@@ -3653,11 +3743,11 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.1035
         ],
         [
-         6.0,
+         6,
          -0.1035
         ]
        ],
@@ -3674,11 +3764,11 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.1035
         ],
         [
-         6.0,
+         6,
          0.1035
         ]
        ],
@@ -3695,11 +3785,11 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.3105
         ],
         [
-         6.0,
+         6,
          0.3105
         ]
        ],
@@ -3716,11 +3806,11 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.5175
         ],
         [
-         6.0,
+         6,
          0.5175
         ]
        ],
@@ -4006,10 +4096,16 @@
        "region": "round-slings",
        "material": "polyester-round-sling",
        "kind": "rect",
-       "x": 0.75,
-       "y": -0.025,
+       "x": 0,
+       "y": -0.008,
        "w": 0.7375,
-       "h": 0.05
+       "h": 0.016,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.025,
+        "z1": 0.025
+       }
       },
       {
        "id": "sling-leg-b-top",
@@ -4021,10 +4117,16 @@
        "region": "round-slings",
        "material": "polyester-round-sling",
        "kind": "rect",
-       "x": 4.5125,
-       "y": -0.025,
+       "x": 0,
+       "y": -0.008,
        "w": 0.7375,
-       "h": 0.05
+       "h": 0.016,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.025,
+        "z1": 0.025
+       }
       }
      ]
     },
@@ -4090,8 +4192,8 @@
        "region": "bearers",
        "material": "softwood-weathered",
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.1,
        "h": 0.1
       },
@@ -4105,8 +4207,8 @@
        "region": "bearers",
        "material": "softwood-weathered",
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.1,
        "h": 0.1
       },
@@ -4120,8 +4222,8 @@
        "region": "bearers",
        "material": "softwood-weathered",
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.1,
        "h": 0.1
       },
@@ -4135,8 +4237,8 @@
        "region": "bearers",
        "material": "softwood-weathered",
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.1,
        "h": 0.1
       },
@@ -4150,9 +4252,9 @@
        "region": "bundle-sheets",
        "material": "galvanised-steel-weathered",
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
-       "w": 6.0,
+       "x": 0,
+       "y": 0,
+       "w": 6,
        "h": 0.0435
       },
       {
@@ -4165,9 +4267,9 @@
        "region": "top-sheet",
        "material": "galvanised-steel-weathered",
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
-       "w": 6.0,
+       "x": 0,
+       "y": 0,
+       "w": 6,
        "h": 0.035
       },
       {
@@ -4332,7 +4434,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.01
         ],
         [
@@ -4354,7 +4456,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.01
         ],
         [
@@ -4377,7 +4479,7 @@
        "material": "softwood-weathered",
        "kind": "rect",
        "x": -0.6,
-       "y": 0.0,
+       "y": 0,
        "w": 1.2,
        "h": 0.1
       },
@@ -4392,7 +4494,7 @@
        "material": "softwood-weathered",
        "kind": "rect",
        "x": -0.6,
-       "y": 0.0,
+       "y": 0,
        "w": 1.2,
        "h": 0.1
       },
@@ -4407,7 +4509,7 @@
        "material": "softwood-weathered",
        "kind": "rect",
        "x": -0.6,
-       "y": 0.0,
+       "y": 0,
        "w": 1.2,
        "h": 0.1
       },
@@ -4422,7 +4524,7 @@
        "material": "softwood-weathered",
        "kind": "rect",
        "x": -0.6,
-       "y": 0.0,
+       "y": 0,
        "w": 1.2,
        "h": 0.1
       },
@@ -4538,6 +4640,78 @@
         ]
        ],
        "closed": true
+      },
+      {
+       "id": "sling-leg-b-end",
+       "bone": "sling-leg-b",
+       "role": "body",
+       "z": 6.5,
+       "filled": false,
+       "tone": 0.34,
+       "region": "round-slings",
+       "material": "polyester-round-sling",
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0.011
+        ],
+        [
+         0.7375,
+         0.011
+        ],
+        [
+         0.7375,
+         0.009
+        ],
+        [
+         0,
+         0.009
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.025,
+        "z1": 0.025
+       }
+      },
+      {
+       "id": "sling-leg-a-end",
+       "bone": "sling-leg-a",
+       "role": "body",
+       "z": 6.5,
+       "filled": false,
+       "tone": 0.34,
+       "region": "round-slings",
+       "material": "polyester-round-sling",
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0.011
+        ],
+        [
+         0.7375,
+         0.011
+        ],
+        [
+         0.7375,
+         0.009
+        ],
+        [
+         0,
+         0.009
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.025,
+        "z1": 0.025
+       }
       }
      ],
      "plan": [
@@ -4611,9 +4785,9 @@
        "region": "bundle-sheets",
        "material": "galvanised-steel-weathered",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.535,
-       "w": 6.0,
+       "w": 6,
        "h": 1.07
       },
       {
@@ -4628,7 +4802,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.5
         ],
         [
@@ -4640,15 +4814,15 @@
          -0.535
         ],
         [
-         6.0,
+         6,
          -0.535
         ],
         [
-         6.0,
+         6,
          0.535
         ],
         [
-         0.0,
+         0,
          0.535
         ]
        ],
@@ -4816,15 +4990,29 @@
        "kind": "poly",
        "points": [
         [
-         0.75,
-         0.0
+         0,
+         0.011
         ],
         [
-         1.4875,
-         0.0
+         0.7375,
+         0.011
+        ],
+        [
+         0.7375,
+         0.009
+        ],
+        [
+         0,
+         0.009
         ]
        ],
-       "closed": false
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.025,
+        "z1": 0.025
+       }
       },
       {
        "id": "sling-leg-b-top",
@@ -4838,15 +5026,29 @@
        "kind": "poly",
        "points": [
         [
-         4.5125,
-         0.0
+         0,
+         0.011
         ],
         [
-         5.25,
-         0.0
+         0.7375,
+         0.011
+        ],
+        [
+         0.7375,
+         0.009
+        ],
+        [
+         0,
+         0.009
         ]
        ],
-       "closed": false
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.025,
+        "z1": 0.025
+       }
       }
      ]
     },
@@ -4912,8 +5114,8 @@
        "region": "bearers",
        "material": "softwood-weathered",
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.1,
        "h": 0.1
       },
@@ -4927,8 +5129,8 @@
        "region": "bearers",
        "material": "softwood-weathered",
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.1,
        "h": 0.1
       },
@@ -4942,8 +5144,8 @@
        "region": "bearers",
        "material": "softwood-weathered",
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.1,
        "h": 0.1
       },
@@ -4957,8 +5159,8 @@
        "region": "bearers",
        "material": "softwood-weathered",
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.1,
        "h": 0.1
       },
@@ -4975,9 +5177,9 @@
        ],
        "material": "galvanised-steel-weathered",
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
-       "w": 6.0,
+       "x": 0,
+       "y": 0,
+       "w": 6,
        "h": 0.0785
       },
       {
@@ -5064,12 +5266,12 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
          0.7375,
-         0.0
+         0
         ]
        ],
        "closed": false
@@ -5086,12 +5288,12 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
          0.7375,
-         0.0
+         0
         ]
        ],
        "closed": false
@@ -5109,7 +5311,7 @@
        "material": "softwood-weathered",
        "kind": "rect",
        "x": -0.6,
-       "y": 0.0,
+       "y": 0,
        "w": 1.2,
        "h": 0.1
       },
@@ -5124,7 +5326,7 @@
        "material": "softwood-weathered",
        "kind": "rect",
        "x": -0.6,
-       "y": 0.0,
+       "y": 0,
        "w": 1.2,
        "h": 0.1
       },
@@ -5139,7 +5341,7 @@
        "material": "softwood-weathered",
        "kind": "rect",
        "x": -0.6,
-       "y": 0.0,
+       "y": 0,
        "w": 1.2,
        "h": 0.1
       },
@@ -5154,7 +5356,7 @@
        "material": "softwood-weathered",
        "kind": "rect",
        "x": -0.6,
-       "y": 0.0,
+       "y": 0,
        "w": 1.2,
        "h": 0.1
       },
@@ -5209,6 +5411,78 @@
         ]
        ],
        "closed": true
+      },
+      {
+       "id": "sling-leg-b-end",
+       "bone": "sling-leg-b",
+       "role": "body",
+       "z": 6.5,
+       "filled": false,
+       "tone": 0.34,
+       "region": "round-slings",
+       "material": "polyester-round-sling",
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0.001
+        ],
+        [
+         0.7375,
+         0.001
+        ],
+        [
+         0.7375,
+         -0.001
+        ],
+        [
+         0,
+         -0.001
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.025,
+        "z1": 0.025
+       }
+      },
+      {
+       "id": "sling-leg-a-end",
+       "bone": "sling-leg-a",
+       "role": "body",
+       "z": 6.5,
+       "filled": false,
+       "tone": 0.34,
+       "region": "round-slings",
+       "material": "polyester-round-sling",
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0.001
+        ],
+        [
+         0.7375,
+         0.001
+        ],
+        [
+         0.7375,
+         -0.001
+        ],
+        [
+         0,
+         -0.001
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.025,
+        "z1": 0.025
+       }
       }
      ],
      "plan": [
@@ -5282,9 +5556,9 @@
        "region": "bundle-sheets",
        "material": "galvanised-steel-weathered",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.535,
-       "w": 6.0,
+       "w": 6,
        "h": 1.07
       },
       {
@@ -5297,9 +5571,9 @@
        "region": "top-sheet",
        "material": "galvanised-steel-weathered",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.535,
-       "w": 6.0,
+       "w": 6,
        "h": 1.07
       },
       {
@@ -5386,15 +5660,29 @@
        "kind": "poly",
        "points": [
         [
-         0.75,
-         0.0
+         0,
+         0.001
         ],
         [
-         1.4875,
-         0.0
+         0.7375,
+         0.001
+        ],
+        [
+         0.7375,
+         -0.001
+        ],
+        [
+         0,
+         -0.001
         ]
        ],
-       "closed": false
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.025,
+        "z1": 0.025
+       }
       },
       {
        "id": "sling-leg-b-top",
@@ -5408,15 +5696,29 @@
        "kind": "poly",
        "points": [
         [
-         4.5125,
-         0.0
+         0,
+         0.001
         ],
         [
-         5.25,
-         0.0
+         0.7375,
+         0.001
+        ],
+        [
+         0.7375,
+         -0.001
+        ],
+        [
+         0,
+         -0.001
         ]
        ],
-       "closed": false
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.025,
+        "z1": 0.025
+       }
       }
      ]
     },
@@ -5484,7 +5786,7 @@
       },
       "bundle-sheets": {
        "exposedFraction": 0.5,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "bearers": {
        "exposedFraction": 0.7,
@@ -5495,11 +5797,11 @@
        "sunlitFraction": 0.5
       },
       "lashing-straps": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.4
       },
       "round-slings": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.4
       }
      },
@@ -5541,7 +5843,7 @@
       },
       "bundle-sheets": {
        "exposedFraction": 0.5,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "bearers": {
        "exposedFraction": 0.7,
@@ -5552,11 +5854,11 @@
        "sunlitFraction": 0.5
       },
       "lashing-straps": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.4
       },
       "round-slings": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.4
       }
      },
@@ -5610,7 +5912,7 @@
       },
       "bundle-sheets": {
        "exposedFraction": 0.6,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "bearers": {
        "exposedFraction": 0.95,
@@ -5621,11 +5923,11 @@
        "sunlitFraction": 0.5
       },
       "lashing-straps": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.4
       },
       "round-slings": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.4
       }
      },
@@ -5641,7 +5943,7 @@
       },
       "anchor": "bearer-1-ground",
       "fxN": 0,
-      "fyN": 53.0,
+      "fyN": 53,
       "source": "authored-estimate",
       "reference": "en-338"
      },
@@ -5654,7 +5956,7 @@
       },
       "anchor": "bearer-2-ground",
       "fxN": 0,
-      "fyN": 53.0,
+      "fyN": 53,
       "source": "authored-estimate",
       "reference": "en-338"
      },
@@ -5667,7 +5969,7 @@
       },
       "anchor": "bearer-3-ground",
       "fxN": 0,
-      "fyN": 53.0,
+      "fyN": 53,
       "source": "authored-estimate",
       "reference": "en-338"
      },
@@ -5680,7 +5982,7 @@
       },
       "anchor": "bearer-4-ground",
       "fxN": 0,
-      "fyN": 53.0,
+      "fyN": 53,
       "source": "authored-estimate",
       "reference": "en-338"
      }
@@ -5714,12 +6016,12 @@
     "thermal": {
      "regions": {
       "top-sheet": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.5
       },
       "bundle-sheets": {
        "exposedFraction": 0.5,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "bearers": {
        "exposedFraction": 0.7,
@@ -5730,11 +6032,11 @@
        "sunlitFraction": 0.3
       },
       "lashing-straps": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.4
       },
       "round-slings": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.4
       }
      },
@@ -5823,12 +6125,12 @@
     "thermal": {
      "regions": {
       "top-sheet": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.5
       },
       "bundle-sheets": {
        "exposedFraction": 0.5,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "bearers": {
        "exposedFraction": 0.7,
@@ -5839,11 +6141,11 @@
        "sunlitFraction": 0.3
       },
       "lashing-straps": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.4
       },
       "round-slings": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.4
       }
      },
@@ -5862,7 +6164,7 @@
       "distributed": {
        "bone": "sheet-30",
        "fromM": 0,
-       "toM": 6.0,
+       "toM": 6,
        "wxNPerM": 0,
        "wyNPerM": -704
       },
@@ -5951,12 +6253,12 @@
     "thermal": {
      "regions": {
       "top-sheet": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.5
       },
       "bundle-sheets": {
        "exposedFraction": 0.5,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "bearers": {
        "exposedFraction": 0.7,
@@ -5967,11 +6269,11 @@
        "sunlitFraction": 0.3
       },
       "lashing-straps": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.4
       },
       "round-slings": {
-       "exposedFraction": 1.0,
+       "exposedFraction": 1,
        "sunlitFraction": 0.4
       }
      },
@@ -5990,7 +6292,7 @@
       "distributed": {
        "bone": "sheet-30",
        "fromM": 0,
-       "toM": 6.0,
+       "toM": 6,
        "wxNPerM": 0,
        "wyNPerM": 621
       },
@@ -6321,7 +6623,7 @@
      "kind": "surface",
      "model": "passive",
      "material": "softwood-weathered",
-     "areaM2": 2.0,
+     "areaM2": 2,
      "characteristicLengthM": 0.1,
      "geometry": "horizontal-plate-up",
      "skyViewFactor": 0.3,
@@ -6443,7 +6745,7 @@
        "translation": [
         0.05,
         0.05,
-        0.0
+        0
        ]
       }
      },
@@ -6463,7 +6765,7 @@
        "translation": [
         0.05,
         0.05,
-        0.0
+        0
        ]
       }
      },
@@ -6483,7 +6785,7 @@
        "translation": [
         0.05,
         0.05,
-        0.0
+        0
        ]
       }
      },
@@ -6503,7 +6805,7 @@
        "translation": [
         0.05,
         0.05,
-        0.0
+        0
        ]
       }
      },
@@ -6608,11 +6910,11 @@
         0.500191
        ],
        [
-        0.0,
+        0,
         0.475191
        ],
        [
-        0.0,
+        0,
         0.352809
        ],
        [
@@ -6624,11 +6926,11 @@
         0.293191
        ],
        [
-        0.0,
+        0,
         0.268191
        ],
        [
-        0.0,
+        0,
         0.145809
        ],
        [
@@ -6640,11 +6942,11 @@
         0.086191
        ],
        [
-        0.0,
+        0,
         0.061191
        ],
        [
-        0.0,
+        0,
         -0.061191
        ],
        [
@@ -6656,11 +6958,11 @@
         -0.120809
        ],
        [
-        0.0,
+        0,
         -0.145809
        ],
        [
-        0.0,
+        0,
         -0.268191
        ],
        [
@@ -6672,11 +6974,11 @@
         -0.327809
        ],
        [
-        0.0,
+        0,
         -0.352809
        ],
        [
-        0.0,
+        0,
         -0.475191
        ],
        [
@@ -6685,8 +6987,8 @@
        ]
       ],
       "plane": "yz",
-      "from": 0.0,
-      "to": 6.0
+      "from": 0,
+      "to": 6
      },
      {
       "id": "sheets-1-29-edge-crest",
@@ -6715,7 +7017,7 @@
       ],
       "plane": "yz",
       "from": 0.15,
-      "to": 6.0
+      "to": 6
      },
      {
       "id": "sheet-30",
@@ -6818,11 +7120,11 @@
         0.500191
        ],
        [
-        0.0,
+        0,
         0.475191
        ],
        [
-        0.0,
+        0,
         0.352809
        ],
        [
@@ -6834,11 +7136,11 @@
         0.293191
        ],
        [
-        0.0,
+        0,
         0.268191
        ],
        [
-        0.0,
+        0,
         0.145809
        ],
        [
@@ -6850,11 +7152,11 @@
         0.086191
        ],
        [
-        0.0,
+        0,
         0.061191
        ],
        [
-        0.0,
+        0,
         -0.061191
        ],
        [
@@ -6866,11 +7168,11 @@
         -0.120809
        ],
        [
-        0.0,
+        0,
         -0.145809
        ],
        [
-        0.0,
+        0,
         -0.268191
        ],
        [
@@ -6882,11 +7184,11 @@
         -0.327809
        ],
        [
-        0.0,
+        0,
         -0.352809
        ],
        [
-        0.0,
+        0,
         -0.475191
        ],
        [
@@ -6895,8 +7197,8 @@
        ]
       ],
       "plane": "yz",
-      "from": 0.0,
-      "to": 6.0,
+      "from": 0,
+      "to": 6,
       "sheet": true
      },
      {
@@ -6926,7 +7228,7 @@
       ],
       "plane": "yz",
       "from": 0.15,
-      "to": 6.0,
+      "to": 6,
       "sheet": true
      },
      {
@@ -6945,7 +7247,7 @@
        "translation": [
         -2.7,
         0.1285,
-        0.0
+        0
        ]
       },
       "repeat": {
@@ -7004,11 +7306,11 @@
       "holes": [
        [
         [
-         0.0,
+         0,
          -0.475
         ],
         [
-         0.0,
+         0,
          0.475
         ],
         [
@@ -7191,11 +7493,11 @@
       "holes": [
        [
         [
-         0.0,
+         0,
          -0.475
         ],
         [
-         0.0,
+         0,
          0.475
         ],
         [
@@ -7219,7 +7521,7 @@
       "repeat": {
        "count": 2,
        "translation": [
-        3.0,
+        3,
         0,
         0
        ]
@@ -7240,8 +7542,8 @@
       "transform": {
        "translation": [
         0.36875,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      },
@@ -7260,8 +7562,8 @@
       "transform": {
        "translation": [
         0.36875,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      }
@@ -7433,11 +7735,11 @@
         0.500191
        ],
        [
-        0.0,
+        0,
         0.475191
        ],
        [
-        0.0,
+        0,
         0.352809
        ],
        [
@@ -7449,11 +7751,11 @@
         0.293191
        ],
        [
-        0.0,
+        0,
         0.268191
        ],
        [
-        0.0,
+        0,
         0.145809
        ],
        [
@@ -7465,11 +7767,11 @@
         0.086191
        ],
        [
-        0.0,
+        0,
         0.061191
        ],
        [
-        0.0,
+        0,
         -0.061191
        ],
        [
@@ -7481,11 +7783,11 @@
         -0.120809
        ],
        [
-        0.0,
+        0,
         -0.145809
        ],
        [
-        0.0,
+        0,
         -0.268191
        ],
        [
@@ -7497,11 +7799,11 @@
         -0.327809
        ],
        [
-        0.0,
+        0,
         -0.352809
        ],
        [
-        0.0,
+        0,
         -0.475191
        ],
        [
@@ -7510,8 +7812,8 @@
        ]
       ],
       "plane": "yz",
-      "from": 0.0,
-      "to": 6.0,
+      "from": 0,
+      "to": 6,
       "region": "bundle-sheets"
      },
      {
@@ -7541,7 +7843,7 @@
       ],
       "plane": "yz",
       "from": 0.15,
-      "to": 6.0,
+      "to": 6,
       "region": "bundle-sheets"
      }
     ],
@@ -7636,7 +7938,7 @@
        "translation": [
         0.05,
         0.05,
-        0.0
+        0
        ]
       }
      },
@@ -7656,7 +7958,7 @@
        "translation": [
         0.05,
         0.05,
-        0.0
+        0
        ]
       }
      },
@@ -7676,7 +7978,7 @@
        "translation": [
         0.05,
         0.05,
-        0.0
+        0
        ]
       }
      },
@@ -7696,7 +7998,7 @@
        "translation": [
         0.05,
         0.05,
-        0.0
+        0
        ]
       }
      },
@@ -7801,11 +8103,11 @@
         0.500191
        ],
        [
-        0.0,
+        0,
         0.475191
        ],
        [
-        0.0,
+        0,
         0.352809
        ],
        [
@@ -7817,11 +8119,11 @@
         0.293191
        ],
        [
-        0.0,
+        0,
         0.268191
        ],
        [
-        0.0,
+        0,
         0.145809
        ],
        [
@@ -7833,11 +8135,11 @@
         0.086191
        ],
        [
-        0.0,
+        0,
         0.061191
        ],
        [
-        0.0,
+        0,
         -0.061191
        ],
        [
@@ -7849,11 +8151,11 @@
         -0.120809
        ],
        [
-        0.0,
+        0,
         -0.145809
        ],
        [
-        0.0,
+        0,
         -0.268191
        ],
        [
@@ -7865,11 +8167,11 @@
         -0.327809
        ],
        [
-        0.0,
+        0,
         -0.352809
        ],
        [
-        0.0,
+        0,
         -0.475191
        ],
        [
@@ -7878,8 +8180,8 @@
        ]
       ],
       "plane": "yz",
-      "from": 0.0,
-      "to": 6.0
+      "from": 0,
+      "to": 6
      },
      {
       "id": "pack-1-29-edge-crests",
@@ -7908,7 +8210,7 @@
       ],
       "plane": "yz",
       "from": 0.15,
-      "to": 6.0
+      "to": 6
      },
      {
       "id": "s100-sheet-30",
@@ -8011,11 +8313,11 @@
         0.500191
        ],
        [
-        0.0,
+        0,
         0.475191
        ],
        [
-        0.0,
+        0,
         0.352809
        ],
        [
@@ -8027,11 +8329,11 @@
         0.293191
        ],
        [
-        0.0,
+        0,
         0.268191
        ],
        [
-        0.0,
+        0,
         0.145809
        ],
        [
@@ -8043,11 +8345,11 @@
         0.086191
        ],
        [
-        0.0,
+        0,
         0.061191
        ],
        [
-        0.0,
+        0,
         -0.061191
        ],
        [
@@ -8059,11 +8361,11 @@
         -0.120809
        ],
        [
-        0.0,
+        0,
         -0.145809
        ],
        [
-        0.0,
+        0,
         -0.268191
        ],
        [
@@ -8075,11 +8377,11 @@
         -0.327809
        ],
        [
-        0.0,
+        0,
         -0.352809
        ],
        [
-        0.0,
+        0,
         -0.475191
        ],
        [
@@ -8088,8 +8390,8 @@
        ]
       ],
       "plane": "yz",
-      "from": 0.0,
-      "to": 6.0,
+      "from": 0,
+      "to": 6,
       "sheet": true
      },
      {
@@ -8119,7 +8421,7 @@
       ],
       "plane": "yz",
       "from": 0.15,
-      "to": 6.0,
+      "to": 6,
       "sheet": true
      },
      {
@@ -8138,7 +8440,7 @@
        "translation": [
         -2.7,
         0.1285,
-        0.0
+        0
        ]
       },
       "repeat": {
@@ -8197,11 +8499,11 @@
       "holes": [
        [
         [
-         0.0,
+         0,
          -0.475
         ],
         [
-         0.0,
+         0,
          0.475
         ],
         [
@@ -8334,11 +8636,11 @@
       "holes": [
        [
         [
-         0.0,
+         0,
          -0.475
         ],
         [
-         0.0,
+         0,
          0.475
         ],
         [
@@ -8362,7 +8664,7 @@
       "repeat": {
        "count": 2,
        "translation": [
-        3.0,
+        3,
         0,
         0
        ]
@@ -8383,8 +8685,8 @@
       "transform": {
        "translation": [
         0.36875,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      },
@@ -8403,8 +8705,8 @@
       "transform": {
        "translation": [
         0.36875,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      }
@@ -8567,7 +8869,7 @@
        "translation": [
         0.05,
         0.05,
-        0.0
+        0
        ]
       }
      },
@@ -8587,7 +8889,7 @@
        "translation": [
         0.05,
         0.05,
-        0.0
+        0
        ]
       }
      },
@@ -8607,7 +8909,7 @@
        "translation": [
         0.05,
         0.05,
-        0.0
+        0
        ]
       }
      },
@@ -8627,7 +8929,7 @@
        "translation": [
         0.05,
         0.05,
-        0.0
+        0
        ]
       }
      },
@@ -8639,15 +8941,15 @@
       "role": "body",
       "tone": 0.66,
       "size": [
-       6.0,
+       6,
        0.0435,
        1.07
       ],
       "transform": {
        "translation": [
-        3.0,
+        3,
         0.02175,
-        0.0
+        0
        ]
       }
      },
@@ -8659,15 +8961,15 @@
       "role": "body",
       "tone": 0.78,
       "size": [
-       6.0,
+       6,
        0.035,
        1.07
       ],
       "transform": {
        "translation": [
-        3.0,
+        3,
         0.0175,
-        0.0
+        0
        ]
       },
       "sheet": true
@@ -8688,7 +8990,7 @@
        "translation": [
         -2.7,
         0.1285,
-        0.0
+        0
        ]
       },
       "repeat": {
@@ -8739,11 +9041,11 @@
       "holes": [
        [
         [
-         0.0,
+         0,
          -0.535
         ],
         [
-         0.0,
+         0,
          0.535
         ],
         [
@@ -8804,11 +9106,11 @@
       "holes": [
        [
         [
-         0.0,
+         0,
          -0.535
         ],
         [
-         0.0,
+         0,
          0.535
         ],
         [
@@ -8824,7 +9126,7 @@
       "repeat": {
        "count": 2,
        "translation": [
-        3.0,
+        3,
         0,
         0
        ]
@@ -8846,7 +9148,7 @@
        "translation": [
         0.36875,
         0.01,
-        0.0
+        0
        ]
       },
       "slender": true
@@ -8867,7 +9169,7 @@
        "translation": [
         0.36875,
         0.01,
-        0.0
+        0
        ]
       },
       "slender": true
@@ -9011,7 +9313,7 @@
        "translation": [
         0.05,
         0.05,
-        0.0
+        0
        ]
       }
      },
@@ -9031,7 +9333,7 @@
        "translation": [
         0.05,
         0.05,
-        0.0
+        0
        ]
       }
      },
@@ -9051,7 +9353,7 @@
        "translation": [
         0.05,
         0.05,
-        0.0
+        0
        ]
       }
      },
@@ -9071,7 +9373,7 @@
        "translation": [
         0.05,
         0.05,
-        0.0
+        0
        ]
       }
      },
@@ -9083,15 +9385,15 @@
       "role": "body",
       "tone": 0.66,
       "size": [
-       6.0,
+       6,
        0.0435,
        1.07
       ],
       "transform": {
        "translation": [
-        3.0,
+        3,
         0.02175,
-        0.0
+        0
        ]
       },
       "sheet": true
@@ -9104,15 +9406,15 @@
       "role": "body",
       "tone": 0.78,
       "size": [
-       6.0,
+       6,
        0.035,
        1.07
       ],
       "transform": {
        "translation": [
-        3.0,
+        3,
         0.0175,
-        0.0
+        0
        ]
       },
       "sheet": true
@@ -9133,7 +9435,7 @@
        "translation": [
         -2.7,
         0.1285,
-        0.0
+        0
        ]
       },
       "repeat": {
@@ -9161,7 +9463,7 @@
        "translation": [
         0.36875,
         0.01,
-        0.0
+        0
        ]
       },
       "slender": true
@@ -9182,7 +9484,7 @@
        "translation": [
         0.36875,
         0.01,
-        0.0
+        0
        ]
       },
       "slender": true
@@ -9273,11 +9575,11 @@
       "holes": [
        [
         [
-         0.0,
+         0,
          -0.535
         ],
         [
-         0.0,
+         0,
          0.535
         ],
         [

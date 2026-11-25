@@ -56,7 +56,8 @@
       "release",
       "publish",
       "clean"
-    ]
+    ],
+    "staged": []
   },
   "invalidRegistries": [
     {
@@ -219,6 +220,89 @@
         }
       ],
       "schema": false
+    },
+    {
+      "name": "a duplicate route",
+      "patch": [
+        {
+          "op": "set",
+          "path": [
+            "commands",
+            7,
+            "routes"
+          ],
+          "value": [
+            {
+              "segments": [
+                "mcp"
+              ],
+              "requires": "staged",
+              "reason": {
+                "en": "a",
+                "de": "b"
+              }
+            },
+            {
+              "segments": [
+                "mcp"
+              ],
+              "requires": "none",
+              "reason": {
+                "en": "a",
+                "de": "b"
+              }
+            }
+          ]
+        }
+      ],
+      "schema": false
+    },
+    {
+      "name": "an unknown route requirement",
+      "patch": [
+        {
+          "op": "set",
+          "path": [
+            "commands",
+            7,
+            "routes",
+            0,
+            "requires"
+          ],
+          "value": "maybe"
+        }
+      ],
+      "schema": true
+    },
+    {
+      "name": "an empty route",
+      "patch": [
+        {
+          "op": "set",
+          "path": [
+            "commands",
+            7,
+            "routes",
+            0,
+            "segments"
+          ],
+          "value": []
+        }
+      ],
+      "schema": true
+    },
+    {
+      "name": "a missing staged label",
+      "patch": [
+        {
+          "op": "delete",
+          "path": [
+            "labels",
+            "requiresStaged"
+          ]
+        }
+      ],
+      "schema": true
     }
   ],
   "helpRequests": [
@@ -340,13 +424,15 @@
       "name": "a command that needs nothing never provisions",
       "requires": "none",
       "capabilities": {},
-      "provisions": false
+      "provisions": false,
+      "segments": []
     },
     {
       "name": "a direct run provisions before a dependent command",
       "requires": "dependencies",
       "capabilities": {},
-      "provisions": true
+      "provisions": true,
+      "segments": []
     },
     {
       "name": "a build-owned run provisioned already",
@@ -354,7 +440,8 @@
       "capabilities": {
         "workspaceRoot": "@root"
       },
-      "provisions": false
+      "provisions": false,
+      "segments": []
     },
     {
       "name": "a native-owned run provisioned already",
@@ -362,40 +449,45 @@
       "capabilities": {
         "repositoryRoot": "@root"
       },
-      "provisions": false
+      "provisions": false,
+      "segments": []
     },
-      {
-        "name": "an owned workspace reprovisions a missing dependency generation",
-        "requires": "dependencies",
-        "capabilities": {
-          "workspaceRoot": "@root"
-        },
-        "available": false,
-        "provisions": true
+    {
+      "name": "an owned workspace reprovisions a missing dependency generation",
+      "requires": "dependencies",
+      "capabilities": {
+        "workspaceRoot": "@root"
       },
-      {
-        "name": "an owned repository reprovisions a missing dependency generation",
-        "requires": "dependencies",
-        "capabilities": {
-          "repositoryRoot": "@root"
-        },
-        "available": false,
-        "provisions": true
+      "available": false,
+      "provisions": true,
+      "segments": []
+    },
+    {
+      "name": "an owned repository reprovisions a missing dependency generation",
+      "requires": "dependencies",
+      "capabilities": {
+        "repositoryRoot": "@root"
       },
+      "available": false,
+      "provisions": true,
+      "segments": []
+    },
     {
       "name": "a foreign workspace root does not count",
       "requires": "dependencies",
       "capabilities": {
         "workspaceRoot": "/elsewhere"
       },
-      "provisions": true
+      "provisions": true,
+      "segments": []
     },
     {
       "name": "a failing provisioner is named and never swallowed",
       "requires": "dependencies",
       "capabilities": {},
       "provisions": true,
-      "fail": true
+      "fail": true,
+      "segments": []
     },
     {
       "name": "progress follows the help language",
@@ -404,7 +496,194 @@
       "provisions": true,
       "environment": {
         "SEMIO_LANGUAGE": "de"
-      }
+      },
+      "segments": []
+    },
+    {
+      "name": "a staged route with installed dependencies never provisions, even when the invocation is not build-owned",
+      "requires": "dependencies",
+      "routes": [
+        {
+          "segments": [
+            "mcp",
+            "stdio",
+            "os"
+          ],
+          "requires": "staged"
+        }
+      ],
+      "segments": [
+        "mcp",
+        "stdio",
+        "os"
+      ],
+      "capabilities": {},
+      "provisions": false
+    },
+    {
+      "name": "a staged route with extra trailing segments still matches its prefix",
+      "requires": "dependencies",
+      "routes": [
+        {
+          "segments": [
+            "mcp",
+            "stdio"
+          ],
+          "requires": "staged"
+        }
+      ],
+      "segments": [
+        "mcp",
+        "stdio",
+        "os",
+        "--verbose"
+      ],
+      "capabilities": {},
+      "provisions": false
+    },
+    {
+      "name": "a staged route with absent dependencies provisions",
+      "requires": "dependencies",
+      "routes": [
+        {
+          "segments": [
+            "mcp",
+            "stdio",
+            "os"
+          ],
+          "requires": "staged"
+        }
+      ],
+      "segments": [
+        "mcp",
+        "stdio",
+        "os"
+      ],
+      "capabilities": {},
+      "available": false,
+      "provisions": true
+    },
+    {
+      "name": "a staged command with absent dependencies provisions under a build-owned invocation",
+      "requires": "staged",
+      "segments": [],
+      "capabilities": {
+        "workspaceRoot": "@root"
+      },
+      "available": false,
+      "provisions": true
+    },
+    {
+      "name": "non-matching segments fall back to the command requirement",
+      "requires": "dependencies",
+      "routes": [
+        {
+          "segments": [
+            "mcp",
+            "stdio",
+            "os"
+          ],
+          "requires": "staged"
+        }
+      ],
+      "segments": [
+        "storybook"
+      ],
+      "capabilities": {},
+      "provisions": true
+    },
+    {
+      "name": "a partial route prefix does not match and falls back",
+      "requires": "dependencies",
+      "routes": [
+        {
+          "segments": [
+            "mcp",
+            "stdio",
+            "os"
+          ],
+          "requires": "staged"
+        }
+      ],
+      "segments": [
+        "mcp",
+        "stdio"
+      ],
+      "capabilities": {},
+      "provisions": true
+    },
+    {
+      "name": "the longest matching route wins over a shorter one",
+      "requires": "dependencies",
+      "routes": [
+        {
+          "segments": [
+            "mcp"
+          ],
+          "requires": "dependencies"
+        },
+        {
+          "segments": [
+            "mcp",
+            "stdio",
+            "os"
+          ],
+          "requires": "staged"
+        }
+      ],
+      "segments": [
+        "mcp",
+        "stdio",
+        "os"
+      ],
+      "capabilities": {},
+      "provisions": false
+    },
+    {
+      "name": "the longest matching route wins even when it demands more",
+      "requires": "staged",
+      "routes": [
+        {
+          "segments": [
+            "mcp"
+          ],
+          "requires": "staged"
+        },
+        {
+          "segments": [
+            "mcp",
+            "stdio",
+            "os"
+          ],
+          "requires": "none"
+        }
+      ],
+      "segments": [
+        "mcp",
+        "stdio",
+        "os"
+      ],
+      "capabilities": {},
+      "available": false,
+      "provisions": false
+    },
+    {
+      "name": "a none route under a dependent command never provisions",
+      "requires": "dependencies",
+      "routes": [
+        {
+          "segments": [
+            "help"
+          ],
+          "requires": "none"
+        }
+      ],
+      "segments": [
+        "help"
+      ],
+      "capabilities": {},
+      "available": false,
+      "provisions": false
     }
   ],
   "gateProgress": {
@@ -421,5 +700,118 @@
     "verify",
     "repo dependencies ensure",
     "boom"
+  ],
+  "expectedRoutes": {
+    "dev": [
+      {
+        "segments": [
+          "mcp",
+          "stdio",
+          "os"
+        ],
+        "requires": "staged"
+      }
+    ]
+  },
+  "routeRequirements": [
+    {
+      "name": "no routes use the command requirement",
+      "requires": "dependencies",
+      "routes": [],
+      "segments": [
+        "mcp"
+      ],
+      "expected": "dependencies"
+    },
+    {
+      "name": "an exact route",
+      "requires": "dependencies",
+      "routes": [
+        {
+          "segments": [
+            "mcp"
+          ],
+          "requires": "staged"
+        }
+      ],
+      "segments": [
+        "mcp"
+      ],
+      "expected": "staged"
+    },
+    {
+      "name": "a route is a prefix of the segments",
+      "requires": "none",
+      "routes": [
+        {
+          "segments": [
+            "mcp"
+          ],
+          "requires": "staged"
+        }
+      ],
+      "segments": [
+        "mcp",
+        "stdio"
+      ],
+      "expected": "staged"
+    },
+    {
+      "name": "empty segments never match a route",
+      "requires": "dependencies",
+      "routes": [
+        {
+          "segments": [
+            "mcp"
+          ],
+          "requires": "staged"
+        }
+      ],
+      "segments": [],
+      "expected": "dependencies"
+    },
+    {
+      "name": "the longest route wins regardless of declaration order",
+      "requires": "dependencies",
+      "routes": [
+        {
+          "segments": [
+            "a",
+            "b"
+          ],
+          "requires": "none"
+        },
+        {
+          "segments": [
+            "a"
+          ],
+          "requires": "staged"
+        }
+      ],
+      "segments": [
+        "a",
+        "b",
+        "c"
+      ],
+      "expected": "none"
+    },
+    {
+      "name": "a different segment does not match",
+      "requires": "dependencies",
+      "routes": [
+        {
+          "segments": [
+            "a",
+            "b"
+          ],
+          "requires": "none"
+        }
+      ],
+      "segments": [
+        "a",
+        "c"
+      ],
+      "expected": "dependencies"
+    }
   ]
 }

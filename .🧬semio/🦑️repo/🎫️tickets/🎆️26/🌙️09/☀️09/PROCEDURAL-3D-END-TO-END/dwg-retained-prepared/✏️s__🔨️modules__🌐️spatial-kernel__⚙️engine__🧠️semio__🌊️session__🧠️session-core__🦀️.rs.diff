@@ -1,0 +1,13 @@
+--- a/✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/🧠️session-core/🦀️.rs
++++ b/✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/🧠️session-core/🦀️.rs
+@@ -744,6 +744,10 @@
+ 
+ pub fn plan_mesh_publication(&self, decoder: &mut MeshDecode) -> Result<MeshPublication, ValueError> {
+     self.with_open_kernel(|kernel| kernel.plan_mesh_publication(decoder))
++}
++
++pub fn plan_mesh_publication_from_cursor(&self, cursor: semio_framework_3d_brep_engine::MeshImportCursor) -> Result<MeshPublication, ValueError> {
++    self.with_open_kernel(|kernel| Ok(kernel.plan_mesh_publication_from_cursor(cursor)))
+ }
+ 
+ pub fn mesh_preparation_demand(&self, plan: &MeshPublication) -> Result<RetirementDemand, ValueError> {

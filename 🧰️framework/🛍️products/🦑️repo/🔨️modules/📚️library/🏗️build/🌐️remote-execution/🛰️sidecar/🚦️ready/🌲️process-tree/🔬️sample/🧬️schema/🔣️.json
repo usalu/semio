@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:build:remote-execution:sidecar:ready:process-tree:sample:v1",
+  "title": "What the slice worker of a silent read is doing, named by a stack sample of its main thread",
+  "description": "EN: A read whose slice report stopped being written has an event loop that no longer turns. The slice report cannot say why (it is written by that very loop), so once per stage attempt, when the report of a reading stage is `silentMilliseconds` old and its process is a member of the stage tree, the supervisor samples that process with the operating system's sampler (`sample <pid> <seconds>` on macOS, see https://ss64.com/mac/sample.html) and mirrors a summary next to the stage log (`ready-log-<stage>-sample.txt` in the origin of the worker): the main thread's own time by frame (system calls such as `lstat`, `read` or `__wait4` are named; JIT code of the read is `JIT`), and the tail of its heaviest path. Other platforms have no sampler here; nothing is written. DE: Ein Lesen, dessen Slice-Bericht nicht mehr geschrieben wird, hat eine Ereignisschleife, die sich nicht mehr dreht. Der Bericht kann nicht sagen warum (ihn schreibt genau diese Schleife); deshalb nimmt der Aufseher einmal pro Stufenversuch, wenn der Bericht einer lesenden Stufe `silentMilliseconds` alt ist und sein Prozess zum Stufenbaum gehört, mit dem Sampler des Betriebssystems eine Stichprobe dieses Prozesses (`sample <pid> <Sekunden>` auf macOS) und spiegelt eine Zusammenfassung neben das Stufenprotokoll (`ready-log-<Stufe>-sample.txt` im Ursprung des Workers): die eigene Zeit des Hauptthreads nach Frame (Systemaufrufe wie `lstat`, `read` oder `__wait4` sind benannt; JIT-Code des Lesens ist `JIT`) und das Ende seines schwersten Pfads. Andere Plattformen haben hier keinen Sampler; nichts wird geschrieben.",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "silentMilliseconds": 180000,
+        "seconds": 3,
+        "timeoutMilliseconds": 60000,
+        "outputBytes": 8388608,
+        "frames": 14,
+        "pathFrames": 12,
+        "frameCharacters": 160,
+        "program": "/usr/bin/sample"
+      }
+    },
+    "Texts": {
+      "const": {
+        "en": { "head": "slice worker {pid} silent for {silentSeconds} s, sampled for {seconds} s: {total} samples of its main thread", "self": "own time of the main thread by frame:", "path": "end of the heaviest path of the main thread:" },
+        "de": { "head": "Slice-Worker {pid} seit {silentSeconds} s still, {seconds} s lang beprobt: {total} Stichproben seines Hauptthreads", "self": "eigene Zeit des Hauptthreads nach Frame:", "path": "Ende des schwersten Pfads des Hauptthreads:" }
+      }
+    }
+  }
+}

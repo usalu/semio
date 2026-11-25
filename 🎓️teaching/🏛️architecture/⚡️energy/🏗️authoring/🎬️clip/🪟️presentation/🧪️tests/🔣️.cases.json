@@ -7,14 +7,25 @@
   "chrome": {
     "navbarHeight": 29,
     "footerHeight": 29,
-    "titleHeight": 24,
-    "inset": 3.2
+    "titleHeight": 24
+  },
+  "canvas": {
+    "x": 0,
+    "y": 29,
+    "width": 1600,
+    "height": 842
   },
   "focus": {
-    "x": 6.4,
-    "y": 59.4,
-    "width": 1587.2,
-    "height": 805.2
+    "x": 0,
+    "y": 29,
+    "width": 1600,
+    "height": 842
+  },
+  "safeClearance": {
+    "top": 24,
+    "right": 0,
+    "bottom": 0,
+    "left": 0
   },
   "crop": {
     "left": 0,

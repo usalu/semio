@@ -13,12 +13,48 @@
    "de": "Ein batterieelektrischer Vierrad-Gegengewichtsstapler mit 2,5 t Tragkraft (Klasse Jungheinrich EFG 425): ein Duplex-ZT-Mast mit geschachtelten Profilen, zwei Hubzylindern und einem freihebenden Gabelträger nach ISO Klasse 2 mit Lastschutzgitter und 1,15-m-Gabeln, zwei Neigezylinder, Fahrerschutzdach, Antriebsachse mit zwei Fahrmotoren und Lenkachse mit Superelastikreifen, die Batterie unter dem Sitz und ein gegossenes Gegengewicht, dazu eine Europalette mit 1 t Ladegut; die Reaktionen von Vorder- und Hinterachse verschieben sich mit dem Lastmoment."
   },
   "tags": [
-   "machine",
-   "forklift",
-   "counterbalanced",
-   "battery-electric",
-   "warehouse",
-   "wheeled"
+   {
+    "id": "machine",
+    "title": {
+     "en": "machine",
+     "de": "Maschine"
+    }
+   },
+   {
+    "id": "forklift",
+    "title": {
+     "en": "forklift",
+     "de": "Gabelstapler"
+    }
+   },
+   {
+    "id": "counterbalanced",
+    "title": {
+     "en": "counterbalanced",
+     "de": "Gegengewicht"
+    }
+   },
+   {
+    "id": "battery-electric",
+    "title": {
+     "en": "battery electric",
+     "de": "batterieelektrisch"
+    }
+   },
+   {
+    "id": "warehouse",
+    "title": {
+     "en": "warehouse",
+     "de": "Lager"
+    }
+   },
+   {
+    "id": "wheeled",
+    "title": {
+     "en": "wheeled",
+     "de": "rollend"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content worker (vehicles)",
@@ -6490,7 +6526,7 @@
       },
       {
        "id": "tyre-r-l",
-       "bone": "wheel-r",
+       "bone": "axle-r",
        "role": "body",
        "z": 2.07,
        "filled": true,
@@ -6584,7 +6620,7 @@
       },
       {
        "id": "tyre-r-r",
-       "bone": "wheel-r",
+       "bone": "axle-r",
        "role": "body",
        "z": 2.08,
        "filled": true,
@@ -10265,7 +10301,7 @@
       },
       {
        "id": "tyre-f-l",
-       "bone": "wheel-f",
+       "bone": "axle-f",
        "role": "body",
        "z": 2.61,
        "filled": true,
@@ -10359,7 +10395,7 @@
       },
       {
        "id": "tyre-f-r",
-       "bone": "wheel-f",
+       "bone": "axle-f",
        "role": "body",
        "z": 2.62,
        "filled": true,
@@ -13152,7 +13188,7 @@
       },
       {
        "id": "tyre-r-l",
-       "bone": "wheel-r",
+       "bone": "axle-r",
        "role": "body",
        "z": 2.11,
        "filled": true,
@@ -13246,7 +13282,7 @@
       },
       {
        "id": "tyre-r-r",
-       "bone": "wheel-r",
+       "bone": "axle-r",
        "role": "body",
        "z": 2.12,
        "filled": true,
@@ -13671,7 +13707,7 @@
       },
       {
        "id": "tyre-f-l",
-       "bone": "wheel-f",
+       "bone": "axle-f",
        "role": "body",
        "z": 2.2,
        "filled": true,
@@ -13765,7 +13801,7 @@
       },
       {
        "id": "tyre-f-r",
-       "bone": "wheel-f",
+       "bone": "axle-f",
        "role": "body",
        "z": 2.21,
        "filled": true,
@@ -21166,7 +21202,7 @@
       },
       {
        "id": "tyre-r-l",
-       "bone": "wheel-r",
+       "bone": "axle-r",
        "role": "body",
        "z": 2.06,
        "filled": true,
@@ -21260,7 +21296,7 @@
       },
       {
        "id": "tyre-r-r",
-       "bone": "wheel-r",
+       "bone": "axle-r",
        "role": "body",
        "z": 2.07,
        "filled": true,
@@ -23707,7 +23743,7 @@
       },
       {
        "id": "tyre-f-l",
-       "bone": "wheel-f",
+       "bone": "axle-f",
        "role": "body",
        "z": 2.55,
        "filled": true,
@@ -23801,7 +23837,7 @@
       },
       {
        "id": "tyre-f-r",
-       "bone": "wheel-f",
+       "bone": "axle-f",
        "role": "body",
        "z": 2.56,
        "filled": true,
@@ -25758,7 +25794,7 @@
       },
       {
        "id": "tyre-r-l",
-       "bone": "wheel-r",
+       "bone": "axle-r",
        "role": "body",
        "z": 2.04,
        "filled": true,
@@ -25852,7 +25888,7 @@
       },
       {
        "id": "tyre-r-r",
-       "bone": "wheel-r",
+       "bone": "axle-r",
        "role": "body",
        "z": 2.05,
        "filled": true,
@@ -26186,7 +26222,7 @@
       },
       {
        "id": "tyre-f-l",
-       "bone": "wheel-f",
+       "bone": "axle-f",
        "role": "body",
        "z": 2.12,
        "filled": true,
@@ -26280,7 +26316,7 @@
       },
       {
        "id": "tyre-f-r",
-       "bone": "wheel-f",
+       "bone": "axle-f",
        "role": "body",
        "z": 2.13,
        "filled": true,
@@ -30940,7 +30976,7 @@
       },
       {
        "id": "tyre-r-l",
-       "bone": "wheel-r",
+       "bone": "axle-r",
        "role": "body",
        "z": 2.01,
        "filled": true,
@@ -31034,7 +31070,7 @@
       },
       {
        "id": "tyre-r-r",
-       "bone": "wheel-r",
+       "bone": "axle-r",
        "role": "body",
        "z": 2.02,
        "filled": true,
@@ -32701,7 +32737,7 @@
       },
       {
        "id": "tyre-f-l",
-       "bone": "wheel-f",
+       "bone": "axle-f",
        "role": "body",
        "z": 2.38,
        "filled": true,
@@ -32795,7 +32831,7 @@
       },
       {
        "id": "tyre-f-r",
-       "bone": "wheel-f",
+       "bone": "axle-f",
        "role": "body",
        "z": 2.39,
        "filled": true,
@@ -33801,7 +33837,7 @@
       },
       {
        "id": "tyre-r-l",
-       "bone": "wheel-r",
+       "bone": "axle-r",
        "role": "body",
        "z": 2.01,
        "filled": true,
@@ -33895,7 +33931,7 @@
       },
       {
        "id": "tyre-r-r",
-       "bone": "wheel-r",
+       "bone": "axle-r",
        "role": "body",
        "z": 2.02,
        "filled": true,
@@ -34181,7 +34217,7 @@
       },
       {
        "id": "tyre-f-l",
-       "bone": "wheel-f",
+       "bone": "axle-f",
        "role": "body",
        "z": 2.07,
        "filled": true,
@@ -34275,7 +34311,7 @@
       },
       {
        "id": "tyre-f-r",
-       "bone": "wheel-f",
+       "bone": "axle-f",
        "role": "body",
        "z": 2.08,
        "filled": true,

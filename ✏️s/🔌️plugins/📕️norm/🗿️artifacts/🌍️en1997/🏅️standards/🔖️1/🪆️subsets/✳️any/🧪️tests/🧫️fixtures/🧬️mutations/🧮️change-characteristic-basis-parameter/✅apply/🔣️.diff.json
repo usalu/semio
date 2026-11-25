@@ -17,6 +17,7 @@
   "pileGroups": null,
   "labTests": null,
   "layerWaters": null,
+  "placements": null,
   "cases": {
     "removed": [],
     "inserted": [],
@@ -32,7 +33,9 @@
       {
         "id": "characteristic-basis-1",
         "patch": {
-          "parameter": "frictionAngle"
+          "layerId": null,
+          "parameter": "frictionAngle",
+          "basis": null
         }
       }
     ]

@@ -13,13 +13,55 @@
       "de": "Eine 1,2 m breite Vorbau-Außenjalousie (Raffstore) aus 18 Aluminium-Z-90-Lamellen (0,45-mm-Blech, 90 mm breit, 80 mm Abstand), die an zwei Aufzugsbändern an einer Stahl-Oberschiene 58 x 56 mm hinter einer 150 x 210 mm großen Aluminiumblende hängen, mit zwei Führungsschienen und einer Unterschiene 90 x 20 mm, im Vertikalschnitt vor einem festverglasten, doppelt verglasten Aluminiumfenster mit Fensterbank in einer gedämmten Ziegelwand; hochgezogen, abgelassen mit waagerechten, 45-Grad- oder geschlossenen Lamellen, mit der Verschattungswirkung auf die Verglasung aus der Lamellengeometrie."
     },
     "tags": [
-      "component",
-      "shading",
-      "blind",
-      "louvre",
-      "facade",
-      "mechanism",
-      "conditioned"
+      {
+        "id": "component",
+        "title": {
+          "en": "component",
+          "de": "Bauteil"
+        }
+      },
+      {
+        "id": "shading",
+        "title": {
+          "en": "shading",
+          "de": "Beschattung"
+        }
+      },
+      {
+        "id": "blind",
+        "title": {
+          "en": "blind",
+          "de": "Jalousie"
+        }
+      },
+      {
+        "id": "louvre",
+        "title": {
+          "en": "louvre",
+          "de": "Lamelle"
+        }
+      },
+      {
+        "id": "facade",
+        "title": {
+          "en": "facade",
+          "de": "Fassade"
+        }
+      },
+      {
+        "id": "mechanism",
+        "title": {
+          "en": "mechanism",
+          "de": "Mechanik"
+        }
+      },
+      {
+        "id": "conditioned",
+        "title": {
+          "en": "conditioned",
+          "de": "klimatisiert"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage component authors (NW-C)",

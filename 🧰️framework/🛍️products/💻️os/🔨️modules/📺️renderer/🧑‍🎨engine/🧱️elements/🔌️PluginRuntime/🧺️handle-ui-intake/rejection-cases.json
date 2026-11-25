@@ -1,0 +1,53 @@
+{
+  "code": "plugin-ui.intake-rejected",
+  "cases": [
+    {
+      "name": "tree row activated by a record binding (PDF thumbnail strip, round 3)",
+      "surfaceId": "1:pdf.thumbnails",
+      "phase": "validation",
+      "failure": "Owned UI graph invariants violated (invalidRowTarget) node=1",
+      "rule": "invalidRowTarget",
+      "node": 1,
+      "notice": {
+        "en": "The window “pdf.thumbnails” cannot be shown: the app published an interface the shell refuses (invalidRowTarget, node 1).",
+        "de": "Das Fenster „pdf.thumbnails“ kann nicht angezeigt werden: Die App hat eine Oberfläche veröffentlicht, die die Shell ablehnt (invalidRowTarget, Knoten 1)."
+      }
+    },
+    {
+      "name": "tree detail with a toolbar suffix",
+      "surfaceId": "12:s.stdio.window.snapshot-details",
+      "phase": "validation",
+      "failure": "Owned UI graph invariants violated (invalidTreeDetail) node=42 detail=7",
+      "rule": "invalidTreeDetail",
+      "node": 42,
+      "notice": {
+        "en": "The window “s.stdio.window.snapshot-details” cannot be shown: the app published an interface the shell refuses (invalidTreeDetail, node 42).",
+        "de": "Das Fenster „s.stdio.window.snapshot-details“ kann nicht angezeigt werden: Die App hat eine Oberfläche veröffentlicht, die die Shell ablehnt (invalidTreeDetail, Knoten 42)."
+      }
+    },
+    {
+      "name": "sibling key without a node",
+      "surfaceId": "3:framework.panel.history",
+      "phase": "validation",
+      "failure": "Owned UI graph invariants violated (duplicateSiblingKey) parent=5",
+      "rule": "duplicateSiblingKey",
+      "node": null,
+      "notice": {
+        "en": "The window “framework.panel.history” cannot be shown: the app published an interface the shell refuses (duplicateSiblingKey).",
+        "de": "Das Fenster „framework.panel.history“ kann nicht angezeigt werden: Die App hat eine Oberfläche veröffentlicht, die die Shell ablehnt (duplicateSiblingKey)."
+      }
+    },
+    {
+      "name": "intake refusal without a failure text names the phase",
+      "surfaceId": "2:pdf.page",
+      "phase": "intake",
+      "failure": null,
+      "rule": null,
+      "node": null,
+      "notice": {
+        "en": "The window “pdf.page” cannot be shown: the app published an interface the shell refuses (intake).",
+        "de": "Das Fenster „pdf.page“ kann nicht angezeigt werden: Die App hat eine Oberfläche veröffentlicht, die die Shell ablehnt (intake)."
+      }
+    }
+  ]
+}

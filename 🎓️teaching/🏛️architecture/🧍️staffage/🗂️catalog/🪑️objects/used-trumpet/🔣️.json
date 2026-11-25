@@ -13,31 +13,181 @@
    "de": "Eine gebrauchte B-Schülertrompete, wie sie ein Gebrauchtinstrumentenhandel oder das Lager einer Musikschule anbietet, gereinigt, geölt und wieder spielbereit: 0,48 m vom Mundrohr zum 123-mm-Schallstück aus Gelbmessing, ML-Bohrung, drei Perinet-Pumpventile mit Neusilberkappen und Perlmuttdrückern, der Klarlack vergilbt und an Ventilgehäusen und Mundrohr, wo die Hände hielten, bis aufs angelaufene Messing durchgegriffen; ein versilbertes 7C-Mundstück mit bis aufs Messing abgeriebenem Rand, ein Straight-Dämpfer aus Aluminium und ein Cup-Dämpfer aus Fasermasse, eine halbvolle Flasche Ventilöl und ein Poliertuch, alles in einem Sperrholzkoffer 0,64 x 0,33 x 0,175 m mit schwarzem Tolex, an einer Ecke eingerissen und an der Bodenkante verschrammt, mit einem Inventaraufkleber der Schule auf dem Deckel; zusammen 4.76 kg, die Trompete 1.01 kg. Posen: offen gelagert, geschlossen, am Griff getragen, im Stehen gespielt mit 6 Grad gesenktem Schallstück."
   },
   "tags": [
-   "used",
-   "instrument",
-   "music",
-   "second-hand",
-   "brass",
-   "trumpet",
-   "b-flat-trumpet",
-   "piston-valves",
-   "aerophone",
-   "lip-reed",
-   "mouthpiece",
-   "mute",
-   "straight-mute",
-   "cup-mute",
-   "valve-oil",
-   "instrument-case",
-   "hard-case",
-   "tolex",
-   "plywood",
-   "lacquered-brass",
-   "nickel-silver",
-   "silver-plated",
-   "aluminium",
-   "student-instrument",
-   "passive"
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "instrument",
+    "title": {
+     "en": "instrument",
+     "de": "Instrument"
+    }
+   },
+   {
+    "id": "music",
+    "title": {
+     "en": "music",
+     "de": "Musik"
+    }
+   },
+   {
+    "id": "second-hand",
+    "title": {
+     "en": "second-hand",
+     "de": "Second-Hand"
+    }
+   },
+   {
+    "id": "brass",
+    "title": {
+     "en": "brass",
+     "de": "Messing"
+    }
+   },
+   {
+    "id": "trumpet",
+    "title": {
+     "en": "trumpet",
+     "de": "Trompete"
+    }
+   },
+   {
+    "id": "b-flat-trumpet",
+    "title": {
+     "en": "B-flat trumpet",
+     "de": "B-Trompete"
+    }
+   },
+   {
+    "id": "piston-valves",
+    "title": {
+     "en": "piston valves",
+     "de": "Pistonventile"
+    }
+   },
+   {
+    "id": "aerophone",
+    "title": {
+     "en": "aerophone",
+     "de": "Aerophon"
+    }
+   },
+   {
+    "id": "lip-reed",
+    "title": {
+     "en": "lip reed",
+     "de": "Lippenton"
+    }
+   },
+   {
+    "id": "mouthpiece",
+    "title": {
+     "en": "mouthpiece",
+     "de": "Mundstück"
+    }
+   },
+   {
+    "id": "mute",
+    "title": {
+     "en": "mute",
+     "de": "Dämpfer"
+    }
+   },
+   {
+    "id": "straight-mute",
+    "title": {
+     "en": "straight mute",
+     "de": "gerader Dämpfer"
+    }
+   },
+   {
+    "id": "cup-mute",
+    "title": {
+     "en": "cup mute",
+     "de": "Tassendämpfer"
+    }
+   },
+   {
+    "id": "valve-oil",
+    "title": {
+     "en": "valve oil",
+     "de": "Ventilöl"
+    }
+   },
+   {
+    "id": "instrument-case",
+    "title": {
+     "en": "instrument case",
+     "de": "Instrumentenkoffer"
+    }
+   },
+   {
+    "id": "hard-case",
+    "title": {
+     "en": "hard case",
+     "de": "Hartschalenkoffer"
+    }
+   },
+   {
+    "id": "tolex",
+    "title": {
+     "en": "tolex",
+     "de": "Tolex"
+    }
+   },
+   {
+    "id": "plywood",
+    "title": {
+     "en": "plywood",
+     "de": "Sperrholz"
+    }
+   },
+   {
+    "id": "lacquered-brass",
+    "title": {
+     "en": "lacquered brass",
+     "de": "lackiertes Messing"
+    }
+   },
+   {
+    "id": "nickel-silver",
+    "title": {
+     "en": "nickel silver",
+     "de": "Neusilber"
+    }
+   },
+   {
+    "id": "silver-plated",
+    "title": {
+     "en": "silver plated",
+     "de": "versilbert"
+    }
+   },
+   {
+    "id": "aluminium",
+    "title": {
+     "en": "aluminium",
+     "de": "Aluminium"
+    }
+   },
+   {
+    "id": "student-instrument",
+    "title": {
+     "en": "student instrument",
+     "de": "Schülerinstrument"
+    }
+   },
+   {
+    "id": "passive",
+    "title": {
+     "en": "passive",
+     "de": "passiv"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage instrument authors (used instruments wave, author 21)",
@@ -35066,8 +35216,8 @@
        0.02,
        0.36
       ],
-      "r0": 0.03,
-      "r1": 0.03,
+      "r0": 0.016,
+      "r1": 0.016,
       "member": "case",
       "part": "joint"
      },
@@ -35088,8 +35238,8 @@
        0.0,
        0.026
       ],
-      "r0": 0.03,
-      "r1": 0.03,
+      "r0": 0.016,
+      "r1": 0.016,
       "member": "case",
       "part": "joint"
      },
@@ -35101,9 +35251,9 @@
       "role": "detail",
       "tone": 0.25,
       "radii": [
-       0.03,
-       0.03,
-       0.03
+       0.016,
+       0.016,
+       0.016
       ],
       "transform": {
        "translation": [
@@ -35123,9 +35273,9 @@
       "role": "detail",
       "tone": 0.2,
       "radii": [
-       0.018,
-       0.018,
-       0.018
+       0.016,
+       0.016,
+       0.016
       ],
       "transform": {
        "translation": [
@@ -35145,9 +35295,9 @@
       "role": "detail",
       "tone": 0.2,
       "radii": [
-       0.018,
-       0.018,
-       0.018
+       0.016,
+       0.016,
+       0.016
       ],
       "transform": {
        "translation": [
@@ -35167,9 +35317,9 @@
       "role": "detail",
       "tone": 0.2,
       "radii": [
-       0.018,
-       0.018,
-       0.018
+       0.016,
+       0.016,
+       0.016
       ],
       "transform": {
        "translation": [
@@ -35189,9 +35339,9 @@
       "role": "detail",
       "tone": 0.2,
       "radii": [
-       0.018,
-       0.018,
-       0.018
+       0.016,
+       0.016,
+       0.016
       ],
       "transform": {
        "translation": [
@@ -35211,9 +35361,9 @@
       "role": "detail",
       "tone": 0.2,
       "radii": [
-       0.018,
-       0.018,
-       0.018
+       0.016,
+       0.016,
+       0.016
       ],
       "transform": {
        "translation": [
@@ -35233,9 +35383,9 @@
       "role": "detail",
       "tone": 0.2,
       "radii": [
-       0.018,
-       0.018,
-       0.018
+       0.016,
+       0.016,
+       0.016
       ],
       "transform": {
        "translation": [
@@ -35255,9 +35405,9 @@
       "role": "detail",
       "tone": 0.2,
       "radii": [
-       0.018,
-       0.018,
-       0.018
+       0.016,
+       0.016,
+       0.016
       ],
       "transform": {
        "translation": [
@@ -35282,8 +35432,730 @@
     ]
    },
    "500": {
-    "status": "unavailable",
-    "denominator": 500
+    "status": "authored",
+    "denominator": 500,
+    "decisions": [
+     {
+      "en": "Body for the 75 mm feature: the open case keeps its wall ring and its lid rim ring as hollow parts judged by their overall extents, the bottom as its declared 15 mm sheet under the bed lining as its declared 3 mm sheet in place, the lid top as its declared sheet and the handle as one 75 mm block with its outer face in place; the trumpet is its leadpipe, its lower main tube and its bell tube at their true section as slender parts through one 75 mm valve block, and the bell is the filled flare of its true profile; the two mutes are cones of four and five points; hinge, divider, cloth, bottle, crooks and the two short slides are below the feature and left out.",
+      "de": "Körper für das 75-mm-Merkmal: der offene Koffer behält Wandring und Deckelrandring als Hohlteile, nach ihren Gesamtmaßen beurteilt, den Boden als erklärte 15-mm-Platte unter dem Bettfutter als erklärter 3-mm-Platte am Ort, die Deckelplatte als erklärte Platte und den Griff als einen 75-mm-Block mit der Außenfläche am Ort; die Trompete ist ihr Mundrohr, ihr unteres Hauptrohr und ihr Schallrohr im wahren Querschnitt als schlanke Teile durch einen 75-mm-Ventilblock, und der Schallbecher ist der gefüllte Becher seines wahren Profils; die zwei Dämpfer sind Kegel aus vier und fünf Punkten; Scharnier, Trennsteg, Tuch, Flasche, Bögen und die zwei kurzen Züge liegen unter dem Merkmal und entfallen."
+     },
+     {
+      "en": "Thermal: the body solids in their regions by reference; worn brass, mouthpiece and accessories as texture faces so that every region keeps a solid, and a 75 mm breath disc at the bell mouth.",
+      "de": "Thermik: die Körper in ihren Regionen als Verweis; abgegriffenes Messing, Mundstück und Zubehör als Texturflächen, damit jede Region einen Körper behält, und eine 75-mm-Atemscheibe an der Bechermündung."
+     },
+     {
+      "en": "Structure: the members by reference, the hinge as a 75 mm joint and three mass markers.",
+      "de": "Tragwerk: die Stäbe als Verweis, das Scharnier als 75-mm-Gelenk und drei Massenmarken."
+     }
+    ],
+    "body": [
+     {
+      "id": "walls",
+      "kind": "extrude",
+      "bone": "case",
+      "material": "case-ply-tolex",
+      "role": "body",
+      "tone": 0.12,
+      "profile": [
+       [
+        0.025,
+        0
+       ],
+       [
+        0.355,
+        0
+       ],
+       [
+        0.355,
+        0.64
+       ],
+       [
+        0.025,
+        0.64
+       ]
+      ],
+      "plane": "zx",
+      "from": -0.1,
+      "to": 0.02,
+      "holes": [
+       [
+        [
+         0.031,
+         0.006
+        ],
+        [
+         0.349,
+         0.006
+        ],
+        [
+         0.349,
+         0.634
+        ],
+        [
+         0.031,
+         0.634
+        ]
+       ]
+      ]
+     },
+     {
+      "id": "bottom",
+      "kind": "box",
+      "bone": "case",
+      "material": "case-ply-tolex",
+      "role": "body",
+      "tone": 0.12,
+      "size": [
+       0.628,
+       0.015,
+       0.318
+      ],
+      "transform": {
+       "translation": [
+        0.32,
+        -0.0925,
+        0.19
+       ]
+      },
+      "sheet": true
+     },
+     {
+      "id": "bed-lining",
+      "kind": "box",
+      "bone": "case",
+      "material": "plush-foam",
+      "role": "body",
+      "tone": 0.32,
+      "size": [
+       0.628,
+       0.003,
+       0.318
+      ],
+      "transform": {
+       "translation": [
+        0.32,
+        -0.0725,
+        0.19
+       ]
+      },
+      "sheet": true
+     },
+     {
+      "id": "handle",
+      "kind": "box",
+      "bone": "case",
+      "material": "handle-pvc",
+      "role": "body",
+      "tone": 0.15,
+      "size": [
+       0.15,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.32,
+        -0.0175,
+        0.0265
+       ]
+      }
+     },
+     {
+      "id": "lid-rims",
+      "kind": "extrude",
+      "bone": "lid",
+      "material": "case-ply-tolex",
+      "role": "body",
+      "tone": 0.14,
+      "profile": [
+       [
+        -0.335,
+        0
+       ],
+       [
+        -0.005,
+        0
+       ],
+       [
+        -0.005,
+        0.64
+       ],
+       [
+        -0.335,
+        0.64
+       ]
+      ],
+      "plane": "zx",
+      "from": 0,
+      "to": 0.049,
+      "holes": [
+       [
+        [
+         -0.329,
+         0.006
+        ],
+        [
+         -0.011,
+         0.006
+        ],
+        [
+         -0.011,
+         0.634
+        ],
+        [
+         -0.329,
+         0.634
+        ]
+       ]
+      ]
+     },
+     {
+      "id": "lid-top",
+      "kind": "box",
+      "bone": "lid",
+      "material": "case-ply-tolex",
+      "role": "body",
+      "tone": 0.14,
+      "size": [
+       0.64,
+       0.01,
+       0.33
+      ],
+      "transform": {
+       "translation": [
+        0.32,
+        0.05,
+        -0.17
+       ]
+      },
+      "sheet": true
+     },
+     {
+      "id": "straight-mute",
+      "kind": "revolve",
+      "bone": "straight-mute",
+      "material": "aluminium-spun",
+      "role": "body",
+      "tone": 0.82,
+      "profile": [
+       [
+        0.004,
+        0
+       ],
+       [
+        0.004,
+        0.049
+       ],
+       [
+        0.135,
+        0.02
+       ],
+       [
+        0.135,
+        0
+       ]
+      ],
+      "axis": [
+       1,
+       0,
+       0
+      ],
+      "origin": [
+       0,
+       0,
+       0
+      ]
+     },
+     {
+      "id": "cup-mute",
+      "kind": "revolve",
+      "bone": "cup-mute",
+      "material": "fibre-painted",
+      "role": "body",
+      "tone": 0.2,
+      "profile": [
+       [
+        0.002,
+        0
+       ],
+       [
+        0.002,
+        0.053
+       ],
+       [
+        0.09,
+        0.053
+       ],
+       [
+        0.13,
+        0.02
+       ],
+       [
+        0.13,
+        0
+       ]
+      ],
+      "axis": [
+       1,
+       0,
+       0
+      ],
+      "origin": [
+       0,
+       0,
+       0
+      ]
+     },
+     {
+      "id": "valve-block",
+      "kind": "box",
+      "bone": "trumpet",
+      "material": "brass-lacquer",
+      "role": "body",
+      "tone": 0.72,
+      "size": [
+       0.075,
+       0.075,
+       0.11
+      ],
+      "transform": {
+       "translation": [
+        0.224,
+        0.025,
+        0.029
+       ]
+      }
+     },
+     {
+      "id": "leadpipe",
+      "kind": "capsule",
+      "bone": "trumpet",
+      "material": "brass-lacquer",
+      "role": "body",
+      "tone": 0.74,
+      "p0": [
+       0,
+       0,
+       0
+      ],
+      "p1": [
+       0.41,
+       0,
+       0.014
+      ],
+      "r0": 0.0068,
+      "r1": 0.0068,
+      "slender": true
+     },
+     {
+      "id": "main-lower",
+      "kind": "capsule",
+      "bone": "trumpet",
+      "material": "brass-lacquer",
+      "role": "body",
+      "tone": 0.7,
+      "p0": [
+       0.135,
+       0,
+       0.046
+      ],
+      "p1": [
+       0.41,
+       0,
+       0.046
+      ],
+      "r0": 0.0063,
+      "r1": 0.0063,
+      "slender": true
+     },
+     {
+      "id": "bell-tail",
+      "kind": "capsule",
+      "bone": "bell",
+      "material": "brass-lacquer",
+      "role": "body",
+      "tone": 0.76,
+      "p0": [
+       0.029,
+       0,
+       0.004
+      ],
+      "p1": [
+       0.345,
+       0,
+       0
+      ],
+      "r0": 0.0075,
+      "r1": 0.0075,
+      "slender": true
+     },
+     {
+      "id": "bell",
+      "kind": "revolve",
+      "bone": "bell",
+      "material": "brass-lacquer",
+      "role": "body",
+      "tone": 0.78,
+      "profile": [
+       [
+        0.3,
+        0
+       ],
+       [
+        0.3,
+        0.0078
+       ],
+       [
+        0.37,
+        0.0138
+       ],
+       [
+        0.415,
+        0.0236
+       ],
+       [
+        0.446,
+        0.0383
+       ],
+       [
+        0.4774,
+        0.0615
+       ],
+       [
+        0.4774,
+        0
+       ]
+      ],
+      "axis": [
+       1,
+       0,
+       0
+      ],
+      "origin": [
+       0,
+       0,
+       0
+      ]
+     }
+    ],
+    "thermal": [
+     {
+      "id": "th-walls",
+      "of": "walls",
+      "region": "case-shell"
+     },
+     {
+      "id": "th-bottom",
+      "of": "bottom",
+      "region": "case-shell"
+     },
+     {
+      "id": "th-lid-rims",
+      "of": "lid-rims",
+      "region": "case-shell"
+     },
+     {
+      "id": "th-lid-top",
+      "of": "lid-top",
+      "region": "case-shell"
+     },
+     {
+      "id": "th-bed-lining",
+      "of": "bed-lining",
+      "region": "case-lining"
+     },
+     {
+      "id": "th-handle",
+      "of": "handle",
+      "region": "case-hardware"
+     },
+     {
+      "id": "th-straight-mute",
+      "of": "straight-mute",
+      "region": "straight-mute"
+     },
+     {
+      "id": "th-cup-mute",
+      "of": "cup-mute",
+      "region": "cup-mute"
+     },
+     {
+      "id": "th-valve-block",
+      "of": "valve-block",
+      "region": "trumpet-brass"
+     },
+     {
+      "id": "th-leadpipe",
+      "of": "leadpipe",
+      "region": "trumpet-brass"
+     },
+     {
+      "id": "th-main-lower",
+      "of": "main-lower",
+      "region": "trumpet-brass"
+     },
+     {
+      "id": "th-bell-tail",
+      "of": "bell-tail",
+      "region": "trumpet-brass"
+     },
+     {
+      "id": "th-bell",
+      "of": "bell",
+      "region": "trumpet-brass"
+     },
+     {
+      "id": "th-valve-block-wear",
+      "kind": "box",
+      "bone": "trumpet",
+      "material": "brass-worn",
+      "role": "texture",
+      "tone": 0.5,
+      "size": [
+       0.072,
+       0.001,
+       0.042
+      ],
+      "transform": {
+       "translation": [
+        0.224,
+        0.063,
+        0.029
+       ]
+      },
+      "texture": true,
+      "region": "worn-brass"
+     },
+     {
+      "id": "th-mouthpiece",
+      "kind": "box",
+      "bone": "mouthpiece",
+      "material": "silver-plate",
+      "role": "texture",
+      "tone": 0.9,
+      "size": [
+       0.066,
+       0.001,
+       0.026
+      ],
+      "transform": {
+       "translation": [
+        -0.033,
+        -0.012,
+        0
+       ]
+      },
+      "texture": true,
+      "region": "mouthpiece"
+     },
+     {
+      "id": "th-bottle",
+      "kind": "box",
+      "bone": "oil-bottle",
+      "material": "pe-bottle",
+      "role": "texture",
+      "tone": 0.88,
+      "size": [
+       0.09,
+       0.001,
+       0.032
+      ],
+      "transform": {
+       "translation": [
+        0.045,
+        -0.0065,
+        0
+       ]
+      },
+      "texture": true,
+      "region": "accessories"
+     },
+     {
+      "id": "th-breath-bell",
+      "kind": "revolve",
+      "bone": "bell",
+      "material": "brass-lacquer",
+      "role": "detail",
+      "tone": 0.2,
+      "profile": [
+       [
+        0.477,
+        0
+       ],
+       [
+        0.477,
+        0.0375
+       ],
+       [
+        0.552,
+        0.0375
+       ],
+       [
+        0.552,
+        0
+       ]
+      ],
+      "axis": [
+       1,
+       0,
+       0
+      ],
+      "origin": [
+       0,
+       0,
+       0
+      ],
+      "region": "trumpet-brass",
+      "tags": [
+       "emitter",
+       "breath-bell"
+      ]
+     }
+    ],
+    "structure": [
+     {
+      "id": "st-walls",
+      "of": "walls",
+      "member": "case",
+      "part": "member"
+     },
+     {
+      "id": "st-bottom",
+      "of": "bottom",
+      "member": "case",
+      "part": "member"
+     },
+     {
+      "id": "st-lid-rims",
+      "of": "lid-rims",
+      "member": "lid",
+      "part": "member"
+     },
+     {
+      "id": "st-lid-top",
+      "of": "lid-top",
+      "member": "lid",
+      "part": "member"
+     },
+     {
+      "id": "st-valve-block",
+      "of": "valve-block",
+      "member": "trumpet",
+      "part": "member"
+     },
+     {
+      "id": "st-leadpipe",
+      "of": "leadpipe",
+      "member": "trumpet",
+      "part": "member"
+     },
+     {
+      "id": "st-main-lower",
+      "of": "main-lower",
+      "member": "trumpet",
+      "part": "member"
+     },
+     {
+      "id": "st-bell-tail",
+      "of": "bell-tail",
+      "member": "bell",
+      "part": "member"
+     },
+     {
+      "id": "st-bell",
+      "of": "bell",
+      "member": "bell",
+      "part": "member"
+     },
+     {
+      "id": "st-hinge",
+      "kind": "box",
+      "bone": "case",
+      "material": "nickel-steel",
+      "role": "body",
+      "tone": 0.7,
+      "size": [
+       0.46,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.32,
+        0.02,
+        0.36
+       ]
+      },
+      "member": "lid",
+      "part": "joint"
+     },
+     {
+      "id": "st-mass-case",
+      "kind": "box",
+      "bone": "case",
+      "material": "case-ply-tolex",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.32,
+        -0.06,
+        0.19
+       ]
+      },
+      "member": "case",
+      "part": "mass"
+     },
+     {
+      "id": "st-mass-lid",
+      "kind": "box",
+      "bone": "lid",
+      "material": "case-ply-tolex",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.32,
+        0.025,
+        -0.17
+       ]
+      },
+      "member": "lid",
+      "part": "mass"
+     },
+     {
+      "id": "st-mass-trumpet",
+      "kind": "box",
+      "bone": "trumpet",
+      "material": "brass-lacquer",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.2,
+        0.02,
+        0.03
+       ]
+      },
+      "member": "trumpet",
+      "part": "mass"
+     }
+    ]
    }
   },
   "presentation": {

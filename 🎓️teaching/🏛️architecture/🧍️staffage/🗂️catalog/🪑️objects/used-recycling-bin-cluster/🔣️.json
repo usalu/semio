@@ -13,18 +13,90 @@
    "de": "Eine Dreifach-Kippbehälterstation eines kommunalen Parks nach Jahren im Einsatz: vier anthrazitfarbene Quadratrohrpfosten, auf eine Fertigteilplatte gedübelt, tragen einen ausgeblichenen gelben Verpackungsbehälter, einen blauen Papierbehälter mit Graffiti-Tag und einen grauen Restmüllbehälter mit ersetztem Deckel, verkratztes HDPE, rostige Pfostenfüße, Moos und Kaugummi auf der Platte und eine leere Weinflasche daneben, weil Glas nicht hineingehört."
   },
   "tags": [
-   "used",
-   "park",
-   "public-space",
-   "waste",
-   "recycling",
-   "litter-bin",
-   "tipping-bin",
-   "hdpe",
-   "steel",
-   "concrete",
-   "street-furniture",
-   "maintenance"
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "park",
+    "title": {
+     "en": "park",
+     "de": "Park"
+    }
+   },
+   {
+    "id": "public-space",
+    "title": {
+     "en": "public space",
+     "de": "öffentlicher Raum"
+    }
+   },
+   {
+    "id": "waste",
+    "title": {
+     "en": "waste",
+     "de": "Abfall"
+    }
+   },
+   {
+    "id": "recycling",
+    "title": {
+     "en": "recycling",
+     "de": "Recycling"
+    }
+   },
+   {
+    "id": "litter-bin",
+    "title": {
+     "en": "litter bin",
+     "de": "Abfalleimer"
+    }
+   },
+   {
+    "id": "tipping-bin",
+    "title": {
+     "en": "tipping bin",
+     "de": "Kippbehälter"
+    }
+   },
+   {
+    "id": "hdpe",
+    "title": {
+     "en": "HDPE",
+     "de": "HDPE"
+    }
+   },
+   {
+    "id": "steel",
+    "title": {
+     "en": "steel",
+     "de": "Stahl"
+    }
+   },
+   {
+    "id": "concrete",
+    "title": {
+     "en": "concrete",
+     "de": "Beton"
+    }
+   },
+   {
+    "id": "street-furniture",
+    "title": {
+     "en": "street furniture",
+     "de": "Stadtmobiliar"
+    }
+   },
+   {
+    "id": "maintenance",
+    "title": {
+     "en": "maintenance",
+     "de": "Wartung"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content (used park objects wave)",

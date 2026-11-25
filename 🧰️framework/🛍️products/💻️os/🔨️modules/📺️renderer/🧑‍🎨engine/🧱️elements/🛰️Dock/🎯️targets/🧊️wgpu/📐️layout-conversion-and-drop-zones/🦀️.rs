@@ -1,6 +1,7 @@
 //! 📐️ Layout conversion and drop zones: the conversion between window layouts and dock nodes, the layout edits, the split and drop zone geometry and the stack tab bars. See [`super`].
 
 use super::*;
+use semio_ui_wgpu_light::drag_places::{insert_slot, DropRect};
 
 //#region DockFreeFunctions
 pub fn dock_from_window_layout(root: &WindowLayoutNode) -> DockNode {
@@ -312,17 +313,22 @@ pub fn split_drop_preview_in_body(body: Rect, side: DockSide) -> Rect {
     }
 }
 
-/// 🎯️ Resolves the on-canvas indicator rect for an active dock drop zone.
-pub fn drop_zone_indicator_rect(zone: &DockDropZone, tab_bars: &[(DockPath, WindowStackCorner, Rect, Vec<f32>)], bodies: &[(DockPath, Rect, String)], canvas: Rect, gap: f32) -> Option<Rect> {
+/// 🎯️ Resolves the active drop place for a dock drop zone: a rectangle inside its stack, the slot the dropped tab takes in the tab row (the first half of the tab it lands before, `insert_slot`) or the half of the body the split takes.
+pub fn drop_zone_indicator_rect(zone: &DockDropZone, tab_bars: &[(DockPath, WindowStackCorner, Rect, Vec<f32>)], bodies: &[(DockPath, Rect, String)], canvas: Rect) -> Option<Rect> {
     match zone {
         DockDropZone::Tab { stack_path, corner, index } => {
             let (_, _, tab_bar, widths) = tab_bars.iter().find(|(path, bar_corner, _, _)| path == stack_path && bar_corner == corner)?;
-            let mut x = tab_bar.x + gap;
-            for width in widths.iter().take(*index) {
-                x += width + gap;
-            }
-            let preview_w = widths.get(*index).copied().unwrap_or(88.0).clamp(48.0, 120.0);
-            Some(Rect::new(x, tab_bar.y + gap * 0.5, preview_w, tab_bar.h - gap))
+            let mut left = tab_bar.x;
+            let items: Vec<DropRect> = widths
+                .iter()
+                .map(|width| {
+                    let item = DropRect { left, top: tab_bar.y, right: left + width, bottom: tab_bar.y + tab_bar.h };
+                    left += width;
+                    item
+                })
+                .collect();
+            let [x, y, w, h] = insert_slot(DropRect::from_frame([tab_bar.x, tab_bar.y, tab_bar.w, tab_bar.h]), &items, *index as i64).frame();
+            Some(Rect::new(x, y, w, h))
         }
         DockDropZone::Split { stack_path, side } => {
             let (_, body, _) = bodies.iter().find(|(path, _, _)| path == stack_path)?;
@@ -330,6 +336,11 @@ pub fn drop_zone_indicator_rect(zone: &DockDropZone, tab_bars: &[(DockPath, Wind
         }
         DockDropZone::RootSplit { side } => Some(split_drop_preview_in_body(canvas, *side)),
     }
+}
+
+/// 🎯️ Every place a dragged window or tab can be dropped on while it travels: the tab row and the body of every stack, tinted `DROP_TINT_AVAILABLE_PERCENT`.
+pub fn dock_drop_places(tab_bars: &[(DockPath, WindowStackCorner, Rect, Vec<f32>)], bodies: &[(DockPath, Rect, String)]) -> Vec<Rect> {
+    tab_bars.iter().map(|(_, _, rect, _)| *rect).chain(bodies.iter().map(|(_, rect, _)| *rect)).collect()
 }
 
 pub fn dock_cap_depth(theme: &Theme) -> f32 {

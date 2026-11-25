@@ -13,13 +13,55 @@
       "de": "Ein 19-Zoll-Serverschrank mit 42 HE, 2,0 m hoch, 0,6 m breit und 1,0 m tief, mit gelochter Fronttür, sechs Servern, einem Speicher und einem Switch: im Leerlauf etwa 1,5 kW Wärme, bei Volllast 5 kW, fast alles in der Luft, die die Lüfter von vorn nach hinten blasen."
     },
     "tags": [
-      "server-rack",
-      "data-centre",
-      "it-equipment",
-      "internal-gain",
-      "electrical",
-      "heat-source",
-      "ventilation"
+      {
+        "id": "server-rack",
+        "title": {
+          "en": "server rack",
+          "de": "Serverschrank"
+        }
+      },
+      {
+        "id": "data-centre",
+        "title": {
+          "en": "data centre",
+          "de": "Rechenzentrum"
+        }
+      },
+      {
+        "id": "it-equipment",
+        "title": {
+          "en": "IT equipment",
+          "de": "IT-Geräte"
+        }
+      },
+      {
+        "id": "internal-gain",
+        "title": {
+          "en": "internal gain",
+          "de": "innere Wärmelast"
+        }
+      },
+      {
+        "id": "electrical",
+        "title": {
+          "en": "electrical",
+          "de": "Elektro"
+        }
+      },
+      {
+        "id": "heat-source",
+        "title": {
+          "en": "heat source",
+          "de": "Wärmequelle"
+        }
+      },
+      {
+        "id": "ventilation",
+        "title": {
+          "en": "ventilation",
+          "de": "Lüftung"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage content (A7)",

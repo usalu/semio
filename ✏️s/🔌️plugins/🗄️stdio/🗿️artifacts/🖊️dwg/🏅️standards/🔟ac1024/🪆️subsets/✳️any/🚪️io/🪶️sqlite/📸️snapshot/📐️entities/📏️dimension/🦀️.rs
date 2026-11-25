@@ -1,11 +1,11 @@
 //! 📏️ Linear dimension measurements, attachment, text state and explicit coordinate components.
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgDimensionEntityCommon;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgDimensionLineSpacingStyle;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgDimensionStatus;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgDimensionTextAttachment;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEntityCommon;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgLinearDimensionEntity;
+use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgDimensionEntityCommon;
+use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgDimensionLineSpacingStyle;
+use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgDimensionStatus;
+use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgDimensionTextAttachment;
+use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgEntityCommon;
+use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgLinearDimensionEntity;
 use super::{reader::optional_words,number::Projection,entities::{coordinates,read_coordinates},reader::{boolean,full_unsigned,high,low,optional_unsigned,real,Reader}};
 use semio_os_kernel::sqlite_snapshot::artifact::Cell;
 use Cell::{Integer as I,Real as R,Text as T};

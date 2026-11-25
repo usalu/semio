@@ -30,6 +30,10 @@ semio-s-artifact-norm-en1996-diff = { workspace = true }
 semio-s-artifact-norm-en1996-masonry = { workspace = true }
 semio-s-artifact-norm-en1996-model = { workspace = true }
 semio-s-artifact-norm-en1996-mutations = { workspace = true }
+semio-s-artifact-norm-en1996-mutations-graphql = { workspace = true }
+semio-s-artifact-norm-en1996-mutations-json-schema = { workspace = true }
+semio-s-artifact-norm-en1996-mutations-proto = { workspace = true }
+semio-s-artifact-norm-en1996-mutations-typescript = { workspace = true }
 semio-s-plugin-norm-compliance = { workspace = true }
 
 [features]

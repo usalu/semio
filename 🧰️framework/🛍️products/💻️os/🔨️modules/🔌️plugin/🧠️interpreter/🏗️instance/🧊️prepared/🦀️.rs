@@ -90,13 +90,13 @@ pub(super) fn copy_image<T:Copy>(target:&mut Vec<T>,source:&[T],cx:&mut StepCont
  if offset==source.len(){return Ok(true)}
  if target.capacity()<source.len(){reserve(target,source.len(),cx)?;return Ok(false)}
  let count=copy_count(cx,source.len()-offset,size_of::<T>());
- if count>0&&charge(cx,bytes_for::<T>(count)?,0,0)?{target.extend_from_slice(&source[offset..offset+count]);}
+ if count>0&&charge_in(RetainedCategory::CheckpointImage,cx,bytes_for::<T>(count)?,0,0)?{target.extend_from_slice(&source[offset..offset+count]);}
  Ok(false)
 }
 
 pub(super) fn copy_image_segment<T:Copy>(target:&mut Vec<Option<Vec<T>>>,index:usize,source:Option<&[T]>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
  if target.len()==index{
-  if charge(cx,size_of::<Option<Vec<T>>>(),0,0)?{target.push(source.map(|_|Vec::new()));}
+  if charge_in(RetainedCategory::CheckpointImage,cx,size_of::<Option<Vec<T>>>(),0,0)?{target.push(source.map(|_|Vec::new()));}
   return Ok(false)
  }
  let Some(source)=source else{return Ok(true)};

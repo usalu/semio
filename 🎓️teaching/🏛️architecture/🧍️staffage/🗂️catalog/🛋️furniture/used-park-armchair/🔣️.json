@@ -13,18 +13,90 @@
    "de": "Ein beweglicher Stahlsessel vom Stadtpark-Typ nach Jahren im Einsatz auf dem Kies eines städtischen Parks: zwei Seitenrahmen aus Rohr Ø25 mm, zu Hinterbein, Armlehne und Vorderbein gebogen, Sitz und Rücken aus 2-mm-Lochblech auf Flachstahlträgern, Sitz 0,40 m, Armlehnen 0,61 m, 12,8 kg. Die moosgrüne Farbe ist gekreidet und blättert, die Armlehnen sind vorn von Händen blank gegriffen, die Polyamidgleiter sind verloren und die Füße verrostet. Der Bauhof hebt ihn an den Armlehnen auf den Winterstapel (die gespreizten Beine lassen die Stühle ineinander stapeln); Besucher ziehen ihn über den Kies in die Sonne und lehnen sich zurück."
   },
   "tags": [
-   "used",
-   "park",
-   "public-space",
-   "seating",
-   "armchair",
-   "chair",
-   "movable",
-   "stackable",
-   "steel",
-   "perforated-sheet",
-   "street-furniture",
-   "rust"
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "park",
+    "title": {
+     "en": "park",
+     "de": "Park"
+    }
+   },
+   {
+    "id": "public-space",
+    "title": {
+     "en": "public space",
+     "de": "öffentlicher Raum"
+    }
+   },
+   {
+    "id": "seating",
+    "title": {
+     "en": "seating",
+     "de": "Sitzmöbel"
+    }
+   },
+   {
+    "id": "armchair",
+    "title": {
+     "en": "armchair",
+     "de": "Sessel"
+    }
+   },
+   {
+    "id": "chair",
+    "title": {
+     "en": "chair",
+     "de": "Stuhl"
+    }
+   },
+   {
+    "id": "movable",
+    "title": {
+     "en": "movable",
+     "de": "beweglich"
+    }
+   },
+   {
+    "id": "stackable",
+    "title": {
+     "en": "stackable",
+     "de": "stapelbar"
+    }
+   },
+   {
+    "id": "steel",
+    "title": {
+     "en": "steel",
+     "de": "Stahl"
+    }
+   },
+   {
+    "id": "perforated-sheet",
+    "title": {
+     "en": "perforated sheet",
+     "de": "Lochblech"
+    }
+   },
+   {
+    "id": "street-furniture",
+    "title": {
+     "en": "street furniture",
+     "de": "Stadtmobiliar"
+    }
+   },
+   {
+    "id": "rust",
+    "title": {
+     "en": "rust",
+     "de": "Rost"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content (used park objects wave)",

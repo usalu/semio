@@ -2,7 +2,7 @@
 use super::*;
 use semio_framework_job::{OriginalJobFixtureCaller,OriginalJobDecodeOwner,OperationId,Generation};
 use semio_framework_value::{RetainedCloneGrant,retirement::controlled::ControlledRetirement};
-use semio_plugin_ownership::original_store_genesis::OriginalStoreBirth;
+use semio_plugin_store_lifecycle::original_store_genesis::OriginalStoreBirth;
 use semio_plugin_job::original_steps::replied;
 fn clock()->Option<u64>{Some(1)}
 fn grant()->RetainedCloneGrant{let header=semio_framework_value::RetirementDemand{capacity_bytes:size_of::<OriginalTypingCommit<String>>(),..semio_plugin_job::original_steps::fixed::<OriginalTypingCommit<String>>()};let(quote,_)=semio_framework_job::original_construction_settled_quote::<Box<OriginalTypingCommit<String>>>(semio_plugin_job::original_steps::construction(header),1).unwrap();RetainedCloneGrant{maximum_items:quote.items,maximum_copy_bytes:quote.copy_bytes.max(32768),maximum_capacity_bytes:quote.capacity_bytes.max(1<<20),maximum_release_bytes:1<<20,maximum_depth:quote.depth.max(4096)}}

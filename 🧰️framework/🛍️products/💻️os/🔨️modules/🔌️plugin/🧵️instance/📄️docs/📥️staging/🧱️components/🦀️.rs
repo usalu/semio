@@ -6,7 +6,7 @@ use std::sync::Arc;
 use semio_plugin_decl_app::ArtifactApp;
 use semio_plugin_decl_media::ArtifactDownloadOutput;
 use semio_plugin_ownership::bounded_ownership::{ArtifactFixedRegistry, DOCUMENT_ARCHIVE_LOAD_SLOTS};
-use semio_plugin_ownership::store_lifecycle::{ArtifactOwnedDisposer, ArtifactSnapshotCloseRetention};
+use semio_plugin_store_lifecycle::store_lifecycle::{ArtifactOwnedDisposer, ArtifactSnapshotCloseRetention};
 use pack::snapshot::ArtifactPack;
 use semio_framework_value::retirement::controlled::ControlledRetirement;
 use semio_plugin_decl_emission::Emit;
@@ -20,12 +20,10 @@ use protocol::OpText;
 use semio_plugin_reactor_app::PluginApp;
 use semio_plugin_child::SnapshotReadReturnPump;
 use semio_ui_contract::*;
-#[path = "🎟️picker-publication.rs"]
-pub mod picker_publication;
 
 /// 🩺️ Media transfers: the media exports, downloads, closures and snapshot retirements of the instance.
 pub struct MediaTransfers<A: ArtifactApp> {
-    pub original_picker: Option<Box<picker_publication::PickerPublication>>,
+    pub original_picker: Option<Box<semio_plugin_instance_natural_publication::picker::PickerPublication>>,
     pub natural_source: Option<Box<semio_plugin_instance_natural_publication::NaturalFilePublication>>,
     pub pending_reserved_producer_permit:ManuallyDrop<Option<(FrameworkReservedCommitPermit,(semio_framework_job::OperationId,semio_framework_job::Generation,usize))>>,
     pub reserved_mount:ManuallyDrop<Option<Box<semio_plugin_retained_command::typed_operation::original_emission::OriginalEmissionAdmission<A>>>>,
@@ -233,12 +231,39 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> EnvelopeJobs<A, M
         Ok(())
     }
 
+    /// 📊️ The status of one load, counting the records its awaited store replacement decoded so far: the replacement's own steps are what run through the long phase after the fold, and the load itself only observes them between its turns.
+    pub fn document_archive_status(&self, operation: u64) -> Option<protocol::DocumentArchiveLoadStatus> {
+        let load = self.document_archive_loads.get(operation)?;
+        let live = load.replacement.and_then(|handle| self.store_replacement_jobs.get(handle.operation.0).filter(|job| job.operation == handle.operation && job.generation == handle.generation)).map_or(0, |job| job.decoded);
+        Some(load.status_with_decoded(live))
+    }
+
+    /// 🛑️ Cancels one running whole-document load together with the store replacement it awaits, in this one step, so no
+    /// maintenance unit can commit the candidate between the request and the load's own next turn. `false` when the load is
+    /// not running or its replacement already committed: the document is then the new one and the load ends ready.
+    pub fn request_document_archive_cancel(&mut self, operation: u64) -> bool {
+        let Some(active) = self.document_archive_loads.get_mut(operation) else { return false };
+        if !matches!(active.state, semio_plugin_document_media::ActiveDocumentArchiveLoadState::Pending | semio_plugin_document_media::ActiveDocumentArchiveLoadState::Running) {
+            return false;
+        }
+        if let Some(handle) = active.replacement {
+            let replacement = self.store_replacement_jobs.get(handle.operation.0).filter(|job| job.operation == handle.operation && job.generation == handle.generation);
+            if replacement.is_some_and(|job| job.committed) {
+                return false;
+            }
+            if let Some(job) = replacement {
+                job.request_cancel();
+            }
+        }
+        active.request_terminal(semio_plugin_document_media::ActiveDocumentArchiveLoadState::Cancelled);
+        true
+    }
+
     pub fn cancel_document_archive_load(&mut self, operation: u64) -> Result<(), semio_framework::Fault> {
-        let active = self.document_archive_loads.get_mut(operation).ok_or_else(|| semio_plugin_decl_app::document_load_fault(semio_plugin_decl_app::DOCUMENT_LOAD_OPERATION_UNKNOWN_CODE, "unknown recursive document archive operation"))?;
-        match active.state {
+        let state = self.document_archive_loads.get(operation).ok_or_else(|| semio_plugin_decl_app::document_load_fault(semio_plugin_decl_app::DOCUMENT_LOAD_OPERATION_UNKNOWN_CODE, "unknown recursive document archive operation"))?.state;
+        match state {
             semio_plugin_document_media::ActiveDocumentArchiveLoadState::Pending | semio_plugin_document_media::ActiveDocumentArchiveLoadState::Running => {
-                active.request_terminal(semio_plugin_document_media::ActiveDocumentArchiveLoadState::Cancelled);
-                Ok(())
+                if self.request_document_archive_cancel(operation) { Ok(()) } else { Err(semio_plugin_decl_app::document_load_fault(semio_plugin_decl_app::DOCUMENT_LOAD_FAILED_CODE, "recursive document archive replacement already committed and cannot be cancelled")) }
             }
             semio_plugin_document_media::ActiveDocumentArchiveLoadState::Cancelled => Ok(()),
             semio_plugin_document_media::ActiveDocumentArchiveLoadState::Ready | semio_plugin_document_media::ActiveDocumentArchiveLoadState::Fault => Err(semio_plugin_decl_app::document_load_fault(semio_plugin_decl_app::DOCUMENT_LOAD_OPERATION_UNKNOWN_CODE, "terminal recursive document archive operation cannot be cancelled")),

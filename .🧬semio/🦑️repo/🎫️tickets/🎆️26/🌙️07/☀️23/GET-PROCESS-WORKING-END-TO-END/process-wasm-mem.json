@@ -1,0 +1,29 @@
+[
+ {
+  "name": "wait for the initial document",
+  "js": "(async()=>'w')()",
+  "until": "(async()=>String(document.querySelectorAll('canvas').length>=1&&!/Loading document/.test(document.body.innerText)&&!!document.querySelector('[role=combobox]')))()",
+  "timeoutMs": 420000,
+  "settleMs": 2000
+ },
+ {
+  "name": "wasm memories after load",
+  "js": "(async()=>window.__memReport?window.__memReport():'none')()",
+  "settleMs": 300
+ },
+ {
+  "name": "switch to Viewer",
+  "js": "(async()=>{[...document.querySelectorAll('button,[role=tab]')].find(b=>(b.getAttribute('aria-label')||b.innerText).trim().startsWith(\"Viewer\")).click();return \"v\"})()",
+  "settleMs": 75000
+ },
+ {
+  "name": "wasm memories after viewer",
+  "js": "(async()=>window.__memReport?window.__memReport():'none')()",
+  "settleMs": 300
+ },
+ {
+  "name": "wasm memories after viewer again",
+  "js": "(async()=>window.__memReport?window.__memReport():'none')()",
+  "settleMs": 300
+ }
+]

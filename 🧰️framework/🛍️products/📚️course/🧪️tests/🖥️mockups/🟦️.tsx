@@ -36,6 +36,8 @@ describe("workspace previews", () => {
       expect(within(region).getByText("Costs")).toBeDefined();
       expect(view.container.querySelectorAll("[data-selected]")).toHaveLength(1);
       expect(view.container.querySelector("code[data-highlight]")).not.toBeNull();
+      expect(region.closest('.course-mockup[data-level="window"]')?.firstElementChild?.matches('figcaption[data-level="pane"][data-glass-chip]')).toBe(true);
+      expect(region.querySelector('.course-workbook[data-level="pane"] > .course-workbook-title[data-glass-chip][data-level="panel"]')).not.toBeNull();
       expect(view.container.querySelectorAll("button,input,select")).toHaveLength(0);
       view.unmount();
     }

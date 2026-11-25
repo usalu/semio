@@ -24,6 +24,7 @@ semio-plugin-reactor-app = { path = "../../../../../⚛️reactor/🔌️app/�
 semio-plugin-instance-extension = { path = "../../../../../🧵️instance/🧩️extensions/📦️packages/🦀️rust" }
 semio-framework = { path = "../../../../../../../../../📦️packages/🦀️rust" }
 semio-plugin-ownership = { path = "../../../../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
+semio-plugin-store-lifecycle = { path = "../../../../../♻️lifecycle/🧱️owner/📦️packages/🦀️rust" }
 semio-framework-test-fixtures = { path = "../../../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio_ui_contract = { path = "../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-ui-contract" }
 semio-os-kernel = { path = "../../../../../../../📦️packages/🦀️rust" }

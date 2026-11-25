@@ -6,7 +6,7 @@
   {"op":"anchor","id":"tp-sun-7","set":{"bone":"t2-1-b","x":3.5222,"y":3.4643,"z":4.5629}},
   {"op":"anchor","id":"tp-sun-8","set":{"bone":"t5-1","x":2.5884,"y":1.7397,"z":7.9836}},
   {"op":"anchor","id":"tp-sun-9","set":{"bone":"t4-2-b","x":2.7508,"y":4.5468,"z":3.2449}},
-  {"op":"anchor","id":"tp-shade-2","set":{"bone":"t2-4","x":4.881,"y":-0.1793,"z":-4.4265}},
+  {"op":"anchor","id":"tp-shade-2","set":{"bone":"t3-4","x":2.2766,"y":0.2197,"z":-2.9181}},
   {"op":"anchor","id":"tp-shade-3","set":{"bone":"t5-4","x":4.1543,"y":0.2227,"z":-1.1204}},
   {"op":"anchor","id":"tp-shade-4","set":{"bone":"t5-4","x":4.71,"y":-0.7943,"z":1.5692}},
   {"op":"anchor","id":"tp-shade-5","set":{"bone":"t6-2","x":2.7614,"y":-0.0065,"z":1.9163}}

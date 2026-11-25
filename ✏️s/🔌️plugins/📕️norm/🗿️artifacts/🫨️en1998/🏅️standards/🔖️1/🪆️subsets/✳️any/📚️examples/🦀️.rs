@@ -29,4 +29,7 @@ pub mod seismic_rc_frame_fail;
 #[cfg(test)]
 #[path = "⚠️seismic-rc-frame-fail/🧪️tests/🧩️example/🦀️.rs"]
 mod example_seismic_rc_frame_fail;
+#[cfg(test)]
+#[path = "🧪️tests/🗜️pack-twins/🦀️.rs"]
+mod pack_twins;
 //#endregion 🪢️Mounts

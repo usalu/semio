@@ -439,11 +439,25 @@ export function meshFormatDiagnostics(meshes: readonly PreparedMesh[], format: s
   return output;
 }
 
-/** 🔌️ An export output reads exactly the geometry channels wired into that widget. */
-export function exportSourceChannels(snapshot: { widgets: readonly { id: string; type: string; preview?: boolean }[]; synapses: readonly { from: string; fromPort: string; to: string }[] }, widgetId?: string): [string, string | null][] {
-  if (widgetId === undefined) return snapshot.widgets.filter(widget => (widget.type === "neuron" && widget.preview === true) || widget.type === "outputPreview" || widget.type === "cluster").map(widget => [widget.id, null]);
-  if (!snapshot.widgets.some(widget => widget.id === widgetId && widget.type === "outputExport")) throw new Error("choose an export output");
-  const channels = snapshot.synapses.filter(wire => wire.to === widgetId).map(wire => [wire.from, wire.fromPort] as [string, string]);
-  if (!channels.length || channels.some(([source]) => !snapshot.widgets.some(widget => widget.id === source))) throw new Error("export output has no connected source");
-  return channels.filter((channel, index) => channels.findIndex(other => other[0] === channel[0] && other[1] === channel[1]) === index);
+/** 🔌️ An export output reads exactly the geometry channels wired into that widget; a whole-dictionary wire (empty port) subsumes the named channels of its source in place, as the Rust `add_geometry_channel` does. */
+export function exportSourceChannels(snapshot: { widgets: readonly { id: string; kind: string; preview?: boolean }[]; synapses: readonly { from: string; fromPort: string; to: string }[] }, widgetId?: string): [string, string | null][] {
+  if (widgetId === undefined) return snapshot.widgets.filter(widget => (widget.kind === "neuron" && widget.preview === true) || widget.kind === "outputPreview" || widget.kind === "cluster").map(widget => [widget.id, null]);
+  if (!snapshot.widgets.some(widget => widget.id === widgetId && widget.kind === "outputExport")) throw new Error("choose an export output");
+  const channels: [string, string | null][] = [];
+  for (const wire of snapshot.synapses.filter(wire => wire.to === widgetId)) {
+    if (!snapshot.widgets.some(widget => widget.id === wire.from)) throw new Error("export output has no connected source");
+    if (wire.fromPort !== "") {
+      if (channels.some(([source, channel]) => source === wire.from && (channel === null || channel === wire.fromPort))) continue;
+    } else {
+      const first = channels.findIndex(([source]) => source === wire.from);
+      if (first >= 0) {
+        channels[first] = [wire.from, null];
+        for (let index = channels.length - 1; index > first; index--) if (channels[index]![0] === wire.from) channels.splice(index, 1);
+        continue;
+      }
+    }
+    channels.push([wire.from, wire.fromPort === "" ? null : wire.fromPort]);
+  }
+  if (!channels.length) throw new Error("export output has no connected source");
+  return channels;
 }

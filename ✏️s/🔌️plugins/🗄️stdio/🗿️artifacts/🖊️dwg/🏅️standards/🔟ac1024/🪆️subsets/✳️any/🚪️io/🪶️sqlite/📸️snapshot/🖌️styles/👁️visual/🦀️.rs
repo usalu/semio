@@ -2,10 +2,10 @@
 /// 🗄️ The DDL of the tables this module projects.
 pub const SQL: &str = include_str!("🗄️.sql");
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgVisualStyle;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgVisualStyleProperties;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgVisualStyleProperty;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgVisualStylePropertyOperation;
+use semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgVisualStyle;
+use semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgVisualStyleProperties;
+use semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgVisualStyleProperty;
+use semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgVisualStylePropertyOperation;
 use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::number::Projection;
 use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::number::Row;
 use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::color;

@@ -11,7 +11,7 @@ use semio_os_mcp_dispatch::actions::ActionAdapter;
 use semio_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
 use semio_os_mcp_port::policy::{AgentPrincipal, PolicyEngine, authorize_capability_scopes};
 use semio_os_mcp_schema::schema::{conversation_reply_input_schema, conversation_reply_output_schema, job_cancel_input_schema, job_get_input_schema, job_snapshot_output_schema, ui_focus_input_schema, ui_focus_output_schema, ui_reveal_input_schema, ui_reveal_output_schema};
-use semio_os_mcp_wire::job_registry::job_registry;
+use semio_os_mcp_wire::job_registry::{job_registry, no_such_job_error};
 use semio_os_mcp_wire::protocol::{CallToolResult, ContentBlock, InMemoryToolRegistry, Resource, ResourceContent, ResourceTemplate, Tool};
 use semio_os_mcp_workspace::headless_workspace_state::HeadlessWorkspace;
 
@@ -68,7 +68,7 @@ fn job_get_handler(arguments: serde_json::Value) -> CallToolResult {
     };
     match job_registry().snapshot(&job_id) {
         Some(snapshot) => CallToolResult::ok(vec![ContentBlock::Text { text: format!("job {job_id} is {:?}", snapshot.status) }], Some(snapshot.to_json())),
-        None => CallToolResult::tool_error(&GatewayError::new(GatewayErrorCode::NotFound, format!("no such job: {job_id}"))),
+        None => CallToolResult::tool_error(&no_such_job_error(&job_id)),
     }
 }
 
@@ -90,7 +90,7 @@ fn job_cancel_handler(arguments: serde_json::Value) -> CallToolResult {
 pub fn register_ui_tools(registry: &mut InMemoryToolRegistry, bridge: Option<BridgeSlot>, _workspace: Option<Arc<HeadlessWorkspace>>, principal: AgentPrincipal) {
     let mut ui_focus = Tool::new("ui_focus", ui_focus_input_schema());
     ui_focus.title = Some("Focus Window".to_string());
-    ui_focus.description = Some("Focuses a window on the attached shell (omit windowId to clear focus).".to_string());
+    ui_focus.description = Some("Focuses a window on the attached shell (omit windowId to clear focus). — Fokussiert ein Fenster der angeschlossenen Shell (ohne windowId wird der Fokus aufgehoben).".to_string());
     ui_focus.output_schema = Some(ui_focus_output_schema());
     let (focus_bridge, focus_principal, focus_capability) = (bridge.clone(), principal.clone(), ui_focus_capability());
     registry
@@ -102,7 +102,7 @@ pub fn register_ui_tools(registry: &mut InMemoryToolRegistry, bridge: Option<Bri
 
     let mut ui_reveal = Tool::new("ui_reveal", ui_reveal_input_schema());
     ui_reveal.title = Some("Reveal In Panel".to_string());
-    ui_reveal.description = Some("Makes a panel visible and navigates it to the given path on the attached shell.".to_string());
+    ui_reveal.description = Some("Makes a panel visible and navigates it to the given path on the attached shell. — Macht ein Panel der angeschlossenen Shell sichtbar und navigiert es zum angegebenen Pfad.".to_string());
     ui_reveal.output_schema = Some(ui_reveal_output_schema());
     let (reveal_bridge, reveal_principal, reveal_capability) = (bridge.clone(), principal, ui_reveal_capability());
     registry
@@ -114,13 +114,13 @@ pub fn register_ui_tools(registry: &mut InMemoryToolRegistry, bridge: Option<Bri
 
     let mut job_get = Tool::new("job_get", job_get_input_schema());
     job_get.title = Some("Get Job".to_string());
-    job_get.description = Some("Reads the status/progress/result of one plugin-agnostic job by id.".to_string());
+    job_get.description = Some("Reads the status/progress/result of one plugin-agnostic job by id. — Liest Status, Fortschritt und Ergebnis eines pluginunabhängigen Auftrags per Id.".to_string());
     job_get.output_schema = Some(job_snapshot_output_schema("job.get"));
     registry.register(job_get, move |arguments| job_get_handler(arguments)).expect("job_get is a valid tool name");
 
     let mut job_cancel = Tool::new("job_cancel", job_cancel_input_schema());
     job_cancel.title = Some("Cancel Job".to_string());
-    job_cancel.description = Some("Requests cooperative cancellation of one running or pending job by id.".to_string());
+    job_cancel.description = Some("Requests cooperative cancellation of one running or pending job by id. — Fordert den kooperativen Abbruch eines laufenden oder wartenden Auftrags per Id an.".to_string());
     job_cancel.output_schema = Some(job_snapshot_output_schema("job.cancel"));
     registry.register(job_cancel, move |arguments| job_cancel_handler(arguments)).expect("job_cancel is a valid tool name");
 }
@@ -291,7 +291,7 @@ fn read_selection_resource(bridge: Option<&Arc<BridgeHandle>>) -> Result<Vec<Res
 fn read_job_resource(job_id: &str) -> Result<Vec<ResourceContent>, GatewayError> {
     match job_registry().snapshot(job_id) {
         Some(snapshot) => Ok(vec![ResourceContent { uri: format!("semio://job/{job_id}"), mime_type: Some("application/json".to_string()), text: Some(snapshot.to_json().to_string()), blob: None }]),
-        None => Err(GatewayError::new(GatewayErrorCode::NotFound, format!("no such job: {job_id}"))),
+        None => Err(no_such_job_error(job_id)),
     }
 }
 

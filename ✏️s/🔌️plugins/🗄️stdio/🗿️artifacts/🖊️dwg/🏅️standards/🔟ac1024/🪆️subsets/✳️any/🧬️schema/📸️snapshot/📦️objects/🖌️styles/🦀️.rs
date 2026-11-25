@@ -1,7 +1,10 @@
 //! 🖌️ Styles: visual styles, table and cell styles, multiline styles, multileader styles and materials.
 
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_artifact_stdio_dwg_snapshot_objects_metadata::{dwg_metadata};
 use semio_framework_value::{ValueError, ValueRefusalKind};
-use crate::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::{DwgComplexColor};
+use semio_s_artifact_stdio_dwg_snapshot_objects_tables::{DwgComplexColor};
 
 //#region 🔖️DrawingModel
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

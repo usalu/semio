@@ -61,7 +61,3 @@ impl Springs {
 pub fn period_lengthening(pier_stiffness_n_per_m: f64, height_m: f64, springs: &Springs) -> f64 {
     (1.0 + pier_stiffness_n_per_m / springs.horizontal_n_per_m + pier_stiffness_n_per_m * height_m * height_m / springs.rocking_nm_per_rad).sqrt()
 }
-
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;

@@ -70,6 +70,11 @@ test("the phase of a stage is what its latest marker line says and stays when no
  expect(readyStagePhaseV1([LOG.noise],"executing")).toBe("executing");
 });
 
+test("every line the graph service prints while it plans or holds a request is a reading line, so a silent plan is no stall",()=>{
+ for(const line of["Planning the selected targets and what they need.","Planning 12 targets.","The graph service holds this request and is working on it (778 s).","The graph service is identifying the workspace graph (4 s).","The graph service is checking which inputs this plan uses (9 s).","Waiting for the repo graph service (8126 ms).","Plane die gewählten Ziele und was sie brauchen.","Plane 12 Ziele.","Der Graphdienst hält diese Anfrage und arbeitet daran (778 s).","Der Graphdienst ermittelt die Identität des Workspace-Graphen (4 s).","Der Graphdienst prüft die Eingaben dieses Plans (9 s).","Warte auf den Repo-Graphdienst (8126 ms)."])expect(readyStagePhaseV1([line],null)).toBe("reading");
+ expect(readyStagePhaseV1(["The graph service sent nothing for 30 s."],null)).toBeNull();
+});
+
 test("law: executing never stops for stale code, reading and unknown stop after the stale age",()=>{
  const age=TREE.staleStageMilliseconds;
  expect(readyStaleStopV1("executing",age*100)).toBe(false);

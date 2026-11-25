@@ -4,7 +4,7 @@ name = "semio-plugin-ownership"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
-description = "🏛️ Plugin SDK ownership: bounded lifecycle steps and grants, SDK faults, worker session admission, store lifecycle and disposers, and transient publication."
+description = "🏛️ Plugin SDK ownership: bounded lifecycle steps and grants, SDK faults and worker session admission."
 
 [package.metadata.semio]
 role = "framework"
@@ -21,32 +21,21 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
+[features]
+testkit = []
+
 [dependencies]
-semio-framework-value-native-owned = { path = "../../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
-semio-framework-artifact-reference = { path = "../../../../../../../../🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust" }
 semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust" }
 semio-framework-async = { path = "../../../../../../../../🔨️modules/⏳️async/📦️packages/🦀️rust" }
 semio-framework-diagnostic = { path = "../../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
 semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust" }
-semio-os-kernel = { path = "../../../../../../📦️packages/🦀️rust" }
+semio-framework-job-worker = { path = "../../../../../../../../🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust" }
+semio-framework-job-worker-authority = { path = "../../../../../../../../🔨️modules/🧵️job/👷️worker/🎟️authority/📦️packages/🦀️rust" }
 semio-framework-trace = { workspace = true }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-ordered = { path = "../../../../../../../../🔨️modules/🌱️value/🗂️ordered/📦️packages/🦀️rust" }
-pack = { path = "../../../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
+semio-os-kernel = { path = "../../../../../../📦️packages/🦀️rust" }
 serde_json = "1.0.140"
-semio-framework-job-worker = { path = "../../../../../../../../🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust" }
-semio-framework-job-worker-authority = { path = "../../../../../../../../🔨️modules/🧵️job/👷️worker/🎟️authority/📦️packages/🦀️rust" }
-
-semio-os-store-replay = { path = "../../../../../🏪️store/🔁️replay/📦️packages/🦀️rust" }
-semio-framework-value-factory = { path = "../../../../../../../../🔨️modules/🌱️value/♻️retirement/🏭️factory/📦️packages/🦀️rust" }
-semio-framework-value-snapshot-read = { path = "../../../../../../../../🔨️modules/🌱️value/📸️snapshot/👁️read/📦️packages/🦀️rust" }
-semio-framework-value-snapshot-projection = { path = "../../../../../../../../🔨️modules/🌱️value/📽️projection/📦️packages/🦀️rust" }
-
-semio-framework-hash = { workspace = true }
-semio-framework-dsl-record = { path = "../../../../../../../../🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
-semio-os-store-replay-operation = { path = "../../../../../🏪️store/🔁️replay/🎮️operation/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", features = ["testkit"] }
-
-semio-framework-value-native-owned = { path = "../../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }

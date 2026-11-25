@@ -1,10 +1,10 @@
 /** 💽️ Contract: a stage whose declared need does not fit starts the collection of the registry (priority order, progress lines in both languages, cancellation) before it waits; it starts once the need fits; when automatic collection did not free enough space it waits with the typed refusal that lists the largest consumers and the exact command for each; a stage that already runs is never gated; the need is derived from measured growth when the machine has it. */
 import{afterAll,expect,test}from"bun:test";
-import{mkdtempSync,rmSync}from"node:fs";
+import{mkdirSync,mkdtempSync,rmSync,writeFileSync}from"node:fs";
 import{tmpdir}from"node:os";
 import{join}from"node:path";
 import{spawnSync}from"node:child_process";
-import{READY_POLICY_V1 as P,createReadyLeaseV1,emptyReadyStateV1,readyDigestsV1,readyDiskNeedV1,readyDiskRefusalV1,readyDiskShortV1,readyDiskUnfitRefusalV1,readyUnfitRecheckDueV1,readyNoSpaceV1,readyStoreFullV1,readyTailWithDiskCauseV1,runReadyV1,type ReadyFilesystemFactsV1,type ReadyLocalStateV1,type ReadyPortsV1,type ReadyRunResultV1,type ReadyStatusV1,type ReadyTimingV1}from"../../🟦️.ts";
+import{READY_POLICY_V1 as P,createReadyLeaseV1,emptyReadyStateV1,readyDigestsV1,readyDerivedInodesV1,readyDiskNeedV1,readyDiskRefusalV1,readyDiskShortV1,readyDiskUnfitRefusalV1,readyUnfitRecheckDueV1,readyNoSpaceV1,readyStoreFullV1,readyTailWithDiskCauseV1,runReadyV1,type ReadyFilesystemFactsV1,type ReadyLocalStateV1,type ReadyPortsV1,type ReadyRunResultV1,type ReadyStatusV1,type ReadyTimingV1}from"../../🟦️.ts";
 import{recoverNeedV1,type DiskWriterV1}from"../../../../../🌡️host-capacity/🧹️disk-recovery/🟦️.ts";
 import{DISK_WRITERS_V1}from"../../../../../🌡️host-capacity/🧹️disk-recovery/🟦️.ts";
 import{CAS_RESERVE_FACTOR_V1}from"../../../../../🗄️cas/🧬️schema/🟦️.ts";
@@ -130,8 +130,17 @@ test("the need is the declared estimate until the machine has measured the stage
  const run=(stage:string,growth:number|null|undefined,outcome:ReadyTimingV1["outcome"]="ok"):ReadyTimingV1=>({stage,startedMs:1,endedMs:2,seconds:1,exit:0,outcome,peakMegabytes:1,attempts:0,digest:"d",...growth===undefined?{}:{growthMegabytes:growth}});
  expect(readyDiskNeedV1("workspace",[])).toEqual({megabytes:P.diskRequirements.workspace.megabytes,inodes:P.diskRequirements.workspace.inodes,source:"declared"});
  expect(readyDiskNeedV1("workspace",[run("workspace",undefined),run("workspace",null),run("workspace",900,"stage-failed")]).source).toBe("declared");
- const cases:[ReadyTimingV1[],number][]=[[[run("workspace",1500)],3000],[[run("workspace",100)],P.diskGrowth.floorMegabytes],[[run("workspace",1000),run("workspace",2600),run("tools",9000)],5200],[[...Array.from({length:6},(_,index)=>run("workspace",index===0?9000:700))],1400]];
+ expect(readyDiskNeedV1("workspace",[run("workspace",17764),run("workspace",1678,"stage-failed"),run("workspace",6788,"stage-failed"),run("workspace",1553,"stage-failed"),run("workspace",1080,"stage-failed")]).megabytes).toBe(3356);
+ expect(readyDiskNeedV1("workspace",[run("workspace",5000,"stage-failed"),run("workspace",5000,"stalled")]).source).toBe("declared");
+ const cases:[ReadyTimingV1[],number][]=[[[run("workspace",1500)],3000],[[run("workspace",100)],P.diskGrowth.floorMegabytes],[[run("workspace",1000),run("workspace",2600),run("tools",9000)],5200],[[...Array.from({length:6},(_,index)=>run("workspace",index===0?9000:700))],1400],[[run("workspace",17764),run("workspace",1678,"stage-failed"),run("workspace",6788,"stage-failed"),run("workspace",1553,"stage-failed"),run("workspace",1080,"stage-failed")],3356]];
  for(const [runs,expected] of cases){expect(readyDiskNeedV1("workspace",runs).megabytes).toBe(expected);expect(readyDiskNeedV1("workspace",runs).source).toBe("measured");}
+ const inode=(growth:number|null,outcome:ReadyTimingV1["outcome"]="ok"):ReadyTimingV1=>({...run("workspace",1000,outcome),growthInodes:growth});
+ const declaredInodes=P.diskRequirements.workspace.inodes;
+ expect(readyDiskNeedV1("workspace",[run("workspace",1000)]).inodes).toBe(declaredInodes);
+ expect(readyDiskNeedV1("workspace",[inode(40_000),inode(900_000,"stage-failed"),inode(10_000,"stage-failed")]).inodes).toBe(80_000);
+ expect(readyDiskNeedV1("workspace",[inode(30_000),inode(10_000,"stage-failed"),inode(50_000,"stage-failed")]).inodes).toBe(60_000);
+ expect(readyDiskNeedV1("workspace",[inode(500),inode(400,"stage-failed")]).inodes).toBe(P.diskDefaultRequirement.inodes);
+ expect(readyDiskNeedV1("workspace",[inode(null,"stage-failed"),inode(80_000,"stage-failed")]).inodes).toBe(declaredInodes);
  expect(CAS_RESERVE_FACTOR_V1).toBe(2);
  const model=(runs:ReadyTimingV1[])=>Number(spawnSync("/usr/bin/python3",["-I",join(import.meta.dir,"🐍️.py"),JSON.stringify(runs.map(item=>[item.stage,item.outcome,item.growthMegabytes??null])),String(P.diskGrowth.keptRuns),String(P.diskGrowth.floorMegabytes),String(CAS_RESERVE_FACTOR_V1)],{encoding:"utf8"}).stdout.trim());
  for(const [runs] of cases)expect(readyDiskNeedV1("workspace",runs).megabytes).toBe(model(runs));
@@ -190,4 +199,24 @@ test("a lock-file shortage from Nx names the native shard that cannot rewrite it
  expect(named.at(-2)).toBe("No space left (ENOSPC) in "+consumer.path+": the disk");expect(readyStoreFullV1(named)?.path).toBe(consumer.path);
  expect(readyTailWithDiskCauseV1(full.tail,null,null)).toEqual(full.tail);
  expect(readyTailWithDiskCauseV1(["No space left (ENOSPC) in /elsewhere: the disk"],null,consumer)).toEqual(["No space left (ENOSPC) in /elsewhere: the disk"]);
+});
+
+
+/** 🧮️ Contract: the cold inode need of the dependencies stage is derived from the lockfiles of its scopes (lines times the calibrated entries per line), replaces the fixed declaration until a run measured the stage, applies to no other stage, and equals an independent count. */
+test("the cold inode need of the dependencies stage is derived from the lockfile lines of every scope and equals an independent count",()=>{
+ const root=mkdtempSync(join(tmpdir(),"ready-derived-"));
+ try{
+  const lock=(path:string,lines:number)=>{mkdirSync(join(root,path,".."),{recursive:true});writeFileSync(join(root,path),"x\n".repeat(lines));};
+  lock("bun.lock",1000);lock("scope-a/bun.lock",2000);lock("scope-b/bun.lock",500);lock("node_modules/bun.lock",9999);lock(".hidden/bun.lock",9999);lock("deep/er/bun.lock",9999);
+  const count=Number(spawnSync("/usr/bin/python3",["-I","-c","import sys,math,glob,os;r=sys.argv[1];f=float(sys.argv[2]);n=sum(len(open(p,'rb').read().splitlines()) for p in [r+'/bun.lock']+[r+'/'+d+'/bun.lock' for d in sorted(os.listdir(r)) if not d.startswith('.') and d!='node_modules' and os.path.isfile(r+'/'+d+'/bun.lock')]);print(math.ceil(n*f))",root,String(P.diskDerivation.entriesPerLockfileLine)],{encoding:"utf8"}).stdout.trim());
+  expect(count).toBe(Math.ceil(3500*P.diskDerivation.entriesPerLockfileLine));
+  expect(readyDerivedInodesV1("dependencies",root)).toBe(count);
+  expect(readyDerivedInodesV1("workspace",root)).toBeNull();
+  expect(readyDerivedInodesV1("dependencies",join(root,"missing"))).toBeNull();
+  expect(readyDiskNeedV1("dependencies",[],undefined,undefined,count).inodes).toBe(Math.max(P.diskDefaultRequirement.inodes,count));
+  expect(readyDiskNeedV1("dependencies",[],undefined,1_000_000,count).inodes).toBe(Math.max(P.diskDefaultRequirement.inodes,Math.min(count,Math.max(P.diskDefaultRequirement.inodes,250_000))));
+  expect(readyDiskNeedV1("dependencies",[],undefined,undefined,null).inodes).toBe(P.diskRequirements.dependencies.inodes);
+  const measured:ReadyTimingV1[]=[{stage:"dependencies",startedMs:1,endedMs:2,seconds:1,exit:0,outcome:"ok",peakMegabytes:1,attempts:0,digest:"d",growthMegabytes:100,growthInodes:20_000}];
+  expect(readyDiskNeedV1("dependencies",measured,undefined,undefined,count).inodes).toBe(40_000);
+ }finally{rmSync(root,{recursive:true,force:true});}
 });

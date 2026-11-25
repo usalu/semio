@@ -74,7 +74,7 @@ export function runBun(args: string[], cwd: string, env: NodeJS.ProcessEnv = pro
 
 /** 🚥️Runs `bunx` synchronously in `cwd`, returning status code. */
 export function runBunxStatus(args: string[], cwd: string, env: NodeJS.ProcessEnv = process.env): number {
-  const result = spawnSync(process.execPath, bunxCmdArgs(args, cwd), { cwd, env, shell: false, stdio: "inherit" });
+  const result = spawnSync(process.execPath, bunxCmdArgs(args, cwd), { windowsHide: true, cwd, env, shell: false, stdio: "inherit" });
   if (result.error) {
     console.error(result.error);
     return 1;

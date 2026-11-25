@@ -170,6 +170,7 @@ export function applyUiThemeToRoot(root: HTMLElement, theme: UiTheme): void {
     if (typeof chrome.hoverStepPercent === "number") setCssVar(root, appliedNames, "--hover-shade-step", `${chrome.hoverStepPercent}%`);
     if (typeof chrome.glassAlphaStep === "number") setCssVar(root, appliedNames, "--glass-alpha-step", `${chrome.glassAlphaStep}`);
     if (typeof chrome.glassBlurStepPx === "number") setCssVar(root, appliedNames, "--glass-blur-step", `${chrome.glassBlurStepPx / 16}rem`);
+    if (typeof chrome.chipTintPercent === "number") setCssVar(root, appliedNames, "--chip-tint", `${chrome.chipTintPercent}%`);
   }
   clearColorResolveCache();
 }

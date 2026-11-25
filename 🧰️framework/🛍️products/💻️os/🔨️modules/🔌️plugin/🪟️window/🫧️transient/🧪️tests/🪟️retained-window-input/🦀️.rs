@@ -2,14 +2,14 @@
 
 use semio_framework_value::RetainedCloneStep;
 use std::sync::Arc;
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use semio_plugin_window_transient::window_transient::{ErasedWindowTransientPublication, TypedWindowTransientStoreOwner, WindowTransientAuthority, WindowTransientMutation, WindowTransientOwner, WindowTransientOwnerBundle, WindowTransientOwnerRegistry, WindowTransientSnapshot, WindowTransientStore};
 use semio_framework::{Fault, ViewModel};
 use semio_plugin_ownership::bounded_ownership::PluginLifecycleStep;
 use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress, RetirementDemand, ValueError};
 use semio_plugin_window_config_registry::{WindowRegistry, fits};
 use semio_os_kernel as store;
-use semio_plugin_ownership::transient_publication::transient_store_disposer;
+use semio_plugin_transient_publication::transient_publication::transient_store_disposer;
 
 fn original_transient_grant() -> RetainedCloneGrant { RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 65_536, maximum_capacity_bytes: 65_536, maximum_release_bytes: 65_536, maximum_depth: 64 } }
 

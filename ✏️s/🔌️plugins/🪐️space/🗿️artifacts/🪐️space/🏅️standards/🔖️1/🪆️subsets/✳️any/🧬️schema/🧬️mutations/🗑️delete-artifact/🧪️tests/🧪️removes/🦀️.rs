@@ -97,7 +97,7 @@ async fn produces_committed_diff() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
     let decoded = decode_value::<SSpaceDiff>((*DIFF));
-    assert_eq!(decoded.artifacts.as_ref().map(Vec::len), Some(1), "delete-artifact/removes-artifact-2-from-the-index: the committed diff must carry the one surviving row");
+    assert_eq!(protocol::apply_diff_cold(&decoded, &before()).expect("the committed diff applies to the before-index").artifacts.len(), 1, "delete-artifact/removes-artifact-2-from-the-index: the committed diff must carry the one surviving row");
     let reencoded = encode_value(&decoded);
     let original = semio_framework_pack_json::parse((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff reparses");
     assert_eq!(reencoded, original, "delete-artifact/removes-artifact-2-from-the-index: committed diff JSON is not canonical");

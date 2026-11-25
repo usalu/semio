@@ -13,21 +13,111 @@
    "de": "Ein gebrauchter verchromter Leiter-Badheizkörper 500 x 1200 mm, wie ihn eine Bauteilbörse anbietet: zwei D-förmige Stahl-Sammelrohre 35 x 30 mm mit flacher Rückseite zur Wand und achtzehn runde Sprossen 22 mm in drei Gruppen zu sechs, noch mit seinen vier verchromten Wandkonsolen und deren Rosetten, einem verchromten Thermostat-Eckventilkörper am Vorlauf-Sammelrohr mit abgenommenem Kopf, einer weißen Schutzkappe auf der Spindel und einem abgetrennten Kupferrohrstummel 15 mm, einem Blindstopfen im Rücklaufanschluss und dem Entlüftungsstopfen oben; das Chrom ist matt und dort, wo nasse Handtücher hingen, stellenweise durchgerieben. Entleert, 8.4 kg, lehnt er um 10 Grad zurück in einem Stahl-A-Bock aus Rohren 40 x 40 mm, steht auf einem EPDM-belegten Holz-Auflageklotz und liegt am EPDM-Kantenschutz der oberen Traverse an (38 kg mit dem Bock). Posen: im A-Bock gelagert, an einer Rundschlinge gehoben, wobei der Bock stehen bleibt, und wieder an einer Badwand eingebaut bei 75/65 °C (Normpunkt EN 442), in der Komfortstufe und kalt."
   },
   "tags": [
-   "component",
-   "reclaimed",
-   "used",
-   "hvac",
-   "heating",
-   "radiator",
-   "towel-radiator",
-   "chrome",
-   "steel",
-   "brass",
-   "thermostatic-valve",
-   "a-frame",
-   "operating",
-   "convection",
-   "thermal"
+   {
+    "id": "component",
+    "title": {
+     "en": "component",
+     "de": "Bauteil"
+    }
+   },
+   {
+    "id": "reclaimed",
+    "title": {
+     "en": "reclaimed",
+     "de": "wiederverwendet"
+    }
+   },
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "hvac",
+    "title": {
+     "en": "HVAC",
+     "de": "HLK"
+    }
+   },
+   {
+    "id": "heating",
+    "title": {
+     "en": "heating",
+     "de": "Heizung"
+    }
+   },
+   {
+    "id": "radiator",
+    "title": {
+     "en": "radiator",
+     "de": "Heizkörper"
+    }
+   },
+   {
+    "id": "towel-radiator",
+    "title": {
+     "en": "towel radiator",
+     "de": "Handtuchheizkörper"
+    }
+   },
+   {
+    "id": "chrome",
+    "title": {
+     "en": "chrome",
+     "de": "Chrom"
+    }
+   },
+   {
+    "id": "steel",
+    "title": {
+     "en": "steel",
+     "de": "Stahl"
+    }
+   },
+   {
+    "id": "brass",
+    "title": {
+     "en": "brass",
+     "de": "Messing"
+    }
+   },
+   {
+    "id": "thermostatic-valve",
+    "title": {
+     "en": "thermostatic valve",
+     "de": "Thermostatventil"
+    }
+   },
+   {
+    "id": "a-frame",
+    "title": {
+     "en": "A-frame",
+     "de": "A-Rahmen"
+    }
+   },
+   {
+    "id": "operating",
+    "title": {
+     "en": "operating",
+     "de": "Betrieb"
+    }
+   },
+   {
+    "id": "convection",
+    "title": {
+     "en": "convection",
+     "de": "Konvektion"
+    }
+   },
+   {
+    "id": "thermal",
+    "title": {
+     "en": "thermal",
+     "de": "thermisch"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage component authors (used HVAC wave, author 11)",
@@ -242,7 +332,7 @@
      },
      "mass": {
       "kg": 29.426877,
-      "comX": 0.0,
+      "comX": 0,
       "comY": 0.55,
       "distribution": "point",
       "source": "literature",
@@ -250,7 +340,7 @@
      },
      "section": {
       "areaM2": 0.000294,
-      "secondMomentM4": 6.94e-08,
+      "secondMomentM4": 6.94e-8,
       "extremeFibreM": 0.02,
       "material": "painted-steel",
       "title": {
@@ -286,7 +376,7 @@
      },
      "x": 0,
      "y": 0,
-     "angleDeg": 10.0,
+     "angleDeg": 10,
      "lengthM": 0.015,
      "joint": {
       "type": "revolute",
@@ -318,7 +408,7 @@
      },
      "mass": {
       "kg": 4.875165,
-      "comX": 0.0,
+      "comX": 0,
       "comY": 0.5535,
       "distribution": "point",
       "source": "literature",
@@ -346,7 +436,7 @@
       ],
       "transform": {
        "translation": [
-        0.0,
+        0,
         0.02,
         -0.4
        ]
@@ -424,7 +514,7 @@
       ],
       "transform": {
        "translation": [
-        0.0,
+        0,
         0.02,
         0.4
        ]
@@ -502,9 +592,9 @@
       ],
       "transform": {
        "translation": [
-        0.0,
+        0,
         1.28,
-        0.0
+        0
        ]
       }
      },
@@ -524,7 +614,7 @@
        "translation": [
         0.237447,
         0.02,
-        0.0
+        0
        ]
       }
      },
@@ -544,7 +634,7 @@
        "translation": [
         0.077892,
         0.8,
-        0.0
+        0
        ]
       }
      },
@@ -593,7 +683,7 @@
        "translation": [
         0.237447,
         0.1125,
-        0.0
+        0
        ]
       }
      },
@@ -613,7 +703,7 @@
        "translation": [
         0.237447,
         0.1925,
-        0.0
+        0
        ]
       }
      },
@@ -633,7 +723,7 @@
        "translation": [
         -0.237447,
         0.02,
-        0.0
+        0
        ]
       }
      },
@@ -653,7 +743,7 @@
        "translation": [
         -0.077892,
         0.8,
-        0.0
+        0
        ]
       }
      },
@@ -702,7 +792,7 @@
        "translation": [
         -0.237447,
         0.1125,
-        0.0
+        0
        ]
       }
      },
@@ -722,7 +812,7 @@
        "translation": [
         -0.237447,
         0.1925,
-        0.0
+        0
        ]
       }
      },
@@ -889,7 +979,7 @@
        1
       ],
       "origin": [
-       0.0,
+       0,
        0.011,
        -0.2325
       ],
@@ -926,7 +1016,7 @@
        1
       ],
       "origin": [
-       0.0,
+       0,
        0.066,
        -0.2325
       ],
@@ -963,7 +1053,7 @@
        1
       ],
       "origin": [
-       0.0,
+       0,
        0.121,
        -0.2325
       ],
@@ -1000,7 +1090,7 @@
        1
       ],
       "origin": [
-       0.0,
+       0,
        0.176,
        -0.2325
       ],
@@ -1037,7 +1127,7 @@
        1
       ],
       "origin": [
-       0.0,
+       0,
        0.231,
        -0.2325
       ],
@@ -1074,7 +1164,7 @@
        1
       ],
       "origin": [
-       0.0,
+       0,
        0.286,
        -0.2325
       ],
@@ -1111,7 +1201,7 @@
        1
       ],
       "origin": [
-       0.0,
+       0,
        0.416,
        -0.2325
       ],
@@ -1148,7 +1238,7 @@
        1
       ],
       "origin": [
-       0.0,
+       0,
        0.471,
        -0.2325
       ],
@@ -1185,7 +1275,7 @@
        1
       ],
       "origin": [
-       0.0,
+       0,
        0.526,
        -0.2325
       ],
@@ -1222,7 +1312,7 @@
        1
       ],
       "origin": [
-       0.0,
+       0,
        0.581,
        -0.2325
       ],
@@ -1259,7 +1349,7 @@
        1
       ],
       "origin": [
-       0.0,
+       0,
        0.636,
        -0.2325
       ],
@@ -1296,7 +1386,7 @@
        1
       ],
       "origin": [
-       0.0,
+       0,
        0.691,
        -0.2325
       ],
@@ -1333,7 +1423,7 @@
        1
       ],
       "origin": [
-       0.0,
+       0,
        0.821,
        -0.2325
       ],
@@ -1370,7 +1460,7 @@
        1
       ],
       "origin": [
-       0.0,
+       0,
        0.876,
        -0.2325
       ],
@@ -1407,7 +1497,7 @@
        1
       ],
       "origin": [
-       0.0,
+       0,
        0.931,
        -0.2325
       ],
@@ -1444,7 +1534,7 @@
        1
       ],
       "origin": [
-       0.0,
+       0,
        0.986,
        -0.2325
       ],
@@ -1481,7 +1571,7 @@
        1
       ],
       "origin": [
-       0.0,
+       0,
        1.041,
        -0.2325
       ],
@@ -1518,7 +1608,7 @@
        1
       ],
       "origin": [
-       0.0,
+       0,
        1.096,
        -0.2325
       ],
@@ -1538,7 +1628,7 @@
       ],
       "transform": {
        "translation": [
-        0.0,
+        0,
         0.15,
         -0.2325
        ]
@@ -1630,7 +1720,7 @@
       ],
       "transform": {
        "translation": [
-        0.0,
+        0,
         0.15,
         0.2325
        ]
@@ -1722,7 +1812,7 @@
       ],
       "transform": {
        "translation": [
-        0.0,
+        0,
         1.0135,
         -0.2325
        ]
@@ -1814,7 +1904,7 @@
       ],
       "transform": {
        "translation": [
-        0.0,
+        0,
         1.0135,
         0.2325
        ]
@@ -1923,7 +2013,7 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        1.14,
        0.2325
       ]
@@ -1959,7 +2049,7 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        1.14,
        -0.2325
       ]
@@ -1995,7 +2085,7 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        -0.062,
        -0.2325
       ]
@@ -2031,7 +2121,7 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        -0.065,
        0.2325
       ]
@@ -2067,7 +2157,7 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        -0.115,
        0.2325
       ]
@@ -2175,7 +2265,7 @@
        1
       ],
       "origin": [
-       0.0,
+       0,
        -0.1,
        0.2445
       ]
@@ -2211,7 +2301,7 @@
        1
       ],
       "origin": [
-       0.0,
+       0,
        -0.1,
        0.2655
       ]
@@ -2522,9 +2612,9 @@
       ],
       "transform": {
        "translation": [
-        0.0,
+        0,
         1.11075,
-        0.0
+        0
        ]
       },
       "region": "rails",
@@ -2770,9 +2860,9 @@
       ],
       "transform": {
        "translation": [
-        0.0,
-        0.0,
-        0.0
+        0,
+        0,
+        0
        ]
       },
       "member": "radiator",
@@ -2836,7 +2926,7 @@
       ],
       "transform": {
        "translation": [
-        0.0,
+        0,
         0.471,
         0
        ]
@@ -2858,7 +2948,7 @@
       ],
       "transform": {
        "translation": [
-        0.0,
+        0,
         0.581,
         0
        ]
@@ -2880,9 +2970,9 @@
       ],
       "transform": {
        "translation": [
-        0.0,
+        0,
         0.02,
-        0.0
+        0
        ]
       },
       "member": "rack",
@@ -2918,7 +3008,7 @@
       ],
       "transform": {
        "translation": [
-        0.0,
+        0,
         0.02,
         -0.4
        ]
@@ -2996,7 +3086,7 @@
       ],
       "transform": {
        "translation": [
-        0.0,
+        0,
         0.02,
         0.4
        ]
@@ -3074,9 +3164,9 @@
       ],
       "transform": {
        "translation": [
-        0.0,
+        0,
         1.28,
-        0.0
+        0
        ]
       }
      },
@@ -3096,7 +3186,7 @@
        "translation": [
         0.237447,
         0.02,
-        0.0
+        0
        ]
       }
      },
@@ -3116,7 +3206,7 @@
        "translation": [
         0.077892,
         0.8,
-        0.0
+        0
        ]
       }
      },
@@ -3165,7 +3255,7 @@
        "translation": [
         0.237447,
         0.1125,
-        0.0
+        0
        ]
       }
      },
@@ -3185,7 +3275,7 @@
        "translation": [
         0.237447,
         0.1925,
-        0.0
+        0
        ]
       }
      },
@@ -3205,7 +3295,7 @@
        "translation": [
         -0.237447,
         0.02,
-        0.0
+        0
        ]
       }
      },
@@ -3225,7 +3315,7 @@
        "translation": [
         -0.077892,
         0.8,
-        0.0
+        0
        ]
       }
      },
@@ -3274,7 +3364,7 @@
        "translation": [
         -0.237447,
         0.1125,
-        0.0
+        0
        ]
       }
      },
@@ -3294,7 +3384,7 @@
        "translation": [
         -0.237447,
         0.1925,
-        0.0
+        0
        ]
       }
      },
@@ -3461,7 +3551,7 @@
        1
       ],
       "origin": [
-       0.0,
+       0,
        0.011,
        -0.2325
       ],
@@ -3499,7 +3589,7 @@
        1
       ],
       "origin": [
-       0.0,
+       0,
        0.1485,
        -0.2325
       ],
@@ -3537,7 +3627,7 @@
        1
       ],
       "origin": [
-       0.0,
+       0,
        0.286,
        -0.2325
       ],
@@ -3575,7 +3665,7 @@
        1
       ],
       "origin": [
-       0.0,
+       0,
        0.416,
        -0.2325
       ],
@@ -3613,7 +3703,7 @@
        1
       ],
       "origin": [
-       0.0,
+       0,
        0.5535,
        -0.2325
       ],
@@ -3651,7 +3741,7 @@
        1
       ],
       "origin": [
-       0.0,
+       0,
        0.691,
        -0.2325
       ],
@@ -3689,7 +3779,7 @@
        1
       ],
       "origin": [
-       0.0,
+       0,
        0.821,
        -0.2325
       ],
@@ -3727,7 +3817,7 @@
        1
       ],
       "origin": [
-       0.0,
+       0,
        0.9585,
        -0.2325
       ],
@@ -3765,7 +3855,7 @@
        1
       ],
       "origin": [
-       0.0,
+       0,
        1.096,
        -0.2325
       ],
@@ -3883,7 +3973,7 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        -0.115,
        0.2325
       ]
@@ -3955,7 +4045,7 @@
        1
       ],
       "origin": [
-       0.0,
+       0,
        -0.1,
        0.2445
       ]
@@ -4151,9 +4241,9 @@
       ],
       "transform": {
        "translation": [
-        0.0,
+        0,
         1.1145,
-        0.0
+        0
        ]
       },
       "region": "rails",
@@ -4345,9 +4435,9 @@
       ],
       "transform": {
        "translation": [
-        0.0,
-        0.0,
-        0.0
+        0,
+        0,
+        0
        ]
       },
       "member": "radiator",
@@ -4411,7 +4501,7 @@
       ],
       "transform": {
        "translation": [
-        0.0,
+        0,
         0.5535,
         0
        ]
@@ -4433,7 +4523,7 @@
       ],
       "transform": {
        "translation": [
-        0.0,
+        0,
         0.691,
         0
        ]
@@ -4455,9 +4545,9 @@
       ],
       "transform": {
        "translation": [
-        0.0,
+        0,
         0.02,
-        0.0
+        0
        ]
       },
       "member": "rack",
@@ -4493,7 +4583,7 @@
       ],
       "transform": {
        "translation": [
-        0.0,
+        0,
         0.02,
         -0.4
        ]
@@ -4571,7 +4661,7 @@
       ],
       "transform": {
        "translation": [
-        0.0,
+        0,
         0.02,
         0.4
        ]
@@ -4649,9 +4739,9 @@
       ],
       "transform": {
        "translation": [
-        0.0,
+        0,
         1.28,
-        0.0
+        0
        ]
       }
      },
@@ -4671,7 +4761,7 @@
        "translation": [
         0.237447,
         0.02,
-        0.0
+        0
        ]
       }
      },
@@ -4720,7 +4810,7 @@
        "translation": [
         0.237447,
         0.12,
-        0.0
+        0
        ]
       }
      },
@@ -4740,7 +4830,7 @@
        "translation": [
         -0.237447,
         0.02,
-        0.0
+        0
        ]
       }
      },
@@ -4789,7 +4879,7 @@
        "translation": [
         -0.237447,
         0.12,
-        0.0
+        0
        ]
       }
      },
@@ -4956,7 +5046,7 @@
        1
       ],
       "origin": [
-       0.0,
+       0,
        0.015,
        -0.2325
       ],
@@ -4993,7 +5083,7 @@
        1
       ],
       "origin": [
-       0.0,
+       0,
        0.28425,
        -0.2325
       ],
@@ -5030,7 +5120,7 @@
        1
       ],
       "origin": [
-       0.0,
+       0,
        0.5535,
        -0.2325
       ],
@@ -5067,7 +5157,7 @@
        1
       ],
       "origin": [
-       0.0,
+       0,
        0.82275,
        -0.2325
       ],
@@ -5104,7 +5194,7 @@
        1
       ],
       "origin": [
-       0.0,
+       0,
        1.092,
        -0.2325
       ],
@@ -5351,9 +5441,9 @@
       ],
       "transform": {
        "translation": [
-        0.0,
+        0,
         1.122,
-        0.0
+        0
        ]
       },
       "region": "rails",
@@ -5497,9 +5587,9 @@
       ],
       "transform": {
        "translation": [
-        0.0,
-        0.0,
-        0.0
+        0,
+        0,
+        0
        ]
       },
       "member": "radiator",
@@ -5563,7 +5653,7 @@
       ],
       "transform": {
        "translation": [
-        0.0,
+        0,
         0.5535,
         0
        ]
@@ -5585,7 +5675,7 @@
       ],
       "transform": {
        "translation": [
-        0.0,
+        0,
         0.82275,
         0
        ]
@@ -5607,9 +5697,9 @@
       ],
       "transform": {
        "translation": [
-        0.0,
+        0,
         0.02,
-        0.0
+        0
        ]
       },
       "member": "rack",
@@ -5628,8 +5718,629 @@
     ]
    },
    "500": {
-    "status": "unavailable",
-    "denominator": 500
+    "status": "authored",
+    "denominator": 500,
+    "decisions": [
+     {
+      "en": "Body for the 75 mm feature: each end of the A-frame rack is one 75 mm plate of its outline (foot bar and both legs) with the opening between the legs kept as a hole, joined by a 75 mm ridge; the sill of each face is one 75 mm block of its true length (the cross tube is left out), each edge strip a 75 mm bar from frame to frame; the radiator keeps its two uprights at their true section as slender parts and its rails as five octagonal 75 mm bars between them, the typified rails of 1:200 thickened about their axes and declared as the envelope of the row; the valve is a 75 mm block; brackets are below the feature and left out.",
+      "de": "Körper für das 75-mm-Merkmal: jedes Ende des A-Bock-Gestells ist eine 75-mm-Platte seines Umrisses (Fußholm und beide Beine) mit der Öffnung zwischen den Beinen als Loch, verbunden durch einen 75-mm-First; die Schwelle jeder Seite ist ein 75-mm-Block ihrer wahren Länge (das Querrohr entfällt), jede Kantenleiste ein 75-mm-Stab von Rahmen zu Rahmen; der Heizkörper behält seine zwei Holme im wahren Querschnitt als schlanke Teile und seine Sprossen als fünf achteckige 75-mm-Stäbe dazwischen, die typisierten Sprossen von 1:200, um ihre Achsen verdickt und als Hülle der Reihe erklärt; das Ventil ist ein 75-mm-Block; Konsolen liegen unter dem Merkmal und entfallen."
+     },
+     {
+      "en": "Thermal: sills, uprights, rails and valve by reference; the rack and the edge strips as shells of their layer at the true 40 mm tube and strip section, so the outer area stays that of the tubes; the four brackets as shells of their layer at true size and a 75 mm plume patch at the top rail.",
+      "de": "Thermik: Schwellen, Holme, Sprossen und Ventil als Verweis; das Gestell und die Kantenleisten als Schalen ihrer Schicht im wahren 40-mm-Rohr- und Leistenquerschnitt, damit die Außenfläche die der Rohre bleibt; die vier Konsolen als Schalen ihrer Schicht in wahrer Größe und eine 75-mm-Auftriebsfläche an der obersten Sprosse."
+     },
+     {
+      "en": "Structure: the members by reference, the sill bearing as a 75 mm joint and two mass markers.",
+      "de": "Tragwerk: die Stäbe als Verweis, das Schwellenlager als 75-mm-Gelenk und zwei Massenmarken."
+     }
+    ],
+    "body": [
+     {
+      "id": "end-frames",
+      "kind": "extrude",
+      "bone": "rack",
+      "material": "painted-steel",
+      "role": "body",
+      "tone": 0.45,
+      "profile": [
+       [
+        -0.45,
+        0
+       ],
+       [
+        0.45,
+        0
+       ],
+       [
+        0.45,
+        0.075
+       ],
+       [
+        0.26,
+        0.075
+       ],
+       [
+        0.0375,
+        1.3
+       ],
+       [
+        -0.0375,
+        1.3
+       ],
+       [
+        -0.26,
+        0.075
+       ],
+       [
+        -0.45,
+        0.075
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.42,
+      "to": -0.345,
+      "holes": [
+       [
+        [
+         -0.15,
+         0.1
+        ],
+        [
+         0.15,
+         0.1
+        ],
+        [
+         0,
+         0.95
+        ]
+       ]
+      ],
+      "repeat": {
+       "count": 2,
+       "translation": [
+        0,
+        0,
+        0.765
+       ]
+      }
+     },
+     {
+      "id": "ridge",
+      "kind": "box",
+      "bone": "rack",
+      "material": "painted-steel",
+      "role": "body",
+      "tone": 0.45,
+      "size": [
+       0.075,
+       0.075,
+       0.69
+      ],
+      "transform": {
+       "translation": [
+        0,
+        1.2625,
+        0
+       ]
+      }
+     },
+     {
+      "id": "sills",
+      "kind": "box",
+      "bone": "rack",
+      "material": "softwood",
+      "role": "body",
+      "tone": 0.62,
+      "size": [
+       0.075,
+       0.2,
+       0.36
+      ],
+      "transform": {
+       "translation": [
+        0.2375,
+        0.1,
+        0
+       ]
+      },
+      "repeat": {
+       "count": 2,
+       "translation": [
+        -0.475,
+        0,
+        0
+       ]
+      }
+     },
+     {
+      "id": "edge-strips",
+      "kind": "box",
+      "bone": "rack",
+      "material": "epdm",
+      "role": "body",
+      "tone": 0.15,
+      "size": [
+       0.075,
+       0.075,
+       0.69
+      ],
+      "transform": {
+       "translation": [
+        0.089,
+        0.8,
+        0
+       ]
+      },
+      "repeat": {
+       "count": 2,
+       "translation": [
+        -0.178,
+        0,
+        0
+       ]
+      }
+     },
+     {
+      "id": "upright-right",
+      "kind": "box",
+      "bone": "radiator",
+      "material": "chrome-steel",
+      "role": "body",
+      "tone": 0.86,
+      "size": [
+       0.03,
+       1.2,
+       0.035
+      ],
+      "transform": {
+       "translation": [
+        0,
+        0.55,
+        -0.2325
+       ]
+      },
+      "slender": true
+     },
+     {
+      "id": "upright-left",
+      "kind": "box",
+      "bone": "radiator",
+      "material": "chrome-steel",
+      "role": "body",
+      "tone": 0.86,
+      "size": [
+       0.03,
+       1.2,
+       0.035
+      ],
+      "transform": {
+       "translation": [
+        0,
+        0.55,
+        0.2325
+       ]
+      },
+      "slender": true
+     },
+     {
+      "id": "rails",
+      "kind": "extrude",
+      "bone": "rails",
+      "material": "chrome-steel",
+      "role": "body",
+      "tone": 0.82,
+      "profile": [
+       [
+        0.0375,
+        0.0305
+       ],
+       [
+        0.0155,
+        0.0525
+       ],
+       [
+        -0.0155,
+        0.0525
+       ],
+       [
+        -0.0375,
+        0.0305
+       ],
+       [
+        -0.0375,
+        -0.0005
+       ],
+       [
+        -0.0155,
+        -0.0225
+       ],
+       [
+        0.0155,
+        -0.0225
+       ],
+       [
+        0.0375,
+        -0.0005
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.215,
+      "to": 0.215,
+      "envelope": true,
+      "repeat": {
+       "count": 5,
+       "translation": [
+        0,
+        0.26925,
+        0
+       ]
+      }
+     },
+     {
+      "id": "valve-body",
+      "kind": "box",
+      "bone": "radiator",
+      "material": "chrome-brass",
+      "role": "body",
+      "tone": 0.78,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        -0.015,
+        -0.0875,
+        0.2495
+       ]
+      }
+     }
+    ],
+    "thermal": [
+     {
+      "id": "th-end-frames",
+      "kind": "extrude",
+      "bone": "rack",
+      "material": "painted-steel",
+      "role": "body",
+      "tone": 0.45,
+      "profile": [
+       [
+        -0.45,
+        0
+       ],
+       [
+        0.45,
+        0
+       ],
+       [
+        0.45,
+        0.075
+       ],
+       [
+        0.26,
+        0.075
+       ],
+       [
+        0.0375,
+        1.3
+       ],
+       [
+        -0.0375,
+        1.3
+       ],
+       [
+        -0.26,
+        0.075
+       ],
+       [
+        -0.45,
+        0.075
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.42,
+      "to": -0.38,
+      "holes": [
+       [
+        [
+         -0.15,
+         0.1
+        ],
+        [
+         0.15,
+         0.1
+        ],
+        [
+         0,
+         0.95
+        ]
+       ]
+      ],
+      "repeat": {
+       "count": 2,
+       "translation": [
+        0,
+        0,
+        0.8
+       ]
+      },
+      "region": "rack",
+      "layer": "steel"
+     },
+     {
+      "id": "th-ridge",
+      "kind": "box",
+      "bone": "rack",
+      "material": "painted-steel",
+      "role": "body",
+      "tone": 0.45,
+      "size": [
+       0.04,
+       0.04,
+       0.76
+      ],
+      "transform": {
+       "translation": [
+        0,
+        1.28,
+        0
+       ]
+      },
+      "region": "rack",
+      "layer": "steel"
+     },
+     {
+      "id": "th-sills",
+      "of": "sills",
+      "region": "sills"
+     },
+     {
+      "id": "th-edge-strips",
+      "kind": "box",
+      "bone": "rack",
+      "material": "epdm",
+      "role": "body",
+      "tone": 0.15,
+      "size": [
+       0.062,
+       0.04,
+       0.76
+      ],
+      "transform": {
+       "translation": [
+        0.089,
+        0.8,
+        0
+       ]
+      },
+      "repeat": {
+       "count": 2,
+       "translation": [
+        -0.178,
+        0,
+        0
+       ]
+      },
+      "region": "edge-strips",
+      "layer": "rubber"
+     },
+     {
+      "id": "th-upright-right",
+      "of": "upright-right",
+      "region": "upright-return"
+     },
+     {
+      "id": "th-upright-left",
+      "of": "upright-left",
+      "region": "upright-flow"
+     },
+     {
+      "id": "th-rails",
+      "of": "rails",
+      "region": "rails"
+     },
+     {
+      "id": "th-valve-body",
+      "of": "valve-body",
+      "region": "valve"
+     },
+     {
+      "id": "th-brackets-lower",
+      "kind": "box",
+      "bone": "radiator",
+      "material": "chrome-steel",
+      "role": "body",
+      "tone": 0.74,
+      "size": [
+       0.05,
+       0.03,
+       0.045
+      ],
+      "transform": {
+       "translation": [
+        -0.04,
+        0.15,
+        -0.2325
+       ]
+      },
+      "repeat": {
+       "count": 2,
+       "translation": [
+        0,
+        0,
+        0.465
+       ]
+      },
+      "region": "brackets",
+      "layer": "zinc"
+     },
+     {
+      "id": "th-brackets-upper",
+      "kind": "box",
+      "bone": "radiator",
+      "material": "chrome-steel",
+      "role": "body",
+      "tone": 0.74,
+      "size": [
+       0.05,
+       0.03,
+       0.045
+      ],
+      "transform": {
+       "translation": [
+        -0.04,
+        1.014,
+        -0.2325
+       ]
+      },
+      "repeat": {
+       "count": 2,
+       "translation": [
+        0,
+        0,
+        0.465
+       ]
+      },
+      "region": "brackets",
+      "layer": "zinc"
+     },
+     {
+      "id": "th-radiator-plume",
+      "kind": "box",
+      "bone": "rails",
+      "material": "chrome-steel",
+      "role": "detail",
+      "tone": 0.82,
+      "size": [
+       0.075,
+       0.075,
+       0.43
+      ],
+      "transform": {
+       "translation": [
+        0,
+        1.1445,
+        0
+       ]
+      },
+      "region": "rails",
+      "tags": [
+       "radiator-plume"
+      ]
+     }
+    ],
+    "structure": [
+     {
+      "id": "member-end-frames",
+      "of": "end-frames",
+      "member": "rack",
+      "part": "member"
+     },
+     {
+      "id": "member-ridge",
+      "of": "ridge",
+      "member": "rack",
+      "part": "member"
+     },
+     {
+      "id": "member-sills",
+      "of": "sills",
+      "member": "rack",
+      "part": "member"
+     },
+     {
+      "id": "member-edge-strips",
+      "of": "edge-strips",
+      "member": "rack",
+      "part": "member"
+     },
+     {
+      "id": "member-upright-right",
+      "of": "upright-right",
+      "member": "radiator",
+      "part": "member"
+     },
+     {
+      "id": "member-upright-left",
+      "of": "upright-left",
+      "member": "radiator",
+      "part": "member"
+     },
+     {
+      "id": "member-rails",
+      "of": "rails",
+      "member": "rails",
+      "part": "member"
+     },
+     {
+      "id": "joint-sill-bearing",
+      "kind": "box",
+      "bone": "radiator",
+      "material": "chrome-steel",
+      "role": "detail",
+      "tone": 0.5,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0,
+        0.0375,
+        0
+       ]
+      },
+      "member": "radiator",
+      "part": "joint"
+     },
+     {
+      "id": "mass-rack",
+      "kind": "box",
+      "bone": "rack",
+      "material": "painted-steel",
+      "role": "detail",
+      "tone": 0.5,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0,
+        1.2625,
+        0
+       ]
+      },
+      "member": "rack",
+      "part": "mass"
+     },
+     {
+      "id": "mass-radiator",
+      "kind": "box",
+      "bone": "radiator",
+      "material": "chrome-steel",
+      "role": "detail",
+      "tone": 0.5,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0,
+        0.55,
+        0
+       ]
+      },
+      "member": "radiator",
+      "part": "mass"
+     }
+    ]
    }
   },
   "anchors": [
@@ -5857,7 +6568,7 @@
        "region": "rack",
        "kind": "rect",
        "x": -0.45,
-       "y": 0.0,
+       "y": 0,
        "w": 0.9,
        "h": 0.04
       },
@@ -6127,7 +6838,7 @@
        "material": "chrome-steel",
        "region": "rails",
        "kind": "ellipse",
-       "cx": 0.0,
+       "cx": 0,
        "cy": 0.011,
        "rx": 0.011,
        "ry": 0.011
@@ -6142,7 +6853,7 @@
        "material": "chrome-steel",
        "region": "rails",
        "kind": "ellipse",
-       "cx": 0.0,
+       "cx": 0,
        "cy": 0.066,
        "rx": 0.011,
        "ry": 0.011
@@ -6157,7 +6868,7 @@
        "material": "chrome-steel",
        "region": "rails",
        "kind": "ellipse",
-       "cx": 0.0,
+       "cx": 0,
        "cy": 0.121,
        "rx": 0.011,
        "ry": 0.011
@@ -6172,7 +6883,7 @@
        "material": "chrome-steel",
        "region": "rails",
        "kind": "ellipse",
-       "cx": 0.0,
+       "cx": 0,
        "cy": 0.176,
        "rx": 0.011,
        "ry": 0.011
@@ -6187,7 +6898,7 @@
        "material": "chrome-steel",
        "region": "rails",
        "kind": "ellipse",
-       "cx": 0.0,
+       "cx": 0,
        "cy": 0.231,
        "rx": 0.011,
        "ry": 0.011
@@ -6202,7 +6913,7 @@
        "material": "chrome-steel",
        "region": "rails",
        "kind": "ellipse",
-       "cx": 0.0,
+       "cx": 0,
        "cy": 0.286,
        "rx": 0.011,
        "ry": 0.011
@@ -6217,7 +6928,7 @@
        "material": "chrome-steel",
        "region": "rails",
        "kind": "ellipse",
-       "cx": 0.0,
+       "cx": 0,
        "cy": 0.416,
        "rx": 0.011,
        "ry": 0.011
@@ -6232,7 +6943,7 @@
        "material": "chrome-steel",
        "region": "rails",
        "kind": "ellipse",
-       "cx": 0.0,
+       "cx": 0,
        "cy": 0.471,
        "rx": 0.011,
        "ry": 0.011
@@ -6247,7 +6958,7 @@
        "material": "chrome-steel",
        "region": "rails",
        "kind": "ellipse",
-       "cx": 0.0,
+       "cx": 0,
        "cy": 0.526,
        "rx": 0.011,
        "ry": 0.011
@@ -6262,7 +6973,7 @@
        "material": "chrome-steel",
        "region": "rails",
        "kind": "ellipse",
-       "cx": 0.0,
+       "cx": 0,
        "cy": 0.581,
        "rx": 0.011,
        "ry": 0.011
@@ -6277,7 +6988,7 @@
        "material": "chrome-steel",
        "region": "rails",
        "kind": "ellipse",
-       "cx": 0.0,
+       "cx": 0,
        "cy": 0.636,
        "rx": 0.011,
        "ry": 0.011
@@ -6292,7 +7003,7 @@
        "material": "chrome-steel",
        "region": "rails",
        "kind": "ellipse",
-       "cx": 0.0,
+       "cx": 0,
        "cy": 0.691,
        "rx": 0.011,
        "ry": 0.011
@@ -6307,7 +7018,7 @@
        "material": "chrome-steel",
        "region": "rails",
        "kind": "ellipse",
-       "cx": 0.0,
+       "cx": 0,
        "cy": 0.821,
        "rx": 0.011,
        "ry": 0.011
@@ -6322,7 +7033,7 @@
        "material": "chrome-steel",
        "region": "rails",
        "kind": "ellipse",
-       "cx": 0.0,
+       "cx": 0,
        "cy": 0.876,
        "rx": 0.011,
        "ry": 0.011
@@ -6337,7 +7048,7 @@
        "material": "chrome-steel",
        "region": "rails",
        "kind": "ellipse",
-       "cx": 0.0,
+       "cx": 0,
        "cy": 0.931,
        "rx": 0.011,
        "ry": 0.011
@@ -6352,7 +7063,7 @@
        "material": "chrome-steel",
        "region": "rails",
        "kind": "ellipse",
-       "cx": 0.0,
+       "cx": 0,
        "cy": 0.986,
        "rx": 0.011,
        "ry": 0.011
@@ -6367,7 +7078,7 @@
        "material": "chrome-steel",
        "region": "rails",
        "kind": "ellipse",
-       "cx": 0.0,
+       "cx": 0,
        "cy": 1.041,
        "rx": 0.011,
        "ry": 0.011
@@ -6382,7 +7093,7 @@
        "material": "chrome-steel",
        "region": "rails",
        "kind": "ellipse",
-       "cx": 0.0,
+       "cx": 0,
        "cy": 1.096,
        "rx": 0.011,
        "ry": 0.011
@@ -6571,7 +7282,7 @@
        "id": "upright-highlight",
        "bone": "radiator",
        "role": "texture",
-       "z": 8.0,
+       "z": 8,
        "filled": false,
        "tone": 0.98,
        "kind": "poly",
@@ -6904,7 +7615,7 @@
        "region": "rack",
        "kind": "rect",
        "x": -0.42,
-       "y": 0.0,
+       "y": 0,
        "w": 0.04,
        "h": 0.04
       },
@@ -6949,7 +7660,7 @@
        "region": "rack",
        "kind": "rect",
        "x": 0.38,
-       "y": 0.0,
+       "y": 0,
        "w": 0.04,
        "h": 0.04
       },
@@ -7009,7 +7720,7 @@
        "region": "rack",
        "kind": "rect",
        "x": -0.38,
-       "y": 0.0,
+       "y": 0,
        "w": 0.76,
        "h": 0.04
       },
@@ -7084,7 +7795,7 @@
        "region": "rack",
        "kind": "rect",
        "x": -0.38,
-       "y": 0.0,
+       "y": 0,
        "w": 0.76,
        "h": 0.04
       },
@@ -7157,62 +7868,17 @@
        "tone": 0.86,
        "material": "chrome-steel",
        "region": "upright-return",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         -0.25,
-         0.148155
-        ],
-        [
-         -0.215,
-         0.148155
-        ],
-        [
-         -0.215,
-         1.322247
-        ],
-        [
-         -0.215857,
-         1.323186
-        ],
-        [
-         -0.218342,
-         1.324033
-        ],
-        [
-         -0.222214,
-         1.324705
-        ],
-        [
-         -0.227092,
-         1.325137
-        ],
-        [
-         -0.2325,
-         1.325286
-        ],
-        [
-         -0.237908,
-         1.325137
-        ],
-        [
-         -0.242786,
-         1.324705
-        ],
-        [
-         -0.246658,
-         1.324033
-        ],
-        [
-         -0.249143,
-         1.323186
-        ],
-        [
-         -0.25,
-         1.322247
-        ]
-       ]
+       "kind": "rect",
+       "x": -0.015,
+       "y": -0.05,
+       "w": 0.03,
+       "h": 1.19,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.25,
+        "z1": -0.215
+       }
       },
       {
        "id": "upright-left",
@@ -7223,62 +7889,17 @@
        "tone": 0.86,
        "material": "chrome-steel",
        "region": "upright-flow",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.215,
-         0.148155
-        ],
-        [
-         0.25,
-         0.148155
-        ],
-        [
-         0.25,
-         1.322247
-        ],
-        [
-         0.249143,
-         1.323186
-        ],
-        [
-         0.246658,
-         1.324033
-        ],
-        [
-         0.242786,
-         1.324705
-        ],
-        [
-         0.237908,
-         1.325137
-        ],
-        [
-         0.2325,
-         1.325286
-        ],
-        [
-         0.227092,
-         1.325137
-        ],
-        [
-         0.222214,
-         1.324705
-        ],
-        [
-         0.218342,
-         1.324033
-        ],
-        [
-         0.215857,
-         1.323186
-        ],
-        [
-         0.215,
-         1.322247
-        ]
-       ]
+       "kind": "rect",
+       "x": -0.015,
+       "y": -0.05,
+       "w": 0.03,
+       "h": 1.19,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.215,
+        "z1": 0.25
+       }
       },
       {
        "id": "rail-00",
@@ -7289,26 +7910,17 @@
        "tone": 0.82,
        "material": "chrome-steel",
        "region": "rails",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         -0.2325,
-         0.2
-        ],
-        [
-         0.2325,
-         0.2
-        ],
-        [
-         0.2325,
-         0.221666
-        ],
-        [
-         -0.2325,
-         0.221666
-        ]
-       ]
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0.011,
+       "rx": 0.011,
+       "ry": 0.011,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2325,
+        "z1": 0.2325
+       }
       },
       {
        "id": "rail-01",
@@ -7319,26 +7931,17 @@
        "tone": 0.82,
        "material": "chrome-steel",
        "region": "rails",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         -0.2325,
-         0.254164
-        ],
-        [
-         0.2325,
-         0.254164
-        ],
-        [
-         0.2325,
-         0.27583
-        ],
-        [
-         -0.2325,
-         0.27583
-        ]
-       ]
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0.066,
+       "rx": 0.011,
+       "ry": 0.011,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2325,
+        "z1": 0.2325
+       }
       },
       {
        "id": "rail-02",
@@ -7349,26 +7952,17 @@
        "tone": 0.82,
        "material": "chrome-steel",
        "region": "rails",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         -0.2325,
-         0.308329
-        ],
-        [
-         0.2325,
-         0.308329
-        ],
-        [
-         0.2325,
-         0.329995
-        ],
-        [
-         -0.2325,
-         0.329995
-        ]
-       ]
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0.121,
+       "rx": 0.011,
+       "ry": 0.011,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2325,
+        "z1": 0.2325
+       }
       },
       {
        "id": "rail-03",
@@ -7379,26 +7973,17 @@
        "tone": 0.82,
        "material": "chrome-steel",
        "region": "rails",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         -0.2325,
-         0.362493
-        ],
-        [
-         0.2325,
-         0.362493
-        ],
-        [
-         0.2325,
-         0.384159
-        ],
-        [
-         -0.2325,
-         0.384159
-        ]
-       ]
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0.176,
+       "rx": 0.011,
+       "ry": 0.011,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2325,
+        "z1": 0.2325
+       }
       },
       {
        "id": "rail-04",
@@ -7409,26 +7994,17 @@
        "tone": 0.82,
        "material": "chrome-steel",
        "region": "rails",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         -0.2325,
-         0.416658
-        ],
-        [
-         0.2325,
-         0.416658
-        ],
-        [
-         0.2325,
-         0.438323
-        ],
-        [
-         -0.2325,
-         0.438323
-        ]
-       ]
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0.231,
+       "rx": 0.011,
+       "ry": 0.011,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2325,
+        "z1": 0.2325
+       }
       },
       {
        "id": "rail-05",
@@ -7439,26 +8015,17 @@
        "tone": 0.82,
        "material": "chrome-steel",
        "region": "rails",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         -0.2325,
-         0.470822
-        ],
-        [
-         0.2325,
-         0.470822
-        ],
-        [
-         0.2325,
-         0.492488
-        ],
-        [
-         -0.2325,
-         0.492488
-        ]
-       ]
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0.286,
+       "rx": 0.011,
+       "ry": 0.011,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2325,
+        "z1": 0.2325
+       }
       },
       {
        "id": "rail-06",
@@ -7469,26 +8036,17 @@
        "tone": 0.82,
        "material": "chrome-steel",
        "region": "rails",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         -0.2325,
-         0.598847
-        ],
-        [
-         0.2325,
-         0.598847
-        ],
-        [
-         0.2325,
-         0.620513
-        ],
-        [
-         -0.2325,
-         0.620513
-        ]
-       ]
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0.416,
+       "rx": 0.011,
+       "ry": 0.011,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2325,
+        "z1": 0.2325
+       }
       },
       {
        "id": "rail-07",
@@ -7499,26 +8057,17 @@
        "tone": 0.82,
        "material": "chrome-steel",
        "region": "rails",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         -0.2325,
-         0.653012
-        ],
-        [
-         0.2325,
-         0.653012
-        ],
-        [
-         0.2325,
-         0.674677
-        ],
-        [
-         -0.2325,
-         0.674677
-        ]
-       ]
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0.471,
+       "rx": 0.011,
+       "ry": 0.011,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2325,
+        "z1": 0.2325
+       }
       },
       {
        "id": "rail-08",
@@ -7529,26 +8078,17 @@
        "tone": 0.82,
        "material": "chrome-steel",
        "region": "rails",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         -0.2325,
-         0.707176
-        ],
-        [
-         0.2325,
-         0.707176
-        ],
-        [
-         0.2325,
-         0.728842
-        ],
-        [
-         -0.2325,
-         0.728842
-        ]
-       ]
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0.526,
+       "rx": 0.011,
+       "ry": 0.011,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2325,
+        "z1": 0.2325
+       }
       },
       {
        "id": "rail-09",
@@ -7559,26 +8099,17 @@
        "tone": 0.82,
        "material": "chrome-steel",
        "region": "rails",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         -0.2325,
-         0.76134
-        ],
-        [
-         0.2325,
-         0.76134
-        ],
-        [
-         0.2325,
-         0.783006
-        ],
-        [
-         -0.2325,
-         0.783006
-        ]
-       ]
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0.581,
+       "rx": 0.011,
+       "ry": 0.011,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2325,
+        "z1": 0.2325
+       }
       },
       {
        "id": "rail-10",
@@ -7589,26 +8120,17 @@
        "tone": 0.82,
        "material": "chrome-steel",
        "region": "rails",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         -0.2325,
-         0.815505
-        ],
-        [
-         0.2325,
-         0.815505
-        ],
-        [
-         0.2325,
-         0.837171
-        ],
-        [
-         -0.2325,
-         0.837171
-        ]
-       ]
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0.636,
+       "rx": 0.011,
+       "ry": 0.011,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2325,
+        "z1": 0.2325
+       }
       },
       {
        "id": "rail-11",
@@ -7619,26 +8141,17 @@
        "tone": 0.82,
        "material": "chrome-steel",
        "region": "rails",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         -0.2325,
-         0.869669
-        ],
-        [
-         0.2325,
-         0.869669
-        ],
-        [
-         0.2325,
-         0.891335
-        ],
-        [
-         -0.2325,
-         0.891335
-        ]
-       ]
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0.691,
+       "rx": 0.011,
+       "ry": 0.011,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2325,
+        "z1": 0.2325
+       }
       },
       {
        "id": "rail-12",
@@ -7649,26 +8162,17 @@
        "tone": 0.82,
        "material": "chrome-steel",
        "region": "rails",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         -0.2325,
-         0.997694
-        ],
-        [
-         0.2325,
-         0.997694
-        ],
-        [
-         0.2325,
-         1.01936
-        ],
-        [
-         -0.2325,
-         1.01936
-        ]
-       ]
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0.821,
+       "rx": 0.011,
+       "ry": 0.011,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2325,
+        "z1": 0.2325
+       }
       },
       {
        "id": "rail-13",
@@ -7679,26 +8183,17 @@
        "tone": 0.82,
        "material": "chrome-steel",
        "region": "rails",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         -0.2325,
-         1.051859
-        ],
-        [
-         0.2325,
-         1.051859
-        ],
-        [
-         0.2325,
-         1.073524
-        ],
-        [
-         -0.2325,
-         1.073524
-        ]
-       ]
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0.876,
+       "rx": 0.011,
+       "ry": 0.011,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2325,
+        "z1": 0.2325
+       }
       },
       {
        "id": "rail-14",
@@ -7709,26 +8204,17 @@
        "tone": 0.82,
        "material": "chrome-steel",
        "region": "rails",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         -0.2325,
-         1.106023
-        ],
-        [
-         0.2325,
-         1.106023
-        ],
-        [
-         0.2325,
-         1.127689
-        ],
-        [
-         -0.2325,
-         1.127689
-        ]
-       ]
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0.931,
+       "rx": 0.011,
+       "ry": 0.011,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2325,
+        "z1": 0.2325
+       }
       },
       {
        "id": "rail-15",
@@ -7739,26 +8225,17 @@
        "tone": 0.82,
        "material": "chrome-steel",
        "region": "rails",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         -0.2325,
-         1.160188
-        ],
-        [
-         0.2325,
-         1.160188
-        ],
-        [
-         0.2325,
-         1.181853
-        ],
-        [
-         -0.2325,
-         1.181853
-        ]
-       ]
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0.986,
+       "rx": 0.011,
+       "ry": 0.011,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2325,
+        "z1": 0.2325
+       }
       },
       {
        "id": "rail-16",
@@ -7769,26 +8246,17 @@
        "tone": 0.82,
        "material": "chrome-steel",
        "region": "rails",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         -0.2325,
-         1.214352
-        ],
-        [
-         0.2325,
-         1.214352
-        ],
-        [
-         0.2325,
-         1.236018
-        ],
-        [
-         -0.2325,
-         1.236018
-        ]
-       ]
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 1.041,
+       "rx": 0.011,
+       "ry": 0.011,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2325,
+        "z1": 0.2325
+       }
       },
       {
        "id": "rail-17",
@@ -7799,26 +8267,17 @@
        "tone": 0.82,
        "material": "chrome-steel",
        "region": "rails",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         -0.2325,
-         1.268516
-        ],
-        [
-         0.2325,
-         1.268516
-        ],
-        [
-         0.2325,
-         1.290182
-        ],
-        [
-         -0.2325,
-         1.290182
-        ]
-       ]
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 1.096,
+       "rx": 0.011,
+       "ry": 0.011,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2325,
+        "z1": 0.2325
+       }
       },
       {
        "id": "bracket-lower-right-collar",
@@ -7829,26 +8288,17 @@
        "tone": 0.78,
        "material": "chrome-steel",
        "region": "brackets",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         -0.255,
-         0.3344
-        ],
-        [
-         -0.21,
-         0.3344
-        ],
-        [
-         -0.21,
-         0.361042
-        ],
-        [
-         -0.255,
-         0.361042
-        ]
-       ]
+       "kind": "rect",
+       "x": -0.02,
+       "y": 0.14,
+       "w": 0.04,
+       "h": 0.02,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.255,
+        "z1": -0.21
+       }
       },
       {
        "id": "bracket-lower-right-pin",
@@ -8031,26 +8481,17 @@
        "tone": 0.78,
        "material": "chrome-steel",
        "region": "brackets",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.21,
-         0.3344
-        ],
-        [
-         0.255,
-         0.3344
-        ],
-        [
-         0.255,
-         0.361042
-        ],
-        [
-         0.21,
-         0.361042
-        ]
-       ]
+       "kind": "rect",
+       "x": -0.02,
+       "y": 0.14,
+       "w": 0.04,
+       "h": 0.02,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.21,
+        "z1": 0.255
+       }
       },
       {
        "id": "bracket-lower-left-pin",
@@ -8233,26 +8674,17 @@
        "tone": 0.78,
        "material": "chrome-steel",
        "region": "brackets",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         -0.255,
-         1.184782
-        ],
-        [
-         -0.21,
-         1.184782
-        ],
-        [
-         -0.21,
-         1.211424
-        ],
-        [
-         -0.255,
-         1.211424
-        ]
-       ]
+       "kind": "rect",
+       "x": -0.02,
+       "y": 1.0035,
+       "w": 0.04,
+       "h": 0.02,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.255,
+        "z1": -0.21
+       }
       },
       {
        "id": "bracket-upper-right-pin",
@@ -8435,26 +8867,17 @@
        "tone": 0.78,
        "material": "chrome-steel",
        "region": "brackets",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.21,
-         1.184782
-        ],
-        [
-         0.255,
-         1.184782
-        ],
-        [
-         0.255,
-         1.211424
-        ],
-        [
-         0.21,
-         1.211424
-        ]
-       ]
+       "kind": "rect",
+       "x": -0.02,
+       "y": 1.0035,
+       "w": 0.04,
+       "h": 0.02,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.21,
+        "z1": 0.255
+       }
       },
       {
        "id": "bracket-upper-left-pin",
@@ -8637,82 +9060,17 @@
        "tone": 0.8,
        "material": "chrome-brass",
        "region": "upright-flow",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.2205,
-         1.322681
-        ],
-        [
-         0.221413,
-         1.321883
-        ],
-        [
-         0.224015,
-         1.321207
-        ],
-        [
-         0.227908,
-         1.320756
-        ],
-        [
-         0.2325,
-         1.320597
-        ],
-        [
-         0.237092,
-         1.320756
-        ],
-        [
-         0.240985,
-         1.321207
-        ],
-        [
-         0.243587,
-         1.321883
-        ],
-        [
-         0.2445,
-         1.322681
-        ],
-        [
-         0.2445,
-         1.332529
-        ],
-        [
-         0.243587,
-         1.333326
-        ],
-        [
-         0.240985,
-         1.334002
-        ],
-        [
-         0.237092,
-         1.334454
-        ],
-        [
-         0.2325,
-         1.334613
-        ],
-        [
-         0.227908,
-         1.334454
-        ],
-        [
-         0.224015,
-         1.334002
-        ],
-        [
-         0.221413,
-         1.333326
-        ],
-        [
-         0.2205,
-         1.332529
-        ]
-       ]
+       "kind": "rect",
+       "x": -0.012,
+       "y": 1.14,
+       "w": 0.024,
+       "h": 0.01,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.2205,
+        "z1": 0.2445
+       }
       },
       {
        "id": "plug-top-right",
@@ -8723,82 +9081,17 @@
        "tone": 0.8,
        "material": "chrome-brass",
        "region": "upright-return",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         -0.2445,
-         1.322681
-        ],
-        [
-         -0.243587,
-         1.321883
-        ],
-        [
-         -0.240985,
-         1.321207
-        ],
-        [
-         -0.237092,
-         1.320756
-        ],
-        [
-         -0.2325,
-         1.320597
-        ],
-        [
-         -0.227908,
-         1.320756
-        ],
-        [
-         -0.224015,
-         1.321207
-        ],
-        [
-         -0.221413,
-         1.321883
-        ],
-        [
-         -0.2205,
-         1.322681
-        ],
-        [
-         -0.2205,
-         1.332529
-        ],
-        [
-         -0.221413,
-         1.333326
-        ],
-        [
-         -0.224015,
-         1.334002
-        ],
-        [
-         -0.227908,
-         1.334454
-        ],
-        [
-         -0.2325,
-         1.334613
-        ],
-        [
-         -0.237092,
-         1.334454
-        ],
-        [
-         -0.240985,
-         1.334002
-        ],
-        [
-         -0.243587,
-         1.333326
-        ],
-        [
-         -0.2445,
-         1.332529
-        ]
-       ]
+       "kind": "rect",
+       "x": -0.012,
+       "y": 1.14,
+       "w": 0.024,
+       "h": 0.01,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2445,
+        "z1": -0.2205
+       }
       },
       {
        "id": "blanking-plug",
@@ -8809,82 +9102,17 @@
        "tone": 0.8,
        "material": "chrome-brass",
        "region": "upright-return",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         -0.2475,
-         0.138942
-        ],
-        [
-         -0.246358,
-         0.137945
-        ],
-        [
-         -0.243107,
-         0.1371
-        ],
-        [
-         -0.23824,
-         0.136536
-        ],
-        [
-         -0.2325,
-         0.136337
-        ],
-        [
-         -0.22676,
-         0.136536
-        ],
-        [
-         -0.221893,
-         0.1371
-        ],
-        [
-         -0.218642,
-         0.137945
-        ],
-        [
-         -0.2175,
-         0.138942
-        ],
-        [
-         -0.2175,
-         0.15076
-        ],
-        [
-         -0.218642,
-         0.151756
-        ],
-        [
-         -0.221893,
-         0.152601
-        ],
-        [
-         -0.22676,
-         0.153166
-        ],
-        [
-         -0.2325,
-         0.153364
-        ],
-        [
-         -0.23824,
-         0.153166
-        ],
-        [
-         -0.243107,
-         0.152601
-        ],
-        [
-         -0.246358,
-         0.151756
-        ],
-        [
-         -0.2475,
-         0.15076
-        ]
-       ]
+       "kind": "rect",
+       "x": -0.015,
+       "y": -0.062,
+       "w": 0.03,
+       "h": 0.012,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2475,
+        "z1": -0.2175
+       }
       },
       {
        "id": "valve-nut",
@@ -8895,82 +9123,17 @@
        "tone": 0.8,
        "material": "chrome-brass",
        "region": "valve",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.2165,
-         0.135988
-        ],
-        [
-         0.217718,
-         0.134924
-        ],
-        [
-         0.221186,
-         0.134023
-        ],
-        [
-         0.226377,
-         0.133421
-        ],
-        [
-         0.2325,
-         0.133209
-        ],
-        [
-         0.238623,
-         0.133421
-        ],
-        [
-         0.243814,
-         0.134023
-        ],
-        [
-         0.247282,
-         0.134924
-        ],
-        [
-         0.2485,
-         0.135988
-        ],
-        [
-         0.2485,
-         0.15076
-        ],
-        [
-         0.247282,
-         0.151823
-        ],
-        [
-         0.243814,
-         0.152724
-        ],
-        [
-         0.238623,
-         0.153327
-        ],
-        [
-         0.2325,
-         0.153538
-        ],
-        [
-         0.226377,
-         0.153327
-        ],
-        [
-         0.221186,
-         0.152724
-        ],
-        [
-         0.217718,
-         0.151823
-        ],
-        [
-         0.2165,
-         0.15076
-        ]
-       ]
+       "kind": "rect",
+       "x": -0.016,
+       "y": -0.065,
+       "w": 0.032,
+       "h": 0.015,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.2165,
+        "z1": 0.2485
+       }
       },
       {
        "id": "valve-body",
@@ -8981,82 +9144,17 @@
        "tone": 0.76,
        "material": "chrome-brass",
        "region": "valve",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.2195,
-         0.086747
-        ],
-        [
-         0.22049,
-         0.085883
-        ],
-        [
-         0.223308,
-         0.085151
-        ],
-        [
-         0.227525,
-         0.084662
-        ],
-        [
-         0.2325,
-         0.08449
-        ],
-        [
-         0.237475,
-         0.084662
-        ],
-        [
-         0.241692,
-         0.085151
-        ],
-        [
-         0.24451,
-         0.085883
-        ],
-        [
-         0.2455,
-         0.086747
-        ],
-        [
-         0.2455,
-         0.135988
-        ],
-        [
-         0.24451,
-         0.136851
-        ],
-        [
-         0.241692,
-         0.137584
-        ],
-        [
-         0.237475,
-         0.138073
-        ],
-        [
-         0.2325,
-         0.138245
-        ],
-        [
-         0.227525,
-         0.138073
-        ],
-        [
-         0.223308,
-         0.137584
-        ],
-        [
-         0.22049,
-         0.136851
-        ],
-        [
-         0.2195,
-         0.135988
-        ]
-       ]
+       "kind": "rect",
+       "x": -0.013,
+       "y": -0.115,
+       "w": 0.026,
+       "h": 0.05,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.2195,
+        "z1": 0.2455
+       }
       },
       {
        "id": "valve-outlet",
@@ -10021,62 +10119,17 @@
        "tone": 0.86,
        "material": "chrome-steel",
        "region": "upright-return",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.024716,
-         -0.25
-        ],
-        [
-         0.243667,
-         -0.25
-        ],
-        [
-         0.248993,
-         -0.249143
-        ],
-        [
-         0.253797,
-         -0.246658
-        ],
-        [
-         0.25761,
-         -0.242786
-        ],
-        [
-         0.260058,
-         -0.237908
-        ],
-        [
-         0.260901,
-         -0.2325
-        ],
-        [
-         0.260058,
-         -0.227092
-        ],
-        [
-         0.25761,
-         -0.222214
-        ],
-        [
-         0.253797,
-         -0.218342
-        ],
-        [
-         0.248993,
-         -0.215857
-        ],
-        [
-         0.243667,
-         -0.215
-        ],
-        [
-         0.024716,
-         -0.215
-        ]
-       ]
+       "kind": "rect",
+       "x": -0.015,
+       "y": -0.05,
+       "w": 0.03,
+       "h": 1.19,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.25,
+        "z1": -0.215
+       }
       },
       {
        "id": "upright-left",
@@ -10087,62 +10140,17 @@
        "tone": 0.86,
        "material": "chrome-steel",
        "region": "upright-flow",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.024716,
-         0.215
-        ],
-        [
-         0.243667,
-         0.215
-        ],
-        [
-         0.248993,
-         0.215857
-        ],
-        [
-         0.253797,
-         0.218342
-        ],
-        [
-         0.25761,
-         0.222214
-        ],
-        [
-         0.260058,
-         0.227092
-        ],
-        [
-         0.260901,
-         0.2325
-        ],
-        [
-         0.260058,
-         0.237908
-        ],
-        [
-         0.25761,
-         0.242786
-        ],
-        [
-         0.253797,
-         0.246658
-        ],
-        [
-         0.248993,
-         0.249143
-        ],
-        [
-         0.243667,
-         0.25
-        ],
-        [
-         0.024716,
-         0.25
-        ]
-       ]
+       "kind": "rect",
+       "x": -0.015,
+       "y": -0.05,
+       "w": 0.03,
+       "h": 1.19,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.215,
+        "z1": 0.25
+       }
       },
       {
        "id": "rail-00",
@@ -10153,26 +10161,17 @@
        "tone": 0.82,
        "material": "chrome-steel",
        "region": "rails",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.224704,
-         -0.2325
-        ],
-        [
-         0.246369,
-         -0.2325
-        ],
-        [
-         0.246369,
-         0.2325
-        ],
-        [
-         0.224704,
-         0.2325
-        ]
-       ]
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0.011,
+       "rx": 0.011,
+       "ry": 0.011,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2325,
+        "z1": 0.2325
+       }
       },
       {
        "id": "rail-01",
@@ -10183,26 +10182,17 @@
        "tone": 0.82,
        "material": "chrome-steel",
        "region": "rails",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.215153,
-         -0.2325
-        ],
-        [
-         0.236819,
-         -0.2325
-        ],
-        [
-         0.236819,
-         0.2325
-        ],
-        [
-         0.215153,
-         0.2325
-        ]
-       ]
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0.066,
+       "rx": 0.011,
+       "ry": 0.011,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2325,
+        "z1": 0.2325
+       }
       },
       {
        "id": "rail-02",
@@ -10213,26 +10203,17 @@
        "tone": 0.82,
        "material": "chrome-steel",
        "region": "rails",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.205602,
-         -0.2325
-        ],
-        [
-         0.227268,
-         -0.2325
-        ],
-        [
-         0.227268,
-         0.2325
-        ],
-        [
-         0.205602,
-         0.2325
-        ]
-       ]
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0.121,
+       "rx": 0.011,
+       "ry": 0.011,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2325,
+        "z1": 0.2325
+       }
       },
       {
        "id": "rail-03",
@@ -10243,26 +10224,17 @@
        "tone": 0.82,
        "material": "chrome-steel",
        "region": "rails",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.196052,
-         -0.2325
-        ],
-        [
-         0.217717,
-         -0.2325
-        ],
-        [
-         0.217717,
-         0.2325
-        ],
-        [
-         0.196052,
-         0.2325
-        ]
-       ]
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0.176,
+       "rx": 0.011,
+       "ry": 0.011,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2325,
+        "z1": 0.2325
+       }
       },
       {
        "id": "rail-04",
@@ -10273,26 +10245,17 @@
        "tone": 0.82,
        "material": "chrome-steel",
        "region": "rails",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.186501,
-         -0.2325
-        ],
-        [
-         0.208167,
-         -0.2325
-        ],
-        [
-         0.208167,
-         0.2325
-        ],
-        [
-         0.186501,
-         0.2325
-        ]
-       ]
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0.231,
+       "rx": 0.011,
+       "ry": 0.011,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2325,
+        "z1": 0.2325
+       }
       },
       {
        "id": "rail-05",
@@ -10303,26 +10266,17 @@
        "tone": 0.82,
        "material": "chrome-steel",
        "region": "rails",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.17695,
-         -0.2325
-        ],
-        [
-         0.198616,
-         -0.2325
-        ],
-        [
-         0.198616,
-         0.2325
-        ],
-        [
-         0.17695,
-         0.2325
-        ]
-       ]
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0.286,
+       "rx": 0.011,
+       "ry": 0.011,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2325,
+        "z1": 0.2325
+       }
       },
       {
        "id": "rail-06",
@@ -10333,26 +10287,17 @@
        "tone": 0.82,
        "material": "chrome-steel",
        "region": "rails",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.154376,
-         -0.2325
-        ],
-        [
-         0.176042,
-         -0.2325
-        ],
-        [
-         0.176042,
-         0.2325
-        ],
-        [
-         0.154376,
-         0.2325
-        ]
-       ]
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0.416,
+       "rx": 0.011,
+       "ry": 0.011,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2325,
+        "z1": 0.2325
+       }
       },
       {
        "id": "rail-07",
@@ -10363,26 +10308,17 @@
        "tone": 0.82,
        "material": "chrome-steel",
        "region": "rails",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.144825,
-         -0.2325
-        ],
-        [
-         0.166491,
-         -0.2325
-        ],
-        [
-         0.166491,
-         0.2325
-        ],
-        [
-         0.144825,
-         0.2325
-        ]
-       ]
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0.471,
+       "rx": 0.011,
+       "ry": 0.011,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2325,
+        "z1": 0.2325
+       }
       },
       {
        "id": "rail-08",
@@ -10393,26 +10329,17 @@
        "tone": 0.82,
        "material": "chrome-steel",
        "region": "rails",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.135275,
-         -0.2325
-        ],
-        [
-         0.156941,
-         -0.2325
-        ],
-        [
-         0.156941,
-         0.2325
-        ],
-        [
-         0.135275,
-         0.2325
-        ]
-       ]
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0.526,
+       "rx": 0.011,
+       "ry": 0.011,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2325,
+        "z1": 0.2325
+       }
       },
       {
        "id": "rail-09",
@@ -10423,26 +10350,17 @@
        "tone": 0.82,
        "material": "chrome-steel",
        "region": "rails",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.125724,
-         -0.2325
-        ],
-        [
-         0.14739,
-         -0.2325
-        ],
-        [
-         0.14739,
-         0.2325
-        ],
-        [
-         0.125724,
-         0.2325
-        ]
-       ]
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0.581,
+       "rx": 0.011,
+       "ry": 0.011,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2325,
+        "z1": 0.2325
+       }
       },
       {
        "id": "rail-10",
@@ -10453,26 +10371,17 @@
        "tone": 0.82,
        "material": "chrome-steel",
        "region": "rails",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.116173,
-         -0.2325
-        ],
-        [
-         0.137839,
-         -0.2325
-        ],
-        [
-         0.137839,
-         0.2325
-        ],
-        [
-         0.116173,
-         0.2325
-        ]
-       ]
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0.636,
+       "rx": 0.011,
+       "ry": 0.011,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2325,
+        "z1": 0.2325
+       }
       },
       {
        "id": "rail-11",
@@ -10483,26 +10392,17 @@
        "tone": 0.82,
        "material": "chrome-steel",
        "region": "rails",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.106623,
-         -0.2325
-        ],
-        [
-         0.128288,
-         -0.2325
-        ],
-        [
-         0.128288,
-         0.2325
-        ],
-        [
-         0.106623,
-         0.2325
-        ]
-       ]
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0.691,
+       "rx": 0.011,
+       "ry": 0.011,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2325,
+        "z1": 0.2325
+       }
       },
       {
        "id": "rail-12",
@@ -10513,26 +10413,17 @@
        "tone": 0.82,
        "material": "chrome-steel",
        "region": "rails",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.084048,
-         -0.2325
-        ],
-        [
-         0.105714,
-         -0.2325
-        ],
-        [
-         0.105714,
-         0.2325
-        ],
-        [
-         0.084048,
-         0.2325
-        ]
-       ]
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0.821,
+       "rx": 0.011,
+       "ry": 0.011,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2325,
+        "z1": 0.2325
+       }
       },
       {
        "id": "rail-13",
@@ -10543,26 +10434,17 @@
        "tone": 0.82,
        "material": "chrome-steel",
        "region": "rails",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.074498,
-         -0.2325
-        ],
-        [
-         0.096164,
-         -0.2325
-        ],
-        [
-         0.096164,
-         0.2325
-        ],
-        [
-         0.074498,
-         0.2325
-        ]
-       ]
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0.876,
+       "rx": 0.011,
+       "ry": 0.011,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2325,
+        "z1": 0.2325
+       }
       },
       {
        "id": "rail-14",
@@ -10573,26 +10455,17 @@
        "tone": 0.82,
        "material": "chrome-steel",
        "region": "rails",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.064947,
-         -0.2325
-        ],
-        [
-         0.086613,
-         -0.2325
-        ],
-        [
-         0.086613,
-         0.2325
-        ],
-        [
-         0.064947,
-         0.2325
-        ]
-       ]
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0.931,
+       "rx": 0.011,
+       "ry": 0.011,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2325,
+        "z1": 0.2325
+       }
       },
       {
        "id": "rail-15",
@@ -10603,26 +10476,17 @@
        "tone": 0.82,
        "material": "chrome-steel",
        "region": "rails",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.055397,
-         -0.2325
-        ],
-        [
-         0.077062,
-         -0.2325
-        ],
-        [
-         0.077062,
-         0.2325
-        ],
-        [
-         0.055397,
-         0.2325
-        ]
-       ]
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0.986,
+       "rx": 0.011,
+       "ry": 0.011,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2325,
+        "z1": 0.2325
+       }
       },
       {
        "id": "rail-16",
@@ -10633,26 +10497,17 @@
        "tone": 0.82,
        "material": "chrome-steel",
        "region": "rails",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.045846,
-         -0.2325
-        ],
-        [
-         0.067512,
-         -0.2325
-        ],
-        [
-         0.067512,
-         0.2325
-        ],
-        [
-         0.045846,
-         0.2325
-        ]
-       ]
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 1.041,
+       "rx": 0.011,
+       "ry": 0.011,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2325,
+        "z1": 0.2325
+       }
       },
       {
        "id": "rail-17",
@@ -10663,26 +10518,17 @@
        "tone": 0.82,
        "material": "chrome-steel",
        "region": "rails",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.036295,
-         -0.2325
-        ],
-        [
-         0.057961,
-         -0.2325
-        ],
-        [
-         0.057961,
-         0.2325
-        ],
-        [
-         0.036295,
-         0.2325
-        ]
-       ]
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 1.096,
+       "rx": 0.011,
+       "ry": 0.011,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2325,
+        "z1": 0.2325
+       }
       },
       {
        "id": "bracket-lower-right-collar",
@@ -10693,26 +10539,17 @@
        "tone": 0.78,
        "material": "chrome-steel",
        "region": "brackets",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.189967,
-         -0.255
-        ],
-        [
-         0.232832,
-         -0.255
-        ],
-        [
-         0.232832,
-         -0.21
-        ],
-        [
-         0.189967,
-         -0.21
-        ]
-       ]
+       "kind": "rect",
+       "x": -0.02,
+       "y": 0.14,
+       "w": 0.04,
+       "h": 0.02,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.255,
+        "z1": -0.21
+       }
       },
       {
        "id": "bracket-lower-right-pin",
@@ -10723,82 +10560,17 @@
        "tone": 0.7,
        "material": "chrome-steel",
        "region": "brackets",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.155846,
-         -0.2325
-        ],
-        [
-         0.155951,
-         -0.235562
-        ],
-        [
-         0.156253,
-         -0.238157
-        ],
-        [
-         0.156703,
-         -0.239891
-        ],
-        [
-         0.157235,
-         -0.2405
-        ],
-        [
-         0.191703,
-         -0.2405
-        ],
-        [
-         0.192235,
-         -0.239891
-        ],
-        [
-         0.192686,
-         -0.238157
-        ],
-        [
-         0.192987,
-         -0.235562
-        ],
-        [
-         0.193092,
-         -0.2325
-        ],
-        [
-         0.192987,
-         -0.229438
-        ],
-        [
-         0.192686,
-         -0.226843
-        ],
-        [
-         0.192235,
-         -0.225109
-        ],
-        [
-         0.191703,
-         -0.2245
-        ],
-        [
-         0.157235,
-         -0.2245
-        ],
-        [
-         0.156703,
-         -0.225109
-        ],
-        [
-         0.156253,
-         -0.226843
-        ],
-        [
-         0.155951,
-         -0.229438
-        ]
-       ]
+       "kind": "rect",
+       "x": -0.055,
+       "y": 0.142,
+       "w": 0.035,
+       "h": 0.016,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2405,
+        "z1": -0.2245
+       }
       },
       {
        "id": "bracket-lower-right-rosette",
@@ -10809,82 +10581,17 @@
        "tone": 0.74,
        "material": "chrome-steel",
        "region": "brackets",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.143046,
-         -0.2325
-        ],
-        [
-         0.143376,
-         -0.242067
-        ],
-        [
-         0.144317,
-         -0.250178
-        ],
-        [
-         0.145726,
-         -0.255597
-        ],
-        [
-         0.147387,
-         -0.2575
-        ],
-        [
-         0.157235,
-         -0.2575
-        ],
-        [
-         0.158896,
-         -0.255597
-        ],
-        [
-         0.160305,
-         -0.250178
-        ],
-        [
-         0.161246,
-         -0.242067
-        ],
-        [
-         0.161576,
-         -0.2325
-        ],
-        [
-         0.161246,
-         -0.222933
-        ],
-        [
-         0.160305,
-         -0.214822
-        ],
-        [
-         0.158896,
-         -0.209403
-        ],
-        [
-         0.157235,
-         -0.2075
-        ],
-        [
-         0.147387,
-         -0.2075
-        ],
-        [
-         0.145726,
-         -0.209403
-        ],
-        [
-         0.144317,
-         -0.214822
-        ],
-        [
-         0.143376,
-         -0.222933
-        ]
-       ]
+       "kind": "rect",
+       "x": -0.065,
+       "y": 0.125,
+       "w": 0.01,
+       "h": 0.05,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2575,
+        "z1": -0.2075
+       }
       },
       {
        "id": "bracket-lower-left-collar",
@@ -10895,26 +10602,17 @@
        "tone": 0.78,
        "material": "chrome-steel",
        "region": "brackets",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.189967,
-         0.21
-        ],
-        [
-         0.232832,
-         0.21
-        ],
-        [
-         0.232832,
-         0.255
-        ],
-        [
-         0.189967,
-         0.255
-        ]
-       ]
+       "kind": "rect",
+       "x": -0.02,
+       "y": 0.14,
+       "w": 0.04,
+       "h": 0.02,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.21,
+        "z1": 0.255
+       }
       },
       {
        "id": "bracket-lower-left-pin",
@@ -10925,82 +10623,17 @@
        "tone": 0.7,
        "material": "chrome-steel",
        "region": "brackets",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.155846,
-         0.2325
-        ],
-        [
-         0.155951,
-         0.229438
-        ],
-        [
-         0.156253,
-         0.226843
-        ],
-        [
-         0.156703,
-         0.225109
-        ],
-        [
-         0.157235,
-         0.2245
-        ],
-        [
-         0.191703,
-         0.2245
-        ],
-        [
-         0.192235,
-         0.225109
-        ],
-        [
-         0.192686,
-         0.226843
-        ],
-        [
-         0.192987,
-         0.229438
-        ],
-        [
-         0.193092,
-         0.2325
-        ],
-        [
-         0.192987,
-         0.235562
-        ],
-        [
-         0.192686,
-         0.238157
-        ],
-        [
-         0.192235,
-         0.239891
-        ],
-        [
-         0.191703,
-         0.2405
-        ],
-        [
-         0.157235,
-         0.2405
-        ],
-        [
-         0.156703,
-         0.239891
-        ],
-        [
-         0.156253,
-         0.238157
-        ],
-        [
-         0.155951,
-         0.235562
-        ]
-       ]
+       "kind": "rect",
+       "x": -0.055,
+       "y": 0.142,
+       "w": 0.035,
+       "h": 0.016,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.2245,
+        "z1": 0.2405
+       }
       },
       {
        "id": "bracket-lower-left-rosette",
@@ -11011,82 +10644,17 @@
        "tone": 0.74,
        "material": "chrome-steel",
        "region": "brackets",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.143046,
-         0.2325
-        ],
-        [
-         0.143376,
-         0.222933
-        ],
-        [
-         0.144317,
-         0.214822
-        ],
-        [
-         0.145726,
-         0.209403
-        ],
-        [
-         0.147387,
-         0.2075
-        ],
-        [
-         0.157235,
-         0.2075
-        ],
-        [
-         0.158896,
-         0.209403
-        ],
-        [
-         0.160305,
-         0.214822
-        ],
-        [
-         0.161246,
-         0.222933
-        ],
-        [
-         0.161576,
-         0.2325
-        ],
-        [
-         0.161246,
-         0.242067
-        ],
-        [
-         0.160305,
-         0.250178
-        ],
-        [
-         0.158896,
-         0.255597
-        ],
-        [
-         0.157235,
-         0.2575
-        ],
-        [
-         0.147387,
-         0.2575
-        ],
-        [
-         0.145726,
-         0.255597
-        ],
-        [
-         0.144317,
-         0.250178
-        ],
-        [
-         0.143376,
-         0.242067
-        ]
-       ]
+       "kind": "rect",
+       "x": -0.065,
+       "y": 0.125,
+       "w": 0.01,
+       "h": 0.05,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.2075,
+        "z1": 0.2575
+       }
       },
       {
        "id": "bracket-upper-right-collar",
@@ -11097,26 +10665,17 @@
        "tone": 0.78,
        "material": "chrome-steel",
        "region": "brackets",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.040022,
-         -0.255
-        ],
-        [
-         0.082887,
-         -0.255
-        ],
-        [
-         0.082887,
-         -0.21
-        ],
-        [
-         0.040022,
-         -0.21
-        ]
-       ]
+       "kind": "rect",
+       "x": -0.02,
+       "y": 1.0035,
+       "w": 0.04,
+       "h": 0.02,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.255,
+        "z1": -0.21
+       }
       },
       {
        "id": "bracket-upper-right-pin",
@@ -11127,82 +10686,17 @@
        "tone": 0.7,
        "material": "chrome-steel",
        "region": "brackets",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.005901,
-         -0.2325
-        ],
-        [
-         0.006006,
-         -0.235562
-        ],
-        [
-         0.006307,
-         -0.238157
-        ],
-        [
-         0.006758,
-         -0.239891
-        ],
-        [
-         0.00729,
-         -0.2405
-        ],
-        [
-         0.041758,
-         -0.2405
-        ],
-        [
-         0.04229,
-         -0.239891
-        ],
-        [
-         0.04274,
-         -0.238157
-        ],
-        [
-         0.043041,
-         -0.235562
-        ],
-        [
-         0.043147,
-         -0.2325
-        ],
-        [
-         0.043041,
-         -0.229438
-        ],
-        [
-         0.04274,
-         -0.226843
-        ],
-        [
-         0.04229,
-         -0.225109
-        ],
-        [
-         0.041758,
-         -0.2245
-        ],
-        [
-         0.00729,
-         -0.2245
-        ],
-        [
-         0.006758,
-         -0.225109
-        ],
-        [
-         0.006307,
-         -0.226843
-        ],
-        [
-         0.006006,
-         -0.229438
-        ]
-       ]
+       "kind": "rect",
+       "x": -0.055,
+       "y": 1.0055,
+       "w": 0.035,
+       "h": 0.016,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2405,
+        "z1": -0.2245
+       }
       },
       {
        "id": "bracket-upper-right-rosette",
@@ -11213,82 +10707,17 @@
        "tone": 0.74,
        "material": "chrome-steel",
        "region": "brackets",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         -0.0069,
-         -0.2325
-        ],
-        [
-         -0.006569,
-         -0.242067
-        ],
-        [
-         -0.005628,
-         -0.250178
-        ],
-        [
-         -0.00422,
-         -0.255597
-        ],
-        [
-         -0.002558,
-         -0.2575
-        ],
-        [
-         0.00729,
-         -0.2575
-        ],
-        [
-         0.008951,
-         -0.255597
-        ],
-        [
-         0.010359,
-         -0.250178
-        ],
-        [
-         0.0113,
-         -0.242067
-        ],
-        [
-         0.011631,
-         -0.2325
-        ],
-        [
-         0.0113,
-         -0.222933
-        ],
-        [
-         0.010359,
-         -0.214822
-        ],
-        [
-         0.008951,
-         -0.209403
-        ],
-        [
-         0.00729,
-         -0.2075
-        ],
-        [
-         -0.002558,
-         -0.2075
-        ],
-        [
-         -0.00422,
-         -0.209403
-        ],
-        [
-         -0.005628,
-         -0.214822
-        ],
-        [
-         -0.006569,
-         -0.222933
-        ]
-       ]
+       "kind": "rect",
+       "x": -0.065,
+       "y": 0.9885,
+       "w": 0.01,
+       "h": 0.05,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2575,
+        "z1": -0.2075
+       }
       },
       {
        "id": "bracket-upper-left-collar",
@@ -11299,26 +10728,17 @@
        "tone": 0.78,
        "material": "chrome-steel",
        "region": "brackets",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.040022,
-         0.21
-        ],
-        [
-         0.082887,
-         0.21
-        ],
-        [
-         0.082887,
-         0.255
-        ],
-        [
-         0.040022,
-         0.255
-        ]
-       ]
+       "kind": "rect",
+       "x": -0.02,
+       "y": 1.0035,
+       "w": 0.04,
+       "h": 0.02,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.21,
+        "z1": 0.255
+       }
       },
       {
        "id": "bracket-upper-left-pin",
@@ -11329,82 +10749,17 @@
        "tone": 0.7,
        "material": "chrome-steel",
        "region": "brackets",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.005901,
-         0.2325
-        ],
-        [
-         0.006006,
-         0.229438
-        ],
-        [
-         0.006307,
-         0.226843
-        ],
-        [
-         0.006758,
-         0.225109
-        ],
-        [
-         0.00729,
-         0.2245
-        ],
-        [
-         0.041758,
-         0.2245
-        ],
-        [
-         0.04229,
-         0.225109
-        ],
-        [
-         0.04274,
-         0.226843
-        ],
-        [
-         0.043041,
-         0.229438
-        ],
-        [
-         0.043147,
-         0.2325
-        ],
-        [
-         0.043041,
-         0.235562
-        ],
-        [
-         0.04274,
-         0.238157
-        ],
-        [
-         0.04229,
-         0.239891
-        ],
-        [
-         0.041758,
-         0.2405
-        ],
-        [
-         0.00729,
-         0.2405
-        ],
-        [
-         0.006758,
-         0.239891
-        ],
-        [
-         0.006307,
-         0.238157
-        ],
-        [
-         0.006006,
-         0.235562
-        ]
-       ]
+       "kind": "rect",
+       "x": -0.055,
+       "y": 1.0055,
+       "w": 0.035,
+       "h": 0.016,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.2245,
+        "z1": 0.2405
+       }
       },
       {
        "id": "bracket-upper-left-rosette",
@@ -11415,82 +10770,17 @@
        "tone": 0.74,
        "material": "chrome-steel",
        "region": "brackets",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         -0.0069,
-         0.2325
-        ],
-        [
-         -0.006569,
-         0.222933
-        ],
-        [
-         -0.005628,
-         0.214822
-        ],
-        [
-         -0.00422,
-         0.209403
-        ],
-        [
-         -0.002558,
-         0.2075
-        ],
-        [
-         0.00729,
-         0.2075
-        ],
-        [
-         0.008951,
-         0.209403
-        ],
-        [
-         0.010359,
-         0.214822
-        ],
-        [
-         0.0113,
-         0.222933
-        ],
-        [
-         0.011631,
-         0.2325
-        ],
-        [
-         0.0113,
-         0.242067
-        ],
-        [
-         0.010359,
-         0.250178
-        ],
-        [
-         0.008951,
-         0.255597
-        ],
-        [
-         0.00729,
-         0.2575
-        ],
-        [
-         -0.002558,
-         0.2575
-        ],
-        [
-         -0.00422,
-         0.255597
-        ],
-        [
-         -0.005628,
-         0.250178
-        ],
-        [
-         -0.006569,
-         0.242067
-        ]
-       ]
+       "kind": "rect",
+       "x": -0.065,
+       "y": 0.9885,
+       "w": 0.01,
+       "h": 0.05,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.2075,
+        "z1": 0.2575
+       }
       },
       {
        "id": "plug-top-left",
@@ -11931,82 +11221,17 @@
        "tone": 0.78,
        "material": "chrome-brass",
        "region": "valve",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.198389,
-         0.2325
-        ],
-        [
-         0.198561,
-         0.227525
-        ],
-        [
-         0.199051,
-         0.223308
-        ],
-        [
-         0.199783,
-         0.22049
-        ],
-        [
-         0.200647,
-         0.2195
-        ],
-        [
-         0.242994,
-         0.2195
-        ],
-        [
-         0.243858,
-         0.22049
-        ],
-        [
-         0.24459,
-         0.223308
-        ],
-        [
-         0.245079,
-         0.227525
-        ],
-        [
-         0.245251,
-         0.2325
-        ],
-        [
-         0.245079,
-         0.237475
-        ],
-        [
-         0.24459,
-         0.241692
-        ],
-        [
-         0.243858,
-         0.24451
-        ],
-        [
-         0.242994,
-         0.2455
-        ],
-        [
-         0.200647,
-         0.2455
-        ],
-        [
-         0.199783,
-         0.24451
-        ],
-        [
-         0.199051,
-         0.241692
-        ],
-        [
-         0.198561,
-         0.237475
-        ]
-       ]
+       "kind": "rect",
+       "x": -0.055,
+       "y": -0.113,
+       "w": 0.043,
+       "h": 0.026,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.2195,
+        "z1": 0.2455
+       }
       },
       {
        "id": "copper-stub",
@@ -12017,82 +11242,17 @@
        "tone": 0.5,
        "material": "copper",
        "region": "valve",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.1698,
-         0.2325
-        ],
-        [
-         0.1699,
-         0.22963
-        ],
-        [
-         0.170182,
-         0.227197
-        ],
-        [
-         0.170604,
-         0.225571
-        ],
-        [
-         0.171103,
-         0.225
-        ],
-        [
-         0.200647,
-         0.225
-        ],
-        [
-         0.201145,
-         0.225571
-        ],
-        [
-         0.201568,
-         0.227197
-        ],
-        [
-         0.20185,
-         0.22963
-        ],
-        [
-         0.201949,
-         0.2325
-        ],
-        [
-         0.20185,
-         0.23537
-        ],
-        [
-         0.201568,
-         0.237803
-        ],
-        [
-         0.201145,
-         0.239429
-        ],
-        [
-         0.200647,
-         0.24
-        ],
-        [
-         0.171103,
-         0.24
-        ],
-        [
-         0.170604,
-         0.239429
-        ],
-        [
-         0.170182,
-         0.237803
-        ],
-        [
-         0.1699,
-         0.23537
-        ]
-       ]
+       "kind": "rect",
+       "x": -0.085,
+       "y": -0.1075,
+       "w": 0.03,
+       "h": 0.015,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.225,
+        "z1": 0.24
+       }
       },
       {
        "id": "valve-bonnet",
@@ -12165,11 +11325,11 @@
        "closed": false,
        "points": [
         [
-         0.0,
+         0,
          -0.4
         ],
         [
-         0.0,
+         0,
          0.4
         ]
        ],
@@ -12240,7 +11400,7 @@
        "region": "rack",
        "kind": "rect",
        "x": -0.45,
-       "y": 0.0,
+       "y": 0,
        "w": 0.9,
        "h": 0.04
       },
@@ -12509,7 +11669,7 @@
        "material": "chrome-steel",
        "region": "rails",
        "kind": "ellipse",
-       "cx": 0.0,
+       "cx": 0,
        "cy": 0.011,
        "rx": 0.011,
        "ry": 0.011
@@ -12524,7 +11684,7 @@
        "material": "chrome-steel",
        "region": "rails",
        "kind": "ellipse",
-       "cx": 0.0,
+       "cx": 0,
        "cy": 0.1485,
        "rx": 0.011,
        "ry": 0.011
@@ -12539,7 +11699,7 @@
        "material": "chrome-steel",
        "region": "rails",
        "kind": "ellipse",
-       "cx": 0.0,
+       "cx": 0,
        "cy": 0.286,
        "rx": 0.011,
        "ry": 0.011
@@ -12554,7 +11714,7 @@
        "material": "chrome-steel",
        "region": "rails",
        "kind": "ellipse",
-       "cx": 0.0,
+       "cx": 0,
        "cy": 0.416,
        "rx": 0.011,
        "ry": 0.011
@@ -12569,7 +11729,7 @@
        "material": "chrome-steel",
        "region": "rails",
        "kind": "ellipse",
-       "cx": 0.0,
+       "cx": 0,
        "cy": 0.5535,
        "rx": 0.011,
        "ry": 0.011
@@ -12584,7 +11744,7 @@
        "material": "chrome-steel",
        "region": "rails",
        "kind": "ellipse",
-       "cx": 0.0,
+       "cx": 0,
        "cy": 0.691,
        "rx": 0.011,
        "ry": 0.011
@@ -12599,7 +11759,7 @@
        "material": "chrome-steel",
        "region": "rails",
        "kind": "ellipse",
-       "cx": 0.0,
+       "cx": 0,
        "cy": 0.821,
        "rx": 0.011,
        "ry": 0.011
@@ -12614,7 +11774,7 @@
        "material": "chrome-steel",
        "region": "rails",
        "kind": "ellipse",
-       "cx": 0.0,
+       "cx": 0,
        "cy": 0.9585,
        "rx": 0.011,
        "ry": 0.011
@@ -12629,7 +11789,7 @@
        "material": "chrome-steel",
        "region": "rails",
        "kind": "ellipse",
-       "cx": 0.0,
+       "cx": 0,
        "cy": 1.096,
        "rx": 0.011,
        "ry": 0.011
@@ -12698,7 +11858,7 @@
        "id": "upright-highlight",
        "bone": "radiator",
        "role": "detail",
-       "z": 8.0,
+       "z": 8,
        "filled": false,
        "tone": 0.98,
        "kind": "poly",
@@ -12728,7 +11888,7 @@
        "region": "rack",
        "kind": "rect",
        "x": -0.42,
-       "y": 0.0,
+       "y": 0,
        "w": 0.04,
        "h": 0.04
       },
@@ -12773,7 +11933,7 @@
        "region": "rack",
        "kind": "rect",
        "x": 0.38,
-       "y": 0.0,
+       "y": 0,
        "w": 0.04,
        "h": 0.04
       },
@@ -12833,7 +11993,7 @@
        "region": "rack",
        "kind": "rect",
        "x": -0.38,
-       "y": 0.0,
+       "y": 0,
        "w": 0.76,
        "h": 0.04
       },
@@ -12908,7 +12068,7 @@
        "region": "rack",
        "kind": "rect",
        "x": -0.38,
-       "y": 0.0,
+       "y": 0,
        "w": 0.76,
        "h": 0.04
       },
@@ -12981,62 +12141,17 @@
        "tone": 0.86,
        "material": "chrome-steel",
        "region": "upright-return",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         -0.25,
-         0.148155
-        ],
-        [
-         -0.215,
-         0.148155
-        ],
-        [
-         -0.215,
-         1.332095
-        ],
-        [
-         -0.215857,
-         1.333034
-        ],
-        [
-         -0.218342,
-         1.333881
-        ],
-        [
-         -0.222214,
-         1.334553
-        ],
-        [
-         -0.227092,
-         1.334985
-        ],
-        [
-         -0.2325,
-         1.335134
-        ],
-        [
-         -0.237908,
-         1.334985
-        ],
-        [
-         -0.242786,
-         1.334553
-        ],
-        [
-         -0.246658,
-         1.333881
-        ],
-        [
-         -0.249143,
-         1.333034
-        ],
-        [
-         -0.25,
-         1.332095
-        ]
-       ]
+       "kind": "rect",
+       "x": -0.015,
+       "y": -0.05,
+       "w": 0.03,
+       "h": 1.2,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.25,
+        "z1": -0.215
+       }
       },
       {
        "id": "upright-left",
@@ -13047,62 +12162,17 @@
        "tone": 0.86,
        "material": "chrome-steel",
        "region": "upright-flow",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.215,
-         0.148155
-        ],
-        [
-         0.25,
-         0.148155
-        ],
-        [
-         0.25,
-         1.332095
-        ],
-        [
-         0.249143,
-         1.333034
-        ],
-        [
-         0.246658,
-         1.333881
-        ],
-        [
-         0.242786,
-         1.334553
-        ],
-        [
-         0.237908,
-         1.334985
-        ],
-        [
-         0.2325,
-         1.335134
-        ],
-        [
-         0.227092,
-         1.334985
-        ],
-        [
-         0.222214,
-         1.334553
-        ],
-        [
-         0.218342,
-         1.333881
-        ],
-        [
-         0.215857,
-         1.333034
-        ],
-        [
-         0.215,
-         1.332095
-        ]
-       ]
+       "kind": "rect",
+       "x": -0.015,
+       "y": -0.05,
+       "w": 0.03,
+       "h": 1.2,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.215,
+        "z1": 0.25
+       }
       },
       {
        "id": "rail-00",
@@ -13113,26 +12183,17 @@
        "tone": 0.82,
        "material": "chrome-steel",
        "region": "rails",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         -0.2325,
-         0.2
-        ],
-        [
-         0.2325,
-         0.2
-        ],
-        [
-         0.2325,
-         0.221666
-        ],
-        [
-         -0.2325,
-         0.221666
-        ]
-       ]
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0.011,
+       "rx": 0.011,
+       "ry": 0.011,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2325,
+        "z1": 0.2325
+       }
       },
       {
        "id": "rail-01",
@@ -13143,26 +12204,17 @@
        "tone": 0.82,
        "material": "chrome-steel",
        "region": "rails",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         -0.2325,
-         0.335411
-        ],
-        [
-         0.2325,
-         0.335411
-        ],
-        [
-         0.2325,
-         0.357077
-        ],
-        [
-         -0.2325,
-         0.357077
-        ]
-       ]
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0.1485,
+       "rx": 0.011,
+       "ry": 0.011,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2325,
+        "z1": 0.2325
+       }
       },
       {
        "id": "rail-02",
@@ -13173,26 +12225,17 @@
        "tone": 0.82,
        "material": "chrome-steel",
        "region": "rails",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         -0.2325,
-         0.470822
-        ],
-        [
-         0.2325,
-         0.470822
-        ],
-        [
-         0.2325,
-         0.492488
-        ],
-        [
-         -0.2325,
-         0.492488
-        ]
-       ]
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0.286,
+       "rx": 0.011,
+       "ry": 0.011,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2325,
+        "z1": 0.2325
+       }
       },
       {
        "id": "rail-03",
@@ -13203,26 +12246,17 @@
        "tone": 0.82,
        "material": "chrome-steel",
        "region": "rails",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         -0.2325,
-         0.598847
-        ],
-        [
-         0.2325,
-         0.598847
-        ],
-        [
-         0.2325,
-         0.620513
-        ],
-        [
-         -0.2325,
-         0.620513
-        ]
-       ]
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0.416,
+       "rx": 0.011,
+       "ry": 0.011,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2325,
+        "z1": 0.2325
+       }
       },
       {
        "id": "rail-04",
@@ -13233,26 +12267,17 @@
        "tone": 0.82,
        "material": "chrome-steel",
        "region": "rails",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         -0.2325,
-         0.734258
-        ],
-        [
-         0.2325,
-         0.734258
-        ],
-        [
-         0.2325,
-         0.755924
-        ],
-        [
-         -0.2325,
-         0.755924
-        ]
-       ]
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0.5535,
+       "rx": 0.011,
+       "ry": 0.011,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2325,
+        "z1": 0.2325
+       }
       },
       {
        "id": "rail-05",
@@ -13263,26 +12288,17 @@
        "tone": 0.82,
        "material": "chrome-steel",
        "region": "rails",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         -0.2325,
-         0.869669
-        ],
-        [
-         0.2325,
-         0.869669
-        ],
-        [
-         0.2325,
-         0.891335
-        ],
-        [
-         -0.2325,
-         0.891335
-        ]
-       ]
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0.691,
+       "rx": 0.011,
+       "ry": 0.011,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2325,
+        "z1": 0.2325
+       }
       },
       {
        "id": "rail-06",
@@ -13293,26 +12309,17 @@
        "tone": 0.82,
        "material": "chrome-steel",
        "region": "rails",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         -0.2325,
-         0.997694
-        ],
-        [
-         0.2325,
-         0.997694
-        ],
-        [
-         0.2325,
-         1.01936
-        ],
-        [
-         -0.2325,
-         1.01936
-        ]
-       ]
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0.821,
+       "rx": 0.011,
+       "ry": 0.011,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2325,
+        "z1": 0.2325
+       }
       },
       {
        "id": "rail-07",
@@ -13323,26 +12330,17 @@
        "tone": 0.82,
        "material": "chrome-steel",
        "region": "rails",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         -0.2325,
-         1.133105
-        ],
-        [
-         0.2325,
-         1.133105
-        ],
-        [
-         0.2325,
-         1.154771
-        ],
-        [
-         -0.2325,
-         1.154771
-        ]
-       ]
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0.9585,
+       "rx": 0.011,
+       "ry": 0.011,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2325,
+        "z1": 0.2325
+       }
       },
       {
        "id": "rail-08",
@@ -13353,26 +12351,17 @@
        "tone": 0.82,
        "material": "chrome-steel",
        "region": "rails",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         -0.2325,
-         1.268516
-        ],
-        [
-         0.2325,
-         1.268516
-        ],
-        [
-         0.2325,
-         1.290182
-        ],
-        [
-         -0.2325,
-         1.290182
-        ]
-       ]
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 1.096,
+       "rx": 0.011,
+       "ry": 0.011,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2325,
+        "z1": 0.2325
+       }
       },
       {
        "id": "bracket-lower-right",
@@ -13383,26 +12372,17 @@
        "tone": 0.74,
        "material": "chrome-steel",
        "region": "brackets",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         -0.255,
-         0.324124
-        ],
-        [
-         -0.21,
-         0.324124
-        ],
-        [
-         -0.21,
-         0.357426
-        ],
-        [
-         -0.255,
-         0.357426
-        ]
-       ]
+       "kind": "rect",
+       "x": -0.065,
+       "y": 0.1375,
+       "w": 0.05,
+       "h": 0.025,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.255,
+        "z1": -0.21
+       }
       },
       {
        "id": "bracket-lower-left",
@@ -13413,26 +12393,17 @@
        "tone": 0.74,
        "material": "chrome-steel",
        "region": "brackets",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.21,
-         0.324124
-        ],
-        [
-         0.255,
-         0.324124
-        ],
-        [
-         0.255,
-         0.357426
-        ],
-        [
-         0.21,
-         0.357426
-        ]
-       ]
+       "kind": "rect",
+       "x": -0.065,
+       "y": 0.1375,
+       "w": 0.05,
+       "h": 0.025,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.21,
+        "z1": 0.255
+       }
       },
       {
        "id": "bracket-upper-right",
@@ -13443,26 +12414,17 @@
        "tone": 0.74,
        "material": "chrome-steel",
        "region": "brackets",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         -0.255,
-         1.174505
-        ],
-        [
-         -0.21,
-         1.174505
-        ],
-        [
-         -0.21,
-         1.207808
-        ],
-        [
-         -0.255,
-         1.207808
-        ]
-       ]
+       "kind": "rect",
+       "x": -0.065,
+       "y": 1.001,
+       "w": 0.05,
+       "h": 0.025,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.255,
+        "z1": -0.21
+       }
       },
       {
        "id": "bracket-upper-left",
@@ -13473,26 +12435,17 @@
        "tone": 0.74,
        "material": "chrome-steel",
        "region": "brackets",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.21,
-         1.174505
-        ],
-        [
-         0.255,
-         1.174505
-        ],
-        [
-         0.255,
-         1.207808
-        ],
-        [
-         0.21,
-         1.207808
-        ]
-       ]
+       "kind": "rect",
+       "x": -0.065,
+       "y": 1.001,
+       "w": 0.05,
+       "h": 0.025,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.21,
+        "z1": 0.255
+       }
       },
       {
        "id": "valve-body",
@@ -13503,82 +12456,17 @@
        "tone": 0.78,
        "material": "chrome-brass",
        "region": "valve",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.2165,
-         0.086747
-        ],
-        [
-         0.217718,
-         0.085684
-        ],
-        [
-         0.221186,
-         0.084782
-        ],
-        [
-         0.226377,
-         0.08418
-        ],
-        [
-         0.2325,
-         0.083969
-        ],
-        [
-         0.238623,
-         0.08418
-        ],
-        [
-         0.243814,
-         0.084782
-        ],
-        [
-         0.247282,
-         0.085684
-        ],
-        [
-         0.2485,
-         0.086747
-        ],
-        [
-         0.2485,
-         0.15076
-        ],
-        [
-         0.247282,
-         0.151823
-        ],
-        [
-         0.243814,
-         0.152724
-        ],
-        [
-         0.238623,
-         0.153327
-        ],
-        [
-         0.2325,
-         0.153538
-        ],
-        [
-         0.226377,
-         0.153327
-        ],
-        [
-         0.221186,
-         0.152724
-        ],
-        [
-         0.217718,
-         0.151823
-        ],
-        [
-         0.2165,
-         0.15076
-        ]
-       ]
+       "kind": "rect",
+       "x": -0.016,
+       "y": -0.115,
+       "w": 0.032,
+       "h": 0.065,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.2165,
+        "z1": 0.2485
+       }
       },
       {
        "id": "valve-outlet",
@@ -13589,82 +12477,17 @@
        "tone": 0.76,
        "material": "chrome-brass",
        "region": "valve",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.2215,
-         0.086759
-        ],
-        [
-         0.222337,
-         0.082614
-        ],
-        [
-         0.224722,
-         0.079099
-        ],
-        [
-         0.228291,
-         0.076751
-        ],
-        [
-         0.2325,
-         0.075926
-        ],
-        [
-         0.236709,
-         0.076751
-        ],
-        [
-         0.240278,
-         0.079099
-        ],
-        [
-         0.242663,
-         0.082614
-        ],
-        [
-         0.2435,
-         0.086759
-        ],
-        [
-         0.2435,
-         0.099435
-        ],
-        [
-         0.242663,
-         0.103581
-        ],
-        [
-         0.240278,
-         0.107095
-        ],
-        [
-         0.236709,
-         0.109444
-        ],
-        [
-         0.2325,
-         0.110268
-        ],
-        [
-         0.228291,
-         0.109444
-        ],
-        [
-         0.224722,
-         0.107095
-        ],
-        [
-         0.222337,
-         0.103581
-        ],
-        [
-         0.2215,
-         0.099435
-        ]
-       ]
+       "kind": "rect",
+       "x": -0.085,
+       "y": -0.111,
+       "w": 0.073,
+       "h": 0.022,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.2215,
+        "z1": 0.2435
+       }
       },
       {
        "id": "valve-bonnet",
@@ -14025,62 +12848,17 @@
        "tone": 0.86,
        "material": "chrome-steel",
        "region": "upright-return",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.022979,
-         -0.25
-        ],
-        [
-         0.243667,
-         -0.25
-        ],
-        [
-         0.248993,
-         -0.249143
-        ],
-        [
-         0.253797,
-         -0.246658
-        ],
-        [
-         0.25761,
-         -0.242786
-        ],
-        [
-         0.260058,
-         -0.237908
-        ],
-        [
-         0.260901,
-         -0.2325
-        ],
-        [
-         0.260058,
-         -0.227092
-        ],
-        [
-         0.25761,
-         -0.222214
-        ],
-        [
-         0.253797,
-         -0.218342
-        ],
-        [
-         0.248993,
-         -0.215857
-        ],
-        [
-         0.243667,
-         -0.215
-        ],
-        [
-         0.022979,
-         -0.215
-        ]
-       ]
+       "kind": "rect",
+       "x": -0.015,
+       "y": -0.05,
+       "w": 0.03,
+       "h": 1.2,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.25,
+        "z1": -0.215
+       }
       },
       {
        "id": "upright-left",
@@ -14091,62 +12869,17 @@
        "tone": 0.86,
        "material": "chrome-steel",
        "region": "upright-flow",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.022979,
-         0.215
-        ],
-        [
-         0.243667,
-         0.215
-        ],
-        [
-         0.248993,
-         0.215857
-        ],
-        [
-         0.253797,
-         0.218342
-        ],
-        [
-         0.25761,
-         0.222214
-        ],
-        [
-         0.260058,
-         0.227092
-        ],
-        [
-         0.260901,
-         0.2325
-        ],
-        [
-         0.260058,
-         0.237908
-        ],
-        [
-         0.25761,
-         0.242786
-        ],
-        [
-         0.253797,
-         0.246658
-        ],
-        [
-         0.248993,
-         0.249143
-        ],
-        [
-         0.243667,
-         0.25
-        ],
-        [
-         0.022979,
-         0.25
-        ]
-       ]
+       "kind": "rect",
+       "x": -0.015,
+       "y": -0.05,
+       "w": 0.03,
+       "h": 1.2,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.215,
+        "z1": 0.25
+       }
       },
       {
        "id": "rail-00",
@@ -14157,26 +12890,17 @@
        "tone": 0.82,
        "material": "chrome-steel",
        "region": "rails",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.224704,
-         -0.2325
-        ],
-        [
-         0.246369,
-         -0.2325
-        ],
-        [
-         0.246369,
-         0.2325
-        ],
-        [
-         0.224704,
-         0.2325
-        ]
-       ]
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0.011,
+       "rx": 0.011,
+       "ry": 0.011,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2325,
+        "z1": 0.2325
+       }
       },
       {
        "id": "rail-01",
@@ -14187,26 +12911,17 @@
        "tone": 0.82,
        "material": "chrome-steel",
        "region": "rails",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.200827,
-         -0.2325
-        ],
-        [
-         0.222493,
-         -0.2325
-        ],
-        [
-         0.222493,
-         0.2325
-        ],
-        [
-         0.200827,
-         0.2325
-        ]
-       ]
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0.1485,
+       "rx": 0.011,
+       "ry": 0.011,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2325,
+        "z1": 0.2325
+       }
       },
       {
        "id": "rail-02",
@@ -14217,26 +12932,17 @@
        "tone": 0.82,
        "material": "chrome-steel",
        "region": "rails",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.17695,
-         -0.2325
-        ],
-        [
-         0.198616,
-         -0.2325
-        ],
-        [
-         0.198616,
-         0.2325
-        ],
-        [
-         0.17695,
-         0.2325
-        ]
-       ]
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0.286,
+       "rx": 0.011,
+       "ry": 0.011,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2325,
+        "z1": 0.2325
+       }
       },
       {
        "id": "rail-03",
@@ -14247,26 +12953,17 @@
        "tone": 0.82,
        "material": "chrome-steel",
        "region": "rails",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.154376,
-         -0.2325
-        ],
-        [
-         0.176042,
-         -0.2325
-        ],
-        [
-         0.176042,
-         0.2325
-        ],
-        [
-         0.154376,
-         0.2325
-        ]
-       ]
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0.416,
+       "rx": 0.011,
+       "ry": 0.011,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2325,
+        "z1": 0.2325
+       }
       },
       {
        "id": "rail-04",
@@ -14277,26 +12974,17 @@
        "tone": 0.82,
        "material": "chrome-steel",
        "region": "rails",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.130499,
-         -0.2325
-        ],
-        [
-         0.152165,
-         -0.2325
-        ],
-        [
-         0.152165,
-         0.2325
-        ],
-        [
-         0.130499,
-         0.2325
-        ]
-       ]
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0.5535,
+       "rx": 0.011,
+       "ry": 0.011,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2325,
+        "z1": 0.2325
+       }
       },
       {
        "id": "rail-05",
@@ -14307,26 +12995,17 @@
        "tone": 0.82,
        "material": "chrome-steel",
        "region": "rails",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.106623,
-         -0.2325
-        ],
-        [
-         0.128288,
-         -0.2325
-        ],
-        [
-         0.128288,
-         0.2325
-        ],
-        [
-         0.106623,
-         0.2325
-        ]
-       ]
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0.691,
+       "rx": 0.011,
+       "ry": 0.011,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2325,
+        "z1": 0.2325
+       }
       },
       {
        "id": "rail-06",
@@ -14337,26 +13016,17 @@
        "tone": 0.82,
        "material": "chrome-steel",
        "region": "rails",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.084048,
-         -0.2325
-        ],
-        [
-         0.105714,
-         -0.2325
-        ],
-        [
-         0.105714,
-         0.2325
-        ],
-        [
-         0.084048,
-         0.2325
-        ]
-       ]
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0.821,
+       "rx": 0.011,
+       "ry": 0.011,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2325,
+        "z1": 0.2325
+       }
       },
       {
        "id": "rail-07",
@@ -14367,26 +13037,17 @@
        "tone": 0.82,
        "material": "chrome-steel",
        "region": "rails",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.060172,
-         -0.2325
-        ],
-        [
-         0.081838,
-         -0.2325
-        ],
-        [
-         0.081838,
-         0.2325
-        ],
-        [
-         0.060172,
-         0.2325
-        ]
-       ]
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0.9585,
+       "rx": 0.011,
+       "ry": 0.011,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2325,
+        "z1": 0.2325
+       }
       },
       {
        "id": "rail-08",
@@ -14397,26 +13058,17 @@
        "tone": 0.82,
        "material": "chrome-steel",
        "region": "rails",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.036295,
-         -0.2325
-        ],
-        [
-         0.057961,
-         -0.2325
-        ],
-        [
-         0.057961,
-         0.2325
-        ],
-        [
-         0.036295,
-         0.2325
-        ]
-       ]
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 1.096,
+       "rx": 0.011,
+       "ry": 0.011,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2325,
+        "z1": 0.2325
+       }
       },
       {
        "id": "bracket-lower-right",
@@ -14427,26 +13079,17 @@
        "tone": 0.74,
        "material": "chrome-steel",
        "region": "brackets",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.145216,
-         -0.255
-        ],
-        [
-         0.198798,
-         -0.255
-        ],
-        [
-         0.198798,
-         -0.21
-        ],
-        [
-         0.145216,
-         -0.21
-        ]
-       ]
+       "kind": "rect",
+       "x": -0.065,
+       "y": 0.1375,
+       "w": 0.05,
+       "h": 0.025,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.255,
+        "z1": -0.21
+       }
       },
       {
        "id": "bracket-lower-left",
@@ -14457,26 +13100,17 @@
        "tone": 0.74,
        "material": "chrome-steel",
        "region": "brackets",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.145216,
-         0.21
-        ],
-        [
-         0.198798,
-         0.21
-        ],
-        [
-         0.198798,
-         0.255
-        ],
-        [
-         0.145216,
-         0.255
-        ]
-       ]
+       "kind": "rect",
+       "x": -0.065,
+       "y": 0.1375,
+       "w": 0.05,
+       "h": 0.025,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.21,
+        "z1": 0.255
+       }
       },
       {
        "id": "bracket-upper-right",
@@ -14487,26 +13121,17 @@
        "tone": 0.74,
        "material": "chrome-steel",
        "region": "brackets",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         -0.004729,
-         -0.255
-        ],
-        [
-         0.048853,
-         -0.255
-        ],
-        [
-         0.048853,
-         -0.21
-        ],
-        [
-         -0.004729,
-         -0.21
-        ]
-       ]
+       "kind": "rect",
+       "x": -0.065,
+       "y": 1.001,
+       "w": 0.05,
+       "h": 0.025,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.255,
+        "z1": -0.21
+       }
       },
       {
        "id": "bracket-upper-left",
@@ -14517,26 +13142,17 @@
        "tone": 0.74,
        "material": "chrome-steel",
        "region": "brackets",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         -0.004729,
-         0.21
-        ],
-        [
-         0.048853,
-         0.21
-        ],
-        [
-         0.048853,
-         0.255
-        ],
-        [
-         -0.004729,
-         0.255
-        ]
-       ]
+       "kind": "rect",
+       "x": -0.065,
+       "y": 1.001,
+       "w": 0.05,
+       "h": 0.025,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.21,
+        "z1": 0.255
+       }
       },
       {
        "id": "valve-body",
@@ -14633,82 +13249,17 @@
        "tone": 0.76,
        "material": "chrome-brass",
        "region": "valve",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.169193,
-         0.2325
-        ],
-        [
-         0.169338,
-         0.228291
-        ],
-        [
-         0.169752,
-         0.224722
-        ],
-        [
-         0.170372,
-         0.222337
-        ],
-        [
-         0.171103,
-         0.2215
-        ],
-        [
-         0.242994,
-         0.2215
-        ],
-        [
-         0.243725,
-         0.222337
-        ],
-        [
-         0.244344,
-         0.224722
-        ],
-        [
-         0.244758,
-         0.228291
-        ],
-        [
-         0.244904,
-         0.2325
-        ],
-        [
-         0.244758,
-         0.236709
-        ],
-        [
-         0.244344,
-         0.240278
-        ],
-        [
-         0.243725,
-         0.242663
-        ],
-        [
-         0.242994,
-         0.2435
-        ],
-        [
-         0.171103,
-         0.2435
-        ],
-        [
-         0.170372,
-         0.242663
-        ],
-        [
-         0.169752,
-         0.240278
-        ],
-        [
-         0.169338,
-         0.236709
-        ]
-       ]
+       "kind": "rect",
+       "x": -0.085,
+       "y": -0.111,
+       "w": 0.073,
+       "h": 0.022,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.2215,
+        "z1": 0.2435
+       }
       },
       {
        "id": "valve-bonnet",
@@ -14805,7 +13356,7 @@
        "region": "rack",
        "kind": "rect",
        "x": -0.45,
-       "y": 0.0,
+       "y": 0,
        "w": 0.9,
        "h": 0.04
       },
@@ -15026,7 +13577,7 @@
        "material": "chrome-steel",
        "region": "rails",
        "kind": "ellipse",
-       "cx": 0.0,
+       "cx": 0,
        "cy": 0.015,
        "rx": 0.015,
        "ry": 0.015
@@ -15041,7 +13592,7 @@
        "material": "chrome-steel",
        "region": "rails",
        "kind": "ellipse",
-       "cx": 0.0,
+       "cx": 0,
        "cy": 0.28425,
        "rx": 0.015,
        "ry": 0.015
@@ -15056,7 +13607,7 @@
        "material": "chrome-steel",
        "region": "rails",
        "kind": "ellipse",
-       "cx": 0.0,
+       "cx": 0,
        "cy": 0.5535,
        "rx": 0.015,
        "ry": 0.015
@@ -15071,7 +13622,7 @@
        "material": "chrome-steel",
        "region": "rails",
        "kind": "ellipse",
-       "cx": 0.0,
+       "cx": 0,
        "cy": 0.82275,
        "rx": 0.015,
        "ry": 0.015
@@ -15086,7 +13637,7 @@
        "material": "chrome-steel",
        "region": "rails",
        "kind": "ellipse",
-       "cx": 0.0,
+       "cx": 0,
        "cy": 1.092,
        "rx": 0.015,
        "ry": 0.015
@@ -15149,7 +13700,7 @@
        "region": "rack",
        "kind": "rect",
        "x": -0.42,
-       "y": 0.0,
+       "y": 0,
        "w": 0.04,
        "h": 0.04
       },
@@ -15194,7 +13745,7 @@
        "region": "rack",
        "kind": "rect",
        "x": 0.38,
-       "y": 0.0,
+       "y": 0,
        "w": 0.04,
        "h": 0.04
       },
@@ -15254,7 +13805,7 @@
        "region": "rack",
        "kind": "rect",
        "x": -0.38,
-       "y": 0.0,
+       "y": 0,
        "w": 0.76,
        "h": 0.04
       },
@@ -15305,7 +13856,7 @@
        "region": "rack",
        "kind": "rect",
        "x": -0.38,
-       "y": 0.0,
+       "y": 0,
        "w": 0.76,
        "h": 0.04
       },
@@ -15354,62 +13905,17 @@
        "tone": 0.86,
        "material": "chrome-steel",
        "region": "upright-return",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         -0.25,
-         0.148155
-        ],
-        [
-         -0.215,
-         0.148155
-        ],
-        [
-         -0.215,
-         1.332095
-        ],
-        [
-         -0.215857,
-         1.333034
-        ],
-        [
-         -0.218342,
-         1.333881
-        ],
-        [
-         -0.222214,
-         1.334553
-        ],
-        [
-         -0.227092,
-         1.334985
-        ],
-        [
-         -0.2325,
-         1.335134
-        ],
-        [
-         -0.237908,
-         1.334985
-        ],
-        [
-         -0.242786,
-         1.334553
-        ],
-        [
-         -0.246658,
-         1.333881
-        ],
-        [
-         -0.249143,
-         1.333034
-        ],
-        [
-         -0.25,
-         1.332095
-        ]
-       ]
+       "kind": "rect",
+       "x": -0.015,
+       "y": -0.05,
+       "w": 0.03,
+       "h": 1.2,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.25,
+        "z1": -0.215
+       }
       },
       {
        "id": "upright-left",
@@ -15420,62 +13926,17 @@
        "tone": 0.86,
        "material": "chrome-steel",
        "region": "upright-flow",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.215,
-         0.148155
-        ],
-        [
-         0.25,
-         0.148155
-        ],
-        [
-         0.25,
-         1.332095
-        ],
-        [
-         0.249143,
-         1.333034
-        ],
-        [
-         0.246658,
-         1.333881
-        ],
-        [
-         0.242786,
-         1.334553
-        ],
-        [
-         0.237908,
-         1.334985
-        ],
-        [
-         0.2325,
-         1.335134
-        ],
-        [
-         0.227092,
-         1.334985
-        ],
-        [
-         0.222214,
-         1.334553
-        ],
-        [
-         0.218342,
-         1.333881
-        ],
-        [
-         0.215857,
-         1.333034
-        ],
-        [
-         0.215,
-         1.332095
-        ]
-       ]
+       "kind": "rect",
+       "x": -0.015,
+       "y": -0.05,
+       "w": 0.03,
+       "h": 1.2,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.215,
+        "z1": 0.25
+       }
       },
       {
        "id": "rail-00",
@@ -15486,26 +13947,17 @@
        "tone": 0.82,
        "material": "chrome-steel",
        "region": "rails",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         -0.2325,
-         0.2
-        ],
-        [
-         0.2325,
-         0.2
-        ],
-        [
-         0.2325,
-         0.229544
-        ],
-        [
-         -0.2325,
-         0.229544
-        ]
-       ]
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0.015,
+       "rx": 0.015,
+       "ry": 0.015,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2325,
+        "z1": 0.2325
+       }
       },
       {
        "id": "rail-01",
@@ -15516,26 +13968,17 @@
        "tone": 0.82,
        "material": "chrome-steel",
        "region": "rails",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         -0.2325,
-         0.46516
-        ],
-        [
-         0.2325,
-         0.46516
-        ],
-        [
-         0.2325,
-         0.494704
-        ],
-        [
-         -0.2325,
-         0.494704
-        ]
-       ]
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0.28425,
+       "rx": 0.015,
+       "ry": 0.015,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2325,
+        "z1": 0.2325
+       }
       },
       {
        "id": "rail-02",
@@ -15546,26 +13989,17 @@
        "tone": 0.82,
        "material": "chrome-steel",
        "region": "rails",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         -0.2325,
-         0.730319
-        ],
-        [
-         0.2325,
-         0.730319
-        ],
-        [
-         0.2325,
-         0.759863
-        ],
-        [
-         -0.2325,
-         0.759863
-        ]
-       ]
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0.5535,
+       "rx": 0.015,
+       "ry": 0.015,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2325,
+        "z1": 0.2325
+       }
       },
       {
        "id": "rail-03",
@@ -15576,26 +14010,17 @@
        "tone": 0.82,
        "material": "chrome-steel",
        "region": "rails",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         -0.2325,
-         0.995479
-        ],
-        [
-         0.2325,
-         0.995479
-        ],
-        [
-         0.2325,
-         1.025023
-        ],
-        [
-         -0.2325,
-         1.025023
-        ]
-       ]
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0.82275,
+       "rx": 0.015,
+       "ry": 0.015,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2325,
+        "z1": 0.2325
+       }
       },
       {
        "id": "rail-04",
@@ -15606,26 +14031,17 @@
        "tone": 0.82,
        "material": "chrome-steel",
        "region": "rails",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         -0.2325,
-         1.260638
-        ],
-        [
-         0.2325,
-         1.260638
-        ],
-        [
-         0.2325,
-         1.290182
-        ],
-        [
-         -0.2325,
-         1.290182
-        ]
-       ]
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 1.092,
+       "rx": 0.015,
+       "ry": 0.015,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2325,
+        "z1": 0.2325
+       }
       },
       {
        "id": "bracket-lower-right",
@@ -15636,26 +14052,17 @@
        "tone": 0.74,
        "material": "chrome-steel",
        "region": "brackets",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         -0.255,
-         0.321662
-        ],
-        [
-         -0.21,
-         0.321662
-        ],
-        [
-         -0.21,
-         0.359889
-        ],
-        [
-         -0.255,
-         0.359889
-        ]
-       ]
+       "kind": "rect",
+       "x": -0.065,
+       "y": 0.135,
+       "w": 0.05,
+       "h": 0.03,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.255,
+        "z1": -0.21
+       }
       },
       {
        "id": "bracket-lower-left",
@@ -15666,26 +14073,17 @@
        "tone": 0.74,
        "material": "chrome-steel",
        "region": "brackets",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.21,
-         0.321662
-        ],
-        [
-         0.255,
-         0.321662
-        ],
-        [
-         0.255,
-         0.359889
-        ],
-        [
-         0.21,
-         0.359889
-        ]
-       ]
+       "kind": "rect",
+       "x": -0.065,
+       "y": 0.135,
+       "w": 0.05,
+       "h": 0.03,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.21,
+        "z1": 0.255
+       }
       },
       {
        "id": "bracket-upper-right",
@@ -15696,26 +14094,17 @@
        "tone": 0.74,
        "material": "chrome-steel",
        "region": "brackets",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         -0.255,
-         1.172043
-        ],
-        [
-         -0.21,
-         1.172043
-        ],
-        [
-         -0.21,
-         1.21027
-        ],
-        [
-         -0.255,
-         1.21027
-        ]
-       ]
+       "kind": "rect",
+       "x": -0.065,
+       "y": 0.9985,
+       "w": 0.05,
+       "h": 0.03,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.255,
+        "z1": -0.21
+       }
       },
       {
        "id": "bracket-upper-left",
@@ -15726,26 +14115,17 @@
        "tone": 0.74,
        "material": "chrome-steel",
        "region": "brackets",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.21,
-         1.172043
-        ],
-        [
-         0.255,
-         1.172043
-        ],
-        [
-         0.255,
-         1.21027
-        ],
-        [
-         0.21,
-         1.21027
-        ]
-       ]
+       "kind": "rect",
+       "x": -0.065,
+       "y": 0.9985,
+       "w": 0.05,
+       "h": 0.03,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.21,
+        "z1": 0.255
+       }
       },
       {
        "id": "valve-body",
@@ -15756,26 +14136,17 @@
        "tone": 0.78,
        "material": "chrome-brass",
        "region": "valve",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.2175,
-         0.078933
-        ],
-        [
-         0.2805,
-         0.078933
-        ],
-        [
-         0.2805,
-         0.153364
-        ],
-        [
-         0.2175,
-         0.153364
-        ]
-       ]
+       "kind": "rect",
+       "x": -0.045,
+       "y": -0.115,
+       "w": 0.06,
+       "h": 0.065,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.2175,
+        "z1": 0.2805
+       }
       }
      ],
      "plan": [
@@ -15995,62 +14366,17 @@
        "tone": 0.86,
        "material": "chrome-steel",
        "region": "upright-return",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.022979,
-         -0.25
-        ],
-        [
-         0.243667,
-         -0.25
-        ],
-        [
-         0.248993,
-         -0.249143
-        ],
-        [
-         0.253797,
-         -0.246658
-        ],
-        [
-         0.25761,
-         -0.242786
-        ],
-        [
-         0.260058,
-         -0.237908
-        ],
-        [
-         0.260901,
-         -0.2325
-        ],
-        [
-         0.260058,
-         -0.227092
-        ],
-        [
-         0.25761,
-         -0.222214
-        ],
-        [
-         0.253797,
-         -0.218342
-        ],
-        [
-         0.248993,
-         -0.215857
-        ],
-        [
-         0.243667,
-         -0.215
-        ],
-        [
-         0.022979,
-         -0.215
-        ]
-       ]
+       "kind": "rect",
+       "x": -0.015,
+       "y": -0.05,
+       "w": 0.03,
+       "h": 1.2,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.25,
+        "z1": -0.215
+       }
       },
       {
        "id": "upright-left",
@@ -16061,62 +14387,17 @@
        "tone": 0.86,
        "material": "chrome-steel",
        "region": "upright-flow",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.022979,
-         0.215
-        ],
-        [
-         0.243667,
-         0.215
-        ],
-        [
-         0.248993,
-         0.215857
-        ],
-        [
-         0.253797,
-         0.218342
-        ],
-        [
-         0.25761,
-         0.222214
-        ],
-        [
-         0.260058,
-         0.227092
-        ],
-        [
-         0.260901,
-         0.2325
-        ],
-        [
-         0.260058,
-         0.237908
-        ],
-        [
-         0.25761,
-         0.242786
-        ],
-        [
-         0.253797,
-         0.246658
-        ],
-        [
-         0.248993,
-         0.249143
-        ],
-        [
-         0.243667,
-         0.25
-        ],
-        [
-         0.022979,
-         0.25
-        ]
-       ]
+       "kind": "rect",
+       "x": -0.015,
+       "y": -0.05,
+       "w": 0.03,
+       "h": 1.2,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.215,
+        "z1": 0.25
+       }
       },
       {
        "id": "rail-00",
@@ -16127,26 +14408,17 @@
        "tone": 0.82,
        "material": "chrome-steel",
        "region": "rails",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.22007,
-         -0.2325
-        ],
-        [
-         0.249614,
-         -0.2325
-        ],
-        [
-         0.249614,
-         0.2325
-        ],
-        [
-         0.22007,
-         0.2325
-        ]
-       ]
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0.015,
+       "rx": 0.015,
+       "ry": 0.015,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2325,
+        "z1": 0.2325
+       }
       },
       {
        "id": "rail-01",
@@ -16157,26 +14429,17 @@
        "tone": 0.82,
        "material": "chrome-steel",
        "region": "rails",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.173315,
-         -0.2325
-        ],
-        [
-         0.202859,
-         -0.2325
-        ],
-        [
-         0.202859,
-         0.2325
-        ],
-        [
-         0.173315,
-         0.2325
-        ]
-       ]
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0.28425,
+       "rx": 0.015,
+       "ry": 0.015,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2325,
+        "z1": 0.2325
+       }
       },
       {
        "id": "rail-02",
@@ -16187,26 +14450,17 @@
        "tone": 0.82,
        "material": "chrome-steel",
        "region": "rails",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.12656,
-         -0.2325
-        ],
-        [
-         0.156104,
-         -0.2325
-        ],
-        [
-         0.156104,
-         0.2325
-        ],
-        [
-         0.12656,
-         0.2325
-        ]
-       ]
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0.5535,
+       "rx": 0.015,
+       "ry": 0.015,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2325,
+        "z1": 0.2325
+       }
       },
       {
        "id": "rail-03",
@@ -16217,26 +14471,17 @@
        "tone": 0.82,
        "material": "chrome-steel",
        "region": "rails",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.079805,
-         -0.2325
-        ],
-        [
-         0.10935,
-         -0.2325
-        ],
-        [
-         0.10935,
-         0.2325
-        ],
-        [
-         0.079805,
-         0.2325
-        ]
-       ]
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0.82275,
+       "rx": 0.015,
+       "ry": 0.015,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2325,
+        "z1": 0.2325
+       }
       },
       {
        "id": "rail-04",
@@ -16247,26 +14492,17 @@
        "tone": 0.82,
        "material": "chrome-steel",
        "region": "rails",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.033051,
-         -0.2325
-        ],
-        [
-         0.062595,
-         -0.2325
-        ],
-        [
-         0.062595,
-         0.2325
-        ],
-        [
-         0.033051,
-         0.2325
-        ]
-       ]
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 1.092,
+       "rx": 0.015,
+       "ry": 0.015,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2325,
+        "z1": 0.2325
+       }
       },
       {
        "id": "bracket-lower-right",
@@ -16277,26 +14513,17 @@
        "tone": 0.74,
        "material": "chrome-steel",
        "region": "brackets",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.144782,
-         -0.255
-        ],
-        [
-         0.199232,
-         -0.255
-        ],
-        [
-         0.199232,
-         -0.21
-        ],
-        [
-         0.144782,
-         -0.21
-        ]
-       ]
+       "kind": "rect",
+       "x": -0.065,
+       "y": 0.135,
+       "w": 0.05,
+       "h": 0.03,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.255,
+        "z1": -0.21
+       }
       },
       {
        "id": "bracket-lower-left",
@@ -16307,26 +14534,17 @@
        "tone": 0.74,
        "material": "chrome-steel",
        "region": "brackets",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.144782,
-         0.21
-        ],
-        [
-         0.199232,
-         0.21
-        ],
-        [
-         0.199232,
-         0.255
-        ],
-        [
-         0.144782,
-         0.255
-        ]
-       ]
+       "kind": "rect",
+       "x": -0.065,
+       "y": 0.135,
+       "w": 0.05,
+       "h": 0.03,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.21,
+        "z1": 0.255
+       }
       },
       {
        "id": "bracket-upper-right",
@@ -16337,26 +14555,17 @@
        "tone": 0.74,
        "material": "chrome-steel",
        "region": "brackets",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         -0.005163,
-         -0.255
-        ],
-        [
-         0.049287,
-         -0.255
-        ],
-        [
-         0.049287,
-         -0.21
-        ],
-        [
-         -0.005163,
-         -0.21
-        ]
-       ]
+       "kind": "rect",
+       "x": -0.065,
+       "y": 0.9985,
+       "w": 0.05,
+       "h": 0.03,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.255,
+        "z1": -0.21
+       }
       },
       {
        "id": "bracket-upper-left",
@@ -16367,26 +14576,17 @@
        "tone": 0.74,
        "material": "chrome-steel",
        "region": "brackets",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         -0.005163,
-         0.21
-        ],
-        [
-         0.049287,
-         0.21
-        ],
-        [
-         0.049287,
-         0.255
-        ],
-        [
-         -0.005163,
-         0.255
-        ]
-       ]
+       "kind": "rect",
+       "x": -0.065,
+       "y": 0.9985,
+       "w": 0.05,
+       "h": 0.03,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.21,
+        "z1": 0.255
+       }
       },
       {
        "id": "valve-body",
@@ -16397,26 +14597,17 @@
        "tone": 0.78,
        "material": "chrome-brass",
        "region": "valve",
-       "kind": "poly",
-       "closed": true,
-       "points": [
-        [
-         0.201813,
-         0.2175
-        ],
-        [
-         0.272188,
-         0.2175
-        ],
-        [
-         0.272188,
-         0.2805
-        ],
-        [
-         0.201813,
-         0.2805
-        ]
-       ]
+       "kind": "rect",
+       "x": -0.045,
+       "y": -0.115,
+       "w": 0.06,
+       "h": 0.065,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.2175,
+        "z1": 0.2805
+       }
       }
      ]
     },
@@ -16561,7 +14752,7 @@
     },
     "bones": {
      "radiator": {
-      "angleDeg": -10.0
+      "angleDeg": -10
      }
     },
     "ground": "authored",
@@ -16634,7 +14825,7 @@
       "dy": 0.3
      },
      "radiator": {
-      "angleDeg": -10.0
+      "angleDeg": -10
      }
     },
     "ground": "authored",
@@ -16709,7 +14900,7 @@
       "dx": -1.2
      },
      "radiator": {
-      "angleDeg": -10.0
+      "angleDeg": -10
      }
     },
     "ground": "authored",
@@ -16819,7 +15010,7 @@
       "dx": -1.2
      },
      "radiator": {
-      "angleDeg": -10.0
+      "angleDeg": -10
      }
     },
     "ground": "authored",
@@ -16929,7 +15120,7 @@
       "dx": -1.2
      },
      "radiator": {
-      "angleDeg": -10.0
+      "angleDeg": -10
      }
     },
     "ground": "authored",
@@ -17409,13 +15600,13 @@
        "kind": "metal",
        "material": "chrome-steel",
        "thicknessM": 0.0012,
-       "resistanceM2KW": 2.4e-05,
+       "resistanceM2KW": 0.000024,
        "heatCapacityJM2K": 4333.2,
        "source": "literature",
        "reference": "en-10305-3"
       }
      ],
-     "heatCapacityJM2K": 22607.0,
+     "heatCapacityJM2K": 22607,
      "source": "authored-estimate",
      "reference": "towel-radiator-catalogues",
      "hydronic": {
@@ -17466,7 +15657,7 @@
        "kind": "metal",
        "material": "chrome-steel",
        "thicknessM": 0.0012,
-       "resistanceM2KW": 2.4e-05,
+       "resistanceM2KW": 0.000024,
        "heatCapacityJM2K": 4333.2,
        "source": "literature",
        "reference": "en-10305-3"
@@ -17521,7 +15712,7 @@
        "kind": "metal",
        "material": "chrome-steel",
        "thicknessM": 0.0012,
-       "resistanceM2KW": 2.4e-05,
+       "resistanceM2KW": 0.000024,
        "heatCapacityJM2K": 4333.2,
        "source": "literature",
        "reference": "en-10305-3"
@@ -17576,13 +15767,13 @@
        "kind": "metal",
        "material": "chrome-brass",
        "thicknessM": 0.003,
-       "resistanceM2KW": 2.7e-05,
-       "heatCapacityJM2K": 9690.0,
+       "resistanceM2KW": 0.000027,
+       "heatCapacityJM2K": 9690,
        "source": "literature",
        "reference": "en-215"
       }
      ],
-     "heatCapacityJM2K": 9690.0,
+     "heatCapacityJM2K": 9690,
      "source": "authored-estimate",
      "reference": "en-215",
      "hydronic": {
@@ -17604,7 +15795,7 @@
         "returnTempC": 65
        }
       ],
-      "flowPosition": 0.0,
+      "flowPosition": 0,
       "filmM2KW": 0.01
      }
     },
@@ -17631,13 +15822,13 @@
        "kind": "metal",
        "material": "chrome-steel",
        "thicknessM": 0.003,
-       "resistanceM2KW": 6e-05,
-       "heatCapacityJM2K": 10833.0,
+       "resistanceM2KW": 0.00006,
+       "heatCapacityJM2K": 10833,
        "source": "literature",
        "reference": "incropera-2018"
       }
      ],
-     "heatCapacityJM2K": 10833.0,
+     "heatCapacityJM2K": 10833,
      "source": "authored-estimate",
      "reference": "towel-radiator-catalogues"
     },
@@ -17664,13 +15855,13 @@
        "kind": "metal",
        "material": "painted-steel",
        "thicknessM": 0.002,
-       "resistanceM2KW": 4e-05,
-       "heatCapacityJM2K": 7222.0,
+       "resistanceM2KW": 0.00004,
+       "heatCapacityJM2K": 7222,
        "source": "literature",
        "reference": "en-10219-2"
       }
      ],
-     "heatCapacityJM2K": 7222.0,
+     "heatCapacityJM2K": 7222,
      "source": "literature",
      "reference": "en-10219-2"
     },
@@ -17698,12 +15889,12 @@
        "material": "epdm",
        "thicknessM": 0.015,
        "resistanceM2KW": 0.06,
-       "heatCapacityJM2K": 17250.0,
+       "heatCapacityJM2K": 17250,
        "source": "literature",
        "reference": "en-iso-10456"
       }
      ],
-     "heatCapacityJM2K": 17250.0,
+     "heatCapacityJM2K": 17250,
      "source": "literature",
      "reference": "en-iso-10456"
     },
@@ -17731,12 +15922,12 @@
        "material": "softwood",
        "thicknessM": 0.02,
        "resistanceM2KW": 0.153846,
-       "heatCapacityJM2K": 14400.0,
+       "heatCapacityJM2K": 14400,
        "source": "literature",
        "reference": "en-338"
       }
      ],
-     "heatCapacityJM2K": 14400.0,
+     "heatCapacityJM2K": 14400,
      "source": "literature",
      "reference": "en-338"
     }

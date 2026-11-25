@@ -2,7 +2,7 @@
 use super::*;
 use semio_framework_job::*;
 use semio_framework_value::RetainedWorkOutcome;
-use semio_plugin_ownership::original_store_genesis::OriginalStoreBirth;
+use semio_plugin_store_lifecycle::original_store_genesis::OriginalStoreBirth;
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
 use semio_framework_dsl_record::{BorrowedDslRecord,native_encoding::FieldProjectionSource};
 #[path="🧸️fixture/🦀️.rs"]

@@ -1,0 +1,33 @@
+[capacity] run: sized at 37% of the default from 1 earlier run(s) of its class
+[capacity] admitted run: 1 job(s), 512 MB reserved (5656 MB available, 2048 MB floor)
+[script] {"owner":"repository:build","command":"repo","stage":"loading"}
+[script] {"owner":"repository:build","command":"repo","stage":"running"}
+Planning 1 targets.
+Reading the project graph slice (2 s).
+Reading the project graph slice (4 s).
+[repo] still working after 5 s; last phase started: door.script
+Reading the project graph slice (6 s).
+Reading the project graph slice (8 s): checking the file inventory of the tree (26659 distinct source observations) (5184 verified memo rows) / Prüfe das Dateiverzeichnis des Baums (26659 verschiedene Quellbeobachtungen) (5184 bestätigte Memozeilen) 0 of 600.
+[repo] still working after 10 s; last phase started: door.script
+Reading the project graph slice (10 s): checking the file inventory of the tree (26659 distinct source observations) (5184 verified memo rows) / Prüfe das Dateiverzeichnis des Baums (26659 verschiedene Quellbeobachtungen) (5184 bestätigte Memozeilen) 0 of 600.
+Reading the project graph slice (12 s): checking the file inventory of the tree (26659 distinct source observations) (5184 verified memo rows) / Prüfe das Dateiverzeichnis des Baums (26659 verschiedene Quellbeobachtungen) (5184 bestätigte Memozeilen) 0 of 600.
+Reading the project graph slice (14 s): checking the file inventory of the tree (31358 distinct source observations) (5184 verified memo rows) / Prüfe das Dateiverzeichnis des Baums (31358 verschiedene Quellbeobachtungen) (5184 bestätigte Memozeilen) 0 of 600.
+Reading the project graph slice (16 s): checking the file inventory of the tree (31358 distinct source observations) (5184 verified memo rows) / Prüfe das Dateiverzeichnis des Baums (31358 verschiedene Quellbeobachtungen) (5184 bestätigte Memozeilen) 0 of 600.
+Reading the project graph slice (18 s): checking the file inventory of the tree (38885 distinct source observations) (5184 verified memo rows) / Prüfe das Dateiverzeichnis des Baums (38885 verschiedene Quellbeobachtungen) (5184 bestätigte Memozeilen) 0 of 600.
+[repo] still working after 20 s; last phase started: door.script
+Reading the project graph slice (20 s): checking the file inventory of the tree (38885 distinct source observations) (5184 verified memo rows) / Prüfe das Dateiverzeichnis des Baums (38885 verschiedene Quellbeobachtungen) (5184 bestätigte Memozeilen) 0 of 600.
+Reading the project graph slice (22 s): checking the file inventory of the tree (38885 distinct source observations) (5184 verified memo rows) / Prüfe das Dateiverzeichnis des Baums (38885 verschiedene Quellbeobachtungen) (5184 bestätigte Memozeilen) 0 of 600.
+Reading the project graph slice (24 s): checking the file inventory of the tree (45451 distinct source observations) (5184 verified memo rows) / Prüfe das Dateiverzeichnis des Baums (45451 verschiedene Quellbeobachtungen) (5184 bestätigte Memozeilen) 0 of 600.
+Reading the project graph slice (26 s): checking the file inventory of the tree (45451 distinct source observations) (5184 verified memo rows) / Prüfe das Dateiverzeichnis des Baums (45451 verschiedene Quellbeobachtungen) (5184 bestätigte Memozeilen) 0 of 600.
+Reading the project graph slice (28 s): checking the file inventory of the tree (51744 distinct source observations) (5184 verified memo rows) / Prüfe das Dateiverzeichnis des Baums (51744 verschiedene Quellbeobachtungen) (5184 bestätigte Memozeilen) 0 of 600.
+Reading the project graph slice (30 s): checking the file inventory of the tree (51744 distinct source observations) (5184 verified memo rows) / Prüfe das Dateiverzeichnis des Baums (51744 verschiedene Quellbeobachtungen) (5184 bestätigte Memozeilen) 0 of 600.
+Reading the project graph slice (32 s): checking the file inventory of the tree (51744 distinct source observations) (5184 verified memo rows) / Prüfe das Dateiverzeichnis des Baums (51744 verschiedene Quellbeobachtungen) (5184 bestätigte Memozeilen) 0 of 600.
+Reading the project graph slice (34 s): checking the file inventory of the tree (51744 distinct source observations) (5184 verified memo rows) / Prüfe das Dateiverzeichnis des Baums (51744 verschiedene Quellbeobachtungen) (5184 bestätigte Memozeilen) 0 of 600.
+Reading the project graph slice (36 s): checking the file inventory of the tree (55772 distinct source observations) (5184 verified memo rows) / Prüfe das Dateiverzeichnis des Baums (55772 verschiedene Quellbeobachtungen) (5184 bestätigte Memozeilen) 0 of 600.
+Reading the project graph slice (0 s): a new pass over the owners starts (round 1): 1 path(s) changed under the read, 0 owner(s) forgotten, live heap 0 MB (0 when not measured).
+Reading the project graph slice (38 s): checking the file inventory of the tree (55772 distinct source observations) (5184 verified memo rows) / Prüfe das Dateiverzeichnis des Baums (55772 verschiedene Quellbeobachtungen) (5184 bestätigte Memozeilen) 0 of 600. | Reading the project graph slice (38 s): a new pass over the owners starts (round 1): 1 path(s) changed under the read, 0 owner(s) forgotten, live heap 0 MB (0 when not measured).
+Reading the project graph slice (40 s): checking the file inventory of the tree (55772 distinct source observations) (5184 verified memo rows) / Prüfe das Dateiverzeichnis des Baums (55772 verschiedene Quellbeobachtungen) (5184 bestätigte Memozeilen) 0 of 600. | Reading the project graph slice (40 s): a new pass over the owners starts (round 1): 1 path(s) changed under the read, 0 owner(s) forgotten, live heap 0 MB (0 when not measured).
+Reading the project graph slice (42 s): checking the file inventory of the tree (0 distinct source observations) / Prüfe das Dateiverzeichnis des Baums (0 verschiedene Quellbeobachtungen) 0 of 600. | Reading the project graph slice (42 s): a new pass over the owners starts (round 1): 1 path(s) changed under the read, 0 owner(s) forgotten, live heap 0 MB (0 when not measured).
+The resident service met an unexpected failure (reference 2cfab77d): Error: Slice worker exited with code null: [DEBUG] [owner-declaration] semio-hub-procedural-component stage=0 manifest=10 cargo-targets=11 component-targets=12 providers=16 shared-catalog=633 end=633
+  at <anonymous> (semio-source:/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/🟨️.mjs:294:38)
+  at processTicksAndRejections (native:7:39); try again, the details under that reference are in the service log /var/folders/1s/pfk8j2p90t94v1nx_gf8zq3w0000gn/T/semio-repo/501/host-414d793198c0.log.

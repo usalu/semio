@@ -13,7 +13,7 @@
     {
       "id": "mixed",
       "rows": 20,
-      "valueBytes": 3192
+      "valueBytes": 3682
     },
     {
       "id": "empty",
@@ -24,49 +24,49 @@
       "id": "0000000000000000",
       "word": "0000000000000000",
       "rows": 20,
-      "valueBytes": 3192
+      "valueBytes": 3682
     },
     {
       "id": "8000000000000000",
       "word": "8000000000000000",
       "rows": 20,
-      "valueBytes": 3192
+      "valueBytes": 3682
     },
     {
       "id": "7ff0000000000000",
       "word": "7ff0000000000000",
       "rows": 20,
-      "valueBytes": 4272
+      "valueBytes": 5002
     },
     {
       "id": "fff0000000000000",
       "word": "fff0000000000000",
       "rows": 20,
-      "valueBytes": 4272
+      "valueBytes": 5002
     },
     {
       "id": "7ff8000000000042",
       "word": "7ff8000000000042",
       "rows": 20,
-      "valueBytes": 2004
+      "valueBytes": 2230
     },
     {
       "id": "7ff0000000000001",
       "word": "7ff0000000000001",
       "rows": 20,
-      "valueBytes": 2004
+      "valueBytes": 2230
     },
     {
       "id": "0000000000000001",
       "word": "0000000000000001",
       "rows": 20,
-      "valueBytes": 3192
+      "valueBytes": 3682
     },
     {
       "id": "0010000000000000",
       "word": "0010000000000000",
       "rows": 20,
-      "valueBytes": 3192
+      "valueBytes": 3682
     }
   ],
   "annexes": [

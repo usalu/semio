@@ -1,4 +1,4 @@
-/** 🐾️ Proposes the ops of `./fit.ts` for a quadruped or a bird from its document alone: `bun suggest.ts <id|file.json> [--skip id,id] [--only-scales 50,100] [--pairs 50:bone,100:bone] > ops/<id>.json`. For every authored scale and every closed elevation shape on a bone that a pose or clip turns (itself or an ancestor) it looks at the front and plan twins of the same id and bone that are not solids yet (flat or `followTip`) and proposes by the rest direction of the bone: the front twin becomes the prism of its own outline swept along the bone axis nearest to the viewer (`view-sweep`); the plan twin of a bone that stands (u nearer to the vertical than v) and every other twin get the op `solid`, which takes the first construction that keeps both the footprint of the elevation twin and the outline of the default pose (a standing bone tries the lateral extrusion first, every other the prism of its own outline). A revolved elevation twin is copied. `--pairs` keeps the bones the gate reports at a scale (`reported.py`). Twins that are solids already are left alone; the gate says which of them need a hand-made op.
+/** 🐾️ Proposes the ops of `./fit.ts` for a quadruped or a bird from its document alone: `bun suggest.ts <id|file.json> [--skip id,id] [--only-scales 50,100] [--pairs 50:bone,100:bone] > ops/<id>.json`. For every authored scale and every closed elevation shape on a bone that a pose or clip turns (itself or an ancestor) it looks at the front and plan twins of the same id and bone that are not solids yet (flat or `followTip`) and proposes by the rest direction of the bone: the front twin becomes the prism of its own outline swept along the bone axis nearest to the viewer (`view-sweep`); the plan twin of a bone that stands (u nearer to the vertical than v) and every other twin get the op `solid`, which takes the first construction that keeps both the footprint of the elevation twin and the outline of the default pose (a standing bone tries the lateral extrusion first, every other the prism of its own outline). A revolved elevation twin is copied. `--pairs` keeps the bones the gate reports at a scale (`reported.py`). A twin that is a solid already gets the op with `\"redo\": true` (it is only rebuilt when it misses the footprint and a construction improves it); a far-side shape without an elevation shape on its bone borrows the single elevation shape of the mirror bone (`twin`, `twinBone`); every plan twin ends with a `lateral-match` to its front twin.
  * @see ../MR/suggest.ts — the proposals for people */
 import { join } from "node:path";
 import { S, readDoc } from "../MR/lib.ts";
@@ -35,27 +35,40 @@ const frames = restFrames(asset.rig) as Record<string, { frame: { u: number[]; v
 const ops: any[] = [];
 for (const [scale, rep] of Object.entries(asset.representations) as [string, any][]) {
   if (rep.status !== "authored" || (onlyScales.length > 0 && !onlyScales.includes(scale))) continue;
-  for (const twin of rep.geometry.elevation) {
-    if (twin.role === "ground" || skip.has(twin.id) || !turned(twin.bone)) continue;
-    if (pairs.size > 0 && !pairs.has(`${scale}:${twin.bone}`)) continue;
-    if (twin.kind === "poly" && twin.closed !== true) continue;
-    const frame = frames[twin.bone]!.frame;
-    const base = { scale, id: twin.id, ...(rep.geometry.elevation.filter((shape: any) => shape.id === twin.id).length > 1 ? { bone: twin.bone } : {}) };
-    for (const view of ["front", "plan"] as const) {
-      const shape = rep.geometry[view].find((candidate: any) => candidate.id === twin.id && candidate.bone === twin.bone);
-      if (shape === undefined || shape.solid !== undefined) continue;
-      if (shape.kind === "poly" && shape.closed !== true) continue;
+  const mirror = (bone: string): string | undefined => {
+    const other = bone.replace(/(^|-)(h|f)?(n|f)$/u, (_all, dash: string, limb: string | undefined, side: string) => `${dash}${limb ?? ""}${side === "n" ? "f" : "n"}`);
+    return other !== bone && parents.has(other) ? other : undefined;
+  };
+  const closed = (shape: any): boolean => !(shape.kind === "poly" && shape.closed !== true);
+  for (const view of ["front", "plan"] as const)
+    for (const shape of rep.geometry[view]) {
+      if (shape.role === "ground" || skip.has(shape.id) || !turned(shape.bone) || !closed(shape)) continue;
+      if (pairs.size > 0 && !pairs.has(`${scale}:${shape.bone}`)) continue;
+      let twin = rep.geometry.elevation.find((candidate: any) => candidate.id === shape.id && candidate.bone === shape.bone);
+      let borrowed: { twin: string; twinBone: string } | undefined;
+      if (twin === undefined && mirror(shape.bone) !== undefined && !rep.geometry.elevation.some((candidate: any) => candidate.bone === shape.bone && candidate.role !== "ground")) {
+        const bodies = rep.geometry.elevation.filter((candidate: any) => candidate.bone === mirror(shape.bone) && closed(candidate) && (candidate.role ?? "body") === (shape.role ?? "body"));
+        if (bodies.length === 1) (twin = bodies[0]), (borrowed = { twin: twin.id, twinBone: twin.bone });
+      }
+      if (twin === undefined || !closed(twin)) continue;
+      const frame = frames[shape.bone]!.frame;
+      const base = { scale, id: shape.id, ...(rep.geometry[view].filter((other: any) => other.id === shape.id).length > 1 ? { bone: shape.bone } : {}), ...(borrowed ?? {}) };
       if (twin.solid?.kind === "revolved") {
-        ops.push({ op: "copy", ...base, from: "elevation", to: [view] });
+        if (shape.solid === undefined && borrowed === undefined) ops.push({ op: "copy", ...base, from: "elevation", to: [view] });
         continue;
       }
       const d = view === "front" ? 0 : 1;
       const lateral = Math.abs(frame.w[d]!) > Math.max(Math.abs(frame.u[d]!), Math.abs(frame.v[d]!));
       const stands = Math.abs(frame.u[1]!) > Math.abs(frame.v[1]!);
-      if (lateral) ops.push({ op: "extrude", ...base, view });
-      else if (view === "plan" && stands) ops.push({ op: "solid", ...base, view, across: "front", order: ["extrude", "revolve", "view-sweep"] });
-      else ops.push({ op: "solid", ...base, view, ...(view === "front" ? { across: "plan" } : {}) });
+      const redo = shape.solid !== undefined ? { redo: true } : {};
+      if (lateral) shape.solid === undefined && ops.push({ op: "extrude", ...base, view });
+      else if (view === "plan" && stands) ops.push({ op: "solid", ...base, view, across: "front", order: ["extrude", "revolve", "view-sweep"], ...redo });
+      else ops.push({ op: "solid", ...base, view, ...(view === "front" ? { across: "plan" } : {}), ...redo });
     }
+  for (const shape of rep.geometry.plan) {
+    if (shape.role === "ground" || !turned(shape.bone) || !closed(shape) || (pairs.size > 0 && !pairs.has(`${scale}:${shape.bone}`))) continue;
+    if (rep.geometry.front.filter((other: any) => other.id === shape.id && other.bone === shape.bone).length !== 1 || rep.geometry.plan.filter((other: any) => other.id === shape.id).length !== 1) continue;
+    ops.push({ op: "lateral-match", scale, id: shape.id, view: "plan" });
   }
 }
 console.log(JSON.stringify(ops, null, 1));

@@ -20,3 +20,6 @@ semio-os-kernel = { workspace = true }
 semio-s-artifact-stdio-dwg-read-records = { workspace = true }
 semio-s-artifact-stdio-dwg-snapshot = { workspace = true }
 semio-s-artifact-stdio-dwg-snapshot-objects = { workspace = true }
+semio-s-artifact-stdio-dwg-snapshot-objects-associativity = { workspace = true }
+semio-s-artifact-stdio-dwg-snapshot-objects-blocks = { workspace = true }
+semio-s-artifact-stdio-dwg-snapshot-objects-constraints = { workspace = true }

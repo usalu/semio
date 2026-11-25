@@ -137,7 +137,7 @@ function OpenedAssetPage({ row, params }: { readonly row: Row; readonly params: 
       {copied === "idle" ? null : <Notice kind="info" compact title={t(copied === "done" ? "detail.shareDone" : "detail.shareBlocked")} />}
       <Cell className="items-center">
         <RowFacts row={row} />
-        {asset === undefined ? null : asset.tags.map((tag) => <Tag key={tag}>{tag.replaceAll("-", " ")}</Tag>)}
+        {asset === undefined ? null : asset.tags.map((tag) => <Tag key={tag.id}>{tag.title[language]}</Tag>)}
         <Tag>{t(`completion.${asset?.completion ?? row.entry.completion}`)}</Tag>
         {row.entry.analytics.map((analytic) => <Tag key={analytic}>{t(`analytic.${analytic}`)}</Tag>)}
       </Cell>

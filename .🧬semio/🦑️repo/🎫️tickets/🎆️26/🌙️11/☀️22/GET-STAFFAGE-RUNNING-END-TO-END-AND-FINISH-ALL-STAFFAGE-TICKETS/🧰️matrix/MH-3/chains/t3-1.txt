@@ -1,0 +1,8 @@
+# third fixer, 2026-11-25: sheets, write and light proof of the three assets whose dry run is clean; light proof of the six written ones; dry run of the crutches ops (2500 MB)
+"$here/in-look.sh" person-eating-standing:before:50 person-eating-standing:try:50 person-eating-standing:before:100 person-eating-standing:try:100 person-eating-standing:before:200 person-eating-standing:try:200 person-eating-standing:before:500 person-eating-standing:try:500
+"$here/in-look.sh" person-in-rain-poncho:before:50 person-in-rain-poncho:try:50 person-in-rain-poncho:before:100 person-in-rain-poncho:try:100 person-in-rain-poncho:before:200 person-in-rain-poncho:try:200 person-in-rain-poncho:before:500 person-in-rain-poncho:try:500
+"$here/in-look.sh" person-carrying-shopping-bags:before:50 person-carrying-shopping-bags:try:50 person-carrying-shopping-bags:before:100 person-carrying-shopping-bags:try:100 person-carrying-shopping-bags:before:200 person-carrying-shopping-bags:try:200 person-carrying-shopping-bags:before:500 person-carrying-shopping-bags:try:500
+"$here/in-apply.sh" person-eating-standing person-in-rain-poncho person-carrying-shopping-bags
+TAG=three "$here/in-prove.sh" person-eating-standing person-in-rain-poncho person-carrying-shopping-bags
+TAG=six "$here/in-prove.sh" person-drinking-coffee person-checking-watch person-queuing person-cooking person-in-winter-coat person-signing
+GATE_TIMEOUT=2400 "$here/in-try.sh" person-on-crutches:all

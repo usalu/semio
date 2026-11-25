@@ -9,10 +9,11 @@ import { describe, expect, it, vi } from "vitest";
 // 🔁️ Through the package barrel, not the element file: `📐️Layout` → `🖼️Panel` → `🎯️targets/⚛️react`
 // is a real runtime cycle, and entering it at the element leaves `PanelTabButton`'s own imports
 // undefined in jsdom ("Element type is invalid … Check the render method of `PanelTabButton`").
-import { Footer, Layout, Navbar, Toggle } from "@semio-tech/ui-react";
+import { Canvas, Footer, Layout, Mode, Navbar, Toggle, uiDataLabel } from "@semio-tech/ui-react";
 import reserveFixture from "../../../../🧪️tests/🧫️fixtures/🛟️panel-window-reservation/🔣️.json";
 import scrollFixture from "./scroll-canvas.cases.json";
 import bandsFixture from "./shell-borders.cases.json";
+import { launchChromium } from "../../../../🧪️tests/🌐️chromium-launch/🟦️";
 // #endregion 🔌️Adapters
 
 describe("Layout panel overlay", () => {
@@ -21,7 +22,8 @@ describe("Layout panel overlay", () => {
     const column = container.querySelector('[data-slot="layout-canvas-column"]') as HTMLElement;
 
     expect(column).not.toBeNull();
-    expect(column.contains(container.querySelector('[data-testid="canvas"]'))).toBe(true);
+    expect(container.querySelector('[data-slot="layout-canvas-bleed"]')?.contains(container.querySelector('[data-testid="canvas"]'))).toBe(true);
+    expect(column.contains(container.querySelector('[data-slot="layout-canvas-bleed"]'))).toBe(false);
     expect(column.style.paddingLeft).toBe("");
     expect(column.style.paddingRight).toBe("");
     expect(column.getAttribute("style")).toBeNull();
@@ -69,16 +71,119 @@ describe("Shell band borders", () => {
   });
 });
 
+describe("Layout canvas beneath the bands", () => {
+  it.each(scrollFixture.cases.filter(({ scrolls }) => !scrolls).map(({ id, width, height, mobile, dark }) => ({ id, width, height, mobile, dark })))("runs the canvas from the top to the bottom client edge under the glass bands: $id", async ({ width, height, mobile, dark }) => {
+    const markup = renderToStaticMarkup(
+      <Layout
+        mobile={mobile}
+        navbar={<Navbar items={[{ content: <button type="button">Navigation</button> }]} showFullscreenToggle={false} />}
+        footer={<Footer items={[{ content: <button type="button">Footer action</button> }]} />}
+        canvas={<div data-test-canvas style={{ height: "100%", backgroundColor: "red" }} />}
+      />,
+    );
+    const ui = resolve(import.meta.dirname, "../../../..");
+    const cssPath = resolve(ui, "🎨️styling/🖌️ui/🎨️.css");
+    const compiler = await compile(readFileSync(cssPath, "utf8"), { base: dirname(cssPath), onDependency: () => {} });
+    const css = compiler.build([...markup.matchAll(/class="([^"]*)"/g)].flatMap((match) => match[1].split(" "))) + readFileSync(resolve(ui, "🌐️globals/🎨️.css"), "utf8");
+    const browser = await launchChromium();
+    try {
+      const page = await browser.newPage({ viewport: { width, height } });
+      await page.setContent(`<!doctype html><html class="${dark ? "dark" : ""}" lang="en"><head><style>${css}html,body{height:100%;margin:0}</style></head><body>${markup}</body></html>`);
+      const layout = await page.evaluate(() => {
+        const rect = (selector: string) => document.querySelector(selector)!.getBoundingClientRect().toJSON() as DOMRect;
+        const top = (selector: string) => document.elementsFromPoint(window.innerWidth / 2, rect(selector).top + rect(selector).height / 2)[0]?.closest(selector) !== null;
+        return { bleed: rect('[data-slot="layout-canvas-bleed"]'), navbar: rect('[data-slot="navbar"]'), footer: rect('[data-slot="footer"]'), navbarWins: top('[data-slot="navbar"]'), footerWins: top('[data-slot="footer"]') };
+      });
+      expect(layout.bleed.top).toBe(0);
+      expect(layout.bleed.bottom).toBe(height);
+      expect(layout.navbar.top).toBe(0);
+      expect(layout.footer.bottom).toBe(height);
+      expect(layout.navbarWins && layout.footerWins).toBe(true);
+    } finally {
+      await browser.close();
+    }
+  }, 30_000);
+
+  it("keeps the layout rows in the band, middle, band order with the canvas as a full-bleed layer", () => {
+    const { container } = render(<Layout navbar={<div data-testid="navbar" />} footer={<div data-testid="footer" />} canvas={<div data-testid="canvas" />} />);
+    const layout = container.querySelector('[data-slot="layout"]') as HTMLElement;
+    expect([...layout.children].map((row) => row.getAttribute("data-layout-band"))).toEqual(["start", null, null, "end"]);
+    expect(layout.querySelector('[data-slot="layout-canvas-bleed"]')?.contains(container.querySelector('[data-testid="canvas"]'))).toBe(true);
+    expect(["--layout-clearance-top", "--layout-clearance-bottom", "--layout-subfooter-height"].map((name) => layout.style.getPropertyValue(name))).toEqual(["0px", "0px", "0px"]);
+  });
+});
+
+describe("Layout docked windows between the bands", () => {
+  const windowsOf = (count: number) => Array.from({ length: count }, (_, index) => ({ id: `w${index}`, title: uiDataLabel(`Window ${index}`), iconId: "app-window" as const, children: <div>Body {index}</div> }));
+  it.each([1, 2])("keeps every chip of %i docked window(s) outside both bands and hit-testable", async (count) => {
+    const windows = windowsOf(count);
+    const markup = renderToStaticMarkup(
+      <Layout
+        navbar={<Navbar items={[{ content: <button type="button">Navigation</button> }]} showFullscreenToggle={false} />}
+        footer={<Footer items={[{ content: <button type="button">Footer action</button> }]} />}
+        canvas={<Canvas><Mode windows={windows} activeWindowId="w0" onActiveWindowChange={() => {}} layout={{ kind: "split", axis: "horizontal", children: windows.map(({ id }) => ({ kind: "stack", children: [{ kind: "window", windowKindId: id }] })) }} /></Canvas>}
+      />,
+    );
+    const ui = resolve(import.meta.dirname, "../../../..");
+    const cssPath = resolve(ui, "🎨️styling/🖌️ui/🎨️.css");
+    const compiler = await compile(readFileSync(cssPath, "utf8"), { base: dirname(cssPath), onDependency: () => {} });
+    const css = compiler.build([...markup.matchAll(/class="([^"]*)"/g)].flatMap((match) => match[1].split(" "))) + readFileSync(resolve(ui, "🌐️globals/🎨️.css"), "utf8");
+    const browser = await launchChromium();
+    try {
+      const page = await browser.newPage({ viewport: { width: 1000, height: 600 } });
+      await page.setContent(`<!doctype html><html lang="en"><head><style>${css}html,body{height:100%;margin:0}</style></head><body>${markup}</body></html>`);
+      const read = await page.evaluate(() => {
+        const root = document.querySelector<HTMLElement>('[data-slot="layout"]')!;
+        const height = (edge: string) => [...root.querySelectorAll<HTMLElement>(`:scope > [data-layout-band="${edge}"]`)].reduce((sum, band) => sum + band.offsetHeight, 0);
+        root.style.setProperty("--layout-clearance-top", `${height("start")}px`);
+        root.style.setProperty("--layout-clearance-bottom", `${height("end")}px`);
+        const rect = (element: Element) => element.getBoundingClientRect().toJSON() as DOMRect;
+        const chips = [...document.querySelectorAll<HTMLElement>("[data-window-frame-chip]")].map((chip) => {
+          const box = rect(chip);
+          const hit = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2);
+          return { box, hit: hit !== null && chip.contains(hit), what: `${chip.dataset.slot} <- ${hit?.tagName}.${hit?.getAttribute("data-slot")}.${String(hit?.getAttribute("class")).slice(0, 60)}` };
+        });
+        return { navbar: rect(document.querySelector('[data-slot="navbar"]')!), footer: rect(document.querySelector('[data-slot="footer"]')!), stage: rect(document.querySelector('[data-slot="canvas-stage"]')!), canvas: rect(document.querySelector('[data-slot="canvas"]')!), chips, stacks: document.querySelectorAll('[data-slot="mode-dock-stack"]').length };
+      });
+      expect(read.stacks).toBe(count);
+      expect(read.chips.length).toBeGreaterThanOrEqual(count);
+      expect(read.canvas.top).toBe(0);
+      expect(read.canvas.bottom).toBe(600);
+      expect(read.stage.top).toBe(read.navbar.bottom);
+      expect(read.stage.bottom).toBe(read.footer.top);
+      for (const { box, hit, what } of read.chips) {
+        expect(box.top).toBeGreaterThanOrEqual(read.navbar.bottom);
+        expect(box.bottom).toBeLessThanOrEqual(read.footer.top);
+        expect(hit, what).toBe(true);
+      }
+    } finally {
+      await browser.close();
+    }
+  }, 30_000);
+
+  it("publishes the band heights as clearance of the layout root", () => {
+    const heights = new Map([["navbar", 29], ["footer", 25]]);
+    const offset = vi.spyOn(HTMLElement.prototype, "offsetHeight", "get").mockImplementation(function (this: HTMLElement) { return heights.get(this.firstElementChild?.getAttribute("data-testid") ?? "") ?? 0; });
+    try {
+      const { container } = render(<Layout navbar={<div data-testid="navbar" />} footer={<div data-testid="footer" />} canvas={<div />} />);
+      const layout = container.querySelector('[data-slot="layout"]') as HTMLElement;
+      expect([layout.style.getPropertyValue("--layout-clearance-top"), layout.style.getPropertyValue("--layout-clearance-bottom")]).toEqual(["29px", "25px"]);
+    } finally {
+      offset.mockRestore();
+    }
+  });
+});
+
 describe("Layout subfooter row", () => {
   it("keeps the subfooter in flow as the last row, directly under the footer — the footer stays next to the region whose docked panels reach into it — and renders no row without one", () => {
     for (const mobile of [false, true]) {
       const { container, unmount } = render(<Layout mobile={mobile} navbar={<div data-testid="navbar" />} footer={<div data-testid="footer" />} subfooter={<div data-testid="band" />} canvas={<div data-testid="canvas" />} />);
       const layout = container.querySelector('[data-slot="layout"]') as HTMLElement;
       const row = container.querySelector('[data-slot="layout-subfooter"]') as HTMLElement;
-      const rows = Array.from(layout.children);
-      const holding = (testId: string) => rows.findIndex((child) => child.querySelector(`[data-testid="${testId}"]`) !== null);
+      const rows = Array.from(layout.children).filter((child) => child.getAttribute("data-slot") !== "layout-canvas-bleed");
+      const holding = (testId: string) => testId === "canvas" ? rows.findIndex((child) => !child.hasAttribute("data-layout-band") && child.getAttribute("data-slot") !== "layout-subfooter") : rows.findIndex((child) => child.querySelector(`[data-testid="${testId}"]`) !== null);
       expect([row.parentElement === layout, holding("navbar"), holding("canvas"), holding("footer"), holding("band"), rows.length], `mobile=${mobile}: navbar, middle, footer, subfooter — one row each, in this order`).toEqual([true, 0, 1, 2, 3, 4]);
-      expect([row.className, rows[holding("canvas")]!.contains(row), rows[holding("canvas")]!.nextElementSibling === rows[holding("footer")]], `mobile=${mobile}: the row is in flow, outside the region the panels and the canvas share, and never between that region and the footer`).toEqual(["flex-shrink-0", false, true]);
+      expect([row.className, rows[holding("canvas")]!.contains(row), holding("footer") === holding("canvas") + 1], `mobile=${mobile}: the row is in flow, outside the region the panels and the canvas share, and never between that region and the footer`).toEqual(["flex-shrink-0", false, true]);
       unmount();
     }
     const bare = render(<Layout footer={<div data-testid="footer" />} canvas={<div data-testid="canvas" />} />);
@@ -106,8 +211,7 @@ describe("Layout scroll canvas", () => {
     const compiler = await compile(readFileSync(cssPath, "utf8"), { base: dirname(cssPath), onDependency: () => {} });
     const classes = [...markup.join("").matchAll(/class="([^"]*)"/g)].flatMap((match) => match[1].split(" "));
     const css = compiler.build(classes) + readFileSync(resolve(ui, "🌐️globals/🎨️.css"), "utf8");
-    const { chromium } = await import("playwright");
-    const browser = await chromium.launch({ headless: true });
+    const browser = await launchChromium();
     try {
       const page = await browser.newPage();
       for (const [index, row] of scrollFixture.cases.entries()) {
@@ -204,8 +308,7 @@ describe("Layout scroll canvas", () => {
 
 describe("Shared native panel overlay contract", () => {
   it("keeps the window canvas full width under every open panel", async () => {
-    const { chromium } = await import("playwright");
-    const browser = await chromium.launch({ headless: true });
+    const browser = await launchChromium();
     try {
       const page = await browser.newPage();
       for (const row of reserveFixture.cases) {

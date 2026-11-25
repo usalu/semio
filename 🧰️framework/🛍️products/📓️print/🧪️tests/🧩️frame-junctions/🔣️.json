@@ -6,9 +6,22 @@
     { "name": "heading to window", "previousBottom": 100, "gap": -1.38, "previousColor": "semio-secondary", "ownColor": "semio-chrome-border-normal", "top": 99.25, "sharedColor": "semio-chrome-border-normal" },
     { "name": "window to window", "previousBottom": 240, "gap": 3.83257, "previousColor": "semio-chrome-border-normal", "ownColor": "semio-chrome-border-normal", "top": 239.25, "sharedColor": "semio-chrome-border-normal" },
     { "name": "window to heading", "previousBottom": 240, "gap": 3.83257, "previousColor": "semio-chrome-border-normal", "ownColor": "semio-primary", "top": 239.25, "sharedColor": "semio-chrome-border-normal" },
-    { "name": "list to heading", "previousBottom": 356.525, "gap": 5.47499, "previousColor": "semio-chrome-border-normal", "ownColor": "semio-secondary", "top": 355.775, "sharedColor": "semio-chrome-border-normal" }
+    { "name": "list to heading", "previousBottom": 356.525, "gap": 5.47499, "previousColor": "semio-chrome-border-normal", "ownColor": "semio-secondary", "top": 355.775, "sharedColor": "semio-chrome-border-normal" },
+    { "name": "chapter to kind window", "previousBottom": 86.84, "gap": -1.38, "previousColor": "semio-tertiary", "ownColor": "semio-chrome-border-normal", "top": 86.09, "sharedColor": "semio-chrome-border-normal" },
+    { "name": "heading to list", "previousBottom": 270.29, "gap": -1.38, "previousColor": "semio-secondary", "ownColor": "semio-chrome-border-normal", "top": 269.54, "sharedColor": "semio-chrome-border-normal" },
+    { "name": "stretched list to heading", "previousBottom": 268.615, "gap": 13.47, "previousColor": "semio-chrome-border-normal", "ownColor": "semio-secondary", "top": 267.865, "sharedColor": "semio-chrome-border-normal" }
   ],
   "row": { "width": 430.87, "weights": [0.25, 0.25, 0.5], "lefts": [0, 107.3425, 214.685], "widths": [108.0925, 108.0925, 216.185] },
   "list": { "points": 3, "dividers": 4 },
+  "edge": {
+    "reach": 131072,
+    "samples": [
+      { "name": "edge on the text bottom", "edge": 3226870, "bottom": 3177710, "closed": true },
+      { "name": "edge below the text bottom", "edge": 3170000, "bottom": 3177710, "closed": true },
+      { "name": "edge just inside the reach", "edge": 3308781, "bottom": 3177710, "closed": true },
+      { "name": "edge just outside the reach", "edge": 3308782, "bottom": 3177710, "closed": false },
+      { "name": "edge higher on a page ended by force", "edge": 12345678, "bottom": 3177710, "closed": false }
+    ]
+  },
   "page": { "headSeparation": -0.75, "footerHeight": 18, "footPadding": 5.5, "footSkip": 22.75 }
 }

@@ -1,8 +1,9 @@
 //! 🖍️ Actual Draw component opening under the independent compiled host runtime.
 use semio_framework::kernel::{Budget, Event, RetainedTurnInput, TurnStatus};
 use semio_framework_actor::ActorId as RuntimeActorId;
-use semio_framework_job::{CancelToken, Generation, JobPayloadAuthority, OperationId, OriginalCallerSourceParent, StepBudget, StepContext};
+use semio_framework_job::{Generation, OperationId, OriginalJobFixtureCaller, StepContext};
 use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress};
+use semio_plugin_guest_contract::TurnFault;
 use semio_plugin_host::{GuestInstance, GuestRuntime, PackageHash, PackageId, PackageRef, SharedEngineConfig, WasmtimeRuntime, retryable_lifecycle_turn};
 use std::path::PathBuf;
 #[derive(serde::Deserialize)]
@@ -72,59 +73,24 @@ fn native_now() -> u64 {
 
 struct NativeCaller {
     policy: NativeCallerPolicy,
-    source: std::mem::ManuallyDrop<Option<OriginalCallerSourceParent>>,
-    spent: RetainedCloneProgress,
-    fuel: u64,
+    source: OriginalJobFixtureCaller,
     execution_fuel: u64,
     deadline: u64,
-    binding: u64,
     epoch: u64,
-    sequence: u64,
     turns: usize,
 }
 
 impl NativeCaller {
     fn admit(policy: &NativeCallerPolicy, identity: u64) -> Self {
-        let mut caller = Self {
+        let deadline = native_now().checked_add(policy.lifetime_us).expect("finite native deadline");
+        Self {
             policy: policy.clone(),
-            source: std::mem::ManuallyDrop::new(None),
-            spent: Default::default(),
-            fuel: policy.fuel,
+            source: OriginalJobFixtureCaller::admit(OperationId(identity), Generation(1), policy.grant, semio_framework_job::default_now_us, deadline, policy.fuel),
             execution_fuel: policy.execution_fuel,
-            deadline: native_now().checked_add(policy.lifetime_us).expect("finite native deadline"),
-            binding: identity,
+            deadline,
             epoch: 1,
-            sequence: 0,
             turns: 0,
-        };
-        let turn = CancelToken::admit_root(caller.remaining());
-        let (cancel, spent) = turn.result.expect("native cancellation admission").expect("authored cancellation stock");
-        caller.pay(spent, turn.work);
-        let turn = JobPayloadAuthority::admit(OperationId(identity), Generation(1), caller.remaining());
-        let (authority, spent) = turn.result.expect("native payload admission").expect("authored payload stock");
-        caller.pay(spent, turn.work);
-        let turn = OriginalCallerSourceParent::admit(authority, cancel, caller.remaining());
-        let (source, spent) = turn.result.unwrap_or_else(|_| panic!("authored original parent admission"));
-        *caller.source = Some(source);
-        caller.pay(spent, turn.work);
-        caller
-    }
-
-    fn remaining(&self) -> RetainedCloneGrant {
-        assert!(self.spent.fits(self.policy.grant));
-        RetainedCloneGrant {
-            maximum_items: self.policy.grant.maximum_items - self.spent.copied_items,
-            maximum_copy_bytes: self.policy.grant.maximum_copy_bytes - self.spent.copied_bytes,
-            maximum_capacity_bytes: self.policy.grant.maximum_capacity_bytes - self.spent.retained_capacity_bytes,
-            maximum_release_bytes: self.policy.grant.maximum_release_bytes - self.spent.released_bytes,
-            ..self.policy.grant
         }
-    }
-
-    fn pay(&mut self, spent: RetainedCloneProgress, work: u64) {
-        self.spent = self.spent.checked_add(spent).expect("native original cumulative spending");
-        self.fuel = self.fuel.checked_sub(work).expect("native original fuel is conserved");
-        assert!(self.spent.fits(self.policy.grant));
     }
 
     fn reserve_execution(&mut self) {
@@ -135,20 +101,14 @@ impl NativeCaller {
     }
 
     fn context(&mut self) -> StepContext<'_> {
-        let mut cx = self
-            .source
-            .as_ref()
-            .expect("original native source remains retained")
-            .borrow_context(StepBudget::new(self.fuel, self.deadline, self.policy.grant), semio_framework_job::default_now_us, &mut self.sequence, &mut self.spent)
-            .expect("original native context");
-        cx.bind_original_clock_binding(self.binding).expect("bind actual native source clock");
+        let mut cx = self.source.lend_context();
         cx.bind_original_source_epoch(self.epoch).expect("bind actual issued epoch");
         cx
     }
 
     fn returned(&mut self, fuel: u64) {
-        assert!(fuel <= self.fuel, "native original work cannot be renewed");
-        self.fuel = fuel;
+        assert!(fuel <= self.source.fuel_remaining(), "native original work cannot be renewed");
+        self.source.settle_lent_fuel(fuel);
         self.epoch = self.epoch.checked_add(1).expect("native epoch remains finite");
         assert!(native_now() < self.deadline, "native guest completed outside its absolute deadline");
     }
@@ -156,23 +116,12 @@ impl NativeCaller {
     fn retire(&mut self) {
         for _ in 0..self.policy.maximum_turns {
             assert!(native_now() < self.deadline, "original native source retirement retains its finite deadline");
-            if self.source.as_ref().is_none_or(OriginalCallerSourceParent::terminal_is_empty) {
-                self.source.take();
+            if self.source.terminal_is_empty() {
                 return;
             }
-            assert!(self.fuel > 0, "original native source retirement is funded");
-            let grant = self.remaining();
-            let turn = self.source.as_mut().unwrap().close_step(grant);
-            let step = turn.result.expect("original native source paid retirement");
-            self.pay(step.progress(), turn.work);
+            self.source.retire_step(self.policy.grant).expect("original native source paid retirement");
         }
         panic!("original native source retirement exceeded its authored bound")
-    }
-}
-
-impl Drop for NativeCaller {
-    fn drop(&mut self) {
-        assert!(std::thread::panicking() || self.source.is_none(), "original native source requires paid retirement")
     }
 }
 
@@ -191,10 +140,10 @@ fn receive(cx: &mut StepContext<'_>, budget: Budget, returned: RetainedTurnInput
     budget.retained.return_original(spent, work).expect("actual guest work and retained receipt conserve the issued source");
 }
 
-fn require_call<T>(cx: &mut StepContext<'_>, budget: Budget, result: Result<T, semio_plugin_host::TurnFault>) -> T {
+fn require_call<T>(cx: &mut StepContext<'_>, budget: Budget, result: Result<T, TurnFault>) -> T {
     match result {
         Ok(value) => value,
-        Err(semio_plugin_host::TurnFault::ActorCall(call)) => {
+        Err(TurnFault::ActorCall(call)) => {
             receive(cx, budget, call.input, call.spent, call.work_units_spent);
             panic!("native guest refused its original call: {call:?}")
         }
@@ -210,9 +159,8 @@ fn retire_owned<T: semio_framework_value::retirement::RetireOwned>(cx: &mut Step
         }
         cx.with_original_retirement(|cx| {
             let demand = owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?;
-            semio_framework_job::close_original_retained_step(cx, demand, |grant| {
-                let result = owner.step(grant);
-                semio_framework_value::RetainedWorkOutcome { result, work: owner.last_turn_work() }
+            semio_framework_job::close_original_effect_step(cx, demand, |effect| {
+                owner.step(effect.grant().maximum_copy_bytes, effect)
             })?;
             Ok::<_, semio_framework_job::OriginalTurnFailure>(())
         })
@@ -303,7 +251,7 @@ async fn open_to_settle(runtime: &impl GuestRuntime, instance: &mut GuestInstanc
             Err(fault) if retryable_lifecycle_turn(&fault, &events) => {
                 panic!("retryable lifecycle fault did not carry its actual original receipt: {fault:?}")
             }
-            Err(semio_plugin_host::TurnFault::ActorCall(call)) => {
+            Err(TurnFault::ActorCall(call)) => {
                 receive(&mut cx, budget, call.input, call.spent, call.work_units_spent);
                 panic!("InstanceOpen refused its original call after {:?}: {call:?}", started.elapsed())
             }

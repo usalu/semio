@@ -1,0 +1,6 @@
+# fifth fixer: the bicycle with the four fingers of each hand fitted into one loft (the single finger lofts stood 0.012 mm apart on paper at 1:50 and the check refused the scale): dry run over every subject, write when clean, sheets, check CLI and matrix only when the catalog file is the dry run (1000 MB)
+GATE_TIMEOUT=6000 "$here/in-try-apply.sh" person-pushing-bicycle
+(cd "$S/📦️packages/🟦️typescript" && timeout 600 "$B" "$here/suit.ts" "$GEN/try/person-pushing-bicycle.json") 2>&1 | cut -c1-900
+grep -h "lofts\|refused" "$GEN/try/person-pushing-bicycle.loft.log" | cut -c1-260
+"$here/in-look.sh" person-pushing-bicycle:try:50 person-pushing-bicycle:try:50:lifting-onto-stand person-pushing-bicycle:before:50:lifting-onto-stand
+cmp -s "$S/🗂️catalog/👤️humans/person-pushing-bicycle/🔣️.json" "$GEN/try/person-pushing-bicycle.json" && "$here/in-final.sh" person-pushing-bicycle

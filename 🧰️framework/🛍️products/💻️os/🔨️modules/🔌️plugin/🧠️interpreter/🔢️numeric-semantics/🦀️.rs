@@ -5,6 +5,9 @@ mod execution;
 #[path = "🧱️types/🦀️.rs"]
 mod types;
 
+/// 🪪️ The complete source of the numeric semantics for the engine identity.
+pub const NUMERIC_SOURCE: &str = concat!(include_str!("🦀️.rs"), include_str!("🧮️execution/🦀️.rs"), include_str!("🧱️types/🦀️.rs"));
+
 pub use execution::{execute_numeric_fixed, numeric_arity, NumericError};
 pub use types::{CoreError, Value, ValueType};
 

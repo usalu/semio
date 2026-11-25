@@ -4,7 +4,7 @@ import {Buffer} from "node:buffer";
 import {createHash} from "node:crypto";
 import {readFileSync} from "node:fs";
 import {join} from "node:path";
-import {inferenceClientVerdictV1,createHeadlessCallerSurfaceV1,inferenceCancellationVerdictV1,verifyActiveInferenceCancellationV1,type McpClientSessionV1,type McpClientStep} from "../../🟦️.ts";
+import {inferenceClientVerdictV1,createHeadlessCallerSurfaceV1,inferenceCancellationVerdictV1,verifyActiveInferenceCancellationV1,requireMcpClientTerminalStepV1,type McpClientSessionV1,type McpClientStep} from "../../🟦️.ts";
 import {encodeMcpComponentModelManifestV1} from "../../📡️stdio/📦️component-models/🟦️.ts";
 import modelSchema from "../../📡️stdio/📦️component-models/🔣️.json";
 import {OS_MCP_SCHEMA_DOCUMENT} from "../../🧬️schema/🟦️.ts";
@@ -63,14 +63,17 @@ test("cancellation gives the active job time to report progress and requires bot
  const oracle = new Ajv().compile({type:"object",required:["packBase64","sprBase64"],properties:{packBase64:{type:"string",minLength:1},sprBase64:{type:"string",minLength:1}}});
  const db = new Database(":memory:");
  try {
-  const unchanged = db.query("SELECT json_extract(?1, '$.packBase64') = json_extract(?2, '$.packBase64') AND json_extract(?1, '$.sprBase64') = json_extract(?2, '$.sprBase64') AS valid");
+  const unchanged = db.query("SELECT json_extract(?1, '$.packBase64') = json_extract(?2, '$.packBase64') AND json_extract(?1, '$.sprBase64') = json_extract(?2, '$.sprBase64') AND ?3 = ?4 AND ?5 = ?6 AS valid");
   for (const row of cancellation.documentCases) {
-   expect(Boolean(oracle(row.before) && oracle(row.after) && (unchanged.get(JSON.stringify(row.before),JSON.stringify(row.after)) as {valid:number}).valid), row.name).toBe(row.expected);
+   const jobHandle = "handle-1", jobId = "job-1";
+   const terminalJobId = row.terminalJobId ?? jobId, terminalHandle = row.terminalHandle ?? jobHandle;
+   expect(Boolean(oracle(row.before) && oracle(row.after) && (unchanged.get(JSON.stringify(row.before),JSON.stringify(row.after),jobId,terminalJobId,jobHandle,terminalHandle) as {valid:number}).valid), row.name).toBe(row.expected);
    let activeProgress = row.progressDelayMs === 0;
    let cancelComplete = false;
    let snapshotCount = 0;
    const timers: ReturnType<typeof setTimeout>[] = [];
-   const job = () => cancelComplete ? {state:"CANCELLED",cancelRequested:true,progress:[]} : {state:"RUNNING",cancelRequested:false,progress:activeProgress ? [{fraction:0.2}] : []};
+   const binding = {serviceId:pins.inferenceSchema,pluginId:pins.inferencePluginId,artifactKind:pins.inferenceArtifactKind,documentId:"artifact-active-cancel"};
+   const page = () => ({structuredContent:{jobHandle:cancelComplete ? terminalHandle : jobHandle,job:{...binding,jobId:cancelComplete ? terminalJobId : jobId,state:cancelComplete ? "CANCELLED" : "RUNNING",cancelRequested:cancelComplete,progress:activeProgress && !cancelComplete ? [{fraction:0.2}] : []}}});
    const call = async (name: string): ReturnType<McpClientSessionV1["call"]> => {
     switch (name) {
      case "artifact_create": return {structuredContent:{}};
@@ -81,12 +84,12 @@ test("cancellation gives the active job time to report progress and requires bot
      }
      case "inference_submit":
       if (row.progressDelayMs) timers.push(setTimeout(() => { activeProgress = true; }, row.progressDelayMs));
-      return {structuredContent:{jobHandle:"job-1",job:job()}};
+      return page();
      case "inference_cancel":
       if (row.cancelDelayMs) timers.push(setTimeout(() => { cancelComplete = true; }, row.cancelDelayMs));
       else cancelComplete = true;
-      return {structuredContent:{job:job()}};
-     case "inference_events": return {structuredContent:{job:job()}};
+      return page();
+     case "inference_events": return page();
      default: throw Error(`Unexpected inference fixture call ${name}`);
     }
    };
@@ -95,6 +98,21 @@ test("cancellation gives the active job time to report progress and requires bot
     await verifyActiveInferenceCancellationV1({call}, pins, "artifact", step => steps.push(step));
     expect(steps.map(step => step.ok), row.name).toEqual([true, row.expected]);
    } finally { timers.forEach(clearTimeout); }
+  }
+ } finally { db.close(); }
+});
+
+test("a green prefix cannot pass a journey with a missing terminal step", () => {
+ const db = new Database(":memory:");
+ try {
+  const outcome = db.query("SELECT count(*) FILTER (WHERE json_extract(value, '$.ok') = 0)=0 AND count(*) FILTER (WHERE json_extract(value, '$.step') = ?2)>0 AS passes FROM json_each(?1)");
+  for (const row of cancellation.terminalCases) {
+   expect(outcome.get(JSON.stringify(row.steps),"complete")).toEqual({passes:Number(row.passes)});
+   const steps = row.steps.map(step => ({...step, detail:""}));
+   const result = requireMcpClientTerminalStepV1(steps,"complete");
+   expect(result.every(step => step.ok)).toBe(row.passes);
+   expect(result.length - steps.length).toBe(Number(row.added));
+   if (row.added) expect(result.at(-1)?.step).toBe("complete");
   }
  } finally { db.close(); }
 });

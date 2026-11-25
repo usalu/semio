@@ -2,17 +2,17 @@
 /// 🗄️ The DDL of the tables this module projects.
 pub const SQL: &str = include_str!("🗄️.sql");
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgMaterial;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgMaterialChannels;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgMaterialColor;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgMaterialMap;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgMaterialMapSource;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgMaterialProjection;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgMaterialTiling;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgMlineCaps;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgMlineLinetype;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgMlineStyle;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgMlineStyleElement;
+use semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgMaterial;
+use semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgMaterialChannels;
+use semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgMaterialColor;
+use semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgMaterialMap;
+use semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgMaterialMapSource;
+use semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgMaterialProjection;
+use semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgMaterialTiling;
+use semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgMlineCaps;
+use semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgMlineLinetype;
+use semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgMlineStyle;
+use semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgMlineStyleElement;
 use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::number::Projection;
 use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::color;
 use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::evaluation::project_coordinates as coords;

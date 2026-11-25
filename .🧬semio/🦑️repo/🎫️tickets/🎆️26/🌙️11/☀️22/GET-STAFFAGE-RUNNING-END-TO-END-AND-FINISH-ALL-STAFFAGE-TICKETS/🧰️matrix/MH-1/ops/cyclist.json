@@ -1,0 +1,12 @@
+[
+  {"op":"anchor","id":"pedal-spindle-r","set":{"z":-0.13}},
+  {"op":"anchor","id":"pedal-spindle-l","set":{"z":0.13}},
+  {"scale":"50","op":"volume","id":"thigh-l","as":"loft"},
+  {"scale":"50","op":"volume","id":"thigh-r","as":"revolved"},
+  {"scale":"100","op":"volume","id":"thigh-l","as":"revolved"},
+  {"scale":"500","op":"volume","id":"thigh-l","as":"loft"},
+  {"scale":"500","op":"volume","id":"thigh-r","as":"revolved"},
+  {"scale":"100","op":"volume","id":"jacket","as":"loft"},
+  {"scale":"200","op":"volume","id":"jacket","as":"loft"},
+  {"scale":"500","op":"volume","id":"shoe-rear-l","as":"prism-w"}
+]

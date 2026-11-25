@@ -58,7 +58,7 @@ fn ui_turn_patch_owner_typed_descendants_preserve_exact_one_byte_grants() {
         let surface = fixture["surface"].as_str().unwrap();
         let text = fixture["payload"].as_str().unwrap();
         let mut patch = UiPatch { surface: ui::SurfaceId::try_from(surface).unwrap(), base_revision: ui::UiRevision(0), revision: ui::UiRevision(1), ops: Default::default() };
-        patch.ops.try_push(UiPatchOp::SetComponent { id: ui::UiNodeId(7), component: ui::Component::Text(ui::TextProps { value: ui::Label(ui::UiText::try_from_str(text).unwrap()), emphasize: None, data_attributes: None }) }).unwrap();
+        patch.ops.try_push(UiPatchOp::SetComponent { id: ui::UiNodeId(7), component: ui::Component::Text(ui::TextProps { value: ui::Label(ui::UiText::try_from_str(text).unwrap()), emphasize: None, data_attributes: None, heading_level: None }) }).unwrap();
         let expected = serde_json::to_value(&patch).unwrap();
         let mut owner = UiTurnPatches::default();
         owner.try_push_ui_patch(patch).unwrap();
@@ -360,7 +360,7 @@ fn ui_turn_patch_transport_handback_reports_exact_typed_descendant_bytes() {
     let surface = fixture["surface"].as_str().unwrap();
     let text = fixture["payload"].as_str().unwrap();
     let mut patch = UiPatch { surface: ui::SurfaceId::try_from(surface).unwrap(), base_revision: ui::UiRevision(0), revision: ui::UiRevision(1), ops: Default::default() };
-    patch.ops.try_push(UiPatchOp::SetComponent { id: ui::UiNodeId(7), component: ui::Component::Text(ui::TextProps { value: ui::Label(ui::UiText::try_from_str(text).unwrap()), emphasize: None, data_attributes: None }) }).unwrap();
+    patch.ops.try_push(UiPatchOp::SetComponent { id: ui::UiNodeId(7), component: ui::Component::Text(ui::TextProps { value: ui::Label(ui::UiText::try_from_str(text).unwrap()), emphasize: None, data_attributes: None, heading_level: None }) }).unwrap();
     let mut owner = UiTurnPatches::default();
     owner.try_push_ui_patch(patch).unwrap();
     let mut producer = UiTurnPatchTransportProducer::try_new(700_016, owner).unwrap();

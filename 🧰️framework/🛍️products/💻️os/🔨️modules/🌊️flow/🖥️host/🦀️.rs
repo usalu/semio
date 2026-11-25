@@ -2,6 +2,7 @@
 
 pub use semio_os_flow_host_core::*;
 pub use semio_os_flow_host_read::*;
+pub use semio_os_flow_host_read_authoring::*;
 pub use semio_os_flow_host_session::*;
 
 #[path="📤️publication/📨️pending/🦀️.rs"]

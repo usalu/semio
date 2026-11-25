@@ -13,23 +13,125 @@
    "de": "Eine gebrauchte zweimanualige Heimorgel der 1980er Jahre, 1,10 m breit, 0,55 m tief und 0,98 m hoch, 64 kg: zwei 44-tastige Manuale mit dem Spinett-Versatz von einer Oktave, ein 13-töniges Pedal, Rhythmusgerät, Schweller und ein 90-W-Verstärker in einem furnierten Spanplattengehäuse. Dreißig Jahre haben die Tasten vergilbt, Felder und Lack ausgebleicht und das Furnier an den Tastenbacken abgegriffen. Beim Händler steht sie auf einem Möbelroller mit der Bank davor, wird für Kaufinteressenten warmgelaufen vorgeführt und von der Bank aus wieder gespielt."
   },
   "tags": [
-   "used",
-   "instrument",
-   "music",
-   "second-hand",
-   "keyboard",
-   "amplification",
-   "electronic-organ",
-   "home-organ",
-   "spinet",
-   "electrophone",
-   "veneer",
-   "chipboard",
-   "dolly",
-   "bench",
-   "electrical",
-   "heat-source",
-   "internal-gain"
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "instrument",
+    "title": {
+     "en": "instrument",
+     "de": "Instrument"
+    }
+   },
+   {
+    "id": "music",
+    "title": {
+     "en": "music",
+     "de": "Musik"
+    }
+   },
+   {
+    "id": "second-hand",
+    "title": {
+     "en": "second-hand",
+     "de": "Second-Hand"
+    }
+   },
+   {
+    "id": "keyboard",
+    "title": {
+     "en": "keyboard",
+     "de": "Tasteninstrument"
+    }
+   },
+   {
+    "id": "amplification",
+    "title": {
+     "en": "amplification",
+     "de": "Verstärkung"
+    }
+   },
+   {
+    "id": "electronic-organ",
+    "title": {
+     "en": "electronic organ",
+     "de": "E-Orgel"
+    }
+   },
+   {
+    "id": "home-organ",
+    "title": {
+     "en": "home organ",
+     "de": "Heimorgel"
+    }
+   },
+   {
+    "id": "spinet",
+    "title": {
+     "en": "spinet",
+     "de": "Spinett"
+    }
+   },
+   {
+    "id": "electrophone",
+    "title": {
+     "en": "electrophone",
+     "de": "Elektrophon"
+    }
+   },
+   {
+    "id": "veneer",
+    "title": {
+     "en": "veneer",
+     "de": "Furnier"
+    }
+   },
+   {
+    "id": "chipboard",
+    "title": {
+     "en": "chipboard",
+     "de": "Spanplatte"
+    }
+   },
+   {
+    "id": "dolly",
+    "title": {
+     "en": "dolly",
+     "de": "Transportroller"
+    }
+   },
+   {
+    "id": "bench",
+    "title": {
+     "en": "bench",
+     "de": "Bank"
+    }
+   },
+   {
+    "id": "electrical",
+    "title": {
+     "en": "electrical",
+     "de": "Elektro"
+    }
+   },
+   {
+    "id": "heat-source",
+    "title": {
+     "en": "heat source",
+     "de": "Wärmequelle"
+    }
+   },
+   {
+    "id": "internal-gain",
+    "title": {
+     "en": "internal gain",
+     "de": "innere Wärmelast"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content (used instruments wave)",
@@ -21761,8 +21863,855 @@
     ]
    },
    "500": {
-    "status": "unavailable",
-    "denominator": 500
+    "status": "authored",
+    "denominator": 500,
+    "decisions": [
+     {
+      "en": "Body for the 75 mm feature: between two 75 mm cheeks of their true side outline the cabinet is one prism (lid, console, the closed key cover as the slope from the lid to the console front, knee panel and bottom merged), so the console still overhangs the knee space; the pedalboard is one block in the knee space, the swell shoe a 75 mm block beside it, the dolly one slab from the floor to the cabinet and the bench a top on four 75 mm legs that keep their outer faces; manuals, panels and castors are below the feature and left out.",
+      "de": "Körper für das 75-mm-Merkmal: zwischen zwei 75-mm-Wangen ihres wahren Seitenumrisses ist das Gehäuse ein Prisma (Deckel, Spieltisch, die geschlossene Tastenklappe als Schräge vom Deckel zur Spieltischfront, Knieblende und Boden verschmolzen), sodass der Spieltisch weiter über den Knieraum ragt; das Pedal ist ein Block im Knieraum, der Schweller ein 75-mm-Block daneben, der Rollwagen eine Platte vom Boden bis zum Gehäuse und die Bank eine Platte auf vier 75-mm-Beinen, die ihre Außenflächen behalten; Manuale, Blenden und Rollen liegen unter dem Merkmal und entfallen."
+     },
+     {
+      "en": "Thermal: the body solids in their regions by reference, the back as its declared 3 mm sheet, the knee grille, the keys and the two control panels as shells of their layer on the faces of the prism, the hidden amplifier as a block inside and the plume patch on the back.",
+      "de": "Thermik: die Körper in ihren Regionen als Verweis, die Rückwand als erklärte 3-mm-Platte, das Kniegitter, die Tasten und die zwei Bedienfelder als Schalen ihrer Schicht auf den Flächen des Prismas, der verdeckte Verstärker als Block im Inneren und die Auftriebsfläche an der Rückwand."
+     },
+     {
+      "en": "Structure: the members by reference, the cabinet spanning key cover and key, four 75 mm joints, eight 75 mm supports under dolly and bench and three mass markers.",
+      "de": "Tragwerk: die Stäbe als Verweis, das Gehäuse überspannt Tastenklappe und Taste, vier 75-mm-Gelenke, acht 75-mm-Auflager unter Rollwagen und Bank und drei Massenmarken."
+     }
+    ],
+    "body": [
+     {
+      "id": "cabinet",
+      "kind": "extrude",
+      "bone": "cabinet",
+      "material": "veneer-aged",
+      "role": "body",
+      "tone": 0.45,
+      "profile": [
+       [
+        0,
+        0.275
+       ],
+       [
+        0.983,
+        0.275
+       ],
+       [
+        0.983,
+        0.03
+       ],
+       [
+        0.735,
+        -0.275
+       ],
+       [
+        0.6,
+        -0.275
+       ],
+       [
+        0.6,
+        0.031
+       ],
+       [
+        0,
+        0.031
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.475,
+      "to": 0.475
+     },
+     {
+      "id": "cheeks",
+      "kind": "extrude",
+      "bone": "cabinet",
+      "material": "veneer-aged",
+      "role": "body",
+      "tone": 0.4,
+      "profile": [
+       [
+        0,
+        0.275
+       ],
+       [
+        0,
+        -0.255
+       ],
+       [
+        0.05,
+        -0.255
+       ],
+       [
+        0.09,
+        -0.215
+       ],
+       [
+        0.6,
+        -0.215
+       ],
+       [
+        0.6,
+        -0.275
+       ],
+       [
+        0.735,
+        -0.275
+       ],
+       [
+        0.983,
+        0.03
+       ],
+       [
+        0.983,
+        0.275
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.55,
+      "to": -0.475,
+      "repeat": {
+       "count": 2,
+       "translation": [
+        0,
+        0,
+        1.025
+       ]
+      }
+     },
+     {
+      "id": "pedalboard",
+      "kind": "box",
+      "bone": "pedalboard",
+      "material": "pedal-beech",
+      "role": "body",
+      "tone": 0.5,
+      "size": [
+       0.25,
+       0.085,
+       0.5
+      ],
+      "transform": {
+       "translation": [
+        0.125,
+        0.0425,
+        -0.17
+       ]
+      }
+     },
+     {
+      "id": "swell-shoe",
+      "kind": "box",
+      "bone": "swell-pedal",
+      "material": "pedal-sharp",
+      "role": "body",
+      "tone": 0.2,
+      "size": [
+       0.29,
+       0.075,
+       0.095
+      ],
+      "transform": {
+       "translation": [
+        0.015,
+        0.0375,
+        0.2025
+       ]
+      }
+     },
+     {
+      "id": "dolly",
+      "kind": "box",
+      "bone": "dolly",
+      "material": "dolly-beech",
+      "role": "body",
+      "tone": 0.6,
+      "size": [
+       0.45,
+       0.125,
+       0.6
+      ],
+      "transform": {
+       "translation": [
+        0.225,
+        -0.0485,
+        0
+       ]
+      }
+     },
+     {
+      "id": "bench-legs-back",
+      "kind": "box",
+      "bone": "bench",
+      "material": "bench-beech",
+      "role": "body",
+      "tone": 0.4,
+      "size": [
+       0.45,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.225,
+        0.1075,
+        -0.3725
+       ]
+      },
+      "repeat": {
+       "count": 2,
+       "translation": [
+        0,
+        0,
+        0.685
+       ]
+      }
+     },
+     {
+      "id": "bench-legs-front",
+      "kind": "box",
+      "bone": "bench",
+      "material": "bench-beech",
+      "role": "body",
+      "tone": 0.4,
+      "size": [
+       0.45,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.225,
+        -0.1075,
+        -0.3725
+       ]
+      },
+      "repeat": {
+       "count": 2,
+       "translation": [
+        0,
+        0,
+        0.685
+       ]
+      }
+     },
+     {
+      "id": "bench-top",
+      "kind": "box",
+      "bone": "bench",
+      "material": "bench-vinyl",
+      "role": "body",
+      "tone": 0.4,
+      "size": [
+       0.125,
+       0.32,
+       0.8
+      ],
+      "transform": {
+       "translation": [
+        0.5125,
+        0,
+        -0.03
+       ]
+      }
+     }
+    ],
+    "thermal": [
+     {
+      "id": "th-cabinet",
+      "of": "cabinet",
+      "region": "cabinet-veneer"
+     },
+     {
+      "id": "th-pedalboard",
+      "of": "pedalboard",
+      "region": "pedals"
+     },
+     {
+      "id": "th-swell-shoe",
+      "of": "swell-shoe",
+      "region": "pedals"
+     },
+     {
+      "id": "th-dolly",
+      "of": "dolly",
+      "region": "dolly"
+     },
+     {
+      "id": "th-cheeks",
+      "of": "cheeks",
+      "region": "cabinet-veneer"
+     },
+     {
+      "id": "th-bench-legs-back",
+      "of": "bench-legs-back",
+      "region": "bench"
+     },
+     {
+      "id": "th-bench-legs-front",
+      "of": "bench-legs-front",
+      "region": "bench"
+     },
+     {
+      "id": "th-bench-top",
+      "of": "bench-top",
+      "region": "bench"
+     },
+     {
+      "id": "th-back-panel",
+      "kind": "box",
+      "bone": "cabinet",
+      "material": "hardboard-aged",
+      "role": "body",
+      "tone": 0.3,
+      "size": [
+       0.983,
+       0.003,
+       1.1
+      ],
+      "transform": {
+       "translation": [
+        0.4915,
+        0.2765,
+        0
+       ]
+      },
+      "region": "back-panel",
+      "sheet": true
+     },
+     {
+      "id": "th-knee-panel",
+      "kind": "box",
+      "bone": "cabinet",
+      "material": "grille-cloth",
+      "role": "body",
+      "tone": 0.3,
+      "size": [
+       0.582,
+       0.03,
+       1.04
+      ],
+      "transform": {
+       "translation": [
+        0.309,
+        0.046,
+        0
+       ]
+      },
+      "region": "grille-panel",
+      "layer": "cloth-on-board"
+     },
+     {
+      "id": "th-keys",
+      "kind": "box",
+      "bone": "cabinet",
+      "material": "key-acrylic-yellowed",
+      "role": "detail",
+      "tone": 0.85,
+      "size": [
+       0.085,
+       0.075,
+       0.611
+      ],
+      "transform": {
+       "translation": [
+        0.6625,
+        -0.2375,
+        -0.0825
+       ]
+      },
+      "region": "keys",
+      "layer": "key-shell"
+     },
+     {
+      "id": "th-panel-right",
+      "kind": "box",
+      "bone": "cabinet",
+      "material": "panel-faded",
+      "role": "body",
+      "tone": 0.62,
+      "size": [
+       0.07,
+       0.075,
+       0.132
+      ],
+      "transform": {
+       "translation": [
+        0.655,
+        -0.2375,
+        -0.454
+       ]
+      },
+      "region": "control-panels",
+      "layer": "printed-aluminium"
+     },
+     {
+      "id": "th-panel-left",
+      "kind": "box",
+      "bone": "cabinet",
+      "material": "panel-faded",
+      "role": "body",
+      "tone": 0.62,
+      "size": [
+       0.07,
+       0.075,
+       0.297
+      ],
+      "transform": {
+       "translation": [
+        0.655,
+        -0.2375,
+        0.3715
+       ]
+      },
+      "region": "control-panels",
+      "layer": "printed-aluminium"
+     },
+     {
+      "id": "th-amplifier",
+      "kind": "box",
+      "bone": "cabinet",
+      "material": "amp-aluminium",
+      "role": "detail",
+      "tone": 0.15,
+      "size": [
+       0.18,
+       0.17,
+       0.39
+      ],
+      "transform": {
+       "translation": [
+        0.48,
+        0.175,
+        0
+       ]
+      },
+      "region": "amplifier"
+     },
+     {
+      "id": "th-rear-plume",
+      "kind": "box",
+      "bone": "cabinet",
+      "material": "hardboard-aged",
+      "role": "texture",
+      "tone": 0.3,
+      "size": [
+       0.14,
+       0.003,
+       0.51
+      ],
+      "transform": {
+       "translation": [
+        0.56,
+        0.2795,
+        0
+       ]
+      },
+      "region": "back-panel",
+      "tags": [
+       "rear-plume"
+      ],
+      "sectionFaces": [
+       "+u",
+       "-u",
+       "+v",
+       "-v",
+       "+w",
+       "-w"
+      ]
+     }
+    ],
+    "structure": [
+     {
+      "id": "member-cabinet",
+      "of": "cabinet",
+      "member": "cabinet",
+      "part": "member",
+      "members": [
+       "key-cover",
+       "lower-key"
+      ]
+     },
+     {
+      "id": "member-pedalboard",
+      "of": "pedalboard",
+      "member": "pedalboard",
+      "part": "member"
+     },
+     {
+      "id": "member-swell-shoe",
+      "of": "swell-shoe",
+      "member": "swell-pedal",
+      "part": "member"
+     },
+     {
+      "id": "member-dolly",
+      "of": "dolly",
+      "member": "dolly",
+      "part": "member"
+     },
+     {
+      "id": "member-cheeks",
+      "of": "cheeks",
+      "member": "cabinet",
+      "part": "member"
+     },
+     {
+      "id": "member-bench-legs-back",
+      "of": "bench-legs-back",
+      "member": "bench",
+      "part": "member"
+     },
+     {
+      "id": "member-bench-legs-front",
+      "of": "bench-legs-front",
+      "member": "bench",
+      "part": "member"
+     },
+     {
+      "id": "member-bench-top",
+      "of": "bench-top",
+      "member": "bench",
+      "part": "member"
+     },
+     {
+      "id": "joint-cover-hinge",
+      "kind": "box",
+      "bone": "key-cover",
+      "material": "castor-steel",
+      "role": "detail",
+      "tone": 0.4,
+      "size": [
+       0.075,
+       0.075,
+       1.1
+      ],
+      "transform": {
+       "translation": [
+        0.0375,
+        -0.0375,
+        0
+       ]
+      },
+      "member": "key-cover",
+      "part": "joint"
+     },
+     {
+      "id": "joint-pedal-hinge",
+      "kind": "box",
+      "bone": "pedalboard",
+      "material": "castor-steel",
+      "role": "detail",
+      "tone": 0.4,
+      "size": [
+       0.075,
+       0.085,
+       0.5
+      ],
+      "transform": {
+       "translation": [
+        0.0375,
+        0.0425,
+        -0.17
+       ]
+      },
+      "member": "pedalboard",
+      "part": "joint"
+     },
+     {
+      "id": "joint-swell-pivot",
+      "kind": "box",
+      "bone": "swell-pedal",
+      "material": "castor-steel",
+      "role": "detail",
+      "tone": 0.4,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0,
+        0.0375,
+        0.2025
+       ]
+      },
+      "member": "swell-pedal",
+      "part": "joint"
+     },
+     {
+      "id": "joint-key-pivot",
+      "kind": "box",
+      "bone": "lower-key",
+      "material": "castor-steel",
+      "role": "detail",
+      "tone": 0.4,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.0375,
+        -0.0375,
+        -0.118
+       ]
+      },
+      "member": "lower-key",
+      "part": "joint"
+     },
+     {
+      "id": "support-castor-back-right",
+      "kind": "box",
+      "bone": "dolly",
+      "material": "castor-rubber",
+      "role": "ground",
+      "tone": 0.2,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.045,
+        -0.0735,
+        -0.25
+       ]
+      },
+      "member": "dolly",
+      "part": "support",
+      "anchor": "castor-back-right"
+     },
+     {
+      "id": "support-castor-back-left",
+      "kind": "box",
+      "bone": "dolly",
+      "material": "castor-rubber",
+      "role": "ground",
+      "tone": 0.2,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.045,
+        -0.0735,
+        0.25
+       ]
+      },
+      "member": "dolly",
+      "part": "support",
+      "anchor": "castor-back-left"
+     },
+     {
+      "id": "support-castor-front-right",
+      "kind": "box",
+      "bone": "dolly",
+      "material": "castor-rubber",
+      "role": "ground",
+      "tone": 0.2,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.405,
+        -0.0735,
+        -0.25
+       ]
+      },
+      "member": "dolly",
+      "part": "support",
+      "anchor": "castor-front-right"
+     },
+     {
+      "id": "support-castor-front-left",
+      "kind": "box",
+      "bone": "dolly",
+      "material": "castor-rubber",
+      "role": "ground",
+      "tone": 0.2,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.405,
+        -0.0735,
+        0.25
+       ]
+      },
+      "member": "dolly",
+      "part": "support",
+      "anchor": "castor-front-left"
+     },
+     {
+      "id": "support-bench-foot-back-right",
+      "kind": "box",
+      "bone": "bench",
+      "material": "bench-beech",
+      "role": "ground",
+      "tone": 0.2,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.0375,
+        0.1075,
+        -0.3725
+       ]
+      },
+      "member": "bench",
+      "part": "support",
+      "anchor": "bench-foot-back-right"
+     },
+     {
+      "id": "support-bench-foot-back-left",
+      "kind": "box",
+      "bone": "bench",
+      "material": "bench-beech",
+      "role": "ground",
+      "tone": 0.2,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.0375,
+        0.1075,
+        0.3125
+       ]
+      },
+      "member": "bench",
+      "part": "support",
+      "anchor": "bench-foot-back-left"
+     },
+     {
+      "id": "support-bench-foot-front-right",
+      "kind": "box",
+      "bone": "bench",
+      "material": "bench-beech",
+      "role": "ground",
+      "tone": 0.2,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.0375,
+        -0.1075,
+        -0.3725
+       ]
+      },
+      "member": "bench",
+      "part": "support",
+      "anchor": "bench-foot-front-right"
+     },
+     {
+      "id": "support-bench-foot-front-left",
+      "kind": "box",
+      "bone": "bench",
+      "material": "bench-beech",
+      "role": "ground",
+      "tone": 0.2,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.0375,
+        -0.1075,
+        0.3125
+       ]
+      },
+      "member": "bench",
+      "part": "support",
+      "anchor": "bench-foot-front-left"
+     },
+     {
+      "id": "mass-cabinet",
+      "kind": "box",
+      "bone": "cabinet",
+      "material": "veneer-aged",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.45,
+        0.1,
+        0
+       ]
+      },
+      "member": "cabinet",
+      "part": "mass"
+     },
+     {
+      "id": "mass-dolly",
+      "kind": "box",
+      "bone": "dolly",
+      "material": "dolly-beech",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.225,
+        -0.05,
+        0
+       ]
+      },
+      "member": "dolly",
+      "part": "mass"
+     },
+     {
+      "id": "mass-bench",
+      "kind": "box",
+      "bone": "bench",
+      "material": "bench-beech",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.45,
+        0,
+        -0.03
+       ]
+      },
+      "member": "bench",
+      "part": "mass"
+     }
+    ]
    }
   },
   "presentation": {

@@ -1,0 +1,9 @@
+--- a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📤️export/🧪️tests/🧫️fixtures/🧵️write-cursor/🔣️.json
++++ b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📤️export/🧪️tests/🧫️fixtures/🧵️write-cursor/🔣️.json
+@@ -1,5 +1,5 @@
+ {
+-  "phaseOrder": ["snapshot", "objects", "handles", "slots", "pages", "layout", "assemble", "seal"],
++  "phaseOrder": ["objects", "handles", "slots", "pages", "layout", "assemble", "seal"],
+   "oracleDrawing": "🖼️assets/🏛️architectural/🏛️architectural.dwg",
+   "oracleEntityCount": 68,
+   "cancelAfterSteps": 5,

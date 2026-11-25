@@ -10,10 +10,11 @@
     "Resident": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["version", "pid", "kind", "rssBytes", "atMs"],
+      "required": ["version", "pid", "startMs", "kind", "rssBytes", "atMs"],
       "properties": {
         "version": {"const": 1},
         "pid": {"type": "integer", "minimum": 1},
+        "startMs": {"type": "integer", "minimum": 1},
         "kind": {"enum": ["finite", "watch"]},
         "rssBytes": {"type": "integer", "minimum": 0},
         "atMs": {"type": "integer", "minimum": 0}

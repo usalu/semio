@@ -3,6 +3,18 @@
 use super::*;
 
 //#region 🔖️ArtifactChannel
+/// 🧾️ Bounds implicit editor work independently of the host resources needed to execute and settle the guest.
+#[cfg(not(target_arch = "wasm32"))]
+pub(super) fn implicit_editor_request(wall_us: u64) -> semio_plugin_host::GuestRelayOperationRequest {
+    static REQUEST: std::sync::LazyLock<semio_plugin_host::GuestRelayOperationRequest> = std::sync::LazyLock::new(|| {
+        semio_framework_value::serde_json::from_str(include_str!("implicit-editor-request.json")).expect("schema-checked implicit editor request")
+    });
+    semio_plugin_host::GuestRelayOperationRequest {
+        maximum_elapsed_microseconds: wall_us.min(REQUEST.maximum_elapsed_microseconds),
+        ..*REQUEST
+    }
+}
+
 /// 🧮️ The logical work units one headless turn may spend; the instruction fuel is disarmed separately.
 #[cfg(not(target_arch = "wasm32"))]
 const HEADLESS_WORK_FUEL: u64 = 1 << 30;
@@ -122,7 +134,7 @@ pub(super) const DOCUMENT_LOAD_WALL_BUDGET: std::time::Duration = std::time::Dur
 /// the receipt it publishes — and well under the MCP client's own 240 s per-call budget, so a guest
 /// that cannot come up is reported as a bounded `budget.exceeded` instead of killing the tool call.
 #[cfg(not(target_arch = "wasm32"))]
-pub(super) const INSTANCE_OPEN_WALL_BUDGET: std::time::Duration = std::time::Duration::from_secs(150);
+pub(super) const INSTANCE_OPEN_WALL_BUDGET: std::time::Duration = std::time::Duration::from_secs(210);
 
 #[cfg(not(target_arch = "wasm32"))]
 pub(crate) fn shared_compiled_component(runtime: &GuestRuntimes, plugin_id: &str, bytes: &[u8]) -> Result<semio_plugin_host::CompiledHandle, GatewayError> {

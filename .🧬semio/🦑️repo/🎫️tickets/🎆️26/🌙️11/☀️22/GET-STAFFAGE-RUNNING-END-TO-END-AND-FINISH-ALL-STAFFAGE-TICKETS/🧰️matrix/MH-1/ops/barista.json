@@ -3,5 +3,5 @@
   {"op": "front-sweep", "scale": "100", "id": "neck"},
   {"op": "front-sweep", "scale": "500", "id": "sil-head"},
   {"op": "plan-revolve", "scale": "500", "id": "sil-head"},
-  {"op": "copy", "scale": "500", "id": "palm-r", "from": "elevation", "to": ["plan"]}
+  {"scale": "500", "op": "copy", "id": "palm-r", "from": "elevation", "to": ["plan"]}
 ]

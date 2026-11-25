@@ -91,6 +91,9 @@ fn read_opt_usize_bin(reader: &mut store::ByteReader<'_>) -> Result<Option<usize
         other => Err(format!("bad option tag {other}")),
     }
 }
+protocol::original_decoded_operation_receiving!(FormMutation);
+protocol::artifact_persisted_binary_operation!(FormMutation);
+
 impl protocol::OpBinary for FormMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {

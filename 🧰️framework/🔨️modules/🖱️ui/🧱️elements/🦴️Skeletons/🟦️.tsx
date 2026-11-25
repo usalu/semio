@@ -10,7 +10,6 @@ import * as React from "react";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { shellFloorFillClass } from "../../🔨️modules/🏠️shell-floor-presentation/🟦️.ts";
 import { WindowChrome, windowChromeTitleChipClass } from "../🗂️WindowChrome/🟦️.tsx";
-import { windowBodyFrameClass } from "../../🔨️modules/🎨️chrome-class-names/🟦️.ts";
 import { LevelProvider, SurfaceScope, useSurface } from "../🌈️Surface/🟦️.tsx";
 import { SceneSkeleton } from "../🎬️Scene/🟦️.tsx";
 import { SharedBorderRow, SharedBorderRowCell } from "../🪢️SharedBorderRow/🟦️.tsx";
@@ -140,9 +139,8 @@ const CanvasSkeletonWindow: React.FC<{ active?: boolean }> = ({ active = false }
       stackSlot="canvas-skeleton-stack"
       frameBorderSlot="canvas-skeleton-frame-border"
       stackClassName="relative z-window h-full min-h-0 w-full min-w-0 overflow-hidden"
-      bodyClassName={cn("flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-single", windowBodyFrameClass)}
-      bodySurfaceClassName={windowBodyFrameClass}
-      bodySurfaceLevel="base"
+      bodyClassName="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-single"
+      bodySurfaceFill="surface"
       titleChips={
         <span className={cn(windowChromeTitleChipClass, "flex items-center gap-single px-single")} aria-hidden>
           <SkeletonBlock className="size-small shrink-0 rounded-sm" />

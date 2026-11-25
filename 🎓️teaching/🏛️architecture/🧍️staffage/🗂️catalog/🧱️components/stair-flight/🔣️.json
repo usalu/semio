@@ -13,12 +13,48 @@
       "de": "Ein gerader Stahltreppenlauf mit Mittelwange, 16 Steigungen von 181,25 mm und Auftritten von 280 mm (2 s + a = 0,64 m, 32,9 Grad, DIN 18065) vom Boden bis zum Podest, 2,90 m hoch und 1,20 m breit: eine Wange HEA 160 auf einer Fußplatte mit vier Ankern, über eine Kopfplatte mit Langlöchern an die Podeststirn geschraubt, unter jeder der 16 Holzstufen aus C24 (40 mm, 30 mm Unterschneidung) eine angeschweißte Konsole aus Steg und Auflagerplatte, Setzstufen offen, durch eine Kinderschutzleiste 30 x 30 mm unter jeder Vorderkante auf 111 mm verengt; die Wange ist am Fuß fest und am Podest verschieblich gelagert. Beide offenen Seiten tragen ein Geländer aus sechs Pfosten auf den Stufen, einem 42,4-mm-Handlauf 0,95 m über der Vorderkantenlinie, einem Untergurt und 12-mm-Stäben im Abstand von 105 mm."
     },
     "tags": [
-      "component",
-      "structural",
-      "stair",
-      "stringer",
-      "steel",
-      "timber"
+      {
+        "id": "component",
+        "title": {
+          "en": "component",
+          "de": "Bauteil"
+        }
+      },
+      {
+        "id": "structural",
+        "title": {
+          "en": "structural",
+          "de": "tragend"
+        }
+      },
+      {
+        "id": "stair",
+        "title": {
+          "en": "stair",
+          "de": "Treppe"
+        }
+      },
+      {
+        "id": "stringer",
+        "title": {
+          "en": "stringer",
+          "de": "Wange"
+        }
+      },
+      {
+        "id": "steel",
+        "title": {
+          "en": "steel",
+          "de": "Stahl"
+        }
+      },
+      {
+        "id": "timber",
+        "title": {
+          "en": "timber",
+          "de": "Holz"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage component authors",

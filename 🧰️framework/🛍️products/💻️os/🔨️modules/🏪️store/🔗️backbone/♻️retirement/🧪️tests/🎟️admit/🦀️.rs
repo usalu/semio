@@ -154,3 +154,28 @@ fn backbone_retirement_releases_an_installed_actor_wake_and_finishes() {
     assert!(owner.is_none());
     assert_eq!(Arc::strong_count(&calls), 1);
 }
+
+/// 🔗️ Each end of a live memory pair retires while its peer still shares both queues; the last end retires the queued messages.
+#[test]
+fn memory_pair_ends_retire_while_their_peer_still_shares_the_queues() {
+    use std::future::Future;
+    let mut pair = std::pin::pin!(crate::MemoryBackbone::pair("mem://a", "mem://b"));
+    let std::task::Poll::Ready((first, second)) = pair.as_mut().poll(&mut std::task::Context::from_waker(std::task::Waker::noop())) else { panic!("pairing never suspends") };
+    let probe = Arc::downgrade(first.outbox.as_ref().unwrap());
+    first.outbox.as_ref().unwrap().lock().unwrap().push_back(BackboneMessage::Genesis { pack: vec![7; 4096] });
+    let frame = ArtifactStoreBackboneRetirement::constructor_capacity_bytes();
+    let birth = RetainedCloneGrant { maximum_items: 1, maximum_capacity_bytes: frame, maximum_depth: 1, ..Default::default() };
+    for (end, live_after) in [(first, true), (second, false)] {
+        let (mut queue, mut backbone) = (VecDeque::new(), Some(Backbones::Memory(end)));
+        let (mut owner, _) = ArtifactStoreBackboneRetirement::admit_attached(&mut queue, &mut backbone, birth).unwrap();
+        for turn in 0..1000 {
+            if owner.is_none() { break; }
+            let demand = semio_framework_value::factory_ticket_demands(owner.as_ref().unwrap(), 4096).unwrap();
+            let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
+            crate::test_effect::funded(grant, |effect| crate::test_effect::step(semio_framework_value::close_factory_ticket(&mut owner, effect)));
+            assert!(turn < 999, "a pair end never retired while its peer lived");
+        }
+        assert!(owner.is_none());
+        assert_eq!(probe.upgrade().is_some(), live_after);
+    }
+}

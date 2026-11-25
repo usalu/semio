@@ -1,0 +1,2 @@
+# check CLI of the six written assets (5000 MB)
+"$here/in-check.sh" person-drinking-coffee person-checking-watch person-queuing person-cooking person-in-winter-coat person-signing

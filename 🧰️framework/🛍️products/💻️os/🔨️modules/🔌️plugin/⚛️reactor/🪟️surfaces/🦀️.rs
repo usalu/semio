@@ -74,7 +74,6 @@ pub struct SurfaceContexts {
     retiring:Option<Displaced>,
     retirement: semio_framework_value::retained_clone::RetainedCloneClose,
     closing_slot: usize,
-    closing_body: Option<usize>,
     cached_source:std::mem::ManuallyDrop<Option<semio_framework_value::RetainedCloneSource<ViewModel>>>,
     cached_capture:Option<usize>,
     captured_slot:Option<usize>,
@@ -99,7 +98,7 @@ impl semio_framework_value::retirement::RetireOwned for SurfaceContexts{
 }
 impl Default for SurfaceContexts {
     fn default() -> Self {
-        Self {slots: std::array::from_fn(|_| None),view_state: None,version:0,leases_exhausted:false,displaced:Vec::new(),retiring:None,retirement:Default::default(),closing_slot:0,closing_body:None,cached_source:std::mem::ManuallyDrop::new(None),cached_capture:None,captured_slot:None}
+        Self {slots: std::array::from_fn(|_| None),view_state: None,version:0,leases_exhausted:false,displaced:Vec::new(),retiring:None,retirement:Default::default(),closing_slot:0,cached_source:std::mem::ManuallyDrop::new(None),cached_capture:None,captured_slot:None}
     }
 }
 
@@ -201,6 +200,11 @@ impl SurfaceContexts {
             }
         }
         self.displaced.extend(self.view_state.replace(view.clone()).map(Displaced::View));
+    }
+
+    /// 🗑️ Hands a call-scoped host view to the funded displaced retirement, so its ordered roots never drop live.
+    pub fn displace_view(&mut self, view: ViewModel) {
+        self.displaced.push(Displaced::View(view));
     }
 
     fn prune_windows(&mut self, view: &ViewModel) {

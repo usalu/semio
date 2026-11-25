@@ -614,6 +614,28 @@ describe("root border compositor", () => {
       dom.window.close();
     }
   });
+  test("a seam between abutting windows that clip their overflow lies fully inside its owner, so no half of it is cut", () => {
+    const dom = new JSDOM('<div class="semio-scope"><div id="left" style="overflow-x:hidden;overflow-y:hidden"></div><div id="right" style="overflow-x:hidden;overflow-y:hidden"></div></div>');
+    const previous = { Element: globalThis.Element, MutationObserver: globalThis.MutationObserver };
+    Object.assign(globalThis, { Element: dom.window.Element, MutationObserver: dom.window.MutationObserver });
+    const root = dom.window.document.querySelector<HTMLElement>(".semio-scope")!;
+    const rect = (left: number) => ({ left, top: 0, right: left + 100, bottom: 100, width: 100, height: 100, x: left, y: 0, toJSON() {} }) as DOMRect;
+    const left = root.querySelector<HTMLElement>("#left")!, right = root.querySelector<HTMLElement>("#right")!;
+    left.getBoundingClientRect = () => rect(0); right.getBoundingClientRect = () => rect(100);
+    const updates = new Map<string, readonly { d: string; state: string }[]>();
+    const compositor = new BorderCompositor(root);
+    try {
+      compositor.windows.set("b", { element: right, geometry, state: "active", update: value => updates.set("b", value) });
+      compositor.windows.set("a", { element: left, geometry, state: "normal", update: value => updates.set("a", value) });
+      compositor.schedule();
+      const lines = (id: string) => (updates.get(id) ?? []).flatMap(segment => [...segment.d.matchAll(/M\s*([\d.-]+)\s+([\d.-]+)\s+L\s*([\d.-]+)\s+([\d.-]+)/g)].map(match => ({ x1: Number(match[1]), x2: Number(match[3]) })));
+      expect(lines("b").some(line => line.x1 === 1 && line.x2 === 1), "the active seam is held one inset inside the right window").toBe(true);
+      expect(lines("b").some(line => line.x1 <= 0 && line.x2 <= 0), "nothing of it lies on or beyond the clip edge").toBe(false);
+      expect(lines("a").some(line => line.x1 >= 100 && line.x2 >= 100), "the losing window paints no seam of its own").toBe(false);
+    } finally {
+      compositor.dispose(); Object.assign(globalThis, previous); dom.window.close();
+    }
+  });
   test("framed controls that are direct children of a cells owner are cells: the owner paints one frame, they register none", () => {
     const { row: size, cells, expectedOverlays, rowPaths } = cases.cellFrames;
     const dom = new JSDOM('<div class="semio-scope"><div id="row" data-shared-border-frame data-shared-border-cells>' + '<div class="cell" data-shared-border-frame data-shared-border-interactive></div>'.repeat(cells) + '<div id="wrapper"><div id="deep" data-shared-border-frame></div></div></div></div>');
@@ -774,7 +796,7 @@ describe("root border compositor", () => {
       try {
         h.compositor.schedule();
         h.hover("plus");
-        expect(h.painted("hover")).toEqual(closed(50, 99));
+        expect(h.painted("hover")).toEqual(["M 50 1 L 50 19", "M 50 19 L 99 19"]);
       } finally { h.done(); }
     });
 
@@ -921,7 +943,7 @@ describe("root border compositor", () => {
     const scope = document.createElement("div");
     scope.className = "semio-scope";
     const button = document.createElement("button");
-    button.setAttribute("data-shared-border-frame", ""); button.setAttribute("data-shared-border-edges", "");
+    button.setAttribute("data-shared-border-frame", ""); button.setAttribute("data-shared-border-edges", "top right bottom left");
     button.getBoundingClientRect = () => ({ left: 0, top: 0, right: 40, bottom: 20, width: 40, height: 20 }) as DOMRect;
     scope.append(button);
     document.body.append(scope);

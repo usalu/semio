@@ -1,0 +1,4 @@
+-p semio-os-store-backbone --tests
+-p semio-os-store-composition --tests
+-p semio-s-artifact-puzzle-3d-editor --test editor-action-producer
+-p semio-s-artifact-puzzle-3d-editor --test editor-gestures mutation_latency

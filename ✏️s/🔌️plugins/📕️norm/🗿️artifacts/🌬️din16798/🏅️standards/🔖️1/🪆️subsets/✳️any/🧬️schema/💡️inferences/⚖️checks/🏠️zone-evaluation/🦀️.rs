@@ -296,7 +296,7 @@ fn check_zone_occupancy(
         format!("din16798-1.occupancy.{}", zone.id), "DIN EN 16798-1", ClauseId::new("EN 16798-1", "Annex B", "occupancy"),
         zone_subject(zone, path("occupants")), loc("Typical occupancy of the usage category", "Typische Belegung der Nutzungsart"),
     ).annex(doc.annex);
-    let Some(density) = part_1::typical_floor_area_per_person_m2(usage) else {
+    let Some((ndp_id, density)) = part_1::typical_occupancy_ndp(usage).and_then(|id| semio_s_plugin_norm_compliance::ndp_number_opt(id, doc.annex).map(|density| (id, density))) else {
         out.push(builder.not_applicable(loc(
             "The standard defines no typical occupancy for this usage category.",
             "Die Norm legt für diese Nutzungsart keine typische Belegung fest.",
@@ -308,9 +308,12 @@ fn check_zone_occupancy(
     let (note_en, note_de) = if f64::from(declared) > typical * (1.0 + 1e-9) {
         (" The declared occupancy exceeds the typical one; confirm it as the project design occupancy.", " Die angegebene Belegung übersteigt die typische; sie ist als Projektauslegung zu bestätigen.")
     } else { ("", "") };
-    out.push(builder.informative(Quantity::new(QuantityKind::Dimensionless, typical)).explanation(loc(
-        format!("Typical occupancy {typical:.1} persons at {density:.1} m² per person. Declared {declared} persons.{note_en}"),
-        format!("Typische Belegung {typical:.1} Personen bei {density:.1} m² je Person. Angegeben {declared} Personen.{note_de}"),
+    let verified = semio_s_plugin_norm_compliance::ndp_is_verified_for(ndp_id, doc.annex);
+    let (basis_en, basis_de) = if verified { ("", "") } else { (" Unverified basis: the density awaits a double-key against EN 16798-1 Annex B.", " Ungeprüfte Grundlage: die Dichte ist noch gegen EN 16798-1 Anhang B zu prüfen.") };
+    let builder = builder.informative(Quantity::new(QuantityKind::Dimensionless, typical)).ndp(ndp_id);
+    out.push(builder.explanation(loc(
+        format!("Typical occupancy {typical:.1} persons at {density:.1} m² per person. Declared {declared} persons.{note_en}{basis_en}"),
+        format!("Typische Belegung {typical:.1} Personen bei {density:.1} m² je Person. Angegeben {declared} Personen.{note_de}{basis_de}"),
     )).build());
 }
 

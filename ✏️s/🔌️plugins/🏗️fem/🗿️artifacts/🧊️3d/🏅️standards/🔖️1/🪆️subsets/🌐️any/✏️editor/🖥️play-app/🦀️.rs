@@ -19,10 +19,29 @@ fn fem3d_transient_transfer(mutation: <Fem3dPlayApp as ArtifactEditor>::Transien
     transient
 }
 
+/// 📣️ The EN/DE notices of every refusal the FEM 3D editor raises with a `{name}` param: the gumball and canvas table it shares with FEM 2D, then the `addCombination` terms and `addSolid` refusals.
+fn fem3d_fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
+    static NOTICES: std::sync::LazyLock<Vec<(&'static str, LocalizedLabel)>> = std::sync::LazyLock::new(|| {
+        let notice = LocalizedLabel::native;
+        let mut table = semio_s_artifact_fem_2d_editor::editor::fem2d::commands::gumball::fem_fault_notices().to_vec();
+        table.extend([
+            ("fem3d.combination.terms-unreadable", notice("The terms '{terms}' could not be read. Write load case ids with factors, for example dead:1.35, live:1.5 or dead=1.35, live=1.5 or 1.35 dead + 1.5 live or JSON [[\"dead\", 1.35], [\"live\", 1.5]].", "Die Terme '{terms}' konnten nicht gelesen werden. Gib Lastfall-Kennungen mit Faktoren an, zum Beispiel dead:1.35, live:1.5 oder dead=1.35, live=1.5 oder 1.35 dead + 1.5 live oder JSON [[\"dead\", 1.35], [\"live\", 1.5]].")),
+            ("fem3d.combination.terms-empty", notice("A combination needs at least one term, for example dead:1.35.", "Eine Kombination braucht mindestens einen Term, zum Beispiel dead:1.35.")),
+            ("fem3d.combination.terms-case-unknown", notice("'{case}' is not a load case of this document.", "'{case}' ist kein Lastfall dieses Dokuments.")),
+            ("fem3d.combination.terms-case-repeated", notice("The load case '{case}' appears more than once.", "Der Lastfall '{case}' kommt mehrfach vor.")),
+            ("fem3d.combination.terms-factor-invalid", notice("The factor of '{case}' is not a finite number.", "Der Faktor von '{case}' ist keine endliche Zahl.")),
+            ("fem3d.solid.material-unknown", notice("'{material}' is not a material of this document. Add a material first or use the id of an existing one.", "'{material}' ist kein Material dieses Dokuments. Füge zuerst ein Material hinzu oder nutze die Kennung eines vorhandenen.")),
+            ("fem3d.solid.extent", notice("A solid needs a positive width, depth and height.", "Ein Volumenkörper braucht positive Breite, Tiefe und Höhe.")),
+        ]);
+        table
+    });
+    &NOTICES
+}
+
 impl ArtifactEditor for Fem3dPlayApp {
     /// 📢️ The localized notices of the gumball and canvas refusals (design §20.12), the fem 2d table.
     fn fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
-        semio_s_artifact_fem_2d_editor::editor::fem2d::commands::gumball::fem_fault_notices()
+        fem3d_fault_notices()
     }
 
     type Snapshot = Fem3dSnapshot;
@@ -212,6 +231,26 @@ impl ArtifactEditor for Fem3dPlayApp {
 
     fn io() -> Option<AppIo> {
         Some(fem3d_io())
+    }
+
+    fn interaction_topology(doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<semio_plugin::InteractionTopology, semio_framework_value::ValueError> {
+        Ok(semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3d_interaction_topology(doc.snapshot))
+    }
+
+    fn clipboard_media_type() -> Option<MediaType> {
+        Some(fem3d_clipboard_media_type())
+    }
+
+    fn copy_fragment(doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, NoConfig>, interaction: &InteractionView<'_>) -> Result<semio_framework::kernel::ClipboardFragment, semio_framework::kernel::ClipboardError> {
+        fem3d_copy_fragment(doc.snapshot, &Fem3dInteractionSnapshot::from_interaction(interaction).selected_ids)
+    }
+
+    fn cut_operations(doc: &ArtifactView<'_, Fem3dSnapshot>, cfg: &ConfigView<'_, NoConfig>, interaction: &InteractionView<'_>) -> Vec<Fem3dMutation> {
+        fem3d_cut_operations(doc, cfg, &Fem3dInteractionSnapshot::from_interaction(interaction).selected_ids)
+    }
+
+    fn paste_operations(doc: &ArtifactView<'_, Fem3dSnapshot>, fragment: &semio_framework::kernel::ClipboardFragment, placement: &semio_framework::kernel::PastePlacement) -> Result<Vec<Fem3dMutation>, semio_framework::kernel::ClipboardError> {
+        fem3d_paste_operations(doc, fragment, placement)
     }
 
     fn mounted_job_maintenance_phase(instance_id: u32) -> Option<semio_plugin::MountedOwnerPhaseV1> {
@@ -589,7 +628,11 @@ impl Fem3dPlayApp {
             }
             artifact_panel::BODY_KEY => artifact_panel::render(doc.snapshot, &interaction, labels, &semio_plugin::TreeWindows::for_body(view_state, artifact_panel::BODY_KEY)),
             inspection_panel::BODY_KEY => inspection_panel::render(doc.snapshot, &interaction, labels, &semio_plugin::TreeWindows::for_body(view_state, inspection_panel::BODY_KEY)),
-            results_panel::BODY_KEY => results_panel::render(doc.snapshot, window_results::config::captured(cfg).as_ref(), clock.as_ref(), &results_window_instance_id(view_state).unwrap_or_default(), labels),
+            results_panel::BODY_KEY => {
+                let window_id = results_window_instance_id(view_state).unwrap_or_default();
+                let window = window_results::config::captured(cfg).or_else(|| window_results::config::remembered(&window_id));
+                results_panel::render(doc.snapshot, window.as_ref(), clock.as_ref(), &window_id, labels)
+            }
             _ => built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "fem3d unknown-body label admission failed")),
         }
         .map(semio_plugin::built_to_component_tree)

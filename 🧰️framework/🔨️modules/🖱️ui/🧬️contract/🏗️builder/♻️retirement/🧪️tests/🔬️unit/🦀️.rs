@@ -6,7 +6,7 @@ fn fixture() -> serde_json::Value {
 }
 
 fn text_node(key: &str, value: &str) -> BuiltNode {
-    BuiltNode::try_new(key, Component::Text(TextProps { value: crate::Label::try_from(value).unwrap(), emphasize: None, data_attributes: Default::default() })).unwrap()
+    BuiltNode::try_new(key, Component::Text(TextProps { value: crate::Label::try_from(value).unwrap(), emphasize: None, data_attributes: Default::default(), heading_level: None })).unwrap()
 }
 
 fn close(owner: &mut BuiltTreeRetirement, grant: usize) -> usize {

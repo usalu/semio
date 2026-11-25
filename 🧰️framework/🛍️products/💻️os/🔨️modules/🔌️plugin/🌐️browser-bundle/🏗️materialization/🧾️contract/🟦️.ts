@@ -4,6 +4,8 @@ import type { BuildMode } from "@semio-tech/process/build-mode";
 import { SHARD_LIVENESS_POLICY } from "../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🫀️liveness/🟦️.ts";
 
 export const PLUGIN_HOST_SHIM_FILE = "🟨️.js";
+/** 🔑️ The import specifier the pure and host-async framework worlds are transpiled to, which the component factory looks the per-activation host up under. */
+export const PLUGIN_HOST_IMPORT = `./${PLUGIN_HOST_SHIM_FILE}`;
 export const SHARD_WORKER_FILE = "🟨️shard-worker.js";
 export const GUESTSLIM_FONT_RELATIVE = "🪞️vendor/🔤️guestslim-typst-fonts.bin";
 

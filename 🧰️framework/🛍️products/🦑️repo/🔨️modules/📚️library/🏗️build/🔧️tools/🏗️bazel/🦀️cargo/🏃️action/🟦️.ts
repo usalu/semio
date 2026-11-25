@@ -21,7 +21,7 @@ async function main(manifestPath:string,out:string):Promise<void>{
  const manifest=JSON.parse(await readFile(manifestPath,"utf8")),runtime=JSON.parse(await readFile(join(dirname(await realpath(manifestPath)),"runtime.json"),"utf8")),lines:string[]=[];
  if(runtime.journal)await appendFile(runtime.journal,manifest.id+" start "+Date.now()+"\n");
  const status=await new Promise<number>(accept=>{
-  const child=spawn(process.execPath,["repo",...manifest.argv],{cwd:runtime.workspace,env:runtime.environment,stdio:["ignore","pipe","pipe"]});
+  const child=spawn(process.execPath,["repo",...manifest.argv],{windowsHide:true,cwd:runtime.workspace,env:runtime.environment,stdio:["ignore","pipe","pipe"]});
   for(const stream of [child.stdout,child.stderr]){let rest="";stream.on("data",chunk=>{const parts=(rest+chunk.toString()).split("\n");rest=parts.pop()!;for(const line of parts){lines.push(line);if(!line.startsWith("[script]"))process.stderr.write(line+"\n");}});}
   child.on("close",code=>accept(code??1));
  });

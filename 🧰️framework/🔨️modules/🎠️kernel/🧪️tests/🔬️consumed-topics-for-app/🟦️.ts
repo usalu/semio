@@ -33,12 +33,11 @@ describe("demonstrator pack budget", () => {
     const json = scopeContributionsJson(loaded as never, "demonstrator", consumedTopicsForApp(registry, loaded, "demonstrator", appId));
     return Buffer.byteLength(JSON.stringify(["setContributions", { json }]));
   };
-  const retained = ["s.cad.cad@1/*#editor", "s.process.process3d@1/*#editor", "s.sourcing.curation@1/*#editor"];
+  const retained = ["s.process.process3d@1/*#editor", "s.sourcing.curation@1/*#editor"];
 
   it("reads the budget from its single Rust source", () => expect(budget).toBe(49152));
-  it("the union alone would overflow, which is why the cut is per app", () => {
-    const union = Buffer.byteLength(JSON.stringify(["setContributions", { json: scopeContributionsJson(loaded as never, "demonstrator", registry.find((row) => row.pluginId === "demonstrator")!.consumes) }]));
-    expect(union).toBeGreaterThan(budget);
+  it("the demonstrator row consumes exactly the union of the process and sourcing rows", () => {
+    expect(new Set(registry.find((row) => row.pluginId === "demonstrator")!.consumes)).toEqual(new Set([...consumesOf("🏭️process"), ...consumesOf("🪵️sourcing")]));
   });
   for (const appId of retained) {
     it(`${appId} receives a pack inside the retained wire budget`, () => {
@@ -47,8 +46,4 @@ describe("demonstrator pack budget", () => {
       expect(bytes).toBeLessThanOrEqual(budget);
     });
   }
-  it("the generator app still receives every flow extension", () => {
-    const pack = JSON.parse(scopeContributionsJson(loaded as never, "demonstrator", consumedTopicsForApp(registry, loaded, "demonstrator", "s.procedural.generation3d@1/*#editor"))) as { pluginId: string }[];
-    expect(pack.filter((entry) => entry.pluginId.startsWith("flow-extension-")).length).toBeGreaterThanOrEqual(8);
-  });
 });

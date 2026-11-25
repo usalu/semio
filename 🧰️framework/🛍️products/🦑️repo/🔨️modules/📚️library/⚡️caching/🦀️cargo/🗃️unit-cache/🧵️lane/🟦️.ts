@@ -3,6 +3,7 @@ import {closeSync,mkdirSync,openSync,readFileSync,readdirSync,renameSync,rmSync,
 import {basename,join,relative,resolve,sep} from "node:path";
 import {processAliveV1,tryClaimV1} from "../🔒️lock/🟦️.ts";
 import {UNIT_CACHE_POLICY_V1} from "../🔏️key/🟦️.ts";
+import {ownProcessIdentityV1,parseProcessIdentityV1} from "../../../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts";
 
 const policy=UNIT_CACHE_POLICY_V1,layout=policy.layout,idPattern=/^[a-z0-9]{1,12}$/u;
 /** 🪪️ Who a lane belongs to: the agent session address and the agent, recorded in the lane's metadata so caches and cleanup can be attributed. */
@@ -34,14 +35,14 @@ export type LaneRecordV1=Readonly<{version:1;id:string;createdMs:number;session?
 export function readLaneV1(root:string,id:string):LaneRecordV1|undefined{try{return JSON.parse(readFileSync(lanePathsV1(root,id).metadata,"utf8"));}catch{return undefined;}}
 
 /** 📏️ The size last measured for a lane by the collector, with the part its Cargo incremental sessions hold; `undefined` until it was measured. */
-export function readLaneSizeV1(root:string,id:string):Readonly<{bytes:number;incrementalBytes:number;measuredMs:number}>|undefined{
- try{const row=JSON.parse(readFileSync(lanePathsV1(root,id).size,"utf8"));return Number.isSafeInteger(row?.bytes)&&Number.isSafeInteger(row?.incrementalBytes)&&Number.isSafeInteger(row?.measuredMs)?{bytes:row.bytes,incrementalBytes:row.incrementalBytes,measuredMs:row.measuredMs}:undefined;}catch{return undefined;}
+export function readLaneSizeV1(root:string,id:string):Readonly<{bytes:number;incrementalBytes:number;measuredMs:number;temporariesBytes?:number}>|undefined{
+ try{const row=JSON.parse(readFileSync(lanePathsV1(root,id).size,"utf8"));return Number.isSafeInteger(row?.bytes)&&Number.isSafeInteger(row?.incrementalBytes)&&Number.isSafeInteger(row?.measuredMs)?{bytes:row.bytes,incrementalBytes:row.incrementalBytes,measuredMs:row.measuredMs,...Number.isSafeInteger(row.temporariesBytes)?{temporariesBytes:row.temporariesBytes}:{}}:undefined;}catch{return undefined;}
 }
 
 const writeAtomicV1=(path:string,text:string):void=>{const temporary=path+"."+randomBytes(3).toString("hex");writeFileSync(temporary,text);renameSync(temporary,path);};
 
 /** 🧮️ Records the measured size of a lane and the part its incremental sessions hold next to its metadata (a file of its own, so a measurement never overwrites a concurrent acquisition's record). */
-export function recordLaneSizeV1(root:string,id:string,bytes:number,incrementalBytes:number,nowMs:number):void{try{writeAtomicV1(lanePathsV1(root,id).size,JSON.stringify({bytes,incrementalBytes,measuredMs:nowMs}));}catch{}}
+export function recordLaneSizeV1(root:string,id:string,bytes:number,incrementalBytes:number,nowMs:number,temporariesBytes?:number):void{try{writeAtomicV1(lanePathsV1(root,id).size,JSON.stringify({bytes,incrementalBytes,measuredMs:nowMs,...temporariesBytes===undefined?{}:{temporariesBytes}}));}catch{}}
 
 /** 🚪️ Registers one running command in its lane and records who uses it for which crate set. The marker is kept fresh by a heartbeat and removed on release; garbage collection never touches a lane with a fresh marker. */
 export function enterLaneV1(root:string,id:string,owner?:LaneOwnerV1,crates?:readonly string[],flavour?:string):Readonly<{paths:ReturnType<typeof lanePathsV1>;release():void}>{
@@ -51,7 +52,7 @@ export function enterLaneV1(root:string,id:string,owner?:LaneOwnerV1,crates?:rea
  const kept=flavour??before?.flavour;
  writeAtomicV1(paths.metadata,JSON.stringify({version:1,id,createdMs:before?.createdMs??Date.now(),usedMs:Date.now(),...kept===undefined?{}:{flavour:kept},...who===undefined?{}:{session:who.session,agent:who.agent},...names===undefined?{}:{crateKey:crateKeyV1(names),crates:names.slice(0,policy.pool.listedCrates)}}));
  const touch=()=>{try{const now=new Date(),record=readLaneV1(root,id);if(record!==undefined)writeAtomicV1(paths.metadata,JSON.stringify({...record,usedMs:now.getTime()}));utimesSync(paths.metadata,now,now);}catch{}};
- const marker=join(paths.live,process.pid+"-"+randomBytes(3).toString("hex")),write=()=>{const fd=openSync(marker,"w");try{writeSync(fd,JSON.stringify({pid:process.pid}));}finally{closeSync(fd);}};write();
+ const marker=join(paths.live,process.pid+"-"+randomBytes(3).toString("hex")),write=()=>writeAtomicV1(marker,JSON.stringify({...ownProcessIdentityV1(),startedMs:Date.now()}));write();
  const beat=setInterval(()=>{try{const now=new Date();utimesSync(marker,now,now);}catch{}},policy.slot.heartbeatMilliseconds);beat.unref?.();
  let released=false;
  return Object.freeze({paths,release(){if(released)return;released=true;clearInterval(beat);rmSync(marker,{force:true});touch();}});
@@ -61,17 +62,17 @@ export function enterLaneV1(root:string,id:string,owner?:LaneOwnerV1,crates?:rea
 export function laneLiveV1(paths:ReturnType<typeof lanePathsV1>,nowMs:number):boolean{
  let names:string[];try{names=readdirSync(paths.live);}catch{return false;}
  for(const name of names){
-  try{if(processAliveV1(Number(name.split("-")[0])))return true;rmSync(join(paths.live,name),{force:true});}catch{}
+  try{const holder=parseProcessIdentityV1(JSON.parse(readFileSync(join(paths.live,name),"utf8")));if(holder!==undefined&&processAliveV1(holder))return true;rmSync(join(paths.live,name),{force:true});}catch{}
  }
  return false;
 }
 
-function treeBytes(path:string,limit:{files:number}):number{
+function treeBytes(path:string,limit:{files:number},skip?:string):number{
  let total=0,entries;try{entries=readdirSync(path,{withFileTypes:true});}catch{return 0;}
  for(const entry of entries){
   if(limit.files--<=0)return total;
   const child=join(path,entry.name);
-  if(entry.isDirectory())total+=treeBytes(child,limit);else if(entry.isFile()){try{total+=statSync(child).size;}catch{}}
+  if(entry.isDirectory()){if(child!==skip)total+=treeBytes(child,limit);}else if(entry.isFile()){try{total+=statSync(child).size;}catch{}}
  }
  return total;
 }
@@ -113,11 +114,11 @@ export function holdLaneOfBuildDirectoryV1(cacheRoot:string,buildDirectory:strin
 export function laneIdsV1(root:string):string[]{try{return readdirSync(join(root,layout.lanes)).filter(name=>idPattern.test(name)).sort();}catch{return[];}}
 
 /** 🔭️ Measures every lane of a cache root for the garbage collector (logical bytes; reflinked files count in full, which only makes collection earlier) and records each size beside the lane, where the pool reads it. */
-export function listLanesV1(root:string,nowMs:number):{id:string;bytes:number;incrementalBytes:number;lastUsedMs:number;live:boolean;retained:boolean}[]{
+export function listLanesV1(root:string,nowMs:number):{id:string;bytes:number;incrementalBytes:number;temporariesBytes:number;lastUsedMs:number;live:boolean;retained:boolean}[]{
  const base=join(root,layout.lanes);let ids:string[];try{ids=readdirSync(base).filter(name=>idPattern.test(name)&&!policy.pool.reserved.includes(name));}catch{return[];}
  return ids.map(id=>{const paths=lanePathsV1(root,id),limit={files:2_000_000},lastUsedMs=laneUsedMsV1(root,id);
-  const incrementalBytes=incrementalDirectoriesV1(paths.build).reduce((sum,path)=>sum+treeBytes(path,limit),0),bytes=treeBytes(paths.base,limit);recordLaneSizeV1(root,id,bytes,incrementalBytes,nowMs);
-  return{id,bytes,incrementalBytes,lastUsedMs,live:laneLiveV1(paths,nowMs),retained:laneRetainedV1(id,lastUsedMs,nowMs,readLaneV1(root,id)?.holdUntilMs)||laneRecentV1(readLaneV1(root,id)?.flavour,lastUsedMs,nowMs)};});
+  const incrementalBytes=incrementalDirectoriesV1(paths.build).reduce((sum,path)=>sum+treeBytes(path,limit),0),temporariesBytes=treeBytes(paths.temporaries,limit),bytes=temporariesBytes+treeBytes(paths.base,limit,paths.temporaries);recordLaneSizeV1(root,id,bytes,incrementalBytes,nowMs,temporariesBytes);
+  return{id,bytes,incrementalBytes,temporariesBytes,lastUsedMs,live:laneLiveV1(paths,nowMs),retained:laneRetainedV1(id,lastUsedMs,nowMs,readLaneV1(root,id)?.holdUntilMs)||laneRecentV1(readLaneV1(root,id)?.flavour,lastUsedMs,nowMs)};});
 }
 
 /** 📐️ The logical bytes a lane holds right now, measured with the same bound as the collector's measurement; `0` for a lane that does not exist. */

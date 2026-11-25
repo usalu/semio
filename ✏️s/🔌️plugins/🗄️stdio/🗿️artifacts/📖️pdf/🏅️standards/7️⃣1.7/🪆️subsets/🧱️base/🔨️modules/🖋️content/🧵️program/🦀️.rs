@@ -1,14 +1,16 @@
 //! 🧵️ Retains PDF content token, operator, and font state across bounded parse turns.
 
-use super::{array_text_item, bounded_number, bounded_spelling, first_array, fixed_operator, named_operator, num, plain_text_byte, ContentToken, ContentTokenCursor, FontState, FontTable, NumericArray, PdfObject, PdfOp, PdfTextArrayItem, PdfTextString, SavedFont, TextShow};
+use super::{array_text_item, bounded_number, bounded_spelling, first_array, fixed_operator, named_operator, num, plain_text_byte, text_string, ContentToken, ContentTokenCursor, FontState, FontTable, NumericArray, PdfObject, PdfOp, PdfTextArrayItem, PdfTextString, SavedFont, TextShow};
 use crate::standards::v1_7::subsets::base::modules::lexer::{ContentTokenEvent, ContentTokenReceipt, CosGrant, CosReceipt, CosStatus, PdfCosCursor};
-use super::{PdfBaseEncoding, PdfFixedCodeWidth};
+use super::{PdfBaseEncoding, PdfFixedCodeWidth, PdfPropertyList};
 use std::mem::{size_of, take};
 
 const OPERAND_LIMIT: usize = 64;
 const ATOMIC_NAME_BYTES: usize = 128;
 const CONTROLLED_TEXT_BYTES: usize = 128;
 const CONTROLLED_TEXT_ITEMS: usize = 16;
+/// 📏️ The most one applying, text or number unit writes: one operator or one text array item (a mapped glyph's text is shorter than either).
+const TYPED_UNIT_BYTES: usize = if size_of::<PdfOp>() > size_of::<PdfTextArrayItem>() { size_of::<PdfOp>() } else { size_of::<PdfTextArrayItem>() };
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ContentProgramEvent {
@@ -40,6 +42,7 @@ enum Phase {
     ScanText { target: TextTarget, index: usize, bytes: usize },
     AllocateText { target: TextTarget, utf8_bytes: Option<usize> },
     CopyText { target: TextTarget, index: usize },
+    CodecText { target: TextTarget },
     AllocateTextArray,
     TextArray { index: usize },
     AllocateNumbers { target: NumericArray },
@@ -76,7 +79,7 @@ pub struct ContentProgramCursor {
     tokens_closed: bool,
     operands: Vec<PdfObject>,
     operand: Option<PdfObject>,
-    retiring: Option<PdfCosCursor>,
+    retiring: PdfCosCursor,
     fonts: FontState,
     text: Option<PdfTextString>,
     encoding: Option<PdfBaseEncoding>,
@@ -97,7 +100,7 @@ impl ContentProgramCursor {
             tokens_closed: false,
             operands: Vec::new(),
             operand: None,
-            retiring: None,
+            retiring: PdfCosCursor::idle(),
             fonts: FontState::default(),
             text: None,
             encoding: None,
@@ -112,6 +115,20 @@ impl ContentProgramCursor {
 
     /// 🔤️ Returns the authored font selected by the operators already applied.
     pub fn selected_font(&self) -> Option<&str> { self.fonts.current.as_deref() }
+
+    /// 📏️ The most one unit copies of the program's own bytes: [`Self::unit_copy`] never exceeds it.
+    pub const UNIT_COPY_MAXIMUM: usize = if size_of::<PdfObject>() > TYPED_UNIT_BYTES { size_of::<PdfObject>() } else { TYPED_UNIT_BYTES };
+
+    /// 📏️ The bytes the next unit writes beside its allocation, or `None` when it lexes, which reads one source byte and writes at most one byte of token state per unit of its grant: taking, storing or retiring an operand moves one value (the cursors it passes through are re-armed in place), and applying, text and number steps write at most one operator, array item or mapped glyph.
+    pub fn unit_copy(&self) -> Option<usize> {
+        Some(match self.phase {
+            Phase::Lex if !self.retiring_value() => return None,
+            Phase::TakeToken | Phase::StoreOperand => size_of::<PdfObject>(),
+            Phase::Drain { .. } if !self.retiring_value() => size_of::<PdfObject>(),
+            Phase::Apply { .. } | Phase::CopyText { .. } | Phase::CodecText { .. } | Phase::TextArray { .. } | Phase::CopyNumbers { .. } => TYPED_UNIT_BYTES,
+            _ => 0,
+        })
+    }
 
     /// 👁️ Borrows the ready native operator before accepting its backing.
     pub fn peek_operator(&self) -> Option<&PdfOp> {
@@ -141,7 +158,7 @@ impl ContentProgramCursor {
             Phase::Closing => self.close_step(grant),
             Phase::Closed => receipt(Event::Closed),
             _ if grant.work == 0 => receipt(Event::More),
-            Phase::Lex if self.retiring.is_some() => self.retire_value(grant),
+            Phase::Lex if self.retiring_value() => self.retire_value(grant),
             Phase::Lex => {
                 let child = self.tokens.advance(source, grant, false);
                 match child.event {
@@ -181,14 +198,15 @@ impl ContentProgramCursor {
             }
             Phase::AllocateText { target, utf8_bytes } => self.allocate_text(target, utf8_bytes, grant),
             Phase::CopyText { target, index } => self.copy_text(target, index, fonts),
+            Phase::CodecText { target } => self.codec_text(target, fonts, grant),
             Phase::AllocateTextArray => self.allocate_text_array(grant),
-            Phase::TextArray { index } => self.text_array_item(index),
+            Phase::TextArray { index } => self.text_array_item(index, fonts),
             Phase::AllocateNumbers { target } => self.allocate_numbers(target, grant),
             Phase::CopyNumbers { target, index } => self.copy_numbers(target, index, grant),
-            Phase::Drain { .. } if self.retiring.is_some() => self.retire_value(grant),
+            Phase::Drain { .. } if self.retiring_value() => self.retire_value(grant),
             Phase::Drain { complete } => {
                 if let Some(value) = self.operands.pop() {
-                    self.retiring = Some(PdfCosCursor::retire_parsed_value(value));
+                    self.retire(value);
                     return worked(0, 0);
                 }
                 self.phase = if complete { Phase::Complete } else { Phase::Ready };
@@ -221,9 +239,9 @@ impl ContentProgramCursor {
             }
             return token_receipt(child);
         }
-        if self.retiring.is_some() { return self.retire_value(grant); }
+        if self.retiring_value() { return self.retire_value(grant); }
         if let Some(value) = self.operand.take().or_else(|| self.operands.pop()) {
-            self.retiring = Some(PdfCosCursor::retire_parsed_value(value));
+            self.retire(value);
             return worked(0, 0);
         }
         if matches!(self.pending, Some(PdfOp::ShowTextArray { .. })) {
@@ -289,16 +307,21 @@ impl ContentProgramCursor {
         if self.operands.len() < OPERAND_LIMIT {
             self.operands.push(value);
         } else {
-            self.retiring = Some(PdfCosCursor::retire_parsed_value(value));
+            self.retire(value);
         }
         self.phase = Phase::Lex;
         worked(bytes, 0)
     }
 
     fn retire_value(&mut self, grant: CosGrant) -> ContentProgramReceipt {
-        let child = self.retiring.as_mut().expect("retiring PDF content operand").close_step(grant);
-        if child.status == Ok(CosStatus::Closed) { self.retiring = None; }
-        cos_receipt(child)
+        cos_receipt(self.retiring.close_step(grant))
+    }
+
+    fn retiring_value(&self) -> bool { !self.retiring.terminal_is_empty() }
+
+    /// 🪦️ Hands one operand to the program's single retirement cursor, re-armed in place; every caller reaches it only after the previous retirement settled.
+    fn retire(&mut self, value: PdfObject) {
+        if self.retiring.rearm_retiring(value).is_err() { unreachable!("PDF content operand retirement starts on a settled cursor"); }
     }
 
     fn apply(&mut self, source: &[u8], fonts: &dyn FontTable, grant: CosGrant, start: usize, end: usize) -> ContentProgramReceipt {
@@ -312,11 +335,11 @@ impl ContentProgramCursor {
         self.operator_span = (start, end);
         if let Some(op) = fixed_operator(word, &self.operands) { return self.finish(op, 0, 0, 0); }
         if let Some(show) = TextShow::new(word, &self.operands) {
-            if !self.select_text_encoding(fonts) { return self.defer(start, end); }
-            return self.start_text(TextTarget::Show(show));
+            self.select_text_encoding(fonts);
+            return self.start_text(TextTarget::Show(show), fonts);
         }
         if word == "TJ" {
-            if !self.select_text_encoding(fonts) { return self.defer(start, end); }
+            self.select_text_encoding(fonts);
             if (self.encoding.is_some() || self.code_width.is_some())
                 && first_array(&self.operands).len() > CONTROLLED_TEXT_ITEMS { return self.defer(start, end); }
             self.phase = Phase::AllocateTextArray;
@@ -336,6 +359,7 @@ impl ContentProgramCursor {
                 if len > ATOMIC_NAME_BYTES { return self.defer(start, end); }
                 (2 * len, string_capacity(current), len)
             }
+            "BDC" | "DP" => return self.apply_marked(word, grant, start, end),
             _ => return self.apply_named(word, grant, start, end),
         };
         if allocation > grant.allocation_bytes { return receipt(ContentProgramEvent::NeedsAllocation { bytes: allocation }); }
@@ -358,6 +382,17 @@ impl ContentProgramCursor {
         self.finish(op, bytes, bytes, 0)
     }
 
+    /// 🏷️ Applies marked content whose property list is a named resource (`/OC /oc1 BDC`); an inline property dictionary defers.
+    fn apply_marked(&mut self, word: &str, grant: CosGrant, start: usize, end: usize) -> ContentProgramReceipt {
+        let [PdfObject::Name(tag), PdfObject::Name(properties)] = self.operands.as_slice() else { return self.defer(start, end); };
+        if tag.len() > ATOMIC_NAME_BYTES || properties.len() > ATOMIC_NAME_BYTES { return self.defer(start, end); }
+        let bytes = tag.len() + properties.len();
+        if bytes > grant.allocation_bytes { return receipt(ContentProgramEvent::NeedsAllocation { bytes }); }
+        let (tag, properties) = (tag.clone(), PdfPropertyList::Named { name: properties.clone() });
+        let op = if word == "BDC" { PdfOp::BeginMarkedContentWithProperties { tag, properties } } else { PdfOp::MarkedContentPointWithProperties { tag, properties } };
+        self.finish(op, bytes, bytes, 0)
+    }
+
     fn defer_unbounded_number(&mut self) -> ContentProgramReceipt {
         let (start, end) = self.operator_span;
         self.defer(start, end)
@@ -368,21 +403,22 @@ impl ContentProgramCursor {
         result(ContentProgramEvent::Deferred { start, end }, 1, 0, 0)
     }
 
-    fn select_text_encoding(&mut self, fonts: &dyn FontTable) -> bool {
+    fn select_text_encoding(&mut self, fonts: &dyn FontTable) {
         self.encoding = self.selected_font().and_then(|name| fonts.controlled_type1(name));
         self.code_width = self.selected_font().and_then(|name| fonts.controlled_code_width(name));
-        self.encoding.is_some() || self.code_width.is_some() || self.fonts.codec(fonts).is_none()
     }
 
     fn native_width(&self) -> usize { self.code_width.map_or(1, |width| width as usize) }
 
-    fn start_text(&mut self, target: TextTarget) -> ContentProgramReceipt {
+    fn start_text(&mut self, target: TextTarget, fonts: &dyn FontTable) -> ContentProgramReceipt {
         let length = target.bytes(&self.operands).len();
         if (self.encoding.is_some() || self.code_width.is_some()) && length > CONTROLLED_TEXT_BYTES {
             let (start, end) = self.operator_span;
             return self.defer(start, end);
         }
-        self.phase = if self.code_width.is_some() {
+        self.phase = if self.encoding.is_none() && self.code_width.is_none() && self.fonts.codec(fonts).is_some() {
+            Phase::CodecText { target }
+        } else if self.code_width.is_some() {
             if !length.is_multiple_of(self.native_width()) {
                 self.phase = Phase::Failed("PDF text ends inside its admitted fixed-width codespace");
                 return failure("PDF text ends inside its admitted fixed-width codespace");
@@ -435,6 +471,26 @@ impl ContentProgramCursor {
         }
     }
 
+    /// 🔤️ Decodes one string through the selected font's codec exactly like the reference parser: `Text` when it round-trips, `Codes` otherwise.
+    fn codec_text(&mut self, target: TextTarget, fonts: &dyn FontTable, grant: CosGrant) -> ContentProgramReceipt {
+        let codec = self.fonts.codec(fonts).expect("selected PDF font codec");
+        let text = text_string(target.bytes(&self.operands), Some(codec));
+        let bytes = match &text {
+            PdfTextString::Text { text } => text.capacity(),
+            PdfTextString::Codes { codes } => codes.capacity() * size_of::<u32>(),
+        };
+        if bytes > grant.allocation_bytes { return receipt(ContentProgramEvent::NeedsAllocation { bytes }); }
+        self.output_bytes += bytes;
+        match target {
+            TextTarget::Show(show) => self.finish(show.finish(text), self.output_bytes, bytes, 0),
+            TextTarget::Array { index } => {
+                self.text_array.push(array_text_item(text));
+                self.phase = Phase::TextArray { index: index + 1 };
+                worked(bytes, 0)
+            }
+        }
+    }
+
     fn allocate_text_array(&mut self, grant: CosGrant) -> ContentProgramReceipt {
         let count = first_array(&self.operands).len();
         let bytes = count * size_of::<PdfTextArrayItem>();
@@ -445,10 +501,10 @@ impl ContentProgramCursor {
         worked(bytes, 0)
     }
 
-    fn text_array_item(&mut self, index: usize) -> ContentProgramReceipt {
+    fn text_array_item(&mut self, index: usize, fonts: &dyn FontTable) -> ContentProgramReceipt {
         match first_array(&self.operands).get(index) {
             Some(PdfObject::Str(_)) => {
-                return self.start_text(TextTarget::Array { index });
+                return self.start_text(TextTarget::Array { index }, fonts);
             }
             Some(value) => {
                 let Ok(amount) = bounded_number(value) else { return self.defer_unbounded_number(); };

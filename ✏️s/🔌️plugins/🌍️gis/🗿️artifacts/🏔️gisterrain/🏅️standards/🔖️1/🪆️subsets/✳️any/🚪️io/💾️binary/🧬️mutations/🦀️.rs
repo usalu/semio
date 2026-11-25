@@ -37,3 +37,4 @@ impl OpBinary for GisTerrainMutation {
 }
 
 dsl::original_pack_value_operation_receiving!(GisTerrainMutation, tagged_key = COMPONENT_PROTOCOL_SEMIO);
+dsl::artifact_persisted_binary_operation!(GisTerrainMutation);

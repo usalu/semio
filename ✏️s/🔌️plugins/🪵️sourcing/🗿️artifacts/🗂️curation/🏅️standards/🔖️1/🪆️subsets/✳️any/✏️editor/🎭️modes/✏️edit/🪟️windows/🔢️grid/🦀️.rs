@@ -11,10 +11,13 @@ use crate::editor::sourcing::config::SourcingCurationConfig;
 use crate::ObjectKind;
 use semio_plugin::app::WindowKit;
 use semio_plugin::world3d_default_camera;
+use semio_plugin::world3d_scene;
 use semio_plugin::world3d_selection_json;
+use semio_plugin::scene_surface;
+use semio_plugin::WorldSunConfig;
+use crate::editor::sourcing::editor_vocabulary::{SOURCING_OBJECT_GRANULARITY, SOURCING_ROWS_DOMAIN};
 use semio_plugin::BuiltNode;
 use semio_ui_locale::LocalizedLabel;
-use semio_plugin::MeshView;
 use semio_plugin::MeshWindowKit;
 use semio_plugin::SurfaceKind;
 use semio_plugin::UiAssemblyResult;
@@ -69,15 +72,16 @@ fn line_behind_offset(copy_index: usize, cell: f64) -> f64 {
     -(copy_index as f64) * cell * GRID_LINE_BEHIND_SPACING
 }
 
-fn push_kind_copies(instances: &mut Vec<semio_framework_value::DslValue>, kind: &ObjectKind, count: u32, position: [f64; 3], scale: f64, line_behind: bool) {
+fn push_kind_copies(instances: &mut Vec<semio_framework_value::DslValue>, kind: &ObjectKind, count: u32, position: [f64; 3], scale: f64, line_behind: bool, selected: bool) {
     let copies = if line_behind { count.max(1) as usize } else { 1 };
     for copy in 0..copies {
         let z = position[2] + if line_behind { line_behind_offset(copy, SOURCING_CURATION_GRID_CELL) } else { 0.0 };
-        instances.extend(kind_copy_instances_json(kind, copy, [position[0], position[1], z], scale, false));
+        instances.extend(kind_copy_instances_json(kind, copy, [position[0], position[1], z], scale, selected));
     }
 }
 
-pub fn render(document: &CurationSnapshot, cfg: &SourcingCurationConfig, window: &GridWindowConfig, locale: semio_plugin::Locale) -> UiAssemblyResult<BuiltNode> {
+/// 🧊️ The grid scene: every curated row laid out as instances that stand for their kind in the `rows` interaction domain, so a pick, a marquee or a hover selects the kind and the selected kinds draw highlighted.
+pub fn render(document: &CurationSnapshot, cfg: &SourcingCurationConfig, window: &GridWindowConfig, selected_ids: &[String], locale: semio_plugin::Locale) -> UiAssemblyResult<BuiltNode> {
     let rows = curated_grid_rows(document, cfg);
     let display = window.instance_display.as_str();
     let mut meshes = Vec::new();
@@ -96,21 +100,26 @@ pub fn render(document: &CurationSnapshot, cfg: &SourcingCurationConfig, window:
         let (x, z) = grid_placement(row_count, index, SOURCING_CURATION_GRID_CELL);
         let scale = grid_scale(&row.kind.geometry, SOURCING_CURATION_GRID_CELL * 0.8);
         let anchor = [x, 0.0, z];
+        let selected = selected_ids.contains(&row.kind.id);
         match display {
-            GRID_INSTANCE_DISPLAY_REPRESENTATIVE => push_kind_copies(&mut instances, &row.kind, 1, anchor, scale, false),
+            GRID_INSTANCE_DISPLAY_REPRESENTATIVE => push_kind_copies(&mut instances, &row.kind, 1, anchor, scale, false, selected),
             GRID_INSTANCE_DISPLAY_REPRESENTATIVE_WITH_COUNT => {
-                push_kind_copies(&mut instances, &row.kind, 1, anchor, scale, false);
-                append_grid_count_glyph_instances(&mut instances, &row.kind.id, row.count, anchor, SOURCING_CURATION_GRID_CELL);
+                push_kind_copies(&mut instances, &row.kind, 1, anchor, scale, false, selected);
+                append_grid_count_glyph_instances(&mut instances, &row.kind.id, row.count, anchor, SOURCING_CURATION_GRID_CELL, selected);
             }
-            _ => push_kind_copies(&mut instances, &row.kind, row.count, anchor, scale, true),
+            _ => push_kind_copies(&mut instances, &row.kind, row.count, anchor, scale, true, selected),
         }
     }
-    MeshWindowKit::render(&MeshView {
-        camera_json: world3d_default_camera(),
-        meshes_json: semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::Array(meshes)),
-        instances_json: semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::Array(instances)),
-        selection_json: world3d_selection_json("rectangle", &[], None),
-    }, locale)
+    let mut scene = world3d_scene(
+        world3d_default_camera(),
+        semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::Array(meshes)),
+        semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::Array(instances)),
+        world3d_selection_json("rectangle", selected_ids, None),
+        &WorldSunConfig::default(),
+    );
+    scene.domain_id = Some(SOURCING_ROWS_DOMAIN.into());
+    scene.domain_granularity_id = Some(SOURCING_OBJECT_GRANULARITY.into());
+    scene_surface(MeshWindowKit::KIND_ID, semio_plugin::app::SurfaceKind::World3d, &scene, semio_plugin::surface_name(locale, "3D view", "3D-Ansicht"), None)
 }
 //#endregion 🔖️Render
 

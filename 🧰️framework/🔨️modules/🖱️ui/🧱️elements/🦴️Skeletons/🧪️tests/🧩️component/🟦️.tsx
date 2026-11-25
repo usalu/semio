@@ -20,7 +20,10 @@ describe("CanvasSkeleton", () => {
     expect(container.querySelectorAll('[data-window-frame-chip]')).toHaveLength(2);
     for (const stack of container.querySelectorAll('[data-slot="canvas-skeleton-stack"]')) {
       expect(stack.hasAttribute("data-window-frame")).toBe(true);
-      expect(stack.querySelector("[data-window-frame-content]")).not.toBeNull();
+      expect(stack.querySelector('[data-window-frame-content][data-level="window"]')).not.toBeNull();
+      expect(stack.querySelector(':scope > [data-slot="window-chrome-body-surface"].ui-surface[data-level="window"]')).not.toBeNull();
+      expect(stack.querySelectorAll(".ui-surface")).toHaveLength(1);
+      expect(stack.querySelector('[data-window-frame-chip][data-level="pane"]')).not.toBeNull();
       expect(stack.querySelector("[data-window-frame-chip]")?.closest("[data-window-frame]")).toBe(stack);
       expect(stack.querySelector('[data-slot$="gap"]')).toBeNull();
     }

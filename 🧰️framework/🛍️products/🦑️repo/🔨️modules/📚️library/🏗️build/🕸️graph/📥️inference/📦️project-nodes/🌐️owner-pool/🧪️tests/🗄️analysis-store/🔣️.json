@@ -1,0 +1,14 @@
+{
+  "derived": [
+    { "closureStore": "/srv/semio/.cache/b/g/m/inference/selections/8d8f/ce", "analysisStore": "/srv/semio/.cache/b/g/m/inference/selections/8d8f/sa" },
+    { "closureStore": "/srv/semio/.cache/f/owner-pool-closures", "analysisStore": "/srv/semio/.cache/f/sa" }
+  ],
+  "refused": [
+    "ce",
+    "",
+    "./ce",
+    ".cache/b/g/m/inference/ce",
+    "C:\\semio\\.cache\\b\\g\\m\\inference\\selections\\8d8f21d74af11ed12bed7540aa42908f48a1a023e5437e26666ef5722ed50089\\ce"
+  ],
+  "sentFromWindows": "C:\\semio\\.cache\\b\\g\\m\\inference\\selections\\8d8f21d74af11ed12bed7540aa42908f48a1a023e5437e26666ef5722ed50089\\ce"
+}

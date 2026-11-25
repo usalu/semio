@@ -95,6 +95,7 @@ pub enum XlsxMutation {
     RemoveContentType(remove_content_type::RemoveContentType),
 }
 dsl::original_pack_value_operation_receiving!(XlsxMutation);
+dsl::artifact_persisted_binary_operation!(XlsxMutation);
 #[path = "🎯️history-target/🦀️.rs"]
 mod history_target;
 

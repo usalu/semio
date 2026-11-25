@@ -234,14 +234,17 @@ fn work_recipient_posts_the_business_view_without_resident_birth_work() {
         cx.bind_original_work_recipient(&mut work).unwrap();
         cx.bind_original_reserved_recipient(&mut reserved, &mut reserved_work).unwrap();
         cx.consume_fuel(3);
-        let (work_before, kept) = (cx.original_work_units_spent(), cx.retained_progress());
+        let baseline = cx.original_birth_baseline();
         cx.consume_fuel(2);
-        cx.exclude_original_birth(work_before, kept);
+        cx.receive_original_reserved_return(RetainedCloneProgress { copied_items: 1, copied_bytes: 8, ..Default::default() }, 4).unwrap();
+        cx.exclude_original_birth(baseline);
         business = cx.original_work_units_spent();
         remaining = cx.original_source_fuel_remaining();
     }
-    assert_eq!(business, 3);
+    assert_eq!(business, 3 + 4, "the redeemed work stays in the view the reserved observer subtracts from");
     assert_eq!(work, 5 + business);
+    assert_eq!(reserved_work, 7 + 4);
+    assert_eq!(reserved.copied_bytes, 8);
     caller.settle_lent_fuel(remaining);
     std::mem::forget(caller);
 }

@@ -55,7 +55,7 @@
         "ownerWave": 48,
         "ownerWaveMaximum": 960,
         "ownerWaveGrowth": 4,
-        "ownerWaveBudgetMilliseconds": 300000,
+        "ownerWaveBudgetMilliseconds": 900000,
         "ownerAhead": 480,
         "textMaximumCharacters": 4096,
         "reasonMaximumCharacters": 256,

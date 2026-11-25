@@ -15,7 +15,7 @@ use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedClonePro
 use semio_framework::{ActionArgDef, FaultFrom};
 use semio_plugin_decl_app::ArtifactApp;
 #[cfg(test)]
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 #[cfg(test)]
 use semio_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
 use pack::snapshot::ArtifactPack;
@@ -37,7 +37,6 @@ use semio_plugin_instance_extension::InstanceExtension;
 use semio_plugin_instance_docs::docs_plugin_app_impl::history_changed_event;
 use semio_plugin_decl_emission::ActionMeta;
 use semio_plugin_command::{CommandLogAppend, HISTORY_STEP_BLOCKED_CODE};
-use semio_plugin_document_media::ActiveDocumentArchiveLoadState;
 use semio_plugin_interaction::interaction_topology::INTERACTION_ACTION_IDS;
 use semio_plugin_job::reserved_jobs::HISTORY_ACTION_IDS;
 use semio_framework::{ActionKind, ViewModel, REVERT_TO_COMMAND_ACTION_ID};

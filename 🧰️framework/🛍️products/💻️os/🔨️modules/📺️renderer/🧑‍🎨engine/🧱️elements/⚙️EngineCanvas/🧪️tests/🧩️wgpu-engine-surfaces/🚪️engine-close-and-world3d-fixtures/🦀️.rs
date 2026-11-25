@@ -51,7 +51,9 @@ fn paint_scene(scene: &UiComponentSceneNode, bounds: Rect, states: semio_rendere
     let mut collapsed = HashMap::new();
     let mut selects = HashMap::new();
     let mut world3d_states = states;
+    let mut caller = crate::fixture_original_turn::FixtureTurnV1::wide(ui_contract::UI_WORKER_RETIREMENT_POLICY, 1);
     let mut world_resources = World3dBuildContext::new(WorldCursorWakeAuthority::new());
+    assert!((0..4096).any(|_| caller.turn_funded(1 << 20, |cx| world_resources.prepare_step(cx)).expect("original world resource preparation")), "the world resources prepare within their turn ceiling");
     {
         let mut ctx = semio_renderer_wgpu_scene_canvas2d::ui_image_loading::framework_widget_context(&mut draw, None, &mut atlas, Some(&icons), &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, 0.0);
         let mut hosts = semio_renderer_wgpu_scene_state::SceneEngineHosts { chrome_labels: semio_renderer_wgpu_scene_state::SceneChromeLabels::english(), world3d_states: &mut world3d_states, world_resources: &mut world_resources, window_id: "law-window" };
@@ -64,6 +66,8 @@ fn paint_scene(scene: &UiComponentSceneNode, bounds: Rect, states: semio_rendere
             }
         }
     }
+    caller.retire_world(&mut world_resources);
+    caller.finish();
     PaintedFrame { draw, world3d_states }
 }
 

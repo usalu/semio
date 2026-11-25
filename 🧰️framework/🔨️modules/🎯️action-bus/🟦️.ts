@@ -83,7 +83,8 @@ export function partitionWindowMeasures(measures: readonly WindowMeasure[], acti
  * itself. An id declared by ANY window kind is that window's authored declaration and is never
  * re-offered from the app roster. Hand-written twin of Rust `window_kind_actions`
  * (`🛂️manifest/🦀️.rs`); the roster lives on the app because copying it into every window kind made
- * the package descriptor grow as `apps × window kinds × actions`.
+ * the package descriptor grow as `apps × window kinds × actions`. `app` is a RESOLVED app
+ * (`resolveManifestApp`, `🛂️manifest/🧺️action-sets/🟦️.ts`): the action sets of its plugin are already part of its roster.
  */
 export function resolveWindowActions(
   app: { readonly windowKinds: readonly { readonly actions?: readonly ActionDefinition[] }[]; readonly actions?: readonly ActionDefinition[] },

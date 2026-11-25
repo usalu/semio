@@ -982,9 +982,9 @@
       "thermalSpanK": 25,
       "scale": 50
     },
-    "shared-heat-pump-heating-sweep": {
+    "shared-heat-pump-heating-modulation": {
       "asset": "heat-pump-outdoor-unit",
-      "clip": "heating-sweep",
+      "clip": "heating-modulation",
       "view": "thermal",
       "environment": "winter-overcast",
       "viewpoint": "elevation",

@@ -13,20 +13,104 @@
    "de": "Ein gebrauchter Halogen-Deckenfluter der 1990er Jahre aus einer Haushaltsauflösung, 1,80 m hoch: ein gewölbter schwarzer Stahlfußteller Ø0,29 m über seinem Ballast, eine Stange Ø25 mm aus drei verschraubten Längen, ein Drehdimmer auf 0,99 m, dessen verlorener Knopf durch einen grauen von einem anderen Gerät ersetzt ist, ein verchromter Reflektor mit einem 300-W-R7s-Halogenstab unter einem Schutzgitter und eine Pressglasschale Ø0,36 m, die vergilbt ist und ein paar tote Insekten enthält; der Lack ist am Fußrand abgeplatzt und an der Stange verkratzt, und das Kabel trägt 0,2 m vom Fuß eine Reparatur mit schwarzem Isolierband. Er lagert auf einem Kartonbogen, wird an der Stange aufrecht getragen und im Wohnzimmer eingeschaltet, gedimmt und auf Standsicherheit geprüft."
   },
   "tags": [
-   "used",
-   "household",
-   "second-hand",
-   "living",
-   "floor-lamp",
-   "uplighter",
-   "halogen",
-   "dimmer",
-   "glass",
-   "steel",
-   "luminaire",
-   "internal-gain",
-   "electrical",
-   "heat-source"
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "household",
+    "title": {
+     "en": "household",
+     "de": "Haushalt"
+    }
+   },
+   {
+    "id": "second-hand",
+    "title": {
+     "en": "second-hand",
+     "de": "Second-Hand"
+    }
+   },
+   {
+    "id": "living",
+    "title": {
+     "en": "living",
+     "de": "Wohnen"
+    }
+   },
+   {
+    "id": "floor-lamp",
+    "title": {
+     "en": "floor lamp",
+     "de": "Stehleuchte"
+    }
+   },
+   {
+    "id": "uplighter",
+    "title": {
+     "en": "uplighter",
+     "de": "Deckenfluter"
+    }
+   },
+   {
+    "id": "halogen",
+    "title": {
+     "en": "halogen",
+     "de": "Halogen"
+    }
+   },
+   {
+    "id": "dimmer",
+    "title": {
+     "en": "dimmer",
+     "de": "Dimmer"
+    }
+   },
+   {
+    "id": "glass",
+    "title": {
+     "en": "glass",
+     "de": "Glas"
+    }
+   },
+   {
+    "id": "steel",
+    "title": {
+     "en": "steel",
+     "de": "Stahl"
+    }
+   },
+   {
+    "id": "luminaire",
+    "title": {
+     "en": "luminaire",
+     "de": "Leuchte"
+    }
+   },
+   {
+    "id": "internal-gain",
+    "title": {
+     "en": "internal gain",
+     "de": "innere Wärmelast"
+    }
+   },
+   {
+    "id": "electrical",
+    "title": {
+     "en": "electrical",
+     "de": "Elektro"
+    }
+   },
+   {
+    "id": "heat-source",
+    "title": {
+     "en": "heat source",
+     "de": "Wärmequelle"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content (used household objects wave, author 28)",

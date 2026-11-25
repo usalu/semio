@@ -117,3 +117,28 @@ async fn results_panel_without_a_captured_window_offers_a_toggle_and_a_focus_hin
     assert!(json.contains("fem3d-play-results.transport.play"), "{json}");
     assert!(json.matches(labels().focus_results_hint.as_str()).count() >= 2, "the toggle describes its unknown state: {json}");
 }
+
+/// 🎯️ LAW: the source select offers canonical result-source identities (the only values `setResultDisplay` admits), and a window showing one of them renders it as the selected value, so the combobox text follows the choice.
+#[semio_framework_async_macros::async_test]
+async fn results_panel_source_options_are_canonical_identities_and_the_selection_follows() {
+    let doc = boot();
+    let identities: Vec<String> = doc.load_cases.iter().map(|case| semio_s_fem_analyses_model::encode_result_source_parts("loadCase", &case.id).expect("identity")).chain(doc.combinations.iter().map(|combination| semio_s_fem_analyses_model::encode_result_source_parts("combination", &combination.id).expect("identity"))).collect();
+    assert!(identities.len() >= 2, "the boot document offers several sources");
+    let json = panel_json(&Fem3dResultsWindowConfig::default());
+    for identity in &identities {
+        assert!(json.contains(identity.as_str()), "option {identity} missing: {json}");
+        semio_s_fem_analyses_model::validate_result_source_identity(identity).expect("canonical identity");
+    }
+    let chosen = &identities[1];
+    let followed = panel_json(&Fem3dResultsWindowConfig { result_source_id: Some(chosen.clone()), ..Fem3dResultsWindowConfig::default() });
+    assert!(followed.matches(chosen.as_str()).count() > json.matches(chosen.as_str()).count(), "the select value follows the chosen source: {followed}");
+}
+
+/// 🎯️ LAW: the mode select and the mode index input render the window's chosen values.
+#[semio_framework_async_macros::async_test]
+async fn results_panel_renders_the_chosen_mode_and_index() {
+    let idle = panel_json(&Fem3dResultsWindowConfig::default());
+    let chosen = panel_json(&Fem3dResultsWindowConfig { result_mode: semio_s_fem_app_surface::ResultMode::Modal, result_mode_index: 3, ..Fem3dResultsWindowConfig::default() });
+    assert_ne!(idle, chosen);
+    assert!(chosen.contains("\"modal\"") && chosen.contains("\"3\""), "{chosen}");
+}

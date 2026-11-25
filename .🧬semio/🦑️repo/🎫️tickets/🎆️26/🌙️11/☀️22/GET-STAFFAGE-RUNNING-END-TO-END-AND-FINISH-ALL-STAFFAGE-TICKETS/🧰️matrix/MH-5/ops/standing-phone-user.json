@@ -89,5 +89,199 @@
   "scale": "500",
   "id": "sil-head",
   "bone": "head"
+ },
+ {
+  "op": "set",
+  "scale": "500",
+  "view": "front",
+  "id": "sil-head",
+  "bone": "head",
+  "why": "the 1:500 head keeps its full width in front and plan (the tapered span of extrude drew it 90 mm wide at the neck and left the ear anchor 34 mm outside)",
+  "set": {
+   "kind": "poly",
+   "points": [
+    [
+     -0.0034,
+     0.0631
+    ],
+    [
+     0.0005,
+     0.0575
+    ],
+    [
+     -0.071,
+     -0.0128
+    ],
+    [
+     -0.071,
+     -0.0768
+    ],
+    [
+     -0.016,
+     -0.0968
+    ],
+    [
+     0.059,
+     -0.1028
+    ],
+    [
+     0.1064,
+     -0.0946
+    ],
+    [
+     0.113,
+     -0.1041
+    ],
+    [
+     0.1405,
+     -0.0795
+    ],
+    [
+     0.1603,
+     -0.0395
+    ],
+    [
+     0.1641,
+     0.0106
+    ],
+    [
+     0.1414,
+     0.0635
+    ],
+    [
+     0.1018,
+     0.1001
+    ],
+    [
+     0.0595,
+     0.1054
+    ],
+    [
+     0.0224,
+     0.0902
+    ]
+   ],
+   "closed": true,
+   "x": null,
+   "y": null,
+   "w": null,
+   "h": null,
+   "x0": null,
+   "y0": null,
+   "x1": null,
+   "y1": null,
+   "r0": null,
+   "r1": null,
+   "r": null,
+   "cx": null,
+   "cy": null,
+   "rx": null,
+   "ry": null,
+   "d": null,
+   "followTip": null,
+   "solid": {
+    "kind": "extruded",
+    "sweep": "w",
+    "z0": -0.088,
+    "z1": 0.086
+   }
+  }
+ },
+ {
+  "op": "set",
+  "scale": "500",
+  "view": "plan",
+  "id": "sil-head",
+  "bone": "head",
+  "why": "the 1:500 head keeps its full width in front and plan (the tapered span of extrude drew it 90 mm wide at the neck and left the ear anchor 34 mm outside)",
+  "set": {
+   "kind": "poly",
+   "points": [
+    [
+     -0.0034,
+     0.0631
+    ],
+    [
+     0.0005,
+     0.0575
+    ],
+    [
+     -0.071,
+     -0.0128
+    ],
+    [
+     -0.071,
+     -0.0768
+    ],
+    [
+     -0.016,
+     -0.0968
+    ],
+    [
+     0.059,
+     -0.1028
+    ],
+    [
+     0.1064,
+     -0.0946
+    ],
+    [
+     0.113,
+     -0.1041
+    ],
+    [
+     0.1405,
+     -0.0795
+    ],
+    [
+     0.1603,
+     -0.0395
+    ],
+    [
+     0.1641,
+     0.0106
+    ],
+    [
+     0.1414,
+     0.0635
+    ],
+    [
+     0.1018,
+     0.1001
+    ],
+    [
+     0.0595,
+     0.1054
+    ],
+    [
+     0.0224,
+     0.0902
+    ]
+   ],
+   "closed": true,
+   "x": null,
+   "y": null,
+   "w": null,
+   "h": null,
+   "x0": null,
+   "y0": null,
+   "x1": null,
+   "y1": null,
+   "r0": null,
+   "r1": null,
+   "r": null,
+   "cx": null,
+   "cy": null,
+   "rx": null,
+   "ry": null,
+   "d": null,
+   "followTip": null,
+   "solid": {
+    "kind": "extruded",
+    "sweep": "w",
+    "z0": -0.088,
+    "z1": 0.086
+   }
+  }
  }
 ]

@@ -13,14 +13,62 @@
    "de": "Ein ausgewachsener Echter Lavendel (Lavandula angustifolia) in voller Juliblüte: ein dichtes, graugrünes Polster aus linealen Blättern, 0.80 m breit und 0,38 m hoch, auf einem verholzten Wurzelhals, gekrönt von etwa fünfundfünfzig schlanken Blütenstielen, die sich fächerförmig nach außen neigen und violette Ähren bis 0.60 m tragen; der immergrüne Halbstrauch der Kräutergärten, Kiesbeete und mediterranen Pflanzungen."
   },
   "tags": [
-   "shrub",
-   "subshrub",
-   "evergreen",
-   "herb",
-   "flowering",
-   "mediterranean",
-   "wind",
-   "transpiration"
+   {
+    "id": "shrub",
+    "title": {
+     "en": "shrub",
+     "de": "Strauch"
+    }
+   },
+   {
+    "id": "subshrub",
+    "title": {
+     "en": "subshrub",
+     "de": "Halbstrauch"
+    }
+   },
+   {
+    "id": "evergreen",
+    "title": {
+     "en": "evergreen",
+     "de": "immergrün"
+    }
+   },
+   {
+    "id": "herb",
+    "title": {
+     "en": "herb",
+     "de": "Kraut"
+    }
+   },
+   {
+    "id": "flowering",
+    "title": {
+     "en": "flowering",
+     "de": "blühend"
+    }
+   },
+   {
+    "id": "mediterranean",
+    "title": {
+     "en": "mediterranean",
+     "de": "mediterran"
+    }
+   },
+   {
+    "id": "wind",
+    "title": {
+     "en": "wind",
+     "de": "Wind"
+    }
+   },
+   {
+    "id": "transpiration",
+    "title": {
+     "en": "transpiration",
+     "de": "Transpiration"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage plant worker PW-14",
@@ -131,8 +179,8 @@
       "de": "Verholzter Wurzelhals"
      },
      "x": -0.04,
-     "y": 0.0,
-     "angleDeg": 0.0,
+     "y": 0,
+     "angleDeg": 0,
      "lengthM": 0.08,
      "joint": {
       "type": "fixed"
@@ -147,7 +195,7 @@
      },
      "section": {
       "areaM2": 0.0019635,
-      "secondMomentM4": 3.06796e-07,
+      "secondMomentM4": 3.06796e-7,
       "extremeFibreM": 0.025,
       "material": "lavender-wood",
       "title": {
@@ -164,7 +212,7 @@
       "de": "Verholzter vorderer Trieb"
      },
      "x": 0.055,
-     "y": 0.0,
+     "y": 0,
      "angleDeg": 57.9946,
      "lengthM": 0.1415,
      "joint": {
@@ -182,7 +230,7 @@
      },
      "section": {
       "areaM2": 0.000452389,
-      "secondMomentM4": 1.6286e-08,
+      "secondMomentM4": 1.6286e-8,
       "extremeFibreM": 0.012,
       "material": "lavender-wood",
       "title": {
@@ -199,7 +247,7 @@
       "de": "Vorderer Polstersektor"
      },
      "x": 0.1415,
-     "y": 0.0,
+     "y": 0,
      "angleDeg": 8.0429,
      "lengthM": 0.197,
      "joint": {
@@ -224,7 +272,7 @@
       "de": "Blütenstiele des vorderen Sektors"
      },
      "x": 0.197,
-     "y": 0.0,
+     "y": 0,
      "angleDeg": 11.9625,
      "lengthM": 0.24,
      "joint": {
@@ -249,7 +297,7 @@
       "de": "Verholzter hinterer Trieb"
      },
      "x": 0.025,
-     "y": 0.0,
+     "y": 0,
      "angleDeg": 122.0054,
      "lengthM": 0.1415,
      "joint": {
@@ -267,7 +315,7 @@
      },
      "section": {
       "areaM2": 0.000452389,
-      "secondMomentM4": 1.6286e-08,
+      "secondMomentM4": 1.6286e-8,
       "extremeFibreM": 0.012,
       "material": "lavender-wood",
       "title": {
@@ -284,7 +332,7 @@
       "de": "Hinterer Polstersektor"
      },
      "x": 0.1415,
-     "y": 0.0,
+     "y": 0,
      "angleDeg": -8.0429,
      "lengthM": 0.197,
      "joint": {
@@ -309,7 +357,7 @@
       "de": "Blütenstiele des hinteren Sektors"
      },
      "x": 0.197,
-     "y": 0.0,
+     "y": 0,
      "angleDeg": -11.9625,
      "lengthM": 0.24,
      "joint": {
@@ -334,9 +382,9 @@
       "de": "Verholzter linker Trieb"
      },
      "x": 0.04,
-     "y": 0.0,
+     "y": 0,
      "z": 0.02,
-     "angleDeg": 90.0,
+     "angleDeg": 90,
      "lengthM": 0.13,
      "joint": {
       "type": "revolute",
@@ -353,7 +401,7 @@
      },
      "section": {
       "areaM2": 0.000452389,
-      "secondMomentM4": 1.6286e-08,
+      "secondMomentM4": 1.6286e-8,
       "extremeFibreM": 0.012,
       "material": "lavender-wood",
       "title": {
@@ -370,8 +418,8 @@
       "de": "Linker Polstersektor"
      },
      "x": 0.13,
-     "y": 0.0,
-     "angleDeg": 0.0,
+     "y": 0,
+     "angleDeg": 0,
      "lengthM": 0.17,
      "joint": {
       "type": "revolute",
@@ -395,9 +443,9 @@
       "de": "Blütenstiele des linken Sektors"
      },
      "x": 0.17,
-     "y": 0.0,
+     "y": 0,
      "z": 0.14,
-     "angleDeg": 0.0,
+     "angleDeg": 0,
      "lengthM": 0.24,
      "joint": {
       "type": "revolute",
@@ -421,9 +469,9 @@
       "de": "Verholzter rechter Trieb"
      },
      "x": 0.04,
-     "y": 0.0,
+     "y": 0,
      "z": -0.02,
-     "angleDeg": 90.0,
+     "angleDeg": 90,
      "lengthM": 0.13,
      "joint": {
       "type": "revolute",
@@ -440,7 +488,7 @@
      },
      "section": {
       "areaM2": 0.000452389,
-      "secondMomentM4": 1.6286e-08,
+      "secondMomentM4": 1.6286e-8,
       "extremeFibreM": 0.012,
       "material": "lavender-wood",
       "title": {
@@ -457,8 +505,8 @@
       "de": "Rechter Polstersektor"
      },
      "x": 0.13,
-     "y": 0.0,
-     "angleDeg": 0.0,
+     "y": 0,
+     "angleDeg": 0,
      "lengthM": 0.17,
      "joint": {
       "type": "revolute",
@@ -482,9 +530,9 @@
       "de": "Blütenstiele des rechten Sektors"
      },
      "x": 0.17,
-     "y": 0.0,
+     "y": 0,
      "z": -0.14,
-     "angleDeg": 0.0,
+     "angleDeg": 0,
      "lengthM": 0.24,
      "joint": {
       "type": "revolute",
@@ -508,8 +556,8 @@
       "de": "Verholzter mittlerer Trieb"
      },
      "x": 0.04,
-     "y": 0.0,
-     "angleDeg": 90.0,
+     "y": 0,
+     "angleDeg": 90,
      "lengthM": 0.17,
      "joint": {
       "type": "revolute",
@@ -526,7 +574,7 @@
      },
      "section": {
       "areaM2": 0.000452389,
-      "secondMomentM4": 1.6286e-08,
+      "secondMomentM4": 1.6286e-8,
       "extremeFibreM": 0.012,
       "material": "lavender-wood",
       "title": {
@@ -543,8 +591,8 @@
       "de": "Mittlerer Polstersektor"
      },
      "x": 0.17,
-     "y": 0.0,
-     "angleDeg": 0.0,
+     "y": 0,
+     "angleDeg": 0,
      "lengthM": 0.19,
      "joint": {
       "type": "revolute",
@@ -568,8 +616,8 @@
       "de": "Blütenstiele des mittleren Sektors"
      },
      "x": 0.19,
-     "y": 0.0,
-     "angleDeg": 0.0,
+     "y": 0,
+     "angleDeg": 0,
      "lengthM": 0.225,
      "joint": {
       "type": "revolute",
@@ -630,7 +678,7 @@
     "id": "tp-cushion-left",
     "bone": "cushion-left",
     "x": 0.07,
-    "y": 0.0,
+    "y": 0,
     "z": 0.16,
     "kind": "emitter",
     "title": {
@@ -642,7 +690,7 @@
     "id": "tp-cushion-right",
     "bone": "cushion-right",
     "x": 0.07,
-    "y": 0.0,
+    "y": 0,
     "z": -0.16,
     "kind": "emitter",
     "title": {
@@ -654,7 +702,7 @@
     "id": "tp-cushion-centre",
     "bone": "cushion-centre",
     "x": 0.13,
-    "y": 0.0,
+    "y": 0,
     "kind": "emitter",
     "title": {
      "en": "Transpiration of the central cushion sector",
@@ -761,7 +809,7 @@
       },
       "bone": "cushion-front",
       "x": 0.1182,
-      "y": 0.0,
+      "y": 0,
       "fxN": 0.045,
       "fyN": 0,
       "source": "literature",
@@ -776,7 +824,7 @@
       },
       "bone": "spikes-front",
       "x": 0.16,
-      "y": 0.0,
+      "y": 0,
       "fxN": 0.021,
       "fyN": 0,
       "source": "literature",
@@ -791,7 +839,7 @@
       },
       "bone": "cushion-back",
       "x": 0.1182,
-      "y": 0.0,
+      "y": 0,
       "fxN": 0.045,
       "fyN": 0,
       "source": "literature",
@@ -806,7 +854,7 @@
       },
       "bone": "spikes-back",
       "x": 0.16,
-      "y": 0.0,
+      "y": 0,
       "fxN": 0.021,
       "fyN": 0,
       "source": "literature",
@@ -821,7 +869,7 @@
       },
       "bone": "cushion-left",
       "x": 0.102,
-      "y": 0.0,
+      "y": 0,
       "fxN": 0.045,
       "fyN": 0,
       "source": "literature",
@@ -836,7 +884,7 @@
       },
       "bone": "spikes-left",
       "x": 0.16,
-      "y": 0.0,
+      "y": 0,
       "fxN": 0.021,
       "fyN": 0,
       "source": "literature",
@@ -851,7 +899,7 @@
       },
       "bone": "cushion-right",
       "x": 0.102,
-      "y": 0.0,
+      "y": 0,
       "fxN": 0.045,
       "fyN": 0,
       "source": "literature",
@@ -866,7 +914,7 @@
       },
       "bone": "spikes-right",
       "x": 0.16,
-      "y": 0.0,
+      "y": 0,
       "fxN": 0.021,
       "fyN": 0,
       "source": "literature",
@@ -881,7 +929,7 @@
       },
       "bone": "cushion-centre",
       "x": 0.114,
-      "y": 0.0,
+      "y": 0,
       "fxN": 0.045,
       "fyN": 0,
       "source": "literature",
@@ -896,7 +944,7 @@
       },
       "bone": "spikes-centre",
       "x": 0.16,
-      "y": 0.0,
+      "y": 0,
       "fxN": 0.021,
       "fyN": 0,
       "source": "literature",
@@ -993,7 +1041,7 @@
       },
       "bone": "cushion-front",
       "x": 0.1182,
-      "y": 0.0,
+      "y": 0,
       "fxN": 0.206,
       "fyN": 0,
       "source": "literature",
@@ -1008,7 +1056,7 @@
       },
       "bone": "spikes-front",
       "x": 0.16,
-      "y": 0.0,
+      "y": 0,
       "fxN": 0.13,
       "fyN": 0,
       "source": "literature",
@@ -1023,7 +1071,7 @@
       },
       "bone": "cushion-back",
       "x": 0.1182,
-      "y": 0.0,
+      "y": 0,
       "fxN": 0.206,
       "fyN": 0,
       "source": "literature",
@@ -1038,7 +1086,7 @@
       },
       "bone": "spikes-back",
       "x": 0.16,
-      "y": 0.0,
+      "y": 0,
       "fxN": 0.13,
       "fyN": 0,
       "source": "literature",
@@ -1053,7 +1101,7 @@
       },
       "bone": "cushion-left",
       "x": 0.102,
-      "y": 0.0,
+      "y": 0,
       "fxN": 0.206,
       "fyN": 0,
       "source": "literature",
@@ -1068,7 +1116,7 @@
       },
       "bone": "spikes-left",
       "x": 0.16,
-      "y": 0.0,
+      "y": 0,
       "fxN": 0.13,
       "fyN": 0,
       "source": "literature",
@@ -1083,7 +1131,7 @@
       },
       "bone": "cushion-right",
       "x": 0.102,
-      "y": 0.0,
+      "y": 0,
       "fxN": 0.206,
       "fyN": 0,
       "source": "literature",
@@ -1098,7 +1146,7 @@
       },
       "bone": "spikes-right",
       "x": 0.16,
-      "y": 0.0,
+      "y": 0,
       "fxN": 0.13,
       "fyN": 0,
       "source": "literature",
@@ -1113,7 +1161,7 @@
       },
       "bone": "cushion-centre",
       "x": 0.114,
-      "y": 0.0,
+      "y": 0,
       "fxN": 0.206,
       "fyN": 0,
       "source": "literature",
@@ -1128,7 +1176,7 @@
       },
       "bone": "spikes-centre",
       "x": 0.16,
-      "y": 0.0,
+      "y": 0,
       "fxN": 0.13,
       "fyN": 0,
       "source": "literature",
@@ -1209,7 +1257,7 @@
       },
       "stem-bark": {
        "exposedFraction": 1,
-       "sunlitFraction": 0.0,
+       "sunlitFraction": 0,
        "wettedness": 0.3
       }
      },
@@ -1228,7 +1276,7 @@
       },
       "bone": "cushion-front",
       "x": 0.1182,
-      "y": 0.0,
+      "y": 0,
       "fxN": 1.168,
       "fyN": 0,
       "source": "literature",
@@ -1243,7 +1291,7 @@
       },
       "bone": "spikes-front",
       "x": 0.16,
-      "y": 0.0,
+      "y": 0,
       "fxN": 0.785,
       "fyN": 0,
       "source": "literature",
@@ -1258,7 +1306,7 @@
       },
       "bone": "cushion-back",
       "x": 0.1182,
-      "y": 0.0,
+      "y": 0,
       "fxN": 1.168,
       "fyN": 0,
       "source": "literature",
@@ -1273,7 +1321,7 @@
       },
       "bone": "spikes-back",
       "x": 0.16,
-      "y": 0.0,
+      "y": 0,
       "fxN": 0.785,
       "fyN": 0,
       "source": "literature",
@@ -1288,7 +1336,7 @@
       },
       "bone": "cushion-left",
       "x": 0.102,
-      "y": 0.0,
+      "y": 0,
       "fxN": 1.168,
       "fyN": 0,
       "source": "literature",
@@ -1303,7 +1351,7 @@
       },
       "bone": "spikes-left",
       "x": 0.16,
-      "y": 0.0,
+      "y": 0,
       "fxN": 0.785,
       "fyN": 0,
       "source": "literature",
@@ -1318,7 +1366,7 @@
       },
       "bone": "cushion-right",
       "x": 0.102,
-      "y": 0.0,
+      "y": 0,
       "fxN": 1.168,
       "fyN": 0,
       "source": "literature",
@@ -1333,7 +1381,7 @@
       },
       "bone": "spikes-right",
       "x": 0.16,
-      "y": 0.0,
+      "y": 0,
       "fxN": 0.785,
       "fyN": 0,
       "source": "literature",
@@ -1348,7 +1396,7 @@
       },
       "bone": "cushion-centre",
       "x": 0.114,
-      "y": 0.0,
+      "y": 0,
       "fxN": 1.168,
       "fyN": 0,
       "source": "literature",
@@ -1363,7 +1411,7 @@
       },
       "bone": "spikes-centre",
       "x": 0.16,
-      "y": 0.0,
+      "y": 0,
       "fxN": 0.785,
       "fyN": 0,
       "source": "literature",
@@ -1410,7 +1458,7 @@
      "regions": {
       "leaf-cushion": {
        "exposedFraction": 1,
-       "sunlitFraction": 0.0,
+       "sunlitFraction": 0,
        "wettedness": 0.5
       },
       "flower-spikes": {
@@ -1420,7 +1468,7 @@
       },
       "stem-bark": {
        "exposedFraction": 1,
-       "sunlitFraction": 0.0,
+       "sunlitFraction": 0,
        "wettedness": 0.3
       }
      },
@@ -1439,7 +1487,7 @@
       },
       "bone": "cushion-front",
       "x": 0.1182,
-      "y": 0.0,
+      "y": 0,
       "fxN": 0,
       "fyN": -29,
       "source": "authored-estimate",
@@ -1454,7 +1502,7 @@
       },
       "bone": "cushion-back",
       "x": 0.1182,
-      "y": 0.0,
+      "y": 0,
       "fxN": 0,
       "fyN": -29,
       "source": "authored-estimate",
@@ -1469,7 +1517,7 @@
       },
       "bone": "cushion-left",
       "x": 0.102,
-      "y": 0.0,
+      "y": 0,
       "fxN": 0,
       "fyN": -29,
       "source": "authored-estimate",
@@ -1484,7 +1532,7 @@
       },
       "bone": "cushion-right",
       "x": 0.102,
-      "y": 0.0,
+      "y": 0,
       "fxN": 0,
       "fyN": -29,
       "source": "authored-estimate",
@@ -1499,7 +1547,7 @@
       },
       "bone": "cushion-centre",
       "x": 0.114,
-      "y": 0.0,
+      "y": 0,
       "fxN": 0,
       "fyN": -29,
       "source": "authored-estimate",
@@ -1525,7 +1573,7 @@
     "rootMotion": "none",
     "keys": [
      {
-      "t": 0.0,
+      "t": 0,
       "pose": "windy",
       "ease": "smooth",
       "bones": {
@@ -1542,7 +1590,7 @@
         "angleDeg": -0.5181
        },
        "cushion-back": {
-        "angleDeg": -1.0
+        "angleDeg": -1
        },
        "spikes-back": {
         "angleDeg": -5.2412
@@ -1554,7 +1602,7 @@
         "angleDeg": -1.658
        },
        "spikes-left": {
-        "angleDeg": -9.0
+        "angleDeg": -9
        },
        "stem-right": {
         "angleDeg": -0.95
@@ -1673,7 +1721,7 @@
         "angleDeg": -0.9026
        },
        "cushion-centre": {
-        "angleDeg": -2.0
+        "angleDeg": -2
        },
        "spikes-centre": {
         "angleDeg": -5.0608
@@ -1698,7 +1746,7 @@
         "angleDeg": -0.6974
        },
        "cushion-back": {
-        "angleDeg": -2.0
+        "angleDeg": -2
        },
        "spikes-back": {
         "angleDeg": -12.7588
@@ -1710,7 +1758,7 @@
         "angleDeg": -2.9397
        },
        "spikes-left": {
-        "angleDeg": -9.0
+        "angleDeg": -9
        },
        "stem-right": {
         "angleDeg": -1.0598
@@ -1829,7 +1877,7 @@
         "angleDeg": -0.5181
        },
        "cushion-centre": {
-        "angleDeg": -1.0
+        "angleDeg": -1
        },
        "spikes-centre": {
         "angleDeg": -12.9392
@@ -1854,7 +1902,7 @@
         "angleDeg": -1.0819
        },
        "cushion-back": {
-        "angleDeg": -3.0
+        "angleDeg": -3
        },
        "spikes-back": {
         "angleDeg": -5.2412
@@ -1866,7 +1914,7 @@
         "angleDeg": -2.342
        },
        "spikes-left": {
-        "angleDeg": -9.0
+        "angleDeg": -9
        },
        "stem-right": {
         "angleDeg": -0.65
@@ -1985,7 +2033,7 @@
         "angleDeg": -0.6974
        },
        "cushion-centre": {
-        "angleDeg": -2.0
+        "angleDeg": -2
        },
        "spikes-centre": {
         "angleDeg": -5.0608
@@ -2010,7 +2058,7 @@
         "angleDeg": -0.9026
        },
        "cushion-back": {
-        "angleDeg": -2.0
+        "angleDeg": -2
        },
        "spikes-back": {
         "angleDeg": -12.7588
@@ -2022,7 +2070,7 @@
         "angleDeg": -1.0603
        },
        "spikes-left": {
-        "angleDeg": -9.0
+        "angleDeg": -9
        },
        "stem-right": {
         "angleDeg": -0.5402
@@ -2045,7 +2093,7 @@
       }
      },
      {
-      "t": 1.0,
+      "t": 1,
       "pose": "windy",
       "ease": "smooth",
       "bones": {
@@ -2141,7 +2189,7 @@
         "angleDeg": -1.0819
        },
        "cushion-centre": {
-        "angleDeg": -3.0
+        "angleDeg": -3
        },
        "spikes-centre": {
         "angleDeg": -12.9392
@@ -2166,7 +2214,7 @@
         "angleDeg": -0.5181
        },
        "cushion-back": {
-        "angleDeg": -1.0
+        "angleDeg": -1
        },
        "spikes-back": {
         "angleDeg": -5.2412
@@ -2178,7 +2226,7 @@
         "angleDeg": -1.658
        },
        "spikes-left": {
-        "angleDeg": -9.0
+        "angleDeg": -9
        },
        "stem-right": {
         "angleDeg": -0.95
@@ -2393,7 +2441,7 @@
         "angleDeg": -2.8
        },
        "spikes-front": {
-        "angleDeg": -12.0
+        "angleDeg": -12
        },
        "stem-back": {
         "angleDeg": -1.1
@@ -2402,7 +2450,7 @@
         "angleDeg": -2.8
        },
        "spikes-back": {
-        "angleDeg": -12.0
+        "angleDeg": -12
        },
        "stem-left": {
         "angleDeg": -1.1
@@ -2411,7 +2459,7 @@
         "angleDeg": -2.8
        },
        "spikes-left": {
-        "angleDeg": -12.0
+        "angleDeg": -12
        },
        "stem-right": {
         "angleDeg": -1.1
@@ -2420,7 +2468,7 @@
         "angleDeg": -2.8
        },
        "spikes-right": {
-        "angleDeg": -12.0
+        "angleDeg": -12
        },
        "stem-centre": {
         "angleDeg": -1.1
@@ -2429,7 +2477,7 @@
         "angleDeg": -2.8
        },
        "spikes-centre": {
-        "angleDeg": -12.0
+        "angleDeg": -12
        }
       }
      },
@@ -3128,11 +3176,11 @@
       "keys": [
        {
         "t": 0,
-        "v": 0.0
+        "v": 0
        },
        {
         "t": 5,
-        "v": 0.0
+        "v": 0
        },
        {
         "t": 7,
@@ -3156,11 +3204,11 @@
        },
        {
         "t": 20,
-        "v": 0.0
+        "v": 0
        },
        {
         "t": 24,
-        "v": 0.0
+        "v": 0
        }
       ]
      },
@@ -3170,11 +3218,11 @@
       "keys": [
        {
         "t": 0,
-        "v": 0.0
+        "v": 0
        },
        {
         "t": 5,
-        "v": 0.0
+        "v": 0
        },
        {
         "t": 7,
@@ -3198,11 +3246,11 @@
        },
        {
         "t": 20,
-        "v": 0.0
+        "v": 0
        },
        {
         "t": 24,
-        "v": 0.0
+        "v": 0
        }
       ]
      },
@@ -3212,11 +3260,11 @@
       "keys": [
        {
         "t": 0,
-        "v": 0.0
+        "v": 0
        },
        {
         "t": 5,
-        "v": 0.0
+        "v": 0
        },
        {
         "t": 7,
@@ -3240,11 +3288,11 @@
        },
        {
         "t": 20,
-        "v": 0.0
+        "v": 0
        },
        {
         "t": 24,
-        "v": 0.0
+        "v": 0
        }
       ]
      }
@@ -3367,7 +3415,7 @@
       "tp-spikes-right",
       "tp-spikes-centre"
      ],
-     "directionDeg": 12.0,
+     "directionDeg": 12,
      "diameterM": 0.25,
      "region": "flower-spikes",
      "source": "authored-estimate",
@@ -3426,7 +3474,7 @@
        "translation": [
         0.1046,
         -0.063,
-        0.0
+        0
        ],
        "rotation": [
         0,
@@ -3452,7 +3500,7 @@
        "translation": [
         0.1,
         0.065,
-        0.0
+        0
        ],
        "rotation": [
         0,
@@ -3477,7 +3525,7 @@
       "transform": {
        "translation": [
         0.06,
-        0.0,
+        0,
         0.15
        ],
        "rotation": [
@@ -3503,7 +3551,7 @@
       "transform": {
        "translation": [
         0.055,
-        0.0,
+        0,
         -0.15
        ],
        "rotation": [
@@ -3529,8 +3577,8 @@
       "transform": {
        "translation": [
         0.065,
-        0.0,
-        0.0
+        0,
+        0
        ],
        "rotation": [
         0,
@@ -3763,7 +3811,7 @@
       "transform": {
        "translation": [
         -0.04,
-        0.0,
+        0,
         0.279
        ],
        "rotation": [
@@ -3997,7 +4045,7 @@
       "transform": {
        "translation": [
         0.02,
-        0.0,
+        0,
         -0.27
        ],
        "rotation": [
@@ -4387,8 +4435,8 @@
       "transform": {
        "translation": [
         0.165,
-        0.0,
-        0.0
+        0,
+        0
        ],
        "rotation": [
         0,
@@ -4407,11 +4455,11 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.045
        ],
        [
@@ -4424,18 +4472,18 @@
        ],
        [
         0.06,
-        0.0
+        0
        ]
       ],
       "axis": [
-       0.0,
-       1.0,
+       0,
+       1,
        0
       ],
       "origin": [
        0.04,
-       0.0,
-       0.0
+       0,
+       0
       ]
      },
      {
@@ -4448,12 +4496,12 @@
       "p0": [
        0.0102,
        0.0064,
-       0.0
+       0
       ],
       "p1": [
        0.1834,
        0.0085,
-       0.0
+       0
       ],
       "r0": 0.012,
       "r1": 0.009
@@ -4468,12 +4516,12 @@
       "p0": [
        0.0102,
        -0.0064,
-       0.0
+       0
       ],
       "p1": [
        0.1834,
        -0.0085,
-       0.0
+       0
       ],
       "r0": 0.012,
       "r1": 0.009
@@ -4487,12 +4535,12 @@
       "kind": "capsule",
       "p0": [
        0.012,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "p1": [
        0.16,
-       0.0,
+       0,
        0.1
       ],
       "r0": 0.012,
@@ -4507,12 +4555,12 @@
       "kind": "capsule",
       "p0": [
        0.012,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "p1": [
        0.16,
-       0.0,
+       0,
        -0.1
       ],
       "r0": 0.012,
@@ -4527,13 +4575,13 @@
       "kind": "capsule",
       "p0": [
        0.012,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "p1": [
        0.2,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "r0": 0.012,
       "r1": 0.009
@@ -4547,14 +4595,14 @@
       "slender": true,
       "kind": "capsule",
       "p0": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "p1": [
        0.185,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "r0": 0.0015,
       "r1": 0.0015
@@ -4568,13 +4616,13 @@
       "kind": "capsule",
       "p0": [
        0.185,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "p1": [
        0.2345,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "r0": 0.0055,
       "r1": 0.0055
@@ -4998,14 +5046,14 @@
       "slender": true,
       "kind": "capsule",
       "p0": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "p1": [
        0.185,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "r0": 0.0015,
       "r1": 0.0015
@@ -5019,13 +5067,13 @@
       "kind": "capsule",
       "p0": [
        0.185,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "p1": [
        0.2345,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "r0": 0.0055,
       "r1": 0.0055
@@ -5449,14 +5497,14 @@
       "slender": true,
       "kind": "capsule",
       "p0": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "p1": [
        0.185,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "r0": 0.0015,
       "r1": 0.0015
@@ -5470,13 +5518,13 @@
       "kind": "capsule",
       "p0": [
        0.185,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "p1": [
        0.2345,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "r0": 0.0055,
       "r1": 0.0055
@@ -5900,14 +5948,14 @@
       "slender": true,
       "kind": "capsule",
       "p0": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "p1": [
        0.185,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "r0": 0.0015,
       "r1": 0.0015
@@ -5921,13 +5969,13 @@
       "kind": "capsule",
       "p0": [
        0.185,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "p1": [
        0.2345,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "r0": 0.0055,
       "r1": 0.0055
@@ -6351,14 +6399,14 @@
       "slender": true,
       "kind": "capsule",
       "p0": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "p1": [
        0.185,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "r0": 0.0015,
       "r1": 0.0015
@@ -6372,13 +6420,13 @@
       "kind": "capsule",
       "p0": [
        0.185,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "p1": [
        0.2345,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "r0": 0.0055,
       "r1": 0.0055
@@ -7628,7 +7676,7 @@
       "transform": {
        "translation": [
         0.07,
-        0.0,
+        0,
         0.16
        ]
       },
@@ -7652,7 +7700,7 @@
       "transform": {
        "translation": [
         0.07,
-        0.0,
+        0,
         -0.16
        ]
       },
@@ -7676,7 +7724,7 @@
       "transform": {
        "translation": [
         0.13,
-        0.0,
+        0,
         0
        ]
       },
@@ -7823,7 +7871,7 @@
        "translation": [
         0.04,
         -0.0037,
-        0.0
+        0
        ]
       },
       "member": "root-crown",
@@ -7840,12 +7888,12 @@
       "p0": [
        0.01,
        0.022,
-       0.0
+       0
       ],
       "p1": [
        0.07,
        0.022,
-       0.0
+       0
       ],
       "r0": 0.022,
       "r1": 0.022,
@@ -7862,12 +7910,12 @@
       "p0": [
        0.0093,
        0.0058,
-       0.0
+       0
       ],
       "p1": [
        0.1834,
        0.0085,
-       0.0
+       0
       ],
       "r0": 0.011,
       "r1": 0.011,
@@ -7884,12 +7932,12 @@
       "p0": [
        0.0426,
        0.0025,
-       0.0
+       0
       ],
       "p1": [
        0.197,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "r0": 0.008,
       "r1": 0.008,
@@ -7904,14 +7952,14 @@
       "role": "body",
       "tone": 0.4,
       "p0": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "p1": [
        0.204,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "r0": 0.0035,
       "r1": 0.0035,
@@ -7929,12 +7977,12 @@
       "p0": [
        0.0093,
        -0.0058,
-       0.0
+       0
       ],
       "p1": [
        0.1834,
        -0.0085,
-       0.0
+       0
       ],
       "r0": 0.011,
       "r1": 0.011,
@@ -7951,12 +7999,12 @@
       "p0": [
        0.0426,
        -0.0025,
-       0.0
+       0
       ],
       "p1": [
        0.197,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "r0": 0.008,
       "r1": 0.008,
@@ -7971,14 +8019,14 @@
       "role": "body",
       "tone": 0.4,
       "p0": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "p1": [
        0.204,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "r0": 0.0035,
       "r1": 0.0035,
@@ -7995,12 +8043,12 @@
       "tone": 0.4,
       "p0": [
        0.011,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "p1": [
        0.16,
-       0.0,
+       0,
        0.1
       ],
       "r0": 0.011,
@@ -8017,12 +8065,12 @@
       "tone": 0.4,
       "p0": [
        0.03,
-       0.0,
+       0,
        0.1
       ],
       "p1": [
        0.17,
-       0.0,
+       0,
        0.14
       ],
       "r0": 0.008,
@@ -8038,14 +8086,14 @@
       "role": "body",
       "tone": 0.4,
       "p0": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "p1": [
        0.204,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "r0": 0.0035,
       "r1": 0.0035,
@@ -8062,12 +8110,12 @@
       "tone": 0.4,
       "p0": [
        0.011,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "p1": [
        0.16,
-       0.0,
+       0,
        -0.1
       ],
       "r0": 0.011,
@@ -8084,12 +8132,12 @@
       "tone": 0.4,
       "p0": [
        0.03,
-       0.0,
+       0,
        -0.1
       ],
       "p1": [
        0.17,
-       0.0,
+       0,
        -0.14
       ],
       "r0": 0.008,
@@ -8105,14 +8153,14 @@
       "role": "body",
       "tone": 0.4,
       "p0": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "p1": [
        0.204,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "r0": 0.0035,
       "r1": 0.0035,
@@ -8129,13 +8177,13 @@
       "tone": 0.4,
       "p0": [
        0.011,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "p1": [
        0.2,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "r0": 0.011,
       "r1": 0.011,
@@ -8151,13 +8199,13 @@
       "tone": 0.4,
       "p0": [
        0.03,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "p1": [
        0.19,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "r0": 0.008,
       "r1": 0.008,
@@ -8172,14 +8220,14 @@
       "role": "body",
       "tone": 0.4,
       "p0": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "p1": [
        0.1913,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "r0": 0.0035,
       "r1": 0.0035,
@@ -8203,7 +8251,7 @@
        "translation": [
         0.0426,
         0.0025,
-        0.0
+        0
        ]
       },
       "member": "cushion-front",
@@ -8225,7 +8273,7 @@
        "translation": [
         0.0426,
         -0.0025,
-        0.0
+        0
        ]
       },
       "member": "cushion-back",
@@ -8246,7 +8294,7 @@
       "transform": {
        "translation": [
         0.03,
-        0.0,
+        0,
         0.1
        ]
       },
@@ -8268,7 +8316,7 @@
       "transform": {
        "translation": [
         0.03,
-        0.0,
+        0,
         -0.1
        ]
       },
@@ -8290,8 +8338,8 @@
       "transform": {
        "translation": [
         0.03,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "member": "cushion-centre",
@@ -8329,7 +8377,7 @@
        "translation": [
         0.1019,
         -0.0619,
-        0.0
+        0
        ],
        "rotation": [
         0,
@@ -8355,7 +8403,7 @@
        "translation": [
         0.0992,
         0.0632,
-        0.0
+        0
        ],
        "rotation": [
         0,
@@ -8380,7 +8428,7 @@
       "transform": {
        "translation": [
         0.058,
-        0.0,
+        0,
         0.148
        ],
        "rotation": [
@@ -8406,7 +8454,7 @@
       "transform": {
        "translation": [
         0.055,
-        0.0,
+        0,
         -0.148
        ],
        "rotation": [
@@ -8432,8 +8480,8 @@
       "transform": {
        "translation": [
         0.063,
-        0.0,
-        0.0
+        0,
+        0
        ],
        "rotation": [
         0,
@@ -8868,11 +8916,11 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.046
        ],
        [
@@ -8885,18 +8933,18 @@
        ],
        [
         0.06,
-        0.0
+        0
        ]
       ],
       "axis": [
-       0.0,
-       1.0,
+       0,
+       1,
        0
       ],
       "origin": [
        0.04,
-       0.0,
-       0.0
+       0,
+       0
       ]
      },
      {
@@ -8909,12 +8957,12 @@
       "p0": [
        0.0106,
        0.0066,
-       0.0
+       0
       ],
       "p1": [
        0.1834,
        0.0085,
-       0.0
+       0
       ],
       "r0": 0.0125,
       "r1": 0.0094
@@ -8929,12 +8977,12 @@
       "p0": [
        0.0106,
        -0.0066,
-       0.0
+       0
       ],
       "p1": [
        0.1834,
        -0.0085,
-       0.0
+       0
       ],
       "r0": 0.0125,
       "r1": 0.0094
@@ -8948,12 +8996,12 @@
       "kind": "capsule",
       "p0": [
        0.0125,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "p1": [
        0.16,
-       0.0,
+       0,
        0.1
       ],
       "r0": 0.0125,
@@ -8968,12 +9016,12 @@
       "kind": "capsule",
       "p0": [
        0.0125,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "p1": [
        0.16,
-       0.0,
+       0,
        -0.1
       ],
       "r0": 0.0125,
@@ -8988,13 +9036,13 @@
       "kind": "capsule",
       "p0": [
        0.0125,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "p1": [
        0.2,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "r0": 0.0125,
       "r1": 0.0094
@@ -9008,14 +9056,14 @@
       "slender": true,
       "kind": "capsule",
       "p0": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "p1": [
        0.18,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "r0": 0.0015,
       "r1": 0.0015
@@ -9029,13 +9077,13 @@
       "kind": "capsule",
       "p0": [
        0.18,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "p1": [
        0.2315,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "r0": 0.0085,
       "r1": 0.0085
@@ -9213,14 +9261,14 @@
       "slender": true,
       "kind": "capsule",
       "p0": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "p1": [
        0.18,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "r0": 0.0015,
       "r1": 0.0015
@@ -9234,13 +9282,13 @@
       "kind": "capsule",
       "p0": [
        0.18,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "p1": [
        0.2315,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "r0": 0.0085,
       "r1": 0.0085
@@ -9418,14 +9466,14 @@
       "slender": true,
       "kind": "capsule",
       "p0": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "p1": [
        0.18,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "r0": 0.0015,
       "r1": 0.0015
@@ -9439,13 +9487,13 @@
       "kind": "capsule",
       "p0": [
        0.18,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "p1": [
        0.2315,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "r0": 0.0085,
       "r1": 0.0085
@@ -9623,14 +9671,14 @@
       "slender": true,
       "kind": "capsule",
       "p0": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "p1": [
        0.18,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "r0": 0.0015,
       "r1": 0.0015
@@ -9644,13 +9692,13 @@
       "kind": "capsule",
       "p0": [
        0.18,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "p1": [
        0.2315,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "r0": 0.0085,
       "r1": 0.0085
@@ -9828,14 +9876,14 @@
       "slender": true,
       "kind": "capsule",
       "p0": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "p1": [
        0.18,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "r0": 0.0015,
       "r1": 0.0015
@@ -9849,13 +9897,13 @@
       "kind": "capsule",
       "p0": [
        0.18,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "p1": [
        0.2315,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "r0": 0.0085,
       "r1": 0.0085
@@ -10474,7 +10522,7 @@
       "transform": {
        "translation": [
         0.07,
-        0.0,
+        0,
         0.16
        ]
       },
@@ -10498,7 +10546,7 @@
       "transform": {
        "translation": [
         0.07,
-        0.0,
+        0,
         -0.16
        ]
       },
@@ -10522,7 +10570,7 @@
       "transform": {
        "translation": [
         0.13,
-        0.0,
+        0,
         0
        ]
       },
@@ -10669,7 +10717,7 @@
        "translation": [
         0.04,
         -0.0075,
-        0.0
+        0
        ]
       },
       "member": "root-crown",
@@ -10686,12 +10734,12 @@
       "p0": [
        0.01,
        0.022,
-       0.0
+       0
       ],
       "p1": [
        0.07,
        0.022,
-       0.0
+       0
       ],
       "r0": 0.022,
       "r1": 0.022,
@@ -10708,12 +10756,12 @@
       "p0": [
        0.0093,
        0.0058,
-       0.0
+       0
       ],
       "p1": [
        0.1834,
        0.0085,
-       0.0
+       0
       ],
       "r0": 0.011,
       "r1": 0.011,
@@ -10730,12 +10778,12 @@
       "p0": [
        0.0426,
        0.0025,
-       0.0
+       0
       ],
       "p1": [
        0.197,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "r0": 0.0083,
       "r1": 0.0083,
@@ -10750,14 +10798,14 @@
       "role": "body",
       "tone": 0.4,
       "p0": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "p1": [
        0.204,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "r0": 0.005,
       "r1": 0.005,
@@ -10775,12 +10823,12 @@
       "p0": [
        0.0093,
        -0.0058,
-       0.0
+       0
       ],
       "p1": [
        0.1834,
        -0.0085,
-       0.0
+       0
       ],
       "r0": 0.011,
       "r1": 0.011,
@@ -10797,12 +10845,12 @@
       "p0": [
        0.0426,
        -0.0025,
-       0.0
+       0
       ],
       "p1": [
        0.197,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "r0": 0.0083,
       "r1": 0.0083,
@@ -10817,14 +10865,14 @@
       "role": "body",
       "tone": 0.4,
       "p0": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "p1": [
        0.204,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "r0": 0.005,
       "r1": 0.005,
@@ -10841,12 +10889,12 @@
       "tone": 0.4,
       "p0": [
        0.011,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "p1": [
        0.16,
-       0.0,
+       0,
        0.1
       ],
       "r0": 0.011,
@@ -10863,12 +10911,12 @@
       "tone": 0.4,
       "p0": [
        0.03,
-       0.0,
+       0,
        0.1
       ],
       "p1": [
        0.17,
-       0.0,
+       0,
        0.14
       ],
       "r0": 0.0083,
@@ -10884,14 +10932,14 @@
       "role": "body",
       "tone": 0.4,
       "p0": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "p1": [
        0.204,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "r0": 0.005,
       "r1": 0.005,
@@ -10908,12 +10956,12 @@
       "tone": 0.4,
       "p0": [
        0.011,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "p1": [
        0.16,
-       0.0,
+       0,
        -0.1
       ],
       "r0": 0.011,
@@ -10930,12 +10978,12 @@
       "tone": 0.4,
       "p0": [
        0.03,
-       0.0,
+       0,
        -0.1
       ],
       "p1": [
        0.17,
-       0.0,
+       0,
        -0.14
       ],
       "r0": 0.0083,
@@ -10951,14 +10999,14 @@
       "role": "body",
       "tone": 0.4,
       "p0": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "p1": [
        0.204,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "r0": 0.005,
       "r1": 0.005,
@@ -10975,13 +11023,13 @@
       "tone": 0.4,
       "p0": [
        0.011,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "p1": [
        0.2,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "r0": 0.011,
       "r1": 0.011,
@@ -10997,13 +11045,13 @@
       "tone": 0.4,
       "p0": [
        0.03,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "p1": [
        0.19,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "r0": 0.0083,
       "r1": 0.0083,
@@ -11018,14 +11066,14 @@
       "role": "body",
       "tone": 0.4,
       "p0": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "p1": [
        0.1913,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "r0": 0.005,
       "r1": 0.005,
@@ -11065,7 +11113,7 @@
        "translation": [
         0.0965,
         -0.0447,
-        0.0
+        0
        ],
        "rotation": [
         0,
@@ -11091,7 +11139,7 @@
        "translation": [
         0.0919,
         0.0467,
-        0.0
+        0
        ],
        "rotation": [
         0,
@@ -11116,7 +11164,7 @@
       "transform": {
        "translation": [
         0.06,
-        0.0,
+        0,
         0.13
        ],
        "rotation": [
@@ -11142,7 +11190,7 @@
       "transform": {
        "translation": [
         0.055,
-        0.0,
+        0,
         -0.13
        ],
        "rotation": [
@@ -11168,8 +11216,8 @@
       "transform": {
        "translation": [
         0.065,
-        0.0,
-        0.0
+        0,
+        0
        ],
        "rotation": [
         0,
@@ -11292,11 +11340,11 @@
       "kind": "revolve",
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.05
        ],
        [
@@ -11309,18 +11357,18 @@
        ],
        [
         0.06,
-        0.0
+        0
        ]
       ],
       "axis": [
-       0.0,
-       1.0,
+       0,
+       1,
        0
       ],
       "origin": [
        0.04,
-       0.0,
-       0.0
+       0,
+       0
       ]
      },
      {
@@ -11333,7 +11381,7 @@
       "p0": [
        0.0136,
        0.0085,
-       0.0
+       0
       ],
       "p1": [
        0.1998,
@@ -11353,7 +11401,7 @@
       "p0": [
        0.0136,
        -0.0085,
-       0.0
+       0
       ],
       "p1": [
        0.1998,
@@ -11372,13 +11420,13 @@
       "kind": "capsule",
       "p0": [
        0.016,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "p1": [
        0.21,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "r0": 0.016,
       "r1": 0.012
@@ -11392,14 +11440,14 @@
       "slender": true,
       "kind": "capsule",
       "p0": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "p1": [
        0.165,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "r0": 0.0015,
       "r1": 0.0015
@@ -11413,13 +11461,13 @@
       "kind": "capsule",
       "p0": [
        0.165,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "p1": [
        0.224,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "r0": 0.016,
       "r1": 0.016
@@ -11515,14 +11563,14 @@
       "slender": true,
       "kind": "capsule",
       "p0": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "p1": [
        0.165,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "r0": 0.0015,
       "r1": 0.0015
@@ -11536,13 +11584,13 @@
       "kind": "capsule",
       "p0": [
        0.165,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "p1": [
        0.224,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "r0": 0.016,
       "r1": 0.016
@@ -11638,14 +11686,14 @@
       "slender": true,
       "kind": "capsule",
       "p0": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "p1": [
        0.165,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "r0": 0.0015,
       "r1": 0.0015
@@ -11659,13 +11707,13 @@
       "kind": "capsule",
       "p0": [
        0.165,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "p1": [
        0.224,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "r0": 0.016,
       "r1": 0.016
@@ -11761,14 +11809,14 @@
       "slender": true,
       "kind": "capsule",
       "p0": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "p1": [
        0.165,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "r0": 0.0015,
       "r1": 0.0015
@@ -11782,13 +11830,13 @@
       "kind": "capsule",
       "p0": [
        0.165,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "p1": [
        0.224,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "r0": 0.016,
       "r1": 0.016
@@ -11884,14 +11932,14 @@
       "slender": true,
       "kind": "capsule",
       "p0": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "p1": [
        0.165,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "r0": 0.0015,
       "r1": 0.0015
@@ -11905,13 +11953,13 @@
       "kind": "capsule",
       "p0": [
        0.165,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "p1": [
        0.224,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "r0": 0.016,
       "r1": 0.016
@@ -12278,7 +12326,7 @@
       "transform": {
        "translation": [
         0.07,
-        0.0,
+        0,
         0.16
        ]
       },
@@ -12302,7 +12350,7 @@
       "transform": {
        "translation": [
         0.07,
-        0.0,
+        0,
         -0.16
        ]
       },
@@ -12326,7 +12374,7 @@
       "transform": {
        "translation": [
         0.13,
-        0.0,
+        0,
         0
        ]
       },
@@ -12473,7 +12521,7 @@
        "translation": [
         0.04,
         -0.015,
-        0.0
+        0
        ]
       },
       "member": "root-crown",
@@ -12490,12 +12538,12 @@
       "p0": [
        0.01,
        0.022,
-       0.0
+       0
       ],
       "p1": [
        0.07,
        0.022,
-       0.0
+       0
       ],
       "r0": 0.022,
       "r1": 0.022,
@@ -12512,9 +12560,9 @@
       "sections": [
        {
         "at": [
-         0.0,
-         0.0,
-         0.0
+         0,
+         0,
+         0
         ],
         "rx": 0.016,
         "ry": 0.016,
@@ -12528,8 +12576,8 @@
        {
         "at": [
          0.1415,
-         0.0,
-         0.0
+         0,
+         0
         ],
         "rx": 0.016,
         "ry": 0.016,
@@ -12544,7 +12592,7 @@
         "at": [
          0.3365,
          0.0276,
-         0.0
+         0
         ],
         "rx": 0.016,
         "ry": 0.016,
@@ -12559,7 +12607,7 @@
         "at": [
          0.5621,
          0.1097,
-         0.0
+         0
         ],
         "rx": 0.016,
         "ry": 0.016,
@@ -12590,9 +12638,9 @@
       "sections": [
        {
         "at": [
-         0.0,
-         0.0,
-         0.0
+         0,
+         0,
+         0
         ],
         "rx": 0.016,
         "ry": 0.016,
@@ -12606,8 +12654,8 @@
        {
         "at": [
          0.1415,
-         0.0,
-         0.0
+         0,
+         0
         ],
         "rx": 0.016,
         "ry": 0.016,
@@ -12622,7 +12670,7 @@
         "at": [
          0.3365,
          -0.0276,
-         0.0
+         0
         ],
         "rx": 0.016,
         "ry": 0.016,
@@ -12637,7 +12685,7 @@
         "at": [
          0.5621,
          -0.1097,
-         0.0
+         0
         ],
         "rx": 0.016,
         "ry": 0.016,
@@ -12668,9 +12716,9 @@
       "sections": [
        {
         "at": [
-         0.0,
-         0.0,
-         0.0
+         0,
+         0,
+         0
         ],
         "rx": 0.016,
         "ry": 0.016,
@@ -12684,8 +12732,8 @@
        {
         "at": [
          0.17,
-         0.0,
-         0.0
+         0,
+         0
         ],
         "rx": 0.016,
         "ry": 0.016,
@@ -12699,8 +12747,8 @@
        {
         "at": [
          0.36,
-         0.0,
-         0.0
+         0,
+         0
         ],
         "rx": 0.016,
         "ry": 0.016,
@@ -12714,8 +12762,8 @@
        {
         "at": [
          0.585,
-         0.0,
-         0.0
+         0,
+         0
         ],
         "rx": 0.016,
         "ry": 0.016,
@@ -12745,12 +12793,12 @@
       "tone": 0.4,
       "p0": [
        0.0165,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "p1": [
        0.16,
-       0.0,
+       0,
        0.1
       ],
       "r0": 0.0165,
@@ -12767,12 +12815,12 @@
       "tone": 0.4,
       "p0": [
        0.03,
-       0.0,
+       0,
        0.1
       ],
       "p1": [
        0.17,
-       0.0,
+       0,
        0.14
       ],
       "r0": 0.0165,
@@ -12788,14 +12836,14 @@
       "role": "body",
       "tone": 0.4,
       "p0": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "p1": [
        0.204,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "r0": 0.005,
       "r1": 0.005,
@@ -12812,12 +12860,12 @@
       "tone": 0.4,
       "p0": [
        0.0165,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "p1": [
        0.16,
-       0.0,
+       0,
        -0.1
       ],
       "r0": 0.0165,
@@ -12834,12 +12882,12 @@
       "tone": 0.4,
       "p0": [
        0.03,
-       0.0,
+       0,
        -0.1
       ],
       "p1": [
        0.17,
-       0.0,
+       0,
        -0.14
       ],
       "r0": 0.0165,
@@ -12855,14 +12903,14 @@
       "role": "body",
       "tone": 0.4,
       "p0": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "p1": [
        0.204,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "r0": 0.005,
       "r1": 0.005,
@@ -12896,7 +12944,7 @@
       "profile": [
        [
         0.02,
-        0.0
+        0
        ],
        [
         0.02,
@@ -12928,18 +12976,18 @@
        ],
        [
         0.385,
-        0.0
+        0
        ]
       ],
       "axis": [
-       1.0,
-       0.0,
+       1,
+       0,
        0
       ],
       "origin": [
        -0.17,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "lateralScale": 0.95
      },
@@ -12951,14 +12999,14 @@
       "tone": 0.72,
       "kind": "capsule",
       "p0": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "p1": [
        0.2317,
        0.0162,
-       0.0
+       0
       ],
       "r0": 0.04,
       "r1": 0.04
@@ -12971,14 +13019,14 @@
       "tone": 0.72,
       "kind": "capsule",
       "p0": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "p1": [
        0.2317,
        -0.0162,
-       0.0
+       0
       ],
       "r0": 0.04,
       "r1": 0.04
@@ -12991,13 +13039,13 @@
       "tone": 0.72,
       "kind": "capsule",
       "p0": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "p1": [
        0.23,
-       0.0,
+       0,
        0.0516
       ],
       "r0": 0.04,
@@ -13011,13 +13059,13 @@
       "tone": 0.72,
       "kind": "capsule",
       "p0": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "p1": [
        0.23,
-       0.0,
+       0,
        -0.0516
       ],
       "r0": 0.04,
@@ -13031,14 +13079,14 @@
       "tone": 0.72,
       "kind": "capsule",
       "p0": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "p1": [
        0.2,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "r0": 0.04,
       "r1": 0.04
@@ -13052,13 +13100,13 @@
       "kind": "capsule",
       "p0": [
        0.04,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "p1": [
        0.29,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "r0": 0.04,
       "r1": 0.04
@@ -13163,7 +13211,7 @@
       "transform": {
        "translation": [
         0.07,
-        0.0,
+        0,
         0.16
        ]
       },
@@ -13187,7 +13235,7 @@
       "transform": {
        "translation": [
         0.07,
-        0.0,
+        0,
         -0.16
        ]
       },
@@ -13211,7 +13259,7 @@
       "transform": {
        "translation": [
         0.13,
-        0.0,
+        0,
         0
        ]
       },
@@ -13358,7 +13406,7 @@
        "translation": [
         0.04,
         -0.0375,
-        0.0
+        0
        ]
       },
       "member": "root-crown",
@@ -13375,9 +13423,9 @@
       "sections": [
        {
         "at": [
-         0.0,
-         0.0,
-         0.0
+         0,
+         0,
+         0
         ],
         "rx": 0.04,
         "ry": 0.04,
@@ -13391,8 +13439,8 @@
        {
         "at": [
          0.33,
-         0.0,
-         0.0
+         0,
+         0
         ],
         "rx": 0.04,
         "ry": 0.04,
@@ -13406,8 +13454,8 @@
        {
         "at": [
          0.53,
-         0.0,
-         0.0
+         0,
+         0
         ],
         "rx": 0.04,
         "ry": 0.04,
@@ -13439,9 +13487,9 @@
       "sections": [
        {
         "at": [
-         0.0,
-         0.0,
-         0.0
+         0,
+         0,
+         0
         ],
         "rx": 0.04,
         "ry": 0.04,
@@ -13455,8 +13503,8 @@
        {
         "at": [
          0.1415,
-         0.0,
-         0.0
+         0,
+         0
         ],
         "rx": 0.04,
         "ry": 0.04,
@@ -13471,7 +13519,7 @@
         "at": [
          0.3365,
          0.0276,
-         0.0
+         0
         ],
         "rx": 0.04,
         "ry": 0.04,
@@ -13486,7 +13534,7 @@
         "at": [
          0.5621,
          0.1097,
-         0.0
+         0
         ],
         "rx": 0.04,
         "ry": 0.04,
@@ -13517,9 +13565,9 @@
       "sections": [
        {
         "at": [
-         0.0,
-         0.0,
-         0.0
+         0,
+         0,
+         0
         ],
         "rx": 0.04,
         "ry": 0.04,
@@ -13533,8 +13581,8 @@
        {
         "at": [
          0.1415,
-         0.0,
-         0.0
+         0,
+         0
         ],
         "rx": 0.04,
         "ry": 0.04,
@@ -13549,7 +13597,7 @@
         "at": [
          0.3365,
          -0.0276,
-         0.0
+         0
         ],
         "rx": 0.04,
         "ry": 0.04,
@@ -13564,7 +13612,7 @@
         "at": [
          0.5621,
          -0.1097,
-         0.0
+         0
         ],
         "rx": 0.04,
         "ry": 0.04,
@@ -13594,12 +13642,12 @@
       "tone": 0.4,
       "p0": [
        0.06,
-       0.0,
+       0,
        -0.02
       ],
       "p1": [
        0.32,
-       0.0,
+       0,
        0.14
       ],
       "r0": 0.04,
@@ -13618,14 +13666,14 @@
       "role": "body",
       "tone": 0.4,
       "p0": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "p1": [
        0.17,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "r0": 0.006,
       "r1": 0.006,
@@ -13642,12 +13690,12 @@
       "tone": 0.4,
       "p0": [
        0.06,
-       0.0,
+       0,
        0.02
       ],
       "p1": [
        0.32,
-       0.0,
+       0,
        -0.14
       ],
       "r0": 0.04,
@@ -13666,14 +13714,14 @@
       "role": "body",
       "tone": 0.4,
       "p0": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "p1": [
        0.17,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "r0": 0.006,
       "r1": 0.006,
@@ -13775,10 +13823,10 @@
        "material": "lavender-leaf",
        "kind": "ellipse",
        "cx": 0.06,
-       "cy": 0.0,
+       "cy": 0,
        "rx": 0.21,
        "ry": 0.16,
-       "rotationDeg": -90.0
+       "rotationDeg": -90
       },
       {
        "id": "lobe-04",
@@ -13791,10 +13839,10 @@
        "material": "lavender-leaf",
        "kind": "ellipse",
        "cx": 0.055,
-       "cy": 0.0,
+       "cy": 0,
        "rx": 0.21,
        "ry": 0.155,
-       "rotationDeg": -90.0
+       "rotationDeg": -90
       },
       {
        "id": "lobe-05",
@@ -13807,10 +13855,10 @@
        "material": "lavender-leaf",
        "kind": "ellipse",
        "cx": 0.065,
-       "cy": 0.0,
+       "cy": 0,
        "rx": 0.24,
        "ry": 0.15,
-       "rotationDeg": -90.0
+       "rotationDeg": -90
       },
       {
        "id": "lobe-06",
@@ -13922,7 +13970,7 @@
        "cy": -0.2041,
        "rx": 0.08,
        "ry": 0.0808,
-       "rotationDeg": -90.0
+       "rotationDeg": -90
       },
       {
        "id": "tuft-13",
@@ -13938,7 +13986,7 @@
        "cy": -0.1057,
        "rx": 0.08,
        "ry": 0.0918,
-       "rotationDeg": -90.0
+       "rotationDeg": -90
       },
       {
        "id": "tuft-14",
@@ -13951,10 +13999,10 @@
        "material": "lavender-leaf",
        "kind": "ellipse",
        "cx": -0.04,
-       "cy": 0.0,
+       "cy": 0,
        "rx": 0.08,
        "ry": 0.0842,
-       "rotationDeg": -90.0
+       "rotationDeg": -90
       },
       {
        "id": "tuft-15",
@@ -13970,7 +14018,7 @@
        "cy": 0.1051,
        "rx": 0.08,
        "ry": 0.0799,
-       "rotationDeg": -90.0
+       "rotationDeg": -90
       },
       {
        "id": "tuft-16",
@@ -13986,7 +14034,7 @@
        "cy": 0.2052,
        "rx": 0.08,
        "ry": 0.0893,
-       "rotationDeg": -90.0
+       "rotationDeg": -90
       },
       {
        "id": "tuft-17",
@@ -14066,7 +14114,7 @@
        "cy": 0.1981,
        "rx": 0.08,
        "ry": 0.0901,
-       "rotationDeg": -90.0
+       "rotationDeg": -90
       },
       {
        "id": "tuft-22",
@@ -14082,7 +14130,7 @@
        "cy": 0.1067,
        "rx": 0.08,
        "ry": 0.0825,
-       "rotationDeg": -90.0
+       "rotationDeg": -90
       },
       {
        "id": "tuft-23",
@@ -14095,10 +14143,10 @@
        "material": "lavender-leaf",
        "kind": "ellipse",
        "cx": 0.02,
-       "cy": 0.0,
+       "cy": 0,
        "rx": 0.08,
        "ry": 0.0876,
-       "rotationDeg": -90.0
+       "rotationDeg": -90
       },
       {
        "id": "tuft-24",
@@ -14114,7 +14162,7 @@
        "cy": -0.1086,
        "rx": 0.08,
        "ry": 0.0808,
-       "rotationDeg": -90.0
+       "rotationDeg": -90
       },
       {
        "id": "tuft-25",
@@ -14130,7 +14178,7 @@
        "cy": -0.1987,
        "rx": 0.08,
        "ry": 0.0918,
-       "rotationDeg": -90.0
+       "rotationDeg": -90
       },
       {
        "id": "tuft-26",
@@ -14178,7 +14226,7 @@
        "cy": -0.1083,
        "rx": 0.065,
        "ry": 0.05,
-       "rotationDeg": -90.0
+       "rotationDeg": -90
       },
       {
        "id": "tuft-29",
@@ -14194,7 +14242,7 @@
        "cy": -0.1389,
        "rx": 0.065,
        "ry": 0.05,
-       "rotationDeg": -90.0
+       "rotationDeg": -90
       },
       {
        "id": "tuft-30",
@@ -14210,7 +14258,7 @@
        "cy": -0.0153,
        "rx": 0.065,
        "ry": 0.05,
-       "rotationDeg": -90.0
+       "rotationDeg": -90
       },
       {
        "id": "tuft-31",
@@ -14226,7 +14274,7 @@
        "cy": 0.0939,
        "rx": 0.065,
        "ry": 0.05,
-       "rotationDeg": -90.0
+       "rotationDeg": -90
       },
       {
        "id": "tuft-32",
@@ -14242,7 +14290,7 @@
        "cy": 0.0989,
        "rx": 0.065,
        "ry": 0.05,
-       "rotationDeg": -90.0
+       "rotationDeg": -90
       },
       {
        "id": "tuft-33",
@@ -14274,7 +14322,7 @@
        "cy": 0.0764,
        "rx": 0.065,
        "ry": 0.05,
-       "rotationDeg": -90.0
+       "rotationDeg": -90
       },
       {
        "id": "tuft-35",
@@ -14290,7 +14338,7 @@
        "cy": 0.0278,
        "rx": 0.065,
        "ry": 0.05,
-       "rotationDeg": -90.0
+       "rotationDeg": -90
       },
       {
        "id": "tuft-36",
@@ -14306,7 +14354,7 @@
        "cy": -0.0516,
        "rx": 0.065,
        "ry": 0.05,
-       "rotationDeg": -90.0
+       "rotationDeg": -90
       },
       {
        "id": "tuft-37",
@@ -14335,10 +14383,10 @@
        "material": "lavender-leaf",
        "kind": "ellipse",
        "cx": 0.165,
-       "cy": 0.0,
+       "cy": 0,
        "rx": 0.065,
        "ry": 0.05,
-       "rotationDeg": -90.0
+       "rotationDeg": -90
       },
       {
        "id": "root-collar",
@@ -14353,11 +14401,11 @@
        "points": [
         [
          0.04,
-         0.0
+         0
         ],
         [
          0.085,
-         0.0
+         0
         ],
         [
          0.0814,
@@ -14381,7 +14429,7 @@
         ],
         [
          -0.005,
-         0.0
+         0
         ]
        ],
        "closed": true
@@ -14431,9 +14479,9 @@
        "material": "lavender-bark",
        "kind": "capsule",
        "x0": 0.012,
-       "y0": 0.0,
+       "y0": 0,
        "x1": 0.16,
-       "y1": 0.0,
+       "y1": 0,
        "r0": 0.012,
        "r1": 0.009
       },
@@ -14448,9 +14496,9 @@
        "material": "lavender-bark",
        "kind": "capsule",
        "x0": 0.012,
-       "y0": 0.0,
+       "y0": 0,
        "x1": 0.16,
-       "y1": 0.0,
+       "y1": 0,
        "r0": 0.012,
        "r1": 0.009
       },
@@ -14465,9 +14513,9 @@
        "material": "lavender-bark",
        "kind": "capsule",
        "x0": 0.012,
-       "y0": 0.0,
+       "y0": 0,
        "x1": 0.2,
-       "y1": 0.0,
+       "y1": 0,
        "r0": 0.012,
        "r1": 0.009
       },
@@ -14481,12 +14529,12 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
          0.185,
-         0.0
+         0
         ]
        ],
        "closed": false
@@ -14502,9 +14550,9 @@
        "material": "lavender-flower",
        "kind": "capsule",
        "x0": 0.185,
-       "y0": 0.0,
+       "y0": 0,
        "x1": 0.2345,
-       "y1": 0.0,
+       "y1": 0,
        "r0": 0.0055,
        "r1": 0.0055
       },
@@ -14888,12 +14936,12 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
          0.185,
-         0.0
+         0
         ]
        ],
        "closed": false
@@ -14909,9 +14957,9 @@
        "material": "lavender-flower",
        "kind": "capsule",
        "x0": 0.185,
-       "y0": 0.0,
+       "y0": 0,
        "x1": 0.2345,
-       "y1": 0.0,
+       "y1": 0,
        "r0": 0.0055,
        "r1": 0.0055
       },
@@ -15295,12 +15343,12 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
          0.185,
-         0.0
+         0
         ]
        ],
        "closed": false
@@ -15316,9 +15364,9 @@
        "material": "lavender-flower",
        "kind": "capsule",
        "x0": 0.185,
-       "y0": 0.0,
+       "y0": 0,
        "x1": 0.2345,
-       "y1": 0.0,
+       "y1": 0,
        "r0": 0.0055,
        "r1": 0.0055
       },
@@ -15702,12 +15750,12 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
          0.185,
-         0.0
+         0
         ]
        ],
        "closed": false
@@ -15723,9 +15771,9 @@
        "material": "lavender-flower",
        "kind": "capsule",
        "x0": 0.185,
-       "y0": 0.0,
+       "y0": 0,
        "x1": 0.2345,
-       "y1": 0.0,
+       "y1": 0,
        "r0": 0.0055,
        "r1": 0.0055
       },
@@ -16109,12 +16157,12 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
          0.185,
-         0.0
+         0
         ]
        ],
        "closed": false
@@ -16130,9 +16178,9 @@
        "material": "lavender-flower",
        "kind": "capsule",
        "x0": 0.185,
-       "y0": 0.0,
+       "y0": 0,
        "x1": 0.2345,
-       "y1": 0.0,
+       "y1": 0,
        "r0": 0.0055,
        "r1": 0.0055
       },
@@ -17238,7 +17286,7 @@
        "region": "leaf-cushion",
        "material": "lavender-leaf",
        "kind": "ellipse",
-       "cx": 0.0,
+       "cx": 0,
        "cy": 0.19,
        "rx": 0.21,
        "ry": 0.16
@@ -17253,7 +17301,7 @@
        "region": "leaf-cushion",
        "material": "lavender-leaf",
        "kind": "ellipse",
-       "cx": 0.0,
+       "cx": 0,
        "cy": 0.185,
        "rx": 0.21,
        "ry": 0.155
@@ -17298,7 +17346,7 @@
        "region": "leaf-cushion",
        "material": "lavender-leaf",
        "kind": "ellipse",
-       "cx": 0.0,
+       "cx": 0,
        "cy": 0.235,
        "rx": 0.24,
        "ry": 0.15
@@ -17793,7 +17841,7 @@
        "region": "leaf-cushion",
        "material": "lavender-leaf",
        "kind": "ellipse",
-       "cx": 0.0,
+       "cx": 0,
        "cy": 0.335,
        "rx": 0.065,
        "ry": 0.05
@@ -17810,12 +17858,12 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
          0.045,
-         0.0
+         0
         ],
         [
          0.0414,
@@ -17826,7 +17874,7 @@
          0.055
         ],
         [
-         0.0,
+         0,
          0.06
         ],
         [
@@ -17839,7 +17887,7 @@
         ],
         [
          -0.045,
-         0.0
+         0
         ]
        ],
        "closed": true
@@ -17854,9 +17902,9 @@
        "region": "stem-bark",
        "material": "lavender-bark",
        "kind": "capsule",
-       "x0": 0.0,
+       "x0": 0,
        "y0": 0.012,
-       "x1": 0.0,
+       "x1": 0,
        "y1": 0.16,
        "r0": 0.012,
        "r1": 0.009
@@ -17871,9 +17919,9 @@
        "region": "stem-bark",
        "material": "lavender-bark",
        "kind": "capsule",
-       "x0": 0.0,
+       "x0": 0,
        "y0": 0.012,
-       "x1": 0.0,
+       "x1": 0,
        "y1": 0.16,
        "r0": 0.012,
        "r1": 0.009
@@ -17922,9 +17970,9 @@
        "region": "stem-bark",
        "material": "lavender-bark",
        "kind": "capsule",
-       "x0": 0.0,
+       "x0": 0,
        "y0": 0.012,
-       "x1": 0.0,
+       "x1": 0,
        "y1": 0.2,
        "r0": 0.012,
        "r1": 0.009
@@ -17939,11 +17987,11 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.3
         ],
         [
-         0.0,
+         0,
          0.481
         ]
        ],
@@ -17959,9 +18007,9 @@
        "region": "flower-spikes",
        "material": "lavender-flower",
        "kind": "capsule",
-       "x0": 0.0,
+       "x0": 0,
        "y0": 0.481,
-       "x1": 0.0,
+       "x1": 0,
        "y1": 0.5294,
        "r0": 0.0055,
        "r1": 0.0055
@@ -18346,11 +18394,11 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.3
         ],
         [
-         0.0,
+         0,
          0.481
         ]
        ],
@@ -18366,9 +18414,9 @@
        "region": "flower-spikes",
        "material": "lavender-flower",
        "kind": "capsule",
-       "x0": 0.0,
+       "x0": 0,
        "y0": 0.481,
-       "x1": 0.0,
+       "x1": 0,
        "y1": 0.5294,
        "r0": 0.0055,
        "r1": 0.0055
@@ -19567,11 +19615,11 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.36
         ],
         [
-         0.0,
+         0,
          0.545
         ]
        ],
@@ -19587,9 +19635,9 @@
        "region": "flower-spikes",
        "material": "lavender-flower",
        "kind": "capsule",
-       "x0": 0.0,
+       "x0": 0,
        "y0": 0.545,
-       "x1": 0.0,
+       "x1": 0,
        "y1": 0.5945,
        "r0": 0.0055,
        "r1": 0.0055
@@ -20697,7 +20745,7 @@
        "material": "lavender-leaf",
        "kind": "ellipse",
        "cx": 0.19,
-       "cy": 0.0,
+       "cy": 0,
        "rx": 0.21,
        "ry": 0.21
       },
@@ -20712,7 +20760,7 @@
        "material": "lavender-leaf",
        "kind": "ellipse",
        "cx": -0.19,
-       "cy": 0.0,
+       "cy": 0,
        "rx": 0.21,
        "ry": 0.21
       },
@@ -20726,7 +20774,7 @@
        "region": "leaf-cushion",
        "material": "lavender-leaf",
        "kind": "ellipse",
-       "cx": 0.0,
+       "cx": 0,
        "cy": 0.17,
        "rx": 0.21,
        "ry": 0.21
@@ -20741,7 +20789,7 @@
        "region": "leaf-cushion",
        "material": "lavender-leaf",
        "kind": "ellipse",
-       "cx": 0.0,
+       "cx": 0,
        "cy": -0.17,
        "rx": 0.21,
        "ry": 0.21
@@ -20756,8 +20804,8 @@
        "region": "leaf-cushion",
        "material": "lavender-leaf",
        "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
+       "cx": 0,
+       "cy": 0,
        "rx": 0.24,
        "ry": 0.24
       },
@@ -20891,7 +20939,7 @@
        "region": "leaf-cushion",
        "material": "lavender-leaf",
        "kind": "ellipse",
-       "cx": 0.0,
+       "cx": 0,
        "cy": 0.299,
        "rx": 0.08,
        "ry": 0.078
@@ -21026,7 +21074,7 @@
        "region": "leaf-cushion",
        "material": "lavender-leaf",
        "kind": "ellipse",
-       "cx": 0.0,
+       "cx": 0,
        "cy": -0.29,
        "rx": 0.08,
        "ry": 0.078
@@ -21251,8 +21299,8 @@
        "region": "leaf-cushion",
        "material": "lavender-leaf",
        "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
+       "cx": 0,
+       "cy": 0,
        "rx": 0.065,
        "ry": 0.065
       },
@@ -21266,8 +21314,8 @@
        "region": "stem-bark",
        "material": "lavender-bark",
        "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
+       "cx": 0,
+       "cy": 0,
        "rx": 0.045,
        "ry": 0.045
       },
@@ -21282,9 +21330,9 @@
        "material": "lavender-bark",
        "kind": "capsule",
        "x0": 0.015,
-       "y0": 0.0,
+       "y0": 0,
        "x1": 0.105,
-       "y1": 0.0,
+       "y1": 0,
        "r0": 0.012,
        "r1": 0.009
       },
@@ -21299,9 +21347,9 @@
        "material": "lavender-bark",
        "kind": "capsule",
        "x0": -0.015,
-       "y0": 0.0,
+       "y0": 0,
        "x1": -0.105,
-       "y1": 0.0,
+       "y1": 0,
        "r0": 0.012,
        "r1": 0.009
       },
@@ -21315,9 +21363,9 @@
        "region": "stem-bark",
        "material": "lavender-bark",
        "kind": "capsule",
-       "x0": 0.0,
+       "x0": 0,
        "y0": 0.02,
-       "x1": 0.0,
+       "x1": 0,
        "y1": 0.12,
        "r0": 0.012,
        "r1": 0.009
@@ -21332,9 +21380,9 @@
        "region": "stem-bark",
        "material": "lavender-bark",
        "kind": "capsule",
-       "x0": 0.0,
+       "x0": 0,
        "y0": -0.02,
-       "x1": 0.0,
+       "x1": 0,
        "y1": -0.12,
        "r0": 0.012,
        "r1": 0.009
@@ -21349,10 +21397,10 @@
        "region": "stem-bark",
        "material": "lavender-bark",
        "kind": "capsule",
-       "x0": 0.0,
-       "y0": 0.0,
-       "x1": 0.0,
-       "y1": 0.0,
+       "x0": 0,
+       "y0": 0,
+       "x1": 0,
+       "y1": 0,
        "r0": 0.012,
        "r1": 0.009
       },
@@ -21367,11 +21415,11 @@
        "points": [
         [
          0.17,
-         0.0
+         0
         ],
         [
          0.2085,
-         0.0
+         0
         ]
        ],
        "closed": false
@@ -21387,9 +21435,9 @@
        "material": "lavender-flower",
        "kind": "capsule",
        "x0": 0.2085,
-       "y0": 0.0,
+       "y0": 0,
        "x1": 0.2188,
-       "y1": 0.0,
+       "y1": 0,
        "r0": 0.0055,
        "r1": 0.0055
       },
@@ -21774,11 +21822,11 @@
        "points": [
         [
          -0.17,
-         0.0
+         0
         ],
         [
          -0.2085,
-         0.0
+         0
         ]
        ],
        "closed": false
@@ -21794,9 +21842,9 @@
        "material": "lavender-flower",
        "kind": "capsule",
        "x0": -0.2085,
-       "y0": 0.0,
+       "y0": 0,
        "x1": -0.2188,
-       "y1": 0.0,
+       "y1": 0,
        "r0": 0.0055,
        "r1": 0.0055
       },
@@ -22180,9 +22228,9 @@
        "region": "flower-spikes",
        "material": "lavender-flower",
        "kind": "capsule",
-       "x0": 0.0,
+       "x0": 0,
        "y0": 0.16,
-       "x1": 0.0,
+       "x1": 0,
        "y1": 0.16,
        "r0": 0.0055,
        "r1": 0.0055
@@ -22567,9 +22615,9 @@
        "region": "flower-spikes",
        "material": "lavender-flower",
        "kind": "capsule",
-       "x0": 0.0,
+       "x0": 0,
        "y0": -0.16,
-       "x1": 0.0,
+       "x1": 0,
        "y1": -0.16,
        "r0": 0.0055,
        "r1": 0.0055
@@ -22954,10 +23002,10 @@
        "region": "flower-spikes",
        "material": "lavender-flower",
        "kind": "capsule",
-       "x0": 0.0,
-       "y0": 0.0,
-       "x1": 0.0,
-       "y1": 0.0,
+       "x0": 0,
+       "y0": 0,
+       "x1": 0,
+       "y1": 0,
        "r0": 0.0055,
        "r1": 0.0055
       },
@@ -24148,10 +24196,10 @@
        "material": "lavender-leaf",
        "kind": "ellipse",
        "cx": 0.058,
-       "cy": 0.0,
+       "cy": 0,
        "rx": 0.208,
        "ry": 0.158,
-       "rotationDeg": -90.0
+       "rotationDeg": -90
       },
       {
        "id": "lobe-04",
@@ -24164,10 +24212,10 @@
        "material": "lavender-leaf",
        "kind": "ellipse",
        "cx": 0.055,
-       "cy": 0.0,
+       "cy": 0,
        "rx": 0.208,
        "ry": 0.155,
-       "rotationDeg": -90.0
+       "rotationDeg": -90
       },
       {
        "id": "lobe-05",
@@ -24180,10 +24228,10 @@
        "material": "lavender-leaf",
        "kind": "ellipse",
        "cx": 0.063,
-       "cy": 0.0,
+       "cy": 0,
        "rx": 0.245,
        "ry": 0.152,
-       "rotationDeg": -90.0
+       "rotationDeg": -90
       },
       {
        "id": "lobe-06",
@@ -24279,7 +24327,7 @@
        "cy": -0.1186,
        "rx": 0.08,
        "ry": 0.08,
-       "rotationDeg": -90.0
+       "rotationDeg": -90
       },
       {
        "id": "tuft-12",
@@ -24295,7 +24343,7 @@
        "cy": 0.1186,
        "rx": 0.08,
        "ry": 0.08,
-       "rotationDeg": -90.0
+       "rotationDeg": -90
       },
       {
        "id": "tuft-13",
@@ -24343,7 +24391,7 @@
        "cy": 0.1186,
        "rx": 0.08,
        "ry": 0.08,
-       "rotationDeg": -90.0
+       "rotationDeg": -90
       },
       {
        "id": "tuft-16",
@@ -24359,7 +24407,7 @@
        "cy": -0.1186,
        "rx": 0.08,
        "ry": 0.08,
-       "rotationDeg": -90.0
+       "rotationDeg": -90
       },
       {
        "id": "tuft-17",
@@ -24391,7 +24439,7 @@
        "cy": -0.0919,
        "rx": 0.075,
        "ry": 0.065,
-       "rotationDeg": -90.0
+       "rotationDeg": -90
       },
       {
        "id": "tuft-19",
@@ -24423,7 +24471,7 @@
        "cy": 0.0919,
        "rx": 0.075,
        "ry": 0.065,
-       "rotationDeg": -90.0
+       "rotationDeg": -90
       },
       {
        "id": "tuft-21",
@@ -24454,11 +24502,11 @@
        "points": [
         [
          0.04,
-         0.0
+         0
         ],
         [
          0.086,
-         0.0
+         0
         ],
         [
          0.0823,
@@ -24482,7 +24530,7 @@
         ],
         [
          -0.006,
-         0.0
+         0
         ]
        ],
        "closed": true
@@ -24532,9 +24580,9 @@
        "material": "lavender-bark",
        "kind": "capsule",
        "x0": 0.0125,
-       "y0": 0.0,
+       "y0": 0,
        "x1": 0.16,
-       "y1": 0.0,
+       "y1": 0,
        "r0": 0.0125,
        "r1": 0.0094
       },
@@ -24549,9 +24597,9 @@
        "material": "lavender-bark",
        "kind": "capsule",
        "x0": 0.0125,
-       "y0": 0.0,
+       "y0": 0,
        "x1": 0.16,
-       "y1": 0.0,
+       "y1": 0,
        "r0": 0.0125,
        "r1": 0.0094
       },
@@ -24566,9 +24614,9 @@
        "material": "lavender-bark",
        "kind": "capsule",
        "x0": 0.0125,
-       "y0": 0.0,
+       "y0": 0,
        "x1": 0.2,
-       "y1": 0.0,
+       "y1": 0,
        "r0": 0.0125,
        "r1": 0.0094
       },
@@ -24582,12 +24630,12 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
          0.18,
-         0.0
+         0
         ]
        ],
        "closed": false
@@ -24603,9 +24651,9 @@
        "material": "lavender-flower",
        "kind": "capsule",
        "x0": 0.18,
-       "y0": 0.0,
+       "y0": 0,
        "x1": 0.2315,
-       "y1": 0.0,
+       "y1": 0,
        "r0": 0.0085,
        "r1": 0.0085
       },
@@ -24767,12 +24815,12 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
          0.18,
-         0.0
+         0
         ]
        ],
        "closed": false
@@ -24788,9 +24836,9 @@
        "material": "lavender-flower",
        "kind": "capsule",
        "x0": 0.18,
-       "y0": 0.0,
+       "y0": 0,
        "x1": 0.2315,
-       "y1": 0.0,
+       "y1": 0,
        "r0": 0.0085,
        "r1": 0.0085
       },
@@ -24952,12 +25000,12 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
          0.18,
-         0.0
+         0
         ]
        ],
        "closed": false
@@ -24973,9 +25021,9 @@
        "material": "lavender-flower",
        "kind": "capsule",
        "x0": 0.18,
-       "y0": 0.0,
+       "y0": 0,
        "x1": 0.2315,
-       "y1": 0.0,
+       "y1": 0,
        "r0": 0.0085,
        "r1": 0.0085
       },
@@ -25137,12 +25185,12 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
          0.18,
-         0.0
+         0
         ]
        ],
        "closed": false
@@ -25158,9 +25206,9 @@
        "material": "lavender-flower",
        "kind": "capsule",
        "x0": 0.18,
-       "y0": 0.0,
+       "y0": 0,
        "x1": 0.2315,
-       "y1": 0.0,
+       "y1": 0,
        "r0": 0.0085,
        "r1": 0.0085
       },
@@ -25322,12 +25370,12 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
          0.18,
-         0.0
+         0
         ]
        ],
        "closed": false
@@ -25343,9 +25391,9 @@
        "material": "lavender-flower",
        "kind": "capsule",
        "x0": 0.18,
-       "y0": 0.0,
+       "y0": 0,
        "x1": 0.2315,
-       "y1": 0.0,
+       "y1": 0,
        "r0": 0.0085,
        "r1": 0.0085
       },
@@ -25869,7 +25917,7 @@
        "region": "leaf-cushion",
        "material": "lavender-leaf",
        "kind": "ellipse",
-       "cx": 0.0,
+       "cx": 0,
        "cy": 0.188,
        "rx": 0.208,
        "ry": 0.158
@@ -25884,7 +25932,7 @@
        "region": "leaf-cushion",
        "material": "lavender-leaf",
        "kind": "ellipse",
-       "cx": 0.0,
+       "cx": 0,
        "cy": 0.185,
        "rx": 0.208,
        "ry": 0.155
@@ -25929,7 +25977,7 @@
        "region": "leaf-cushion",
        "material": "lavender-leaf",
        "kind": "ellipse",
-       "cx": 0.0,
+       "cx": 0,
        "cy": 0.233,
        "rx": 0.245,
        "ry": 0.152
@@ -26186,12 +26234,12 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
          0.046,
-         0.0
+         0
         ],
         [
          0.0423,
@@ -26202,7 +26250,7 @@
          0.055
         ],
         [
-         0.0,
+         0,
          0.06
         ],
         [
@@ -26215,7 +26263,7 @@
         ],
         [
          -0.046,
-         0.0
+         0
         ]
        ],
        "closed": true
@@ -26230,9 +26278,9 @@
        "region": "stem-bark",
        "material": "lavender-bark",
        "kind": "capsule",
-       "x0": 0.0,
+       "x0": 0,
        "y0": 0.0125,
-       "x1": 0.0,
+       "x1": 0,
        "y1": 0.16,
        "r0": 0.0125,
        "r1": 0.0094
@@ -26247,9 +26295,9 @@
        "region": "stem-bark",
        "material": "lavender-bark",
        "kind": "capsule",
-       "x0": 0.0,
+       "x0": 0,
        "y0": 0.0125,
-       "x1": 0.0,
+       "x1": 0,
        "y1": 0.16,
        "r0": 0.0125,
        "r1": 0.0094
@@ -26298,9 +26346,9 @@
        "region": "stem-bark",
        "material": "lavender-bark",
        "kind": "capsule",
-       "x0": 0.0,
+       "x0": 0,
        "y0": 0.0125,
-       "x1": 0.0,
+       "x1": 0,
        "y1": 0.2,
        "r0": 0.0125,
        "r1": 0.0094
@@ -26315,11 +26363,11 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.3
         ],
         [
-         0.0,
+         0,
          0.4761
         ]
        ],
@@ -26335,9 +26383,9 @@
        "region": "flower-spikes",
        "material": "lavender-flower",
        "kind": "capsule",
-       "x0": 0.0,
+       "x0": 0,
        "y0": 0.4761,
-       "x1": 0.0,
+       "x1": 0,
        "y1": 0.5264,
        "r0": 0.0085,
        "r1": 0.0085
@@ -26500,11 +26548,11 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.3
         ],
         [
-         0.0,
+         0,
          0.4761
         ]
        ],
@@ -26520,9 +26568,9 @@
        "region": "flower-spikes",
        "material": "lavender-flower",
        "kind": "capsule",
-       "x0": 0.0,
+       "x0": 0,
        "y0": 0.4761,
-       "x1": 0.0,
+       "x1": 0,
        "y1": 0.5264,
        "r0": 0.0085,
        "r1": 0.0085
@@ -27055,11 +27103,11 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.36
         ],
         [
-         0.0,
+         0,
          0.54
         ]
        ],
@@ -27075,9 +27123,9 @@
        "region": "flower-spikes",
        "material": "lavender-flower",
        "kind": "capsule",
-       "x0": 0.0,
+       "x0": 0,
        "y0": 0.54,
-       "x1": 0.0,
+       "x1": 0,
        "y1": 0.5915,
        "r0": 0.0085,
        "r1": 0.0085
@@ -27603,7 +27651,7 @@
        "material": "lavender-leaf",
        "kind": "ellipse",
        "cx": 0.188,
-       "cy": 0.0,
+       "cy": 0,
        "rx": 0.212,
        "ry": 0.208
       },
@@ -27618,7 +27666,7 @@
        "material": "lavender-leaf",
        "kind": "ellipse",
        "cx": -0.188,
-       "cy": 0.0,
+       "cy": 0,
        "rx": 0.212,
        "ry": 0.208
       },
@@ -27632,7 +27680,7 @@
        "region": "leaf-cushion",
        "material": "lavender-leaf",
        "kind": "ellipse",
-       "cx": 0.0,
+       "cx": 0,
        "cy": 0.168,
        "rx": 0.208,
        "ry": 0.212
@@ -27647,7 +27695,7 @@
        "region": "leaf-cushion",
        "material": "lavender-leaf",
        "kind": "ellipse",
-       "cx": 0.0,
+       "cx": 0,
        "cy": -0.168,
        "rx": 0.208,
        "ry": 0.212
@@ -27662,8 +27710,8 @@
        "region": "leaf-cushion",
        "material": "lavender-leaf",
        "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
+       "cx": 0,
+       "cy": 0,
        "rx": 0.245,
        "ry": 0.245
       },
@@ -27917,8 +27965,8 @@
        "region": "stem-bark",
        "material": "lavender-bark",
        "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
+       "cx": 0,
+       "cy": 0,
        "rx": 0.046,
        "ry": 0.046
       },
@@ -27933,9 +27981,9 @@
        "material": "lavender-bark",
        "kind": "capsule",
        "x0": 0.015,
-       "y0": 0.0,
+       "y0": 0,
        "x1": 0.105,
-       "y1": 0.0,
+       "y1": 0,
        "r0": 0.0125,
        "r1": 0.0094
       },
@@ -27950,9 +27998,9 @@
        "material": "lavender-bark",
        "kind": "capsule",
        "x0": -0.015,
-       "y0": 0.0,
+       "y0": 0,
        "x1": -0.105,
-       "y1": 0.0,
+       "y1": 0,
        "r0": 0.0125,
        "r1": 0.0094
       },
@@ -27966,9 +28014,9 @@
        "region": "stem-bark",
        "material": "lavender-bark",
        "kind": "capsule",
-       "x0": 0.0,
+       "x0": 0,
        "y0": 0.02,
-       "x1": 0.0,
+       "x1": 0,
        "y1": 0.12,
        "r0": 0.0125,
        "r1": 0.0094
@@ -27983,9 +28031,9 @@
        "region": "stem-bark",
        "material": "lavender-bark",
        "kind": "capsule",
-       "x0": 0.0,
+       "x0": 0,
        "y0": -0.02,
-       "x1": 0.0,
+       "x1": 0,
        "y1": -0.12,
        "r0": 0.0125,
        "r1": 0.0094
@@ -28000,10 +28048,10 @@
        "region": "stem-bark",
        "material": "lavender-bark",
        "kind": "capsule",
-       "x0": 0.0,
-       "y0": 0.0,
-       "x1": 0.0,
-       "y1": 0.0,
+       "x0": 0,
+       "y0": 0,
+       "x1": 0,
+       "y1": 0,
        "r0": 0.0125,
        "r1": 0.0094
       },
@@ -28018,11 +28066,11 @@
        "points": [
         [
          0.17,
-         0.0
+         0
         ],
         [
          0.2074,
-         0.0
+         0
         ]
        ],
        "closed": false
@@ -28038,9 +28086,9 @@
        "material": "lavender-flower",
        "kind": "capsule",
        "x0": 0.2074,
-       "y0": 0.0,
+       "y0": 0,
        "x1": 0.2181,
-       "y1": 0.0,
+       "y1": 0,
        "r0": 0.0085,
        "r1": 0.0085
       },
@@ -28203,11 +28251,11 @@
        "points": [
         [
          -0.17,
-         0.0
+         0
         ],
         [
          -0.2074,
-         0.0
+         0
         ]
        ],
        "closed": false
@@ -28223,9 +28271,9 @@
        "material": "lavender-flower",
        "kind": "capsule",
        "x0": -0.2074,
-       "y0": 0.0,
+       "y0": 0,
        "x1": -0.2181,
-       "y1": 0.0,
+       "y1": 0,
        "r0": 0.0085,
        "r1": 0.0085
       },
@@ -28387,9 +28435,9 @@
        "region": "flower-spikes",
        "material": "lavender-flower",
        "kind": "capsule",
-       "x0": 0.0,
+       "x0": 0,
        "y0": 0.16,
-       "x1": 0.0,
+       "x1": 0,
        "y1": 0.16,
        "r0": 0.0085,
        "r1": 0.0085
@@ -28552,9 +28600,9 @@
        "region": "flower-spikes",
        "material": "lavender-flower",
        "kind": "capsule",
-       "x0": 0.0,
+       "x0": 0,
        "y0": -0.16,
-       "x1": 0.0,
+       "x1": 0,
        "y1": -0.16,
        "r0": 0.0085,
        "r1": 0.0085
@@ -28717,10 +28765,10 @@
        "region": "flower-spikes",
        "material": "lavender-flower",
        "kind": "capsule",
-       "x0": 0.0,
-       "y0": 0.0,
-       "x1": 0.0,
-       "y1": 0.0,
+       "x0": 0,
+       "y0": 0,
+       "x1": 0,
+       "y1": 0,
        "r0": 0.0085,
        "r1": 0.0085
       },
@@ -29329,10 +29377,10 @@
        "material": "lavender-leaf",
        "kind": "ellipse",
        "cx": 0.06,
-       "cy": 0.0,
+       "cy": 0,
        "rx": 0.25,
        "ry": 0.165,
-       "rotationDeg": -90.0
+       "rotationDeg": -90
       },
       {
        "id": "lobe-04",
@@ -29345,10 +29393,10 @@
        "material": "lavender-leaf",
        "kind": "ellipse",
        "cx": 0.055,
-       "cy": 0.0,
+       "cy": 0,
        "rx": 0.25,
        "ry": 0.16,
-       "rotationDeg": -90.0
+       "rotationDeg": -90
       },
       {
        "id": "lobe-05",
@@ -29361,10 +29409,10 @@
        "material": "lavender-leaf",
        "kind": "ellipse",
        "cx": 0.065,
-       "cy": 0.0,
+       "cy": 0,
        "rx": 0.26,
        "ry": 0.15,
-       "rotationDeg": -90.0
+       "rotationDeg": -90
       },
       {
        "id": "lobe-06",
@@ -29443,11 +29491,11 @@
        "points": [
         [
          0.04,
-         0.0
+         0
         ],
         [
          0.09,
-         0.0
+         0
         ],
         [
          0.086,
@@ -29471,7 +29519,7 @@
         ],
         [
          -0.01,
-         0.0
+         0
         ]
        ],
        "closed": true
@@ -29521,9 +29569,9 @@
        "material": "lavender-bark",
        "kind": "capsule",
        "x0": 0.016,
-       "y0": 0.0,
+       "y0": 0,
        "x1": 0.21,
-       "y1": 0.0,
+       "y1": 0,
        "r0": 0.016,
        "r1": 0.012
       },
@@ -29537,12 +29585,12 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
          0.165,
-         0.0
+         0
         ]
        ],
        "closed": false
@@ -29558,9 +29606,9 @@
        "material": "lavender-flower",
        "kind": "capsule",
        "x0": 0.165,
-       "y0": 0.0,
+       "y0": 0,
        "x1": 0.224,
-       "y1": 0.0,
+       "y1": 0,
        "r0": 0.016,
        "r1": 0.016
       },
@@ -29648,12 +29696,12 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
          0.165,
-         0.0
+         0
         ]
        ],
        "closed": false
@@ -29669,9 +29717,9 @@
        "material": "lavender-flower",
        "kind": "capsule",
        "x0": 0.165,
-       "y0": 0.0,
+       "y0": 0,
        "x1": 0.224,
-       "y1": 0.0,
+       "y1": 0,
        "r0": 0.016,
        "r1": 0.016
       },
@@ -29759,12 +29807,12 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
          0.165,
-         0.0
+         0
         ]
        ],
        "closed": false
@@ -29780,9 +29828,9 @@
        "material": "lavender-flower",
        "kind": "capsule",
        "x0": 0.165,
-       "y0": 0.0,
+       "y0": 0,
        "x1": 0.224,
-       "y1": 0.0,
+       "y1": 0,
        "r0": 0.016,
        "r1": 0.016
       },
@@ -29870,12 +29918,12 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
          0.165,
-         0.0
+         0
         ]
        ],
        "closed": false
@@ -29891,9 +29939,9 @@
        "material": "lavender-flower",
        "kind": "capsule",
        "x0": 0.165,
-       "y0": 0.0,
+       "y0": 0,
        "x1": 0.224,
-       "y1": 0.0,
+       "y1": 0,
        "r0": 0.016,
        "r1": 0.016
       },
@@ -29981,12 +30029,12 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
          0.165,
-         0.0
+         0
         ]
        ],
        "closed": false
@@ -30002,9 +30050,9 @@
        "material": "lavender-flower",
        "kind": "capsule",
        "x0": 0.165,
-       "y0": 0.0,
+       "y0": 0,
        "x1": 0.224,
-       "y1": 0.0,
+       "y1": 0,
        "r0": 0.016,
        "r1": 0.016
       },
@@ -30094,7 +30142,7 @@
        "region": "leaf-cushion",
        "material": "lavender-leaf",
        "kind": "ellipse",
-       "cx": 0.0,
+       "cx": 0,
        "cy": 0.19,
        "rx": 0.25,
        "ry": 0.165
@@ -30109,7 +30157,7 @@
        "region": "leaf-cushion",
        "material": "lavender-leaf",
        "kind": "ellipse",
-       "cx": 0.0,
+       "cx": 0,
        "cy": 0.185,
        "rx": 0.25,
        "ry": 0.16
@@ -30154,7 +30202,7 @@
        "region": "leaf-cushion",
        "material": "lavender-leaf",
        "kind": "ellipse",
-       "cx": 0.0,
+       "cx": 0,
        "cy": 0.235,
        "rx": 0.26,
        "ry": 0.15
@@ -30231,12 +30279,12 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
          0.05,
-         0.0
+         0
         ],
         [
          0.046,
@@ -30247,7 +30295,7 @@
          0.055
         ],
         [
-         0.0,
+         0,
          0.06
         ],
         [
@@ -30260,7 +30308,7 @@
         ],
         [
          -0.05,
-         0.0
+         0
         ]
        ],
        "closed": true
@@ -30275,7 +30323,7 @@
        "region": "stem-bark",
        "material": "lavender-bark",
        "kind": "capsule",
-       "x0": 0.0,
+       "x0": 0,
        "y0": 0.016,
        "x1": 0.04,
        "y1": 0.17,
@@ -30292,7 +30340,7 @@
        "region": "stem-bark",
        "material": "lavender-bark",
        "kind": "capsule",
-       "x0": 0.0,
+       "x0": 0,
        "y0": 0.016,
        "x1": -0.04,
        "y1": 0.17,
@@ -30309,9 +30357,9 @@
        "region": "stem-bark",
        "material": "lavender-bark",
        "kind": "capsule",
-       "x0": 0.0,
+       "x0": 0,
        "y0": 0.016,
-       "x1": 0.0,
+       "x1": 0,
        "y1": 0.21,
        "r0": 0.016,
        "r1": 0.012
@@ -30326,11 +30374,11 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.3
         ],
         [
-         0.0,
+         0,
          0.4614
         ]
        ],
@@ -30346,9 +30394,9 @@
        "region": "flower-spikes",
        "material": "lavender-flower",
        "kind": "capsule",
-       "x0": 0.0,
+       "x0": 0,
        "y0": 0.4614,
-       "x1": 0.0,
+       "x1": 0,
        "y1": 0.5191,
        "r0": 0.016,
        "r1": 0.016
@@ -30437,11 +30485,11 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.3
         ],
         [
-         0.0,
+         0,
          0.4614
         ]
        ],
@@ -30457,9 +30505,9 @@
        "region": "flower-spikes",
        "material": "lavender-flower",
        "kind": "capsule",
-       "x0": 0.0,
+       "x0": 0,
        "y0": 0.4614,
-       "x1": 0.0,
+       "x1": 0,
        "y1": 0.5191,
        "r0": 0.016,
        "r1": 0.016
@@ -30770,11 +30818,11 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.36
         ],
         [
-         0.0,
+         0,
          0.525
         ]
        ],
@@ -30790,9 +30838,9 @@
        "region": "flower-spikes",
        "material": "lavender-flower",
        "kind": "capsule",
-       "x0": 0.0,
+       "x0": 0,
        "y0": 0.525,
-       "x1": 0.0,
+       "x1": 0,
        "y1": 0.584,
        "r0": 0.016,
        "r1": 0.016
@@ -30884,7 +30932,7 @@
        "material": "lavender-leaf",
        "kind": "ellipse",
        "cx": 0.17,
-       "cy": 0.0,
+       "cy": 0,
        "rx": 0.23,
        "ry": 0.25
       },
@@ -30899,7 +30947,7 @@
        "material": "lavender-leaf",
        "kind": "ellipse",
        "cx": -0.17,
-       "cy": 0.0,
+       "cy": 0,
        "rx": 0.23,
        "ry": 0.25
       },
@@ -30913,7 +30961,7 @@
        "region": "leaf-cushion",
        "material": "lavender-leaf",
        "kind": "ellipse",
-       "cx": 0.0,
+       "cx": 0,
        "cy": 0.15,
        "rx": 0.25,
        "ry": 0.23
@@ -30928,7 +30976,7 @@
        "region": "leaf-cushion",
        "material": "lavender-leaf",
        "kind": "ellipse",
-       "cx": 0.0,
+       "cx": 0,
        "cy": -0.15,
        "rx": 0.25,
        "ry": 0.23
@@ -30943,8 +30991,8 @@
        "region": "leaf-cushion",
        "material": "lavender-leaf",
        "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
+       "cx": 0,
+       "cy": 0,
        "rx": 0.26,
        "ry": 0.26
       },
@@ -31018,8 +31066,8 @@
        "region": "stem-bark",
        "material": "lavender-bark",
        "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
+       "cx": 0,
+       "cy": 0,
        "rx": 0.05,
        "ry": 0.05
       },
@@ -31034,7 +31082,7 @@
        "material": "lavender-bark",
        "kind": "capsule",
        "x0": 0.015,
-       "y0": 0.0,
+       "y0": 0,
        "x1": 0.12,
        "y1": 0.04,
        "r0": 0.016,
@@ -31051,7 +31099,7 @@
        "material": "lavender-bark",
        "kind": "capsule",
        "x0": -0.015,
-       "y0": 0.0,
+       "y0": 0,
        "x1": -0.12,
        "y1": -0.04,
        "r0": 0.016,
@@ -31067,10 +31115,10 @@
        "region": "stem-bark",
        "material": "lavender-bark",
        "kind": "capsule",
-       "x0": 0.0,
-       "y0": 0.0,
-       "x1": 0.0,
-       "y1": 0.0,
+       "x0": 0,
+       "y0": 0,
+       "x1": 0,
+       "y1": 0,
        "r0": 0.016,
        "r1": 0.012
       },
@@ -31085,11 +31133,11 @@
        "points": [
         [
          0.17,
-         0.0
+         0
         ],
         [
          0.2043,
-         0.0
+         0
         ]
        ],
        "closed": false
@@ -31105,9 +31153,9 @@
        "material": "lavender-flower",
        "kind": "capsule",
        "x0": 0.2043,
-       "y0": 0.0,
+       "y0": 0,
        "x1": 0.2166,
-       "y1": 0.0,
+       "y1": 0,
        "r0": 0.016,
        "r1": 0.016
       },
@@ -31196,11 +31244,11 @@
        "points": [
         [
          -0.17,
-         0.0
+         0
         ],
         [
          -0.2043,
-         0.0
+         0
         ]
        ],
        "closed": false
@@ -31216,9 +31264,9 @@
        "material": "lavender-flower",
        "kind": "capsule",
        "x0": -0.2043,
-       "y0": 0.0,
+       "y0": 0,
        "x1": -0.2166,
-       "y1": 0.0,
+       "y1": 0,
        "r0": 0.016,
        "r1": 0.016
       },
@@ -31306,9 +31354,9 @@
        "region": "flower-spikes",
        "material": "lavender-flower",
        "kind": "capsule",
-       "x0": 0.0,
+       "x0": 0,
        "y0": 0.16,
-       "x1": 0.0,
+       "x1": 0,
        "y1": 0.16,
        "r0": 0.016,
        "r1": 0.016
@@ -31397,9 +31445,9 @@
        "region": "flower-spikes",
        "material": "lavender-flower",
        "kind": "capsule",
-       "x0": 0.0,
+       "x0": 0,
        "y0": -0.16,
-       "x1": 0.0,
+       "x1": 0,
        "y1": -0.16,
        "r0": 0.016,
        "r1": 0.016
@@ -31488,10 +31536,10 @@
        "region": "flower-spikes",
        "material": "lavender-flower",
        "kind": "capsule",
-       "x0": 0.0,
-       "y0": 0.0,
-       "x1": 0.0,
-       "y1": 0.0,
+       "x0": 0,
+       "y0": 0,
+       "x1": 0,
+       "y1": 0,
        "r0": 0.016,
        "r1": 0.016
       },
@@ -31669,7 +31717,7 @@
        "points": [
         [
          -0.36,
-         0.0
+         0
         ],
         [
          -0.352,
@@ -31733,7 +31781,7 @@
         ],
         [
          0.44,
-         0.0
+         0
         ]
        ],
        "closed": true
@@ -31751,7 +31799,7 @@
        "points": [
         [
          -0.38,
-         0.0
+         0
         ],
         [
          -0.3724,
@@ -31770,31 +31818,23 @@
          0.567
         ],
         [
-         -0.1568,
+         -0.1393,
          0.5177
         ],
         [
-         -0.1045,
-         0.5835
-        ],
-        [
-         -0.0522,
-         0.5326
-        ],
-        [
-         0.0,
+         -0.0697,
          0.6
         ],
         [
-         0.0522,
+         0,
          0.5326
         ],
         [
-         0.1045,
-         0.5835
+         0.0697,
+         0.6
         ],
         [
-         0.1568,
+         0.1393,
          0.5177
         ],
         [
@@ -31815,7 +31855,7 @@
         ],
         [
          0.38,
-         0.0
+         0
         ]
        ],
        "closed": true
@@ -31833,7 +31873,7 @@
        "points": [
         [
          0.4,
-         0.0
+         0
         ],
         [
          0.3671,
@@ -31856,7 +31896,7 @@
          0.3487
         ],
         [
-         0.0,
+         0,
          0.3762
         ],
         [
@@ -31881,7 +31921,7 @@
         ],
         [
          -0.4,
-         0.0
+         0
         ],
         [
          -0.3671,
@@ -31904,7 +31944,7 @@
          -0.3487
         ],
         [
-         0.0,
+         0,
          -0.3762
         ],
         [
@@ -31941,7 +31981,7 @@
        "points": [
         [
          0.05,
-         0.0
+         0
         ],
         [
          0.0433,
@@ -31952,7 +31992,7 @@
          0.0433
         ],
         [
-         0.0,
+         0,
          0.05
         ],
         [
@@ -31965,7 +32005,7 @@
         ],
         [
          -0.05,
-         0.0
+         0
         ],
         [
          -0.0433,
@@ -31976,7 +32016,7 @@
          -0.0433
         ],
         [
-         0.0,
+         0,
          -0.05
         ],
         [

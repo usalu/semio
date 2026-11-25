@@ -89,6 +89,17 @@ export class ShardRouting {
     this.state.shards[index] = this.hub.transport.spawnShard(index);
   }
 
+  /** ♻️ Gives a shard's wasm memory back: linear memory never shrinks, so a shard whose last actor is gone, with nothing in flight and no original closure pending besides the one that just reported (its worker already dropped the instance whether or not the guest closed its source), is replaced by a fresh worker at the same index. */
+  recycleIdle(slot: ShardSlot, closed?: bigint): boolean {
+    if (this.state.shards[slot.index] !== slot || !slot.available || slot.actorIds.size > 0 || slot.pendingRequestIds.size > 0) return false;
+    for (const [operation, activation] of this.state.originalClosures) if (activation.slot === slot && operation !== closed) return false;
+    for (const activation of this.state.actorActivations.values()) if (activation.slot === slot) return false;
+    this.hub.transport.failShard(slot, new Error(`shard ${slot.index} recycled`));
+    slot.worker.terminate();
+    this.state.shards[slot.index] = this.hub.transport.spawnShard(slot.index);
+    return true;
+  }
+
   /** ⏏️ Tears down every shard's worker — call on full app shutdown, never per-actor (use {@link dispose}). */
   disposeAll(): void {
     this.hub.watchdog.stopWatchdog();

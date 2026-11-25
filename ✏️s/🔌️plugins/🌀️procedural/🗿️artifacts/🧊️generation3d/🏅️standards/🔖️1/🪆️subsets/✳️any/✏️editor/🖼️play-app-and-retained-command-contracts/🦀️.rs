@@ -59,7 +59,7 @@ pub fn generation3d_render_body(
     view_state: &semio_plugin::ViewModel,
     marks: &PreviewInteractionMarks,
     session: &FlowEvalSession,
-    run: Option<&semio_plugin::ToolRunView>,
+    run: Option<semio_plugin::ToolRunPollView<'_>>,
     hover_groups: &mut Option<semio_s_artifact_procedural_3d_preview_eval::PreviewHoverGroups>,
 ) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
     let labels = generation3d_labels(view_state);

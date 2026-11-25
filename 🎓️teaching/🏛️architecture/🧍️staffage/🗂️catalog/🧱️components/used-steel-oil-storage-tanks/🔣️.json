@@ -13,18 +13,90 @@
    "de": "Drei gebrauchte doppelwandige Heizöl-Batterietanks zu 1000 l, ein PE-HD-Innenbehälter in einem Stahlmantel von 1,25 mm, je 1640 x 1100 x 760 mm, noch verbunden durch ihre abgetrennten und verschlossenen Füll- und Lüftungsleitungen DN 40 und die Kupfer-Entnahmeleitung; gereinigt und entgast liegen sie hochkant auf zwei Kanthölzern, werden auf Gabelzinken angehoben und stehen im Wiedereinbau aufrecht und befüllt."
   },
   "tags": [
-   "component",
-   "reclaimed",
-   "used",
-   "hvac",
-   "heating",
-   "plumbing",
-   "steel",
-   "polyethylene",
-   "tank",
-   "oil-tank",
-   "storage",
-   "double-walled"
+   {
+    "id": "component",
+    "title": {
+     "en": "component",
+     "de": "Bauteil"
+    }
+   },
+   {
+    "id": "reclaimed",
+    "title": {
+     "en": "reclaimed",
+     "de": "wiederverwendet"
+    }
+   },
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "hvac",
+    "title": {
+     "en": "HVAC",
+     "de": "HLK"
+    }
+   },
+   {
+    "id": "heating",
+    "title": {
+     "en": "heating",
+     "de": "Heizung"
+    }
+   },
+   {
+    "id": "plumbing",
+    "title": {
+     "en": "plumbing",
+     "de": "Sanitär"
+    }
+   },
+   {
+    "id": "steel",
+    "title": {
+     "en": "steel",
+     "de": "Stahl"
+    }
+   },
+   {
+    "id": "polyethylene",
+    "title": {
+     "en": "polyethylene",
+     "de": "Polyethylen"
+    }
+   },
+   {
+    "id": "tank",
+    "title": {
+     "en": "tank",
+     "de": "Tank"
+    }
+   },
+   {
+    "id": "oil-tank",
+    "title": {
+     "en": "oil tank",
+     "de": "Öltank"
+    }
+   },
+   {
+    "id": "storage",
+    "title": {
+     "en": "storage",
+     "de": "Lagerung"
+    }
+   },
+   {
+    "id": "double-walled",
+    "title": {
+     "en": "double walled",
+     "de": "doppelwandig"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage component authors",

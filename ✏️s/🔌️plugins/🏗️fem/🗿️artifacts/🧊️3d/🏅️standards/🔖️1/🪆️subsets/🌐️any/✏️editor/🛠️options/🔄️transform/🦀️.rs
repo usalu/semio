@@ -40,7 +40,7 @@ pub fn measure(config: &Fem3dGumballConfig, labels: &Fem3dLabels) -> WindowMeasu
             toggle("fem3d-transform-move-planes", "square", labels.move_planes_flag.as_str(), config.move_planes, "movePlanes"),
             toggle("fem3d-transform-rotate", "rotate-cw", labels.rotate_flag.as_str(), config.rotate, "rotate"),
             toggle("fem3d-transform-scale-axes", "scaling", labels.scale_axes_flag.as_str(), config.scale_axes, "scaleAxes"),
-            toggle("fem3d-transform-scale-uniform", "expand", labels.scale_uniform_flag.as_str(), config.scale_uniform, "scaleUniform"),
+            toggle("fem3d-transform-scale-uniform", "maximize-2", labels.scale_uniform_flag.as_str(), config.scale_uniform, "scaleUniform"),
         ],
     }
 }

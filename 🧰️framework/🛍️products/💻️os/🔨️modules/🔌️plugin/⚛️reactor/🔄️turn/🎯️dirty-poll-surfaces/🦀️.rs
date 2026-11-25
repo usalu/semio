@@ -79,6 +79,14 @@ pub fn redirty_acknowledged_deferred_surfaces(patches: &patches::PatchTracker, d
     Ok(taken)
 }
 
+/// 🎟️ One starved surface: the rows its last render left unbuilt and, once it was re-dirtied for them, the count it was re-dirtied at.
+pub(super) struct StarvedSurface {
+    pub instance: u32,
+    pub surface: ui_contract::SurfaceId,
+    pub unbuilt: usize,
+    pub retried_at: Option<usize>,
+}
+
 /// 🎟️ Surfaces whose last render stopped short for want of `UiValue` arena credit, each with the rows it left unbuilt
 /// ([`crate::app::take_arena_unbuilt_rows`]). The arena is ONE page shared by every panel and by the generations the
 /// close ladder is still retiring, so a quick edit → undo → redo renders against whatever is left; its windows then
@@ -86,39 +94,87 @@ pub fn redirty_acknowledged_deferred_surfaces(patches: &patches::PatchTracker, d
 /// asks again. [`redirty_arena_starved_surfaces`] renders such a surface once more as soon as the arena can price the
 /// rows it is missing, so the rows arrive with the returned credit and no surface re-renders while it cannot gain.
 pub(super) struct ArenaStarvedSurfaces {
-    pub slots: [Option<(u32, ui_contract::SurfaceId, usize)>; DIRTY_RENDER_CAPACITY],
+    pub slots: [Option<StarvedSurface>; DIRTY_RENDER_CAPACITY],
 }
 
 impl ArenaStarvedSurfaces {
     /// 🎟️ Records `surface`'s latest render: short by `unbuilt` rows, or complete (`0`) — which forgets it.
+    ///
+    /// 🐛️ A surface re-dirtied for its missing rows that comes back short by as many or more is one no retry can finish: its rows exceed what the arena can ever hold. It is forgotten instead of re-dirtied again, because its own retirement returns exactly the credit that triggers the next retry. FEM 3D measured the artifact panel at revision 1 704 and both canvas windows at generation 1 775 within three minutes, every turn `reconcile` or `reconcile,ui_retirement`.
     pub fn note(&mut self, instance: u32, surface: &str, unbuilt: usize) {
         let Ok(surface) = ui_contract::SurfaceId::try_from(surface) else { return };
-        for slot in &mut self.slots {
-            if slot.as_ref().is_some_and(|(owner, starved, _)| *owner == instance && *starved == surface) {
-                *slot = None;
-            }
-        }
-        if unbuilt == 0 {
+        let previous = self.slots.iter_mut().find(|slot| slot.as_ref().is_some_and(|starved| starved.instance == instance && starved.surface == surface)).and_then(Option::take);
+        if unbuilt == 0 || previous.as_ref().and_then(|starved| starved.retried_at).is_some_and(|retried_at| unbuilt >= retried_at) {
             return;
         }
         if let Some(slot) = self.slots.iter_mut().find(|slot| slot.is_none()) {
-            *slot = Some((instance, surface, unbuilt));
+            *slot = Some(StarvedSurface { instance, surface, unbuilt, retried_at: None });
         }
+    }
+
+    /// 🎟️ Hands every starved surface whose missing rows `rows` can price again to `dirty` once, remembering the count it was re-dirtied at, and answers how many.
+    pub fn redirty(&mut self, rows: usize, dirty: &mut DirtyPollOwners) -> Result<usize, semio_framework::Fault> {
+        let mut taken = 0usize;
+        for starved in self.slots.iter_mut().flatten().filter(|starved| starved.retried_at.is_none() && starved.unbuilt <= rows) {
+            dirty.try_surface(starved.instance, starved.surface.clone()).map_err(|_| reactor_close_fault("fixed dirty surface authority saturated"))?;
+            starved.retried_at = Some(starved.unbuilt);
+            taken += 1;
+        }
+        Ok(taken)
     }
 }
 
 /// 🎟️ Re-dirties every arena-starved surface whose missing rows the `UiValue` arena can price again, and answers how many.
 pub(super) fn redirty_arena_starved_surfaces(dirty: &mut DirtyPollOwners) -> Result<usize, semio_framework::Fault> {
     let rows = ui_contract::ui_value_headroom().rows();
-    ARENA_STARVED.with(|starved| {
-        let mut taken = 0usize;
-        for slot in starved.borrow_mut().slots.iter_mut() {
-            let Some((instance, surface, _)) = slot.take_if(|(_, _, unbuilt)| *unbuilt <= rows) else { continue };
-            dirty.try_surface(instance, surface).map_err(|_| reactor_close_fault("fixed dirty surface authority saturated"))?;
-            taken += 1;
-        }
-        Ok(taken)
-    })
+    let taken = ARENA_STARVED.with(|starved| starved.borrow_mut().redirty(rows, dirty))?;
+    if taken > 0 {
+        trace_guest_line(&format!("[TRACE] reactor arena-starved surfaces re-dirtied taken={taken} rows={rows}"));
+    }
+    Ok(taken)
+}
+
+#[cfg(test)]
+mod arena_starved_tests {
+    use super::*;
+
+    fn starved() -> ArenaStarvedSurfaces {
+        ArenaStarvedSurfaces { slots: [const { None }; DIRTY_RENDER_CAPACITY] }
+    }
+
+    fn occupied(table: &ArenaStarvedSurfaces) -> usize {
+        table.slots.iter().flatten().count()
+    }
+
+    /// ⚖️ LAW: a surface that a retry leaves as short as before is forgotten, not re-dirtied for ever.
+    #[test]
+    fn a_starved_surface_whose_retry_gains_nothing_is_not_redirtied_again() {
+        let mut table = starved();
+        let mut dirty = DirtyPollOwners::new();
+        table.note(1, "framework.panel.artifact", 5);
+        assert_eq!(table.redirty(4, &mut dirty).unwrap(), 0, "the arena cannot price the missing rows yet");
+        assert_eq!(table.redirty(10, &mut dirty).unwrap(), 1);
+        assert_eq!(table.redirty(10, &mut dirty).unwrap(), 0, "a surface waiting for its retry is not re-dirtied");
+        table.note(1, "framework.panel.artifact", 5);
+        assert_eq!(occupied(&table), 0, "the retry gained no rows, so the surface is forgotten");
+        assert_eq!(table.redirty(10, &mut dirty).unwrap(), 0);
+        assert_eq!(dirty.surfaces.len(), 1);
+    }
+
+    /// ⚖️ LAW: a retry that gains rows is followed by another retry for the rest, and a complete render forgets the surface.
+    #[test]
+    fn a_starved_surface_whose_retry_gains_rows_is_retried_until_complete() {
+        let mut table = starved();
+        let mut dirty = DirtyPollOwners::new();
+        table.note(1, "fem3d-model", 8);
+        assert_eq!(table.redirty(8, &mut dirty).unwrap(), 1);
+        table.note(1, "fem3d-model", 3);
+        assert_eq!(occupied(&table), 1);
+        assert_eq!(table.redirty(3, &mut dirty).unwrap(), 1);
+        table.note(1, "fem3d-model", 0);
+        assert_eq!(occupied(&table), 0);
+        assert_eq!(dirty.surfaces.len(), 1, "one surface, queued once");
+    }
 }
 
 impl DirtyPollOwners {

@@ -13,4 +13,7 @@ extern crate semio_framework_value_derive as value_derive;
 pub mod broken;
 #[path = "🎬️demo/🦀️.rs"]
 pub mod demo;
+#[cfg(test)]
+#[path = "🧪️tests/🗜️pack-twins/🦀️.rs"]
+mod pack_twins;
 //#endregion 🪢️Mounts

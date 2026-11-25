@@ -9,6 +9,7 @@ import {installBootStageV1,listCodeSnapshotsV1,listStoreCodeV1,publishCodeSnapsh
 import {admitCodeV1,createAdmissionStateV1,applyQueue,closeReplicaV1,followOnceV1,joinV1,openReplicaV1,publishOnceV1,ReplicaBusyV1,runV1,seedV1,statusV1,type ReplicaEventV1,type ReplicaOptionsV1} from "../🟦️.ts";
 import {runReplicaCommandV1} from "../⌨️command/🟦️.ts";
 import {bootLimitsV1} from "../🛟️supervisor/🟦️.ts";
+import {readProcessStartV1} from "../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts";
 
 setDefaultTimeout(180_000);
 const scratch:string[]=[],module_="🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree";
@@ -460,10 +461,10 @@ test("status reports a daemon with a blocked event loop as running and busy, and
  const holder=Bun.spawn([process.execPath,"-e","setTimeout(()=>{},60000)"],{stdout:"ignore",stderr:"ignore"});
  try{
   const lock=join(worktree,".cache","f","daemon.lock");
-  writeFileSync(lock,JSON.stringify({version:1,pid:holder.pid,startedMs:Date.now()-600_000,originId:"s1",bootMs:Date.now()-Math.round(uptime()*1000),hb:true}));
+  writeFileSync(lock,JSON.stringify({version:1,pid:holder.pid,startMs:(()=>{const read=readProcessStartV1(holder.pid);return typeof read==="number"?read:1;})(),originId:"s1",bootMs:Date.now()-Math.round(uptime()*1000),hb:true}));
   const old=(Date.now()-300_000)/1000;utimesSync(lock,old,old);
   expect((await statusV1(options)).daemon).toEqual({running:false,pid:null});
-  const beat=(lagMs:number)=>JSON.stringify({version:1,pid:holder.pid,parent:1,startedMs:Date.now()-600_000,wallMs:Date.now(),phase:"run",base:worktree,source:"worktree",lagMs});
+  const beat=(lagMs:number)=>JSON.stringify({version:1,pid:holder.pid,startMs:(()=>{const read=readProcessStartV1(holder.pid);return typeof read==="number"?read:1;})(),parent:1,startedMs:Date.now()-600_000,wallMs:Date.now(),phase:"run",base:worktree,source:"worktree",lagMs});
   put(worktree,".cache/f/boot/beat.json",beat(95_000));
   const busy=await statusV1(options);
   expect(busy.daemon).toEqual({running:true,pid:holder.pid,busySeconds:95});expect(busy.code).toEqual({source:"worktree",phase:"run"});

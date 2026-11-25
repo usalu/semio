@@ -65,6 +65,12 @@ path = "../../../../../🧰️framework/🛍️products/💻️os/📦️package
 [workspace.dependencies.semio-plugin-ownership]
 path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/🧱️owner/📦️packages/🦀️rust"
 
+[workspace.dependencies.semio-plugin-store-lifecycle]
+path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/♻️lifecycle/🧱️owner/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-plugin-transient-publication]
+path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🫧️transient/🧱️owner/📦️packages/🦀️rust"
+
 [workspace.dependencies.semio-plugin]
 path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust"
 

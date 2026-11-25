@@ -13,19 +13,97 @@
    "de": "Ein gebrauchter Edelstahl-Fußbodenheizungsverteiler für acht Kreise mit Durchflussanzeigern auf dem Vorlaufbalken, thermischen Stellantrieben auf dem Rücklaufbalken, roten und blauen Kugelhähnen 1 Zoll, zwei Haltern und sechzehn abgeschnittenen PE-X-Stummeln, noch in seinem Aufputz-Stahlblechschrank 780 x 705 x 125 mm, dessen Tür fehlt; entleert liegt er auf dem Rücken in einer oben offenen Fichtenkiste, wird von Hand herausgehoben und läuft, wieder an eine Wand montiert, mit 35/28 °C."
   },
   "tags": [
-   "component",
-   "reclaimed",
-   "used",
-   "hvac",
-   "heating",
-   "plumbing",
-   "controls",
-   "manifold",
-   "underfloor-heating",
-   "stainless-steel",
-   "sheet-steel",
-   "pe-x",
-   "crate"
+   {
+    "id": "component",
+    "title": {
+     "en": "component",
+     "de": "Bauteil"
+    }
+   },
+   {
+    "id": "reclaimed",
+    "title": {
+     "en": "reclaimed",
+     "de": "wiederverwendet"
+    }
+   },
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "hvac",
+    "title": {
+     "en": "HVAC",
+     "de": "HLK"
+    }
+   },
+   {
+    "id": "heating",
+    "title": {
+     "en": "heating",
+     "de": "Heizung"
+    }
+   },
+   {
+    "id": "plumbing",
+    "title": {
+     "en": "plumbing",
+     "de": "Sanitär"
+    }
+   },
+   {
+    "id": "controls",
+    "title": {
+     "en": "controls",
+     "de": "Bedienelemente"
+    }
+   },
+   {
+    "id": "manifold",
+    "title": {
+     "en": "manifold",
+     "de": "Verteiler"
+    }
+   },
+   {
+    "id": "underfloor-heating",
+    "title": {
+     "en": "underfloor heating",
+     "de": "Fußbodenheizung"
+    }
+   },
+   {
+    "id": "stainless-steel",
+    "title": {
+     "en": "stainless steel",
+     "de": "Edelstahl"
+    }
+   },
+   {
+    "id": "sheet-steel",
+    "title": {
+     "en": "sheet steel",
+     "de": "Stahlblech"
+    }
+   },
+   {
+    "id": "pe-x",
+    "title": {
+     "en": "PE-X",
+     "de": "PE-X"
+    }
+   },
+   {
+    "id": "crate",
+    "title": {
+     "en": "crate",
+     "de": "Kiste"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage component authors",

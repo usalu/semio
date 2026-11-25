@@ -454,7 +454,7 @@ class Beat1_Anatomy(_visuals.ClipScene):
         edges = [self._tok(name, point, tone) for name, point, tone in (("B2", lines.front_edge, BLUE), ("B3", lines.side_edge, RED))]
         glyph = self.xl_formula_text("(  )", language=lang, at=(0.0, -0.1, 0.0), ink=GOOD).scale(2.4)
         glyph.set_stroke(color=GOOD, width=2.5, opacity=1.0).set_fill(GOOD, opacity=1.0)
-        plate = _engine.RoundedRectangle(corner_radius=0.12, width=glyph.width + 0.4, height=glyph.height + 0.3, stroke_color=GOOD, stroke_width=3, fill_color="#10222B", fill_opacity=1.0).move_to(glyph)
+        plate = _engine.Rectangle(width=glyph.width + 0.4, height=glyph.height + 0.3, stroke_color=GOOD, stroke_width=3, fill_color="#10222B", fill_opacity=1.0).move_to(glyph)
         bracket = _engine.VGroup(plate, glyph).move_to(bar + np.array([1.5, 0.0, 0.0]))
         landed = bracket.copy().move_to(lines.back_edge)
         self._clause("precedence", [_engine.FadeOut(window), _engine.FadeIn(window2)], lambda: self.add(*names, bracket),

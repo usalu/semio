@@ -240,7 +240,7 @@ fn snapping_agrees_with_the_numpy_oracle() {
         "[{}]",
         cases.iter().map(|(raw, inc, tol)| format!("{{\"raw\":{raw},\"min\":0.5,\"max\":12.0,\"targets\":{:?},\"tolerance\":{tol},\"increment\":{inc}}}", if *tol > 0.0 { targets.to_vec() } else { vec![] })).collect::<Vec<_>>().join(",")
     );
-    let script = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🕹️direct-manipulation/🔮️oracles/🐍️.py");
+    let script = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🕹️direct-manipulation/🔮️oracles/🐍️.py");
     let out = semio_s_plugin_norm_compliance::python_oracle::run(script, &[], Some(json.as_bytes()));
     assert!(out.status.success(), "{}", String::from_utf8_lossy(&out.stderr));
     let expected: Vec<f64> = String::from_utf8(out.stdout).unwrap().lines().map(|l| l.parse().unwrap()).collect();

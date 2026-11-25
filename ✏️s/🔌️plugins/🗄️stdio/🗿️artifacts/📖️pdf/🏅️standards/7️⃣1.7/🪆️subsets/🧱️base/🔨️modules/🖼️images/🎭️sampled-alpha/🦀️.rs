@@ -1,6 +1,6 @@
 //! 🎭️ Samples PDF image color and alpha together on the image unit square.
 
-use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfColorSpace, PdfImage, PdfImageBody, PdfImageMask, PdfInlineImage};
+use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfColorSpace, PdfImage, PdfImageBody, PdfImageMask, PdfInlineImage, PdfPackedSamples};
 use semio_framework_artifact_reference::ArtifactRef;
 
 const MAX_CHANNELS: usize = 8;
@@ -11,7 +11,7 @@ type ResolveSamples<'a> = dyn Fn(&ArtifactRef, (u32, u32), usize) -> Option<Vec<
 pub type ConvertColour<'a> = dyn Fn(&PdfColorSpace, &[f64]) -> Option<[f64; 3]> + 'a;
 
 enum Samples<'a> {
-    Borrowed(&'a [u32]),
+    Packed(PdfPackedSamples<'a>),
     Decoded(Vec<u8>),
 }
 
@@ -42,7 +42,7 @@ impl<'a> SampleGrid<'a> {
             return None;
         }
         let samples = match body {
-            PdfImageBody::Samples { values } if values.len() == length && stride == channels => Samples::Borrowed(values),
+            PdfImageBody::Samples { packed } if stride == channels => Samples::Packed(PdfPackedSamples::new(packed, width, height, channels as u32, bits).ok().filter(|view| view.len() == length)?),
             PdfImageBody::Artifact { reference } if matches!(bits, 1 | 8) => {
                 let bytes = resolve(reference, size, stride)?;
                 if bytes.len() != full { return None; }
@@ -60,7 +60,9 @@ impl<'a> SampleGrid<'a> {
         let mut pixel = [0; MAX_CHANNELS];
         let channels = &mut pixel[..self.channels];
         match &self.samples {
-            Samples::Borrowed(values) => channels.copy_from_slice(&values[offset..offset + self.channels]),
+            Samples::Packed(view) => {
+                for (index, channel) in channels.iter_mut().enumerate() { *channel = view.get(offset + index).unwrap_or(0); }
+            }
             Samples::Decoded(values) => {
                 for (channel, &sample) in channels.iter_mut().zip(&values[offset..]) {
                     *channel = u32::from(sample);

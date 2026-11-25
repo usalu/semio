@@ -1,19 +1,19 @@
-/** 🧬️ The jco asset URL, async result and preview2 shim rewrites and the component instantiation of the ticket-owned browser host staging suite. */
+/** 🧬️ The jco instantiation factory, async result and preview2 shim rewrites and the component instantiation of the ticket-owned browser host staging suite. */
 import { actorLifetimeFixtureUrl } from "@semio-tech/framework-actor/testing/fixtures";
 import { createTestKit, type TestDependencies, type TestSource } from "../🧰️test-kit/🟦️.ts";
 
 export async function registerJcoRewriteTests(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: TestDependencies, source: TestSource): Promise<void> {
-  const { MODULE_EXTENSION_ROUTE, MODULE_PLUGIN_ROUTE, PLUGIN_HOST_SHIM_FILE, basename, hostShimSource, join, pluginComponentBridgeSource, readFileSync, repoRoot, rewriteJcoAsyncResultLifting, rewriteJcoComponentAssetUrls, rewritePreview2ShimImportSource, shardWorkerSource } = dependencies;
+  const { MODULE_EXTENSION_ROUTE, MODULE_PLUGIN_ROUTE, PLUGIN_HOST_SHIM_FILE, basename, hostShimSource, join, pluginComponentBridgeSource, readFileSync, repoRoot, rewriteJcoAsyncResultLifting, rewriteJcoComponentFactory, rewritePreview2ShimImportSource, shardWorkerSource } = dependencies;
   const { describe, expect, it } = vitest;
   const { itLong, generatedBridge, retainedGuestSource } = createTestKit(vitest, dependencies, source);
 
-  describe("rewriteJcoComponentAssetUrls", () => {
+  describe("rewriteJcoComponentFactory", () => {
     itLong("keeps generated host imports and replies isolated across same-package activations", async () => {
       const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧫️fixtures/⚡️host-activation.json"), "utf8")) as { activations: Array<{ actorId: string; generation: string; value: string }> };
-      const component = rewriteJcoComponentAssetUrls(retainedGuestSource({
-        prelude: `import { storageRead, emit } from "./${PLUGIN_HOST_SHIM_FILE}";\nconst identity = new URL(import.meta.url).searchParams.get("actor") + ":" + new URL(import.meta.url).searchParams.get("activation");`,
-        poll: `emit(identity); return { retainedReceipt: receipt(grant.retained), fuelUsed: 0n, value: await storageRead(identity), uiPatches: [], status: { tag: "idle" }, commandIngress: { kind: 0 } };`,
-      }));
+      const component = retainedGuestSource({
+        prelude: `const { storageRead, emit } = imports["./${PLUGIN_HOST_SHIM_FILE}"];\nconst identity = "instance";`,
+        poll: `emit(identity); return { retainedReceipt: receipt(), fuelUsed: 0n, value: await storageRead(identity), uiPatches: [], status: { tag: "idle" }, commandIngress: { kind: 0 } };`,
+      });
       const sent: any[] = [];
       const priorSelf = Object.getOwnPropertyDescriptor(globalThis, "self");
       Object.defineProperty(globalThis, "self", { value: { postMessage: (message: unknown) => sent.push(message) }, configurable: true, writable: true });
@@ -96,15 +96,22 @@ export async function registerJcoRewriteTests(vitest: NonNullable<ImportMeta["vi
       expect(calls).toEqual(["captured", [{ kind: "instance-close", payload }]]);
     });
 
-    it("propagates a component module rebuild version to every extracted core wasm fetch", () => {
-      const generated = `const module0 = fetchCompile(new URL('./plugin_component.core.wasm', import.meta.url));
-const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.meta.url));`;
-      const rewritten = rewriteJcoComponentAssetUrls(generated);
-      expect(rewritten).toContain("function __semioVersionedComponentAssetUrl(path)");
-      expect(rewritten).toContain("const rebuildVersion = new URL(import.meta.url).searchParams.get(\"v\")");
-      expect(rewritten).toContain("__semioVersionedComponentAssetUrl('./plugin_component.core.wasm')");
-      expect(rewritten).toContain("__semioVersionedComponentAssetUrl('./plugin_component.core2.wasm')");
-      expect(rewriteJcoComponentAssetUrls(rewritten)).toBe(rewritten);
+    it("imports every WASI interface a factory names from the preview2 shim and exports them as its import object, once", () => {
+      const generated = `"use components";
+export function instantiate(getCoreModule, imports, instantiateCore, options) {
+const { getEnvironment } = imports['wasi:cli/environment'];
+const { TerminalInput } = imports['wasi:cli/terminal-input'];
+const { now } = imports['wasi:clocks/monotonic-clock'];
+const { getRandomU64 } = imports["wasi:random/random@0.2.3"];
+const { log } = imports['./${PLUGIN_HOST_SHIM_FILE}'];
+}`;
+      const rewritten = rewriteJcoComponentFactory(generated);
+      expect(rewritten).toContain("import { environment as __wasi_cli_environment, terminalInput as __wasi_cli_terminalInput } from '@bytecodealliance/preview2-shim/cli';");
+      expect(rewritten).toContain("import { monotonicClock as __wasi_clocks_monotonicClock } from '@bytecodealliance/preview2-shim/clocks';");
+      expect(rewritten).toContain("import { random as __wasi_random_random } from '@bytecodealliance/preview2-shim/random';");
+      expect(rewritten).toContain('export const wasiImports = Object.freeze({ "wasi:cli/environment": __wasi_cli_environment, "wasi:cli/terminal-input": __wasi_cli_terminalInput, "wasi:clocks/monotonic-clock": __wasi_clocks_monotonicClock, "wasi:random/random@0.2.3": __wasi_random_random });');
+      expect(rewriteJcoComponentFactory(rewritten)).toBe(rewritten);
+      expect(() => rewriteJcoComponentFactory("const module0 = fetchCompile(new URL('./plugin_component.core.wasm', import.meta.url));")).toThrow("not an instantiation factory");
     });
   });
 

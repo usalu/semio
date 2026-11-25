@@ -1,0 +1,9 @@
+{
+  "sessionApp": { "id": "s.stdio.pdf@1.7/*#editor", "panelTabs": [{ "bodyKey": "framework.body.history", "children": [], "group": "settings", "kind": { "id": "framework.panel.history", "kind": "app" }, "label": { "native": { "de": "Verlauf", "en": "History" }, "reuse": { "de": "Verlauf", "en": "History" } } }] },
+  "hostApp": { "id": "s.space.home@1/*#editor", "panelTabs": [{ "bodyKey": "framework.body.catalogue", "children": [], "group": "workspace", "kind": { "id": "framework.panel.catalogue", "kind": "app" }, "label": { "native": { "de": "Katalog", "en": "Catalogue" }, "reuse": { "de": "Katalog", "en": "Catalogue" } } }] },
+  "cases": [
+    { "name": "standalone host", "host": false, "session": true, "leaf": "framework.panel.history" },
+    { "name": "configured host", "host": true, "session": true, "leaf": "framework.panel.catalogue" },
+    { "name": "nothing mounted", "host": false, "session": false, "refusal": "configured host app has no panel leaf" }
+  ]
+}

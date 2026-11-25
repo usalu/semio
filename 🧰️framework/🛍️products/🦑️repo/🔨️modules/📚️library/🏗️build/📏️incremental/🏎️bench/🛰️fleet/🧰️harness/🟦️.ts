@@ -26,7 +26,7 @@ export function createFleetCheckoutV1(label:string,scratch:string):FleetCheckout
  const args=(name:string,externs:readonly string[]=[])=>["--crate-name",name,"--edition=2021",`pk/${name}/src/lib.rs`,"--error-format=json","--json=diagnostic-rendered-ansi,artifacts,future-incompat","--crate-type","lib","--emit=dep-info,metadata,link","-C","embed-bitcode=no","-C","debuginfo=2","--remap-path-prefix",`${root}=.`,"-C",`metadata=${externHashV1(name)}`,"-C",`extra-filename=-${externHashV1(name)}`,"--out-dir",deps,"-L",`dependency=${deps}`,...externs.flatMap(external=>["--extern",`${external}=${join(deps,`lib${external}-${externHashV1(external)}.rlib`)}`])];
  const compile=(name:string,source:string,externs:readonly string[]=[])=>{
   crate(name,source);
-  const result=spawnSync("rustc",args(name,externs),{cwd:root,encoding:"utf8",env:rustEnvironmentV1(environment(name))});
+  const result=spawnSync("rustc",args(name,externs),{windowsHide:true,cwd:root,encoding:"utf8",env:rustEnvironmentV1(environment(name))});
   if(result.status!==0)throw Error(`rustc failed for ${name}: ${result.stderr}`);
  };
  return Object.freeze({base,root,deps,crate,compile,arguments:args,environment});

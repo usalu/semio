@@ -1,5 +1,8 @@
 //! 🔗️ Associativity and evaluation: dependencies, actions, variables, evaluation expressions and graphs, networks.
 
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_artifact_stdio_dwg_snapshot_objects_metadata::{dwg_controlled_payloads, dwg_metadata};
 use semio_framework_value::{ValueError, ValueRefusalKind};
 
 //#region 🔖️DrawingModel

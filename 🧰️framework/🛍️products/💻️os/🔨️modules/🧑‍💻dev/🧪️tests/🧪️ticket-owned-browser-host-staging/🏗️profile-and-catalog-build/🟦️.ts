@@ -30,7 +30,7 @@ export async function registerProfileAndCatalogBuildTests(vitest: NonNullable<Im
       const manifest = toml.parse(readFileSync(join(repoRoot, "Cargo.toml"), "utf8")) as any;
       expect(manifest.profile).toBeUndefined();
       const {renderCargoProfileConfigurationV1}=await import("@semio-tech/repo-lib/cargo");
-      for(const mode of ["prototype","release"] as const){const rendered=renderCargoProfileConfigurationV1({version:1,mode,target:"wasm32-wasip2",producer:"wasm-component",operation:"build"},"Cargo.toml","repository"),parsed=toml.parse(rendered.selectors.join("\n")) as {profile:Record<string,Record<string,unknown>>};expect(parsed.profile[mode]!["opt-level"]).toBe(mode==="release"?"s":1);expect(rendered.plan.profile).toBe(mode);}
+      for(const mode of ["prototype","release"] as const){const rendered=renderCargoProfileConfigurationV1({version:1,mode,target:"wasm32-wasip2",producer:"wasm-component",operation:"build"},"Cargo.toml","repository"),parsed=toml.parse(rendered.selectors.join("\n")) as {profile:Record<string,Record<string,unknown>>};expect(parsed.profile[mode]!["opt-level"]).toBe("s");expect(rendered.plan.profile).toBe(mode);}
     });
   });
 
@@ -39,7 +39,7 @@ export async function registerProfileAndCatalogBuildTests(vitest: NonNullable<Im
       const cargo = componentCargoV1("semio-hub-procedural", "release");
       expect(cargo.command).toBe("build");
       expect(cargo.args).toEqual(["-p", "semio-hub-procedural", "--lib", "--target", "wasm32-wasip2", "--profile", "release"]);
-      expect(cargo.environment).toEqual({ CARGO_UNSTABLE_FEATURE_UNIFICATION: "true", CARGO_RESOLVER_FEATURE_UNIFICATION: "package" });
+      expect(cargo.environment).toEqual({ CARGO_UNSTABLE_FEATURE_UNIFICATION: "true", CARGO_RESOLVER_FEATURE_UNIFICATION: "selected" });
       const { default: toml } = await import("@iarna/toml");
       const config = toml.parse(readFileSync(join(repoRoot, ".cargo/config.toml"), "utf8")) as any;
       const rustflags: readonly string[] = config.target["wasm32-wasip2"].rustflags;

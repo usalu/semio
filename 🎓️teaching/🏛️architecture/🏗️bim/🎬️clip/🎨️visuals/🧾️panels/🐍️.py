@@ -24,10 +24,9 @@ CARD_NAMES = {"architecture": ("Architecture", "Architektur"), "structure": ("St
 BASIS_NAMES = {"sourced": ("sourced", "belegt"), "assumed": ("assumed", "angenommen"), "inferred": ("inferred", "gefolgert")}
 
 
-def frame_box(width: float, height: float, color=MUTED, *, fill: float = 0.9, radius: float = 0.06):
-    """🔲 Dark rounded panel frame."""
-    return _engine.RoundedRectangle(corner_radius=radius, width=width, height=height, stroke_color=color, stroke_width=W_THIN,
-                                    fill_color=_art.CHROME_FILL, fill_opacity=fill)
+def frame_box(width: float, height: float, color=MUTED, *, fill: float = 0.9, top_depth: float = 0.0):
+    """🔲 Dark square panel frame; a ``top_depth`` header is one glass chip across the top edge, drawing only its inner edge."""
+    return _art.window_frame(width, height, color=color, fill_opacity=fill, stroke_width=W_THIN, top_depth=top_depth, top_chips=((0, width),) if top_depth else ())
 
 
 class Panels:
@@ -39,15 +38,12 @@ class Panels:
         head = self.text(name, (0, 0, 0), size=S_LABEL, color=color, width=width - 0.2)
         pitch = 0.3
         height = 0.46 + (len(items) * pitch + 0.14 if items else 0.0)
-        frame = frame_box(width, height, color)
+        frame = frame_box(width, height, color, top_depth=0.46 if items else 0.0)
         group = _engine.VGroup(frame, head.move_to(frame.get_top() + np.array([0, -0.23, 0])))
-        rule = segments([(frame.get_corner(_engine.UL) + (0, -0.46, 0), frame.get_corner(_engine.UR) + (0, -0.46, 0))], color, W_THIN) if items else None
         labels = []
         for index, (row, tone) in enumerate(items):
             label = self.text(row, frame.get_corner(_engine.UL) + np.array([0.14, -0.46 - 0.07 - pitch * (index + 0.5), 0]), size=size, color=tone, width=width - 0.28, anchor="l")
             labels.append(label)
-        if rule is not None:
-            group.add(rule)
         group.add(*labels)
         group.frame, group.header, group.rows = frame, head, labels
         return place(group, point, anchor)
@@ -72,8 +68,7 @@ class Panels:
             lit = node["class"] in highlight
             tone = DATA if lit else color
             chip = self.text(node["class"], (0, 0, 0), size=S_LABEL, color=tone)
-            frame = _engine.RoundedRectangle(corner_radius=0.05, width=chip.width + 0.28, height=0.36, stroke_color=tone, stroke_width=W_EDGE if lit else W_THIN,
-                                             fill_color=_art.CHROME_FILL, fill_opacity=0.95)
+            frame = _art.window_frame(chip.width + 0.28, 0.36, color=tone, stroke_width=W_EDGE if lit else W_THIN, glass=True)
             chip.move_to(frame)
             row = _engine.VGroup(frame, chip)
             attrs = _engine.VGroup()
@@ -148,13 +143,12 @@ class Panels:
             normal.append((name, text, kind))
         pitch = 0.34
         height = len(normal) * pitch + 0.2 + (0.42 if title else 0)
-        frame = frame_box(width, height, color)
+        frame = frame_box(width, height, color, top_depth=0.42 if title else 0.0)
         table = _engine.VGroup(frame)
         top = frame.get_top()[1] - 0.1
         if title:
-            head = self.text(title, (frame.get_left()[0] + 0.14, top - 0.2, 0), size=S_LABEL, color=color, anchor="l", width=width - 0.3)
+            head = self.text(title, (frame.get_left()[0] + 0.14, frame.get_top()[1] - 0.21, 0), size=S_LABEL, color=color, anchor="l", width=width - 0.3)
             table.add(head)
-            table.add(segments([(P((frame.get_left()[0], top - 0.42)), P((frame.get_right()[0], top - 0.42)))], color, W_THIN))
             top -= 0.42
         table.rows, table.title = [], None
         basis_x = frame.get_right()[0] - 0.14
@@ -268,7 +262,7 @@ class Panels:
         en, de = CARD_NAMES[model_id]
         name = info["name"][self.language()] if isinstance(info.get("name"), dict) else self.tr(en, de)
         height = 3.7 if thumbnail else 1.5
-        frame = frame_box(width, height, tone)
+        frame = frame_box(width, height, tone, top_depth=0.5)
         card = _engine.VGroup(frame)
         top = frame.get_top()[1]
         header = self.text(name, (frame.get_left()[0] + 0.16, top - 0.28, 0), size=S_BODY, color=tone, anchor="l", width=width * 0.6)
@@ -290,7 +284,7 @@ class Panels:
         guid = _model.global_id(key) if model is None else _model.element(key, model)["guid"]
         ident = self.mono(guid, (0, 0, 0), size=S_SMALL, color=color)
         head = self.text("GlobalId" + (f"  {key}" if label else ""), (0, 0, 0), size=S_SMALL, color=MUTED, anchor="l")
-        frame = frame_box(max(ident.width, head.width) + 0.32, 0.72, color)
+        frame = frame_box(max(ident.width, head.width) + 0.32, 0.72, color, top_depth=0.38)
         chip = _engine.VGroup(frame, head.move_to(frame.get_corner(_engine.UL) + np.array([0.14, -0.2, 0]), aligned_edge=_engine.LEFT),
                               ident.move_to(frame.get_corner(_engine.DL) + np.array([0.16 + ident.width / 2, 0.22, 0])))
         chip.frame, chip.id, chip.head, chip.guid = frame, ident, head, guid

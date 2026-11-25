@@ -1,0 +1,5 @@
+# World3d Lower Overlay Rail
+
+The lower-left World3d React overlay uses one vertical shared-border row at the pane glass level. The row clears the window frame’s measured footer. Its passive legend, mismatch, and terrain feature label leave input on the scene. The attribution occupies a full-width keyboard-focusable link within the rail and retains its external link attributes. The legend and mismatch share a single conditional branch.
+
+The World3d modelling suite verifies that the scalar legend or announced mismatch shares the attribution’s border and glass owner. It also checks the attribution’s accessible name, destination, and external link attributes. The full suite passed with 46 tests through the ticket’s Vitest configuration and `repo tools exec vitest`. The direct `repo test-file` route selected Bun, which cannot run the suite’s existing Vitest hoisted mocks. Vitest logged the existing jsdom limitation for the terrain canvas context. The changed source files passed the scoped whitespace check. Browser visual verification was outside this modelling test run.

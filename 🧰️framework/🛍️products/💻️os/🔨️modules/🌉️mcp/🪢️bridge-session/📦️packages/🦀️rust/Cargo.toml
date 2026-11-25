@@ -32,3 +32,6 @@ semio-os-mcp-bridge-codec = { path = "../../../🧶️bridge-codec/📦️packag
 
 [dev-dependencies]
 semio-framework-test-fixtures = { path = "../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
+
+[features]
+testkit = []

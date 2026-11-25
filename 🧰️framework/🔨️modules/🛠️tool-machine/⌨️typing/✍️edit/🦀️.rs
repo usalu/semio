@@ -43,6 +43,7 @@ impl<M:semio_framework_value::retirement::RetireOwned+Send+'static> OriginalTypi
   if output.is_some()&&!admission.settling(){return if admission.terminal_is_empty(){Ok(true)}else{admission.reset_step(cx)}}
   if failure.is_some(){return Err(invalid().into())}
   let input=request.as_ref().ok_or_else(invalid)?;if ledger.original_write_pending()||ledger.retained_read_pending(&input.window){return Ok(false)}
+  ledger.settle_deferred(&input.window);
   if !Owners::<M>::controlled_retirement_supported(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original typing edit has no controlled retirement").into())}
   let d=Self::admission_demands(ledger,input);if !funds(cx,d){return Ok(false)}
   let previous=ledger.open(&input.window);if previous.is_some_and(|row|row.states.as_slice()!=["root","typing"]||row.transaction.tool!=row.tool){return Err(invalid().into())}

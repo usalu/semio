@@ -41,7 +41,7 @@ export function nativeImageContainerFreeBytesV1(plist:string):number|undefined{
 }
 type ImageInformationRunV1=(program:string,args:readonly string[])=>string|undefined;
 const runImageInformationV1:ImageInformationRunV1=(program,args)=>{
- const row=spawnSync(program,[...args],{encoding:"utf8",timeout:10000,env:{PATH:"/usr/bin:/bin:/usr/sbin:/sbin",LANG:"C",LC_ALL:"C"}});
+ const row=spawnSync(program,[...args],{windowsHide:true,encoding:"utf8",timeout:10000,env:{PATH:"/usr/bin:/bin:/usr/sbin:/sbin",LANG:"C",LC_ALL:"C"}});
  return row.status===0?row.stdout:undefined;
 };
 

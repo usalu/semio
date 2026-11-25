@@ -13,12 +13,48 @@
       "de": "Eine an der Wand montierte Klassenraumtafel von 4,0 m Breite und 1,26 m Höhe: zwei feste emaillierte Platten in einem Aluminiumrahmen unter einer Laufschiene, ein 2,0 m breiter Flügel, der an zwei Laufwagen hängt und davor gleitet, und darunter eine Kreideablage, in Vorderansicht; eine passive Fläche, die sich in der Sonne erwärmt."
     },
     "tags": [
-      "chalkboard",
-      "classroom",
-      "teaching-board",
-      "school",
-      "wall-mounted",
-      "object"
+      {
+        "id": "chalkboard",
+        "title": {
+          "en": "chalkboard",
+          "de": "Kreidetafel"
+        }
+      },
+      {
+        "id": "classroom",
+        "title": {
+          "en": "classroom",
+          "de": "Klassenzimmer"
+        }
+      },
+      {
+        "id": "teaching-board",
+        "title": {
+          "en": "teaching board",
+          "de": "Lehrtafel"
+        }
+      },
+      {
+        "id": "school",
+        "title": {
+          "en": "school",
+          "de": "Schule"
+        }
+      },
+      {
+        "id": "wall-mounted",
+        "title": {
+          "en": "wall mounted",
+          "de": "wandmontiert"
+        }
+      },
+      {
+        "id": "object",
+        "title": {
+          "en": "object",
+          "de": "Objekt"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage content (A8)",

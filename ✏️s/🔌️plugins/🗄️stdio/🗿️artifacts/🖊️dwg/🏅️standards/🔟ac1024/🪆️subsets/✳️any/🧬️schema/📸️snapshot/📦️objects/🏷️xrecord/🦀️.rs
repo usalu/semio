@@ -1,5 +1,8 @@
 //! 🏷️ Extended data: xrecord values and bodies, dictionaries, extended entity data and named references.
 
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_artifact_stdio_dwg_snapshot_objects_metadata::{dwg_metadata};
 use semio_framework_value::{ValueError, ValueRefusalKind};
 
 //#region 🔖️DrawingModel

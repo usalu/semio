@@ -200,15 +200,5 @@ pub fn artifact_create_template_property(template_ids: &[String]) -> serde_json:
     serde_json::json!({ "type": "string", "enum": template_ids.iter().map(|id| serde_json::Value::String(id.clone())).collect::<Vec<_>>() })
 }
 
-/// 🌱️ Grafts [`artifact_create_template_property`] onto an existing `artifact.create` input schema,
-/// so the ONE canonical `artifact.create` capability (the `artifact_create` tool's own, with its
-/// real `artifactId`/`kind`/`initial` arguments) carries the declared template enum instead of a
-/// second capability claiming the same id with a different shape.
-pub fn with_artifact_create_templates(mut schema: serde_json::Value, template_ids: &[String]) -> serde_json::Value {
-    if let Some(properties) = schema.get_mut("properties").and_then(serde_json::Value::as_object_mut) {
-        properties.insert("template".to_string(), artifact_create_template_property(template_ids));
-    }
-    schema
-}
 //#endregion 🔖️CatalogToolSchemas
 //#endregion 🔖️ToolSchemas

@@ -91,7 +91,7 @@ describe("Shell components", () => {
       expect(screen.getByText("Windows").closest('[data-active="true"]')).toBeNull();
     });
 
-    it("Panel keeps only the root tab row in its top chip overlay and renders deeper rows as full-width lines before the tree", () => {
+    it("Panel puts every tab row, root and deeper, into its one top chip on the frame edge and keeps only the tree in the body", () => {
       const StubIcon = (): null => null;
       const tabs: PanelTabNode[] = [
         {
@@ -106,24 +106,19 @@ describe("Shell components", () => {
       const chipCap = container.querySelector('[data-slot="window-chrome-chip-cap"]');
       const body = container.querySelector('[data-slot="panel-content"]');
       const bodyStack = body?.firstElementChild;
-      const bodyTabs = bodyStack?.querySelector('[data-slot="panel-tabs"]');
 
       expect(bodyStack?.getAttribute("data-slot")).toBe("panel-body-stack");
       expect(bodyStack?.className).toContain("min-w-0");
       expect(bodyStack?.className).toContain("w-full");
-      expect(chipCap?.querySelectorAll('[data-slot="panel-tabs"]')).toHaveLength(1);
+      expect(chipCap?.querySelectorAll('[data-slot="panel-tabs"]')).toHaveLength(2);
       expect(chipCap?.textContent).toContain("App");
-      expect(chipCap?.textContent).not.toContain("Command");
-      expect(bodyTabs?.textContent).toContain("Command");
-      expect(bodyTabs?.className).toContain("flex-auto");
-      expect(bodyTabs?.parentElement?.getAttribute("data-slot")).toBe("panel-tab-frame");
-      expect(bodyTabs?.parentElement?.className).toContain("w-full");
-      expect(bodyTabs?.closest("[data-window-frame-chip]")).toBeNull();
+      expect(chipCap?.textContent).toContain("Command");
+      expect(bodyStack?.querySelector('[data-slot="panel-tabs"]')).toBeNull();
+      expect(bodyStack?.querySelector('[data-slot="ribbon"]')).toBeNull();
       expect(chipCap?.closest("[data-window-frame-chip]")).toBeTruthy();
       expect(container.innerHTML).toContain("--window-frame-top-clearance");
       expect(container.innerHTML).not.toMatch(/silhouette|clip-path/u);
-      expect(bodyStack?.firstElementChild?.getAttribute("data-slot")).toBe("ribbon");
-      expect(bodyStack?.lastElementChild?.getAttribute("data-slot")).toBe("scroll-area");
+      expect(bodyStack?.firstElementChild?.getAttribute("data-slot")).toBe("scroll-area");
       expect(bodyStack?.querySelector('[data-slot="scroll-area-viewport"]')?.className).toContain("w-full");
     });
 
@@ -300,12 +295,12 @@ describe("Shell components", () => {
       expect(screen.getByText("Leaf B")).toBeTruthy();
     });
 
-    it("chromeHostedOpenPanelPositionStyle pulls the top cap into the navbar band, opens the bottom cap in place over the canvas chip row and leaves side-middle canvas insets alone", () => {
+    it("chromeHostedOpenPanelPositionStyle pulls the top cap into the navbar band and keeps the footer chip row free, opens the bottom cap in place over the canvas chip row and leaves side-middle canvas insets alone", () => {
       const top = chromeHostedOpenPanelPositionStyle("top-left");
       expect(top.top).toBe("calc(-1 * var(--navbar-band-height))");
       expect((top as Record<string, unknown>)["--panel-header-height"]).toBe("var(--navbar-band-height)");
       expect(top.left).toBe("0px");
-      expect(top.maxHeight).toBe("calc(100% + var(--navbar-band-height))");
+      expect(top.maxHeight).toBe("calc(100% + var(--navbar-band-height) - var(--footer-band-height))");
 
       const bottom = chromeHostedOpenPanelPositionStyle("bottom-right");
       expect(bottom.bottom).toBe("0px");

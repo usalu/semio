@@ -35,8 +35,9 @@ impl std::error::Error for CatalogError {}
 
 //#region 🔖️Catalog
 /// 📚️ The compiled, sorted, content-addressed capability catalog — `hash` changes if and only if
-/// `entries` changes (blake3 over the canonical JSON serialization of the sorted entry vector, so
-/// compiling the SAME `CatalogSource` twice is byte-identical, proven in `🧪️Tests` below).
+/// `entries` changes: one blake3 digest per entry over its canonical JSON serialization, hashed again
+/// over those digests joined by newlines in sorted-id order, so compiling the SAME `CatalogSource`
+/// twice is byte-identical whatever the worker count (see [`compute_catalog_entries_hash`]).
 #[derive(Clone, Debug, PartialEq, serde::Serialize, ToValue, FromValue)]
 pub struct Catalog {
     pub hash: String,
@@ -56,9 +57,17 @@ impl Catalog {
     }
 }
 
-fn compute_catalog_entries_hash(entries: &[CapabilityDefinition]) -> String {
-    let bytes = serde_json::to_vec(entries).expect("capability catalog entries always serialize");
-    framework_hash::hash_bytes(&bytes)
+fn entry_digest(entry: &CapabilityDefinition) -> String {
+    framework_hash::hash_bytes(&serde_json::to_vec(entry).expect("capability catalog entry always serializes"))
+}
+
+/// #️⃣️ The catalog hash over sorted `entries`: the digest of each entry's JSON, computed in parallel on the worker pool, then the
+/// digest of those digests joined by `\n`. It changes exactly when an entry's content, the entry count or the entry order changes;
+/// the entries are handed back unchanged. See [`pool_map`].
+pub fn compute_catalog_entries_hash(entries: Vec<CapabilityDefinition>) -> (String, Vec<CapabilityDefinition>) {
+    let digested = pool_map(entries, entry_digest);
+    let joined = digested.iter().map(|(_, digest)| digest.as_str()).collect::<Vec<_>>().join("\n");
+    (framework_hash::hash_bytes(joined.as_bytes()), digested.into_iter().map(|(entry, _)| entry).collect())
 }
 //#endregion 🔖️Catalog
 
@@ -173,14 +182,13 @@ pub fn compile_with_audiences(source: &CatalogSource, locale: Locale, terminolog
     if !template_ids.is_empty() {
         template_ids.sort();
         template_ids.dedup();
-        match entries.get_mut("artifact.create") {
-            Some(capability) => capability.input_schema = with_artifact_create_templates(capability.input_schema.clone(), &template_ids),
-            None => insert_capability(&mut entries, artifact_create_capability(&template_ids))?,
+        if !entries.contains_key("artifact.create") {
+            insert_capability(&mut entries, artifact_create_capability(&template_ids))?;
         }
     }
 
     let sorted: Vec<CapabilityDefinition> = entries.into_values().filter(|capability| audiences.contains(&capability.audience)).collect();
-    let hash = compute_catalog_entries_hash(&sorted);
-    Ok(Catalog { hash, entries: sorted })
+    let (hash, entries) = compute_catalog_entries_hash(sorted);
+    Ok(Catalog { hash, entries })
 }
 //#endregion 🔖️Compile

@@ -7,7 +7,7 @@ use semio_framework_value::{retained_clone::RetainedCloneBirthDemand, RetainedCl
 use semio_plugin::original_ephemeral::{self, FixedStoreInitial as EphemeralFixedStoreInitial, OriginalEphemeralDeclaration, OriginalFixedStoreInitial as OriginalEphemeralFixedStoreInitial, OriginalPresenceOwners, OriginalTransientOwners};
 use semio_plugin::original_instance_registration::{OriginalInstanceDeclarations, OriginalNativeRegistration, OriginalNoWindows, OriginalWindowSequence};
 use semio_plugin::{ArtifactEditor, EditorApp, OriginalWindowTransientOwnerRegistration, WindowConfigOwnerRegistry, WindowTransientOwnerRegistry};
-use semio_plugin_ownership::original_store_genesis::{FixedStoreInitial, OriginalFixedStoreInitial, OriginalStoreGenesisOwner};
+use semio_plugin_store_lifecycle::original_store_genesis::{FixedStoreInitial, OriginalFixedStoreInitial, OriginalStoreGenesisOwner};
 use semio_s_artifact_process_process3d_config::{Process3dConfig, Process3dConfigMutation};
 use semio_s_artifact_process_process3d_host::Process3dDocumentGenesis;
 use semio_s_artifact_process_process3d_presence::{process3d_presence_is_terminal_empty, Process3dPresence};

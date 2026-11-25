@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 
 import { compile } from "tailwindcss";
-import { chromium } from "playwright";
+import { launchChromium } from "../../../../🧪️tests/🌐️chromium-launch/🟦️";
 import corpus from "../🧫️fixtures/📏️relative-sizing/🔣️.json";
 
 const utilities = [
@@ -19,7 +19,7 @@ export async function proveRelativeStylingSizesV1(): Promise<number> {
   const compiler = await compile("@tailwind utilities;");
   const classes = [...corpus.sizes.flatMap(row => utilities.map(([prefix]) => prefix + "-[" + row.rem + "]")), ...corpus.rounding.map(row => row.semanticClass)];
   const css = compiler.build(classes);
-  const browser = await chromium.launch({ headless: true });
+  const browser = await launchChromium();
   try {
     const page = await browser.newPage();
     await page.setContent("<style>" + css + "</style>");

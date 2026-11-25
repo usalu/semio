@@ -13,14 +13,62 @@
    "de": "Zweiundzwanzig gebrauchte Gehwegplatten aus Beton 50 x 50 x 5 cm mit abgeplatzten Ecken und vom Moos gedunkelter Fläche, hochkant in zwei umreiften Paketen zu elf auf einer EUR-Palette; auf Gabelzinken gehoben, sechs davon als Feld 2 x 3 auf einem Sandbett unter einer wandernden Radlast wieder verlegt."
   },
   "tags": [
-   "component",
-   "reclaimed",
-   "concrete",
-   "paving",
-   "slab",
-   "pallet",
-   "timber",
-   "hardscape"
+   {
+    "id": "component",
+    "title": {
+     "en": "component",
+     "de": "Bauteil"
+    }
+   },
+   {
+    "id": "reclaimed",
+    "title": {
+     "en": "reclaimed",
+     "de": "wiederverwendet"
+    }
+   },
+   {
+    "id": "concrete",
+    "title": {
+     "en": "concrete",
+     "de": "Beton"
+    }
+   },
+   {
+    "id": "paving",
+    "title": {
+     "en": "paving",
+     "de": "Pflaster"
+    }
+   },
+   {
+    "id": "slab",
+    "title": {
+     "en": "slab",
+     "de": "Platte"
+    }
+   },
+   {
+    "id": "pallet",
+    "title": {
+     "en": "pallet",
+     "de": "Palette"
+    }
+   },
+   {
+    "id": "timber",
+    "title": {
+     "en": "timber",
+     "de": "Holz"
+    }
+   },
+   {
+    "id": "hardscape",
+    "title": {
+     "en": "hardscape",
+     "de": "Hartbelag"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage component authors",
@@ -88,7 +136,7 @@
     },
     "emissivity": 0.94,
     "solarAbsorptivity": 0.75,
-    "densityKgM3": 2300.0,
+    "densityKgM3": 2300,
     "conductivityWmK": 1.8,
     "specificHeatJKgK": 1000,
     "elasticModulusPa": 30000000000,
@@ -104,7 +152,7 @@
     },
     "emissivity": 0.9,
     "solarAbsorptivity": 0.65,
-    "densityKgM3": 520.0,
+    "densityKgM3": 520,
     "conductivityWmK": 0.13,
     "specificHeatJKgK": 1600,
     "elasticModulusPa": 8000000000,
@@ -120,7 +168,7 @@
     },
     "emissivity": 0.9,
     "solarAbsorptivity": 0.6,
-    "densityKgM3": 1380.0,
+    "densityKgM3": 1380,
     "conductivityWmK": 0.24,
     "specificHeatJKgK": 1300,
     "elasticModulusPa": 10000000000,
@@ -175,7 +223,7 @@
      },
      "section": {
       "areaM2": 0.02156,
-      "secondMomentM4": 8.695867e-07,
+      "secondMomentM4": 8.695867e-7,
       "extremeFibreM": 0.011,
       "material": "pallet-timber",
       "title": {
@@ -349,7 +397,7 @@
      },
      "section": {
       "areaM2": 0.025,
-      "secondMomentM4": 5.208333e-06,
+      "secondMomentM4": 0.000005208333,
       "extremeFibreM": 0.025,
       "material": "concrete-slab",
       "title": {
@@ -405,7 +453,7 @@
      },
      "section": {
       "areaM2": 0.025,
-      "secondMomentM4": 5.208333e-06,
+      "secondMomentM4": 0.000005208333,
       "extremeFibreM": 0.025,
       "material": "concrete-slab",
       "title": {
@@ -461,7 +509,7 @@
      },
      "section": {
       "areaM2": 0.025,
-      "secondMomentM4": 5.208333e-06,
+      "secondMomentM4": 0.000005208333,
       "extremeFibreM": 0.025,
       "material": "concrete-slab",
       "title": {
@@ -516,7 +564,7 @@
      },
      "section": {
       "areaM2": 0.025,
-      "secondMomentM4": 5.208333e-06,
+      "secondMomentM4": 0.000005208333,
       "extremeFibreM": 0.025,
       "material": "concrete-slab",
       "title": {
@@ -571,7 +619,7 @@
      },
      "section": {
       "areaM2": 0.025,
-      "secondMomentM4": 5.208333e-06,
+      "secondMomentM4": 0.000005208333,
       "extremeFibreM": 0.025,
       "material": "concrete-slab",
       "title": {
@@ -626,7 +674,7 @@
      },
      "section": {
       "areaM2": 0.025,
-      "secondMomentM4": 5.208333e-06,
+      "secondMomentM4": 0.000005208333,
       "extremeFibreM": 0.025,
       "material": "concrete-slab",
       "title": {
@@ -696,7 +744,7 @@
        "translation": [
         0.6,
         -0.122,
-        0.0
+        0
        ]
       }
      },
@@ -756,7 +804,7 @@
        "translation": [
         0.0725,
         -0.072,
-        0.0
+        0
        ]
       }
      },
@@ -816,7 +864,7 @@
        "translation": [
         0.6,
         -0.072,
-        0.0
+        0
        ]
       }
      },
@@ -876,7 +924,7 @@
        "translation": [
         1.1275,
         -0.072,
-        0.0
+        0
        ]
       }
      },
@@ -916,7 +964,7 @@
        "translation": [
         0.0725,
         -0.022,
-        0.0
+        0
        ]
       }
      },
@@ -936,7 +984,7 @@
        "translation": [
         0.6,
         -0.022,
-        0.0
+        0
        ]
       }
      },
@@ -956,7 +1004,7 @@
        "translation": [
         1.1275,
         -0.022,
-        0.0
+        0
        ]
       }
      },
@@ -975,7 +1023,7 @@
       "transform": {
        "translation": [
         0.6,
-        0.0,
+        0,
         -0.3275
        ]
       }
@@ -995,7 +1043,7 @@
       "transform": {
        "translation": [
         0.6,
-        0.0,
+        0,
         -0.16375
        ]
       }
@@ -1015,8 +1063,8 @@
       "transform": {
        "translation": [
         0.6,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      },
@@ -1035,7 +1083,7 @@
       "transform": {
        "translation": [
         0.6,
-        0.0,
+        0,
         0.16375
        ]
       }
@@ -1055,7 +1103,7 @@
       "transform": {
        "translation": [
         0.6,
-        0.0,
+        0,
         0.3275
        ]
       }
@@ -1070,11 +1118,11 @@
       "profile": [
        [
         -0.25,
-        0.0
+        0
        ],
        [
         0.25,
-        0.0
+        0
        ],
        [
         0.25,
@@ -1103,11 +1151,11 @@
       "profile": [
        [
         -0.25,
-        0.0
+        0
        ],
        [
         0.25,
-        0.0
+        0
        ],
        [
         0.25,
@@ -1132,11 +1180,11 @@
       "profile": [
        [
         -0.25,
-        0.0
+        0
        ],
        [
         0.25,
-        0.0
+        0
        ],
        [
         0.25,
@@ -1165,11 +1213,11 @@
       "profile": [
        [
         -0.25,
-        0.0
+        0
        ],
        [
         0.22,
-        0.0
+        0
        ],
        [
         0.25,
@@ -1198,11 +1246,11 @@
       "profile": [
        [
         -0.25,
-        0.0
+        0
        ],
        [
         0.25,
-        0.0
+        0
        ],
        [
         0.25,
@@ -1235,11 +1283,11 @@
       "profile": [
        [
         -0.25,
-        0.0
+        0
        ],
        [
         0.25,
-        0.0
+        0
        ],
        [
         0.25,
@@ -1264,11 +1312,11 @@
       "profile": [
        [
         -0.25,
-        0.0
+        0
        ],
        [
         0.25,
-        0.0
+        0
        ],
        [
         0.25,
@@ -1301,11 +1349,11 @@
        ],
        [
         -0.22,
-        0.0
+        0
        ],
        [
         0.25,
-        0.0
+        0
        ],
        [
         0.25,
@@ -1321,7 +1369,7 @@
        ]
       ],
       "plane": "zx",
-      "from": 0.0,
+      "from": 0,
       "to": 0.05
      },
      {
@@ -1334,11 +1382,11 @@
       "profile": [
        [
         -0.25,
-        0.0
+        0
        ],
        [
         0.25,
-        0.0
+        0
        ],
        [
         0.25,
@@ -1367,11 +1415,11 @@
       "profile": [
        [
         -0.25,
-        0.0
+        0
        ],
        [
         0.25,
-        0.0
+        0
        ],
        [
         0.25,
@@ -1396,11 +1444,11 @@
       "profile": [
        [
         -0.25,
-        0.0
+        0
        ],
        [
         0.225,
-        0.0
+        0
        ],
        [
         0.25,
@@ -1433,11 +1481,11 @@
       "profile": [
        [
         -0.25,
-        0.0
+        0
        ],
        [
         0.25,
-        0.0
+        0
        ],
        [
         0.25,
@@ -1466,11 +1514,11 @@
       "profile": [
        [
         -0.25,
-        0.0
+        0
        ],
        [
         0.25,
-        0.0
+        0
        ],
        [
         0.25,
@@ -1499,11 +1547,11 @@
       "profile": [
        [
         -0.25,
-        0.0
+        0
        ],
        [
         0.25,
-        0.0
+        0
        ],
        [
         0.25,
@@ -1528,11 +1576,11 @@
       "profile": [
        [
         -0.25,
-        0.0
+        0
        ],
        [
         0.25,
-        0.0
+        0
        ],
        [
         0.25,
@@ -1561,11 +1609,11 @@
       "profile": [
        [
         -0.25,
-        0.0
+        0
        ],
        [
         0.25,
-        0.0
+        0
        ],
        [
         0.25,
@@ -1585,7 +1633,7 @@
        ]
       ],
       "plane": "zx",
-      "from": 0.0,
+      "from": 0,
       "to": 0.05
      },
      {
@@ -1602,11 +1650,11 @@
        ],
        [
         -0.4775,
-        0.0
+        0
        ],
        [
         -0.0025,
-        0.0
+        0
        ],
        [
         -0.0025,
@@ -1622,7 +1670,7 @@
        ]
       ],
       "plane": "zx",
-      "from": 0.0,
+      "from": 0,
       "to": 0.05
      },
      {
@@ -1635,11 +1683,11 @@
       "profile": [
        [
         -0.5025,
-        0.0
+        0
        ],
        [
         -0.0025,
-        0.0
+        0
        ],
        [
         -0.0025,
@@ -1655,7 +1703,7 @@
        ]
       ],
       "plane": "zx",
-      "from": 0.0,
+      "from": 0,
       "to": 0.05
      },
      {
@@ -1668,11 +1716,11 @@
       "profile": [
        [
         -0.5025,
-        0.0
+        0
        ],
        [
         -0.0025,
-        0.0
+        0
        ],
        [
         -0.0025,
@@ -1692,7 +1740,7 @@
        ]
       ],
       "plane": "zx",
-      "from": 0.0,
+      "from": 0,
       "to": 0.05
      },
      {
@@ -1705,11 +1753,11 @@
       "profile": [
        [
         -0.25,
-        0.0
+        0
        ],
        [
         0.25,
-        0.0
+        0
        ],
        [
         0.25,
@@ -1725,7 +1773,7 @@
        ]
       ],
       "plane": "zx",
-      "from": 0.0,
+      "from": 0,
       "to": 0.05
      },
      {
@@ -1742,11 +1790,11 @@
        ],
        [
         -0.225,
-        0.0
+        0
        ],
        [
         0.25,
-        0.0
+        0
        ],
        [
         0.25,
@@ -1762,7 +1810,7 @@
        ]
       ],
       "plane": "zx",
-      "from": 0.0,
+      "from": 0,
       "to": 0.05
      },
      {
@@ -1775,11 +1823,11 @@
       "profile": [
        [
         -0.25,
-        0.0
+        0
        ],
        [
         0.22,
-        0.0
+        0
        ],
        [
         0.25,
@@ -1803,7 +1851,7 @@
        ]
       ],
       "plane": "zx",
-      "from": 0.0,
+      "from": 0,
       "to": 0.05
      },
      {
@@ -1864,7 +1912,7 @@
        "translation": [
         -0.00045,
         0.008,
-        0.0
+        0
        ]
       },
       "slender": true
@@ -1885,7 +1933,7 @@
        "translation": [
         0.55045,
         0.008,
-        0.0
+        0
        ]
       },
       "slender": true
@@ -1948,7 +1996,7 @@
        "translation": [
         -0.00045,
         0.008,
-        0.0
+        0
        ]
       },
       "slender": true
@@ -1969,7 +2017,7 @@
        "translation": [
         0.55045,
         0.008,
-        0.0
+        0
        ]
       },
       "slender": true
@@ -2243,7 +2291,7 @@
       "transform": {
        "translation": [
         0.6,
-        0.0,
+        0,
         -0.3275
        ]
       },
@@ -2265,7 +2313,7 @@
       "transform": {
        "translation": [
         0.6,
-        0.0,
+        0,
         -0.16375
        ]
       },
@@ -2287,8 +2335,8 @@
       "transform": {
        "translation": [
         0.6,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "member": "pallet",
@@ -2309,7 +2357,7 @@
       "transform": {
        "translation": [
         0.6,
-        0.0,
+        0,
         0.16375
        ]
       },
@@ -2331,7 +2379,7 @@
       "transform": {
        "translation": [
         0.6,
-        0.0,
+        0,
         0.3275
        ]
       },
@@ -2354,7 +2402,7 @@
        "translation": [
         0.0725,
         -0.022,
-        0.0
+        0
        ]
       },
       "member": "pallet",
@@ -2376,7 +2424,7 @@
        "translation": [
         0.6,
         -0.022,
-        0.0
+        0
        ]
       },
       "member": "pallet",
@@ -2398,7 +2446,7 @@
        "translation": [
         1.1275,
         -0.022,
-        0.0
+        0
        ]
       },
       "member": "pallet",
@@ -2442,7 +2490,7 @@
        "translation": [
         0.0725,
         -0.083,
-        0.0
+        0
        ]
       },
       "member": "pallet",
@@ -2508,7 +2556,7 @@
        "translation": [
         0.6,
         -0.083,
-        0.0
+        0
        ]
       },
       "member": "pallet",
@@ -2574,7 +2622,7 @@
        "translation": [
         1.1275,
         -0.083,
-        0.0
+        0
        ]
       },
       "member": "pallet",
@@ -2618,7 +2666,7 @@
        "translation": [
         0.25,
         0.2,
-        0.0
+        0
        ]
       },
       "member": "pack-rear",
@@ -2640,7 +2688,7 @@
        "translation": [
         0.25,
         0.2,
-        0.0
+        0
        ]
       },
       "member": "pack-front",
@@ -2728,7 +2776,7 @@
        "translation": [
         0.25,
         0.025,
-        0.0
+        0
        ]
       },
       "member": "slab-f1",
@@ -2750,7 +2798,7 @@
        "translation": [
         0.25,
         0.025,
-        0.0
+        0
        ]
       },
       "member": "slab-f2",
@@ -2772,7 +2820,7 @@
        "translation": [
         0.25,
         0.025,
-        0.0
+        0
        ]
       },
       "member": "slab-f3",
@@ -2834,7 +2882,7 @@
        "translation": [
         0.6,
         -0.122,
-        0.0
+        0
        ]
       }
      },
@@ -2894,7 +2942,7 @@
        "translation": [
         0.0725,
         -0.072,
-        0.0
+        0
        ]
       }
      },
@@ -2954,7 +3002,7 @@
        "translation": [
         0.6,
         -0.072,
-        0.0
+        0
        ]
       }
      },
@@ -3014,7 +3062,7 @@
        "translation": [
         1.1275,
         -0.072,
-        0.0
+        0
        ]
       }
      },
@@ -3054,7 +3102,7 @@
        "translation": [
         0.0725,
         -0.022,
-        0.0
+        0
        ]
       }
      },
@@ -3074,7 +3122,7 @@
        "translation": [
         0.6,
         -0.022,
-        0.0
+        0
        ]
       }
      },
@@ -3094,7 +3142,7 @@
        "translation": [
         1.1275,
         -0.022,
-        0.0
+        0
        ]
       }
      },
@@ -3113,8 +3161,8 @@
       "transform": {
        "translation": [
         0.6,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      },
@@ -3134,7 +3182,7 @@
        "translation": [
         0.25,
         0.375,
-        0.0
+        0
        ]
       }
      },
@@ -3154,7 +3202,7 @@
        "translation": [
         0.25,
         0.325,
-        0.0
+        0
        ]
       }
      },
@@ -3174,7 +3222,7 @@
        "translation": [
         0.25,
         0.275,
-        0.0
+        0
        ]
       }
      },
@@ -3194,7 +3242,7 @@
        "translation": [
         0.25,
         0.225,
-        0.0
+        0
        ]
       }
      },
@@ -3214,7 +3262,7 @@
        "translation": [
         0.25,
         0.175,
-        0.0
+        0
        ]
       }
      },
@@ -3234,7 +3282,7 @@
        "translation": [
         0.25,
         0.125,
-        0.0
+        0
        ]
       }
      },
@@ -3254,7 +3302,7 @@
        "translation": [
         0.25,
         0.075,
-        0.0
+        0
        ]
       }
      },
@@ -3274,7 +3322,7 @@
        "translation": [
         0.25,
         0.025,
-        0.0
+        0
        ]
       }
      },
@@ -3294,7 +3342,7 @@
        "translation": [
         0.25,
         0.375,
-        0.0
+        0
        ]
       }
      },
@@ -3314,7 +3362,7 @@
        "translation": [
         0.25,
         0.325,
-        0.0
+        0
        ]
       }
      },
@@ -3334,7 +3382,7 @@
        "translation": [
         0.25,
         0.275,
-        0.0
+        0
        ]
       }
      },
@@ -3354,7 +3402,7 @@
        "translation": [
         0.25,
         0.225,
-        0.0
+        0
        ]
       }
      },
@@ -3374,7 +3422,7 @@
        "translation": [
         0.25,
         0.175,
-        0.0
+        0
        ]
       }
      },
@@ -3394,7 +3442,7 @@
        "translation": [
         0.25,
         0.125,
-        0.0
+        0
        ]
       }
      },
@@ -3414,7 +3462,7 @@
        "translation": [
         0.25,
         0.075,
-        0.0
+        0
        ]
       }
      },
@@ -3434,7 +3482,7 @@
        "translation": [
         0.25,
         0.025,
-        0.0
+        0
        ]
       }
      },
@@ -3514,7 +3562,7 @@
        "translation": [
         0.25,
         0.025,
-        0.0
+        0
        ]
       }
      },
@@ -3534,7 +3582,7 @@
        "translation": [
         0.25,
         0.025,
-        0.0
+        0
        ]
       }
      },
@@ -3554,7 +3602,7 @@
        "translation": [
         0.25,
         0.025,
-        0.0
+        0
        ]
       }
      },
@@ -3616,7 +3664,7 @@
        "translation": [
         -0.00045,
         0.008,
-        0.0
+        0
        ]
       },
       "slender": true
@@ -3637,7 +3685,7 @@
        "translation": [
         0.55045,
         0.008,
-        0.0
+        0
        ]
       },
       "slender": true
@@ -3700,7 +3748,7 @@
        "translation": [
         -0.00045,
         0.008,
-        0.0
+        0
        ]
       },
       "slender": true
@@ -3721,7 +3769,7 @@
        "translation": [
         0.55045,
         0.008,
-        0.0
+        0
        ]
       },
       "slender": true
@@ -3975,8 +4023,8 @@
       "transform": {
        "translation": [
         0.6,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "member": "pallet",
@@ -3998,7 +4046,7 @@
        "translation": [
         0.0725,
         -0.022,
-        0.0
+        0
        ]
       },
       "member": "pallet",
@@ -4020,7 +4068,7 @@
        "translation": [
         0.6,
         -0.022,
-        0.0
+        0
        ]
       },
       "member": "pallet",
@@ -4042,7 +4090,7 @@
        "translation": [
         1.1275,
         -0.022,
-        0.0
+        0
        ]
       },
       "member": "pallet",
@@ -4086,7 +4134,7 @@
        "translation": [
         0.0725,
         -0.083,
-        0.0
+        0
        ]
       },
       "member": "pallet",
@@ -4152,7 +4200,7 @@
        "translation": [
         0.6,
         -0.083,
-        0.0
+        0
        ]
       },
       "member": "pallet",
@@ -4218,7 +4266,7 @@
        "translation": [
         1.1275,
         -0.083,
-        0.0
+        0
        ]
       },
       "member": "pallet",
@@ -4262,7 +4310,7 @@
        "translation": [
         0.25,
         0.2,
-        0.0
+        0
        ]
       },
       "member": "pack-rear",
@@ -4284,7 +4332,7 @@
        "translation": [
         0.25,
         0.2,
-        0.0
+        0
        ]
       },
       "member": "pack-front",
@@ -4372,7 +4420,7 @@
        "translation": [
         0.25,
         0.025,
-        0.0
+        0
        ]
       },
       "member": "slab-f1",
@@ -4394,7 +4442,7 @@
        "translation": [
         0.25,
         0.025,
-        0.0
+        0
        ]
       },
       "member": "slab-f2",
@@ -4416,7 +4464,7 @@
        "translation": [
         0.25,
         0.025,
-        0.0
+        0
        ]
       },
       "member": "slab-f3",
@@ -4458,7 +4506,7 @@
        "translation": [
         0.6,
         -0.011,
-        0.0
+        0
        ]
       }
      },
@@ -4498,7 +4546,7 @@
        "translation": [
         0.0725,
         -0.083,
-        0.0
+        0
        ]
       }
      },
@@ -4558,7 +4606,7 @@
        "translation": [
         0.6,
         -0.083,
-        0.0
+        0
        ]
       }
      },
@@ -4618,7 +4666,7 @@
        "translation": [
         1.1275,
         -0.083,
-        0.0
+        0
        ]
       }
      },
@@ -4658,7 +4706,7 @@
        "translation": [
         0.25,
         0.2,
-        0.0
+        0
        ]
       }
      },
@@ -4678,7 +4726,7 @@
        "translation": [
         0.25,
         0.2,
-        0.0
+        0
        ]
       }
      },
@@ -4758,7 +4806,7 @@
        "translation": [
         0.25,
         0.025,
-        0.0
+        0
        ]
       }
      },
@@ -4778,7 +4826,7 @@
        "translation": [
         0.25,
         0.025,
-        0.0
+        0
        ]
       }
      },
@@ -4798,7 +4846,7 @@
        "translation": [
         0.25,
         0.025,
-        0.0
+        0
        ]
       }
      },
@@ -4860,7 +4908,7 @@
        "translation": [
         -0.00045,
         0.008,
-        0.0
+        0
        ]
       },
       "slender": true
@@ -4881,7 +4929,7 @@
        "translation": [
         0.55045,
         0.008,
-        0.0
+        0
        ]
       },
       "slender": true
@@ -4944,7 +4992,7 @@
        "translation": [
         -0.00045,
         0.008,
-        0.0
+        0
        ]
       },
       "slender": true
@@ -4965,7 +5013,7 @@
        "translation": [
         0.55045,
         0.008,
-        0.0
+        0
        ]
       },
       "slender": true
@@ -5120,7 +5168,7 @@
        "translation": [
         0.6,
         -0.011,
-        0.0
+        0
        ]
       },
       "member": "pallet",
@@ -5164,7 +5212,7 @@
        "translation": [
         0.0725,
         -0.083,
-        0.0
+        0
        ]
       },
       "member": "pallet",
@@ -5230,7 +5278,7 @@
        "translation": [
         0.6,
         -0.083,
-        0.0
+        0
        ]
       },
       "member": "pallet",
@@ -5296,7 +5344,7 @@
        "translation": [
         1.1275,
         -0.083,
-        0.0
+        0
        ]
       },
       "member": "pallet",
@@ -5340,7 +5388,7 @@
        "translation": [
         0.25,
         0.2,
-        0.0
+        0
        ]
       },
       "member": "pack-rear",
@@ -5362,7 +5410,7 @@
        "translation": [
         0.25,
         0.2,
-        0.0
+        0
        ]
       },
       "member": "pack-front",
@@ -5450,7 +5498,7 @@
        "translation": [
         0.25,
         0.025,
-        0.0
+        0
        ]
       },
       "member": "slab-f1",
@@ -5472,7 +5520,7 @@
        "translation": [
         0.25,
         0.025,
-        0.0
+        0
        ]
       },
       "member": "slab-f2",
@@ -5494,7 +5542,7 @@
        "translation": [
         0.25,
         0.025,
-        0.0
+        0
        ]
       },
       "member": "slab-f3",
@@ -5578,7 +5626,7 @@
        ]
       ],
       "plane": "yz",
-      "from": 0.0,
+      "from": 0,
       "to": 1.2
      },
      {
@@ -5597,7 +5645,7 @@
        "translation": [
         0.25,
         0.2,
-        0.0
+        0
        ]
       }
      },
@@ -5617,7 +5665,7 @@
        "translation": [
         0.25,
         0.2,
-        0.0
+        0
        ]
       }
      },
@@ -5697,7 +5745,7 @@
        "translation": [
         0.25,
         0.0375,
-        0.0
+        0
        ]
       }
      },
@@ -5717,7 +5765,7 @@
        "translation": [
         0.25,
         0.0375,
-        0.0
+        0
        ]
       }
      },
@@ -5737,7 +5785,7 @@
        "translation": [
         0.25,
         0.0375,
-        0.0
+        0
        ]
       }
      }
@@ -5848,7 +5896,7 @@
        "translation": [
         -0.00045,
         0.008,
-        0.0
+        0
        ]
       },
       "slender": true,
@@ -5870,7 +5918,7 @@
        "translation": [
         0.55045,
         0.008,
-        0.0
+        0
        ]
       },
       "slender": true,
@@ -5936,7 +5984,7 @@
        "translation": [
         -0.00045,
         0.008,
-        0.0
+        0
        ]
       },
       "slender": true,
@@ -5958,7 +6006,7 @@
        "translation": [
         0.55045,
         0.008,
-        0.0
+        0
        ]
       },
       "slender": true,
@@ -5982,7 +6030,7 @@
        "translation": [
         0.6,
         -0.061,
-        0.0
+        0
        ]
       },
       "member": "pallet",
@@ -6004,7 +6052,7 @@
        "translation": [
         0.25,
         0.2,
-        0.0
+        0
        ]
       },
       "member": "pack-rear",
@@ -6026,7 +6074,7 @@
        "translation": [
         0.25,
         0.2,
-        0.0
+        0
        ]
       },
       "member": "pack-front",
@@ -6114,7 +6162,7 @@
        "translation": [
         0.25,
         0.0375,
-        0.0
+        0
        ]
       },
       "member": "slab-f1",
@@ -6136,7 +6184,7 @@
        "translation": [
         0.25,
         0.0375,
-        0.0
+        0
        ]
       },
       "member": "slab-f2",
@@ -6158,7 +6206,7 @@
        "translation": [
         0.25,
         0.0375,
-        0.0
+        0
        ]
       },
       "member": "slab-f3",
@@ -6204,7 +6252,7 @@
     "bone": "pallet",
     "x": 0.0725,
     "y": -0.133,
-    "z": 0.0,
+    "z": 0,
     "kind": "contact",
     "title": {
      "en": "Pallet foot rear centre on the yard",
@@ -6255,7 +6303,7 @@
     "bone": "pallet",
     "x": 0.6,
     "y": -0.133,
-    "z": 0.0,
+    "z": 0,
     "kind": "contact",
     "title": {
      "en": "Pallet foot middle centre on the yard",
@@ -6306,7 +6354,7 @@
     "bone": "pallet",
     "x": 1.1275,
     "y": -0.133,
-    "z": 0.0,
+    "z": 0,
     "kind": "contact",
     "title": {
      "en": "Pallet foot front centre on the yard",
@@ -6493,7 +6541,7 @@
     "bone": "slab-f1",
     "x": 0.25,
     "y": 0,
-    "z": 0.0,
+    "z": 0,
     "kind": "contact",
     "title": {
      "en": "Sand bed under field slab f1",
@@ -6510,7 +6558,7 @@
     "bone": "slab-f2",
     "x": 0.25,
     "y": 0,
-    "z": 0.0,
+    "z": 0,
     "kind": "contact",
     "title": {
      "en": "Sand bed under field slab f2",
@@ -6527,7 +6575,7 @@
     "bone": "slab-f3",
     "x": 0.25,
     "y": 0,
-    "z": 0.0,
+    "z": 0,
     "kind": "contact",
     "title": {
      "en": "Sand bed under field slab f3",
@@ -6591,7 +6639,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.133
         ],
         [
@@ -6603,7 +6651,7 @@
          -0.111
         ],
         [
-         0.0,
+         0,
          -0.111
         ]
        ],
@@ -6615,13 +6663,13 @@
        "id": "block-rear-right",
        "bone": "pallet",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.36,
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.111
         ],
         [
@@ -6633,7 +6681,7 @@
          -0.033
         ],
         [
-         0.0,
+         0,
          -0.033
         ]
        ],
@@ -6645,7 +6693,7 @@
        "id": "block-middle-right",
        "bone": "pallet",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.36,
        "kind": "poly",
@@ -6675,7 +6723,7 @@
        "id": "block-front-right",
        "bone": "pallet",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.36,
        "kind": "poly",
@@ -6711,7 +6759,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.033
         ],
         [
@@ -6723,7 +6771,7 @@
          -0.011
         ],
         [
-         0.0,
+         0,
          -0.011
         ]
        ],
@@ -6801,7 +6849,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.011
         ],
         [
@@ -6813,7 +6861,7 @@
          0.011
         ],
         [
-         0.0,
+         0,
          0.011
         ]
        ],
@@ -6831,19 +6879,19 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
          0.5,
-         0.0
+         0
         ],
         [
          0.5,
          0.4
         ],
         [
-         0.0,
+         0,
          0.4
         ]
        ],
@@ -6861,7 +6909,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.05
         ],
         [
@@ -6882,7 +6930,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.1
         ],
         [
@@ -6903,7 +6951,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.15
         ],
         [
@@ -6924,7 +6972,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.2
         ],
         [
@@ -6945,7 +6993,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.25
         ],
         [
@@ -6966,7 +7014,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.3
         ],
         [
@@ -6987,7 +7035,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.35
         ],
         [
@@ -7051,7 +7099,7 @@
        "points": [
         [
          0.465,
-         0.0
+         0
         ],
         [
          0.465,
@@ -7072,7 +7120,7 @@
        "points": [
         [
          0.02,
-         0.0
+         0
         ],
         [
          0.02,
@@ -7092,19 +7140,19 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
          0.5,
-         0.0
+         0
         ],
         [
          0.5,
          0.4
         ],
         [
-         0.0,
+         0,
          0.4
         ]
        ],
@@ -7122,7 +7170,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.05
         ],
         [
@@ -7143,7 +7191,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.1
         ],
         [
@@ -7164,7 +7212,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.15
         ],
         [
@@ -7185,7 +7233,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.2
         ],
         [
@@ -7206,7 +7254,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.25
         ],
         [
@@ -7227,7 +7275,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.3
         ],
         [
@@ -7248,7 +7296,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.35
         ],
         [
@@ -7312,7 +7360,7 @@
        "points": [
         [
          0.47,
-         0.0
+         0
         ],
         [
          0.47,
@@ -7329,28 +7377,42 @@
        "z": 2.5,
        "filled": true,
        "tone": 0.6,
+       "region": "slab-field",
+       "material": "concrete-slab",
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0.5,
+         -0.5025
         ],
         [
          0.5,
-         0.0
+         -0.0375
         ],
         [
-         0.5,
-         0.05
+         0.47,
+         -0.0025
         ],
         [
-         0.0,
-         0.05
+         0,
+         -0.0025
+        ],
+        [
+         0,
+         -0.4775
+        ],
+        [
+         0.02,
+         -0.5025
         ]
        ],
        "closed": true,
-       "region": "slab-field",
-       "material": "concrete-slab"
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": 0,
+        "z1": 0.05
+       }
       },
       {
        "id": "chip-rear-00-br",
@@ -7363,7 +7425,7 @@
        "points": [
         [
          0.02,
-         0.0
+         0
         ],
         [
          0.02,
@@ -7380,28 +7442,38 @@
        "z": 2.5,
        "filled": true,
        "tone": 0.6,
+       "region": "slab-field",
+       "material": "concrete-slab",
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0.465,
+         -0.5025
         ],
         [
          0.5,
-         0.0
+         -0.4625
         ],
         [
          0.5,
-         0.05
+         -0.0025
         ],
         [
-         0.0,
-         0.05
+         0,
+         -0.0025
+        ],
+        [
+         0,
+         -0.5025
         ]
        ],
        "closed": true,
-       "region": "slab-field",
-       "material": "concrete-slab"
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": 0,
+        "z1": 0.05
+       }
       },
       {
        "id": "chip-rear-01-tr",
@@ -7414,7 +7486,7 @@
        "points": [
         [
          0.465,
-         0.0
+         0
         ],
         [
          0.465,
@@ -7431,28 +7503,42 @@
        "z": 2.5,
        "filled": true,
        "tone": 0.6,
+       "region": "slab-field",
+       "material": "concrete-slab",
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0.475,
+         -0.5025
         ],
         [
          0.5,
-         0.0
+         -0.4775
         ],
         [
          0.5,
-         0.05
+         -0.0325
         ],
         [
-         0.0,
-         0.05
+         0.455,
+         -0.0025
+        ],
+        [
+         0,
+         -0.0025
+        ],
+        [
+         0,
+         -0.5025
         ]
        ],
        "closed": true,
-       "region": "slab-field",
-       "material": "concrete-slab"
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": 0,
+        "z1": 0.05
+       }
       },
       {
        "id": "chip-rear-02-tr",
@@ -7465,7 +7551,7 @@
        "points": [
         [
          0.475,
-         0.0
+         0
         ],
         [
          0.475,
@@ -7485,19 +7571,19 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
          0.5,
-         0.0
+         0
         ],
         [
          0.5,
          0.05
         ],
         [
-         0.0,
+         0,
          0.05
         ]
        ],
@@ -7516,7 +7602,7 @@
        "points": [
         [
          0.465,
-         0.0
+         0
         ],
         [
          0.465,
@@ -7536,19 +7622,19 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
          0.5,
-         0.0
+         0
         ],
         [
          0.5,
          0.05
         ],
         [
-         0.0,
+         0,
          0.05
         ]
        ],
@@ -7567,7 +7653,7 @@
        "points": [
         [
          0.025,
-         0.0
+         0
         ],
         [
          0.025,
@@ -7587,19 +7673,19 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
          0.5,
-         0.0
+         0
         ],
         [
          0.5,
          0.05
         ],
         [
-         0.0,
+         0,
          0.05
         ]
        ],
@@ -7618,7 +7704,7 @@
        "points": [
         [
          0.455,
-         0.0
+         0
         ],
         [
          0.455,
@@ -7639,11 +7725,11 @@
        "points": [
         [
          -0.0009,
-         0.0
+         0
         ],
         [
          0.5509,
-         0.0
+         0
         ],
         [
          0.5509,
@@ -7669,11 +7755,11 @@
        "points": [
         [
          -0.0009,
-         0.0
+         0
         ],
         [
          0.5509,
-         0.0
+         0
         ],
         [
          0.5509,
@@ -7701,11 +7787,11 @@
        "points": [
         [
          -0.4,
-         0.0
+         0
         ],
         [
          -0.3,
-         0.0
+         0
         ],
         [
          -0.3,
@@ -7731,11 +7817,11 @@
        "points": [
         [
          -0.0725,
-         0.0
+         0
         ],
         [
          0.0725,
-         0.0
+         0
         ],
         [
          0.0725,
@@ -7761,11 +7847,11 @@
        "points": [
         [
          0.3,
-         0.0
+         0
         ],
         [
          0.4,
-         0.0
+         0
         ],
         [
          0.4,
@@ -7784,7 +7870,7 @@
        "id": "block-front-right",
        "bone": "pallet",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.36,
        "kind": "poly",
@@ -7814,7 +7900,7 @@
        "id": "block-front-centre",
        "bone": "pallet",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.36,
        "kind": "poly",
@@ -7844,7 +7930,7 @@
        "id": "block-front-left",
        "bone": "pallet",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.36,
        "kind": "poly",
@@ -8111,11 +8197,11 @@
          -0.0025
         ],
         [
-         0.0,
+         0,
          -0.0025
         ],
         [
-         0.0,
+         0,
          -0.4775
         ],
         [
@@ -8127,7 +8213,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "v",
-        "z0": 0.0,
+        "z0": 0,
         "z1": 0.05
        },
        "region": "slab-field",
@@ -8156,11 +8242,11 @@
          -0.0025
         ],
         [
-         0.0,
+         0,
          -0.0025
         ],
         [
-         0.0,
+         0,
          -0.5025
         ]
        ],
@@ -8168,7 +8254,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "v",
-        "z0": 0.0,
+        "z0": 0,
         "z1": 0.05
        },
        "region": "slab-field",
@@ -8201,11 +8287,11 @@
          -0.0025
         ],
         [
-         0.0,
+         0,
          -0.0025
         ],
         [
-         0.0,
+         0,
          -0.5025
         ]
        ],
@@ -8213,7 +8299,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "v",
-        "z0": 0.0,
+        "z0": 0,
         "z1": 0.05
        },
        "region": "slab-field",
@@ -8242,11 +8328,11 @@
          0.25
         ],
         [
-         0.0,
+         0,
          0.25
         ],
         [
-         0.0,
+         0,
          -0.25
         ]
        ],
@@ -8254,7 +8340,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "v",
-        "z0": 0.0,
+        "z0": 0,
         "z1": 0.05
        },
        "region": "slab-field",
@@ -8283,11 +8369,11 @@
          0.25
         ],
         [
-         0.0,
+         0,
          0.25
         ],
         [
-         0.0,
+         0,
          -0.225
         ],
         [
@@ -8299,7 +8385,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "v",
-        "z0": 0.0,
+        "z0": 0,
         "z1": 0.05
        },
        "region": "slab-field",
@@ -8336,11 +8422,11 @@
          0.25
         ],
         [
-         0.0,
+         0,
          0.22
         ],
         [
-         0.0,
+         0,
          -0.25
         ]
        ],
@@ -8348,7 +8434,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "v",
-        "z0": 0.0,
+        "z0": 0,
         "z1": 0.05
        },
        "region": "slab-field",
@@ -8427,7 +8513,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.4
         ],
         [
@@ -8439,7 +8525,7 @@
          -0.3
         ],
         [
-         0.0,
+         0,
          -0.3
         ]
        ],
@@ -8457,7 +8543,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.0725
         ],
         [
@@ -8469,7 +8555,7 @@
          0.0725
         ],
         [
-         0.0,
+         0,
          0.0725
         ]
        ],
@@ -8487,7 +8573,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.3
         ],
         [
@@ -8499,7 +8585,7 @@
          0.4
         ],
         [
-         0.0,
+         0,
          0.4
         ]
        ],
@@ -8517,7 +8603,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.4
         ],
         [
@@ -8529,7 +8615,7 @@
          0.4
         ],
         [
-         0.0,
+         0,
          0.4
         ]
        ],
@@ -8607,7 +8693,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.4
         ],
         [
@@ -8619,7 +8705,7 @@
          -0.255
         ],
         [
-         0.0,
+         0,
          -0.255
         ]
        ],
@@ -8637,7 +8723,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.21375
         ],
         [
@@ -8649,7 +8735,7 @@
          -0.11375
         ],
         [
-         0.0,
+         0,
          -0.11375
         ]
        ],
@@ -8667,7 +8753,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.0725
         ],
         [
@@ -8679,7 +8765,7 @@
          0.0725
         ],
         [
-         0.0,
+         0,
          0.0725
         ]
        ],
@@ -8697,7 +8783,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.11375
         ],
         [
@@ -8709,7 +8795,7 @@
          0.21375
         ],
         [
-         0.0,
+         0,
          0.21375
         ]
        ],
@@ -8727,7 +8813,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.255
         ],
         [
@@ -8739,7 +8825,7 @@
          0.4
         ],
         [
-         0.0,
+         0,
          0.4
         ]
        ],
@@ -9123,11 +9209,11 @@
          -0.0025
         ],
         [
-         0.0,
+         0,
          -0.0025
         ],
         [
-         0.0,
+         0,
          -0.4775
         ],
         [
@@ -9139,7 +9225,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "v",
-        "z0": 0.0,
+        "z0": 0,
         "z1": 0.05
        },
        "region": "slab-field",
@@ -9167,11 +9253,11 @@
          -0.0025
         ],
         [
-         0.0,
+         0,
          -0.0025
         ],
         [
-         0.0,
+         0,
          -0.5025
         ]
        ],
@@ -9179,7 +9265,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "v",
-        "z0": 0.0,
+        "z0": 0,
         "z1": 0.05
        },
        "region": "slab-field",
@@ -9211,11 +9297,11 @@
          -0.0025
         ],
         [
-         0.0,
+         0,
          -0.0025
         ],
         [
-         0.0,
+         0,
          -0.5025
         ]
        ],
@@ -9223,7 +9309,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "v",
-        "z0": 0.0,
+        "z0": 0,
         "z1": 0.05
        },
        "region": "slab-field",
@@ -9251,11 +9337,11 @@
          0.25
         ],
         [
-         0.0,
+         0,
          0.25
         ],
         [
-         0.0,
+         0,
          -0.25
         ]
        ],
@@ -9263,7 +9349,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "v",
-        "z0": 0.0,
+        "z0": 0,
         "z1": 0.05
        },
        "region": "slab-field",
@@ -9291,11 +9377,11 @@
          0.25
         ],
         [
-         0.0,
+         0,
          0.25
         ],
         [
-         0.0,
+         0,
          -0.225
         ],
         [
@@ -9307,7 +9393,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "v",
-        "z0": 0.0,
+        "z0": 0,
         "z1": 0.05
        },
        "region": "slab-field",
@@ -9343,11 +9429,11 @@
          0.25
         ],
         [
-         0.0,
+         0,
          0.22
         ],
         [
-         0.0,
+         0,
          -0.25
         ]
        ],
@@ -9355,7 +9441,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "v",
-        "z0": 0.0,
+        "z0": 0,
         "z1": 0.05
        },
        "region": "slab-field",
@@ -9372,7 +9458,7 @@
        "points": [
         [
          0.02455,
-         0.0
+         0
         ],
         [
          0.02455,
@@ -9392,7 +9478,7 @@
         ],
         [
          0.02455,
-         0.0
+         0
         ]
        ],
        "closed": false,
@@ -9410,7 +9496,7 @@
        "points": [
         [
          0.62455,
-         0.0
+         0
         ],
         [
          0.62455,
@@ -9430,7 +9516,7 @@
         ],
         [
          0.62455,
-         0.0
+         0
         ]
        ],
        "closed": false,
@@ -9513,7 +9599,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.133
         ],
         [
@@ -9525,7 +9611,7 @@
          -0.111
         ],
         [
-         0.0,
+         0,
          -0.111
         ]
        ],
@@ -9537,13 +9623,13 @@
        "id": "block-rear-right",
        "bone": "pallet",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.36,
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.111
         ],
         [
@@ -9555,7 +9641,7 @@
          -0.033
         ],
         [
-         0.0,
+         0,
          -0.033
         ]
        ],
@@ -9567,7 +9653,7 @@
        "id": "block-middle-right",
        "bone": "pallet",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.36,
        "kind": "poly",
@@ -9597,7 +9683,7 @@
        "id": "block-front-right",
        "bone": "pallet",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.36,
        "kind": "poly",
@@ -9633,7 +9719,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.033
         ],
         [
@@ -9645,7 +9731,7 @@
          -0.011
         ],
         [
-         0.0,
+         0,
          -0.011
         ]
        ],
@@ -9723,7 +9809,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.011
         ],
         [
@@ -9735,7 +9821,7 @@
          0.011
         ],
         [
-         0.0,
+         0,
          0.011
         ]
        ],
@@ -9753,19 +9839,19 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
          0.5,
-         0.0
+         0
         ],
         [
          0.5,
          0.4
         ],
         [
-         0.0,
+         0,
          0.4
         ]
        ],
@@ -9783,7 +9869,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.05
         ],
         [
@@ -9804,7 +9890,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.1
         ],
         [
@@ -9825,7 +9911,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.15
         ],
         [
@@ -9846,7 +9932,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.2
         ],
         [
@@ -9867,7 +9953,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.25
         ],
         [
@@ -9888,7 +9974,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.3
         ],
         [
@@ -9909,7 +9995,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.35
         ],
         [
@@ -9930,19 +10016,19 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
          0.5,
-         0.0
+         0
         ],
         [
          0.5,
          0.4
         ],
         [
-         0.0,
+         0,
          0.4
         ]
        ],
@@ -9960,7 +10046,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.05
         ],
         [
@@ -9981,7 +10067,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.1
         ],
         [
@@ -10002,7 +10088,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.15
         ],
         [
@@ -10023,7 +10109,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.2
         ],
         [
@@ -10044,7 +10130,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.25
         ],
         [
@@ -10065,7 +10151,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.3
         ],
         [
@@ -10086,7 +10172,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.35
         ],
         [
@@ -10104,28 +10190,34 @@
        "z": 2.5,
        "filled": true,
        "tone": 0.6,
+       "region": "slab-field",
+       "material": "concrete-slab",
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0.5,
+         -0.5025
         ],
         [
          0.5,
-         0.0
+         -0.0025
         ],
         [
-         0.5,
-         0.05
+         0,
+         -0.0025
         ],
         [
-         0.0,
-         0.05
+         0,
+         -0.5025
         ]
        ],
        "closed": true,
-       "region": "slab-field",
-       "material": "concrete-slab"
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": 0,
+        "z1": 0.05
+       }
       },
       {
        "id": "slab-r2-edge",
@@ -10134,28 +10226,34 @@
        "z": 2.5,
        "filled": true,
        "tone": 0.6,
+       "region": "slab-field",
+       "material": "concrete-slab",
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0.5,
+         -0.5025
         ],
         [
          0.5,
-         0.0
+         -0.0025
         ],
         [
-         0.5,
-         0.05
+         0,
+         -0.0025
         ],
         [
-         0.0,
-         0.05
+         0,
+         -0.5025
         ]
        ],
        "closed": true,
-       "region": "slab-field",
-       "material": "concrete-slab"
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": 0,
+        "z1": 0.05
+       }
       },
       {
        "id": "slab-r3-edge",
@@ -10164,28 +10262,34 @@
        "z": 2.5,
        "filled": true,
        "tone": 0.6,
+       "region": "slab-field",
+       "material": "concrete-slab",
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0.5,
+         -0.5025
         ],
         [
          0.5,
-         0.0
+         -0.0025
         ],
         [
-         0.5,
-         0.05
+         0,
+         -0.0025
         ],
         [
-         0.0,
-         0.05
+         0,
+         -0.5025
         ]
        ],
        "closed": true,
-       "region": "slab-field",
-       "material": "concrete-slab"
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": 0,
+        "z1": 0.05
+       }
       },
       {
        "id": "slab-f1-edge",
@@ -10197,19 +10301,19 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
          0.5,
-         0.0
+         0
         ],
         [
          0.5,
          0.05
         ],
         [
-         0.0,
+         0,
          0.05
         ]
        ],
@@ -10227,19 +10331,19 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
          0.5,
-         0.0
+         0
         ],
         [
          0.5,
          0.05
         ],
         [
-         0.0,
+         0,
          0.05
         ]
        ],
@@ -10257,19 +10361,19 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
          0.5,
-         0.0
+         0
         ],
         [
          0.5,
          0.05
         ],
         [
-         0.0,
+         0,
          0.05
         ]
        ],
@@ -10288,11 +10392,11 @@
        "points": [
         [
          -0.0009,
-         0.0
+         0
         ],
         [
          0.5509,
-         0.0
+         0
         ],
         [
          0.5509,
@@ -10318,11 +10422,11 @@
        "points": [
         [
          -0.0009,
-         0.0
+         0
         ],
         [
          0.5509,
-         0.0
+         0
         ],
         [
          0.5509,
@@ -10350,11 +10454,11 @@
        "points": [
         [
          -0.4,
-         0.0
+         0
         ],
         [
          -0.3,
-         0.0
+         0
         ],
         [
          -0.3,
@@ -10380,11 +10484,11 @@
        "points": [
         [
          -0.0725,
-         0.0
+         0
         ],
         [
          0.0725,
-         0.0
+         0
         ],
         [
          0.0725,
@@ -10410,11 +10514,11 @@
        "points": [
         [
          0.3,
-         0.0
+         0
         ],
         [
          0.4,
-         0.0
+         0
         ],
         [
          0.4,
@@ -10433,7 +10537,7 @@
        "id": "block-front-right",
        "bone": "pallet",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.36,
        "kind": "poly",
@@ -10463,7 +10567,7 @@
        "id": "block-front-centre",
        "bone": "pallet",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.36,
        "kind": "poly",
@@ -10493,7 +10597,7 @@
        "id": "block-front-left",
        "bone": "pallet",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.36,
        "kind": "poly",
@@ -10628,11 +10732,11 @@
          -0.0025
         ],
         [
-         0.0,
+         0,
          -0.0025
         ],
         [
-         0.0,
+         0,
          -0.5025
         ]
        ],
@@ -10640,7 +10744,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "v",
-        "z0": 0.0,
+        "z0": 0,
         "z1": 0.05
        },
        "region": "slab-field",
@@ -10665,11 +10769,11 @@
          -0.0025
         ],
         [
-         0.0,
+         0,
          -0.0025
         ],
         [
-         0.0,
+         0,
          -0.5025
         ]
        ],
@@ -10677,7 +10781,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "v",
-        "z0": 0.0,
+        "z0": 0,
         "z1": 0.05
        },
        "region": "slab-field",
@@ -10702,11 +10806,11 @@
          -0.0025
         ],
         [
-         0.0,
+         0,
          -0.0025
         ],
         [
-         0.0,
+         0,
          -0.5025
         ]
        ],
@@ -10714,7 +10818,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "v",
-        "z0": 0.0,
+        "z0": 0,
         "z1": 0.05
        },
        "region": "slab-field",
@@ -10739,11 +10843,11 @@
          0.25
         ],
         [
-         0.0,
+         0,
          0.25
         ],
         [
-         0.0,
+         0,
          -0.25
         ]
        ],
@@ -10751,7 +10855,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "v",
-        "z0": 0.0,
+        "z0": 0,
         "z1": 0.05
        },
        "region": "slab-field",
@@ -10776,11 +10880,11 @@
          0.25
         ],
         [
-         0.0,
+         0,
          0.25
         ],
         [
-         0.0,
+         0,
          -0.25
         ]
        ],
@@ -10788,7 +10892,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "v",
-        "z0": 0.0,
+        "z0": 0,
         "z1": 0.05
        },
        "region": "slab-field",
@@ -10813,11 +10917,11 @@
          0.25
         ],
         [
-         0.0,
+         0,
          0.25
         ],
         [
-         0.0,
+         0,
          -0.25
         ]
        ],
@@ -10825,7 +10929,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "v",
-        "z0": 0.0,
+        "z0": 0,
         "z1": 0.05
        },
        "region": "slab-field",
@@ -10874,7 +10978,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.4
         ],
         [
@@ -10886,7 +10990,7 @@
          -0.3
         ],
         [
-         0.0,
+         0,
          -0.3
         ]
        ],
@@ -10904,7 +11008,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.0725
         ],
         [
@@ -10916,7 +11020,7 @@
          0.0725
         ],
         [
-         0.0,
+         0,
          0.0725
         ]
        ],
@@ -10934,7 +11038,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.3
         ],
         [
@@ -10946,7 +11050,7 @@
          0.4
         ],
         [
-         0.0,
+         0,
          0.4
         ]
        ],
@@ -10964,7 +11068,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.4
         ],
         [
@@ -10976,7 +11080,7 @@
          0.4
         ],
         [
-         0.0,
+         0,
          0.4
         ]
        ],
@@ -11054,7 +11158,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.4
         ],
         [
@@ -11066,7 +11170,7 @@
          0.4
         ],
         [
-         0.0,
+         0,
          0.4
         ]
        ],
@@ -11446,11 +11550,11 @@
          -0.0025
         ],
         [
-         0.0,
+         0,
          -0.0025
         ],
         [
-         0.0,
+         0,
          -0.5025
         ]
        ],
@@ -11458,7 +11562,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "v",
-        "z0": 0.0,
+        "z0": 0,
         "z1": 0.05
        },
        "region": "slab-field",
@@ -11482,11 +11586,11 @@
          -0.0025
         ],
         [
-         0.0,
+         0,
          -0.0025
         ],
         [
-         0.0,
+         0,
          -0.5025
         ]
        ],
@@ -11494,7 +11598,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "v",
-        "z0": 0.0,
+        "z0": 0,
         "z1": 0.05
        },
        "region": "slab-field",
@@ -11518,11 +11622,11 @@
          -0.0025
         ],
         [
-         0.0,
+         0,
          -0.0025
         ],
         [
-         0.0,
+         0,
          -0.5025
         ]
        ],
@@ -11530,7 +11634,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "v",
-        "z0": 0.0,
+        "z0": 0,
         "z1": 0.05
        },
        "region": "slab-field",
@@ -11554,11 +11658,11 @@
          0.25
         ],
         [
-         0.0,
+         0,
          0.25
         ],
         [
-         0.0,
+         0,
          -0.25
         ]
        ],
@@ -11566,7 +11670,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "v",
-        "z0": 0.0,
+        "z0": 0,
         "z1": 0.05
        },
        "region": "slab-field",
@@ -11590,11 +11694,11 @@
          0.25
         ],
         [
-         0.0,
+         0,
          0.25
         ],
         [
-         0.0,
+         0,
          -0.25
         ]
        ],
@@ -11602,7 +11706,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "v",
-        "z0": 0.0,
+        "z0": 0,
         "z1": 0.05
        },
        "region": "slab-field",
@@ -11626,11 +11730,11 @@
          0.25
         ],
         [
-         0.0,
+         0,
          0.25
         ],
         [
-         0.0,
+         0,
          -0.25
         ]
        ],
@@ -11638,7 +11742,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "v",
-        "z0": 0.0,
+        "z0": 0,
         "z1": 0.05
        },
        "region": "slab-field",
@@ -11768,7 +11872,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.033
         ],
         [
@@ -11780,7 +11884,7 @@
          0.011
         ],
         [
-         0.0,
+         0,
          0.011
         ]
        ],
@@ -11792,13 +11896,13 @@
        "id": "foot-rear-right",
        "bone": "pallet",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.36,
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.133
         ],
         [
@@ -11810,7 +11914,7 @@
          -0.033
         ],
         [
-         0.0,
+         0,
          -0.033
         ]
        ],
@@ -11822,7 +11926,7 @@
        "id": "foot-middle-right",
        "bone": "pallet",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.36,
        "kind": "poly",
@@ -11852,7 +11956,7 @@
        "id": "foot-front-right",
        "bone": "pallet",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.36,
        "kind": "poly",
@@ -11888,19 +11992,19 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
          0.5,
-         0.0
+         0
         ],
         [
          0.5,
          0.4
         ],
         [
-         0.0,
+         0,
          0.4
         ]
        ],
@@ -11918,19 +12022,19 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
          0.5,
-         0.0
+         0
         ],
         [
          0.5,
          0.4
         ],
         [
-         0.0,
+         0,
          0.4
         ]
        ],
@@ -11945,28 +12049,34 @@
        "z": 2.5,
        "filled": true,
        "tone": 0.6,
+       "region": "slab-field",
+       "material": "concrete-slab",
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0.5,
+         -0.5025
         ],
         [
          0.5,
-         0.0
+         -0.0025
         ],
         [
-         0.5,
-         0.05
+         0,
+         -0.0025
         ],
         [
-         0.0,
-         0.05
+         0,
+         -0.5025
         ]
        ],
        "closed": true,
-       "region": "slab-field",
-       "material": "concrete-slab"
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": 0,
+        "z1": 0.05
+       }
       },
       {
        "id": "slab-r2-edge",
@@ -11975,28 +12085,34 @@
        "z": 2.5,
        "filled": true,
        "tone": 0.6,
+       "region": "slab-field",
+       "material": "concrete-slab",
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0.5,
+         -0.5025
         ],
         [
          0.5,
-         0.0
+         -0.0025
         ],
         [
-         0.5,
-         0.05
+         0,
+         -0.0025
         ],
         [
-         0.0,
-         0.05
+         0,
+         -0.5025
         ]
        ],
        "closed": true,
-       "region": "slab-field",
-       "material": "concrete-slab"
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": 0,
+        "z1": 0.05
+       }
       },
       {
        "id": "slab-r3-edge",
@@ -12005,28 +12121,34 @@
        "z": 2.5,
        "filled": true,
        "tone": 0.6,
+       "region": "slab-field",
+       "material": "concrete-slab",
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0.5,
+         -0.5025
         ],
         [
          0.5,
-         0.0
+         -0.0025
         ],
         [
-         0.5,
-         0.05
+         0,
+         -0.0025
         ],
         [
-         0.0,
-         0.05
+         0,
+         -0.5025
         ]
        ],
        "closed": true,
-       "region": "slab-field",
-       "material": "concrete-slab"
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": 0,
+        "z1": 0.05
+       }
       },
       {
        "id": "slab-f1-edge",
@@ -12038,19 +12160,19 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
          0.5,
-         0.0
+         0
         ],
         [
          0.5,
          0.05
         ],
         [
-         0.0,
+         0,
          0.05
         ]
        ],
@@ -12068,19 +12190,19 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
          0.5,
-         0.0
+         0
         ],
         [
          0.5,
          0.05
         ],
         [
-         0.0,
+         0,
          0.05
         ]
        ],
@@ -12098,19 +12220,19 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
          0.5,
-         0.0
+         0
         ],
         [
          0.5,
          0.05
         ],
         [
-         0.0,
+         0,
          0.05
         ]
        ],
@@ -12196,18 +12318,18 @@
        "id": "foot-front-right",
        "bone": "pallet",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.36,
        "kind": "poly",
        "points": [
         [
          -0.4,
-         0.0
+         0
         ],
         [
          -0.3,
-         0.0
+         0
         ],
         [
          -0.3,
@@ -12226,18 +12348,18 @@
        "id": "foot-front-centre",
        "bone": "pallet",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.36,
        "kind": "poly",
        "points": [
         [
          -0.0725,
-         0.0
+         0
         ],
         [
          0.0725,
-         0.0
+         0
         ],
         [
          0.0725,
@@ -12256,18 +12378,18 @@
        "id": "foot-front-left",
        "bone": "pallet",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.36,
        "kind": "poly",
        "points": [
         [
          0.3,
-         0.0
+         0
         ],
         [
          0.4,
-         0.0
+         0
         ],
         [
          0.4,
@@ -12330,11 +12452,11 @@
          -0.0025
         ],
         [
-         0.0,
+         0,
          -0.0025
         ],
         [
-         0.0,
+         0,
          -0.5025
         ]
        ],
@@ -12342,7 +12464,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "v",
-        "z0": 0.0,
+        "z0": 0,
         "z1": 0.05
        },
        "region": "slab-field",
@@ -12366,11 +12488,11 @@
          -0.0025
         ],
         [
-         0.0,
+         0,
          -0.0025
         ],
         [
-         0.0,
+         0,
          -0.5025
         ]
        ],
@@ -12378,7 +12500,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "v",
-        "z0": 0.0,
+        "z0": 0,
         "z1": 0.05
        },
        "region": "slab-field",
@@ -12402,11 +12524,11 @@
          -0.0025
         ],
         [
-         0.0,
+         0,
          -0.0025
         ],
         [
-         0.0,
+         0,
          -0.5025
         ]
        ],
@@ -12414,7 +12536,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "v",
-        "z0": 0.0,
+        "z0": 0,
         "z1": 0.05
        },
        "region": "slab-field",
@@ -12438,11 +12560,11 @@
          0.25
         ],
         [
-         0.0,
+         0,
          0.25
         ],
         [
-         0.0,
+         0,
          -0.25
         ]
        ],
@@ -12450,7 +12572,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "v",
-        "z0": 0.0,
+        "z0": 0,
         "z1": 0.05
        },
        "region": "slab-field",
@@ -12474,11 +12596,11 @@
          0.25
         ],
         [
-         0.0,
+         0,
          0.25
         ],
         [
-         0.0,
+         0,
          -0.25
         ]
        ],
@@ -12486,7 +12608,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "v",
-        "z0": 0.0,
+        "z0": 0,
         "z1": 0.05
        },
        "region": "slab-field",
@@ -12510,11 +12632,11 @@
          0.25
         ],
         [
-         0.0,
+         0,
          0.25
         ],
         [
-         0.0,
+         0,
          -0.25
         ]
        ],
@@ -12522,7 +12644,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "v",
-        "z0": 0.0,
+        "z0": 0,
         "z1": 0.05
        },
        "region": "slab-field",
@@ -12561,7 +12683,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.4
         ],
         [
@@ -12573,7 +12695,7 @@
          0.4
         ],
         [
-         0.0,
+         0,
          0.4
         ]
        ],
@@ -12591,7 +12713,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.4
         ],
         [
@@ -12603,7 +12725,7 @@
          -0.3
         ],
         [
-         0.0,
+         0,
          -0.3
         ]
        ],
@@ -12621,7 +12743,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.0725
         ],
         [
@@ -12633,7 +12755,7 @@
          0.0725
         ],
         [
-         0.0,
+         0,
          0.0725
         ]
        ],
@@ -12651,7 +12773,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.3
         ],
         [
@@ -12663,7 +12785,7 @@
          0.4
         ],
         [
-         0.0,
+         0,
          0.4
         ]
        ],
@@ -12929,11 +13051,11 @@
          -0.0025
         ],
         [
-         0.0,
+         0,
          -0.0025
         ],
         [
-         0.0,
+         0,
          -0.5025
         ]
        ],
@@ -12941,7 +13063,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "v",
-        "z0": 0.0,
+        "z0": 0,
         "z1": 0.05
        },
        "region": "slab-field",
@@ -12965,11 +13087,11 @@
          -0.0025
         ],
         [
-         0.0,
+         0,
          -0.0025
         ],
         [
-         0.0,
+         0,
          -0.5025
         ]
        ],
@@ -12977,7 +13099,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "v",
-        "z0": 0.0,
+        "z0": 0,
         "z1": 0.05
        },
        "region": "slab-field",
@@ -13001,11 +13123,11 @@
          -0.0025
         ],
         [
-         0.0,
+         0,
          -0.0025
         ],
         [
-         0.0,
+         0,
          -0.5025
         ]
        ],
@@ -13013,7 +13135,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "v",
-        "z0": 0.0,
+        "z0": 0,
         "z1": 0.05
        },
        "region": "slab-field",
@@ -13037,11 +13159,11 @@
          0.25
         ],
         [
-         0.0,
+         0,
          0.25
         ],
         [
-         0.0,
+         0,
          -0.25
         ]
        ],
@@ -13049,7 +13171,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "v",
-        "z0": 0.0,
+        "z0": 0,
         "z1": 0.05
        },
        "region": "slab-field",
@@ -13073,11 +13195,11 @@
          0.25
         ],
         [
-         0.0,
+         0,
          0.25
         ],
         [
-         0.0,
+         0,
          -0.25
         ]
        ],
@@ -13085,7 +13207,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "v",
-        "z0": 0.0,
+        "z0": 0,
         "z1": 0.05
        },
        "region": "slab-field",
@@ -13109,11 +13231,11 @@
          0.25
         ],
         [
-         0.0,
+         0,
          0.25
         ],
         [
-         0.0,
+         0,
          -0.25
         ]
        ],
@@ -13121,7 +13243,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "v",
-        "z0": 0.0,
+        "z0": 0,
         "z1": 0.05
        },
        "region": "slab-field",
@@ -13249,7 +13371,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.133
         ],
         [
@@ -13261,7 +13383,7 @@
          0.011
         ],
         [
-         0.0,
+         0,
          0.011
         ]
        ],
@@ -13279,19 +13401,19 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
          0.5,
-         0.0
+         0
         ],
         [
          0.5,
          0.4
         ],
         [
-         0.0,
+         0,
          0.4
         ]
        ],
@@ -13312,19 +13434,19 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
          0.5,
-         0.0
+         0
         ],
         [
          0.5,
          0.4
         ],
         [
-         0.0,
+         0,
          0.4
         ]
        ],
@@ -13342,28 +13464,34 @@
        "z": 2.5,
        "filled": true,
        "tone": 0.6,
+       "region": "slab-field",
+       "material": "concrete-slab",
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0.5,
+         -0.5025
         ],
         [
          0.5,
-         0.0
+         -0.0025
         ],
         [
-         0.5,
-         0.075
+         0,
+         -0.0025
         ],
         [
-         0.0,
-         0.075
+         0,
+         -0.5025
         ]
        ],
        "closed": true,
-       "region": "slab-field",
-       "material": "concrete-slab"
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": 0,
+        "z1": 0.075
+       }
       },
       {
        "id": "slab-r2-edge",
@@ -13372,28 +13500,34 @@
        "z": 2.5,
        "filled": true,
        "tone": 0.6,
+       "region": "slab-field",
+       "material": "concrete-slab",
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0.5,
+         -0.5025
         ],
         [
          0.5,
-         0.0
+         -0.0025
         ],
         [
-         0.5,
-         0.075
+         0,
+         -0.0025
         ],
         [
-         0.0,
-         0.075
+         0,
+         -0.5025
         ]
        ],
        "closed": true,
-       "region": "slab-field",
-       "material": "concrete-slab"
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": 0,
+        "z1": 0.075
+       }
       },
       {
        "id": "slab-r3-edge",
@@ -13402,28 +13536,34 @@
        "z": 2.5,
        "filled": true,
        "tone": 0.6,
+       "region": "slab-field",
+       "material": "concrete-slab",
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0.5,
+         -0.5025
         ],
         [
          0.5,
-         0.0
+         -0.0025
         ],
         [
-         0.5,
-         0.075
+         0,
+         -0.0025
         ],
         [
-         0.0,
-         0.075
+         0,
+         -0.5025
         ]
        ],
        "closed": true,
-       "region": "slab-field",
-       "material": "concrete-slab"
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": 0,
+        "z1": 0.075
+       }
       },
       {
        "id": "slab-f1-edge",
@@ -13435,19 +13575,19 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
          0.5,
-         0.0
+         0
         ],
         [
          0.5,
          0.075
         ],
         [
-         0.0,
+         0,
          0.075
         ]
        ],
@@ -13465,19 +13605,19 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
          0.5,
-         0.0
+         0
         ],
         [
          0.5,
          0.075
         ],
         [
-         0.0,
+         0,
          0.075
         ]
        ],
@@ -13495,19 +13635,19 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
          0.5,
-         0.0
+         0
         ],
         [
          0.5,
          0.075
         ],
         [
-         0.0,
+         0,
          0.075
         ]
        ],
@@ -13528,11 +13668,11 @@
        "points": [
         [
          -0.4,
-         0.0
+         0
         ],
         [
          -0.3,
-         0.0
+         0
         ],
         [
          -0.3,
@@ -13544,11 +13684,11 @@
         ],
         [
          -0.0725,
-         0.0
+         0
         ],
         [
          0.0725,
-         0.0
+         0
         ],
         [
          0.0725,
@@ -13560,11 +13700,11 @@
         ],
         [
          0.3,
-         0.0
+         0
         ],
         [
          0.4,
-         0.0
+         0
         ],
         [
          0.4,
@@ -13630,11 +13770,11 @@
          -0.0025
         ],
         [
-         0.0,
+         0,
          -0.0025
         ],
         [
-         0.0,
+         0,
          -0.5025
         ]
        ],
@@ -13642,7 +13782,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "v",
-        "z0": 0.0,
+        "z0": 0,
         "z1": 0.075
        },
        "region": "slab-field",
@@ -13666,11 +13806,11 @@
          -0.0025
         ],
         [
-         0.0,
+         0,
          -0.0025
         ],
         [
-         0.0,
+         0,
          -0.5025
         ]
        ],
@@ -13678,7 +13818,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "v",
-        "z0": 0.0,
+        "z0": 0,
         "z1": 0.075
        },
        "region": "slab-field",
@@ -13702,11 +13842,11 @@
          -0.0025
         ],
         [
-         0.0,
+         0,
          -0.0025
         ],
         [
-         0.0,
+         0,
          -0.5025
         ]
        ],
@@ -13714,7 +13854,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "v",
-        "z0": 0.0,
+        "z0": 0,
         "z1": 0.075
        },
        "region": "slab-field",
@@ -13738,11 +13878,11 @@
          0.25
         ],
         [
-         0.0,
+         0,
          0.25
         ],
         [
-         0.0,
+         0,
          -0.25
         ]
        ],
@@ -13750,7 +13890,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "v",
-        "z0": 0.0,
+        "z0": 0,
         "z1": 0.075
        },
        "region": "slab-field",
@@ -13774,11 +13914,11 @@
          0.25
         ],
         [
-         0.0,
+         0,
          0.25
         ],
         [
-         0.0,
+         0,
          -0.25
         ]
        ],
@@ -13786,7 +13926,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "v",
-        "z0": 0.0,
+        "z0": 0,
         "z1": 0.075
        },
        "region": "slab-field",
@@ -13810,11 +13950,11 @@
          0.25
         ],
         [
-         0.0,
+         0,
          0.25
         ],
         [
-         0.0,
+         0,
          -0.25
         ]
        ],
@@ -13822,7 +13962,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "v",
-        "z0": 0.0,
+        "z0": 0,
         "z1": 0.075
        },
        "region": "slab-field",
@@ -13840,7 +13980,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.4
         ],
         [
@@ -13852,7 +13992,7 @@
          0.4
         ],
         [
-         0.0,
+         0,
          0.4
         ]
        ],
@@ -13944,11 +14084,11 @@
          -0.0025
         ],
         [
-         0.0,
+         0,
          -0.0025
         ],
         [
-         0.0,
+         0,
          -0.5025
         ]
        ],
@@ -13956,7 +14096,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "v",
-        "z0": 0.0,
+        "z0": 0,
         "z1": 0.075
        },
        "region": "slab-field",
@@ -13980,11 +14120,11 @@
          -0.0025
         ],
         [
-         0.0,
+         0,
          -0.0025
         ],
         [
-         0.0,
+         0,
          -0.5025
         ]
        ],
@@ -13992,7 +14132,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "v",
-        "z0": 0.0,
+        "z0": 0,
         "z1": 0.075
        },
        "region": "slab-field",
@@ -14016,11 +14156,11 @@
          -0.0025
         ],
         [
-         0.0,
+         0,
          -0.0025
         ],
         [
-         0.0,
+         0,
          -0.5025
         ]
        ],
@@ -14028,7 +14168,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "v",
-        "z0": 0.0,
+        "z0": 0,
         "z1": 0.075
        },
        "region": "slab-field",
@@ -14052,11 +14192,11 @@
          0.25
         ],
         [
-         0.0,
+         0,
          0.25
         ],
         [
-         0.0,
+         0,
          -0.25
         ]
        ],
@@ -14064,7 +14204,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "v",
-        "z0": 0.0,
+        "z0": 0,
         "z1": 0.075
        },
        "region": "slab-field",
@@ -14088,11 +14228,11 @@
          0.25
         ],
         [
-         0.0,
+         0,
          0.25
         ],
         [
-         0.0,
+         0,
          -0.25
         ]
        ],
@@ -14100,7 +14240,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "v",
-        "z0": 0.0,
+        "z0": 0,
         "z1": 0.075
        },
        "region": "slab-field",
@@ -14124,11 +14264,11 @@
          0.25
         ],
         [
-         0.0,
+         0,
          0.25
         ],
         [
-         0.0,
+         0,
          -0.25
         ]
        ],
@@ -14136,7 +14276,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "v",
-        "z0": 0.0,
+        "z0": 0,
         "z1": 0.075
        },
        "region": "slab-field",
@@ -14518,7 +14658,7 @@
       },
       "anchor": "wheel-contact",
       "fxN": 0,
-      "fyN": -2500.0,
+      "fyN": -2500,
       "source": "authored-estimate",
       "reference": "en-1991-1-1"
      }

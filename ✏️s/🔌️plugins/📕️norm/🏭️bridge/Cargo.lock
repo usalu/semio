@@ -10361,7 +10361,6 @@ dependencies = [
  "semio-os-kernel",
  "semio-os-store-one-item",
  "semio-framework-schema",
- "semio-framework-schema-registry",
  "semio-framework-schema-state",
  "semio-ui-locale",
  "semio-framework-value",
@@ -10391,29 +10390,8 @@ dependencies = [
  "semio-s-artifact-norm-en1996-mut-ties",
  "semio-s-artifact-norm-en1996-mut-units",
  "semio-s-artifact-norm-en1996-mut-walls",
- "semio-s-artifact-norm-en1996-mutations-graphql",
- "semio-s-artifact-norm-en1996-mutations-json-schema",
- "semio-s-artifact-norm-en1996-mutations-proto",
- "semio-s-artifact-norm-en1996-mutations-typescript",
- "semio-s-plugin-norm-app-surface",
  "serde",
 ]
-
-[[package]]
-name = "semio-s-artifact-norm-en1996-mutations-graphql"
-version = "0.1.0"
-
-[[package]]
-name = "semio-s-artifact-norm-en1996-mutations-json-schema"
-version = "0.1.0"
-
-[[package]]
-name = "semio-s-artifact-norm-en1996-mutations-proto"
-version = "0.1.0"
-
-[[package]]
-name = "semio-s-artifact-norm-en1996-mutations-typescript"
-version = "0.1.0"
 
 [[package]]
 name = "semio-s-artifact-norm-en1997-diff"
@@ -11426,6 +11404,7 @@ dependencies = [
  "semio-s-artifact-norm-en1999-diff-graphql",
  "semio-s-artifact-norm-en1999-diff-json-schema",
  "semio-s-artifact-norm-en1999-diff-proto",
+ "semio-s-artifact-norm-en1999-diff-rows-details",
  "semio-s-artifact-norm-en1999-diff-typescript",
  "semio-s-artifact-norm-en1999-model",
  "semio-s-plugin-norm-compliance",
@@ -11443,6 +11422,19 @@ version = "0.1.0"
 [[package]]
 name = "semio-s-artifact-norm-en1999-diff-proto"
 version = "0.1.0"
+
+[[package]]
+name = "semio-s-artifact-norm-en1999-diff-rows-details"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-dsl-record",
+ "semio-framework-dsl-record-derive",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-os-kernel",
+ "semio-s-artifact-norm-en1999-model",
+ "serde",
+]
 
 [[package]]
 name = "semio-s-artifact-norm-en1999-diff-typescript"

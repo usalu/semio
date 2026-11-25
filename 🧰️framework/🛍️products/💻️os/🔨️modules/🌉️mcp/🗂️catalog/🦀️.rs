@@ -10,7 +10,7 @@ use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
 use semio_framework_value::ValueError;
 use std::collections::BTreeMap;
-use semio_os_mcp_schema::schema::{artifact_create_template_input_schema, capability_action_input_schema, capability_generic_input_schema, capability_generic_output_schema, compile_validator, ui_dialog_open_input_schema, validate, with_artifact_create_templates};
+use semio_os_mcp_schema::schema::{artifact_create_template_input_schema, capability_action_input_schema, capability_generic_input_schema, capability_generic_output_schema, compile_validator, ui_dialog_open_input_schema, validate};
 
 #[path = "🪪️capability-identity/🦀️.rs"]
 mod capability_identity;
@@ -27,6 +27,10 @@ use framework_dedup::*;
 #[path = "🏭️capability-builders/🦀️.rs"]
 mod capability_builders;
 pub use capability_builders::*;
+
+#[path = "⚡️pool-map/🦀️.rs"]
+mod pool_map_impl;
+pub use pool_map_impl::*;
 
 #[path = "📚️catalog-compile/🦀️.rs"]
 mod catalog_compile;

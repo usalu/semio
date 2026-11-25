@@ -8,6 +8,7 @@ import type { PixelOracleFixture } from "../🧾️pixel-oracle-fixture/🟦️.
 import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import { runtimeBundleV1 } from "../../../../../../../../🔨️modules/⚙️runtime/🔬️source/🟦️.ts";
 import { runtimeResolveV1 } from "../../../../../../../../🔨️modules/⚙️runtime/🚀️process/🟦️.ts";
+import { launchChromium } from "../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🌐️chromium-launch/🟦️";
 
 declare const THREE: any;
 declare const worldSurfaceMaterial: (name: string, material: any, vertexColors: boolean) => any;
@@ -218,9 +219,7 @@ export async function runGridVisualOracle(repoRoot: string, outputDirectory: str
   if(!bundle)throw Error("Successful oracle bundle output required");
   const javascript = await bundle.text();
   if (output) await writeFile(join(output, "oracle.js"), javascript);
-  const playwrightSpecifier = "playwright";
-  const { chromium } = (await import(playwrightSpecifier)) as typeof import("playwright");
-  const browser = await chromium.launch({ headless: true, args: ["--ignore-gpu-blocklist", ...(webgpu ? ["--enable-unsafe-webgpu"] : []), ...(process.platform === "darwin" ? ["--use-angle=metal"] : [])] });
+  const browser = await launchChromium({ args: ["--ignore-gpu-blocklist", ...(webgpu ? ["--enable-unsafe-webgpu"] : []), ...(process.platform === "darwin" ? ["--use-angle=metal"] : [])] });
   try {
     const page = await browser.newPage({ viewport: { width: 256, height: 256 }, deviceScaleFactor: 1 });
     const errors: string[] = [];

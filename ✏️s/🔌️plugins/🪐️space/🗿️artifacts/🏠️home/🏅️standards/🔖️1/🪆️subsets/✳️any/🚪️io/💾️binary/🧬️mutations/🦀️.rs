@@ -10,6 +10,7 @@ use crate::standards::v1::subsets::any::schema::mutations::SHomeMutation;
 use protocol::OpBinary;
 
 dsl::original_tagged_operation_receiving!(SHomeMutation, COMPONENT_PROTOCOL_SEMIO);
+dsl::artifact_persisted_binary_operation!(SHomeMutation);
 
 pub const BINARY_TAGS: &[(&str, u8)] = &[("ChangeCatalogGeneration", change_catalog_generation::BINARY_TAG)];
 

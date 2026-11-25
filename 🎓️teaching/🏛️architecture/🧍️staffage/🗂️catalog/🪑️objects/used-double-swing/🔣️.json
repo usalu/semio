@@ -13,18 +13,90 @@
    "de": "Eine kommunale Doppelschaukel aus Holz, wie sie nach etwa fünfzehn Jahren auf einem Parkspielplatz steht: zwei A-Böcke aus vergrautem, rissigem Kiefernrundholz 120 mm auf verzinkten Pfostenankern tragen einen 3,30 m langen Rundholzbalken 140 mm mit vier Schaukellagern 2,30 m über dem Kies; ein flacher EPDM-Sitz und ein Krippensitz hängen an abgenutzten Rundstahlketten, und die Füße der Kinder haben unter dem Flachsitz eine 90 mm tiefe Mulde in den Fallschutzkies gescharrt. Der Flachsitz schwingt mit einem Kind als Pendel von 1,64 m (T = 2,61 s bei 30 Grad); in der Wartung wird er ausgeschäkelt und zum Austausch in seine Mulde abgesetzt."
   },
   "tags": [
-   "used",
-   "park",
-   "public-space",
-   "play",
-   "swing",
-   "double-swing",
-   "timber",
-   "round-timber",
-   "a-frame",
-   "playground",
-   "gravel",
-   "weathered"
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "park",
+    "title": {
+     "en": "park",
+     "de": "Park"
+    }
+   },
+   {
+    "id": "public-space",
+    "title": {
+     "en": "public space",
+     "de": "öffentlicher Raum"
+    }
+   },
+   {
+    "id": "play",
+    "title": {
+     "en": "play",
+     "de": "Spiel"
+    }
+   },
+   {
+    "id": "swing",
+    "title": {
+     "en": "swing",
+     "de": "Schaukel"
+    }
+   },
+   {
+    "id": "double-swing",
+    "title": {
+     "en": "double swing",
+     "de": "Doppelschaukel"
+    }
+   },
+   {
+    "id": "timber",
+    "title": {
+     "en": "timber",
+     "de": "Holz"
+    }
+   },
+   {
+    "id": "round-timber",
+    "title": {
+     "en": "round timber",
+     "de": "Rundholz"
+    }
+   },
+   {
+    "id": "a-frame",
+    "title": {
+     "en": "A-frame",
+     "de": "A-Rahmen"
+    }
+   },
+   {
+    "id": "playground",
+    "title": {
+     "en": "playground",
+     "de": "Spielplatz"
+    }
+   },
+   {
+    "id": "gravel",
+    "title": {
+     "en": "gravel",
+     "de": "Kies"
+    }
+   },
+   {
+    "id": "weathered",
+    "title": {
+     "en": "weathered",
+     "de": "verwittert"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content (used park objects wave)",

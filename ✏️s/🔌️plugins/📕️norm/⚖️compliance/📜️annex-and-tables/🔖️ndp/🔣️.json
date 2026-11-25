@@ -1,6 +1,82 @@
 {
  "entries": [
   {
+   "id": "ndp.din16798-1.occupancy.classroom",
+   "code": "EN 16798-1",
+   "part": "",
+   "clause": "Annex B",
+   "symbol": "typical floor area per person, classroom",
+   "recommended": 2.0,
+   "naDe": 2.0,
+   "unit": "m2/person",
+   "source": {
+    "document": "EN 16798-1",
+    "edition": "to be recorded at verification",
+    "locator": "Annex B"
+   },
+   "status": "unverified",
+   "specRef": "EN 16798-1 Annex B",
+   "asWritten": "Typical design occupancy of a classroom: 2 m2 per person.",
+   "evidence": "din16798 2026-11-24: UNVERIFIED. Value recalled from the typical-occupancy list of CR 1752 and EN 15251, not keyed from the printed EN 16798-1 Annex B; needs a human double-key."
+  },
+  {
+   "id": "ndp.din16798-1.occupancy.meeting",
+   "code": "EN 16798-1",
+   "part": "",
+   "clause": "Annex B",
+   "symbol": "typical floor area per person, meeting",
+   "recommended": 2.0,
+   "naDe": 2.0,
+   "unit": "m2/person",
+   "source": {
+    "document": "EN 16798-1",
+    "edition": "to be recorded at verification",
+    "locator": "Annex B"
+   },
+   "status": "unverified",
+   "specRef": "EN 16798-1 Annex B",
+   "asWritten": "Typical design occupancy of a conference or meeting room: 2 m2 per person.",
+   "evidence": "din16798 2026-11-24: UNVERIFIED. Value recalled from the typical-occupancy list of CR 1752 and EN 15251, not keyed from the printed EN 16798-1 Annex B; needs a human double-key."
+  },
+  {
+   "id": "ndp.din16798-1.occupancy.office",
+   "code": "EN 16798-1",
+   "part": "",
+   "clause": "Annex B",
+   "symbol": "typical floor area per person, office",
+   "recommended": 10.0,
+   "naDe": 10.0,
+   "unit": "m2/person",
+   "source": {
+    "document": "EN 16798-1",
+    "edition": "to be recorded at verification",
+    "locator": "Annex B"
+   },
+   "status": "unverified",
+   "specRef": "EN 16798-1 Annex B",
+   "asWritten": "Typical design occupancy of a single office: 10 m2 per person.",
+   "evidence": "din16798 2026-11-24: UNVERIFIED. Value recalled from the typical-occupancy list of CR 1752 and EN 15251, not keyed from the printed EN 16798-1 Annex B; needs a human double-key."
+  },
+  {
+   "id": "ndp.din16798-1.occupancy.retail",
+   "code": "EN 16798-1",
+   "part": "",
+   "clause": "Annex B",
+   "symbol": "typical floor area per person, retail",
+   "recommended": 7.0,
+   "naDe": 7.0,
+   "unit": "m2/person",
+   "source": {
+    "document": "EN 16798-1",
+    "edition": "to be recorded at verification",
+    "locator": "Annex B"
+   },
+   "status": "unverified",
+   "specRef": "EN 16798-1 Annex B",
+   "asWritten": "Typical design occupancy of a department store: 7 m2 per person.",
+   "evidence": "din16798 2026-11-24: UNVERIFIED. Value recalled from the typical-occupancy list of CR 1752 and EN 15251, not keyed from the printed EN 16798-1 Annex B; needs a human double-key."
+  },
+  {
    "id": "ndp.din4108-2.mould.f_rsi_min",
    "code": "DIN 4108-2",
    "part": "",

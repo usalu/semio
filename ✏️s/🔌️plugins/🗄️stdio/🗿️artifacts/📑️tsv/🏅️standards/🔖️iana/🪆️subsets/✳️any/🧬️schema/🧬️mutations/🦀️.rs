@@ -51,6 +51,7 @@ pub enum TsvMutation {
     SetCell(set_cell::SetCell),
 }
 dsl::original_pack_value_operation_receiving!(TsvMutation);
+dsl::artifact_persisted_binary_operation!(TsvMutation);
 
 /// 🧾️ Kebab-case spelling of every `TsvMutation` variant, in declaration order — the exhaustive
 /// mutation catalog `tsv-iana-any` (`../../🔮️oracles/🔣️.json`) is measured against this

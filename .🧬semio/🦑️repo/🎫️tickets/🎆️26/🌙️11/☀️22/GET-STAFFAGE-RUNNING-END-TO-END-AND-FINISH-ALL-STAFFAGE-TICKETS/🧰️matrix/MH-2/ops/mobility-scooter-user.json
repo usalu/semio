@@ -1,4 +1,10 @@
 [
   {"op": "front-sweep", "scale": "500", "id": "jacket"},
-  {"op": "plan-prism", "scale": "500", "id": "jacket"}
+  {"op": "plan-depth", "scale": "500", "id": "jacket"},
+  {"op": "plan-core", "scale": "500", "id": "jacket", "as": "jacket-core", "half": 0.15},
+  {"op": "copy", "scale": "50", "id": "glove-r", "bone": "hand-r", "from": "elevation", "to": ["front"], "solid": {"front": {"kind": "extruded", "sweep": "w", "z0": -0.219, "z1": -0.1111}}},
+  {"op": "copy", "scale": "100", "id": "glove-r", "bone": "hand-r", "from": "elevation", "to": ["front"], "solid": {"front": {"kind": "extruded", "sweep": "w", "z0": -0.2184, "z1": -0.1115}}},
+  {"op": "copy", "scale": "100", "id": "fingers-r", "bone": "hand-r", "from": "elevation", "to": ["front"], "solid": {"front": {"kind": "extruded", "sweep": "w", "z0": -0.2121, "z1": -0.137}}},
+  {"op": "copy", "scale": "200", "id": "glove-r", "bone": "hand-r", "from": "elevation", "to": ["front"], "solid": {"front": {"kind": "extruded", "sweep": "w", "z0": -0.2173, "z1": -0.1284}}},
+  {"op": "copy", "scale": "200", "id": "fingers-r", "bone": "hand-r", "from": "elevation", "to": ["front"], "solid": {"front": {"kind": "extruded", "sweep": "w", "z0": -0.216, "z1": -0.1329}}}
 ]

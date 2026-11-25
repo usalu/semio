@@ -156,15 +156,29 @@ fn triangulate_solid(solid: &FemSolid) -> Result<semio_s_fem_mesh::TriMesh2, Fem
 /// and the slab on the walls into one connected structure. Returns the merged nodes and every solid's
 /// mesh; `SolidMesh::node_ids[i]` is the document-wide id of `SolidMesh::points[i]`.
 pub fn mesh_solids(doc: &Fem3dSnapshot) -> Result<(Vec<Node>, Vec<SolidMesh>), Fem3dError> {
+    let (nodes, meshes, failures) = mesh_solids_partial(doc);
+    failures.into_iter().next().map_or(Ok((nodes, meshes)), Err)
+}
+
+/// 🧩️ [`mesh_solids`] that never gives up on the whole document: every solid that meshes is returned, every one that does
+/// not is reported with its error in document order — what a renderer needs to draw the rest and mark the failing one.
+pub fn mesh_solids_partial(doc: &Fem3dSnapshot) -> (Vec<Node>, Vec<SolidMesh>, Vec<Fem3dError>) {
     let mut merger = NodeMerger::new(doc);
     let mut meshes = Vec::with_capacity(doc.solids.len());
+    let mut failures = Vec::new();
     for solid in &doc.solids {
-        let footprint = triangulate_solid(solid)?;
+        let footprint = match triangulate_solid(solid) {
+            Ok(footprint) => footprint,
+            Err(error) => {
+                failures.push(error);
+                continue;
+            }
+        };
         let (points, tets, boundary_tris) = extrude_solid(solid, &footprint);
         let node_ids = points.iter().enumerate().map(|(point_index, point)| merger.resolve(*point, || format!("{}_m{point_index}", solid.id))).collect();
         meshes.push(SolidMesh { solid_id: solid.id.clone(), points, tets, boundary_tris, node_ids, footprint });
     }
-    Ok((merger.nodes, meshes))
+    (merger.nodes, meshes, failures)
 }
 
 /// 🔵️ `resolve_geometry`'s resolved `(nodes, elements, meshed solids, supports)` quadruple.

@@ -21,7 +21,8 @@ import {
   clipboardWriteFragmentFromEffect,
   ClipboardActionQueue,
   pasteActionWithRetainedFragment,
-  pasteArgsFragment
+  pasteArgsFragment,
+  workspacePasteKeybinding
 } from "../../🧱️elements/🛠️ShellHelpers/🪟️window-panes/📋️clipboard-activation/🟦️.ts";
 import "../🧰️engine-contract-helpers/🟦️.ts";
 
@@ -381,18 +382,29 @@ describe("palette redirect and keybinding rule (P3/P4)", () => {
     const queue = new ClipboardActionQueue();
     let finishCopy!: () => void;
     const copyMayFinish = new Promise<void>((resolve) => { finishCopy = resolve; });
-    let fragment: unknown;
+    let fragment: unknown = clipboardOrder.initial;
     let writes = 0;
     const pasted: unknown[] = [];
-    const actions = clipboardOrder.submitted.map((action) => queue.run({ action }, async () => {
+    const { windowId } = clipboardOrder.placement;
+    expect(workspacePasteKeybinding("paste", windowId, false, undefined)).toBeUndefined();
+    expect(workspacePasteKeybinding("paste", windowId, true, undefined)).toEqual({ action: "paste", args: { windowId } });
+    expect(workspacePasteKeybinding("paste", windowId, false, fragment)).toEqual({ action: "paste", args: { windowId } });
+    const actions = clipboardOrder.submitted.map((action) => {
       if (action === "paste") {
-        pasted.push(pasteArgsFragment(pasteActionWithRetainedFragment({ action, args: {} }, fragment)));
-      } else {
+        const requested = workspacePasteKeybinding(action, windowId, queue.pending, fragment);
+        if (!requested) throw new Error("Paste shortcut requires dispatch");
+        return queue.run(requested, async () => {
+          const dispatched = pasteActionWithRetainedFragment(requested, fragment);
+          expect(dispatched.args.windowId).toBe(windowId);
+          pasted.push(pasteArgsFragment(dispatched));
+        });
+      }
+      return queue.run({ action }, async () => {
         const index = writes++;
         if (index === 0) await copyMayFinish;
         fragment = clipboardOrder.copied[index];
-      }
-    }));
+      });
+    });
 
     expect(queue.pending).toBe(true);
     await expect(queue.run({ action: "worldRelocate" }, async () => "moved")).resolves.toBe("moved");

@@ -25,6 +25,7 @@ pub enum XmlMutation {
     SetText(SetTextMutation),
 }
 dsl::original_pack_value_operation_receiving!(XmlMutation);
+dsl::artifact_persisted_binary_operation!(XmlMutation);
 
 
 

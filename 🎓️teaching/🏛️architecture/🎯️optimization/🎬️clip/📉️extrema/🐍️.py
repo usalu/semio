@@ -816,5 +816,5 @@ class Beat1_LocalGlobalExtrema(_visuals.ClipScene):
         answer = _mn.Circle(radius=.2, color=GOOD, stroke_width=3).move_to(axes.c2p(found[0][0], found[0][1]))
         self.step("scope", *self._sub("Direction, domain and scope", "Richtung, Bereich und Geltung"), *[_mn.FadeOut(item) for item in content], _mn.FadeIn(card), _mn.FadeIn(plan), _mn.FadeIn(axes), _mn.FadeIn(labels), _mn.FadeIn(x_names),
                   *[_mn.FadeIn(item) for item in (*lines, *dots, *tiles, *notes)], _mn.FadeIn(strip), _mn.FadeIn(ripple), _mn.Succession(_mn.Wait(1.2), _mn.Indicate(card_rows[2], color=DESIGN)), seconds=2.8)
-        bill = self._t(f"≈ {self.quantity(found[0][1] * study['tariff'], 'CHF/a', 1)}", (3.75, -.5, 0), size=15, color=WARN, width=2.0, edge="left")
+        bill = self._t(f"≈ {self.quantity(found[0][1] * study['tariff'], 'CHF/a', 1)}", (3.75, rows_y[0] - .42, 0), size=15, color=WARN, width=2.0, edge="left")
         self.step("scope_2", _mn.FadeIn(bill), *[_mn.FadeOut(item) for item in (*lines[1:], *dots[1:], *tiles[1:], *notes[1:], strip, ripple)], _mn.FadeIn(answer), _mn.Indicate(card_rows[1], color=WARN), seconds=1.8)

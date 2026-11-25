@@ -17,12 +17,7 @@
   "pileGroups": null,
   "labTests": null,
   "layerWaters": null,
-  "placements": {
-    "removed": [],
-    "inserted": [],
-    "moved": [],
-    "modified": []
-  },
+  "placements": null,
   "cases": {
     "removed": [
       {

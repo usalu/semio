@@ -35,7 +35,11 @@ impl<T:FieldProjectionSource+RetireOwned+Sync> OwnedProjectedPackWireCursor<T>{
  pub fn begin_close(&mut self){self.closing=true;}
  pub fn terminal_is_empty(&self)->bool{self.original.is_none()&&self.admission.is_none()&&self.source.is_none()&&self.cursor.is_none()&&self.wire.terminal_is_empty()&&self.original_close.is_none()&&!self.take_pending}
  fn close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{
-  if let Some(admission)=self.admission.as_ref(){return admission.next_return_demand()}
+  if let Some(admission)=self.admission.as_ref(){return match admission.phase(){
+   "ready"=>Ok(admission.take_output_demand()),
+   _ if admission.projection_result()==Some(true)=>Ok(admission.discard_projection_demand()),
+   _=>admission.next_return_demand(),
+  }}
   if let Some(cursor)=self.cursor.as_ref(){return if cursor.terminal_is_empty(){Ok(header())}else{cursor.retirement_demands()}}
   if let Some(source)=self.source.as_ref(){return if source.terminal_is_empty(){Ok(header())}else{source.next_close_demand(body)}}
   if let Some(owner)=self.original_close.as_ref(){return if owner.terminal_is_empty(){Ok(header())}else{owner.selected_demand(body)}}
@@ -46,7 +50,12 @@ impl<T:FieldProjectionSource+RetireOwned+Sync> OwnedProjectedPackWireCursor<T>{
   if self.closing{return self.close_demand(body)}
   if matches!(self.phase,6|7)&&self.pending_offset<self.pending_length{return Ok(RetirementDemand{copy_bytes:(self.pending_length-self.pending_offset).min(body),depth:1,..Default::default()})}
   Ok(match self.phase{
-   0=>match self.admission.as_ref(){Some(admission) if admission.phase()!="ready"=>admission.next_demand()?,_=>header()},
+   0=>match self.admission.as_ref(){
+    Some(admission) if admission.phase()=="projectionStart"=>admission.owned_projection_demand()?,
+    Some(admission) if admission.phase()=="ready"=>admission.take_output_demand(),
+    Some(admission)=>admission.next_demand()?,
+    None=>header(),
+   },
    1|6=>{let cursor=self.cursor.as_ref().ok_or_else(||invalid("original Pack codec is absent"))?;RetirementDemand{copy_bytes:cursor.next_minimum_copy_bytes(),capacity_bytes:cursor.next_capacity_byte_demand()?,depth:cursor.next_advance_depth_demand()?,..Default::default()}},
    2|7=>self.cursor.as_ref().map_or(Ok(header()),|cursor|if cursor.terminal_is_empty(){Ok(header())}else{cursor.retirement_demands()})?,
    3=>RetirementDemand{capacity_bytes:self.wire.next_exact_capacity_allocation_bytes(self.length).map_err(page_error)?.unwrap_or(0),depth:self.wire.next_reserve_depth_demand().map_err(page_error)?.max(1),..Default::default()},
@@ -63,7 +72,14 @@ impl<T:FieldProjectionSource+RetireOwned+Sync> OwnedProjectedPackWireCursor<T>{
    0=>{
     if self.admission.is_none(){act(effect)?;let original=self.original.take().ok_or_else(||invalid("original Pack input is absent"))?;*self.admission=Some(RetainedCloneSource::<T>::admission_owned(original,()));return Ok(none(item()))}
     let admission=self.admission.as_mut().ok_or_else(||invalid("original Pack admission is absent"))?;
-    if admission.phase()=="ready"{let turn=admission.take_output(&mut self.source,effect);let step=turn.result?;if admission.terminal_is_empty(){self.admission.take();*self.cursor=Some(Default::default());self.phase=1;}Ok(none(step.progress()))}else{let turn=admission.advance(effect);turn.result.map(|step|none(step.progress())).map_err(Into::into)}
+    let turn=match admission.phase(){
+     "ready"=>admission.take_output(&mut self.source,effect),
+     "projectionStart"=>admission.project_owned(effect),
+     _=>admission.advance(effect),
+    };
+    let step=turn.result?;
+    if admission.terminal_is_empty(){self.admission.take();*self.cursor=Some(Default::default());self.phase=1;}
+    Ok(none(step.progress()))
    },
    1|6=>{
     let source=self.source.as_ref().ok_or_else(||invalid("original Pack source is absent"))?.try_borrow()?;let cursor=self.cursor.as_mut().ok_or_else(||invalid("original Pack codec is absent"))?;
@@ -83,7 +99,17 @@ impl<T:FieldProjectionSource+RetireOwned+Sync> OwnedProjectedPackWireCursor<T>{
  pub fn advance(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<OwnedProjectedPackWireStep<T>,BorrowedProjectedPackFailure>{let result=self.advance_one(effect);if result.is_err(){self.begin_close()}result}
  fn close_one(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneProgress,BorrowedProjectedPackFailure>{
   let grant=effect.grant();
-  if let Some(admission)=self.admission.as_mut(){let mut returned=None;let turn=admission.return_inputs(&mut returned,effect);if let Some((original,()))=returned{*self.original=Some(original);}if admission.terminal_is_empty(){self.admission.take();}return turn.result.map(|step|step.progress()).map_err(Into::into)}
+  if let Some(admission)=self.admission.as_mut(){
+   let mut returned=None;
+   let turn=match admission.phase(){
+    "ready"=>admission.take_output(&mut self.source,effect),
+    _ if admission.projection_result()==Some(true)=>admission.discard_projection(effect),
+    _=>admission.return_inputs(&mut returned,effect),
+   };
+   if let Some((original,()))=returned{*self.original=Some(original);}
+   if admission.terminal_is_empty(){self.admission.take();}
+   return turn.result.map(|step|step.progress()).map_err(Into::into)
+  }
   if let Some(cursor)=self.cursor.as_mut(){if cursor.terminal_is_empty(){act(effect)?;self.cursor.take();return Ok(item())}return cursor.close(effect).map(|step|step.progress)}
   if let Some(source)=self.source.as_mut(){if source.terminal_is_empty(){act(effect)?;self.source.take();return Ok(item())}return settled(source.close_step(grant.maximum_copy_bytes,effect))}
   if let Some(owner)=self.original_close.as_mut(){if owner.terminal_is_empty(){act(effect)?;self.original_close.take();return Ok(item())}return settled(owner.step(grant.maximum_copy_bytes,effect))}

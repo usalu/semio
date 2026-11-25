@@ -22,5 +22,6 @@
   {"scale": "500", "id": "boot-r", "op": "extrude", "view": "plan"},
   {"scale": "500", "id": "boot-r", "op": "extrude", "view": "front"},
   {"scale": "500", "id": "jeans-thigh-l", "op": "plan-revolve", "rebuild": true},
-  {"scale": "500", "id": "jeans-thigh-r", "op": "plan-revolve", "rebuild": true}
+  {"scale": "500", "id": "jeans-thigh-r", "op": "plan-revolve", "rebuild": true},
+  {"op": "anchor", "id": "toddler-crown", "set": {"x": 0.19}}
 ]

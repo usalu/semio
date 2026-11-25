@@ -17,6 +17,12 @@ export type SchedulerStoreV1=Readonly<{
 }>;
 export type SchedulerStorePortsV1=Readonly<{now?:()=>number;host?:()=>SchedulerHostV1|Promise<SchedulerHostV1>;onEvents?:(events:readonly SchedulerEventV1[],state:SchedulerStateV1)=>void;sleep?:(milliseconds:number)=>Promise<void>}>;
 
+/** 🔐️ Whether a failed lock `mkdir` means another writer holds or is just releasing the lock: `EEXIST` everywhere, and on Windows `EPERM`/`EACCES` while the holder's `rmdir` is still delete-pending.
+ * @see https://learn.microsoft.com/windows/win32/api/fileapi/nf-fileapi-removedirectoryw */
+export function schedulerLockContendedV1(code:string|undefined,platform:NodeJS.Platform=process.platform):boolean{
+ return code==="EEXIST"||platform==="win32"&&(code==="EPERM"||code==="EACCES");
+}
+
 /** 📍 Host-wide scheduler directory: the platform cache folder shared by every workspace and agent of the user. */
 export function schedulerDirectoryV1(environment:Readonly<Record<string,string|undefined>>=process.env,platform:NodeJS.Platform=process.platform,home:string=homedir()):string{
  const override=environment.SEMIO_SCHEDULER_DIRECTORY;if(override)return override;
@@ -56,7 +62,7 @@ export function createFileSchedulerStoreV1(directory:string,policy:SchedulerPoli
   const deadline=now()+policy.lockStaleMs*2;
   for(;;){
    try{mkdirSync(directory,{recursive:true});mkdirSync(lock);return;}catch(error){
-    if((error as NodeJS.ErrnoException).code!=="EEXIST")throw error;
+    if(!schedulerLockContendedV1((error as NodeJS.ErrnoException).code))throw error;
     try{if(Date.now()-statSync(lock).mtimeMs>policy.lockStaleMs)rmdirSync(lock);}catch{}
     if(now()>deadline)throw Error(schedulerTextV1("en","error.lock",{seconds:Math.floor(policy.lockStaleMs*2/1000)})+"\n"+schedulerTextV1("de","error.lock",{seconds:Math.floor(policy.lockStaleMs*2/1000)}));
     await sleep(5+Math.floor(Math.random()*20));

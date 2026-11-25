@@ -1,0 +1,5 @@
+#!/bin/zsh
+# 🚏️ The pinned bun behind the machine-wide memory queue (coordinator rule of 2026-11-24): `QMEM=<MB> QTIME=<s> qbun <bun args…>` runs `repo capacity run --memory=<MB> -- timeout <s> bun <args…>` from the repo root with the caller's working directory restored inside; the wait in the queue is not counted into the timeout. Defaults: 2500 MB, 1800 s. Reserve 7000 for 📊️matrix.ts, 5000 for the check CLI, 2500 for silhouette, three-views, physics and any vitest run, 1000 for the fast scan and small scripts.
+dir="$PWD"
+bun="$(ls "$HOME"/Library/Caches/semio/runtimes/bun/*/bun | head -1)"
+cd /Users/ueli/Documents/semio && exec repo capacity run --memory=${QMEM:-2500} -- timeout ${QTIME:-1800} /bin/zsh -c 'cd "$1" && shift && exec "$@"' _ "$dir" "$bun" "$@"

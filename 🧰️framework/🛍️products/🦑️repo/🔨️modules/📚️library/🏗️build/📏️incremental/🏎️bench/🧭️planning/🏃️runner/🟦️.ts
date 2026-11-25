@@ -61,7 +61,7 @@ type PlanRunV1=Readonly<{exit:number|null;wallMs:number;lines:readonly PlanningL
 const plan=async(root:string,target:string,intervalMs:number,signal:AbortSignal):Promise<PlanRunV1>=>{
  const lines:PlanningLineV1[]=[],begin=Date.now();
  let origin=begin,peakRss:number|null=null,peakSwap:number|null=null,minAvail:number|null=null;
- const child=spawn("repo",["run",target,"--dry-run","--output=static","--lang=en"],{cwd:root,stdio:["ignore","pipe","pipe"]});
+ const child=spawn("repo",["run",target,"--dry-run","--output=static","--lang=en"],{windowsHide:true,cwd:root,stdio:["ignore","pipe","pipe"]});
  const push=(text:string)=>{if(/^\[slot\] acquired/u.test(text))origin=Date.now();lines.push({atMs:Date.now()-origin,text});};
  {let tail="";for(const stream of [child.stdout!,child.stderr!])stream.on("data",(chunk:Buffer)=>{const parts=(tail+chunk.toString("utf8")).split("\n");tail=parts.pop()!;parts.forEach(push);});}
  const timer=setInterval(()=>{

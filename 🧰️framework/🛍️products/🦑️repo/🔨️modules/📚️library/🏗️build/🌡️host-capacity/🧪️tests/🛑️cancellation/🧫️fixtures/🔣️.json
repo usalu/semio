@@ -1,0 +1,4 @@
+[
+  {"signal": "SIGINT", "status": 130},
+  {"signal": "SIGTERM", "status": 143}
+]

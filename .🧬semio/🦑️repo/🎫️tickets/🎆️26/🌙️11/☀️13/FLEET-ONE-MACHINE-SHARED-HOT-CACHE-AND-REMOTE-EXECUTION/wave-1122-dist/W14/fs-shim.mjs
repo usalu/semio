@@ -1,0 +1,8 @@
+/** 🧮️ W14 counting shim for `node:fs`: every synchronous probe is counted per caller (stack sampled every `SAMPLE` calls) and per distinct path; the counts live on `globalThis.__w14`. */
+import * as real from "node:fs";
+const C = globalThis.__w14 ??= { calls: {}, callers: {}, paths: {}, sample: Number(process.env.W14_SAMPLE ?? 8) };
+const callerOf = () => { const lines = String(new Error().stack).split("\n").slice(3); for (const line of lines) { if (line.includes("fs-shim")) continue; const m = line.match(/at (\S+) \((.*?):(\d+):\d+\)/) ?? line.match(/at (.*?):(\d+):\d+/); if (!m) continue; const name = m.length === 4 ? m[1] : "<anon>", file = (m.length === 4 ? m[2] : m[1]).split("/").slice(-3).join("/"), at = m.length === 4 ? m[3] : m[2]; return name + " " + file + ":" + at; } return "?"; };
+const wrap = name => { const original = real[name]; return function (...args) { const n = (C.calls[name] = (C.calls[name] ?? 0) + 1); let set = C.paths[name]; if (set === undefined) set = C.paths[name] = new Set(); if (typeof args[0] === "string") set.add(args[0]); if (n % C.sample === 0) { const k = name + " <- " + callerOf(); C.callers[k] = (C.callers[k] ?? 0) + C.sample; } return original.apply(this, args); }; };
+export const statSync = wrap("statSync"), lstatSync = wrap("lstatSync"), readdirSync = wrap("readdirSync"), existsSync = wrap("existsSync"), readFileSync = wrap("readFileSync"), accessSync = wrap("accessSync"), realpathSync = wrap("realpathSync");
+export * from "node:fs";
+export default { ...real, statSync, lstatSync, readdirSync, existsSync, readFileSync, accessSync, realpathSync };

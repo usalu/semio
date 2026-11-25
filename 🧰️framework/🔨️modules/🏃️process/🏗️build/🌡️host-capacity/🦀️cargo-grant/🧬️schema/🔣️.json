@@ -1,0 +1,81 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/process/cargo-grant/v1",
+  "title": "Cargo grant: how an ad-hoc Cargo invocation of the tool registry is classified, sized and limited by the machine-wide capacity ledger",
+  "definitions": {
+    "Policy": {
+      "description": "The authored constants: the operation the invocation is admitted as, the environment variable the granted jobs are handed over in, the flags a command line may name its own jobs with and the longest class name part.",
+      "const": {
+        "operation": "cargo",
+        "jobsVariable": "CARGO_BUILD_JOBS",
+        "jobsFlags": ["-j", "--jobs"],
+        "workspaceFlags": ["--workspace", "--all"],
+        "workspaceClass": "workspace",
+        "partMaximumLength": 120
+      }
+    },
+    "Arguments": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "Environment": {
+      "type": "object",
+      "additionalProperties": {"type": "string"}
+    },
+    "LineageCase": {
+      "type": "object",
+      "required": ["name", "arguments", "lineage"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {"type": "string"},
+        "arguments": {"$ref": "#/definitions/Arguments"},
+        "lineage": {"type": "array", "minItems": 1, "items": {"type": "string"}}
+      }
+    },
+    "JobsCase": {
+      "type": "object",
+      "required": ["name", "arguments", "environment", "cores", "jobs"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {"type": "string"},
+        "arguments": {"$ref": "#/definitions/Arguments"},
+        "environment": {"$ref": "#/definitions/Environment"},
+        "cores": {"type": "integer", "minimum": 1},
+        "jobs": {"type": "integer", "minimum": 1}
+      }
+    },
+    "CapCase": {
+      "type": "object",
+      "required": ["name", "arguments", "granted", "capped"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {"type": "string"},
+        "arguments": {"$ref": "#/definitions/Arguments"},
+        "granted": {"type": "integer", "minimum": 1},
+        "capped": {"$ref": "#/definitions/Arguments"}
+      }
+    },
+    "Toolchain": {
+      "type": "object",
+      "required": ["name", "file", "triple", "toolchain"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {"type": "string"},
+        "file": {"type": "string"},
+        "triple": {"type": "string"},
+        "toolchain": {"type": ["string", "null"]}
+      }
+    },
+    "Sizing": {
+      "type": "object",
+      "required": ["name", "history", "default", "ratioBasisPoints"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {"type": "string"},
+        "history": {"type": "array", "items": {"type": "integer", "minimum": 1}},
+        "default": {"type": "integer", "minimum": 1},
+        "ratioBasisPoints": {"type": "integer", "minimum": 1}
+      }
+    }
+  }
+}

@@ -1,0 +1,157 @@
+{
+  "schema": "semio.os.mcp.publication-revalidate/1",
+  "rule": "A launch whose previously published server is usable (its configured catalog publication exists and its executable is admitted) serves from it at once and releases that admission before the refresh builds; after the refresh it admits the publication again for its lifetime and reports changed only when the executable stamp or the catalog content differ from what served first. A launch whose configured catalog publication is missing reports changed and never serves early. While the refresh runs the first server executes from a private copy of the executable (unchanged by the refresh) and its component readers stay held until the refreshed publication is admitted, or until the end when the refresh fails.",
+  "cases": [
+    {
+      "name": "usable-nothing-changed",
+      "catalog": "present",
+      "mutate": "none",
+      "changed": false,
+      "trace": [
+        "reader-enter",
+        "components-enter",
+        "serving",
+        "build",
+        "reader-leave",
+        "reader-enter",
+        "components-enter",
+        "components-leave",
+        "status:0",
+        "changed:false",
+        "reader-leave",
+        "components-leave"
+      ],
+      "servedCopy": "binary-1",
+      "status": 0
+    },
+    {
+      "name": "usable-executable-changed",
+      "catalog": "present",
+      "mutate": "binary",
+      "changed": true,
+      "trace": [
+        "reader-enter",
+        "components-enter",
+        "serving",
+        "build",
+        "reader-leave",
+        "reader-enter",
+        "components-enter",
+        "components-leave",
+        "status:0",
+        "changed:true",
+        "reader-leave",
+        "components-leave"
+      ],
+      "servedCopy": "binary-1",
+      "status": 0
+    },
+    {
+      "name": "usable-catalog-changed",
+      "catalog": "present",
+      "mutate": "catalog",
+      "changed": true,
+      "trace": [
+        "reader-enter",
+        "components-enter",
+        "serving",
+        "build",
+        "reader-leave",
+        "reader-enter",
+        "components-enter",
+        "components-leave",
+        "status:0",
+        "changed:true",
+        "reader-leave",
+        "components-leave"
+      ],
+      "servedCopy": "binary-1",
+      "status": 0
+    },
+    {
+      "name": "usable-both-changed",
+      "catalog": "present",
+      "mutate": "both",
+      "changed": true,
+      "trace": [
+        "reader-enter",
+        "components-enter",
+        "serving",
+        "build",
+        "reader-leave",
+        "reader-enter",
+        "components-enter",
+        "components-leave",
+        "status:0",
+        "changed:true",
+        "reader-leave",
+        "components-leave"
+      ],
+      "servedCopy": "binary-1",
+      "status": 0
+    },
+    {
+      "name": "cold-with-catalog-publication-missing",
+      "catalog": "missing",
+      "mutate": "none",
+      "changed": true,
+      "trace": [
+        "build",
+        "reader-enter",
+        "components-enter",
+        "status:0",
+        "changed:true",
+        "reader-leave",
+        "components-leave"
+      ],
+      "servedCopy": null,
+      "status": 0
+    },
+    {
+      "name": "usable-refresh-failed-keeps-the-component-readers-to-the-end",
+      "catalog": "present",
+      "mutate": "none",
+      "status": 1,
+      "changed": true,
+      "servedCopy": "binary-1",
+      "trace": [
+        "reader-enter",
+        "components-enter",
+        "serving",
+        "build",
+        "reader-leave",
+        "status:1",
+        "components-leave"
+      ]
+    },
+    {
+      "name": "usable-executable-swaps-before-the-catalog-stage",
+      "catalog": "present",
+      "mutate": "binary",
+      "changed": true,
+      "trace": [
+        "reader-enter",
+        "components-enter",
+        "serving",
+        "build",
+        "reader-leave",
+        "reader-enter",
+        "components-enter",
+        "serving",
+        "build",
+        "components-leave",
+        "reader-leave",
+        "reader-enter",
+        "components-enter",
+        "components-leave",
+        "status:0",
+        "changed:true",
+        "reader-leave",
+        "components-leave"
+      ],
+      "servedCopy": "binary-22",
+      "status": 0,
+      "catalogTarget": "catalog:generate"
+    }
+  ]
+}

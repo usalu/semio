@@ -6,6 +6,8 @@ use std::collections::BTreeSet;
 use std::collections::VecDeque;
 use std::sync::Arc;
 use std::sync::Mutex;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::time::{Duration, Instant};
 use std::sync::OnceLock;
 use std::sync::Weak;
 use crate::job_registry::job_registry;
@@ -297,6 +299,50 @@ pub fn broadcast_tool_result_changes(tool: &str, is_error: bool, structured: Opt
 
 pub const NOTIFICATION_PROGRESS: &str = "notifications/progress";
 
+/// 🚦️ The progress lifecycle of ONE call, shared by its binding and by every job minted under it. Declared in `🧬️schema/🔣️.json`.
+pub struct ProgressGate {
+    answered: AtomicBool,
+    last_published: Mutex<Option<Instant>>,
+}
+
+const LIFECYCLE: &str = include_str!("🧬️schema/🔣️.json");
+
+fn minimum_gap() -> Duration {
+    static GAP: OnceLock<Duration> = OnceLock::new();
+    *GAP.get_or_init(|| {
+        let schema: serde_json::Value = serde_json::from_str(LIFECYCLE).expect("progress lifecycle schema is valid JSON");
+        Duration::from_millis(schema["definitions"]["Lifecycle"]["const"]["minimumGapMilliseconds"].as_u64().expect("progress lifecycle schema names minimumGapMilliseconds"))
+    })
+}
+
+impl ProgressGate {
+    fn new() -> Self {
+        Self { answered: AtomicBool::new(false), last_published: Mutex::new(None) }
+    }
+
+    fn push(&self, slot: &NotificationSlot, params: serde_json::Value) -> bool {
+        let mut last = self.last_published.lock().expect("progress gate lock poisoned");
+        if self.answered.load(Ordering::Acquire) {
+            return false;
+        }
+        let sent = publish(Some(slot), JsonRpcNotification::new(NOTIFICATION_PROGRESS, Some(params)));
+        if sent {
+            *last = Some(Instant::now());
+        }
+        sent
+    }
+
+    /// 🔒️ Closes the call: waits until the last pushed row is old enough not to share a read with the response, then refuses every later row.
+    fn answer(&self) {
+        let mut last = self.last_published.lock().expect("progress gate lock poisoned");
+        if let Some(sent) = *last {
+            std::thread::sleep(minimum_gap().saturating_sub(sent.elapsed()));
+        }
+        self.answered.store(true, Ordering::Release);
+        *last = None;
+    }
+}
+
 /// 📈️ What the `tools/call` running on this thread asked to be told about: the client's own opaque
 /// `_meta.progressToken` and the connection to push it down. Both are needed — a token with no sink
 /// has nowhere to go, and a sink with no token has nothing the client could correlate.
@@ -304,6 +350,13 @@ pub const NOTIFICATION_PROGRESS: &str = "notifications/progress";
 pub struct ProgressBinding {
     pub token: serde_json::Value,
     pub slot: NotificationSlot,
+    gate: Arc<ProgressGate>,
+}
+
+impl ProgressBinding {
+    pub fn new(token: serde_json::Value, slot: NotificationSlot) -> Self {
+        Self { token, slot, gate: Arc::new(ProgressGate::new()) }
+    }
 }
 
 thread_local! {
@@ -426,9 +479,8 @@ pub fn cancel_request(request_id: &serde_json::Value) {
     }
 }
 
-/// 📈️ Publishes one `notifications/progress` for `job_id` if it was minted under a progress token —
-/// called by `JobRegistry::report_progress` and by its terminal transitions, so the client sees the
-/// same progression `job_get` polling would have shown, pushed instead of polled.
+/// 📈️ Publishes one in-flight `notifications/progress` for `job_id` if it was minted under a progress token
+/// whose call is still unanswered — called by `JobRegistry::report_progress`; a terminal transition pushes no row.
 pub fn job_progress_changed(job_id: &str, progress: f64, message: Option<&str>) -> bool {
     let binding = {
         let bindings = progress_bindings().lock().expect("progress binding lock poisoned");
@@ -441,7 +493,7 @@ pub fn job_progress_changed(job_id: &str, progress: f64, message: Option<&str>) 
             object.insert("message".to_string(), serde_json::json!(message));
         }
     }
-    publish(Some(&binding.slot), JsonRpcNotification::new(NOTIFICATION_PROGRESS, Some(params)))
+    binding.gate.push(&binding.slot, params)
 }
 
 /// 📈️ Publishes one `notifications/progress` for the `tools/call` running on this thread while it waits on work no job
@@ -450,7 +502,20 @@ pub fn job_progress_changed(job_id: &str, progress: f64, message: Option<&str>) 
 pub fn publish_call_progress(progress: f64, message: &str) -> bool {
     let Some(binding) = active_progress_binding() else { return false };
     let params = serde_json::json!({ "progressToken": binding.token, "progress": progress.clamp(0.0, 1.0), "total": 1.0, "message": message });
-    publish(Some(&binding.slot), JsonRpcNotification::new(NOTIFICATION_PROGRESS, Some(params)))
+    binding.gate.push(&binding.slot, params)
+}
+
+/// 🔒️ Answers the `tools/call` running on this thread: its progress token stops accepting rows and every job bound under it forgets the token, so a job that outlives the call pushes nothing under an answered token. Call it right before the response is returned.
+pub fn answer_active_call() {
+    if let Some(binding) = active_progress_binding() {
+        binding.gate.answer();
+    }
+    let Some(key) = ACTIVE_REQUEST.with(|active| active.borrow().clone()) else { return };
+    let mut bindings = progress_bindings().lock().expect("progress binding lock poisoned");
+    let jobs = bindings.jobs_by_request.get(&key).cloned().unwrap_or_default();
+    for job in jobs {
+        bindings.by_job.remove(&job);
+    }
 }
 
 /// 🧹️ Forgets a terminal job's binding — a long-lived stdio process must not accumulate one entry

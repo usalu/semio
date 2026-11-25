@@ -20,6 +20,11 @@ Feature: The sweep of an extruded solid is required and never defaulted
     When it is swept laterally from -0.2 m to 0.3 m and the front and plan views are evaluated
     Then the part still spans -0.2 m to 0.3 m of the asset, and the same profile swept along the bone normal sits 0.1 m to the left with its bone
 
+  Scenario: The paint depth of a swept solid follows its sweep
+    Given a profile on a hanging thigh swept along u, along v and along w
+    When the depth that ranks the shape in the front and in the plan is read
+    Then it is the nearest point of the profile placed in the plane of its sweep at the middle of its span, as gl-matrix carries it
+
   Scenario: A missing or unknown sweep is refused
     Given an extruded solid without sweep, or with the axis "u"
     When it is evaluated, resolved to views, validated or checked against the schema

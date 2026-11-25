@@ -8,6 +8,7 @@ const output = resolve(process.argv[2]);
 mkdirSync(output, { recursive: true });
 const browser = await chromium.launch({ headless: true, args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-unsafe-webgpu"] });
 const page = await (await browser.newContext({ locale: "en", viewport: { width: 1600, height: 1000 }, permissions: ["clipboard-read", "clipboard-write"] })).newPage();
+await page.routeWebSocket(address => address.searchParams.has("token"), () => undefined);
 const errors = [];
 page.on("console", message => { if (["error", "warning"].includes(message.type()) && !message.text().startsWith("[DEBUG] ")) errors.push(message.text().slice(0, 300)); });
 page.on("pageerror", error => errors.push(String(error)));

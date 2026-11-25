@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { chromium } from "playwright";
+import { launchChromium } from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🌐️chromium-launch/🟦️";
 import { AmbientLight, BufferGeometry, DirectionalLight, Float32BufferAttribute, Mesh, MeshStandardMaterial, PerspectiveCamera, Scene, Vector3 } from "three";
 import { SVGRenderer } from "three/examples/jsm/renderers/SVGRenderer.js";
 import { describe, expect, it } from "vitest";
@@ -52,7 +52,7 @@ describe("🎨️ Icon SVG face lighting", () => {
   it("renders the actual production SVG profile through Chromium WebGPU", async () => {
     const shaderPath = resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🎨️shaders/🦀️.rs");
     const shader = readModuleTreeSource(shaderPath).match(/pub const WORLD3D_SHADER: &str = r#"([\s\S]*?)"#;/)![1];
-    const browser = await chromium.launch({ headless: true, args: ["--enable-unsafe-webgpu", "--use-angle=swiftshader"] });
+    const browser = await launchChromium({ args: ["--enable-unsafe-webgpu", "--use-angle=swiftshader"] });
     try {
       const page = await browser.newPage();
       await page.route("https://renderer.test/**", (route) => route.fulfill({ contentType: "text/html", body: "<!doctype html><title>Icon SVG lighting fixture</title>" }));

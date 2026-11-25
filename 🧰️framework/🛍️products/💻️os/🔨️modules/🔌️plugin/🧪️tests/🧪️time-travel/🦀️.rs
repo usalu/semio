@@ -1,15 +1,15 @@
 // ⏪️ Support module 1 of the split test module `🧪️time-travel`: the fixtures that more than one piece uses, as real definitions the pieces import.
-use semio_plugin_ownership::store_lifecycle::bounded_document_store_owners;
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::{bounded_document_store_owners, cold_replay_document_store_owners, cold_replay_document_store_owners_source_demands};
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use semio_plugin_decl_emission::ArtifactMutationOutcome;
-use semio_plugin_ownership::store_lifecycle::bounded_document_store_disposer;
+use semio_plugin_store_lifecycle::store_lifecycle::bounded_document_store_disposer;
 use semio_framework_value::RetainedCloneProgress;
 use semio_os_kernel::ArtifactStore;
 use semio_os_kernel::ConfigStore;
 use serde_json::Value;
 use semio_os_kernel::store_schema::ArtifactCommand;
-use semio_plugin_ownership::store_lifecycle::bounded_config_store_owners;
-use semio_plugin_ownership::store_lifecycle::bounded_config_store_disposer;
+use semio_plugin_store_lifecycle::store_lifecycle::bounded_config_store_owners;
+use semio_plugin_store_lifecycle::store_lifecycle::bounded_config_store_disposer;
 use semio_plugin_decl_emission::{ActionMeta, AsyncTaskRun, AsyncTaskSource, Emit, HostEvent, ToolCommandCatalog};
 use semio_plugin_app_builder::App;
 use semio_plugin_abi::{ArtifactAnalysis, ArtifactAnalyzer, ArtifactBuilder, ArtifactChildren, ArtifactComposer, ArtifactComposition, ArtifactDecomposer, ArtifactDeserializer, ArtifactSerializer, DerivedArtifactSpec};
@@ -30,7 +30,7 @@ use semio_plugin_mounted_owner::MountedOwnerPolicyV1;
 use semio_plugin_reactor_app::PluginApp;
 use semio_plugin_plugin_program::PluginProgram;
 use semio_framework_job::StepContext;
-use semio_ui_declaration::ui::SurfaceKind;
+use semio_ui_contract::SurfaceKind;
 use semio_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
 use semio_plugin_interaction::UiAssemblyResult;
 use semio_plugin_instance_app::VcsArtifactApp;
@@ -41,7 +41,7 @@ use semio_plugin_testing_laws::artifact_app_laws;
 use semio_plugin_builder as builder;
 use semio_plugin_window_transient::built_text_to_component_tree;
 use semio_os_kernel::io;
-use semio_plugin_ownership::transient_publication::transient_store_disposer;
+use semio_plugin_transient_publication::transient_publication::transient_store_disposer;
 use semio_framework::*;
 use semio_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::set_count::SetCount;
 use semio_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::set_label::SetLabel;
@@ -143,8 +143,10 @@ impl ArtifactApp for ToyHistoryApp {
         built_text_to_component_tree(semio_ui_locale::Label::data(format!("count={} label={}", doc.snapshot.count, doc.snapshot.label)))
     }
 
+    fn document_store_owners_source_demands()->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{cold_replay_document_store_owners_source_demands::<Self::Snapshot, Self::Mutation>()}
+
     fn build_document_store_owners(grant:RetainedCloneGrant) -> Option<Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::Snapshot, Self::Mutation>,RetainedCloneProgress),store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>>> {
-        Some(bounded_document_store_owners::<Self::Snapshot, Self::Mutation>(grant))
+        Some(cold_replay_document_store_owners::<Self::Snapshot, Self::Mutation>(grant))
     }
 
     fn build_config_store_owners(grant:RetainedCloneGrant) -> Option<Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::Config, Self::ConfigMutation>,RetainedCloneProgress),store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::Config, Self::ConfigMutation>>> {
@@ -156,7 +158,7 @@ impl ArtifactApp for ToyHistoryApp {
     }
 
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
-        Some(store::mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
+        Some(store::cold_mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
     }
 
     fn build_document_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
@@ -263,8 +265,19 @@ pub fn seeded_mutation(app: &ToyApp, index: usize) -> String {
 }
 
 #[doc(hidden)]
-pub async fn verb(app: &mut ToyApp, fixture: &Value, action: &str, args: Vec<(String, DslValue)>, mounted_policy:semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> InvocationResult {
-    app.handle_action(action, Some(&DslValue::Object(args)), &meta(fixture), identity).await.unwrap_or_else(|fault| panic!("{action}: {fault:?}"))
+pub async fn verb(app: &mut ToyApp, fixture: &Value, action: &str, args: Vec<(String, DslValue)>, mounted_policy:semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> InvocationResult {
+    assert_eq!(app.mounted_policy,mounted_policy);
+    let args=DslValue::Object(args);
+    for _ in 0..semio_plugin_testing_caller::OriginalFixtureCaller::maximum_turns(){
+        match artifact_app_laws::dispatch_fixture_action(app,action,Some(args.clone()),&meta(fixture),identity,cx,mounted_policy.maintenance).await{
+            Ok(result)=>return result,
+            Err(failure)if failure.primary_fault().is_some_and(|fault|fault.message.contains("must settle before another selected input"))=>{
+                pump_until(app,"the cancelled preview settles",|app|!app.time_travel.has_pending_work(),mounted_policy,identity,cx).await;
+            }
+            Err(fault)=>panic!("{action}: {fault:?}"),
+        }
+    }
+    panic!("{action} did not settle under the original fixture caller")
 }
 
 #[doc(hidden)]
@@ -288,16 +301,15 @@ pub async fn pump_until(app: &mut ToyApp, what: &str, done: impl Fn(&ToyApp) -> 
 }
 
 #[doc(hidden)]
-pub async fn render_body(app: &mut ToyApp) -> String {
-    let tree = app.render("time-travel.main", None, &ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).await.unwrap_or_else(|fault| panic!("render: {fault:?}"));
-    artifact_app_laws::project_and_retire_fixture_tree(tree).unwrap_or_else(|error| panic!("project: {error}"))
+pub async fn render_body(app: &mut ToyApp,cx:&mut semio_framework_job::StepContext<'_>) -> String {
+    let view=ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
+    semio_plugin_testing_instance_laws::render_registered_fixture_app_over(app,"time-travel.main",None,&view,cx).await.unwrap_or_else(|fault| panic!("render: {fault:?}"))
 }
 
 #[doc(hidden)]
-pub async fn render_history(app: &mut ToyApp, locale: Locale) -> Value {
+pub async fn render_history(app: &mut ToyApp, locale: Locale,cx:&mut semio_framework_job::StepContext<'_>) -> Value {
     let view = ViewModel { locale, ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
-    let tree = app.render(FRAMEWORK_HISTORY_BODY_KEY, None, &view).await.unwrap_or_else(|fault| panic!("history render: {fault:?}"));
-    serde_json::from_str(&artifact_app_laws::project_and_retire_fixture_tree(tree).expect("history projection")).expect("history projection parses")
+    serde_json::from_str(&semio_plugin_testing_instance_laws::render_registered_fixture_app_over(app,FRAMEWORK_HISTORY_BODY_KEY,None,&view,cx).await.unwrap_or_else(|fault| panic!("history render: {fault:?}"))).expect("history projection parses")
 }
 
 #[doc(hidden)]
@@ -315,22 +327,22 @@ pub async fn run_step(app: &mut ToyApp, fixture: &Value, step: &Value, mounted_p
     Some(match name.as_str() {
         "begin" => {
             let mutation = seeded_mutation(app, value.as_u64().expect("edit index") as usize);
-            verb(app, fixture, "historyEditBegin", vec![("mutationId".into(), DslValue::String(mutation))], mounted_policy, identity).await
+            verb(app, fixture, "historyEditBegin", vec![("mutationId".into(), DslValue::String(mutation))], mounted_policy, identity,cx).await
         }
-        "input" => verb(app, fixture, "historyEditInput", vec![("path".into(), dsl(&value["path"])), ("value".into(), dsl(&value["value"]))], mounted_policy, identity).await,
-        "withdraw" => verb(app, fixture, "historyEditWithdraw", Vec::new(), mounted_policy, identity).await,
+        "input" => verb(app, fixture, "historyEditInput", vec![("path".into(), dsl(&value["path"])), ("value".into(), dsl(&value["value"]))], mounted_policy, identity,cx).await,
+        "withdraw" => verb(app, fixture, "historyEditWithdraw", Vec::new(), mounted_policy, identity,cx).await,
         "withdrawRow" | "restore" => {
             let mutation = seeded_mutation(app, value.as_u64().expect("edit index") as usize);
-            verb(app, fixture, if name == "restore" { "historyEditRestore" } else { "historyEditWithdraw" }, vec![("mutationId".into(), DslValue::String(mutation))], mounted_policy, identity).await
+            verb(app, fixture, if name == "restore" { "historyEditRestore" } else { "historyEditWithdraw" }, vec![("mutationId".into(), DslValue::String(mutation))], mounted_policy, identity,cx).await
         }
-        "accept" => verb(app, fixture, "historyEditAccept", Vec::new(), mounted_policy, identity).await,
+        "accept" => verb(app, fixture, "historyEditAccept", Vec::new(), mounted_policy, identity,cx).await,
         "discard" => {
-            let result=verb(app, fixture, "historyEditDiscard", Vec::new(), mounted_policy, identity).await;
+            let result=verb(app, fixture, "historyEditDiscard", Vec::new(), mounted_policy, identity,cx).await;
             if rejected(&result).is_none(){pump_until(app,"original Discard publication settles",|app| !app.time_travel.has_pending_work(), mounted_policy, identity,cx).await;}
             result
         },
-        "finalize" => verb(app, fixture, "historyEditFinalize", Vec::new(), mounted_policy, identity).await,
-        "exit" => verb(app, fixture, "historyEditExit", Vec::new(), mounted_policy, identity).await,
+        "finalize" => verb(app, fixture, "historyEditFinalize", Vec::new(), mounted_policy, identity,cx).await,
+        "exit" => verb(app, fixture, "historyEditExit", Vec::new(), mounted_policy, identity,cx).await,
         "commit" => {
             let mut args = Vec::new();
             if let Some(name) = value["name"].as_str() {
@@ -339,7 +351,7 @@ pub async fn run_step(app: &mut ToyApp, fixture: &Value, step: &Value, mounted_p
             if let Some(choice) = value["choice"].as_str() {
                 args.push(("choice".to_string(), DslValue::String(choice.to_string())));
             }
-            verb(app, fixture, "historyEditCommit", args, mounted_policy, identity).await
+            verb(app, fixture, "historyEditCommit", args, mounted_policy, identity,cx).await
         }
         "replay" => {
             pump_until(app, "replay completes", |app| app.time_travel.session().stage != TimeTravelStage::Replaying, mounted_policy, identity,cx).await;
@@ -395,17 +407,27 @@ pub async fn apply_long_edit(app: &mut ToyApp, count: i32, identity: &mut semio_
 /// 🪶️ Publishes one edit with an explicit author while preserving the opened instance actor.
 #[doc(hidden)]
 pub fn publish_as(app: &mut ToyApp, actor: &str, mutation: TestMutation) {
-    let mut receiving_job=semio_plugin_testing_laws::artifact_app_laws::FixtureOriginalJob::new(semio_framework::kernel::RetainedTurnInput{operation:71,generation:3,epoch:1,work: semio_framework_actor::OriginalActorTurnWork{clock_binding:1,absolute_deadline_us:u64::MAX,fuel:1_000_000}, grant:app.mounted_policy.close});
+    let mut receiving_job=semio_plugin_testing_laws::artifact_app_laws::FixtureOriginalJob::new(semio_framework::kernel::RetainedTurnInput{operation:71,generation:3,epoch:1,work: semio_framework::kernel::OriginalActorTurnWork{clock_binding:1,absolute_deadline_us:u64::MAX,fuel:1_000_000}, grant:app.mounted_policy.close});
     let grant = store::os_store::one_item::ArtifactStoreOneItemGrant::from_retained(app.mounted_policy.preparation);
+    let body = app.mounted_policy.preparation.maximum_copy_bytes;
     let mut publication = app
         .stores.store
         .begin_apply_batch(semio_framework_job::OperationId(1), app.stores.store.generation_now(), app.stores.store.content_revision_now(), actor.into(), vec![mutation], store::os_store::store_schema::HistoryLane::Document, app.stores.artifact_one_item_factory.as_ref(), None)
         .unwrap_or_else(|rejected| panic!("the edit is admitted: {}", rejected.into_owners().0));
-    let published = (0..65_536).any(|_| matches!(app.stores.store.advance_apply_batch(&mut publication, grant).expect("the edit publishes"), store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Published(_)));
+    let published = (0..65_536).any(|_| matches!(receiving_job.receive(app.mounted_policy.preparation, |receiving| app.stores.store.advance_apply_batch(&mut publication, body, grant, receiving)).expect("the edit publishes"), store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Published(..)));
     assert!(published && publication.acknowledge(), "the edit is published and acknowledged");
     publication.begin_close();
-    let closed = (0..4_096).any(|_|{let grant=app.mounted_policy.close;let step=publication.close_step(grant).expect("the publication closes");assert!(step.progress().fits(grant));matches!(step,semio_framework_value::retained_clone::RetainedCloneStep::Complete(_))});
+    let mut closer = semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::OperationId(72), semio_framework_job::Generation(3), app.mounted_policy.close, semio_framework_job::default_now_us, u64::MAX, 1 << 30);
+    let closed = (0..4_096).any(|_| {
+        let grant = app.mounted_policy.close;
+        match closer.with_effect(grant, |effect| publication.close_step(effect)) {
+            Ok(Ok(step)) => { assert!(step.progress().fits(grant)); matches!(step, semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) }
+            Ok(Err(_)) => panic!("the publication closes"),
+            Err(_) => false,
+        }
+    });
     assert!(closed && publication.terminal_is_empty(), "the publication retires every owner");
+    closer.retire(app.mounted_policy.close);
 }
 //#endregion ⏱️WallDeadline
 
@@ -420,4 +442,17 @@ pub fn edit_authors(app: &ToyApp) -> Vec<Option<String>> {
 pub fn row_actions(row: &Value) -> Vec<(String, String, bool, Option<String>)> {
     let text = |value: &Value| value.as_str().map(str::to_string);
     row["component"]["rowActions"].as_array().into_iter().flatten().map(|action| (text(&action["verb"]).unwrap_or_default(), text(&action["label"]).unwrap_or_default(), action["disabled"] == Value::Bool(true), text(&action["reason"]))).collect()
+}
+
+/// 🎬️ Dispatches one action on the caller's context until it settles.
+#[doc(hidden)]
+pub async fn act(app: &mut ToyApp, action: &str, args: Option<&DslValue>, action_meta: &ActionMeta, cx: &mut semio_framework_job::StepContext<'_>) -> InvocationResult {
+    let mut source = args.cloned();
+    let mut action_meta = Some(action_meta.clone());
+    for _ in 0..semio_plugin_testing_caller::OriginalFixtureCaller::maximum_turns() {
+        if let Some(result) = app.handle_action(action, &mut source, &mut action_meta, &mut artifact_app_laws::fixture_identity(), cx).await.unwrap_or_else(|fault| panic!("{action}: {fault:?}")) {
+            return result;
+        }
+    }
+    panic!("{action} did not settle under the original fixture caller")
 }

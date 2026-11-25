@@ -13,6 +13,11 @@ Feature: Revolved and extruded parts keep their solid shape in the front and pla
     When the rest pose and the stride pose are evaluated in the front and the plan
     Then every extent equals the hand-computed number relative to the pelvis origin
 
+  Scenario: An elliptic body of revolution is half as wide as it is deep
+    Given the same profile revolved with lateralScale 0.5 as oval, offset half profile and crown
+    When the rest pose and the stride pose are evaluated in the front and the plan
+    Then the front is half as wide as the circular solid, the half profile stands at half its distance from the axis and the plan reaches half the radius to the side
+
   Scenario: A third-party geometry library builds the same solids
     Given the same profile rotated by the world angle of its bone
     When shapely mirrors, buffers and extrudes it

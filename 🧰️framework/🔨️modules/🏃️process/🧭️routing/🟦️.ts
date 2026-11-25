@@ -26,11 +26,11 @@ export abstract class BundleScript<Capabilities extends object = object> extends
   }
 }
 export type ScriptCommand<Capabilities extends object = object> = new (root: string, repoRoot: string, invocation: ScriptInvocation<Capabilities>) => Script<Capabilities>;
-export type ScriptCommandLoader<Capabilities extends object = object> = (invocation: ScriptInvocation<Capabilities>) => Promise<ScriptCommand<Capabilities>>;
+export type ScriptCommandLoader<Capabilities extends object = object> = (invocation: ScriptInvocation<Capabilities>, segments: readonly string[]) => Promise<ScriptCommand<Capabilities>>;
 
 /** 📜️Declarative subcommand registry for a single `script.ts`. */
 export class ScriptRouter<Capabilities extends object = object> {
-  private readonly commands = new Map<string, (invocation: ScriptInvocation<Capabilities>) => ScriptCommand<Capabilities> | Promise<ScriptCommand<Capabilities>>>();
+  private readonly commands = new Map<string, (invocation: ScriptInvocation<Capabilities>, segments: readonly string[]) => ScriptCommand<Capabilities> | Promise<ScriptCommand<Capabilities>>>();
   readonly bundleRoot: string;
   readonly repoRoot: string;
 
@@ -59,11 +59,21 @@ export class ScriptRouter<Capabilities extends object = object> {
   /** 💤️Loads only the selected command owner, sharing one load across concurrent dispatches. */
   registerLazy(name: string, load: ScriptCommandLoader<Capabilities>): this {
     let command: Promise<ScriptCommand<Capabilities>> | undefined;
-    this.add(name, invocation => command ??= Promise.resolve().then(() => load(invocation)));
+    this.add(name, (invocation, segments) => command ??= Promise.resolve().then(() => load(invocation, segments)));
     return this;
   }
 
-  private add(name: string, load: (invocation: ScriptInvocation<Capabilities>) => ScriptCommand<Capabilities> | Promise<ScriptCommand<Capabilities>>): void {
+  /** 🚦️Runs `gate` on every dispatch with the segments after the command name, then loads the command owner once; a failed load is retried by the next dispatch. */
+  registerGated(name: string, gate: (invocation: ScriptInvocation<Capabilities>, segments: readonly string[]) => Promise<void>, load: () => Promise<ScriptCommand<Capabilities>>): this {
+    let command: Promise<ScriptCommand<Capabilities>> | undefined;
+    this.add(name, async (invocation, segments) => {
+      await gate(invocation, segments);
+      return command ??= load().catch((error: unknown) => { command = undefined; throw error; });
+    });
+    return this;
+  }
+
+  private add(name: string, load: (invocation: ScriptInvocation<Capabilities>, segments: readonly string[]) => ScriptCommand<Capabilities> | Promise<ScriptCommand<Capabilities>>): void {
     if (!name || name.trim() !== name) throw Error("Command name must be nonempty and trimmed");
     if (this.commands.has(name)) throw Error(`Command ${JSON.stringify(name)} is already registered`);
     this.commands.set(name, load);
@@ -89,7 +99,7 @@ export class ScriptRouter<Capabilities extends object = object> {
     const load = this.commands.get(name);
     if (!load) throw Error(`unknown command ${JSON.stringify(name)}; usage: ${this.usage()}`);
     await advanceScriptInvocation(invocation, name, "loading");
-    const Command = await load(invocation);
+    const Command = await load(invocation, segments.slice(1));
     await advanceScriptInvocation(invocation, name, "running");
     await Promise.resolve(new Command(this.bundleRoot, this.repoRoot, invocation).run(segments.slice(1)));
     await advanceScriptInvocation(invocation, name, "complete");

@@ -2,7 +2,7 @@
 use super::*;
 fn denied_begin<R:NativeReceiver<crate::DslValue,T>,T>(receiver:&mut R){
     let denied=RetainedCloneGrant{maximum_items:0,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:0};
-    let turn=crate::effect_fixture::settled(crate::effect_fixture::with_effect(denied,1<<20,&mut None,|effect|{let mut slot=None;let reply=crate::retained_clone::OriginalEffectReply::borrow(&mut slot)?;receiver.begin_close_into(effect,reply)?;slot.take().ok_or_else(||ValueError::invariant("denied close start stayed pending"))}));
+    let turn=crate::effect_fixture::turn::<crate::OriginalRetirementFailure>(denied,1<<20,&mut |effect,reply|receiver.begin_close_into(effect,reply));
     assert_eq!(turn.work,0);assert_eq!(turn.result.unwrap().progress(),Default::default());assert!(!receiver.is_closing());
 }
 #[test]

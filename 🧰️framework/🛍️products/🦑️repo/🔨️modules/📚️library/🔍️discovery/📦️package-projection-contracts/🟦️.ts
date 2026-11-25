@@ -26,6 +26,7 @@ export interface GeneratorContract {
   readonly compilerInputManifest?: { readonly kind: "compiler-input-manifest-v1"; readonly manifestOutputPath: string; readonly manifestSchemaPath: string; readonly staticAuthorityPath: string; readonly maxFiles: number };
   readonly checkTarget?: string;
   readonly nativeConsumers?: readonly string[];
+  readonly ingressPreparation?: boolean;
   readonly inputPatterns: readonly string[];
   readonly inputDiscovery?: RegistryCatalogInputDiscovery;
   readonly packageGeneration?: SemanticPackageGeneration;

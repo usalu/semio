@@ -3,7 +3,7 @@ import { type WindowLayoutAxis, type WindowLayoutPanel, type WindowLayoutPath, t
 import * as React from "react";
 import { reactHostPort } from "../../🔌️Ports/⚛️react/🟦️.ts";
 import { useLabel } from "../../🏷️Label/🟦️.tsx";
-import { modeDockTabLabelClassName, modeDockActiveTabClass, modeDockInactiveTabClass, modeDockActiveTabFillClass, dropZoneReadyClass, windowBodyFrameClass } from "../../../🔨️modules/🎨️chrome-class-names/🟦️.ts";
+import { modeDockTabLabelClassName, modeDockActiveTabClass, modeDockInactiveTabClass, modeDockActiveTabFillClass } from "../../../🔨️modules/🎨️chrome-class-names/🟦️.ts";
 import { Icon, Minimize2Icon, Maximize2Icon, CloseIcon } from "../../🔣️Icons/🟦️.tsx";
 import { cn } from "../../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { modeDockTabClassName } from "../../../🔨️modules/🎛️chrome-control-presentation/🟦️.ts";
@@ -12,10 +12,12 @@ import { DragHandle } from "../../🧱️DragHandle/🟦️.tsx";
 import { useSurfaceActive, SurfaceScope } from "../../🌈️Surface/🟦️.tsx";
 import { Window } from "../../🪟️Window/🟦️.tsx";
 import { WindowChrome } from "../../🗂️WindowChrome/🟦️.tsx";
+import { useChromePanelSafeArea } from "../../../🔨️modules/🛟️chrome-safe-area/🟦️.tsx";
 import { type ResizableGroupHandle, type ResizableJoinCornerResizeHandler, ResizableHandle, ResizablePanel, ResizablePanelGroup } from "../../↔️Resizable/🟦️.tsx";
 import { type ModeDragState, type ModeTabInsertPreview, modeDockTabsWithInsertPreview } from "../🎯️drop/🟦️.ts";
 import { modePathKey, modeStackTabsByCorner } from "../🗺️layout/🟦️.ts";
 import { modeDockTabInsertPreviewClass } from "../🧲️drag-preview/🟦️.tsx";
+import { dropPlaceAttributes } from "../../../🔨️modules/🫳️pointer-drag/🟦️.tsx";
 import type { ModeWindowDescriptor } from "../🪟️template-drag/🟦️.ts";
 import { modeJoinCornerSpecsForCrossSeparator, modeJoinCornerSpecsForSeparator } from "../🔗️join-corners/🟦️.ts";
 
@@ -100,7 +102,7 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
   };
 
   const renderGhostTab = (tab: { id: string; title: string; iconId: IconName }) => (
-    <div data-slot="mode-dock-tab-insert-preview" data-shared-border-cell="" data-shared-border-state="active" className={modeDockTabInsertPreviewClass} aria-hidden>
+    <div data-slot="mode-dock-tab-insert-preview" data-shared-border-cell="" data-shared-border-state="active" {...dropPlaceAttributes("active")} className={modeDockTabInsertPreviewClass} aria-hidden>
       <div className={modeDockTabLabelClassName}>
         <Icon icon={tab.iconId} size="small" className="shrink-0" />
         <span data-slot="inline-label" className="truncate">
@@ -192,7 +194,7 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
   if (tabs.length === 0 && !modeDragActive && displayTabs.length === 0) return null;
 
   return (
-    <div ref={ref} data-slot="mode-dock-tabs" data-corner={corner} role="tablist" aria-label={tabsLabel} className={cn("flex min-w-0 items-stretch justify-start overflow-x-auto overflow-y-hidden", modeDragActive && dropZoneReadyClass)}>
+    <div ref={ref} data-slot="mode-dock-tabs" data-corner={corner} role="tablist" aria-label={tabsLabel} {...dropPlaceAttributes(modeDragActive ? "available" : undefined)} className="flex min-w-0 items-stretch justify-start overflow-x-auto overflow-y-hidden">
       {displayTabs.map((tab) =>
         tab.preview === "ghost" ? (
           <div key={`ghost-${tab.id}`}>{renderGhostTab(tab)}</div>
@@ -222,6 +224,17 @@ interface ModeDockStackProps {
   /** 📲️ Skips the per-tab active-chrome grid (which sizes tab columns to their content and doesn't scroll) in favor of the plain scrollable tab strip, and drops the Focus control (windows always take the full space on mobile) so only Close stays reachable when many windows collapse into one mobile tab stack. Desktop also hides Focus when the canvas has only one window. */
   mobile?: boolean;
 }
+
+/** 🛟️ Keeps a stack's top-left tab chips (title, Focus, Close) clear of the anchored chrome panels that float over the canvas region: the chips step inline past a panel instead of hiding under it. */
+const ModeDockTabsClear: React.FC<{ readonly hostRef: React.RefObject<HTMLElement | null>; readonly children: React.ReactNode }> = ({ hostRef, children }) => {
+  const affordanceRef = reactHostPort.useRef<HTMLDivElement>(null);
+  const safeArea = useChromePanelSafeArea({ hostRef, affordanceRef, anchor: "top-left", yieldAxis: "inline" });
+  return (
+    <div ref={affordanceRef} data-slot="mode-dock-tabs-clear" data-safe-area-inline={safeArea.inlinePx || undefined} className="flex min-w-0" style={safeArea.inlinePx > 0 ? { marginInlineStart: safeArea.inlinePx } : undefined}>
+      {children}
+    </div>
+  );
+};
 
 export const ModeDockStack: React.FC<ModeDockStackProps> = ({ stackPath, node, windowsById, activeWindowId, mobile = false }) => {
   const dock = reactHostPort.useContext(ModeDockContext);
@@ -283,6 +296,8 @@ export const ModeDockStack: React.FC<ModeDockStackProps> = ({ stackPath, node, w
     );
   };
 
+  const topLeftBar = renderCornerBar("topLeft");
+
   const stackBody = (
     <SurfaceScope level="base" fill="surface">
       <div
@@ -323,10 +338,9 @@ export const ModeDockStack: React.FC<ModeDockStackProps> = ({ stackPath, node, w
         stackBindProps={surfaceActiveProps}
         stackDataAttrs={{ "data-stack-path": modePathKey(stackPath) }}
         stackClassName="relative z-window h-full min-h-0 w-full min-w-0 overflow-hidden bg-transparent"
-        bodyClassName={cn("pointer-events-auto flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-0", windowBodyFrameClass)}
-        bodySurfaceClassName={windowBodyFrameClass}
-        bodySurfaceLevel="base"
-        titleChips={renderCornerBar("topLeft")}
+        bodyClassName="pointer-events-auto flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-0"
+        bodySurfaceFill="surface"
+        titleChips={topLeftBar && <ModeDockTabsClear hostRef={stackRef}>{topLeftBar}</ModeDockTabsClear>}
         capRightChips={renderCornerBar("topRight")}
         footerLeftChips={renderCornerBar("bottomLeft")}
         footerRightChips={renderCornerBar("bottomRight")}

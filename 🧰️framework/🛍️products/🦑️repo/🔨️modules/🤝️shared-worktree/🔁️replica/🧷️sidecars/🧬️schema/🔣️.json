@@ -9,11 +9,12 @@
    "description": "<name>.json below .cache/f/sidecars: written by the launcher of the sidecar at start and every two seconds (tmp + rename): its name, process, start, the time of this write and the sha256 of the entry script it runs. A daemon adopts the sidecar when the process lives, the write is at most fifteen seconds old and the entry script still has this hash.",
    "type": "object",
    "additionalProperties": false,
-   "required": ["version", "name", "pid", "startedMs", "wallMs", "entrySha256"],
+   "required": ["version", "name", "pid", "startMs", "startedMs", "wallMs", "entrySha256"],
    "properties": {
     "version": {"const": 1},
     "name": {"type": "string", "pattern": "^[a-z][a-z0-9-]{0,39}$"},
     "pid": {"type": "integer", "minimum": 1},
+    "startMs": {"type": "integer", "minimum": 1},
     "startedMs": {"$ref": "#/definitions/Count"},
     "wallMs": {"$ref": "#/definitions/Count"},
     "entrySha256": {"$ref": "#/definitions/Sha256"}

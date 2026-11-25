@@ -41,7 +41,7 @@ const claimOf=async(unit:OwnerPoolUnitV1):Promise<ProjectClaimV1>=>{
 };
 const run=async(unit:OwnerPoolUnitV1):Promise<boolean>=>{
  running++;publish();
- try{const process_=Bun.spawn([process.execPath,child,`--rehearsal=${config.id}`,`--machine=${config.origin}`,`--duration=${config.ownerMilliseconds}`,`--mb=${unit.megabytes??config.ownerMegabytes}`],{stdin:"ignore",stdout:"ignore",stderr:"ignore"});return await process_.exited===0;}
+ try{const process_=Bun.spawn([process.execPath,child,`--rehearsal=${config.id}`,`--machine=${config.origin}`,`--duration=${config.ownerMilliseconds}`,`--mb=${unit.megabytes??config.ownerMegabytes}`],{windowsHide:true,stdin:"ignore",stdout:"ignore",stderr:"ignore"});return await process_.exited===0;}
  finally{running--;}
 };
 const host=rehearsalHostV1(process.env);

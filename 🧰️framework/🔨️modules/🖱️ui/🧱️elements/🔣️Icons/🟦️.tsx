@@ -353,7 +353,7 @@ function coerceIconSource(source: IconSource): Icon {
 /** 🕳️ Renders a control icon or a visible missing-icon placeholder. */
 export function renderControlIcon(icon: ControlIcon | undefined | null | false, size: number | IconSizeToken = "small"): React.ReactNode {
   if (icon === undefined || icon === null || icon === false) {
-    return <span data-missing-icon data-icon-kind="missing" className="inline-flex size-small shrink-0 rounded-sm bg-destructive/30" aria-hidden />;
+    return <span data-missing-icon data-icon-kind="missing" className="inline-flex size-small shrink-0 bg-destructive/30" aria-hidden />;
   }
   if (isIconSource(icon)) return <Icon icon={icon} size={size} />;
   return icon;
@@ -462,7 +462,7 @@ export function Icon({ icon, size = "base", className, title }: IconProps): Reac
   if (normalized.kind === "text" || normalized.kind === "typst") {
     const label = normalized.kind === "text" ? normalized.text : normalized.src;
     return (
-      <span data-icon-kind={normalized.kind} className={cn("inline-flex shrink-0 items-center justify-center font-mono text-xs", boxClass)} style={boxStyle} title={title}>
+      <span data-icon-kind={normalized.kind} className={cn("inline-flex shrink-0 items-center justify-center overflow-hidden whitespace-nowrap font-mono text-xs", boxClass)} style={boxStyle} title={title}>
         {label}
       </span>
     );

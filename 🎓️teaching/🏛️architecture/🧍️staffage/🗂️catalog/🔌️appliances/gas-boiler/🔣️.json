@@ -13,16 +13,76 @@
       "de": "Ein wandhängender Gas-Brennwertkessel von 20 kW in der Vorderansicht: weißes Gehäuse mit Brenner-Schauglas, Bedienfeld mit Display und Betriebsartenknopf, oben ein konzentrischer Abgasstutzen und unten fünf Anschlüsse; das Gehäuse gibt 55 bis 85 W ab, das Abgas führt etwa 430 W (2,1 % der Zufuhr) mit 46 K über der Raumtemperatur ab."
     },
     "tags": [
-      "gas-boiler",
-      "condensing-boiler",
-      "boiler",
-      "heating",
-      "hydronic",
-      "wall-hung",
-      "burner",
-      "flue",
-      "appliance",
-      "heating-plant"
+      {
+        "id": "gas-boiler",
+        "title": {
+          "en": "gas boiler",
+          "de": "Gaskessel"
+        }
+      },
+      {
+        "id": "condensing-boiler",
+        "title": {
+          "en": "condensing boiler",
+          "de": "Brennwertkessel"
+        }
+      },
+      {
+        "id": "boiler",
+        "title": {
+          "en": "boiler",
+          "de": "Heizkessel"
+        }
+      },
+      {
+        "id": "heating",
+        "title": {
+          "en": "heating",
+          "de": "Heizung"
+        }
+      },
+      {
+        "id": "hydronic",
+        "title": {
+          "en": "hydronic",
+          "de": "wasserführend"
+        }
+      },
+      {
+        "id": "wall-hung",
+        "title": {
+          "en": "wall hung",
+          "de": "wandhängend"
+        }
+      },
+      {
+        "id": "burner",
+        "title": {
+          "en": "burner",
+          "de": "Brenner"
+        }
+      },
+      {
+        "id": "flue",
+        "title": {
+          "en": "flue",
+          "de": "Abgasrohr"
+        }
+      },
+      {
+        "id": "appliance",
+        "title": {
+          "en": "appliance",
+          "de": "Gerät"
+        }
+      },
+      {
+        "id": "heating-plant",
+        "title": {
+          "en": "heating plant",
+          "de": "Heizzentrale"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage content (A9)",

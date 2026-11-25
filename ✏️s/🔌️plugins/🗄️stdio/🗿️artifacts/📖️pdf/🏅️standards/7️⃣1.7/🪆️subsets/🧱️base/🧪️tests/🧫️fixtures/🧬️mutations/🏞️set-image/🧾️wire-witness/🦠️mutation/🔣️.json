@@ -24,7 +24,7 @@
     "extra": [],
     "body": {
       "kind": "samples",
-      "values": []
+      "packed": []
     }
   }
 }

@@ -1,0 +1,39 @@
+Notes on the proof lines:
+- `⚡️asset-power`: the fixture has no case for any asset of this batch (24 skipped, before and after).
+- `🫁️breathing-catalog` runs 2 or 3 cases per asset by its name filter, as before the repair.
+- Baseline of every asset before any change (`measure.ts` and check CLI, 2026-11-24 17:17 to 17:33): silhouette OK, `validateAsset` 0 issues, three-views sweep 0 findings, check `✓` for all eleven; unchanged after.
+- Memory queue: from 23:00 every run of this batch (gate, scan, measure, check CLI, vitest, matrix) was started through `repo capacity run --memory=<MB>` (`cap.sh`: 7000 matrix, 5000 check, 2500 gate, measure and vitest, 1000 scan), one at a time. The proofs of `walking-toddler`, `worker-with-pallet-jack` and `teenager-with-headphones` and the tests of `wheelchair-user` ran before the rule, outside the queue, to their end. Repeated through the queue: the matrix of `wheelchair-user` (its first run was cut by its own 90-minute timeout at 23:03 under a host load of 30, exit 124, no cell written) and the gate of `walking-toddler` (the first was terminated from outside at 17:38, exit 143).
+- A gate line "trial copy identical to the catalog file" cites the gate that ran to its end on a copy that is byte for byte the landed file (`try.sh`, then `cmp`); else the gate ran on the catalog file.
+
+## 5. The tools of this batch (`U/🧰️matrix/MH-6/`)
+
+| Script | Purpose |
+|---|---|
+| `fit.ts` | the `fit.ts` of MR with further ops (header of the file): `plan-sweep` (plan outline of a lying part kept, cut to the elevation twin, swept along v), `plan-prism` (plan outline of a standing part as the section of a prism along the bone; also rebuilds a sheet across the bone), `core` (the middle slice of a trunk under its free plan outline), `thicken` (a tracer plate gets its real depth; the outline is narrowed by what that depth adds on the sheet of the default pose, and the op refuses a plate that lies oblique), `rebind` (a flat shape bound to the wrong bone), `keep-as`, `carry` and `carry-solid` (a part of a finer band drawn and modelled in a coarser one), `anchor-split` (D45: one anchor per wheel or foot; contacts and events follow), `"twin": [ids]` for `front-sweep`, `"across": "range"` for `extrude` |
+| `ops/<id>.json` | the repair of each asset, one op per line |
+| `land.sh` | applies the ops to the catalog file until a run changes nothing |
+| `try.sh`, `try-all.sh` | the same on a copy, then gate and silhouette, validate, sweep against the baseline |
+| `var.sh` | compares variants of a repair by the silhouette guard (and the gate of chosen scales) |
+| `proof.sh` | the whole proof of one asset with its matrix |
+| `gate-all.sh`, `hard.py`, `pick.py`, `cmp.py` | gate of the batch; hard findings of a gate log in short; the proposals of `MR/suggest.ts` that a gate log asks for; two measure logs side by side |
+| `ext.ts`, `facts.py` | extents of every shape of chosen bones in one subject of the matrix; construction of every shape of a document per bone and view |
+| `small.sh` | product sheet of an asset, with a copy 1200 px wide |
+| `q.sh`, `wait.sh`, `cap.sh` | the one-at-a-time worker of the batch; `cap.sh` starts a run through the machine-wide memory queue (`repo capacity run`) |
+| `report-data.py`, `report-build.py`, `report-head.md.txt`, `report-tail.md.txt` | this report from the logs |
+
+What the next fixer should know: `suggest.ts` proposals answered every flat limb; the picks failed where a band holds tracer plates (section 3). `thicken` with its hold is the op to try first on a plate; it works when the plate faces the view (waiter sleeve, traveller coat) and says by name when it does not. A plan trunk whose outline is free keeps it with `core` underneath. `fit.ts` needed a second run on six of eleven assets (`land.sh` loops).
+
+## 6. Files
+
+Updated (repo-relative):
+- `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/👤️humans/<id>/🔣️.json` for `teenager-with-headphones`, `tennis-player`, `tour-guide`, `traveller-with-rolling-suitcase`, `waiter-with-tray`, `walking-toddler`, `waving-person`, `wheelchair-user`, `worker-carrying-box`, `worker-with-jackhammer`, `worker-with-pallet-jack`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️22/GET-STAFFAGE-RUNNING-END-TO-END-AND-FINISH-ALL-STAFFAGE-TICKETS/requests.md` (two entries `## multiview MH-6 — …`)
+
+Created (under `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️22/GET-STAFFAGE-RUNNING-END-TO-END-AND-FINISH-ALL-STAFFAGE-TICKETS/`):
+- `multiview-MH-6.md`
+- `🧰️matrix/MH-6/`: `fit.ts`, `ext.ts`, `facts.py`, `hard.py`, `pick.py`, `cmp.py`, `gate-all.sh`, `try.sh`, `try-all.sh`, `var.sh`, `land.sh`, `proof.sh`, `small.sh`, `q.sh`, `wait.sh`, `cap.sh`, `report-data.py`, `report-build.py`, `report-head.md.txt`, `report-tail.md.txt`
+- `🧰️matrix/MH-6/ops/`: one `<id>.json` for each of the eleven assets
+
+Removed: `🗑️generated/matrix/MH-6` (backups, trial copies, logs, sheets, matrix folders).
+
+Manifest: not edited. Declared dimensions: none changed. Anchors changed (for the coordinator's sync and for anyone who names them): `wheelchair-user` `patch-rear` → `patch-rear-l`, `patch-rear-r`; `patch-front` → `patch-front-l`, `patch-front-r`; `traveller-with-rolling-suitcase` `case-foot` → `case-foot-l`, `case-foot-r`. No fixture under `S/🧫️fixtures` names these anchors (searched); the physics tests of both assets pass. `worker-with-pallet-jack` has two more body solids (`roller-l`, `roller-r`) in `volumes.200` and `volumes.500`.

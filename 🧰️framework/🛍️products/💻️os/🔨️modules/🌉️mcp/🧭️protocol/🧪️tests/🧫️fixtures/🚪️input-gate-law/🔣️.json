@@ -1,0 +1,14 @@
+[
+  { "name": "search with only the required query", "shape": "CapabilitiesSearchInput", "input": { "query": "move" }, "valid": true },
+  { "name": "search limit at the lower bound", "shape": "CapabilitiesSearchInput", "input": { "query": "move", "limit": 1 }, "valid": true },
+  { "name": "search limit at the upper bound", "shape": "CapabilitiesSearchInput", "input": { "query": "move", "limit": 100 }, "valid": true },
+  { "name": "search limit below the minimum", "shape": "CapabilitiesSearchInput", "input": { "query": "move", "limit": 0 }, "valid": false, "mentions": "limit" },
+  { "name": "search limit above the maximum", "shape": "CapabilitiesSearchInput", "input": { "query": "move", "limit": 101 }, "valid": false, "mentions": "limit" },
+  { "name": "search limit of the wrong type", "shape": "CapabilitiesSearchInput", "input": { "query": "move", "limit": "3" }, "valid": false, "mentions": "limit" },
+  { "name": "search without the required query", "shape": "CapabilitiesSearchInput", "input": { "limit": 3 }, "valid": false, "mentions": "query" },
+  { "name": "search with an unknown property", "shape": "CapabilitiesSearchInput", "input": { "query": "move", "page": 2 }, "valid": false, "mentions": "page" },
+  { "name": "reveal anchor outside the enum", "shape": "UiRevealInput", "input": { "anchor": "middle", "path": ["a"] }, "valid": false, "mentions": "anchor" },
+  { "name": "reveal anchor inside the enum", "shape": "UiRevealInput", "input": { "anchor": "left", "path": ["a"] }, "valid": true },
+  { "name": "list limit above the maximum", "shape": "InferenceListInput", "input": { "limit": 500 }, "valid": false, "mentions": "limit" },
+  { "name": "list narrowed to one service", "shape": "InferenceListInput", "input": { "inferenceSchema": "gltf.mesh@1" }, "valid": true }
+]

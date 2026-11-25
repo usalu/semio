@@ -1,0 +1,20 @@
+{
+  "schema": "storybook-frame-visuals/v1",
+  "minLineCoverage": 0.85,
+  "rowTolerance": 2,
+  "viewport": {
+    "width": 1280,
+    "height": 720
+  },
+  "stories": {
+    "tabs": "🖱️ui⚛️react-tabs--default",
+    "layout": "🖱️ui⚛️react-layout--default",
+    "select": "🖱️ui⚛️react-select--default",
+    "contextMenu": "🖱️ui⚛️react-contextmenu--grouped",
+    "quad": "🖱️ui⚛️react-mode--quad-layout",
+    "stack": "🖱️ui⚛️react-mode--tab-stack",
+    "canvas": "🖱️ui⚛️react-canvas--default",
+    "status": "🖱️ui⚛️react-statuschip--states",
+    "nested": "🖱️ui⚛️react-window--nested-layout"
+  }
+}

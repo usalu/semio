@@ -172,6 +172,7 @@
         "^default",
         "testEnv",
         "reads",
+        "{workspaceRoot}/✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/**/*",
         { "dependentTasksOutputFiles": "**/*" }
       ],
       "options": {

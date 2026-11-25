@@ -48,3 +48,23 @@ async fn set_result_display_applies_one_named_field() {
     assert!(apply("mode", "harmonic").is_err(), "an unknown mode is refused");
     assert!(apply("modeIndex", "second").is_err(), "an unparseable index is refused");
 }
+
+/// 🪞️ LAW: a panel control used while another pane holds focus still lands in the results window, keeps what the panel last showed (so the Mode select reads Modal, not Static) and publishes only the field it named.
+#[semio_framework_async_macros::async_test]
+async fn set_result_display_from_an_unfocused_panel_is_remembered_and_sparse() {
+    let config = NoConfig::default();
+    let cfg = ConfigView { snapshot: &config, window: None };
+    let view = ViewModel {
+        window_id: Some("results-shadow".into()),
+        window_instances: vec![ViewWindowInstance { id: "results-shadow".into(), window_kind_id: results::WINDOW_KIND_ID.into() }],
+        ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
+    };
+    let pick = |field: &str, value: &str| SetResultDisplay { source_id: None, mode: String::new(), mode_index: 0, field: Some(field.into()), value: Some(value.into()), window_id: Some("results-shadow".into()) };
+    handle_window(&pick("mode", "modal"), &cfg, &view).expect("mode");
+    assert_eq!(results::config::remembered("results-shadow").expect("remembered").result_mode, semio_s_fem_app_surface::ResultMode::Modal);
+    handle_window(&pick("modeIndex", "2"), &cfg, &view).expect("index");
+    let remembered = results::config::remembered("results-shadow").expect("remembered");
+    assert_eq!((remembered.result_mode, remembered.result_mode_index), (semio_s_fem_app_surface::ResultMode::Modal, 2), "a later field keeps the earlier one");
+    let sparse = results::config::addressed_fields("results-shadow", &remembered, Some("mode"));
+    assert_eq!(sparse.window_id(), "results-shadow");
+}

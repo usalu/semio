@@ -15,7 +15,7 @@ fn enum_controller_value(input: &serde_json::Value) -> IfcValue {
 }
 #[test]
 fn enum_type_inputs_use_the_original_controller_and_declared_resident_choices() {
-    let _arena=semio_plugin::artifact_app_laws::FixtureUiArena::admit();semio_ui_contract::built_node_pages_are_terminal_empty();
+    let _arena=semio_plugin::artifact_app_laws::FixtureUiArena::admit();crate::editor::tree_probe::warm_ui();
     use semio_plugin::{AppRenderOperationContext, ChildContentView};
     use semio_ui_contract::{Component, ContainerRole, OriginalBuiltTreeRetirement};
     use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::{IfcComplexType, IfcEntity};
@@ -65,14 +65,14 @@ fn enum_type_inputs_use_the_original_controller_and_declared_resident_choices() 
                     break;
                 }
                 Ok(None) => {}
-                Err(_) => panic!("enum neutral guidance refuses"),
+                Err(error)=>panic!("{error:?}: enum neutral guidance refuses"),
             }
         }
         let tree = output.take().expect("original enum input body");
         let Component::Container(form) = &tree.root.component else { panic!("missing form") };
         assert_eq!(form.role, ContainerRole::Form);
         let Component::Extension(status) = &tree.root.children.get(0).unwrap().component else { panic!("missing typed status") };
-        assert_eq!(serde_json::to_value(&status.props).unwrap()["ready"], true);
+        assert_eq!(serde_json::to_value(&status.props).unwrap()["ready"], true, "{}", row["id"]);
         let count = row["required"].as_array().unwrap().len();
         assert!(tree.root.children.len() >= count + 1 && tree.root.children.len() <= count + 3);
         for field in 0..count {

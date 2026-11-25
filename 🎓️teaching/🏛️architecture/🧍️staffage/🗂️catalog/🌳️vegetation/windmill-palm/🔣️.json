@@ -1617,14 +1617,62 @@
    "de": "Eine ausgewachsene Chinesische Hanfpalme (Trachycarpus fortunei) von etwa 8 m, die winterhärteste stammbildende Palme gemäßigter Gärten: ein schlanker Stamm von etwa 25 cm, eingehüllt in die braunen, haarigen Fasern seiner alten Blattscheiden, oben mit abgeschnittenen Blattstielstümpfen und an der kahlen Basis mit Ringnarben, ein faseriger Kronenschaft und eine rundliche Krone aus zwanzig steifen Fächerblättern in vier Kränzen, jedes ein fein gezähnter Blattstiel und eine handförmige Spreite aus 36 gefalteten Segmenten, die bis etwa zur Hälfte des Halbmessers eingeschnitten sind, mit überhängenden Spitzen, sowie fünf tote Blätter, die zusammengefaltet unter der Krone hängen."
   },
   "tags": [
-   "tree",
-   "palm",
-   "evergreen",
-   "unbranched",
-   "hardy",
-   "fan-leaves",
-   "wind",
-   "transpiration"
+   {
+    "id": "tree",
+    "title": {
+     "en": "tree",
+     "de": "Baum"
+    }
+   },
+   {
+    "id": "palm",
+    "title": {
+     "en": "palm",
+     "de": "Palme"
+    }
+   },
+   {
+    "id": "evergreen",
+    "title": {
+     "en": "evergreen",
+     "de": "immergrün"
+    }
+   },
+   {
+    "id": "unbranched",
+    "title": {
+     "en": "unbranched",
+     "de": "unverzweigt"
+    }
+   },
+   {
+    "id": "hardy",
+    "title": {
+     "en": "hardy",
+     "de": "winterhart"
+    }
+   },
+   {
+    "id": "fan-leaves",
+    "title": {
+     "en": "fan leaves",
+     "de": "Fächerblätter"
+    }
+   },
+   {
+    "id": "wind",
+    "title": {
+     "en": "wind",
+     "de": "Wind"
+    }
+   },
+   {
+    "id": "transpiration",
+    "title": {
+     "en": "transpiration",
+     "de": "Transpiration"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage vegetation content worker PW-10",

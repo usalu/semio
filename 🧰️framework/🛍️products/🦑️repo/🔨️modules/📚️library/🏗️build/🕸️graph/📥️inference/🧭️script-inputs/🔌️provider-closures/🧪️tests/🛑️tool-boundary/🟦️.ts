@@ -1,4 +1,4 @@
-/** 🧊️ Contract: the closure of a command that imports a declared tool stops at the tool's entry module, so the freshness of an owner does not hold the files of the tool (the build library): an edit inside a tool, even one that adds an import or a file, leaves the derived answer and every supporting row of every owner that imports the tool as it was; an edit of an owner's own script moves that owner alone; the declared stamp of an inferrer, and nothing of the bytes of its sources, moves the rows that name it. */
+/** 🧊️ Contract: the closure of a command that imports a declared tool stops at the tool's entry module, so the freshness of an owner does not hold the files of the tool (the build library): an edit inside a tool, even one that adds an import or a file, leaves the `closure-graph` row (its closure digest is cut at the tool's entry) and every other row of every owner that imports the tool as it was; an edit of an owner's own script moves that owner alone; the declared stamp of an inferrer, and nothing of the bytes of its sources, moves the rows that name it. */
 import {afterAll,expect,setDefaultTimeout,test} from "bun:test";
 import * as esbuild from "esbuild";
 import {spawnSync} from "node:child_process";
@@ -19,7 +19,9 @@ const infer=<T>(body:()=>Promise<T>)=>observation.observeInferenceSnapshotV1(bod
 const owner=(root:string,name:string)=>{mkdirSync(join(root,name),{recursive:true});writeFileSync(join(root,name,"own.ts"),"export const own = 1;\n");writeFileSync(join(root,name,"📜️script.ts"),'import "../'+driver+'";\nimport "./own.ts";\nexport const script = 1;\n');return{options:{cwd:name,command:"repo ./📜️script.ts"}};};
 const read=async(root:string,target:unknown,projectRoot:string)=>infer(async()=>{const api=scriptInputs.closureApiV1(cache(root,true),root),handle=scriptInputs.closureHandleOfV1(await api.nativeTargetCommandInputs(target,await api.nativeCommandInputs(),projectRoot)),result=await api.resolve([[handle.key,handle.recipe]]);return{rows:result.rows as any[],derived:result.derived as {row:any;support:any[]}[]};});
 const holds=async(root:string,entry:{rows:any[];derived:{row:any;support:any[]}[]})=>infer(async()=>{
- for(const row of [...entry.rows,...entry.derived.flatMap(item=>item.support)])if(!observation.observationRowFreshV1(row))return false;
+ const rows=[...entry.rows,...entry.derived.flatMap(item=>item.support)];
+ await observation.prepareGlobalFactsV1(rows);
+ for(const row of rows)if(!observation.observationRowFreshV1(row))return false;
  for(const{row}of entry.derived){const asked=await scriptInputs.deriveClosureFactV1(row,cache(root,false));if(asked.fact!==row.fact)return false;}
  return true;
 });

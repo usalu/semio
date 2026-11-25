@@ -636,8 +636,7 @@ class Beat3_DevicesLighting(Scene):
         for name, lit, color, cx in usages:
             label = Text(name, font_size=BODY_FONT_SIZE, color=color)
             depth = label.height + 2 * _theme_module.UI_SPACING
-            frame = window_frame(3.4, 2.4, title_width=label.width + 2 * _theme_module.UI_SPACING,
-                                 title_depth=depth, color=color).move_to([cx, 0.5, 0])
+            frame = window_frame(3.4, 2.4, top_depth=depth, top_chips=((0, label.width + 2 * _theme_module.UI_SPACING),), color=color).move_to([cx, 0.5, 0])
             label.move_to([frame.get_left()[0] + _theme_module.UI_SPACING + label.width / 2,
                            frame.get_top()[1] - depth / 2, 0])
             icons = VGroup()
@@ -793,8 +792,7 @@ class Beat4_CumulativeLoad(Scene):
         def source_card(icon, title_de, term, color, center):
             label = Text(title_de, font_size=BODY_FONT_SIZE, color=color)
             depth = label.height + 2 * _theme_module.UI_SPACING
-            frame = window_frame(2.15, 2.1, title_width=label.width + 2 * _theme_module.UI_SPACING,
-                                 title_depth=depth, color=color).move_to(center)
+            frame = window_frame(2.15, 2.1, top_depth=depth, top_chips=((0, label.width + 2 * _theme_module.UI_SPACING),), color=color).move_to(center)
             label.move_to([frame.get_left()[0] + _theme_module.UI_SPACING + label.width / 2,
                            frame.get_top()[1] - depth / 2, 0])
             term_t = math_label(term, size=LABEL_FONT_SIZE + 2, color=P_WHITE)
@@ -873,6 +871,17 @@ class Beat4_CumulativeLoad(Scene):
 
 #region Beat 5 — Mitigation & smart design
 
+def _control_panel(room, width, text_color, line_color):
+    """🎛️ The smart load control panel under the room: one frame, its heading is the glass title chip.
+    @see 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🐍️.py window_frame
+    """
+    title = Text(tr("Smart load control", "Smarte Laststeuerung"), font_size=LABEL_FONT_SIZE, color=text_color)
+    depth = title.height + 0.24
+    panel = window_frame(width, 1.05, top_depth=depth, top_chips=((0, title.width + 0.4),), color=line_color).next_to(room, DOWN, buff=0.18)
+    title.move_to([panel.get_left()[0] + 0.2 + title.width / 2, panel.get_top()[1] - depth / 2, 0])
+    return panel, title
+
+
 class Beat5_Mitigation(Scene):
     NARRATION = [
         ("intro",
@@ -936,22 +945,15 @@ class Beat5_Mitigation(Scene):
         plug_knob = Dot(color=C_HEAT_HOT, radius=0.1)
         plug_pct = Text("100%", font_size=LABEL_FONT_SIZE, color=C_HEAT_HOT)
 
-        ctrl_panel = RoundedRectangle(
-            width=room_w, height=0.9, corner_radius=0,
-            color=C_COOL_DIM, stroke_width=2,
-            fill_color=_theme_module.CHROME_FILL, fill_opacity=0.95,
-        ).next_to(room, DOWN, buff=0.18)
+        ctrl_panel, ctrl_title = _control_panel(room, room_w, C_COOL, C_COOL_DIM)
 
-        ctrl_title = Text(tr("Smart load control", "Smarte Laststeuerung"), font_size=LABEL_FONT_SIZE, color=C_COOL)
-        ctrl_title.move_to(ctrl_panel.get_top() + DOWN * 0.18)
-
-        light_track.move_to(ctrl_panel.get_center() + LEFT * 2.0 + DOWN * 0.12)
+        light_track.move_to(ctrl_panel.get_center() + LEFT * 2.0 + DOWN * 0.2)
         light_fill.put_start_and_end_on(light_track.get_start(), light_track.get_end())
         light_knob.move_to(light_track.get_end())
         light_label.next_to(light_track, LEFT, buff=0.2)
         light_pct.next_to(light_track, RIGHT, buff=0.26)
 
-        plug_track.move_to(ctrl_panel.get_center() + RIGHT * 1.9 + DOWN * 0.12)
+        plug_track.move_to(ctrl_panel.get_center() + RIGHT * 1.9 + DOWN * 0.2)
         plug_fill.put_start_and_end_on(plug_track.get_start(), plug_track.get_end())
         plug_knob.move_to(plug_track.get_end())
         plug_label.next_to(plug_track, LEFT, buff=0.2)

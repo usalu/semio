@@ -99,7 +99,14 @@ fn ticks_compose_into_one_net_leaf() {
     let about_z = |angle| tick(Fem3dGumballMotion::Rotate { axis: [0.0, 0.0, 2.0], angle });
     let turn = fem3d_gumball_then(&about_z(0.5), &about_z(0.25)).expect("rotations about one axis add");
     assert_eq!(turn.angle, 0.75);
-    assert!(fem3d_gumball_then(&turn, &tick(Fem3dGumballMotion::Rotate { axis: [1.0, 0.0, 0.0], angle: 0.25 })).is_none(), "another axis does not compose");
+    let tipped = fem3d_gumball_then(&turn, &tick(Fem3dGumballMotion::Rotate { axis: [1.0, 0.0, 0.0], angle: 0.25 })).expect("another axis composes as the quaternion product");
+    let (about_x, about_z_net) = (tick(Fem3dGumballMotion::Rotate { axis: [1.0, 0.0, 0.0], angle: 0.25 }), turn.clone());
+    let point = [1.0, 2.0, 3.0];
+    let stepwise = about_x.map(about_z_net.map(point));
+    let net = tipped.map(point);
+    assert!(stepwise.iter().zip(net).all(|(left, right)| (left - right).abs() < 1e-12), "the net leaf maps like its two steps: {stepwise:?} vs {net:?}");
+    let back = fem3d_gumball_then(&about_z(0.5), &tick(Fem3dGumballMotion::Rotate { axis: [0.0, 0.0, -1.0], angle: 0.25 })).expect("an anti-parallel axis subtracts");
+    assert!((back.angle - 0.25).abs() < 1e-12, "{back:?}");
     let stretch = fem3d_gumball_then(&tick(Fem3dGumballMotion::Scale { sx: 2.0, sy: 1.0, sz: 1.0 }), &tick(Fem3dGumballMotion::Scale { sx: 1.5, sy: 0.5, sz: 2.0 })).expect("factors multiply");
     assert_eq!([stretch.sx, stretch.sy, stretch.sz], [3.0, 0.5, 2.0]);
     assert_eq!(fem3d_gumball_then(&drag, &tick(Fem3dGumballMotion::Translate { dx: 0.0, dy: 0.0, dz: 0.0 })), Some(drag.clone()), "an identity tick changes nothing");
@@ -234,4 +241,51 @@ async fn a_gumball_move_edited_in_history_replays_its_downstream() {
         disposer.close_step_cold(&mut store, grant).expect("the store retires");
     }
     assert!(disposer.terminal_is_empty(&store), "the standalone store retires to its terminal-empty shell");
+}
+
+/// 🌀️ LAW (F2): the ~60 px drag of the Z ring on the slab `sol1` — a stream of small ticks whose reported axis carries
+/// sensor noise and flips sign when the pointer reverses — folds into ONE net leaf (no tick is dropped) that turns the
+/// slab into a valid, planar, same-area, same-height solid about its own centroid.
+#[test]
+fn a_sixty_pixel_ring_drag_turns_the_slab_into_a_valid_solid() {
+    let doc = demo();
+    let target = targets(&[("solid", "sol1")]);
+    let area = |solid: &semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSolid| solid.outline.iter().zip(solid.outline.iter().cycle().skip(1)).map(|(a, b)| a[0] * b[1] - b[0] * a[1]).sum::<f64>() / 2.0;
+    let base = doc.solids.iter().find(|solid| solid.id == "sol1").expect("sol1").clone();
+    let steps = [0.12, 0.12, 0.11, 0.1, 0.1, -0.05, -0.04, 0.12, 0.13, 0.12, 0.1, 0.09];
+    let mut net: Option<MoveSelection> = None;
+    let mut sum = 0.0;
+    for (index, step) in steps.iter().enumerate() {
+        let noise = 1e-7 * ((index as f64 * 2.3).sin());
+        let axis = if *step < 0.0 { [noise, -noise, -1.0] } else { [noise, noise * 0.5, 1.0] };
+        let tick = fem3d_gumball_tick(&doc, &target, Fem3dGumballMotion::Rotate { axis, angle: step.abs() }).expect("tick");
+        assert!(fem3d_gumball_moves(&tick), "step {index} moves");
+        net = Some(match net { None => tick, Some(net) => fem3d_gumball_then(&net, &tick).unwrap_or_else(|| panic!("step {index} composes")) });
+        sum += step;
+    }
+    let net = net.expect("net leaf");
+    assert!((net.angle - sum).abs() < 1e-9 && net.angle > 0.8, "the net angle is the signed sum: {}", net.angle);
+    let turned = moved(&doc, net);
+    let solid = turned.solids.iter().find(|solid| solid.id == "sol1").expect("the slab is still there");
+    assert_ne!(solid.outline, base.outline, "the slab turned");
+    assert!(solid.outline.iter().flatten().all(|value| value.is_finite()));
+    assert!((solid.height - base.height).abs() < 1e-6 && (solid.base_z - base.base_z).abs() < 1e-6, "{solid:?}");
+    assert!((area(solid) - area(&base)).abs() < 1e-6, "a turn keeps the footprint area");
+    assert!(solid.height > 0.0 && solid.outline.len() == base.outline.len(), "the turned slab keeps its extrusion");
+}
+
+/// 📏️ LAW (F2): a scale tick that is zero, negative or not finite is dropped by the tool and never reaches the leaf, so
+/// a handle dragged through its origin cannot destroy the solid; a positive tick scales it about its centroid.
+#[test]
+fn degenerate_scale_ticks_never_reach_the_slab() {
+    let doc = demo();
+    let target = targets(&[("solid", "sol1")]);
+    for factors in [[0.0, 1.0, 1.0], [-1.5, 1.0, 1.0], [1.0, f64::NAN, 1.0], [1.0, 1.0, f64::INFINITY]] {
+        let tick = fem3d_gumball_tick(&doc, &target, Fem3dGumballMotion::Scale { sx: factors[0], sy: factors[1], sz: factors[2] });
+        assert!(drive(&FemGumballTransient::default(), "w", "scaleSelection", GesturePhase::Stream, tick, "base").transient.is_none_or(|open| open.gestures.is_empty()), "{factors:?} opens no gesture");
+    }
+    let tick = fem3d_gumball_tick(&doc, &target, Fem3dGumballMotion::Scale { sx: 1.5, sy: 1.0, sz: 1.0 }).expect("tick");
+    let scaled = moved(&doc, tick);
+    let solid = scaled.solids.iter().find(|solid| solid.id == "sol1").expect("sol1");
+    assert!(solid.height > 0.0 && solid.outline.iter().flatten().all(|value| value.is_finite()), "{solid:?}");
 }

@@ -27,8 +27,8 @@ function checks(asset: any, only?: { scale: string; view: string }, raw = false)
   }
   if (only !== undefined) return out;
   for (const issue of validateAsset(asset) as { code: string; path?: string }[]) {
-    const where = /representations\.(\d+)\.geometry\.(\w+)/u.exec(issue.path ?? "");
-    out.push({ key: `validate ${issue.code} ${where ? `${where[1]} ${where[2]}` : (issue.path ?? "")}`, scale: where?.[1], view: where?.[2], value: 1, better: () => false });
+    const where = /representations\.(\d+)\.geometry\.(\w+)/u.exec(issue.path ?? "") ?? /^volumes\.(\d+)()/u.exec(issue.path ?? "");
+    out.push({ key: `validate ${issue.code} ${where ? `${where[1]} ${where[2]}` : (issue.path ?? "")}`, scale: where?.[1], view: where?.[2] || undefined, value: 1, better: () => false });
   }
   for (const scale of authoredScales(asset) as number[])
     for (const finding of [...sweep(asset, scale), ...consistency(asset, scale)] as { check: string }[]) {
@@ -49,6 +49,11 @@ for (let round = 1; round <= 40; round++) {
   console.log(`[round ${round}] ${run.stdout.toString().trim().split("\n").at(-1)} | failing: ${failing.map((check) => `${check.key}${check.value === 1 ? "" : ` ${check.value.toFixed(4)}`}`).join(", ") || "none"}`);
   if (open.length === 0) break;
   const check = open[0]!;
+  if (check.scale === undefined) {
+    dead.add(check.key);
+    console.log(`  ${check.key}: not bound to a scale, left open`);
+    continue;
+  }
   const views = check.view !== undefined ? [check.view] : ["front", "plan"];
   const ops = JSON.parse(readFileSync(opsFile, "utf8")) as any[];
   let best: { view: string; name: string; gain: number } | undefined;
@@ -72,8 +77,14 @@ for (let round = 1; round <= 40; round++) {
     }
   }
   if (best === undefined) {
-    dead.add(check.key);
-    console.log(`  ${check.key}: no changed family helps, left open`);
+    const rest = check.scale === undefined ? ops : ops.filter((op) => op.scale !== check.scale || !views.includes(op.view ?? (op.to ?? [])[0] ?? "plan"));
+    if (rest.length === ops.length) {
+      dead.add(check.key);
+      console.log(`  ${check.key}: no changed family helps and no op is left for it, left open`);
+    } else {
+      writeFileSync(opsFile, JSON.stringify(rest, null, 1));
+      console.log(`  ${check.key}: no single family helps: all ${ops.length - rest.length} ops of 1:${check.scale} ${views.join(" and ")} removed`);
+    }
     continue;
   }
   let tightened = 0;

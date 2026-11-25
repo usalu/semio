@@ -37,6 +37,7 @@ semio-os-mcp-consent = { path = "../../../🙋️consent/📦️packages/🦀️
 semio-os-mcp-server = { path = "../../../🎯️server/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-os-mcp-bridge = { path = "../../../🪢️bridge-session/📦️packages/🦀️rust", features = ["testkit"] }
 futures = "0.3"
 semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 tokio = { workspace = true, features = ["full"] }

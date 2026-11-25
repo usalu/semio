@@ -1,12 +1,12 @@
 //! 🖼️ DWG viewport geometry, ordered status flags, render state and style references.
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgDefaultLightingType;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEntityCommon;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgOrthographicView;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgShadePlotMode;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgViewportEntity;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgViewportRenderMode;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgViewportStatusFlag;
+use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgDefaultLightingType;
+use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgEntityCommon;
+use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgOrthographicView;
+use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgShadePlotMode;
+use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgViewportEntity;
+use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgViewportRenderMode;
+use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgViewportStatusFlag;
 use super::{color,reader::optional_words,number::Projection,entities::{coordinates,handles,read_coordinates,read_handles},reader::{boolean,optional_unsigned,ordinal,real,word,Reader}};
 use semio_os_kernel::sqlite_snapshot::artifact::Cell;
 use Cell::{Integer as I,Real as R,Text as T};

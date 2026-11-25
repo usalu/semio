@@ -148,6 +148,10 @@ describe("cancellation", () => {
     expect(documentActivationLabel("cancelled", "en", { plugins: "flow-extension-brep" })).toBe(fixture.labels.cancelled.en);
     expect(documentActivationLabel("cancelled", "de-CH", { plugins: "flow-extension-brep" })).toBe(fixture.labels.cancelled.de);
     expect(documentActivationLabel("cancelled", "fr", { plugins: "x" })).toStartWith("Opening the document");
+    expect(documentActivationLabel("openingExample", "en", { example: "Concrete Forest" })).toBe(fixture.labels.openingExample.en);
+    expect(documentActivationLabel("openingExample", "de", { example: "Concrete Forest" })).toBe(fixture.labels.openingExample.de);
+    expect(documentActivationLabel("exampleRefused", "en", { example: "Concrete Forest", reason: "The input could not be delivered." })).toBe(fixture.labels.exampleRefused.en);
+    expect(documentActivationLabel("exampleRefused", "de", { example: "Concrete Forest", reason: "Die Eingabe konnte nicht zugestellt werden." })).toBe(fixture.labels.exampleRefused.de);
     expect(cancelled.state).toBe("cancelled");
   });
 });
@@ -257,7 +261,9 @@ describe("both hosts hand the document over only after activation", () => {
   test("the React picker and boot example hand the action to the guest inside the activation handoff", () => {
     const scope = read("🧱️elements", "🏛️ShellHost", "🔎️command-bar", "🔶️scope", "🟦️.tsx");
     const call = scope.slice(scope.indexOf("return openExampleAfterActivation({"));
-    expect(call.indexOf("handoff: () => onAction(buildActiveExampleAction(")).toBeGreaterThan(call.indexOf("openExampleAfterActivation"));
+    const handoff = call.indexOf("handoff: async () => {");
+    expect(handoff).toBeGreaterThan(call.indexOf("openExampleAfterActivation"));
+    expect(call.indexOf("onAction(buildActiveExampleAction(")).toBeGreaterThan(handoff);
     expect(scope.match(/onAction\(buildActiveExampleAction/g)).toHaveLength(1);
     expect(scope).toContain("exampleActivationRef.current?.abort()");
   });

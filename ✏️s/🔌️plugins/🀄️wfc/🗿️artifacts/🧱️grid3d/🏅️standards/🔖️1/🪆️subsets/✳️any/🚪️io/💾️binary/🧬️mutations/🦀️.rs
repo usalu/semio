@@ -14,6 +14,8 @@ use crate::standards::v1::subsets::any::io::text::mutations::{operation_from_dsl
 use crate::schema::mutations::Grid3dMutation;
 use protocol::OpBinary;
 
+dsl::artifact_persisted_binary_operation!(Grid3dMutation);
+
 dsl::original_tagged_operation_receiving!(Grid3dOperationDsl, COMPONENT_PROTOCOL_SEMIO);
 dsl::original_mirrored_operation_receiving!(Grid3dMutation, Grid3dOperationDsl, operation_from_dsl);
 

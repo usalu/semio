@@ -15,7 +15,7 @@ fn payment(effect:&mut RetainedAllocationEffect<'_>,progress:RetainedCloneProgre
 
 pub type WindowConfigStore<O> = store::ConfigStore<<O as WindowConfigOwner>::State, <O as WindowConfigOwner>::Mutation>;
 
-pub type WindowConfigStoreBox<O> = semio_plugin_ownership::original_store_genesis::OriginalStoreSlot<<O as WindowConfigOwner>::State,<O as WindowConfigOwner>::Mutation>;
+pub type WindowConfigStoreBox<O> = semio_plugin_store_lifecycle::original_store_genesis::OriginalStoreSlot<<O as WindowConfigOwner>::State,<O as WindowConfigOwner>::Mutation>;
 
 type WindowPreviewOwners = (Option<WindowConfigSnapshot>, Option<Vec<store::os_store::snapshot_read::ErasedSnapshotRead>>, Option<store::os_store::snapshot_read::ErasedSnapshotRead>);
 
@@ -240,7 +240,7 @@ pub struct DirectIngress<M:Send+'static>{#[doc(hidden)] pub mutations:Vec<Window
 pub struct TypedWindowConfigStoreOwner<O: WindowConfigOwner> {
     #[doc(hidden)] pub construction:retained::Construction,
     #[doc(hidden)] pub initializing:Option<Box<WindowConfigPartitionBirth<O>>>,
-    #[doc(hidden)] pub birth:semio_plugin_ownership::original_store_genesis::OriginalStoreBirth,
+    #[doc(hidden)] pub birth:semio_plugin_store_lifecycle::original_store_genesis::OriginalStoreBirth,
     #[doc(hidden)] pub initialized_window:Option<String>,
     #[doc(hidden)] pub initialized_store:Option<Box<WindowConfigStore<O>>>,
     #[doc(hidden)] pub initialized_address:Option<SharedUtf8>,
@@ -371,8 +371,8 @@ impl<O: WindowConfigOwner> ErasedWindowConfigStoreOwner for TypedWindowConfigSto
         if original.window_id!=authority.window_id||original.window_kind_id!=O::WINDOW_KIND_ID||authority.window_kind_id!=O::WINDOW_KIND_ID||!original.mutation.as_any().is::<O::Mutation>(){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original window input differs from its captured owner"));}
         let captured=actor.as_ref().filter(|owner|owner.original_is_untouched()).and_then(ControlledRetirement::original).ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"original window publication requires its paid actor capture"))?;
         if self.actor.as_ref().is_none_or(|opened|opened.0.as_str()!=captured.as_str()){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original window actor differs from its opened session"));}
-        let partition=self.partitions.get(&original.window_id).ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"original captured window partition is absent"))?;
-        if partition.store.generation()!=authority.generation||partition.store.content_revision_now()!=authority.revision{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original window authority is stale"));}
+        let live=self.borrow(&original.window_id).ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"original captured window partition is absent"))?;
+        if !authority.matches_committed(&live){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original window authority is stale"));}
         let frame=size_of::<TypedWindowConfigPublication<O>>();
         let copied_bytes=[frame,size_of::<WindowConfigMutation>(),size_of::<FactoryBoxedValue<O::Mutation>>(),size_of::<O::Mutation>()].into_iter().try_fold(0usize,usize::checked_add).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"original window constructor copy overflow"))?;
         let retained_capacity_bytes=frame.checked_add(size_of::<O::Mutation>()).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"original window constructor capacity overflow"))?;

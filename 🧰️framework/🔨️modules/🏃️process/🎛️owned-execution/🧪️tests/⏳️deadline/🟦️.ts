@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { runOwnedCommand } from "../../🟦️.ts";
 import { ProgressDeadlineExpiredV1 } from "../../../⏱️budget/🟦️.ts";
+import { ResourceLoanDeadlineExhaustedV1 } from "../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import type { ResourceLeaseControl } from "../../../🔒️leases/🟦️.ts";
 
 type Row = Readonly<{ name: string; idleMilliseconds: number; lineEveryMilliseconds: number; lines: number; renewOnLine: boolean; expected: string }>;
@@ -45,4 +46,13 @@ test("owned command deadline: cancellation still wins over a live deadline", asy
   const { control } = renewableControl(row, controller.signal);
   setTimeout(() => controller.abort(), 300);
   await expect(runOwnedCommand(process.execPath, ["-e", "setTimeout(() => {}, 5000)"], process.cwd(), "deadline-cancel", 0, { deadline: control, signal: controller.signal, stdout: "ignore" })).rejects.toThrow(/cancelled/);
+});
+
+test("owned command deadline: a caller signal ended by an exhausted loan stops the command with that deadline, never as a cancellation", async () => {
+  for (const delay of [0, 300]) {
+    const controller = new AbortController(), reason = new ResourceLoanDeadlineExhaustedV1("Original physical body cutoff reached");
+    if (delay === 0) controller.abort(reason); else setTimeout(() => controller.abort(reason), delay);
+    const failure = await runOwnedCommand(process.execPath, ["-e", "setTimeout(() => {}, 5000)"], process.cwd(), "deadline-loan", 0, { signal: controller.signal, stdout: "ignore" }).then(() => undefined, (error: unknown) => error);
+    expect(failure).toBe(reason);
+  }
 });

@@ -2,15 +2,15 @@
 /// 🗄️ The DDL of the tables this module projects.
 pub const SQL: &str = include_str!("🗄️.sql");
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgBlockTableControl;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgDimensionStyleTableControl;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgLinetypeTableControl;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgTableControlBody;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgTableControlEntries;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgTableControlEntry;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::xrecord::DwgDictionaryBody;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::xrecord::DwgNamedReference;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::xrecord::DwgXRecordBody;
+use semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgBlockTableControl;
+use semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgDimensionStyleTableControl;
+use semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgLinetypeTableControl;
+use semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgTableControlBody;
+use semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgTableControlEntries;
+use semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgTableControlEntry;
+use semio_s_artifact_stdio_dwg_snapshot_objects_xrecord::DwgDictionaryBody;
+use semio_s_artifact_stdio_dwg_snapshot_objects_xrecord::DwgNamedReference;
+use semio_s_artifact_stdio_dwg_snapshot_objects_xrecord::DwgXRecordBody;
 use super::reader::optional_words;
 use super::reader::{boolean,full_unsigned,high,low,optional_unsigned,ordinal,word,Reader};
 use super::xrecord::{project_values,reconstruct_values,require_null};

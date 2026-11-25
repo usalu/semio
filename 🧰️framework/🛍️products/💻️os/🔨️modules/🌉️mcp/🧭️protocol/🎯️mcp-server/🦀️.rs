@@ -3,7 +3,7 @@
 use std::sync::Arc;
 use semio_os_mcp_bridge::session::AgentConversation;
 use semio_os_mcp_bridge_codec::bridge::SELF_PUBLISHING_CONVERSATION_TOOLS;
-use semio_os_mcp_wire::notify::{DEFAULT_PAGE_SIZE, NotificationSlot, ProgressBinding, ResourceSubscriptions, broadcast_tool_result_changes, cancel_request, decode_cursor, enter_progress_scope, enter_request_scope, paginate};
+use semio_os_mcp_wire::notify::{DEFAULT_PAGE_SIZE, answer_active_call, NotificationSlot, ProgressBinding, ResourceSubscriptions, broadcast_tool_result_changes, cancel_request, decode_cursor, enter_progress_scope, enter_request_scope, paginate};
 use semio_os_mcp_wire::protocol::{CallToolResult, ClientFeatures, ContentBlock, INVALID_PARAMS, InMemoryPromptRegistry, InMemoryResourceRegistry, InMemoryToolRegistry, JsonRpcRequest, JsonRpcResponse, METHOD_INITIALIZE, METHOD_NOTIFICATIONS_CANCELLED, METHOD_NOTIFICATIONS_INITIALIZED, METHOD_NOT_FOUND, METHOD_PING, METHOD_PROMPTS_GET, METHOD_PROMPTS_LIST, METHOD_RESOURCES_LIST, METHOD_RESOURCES_READ, METHOD_RESOURCES_SUBSCRIBE, METHOD_RESOURCES_TEMPLATES_LIST, METHOD_RESOURCES_UNSUBSCRIBE, METHOD_SERVER_DISCOVER, METHOD_TOOLS_CALL, METHOD_TOOLS_LIST, NullBackend, PromptRegistry, ProtocolEra, ResourceRegistry, SERVER_INSTRUCTIONS, SUPPORTED_PROTOCOL_VERSIONS, ToolRegistry, UNSUPPORTED_PROTOCOL_VERSION, extract_meta_protocol_version};
 use semio_os_mcp_workspace::gateway_backend::GatewayBackends;
 
@@ -284,7 +284,7 @@ impl McpServer {
             return None;
         }
         let slot = self.notifications.clone()?;
-        Some(ProgressBinding { token, slot })
+        Some(ProgressBinding::new(token, slot))
     }
 
     /// 📈️ Held across the whole call: every job the tool mints while this guard is alive is bound [Design notes](README.md#source-notes-290).
@@ -297,6 +297,7 @@ impl McpServer {
         let publishes_itself = SELF_PUBLISHING_CONVERSATION_TOOLS.contains(&name);
         let invocation = self.conversation.as_ref().filter(|_| !publishes_itself).map(|conversation| conversation.begin_tool_call(name, &arguments));
         let outcome = self.tools.call(name, arguments);
+        answer_active_call();
         if let (Some(conversation), Some(invocation_id)) = (self.conversation.as_ref(), invocation.as_deref()) {
             let (ok, summary) = match &outcome {
                 Ok(result) => (!result.is_error, tool_result_summary(result)),

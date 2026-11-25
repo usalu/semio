@@ -2,6 +2,36 @@
 
 use super::*;
 use super::native_poll::{close_poll, open_poll, poll_turn};
+use semio_framework::kernel::{ActorInstanceLifecycleAck, ActorInstanceLifecycleReceipt, ActorInstanceOpenRequest, Event, TurnStatus};
+
+enum InstanceOpenProgress {
+    WaitForCapture,
+    Acknowledge(ActorInstanceLifecycleReceipt),
+    Live,
+}
+
+/// 🎟️ A completed ACK commits the captured lifetime before the guest publishes its turn status.
+fn instance_open_progress(request: ActorInstanceOpenRequest, acknowledging: bool, status: &TurnStatus, receipt: Option<ActorInstanceLifecycleReceipt>) -> Result<InstanceOpenProgress, &'static str> {
+    if !matches!(status, TurnStatus::Idle | TurnStatus::MoreWork) {
+        return Err("unexpected instance opening turn status");
+    }
+    match (acknowledging, receipt) {
+        (true, None) => Ok(InstanceOpenProgress::Live),
+        (true, Some(_)) => Err("instance lifecycle acknowledgment returned a receipt"),
+        (false, Some(receipt @ ActorInstanceLifecycleReceipt::Captured { lifetime, request_sequence }))
+            if lifetime.activation_generation == request.activation_generation
+                && lifetime.instance_id == request.instance_id
+                && lifetime.guest_lifetime != 0
+                && request_sequence == request.request_sequence => Ok(InstanceOpenProgress::Acknowledge(receipt)),
+        (false, Some(_)) => Err("instance lifecycle receipt does not match its open request"),
+        (false, None) if matches!(status, TurnStatus::MoreWork) => Ok(InstanceOpenProgress::WaitForCapture),
+        (false, None) => Err("instance became idle before publishing its captured receipt"),
+    }
+}
+
+#[cfg(test)]
+#[path = "🧪️tests/🦀️.rs"]
+mod tests;
 
 //#region 🔖️ArtifactChannel
 #[cfg(not(target_arch = "wasm32"))]
@@ -42,23 +72,38 @@ impl PluginArtifactChannel {
             .and_then(|root| semio_plugin_host::package_assets::package_file_assets(&root, &self.descriptor.assets).map_err(|message| Fault { code: "package-assets.refused".to_string(), message }))?;
         let origin = crate::compiled_components::native_instance_origin(self.compiled.package_hash).map_err(|error| Self::not_wired("guest poll origin", format!("{error:?}")))?;
         let mut guest = self.issue_native_poll(actor, origin, scope)?;
-        let mut owed = vec![semio_framework::kernel::Event::InstanceOpen {
+        let request = ActorInstanceOpenRequest { activation_generation: 1, instance_id: instance, request_sequence: 1 };
+        let mut owed = Some(Event::InstanceOpen {
             purpose: semio_framework::kernel::ActorInstanceOpenPurpose::Ordinary,
-            request: semio_framework::kernel::ActorInstanceOpenRequest { activation_generation: 1, instance_id: instance, request_sequence: 1 },
+            request,
             app_id: semio_framework::kernel::AppInstanceId(self.app_ref.app_id.clone()),
             actor: self.actor_label.clone(),
             config: Vec::new(),
             assets,
             capabilities: caps,
             quotas: self.descriptor.quotas.clone(),
-        }];
+        });
         let deadline = std::time::Instant::now() + INSTANCE_OPEN_WALL_BUDGET;
         let opened = open_poll(&mut guest, scope, deadline).and_then(|()| {
             loop {
-                let (receipt, idle) = poll_turn(&mut guest, &owed, scope, deadline, |turn| Ok((turn.lifecycle_receipt, matches!(turn.status, semio_framework::kernel::TurnStatus::Idle))))?;
-                owed.clear();
-                if let Some(receipt) = receipt { owed.push(semio_framework::kernel::Event::InstanceLifecycleAck(semio_framework::kernel::ActorInstanceLifecycleAck { receipt })); }
-                if idle && owed.is_empty() { return Ok(()); }
+                let acknowledging = matches!(owed, Some(Event::InstanceLifecycleAck(_)));
+                let progress = poll_turn(&mut guest, owed.as_slice(), scope, deadline, |turn| {
+                    instance_open_progress(request, acknowledging, &turn.status, turn.lifecycle_receipt)
+                        .map_err(|message| Self::not_wired("instance opening", message))
+                }).map_err(|mut fault| {
+                    let phase = match owed.as_ref() {
+                        Some(Event::InstanceOpen { .. }) => "opening request",
+                        Some(_) => "lifecycle acknowledgment",
+                        None => "waiting for capture",
+                    };
+                    fault.message = format!("instance {instance} {phase}: {}", fault.message);
+                    fault
+                })?;
+                owed = match progress {
+                    InstanceOpenProgress::WaitForCapture => None,
+                    InstanceOpenProgress::Acknowledge(receipt) => Some(Event::InstanceLifecycleAck(ActorInstanceLifecycleAck { receipt })),
+                    InstanceOpenProgress::Live => return Ok(()),
+                };
                 if std::time::Instant::now() >= deadline { return Err(Self::budget_fault("InstanceOpen")); }
             }
         });

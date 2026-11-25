@@ -13,6 +13,7 @@ G = TICKET / "🗑️generated"
 BUN = ROOT / ".cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun"
 TARGET = G / "claude-pane/native/target/wasm32-wasip2/wasm-prototype"
 STATUS = G / "claude-pane/lanes.status"
+os.environ.setdefault("SEMIO_PLUGIN_CATALOG", str(ROOT / "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated"))
 
 
 def say(text: str) -> None:
@@ -69,12 +70,18 @@ def serve(variant: str, port: int, log: Path) -> None:
 def main() -> None:
     STATUS.write_text("")
     say("space cargo process gone")
-    cargo("claude-pane-cargo.sh", "office", ["semio_hub_stdio_component.wasm", "semio_hub_stdio_office_component.wasm"])
+    if os.environ.get("SKIP_OFFICE_CARGO") != "1":
+        cargo("claude-pane-cargo.sh", "office", ["semio_hub_stdio_component.wasm", "semio_hub_stdio_office_component.wasm"])
     stdio, office = wasm("semio_hub_stdio_component.wasm"), wasm("semio_hub_stdio_office_component.wasm")
     code = run([BUN, TICKET / "claude-fulls-session.ts", "stdio-xlsx", "stdio,stdio-office"], TICKET, G / "claude-pane/session.log")
     say(f"pane session exit {code}")
-    code = run([BUN, TICKET / "claude-pane-publish.ts", "stdio", stdio, "stdio-office", office], TICKET, G / "claude-pane/publish.log")
-    say(f"pane publish exit {code}")
+    if os.environ.get("SKIP_PANE_PUBLISH") != "1":
+        code = run([BUN, TICKET / "claude-pane-publish.ts", "stdio", stdio, "stdio-office", office], TICKET, G / "claude-pane/publish.log")
+        say(f"pane publish exit {code}")
+        if code:
+            raise SystemExit(code)
+    code = run([BUN, TICKET / "claude-pane-support.ts"], ROOT, G / "claude-pane/support.log")
+    say(f"pane support exit {code}")
     if code:
         raise SystemExit(code)
     code = run([BUN, TICKET / "claude-pane-activate.ts"], TICKET, G / "claude-pane/activate.log")

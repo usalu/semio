@@ -8,14 +8,14 @@ use semio_s_artifact_stdio_dwg_read_records::standards::v_ac1024::subsets::any::
 //#region 🔖️DwgStructuralCodec
 //#region DwgRead
 /// 🧩️ Decodes one table control object body from its main, string and handle streams.
-pub fn decode_table_control_object(handle: u64, type_code: u16, data: &mut DwgBitReader<'_>, handle_reader: &mut DwgBitReader<'_>, object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject) -> Result<(), String> {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgBlockTableControl;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgDimensionStyleTableControl;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgLinetypeTableControl;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgTableControlBody;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgTableControlEntries;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgTableControlEntry;
+pub fn decode_table_control_object(handle: u64, type_code: u16, data: &mut DwgBitReader<'_>, handle_reader: &mut DwgBitReader<'_>, object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject) -> Result<(), String> {
+    use semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgBlockTableControl;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgDimensionStyleTableControl;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgLinetypeTableControl;
+    use semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgTableControlBody;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgTableControlEntries;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgTableControlEntry;
     let entry_count = match type_code {
         48 | 50 | 52 | 60 => data.read_bl().map(|value| value as usize),
         _ => data.read_bs().map(|value| value as usize),
@@ -61,7 +61,7 @@ pub fn decode_table_control_object(handle: u64, type_code: u16, data: &mut DwgBi
     Ok(())
 }
 /// 🧩️ Decodes one table record object body from its main, string and handle streams.
-pub fn decode_table_record_object(handle: u64, type_code: u16, main_end_bit: usize, data: &mut DwgBitReader<'_>, handle_reader: &mut DwgBitReader<'_>, strings: &mut Option<DwgBitReader<'_>>, object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject) -> Result<(), String> {
+pub fn decode_table_record_object(handle: u64, type_code: u16, main_end_bit: usize, data: &mut DwgBitReader<'_>, handle_reader: &mut DwgBitReader<'_>, strings: &mut Option<DwgBitReader<'_>>, object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject) -> Result<(), String> {
     let xref_resolution = data.read_bs().map_err(|error| format!("table record {handle:#x} xref resolution: {error}"))?;
     if !matches!(xref_resolution, 0 | 256) {
         return Err(format!("table record {handle:#x} xref resolution {xref_resolution} is invalid"));
@@ -102,7 +102,7 @@ pub fn decode_table_record_object(handle: u64, type_code: u16, main_end_bit: usi
             return Err(format!("viewport table {handle:#x} ambient color flags {ambient_flags:#x} are invalid"));
         }
         Some((
-            semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgViewportTableRecord {
+            semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgViewportTableRecord {
                 common: Default::default(),
                 view_height,
                 view_width,
@@ -119,7 +119,7 @@ pub fn decode_table_record_object(handle: u64, type_code: u16, main_end_bit: usi
                 default_lighting_type,
                 brightness,
                 contrast,
-                ambient_color: semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgComplexColor { index: ambient_index, value: decode_complex_color_value(ambient_rgb)?, name: None, book_name: None },
+                ambient_color: semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgComplexColor { index: ambient_index, value: decode_complex_color_value(ambient_rgb)?, name: None, book_name: None },
                 lower_left: data.read_2rd()?,
                 upper_right: data.read_2rd()?,
                 ucs_follow: data.read_b()?,
@@ -155,12 +155,12 @@ pub fn decode_table_record_object(handle: u64, type_code: u16, main_end_bit: usi
         None
     };
     let dimension_style = if type_code == 69 {
-        use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgDimensionBehavior;
-        use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgDimensionGeometry;
-        use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgDimensionR2010;
-        use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgDimensionStyleTableRecord;
-        use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgDimensionText;
-        use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgDimensionUnits;
+        use semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgDimensionBehavior;
+        use semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgDimensionGeometry;
+        use semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgDimensionR2010;
+        use semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgDimensionStyleTableRecord;
+        use semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgDimensionText;
+        use semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgDimensionUnits;
         let geometry = DwgDimensionGeometry {
             scale: data.read_bd()?,
             arrow_size: data.read_bd()?,
@@ -339,12 +339,12 @@ pub fn decode_table_record_object(handle: u64, type_code: u16, main_end_bit: usi
     let strings = strings.as_mut().ok_or_else(|| format!("table record {handle:#x} string stream missing"))?;
     let name = strings.read_tu().map_err(|error| format!("table record {handle:#x} name: {error}"))?;
     let xref_handle = read_object_handle(handle_reader, handle).map_err(|error| format!("table record {handle:#x} xref handle: {error}"))?;
-    let common = semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgTableRecordCommon { name, xref_resolution, xref_handle };
+    let common = semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgTableRecordCommon { name, xref_resolution, xref_handle };
     let body = if let Some((mut value, color_flags)) = dimension_style {
         value.common = common;
         value.dimension_postfix = strings.read_tu()?;
         value.alternate_postfix = strings.read_tu()?;
-        let mut read_color_strings = |color: &mut semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgComplexColor, flags: u8| -> Result<(), String> {
+        let mut read_color_strings = |color: &mut semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgComplexColor, flags: u8| -> Result<(), String> {
             if flags & 1 != 0 {
                 color.name = Some(strings.read_tu()?);
             }
@@ -367,7 +367,7 @@ pub fn decode_table_record_object(handle: u64, type_code: u16, main_end_bit: usi
         value.dimension_linetype_handle = read_object_handle(handle_reader, handle)?;
         value.extension_1_linetype_handle = read_object_handle(handle_reader, handle)?;
         value.extension_2_linetype_handle = read_object_handle(handle_reader, handle)?;
-        semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgTableRecordBody::DimensionStyle(value)
+        semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgTableRecordBody::DimensionStyle(value)
     } else if let Some((mut value, ambient_flags)) = viewport {
         value.common = common;
         if ambient_flags & 1 != 0 {
@@ -381,7 +381,7 @@ pub fn decode_table_record_object(handle: u64, type_code: u16, main_end_bit: usi
         value.sun_handle = read_object_handle(handle_reader, handle)?;
         value.named_ucs_handle = read_object_handle(handle_reader, handle)?;
         value.base_ucs_handle = read_object_handle(handle_reader, handle)?;
-        semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgTableRecordBody::Viewport(value)
+        semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgTableRecordBody::Viewport(value)
     } else if let Some((anonymous, has_attributes, is_xref, xref_overlaid, xref_loaded, owned_count, base_point, insert_count, insert_units, explodable, block_scaling)) = block_header {
         let xref_path = strings.read_tu().map_err(|error| format!("block header {handle:#x} xref path: {error}"))?;
         let description = strings.read_tu().map_err(|error| format!("block header {handle:#x} description: {error}"))?;
@@ -402,7 +402,7 @@ pub fn decode_table_record_object(handle: u64, type_code: u16, main_end_bit: usi
             );
         }
         let layout_handle = read_object_handle(handle_reader, handle).map_err(|error| format!("block header {handle:#x} layout: {error}"))?;
-        semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgTableRecordBody::BlockHeader(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgBlockHeaderTableRecord {
+        semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgTableRecordBody::BlockHeader(semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgBlockHeaderTableRecord {
             common,
             anonymous,
             has_attributes,
@@ -426,16 +426,16 @@ pub fn decode_table_record_object(handle: u64, type_code: u16, main_end_bit: usi
         let mut dashes = Vec::with_capacity(dash_values.len());
         for (index, (length, complex_shape_code, x_offset, y_offset, scale, rotation, shape_flags)) in dash_values.into_iter().enumerate() {
             let style_handle = read_object_handle(handle_reader, handle).map_err(|error| format!("linetype {handle:#x} dash {index} style: {error}"))?;
-            dashes.push(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgLinetypeDash { length, complex_shape_code, style_handle, x_offset, y_offset, scale, rotation, shape_flags, text: None });
+            dashes.push(semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgLinetypeDash { length, complex_shape_code, style_handle, x_offset, y_offset, scale, rotation, shape_flags, text: None });
         }
-        semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgTableRecordBody::Linetype(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgLinetypeTableRecord { common, description, pattern_length, alignment, dashes })
+        semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgTableRecordBody::Linetype(semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgLinetypeTableRecord { common, description, pattern_length, alignment, dashes })
     } else if let Some((flag0, color_index, color_rgb, color_flags)) = layer {
         let color_name = if color_flags & 1 != 0 { Some(strings.read_tu().map_err(|error| format!("layer {handle:#x} color name: {error}"))?) } else { None };
         let color_book_name = if color_flags & 2 != 0 { Some(strings.read_tu().map_err(|error| format!("layer {handle:#x} color book name: {error}"))?) } else { None };
         let plot_style_handle = read_object_handle(handle_reader, handle).map_err(|error| format!("layer {handle:#x} plot-style handle: {error}"))?;
         let material_handle = read_object_handle(handle_reader, handle).map_err(|error| format!("layer {handle:#x} material handle: {error}"))?;
         let linetype_handle = read_object_handle(handle_reader, handle).map_err(|error| format!("layer {handle:#x} linetype handle: {error}"))?;
-        semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgTableRecordBody::Layer(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgLayerTableRecord {
+        semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgTableRecordBody::Layer(semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgLayerTableRecord {
             common,
             frozen: flag0 & 1 != 0,
             off: flag0 & 2 != 0,
@@ -443,7 +443,7 @@ pub fn decode_table_record_object(handle: u64, type_code: u16, main_end_bit: usi
             locked: flag0 & 8 != 0,
             plottable: flag0 & 16 != 0,
             lineweight: ((flag0 & 0x03e0) >> 5) as u8,
-            color: semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgComplexColor { index: color_index, value: decode_complex_color_value(color_rgb)?, name: color_name, book_name: color_book_name },
+            color: semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgComplexColor { index: color_index, value: decode_complex_color_value(color_rgb)?, name: color_name, book_name: color_book_name },
             plot_style_handle,
             material_handle,
             linetype_handle,
@@ -451,11 +451,11 @@ pub fn decode_table_record_object(handle: u64, type_code: u16, main_end_bit: usi
     } else if let Some((is_shape, is_vertical, text_size, width_factor, oblique_angle, generation, last_height)) = text_style {
         let font_file = strings.read_tu().map_err(|error| format!("text style {handle:#x} font file: {error}"))?;
         let big_font_file = strings.read_tu().map_err(|error| format!("text style {handle:#x} big-font file: {error}"))?;
-        semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgTableRecordBody::TextStyle(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgTextStyleTableRecord { common, is_shape, is_vertical, text_size, width_factor, oblique_angle, generation, last_height, font_file, big_font_file })
+        semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgTableRecordBody::TextStyle(semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgTextStyleTableRecord { common, is_shape, is_vertical, text_size, width_factor, oblique_angle, generation, last_height, font_file, big_font_file })
     } else {
-        semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgTableRecordBody::RegisteredApplication(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgRegisteredApplicationTableRecord { common, group_71: group_71.unwrap() })
+        semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgTableRecordBody::RegisteredApplication(semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgRegisteredApplicationTableRecord { common, group_71: group_71.unwrap() })
     };
-    object.body = Some(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody::TableRecord(body));
+    object.body = Some(semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody::TableRecord(body));
 
     Ok(())
 }

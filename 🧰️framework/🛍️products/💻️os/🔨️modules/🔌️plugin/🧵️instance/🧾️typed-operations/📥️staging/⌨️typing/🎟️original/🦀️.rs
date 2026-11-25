@@ -5,7 +5,7 @@ use semio_plugin_job::original_emission::OriginalEmissionInput;
 use semio_framework_job::{StepContext,OriginalSourceBinding,OriginalTurnFailure,OriginalConstructionDemand};
 use semio_plugin_job::original_steps::{begun,funded,retired,retired_poll};
 use semio_plugin_ownership::bounded_ownership::plugin_settle_value;
-use semio_plugin_ownership::original_store_genesis::OriginalStoreBirth;
+use semio_plugin_store_lifecycle::original_store_genesis::OriginalStoreBirth;
 use semio_framework_value::{SharedUtf8,RetirementDemand,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,RetainedWorkPoll,ValueError,ValueRefusalKind,retirement::RetireOwned,retained_clone::RetainedCloneClose};
 use semio_framework_tool_machine::{TypingLedger,TypingState,TypingCommit,OriginalToolLedgerSource};
 use semio_framework_value_native_owned::NativeAllocationIdentity;
@@ -33,6 +33,8 @@ impl<M:RetireOwned+Send+Sync+'static> OriginalTypingCommit<M>{
  }
  fn validate(&self,ledger:&TypingLedger<M>,cx:&StepContext<'_>)->Result<(),OriginalTurnFailure>{if self.ledger!=ledger as*const _ as usize||self.revision!=ledger.source_revision()||!self.binding.matches(cx)||cx.native_receiving_identity()!=Some(self.decoder){return Err(invalid().into())}Ok(())}
  pub fn ready(&self)->bool{self.phase==5&&!self.closing}
+ /// ⏳️ Whether the commit has not yet moved its row out of the resident slot, so a retained read of that slot holds it back.
+ pub fn awaits_source(&self)->bool{self.phase==0&&self.unit.is_none()&&!self.closing}
  pub fn advance(&mut self,ledger:&mut TypingLedger<M>,source:&SharedUtf8,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   self.validate(ledger,cx)?;if self.closing{return Err(invalid().into())}if cx.is_cancelled(){return Err(ValueError::literal(ValueRefusalKind::Canceled,"original typing commit was cancelled").into())}if self.ready(){return Ok(true)}
   if !self.retirement.is_empty(){let d=self.retirement.demands(self.body)?;let body=self.body;retired_poll(cx,d,|effect|self.retirement.step_granted(body,effect))?;return Ok(false)}

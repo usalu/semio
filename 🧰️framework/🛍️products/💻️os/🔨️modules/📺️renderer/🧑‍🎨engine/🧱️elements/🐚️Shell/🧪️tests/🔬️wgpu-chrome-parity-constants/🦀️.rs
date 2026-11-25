@@ -20,12 +20,11 @@ fn identity_of(name: &str) -> ShellIdentityResolution {
     }
 }
 
-/// ⚖️ LAW: the insert bar is the shared schema's width, and a drop nests into a branch over the schema's 30 to 70 percent band.
+/// ⚖️ LAW: a drop nests into a branch over the schema's 30 to 70 percent band, an empty anchor's zone is ten rem wide; every drop place is a rectangle tinted by the shared places cases (the insert bar and the nest fill of the old law do not exist).
 #[test]
 fn the_panel_drop_constants_are_the_shared_schemas() {
     let drop = &chrome_parity_constants().panel_drop;
-    assert_eq!(drop.insert_bar_width_px, semio_renderer_wgpu_shell_view_paint::TAB_INSERT_PREVIEW_WIDTH_PX);
-    assert_eq!((drop.nest_min_fraction, drop.nest_max_fraction, drop.nest_fill_alpha, drop.empty_zone_min_width_rem), (0.3, 0.7, 0.2, 10.0));
+    assert_eq!((drop.nest_min_fraction, drop.nest_max_fraction, drop.empty_zone_min_width_rem), (0.3, 0.7, 10.0));
 }
 
 /// ⚖️ LAW: an empty anchor's drop zone is `min-w-[10rem]` by one control, inside its one-row panel box where the root tab row would sit.

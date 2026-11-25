@@ -8,8 +8,6 @@ pub use semio_framework_value_native_schema_engine::source::{NativeTreeKind,Nati
 use semio_framework_value_native_receiver_protocol::{NativeReceiver,NativeAdvanceSelection,OriginalEffectReply,OriginalEffectReplyComplete};
 
 pub trait NativeScalarValue<I:NativeValueSource+?Sized>:RetireOwned{fn read(original:&I)->Result<Self,ValueError> where Self:Sized;fn read_copy_bytes(original:&I)->Result<usize,ValueError>;}
-/// 🍃️ A pair of scalars reads straight from its original two-element sequence, so a record field of that type needs no child receiver.
-impl<I:NativeValueSource+?Sized,A:NativeScalarValue<dyn NativeValueSource>,B:NativeScalarValue<dyn NativeValueSource>> NativeScalarValue<I> for (A,B) where (A,B):RetireOwned{fn read(original:&I)->Result<Self,ValueError>{if original.sequence_len()?!=2{return Err(invalid())}Ok((A::read(original.sequence_child(0)?)?,B::read(original.sequence_child(1)?)?))}fn read_copy_bytes(_:&I)->Result<usize,ValueError>{Ok(size_of::<Option<Self>>())}}
 pub struct NativeScalarReceiver<I:NativeValueSource+?Sized,T:NativeScalarValue<I>>{binding:Option<RetainedCloneBinding>,output:ManuallyDrop<Option<T>>,retirement:RetainedCloneClose,closing:bool,taken:bool,input:std::marker::PhantomData<fn(&I)>}
 impl<I:NativeValueSource+?Sized,T:NativeScalarValue<I>> NativeScalarReceiver<I,T>{pub fn new()->Self{Self{binding:None,output:ManuallyDrop::new(None),retirement:Default::default(),closing:false,taken:false,input:std::marker::PhantomData}}}
 impl<I:NativeValueSource+?Sized,T:NativeScalarValue<I>> NativeReceiver<I,T> for NativeScalarReceiver<I,T>{
@@ -38,10 +36,13 @@ macro_rules! unsigned {($($t:ty),*)=>{$(scalar!($t,input,match input.number()?{N
 unsigned!(u8,u16,u32,u64,usize);
 macro_rules! signed {($($t:ty),*)=>{$(scalar!($t,input,match input.number()?{Number::UInt(n)=><$t>::try_from(n).map_err(|_|invalid()),Number::Int(n)=><$t>::try_from(n).map_err(|_|invalid()),Number::Float(n)if n.is_finite()&&n.fract()==0.0&&n>=<$t>::MIN as f64&&n<=<$t>::MAX as f64&&n<9223372036854775808.0=>Ok(n as $t),_=>Err(invalid())});)*};}
 signed!(i8,i16,i32,i64,isize);
+macro_rules! tuple_scalar{($n:literal;$($t:ident:$k:literal),+)=>{impl<I:NativeValueSource+?Sized,$($t:NativeScalarValue<dyn NativeValueSource>),+> NativeScalarValue<I> for ($($t,)+){fn read(input:&I)->Result<Self,ValueError>{if input.sequence_len()?!=$n{return Err(invalid())}Ok(($($t::read(input.sequence_child($k)?)?,)+))}fn read_copy_bytes(_:&I)->Result<usize,ValueError>{Ok(size_of::<Option<Self>>())}}};}
+/// 🍃️ Scalar tuples read as one leaf: the whole sequence of scalars is read in one inline step.
+tuple_scalar!(2;A:0,B:1);tuple_scalar!(3;A:0,B:1,C:2);tuple_scalar!(4;A:0,B:1,C:2,D:3);
 /// 🧭️ Erases one field slot so the struct-independent plan phases are compiled once instead of once per record.
 pub trait NativeFieldPlanSlot{
  fn plan_ready(&self)->bool;
- fn plan_demands(&self,source:&Option<crate::retained_clone::RetainedOwnedProjection<dyn NativeValueSource>>,body:usize,maximum:u64)->Result<RetirementDemand,ValueError>;
+ fn plan_demands(&self,child:Option<crate::retained_clone::RetainedCloneRef<'_,dyn NativeValueSource>>,body:usize,maximum:u64)->Result<RetirementDemand,ValueError>;
  fn plan_take_demand(&self)->Result<RetirementDemand,ValueError>;
  fn plan_take_work_demand(&self)->Result<u64,ValueError>;
  fn plan_terminal_is_empty(&self)->bool;
@@ -53,7 +54,7 @@ pub trait NativeFieldPlanSlot{
 }
 impl<T:semio_framework_value_native_default::NativeDefault,F:semio_framework_value_native_receiver_protocol::SlotFrame> NativeFieldPlanSlot for semio_framework_value_native_default::NativeDefaultSlot<T,F>{
  fn plan_ready(&self)->bool{self.ready()}
- fn plan_demands(&self,_:&Option<crate::retained_clone::RetainedOwnedProjection<dyn NativeValueSource>>,body:usize,maximum:u64)->Result<RetirementDemand,ValueError>{self.demands(body,maximum)}
+ fn plan_demands(&self,_:Option<crate::retained_clone::RetainedCloneRef<'_,dyn NativeValueSource>>,body:usize,maximum:u64)->Result<RetirementDemand,ValueError>{self.demands(body,maximum)}
  fn plan_take_demand(&self)->Result<RetirementDemand,ValueError>{self.take_demand()}
  fn plan_take_work_demand(&self)->Result<u64,ValueError>{self.take_work_demand()}
  fn plan_terminal_is_empty(&self)->bool{self.terminal_is_empty()}
@@ -64,12 +65,12 @@ impl<T:semio_framework_value_native_default::NativeDefault,F:semio_framework_val
  fn plan_close_work_demand(&self,body:usize)->Result<u64,ValueError>{self.close_work_demand(body)}
 }
 /// 🧭️ Plans every field stage except the projection of a present field (stage 0), which needs the typed input.
-pub fn plan_field_stage(stage:u8,present:bool,slot:&dyn NativeFieldPlanSlot,source:&Option<crate::retained_clone::RetainedOwnedProjection<dyn NativeValueSource>>,projection:&crate::retained_clone::RetainedOwnedProjectionAdmission<dyn NativeValueSource>,body:usize,maximum:u64,option_bytes:usize,field_demand:fn(usize)->Result<RetirementDemand,ValueError>)->Result<(RetirementDemand,u64,u8),ValueError>{
+pub fn plan_field_stage(stage:u8,present:bool,slot:&dyn NativeFieldPlanSlot,source:&Option<crate::retained_clone::RetainedOwnedProjection<dyn NativeValueSource>>,child:Option<crate::retained_clone::RetainedCloneRef<'_,dyn NativeValueSource>>,projection:&crate::retained_clone::RetainedOwnedProjectionAdmission<dyn NativeValueSource>,body:usize,maximum:u64,option_bytes:usize,field_demand:fn(usize)->Result<RetirementDemand,ValueError>)->Result<(RetirementDemand,u64,u8),ValueError>{
  let one=||->Result<(RetirementDemand,u64,u8),ValueError>{Ok((fixed(size_of::<u8>()),1,13))};
  match stage{
   0=>if present{Err(invalid())}else{one()},
   8=>if present{Ok((projection.take_demand()?,projection.take_work_demand()?,24))}else{Err(invalid())},
-  1=>if slot.plan_ready(){one()}else{Ok((slot.plan_demands(source,body,maximum)?,1,14))},
+  1=>if slot.plan_ready(){one()}else{Ok((slot.plan_demands(child,body,maximum)?,1,14))},
   2=>{let mut d=slot.plan_take_demand()?;d.copy_bytes=d.copy_bytes.checked_add(option_bytes+size_of::<u8>()).ok_or_else(invalid)?;Ok((d,work_sum(slot.plan_take_work_demand()?,2)?,13))},
   3=>{let mut d=field_demand(0)?;d.copy_bytes=d.copy_bytes.checked_add(size_of::<bool>()+size_of::<u8>()).ok_or_else(invalid)?;Ok((d,work_sum(1,2)?,13))},
   4=>if slot.plan_terminal_is_empty()||slot.plan_is_closing(){one()}else{Ok((slot.plan_begin_close_demand()?,slot.plan_begin_close_work_demand()?,21))},

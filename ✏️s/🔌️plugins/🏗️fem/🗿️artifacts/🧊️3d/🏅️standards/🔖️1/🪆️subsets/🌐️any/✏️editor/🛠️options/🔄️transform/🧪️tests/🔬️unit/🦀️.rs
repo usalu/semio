@@ -22,3 +22,14 @@ fn gumball_flags_toggle_and_refuse_unknown_names() {
     let off = Fem3dGumballConfig { move_axes: false, move_planes: false, rotate: false, scale_axes: false, scale_uniform: false };
     assert!(!off.any());
 }
+
+/// 🖼️ LAW: every transform toggle names a registered icon id; an unregistered one silently falls back to the generic circle.
+#[test]
+fn every_transform_toggle_icon_is_registered_3d() {
+    let labels = semio_s_artifact_fem_3d_editor_terminology::editor::fem3d::terminology::fem3d_labels(&ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native));
+    let WindowMeasure::Group { children, .. } = measure(&Fem3dGumballConfig::default(), labels) else { panic!("group") };
+    for child in &children {
+        let WindowMeasure::Toggle { id, icon_id, .. } = child else { panic!("toggle") };
+        assert_ne!(*icon_id, semio_plugin::IconName::Circle, "{id} falls back to the generic circle");
+    }
+}

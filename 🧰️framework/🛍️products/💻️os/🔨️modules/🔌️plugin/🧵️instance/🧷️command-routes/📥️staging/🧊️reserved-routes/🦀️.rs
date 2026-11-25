@@ -5,7 +5,7 @@ use semio_framework::{ActionKind, Fault, FaultCode, FaultFrom, FaultOrigin, NOTE
 use semio_plugin_decl_emission::{ActionMeta, Emit};
 use semio_plugin_decl_app::ArtifactApp;
 use store::os_store::store_schema::ArtifactCommand;
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use semio_plugin_job::reserved_jobs::{CLIPBOARD_ACTION_IDS, FrameworkReservedCommit, FrameworkReservedCommitPermit, FrameworkReservedCommitStage, HISTORY_ACTION_IDS, PendingFrameworkReserved, encode_framework_reserved_job_input};
 use semio_framework::kernel::{Effect, FRAMEWORK_RESERVED_JOB_KIND, InvocationResult, UiDirtyScope};
@@ -147,6 +147,12 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                 self.pending.reserved_commits.push_front(commit);
             }
             Err(failure) => {
+                if let Some(fault) = failure.plain_refusal().cloned() {
+                    drop(failure);
+                    commit.sealed = Some(Some(Err(fault)));
+                    self.pending.reserved_commits.push_front(commit);
+                    return Ok(());
+                }
                 self.pending.reserved_commits.push_front(commit);
                 return Err(failure);
             }

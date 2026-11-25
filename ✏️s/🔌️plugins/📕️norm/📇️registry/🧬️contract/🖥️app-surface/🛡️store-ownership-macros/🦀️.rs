@@ -1,10 +1,21 @@
 //! 🛡️ Exported store ownership macros of the norm app surface: the exact bounded store owners and the read-only viewer twin every norm editor installs. See [`super`].
 
 
-/// 🧹️ Installs the exact bounded store owners and disposers shared by every Norm editor.
+/// 🧹️ Installs the exact bounded store owners and disposers shared by every Norm editor, and the shared cold replay issuer that lets its history preview, replay and archive load report.
 #[macro_export]
 macro_rules! norm_exact_store_ownership {
     (live) => {
+        fn document_store_owners_source_demands() -> Result<semio_plugin::__value::RetirementDemand, semio_plugin::__value::ValueError> {
+            semio_plugin::cold_replay_document_store_owners_source_demands::<Self::Snapshot, Self::Mutation>()
+        }
+
+        fn build_document_store_owners(grant: semio_plugin::__value::retained_clone::RetainedCloneGrant) -> Option<Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, semio_plugin::__value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>>> {
+            Some(semio_plugin::cold_replay_document_store_owners::<Self::Snapshot, Self::Mutation>(grant).map(|(mut owners, progress)| {
+                owners.operation_wire = store::os_store::ArtifactOperationWire::semantic::<Self::Snapshot>().with_batch_digest().with_original_encoded_binary_receiving().with_original_target(store::os_store::whole_document_target::<Self::Mutation>);
+                (owners, progress)
+            }))
+        }
+
         fn build_document_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
             Some(semio_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
         }
@@ -46,6 +57,17 @@ macro_rules! norm_exact_store_ownership {
         }
     };
     () => {
+
+        fn document_store_owners_source_demands() -> Result<semio_plugin::__value::RetirementDemand, semio_plugin::__value::ValueError> {
+            semio_plugin::cold_replay_document_store_owners_source_demands::<Self::Snapshot, Self::Mutation>()
+        }
+
+        fn build_document_store_owners(grant: semio_plugin::__value::retained_clone::RetainedCloneGrant) -> Option<Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, semio_plugin::__value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>>> {
+            Some(semio_plugin::cold_replay_document_store_owners::<Self::Snapshot, Self::Mutation>(grant).map(|(mut owners, progress)| {
+                owners.operation_wire = store::os_store::ArtifactOperationWire::semantic::<Self::Snapshot>().with_batch_digest().with_original_encoded_binary_receiving().with_original_target(store::os_store::whole_document_target::<Self::Mutation>);
+                (owners, progress)
+            }))
+        }
 
         fn build_document_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
             Some(semio_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())

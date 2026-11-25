@@ -4,7 +4,7 @@ import type { InvocationWireTestKit } from "../🧰️invocation-wire-test-kit/�
 
 /** 🆔 Registers the WIT request identity, icon export wire decoding and host effect address decoding tests. */
 export function registerIdentityAndWireDecodingTests(kit: InvocationWireTestKit): void {
-  const { SemioFaultError, assertAddressedInvocation, decodePackValue, decodePackWire, describe, encodePackValue, expect, it, wireEffectToFriendly, wireExtensionInvocation } = kit;
+  const { SemioFaultError, assertAddressedInvocation, decodePackValue, dependencies, decodePackWire, describe, encodePackValue, expect, it, wireEffectToFriendly, wireExtensionInvocation } = kit;
     describe("extension invocation WIT request identity", () => {
       it("rejects narrowed, exhausted or malformed request identities", () => {
         for (const req of [0n, -1n, 0x10000000000000000n, 1, "1", undefined]) {
@@ -54,6 +54,19 @@ export function registerIdentityAndWireDecodingTests(kit: InvocationWireTestKit)
         expect(wireEffectToFriendly(nested("open-dialog", dialogReq, dialogParams))).toEqual({ openDialog: { req: dialogReq, dialogId: fixture.openDialog.dialogId, args: undefined } });
         const { req: spawnReq, ...spawnParams } = fixture.spawnPluginInstance;
         expect(wireEffectToFriendly(nested("spawn-plugin-instance", spawnReq, spawnParams))).toEqual({ spawnPluginInstance: { req: spawnReq, ...spawnParams } });
+      });
+
+      it("carries every guest published event through the refresh settle exactly as the shared decoder reads it", async () => {
+        const { default: fixture } = await import("../../../🧱️elements/🔌️PluginRuntime/🧪️tests/🧫️fixtures/📣️guest-published-events.json");
+        const { wireEffectToFriendly: sharedDecode } = await import("@semio-tech/framework-actor/wire-turn");
+        const wires = fixture.rows.map((row) => ({ tag: "publish-event", val: { topic: row.topic, payload: new TextEncoder().encode(row.text) } }));
+        const expected = fixture.rows.map((row) => ({ publishEvent: { topic: row.topic, payload: [...new TextEncoder().encode(row.text)] } }));
+        expect(wires.map((wire) => sharedDecode(wire, decodePackValue))).toEqual(expected);
+        expect(wires.map((wire) => wireEffectToFriendly(wire))).toEqual(expected);
+        expect(dependencies.retainedUiRefreshEffects(fixture.instance, wires)).toEqual(expected);
+        const warn = console.warn; const warned: unknown[] = []; console.warn = (...args: unknown[]) => { warned.push(args); };
+        try { expect(dependencies.retainedUiRefreshEffects(fixture.instance, fixture.hostInternalTags.map((tag) => ({ tag, val: null })))).toEqual([]); } finally { console.warn = warn; }
+        expect(warned, "host-internal pseudo-effects are dropped without noise").toEqual([]);
       });
 
       it("drops a dispatch-action whose action id never survived the boundary", async () => {

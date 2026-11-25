@@ -268,5 +268,113 @@
    ]
   },
   "why": "the underlay of the torso (a fill of the silhouette round under hoodie and daypack) also covered the place of the left arm of the default pose, 86 mm beside the torso; bound to the torso it stayed there when the arm moved (sync-lateral 36 mm in take-and-check): the arm lobe is cut off along the outline of the hoodie, the arm is drawn by its sleeve solids"
+ },
+ {
+  "mh4": 1,
+  "op": "set",
+  "scale": "200",
+  "view": "elevation",
+  "id": "sleeve-r",
+  "set": {
+   "points": [
+    [
+     -0.0405,
+     0
+    ],
+    [
+     -0.0405,
+     0.029
+    ],
+    [
+     0.02,
+     0.0652
+    ],
+    [
+     0.2505,
+     0.048
+    ],
+    [
+     0.3475,
+     0.0316
+    ],
+    [
+     0.3475,
+     0
+    ]
+   ]
+  },
+  "why": "paper-width at 1:200: the front of the default pose was drawn 2.35 mm wide against 2.42 mm of the declared depth (15 mm short); the right sleeve of this band had its widest section 53 mm below the shoulder joint, 13 mm inside the sleeve of 1:100: the section is moved up to 20 mm below the joint and widened by 1 mm, the same body in the three views"
+ },
+ {
+  "mh4": 1,
+  "op": "set",
+  "scale": "200",
+  "view": "front",
+  "id": "sleeve-r",
+  "set": {
+   "points": [
+    [
+     -0.0405,
+     0
+    ],
+    [
+     -0.0405,
+     0.029
+    ],
+    [
+     0.02,
+     0.0652
+    ],
+    [
+     0.2505,
+     0.048
+    ],
+    [
+     0.3475,
+     0.0316
+    ],
+    [
+     0.3475,
+     0
+    ]
+   ]
+  },
+  "why": "paper-width at 1:200: the front of the default pose was drawn 2.35 mm wide against 2.42 mm of the declared depth (15 mm short); the right sleeve of this band had its widest section 53 mm below the shoulder joint, 13 mm inside the sleeve of 1:100: the section is moved up to 20 mm below the joint and widened by 1 mm, the same body in the three views"
+ },
+ {
+  "mh4": 1,
+  "op": "set",
+  "scale": "200",
+  "view": "plan",
+  "id": "sleeve-r",
+  "set": {
+   "points": [
+    [
+     -0.0405,
+     0
+    ],
+    [
+     -0.0405,
+     0.029
+    ],
+    [
+     0.02,
+     0.0652
+    ],
+    [
+     0.2505,
+     0.048
+    ],
+    [
+     0.3475,
+     0.0316
+    ],
+    [
+     0.3475,
+     0
+    ]
+   ]
+  },
+  "why": "paper-width at 1:200: the front of the default pose was drawn 2.35 mm wide against 2.42 mm of the declared depth (15 mm short); the right sleeve of this band had its widest section 53 mm below the shoulder joint, 13 mm inside the sleeve of 1:100: the section is moved up to 20 mm below the joint and widened by 1 mm, the same body in the three views"
  }
 ]

@@ -1,0 +1,18 @@
+{
+  "opens": 3,
+  "wardenCapMB": 4096,
+  "component": "semio_hub_stdio_pdf_1_7_editors_component",
+  "coreModuleCompilations": 1,
+  "liveLinearMemoriesSettled": 1,
+  "perOpenRendererGrowthMB": 128,
+  "settledTreeResidentMB": 3584,
+  "rendererPeakFootprintMB": 3328,
+  "notes": {
+    "coreModuleCompilations": "the 285 MB core module is compiled once per page however many program instances and shard workers use it (measured 3 compilations for 3 instances before, 1 after)",
+    "liveLinearMemoriesSettled": "one program is open after the last Open File; every retired predecessor's instance and linear memory is collectable (measured 3 live memories, 333 MB, before; 1, 104 MB, after)",
+    "perOpenRendererGrowthMB": "renderer physical footprint after the last open minus after the one before it (measured +205 MB per open before the release fix, 0 to -100 MB after)",
+    "settledTreeResidentMB": "the warden's own measure (resident megabytes summed over the runner and the browser tree) after the opens settle: 512 MB below the 4,096 MB cap (measured 2,816 MB before, 2,244 to 3,129 MB after)",
+    "rendererPeakFootprintMB": "the kernel's lifetime peak physical footprint of the renderer (vmmap), the first-open transient included: 768 MB below the cap (measured 2,765 to 3,072 MB)",
+    "component": "the page opens the PDF 1.7 editor, whose app the descriptor's components map to semio-hub-stdio-pdf-1-7-editors: only that component's core module is fetched and compiled, never the 1.4 or viewer components (before round 6 the one component held all 20 apps)"
+  }
+}

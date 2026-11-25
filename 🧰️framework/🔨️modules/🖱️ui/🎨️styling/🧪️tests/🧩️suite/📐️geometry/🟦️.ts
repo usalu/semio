@@ -109,10 +109,10 @@ describe("shared theme geometry", () => {
     expect(css).toMatch(/\[data-slot="footer"\] \{\s*--chip-row-height: var\(--footer-band-height\);\s*\}/);
   });
 
-  it("uses projected chrome metrics in React shell placement", () => {
+  it("uses projected band heights and keeps the React canvas flush", () => {
     const root = resolve(import.meta.dir, "../../../../🧱️elements");
     expect(readFileSync(resolve(root, "🔝️Navbar/🟦️.tsx"), "utf8")).toContain("h-[var(--navbar-band-height)]");
     expect(readFileSync(resolve(root, "🔚️Footer/🟦️.tsx"), "utf8")).toContain("h-[var(--footer-band-height)]");
-    expect(readFileSync(resolve(root, "🎨️Canvas/🟦️.tsx"), "utf8")).toContain('MODE_CANVAS_INSET_CLASS = "p-[var(--panel-inset)]"');
+    expect(readFileSync(resolve(root, "🎨️Canvas/🟦️.tsx"), "utf8")).toContain('MODE_CANVAS_INSET_CLASS = "p-0"');
   });
 });

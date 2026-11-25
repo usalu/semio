@@ -176,18 +176,18 @@ export const imageDefinitions = {
         "type": "object",
         "required": [
           "kind",
-          "values"
+          "packed"
         ],
         "properties": {
           "kind": {
             "const": "samples"
           },
-          "values": {
+          "packed": {
             "type": "array",
             "items": {
               "type": "integer",
               "minimum": 0,
-              "maximum": 65535
+              "maximum": 255
             }
           }
         },

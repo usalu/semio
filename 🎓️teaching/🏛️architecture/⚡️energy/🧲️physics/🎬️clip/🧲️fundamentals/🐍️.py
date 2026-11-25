@@ -978,8 +978,7 @@ class Beat2_EnergieImAlltag(Scene):
         meter_depth = meter_tag.height + 2 * _theme_module.UI_SPACING
         meter_center = np.array([-1.45, 0.3, 0.0])
         meter_box = window_frame(
-            2.5, 0.66 + meter_depth, title_width=meter_tag.width + 2 * _theme_module.UI_SPACING,
-            title_depth=meter_depth, color=P_PRIMARY,
+            2.5, 0.66 + meter_depth, top_depth=meter_depth, top_chips=((0, meter_tag.width + 2 * _theme_module.UI_SPACING),), color=P_PRIMARY,
         ).move_to(meter_center + UP * meter_depth / 2)
         meter_tag.move_to([meter_box.get_left()[0] + _theme_module.UI_SPACING + meter_tag.width / 2,
                            meter_box.get_top()[1] - meter_depth / 2, 0])

@@ -26,6 +26,3 @@ mod live_law;
 #[path = "🧪️tests/🔭️wave3/🦀️.rs"]
 mod wave3;
 
-#[cfg(test)]
-#[path = "🧪️tests/🎨️visual-pass/🦀️.rs"]
-mod visual_pass;

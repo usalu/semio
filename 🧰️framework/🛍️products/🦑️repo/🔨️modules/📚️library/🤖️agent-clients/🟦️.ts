@@ -38,7 +38,7 @@ const CLIENT_FILES: Readonly<Record<AgentClient, Readonly<{ path: string; render
   codex: {
     path: ".codex/config.toml",
     render: (servers) =>
-      `${servers.map((server) => `[mcp_servers.${tomlKey(server.name)}]\ncommand = ${tomlText(server.command)}\nargs = [${server.args.map(tomlText).join(", ")}]\n${tomlEnv(server.env)}enabled = true\ncwd = "."\n`).join("\n")}`,
+      `${servers.map((server) => `[mcp_servers.${tomlKey(server.name)}]\ncommand = ${tomlText(server.command)}\nargs = [${server.args.map(tomlText).join(", ")}]\n${tomlEnv(server.env)}enabled = true\n`).join("\n")}`,
   },
 };
 

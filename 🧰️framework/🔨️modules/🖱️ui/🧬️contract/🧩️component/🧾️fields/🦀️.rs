@@ -8,7 +8,7 @@ macro_rules! ui_component_field_catalog {
         $visitor!(RowAction { 0 => icon: UiText, 1 => label: Option<Label>, 2 => verb: UiText, 3 => placement: RowActionPlacement, 4 => disabled: bool, 5 => reason: Option<Label> });
         $visitor!(RowTarget { 0 => scope: UiText, 1 => version: u16, 2 => args: Option<UiMap>, 3 => activation: Option<UiText> });
         $visitor!(ContainerProps { 0 => role: ContainerRole, 1 => label: Option<Label>, 2 => description: Option<UiText>, 3 => required: Option<bool>, 4 => error: Option<UiText>, 5 => default_open: Option<bool>, 6 => drop_overlay: Option<DropOverlaySpec> });
-        $visitor!(TextProps { 0 => value: Label, 1 => emphasize: Option<bool>, 2 => data_attributes: Option<UiFixedMap<UiText>> });
+        $visitor!(TextProps { 0 => value: Label, 1 => emphasize: Option<bool>, 2 => data_attributes: Option<UiFixedMap<UiText>>, 3 => heading_level: Option<u16> });
         $visitor!(ButtonProps { 0 => icon: UiText, 1 => label: Label });
         $visitor!(SeparatorProps {});
         $visitor!(InputProps { 0 => kind: InputKind, 1 => value: UiText, 2 => placeholder: Option<Label>, 3 => commit: Option<UiText>, 4 => min: Option<f64>, 5 => max: Option<f64>, 6 => step: Option<f64>, 7 => accept: Option<UiText>, 8 => precision: Option<u16>, 9 => snaps: UiFixedList<f64>, 10 => display_factor: Option<f64>, 11 => limits: Option<UiNumberLimits>, 12 => draft_target: Option<UiText>, 13 => publication_revision: Option<UiPublicationRevision> });

@@ -10,6 +10,11 @@ fn case_entry(e: &'static Entry) -> CaseEntry {
     CaseEntry { id: e.id, part: e.part, clause: e.clause, en: e.en, de: e.de, inputs: e.inputs, geometry: geometry::geometry_of(e.id) }
 }
 
+/// 🎯️ Whether a catalogue entry is evaluated as a design case: its route in [`entity_cases::reach`] is [`entity_cases::reach::Route::Case`], as opposed to an entity check, a member or anchor check prefix, or a view.
+pub fn is_case_entry(entry_id: &str) -> bool {
+    matches!(entity_cases::reach::route_of(entry_id), Some(entity_cases::reach::Route::Case))
+}
+
 /// 🧾 The evaluator input of a design case.
 pub fn case_input(annex: AnnexChoice, case: &DesignCase) -> Case {
     let mut input = Case::new(&case.id, annex);

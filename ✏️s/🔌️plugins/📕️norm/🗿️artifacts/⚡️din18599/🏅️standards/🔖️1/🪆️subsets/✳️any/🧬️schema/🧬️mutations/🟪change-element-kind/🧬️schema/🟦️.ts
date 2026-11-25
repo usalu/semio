@@ -5,9 +5,9 @@ import { normWireLiteral, normWireObject, type NormWireReader, normWireRequired,
 import { type Din18599ElementKind, parseDin18599ElementKind } from "../../../📸️snapshot/🟦️.ts";
 
 export interface ChangeElementKind {
-  mutation: "changeelementkind";
+  mutation: "changeElementKind";
   elementId: string;
   newKind: Din18599ElementKind;
 }
 
-export const parseChangeElementKind: NormWireReader<ChangeElementKind> = normWireObject<ChangeElementKind>({ mutation: normWireRequired(normWireLiteral("changeelementkind")), elementId: normWireRequired(normWireString), newKind: normWireRequired(parseDin18599ElementKind) });
+export const parseChangeElementKind: NormWireReader<ChangeElementKind> = normWireObject<ChangeElementKind>({ mutation: normWireRequired(normWireLiteral("changeElementKind")), elementId: normWireRequired(normWireString), newKind: normWireRequired(parseDin18599ElementKind) });

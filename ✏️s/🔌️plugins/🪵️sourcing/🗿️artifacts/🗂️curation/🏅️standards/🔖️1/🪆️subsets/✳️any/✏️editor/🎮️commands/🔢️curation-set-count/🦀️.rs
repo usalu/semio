@@ -52,12 +52,12 @@ pub struct CurationSetCount {
 }
 
 /// 🎚️ The pool/curated tables' count stepper cell dispatches this SAME action for both a relative
-/// drag tick (`delta`) and an absolute typed value (`value`) — `delta` is checked first.
+/// drag tick (`delta`) and an absolute typed value (`value`) — `delta` is checked first. A negative or non-finite typed value is refused (a no-op), never read as zero, so a mistyped sign cannot remove a kind.
 pub fn handle(payload: &CurationSetCount, doc: &ArtifactView<'_, CurationSnapshot>, _cfg: &ConfigView<'_, SourcingCurationConfig>) -> Result<Emit<SourcingMutation, SourcingCurationConfigMutation>, Fault> {
     let decision = if let Some(delta) = payload.delta {
         curation_decision_for_delta(doc.snapshot, &payload.object_id, delta as i64)
     } else if let Some(value) = payload.value {
-        curation_decision_for_set(doc.snapshot, &payload.object_id, value.max(0.0) as u32)
+        if value.is_finite() && value >= 0.0 { curation_decision_for_set(doc.snapshot, &payload.object_id, value as u32) } else { CurationDecision::NoOp }
     } else {
         CurationDecision::NoOp
     };

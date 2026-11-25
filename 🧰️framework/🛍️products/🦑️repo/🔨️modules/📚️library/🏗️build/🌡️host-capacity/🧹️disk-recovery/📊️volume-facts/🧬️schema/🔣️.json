@@ -7,7 +7,7 @@
       "type": "object",
       "additionalProperties": false,
       "required": ["path", "totalBytes", "freeBytes"],
-      "properties": {"path": {"type": "string", "minLength": 1}, "totalBytes": {"type": "integer", "minimum": 0}, "freeBytes": {"type": "integer", "minimum": 0}}
+      "properties": {"path": {"type": "string", "minLength": 1}, "totalBytes": {"type": "integer", "minimum": 0}, "freeBytes": {"type": "integer", "minimum": 0}, "totalInodes": {"type": "integer", "minimum": 1}, "freeInodes": {"type": "integer", "minimum": 0}}
     }
   }
 }

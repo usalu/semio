@@ -13,13 +13,55 @@
    "de": "Ein 8x4-Fahrmischer der 9-m3-Klasse: schweres Fahrgestell mit Frontlenker-Fahrerhaus und senkrechtem Auspuffrohr, eine um 11 Grad geneigte Mischtrommel, deren angeschweißte Mischwendeln mit dem Mantel umlaufen, Einfülltrichter und eine Schwenkschurre mit Klappteil, die in Fahrt zur Seite geschwenkt ist."
   },
   "tags": [
-   "machine",
-   "truck-mixer",
-   "concrete",
-   "diesel",
-   "construction",
-   "wheeled",
-   "rotating-drum"
+   {
+    "id": "machine",
+    "title": {
+     "en": "machine",
+     "de": "Maschine"
+    }
+   },
+   {
+    "id": "truck-mixer",
+    "title": {
+     "en": "truck mixer",
+     "de": "Fahrmischer"
+    }
+   },
+   {
+    "id": "concrete",
+    "title": {
+     "en": "concrete",
+     "de": "Beton"
+    }
+   },
+   {
+    "id": "diesel",
+    "title": {
+     "en": "diesel",
+     "de": "Diesel"
+    }
+   },
+   {
+    "id": "construction",
+    "title": {
+     "en": "construction",
+     "de": "Bau"
+    }
+   },
+   {
+    "id": "wheeled",
+    "title": {
+     "en": "wheeled",
+     "de": "rollend"
+    }
+   },
+   {
+    "id": "rotating-drum",
+    "title": {
+     "en": "rotating drum",
+     "de": "Drehtrommel"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content worker NW-MA",

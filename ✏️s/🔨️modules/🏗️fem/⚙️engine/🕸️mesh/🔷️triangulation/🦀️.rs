@@ -911,7 +911,21 @@ pub(super) fn remap_constraints(prepared_points: &[[f64; 2]], sorted_points: &[[
 /// Refinement deterministically subdivides constrained edges and seeds an interior lattice before
 /// insertion. Triangle inside/outside classification happens after boundary recovery, by a local
 /// point-in-polygon centroid test that handles every hole explicitly.
+///
+/// 🔁️ A lattice of one spacing can land a point an ulp-sliver away from a slanted boundary edge (a rectangle turned by
+/// about 45°), where the boundary edge cannot be recovered; the same domain is then retried at the slightly different
+/// spacings of [`LATTICE_RETRIES`], the last of which drops the lattice and meshes the boundary alone.
 pub fn triangulate(domain: &PlanarDomain, opts: &MeshOpts) -> Result<TriMesh2, MeshError> {
-    owned_triangulate(domain, opts)
+    let mut first = None;
+    for factor in LATTICE_RETRIES {
+        match owned_triangulate(domain, &MeshOpts { max_edge: opts.max_edge * factor, ..*opts }) {
+            Ok(mesh) => return Ok(mesh),
+            Err(error) => first = first.or(Some(error)),
+        }
+    }
+    Err(first.unwrap_or(MeshError::DegenerateDomain))
 }
+
+/// 🔁️ The factors of `max_edge` [`triangulate`] tries in order: the asked spacing first, a boundary-only mesh last.
+const LATTICE_RETRIES: [f64; 7] = [1.0, 1.07, 0.93, 1.19, 0.81, 1.41, 0.0];
 // #endregion 🔖️PlanarDomain

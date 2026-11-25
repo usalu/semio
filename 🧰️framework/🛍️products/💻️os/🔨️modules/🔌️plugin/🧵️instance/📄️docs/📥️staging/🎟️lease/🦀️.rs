@@ -1,6 +1,6 @@
 //! 🪮️ Staged slice of the `lease` band of the mounted artifact instance: its `instance-docs` members (WP6 step S0 of the instance family).
 use semio_plugin_decl_app::ArtifactApp;
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use semio_plugin_decl_emission::Emit;
 use semio_framework::FaultFrom;

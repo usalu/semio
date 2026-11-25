@@ -5,7 +5,7 @@
 use semio_plugin_ownership::bounded_ownership::{ARTIFACT_LIVE_OUTPUT_SLOTS, ArtifactFixedRegistry, PluginLifecycleStep, plugin_retirement_fault};
 use semio_plugin_instance_stores::stores_components::{ActionIngress, PeerRoster};
 use semio_plugin_decl_app::ArtifactApp;
-use semio_plugin_ownership::store_lifecycle::{ArtifactOwnedDisposer, ArtifactSnapshotCloseRetention};
+use semio_plugin_store_lifecycle::store_lifecycle::{ArtifactOwnedDisposer, ArtifactSnapshotCloseRetention};
 use pack::snapshot::ArtifactPack;
 use semio_plugin_child::ChildContentRetirement;
 use semio_plugin_decl_views::child_view::ChildContentView;

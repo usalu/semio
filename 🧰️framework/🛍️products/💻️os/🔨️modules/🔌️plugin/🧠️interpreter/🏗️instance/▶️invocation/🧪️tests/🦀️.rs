@@ -38,7 +38,6 @@ fn returned_frame_quotes_the_exact_next_physical_release() {
         assert_eq!(owner.returned_frame_demand(&module, cx)?, None);
         owner.begin_function_step(&module, 0, &[], cx)
     }).unwrap());
-
     let release = law["controlBackingElements"].as_u64().unwrap() as usize * size_of::<ControlFrame>();
     let copy = size_of::<Vec<ControlFrame>>();
     let exact = RetirementDemand { copy_bytes: copy, release_bytes: release, depth: 1, ..Default::default() };
@@ -50,6 +49,12 @@ fn returned_frame_quotes_the_exact_next_physical_release() {
         if owner.returning_frame { break; }
     }
     assert!(owner.returning_frame);
+    {
+        let pool = &mut owner.core.as_mut().unwrap().pool;
+        pool.locals.iter_mut().for_each(|slot| *slot = Vec::with_capacity(1));
+        pool.controls.iter_mut().for_each(|slot| *slot = Vec::with_capacity(1));
+        pool.types.iter_mut().for_each(|slot| *slot = Vec::with_capacity(1));
+    }
     let before = stack_state(&owner);
     for denied in [
         RetainedCloneGrant { maximum_release_bytes: release - law["releaseBytesBelowExact"].as_u64().unwrap() as usize, ..stock },
@@ -102,8 +107,7 @@ fn original_core_stack_growth_preserves_paid_receipts_and_guest_semantics() {
     let stock = RetainedCloneGrant { maximum_items: 10_000, maximum_copy_bytes: 2_000_000,
         maximum_capacity_bytes: 2_000_000, maximum_release_bytes: 2_000_000, maximum_depth: 64 };
     let child_bytes = size_of::<ControlFrame>() + 2 * size_of::<ValueType>();
-    let call_copy = child_bytes + size_of::<Frame>() + size_of::<Value>() + 2 * size_of::<usize>();
-    let push_copy = size_of::<Value>() + size_of::<usize>();
+    let call_copy = child_bytes + size_of::<Frame>();
     let widths = [size_of::<Value>(), size_of::<Frame>()];
     let peaks = [fixture["operandPeak"].as_u64().unwrap() as usize, fixture["framePeak"].as_u64().unwrap() as usize];
     let expected_fuel = ["scalar", "frameBirth", "frameReturn", "control", "memory", "hostCall"]
@@ -132,7 +136,7 @@ fn original_core_stack_growth_preserves_paid_receipts_and_guest_semantics() {
         let mut complete = false;
         let mut traced_fuel = [0; 6];
         for _ in 0..1000 {
-            let mut before = stack_state(&owner);
+            let before = stack_state(&owner);
             let mut grant = stock;
             let axis = if before.function == 0 && before.depths[0] == 2 && before.depths[1] == 1 && !constrained[0] {
                 Some(0)
@@ -153,25 +157,8 @@ fn original_core_stack_growth_preserves_paid_receipts_and_guest_semantics() {
                     assert_eq!((status, spent, receipt), (CoreOriginalInvocationStatus::Pending, 0, RetainedCloneProgress::default()));
                     assert_eq!(stack_state(&owner), before);
                 }
-                if axis == 0 {
-                    let growth_only = RetainedCloneGrant {
-                        maximum_capacity_bytes: birth,
-                        maximum_copy_bytes: copy + push_copy - 1,
-                        ..stock
-                    };
-                    let (status, spent, receipt) = scalar(&mut caller, &mut owner, &module, &mut epoch, growth_only, &mut traced_fuel);
-                    assert_eq!((status, spent), (CoreOriginalInvocationStatus::Pending, 0));
-                    assert_eq!((receipt.copied_bytes, receipt.retained_capacity_bytes, receipt.released_bytes), (copy, birth, release));
-                    let after_growth = stack_state(&owner);
-                    assert_eq!(after_growth, StackState { capacities: [3, before.capacities[1]], ..before.clone() });
-                    live += birth - release;
-                    relocated[axis] += copy;
-                    before = after_growth;
-                    grant.maximum_capacity_bytes = 0;
-                } else {
-                    grant.maximum_capacity_bytes = birth;
-                    grant.maximum_release_bytes = release + widths[axis];
-                }
+                grant.maximum_capacity_bytes = birth;
+                grant.maximum_release_bytes = release + widths[axis];
                 constrained[axis] = true;
             }
             let (status, spent, receipt) = scalar(&mut caller, &mut owner, &module, &mut epoch, grant, &mut traced_fuel);
@@ -183,7 +170,7 @@ fn original_core_stack_growth_preserves_paid_receipts_and_guest_semantics() {
                 if after.capacities[index] > before.capacities[index] {
                     let moves = before.depths[index] * width;
                     relocated[index] += moves;
-                    let (child, write) = if index == 0 { (0, push_copy) } else { (child_bytes, call_copy) };
+                    let (child, write) = if index == 0 { (0, 0) } else { (child_bytes, call_copy) };
                     assert_eq!(spent, 1);
                     assert_eq!(receipt.copied_bytes, moves + write);
                     assert_eq!(receipt.released_bytes, before.capacities[index] * width);
@@ -223,7 +210,13 @@ fn original_core_stack_growth_preserves_paid_receipts_and_guest_semantics() {
             live -= receipt.released_bytes;
             if closed { break; }
         }
-        assert_eq!(live, 0);
+        let pool = &owner.core.as_ref().unwrap().pool;
+        let pooled = pool.locals.iter().map(|slot| slot.capacity() * size_of::<Value>()).sum::<usize>()
+            + pool.controls.iter().map(|slot| slot.capacity() * size_of::<ControlFrame>()).sum::<usize>()
+            + pool.types.iter().map(|slot| slot.capacity() * size_of::<ValueType>()).sum::<usize>();
+        assert!(pooled > 0);
+        assert!(pool.locals.iter().all(Vec::is_empty) && pool.controls.iter().all(Vec::is_empty) && pool.types.iter().all(Vec::is_empty));
+        assert_eq!(live, pooled);
         assert!(owner.core.as_ref().unwrap().machine.is_none());
         for _ in 0..100 {
             if owner.terminal_is_empty() { break; }

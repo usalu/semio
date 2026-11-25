@@ -86,6 +86,12 @@ pub enum TreeDropPosition {
     Inside,
 }
 
+/// 🏷️ The drag payload key under which a draggable tree row publishes the label its drag ghost shows.
+pub const TREE_DRAG_GHOST_LABEL_KEY: &str = "application/x-semio-tree-drag-ghost-label";
+
+/// 🖼️ The drag payload key under which a draggable tree row publishes the icon its drag ghost shows.
+pub const TREE_DRAG_GHOST_ICON_KEY: &str = "application/x-semio-tree-drag-ghost-icon";
+
 #[derive(Clone, Debug)]
 pub struct TreeDragState {
     pub source_id: String,

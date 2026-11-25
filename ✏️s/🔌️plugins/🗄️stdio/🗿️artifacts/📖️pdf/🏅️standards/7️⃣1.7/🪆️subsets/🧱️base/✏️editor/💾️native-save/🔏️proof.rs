@@ -183,8 +183,8 @@ fn compare_image(projected: &PdfImage, current: &PdfImage, offset: &mut usize) -
     if *offset == 0 && !image_header(projected, current) { return Err(ExactGraphRefusal::Semantic); }
     match (&projected.body, &current.body) {
         (PdfImageBody::Artifact { reference: left }, PdfImageBody::Artifact { reference: right }) if left == right => Ok(true),
-        (PdfImageBody::Samples { values: left }, PdfImageBody::Samples { values: right }) if left.len() == right.len() => {
-            let end = left.len().min(offset.saturating_add(COMPARE_WORK / size_of::<u32>()));
+        (PdfImageBody::Samples { packed: left }, PdfImageBody::Samples { packed: right }) if left.len() == right.len() => {
+            let end = left.len().min(offset.saturating_add(COMPARE_WORK));
             if left[*offset..end] != right[*offset..end] { return Err(ExactGraphRefusal::Semantic); }
             *offset = end;
             Ok(end == left.len())

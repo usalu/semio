@@ -178,7 +178,7 @@ pub(super) const TEXT_PROPS: SchemaMetadata = SchemaMetadata {
     typescript: r####"/**
  * 📝️ Props for `Component::Text`.
  */
-export type TextProps = { value: Label, emphasize: boolean | null, dataAttributes: { [key in string]?: string } | null, };"####,
+export type TextProps = { value: Label, emphasize: boolean | null, dataAttributes: { [key in string]?: string } | null, headingLevel?: number | null, };"####,
 };
 
 pub(super) const TOGGLE_APPEARANCE: SchemaMetadata = SchemaMetadata {

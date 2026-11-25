@@ -1,0 +1,10 @@
+--- a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📤️export/🧱️records/📦️packages/🦀️rust/Cargo.toml
++++ b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📤️export/🧱️records/📦️packages/🦀️rust/Cargo.toml
+@@ -16,6 +16,7 @@
+ path = "🦀️.rs"
+ 
+ [dependencies]
++semio-framework-value = { workspace = true }
+ semio-s-artifact-stdio-dwg-snapshot = { workspace = true }
+ semio-s-artifact-stdio-dwg-snapshot-document = { workspace = true }
+ semio-s-artifact-stdio-dwg-snapshot-objects = { workspace = true }

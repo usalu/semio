@@ -5,6 +5,12 @@ use semio_framework_value::{ValueError,ValueRefusalKind};
 use semio_framework_actor::OriginalGuestExecutionBudget;
 fn unsupported()->OriginalTurnFailure{ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original unit calls require the actual owned backend and its owned instance").into()}
 impl GuestRuntimes{
+ /// 📒️ Reads one guest instance's retained ledger by category, when its runtime keeps one.
+ pub fn original_retained_ledger(&self,instance:&GuestInstance)->Option<[u64;20]>{let(Self::Owned(runtime),GuestInstanceState::Owned(state))=(self,&instance.state)else{return None};runtime.original_retained_ledger(state)}
+ /// 📒️ Formats a retained ledger snapshot; called only when a refusal is produced.
+ pub fn retained_ledger_formatter()->fn(&[u64;20])->String{semio_plugin_interpreter_runtime::format_retained_snapshot}
+ /// 📒️ Items and copy bytes the owned interpreter booked on this thread so far.
+ pub fn booked_on_this_thread()->(u64,u64){semio_plugin_interpreter_runtime::thread_booked()}
  /// 🧮️ Reads the exact physical retirement demand of the original returned frame.
  pub fn original_returned_frame_demand(&self,instance:&GuestInstance,cx:&StepContext<'_>)->Result<Option<semio_framework_value::RetirementDemand>,OriginalTurnFailure>{
   let(Self::Owned(runtime),GuestInstanceState::Owned(state))=(self,&instance.state)else{return Err(unsupported())};

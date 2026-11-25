@@ -46,7 +46,6 @@ def geometry_metrics() -> dict:
         "title_font_size": metrics["typography"]["textXsPx"],
         "title_line_height": metrics["typography"]["textXsPx"],
         "title_max_width": 12 * metrics["dom"]["rootRemPx"],
-        "inset": spacing * chrome["panelInsetUiSpacing"],
         "path_inset": 1,
         "border_width": tokens["strokes"]["chromeBorderHairline"],
     }
@@ -97,8 +96,8 @@ def window_geometry(rect: dict, title_advance: float) -> dict:
         raise ValueError("Window geometry requires a nonnegative finite title advance")
     metrics = geometry_metrics()
     x, y, width, height = (rect[key] for key in ("x", "y", "width", "height"))
-    cap, size, padding = (metrics[key] for key in ("title_height", "control_size", "inset"))
-    if width <= size + 2 * padding or height <= cap + 2 * padding:
+    cap, size, padding = (metrics[key] for key in ("title_height", "control_size", "spacing"))
+    if width <= size or height <= cap:
         raise ValueError("Window geometry is too small for canonical compact chrome")
     title_width = min(title_advance + 2 * padding, metrics["title_max_width"], width - size)
     chips = _chip_spans([[0, title_width], [width - size, width]], width)
@@ -107,8 +106,7 @@ def window_geometry(rect: dict, title_advance: float) -> dict:
         "rect": {key: rect[key] for key in ("x", "y", "width", "height")},
         "title": {"x": x, "y": y, "width": title_width, "height": cap},
         "control": {"x": x + width - size, "y": y, "width": size, "height": size},
-        "body": {"x": x + padding, "y": y + cap + padding,
-                 "width": width - 2 * padding, "height": height - cap - 2 * padding},
+        "body": {"x": x, "y": y, "width": width, "height": height},
         "surface": {"x": x, "y": y, "width": width, "height": height},
         "outline": absolute(_frame_outline(width, height, 0)),
         "border_outline": absolute(_frame_outline(width, height, metrics["path_inset"])),

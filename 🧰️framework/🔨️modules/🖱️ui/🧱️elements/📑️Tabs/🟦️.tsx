@@ -93,7 +93,7 @@ function Tabs({ className, value, defaultValue, onValueChange, orientation = "ho
   const measureList = React.useCallback((node: HTMLElement | null) => {
     listObserver.current?.disconnect();
     listObserver.current = null;
-    const root = rootRef.current;
+    const root = node?.closest<HTMLElement>('[data-slot="tabs"]') ?? rootRef.current;
     if (!root) return;
     if (!node) { root.style.removeProperty(TABS_CLEARANCE); return; }
     const sync = () => {
@@ -176,9 +176,12 @@ function TabsList({ className, ref, children, ...props }: TabsListProps) {
       role="tablist"
       aria-orientation={context.orientation}
       data-slot="tabs-list"
-      data-shared-border-group=""
+      data-shared-border-frame=""
+      data-shared-border-cells=""
+      data-shared-border-edges={context.dir === "rtl" ? "left bottom" : "right bottom"}
       data-orientation={context.orientation}
       data-tabs-chip=""
+      data-glass-chip=""
       className={cn("text-muted-foreground absolute z-[2] inline-flex items-stretch justify-center p-0", context.orientation === "horizontal" ? "start-0 top-0 h-large w-fit max-w-full" : "start-0 top-0 flex-col", glassClass, className)}
     >
       {children}
@@ -227,8 +230,7 @@ function TabsTrigger({ className, value, disabled = false, id, ref, onClick, onF
       aria-controls={contentId}
       tabIndex={disabled ? -1 : context.focusValue === value ? 0 : -1}
       data-slot="tabs-trigger"
-      data-shared-border-frame={selected ? "" : undefined}
-      data-shared-border-edges={selected ? (context.orientation === "horizontal" ? "right bottom left" : context.dir === "rtl" ? "top bottom left" : "top right bottom") : undefined}
+      {...sharedBorderlessBoxProps}
       data-shared-border-state={selected ? "active" : undefined}
       data-tabs-value={value}
       data-state={selected ? "active" : "inactive"}

@@ -13,11 +13,41 @@
       "de": "Eine fünfstufige Aluminium-Stehleiter mit Plattform, 1,68 m hoch mit der Plattform auf 1,06 m und 1,02 m über den Füßen, aufgeklappt und gesperrt: leer, unter einer stehenden Person und unter der EN-131-Nennprüflast, mit Standlast und Seitenschub als Lasten."
     },
     "tags": [
-      "stepladder",
-      "ladder",
-      "aluminium",
-      "tool",
-      "standing-load"
+      {
+        "id": "stepladder",
+        "title": {
+          "en": "stepladder",
+          "de": "Stehleiter"
+        }
+      },
+      {
+        "id": "ladder",
+        "title": {
+          "en": "ladder",
+          "de": "Leiter"
+        }
+      },
+      {
+        "id": "aluminium",
+        "title": {
+          "en": "aluminium",
+          "de": "Aluminium"
+        }
+      },
+      {
+        "id": "tool",
+        "title": {
+          "en": "tool",
+          "de": "Werkzeug"
+        }
+      },
+      {
+        "id": "standing-load",
+        "title": {
+          "en": "standing load",
+          "de": "ruhende Last"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage content (NW-O)",

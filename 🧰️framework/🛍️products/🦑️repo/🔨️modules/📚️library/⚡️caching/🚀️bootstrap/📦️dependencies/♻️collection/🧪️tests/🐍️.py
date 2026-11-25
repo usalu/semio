@@ -21,7 +21,8 @@ for case in rows["cases"]:
             if row["ready"]:
                 limit = 0 if pressure else policy["supersededGraceSeconds"]
             else:
-                limit = policy["unfinishedGraceSeconds"]
+                resumed = min((g for g in case["generations"] if not g["ready"]), key=lambda g: (g["ageSeconds"], g["key"]), default=None)
+                limit = policy["unfinishedPressureGraceSeconds"] if pressure and key != resumed["key"] else policy["unfinishedGraceSeconds"]
             due = row["ageSeconds"] >= limit
         if due:
             result.append({"key": key, "reason": "superseded" if row["ready"] else "unfinished"})

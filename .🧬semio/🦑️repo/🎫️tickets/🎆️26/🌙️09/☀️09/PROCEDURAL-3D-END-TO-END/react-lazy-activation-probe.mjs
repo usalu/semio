@@ -5,7 +5,7 @@ import { join } from "node:path";
 /** 🧭️ Boots the React 6018 page, optionally asks the on-demand door for a node kind by hand (`SMOKE_ASK=1`), and reports activation requests, notices, console errors and the artifact panel's node states over time. */
 const out = join(import.meta.dir, "🗑️generated/react-native-smoke"); mkdirSync(out, { recursive: true });
 const url = process.env.SEMIO_BATTERY_URL ?? "http://127.0.0.1:6018/?plugin=generation3d";
-const browser = await chromium.launch({ headless: true, args: ["--enable-unsafe-webgpu", "--ignore-gpu-blocklist", "--use-angle=metal"] });
+const browser = await chromium.launch({ headless: true, args: ["--js-flags=--max-old-space-size=1024", "--renderer-process-limit=1", "--enable-unsafe-webgpu", "--ignore-gpu-blocklist", "--use-angle=metal"] });
 const page = await (await browser.newContext({ viewport: { width: 1440, height: 900 } })).newPage();
 const lines = [];
 page.on("console", m => lines.push(`${m.type()} ${m.text()}`));

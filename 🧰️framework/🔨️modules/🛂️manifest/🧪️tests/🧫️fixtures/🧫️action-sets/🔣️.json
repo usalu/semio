@@ -1,0 +1,535 @@
+{
+  "note": "🧺️ Action sets of a plugin manifest: a plugin declares an action table once and every app it names receives the rows in table order, ahead of its own roster. `resolution` cases give each app's own roster and the sets; `resolved` is the roster each app resolves to (the windows' app roster) and `fault` the one reason the table is refused, or null when it is sound. `sharing` cases give each app's declared roster and the sets a plugin forms in order, each over the apps named in `members`: `sets` is the table that results (id, member apps, rows), `remaining` what is left on each roster and `refusal` why a set cannot be formed. Every language resolves and validates the same table to the same answer.",
+  "resolution": [
+    {
+      "case": "two apps share one set",
+      "apps": {
+        "a": [
+          "own-a"
+        ],
+        "b": [
+          "own-b"
+        ]
+      },
+      "actionSets": [
+        {
+          "id": "edit",
+          "appIds": [
+            "a",
+            "b"
+          ],
+          "actions": [
+            "x",
+            "y"
+          ]
+        }
+      ],
+      "resolved": {
+        "a": [
+          "x",
+          "y",
+          "own-a"
+        ],
+        "b": [
+          "x",
+          "y",
+          "own-b"
+        ]
+      },
+      "fault": null
+    },
+    {
+      "case": "an app outside every set keeps its own roster",
+      "apps": {
+        "a": [],
+        "c": [
+          "own-c"
+        ]
+      },
+      "actionSets": [
+        {
+          "id": "edit",
+          "appIds": [
+            "a"
+          ],
+          "actions": [
+            "x"
+          ]
+        }
+      ],
+      "resolved": {
+        "a": [
+          "x"
+        ],
+        "c": [
+          "own-c"
+        ]
+      },
+      "fault": null
+    },
+    {
+      "case": "sets resolve in table order",
+      "apps": {
+        "a": [
+          "own"
+        ]
+      },
+      "actionSets": [
+        {
+          "id": "edit",
+          "appIds": [
+            "a"
+          ],
+          "actions": [
+            "x"
+          ]
+        },
+        {
+          "id": "view",
+          "appIds": [
+            "a"
+          ],
+          "actions": [
+            "z"
+          ]
+        }
+      ],
+      "resolved": {
+        "a": [
+          "x",
+          "z",
+          "own"
+        ]
+      },
+      "fault": null
+    },
+    {
+      "case": "no table resolves every app to its own roster",
+      "apps": {
+        "a": [
+          "own"
+        ]
+      },
+      "actionSets": [],
+      "resolved": {
+        "a": [
+          "own"
+        ]
+      },
+      "fault": null
+    },
+    {
+      "case": "a set id may not repeat",
+      "apps": {
+        "a": []
+      },
+      "actionSets": [
+        {
+          "id": "edit",
+          "appIds": [
+            "a"
+          ],
+          "actions": [
+            "x"
+          ]
+        },
+        {
+          "id": "edit",
+          "appIds": [
+            "a"
+          ],
+          "actions": [
+            "y"
+          ]
+        }
+      ],
+      "resolved": null,
+      "fault": "action set edit is declared twice"
+    },
+    {
+      "case": "a set needs a member",
+      "apps": {
+        "a": []
+      },
+      "actionSets": [
+        {
+          "id": "edit",
+          "appIds": [],
+          "actions": [
+            "x"
+          ]
+        }
+      ],
+      "resolved": null,
+      "fault": "action set edit has no member app"
+    },
+    {
+      "case": "a member must be an app of the manifest",
+      "apps": {
+        "a": []
+      },
+      "actionSets": [
+        {
+          "id": "edit",
+          "appIds": [
+            "z"
+          ],
+          "actions": [
+            "x"
+          ]
+        }
+      ],
+      "resolved": null,
+      "fault": "action set edit names unknown app z"
+    },
+    {
+      "case": "a set may not declare a row twice",
+      "apps": {
+        "a": []
+      },
+      "actionSets": [
+        {
+          "id": "edit",
+          "appIds": [
+            "a"
+          ],
+          "actions": [
+            "x",
+            "x"
+          ]
+        }
+      ],
+      "resolved": null,
+      "fault": "action set edit declares action x twice"
+    },
+    {
+      "case": "a member may not also declare a row of its set",
+      "apps": {
+        "a": [
+          "x"
+        ]
+      },
+      "actionSets": [
+        {
+          "id": "edit",
+          "appIds": [
+            "a"
+          ],
+          "actions": [
+            "x"
+          ]
+        }
+      ],
+      "resolved": null,
+      "fault": "app a declares action x that action set edit already provides"
+    },
+    {
+      "case": "two sets may not give one app the same action",
+      "apps": {
+        "a": []
+      },
+      "actionSets": [
+        {
+          "id": "edit",
+          "appIds": [
+            "a"
+          ],
+          "actions": [
+            "x"
+          ]
+        },
+        {
+          "id": "more",
+          "appIds": [
+            "a"
+          ],
+          "actions": [
+            "x",
+            "y"
+          ]
+        }
+      ],
+      "resolved": null,
+      "fault": "app a receives an action from both action sets edit and more"
+    }
+  ],
+  "sharing": [
+    {
+      "case": "members move the rows they declare identically into one set",
+      "rosters": {
+        "a": [
+          "x",
+          "y",
+          "own-a"
+        ],
+        "b": [
+          "x",
+          "y",
+          "own-b"
+        ],
+        "c": [
+          "own-c"
+        ]
+      },
+      "sets": [
+        {
+          "id": "edit",
+          "members": [
+            "a",
+            "b"
+          ]
+        }
+      ],
+      "result": [
+        {
+          "id": "edit",
+          "appIds": [
+            "a",
+            "b"
+          ],
+          "actions": [
+            "x",
+            "y"
+          ]
+        }
+      ],
+      "remaining": {
+        "a": [
+          "own-a"
+        ],
+        "b": [
+          "own-b"
+        ],
+        "c": [
+          "own-c"
+        ]
+      },
+      "refusal": null
+    },
+    {
+      "case": "a row only some members declare stays on their rosters",
+      "rosters": {
+        "a": [
+          "x",
+          "y"
+        ],
+        "b": [
+          "x"
+        ]
+      },
+      "sets": [
+        {
+          "id": "edit",
+          "members": [
+            "a",
+            "b"
+          ]
+        }
+      ],
+      "result": [
+        {
+          "id": "edit",
+          "appIds": [
+            "a",
+            "b"
+          ],
+          "actions": [
+            "x"
+          ]
+        }
+      ],
+      "remaining": {
+        "a": [
+          "y"
+        ],
+        "b": []
+      },
+      "refusal": null
+    },
+    {
+      "case": "a row a member declares differently stays on every roster",
+      "rosters": {
+        "a": [
+          "x",
+          "y"
+        ],
+        "b": [
+          "x",
+          "y"
+        ]
+      },
+      "differing": {
+        "b": "y"
+      },
+      "sets": [
+        {
+          "id": "edit",
+          "members": [
+            "a",
+            "b"
+          ]
+        }
+      ],
+      "result": [
+        {
+          "id": "edit",
+          "appIds": [
+            "a",
+            "b"
+          ],
+          "actions": [
+            "x"
+          ]
+        }
+      ],
+      "remaining": {
+        "a": [
+          "y"
+        ],
+        "b": [
+          "y"
+        ]
+      },
+      "refusal": null
+    },
+    {
+      "case": "sets form in order, the later one over what the earlier left",
+      "rosters": {
+        "a": [
+          "x",
+          "y"
+        ],
+        "b": [
+          "x",
+          "y"
+        ],
+        "c": [
+          "x"
+        ]
+      },
+      "sets": [
+        {
+          "id": "wide",
+          "members": [
+            "a",
+            "b",
+            "c"
+          ]
+        },
+        {
+          "id": "narrow",
+          "members": [
+            "a",
+            "b"
+          ]
+        }
+      ],
+      "result": [
+        {
+          "id": "wide",
+          "appIds": [
+            "a",
+            "b",
+            "c"
+          ],
+          "actions": [
+            "x"
+          ]
+        },
+        {
+          "id": "narrow",
+          "appIds": [
+            "a",
+            "b"
+          ],
+          "actions": [
+            "y"
+          ]
+        }
+      ],
+      "remaining": {
+        "a": [],
+        "b": [],
+        "c": []
+      },
+      "refusal": null
+    },
+    {
+      "case": "a set needs two members",
+      "rosters": {
+        "a": [
+          "x"
+        ],
+        "b": [
+          "x"
+        ]
+      },
+      "sets": [
+        {
+          "id": "edit",
+          "members": [
+            "a"
+          ]
+        }
+      ],
+      "result": null,
+      "remaining": null,
+      "refusal": "action set edit needs at least two member apps, found 1"
+    },
+    {
+      "case": "members that share nothing form no set",
+      "rosters": {
+        "a": [
+          "x"
+        ],
+        "b": [
+          "y"
+        ]
+      },
+      "sets": [
+        {
+          "id": "edit",
+          "members": [
+            "a",
+            "b"
+          ]
+        }
+      ],
+      "result": null,
+      "remaining": null,
+      "refusal": "the member apps of action set edit share no action"
+    },
+    {
+      "case": "a set id may not repeat",
+      "rosters": {
+        "a": [
+          "x",
+          "y"
+        ],
+        "b": [
+          "x",
+          "y"
+        ]
+      },
+      "sets": [
+        {
+          "id": "edit",
+          "members": [
+            "a",
+            "b"
+          ]
+        },
+        {
+          "id": "edit",
+          "members": [
+            "a",
+            "b"
+          ]
+        }
+      ],
+      "result": null,
+      "remaining": null,
+      "refusal": "action set edit is declared twice"
+    }
+  ]
+}

@@ -12494,6 +12494,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-plugin-reactor-receiving-completed"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-diagnostic",
+ "semio-framework-job",
+ "semio-framework-job-native-decode",
+ "semio-framework-pack",
+ "semio-framework-pack-json",
+ "semio-framework-trace",
+ "semio-framework-value",
+ "semio-plugin-actor-host",
+ "semio-plugin-reactor-receiving-source",
+]
+
+[[package]]
 name = "semio-plugin-reactor-receiving-source"
 version = "0.1.0"
 dependencies = [
@@ -12589,6 +12605,7 @@ dependencies = [
  "semio-plugin-reactor-core",
  "semio-plugin-reactor-lifecycle",
  "semio-plugin-reactor-patches",
+ "semio-plugin-reactor-receiving-completed",
  "semio-plugin-reactor-receiving-source",
  "semio-plugin-reactor-staged-forms",
  "semio-plugin-reactor-surfaces",
@@ -27364,6 +27381,7 @@ dependencies = [
  "semio-s-artifact-norm-en1996-io",
  "semio-s-artifact-norm-en1996-model",
  "semio-s-artifact-norm-en1996-mutations",
+ "semio-s-artifact-norm-en1996-mutations-edit-rules",
  "semio-s-artifact-norm-en1996-scene",
  "semio-s-artifact-norm-en1996-scene-diagrams",
  "semio-s-artifact-norm-en1996-scene-kit",
@@ -27997,7 +28015,6 @@ dependencies = [
  "semio-framework-diagnostic",
  "semio-framework-pack-json",
  "semio-framework-schema",
- "semio-framework-schema-registry",
  "semio-framework-schema-state",
  "semio-framework-value",
  "semio-framework-value-derive",
@@ -28031,12 +28048,16 @@ dependencies = [
  "semio-s-artifact-norm-en1996-mut-ties",
  "semio-s-artifact-norm-en1996-mut-units",
  "semio-s-artifact-norm-en1996-mut-walls",
- "semio-s-artifact-norm-en1996-mutations-graphql",
- "semio-s-artifact-norm-en1996-mutations-json-schema",
- "semio-s-artifact-norm-en1996-mutations-proto",
- "semio-s-artifact-norm-en1996-mutations-typescript",
- "semio-s-plugin-norm-app-surface",
  "semio-ui-locale",
+]
+
+[[package]]
+name = "semio-s-artifact-norm-en1996-mutations-edit-rules"
+version = "0.1.0"
+dependencies = [
+ "semio-s-artifact-norm-en1996-model",
+ "semio-s-artifact-norm-en1996-mutations",
+ "semio-s-plugin-norm-app-surface",
 ]
 
 [[package]]
@@ -28128,6 +28149,10 @@ dependencies = [
  "semio-s-artifact-norm-en1996-masonry",
  "semio-s-artifact-norm-en1996-model",
  "semio-s-artifact-norm-en1996-mutations",
+ "semio-s-artifact-norm-en1996-mutations-graphql",
+ "semio-s-artifact-norm-en1996-mutations-json-schema",
+ "semio-s-artifact-norm-en1996-mutations-proto",
+ "semio-s-artifact-norm-en1996-mutations-typescript",
  "semio-s-plugin-norm-compliance",
 ]
 
@@ -30782,6 +30807,7 @@ dependencies = [
  "semio-s-artifact-norm-en1999-diff-graphql",
  "semio-s-artifact-norm-en1999-diff-json-schema",
  "semio-s-artifact-norm-en1999-diff-proto",
+ "semio-s-artifact-norm-en1999-diff-rows-details",
  "semio-s-artifact-norm-en1999-diff-typescript",
  "semio-s-artifact-norm-en1999-model",
  "semio-s-plugin-norm-compliance",
@@ -30798,6 +30824,18 @@ version = "0.1.0"
 [[package]]
 name = "semio-s-artifact-norm-en1999-diff-proto"
 version = "0.1.0"
+
+[[package]]
+name = "semio-s-artifact-norm-en1999-diff-rows-details"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-dsl-record",
+ "semio-framework-dsl-record-derive",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-os-kernel",
+ "semio-s-artifact-norm-en1999-model",
+]
 
 [[package]]
 name = "semio-s-artifact-norm-en1999-diff-typescript"
@@ -44255,6 +44293,8 @@ dependencies = [
  "semio-s-artifact-stdio-dwg-snapshot",
  "semio-s-artifact-stdio-dwg-snapshot-drawing",
  "semio-s-artifact-stdio-dwg-snapshot-objects",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-entities",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-xrecord",
 ]
 
 [[package]]
@@ -44324,6 +44364,8 @@ dependencies = [
  "semio-s-artifact-stdio-dwg-snapshot",
  "semio-s-artifact-stdio-dwg-snapshot-drawing",
  "semio-s-artifact-stdio-dwg-snapshot-objects",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-tables",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-xrecord",
 ]
 
 [[package]]
@@ -44337,6 +44379,13 @@ dependencies = [
  "semio-s-artifact-stdio-dwg-snapshot-document",
  "semio-s-artifact-stdio-dwg-snapshot-drawing",
  "semio-s-artifact-stdio-dwg-snapshot-objects",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-associativity",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-blocks",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-constraints",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-entities",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-styles",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-tables",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-xrecord",
 ]
 
 [[package]]
@@ -44347,6 +44396,9 @@ dependencies = [
  "semio-s-artifact-stdio-dwg-read-records",
  "semio-s-artifact-stdio-dwg-snapshot",
  "semio-s-artifact-stdio-dwg-snapshot-objects",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-associativity",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-blocks",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-constraints",
 ]
 
 [[package]]
@@ -44359,6 +44411,13 @@ dependencies = [
  "semio-s-artifact-stdio-dwg-snapshot-document",
  "semio-s-artifact-stdio-dwg-snapshot-drawing",
  "semio-s-artifact-stdio-dwg-snapshot-objects",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-associativity",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-blocks",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-constraints",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-entities",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-styles",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-tables",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-xrecord",
 ]
 
 [[package]]
@@ -44383,6 +44442,13 @@ dependencies = [
  "semio-s-artifact-stdio-dwg-snapshot-document",
  "semio-s-artifact-stdio-dwg-snapshot-drawing",
  "semio-s-artifact-stdio-dwg-snapshot-objects",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-associativity",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-blocks",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-constraints",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-entities",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-styles",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-tables",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-xrecord",
  "semio-s-artifact-stdio-dwg-sqlite-drawing",
  "semio-s-artifact-stdio-dwg-sqlite-entities",
  "semio-s-artifact-stdio-dwg-sqlite-objects",
@@ -44418,6 +44484,10 @@ dependencies = [
  "semio-os-kernel",
  "semio-s-artifact-stdio-dwg-geometry",
  "semio-s-artifact-stdio-dwg-snapshot-objects",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-entities",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-styles",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-tables",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-xrecord",
 ]
 
 [[package]]
@@ -44427,13 +44497,115 @@ dependencies = [
  "semio-framework-dsl-record",
  "semio-framework-dsl-record-derive",
  "semio-framework-pack-json",
- "semio-framework-schema",
- "semio-framework-schema-composition",
- "semio-framework-schema-state",
  "semio-framework-value",
  "semio-framework-value-derive",
  "semio-framework-value-native-owned",
- "semio-os-kernel",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-associativity",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-blocks",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-constraints",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-entities",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-metadata",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-styles",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-tables",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-xrecord",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-dwg-snapshot-objects-associativity"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-dsl-record",
+ "semio-framework-dsl-record-derive",
+ "semio-framework-pack-json",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-metadata",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-dwg-snapshot-objects-blocks"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-dsl-record",
+ "semio-framework-dsl-record-derive",
+ "semio-framework-pack-json",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-associativity",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-dwg-snapshot-objects-constraints"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-dsl-record",
+ "semio-framework-dsl-record-derive",
+ "semio-framework-pack-json",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-associativity",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-metadata",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-dwg-snapshot-objects-entities"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-dsl-record",
+ "semio-framework-dsl-record-derive",
+ "semio-framework-pack-json",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-metadata",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-tables",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-dwg-snapshot-objects-metadata"
+version = "0.1.0"
+
+[[package]]
+name = "semio-s-artifact-stdio-dwg-snapshot-objects-styles"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-dsl-record",
+ "semio-framework-dsl-record-derive",
+ "semio-framework-pack-json",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-metadata",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-tables",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-dwg-snapshot-objects-tables"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-dsl-record",
+ "semio-framework-dsl-record-derive",
+ "semio-framework-pack-json",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-metadata",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-dwg-snapshot-objects-xrecord"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-dsl-record",
+ "semio-framework-dsl-record-derive",
+ "semio-framework-pack-json",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-metadata",
 ]
 
 [[package]]
@@ -44451,6 +44623,10 @@ dependencies = [
  "semio-s-artifact-stdio-dwg-snapshot-document",
  "semio-s-artifact-stdio-dwg-snapshot-drawing",
  "semio-s-artifact-stdio-dwg-snapshot-objects",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-blocks",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-entities",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-styles",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-xrecord",
  "semio-s-artifact-stdio-dwg-sqlite-drawing-2",
  "semio-s-artifact-stdio-dwg-sqlite-objects",
 ]
@@ -44470,6 +44646,10 @@ dependencies = [
  "semio-s-artifact-stdio-dwg-snapshot-document",
  "semio-s-artifact-stdio-dwg-snapshot-drawing",
  "semio-s-artifact-stdio-dwg-snapshot-objects",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-associativity",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-constraints",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-styles",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-xrecord",
  "semio-s-artifact-stdio-dwg-sqlite-objects",
 ]
 
@@ -44486,6 +44666,7 @@ dependencies = [
  "semio-framework-value-derive",
  "semio-os-kernel",
  "semio-s-artifact-stdio-dwg-snapshot-objects",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-entities",
  "semio-s-artifact-stdio-dwg-sqlite-objects",
 ]
 
@@ -44502,6 +44683,10 @@ dependencies = [
  "semio-framework-value-derive",
  "semio-os-kernel",
  "semio-s-artifact-stdio-dwg-snapshot-objects",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-associativity",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-blocks",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-tables",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-xrecord",
 ]
 
 [[package]]
@@ -44525,6 +44710,13 @@ dependencies = [
  "semio-s-artifact-stdio-dwg-snapshot",
  "semio-s-artifact-stdio-dwg-snapshot-document",
  "semio-s-artifact-stdio-dwg-snapshot-objects",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-associativity",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-blocks",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-constraints",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-entities",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-styles",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-tables",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-xrecord",
  "semio-s-artifact-stdio-dwg-write-records",
 ]
 
@@ -44535,6 +44727,13 @@ dependencies = [
  "semio-s-artifact-stdio-dwg-snapshot",
  "semio-s-artifact-stdio-dwg-snapshot-document",
  "semio-s-artifact-stdio-dwg-snapshot-objects",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-associativity",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-blocks",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-constraints",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-entities",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-styles",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-tables",
+ "semio-s-artifact-stdio-dwg-snapshot-objects-xrecord",
 ]
 
 [[package]]
@@ -56288,8 +56487,20 @@ dependencies = [
  "semio-plugin",
  "semio-s-artifact-stdio-contract",
  "semio-s-artifact-stdio-txt",
+ "semio-s-artifact-stdio-xml-snapshot-document",
  "semio-ui-locale",
  "serde_json",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-xml-snapshot-document"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-pack-json",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
 ]
 
 [[package]]

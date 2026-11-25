@@ -91,6 +91,7 @@ pub enum SemioFlowMutation {
     DragNodes(drag_nodes::DragNodes),
 }
 dsl::original_pack_value_operation_receiving!(SemioFlowMutation);
+dsl::artifact_persisted_binary_operation!(SemioFlowMutation);
 
 /// 🏷️ The declared mutation vocabulary of `s.stdio.semio.flow`, in `SemioFlowMutation`'s own
 /// declaration order and kebab-case spelling — the single source of truth for the binary op frame's

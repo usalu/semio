@@ -7,7 +7,7 @@ use semio_plugin_decl_app::ArtifactApp;
 use semio_framework::kernel::ArtifactHandle;
 use semio_plugin_decl_media::{ArtifactMediaExportCompletion, ArtifactMediaExportCredit, ArtifactMediaExportHandle, ArtifactOutputChunks};
 use semio_plugin_decl_app::media_contract::ArtifactMediaExportJobRequest;
-use semio_plugin_ownership::store_lifecycle::{ArtifactOwnedDisposer, ArtifactSnapshotCloseLease, ArtifactSnapshotCloseRetention};
+use semio_plugin_store_lifecycle::store_lifecycle::{ArtifactOwnedDisposer, ArtifactSnapshotCloseLease, ArtifactSnapshotCloseRetention};
 use pack::snapshot::ArtifactPack;
 use semio_plugin_decl_app::tool_contract::ArtifactReservedToolJob;
 use semio_framework_value::retirement::controlled::ControlledRetirement;
@@ -30,7 +30,7 @@ pub struct MediaExportPreparation<A:ArtifactApp>{
  pub checkpoint:Option<super::native_checkpoint_export::NativeCheckpointExportSource<A>>,pub checkpoint_identity:Option<(usize,usize)>,
  pub canonical_revision:[u8;32],pub metadata:ManuallyDrop<Option<[Vec<u8>;7]>>,pub(crate) metadata_stage:usize,pub metadata_close:ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<[Vec<u8>;7]>>>,
  pub request_close:ManuallyDrop<Option<semio_plugin_decl_app::media_contract::ArtifactMediaExportRequestRetirement<A>>>,pub parts:ManuallyDrop<Option<semio_plugin_document_media::media_export::MediaExportOwnedParts>>,pub(crate) parts_close:ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<semio_plugin_document_media::media_export::MediaExportOwnedParts>>>,pub handle:ManuallyDrop<Option<ArtifactMediaExportHandle>>,pub handle_close:ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<ArtifactMediaExportHandle>>>,pub operation:Option<semio_framework_job::Operation>,pub(crate) body_ready:bool,pub(crate) operation_bound:bool,pub assembled:bool,pub published:bool,
- pub snapshot_source:semio_plugin_ownership::store_lifecycle::ArtifactMediaSnapshotSource<A::Snapshot>,
+ pub snapshot_source:semio_plugin_store_lifecycle::store_lifecycle::ArtifactMediaSnapshotSource<A::Snapshot>,
  pub original_read:ManuallyDrop<Option<store::os_store::snapshot_read::SnapshotRead<A::Snapshot>>>,pub original_read_close:ManuallyDrop<Option<ControlledRetirement<store::os_store::snapshot_read::SnapshotRead<A::Snapshot>>>>,pub original_children:ManuallyDrop<Option<semio_plugin_decl_views::ChildContentView>>,pub original_children_close:ManuallyDrop<Option<ControlledRetirement<semio_plugin_decl_views::ChildContentView>>>,pub child_root_identity:Option<usize>,
  pub snapshot:ManuallyDrop<Option<std::sync::Arc<A::Snapshot>>>,pub(crate) snapshot_lease:ManuallyDrop<Option<ArtifactSnapshotCloseLease<A::Snapshot>>>,pub(crate) snapshot_retention:ManuallyDrop<Option<ArtifactSnapshotCloseRetention>>,
  pub request:ManuallyDrop<Option<ArtifactMediaExportJobRequest<A>>>,pub body:ManuallyDrop<Option<Box<dyn semio_plugin_decl_app::tool_contract::ArtifactReservedJob+Send>>>,pub producer:ManuallyDrop<Option<ArtifactReservedToolJob>>,

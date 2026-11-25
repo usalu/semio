@@ -13,17 +13,83 @@
    "de": "Ein gebrauchtes 120-Bass-Pianoakkordeon der Schüler- und Amateurklasse (41 Diskanttasten, 120 Stradella-Bässe, 10,2 kg, 0,48 m hoch, mit geschlossenem Balg 0,42 m lang) im offenen Hartschalenkoffer aus Sperrholz von 5,3 kg, der Deckel auf dem Boden, wie ein Gebrauchtinstrumentenhändler es zeigt: vergilbte Tasten, rissiges Zelluloid, abgeriebene Balgecken, ein abgestoßener Koffer mit altem Aufkleber. Im geschlossenen Koffer am Griff getragen, im Sitzen auf dem linken Oberschenkel gespielt, mit sich öffnendem und schließendem Balg."
   },
   "tags": [
-   "used",
-   "instrument",
-   "music",
-   "second-hand",
-   "folk",
-   "keyboard",
-   "accordion",
-   "free-reed",
-   "bellows",
-   "celluloid",
-   "hard-case"
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "instrument",
+    "title": {
+     "en": "instrument",
+     "de": "Instrument"
+    }
+   },
+   {
+    "id": "music",
+    "title": {
+     "en": "music",
+     "de": "Musik"
+    }
+   },
+   {
+    "id": "second-hand",
+    "title": {
+     "en": "second-hand",
+     "de": "Second-Hand"
+    }
+   },
+   {
+    "id": "folk",
+    "title": {
+     "en": "folk",
+     "de": "Volksmusik"
+    }
+   },
+   {
+    "id": "keyboard",
+    "title": {
+     "en": "keyboard",
+     "de": "Tasteninstrument"
+    }
+   },
+   {
+    "id": "accordion",
+    "title": {
+     "en": "accordion",
+     "de": "Akkordeon"
+    }
+   },
+   {
+    "id": "free-reed",
+    "title": {
+     "en": "free reed",
+     "de": "durchschlagende Zunge"
+    }
+   },
+   {
+    "id": "bellows",
+    "title": {
+     "en": "bellows",
+     "de": "Balg"
+    }
+   },
+   {
+    "id": "celluloid",
+    "title": {
+     "en": "celluloid",
+     "de": "Zelluloid"
+    }
+   },
+   {
+    "id": "hard-case",
+    "title": {
+     "en": "hard case",
+     "de": "Hartschalenkoffer"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content (used instruments wave)",
@@ -13319,8 +13385,501 @@
     ]
    },
    "500": {
-    "status": "unavailable",
-    "denominator": 500
+    "status": "authored",
+    "denominator": 500,
+    "decisions": [
+     {
+      "en": "Body for the 75 mm feature: the case keeps its frame of 18 mm boards as one hollow part judged by its overall extents, so the instrument still shows in the open case, with the back as a declared 18 mm sheet; the lid lying before it is thickened from 29 to 75 mm, the handle is one 75 mm block that keeps the height; the accordion is three blocks: treble box with the keyboard, the four bellows segments as one, bass box with button field and strap; the grille is below the feature and left out.",
+      "de": "Körper für das 75-mm-Merkmal: der Koffer behält seinen Rahmen aus 18-mm-Brettern als ein Hohlteil, nach seinen Gesamtmaßen beurteilt, damit das Instrument im offenen Koffer sichtbar bleibt, mit der Rückwand als erklärter 18-mm-Platte; der davor liegende Deckel ist von 29 auf 75 mm verdickt, der Griff ein 75-mm-Block, der die Höhe hält; das Akkordeon sind drei Blöcke: Diskantgehäuse mit der Tastatur, die vier Balgsegmente als eines, Bassgehäuse mit Knopffeld und Riemen; das Gitter liegt unter dem Merkmal und entfällt."
+     },
+     {
+      "en": "Thermal: the body solids in their regions by reference; grille, keyboard, bass buttons and bass strap as shells of their layer at true size.",
+      "de": "Thermik: die Körper in ihren Regionen als Verweis; Gitter, Tastatur, Bassknöpfe und Bassriemen als Schalen ihrer Schicht in wahrer Größe."
+     },
+     {
+      "en": "Structure: the members by reference, the bellows block spanning the four bellows bones, the lid hinge as a 75 mm joint and five mass markers.",
+      "de": "Tragwerk: die Stäbe als Verweis, der Balgblock überspannt die vier Balgknochen, das Deckelscharnier als 75-mm-Gelenk und fünf Massenmarken."
+     }
+    ],
+    "body": [
+     {
+      "id": "case-frame",
+      "kind": "extrude",
+      "bone": "case",
+      "material": "case-tolex",
+      "role": "body",
+      "tone": 0.22,
+      "profile": [
+       [
+        0,
+        0
+       ],
+       [
+        0.5,
+        0
+       ],
+       [
+        0.5,
+        0.51
+       ],
+       [
+        0,
+        0.51
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.11,
+      "to": 0.135,
+      "holes": [
+       [
+        [
+         0.018,
+         0.018
+        ],
+        [
+         0.482,
+         0.018
+        ],
+        [
+         0.482,
+         0.492
+        ],
+        [
+         0.018,
+         0.492
+        ]
+       ]
+      ]
+     },
+     {
+      "id": "case-back",
+      "kind": "box",
+      "bone": "case",
+      "material": "case-tolex",
+      "role": "body",
+      "tone": 0.22,
+      "size": [
+       0.464,
+       0.474,
+       0.018
+      ],
+      "transform": {
+       "translation": [
+        0.25,
+        0.255,
+        0.126
+       ]
+      },
+      "sheet": true
+     },
+     {
+      "id": "lid-panel",
+      "kind": "box",
+      "bone": "lid",
+      "material": "case-tolex",
+      "role": "body",
+      "tone": 0.24,
+      "size": [
+       0.5,
+       0.075,
+       0.511
+      ],
+      "transform": {
+       "translation": [
+        0.25,
+        0.0255,
+        -0.2425
+       ]
+      }
+     },
+     {
+      "id": "handle-block",
+      "kind": "box",
+      "bone": "handle",
+      "material": "leather",
+      "role": "body",
+      "tone": 0.3,
+      "size": [
+       0.13,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.065,
+        -0.0025,
+        0
+       ]
+      }
+     },
+     {
+      "id": "treble-box",
+      "kind": "box",
+      "bone": "treble",
+      "material": "celluloid",
+      "role": "body",
+      "tone": 0.38,
+      "size": [
+       0.14,
+       0.466,
+       0.19
+      ],
+      "transform": {
+       "translation": [
+        -0.07,
+        -0.005,
+        0
+       ]
+      }
+     },
+     {
+      "id": "bellows",
+      "kind": "box",
+      "bone": "bellows-1",
+      "material": "bellows-card",
+      "role": "body",
+      "tone": 0.13,
+      "size": [
+       0.2,
+       0.44,
+       0.175
+      ],
+      "transform": {
+       "translation": [
+        0.1,
+        0,
+        0
+       ]
+      }
+     },
+     {
+      "id": "bass-box",
+      "kind": "box",
+      "bone": "bass",
+      "material": "celluloid",
+      "role": "body",
+      "tone": 0.38,
+      "size": [
+       0.168,
+       0.466,
+       0.19
+      ],
+      "transform": {
+       "translation": [
+        0.084,
+        -0.005,
+        0
+       ]
+      }
+     }
+    ],
+    "thermal": [
+     {
+      "id": "th-case-frame",
+      "of": "case-frame",
+      "region": "case-shell"
+     },
+     {
+      "id": "th-handle-block",
+      "of": "handle-block",
+      "region": "case-shell"
+     },
+     {
+      "id": "th-case-back",
+      "of": "case-back",
+      "region": "case-lining"
+     },
+     {
+      "id": "th-lid-panel",
+      "of": "lid-panel",
+      "region": "case-lid"
+     },
+     {
+      "id": "th-treble-box",
+      "of": "treble-box",
+      "region": "treble-casing"
+     },
+     {
+      "id": "th-bellows",
+      "of": "bellows",
+      "region": "bellows"
+     },
+     {
+      "id": "th-bass-box",
+      "of": "bass-box",
+      "region": "bass-casing"
+     },
+     {
+      "id": "th-grille",
+      "kind": "box",
+      "bone": "treble",
+      "material": "plated-steel",
+      "role": "body",
+      "tone": 0.78,
+      "size": [
+       0.073,
+       0.366,
+       0.003
+      ],
+      "transform": {
+       "translation": [
+        -0.0585,
+        0,
+        -0.0965
+       ]
+      },
+      "region": "grille",
+      "layer": "grille-sheet",
+      "sheet": true
+     },
+     {
+      "id": "th-keyboard",
+      "kind": "box",
+      "bone": "treble",
+      "material": "key-plastic",
+      "role": "body",
+      "tone": 0.8,
+      "size": [
+       0.035,
+       0.43,
+       0.125
+      ],
+      "transform": {
+       "translation": [
+        -0.1225,
+        0,
+        -0.0275
+       ]
+      },
+      "region": "keyboard",
+      "layer": "key-tops"
+     },
+     {
+      "id": "th-bass-buttons",
+      "kind": "box",
+      "bone": "bass",
+      "material": "key-plastic",
+      "role": "body",
+      "tone": 0.72,
+      "size": [
+       0.028,
+       0.384,
+       0.094
+      ],
+      "transform": {
+       "translation": [
+        0.154,
+        -0.003,
+        -0.018
+       ]
+      },
+      "region": "bass-buttons",
+      "layer": "button"
+     },
+     {
+      "id": "th-bass-strap",
+      "kind": "box",
+      "bone": "bass",
+      "material": "leather",
+      "role": "body",
+      "tone": 0.3,
+      "size": [
+       0.028,
+       0.384,
+       0.051
+      ],
+      "transform": {
+       "translation": [
+        0.154,
+        -0.003,
+        0.0545
+       ]
+      },
+      "region": "straps",
+      "layer": "strap-leather"
+     }
+    ],
+    "structure": [
+     {
+      "id": "st-case-frame",
+      "of": "case-frame",
+      "member": "case",
+      "part": "member"
+     },
+     {
+      "id": "st-case-back",
+      "of": "case-back",
+      "member": "case",
+      "part": "member"
+     },
+     {
+      "id": "st-lid-panel",
+      "of": "lid-panel",
+      "member": "lid",
+      "part": "member"
+     },
+     {
+      "id": "st-handle-block",
+      "of": "handle-block",
+      "member": "handle",
+      "part": "member"
+     },
+     {
+      "id": "st-treble-box",
+      "of": "treble-box",
+      "member": "treble",
+      "part": "member"
+     },
+     {
+      "id": "st-bellows",
+      "of": "bellows",
+      "member": "bellows-1",
+      "part": "member",
+      "members": [
+       "bellows-2",
+       "bellows-3",
+       "bellows-4"
+      ]
+     },
+     {
+      "id": "st-bass-box",
+      "of": "bass-box",
+      "member": "bass",
+      "part": "member"
+     },
+     {
+      "id": "j-lid-hinge",
+      "kind": "box",
+      "bone": "lid",
+      "material": "corner-steel",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.5,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.25,
+        0.0255,
+        0
+       ]
+      },
+      "member": "lid",
+      "part": "joint"
+     },
+     {
+      "id": "mass-case",
+      "kind": "box",
+      "bone": "case",
+      "material": "case-tolex",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.25,
+        0.255,
+        0.0975
+       ]
+      },
+      "member": "case",
+      "part": "mass"
+     },
+     {
+      "id": "mass-lid",
+      "kind": "box",
+      "bone": "lid",
+      "material": "case-tolex",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.25,
+        0.0255,
+        -0.24
+       ]
+      },
+      "member": "lid",
+      "part": "mass"
+     },
+     {
+      "id": "mass-treble",
+      "kind": "box",
+      "bone": "treble",
+      "material": "celluloid",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        -0.05,
+        0,
+        0
+       ]
+      },
+      "member": "treble",
+      "part": "mass"
+     },
+     {
+      "id": "mass-bellows",
+      "kind": "box",
+      "bone": "bellows-1",
+      "material": "bellows-card",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.1,
+        0,
+        0
+       ]
+      },
+      "member": "bellows-1",
+      "part": "mass"
+     },
+     {
+      "id": "mass-bass",
+      "kind": "box",
+      "bone": "bass",
+      "material": "celluloid",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.07,
+        0,
+        0
+       ]
+      },
+      "member": "bass",
+      "part": "mass"
+     }
+    ]
    }
   },
   "presentation": {

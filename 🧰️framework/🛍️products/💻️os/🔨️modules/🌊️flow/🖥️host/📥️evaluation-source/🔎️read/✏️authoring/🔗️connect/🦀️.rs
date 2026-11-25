@@ -1,5 +1,5 @@
 //! 🔗️ Original connection admission walks borrowed endpoints and edges before funding mutation leaves.
-use super::super::*;
+use super::*;
 use super::{compare::TextCompare,text::FundedText,ports::{PortProbe,PortTypes},types::{TypeCompatibility,TypeTextWork,TextInput},synapse::SynapseWork,reach::ReachWork};
 use semio_framework_artifact_flow_flow::{FlowSnapshotSource,Widget,FlowMutation,SynapseSpec,AddSynapse,RemoveSynapse,widget_id_for};
 use semio_framework_job::{OriginalConstructionDemand,OriginalTurnFailure,StepContext};

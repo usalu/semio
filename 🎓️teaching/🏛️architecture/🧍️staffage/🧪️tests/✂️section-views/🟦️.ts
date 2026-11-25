@@ -187,6 +187,24 @@ describe("section validation", () => {
     expect(issue!.message.de).toContain("Seitenansicht");
   });
 
+  it("refuses a section label that differs between the languages, since the letters stand beside the cut line and a wider one moves the whole drawing on the sheet of that language", () => {
+    const asset = assets.get("sliding-door")!;
+    const labelled = (label: { en: string; de: string }): Asset => ({ ...asset, representations: Object.fromEntries(Object.entries(asset.representations).map(([key, rep]) => [key, rep.status === "authored" ? { ...rep, sections: { plan: { plane: 1, label } } } : rep])) }) as Asset;
+    const issues = validateAsset(labelled({ en: "Longitudinal door section", de: "Türlängsschnitt" })).filter((candidate) => candidate.code === "section-label-language");
+    expect(issues.length).toBeGreaterThan(0);
+    expect(issues[0]!.path).toContain(".sections.plan.label");
+    expect(issues[0]!.message.en).toContain("Longitudinal door section");
+    expect(issues[0]!.message.de).toContain("Türlängsschnitt");
+    expect(validateAsset(labelled({ en: "B-B", de: "B-B" })).filter((candidate) => candidate.code === "section-label-language")).toEqual([]);
+    const shapesOf = (target: Asset, language: "en" | "de"): string => JSON.stringify(depict(evaluate(target, { kind: "pose", pose: target.presentation.defaultPose }, { kind: "scale", scale: { denominator: 50 } }), { ...defaultDepictionOptions("light-line", language, 50, "elevation"), representation: { kind: "scale", scale: { denominator: 50 } } }).layers.flatMap((layer) => layer.items.flatMap((item) => (item.kind === "path" && item.id.startsWith("shape:") ? [[item.id, item.commands]] : []))));
+    expect(shapesOf(labelled({ en: "Longitudinal door section", de: "Türlängsschnitt" }), "en")).not.toBe(shapesOf(labelled({ en: "Longitudinal door section", de: "Türlängsschnitt" }), "de"));
+    expect(shapesOf(labelled({ en: "B-B", de: "B-B" }), "en")).toBe(shapesOf(labelled({ en: "B-B", de: "B-B" }), "de"));
+  });
+
+  it("accepts the declared labels", () => {
+    for (const id of [...Object.keys(vectors.catalog), ...Object.keys(vectors.elevationCatalog)]) expect(validateAsset(assets.get(id)!).filter((issue) => issue.code === "section-label-language"), id).toEqual([]);
+  });
+
   it("accepts the declared planes", () => {
     for (const id of [...Object.keys(vectors.catalog), ...Object.keys(vectors.elevationCatalog)]) expect(validateAsset(assets.get(id)!).filter((issue) => issue.code === "section-plane-outside"), id).toEqual([]);
   });

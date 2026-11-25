@@ -3,6 +3,20 @@ import{Database}from"bun:sqlite";
 import Ajv from"ajv";
 import corpus from"../🔣️.json";
 import schema from"../🧬️.json";
+import acknowledgment from"./🧫️acknowledgment-stock.json";
+
+test("ordinary acknowledgment below its copy charge retains the issued loan",()=>{
+ const db=new Database(":memory:");
+ try{
+  const decide=db.query(`SELECT CASE WHEN ?1<0 THEN 'Refused' ELSE 'Ready' END AS status,
+   ?1<0 AS loanUnchanged, ?1<0 AS epochUnchanged, ?1<0 AS requestUnchanged, ?1<0 AS ownerUnchanged`);
+  const {status,...loan}=decide.get(-acknowledgment.copyBytesBelowMinimum) as {status:string}&Record<string,number>;
+  expect(status).toBe(acknowledgment.ordinaryStatus);
+  expect(Object.fromEntries(Object.entries(loan).map(([key,value])=>[key,Boolean(value)]))).toEqual(acknowledgment.pendingLoan);
+  expect(decide.get(0)).toMatchObject({status:"Ready"});
+ }finally{db.close();}
+});
+
 test("each Poll crossing requires both real scopes to cover its Core reserve",()=>{const db=new Database(":memory:"),valid=new Ajv({strict:true}).compile({type:"array",minItems:6,maxItems:6,items:{type:"integer",minimum:0}});try{for(const header of [144,152,144]){const copy=4400+header+1024,work=2948;for(const [row,expected]of [[[21,copy,work,21,copy,work],1],[[21,copy-1,work,21,copy,work],0],[[21,copy,work,21,copy-1,work],0],[[21,copy,work-1,21,copy,work],0],[[21,copy,work,21,copy,work-1],0]] as const){expect(valid(row)).toBe(true);expect(db.query("SELECT ?>=21 AND ?>=? AND ?>=? AND ?>=21 AND ?>=? AND ?>=? AS ok").get(row[0],row[1],copy,row[2],work,row[3],row[4],copy,row[5],work)).toEqual({ok:expected})}}}finally{db.close()}});
 test("poll transport preserves typed capture and both guest output owners before callbacks and Source return",()=>{
  const validate=new Ajv({strict:true}).compile(schema),db=new Database(":memory:");

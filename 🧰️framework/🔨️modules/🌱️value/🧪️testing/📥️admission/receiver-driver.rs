@@ -97,17 +97,19 @@ pub fn receive_traced<I:?Sized,T,R:NativeReceiver<I,T>>(receiver:&mut R,source:R
 /// ✂️ Asserts that a cut receive published nothing.
 pub fn none<T>(received:Result<Option<T>,String>)->Result<(),String>{received.map(|published|assert!(published.is_none(),"a cut receive publishes nothing"))}
 /// ♻️ Closes the receiver through funded steps, denying each axis first.
-pub fn close<I:?Sized,T,R:NativeReceiver<I,T>>(receiver:&mut R,bank:&mut EffectBank,body:usize){
-    session_open(bank);
+pub fn close<I:?Sized,T,R:NativeReceiver<I,T>>(receiver:&mut R,bank:&mut EffectBank,body:usize){close_traced::<I,T,R>(receiver,bank,body);}
+/// 🧾️ Like [`close`], returning each funded close step's quoted copy bytes and work.
+pub fn close_traced<I:?Sized,T,R:NativeReceiver<I,T>>(receiver:&mut R,bank:&mut EffectBank,body:usize)->Vec<(usize,u64)>{
+    session_open(bank);let mut trace=Vec::new();
     for _ in 0..CLOSE_STEPS{
-        if receiver.terminal_is_empty(){return}
+        if receiver.terminal_is_empty(){return trace}
         assert!(!receiver.requires_original_birth()&&!receiver.requires_original_control(),"close loan not lent");
         if !receiver.is_closing(){
-            let d=receiver.begin_close_demand().unwrap();let w=receiver.begin_close_work_demand().unwrap();let g=grant(d);
+            let d=receiver.begin_close_demand().unwrap();let w=receiver.begin_close_work_demand().unwrap();let g=grant(d);trace.push((d.copy_bytes,w));
             for denied in denials(g,d){let((poll,_),heap)=observe(||driven::<OriginalRetirementFailure>(bank,denied,w.max(1),|effect,reply,recover|if recover{receiver.recover_begin_close_into(effect,reply)}else{receiver.begin_close_into(effect,reply)}));refused(poll,heap);assert_eq!(receiver.begin_close_demand().unwrap(),d,"denied close start changed quote");}
             let((poll,_),heap)=observe(||driven::<OriginalRetirementFailure>(bank,g,w.max(1),|effect,reply,recover|if recover{receiver.recover_begin_close_into(effect,reply)}else{receiver.begin_close_into(effect,reply)}));post(bank,g,heap,poll).unwrap();
         }else{
-            let d=receiver.close_demands(body).unwrap();let w=receiver.close_work_demand(body).unwrap();let g=grant(d);
+            let d=receiver.close_demands(body).unwrap();let w=receiver.close_work_demand(body).unwrap();let g=grant(d);trace.push((d.copy_bytes,w));
             for denied in denials(g,d){let((poll,_),heap)=observe(||driven::<OriginalRetirementFailure>(bank,denied,w.max(1),|effect,reply,recover|if recover{receiver.recover_close_step(body,effect,reply)}else{receiver.close_step(body,effect,reply)}));refused(poll,heap);assert_eq!(receiver.close_demands(body).unwrap(),d,"denied close step changed quote");}
             let((poll,_),heap)=observe(||driven::<OriginalRetirementFailure>(bank,g,w.max(1),|effect,reply,recover|if recover{receiver.recover_close_step(body,effect,reply)}else{receiver.close_step(body,effect,reply)}));post(bank,g,heap,poll).unwrap();
         }

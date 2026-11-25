@@ -65,7 +65,7 @@ export function offloadLinkerIdentityV1(sysroot:string,memoRoot?:string):string|
 export function offloadSysrootV1(root:string,inner:readonly string[],environment:Environment,now:number=Date.now()):string|undefined{
  const path=join(root,"offload-sysroot.json"),identity=JSON.stringify(inner);
  try{const memo=JSON.parse(readFileSync(path,"utf8")) as {atMs:number;inner:string;sysroot:string};if(memo.inner===identity&&now-memo.atMs<600000&&now>=memo.atMs)return memo.sysroot;}catch{}
- const result=spawnSync(inner[0]!,[...inner.slice(1),"--print","sysroot"],{encoding:"utf8",env:environment as NodeJS.ProcessEnv,timeout:20000}),text=result.status===0?result.stdout.trim():"";
+ const result=spawnSync(inner[0]!,[...inner.slice(1),"--print","sysroot"],{windowsHide:true,encoding:"utf8",env:environment as NodeJS.ProcessEnv,timeout:20000}),text=result.status===0?result.stdout.trim():"";
  if(text==="")return undefined;
  try{mkdirSync(root,{recursive:true});const temporary=path+"."+process.pid;writeFileSync(temporary,JSON.stringify({atMs:now,inner:identity,sysroot:text}));renameSync(temporary,path);}catch{}
  return text;
@@ -80,7 +80,7 @@ export function sysrootTargetsV1(sysroot:string):readonly string[]{
 /** 🔭️ Probes the compiler pinned by `cwd` and offers the executable in the reported sysroot for its host triple. The target libraries determine the target properties. */
 export function detectWorkerRustcV1(cwd:string,environment:Environment=process.env,compiler:string|readonly [string,...string[]]="rustc"):OffloadWorkerOfferV1|undefined{
  const [tool,...prefix]=typeof compiler==="string"?[compiler]:compiler;
- const run=(args:readonly string[])=>spawnSync(tool,[...prefix,...args],{cwd,encoding:"utf8",env:environment as NodeJS.ProcessEnv,timeout:60000});
+ const run=(args:readonly string[])=>spawnSync(tool,[...prefix,...args],{windowsHide:true,cwd,encoding:"utf8",env:environment as NodeJS.ProcessEnv,timeout:60000});
  const identity=run(["-vV"]),sysroot=run(["--print","sysroot"]);
  if(identity.status!==0||sysroot.status!==0)return undefined;
  const parsed=parseRustcIdentityV1(identity.stdout),root=sysroot.stdout.trim();
@@ -99,7 +99,7 @@ export function detectWorkerRustcV1(cwd:string,environment:Environment=process.e
 export function rustcVersionTextV1(root:string,inner:readonly string[],environment:Environment,now:number=Date.now()):string|undefined{
  const path=join(root,"offload-rustc.json"),identity=JSON.stringify(inner);
  try{const memo=JSON.parse(readFileSync(path,"utf8")) as {atMs:number;inner:string;text:string};if(memo.inner===identity&&now-memo.atMs<600000&&now>=memo.atMs)return memo.text;}catch{}
- const result=spawnSync(inner[0]!,[...inner.slice(1),"-vV"],{encoding:"utf8",env:environment as NodeJS.ProcessEnv,timeout:20000});
+ const result=spawnSync(inner[0]!,[...inner.slice(1),"-vV"],{windowsHide:true,encoding:"utf8",env:environment as NodeJS.ProcessEnv,timeout:20000});
  if(result.status!==0||!result.stdout)return undefined;
  try{mkdirSync(root,{recursive:true});const temporary=path+"."+process.pid;writeFileSync(temporary,JSON.stringify({atMs:now,inner:identity,text:result.stdout}));renameSync(temporary,path);}catch{}
  return result.stdout;

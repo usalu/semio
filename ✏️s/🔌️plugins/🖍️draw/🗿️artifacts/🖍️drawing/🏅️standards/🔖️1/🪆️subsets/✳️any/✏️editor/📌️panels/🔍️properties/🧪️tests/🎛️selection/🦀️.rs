@@ -205,6 +205,13 @@ fn inspector_controls_bind_the_events_the_host_dispatches() {
         assert!(count >= 30,"missing inspector controls: {count}");
     }
     retire_inspector_view(view);
+    use semio_plugin::plugin_app_close_prelude::{built_node_pages_are_terminal_empty, close_built_node_page_one};
+    for _ in 0..10_000 {
+        if close_built_node_page_one() {
+            break;
+        }
+    }
+    assert!(built_node_pages_are_terminal_empty());
 }
 
 #[test]
@@ -464,7 +471,7 @@ fn inspector_actions_respect_selection_eligibility() {
                 layers=vec![group];
             }
             "duplicateRows"=>{
-                ids=vec![semio_s_artifact_draw_drawing_model::drawing_play_layers_tree_row_id(&layers[0]);2];
+                ids=vec![semio_s_artifact_draw_drawing_model::layer_id(&layers[0]).to_string();2];
             }
             "shapePath"=>{
                 let shape=&layers[1];

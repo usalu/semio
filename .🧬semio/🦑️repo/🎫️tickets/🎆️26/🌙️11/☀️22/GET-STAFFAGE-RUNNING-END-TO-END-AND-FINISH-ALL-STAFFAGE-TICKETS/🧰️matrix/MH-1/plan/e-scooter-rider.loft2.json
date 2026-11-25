@@ -1,0 +1,20 @@
+[
+  {"op": "front-sweep", "scale": "50", "id": "thigh-r", "fixed": true},
+  {"op": "front-sweep", "scale": "100", "id": "thigh-r", "fixed": true},
+  {"op": "front-sweep", "scale": "500", "id": "thigh-r", "fixed": true},
+  {"op": "plan-revolve", "scale": "50", "id": "thigh-l", "fixed": true},
+  {"op": "plan-revolve", "scale": "50", "id": "thigh-r", "fixed": true},
+  {"op": "plan-revolve", "scale": "100", "id": "thigh-l", "fixed": true},
+  {"op": "plan-revolve", "scale": "100", "id": "thigh-r", "fixed": true},
+  {"op": "plan-revolve", "scale": "200", "id": "thigh-l", "fixed": true},
+  {"op": "plan-revolve", "scale": "500", "id": "thigh-l", "fixed": true},
+  {"op": "plan-revolve", "scale": "500", "id": "thigh-r", "fixed": true},
+  {"op": "plan-revolve", "scale": "500", "id": "shank-r", "fixed": true},
+  {"op": "plan-revolve", "scale": "50", "id": "sleeve-r", "fixed": true},
+  {"scale": "500", "op": "copy", "id": "shoe-rear-l", "from": "elevation", "to": ["plan"], "fixed": true},
+  {"scale": "500", "op": "copy", "id": "shoe-rear-r", "from": "elevation", "to": ["plan"], "fixed": true},
+  {"op": "volume", "scale": "200", "id": "wheel-r", "as": "prism-w", "profile": "elevation", "fixed": true},
+  {"scale": "100", "op": "volume", "id": "jacket", "as": "loft", "views": ["plan"], "fixed": true},
+  {"search": true, "order": ["loft"], "scale": "200", "id": "jacket", "subsets": [["plan"], ["front", "plan"], ["elevation", "front", "plan"]]},
+  {"search": true, "order": ["loft"], "scale": "500", "id": "jacket", "subsets": [["plan"], ["front", "plan"], ["elevation", "front", "plan"]]}
+]

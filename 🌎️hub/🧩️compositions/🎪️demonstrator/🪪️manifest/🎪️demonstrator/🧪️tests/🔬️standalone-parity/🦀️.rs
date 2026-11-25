@@ -59,11 +59,7 @@ fn every_foreign_surface_is_defined_exactly_like_its_standalone_host() {
     let bundle = test_bundle();
     let mut matched = BTreeSet::new();
     for (owner, found) in [
-        ("cad", assert_surfaces_match(&bundle, &standalone("cad", semio_hub_cad::plugin::plugin()))),
-        ("gis", assert_surfaces_match(&bundle, &standalone("gis", semio_hub_gis::plugin()))),
-        ("procedural", assert_surfaces_match(&bundle, &standalone("procedural", semio_hub_procedural::plugin()))),
         ("process", assert_surfaces_match(&bundle, &standalone("process", semio_hub_process::plugin::plugin()))),
-        ("puzzle", assert_surfaces_match(&bundle, &standalone("puzzle", semio_hub_puzzle::plugin()))),
         ("sourcing", assert_surfaces_match(&bundle, &standalone("sourcing", semio_hub_sourcing::plugin::plugin()))),
     ] {
         assert!(!found.is_empty(), "standalone {owner} host contributes no surface to the bundle");
@@ -77,12 +73,8 @@ fn every_foreign_surface_is_defined_exactly_like_its_standalone_host() {
 #[test]
 fn every_bundled_surface_type_is_the_variant_its_standalone_fleet_carries() {
     fn carried<Variant, Fleet: From<Variant>>() {}
-    carried::<EditorSurfaceApp<CadPlayApp>, semio_hub_cad::plugin::CadApps>();
-    carried::<EditorSurfaceApp<Gis2dPlayApp>, semio_hub_gis::GisApps>();
-    carried::<EditorSurfaceApp<Generation3dPlayApp>, semio_hub_procedural::ProceduralApps>();
     carried::<EditorSurfaceApp<Process3dPlayApp>, semio_hub_process::plugin::ProcessApps>();
     carried::<ViewerSurfaceApp<Process3dViewer>, semio_hub_process::plugin::ProcessApps>();
-    carried::<EditorSurfaceApp<Puzzle3dPlayApp>, semio_hub_puzzle::PuzzleApps>();
     carried::<EditorSurfaceApp<SourcingCurationApp>, semio_hub_sourcing::SourcingApps>();
     carried::<ViewerSurfaceApp<SourcingViewer>, semio_hub_sourcing::SourcingApps>();
 }
@@ -95,31 +87,21 @@ fn every_bundled_surface_declares_an_original_action_producer() {
     }
     produces::<EditorApp<crate::editor::playground::PlaygroundEditor>>("s.demonstrator.playground@1/*#editor");
     produces::<ViewerApp<crate::viewer::playground::PlaygroundViewer>>("s.demonstrator.playground@1/*#viewer");
-    produces::<EditorApp<Generation3dPlayApp>>("s.procedural.generation3d@1/*#editor");
-    produces::<EditorApp<CadPlayApp>>("s.cad.cad@1/*#editor");
-    produces::<EditorApp<Puzzle3dPlayApp>>("s.puzzle.puzzle3d@1/*#editor");
     produces::<EditorApp<SourcingCurationApp>>("s.sourcing.curation@1/*#editor");
     produces::<ViewerApp<SourcingViewer>>("s.sourcing.curation@1/*#viewer");
     produces::<EditorApp<Process3dPlayApp>>("s.process.process3d@1/*#editor");
     produces::<ViewerApp<Process3dViewer>>("s.process.process3d@1/*#viewer");
-    produces::<EditorApp<Gis2dPlayApp>>("s.gis.gismap@1/*#editor");
 }
 
-const UNBUNDLED_REQUESTS: [&str; 1] = ["shell.clipboard"];
-
-/// 🙏️ The capability asks of the bundled apps are the asks their standalone hosts make; `shell.clipboard` belongs to the puzzle5d surface this bundle does not carry.
+/// 🙏️ The capability asks of the bundled apps are the asks their standalone hosts make.
 #[test]
 fn bundle_asks_for_the_capabilities_its_standalone_hosts_ask_for() {
     let bundle = test_bundle();
     let hosts = [
-        standalone("cad", semio_hub_cad::plugin::plugin()).descriptor_extras().capability_requests.clone(),
-        standalone("gis", semio_hub_gis::plugin()).descriptor_extras().capability_requests.clone(),
-        standalone("procedural", semio_hub_procedural::plugin()).descriptor_extras().capability_requests.clone(),
         standalone("process", semio_hub_process::plugin::plugin()).descriptor_extras().capability_requests.clone(),
-        standalone("puzzle", semio_hub_puzzle::plugin()).descriptor_extras().capability_requests.clone(),
         standalone("sourcing", semio_hub_sourcing::plugin::plugin()).descriptor_extras().capability_requests.clone(),
     ];
-    let asked: BTreeSet<String> = hosts.iter().flatten().map(|request| request.id.0.clone()).filter(|id| !UNBUNDLED_REQUESTS.contains(&id.as_str())).collect();
+    let asked: BTreeSet<String> = hosts.iter().flatten().map(|request| request.id.0.clone()).collect();
     let ours = bundle.descriptor_extras().capability_requests.clone();
     assert_eq!(ours.iter().map(|request| request.id.0.clone()).collect::<BTreeSet<_>>(), asked);
     for request in &ours {
@@ -133,11 +115,7 @@ fn bundle_asks_for_the_capabilities_its_standalone_hosts_ask_for() {
 #[test]
 fn bundle_consumes_the_union_of_its_standalone_hosts_consumes() {
     let hosts = [
-        include_str!("../../../../../📐️cad/🧩️component/📦️packages/🦀️rust/Cargo.toml"),
-        include_str!("../../../../../🌍️gis/🧩️component/📦️packages/🦀️rust/Cargo.toml"),
-        include_str!("../../../../../🌀️procedural/🧩️component/📦️packages/🦀️rust/Cargo.toml"),
         include_str!("../../../../../🏭️process/🧩️component/📦️packages/🦀️rust/Cargo.toml"),
-        include_str!("../../../../../🧩️puzzle/🧩️component/📦️packages/🦀️rust/Cargo.toml"),
         include_str!("../../../../../🪵️sourcing/🧩️component/📦️packages/🦀️rust/Cargo.toml"),
     ];
     let bundle = include_str!("../../../../../🎪️demonstrator/🧩️component/📦️packages/🦀️rust/Cargo.toml");
@@ -146,18 +124,14 @@ fn bundle_consumes_the_union_of_its_standalone_hosts_consumes() {
     assert_eq!(semio_row(bundle, "consumes"), union);
 }
 
-const UNMATERIALIZED_DEPENDENCIES: [&str; 1] = ["flow-extension-draw"];
-
-/// 🔗️ The bundle loads the six plugins it hosts plus every flow extension the procedural host loads, less the ones its apps never use.
+/// 🔗️ The bundle loads exactly the two plugins it hosts, as its manifest declares.
 #[test]
-fn bundle_depends_on_what_its_standalone_hosts_depend_on() {
-    let procedural = semio_row(include_str!("../../../../../🌀️procedural/🧩️component/📦️packages/🦀️rust/Cargo.toml"), "depends-on");
+fn bundle_depends_on_the_plugins_it_hosts() {
     let bundle = semio_row(include_str!("../../../../../🎪️demonstrator/🧩️component/📦️packages/🦀️rust/Cargo.toml"), "depends-on");
-    let mut expected: BTreeSet<String> = ["cad", "gis", "procedural", "process", "puzzle", "sourcing"].into_iter().map(str::to_string).collect();
-    expected.extend(procedural.into_iter().filter(|dependency| !UNMATERIALIZED_DEPENDENCIES.contains(&dependency.as_str())));
+    let expected: BTreeSet<String> = ["process", "sourcing"].into_iter().map(str::to_string).collect();
     assert_eq!(bundle, expected);
     let declared: BTreeSet<String> = test_bundle().manifest.dependencies.iter().map(|dependency| dependency.plugin_id.clone()).collect();
-    assert!(["cad", "gis", "procedural", "process", "puzzle", "sourcing"].iter().all(|owner| declared.contains(*owner) && bundle.contains(*owner)));
+    assert_eq!(declared, expected);
 }
 
 #[test]

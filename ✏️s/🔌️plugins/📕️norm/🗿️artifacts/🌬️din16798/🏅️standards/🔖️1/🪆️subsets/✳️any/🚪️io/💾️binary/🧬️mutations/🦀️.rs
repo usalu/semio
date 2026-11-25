@@ -718,4 +718,5 @@ impl protocol::OpBinary for Din16798Mutation {
 }
 }
 
-dsl::original_pack_value_operation_receiving!(crate::Din16798Mutation);
+dsl::original_decoded_operation_receiving!(crate::Din16798Mutation);
+dsl::artifact_persisted_binary_operation!(crate::Din16798Mutation);

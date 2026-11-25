@@ -3,7 +3,7 @@
 //! 📜️ The history projection: the command log backfill, the history view and its patches, the projection cache refresh, the history route commands and the reprojection status.
 use semio_plugin_decl_app::ArtifactApp;
 use store::os_store::store_schema::ArtifactCommand;
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use semio_plugin_command::{CommandLogAppendKey, HistoryBackfillMark, HistoryRowReads, HistoryViewCache, HistoryViewPatch, HistoryViewStamp, backfilled_edit_label};
 use semio_plugin_decl_views::history_view::{CommandLogEntry, CommandView, HistoryView, MutationView};
@@ -26,7 +26,6 @@ use semio_framework::history_edit::HISTORY_EDIT_COMMIT_ACTION_ID;
 use std::sync::Arc;
 use semio_plugin_instance_extension::InstanceExtension;
 use semio_plugin_command::CommandLogAppend;
-use semio_plugin_document_media::ActiveDocumentArchiveLoad;
 
 /// 🧹️ The bounded command-prune steps one cache refresh drives before it projects: the refresh is reached from synchronous exchanges that cannot suspend, so the rest of a long prune stays with the maintenance ladder and a later refresh re-projects once it removed rows.
 const COMMAND_PRUNE_STEPS_PER_REFRESH: usize = 1024;
@@ -504,7 +503,7 @@ impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: I
     /// history step or a remote change — with whether the user paused a remote one and the code of a refused adoption;
     /// `None` while nothing waits.
     pub fn reprojection_status(&self) -> Option<HistoryReprojection> {
-        if let Some(load) = self.ingest.live_document_load().and_then(|operation| self.ingest.document_archive_loads.get(operation)).map(ActiveDocumentArchiveLoad::status) {
+        if let Some(load) = self.ingest.live_document_load().and_then(|operation| self.ingest.document_archive_status(operation)) {
             return Some(HistoryReprojection { done: u32::try_from(load.completed).unwrap_or(u32::MAX), total: u32::try_from(load.total).unwrap_or(u32::MAX), processed: None, kind: HistoryReprojectionKind::Load, paused: false, fault: None });
         }
         let kind = if self.stores.store.local_step_pending() { HistoryReprojectionKind::Step } else { HistoryReprojectionKind::Remote };

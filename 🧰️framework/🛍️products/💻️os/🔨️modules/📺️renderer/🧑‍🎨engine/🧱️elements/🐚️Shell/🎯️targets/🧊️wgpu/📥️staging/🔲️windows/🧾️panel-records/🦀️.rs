@@ -183,7 +183,7 @@ impl PanelProjection<'_> {
             UiNode::Text(text) => {
                 let key = self.key(None);
                 let id = self.reserve();
-                let props = ui_contract::TextProps { value: measure_label(text.value.as_str()), emphasize: text.emphasize, data_attributes: None };
+                let props = ui_contract::TextProps { value: measure_label(text.value.as_str()), emphasize: text.emphasize, data_attributes: None, heading_level: None };
                 self.place(
                     id,
                     key,

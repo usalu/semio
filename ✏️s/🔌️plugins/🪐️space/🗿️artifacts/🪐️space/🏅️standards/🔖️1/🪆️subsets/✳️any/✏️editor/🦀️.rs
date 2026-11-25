@@ -261,6 +261,21 @@ impl ArtifactEditor for SpaceIndexEditor {
             "foldDirectoryEvents", "presenceHeartbeat", "inviteMember", "removeMember", "setVisibility", "copyInviteLink", "requestInviteMember"]
     }
 
+    fn document_store_owners_source_demands() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        semio_plugin::cold_replay_document_store_owners_source_demands::<Self::Snapshot, Self::Mutation>()
+    }
+
+    /// 🕰️ History edits replay the document's own mutations through the shared cold issuer, and every Space mutation addresses the whole index as its conflict target.
+    fn build_document_store_owners(grant: semio_framework_value::RetainedCloneGrant) -> Option<Result<(
+        store::os_store::document_store_owners::DocumentStoreOwners<Self::Snapshot, Self::Mutation>,
+        semio_framework_value::RetainedCloneProgress,
+    ), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>>> {
+        Some(semio_plugin::cold_replay_document_store_owners::<Self::Snapshot, Self::Mutation>(grant).map(|(mut owners, progress)| {
+            owners.operation_wire = owners.operation_wire.with_original_ordinal_binary_receiving().with_original_target(store::whole_document_target::<Self::Mutation>);
+            (owners, progress)
+        }))
+    }
+
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         semio_s_space_core::space_retained_store_preparation::<Self::Snapshot, Self::Mutation>("space-index-artifact-retained", SPACE_INDEX_RETAINED_OUTPUT_BYTES)
     }
@@ -340,7 +355,7 @@ impl ArtifactEditor for SpaceIndexEditor {
         let str_field = |key: &str| args.and_then(|value| value.get(key)).and_then(semio_framework_value::DslValue::as_str).map(str::to_string);
         let u64_field = |key: &str| args.and_then(|value| value.get(key)).and_then(semio_framework_value::DslValue::as_f64).map(|value| value as u64);
         match action {
-            "createArtifact" => Ok(SpaceIndexCommand::CreateArtifact(create_artifact::CreateArtifact { name: str_field("name").unwrap_or_default(), kind_choice: str_field("kindChoice").unwrap_or_default() })),
+            "createArtifact" => Ok(SpaceIndexCommand::CreateArtifact(create_artifact::CreateArtifact { name: str_field("name").unwrap_or_default(), kind_choice: str_field("kindChoice").or_else(|| str_field("kind_choice")).unwrap_or_default() })),
             "deleteArtifact" => Ok(SpaceIndexCommand::DeleteArtifact(delete_artifact::DeleteArtifact { id: str_field("id").unwrap_or_default() })),
             "renameArtifact" => Ok(SpaceIndexCommand::RenameArtifact(rename_artifact::RenameArtifact { id: str_field("id").unwrap_or_default(), new_name: str_field("newName").or_else(|| str_field("new_name")).unwrap_or_default() })),
             "touchArtifact" => Ok(SpaceIndexCommand::TouchArtifact(touch_artifact::TouchArtifact {

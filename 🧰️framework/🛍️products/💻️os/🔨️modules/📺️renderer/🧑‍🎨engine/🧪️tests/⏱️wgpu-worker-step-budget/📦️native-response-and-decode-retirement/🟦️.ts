@@ -4,6 +4,7 @@ import { join } from "node:path";
 import Ajv2020 from "ajv/dist/2020";
 import { expect, it } from "vitest";
 import { ENGINE_ROOT, FRAME_TURN_FIXTURE } from "../🧰️step-budget-fixtures/🟦️.ts";
+import { launchChromium } from "../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🌐️chromium-launch/🟦️";
 
 /** 🧾 Registers the native response page, reference decode retirement, contended mounted I/O task and aborted ready image tests. */
 export function registerNativeResponseAndDecodeRetirementTests(): void {
@@ -14,8 +15,7 @@ export function registerNativeResponseAndDecodeRetirementTests(): void {
     
     
     const acceptsPage = new Ajv2020().compile({ type: "array", minItems: 1, maxItems: fixture.pageBytes, items: { type: "integer", minimum: 0, maximum: 255 } });
-    const { chromium } = await import("playwright");
-    const browser = await chromium.launch({ headless: true });
+    const browser = await launchChromium();
     try {
       const page = await browser.newPage();
       for (const example of fixture.cases) {
@@ -108,8 +108,7 @@ export function registerNativeResponseAndDecodeRetirementTests(): void {
   });
   it("Chromium rejects an aborted ready image before publication while retaining its successor", async () => {
     const fixture = JSON.parse(readFileSync(FRAME_TURN_FIXTURE, "utf8"));
-    const { chromium } = await import("playwright");
-    const browser = await chromium.launch({ headless: true });
+    const browser = await launchChromium();
     try {
       const page = await browser.newPage();
       const observed = await page.evaluate(async ({ retiredToken, successorToken }) => {

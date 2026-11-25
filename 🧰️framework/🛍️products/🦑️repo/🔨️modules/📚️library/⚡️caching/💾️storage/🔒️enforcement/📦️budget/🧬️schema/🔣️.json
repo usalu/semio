@@ -309,6 +309,8 @@
         "floorBytes",
         "headroomPercent",
         "hostFreeReservePercent",
+        "growHostFreeFloorBytes",
+        "growHostFreeFloorPercent",
         "alignBytes",
         "maximumBytes",
         "minimumBytes",
@@ -336,9 +338,22 @@
           "maximum": 1000
         },
         "hostFreeReservePercent": {
+          "description": "The share of the host's free bytes a NEW image may be born with (`100 - this`): it keeps the images born one after the other from promising more than the host has. It does not limit the growth of an existing image.",
           "type": "integer",
           "minimum": 0,
           "maximum": 99
+        },
+        "growHostFreeFloorBytes": {
+          "description": "Free bytes the host volume keeps after an existing image grew to its target: the growth ceiling is the host free bytes plus the image's own host allocation minus the larger of this floor and `growHostFreeFloorPercent` of that sum, capped by `maximumBytes`.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1099511627776
+        },
+        "growHostFreeFloorPercent": {
+          "description": "The share of the host volume (free bytes plus the image's own allocation) kept free after growth, if larger than `growHostFreeFloorBytes`.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 50
         },
         "alignBytes": {
           "type": "integer",

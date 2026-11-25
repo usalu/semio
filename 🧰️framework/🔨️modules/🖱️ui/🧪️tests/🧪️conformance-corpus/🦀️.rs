@@ -112,7 +112,7 @@ fn node_of<'a>(ui: &'a Ui, window: &str, id: u64) -> &'a UiNode {
 #[test]
 fn every_accept_case_of_the_corpus_mounts_every_record() {
     let cases = accept_cases();
-    assert_eq!(cases.len(), 56, "the shape groups hold every accept case of the corpus");
+    assert_eq!(cases.len(), 57, "the shape groups hold every accept case of the corpus");
     for (group, case, snapshot, expectation) in &cases {
         let window = format!("conformance.{case}");
         let (ui, instances) = mount(&window, snapshot);

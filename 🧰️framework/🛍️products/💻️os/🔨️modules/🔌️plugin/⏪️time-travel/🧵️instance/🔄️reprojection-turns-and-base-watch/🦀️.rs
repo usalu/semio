@@ -55,8 +55,10 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     /// (`discard_local_step`); a waiting remote change's running replay is dropped (the store keeps the change) and driver
     /// turns leave it until `historyEditRerun`.
     pub(super) fn cancel_reprojection_turns(&mut self) -> TimeTravelActionOutcome {
-        if let Some(active) = self.ingest.live_document_load().and_then(|operation| self.ingest.document_archive_loads.get_mut(operation)) {
-            active.request_terminal(ActiveDocumentArchiveLoadState::Cancelled);
+        if let Some(operation) = self.ingest.live_document_load() {
+            if !self.ingest.request_document_archive_cancel(operation) {
+                return TimeTravelActionOutcome::Rejected(TimeTravelActionRefusal::Session(TimeTravelRefusal::Illegal));
+            }
             self.note_time_travel_changed(true, true);
             return TimeTravelActionOutcome::Applied(TimeTravelStage::Inactive);
         }

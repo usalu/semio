@@ -1,0 +1,14 @@
+{
+  "schema": "window-viewport-inset/v1",
+  "minViewportPx": 160,
+  "cases": [
+    { "name": "no open pane leaves the viewport whole", "bodyWidthPx": 800, "panes": [], "inset": { "leftPx": 0, "rightPx": 0 } },
+    { "name": "a left pane pushes the viewport to its right", "bodyWidthPx": 800, "panes": [{ "leftPx": 0, "rightPx": 300 }], "inset": { "leftPx": 300, "rightPx": 0 } },
+    { "name": "a right pane pushes the viewport to its left", "bodyWidthPx": 800, "panes": [{ "leftPx": 500, "rightPx": 800 }], "inset": { "leftPx": 0, "rightPx": 300 } },
+    { "name": "a pane that yields to a chip keeps the wider free side", "bodyWidthPx": 800, "panes": [{ "leftPx": 285, "rightPx": 585 }], "inset": { "leftPx": 0, "rightPx": 515 } },
+    { "name": "two side panes leave the middle", "bodyWidthPx": 1000, "panes": [{ "leftPx": 0, "rightPx": 300 }, { "leftPx": 700, "rightPx": 1000 }], "inset": { "leftPx": 300, "rightPx": 300 } },
+    { "name": "overlapping panes merge", "bodyWidthPx": 800, "panes": [{ "leftPx": 0, "rightPx": 300 }, { "leftPx": 200, "rightPx": 400 }], "inset": { "leftPx": 400, "rightPx": 0 } },
+    { "name": "a strip below the minimum is overlaid instead", "bodyWidthPx": 800, "panes": [{ "leftPx": 0, "rightPx": 350 }, { "leftPx": 480, "rightPx": 800 }], "inset": { "leftPx": 0, "rightPx": 0 } },
+    { "name": "a pane wider than the body covers everything", "bodyWidthPx": 400, "panes": [{ "leftPx": -20, "rightPx": 420 }], "inset": { "leftPx": 0, "rightPx": 0 } }
+  ]
+}

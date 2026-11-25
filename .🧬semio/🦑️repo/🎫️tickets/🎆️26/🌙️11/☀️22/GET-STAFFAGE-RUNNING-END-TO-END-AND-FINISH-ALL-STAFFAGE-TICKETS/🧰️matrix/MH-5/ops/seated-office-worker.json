@@ -1,0 +1,1658 @@
+[
+ {
+  "op": "sync",
+  "scale": "50",
+  "id": "shank-l",
+  "bone": "shank-l",
+  "convert": [
+   "front",
+   "plan"
+  ]
+ },
+ {
+  "op": "set",
+  "scale": "50",
+  "view": "front",
+  "id": "shirt",
+  "bone": "torso",
+  "why": "result of the candidate mr-front-extrude-plan of auto.py",
+  "set": {
+   "kind": "poly",
+   "points": [
+    [
+     -0.0342,
+     0.1219
+    ],
+    [
+     -0.0165,
+     0.1483
+    ],
+    [
+     0.0033,
+     0.1586
+    ],
+    [
+     0.1698,
+     0.1736
+    ],
+    [
+     0.2613,
+     0.1947
+    ],
+    [
+     0.283,
+     0.1923
+    ],
+    [
+     0.3278,
+     0.0846
+    ],
+    [
+     0.3422,
+     0.0697
+    ],
+    [
+     0.3422,
+     -0.0674
+    ],
+    [
+     0.3302,
+     -0.0803
+    ],
+    [
+     0.2853,
+     -0.1894
+    ],
+    [
+     0.2811,
+     -0.1931
+    ],
+    [
+     0.2613,
+     -0.195
+    ],
+    [
+     0.1698,
+     -0.1739
+    ],
+    [
+     0.0024,
+     -0.1584
+    ],
+    [
+     -0.0165,
+     -0.1486
+    ],
+    [
+     -0.0342,
+     -0.1233
+    ]
+   ],
+   "closed": true,
+   "x": null,
+   "y": null,
+   "w": null,
+   "h": null,
+   "x0": null,
+   "y0": null,
+   "x1": null,
+   "y1": null,
+   "r0": null,
+   "r1": null,
+   "r": null,
+   "cx": null,
+   "cy": null,
+   "rx": null,
+   "ry": null,
+   "d": null,
+   "followTip": null,
+   "solid": {
+    "kind": "extruded",
+    "sweep": "v",
+    "z0": -0.1401,
+    "z1": 0.0398,
+    "zTip": [
+     -0.0582,
+     0.0647
+    ]
+   }
+  }
+ },
+ {
+  "op": "set",
+  "scale": "50",
+  "view": "plan",
+  "id": "shirt",
+  "bone": "torso",
+  "why": "result of the candidate mr-front-extrude-plan of auto.py",
+  "set": {
+   "kind": "poly",
+   "points": [
+    [
+     -0.0342,
+     -0.115
+    ],
+    [
+     -0.0328,
+     -0.1219
+    ],
+    [
+     -0.0135,
+     -0.1447
+    ],
+    [
+     0.0054,
+     -0.1511
+    ],
+    [
+     0.1684,
+     -0.1552
+    ],
+    [
+     0.2304,
+     -0.145
+    ],
+    [
+     0.2622,
+     -0.1292
+    ],
+    [
+     0.3242,
+     -0.0684
+    ],
+    [
+     0.3422,
+     -0.0583
+    ],
+    [
+     0.3415,
+     0.0647
+    ],
+    [
+     0.2973,
+     0.0727
+    ],
+    [
+     0.2621,
+     0.0871
+    ],
+    [
+     0.2278,
+     0.0922
+    ],
+    [
+     0.1029,
+     0.0884
+    ],
+    [
+     0.0047,
+     0.0727
+    ],
+    [
+     -0.0123,
+     0.0661
+    ],
+    [
+     -0.0342,
+     0.0398
+    ]
+   ],
+   "closed": true,
+   "x": null,
+   "y": null,
+   "w": null,
+   "h": null,
+   "x0": null,
+   "y0": null,
+   "x1": null,
+   "y1": null,
+   "r0": null,
+   "r1": null,
+   "r": null,
+   "cx": null,
+   "cy": null,
+   "rx": null,
+   "ry": null,
+   "d": null,
+   "followTip": null,
+   "solid": {
+    "kind": "extruded",
+    "sweep": "w",
+    "z0": -0.195,
+    "z1": 0.1947,
+    "zTip": [
+     -0.195,
+     0.1945
+    ]
+   }
+  }
+ },
+ {
+  "op": "sync",
+  "scale": "50",
+  "id": "shank-r",
+  "bone": "shank-r",
+  "convert": [
+   "front",
+   "plan"
+  ]
+ },
+ {
+  "op": "sync",
+  "scale": "100",
+  "id": "shank-l",
+  "bone": "shank-l",
+  "convert": [
+   "front",
+   "plan"
+  ]
+ },
+ {
+  "op": "extrude",
+  "scale": "100",
+  "id": "neck",
+  "bone": "neck",
+  "view": "front",
+  "span": "full"
+ },
+ {
+  "op": "extrude",
+  "scale": "100",
+  "id": "neck",
+  "bone": "neck",
+  "view": "plan",
+  "span": "full"
+ },
+ {
+  "op": "set",
+  "scale": "100",
+  "view": "front",
+  "id": "shirt",
+  "bone": "torso",
+  "why": "result of the candidate mr-front-extrude-plan of auto.py",
+  "set": {
+   "kind": "poly",
+   "points": [
+    [
+     -0.0345,
+     0.1198
+    ],
+    [
+     0.0043,
+     0.1591
+    ],
+    [
+     0.1674,
+     0.1731
+    ],
+    [
+     0.2608,
+     0.1947
+    ],
+    [
+     0.2816,
+     0.1928
+    ],
+    [
+     0.3287,
+     0.0823
+    ],
+    [
+     0.3424,
+     0.0651
+    ],
+    [
+     0.3424,
+     -0.0668
+    ],
+    [
+     0.3297,
+     -0.0807
+    ],
+    [
+     0.2816,
+     -0.1931
+    ],
+    [
+     0.2608,
+     -0.195
+    ],
+    [
+     0.1674,
+     -0.1734
+    ],
+    [
+     0.0043,
+     -0.1594
+    ],
+    [
+     -0.0345,
+     -0.1202
+    ]
+   ],
+   "closed": true,
+   "x": null,
+   "y": null,
+   "w": null,
+   "h": null,
+   "x0": null,
+   "y0": null,
+   "x1": null,
+   "y1": null,
+   "r0": null,
+   "r1": null,
+   "r": null,
+   "cx": null,
+   "cy": null,
+   "rx": null,
+   "ry": null,
+   "d": null,
+   "followTip": null,
+   "solid": {
+    "kind": "extruded",
+    "sweep": "v",
+    "z0": -0.1398,
+    "z1": 0.0376,
+    "zTip": [
+     -0.057,
+     0.0643
+    ]
+   }
+  }
+ },
+ {
+  "op": "set",
+  "scale": "100",
+  "view": "plan",
+  "id": "shirt",
+  "bone": "torso",
+  "why": "result of the candidate mr-front-extrude-plan of auto.py",
+  "set": {
+   "kind": "poly",
+   "points": [
+    [
+     -0.0344,
+     -0.1098
+    ],
+    [
+     -0.0328,
+     -0.121
+    ],
+    [
+     0.0065,
+     -0.1514
+    ],
+    [
+     0.167,
+     -0.1554
+    ],
+    [
+     0.2326,
+     -0.1442
+    ],
+    [
+     0.2618,
+     -0.1297
+    ],
+    [
+     0.3241,
+     -0.0679
+    ],
+    [
+     0.3424,
+     -0.0569
+    ],
+    [
+     0.3415,
+     0.0642
+    ],
+    [
+     0.2315,
+     0.0923
+    ],
+    [
+     0.1052,
+     0.0887
+    ],
+    [
+     0.0052,
+     0.0728
+    ],
+    [
+     -0.0343,
+     0.0379
+    ]
+   ],
+   "closed": true,
+   "x": null,
+   "y": null,
+   "w": null,
+   "h": null,
+   "x0": null,
+   "y0": null,
+   "x1": null,
+   "y1": null,
+   "r0": null,
+   "r1": null,
+   "r": null,
+   "cx": null,
+   "cy": null,
+   "rx": null,
+   "ry": null,
+   "d": null,
+   "followTip": null,
+   "solid": {
+    "kind": "extruded",
+    "sweep": "w",
+    "z0": -0.195,
+    "z1": 0.1944,
+    "zTip": [
+     -0.195,
+     0.1941
+    ]
+   }
+  }
+ },
+ {
+  "op": "sync",
+  "scale": "100",
+  "id": "shank-r",
+  "bone": "shank-r",
+  "convert": [
+   "front",
+   "plan"
+  ]
+ },
+ {
+  "op": "set",
+  "scale": "200",
+  "view": "front",
+  "id": "shank-l",
+  "bone": "shank-l",
+  "why": "result of the candidate convert-sides of auto.py",
+  "set": {
+   "kind": "poly",
+   "points": [
+    [
+     0.428,
+     -0.0528
+    ],
+    [
+     0.4243,
+     0.0563
+    ],
+    [
+     0.158,
+     0.06
+    ],
+    [
+     -0.0014,
+     0.0525
+    ],
+    [
+     -0.0126,
+     0.0431
+    ],
+    [
+     -0.0126,
+     -0.0434
+    ],
+    [
+     -0.0014,
+     -0.0528
+    ]
+   ],
+   "closed": true,
+   "x": null,
+   "y": null,
+   "w": null,
+   "h": null,
+   "x0": null,
+   "y0": null,
+   "x1": null,
+   "y1": null,
+   "r0": null,
+   "r1": null,
+   "r": null,
+   "cx": null,
+   "cy": null,
+   "rx": null,
+   "ry": null,
+   "d": null,
+   "followTip": null,
+   "solid": {
+    "kind": "extruded",
+    "sweep": "v",
+    "z0": -0.07,
+    "z1": 0.0501,
+    "zTip": [
+     -0.0624,
+     0.0613
+    ]
+   }
+  }
+ },
+ {
+  "op": "set",
+  "scale": "200",
+  "view": "plan",
+  "id": "shank-l",
+  "bone": "shank-l",
+  "why": "result of the candidate convert-sides of auto.py",
+  "set": {
+   "kind": "poly",
+   "points": [
+    [
+     -0.0138,
+     -0.0597
+    ],
+    [
+     0.0331,
+     -0.0503
+    ],
+    [
+     0.0612,
+     -0.0129
+    ],
+    [
+     0.05,
+     0.0357
+    ],
+    [
+     0.005,
+     0.06
+    ],
+    [
+     -0.0438,
+     0.0488
+    ],
+    [
+     -0.07,
+     0.0076
+    ],
+    [
+     -0.0569,
+     -0.0373
+    ]
+   ],
+   "closed": true,
+   "x": null,
+   "y": null,
+   "w": null,
+   "h": null,
+   "x0": null,
+   "y0": null,
+   "x1": null,
+   "y1": null,
+   "r0": null,
+   "r1": null,
+   "r": null,
+   "cx": null,
+   "cy": null,
+   "rx": null,
+   "ry": null,
+   "d": null,
+   "followTip": null,
+   "solid": {
+    "kind": "extruded",
+    "sweep": "u",
+    "z0": 0.1026,
+    "z1": 0.396
+   }
+  }
+ },
+ {
+  "op": "extrude",
+  "scale": "200",
+  "id": "neck",
+  "bone": "neck",
+  "view": "front",
+  "span": "full"
+ },
+ {
+  "op": "extrude",
+  "scale": "200",
+  "id": "neck",
+  "bone": "neck",
+  "view": "plan",
+  "span": "full"
+ },
+ {
+  "op": "set",
+  "scale": "200",
+  "view": "front",
+  "id": "shirt",
+  "bone": "torso",
+  "why": "result of the candidate mr-front-extrude-plan of auto.py",
+  "set": {
+   "kind": "poly",
+   "points": [
+    [
+     -0.0309,
+     0.1261
+    ],
+    [
+     0.003,
+     0.1598
+    ],
+    [
+     0.286,
+     0.1898
+    ],
+    [
+     0.3405,
+     0.0749
+    ],
+    [
+     0.3405,
+     -0.0754
+    ],
+    [
+     0.2822,
+     -0.193
+    ],
+    [
+     0.003,
+     -0.1593
+    ],
+    [
+     -0.0309,
+     -0.1304
+    ]
+   ],
+   "closed": true,
+   "x": null,
+   "y": null,
+   "w": null,
+   "h": null,
+   "x0": null,
+   "y0": null,
+   "x1": null,
+   "y1": null,
+   "r0": null,
+   "r1": null,
+   "r": null,
+   "cx": null,
+   "cy": null,
+   "rx": null,
+   "ry": null,
+   "d": null,
+   "followTip": null,
+   "solid": {
+    "kind": "extruded",
+    "sweep": "v",
+    "z0": -0.1403,
+    "z1": 0.0477,
+    "zTip": [
+     -0.058,
+     0.064
+    ]
+   }
+  }
+ },
+ {
+  "op": "set",
+  "scale": "200",
+  "view": "plan",
+  "id": "shirt",
+  "bone": "torso",
+  "why": "result of the candidate mr-front-extrude-plan of auto.py",
+  "set": {
+   "kind": "poly",
+   "points": [
+    [
+     -0.0309,
+     -0.1102
+    ],
+    [
+     -0.028,
+     -0.1306
+    ],
+    [
+     0.009,
+     -0.1519
+    ],
+    [
+     0.1573,
+     -0.1557
+    ],
+    [
+     0.2512,
+     -0.1368
+    ],
+    [
+     0.3405,
+     -0.058
+    ],
+    [
+     0.3386,
+     0.0629
+    ],
+    [
+     0.2536,
+     0.0889
+    ],
+    [
+     0.1849,
+     0.0925
+    ],
+    [
+     0.004,
+     0.0727
+    ],
+    [
+     -0.0305,
+     0.0489
+    ]
+   ],
+   "closed": true,
+   "x": null,
+   "y": null,
+   "w": null,
+   "h": null,
+   "x0": null,
+   "y0": null,
+   "x1": null,
+   "y1": null,
+   "r0": null,
+   "r1": null,
+   "r": null,
+   "cx": null,
+   "cy": null,
+   "rx": null,
+   "ry": null,
+   "d": null,
+   "followTip": null,
+   "solid": {
+    "kind": "extruded",
+    "sweep": "w",
+    "z0": -0.193,
+    "z1": 0.1933,
+    "zTip": [
+     -0.193,
+     0.1933
+    ]
+   }
+  }
+ },
+ {
+  "op": "sync",
+  "scale": "200",
+  "id": "shank-r",
+  "bone": "shank-r",
+  "convert": [
+   "front",
+   "plan"
+  ]
+ },
+ {
+  "op": "extrude",
+  "scale": "500",
+  "id": "thigh-l",
+  "bone": "thigh-l",
+  "view": "front",
+  "span": "full"
+ },
+ {
+  "op": "extrude",
+  "scale": "500",
+  "id": "thigh-l",
+  "bone": "thigh-l",
+  "view": "plan",
+  "span": "full"
+ },
+ {
+  "op": "sync",
+  "scale": "500",
+  "id": "shank-l",
+  "bone": "shank-l",
+  "convert": [
+   "front",
+   "plan"
+  ]
+ },
+ {
+  "op": "extrude",
+  "scale": "500",
+  "id": "shirt",
+  "bone": "torso",
+  "view": "plan",
+  "span": "full"
+ },
+ {
+  "op": "sync",
+  "scale": "500",
+  "id": "shirt",
+  "bone": "torso"
+ },
+ {
+  "op": "sync",
+  "scale": "500",
+  "id": "shank-r",
+  "bone": "shank-r",
+  "convert": [
+   "front",
+   "plan"
+  ]
+ },
+ {
+  "op": "extrude",
+  "scale": "200",
+  "id": "hand-l",
+  "bone": "hand-l",
+  "view": "front",
+  "span": "full",
+  "why": "third fixer: the left hand of 1:200 and 1:500 is one prism in the three views (the elevation outline over the width of the hand); guard OK at both scales, at 1:50 and 1:100 the same prism fails the guard (elevation 58.2 mm)"
+ },
+ {
+  "op": "copy",
+  "scale": "200",
+  "id": "hand-l",
+  "bone": "hand-l",
+  "from": "front",
+  "to": [
+   "elevation",
+   "plan"
+  ]
+ },
+ {
+  "op": "extrude",
+  "scale": "500",
+  "id": "hand-l",
+  "bone": "hand-l",
+  "view": "front",
+  "span": "full"
+ },
+ {
+  "op": "copy",
+  "scale": "500",
+  "id": "hand-l",
+  "bone": "hand-l",
+  "from": "front",
+  "to": [
+   "elevation",
+   "plan"
+  ]
+ },
+ {
+  "op": "extrude",
+  "scale": "500",
+  "id": "chair-backrest-pad",
+  "bone": "chair-backrest",
+  "view": "front",
+  "span": "full",
+  "why": "fourth fixer: the backrest pad of 1:500 is its side outline swept over its width: the flat plan did not follow the reclining chair (sync-forward 31 mm in settle-back)"
+ },
+ {
+  "op": "extrude",
+  "scale": "500",
+  "id": "chair-backrest-pad",
+  "bone": "chair-backrest",
+  "view": "plan",
+  "span": "full"
+ },
+ {
+  "op": "extrude",
+  "scale": "100",
+  "id": "chair-backrest-pad",
+  "bone": "chair-backrest",
+  "view": "plan",
+  "span": "full"
+ },
+ {
+  "op": "add",
+  "scale": "50",
+  "view": "elevation",
+  "id": "fingers-proximal-l",
+  "why": "fourth fixer: the fingers of the left hand as the merged lofts of the 1:100 body: the plate of the hand drew them, the loft of the hand bone does not",
+  "shape": {
+   "id": "fingers-proximal-l",
+   "kind": "loft",
+   "bone": "middle-proximal-l",
+   "role": "body",
+   "z": 4,
+   "filled": true,
+   "tone": 0.74,
+   "region": "hand-skin",
+   "material": "skin",
+   "sections": [
+    {
+     "at": [
+      -0.008,
+      0,
+      0.0095
+     ],
+     "rx": 0.041,
+     "ry": 0.0095,
+     "rotation": [
+      0,
+      -0.70711,
+      0,
+      0.70711
+     ],
+     "exponent": 2.8
+    },
+    {
+     "at": [
+      0,
+      0,
+      0.0095
+     ],
+     "rx": 0.041,
+     "ry": 0.0095,
+     "rotation": [
+      0,
+      -0.70711,
+      0,
+      0.70711
+     ],
+     "exponent": 2.8
+    },
+    {
+     "at": [
+      0.045,
+      0,
+      0.0095
+     ],
+     "rx": 0.04,
+     "ry": 0.009,
+     "rotation": [
+      0,
+      -0.70711,
+      0,
+      0.70711
+     ],
+     "exponent": 2.8
+    },
+    {
+     "at": [
+      0.051,
+      0,
+      0.0095
+     ],
+     "rx": 0.04,
+     "ry": 0.009,
+     "rotation": [
+      0,
+      -0.70711,
+      0,
+      0.70711
+     ],
+     "exponent": 2.8
+    }
+   ]
+  }
+ },
+ {
+  "op": "add",
+  "scale": "50",
+  "view": "front",
+  "id": "fingers-proximal-l",
+  "why": "fourth fixer: the fingers of the left hand as the merged lofts of the 1:100 body: the plate of the hand drew them, the loft of the hand bone does not",
+  "shape": {
+   "id": "fingers-proximal-l",
+   "kind": "loft",
+   "bone": "middle-proximal-l",
+   "role": "body",
+   "z": 9.5,
+   "filled": true,
+   "tone": 0.74,
+   "region": "hand-skin",
+   "material": "skin",
+   "sections": [
+    {
+     "at": [
+      -0.008,
+      0,
+      0.0095
+     ],
+     "rx": 0.041,
+     "ry": 0.0095,
+     "rotation": [
+      0,
+      -0.70711,
+      0,
+      0.70711
+     ],
+     "exponent": 2.8
+    },
+    {
+     "at": [
+      0,
+      0,
+      0.0095
+     ],
+     "rx": 0.041,
+     "ry": 0.0095,
+     "rotation": [
+      0,
+      -0.70711,
+      0,
+      0.70711
+     ],
+     "exponent": 2.8
+    },
+    {
+     "at": [
+      0.045,
+      0,
+      0.0095
+     ],
+     "rx": 0.04,
+     "ry": 0.009,
+     "rotation": [
+      0,
+      -0.70711,
+      0,
+      0.70711
+     ],
+     "exponent": 2.8
+    },
+    {
+     "at": [
+      0.051,
+      0,
+      0.0095
+     ],
+     "rx": 0.04,
+     "ry": 0.009,
+     "rotation": [
+      0,
+      -0.70711,
+      0,
+      0.70711
+     ],
+     "exponent": 2.8
+    }
+   ]
+  }
+ },
+ {
+  "op": "add",
+  "scale": "50",
+  "view": "plan",
+  "id": "fingers-proximal-l",
+  "why": "fourth fixer: the fingers of the left hand as the merged lofts of the 1:100 body: the plate of the hand drew them, the loft of the hand bone does not",
+  "shape": {
+   "id": "fingers-proximal-l",
+   "kind": "loft",
+   "bone": "middle-proximal-l",
+   "role": "body",
+   "z": 8.6,
+   "filled": true,
+   "tone": 0.74,
+   "region": "hand-skin",
+   "material": "skin",
+   "sections": [
+    {
+     "at": [
+      -0.008,
+      0,
+      0.0095
+     ],
+     "rx": 0.041,
+     "ry": 0.0095,
+     "rotation": [
+      0,
+      -0.70711,
+      0,
+      0.70711
+     ],
+     "exponent": 2.8
+    },
+    {
+     "at": [
+      0,
+      0,
+      0.0095
+     ],
+     "rx": 0.041,
+     "ry": 0.0095,
+     "rotation": [
+      0,
+      -0.70711,
+      0,
+      0.70711
+     ],
+     "exponent": 2.8
+    },
+    {
+     "at": [
+      0.045,
+      0,
+      0.0095
+     ],
+     "rx": 0.04,
+     "ry": 0.009,
+     "rotation": [
+      0,
+      -0.70711,
+      0,
+      0.70711
+     ],
+     "exponent": 2.8
+    },
+    {
+     "at": [
+      0.051,
+      0,
+      0.0095
+     ],
+     "rx": 0.04,
+     "ry": 0.009,
+     "rotation": [
+      0,
+      -0.70711,
+      0,
+      0.70711
+     ],
+     "exponent": 2.8
+    }
+   ]
+  }
+ },
+ {
+  "op": "add",
+  "scale": "50",
+  "view": "elevation",
+  "id": "fingers-middle-l",
+  "why": "fourth fixer: the fingers of the left hand as the merged lofts of the 1:100 body: the plate of the hand drew them, the loft of the hand bone does not",
+  "shape": {
+   "id": "fingers-middle-l",
+   "kind": "loft",
+   "bone": "middle-middle-l",
+   "role": "body",
+   "z": 4,
+   "filled": true,
+   "tone": 0.74,
+   "region": "hand-skin",
+   "material": "skin",
+   "sections": [
+    {
+     "at": [
+      -0.008,
+      0,
+      0.0095
+     ],
+     "rx": 0.04,
+     "ry": 0.009,
+     "rotation": [
+      0,
+      -0.70711,
+      0,
+      0.70711
+     ],
+     "exponent": 2.8
+    },
+    {
+     "at": [
+      0,
+      0,
+      0.0095
+     ],
+     "rx": 0.04,
+     "ry": 0.009,
+     "rotation": [
+      0,
+      -0.70711,
+      0,
+      0.70711
+     ],
+     "exponent": 2.8
+    },
+    {
+     "at": [
+      0.027,
+      0,
+      0.0095
+     ],
+     "rx": 0.038,
+     "ry": 0.0085,
+     "rotation": [
+      0,
+      -0.70711,
+      0,
+      0.70711
+     ],
+     "exponent": 2.8
+    },
+    {
+     "at": [
+      0.033,
+      0,
+      0.0095
+     ],
+     "rx": 0.038,
+     "ry": 0.0085,
+     "rotation": [
+      0,
+      -0.70711,
+      0,
+      0.70711
+     ],
+     "exponent": 2.8
+    }
+   ]
+  }
+ },
+ {
+  "op": "add",
+  "scale": "50",
+  "view": "front",
+  "id": "fingers-middle-l",
+  "why": "fourth fixer: the fingers of the left hand as the merged lofts of the 1:100 body: the plate of the hand drew them, the loft of the hand bone does not",
+  "shape": {
+   "id": "fingers-middle-l",
+   "kind": "loft",
+   "bone": "middle-middle-l",
+   "role": "body",
+   "z": 9.5,
+   "filled": true,
+   "tone": 0.74,
+   "region": "hand-skin",
+   "material": "skin",
+   "sections": [
+    {
+     "at": [
+      -0.008,
+      0,
+      0.0095
+     ],
+     "rx": 0.04,
+     "ry": 0.009,
+     "rotation": [
+      0,
+      -0.70711,
+      0,
+      0.70711
+     ],
+     "exponent": 2.8
+    },
+    {
+     "at": [
+      0,
+      0,
+      0.0095
+     ],
+     "rx": 0.04,
+     "ry": 0.009,
+     "rotation": [
+      0,
+      -0.70711,
+      0,
+      0.70711
+     ],
+     "exponent": 2.8
+    },
+    {
+     "at": [
+      0.027,
+      0,
+      0.0095
+     ],
+     "rx": 0.038,
+     "ry": 0.0085,
+     "rotation": [
+      0,
+      -0.70711,
+      0,
+      0.70711
+     ],
+     "exponent": 2.8
+    },
+    {
+     "at": [
+      0.033,
+      0,
+      0.0095
+     ],
+     "rx": 0.038,
+     "ry": 0.0085,
+     "rotation": [
+      0,
+      -0.70711,
+      0,
+      0.70711
+     ],
+     "exponent": 2.8
+    }
+   ]
+  }
+ },
+ {
+  "op": "add",
+  "scale": "50",
+  "view": "plan",
+  "id": "fingers-middle-l",
+  "why": "fourth fixer: the fingers of the left hand as the merged lofts of the 1:100 body: the plate of the hand drew them, the loft of the hand bone does not",
+  "shape": {
+   "id": "fingers-middle-l",
+   "kind": "loft",
+   "bone": "middle-middle-l",
+   "role": "body",
+   "z": 8.6,
+   "filled": true,
+   "tone": 0.74,
+   "region": "hand-skin",
+   "material": "skin",
+   "sections": [
+    {
+     "at": [
+      -0.008,
+      0,
+      0.0095
+     ],
+     "rx": 0.04,
+     "ry": 0.009,
+     "rotation": [
+      0,
+      -0.70711,
+      0,
+      0.70711
+     ],
+     "exponent": 2.8
+    },
+    {
+     "at": [
+      0,
+      0,
+      0.0095
+     ],
+     "rx": 0.04,
+     "ry": 0.009,
+     "rotation": [
+      0,
+      -0.70711,
+      0,
+      0.70711
+     ],
+     "exponent": 2.8
+    },
+    {
+     "at": [
+      0.027,
+      0,
+      0.0095
+     ],
+     "rx": 0.038,
+     "ry": 0.0085,
+     "rotation": [
+      0,
+      -0.70711,
+      0,
+      0.70711
+     ],
+     "exponent": 2.8
+    },
+    {
+     "at": [
+      0.033,
+      0,
+      0.0095
+     ],
+     "rx": 0.038,
+     "ry": 0.0085,
+     "rotation": [
+      0,
+      -0.70711,
+      0,
+      0.70711
+     ],
+     "exponent": 2.8
+    }
+   ]
+  }
+ },
+ {
+  "op": "add",
+  "scale": "50",
+  "view": "elevation",
+  "id": "fingers-distal-l",
+  "why": "fourth fixer: the fingers of the left hand as the merged lofts of the 1:100 body: the plate of the hand drew them, the loft of the hand bone does not",
+  "shape": {
+   "id": "fingers-distal-l",
+   "kind": "loft",
+   "bone": "middle-distal-l",
+   "role": "body",
+   "z": 4,
+   "filled": true,
+   "tone": 0.74,
+   "region": "hand-skin",
+   "material": "skin",
+   "sections": [
+    {
+     "at": [
+      -0.008,
+      0,
+      0.0095
+     ],
+     "rx": 0.038,
+     "ry": 0.0085,
+     "rotation": [
+      0,
+      -0.70711,
+      0,
+      0.70711
+     ],
+     "exponent": 2.8
+    },
+    {
+     "at": [
+      0,
+      0,
+      0.0095
+     ],
+     "rx": 0.038,
+     "ry": 0.0085,
+     "rotation": [
+      0,
+      -0.70711,
+      0,
+      0.70711
+     ],
+     "exponent": 2.8
+    },
+    {
+     "at": [
+      0.015,
+      0,
+      0.0095
+     ],
+     "rx": 0.034,
+     "ry": 0.008,
+     "rotation": [
+      0,
+      -0.70711,
+      0,
+      0.70711
+     ],
+     "exponent": 2.8
+    },
+    {
+     "at": [
+      0.021,
+      0,
+      0.0095
+     ],
+     "rx": 0.0272,
+     "ry": 0.008,
+     "rotation": [
+      0,
+      -0.70711,
+      0,
+      0.70711
+     ],
+     "exponent": 2.8
+    }
+   ]
+  }
+ },
+ {
+  "op": "add",
+  "scale": "50",
+  "view": "front",
+  "id": "fingers-distal-l",
+  "why": "fourth fixer: the fingers of the left hand as the merged lofts of the 1:100 body: the plate of the hand drew them, the loft of the hand bone does not",
+  "shape": {
+   "id": "fingers-distal-l",
+   "kind": "loft",
+   "bone": "middle-distal-l",
+   "role": "body",
+   "z": 9.5,
+   "filled": true,
+   "tone": 0.74,
+   "region": "hand-skin",
+   "material": "skin",
+   "sections": [
+    {
+     "at": [
+      -0.008,
+      0,
+      0.0095
+     ],
+     "rx": 0.038,
+     "ry": 0.0085,
+     "rotation": [
+      0,
+      -0.70711,
+      0,
+      0.70711
+     ],
+     "exponent": 2.8
+    },
+    {
+     "at": [
+      0,
+      0,
+      0.0095
+     ],
+     "rx": 0.038,
+     "ry": 0.0085,
+     "rotation": [
+      0,
+      -0.70711,
+      0,
+      0.70711
+     ],
+     "exponent": 2.8
+    },
+    {
+     "at": [
+      0.015,
+      0,
+      0.0095
+     ],
+     "rx": 0.034,
+     "ry": 0.008,
+     "rotation": [
+      0,
+      -0.70711,
+      0,
+      0.70711
+     ],
+     "exponent": 2.8
+    },
+    {
+     "at": [
+      0.021,
+      0,
+      0.0095
+     ],
+     "rx": 0.0272,
+     "ry": 0.008,
+     "rotation": [
+      0,
+      -0.70711,
+      0,
+      0.70711
+     ],
+     "exponent": 2.8
+    }
+   ]
+  }
+ },
+ {
+  "op": "add",
+  "scale": "50",
+  "view": "plan",
+  "id": "fingers-distal-l",
+  "why": "fourth fixer: the fingers of the left hand as the merged lofts of the 1:100 body: the plate of the hand drew them, the loft of the hand bone does not",
+  "shape": {
+   "id": "fingers-distal-l",
+   "kind": "loft",
+   "bone": "middle-distal-l",
+   "role": "body",
+   "z": 8.6,
+   "filled": true,
+   "tone": 0.74,
+   "region": "hand-skin",
+   "material": "skin",
+   "sections": [
+    {
+     "at": [
+      -0.008,
+      0,
+      0.0095
+     ],
+     "rx": 0.038,
+     "ry": 0.0085,
+     "rotation": [
+      0,
+      -0.70711,
+      0,
+      0.70711
+     ],
+     "exponent": 2.8
+    },
+    {
+     "at": [
+      0,
+      0,
+      0.0095
+     ],
+     "rx": 0.038,
+     "ry": 0.0085,
+     "rotation": [
+      0,
+      -0.70711,
+      0,
+      0.70711
+     ],
+     "exponent": 2.8
+    },
+    {
+     "at": [
+      0.015,
+      0,
+      0.0095
+     ],
+     "rx": 0.034,
+     "ry": 0.008,
+     "rotation": [
+      0,
+      -0.70711,
+      0,
+      0.70711
+     ],
+     "exponent": 2.8
+    },
+    {
+     "at": [
+      0.021,
+      0,
+      0.0095
+     ],
+     "rx": 0.0272,
+     "ry": 0.008,
+     "rotation": [
+      0,
+      -0.70711,
+      0,
+      0.70711
+     ],
+     "exponent": 2.8
+    }
+   ]
+  }
+ }
+]

@@ -13,15 +13,69 @@
       "de": "Ein 74-jähriger Freilichtmaler von 1,65 m in Tweedjacke, Schiebermütze und Brille steht leicht gebeugt an einer 1,86 m hohen A-Staffelei aus Buche: eine Leinwand von 50 × 60 cm auf der Ablage, ein flacher Borstenpinsel in der rechten Hand und eine Palette mit Farbe am linken Daumen, bei etwa 1,6 met im Freien. Posen für einen Pinselstrich auf der Leinwand, das Mischen auf der Palette und den prüfenden Blick; eine Schleife aus Pinselstrichen und eine Atemschleife."
     },
     "tags": [
-      "human",
-      "adult",
-      "elderly",
-      "standing",
-      "culture",
-      "painting",
-      "easel",
-      "plein-air",
-      "public-space"
+      {
+        "id": "human",
+        "title": {
+          "en": "human",
+          "de": "Mensch"
+        }
+      },
+      {
+        "id": "adult",
+        "title": {
+          "en": "adult",
+          "de": "erwachsen"
+        }
+      },
+      {
+        "id": "elderly",
+        "title": {
+          "en": "elderly",
+          "de": "ältere Person"
+        }
+      },
+      {
+        "id": "standing",
+        "title": {
+          "en": "standing",
+          "de": "Stehen"
+        }
+      },
+      {
+        "id": "culture",
+        "title": {
+          "en": "culture",
+          "de": "Kultur"
+        }
+      },
+      {
+        "id": "painting",
+        "title": {
+          "en": "painting",
+          "de": "Malen"
+        }
+      },
+      {
+        "id": "easel",
+        "title": {
+          "en": "easel",
+          "de": "Staffelei"
+        }
+      },
+      {
+        "id": "plein-air",
+        "title": {
+          "en": "plein air",
+          "de": "Freilichtmalerei"
+        }
+      },
+      {
+        "id": "public-space",
+        "title": {
+          "en": "public space",
+          "de": "öffentlicher Raum"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage human worker HW-12",

@@ -38,6 +38,44 @@
         "preparedActorImage": "📦️actor.semio",
         "maximumPreparedActorBytes": 536870912
       }
+    },
+    "MissingModel": {
+      "description": "🕳️ How the native child names a plugin whose component model the launcher has not published yet: a retryable PLUGIN_UNAVAILABLE whose `details` carry the typed cause, the plugin with its crate, and the en + de sentence a client shows (`{pluginId}` is replaced by the plugin). Between the native channel and the tool answer it travels as the `message` of a Fault whose code is `plugin.model-missing`, and every answering path merges its own context into these details instead of replacing them. The launcher's gateway reads exactly this from a relayed response and builds that model once per plugin and session.",
+      "const": {
+        "detailsKey": "missingModel",
+        "cause": "model-missing",
+        "errorCode": "PLUGIN_UNAVAILABLE",
+        "summary": {
+          "en": "Plugin `{pluginId}` has no component model yet; the launcher is preparing it, retry in a moment.",
+          "de": "Das Plugin `{pluginId}` hat noch kein Komponentenmodell; der Starter bereitet es vor, gleich erneut versuchen."
+        }
+      }
+    },
+    "MissingModelDetails": {
+      "description": "The typed cause plus whatever call context the answering tool merged in (job, artifact, kind, field, ...): only the three typed members are closed.",
+      "type": "object",
+      "required": ["cause", "missingModel", "summary"],
+      "properties": {
+        "cause": { "const": "model-missing" },
+        "missingModel": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["pluginId", "cratePath"],
+          "properties": {
+            "pluginId": { "type": "string", "maxLength": 64, "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+            "cratePath": { "type": "string", "minLength": 1, "maxLength": 256 }
+          }
+        },
+        "summary": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["en", "de"],
+          "properties": {
+            "en": { "type": "string", "minLength": 1 },
+            "de": { "type": "string", "minLength": 1 }
+          }
+        }
+      }
     }
   }
 }

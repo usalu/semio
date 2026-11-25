@@ -6,6 +6,6 @@ out="$GEN/$1"; shift; mkdir -p "$out"
 list=("$@"); (( $# == 0 )) && list=($IDS)
 for a in $list; do
   name="${${a:t}%.json}"
-  (cd "$T" && timeout 1800 "$B" "$W/gate.ts" "$a" --twins --soft ${=GATE_ARGS}) > "$out/$name.log" 2>&1
+  "$W/cap.sh" 2500 3600 "$T" "$B" "$W/gate.ts" "$a" --twins --soft ${=GATE_ARGS} > "$out/$name.log" 2>&1
   echo "$name exit $? $(tail -1 "$out/$name.log")"
 done

@@ -2,7 +2,7 @@
 
 use super::cmap::PdfDirectToUnicodeCursor;
 use crate::standards::v1_7::subsets::base::io::foreign_artifacts::{artifact_reference, artifact_reference_bytes};
-use crate::standards::v1_7::subsets::base::modules::lexer::{CosGrant, CosReceipt, CosStatus};
+use crate::standards::v1_7::subsets::base::modules::lexer::{CosGrant, CosReceipt, CosStatus, grow_table, table_growth};
 use crate::standards::v1_7::subsets::base::schema::snapshot::{
     ObjRef, PdfBaseEncoding, PdfCMap, PdfCidFont, PdfCidToGid, PdfCidWidthRun, PdfDictEntry, PdfFont, PdfFontDescriptor, PdfFontKind, PdfFontProgram, PdfObject,
     PdfEncodingDifference, PdfSimpleEncoding, PdfSnapshot, PdfStreamFilter, PdfToUnicode, PdfToUnicodeMapping,
@@ -417,28 +417,40 @@ fn receipt(status: Result<CosStatus, &'static str>, work: usize) -> CosReceipt {
     CosReceipt { status, work, allocated_bytes: 0, released_bytes: 0 }
 }
 
-/// 🪟️ Coordinates one original font binding per page and owns an active embedded-font cursor.
+/// 🪟️ Coordinates the document's font owners (one slot per typed font) and owns an active embedded-font cursor.
 #[derive(Default)]
 pub struct ControlledFontResources {
-    pub owners: [ObjRef; Self::MAX_COUNT],
+    pub owners: Vec<ObjRef>,
     pending: Option<Box<PdfEmbeddedFontCursor>>,
-    embedded: [Option<FontDependencies>; Self::MAX_COUNT],
 }
 
 impl ControlledFontResources {
     pub const MAX_COUNT: usize = 32;
     pub const ROLES_PER_FONT: usize = 2;
-    pub const EXTRA_ROLES: usize = Self::ROLES_PER_FONT * Self::MAX_COUNT;
 
     /// 📏️ Reports the inline transfer reserve for the next font turn.
     pub fn inline_body_bytes(&self) -> usize {
         self.pending.as_ref().map_or(size_of::<PdfFont>(), |owner| owner.inline_body_bytes())
     }
 
-    /// 🧬️ Returns the additional native dependencies for the admitted embedded font.
-    pub fn dependencies(&self, index: usize) -> &[ObjRef] {
-        self.embedded[index].as_ref().map_or(&[], FontDependencies::owners)
+    /// 🔎️ The slot an owner was admitted under, when the document already typed it.
+    pub fn slot_of(&self, owner: ObjRef) -> Option<usize> { self.owners.iter().position(|reference| *reference == owner) }
+
+    /// 📏️ Quotes the owner-table growth for one more typed font.
+    pub fn owner_growth(&self) -> usize { table_growth(&self.owners, 1) }
+
+    /// 🪢️ Binds a font typed outside this table (the reference font builder) to the next slot after [`Self::owner_growth`] was granted.
+    pub fn bind(&mut self, owner: ObjRef) -> Option<usize> {
+        if !grow_table(&mut self.owners, 1) { return None; }
+        self.owners.push(owner);
+        Some(self.owners.len() - 1)
     }
+
+    /// 📦️ Bytes of the owner table this cursor still holds.
+    pub fn held_bytes(&self) -> usize { self.owners.capacity() * size_of::<ObjRef>() }
+
+    /// 🧺️ Releases the owner table once its [`Self::held_bytes`] were credited.
+    pub fn release(&mut self) { self.owners = Vec::new(); }
 
     /// 🧾️ Admits a new font or returns the established slot for a shared authored name.
     pub fn admit(&mut self, inspect: &mut Inspect<'_>, snapshot: &mut PdfSnapshot, owner: ObjRef, name: &str, grant: CosGrant) -> Option<CosReceipt> {
@@ -448,24 +460,22 @@ impl ControlledFontResources {
             let turn = cursor.advance(inspect, grant);
             if cursor.reference_required() { return None; }
             if !matches!(turn.status, Ok(CosStatus::Complete { .. })) { return Some(turn); }
-            if snapshot.admitted_stream_roles.len() + Self::ROLES_PER_FONT > snapshot.admitted_stream_roles.capacity() { return None; }
-            let allocated_bytes = cursor.publication_bytes(name) + font_slots(snapshot);
+            let allocated_bytes = cursor.publication_bytes(name) + table_growth(&snapshot.fonts, 1) + table_growth(&snapshot.admitted_stream_roles, Self::ROLES_PER_FONT) + table_growth(&self.owners, 1);
             let released_bytes = size_of::<PdfEmbeddedFontCursor>();
             if allocated_bytes > grant.allocation_bytes { return Some(receipt(Ok(CosStatus::NeedsAllocation { bytes: allocated_bytes }), 0)); }
             if released_bytes > grant.release_bytes { return Some(receipt(Ok(CosStatus::NeedsRelease { bytes: released_bytes }), 0)); }
-            let AdmittedEmbeddedFont { font, roles, dependencies } = cursor.take(name).expect("published embedded font resource");
+            if !grow_table(&mut snapshot.fonts, 1) || !grow_table(&mut snapshot.admitted_stream_roles, Self::ROLES_PER_FONT) || !grow_table(&mut self.owners, 1) { return Some(receipt(Err("unable to grow the PDF font tables"), 0)); }
+            let AdmittedEmbeddedFont { font, roles, .. } = cursor.take(name).expect("published embedded font resource");
             self.pending = None;
-            self.embedded[slot] = Some(dependencies);
-            reserve_font_table(snapshot);
             snapshot.fonts.push(font);
             snapshot.admitted_stream_roles.extend(roles);
-            self.owners[slot] = owner;
+            self.owners.push(owner);
             return Some(CosReceipt { allocated_bytes, released_bytes, ..receipt(Ok(CosStatus::Complete { end: slot }), 1) });
         }
-        if let Some(slot) = self.owners[..slot].iter().position(|reference| *reference == owner) {
+        if let Some(slot) = self.slot_of(owner) {
             return (snapshot.fonts[slot].id == name).then(|| receipt(Ok(CosStatus::Complete { end: slot }), 1));
         }
-        if slot == Self::MAX_COUNT || snapshot.fonts.iter().any(|font| font.id == name) { return None; }
+        if snapshot.fonts.iter().any(|font| font.id == name) { return None; }
         let mut standard = None;
         let mut embedded = None;
         inspect(owner, &mut |value| {
@@ -475,12 +485,12 @@ impl ControlledFontResources {
             }
         });
         if let Some(StandardType1 { base_font, base, differences, glyph_bytes }) = standard {
-            let allocated_bytes = name.len() + base_font.len() + font_slots(snapshot) + differences * size_of::<PdfEncodingDifference>() + glyph_bytes;
+            let allocated_bytes = name.len() + base_font.len() + table_growth(&snapshot.fonts, 1) + table_growth(&self.owners, 1) + differences * size_of::<PdfEncodingDifference>() + glyph_bytes;
             if allocated_bytes > grant.allocation_bytes { return Some(receipt(Ok(CosStatus::NeedsAllocation { bytes: allocated_bytes }), 0)); }
             let mut authored = Vec::new();
             if differences != 0 { inspect(owner, &mut |value| { authored = value.map_or_else(Vec::new, |value| encoding_differences(value, differences)); }); }
             if authored.len() != differences { return None; }
-            reserve_font_table(snapshot);
+            if !grow_table(&mut snapshot.fonts, 1) || !grow_table(&mut self.owners, 1) { return Some(receipt(Err("unable to grow the PDF font table"), 0)); }
             snapshot.fonts.push(PdfFont {
                 id: name.to_owned(),
                 kind: PdfFontKind::Type1 {
@@ -489,7 +499,7 @@ impl ControlledFontResources {
                 },
                 to_unicode: None, extra: Vec::new(),
             });
-            self.owners[slot] = owner;
+            self.owners.push(owner);
             return Some(CosReceipt { allocated_bytes, ..receipt(Ok(CosStatus::Complete { end: slot }), 1) });
         }
         let cursor = embedded?;
@@ -504,26 +514,29 @@ impl ControlledFontResources {
         if let Some(cursor) = self.pending.as_mut() { cursor.begin_close(); }
     }
 
-    /// 🧹️ Retires an unpublished font and then its outer cursor allocation.
+    /// 🧹️ Retires an unpublished font, its outer cursor allocation, then the owner table.
     pub fn close_step(&mut self, grant: CosGrant) -> CosReceipt {
-        let Some(cursor) = self.pending.as_mut() else { return receipt(Ok(CosStatus::Closed), 0); };
         if grant.work == 0 { return receipt(Ok(CosStatus::More), 0); }
-        let mut turn = cursor.close_step(grant);
-        if turn.status != Ok(CosStatus::Closed) { return turn; }
-        if turn.work != 0 { turn.status = Ok(CosStatus::More); return turn; }
-        let released_bytes = size_of::<PdfEmbeddedFontCursor>();
+        if let Some(turn) = self.retire_pending(grant) { return turn; }
+        let released_bytes = self.held_bytes();
+        if released_bytes == 0 { return receipt(Ok(CosStatus::Closed), 0); }
         if released_bytes > grant.release_bytes { return receipt(Ok(CosStatus::NeedsRelease { bytes: released_bytes }), 0); }
-        self.pending = None;
-        CosReceipt { released_bytes, ..receipt(Ok(CosStatus::Closed), 1) }
+        self.release();
+        CosReceipt { released_bytes, ..receipt(Ok(CosStatus::More), 1) }
     }
-}
 
-fn font_slots(snapshot: &PdfSnapshot) -> usize {
-    if snapshot.fonts.capacity() == 0 { ControlledFontResources::MAX_COUNT * size_of::<PdfFont>() } else { 0 }
-}
-
-fn reserve_font_table(snapshot: &mut PdfSnapshot) {
-    if snapshot.fonts.capacity() == 0 { snapshot.fonts = Vec::with_capacity(ControlledFontResources::MAX_COUNT); }
+    /// ♻️ Retires an embedded-font cursor that stopped (refused or cancelled) one unit at a time; `None` once no cursor is pending.
+    pub fn retire_pending(&mut self, grant: CosGrant) -> Option<CosReceipt> {
+        let cursor = self.pending.as_mut()?;
+        cursor.begin_close();
+        let mut turn = cursor.close_step(grant);
+        if turn.status != Ok(CosStatus::Closed) { return Some(turn); }
+        if turn.work != 0 { turn.status = Ok(CosStatus::More); return Some(turn); }
+        let released_bytes = size_of::<PdfEmbeddedFontCursor>();
+        if released_bytes > grant.release_bytes { return Some(receipt(Ok(CosStatus::NeedsRelease { bytes: released_bytes }), 0)); }
+        self.pending = None;
+        Some(CosReceipt { released_bytes, ..receipt(Ok(CosStatus::More), 1) })
+    }
 }
 
 /// 🔠️ The qualified standard Type1 font dictionary: its encoding and the exact size of its `/Differences`.

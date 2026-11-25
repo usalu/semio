@@ -35,6 +35,23 @@ struct AuditContext<'a> {
     raw_input: &'a serde_json::Value,
 }
 
+/// 🧭️ A directly exposed gateway tool has no artifact channel behind it: preparing it would route its baseline read to
+/// whichever plugin happens to be first. The refusal names the tool to call directly and involves no plugin.
+fn require_artifact_routable(capability: &CapabilityDefinition) -> Result<(), GatewayError> {
+    let (semio_os_mcp_catalog::catalog::CapabilityOwner::Gateway, semio_os_mcp_catalog::catalog::ToolExposure::Direct { tool_name }) = (&capability.owner, &capability.exposure) else {
+        return Ok(());
+    };
+    let id = capability.id.as_str();
+    Err(GatewayError::new(GatewayErrorCode::InputInvalid, format!("`{id}` is a gateway tool, not an artifact action — call `{tool_name}` directly instead of action_prepare/action_invoke")).with_details(serde_json::json!({
+        "capabilityId": id,
+        "tool": tool_name,
+        "remedy": {
+            "en": "Call the named gateway tool directly; action_prepare and action_invoke only run plugin-owned artifact actions.",
+            "de": "Das genannte Gateway-Werkzeug direkt aufrufen; action_prepare und action_invoke führen nur Artefakt-Aktionen von Plugins aus.",
+        },
+    })))
+}
+
 /// 🎬️ The mutation protocol's home — `📋️master.md` §3.3's Observe→Prepare→Preview→Approve→
 /// Commit→Verify→Undo/Redo lifecycle, over an [`ArtifactChannel`]. One adapter is shared (behind
 /// `Arc`) across every tool call in a process, matching P1b's own "one shared `McpServer`" model
@@ -260,6 +277,11 @@ impl ActionAdapter {
                 return Err(error);
             }
         };
+
+        if let Err(error) = require_artifact_routable(capability) {
+            self.record_audit(AuditContext { invocation_id: &invocation_id, principal, session, capability_id, raw_input: &input }, AuditDecision::Denied { code: error.code }, None, None, "not_actionable", Some(error.clone()), None, now_ms);
+            return Err(error);
+        }
 
         let input = declared_effective_input(capability, input);
         if let Ok(validator) = compile_validator(&capability.input_schema) {

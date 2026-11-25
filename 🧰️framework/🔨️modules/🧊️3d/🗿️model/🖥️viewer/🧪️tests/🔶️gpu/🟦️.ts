@@ -1,4 +1,5 @@
 /** 🔶️ Real WebGL2: bundles the browser harness, renders the rig with the WebGL2 backend in headless Chromium (Playwright, a test-only dependency; SwiftShader when no GPU) and compares every frame with the software rasteriser; also loses and restores the context. Skipped when no browser can be launched. */
+import { launchChromium } from "../../../../../🖱️ui/🧪️tests/🌐️chromium-launch/🟦️.ts";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
@@ -10,8 +11,7 @@ describe("webgl2 on a real browser", () => {
   it("agrees with the software rasteriser in coverage and colour and recovers from context loss", async (ctx) => {
     let browser: import("playwright").Browser | null = null;
     try {
-      const { chromium } = await import("playwright");
-      browser = await chromium.launch({ args: ["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] });
+      browser = await launchChromium({ args: ["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] });
     } catch {
       return ctx.skip("Playwright cannot launch Chromium on this host (browser binaries not installed), so the real WebGL2 path is not exercised");
     }

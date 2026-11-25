@@ -1,0 +1,12 @@
+{
+  "view": {
+    "activeModeId": "generate",
+    "activeWindowKindId": "procedural-main",
+    "focusedWindowId": "generation3d-generations",
+    "windowInstances": [
+      { "id": "procedural-main", "windowKindId": "procedural-main" },
+      { "id": "generation3d-generations", "windowKindId": "generation3d-generations" }
+    ]
+  },
+  "expected": { "windowInstanceId": "generation3d-generations", "windowKindId": "generation3d-generations" }
+}

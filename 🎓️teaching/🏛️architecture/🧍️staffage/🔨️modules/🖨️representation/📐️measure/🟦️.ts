@@ -21,6 +21,7 @@ export type PaperShape = { readonly id: string; readonly rings: readonly Ring[];
 /** 📏️ A measured gap between two shapes of one drawing. */
 export type Gap = { readonly a: string; readonly b: string; readonly gapMm: number; readonly centreMm: number; readonly at: Vec };
 
+/** 🤝️ The distance in paper millimetres under which two lines, and the inks of two shapes, touch: a join, never a gap (a tenth of a micrometre; the coordinates of a scale carry rounding of that order, so an ink gap of exactly zero is a join on every scale). */
 const TOUCH_MM = 1e-4;
 
 function segmentDistance(p: Vec, q: Vec, r: Vec, s: Vec): { readonly d: number; readonly a: Vec; readonly b: Vec } {
@@ -115,7 +116,7 @@ export function gapsBetween(shapes: readonly PaperShape[], searchMm: number): Ga
       }
       if (best <= TOUCH_MM || best > reach) continue;
       const ink = best - (a.shape.penMm + b.shape.penMm) / 2;
-      if (ink <= 0) continue;
+      if (ink <= TOUCH_MM) continue;
       gaps.push({ a: a.shape.id, b: b.shape.id, gapMm: ink, centreMm: best, at });
     }
   }

@@ -95,7 +95,8 @@ export function ButtonLink(props: { readonly href: string; readonly icon?: IconN
 /** 🎛️ One option of a segmented choice. */
 export type SegmentOption<T extends string | number> = { readonly value: T; readonly label: ReactNode; readonly title?: string; readonly name?: string; readonly icon?: IconName; readonly lang?: string; readonly unavailable?: string };
 
-/** 🎛️ A radio group drawn as segments of one shared-border row: arrow keys move and select, the selected segment is the only tab stop. Its label is a cell above the segments unless `hideLabel` makes it screen-reader only. */
+/** 🎛️ A radio group drawn as segments of one shared-border row: arrow keys move and select, the selected segment is the only tab stop. Its label is a cell above the segments unless `hideLabel` makes it screen-reader only.
+ * A segment is never narrower than its label: segments that do not fit side by side break into further lines of the same row, and only a label wider than the whole row breaks inside its segment. */
 export function Segmented<T extends string | number>(props: { readonly label: string; readonly options: readonly SegmentOption<T>[]; readonly value: T | null; readonly onChange: (value: T) => void; readonly className?: string; readonly hideLabel?: boolean; readonly inline?: boolean; readonly data?: Readonly<Record<`data-${string}`, string>> }): ReactElement {
   const { label, options, value, onChange, className, hideLabel, inline, data } = props;
   const id = useId();
@@ -110,7 +111,7 @@ export function Segmented<T extends string | number>(props: { readonly label: st
     if (options[next]!.unavailable === undefined) onChange(options[next]!.value);
   };
   const group = (
-    <SharedBorderRow role="radiogroup" {...(hideLabel ? { "aria-label": label, ...data } : { "aria-labelledby": id })} className={cn("max-w-full", hideLabel ? className : inline ? "flex-1" : "w-full")}>
+    <SharedBorderRow wrap role="radiogroup" {...(hideLabel ? { "aria-label": label, ...data } : { "aria-labelledby": id })} className={cn("max-w-full", hideLabel ? className : inline ? "flex-1" : "w-full")}>
       {options.map((option, index) => (
         <button
           key={option.value}
@@ -126,7 +127,7 @@ export function Segmented<T extends string | number>(props: { readonly label: st
           data-shared-border-cell=""
           onKeyDown={(event) => move(event, index)}
           onClick={() => option.unavailable === undefined && onChange(option.value)}
-          className={cn("inline-flex min-h-6 min-w-0 items-center justify-center gap-single border-0 px-double py-single text-xs font-medium transition-colors motion-reduce:transition-none", !hideLabel && "flex-1", option.value === value ? "bg-active-base text-active-foreground" : "bg-panel text-foreground hover:bg-hover-panel", option.unavailable !== undefined && "cursor-not-allowed opacity-65")}
+          className={cn("inline-flex min-h-6 max-w-full shrink-0 basis-auto items-center justify-center gap-single border-0 px-double py-single text-xs font-medium transition-colors motion-reduce:transition-none", hideLabel ? "grow-0" : "grow", option.value === value ? "bg-active-base text-active-foreground" : "bg-panel text-foreground hover:bg-hover-panel", option.unavailable !== undefined && "cursor-not-allowed opacity-65")}
         >
           {option.icon === undefined ? null : <Icon icon={option.icon} size="small" className="shrink-0" />}
           {option.label}

@@ -42,6 +42,11 @@ export async function testDemonstratorBrowserCatalog(workspace: string): Promise
   for (const pane of fixture.panes) assert.ok(composed.catalog.playgrounds.some((row: any) => row.variant === pane.runtimeVariant));
   assert.throws(() => composeSpecificOsCatalogV1(fixture.admission.baseUrl, { ...control, maxRows: fixture.admission.rejectedMaxRows }), /plugin-catalog-invalid: row (count|credits)/);
   const catalog = await import(pathToFileURL(join(directory, "🟦️.ts")).href), build = require("esbuild").build;
+  const { EXTENSION_TARGETS } = await import(pathToFileURL(join(workspace, "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🧩️plugins/🟦️.ts")).href);
+  const knownExtensions: string[] = EXTENSION_TARGETS.map((row: any) => row.pluginId);
+  assert.ok(fixture.withheldExtensions.every((id: string) => knownExtensions.includes(id)), "Every withheld extension must be a known extension id");
+  const shipped = new Set<unknown>(catalog.demonstratorShippedComponents(EXTENSION_TARGETS));
+  assert.deepEqual(EXTENSION_TARGETS.filter((row: any) => !shipped.has(row)).map((row: any) => row.pluginId).sort(), [...fixture.withheldExtensions].sort(), "demonstratorShippedComponents must drop exactly the withheld extensions");
   const browser = await build({ entryPoints: [join(directory, "🟦️.ts")], absWorkingDir: root, bundle: true, write: false, platform: "browser", format: "iife", globalName: "DemonstratorCatalog", metafile: true, logLevel: "silent" });
   const normalizedInputs = (metafile: any): string[] => Object.keys(metafile.inputs).map(path => relative(root, join(root, path)).replaceAll("\\", "/")).sort();
   assert.deepEqual(normalizedInputs(browser.metafile), [...fixture.catalogInputs].sort());

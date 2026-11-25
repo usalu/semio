@@ -150,6 +150,21 @@ fn acadrust_reads_what_this_subset_writes() {
 }
 
 #[test]
+fn acadrust_reads_the_stepped_writer_of_the_committed_autocad_drawing() {
+    let case: serde_json::Value = serde_json::from_slice(include_bytes!("../🧫️fixtures/🧵️write-cursor/🔣️.json")).unwrap();
+    let architectural = fixture("../../../../🖼️assets/🏛️architectural/🏛️architectural.dwg");
+    let drawing = dwg_from_bytes(&architectural).expect("this subset reads the DWG");
+    let mut cursor = DwgWriteCursor::new(drawing.clone());
+    let bytes = loop {
+        if let DwgWriteStep::Complete(bytes) = cursor.step().expect("the cursor writes") { break bytes; }
+    };
+    assert_eq!(&bytes[..6], b"AC1024");
+    assert_eq!(ours(&drawing).len() as u64, case["oracleEntityCount"].as_u64().unwrap());
+    assert_eq!(theirs(&acadrust_read(&bytes)), ours(&drawing));
+    assert_eq!(ours(&drawing), theirs(&acadrust_read(&architectural)));
+}
+
+#[test]
 fn this_subset_reads_what_acadrust_writes() {
     use semio_s_artifact_stdio_dwg_read::standards::v_ac1024::subsets::any::io::import::{DwgDrawingRead, DwgDrawingReadStep};
     use acadrust::entities::{Arc, Circle, Ellipse, Face3D, Line, LwPolyline, Point, PolyfaceMesh, Polyline3D, Spline, Text};

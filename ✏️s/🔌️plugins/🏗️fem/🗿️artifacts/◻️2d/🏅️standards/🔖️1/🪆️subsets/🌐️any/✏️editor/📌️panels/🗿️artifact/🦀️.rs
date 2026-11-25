@@ -12,6 +12,8 @@
 //! closes a section with a `+N` row (see `semio_plugin::TreeWindows`).
 
 use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::Fem2dInteractionSnapshot;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::FEM2D_ANALYSIS_ID;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::FEM2D_GRANULARITY_ANALYSIS;
 use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::FEM2D_GRANULARITY_COMBINATION;
 use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::FEM2D_GRANULARITY_ELEMENT;
 use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::FEM2D_GRANULARITY_LOAD;
@@ -209,13 +211,13 @@ pub fn fem2d_analysis_description(document: &Fem2dSnapshot, labels: &Fem2dLabels
 /// one-page `UiValue` argument arena and starves every panel rendered beside the tree (the cad
 /// incident, and this ticket's first browser probe), and focus and delete live in the inspector for
 /// the same reason. A clipped label keeps a pathological name from refusing the whole render.
-fn entity_item(id: &str, granularity: &str, label: &str, description: &LabelText, icon: &str, dimmed: bool) -> UiAssemblyResult<ui::TreeItemBuilder> {
+fn entity_item(id: &str, granularity: &str, label: &str, description: &str, icon: &str, dimmed: bool) -> UiAssemblyResult<ui::TreeItemBuilder> {
     let target = if granularity == FEM2D_GRANULARITY_LOAD { id.to_string() } else { semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::fem2d_entity_target_id(granularity, id).map_err(|_| capacity_error("fem2d artifact identity admission failed"))? };
     let item = ui::tree_item(UiLabel(UiText::clipped(label))).try_id(&target).map_err(|_| capacity_error("fem2d artifact row id admission failed"))?;
-    Ok(item.icon(icon_text(icon)?).description(UiText::clipped(description.as_str())).dimmed(dimmed).granularity(granularity_text(granularity)?))
+    Ok(item.icon(icon_text(icon)?).description(UiText::clipped(description)).dimmed(dimmed).granularity(granularity_text(granularity)?))
 }
 
-fn entity_row(id: &str, granularity: &str, label: &str, description: &LabelText, icon: &str, dimmed: bool) -> UiAssemblyResult<BuiltNode> {
+fn entity_row(id: &str, granularity: &str, label: &str, description: &str, icon: &str, dimmed: bool) -> UiAssemblyResult<BuiltNode> {
     entity_item(id, granularity, label, description, icon, dimmed)?.default_open(false).try_build().map_err(|_| capacity_error("fem2d artifact row admission failed"))
 }
 
@@ -272,7 +274,7 @@ pub fn build_artifact_tree(document: &Fem2dSnapshot, interaction: &Fem2dInteract
             Some(section_label(&labels.nodes, document.nodes.len())?),
             true,
             &nodes,
-            |node| entity_row(node.id.as_str(), FEM2D_GRANULARITY_NODE, &fem2d_node_label(node), &labels.node, "circle-dot", false),
+            |node| entity_row(node.id.as_str(), FEM2D_GRANULARITY_NODE, &fem2d_node_label(node), labels.node.as_str(), "circle-dot", false),
             placeholder.clone(),
         )?
         .window_section_or_placeholder(
@@ -281,7 +283,7 @@ pub fn build_artifact_tree(document: &Fem2dSnapshot, interaction: &Fem2dInteract
             Some(section_label(&labels.elements, document.elements.len())?),
             true,
             &document.elements,
-            |element| entity_row(element_id(element), FEM2D_GRANULARITY_ELEMENT, &fem2d_element_label(element, labels), &labels.element, "minus", element_is_dangling(document, element)),
+            |element| entity_row(element_id(element), FEM2D_GRANULARITY_ELEMENT, &fem2d_element_label(element, labels), labels.element.as_str(), "minus", element_is_dangling(document, element)),
             placeholder.clone(),
         )?
         .window_section_or_placeholder(
@@ -292,7 +294,7 @@ pub fn build_artifact_tree(document: &Fem2dSnapshot, interaction: &Fem2dInteract
             &document.regions,
             |region| {
                 let dimmed = !document.materials.iter().any(|material| material.id.as_str() == region.material_id.as_str());
-                entity_row(&region.id, FEM2D_GRANULARITY_REGION, &fem2d_region_label(region, labels), &labels.region, "square", dimmed)
+                entity_row(&region.id, FEM2D_GRANULARITY_REGION, &fem2d_region_label(region, labels), labels.region.as_str(), "square", dimmed)
             },
             placeholder.clone(),
         )?
@@ -302,7 +304,7 @@ pub fn build_artifact_tree(document: &Fem2dSnapshot, interaction: &Fem2dInteract
             Some(section_label(&labels.supports, document.supports.len())?),
             true,
             &document.supports,
-            |support| entity_row(&support.id, FEM2D_GRANULARITY_SUPPORT, &fem2d_support_label(support, labels), &labels.support, "anchor", !has_node(document, &support.node_id)),
+            |support| entity_row(&support.id, FEM2D_GRANULARITY_SUPPORT, &fem2d_support_label(support, labels), labels.support.as_str(), "triangle", !has_node(document, &support.node_id)),
             placeholder.clone(),
         )?
         .window_section_or_placeholder(
@@ -313,10 +315,10 @@ pub fn build_artifact_tree(document: &Fem2dSnapshot, interaction: &Fem2dInteract
             &document.load_cases,
             |case| {
                 let dimmed = case.loads.is_empty() && !case.self_weight;
-                let item = entity_item(&case.id, FEM2D_GRANULARITY_LOAD_CASE, &fem2d_load_case_label(case, labels), &labels.load_case, "list", dimmed)?;
+                let item = entity_item(&case.id, FEM2D_GRANULARITY_LOAD_CASE, &fem2d_load_case_label(case, labels), labels.load_case.as_str(), "list", dimmed)?;
                 let target = semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::fem2d_entity_target_id(FEM2D_GRANULARITY_LOAD_CASE, &case.id).map_err(|_| capacity_error("fem2d artifact case identity admission failed"))?;
                 tree_window_item(windows, item, &target, true, &case.loads, |load| {
-                    entity_row(&semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::fem2d_load_target_id(&case.id, load_id(load)).map_err(|_| capacity_error("fem2d artifact load identity admission failed"))?, FEM2D_GRANULARITY_LOAD, &fem2d_load_label(load, labels), &labels.load, "arrow-down", load_is_dangling(document, load))
+                    entity_row(&semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::fem2d_load_target_id(&case.id, load_id(load)).map_err(|_| capacity_error("fem2d artifact load identity admission failed"))?, FEM2D_GRANULARITY_LOAD, &fem2d_load_label(load, labels), labels.load.as_str(), "arrow-down", load_is_dangling(document, load))
                 })
             },
             placeholder.clone(),
@@ -329,7 +331,7 @@ pub fn build_artifact_tree(document: &Fem2dSnapshot, interaction: &Fem2dInteract
             &document.combinations,
             |combination| {
                 let dimmed = combination.terms.iter().any(|term| !document.load_cases.iter().any(|case| case.id == term.case_id));
-                let item = entity_item(&combination.id, FEM2D_GRANULARITY_COMBINATION, &fem2d_combination_label(combination), &labels.combination, "link", dimmed)?;
+                let item = entity_item(&combination.id, FEM2D_GRANULARITY_COMBINATION, &fem2d_combination_label(combination), labels.combination.as_str(), "link", dimmed)?;
                 let target = semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::fem2d_entity_target_id(FEM2D_GRANULARITY_COMBINATION, &combination.id).map_err(|_| capacity_error("fem2d artifact combination identity admission failed"))?;
                 tree_window_item(windows, item, &target, true, &combination.terms, |term| term_row(combination, term, labels))
             },
@@ -341,7 +343,7 @@ pub fn build_artifact_tree(document: &Fem2dSnapshot, interaction: &Fem2dInteract
             Some(section_label(&labels.materials, document.materials.len())?),
             false,
             &materials,
-            |material| entity_row(material.id.as_str(), FEM2D_GRANULARITY_MATERIAL, &fem2d_material_label(material), &labels.material, "layers", false),
+            |material| entity_row(material.id.as_str(), FEM2D_GRANULARITY_MATERIAL, &fem2d_material_label(material), labels.material.as_str(), "layers", false),
             placeholder.clone(),
         )?
         .window_section_or_placeholder(
@@ -350,12 +352,10 @@ pub fn build_artifact_tree(document: &Fem2dSnapshot, interaction: &Fem2dInteract
             Some(section_label(&labels.sections, document.sections.len())?),
             false,
             &document.sections,
-            |section| entity_row(&section.id, FEM2D_GRANULARITY_SECTION, &fem2d_section_label(section), &labels.section, "ruler", false),
+            |section| entity_row(&section.id, FEM2D_GRANULARITY_SECTION, &fem2d_section_label(section), labels.section.as_str(), "beam", false),
             placeholder,
         )?
-        .window_section(windows, &format!("{TREE_NAMESPACE}.analysis"), Some(ui_label(labels.analysis.as_str())?), false, &analysis, |description| {
-            tree_item_desc(format!("{TREE_NAMESPACE}.analysis.settings"), ui_label(labels.analysis.as_str())?, Some(description.clone()))
-        })?
+        .window_section(windows, &format!("{TREE_NAMESPACE}.analysis"), Some(ui_label(labels.analysis.as_str())?), false, &analysis, |description| entity_row(FEM2D_ANALYSIS_ID, FEM2D_GRANULARITY_ANALYSIS, labels.analysis.as_str(), description, "settings-2", false))?
         .interaction_domain(FEM2D_PLAY_CONTROLLER_ID, FEM2D_INTERACTION_DOMAIN)?
         .selected(marked_ids(&interaction.selected_ids))?
         .highlighted(marked_ids(&interaction.hovered_ids))?

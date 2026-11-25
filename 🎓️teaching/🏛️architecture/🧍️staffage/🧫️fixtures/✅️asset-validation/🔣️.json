@@ -1045,6 +1045,17 @@
       "name": "representation with an empty sections member",
       "patch": [{ "op": "replace", "path": "/representations/50/sections", "value": {} }],
       "expectCodes": ["section-empty"]
+    },
+    {
+      "name": "section label that differs between the languages",
+      "patch": [{ "op": "replace", "path": "/representations/50/sections", "value": { "front": { "plane": 0, "label": { "en": "Cross section", "de": "Querschnitt" } } } }],
+      "expectCodes": ["section-label-language"]
+    },
+    {
+      "name": "section label of letters, the same in both languages",
+      "patch": [{ "op": "replace", "path": "/representations/50/sections", "value": { "front": { "plane": 0, "label": { "en": "A-A", "de": "A-A" } } } }],
+      "expectCodes": [],
+      "expectAbsent": ["section-label-language"]
     }
   ],
   "manifest": {

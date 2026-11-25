@@ -4,6 +4,7 @@
  * - `print-<denominator>-<category>.svg`: the three views of the neutral pose at true print scale (millimetres on A3 width pages) with a one metre scale bar and the print-profile minimum stroke noted; unavailable scales print their reason.
  *
  * All sheets come from `resolveViews`, so every cell of one row is projected from one evaluated state.
+ * No sheet holds the catalog: the selection is kept as ids per category, an asset document is read for its row or block and released with it, and a print sheet keeps the markup of its drawings, not their scenes.
  *
  * @see ./🧰️.ts — the instants
  * @see ../../🔨️modules/🔭️multiview/🟦️.ts — the resolver
@@ -15,7 +16,7 @@ import type { DrawingScene, EvaluationQuery } from "../../🔨️modules/🔗️
 import { evaluate } from "../../🔨️modules/🧮️evaluation/🟦️.ts";
 import { resolveViews, type MultiView } from "../../🔨️modules/🔭️multiview/🟦️.ts";
 import { svgMarkup } from "../../🔨️modules/📤️export/🖼️svg/🟦️.ts";
-import { CATEGORY_ORDER, VIEWPOINT_LIST, clipInstants, drawOptions, loadCatalog, probeChannels, scaleSelector } from "./🧰️.ts";
+import { CATEGORY_ORDER, VIEWPOINT_LIST, clipInstants, drawOptions, loadAsset, mapCatalog, probeChannels, scaleSelector } from "./🧰️.ts";
 
 const args = process.argv.slice(2);
 const flag = (name: string): string | undefined => {
@@ -26,7 +27,7 @@ const out = resolve(flag("out") ?? ".");
 const wantedCategories = flag("categories")?.split(",");
 const wantedAssets = flag("assets")?.split(",");
 const scales = (flag("scales") ?? "500,200,100,50").split(",").map(Number);
-const assets = loadCatalog().filter((asset) => (wantedAssets === undefined || wantedAssets.includes(asset.id)) && (wantedCategories === undefined || wantedCategories.includes(asset.category)));
+const selection = mapCatalog((asset) => (wantedCategories === undefined || wantedCategories.includes(asset.category) ? { id: asset.id, category: asset.category } : undefined), wantedAssets);
 const esc = (text: string): string => text.replace(/&/gu, "&amp;").replace(/</gu, "&lt;").replace(/>/gu, "&gt;").replace(/"/gu, "&quot;");
 const num = (n: number): string => (Math.round(n * 1000) / 1000).toString();
 const VIEW_LABEL: Record<PlanarViewpoint, string> = { elevation: "side elevation", front: "front elevation", plan: "plan (top view)" };
@@ -67,7 +68,7 @@ function cellMulti(asset: Asset, query: EvaluationQuery, denominator: number): M
   }
 }
 
-function contactSheet(category: string, group: readonly Asset[]): string {
+function contactSheet(category: string, group: readonly string[]): string {
   const cellW = 52;
   const cellH = 52;
   const labelW = 44;
@@ -78,7 +79,8 @@ function contactSheet(category: string, group: readonly Asset[]): string {
   const parts: string[] = [`<rect width="${width}" height="${height}" fill="#fff"/>`];
   const heads = ["neutral", "extreme"].flatMap((moment) => VIEWPOINT_LIST.map((view) => `${moment} · ${VIEW_LABEL[view]}`));
   heads.forEach((label, i) => parts.push(text(labelW + i * (cellW + gap) + 1, 9, 2.6, label)));
-  group.forEach((asset, row) => {
+  group.forEach((id, row) => {
+    const asset = loadAsset(id)!;
     const y = headH + row * (cellH + gap);
     parts.push(text(1, y + 5, 3, asset.id), text(1, y + 9, 2.2, `${asset.dimensions.heightM} × ${asset.dimensions.widthM} × ${asset.dimensions.depthM} m`, "#666"));
     const scale = [asset.presentation.defaultScale, 100, 50, 200, 500].find((d) => asset.representations[`${d}` as keyof Asset["representations"]]?.status === "authored") ?? asset.presentation.defaultScale;
@@ -97,37 +99,38 @@ function contactSheet(category: string, group: readonly Asset[]): string {
   return `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" width="${width}mm" height="${height}mm" viewBox="0 0 ${width} ${height}"><title>${esc(category)} contact sheet</title>${parts.join("")}</svg>\n`;
 }
 
-function printSheet(category: string, denominator: number, group: readonly Asset[]): string {
+function printSheet(category: string, denominator: number, group: readonly string[]): string {
   const margin = 8;
   const k = 1000 / denominator;
-  const blocks = group.map((asset) => {
+  const blocks = group.map((id) => {
+    const asset = loadAsset(id)!;
     const decision = asset.representations[`${denominator}` as keyof Asset["representations"]];
     const multi = decision?.status === "authored" ? cellMulti(asset, neutralQuery(asset), denominator) : undefined;
-    const drawings = multi === undefined || typeof multi === "string" ? [] : VIEWPOINT_LIST.flatMap((view) => (multi.views[view].kind === "drawing" ? [{ view, scene: (multi.views[view] as { scene: DrawingScene }).scene }] : []));
-    const width = drawings.length === 0 ? 70 : drawings.reduce((sum, d) => sum + d.scene.widthMm + 4, 0);
-    const height = drawings.length === 0 ? 12 : Math.max(...drawings.map((d) => d.scene.heightMm)) + 7;
-    return { asset, decision, drawings, width, height };
+    const drawings = multi === undefined || typeof multi === "string" ? [] : VIEWPOINT_LIST.flatMap((view) => (multi.views[view].kind === "drawing" ? [(multi.views[view] as { scene: DrawingScene }).scene].map((scene) => ({ view, widthMm: scene.widthMm, heightMm: scene.heightMm, markup: svgMarkup(scene) })) : []));
+    const width = drawings.length === 0 ? 70 : drawings.reduce((sum, d) => sum + d.widthMm + 4, 0);
+    const height = drawings.length === 0 ? 12 : Math.max(...drawings.map((d) => d.heightMm)) + 7;
+    const reason = decision?.status === "unavailable" ? `1:${denominator} unavailable (${decision.cause}): ${decision.reason.en}` : "no representation";
+    return { id, reason, drawings, width, height };
   });
   const pageW = Math.max(420, ...blocks.map((block) => block.width + 2 * margin));
   const parts: string[] = [];
   let x = margin;
   let y = margin + 8;
   let rowH = 0;
-  for (const { asset, decision, drawings, width, height } of blocks) {
+  for (const { id, reason, drawings, width, height } of blocks) {
     if (x + width > pageW - margin && x > margin) {
       x = margin;
       y += rowH + 4;
       rowH = 0;
     }
-    parts.push(text(x, y + 3, 2.4, asset.id));
+    parts.push(text(x, y + 3, 2.4, id));
     if (drawings.length === 0) {
-      const reason = decision?.status === "unavailable" ? `1:${denominator} unavailable (${decision.cause}): ${decision.reason.en}` : "no representation";
       parts.push(text(x, y + 8, 2, reason.slice(0, 120), "#c00000"));
     } else {
       let dx = x;
-      for (const { view, scene } of drawings) {
-        parts.push(`<svg x="${num(dx)}" y="${num(y + 5)}" width="${num(scene.widthMm)}" height="${num(scene.heightMm)}" viewBox="0 0 ${num(scene.widthMm)} ${num(scene.heightMm)}">${svgMarkup(scene)}</svg>`, text(dx, y + 5 + scene.heightMm + 2, 1.6, view, "#666"));
-        dx += scene.widthMm + 4;
+      for (const { view, widthMm, heightMm, markup } of drawings) {
+        parts.push(`<svg x="${num(dx)}" y="${num(y + 5)}" width="${num(widthMm)}" height="${num(heightMm)}" viewBox="0 0 ${num(widthMm)} ${num(heightMm)}">${markup}</svg>`, text(dx, y + 5 + heightMm + 2, 1.6, view, "#666"));
+        dx += widthMm + 4;
       }
     }
     rowH = Math.max(rowH, height);
@@ -143,7 +146,7 @@ function printSheet(category: string, denominator: number, group: readonly Asset
 
 mkdirSync(out, { recursive: true });
 for (const category of CATEGORY_ORDER) {
-  const group = assets.filter((asset) => asset.category === category);
+  const group = selection.filter((head) => head.category === category).map((head) => head.id);
   if (group.length === 0) continue;
   console.error(`[proofs] ${category}: ${group.length} assets`);
   writeFileSync(join(out, `contact-${category}.svg`), contactSheet(category, group));

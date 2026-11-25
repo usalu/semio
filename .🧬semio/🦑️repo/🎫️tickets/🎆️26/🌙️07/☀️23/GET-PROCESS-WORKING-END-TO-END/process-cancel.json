@@ -1,0 +1,85 @@
+[
+ {
+  "name": "wait for the initial document",
+  "js": "(async()=>'w')()",
+  "until": "(async()=>String(document.querySelectorAll('canvas').length>=1&&!/Loading document/.test(document.body.innerText)&&!!document.querySelector('[role=combobox]')))()",
+  "timeoutMs": 420000,
+  "settleMs": 2000
+ },
+ {
+  "name": "install load trace",
+  "js": "(async()=>{window.__trace=[];const t0=performance.now();let last='';const tick=()=>{const m=(document.body.innerText.match(/Loading document[^\\n]*/)||[''])[0];if(m!==last){last=m;window.__trace.push([Math.round(performance.now()-t0),m])}};setInterval(tick,500);return 'ok'})()",
+  "settleMs": 200
+ },
+ {
+  "name": "reopen example select",
+  "js": "(async()=>'o')()",
+  "pointer": "(async()=>{const e=document.querySelector('[role=combobox]');const r=e.getBoundingClientRect();return JSON.stringify([r.x+r.width/2,r.y+r.height/2])})()",
+  "settleMs": 1000
+ },
+ {
+  "name": "start Concrete Forest load",
+  "js": "(async()=>'p')()",
+  "pointer": "(async()=>{const e=[...document.querySelectorAll('[role=option]')].find(e=>e.innerText.trim()==='Concrete Forest');const r=e.getBoundingClientRect();return JSON.stringify([r.x+r.width/2,r.y+r.height/2])})()",
+  "settleMs": 20000
+ },
+ {
+  "name": "state while loading",
+  "js": "(async()=>JSON.stringify([document.querySelector('[role=combobox]')?.innerText,document.querySelectorAll('canvas').length,(document.body.innerText.match(/Loading document[^\\n]*/)||[''])[0]]))()",
+  "settleMs": 300
+ },
+ {
+  "name": "load banner appears",
+  "js": "(async()=>'w')()",
+  "until": "(async()=>String(/Loading document/.test(document.body.innerText)))()",
+  "timeoutMs": 300000,
+  "settleMs": 1500
+ },
+ {
+  "name": "Cancel replay",
+  "js": "(async()=>{const b=[...document.querySelectorAll('button')].find(b=>/Cancel replay|Wiedergabe abbrechen/.test(b.innerText||b.getAttribute('aria-label')||''));if(!b)return 'no cancel button';b.click();return 'clicked'})()",
+  "settleMs": 2000
+ },
+ {
+  "name": "load stops",
+  "js": "(async()=>'w')()",
+  "until": "(async()=>String(!/Loading document/.test(document.body.innerText)))()",
+  "timeoutMs": 180000,
+  "settleMs": 3000
+ },
+ {
+  "name": "state after cancel",
+  "js": "(async()=>JSON.stringify([document.querySelector('[role=combobox]')?.innerText,document.querySelectorAll('canvas').length,(document.body.innerText.match(/Loading document[^\\n]*/)||[''])[0]]))()",
+  "settleMs": 500
+ },
+ {
+  "name": "settle 60 s",
+  "js": "(async()=>'w')()",
+  "settleMs": 60000
+ },
+ {
+  "name": "state 60 s later",
+  "js": "(async()=>JSON.stringify([document.querySelector('[role=combobox]')?.innerText,document.querySelectorAll('canvas').length,(document.body.innerText.match(/Loading document[^\\n]*/)||[''])[0]]))()",
+  "settleMs": 300
+ },
+ {
+  "name": "read trace",
+  "js": "(async()=>JSON.stringify(window.__trace))()",
+  "settleMs": 200
+ },
+ {
+  "name": "app usable: Viewer",
+  "js": "(async()=>{[...document.querySelectorAll('button')].find(b=>b.innerText.startsWith('Viewer')).click();return 'v'})()",
+  "settleMs": 8000
+ },
+ {
+  "name": "app usable: Editor",
+  "js": "(async()=>{[...document.querySelectorAll('button')].find(b=>b.innerText.startsWith('Editor')).click();return 'e'})()",
+  "settleMs": 8000
+ },
+ {
+  "name": "final state",
+  "js": "(async()=>JSON.stringify([document.querySelector('[role=combobox]')?.innerText,document.querySelectorAll('canvas').length,(document.body.innerText.match(/Loading document[^\\n]*/)||[''])[0]]))()",
+  "settleMs": 500
+ }
+]

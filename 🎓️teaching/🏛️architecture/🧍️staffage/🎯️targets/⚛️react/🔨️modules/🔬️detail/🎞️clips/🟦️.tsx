@@ -67,7 +67,7 @@ export function PosesAndClips(props: { readonly asset: Asset; readonly selection
 
 const EVENT_GLYPHS: Readonly<Record<ClipEvent["kind"], string>> = { "contact-on": "▼", "contact-off": "▲", ignition: "✦", shutdown: "■", "load-on": "⊕", "load-off": "⊖", thermal: "☼", motion: "→", operating: "⚙" };
 
-/** ⏳️ The timeline of a clip with a cursor at `timeS`; `onSeek` receives seconds. */
+/** ⏳️ The timeline of a clip with a cursor at `timeS`; `onSeek` receives seconds. The track is inset by half an event marker (`--staffage-marker`), so the marker of an event at the start or the end of the clip lies inside the page. */
 export function ClipTimeline(props: { readonly asset: Asset; readonly clip: Clip; readonly timeS: number; readonly onSeek: (timeS: number) => void }): ReactElement {
   const { asset, clip, timeS, onSeek } = props;
   const { t, language } = useArchive();
@@ -91,8 +91,8 @@ export function ClipTimeline(props: { readonly asset: Asset; readonly clip: Clip
     <Section aria-labelledby="detail-timeline" data-section="timeline">
       <SectionTitle id="detail-timeline">{t("detail.timeline.title", { clip: clip.title[language] })}</SectionTitle>
       <SharedBorderRowCell className="px-double py-single"><input type="range" aria-label={t("detail.timeline.label")} aria-describedby="detail-timeline-help" aria-valuetext={`${num(timeS, language)} s`} min={0} max={durationS} step={1 / fps} value={Math.min(Math.max(timeS, 0), durationS)} onChange={(event) => seek(Number(event.target.value))} className="min-h-6 w-full accent-[var(--accent)]" /></SharedBorderRowCell>
-      <div role="group" aria-label={t("detail.timeline.events")} data-shared-border-cell="" data-border-probe-art="" onClick={(event) => { const box = event.currentTarget.getBoundingClientRect(); if (box.width > 0 && !(event.target instanceof Element && event.target.closest("[data-event]"))) seek(((event.clientX - box.left) / box.width) * durationS); }} className="bg-panel px-double py-single">
-        <div className="relative">
+      <div role="group" aria-label={t("detail.timeline.events")} data-shared-border-cell="" data-border-probe-art="" onClick={(event) => { const box = event.currentTarget.querySelector("[data-track]")?.getBoundingClientRect(); if (box !== undefined && box.width > 0 && !(event.target instanceof Element && event.target.closest("[data-event]"))) seek(((event.clientX - box.left) / box.width) * durationS); }} className="bg-panel px-double py-single">
+        <div data-track="" className="relative mx-[calc(var(--staffage-marker)/2)]">
         <div className="relative h-6" aria-hidden="true">
           {frames <= 150 ? Array.from({ length: frames + 1 }, (_, frame) => <span key={frame} className="absolute top-0 h-1.5 border-l border-border" style={{ left: pct(frame / fps) }} />) : null}
           {seconds.map((second) => <span key={second} className="absolute top-0 h-3 border-l border-foreground/70 pl-px font-mono text-[0.65rem] text-muted-foreground" style={{ left: pct(second) }}><span className="relative top-3">{second} s</span></span>)}
@@ -100,9 +100,9 @@ export function ClipTimeline(props: { readonly asset: Asset; readonly clip: Clip
         <div className="relative mt-double h-6" data-row="phases">
           {clip.phases.map((phase) => <span key={phase.id} data-phase={phase.id} className="absolute inset-y-0 overflow-hidden border border-foreground/60 bg-muted/50 px-single text-[0.65rem] leading-6" style={{ left: pct(phase.fromS), width: `calc(${pct(phase.toS)} - ${pct(phase.fromS)})` }}>{phase.title[language]}</span>)}
         </div>
-        <div className="relative mt-single h-7" data-row="events">
+        <div className="relative mt-single h-[calc(var(--staffage-marker)+0.25rem)]" data-row="events">
           {clip.events.map((event, at) => (
-            <button key={at} type="button" data-shared-border-frame="" data-event={event.kind} aria-label={label(event)} title={label(event)} onClick={() => seek(event.t)} className="absolute top-0 min-h-6 min-w-6 -translate-x-1/2 border border-border bg-background text-xs leading-none" style={{ left: pct(event.t) }}>
+            <button key={at} type="button" data-shared-border-frame="" data-event={event.kind} aria-label={label(event)} title={label(event)} onClick={() => seek(event.t)} className="absolute top-0 min-h-[var(--staffage-marker)] min-w-[var(--staffage-marker)] -translate-x-1/2 border border-border bg-background text-xs leading-none" style={{ left: pct(event.t) }}>
               <span aria-hidden="true">{EVENT_GLYPHS[event.kind]}</span>
             </button>
           ))}

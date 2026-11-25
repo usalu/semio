@@ -10,7 +10,7 @@ const pause=milliseconds=>new Promise(accept=>setTimeout(accept,milliseconds));
 /** 🚀️ Starts the replacement process with the caller's terminal and forwards stop signals; resolves with its exit code. */
 export function launchReplacementProcessV1({execPath,args,environment}){
  return new Promise((accept,reject)=>{
-  const child=spawn(execPath,args,{stdio:"inherit",env:environment}),forwards=(process.platform==="win32"?["SIGINT","SIGTERM","SIGBREAK","SIGHUP"]:["SIGINT","SIGTERM"]).map(signal=>[signal,()=>{try{child.kill(signal);}catch{}}]);
+  const child=spawn(execPath,args,{windowsHide:true,stdio:"inherit",env:environment}),forwards=(process.platform==="win32"?["SIGINT","SIGTERM","SIGBREAK","SIGHUP"]:["SIGINT","SIGTERM"]).map(signal=>[signal,()=>{try{child.kill(signal);}catch{}}]);
   for(const[signal,forward]of forwards)process.on(signal,forward);
   const finish=()=>{for(const[signal,forward]of forwards)process.off(signal,forward);};
   child.once("error",error=>{finish();reject(error);});

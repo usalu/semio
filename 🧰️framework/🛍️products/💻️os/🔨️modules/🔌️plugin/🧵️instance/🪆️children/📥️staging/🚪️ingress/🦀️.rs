@@ -4,7 +4,7 @@
 use semio_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS;
 use semio_plugin_decl_app::ArtifactApp;
 use semio_framework_artifact_reference::{ArtifactDialect, ArtifactRef};
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_plugin_child::ChildAdmissionTestState;

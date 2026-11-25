@@ -1,6 +1,6 @@
-//! 🛂️ Demonstrator plugin manifest — its own `🎪️playground` editor/viewer surfaces (ticket
-//! 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET) plus its six foreign plugins' surface
-//! registrations (eight surfaces: four editor-only, two editor+viewer pairs).
+//! 🛂️ Demonstrator plugin manifest — its own `🎪️playground` editor/viewer surfaces plus the
+//! `sourcing` and `process` editor+viewer surface registrations (six surfaces in all). The cad,
+//! gis, puzzle and generation3d panes run on their owners' own components.
 
 use semio_plugin::__semio_dispatch_PluginApp;
 use semio_plugin::plugin_app_close_prelude::*;
@@ -9,18 +9,8 @@ use semio_plugin::declarations::{EditorSurfaceApp, ViewerSurfaceApp};
 use semio_plugin::PluginBuilder;
 use semio_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
 
-// 🎫️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET: `cad`'s W2 packet dissolved
-// `apps::cad` into `editor::cad`/`viewer::cad` (module path read off `cad`'s OWN
-// `📦️packages/🦀️rust/🦀️.rs` `pub mod` nesting, never guessed from directory layout).
-// `CadPlayApp` now implements `ArtifactEditor`, not `ArtifactApp`, and `create_cad_app()` returns
-// `AppDefinition`, not `App` — see `.editor::<…>(…)` below.
-use semio_s_artifact_cad_cad_editor::{create_cad_app, CadPlayApp};
-use semio_s_artifact_gis_gismap::editor::gis2d::{create_gis2d_app, Gis2dPlayApp};
-use semio_s_artifact_procedural_generation3d::manifest::create_generation3d_app;
-use semio_s_artifact_procedural_generation3d::Generation3dPlayApp;
 use semio_s_artifact_process_process3d_editor::{create_process3d_app, Process3dPlayApp};
 use semio_s_artifact_process_process3d_viewer::{create_process3d_viewer, Process3dViewer};
-use {semio_s_artifact_puzzle_3d_editor::create_puzzle3d_app, semio_s_artifact_puzzle_3d_editor::Puzzle3dPlayApp};
 use semio_s_artifact_sourcing_curation::editor::sourcing::{create_sourcing_curation_app, SourcingCurationApp};
 use semio_s_artifact_sourcing_curation::viewer::sourcing::{create_sourcing_viewer, SourcingViewer};
 
@@ -38,42 +28,28 @@ semio_framework_dispatch_macros::dyn_enum_close! {
     pub enum DemonstratorApps: PluginApp {
         PlaygroundEditor(EditorSurfaceApp<crate::editor::playground::PlaygroundEditor>),
         PlaygroundViewer(ViewerSurfaceApp<crate::viewer::playground::PlaygroundViewer>),
-        Generation3dEditor(EditorSurfaceApp<Generation3dPlayApp>),
-        CadEditor(EditorSurfaceApp<CadPlayApp>),
-        Puzzle3dEditor(EditorSurfaceApp<Puzzle3dPlayApp>),
         SourcingEditor(EditorSurfaceApp<SourcingCurationApp>),
         SourcingViewer(ViewerSurfaceApp<SourcingViewer>),
         ProcessEditor(EditorSurfaceApp<Process3dPlayApp>),
         ProcessViewer(ViewerSurfaceApp<Process3dViewer>),
-        GisEditor(EditorSurfaceApp<Gis2dPlayApp>),
     }
 }
 
 /// 🔌️ Builds the concrete demonstrator bundle: declares its owned playground artifact, registers
-/// its own native editor+viewer surfaces over that artifact, then registers the six foreign plugins'
-/// surfaces in their preserved order (`sourcing`/`process` each contribute an editor+viewer pair).
+/// its own native editor+viewer surfaces over that artifact, then the `sourcing` and `process`
+/// editor+viewer pairs.
 pub fn plugin() -> Result<Plugin<DemonstratorApps>, PluginAssemblyError> {
     PluginBuilder::<_, DemonstratorApps>::new(PLUGIN_ID)
         .label(PLUGIN_LABEL)
         .version(PLUGIN_VERSION)
         .package_id("semio:demonstrator")
-        .depends_on("cad", semio_framework::tree_pin!())
-        .depends_on("gis", semio_framework::tree_pin!())
-        .depends_on("procedural", semio_framework::tree_pin!())
         .depends_on("process", semio_framework::tree_pin!())
-        .depends_on("puzzle", semio_framework::tree_pin!())
         .depends_on("sourcing", semio_framework::tree_pin!())
         .artifact(crate::artifacts::playground::declaration().map_err(PluginAssemblyError::definition)?)
         .editor::<crate::editor::playground::PlaygroundEditor>(crate::editor::playground::create_playground_editor())
         .editor_mutation_roster::<crate::editor::playground::PlaygroundEditor>()
         .viewer::<crate::viewer::playground::PlaygroundViewer>(crate::viewer::playground::create_playground_viewer())
         .viewer_mutation_roster::<crate::viewer::playground::PlaygroundViewer>()
-        .editor::<Generation3dPlayApp>(create_generation3d_app())
-        .editor_mutation_roster::<Generation3dPlayApp>()
-        .editor::<CadPlayApp>(create_cad_app())
-        .editor_mutation_roster::<CadPlayApp>()
-        .editor::<Puzzle3dPlayApp>(create_puzzle3d_app())
-        .editor_mutation_roster::<Puzzle3dPlayApp>()
         .editor::<SourcingCurationApp>(create_sourcing_curation_app())
         .editor_mutation_roster::<SourcingCurationApp>()
         .viewer::<SourcingViewer>(create_sourcing_viewer())
@@ -82,12 +58,8 @@ pub fn plugin() -> Result<Plugin<DemonstratorApps>, PluginAssemblyError> {
         .editor_mutation_roster::<Process3dPlayApp>()
         .viewer::<Process3dViewer>(create_process3d_viewer())
         .viewer_mutation_roster::<Process3dViewer>()
-        .editor::<Gis2dPlayApp>(create_gis2d_app())
-        .editor_mutation_roster::<Gis2dPlayApp>()
         .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::playground::artifact_kind().id })
-        .requests(CapabilityRequest { id: CapabilityId("artifacts.write".into()), scope: "plugin".into(), reason: "persist cad, gis2d, generation3d, process3d, puzzle3d and sourcing editor edits to the open document".into(), optional: false })
-        .requests(CapabilityRequest { id: CapabilityId("ui.dialog".into()), scope: "plugin".into(), reason: "puzzle3d's add-object flow opens the addObject dialog (Effect::OpenDialog)".into(), optional: false })
-        .requests(CapabilityRequest { id: CapabilityId("shell.navigate".into()), scope: "plugin".into(), reason: "the gis2d `shell` command opens an external basemap/attribution URL (Effect::OpenExternalUrl)".into(), optional: false })
+        .requests(CapabilityRequest { id: CapabilityId("artifacts.write".into()), scope: "plugin".into(), reason: "persist process3d and sourcing editor edits to the open document".into(), optional: false })
         .try_build()
 }
 //#endregion 🔌️Plugin

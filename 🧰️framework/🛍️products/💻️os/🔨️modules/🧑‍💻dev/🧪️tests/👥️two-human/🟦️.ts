@@ -21,7 +21,7 @@ import {ensureRepositoryBrowserPathV1,prepareRepositoryBrowserV1} from "../../..
 
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { browserLaunchOptionsV1, PLAYWRIGHT_MODULE_SPECIFIER } from "../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🟦️.ts";
+import { browserLaunchOptionsV1, launchBrowserV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🟦️.ts";
 import { readMatrixPins, withDevServe } from "../🧮️program-matrix/🟦️.ts";
 import { acceptanceCheckResult, publishAcceptanceCheckResult, withAcceptanceRecord } from "@semio-tech/repo-test/acceptance/orchestration";
 import { activate, boot, clickRowAction, dialog, faultsSince, type Human, openSessions, pause, readStatus, selectOption, type Session, signIn, started, submitDialog, until, waitNamedRow, waitRow } from "./🔑️sessions/🟦️.ts";
@@ -47,9 +47,8 @@ async function runTwoHumanWithTransport(repoRoot:string,options:TwoHumanOptions,
   const browserLocale = options.locale === "de" ? "de-DE" : "en-US";
   const report: TwoHumanReport = { tag: options.tag, journey: options.journey, hub: options.hub, serves: options.serves, locale: browserLocale, startedAt: new Date().toISOString(), spaceId: options.spaceId, kinds: [], rows: [], misses: [] };
   ensureRepositoryBrowserPathV1(repoRoot,process.env);
-  const { chromium }: typeof import("playwright") = await import(PLAYWRIGHT_MODULE_SPECIFIER);
   const launch=browserLaunchOptionsV1();
-  const browser = await chromium.launch(transport?{...launch,args:[...launch.args,"--proxy-bypass-list=<-loopback>"]}:launch);
+  const browser = await launchBrowserV1(transport?{...launch,args:[...launch.args,"--proxy-bypass-list=<-loopback>"]}:launch);
   const sessions = await openSessions(browser, options.serves, options.humans, browserLocale,transport?.proxyUrl).catch(async error=>{await browser.close();throw error});
   const A = sessions[0]!;
   let B = sessions[1]!;

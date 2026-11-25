@@ -113,7 +113,7 @@ pub mod app {
     pub use semio_plugin_decl_views::{NoConfigGenesisOwner,NoDraftGenesisOwner};
     pub use crate::{MountedOwnerPhaseV1, MountedOwnerTurnV1};
     pub use super::child_emit_preparation::{ChildEmitPreparation,ChildEmitPreparationStep,OwnedChildEmit};
-    pub use semio_plugin_ownership::transient_publication::{bounded_transient_preparation_factory, cold_transient_preparation_factory, bounded_transient_root_retirement_factory, bounded_transient_store_disposer, transient_store_disposer};
+    pub use semio_plugin_transient_publication::transient_publication::{bounded_transient_preparation_factory, cold_transient_preparation_factory, bounded_transient_root_retirement_factory, bounded_transient_store_disposer, transient_store_disposer};
     pub use super::window_config::{
         WindowConfigNativePairReceiving,window_config_native_pair_demands,admit_window_config_native_pair,bounded_window_config_preparation_source_birth, bounded_window_config_preparation_factory, bounded_window_config_store_disposer,bounded_window_config_store_disposer_birth, bounded_window_config_store_owners, RejectedWindowConfigEmission, WindowConfigAuthorityIdentity, WindowConfigBorrow, WindowConfigMutation, WindowConfigOwner, WindowConfigOwnerRegistry, WindowConfigPack,
         WindowConfigPackLoad, WindowConfigPackLoadDiagnostic, WindowConfigPackLoadPhase, WindowConfigPackLoadProgress, WindowConfigPackLoadStep, WindowConfigApplyCursor, WindowConfigApplyEdit, WindowConfigApplyMutation, WindowConfigReplaceCursor, WindowConfigReplaceEdit, WindowConfigReplaceMutation, WindowConfigSnapshot,
@@ -198,7 +198,7 @@ pub mod app {
     pub use super::child_content::*;
     pub use super::document_ingress::*;
     pub use super::peer_roster::*;
-    pub use semio_plugin_ownership::store_lifecycle::*;
+    pub use semio_plugin_store_lifecycle::store_lifecycle::*;
     pub use super::store_publication::*;
     pub use super::command_history::*;
     pub use super::reserved_jobs::*;
@@ -229,6 +229,8 @@ pub mod plugin_app_close_prelude {
     pub use semio_plugin_decl_views;
     pub use semio_plugin_document_media;
     pub use semio_plugin_ownership;
+    pub use semio_plugin_store_lifecycle;
+    pub use semio_plugin_transient_publication;
     pub use semio_plugin_window_config;
     pub use semio_framework_tool_run::ToolRunTraceCursor;
     pub use semio_ui_contract::tree_item as tree_item_builder;
@@ -249,7 +251,8 @@ pub mod artifact_app_laws {
 #[doc(hidden)]
 #[cfg(any(test, feature = "artifact-app-testing"))]
 pub mod reactor_turn_laws {
-    pub use semio_plugin_reactor_turn::{command_idle_turn_limit, command_stalled, note_command_turn, poll_kernel, retained_command_ingress_occupancy, set_command_idle_turn_limit, COMMAND_IDLE_TURN_LIMIT, COMMAND_STALLED_FAULT_CODE};
+    pub use semio_plugin_reactor_lifecycle::command_stall::{command_idle_turn_limit, command_stalled, note_command_turn, set_command_idle_turn_limit, COMMAND_IDLE_TURN_LIMIT, COMMAND_STALLED_FAULT_CODE};
+    pub use semio_plugin_reactor_turn::{poll_kernel, retained_command_ingress_occupancy};
 }
 #[cfg(any(test, feature = "artifact-app-testing"))]
 pub use app::authoring_law;

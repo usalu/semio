@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/process/host-capacity/native-footprint/v1",
+  "title": "Native macOS footprint: what the kernel charges a process, read in microseconds instead of by a tool",
+  "definitions": {
+    "Layout": {
+      "description": "The call and the byte layout of `proc_pid_rusage` with flavor RUSAGE_INFO_V4 (`struct rusage_info_v4` of <sys/resource.h>): the library that exports it, the flavor, the buffer size (the structure is 296 bytes, the buffer leaves room for later flavors) and the offsets of the two counters read (`ri_resident_size`, `ri_phys_footprint`, both 64-bit). The footprint is the number `footprint(1)` and Activity Monitor print as the memory of a process: dirty, compressed and swapped pages, without the pages an allocator marked reusable.",
+      "const": {
+        "library": "/usr/lib/libproc.dylib",
+        "flavor": 4,
+        "size": 512,
+        "residentSize": 64,
+        "physicalFootprint": 72
+      }
+    },
+    "Reading": {
+      "description": "One case of the language-agnostic contract: the counters the kernel wrote into the buffer (offset to value), the return code of the call and the bytes the footprint must come out as (null when the call failed).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "result", "counters", "footprintBytes"],
+      "properties": {
+        "name": {"type": "string"},
+        "result": {"type": "integer"},
+        "counters": {"type": "object", "additionalProperties": {"type": "string"}},
+        "footprintBytes": {"type": ["integer", "null"], "minimum": 0}
+      }
+    }
+  }
+}

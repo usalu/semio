@@ -1,0 +1,603 @@
+[
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "near-hind-paw",
+  "bone": "paw-hn"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "far-hind-paw",
+  "bone": "paw-hf"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "tail-root",
+  "bone": "tail-1"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "tail-mid",
+  "bone": "tail-2"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "tail-tip",
+  "bone": "tail-3"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "chest",
+  "bone": "thorax"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "near-wrist",
+  "bone": "metacarpus-fn"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "near-forepaw",
+  "bone": "paw-fn"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "far-wrist",
+  "bone": "metacarpus-ff"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "far-forepaw",
+  "bone": "paw-ff"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "head",
+  "bone": "head"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "eye-n",
+  "bone": "head",
+  "twin": "eye",
+  "twinBone": "head"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "front",
+  "id": "eye-f",
+  "bone": "head",
+  "twin": "eye",
+  "twinBone": "head"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "near-hind-paw",
+  "bone": "paw-hn"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "far-thigh",
+  "bone": "thigh-hf"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "far-hind-paw",
+  "bone": "paw-hf"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "near-humerus",
+  "bone": "humerus-fn"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "near-wrist",
+  "bone": "metacarpus-fn"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "near-forepaw",
+  "bone": "paw-fn"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "far-humerus",
+  "bone": "humerus-ff"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "far-wrist",
+  "bone": "metacarpus-ff"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "far-forepaw",
+  "bone": "paw-ff"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "tail-root",
+  "bone": "tail-1"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "tail-mid",
+  "bone": "tail-2"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "tail-tip",
+  "bone": "tail-3"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "neck",
+  "bone": "neck"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "eye-n",
+  "bone": "head",
+  "twin": "eye",
+  "twinBone": "head"
+ },
+ {
+  "op": "nest",
+  "scale": "50",
+  "view": "plan",
+  "id": "eye-f",
+  "bone": "head",
+  "twin": "eye",
+  "twinBone": "head"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "near-hind-paw",
+  "bone": "paw-hn"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "far-hind-paw",
+  "bone": "paw-hf"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "tail-root",
+  "bone": "tail-1"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "tail-mid",
+  "bone": "tail-2"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "tail-tip",
+  "bone": "tail-3"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "near-wrist",
+  "bone": "metacarpus-fn"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "near-forepaw",
+  "bone": "paw-fn"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "far-wrist",
+  "bone": "metacarpus-ff"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "far-forepaw",
+  "bone": "paw-ff"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "front",
+  "id": "head",
+  "bone": "head"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "near-hind-paw",
+  "bone": "paw-hn"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "far-hind-paw",
+  "bone": "paw-hf"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "near-wrist",
+  "bone": "metacarpus-fn"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "near-forepaw",
+  "bone": "paw-fn"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "far-wrist",
+  "bone": "metacarpus-ff"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "far-forepaw",
+  "bone": "paw-ff"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "tail-root",
+  "bone": "tail-1"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "tail-mid",
+  "bone": "tail-2"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "tail-tip",
+  "bone": "tail-3"
+ },
+ {
+  "op": "nest",
+  "scale": "100",
+  "view": "plan",
+  "id": "chest",
+  "bone": "thorax"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "front",
+  "id": "near-hind-shank",
+  "bone": "shank-hn"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "front",
+  "id": "near-hind-paw",
+  "bone": "paw-hn"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "front",
+  "id": "far-hind-shank",
+  "bone": "shank-hf"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "front",
+  "id": "far-hind-paw",
+  "bone": "paw-hf"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "front",
+  "id": "chest",
+  "bone": "thorax"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "front",
+  "id": "near-fore-lower",
+  "bone": "metacarpus-fn"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "front",
+  "id": "near-forepaw",
+  "bone": "paw-fn"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "front",
+  "id": "far-fore-lower",
+  "bone": "metacarpus-ff"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "front",
+  "id": "far-forepaw",
+  "bone": "paw-ff"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "plan",
+  "id": "near-hind-paw",
+  "bone": "paw-hn"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "plan",
+  "id": "far-hind-paw",
+  "bone": "paw-hf"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "plan",
+  "id": "near-fore-lower",
+  "bone": "metacarpus-fn"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "plan",
+  "id": "near-forepaw",
+  "bone": "paw-fn"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "plan",
+  "id": "far-fore-lower",
+  "bone": "metacarpus-ff"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "plan",
+  "id": "far-forepaw",
+  "bone": "paw-ff"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "plan",
+  "id": "chest",
+  "bone": "thorax"
+ },
+ {
+  "op": "nest",
+  "scale": "200",
+  "view": "plan",
+  "id": "head",
+  "bone": "head"
+ },
+ {
+  "op": "nest",
+  "scale": "500",
+  "view": "front",
+  "id": "n-hind-thigh",
+  "bone": "thigh-hn"
+ },
+ {
+  "op": "nest",
+  "scale": "500",
+  "view": "front",
+  "id": "n-hind-foot",
+  "bone": "metatarsus-hn",
+  "twin": "hind-foot-n",
+  "twinBone": "metatarsus-hn"
+ },
+ {
+  "op": "nest",
+  "scale": "500",
+  "view": "front",
+  "id": "f-hind-thigh",
+  "bone": "thigh-hf"
+ },
+ {
+  "op": "nest",
+  "scale": "500",
+  "view": "front",
+  "id": "paw-hf",
+  "bone": "paw-hf",
+  "twin": "paw-hn-sil",
+  "twinBone": "paw-hn"
+ },
+ {
+  "op": "nest",
+  "scale": "500",
+  "view": "front",
+  "id": "paw-ff",
+  "bone": "paw-ff",
+  "twin": "paw-fn-sil",
+  "twinBone": "paw-fn"
+ },
+ {
+  "op": "nest",
+  "scale": "500",
+  "view": "front",
+  "id": "n-fore-upper",
+  "bone": "humerus-fn"
+ },
+ {
+  "op": "nest",
+  "scale": "500",
+  "view": "front",
+  "id": "n-fore-foot",
+  "bone": "metacarpus-fn"
+ },
+ {
+  "op": "nest",
+  "scale": "500",
+  "view": "front",
+  "id": "f-fore-upper",
+  "bone": "humerus-ff"
+ },
+ {
+  "op": "nest",
+  "scale": "500",
+  "view": "front",
+  "id": "f-fore-foot",
+  "bone": "metacarpus-ff"
+ },
+ {
+  "op": "nest",
+  "scale": "500",
+  "view": "front",
+  "id": "paw-hn",
+  "bone": "paw-hn",
+  "twin": "paw-hn-sil",
+  "twinBone": "paw-hn"
+ },
+ {
+  "op": "nest",
+  "scale": "500",
+  "view": "front",
+  "id": "paw-fn",
+  "bone": "paw-fn",
+  "twin": "paw-fn-sil",
+  "twinBone": "paw-fn"
+ },
+ {
+  "op": "nest",
+  "scale": "500",
+  "view": "plan",
+  "id": "n-hind-thigh",
+  "bone": "thigh-hn"
+ },
+ {
+  "op": "nest",
+  "scale": "500",
+  "view": "plan",
+  "id": "n-hind-foot",
+  "bone": "metatarsus-hn",
+  "twin": "hind-foot-n",
+  "twinBone": "metatarsus-hn"
+ },
+ {
+  "op": "nest",
+  "scale": "500",
+  "view": "plan",
+  "id": "f-hind-thigh",
+  "bone": "thigh-hf"
+ },
+ {
+  "op": "nest",
+  "scale": "500",
+  "view": "plan",
+  "id": "n-fore-foot",
+  "bone": "metacarpus-fn"
+ },
+ {
+  "op": "nest",
+  "scale": "500",
+  "view": "plan",
+  "id": "f-fore-foot",
+  "bone": "metacarpus-ff"
+ },
+ {
+  "op": "nest",
+  "scale": "500",
+  "view": "plan",
+  "id": "chest",
+  "bone": "thorax"
+ },
+ {
+  "op": "nest",
+  "scale": "500",
+  "view": "plan",
+  "id": "neck",
+  "bone": "neck"
+ }
+]

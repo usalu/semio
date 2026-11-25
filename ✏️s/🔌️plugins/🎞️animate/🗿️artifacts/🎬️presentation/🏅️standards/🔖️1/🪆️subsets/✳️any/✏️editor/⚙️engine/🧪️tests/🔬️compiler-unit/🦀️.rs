@@ -13,8 +13,16 @@ mod tests {
         let _ = fs::remove_dir_all(&output);
         compile_presentation_site(&deck, &output).expect("compile site");
         let index = fs::read_to_string(output.join("🌐️.html")).expect("🌐️.html");
+        assert!(index.contains("<html lang=\"\">"));
+        assert!(index.contains("<title lang=\"en\">Animate Presentation</title>"));
         assert!(index.contains("animate.presentation.deck"));
         assert!(index.contains("semio_s_plugin_animate.js"));
+        assert!(index.contains("data-level=\"window\""));
+        assert!(index.contains("data-window-frame-content"));
+        let style = fs::read_to_string(output.join("styles.css")).expect("styles.css");
+        assert!(style.contains("--level-shade-step:"));
+        assert!(style.contains("border: var(--presentation-hairline) solid var(--border-normal-color)"));
+        assert!(!style.contains("border-radius"));
         let player = fs::read_to_string(output.join("player.js")).expect("player.js");
         assert!(player.contains("sceneClips"));
         let manifest = semio_framework_pack_json::parse(&fs::read_to_string(output.join("manifest.json")).expect("manifest"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("json");

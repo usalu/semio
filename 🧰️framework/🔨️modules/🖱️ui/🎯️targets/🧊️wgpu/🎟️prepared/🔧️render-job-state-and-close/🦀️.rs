@@ -19,6 +19,7 @@ pub struct PreparedRenderJob {
     pub commands: Option<PreparedRenderCommandPages>,
     pub(super) digest: u64,
     pub(super) fault: Option<&'static str>,
+    pub(super) business_generation: Option<u64>,
     pub fault_payload: RetainedPayloadBuilder,
     pub(super) receiver: PreparedRenderReceiver,
     pub(super) rejected_upload: Option<PreparedRenderUpload>,
@@ -237,6 +238,7 @@ impl PreparedRenderJob {
             commands: Some(PreparedRenderCommandPages::default()),
             digest: 0xcbf29ce484222325,
             fault: None,
+            business_generation: None,
             fault_payload: RetainedPayloadBuilder::new(JobPayloadStream::Fault),
             receiver,
             rejected_upload: None,
@@ -259,6 +261,20 @@ impl PreparedRenderJob {
 
     pub fn receiver(&self) -> Option<PreparedRenderReceiver> {
         self.receiver.try_clone()
+    }
+
+    /// 🩺️ The reason this job published a fault outcome, so the consumer reports it instead of a generic refusal.
+    /// 🪪️ Binds the lent business generation the worker callbacks run under; `preview_generation` then only selects presentation freshness.
+    pub fn bind_business_generation(&mut self, generation: u64) {
+        self.business_generation = Some(generation);
+    }
+
+    pub(super) fn generation_is_stale(&self, preview_generation: u64, cx: &semio_framework_job::StepContext<'_>) -> bool {
+        cx.generation().0 != self.business_generation.unwrap_or(preview_generation)
+    }
+
+    pub fn fault_detail(&self) -> Option<&'static str> {
+        self.fault
     }
 
     pub fn take_packet(&self) -> Option<PreparedRenderPacket> {

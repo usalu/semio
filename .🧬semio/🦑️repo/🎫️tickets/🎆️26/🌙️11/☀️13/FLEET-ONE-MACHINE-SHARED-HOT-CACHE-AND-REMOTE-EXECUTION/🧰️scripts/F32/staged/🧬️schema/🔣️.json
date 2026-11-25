@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Text": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["en", "de"],
+      "properties": {
+        "en": {"type": "string", "minLength": 1},
+        "de": {"type": "string", "minLength": 1}
+      }
+    },
+    "Policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["maximumAttempts"],
+      "properties": {
+        "maximumAttempts": {"type": "integer", "minimum": 1}
+      }
+    },
+    "Protocol": {
+      "const": {"maximumAttempts": 4},
+      "type": "object"
+    },
+    "Messages": {
+      "const": {
+        "changed": {
+          "en": "The funding journal {path} kept changing while its child charge was being retired ({attempts} attempts). The charge stays recorded; run the command again.",
+          "de": "Das Finanzierungsjournal {path} hat sich beim Aufheben seiner Kindbelastung ständig geändert ({attempts} Versuche). Die Belastung bleibt vermerkt; den Befehl erneut ausführen."
+        },
+        "notOriginal": {
+          "en": "The original child funding journal {path} is required: a regular file with exactly one link.",
+          "de": "Das ursprüngliche Kind-Finanzierungsjournal {path} ist erforderlich: eine reguläre Datei mit genau einem Link."
+        },
+        "noProgress": {
+          "en": "Appending to the child funding journal {path} made no progress.",
+          "de": "Das Anhängen an das Kind-Finanzierungsjournal {path} kam nicht voran."
+        }
+      },
+      "type": "object"
+    }
+  }
+}

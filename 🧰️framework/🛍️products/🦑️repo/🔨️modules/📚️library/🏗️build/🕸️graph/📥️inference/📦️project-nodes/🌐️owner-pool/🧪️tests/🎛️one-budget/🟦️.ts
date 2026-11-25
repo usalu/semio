@@ -62,7 +62,7 @@ test("the pool never runs a child the budget cannot hold while the machine's own
   const own=ownerPoolSizingV1({host:host({availableMegabytes:2048+1,foreground:{cpu:8,unrealizedMegabytes:unrealized}}),children:0,childMegabytes});
   expect(own.children,"a read is there: one forced child would eat the read's memory").toBe(0);
   const alone=ownerPoolSizingV1({host:host({availableMegabytes:2048+1}),children:0,childMegabytes});
-  expect(alone.children,"nothing of its own to starve: one child still runs").toBe(1);
+  expect(alone.children,"the desktop reserve also applies without a repository job").toBe(0);
   const fits=ownerPoolSizingV1({host:host({availableMegabytes:2048+childMegabytes+Math.min(unrealized,Math.floor(16384*P.ownHoldShareBasisPoints/10000)),foreground:{cpu:8,unrealizedMegabytes:unrealized}}),children:0,childMegabytes});
   expect(fits.children).toBeGreaterThanOrEqual(1);
  }
@@ -107,10 +107,20 @@ test("a pool with claimable work that waits states the exact numbers in English 
   const sizing=ownerPoolSizingV1({...row,host:row.host as OwnerPoolHostV1});
   const controller=new AbortController();
   let said:Partial<OwnerPoolStatusV1>|undefined;
+  let samples=0;
+  const targets:number[]=[];
   const status={update(patch:Partial<OwnerPoolStatusV1>){
-   if(patch.reason==="nothing-fits"){said=patch;controller.abort();}
+   if(patch.reason==="nothing-fits"){
+    targets.push(patch.target!);
+    if(samples===2){said=patch;controller.abort();}
+   }
   }};
-  await runOwnerPoolV1({root,environment:{...process.env,...environment},totalMegabytes:row.host.totalMegabytes,signal:AbortSignal.any([controller.signal,AbortSignal.timeout(20000)]),capacity:async()=>sizing,revision:"revision-a",targetPollMilliseconds:100,status});
+  const capacity=async()=>{
+   if(++samples===1)throw Error("fixture host counters unavailable");
+   return sizing;
+  };
+  await runOwnerPoolV1({root,environment:{...process.env,...environment},totalMegabytes:row.host.totalMegabytes,signal:AbortSignal.any([controller.signal,AbortSignal.timeout(20000)]),capacity,spawn:()=>{throw Error("unadmitted child");},revision:"revision-a",targetPollMilliseconds:100,status});
+  expect(targets).toEqual([0,0]);
   expect(said).toMatchObject({wave:manifest.head.id,units:6,children:0,target:0});
   expect(said?.reasonText).toBeTruthy();
   const {en,de}=said!.reasonText!;

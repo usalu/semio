@@ -4,10 +4,10 @@
 //! in which an empty stage never consumes the call. Every unit quotes its next demand on all axes and spends the caller's
 //! unchanged grant on exactly one owner; the same module drives the envelope-ingress, store-replacement and archive-load
 //! frontiers for both the live rotation and the close ladder.
-use semio_plugin_document_media::{ActiveArtifactStoreReplacementState, ActiveDocumentArchiveLoad, ActiveDocumentArchiveLoadPhase, ActiveDocumentArchiveLoadState, ArtifactEnvelopeDecodeOperationPoll, PendingDocumentArchiveMember};
+use semio_plugin_document_media::{STORE_REPLACEMENT_STAGES, ActiveArtifactStoreReplacementState, ActiveDocumentArchiveLoad, ActiveDocumentArchiveLoadPhase, ActiveDocumentArchiveLoadState, ArtifactEnvelopeDecodeOperationPoll, PendingDocumentArchiveMember};
 use semio_plugin_decl_app::{ArtifactApp, DOCUMENT_LOAD_FAILED_CODE, DOCUMENT_LOAD_HISTORY_INVALID_CODE, document_load_fault};
 use store::os_store::store_schema::ArtifactEnvelope;
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use semio_framework_artifact_reference::ArtifactRef;
 use semio_plugin_instance_children::children_components::ChildComposition;
@@ -171,7 +171,8 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> Envelope
     pub(crate) fn drive_document_archive_terminal(&mut self, active: &mut ActiveDocumentArchiveLoad<A::Snapshot, A::Mutation>, grant: RetainedCloneGrant, cx:&mut semio_framework_job::StepContext<'_>) -> Result<PluginLifecycleStep, semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         let target = active.terminal_target.ok_or_else(|| document_load_fault(DOCUMENT_LOAD_FAILED_CODE, "recursive document archive terminal cleanup has no target"))?;
         if let Some(handle) = active.replacement {
-            if self.store_replacement_jobs.get(handle.operation.0).is_some() {
+            if let Some(replacement) = self.store_replacement_jobs.get(handle.operation.0) {
+                active.note_replacement_decoded(replacement.decoded);
                 if target != ActiveDocumentArchiveLoadState::Ready {
                     self.cancel_artifact_store_replacement(handle)?;
                 }
@@ -308,7 +309,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> Envelope
                         if history.doc_id != current.id || history.schema != A::DOCUMENT_SCHEMA {
                             return Err(missing("paged folder archive history changed its document or schema").into());
                         }
-                        let (owners, built) = A::build_document_store_owners(grant).ok_or_else(|| missing("paged archive requires the app's exact Store owner catalog"))?.map_err(owners_admission_fault)?;
+                        let (owners, built) = A::persisted_document_store_owners(grant).ok_or_else(|| missing("paged archive requires the app's exact Store owner catalog"))?.map_err(owners_admission_fault)?;
                         let mut initial = None;
                         let moved = parent.take_initial(&mut initial, grant)?;
                         let Some(initial) = initial else { return Ok(PluginLifecycleStep::Progress(built)); };
@@ -339,7 +340,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> Envelope
                     }
                 }
                 if active.hydration.is_none() {
-                    let (owners, built) = A::build_document_store_owners(grant).ok_or_else(|| missing("document archive parent requires the app's exact document owner catalog"))?.map_err(owners_admission_fault)?;
+                    let (owners, built) = A::persisted_document_store_owners(grant).ok_or_else(|| missing("document archive parent requires the app's exact document owner catalog"))?.map_err(owners_admission_fault)?;
                     let archive = active.archive.as_mut().ok_or_else(|| missing("recursive document archive parent input owner is absent"))?;
                     let pack = std::mem::take(&mut archive.parent_pack);
                     let history = active.decoded_history.take().ok_or_else(|| missing("recursive document archive decoded history owner is absent"))?;
@@ -399,7 +400,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> Envelope
                         active.replacement = Some(handle);
                         let hydration_total = std::mem::take(&mut active.fold).1;
                         active.completed = active.completed.saturating_add(hydration_total).saturating_add(1);
-                        active.total = active.total.saturating_add(hydration_total);
+                        active.total = active.total.saturating_add(hydration_total).saturating_add(STORE_REPLACEMENT_STAGES).saturating_add(2 * active.archive.as_ref().map_or(0, |archive| archive.members.len() as u64));
                         active.phase = ActiveDocumentArchiveLoadPhase::AwaitingMembers;
                         Ok(PluginLifecycleStep::Progress(item))
                     }
@@ -415,6 +416,9 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> Envelope
                 let replacement = self.store_replacement_jobs.get(handle.operation.0);
                 if let Some(replacement) = replacement {
                     active.fold = replacement.fold_progress;
+                    active.stage = active.stage.max(replacement.state.stage());
+                    active.members_done = active.members_done.max(replacement.member_progress());
+                    active.note_replacement_decoded(replacement.decoded);
                     if replacement.refusal.is_some() {
                         active.phase = ActiveDocumentArchiveLoadPhase::AwaitReplacement;
                         return Ok(PluginLifecycleStep::Progress(item));
@@ -517,6 +521,11 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> Envelope
             }
             ActiveDocumentArchiveLoadPhase::AwaitReplacement => {
                 let handle = active.replacement.ok_or_else(|| missing("recursive document archive replacement handle is absent"))?;
+                if let Some(replacement) = self.store_replacement_jobs.get(handle.operation.0) {
+                    active.stage = active.stage.max(replacement.state.stage());
+                    active.members_done = active.members_done.max(replacement.member_progress());
+                    active.note_replacement_decoded(replacement.decoded);
+                }
                 let target = match self.poll_artifact_store_replacement(handle) {
                     ArtifactEnvelopeDecodeOperationPoll::Pending | ArtifactEnvelopeDecodeOperationPoll::Progress => return Ok(PluginLifecycleStep::Progress(empty)),
                     ArtifactEnvelopeDecodeOperationPoll::Ready => ActiveDocumentArchiveLoadState::Ready,

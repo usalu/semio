@@ -236,7 +236,7 @@ class Beat4_Casting(_live_scene.RefreshMoving, _visuals.ClipScene):
     def _tag(self, string, point, color):
         """🔖 A label on a light backing plate so it stays readable over drawings."""
         label = self.text(string, point, size=SMALL, color=color)
-        plate = _mn.RoundedRectangle(corner_radius=0.05, width=label.width + 0.14, height=label.height + 0.1, stroke_width=0, fill_color="#F2F2F2", fill_opacity=0.9).move_to(label)
+        plate = _mn.Rectangle(width=label.width + 0.14, height=label.height + 0.1, stroke_width=0, fill_color="#F2F2F2", fill_opacity=0.9).move_to(label)
         return _mn.VGroup(plate, label)
 
     def _dashed(self, widget, pad=0.1):
@@ -468,7 +468,7 @@ class Beat4_Casting(_live_scene.RefreshMoving, _visuals.ClipScene):
         group = _mn.VGroup()
         boxes = []
         for index, (text, tone) in enumerate(steps):
-            box = _mn.RoundedRectangle(corner_radius=0.08, width=5.2, height=0.56, stroke_color=tone, stroke_width=2.0, fill_color=tone, fill_opacity=0.16)
+            box = _mn.Rectangle(width=5.2, height=0.56, stroke_color=tone, stroke_width=2.0, fill_color=tone, fill_opacity=0.16)
             box.move_to(SHEET_AT + np.array([0.3, 1.55 - index * 0.95, 0]))
             label = self.text(text, box.get_center(), size=SMALL, color=_canvas.TEXT, width=4.9)
             boxes.append(box)
@@ -489,7 +489,7 @@ class Beat4_Casting(_live_scene.RefreshMoving, _visuals.ClipScene):
         slot = next(s for s in _nakagin.slots() if (s.building, s.tower, s.storey, s.facade, s.item) == SLOT)
         key = f"{{{slot.building};{slot.tower};{slot.storey};{slot.facade}}}"
         chips = [self.tr(f"Width {width}", f"Breite {width}"), self.tr(f"Storeys {sol.value('sto', 'Integer')}", f"Geschosse {sol.value('sto', 'Integer')}"), self.tr(f"Plane at slot {key}", f"Ebene am Platz {key}")]
-        return _mn.VGroup(*[self.badge(text, (0, 0, 0), color=color, size=SMALL, filled=False) for text, color in zip(chips, (INK_TEAL, INK_GOLD, INK_GREEN))]).arrange(_mn.RIGHT, buff=0.18).move_to(PORT_AT + np.array([0, -2.2, 0]))
+        return _mn.VGroup(*[self.badge(text, (0, 0, 0), color=color, size=SMALL, filled=False, appearance="light") for text, color in zip(chips, (INK_TEAL, INK_GOLD, INK_GREEN))]).arrange(_mn.RIGHT, buff=0.18).move_to(PORT_AT + np.array([0, -2.2, 0]))
 
     def _domain_world(self, sol):
         """↔️ Capsule A with the length interval and the Divide Domain cuts beside it."""
@@ -630,10 +630,10 @@ class Beat4_Casting(_live_scene.RefreshMoving, _visuals.ClipScene):
         group = _mn.VGroup()
         for index, (head, body) in enumerate(cards):
             centre = SHEET_AT + np.array([0, 1.5 - index * 1.45, 0])
-            box = _mn.RoundedRectangle(corner_radius=0.1, width=6.2, height=1.15, stroke_color=GOOD, stroke_width=2.0, fill_color="#FFFFFF", fill_opacity=0.9).move_to(centre)
-            badge = self.badge(str(index + 1), centre + np.array([-2.75, 0, 0]), color=INK_GREEN, size=SMALL, filled=True)
-            group.add(box, badge, self.text(head, centre + np.array([-2.3, 0.2, 0]), size=19.2, color=_canvas.TEXT, anchor="l", width=5.2),
-                      self.text(body, centre + np.array([-2.3, -0.25, 0]), size=SMALL, color=INK_GREY, anchor="l", width=5.2))
+            box = _art.window_frame(6.2, 1.15, color=GOOD, stroke_width=1.6, fill_color="#FFFFFF", fill_opacity=0.9, top_depth=0.52, top_chips=((0, 6.2),), appearance="light").move_to(centre)
+            badge = self.badge(str(index + 1), centre + np.array([-2.75, 0.315, 0]), color=INK_GREEN, size=SMALL, filled=True)
+            group.add(box, badge, self.text(head, centre + np.array([-2.3, 0.315, 0]), size=19.2, color=_canvas.TEXT, anchor="l", width=5.2),
+                      self.text(body, centre + np.array([-2.3, -0.2, 0]), size=SMALL, color=INK_GREY, anchor="l", width=5.2))
         return group
 
     def present_casting(self):

@@ -78,7 +78,7 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
         if self.read_registry.closed(){return Ok(RetirementDemand{depth:1,..Default::default()});}
         if self.read_registry.has_returned(){return self.native_read_retirement_demands(body);}
         let backing=self.read_registry.empty_backing_demands()?;if backing.release_bytes!=0{return Ok(backing);}
-        Ok(RetirementDemand{release_bytes:self.read_registry.custody_byte_demand()?,depth:1,..Default::default()})
+        self.read_registry.custody_demands()
     }
     pub(super) fn close_reads(&mut self,factory:&Arc<dyn ArtifactOwnedValueRetirementFactory<P>>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>
     where P:Send+Sync+'static,

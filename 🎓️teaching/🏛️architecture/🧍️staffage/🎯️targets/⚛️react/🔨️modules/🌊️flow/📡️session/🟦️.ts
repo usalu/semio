@@ -8,6 +8,7 @@
 import type { Asset, Environment, EvaluationQuery, FlowConditions, FlowField } from "@teaching/staffage";
 import { FLOW_DEVELOP_S, FLOW_REFRESH_HZ, flowPeriodS, flowTimeS } from "../🟦️.ts";
 import { FlowServer, type FlowMessage, type FlowReply } from "../🧵️server/🟦️.ts";
+import { flowWireOut } from "../🧵️server/wire.ts";
 
 /** 🧾️ Where a flow session is. */
 export type FlowStatus = { readonly phase: "idle" | "developing" | "ready" | "cancelled" | "error"; readonly fraction: number; readonly message: string };
@@ -36,7 +37,7 @@ function portOf(): Port {
       send = local();
       for (const message of [...held.assets.values(), ...held.opens.values(), ...held.frames.values()]) send(message);
     };
-    send = (message) => worker.postMessage(message);
+    send = (message) => worker.postMessage(flowWireOut(message));
   } catch {
     send = local();
   }

@@ -10,6 +10,7 @@ use semio_framework::kernel::ActivationEvent;
 use semio_framework::kernel::CapabilityRequest;
 use semio_framework::kernel::QuotaSchema;
 use semio_framework::AssetDeclaration;
+use semio_framework::ComponentDeclaration;
 use semio_framework::ExecutionMode;
 use semio_framework::ExtensionPointDeclaration;
 use semio_framework::Fault;
@@ -56,6 +57,7 @@ pub struct PluginDescriptorExtras {
     pub execution: ExecutionMode,
     pub quotas: QuotaSchema,
     pub assets: Vec<AssetDeclaration>,
+    pub components: Vec<ComponentDeclaration>,
 }
 /// 📖️ This plugin's deterministic `contributor.list-artifact-mutations` roster: every owner
 /// document app's `SemanticMutation::kinds()` (`"<document-schema>#<kebab-kind>"`, committed by

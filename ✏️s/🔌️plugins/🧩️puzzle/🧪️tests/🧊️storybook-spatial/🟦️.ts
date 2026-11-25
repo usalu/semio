@@ -8,8 +8,8 @@
 
 import { expect, test, type Locator, type Page } from "../../../../../.storybook/🧪️tests/🎭️playwright/🟦️.ts";
 import { PerspectiveCamera, Vector3 } from "three";
-import worldCorpus from "../🧫️fixtures/🌐️world-session/🔣️.json";
-import exampleCounts from "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/📚️example-counts/🔣️.json";
+import worldCorpus from "../🧫️fixtures/🌐️world-session/🔣️.json" with { type: "json" };
+import exampleCounts from "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/📚️example-counts/🔣️.json" with { type: "json" };
 import { storyId, type StoryIndexEntry } from "../📚️storybook-index/🟦️.ts";
 
 function significantConsoleErrors(messages: string[]): string[] {
@@ -140,7 +140,7 @@ test("puzzle3d world nakagin: real 180-object fixture round-trips through World3
 //#endregion puzzle/3d World
 
 //#region puzzle/5d Timeline
-test("puzzle5d timeline nakagin: boots fully assembled (revealCount === partCount), scrubbing to the oldest checkpoint reveals just 1 part", async ({ page }) => {
+test("puzzle5d timeline nakagin: scrubbing reveals one selectable part and clicking the background clears selection", async ({ page }) => {
   const assertNoErrors = await expectStoryLoads(page, "🧩️puzzle🕐️5d", "Nakagin Capsule Tower");
   const debug = page.getByTestId("puzzle5d-timeline-debug");
   const before = JSON.parse(await debug.innerText());
@@ -151,9 +151,12 @@ test("puzzle5d timeline nakagin: boots fully assembled (revealCount === partCoun
   await page.locator(".semio-graph-timeline-host").getByRole("button").last().click();
   await expect.poll(async () => JSON.parse(await debug.innerText()).revealCount).toBe(1);
   await expectWorldInstances(page, 1);
+  const { oldestPartId } = worldCorpus.nakaginTimeline;
+  await clickFirstWorldInstance(page, oldestPartId);
+  await expect.poll(async () => JSON.parse(await debug.innerText()).selection).toEqual([oldestPartId]);
+  await expectWorldSelection(page, [oldestPartId]);
   await clickWorldBackground(page);
-  await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => resolve())));
-  expect(JSON.parse(await debug.innerText()).selection).toEqual(worldCorpus.emptySelection);
+  await expect.poll(async () => JSON.parse(await debug.innerText()).selection).toEqual(worldCorpus.emptySelection);
   await expectWorldSelection(page, worldCorpus.emptySelection);
   assertNoErrors();
 });

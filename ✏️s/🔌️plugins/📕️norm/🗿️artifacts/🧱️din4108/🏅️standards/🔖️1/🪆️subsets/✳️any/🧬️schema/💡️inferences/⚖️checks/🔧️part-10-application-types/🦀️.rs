@@ -86,7 +86,7 @@ pub fn min_acoustic_for(app: &str) -> &'static str {
 pub fn check_application(element: &EnvelopeElement, layer_index: usize) -> CheckResult {
     let layer = &element.layers[layer_index];
     let subject = SubjectRef::new(
-        &layer.id,
+        &element.id,
         layer_field_path(&element.id, &layer.id, "applicationType"),
         loc(&format!("Layer {}", layer.id), &format!("Schicht {}", layer.id)),
     );

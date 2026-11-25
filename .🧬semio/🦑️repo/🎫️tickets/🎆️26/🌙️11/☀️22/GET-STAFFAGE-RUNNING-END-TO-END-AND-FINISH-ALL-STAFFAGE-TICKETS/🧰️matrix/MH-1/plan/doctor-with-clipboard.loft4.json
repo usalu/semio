@@ -1,0 +1,19 @@
+[
+  {"op": "volume", "scale": "100", "id": "sleeve-l", "as": "revolved", "fixed": true},
+  {"op": "volume", "scale": "200", "id": "forearm-r", "as": "revolved", "fixed": true},
+  {"op": "volume", "scale": "200", "id": "forearm-l", "as": "revolved", "fixed": true},
+  {"scale": "200", "label": "loft for sleeve-l", "choose": [[{"op": "volume", "id": "sleeve-l", "as": "loft"}], [{"op": "volume", "id": "sleeve-l", "as": "prism-w", "profile": "elevation"}]]},
+  {"op": "volume", "scale": "200", "id": "hand-r", "as": "revolved", "fixed": true},
+  {"op": "volume", "scale": "200", "id": "sleeve-r", "as": "revolved", "fixed": true},
+  {"scale": "500", "label": "loft for forearm-r", "choose": [[{"op": "volume", "id": "forearm-r", "as": "loft"}], [{"op": "volume", "id": "forearm-r", "as": "prism-v"}]]},
+  {"scale": "500", "label": "loft for forearm-l", "choose": [[{"op": "volume", "id": "forearm-l", "as": "loft"}], [{"op": "volume", "id": "forearm-l", "as": "prism-w"}]]},
+  {"scale": "500", "label": "loft for hand-l", "choose": [[{"op": "volume", "id": "hand-l", "as": "loft"}], [{"op": "volume", "id": "hand-l", "as": "prism-w"}]]},
+  {"op": "volume", "scale": "500", "id": "sleeve-r", "as": "revolved", "fixed": true},
+  {"scale": "50", "id": "sleeve-l", "op": "volume", "views": ["elevation", "plan"], "as": "revolved", "fixed": true},
+  {"scale": "50", "label": "loft for hand-r", "choose": [[{"id": "hand-r", "op": "volume", "views": ["plan"], "as": "loft"}], [{"id": "hand-r", "op": "volume", "views": ["plan"], "as": "prism-w"}]]},
+  {"scale": "100", "label": "loft for hand-r", "choose": [[{"id": "hand-r", "op": "volume", "views": ["plan"], "as": "loft"}], [{"id": "hand-r", "op": "volume", "views": ["plan"], "as": "prism-v"}]]},
+  {"scale": "500", "id": "sleeve-l", "op": "volume", "views": ["elevation", "plan"], "as": "revolved", "fixed": true},
+  {"scale": "200", "id": "hand-l", "op": "volume", "views": ["plan"], "as": "loft", "fixed": true},
+  {"scale": "100", "op": "volume", "id": "hand-l", "views": ["plan"], "as": "loft", "pose": "reading-clipboard", "solids": ["hand-l-thenar", "hand-l-thumb-metacarpal", "hand-l-thumb-proximal", "hand-l-thumb-distal"], "newId": "hand-l-thumb", "fixed": true},
+  {"scale": "100", "op": "volume", "id": "hand-l", "views": ["plan"], "as": "loft", "pose": "reading-clipboard", "solids": ["hand-l", "hand-l-hypothenar", "hand-l-index-proximal", "hand-l-index-middle", "hand-l-index-distal", "hand-l-middle-proximal", "hand-l-middle-middle", "hand-l-middle-distal", "hand-l-ring-proximal", "hand-l-ring-middle", "hand-l-ring-distal", "hand-l-little-proximal", "hand-l-little-middle", "hand-l-little-distal"], "fixed": true}
+]

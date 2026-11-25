@@ -1,0 +1,754 @@
+[
+ {
+  "op": "extrude",
+  "scale": "50",
+  "id": "dog-far-forearm",
+  "view": "plan",
+  "taper": false,
+  "why": "dog-forearm-ff: a part of the dog that is deep in the side view and narrow in the plan; as a body of revolution it is up to 22 mm wider than its plan outline and the plan of the default pose wider than the declared depth: the elevation outline swept over the width the plan shape had"
+ },
+ {
+  "op": "extrude",
+  "scale": "50",
+  "id": "dog-near-forearm",
+  "view": "plan",
+  "taper": false,
+  "why": "dog-forearm-fn: a part of the dog that is deep in the side view and narrow in the plan; as a body of revolution it is up to 22 mm wider than its plan outline and the plan of the default pose wider than the declared depth: the elevation outline swept over the width the plan shape had"
+ },
+ {
+  "op": "extrude",
+  "scale": "50",
+  "id": "dog-far-humerus",
+  "view": "plan",
+  "across": "front",
+  "why": "dog-humerus-ff: a short broad part; as a body of revolution it is 45 mm longer and 62 mm wider than its side and front outlines: the elevation outline swept over the width of the front twin"
+ },
+ {
+  "op": "extrude",
+  "scale": "50",
+  "id": "dog-near-humerus",
+  "view": "plan",
+  "across": "front",
+  "why": "dog-humerus-fn: a short broad part; as a body of revolution it is 45 mm longer and 62 mm wider than its side and front outlines: the elevation outline swept over the width of the front twin"
+ },
+ {
+  "op": "extrude",
+  "scale": "50",
+  "id": "dog-hindbody",
+  "view": "front",
+  "taper": false,
+  "why": "dog-lumbar: the dog's trunk bone lies level and tips up when the dog sits; a prism of the front outline is a box that misses the side outline by 45 to 86 mm: the elevation outline swept laterally"
+ },
+ {
+  "op": "prism",
+  "scale": "50",
+  "id": "dog-hindbody",
+  "view": "plan",
+  "why": "dog-lumbar: flat/flat/flat: prism that keeps the outline"
+ },
+ {
+  "op": "extrude",
+  "scale": "50",
+  "id": "dog-far-hock",
+  "view": "plan",
+  "taper": false,
+  "why": "dog-metatarsus-hf: a part of the dog that is deep in the side view and narrow in the plan; as a body of revolution it is up to 22 mm wider than its plan outline and the plan of the default pose wider than the declared depth: the elevation outline swept over the width the plan shape had"
+ },
+ {
+  "op": "extrude",
+  "scale": "50",
+  "id": "dog-near-hock",
+  "view": "plan",
+  "taper": false,
+  "why": "dog-metatarsus-hn: a part of the dog that is deep in the side view and narrow in the plan; as a body of revolution it is up to 22 mm wider than its plan outline and the plan of the default pose wider than the declared depth: the elevation outline swept over the width the plan shape had"
+ },
+ {
+  "op": "extrude",
+  "scale": "50",
+  "id": "dog-croup",
+  "view": "front",
+  "taper": false,
+  "why": "dog-pelvis: the dog's trunk bone lies level and tips up when the dog sits; a prism of the front outline is a box that misses the side outline by 45 to 86 mm: the elevation outline swept laterally"
+ },
+ {
+  "op": "extrude",
+  "scale": "50",
+  "id": "dog-croup",
+  "view": "plan",
+  "taper": false,
+  "why": "dog-pelvis: the dog's trunk bone lies level and tips up when the dog sits; a prism of the plan outline is a box that misses the side outline by 45 to 86 mm: the elevation outline swept laterally"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "50",
+  "id": "dog-far-shank",
+  "range": "keep",
+  "why": "dog leg: flat front shape on a bone that swings: prism along v that keeps the front outline (the side outline swept laterally moved the front silhouette of the default pose to 18.8 and 28.7 mm against the limit of 15.0)"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "50",
+  "id": "dog-near-shank",
+  "range": "keep",
+  "why": "dog leg: flat front shape on a bone that swings: prism along v that keeps the front outline (the side outline swept laterally moved the front silhouette of the default pose to 18.8 and 28.7 mm against the limit of 15.0)"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "50",
+  "id": "dog-far-thigh",
+  "range": "keep",
+  "why": "dog leg: flat front shape on a bone that swings: prism along v that keeps the front outline (the side outline swept laterally moved the front silhouette of the default pose to 18.8 and 28.7 mm against the limit of 15.0)"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "50",
+  "id": "dog-near-thigh",
+  "range": "keep",
+  "why": "dog leg: flat front shape on a bone that swings: prism along v that keeps the front outline (the side outline swept laterally moved the front silhouette of the default pose to 18.8 and 28.7 mm against the limit of 15.0)"
+ },
+ {
+  "op": "extrude",
+  "scale": "50",
+  "id": "boot-l",
+  "view": "front",
+  "taper": false,
+  "why": "foot-l: flat/flat/flat: a foot that rolls, the elevation outline swept laterally"
+ },
+ {
+  "op": "extrude",
+  "scale": "50",
+  "id": "boot-l",
+  "view": "plan",
+  "taper": false,
+  "why": "foot-l: flat/flat/flat: a foot that rolls, the elevation outline swept laterally"
+ },
+ {
+  "op": "extrude",
+  "scale": "50",
+  "id": "boot-r",
+  "view": "front",
+  "taper": false,
+  "why": "foot-r: flat/flat/flat: a foot that rolls, the elevation outline swept laterally"
+ },
+ {
+  "op": "extrude",
+  "scale": "50",
+  "id": "boot-r",
+  "view": "plan",
+  "taper": false,
+  "why": "foot-r: flat/flat/flat: a foot that rolls, the elevation outline swept laterally"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "50",
+  "id": "thigh-l",
+  "why": "thigh-l: flat/None/flat: revolved about the bone axis",
+  "radius": "keep"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "50",
+  "id": "thigh-r",
+  "why": "thigh-r: flat/flat/flat: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "50",
+  "id": "thigh-r",
+  "why": "thigh-r: flat/flat/flat: revolved about the bone axis"
+ },
+ {
+  "op": "extrude",
+  "scale": "100",
+  "id": "dog-far-forearm",
+  "view": "plan",
+  "taper": false,
+  "why": "dog-forearm-ff: a part of the dog that is deep in the side view and narrow in the plan; as a body of revolution it is up to 22 mm wider than its plan outline and the plan of the default pose wider than the declared depth: the elevation outline swept over the width the plan shape had"
+ },
+ {
+  "op": "extrude",
+  "scale": "100",
+  "id": "dog-near-forearm",
+  "view": "plan",
+  "taper": false,
+  "why": "dog-forearm-fn: a part of the dog that is deep in the side view and narrow in the plan; as a body of revolution it is up to 22 mm wider than its plan outline and the plan of the default pose wider than the declared depth: the elevation outline swept over the width the plan shape had"
+ },
+ {
+  "op": "extrude",
+  "scale": "100",
+  "id": "dog-far-upper-arm",
+  "view": "plan",
+  "across": "front",
+  "why": "dog-humerus-ff: a short broad part; as a body of revolution it is 45 mm longer and 62 mm wider than its side and front outlines: the elevation outline swept over the width of the front twin"
+ },
+ {
+  "op": "extrude",
+  "scale": "100",
+  "id": "dog-near-upper-arm",
+  "view": "plan",
+  "across": "front",
+  "why": "dog-humerus-fn: a short broad part; as a body of revolution it is 45 mm longer and 62 mm wider than its side and front outlines: the elevation outline swept over the width of the front twin"
+ },
+ {
+  "op": "extrude",
+  "scale": "100",
+  "id": "dog-hindbody",
+  "view": "front",
+  "taper": false,
+  "why": "dog-lumbar: the dog's trunk bone lies level and tips up when the dog sits; a prism of the front outline is a box that misses the side outline by 45 to 86 mm: the elevation outline swept laterally"
+ },
+ {
+  "op": "prism",
+  "scale": "100",
+  "id": "dog-hindbody",
+  "view": "plan",
+  "why": "dog-lumbar: flat/flat/flat: prism that keeps the outline"
+ },
+ {
+  "op": "extrude",
+  "scale": "100",
+  "id": "dog-far-hock",
+  "view": "plan",
+  "taper": false,
+  "why": "dog-metatarsus-hf: a part of the dog that is deep in the side view and narrow in the plan; as a body of revolution it is up to 22 mm wider than its plan outline and the plan of the default pose wider than the declared depth: the elevation outline swept over the width the plan shape had"
+ },
+ {
+  "op": "extrude",
+  "scale": "100",
+  "id": "dog-near-hock",
+  "view": "plan",
+  "taper": false,
+  "why": "dog-metatarsus-hn: a part of the dog that is deep in the side view and narrow in the plan; as a body of revolution it is up to 22 mm wider than its plan outline and the plan of the default pose wider than the declared depth: the elevation outline swept over the width the plan shape had"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "100",
+  "id": "dog-far-shank",
+  "range": "keep",
+  "why": "dog leg: flat front shape on a bone that swings: prism along v that keeps the front outline (the side outline swept laterally moves the silhouette of the default pose beyond the guard)"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "100",
+  "id": "dog-near-shank",
+  "range": "keep",
+  "why": "dog leg: flat front shape on a bone that swings: prism along v that keeps the front outline (the side outline swept laterally moves the silhouette of the default pose beyond the guard)"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "100",
+  "id": "dog-far-thigh",
+  "range": "keep",
+  "why": "dog leg: flat front shape on a bone that swings: prism along v that keeps the front outline (the side outline swept laterally moves the silhouette of the default pose beyond the guard)"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "100",
+  "id": "dog-near-thigh",
+  "range": "keep",
+  "why": "dog leg: flat front shape on a bone that swings: prism along v that keeps the front outline (the side outline swept laterally moves the silhouette of the default pose beyond the guard)"
+ },
+ {
+  "op": "extrude",
+  "scale": "100",
+  "id": "boot-l",
+  "view": "front",
+  "taper": false,
+  "why": "foot-l: flat/flat/None: a foot that rolls, the elevation outline swept laterally"
+ },
+ {
+  "op": "extrude",
+  "scale": "100",
+  "id": "boot-r",
+  "view": "front",
+  "taper": false,
+  "why": "foot-r: flat/flat/None: a foot that rolls, the elevation outline swept laterally"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "100",
+  "id": "thigh-l",
+  "why": "thigh-l: flat/None/flat: revolved about the bone axis",
+  "radius": "keep"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "100",
+  "id": "thigh-r",
+  "why": "thigh-r: flat/flat/flat: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "100",
+  "id": "thigh-r",
+  "why": "thigh-r: flat/flat/flat: revolved about the bone axis"
+ },
+ {
+  "op": "extrude",
+  "scale": "200",
+  "id": "dog-far-fore-upper",
+  "view": "plan",
+  "across": "front",
+  "why": "dog-humerus-ff: a short broad part; as a body of revolution it is 45 mm longer and 62 mm wider than its side and front outlines: the elevation outline swept over the width of the front twin"
+ },
+ {
+  "op": "extrude",
+  "scale": "200",
+  "id": "dog-near-fore-upper",
+  "view": "plan",
+  "across": "front",
+  "why": "dog-humerus-fn: a short broad part; as a body of revolution it is 45 mm longer and 62 mm wider than its side and front outlines: the elevation outline swept over the width of the front twin"
+ },
+ {
+  "op": "extrude",
+  "scale": "200",
+  "id": "dog-hindbody",
+  "view": "front",
+  "taper": false,
+  "why": "dog-lumbar: the dog's trunk bone lies level and tips up when the dog sits; a prism of the front outline is a box that misses the side outline by 45 to 86 mm: the elevation outline swept laterally"
+ },
+ {
+  "op": "prism",
+  "scale": "200",
+  "id": "dog-hindbody",
+  "view": "plan",
+  "why": "dog-lumbar: flat/flat/flat: prism that keeps the outline"
+ },
+ {
+  "op": "extrude",
+  "scale": "200",
+  "id": "dog-neck",
+  "view": "plan",
+  "taper": false,
+  "why": "dog-neck: as a body of revolution the neck is 25 mm wider than its plan outline and the plan of the default pose 24 mm wider than the dimensions: the elevation outline swept over the width the plan shape had"
+ },
+ {
+  "op": "extrude",
+  "scale": "200",
+  "id": "dog-far-hind-shank",
+  "view": "front",
+  "taper": false,
+  "why": "dog-shank-hf: flat front shape on a bone of the dog that stands askew: the elevation outline swept over the width the front shape had"
+ },
+ {
+  "op": "extrude",
+  "scale": "200",
+  "id": "dog-near-hind-shank",
+  "view": "front",
+  "taper": false,
+  "why": "dog-shank-hn: flat front shape on a bone of the dog that stands askew: the elevation outline swept over the width the front shape had"
+ },
+ {
+  "op": "extrude",
+  "scale": "200",
+  "id": "dog-tail",
+  "view": "front",
+  "taper": false,
+  "why": "dog-tail-2: flat front shape on a bone of the dog that stands askew: the elevation outline swept over the width the front shape had"
+ },
+ {
+  "op": "extrude",
+  "scale": "200",
+  "id": "dog-far-hind-thigh",
+  "view": "front",
+  "taper": false,
+  "why": "dog thigh: flat front shape on a bone that stands askew; a prism along v of the front outline stays 41 mm short of the side outline when the dog sits down: the elevation outline swept laterally"
+ },
+ {
+  "op": "extrude",
+  "scale": "200",
+  "id": "dog-far-hind-thigh",
+  "view": "plan",
+  "taper": false,
+  "why": "dog-thigh-hf: a part of the dog that is deep in the side view and narrow in the plan; as a body of revolution it is up to 22 mm wider than its plan outline and the plan of the default pose wider than the declared depth: the elevation outline swept over the width the plan shape had"
+ },
+ {
+  "op": "extrude",
+  "scale": "200",
+  "id": "dog-near-hind-thigh",
+  "view": "front",
+  "taper": false,
+  "why": "dog thigh: flat front shape on a bone that stands askew; a prism along v of the front outline stays 41 mm short of the side outline when the dog sits down: the elevation outline swept laterally"
+ },
+ {
+  "op": "extrude",
+  "scale": "200",
+  "id": "dog-near-hind-thigh",
+  "view": "plan",
+  "taper": false,
+  "why": "dog-thigh-hn: a part of the dog that is deep in the side view and narrow in the plan; as a body of revolution it is up to 22 mm wider than its plan outline and the plan of the default pose wider than the declared depth: the elevation outline swept over the width the plan shape had"
+ },
+ {
+  "op": "extrude",
+  "scale": "200",
+  "id": "boot-l",
+  "view": "front",
+  "taper": false,
+  "why": "foot-l: flat/flat/None: a foot that rolls, the elevation outline swept laterally"
+ },
+ {
+  "op": "extrude",
+  "scale": "200",
+  "id": "boot-r",
+  "view": "front",
+  "taper": false,
+  "why": "foot-r: flat/flat/None: a foot that rolls, the elevation outline swept laterally"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "200",
+  "id": "shank-l",
+  "why": "shank-l: flat/None/flat: revolved about the bone axis"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "200",
+  "id": "shank-r",
+  "why": "shank-r: flat/None/flat: revolved about the bone axis"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "200",
+  "id": "thigh-l",
+  "why": "thigh-l: flat/None/flat: revolved about the bone axis",
+  "radius": "keep"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "200",
+  "id": "thigh-r",
+  "why": "thigh-r: flat/flat/flat: revolved about the bone axis",
+  "radius": "keep"
+ },
+ {
+  "op": "extrude",
+  "scale": "500",
+  "id": "dog-f-fore-leg",
+  "view": "plan",
+  "taper": false,
+  "why": "dog-forearm-ff: a part of the dog that is deep in the side view and narrow in the plan; as a body of revolution it is up to 22 mm wider than its plan outline and the plan of the default pose wider than the declared depth: the elevation outline swept over the width the plan shape had"
+ },
+ {
+  "op": "extrude",
+  "scale": "500",
+  "id": "dog-n-fore-leg",
+  "view": "plan",
+  "taper": false,
+  "why": "dog-forearm-fn: a part of the dog that is deep in the side view and narrow in the plan; as a body of revolution it is up to 22 mm wider than its plan outline and the plan of the default pose wider than the declared depth: the elevation outline swept over the width the plan shape had"
+ },
+ {
+  "op": "extrude",
+  "scale": "500",
+  "id": "dog-f-fore-upper",
+  "view": "front",
+  "taper": false,
+  "why": "dog-humerus-ff: flat front shape on a bone of the dog that stands askew: the elevation outline swept over the width the front shape had"
+ },
+ {
+  "op": "extrude",
+  "scale": "500",
+  "id": "dog-f-fore-upper",
+  "view": "plan",
+  "why": "dog-humerus-ff: a short broad part; as a body of revolution it is longer than its side outline: the elevation outline swept over the width the plan shape had (the width of the front twin would make the plan of the default pose 24 mm wider than the declared depth)",
+  "taper": false
+ },
+ {
+  "op": "extrude",
+  "scale": "500",
+  "id": "dog-n-fore-upper",
+  "view": "front",
+  "taper": false,
+  "why": "dog-humerus-fn: flat front shape on a bone of the dog that stands askew: the elevation outline swept over the width the front shape had"
+ },
+ {
+  "op": "extrude",
+  "scale": "500",
+  "id": "dog-n-fore-upper",
+  "view": "plan",
+  "why": "dog-humerus-fn: a short broad part; as a body of revolution it is longer than its side outline: the elevation outline swept over the width the plan shape had (the width of the front twin would make the plan of the default pose 24 mm wider than the declared depth)",
+  "taper": false
+ },
+ {
+  "op": "extrude",
+  "scale": "500",
+  "id": "dog-hindbody",
+  "view": "front",
+  "taper": false,
+  "why": "dog-lumbar: the dog's trunk bone lies level and tips up when the dog sits; a prism of the front outline is a box that misses the side outline by 45 to 86 mm: the elevation outline swept laterally"
+ },
+ {
+  "op": "prism",
+  "scale": "500",
+  "id": "dog-hindbody",
+  "view": "plan",
+  "why": "dog-lumbar: flat/flat/flat: prism that keeps the outline"
+ },
+ {
+  "op": "extrude",
+  "scale": "500",
+  "id": "dog-f-hind-foot",
+  "view": "front",
+  "taper": false,
+  "why": "dog-metatarsus-hf: flat front shape on a bone of the dog that stands askew: the elevation outline swept over the width the front shape had"
+ },
+ {
+  "op": "extrude",
+  "scale": "500",
+  "id": "dog-f-hind-foot",
+  "view": "plan",
+  "taper": false,
+  "why": "dog-metatarsus-hf: a part of the dog that is deep in the side view and narrow in the plan; as a body of revolution it is up to 22 mm wider than its plan outline and the plan of the default pose wider than the declared depth: the elevation outline swept over the width the plan shape had"
+ },
+ {
+  "op": "extrude",
+  "scale": "500",
+  "id": "dog-n-hind-foot",
+  "view": "front",
+  "taper": false,
+  "why": "dog-metatarsus-hn: flat front shape on a bone of the dog that stands askew: the elevation outline swept over the width the front shape had"
+ },
+ {
+  "op": "extrude",
+  "scale": "500",
+  "id": "dog-n-hind-foot",
+  "view": "plan",
+  "taper": false,
+  "why": "dog-metatarsus-hn: a part of the dog that is deep in the side view and narrow in the plan; as a body of revolution it is up to 22 mm wider than its plan outline and the plan of the default pose wider than the declared depth: the elevation outline swept over the width the plan shape had"
+ },
+ {
+  "op": "extrude",
+  "scale": "500",
+  "id": "dog-neck",
+  "view": "plan",
+  "taper": false,
+  "why": "dog-neck: as a body of revolution the neck is 25 mm wider than its plan outline and the plan of the default pose 24 mm wider than the dimensions: the elevation outline swept over the width the plan shape had"
+ },
+ {
+  "op": "extrude",
+  "scale": "500",
+  "id": "dog-tail",
+  "view": "front",
+  "taper": false,
+  "why": "dog-tail-2: flat front shape on a bone of the dog that stands askew: the elevation outline swept over the width the front shape had"
+ },
+ {
+  "op": "extrude",
+  "scale": "500",
+  "id": "dog-f-hind-thigh",
+  "view": "front",
+  "taper": false,
+  "why": "dog-thigh-hf: flat front shape on a bone of the dog that stands askew: the elevation outline swept over the width the front shape had"
+ },
+ {
+  "op": "extrude",
+  "scale": "500",
+  "id": "dog-f-hind-thigh",
+  "view": "plan",
+  "taper": false,
+  "why": "dog-thigh-hf: a part of the dog that is deep in the side view and narrow in the plan; as a body of revolution it is up to 22 mm wider than its plan outline and the plan of the default pose wider than the declared depth: the elevation outline swept over the width the plan shape had"
+ },
+ {
+  "op": "extrude",
+  "scale": "500",
+  "id": "dog-n-hind-thigh",
+  "view": "front",
+  "taper": false,
+  "why": "dog-thigh-hn: flat front shape on a bone of the dog that stands askew: the elevation outline swept over the width the front shape had"
+ },
+ {
+  "op": "extrude",
+  "scale": "500",
+  "id": "dog-n-hind-thigh",
+  "view": "plan",
+  "taper": false,
+  "why": "dog-thigh-hn: a part of the dog that is deep in the side view and narrow in the plan; as a body of revolution it is up to 22 mm wider than its plan outline and the plan of the default pose wider than the declared depth: the elevation outline swept over the width the plan shape had"
+ },
+ {
+  "op": "extrude",
+  "scale": "500",
+  "id": "boot-l",
+  "view": "front",
+  "taper": false,
+  "why": "foot-l: flat/flat/flat: a foot that rolls, the elevation outline swept laterally"
+ },
+ {
+  "op": "extrude",
+  "scale": "500",
+  "id": "boot-l",
+  "view": "plan",
+  "taper": false,
+  "why": "foot-l: flat/flat/flat: a foot that rolls, the elevation outline swept laterally"
+ },
+ {
+  "op": "extrude",
+  "scale": "500",
+  "id": "boot-r",
+  "view": "front",
+  "taper": false,
+  "why": "foot-r: flat/flat/flat: a foot that rolls, the elevation outline swept laterally"
+ },
+ {
+  "op": "extrude",
+  "scale": "500",
+  "id": "boot-r",
+  "view": "plan",
+  "taper": false,
+  "why": "foot-r: flat/flat/flat: a foot that rolls, the elevation outline swept laterally"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "500",
+  "id": "shank-l",
+  "why": "shank-l: flat/None/flat: revolved about the bone axis"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "500",
+  "id": "shank-r",
+  "why": "shank-r: flat/None/flat: revolved about the bone axis"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "500",
+  "id": "thigh-l",
+  "why": "thigh-l: flat/None/flat: revolved about the bone axis"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "500",
+  "id": "thigh-r",
+  "why": "thigh-r: flat/flat/flat: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "500",
+  "id": "thigh-r",
+  "why": "thigh-r: flat/flat/flat: revolved about the bone axis"
+ },
+ {
+  "mh4": 1,
+  "op": "extrude",
+  "scale": "100",
+  "id": "boot-l",
+  "view": "plan",
+  "taper": false,
+  "why": "foot: flat plan shape beside a front solid; the heel anchor is 37 mm off it when the foot rolls: the elevation outline swept laterally"
+ },
+ {
+  "mh4": 1,
+  "op": "extrude",
+  "scale": "100",
+  "id": "boot-r",
+  "view": "plan",
+  "taper": false,
+  "why": "foot: flat plan shape beside a front solid; the heel anchor is 37 mm off it when the foot rolls: the elevation outline swept laterally"
+ },
+ {
+  "mh4": 1,
+  "op": "extrude",
+  "scale": "100",
+  "id": "dog-jaw",
+  "view": "front",
+  "taper": false,
+  "why": "dog-jaw: flat front shape on a bone that points at the viewer and opens 24 degrees (51 mm): the elevation outline swept laterally"
+ },
+ {
+  "mh4": 1,
+  "op": "extrude",
+  "scale": "200",
+  "id": "boot-l",
+  "view": "plan",
+  "taper": false,
+  "why": "foot: flat plan shape beside a front solid; the heel anchor is 37 mm off it when the foot rolls: the elevation outline swept laterally"
+ },
+ {
+  "mh4": 1,
+  "op": "extrude",
+  "scale": "200",
+  "id": "boot-r",
+  "view": "plan",
+  "taper": false,
+  "why": "foot: flat plan shape beside a front solid; the heel anchor is 37 mm off it when the foot rolls: the elevation outline swept laterally"
+ },
+ {
+  "mh4": 1,
+  "op": "mirror",
+  "scale": "500",
+  "id": "forearm-l",
+  "views": [
+   "elevation",
+   "front"
+  ],
+  "why": "forearm-l: half profile of a body of revolution; the guiding forearm is twisted 80 degrees and the elevation drew its meridian sheet 36 mm shorter at each end than the plan drew the body: the whole body of revolution in elevation and front"
+ },
+ {
+  "mh4": 4,
+  "op": "prism",
+  "scale": "50",
+  "view": "plan",
+  "id": "dog-near-thigh",
+  "open": true,
+  "why": "dog thigh: the flat plan thigh did not follow the sitting dog (71 mm): the cross-section whose sweep along the thigh fills the outline",
+  "axis": "u"
+ },
+ {
+  "mh4": 4,
+  "op": "prism",
+  "scale": "50",
+  "view": "plan",
+  "id": "dog-far-thigh",
+  "open": true,
+  "why": "dog thigh: the flat plan thigh did not follow the sitting dog (71 mm): the cross-section whose sweep along the thigh fills the outline",
+  "axis": "u"
+ },
+ {
+  "mh4": 4,
+  "op": "prism",
+  "scale": "100",
+  "view": "plan",
+  "id": "dog-near-thigh",
+  "open": true,
+  "why": "dog thigh: the flat plan thigh did not follow the sitting dog (71 mm): the cross-section whose sweep along the thigh fills the outline",
+  "axis": "u"
+ },
+ {
+  "mh4": 4,
+  "op": "prism",
+  "scale": "100",
+  "view": "plan",
+  "id": "dog-far-thigh",
+  "open": true,
+  "why": "dog thigh: the flat plan thigh did not follow the sitting dog (71 mm): the cross-section whose sweep along the thigh fills the outline",
+  "axis": "u"
+ },
+ {
+  "mh4": 4,
+  "op": "prism",
+  "scale": "200",
+  "view": "plan",
+  "id": "dog-near-fore-forearm",
+  "open": true,
+  "why": "dog forearm: the flat plan forearm did not follow the walk (57 mm): the cross-section whose sweep along the forearm fills the outline",
+  "axis": "u"
+ },
+ {
+  "mh4": 4,
+  "op": "prism",
+  "scale": "200",
+  "view": "plan",
+  "id": "dog-far-fore-forearm",
+  "open": true,
+  "why": "dog forearm: the flat plan forearm did not follow the walk (57 mm): the cross-section whose sweep along the forearm fills the outline",
+  "axis": "u"
+ },
+ {
+  "mh4": 4,
+  "op": "prism",
+  "scale": "200",
+  "view": "front",
+  "id": "dog-jaw",
+  "open": true,
+  "why": "dog-jaw: the flat front jaw did not follow the head (51 mm): the cross-section whose sweep along the jaw fills the outline",
+  "axis": "u"
+ }
+]

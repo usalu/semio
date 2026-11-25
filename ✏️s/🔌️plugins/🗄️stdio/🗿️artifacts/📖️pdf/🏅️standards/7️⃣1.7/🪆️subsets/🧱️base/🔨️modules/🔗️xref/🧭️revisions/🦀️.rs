@@ -118,6 +118,15 @@ impl XrefRevisionCursor {
 
     pub fn awaits_companion(&self) -> bool { self.schedule.awaits_companion() }
 
+    /// 🏃️ Whether the next unit reads one byte: the section probe or a classic table row.
+    pub fn scans_bytes(&self) -> bool {
+        match self.stage {
+            Stage::Probe(_) => true,
+            Stage::Section => matches!(&self.section, Some(Section::Table(cursor)) if cursor.scans_rows()),
+            _ => false,
+        }
+    }
+
     pub fn recover_compatible(&mut self, source: &[u8]) -> PResult<bool> {
         match self.section.as_mut() { Some(Section::Stream(cursor)) => cursor.recover_compatible(source), _ => Ok(false) }
     }

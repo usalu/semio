@@ -1,5 +1,5 @@
 //! 🌱️ Original initializer authority and cancellation Arc require separately funded physical release.
-use semio_plugin_ownership::store_lifecycle::ArtifactStoreInitializationJob;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactStoreInitializationJob;
 use semio_plugin_testing_fixtures::test_app_mutation_fixture::document::TestSnapshot;
 use semio_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::TestMutation;
 use store::{ArtifactStore, ArtifactStoreInitializationAuthority};

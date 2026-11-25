@@ -5,10 +5,12 @@ use semio_framework_value::RetirementDemand;
 use std::mem::MaybeUninit;
 type UninitRegistry=Arc<MaybeUninit<Registry>,RegistryAllocator>;
 
-#[derive(Clone,Copy,PartialEq,Eq)]
-struct SourceIdentity{operation:OperationId,generation:Generation,source:usize,recipient:usize,cancel:usize,clock:usize,epoch:Option<u64>,slot:usize}
+/// 🪪️ One Source: operation, generation, Source parent, cancellation node, clock and caller slot never change; the Source epoch only advances and the per-turn recipient local is not identity.
+#[derive(Clone,Copy)]
+struct SourceIdentity{operation:OperationId,generation:Generation,source:usize,cancel:usize,clock:usize,epoch:Option<u64>,slot:usize}
 impl SourceIdentity{
- fn read(source:&Option<Registry>,cx:&StepContext<'_>)->Result<Self,ValueError>{Ok(Self{operation:cx.operation(),generation:cx.generation(),source:cx.original_source_parent()?.source_identity()?,recipient:cx.original_recipient_identity(),cancel:cx.original_cancel_token()as*const _ as usize,clock:cx.clock_source()as usize,epoch:cx.original_source_epoch(),slot:source as*const _ as usize})}
+ fn continues(&self,now:&Self)->bool{(self.operation,self.generation,self.source,self.cancel,self.clock,self.slot)==(now.operation,now.generation,now.source,now.cancel,now.clock,now.slot)&&match(self.epoch,now.epoch){(None,None)=>true,(Some(original),Some(current))=>current>=original,_=>false}}
+ fn read(source:&Option<Registry>,cx:&StepContext<'_>)->Result<Self,ValueError>{Ok(Self{operation:cx.operation(),generation:cx.generation(),source:cx.original_source_parent()?.source_identity()?,cancel:cx.original_cancel_token()as*const _ as usize,clock:cx.clock_source()as usize,epoch:cx.original_source_epoch(),slot:source as*const _ as usize})}
 }
 /// 🎟️ Transfers the original reader and its separately funded final authority together.
 pub struct SharedRegistryAdmissionStep{pub ready:Option<(SharedRegistry,RegistryRetirement)>,pub progress:RetainedCloneProgress}
@@ -25,7 +27,7 @@ impl SharedRegistryIssuer{
  pub fn phase(&self)->u8{self.phase}
  pub fn begin_close(&mut self){self.closing=true;}
  pub fn terminal_is_empty(&self)->bool{self.done&&self.final_root.is_none()&&self.uninit.is_none()&&self.root.is_none()&&self.retirement.is_none()&&self.returned.is_none()}
- fn validate(&self,source:&Option<Registry>,cx:&StepContext<'_>)->Result<SourceIdentity,OriginalTurnFailure>{let identity=SourceIdentity::read(source,cx)?;if self.identity.is_some_and(|original|original!=identity){return Err(refused("registry admission requires its original source slot and caller").into())}Ok(identity)}
+ fn validate(&mut self,source:&Option<Registry>,cx:&StepContext<'_>)->Result<SourceIdentity,OriginalTurnFailure>{let identity=SourceIdentity::read(source,cx)?;if self.identity.is_some_and(|original|!original.continues(&identity)){return Err(refused("registry admission requires its original source slot and caller").into())}if self.identity.is_some(){self.identity=Some(identity)}Ok(identity)}
  pub fn next_demand(&self,_body:usize)->Result<RetirementDemand,ValueError>{
   if self.terminal_is_empty(){return Ok(Default::default())}if self.closing{return self.close_demand()}
   Ok(RetirementDemand{capacity_bytes:match self.phase{1=>shell_bytes::<FinalRootSlot>(),2=>shell_bytes::<Registry>(),0|3|4|5=>0,_=>return Err(refused("invalid original registry admission phase"))},depth:1,..Default::default()})

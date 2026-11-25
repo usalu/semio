@@ -4,36 +4,23 @@ name = "semio-hub-demonstrator"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
-description = "Entwerfen mit Bestand demonstrator plugin - one crate bundling the six demonstrator panes (generator/koordinator/aggregator/aussuchen/bearbeiten/verfolgen) served by procedural/cad/puzzle/sourcing/process/gis into one wasm component"
+description = "Entwerfen mit Bestand demonstrator plugin - one crate bundling the playground, aussuchen and bearbeiten demonstrator panes served by sourcing and process into one wasm component"
 
 [lints]
 workspace = true
 
-# 🎪️ REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT: bundles the six mit-bestand demonstrator panes'
-# already-existing apps (generation3d, cad, puzzle3d, sourcing-curation, process3d, gis2d) into ONE
-# wasm component instead of six — the framework/kernel SDK (`semio-plugin`,
-# `semio-os`) is statically linked exactly once, and the six panes share one plugin
-# worker/module via the existing `acquirePluginModule` lease pool (framework core `🟦️.ts`),
-# instead of six separate workers each duplicating that linkage. Each source plugin
-# (procedural/cad/puzzle/sourcing/process/gis) keeps its own standalone playground rows unchanged
-# for its own non-demonstrator variants (e.g. `generation3d`, `puzzle3d`) — only the six
-# demonstrator-specific rows (`generator`/`koordinator`/`aggregator`/`aussuchen`/`bearbeiten`/`verfolgen`)
-# live here.
+# 🎪️ Bundles the aussuchen (sourcing) and bearbeiten (process) panes' apps into ONE wasm component. The
+# generator, koordinator, aggregator and verfolgen panes run on their owners' own components
+# (procedural, cad, puzzle, gis) through `runtimeVariant`.
 [package.metadata.semio]
 role = "hub"
-# 🔗️ Runtime actor dependencies — the six plugins whose editor/viewer surfaces this crate registers
-# over THEIR artifact kinds (`🪪️manifest/🎪️demonstrator/🦀️.rs`'s `.depends_on(…)` rows must match the
-# plugin ids below exactly). Flow extensions are listed explicitly (not `flow.extension`) so the
-# mit-bestand build does not materialize `flow-extension-draw`, which generation3d does not use.
-# `stdio` is deliberately absent: every `semio_s_artifact_stdio_*` call here is an in-process codec
-# call into a linked rlib, not a message to a separate stdio actor.
+# 🔗️ Runtime actor dependencies — the two plugins whose editor/viewer surfaces this crate registers
+# over THEIR artifact kinds (`🪪️manifest/🎪️demonstrator/🦀️.rs`'s `.depends_on(…)` rows must match).
 
 [lib]
 path = "🦀️.rs"
 
 [dependencies]
-semio-s-artifact-procedural-3d-editor = { workspace = true }
-semio-s-artifact-puzzle-3d-editor = { workspace = true }
 semio-framework-pack = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-ui-locale = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-s-artifact-demonstrator-playground = { workspace = true }
@@ -58,22 +45,12 @@ semio-framework-schema = { path = "../../../../../🧰️framework/🔨️module
 value_derive = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 semio-framework-value = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-s-artifact-sourcing-curation = { workspace = true }
-# 🎪️ Link only the artifact surfaces this bundle registers — not whole multi-artifact plugin crates
-# (puzzle 2d/5d, procedural 2d/assembly, gis terrain stay out of the demonstrator wasm link).
-semio-s-artifact-procedural-generation3d = { workspace = true }
-semio-s-artifact-puzzle-3d = { workspace = true }
-semio-s-artifact-gis-gismap = { workspace = true }
-semio-s-artifact-cad-cad-editor = { workspace = true }
 semio-s-artifact-process-process3d-editor = { workspace = true }
 semio-s-artifact-process-process3d-viewer = { workspace = true }
 
 [dev-dependencies]
-# 🪞️ The six standalone hosts the bundle is compared with by `🧪️tests/🔬️standalone-parity` — each is the plugin the bundled apps are constructed like.
-semio-hub-cad = { path = "../../../📐️cad/📦️packages/🦀️rust" }
-semio-hub-gis = { path = "../../../🌍️gis/📦️packages/🦀️rust" }
-semio-hub-procedural = { path = "../../../🌀️procedural/📦️packages/🦀️rust" }
+# 🪞️ The two standalone hosts the bundle is compared with by `🧪️tests/🔬️standalone-parity` — each is the plugin the bundled apps are constructed like.
 semio-hub-process = { path = "../../../🏭️process/📦️packages/🦀️rust" }
-semio-hub-puzzle = { path = "../../../🧩️puzzle/📦️packages/🦀️rust" }
 semio-hub-sourcing = { path = "../../../🪵️sourcing/📦️packages/🦀️rust" }
 semio-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
 serde.workspace = true

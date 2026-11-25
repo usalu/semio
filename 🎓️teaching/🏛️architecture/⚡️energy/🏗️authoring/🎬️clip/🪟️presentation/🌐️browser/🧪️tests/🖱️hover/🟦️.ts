@@ -35,6 +35,6 @@ const {renderToStaticMarkup}=await import("react-dom/server");
 const {OverviewCard}=await import(pathToFileURL(path.join(process.cwd(),"🧰️framework/🔨️modules/🖱️ui/🧱️elements/🃏️OverviewCard/🟦️.tsx")).href);
 const card=new JSDOM(renderToStaticMarkup(React.createElement(OverviewCard,{as:"button",label:"Example",title:"Example"}))).window.document.querySelector("button");
 assert.equal(card.tagName,c.card_hit_target);
-assert.equal(card.querySelector("[data-overview-card-paint]")?.tagName,c.card_lift_target);
+assert.equal(card.querySelector("[data-overview-card-paint]")?.tagName,c.card_paint_target);
 assert(!card.className.includes("hover:-translate-y-0.5"));
-assert(card.querySelector("[data-overview-card-paint]").className.includes("group-hover:-translate-y-0.5"));
+assert(!/translate/u.test(card.querySelector("[data-overview-card-paint]").className));

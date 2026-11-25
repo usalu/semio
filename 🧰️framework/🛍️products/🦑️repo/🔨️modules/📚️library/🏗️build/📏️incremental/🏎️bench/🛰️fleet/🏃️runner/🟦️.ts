@@ -99,7 +99,7 @@ async function offloadPressure(directory:string):Promise<FleetValuesV1>{
  try{
   for(let index=0;index<policy.offload.workers;index++){
    const name="w"+index,work=join(directory,"worker-"+name);mkdirSync(work,{recursive:true});
-   const child=spawn(process.execPath,[entry,"--join",services.server.workerUrl,"--name",name,"--origin",name,"--work-directory",join(work,"work"),"--concurrency","2"],{cwd:work,env:workerEnvironmentV1(idle),stdio:"ignore"});
+   const child=spawn(process.execPath,[entry,"--join",services.server.workerUrl,"--name",name,"--origin",name,"--work-directory",join(work,"work"),"--concurrency","2"],{windowsHide:true,cwd:work,env:workerEnvironmentV1(idle),stdio:"ignore"});
    children.add(child);child.on("close",()=>children.delete(child));
   }
   await eventuallyV1(async()=>{const status=await (await fetch(services.server.workerUrl+"/status")).json() as {workers?:unknown[]};return (status.workers?.length??0)>=policy.offload.workers;},120000,"the worker to join");
@@ -170,7 +170,7 @@ async function liveBazelCache(directory:string,root:string):Promise<FleetValuesV
   writeFileSync(join(workspace,"MODULE.bazel"),'module(name="scratch",version="0.0.0")\n');writeFileSync(join(workspace,"in.txt"),`fleet ${Date.now()}${process.pid}\n`);
   writeFileSync(join(workspace,"BUILD.bazel"),'genrule(name="a",srcs=["in.txt"],outs=["a.txt"],cmd="cat $(SRCS) > $@ && echo a >> $@")\ngenrule(name="b",srcs=[":a"],outs=["b.txt"],cmd="cat $(SRCS) > $@ && echo b >> $@")\n');
   const bazel=(command:string[])=>new Promise<{status:number|null;text:string}>(accept=>{
-   const child=spawn(found,[`--output_user_root=${join(directory,"root")}`,`--output_base=${join(directory,"ob")}`,`--install_base=${join(directory,"install")}`,"--nosystem_rc","--nohome_rc","--max_idle_secs=15",...command,"--lockfile_mode=off","--incompatible_autoload_externally=",...(command[0]==="build"?rendering.flags:[])],{cwd:workspace,env:{PATH:process.env.PATH??"",HOME:process.env.HOME??""}}),parts:Buffer[]=[],timer=setTimeout(()=>child.kill("SIGKILL"),policy.live.bazelTimeoutMilliseconds);
+   const child=spawn(found,[`--output_user_root=${join(directory,"root")}`,`--output_base=${join(directory,"ob")}`,`--install_base=${join(directory,"install")}`,"--nosystem_rc","--nohome_rc","--max_idle_secs=15",...command,"--lockfile_mode=off","--incompatible_autoload_externally=",...(command[0]==="build"?rendering.flags:[])],{windowsHide:true,cwd:workspace,env:{PATH:process.env.PATH??"",HOME:process.env.HOME??""}}),parts:Buffer[]=[],timer=setTimeout(()=>child.kill("SIGKILL"),policy.live.bazelTimeoutMilliseconds);
    child.stderr.on("data",chunk=>parts.push(chunk));child.stdout.on("data",chunk=>parts.push(chunk));
    child.on("error",()=>{clearTimeout(timer);accept({status:null,text:""});});child.on("close",status=>{clearTimeout(timer);accept({status,text:Buffer.concat(parts).toString()});});
   });
@@ -198,7 +198,7 @@ async function liveOffload(directory:string,root:string):Promise<FleetValuesV1>{
 async function liveRunWarm(root:string):Promise<FleetValuesV1>{
  const target=policy.live.runTarget,environment=incrementalChildEnvironmentV1(process.env,{SEMIO_LANGUAGE:process.env.SEMIO_LANGUAGE??"en"}),run=()=>new Promise<{lines:{atMs:number;text:string}[];wallMs:number}>((accept,reject)=>{
   const started=performance.now(),lines:{atMs:number;text:string}[]=[],pending=["",""];
-  const child=spawn("repo",["run",target,"--tool=nx"],{cwd:root,env:environment,detached:process.platform!=="win32",stdio:["ignore","pipe","pipe"]}),timer=setTimeout(()=>terminateOwnedChildTree(child),policy.live.runTimeoutMilliseconds);
+  const child=spawn("repo",["run",target,"--tool=nx"],{windowsHide:true,cwd:root,env:environment,detached:process.platform!=="win32",stdio:["ignore","pipe","pipe"]}),timer=setTimeout(()=>terminateOwnedChildTree(child),policy.live.runTimeoutMilliseconds);
   const scan=(at:0|1)=>(chunk:Buffer)=>{const now=performance.now()-started;pending[at]+=chunk.toString();for(let cut=pending[at]!.indexOf("\n");cut>=0;cut=pending[at]!.indexOf("\n")){lines.push({atMs:now,text:pending[at]!.slice(0,cut).replace(/\r$/u,"")});pending[at]=pending[at]!.slice(cut+1);}};
   child.stdout!.on("data",scan(0));child.stderr!.on("data",scan(1));
   child.on("error",error=>{clearTimeout(timer);reject(error);});

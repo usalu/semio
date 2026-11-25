@@ -1,0 +1,4 @@
+# fifth fixer: the bicycle with single finger lofts and the hand pen 0.18 mm (variant p18: suitable, guard OK at 1:50): dry run over every subject, write when clean, sheets, then check CLI and matrix only when the catalog file is the dry run (1000 MB)
+GATE_TIMEOUT=6000 "$here/in-try-apply.sh" person-pushing-bicycle
+"$here/in-look.sh" person-pushing-bicycle:try:50 person-pushing-bicycle:try:50:lifting-onto-stand person-pushing-bicycle:try:100 person-pushing-bicycle:try:500
+cmp -s "$S/🗂️catalog/👤️humans/person-pushing-bicycle/🔣️.json" "$GEN/try/person-pushing-bicycle.json" && "$here/in-final.sh" person-pushing-bicycle

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import Decimal from "decimal.js";
 import Ajv from "ajv";
 import schema from "./dock-cases.schema.json";
@@ -17,6 +17,7 @@ import { Input } from "../../✏️Input/🟦️.tsx";
 import { Textarea } from "../../🔤️Textarea/🟦️.tsx";
 import { Stepper } from "../../🪜️Stepper/🟦️.tsx";
 import { Search } from "../../🔍️WindowSearch/🟦️.tsx";
+import { chromiumProvisioned, launchChromium } from "../../../🧪️tests/🌐️chromium-launch/🟦️";
 
 afterEach(() => { cleanup(); vi.restoreAllMocks(); });
 
@@ -138,13 +139,12 @@ describe("flush dock boundaries", () => {
     expect(canvas).not.toContain("h-full w-full gap-[var(--padding-standard)]");
     expect(canvas).toContain('MODE_CANVAS_INSET_CLASS = "p-0"');
     const dock = source("../⚓️dock/🟦️.tsx");
-    expect(dock).toContain('overflow-hidden p-0", windowBodyFrameClass');
     expect(dock).toContain("registerStackDropTargets(stackPath, corner, cornerTabBarRefs.current[corner], stackRef.current)");
     for (const Windows of [HorizontalWindows, VerticalWindows]) {
       const { container, unmount } = render(<Canvas><Windows><div>Pane</div><div>Pane</div></Windows></Canvas>);
       const canvas = container.querySelector('[data-slot="canvas"]')!;
       expect(canvas.className).toContain("p-0");
-      expect(canvas.firstElementChild!.className).toContain("gap-0");
+      expect(canvas.querySelector('[data-slot="canvas-stage"]')!.firstElementChild!.className).toContain("gap-0");
       unmount();
     }
   });
@@ -157,11 +157,18 @@ describe("flush dock boundaries", () => {
     const stacks = body.querySelectorAll('[data-slot="mode-dock-stack"]');
     expect(stacks).toHaveLength(2);
     expect(body.querySelector<HTMLElement>('[data-slot="resizable-handle"]')!.style.width).toBe("0px");
-    for (const stack of stacks) expect(stack.querySelector('[data-slot="mode-dock-stack-body"]')!.className).toContain("p-0");
+    for (const stack of stacks) {
+      const content = stack.querySelector('[data-slot="mode-dock-stack-body"]')!;
+      const fill = stack.querySelector(':scope > [data-slot="window-chrome-body-surface"]')!;
+      expect(content.classList.contains("p-0")).toBe(true);
+      expect(content.classList.contains("ui-surface")).toBe(false);
+      expect(fill.classList.contains("ui-surface")).toBe(true);
+      expect(fill.getAttribute("data-level")).toBe("window");
+    }
     const layout = container.querySelector('[data-slot="layout"]')!;
-    expect(layout.children[0]!.querySelector('[data-testid="navbar"]')).not.toBeNull();
-    expect(layout.children[1]!.contains(body)).toBe(true);
-    expect(layout.children[2]!.querySelector('[data-testid="footer"]')).not.toBeNull();
+    expect(layout.querySelector(':scope > [data-layout-band="start"] [data-testid="navbar"]')).not.toBeNull();
+    expect(layout.querySelector(':scope > [data-slot="layout-canvas-bleed"]')!.contains(body)).toBe(true);
+    expect(layout.querySelector(':scope > [data-layout-band="end"] [data-testid="footer"]')).not.toBeNull();
   });
 
   it("propagates controlled Mode selection to the complete measured frame outline before interaction, then transfers activation and lets the hovered chip close its own outline", async () => {
@@ -314,9 +321,8 @@ describe("flush dock boundaries", () => {
   });
 
   it("matches neutral physical boundaries in the independent browser flex implementation", async (context) => {
-    const { chromium } = await import("playwright");
-    if (!existsSync(chromium.executablePath())) context.skip("Playwright Chromium is not provisioned; no browser was installed by this task.");
-    const browser = await chromium.launch({ headless: true });
+    if (!(await chromiumProvisioned())) context.skip("Playwright Chromium is not provisioned; no browser was installed by this task.");
+    const browser = await launchChromium();
     try {
       const page = await browser.newPage();
       for (const row of fixture.cases) {

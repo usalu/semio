@@ -3,7 +3,7 @@
 //! 🗃️ The whole-document archive merge.
 use semio_plugin_document_media::ActiveDocumentArchiveLoadState;
 use semio_plugin_decl_app::{ArtifactApp, DOCUMENT_LOAD_FAILED_CODE, DOCUMENT_LOAD_MEMBERS_DIFFER_CODE, DOCUMENT_LOAD_OPERATION_UNKNOWN_CODE, DOCUMENT_LOAD_OTHER_DOCUMENT_CODE, document_load_fault};
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use crate::command_bundle::CommandCtx;
 use semio_plugin_decl_emission::Emit;

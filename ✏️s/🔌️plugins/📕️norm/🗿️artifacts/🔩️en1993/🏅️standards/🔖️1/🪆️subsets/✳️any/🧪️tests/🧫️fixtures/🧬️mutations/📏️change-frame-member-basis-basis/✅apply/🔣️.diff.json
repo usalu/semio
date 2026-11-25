@@ -142,19 +142,7 @@
     "removed": [],
     "inserted": [],
     "moved": [],
-    "modified": [
-      {
-        "id": "node-a",
-        "patch": {
-          "label": null,
-          "x": null,
-          "z": null,
-          "support": null,
-          "loadX": 1.5,
-          "loadZ": null
-        }
-      }
-    ]
+    "modified": []
   },
   "frameBars": {
     "removed": [],

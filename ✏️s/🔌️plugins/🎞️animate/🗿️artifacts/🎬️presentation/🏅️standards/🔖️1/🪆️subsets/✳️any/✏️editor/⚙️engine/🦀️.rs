@@ -133,7 +133,7 @@ pub mod compiler {
             vec![
                 el("meta", vec![HtmlAttr::new("charset", "utf-8")], Vec::new()),
                 el("meta", vec![HtmlAttr::new("name", "viewport"), HtmlAttr::new("content", "width=device-width, initial-scale=1")], Vec::new()),
-                el("title", Vec::new(), vec![HtmlNode::Text { text: "Animate Presentation".into() }]),
+                el("title", vec![HtmlAttr::new("lang", "en")], vec![HtmlNode::Text { text: "Animate Presentation".into() }]),
                 el("link", vec![HtmlAttr::new("rel", "stylesheet"), HtmlAttr::new("href", "styles.css")], Vec::new()),
                 el("link", vec![HtmlAttr::new("rel", "manifest"), HtmlAttr::new("href", "manifest.json")], Vec::new()),
             ],
@@ -141,41 +141,21 @@ pub mod compiler {
         let deck_script_children = if deck_json.is_empty() { Vec::new() } else { vec![HtmlNode::RawText { parent_kind: RawTextKind::Script, text: deck_json.to_string() }] };
         let main = el(
             "main",
-            vec![HtmlAttr::new("id", "animate-presentation-root"), HtmlAttr::new("data-deck-schema", "animate.presentation.deck")],
+            vec![HtmlAttr::new("id", "animate-presentation-root"), HtmlAttr::new("data-deck-schema", "animate.presentation.deck"), HtmlAttr::new("data-level", "window")],
             vec![
-                el("canvas", vec![HtmlAttr::new("id", "animate-presentation-canvas"), HtmlAttr::new("width", "1280"), HtmlAttr::new("height", "720")], Vec::new()),
+                el("canvas", vec![HtmlAttr::new("id", "animate-presentation-canvas"), HtmlAttr::new("data-window-frame-content", ""), HtmlAttr::new("width", "1280"), HtmlAttr::new("height", "720")], Vec::new()),
                 el("script", vec![HtmlAttr::new("id", "animate-presentation-deck"), HtmlAttr::new("type", "text/dsl")], deck_script_children),
             ],
         );
         let body = el("body", Vec::new(), vec![main, module_script("/animate/plugin/wasm/semio_s_plugin_animate.js"), module_script("player.js")]);
-        let html = el("html", vec![HtmlAttr::new("lang", "en")], vec![head, body]);
+        let html = el("html", vec![HtmlAttr::new("lang", "")], vec![head, body]);
         HtmlSnapshot { schema: STDIO_HTML_DOCUMENT_SCHEMA.into(), doctype: Some("DOCTYPE html".into()), root: html }
     }
 
-    fn styles_css() -> &'static str {
-        r#"html, body {
-      margin: 0;
-      height: 100%;
-      background: #0b0d12;
-      color: #f4f6fb;
-      font-family: system-ui, sans-serif;
-    }
-
-    #animate-presentation-root {
-      display: grid;
-      place-items: center;
-      min-height: 100%;
-    }
-
-    #animate-presentation-canvas {
-      width: min(100vw, 1280px);
-      height: auto;
-      aspect-ratio: 16 / 9;
-      border: 1px solid #2a3140;
-      border-radius: 8px;
-      background: #11151d;
-    }
-    "#
+    fn styles_css() -> String {
+        let mut css = include_str!("../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🎨️palette/🎨️.css").replace("@theme {", ":root {");
+        css.push_str(include_str!("🎨️presentation.css"));
+        css
     }
 
     fn player_boot_js() -> &'static str {

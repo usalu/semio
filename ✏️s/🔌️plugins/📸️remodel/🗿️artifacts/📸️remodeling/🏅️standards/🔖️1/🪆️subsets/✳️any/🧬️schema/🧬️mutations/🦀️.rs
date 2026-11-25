@@ -61,6 +61,7 @@ pub enum RemodelingMutation {
     CommitReconstruction(CommitReconstruction),
 }
 dsl::original_pack_value_operation_receiving!(RemodelingMutation);
+dsl::artifact_persisted_binary_operation!(RemodelingMutation);
 //#endregion 🔖️Mutations
 
 //#region 🔖️LeafPayloads

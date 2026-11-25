@@ -20,7 +20,7 @@ export type FleetCacheLocalCopyV1=Readonly<{version:1;fetchedAtMs:number;checked
 export type FleetCacheRefreshV1=Readonly<{state:"fresh"|"checked"|"updated"|"stale"|"absent";copy:FleetCacheLocalCopyV1|undefined;error?:string}>;
 
 /** 🧮️ The resolved remote cache of one process: the contract, the token (never printed), the input environment completed with the resolved values, and where endpoint and token came from. */
-export type RemoteCacheResolutionV1=Readonly<{contract:RemoteCacheContractV1;token:string|undefined;environment:Readonly<Record<string,string|undefined>>;endpointFrom:"environment"|"fleet-facts";tokenFrom:"environment"|"fleet-identity"|"none";generation:number|null}>;
+export type RemoteCacheResolutionV1=Readonly<{contract:RemoteCacheContractV1;token:string|undefined;environment:Readonly<Record<string,string|undefined>>;endpointFrom:"environment"|"fleet-facts";tokenFrom:"environment"|"fleet-identity"|"none";generation:number|null;instanceFrom:"environment"|"fleet-facts"|"policy";instanceRefused:string|null}>;
 
 /** ⚙️ What `resolveRemoteCacheV1` may be told: the worktree root whose `.cache/f` holds the local copy, a ready-made copy (tests), and the policy. */
 export type RemoteCacheResolutionOptionsV1=Readonly<{root?:string;copy?:FleetCacheLocalCopyV1;policy?:RemoteCachePolicyV1}>;
@@ -79,14 +79,21 @@ export function pointerSupersededV1(environment:Readonly<Record<string,string|un
  return pointer!==undefined&&facts!==undefined&&facts.cache.endpoints.length>0&&filled(environment,FLEET_POINTER_OVERRIDE_ENVIRONMENT_V1)===undefined&&!facts.cache.endpoints.some(endpoint=>origin(endpoint)===origin(pointer));
 }
 
+/** 🪢️ The instance (namespace) of the environment that the healthy fleet facts contradict: it is a leftover of an older provisioning and the facts, the single source of truth that the cache server publishes, win, unless the operator set the override variable; `undefined` when nothing contradicts. A leftover wrote entries into a namespace that no reader of the fleet looks into. */
+export function instanceRefusedV1(environment:Readonly<Record<string,string|undefined>>,instanceName:string,facts:Readonly<{cache:Readonly<{instance:string}>}>|undefined):string|undefined{
+ const value=filled(environment,instanceName);
+ return value!==undefined&&facts!==undefined&&value!==facts.cache.instance&&filled(environment,FLEET_POINTER_OVERRIDE_ENVIRONMENT_V1)===undefined?value:undefined;
+}
+
 /** 🧭️ THE resolver of every client of the remote cache: the environment first, field by field, then the fleet facts of the local copy. The credential of a joined machine is its own signing identity (`tokenFrom: fleet-identity`, no secret in any variable or file that others read) and is only ever used for an endpoint the facts name, so an explicitly foreign endpoint never sees even a signature; an operator token from the environment (`tokenFrom: environment`) is sent as before. Synchronous and local: a stalled store cannot stall a caller; keep the copy fresh with `refreshFleetCacheFactsV1`. `undefined` means the remote cache is off. */
 export function resolveRemoteCacheV1(environment:Readonly<Record<string,string|undefined>>,options:RemoteCacheResolutionOptionsV1={}):RemoteCacheResolutionV1|undefined{
  const policy=options.policy??readRemoteCachePolicyV1(),names=policy.environment,root=options.root??fleetCacheRootV1(environment),copy=options.copy??(root===undefined?undefined:readLocalFleetCacheFactsV1(root)),facts=copy?.facts;
  const overlay:Record<string,string|undefined>={...environment},pointer=filled(environment,names.endpoint),superseded=pointerSupersededV1(environment,names.endpoint,facts),explicit=superseded?undefined:pointer,tokenName=filled(environment,names.tokenEnvironment)??policy.defaults.tokenEnvironment,own=filled(environment,tokenName);
  let endpointFrom:RemoteCacheResolutionV1["endpointFrom"]="environment",named=false;
+ const instanceRefused=instanceRefusedV1(environment,names.instance,facts),instanceFrom:RemoteCacheResolutionV1["instanceFrom"]=facts!==undefined&&copy!==undefined&&(filled(environment,names.instance)===undefined||instanceRefused!==undefined)?"fleet-facts":filled(environment,names.instance)===undefined?"policy":"environment";
  if(facts!==undefined&&copy!==undefined){
   if(explicit===undefined){overlay[names.endpoint]=copy.selectedEndpoint??facts.cache.endpoints[0];endpointFrom="fleet-facts";}
-  if(filled(environment,names.instance)===undefined)overlay[names.instance]=facts.cache.instance;
+  if(filled(environment,names.instance)===undefined||instanceRefused!==undefined)overlay[names.instance]=facts.cache.instance;
   if(filled(environment,names.access)===undefined)overlay[names.access]=facts.cache.access;
   named=facts.cache.endpoints.some(endpoint=>origin(endpoint)===origin(overlay[names.endpoint]??""));
  }
@@ -94,7 +101,7 @@ export function resolveRemoteCacheV1(environment:Readonly<Record<string,string|u
  if(contract===undefined)return undefined;
  const token=readRemoteCacheTokenV1(contract,overlay),tokenFrom:RemoteCacheResolutionV1["tokenFrom"]=token!==undefined?"environment":named&&root!==undefined&&loadFleetSignerV1(root,"cache-read")!==undefined?"fleet-identity":"none";
  if(tokenFrom==="fleet-identity")overlay.SEMIO_REMOTE_CACHE_SIGNED="1";
- return Object.freeze({contract,token,environment:Object.freeze(overlay),endpointFrom,tokenFrom,generation:facts?.generation??null});
+ return Object.freeze({contract,token,environment:Object.freeze(overlay),endpointFrom,tokenFrom,generation:facts?.generation??null,instanceFrom,instanceRefused:instanceRefused??null});
 }
 
 const copies=new Map<string,{at:number;copy:FleetCacheLocalCopyV1|undefined}>();

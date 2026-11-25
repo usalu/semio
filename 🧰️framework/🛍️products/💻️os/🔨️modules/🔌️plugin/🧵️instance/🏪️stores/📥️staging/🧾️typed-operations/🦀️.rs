@@ -2,7 +2,7 @@
 //!
 //! 🧾️ Typed operations of the mounted artifact instance: typed-operation publication, typed-command dispatch, configuration and the history panel.
 use semio_plugin_decl_app::ArtifactApp;
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use semio_plugin_decl_emission::Emit;
 use semio_framework::{Fault, FaultFrom};
@@ -108,6 +108,16 @@ impl<A: ArtifactApp> InstanceStores<A> {
             mounted.pending_artifact_publication = Some(owner);
         }
         result
+    }
+
+    /// 🏛️ Returns one unit of a closing durable batch's Store-issued commit metadata or causal suffix through its issuing store (the batch abort port), so the generic retirement that follows owns nothing the store still accounts for; `None` once nothing is left to return.
+    pub fn return_publication_custody(&mut self, pending: &mut PendingArtifactStorePublication<A>, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<Option<RetainedCloneProgress>, semio_framework_value::ValueError> {
+        match pending {
+            PendingArtifactStorePublication::Artifact(publication) => self.store.prepare_apply_batch_close(publication, effect),
+            PendingArtifactStorePublication::Config(publication) => self.config_store.prepare_apply_batch_close(publication, effect),
+            PendingArtifactStorePublication::Draft(publication) => self.draft_store.prepare_apply_batch_close(publication, effect),
+            _ => Ok(None),
+        }
     }
 
     /// 🪟️ Continues the window-config authority refresh a published receipt retains until the displaced snapshot has admitted custody; `true` once it is complete, when the use case tells the extensions and queues the receipt's result page; every unit reports its actual progress to the host turn.

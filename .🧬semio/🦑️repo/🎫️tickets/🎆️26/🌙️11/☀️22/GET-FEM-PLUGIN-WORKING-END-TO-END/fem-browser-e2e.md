@@ -130,10 +130,37 @@ Fix: `WindowConfigOwnerRegistry::ensure_for_roster` pumps the partition birth of
 - Not changed: the typing settlement (`OriginalTypingSettlement`) has the same read-lease guard (`retained_read_pending`) and may need the same treatment. FEM's number inputs use the press path.
 - Also fixed in passing: the ticket's `native-fem-dev.sh` pinned a removed cached Vite (`.cache/b/d/m/j/420f…`) and now picks the newest cached Vite. Its `wasm` mode exits 0 on failure, so `wasm-retry.sh` reads the logged `rc=`. `RUST_MIN_STACK=128 MiB` is set against the repeated `STATUS_ACCESS_VIOLATION` / `STATUS_STACK_BUFFER_OVERRUN` rustc crashes under `-Z threads=0`.
 
+### Every Writer Waiting on the Follow's Read Drives the Follow (2026-11-24, Reopened)
+
+- The press fix covered one writer. The follow walks the press, gesture and typing ledgers and holds a retained read (`RetainedOriginalSlot::has_read`) on the row it reads. Every writer of that row refuses while the read is held. A Haiku audit, which I then confirmed in code, found four more writers that only re-polled:
+  - The typing settlement: `OriginalTypingEdit::admit` returns `Ok(false)` under `retained_read_pending`.
+  - The typing dispatch commit: `OriginalTypingCommit::admit` and its phase 0.
+  - The scrub dispatch writer: `OriginalScrubWrite::admit` and `publish` on `has_read`.
+  - The gesture settlement: `GestureLedger::settle` refuses, `settle_gesture_slot` sets `refold_owed`, and the Capture stage re-polls.
+- Fix: one shared `follow_before_writer(cx, writer)` on the render context quotes the follow, funds it (a named shortfall otherwise), and drives one `tool_overlay_retirement_step`. Each writer calls it while the follow holds a read of its ledger:
+  - Press settlement: `OriginalPressSettlement::awaits_writer`.
+  - Typing settlement: `OriginalTypingSettlement::awaits_writer(ledger)`, captured with no writer while its window has a read.
+  - Scrub dispatch: `OriginalToolMachineFollow::reads_presses`.
+  - Typing dispatch commit: `OriginalTypingCommit::awaits_source` plus `reads_typing`.
+  - Gesture settlement: `refold_owed` plus `reads_gestures`.
+- The follow's read predicates use the walk's window (`OriginalToolLedgerWalk::window`) and the ledger's own `retained_read_pending`, so they hold only while the read really is held.
+- Laws:
+  - `a_press_commit_blocked_by_the_follow_read_drives_the_follow`.
+  - `a_typing_commit_blocked_by_the_follow_read_drives_the_follow`.
+  - `every_writer_waiting_on_a_follow_read_drives_the_follow`.
+  - All three share `follow_step_is_funded`.
+- Also: `settle_press`'s doc comment had drifted onto `tool_source_busy`. It is back on `settle_press`, and `tool_source_busy` has its own doc. The audit says nothing calls `tool_source_busy`; I left it in place.
+- Not mine and left in place: another agent re-added `[DEBUG]` `eprintln!` lines in `tool_overlay_retirement_step` and the maintenance ladder, plus `OriginalToolMachineFollow::dbg_state`.
+- Not changed: gesture `abort` and typing `abort`/`lapse` stay `Idle` under a held read, a silent no-op rather than a spin. They need their own design (a deferred abort).
+
 ## Final Evidence (2026-11-24, wasm `e68c95d3…`, no temporary prints)
 
 - 2D, full `🧪️browser-smoke.mjs` rc=0: `Initial FEM 2D Converged · 36 / 512 · Residual 7.460e-9`, then after editing n1 X to 1.5 and clicking away, `Updated FEM 2D Converged · 49 / 512 · Residual 9.515e-9`, and the Live Load reaction is `Ty: 12000 N`.
 - 3D, headless, no interaction: Preparing analysis (24.6 s), Solving loads (37.5 s), results `Case: dead` (44.3 s), 0 faults.
+
+- Re-verified on wasm `fdae8851…`, which includes the follow-writer fix for every writer:
+  - The 2D smoke passes (rc=0): `Initial FEM 2D Converged · 36 / 512 · Residual 7.460e-9`, then `Updated FEM 2D Converged · 49 / 512 · Residual 9.515e-9`, and the Live Load reaction is `Ty: 12000 N`.
+  - 3D headless with no interaction: results show `Case: dead` with the contour on the solid, and no fault lines.
 
 ## Changed Files
 
@@ -148,18 +175,37 @@ Fix: `WindowConfigOwnerRegistry::ensure_for_roster` pumps the partition birth of
 - FEM 2D session (`🏗️model-build-job`, `🎼️eigen-stages`, `🔁️mounted-state-step`, `🧪️tests/🎼️eigen`, `🧪️tests/🔬️unit`) and FEM 3D `💼️mounted-state`: child operation from the host-bound operation and generation.
 - `🧰️framework/…/🔌️plugin/🧵️instance/🖼️render/📥️staging/🛠️tool-machine/🦀️.rs`: `settle_press` drives the tool follow when the Commit waits for its writer (fix C; a peer later folded it into `ToolSettlementUnit` with shortfall reporting).
 - `🧰️framework/…/🔌️plugin/🛠️tool-machine/🧵️settlement/🦀️.rs`: `OriginalPressSettlement::awaits_writer`.
+- `🧰️framework/…/🔌️plugin/🧵️instance/🖼️render/📥️staging/🛠️tool-machine/🦀️.rs`: shared `follow_before_writer`, the typing settlement and gesture capture waits, and the `settle_press` doc moved back onto `settle_press`.
+- `🧰️framework/…/🔌️plugin/🛠️tool-machine/⌨️typing/✍️edit/🦀️.rs`: `OriginalTypingSettlement::awaits_writer`.
+- `🧰️framework/…/🔌️plugin/🧵️instance/🧾️typed-operations/📥️staging/⌨️typing/🦀️.rs`: the scrub dispatch writer and typing dispatch commit drive the follow.
+- `🧰️framework/…/🔌️plugin/🧵️instance/🧾️typed-operations/📥️staging/⌨️typing/🎟️original/🦀️.rs`: `OriginalTypingCommit::awaits_source`.
+- `🧰️framework/…/🔌️plugin/🛠️tool-machine/🔁️follow/🦀️.rs`: `reads_presses`, `reads_gestures`, `reads_typing`.
+- `🧰️framework/…/🔌️plugin/⏯️tool-run/🎞️tick/🎮️operations/📖️source/🧭️walk/🦀️.rs`: `OriginalToolLedgerWalk::window`.
 - `🧰️framework/…/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧾️source-rejection-anchors-and-host-lane/🦀️.rs`: law `a_press_commit_blocked_by_the_follow_read_drives_the_follow`.
 - Temporary `[DEBUG]` prints removed again from the 2D job bridge, cleanup turns, maintenance ladder, 3D session API/mounted job/results, TS turn drive/UI intake/validation graph and the scrub writer.
 - `☀️20/GET-DEV-FEM-2D-WORKING-END-TO-END/🧪️browser-smoke.mjs`: closes the Artifact panel only if it opened, then reopens it after the edit; the Results click moved off the new Actions overlay.
 - FEM 2D `✏️editor/📌️panels/📦️packages/🦀️rust/Cargo.toml`: dev-dependency `semio-plugin` with `artifact-app-testing`.
-- Ticket scripts: `a2d-inspection-test.sh` (now targets `editor_app`), `native-fem-dev.sh` (dynamic Vite, `RUST_MIN_STACK`), `wasm-retry.sh` (new), `law-test.sh` (new), `inspect-node-probe.mjs` (waits for the Demo combobox, `--click`, 120 s edit poll).
+- Ticket scripts: `a2d-inspection-test.sh` (now targets `editor_app`), `native-fem-dev.sh` (dynamic Vite, `RUST_MIN_STACK`), `wasm-retry.sh` (new), `law-test.sh` (new), `check-follow-writers.sh` (new), `inspect-node-probe.mjs` (waits for the Demo combobox, `--click`, 120 s edit poll).
 
 ## Tests
 
-- Law `a_press_commit_blocked_by_the_follow_read_drives_the_follow` in `semio-plugin-tests-01` natively (`law-test.sh`): 1 passed.
+- Follow laws in `semio-plugin-tests-01` natively (`law-test.sh`): `a_press_commit_blocked_by_the_follow_read_drives_the_follow`, `a_typing_commit_blocked_by_the_follow_read_drives_the_follow` and `every_writer_waiting_on_a_follow_read_drives_the_follow`, 3 passed.
+- `cargo check` of `semio-plugin-typing-edit`, `semio-plugin-instance-render` and `semio-plugin-instance-typed-ops`, which pulls in the follow and walk crates (`check-follow-writers.sh`): clean.
 - FEM 2D inspection laws, including the `control_row` accessible name, in the editor crate's `editor_app` host (`a2d-inspection-test.sh`): 16 passed. The panels crate's own results unit tests could not compile, because its dev-dependencies lacked `semio-plugin`'s `artifact-app-testing` feature (`artifact_app_laws`). Added.
 
 - 2D session suite 21/21 and 3D numerical child 3/3 natively, after the child-operation fix.
 - `semio-plugin-window-config-original --lib`: 10 of 11 fail in the current tree, including the pre-existing capture law, with `native Window partition did not initialize`. Blocked by the peer value-protocol work.
 - The reactor source law runs in the `semio-plugin` facade test host and was not built natively in this pass.
 - The published browser module was rebuilt clean on 2026-11-24 (wasm sha256 `19d1b253…`, without the temporary prints).
+
+## Follow-Up
+
+- The dropped host aborts (blur, freeze, lapse) under a held follow read are being fixed in their own session, "Deferred Tool Aborts Under Follow Reads".
+- A Haiku audit of the FEM plugin and PluginRuntime found no `[DEBUG]` literals, `dbg!`, temporary `console.log` or logging counters. The one committed `[TRACE]` `eprintln!` in FEM 3D `🚀️session-api` printed on every live-visual reconcile spawn in runtime code, so I removed it.
+- After the follow-writer fix, a Sonnet agent ran the FEM native session suites: 2D `semio-s-artifact-fem-2d-editor-session` 21 passed, 3D `fem3d_production_numerical_child` 3 passed. `a3d-session-demo.sh` now uses the old build-dir layout against Windows os error 206; `a-retry.sh` retries a script after a peer's mid-edit compile error.
+- Deferred aborts (implemented by the "Deferred Tool Aborts Under Follow Reads" session) verified independently here (`verify-deferred-aborts.sh`, `check-follow-writers.sh`): `semio-framework-tool-machine --lib` 12 passed, including `every_host_abort_during_a_retained_read_ends_its_slot_once_the_read_returns`; typing-edit, instance-render and instance-typed-ops compile cleanly against it.
+- Browser re-verified on wasm `849acedc…`, which includes the deferred aborts and the peer actor-succession change:
+  - The first boot failed with `original-turn.succession-unoffered`: the served shard worker (`modules/🧵️shard/🟨️shard-worker.js`, from 11-20) predated the bridge's `kernel.succeed`. `native-fem-materialize.ts` now also rewrites the shard worker from `shardWorkerSource()`, the native counterpart of `framework-plugin-web:support`.
+  - After that, the 2D smoke passes (rc=0): `Initial FEM 2D Converged · 36 / 512 · Residual 7.460e-9`, then `Updated FEM 2D Converged · 49 / 512 · Residual 9.515e-9`, and the Live Load reaction is `Ty: 12000 N`.
+  - 3D shows `Case: dead` with the contour, no interaction.
+  - Run 2D alone on a cold server: starting both apps through vite at once timed out the 2D mount at 120 s.

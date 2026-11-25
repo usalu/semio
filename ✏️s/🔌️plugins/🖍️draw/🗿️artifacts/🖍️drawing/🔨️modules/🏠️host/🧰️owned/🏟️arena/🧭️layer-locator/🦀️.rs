@@ -76,7 +76,8 @@ impl DrawingLayerLocator {
         if self.frames[self.depth].phase == 0 {
             let key=if self.asset{match node{DrawingLayerNode::Image(image)=>Some(&image.image_key),DrawingLayerNode::Trace(trace)=>Some(&trace.source_key),_=>None}}else{Some(semio_s_artifact_draw_drawing_model::layer_id(node))};
             let Some(key)=key else{self.frames[self.depth].phase=1;cx.consume_fuel(1);return Ok(false);};
-            let compared = self.equality.step(key, target, 1, DRAWING_OWNED_FIELD_BYTES)?;
+            let funded = usize::try_from(cx.fuel_remaining()).unwrap_or(usize::MAX).clamp(1, DRAWING_OWNED_FIELD_BYTES);
+            let compared = self.equality.step(key, target, 1, funded)?;
             cx.consume_fuel(compared.compared_bytes.max(1) as u64);
             if !compared.complete { return Ok(false); }
             let equal = self.equality.result().ok_or("drawing-store.mutation-locator-equality-incomplete")?;
@@ -92,7 +93,6 @@ impl DrawingLayerLocator {
                 self.found = Some(DrawingLayerAddress { length: self.depth + 1, indices });
                 self.terminal = true;
             }
-            cx.consume_fuel(1);
             return Ok(self.terminal);
         }
         if let DrawingLayerNode::Group(group) = node {

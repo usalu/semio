@@ -58,7 +58,40 @@ pub fn sniff_xlsx_subset(data: &[u8]) -> Option<&'static str> {
     let opc = opc::decode_opc(data).ok()?;
     let path = opc.resolve_relationship("", REL_TYPE_OFFICE_DOCUMENT).or_else(|| opc.resolve_relationship("", REL_TYPE_OFFICE_DOCUMENT_STRICT))?;
     let part = opc.parts.iter().find(|part| part.path.trim_start_matches('/') == path.trim_start_matches('/'))?;
-    let head = &part.bytes[..part.bytes.len().min(4096)];
-    SUBSET_NAMESPACES.iter().find(|(_, namespace)| head.windows(namespace.len()).any(|window| window == namespace.as_bytes())).map(|(subset, _)| *subset)
+    let tag = root_start_tag(&part.bytes);
+    SUBSET_NAMESPACES.iter().find(|(_, namespace)| tag.windows(namespace.len()).any(|window| window == namespace.as_bytes())).map(|(subset, _)| *subset)
+}
+
+/// 🏷️ The whole start tag of the root element, wherever the declarations sit inside it: the prolog, comments and processing instructions before it are skipped and quoted attribute values may contain `>`. The root element's own namespace can only be declared there, so no fixed byte window is needed.
+fn root_start_tag(bytes: &[u8]) -> &[u8] {
+    let mut at = 0;
+    while let Some(offset) = bytes[at..].iter().position(|byte| *byte == b'<') {
+        let start = at + offset;
+        let skip = match bytes.get(start + 1) {
+            Some(b'?') => Some(&b"?>"[..]),
+            Some(b'!') if bytes[start..].starts_with(b"<!--") => Some(&b"-->"[..]),
+            Some(b'!') => Some(&b">"[..]),
+            _ => None,
+        };
+        if let Some(terminator) = skip {
+            match bytes[start..].windows(terminator.len()).position(|window| window == terminator) {
+                Some(end) => at = start + end + terminator.len(),
+                None => return &bytes[start..],
+            }
+            continue;
+        }
+        let mut quote = None;
+        for (index, byte) in bytes[start..].iter().enumerate() {
+            match (quote, *byte) {
+                (Some(open), byte) if byte == open => quote = None,
+                (Some(_), _) => {}
+                (None, b'"' | b'\'') => quote = Some(*byte),
+                (None, b'>') => return &bytes[start..=start + index],
+                (None, _) => {}
+            }
+        }
+        return &bytes[start..];
+    }
+    &[]
 }
 //#endregion 🔖️Sniff

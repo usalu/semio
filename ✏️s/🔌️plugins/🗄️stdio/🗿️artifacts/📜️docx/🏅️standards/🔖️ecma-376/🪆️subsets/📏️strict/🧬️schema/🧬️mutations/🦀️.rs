@@ -95,6 +95,7 @@ pub enum DocxStrictMutation {
     RemoveAlternateContent(remove_alternate_content::RemoveAlternateContent),
 }
 dsl::original_pack_value_operation_receiving!(DocxStrictMutation);
+dsl::artifact_persisted_binary_operation!(DocxStrictMutation);
 
 /// 🧾️ Kebab-case spelling of every `DocxStrictMutation` variant, in declaration order — the exhaustive
 /// mutation catalog `docx-ecma-376-strict` (`../../🔣️oracle.json`) is measured against

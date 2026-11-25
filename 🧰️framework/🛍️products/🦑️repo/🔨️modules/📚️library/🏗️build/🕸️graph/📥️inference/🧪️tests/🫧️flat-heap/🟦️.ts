@@ -35,7 +35,7 @@ test("the managed heap after a collection stays flat across owners, and the rost
  const root=await repository.scratch("flat-heap-"),stage=await repository.scratch("flat-heap-stage-");roots.push(root,stage);
  for(let owner=0;owner<fixture.owners;owner++)for(const[path,text]of Object.entries(filesOf(owner))){mkdirSync(dirname(join(root,path)),{recursive:true});writeFileSync(join(root,path),text);}
  scriptInputs.resetClosureEntriesV1();
- const heaps:number[]=[];
+ const heaps:number[]=[],nodes:number[]=[];
  await storage.withBuildGraphStagingV1({root:stage},async()=>{
   const shared=createScriptInputCache({workspaceRoot:root,lateClosures:true});
   for(let owner=0;owner<fixture.owners;owner++){
@@ -47,10 +47,12 @@ test("the managed heap after a collection stays flat across owners, and the rost
    if(owner%12===0)expect(python(root,entry).closure.sort()).toEqual(roster);
    expect(roster.length).toBe(fixture.modulesPerOwner+1);
    scriptInputs.releaseOwnerStateV1(shared);
-   heaps.push(managed());
+   heaps.push(managed());nodes.push(shared.closureGraph?.stats().nodes??0);
   }
  });
  const tail=heaps.slice(fixture.warmup),growth=(tail[tail.length-1]!-tail[0]!)/MEGABYTE,mean=(values:number[])=>values.reduce((sum,value)=>sum+value,0)/values.length,xs=tail.map((_,at)=>at),mx=mean(xs),my=mean(tail),slope=xs.reduce((sum,x,at)=>sum+(x-mx)*(tail[at]!-my),0)/xs.reduce((sum,x)=>sum+(x-mx)**2,0)/1024;
  console.log("[DATA] flat heap "+JSON.stringify({owners:fixture.owners,warmup:fixture.warmup,growthMegabytes:Math.round(growth*10)/10,slopeKilobytesPerOwner:Math.round(slope),first:Math.round(heaps[0]!/MEGABYTE),last:Math.round(heaps[heaps.length-1]!/MEGABYTE)}));
- expect(growth).toBeLessThan(fixture.maximumGrowthMegabytes);expect(slope).toBeLessThan(fixture.maximumSlopeKilobytesPerOwner);
+ const gained=nodes[nodes.length-1]!-nodes[fixture.warmup]!;
+ expect(gained,"the module graph gains the modules of every new owner").toBeGreaterThanOrEqual((fixture.owners-fixture.warmup-1)*(fixture.modulesPerOwner+1));
+ expect(growth).toBeLessThan(fixture.maximumGrowthMegabytes+gained*fixture.graphNodeKilobytes/1024);expect(slope).toBeLessThan(fixture.maximumSlopeKilobytesPerOwner+(fixture.modulesPerOwner+1)*fixture.graphNodeKilobytes);
 }),600000);

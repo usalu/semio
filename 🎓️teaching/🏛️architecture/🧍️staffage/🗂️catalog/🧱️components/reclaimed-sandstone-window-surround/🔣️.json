@@ -13,21 +13,111 @@
    "de": "Ein gründerzeitliches Fenstergewände aus Elbsandstein für eine Öffnung von 1,00 x 1,50 m, Stein für Stein ausgebaut: Sohlbank mit Wasserschlag und Wassernase, zwei Pfosten 220 x 200 mm mit Fensteranschlag und abgeschnittenen Kloben, Sturz mit Verdachungsband und Wassernase, Dübellöcher, Mörtelreste, ein abgeplatztes Horn und die aufgemalten Nummern I bis IV. Die 557 kg Stein liegen in zwei Reihen auf einer Langpalette mit Kanthölzern, werden mit einer Krangabel abgehoben und als zusammengesetzter Rahmen unter 4,32 kN/m Mauerwerk wieder versetzt."
   },
   "tags": [
-   "component",
-   "reclaimed",
-   "used",
-   "natural-stone",
-   "sandstone",
-   "window-surround",
-   "sill",
-   "lintel",
-   "jamb",
-   "masonry",
-   "opening",
-   "pallet",
-   "crane-fork",
-   "timber",
-   "steel"
+   {
+    "id": "component",
+    "title": {
+     "en": "component",
+     "de": "Bauteil"
+    }
+   },
+   {
+    "id": "reclaimed",
+    "title": {
+     "en": "reclaimed",
+     "de": "wiederverwendet"
+    }
+   },
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "natural-stone",
+    "title": {
+     "en": "natural stone",
+     "de": "Naturstein"
+    }
+   },
+   {
+    "id": "sandstone",
+    "title": {
+     "en": "sandstone",
+     "de": "Sandstein"
+    }
+   },
+   {
+    "id": "window-surround",
+    "title": {
+     "en": "window surround",
+     "de": "Fensterlaibung"
+    }
+   },
+   {
+    "id": "sill",
+    "title": {
+     "en": "sill",
+     "de": "Fensterbank"
+    }
+   },
+   {
+    "id": "lintel",
+    "title": {
+     "en": "lintel",
+     "de": "Sturz"
+    }
+   },
+   {
+    "id": "jamb",
+    "title": {
+     "en": "jamb",
+     "de": "Laibung"
+    }
+   },
+   {
+    "id": "masonry",
+    "title": {
+     "en": "masonry",
+     "de": "Mauerwerk"
+    }
+   },
+   {
+    "id": "opening",
+    "title": {
+     "en": "opening",
+     "de": "Öffnung"
+    }
+   },
+   {
+    "id": "pallet",
+    "title": {
+     "en": "pallet",
+     "de": "Palette"
+    }
+   },
+   {
+    "id": "crane-fork",
+    "title": {
+     "en": "crane fork",
+     "de": "Kranzinken"
+    }
+   },
+   {
+    "id": "timber",
+    "title": {
+     "en": "timber",
+     "de": "Holz"
+    }
+   },
+   {
+    "id": "steel",
+    "title": {
+     "en": "steel",
+     "de": "Stahl"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage component authors",

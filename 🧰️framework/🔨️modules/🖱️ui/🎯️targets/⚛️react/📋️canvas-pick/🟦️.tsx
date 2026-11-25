@@ -6,6 +6,7 @@ import { useLabel } from "@semio-tech/ui/elements/Label";
 import { useShellScopeOptional } from "@semio-tech/ui/elements/ShellScope";
 import { cn } from "@semio-tech/ui/modules/class-name-composition";
 import { floatingMenuItemClass } from "@semio-tech/ui/modules/chrome-class-names";
+import { useSharedBorderFrameRef } from "@semio-tech/ui/elements/SharedBorderRow";
 import { createPortal } from "react-dom";
 import { floatingMenuSurfaceClass } from "../🎨️chrome-classes/🟦️.ts";
 
@@ -22,6 +23,7 @@ export type CanvasPickMenuProps = {
 /** 🎯️ Fixed DOM pick list for overlapping canvas targets (not painted on the infinite canvas). */
 export function CanvasPickMenu({ request, hoveredKey, onHoverKey, onPick, onDismiss, renderRow, title }: CanvasPickMenuProps): React.ReactNode {
   const menuRef = React.useRef<HTMLDivElement | null>(null);
+  const frameRef = useSharedBorderFrameRef<HTMLDivElement>(menuRef);
   const selectTargetLabel = useLabel("ui.common.selectTarget");
   const resolvedTitle = title ?? selectTargetLabel;
   const shellScope = useShellScopeOptional();
@@ -77,8 +79,11 @@ export function CanvasPickMenu({ request, hoveredKey, onHoverKey, onPick, onDism
   if (typeof document === "undefined") return null;
   return createPortal(
     <div
-      ref={menuRef}
+      ref={frameRef}
       role="menu"
+      data-level="menu"
+      data-shared-border-frame=""
+      data-shared-border-edges="top right bottom left"
       className={cn("fixed z-tutorial w-layout-floating-menu-sm max-h-layout-preview-md overflow-y-auto p-single", floatingMenuSurfaceClass)}
       style={{
         left: Math.min(request.client.x + 8, window.innerWidth - 230),

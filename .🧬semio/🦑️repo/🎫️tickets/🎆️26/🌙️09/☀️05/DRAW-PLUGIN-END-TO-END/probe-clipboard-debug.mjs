@@ -1,0 +1,43 @@
+/** 📋️ Boots Draw, selects a layer, copies by keyboard and by the Actions menu, pastes, and prints every `[DEBUG] clip` console line with a timestamp after each step. Run from the repository root: node T/probe-clipboard-debug.mjs */
+import { createRequire } from "node:module";
+import { resolve } from "node:path";
+const require = createRequire(resolve("✏️s/🔌️plugins/🖍️draw/🧪️tests/🌐️browser/🟦️.mjs"));
+const { chromium } = require("playwright");
+const browser = await chromium.launch({ headless: true, args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-unsafe-webgpu"] });
+const page = await (await browser.newContext({ locale: "en", viewport: { width: 1600, height: 1000 }, permissions: ["clipboard-read", "clipboard-write"] })).newPage();
+const t0 = performance.now();
+const at = () => Math.round((performance.now() - t0) / 100) / 10;
+const lines = [];
+let printed = 0;
+await page.routeWebSocket(address => address.searchParams.has("token"), () => undefined);
+page.on("console", message => { const text = message.text(); if (text.startsWith("[DEBUG] clip")) lines.push(`${at()} ${text.slice(0, 900)}`); else if (message.type() === "error") lines.push(`${at()} [error] ${text.slice(0, 300)}`); });
+page.on("pageerror", error => lines.push(`${at()} [pageerror] ${String(error).slice(0, 300)}`));
+const flush = label => { console.log(`--- ${label} (${at()} s, ${lines.length - printed} new lines)`); for (const line of lines.slice(printed)) console.log(line); printed = lines.length; };
+const rows = () => page.locator('[role="treeitem"][id^="panel:framework.panel.artifact/drawing-play-layers"]').evaluateAll(nodes => nodes.map(node => node.id).filter(id => !id.includes(".add.")));
+const focus = () => page.locator('[data-surface-role="editor"] [data-ui-node-key="drawing.play.composite"]').first().focus();
+const settleRows = async (count, ms) => { const start = Date.now(); let current = await rows(); while (Date.now() - start < ms && current.length !== count) { await page.waitForTimeout(250); current = await rows(); } return current; };
+await page.goto("http://127.0.0.1:6064/?plugin=draw");
+await page.waitForFunction(() => document.documentElement.dataset.semioOsReady, undefined, { timeout: 120000 });
+await page.waitForTimeout(6000);
+await page.getByText("Artifact", { exact: true }).first().click();
+await page.waitForTimeout(3000);
+flush("boot");
+const before = await rows();
+console.log(at(), "layer rows", before.length);
+await page.locator('[id$="drawing-play-layers.path.emblem-teal"]').first().click();
+await page.waitForTimeout(3000);
+flush("select");
+await focus();
+await page.keyboard.press(process.platform === "darwin" ? "Meta+c" : "Control+c");
+for (let second = 0; second < 6; second += 1) { await page.waitForTimeout(5000); flush(`copy by keyboard +${(second + 1) * 5} s`); }
+const clipboard = await page.evaluate(() => navigator.clipboard.readText().then(text => text.slice(0, 120), error => String(error)));
+console.log(at(), "clipboard text", JSON.stringify(clipboard));
+await page.getByText("Actions", { exact: true }).first().click().catch(error => console.log(at(), "no Actions menu", String(error).slice(0, 120)));
+await page.getByText("Copy", { exact: true }).first().click().catch(error => console.log(at(), "no Copy entry", String(error).slice(0, 120)));
+for (let second = 0; second < 4; second += 1) { await page.waitForTimeout(5000); flush(`copy by menu +${(second + 1) * 5} s`); }
+await focus();
+await page.keyboard.press(process.platform === "darwin" ? "Meta+v" : "Control+v");
+const after = await settleRows(before.length + 1, 30000);
+console.log(at(), "layer rows after paste", after.length, "expected", before.length + 1);
+flush("paste");
+await browser.close();

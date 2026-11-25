@@ -46,7 +46,7 @@ export function runCliGraphql(query: string, variables: Record<string, unknown> 
   const args = ["--repo", root, "--json", "graphql", "--query", query, "-v", vars];
   let stdout: string;
   try {
-    stdout = execFileSync(bin, args, {
+    stdout = execFileSync(bin, args, {windowsHide:true,
       cwd,
       encoding: "utf8",
       maxBuffer: 64 * 1024 * 1024,

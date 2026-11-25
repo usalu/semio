@@ -69,7 +69,7 @@
    }
   },
   {
-   "id": "unknown-availability-beats-warden",
+   "id": "warden-danger-beats-unknown-availability",
    "input": {
     "predictedBytes": 53687091200,
     "availableBytes": null,
@@ -81,8 +81,44 @@
     "cancelled": false
    },
    "expected": {
+    "admit": false,
+    "reason": "warden"
+   }
+  },
+  {
+   "id": "active-swap-beats-the-wait-bound",
+   "input": {
+    "predictedBytes": 2147483648,
+    "availableBytes": 1073741824,
+    "totalBytes": 17179869184,
+    "runningUnrealizedBytes": 0,
+    "runningUnits": 0,
+    "waitedMilliseconds": 180000,
+    "wardenLevel": "calm",
+    "swapOutBytesPerSecond": 67108865,
+    "cancelled": false
+   },
+   "expected": {
+    "admit": false,
+    "reason": "swap"
+   }
+  },
+  {
+   "id": "swap-at-the-threshold-allows-calm-idle-progress",
+   "input": {
+    "predictedBytes": 2147483648,
+    "availableBytes": 1073741824,
+    "totalBytes": 17179869184,
+    "runningUnrealizedBytes": 0,
+    "runningUnits": 0,
+    "waitedMilliseconds": 180000,
+    "wardenLevel": "calm",
+    "swapOutBytesPerSecond": 67108864,
+    "cancelled": false
+   },
+   "expected": {
     "admit": true,
-    "reason": "unknown"
+    "reason": "waited-out"
    }
   },
   {
@@ -162,12 +198,29 @@
     "runningUnrealizedBytes": 0,
     "runningUnits": 0,
     "waitedMilliseconds": 180000,
-    "wardenLevel": null,
+    "wardenLevel": "calm",
     "cancelled": false
    },
    "expected": {
     "admit": true,
     "reason": "waited-out"
+   }
+  },
+  {
+   "id": "unknown-warden-cannot-authorize-the-idle-exception",
+   "input": {
+    "predictedBytes": 8589934592,
+    "availableBytes": 6442450944,
+    "totalBytes": 17179869184,
+    "runningUnrealizedBytes": 0,
+    "runningUnits": 0,
+    "waitedMilliseconds": 180000,
+    "wardenLevel": null,
+    "cancelled": false
+   },
+   "expected": {
+    "admit": false,
+    "reason": "available"
    }
   },
   {
@@ -366,7 +419,7 @@
     "runningUnrealizedBytes": 0,
     "runningUnits": 0,
     "waitedMilliseconds": 360000,
-    "wardenLevel": null,
+    "wardenLevel": "calm",
     "cancelled": true
    },
    "expected": {

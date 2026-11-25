@@ -3,7 +3,7 @@
 //! 📨️ Dispatch of the mounted artifact instance: test snapshot helpers, command log, history view, patch and refresh, preview, `dispatch_emit` and transaction groups.
 use semio_framework::{ActionKind, Fault, FaultCode, FaultFrom, FaultOrigin};
 use semio_plugin_decl_app::ArtifactApp;
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use semio_framework::kernel::Effect;
 use semio_plugin_decl_emission::Emit;

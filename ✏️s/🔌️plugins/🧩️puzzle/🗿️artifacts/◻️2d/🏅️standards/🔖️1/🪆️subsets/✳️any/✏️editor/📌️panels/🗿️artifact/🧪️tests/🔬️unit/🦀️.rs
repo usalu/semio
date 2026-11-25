@@ -143,6 +143,7 @@ fn request(node_key: &str, open: Option<bool>, offset: u32, rows: u32) -> semio_
 /// than its slice, and the body carries neither a `.more` key nor a `+N` label.
 #[test]
 fn the_outliner_stamps_every_container_and_never_pages() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     drain_retired_ui_owners();
     let scene = scaled_scene(SCALE_NODES, SCALE_EDGES);
     let windows = TreeWindows::unhosted();
@@ -164,6 +165,7 @@ fn the_outliner_stamps_every_container_and_never_pages() {
 /// (`edges`) and an explicit host close (`nodes`).
 #[test]
 fn a_closed_outliner_container_stamps_its_total_and_builds_no_row() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     drain_retired_ui_owners();
     let scene = scaled_scene(SCALE_NODES, SCALE_EDGES);
     let view = view_with(vec![request(NODES_SECTION, Some(false), 0, 32)]);
@@ -181,6 +183,7 @@ fn a_closed_outliner_container_stamps_its_total_and_builds_no_row() {
 /// 🪟️ (c) A host window materialises exactly `[offset, offset + rows)`, keyed by raw entity id.
 #[test]
 fn a_host_window_materialises_exactly_its_slice_keyed_by_raw_id() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     drain_retired_ui_owners();
     let scene = scaled_scene(SCALE_NODES, SCALE_EDGES);
     let (offset, rows) = (64u32, 12u32);
@@ -204,6 +207,7 @@ fn a_host_window_materialises_exactly_its_slice_keyed_by_raw_id() {
 /// one `interactionSelect` binding for the whole domain.
 #[test]
 fn outliner_pick_rows_are_domain_bound_without_a_per_row_binding() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     drain_retired_ui_owners();
     let scene = scaled_scene(24, 12);
     let view = view_with(vec![request(NODES_SECTION, Some(true), 0, 24), request(EDGES_SECTION, Some(true), 0, 12)]);
@@ -244,6 +248,7 @@ fn node_keys(node: &BuiltNode, keys: &mut Vec<String>) {
 /// nothing may be closed off with a `+N`.
 #[test]
 fn a_whole_open_document_stamps_every_total_and_stays_inside_the_body_node_ceiling() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     drain_retired_ui_owners();
     let (nodes_len, edges_len) = (ui::UI_DOCUMENT_NODES + 72, ui::UI_DOCUMENT_NODES + 40);
     let scene = scaled_scene(nodes_len, edges_len);
@@ -307,6 +312,7 @@ fn flagged_scene(hidden: bool, locked: bool) -> Puzzle2dScene {
 /// `true`, which made "Show"/"Unlock" re-apply the state the row was already in.
 #[test]
 fn outliner_node_rows_toggle_hide_and_lock_to_the_inverse_state() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     drain_retired_ui_owners();
     for (hidden, locked) in [(false, false), (true, false), (false, true), (true, true)] {
         let scene = flagged_scene(hidden, locked);
@@ -327,6 +333,7 @@ fn outliner_node_rows_toggle_hide_and_lock_to_the_inverse_state() {
 /// per-document argument-arena cost on a Nakagin-scale board.
 #[test]
 fn outliner_edge_rows_carry_no_inline_toggles() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     drain_retired_ui_owners();
     let scene = scaled_scene(4, 3);
     let view = view_with(vec![request(EDGES_SECTION, Some(true), 0, 3)]);
@@ -344,6 +351,7 @@ fn outliner_edge_rows_carry_no_inline_toggles() {
 /// toggles, so a section can never end at zero rows.
 #[test]
 fn an_oversized_outliner_still_materialises_rows_when_toggles_cannot_be_afforded() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     drain_retired_ui_owners();
     let scene = scaled_scene(SCALE_NODES, SCALE_EDGES);
     let view = view_with(vec![request(NODES_SECTION, Some(true), 0, 128)]);

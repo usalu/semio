@@ -5,15 +5,15 @@
     "release"
   ],
   "variants": [
-    "aggregator",
     "aussuchen",
     "bearbeiten",
+    "cad",
     "energy",
     "fem3d",
     "generation3d",
     "generator",
-    "koordinator",
-    "verfolgen"
+    "gis2d",
+    "puzzle3d"
   ],
   "preparationProject": "@semio-tech/framework-os-dev",
   "wasmTargets": [

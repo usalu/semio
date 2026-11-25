@@ -18,9 +18,8 @@ export { uiSpacingLen };
 // reactHostPort.createContext/.useState at module top level, which requires a non-circular import (see
 // 🧱️elements/🔌️Ports/🟦️.tsx's header comment for why the barrel import caused a real bug).
 import { reactHostPort } from "../🔌️Ports/⚛️react/🟦️.ts";
-import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import type { UiLabel } from "../🎗️UiLabel/🟦️.tsx";
-import { surfaceClass } from "../../🔨️modules/🌈️surface-presentation/🟦️.ts";
+import { beginNativeDragGhost } from "../../🔨️modules/🫳️pointer-drag/🟦️.tsx";
 import { FlowProvider } from "../../🔨️modules/🧭️flow-direction-context/🟦️.tsx";
 import { TREE_SECTION_REORDER_MIME } from "../../🔨️modules/🧲️panel-dock/🟦️.tsx";
 import { usePanelGhost, interactionMergeFromModifiers } from "../👻️PanelGhost/🟦️.tsx";
@@ -250,17 +249,9 @@ export const Tree = (({
       Object.entries(customData ?? {}).forEach(([kind, value]) => {
         event.dataTransfer.setData(kind, value);
       });
+      beginNativeDragGhost(event, typeof item.label === "string" ? item.label : typeof item.label === "number" ? String(item.label) : item.id, { hideSource: false });
       if (customData && Object.keys(customData).length > 0 && !(reorderMime && customData[reorderMime])) {
         event.dataTransfer.effectAllowed = "copy";
-        const labelText = typeof item.label === "string" ? item.label : typeof item.label === "number" ? String(item.label) : "Kind";
-        const ghost = document.createElement("div");
-        ghost.textContent = labelText;
-        ghost.setAttribute("data-puzzle3d-fixture-drag-ghost", "true");
-        ghost.setAttribute("data-level", "panel");
-        ghost.className = cn("border-primary text-foreground pointer-events-none fixed left-offscreen top-0 z-tutorial rounded-md border px-2 py-1 text-xs shadow-md", surfaceClass);
-        document.body.appendChild(ghost);
-        event.dataTransfer.setDragImage(ghost, ghost.offsetWidth / 2, ghost.offsetHeight / 2);
-        requestAnimationFrame(() => ghost.remove());
         panelGhost?.begin(event.currentTarget);
       }
       dragAndDropController?.onDragStart?.({ items: sourceItems, sourceItem: item, section });
@@ -408,6 +399,7 @@ export const Tree = (({
   const handleSectionDragStart = reactHostPort.useCallback((event: React.DragEvent<HTMLDivElement>, section: TreeDataSection) => {
     event.dataTransfer.effectAllowed = "move";
     event.dataTransfer.setData(TREE_SECTION_REORDER_MIME, section.id);
+    beginNativeDragGhost(event, typeof section.label === "string" ? section.label : section.id, { hideSource: false });
     setDraggedSectionId(section.id);
   }, []);
 

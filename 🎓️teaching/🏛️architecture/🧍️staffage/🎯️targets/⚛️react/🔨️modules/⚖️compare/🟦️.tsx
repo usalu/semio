@@ -19,6 +19,7 @@ import { FigureBoundary, RowPreview, UnavailableNotice, useDarkSurface } from ".
 import { StaffageFigure } from "../🧍️figure/🟦️.tsx";
 import { SHOWN_FLOW_LAYERS, flowFrameOf, flowsIn, unionFrame } from "../🌊️flow/🟦️.ts";
 import { depictionOptions, evaluateState, sceneExtent, sceneOf, type SceneFrame } from "../🧮️pipeline/🟦️.ts";
+import { useTextEpoch } from "../🧮️pipeline/🔤️text/⚛️hook/🟦️.tsx";
 import { VIEW_NAMES, valueText } from "../🗣️labels/🟦️.ts";
 import { Transport } from "../⏯️transport/🟦️.tsx";
 import { useAssetLoading } from "../📚️catalog/🟦️.ts";
@@ -153,6 +154,7 @@ export function ComparePage(props: { readonly view: PaneView }): ReactElement {
   const first = panes[0];
   const dark = useDarkSurface();
   const theme = dark ? "dark" : "light";
+  const faces = useTextEpoch();
   const frame = useMemo(() => {
     if (!view.opened) return undefined;
     try {
@@ -168,7 +170,7 @@ export function ComparePage(props: { readonly view: PaneView }): ReactElement {
     } catch {
       return undefined;
     }
-  }, [view.opened, panes, rows, scale, language, theme]);
+  }, [view.opened, panes, rows, scale, language, theme, faces]);
   const body =
     panes.length < COMPARE_LIMITS.min ? (
       loading.busy ? null : (

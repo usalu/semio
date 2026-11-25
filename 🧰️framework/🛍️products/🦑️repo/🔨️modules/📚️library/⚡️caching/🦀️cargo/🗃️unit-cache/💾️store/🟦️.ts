@@ -155,9 +155,15 @@ export function putSpillObjectV1(root:string,bytes:Uint8Array|string):string{
 export function readSpillObjectV1(root:string,sha:string):Buffer|undefined{
  try{const data=readFileSync(join(spillDirectory(root),sha));return createHash("sha256").update(data).digest("hex")===sha?data:undefined;}catch{return undefined;}
 }
-/** 💧️ Removes the spilled objects of an entry once its upload is over, whatever the outcome. */
-export function dropSpillObjectsV1(root:string,entry:Readonly<{outputs:readonly{sha256:string}[];stdout?:string|null;stderr?:string|null}>):void{
+const spilledEntryPath=(root:string,key:string)=>join(spillDirectory(root),"entries",key+".json");
+/** 💧️ Removes the spilled objects of an entry, and its spilled entry file, once its upload is over, whatever the outcome. */
+export function dropSpillObjectsV1(root:string,entry:Readonly<{key?:string;outputs:readonly{sha256:string}[];stdout?:string|null;stderr?:string|null}>):void{
  for(const sha of[...entry.outputs.map(row=>row.sha256),entry.stdout,entry.stderr])if(typeof sha==="string")rmSync(join(spillDirectory(root),sha),{force:true});
+ if(entry.key!==undefined)rmSync(spilledEntryPath(root,entry.key),{force:true});
+}
+/** 💧️ The entry of a unit whose objects wait in the spill folder (written beside them, outside the entry index the host store's holders read: its objects are not in the host store, so a collector would take it for dead and a lookup can never serve it); `undefined` when there is none. */
+export function readSpilledEntryV1(root:string,key:string):UnitEntryV1|undefined{
+ try{const entry=JSON.parse(readFileSync(spilledEntryPath(root,key),"utf8")) as UnitEntryV1;return entry.version===1&&entry.key===key?entry:undefined;}catch{return undefined;}
 }
 
 /** 🔎️ Returns the newest entry of `key` whose recorded files and environment still hold, `undefined` on a miss. A missing object, an unreadable entry or an entry that lacks one of the `expected` output names (a hit must leave every file a dependant names) is a miss, never an error. */
@@ -168,7 +174,7 @@ export function lookupUnitV1(root:string,key:string,context:Readonly<{cwd:string
   let entry:UnitEntryV1;try{entry=JSON.parse(readFileSync(join(directory,name),"utf8"));}catch{continue;}
   if(entry.version!==1||entry.key!==key)continue;
   if(context.expected&&uncoveredOutputsV1(entry.outputs.map(row=>row.name),context.expected).length>0)continue;
-  if(entry.dependencies.some(row=>digestFileV1(resolveStored(context.cwd,laneRestoreV1(row.path,context.laneRoot)),context.stampDirectory)!==row.sha256))continue;
+  if(entry.dependencies.some(row=>digestFileV1(resolveStored(context.cwd,generatedRestoreV1(laneRestoreV1(row.path,context.laneRoot),context.environment["OUT_DIR"])),context.stampDirectory)!==row.sha256))continue;
   if(entry.environment.some(row=>{const value=context.environment[row.name];return(value===undefined?null:laneNeutralV1(value,context.laneRoot))!==row.value;}))continue;
   if(lostObjectV1(root,entry))continue;
   holdHostObjectsV1(root);keepHostObjectsV1(root,entry);
@@ -187,8 +193,8 @@ function placeV1(destination:string,write:(temporary:string)=>void):void{
 }
 
 /** ♻️ Writes a cached compilation into `outDir` as the compiler would have: output files by reflink where the filesystem supports it (a copy elsewhere, never a shared inode) stamped with the restore time as a compile writes them (a reflink or Windows copy keeps the cache object's last-use time, which Cargo reads as an output older than a dependency's and re-runs the unit on every later build; see https://doc.rust-lang.org/nightly/nightly-rustc/cargo/core/compiler/fingerprint/index.html), the dependency file rewritten for this lane, and the compiler's messages returned for replay. */
-export function restoreUnitV1(root:string,entry:UnitEntryV1,context:Readonly<{outDir:string;laneRoot:string|undefined;stampDirectory:string|undefined;extra?:string}>):{stdout:string;stderr:string}{
- const extra=context.extra??"",render=(text:string)=>extraRestoreV1(laneRestoreV1(text.split(policy.key.outputToken).join(context.outDir),context.laneRoot),extra);
+export function restoreUnitV1(root:string,entry:UnitEntryV1,context:Readonly<{outDir:string;laneRoot:string|undefined;stampDirectory:string|undefined;extra?:string;generated?:string}>):{stdout:string;stderr:string}{
+ const extra=context.extra??"",render=(text:string)=>extraRestoreV1(laneRestoreV1(generatedRestoreV1(text.split(policy.key.outputToken).join(context.outDir),context.generated),context.laneRoot),extra);
  ensure(context.outDir);
  const staged:Array<{row:UnitEntryV1["outputs"][number];destination:string;temporary:string}>=[];
  try{
@@ -209,18 +215,24 @@ export function restoreUnitV1(root:string,entry:UnitEntryV1,context:Readonly<{ou
  return{stdout:text(entry.stdout),stderr:text(entry.stderr)};
 }
 
+/** 🧬️ The text with the generated-source directory of the unit's build script (`OUT_DIR`) replaced by its token: Cargo's `<hash>` in `build/<package>/<hash>/out` differs between machines, and the dependency file names it. */
+export const generatedNeutralV1=(text:string,generated:string|undefined):string=>generated===undefined||generated===""?text:text.split(generated).join(policy.key.generatedToken);
+
+/** 🧬️ The inverse of {@link generatedNeutralV1} on the machine that restores the unit. */
+export const generatedRestoreV1=(text:string,generated:string|undefined):string=>generated===undefined||generated===""?text:text.split(policy.key.generatedToken).join(generated);
+
 function stampFile(path:string,sha:string,stampDirectory:string):void{
  try{const stat=statSync(path,{bigint:true}),hash=sha256V1(path),stamp=join(stampDirectory,hash.slice(0,2),hash.slice(2,34));ensure(dirname(stamp));const temporary=stamp+"."+randomBytes(3).toString("hex");writeFileSync(temporary,`${stat.size}:${stat.mtimeNs}:${stat.ino} ${sha}`);rmSync(stamp,{force:true});renameSync(temporary,stamp);}catch{}
 }
 
 /** 📥️ Publishes one successful compilation. Objects are content-addressed and the entry is renamed into place last, so a reader sees all of it or none of it. Returns the digests, `undefined` when the dependency file is missing, an `expected` output is absent (an entry that cannot serve its dependants is never stored) or the outputs exceed the bound. */
-export function publishUnitV1(root:string,input:Readonly<{key:string;crate:string;cwd:string;outDir:string;laneRoot:string|undefined;outputs:readonly string[];stdout:string;stderr:string;stampDirectory:string|undefined;provenance?:UnitEntryV1["provenance"];slot?:string;retention?:Readonly<{workspace:string|undefined;externs:readonly string[];units?:readonly string[];toolchain:string}>;spill?:boolean;session?:boolean;expected?:readonly string[];extra?:string}>):UnitEntryV1|undefined{
+export function publishUnitV1(root:string,input:Readonly<{key:string;crate:string;cwd:string;outDir:string;generated?:string;laneRoot:string|undefined;outputs:readonly string[];stdout:string;stderr:string;stampDirectory:string|undefined;provenance?:UnitEntryV1["provenance"];slot?:string;retention?:Readonly<{workspace:string|undefined;externs:readonly string[];units?:readonly string[];toolchain:string}>;spill?:boolean;session?:boolean;expected?:readonly string[];extra?:string}>):UnitEntryV1|undefined{
  const putObject=input.spill===true?putSpillObjectV1:putObjectCas;
  if(input.expected&&uncoveredOutputsV1(input.outputs.map(path=>basename(path)),input.expected).length>0)return undefined;
  const depInfoPath=input.outputs.find(path=>path.endsWith(".d"));if(!depInfoPath||!existsSync(depInfoPath))return undefined;
  const info=parseDepInfoV1(readFileSync(depInfoPath,"utf8"));
  if(info.dependencies.length>policy.key.maximumDependencyFiles)return undefined;
- const extra=input.extra??"",neutral=(text:string)=>extraNeutralV1(laneNeutralV1(text.split(input.outDir).join(policy.key.outputToken),input.laneRoot),extra);
+ const extra=input.extra??"",neutral=(text:string)=>extraNeutralV1(laneNeutralV1(generatedNeutralV1(text.split(input.outDir).join(policy.key.outputToken),input.generated),input.laneRoot),extra);
  let total=0;const outputs:UnitEntryV1["outputs"]=[];
  for(const path of input.outputs){
   const stat=statSync(path);total+=stat.size;if(total>policy.key.maximumOutputBytes)return undefined;
@@ -228,10 +240,11 @@ export function publishUnitV1(root:string,input:Readonly<{key:string;crate:strin
   outputs.push({name:extraNeutralV1(basename(path),extra),sha256:sha,bytes:bytes.length,executable:(stat.mode&0o111)!==0&&!template,...(template?{template:true}:{})});
   if(!template&&input.stampDirectory&&input.spill!==true)stampFile(path,sha,input.stampDirectory);
  }
- const dependencies=info.dependencies.filter(path=>!compilerWrittenV1(path)).map(path=>({path:laneNeutralV1(path,input.laneRoot),sha256:digestFileV1(resolveStored(input.cwd,path),input.stampDirectory)}));
+ const dependencies=info.dependencies.filter(path=>!compilerWrittenV1(path)).map(path=>({path:laneNeutralV1(generatedNeutralV1(path,input.generated),input.laneRoot),sha256:digestFileV1(resolveStored(input.cwd,path),input.stampDirectory)}));
  const retention=input.retention===undefined?undefined:declareV1({kind:"rust-unit",toolchain:input.retention.toolchain,sources:workspaceRowsV1({dependencies,cwd:input.cwd,workspace:input.retention.workspace,generatedRoots:buildPolicy.remoteCache.server.staleness.generatedRoots}),externs:input.retention.externs,self:input.key,units:input.retention.units});
  const entry:UnitEntryV1={version:1,key:input.key,...(input.slot===undefined?{}:{slot:input.slot}),...(input.session===true?{session:true as const}:{}),...(retention===undefined?{}:{retention}),crate:input.crate,dependencies,environment:info.environment.map(row=>({name:row.name,value:row.value===null?null:laneNeutralV1(row.value,input.laneRoot)})),outputs,stderr:input.stderr?putObject(root,neutral(input.stderr)):null,stdout:input.stdout?putObject(root,neutral(input.stdout)):null,createdMs:Date.now(),provenance:input.provenance??null};
- writeEntryV1(root,entry);
+ if(input.spill===true){const path=spilledEntryPath(root,entry.key),temporary=path+"."+randomBytes(4).toString("hex")+".tmp";ensure(dirname(path));writeFileSync(temporary,JSON.stringify(entry));renameSync(temporary,path);}
+ else writeEntryV1(root,entry);
  return entry;
 }
 

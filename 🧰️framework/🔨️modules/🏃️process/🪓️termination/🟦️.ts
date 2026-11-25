@@ -16,7 +16,7 @@ interface OwnedProcessRow {
 }
 
 /** 🔌️ The host facts of a termination: the platform and the synchronous process start, replaced by a test to run the Windows branch against a `taskkill` fixture on any host. */
-export interface TerminationHostV1 { readonly platform?: string; readonly spawnSync?: typeof spawnSync; readonly record?: (row: Readonly<{ pid: number }>, signal: "SIGTERM" | "SIGKILL") => void }
+export interface TerminationHostV1 { readonly platform?: string; readonly spawnSync?: typeof spawnSync; readonly record?: (row: Readonly<{ pid: number }>, signal: "SIGINT" | "SIGTERM" | "SIGKILL") => void }
 
 /** 🪓️Terminates one owned subprocess tree, including descendant-created POSIX groups, before ancestry is lost. On Windows `taskkill /T /F` ends the tree (exit 128 = the process is already gone); any other failure ends at least the root. See https://learn.microsoft.com/windows-server/administration/windows-commands/taskkill */
 export function terminateOwnedProcessTree(rootPid: number, host: TerminationHostV1 = {}): void {
@@ -64,7 +64,7 @@ function ownedRowsV1(rootPid: number): OwnedProcessRow[] | undefined {
 }
 
 /** 📨️ Sends `signal` to the owned rows: the process groups the tree created first (deepest first), then each process, announcing each process through `record` before. */
-function signalOwnedRowsV1(owned: OwnedProcessRow[], signal: "SIGTERM" | "SIGKILL", record?: TerminationHostV1["record"]): void {
+function signalOwnedRowsV1(owned: OwnedProcessRow[], signal: "SIGINT" | "SIGTERM" | "SIGKILL", record?: TerminationHostV1["record"]): void {
   for (const row of owned) try { record?.(row, signal); } catch {}
   const ownedPids = new Set(owned.map((row) => row.pid));
   const groups = new Map<number, number>();
@@ -88,15 +88,15 @@ export function terminateOwnedChildTree(child: OwnedChildHandle, host: Terminati
 
 /** 🗣️ The record of one signal in English and German, `<English> / <German>`: the victim, the signal, the killing process, the command and the reason. A pure function.
  * @see ./🧪️tests/🐍️.py */
-export function ownedKillRecordLineV1(input: Readonly<{ pid: number; signal: "SIGTERM" | "SIGKILL"; killer: number; label: string; reason: string }>): string {
+export function ownedKillRecordLineV1(input: Readonly<{ pid: number; signal: "SIGINT" | "SIGTERM" | "SIGKILL"; killer: number; label: string; reason: string }>): string {
   const fill = (language: "en" | "de"): string => schema.definitions.Texts.const[language]["kill-record"].replace(/\{(\w+)\}/gu, (_all, name: string) => String((input as Record<string, string | number>)[name] ?? ""));
   return `${fill("en")} / ${fill("de")}`;
 }
 
-/** 🔌️ What a graceful termination touches outside its decisions: the declared grace and poll, the wait, whether a pid lives, the platform and the record of each signal. */
-export interface GracefulTerminationV1 extends TerminationHostV1 { readonly graceMilliseconds?: number; readonly pollMilliseconds?: number; readonly sleep?: (milliseconds: number) => Promise<void>; readonly alive?: (pid: number) => boolean }
+/** 🕊️ The signal and grace options, the wait, whether a pid lives, and the platform ports used by graceful termination. */
+export interface GracefulTerminationV1 extends TerminationHostV1 { readonly initialSignal?: "SIGINT" | "SIGTERM"; readonly graceMilliseconds?: number; readonly pollMilliseconds?: number; readonly sleep?: (milliseconds: number) => Promise<void>; readonly alive?: (pid: number) => boolean }
 
-/** 🤝️ Stops one owned tree by asking first: SIGTERM for the whole owned tree (found before ancestry is lost), then up to `graceMilliseconds` (the declared `TERMINATION_POLICY_V1`) for it to end by itself, polled every `pollMilliseconds`; only the members still alive, and anything the tree started meanwhile, get SIGKILL. Every signal is announced through `record` first. Windows and an unreadable process table fall back to [[terminateOwnedProcessTree]]. Resolves when the tree is gone or the kill was sent.
+/** 🤝️ Sends the initial signal (SIGTERM by default) to the whole owned tree before ancestry is lost. After the grace period it sends SIGKILL to remaining members, including descendants started during the wait. Windows and an unreadable process table fall back to [[terminateOwnedProcessTree]]. Resolves when the tree is gone or the kill was sent.
  * @see ./🧬️schema/🔣️.json */
 export async function terminateOwnedProcessTreeGracefullyV1(rootPid: number, host: GracefulTerminationV1 = {}): Promise<void> {
   if (!Number.isSafeInteger(rootPid) || rootPid <= 0) return;
@@ -105,7 +105,7 @@ export async function terminateOwnedProcessTreeGracefullyV1(rootPid: number, hos
   const grace = host.graceMilliseconds ?? TERMINATION_POLICY_V1.graceMilliseconds, poll = host.pollMilliseconds ?? TERMINATION_POLICY_V1.pollMilliseconds;
   const sleep = host.sleep ?? ((milliseconds: number) => new Promise<void>((done) => setTimeout(done, milliseconds)));
   const lives = host.alive ?? ((pid: number): boolean => { try { process.kill(pid, 0); return true; } catch (error) { return (error as NodeJS.ErrnoException).code === "EPERM"; } });
-  signalOwnedRowsV1(owned, "SIGTERM", host.record);
+  signalOwnedRowsV1(owned, host.initialSignal ?? "SIGTERM", host.record);
   for (let waited = 0; waited < grace && owned.some((row) => lives(row.pid)); waited += poll) await sleep(poll);
   const left = owned.filter((row) => lives(row.pid)), fresh = lives(rootPid) ? ownedRowsV1(rootPid) ?? [] : [];
   const rows = [...left, ...fresh.filter((row) => !left.some((known) => known.pid === row.pid))];

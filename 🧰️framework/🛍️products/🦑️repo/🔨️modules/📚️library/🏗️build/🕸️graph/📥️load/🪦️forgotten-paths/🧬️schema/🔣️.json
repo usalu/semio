@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio://repo/build/graph/forgotten-paths/v1",
+  "title": "Forgotten Persisted Paths",
+  "description": "The paths a seal proved stale, each with the time (milliseconds since the epoch) it was proven. A persisted row naming one of them, or the listing of its directory, is refused when it was stored at or before that time, so no worker adopts the stale row again; a row stored after it was observed after the repair and is kept. Entries older than the maximum age are dropped; the file never names more than the maximum number of paths.",
+  "$defs": {
+    "Limits": {
+      "const": {
+        "maximumPaths": 1024,
+        "maximumAgeMilliseconds": 604800000,
+        "maximumPathCharacters": 65536
+      }
+    },
+    "Entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "at"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1, "maxLength": 65536},
+        "at": {"type": "integer", "minimum": 0, "maximum": 9007199254740990}
+      }
+    }
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "paths"],
+  "properties": {
+    "version": {"const": 1},
+    "paths": {"type": "array", "maxItems": 1024, "items": {"$ref": "#/$defs/Entry"}}
+  }
+}

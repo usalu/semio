@@ -13,14 +13,62 @@
       "de": "Eine 900 mm breite Edelstahl-Wandhaube mit drei waschbaren Kassetten, zwei LED-Leuchten, Radialgebläse und Teleskopkamin. Das 150-mm-Rohr führt bis zu 626 m³/h ab."
     },
     "tags": [
-      "extractor-hood",
-      "kitchen",
-      "ventilation",
-      "appliance",
-      "wall-mounted",
-      "internal-gain",
-      "electrical",
-      "extract-air"
+      {
+        "id": "extractor-hood",
+        "title": {
+          "en": "extractor hood",
+          "de": "Dunstabzugshaube"
+        }
+      },
+      {
+        "id": "kitchen",
+        "title": {
+          "en": "kitchen",
+          "de": "Küche"
+        }
+      },
+      {
+        "id": "ventilation",
+        "title": {
+          "en": "ventilation",
+          "de": "Lüftung"
+        }
+      },
+      {
+        "id": "appliance",
+        "title": {
+          "en": "appliance",
+          "de": "Gerät"
+        }
+      },
+      {
+        "id": "wall-mounted",
+        "title": {
+          "en": "wall mounted",
+          "de": "wandmontiert"
+        }
+      },
+      {
+        "id": "internal-gain",
+        "title": {
+          "en": "internal gain",
+          "de": "innere Wärmelast"
+        }
+      },
+      {
+        "id": "electrical",
+        "title": {
+          "en": "electrical",
+          "de": "Elektro"
+        }
+      },
+      {
+        "id": "extract-air",
+        "title": {
+          "en": "extract air",
+          "de": "Abluft"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage content (A8)",

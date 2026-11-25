@@ -91,7 +91,7 @@ describe("framework renderer wgpu plugin bridge", () => {
     const captured = await bridge.readAppDocumentArchive(7);
     await bridge.loadAppDocumentArchive(8, captured);
     expect(seen).toEqual([7, 8]);
-    expect(decodeDocumentArchiveBytes(restored!)).toEqual(documentSurfaceFixture.archive);
+    expect(JSON.parse(JSON.stringify(decodeDocumentArchiveBytes(restored!), (_key, value) => value instanceof Uint8Array ? [...value] : value))).toEqual(documentSurfaceFixture.archive);
   });
 
   it("hands Rust the instance's whole history projection as JSON, a u64 cursor as a number", async () => {

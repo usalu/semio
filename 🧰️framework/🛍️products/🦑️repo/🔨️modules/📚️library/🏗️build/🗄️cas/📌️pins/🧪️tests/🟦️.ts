@@ -1,7 +1,9 @@
 import {expect,spyOn,test} from "bun:test";
 import * as fs from "node:fs/promises";
 import {join} from "node:path";
-import {casPinDirectoryV1,holdCasPinsV1} from "../🟦️.ts";
+import {mkdtempSync,rmSync,writeFileSync,existsSync} from "node:fs";
+import {tmpdir} from "node:os";
+import {casPinDirectoryV1,holdCasPinsV1,pinCasV1,readCasPinsV1} from "../🟦️.ts";
 import fixture from "./🔣️.json" with {type:"json"};
 
 test("a delayed older rename cannot displace newer held digests",async()=>{
@@ -44,4 +46,18 @@ test("a delayed older rename cannot displace newer held digests",async()=>{
   finishOlder.resolve();
   rename.mockRestore();write.mockRestore();mkdir.mockRestore();timer.mockRestore();
  }
+});
+
+test("a pin names its holder by pid and creation time: a reused pid frees it, a pin without a start time is a hard error",async()=>{
+ const root=mkdtempSync(join(tmpdir(),"semio-pin-id-")),directory=casPinDirectoryV1(root),digest="a".repeat(64);
+ try{
+  await pinCasV1(root,{leaseMaxMs:3_600_000},"mine",[digest],60_000,Date.now());
+  expect(JSON.parse(await fs.readFile(join(directory,"mine.json"),"utf8")).startMs).toBeGreaterThan(0);
+  expect([...(await readCasPinsV1(root,Date.now())).keys()]).toEqual([digest]);
+  writeFileSync(join(directory,"reused.json"),JSON.stringify({version:1,holder:"reused",pid:process.pid,startMs:1_000,expiresAtMs:Date.now()+60_000,digests:["b".repeat(64)]}));
+  expect([...(await readCasPinsV1(root,Date.now())).keys()]).toEqual([digest]);
+  expect(existsSync(join(directory,"reused.json"))).toBe(false);
+  writeFileSync(join(directory,"legacy.json"),JSON.stringify({version:1,holder:"legacy",pid:process.pid,expiresAtMs:Date.now()+60_000,digests:["c".repeat(64)]}));
+  await expect(readCasPinsV1(root,Date.now())).rejects.toThrow(/startMs/u);
+ }finally{rmSync(root,{recursive:true,force:true});}
 });

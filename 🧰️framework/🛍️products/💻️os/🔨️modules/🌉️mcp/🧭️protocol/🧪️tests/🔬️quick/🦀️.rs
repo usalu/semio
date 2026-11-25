@@ -2,7 +2,8 @@
 
 use crate::mcp_server::McpServer;
 use semio_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
-use semio_os_mcp_wire::protocol::{CallToolResult, InMemoryPromptRegistry, InMemoryResourceRegistry, InMemoryToolRegistry, JsonRpcId, JsonRpcIncoming, JsonRpcOutcome, JsonRpcRequest, METHOD_INITIALIZE, METHOD_NOTIFICATIONS_INITIALIZED, METHOD_NOT_FOUND, METHOD_SERVER_DISCOVER, METHOD_TOOLS_CALL, METHOD_TOOLS_LIST, NullBackend, ProtocolEra, SUPPORTED_PROTOCOL_VERSIONS, Tool, UNSUPPORTED_PROTOCOL_VERSION, compute_catalog_hash, is_valid_tool_name};
+use semio_os_mcp_wire::tool_paging::page_window;
+use semio_os_mcp_wire::protocol::{ContentBlock, CallToolResult, META_PROTOCOL_VERSION_KEY, ToolRegistry, InMemoryPromptRegistry, InMemoryResourceRegistry, InMemoryToolRegistry, JsonRpcId, JsonRpcIncoming, JsonRpcOutcome, JsonRpcRequest, METHOD_INITIALIZE, METHOD_NOTIFICATIONS_INITIALIZED, METHOD_NOT_FOUND, METHOD_SERVER_DISCOVER, METHOD_TOOLS_CALL, METHOD_TOOLS_LIST, NullBackend, ProtocolEra, SUPPORTED_PROTOCOL_VERSIONS, Tool, UNSUPPORTED_PROTOCOL_VERSION, compute_catalog_hash, is_valid_tool_name};
 use semio_os_mcp_workspace::gateway_backend::GatewayBackends;
 
 fn request(id: Option<i64>, method: &str, params: Option<serde_json::Value>) -> JsonRpcRequest {
@@ -197,3 +198,69 @@ fn catalog_hash_is_stable_under_reordering_and_changes_when_the_name_set_changes
     let c = vec![Tool::new("a_tool", serde_json::json!({}))];
     assert_ne!(compute_catalog_hash(&a), compute_catalog_hash(&c));
 }
+
+//#region 🔖️InputGateAndPaging
+
+#[test]
+fn the_registry_gate_follows_the_language_neutral_input_law() {
+    let document: serde_json::Value = serde_json::from_str(include_str!("../../../🧬️schema/🔣️.json")).unwrap();
+    let cases: Vec<serde_json::Value> = serde_json::from_str(include_str!("../🧫️fixtures/🚪️input-gate-law/🔣️.json")).unwrap();
+    for case in cases {
+        let name = case["name"].as_str().unwrap();
+        let mut registry = InMemoryToolRegistry::new();
+        registry.register(Tool::new("probe", document["$defs"][case["shape"].as_str().unwrap()].clone()), |_| CallToolResult::ok(Vec::new(), None)).unwrap();
+        let result = registry.call("probe", case["input"].clone()).unwrap();
+        assert_eq!(!result.is_error, case["valid"].as_bool().unwrap(), "{name}");
+        if let Some(mention) = case.get("mentions").and_then(serde_json::Value::as_str) {
+            let structured = result.structured_content.unwrap();
+            assert_eq!(structured["code"], "INPUT_INVALID", "{name}");
+            assert_eq!(structured["retryable"], false, "{name}");
+            assert!(structured["message"].as_str().unwrap().contains(mention), "{name}: {structured}");
+        }
+    }
+}
+
+#[test]
+fn the_gate_reads_absent_arguments_as_an_empty_object_and_rejects_other_types() {
+    let mut registry = InMemoryToolRegistry::new();
+    registry.register(Tool::new("probe", serde_json::json!({ "type": "object", "properties": { "a": { "type": "string" } }, "additionalProperties": false })), |_| CallToolResult::ok(Vec::new(), None)).unwrap();
+    assert!(!registry.call("probe", serde_json::Value::Null).unwrap().is_error);
+    assert!(registry.call("probe", serde_json::json!([1])).unwrap().is_error);
+}
+
+#[test]
+fn a_tool_error_text_leads_with_its_code() {
+    let result = CallToolResult::tool_error(&GatewayError::new(GatewayErrorCode::NotFound, "no such job: j"));
+    let ContentBlock::Text { text } = &result.content[0] else { panic!("text block") };
+    assert_eq!(text, "NOT_FOUND: no such job: j");
+    assert_eq!(result.structured_content.unwrap()["code"], "NOT_FOUND");
+}
+
+#[test]
+fn list_paging_follows_the_language_neutral_paging_law() {
+    let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📄️paging-law/🔣️.json")).unwrap();
+    let (default, maximum) = (law["default"].as_u64().unwrap() as usize, law["maximum"].as_u64().unwrap() as usize);
+    for case in law["cases"].as_array().unwrap() {
+        let name = case["name"].as_str().unwrap();
+        let outcome = page_window(&case["arguments"], default, maximum);
+        match case.get("error").and_then(serde_json::Value::as_str) {
+            Some(code) => assert_eq!(outcome.unwrap_err().code.wire_name(), code, "{name}"),
+            None => {
+                let window = outcome.unwrap();
+                assert_eq!((window.offset as u64, window.size as u64), (case["offset"].as_u64().unwrap(), case["size"].as_u64().unwrap()), "{name}");
+            }
+        }
+    }
+}
+
+#[test]
+fn a_window_offers_a_next_cursor_only_while_rows_remain_and_the_cursor_round_trips() {
+    let first = page_window(&serde_json::json!({ "limit": 3 }), 20, 100).unwrap();
+    let cursor = first.next_cursor(7).unwrap();
+    let second = page_window(&serde_json::json!({ "limit": 3, "cursor": cursor }), 20, 100).unwrap();
+    assert_eq!(second.offset, 3);
+    assert_eq!(second.next_cursor(7).map(|cursor| page_window(&serde_json::json!({ "cursor": cursor }), 20, 100).unwrap().offset), Some(6));
+    assert_eq!(page_window(&serde_json::json!({ "limit": 3, "cursor": second.next_cursor(7).unwrap() }), 20, 100).unwrap().next_cursor(7), None);
+}
+
+//#endregion 🔖️InputGateAndPaging

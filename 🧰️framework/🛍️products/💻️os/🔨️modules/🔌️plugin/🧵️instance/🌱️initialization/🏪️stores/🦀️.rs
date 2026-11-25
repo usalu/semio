@@ -1,6 +1,6 @@
 //! 🏪️ Original instance lanes share one caller through authored genesis, native replay and cancellation.
 use semio_plugin_decl_app::ArtifactApp;
-use semio_plugin_ownership::original_store_genesis::{OriginalStoreBirth,OriginalStoreGenesis,OriginalStoreGenesisOwner,OriginalStoreSlot};
+use semio_plugin_store_lifecycle::original_store_genesis::{OriginalStoreBirth,OriginalStoreGenesis,OriginalStoreGenesisOwner,OriginalStoreSlot};
 use semio_plugin_interaction::mutations::InteractionConfigMutation;
 use semio_os_kernel as store;
 use semio_framework_job::{StepContext,OriginalTurnFailure,OriginalSourceBinding,OriginalConstructionDemand};

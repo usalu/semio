@@ -72,25 +72,147 @@
   ]
  },
  {
-  "op": "extrude",
+  "choose": [
+   [
+    {
+     "op": "copy",
+     "id": "hand-r",
+     "fromScale": "500",
+     "from": "plan",
+     "to": [
+      "plan"
+     ]
+    },
+    {
+     "op": "copy",
+     "id": "hand-r",
+     "fromScale": "500",
+     "from": "front",
+     "to": [
+      "front"
+     ]
+    }
+   ],
+   [
+    {
+     "op": "copy",
+     "id": "hand-r",
+     "fromScale": "500",
+     "from": "plan",
+     "to": [
+      "plan"
+     ]
+    }
+   ],
+   [
+    {
+     "op": "copy",
+     "id": "hand-r",
+     "from": "front",
+     "to": [
+      "elevation",
+      "plan"
+     ]
+    }
+   ]
+  ],
   "scale": "50",
-  "id": "hand-r",
-  "view": "plan",
-  "span": [
-   -0.192,
-   -0.15
-  ]
+  "label": "hand-r"
  },
  {
-  "op": "extrude",
+  "choose": [
+   [
+    {
+     "op": "copy",
+     "id": "hand-r",
+     "fromScale": "500",
+     "from": "plan",
+     "to": [
+      "plan"
+     ]
+    },
+    {
+     "op": "copy",
+     "id": "hand-r",
+     "fromScale": "500",
+     "from": "front",
+     "to": [
+      "front"
+     ]
+    }
+   ],
+   [
+    {
+     "op": "copy",
+     "id": "hand-r",
+     "fromScale": "500",
+     "from": "plan",
+     "to": [
+      "plan"
+     ]
+    }
+   ],
+   [
+    {
+     "op": "copy",
+     "id": "hand-r",
+     "from": "front",
+     "to": [
+      "elevation",
+      "plan"
+     ]
+    }
+   ]
+  ],
   "scale": "100",
-  "id": "hand-r",
-  "view": "plan"
+  "label": "hand-r"
  },
  {
-  "op": "extrude",
+  "choose": [
+   [
+    {
+     "op": "copy",
+     "id": "hand-r",
+     "fromScale": "500",
+     "from": "plan",
+     "to": [
+      "plan"
+     ]
+    },
+    {
+     "op": "copy",
+     "id": "hand-r",
+     "fromScale": "500",
+     "from": "front",
+     "to": [
+      "front"
+     ]
+    }
+   ],
+   [
+    {
+     "op": "copy",
+     "id": "hand-r",
+     "fromScale": "500",
+     "from": "plan",
+     "to": [
+      "plan"
+     ]
+    }
+   ],
+   [
+    {
+     "op": "copy",
+     "id": "hand-r",
+     "from": "front",
+     "to": [
+      "elevation",
+      "plan"
+     ]
+    }
+   ]
+  ],
   "scale": "200",
-  "id": "hand-r",
-  "view": "plan"
+  "label": "hand-r"
  }
 ]

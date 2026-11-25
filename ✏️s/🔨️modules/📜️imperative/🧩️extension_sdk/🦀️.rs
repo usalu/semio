@@ -52,17 +52,22 @@ pub fn build_manifest_json(id: &str, name: &str, version: &str, registry: &Regis
 /// 🧮️ Evaluates an operator and returns JSON dictionary or `{ "error": ... }`.
 // 🚫️async: E1 pure — in-memory registry dispatch only, zero suspension points — see R9.
 pub fn evaluate_json(registry: &Registry, kind_id: &str, input_json: &str) -> String {
+    semio_framework_pack_json::to_json_string(&evaluate_value(registry, kind_id, input_json))
+}
+
+fn evaluate_value(registry: &Registry, kind_id: &str, input_json: &str) -> DslValue {
+    let error = |message: String| DslValue::object([("error".to_owned(), DslValue::String(message))]);
     let input: Dictionary = match semio_framework_pack_json::from_json_str(input_json, semio_framework_pack_json::JsonMemberPolicy::Reject) {
         Ok(d) => d,
-        Err(err) => return semio_framework_pack_json::to_json_string(&DslValue::object([("error".to_string(), err.to_string().to_value())])),
+        Err(err) => return error(err.to_string()),
     };
     let input = match registry.operator_info(kind_id) {
         Some(info) => inject_channel_defaults(input, info),
         None => input,
     };
     match registry.dispatch(kind_id, &input) {
-        Ok(out) => semio_framework_pack_json::to_json_string(&out),
-        Err(err) => semio_framework_pack_json::to_json_string(&DslValue::object([("error".to_string(), err.to_string().to_value())])),
+        Ok(out) => out.to_value(),
+        Err(err) => error(err.to_string()),
     }
 }
 
@@ -73,13 +78,13 @@ pub fn evaluate_request_json(kind_id: &str, input_json: &str) -> String {
     serde_json::json!({ "kindId": kind_id, "input": input }).to_string()
 }
 
-/// 🔀️ Parses an evaluate invoke request and runs it against `registry`.
-// 🚫️async: E1 pure — delegates to `evaluate_json` (sync), zero suspension points — see R9.
-pub fn evaluate_invoke(registry: &Registry, request: &[u8]) -> Result<Vec<u8>, String> {
+/// 📬️ Decodes the imperative request and emits the ABI's canonical Pack reply.
+pub fn evaluate_invoke(registry: &Registry, request: &[u8], control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<Vec<u8>, String> {
     let body: serde_json::Value = serde_json::from_slice(request).map_err(|err| err.to_string())?;
     let kind_id = body.get("kindId").and_then(|v| v.as_str()).ok_or_else(|| "missing kindId".to_string())?;
     let input_json = body.get("input").map_or_else(|| "{}".to_string(), |v| v.to_string());
-    Ok(evaluate_json(registry, kind_id, &input_json).into_bytes())
+    let value = evaluate_value(registry, kind_id, &input_json);
+    semio_os_kernel::os_pack::pack_rt::encode_wire_value_controlled(&value, &Default::default(), control).map_err(|err| err.to_string())
 }
 // #endregion 🔖️Evaluate
 // #region 🔖️Owner
@@ -108,7 +113,11 @@ impl semio_plugin::ExtensionResourceOwner for ImperativeEvaluationResources {
             return Ok(ExtensionInvokeStep { payload: None, retained_progress: RetainedCloneProgress::default(), refusal: None });
         }
         let registry = neural_engine::ColdOwner::new((self.make_registry)());
-        let bytes = evaluate_invoke(&registry, request).map_err(|message| semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("extension.evaluate"), message))?;
+        let bytes = {
+            let mut checkpoint = |_| !cx.is_cancelled() && !cx.should_yield();
+            let mut control = semio_framework_value::NativeEncodeControl::new(grant.maximum_capacity_bytes, &mut checkpoint);
+            evaluate_invoke(&registry, request, &mut control)
+        }.map_err(|message| semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("extension.evaluate"), message))?;
         let receipt = RetainedCloneProgress { copied_items: 1, copied_bytes: bytes.len(), retained_capacity_bytes: bytes.capacity(), released_bytes: 0 };
         if !receipt.fits(grant) {
             return Ok(refused(ValueError::literal(ValueRefusalKind::OwnershipLimit, "imperative evaluation reply exceeds the admitted grant")));
@@ -172,3 +181,23 @@ pub fn imperative_module_topic_contribution(module_id: &str, label: &str, icon_i
     )
 }
 // #endregion 🔖️TopicContribution
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn imperative_invocation_replies_in_pack() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️tests/🧫️fixtures/📬️invoke/🔣️.json")).unwrap();
+        let request = serde_json::to_vec(&fixture["request"]).unwrap();
+        let registry = neural_engine::ColdOwner::new(Registry::new());
+        let mut checkpoint = |_| true;
+        let mut control = semio_framework_value::NativeEncodeControl::new(4096, &mut checkpoint);
+        let payload = evaluate_invoke(&registry, &request, &mut control).unwrap();
+        let wire_hex: String = payload.iter().map(|byte| format!("{byte:02x}")).collect();
+        assert_eq!(wire_hex, fixture["wireHex"].as_str().unwrap());
+        let value = semio_os_kernel::os_pack::pack_rt::decode_wire_value(&payload).unwrap();
+        let answer: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&value)).unwrap();
+        assert_eq!(answer, fixture["answer"]);
+    }
+}

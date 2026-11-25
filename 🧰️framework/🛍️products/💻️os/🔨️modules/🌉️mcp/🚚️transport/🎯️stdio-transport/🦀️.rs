@@ -6,10 +6,11 @@ use std::io::BufRead;
 use std::io::Write;
 use std::sync::Arc;
 use crate::mcp_server::McpServer;
-use semio_os_mcp_consent::elicitation::{ElicitationChannel, ElicitationSlot, StdioLines};
+use semio_os_mcp_consent::elicitation::{ElicitationChannel, ElicitationSlot, StdioLines, StdioRead};
 use semio_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
 use semio_os_mcp_wire::notify::{NotificationSink, NotificationSlot};
-use semio_os_mcp_wire::protocol::{ClientFeatures, JsonRpcId, JsonRpcIncoming, JsonRpcNotification, JsonRpcResponse, PARSE_ERROR};
+use semio_os_mcp_wire::protocol::{ClientFeatures, JsonRpcId, JsonRpcIncoming, JsonRpcNotification, JsonRpcRequest, JsonRpcResponse, METHOD_INITIALIZE, METHOD_NOTIFICATIONS_INITIALIZED, METHOD_PING, METHOD_SERVER_DISCOVER, PARSE_ERROR};
+use std::sync::atomic::{AtomicBool, Ordering};
 
 //#region 🔖️McpTransport
 
@@ -114,3 +115,75 @@ impl<L: Write> McpTransport for StdioTransport<L> {
 }
 
 //#endregion 🔖️StdioTransport
+
+//#region 🔖️StdioHandshake
+
+const HANDSHAKE_POLL: std::time::Duration = std::time::Duration::from_millis(20);
+
+/// 🤝️ The connection handshake (`initialize`, `server/discover`, `notifications/initialized`, `ping`), answered from a
+/// bare [`McpServer`] while the real one is still being built. Every other line stays queued, in arrival order, for the real
+/// server, which replays the answered handshake requests before it serves so its negotiated state is identical.
+pub struct StdioHandshake {
+    stop: Arc<AtomicBool>,
+    answering: std::thread::JoinHandle<Vec<JsonRpcRequest>>,
+}
+
+impl StdioHandshake {
+    fn finish(self) -> Vec<JsonRpcRequest> {
+        self.stop.store(true, Ordering::Release);
+        self.answering.join().unwrap_or_default()
+    }
+}
+
+fn is_handshake_method(method: &str) -> bool {
+    matches!(method, METHOD_INITIALIZE | METHOD_SERVER_DISCOVER | METHOD_NOTIFICATIONS_INITIALIZED | METHOD_PING)
+}
+
+fn answer_handshake(lines: Arc<StdioLines>, stop: Arc<AtomicBool>) -> Vec<JsonRpcRequest> {
+    let mut bare = McpServer::with_defaults();
+    let mut answered = Vec::new();
+    while !stop.load(Ordering::Acquire) {
+        let line = match lines.read_line_direct_within(HANDSHAKE_POLL) {
+            Ok(StdioRead::Line(line)) => line,
+            Ok(StdioRead::TimedOut) => continue,
+            Ok(StdioRead::Eof) | Err(_) => break,
+        };
+        let Ok(JsonRpcIncoming::Single(request)) = serde_json::from_str::<JsonRpcIncoming>(line.trim()) else {
+            lines.defer(line);
+            break;
+        };
+        if !is_handshake_method(&request.method) {
+            lines.defer(line);
+            break;
+        }
+        if let Some(response) = bare.dispatch(&request) {
+            if serde_json::to_string(&response).ok().is_none_or(|text| lines.write_line(&text).is_err()) {
+                break;
+            }
+        }
+        answered.push(request);
+    }
+    answered
+}
+
+impl<L: Write> StdioTransport<L> {
+    /// 🤝️ Starts answering the handshake now, so a client's `initialize` does not wait for the server build that follows.
+    pub fn answer_handshake_while_building(&self) -> StdioHandshake {
+        let stop = Arc::new(AtomicBool::new(false));
+        let answering = std::thread::Builder::new().name("semio-mcp-handshake".to_string()).spawn({
+            let (lines, stop) = (self.lines.clone(), stop.clone());
+            move || answer_handshake(lines, stop)
+        }).expect("handshake thread spawns");
+        StdioHandshake { stop, answering }
+    }
+
+    /// 🔁️ Serves `server` once built: replays the handshake already answered, then every queued and later line.
+    pub fn serve_after_handshake(&mut self, mut server: McpServer, handshake: StdioHandshake) -> Result<(), GatewayError> {
+        for request in handshake.finish() {
+            let _ = server.dispatch(&request);
+        }
+        self.serve(server)
+    }
+}
+
+//#endregion 🔖️StdioHandshake

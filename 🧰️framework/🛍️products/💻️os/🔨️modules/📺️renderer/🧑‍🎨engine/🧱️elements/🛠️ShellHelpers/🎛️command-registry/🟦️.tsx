@@ -458,6 +458,7 @@ export function buildCommandCategoryTree(
     sections.push({
       id: `command.category.${expanded.definition.category}.form`,
       label: expanded.definition.label,
+      defaultOpen: true,
       items: expanded.definition.args.map((def) => stagedArgTreeItem(
         `command.${expandedElementKey}.arg.${def.id}`,
         def, effective[def.id], (value) => onStageArg(expandedKey, def.id, value),

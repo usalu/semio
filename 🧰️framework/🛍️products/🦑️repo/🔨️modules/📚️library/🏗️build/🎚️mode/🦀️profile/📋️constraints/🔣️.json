@@ -56,7 +56,79 @@
           "optLevel": "3"
         },
         {
+          "package": "semio-framework-2d-compute",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-framework-actor-retained-context",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-framework-actor-retained-turn",
+          "optLevel": "3"
+        },
+        {
           "package": "semio-framework-hash",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-framework-io-base64",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-framework-job-clock",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-framework-job-context",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-framework-job-native-turn",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-framework-job-payload",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-framework-job-receiving",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-framework-job-recorded-clock",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-framework-job-return-budget",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-framework-trace",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-framework-value-control-contract",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-framework-value-control-physical",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-framework-value-retirement",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-framework-value-source-turn",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-plugin-host-poll",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-plugin-host-wake",
           "optLevel": "3"
         },
         {
@@ -390,7 +462,79 @@
           "optLevel": "3"
         },
         {
+          "package": "semio-framework-2d-compute",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-framework-actor-retained-context",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-framework-actor-retained-turn",
+          "optLevel": "3"
+        },
+        {
           "package": "semio-framework-hash",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-framework-io-base64",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-framework-job-clock",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-framework-job-context",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-framework-job-native-turn",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-framework-job-payload",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-framework-job-receiving",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-framework-job-recorded-clock",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-framework-job-return-budget",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-framework-trace",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-framework-value-control-contract",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-framework-value-control-physical",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-framework-value-retirement",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-framework-value-source-turn",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-plugin-host-poll",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-plugin-host-wake",
           "optLevel": "3"
         },
         {
@@ -712,7 +856,79 @@
           "optLevel": "3"
         },
         {
+          "package": "semio-framework-2d-compute",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-framework-actor-retained-context",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-framework-actor-retained-turn",
+          "optLevel": "3"
+        },
+        {
           "package": "semio-framework-hash",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-framework-io-base64",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-framework-job-clock",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-framework-job-context",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-framework-job-native-turn",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-framework-job-payload",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-framework-job-receiving",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-framework-job-recorded-clock",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-framework-job-return-budget",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-framework-trace",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-framework-value-control-contract",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-framework-value-control-physical",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-framework-value-retirement",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-framework-value-source-turn",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-plugin-host-poll",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-plugin-host-wake",
           "optLevel": "3"
         },
         {
@@ -990,7 +1206,79 @@
           "optLevel": "3"
         },
         {
+          "package": "semio-framework-2d-compute",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-framework-actor-retained-context",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-framework-actor-retained-turn",
+          "optLevel": "3"
+        },
+        {
           "package": "semio-framework-hash",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-framework-io-base64",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-framework-job-clock",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-framework-job-context",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-framework-job-native-turn",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-framework-job-payload",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-framework-job-receiving",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-framework-job-recorded-clock",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-framework-job-return-budget",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-framework-trace",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-framework-value-control-contract",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-framework-value-control-physical",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-framework-value-retirement",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-framework-value-source-turn",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-plugin-host-poll",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-plugin-host-wake",
           "optLevel": "3"
         },
         {

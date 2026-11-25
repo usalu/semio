@@ -16,12 +16,12 @@ import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
+import { launchChromium } from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🌐️chromium-launch/🟦️";
 
 test("Chromium preserves the exact captured sibling when a new scene is inserted before it", async () => {
   const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🪪️scene-pointer-owner/🔣️.json"), "utf8"));
   const plan = fixture.siblingInsertion as { records: number[][]; receiver: number; terminalReceivers: number; events: string[] };
-  const { chromium } = await import("playwright");
-  const browser = await chromium.launch({ headless: true });
+  const browser = await launchChromium();
   try {
     const page = await browser.newPage({ viewport: { width: 500, height: 360 } });
     await page.setContent('<style>body{margin:0;touch-action:none;display:flex}canvas{width:100px;height:100px}</style>');
@@ -70,8 +70,7 @@ test("Chromium preserves the exact captured sibling when a new scene is inserted
 
 test("Chromium retires every pointer capture with its removed scene and admits a fresh owner", async () => {
   const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🪪️scene-pointer-owner/🔣️.json"), "utf8"));
-  const { chromium } = await import("playwright");
-  const browser = await chromium.launch({ headless: true });
+  const browser = await launchChromium();
   try {
     const page = await browser.newPage({ viewport: { width: 500, height: 360 }, hasTouch: true });
     await page.setContent('<style>body{margin:0;touch-action:none}canvas{width:500px;height:360px}</style><canvas></canvas>');
@@ -120,8 +119,7 @@ test("Chromium captures the topmost scene through release outside every scene", 
   const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
   
   
-  const { chromium } = await import("playwright");
-  const browser = await chromium.launch({ headless: true });
+  const browser = await launchChromium();
   try {
     const page = await browser.newPage({ viewport: { width: 500, height: 360 } });
     const cdp = await page.context().newCDPSession(page);
@@ -215,8 +213,7 @@ test("Chromium captures the topmost scene through release outside every scene", 
 });
 
 test("Chromium routes retained scene pointer and wheel events through the same live window owners", async () => {
-  const { chromium } = await import("playwright");
-  const browser = await chromium.launch({ headless: true });
+  const browser = await launchChromium();
   try {
     const page = await browser.newPage({ viewport: { width: 1600, height: 1200 } });
     for (const authored of law.cases as { name: string; frames: Frame[]; expectedResolve: { at: [number, number]; surfaceId: string | null }[] }[]) {

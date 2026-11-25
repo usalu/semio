@@ -1,0 +1,13 @@
+[
+  { "selector": ".roster", "property": "gap", "value": "0" },
+  { "selector": ".action-group .action + .action", "property": "border-inline-start", "value": "0" },
+  { "selector": ".roster a", "property": "border-inline-end", "value": "var(--stroke-hairline) solid var(--line)" },
+  { "selector": ".roster a", "property": "border-block-end", "value": "var(--stroke-hairline) solid var(--line)" },
+  { "selector": ".story-section", "property": "border-block-start", "value": "var(--stroke-hairline) solid var(--line)" },
+  { "selector": ".story-heading", "property": "border-inline-end", "value": "var(--stroke-hairline) solid var(--line)" },
+  { "selector": ".story-heading", "property": "border-block-end", "value": "var(--stroke-hairline) solid var(--line)" },
+  { "selector": ".edge-chip", "property": "--chip-level", "value": "calc(var(--surface-level) + 1)" },
+  { "selector": ".props", "property": "border", "value": "var(--stroke-hairline) solid var(--line)" },
+  { "selector": ".prop + .prop", "property": "border-block-start", "value": "var(--stroke-hairline) solid var(--line)" },
+  { "selector": ".bench section + section", "property": "border-block-start", "value": "var(--stroke-hairline) solid var(--line)" }
+]

@@ -66,7 +66,7 @@ describe("👻️ board catalogue drop geometry", () => {
     pushBoardDropPreview(scope, "controller", preview);
     pushBoardDropPreview(scope, "controller", null);
     pushBoardDropPreview(scope, "controller", null);
-    expect(session.setDropPreviewJson).toHaveBeenCalledExactlyOnceWith(preview);
+    expect(session.setDropPreviewJson.mock.calls).toEqual([[preview]]);
     expect(session.clearDropPreview).toHaveBeenCalledTimes(1);
     expect(session.renderFrame).not.toHaveBeenCalled();
   });

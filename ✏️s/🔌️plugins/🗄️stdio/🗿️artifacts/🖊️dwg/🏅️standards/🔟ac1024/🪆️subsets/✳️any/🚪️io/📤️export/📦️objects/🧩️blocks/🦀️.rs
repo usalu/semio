@@ -14,9 +14,9 @@ use semio_s_artifact_stdio_dwg_write_records::standards::v_ac1024::subsets::any:
 //#region 🔖️DwgStructuralCodec
 //#region DwgRead
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn encode_r2010_block_grip_location_component_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgEvaluationExpressionValue;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody;
+pub fn encode_r2010_block_grip_location_component_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgEvaluationExpressionValue;
+    use semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody;
     let Some(DwgLogicalObjectBody::BlockGripLocationComponent(grip)) = object.body.as_ref() else {
         return Err(format!("BLOCKGRIPLOCATIONCOMPONENT {:#x} body missing", object.handle));
     };
@@ -80,9 +80,9 @@ pub fn encode_r2010_block_grip_location_component_frame(object: &semio_s_artifac
     finish_r2010_object_frame(&data, handles)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn encode_r2010_dynamic_block_proxy_node_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgEvaluationExpressionValue;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody;
+pub fn encode_r2010_dynamic_block_proxy_node_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgEvaluationExpressionValue;
+    use semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody;
     let Some(DwgLogicalObjectBody::DynamicBlockProxyNode(proxy)) = object.body.as_ref() else {
         return Err(format!("ACDB_DYNAMICBLOCKPROXYNODE {:#x} body missing", object.handle));
     };
@@ -147,8 +147,8 @@ pub fn encode_r2010_dynamic_block_proxy_node_frame(object: &semio_s_artifact_std
     finish_r2010_object_frame(&data, handles)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn encode_r2010_block_parameter_dependency_body_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    let Some(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody::BlockParameterDependencyBody(body)) = object.body.as_ref() else {
+pub fn encode_r2010_block_parameter_dependency_body_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    let Some(semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody::BlockParameterDependencyBody(body)) = object.body.as_ref() else {
         return Err(format!("BLOCKPARAMDEPENDENCYBODY {:#x} body missing", object.handle));
     };
     if !object.extended_data.is_empty() || !object.reactor_handles.is_empty() || object.extension_dictionary_handle.is_some() {
@@ -171,8 +171,8 @@ pub fn encode_r2010_block_parameter_dependency_body_frame(object: &semio_s_artif
     finish_r2010_object_frame(&data, handles)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn encode_r2010_block_representation_data_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    let Some(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody::BlockRepresentationData(body)) = object.body.as_ref() else {
+pub fn encode_r2010_block_representation_data_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    let Some(semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody::BlockRepresentationData(body)) = object.body.as_ref() else {
         return Err(format!("ACDB_BLOCKREPRESENTATION_DATA {:#x} body missing", object.handle));
     };
     if !object.extended_data.is_empty() || object.extension_dictionary_handle.is_some() || object.owner_handle != Some(object.handle - 1) || object.reactor_handles.as_slice() != [object.handle - 1] || body.represented_block_header_handle == 0 {
@@ -193,8 +193,8 @@ pub fn encode_r2010_block_representation_data_frame(object: &semio_s_artifact_st
     finish_r2010_object_frame(&data, handles)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn encode_r2010_dynamic_block_purge_preventer_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    let Some(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody::DynamicBlockPurgePreventer(body)) = object.body.as_ref() else {
+pub fn encode_r2010_dynamic_block_purge_preventer_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    let Some(semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody::DynamicBlockPurgePreventer(body)) = object.body.as_ref() else {
         return Err(format!("ACDB_DYNAMICBLOCKPURGEPREVENTER_VERSION {:#x} body missing", object.handle));
     };
     if !object.extended_data.is_empty() || object.extension_dictionary_handle.is_some() || object.owner_handle.is_none() || object.reactor_handles.as_slice() != [object.owner_handle.unwrap_or_default()] || body.protected_block_header_handle == 0 {
@@ -215,10 +215,10 @@ pub fn encode_r2010_dynamic_block_purge_preventer_frame(object: &semio_s_artifac
     finish_r2010_object_frame(&data, handles)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn encode_r2010_block_flip_parameter_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockParameterBaseLocation;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgEvaluationExpressionValue;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody;
+pub fn encode_r2010_block_flip_parameter_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockParameterBaseLocation;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgEvaluationExpressionValue;
+    use semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody;
     let Some(DwgLogicalObjectBody::BlockFlipParameter(body)) = object.body.as_ref() else {
         return Err(format!("BLOCKFLIPPARAMETER {:#x} body missing", object.handle));
     };
@@ -312,10 +312,10 @@ pub fn encode_r2010_block_flip_parameter_frame(object: &semio_s_artifact_stdio_d
     finish_r2010_object_frame(&data, handles)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn encode_r2010_block_visibility_parameter_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgEvaluationExpressionValue;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgVisibilityEvaluationHistory;
+pub fn encode_r2010_block_visibility_parameter_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgEvaluationExpressionValue;
+    use semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgVisibilityEvaluationHistory;
     let Some(DwgLogicalObjectBody::BlockVisibilityParameter(body)) = object.body.as_ref() else {
         return Err(format!("BLOCKVISIBILITYPARAMETER {:#x} body missing", object.handle));
     };
@@ -418,10 +418,10 @@ pub fn encode_r2010_block_visibility_parameter_frame(object: &semio_s_artifact_s
     finish_r2010_object_frame(&data, handles)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn encode_r2010_block_move_action_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockMoveCoordinateMode;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgEvaluationExpressionValue;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody;
+pub fn encode_r2010_block_move_action_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockMoveCoordinateMode;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgEvaluationExpressionValue;
+    use semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody;
     let Some(DwgLogicalObjectBody::BlockMoveAction(body)) = object.body.as_ref() else { return Err(format!("BLOCKMOVEACTION {:#x} body missing", object.handle)) };
     let action = &body.action;
     let expression = &action.evaluation_expression;
@@ -481,9 +481,9 @@ pub fn encode_r2010_block_move_action_frame(object: &semio_s_artifact_stdio_dwg_
     finish_r2010_object_frame(&data, handles)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn encode_r2010_dynamic_block_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockParameterBaseLocation;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody;
+pub fn encode_r2010_dynamic_block_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockParameterBaseLocation;
+    use semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody;
     if !object.extended_data.is_empty() || object.owner_handle.is_none() || !object.reactor_handles.is_empty() || object.extension_dictionary_handle.is_some() {
         return Err(format!("{} {:#x} common state is invalid", object.class_name, object.handle));
     }
@@ -567,10 +567,10 @@ pub fn encode_r2010_dynamic_block_frame(object: &semio_s_artifact_stdio_dwg_snap
     finish_r2010_object_frame(&data, handles)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn encode_r2010_alignment_action_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockActionCoordinateMode;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockScaleMode;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody;
+pub fn encode_r2010_alignment_action_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockActionCoordinateMode;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockScaleMode;
+    use semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody;
     if !object.extended_data.is_empty() || object.owner_handle.is_none() || !object.reactor_handles.is_empty() || object.extension_dictionary_handle.is_some() {
         return Err(format!("{} {:#x} common state is invalid", object.class_name, object.handle));
     }
@@ -674,8 +674,8 @@ pub fn encode_r2010_alignment_action_frame(object: &semio_s_artifact_stdio_dwg_s
     finish_r2010_object_frame(&data, handles)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn encode_r2010_final_parameter_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody;
+pub fn encode_r2010_final_parameter_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    use semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody;
     if !object.extended_data.is_empty() || object.owner_handle.is_none() || object.extension_dictionary_handle.is_some() {
         return Err(format!("{} {:#x} common state is invalid", object.class_name, object.handle));
     }

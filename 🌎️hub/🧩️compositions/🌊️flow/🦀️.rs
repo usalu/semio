@@ -11,10 +11,22 @@ use semio_plugin::PluginBuilder;
 
 //#region 🗃️Apps
 semio_framework_dispatch_macros::dyn_enum_close! {
-    /// 🗃️ Closed runtime app fleet for the flow editor and viewer surfaces.
+    /// 🗃️ Closed runtime app fleet for the flow editor and viewer surfaces; each surface owns its own app crate so the app machinery is never instantiated in one compilation unit.
     pub enum FlowApps: PluginApp {
-        FlowEditor(VcsArtifactApp<EditorApp<crate::editor::flow::FlowPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>),
-        FlowViewer(VcsArtifactApp<ViewerApp<crate::viewer::flow::FlowViewer>, semio_s_artifact_stdio_semio::SemioMembers>),
+        FlowEditor(semio_hub_flow_editor_app::FlowEditorApps),
+        FlowViewer(semio_hub_flow_viewer_app::FlowViewerApps),
+    }
+}
+
+impl From<VcsArtifactApp<EditorApp<crate::editor::flow::FlowPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>> for FlowApps {
+    fn from(app: VcsArtifactApp<EditorApp<crate::editor::flow::FlowPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>) -> Self {
+        Self::FlowEditor(app.into())
+    }
+}
+
+impl From<VcsArtifactApp<ViewerApp<crate::viewer::flow::FlowViewer>, semio_s_artifact_stdio_semio::SemioMembers>> for FlowApps {
+    fn from(app: VcsArtifactApp<ViewerApp<crate::viewer::flow::FlowViewer>, semio_s_artifact_stdio_semio::SemioMembers>) -> Self {
+        Self::FlowViewer(app.into())
     }
 }
 //#endregion 🗃️Apps

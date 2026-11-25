@@ -13,22 +13,118 @@
    "de": "Ein 60-cm-Waschtisch aus Sanitärporzellan mit Einhebelmischer auf einem wandhängenden weißen Melamin-Unterschrank mit einer Hochglanzschublade und der passende Spiegelschrank mit zwei Spiegeltüren und Leuchte, zusammen 51 kg; Kalk an Armatur und Ablauf, eine abgeplatzte Beckenkante, aufgequollene Spanplattenkanten, ein ersetzter Griff und erblindete Spiegelecken. Auf einer EUR-Palette gelagert, von zwei Personen getragen, wieder montiert mit dem Rand in 0,85 m, Licht an und laufendem Wasser."
   },
   "tags": [
-   "used",
-   "household",
-   "second-hand",
-   "bathroom",
-   "washbasin",
-   "vanity-unit",
-   "mirror-cabinet",
-   "vitreous-china",
-   "ceramic",
-   "melamine",
-   "chipboard",
-   "mirror",
-   "tap",
-   "pallet",
-   "1990s",
-   "interior"
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "household",
+    "title": {
+     "en": "household",
+     "de": "Haushalt"
+    }
+   },
+   {
+    "id": "second-hand",
+    "title": {
+     "en": "second-hand",
+     "de": "Second-Hand"
+    }
+   },
+   {
+    "id": "bathroom",
+    "title": {
+     "en": "bathroom",
+     "de": "Badezimmer"
+    }
+   },
+   {
+    "id": "washbasin",
+    "title": {
+     "en": "washbasin",
+     "de": "Waschbecken"
+    }
+   },
+   {
+    "id": "vanity-unit",
+    "title": {
+     "en": "vanity unit",
+     "de": "Waschtischunterschrank"
+    }
+   },
+   {
+    "id": "mirror-cabinet",
+    "title": {
+     "en": "mirror cabinet",
+     "de": "Spiegelschrank"
+    }
+   },
+   {
+    "id": "vitreous-china",
+    "title": {
+     "en": "vitreous china",
+     "de": "Sanitärkeramik"
+    }
+   },
+   {
+    "id": "ceramic",
+    "title": {
+     "en": "ceramic",
+     "de": "Keramik"
+    }
+   },
+   {
+    "id": "melamine",
+    "title": {
+     "en": "melamine",
+     "de": "Melamin"
+    }
+   },
+   {
+    "id": "chipboard",
+    "title": {
+     "en": "chipboard",
+     "de": "Spanplatte"
+    }
+   },
+   {
+    "id": "mirror",
+    "title": {
+     "en": "mirror",
+     "de": "Spiegel"
+    }
+   },
+   {
+    "id": "tap",
+    "title": {
+     "en": "tap",
+     "de": "Wasserhahn"
+    }
+   },
+   {
+    "id": "pallet",
+    "title": {
+     "en": "pallet",
+     "de": "Palette"
+    }
+   },
+   {
+    "id": "1990s",
+    "title": {
+     "en": "1990s",
+     "de": "1990er"
+    }
+   },
+   {
+    "id": "interior",
+    "title": {
+     "en": "interior",
+     "de": "Innenausbau"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content (used household objects wave)",
@@ -15737,8 +15833,594 @@
     ]
    },
    "500": {
-    "status": "unavailable",
-    "denominator": 500
+    "status": "authored",
+    "denominator": 500,
+    "decisions": [
+     {
+      "en": "Body for the 75 mm feature: the pallet as one 144 mm slab; the mirror cabinet as one block under its light bar raised from 60 to 75 mm with the top in place; the vanity as one block that takes carcass, back, drawer box and drawer front in; the basin as one 75 mm slab on it (deck and apron) with the oval mouth of the bowl as its opening down to a floor declared as a 10 mm sheet (the depth of the bowl below stays inside the block) and the tap with spout and lever as one 75 mm post that keeps the height of the lever.",
+      "de": "Körper für das 75-mm-Merkmal: die Palette als eine 144-mm-Platte; der Spiegelschrank als ein Block unter seiner von 60 auf 75 mm erhöhten Lichtleiste mit der Oberkante am Ort; der Unterschrank als ein Block, der Korpus, Rückwand, Schubkasten und Schubladenfront aufnimmt; das Becken als eine 75-mm-Platte darauf (Deck und Schürze) mit dem ovalen Mund der Mulde als Öffnung bis auf einen als 10-mm-Platte erklärten Boden (die Tiefe der Mulde darunter bleibt im Block) und die Armatur mit Auslauf und Hebel als ein 75-mm-Pfosten, der die Höhe des Hebels hält."
+     },
+     {
+      "en": "Thermal: the body solids in their regions by reference; the mirror doors as their declared 8 mm sheet before the block, the drawer front as a 75 mm shell of its layer in the vanity front, the hidden water as a shell of its layer in the basin, a 75 mm light plume patch in the light bar and a 75 mm mist patch in the basin.",
+      "de": "Thermik: die Körper in ihren Regionen als Verweis; die Spiegeltüren als erklärte 8-mm-Platte vor dem Block, die Schubladenfront als 75-mm-Schale ihrer Schicht in der Unterschrankfront, das verdeckte Wasser als Schale seiner Schicht im Becken, eine 75-mm-Auftriebsfläche in der Lichtleiste und eine 75-mm-Nebelfläche im Becken."
+     },
+     {
+      "en": "Structure: the members by reference, the vanity also holding the drawer bone and the tap the lever bone, the lever pivot as a 75 mm joint and five mass markers.",
+      "de": "Tragwerk: die Stäbe als Verweis, der Unterschrank fasst auch den Schubladenknochen und die Armatur den Hebelknochen, das Hebellager als 75-mm-Gelenk und fünf Massenmarken."
+     }
+    ],
+    "body": [
+     {
+      "id": "pallet-slab",
+      "kind": "box",
+      "bone": "pallet",
+      "material": "pallet-spruce",
+      "role": "body",
+      "tone": 0.48,
+      "size": [
+       1.2,
+       0.144,
+       0.8
+      ],
+      "transform": {
+       "translation": [
+        0.6,
+        0.072,
+        0
+       ]
+      }
+     },
+     {
+      "id": "mirror-block",
+      "kind": "box",
+      "bone": "mirror",
+      "material": "melamine-chipboard",
+      "role": "body",
+      "tone": 0.82,
+      "size": [
+       0.148,
+       0.685,
+       0.6
+      ],
+      "transform": {
+       "translation": [
+        0.074,
+        0.3425,
+        0
+       ]
+      }
+     },
+     {
+      "id": "light-bar",
+      "kind": "box",
+      "bone": "mirror",
+      "material": "opal-acrylic",
+      "role": "body",
+      "tone": 0.85,
+      "size": [
+       0.17,
+       0.075,
+       0.6
+      ],
+      "transform": {
+       "translation": [
+        0.085,
+        0.7225,
+        0
+       ]
+      }
+     },
+     {
+      "id": "vanity-block",
+      "kind": "box",
+      "bone": "vanity",
+      "material": "melamine-chipboard",
+      "role": "body",
+      "tone": 0.8,
+      "size": [
+       0.459,
+       0.5,
+       0.58
+      ],
+      "transform": {
+       "translation": [
+        0.2295,
+        0.25,
+        0
+       ]
+      }
+     },
+     {
+      "id": "basin-slab",
+      "kind": "extrude",
+      "bone": "basin",
+      "material": "vitreous-china",
+      "role": "body",
+      "tone": 0.92,
+      "profile": [
+       [
+        -0.3,
+        0
+       ],
+       [
+        0.3,
+        0
+       ],
+       [
+        0.3,
+        0.48
+       ],
+       [
+        -0.3,
+        0.48
+       ]
+      ],
+      "plane": "zx",
+      "from": -0.005,
+      "to": 0.07,
+      "holes": [
+       [
+        [
+         0.0479,
+         0.4014
+        ],
+        [
+         0.1308,
+         0.3662
+        ],
+        [
+         0.1787,
+         0.3052
+        ],
+        [
+         0.1787,
+         0.2348
+        ],
+        [
+         0.1308,
+         0.1738
+        ],
+        [
+         0.0479,
+         0.1386
+        ],
+        [
+         -0.0479,
+         0.1386
+        ],
+        [
+         -0.1308,
+         0.1738
+        ],
+        [
+         -0.1787,
+         0.2348
+        ],
+        [
+         -0.1787,
+         0.3052
+        ],
+        [
+         -0.1308,
+         0.3662
+        ],
+        [
+         -0.0479,
+         0.4014
+        ]
+       ]
+      ]
+     },
+     {
+      "id": "bowl-floor",
+      "kind": "extrude",
+      "bone": "basin",
+      "material": "vitreous-china",
+      "role": "body",
+      "tone": 0.86,
+      "profile": [
+       [
+        0.0479,
+        0.4014
+       ],
+       [
+        0.1308,
+        0.3662
+       ],
+       [
+        0.1787,
+        0.3052
+       ],
+       [
+        0.1787,
+        0.2348
+       ],
+       [
+        0.1308,
+        0.1738
+       ],
+       [
+        0.0479,
+        0.1386
+       ],
+       [
+        -0.0479,
+        0.1386
+       ],
+       [
+        -0.1308,
+        0.1738
+       ],
+       [
+        -0.1787,
+        0.2348
+       ],
+       [
+        -0.1787,
+        0.3052
+       ],
+       [
+        -0.1308,
+        0.3662
+       ],
+       [
+        -0.0479,
+        0.4014
+       ]
+      ],
+      "plane": "zx",
+      "from": -0.005,
+      "to": 0.005,
+      "sheet": true
+     },
+     {
+      "id": "tap",
+      "kind": "box",
+      "bone": "basin",
+      "material": "chrome-brass",
+      "role": "body",
+      "tone": 0.55,
+      "size": [
+       0.075,
+       0.12,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.07,
+        0.13,
+        0
+       ]
+      }
+     }
+    ],
+    "thermal": [
+     {
+      "id": "th-pallet-slab",
+      "of": "pallet-slab",
+      "region": "pallet"
+     },
+     {
+      "id": "th-mirror-block",
+      "of": "mirror-block",
+      "region": "mirror-carcass"
+     },
+     {
+      "id": "th-light-bar",
+      "of": "light-bar",
+      "region": "light-bar"
+     },
+     {
+      "id": "th-vanity-block",
+      "of": "vanity-block",
+      "region": "vanity-carcass"
+     },
+     {
+      "id": "th-basin-slab",
+      "of": "basin-slab",
+      "region": "basin"
+     },
+     {
+      "id": "th-bowl-floor",
+      "of": "bowl-floor",
+      "region": "basin"
+     },
+     {
+      "id": "th-tap",
+      "of": "tap",
+      "region": "tap"
+     },
+     {
+      "id": "th-mirror-doors",
+      "kind": "box",
+      "bone": "mirror",
+      "material": "mirror-glass",
+      "role": "body",
+      "tone": 0.68,
+      "size": [
+       0.008,
+       0.685,
+       0.6
+      ],
+      "transform": {
+       "translation": [
+        0.152,
+        0.3425,
+        0
+       ]
+      },
+      "region": "mirror-doors",
+      "layer": "mirror",
+      "sheet": true
+     },
+     {
+      "id": "th-drawer-front",
+      "kind": "box",
+      "bone": "drawer",
+      "material": "mdf-gloss",
+      "role": "body",
+      "tone": 0.9,
+      "size": [
+       0.075,
+       0.496,
+       0.568
+      ],
+      "transform": {
+       "translation": [
+        0.3815,
+        0.221,
+        0
+       ]
+      },
+      "region": "drawer",
+      "layer": "d-board"
+     },
+     {
+      "id": "th-water-stream",
+      "kind": "box",
+      "bone": "basin",
+      "material": "water",
+      "role": "detail",
+      "tone": 0.5,
+      "size": [
+       0.046,
+       0.196,
+       0.03
+      ],
+      "transform": {
+       "translation": [
+        0.202,
+        0.013,
+        0
+       ]
+      },
+      "region": "water",
+      "layer": "stream"
+     },
+     {
+      "id": "th-light-plume",
+      "kind": "box",
+      "bone": "mirror",
+      "material": "opal-acrylic",
+      "role": "detail",
+      "tone": 0.4,
+      "size": [
+       0.075,
+       0.075,
+       0.4
+      ],
+      "transform": {
+       "translation": [
+        0.13,
+        0.7225,
+        0
+       ]
+      },
+      "region": "light-bar",
+      "tags": [
+       "light-plume"
+      ]
+     },
+     {
+      "id": "th-basin-mist",
+      "kind": "box",
+      "bone": "basin",
+      "material": "water",
+      "role": "detail",
+      "tone": 0.4,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.22,
+        0.0325,
+        0
+       ]
+      },
+      "region": "water",
+      "tags": [
+       "basin-mist"
+      ]
+     }
+    ],
+    "structure": [
+     {
+      "id": "m-pallet-slab",
+      "of": "pallet-slab",
+      "member": "pallet",
+      "part": "member"
+     },
+     {
+      "id": "m-mirror-block",
+      "of": "mirror-block",
+      "member": "mirror",
+      "part": "member"
+     },
+     {
+      "id": "m-light-bar",
+      "of": "light-bar",
+      "member": "mirror",
+      "part": "member"
+     },
+     {
+      "id": "m-vanity-block",
+      "of": "vanity-block",
+      "member": "vanity",
+      "part": "member",
+      "members": [
+       "drawer"
+      ]
+     },
+     {
+      "id": "m-basin-slab",
+      "of": "basin-slab",
+      "member": "basin",
+      "part": "member"
+     },
+     {
+      "id": "m-bowl-floor",
+      "of": "bowl-floor",
+      "member": "basin",
+      "part": "member"
+     },
+     {
+      "id": "m-tap",
+      "of": "tap",
+      "member": "basin",
+      "part": "member",
+      "members": [
+       "lever"
+      ]
+     },
+     {
+      "id": "j-lever-pivot",
+      "kind": "box",
+      "bone": "lever",
+      "material": "chrome-brass",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "member": "lever",
+      "part": "joint"
+     },
+     {
+      "id": "mass-pallet",
+      "kind": "box",
+      "bone": "pallet",
+      "material": "pallet-spruce",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.6,
+        0.072,
+        0
+       ]
+      },
+      "member": "pallet",
+      "part": "mass"
+     },
+     {
+      "id": "mass-mirror",
+      "kind": "box",
+      "bone": "mirror",
+      "material": "melamine-chipboard",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.074,
+        0.35,
+        0
+       ]
+      },
+      "member": "mirror",
+      "part": "mass"
+     },
+     {
+      "id": "mass-vanity",
+      "kind": "box",
+      "bone": "vanity",
+      "material": "melamine-chipboard",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.22,
+        0.25,
+        0
+       ]
+      },
+      "member": "vanity",
+      "part": "mass"
+     },
+     {
+      "id": "mass-drawer",
+      "kind": "box",
+      "bone": "drawer",
+      "material": "mdf-gloss",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.2,
+        0.1,
+        0
+       ]
+      },
+      "member": "drawer",
+      "part": "mass"
+     },
+     {
+      "id": "mass-basin",
+      "kind": "box",
+      "bone": "basin",
+      "material": "vitreous-china",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.24,
+        0.0325,
+        0
+       ]
+      },
+      "member": "basin",
+      "part": "mass"
+     }
+    ]
    }
   },
   "presentation": {

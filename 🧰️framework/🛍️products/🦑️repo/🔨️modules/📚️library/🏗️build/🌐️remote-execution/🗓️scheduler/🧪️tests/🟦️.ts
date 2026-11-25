@@ -1,4 +1,5 @@
-import {expect,test} from "bun:test";
+import {stretchedBudgetMillisecondsV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
+import {expect,setDefaultTimeout,test} from "bun:test";
 import {createHash} from "node:crypto";
 import {decodeProtobufV1,encodeProtobufV1,REAPI_V1} from "../../📡️wire/📦️protobuf/🟦️.ts";
 import type {RemoteExecutionContentV1} from "../../🗄️content/🟦️.ts";
@@ -6,6 +7,9 @@ import {RemoteExecutionSchedulerV1,type RemoteExecutionSchedulerOptionsV1,type R
 import type {RemoteExecutionDigestV1,RemoteExecutionWorkerRegistrationV1,RemoteExecutionTaskResultV1} from "../../🟦️.ts";
 
 const sha=(data:Uint8Array)=>createHash("sha256").update(data).digest("hex");
+
+/** ⏱️ Every test here is in-memory logic on a fake clock: one that never settles fails with its name after this bound (stretched for host load) instead of holding the file for the suite budget. */
+setDefaultTimeout(stretchedBudgetMillisecondsV1(20_000));
 
 class Memory implements RemoteExecutionContentV1{
  blobs=new Map<string,Uint8Array>();results=new Map<string,Uint8Array>();
@@ -388,6 +392,16 @@ test("a restored executing action whose worker never returns is queued after the
  rmSync(directory,{recursive:true,force:true});
 });
 
+test("a restarted scheduler keeps counting the age of a restored executing action from its real start, so all-stuck ends it as soon as the whole run is older than the stuck limit",async()=>{
+ const first=harness({lingerSeconds:3000}),action=first.memory.action([],"old-run"),run=submit(first.scheduler,action),worker=first.scheduler.register(profile("w"));await Bun.sleep(20);
+ const task=(await polled(first.scheduler,worker.id)).task!;
+ first.elapse(500);const rows=first.scheduler.journal();run.abort.abort();
+ const second=harness({lingerSeconds:3000,restore:rows,resumeGraceSeconds:60});
+ second.scheduler.register({...profile("w"),resumed:[{task:task.id,instance:"main",action:{hash:action.hash,size:action.size}}]} as RemoteExecutionWorkerRegistrationV1);second.elapse(150);
+ const ended=second.scheduler.abort("all-stuck");
+ expect(ended.map(row=>[row.stage,row.elapsedSeconds>=650])).toEqual([["EXECUTING",true]]);
+});
+
 class Leasing extends Memory{
  leased:{lease:string|undefined;hashes:string[]}[]=[];released:{lease:string;hashes:string[]}[]=[];
  override async missing(_:string,digests:readonly RemoteExecutionDigestV1[],_signal?:AbortSignal,intent?:string){this.leased.push({lease:intent,hashes:digests.map(digest=>digest.hash)});return digests.filter(digest=>!this.blobs.has(digest.hash));}
@@ -437,4 +451,12 @@ test("a queued operation whose input blob the store loses despite the lease is a
  const run=submit(scheduler,built.action);await Bun.sleep(30);expect(run.rows.at(-1)!.stage).toBe("QUEUED");
  leasing.blobs.delete(textDigest("b").hash);advance(601);await run.done;
  const status=run.rows.at(-1)!.outcome!.status;expect(status.code).toBe(9);expect(status.missing).toEqual([textDigest("b")]);
+});
+
+test("closing the scheduler ends every open operation stream at once, queued or executing, so a shutdown or handover never waits on a client",async()=>{
+ const {memory,scheduler}=harness({unmatchedSeconds:1_000_000}),queued=submit(scheduler,memory.action([{name:"OSFamily",value:"amiga"}],"closing-queued")),worker=scheduler.register(profile("w")),running=submit(scheduler,memory.action([],"closing-running"));
+ await Bun.sleep(30);await polled(scheduler,worker.id);
+ expect(queued.rows.at(-1)!.stage).toBe("QUEUED");expect(running.rows.at(-1)!.stage).toBe("EXECUTING");
+ scheduler.close();await Promise.all([queued.done,running.done]);
+ expect(queued.rows.at(-1)!.outcome,"no outcome is invented: the client re-attaches by name").toBeUndefined();expect(running.rows.at(-1)!.stage).toBe("EXECUTING");
 });

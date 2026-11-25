@@ -11,7 +11,7 @@
   ],
   "properties": {
     "mutation": {
-      "const": "changeelementfc"
+      "const": "changeElementFc"
     },
     "elementId": {
       "type": "string",

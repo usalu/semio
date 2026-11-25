@@ -2,7 +2,6 @@
 import { cn } from "../🏷️class-name-composition/🟦️.ts";
 import { hoverExcludingHandleTextEmphasizedClass, hoverExcludingHandleBgFillClass, interactiveActiveFillClass } from "../🖱️interaction-presentation/🟦️.ts";
 import { borderNormalClass } from "../📏️border-presentation/🟦️.ts";
-import { surfaceClass } from "../🌈️surface-presentation/🟦️.ts";
 import { menuItemClassName } from "../../🧱️elements/📋️MenuItem/🟦️.tsx";
 
 /** 🌳️ Typography for measure tree leaf labels. */
@@ -17,21 +16,12 @@ export const panelTabLabelClass = "min-w-0 truncate text-xs leading-none";
 /** 🖼️ Panel tab icon slot — defers dimensions to the tab icon (12px). */
 export const panelTabIconSlotClass = "inline-flex shrink-0 items-center justify-center overflow-visible leading-none [&_svg]:block";
 
-/** 🎯️ Label/icon emphasis paired with {@link dropZoneReadyFillClass} so text stays legible on the fill. */
-export const dropZoneReadyTextClass = "text-emphasized";
-
-/** 💧️ Passive drop-zone fill — secondary accent, kept visually distinct from the stronger primary-accent indicator on the actively hovered target. */
-export const dropZoneReadyFillClass = "bg-[var(--accent-secondary)]";
-
-/** ➖️ Combined passive drop-zone treatment (fill + emphasized text/icons). */
-export const dropZoneReadyClass = cn(dropZoneReadyFillClass, dropZoneReadyTextClass);
-
 /** 🥂️ The glass overlay box recipe shared by the introduction info box and modal dialogs (see
  * `UIDialog`) — the two mechanisms are styled identically by construction, not by convention.
  * Border color is CSS-owned (`[data-slot="introduction-info-box"|"dialog-box"]`): normal at rest,
  * emphasized on `:hover` only — never `:focus-within`, so clicking a button does not leave the
  * border stuck after the pointer leaves. */
-export const GLASS_OVERLAY_BOX_CLASS = cn("text-foreground pointer-events-auto fixed z-tutorial max-w-sm rounded-lg p-double shadow-lg");
+export const GLASS_OVERLAY_BOX_CLASS = cn("text-foreground pointer-events-auto fixed z-tutorial max-w-sm p-double");
 
 /** 📏️ Normal bottom edge utility for in-chrome dividers (not shell navbar — navbar uses a CSS `::after` stroke). */
 
@@ -88,9 +78,6 @@ export const mobilePanelTabBarClass = cn(panelTabBarClass, "h-large");
 
 /** 📲️ Mobile panel tab button padding. */
 export const mobilePanelTabButtonClass = cn(panelTabButtonClass, "px-single");
-
-/** 🎞️ Body fill only — outer stroke is the stack frame border SVG (frame rectangle + inner chip edges); base level (mode body / floor windows float on) — host element must also carry `data-level="base"`. */
-export const windowBodyFrameClass = cn("relative border-0", surfaceClass);
 
 /** 🌑️ Inactive sibling tab — normal pill resting on the U-frame baseline; transparent so it
  * shows the chip-cell glass beneath it rather than a second opaque fill (matches {@link panelWindowInactiveTabClass}'s rule for the panel variant). */

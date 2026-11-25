@@ -208,6 +208,10 @@ impl<J: InteractiveJob + 'static> BatchJobSession<J> {
         self.checked_out.as_ref().and_then(WorkerJobOutcome::overrun_ledger)
     }
 
+    pub fn checked_out_job(&self) -> Option<&J> {
+        self.checked_out.as_ref().map(WorkerJobOutcome::job)
+    }
+
     pub fn checked_out_job_mut(&mut self) -> Option<&mut J> {
         WorkerJobOutcome::job_mut(self.checked_out.as_mut()?).ok()
     }

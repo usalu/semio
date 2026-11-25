@@ -14,7 +14,7 @@ export async function keepArtifactOpeningV1(port: Readonly<{
   write: (admission: LocalCatalogAdmissionV1) => Promise<boolean>;
   attach: (admission: LocalCatalogAdmissionV1) => Promise<KeptArtifactReceiptV1 | null>;
   record: (document: LocalDocument) => Promise<boolean>;
-  publish: (document: LocalDocument) => boolean;
+  publish: (document: LocalDocument) => boolean | Promise<boolean>;
   close: (receipt: KeptArtifactReceiptV1) => Promise<void>;
   unlist: (document: LocalDocument) => Promise<void>;
   report: (error: unknown) => void;
@@ -44,7 +44,7 @@ export async function keepArtifactOpeningV1(port: Readonly<{
     catalogAttempted = true;
     if (!(await port.record(document))) throw new Error("natural-file.catalog-not-persisted");
     checkpoint(4);
-    if (!port.publish(document)) throw new Error("natural-file.panel-unavailable");
+    if (!(await port.publish(document))) throw new Error("natural-file.panel-unavailable");
     port.progress(5, 5);
     return true;
   } catch (error) {

@@ -113,6 +113,15 @@ impl StructuredXrefCursor {
         }
     }
 
+    /// 🏃️ Bytes the next unit writes when it is a run unit: a footer, table or object-header byte, or one index slot; `None` for trailers and every other action.
+    pub fn run_write_bytes(&self) -> Option<usize> {
+        match self.phase {
+            Phase::Footer(_) | Phase::Validate(_) => Some(1),
+            Phase::Revisions => self.revisions.run_write_bytes(),
+            _ => None,
+        }
+    }
+
     /// 🗝️ Checks the original trailer root before choosing between absolute and header-relative offsets.
     pub fn root_resolves(&self) -> bool {
         let Some(root) = self.trailers.ready_trailer().and_then(|trailer| trailer.get_inheritable("Root")).and_then(|value| value.as_ref()) else { return false; };

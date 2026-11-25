@@ -44,6 +44,7 @@ pub enum PresentationMutation {
     ReorderTiles(reorder_tiles::ReorderTiles),
 }
 dsl::original_pack_value_operation_receiving!(PresentationMutation);
+dsl::artifact_persisted_binary_operation!(PresentationMutation);
 
 /// 🏷️ The kebab spelling of every [`PresentationMutation`] variant, in DECLARATION ORDER — the one list
 /// the language-neutral test platform is measured against. It is duplicated in exactly two other

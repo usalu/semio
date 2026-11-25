@@ -23,6 +23,7 @@ semio-framework-value = { workspace = true }
 semio-framework-value-persistent = { path = "../../../../../../../../../../🔨️modules/🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust" }
 semio-plugin-mounted-owner = { path = "../../../../../../🏇️mounted-owner/📦️packages/🦀️rust" }
 semio-plugin-ownership = { path = "../../../../../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
+semio-plugin-store-lifecycle = { path = "../../../../../../♻️lifecycle/🧱️owner/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-job = { workspace = true, features = ["testkit"] }

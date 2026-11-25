@@ -13,12 +13,48 @@
       "de": "Ein Buchen-Liegestuhl, wie er gebaut wird: ein Rückenrahmen von den Vorderfüssen zur Kopfleiste, ein Sitzrahmen von den Hinterfüssen zur Knieleiste, scherenartig aneinander drehbar, ein Stützrahmen, dessen Rundstab in eine von vier Rasten fällt, und ein gestreiftes Segeltuch, das zwischen den zwei Leisten hängt. Er neigt sich Raste um Raste und klappt mit gespanntem Tuch flach zusammen."
     },
     "tags": [
-      "deck-chair",
-      "folding",
-      "sling",
-      "canvas",
-      "outdoor",
-      "seating"
+      {
+        "id": "deck-chair",
+        "title": {
+          "en": "deck chair",
+          "de": "Liegestuhl"
+        }
+      },
+      {
+        "id": "folding",
+        "title": {
+          "en": "folding",
+          "de": "klappbar"
+        }
+      },
+      {
+        "id": "sling",
+        "title": {
+          "en": "sling",
+          "de": "Schlinge"
+        }
+      },
+      {
+        "id": "canvas",
+        "title": {
+          "en": "canvas",
+          "de": "Segeltuch"
+        }
+      },
+      {
+        "id": "outdoor",
+        "title": {
+          "en": "outdoor",
+          "de": "Außenbereich"
+        }
+      },
+      {
+        "id": "seating",
+        "title": {
+          "en": "seating",
+          "de": "Sitzmöbel"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage content (NW-F)",

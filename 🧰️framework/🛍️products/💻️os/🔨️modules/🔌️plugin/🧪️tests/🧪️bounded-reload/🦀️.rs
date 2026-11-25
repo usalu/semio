@@ -15,7 +15,7 @@ use store::os_store::store_schema::ArtifactCommand;
 use pack::snapshot::ArtifactPack;
 use store::{ArtifactStore, ArtifactStoreInitializationAuthority, MemberFactory, Mutation, SpaceMember};
 #[cfg(test)]
-use semio_plugin_ownership::store_lifecycle::{ArtifactStoreInitializationJob, bounded_document_store_initialization_job};
+use semio_plugin_store_lifecycle::store_lifecycle::{ArtifactStoreInitializationJob, bounded_document_store_initialization_job};
 use semio_framework_value::DslValue;
 use std::future::Future;
 use protocol::LOCAL_ACTOR_ID;

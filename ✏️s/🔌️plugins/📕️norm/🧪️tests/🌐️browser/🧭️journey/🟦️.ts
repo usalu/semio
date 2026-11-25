@@ -6,7 +6,7 @@ type Role = (typeof journey.regions)[number]["role"];
 type Result = { status: OpenedCheckV1["status"]; evidence: string[] };
 
 /** 🪟️ Selects the windows of one role through the framework surface attributes, matching the kind id suffix of editor and viewer alike. */
-export const regionSelectorV1 = (role: Role): string => `[data-surface-window-kind-id$="-${role}"],[data-surface-window-kind-id$=".${role}"]`;
+export const regionSelectorV1 = (role: Role): string => `:is([data-surface-window-kind-id$="-${role}"],[data-surface-window-kind-id$=".${role}"])`;
 
 /** 🏷️ The accessible name of a region in a language, read from the fixture. */
 export const regionNameV1 = (role: Role, locale: Locale): string => journey.regions.find(row => row.role === role)!.names[locale];
@@ -75,9 +75,10 @@ export async function inspectNormEditorV1(context: OpenedArtifactV1): Promise<re
     for (let step = 0; step < journey.edit.times; step++) await ui.press(field, journey.edit.key);
     await ui.press(field, journey.edit.commit);
     const read = (item?: (typeof first)[number]) => item?.attributes.value ?? item?.attributes["aria-valuenow"] ?? null;
-    const after = await until(context, () => shown(ui, field, ["value", "aria-valuenow"]), list => read(list[0]) !== read(first[0]), 15_000);
+    const changed = (list: typeof first) => list.length === 1 && read(first[0]) !== null && read(list[0]) !== null && read(list[0]) !== read(first[0]);
+    const after = await until(context, () => shown(ui, field, ["value", "aria-valuenow"]), changed, 15_000);
     row.evidence.push(JSON.stringify({ before: read(first[0]), after: read(after[0]) }));
-    return read(after[0]) !== read(first[0]);
+    return changed(after);
   });
   await run("checks-utilisation-updates", async row => {
     const after = await until(context, () => utilisations(ui), list => list.length > 0 && list.join("|") !== before.join("|"), journey.utilisation.settleMs);

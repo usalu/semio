@@ -46,6 +46,18 @@ function tryConnect(endpoint){
 const startupDiagnosticV1=waitSchema.definitions.Diagnostic.const;
 
 /** 🪵 Reads only recent log bytes for one observed startup coordinate. */
+/** 🌱️ The phase the starting service reports in its log (`[repo] still working after N s; last phase started: <phase>`), with the files it walked, or nothing while it has said none.
+ * @see ./🧬️schema/🔣️.json */
+function bootPhaseV1(path,from){
+ let file;
+ try{
+  file=openSync(path,"r");const facts=fstatSync(file),start=Math.max(from<=facts.size?from:0,facts.size-8192),buffer=Buffer.alloc(facts.size-start);
+  if(buffer.length===0)return undefined;
+  const text=buffer.subarray(0,readSync(file,buffer,0,buffer.length,start)).toString("utf8"),found=[...text.matchAll(/^\[repo\] still working after \d+ s; last phase started: (\S+)(?: \(walked (\d+) files)?/gmu)].at(-1);
+  return found===undefined?undefined:found[1]+(found[2]===undefined?"":" ("+found[2]+" files)");
+ }catch{return undefined;}finally{if(file!==undefined)try{closeSync(file);}catch{}}
+}
+
 function startOutputV1(path,from,since,lost=false){
  let file;
  try{
@@ -161,7 +173,7 @@ export async function connectHostV1({implementation,identify,environment=process
     throw new HostUnavailableErrorV1("timeout",undefined,startup);
    }
    if(!owner){const existing=await start();if(existing)return existing;}
-   if(elapsed-announced>=2000){announced=elapsed;onProgress({phase:"start",done:0,total:0,message:say("host-wait",{elapsed})});}
+   if(elapsed-announced>=2000){announced=elapsed;const booting=bootPhaseV1(runtime.log,initialLogOffset);onProgress({phase:"start",done:0,total:0,message:booting===undefined?say("host-wait",{elapsed}):say("host-wait-phase",{elapsed,phase:booting})});}
    await sleep(policy.startPollMilliseconds,signal);
   }
  }finally{owner?.close();}

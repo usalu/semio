@@ -13,18 +13,90 @@
    "de": "Eine Schwengelpumpe aus Grauguss in der deutschen Park- und Spielplatzbauart nach Jahrzehnten im Gebrauch: ein Pumpenkopf mit 80 mm Bohrung, langem Auslauf und gegabeltem Schwengelbock auf einem Gussständer, verschraubt auf einer Betonbettung hinter einem 0,9 m langen Granittrog. Die grüne Farbe ist gekreidet und blättert ab, Fuß und Auslauflippe sind verrostet und verkalkt, der Griff ist von Händen blank poliert, der Trog hat eine abgeschlagene Ecke, ein Tag, Moos am Fuß und nasse Algen an der schattigen Seite und steht bis zur Überlaufkerbe voll Wasser."
   },
   "tags": [
-   "used",
-   "park",
-   "public-space",
-   "water",
-   "play",
-   "hand-pump",
-   "lever-pump",
-   "cast-iron",
-   "granite-trough",
-   "concrete-footing",
-   "water-play",
-   "street-furniture"
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "park",
+    "title": {
+     "en": "park",
+     "de": "Park"
+    }
+   },
+   {
+    "id": "public-space",
+    "title": {
+     "en": "public space",
+     "de": "öffentlicher Raum"
+    }
+   },
+   {
+    "id": "water",
+    "title": {
+     "en": "water",
+     "de": "Wasser"
+    }
+   },
+   {
+    "id": "play",
+    "title": {
+     "en": "play",
+     "de": "Spiel"
+    }
+   },
+   {
+    "id": "hand-pump",
+    "title": {
+     "en": "hand pump",
+     "de": "Handpumpe"
+    }
+   },
+   {
+    "id": "lever-pump",
+    "title": {
+     "en": "lever pump",
+     "de": "Hebelpumpe"
+    }
+   },
+   {
+    "id": "cast-iron",
+    "title": {
+     "en": "cast iron",
+     "de": "Gusseisen"
+    }
+   },
+   {
+    "id": "granite-trough",
+    "title": {
+     "en": "granite trough",
+     "de": "Granittrog"
+    }
+   },
+   {
+    "id": "concrete-footing",
+    "title": {
+     "en": "concrete footing",
+     "de": "Betonfundament"
+    }
+   },
+   {
+    "id": "water-play",
+    "title": {
+     "en": "water play",
+     "de": "Wasserspiel"
+    }
+   },
+   {
+    "id": "street-furniture",
+    "title": {
+     "en": "street furniture",
+     "de": "Stadtmobiliar"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content (used park objects wave)",

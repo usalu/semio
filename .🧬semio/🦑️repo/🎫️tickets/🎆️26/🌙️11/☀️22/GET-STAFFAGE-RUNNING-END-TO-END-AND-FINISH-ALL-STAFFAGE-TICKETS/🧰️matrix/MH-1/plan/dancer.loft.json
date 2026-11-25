@@ -1,0 +1,18 @@
+[
+  {"scale": "50", "label": "part shirt-waist", "choose": [[{"op": "volume", "id": "shirt-waist", "as": "loft"}], [{"op": "volume", "id": "shirt-waist", "as": "prism-w"}]]},
+  {"op": "volume", "scale": "50", "id": "shoe-toe-r", "as": "prism-w", "fixed": true},
+  {"scale": "100", "label": "part shirt-waist", "choose": [[{"op": "volume", "id": "shirt-waist", "as": "loft"}], [{"op": "volume", "id": "shirt-waist", "as": "prism-w"}]]},
+  {"op": "volume", "scale": "200", "id": "shoe-r", "as": "prism-v", "fixed": true},
+  {"op": "volume", "scale": "200", "id": "shank-r", "as": "revolved", "fixed": true},
+  {"scale": "200", "label": "part shorts", "choose": [[{"op": "volume", "id": "shorts", "as": "loft"}], [{"op": "volume", "id": "shorts", "as": "prism-w"}]]},
+  {"op": "volume", "scale": "500", "id": "shank-l", "as": "prism-w", "fixed": true},
+  {"op": "volume", "scale": "500", "id": "shoe-toe-l", "as": "prism-w", "fixed": true},
+  {"op": "volume", "scale": "500", "id": "shank-r", "as": "revolved", "fixed": true},
+  {"op": "volume", "scale": "500", "id": "shoe-toe-r", "as": "prism-w", "profile": "elevation", "fixed": true},
+  {"op": "volume", "scale": "500", "id": "shoe-r", "as": "prism-v", "fixed": true},
+  {"search": true, "order": ["loft"], "scale": "100", "id": "shirt", "subsets": [["front"]]},
+  {"search": true, "order": ["loft"], "scale": "50", "id": "sole-r", "solids": ["sole-r"], "subsets": [["plan"]]},
+  {"search": true, "order": ["loft"], "scale": "50", "id": "shoe-r", "solids": ["shoe-r"], "subsets": [["plan"], ["front", "plan"]]},
+  {"search": true, "order": ["loft"], "scale": "50", "id": "sole-l", "solids": ["sole-l"], "subsets": [["front"]]},
+  {"search": true, "order": ["loft"], "scale": "50", "id": "shoe-l", "solids": ["shoe-l"], "subsets": [["front"]]}
+]

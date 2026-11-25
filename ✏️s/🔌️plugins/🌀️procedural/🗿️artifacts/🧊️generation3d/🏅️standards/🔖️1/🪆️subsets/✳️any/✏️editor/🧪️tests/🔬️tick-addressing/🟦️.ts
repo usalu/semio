@@ -7,13 +7,15 @@ import { fileURLToPath } from "node:url";
  * two surfaces. */
 export function testGeneration3dPreviewTickAddressingContract(): void {
   const here = fileURLToPath(new URL(".", import.meta.url));
-  const fixture = JSON.parse(readFileSync(`${here}/../../../🧫️fixtures/🪟️tick-addressing.json`, "utf8")) as {
+  const fixture = JSON.parse(readFileSync(`${here}/../../../🧪️tests/🧫️fixtures/🪟️tick-addressing.json`, "utf8")) as {
     format: string;
+    commandArguments: string[];
     windowKinds: Record<string, string>;
     arming: Array<{ id: string; surface: string; armedWindowIds: string[] }>;
     dispatch: Array<{ id: string; surface: string; payloadWindowId: string; payloadWindowKind?: string; admitted: boolean }>;
   };
   assert.equal(fixture.format, "semio.generation3d.tick-addressing");
+  assert.deepEqual(fixture.commandArguments, ["windowId", "windowKindId"]);
   assert.equal(fixture.windowKinds.generatePreview, "generation3d-generate-preview");
   assert.equal(fixture.windowKinds.viewPreview, "procedural-view-preview");
 

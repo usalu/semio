@@ -13,11 +13,41 @@
       "de": "Eine 1,5 m auskragende Stahlbetonplatte an einer außengedämmten Wand mit Dämmelement (Kragplattenanschluss) und aufgesetztem Stahl-Geländerpfosten, die eine wandernde Einzellast trägt; der Wandanschluss nimmt das volle Biegemoment auf und ist die klassische Wärmebrücke des Balkons."
     },
     "tags": [
-      "component",
-      "structural",
-      "balcony",
-      "cantilever",
-      "concrete"
+      {
+        "id": "component",
+        "title": {
+          "en": "component",
+          "de": "Bauteil"
+        }
+      },
+      {
+        "id": "structural",
+        "title": {
+          "en": "structural",
+          "de": "tragend"
+        }
+      },
+      {
+        "id": "balcony",
+        "title": {
+          "en": "balcony",
+          "de": "Balkon"
+        }
+      },
+      {
+        "id": "cantilever",
+        "title": {
+          "en": "cantilever",
+          "de": "Kragarm"
+        }
+      },
+      {
+        "id": "concrete",
+        "title": {
+          "en": "concrete",
+          "de": "Beton"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage component authors",

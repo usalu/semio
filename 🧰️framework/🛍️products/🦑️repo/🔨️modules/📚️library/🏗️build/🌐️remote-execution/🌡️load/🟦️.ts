@@ -93,6 +93,20 @@ export const remoteExecutionActionMegabytesV1=(policy:HostCapacityPolicyV1=BUILD
  * @see ./🧬️schema/🔣️.json */
 export const REMOTE_EXECUTION_ADMISSION_POLICY_V1=admissionSchema.definitions.Policy.const;
 
+/** 🧮️ The slots of a machine kept for its own interactive work: `coordinatorReservedSlots` for the coordinator (an origin ending in `coordinatorOriginSuffix`), none for any other machine.
+ * @see ./🧬️schema/🔣️.json */
+export const remoteExecutionReservedSlotsV1=(origin:string,rules:typeof REMOTE_EXECUTION_ADMISSION_POLICY_V1=REMOTE_EXECUTION_ADMISSION_POLICY_V1):number=>origin.endsWith(rules.coordinatorOriginSuffix)?rules.coordinatorReservedSlots:0;
+
+/** 🔥️ Whether the CPU of the host is saturated: its one-minute load average per core is at or above the declared ceiling (`loadPerCoreCeilingPermille`); an unknown load is not saturated.
+ * @see ./🧬️schema/🔣️.json */
+export const remoteExecutionLoadSaturatedV1=(host:Pick<HostSampleV1,"load"|"cores">,rules:typeof REMOTE_EXECUTION_ADMISSION_POLICY_V1=REMOTE_EXECUTION_ADMISSION_POLICY_V1):boolean=>host.load!==null&&host.load*1000>=Math.max(1,host.cores)*rules.loadPerCoreCeilingPermille;
+
+/** 🗣️ The sentence of the CPU refusal of this host in `language`. */
+export function remoteExecutionLoadTextV1(language:"en"|"de",host:Pick<HostSampleV1,"load"|"cores">,rules:typeof REMOTE_EXECUTION_ADMISSION_POLICY_V1=REMOTE_EXECUTION_ADMISSION_POLICY_V1):string{
+ const text=admissionSchema.definitions.Messages.const[language].load,fields:Record<string,string>={load:(host.load??0).toFixed(1),cores:String(Math.max(1,host.cores)),ceiling:(rules.loadPerCoreCeilingPermille/1000).toFixed(1)};
+ return text.replace(/\{(\w+)\}/gu,(_,name:string)=>fields[name]??"?");
+}
+
 /** 🌡️ What the memory pressure of the host means for a unit of `megabytes`: `pressure-critical` refuses every unit; raised pressure (`warn`) alone refuses only a unit above `warnMaximumMegabytes` or while swap is actually growing (the swap-out rate at or above the policy's active share of the memory per second), else the unit is judged as on a calm host (`relaxed`); `normal` otherwise.
  * @see ../🧪️tests/🏋️unit-admission/🐍️.py */
 export function remoteExecutionPressureGateV1(host:Pick<HostSampleV1,"pressure"|"totalMegabytes"|"swapOutMegabytesPerSecond">,megabytes:number,swapActiveBasisPointsPerSecond:number,rules:typeof REMOTE_EXECUTION_ADMISSION_POLICY_V1=REMOTE_EXECUTION_ADMISSION_POLICY_V1):"normal"|"relaxed"|"pressure-warn"|"pressure-critical"{
@@ -114,6 +128,7 @@ export function evaluateRemoteExecutionAdmissionV1(input:Readonly<{view:RemoteEx
  const waiter:HostWaiterV1={request:{id:"remote-candidate",operation:"remote-execution",priority:"lent",minimumJobs:1,preferredJobs:1,fixedMegabytes:megabytes,perJobMegabytes:0,cpuPerJob:1},arrivedAtMs:input.nowMs,pid:process.pid};
  const evaluation=evaluateHostCapacityV1(policy,host,[...input.view.grants,...remote],[...input.view.waiters,waiter],input.nowMs),decision=evaluation.decisions.find(row=>row.id==="remote-candidate"),spareMegabytes=Math.max(0,Math.round(evaluation.headroomMegabytes));
  if(input.running>=input.concurrency)return {admission:{admit:false,reason:"slots"},spareMegabytes};
+ if(remoteExecutionLoadSaturatedV1(input.view.host))return {admission:{admit:false,reason:"load"},spareMegabytes};
  if(gate==="pressure-warn"||gate==="pressure-critical")return {admission:{admit:false,reason:gate},spareMegabytes};
  if(decision?.verdict==="admit")return {admission:{admit:true},spareMegabytes};
  return {admission:{admit:false,reason:(decision?.reason??"memory") as RemoteExecutionRefusalV1},spareMegabytes};
@@ -139,7 +154,7 @@ export async function readRemoteExecutionHostViewV1(environment:Readonly<Record<
 export function buildRemoteExecutionLoadReportV1(input:Readonly<{origin:string;identity:RemoteExecutionPlatformIdentityV1;view:RemoteExecutionHostViewV1;worker:RemoteExecutionWorkerStateV1;counters:RemoteExecutionMachineCountersV1;code?:string;nowMs:number;policy?:HostCapacityPolicyV1;held?:readonly RemoteExecutionHeldUnitV1[]}>):RemoteExecutionLoadReportV1{
  const host=input.view.host,held=(input.held??Array.from({length:input.worker.running},()=>({megabytes:0,usedMegabytes:0}))).map(row=>({megabytes:row.usedMegabytes,usedMegabytes:row.usedMegabytes}));
  const {admission,spareMegabytes}=evaluateRemoteExecutionAdmissionV1({view:input.view,running:input.worker.running,concurrency:Number.MAX_SAFE_INTEGER,nowMs:input.nowMs,megabytes:REMOTE_EXECUTION_ADMISSION_POLICY_V1.smallestMegabytes,held,...input.policy?{policy:input.policy}:{}});
- const report:RemoteExecutionLoadReportV1={version:1,origin:input.origin,platform:input.identity,capacity:{cores:Math.max(1,host.cores),memoryMegabytes:Math.max(1,host.totalMegabytes)},running:input.view.grants.length+input.worker.running,queued:input.view.waiters.length,pressure:host.pressure,freeMegabytes:spareMegabytes,load:host.load===null?null:Math.max(0,host.load),headroom:admission.admit,wallMs:input.nowMs,worker:input.worker.state==="absent"||admission.admit?input.worker:{...input.worker,state:"refusing",why:remoteExecutionWorkerWhyV1("no-headroom",admission.reason)},counters:input.counters,...input.code===undefined?{}:{code:input.code}};
+ const report:RemoteExecutionLoadReportV1={version:1,origin:input.origin,platform:input.identity,capacity:{cores:Math.max(1,host.cores),memoryMegabytes:Math.max(1,host.totalMegabytes)},running:input.view.grants.length+input.worker.running,queued:input.view.waiters.length,pressure:host.pressure,freeMegabytes:spareMegabytes,load:host.load===null?null:Math.max(0,host.load),headroom:admission.admit,wallMs:input.nowMs,worker:input.worker.state==="absent"||admission.admit?input.worker:{...input.worker,state:"refusing",why:admission.reason==="load"?Object.freeze({...remoteExecutionWorkerWhyV1("no-headroom",admission.reason),en:remoteExecutionLoadTextV1("en",host),de:remoteExecutionLoadTextV1("de",host)}):remoteExecutionWorkerWhyV1("no-headroom",admission.reason)},counters:input.counters,...input.code===undefined?{}:{code:input.code}};
  requireRemoteExecutionShapeV1("LoadReport",report,"Closed load report required");
  return report;
 }

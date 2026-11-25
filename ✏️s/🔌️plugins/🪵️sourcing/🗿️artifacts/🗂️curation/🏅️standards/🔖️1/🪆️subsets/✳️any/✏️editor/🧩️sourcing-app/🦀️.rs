@@ -132,6 +132,26 @@ impl ArtifactEditor for SourcingCurationApp {
         Ok(crate::standards::v1::subsets::any::io::text::snapshot::default_document())
     })}
 
+    fn interaction_topology(doc: &ArtifactView<'_, CurationSnapshot>, _cfg: &ConfigView<'_, SourcingCurationConfig>) -> Result<semio_framework::InteractionTopology, semio_framework_value::ValueError> {
+        Ok(super::selection::rows_topology(doc.snapshot))
+    }
+
+    fn clipboard_media_type() -> Option<MediaType> {
+        Some(super::clipboard::media_type())
+    }
+
+    fn copy_fragment(doc: &ArtifactView<'_, CurationSnapshot>, _cfg: &ConfigView<'_, SourcingCurationConfig>, interaction: &InteractionView<'_>) -> Result<semio_plugin::kernel::ClipboardFragment, semio_plugin::kernel::ClipboardError> {
+        super::clipboard::copy(doc.snapshot, &interaction.selection(SOURCING_ROWS_DOMAIN).ids)
+    }
+
+    fn cut_operations(doc: &ArtifactView<'_, CurationSnapshot>, _cfg: &ConfigView<'_, SourcingCurationConfig>, interaction: &InteractionView<'_>) -> Vec<SourcingMutation> {
+        super::clipboard::cut(doc.snapshot, &interaction.selection(SOURCING_ROWS_DOMAIN).ids)
+    }
+
+    fn paste_operations(doc: &ArtifactView<'_, CurationSnapshot>, fragment: &semio_plugin::kernel::ClipboardFragment, placement: &semio_plugin::kernel::PastePlacement) -> Result<Vec<SourcingMutation>, semio_plugin::kernel::ClipboardError> {
+        super::clipboard::paste(doc.snapshot, fragment, placement)
+    }
+
     fn io() -> Option<semio_plugin::AppIo> {
         Some(sourcing_curation_io())
     }
@@ -208,21 +228,10 @@ impl ArtifactEditor for SourcingCurationApp {
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, CurationSnapshot>, cfg: &ConfigView<'_, SourcingCurationConfig>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
-        let snapshot = doc.snapshot;
-        let config = cfg.snapshot;
-        let labels = sourcing_curation_labels(view_state);
-        let grid_window = grid_config::current(cfg);
-        match body_key {
-            pool::SOURCING_CURATION_BODY_POOL => pool::render(snapshot, config, labels, view_state.locale).map(semio_plugin::built_to_component_tree),
-            curated::SOURCING_CURATION_BODY_CURATED => curated::render(snapshot, config, labels, view_state.locale).map(semio_plugin::built_to_component_tree),
-            preview::SOURCING_CURATION_BODY_PREVIEW => preview::render(snapshot, &[], labels, view_state.locale).map(semio_plugin::built_to_component_tree),
-            grid::SOURCING_CURATION_BODY_GRID => grid::render(snapshot, config, &grid_window, view_state.locale).map(semio_plugin::built_to_component_tree),
-            _ => semio_plugin::built_text_to_component_tree(Label::data("")),
-        }
+        render_body(body_key, doc, cfg, view_state, &[])
     }
 
-    /// 🕹️ The Preview window follows the framework-owned `rows` selection a table row or grid pick makes;
-    /// every other body renders exactly as [`Self::render`].
+    /// 🕹️ Every window follows the framework-owned `rows` selection a table row, a grid pick or a menu action makes: the tables paint the selected rows, the grid highlights the selected kinds and the Preview shows them.
     fn render_with_request_context(
         _owner: &semio_plugin::ArtifactInstanceOperationOwnerHandle,
         body_key: &str,
@@ -231,16 +240,25 @@ impl ArtifactEditor for SourcingCurationApp {
         view_state: &semio_plugin::ViewModel,
         _transient: &semio_plugin::TransientView<'_, semio_plugin::NoTransient>,
         interaction: &InteractionView<'_>,
-        cx:&mut semio_plugin::StepContext<'_>,
+        _cx:&mut semio_plugin::StepContext<'_>,
     ) -> semio_plugin::OriginalRenderResult<semio_plugin::ComponentTree> {
-        let rendered:semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree>=(||{
-        if body_key == preview::SOURCING_CURATION_BODY_PREVIEW {
-            let selected_ids = interaction.selection(SOURCING_ROWS_DOMAIN).ids.clone();
-            return preview::render(doc.snapshot, &selected_ids, sourcing_curation_labels(view_state), view_state.locale).map(semio_plugin::built_to_component_tree);
-        }
-        Self::render(body_key, doc, cfg, view_state)
-
-        })();
+        let selected_ids = interaction.selection(SOURCING_ROWS_DOMAIN).ids.clone();
+        let rendered = render_body(body_key, doc, cfg, view_state, &selected_ids);
         rendered.map(Some).map_err(Into::into)
         }
+}
+
+/// 🧭️ The one body-key router: the stock windows render against the `rows` selection they are handed.
+fn render_body(body_key: &str, doc: &ArtifactView<'_, CurationSnapshot>, cfg: &ConfigView<'_, SourcingCurationConfig>, view_state: &semio_plugin::ViewModel, selected_ids: &[String]) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
+    let snapshot = doc.snapshot;
+    let config = cfg.snapshot;
+    let labels = sourcing_curation_labels(view_state);
+    let grid_window = grid_config::current(cfg);
+    match body_key {
+        pool::SOURCING_CURATION_BODY_POOL => pool::render(snapshot, config, labels, selected_ids, view_state.locale).map(semio_plugin::built_to_component_tree),
+        curated::SOURCING_CURATION_BODY_CURATED => curated::render(snapshot, config, labels, selected_ids, view_state.locale).map(semio_plugin::built_to_component_tree),
+        preview::SOURCING_CURATION_BODY_PREVIEW => preview::render(snapshot, selected_ids, labels, view_state.locale).map(semio_plugin::built_to_component_tree),
+        grid::SOURCING_CURATION_BODY_GRID => grid::render(snapshot, config, &grid_window, selected_ids, view_state.locale).map(semio_plugin::built_to_component_tree),
+        _ => semio_plugin::built_text_to_component_tree(Label::data("")),
+    }
 }

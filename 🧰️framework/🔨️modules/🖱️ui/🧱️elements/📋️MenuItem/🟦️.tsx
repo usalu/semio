@@ -12,7 +12,7 @@ import { menuListItemClassName } from "../../🔨️modules/📋️menu-item-pre
 
 // #region 📋️MenuItem
 /** 🎨️ Shared layout and interaction presentation for button-like menu rows. */
-export const menuItemClassName = `relative flex w-full cursor-default items-center gap-single rounded-sm px-single py-half text-start text-xs text-element outline-none select-none ${menuListItemClassName}`;
+export const menuItemClassName = `relative flex w-full cursor-default items-center gap-single px-single py-half text-start text-xs text-element outline-none select-none ${menuListItemClassName}`;
 
 /** 📨️ Native button props accepted by the owned menu-row boundary. */
 export type MenuItemProps = React.ComponentPropsWithoutRef<"button">;

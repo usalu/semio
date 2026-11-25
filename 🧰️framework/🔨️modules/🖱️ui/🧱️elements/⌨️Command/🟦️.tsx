@@ -318,7 +318,7 @@ const CommandInput = React.forwardRef<HTMLInputElement, CommandInputProps>(funct
 /** 📜️ Supplies the owned listbox boundary associated with CommandInput. */
 const CommandList = React.forwardRef<HTMLDivElement, CommandListProps>(function CommandList({ className, ...props }, ref) {
   const context = useCommandContext("CommandList");
-  return <div {...props} ref={ref} id={context.listId} role="listbox" data-slot="command-list" className={cn("max-h-layout-command scroll-py-single overflow-x-hidden overflow-y-auto", className)} />;
+  return <div {...props} ref={ref} id={context.listId} role="listbox" data-slot="command-list" data-shared-border-cells="" data-orientation="vertical" className={cn("max-h-layout-command scroll-py-single overflow-x-hidden overflow-y-auto", className)} />;
 });
 
 /** 🕳️ Stays mounted as a live status and is hidden whenever at least one result remains. */
@@ -346,7 +346,7 @@ const CommandGroup = React.forwardRef<HTMLDivElement, CommandGroupProps>(functio
         data-slot="command-group"
         hidden={groupHidden}
         className={cn(
-          "text-element [&_[data-slot=command-group-heading]]:text-muted-foreground overflow-hidden p-single [&_[data-slot=command-group-heading]]:px-single [&_[data-slot=command-group-heading]]:py-single [&_[data-slot=command-group-heading]]:text-xs [&_[data-slot=command-group-heading]]:font-medium",
+          "text-element [&_[data-slot=command-group-heading]]:text-muted-foreground overflow-hidden [&_[data-slot=command-group-heading]]:px-single [&_[data-slot=command-group-heading]]:py-single [&_[data-slot=command-group-heading]]:text-xs [&_[data-slot=command-group-heading]]:font-medium",
           className,
         )}
       >
@@ -393,6 +393,7 @@ const CommandItem = React.forwardRef<HTMLDivElement, CommandItemProps>(function 
     <div
       {...props}
       {...sharedBorderlessBoxProps}
+      data-shared-border-cell=""
       ref={elementRef}
       id={itemId}
       role="option"
@@ -404,7 +405,7 @@ const CommandItem = React.forwardRef<HTMLDivElement, CommandItemProps>(function 
       data-value={resolvedValue}
       hidden={!visible}
       className={cn(
-        "[&_svg:not([class*='text-'])]:text-muted-foreground relative flex items-center gap-single p-single text-sm outline-hidden select-none data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-tiny cursor-selectable",
+        "[&_svg:not([class*='text-'])]:text-muted-foreground relative flex min-h-(--chip-row-height)! items-center gap-single px-single text-sm outline-hidden select-none data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-tiny cursor-selectable",
         menuListItemClassName,
         className,
       )}

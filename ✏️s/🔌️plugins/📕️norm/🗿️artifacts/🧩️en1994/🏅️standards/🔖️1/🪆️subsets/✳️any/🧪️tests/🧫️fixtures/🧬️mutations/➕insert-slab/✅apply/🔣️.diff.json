@@ -57,17 +57,12 @@
     "moved": [],
     "modified": []
   },
-  "placements": {
-    "removed": [],
-    "inserted": [],
-    "moved": [],
-    "modified": []
-  },
+  "placements": null,
   "studs": null,
   "fireRating": null,
   "insulationThicknessM": null,
   "fatigueDetail": null,
-  "reliabilityClass": "RC2",
+  "reliabilityClass": null,
   "cases": {
     "removed": [],
     "inserted": [],

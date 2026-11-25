@@ -1,0 +1,24 @@
+[
+ {
+  "scale": "50",
+  "bone": "head",
+  "paint": "helmet",
+  "solids": [
+   "helmet",
+   "helmet-rim",
+   "helmet-peak",
+   "helmet-ridge"
+  ]
+ },
+ {
+  "scale": "100",
+  "bone": "head",
+  "paint": "helmet",
+  "solids": [
+   "helmet",
+   "helmet-rim",
+   "helmet-peak",
+   "helmet-ridge"
+  ]
+ }
+]

@@ -102,6 +102,43 @@ describe("🖱️ Canvas2d mounted input contract", () => {
     expect(actions.at(-1)?.args?.cancelled).toBe(false);
   });
 
+  it("pans on a left drag and a right drag only when the meta layer says so, swallows the menu after a right pan, and still picks on a left click", async () => {
+    const { actions, canvas } = mountedHost();
+    const [session] = canvasInputSessions();
+    const camera = () => (session as any).camera as { x: number; y: number };
+    const drag = (button: number, buttons: number, dx: number, modifiers: Record<string, boolean> = {}) => {
+      fireEvent.pointerDown(canvas, { pointerId: 1, button, buttons, clientX: 100, clientY: 100, ...modifiers });
+      fireEvent.pointerMove(canvas, { pointerId: 1, buttons, clientX: 100 + dx, clientY: 100, ...modifiers });
+      fireEvent.pointerUp(canvas, { pointerId: 1, button, clientX: 100 + dx, clientY: 100, ...modifiers });
+    };
+    const before = camera().x;
+    drag(0, 1, 40);
+    await settle();
+    expect(camera().x).toBe(before);
+    expect(actions.map(({ action }) => action)).toContain("canvasPointerDown");
+    actions.length = 0;
+    (session as any).leftDragPans = true;
+    (session as any).rightDragPans = true;
+    drag(0, 1, 40);
+    await settle();
+    expect(camera().x).toBeLessThan(before);
+    expect(actions).toEqual([]);
+    drag(0, 1, 40, { shiftKey: true });
+    await settle();
+    expect(actions.map(({ action }) => action)).toContain("canvasPointerDown");
+    actions.length = 0;
+    const panned = camera().x;
+    drag(2, 2, 40);
+    await settle();
+    expect(camera().x).toBeLessThan(panned);
+    expect((session as any).consumeRightDragged()).toBe(true);
+    expect((session as any).consumeRightDragged()).toBe(false);
+    fireEvent.pointerDown(canvas, { pointerId: 2, button: 0, buttons: 1, clientX: 50, clientY: 50 });
+    fireEvent.pointerUp(canvas, { pointerId: 2, button: 0, clientX: 50, clientY: 50 });
+    await settle();
+    expect(actions.map(({ action }) => action)).toEqual(["canvasPointerDown", "canvasPointerUp"]);
+  });
+
   it("preserves catalogue MIME data and surface coordinates through drag-over and terminal leave/drop", async () => {
     const { actions, host } = mountedHost();
     const dataTransfer = {

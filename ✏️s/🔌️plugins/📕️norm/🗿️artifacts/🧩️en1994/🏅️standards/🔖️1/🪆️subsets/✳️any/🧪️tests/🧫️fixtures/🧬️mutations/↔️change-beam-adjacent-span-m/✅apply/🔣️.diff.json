@@ -38,7 +38,7 @@
           "barSpacingM": null,
           "wkLimitM": null,
           "nCycles": null,
-          "adjacentSpanM": null,
+          "adjacentSpanM": 0.5,
           "patchBearingLengthM": null,
           "bridgeLanes": null,
           "crackedLengthFraction": null,
@@ -56,7 +56,16 @@
   },
   "columns": null,
   "slabs": null,
+  "placements": null,
+  "studs": null,
   "fireRating": null,
   "insulationThicknessM": null,
-  "fatigueDetail": null
+  "fatigueDetail": null,
+  "reliabilityClass": null,
+  "cases": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  }
 }

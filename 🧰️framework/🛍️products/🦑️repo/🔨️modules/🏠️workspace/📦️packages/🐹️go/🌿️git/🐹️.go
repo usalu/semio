@@ -379,6 +379,7 @@ func ToolCommandContext(ctx context.Context, command string, args ...string) *ex
 	cmd := exec.CommandContext(ctx, program, arguments...)
 	if refusal != nil { cmd.Err = refusal }
 	if refusal == nil && batch { setRegisteredBatchCommandLine(cmd, arguments[4]) }
+	hideConsoleWindow(cmd)
 	if environment != nil {
 		cmd.Env = environment
 	}

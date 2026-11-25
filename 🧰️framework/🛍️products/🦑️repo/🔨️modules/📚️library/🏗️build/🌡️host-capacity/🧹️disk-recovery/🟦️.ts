@@ -18,7 +18,7 @@ export function diskTextV1(key:string,language:DiskLanguageV1,values:Record<stri
 }
 
 /** 🗂️ One registered writer: who fills which root, how it is bounded, who collects it and in which order the gate frees it (`priority` ascending), whether freeing it returns bytes to the host volume at once (`relief`), and the exact command that frees it by hand. */
-export type DiskWriterRowV1=Readonly<{id:string;priority:number;class:"derivable"|"recoverable"|"content"|"store"|"image";relief:"host"|"image"|"none";root:string;collector:"ledger"|"cas-lru"|"staging-sweep"|"image-sweep"|"age-prune"|"log-rotate"|"native-shards"|"image-reset"|"store-compaction"|"manual";command:string;bound:Readonly<{en:string;de:string}>}>;
+export type DiskWriterRowV1=Readonly<{id:string;priority:number;inodeRank?:number;class:"derivable"|"recoverable"|"content"|"store"|"image";relief:"host"|"image"|"none";root:string;collector:"ledger"|"cas-lru"|"staging-sweep"|"image-sweep"|"age-prune"|"log-rotate"|"native-shards"|"image-reset"|"store-compaction"|"manual";command:string;bound:Readonly<{en:string;de:string}>}>;
 export const DISK_WRITERS_V1:readonly DiskWriterRowV1[]=Object.freeze(JSON.parse(JSON.stringify(schema.definitions.Writers.const)));
 
 /** 🔌️ A registered writer bound to its collector: what it holds now and how to free it; `collect` answers the bytes it claims to have freed (the recovery trusts the volume, not the claim). */
@@ -29,10 +29,11 @@ export type DiskFactsV1=Pick<CasPartitionV1,"partition"|"totalBytes"|"freeBytes"
 
 /** ✅️ Proves the registry: unique ids and priorities, a command for every writer, a collector that can run for every row the gate frees, and the manual rows last. */
 export function requireDiskWritersV1(rows:readonly DiskWriterRowV1[]=DISK_WRITERS_V1):readonly DiskWriterRowV1[]{
- const ids=new Set<string>(),priorities=new Set<number>();
+ const ids=new Set<string>(),priorities=new Set<number>(),ranks=new Set<number>();
  for(const row of rows){
   if(ids.has(row.id)||priorities.has(row.priority))throw Error("Unique disk writer ids and priorities required / Eindeutige Plattenschreiber-Kennungen und -Prioritäten erforderlich: "+row.id);
   ids.add(row.id);priorities.add(row.priority);
+  if(row.inodeRank!==undefined){if(ranks.has(row.inodeRank))throw Error("Unique inode ranks required / Eindeutige Inode-Ränge erforderlich: "+row.id);ranks.add(row.inodeRank);}
   if(row.command.trim()===""||row.bound.en.trim()===""||row.bound.de.trim()==="")throw Error("A command and a bound in both languages required / Ein Befehl und eine Grenze in beiden Sprachen erforderlich: "+row.id);
   if(row.collector==="manual"&&row.relief==="none")throw Error("A manual writer must say what it relieves / Ein manueller Schreiber muss sagen, was er entlastet: "+row.id);
  }
@@ -81,11 +82,11 @@ export async function recoverDiskV1(input:Readonly<{facts():DiskFactsV1|undefine
 export function diskReliefV1(row:Pick<DiskWriterRowV1,"relief">,imageBacked:boolean):DiskWriterRowV1["relief"]{return row.relief==="image"&&!imageBacked?"host":row.relief;}
 
 /** 🪜️ Runs the collectors that give bytes to the host volume in the order of the registry until `targetFreeBytes` are free: the volume is read again after each one (the claim of a collector is not trusted), a failing or too slow collector never stops the next, progress lines go to `report` in the language asked for and cancellation stops between collectors. Answers the last reading of the volume. */
-export async function collectInOrderV1(input:Readonly<{facts():DiskFactsV1|undefined;current:DiskFactsV1;targetFreeBytes:number;writers:readonly DiskWriterV1[];language:DiskLanguageV1;report?(line:string):void;signal?:AbortSignal;budgetMilliseconds?:number;startKey?:string;sweep?:boolean;steps:Array<{id:string;freedBytes:number;freeBytes:number;failure?:string}>}>):Promise<DiskFactsV1>{
+export async function collectInOrderV1(input:Readonly<{facts():DiskFactsV1|undefined;current:DiskFactsV1;targetFreeBytes:number;writers:readonly DiskWriterV1[];language:DiskLanguageV1;report?(line:string):void;signal?:AbortSignal;budgetMilliseconds?:number;startKey?:string;sweep?:boolean;scarce?:"inodes";steps:Array<{id:string;freedBytes:number;freeBytes:number;failure?:string}>}>):Promise<DiskFactsV1>{
  const text=(key:string,values:Record<string,string|number>)=>diskTextV1(key,input.language,values),write=input.report??(()=>undefined);
  let facts=input.current;
  write(text(input.startKey??"recovery.start",{partition:facts.partition,free:formatDiskBytesV1(facts.freeBytes),target:formatDiskBytesV1(input.targetFreeBytes)}));
- const order=input.writers.filter(writer=>(writer.row.relief==="host"||input.sweep===true&&writer.row.relief==="image")&&writer.row.collector!=="manual"&&writer.collect!==undefined).sort((first,second)=>first.row.priority-second.row.priority);
+ const order=input.writers.filter(writer=>(writer.row.relief==="host"||input.sweep===true&&writer.row.relief==="image")&&writer.row.collector!=="manual"&&writer.collect!==undefined).sort((first,second)=>input.scarce==="inodes"?(first.row.inodeRank??Infinity)-(second.row.inodeRank??Infinity)||first.row.priority-second.row.priority:first.row.priority-second.row.priority);
  for(const writer of order){
   input.signal?.throwIfAborted();
   write(text("recovery.collector-start",{id:writer.row.id}));
@@ -104,11 +105,11 @@ export async function collectInOrderV1(input:Readonly<{facts():DiskFactsV1|undef
 }
 
 /** 🧹️ Runs every collector of the registry that has one, the writers that relieve the image included, once and in priority order, whatever the volume says in between: a write that failed with "no space left" inside an image or a quota does not show in the free bytes of the host, so the stop condition of `recoverNeedV1` would never collect. Answers the steps taken, the bytes the host gained and the largest consumers left. */
-export async function sweepDiskV1(input:Readonly<{facts():DiskFactsV1|undefined;needBytes:number;writers:readonly DiskWriterV1[];language:DiskLanguageV1;report?(line:string):void;signal?:AbortSignal;budgetMilliseconds?:number}>):Promise<DiskRecoveryV1>{
+export async function sweepDiskV1(input:Readonly<{facts():DiskFactsV1|undefined;needBytes:number;scarce?:"inodes";writers:readonly DiskWriterV1[];language:DiskLanguageV1;report?(line:string):void;signal?:AbortSignal;budgetMilliseconds?:number}>):Promise<DiskRecoveryV1>{
  const steps:Array<{id:string;freedBytes:number;freeBytes:number;failure?:string}>=[],facts=input.facts();
  const done=(consumers:readonly DiskConsumerV1[]=[]):DiskRecoveryV1=>Object.freeze({verdict:steps.length?"admit" as const:"refuse" as const,facts:input.facts()??facts,needBytes:input.needBytes,mustFreeBytes:input.needBytes,targetFreeBytes:input.needBytes,steps:Object.freeze(steps.slice()),consumers});
  if(facts===undefined)return done();
- await collectInOrderV1({facts:input.facts,current:facts,targetFreeBytes:facts.freeBytes+input.needBytes,writers:input.writers,language:input.language,report:input.report,signal:input.signal,budgetMilliseconds:input.budgetMilliseconds,startKey:"recovery.start-need",sweep:true,steps});
+ await collectInOrderV1({facts:input.facts,current:facts,targetFreeBytes:facts.freeBytes+input.needBytes,writers:input.writers,language:input.language,report:input.report,signal:input.signal,budgetMilliseconds:input.budgetMilliseconds,startKey:"recovery.start-need",sweep:true,scarce:input.scarce,steps});
  return done(steps.length?[]:await consumersOfV1(input.writers,input.signal));
 }
 

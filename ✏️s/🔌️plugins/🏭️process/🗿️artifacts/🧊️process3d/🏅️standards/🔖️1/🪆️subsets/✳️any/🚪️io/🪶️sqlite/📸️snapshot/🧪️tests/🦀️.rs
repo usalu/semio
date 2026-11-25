@@ -303,3 +303,12 @@ async fn sqlite_snapshot_process3d_actual_public_file_preserves_complete_parent_
         }
     }
 }
+#[test]
+fn sqlite_snapshot_process3d_tagged_variant_fields_project_retained_statements() {
+    use semio_framework_dsl_record::{native_encoding::FieldProjectionView as V, DslField};
+    let recipe = MeasureRecipe::DiscCut { diameter: "1".into(), kerf: "2".into() };
+    assert!(matches!(DslField::projection_view(&recipe, &[]).unwrap(), V::Statements(1)));
+    assert!(matches!(DslField::projection_view(&recipe, &[0]).unwrap(), V::Record(_)));
+    assert_eq!(DslField::projection_key(&recipe, &[], 0).unwrap(), "disc-cut");
+    assert!(DslField::projection_view(&recipe, &[1]).is_err());
+}

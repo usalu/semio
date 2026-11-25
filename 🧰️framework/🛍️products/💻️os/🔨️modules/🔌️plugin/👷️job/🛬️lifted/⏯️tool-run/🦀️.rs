@@ -3,7 +3,7 @@
 //! WP5 owns the source file and cuts the items here (is_tool_run_action_id); WP3 wires this file with one `mod` line in the crate root. Until `job` exists, the source module re-exports the items with `pub use`.
 use semio_plugin_decl_app::ArtifactApp;
 #[cfg(test)]
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 #[cfg(test)]
 use semio_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
 use pack::snapshot::ArtifactPack;

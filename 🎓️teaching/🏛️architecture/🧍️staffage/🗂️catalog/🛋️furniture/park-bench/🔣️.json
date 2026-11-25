@@ -13,11 +13,41 @@
       "de": "Lange Sitz- und Rückenlehne aus Eichenlatten auf zwei lackierten Stahl-Endgestellen in Gussoptik mit Armlehnen; Lastzustände sind besetzte Plätze auf der Sitzfläche. Vorderansicht: Die Länge verläuft entlang x, die Endgestelle sind in Vorderansicht zu sehen."
     },
     "tags": [
-      "bench",
-      "street-furniture",
-      "seating",
-      "timber",
-      "steel"
+      {
+        "id": "bench",
+        "title": {
+          "en": "bench",
+          "de": "Bank"
+        }
+      },
+      {
+        "id": "street-furniture",
+        "title": {
+          "en": "street furniture",
+          "de": "Stadtmobiliar"
+        }
+      },
+      {
+        "id": "seating",
+        "title": {
+          "en": "seating",
+          "de": "Sitzmöbel"
+        }
+      },
+      {
+        "id": "timber",
+        "title": {
+          "en": "timber",
+          "de": "Holz"
+        }
+      },
+      {
+        "id": "steel",
+        "title": {
+          "en": "steel",
+          "de": "Stahl"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage content (CV-FO)",

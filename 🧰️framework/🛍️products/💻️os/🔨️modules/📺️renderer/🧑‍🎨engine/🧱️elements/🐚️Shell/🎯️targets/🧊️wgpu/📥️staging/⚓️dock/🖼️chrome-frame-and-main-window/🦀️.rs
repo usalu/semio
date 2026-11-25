@@ -117,28 +117,24 @@ impl ShellDockState {
         flowed_anchor_content_rect(anchor.flow().block, panel, bar, theme.gap_standard)
     }
 
-    /// 🫳️ The x the insert preview paints at for one tab row, or `None` when the pointer is outside it.
-    /// React's `computeTabDockDropZone` (`🖱️ui/🎯️targets/⚛️react/🟦️.tsx`): the chip the pointer is over
-    /// decides by its own half (`fraction >= 0.5` inserts after), and a pointer inside the row but past
-    /// every chip inserts at the row's end. The dragged tab's own chip is excluded, exactly as React's
-    /// `excludedIds` excludes the dragged subtree.
+    /// 🫳️ The index in one tab row the dragged tab would be inserted at, or `None` when the pointer is outside the row or nests into a branch. React's `computeTabDockDropZone` (`🖱️ui/🎯️targets/⚛️react/🟦️.tsx`): the chip the pointer is over decides by its own half (`fraction >= 0.5` inserts after), and a pointer inside the row but past every chip inserts at the row's end. The dragged tab's own chip is excluded, exactly as React's `excludedIds` excludes the dragged subtree. The drop place painted is `insert_slot` at this index.
     #[allow(clippy::too_many_arguments, reason = "the tab row's own geometry, forwarded unchanged")]
-    pub fn dock_tab_insert_preview(&self, row: &[DockTabNode], atlas: &mut FontAtlas, theme: &Theme, row_rect: Rect, offset: f32, pointer_x: f32, pointer_y: f32) -> Option<f32> {
+    pub fn dock_tab_insert_index(&self, row: &[DockTabNode], atlas: &mut FontAtlas, theme: &Theme, row_rect: Rect, offset: f32, pointer_x: f32, pointer_y: f32) -> Option<usize> {
         if !row_rect.contains(pointer_x, pointer_y) || self.dock_tab_nest_target(row, atlas, theme, row_rect, offset, pointer_x, pointer_y).is_some() {
             return None;
         }
         let dragged = self.dock_tab_drag.as_ref().map(|(tab_id, _)| tab_id.as_str());
         let mut x = row_rect.x - offset;
-        for node in row {
+        for (index, node) in row.iter().enumerate() {
             let item = ChromeGroupItem { control_id: node.id.as_str(), icon_id: Some(node.icon_id.as_str()), label: Some(node.label.as_str()), active: false, disabled: false, kind: HitKind::PanelTab };
             let chip_w = retained_panel_chrome_item_width(atlas, theme, &item).unwrap_or(theme.control_height);
             if dragged != Some(node.id.as_str()) && pointer_x >= x && pointer_x < x + chip_w {
                 let fraction = if chip_w > 0.0 { (pointer_x - x) / chip_w } else { 0.5 };
-                return Some(if fraction >= 0.5 { x + chip_w + theme.gap_standard } else { x });
+                return Some(if fraction >= 0.5 { index + 1 } else { index });
             }
             x += chip_w + theme.gap_standard;
         }
-        Some(x)
+        Some(row.len())
     }
 
     /// 🪺️ The index of the BRANCH chip the pointer nests a dragged tab into, or `None`: React's `computeTabDockDropZone` answers `child` when the pointer is inside a branch button's `nestMinFraction..nestMaxFraction` band (30-70%, from the shared schema), and the dragged subtree's own chip is excluded.

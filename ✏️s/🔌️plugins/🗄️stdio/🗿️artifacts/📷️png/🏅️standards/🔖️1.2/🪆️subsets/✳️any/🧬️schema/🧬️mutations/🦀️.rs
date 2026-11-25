@@ -24,6 +24,7 @@ pub enum PngMutation {
     ReplaceSamples(ReplaceSamples),
 }
 dsl::original_pack_value_operation_receiving!(PngMutation);
+dsl::artifact_persisted_binary_operation!(PngMutation);
 
 #[cfg(any(test, feature = "testkit"))]
 pub fn demo_mutation_cases() -> Vec<PngMutation> {

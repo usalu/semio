@@ -1,6 +1,6 @@
 {
   "ChangePanelDesignTemperature": {
-    "id": "pp-1",
+    "id": "plate",
     "newDesignTemperature": 1.5
   }
 }

@@ -1,0 +1,21 @@
+# fourth fixer: person-eating-standing with the traced paths reduced too (their plates cost half a minute per state); the bicycle hand as lofts; written when the dry run is clean (1000 MB; measure.ts of the bicycle held 877 MB)
+(cd "$T" && "$B" "$here/fit.ts" person-eating-standing --ops "$here/ops/person-eating-standing.json" --out "$GEN/var/eating-paths.json") 2>&1 | grep -E "simplify|changed" | cut -c1-400
+(cd "$T" && timeout 900 "$B" "$here/shape-time.ts" "$GEN/var/eating-paths.json" 50) 2>&1 | tail -14
+(cd "$T" && timeout 1500 "$B" "$here/../MV-3/timing.ts" "$GEN/var/eating-paths.json" 50) 2>&1 | tail -3
+MEASURE=1 MSCALES=50 GATE_TIMEOUT=3600 "$here/in-var.sh" person-pushing-bicycle "$here/var/bicycle-l2.json" bicycle-l2 --scales 50 --poses
+(cd "$T" && FOCUS=0.12 timeout 600 "$B" "$here/zoom.ts" "$GEN/var/bicycle-l2.json" 50 default "$GEN/zoom/hand-ctx-l2.png" '^(hand|forearm)-r$') 2>&1 | tail -1
+NOGATE=1 MEASURE=1 MSCALES=500 "$here/in-var.sh" person-on-crutches "$here/var/crutches-c8.json" crutches-c8
+NOGATE=1 MEASURE=1 MSCALES=500 "$here/in-var.sh" person-on-crutches "$here/var/crutches-c9.json" crutches-c9
+NOGATE=1 MEASURE=1 MSCALES=500 "$here/in-var.sh" person-on-crutches "$here/var/crutches-c10.json" crutches-c10
+MEASURE=1 "$here/in-var.sh" person-on-crutches "$here/var/crutches-c11.json" crutches-c11 --scales 500
+NOGATE=1 MEASURE=1 MSCALES=500 "$here/in-var.sh" person-on-crutches "$here/var/crutches-c12.json" crutches-c12
+(cd "$T" && timeout 600 "$B" "$here/zoom.ts" "$GEN/var/crutches-c12.json" 500 default "$GEN/zoom/crutches-c12-500.png" '^(crutch|arm|foot)') 2>&1 | tail -1
+GATE_TIMEOUT=3600 "$here/in-try-apply.sh" person-eating-standing
+"$here/in-look.sh" person-eating-standing:before:50 person-eating-standing:try:50
+"$here/in-final.sh" person-drinking-coffee
+GATE_TIMEOUT=6000 "$here/in-try.sh" person-pushing-bicycle:all
+"$here/in-look.sh" person-pushing-bicycle:before:50 person-pushing-bicycle:try:50 person-pushing-bicycle:before:100 person-pushing-bicycle:try:100 person-pushing-bicycle:try:500
+"$here/in-final.sh" person-eating-standing
+GATE_TIMEOUT=6000 "$here/in-try-apply.sh" person-pushing-bicycle
+"$here/in-look.sh" person-pushing-bicycle:now:50 person-pushing-bicycle:now:50:lifting-onto-stand
+"$here/in-final.sh" person-pushing-bicycle

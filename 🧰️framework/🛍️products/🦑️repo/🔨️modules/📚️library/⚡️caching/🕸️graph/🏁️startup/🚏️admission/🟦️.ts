@@ -9,6 +9,7 @@ import {acquireResourceLease,type ResourceLease} from "../../../../../../../../�
 import {repositoryLeaseDirectoryV1} from "../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
 import {nxDaemonNamespaceResourceV1} from "../../../💾️storage/🔒️enforcement/🔌️nx/🟦️.ts";
 import {nxGraphYieldResourceV1} from "../../../💾️storage/🔒️enforcement/🔌️nx/📦️graph/🟦️.ts";
+import {parseProcessIdentityV1,processHolderAliveV1} from "../../../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts";
 
 const policy=schema.definitions.Policy.const;
 /** 🚏️ The two daemon families that are counted separately: finite run daemons and dev watch daemons. */
@@ -101,31 +102,28 @@ export async function nxDaemonAdmissionV1(root:string,environment:Readonly<Recor
 }
 
 /** 📊️ What a daemon publishes about its own memory, validated by `./🧬️schema/🔣️.json`. */
-export type NxDaemonResidentV1=Readonly<{version:1;pid:number;kind:NxDaemonKindV1;rssBytes:number;atMs:number}>;
+export type NxDaemonResidentV1=Readonly<{version:1;pid:number;startMs:number;kind:NxDaemonKindV1;rssBytes:number;atMs:number}>;
 
 /** 📂️ The directory in the lease directory of a checkout that holds one resident-memory record per live daemon. */
 export function nxDaemonResidentDirectoryV1(leaseDirectory:string):string{return join(leaseDirectory,policy.residentDirectory);}
 
 /** ✍️ Publishes (atomically, by rename) the resident memory of one daemon and removes the records of daemons that died without leaving. */
-export async function writeNxDaemonResidentV1(leaseDirectory:string,record:NxDaemonResidentV1,alive:(pid:number)=>boolean=processAliveV1):Promise<void>{
+export async function writeNxDaemonResidentV1(leaseDirectory:string,record:NxDaemonResidentV1,alive:(holder:Readonly<{pid:number;startMs:number}>)=>boolean=processHolderAliveV1):Promise<void>{
  const directory=nxDaemonResidentDirectoryV1(leaseDirectory);await mkdir(directory,{recursive:true});
  const target=join(directory,record.pid+".json"),temporary=target+"."+process.pid+".tmp";await writeFile(temporary,JSON.stringify(record));await rename(temporary,target);
- for(const name of await readdir(directory).catch(()=>[] as string[])){const pid=/^(\d+)\.json$/u.exec(name)?.[1];if(pid!==undefined&&Number(pid)!==record.pid&&!alive(Number(pid)))await rm(join(directory,name),{force:true});}
+ for(const name of await readdir(directory).catch(()=>[] as string[])){const pid=/^(\d+)\.json$/u.exec(name)?.[1];if(pid===undefined||Number(pid)===record.pid)continue;let other:unknown;try{other=JSON.parse(await readFile(join(directory,name),"utf8"));}catch{continue;}const holder=parseProcessIdentityV1(other);if(holder===undefined||!alive(holder))await rm(join(directory,name),{force:true});}
 }
 
 /** 🧹️ Withdraws the record of one daemon when it ends. */
 export async function removeNxDaemonResidentV1(leaseDirectory:string,pid:number):Promise<void>{await rm(join(nxDaemonResidentDirectoryV1(leaseDirectory),pid+".json"),{force:true});}
 
-/** 🫀️ True while a process with this id exists (a process of another user counts as alive). */
-export function processAliveV1(pid:number):boolean{try{process.kill(pid,0);return true;}catch(error){return (error as NodeJS.ErrnoException).code==="EPERM";}}
-
 /** 🧮️ The resident memory of all live daemons of a checkout, for the host capacity governor: records that are not closed by the schema, that are older than the stale period or whose process is gone are not counted. */
-export async function readNxDaemonResidentV1(leaseDirectory:string,now:number,alive:(pid:number)=>boolean=processAliveV1):Promise<Readonly<{daemons:readonly NxDaemonResidentV1[];totalBytes:number}>>{
+export async function readNxDaemonResidentV1(leaseDirectory:string,now:number,alive:(holder:Readonly<{pid:number;startMs:number}>)=>boolean=processHolderAliveV1):Promise<Readonly<{daemons:readonly NxDaemonResidentV1[];totalBytes:number}>>{
  const directory=nxDaemonResidentDirectoryV1(leaseDirectory),daemons:NxDaemonResidentV1[]=[];
  for(const name of await readdir(directory).catch(()=>[] as string[])){
   if(!/^\d+\.json$/u.test(name))continue;let value:unknown;try{value=JSON.parse(await readFile(join(directory,name),"utf8"));}catch{continue;}
   if(validateJsonSchemaSubset(schema.definitions.Resident,value,schema).length)continue;const row=value as NxDaemonResidentV1;
-  if(name!==row.pid+".json"||now-row.atMs>policy.residentStaleMilliseconds||!alive(row.pid))continue;daemons.push(Object.freeze(row));
+  if(name!==row.pid+".json"||now-row.atMs>policy.residentStaleMilliseconds||!alive(row))continue;daemons.push(Object.freeze(row));
  }
  daemons.sort((left,right)=>left.pid-right.pid);return Object.freeze({daemons:Object.freeze(daemons),totalBytes:daemons.reduce((sum,row)=>sum+row.rssBytes,0)});
 }

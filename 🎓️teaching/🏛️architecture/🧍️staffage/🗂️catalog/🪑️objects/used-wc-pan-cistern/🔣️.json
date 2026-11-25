@@ -13,21 +13,111 @@
    "de": "Ein weißes Kombi-Stand-WC (Tiefspüler) der 1990er-Jahre mit 6/3-l-Keramikspülkasten und Duroplastsitz, 0,67 x 0,37 x 0,80 m und 37.3 kg, waagerechter Abgang auf 0,18 m mit roter Kappe, Kalk im Becken, abgeplatzter Fuß, alte Silikonfuge und vergilbter, verkratzter Deckel; auf Pappe auf einer Halbpalette mit verklebtem Spülkastendeckel gelagert, von zwei Personen getragen, wieder in einem Bad mit hochgeklapptem Deckel, sitzender Person und Spülung."
   },
   "tags": [
-   "used",
-   "household",
-   "second-hand",
-   "bathroom",
-   "wc",
-   "toilet",
-   "sanitary",
-   "ceramic",
-   "vitreous-china",
-   "cistern",
-   "seat",
-   "pallet",
-   "reuse-depot",
-   "1990s",
-   "interior"
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "household",
+    "title": {
+     "en": "household",
+     "de": "Haushalt"
+    }
+   },
+   {
+    "id": "second-hand",
+    "title": {
+     "en": "second-hand",
+     "de": "Second-Hand"
+    }
+   },
+   {
+    "id": "bathroom",
+    "title": {
+     "en": "bathroom",
+     "de": "Badezimmer"
+    }
+   },
+   {
+    "id": "wc",
+    "title": {
+     "en": "WC",
+     "de": "WC"
+    }
+   },
+   {
+    "id": "toilet",
+    "title": {
+     "en": "toilet",
+     "de": "Toilette"
+    }
+   },
+   {
+    "id": "sanitary",
+    "title": {
+     "en": "sanitary",
+     "de": "Sanitär"
+    }
+   },
+   {
+    "id": "ceramic",
+    "title": {
+     "en": "ceramic",
+     "de": "Keramik"
+    }
+   },
+   {
+    "id": "vitreous-china",
+    "title": {
+     "en": "vitreous china",
+     "de": "Sanitärkeramik"
+    }
+   },
+   {
+    "id": "cistern",
+    "title": {
+     "en": "cistern",
+     "de": "Zisterne"
+    }
+   },
+   {
+    "id": "seat",
+    "title": {
+     "en": "seat",
+     "de": "Sitz"
+    }
+   },
+   {
+    "id": "pallet",
+    "title": {
+     "en": "pallet",
+     "de": "Palette"
+    }
+   },
+   {
+    "id": "reuse-depot",
+    "title": {
+     "en": "reuse depot",
+     "de": "Wiederverwendungslager"
+    }
+   },
+   {
+    "id": "1990s",
+    "title": {
+     "en": "1990s",
+     "de": "1990er"
+    }
+   },
+   {
+    "id": "interior",
+    "title": {
+     "en": "interior",
+     "de": "Innenausbau"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content (used household objects wave)",
@@ -19846,8 +19936,551 @@
     ]
    },
    "500": {
-    "status": "unavailable",
-    "denominator": 500
+    "status": "authored",
+    "denominator": 500,
+    "decisions": [
+     {
+      "en": "Body for the 75 mm feature: the pan is its foot as one tapered pedestal prism under the bowl as one filled turned body of its true oval outline, with rear body, neck and deck as one block under the cistern; seat ring and lid are one 75 mm leaf of their oval in fourteen points on the hinge, the outlet with its cap one 116 mm cylinder, the cistern with lid and button one block that keeps the height; the pallet is one 144 mm slab under the cardboard as its declared 5 mm sheet.",
+      "de": "Körper für das 75-mm-Merkmal: das Becken ist sein Fuß als ein verjüngtes Sockelprisma unter der Schüssel als einem vollen Drehkörper ihres wahren ovalen Umrisses, mit Hinterteil, Hals und Deck als einem Block unter dem Spülkasten; Sitzring und Deckel sind ein 75-mm-Blatt ihres Ovals in vierzehn Punkten am Scharnier, der Abgang mit seiner Kappe ein 116-mm-Zylinder, der Spülkasten mit Deckel und Taste ein Block, der die Höhe hält; die Palette ist eine 144-mm-Platte unter dem Karton als erklärter 5-mm-Platte."
+     },
+     {
+      "en": "Thermal: one surface per body solid by reference in its region.",
+      "de": "Thermik: eine Oberfläche je Körper als Verweis in seiner Region."
+     },
+     {
+      "en": "Structure: the members by reference, the bowl also holding the seat bone and the cistern its lid and button, the cistern bolts and the hinge as 75 mm joints and four mass markers.",
+      "de": "Tragwerk: die Stäbe als Verweis, die Schüssel fasst auch den Sitzknochen und der Spülkasten Deckel und Taste, die Spülkastenschrauben und das Scharnier als 75-mm-Gelenke und vier Massenmarken."
+     }
+    ],
+    "body": [
+     {
+      "id": "pallet-slab",
+      "kind": "box",
+      "bone": "pallet",
+      "material": "spruce-pallet",
+      "role": "body",
+      "tone": 0.65,
+      "size": [
+       0.8,
+       0.144,
+       0.6
+      ],
+      "transform": {
+       "translation": [
+        0.4,
+        0.072,
+        0
+       ]
+      }
+     },
+     {
+      "id": "cardboard",
+      "kind": "box",
+      "bone": "pallet",
+      "material": "corrugated-board",
+      "role": "body",
+      "tone": 0.5,
+      "size": [
+       0.52,
+       0.005,
+       0.4
+      ],
+      "transform": {
+       "translation": [
+        0.39,
+        0.1465,
+        0
+       ]
+      },
+      "sheet": true
+     },
+     {
+      "id": "pedestal",
+      "kind": "extrude",
+      "bone": "pan",
+      "material": "vitreous-china-pan",
+      "role": "body",
+      "tone": 0.86,
+      "profile": [
+       [
+        -0.08,
+        0
+       ],
+       [
+        0.08,
+        0
+       ],
+       [
+        0.105,
+        0.07
+       ],
+       [
+        0.105,
+        0.3
+       ],
+       [
+        0.06,
+        0.42
+       ],
+       [
+        0,
+        0.44
+       ],
+       [
+        -0.06,
+        0.42
+       ],
+       [
+        -0.105,
+        0.3
+       ],
+       [
+        -0.105,
+        0.07
+       ]
+      ],
+      "plane": "zx",
+      "from": 0,
+      "to": 0.235,
+      "taperTo": [
+       1,
+       0.88
+      ]
+     },
+     {
+      "id": "bowl",
+      "kind": "revolve",
+      "bone": "pan",
+      "material": "vitreous-china-pan",
+      "role": "body",
+      "tone": 0.92,
+      "profile": [
+       [
+        0.2,
+        0
+       ],
+       [
+        0.2,
+        0.044
+       ],
+       [
+        0.24,
+        0.099
+       ],
+       [
+        0.3,
+        0.1455
+       ],
+       [
+        0.36,
+        0.1785
+       ],
+       [
+        0.4,
+        0.18
+       ],
+       [
+        0.4,
+        0
+       ]
+      ],
+      "axis": [
+       0,
+       1,
+       0
+      ],
+      "origin": [
+       0.32,
+       0,
+       0
+      ],
+      "lateralScale": 1.361111
+     },
+     {
+      "id": "rear-body",
+      "kind": "box",
+      "bone": "pan",
+      "material": "vitreous-china-pan",
+      "role": "body",
+      "tone": 0.9,
+      "size": [
+       0.215,
+       0.165,
+       0.25
+      ],
+      "transform": {
+       "translation": [
+        0.0125,
+        0.3175,
+        0
+       ]
+      }
+     },
+     {
+      "id": "lid",
+      "kind": "extrude",
+      "bone": "lid",
+      "material": "duroplast-seat",
+      "role": "body",
+      "tone": 0.86,
+      "profile": [
+       [
+        0,
+        0
+       ],
+       [
+        0.0774,
+        0.0237
+       ],
+       [
+        0.1396,
+        0.09
+       ],
+       [
+        0.174,
+        0.1858
+       ],
+       [
+        0.174,
+        0.2922
+       ],
+       [
+        0.1396,
+        0.388
+       ],
+       [
+        0.0774,
+        0.4543
+       ],
+       [
+        0,
+        0.478
+       ],
+       [
+        -0.0774,
+        0.4543
+       ],
+       [
+        -0.1396,
+        0.388
+       ],
+       [
+        -0.174,
+        0.2922
+       ],
+       [
+        -0.174,
+        0.1858
+       ],
+       [
+        -0.1396,
+        0.09
+       ],
+       [
+        -0.0774,
+        0.0237
+       ]
+      ],
+      "plane": "zx",
+      "from": -0.031,
+      "to": 0.044
+     },
+     {
+      "id": "outlet",
+      "kind": "revolve",
+      "bone": "pan",
+      "material": "pe-cap",
+      "role": "body",
+      "tone": 0.3,
+      "profile": [
+       [
+        -0.095,
+        0
+       ],
+       [
+        -0.095,
+        0.058
+       ],
+       [
+        0.03,
+        0.058
+       ],
+       [
+        0.03,
+        0
+       ]
+      ],
+      "axis": [
+       1,
+       0,
+       0
+      ],
+      "origin": [
+       0,
+       0.18,
+       0
+      ]
+     },
+     {
+      "id": "cistern",
+      "kind": "box",
+      "bone": "cistern",
+      "material": "vitreous-china-cistern",
+      "role": "body",
+      "tone": 0.9,
+      "size": [
+       0.165,
+       0.395,
+       0.375
+      ],
+      "transform": {
+       "translation": [
+        0.08,
+        0.1975,
+        0
+       ]
+      }
+     }
+    ],
+    "thermal": [
+     {
+      "id": "th-pallet-slab",
+      "of": "pallet-slab",
+      "region": "pallet"
+     },
+     {
+      "id": "th-cardboard",
+      "of": "cardboard",
+      "region": "cardboard"
+     },
+     {
+      "id": "th-pedestal",
+      "of": "pedestal",
+      "region": "pan"
+     },
+     {
+      "id": "th-bowl",
+      "of": "bowl",
+      "region": "pan"
+     },
+     {
+      "id": "th-rear-body",
+      "of": "rear-body",
+      "region": "pan"
+     },
+     {
+      "id": "th-lid",
+      "of": "lid",
+      "region": "seat-set"
+     },
+     {
+      "id": "th-outlet",
+      "of": "outlet",
+      "region": "outlet-cap"
+     },
+     {
+      "id": "th-cistern",
+      "of": "cistern",
+      "region": "cistern"
+     }
+    ],
+    "structure": [
+     {
+      "id": "m-pallet-slab",
+      "of": "pallet-slab",
+      "member": "pallet",
+      "part": "member"
+     },
+     {
+      "id": "m-cardboard",
+      "of": "cardboard",
+      "member": "pallet",
+      "part": "member"
+     },
+     {
+      "id": "m-pedestal",
+      "of": "pedestal",
+      "member": "pan",
+      "part": "member"
+     },
+     {
+      "id": "m-bowl",
+      "of": "bowl",
+      "member": "pan",
+      "part": "member",
+      "members": [
+       "seat"
+      ]
+     },
+     {
+      "id": "m-rear-body",
+      "of": "rear-body",
+      "member": "pan",
+      "part": "member"
+     },
+     {
+      "id": "m-lid",
+      "of": "lid",
+      "member": "lid",
+      "part": "member"
+     },
+     {
+      "id": "m-outlet",
+      "of": "outlet",
+      "member": "pan",
+      "part": "member"
+     },
+     {
+      "id": "m-cistern",
+      "of": "cistern",
+      "member": "cistern",
+      "part": "member",
+      "members": [
+       "cistern-lid",
+       "button"
+      ]
+     },
+     {
+      "id": "j-cistern-bolts",
+      "kind": "box",
+      "bone": "cistern",
+      "material": "chromed-zinc",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.08,
+        0.0375,
+        -0.08
+       ]
+      },
+      "repeat": {
+       "count": 2,
+       "translation": [
+        0,
+        0,
+        0.16
+       ]
+      },
+      "member": "cistern",
+      "part": "joint"
+     },
+     {
+      "id": "j-hinge",
+      "kind": "box",
+      "bone": "lid",
+      "material": "chromed-zinc",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.0375,
+        0.0065,
+        0
+       ]
+      },
+      "member": "lid",
+      "part": "joint"
+     },
+     {
+      "id": "mass-pan",
+      "kind": "box",
+      "bone": "pan",
+      "material": "vitreous-china-pan",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.25,
+        0.2,
+        0
+       ]
+      },
+      "member": "pan",
+      "part": "mass"
+     },
+     {
+      "id": "mass-cistern",
+      "kind": "box",
+      "bone": "cistern",
+      "material": "vitreous-china-cistern",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.08,
+        0.18,
+        0
+       ]
+      },
+      "member": "cistern",
+      "part": "mass"
+     },
+     {
+      "id": "mass-lid",
+      "kind": "box",
+      "bone": "lid",
+      "material": "duroplast-seat",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.24,
+        0.0065,
+        0
+       ]
+      },
+      "member": "lid",
+      "part": "mass"
+     },
+     {
+      "id": "mass-pallet",
+      "kind": "box",
+      "bone": "pallet",
+      "material": "spruce-pallet",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.4,
+        0.072,
+        0
+       ]
+      },
+      "member": "pallet",
+      "part": "mass"
+     }
+    ]
    }
   },
   "presentation": {

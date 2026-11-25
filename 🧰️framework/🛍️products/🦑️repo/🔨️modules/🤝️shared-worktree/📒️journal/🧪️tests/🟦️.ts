@@ -11,6 +11,7 @@ import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
 import {storeBlobV1 as storeReadOnlyBlobV1,largeBlobBytesV1 as readOnlyThresholdV1} from "../🟦️.ts";
 import {expiredHorizonV1,expiredTombstoneV1,repairBlobV1,tombstoneLifetimeMillisecondsV1} from "../🟦️.ts";
 import {appendEventsV1,blobPathV1,reclaimStagingV1,readEventSpansV1,streamMembersV1,foldEventsV1,formatHlcV1,listOriginsV1,mergeClockV1,parseHlcV1,readEventsV1,readHeadV1,readNewestSnapshotV1,replaceOriginFileV1,requireEventV1,requireOriginIdV1,storePathsV1,tickClockV1,winsV1,writeBlobV1,writeSnapshotV1,type FleetEventV1,type FleetManifestEntryV1} from "../🟦️.ts";
+import {ownProcessIdentityV1} from "../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts";
 
 type Clock={ms:number;counter:number};
 const cases=fixture as unknown as {
@@ -360,7 +361,7 @@ describe("staging files that a killed process left in the store",()=>{
  test("the own origin's leftovers of dead processes and old names go at once, those of a live process, of other origins and of the relay stay",async()=>{
   const store=temporary(),{tmp}=storePathsV1(store),child=spawnSync(process.execPath,["--version"]),dead=child.pid!;
   mkdirSync(tmp,{recursive:true});
-  const files=[`a-${dead}-${hex}`,`a-${hex}`,`a-${process.pid}-${hex}`,`b-${dead}-${hex}`,`relay-${hex}`,`a-bootstrap-${hex}`];
+  const files=[`a-${dead}-1-${hex}`,`a-${dead}-2-${hex}`,`a-${process.pid}-${ownProcessIdentityV1().startMs}-${hex}`,`b-${dead}-1-${hex}`,`relay-${hex}`,`a-bootstrap-${hex}`];
   for(const name of files)writeFileSync(join(tmp,name),"half");
   expect(await reclaimStagingV1(store,{originId:"a"})).toEqual({files:2,bytes:8});
   expect(readdirSync(tmp).sort()).toEqual(files.slice(2).sort());

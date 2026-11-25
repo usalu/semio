@@ -9,6 +9,8 @@
  *
  * @see ./🥒️.feature — the scenarios
  * @see ./🟦️.ts — the cases
+ * The catalog is 375 documents of 615 MB together: a caller that works on single assets reads single documents ({@link loadAsset}, {@link mapCatalog}, {@link catalogLookup}) and never holds the catalog ({@link loadCatalog} does, 2.1 GB resident).
+ *
  * @see ./📊️matrix.ts — the generator: one process and one record per asset, resume, merge of shards
  * @see ./🔎️scan.ts — the authors' gate: one asset in seconds
  * @see ../../🧫️fixtures/🔭️multiview-coverage/🔣️.json — the vectors
@@ -90,18 +92,68 @@ export const EXTREME_PROBES = 48;
 /** 🎯️ The D18 tolerance of a dimension: the larger of 15 mm and 2 % of it. */
 export const d18 = (nominalM: number): number => Math.max(0.015, 0.02 * nominalM);
 
+/** 🪙️ A length in whole micrometres: the unit every dimension and extent comparison is decided in (D50), so a difference that equals its tolerance is the same integer on both sides whatever the unit or the scale it was computed in. */
+export const micrometres = (lengthM: number): number => Math.round(lengthM * 1e6);
+
+/** ⚖️ Whether a measured length lies within D18 of its nominal one, decided in whole micrometres (D50): a difference of exactly the tolerance is within it, one micrometre more is not. */
+export const withinD18 = (measuredM: number, nominalM: number): boolean => Math.abs(micrometres(measuredM) - micrometres(nominalM)) <= micrometres(d18(nominalM));
+
 /** 💾️ The D18 tolerance of the synchrony checks: D18 of the largest dimension of the asset. */
 export const toleranceM = (asset: Asset): number => d18(Math.max(asset.dimensions.heightM, asset.dimensions.widthM, asset.dimensions.depthM));
 
-/** 🗂️ The catalog asset documents in id order, without validating them. */
-export function loadCatalog(root = join(STAFFAGE_ROOT, "🗂️catalog")): Asset[] {
-  const assets: Asset[] = [];
-  for (const group of readdirSync(root, { withFileTypes: true }).filter((entry) => entry.isDirectory()))
-    for (const folder of readdirSync(join(root, group.name), { withFileTypes: true }).filter((entry) => entry.isDirectory())) {
-      const file = join(root, group.name, folder.name, "🔣️.json");
-      if (existsSync(file)) assets.push((JSON.parse(readFileSync(file, "utf8")) as AssetDocument).asset);
-    }
-  return assets.sort((a, b) => a.id.localeCompare(b.id));
+const CATALOG_ROOT = join(STAFFAGE_ROOT, "🗂️catalog");
+
+const groupsOf = (root: string): string[] => readdirSync(root, { withFileTypes: true }).filter((entry) => entry.isDirectory()).map((entry) => join(root, entry.name));
+
+const readAsset = (file: string): Asset => (JSON.parse(readFileSync(file, "utf8")) as AssetDocument).asset;
+
+/** 📁️ The asset document files of the catalog in folder order, unread. */
+export function catalogFiles(root = CATALOG_ROOT): string[] {
+  return groupsOf(root).flatMap((group) => readdirSync(group, { withFileTypes: true }).filter((entry) => entry.isDirectory()).map((entry) => join(group, entry.name, "🔣️.json")).filter((file) => existsSync(file)));
+}
+
+/** 🗂️ The catalog asset documents in id order, without validating them. It holds every document at once (2.1 GB resident for the 375 documents of 2026-11): only for a caller that needs them all together. */
+export function loadCatalog(root = CATALOG_ROOT): Asset[] {
+  return catalogFiles(root).map(readAsset).sort((a, b) => a.id.localeCompare(b.id));
+}
+
+/** 🚰️ The catalog one asset document at a time in folder order: the caller keeps what it takes of a document, the document itself is released with its turn. */
+export function* streamCatalog(root = CATALOG_ROOT): Generator<Asset> {
+  for (const file of catalogFiles(root)) yield readAsset(file);
+}
+
+/** 🎣️ One asset by id, or undefined when the catalog has none. It reads the one document of the folder the contract gives it (`<category>/<id>/🔣️.json`); only an id that no folder is named after is searched in the stream of the catalog. */
+export function loadAsset(id: string, root = CATALOG_ROOT): Asset | undefined {
+  for (const group of groupsOf(root)) {
+    const file = join(group, id, "🔣️.json");
+    if (!existsSync(file)) continue;
+    const asset = readAsset(file);
+    if (asset.id === id) return asset;
+  }
+  for (const asset of streamCatalog(root)) if (asset.id === id) return asset;
+  return undefined;
+}
+
+/** 🪡️ What `project` takes of the assets of the catalog, in id order, one document at a time: of the named `ids` (each read by {@link loadAsset}, unknown ones left out) or of the whole catalog; a projection that returns undefined leaves its asset out. No document outlives its turn unless the projection keeps it. */
+export function mapCatalog<T extends { readonly id: string }>(project: (asset: Asset) => T | undefined, ids?: readonly string[], root = CATALOG_ROOT): T[] {
+  const taken: T[] = [];
+  const take = (asset: Asset | undefined): void => {
+    const projected = asset === undefined ? undefined : project(asset);
+    if (projected !== undefined) taken.push(projected);
+  };
+  if (ids === undefined) for (const asset of streamCatalog(root)) take(asset);
+  else for (const id of new Set(ids)) take(loadAsset(id, root));
+  return taken.sort((a, b) => a.id.localeCompare(b.id));
+}
+
+/** 📇️ The catalog by asset id as the matrix asks for it: whether an asset exists, and its document. A `Map` of the catalog is one; {@link catalogLookup} is the one that does not hold the catalog. */
+export type CatalogLookup = Pick<ReadonlyMap<string, Asset>, "has" | "get">;
+
+/** 🔦️ A {@link CatalogLookup} that reads the document of an asset when it is asked for and keeps the last answer only, so the run of one asset holds its own document and at most one alternative asset. */
+export function catalogLookup(root = CATALOG_ROOT): CatalogLookup {
+  let last: { readonly id: string; readonly asset: Asset | undefined } | undefined;
+  const get = (id: string): Asset | undefined => (last?.id === id ? last : (last = { id, asset: loadAsset(id, root) })).asset;
+  return { has: (id) => get(id) !== undefined, get };
 }
 
 /** 📐️ The extent of the non-ground shapes, or undefined when nothing is drawn. */
@@ -173,9 +225,18 @@ export function scaleEntries(asset: Asset): ScaleEntry[] {
 /** 🏷️ The id of an alternative inside a scale key. */
 export const alternativeId = (alternative: Alternative, index: number): string => `alt${index}:${alternative.kind === "scale" ? `scale:${alternative.denominator}` : alternative.kind === "symbol" ? `symbol:${alternative.symbol}` : `asset:${alternative.asset}`}`;
 
+/** 🪪️ What the matrix keeps of an asset to place its cells: the id, the category and the scale entries. The universe of cells follows from these alone, so a merge over the catalog holds no document. */
+export type Declared = { readonly id: string; readonly category: string; readonly entries: readonly ScaleEntry[] };
+
+/** 📋️ The {@link Declared} of an asset document. */
+export const declaredOf = (asset: Asset): Declared => ({ id: asset.id, category: asset.category, entries: scaleEntries(asset) });
+
+/** 🔐️ Every cell key of one asset, in the order of the matrix: scale entry, viewpoint, mode. */
+export const keysOf = (declared: Declared): string[] => declared.entries.flatMap((entry) => VIEWPOINT_LIST.flatMap((view) => MODE_LIST.map((mode) => cellKey(declared.id, entry.scale, view, mode))));
+
 /** 🌌️ Every cell key the matrix must contain for the assets, from the declarations alone. */
 export function universe(assets: readonly Asset[]): string[] {
-  return assets.flatMap((asset) => scaleEntries(asset).flatMap((entry) => VIEWPOINT_LIST.flatMap((view) => MODE_LIST.map((mode) => cellKey(asset.id, entry.scale, view, mode)))));
+  return assets.flatMap((asset) => keysOf(declaredOf(asset)));
 }
 
 /** 🗺️ The sampled instants of a clip: start, every keyframe, the middle of every key interval, the extremes of the extents (`probe` maps a time to the extents of the three views and the rig bounds), `UNIFORM_INSTANTS` uniform intermediates and the end. Looping clips wrap, non-looping ones stay inside. */
@@ -264,6 +325,17 @@ export function transitionPairs(asset: Asset): (readonly [string, string])[] {
 /** 🖨️ The fractions of a transition that are sampled. */
 export const TRANSITION_FRACTIONS: readonly number[] = [0, 0.25, 0.5, 0.75, 1];
 
+/** 🧩️ A measurement that is the same at every scale of one authored representation, made once per representation: the first requested denominator that draws it makes it, the others read it. */
+export function perRepresentation<T>(asset: Asset, make: (requested: number) => T): (requested: number) => T {
+  const known = new Map<string, T>();
+  return (requested) => {
+    const picked = pickRepresentation(asset, requested);
+    const key = picked.kind === "authored" ? `${picked.denominator}` : `unavailable ${requested}`;
+    if (!known.has(key)) known.set(key, make(requested));
+    return known.get(key)!;
+  };
+}
+
 /** 🖱️ Every pose, clip instant and transition instant of an asset as subjects; the seven modes render at poses and at the start, key, extreme and end instants, the sampled modes elsewhere. */
 export function subjects(asset: Asset, requested: number): Subject[] {
   const poses: Subject[] = asset.poses.map((pose) => ({ id: `pose ${pose.id}`, query: { kind: "pose", pose: pose.id }, isDefault: pose.id === asset.presentation.defaultPose, modes: MODE_LIST, languages: LANGUAGES }));
@@ -331,7 +403,7 @@ export function geometryFindings(asset: Asset, state: EvaluatedState, isDefault:
   const { elevation: e, front: f, plan: p } = extents;
   const agree = (check: string, views: readonly PlanarViewpoint[], label: string, a: readonly [number, number], b: readonly [number, number]): void => {
     const delta = Math.max(Math.abs(a[0] - b[0]), Math.abs(a[1] - b[1]));
-    if (!(delta <= tolerance)) findings.push({ views, check, tier: "hard", message: `${label} differ: [${a[0].toFixed(3)}, ${a[1].toFixed(3)}] vs [${b[0].toFixed(3)}, ${b[1].toFixed(3)}] m (tolerance ${tolerance.toFixed(3)})`, delta: { deltaMm: delta * 1000, pair: views.join("/") } });
+    if (!(micrometres(delta) <= micrometres(tolerance))) findings.push({ views, check, tier: "hard", message: `${label} differ: [${a[0].toFixed(3)}, ${a[1].toFixed(3)}] vs [${b[0].toFixed(3)}, ${b[1].toFixed(3)}] m (tolerance ${tolerance.toFixed(3)})`, delta: { deltaMm: delta * 1000, pair: views.join("/") } });
   };
   if (e && p) agree("sync-forward", ["elevation", "plan"], "elevation x and plan x", [e.minX, e.maxX], [p.minX, p.maxX]);
   if (e && f) agree("sync-height", ["elevation", "front"], "elevation y and front y", [e.minY, e.maxY], [f.minY, f.maxY]);
@@ -340,7 +412,7 @@ export function geometryFindings(asset: Asset, state: EvaluatedState, isDefault:
   for (const finding of anchorLandmarks(state, tolerance)) findings.push({ views: [finding.view], check: "anchor-landmark", tier: "hard", message: finding.message, delta: { deltaMm: finding.deltaMm, pair: `${finding.view} ${finding.anchor}` }, bone: finding.bone, anchor: finding.anchor, anchorKind: finding.kind });
   if (!isDefault) return findings;
   const size = (check: string, view: PlanarViewpoint, label: string, measured: number, nominal: number): void => {
-    if (!(Math.abs(measured - nominal) <= d18(nominal))) findings.push({ views: [view], check, tier: "hard", message: `${label} is ${measured.toFixed(3)} m but the dimensions say ${nominal.toFixed(3)} m`, delta: { deltaMm: Math.abs(measured - nominal) * 1000, pair: `${view} vs dimensions` } });
+    if (!withinD18(measured, nominal)) findings.push({ views: [view], check, tier: "hard", message: `${label} is ${measured.toFixed(3)} m but the dimensions say ${nominal.toFixed(3)} m`, delta: { deltaMm: Math.abs(measured - nominal) * 1000, pair: `${view} vs dimensions` } });
   };
   const d = asset.dimensions;
   if (e) {
@@ -362,10 +434,12 @@ function checkGeometry(asset: Asset, subject: Subject, state: EvaluatedState, co
   for (const finding of geometryFindings(asset, state, subject.isDefault)) collector.fail(finding.views, MODE_LIST, finding.check, subject.id, finding.message, finding.delta);
 }
 
-/** 🕳️ Why a scene draws none of the shapes of a view: per shape its role, pen and filled flag, then the reason class (`zero-pen`, `degenerate`, `occluded-or-unexplained`). */
+/** 🕳️ Why a scene draws none of the shapes of a view: per shape its role, pen (the shape's own, else the pen of its role in the representation or the symbol that is drawn) and filled flag, then the reason class (`zero-pen`, `degenerate`, `occluded-or-unexplained`). */
 export function blankReason(state: EvaluatedState, view: PlanarViewpoint, mode: View): string {
-  const rep = state.representation.kind === "scale" ? state.asset.representations[`${state.representation.denominator}` as keyof Asset["representations"]] : undefined;
-  const pens = rep?.status === "authored" ? (rep.pens as unknown as Record<string, number | null>) : undefined;
+  const drawn = state.representation;
+  const rep = drawn.kind === "scale" ? state.asset.representations[`${drawn.denominator}` as keyof Asset["representations"]] : undefined;
+  const source = drawn.kind === "symbol" ? state.asset.symbols.find((symbol) => symbol.id === drawn.symbol) : rep?.status === "authored" ? rep : undefined;
+  const pens = source?.pens as unknown as Record<string, number | null> | undefined;
   const lines = state.shapes[view]
     .filter((e) => e.shape.role !== "ground")
     .map((e) => {
@@ -379,7 +453,13 @@ export function blankReason(state: EvaluatedState, view: PlanarViewpoint, mode: 
   return `${mode}: ${lines.length} shapes: ${lines.slice(0, 6).join("; ")}`;
 }
 
-/** 📰️ The paper findings of the default pose of one view: the box of the drawn fills and outline runs ({@link paperBox}) against the dimensions at the scale of the scene, within D18. */
+/** 🫥️ The blank finding of a scene of a line, solid or thermal mode: no non-ground shape of the view is drawn, neither by its fill nor by an outline run ({@link paperIds}), so a part or a symbol drawn as an unfilled outline is drawn; the forces and moments modes draw the structure and are not asked. */
+export function blankFinding(state: EvaluatedState, view: PlanarViewpoint, mode: View, scene: DrawingScene): { readonly check: "blank-shapes"; readonly message: string } | undefined {
+  if (mode === "forces" || mode === "moments" || paperIds(scene, state.shapes[view]).size > 0) return undefined;
+  return { check: "blank-shapes", message: `no ${view} shape of the representation is drawn: ${blankReason(state, view, mode)}` };
+}
+
+/** 📰️ The paper findings of the default pose of one view: the box of the drawn fills and outline runs ({@link paperBox}) against the dimensions at the scale of the scene, within D18 as {@link withinD18} decides it. */
 export function paperFindings(asset: Asset, view: PlanarViewpoint, scene: DrawingScene, shapes: readonly EvaluatedShape[]): { readonly check: "paper-width" | "paper-height"; readonly message: string; readonly delta: { readonly deltaMm: number; readonly pair: string } }[] {
   const box = paperBox(scene, shapes);
   if (box === undefined) return [];
@@ -390,8 +470,8 @@ export function paperFindings(asset: Asset, view: PlanarViewpoint, scene: Drawin
   const gotH = box.maxY - box.minY;
   const pair = `${view} paper vs dimensions`;
   return [
-    ...(Math.abs(gotW - w * k) > d18(w) * k ? [{ check: "paper-width" as const, message: `drawn width ${gotW.toFixed(2)} mm but ${w}·${k.toFixed(3)} = ${(w * k).toFixed(2)} mm`, delta: { deltaMm: (Math.abs(gotW - w * k) / k) * 1000, pair } }] : []),
-    ...(Math.abs(gotH - h * k) > d18(h) * k ? [{ check: "paper-height" as const, message: `drawn height ${gotH.toFixed(2)} mm but ${h}·${k.toFixed(3)} = ${(h * k).toFixed(2)} mm`, delta: { deltaMm: (Math.abs(gotH - h * k) / k) * 1000, pair } }] : []),
+    ...(!withinD18(gotW / k, w) ? [{ check: "paper-width" as const, message: `drawn width ${gotW.toFixed(2)} mm but ${w}·${k.toFixed(3)} = ${(w * k).toFixed(2)} mm`, delta: { deltaMm: (Math.abs(gotW - w * k) / k) * 1000, pair } }] : []),
+    ...(!withinD18(gotH / k, h) ? [{ check: "paper-height" as const, message: `drawn height ${gotH.toFixed(2)} mm but ${h}·${k.toFixed(3)} = ${(h * k).toFixed(2)} mm`, delta: { deltaMm: (Math.abs(gotH - h * k) / k) * 1000, pair } }] : []),
   ];
 }
 
@@ -404,12 +484,11 @@ function checkScene(asset: Asset, subject: Subject, state: EvaluatedState, view:
   if (JSON.stringify(m.query) !== JSON.stringify(state.query)) fail("scene-query", "scene query differs from the state query");
   if (m.scale.denominator !== requested) fail("scene-scale", `scene scale 1:${m.scale.denominator} differs from the requested 1:${requested}`);
   if (!(Number.isFinite(scene.widthMm) && Number.isFinite(scene.heightMm) && scene.widthMm > 0 && scene.heightMm > 0)) fail("scene-size", `scene size ${scene.widthMm} x ${scene.heightMm} mm`);
-  const ids = new Set(state.shapes[view].filter((evaluated) => evaluated.shape.role !== "ground").map((evaluated) => `shape:${evaluated.shape.id}`));
   const box = sceneBox(scene);
-  const named = sceneBox(scene, ids);
   if (box === undefined) return fail("blank", "the scene draws no path");
   if (!finite(box)) return fail("scene-bounds", "the scene has non-finite coordinates");
-  if (named === undefined && mode !== "forces" && mode !== "moments") fail("blank-shapes", `no ${view} shape of the representation is drawn: ${blankReason(state, view, mode)}`);
+  const blank = blankFinding(state, view, mode, scene);
+  if (blank !== undefined) fail(blank.check, blank.message);
   if (subject.isDefault) for (const finding of paperFindings(asset, view, scene, state.shapes[view])) collector.fail([view], [mode], finding.check, subject.id, finding.message, finding.delta);
 }
 
@@ -437,6 +516,7 @@ export function cueFinding(mode: View, scene: DrawingScene): { readonly check: "
 
 function renderSubject(asset: Asset, subject: Subject, source: DrawingSource, collector: Collector, symbol?: SymbolRepresentation): void {
   let geometryDone = false;
+  const compared = subject.languages.length > 1;
   const english = new Map<string, string>();
   for (const language of subject.languages)
     for (const mode of subject.modes) {
@@ -465,7 +545,7 @@ function renderSubject(asset: Asset, subject: Subject, source: DrawingSource, co
         const cue = cueFinding(mode, drawing.scene);
         if (cue !== undefined) collector.fail([view], [mode], cue.check, subject.id, cue.message);
         const key = `${view}|${mode}`;
-        if (language === "en") english.set(key, shapeGeometry(drawing.scene));
+        if (language === "en" && compared) english.set(key, shapeGeometry(drawing.scene));
         else if (english.get(key) !== undefined && english.get(key) !== shapeGeometry(drawing.scene)) collector.fail([view], [mode], "language-geometry", subject.id, `the ${language} drawing has other shape geometry than the English one`);
       }
     }
@@ -496,7 +576,7 @@ const collectorOf = (asset: Asset, entry: ScaleEntry): Collector => new Collecto
 
 const filled = (text: { readonly en: string; readonly de: string } | undefined): boolean => text !== undefined && text.en.trim().length > 0 && text.de.trim().length > 0;
 
-function declaration(asset: Asset, entry: ScaleEntry, catalogById: ReadonlyMap<string, Asset>): { collector: Collector; reason: string } {
+function declaration(asset: Asset, entry: ScaleEntry, catalogById: CatalogLookup): { collector: Collector; reason: string } {
   const collector = collectorOf(asset, entry);
   const decision = asset.representations[entry.representation as keyof Asset["representations"]];
   const fail = (check: string, message: string): void => collector.fail(VIEWPOINT_LIST, MODE_LIST, check, `declaration 1:${entry.requested}`, message);
@@ -530,20 +610,25 @@ function declaration(asset: Asset, entry: ScaleEntry, catalogById: ReadonlyMap<s
   return { collector, reason: filled(decision.reason) ? decision.reason.en : "declared unavailable without reason" };
 }
 
-function runAuthored(asset: Asset, entry: ScaleEntry): Collector {
+/** 🧷️ What a run computes once per representation: the subjects with their extreme instants and the loop findings. */
+type Measured = { readonly subjects: (requested: number) => Subject[]; readonly loops: (requested: number) => LoopFinding[] };
+
+const measuredOf = (asset: Asset): Measured => ({ subjects: perRepresentation(asset, (requested) => subjects(asset, requested)), loops: perRepresentation(asset, (requested) => loopFindings(asset, requested)) });
+
+function runAuthored(asset: Asset, entry: ScaleEntry, measured: Measured): Collector {
   const collector = collectorOf(asset, entry);
   const requested = entry.requested!;
   const source: DrawingSource = { kind: "scale", denominator: requested };
   const reduced = entry.kind === "band-min" || entry.kind === "band-max";
-  const all = subjects(asset, requested);
+  const all = measured.subjects(requested);
   for (const subject of reduced ? all.filter((candidate) => candidate.query.kind === "pose" || candidate.id.includes(" start @") || candidate.id.includes(" end @")) : all) renderSubject(asset, subject, source, collector);
-  checkLoops(asset, requested, collector);
+  for (const finding of measured.loops(requested)) collector.fail(finding.views, MODE_LIST, "loop-closure", finding.subject, finding.message);
   if (entry.kind === "preset" || entry.kind === "declared") checkDerived(asset, entry, collector);
   return collector;
 }
 
-/** 📷️ One allowlisted symmetric view: the asset, the viewpoint and the physical reason in English and German (a body of revolution has the same front and side by nature). */
-export type DerivedAllowance = { readonly asset: string; readonly view: PlanarViewpoint; readonly reason: { readonly en: string; readonly de: string } };
+/** 📷️ One allowlisted symmetric view: the asset, the viewpoint and the physical reason in English and German (a body of revolution has the same front and side by nature); with `bands` (one or more scale keys) the allowance holds in those bands only (D51: a slender body whose two views differ by less than the measure can resolve in the coarse bands), without it in every band. */
+export type DerivedAllowance = { readonly asset: string; readonly view: PlanarViewpoint; readonly bands?: readonly string[]; readonly reason: { readonly en: string; readonly de: string } };
 
 /** 🧱️ One allowlisted band copy: the asset, the viewpoint, the scale keys (two or more different ones, in any order) whose drawing of that view is truthfully the same, so a copy between any two of them is allowed, and the physical reason in English and German (a prismatic or plain part, such as a rendered wall face, has nothing a finer band could add). */
 export type BandCopyAllowance = { readonly asset: string; readonly view: PlanarViewpoint; readonly bands: readonly string[]; readonly reason: { readonly en: string; readonly de: string } };
@@ -559,7 +644,7 @@ export function allowlists(): Allowlists {
   return { derived: document.derivedViewAllowlist ?? [], bandCopy: document.bandCopyAllowlist ?? [] };
 }
 
-/** 🧬️ The derived-view findings of the default pose of one representation (or symbol) at a requested denominator: a front or plan that equals the same view of another authored band (`derived-view-band-copy`) or another view of its own band (`derived-view-in-band`), unless an allowlist names the asset and view (for a band copy also the two bands) with a physical reason in English and German; an entry without both texts allows nothing. */
+/** 🧬️ The derived-view findings of the default pose of one representation (or symbol) at a requested denominator: a front or plan that equals the same view of another authored band (`derived-view-band-copy`) or another view of its own band (`derived-view-in-band`), unless an allowlist names the asset and view (for a band copy the two bands, for an in-band view optionally the bands it holds in) with a physical reason in English and German; an entry without both texts allows nothing. */
 export function derivedFindings(asset: Asset, representation: string, requested: number, symbol?: string, allow: Allowlists = allowlists()): { readonly view: PlanarViewpoint; readonly check: "derived-view-band-copy" | "derived-view-in-band"; readonly against: string; readonly message: string }[] {
   const select = (denominator: number): RepresentationSelector => (symbol === undefined ? scaleSelector(denominator) : { kind: "symbol", symbol });
   const shapesAt = (denominator: number) => evaluate(asset, { kind: "pose", pose: asset.presentation.defaultPose }, select(denominator)).shapes;
@@ -568,7 +653,7 @@ export function derivedFindings(asset: Asset, representation: string, requested:
   const symmetric = allow.derived.filter(reasoned);
   const copies = allow.bandCopy.filter(reasoned);
   const allowed = (flag: { readonly view: PlanarViewpoint; readonly against: string }): boolean =>
-    flag.against.startsWith("1:") ? copies.some((allowance) => allowance.view === flag.view && representation !== flag.against.slice(2).split(" ")[0] && allowance.bands.includes(representation) && allowance.bands.includes(flag.against.slice(2).split(" ")[0]!)) : symmetric.some((allowance) => allowance.view === flag.view);
+    flag.against.startsWith("1:") ? copies.some((allowance) => allowance.view === flag.view && representation !== flag.against.slice(2).split(" ")[0] && allowance.bands.includes(representation) && allowance.bands.includes(flag.against.slice(2).split(" ")[0]!)) : symmetric.some((allowance) => allowance.view === flag.view && (allowance.bands === undefined || allowance.bands.includes(representation)));
   return derivedFlags(shapesAt(requested), others)
     .filter((flag) => !allowed(flag))
     .map((flag) => ({ view: flag.view, check: flag.against.startsWith("1:") ? ("derived-view-band-copy" as const) : ("derived-view-in-band" as const), against: flag.against, message: `the ${flag.view} view equals the ${flag.against} under ${flag.transform} (normalised Hausdorff ${flag.distance})` }));
@@ -583,7 +668,10 @@ function checkDerived(asset: Asset, entry: ScaleEntry, collector: Collector, sym
   }
 }
 
-function checkLoops(asset: Asset, requested: number, collector: Collector): void {
+type LoopFinding = { readonly views: readonly PlanarViewpoint[]; readonly subject: string; readonly message: string };
+
+function loopFindings(asset: Asset, requested: number): LoopFinding[] {
+  const findings: LoopFinding[] = [];
   for (const clip of asset.clips) {
     if (!clip.loop) continue;
     try {
@@ -592,12 +680,13 @@ function checkLoops(asset: Asset, requested: number, collector: Collector): void
       for (const view of VIEWPOINT_LIST) {
         const ea = extentOf(a.shapes[view]);
         const eb = extentOf(b.shapes[view]);
-        if (ea && eb && Math.max(Math.abs(ea.maxY - eb.maxY), Math.abs(ea.minY - eb.minY)) > toleranceM(asset)) collector.fail([view], MODE_LIST, "loop-closure", `clip ${clip.id}`, `the ${view} view at the end of the loop differs from its start`);
+        if (ea && eb && Math.max(Math.abs(ea.maxY - eb.maxY), Math.abs(ea.minY - eb.minY)) > toleranceM(asset)) findings.push({ views: [view], subject: `clip ${clip.id}`, message: `the ${view} view at the end of the loop differs from its start` });
       }
     } catch (error) {
-      collector.fail(VIEWPOINT_LIST, MODE_LIST, "loop-closure", `clip ${clip.id}`, messageOf(error));
+      findings.push({ views: VIEWPOINT_LIST, subject: `clip ${clip.id}`, message: messageOf(error) });
     }
   }
+  return findings;
 }
 
 function runSymbol(asset: Asset, entry: ScaleEntry, symbolId: string): Collector {
@@ -622,10 +711,11 @@ function runSymbol(asset: Asset, entry: ScaleEntry, symbolId: string): Collector
   return collector;
 }
 
-/** 🧮️ Runs every cell of one asset: every scale entry with its declarations, geometry, instants, renders and alternatives. `onEntry` reports the progress before each scale entry (its index, the count and its scale) and stops the run with the error it throws, which is how a caller cancels. */
-export function runAsset(asset: Asset, catalogById: ReadonlyMap<string, Asset>, onEntry?: (index: number, count: number, scale: string) => void): Cell[] {
+/** 🧮️ Runs every cell of one asset: every scale entry with its declarations, geometry, instants, renders and alternatives. `catalogById` answers the asset alternatives ({@link catalogLookup} reads them on demand). `onEntry` reports the progress before each scale entry (its index, the count and its scale) and stops the run with the error it throws, which is how a caller cancels. */
+export function runAsset(asset: Asset, catalogById: CatalogLookup, onEntry?: (index: number, count: number, scale: string) => void): Cell[] {
   const cells: Cell[] = [];
   const byScale = new Map<string, Cell[]>();
+  const measured = measuredOf(asset);
   const ordered = scaleEntries(asset);
   const sequence = [...ordered.filter((candidate) => candidate.kind !== "alternative"), ...ordered.filter((candidate) => candidate.kind === "alternative")];
   for (const [position, entry] of sequence.entries()) {
@@ -649,7 +739,7 @@ export function runAsset(asset: Asset, catalogById: ReadonlyMap<string, Asset>, 
       const { collector, reason } = declaration(asset, entry, catalogById);
       produced = toCells(asset, entry, collector, reason);
     } else {
-      const { collector } = { collector: runAuthored(asset, entry) };
+      const collector = runAuthored(asset, entry, measured);
       const declared = declaration(asset, entry, catalogById);
       for (const [key, value] of declared.collector.cells) collector.cells.get(key)!.checked += value.checked;
       produced = toCells(asset, entry, collector);
@@ -675,20 +765,31 @@ function okAll(asset: Asset, entry: ScaleEntry): Collector {
 
 /** 🧯️ The cells of an asset whose run did not end: every cell of its universe as a failure named `code` (`asset-crashed`, `asset-timeout`) that carries the message, so a crash or a timeout inside one asset is never a silent `cell-missing`. */
 export function failedAsset(asset: Asset, code: string, message: string): Cell[] {
-  return scaleEntries(asset).flatMap((entry) => VIEWPOINT_LIST.flatMap((view) => MODE_LIST.map((mode): Cell => ({ asset: asset.id, category: asset.category, scale: entry.scale, scaleKind: entry.kind, requested: entry.requested, view, mode, status: "fail", checked: 0, failures: { [code]: { count: 1, first: [{ subject: asset.id, message }] } } }))));
+  return failedCells(declaredOf(asset), code, message);
 }
+
+/** 🪦️ {@link failedAsset} from the {@link Declared} of the asset. */
+export function failedCells(declared: Declared, code: string, message: string): Cell[] {
+  return declared.entries.flatMap((entry) => VIEWPOINT_LIST.flatMap((view) => MODE_LIST.map((mode): Cell => ({ asset: declared.id, category: declared.category, scale: entry.scale, scaleKind: entry.kind, requested: entry.requested, view, mode, status: "fail", checked: 0, failures: { [code]: { count: 1, first: [{ subject: declared.id, message }] } } }))));
+}
+
+/** 🧶️ The cells of one asset in the order of the matrix: every universe cell of it exactly once, taken from `produced` by key, a missing one as a `cell-missing` failure. */
+export function placeCells(declared: Declared, produced: ReadonlyMap<string, Cell>): Cell[] {
+  return keysOf(declared).map((key) => {
+    const found = produced.get(key);
+    if (found !== undefined) return found;
+    const [assetId, scale, view, mode] = key.split("|") as [string, string, PlanarViewpoint, View];
+    return { asset: assetId, category: declared.category, scale, scaleKind: "preset" as const, requested: null, view, mode, status: "fail" as const, checked: 0, failures: { "cell-missing": { count: 1, first: [{ subject: key, message: "no runner produced this cell" }] } } };
+  });
+}
+
+/** 🪢️ The cells by their key. */
+export const cellsByKey = (cells: readonly Cell[]): Map<string, Cell> => new Map(cells.map((cell) => [cellKey(cell.asset, cell.scale, cell.view, cell.mode), cell]));
 
 /** 🚨️ The result of the matrix: every universe cell exactly once, missing ones as `cell-missing` failures. */
 export function assemble(assets: readonly Asset[], produced: readonly Cell[]): Cell[] {
-  const byKey = new Map(produced.map((cell) => [cellKey(cell.asset, cell.scale, cell.view, cell.mode), cell]));
-  const byId = new Map(assets.map((asset) => [asset.id, asset]));
-  return universe(assets).map((key) => {
-    const found = byKey.get(key);
-    if (found !== undefined) return found;
-    const [assetId, scale, view, mode] = key.split("|") as [string, string, PlanarViewpoint, View];
-    const asset = byId.get(assetId)!;
-    return { asset: assetId, category: asset.category, scale, scaleKind: "preset" as const, requested: null, view, mode, status: "fail" as const, checked: 0, failures: { "cell-missing": { count: 1, first: [{ subject: key, message: "no runner produced this cell" }] } } };
-  });
+  const byKey = cellsByKey(produced);
+  return assets.flatMap((asset) => placeCells(declaredOf(asset), byKey));
 }
 
 /** 🏗️ Builds the matrix of the assets sequentially. */
@@ -700,28 +801,43 @@ export function buildMatrix(assets: readonly Asset[], catalogAssets: readonly As
 /** 📊️ The counts of one group of cells. */
 export type Counts = { ok: number; unavailable: number; "range-end": number; "group-drift": number; fail: number };
 
-/** 🛑️ Counts by category, then by viewpoint, and the failing checks by number of cells. */
-export function summarise(cells: readonly Cell[]): { total: Counts; byCategory: Record<string, { total: Counts; byView: Record<PlanarViewpoint, Counts>; assets: number; failingAssets: number }>; checks: Record<string, number> } {
+/** 📮️ The summary of a matrix: counts by category, then by viewpoint, and the failing checks by number of cells. */
+export type Summary = { total: Counts; byCategory: Record<string, { total: Counts; byView: Record<PlanarViewpoint, Counts>; assets: number; failingAssets: number }>; checks: Record<string, number> };
+
+/** 🧺️ Summarises cells as they come: `add` counts a batch and keeps none of it, `result` is the {@link Summary} of everything added, the same as {@link summarise} of the batches in one array. */
+export function summariser(): { readonly add: (cells: readonly Cell[]) => void; readonly result: () => Summary } {
   const zero = (): Counts => ({ ok: 0, unavailable: 0, "range-end": 0, "group-drift": 0, fail: 0 });
   const total = zero();
-  const byCategory: Record<string, { total: Counts; byView: Record<PlanarViewpoint, Counts>; assets: number; failingAssets: number }> = {};
+  const byCategory: Summary["byCategory"] = {};
   const checks: Record<string, number> = {};
   const assetsIn = new Map<string, Set<string>>();
   const failingIn = new Map<string, Set<string>>();
-  for (const cell of cells) {
-    const group = (byCategory[cell.category] ??= { total: zero(), byView: { elevation: zero(), front: zero(), plan: zero() }, assets: 0, failingAssets: 0 });
-    total[cell.status]++;
-    group.total[cell.status]++;
-    group.byView[cell.view][cell.status]++;
-    (assetsIn.get(cell.category) ?? assetsIn.set(cell.category, new Set()).get(cell.category)!).add(cell.asset);
-    if (cell.status === "fail") (failingIn.get(cell.category) ?? failingIn.set(cell.category, new Set()).get(cell.category)!).add(cell.asset);
-    for (const check of Object.keys(cell.failures)) checks[check] = (checks[check] ?? 0) + 1;
-  }
-  for (const [category, group] of Object.entries(byCategory)) {
-    group.assets = assetsIn.get(category)?.size ?? 0;
-    group.failingAssets = failingIn.get(category)?.size ?? 0;
-  }
-  return { total, byCategory, checks: Object.fromEntries(Object.entries(checks).sort((a, b) => b[1] - a[1])) };
+  const add = (cells: readonly Cell[]): void => {
+    for (const cell of cells) {
+      const group = (byCategory[cell.category] ??= { total: zero(), byView: { elevation: zero(), front: zero(), plan: zero() }, assets: 0, failingAssets: 0 });
+      total[cell.status]++;
+      group.total[cell.status]++;
+      group.byView[cell.view][cell.status]++;
+      (assetsIn.get(cell.category) ?? assetsIn.set(cell.category, new Set()).get(cell.category)!).add(cell.asset);
+      if (cell.status === "fail") (failingIn.get(cell.category) ?? failingIn.set(cell.category, new Set()).get(cell.category)!).add(cell.asset);
+      for (const check of Object.keys(cell.failures)) checks[check] = (checks[check] ?? 0) + 1;
+    }
+  };
+  const result = (): Summary => {
+    for (const [category, group] of Object.entries(byCategory)) {
+      group.assets = assetsIn.get(category)?.size ?? 0;
+      group.failingAssets = failingIn.get(category)?.size ?? 0;
+    }
+    return { total, byCategory, checks: Object.fromEntries(Object.entries(checks).sort((a, b) => b[1] - a[1])) };
+  };
+  return { add, result };
+}
+
+/** 🛑️ Counts by category, then by viewpoint, and the failing checks by number of cells. */
+export function summarise(cells: readonly Cell[]): Summary {
+  const summary = summariser();
+  summary.add(cells);
+  return summary.result();
 }
 
 /** 📥️ The categories in schema order. */

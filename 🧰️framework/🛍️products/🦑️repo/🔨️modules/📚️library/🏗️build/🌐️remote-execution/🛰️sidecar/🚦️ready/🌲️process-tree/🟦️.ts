@@ -4,6 +4,7 @@ import {join} from "node:path";
 import {createHash} from "node:crypto";
 import {scaledMillisecondsV1} from "../../../../🐢️speed/🟨️.mjs";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
+import {pinSpawnedProcessV1,processIdentityVerdictV1,readProcessStartV1}from"../../../../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts";
 
 /** 📐️ The numbers of the process-tree rules.
  * @see ./🧬️schema/🔣️.json */
@@ -19,9 +20,25 @@ const near=(left:number,right:number,tolerance:number)=>Math.abs(left-right)<=to
 
 /** 🧭️ Whether the process `known` named is still in the table as the same process, gone, or its pid belongs to another process now. A start time of 0 in the record means the start was not known and only the pid counts. */
 export function readyIdentityV1(known:ReadyKnownV1,table:readonly ReadyProcessV1[],tolerance:number=P.toleranceMilliseconds):"same"|"gone"|"reused"{
- const row=table.find(each=>each.pid===known.pid);
- if(row===undefined)return"gone";
- return known.startMs===0||near(row.startMs,known.startMs,tolerance)?"same":"reused";
+ const verdict=processIdentityVerdictV1(known,table.find(each=>each.pid===known.pid)?.startMs??"gone",tolerance);
+ return verdict==="same"||verdict==="reused"?verdict:"gone";
+}
+
+/** 📌️ The identity of the stage process spawned at `startedMs`: the recorded start of the pid in an earlier sample (`restored`, a start other than the spawn time), else the row of the table in the window a spawn can have created it (the clock is read before the system creates the process and a loaded Windows machine creates it late), else the spawn time itself, which then judges any row outside the window another process. The creation time is never taken from the clock before the spawn alone: that told a slow Windows spawn from a reused pid.
+ * @see ../../../../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts */
+export function readyPinStageRootV1(flight:Readonly<{pid:number;startedMs:number}>,table:readonly ReadyProcessV1[],restored?:ReadyKnownV1|undefined):ReadyKnownV1{
+ if(restored!==undefined&&restored.pid===flight.pid&&restored.startMs!==flight.startedMs&&pinSpawnedProcessV1({pid:flight.pid,spawnedMs:flight.startedMs},restored.startMs)!==undefined)return{pid:restored.pid,startMs:restored.startMs};
+ const pinned=pinSpawnedProcessV1({pid:flight.pid,spawnedMs:flight.startedMs},table.find(row=>row.pid===flight.pid)?.startMs);
+ return pinned===undefined?{pid:flight.pid,startMs:flight.startedMs}:pinned;
+}
+
+/** 🧭️ Whether the process now at the pid of a stage in flight is that stage's process (`same`) or another process that reused the pid (`reused`), from its creation time `seenMs` (`null`: not readable, never a verdict of reuse) and the pinned start of the tree record: a pinned start is compared exactly, an unpinned one by the window a spawn can have created it in.
+ * @see ../../../../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts */
+export function readyStageProcessVerdictV1(flight:Readonly<{pid:number;startedMs:number}>,restored:ReadyKnownV1|undefined,seenMs:number|null):"same"|"reused"{
+ if(seenMs===null)return"same";
+ const root=readyPinStageRootV1(flight,[],restored);
+ if(root.startMs!==flight.startedMs)return processIdentityVerdictV1(root,seenMs)==="same"?"same":"reused";
+ return pinSpawnedProcessV1({pid:flight.pid,spawnedMs:flight.startedMs},seenMs)!==undefined?"same":"reused";
 }
 
 /** 🪪️ Confirms a later birth for the same PID independently in both process observations. */
@@ -116,7 +133,7 @@ export function readyProgressKeyV1(lines:readonly string[],patterns:readonly str
  return null;
 }
 
-/** 🧽️ A line of a stage log with its elapsed-seconds counters, clocks and timestamps replaced by `#` (`normalisePatterns` of the schema), a carriage return dropped and a Windows path (drive letter, backslashes or doubled backslashes of JSON, any case) spelled `c:/users/x`, so a line that only counts seconds or only spells a path the Windows way is the same line every time; a counter such as `1957 of 2927` stays. A pure function.
+/** 🧽️ A line of a stage log with its elapsed-seconds counters, clocks and timestamps replaced by `#` (`normalisePatterns` of the schema), a carriage return dropped and a Windows path (drive letter, backslashes or doubled backslashes of JSON, any case) spelled `c:/users/x`, so a line that only counts seconds or only spells a path the Windows way is the same line every time; a counter such as `1957 of 2927` stays. A wait in the host capacity gate is one line whatever the gate reports (available megabytes, grants, queue, reason): a stage queued there computes nothing, so its changing facts are no progress, the stall rule ends a wait that never gets its grant, and the restart runs on the current code (a slice read queued for 7 h behind its own session's grants on old gate code looked alive forever). A pure function.
  * @see ./🧪️tests/🐍️.py */
 export function readyNormaliseLineV1(line:string,patterns:readonly string[]=P.normalisePatterns):string{
  let text=line.replace(/\r/gu,"").trim().replace(/\b[A-Za-z]:[\\/][^\s"',;)\]]*/gu,path=>path.replace(/[\\/]+/gu,"/").toLowerCase());
@@ -159,6 +176,13 @@ export function readyGrantWaitV1(report:unknown,nowMs:number,policy:typeof P=P):
  if(typeof row?.atMs!=="number"||nowMs-row.atMs>policy.grantWaitFreshMilliseconds)return false;
  const waiting=row.sources?.owners?.presence?.mappingQueue?.waiting;
  return Array.isArray(waiting)&&waiting.some(wait=>typeof wait?.waitedMilliseconds==="number"&&wait.waitedMilliseconds<policy.grantWaitMaximumMilliseconds);
+}
+
+/** 🔇️ Whether the read of the stage went silent: its own slice report of this attempt (written at `atMs`, not before `startedMs`) is not the last one of a finished read (`reason` "end") and is older than `sliceSilentMilliseconds`. The slice worker writes it every 30 s from its event loop, so a report that old means a loop that no longer turns (a call blocked in the kernel, a stopped process, a wait that never settles), whatever the processor time of the tree or the progress line the host repeats from the last phase say; such a read is a stall when the stage log also showed no new line for the same window (the supervisor checks that beside it: a worker whose loop turns rarely but whose `taken` still moves is not one). A pure function.
+ * @see ./🧪️tests/🔇️slice-silent */
+export function readySliceSilentV1(report:unknown,nowMs:number,startedMs:number,policy:typeof P=P):boolean{
+ const row=report as {atMs?:unknown;reason?:unknown}|null|undefined;
+ return typeof row?.atMs==="number"&&row.atMs>=startedMs&&row.reason!=="end"&&nowMs-row.atMs>=policy.sliceSilentMilliseconds;
 }
 
 /** 🌱️ The graph counter tracker of one stage run: `observe` answers whether the newest counter of `graphCounterPatterns` (`taken 461 of 600`) is above the highest one seen, so a read whose text repeats after normalisation but whose server counter advanced is progress; a counter that repeats or falls back is none. A pure function of the lines seen so far.
@@ -393,18 +417,11 @@ export function readyWindowsTreeSampleV1(input:Readonly<{table:readonly ReadyPro
  return{checkpoint:{rootBirth,cpu},progress:ticks>=input.minimumCpuMilliseconds*10000,megabytes:complete&&Number.isSafeInteger(bytes)?Math.round(bytes/1048576):null,changed};
 }
 
-/** 🕰️ Reads one lease owner's absolute process birth, or null when it could not be observed. */
+/** 🕰️ Reads one lease owner's absolute process birth, or null when it could not be observed: the shared process identity read (Windows `Win32_Process.CreationDate`, elsewhere `ps -o lstart=`).
+ * @see ../../../../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts */
 export function readyProcessStartSyncV1(pid:number,platform:NodeJS.Platform=process.platform):number|null{
- try{
-  const id=Math.trunc(pid);
-  if(!Number.isInteger(id)||id<1)return null;
-  if(platform==="win32"){
-   const run=spawnSync("powershell.exe",["-NoProfile","-NonInteractive","-Command",`([DateTimeOffset](Get-CimInstance Win32_Process -Filter 'ProcessId=${id}').CreationDate).ToUnixTimeMilliseconds()`],{encoding:"utf8",windowsHide:true,timeout:15000}),value=Number(run.stdout.trim());
-   return Number.isFinite(value)&&value>0?value:null;
-  }
-  const run=spawnSync("ps",["-p",String(id),"-o",posixProcessColumns],{encoding:"utf8",timeout:5000,env:posixProcessEnvironment()});
-  return run.status===0?readyParseUnixTableV1(run.stdout).find(row=>row.pid===id)?.startMs??null:null;
- }catch{return null;}
+ const read=readProcessStartV1(pid,platform);
+ return typeof read==="number"?read:null;
 }
 
 /** 🖥️ The command that prints the process table on this platform. */

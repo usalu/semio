@@ -1,0 +1,17 @@
+[
+ {
+  "name": "turns",
+  "old": "const totalArea = (rings: readonly (readonly Point[])[]): number => rings.reduce((sum, ring) => sum + area(ring), 0);",
+  "new": "/** 🧭️ The angles (radians) the slab union is repeated at when it does not close in the frame it was given. The slabs are vertical: an edge that stands within nanometres of the vertical (the face of a prism swept along the up axis of the view, a profile seen along itself) has a slope of 10⁸ and more, which the ordinates of a slab cannot carry; turned by one of these angles the same polygons have no such edge. */\nconst SLAB_TURNS: readonly number[] = [0.3, 0.7, 1.1, 1.9];\n\n/** 🔄️ The {@link slabUnion} of the polygons turned by `angle` about the origin, with its rings turned back: the same union, built with slabs that stand at that angle to the polygons. */\nfunction turnedSlabUnion(polygons: readonly (readonly Point[])[], angle: number): { readonly rings: Point[][]; readonly area: number } {\n  const c = portable.cos(angle);\n  const s = portable.sin(angle);\n  const exact = slabUnion(polygons.map((ring) => ring.map((p) => ({ x: c * p.x - s * p.y, y: s * p.x + c * p.y }))));\n  return { rings: exact.rings.map((ring) => ring.map((p) => ({ x: c * p.x + s * p.y, y: c * p.y - s * p.x }))), area: exact.area };\n}\n\nconst totalArea = (rings: readonly (readonly Point[])[]): number => rings.reduce((sum, ring) => sum + area(ring), 0);"
+ },
+ {
+  "name": "fallback",
+  "old": "  for (const candidate of [polygons, near]) {\n    const exact = slabUnion(candidate);\n    if (exact.rings.length > 0 && Math.abs(totalArea(exact.rings) - exact.area) <= 1e-4 * exact.area + 1e-9) return exact.rings;\n  }\n  throw new PolygonUnionError",
+  "new": "  const closes = (exact: { readonly rings: Point[][]; readonly area: number }): boolean => exact.rings.length > 0 && Math.abs(totalArea(exact.rings) - exact.area) <= 1e-4 * exact.area + 1e-9;\n  for (const candidate of [polygons, near]) {\n    const exact = slabUnion(candidate);\n    if (closes(exact)) return exact.rings;\n  }\n  for (const angle of SLAB_TURNS)\n    for (const candidate of [polygons, near]) {\n      const exact = turnedSlabUnion(candidate, angle);\n      if (closes(exact)) return exact.rings;\n    }\n  throw new PolygonUnionError"
+ },
+ {
+  "name": "doc",
+  "old": "then the exact slab union takes over (on the polygons as given, then on the joined ones), and if that cannot close a boundary either a {@link PolygonUnionError} is thrown",
+  "new": "then the exact slab union takes over (on the polygons as given, then on the joined ones, then on both turned by each of {@link SLAB_TURNS}, since edges within nanometres of the vertical defeat vertical slabs), and if that cannot close a boundary either a {@link PolygonUnionError} is thrown"
+ }
+]

@@ -169,14 +169,16 @@ export function toolJobFullOperationBounded(source: string): boolean {
   );
 }
 
-/** 🔒️ Requires document freshness before either resuming or beginning one retained publication turn. */
+/** 🔒️ Requires document freshness before Store work and an operation-local fault for stale owners. */
 export function toolJobPublicationFreshnessBeforeEveryTurn(source: string): boolean {
   const publisherStart = source.lastIndexOf("fn publish_mounted_typed_operation_unit");
   const publisherOpen = publisherStart < 0 ? -1 : source.indexOf("{", publisherStart);
   const publisher = publisherOpen < 0 ? undefined : toolJobRustBlock(source, publisherOpen);
   if (!publisher) return false;
-  const directFreshness = publisher.body.indexOf("validate_commit(&mounted.operation");
-  const helperFreshness = publisher.body.indexOf("typed_operation_document_is_fresh(&mounted.operation");
+  const freshness = publisher.body.indexOf("if !typed_operation_document_is_fresh(&mounted.operation");
+  const stale = freshness < 0 ? undefined : toolJobRustBlock(publisher.body, publisher.body.indexOf("{", freshness));
+  const cancellation = publisher.body.indexOf("if mounted.reject_cancelled_publication()?");
+  const cancelled = cancellation < 0 ? undefined : toolJobRustBlock(publisher.body, publisher.body.indexOf("{", cancellation));
   const helperStart = source.lastIndexOf("fn typed_operation_document_is_fresh");
   const helperOpen = helperStart < 0 ? -1 : source.indexOf("{", helperStart);
   const helper = helperOpen < 0 ? undefined : toolJobRustBlock(source, helperOpen);
@@ -186,7 +188,6 @@ export function toolJobPublicationFreshnessBeforeEveryTurn(source: string): bool
     helper.body.includes("validate_commit(operation") &&
     helper.body.includes("Generation(live_generation)") &&
     helper.body.includes("CommitValidation::Accepted");
-  const freshness = directFreshness >= 0 ? directFreshness : helperExact ? helperFreshness : -1;
   const pendingPublication = publisher.body.indexOf("if let Some(pending) = mounted.pending_artifact_publication.as_mut()");
   const beginTurns = [
     "self.stores.store.admit_apply_batch",
@@ -200,12 +201,23 @@ export function toolJobPublicationFreshnessBeforeEveryTurn(source: string): bool
     .map((needle) => publisher.body.indexOf(needle))
     .filter((index) => index >= 0);
   return (
-    freshness >= 0 &&
+    helperExact &&
+    !!stale &&
+    !!cancelled &&
+    cancellation < freshness &&
+    cancelled.body.includes("mounted.reserve_cancelled_result(cx)?") &&
+    cancelled.body.includes("self.stores.handoff_mounted_durable_publication(mounted)?") &&
+    stale.body.includes("cx.with_original_retirement(") &&
+    stale.body.includes("close_original_retained_step(") &&
+    stale.body.includes("mounted.terminal_fault = Some(") &&
+    stale.body.includes('"interactive-job.stale"') &&
+    stale.body.includes('mounted.cancellation_lease.as_ref().expect("claimed publication lease").cancel()') &&
+    stale.body.trim().endsWith("return Ok(());") &&
+    !stale.body.includes("return Err(") &&
     pendingPublication >= 0 &&
     beginTurns.length > 0 &&
     freshness < pendingPublication &&
-    beginTurns.every((begin) => freshness < begin) &&
-    (publisher.body.includes("mounted.canonical_revision != live_revision") || helperExact)
+    beginTurns.every((begin) => freshness < begin)
   );
 }
 

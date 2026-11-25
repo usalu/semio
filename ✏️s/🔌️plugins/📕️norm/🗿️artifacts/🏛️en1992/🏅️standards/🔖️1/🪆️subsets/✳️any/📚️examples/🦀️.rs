@@ -34,4 +34,7 @@ pub mod failing_under_reinforced;
 mod failing_under_reinforced_example_tests;
 #[path = "🛢️liquid-retaining-fem-anchor/🦀️.rs"]
 pub mod liquid_retaining_fem_anchor;
+#[cfg(test)]
+#[path = "🧪️tests/🗜️pack-twins/🦀️.rs"]
+mod pack_twins;
 //#endregion 🪢️Mounts

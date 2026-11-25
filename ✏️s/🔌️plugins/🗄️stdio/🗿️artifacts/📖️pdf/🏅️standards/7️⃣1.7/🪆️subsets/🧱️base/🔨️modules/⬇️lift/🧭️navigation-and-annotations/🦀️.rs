@@ -10,7 +10,7 @@ use crate::standards::v1_7::subsets::base::modules::lift::*;
 //#region 🔖️Navigation
 impl Lifter<'_> {
     /// 🎯 Lifts a destination: an explicit array, a name/string, or a dictionary with `/D`.
-    pub(crate) fn lift_destination(&mut self, value: &PdfObject) -> Option<PdfDestination> {
+    pub fn lift_destination(&mut self, value: &PdfObject) -> Option<PdfDestination> {
         let resolved = self.source.deref(value);
         match resolved {
             PdfObject::Name(name) => Some(PdfDestination::Named { name }),
@@ -177,21 +177,27 @@ impl Lifter<'_> {
                 Some(child) => self.lift_outline_siblings(&child, visited, depth + 1),
                 None => Vec::new(),
             };
-            let flags = dict_i64(&dict, "F").unwrap_or(0);
-            items.push(PdfOutlineItem {
-                title: self.text(dict_get(&dict, "Title")).unwrap_or_default(),
-                destination: dict_get(&dict, "Dest").cloned().and_then(|d| self.lift_destination(&d)),
-                action: dict_get(&dict, "A").cloned().and_then(|a| self.lift_action(&a)),
-                color: array_n::<3>(dict_get(&dict, "C")),
-                italic: flags & 1 != 0,
-                bold: flags & 2 != 0,
-                open: dict_i64(&dict, "Count").unwrap_or(0) > 0,
-                children,
-                extra: extra_entries(&dict, &["Title", "Parent", "Prev", "Next", "First", "Last", "Count", "Dest", "A", "SE", "C", "F"]),
-            });
+            let item = self.lift_outline_item(&dict, children);
+            items.push(item);
             cursor = dict_get(&dict, "Next").cloned();
         }
         items
+    }
+
+    /// 🔖️ Lifts one outline item dictionary over its already lifted children.
+    pub fn lift_outline_item(&mut self, dict: &[PdfDictEntry], children: Vec<PdfOutlineItem>) -> PdfOutlineItem {
+        let flags = dict_i64(dict, "F").unwrap_or(0);
+        PdfOutlineItem {
+            title: self.text(dict_get(dict, "Title")).unwrap_or_default(),
+            destination: dict_get(dict, "Dest").cloned().and_then(|d| self.lift_destination(&d)),
+            action: dict_get(dict, "A").cloned().and_then(|a| self.lift_action(&a)),
+            color: array_n::<3>(dict_get(dict, "C")),
+            italic: flags & 1 != 0,
+            bold: flags & 2 != 0,
+            open: dict_i64(dict, "Count").unwrap_or(0) > 0,
+            children,
+            extra: extra_entries(dict, &["Title", "Parent", "Prev", "Next", "First", "Last", "Count", "Dest", "A", "SE", "C", "F"]),
+        }
     }
 
     /// 🌳 Flattens a name tree (§7.9.6) into (key, value) pairs in tree order.
@@ -267,7 +273,7 @@ impl Lifter<'_> {
         }
     }
 
-    pub(crate) fn lift_annotation(&mut self, dict: &[PdfDictEntry]) -> PdfAnnotation {
+    pub fn lift_annotation(&mut self, dict: &[PdfDictEntry]) -> PdfAnnotation {
         let subtype = dict_name(dict, "Subtype").unwrap_or("").to_string();
         let rect = rect_of(dict_get(dict, "Rect")).unwrap_or([0.0; 4]);
         let quad_points = |lifter: &mut Self| lifter.source.deref(dict_get(dict, "QuadPoints").unwrap_or(&PdfObject::Null)).as_array().map(|items| items.iter().filter_map(PdfObject::as_f64).collect()).unwrap_or_default();

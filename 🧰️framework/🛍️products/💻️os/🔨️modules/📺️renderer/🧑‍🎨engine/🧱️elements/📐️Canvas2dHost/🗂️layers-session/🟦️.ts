@@ -1,19 +1,25 @@
 /** 🗂️ Canvas2dHost JSON layers session: the class that interprets a `layersJson` scene into the retained canvas, its hit testing, selection and drawing. */
 import { drawSceneNode, paintCompositedLayers, isDecodedImage } from "../🎨️paint/🟦️.ts";
 import { type WasmCanvasSession, type CanvasInputModifiers } from "@semio-tech/framework/canvas/react-renderer";
-import { fitCanvasFrame, type Canvas2dFraming, type PinchStep } from "@semio-tech/framework";
+import { fitCanvasFrame, type Canvas2dFraming, type MergeMode, type PinchStep } from "@semio-tech/framework";
 import { type CanvasCamera, canvasPinchCamera, screenToWorldLogical, wheelCameraAtScreen } from "../📷️camera-math/🟦️.ts";
 import { canvasLayerDisplayLabel, type CanvasLayerRecord, drawBoundsLayer, drawInfiniteCanvasGrid, layerBounds, layerColorCss, readCanvas2dSurfaceColors } from "../🖍️layer-paint/🟦️.ts";
-import { type CanvasPointerDispatch, type CanvasPointerExtra, type CanvasPointerGestureLane, type CanvasPointerSample, createCanvasPointerGestureLane, pointerSample } from "../👆️pointer-lane/🟦️.ts";
+import { type CanvasPointerDispatch, type CanvasPointerExtra, type CanvasPointerGestureLane, type CanvasPointerSample, createCanvasPointerGestureLane, modifiersForSelectionMode, pointerSample } from "../👆️pointer-lane/🟦️.ts";
 
 //#region 🔖️Canvas2dHost
 //#region JsonLayersCanvasSession
+const sameCamera = (left: CanvasCamera, right: CanvasCamera): boolean => left.x === right.x && left.y === right.y && left.zoom === right.zoom;
+
+/** 🖱️ Pixels a primary press may move before it becomes a pan rather than a pick. */
+const CANVAS_PAN_DRAG_THRESHOLD_PX = 4;
+
 export class JsonLayersCanvasSession implements WasmCanvasSession {
   private canvas: HTMLCanvasElement | null = null;
   private ctx: CanvasRenderingContext2D | null = null;
   private logicalWidth = 0;
   private logicalHeight = 0;
-  private framingRevision: number | undefined;
+  /** 🖼️ The last framing this session applied; it follows the canvas size until the camera moves off it. */
+  private framed: { readonly request: Canvas2dFraming; readonly camera: CanvasCamera } | null = null;
   private dpr = 1;
   private readonly imageCache = new Map<string, HTMLImageElement>();
   private readonly compositeSurfaces:CanvasRenderingContext2D[]=[];
@@ -21,6 +27,11 @@ export class JsonLayersCanvasSession implements WasmCanvasSession {
   private panStart = { x: 0, y: 0 };
   private panCameraStart = { x: 0, y: 0 };
   private activeUtility = "selectDirect";
+  private panButton = -1;
+  private leftDragPans = false;
+  private rightDragPans = false;
+  private pendingLeft: { readonly x: number; readonly y: number; readonly modifiers?: CanvasInputModifiers } | null = null;
+  private rightDragged = false;
   /** 🖱️ Per session (= per mounted host and per `dispatch` identity, since `sessionFactory` is memoised
    * on it): the gesture lane every non-pan pointer event goes through. */
   private readonly lane: CanvasPointerGestureLane | null;
@@ -39,6 +50,7 @@ export class JsonLayersCanvasSession implements WasmCanvasSession {
     onCameraChange: (camera: CanvasCamera) => void,
     onPointer?: CanvasPointerDispatch,
     private readonly readFraming?: () => Canvas2dFraming | null | undefined,
+    private readonly readSelectionMode?: () => MergeMode | undefined,
   ) {
     this.readLayersJson = readLayersJson;
     this.camera = camera;
@@ -81,11 +93,14 @@ export class JsonLayersCanvasSession implements WasmCanvasSession {
   }
 
   private syncFraming(): void {
-    const request = this.readFraming?.();
-    if (!request || request.revision === this.framingRevision) return;
-    const camera = fitCanvasFrame(request,this.logicalWidth,this.logicalHeight);
-    if (!camera) return;
-    this.framingRevision = request.revision;
+    const live = this.readFraming?.();
+    const fresh = live && live.revision !== this.framed?.request.revision ? live : null;
+    const request = fresh ?? (this.framed && sameCamera(this.camera, this.framed.camera) ? this.framed.request : null);
+    const camera = request && fitCanvasFrame(request, this.logicalWidth, this.logicalHeight);
+    if (!request || !camera) return;
+    const publish = this.framed === null || !sameCamera(camera, this.camera);
+    this.framed = { request, camera };
+    if (!publish) return;
     this.camera = camera;
     this.onCameraChange(camera);
   }
@@ -139,6 +154,10 @@ export class JsonLayersCanvasSession implements WasmCanvasSession {
     const records = this.parseLayers();
     const meta = records.find((record) => record.role === "meta");
     if (meta?.utility) this.activeUtility = meta.utility;
+    if (meta) {
+      this.leftDragPans = meta.leftDragPans === true;
+      this.rightDragPans = meta.rightDragPans === true;
+    }
     const layers = records.filter((record) => record.role !== "meta");
     ctx.save();
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -223,35 +242,64 @@ export class JsonLayersCanvasSession implements WasmCanvasSession {
 
   /** 🧭️ One sample at `(x, y)`, its world position read under the camera the session holds now. */
   private sample(x: number, y: number, modifiers?: CanvasInputModifiers): CanvasPointerSample {
-    return pointerSample(x,y,modifiers,screenToWorldLogical(x,y,this.camera,this.logicalWidth,this.logicalHeight));
+    return pointerSample(x,y,modifiersForSelectionMode(modifiers,this.readSelectionMode?.()),screenToWorldLogical(x,y,this.camera,this.logicalWidth,this.logicalHeight));
   }
 
-  pointerDown(x: number, y: number, button: number, _extend: boolean, modifiers?: CanvasInputModifiers): void {
-    this.cancelledGestureAwaitingDown = false;
-    if (this.activeUtility === "transform" && button !== 1) {
-      return;
-    }
-    if (button === 1 || this.activeUtility === "transformMove") {
-      this.panning = true;
-      this.panStart = { x, y };
-      this.panCameraStart = { x: this.camera.x, y: this.camera.y };
-      return;
-    }
+  /** 🖱️ Whether a right drag panned since the last call — the context menu that trails it is swallowed, a plain right click still opens it. */
+  consumeRightDragged(): boolean {
+    const dragged = this.rightDragged;
+    this.rightDragged = false;
+    return dragged;
+  }
+
+  private beginPan(x: number, y: number, button: number): void {
+    this.panning = true;
+    this.panButton = button;
+    this.panStart = { x, y };
+    this.panCameraStart = { x: this.camera.x, y: this.camera.y };
+  }
+
+  private beginLane(x: number, y: number, button: number, modifiers?: CanvasInputModifiers): void {
     this.lastSample = this.sample(x,y,modifiers);
     this.gestureCounter += 1;
     this.lane?.begin(this.gestureCounter, this.lastSample, {
       button,
-      shift: modifiers?.shift ?? false,
-      ctrl: modifiers?.ctrl ?? false,
-      meta: modifiers?.meta ?? false,
-      alt: modifiers?.alt ?? false,
+      shift: this.lastSample[2].shift ?? false,
+      ctrl: this.lastSample[2].ctrl ?? false,
+      meta: this.lastSample[2].meta ?? false,
+      alt: this.lastSample[2].alt ?? false,
       width: this.logicalWidth,
       height: this.logicalHeight,
     });
   }
 
+  pointerDown(x: number, y: number, button: number, _extend: boolean, modifiers?: CanvasInputModifiers): void {
+    this.cancelledGestureAwaitingDown = false;
+    this.rightDragged = false;
+    this.pendingLeft = null;
+    const rightPans = button === 2 && this.rightDragPans;
+    if (this.activeUtility === "transform" && button !== 1 && !rightPans) {
+      return;
+    }
+    if (button === 1 || rightPans || this.activeUtility === "transformMove") {
+      this.beginPan(x, y, button);
+      return;
+    }
+    if (button === 0 && this.leftDragPans && !(modifiers?.shift || modifiers?.ctrl || modifiers?.meta)) {
+      this.pendingLeft = { x, y, modifiers };
+      return;
+    }
+    this.beginLane(x, y, button, modifiers);
+  }
+
   pointerMove(x: number, y: number, modifiers?: CanvasInputModifiers): void {
+    if (this.pendingLeft) {
+      if (Math.hypot(x - this.pendingLeft.x, y - this.pendingLeft.y) < CANVAS_PAN_DRAG_THRESHOLD_PX) return;
+      this.beginPan(this.pendingLeft.x, this.pendingLeft.y, 0);
+      this.pendingLeft = null;
+    }
     if (this.panning) {
+      if (this.panButton === 2 && Math.hypot(x - this.panStart.x, y - this.panStart.y) >= CANVAS_PAN_DRAG_THRESHOLD_PX) this.rightDragged = true;
       const zoom = this.camera.zoom || 1;
       const next = {
         ...this.camera,
@@ -269,6 +317,11 @@ export class JsonLayersCanvasSession implements WasmCanvasSession {
   }
 
   pointerUp(x: number, y: number, modifiers?: CanvasInputModifiers): void {
+    if (this.pendingLeft) {
+      const press = this.pendingLeft;
+      this.pendingLeft = null;
+      this.beginLane(press.x, press.y, 0, press.modifiers);
+    }
     if (this.panning) {
       this.panning = false;
       return;
@@ -276,10 +329,10 @@ export class JsonLayersCanvasSession implements WasmCanvasSession {
     if (this.cancelledGestureAwaitingDown) return;
     this.lastSample = this.sample(x,y,modifiers);
     const extra: CanvasPointerExtra = {
-      shift: modifiers?.shift ?? false,
-      ctrl: modifiers?.ctrl ?? false,
-      meta: modifiers?.meta ?? false,
-      alt: modifiers?.alt ?? false,
+      shift: this.lastSample[2].shift ?? false,
+      ctrl: this.lastSample[2].ctrl ?? false,
+      meta: this.lastSample[2].meta ?? false,
+      alt: this.lastSample[2].alt ?? false,
       width: this.logicalWidth,
       height: this.logicalHeight,
     };
@@ -294,6 +347,7 @@ export class JsonLayersCanvasSession implements WasmCanvasSession {
    * turns an open gesture into `canvasPointerUp { cancelled: true }`. Outside a gesture this is a no-op —
    * the pre-lane `pointerleave → pointerUp` mapping forged a release here. */
   pointerCancel(): void {
+    this.pendingLeft = null;
     if (this.panning) {
       this.panning = false;
       return;

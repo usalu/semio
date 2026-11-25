@@ -1,7 +1,8 @@
 /* 🏁 The parts of a result, the preferences, the ways to appear, the segmented choice, the leaderboard row and the notices. */
 
 /* 🏁️ The parts of a result. The score with how everyone scored stands beside the badges the run earned where both
-   fit; a task's tables stand beside its figures from 84rem, so a wide screen shows the answer and the crowd at once. */
+   fit; a task's figures stand below its tables over the whole width, where their items lie side by side as tiles, so no
+   column of the card stays empty beside a taller one. */
 .course-summary {
   display: flex;
   flex-wrap: wrap;
@@ -25,13 +26,6 @@
 
 .course-result > * {
   min-inline-size: 0;
-}
-
-@container course-card (min-width: 84rem) {
-  .course-result[data-crowd] {
-    display: grid;
-    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
-  }
 }
 
 /* 🎛️ The preferences: a column of cells, the name of each setting above its choice as wide as the card, so every

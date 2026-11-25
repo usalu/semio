@@ -33,16 +33,8 @@ export function createClosureStoreV1({directory,limits=INFERENCE_LIMITS_V1,readO
   const youngest=Date.now()-limits.closureStoreGraceMilliseconds;
   for(const file of dated.sort((a,b)=>a.time-b.time).slice(0,dated.length-maximum))if(file.time<youngest)await rm(file.path,{force:true});
  };
- const sharedFacts=createBoundedCacheV1({name:"inference:closure-sidecar-facts",maxEntries:limits.closureStoreMaximumLayers,maxBytes:limits.closureSidecarCacheBytes,sizeOf:()=>limits.closureSidecarFactBytes}),sharedMembers=createBoundedCacheV1({name:"inference:closure-sidecar-members",maxEntries:limits.closureStoreMaximumLayers,maxBytes:limits.closureSidecarCacheBytes,sizeOf:list=>limits.closureSidecarWalkBytes*(list.length+8)});
- const sameList=(left,right)=>left.length===right.length&&left.every((item,at)=>item===right[at]);
- const memberSets=new WeakMap(),unionMembers=(digest,mapped)=>{const held=sharedMembers.get(digest);if(held===undefined){sharedMembers.set(digest,mapped);return mapped;}if(held===mapped||sameList(held,mapped))return held;let have=memberSets.get(held);if(have===undefined||have.size!==held.length){have=new Set(held);memberSets.set(held,have);}const extra=mapped.filter(walk=>!have.has(walk));if(extra.length===0)return held;held.push(...extra);for(const walk of extra)have.add(walk);return held;};
- const packSidecar=sidecar=>{const walks=[],index=new Map(),at=walk=>{let found=index.get(walk);if(found===undefined){found=walks.length;walks.push(walk);index.set(walk,found);}return found;};return{...sidecar,members:sidecar.members?.map(list=>list&&list.map(at)),walks};};
- const unpackSidecar=({walks=[],...sidecar},digests)=>{
-  const table=walks.map(intern);
-  const facts=sidecar.facts?.map((fact,at)=>{if(!fact)return fact;const text=JSON.stringify(fact),known=sharedFacts.get(digests[at]);if(known!==undefined&&known.text===text)return known.fact;sharedFacts.set(digests[at],{text,fact});return fact;});
-  const members=sidecar.members?.map((list,at)=>{if(!list)return list;return unionMembers(digests[at],list.map(index=>table[index]));});
-  return{...sidecar,facts,members};
- };
+ const sharedFacts=createBoundedCacheV1({name:"inference:closure-sidecar-facts",maxEntries:limits.closureStoreMaximumLayers,maxBytes:limits.closureSidecarCacheBytes,sizeOf:()=>limits.closureSidecarFactBytes});
+ const unpackSidecar=(sidecar,digests)=>({...sidecar,facts:sidecar.facts?.map((fact,at)=>{if(!fact)return fact;const text=JSON.stringify(fact),known=sharedFacts.get(digests[at]);if(known!==undefined&&known.text===text)return known.fact;sharedFacts.set(digests[at],{text,fact});return fact;})});
  const layerIndex=createLayerIndexV1({directory,limits}),stampCache=createBoundedCacheV1({name:"inference:closure-stamps",maxEntries:limits.closureStampCacheEntries,maxBytes:limits.closureStampCacheBytes,sizeOf:held=>limits.closureStampItemBytes*(held.witness.paths.length+held.witness.typed.length+held.witness.live.length+8)});
  const layerBytesSync=digest=>{
   try{const bytes=brotliDecompressSync(readFileSync(layerPath(digest)),{maxOutputLength:MAXIMUM_RECORD_BYTES});if(bytes.length<2||bytes[0]!==91||bytes[bytes.length-1]!==93||createHash("sha256").update(bytes).digest("hex")!==digest)return undefined;return bytes;}catch{return undefined;}
@@ -78,7 +70,7 @@ export function createClosureStoreV1({directory,limits=INFERENCE_LIMITS_V1,readO
    let image=value!==null&&typeof value==="object"?valueImages.get(value):undefined,valueText;
    if(!image){valueText=JSON.stringify(value);image={digest:sha(valueText)};if(value!==null&&typeof value==="object")valueImages.set(value,image);}
    if(!trusted(image.digest,valuePath(image.digest))){if(!await reuse(valuePath(image.digest)))await place(valuePath(image.digest),valueText??JSON.stringify(value));written.set(image.digest,Date.now());}
-   const rowsText=listText(rows),text='{"version":3,"id":'+JSON.stringify(id)+',"digest":"'+sha(rowsText+digests.join(",")+image.digest)+'","recipe":'+JSON.stringify(recipe)+',"valueDigest":"'+image.digest+'","rows":'+rowsText+',"layers":'+JSON.stringify(digests)+',"sidecar":'+JSON.stringify(sidecar&&packSidecar(sidecar))+"}";
+   const rowsText=listText(rows),text='{"version":3,"id":'+JSON.stringify(id)+',"digest":"'+sha(rowsText+digests.join(",")+image.digest)+'","recipe":'+JSON.stringify(recipe)+',"valueDigest":"'+image.digest+'","rows":'+rowsText+',"layers":'+JSON.stringify(digests)+',"sidecar":'+JSON.stringify(sidecar)+"}";
    await place(entryPath(id),text);
    pruned??=collect().catch(()=>undefined).then(()=>Promise.all([sweep(entries,limits.closureStoreMaximumEntries),sweep(layers,limits.closureStoreMaximumLayers),sweep(values,limits.closureStoreMaximumValues),sweep(stamps,limits.closureStoreMaximumEntries)]));
    return{bytes:text.length+8*digests.length,digests,digest:sha(rowsText+digests.join(",")+image.digest)};

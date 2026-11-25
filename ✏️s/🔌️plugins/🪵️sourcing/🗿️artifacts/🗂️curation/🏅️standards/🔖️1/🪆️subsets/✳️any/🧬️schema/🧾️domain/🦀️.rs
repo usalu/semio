@@ -250,7 +250,7 @@ pub fn kind_copy_instances_json(kind: &ObjectKind, copy: usize, origin: [f64; 3]
     let stem = if copy == 0 { kind.id.clone() } else { format!("{}~{copy}", kind.id) };
     let Some(parts) = box_parts(&kind.geometry) else {
         let mesh_id = kind_world_mesh_id(kind);
-        return vec![instance_json(&stem, &mesh_id, &kind.name, origin, [scale; 3], selected)];
+        return vec![instance_json(&stem, &kind.id, &mesh_id, &kind.name, origin, [scale; 3], selected)];
     };
     let single = parts.len() == 1;
     parts
@@ -259,14 +259,15 @@ pub fn kind_copy_instances_json(kind: &ObjectKind, copy: usize, origin: [f64; 3]
         .map(|(index, (center, size))| {
             let id = if single { stem.clone() } else { format!("{stem}#{index}") };
             let position = [origin[0] + center[0] * scale, origin[1] + center[1] * scale, origin[2] + center[2] * scale];
-            instance_json(&id, SOURCING_UNIT_BOX_MESH_ID, &kind.name, position, [size[0] * scale, size[1] * scale, size[2] * scale], selected)
+            instance_json(&id, &kind.id, SOURCING_UNIT_BOX_MESH_ID, &kind.name, position, [size[0] * scale, size[1] * scale, size[2] * scale], selected)
         })
         .collect()
 }
 
-fn instance_json(id: &str, mesh_id: &str, label: &str, position: [f64; 3], scale: [f64; 3], selected: bool) -> semio_framework_value::DslValue {
+fn instance_json(id: &str, interaction_id: &str, mesh_id: &str, label: &str, position: [f64; 3], scale: [f64; 3], selected: bool) -> semio_framework_value::DslValue {
     semio_framework_value::DslValue::object([
         ("id".to_string(), semio_framework_value::DslValue::String(id.to_string())),
+        ("interactionId".to_string(), semio_framework_value::DslValue::String(interaction_id.to_string())),
         ("meshId".to_string(), semio_framework_value::DslValue::String(mesh_id.to_string())),
         ("position".to_string(), semio_framework_value::ToValue::to_value(&position)),
         ("rotation".to_string(), semio_framework_value::ToValue::to_value(&[0.0, 0.0, 0.0, 1.0])),
@@ -279,7 +280,7 @@ fn instance_json(id: &str, mesh_id: &str, label: &str, position: [f64; 3], scale
 
 /// 🔢️ Appends unit-box voxels spelling `count` in a 3×5 dot matrix beside `anchor` — used by the
 /// sourcing grid's representative-with-count display mode.
-pub fn append_grid_count_glyph_instances(instances: &mut Vec<semio_framework_value::DslValue>, object_id: &str, count: u32, anchor: [f64; 3], cell: f64) {
+pub fn append_grid_count_glyph_instances(instances: &mut Vec<semio_framework_value::DslValue>, object_id: &str, count: u32, anchor: [f64; 3], cell: f64, selected: bool) {
     if count == 0 {
         return;
     }
@@ -299,7 +300,7 @@ pub fn append_grid_count_glyph_instances(instances: &mut Vec<semio_framework_val
                 }
                 let position = [origin_x + (col as f64 - 1.0) * pitch, glyph_y + (2.0 - row as f64) * pitch, anchor[2]];
                 let id = format!("{object_id}#count-glyph-{digit_index}-{row}-{col}");
-                instances.push(instance_json(&id, SOURCING_UNIT_BOX_MESH_ID, "", position, [dot, dot, dot], false));
+                instances.push(instance_json(&id, object_id, SOURCING_UNIT_BOX_MESH_ID, "", position, [dot, dot, dot], selected));
             }
         }
     }
@@ -748,6 +749,53 @@ pub fn grid_scale(recipe: &GeometryRecipe, cell: f64) -> f64 {
     }
 }
 //#endregion 🔖️GridLayout
+
+//#region 🔖️CatalogLabels
+/// 🗣️ `(id, English, German)` rows of the module labels the sourcing catalogue ships; an unlisted module id falls back to the label its contribution carries.
+const CATALOG_MODULE_LABELS: [(&str, &str, &str); 4] = [("beams", "Beams", "Balken"), ("windows", "Windows", "Fenster"), ("slabs", "Slabs", "Decken"), ("reuse", "Reuse", "Wiederverwendung")];
+
+/// 🗣️ `(typology segment id, English, German)` rows; an unlisted segment id falls back to the label its module tree carries.
+const CATALOG_TYPOLOGY_LABELS: [(&str, &str, &str); 17] = [
+    ("beams", "Beams", "Balken"), ("solid-timber", "Solid Timber", "Massivholz"), ("glulam", "Glulam", "Brettschichtholz"), ("kvh", "KVH", "KVH"), ("steel", "Steel", "Stahl"), ("ipe", "IPE", "IPE"), ("hea", "HEA", "HEA"),
+    ("windows", "Windows", "Fenster"), ("casement", "Casement", "Drehflügel"), ("fixed", "Fixed", "Festverglasung"), ("tilt-turn", "Tilt & Turn", "Dreh-Kipp"),
+    ("slabs", "Slabs", "Decken"), ("concrete", "Concrete", "Beton"), ("clt", "CLT", "BSP"), ("hollow-core", "Hollow Core", "Hohlkörper"), ("reuse", "Reuse", "Wiederverwendung"), ("forest", "Forest", "Wald"),
+];
+
+/// 🗣️ `(kind id, English, German)` rows of the demo stock names; an unlisted kind id keeps the name its document carries.
+const CATALOG_KIND_NAMES: [(&str, &str, &str); 12] = [
+    ("beam-glulam-gl24h", "Glulam GL24h 200×400", "Brettschichtholz GL24h 200×400"), ("beam-kvh-c24", "KVH C24 100×200", "KVH C24 100×200"), ("beam-steel-ipe200", "Steel IPE 200", "Stahl IPE 200"), ("beam-steel-hea160", "Steel HEA 160", "Stahl HEA 160"),
+    ("window-casement-100x120", "Casement Window 100×120", "Drehflügelfenster 100×120"), ("window-fixed-150x150", "Fixed Window 150×150", "Festverglasung 150×150"), ("window-tilt-turn-120x140", "Tilt & Turn Window 120×140", "Dreh-Kipp-Fenster 120×140"),
+    ("slab-concrete-240", "Concrete Slab 240mm", "Betondecke 240 mm"), ("slab-clt-160", "CLT Slab 160mm", "BSP-Decke 160 mm"), ("slab-hollow-core-265", "Hollow Core Slab 265mm", "Hohlkörperdecke 265 mm"),
+    ("hexagonal-cut-concrete-forest-left", "Hexagonal Cut Concrete Forest Left", "Sechseckig geschnittener Betonwald links"), ("hexagonal-cut-concrete-forest-right", "Hexagonal Cut Concrete Forest Right", "Sechseckig geschnittener Betonwald rechts"),
+];
+
+fn catalog_row(table: &[(&'static str, &'static str, &'static str)], id: &str, locale: semio_plugin::Locale) -> Option<&'static str> {
+    table.iter().find(|row| row.0 == id).map(|row| match locale {
+        semio_plugin::Locale::En => row.1,
+        semio_plugin::Locale::De => row.2,
+    })
+}
+
+/// 🗣️ The module's display label in `locale`, or `fallback` for a module the catalogue ships no row for.
+pub fn catalog_module_label(module_id: &str, fallback: &str, locale: semio_plugin::Locale) -> String {
+    catalog_row(&CATALOG_MODULE_LABELS, module_id, locale).unwrap_or(fallback).to_string()
+}
+
+/// 🗣️ The typology segment's display label in `locale`, or `fallback` for a segment the catalogue ships no row for.
+pub fn catalog_typology_label(segment_id: &str, fallback: &str, locale: semio_plugin::Locale) -> String {
+    catalog_row(&CATALOG_TYPOLOGY_LABELS, segment_id, locale).unwrap_or(fallback).to_string()
+}
+
+/// 🗣️ The kind's display name in `locale`, or the name its document carries for a kind the catalogue ships no row for.
+pub fn catalog_kind_name(kind: &ObjectKind, locale: semio_plugin::Locale) -> String {
+    catalog_row(&CATALOG_KIND_NAMES, &kind.id, locale).unwrap_or(&kind.name).to_string()
+}
+
+/// 🗣️ The kind's typology path as one localized `A / B / C` text.
+pub fn catalog_typology_path(kind: &ObjectKind, locale: semio_plugin::Locale) -> String {
+    kind.typology_path.iter().map(|segment| catalog_typology_label(segment, segment, locale)).collect::<Vec<_>>().join(" / ")
+}
+//#endregion 🔖️CatalogLabels
 
 //#region 🔖️Fixtures
 /// 🧩️ The canonical demo-stock catalogue — every built-in module's demo kinds, in module-registration

@@ -13,20 +13,104 @@
    "de": "Eine gebrauchte 7-kg-Frontlader-Waschmaschine der verbreiteten deutschen Mittelklasse der Jahre 2005 bis 2015, wie ein Gebrauchtwarenkaufhaus sie aus einer Haushaltsauflösung übernimmt: ein weiß emailliertes Stahlgehäuse von 595 mm Breite, 540 mm Tiefe und 805 mm Höhe auf vier Schraubfüßen, eine 25 mm starke beschichtete Arbeitsplatte, die Bedienblende mit der Waschmittelschublade oben links und dem Programmwahlknopf rechts und die Bullaugentür von 340 mm mit ihrer Glasschüssel. Sie wurde geleert, entwässert und abgewischt, die drei Transportsicherungen sind für den Transport wieder in die Rückwand geschraubt, Zulauf- und Ablaufschlauch und das Netzkabel sind aufgerollt und auf die Rückseite geklebt, und die Tür ist zugeklebt. Ihr Gebrauch hinterließ Kalkkrusten in der Türmanschette, vergilbten und zerkratzten Lack, eine Delle und Rost an der unteren vorderen Ecke, Waschmittelreste an der Schublade, eine abgeplatzte Ecke der Arbeitsplatte, Tassenränder und die Reste des Energielabels. Sie steht auf einer EPAL-Halbpalette (800 x 600 mm), wird von zwei Personen nach hinten gekippt getragen, während die Palette stehen bleibt, und läuft wieder in einem Hauswirtschaftsraum das Baumwollprogramm 60 C: Die Heizung erwärmt das Wasser, die Trommel wendet und schleudert zum Schluss."
   },
   "tags": [
-   "used",
-   "household",
-   "second-hand",
-   "utility",
-   "bathroom",
-   "appliance",
-   "washing-machine",
-   "front-loader",
-   "laundry",
-   "enamelled-steel",
-   "glass",
-   "pallet",
-   "transit-bolts",
-   "limescale"
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "household",
+    "title": {
+     "en": "household",
+     "de": "Haushalt"
+    }
+   },
+   {
+    "id": "second-hand",
+    "title": {
+     "en": "second-hand",
+     "de": "Second-Hand"
+    }
+   },
+   {
+    "id": "utility",
+    "title": {
+     "en": "utility",
+     "de": "Nutzfahrzeug"
+    }
+   },
+   {
+    "id": "bathroom",
+    "title": {
+     "en": "bathroom",
+     "de": "Badezimmer"
+    }
+   },
+   {
+    "id": "appliance",
+    "title": {
+     "en": "appliance",
+     "de": "Gerät"
+    }
+   },
+   {
+    "id": "washing-machine",
+    "title": {
+     "en": "washing machine",
+     "de": "Waschmaschine"
+    }
+   },
+   {
+    "id": "front-loader",
+    "title": {
+     "en": "front loader",
+     "de": "Frontlader"
+    }
+   },
+   {
+    "id": "laundry",
+    "title": {
+     "en": "laundry",
+     "de": "Wäsche"
+    }
+   },
+   {
+    "id": "enamelled-steel",
+    "title": {
+     "en": "enamelled steel",
+     "de": "emaillierter Stahl"
+    }
+   },
+   {
+    "id": "glass",
+    "title": {
+     "en": "glass",
+     "de": "Glas"
+    }
+   },
+   {
+    "id": "pallet",
+    "title": {
+     "en": "pallet",
+     "de": "Palette"
+    }
+   },
+   {
+    "id": "transit-bolts",
+    "title": {
+     "en": "transit bolts",
+     "de": "Transportsicherungen"
+    }
+   },
+   {
+    "id": "limescale",
+    "title": {
+     "en": "limescale",
+     "de": "Kalk"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage author 22 of the used household objects wave",
@@ -6374,6 +6458,42 @@
        }
       },
       {
+       "id": "cabinet-underside",
+       "bone": "cabinet",
+       "role": "body",
+       "z": 0.9,
+       "filled": true,
+       "tone": 0.88,
+       "region": "cabinet",
+       "material": "enamelled-steel-aged",
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0.538,
+         0
+        ],
+        [
+         0.538,
+         0.02
+        ],
+        [
+         0,
+         0.02
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2955,
+        "z1": 0.2955
+       }
+      },
+      {
        "id": "drum-face",
        "bone": "drum",
        "role": "detail",
@@ -9883,6 +10003,42 @@
         "sweep": "u",
         "z0": 0.584,
         "z1": 0.586
+       }
+      },
+      {
+       "id": "cabinet-underside",
+       "bone": "cabinet",
+       "role": "body",
+       "z": 0.9,
+       "filled": true,
+       "tone": 0.88,
+       "region": "cabinet",
+       "material": "enamelled-steel-aged",
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0.538,
+         0
+        ],
+        [
+         0.538,
+         0.02
+        ],
+        [
+         0,
+         0.02
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.2955,
+        "z1": 0.2955
        }
       },
       {

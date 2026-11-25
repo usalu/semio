@@ -106,7 +106,8 @@ pub fn focus_of_outcome(document: &model::Din4108Snapshot, report: &norm::CheckR
 
 /// 📶️ The governing binding among the checks owned by any of the rows `ids`.
 pub fn binding(document: &model::Din4108Snapshot, report: &norm::CheckReport, ids: &[&str]) -> Option<UtilisationBinding> {
-    projection_kit::binding_where(report, |check| owner_entity(document, check).is_some_and(|owner| ids.contains(&owner.as_str())))
+    projection_kit::governing_where(report, |check| owner_entity(document, check).is_some_and(|owner| ids.contains(&owner.as_str())))
+        .map(projection_kit::binding_of_check)
 }
 
 /// 🧱️ Everything one scene entity needs before sealing.

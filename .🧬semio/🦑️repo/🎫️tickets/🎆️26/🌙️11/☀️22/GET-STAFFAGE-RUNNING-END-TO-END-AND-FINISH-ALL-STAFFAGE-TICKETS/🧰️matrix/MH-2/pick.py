@@ -29,6 +29,7 @@ for op in ops:
     if "to" in op: op["to"] = keep
     if op.get("review") and op["op"] == "plan-revolve" and re.search("foot|toe|shoe", bone): op.update(op="extrude", view="plan")
     elif op.get("review") and op["op"] == "plan-revolve" and not re.search("neck|hand", bone): op["op"] = "plan-prism"
+    if re.search("foot|toe|shoe", bone) and op["op"] in ("front-sweep", "plan-revolve", "plan-prism"): op.update(op="extrude", view="front" if op["op"] == "front-sweep" else "plan")
     op.pop("why", None); op.pop("review", None)
     out.append(op)
 def rule(sc, bone, view):

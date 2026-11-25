@@ -54,7 +54,7 @@ fn oversized_document_stamps_totals_and_never_a_continuation_row() {
     assert!(json.contains("\"total\":40"), "the nested group stamps its own full extent: {json}");
     assert!(!json.contains(".more"), "no continuation row survives: {json}");
     assert!(!json.contains("\"+"), "no `+N` label survives: {json}");
-    assert!(json.matches("drawing-play-layers.shape.").count() <= TREE_WINDOW_DEFAULT_ROWS as usize, "first paint materialises about one viewport: {json}");
+    assert!(json.matches("\"granularity\":\"stroke\"").count() <= TREE_WINDOW_DEFAULT_ROWS as usize, "first paint materialises about one viewport: {json}");
 }
 
 /// 🪟️ Law (b): a container the host closed stamps its total and materialises nothing — at both levels.
@@ -66,9 +66,9 @@ fn closed_containers_stamp_totals_and_materialise_no_children() {
     assert!(json.contains("\"total\":310"), "a closed section still stamps its extent: {json}");
     assert!(!json.contains("drawing-play-layers.add.path"), "a closed section materialises no rows: {json}");
 
-    let nested = window_body(&document, vec![open("drawing-play-layers", 0, 12), TreeWindowRequest { body_key: DRAWING_PLAY_BODY_LAYERS.into(), node_key: nested_path(&["drawing-play-layers", "drawing-play-layers.group.group-0"]), open: Some(false), offset: 0, rows: 0 }]);
+    let nested = window_body(&document, vec![open("drawing-play-layers", 0, 12), TreeWindowRequest { body_key: DRAWING_PLAY_BODY_LAYERS.into(), node_key: nested_path(&["drawing-play-layers", "group-0"]), open: Some(false), offset: 0, rows: 0 }]);
     assert!(nested.contains("\"total\":40"), "a closed group still stamps its extent: {nested}");
-    assert!(!nested.contains("drawing-play-layers.shape.nested-0"), "a closed group materialises no children: {nested}");
+    assert!(!nested.contains("\"nested-0\""), "a closed group materialises no children: {nested}");
 }
 
 /// 🪟️ Law (c): a host window materialises exactly `[offset, offset + rows)`, keyed by the raw row id —
@@ -80,18 +80,18 @@ fn host_windows_materialise_exactly_their_slice() {
     let json = window_body(&document, vec![open("drawing-play-layers", 110, 10)]);
     assert!(json.contains("\"offset\":110"), "the section reports its offset: {json}");
     for index in 100..110 {
-        assert!(json.contains(&format!("drawing-play-layers.shape.shape-{index}\"")), "row {index} is inside the window: {json}");
+        assert!(json.contains(&format!("\"shape-{index}\"")), "row {index} is inside the window: {json}");
     }
-    assert!(!json.contains("drawing-play-layers.shape.shape-99\""), "the row before the window stays out: {json}");
-    assert!(!json.contains("drawing-play-layers.shape.shape-110\""), "the row after the window stays out: {json}");
+    assert!(!json.contains("\"shape-99\""), "the row before the window stays out: {json}");
+    assert!(!json.contains("\"shape-110\""), "the row after the window stays out: {json}");
 
-    let nested = window_body(&document, vec![open("drawing-play-layers", 10, 1), open(&nested_path(&["drawing-play-layers", "drawing-play-layers.group.group-0"]), 12, 4)]);
+    let nested = window_body(&document, vec![open("drawing-play-layers", 10, 1), open(&nested_path(&["drawing-play-layers", "group-0"]), 12, 4)]);
     assert!(nested.contains("\"offset\":12"), "the nested group reports its offset: {nested}");
     for index in 12..16 {
-        assert!(nested.contains(&format!("drawing-play-layers.shape.nested-{index}\"")), "nested child {index} is inside the window: {nested}");
+        assert!(nested.contains(&format!("\"nested-{index}\"")), "nested child {index} is inside the window: {nested}");
     }
-    assert!(!nested.contains("drawing-play-layers.shape.nested-11\""), "the nested child before the window stays out: {nested}");
-    assert!(!nested.contains("drawing-play-layers.shape.nested-16\""), "the nested child after the window stays out: {nested}");
+    assert!(!nested.contains("\"nested-11\""), "the nested child before the window stays out: {nested}");
+    assert!(!nested.contains("\"nested-16\""), "the nested child after the window stays out: {nested}");
 }
 
 /// 🪟️ Law (d): the tree carries exactly ONE `interactionSelect` binding for the `"strokes"` domain and
@@ -105,6 +105,20 @@ fn domain_bound_rows_carry_granularity_and_one_tree_binding() {
     assert_eq!(json.matches("interactionSelect").count(), 1, "exactly one tree-level pick binding exists: {json}");
     assert_eq!(json.matches("\"granularity\":\"stroke\"").count(), 5, "every layer row, nested ones included, is a pick target: {json}");
     assert!(json.contains("addLayer"), "the add rows keep their own action: {json}");
+}
+
+/// 🪢️ Law (e): a row is picked under its own key, so every topology identity is the key of its row; a key the
+/// topology does not know is pruned from the stored selection and reaches neither copy nor delete.
+#[test]
+fn every_row_key_is_its_topology_identity() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
+    let document = oversized_document(3, 2);
+    let json = window_body(&document, Vec::new());
+    let topology = semio_s_artifact_draw_drawing_editor_interaction::drawing_interaction_topology(&document);
+    assert_eq!(topology.ordered.len(), 5);
+    for node in &topology.ordered {
+        assert!(json.contains(&format!("\"key\":\"{}\"", node.id)), "{} has a row of its own: {json}", node.id);
+    }
 }
 //#endregion 🪟️WindowLaws
 

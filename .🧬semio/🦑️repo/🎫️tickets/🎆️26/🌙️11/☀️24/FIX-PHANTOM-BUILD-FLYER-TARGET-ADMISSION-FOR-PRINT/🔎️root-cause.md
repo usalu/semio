@@ -50,6 +50,45 @@ targets anyway and derives the same producers from their command closure
 (`closures.generatedDependencies` in `🧱️project-assembly/🟨️.mjs`). Any other absent consumer is still refused.
 Test: `📦️project-nodes/🧪️tests/🖨️print-generated` (fixture + schema + SQLite oracle).
 
+## Third defect exposed: Nx `EPERM: operation not permitted, fsync` on Windows
+
+With the graph sealed (14 tasks planned), the Nx run died before any task. `--verbose` traced it into
+the bundled authorizers: the graph publication journal write (`journalWrite`) ends with `syncDirectory`
+in `⚡️caching/🕸️graph/📤️publication/📦️transaction/🟦️.ts`, which `fsync`s a directory handle. Windows
+refuses that (EPERM). `syncDirectory` now skips the directory sync on `win32`, as the dependency store
+(`🚀️bootstrap/📦️dependencies/🚦️concurrent/💾️storage`) already does; NTFS journals the rename.
+`💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests` fails 37/47 with and without this change
+(`Original captured runtime entry provider required`): pre-existing, unrelated.
+
+## Fourth defect exposed: Tectonic `App data directories not supported` on Windows
+
+With Nx running, all eight `build-<id>` tasks failed in Tectonic. The Print compiler redirects
+`USERPROFILE`/`HOME`/`APPDATA`/`LOCALAPPDATA` to its private sink; Tectonic resolves its config through
+`SHGetKnownFolderPath`, which with a redirected `USERPROFILE` only succeeds when
+`%USERPROFILE%\AppData\Roaming` exists. Reproduced against the staged `tectonic.exe` 0.16.9:
+`USERPROFILE=<empty dir>` → error; `<dir>\AppData\Roaming` present → works.
+`🖨️tectonic-template-compilation/🟦️.ts` now creates `AppData/Roaming` and `AppData/Local` in the sink before
+each compile and points `APPDATA`/`LOCALAPPDATA` at them (`printCompilerProfileV1`).
+
+## Fifth: stale Print command-boundary contract
+
+With all 14 dependencies green, `print:test quick` failed in `verifyPrintCommandBoundaries`: the compiler
+entries (`🖨️tectonic-template-compilation/🟦️.ts`, `📜️script.ts`) bundle-import
+`@semio-tech/framework-filesystem` and `@semio-tech/nx-bootstrap-tools`. They arrive through
+repo-lib `💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication` (already committed in HEAD), which the
+compiler reaches via its storage tasks. `🧫️command-boundaries.json` lists them now for both compiler entries
+(recomputed with esbuild for all four entries; the paint entries are unchanged).
+
+## Sixth: scheduler lock `EPERM` on Windows
+
+`repo` aborted (`Internal error: EPERM … mkdir '…\semio\scheduler\lock'`): the scheduler store's `mkdir`
+lock treated only `EEXIST` as contention, but Windows answers `EPERM`/`EACCES` while the previous holder's
+`rmdir` is still delete-pending. `schedulerLockContendedV1` in `🗓️scheduler/💾️store/🟦️.ts` now treats those
+as contention on `win32` (retry until the existing stale deadline). Test: `🗓️scheduler/🧪️tests/🔐️lock-contention`.
+
+One run was also aborted by worktree churn (another session moved 12 `host-capacity` sources mid-run →
+“Original process admission closed”); that is not a defect of this ticket.
+
 ## Tests
 
 - `🔎️owner-discovery/🧪️tests/🔁️observation` gained the `print-catalog-precedence` case (fixture + schema +

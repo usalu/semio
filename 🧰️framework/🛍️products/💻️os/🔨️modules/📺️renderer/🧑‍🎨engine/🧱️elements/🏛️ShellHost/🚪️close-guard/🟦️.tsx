@@ -2,7 +2,7 @@ import * as React from "../../⚛️react-port/🟦️.ts";
 import { localizedLabelTextV1 } from "../📣️replay-refusal/🟦️.ts";
 import { isUnsavedV1, saveFailureTextV1, type SavedStateV1 } from "../../🛠️ShellHelpers/💾️saved-state/🟦️.ts";
 
-import { SharedBorderRow, sharedBorderlessBoxProps, useSharedBorderFrameRef } from "@semio-tech/ui-react";
+import { cn, glassClass, SharedBorderRow, sharedBorderlessBoxProps, useSharedBorderFrameRef } from "@semio-tech/ui-react";
 export const CLOSE_GUARD_LABELS_V1 = {
   title: { en: "Unsaved changes", de: "Nicht gespeicherte Änderungen" },
   body: { en: "“{name}” has changes that were not saved. Close anyway and lose them?", de: "„{name}“ hat Änderungen, die nicht gespeichert wurden. Trotzdem schließen und sie verlieren?" },
@@ -38,7 +38,9 @@ export function DocumentCloseDialog(props: Readonly<{ name: string; locale: stri
       data-shared-border-frame=""
       data-shared-border-edges="top right bottom left"
       onKeyDown={(event) => { if (event.key === "Escape") props.onKeep(); }}
-      className="pointer-events-auto absolute left-1/2 top-1/3 z-50 -translate-x-1/2 bg-base text-sm shadow-sm"
+      data-level="pane"
+      data-glass-chip=""
+      className={cn("pointer-events-auto absolute left-1/2 top-1/3 z-50 -translate-x-1/2 text-sm", glassClass)}
     >
       <div className="p-double">
         <p id={titleId} className="font-semibold">{closeGuardTextV1("title", props.locale)}</p>

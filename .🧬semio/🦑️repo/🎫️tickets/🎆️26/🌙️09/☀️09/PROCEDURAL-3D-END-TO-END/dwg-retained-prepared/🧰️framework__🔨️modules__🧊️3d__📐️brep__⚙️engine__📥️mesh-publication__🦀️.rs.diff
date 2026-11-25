@@ -1,0 +1,19 @@
+--- a/🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/📥️mesh-publication/🦀️.rs
++++ b/🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/📥️mesh-publication/🦀️.rs
+@@ -30,9 +30,14 @@
+ impl Brep {
+     pub fn plan_mesh_publication(&mut self, decoder: &mut MeshDecode) -> Result<MeshPublication, ValueError> {
+         let cursor = decoder.into_cursor()?;
++        Ok(self.plan_mesh_publication_from_cursor(cursor))
++    }
++
++    /// 🫴️ Admits a cursor an external format decoder already filled, such as the retained DWG decoder.
++    pub fn plan_mesh_publication_from_cursor(&mut self, cursor: MeshImportCursor) -> MeshPublication {
+         self.native.unpublished_topology += 1;
+-        Ok(MeshPublication { cursor, owner: std::ptr::from_ref(&self.native) as usize, revision: self.native.shape_mutation_revision,
+-            key: None, published: false })
++        MeshPublication { cursor, owner: std::ptr::from_ref(&self.native) as usize, revision: self.native.shape_mutation_revision,
++            key: None, published: false }
+     }
+ 
+     pub fn mesh_preparation_demand(&self, plan: &MeshPublication) -> Result<RetirementDemand, ValueError> {

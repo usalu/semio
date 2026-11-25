@@ -1,0 +1,15 @@
+# fourth fixer: crutches at 1:500 with the crutch as member bars (c5: sleeves of c1, c6: sleeves untouched, c7: sleeves as at the other scales); the left hand of person-drinking-coffee at 1:500 (what covers it, and the front hand as the prism of its side view: d1, d2) (1000 MB)
+NOGATE=1 MEASURE=1 MSCALES=500 "$here/in-var.sh" person-on-crutches "$here/var/crutches-c6.json" crutches-c6
+NOGATE=1 MEASURE=1 MSCALES=500 "$here/in-var.sh" person-on-crutches "$here/var/crutches-c7.json" crutches-c7
+MEASURE=1 "$here/in-var.sh" person-on-crutches "$here/var/crutches-c5.json" crutches-c5
+(cd "$T" && timeout 600 "$B" "$here/zoom.ts" "$GEN/var/crutches-c5.json" 500 default "$GEN/zoom/crutches-c5-500.png" '^(crutch|arm)') 2>&1 | tail -1
+(cd "$T" && timeout 600 "$B" "$here/zoom.ts" "$GEN/var/crutches-c1.json" 500 default "$GEN/zoom/crutches-c1-500.png" '^(crutch|arm)') 2>&1 | tail -1
+(cd "$S/📦️packages/🟦️typescript" && timeout 600 "$B" "$here/probe-feature.ts" person-drinking-coffee 500 hand-l) 2>&1 | cut -c1-300
+MEASURE=1 "$here/in-var.sh" person-drinking-coffee "$here/var/coffee-d1.json" coffee-d1 --scales 500
+MEASURE=1 "$here/in-var.sh" person-drinking-coffee "$here/var/coffee-d2.json" coffee-d2 --scales 500
+(cd "$T" && timeout 600 "$B" "$here/zoom.ts" person-drinking-coffee 500 default "$GEN/zoom/coffee-now-500.png" '^hand') 2>&1 | tail -1
+(cd "$T" && timeout 600 "$B" "$here/zoom.ts" "$GEN/var/coffee-d2.json" 500 default "$GEN/zoom/coffee-d2-500.png" '^hand') 2>&1 | tail -1
+(cd "$T" && timeout 900 "$B" "$here/shape-time.ts" person-eating-standing 50) 2>&1 | tail -14
+(cd "$T" && timeout 900 "$B" "$here/shape-time.ts" "$GEN/var/bicycle-b7.json" 50) 2>&1 | tail -14
+"$here/in-final.sh" person-hanging-laundry
+"$here/in-try-apply.sh" person-drinking-coffee

@@ -13,20 +13,104 @@
    "de": "Eine gebrauchte Konzertgitarre des üblichen Schülermodells, 0,99 m lang mit 650 mm Mensur, Fichtendecke, Boden und Zargen aus Palisander-Sperrholz und Schlitzkopf, wie sie ein Gebrauchtinstrumentenhandel anbietet: gereinigt, neu besaitet und gestimmt, 15 Grad zurückgelehnt auf einem klappbaren A-Ständer, daneben ihr abgenutzter Gigbag und die auf 15 cm eingestellte Gitarrenfußbank. Fingerabnutzung und Nagelkratzer unter dem Schallloch, Craquelé im Lack über der Rosette, Kerben unter den ersten Bünden, eine Delle am Boden, eingerissener Ständerschaum und ein abgescheuerter Taschenboden sind, was die Übungsjahre hinterlassen haben. Gelagert, im Gigbag auf dem Rücken getragen und sitzend mit dem linken Fuß auf der Fußbank gespielt, mit einem Trageclip vom Ständer in die Tasche auf den Rücken und einem Spielclip; insgesamt 4,55 kg, vier einzeln gezeichnete und modellierte Maßstäbe von 1:500 bis 1:50."
   },
   "tags": [
-   "used",
-   "instrument",
-   "music",
-   "second-hand",
-   "strings",
-   "guitar",
-   "classical-guitar",
-   "nylon-strings",
-   "spruce",
-   "rosewood",
-   "gig-bag",
-   "guitar-stand",
-   "footstool",
-   "chordophone"
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "instrument",
+    "title": {
+     "en": "instrument",
+     "de": "Instrument"
+    }
+   },
+   {
+    "id": "music",
+    "title": {
+     "en": "music",
+     "de": "Musik"
+    }
+   },
+   {
+    "id": "second-hand",
+    "title": {
+     "en": "second-hand",
+     "de": "Second-Hand"
+    }
+   },
+   {
+    "id": "strings",
+    "title": {
+     "en": "strings",
+     "de": "Saiteninstrumente"
+    }
+   },
+   {
+    "id": "guitar",
+    "title": {
+     "en": "guitar",
+     "de": "Gitarre"
+    }
+   },
+   {
+    "id": "classical-guitar",
+    "title": {
+     "en": "classical guitar",
+     "de": "Konzertgitarre"
+    }
+   },
+   {
+    "id": "nylon-strings",
+    "title": {
+     "en": "nylon strings",
+     "de": "Nylonsaiten"
+    }
+   },
+   {
+    "id": "spruce",
+    "title": {
+     "en": "spruce",
+     "de": "Fichte"
+    }
+   },
+   {
+    "id": "rosewood",
+    "title": {
+     "en": "rosewood",
+     "de": "Palisander"
+    }
+   },
+   {
+    "id": "gig-bag",
+    "title": {
+     "en": "gig bag",
+     "de": "Gigbag"
+    }
+   },
+   {
+    "id": "guitar-stand",
+    "title": {
+     "en": "guitar stand",
+     "de": "Gitarrenständer"
+    }
+   },
+   {
+    "id": "footstool",
+    "title": {
+     "en": "footstool",
+     "de": "Fußhocker"
+    }
+   },
+   {
+    "id": "chordophone",
+    "title": {
+     "en": "chordophone",
+     "de": "Chordophon"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content (used instruments wave)",

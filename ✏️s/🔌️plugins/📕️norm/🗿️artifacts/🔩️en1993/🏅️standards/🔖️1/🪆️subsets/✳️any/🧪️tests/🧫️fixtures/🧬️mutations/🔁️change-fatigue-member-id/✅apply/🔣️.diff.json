@@ -47,7 +47,9 @@
           "memberId": "member-b1-alt",
           "category": null,
           "method": null,
-          "spectrum": null
+          "spectrum": null,
+          "stressHistory": null,
+          "consequence": null
         }
       }
     ]

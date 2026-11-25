@@ -6,9 +6,9 @@ import type { GrammarToken, SpanRange } from "../🏷️editor-types/🟦️.ts"
 
 //#region 🔖️TextEditorHost
 const TOKEN_CLASS_COLORS: Record<string, string> = {
-  keyword: "text-info",
-  string: "text-success",
-  number: "text-warning",
+  keyword: "text-info-ink",
+  string: "text-success-ink",
+  number: "text-warning-ink",
   operator: "text-primary",
   ident: "text-foreground",
 };

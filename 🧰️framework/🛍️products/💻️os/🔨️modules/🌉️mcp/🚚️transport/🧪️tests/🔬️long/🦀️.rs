@@ -4,6 +4,7 @@ use axum::body::Body;
 use axum::extract::State;
 use axum::http::Request;
 use axum::http::StatusCode;
+use axum::response::IntoResponse;
 use axum::response::Response;
 use std::net::SocketAddr;
 use std::sync::Arc;
@@ -12,7 +13,7 @@ use crate::transport::{BRIDGE_OPENING_DEADLINE_MS, EventLog, HEADER_MISMATCH, HT
 use semio_os_mcp_bridge_codec::bridge::{BRIDGE_VERSION, BridgeFlags, GatewayToShell, ShellKind, ShellToGateway};
 use semio_os_mcp_foundation::rendezvous::mint_admission_proof;
 use semio_os_mcp_server::mcp_server::McpServer;
-use semio_os_mcp_wire::protocol::{CallToolResult, InMemoryPromptRegistry, InMemoryResourceRegistry, InMemoryToolRegistry, JsonRpcNotification, NullBackend, SUPPORTED_PROTOCOL_VERSIONS, Tool, UNSUPPORTED_PROTOCOL_VERSION};
+use semio_os_mcp_wire::protocol::{CallToolResult, META_PROTOCOL_VERSION_KEY, InMemoryPromptRegistry, InMemoryResourceRegistry, InMemoryToolRegistry, JsonRpcNotification, NullBackend, SUPPORTED_PROTOCOL_VERSIONS, Tool, UNSUPPORTED_PROTOCOL_VERSION};
 use semio_os_mcp_workspace::gateway_backend::GatewayBackends;
 #[cfg(test)]
 use crate::transport::{handle_get, handle_post};

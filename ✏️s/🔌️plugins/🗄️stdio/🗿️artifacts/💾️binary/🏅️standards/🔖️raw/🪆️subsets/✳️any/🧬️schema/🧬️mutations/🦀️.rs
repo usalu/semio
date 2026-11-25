@@ -37,7 +37,8 @@ pub enum BinaryMutation {
     /// ✂️ Drops everything at/after `offset` (a no-op if `offset >= len`).
     TruncateAt(truncate_at::TruncateAt),
 }
-dsl::original_pack_value_operation_receiving!(BinaryMutation);
+dsl::original_decoded_operation_receiving!(BinaryMutation);
+dsl::artifact_persisted_encoded_binary_operation!(BinaryMutation);
 //#endregion 🔖️Mutations
 
 //#region 🔖️Kinds

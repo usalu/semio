@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schemas/actor/shard-core-modules/v1",
+  "title": "ShardCoreModules",
+  "description": "The compiled core modules of one realm (a page or one shard worker), keyed by the URL they are served from. A holder is one activation. The first holder of a URL compiles it, or adopts a seed compiled in another realm; every further holder shares that module; releasing a holder drops each entry it was the last holder of. Each case is a sequence of steps and the state after the last step: how many compilations ran, which URLs are held by how many holders, which URLs each release dropped and how many seeds the realm can hand to another one. The `module` block is a core wasm module every case may instantiate once per holder to prove that one compilation serves independent instances.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["module", "cases"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "module": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["hex", "export", "calls", "results"],
+      "properties": {
+        "hex": { "type": "string", "pattern": "^0061736d01000000([0-9a-f]{2})+$", "description": "A core wasm module with one exported memory and one exported counter function." },
+        "export": { "type": "string", "minLength": 1 },
+        "calls": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["holder", "delta"], "properties": { "holder": { "type": "string", "minLength": 1 }, "delta": { "type": "integer", "minimum": 0 } } } },
+        "results": { "type": "array", "items": { "type": "integer" } }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "steps", "expected"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+          "steps": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "oneOf": [
+                { "type": "object", "additionalProperties": false, "required": ["acquire", "holder"], "properties": { "acquire": { "type": "string", "minLength": 1 }, "holder": { "type": "string", "minLength": 1 }, "seeded": { "type": "boolean" } } },
+                { "type": "object", "additionalProperties": false, "required": ["release", "dropped"], "properties": { "release": { "type": "string", "minLength": 1 }, "dropped": { "type": "array", "items": { "type": "string" } } } }
+              ]
+            }
+          },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["compilations", "held", "seeds"],
+            "properties": {
+              "compilations": { "type": "integer", "minimum": 0 },
+              "held": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 1 } },
+              "seeds": { "type": "integer", "minimum": 0 }
+            }
+          }
+        }
+      }
+    }
+  }
+}

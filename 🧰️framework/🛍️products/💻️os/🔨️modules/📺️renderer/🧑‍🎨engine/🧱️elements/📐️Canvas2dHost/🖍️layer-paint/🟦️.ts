@@ -10,6 +10,8 @@ export type CanvasLayerRecord = CanvasSceneNode & {
   readonly kind?: string;
   readonly role?: string;
   readonly utility?: string;
+  readonly leftDragPans?: boolean;
+  readonly rightDragPans?: boolean;
   readonly name?: string;
   readonly color?: string;
   readonly selected?: boolean;

@@ -157,8 +157,21 @@ export function readCargoManifestRoleV1(path, role) {
   catch { return readToml(path); }
 }
 
-/** 📏️ The tooling TOML boundary exposes only repository-owned plain records, memoized per parser version (resolved on first use). */
-export function readToml(path) {
+/** ♻️ The pauses in milliseconds before each new reading of a manifest that does not parse: a peer or the replica rewrites a Cargo.toml in place and it is unparseable for a moment, which is a concurrent edit and never a fact about the file; after the last pause the refusal stands (`BUILD_SOURCE_UNPARSEABLE`, with the observation of the last reading). */
+export const TOML_RETRY_MILLISECONDS_V1 = Object.freeze([150, 400, 1000]);
+
+const sleepSyncV1 = milliseconds => { Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, milliseconds); };
+
+/** 📏️ The tooling TOML boundary exposes only repository-owned plain records, memoized per parser version (resolved on first use); a document that does not parse is read again after each pause of `milliseconds` before the refusal stands, so a manifest caught in the middle of a rewrite never fails the read that asked for it.
+ * @see ./🧪️tests/📜️toml/🟦️.ts */
+export function readToml(path, { milliseconds = TOML_RETRY_MILLISECONDS_V1, sleep = sleepSyncV1 } = {}) {
+  for (let attempt = 0; ; attempt++) {
+    try { return readTomlOnceV1(path); }
+    catch (error) { if (error?.code !== "BUILD_SOURCE_UNPARSEABLE" || attempt >= milliseconds.length) throw error; sleep(milliseconds[attempt]); }
+  }
+}
+
+function readTomlOnceV1(path) {
   tomlParsing ??= { namespace: `toml-parse-v1:${runtimeKeyV1()}`, parse: (source) => runtimeParseTomlV1(source) };
   return memoizedFileRecord(tomlParsing.namespace, path, (bytes) => {
     const source=bytes.toString("utf8");

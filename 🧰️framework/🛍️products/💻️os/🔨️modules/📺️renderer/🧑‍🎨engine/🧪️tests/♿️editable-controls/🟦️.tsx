@@ -712,7 +712,8 @@ for (const locale of ["en", "de"] as const) for (const law of femFieldIntents.ca
   const view = render(createElement(UiNodeView, { store, id: 1, context }));
   const control = view.getByRole(law.kind === "number" ? "spinbutton" : "textbox", { name: law.label[locale] }) as HTMLInputElement;
   expect(computeAccessibleName(control)).toBe(law.label[locale]);
-  fireEvent.change(control, { target: { value: law.after } });
+  Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(control, law.after);
+  control.dispatchEvent(new Event("input", { bubbles: true }));
   await act(async () => { publish(2); await Promise.resolve(); });
   fireEvent.blur(control);
   await act(async () => { await Promise.resolve(); await Promise.resolve(); });

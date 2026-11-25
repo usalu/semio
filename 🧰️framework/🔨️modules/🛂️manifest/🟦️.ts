@@ -1,6 +1,7 @@
 /// <reference types="vitest/importMeta" />
 import { artifactKindChoices, decodeArtifactKindChoice, decodeSurfaceAppChoice, encodeArtifactKindChoice, encodeSurfaceAppChoice } from "./🔁️host-effects-choices-and-fault-notices/🟦️.ts";
 export * from "./🧮️arg-schema/📝️staging/🟦️.ts";
+export * from "./🧺️action-sets/🟦️.ts";
 export type { WindowStackCorner, WindowLayoutWindowNode, WindowLayoutStackNode, WindowLayoutSplitNode, WindowLayoutPanel, WindowLayoutNode, WindowLayout } from "@semio-tech/ui-layout";
 export { surfaceAppId, parseSurfaceAppId, type AppRole, type AppRef } from "./🧬️schema/🟦️.ts";
 

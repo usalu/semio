@@ -166,11 +166,11 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       if (message.kind === "frame") effectPosted.resolve();
     };
     const shim = vm.createContext({ exports: {}, URL, self: { postMessage: receive } });
-    const shimCode = generated("hostShimSource").replace("import.meta.url", JSON.stringify("https://fixture.invalid/host.js?actor=a&activation=1"));
-    new vm.Script(ts.transpileModule(shimCode, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS } }).outputText).runInContext(shim);
+    new vm.Script(ts.transpileModule(generated("hostShimSource"), { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS } }).outputText).runInContext(shim);
+    const host = shim.exports.createActorHost("a", 1n);
     let dispatch: ((event: { data: Record<string, unknown> }) => Promise<void>) | null = null;
     const checkpoint = Object.freeze({ ordinary: "checkpoint" }); const effectResult = Object.freeze({ effect: "completed" });
-    const context = vm.createContext({ WebAssembly: { Suspending: class {}, promising: (value: unknown) => value }, self: { postMessage: receive, addEventListener: (kind: string, callback: typeof dispatch) => { if (kind === "message") dispatch = callback; } }, apiA: { originalSource: vmOriginalSource, poll: () => shim.exports.storageRead({ key: "awaited" }), resolveEffect: shim.exports.__resolveEffect, rejectEffect: shim.exports.__rejectEffect }, apiB: { originalSource: vmOriginalSource, checkpoint: async () => checkpoint } });
+    const context = vm.createContext({ WebAssembly: { Suspending: class {}, promising: (value: unknown) => value }, self: { postMessage: receive, addEventListener: (kind: string, callback: typeof dispatch) => { if (kind === "message") dispatch = callback; } }, apiA: { originalSource: vmOriginalSource, poll: () => host.storageRead({ key: "awaited" }), resolveEffect: host.__resolveEffect, rejectEffect: host.__rejectEffect }, apiB: { originalSource: vmOriginalSource, checkpoint: async () => checkpoint } });
     new vm.Script(generated("shardWorkerSource")).runInContext(context);
     new vm.Script('actors.set("a", { api: apiA, activationGeneration: 1n, pendingAssets: [] }); actors.set("b", { api: apiB, activationGeneration: 2n, pendingAssets: [] });').runInContext(context);
     if (!dispatch) throw new Error("Missing generated worker dispatcher");
@@ -181,7 +181,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     const effectRequest = messages[0].frame.envelope.payload.payload; expect(effectRequest.effect).toBe("storage-read");
     await send({ data: { kind: "checkpoint", requestId: "r2", actorId: "b" } });
     expect(messages.find(message => message.requestId === "r2")?.value).toBe(checkpoint); expect(messages.some(message => message.requestId === "r1")).toBe(false);
-    shim.exports.emit({ notification: true }); shim.exports.emitPatch({ patch: true });
+    host.emit({ notification: true }); host.emitPatch({ patch: true });
     await send({ data: { kind: "frame", actorId: "a", activationGeneration: 1n, frame: { kind: "Envelope", envelope: { to: "a", from: { kind: "kernel" }, payload: { kind: "effect-complete", payload: { requestId: effectRequest.requestId, value: effectResult } } } } } });
     await pending;
     const trace = messages.map(message => message.kind === "heartbeat" ? `heartbeat:${message.turnSeq}` : message.kind === "frame" ? `frame:${message.frame.envelope.payload.kind}` : `result:${message.requestId}:${message.ok ? "success" : "fault"}`);

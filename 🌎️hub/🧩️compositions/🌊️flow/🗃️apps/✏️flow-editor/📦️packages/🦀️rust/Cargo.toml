@@ -1,0 +1,28 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-hub-flow-editor-app"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "App fleet of the flow editor surface of semio-hub-flow"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework = { workspace = true }
+semio-framework-dispatch-macros = { workspace = true }
+semio-framework-hash = { workspace = true }
+semio-framework-job = { workspace = true }
+semio-framework-tool-run = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-os-kernel = { workspace = true }
+semio-plugin = { workspace = true, features = ["canvas-runtime-assets"] }
+semio-s-artifact-flow-flow = { workspace = true }
+semio-s-artifact-stdio-semio = { workspace = true }

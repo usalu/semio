@@ -18,7 +18,7 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "nod
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import type { Browser } from "playwright";
-import { PLAYWRIGHT_MODULE_SPECIFIER } from "../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🟦️.ts";
+import { launchBrowserV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🟦️.ts";
 import { acceptanceCheckResult, publishAcceptanceCheckResult } from "@semio-tech/repo-test/acceptance/orchestration";
 
 //#region 🧾️NetLog
@@ -122,8 +122,7 @@ export async function runConnectionBudget(repoRoot: string, options: ConnectionB
   const folders = Array.from({ length: options.streams }, (_, index) => join(scratch, `folder-${String(index).padStart(4, "0")}`));
   for (const folder of folders) mkdirSync(join(folder, ".semio"), { recursive: true });
   ensureRepositoryBrowserPathV1(repoRoot,process.env);
-  const { chromium }: typeof import("playwright") = await import(PLAYWRIGHT_MODULE_SPECIFIER);
-  const browser: Browser = await chromium.launch({ headless: !options.headed, args: ["--use-angle=metal", `--log-net-log=${netLog}`, "--net-log-capture-mode=Default"] });
+  const browser: Browser = await launchBrowserV1({ headless: !options.headed, args: ["--use-angle=metal", `--log-net-log=${netLog}`, "--net-log-capture-mode=Default"] });
   const abort = (): void => void browser.close().catch(() => undefined);
   options.signal.addEventListener("abort", abort, { once: true });
   try {

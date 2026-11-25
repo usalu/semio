@@ -1,7 +1,7 @@
 /** 🟢️ The uses owned rtl placement tests of the Select suite. */
 import { fireEvent, render, screen } from "@testing-library/react";
 import { expect, it, vi } from "vitest";
-import { Select, SelectContent, SelectItem, SelectScrollDownButton, SelectTrigger, SelectValue, resolveSelectPlacement } from "../../../🟦️.tsx";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, resolveSelectPlacement } from "../../../🟦️.tsx";
 
 /** 🔵 Registers the uses owned rtl placement tests of the Select suite. */
 export function registerUsesOwnedRtlPlacementTests(): void {
@@ -20,7 +20,6 @@ export function registerUsesOwnedRtlPlacementTests(): void {
         </SelectTrigger>
         <SelectContent container={portal} position="popper">
           <SelectItem value="one">One</SelectItem>
-          <SelectScrollDownButton />
         </SelectContent>
       </Select>,
     );

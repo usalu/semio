@@ -27,6 +27,7 @@ pub enum TiffMutation {
     ReplaceSamples(ReplaceSamplesMutation),
 }
 dsl::original_pack_value_operation_receiving!(TiffMutation);
+dsl::artifact_persisted_binary_operation!(TiffMutation);
 
 //#endregion Aggregate
 

@@ -1,0 +1,47 @@
+[package]
+workspace = "../../../../../../../../../../.."
+name = "semio-os-flow-host-read-authoring"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Flow host source read authoring: original borrowed authoring derives retained domain leaves without constructing a host"
+
+[package.metadata.semio]
+role = "product"
+id = "os-flow-host-read-authoring"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-job-owned-text = { path = "../../../../../../../../../../🔨️modules/🧵️job/📝️text/🧳️owned/📦️packages/🦀️rust" }
+semio-os-flow-host-core = { path = "../../../../../🧱️flow-host-model/📦️packages/🦀️rust" }
+semio-os-flow-host-source = { path = "../../../../📦️packages/🦀️rust" }
+semio-os-flow-operators = { path = "../../../../../../🗃️operators/📦️packages/🦀️rust" }
+semio-framework-pack-json = { path = "../../../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-native-storage = { path = "../../../../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️storage/📦️packages/🦀️rust" }
+semio-framework-value-ordered = { path = "../../../../../../../../../../🔨️modules/🌱️value/🗂️ordered/📦️packages/🦀️rust" }
+semio-framework-value-persistent = { path = "../../../../../../../../../../🔨️modules/🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust" }
+semio-framework-artifact-flow-flow = { workspace = true }
+semio-framework-job = { workspace = true }
+semio-framework-replication = { workspace = true }
+neural_engine = { path = "../../../../../../../🧠️neural/⚙️engine/📦️packages/🦀️rust", package = "semio-os-kernel-neural-engine" }
+
+[dev-dependencies]
+semio-os-flow-operators = { path = "../../../../../../🗃️operators/📦️packages/🦀️rust", features = ["protocol-laws"] }
+semio-framework-test-fixtures = { path = "../../../../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
+semio-framework-job = { workspace = true, features = ["testkit"] }
+semio-framework-trace = { path = "../../../../../../../../../../🔨️modules/⏱️trace/📦️packages/🦀️rust" }
+semio-framework-artifact-flow-flow = { workspace = true, features = ["protocol-laws"] }
+semio-framework-replication = { workspace = true }
+serde_json = "1"
+

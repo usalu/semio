@@ -239,7 +239,7 @@
       "rampIdleKeepBasisPoints": 15000,
       "settledAfterMilliseconds": 900000,
       "settledKeepBasisPoints": 15000,
-      "childStartMegabytes": 512
+      "childStartMegabytes": 512, "interactiveReserveBasisPoints": 2500, "interactiveReserveMinimumMegabytes": 2048, "interactiveReserveMaximumMegabytes": 8192, "sessionCapBasisPoints": 4000
     },
     "swap": {
       "ceilingBasisPoints": 2500,

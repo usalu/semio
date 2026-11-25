@@ -1,31 +1,17 @@
 //! 📦️ Non-graphical objects: layouts and plot settings, annotation scales, draw order and the object body union.
 
-use semio_framework_value::{ValueError, ValueRefusalKind};
-use crate::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::{DwgAssocNetwork, DwgAssociativeDependency, DwgAssociativeDimensionDependencyBody, DwgAssociativeGeometryDependency, DwgAssociativeValueDependency, DwgAssociativeVariable, DwgBlockGripLocationComponent, DwgDynamicBlockProxyNode, DwgEvaluationGraph};
-use crate::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::{DwgBlockAlignmentGrip, DwgBlockAlignmentParameter, DwgBlockBasePointParameter, DwgBlockFlipAction, DwgBlockFlipGrip, DwgBlockFlipParameter, DwgBlockLinearConstraintParameter, DwgBlockLinearGrip, DwgBlockLinearParameter, DwgBlockMoveAction, DwgBlockParameterDependencyBody, DwgBlockRepresentationData, DwgBlockScaleAction, DwgBlockStretchAction, DwgBlockVisibilityGrip, DwgBlockVisibilityParameter, DwgDynamicBlockPurgePreventer};
-use crate::standards::v_ac1024::subsets::any::schema::snapshot::objects::constraints::{DwgAssoc2dConstraintGroup};
-use crate::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::{DwgEntityBody, DwgOrthographicView};
-use crate::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::{DwgMLeaderStyle, DwgMaterial, DwgMlineStyle, DwgTableStyle, DwgVisualStyle};
-use crate::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::{DwgTableControlBody, DwgTableRecordBody};
-use crate::standards::v_ac1024::subsets::any::schema::snapshot::objects::xrecord::{DwgDictionaryBody, DwgDictionaryVariable, DwgExtendedEntityData, DwgObjectCategory, DwgXRecordBody};
+extern crate semio_framework_value_derive as value_derive;
 
-#[macro_use]
-#[path = "🎛️metadata/🦀️.rs"]
-pub mod metadata;
-#[path = "🏷️xrecord/🦀️.rs"]
-pub mod xrecord;
-#[path = "🗃️tables/🦀️.rs"]
-pub mod tables;
-#[path = "📐️entities/🦀️.rs"]
-pub mod entities;
-#[path = "🔗️associativity/🦀️.rs"]
-pub mod associativity;
-#[path = "🖌️styles/🦀️.rs"]
-pub mod styles;
-#[path = "🧩️blocks/🦀️.rs"]
-pub mod blocks;
-#[path = "📏️constraints/🦀️.rs"]
-pub mod constraints;
+use semio_framework_value::{ValueError, ValueRefusalKind};
+use semio_s_artifact_stdio_dwg_snapshot_objects_metadata::{dwg_controlled_payloads, dwg_metadata};
+use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::{DwgAssocNetwork, DwgAssociativeDependency, DwgAssociativeDimensionDependencyBody, DwgAssociativeGeometryDependency, DwgAssociativeValueDependency, DwgAssociativeVariable, DwgBlockGripLocationComponent, DwgDynamicBlockProxyNode, DwgEvaluationGraph};
+use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::{DwgBlockAlignmentGrip, DwgBlockAlignmentParameter, DwgBlockBasePointParameter, DwgBlockFlipAction, DwgBlockFlipGrip, DwgBlockFlipParameter, DwgBlockLinearConstraintParameter, DwgBlockLinearGrip, DwgBlockLinearParameter, DwgBlockMoveAction, DwgBlockParameterDependencyBody, DwgBlockRepresentationData, DwgBlockScaleAction, DwgBlockStretchAction, DwgBlockVisibilityGrip, DwgBlockVisibilityParameter, DwgDynamicBlockPurgePreventer};
+use semio_s_artifact_stdio_dwg_snapshot_objects_constraints::{DwgAssoc2dConstraintGroup};
+use semio_s_artifact_stdio_dwg_snapshot_objects_entities::{DwgEntityBody, DwgOrthographicView};
+use semio_s_artifact_stdio_dwg_snapshot_objects_styles::{DwgMLeaderStyle, DwgMaterial, DwgMlineStyle, DwgTableStyle, DwgVisualStyle};
+use semio_s_artifact_stdio_dwg_snapshot_objects_tables::{DwgTableControlBody, DwgTableRecordBody};
+use semio_s_artifact_stdio_dwg_snapshot_objects_xrecord::{DwgDictionaryBody, DwgDictionaryVariable, DwgExtendedEntityData, DwgObjectCategory, DwgXRecordBody};
+
 
 //#region 🔖️DrawingModel
 #[derive(Clone, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

@@ -1,4 +1,4 @@
-"""🔗️ Independent Python oracle of the TypeScript package binding plan (standard library only, POSIX paths): it derives the owner, the fixed links, the output and the receipt location from the workspace, the package, the mode and the products directory, with the artifact layout rules read from the authored protocol. Requests arrive as JSON on stdin."""
+"""🔗️ Independent Python oracle of the TypeScript package binding plan (standard library only, POSIX paths): it derives the owner, the fixed links, the output and the receipt location from the workspace, the package, the mode and the products directory, with the artifact layout rules read from the authored protocol, and the mode an existing fixed link is bound to (from the receipt, else from its exact text). Requests arrive as JSON on stdin."""
 import hashlib, json, posixpath, sys
 
 
@@ -32,8 +32,24 @@ def plan(row, protocol):
     return {"value": {"owner": owner, "output": output, "receipt": posixpath.join(posixpath.dirname(directory), "binding.json"), "links": links}}
 
 
+def link_mode(row):
+    if not row["link"]:
+        return None
+    receipt = row.get("receipt")
+    recorded = (receipt or {}).get("activeMode") if row["index"] == 0 else row["mode"]
+    if receipt is not None and recorded in receipt["modes"]:
+        return recorded
+    for mode in (("prototype", "release") if row["index"] == 0 else (row["mode"],)):
+        if "text" in row and row["outputs"].get(mode) == row["text"]:
+            return mode
+    return None
+
+
 def main():
     request = json.load(sys.stdin)
+    if "links" in request:
+        print(json.dumps([link_mode(row) for row in request["links"]], ensure_ascii=False))
+        return
     print(json.dumps([plan(row, request["protocol"]) for row in request["rows"]], ensure_ascii=False))
 
 

@@ -77,3 +77,24 @@ fn set_active_example_unknown_id_resets_to_empty_document() {
     retire(loaded);
     assert!(empty);
 }
+
+/// 📚️ Every declared example loads its own document: non-empty, and no two share the same node, element and solid counts.
+#[test]
+fn set_active_example_loads_a_distinct_document_per_example_3d() {
+    let (snapshot, history) = empty_view();
+    let doc = ArtifactView::new(&*snapshot, &history);
+    let cfg_snapshot = NoConfig::default();
+    let cfg = ConfigView { snapshot: &cfg_snapshot, window: None };
+    let mut shapes = Vec::new();
+    for id in [semio_s_artifact_fem_3d_io::examples::demo::ID, semio_s_artifact_fem_3d_io::examples::concrete_forest::ID, semio_s_artifact_fem_3d_io::examples::house::ID] {
+        let emit = handle(&SetActiveExample { example_id: id.into() }, &doc, &cfg).expect("handle");
+        let Effect::LoadDocument { pack, .. } = emit.effects.first().expect("a LoadDocument effect") else { panic!("expected a LoadDocument effect") };
+        let loaded = <Fem3dSnapshot as pack::snapshot::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
+        shapes.push((loaded.nodes.len(), loaded.elements.len(), loaded.solids.len()));
+        retire(loaded);
+        assert!(shapes.last().unwrap().0 > 0, "{id} has nodes");
+    }
+    shapes.sort();
+    shapes.dedup();
+    assert_eq!(shapes.len(), 3, "each example is its own geometry: {shapes:?}");
+}

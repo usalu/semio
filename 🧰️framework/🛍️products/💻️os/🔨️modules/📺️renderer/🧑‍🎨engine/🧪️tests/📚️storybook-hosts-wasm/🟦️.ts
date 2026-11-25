@@ -12,7 +12,7 @@
 
 import { expect, test, type Page } from "../../../../../../../../.storybook/🧪️tests/🎭️playwright/🟦️.ts";
 import { PNG } from "pngjs";
-import terrariumFixture from "../../../../../../../🔨️modules/🗺️surface/🏔️terrain/🧪️tests/🧫️fixtures/🏔️terrarium-tile/🔣️.json";
+import terrariumFixture from "../../../../../../../🔨️modules/🗺️surface/🏔️terrain/🧪️tests/🧫️fixtures/🏔️terrarium-tile/🔣️.json" with { type: "json" };
 
 //#region Helpers
 function significantConsoleErrors(messages: string[]): string[] {

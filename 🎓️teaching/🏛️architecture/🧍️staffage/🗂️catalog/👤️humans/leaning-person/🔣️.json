@@ -13,13 +13,55 @@
       "de": "Ein 1,72 m großer Mann in Kapuzenpullover, Jeans, Mütze und Turnschuhen, der mit dem oberen Rücken an einer gemauerten Wand lehnt und aufs Telefon schaut oder telefoniert: Wandreaktion und Reibung an den Füßen, Wärmeleitung in die Wand, Sprechatmung und Abstoßen zum freien Stehen; vier einzeln gezeichnete Maßstäbe."
     },
     "tags": [
-      "human",
-      "leaning",
-      "wall",
-      "support",
-      "idle",
-      "phone",
-      "friction"
+      {
+        "id": "human",
+        "title": {
+          "en": "human",
+          "de": "Mensch"
+        }
+      },
+      {
+        "id": "leaning",
+        "title": {
+          "en": "leaning",
+          "de": "angelehnt"
+        }
+      },
+      {
+        "id": "wall",
+        "title": {
+          "en": "wall",
+          "de": "Wand"
+        }
+      },
+      {
+        "id": "support",
+        "title": {
+          "en": "support",
+          "de": "Stütze"
+        }
+      },
+      {
+        "id": "idle",
+        "title": {
+          "en": "idle",
+          "de": "untätig"
+        }
+      },
+      {
+        "id": "phone",
+        "title": {
+          "en": "phone",
+          "de": "Telefon"
+        }
+      },
+      {
+        "id": "friction",
+        "title": {
+          "en": "friction",
+          "de": "Reibung"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage content worker CV-H3",

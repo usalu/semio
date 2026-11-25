@@ -1,4 +1,5 @@
 #!/bin/zsh
+export PATH="/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🚪️shims:$PATH"  # managed cargo entry
 cd "$(dirname "$0")"
 for n in 1 2 3 4 5 6 7 8; do
   ./run-cargo.sh r$n$1 "${@:2}" > "🗑️generated/run-r$n$1.exit" 2>&1

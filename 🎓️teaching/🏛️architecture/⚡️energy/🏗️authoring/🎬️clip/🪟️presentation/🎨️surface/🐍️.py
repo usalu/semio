@@ -9,6 +9,8 @@ from pathlib import Path
 
 _ROOT = Path(__file__).resolve().parent
 _theme = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️theme.🐍️")
+_tokens = importlib.import_module("🧰️framework.🔨️modules.🖱️ui.🎨️styling.🔤️tokens.🐍️")
+LEVELS = _tokens.STYLING_LEVELS
 
 
 def _rgb(value) -> list[float]:
@@ -70,9 +72,14 @@ def _token_color(value: dict) -> list[float]:
     return [a * ratio + b * (1 - ratio) for a, b in zip(_rgb(_theme.color(first)), _rgb(_theme.color(second)))]
 
 
+def border_ink(appearance: str) -> str:
+    """📏 Resolve the neutral separator shared by adjacent chrome regions."""
+    return _hex(_token_color(_theme.TOKENS["appearances"][appearance]["chrome"]["borderNormal"]))
+
+
 def surface_paint(level: str, parent=None, *, appearance: str = "dark") -> dict:
     """🪟 Resolve Oklab tint, CSS backdrop saturation and sRGB alpha over one uniform parent."""
-    levels = _theme.TOKENS["levels"]
+    levels = LEVELS
     if level not in levels["names"] or appearance not in ("light", "dark"):
         raise ValueError("An explicit canonical surface level and appearance are required")
     depth = levels["names"].index(level)
@@ -93,9 +100,26 @@ def surface_paint(level: str, parent=None, *, appearance: str = "dark") -> dict:
             "composite_rgb": [math.floor(channel + 0.5) for channel in composite], "composite": _hex(composite)}
 
 
+def chip_paint(content_level: str, parent=None, *, appearance: str = "dark") -> dict:
+    """🧊 Fold the glass of the level above `content_level` and the foreground veil at `chipTintPercent` into one tint and alpha, like Theme::chip_glass."""
+    names = LEVELS["names"]
+    if content_level not in names:
+        raise ValueError("An explicit canonical surface level is required")
+    glass = surface_paint(names[min(names.index(content_level) + 1, len(names) - 1)], parent, appearance=appearance)
+    foreground = _token_color(_theme.TOKENS["appearances"][appearance]["chrome"]["foreground"])
+    veil = LEVELS["chipTintPercent"] / 100
+    alpha = 1 - (1 - glass["alpha"]) * (1 - veil)
+    rgb = [(veil * ink + (1 - veil) * glass["alpha"] * tint) / alpha for ink, tint in zip(foreground, glass["rgb"])]
+    composite = [channel * alpha + behind * (1 - alpha) for channel, behind in zip(rgb, glass["backdrop_rgb"])]
+    return {"content_level": content_level, "glass_level": glass["level"], "appearance": appearance, "fill": _hex(rgb), "rgb": rgb,
+            "alpha": alpha, "blur_px": glass["blur_px"], "saturate": glass["saturate"], "veil": veil,
+            "parent_rgb": glass["parent_rgb"], "backdrop_rgb": glass["backdrop_rgb"],
+            "composite_rgb": [math.floor(channel + 0.5) for channel in composite], "composite": _hex(composite)}
+
+
 def source_files() -> tuple[Path, ...]:
     """🧬 Bind surface paint identity to the token contract and actual CSS glass formulas."""
     ui = _theme.ROOT / "🧰️framework/🔨️modules/🖱️ui"
-    return (Path(__file__), _ROOT / "🧬️schema.json", _theme.TOKEN_PATH,
+    return (Path(__file__), _ROOT / "🧬️schema.json", _theme.TOKEN_PATH, _theme.ROOT / "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🔤️tokens/🐍️.py",
             ui / "🎨️styling/🖌️ui/🎨️.css",
             ui / "🔨️modules/🌈️surface-presentation/🟦️.ts")

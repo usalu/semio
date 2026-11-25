@@ -23,6 +23,15 @@
         "namespace": "flow",
         "sourceOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust",
         "packageName": "@semio-tech/flow-core",
+        "bridgeExports": [
+          "flow_bridge_allocate",
+          "flow_bridge_release",
+          "flow_bridge_send",
+          "flow_bridge_poll",
+          "flow_bridge_step_progress",
+          "flow_bridge_begin_close",
+          "flow_bridge_terminal_is_empty"
+        ],
         "nativeFiles": [
           "flow_core_bg.wasm",
           "flow_core.js",

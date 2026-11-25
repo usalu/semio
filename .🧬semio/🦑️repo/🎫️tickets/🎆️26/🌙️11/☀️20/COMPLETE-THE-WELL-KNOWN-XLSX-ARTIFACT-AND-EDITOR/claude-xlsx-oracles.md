@@ -47,13 +47,14 @@ Created: `🔮️oracles/🔭️third-party-witness/🦀️.rs`, `🔮️oracles
 - `📕️xlsx/🔮️oracles/🔭️third-party-generators/🐍️.py` (run: `UV_PROJECT_ENVIRONMENT=$PWD/.cache/b/tmp/<venv> repo tools exec uv -- run --frozen --no-dev --group test --python <3.14> python <path> verify|generate`): regenerates the relationship-base pairs **byte-identically** (core.xml `modified` pinned, zip clock fixed) and replays the five openpyxl-written grid pairs (insert-sheet, remove-sheet, rename-sheet, set-cell, remove-cell) by comparing the workbook as openpyxl reads it (their container bytes carry the original run clock, so only the read-back is comparable): all 10 files equal.
 - Recorded versions in the base oracle evidence and the third-party pair table updated to jszip@3.10.2 and fast-xml-parser@5.11.2; the two rationales that said "not installable offline / cannot resolve jszip" now point at the replay scripts.
 
-### 3. Feature-level run of mutate-xlsx-ecma-376 (NOT green yet, blocked outside the xlsx artifact)
-- Case selector: `--case` needs the complete directory name `🔀️mutate-xlsx-ecma-376`; the bare slug matches nothing. Scenarios are tagged `@level-exhaustive`/`@level-long`, so `quick` runs 0 executed (`not-exercised`); use `exhaustive`.
-- Managed route `repo run @semio-tech/repo-test-domain:test-parity -- exhaustive --case 🔀️mutate-xlsx-ecma-376`:
-  - one attempt died at the cargo capture cap (stderr 65543/65536 lines: the heartbeat lines of a 3550 s host compile);
-  - the next failed in the native-build telemetry sampler with "Separated capture and input require finite Original control and bounded output" (`🏃️process/🎛️owned-execution/📥️capture/🟦️.ts` line 85). The sampler's own limits (65536 bytes, 1024 lines) are within the check, and the check itself was edited by another agent between my runs (hardcoded 16777216/65536 became schema-derived), so I did not change it; root cause not isolated.
-- Manual route (mirrors `materializeRustHost`): `claude-oracles2/host` (Cargo.toml + main.rs including the harness `🦀️.rs`, `--features sut`) built through `repo cargo`. Findings: compiling needs `semio-plugin` as an optional sut dependency (found and added); two foreign breakages stopped it afterwards: an `[DEBUG]` line in `🧰️framework/🔨️modules/🚪️io/⏱️control/🦀️.rs` passing a `String` to `ValueError::literal(&'static str)` (minimally fixed to `ValueError::new`, debug text kept) and an in-flight edit of `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🔁️replay/🦀️.rs` (48 errors, `Turn::Yield` missing). A detached retry loop (`🗑️generated/claude-oracles2/retry-host.sh`, status in `host-status.txt`) rebuilds until that crate compiles; the driver `claude-xlsx-feature-run.ts` then plans and runs the host per role.
-- Subject-side laws (`calamine_shared_string_law` etc., behind `sut`) therefore remain unexecuted.
+### 3. Feature-level run of mutate-xlsx-ecma-376 (green through the manually built host)
+- Case selector: `--case` needs the complete directory name `🔀️mutate-xlsx-ecma-376`; scenarios are tagged `@level-exhaustive`/`@level-long`, so `quick` executes 0.
+- The managed route (`repo run @semio-tech/repo-test-domain:test-parity -- exhaustive --case ...`) failed in turn with the cargo capture cap (65543/65536 stderr lines of heartbeat output after a 3550 s cold host compile), "Separated capture and input require finite Original control and bounded output" (telemetry sampler in `🏃️process/🎛️owned-execution/📥️capture/🟦️.ts`; its limits of 65536 B / 1024 lines are within the check, and the check was rewritten by another agent between runs, so not changed by me), a restart-killed resident service, and finally `repo cargo` stalling 10 min in `source.served` (evidence in `claude-gate-stall.md`, logs `🗑️generated/claude-oracles2/host-term-*.log`). The managed re-try is scripted in `🗑️generated/claude-oracles2/run-managed.sh` (result in `managed-status.txt`), not yet run.
+- Manual host (mirrors `materializeRustHost`: `claude-oracles2/host`, `--features sut`, plus the `semio-plugin` sut dependency that the generated host also needs), built with the rustup toolchain cargo (`run-feature.sh`, build exit 0), planned by `claude-xlsx-feature-run.ts` via the framework's `buildCasePlan` and executed per role:
+  - oracle, exhaustive: 20 scenarios, **20 passed**; oracle, long: 2 scenarios, **2 passed**;
+  - subject (`sut`), exhaustive: 20 scenarios, **20 passed**; subject, long: 2 scenarios, **2 passed**.
+  These include the `insert-cell` mutate and inverse rows and the subject-side `calamine_shared_string_law` wiring. Parity comparison between the two result streams is done by the managed phase and was not executed here.
+- Minimal foreign fix made on the way: `🧰️framework/🔨️modules/🚪️io/⏱️control/🦀️.rs` `ValueError::literal(..., format!(..))` became `ValueError::new` in an `[DEBUG]` branch so the crate compiles.
 
 ### Numbers
 | Check | Result |
@@ -62,4 +63,6 @@ Created: `🔮️oracles/🔭️third-party-witness/🦀️.rs`, `🔮️oracles
 | jszip plumbing replay | 23/23 files byte-identical |
 | openpyxl relationship-base replay | 4/4 files byte-identical |
 | openpyxl grid replay | 10/10 files equal |
-| mutate-xlsx-ecma-376 feature run | not run to completion |
+| Feature host, oracle role | 20/20 exhaustive, 2/2 long |
+| Feature host, subject role (`sut`) | 20/20 exhaustive, 2/2 long |
+| Managed parity phase | not green (infrastructure), re-try scripted |

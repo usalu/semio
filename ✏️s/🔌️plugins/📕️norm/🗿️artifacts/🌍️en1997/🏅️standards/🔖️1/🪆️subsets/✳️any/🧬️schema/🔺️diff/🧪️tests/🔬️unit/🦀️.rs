@@ -9,6 +9,7 @@ use semio_s_artifact_norm_en1997_mutations::En1997Mutation;
 use semio_s_artifact_norm_en1997_model::En1997Snapshot;
 use protocol::{DiffAlgebra as _, Mutation as _, MutationDiff as _};
 use protocol::ColdMutationDiff;
+use protocol::{ColdDiffAlgebra as _, ColdMutation as _};
 
 fn base() -> En1997Snapshot {
     let mut base = En1997Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De);
@@ -59,7 +60,7 @@ async fn insert_then_remove_cancels_and_a_patch_on_an_added_row_folds_into_it() 
     assert!(sum.is_empty(), "create∘delete must cancel: {sum:?}");
     let sum = law(&base, &En1997Mutation::InsertFooting(InsertFooting { index: 0, footing: created.clone() }), |_| En1997Mutation::ChangeFootingWidth(ChangeFootingWidth { id: created.id.clone(), new_width: 3.3 })).await;
     let rows = sum.footings.expect("footings");
-    assert!(rows.modified.is_empty());
+    assert!(rows.modified.is_empty(), "{:?} with inserted {:?}", rows.modified, rows.inserted.iter().map(|row| (&row.row.id, row.index)).collect::<Vec<_>>());
     assert_eq!(rows.inserted[0].row.width, 3.3);
     assert_eq!(rows.inserted[0].index, 0);
 }

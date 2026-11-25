@@ -73,7 +73,9 @@ export async function runAgent(context:RemoteExecutionSidecarContextV1):Promise<
    });
   },30_000);
   const rustc=detectWorkerRustcV1(context.root,{...environment,PATH:[environment.PATH,join(homedir(),".cargo","bin")].filter(Boolean).join(delimiter)}),commands=await detectWorkerCommandsV1(context.root,environment);
-  const directory=cacheAreaHomeV1(context.root,"remote-execution-worker").directory,why=checkRemoteExecutionAgentReadinessV1({root:context.root,policy:policy.worker})??(rustc===undefined?remoteExecutionWorkerWhyV1("no-toolchain","no rustc answers in the checkout"):undefined);
+  let directory=join(context.root,".cache"),detached:Error|undefined;
+  try{directory=cacheAreaHomeV1(context.root,"remote-execution-worker").directory;}catch(error){if((error as Error).name!=="CacheAreaDetachedError")throw error;detached=error as Error;}
+  const why=detached!==undefined?remoteExecutionWorkerWhyV1("partition-detached",detached.message.split(" / ")[0]):checkRemoteExecutionAgentReadinessV1({root:context.root,policy:policy.worker})??(rustc===undefined?remoteExecutionWorkerWhyV1("no-toolchain","no rustc answers in the checkout"):undefined);
   say(`joining ${scheduler}${why!==undefined?` without a worker: ${why.en}`:` offering rustc for ${rustc!.toolchain.targets.length} target(s)`}`);
   const recheck=why===undefined?undefined:setTimeout(()=>{controller.abort();},15_000);
   try{

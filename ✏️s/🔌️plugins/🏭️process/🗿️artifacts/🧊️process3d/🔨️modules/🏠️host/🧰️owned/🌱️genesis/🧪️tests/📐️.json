@@ -1,0 +1,27 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract", "schema", "artifactKind", "historyShape", "address", "maximumInitialPackBytes", "machineCount", "stepCount", "toolSolidCount", "turn"],
+  "properties": {
+    "contract": { "const": "semio.process3d.original-document-genesis.v1" },
+    "schema": { "const": "process.3d" },
+    "artifactKind": { "const": "s.process.process3d" },
+    "historyShape": { "enum": ["document"] },
+    "address": { "type": "string", "minLength": 1 },
+    "maximumInitialPackBytes": { "type": "integer", "minimum": 1 },
+    "machineCount": { "type": "integer", "minimum": 0 },
+    "stepCount": { "const": 0 },
+    "toolSolidCount": { "const": 0 },
+    "turn": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["maximumItems", "maximumCopyBytes", "maximumCapacityBytes", "maximumReleaseBytes"],
+      "properties": {
+        "maximumItems": { "type": "integer", "minimum": 1 },
+        "maximumCopyBytes": { "type": "integer", "minimum": 1 },
+        "maximumCapacityBytes": { "type": "integer", "minimum": 1 },
+        "maximumReleaseBytes": { "type": "integer", "minimum": 1 }
+      }
+    }
+  }
+}

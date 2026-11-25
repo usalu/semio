@@ -131,7 +131,7 @@ pub use super::{FixtureUiArena, OriginalFixtureCaller, OriginalFixtureScope, Ori
 mod fixture_dispatch_steps_and_document_loading;
 pub use fixture_dispatch_steps_and_document_loading::{
     assert_editor_genesis_children_declared, assert_viewer_genesis_children_declared,
-    admit_document_archive_load, arm_host_lifetime, arm_host_turn_fuel, arm_host_turn_grant, fixture_end_turn, fixture_renew_turn, HostLifetimeGuard, HostLifetimeStock, HostTurnFuelGuard, HostTurnGrantGuard,
+    admit_document_archive_load, admit_document_archive_merge, arm_host_lifetime, arm_host_turn_fuel, arm_host_turn_grant, fixture_end_turn, fixture_renew_turn, HostLifetimeGuard, HostLifetimeStock, HostTurnFuelGuard, HostTurnGrantGuard,
     dispatch_fixture_action, dispatch_original_fixture_command, ensure_fixture_cancellation_issuer, FixtureOriginalJob, dispatch_fixture_command, dispatch_fixture_response_action, poll_fixture_media_export, produce_fixture_media, retain_fixture_media_export_result, submit_fixture_media_export, take_fixture_media_export_chunk, drain_maintenance_pressure, export_fixture_media,
     fixture_identity, CallerIdentityWork, fixture_job_outcome, fixture_mounted_policy, fixture_payload_bytes, fixture_pending_effects,
     fixture_progress, fixture_retained_turn, fixture_step, fixture_step_context,

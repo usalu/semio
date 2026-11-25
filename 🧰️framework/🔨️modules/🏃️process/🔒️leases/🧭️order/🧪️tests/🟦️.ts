@@ -191,6 +191,16 @@ test("the authored policy lets a graph holder wait for the pinned graph snapshot
   expect(checkHoldAndWaitV1(authoredPolicy, [held("artifact:/repo/out")], request, 1000)).toBeUndefined();
 });
 
+test("the dependency store producer may wait for the pin of a generation while it holds the dependency build lease, because only a collector that never waits holds a pin exclusively; other exclusive holds still refuse", () => {
+  const authoredPolicy = leaseOrderPolicyV1(), directory = "C:\\semio\\.cache\\b\\c", held = (resource: string) => ({ directory, resource, mode: "exclusive" as const, atMs: 0, task: 1 });
+  const request = { directory, resource: "javascript-dependency-pin:C:\\semio:2a5cd89d850242461f8a", mode: "shared" as const, nonblocking: false };
+  expect(classifyLeaseResourceV1(authoredPolicy, request.resource).id).toBe("pin");
+  expect(classifyLeaseResourceV1(authoredPolicy, "javascript-dependency-build:C:\\semio").id).toBe("namespace");
+  expect(checkHoldAndWaitV1(authoredPolicy, [held("javascript-dependency-build:C:\\semio")], request, 60000)).toBeUndefined();
+  expect(checkHoldAndWaitV1(authoredPolicy, [held("rust-code-namespace:C:\\semio")], request, 60000)?.kind).toBe("hold-and-wait");
+  expect(checkHoldAndWaitV1(authoredPolicy, [held("javascript-dependency-build:C:\\semio")], { ...request, resource: "javascript-dependency-bindings:C:\\semio", mode: "exclusive" as const }, 60000)?.kind).toBe("hold-and-wait");
+});
+
 test("the Bazel slot picker is the innermost lock: any held whole-build pin may precede it, and while it is held no other blocking lease may be requested", () => {
   const live = readLeaseOrderPolicyV1(authored), directory = "/repo/.cache/b/l/m/data", held = (resource: string, mode: "shared" | "exclusive") => ({ directory, resource, mode, atMs: 0, task: 1 }), request = (resource: string, nonblocking = false) => ({ directory, resource, mode: "exclusive" as const, nonblocking });
   const gates = ["bazel-slot-gate", "bazel-slot-gate:service"], holds = ["build-graph:/repo/.cache/b/g/m/snapshots/" + "a".repeat(64) + ".json", "build-graph-store:/repo/.cache/b/g/m", "rust-code:/repo/.cache/b/t/m/rc/" + "b".repeat(64), "repo:compiler-writer:/repo/.cache/b/r/m", "rustup:home", "cargo:registry:/h", "semio.compiler.host-capacity/v1", "artifact:/a/b", "nx-tooling-activation", "bazel-slot-s0", "bazel-snapshot-restore"];

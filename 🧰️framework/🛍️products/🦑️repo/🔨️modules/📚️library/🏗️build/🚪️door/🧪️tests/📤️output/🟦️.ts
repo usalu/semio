@@ -39,6 +39,28 @@ for (const row of corpus.door) {
   }, 60_000);
 }
 
+for (const [name, script] of [["front door", entry], ["build script", resolve(import.meta.dir, "../../../📜️script.ts")]]) {
+  test(`${name}: capacity status succeeds when the result pipe has no reader`, () => {
+    const result = spawnSync(testPythonV1() ?? "python3", ["-I", "-c", [
+      "import errno, os, subprocess, sys",
+      "reader, writer = os.pipe()",
+      "os.close(reader)",
+      "try: os.write(writer, b'probe')",
+      "except OSError as error: assert error.errno == errno.EPIPE",
+      "else: raise AssertionError('expected a broken pipe')",
+      "try: run = subprocess.run(sys.argv[1:], stdout=writer, timeout=20)",
+      "finally: os.close(writer)",
+      "sys.exit(run.returncode)",
+    ].join("\n"), process.execPath, script, ...corpus.closedReader.args], {
+      env: { ...process.env, SEMIO_REPO_SEAL: "live", SEMIO_HOST_CAPACITY_DIRECTORY: join(fresh(), "capacity") },
+      encoding: "utf8", timeout: 25_000,
+    });
+    expect(result.error).toBeUndefined();
+    expect(result.status, result.stderr).toBe(corpus.closedReader.status);
+    expect(result.stderr).toBe(corpus.closedReader.stderr);
+  }, 30_000);
+}
+
 test(`wait: ${corpus.wait.name}`, async () => {
   const root = fresh(), release = join(root, "release");
   let released = false;

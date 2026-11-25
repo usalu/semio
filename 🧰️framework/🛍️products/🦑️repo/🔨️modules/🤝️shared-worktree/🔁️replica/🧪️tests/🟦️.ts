@@ -13,6 +13,7 @@ import stateSchema from "../💾️state/🧬️schema/🔣️.json" with {type:
 import {decodeRecordsV1,frameV1,payloadsV1,readCheckpointV1,scanWalV1,walHeaderV1} from "../💾️state/🟦️.ts";
 import {blobPathV1,foldEventsV1,formatHlcV1,readEventsV1,readHeadV1,readNewestSnapshotV1,type FleetEventV1,type FleetManifestEntryV1} from "../../📒️journal/🟦️.ts";
 import {checkpointReplicaV1,closeReplicaV1,flushRefusalsV1,CompactTableV1,compactV1,conflictWinnerV1,followOnceV1,foldStoreV1,homedOriginsV1,joinV1,localPathsV1,JoinRefusedV1,openReplicaV1,publishOnceV1,relayOnceV1,recallV1,relayV1,ReplicaBookV1,scanDelayV1,ReplicaBusyV1,ReplicaFoldsV1,requireReplicaShapeV1,runV1,seedV1,setSyncEnabledV1,snapshotV1,statusV1,syncEnabledV1,verifyV1,type ReplicaEventV1,type ReplicaOptionsV1,type ReplicaV1} from "../🟦️.ts";
+import {readProcessStartV1} from "../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts";
 
 const ajv=new Ajv({strict:true,allowUnionTypes:true}),validator=(definition:string)=>ajv.compile({$schema:schema.$schema,definitions:schema.definitions,$ref:`#/definitions/${definition}`}),headerValidator=ajv.compile({$schema:stateSchema.$schema,definitions:stateSchema.definitions,$ref:"#/definitions/Header"}),python=testPythonV1(),scratch:string[]=[];
 const oracle=join(import.meta.dirname,"🐍️.py"),fixturePath=join(import.meta.dirname,"🧫️fixtures","🔣️.json"),posixTest=process.platform==="win32"?test.skip:test;
@@ -546,7 +547,7 @@ test("torn writer state is never read and torn local staging files and stale loc
  const directory=join(b.options.worktree,".cache","f");
  writeFileSync(join(directory,"tmp","half-written"),"partial");
  const child=Bun.spawnSync([process.execPath,"--version"]);
- writeFileSync(join(directory,"daemon.lock"),JSON.stringify({version:1,pid:child.pid,startedMs:1,originId:"b"}));
+ writeFileSync(join(directory,"daemon.lock"),JSON.stringify({version:1,pid:child.pid,startMs:(()=>{const read=readProcessStartV1(child.pid);return typeof read==="number"?read:1;})(),originId:"b"}));
  await open(b);
  expect(existsSync(join(directory,"tmp","half-written"))).toBe(false);
  await expect(openReplicaV1(b.options)).rejects.toBeInstanceOf(ReplicaBusyV1);

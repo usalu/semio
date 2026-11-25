@@ -3,7 +3,7 @@ use super::*;
 use semio_os_infinite::board::io::text::dag_input::{retained::{DagInputCursor,DagInputKind},output::{DagJsonSource,DagOutputKind,DagOutputPreparation}};
 use semio_framework_pack_json::JsonBorrowedWriteCursor;
 use semio_os_infinite::board::ports::directed_dag::input_application::{DagInputApplication,DagInputDisplaced};
-use semio_framework_value::retirement::controlled::{ControlledRetirement,admit_typed_controlled_retirement};
+use semio_framework_value::retirement::controlled::{ControlledRetirement,admit_typed_controlled_retirement,controlled_retirement_birth_demand};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeContinuation;
 use semio_framework_value::native_encoding::NativeEncodeContinuation;
 use semio_framework_value::{NativeEncodeControl, ErasedSnapshotRetirement, retained_clone::RetainedCloneGrant, retirement::{RetireOwned, admit_owned_retirement}};
@@ -14,20 +14,23 @@ fn authored_input(grant:RetainedCloneGrant,operation:impl FnOnce(&mut semio_fram
     semio_os_flow_host_core::cold_effect(grant,operation)?.unwrap_or(Ok(false))
 }
 
+/// 🔁️ Consecutive polls an input may yield without progress (an unadmitted quote) before it is refused by name.
+const FLOW_INPUT_STALL_TURNS:u32=4096;
+
 pub struct FlowDagAction{
     pub operation:u16,admission:Option<FlowFeatureAdmission>,input_ceiling:usize,output_ceiling:usize,program:FlowProgramState,observer:Rc<FlowOperationObserver>,
     input:Option<DagInputCursor>,output:Option<JsonBorrowedWriteCursor>,kind:Option<DagOutputKind>,
     application:Option<DagInputApplication>,displaced:Option<Box<ControlledRetirement<DagInputDisplaced>>>,
     output_preparation:Option<DagOutputPreparation>,output_prepared:bool,
     decode:Option<NativeDecodeContinuation>,encode:Option<NativeEncodeContinuation>,decode_started:bool,encode_started:bool,
-    retirement:Option<Box<dyn ErasedSnapshotRetirement>>,transitions:u64,
+    retirement:Option<Box<dyn ErasedSnapshotRetirement>>,transitions:u64,stalled_turns:u32,close_stalls:u32,
     close_capacity:usize,close_copy:usize,close_release:usize,receipt:RetainedCloneProgress,
 }
 impl FlowDagAction{
     pub fn new(operation:u16,args:&FlowArguments)->Self{
         let input=match operation{2514=>Some(DagInputKind::Progress),2515=>Some(DagInputKind::Statuses),2525=>Some(DagInputKind::Selection),2528=>Some(DagInputKind::Channels),_=>None};
         let kind=match operation{2518=>Some(DagOutputKind::Nodes),2519=>Some(DagOutputKind::Edges),2520=>Some(DagOutputKind::Selection),2522=>Some(DagOutputKind::Hover),2523=>Some(DagOutputKind::Channels),_=>None};
-        Self{operation,admission:None,input_ceiling:0,output_ceiling:0,program:FlowProgramState::new(args),observer:Rc::new(FlowOperationObserver::new()),input:input.map(DagInputCursor::new),output:kind.map(|_|JsonBorrowedWriteCursor::new()),kind,application:None,displaced:None,output_preparation:kind.map(DagOutputPreparation::new),output_prepared:false,decode:None,encode:None,decode_started:false,encode_started:false,retirement:None,transitions:0,close_capacity:0,close_copy:0,close_release:0,receipt:Default::default()}
+        Self{operation,admission:None,input_ceiling:0,output_ceiling:0,program:FlowProgramState::new(args),observer:Rc::new(FlowOperationObserver::new()),input:input.map(DagInputCursor::new),output:kind.map(|_|JsonBorrowedWriteCursor::new()),kind,application:None,displaced:None,output_preparation:kind.map(DagOutputPreparation::new),output_prepared:false,decode:None,encode:None,decode_started:false,encode_started:false,retirement:None,transitions:0,stalled_turns:0,close_stalls:0,close_capacity:0,close_copy:0,close_release:0,receipt:Default::default()}
     }
     pub fn progress(&mut self)->FlowFeatureStep{self.transitions=self.transitions.saturating_add(1);FlowFeatureStep::Progress{completed:self.transitions,total:0}}
     fn domain_step(&mut self,domain:&mut FlowDomainAdapter,args:&FlowArguments,budget:AbiWorkBudget)->FlowFeatureStep{
@@ -50,12 +53,12 @@ impl FlowDagAction{
             let progress=self.application.as_ref().map(DagInputApplication::normal_step_progress).unwrap_or_else(||self.input.as_ref().unwrap().normal_step_progress());self.receipt=match self.receipt.checked_add(progress){Ok(receipt)=>receipt,Err(error)=>return self.program.finish_domain(Err(self.failure(error)))};
             if let Ok(control)=control{match control.pause(){Ok(receipt)=>self.decode=Some(receipt),Err((error,_))=>return self.program.finish_domain(Err(dag_input_failure(error)))}}
             match result{
-                Ok(false)=>if progress.copied_items==0{FlowFeatureStep::Yield}else{self.progress()},
+                Ok(false)=>self.stalled(progress.copied_items),
                 Ok(true)=>{
                     if self.application.is_none(){self.application=Some(DagInputApplication::new(self.input.as_mut().unwrap().take_facts().expect("complete admitted original DAG facts")));return self.progress()}
                     let Some(items)=budget.retained.maximum_items.checked_sub(progress.copied_items)else{return self.program.finish_domain(Err(abi_failure(AbiErrorCode::NoCredit)))};let Some(capacity)=budget.retained.maximum_capacity_bytes.checked_sub(progress.retained_capacity_bytes)else{return self.program.finish_domain(Err(abi_failure(AbiErrorCode::NoCredit)))};
-                    let bytes=semio_framework_value::retirement::owned_retirement_birth_bytes::<DagInputDisplaced>();let grant=match self.close_grant(RetainedCloneGrant{maximum_items:items,maximum_capacity_bytes:capacity,..budget.retained},0,bytes,0,1){Ok(grant)=>grant,Err(_)=>return if progress.copied_items==0{FlowFeatureStep::Yield}else{self.progress()}};
-                    let mut empty=Some(DagInputDisplaced::empty());let admitted=match semio_os_flow_host_core::cold_effect(grant,|effect|admit_typed_controlled_retirement(&mut empty,effect)){Ok(Some(admitted))=>admitted,Ok(None)=>return if progress.copied_items==0{FlowFeatureStep::Yield}else{self.progress()},Err(error)=>return self.program.finish_domain(Err(self.failure(error)))};match admitted.result{Ok(Some((owner,receipt)))=>{self.close_capacity-=receipt.retained_capacity_bytes;self.receipt=self.receipt.checked_add(receipt).expect("bounded displaced birth receipt");self.displaced=Some(owner);self.progress()},Ok(None)=>self.program.finish_domain(Err(self.failure(semio_framework_value::ValueError::invariant("DAG displaced custody was absent")))),Err(error)=>self.program.finish_domain(Err(self.failure(error)))}
+                    let mut empty=Some(DagInputDisplaced::empty());let birth=match controlled_retirement_birth_demand(empty.as_ref().unwrap()){Ok(demand)=>demand,Err(error)=>return self.program.finish_domain(Err(self.failure(error)))};let grant=match self.close_grant(RetainedCloneGrant{maximum_items:items,maximum_capacity_bytes:capacity,..budget.retained},birth.copy_bytes,birth.capacity_bytes,0,birth.depth){Ok(grant)=>grant,Err(_)=>return self.stalled(progress.copied_items)};
+                    let admitted=match semio_os_flow_host_core::cold_effect(grant,|effect|admit_typed_controlled_retirement(&mut empty,effect)){Ok(Some(admitted))=>admitted,Ok(None)=>return self.stalled(progress.copied_items),Err(error)=>return self.program.finish_domain(Err(self.failure(error)))};match admitted.result{Ok(Some((owner,receipt)))=>{self.close_capacity-=receipt.retained_capacity_bytes;self.close_copy-=receipt.copied_bytes;self.receipt=self.receipt.checked_add(receipt).expect("bounded displaced birth receipt");self.displaced=Some(owner);self.progress()},Ok(None)=>self.stalled(progress.copied_items),Err(error)=>self.program.finish_domain(Err(self.failure(error)))}
                 },
                 Err(error)=>self.program.finish_domain(Err(self.failure(error))),
             }
@@ -67,8 +70,13 @@ impl FlowDagAction{
             let result=match control.as_mut(){Ok(control)=>if !self.output_prepared{self.output_preparation.as_mut().unwrap().step(&domain.host.dag,1,control,grant).map(|complete|{self.output_prepared=complete;None})}else{let source=self.output_preparation.as_ref().unwrap().view(&domain.host.dag);self.output.as_mut().unwrap().step(&DagJsonSource{source:&source,kind:self.kind.unwrap()},1,control,grant)},Err(error)=>Err(semio_framework_value::ValueError::literal(error.0.kind,"DAG output continuation refused"))};
             let progress=if prepared_before{self.output.as_ref().unwrap().normal_step_progress()}else{self.output_preparation.as_ref().unwrap().normal_step_progress()};self.receipt=match self.receipt.checked_add(progress){Ok(receipt)=>receipt,Err(error)=>return self.program.finish_domain(Err(self.failure(error)))};
             if let Ok(control)=control{match control.pause(){Ok(receipt)=>self.encode=Some(receipt),Err((error,_))=>return self.program.finish_domain(Err(dag_input_failure(error)))}}
-            match result{Ok(None)=>if progress.copied_items==0{FlowFeatureStep::Yield}else{self.progress()},Ok(Some(output))=>{self.program.output=output.into_bytes();self.program.phase=FlowProgramPhase::Publish;self.progress()},Err(error)=>self.program.finish_domain(Err(self.failure(error)))}
+            match result{Ok(None)=>self.stalled(progress.copied_items),Ok(Some(output))=>{self.program.output=output.into_bytes();self.program.phase=FlowProgramPhase::Publish;self.progress()},Err(error)=>self.program.finish_domain(Err(self.failure(error)))}
         }
+    }
+    fn stalled(&mut self,copied:usize)->FlowFeatureStep{
+        if copied!=0{self.stalled_turns=0}else{self.stalled_turns+=1}
+        if self.stalled_turns>FLOW_INPUT_STALL_TURNS{return self.program.finish_domain(Err(FlowFailure::new(AbiErrorCode::NoCredit,"DAG input quote was not admitted within its turn limit")))}
+        if copied==0{FlowFeatureStep::Yield}else{self.progress()}
     }
     fn failure(&self,error:semio_framework_value::ValueError)->FlowFailure{
         if error.kind==semio_framework_value::ValueRefusalKind::Canceled{if let Some(code)=self.observer.failure.get(){return abi_failure(code)}}dag_input_failure(error)
@@ -92,11 +100,12 @@ impl FlowDagAction{
         Ok(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:capacity,maximum_release_bytes:release,maximum_depth:depth})
     }
     fn close_owned<T:RetireOwned>(&mut self,original:&mut Option<T>,admitted:RetainedCloneGrant)->Result<bool,FlowFailure>{
-        if original.is_some(){let capacity=semio_framework_value::retirement::owned_retirement_birth_bytes::<T>();let grant=match self.close_grant(admitted,0,capacity,0,1){Ok(grant)=>grant,Err(_)=>return Ok(false)};
-            let Some(admitted)=semio_os_flow_host_core::cold_effect(grant,|effect|admit_owned_retirement(original,effect)).map_err(dag_input_failure)?else{return Ok(false)};
-            match admitted.result.map_err(dag_input_failure)?{Some((owner,progress))=>{self.close_capacity-=progress.retained_capacity_bytes;self.receipt=self.receipt.checked_add(progress).map_err(dag_input_failure)?;self.retirement=Some(owner)},None=>return Ok(true)}
-            return Ok(false)
-        }Ok(true)
+        let Some(value)=original.as_ref()else{return Ok(true)};
+        let birth=controlled_retirement_birth_demand(value).map_err(dag_input_failure)?;
+        let Ok(grant)=self.close_grant(admitted,birth.copy_bytes,birth.capacity_bytes,0,birth.depth)else{return Ok(false)};
+        let Some(admitted)=semio_os_flow_host_core::cold_effect(grant,|effect|admit_owned_retirement(original,effect)).map_err(dag_input_failure)?else{return Ok(false)};
+        if let Some((owner,progress))=admitted.result.map_err(dag_input_failure)?{self.close_capacity-=progress.retained_capacity_bytes;self.close_copy-=progress.copied_bytes;self.receipt=self.receipt.checked_add(progress).map_err(dag_input_failure)?;self.retirement=Some(owner)}
+        Ok(original.is_none())
     }
 }
 impl FlowActionState for FlowDagAction{
@@ -119,6 +128,15 @@ impl FlowActionState for FlowDagAction{
         }
     }
     fn close_step(&mut self,arguments:&mut FlowArguments,budget:AbiWorkBudget)->Result<bool,FlowFailure>{
+        let before=self.receipt;let done=self.close_one(arguments,budget)?;
+        if done||self.receipt!=before||budget.byte_credit==0||budget.retained.maximum_items==0{self.close_stalls=0;return Ok(done)}
+        self.close_stalls+=1;
+        if self.close_stalls>FLOW_INPUT_STALL_TURNS{return Err(FlowFailure::new(AbiErrorCode::NoCredit,"DAG input owner retirement was not admitted within its turn limit"))}
+        Ok(false)
+    }
+}
+impl FlowDagAction{
+    fn close_one(&mut self,arguments:&mut FlowArguments,budget:AbiWorkBudget)->Result<bool,FlowFailure>{
         if budget.byte_credit==0{return Ok(false)}
         if let Some(owner)=self.displaced.take(){assert!(self.retirement.is_none());self.retirement=Some(owner as Box<dyn ErasedSnapshotRetirement>);return Ok(false)}
         if !self.drain_retirement(budget.retained)?{return Ok(false)}

@@ -1,0 +1,5 @@
+{
+"ops": [
+{"op": "shape-set", "scale": "200", "view": "front", "id": "wheel-r", "set": {"bone": "deck"}}
+]
+}

@@ -13,17 +13,83 @@
    "de": "Eine Stahlemaille-Badewanne der 1980er-Jahre, 1,70 x 0,75 m, aus 2-mm-Blech tiefgezogen, 0,41 m tief, 42.4 kg mit verstellbarem Fußgestell, Email um den offenen Überlauf abgeplatzt, Ablaufgarnitur ausgebaut, Kalkrand und alter Silikonrest auf dem Rand; hochkant auf dem Fußende auf einer Möbeldecke an der Lagerwand gelagert, abgekippt und liegend von zwei Personen getragen, wieder in einem Bad gefüllt mit 150 l warmem Wasser und einer badenden Person."
   },
   "tags": [
-   "used",
-   "household",
-   "second-hand",
-   "bathroom",
-   "bathtub",
-   "bath",
-   "enamel",
-   "steel",
-   "sanitary",
-   "1980s",
-   "interior"
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "household",
+    "title": {
+     "en": "household",
+     "de": "Haushalt"
+    }
+   },
+   {
+    "id": "second-hand",
+    "title": {
+     "en": "second-hand",
+     "de": "Second-Hand"
+    }
+   },
+   {
+    "id": "bathroom",
+    "title": {
+     "en": "bathroom",
+     "de": "Badezimmer"
+    }
+   },
+   {
+    "id": "bathtub",
+    "title": {
+     "en": "bathtub",
+     "de": "Badewanne"
+    }
+   },
+   {
+    "id": "bath",
+    "title": {
+     "en": "bath",
+     "de": "Bad"
+    }
+   },
+   {
+    "id": "enamel",
+    "title": {
+     "en": "enamel",
+     "de": "Emaille"
+    }
+   },
+   {
+    "id": "steel",
+    "title": {
+     "en": "steel",
+     "de": "Stahl"
+    }
+   },
+   {
+    "id": "sanitary",
+    "title": {
+     "en": "sanitary",
+     "de": "Sanitär"
+    }
+   },
+   {
+    "id": "1980s",
+    "title": {
+     "en": "1980s",
+     "de": "1980er"
+    }
+   },
+   {
+    "id": "interior",
+    "title": {
+     "en": "interior",
+     "de": "Innenausbau"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content (used household objects wave)",

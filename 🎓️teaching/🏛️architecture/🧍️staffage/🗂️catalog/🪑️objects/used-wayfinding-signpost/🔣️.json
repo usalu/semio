@@ -13,19 +13,97 @@
    "de": "Ein kommunaler Parkwegweiser nach Jahren an einer Weggabelung: ein verzinkter 76,1-mm-Stahlpfosten, 2,98 m hoch, an der Geländelinie verrostet und mit Aufklebern beklebt, 0,7 m tief in einem Betonpunktfundament, trägt vier 650-mm-Pfeilfinger aus Aluminium an Druckguss-Rohrschellen; ein Finger ist mit einem Graffiti-Tag übersprüht und zum Tausch fällig, der unterste hat sich gelockert und zeigt 35 Grad an seinem Ziel vorbei."
   },
   "tags": [
-   "used",
-   "park",
-   "public-space",
-   "signage",
-   "wayfinding",
-   "finger-signpost",
-   "galvanised-steel",
-   "aluminium",
-   "pipe-clamp",
-   "graffiti",
-   "stickers",
-   "concrete-footing",
-   "street-furniture"
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "park",
+    "title": {
+     "en": "park",
+     "de": "Park"
+    }
+   },
+   {
+    "id": "public-space",
+    "title": {
+     "en": "public space",
+     "de": "öffentlicher Raum"
+    }
+   },
+   {
+    "id": "signage",
+    "title": {
+     "en": "signage",
+     "de": "Beschilderung"
+    }
+   },
+   {
+    "id": "wayfinding",
+    "title": {
+     "en": "wayfinding",
+     "de": "Orientierung"
+    }
+   },
+   {
+    "id": "finger-signpost",
+    "title": {
+     "en": "finger signpost",
+     "de": "Wegweiser"
+    }
+   },
+   {
+    "id": "galvanised-steel",
+    "title": {
+     "en": "galvanised steel",
+     "de": "verzinkter Stahl"
+    }
+   },
+   {
+    "id": "aluminium",
+    "title": {
+     "en": "aluminium",
+     "de": "Aluminium"
+    }
+   },
+   {
+    "id": "pipe-clamp",
+    "title": {
+     "en": "pipe clamp",
+     "de": "Rohrschelle"
+    }
+   },
+   {
+    "id": "graffiti",
+    "title": {
+     "en": "graffiti",
+     "de": "Graffiti"
+    }
+   },
+   {
+    "id": "stickers",
+    "title": {
+     "en": "stickers",
+     "de": "Aufkleber"
+    }
+   },
+   {
+    "id": "concrete-footing",
+    "title": {
+     "en": "concrete footing",
+     "de": "Betonfundament"
+    }
+   },
+   {
+    "id": "street-furniture",
+    "title": {
+     "en": "street furniture",
+     "de": "Stadtmobiliar"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content (used park objects wave)",

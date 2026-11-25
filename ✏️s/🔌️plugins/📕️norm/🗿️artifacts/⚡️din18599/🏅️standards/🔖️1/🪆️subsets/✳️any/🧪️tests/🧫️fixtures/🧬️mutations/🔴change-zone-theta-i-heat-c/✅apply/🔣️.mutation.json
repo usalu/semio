@@ -1,5 +1,5 @@
 {
-  "mutation": "changezonethetaiheatc",
+  "mutation": "changeZoneThetaIHeatC",
   "zoneId": "zone-living",
   "newThetaIHeatC": 21.0
 }

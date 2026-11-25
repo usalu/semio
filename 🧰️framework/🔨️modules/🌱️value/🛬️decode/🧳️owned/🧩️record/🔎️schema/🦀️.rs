@@ -26,6 +26,8 @@ impl NativeSchemaFields{
  /// # Safety
  /// Every table must be bounded, deterministic, allocation-free, callback-free and non-unwinding for every index; every recursively returned table must obey the same contract and return only static descriptor data.
  pub const unsafe fn native(read:fn(usize)->Option<NativeRecordSchema>)->Self{Self{read}}
+ /// 🔎️ Reads one static descriptor entry without any matcher.
+ pub fn entry(&self,index:usize)->Option<NativeRecordSchema>{(self.read)(index)}
  /// 📐️ Prices the exact resident descriptor and borrowed reply headers.
  pub fn selection_demand()->RetirementDemand{fixed(size_of::<Option<Option<NativeRecordSchema>>>()+size_of::<Option<Result<RetainedCloneStep,ValueError>>>())}
  /// 📥️ Publishes one selected native descriptor under the genuine performed Work receipt.

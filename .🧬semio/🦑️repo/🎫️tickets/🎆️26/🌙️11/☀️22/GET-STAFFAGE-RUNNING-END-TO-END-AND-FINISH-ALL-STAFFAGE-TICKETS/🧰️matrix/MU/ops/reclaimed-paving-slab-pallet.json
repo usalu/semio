@@ -1,0 +1,16 @@
+{
+"ops": [
+{"op": "solid-from", "scale": "50", "view": "elevation", "id": "slab-r1-edge", "from": "front", "source": "slab-r1-face"},
+{"op": "solid-from", "scale": "50", "view": "elevation", "id": "slab-r2-edge", "from": "front", "source": "slab-r2-face"},
+{"op": "solid-from", "scale": "50", "view": "elevation", "id": "slab-r3-edge", "from": "front", "source": "slab-r3-face"},
+{"op": "solid-from", "scale": "100", "view": "elevation", "id": "slab-r1-edge", "from": "front", "source": "slab-r1-face"},
+{"op": "solid-from", "scale": "100", "view": "elevation", "id": "slab-r2-edge", "from": "front", "source": "slab-r2-face"},
+{"op": "solid-from", "scale": "100", "view": "elevation", "id": "slab-r3-edge", "from": "front", "source": "slab-r3-face"},
+{"op": "solid-from", "scale": "200", "view": "elevation", "id": "slab-r1-edge", "from": "front", "source": "slab-r1-face"},
+{"op": "solid-from", "scale": "200", "view": "elevation", "id": "slab-r2-edge", "from": "front", "source": "slab-r2-face"},
+{"op": "solid-from", "scale": "200", "view": "elevation", "id": "slab-r3-edge", "from": "front", "source": "slab-r3-face"},
+{"op": "solid-from", "scale": "500", "view": "elevation", "id": "slab-r1-edge", "from": "front", "source": "slab-r1-face"},
+{"op": "solid-from", "scale": "500", "view": "elevation", "id": "slab-r2-edge", "from": "front", "source": "slab-r2-face"},
+{"op": "solid-from", "scale": "500", "view": "elevation", "id": "slab-r3-edge", "from": "front", "source": "slab-r3-face"}
+]
+}

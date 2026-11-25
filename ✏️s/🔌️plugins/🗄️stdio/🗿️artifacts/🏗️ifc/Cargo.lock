@@ -6675,6 +6675,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-plugin-reactor-receiving-completed"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-diagnostic",
+ "semio-framework-job",
+ "semio-framework-job-native-decode",
+ "semio-framework-pack",
+ "semio-framework-pack-json",
+ "semio-framework-trace",
+ "semio-framework-value",
+ "semio-plugin-actor-host",
+ "semio-plugin-reactor-receiving-source",
+]
+
+[[package]]
 name = "semio-plugin-reactor-receiving-source"
 version = "0.1.0"
 dependencies = [
@@ -6770,6 +6786,7 @@ dependencies = [
  "semio-plugin-reactor-core",
  "semio-plugin-reactor-lifecycle",
  "semio-plugin-reactor-patches",
+ "semio-plugin-reactor-receiving-completed",
  "semio-plugin-reactor-receiving-source",
  "semio-plugin-reactor-staged-forms",
  "semio-plugin-reactor-surfaces",
@@ -7127,6 +7144,7 @@ dependencies = [
  "semio-plugin-decl-app",
  "semio-plugin-decl-emission",
  "semio-plugin-decl-tool-contract",
+ "semio-plugin-job-receiving",
  "semio-plugin-ownership",
  "semio-plugin-retained-command",
  "semio-ui-contract-values",
@@ -8934,6 +8952,7 @@ dependencies = [
  "semio-s-artifact-stdio-ifc-2x3-base",
  "semio-s-artifact-stdio-ifc-2x3-base-model",
  "semio-s-artifact-stdio-ifc-2x3-base-mutations",
+ "semio-s-artifact-stdio-ifc-details-wire",
  "semio-ui-locale",
 ]
 
@@ -10763,14 +10782,32 @@ dependencies = [
  "semio-s-artifact-stdio-pdf-diff",
  "semio-s-artifact-stdio-pdf-fonts",
  "semio-s-artifact-stdio-pdf-inferences",
+ "semio-s-artifact-stdio-pdf-lifter",
  "semio-s-artifact-stdio-pdf-model",
  "semio-s-artifact-stdio-pdf-mut-base-4",
  "semio-s-artifact-stdio-pdf-mut-family-5",
+ "semio-s-artifact-stdio-pdf-page-content",
+ "semio-s-artifact-stdio-pdf-page-tree",
  "semio-s-artifact-stdio-pdf-snapshot-2",
- "semio-s-artifact-stdio-pdf-xref-stream",
  "semio-ui-contract",
  "semio-ui-locale",
  "serde_json",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-pdf-lifter"
+version = "0.1.0"
+dependencies = [
+ "semio-s-artifact-stdio-pdf-conformance-support",
+ "semio-s-artifact-stdio-pdf-diff",
+ "semio-s-artifact-stdio-pdf-fonts",
+ "semio-s-artifact-stdio-pdf-inferences",
+ "semio-s-artifact-stdio-pdf-model",
+ "semio-s-artifact-stdio-pdf-mut-base-4",
+ "semio-s-artifact-stdio-pdf-mut-family-5",
+ "semio-s-artifact-stdio-pdf-page-content",
+ "semio-s-artifact-stdio-pdf-page-tree",
+ "semio-s-artifact-stdio-pdf-snapshot-2",
 ]
 
 [[package]]
@@ -11890,6 +11927,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-s-artifact-stdio-pdf-page-content"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value",
+ "semio-s-artifact-stdio-pdf-diff",
+ "semio-s-artifact-stdio-pdf-inferences",
+ "semio-s-artifact-stdio-pdf-mut-family-5",
+ "semio-s-artifact-stdio-pdf-snapshot-2",
+]
+
+[[package]]
 name = "semio-s-artifact-stdio-pdf-page-coordinates"
 version = "0.1.0"
 
@@ -11970,6 +12018,16 @@ dependencies = [
  "semio-ui-contract",
  "semio-ui-locale",
  "serde_json",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-pdf-page-tree"
+version = "0.1.0"
+dependencies = [
+ "semio-s-artifact-stdio-pdf-diff",
+ "semio-s-artifact-stdio-pdf-inferences",
+ "semio-s-artifact-stdio-pdf-snapshot-2",
+ "semio-s-artifact-stdio-pdf-xref-stream",
 ]
 
 [[package]]
@@ -13349,8 +13407,20 @@ dependencies = [
  "semio-plugin",
  "semio-s-artifact-stdio-contract",
  "semio-s-artifact-stdio-txt",
+ "semio-s-artifact-stdio-xml-snapshot-document",
  "semio-ui-locale",
  "serde_json",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-xml-snapshot-document"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-pack-json",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
 ]
 
 [[package]]

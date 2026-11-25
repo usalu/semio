@@ -253,6 +253,7 @@ pub enum GltfMutation {
     RemoveUsedExtension(RemoveUsedExtensionMutation),
 }
 dsl::original_pack_value_operation_receiving!(GltfMutation);
+dsl::artifact_persisted_binary_operation!(GltfMutation);
 
 //#region 🌉️TestBridge
 

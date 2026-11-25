@@ -101,7 +101,18 @@
           "corrugationFlat": null,
           "corrugationProjection": null,
           "corrugationDepth": 1.5,
-          "webHeight": null
+          "webHeight": null,
+          "stiffenerSpacing": null,
+          "stiffenerShape": null,
+          "stiffenerDepth": null,
+          "stiffenerThickness": null,
+          "stiffenerFlangeWidth": null,
+          "stiffenerFlangeThickness": null,
+          "lateralPressure": null,
+          "lateralPressureCoefficient": null,
+          "steelGrade": null,
+          "steelSubgrade": null,
+          "designTemperature": null
         }
       }
     ]

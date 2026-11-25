@@ -14,6 +14,7 @@ import {systemAncestryV1,WINDOWS_PROCESS_LISTING_V1} from "../../../🪪️agent
 import {hostDeclarationKeyV1} from "../🪞️profile/🟦️.ts";
 import {HOST_PHASES_V1,hostPhaseSegmentsV1,type HostPhaseTransitionV1,type HostPhaseV1} from "../🪜️phases/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
+import {HOST_WARDEN_POLICY_V1,formatHostWardenHoldV1,hostWardenHoldsV1,type HostWardenStateV1} from "../🛡️warden/🟦️.ts";
 import {currentHostOrphanWatchV1} from "./👻️orphan/🟦️.ts";
 import {absentV1,alive,currentSample,hostBootAtV1,hostCapacityDirectoryV1,modified,names,prepare,readGrants,readJson,readWaiters,remove,writeJson,type HostCapacityStatusV1} from "./📖️status/🟦️.ts";
 export {hostBootAtV1,hostCapacityDirectoryV1,readHostCapacityStatusV1,type HostCapacityStatusV1} from "./📖️status/🟦️.ts";
@@ -46,7 +47,7 @@ export function readLiveHostCapacityPlanV1(environment:Readonly<Record<string,st
 }
 
 /** 🧾️ Reads actual same-id ledger reservation DATA; the larger tool envelope never attests resident capacity. */
-export function readLiveHostCapacityReservationV1(environment:Readonly<Record<string,string|undefined>>,policy:HostCapacityPolicyV1):Readonly<Pick<HostGrantV1,"id"|"jobs"|"cpu"|"reservedMegabytes">>|undefined{const plan=readHostCapacityPlanV1(environment);if(!plan)return undefined;const directory=hostCapacityDirectoryV1(environment),path=grantPath(directory,plan.id);const row=readJson(path);if(!isHostCapacityV1("Grant",row))return undefined;const grant=row as HostGrantV1,at=Date.now(),boot=hostBootAtV1(directory,at);if(!isCurrentHostGrantV1({grant,expectedId:plan.id,pidAlive:alive(grant.pid),nowMs:at,bootAtMs:boot,modifiedAtMs:modified(path)},policy))return undefined;return requireHostCapacityV1("Reservation",Object.freeze({id:grant.id,jobs:grant.jobs,cpu:grant.cpu,reservedMegabytes:grant.quiet?0:grant.reservedMegabytes}));}
+export function readLiveHostCapacityReservationV1(environment:Readonly<Record<string,string|undefined>>,policy:HostCapacityPolicyV1):Readonly<Pick<HostGrantV1,"id"|"jobs"|"cpu"|"reservedMegabytes">>|undefined{const plan=readHostCapacityPlanV1(environment);if(!plan)return undefined;const directory=hostCapacityDirectoryV1(environment),path=grantPath(directory,plan.id);const row=readJson(path);if(!isHostCapacityV1("Grant",row))return undefined;const grant=row as HostGrantV1,at=Date.now(),boot=hostBootAtV1(directory,at);if(!isCurrentHostGrantV1({grant,expectedId:plan.id,pidAlive:alive(grant.pid),nowMs:at,bootAtMs:boot,modifiedAtMs:modified(path)},policy)||grant.lentSinceMs!==undefined)return undefined;return requireHostCapacityV1("Reservation",Object.freeze({id:grant.id,jobs:grant.jobs,cpu:grant.cpu,reservedMegabytes:grant.quiet?0:grant.reservedMegabytes}));}
 
 const grantPath=(directory:string,id:string)=>join(directory,"grants",`${id}.json`);
 const attachedPath=(directory:string,id:string)=>join(directory,"grants",`${id}.attached`);
@@ -259,6 +260,14 @@ async function sweepLeakedImagesV1(environment:Readonly<Record<string,string|und
  return sweepLeakedSandboxImagesV1({parents:root===undefined?[]:[machinePathV1(root,".cache","test-sandbox")]});
 }
 
+/** 🚧️ The state of the host warden when it holds the request back (the level is not calm and the request is heavy), else null: no new heavy work starts while the host memory is tight or critical. A state that cannot be read never holds. */
+function heldByWardenV1(read:()=>HostWardenStateV1|null,request:HostRequestV1,nowMs:number):HostWardenStateV1|null{
+ try{
+  const state=read(),need=request.minimumMegabytes??request.fixedMegabytes+request.minimumJobs*request.perJobMegabytes;
+  return state!==null&&hostWardenHoldsV1(HOST_WARDEN_POLICY_V1,state,need,nowMs,request.operation)?state:null;
+ }catch{return null;}
+}
+
 /** ⏳️ The progress line of a waiting request: the arithmetic of the room (available, floor, what is reserved but not yet resident, what was admitted ahead), how many megabytes it is short and who holds them (`hostBlockersV1`).
  * @see ../🧪️tests/🧾️blockers/🟦️.ts */
 export function hostWaitingLineV1(language:"en"|"de",request:HostRequestV1,host:HostSampleV1,evaluation:HostEvaluationV1,running:number,seconds:number,policy:HostCapacityPolicyV1,ledger:readonly HostGrantV1[],waiters:readonly HostWaiterV1[],nowMs:number,capture?:(facts:HostCapacityWaitV1)=>void):string{
@@ -279,7 +288,9 @@ export async function withHostCapacityV1<T>(options:HostCapacityOptionsV1,body:(
   const sizing=request.quiet===true?options.upgrade!:request,plan=planHostCapacityV1(policy,{totalMegabytes:1048576},sizing,sizing.preferredJobs);
   return body(Object.freeze({id:request.id,jobs:plan.jobs,cpu:plan.cpu,reservedMegabytes:0,plan,inherited:false,adopted:false,bypassed:true,environment:Object.freeze({})}));
  }
- if(options.directory===undefined)void import("../🛡️warden/🔁️loop/🟦️.ts").then(module=>module.ensureHostWardenV1()).catch(()=>undefined);
+ const wardenModule=options.directory===undefined?await import("../🛡️warden/🔁️loop/🟦️.ts").catch(()=>undefined):undefined;
+ if(wardenModule!==undefined)try{wardenModule.ensureHostWardenV1();}catch{}
+ const wardenState=options.warden??(wardenModule===undefined?undefined:()=>wardenModule.readHostWardenStateV1());
  const inheritedId=environment[protocol.grantEnvironment];
  if(inheritedId!==undefined&&!new RegExp(schema.definitions.Grant.properties.id.pattern,"u").test(inheritedId))throw hostCapacityErrorV1("inheritedIdentifier",{},environment);
  const directory=prepare(options.directory),inheritedPath=inheritedId?grantPath(directory,inheritedId):undefined,inherited=inheritedPath?readJson(inheritedPath):undefined,at=now();
@@ -310,11 +321,17 @@ export async function withHostCapacityV1<T>(options:HostCapacityOptionsV1,body:(
    }
    try{utimesSync(waiterPath,new Date(),new Date());}catch{}
    let progressAt:number|undefined,waitFacts:HostCapacityWaitV1|undefined;
-   if(takeLock(directory,now(),policy,pid)){
+   const held=wardenState===undefined?null:heldByWardenV1(wardenState,request,now());
+   if(held!==null){
+    if(now()-lastProgress>=policy.wait.progressMilliseconds){lastProgress=now();write(formatHostWardenHoldV1(language,request.operation,held));progressAt=lastProgress;}
+   }else if(takeLock(directory,now(),policy,pid)){
     try{
      const at=now(),ledger=readGrants(directory,at,policy,undefined,options.control.signal),waiters=readWaiters(directory,at,policy,options.control.signal);
      if(!waiters.some(row=>row.request.id===request.id)){writeJson(waiterPath,record);waiters.push(record);}
-     const evaluation=evaluateHostCapacityV1(policy,withUnmanagedHostV1(host,ledger),ledger,waiters,at),found=evaluation.decisions.find(row=>row.id===request.id)!,drained=Math.min(host.availableMegabytes+ledger.reduce((sum,row)=>sum+(row.lentSinceMs===undefined?row.observedMegabytes??row.reservedMegabytes:0),0),host.totalMegabytes)-evaluation.floorMegabytes,asked=Math.min(request.fixedMegabytes+request.minimumJobs*request.perJobMegabytes,Math.max(0,host.totalMegabytes-evaluation.floorMegabytes)),lone=found.verdict==="wait"&&found.reason==="memory"&&evaluation.decisions.every(row=>row.verdict==="wait")&&evaluation.decisions[0]!.id===request.id&&unsatisfiableHostRequestV1(policy,{waitedMilliseconds:at-arrivedAtMs,roomMegabytes:evaluation.headroomMegabytes,drainedMegabytes:drained,needMegabytes:asked,admitted:0,replaced:false,quiet:request.quiet===true,elastic:request.elastic===true,pause:softHostReasonV1(policy,host)}),mine:HostDecisionV1=lone?Object.freeze({id:request.id,verdict:"admit",jobs:request.minimumJobs,reservedMegabytes:Math.min(asked,Math.floor(evaluation.headroomMegabytes)),reason:"reduced"}):found;
+     const evaluation=evaluateHostCapacityV1(policy,withUnmanagedHostV1(host,ledger),ledger,waiters,at),found=evaluation.decisions.find(row=>row.id===request.id)!;
+     const drained=Math.min(host.availableMegabytes+ledger.reduce((sum,row)=>sum+(row.lentSinceMs===undefined?row.observedMegabytes??row.reservedMegabytes:0),0),host.totalMegabytes)-evaluation.floorMegabytes,asked=Math.min(request.fixedMegabytes+request.minimumJobs*request.perJobMegabytes,Math.max(0,host.totalMegabytes-evaluation.floorMegabytes));
+     const lone=found.verdict==="wait"&&found.reason==="memory"&&evaluation.decisions.every(row=>row.verdict==="wait")&&evaluation.decisions[0]!.id===request.id&&unsatisfiableHostRequestV1(policy,{waitedMilliseconds:at-arrivedAtMs,roomMegabytes:evaluation.headroomMegabytes,drainedMegabytes:drained,needMegabytes:asked,minimumMegabytes:request.minimumMegabytes??0,admitted:0,replaced:false,quiet:request.quiet===true,elastic:request.elastic===true,pause:softHostReasonV1(policy,host)});
+     const mine:HostDecisionV1=lone?Object.freeze({id:request.id,verdict:"admit",jobs:request.minimumJobs,reservedMegabytes:Math.min(asked,Math.floor(evaluation.headroomMegabytes)),reason:"reduced"}):found;
      if(mine.verdict==="wait"&&(mine.reason==="never"||mine.reason==="starved"||hostRequestNeverFitsV1(policy,host,request))){
       const total=host.totalMegabytes,floor=evaluation.floorMegabytes,minimum=request.minimumMegabytes??request.fixedMegabytes+request.minimumJobs*request.perJobMegabytes;
       const held=mine.reason==="starved"&&ledger.some(row=>row.id!==request.id&&row.lentSinceMs===undefined);

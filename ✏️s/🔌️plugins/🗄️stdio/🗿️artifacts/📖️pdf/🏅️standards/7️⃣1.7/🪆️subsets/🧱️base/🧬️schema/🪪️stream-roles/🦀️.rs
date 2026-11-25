@@ -30,7 +30,7 @@ pub enum PdfStreamRoleValue {
     UnicodeMap { mapping: PdfToUnicode },
     CharacterMap { cmap: PdfEmbeddedCMap },
     FontProgram { program: PdfFontProgram },
-    Image { image: PdfImage },
+    Image { image: Box<PdfImage> },
     MetadataText { text: String },
     AttachmentBytes { bytes: Vec<u8> },
     PaletteComponents { components: Vec<u8> },

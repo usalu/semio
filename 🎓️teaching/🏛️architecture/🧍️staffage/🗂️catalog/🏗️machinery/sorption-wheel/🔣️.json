@@ -13,13 +13,55 @@
       "de": "Ein 0,62 m großes Sorptionsrad in der Frontansicht: eine Silicagel-Wabenmatrix auf einem Speichenrotor dreht sich langsam in einem Gehäusering auf zwei Füßen, angetrieben von einem kleinen Riemen-Getriebemotor; durch den heißen Sektor trocknet vom Heizregister auf 70 degC erwärmte Regenerationsluft sie aus, und die Prozessluft verlässt das Rad trocken und durch die Adsorptionswärme erwärmt."
     },
     "tags": [
-      "sorption-wheel",
-      "desiccant",
-      "dec",
-      "dehumidification",
-      "regeneration",
-      "air-handling",
-      "appliance"
+      {
+        "id": "sorption-wheel",
+        "title": {
+          "en": "sorption wheel",
+          "de": "Sorptionsrad"
+        }
+      },
+      {
+        "id": "desiccant",
+        "title": {
+          "en": "desiccant",
+          "de": "Trockenmittel"
+        }
+      },
+      {
+        "id": "dec",
+        "title": {
+          "en": "DEC",
+          "de": "DEC"
+        }
+      },
+      {
+        "id": "dehumidification",
+        "title": {
+          "en": "dehumidification",
+          "de": "Entfeuchtung"
+        }
+      },
+      {
+        "id": "regeneration",
+        "title": {
+          "en": "regeneration",
+          "de": "Regeneration"
+        }
+      },
+      {
+        "id": "air-handling",
+        "title": {
+          "en": "air handling",
+          "de": "Lufttechnik"
+        }
+      },
+      {
+        "id": "appliance",
+        "title": {
+          "en": "appliance",
+          "de": "Gerät"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage content (G2)",

@@ -13,19 +13,97 @@
    "de": "Zwei 600-mm-Küchenunterschränke einer Montageküche der 1990er-Jahre unter einer 1,20 m langen Postforming-Arbeitsplatte mit eingelassener Edelstahlspüle 860 x 500 mm, wie eine Haushaltsauflösung sie hinterlässt: die Zulaufschläuche der Armatur unter der Spüle durchgeschnitten, die Spanplatte an der Spüle gequollen, der Griff der Spülentür ersetzt, auf einer Möbeldecke stehend; von zwei Trägern getragen und wieder in Gebrauch mit Schublade und Türen."
   },
   "tags": [
-   "used",
-   "household",
-   "second-hand",
-   "kitchen",
-   "base-cabinet",
-   "sink",
-   "worktop",
-   "chipboard",
-   "laminate",
-   "stainless-steel",
-   "flat-pack",
-   "water-damage",
-   "storage"
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "household",
+    "title": {
+     "en": "household",
+     "de": "Haushalt"
+    }
+   },
+   {
+    "id": "second-hand",
+    "title": {
+     "en": "second-hand",
+     "de": "Second-Hand"
+    }
+   },
+   {
+    "id": "kitchen",
+    "title": {
+     "en": "kitchen",
+     "de": "Küche"
+    }
+   },
+   {
+    "id": "base-cabinet",
+    "title": {
+     "en": "base cabinet",
+     "de": "Unterschrank"
+    }
+   },
+   {
+    "id": "sink",
+    "title": {
+     "en": "sink",
+     "de": "Spüle"
+    }
+   },
+   {
+    "id": "worktop",
+    "title": {
+     "en": "worktop",
+     "de": "Arbeitsfläche"
+    }
+   },
+   {
+    "id": "chipboard",
+    "title": {
+     "en": "chipboard",
+     "de": "Spanplatte"
+    }
+   },
+   {
+    "id": "laminate",
+    "title": {
+     "en": "laminate",
+     "de": "Laminat"
+    }
+   },
+   {
+    "id": "stainless-steel",
+    "title": {
+     "en": "stainless steel",
+     "de": "Edelstahl"
+    }
+   },
+   {
+    "id": "flat-pack",
+    "title": {
+     "en": "flat pack",
+     "de": "Flachpackung"
+    }
+   },
+   {
+    "id": "water-damage",
+    "title": {
+     "en": "water damage",
+     "de": "Wasserschaden"
+    }
+   },
+   {
+    "id": "storage",
+    "title": {
+     "en": "storage",
+     "de": "Lagerung"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content (used household objects)",

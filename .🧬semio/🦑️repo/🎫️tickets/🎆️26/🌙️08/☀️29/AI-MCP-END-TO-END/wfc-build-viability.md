@@ -1,0 +1,7 @@
+# WFC Build Viability
+
+The repository-pinned nightly `nightly-2026-07-20-aarch64-apple-darwin` reports `wasm32-wasip2` installed. At inspection the host volume had 24 GiB available, the compiler image `.cache/b/r/m` 9.8 GiB, and the products image `.cache/b/p/m` 13 GiB. Only Note is published in the canonical prototype component cache. Unit telemetry and a single Note storage-growth observation now exist.
+
+The earlier reported 5,664 MiB WFC batch estimate was marginal to a concurrent Note closure, not an independent WFC-only estimate. The earlier Note-only admission demanded approximately 19.7 GiB including reserve. Current WFC-only admission has not been measured; the existing telemetry may affect it. A refused earlier build automatically reclaimed 5.1 GiB of build units, so attempting the driver under the observed tight capacity could perform unrelated cleanup. The current `repo cache status` fails before reporting with sandbox denial of `sysctl kern.bootsessionuuid`.
+
+The supported path is the component driver model facet, which creates and validates the owner artifact and receipt under the leased canonical products partition. The old `mcp-qualify-current-wfc.ts` assembles a diagnostic model inside ticket-generated storage from a separately linked component; it does not publish a canonical receipt. The prior fallback also used a different Cargo profile from the canonical prototype. Neither is a justified substitute for the supported publication path. No compilation, publication, or cleanup was attempted during this check.

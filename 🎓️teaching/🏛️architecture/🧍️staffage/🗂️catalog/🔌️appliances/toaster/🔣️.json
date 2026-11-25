@@ -13,12 +13,48 @@
       "de": "Ein verchromter Zweischeiben-Toaster von 900 W, 0,29 m lang und 0,20 m hoch mit Brot: Beim Toasten erwärmen 95 W die Gehäusewände, 25 W die Deckplatte, 150 W die Brotkruste, und ein Strom heißer Luft von 630 W steigt aus den Schlitzen."
     },
     "tags": [
-      "toaster",
-      "kitchen",
-      "appliance",
-      "internal-gain",
-      "electric",
-      "heat-source"
+      {
+        "id": "toaster",
+        "title": {
+          "en": "toaster",
+          "de": "Toaster"
+        }
+      },
+      {
+        "id": "kitchen",
+        "title": {
+          "en": "kitchen",
+          "de": "Küche"
+        }
+      },
+      {
+        "id": "appliance",
+        "title": {
+          "en": "appliance",
+          "de": "Gerät"
+        }
+      },
+      {
+        "id": "internal-gain",
+        "title": {
+          "en": "internal gain",
+          "de": "innere Wärmelast"
+        }
+      },
+      {
+        "id": "electric",
+        "title": {
+          "en": "electric",
+          "de": "elektrisch"
+        }
+      },
+      {
+        "id": "heat-source",
+        "title": {
+          "en": "heat source",
+          "de": "Wärmequelle"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage content (A4)",

@@ -1,8 +1,8 @@
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
-import { canonicalJson } from "@semio-tech/repo-lib/authoring";
-import { loadCatalogTaxonomy, registryCatalogInputView, validateTaxonomy, parseCanonicalWgpuPackageCatalog, parseSemanticPackageBrowserProfile, resolveWorkspaceTaxonomyAuthority, type RegistryCatalogInputView } from "@semio-tech/repo-lib/inventory";
+import { canonicalJson } from "../../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🏗️authoring/🟦️.ts";
+import { loadCatalogTaxonomy, registryCatalogInputView, validateTaxonomy, parseCanonicalWgpuPackageCatalog, parseSemanticPackageBrowserProfile, resolveWorkspaceTaxonomyAuthority, type RegistryCatalogInputView } from "../../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📇️inventory/🟦️.ts";
 import { runtimeIdentityV1 } from "../../../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
 import { runtimeParseTomlV1 } from "../../../../../../../../🔨️modules/⚙️runtime/📄️parse/🟦️.ts";
 import { runtimeBundleV1 } from "../../../../../../../../🔨️modules/⚙️runtime/🔬️source/🟦️.ts";

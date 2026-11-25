@@ -18,7 +18,7 @@ fn projection_fixture_node(value: &Value) -> semio_plugin::BuiltNode {
 
 fn saturated_rejected_fixture_tree(pages: usize, capacity: usize) -> semio_plugin::ComponentTree {
     use semio_ui_contract::{BuiltNode, Component, Label, TextProps};
-    let text = |key: &str| BuiltNode::try_new(key, Component::Text(TextProps { value: Label::try_from("fixture").unwrap(), emphasize: None, data_attributes: None })).unwrap();
+    let text = |key: &str| BuiltNode::try_new(key, Component::Text(TextProps { value: Label::try_from("fixture").unwrap(), emphasize: None, data_attributes: None, heading_level: None })).unwrap();
     let mut root = text("root");
     let mut full_pages = pages.checked_sub(capacity + 2).unwrap();
     for group in 0..capacity {

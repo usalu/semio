@@ -1,0 +1,10 @@
+[
+  {"name":"missing response","frame":null,"valid":false},
+  {"name":"missing envelope","frame":{},"valid":false},
+  {"name":"rpc error","frame":{"jsonrpc":"2.0","error":{"code":-32603}},"valid":false},
+  {"name":"missing result","frame":{"jsonrpc":"2.0","result":null},"valid":false},
+  {"name":"tool error","frame":{"jsonrpc":"2.0","result":{"isError":true,"structuredContent":{"code":"INPUT_INVALID"}}},"valid":false},
+  {"name":"invalid content","frame":{"jsonrpc":"2.0","result":{"structuredContent":[]}},"valid":false},
+  {"name":"empty content","frame":{"jsonrpc":"2.0","result":{"structuredContent":{}}},"valid":false},
+  {"name":"success","frame":{"jsonrpc":"2.0","result":{"structuredContent":{"ok":true}}},"valid":true}
+]

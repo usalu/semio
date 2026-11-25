@@ -1,0 +1,69 @@
+#[test]
+fn original_dwg_exchange_is_retained_reports_progress_cancels_and_round_trips_a_box() {
+    use semio_s_spatial_kernel_semio_session::{read_channel_number, read_geometry, read_text};
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🔣️original-mesh-export.json")).unwrap();
+    let facts = &fixture["closedBox"];
+    let [width, depth, height] = fixture_xyz(&facts["size"]);
+    let session = Session::new();
+    let registry = neural_engine::ColdOwner::new(semio_s_plugin_flow_brep::module_registry(&session));
+    let mut caller = OriginalJobFixtureCaller::admit(OperationId(97830), Generation(17), stock(), || Some(1000), 1500, 32768);
+    let (mut born, mut free) = (0, 0);
+    let primitive = run_live_query(&registry, "brep.prim3d.box",
+        Dictionary::new().insert("width", number(width)).insert("depth", number(depth)).insert("height", number(height)),
+        &mut caller, &mut born, &mut free);
+    let source = primitive.get("solid").unwrap();
+    let source_handle = read_geometry(&primitive, "solid").unwrap();
+    let export_input = || Dictionary::new().insert("geometry", source.clone()).insert("deflection", number(0.1));
+    let handles = || session.with_kernel_read(|kernel| Ok(kernel.live_handles())).unwrap();
+    let before = handles();
+
+    let mut job = Some(admit_live_job(&registry, "brep.io.exportDwg", export_input()));
+    let (mut phases, mut last, mut output) = (std::collections::BTreeSet::new(), 0.0f32, None);
+    for _ in 0..200000 {
+        let copy = job.as_ref().unwrap().next_step_copy_byte_demand().unwrap().max(128);
+        run(&mut caller, Grant { maximum_items: 1, maximum_copy_bytes: copy, ..stock() }, &mut born, &mut free, |cx| {
+            let active = job.as_mut().unwrap();
+            phases.insert(active.progress().phase);
+            let (step, _) = active.step(cx).unwrap();
+            match step {
+                neural_engine::OperatorJobStep::Working(progress) => { assert!(progress.fraction >= last); last = progress.fraction; }
+                neural_engine::OperatorJobStep::Done(value) => output = Some(value),
+            }
+            Ok(())
+        });
+        if output.is_some() { break; }
+    }
+    close_live_job(&mut job, &mut caller, &mut born, &mut free);
+    assert!(phases.contains("mesh-export-tessellation") && phases.contains("mesh-export-encoding"), "{phases:?}");
+    let encoded = neural_engine::ColdOwner::new(output.expect("retained DWG export completes"));
+    let text = read_text(&encoded, "dwg").unwrap();
+    assert_eq!(&semio_framework_value::base64_standard_decode(&text).unwrap()[..6], b"AC1024");
+    assert_eq!(handles(), before);
+
+    let decoded = run_live_query(&registry, "brep.io.importDwg", Dictionary::new().insert("data", encoded.get("dwg").unwrap().clone()).insert("tolerance", number(1e-6)), &mut caller, &mut born, &mut free);
+    let shape = decoded.get("geometry").unwrap();
+    for (method, channel) in [("brep.measure.volume", "volume"), ("brep.measure.area", "area")] {
+        let measured = run_live_query(&registry, method, Dictionary::new().insert("geometry", shape.clone()), &mut caller, &mut born, &mut free);
+        assert!((read_channel_number(&measured, channel).unwrap() - facts[channel].as_f64().unwrap()).abs() < 1e-9, "{channel}");
+    }
+
+    let after_import = handles();
+    for (operator, input) in [
+        ("brep.io.exportDwg", export_input()),
+        ("brep.io.importDwg", Dictionary::new().insert("data", encoded.get("dwg").unwrap().clone()).insert("tolerance", number(1e-6))),
+    ] {
+        let mut job = Some(admit_live_job(&registry, operator, input));
+        for _ in 0..8 {
+            let copy = job.as_ref().unwrap().next_step_copy_byte_demand().unwrap().max(128);
+            run(&mut caller, Grant { maximum_items: 1, maximum_copy_bytes: copy, ..stock() }, &mut born, &mut free, |cx| {
+                assert!(matches!(job.as_mut().unwrap().step(cx).unwrap().0, neural_engine::OperatorJobStep::Working(_)), "{operator} must still be working after a few funded units");
+                Ok(())
+            });
+        }
+        job.as_mut().unwrap().cancel();
+        close_live_job(&mut job, &mut caller, &mut born, &mut free);
+        assert_eq!(handles(), after_import, "{operator} cancellation publishes nothing");
+    }
+    assert!(session.with_kernel_read(|kernel| Ok(kernel.kind_sync(&source_handle).is_ok())).unwrap());
+    caller.retire_exact();
+}

@@ -13,15 +13,69 @@
    "de": "Eine ausgewachsene Bauernhortensie (Hydrangea macrophylla) vom Typ Ballhortensie: zehn Ruten wölben sich aus dem Wurzelstock zu einem dichten Hügel von 1,5 m Höhe und 1,9 m Breite, bis zum Boden mit breiten gezähnten Blättern bekleidet und im Sommer von etwa dreißig ballförmigen Blütenständen gekrönt."
   },
   "tags": [
-   "shrub",
-   "deciduous",
-   "flowering-shrub",
-   "mound",
-   "garden",
-   "mophead",
-   "wind",
-   "rain",
-   "transpiration"
+   {
+    "id": "shrub",
+    "title": {
+     "en": "shrub",
+     "de": "Strauch"
+    }
+   },
+   {
+    "id": "deciduous",
+    "title": {
+     "en": "deciduous",
+     "de": "laubabwerfend"
+    }
+   },
+   {
+    "id": "flowering-shrub",
+    "title": {
+     "en": "flowering shrub",
+     "de": "Blütenstrauch"
+    }
+   },
+   {
+    "id": "mound",
+    "title": {
+     "en": "mound",
+     "de": "Hügelwuchs"
+    }
+   },
+   {
+    "id": "garden",
+    "title": {
+     "en": "garden",
+     "de": "Garten"
+    }
+   },
+   {
+    "id": "mophead",
+    "title": {
+     "en": "mophead",
+     "de": "Bauernhortensie"
+    }
+   },
+   {
+    "id": "wind",
+    "title": {
+     "en": "wind",
+     "de": "Wind"
+    }
+   },
+   {
+    "id": "rain",
+    "title": {
+     "en": "rain",
+     "de": "Regen"
+    }
+   },
+   {
+    "id": "transpiration",
+    "title": {
+     "en": "transpiration",
+     "de": "Transpiration"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage plant collection worker PW-12",

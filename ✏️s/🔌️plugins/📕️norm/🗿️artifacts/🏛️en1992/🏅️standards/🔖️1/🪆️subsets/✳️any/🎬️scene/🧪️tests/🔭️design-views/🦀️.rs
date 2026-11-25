@@ -3,7 +3,7 @@
 use super::*;
 use model::{En1992Snapshot, MemberKind};
 use scene::projection_kit::test_support::revision;
-use scene::Validate;
+use scene::{ColourChannel, Validate};
 use semio_s_artifact_norm_en1992_checks as checks;
 
 fn built_of(document: &En1992Snapshot) -> Built {

@@ -3,7 +3,7 @@
 use semio_framework_test_fixtures::fixture_path;
 use semio_s_plugin_norm_compliance::{AnnexChoice, CheckStatus, ReliabilityClass};
 use crate::{check_full_steel_structure, combine_member_actions, uls_rows, part_1_1, part_1_2, part_1_8, part_1_9, AnnexParams};
-use semio_s_artifact_norm_en1993_model::En1993Snapshot;
+use semio_s_artifact_norm_en1993_model::{En1993Snapshot, MomentDiagram};
 
 fn approx(a: f64, b: f64, tol: f64) {
     assert!((a - b).abs() <= tol, "{a} !≈ {b} (tol {tol})");
@@ -264,7 +264,7 @@ fn slip_resistant_category_c_produces_slip_check() {
 fn python_oracle_and_jsonschema_agree_within_half_percent() {
     use std::path::PathBuf;
     use std::process::Command;
-    let any = fixture_path!("../../../../..")
+    let any = fixture_path!("../../../../../../..")
         .canonicalize()
         .expect("family any root");
     let oracle = any.join("🔮️oracles/⚖️compliance/🐍️.py");
@@ -708,7 +708,7 @@ fn member_type_gates_buckling_and_ltb_checks() {
 #[test]
 fn clause_oracle_matches_rust_clause_functions() {
     use crate::clauses::{fatigue_fire, joints, mcr_fe, resistance, stability};
-    let any = fixture_path!("../../../../..").canonicalize().expect("family any root");
+    let any = fixture_path!("../../../../../../..").canonicalize().expect("family any root");
     let oracle = any.join("🔮️oracles/🧮️clauses/🐍️.py");
     let out = semio_s_plugin_norm_compliance::python_oracle::command().arg(&oracle).output().expect("spawn oracle");
     assert!(out.status.success(), "oracle failed: {}", String::from_utf8_lossy(&out.stderr));
@@ -817,9 +817,9 @@ fn every_ultimate_row_is_checked_and_minor_axis_bending_is_reported() {
 
 #[test]
 fn member_checks_emit_stations_that_follow_the_declared_moment_diagram() {
-    for (diagram, peak_at) in [("parabolic", 0.5), ("linear", 0.0)] {
+    for (diagram, peak_at) in [(MomentDiagram::Parabolic, 0.5), (MomentDiagram::Linear, 0.0)] {
         let mut document = En1993Snapshot::compliant_heb240_frame();
-        document.members[0].moment_diagram = diagram.into();
+        document.members[0].moment_diagram = diagram;
         document.members[0].end_moment_ratio_psi = 0.5;
         document.member_actions[0].action.my = 40_000.0;
         let report = check_full_steel_structure(&document);
@@ -830,7 +830,7 @@ fn member_checks_emit_stations_that_follow_the_declared_moment_diagram() {
         approx(peak.at[0], peak_at, 1e-12);
         approx(peak.utilization, bending.utilization, 1e-12);
         let ends = (bending.stations[0].utilization, bending.stations[10].utilization);
-        if diagram == "parabolic" {
+        if diagram == MomentDiagram::Parabolic {
             approx(ends.0, 0.0, 1e-12);
             approx(ends.1, 0.0, 1e-12);
         } else {
@@ -857,7 +857,7 @@ fn third_party_libraries_reproduce_the_blessed_oracle_cases() {
 #[test]
 fn blessed_third_party_cases_feed_the_evaluator() {
     use crate::clauses::{resistance, stability};
-    let any = fixture_path!("../../../../..").canonicalize().expect("family any root");
+    let any = fixture_path!("../../../../../../..").canonicalize().expect("family any root");
     let text = std::fs::read_to_string(any.join("🧪️tests/🧫️fixtures/🔮️oracle-cases/third-party.json")).expect("cases");
     let doc: serde_json::Value = serde_json::from_str(&text).expect("parse cases");
     let tol = |profile: &str| match profile {

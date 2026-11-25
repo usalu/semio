@@ -1,9 +1,7 @@
 use crate::BinarySnapshot;
 use crate::apply_mutation;
 use crate::standards::v_raw::subsets::any::schema::mutations::*;
-use protocol::os_spr::command::{ColdDiffAlgebra, DiffAlgebra};
-use protocol::MutationDiff;
-use protocol::ColdMutationDiff;
+use protocol::{ColdDiffAlgebra, ColdMutation, ColdMutationDiff, DiffAlgebra, MutationDiff, OpBinary, OpText};
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 pub(crate) fn base() -> BinarySnapshot {

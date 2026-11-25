@@ -1,0 +1,6 @@
+[
+  {"op":"anchor","id":"tp-sun-1","set":{"bone":"fol-w1","x":0.3182,"y":-0.1401,"z":-0.0266}},
+  {"op":"anchor","id":"tp-sun-2","set":{"bone":"le1b","x":1.8733,"y":0.4681,"z":-0.1659}},
+  {"op":"anchor","id":"tp-sun-3","set":{"bone":"fol-n1","x":0.6136,"y":0.1025,"z":-0.063}},
+  {"op":"anchor","id":"tp-sun-4","set":{"bone":"fol-s1","x":0.4008,"y":-0.1769,"z":-0.0547}}
+]

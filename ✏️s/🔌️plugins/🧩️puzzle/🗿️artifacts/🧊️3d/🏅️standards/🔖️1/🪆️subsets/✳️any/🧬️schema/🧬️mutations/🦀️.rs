@@ -76,6 +76,7 @@ pub enum Puzzle3dMutation {
 }
 
 dsl::original_ordinal_operation_receiving!(Puzzle3dMutation);
+dsl::artifact_persisted_binary_operation!(Puzzle3dMutation);
 
 use semio_framework_value::{ValueError, ValueRefusalKind};
 use semio_os_kernel::os_store::ArtifactOperationTargets;

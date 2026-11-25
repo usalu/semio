@@ -7,6 +7,7 @@
 
 /* 🧊 The navbar and the footer lie one layer above the canvas: both are glass bands (`ui-glass` at panel level with the chip tint, clear enough for the content to show through), and the main area runs beneath them from the top edge of the client to its bottom edge.
    The client publishes their heights (`--course-band-top`, `--course-band-bottom`); every scroller of a screen keeps that much clearance, so its content starts below the navbar and ends above the footer at rest and flows beneath both, visible through the glass, while it scrolls.
+   The main area is a stacking context of its own (`isolation: isolate`), so nothing painted in the canvas, not even an emphasised border line of its overlays, rises above the bands.
    A band note under the navbar and the ground of the pets take the clearance themselves, and what follows them keeps none. */
 .course-app {
   --course-band-top: 0px;
@@ -21,6 +22,7 @@
 }
 
 .course-app > #course-main {
+  isolation: isolate;
   margin-block: calc(-1 * var(--course-band-top)) calc(-1 * var(--course-band-bottom));
 }
 

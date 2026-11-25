@@ -34,3 +34,7 @@ For every asset of your batch, every finding the scan and the matrix report for 
 ## Report `U/multiview-<BATCH>.md`
 
 Per asset: findings before and after by code, the proof lines, what was changed; every file created, updated or removed (repo-relative); what stays open, plainly. Final message: the report path and at most six lines.
+
+## Memory rule (added 2026-11-24 23:05, binding)
+
+This machine has 16 GB and was halted by macOS when proof runs ran side by side (`🧯️memory-incident.md`). Start every bun or node run only through the machine-wide queue, from the repo root: `repo capacity run --memory=<MB> -- timeout <s> <bun> <script> <args…>`. Reserve 7000 MB for `📊️matrix.ts`, 5000 MB for the check CLI, 2500 MB for a vitest suite, 1000 MB for scans and small scripts. One heavy run per fixer at a time. Waiting in the queue is intended: never bypass it and count the wait into your own waits.

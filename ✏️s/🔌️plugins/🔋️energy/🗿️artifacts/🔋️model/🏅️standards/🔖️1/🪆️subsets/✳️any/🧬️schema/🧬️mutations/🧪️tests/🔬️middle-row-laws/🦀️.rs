@@ -10,8 +10,8 @@ use crate::snapshot::reference::EnergyModelSnapshot;
 async fn holds(mut model: Model, setup: impl FnOnce(&mut Model), mutation: EnergyModelMutation) {
     setup(&mut model);
     let base: EnergyModelSnapshot = crate::fixtures::snapshot(model);
-    protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
-    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
+    crate::fixtures::inverse_law(&base, &mutation);
+    crate::fixtures::inverse_sum_law(&mutation, &base);
 }
 
 fn seed() -> Model {

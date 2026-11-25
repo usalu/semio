@@ -1,0 +1,6 @@
+[
+{"op": "set", "path": ["representations", "50", "sections", "front", "label"], "value": {"en": "A-A", "de": "A-A"}},
+{"op": "set", "path": ["representations", "100", "sections", "front", "label"], "value": {"en": "A-A", "de": "A-A"}},
+{"op": "set", "path": ["representations", "200", "sections", "front", "label"], "value": {"en": "A-A", "de": "A-A"}},
+{"op": "set", "path": ["representations", "500", "sections", "front", "label"], "value": {"en": "A-A", "de": "A-A"}}
+]

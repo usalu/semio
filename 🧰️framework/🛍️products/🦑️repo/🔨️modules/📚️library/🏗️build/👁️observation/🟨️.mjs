@@ -715,6 +715,7 @@ export const projectRowsHoldAtEndV1=(rows,value,nested,parent)=>projectRowsHoldV
 /** 🏁️ The same verdict for any probe of the rows that are not closure rows: `holdsRest` probes them, the closure rows are verified by the provider one closure at a time (see {@link projectRowsHoldAtEndV1}); a stored record found by a look is judged the same way, so a project that uses more closure entries than the cache holds is not refused for the entries it evicted itself. */
 export async function projectRowsHoldV1(rows,value,holdsRest,closureFailed){
  const provider=closureProviderV1,verify=provider?.verify,closure=typeof verify==="function"?rows.filter(row=>row.kind==="closure"):[],others=closure.length===0?rows:rows.filter(row=>row.kind!=="closure");
+ await prepareGlobalFactsV1(others);
  if(!holdsRest(others))return false;
  if(closure.length===0)return true;
  if(closureFailed===undefined)return await verify.call(provider,closure,value);
@@ -725,6 +726,7 @@ export async function projectRowsHoldV1(rows,value,holdsRest,closureFailed){
 }
 /** 🛎️ Brings the closure entries named by the `closure` facts among `rows` up to date, so the synchronous checks that follow can answer; the provider is asked even when no row is a closure fact, because it also readies what every stored fact is checked against (the registered source analyses of a fresh process). */
 export async function settleClosureRowsV1(rows,value){
+ await prepareGlobalFactsV1(rows);
  if(!closureProviderV1)return;
  const paths=new Set();for(const row of rows)if(row.kind==="closure")paths.add(row.path);
  await closureProviderV1.settle([...paths],value);
@@ -825,8 +827,15 @@ function registryOwnerRowV1(path){
 /** 🖊️ Records the registry row (root and manifest) one inference read for one owner name, or its absence. */
 /** 🌐️ The answers of the global facts a record may depend on without any file (the generator contracts of the taxonomy): a `global` row is `{kind, path: JSON [name, workspaceRoot, segments], fact}` and holds while the resolver registered under `name` says that `fact` (what the inference read at `segments` of that global) still holds for the workspace of the path; without a resolver it does not hold, so a process that cannot answer never adopts such a record.
  * @see ../🕸️graph/📥️inference/📜️contract-reads/🟨️.mjs */
-const globalFactResolversV1=new Map();
-export function registerGlobalFactV1(name,holds){globalFactResolversV1.set(name,holds);}
+const globalFactResolversV1=new Map(),globalFactPreparersV1=new Map();
+export function registerGlobalFactV1(name,holds,prepare){globalFactResolversV1.set(name,holds);if(typeof prepare==="function")globalFactPreparersV1.set(name,prepare);else globalFactPreparersV1.delete(name);}
+/** 🛎️ Lets the resolvers that need asynchronous work before they can answer (`prepare` of {@link registerGlobalFactV1}: the module closure graph answers a question after a pass over the tree) get ready for the `global` rows among `rows`, each resolver once with its own rows; a resolver that is not prepared still answers, from what it holds. */
+export async function prepareGlobalFactsV1(rows){
+ if(globalFactPreparersV1.size===0)return;
+ const byName=new Map();
+ for(const row of rows){if(row?.kind!=="global")continue;let name;try{name=JSON.parse(row.path)[0];}catch{continue;}if(!globalFactPreparersV1.has(name))continue;let list=byName.get(name);if(list===undefined)byName.set(name,list=[]);list.push(row);}
+ for(const[name,list]of byName)await globalFactPreparersV1.get(name)(list);
+}
 function globalFactHoldsV1(path,fact){let name,root,segments;try{[name,root,segments]=JSON.parse(path);}catch{return false;}const holds=globalFactResolversV1.get(name);if(holds===undefined)return false;try{return holds(root,segments,JSON.parse(fact))===true;}catch{return false;}}
 /** ✍️ Records what the running inference read of one global fact, as a row of its record. */
 export function observeGlobalFactV1(name,workspaceRoot,segments,fact){record("global",JSON.stringify([name,workspaceRoot,segments]),JSON.stringify(fact));}
@@ -915,32 +924,46 @@ export function observationWitnessV1(rows,{since=Date.now()}={}){
  for(let at=0;at<list.length;at++){let status;try{status=fs.statSync(list[at]);}catch(error){tuples[at]="!"+(error?.code??"E");continue;}if(status.mtimeMs>=limit||status.ctimeMs>=limit)return undefined;tuples[at]=status.size+":"+status.mtimeMs+":"+status.ctimeMs+":"+status.ino+":"+status.mode;}
  return{paths:list,tuples,typed,code:[...code],live:[...live.keys()]};
 }
-/** 🪪️ Whether the state a witness recorded is the state of the disk now, with the registered parsers it was taken under: the stamps are compared path by path (each distinct path of a round is stamped once through `tuples`), the live rows are probed once per round through `verdicts`; `step` is awaited between chunks so a long witness gives the event loop its turns and stops at cancellation. A witness that fails says nothing about the rows: the caller verifies them in full.
- * @see ./🧪️tests/🪪️witness */
-export async function observationWitnessHoldsV1(witness,{tuples=new Map(),verdicts=new Map(),step}={}){
- if(observedWorlds.getStore()!==undefined)return false;
+/** 🪪️ The verdict of a witness as steps: the stamps are compared path by path (each distinct path of a round is stamped once through `tuples`), the live rows are probed once per round through `verdicts`; it yields where a long witness gives the event loop a turn and returns whether the state a witness recorded is the state of the disk now, with the registered parsers it was taken under. */
+function*witnessVerdictV1(witness,{tuples=new Map(),verdicts=new Map()}){
+ if(witness.base!==undefined&&witness.base!==null){let holds=verdicts.get(witness.base);if(holds===undefined){holds=yield*witnessVerdictV1(witness.base,{tuples,verdicts});verdicts.set(witness.base,holds);}if(!holds)return false;}
  for(const[key,revision]of witness.code){if(key.startsWith("f\0")){if(fieldExtractorIdentityV1(key.slice(2))!==revision)return false;continue;}const[provider,recorded]=key.split("\0");if(registeredAnalysisV1({provider,revision:recorded})?.provider.revision!==revision)return false;}
  const{paths,tuples:recorded}=witness;
  for(let at=0;at<paths.length;at++){
   let now=tuples.get(paths[at]);
   if(now===undefined){now=witnessTupleV1(paths[at]);tuples.set(paths[at],now);}
   if(now!==recorded[at])return false;
-  if(step!==undefined&&(at&1023)===1023)await step();
+  if((at&1023)===1023)yield;
  }
  for(let at=0;at<witness.typed.length;at++){
   const[kind,path,fact]=witness.typed[at],key="\0"+kind+"\0"+path;
   let holds=verdicts.get(key);
   if(holds===undefined){holds=recordedFactHoldsV1(kind,path,fact);verdicts.set(key,holds);}
   if(!holds)return false;
-  if(step!==undefined&&(at&1023)===1023)await step();
+  if((at&1023)===1023)yield;
  }
  for(const text of witness.live){
   let holds=verdicts.get(text);
   if(holds===undefined){holds=observationRowFreshV1(JSON.parse(text));verdicts.set(text,holds);}
   if(!holds)return false;
-  if(step!==undefined)await step();
+  yield;
  }
  return true;
+}
+/** 🪪️ Whether the state a witness recorded is the state of the disk now (see `witnessVerdictV1`); `step` is awaited between chunks so a long witness gives the event loop its turns and stops at cancellation. A witness that fails says nothing about the rows: the caller verifies them in full.
+ * @see ./🧪️tests/🪪️witness */
+export async function observationWitnessHoldsV1(witness,{step,...memos}={}){
+ if(observedWorlds.getStore()!==undefined)return false;
+ const run=witnessVerdictV1(witness,memos);let next;
+ while(!(next=run.next()).done)if(step!==undefined)await step();
+ return next.value;
+}
+/** 🪪️ The same verdict without turns, for a synchronous judge (a `global` fact resolver) that must answer while it is asked. */
+export function observationWitnessHoldsSyncV1(witness,memos={}){
+ if(observedWorlds.getStore()!==undefined)return false;
+ const run=witnessVerdictV1(witness,memos);let next;
+ while(!(next=run.next()).done);
+ return next.value;
 }
 
 /** 🫧️ The same verdict on the shared rows of one reused computation as {@link observationLayerHoldsV1}, row by row with `step` awaited between rows so a long layer gives the event loop its turns and stops at cancellation. */
@@ -1653,6 +1676,9 @@ export function observationsHold(observations, limit = OBSERVATION_LIMITS_V1.hol
 }
 
 const asyncAdmissionChecksV1=new WeakMap();
+const carriedVerdictsV1=new WeakMap(),carriedCountsV1={reused:0,probed:0};
+/** 🤝️ How many rows of in-round holds took a verdict that a fresh verification gave a moment ago (`reused`) and how many were probed (`probed`) in this process. */
+export function observationCarriedCountsV1(){return{...carriedCountsV1};}
 
 /** 🪧️ Shares exact observation verdicts and followed path types across owner admissions in this settle pass. The seal always verifies outside the pass. */
 export function observationsHoldWithinRoundV1(observations,limit,signal,onStale,onVerified){
@@ -1728,10 +1754,16 @@ async function observationsHoldInRoundV1(observations, limit, stableDirectories,
       const row=observations[next++];
       let verdict=verdicts?.get(row);
       if(verdict===undefined){
-        const pending=check(row);
-        verdicts?.set(row,pending);
-        verdict=await pending;
-        verdicts?.set(row,verdict);
+        const carriedAt=verdicts===undefined?undefined:carriedVerdictsV1.get(row);
+        if(carriedAt!==undefined&&performance.now()-carriedAt<OBSERVATION_LIMITS_V1.carriedVerdictMilliseconds){verdict=true;verdicts.set(row,true);carriedCountsV1.reused++;}
+        else{
+          const began=performance.now(),pending=check(row);
+          verdicts?.set(row,pending);
+          verdict=await pending;
+          verdicts?.set(row,verdict);
+          carriedCountsV1.probed++;
+          if(verdicts===undefined&&observedWorlds.getStore()===undefined){if(verdict)carriedVerdictsV1.set(row,began);else carriedVerdictsV1.delete(row);}
+        }
       }else if(typeof verdict!=="boolean")verdict=await verdict;
       if(!verdict){stale=true;onStale?.(row);continue;}
       if(positions!==undefined&&!stale){

@@ -37,7 +37,8 @@ export async function runGeometryOwnershipTestScript(context: Readonly<{ root: s
 
 /** 🏃️ Runs the `BrowserTestScript` command under the caller's roots and invocation. */
 export async function runBrowserTestScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>): Promise<void> {
-  await import("@semio-tech/framework-os/modules/flow/wasm/testing/host");
+  const { testPublishedFlowHost } = await import("@semio-tech/framework-os/modules/flow/wasm/testing/host");
+  await withFlowBrowserPackageV1(context.invocation, scriptCompilerAdmissionControlV1(context.invocation, "flow:browser-host-test", 0), artifact => testPublishedFlowHost(artifact.path));
   await import("@semio-tech/framework-os/modules/flow/wasm/testing/draw-list");
   const {source:module} = await bundleFlowBrowserModule(context.invocation,scriptCompilerAdmissionControlV1(context.invocation,"flow:browser-source-test",0));
   if (!module?.includes('import("../flow_core.js")') || !module.includes('from "../🖥️host/🟨️.js"') || module.includes("../../🕸️bindings")) throw new Error("Flow browser package lost its exact sibling module bindings");
@@ -47,7 +48,7 @@ export async function runBrowserTestScript(context: Readonly<{ root: string; rep
 /** 🏃️ Runs the `BrowserClockTestScript` command under the caller's roots and invocation. */
 export async function runBrowserClockTestScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>): Promise<void> {
   const { testFlowBrowserClock } = await import("@semio-tech/framework-os/modules/flow/wasm/testing/consumed-browser-clock");
-  await testFlowBrowserClock();
+  await withFlowBrowserPackageV1(context.invocation, scriptCompilerAdmissionControlV1(context.invocation, "flow:browser-clock-test", 0), artifact => testFlowBrowserClock(artifact.path));
 }
 
 /** 🏃️ Runs the `RetainedReceiptSourceScript` command under the caller's roots and invocation. */

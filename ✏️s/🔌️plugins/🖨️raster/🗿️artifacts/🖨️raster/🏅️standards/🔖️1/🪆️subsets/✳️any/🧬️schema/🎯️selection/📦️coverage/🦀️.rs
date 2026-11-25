@@ -1,5 +1,5 @@
 //! 📦️ Immutable packed coverage shares page roots while keeping every page backing within a four-KiB release grant.
-use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind};
+use semio_framework_value::{RetainedCloneGrant,RetirementDemand,ValueError,ValueRefusalKind};
 use semio_framework_value::persistent::{PersistentList,PersistentListIter};
 use super::RasterSelectionSpan;
 use std::{fmt,ops::Index,mem::size_of};
@@ -22,23 +22,47 @@ impl Default for RasterSpanPage{fn default()->Self{Self::new()}}
 
 #[derive(Default,semio_framework_value::RetireOwned,semio_framework_value::RetainedClone)]
 pub struct RasterSelectionSpans{pages:PersistentList<RasterSpanPage>,len:usize,maximum_end:u64}
+/// 📋️ A clone rebuilds fresh pages through the granted builder, because a packed root cannot alias itself without an original source lease.
 impl Clone for RasterSelectionSpans {
     fn clone(&self) -> Self {
         use semio_framework_pixels::{BlockingTurns, EffectTurns};
-        use semio_framework_value::RetainedCloneGrant;
-        let demand = PersistentList::<RasterSpanPage>::projection_demand();
-        let work = self.pages.retained_alias_work_demand().expect("Raster coverage alias work");
-        let grant = RetainedCloneGrant {
-            maximum_items: 1,
-            maximum_copy_bytes: demand.copy_bytes,
-            maximum_depth: demand.depth,
-            ..Default::default()
+        use semio_framework_value::{OriginalRetirementFailure, RetainedAllocationEffect, retained_clone::OriginalEffectReply};
+
+        fn turn<R>(turns: &mut BlockingTurns, run: impl FnOnce(&mut RetainedAllocationEffect<'_>) -> R) -> R {
+            let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 1 << 16, maximum_capacity_bytes: 1 << 13, maximum_release_bytes: 1 << 13, maximum_depth: 128 };
+            turns.turn(grant, run).expect("Raster coverage clone turn is funded")
+        }
+
+        let mut turns = BlockingTurns::new(1 << 20);
+        let mut builder = RasterSelectionSpansBuilder::new(self.len).expect("Raster coverage clone length is admitted");
+        let (mut rows, mut row, mut accepted) = (self.iter().copied(), None, 0usize);
+        let output = loop {
+            if builder.output_ready() {
+                break turn(&mut turns, |effect| builder.take(effect)).expect("Raster coverage clone takes").expect("Raster coverage clone output is funded");
+            }
+            if builder.accepts_row() {
+                row = row.or_else(|| rows.next());
+                turn(&mut turns, |effect| builder.push(&mut row, effect)).expect("Raster coverage clone pushes");
+                accepted += usize::from(row.is_none());
+            } else if accepted == self.len && !builder.finishing() {
+                turn(&mut turns, |effect| builder.finish(effect)).expect("Raster coverage clone finishes");
+            } else {
+                turn(&mut turns, |effect| builder.advance(effect)).expect("Raster coverage clone advances");
+            }
         };
-        let Some(pages) = BlockingTurns::new(work).turn(grant, |effect| self.pages.retained_alias(effect))
-            .and_then(|alias| alias).expect("Raster coverage root alias") else {
-            unreachable!("the Raster coverage root quote is fully funded");
-        };
-        Self { pages, len: self.len, maximum_end: self.maximum_end }
+        while !builder.terminal_is_empty() {
+            turn(&mut turns, |effect| -> Result<(), OriginalRetirementFailure> {
+                if !builder.is_closing() {
+                    return builder.begin_close_paid(effect).map(drop).map_err(OriginalRetirementFailure::from);
+                }
+                let mut slot = None;
+                let reply = OriginalEffectReply::borrow(&mut slot).map_err(OriginalRetirementFailure::from)?;
+                let body = effect.grant().maximum_copy_bytes;
+                builder.close_into(body, effect, reply).map_err(OriginalRetirementFailure::from)?;
+                slot.take().map_or(Ok(()), |settled| settled.map(drop))
+            }).expect("Raster coverage clone builder closes");
+        }
+        output
     }
 }
 impl RasterSelectionSpans{

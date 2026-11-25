@@ -65,7 +65,7 @@ test("directory-backed hosts collect the image-relief writers, asking the ledger
   const calls:number[]=[],writers=realDiskWritersV1(context(imageBacked,calls)),v=volume(256,4937),outcome=await recoverNeedV1({facts:()=>({partition:"C:",totalBytes:v.total,freeBytes:v.free}),needBytes:6144*MIB,writers,language:"en",budgetMilliseconds:2000});
   const collectable=writers.filter(item=>item.row.relief==="host"&&item.collect!==undefined&&item.row.collector==="ledger").map(item=>item.row.id).sort();
   expect(collectable.includes("dependency-generations"),String(imageBacked)).toBe(!imageBacked);expect(collectable.includes("compile-caches")).toBe(true);
-  expect(calls.length,String(imageBacked)).toBe(1);expect(calls[0],String(imageBacked)).toBe(6144*MIB-4937*MIB);expect(outcome.verdict).toBe("refuse");
+  expect(calls.length,String(imageBacked)).toBe(new Set(writers.filter(item=>item.row.relief==="host"&&item.row.collector==="ledger").map(item=>/--area=([a-z0-9,-]+)/u.exec(item.row.command)?.[1]??"*")).size);expect(calls[0],String(imageBacked)).toBe(6144*MIB-4937*MIB);expect(outcome.verdict).toBe("refuse");
  }
 });
 

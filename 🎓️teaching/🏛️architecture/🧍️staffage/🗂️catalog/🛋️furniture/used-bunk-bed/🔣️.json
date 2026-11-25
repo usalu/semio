@@ -13,20 +13,104 @@
    "de": "Ein gebrauchtes Etagenbett aus massiver Buche für zwei Matratzen 90 x 200 cm, aufgebaut 2,12 x 1,06 x 1,60 m, mit senkrechter Leiter, Absturzsicherungen und zwei dünnen Schaumstoffmatratzen mit Liegemulden; Wachsmalstifte an den Holmen, ein ersetztes Fichtenbrett, ein abgeplatzter Pfosten. Zerlegt und verzurrt auf einer Möbeldecke gelagert, als Rahmenbündel von zwei Trägern getragen und für zwei Kinder wieder aufgebaut."
   },
   "tags": [
-   "used",
-   "household",
-   "second-hand",
-   "children",
-   "bedroom",
-   "bed",
-   "bunk-bed",
-   "beech",
-   "solid-wood",
-   "mattress",
-   "ladder",
-   "dismantled",
-   "moving-blanket",
-   "interior"
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "household",
+    "title": {
+     "en": "household",
+     "de": "Haushalt"
+    }
+   },
+   {
+    "id": "second-hand",
+    "title": {
+     "en": "second-hand",
+     "de": "Second-Hand"
+    }
+   },
+   {
+    "id": "children",
+    "title": {
+     "en": "children",
+     "de": "Kinder"
+    }
+   },
+   {
+    "id": "bedroom",
+    "title": {
+     "en": "bedroom",
+     "de": "Schlafzimmer"
+    }
+   },
+   {
+    "id": "bed",
+    "title": {
+     "en": "bed",
+     "de": "Bett"
+    }
+   },
+   {
+    "id": "bunk-bed",
+    "title": {
+     "en": "bunk bed",
+     "de": "Etagenbett"
+    }
+   },
+   {
+    "id": "beech",
+    "title": {
+     "en": "beech",
+     "de": "Buche"
+    }
+   },
+   {
+    "id": "solid-wood",
+    "title": {
+     "en": "solid wood",
+     "de": "Massivholz"
+    }
+   },
+   {
+    "id": "mattress",
+    "title": {
+     "en": "mattress",
+     "de": "Matratze"
+    }
+   },
+   {
+    "id": "ladder",
+    "title": {
+     "en": "ladder",
+     "de": "Leiter"
+    }
+   },
+   {
+    "id": "dismantled",
+    "title": {
+     "en": "dismantled",
+     "de": "zerlegt"
+    }
+   },
+   {
+    "id": "moving-blanket",
+    "title": {
+     "en": "moving blanket",
+     "de": "Umzugsdecke"
+    }
+   },
+   {
+    "id": "interior",
+    "title": {
+     "en": "interior",
+     "de": "Innenausbau"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content (used household objects)",

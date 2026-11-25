@@ -460,7 +460,7 @@ impl ArtifactEditor for Puzzle5dPlayApp {
         let runtime = window_ownership::runtime(cfg.snapshot, &window_ownership::config_from_view(cfg), &window_ownership::Puzzle5dWindowTransient::default(), window_id);
         let active_utility = puzzle5d_scene_active_utility(Some(view_state), Some(window_id));
         let envelope = scene_from_projection(&projection, runtime, &active_utility);
-        HashMap::from([(window_id.to_string(), edit::puzzle5d_engagement(&envelope, window_kind, labels, doc.original_tool_run()))])
+        HashMap::from([(window_id.to_string(), edit::puzzle5d_engagement(&envelope, window_kind, labels, doc.tool_run_poll()))])
     }
 
     fn window_engagements_with_request_context(
@@ -476,7 +476,7 @@ impl ArtifactEditor for Puzzle5dPlayApp {
         let runtime = window_ownership::runtime(cfg.snapshot, &window_ownership::config_from_view(cfg), &window_ownership::transient_from_view(transient), window_id);
         let active_utility = puzzle5d_scene_active_utility(Some(view_state), Some(window_id));
         let envelope = scene_from_projection(&puzzle5d_editor_projection(&doc.snapshot), runtime, &active_utility);
-        HashMap::from([(window_id.to_string(), edit::puzzle5d_engagement(&envelope, window_kind, labels, doc.original_tool_run()))])
+        HashMap::from([(window_id.to_string(), edit::puzzle5d_engagement(&envelope, window_kind, labels, doc.tool_run_poll()))])
     }
 
     fn window_measures(doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle5dConfig>, view_state: &semio_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
@@ -499,7 +499,7 @@ impl ArtifactEditor for Puzzle5dPlayApp {
         let runtime = window_ownership::runtime(cfg.snapshot, &window_ownership::config_from_view(cfg), &window_ownership::Puzzle5dWindowTransient::default(), window_id);
         let active_utility = puzzle5d_scene_active_utility(Some(view_state), Some(window_id));
         let envelope = scene_from_projection(&puzzle5d_editor_projection(&doc.snapshot), runtime, &active_utility);
-        HashMap::from([(fill_tool::TOOL_ID.to_string(), fill_tool::measures(&envelope, labels, doc.original_tool_run()))])
+        HashMap::from([(fill_tool::TOOL_ID.to_string(), fill_tool::measures(&envelope, labels, doc.tool_run_poll()))])
     }
 
     fn context_menu(

@@ -8,7 +8,7 @@ use semio_plugin_window_transient::window_transient::WindowTransientOwnerRegistr
 use semio_plugin_window_transient::window_transient::WindowTransientSnapshot;
 use semio_plugin_window_transient::window_transient::WindowTransientStore;
 use semio_plugin_window_transient::window_transient::ErasedWindowTransientPublication;
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use semio_plugin_ownership::bounded_ownership::PluginLifecycleStep;
 use semio_plugin_window_config_registry::WindowRegistry;
 use semio_plugin_window_config_registry::fits;
@@ -16,7 +16,7 @@ use semio_framework_value::RetirementDemand;
 use semio_framework_value::ValueError;
 use semio_framework_value::RetainedCloneGrant;
 use semio_framework_value::RetainedCloneProgress;
-use semio_plugin_ownership::transient_publication::transient_store_disposer;
+use semio_plugin_transient_publication::transient_publication::transient_store_disposer;
 use semio_os_kernel as protocol;
 use semio_os_kernel as store;
 use semio_framework::Fault;

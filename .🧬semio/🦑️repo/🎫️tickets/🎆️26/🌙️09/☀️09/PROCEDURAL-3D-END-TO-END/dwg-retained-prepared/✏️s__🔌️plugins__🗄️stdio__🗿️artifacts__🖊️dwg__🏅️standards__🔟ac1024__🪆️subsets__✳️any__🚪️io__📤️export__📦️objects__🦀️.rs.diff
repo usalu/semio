@@ -1,0 +1,18 @@
+--- a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📤️export/📦️objects/🦀️.rs
++++ b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📤️export/📦️objects/🦀️.rs
+@@ -456,6 +456,7 @@
+     base_address: i64,
+     previous_handle: u64,
+ }
++semio_framework_value::artifact_retire_struct!(HandleMapBlocks { block, base_handle, base_address, previous_handle });
+ 
+ impl HandleMapBlocks {
+     /// 🧾️ Opens an empty handle map with an initial zero delta base.
+@@ -545,6 +546,7 @@
+     handles: BTreeSet<u64>,
+     block_names: BTreeMap<u64, String>,
+ }
++semio_framework_value::artifact_retire_struct!(ObjectRecords { address, length, indexed, framed, handles, block_names });
+ 
+ impl ObjectRecords {
+     /// 🎟️ Binds record encoding to an immutable original object slice.

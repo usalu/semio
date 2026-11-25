@@ -2,7 +2,7 @@
 use semio_plugin_decl_app::ArtifactApp;
 use semio_framework_artifact_reference::ArtifactDialect;
 use semio_plugin_document_media::{ArtifactEnvelopeDecodeOperationHandle, ArtifactEnvelopeDecodeOperationPoll};
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use store::{ArtifactStore, MemberFactory, Mutation, ReferenceSpaceMember};
 use semio_plugin_operation::original_catalog_constructor::{ArtifactStoreConstructorKind, ArtifactStoreConstructorPhase};

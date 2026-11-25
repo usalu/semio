@@ -7,6 +7,7 @@ import {join} from "node:path";
 import {collectRemoteCacheDirectoryV1,scanRemoteCacheDirectoryV1} from "../../🧹️collector/🟦️.ts";
 import {serveRemoteCacheV1,type RemoteCacheCommandContextV1} from "../../⌨️command/🟦️.ts";
 import {RemoteCacheDirectoryBusyV1,startRemoteCacheServerV1,type RemoteCacheServerV1} from "../🟦️.ts";
+import {ownProcessIdentityV1,readProcessStartV1} from "../../../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts";
 
 const python=testPythonV1(),oracle=join(import.meta.dir,"../../🔬️action-result/🧪️tests/🐍️oracle/🐍️.py"),scratch:string[]=[];
 const directory=(label:string)=>{const path=mkdtempSync(join(tmpdir(),`rcache-srv-${label}-`));scratch.push(path);return path;};
@@ -153,9 +154,9 @@ test("one server owns a directory: a living owner blocks a second server, a dead
  const folder=directory("owner"),first=await serve({directory:folder});
  try{await expect(serve({directory:folder})).rejects.toBeInstanceOf(RemoteCacheDirectoryBusyV1);}finally{await first.stop();}
  expect(existsSync(join(folder,"v1",".server.lock")),"the lock is released on stop").toBe(false);
- writeFileSync(join(folder,"v1",".server.lock"),`2147483646\n${Date.now()}\n`);
+ writeFileSync(join(folder,"v1",".server.lock"),`2147483646\n${Date.now()}\n1\n`);
  const second=await serve({directory:folder});await second.stop();
- mkdirSync(join(folder,"v1"),{recursive:true});writeFileSync(join(folder,"v1",".server.lock"),`${process.pid}\n${Date.now()}\n`);
+ mkdirSync(join(folder,"v1"),{recursive:true});writeFileSync(join(folder,"v1",".server.lock"),`${process.pid}\n${Date.now()}\n${ownProcessIdentityV1().startMs}\n`);
  await expect(serve({directory:folder})).rejects.toThrow("Another remote cache server uses");
 });
 

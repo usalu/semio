@@ -217,7 +217,7 @@ impl DwgSnapshot {
         let zero_checksum = "00000000-0000-0000-0000-000000000000".to_string();
         Ok(Self {
             schema: STDIO_DWG_DOCUMENT_SCHEMA.into(),
-            version: "AC1024".into(),
+            version: WRITTEN_VERSION.into(),
             maintenance_version: DWG_NEW_DOCUMENT_MAINTENANCE_VERSION,
             codepage: 30,
             drawing: logical,
@@ -408,5 +408,5 @@ pub fn empty_dwg_snapshot() -> DwgSnapshot {
 /// 📄️ The minimal logical `stdio.dwg` AC1024 demonstration document.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn demo_dwg_snapshot() -> DwgSnapshot {
-    DwgSnapshot { version: "AC1024".into(), maintenance_version: 2, codepage: 30, ..Default::default() }
+    DwgSnapshot { version: WRITTEN_VERSION.into(), maintenance_version: 2, codepage: 30, ..Default::default() }
 }

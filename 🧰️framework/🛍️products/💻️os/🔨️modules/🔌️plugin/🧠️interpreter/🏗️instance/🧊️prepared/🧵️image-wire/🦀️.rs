@@ -100,7 +100,7 @@ impl PreparedCoreInstance {
         if !reader.done() {
             return Err(state("prepared image has trailing bytes"));
         }
-        Self::seal_checked(CoreInstance { module, memories, tables, globals, data, elements, machine: None, next_host_call: 1, preparation_storage: None }, &mut checkpoint)
+        Self::seal_checked(CoreInstance { module, memories, tables, globals, data, elements, machine: None, pool: FramePool::default(), next_host_call: 1, preparation_storage: None }, &mut checkpoint)
     }
 }
 
@@ -191,5 +191,5 @@ fn state(message: &'static str) -> CoreError {
 }
 
 #[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
+#[path="🧪️tests/🦀️.rs"]
 mod tests;

@@ -60,3 +60,9 @@ test("original tree producer admits its exact shell and validates unchanged nati
  const root=process.cwd(),present=readFileSync(`${root}/🧰️framework/🔨️modules/🖱️ui/🧠️runtime/🎭️present/🦀️.rs`,"utf8"),patches=readModuleTreeSource(`${root}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🩹️patches/🦀️.rs`);
  expect(present).toContain("source: Option<ComponentTree>");expect(present).toContain("ComponentTreeProducerFrame::EMPTY");expect(present).toContain("pub fn close_step_on_original");expect(present).not.toContain("parent.admitted.try_push");expect(present).not.toContain("frame.source.next()");expect(patches).toContain("ComponentTreeProducer::required_capacity_bytes()");expect(patches).toContain("maximum_capacity_bytes<capacity");expect(patches).toContain("authority.close_step_on_original(cx)");expect(patches).toContain("released_bytes:capacity");expect(producer.donationCopyBytes).toBe(0);
 });
+
+test("presented roster pins its initiating caller by operation, generation and clock but not by the per-turn deadline",()=>{
+ const source=readFileSync(`${process.cwd()}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎬️media-slots/🎟️collect/🦀️.rs`,"utf8");
+ expect(source).toContain("identity:Option<(semio_framework_job::OperationId,semio_framework_job::Generation,usize)>");
+ expect(source).not.toMatch(/identity[^;]{0,80}cx\.deadline_us\(\)/);
+});

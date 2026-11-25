@@ -1,6 +1,6 @@
 //! 🧭️ Inspector intents bind actual native mutation schemas and admit candidates through the same typed edit plan.
 use super::*;
-use semio_framework::{ActionArgDef,ArgSchema,mutation_input_defs,registered_input_schema_document};
+use semio_framework::{ActionArgDef,ArgSchema};
 use semio_framework::action_staging::StagedFormRequest;
 use semio_framework_value::DslValue;
 use semio_plugin::app::time_travel::time_travel_variant_selector;
@@ -8,17 +8,7 @@ use crate::{NormEdit, NormRetainedEditor, get_value_at_path, parse_path, PathSeg
 use semio_framework_value::{ToValue, retirement::RetireOwned};
 
 fn inputs<A: NormRetainedEditor>(kind: &str) -> Result<Vec<ActionArgDef>, String> {
-    use protocol::Mutation;
-    let index = A::Mutation::DESCRIPTORS.iter().position(|descriptor| descriptor.semantic_kind == kind).ok_or_else(|| format!("unknown mutation kind: {kind}"))?;
-    let schema = A::Mutation::INPUT_SCHEMAS.get(index).ok_or_else(|| format!("missing mutation schema: {kind}"))?;
-    let documents = A::Mutation::INPUT_SCHEMA_DOCUMENTS.get(index).copied().unwrap_or_default();
-    mutation_input_defs(schema, &|id: &str| {
-        documents.iter().find_map(|text| {
-            let document = semio_framework_pack_json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).ok()?;
-            let document = semio_framework_pack_json::to_dsl_value(&document);
-            (document.get("$id").and_then(DslValue::as_str) == Some(id)).then_some(document)
-        }).or_else(|| registered_input_schema_document(id))
-    }).map_err(|error| error.to_string())
+    crate::mutation_inputs::<A::Snapshot, A::Mutation>(kind)
 }
 fn descend(mut input: ActionArgDef, value: &DslValue, path: &str) -> Result<ActionArgDef, String> {
     let mut cursor = value;

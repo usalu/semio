@@ -414,3 +414,5 @@ mod controlled_encoding_tests;
 
 /// 📦️ Encodes an exact-size sequence of values under the caller's native control.
 pub fn controlled_sequence<'a,T:ToValue+'a>(items:impl ExactSizeIterator<Item=&'a T>,control:&mut NativeEncodeControl<'_>)->Result<DslValue,ValueError>{encoding::sequence(items,control)}
+/// 🗺️ Encodes one borrowed map through the same admission as [`controlled_sequence`].
+pub fn controlled_map<'a,K:ToValue+'a,V:ToValue+'a>(items:impl ExactSizeIterator<Item=(&'a K,&'a V)>,control:&mut NativeEncodeControl<'_>)->Result<DslValue,ValueError>{encoding::map(items,control)}

@@ -16,7 +16,7 @@ use semio_plugin_ownership::sdk_fault::plugin_sdk_fault;
 use semio_framework::FaultFrom;
 use semio_framework::ActionKind;
 use semio_plugin_decl_app::tool_contract::{ArtifactBoundedToolFault, ArtifactToolCompletionValue, TypedOperationResultLane};
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use semio_plugin_publication_mounted::mounted_child_group_receipt_group::command::CommandAppendRefusal;
 use semio_plugin_composition_publication::ComposedGestureResult;

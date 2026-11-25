@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "semio:build:graph:inference:owner-pool:v1",
   "title": "Fleet Owner Pool",
-  "description": "🌐️ The pool of owner inferences of one graph wave that every machine of the fleet pulls from: the machine that runs the wave publishes the units (owner name, project JSON, learned peak per kind) as an entry of the fleet cache, every machine pulls units from the tail, claims one by the digest of its record state (claim, heartbeat, publish; a lapsed claim returns the unit to the pool; a stored record is never computed again) and sizes what it takes by its free memory and cores. No machine schedules for another.",
+  "description": "🌐️ The pool of owner inferences of one graph wave that every machine of the fleet pulls from: the machine that runs the wave publishes the units (owner name, project JSON, learned peak per kind) as an entry of the fleet cache, every machine pulls units from the tail, claims one by the digest of its record state (claim, heartbeat, publish; a lapsed claim returns the unit to the pool; a stored record is never computed again) and sizes what it takes by its free memory and cores. Its memory floor also protects desktop applications when no local repository request is active. No machine schedules for another.",
   "oneOf": [
     {
       "$ref": "#/definitions/Pointer"

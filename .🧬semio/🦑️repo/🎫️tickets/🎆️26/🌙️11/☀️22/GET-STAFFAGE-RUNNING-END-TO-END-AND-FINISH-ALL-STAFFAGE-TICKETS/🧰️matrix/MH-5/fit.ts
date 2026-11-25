@@ -1,6 +1,8 @@
 /** 🪡️ The multiview repair of one asset of batch MH-5, the last step of its chain: `bun fit.ts <id|file.json> --ops <ops.json> [--write] [--out <file>]` (from `T`). It is `../MR/fit.ts` (ops `front-sweep`, `plan-revolve`, `extrude`, `copy`, `set`, `remove`, `anchor`, unchanged) plus the op the people of this batch need:
  *
  * - `{ "op": "sync", scale, id, bone?, "convert"?: [view…], "sweep"?: { view: "u" | "v" | "w" }, "lock"?: [view…], "slack"?: metres, "remap"?: false, "zTip"?: false }`: the shape `id` of the bone in the three views becomes three pictures of one solid. A flat shape of a view named in `convert` first becomes a prism: its outline, projected along the viewing direction onto the plane across the bone axis that points most at the viewer (or the axis `sweep` names), is the profile, and the sweep runs along that axis over the extent the elevation twin has there (a flat ELEVATION shape becomes its own outline swept laterally: the solid the twisted heads lacked). Then the span `z0`, `z1`, `zTip` and the ranges of the two profile coordinates of every extruded shape of the three are fitted together: the fit minimises the largest disagreement of the extents the matrix compares (elevation and front: height, elevation and plan: forward, front and plan: lateral) over every pose, the 49 probe instants of every clip and nine instants of every transition (`solid.ts`), under the condition that no shape moves in its OWN view in the default pose by more than `slack` (default 0.3 mm, the pose the silhouette guard measures): only what a view does not show there is free. `lock` keeps a view as it is, `remap: false` fits the spans only. The search runs on a 0.1 mm grid from the present values and a refit is kept only when it gains more than 0.5 mm, so a second run changes nothing.
+ * - `extrude` takes `"span": "full"` (MH-5): the lateral span is the whole lateral range of the shape it replaces, without a taper (a head or a trunk is widest in the middle; the tapered fit of MR draws it too narrow at the joint).
+ * - `{ "op": "add", scale, view, "shape": {…} }`: a shape a view lacked (the face under a helmet), stated whole; present already, it is made equal.
  * - `{ "op": "clip", scale, view, id, "axis"?: "u" | "v" | "w", "range"?: [lo, hi], "side"?: "low" | "high" }`: cuts the profile of an extruded shape to the range of the elevation twin along a bone axis (hidden length inside the neighbouring part).
  * - `{ "op": "anchor-split", id, "into": [{ id, title, z, … }] }`: one anchor per physical contact (D45), references followed.
  * @see ./mgate.ts — the measurement in seconds; ../MR/gate.ts — the proof */
@@ -195,10 +197,10 @@ function frontExtrude(op: any): string {
         return [[u, p[0]! + (p[2]! - p[0]!) * t] as const, [u, p[1]! + (p[3]! - p[1]!) * t] as const];
       });
     const [w0, w1] = rangeOf(across, 1);
-    const fitted = search([w0, w1, w0, w1], (p) => mismatch(prism(p), across) + (p[0]! >= p[1]! - 0.002 || p[2]! >= p[3]! - 0.002 ? 1 : 0));
+    const fitted = op.span === "full" ? [w0, w1, w0, w1] : search([w0, w1, w0, w1], (p) => mismatch(prism(p), across) + (p[0]! >= p[1]! - 0.002 || p[2]! >= p[3]! - 0.002 ? 1 : 0));
     const z = frame.o[2];
     for (const key of GEOMETRY_KEYS) if (key !== "closed") delete shape[key];
-    Object.assign(shape, { kind: "poly", points: structuredClone(profile), closed: true, solid: { kind: "extruded", sweep: "w", z0: round(fitted[0]! + z), z1: round(fitted[1]! + z), zTip: [round(fitted[2]! + z), round(fitted[3]! + z)] } });
+    Object.assign(shape, { kind: "poly", points: structuredClone(profile), closed: true, solid: { kind: "extruded", sweep: "w", z0: round(fitted[0]! + z), z1: round(fitted[1]! + z), ...(op.span === "full" ? {} : { zTip: [round(fitted[2]! + z), round(fitted[3]! + z)] }) } });
   } else Object.assign(shape, { points: structuredClone(profile) });
   return `${settle(shape, before) ? "extruded" : "unchanged"}: the elevation outline swept laterally, span ${JSON.stringify(shape.solid)}`;
 }
@@ -584,6 +586,17 @@ function apply(op: any): string {
     case "sync": case "measure": return sync(op);
     case "clip": return clipOp(op);
     case "copy-scale": return copyScale(op);
+    case "add": {
+      const list = shapesOf(op.scale, op.view);
+      const index = list.findIndex((shape) => shape.id === op.shape.id && shape.bone === op.shape.bone);
+      if (index < 0) {
+        list.push(structuredClone(op.shape));
+        return "added";
+      }
+      if (JSON.stringify(list[index]) === JSON.stringify(op.shape)) return "unchanged";
+      list[index] = structuredClone(op.shape);
+      return "set";
+    }
     case "anchor-split": return anchorSplit(op);
     case "scale-profile": return scaleProfile(op);
     case "set": {

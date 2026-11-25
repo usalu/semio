@@ -1,0 +1,8 @@
+d1381cbc3fff78beb10b330a71f6faf546501b53f68b94c53544183f97ef3191  /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/📂️mount/🟦️.ts
+4b77099f177e62330edf11165fd8a6aa609bf0eda22174a1cf703a758de3bdf1  /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/📂️mount/🧬️schema/🔣️.json
+979ee86e4e32d3cc65fe29cbc7054de918de45d3091a5157ac512b7d8e8f74c4  /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/📂️mount/🧪️tests/🟦️.ts
+48c0634c1d30c363975e3ee1c037cf6d4f95f70c9ca4e8a809eb7a316c5d1d8d  /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/📂️mount/🧪️tests/🔣️.json
+673f2574eee5967c1f008b1fc39206dbf7e24a12fb5b58842aeff27cf096068c  /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/📂️mount/🧪️tests/🥒️.feature
+4f3d39f1c8eb5689ec413e9892b0aad1296ea419c7f0a982e48e18c179b8c31c  /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🍎️image/♻️reclaim/🟦️.ts
+98b445af8635a835fb1dcacef1fb1d1154122a490cdd7a7e442027b7bd66e3f0  /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🍎️image/♻️reclaim/🧪️tests/🟦️.ts
+411ad98afd5bf592ec8a65551e624d9427749b7c968b7b7ec1d7986dccb2f9dc  🟦️.ts

@@ -22,7 +22,7 @@ import { panelGhostSessionBridge, setPanelGhostSessionBridge } from "@semio-tech
 import { MODE_CANVAS_INSET_CLASS, Mode, type ModeProps } from "@semio-tech/ui/elements/Canvas";
 import { COMPOSE_WINDOW_TEMPLATE_MIME, MODE_TEMPLATE_PREVIEW_WINDOW_ID, beginWindowTemplateDrag, endWindowTemplateDrag, readActiveWindowTemplateDragSession, windowTemplatePointerDragRef, beginWindowTemplatePointerDrag, cancelWindowTemplatePointerDrag, windowTemplatePaletteTreeDragController, type ModeWindowDescriptor, type WindowTemplateDragSession, type WindowTemplateDropPayload } from "@semio-tech/ui/elements/Canvas/template-drag";
 import { modeAxisIsPerpendicularChild, modePerpendicularJoinSeparators, modeJoinCornerSpecsForSeparator, modeJoinCornerSpecsForCrossSeparator, MODE_JOIN_CORNER_TOUCH_EPS, resolveJoinCornerPeerCrossAxes, applyAxisResizeDelta, resolveJoinCornerResizeDeltas, applyAxisGroupLayoutDelta, modeAxisGroupLayout, applyModeJoinCornerResize, type ModeJoinCornerCrossAxis } from "@semio-tech/ui/elements/Canvas/join-corners";
-import { applyModeDrop, computeModeDropZone, computeModeSplitPreviewInBody, resolveModeSplitSideInBody, computeTabInsertPreview, modeDockOutLayout, modeDockTabsWithInsertPreview, modeDockDragInsertTabs, resolveModeTabInsertPreview } from "@semio-tech/ui/elements/Canvas/drop";
+import { applyModeDrop, computeModeDropZone, computeModeSplitPreviewInBody, resolveModeSplitSideInBody, modeDockOutLayout, modeDockTabsWithInsertPreview, modeDockDragInsertTabs, resolveModeTabInsertPreview } from "@semio-tech/ui/elements/Canvas/drop";
 import { modeStackTabsByCorner, modePathKey, modePathFromKey, modePathEquals, resolveModeLayout, collectModeWindows, findModeWindow, applyModeSplitPercents } from "@semio-tech/ui/elements/Canvas/layout";
 import { Edges } from "@react-three/drei/core/Edges.js";
 import { GizmoHelper } from "@react-three/drei/core/GizmoHelper.js";
@@ -153,7 +153,7 @@ export { windowMeasuresDefaultWidthPx, windowMeasuresMinWidthPx, windowMeasuresM
 export { shellNavbarTrailingEndWidthByRoot, useShellNavbarTrailingEndWidthPx, shellNavbarTrailingEndReserveStyle, chromeHostedPanelCapRowStyle, type SafeAreaBox, type ChromePanelOccupancy, type SafeAreaYield, type ChromePanelSafeArea, safeAreaBoxFromRect, publishShellChromePanelBox, useShellChromePanelBoxes, chromePanelSafeArea, chromePanelSafeAreaStyle, useChromePanelSafeArea } from "@semio-tech/ui/modules/chrome-safe-area";
 export { type PanelTabDockTarget, type PanelTreeUnitDockTarget, type PanelTreeUnitDockMove, PANEL_TREE_UNIT_MIME, TREE_SECTION_REORDER_MIME, type PanelTreeUnitDragSession, beginPanelTreeUnitDrag, endPanelTreeUnitDrag, readActivePanelTreeUnitDrag, usePanelTreeUnitDragActive, type PanelDockContextValue, PanelDockContext, usePanelDockContext } from "@semio-tech/ui/modules/panel-dock";
 export { ANCHORS, type Anchor, anchorVertical, anchorHorizontal, flowFromAnchor, anchorPositionStyle, chromeHostedOpenPanelPositionStyle, nearestAnchor } from "@semio-tech/ui/modules/panel-anchor";
-export { windowMeasureTreeLeafLabelClass, windowMeasureTreeGroupLabelClass, panelTabLabelClass, panelTabIconSlotClass, dropZoneReadyTextClass, dropZoneReadyFillClass, dropZoneReadyClass, GLASS_OVERLAY_BOX_CLASS, borderNormalTopClass, floatingMenuItemClass, panelTabBarClass, panelTabBarScrollRowClass, panelTabBarEdge, panelTabButtonDividerClass, panelTabButtonClass, panelAnchorTabBarClass, panelAnchorTabButtonClass, mobilePanelTabBarClass, mobilePanelTabButtonClass, windowBodyFrameClass, modeDockInactiveTabClass, modeDockInactiveTabBeforeGapClass, panelWindowInactiveTabClass, modeDockTabLabelClassName, modeDockActiveTabFillClass, modeDockActiveTabClass, windowEngagementBodyClass, utilityBarBodyClass, windowMeasuresBodyClass } from "@semio-tech/ui/modules/chrome-class-names";
+export { windowMeasureTreeLeafLabelClass, windowMeasureTreeGroupLabelClass, panelTabLabelClass, panelTabIconSlotClass, GLASS_OVERLAY_BOX_CLASS, borderNormalTopClass, floatingMenuItemClass, panelTabBarClass, panelTabBarScrollRowClass, panelTabBarEdge, panelTabButtonDividerClass, panelTabButtonClass, panelAnchorTabBarClass, panelAnchorTabButtonClass, mobilePanelTabBarClass, mobilePanelTabButtonClass, modeDockInactiveTabClass, modeDockInactiveTabBeforeGapClass, panelWindowInactiveTabClass, modeDockTabLabelClassName, modeDockActiveTabFillClass, modeDockActiveTabClass, windowEngagementBodyClass, utilityBarBodyClass, windowMeasuresBodyClass } from "@semio-tech/ui/modules/chrome-class-names";
 export { type Point, type Vector, type Plane, type Camera } from "@semio-tech/ui/elements/Scene/geometry";
 export { UiMobileProvider, useUiMobile } from "@semio-tech/ui/modules/ui-mobile-context";
 export { UI_TERMINOLOGY_NATIVE, UI_CHROME_TERMINOLOGY_STORAGE_KEY, readStoredUiChromeTerminology, writeStoredUiChromeTerminology, resolveUiLocalizedText, useUiTerminology } from "@semio-tech/ui/modules/ui-terminology";
@@ -190,7 +190,6 @@ export {
   computeModeDropZone,
   computeModeSplitPreviewInBody,
   resolveModeSplitSideInBody,
-  computeTabInsertPreview,
   modeDockOutLayout,
   modeDockTabsWithInsertPreview,
   modeDockDragInsertTabs,

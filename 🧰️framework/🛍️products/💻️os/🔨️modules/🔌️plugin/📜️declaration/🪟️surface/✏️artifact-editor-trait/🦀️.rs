@@ -39,7 +39,7 @@ pub trait ArtifactEditor: Default + Send + 'static {
         Vec::new()
     }
     type Snapshot: ::semio_os_kernel::StoreState + PartialEq + semio_framework_value::ToValue + semio_framework_value::retirement::RetireOwned + Send + Sync + pack::snapshot::ArtifactPack + pack::snapshot::ArtifactPackMetadata + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + 'static;
-    type Mutation: ::semio_os_kernel::StoreMutationFor<Self::Snapshot> + protocol::SemanticMutation<Self::Snapshot> + store::ArtifactCanonicalJsonTree + PartialEq + semio_framework_value::retirement::RetireOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
+    type Mutation: ::semio_os_kernel::StoreMutationFor<Self::Snapshot> + store::ArtifactPersistedOperation + protocol::SemanticMutation<Self::Snapshot> + store::ArtifactCanonicalJsonTree + PartialEq + semio_framework_value::retirement::RetireOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
     type Config: Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_value::retirement::RetireOwned + Send + Sync + store::ConfigRecord + ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + 'static;
     type ConfigMutation: Clone + ::protocol::ColdMutation<Self::Config> + ::protocol::Mutation<Self::Config> + store::ArtifactCanonicalJsonTree + PartialEq + semio_framework_value::retirement::RetireOwned + Send + ::protocol::OpText + ::replication::OpBinaryReceiving + 'static;
     type Draft: Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_value::retirement::RetireOwned + Send + Sync + pack::snapshot::ArtifactDsl + ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + 'static;
@@ -161,11 +161,14 @@ pub trait ArtifactEditor: Default + Send + 'static {
     /// 📥️ Supplies the framework-owned bounded natural-file importer while leaving every other
     /// reserved route to the editor. Editors with a richer media route may override this method.
     fn build_reserved_tool_job(request:&mut Option<ArtifactReservedToolJobRequest<EditorApp<Self>>>,body:&mut Option<Box<dyn semio_plugin_decl_app::tool_contract::ArtifactReservedJob+Send>>,construction:&mut semio_framework_job::OriginalConstructionAdmission,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        if request.as_ref().is_some_and(|original|matches!(original.tool_id.as_str(),"copy"|"cut"|"paste")&&matches!(original.input,Some(ArtifactReservedToolInput::Action{..}))){
+            return semio_plugin_decl_app::tool_contract::admit_reserved_work::<EditorApp<Self>,crate::clipboard_work::EditorClipboardWork<Self>>(request,body,construction,cx)
+        }
         if let Some(original)=request.as_ref(){let natural=matches!(&original.input,Some(ArtifactReservedToolInput::Media{port,..})if port==NATURAL_FILE_PORT)&&Self::natural_file_codec().is_some();if !natural||!original.raw_wire.is_empty(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"natural-file import requires its owned declared media and no wire").into())}}
         semio_plugin_decl_app::tool_contract::admit_reserved_work::<EditorApp<Self>,crate::natural_file_import::NaturalFileImportWork<Self>>(request,body,construction,cx)
     }
 
-    /// 🎞️ Author-owned resumable media-output producer for `EditorApp<Self>`.
+    /// 🎞️ Author-owned format producer for a picked Original file of `EditorApp<Self>`.
     fn build_original_picker_job(
         _request: &mut Option<ArtifactReservedToolJobRequest<EditorApp<Self>>>,
         _body: &mut Option<Box<dyn semio_plugin_decl_app::tool_contract::ArtifactReservedJob+Send>>,

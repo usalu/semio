@@ -7,5 +7,8 @@ pub fn diff(payload: &InsertBeam, base: &En1994Snapshot) -> protocol::MutationOu
     if payload.index > base.beams.len() {
         return protocol::MutationOutcome::error("mutation.target-missing", "index out of range", [payload.index.to_string()]);
     }
+    if base.beams.iter().any(|row| row.id == payload.beam.id) {
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A beam with id '{}' already exists.", payload.beam.id), [payload.beam.id.clone()]);
+    }
     protocol::MutationOutcome::new(En1994Diff { beams: Some(En1994BeamsRows::insertion(payload.index, payload.beam.clone())), ..Default::default() })
 }

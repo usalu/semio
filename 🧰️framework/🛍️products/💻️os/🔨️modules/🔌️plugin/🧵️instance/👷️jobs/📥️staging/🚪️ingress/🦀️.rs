@@ -5,7 +5,7 @@ use semio_plugin_ownership::bounded_ownership::{ARTIFACT_LIVE_OUTPUT_SLOTS, plug
 use semio_os_kernel::SpaceMember;
 use semio_framework::{ActionKind, Fault, FaultCode, FaultFrom, FaultOrigin};
 use semio_plugin_decl_app::ArtifactApp;
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use std::collections::{BTreeMap, BTreeSet};
 use semio_plugin_instance_children::children_components::ChildComposition;

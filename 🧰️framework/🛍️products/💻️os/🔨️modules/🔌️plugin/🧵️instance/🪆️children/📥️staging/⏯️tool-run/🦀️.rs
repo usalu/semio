@@ -6,7 +6,7 @@ use semio_plugin_tool_run::ToolRunMemberFold;
 use semio_plugin_tool_run::ToolRunMemberGeneration;
 use semio_plugin_tool_run::ToolRunMemberRun;
 use semio_plugin_decl_app::ArtifactApp;
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use semio_plugin_decl_emission::Emit;
 use semio_framework::FaultFrom;

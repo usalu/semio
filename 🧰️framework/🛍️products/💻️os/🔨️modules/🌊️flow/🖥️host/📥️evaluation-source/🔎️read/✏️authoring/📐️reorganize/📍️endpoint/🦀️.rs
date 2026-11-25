@@ -2,7 +2,7 @@
 use super::{Handle,fixed,paid,invalid};
 use super::order::{Label,TextOrder};
 use super::super::ports::{port_at,PortName};
-use super::super::super::{HistoryFoldIndex,OperatorInfo};
+use super::super::{HistoryFoldIndex,OperatorInfo};
 use semio_framework_artifact_flow_flow::{FlowSnapshotSource,widget_id_for};
 use semio_framework_job::{StepContext,OriginalTurnFailure};
 use semio_framework_value::RetireOwned;

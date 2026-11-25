@@ -16,6 +16,7 @@ import {stretchedBudgetMillisecondsV1} from "../../../../../../🔨️modules/�
 import {activityNamesV1,activityV1,blockedFailuresV1,installBootStageV1,listStoreCodeV1,publishCodeSnapshotV1,pruneStoreCodeV1,readBeatV1,readFallbackV1,storeCodeDirectoryV1,verifyCodeSnapshotV1,yieldingV1} from "../🟦️.ts";
 import {createHash} from "node:crypto";
 import {utimesSync} from "node:fs";
+import {ownProcessIdentityV1} from "../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts";
 
 setDefaultTimeout(60_000);
 const ajv=new Ajv({strict:true,allowUnionTypes:true}),scratch:string[]=[],python=testPythonV1();
@@ -354,6 +355,7 @@ test("a sealed snapshot is published to the store with the per-file hashes of th
   expect(await verifyCodeSnapshotV1(target)).toContain("changed");
   expect(await publishCodeSnapshotV1({root,store,digest,originId:"g1-m01"})).toEqual({published:true,reason:null});
   expect(await verifyCodeSnapshotV1(target)).toBeNull();
+  expect(readdirSync(storeCodeDirectoryV1(store)).filter(name=>name.endsWith("-old"))).toEqual([]);
   put(root,"m/a/🟦️.ts","export const changed=1;\n");
   expect((await publishCodeSnapshotV1({root,store,digest:"0".repeat(64),originId:"g1-m01"})).reason).toContain("local snapshot");
   mkdirSync(join(storeCodeDirectoryV1(store),".tmp-g1-m09-dead"),{recursive:true});
@@ -372,6 +374,9 @@ test("old store snapshots are pruned down to the newest ones, but never one that
  expect(removed).toEqual([digests[1]!]);
  expect((await listStoreCodeV1(store)).map(entry=>entry.digest)).toEqual([digests[3]!,digests[2]!,digests[0]!]);
  expect(existsSync(join(base,".tmp-old"))).toBe(false);expect(existsSync(join(base,".tmp-new"))).toBe(true);
+ writeFileSync(join(base,"._"+digests[0]!),"x");utimesSync(join(base,"._"+digests[0]!),1000,1000);writeFileSync(join(base,"._fresh"),"x");
+ await pruneStoreCodeV1(store,2,new Set([digests[0]!]));
+ expect(existsSync(join(base,"._"+digests[0]!))).toBe(false);expect(existsSync(join(base,"._fresh"))).toBe(true);
 });
 
 test("the boot stage copy is installed through a signature that is written last, and only changes when the stage changes",async()=>{
@@ -388,7 +393,7 @@ test("the boot stage copy is installed through a signature that is written last,
 });
 
 test("the beat of a live daemon is read while the file is fresh and the process exists, and the fallback guard is read only when it is closed",async()=>{
- const root=temp("beat"),now=Date.now(),beat={version:1,pid:process.pid,parent:1,startedMs:now-5000,wallMs:now,phase:"run",base:"/x",source:"snapshot",lagMs:42_000};
+ const root=temp("beat"),now=Date.now(),beat={version:1,...ownProcessIdentityV1(),parent:1,startedMs:now-5000,wallMs:now,phase:"run",base:"/x",source:"snapshot",lagMs:42_000};
  put(root,".cache/f/boot/beat.json",JSON.stringify(beat));
  requireResilienceShapeV1("Beat",beat,"Closed beat required");
  expect(await readBeatV1(root,now)).toEqual(beat);

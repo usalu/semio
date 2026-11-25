@@ -3,7 +3,8 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { chromium, type Browser, type Page } from "playwright";
+import { type Browser, type Page } from "playwright";
+import { launchChromium } from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🌐️chromium-launch/🟦️";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { uiWgpuCursorFixture as fixture } from "@semio-tech/ui/testing/fixtures";
 import { BrowserFrameTransport } from "@semio-tech/framework-renderer-wgpu/browser-frame-transport";
@@ -80,7 +81,7 @@ describe("👆️ browser cursor presentation", () => {
     let page: Page;
 
     beforeAll(async () => {
-      browser = await chromium.launch({ headless: true });
+      browser = await launchChromium();
       page = await browser.newPage();
       await page.setContent('<canvas></canvas><div id="react-reference"></div>');
       const styles = readFileSync(new URL("../../../../../../../🔨️modules/🖱️ui/🎨️styling/🖌️ui/🎨️.css", import.meta.url), "utf8");

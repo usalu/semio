@@ -23,7 +23,7 @@ import { cpus, loadavg } from "node:os";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import type { Browser, Locator, Page } from "playwright";
-import { PLAYWRIGHT_MODULE_SPECIFIER } from "../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🟦️.ts";
+import { launchBrowserV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🟦️.ts";
 import { acceptanceCheckResult, publishAcceptanceCheckResult } from "@semio-tech/repo-test/acceptance/orchestration";
 import { awaitBeacon, dismissIntroduction, kindOf, windowIds } from "../🧮️program-matrix/🟦️.ts";
 
@@ -279,8 +279,7 @@ export async function runInteractionLatency(repoRoot: string, options: Readonly<
   const fixture = readLatencyScenarios();
   const loadCeiling = fixture.loadCeilingPerCore * cpus().length;
   ensureRepositoryBrowserPathV1(repoRoot,process.env);
-  const { chromium }: typeof import("playwright") = await import(PLAYWRIGHT_MODULE_SPECIFIER);
-  const browser: Browser = await chromium.launch({ headless: !options.headed, args: ["--use-angle=metal", "--enable-gpu", "--ignore-gpu-blocklist"] });
+  const browser: Browser = await launchBrowserV1({ headless: !options.headed, args: ["--use-angle=metal", "--enable-gpu", "--ignore-gpu-blocklist"] });
   const abort = (): void => void browser.close().catch(() => undefined);
   options.signal.addEventListener("abort", abort, { once: true });
   const rows: LatencyRow[] = [];

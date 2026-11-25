@@ -1,0 +1,25 @@
+# third fixer: enlarged pictures, the crutches baseline, the write of laundry, the simplified eating-standing, and the silhouette of three more hand variants of the bicycle (1200 MB: measure.ts peaked at 871 MB)
+mkdir -p "$GEN/zoom"
+(cd "$T" && timeout 600 "$B" "$here/zoom.ts" "$GEN/backup/person-on-crutches.json" 500 default "$GEN/zoom/crutches-before-500.png" '^crutch') 2>&1 | tail -1
+(cd "$T" && timeout 600 "$B" "$here/zoom.ts" "$GEN/try/person-on-crutches.json" 500 default "$GEN/zoom/crutches-try-500.png" '^crutch') 2>&1 | tail -1
+(cd "$T" && timeout 600 "$B" "$here/zoom.ts" "$GEN/backup/person-on-crutches.json" 500 "pose crutches-forward" "$GEN/zoom/crutches-before-500-fwd.png" '^crutch') 2>&1 | tail -1
+(cd "$T" && timeout 1200 "$B" "$here/zoom.ts" "$GEN/backup/person-pushing-bicycle.json" 50 default "$GEN/zoom/bicycle-before-50.png" '^(hand|forearm)-r$') 2>&1 | tail -1
+(cd "$T" && timeout 1200 "$B" "$here/zoom.ts" "$GEN/var/bicycle-b7.json" 50 default "$GEN/zoom/bicycle-b7-50.png" '^(hand|forearm)-r$') 2>&1 | tail -1
+(cd "$T" && timeout 1800 "$B" "$M/gate.ts" "$GEN/backup/person-on-crutches.json" --twins) > "$GEN/gate/person-on-crutches.before-all.log" 2>&1; tail -1 "$GEN/gate/person-on-crutches.before-all.log"
+"$here/in-apply.sh" person-hanging-laundry
+GATE_TIMEOUT=7200 "$here/in-try-apply.sh" person-eating-standing
+"$here/in-look.sh" person-eating-standing:try:50
+NOGATE=1 MEASURE=1 MSCALES=50 "$here/in-var.sh" person-pushing-bicycle "$here/var/bicycle-b4.json" bicycle-b4
+NOGATE=1 MEASURE=1 MSCALES=50 "$here/in-var.sh" person-pushing-bicycle "$here/var/bicycle-b5.json" bicycle-b5
+NOGATE=1 MEASURE=1 MSCALES=50 "$here/in-var.sh" person-pushing-bicycle "$here/var/bicycle-b6.json" bicycle-b6
+MEASURE=1 "$here/in-var.sh" person-on-crutches "$here/var/crutches-c1.json" crutches-c1
+(cd "$T" && timeout 600 "$B" "$here/zoom.ts" "$GEN/var/crutches-c1.json" 500 default "$GEN/zoom/crutches-c1-500.png" '^crutch') 2>&1 | tail -1
+(cd "$T" && timeout 600 "$B" "$here/zoom.ts" "$GEN/var/crutches-c1.json" 500 "pose crutches-forward" "$GEN/zoom/crutches-c1-500-fwd.png" '^crutch') 2>&1 | tail -1
+(cd "$T" && FOCUS=0.08 timeout 600 "$B" "$here/zoom.ts" "$GEN/backup/person-pushing-bicycle.json" 50 default "$GEN/zoom/bicycle-hand-before.png" '^hand-r$') 2>&1 | tail -1
+(cd "$T" && FOCUS=0.08 timeout 600 "$B" "$here/zoom.ts" "$GEN/var/bicycle-b7.json" 50 default "$GEN/zoom/bicycle-hand-b7.png" '^hand-r$') 2>&1 | tail -1
+(cd "$T" && FOCUS=0.08 timeout 600 "$B" "$here/zoom.ts" "$GEN/var/bicycle-b4.json" 50 default "$GEN/zoom/bicycle-hand-b4.png" '^hand-r$') 2>&1 | tail -1
+# ---------------------------------------------------------------
+MEASURE=1 "$here/in-var.sh" person-on-crutches "$here/var/crutches-c2.json" crutches-c2
+(cd "$T" && timeout 600 "$B" "$here/zoom.ts" "$GEN/var/crutches-c2.json" 500 default "$GEN/zoom/crutches-c2-500.png" '^crutch') 2>&1 | tail -1
+NOGATE=1 MEASURE=1 MSCALES=50 "$here/in-var.sh" person-pushing-bicycle "$here/var/bicycle-b8.json" bicycle-b8
+NOGATE=1 MEASURE=1 MSCALES=50 "$here/in-var.sh" person-pushing-bicycle "$here/var/bicycle-b9.json" bicycle-b9

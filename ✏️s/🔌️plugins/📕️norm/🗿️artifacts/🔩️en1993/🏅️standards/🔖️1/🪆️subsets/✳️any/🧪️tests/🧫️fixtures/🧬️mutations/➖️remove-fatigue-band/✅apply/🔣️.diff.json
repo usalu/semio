@@ -53,7 +53,9 @@
               "deltaSigma": 95000000.0,
               "cycles": 2000000.0
             }
-          ]
+          ],
+          "stressHistory": null,
+          "consequence": null
         }
       }
     ]

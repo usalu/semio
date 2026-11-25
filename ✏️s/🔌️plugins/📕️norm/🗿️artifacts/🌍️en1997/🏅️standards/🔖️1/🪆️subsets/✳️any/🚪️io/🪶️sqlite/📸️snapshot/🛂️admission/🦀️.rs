@@ -5,7 +5,7 @@ use semio_framework_dsl_record::RecordValue as R;
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_s_artifact_norm_contract::sqlite_native as n;
 use semio_s_artifact_norm_contract::sqlite_native::Column::*;
-fn count(root:&R)->Result<usize,ValueError>{let mut rows=1;for id in 7..=21{rows=n::add(rows,n::list(n::field(root,id)?)?.len())?}for(id,nested)in[(8,6),(9,12),(13,13),(16,7),(19,4),(19,5),(20,6)]{for owner in n::list(n::field(root,id)?)?{rows=n::add(rows,n::list(n::field(n::record(owner)?,nested)?)?.len())?}}Ok(rows)}
+fn count(root:&R)->Result<usize,ValueError>{let mut rows=1;for id in 7..=21{rows=n::add(rows,n::list(n::field(root,id)?)?.len())?}for(id,nested)in[(8,6),(9,27),(13,13),(16,12),(19,4),(19,5),(20,6)]{for owner in n::list(n::field(root,id)?)?{rows=n::add(rows,n::list(n::field(n::record(owner)?,nested)?)?.len())?}}Ok(rows)}
 fn write(root:&R,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
  out.insert_key_float("en1997_document",1,&n::cells(root,[Text(0),Unsigned(1,u8::MAX as u64),Text(2),Text(3),Enumeration(4,&["En","De"]),Real(5),Real(6)])?,DOCUMENT)?;
  for(index,v)in n::list(n::field(root,7)?)?.iter().enumerate(){n::entity(out,"en1997_soil_layer",1,index,&n::cells(n::record(v)?,[Text(0),Text(1),Real(2),Real(3),Real(4),Real(5),Real(6),Real(7),Real(8),Real(9),Real(10),Real(11),Real(12),Real(13)])?,LAYER)?;}
@@ -32,4 +32,4 @@ fn write(root:&R,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
 Ok(())
 }
 /// 🛂️ 20 authored physical tables and complete copied semantic controls.
-pub fn admit(root:&R,native:&mut NativeDecodeControl<'_>,limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{n::admit(root,native,limits,En1997Snapshot::SQLITE_SCHEMA,23,96,count(root)?,write)}
+pub fn admit(root:&R,native:&mut NativeDecodeControl<'_>,limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{n::admit(root,native,limits,En1997Snapshot::SQLITE_SCHEMA,23,76,count(root)?,write)}

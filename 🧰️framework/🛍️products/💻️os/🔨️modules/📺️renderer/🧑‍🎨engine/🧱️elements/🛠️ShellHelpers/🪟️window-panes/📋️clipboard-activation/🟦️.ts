@@ -10,6 +10,11 @@ export function clipboardWriteFragmentFromEffect(effect: unknown): unknown | und
 
 export type ClipboardActionDescriptor = { readonly action: string; readonly args?: unknown };
 
+/** ⌨️ Routes clipboard paste through dispatch, where the fragment is read after pending writes settle. */
+export function workspacePasteKeybinding(action: string, windowId: string, clipboardPending: boolean, fragment: unknown) {
+  return action === "paste" && (clipboardPending || fragment !== undefined) ? { action, args: { windowId } } : undefined;
+}
+
 /** 🧷️ Identifies the framework workspace clipboard actions. */
 export function isWorkspaceClipboardAction(action: ClipboardActionDescriptor & { readonly commandAddress?: unknown }): boolean {
   return action.commandAddress === undefined && (action.action === "copy" || action.action === "cut" || action.action === "paste");

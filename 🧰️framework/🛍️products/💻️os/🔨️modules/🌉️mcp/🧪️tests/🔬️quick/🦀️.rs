@@ -99,6 +99,39 @@ fn capabilities_search_tool_call_finds_translate_selection() {
 }
 
 #[test]
+fn capabilities_search_pages_with_its_own_cursor_and_refuses_one_it_did_not_mint() {
+    let server = fixture_server();
+    let search = |arguments: serde_json::Value| server.tools.call("capabilities_search", arguments).expect("known tool name resolves");
+    let first = search(serde_json::json!({ "query": "selection", "limit": 1 })).structured_content.expect("structured content");
+    let total = first["total"].as_u64().unwrap();
+    assert!(total >= 2, "the fixture needs a second hit to page: {first}");
+    let mut seen = vec![first["results"][0]["capabilityId"].as_str().unwrap().to_string()];
+    let mut cursor = first["nextCursor"].as_str().map(str::to_string);
+    while let Some(next) = cursor {
+        let page = search(serde_json::json!({ "query": "selection", "limit": 1, "cursor": next })).structured_content.expect("structured content");
+        seen.push(page["results"][0]["capabilityId"].as_str().unwrap().to_string());
+        cursor = page["nextCursor"].as_str().map(str::to_string);
+    }
+    assert_eq!(seen.len() as u64, total);
+    assert_eq!(seen.iter().collect::<std::collections::BTreeSet<_>>().len(), seen.len(), "no hit may repeat across pages: {seen:?}");
+    for cursor in ["bogus", "3"] {
+        let refused = search(serde_json::json!({ "query": "selection", "cursor": cursor }));
+        assert!(refused.is_error, "{cursor}");
+        assert_eq!(refused.structured_content.unwrap()["code"], "INPUT_INVALID");
+    }
+    for limit in [0, 101] {
+        assert_eq!(search(serde_json::json!({ "query": "selection", "limit": limit })).structured_content.unwrap()["code"], "INPUT_INVALID", "{limit}");
+    }
+}
+
+#[test]
+fn every_gateway_capability_description_carries_english_and_german() {
+    for capability in semio_os_mcp_capabilities::core_capabilities::core_tool_capabilities() {
+        assert!(capability.description.contains(" — "), "{} is English-only: {}", capability.id.as_str(), capability.description);
+    }
+}
+
+#[test]
 fn capabilities_describe_tool_call_returns_the_full_definition() {
     let server = fixture_server();
     let result = server.tools.call("capabilities_describe", serde_json::json!({ "capabilityId": "cad.editor.translateSelection" })).expect("known tool name resolves");

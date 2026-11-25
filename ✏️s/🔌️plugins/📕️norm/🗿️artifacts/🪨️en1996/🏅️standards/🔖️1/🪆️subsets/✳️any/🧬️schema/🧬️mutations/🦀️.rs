@@ -11,10 +11,6 @@ extern crate semio_framework_value_derive as value_derive;
 use semio_s_artifact_norm_en1996_diff::En1996Diff;
 use semio_s_artifact_norm_en1996_model::En1996Snapshot;
 
-#[path = "🧭️edit-rules/🦀️.rs"]
-mod edit_rules;
-pub use crate::edit_rules::{resolve_edit, EDIT_RULES, ID_REMOVALS};
-
 use semio_s_artifact_norm_en1996_mut_concentrated::change_concentrated_bearing_length;
 use semio_s_artifact_norm_en1996_mut_eccentricity::change_slab_span;
 use semio_s_artifact_norm_en1996_mut_walls::change_wall_length;
@@ -461,11 +457,6 @@ mod tests;
 #[cfg(test)]
 #[path = "🧪️tests/🔬️kinds-catalog/🦀️.rs"]
 mod kinds_catalog;
-
-//#region 🍃️FacetLeaves
-/// 🍃️ The five handcrafted leaves of the `mutations` schema facet.
-pub const MUTATION_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: semio_s_artifact_norm_en1996_mutations_typescript::LEAF, graphql: semio_s_artifact_norm_en1996_mutations_graphql::LEAF, json_schema: semio_s_artifact_norm_en1996_mutations_json_schema::LEAF, proto: semio_s_artifact_norm_en1996_mutations_proto::LEAF };
-//#endregion 🍃️FacetLeaves
 
 /// 🌉️ The production dispatch the independent oracle hosts and the vector tests drive: a mutation's diff, applied through the central applier.
 pub mod mutation_bridge {

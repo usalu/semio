@@ -1,6 +1,7 @@
 import {chmodSync,existsSync,lstatSync,mkdirSync,readdirSync,readFileSync,readlinkSync,realpathSync,renameSync,rmdirSync,statSync,unlinkSync,writeFileSync} from "node:fs";
 import {dirname,isAbsolute,join,relative,resolve,sep} from "node:path";
-import {freeSpaceSyncV1} from "../../../../../../../../🔨️modules/🏃️process/🆓️free-space/🟦️.ts";
+import {readFreeSpaceV1} from "../../../../../../../../🔨️modules/🏃️process/🆓️free-space/🟦️.ts";
+import {processTableSnapshot} from "../../../../🏃️process/📋️process-table/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 
 /** ♻️ The closed rules of the collection: where holds and generations live, how long a superseded, retained or unfinished generation rests before it may go, the free fraction of the image below which the rest shrinks to nothing, and how many entries one removal batch deletes. */
@@ -11,12 +12,14 @@ export type DependencyGenerationRetainedV1=Readonly<{key:string;retiredSeconds:n
 export type DependencyGenerationPlanV1=Readonly<{generations:readonly DependencyGenerationFactV1[];current:readonly string[];retained:readonly DependencyGenerationRetainedV1[];held:readonly string[];bound:readonly string[];pressure:boolean}>;
 export type DependencyGenerationRetirementV1=Readonly<{key:string;reason:"superseded"|"unfinished"}>;
 
-/** 🧭️ Decides which generations may be retired: never one a pointer names as current, a live process holds or a checkout binds; a generation a pointer retains rests its retention (the retained grace, the rollback time for the newest of its scope), an unreferenced finished one the superseded grace, an unfinished one of a dead build the unfinished grace; under pressure (the image is nearly full) every finished one is due at once, an unfinished one still rests. Pure; the Python oracle of the tests agrees. */
+/** 🧭️ Decides which generations may be retired: never one a pointer names as current, a live process holds, a live process runs from (its command line names the directory) or a checkout binds; a generation a pointer retains rests its retention (the retained grace, the rollback time for the newest of its scope), an unreferenced finished one the superseded grace, an unfinished one of a dead build the unfinished grace; under pressure (the image is nearly full of bytes or of inodes) every finished one is due at once and every unfinished one after the short pressure grace except the newest unfinished one, which the next attempt resumes. Pure; the Python oracle of the tests agrees. */
 export function planDependencyGenerationRetirementV1(input:DependencyGenerationPlanV1):readonly DependencyGenerationRetirementV1[]{
  const current=new Set(input.current),held=new Set(input.held),bound=new Set(input.bound),retained=new Map(input.retained.map(row=>[row.key,row]));
+ const resumed=input.generations.filter(row=>!row.ready).sort((left,right)=>left.ageSeconds-right.ageSeconds||(left.key<right.key?-1:1))[0]?.key;
  const due=(row:DependencyGenerationFactV1):boolean=>{
   const kept=retained.get(row.key);
   if(kept!==undefined)return kept.retiredSeconds>=(input.pressure?0:kept.newest?policy.rollbackSeconds:policy.retainedGraceSeconds);
+  if(!row.ready&&input.pressure&&row.key!==resumed)return row.ageSeconds>=policy.unfinishedPressureGraceSeconds;
   return row.ageSeconds>=(row.ready?input.pressure?0:policy.supersededGraceSeconds:policy.unfinishedGraceSeconds);
  };
  return input.generations.filter(row=>!current.has(row.key)&&!held.has(row.key)&&!bound.has(row.key)&&due(row)).map(row=>({key:row.key,reason:row.ready?"superseded" as const:"unfinished" as const})).sort((left,right)=>left.key<right.key?-1:left.key>right.key?1:0);
@@ -104,10 +107,23 @@ const newestChangeMs=(path:string):number=>{
 };
 
 /** 🌡️ The free fraction of the volume that holds the store, 1 when it cannot be measured (unknown is never pressure). */
-const volumeFreeFraction=(root:string):number=>{const space=freeSpaceSyncV1(root,{nearest:true});return space!==undefined&&space.totalBytes!==undefined&&space.totalBytes>0?space.availableBytes/space.totalBytes:1;};
+const volumeFreeFraction=(root:string):number=>{
+ const facts=readFreeSpaceV1(root,{nearest:true});
+ if(!facts.known)return 1;
+ const bytes=facts.totalBytes!==undefined&&facts.totalBytes>0?facts.availableBytes/facts.totalBytes:1,inodes=facts.freeInodes!==null&&facts.totalInodes!==undefined&&facts.totalInodes>0?facts.freeInodes/facts.totalInodes:1;
+ return Math.min(bytes,inodes);
+};
 
 export type DependencyGenerationCollectionPlanV1=Readonly<{retire:readonly DependencyGenerationRetirementV1[];tombstones:readonly string[];kept:number;pressure:boolean;refused?:string}>;
-export type DependencyGenerationPlanOptionsV1=Readonly<{now?:()=>number;alive?:(pid:number)=>boolean;only?:ReadonlySet<string>;freeFraction?:()=>number}>;
+export type DependencyGenerationPlanOptionsV1=Readonly<{now?:()=>number;alive?:(pid:number)=>boolean;commands?:()=>readonly string[]|undefined;only?:ReadonlySet<string>;freeFraction?:()=>number}>;
+
+/** 🔭️ The generations that a live process runs from: the keys whose directory a command line of the process table names (any separator, any case), so a server started from an installed `node_modules` by any tool keeps it without having announced a hold; `undefined` when the table cannot be read, because then nothing is known to be unused. */
+export function dependencyGenerationsInUseV1(keys:readonly string[],commands:()=>readonly string[]|undefined=()=>processTableSnapshot()?.map(row=>row.command)):ReadonlySet<string>|undefined{
+ if(keys.length===0)return new Set();
+ const rows=commands();if(rows===undefined)return undefined;
+ const text=rows.join(" ").split("\\").join("/").toLowerCase(),marker="/"+policy.generationDirectory+"/";
+ return new Set(keys.filter(key=>new RegExp(marker+key+"(?![a-f0-9])","u").test(text)));
+}
 
 /** 🗺️ Reads the store and plans one collection without touching it: the generations to retire, the tombstones of earlier interrupted removals to finish, and whether the image is under pressure. Refuses (retires nothing, still lists the tombstones, which are garbage already) when no pointer or no binding record can be read. */
 export function planDependencyGenerationCollectionV1(storeRoot:string,options:DependencyGenerationPlanOptionsV1={}):DependencyGenerationCollectionPlanV1{
@@ -123,7 +139,9 @@ export function planDependencyGenerationCollectionV1(storeRoot:string,options:De
   let mtime:number;try{mtime=newestChangeMs(join(generations,key));}catch{continue;}
   facts.push({key,ready:existsSync(join(generations,key,policy.readyMarker)),ageSeconds:Math.max(0,Math.floor((now-mtime)/1000))});
  }
- const all=planDependencyGenerationRetirementV1({generations:facts,current:pointers.current,retained:pointers.retained,held:readHeldDependencyGenerationsV1(storeRoot,options.alive),bound,pressure}),retire=all.filter(row=>options.only===undefined||options.only.has(row.key));
+ const held=readHeldDependencyGenerationsV1(storeRoot,options.alive),due=planDependencyGenerationRetirementV1({generations:facts,current:pointers.current,retained:pointers.retained,held,bound,pressure}),used=dependencyGenerationsInUseV1(due.map(row=>row.key),options.commands);
+ if(used===undefined)return{retire:[],tombstones,kept:facts.length,pressure,refused:"no readable process table"};
+ const all=due.filter(row=>!used.has(row.key)),retire=all.filter(row=>options.only===undefined||options.only.has(row.key));
  return{retire,tombstones,kept:facts.length-retire.length,pressure};
 }
 

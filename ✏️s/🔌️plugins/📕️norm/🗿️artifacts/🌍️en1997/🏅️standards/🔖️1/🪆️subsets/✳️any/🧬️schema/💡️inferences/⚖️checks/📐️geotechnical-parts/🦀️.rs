@@ -187,8 +187,8 @@ pub mod part_1 {
 
     /// 📐️ Immediate settlement of a flexible rectangle centre on the elastic half-space, s = 4·p·(B/2)·(1−ν²)/E·I(L/B) (Love's corner solution, Annex F.2 form s = p·b·f/E_m); the influence is symmetric in the sides, so the longer side may be given first.
     pub fn elastic_settlement_m(q_pa: f64, width: f64, length: f64, nu: f64, e_pa: f64) -> f64 {
-        let b = width.max(0.1);
-        sl::displacement_rect_at(q_pa, b, length.max(b), 0.0, 0.0, nu, e_pa)
+        let (b, l) = (width.min(length).max(0.1), width.max(length));
+        sl::displacement_rect_at(q_pa, b, l.max(b), 0.0, 0.0, nu, e_pa)
     }
 
     /// 📐️ Equivalent half-space of the ground below a base at `embedment` over the depth 2B: `(ν, E_m, governing layer id)` with E_m = Σh/Σ(h/E) and the mean ν; `None` when no layer lies within the depth.

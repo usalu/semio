@@ -7,7 +7,7 @@ use crate::standards::v1_7::subsets::base::modules::xref::ObjectSink;
 use crate::standards::v1_7::subsets::base::io::error::{PResult, PdfEngineError};
 use crate::standards::v1_7::subsets::base::io::foreign_artifacts::{PdfArtifactResourcePort,NativePdfArtifactResources};
 use crate::standards::v1_7::subsets::base::schema::graph_source::ObjectSource;
-use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfDictEntry, PdfImage, PdfImageBody, PdfImageMask, PdfObject, PdfStreamFilter};
+use crate::standards::v1_7::subsets::base::schema::snapshot::{packed_sample_geometry, PdfDictEntry, PdfImage, PdfImageBody, PdfImageMask, PdfObject, PdfPackedSamples, PdfStreamFilter};
 
 #[path = "🎭️sampled-alpha/🦀️.rs"]
 mod sampled_alpha;
@@ -42,7 +42,7 @@ pub fn lift_image(id: &str, dict: &[PdfDictEntry], data: &[u8], filters: &[PdfSt
         image_mask,
         decode: numbers_of(dict_get(dict, "Decode")),
         interpolate: dict_get(dict, "Interpolate").and_then(PdfObject::as_bool).unwrap_or(false),
-        body:PdfImageBody::Samples {values:Vec::new()},
+        body:PdfImageBody::Samples {packed:Vec::new()},
         soft_mask: dict_get(dict, "SMask").and_then(|reference| id_of(reference)),
         soft_mask_in_data: dict_i64(dict, "SMaskInData").map(|v| v as u32),
         mask,
@@ -54,15 +54,20 @@ pub fn lift_image(id: &str, dict: &[PdfDictEntry], data: &[u8], filters: &[PdfSt
     };
     image.body=match codec {
         Some(filter)=>{let kind=match filter {PdfStreamFilter::Dct {..}=>"s.stdio.jpeg",PdfStreamFilter::Jpx=>"s.stdio.jpeg2000",PdfStreamFilter::Ccitt {..}=>"s.stdio.ccitt",PdfStreamFilter::Jbig2 {..}=>"s.stdio.jbig2",_=>unreachable!()};let reference=NativePdfArtifactResources::default().admit(kind,PdfObject::Stream {dict:dict.to_vec(),data:crate::standards::v1_7::subsets::base::schema::snapshot::stream_bytes(data),filters:filters.to_vec()})?;PdfImageBody::Artifact {reference}},
-        None=>if let Some(reference)=sampled_artifact_reference(dict,data,filters)? {PdfImageBody::Artifact {reference}} else {PdfImageBody::Samples {values:unpack_image_samples(image.width,image.height,image_components(&image),image.bits_per_component,data)?}},
+        None=>if let Some(reference)=sampled_artifact_reference(dict,data,filters)? {PdfImageBody::Artifact {reference}} else {PdfImageBody::Samples {packed:admit_packed_samples(image.width,image.height,image.components(),image.depth(),data.to_vec())?}},
     };Ok(image)
 
 }
 
 fn sampled_artifact_reference(dict: &[PdfDictEntry], data: &[u8], filters: &[PdfStreamFilter]) -> PResult<Option<semio_framework_artifact_reference::ArtifactRef>> {
     use crate::standards::v1_7::subsets::base::io::foreign_artifacts::{
-        INLINE_IMAGE_SAMPLES_MAXIMUM_BYTES, PdfSampledResourceIdentity, qualified_image_dictionary,
+        INLINE_IMAGE_SAMPLES_MAXIMUM_BYTES, PdfSampledResourceIdentity, encoded_sampled_image, qualified_image_dictionary,
     };
+    if filters.is_empty() && encoded_sampled_image(dict) {
+        let Some(mut identity) = PdfSampledResourceIdentity::encoded(dict) else { return Ok(None); };
+        identity.append(data);
+        return Ok(Some(identity.reference()));
+    }
     if !matches!(filters, [] | [PdfStreamFilter::Flate { .. }]) || !qualified_image_dictionary(dict) {
         return Ok(None);
     }
@@ -77,11 +82,11 @@ fn sampled_artifact_reference(dict: &[PdfDictEntry], data: &[u8], filters: &[Pdf
     };
     let width = dimension("Width").ok_or_else(|| PdfEngineError::Unsupported("invalid PDF image width".into()))?;
     let height = dimension("Height").ok_or_else(|| PdfEngineError::Unsupported("invalid PDF image height".into()))?;
-    let (row_samples, packed_length) = packed_image_geometry(width, height, components, 8)?;
+    let (_, packed_length) = packed_image_geometry(width, height, components, 8)?;
     if packed_length != data.len() {
         return Err(PdfEngineError::Unsupported("image packed body does not match its declared geometry".into()));
     }
-    if row_samples * height as usize * std::mem::size_of::<u32>() <= INLINE_IMAGE_SAMPLES_MAXIMUM_BYTES {
+    if packed_length <= INLINE_IMAGE_SAMPLES_MAXIMUM_BYTES {
         return Ok(None);
     }
     let Some(mut identity) = PdfSampledResourceIdentity::new(filters) else { return Ok(None); };
@@ -119,7 +124,7 @@ pub fn lower_image(image: &PdfImage, sink: &mut dyn ObjectSink, ref_of: &mut dyn
     push_opt(&mut dict, "StructParent", image.struct_parent.map(|v| PdfObject::Int(v as i64)));
     dict.extend(image.extra.iter().cloned());
     let (data,filters)=match &image.body {
-        PdfImageBody::Samples {values}=>(crate::standards::v1_7::subsets::base::schema::snapshot::stream_bytes(&pack_image_samples(image.width,image.height,image_components(image),image.bits_per_component,values)?),vec![PdfStreamFilter::Flate {predictor:None}]),
+        PdfImageBody::Samples {packed}=>{packed_samples_of(image)?;(crate::standards::v1_7::subsets::base::schema::snapshot::stream_bytes(packed),vec![PdfStreamFilter::Flate {predictor:None}])},
         PdfImageBody::Artifact {reference}=>{
             use crate::standards::v1_7::subsets::base::io::foreign_artifacts::{
                 png_source::PngPlane, require_pdf_artifact_kind, SAMPLED_IMAGE_KIND,
@@ -129,7 +134,7 @@ pub fn lower_image(image: &PdfImage, sink: &mut dyn ObjectSink, ref_of: &mut dyn
             let sampled = sourced_png.is_none() && require_pdf_artifact_kind(reference, SAMPLED_IMAGE_KIND).is_ok();
             if let Some(role) = sourced_png {
                 let number = |key| value.dict_get(key).and_then(PdfObject::as_i64);
-                if image.bits_per_component != 8 || role.channels() != image_components(image) as usize
+                if image.bits_per_component != 8 || role.channels() != image.components() as usize
                     || number("Width") != Some(i64::from(image.width)) || number("Height") != Some(i64::from(image.height))
                 {
                     return Err(PdfEngineError::Malformed("PDF PNG resource geometry changed before image lowering".into()));
@@ -139,7 +144,7 @@ pub fn lower_image(image: &PdfImage, sink: &mut dyn ObjectSink, ref_of: &mut dyn
                 return Err(PdfEngineError::Unsupported("image artifact is not a native stream".into()));
             };
             if sampled {
-                let (_, expected) = packed_image_geometry(image.width, image.height, image_components(image), image.bits_per_component)?;
+                let (_, expected) = packed_image_geometry(image.width, image.height, image.components(), image.depth())?;
                 if data.len() != expected || !matches!(filters.as_slice(), [] | [PdfStreamFilter::Flate { .. }]) {
                     return Err(PdfEngineError::Malformed("PDF sampled image resource geometry changed before image lowering".into()));
                 }
@@ -152,57 +157,47 @@ pub fn lower_image(image: &PdfImage, sink: &mut dyn ObjectSink, ref_of: &mut dyn
     Ok(PdfObject::Stream {dict,data,filters})
 }
 
-fn image_components(image:&PdfImage)->u32 {if image.image_mask{1}else{image.color_space.as_ref().and_then(|color|color.components()).unwrap_or(1)}}
-/// 📏️ Returns the sample count per row and packed byte length for an image grid.
-pub fn packed_image_geometry(width: u32, height: u32, components: u32, bits: u32) -> PResult<(usize, usize)> {
-    checked_image_geometry(width, height, components, bits).map_err(|reason| PdfEngineError::Unsupported(reason.into()))
+/// 🧮 Checks a packed body against its image grid before it reaches a writer.
+pub fn packed_samples_of(image: &PdfImage) -> PResult<Option<PdfPackedSamples<'_>>> {
+    image.packed_samples().transpose().map_err(|reason| PdfEngineError::Unsupported(reason.into()))
 }
 
-fn checked_image_geometry(width: u32, height: u32, components: u32, bits: u32) -> Result<(usize, usize), &'static str> {
-    if !matches!(bits, 1 | 2 | 4 | 8 | 16) || components == 0 {
-        return Err("image sample depth or components are invalid");
-    }
-    let count = (width as usize).checked_mul(components as usize)
-        .ok_or("image row sample count overflow")?;
-    let row = count.checked_mul(bits as usize)
-        .ok_or("image row width overflow")?.div_ceil(8);
-    count.checked_mul(height as usize).filter(|count| *count <= isize::MAX as usize / std::mem::size_of::<u32>())
-        .ok_or("image sample storage overflow")?;
-    let length = row.checked_mul(height as usize)
-        .ok_or("image body width overflow")?;
-    Ok((count, length))
+/// 📏️ Returns the sample count per row and packed byte length for an image grid.
+pub fn packed_image_geometry(width: u32, height: u32, components: u32, bits: u32) -> PResult<(usize, usize)> {
+    packed_sample_geometry(width, height, components, bits).map_err(|reason| PdfEngineError::Unsupported(reason.into()))
 }
+
+/// 📦️ Admits a decoded image stream as its packed rows after checking them against the declared grid.
+pub fn admit_packed_samples(width: u32, height: u32, components: u32, bits: u32, data: Vec<u8>) -> PResult<Vec<u8>> {
+    PdfPackedSamples::new(&data, width, height, components, bits).map_err(|reason| PdfEngineError::Unsupported(reason.into()))?;
+    Ok(data)
+}
+
 use crate::standards::v1_7::subsets::base::modules::lexer::{CosGrant, CosReceipt, CosStatus};
 
 enum SampleStage { Active, Complete, Cancelled, Closing, Closed }
 
-/// 🎚️ Admits packed native rows while preserving partial output for bounded retirement.
-pub struct PdfImageSampleCursor {
-    row_samples: usize,
-    row_bytes: usize,
+/// 🎚️ Copies packed native rows in bounded runs while preserving partial output for bounded retirement.
+pub struct PdfImagePackedCursor {
     packed_length: usize,
-    sample_count: usize,
-    bits: usize,
-    output: Vec<u32>,
+    output: Vec<u8>,
     stage: SampleStage,
 }
 
-impl PdfImageSampleCursor {
+impl PdfImagePackedCursor {
     pub fn new(width: u32, height: u32, components: u32, bits: u32) -> PResult<Self> {
         Self::checked_new(width, height, components, bits).map_err(|reason| PdfEngineError::Unsupported(reason.into()))
     }
 
     fn checked_new(width: u32, height: u32, components: u32, bits: u32) -> Result<Self, &'static str> {
-        let (row_samples, packed_length) = checked_image_geometry(width, height, components, bits)?;
-        let height = height as usize;
-        let row_bytes = packed_length.checked_div(height).unwrap_or(0);
-        Ok(Self { row_samples, row_bytes, packed_length, sample_count: row_samples * height, bits: bits as usize, output: Vec::new(), stage: SampleStage::Active })
+        let (_, packed_length) = packed_sample_geometry(width, height, components, bits)?;
+        Ok(Self { packed_length, output: Vec::new(), stage: SampleStage::Active })
     }
 
     pub fn advance(&mut self, data: &(impl semio_framework_value::ByteReadSource + ?Sized), grant: CosGrant, cancelled: bool) -> CosReceipt {
         if cancelled && matches!(self.stage, SampleStage::Active | SampleStage::Complete) { self.stage = SampleStage::Cancelled; }
         match self.stage {
-            SampleStage::Complete => return sample_receipt(Ok(CosStatus::Complete { end: self.sample_count }), 0),
+            SampleStage::Complete => return sample_receipt(Ok(CosStatus::Complete { end: self.packed_length }), 0),
             SampleStage::Cancelled => return sample_receipt(Ok(CosStatus::Cancelled), 0),
             SampleStage::Closed => return sample_receipt(Ok(CosStatus::Closed), 0),
             SampleStage::Closing => return sample_receipt(Ok(CosStatus::More), 0),
@@ -212,48 +207,36 @@ impl PdfImageSampleCursor {
         if data.byte_len() != self.packed_length {
             return sample_receipt(Err("image packed body does not match its declared geometry"), 1);
         }
-        if self.sample_count != 0 && self.output.capacity() == 0 {
-            let bytes = self.sample_count * std::mem::size_of::<u32>();
-            if bytes > grant.allocation_bytes { return sample_receipt(Ok(CosStatus::NeedsAllocation { bytes }), 0); }
-            if self.output.try_reserve_exact(self.sample_count).is_err() {
+        if self.packed_length != 0 && self.output.capacity() == 0 {
+            if self.packed_length > grant.allocation_bytes { return sample_receipt(Ok(CosStatus::NeedsAllocation { bytes: self.packed_length }), 0); }
+            if self.output.try_reserve_exact(self.packed_length).is_err() {
                 return sample_receipt(Err("unable to allocate image sample backing"), 1);
             }
-            return CosReceipt { allocated_bytes: self.output.capacity() * std::mem::size_of::<u32>(), ..sample_receipt(Ok(CosStatus::More), 1) };
+            return CosReceipt { allocated_bytes: self.output.capacity(), ..sample_receipt(Ok(CosStatus::More), 1) };
         }
-
-        let count = (self.sample_count - self.output.len()).min(grant.work);
+        let start = self.output.len();
+        let count = (self.packed_length - start).min(grant.work);
         if count == 0 {
             self.stage = SampleStage::Complete;
             return sample_receipt(Ok(CosStatus::Complete { end: 0 }), 1);
         }
-        let mut x = self.output.len() % self.row_samples;
-        let mut y = self.output.len() / self.row_samples;
-        for _ in 0..count {
-            let bit = x * self.bits;
-            let byte = y * self.row_bytes + bit / 8;
-            let Some(first) = data.byte_at(byte) else { return sample_receipt(Err("image sample source lost a byte"), 1); };
-            let value = match self.bits {
-                16 => {
-                    let Some(second) = data.byte_at(byte + 1) else { return sample_receipt(Err("image sample source lost a byte"), 1); };
-                    u32::from(u16::from_be_bytes([first, second]))
-                }
-                8 => u32::from(first),
-                bits => {
-                    let shift = 8 - (bit % 8) - bits;
-                    u32::from((first >> shift) & ((1u8 << bits) - 1))
-                }
-            };
-            self.output.push(value);
-            x += 1;
-            if x == self.row_samples { x = 0; y += 1; }
+        self.output.resize(start + count, 0);
+        let mut filled = start;
+        while filled < start + count {
+            let read = data.read_bytes(filled, &mut self.output[filled..start + count]);
+            if read == 0 {
+                self.output.truncate(start);
+                return sample_receipt(Err("image sample source lost a byte"), 1);
+            }
+            filled += read;
         }
-        if self.output.len() == self.sample_count {
+        if self.output.len() == self.packed_length {
             self.stage = SampleStage::Complete;
-            sample_receipt(Ok(CosStatus::Complete { end: self.sample_count }), count)
+            sample_receipt(Ok(CosStatus::Complete { end: self.packed_length }), count)
         } else { sample_receipt(Ok(CosStatus::More), count) }
     }
 
-    pub fn take_samples(&mut self) -> Option<Vec<u32>> {
+    pub fn take_packed(&mut self) -> Option<Vec<u8>> {
         if !matches!(self.stage, SampleStage::Complete) { return None; }
         self.stage = SampleStage::Closed;
         Some(std::mem::take(&mut self.output))
@@ -266,7 +249,7 @@ impl PdfImageSampleCursor {
     pub fn close_step(&mut self, grant: CosGrant) -> CosReceipt {
         if matches!(self.stage, SampleStage::Closed) { return sample_receipt(Ok(CosStatus::Closed), 0); }
         if !matches!(self.stage, SampleStage::Closing) || grant.work == 0 { return sample_receipt(Ok(CosStatus::More), 0); }
-        let bytes = self.output.capacity() * std::mem::size_of::<u32>();
+        let bytes = self.output.capacity();
         if bytes > grant.release_bytes { return sample_receipt(Ok(CosStatus::NeedsRelease { bytes }), 0); }
         self.output = Vec::new();
         self.stage = SampleStage::Closed;
@@ -276,26 +259,6 @@ impl PdfImageSampleCursor {
 
 fn sample_receipt(status: Result<CosStatus, &'static str>, work: usize) -> CosReceipt {
     CosReceipt { status, work, allocated_bytes: 0, released_bytes: 0 }
-}
-
-/// 🛬️ Admits packed native rows as explicit logical sample values.
-pub fn unpack_image_samples(width: u32, height: u32, components: u32, bits: u32, data: &[u8]) -> PResult<Vec<u32>> {
-    let mut cursor = PdfImageSampleCursor::new(width, height, components, bits)?;
-    let grant = CosGrant { work: 4096, allocation_bytes: usize::MAX, release_bytes: usize::MAX };
-    loop {
-        match cursor.advance(data, grant, false).status {
-            Ok(CosStatus::Complete { .. }) => return Ok(cursor.take_samples().expect("complete PDF image sample output")),
-            Ok(CosStatus::More) => {}
-            Err(reason) => return Err(PdfEngineError::Unsupported(reason.into())),
-            _ => return Err(PdfEngineError::Unsupported("unexpected image sample state".into())),
-        }
-    }
-}
-
-/// 🛫️ Packs explicit logical samples only at native image emission.
-pub fn pack_image_samples(width:u32,height:u32,components:u32,bits:u32,values:&[u32])->PResult<Vec<u8>> {
-    let (count,length)=packed_image_geometry(width,height,components,bits)?;if values.len()!=count*height as usize||values.iter().any(|value|*value>=(1u32<<bits)){return Err(PdfEngineError::Unsupported("image samples do not match declared geometry and depth".into()));}
-    let row=if height==0{0}else{length/height as usize};let mut data=vec![0;length];for y in 0..height as usize {for x in 0..count {let start=y*row*8+x*bits as usize;let value=values[y*count+x];for offset in 0..bits as usize {let bit=start+offset;data[bit/8]|=(((value>>(bits as usize-1-offset))&1)as u8)<<(7-bit%8);}}}Ok(data)
 }
 
 //#region 🧪️Tests
@@ -357,21 +320,24 @@ mod sample_tests {
     const ONE: CosGrant = CosGrant { work: 1, allocation_bytes: 64, release_bytes: 64 };
 
     #[test]
-    fn inline_sample_work_follows_row_padding_and_big_endian_components() {
+    fn packed_rows_copy_in_bounded_runs_and_read_back_through_row_padding_and_big_endian_components() {
         for (width, height, bits, packed, expected) in [
             (3, 2, 1, &[160, 64][..], &[1, 0, 1, 0, 1, 0][..]),
             (2, 1, 16, &[0x13, 0x57, 0xff, 0xff][..], &[0x1357, 65535][..]),
         ] {
-            let mut cursor = PdfImageSampleCursor::new(width, height, 1, bits).unwrap();
+            let mut cursor = PdfImagePackedCursor::new(width, height, 1, bits).unwrap();
             let denied = CosGrant { allocation_bytes: 0, ..ONE };
-            let quote = expected.len() * std::mem::size_of::<u32>();
-            assert_eq!(cursor.advance(packed, denied, false).status, Ok(CosStatus::NeedsAllocation { bytes: quote }));
+            assert_eq!(cursor.advance(packed, denied, false).status, Ok(CosStatus::NeedsAllocation { bytes: packed.len() }));
             for _ in 0..100 {
                 let turn = cursor.advance(packed, ONE, false);
                 assert!(turn.work <= 1);
                 if let Ok(CosStatus::Complete { .. }) = turn.status { break; }
             }
-            assert_eq!(cursor.take_samples().unwrap(), expected);
+            let copied = cursor.take_packed().unwrap();
+            assert_eq!(copied, packed);
+            let view = PdfPackedSamples::new(&copied, width, height, 1, bits).unwrap();
+            assert_eq!(view.iter().collect::<Vec<_>>(), expected);
+            assert_eq!(crate::standards::v1_7::subsets::base::schema::snapshot::pack_samples(width, height, 1, bits, expected).unwrap(), packed);
         }
     }
 
@@ -393,26 +359,26 @@ mod sample_tests {
         let denied = CosGrant { allocation_bytes: 0, ..ONE };
         for _ in 0..2 {
             assert!(image.reserving_samples());
-            assert_eq!(image.advance(data, denied).status, Ok(CosStatus::NeedsAllocation { bytes: 24 }));
-            assert_eq!(image.advance(data, ONE).allocated_bytes, 24);
+            assert_eq!(image.advance(data, denied).status, Ok(CosStatus::NeedsAllocation { bytes: 6 }));
+            assert_eq!(image.advance(data, ONE).allocated_bytes, 6);
             for _ in 0..6 {
                 assert!(!image.reserving_samples());
                 let step = image.advance(data, ONE);
                 assert_eq!((step.work, step.allocated_bytes), (1, 0));
             }
         }
-        let [image, role] = image.take_images("Im0").unwrap();
+        let [image, role] = image.take_images("Im0", None).unwrap();
         assert_eq!(image, role);
         assert!(image.interpolate && !image.image_mask);
-        assert_eq!(image.body, PdfImageBody::Samples { values: vec![255, 0, 4, 0, 128, 5] });
+        assert_eq!(image.body, PdfImageBody::Samples { packed: vec![255, 0, 4, 0, 128, 5] });
 
         let mut partial = ControlledImageCursor::new(&stream).unwrap().unwrap();
         for _ in 0..10 { let _ = partial.advance(data, ONE); }
         partial.begin_close();
         let denied = CosGrant { release_bytes: 0, ..ONE };
-        assert_eq!(partial.close_step(denied).status, Ok(CosStatus::NeedsRelease { bytes: 24 }));
-        assert_eq!(partial.close_step(ONE).released_bytes, 24);
-        assert_eq!(partial.close_step(ONE).released_bytes, 24);
+        assert_eq!(partial.close_step(denied).status, Ok(CosStatus::NeedsRelease { bytes: 6 }));
+        assert_eq!(partial.close_step(ONE).released_bytes, 6);
+        assert_eq!(partial.close_step(ONE).released_bytes, 6);
         assert_eq!(partial.close_step(ONE).status, Ok(CosStatus::Closed));
 
         let PdfObject::Stream { data, .. } = &mut stream else { unreachable!() };
@@ -424,19 +390,19 @@ mod sample_tests {
     }
 
     #[test]
-    fn cancelled_inline_samples_hold_the_allocated_rows_for_granted_close() {
-        let mut cursor = PdfImageSampleCursor::new(4, 1, 1, 8).unwrap();
+    fn cancelled_packed_rows_hold_the_allocated_rows_for_granted_close() {
+        let mut cursor = PdfImagePackedCursor::new(4, 1, 1, 8).unwrap();
         let packed = [0, 4, 5, 76];
-        assert_eq!(cursor.advance(&packed, ONE, false).allocated_bytes, 16);
+        assert_eq!(cursor.advance(&packed, ONE, false).allocated_bytes, 4);
         cursor.advance(&packed, ONE, false);
         assert_eq!(cursor.advance(&packed, ONE, true).status, Ok(CosStatus::Cancelled));
-        assert!(cursor.take_samples().is_none());
+        assert!(cursor.take_packed().is_none());
         cursor.begin_close();
         let denied = CosGrant { release_bytes: 0, ..ONE };
-        assert_eq!(cursor.close_step(denied).status, Ok(CosStatus::NeedsRelease { bytes: 16 }));
+        assert_eq!(cursor.close_step(denied).status, Ok(CosStatus::NeedsRelease { bytes: 4 }));
         let closed = cursor.close_step(ONE);
         assert_eq!(closed.status, Ok(CosStatus::Closed));
-        assert_eq!(closed.released_bytes, 16);
+        assert_eq!(closed.released_bytes, 4);
     }
 }
 

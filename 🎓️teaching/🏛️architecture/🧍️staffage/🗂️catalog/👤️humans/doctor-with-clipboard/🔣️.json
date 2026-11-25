@@ -13,17 +13,83 @@
       "de": "Ein Stationsarzt von 1,78 m in knielangem weißem Laborkittel über Hemd und Pullover, Chinohose und Lederschuhen, ein Stethoskop um den Hals, liest das Krankenblatt auf einem A4-Klemmbrett, das er mit der rechten Hand in Brusthöhe hält, den Stift bereit in der linken; Haltungen für Lesen, Notieren und das Gespräch mit einer Patientin oder einem Patienten bei etwa 1,3 bis 1,5 met."
     },
     "tags": [
-      "human",
-      "adult",
-      "standing",
-      "doctor",
-      "healthcare",
-      "hospital",
-      "lab-coat",
-      "stethoscope",
-      "clipboard",
-      "reading",
-      "writing"
+      {
+        "id": "human",
+        "title": {
+          "en": "human",
+          "de": "Mensch"
+        }
+      },
+      {
+        "id": "adult",
+        "title": {
+          "en": "adult",
+          "de": "erwachsen"
+        }
+      },
+      {
+        "id": "standing",
+        "title": {
+          "en": "standing",
+          "de": "Stehen"
+        }
+      },
+      {
+        "id": "doctor",
+        "title": {
+          "en": "doctor",
+          "de": "Arzt"
+        }
+      },
+      {
+        "id": "healthcare",
+        "title": {
+          "en": "healthcare",
+          "de": "Gesundheitswesen"
+        }
+      },
+      {
+        "id": "hospital",
+        "title": {
+          "en": "hospital",
+          "de": "Krankenhaus"
+        }
+      },
+      {
+        "id": "lab-coat",
+        "title": {
+          "en": "lab coat",
+          "de": "Laborkittel"
+        }
+      },
+      {
+        "id": "stethoscope",
+        "title": {
+          "en": "stethoscope",
+          "de": "Stethoskop"
+        }
+      },
+      {
+        "id": "clipboard",
+        "title": {
+          "en": "clipboard",
+          "de": "Klemmbrett"
+        }
+      },
+      {
+        "id": "reading",
+        "title": {
+          "en": "reading",
+          "de": "Lesen"
+        }
+      },
+      {
+        "id": "writing",
+        "title": {
+          "en": "writing",
+          "de": "Schreiben"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage human worker HW-03",

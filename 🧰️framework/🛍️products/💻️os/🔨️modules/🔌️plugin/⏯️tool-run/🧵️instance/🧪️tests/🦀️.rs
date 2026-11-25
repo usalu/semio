@@ -1,6 +1,6 @@
 //! 🧪️ Tool runs reach every mounted instance through the registered instance extensions.
 use semio_plugin_decl_app::ArtifactApp;
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use semio_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
 use pack::snapshot::ArtifactPack;
 use semio_plugin_decl_emission::Emit;

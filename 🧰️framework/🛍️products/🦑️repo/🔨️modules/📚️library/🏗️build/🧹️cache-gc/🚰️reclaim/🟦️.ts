@@ -31,11 +31,12 @@ export async function graphProducerPublicationsV1(imageRoot:string,dryRun:boolea
 /** 🔖️ One build journal of the generation store: the files `<key>.json` and `<key>.<n>.rows` that carry the finished waves of one unsealed build, its newest write and its bytes. */
 export type BuildJournalGroupV1=Readonly<{key:string;files:readonly string[];newestMs:number;bytes:number}>;
 
-/** 🧮️ Picks the journals no build can resume: a build that is alive rewrites its own journal at every wave and only one build holds the generation writer at a time, so the newest journal and every journal written within the grace are kept and every other one is dead, because later builds start from another membership and therefore name another journal. Pure and language-agnostic.
- * @see ./../🧪️tests/🗞️journals/🟦️.ts */
+/** 🧮️ Picks the journals no build can resume: a build that is alive rewrites its own journal at every wave and only one build holds the generation writer at a time, so the newest journal and every journal written within the grace are kept and every other one is dead, because later builds start from another membership and therefore name another journal. The newest one is dead as well once it rests beyond the grace without its header `<key>.json`: the header is the only document `readBuildJournalV1` resumes from, so rows files without it are a build killed in its first wave that no code reads. Pure and language-agnostic.
+ * @see ./../🧪️tests/🗞️journals/🟦️.ts
+ * @see ./../../🕸️graph/🕰️generations/🔖️journal/🟨️.mjs */
 export function staleBuildJournalGroupsV1(groups:readonly BuildJournalGroupV1[],nowMs:number,graceMs:number):readonly BuildJournalGroupV1[]{
  const newest=groups.reduce<BuildJournalGroupV1|undefined>((best,group)=>best===undefined||group.newestMs>best.newestMs?group:best,undefined);
- return groups.filter(group=>group!==newest&&nowMs-group.newestMs>graceMs);
+ return groups.filter(group=>(group!==newest||!group.files.includes(group.key+".json"))&&nowMs-group.newestMs>graceMs);
 }
 
 /** 🗞️ Reads the journals of the generation store below the graph image, sorted by key. */

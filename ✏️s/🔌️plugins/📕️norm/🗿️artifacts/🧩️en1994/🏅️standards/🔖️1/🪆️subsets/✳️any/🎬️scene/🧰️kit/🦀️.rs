@@ -85,6 +85,16 @@ pub fn entity_kind_of(document: &model::En1994Snapshot, id: &str) -> Option<&'st
     ENTITY_KINDS.iter().find(|k| k.collection == collection)
 }
 
+/// 🔥️ The fire check `<prefix><beam>` of a beam: its subject is the document-level insulation field, so the beam is named by the check id and not by the subject.
+pub fn fire_check<'a>(report: &'a norm::CheckReport, prefix: &str, beam: &str) -> Option<&'a norm::CheckResult> {
+    check_with(report, &format!("{prefix}{beam}"))
+}
+
+/// 🔥️ The utilisation binding of [`fire_check`].
+pub fn fire_binding(report: &norm::CheckReport, prefix: &str, beam: &str) -> Option<UtilisationBinding> {
+    fire_check(report, prefix, beam).map(projection_kit::binding_of_check)
+}
+
 /// 🧊️ Whether the entry of `row` declares geometry, so the design case stands in the scene.
 pub fn declared(row: &model::CaseRow) -> bool {
     projection_kit::design_case::forms::declared::<checks::case_catalogue::En1994Cases>(row).is_some()
@@ -290,7 +300,11 @@ impl Out {
         true
     }
 
+    /// 📏️ Records an annotation of the current owner; a dimension between coincident points (zero degree of connection, a beam without studs) draws nothing and is left out.
     pub fn annotate(&mut self, annotation: Annotation, anchor: &Vec3) {
+        if matches!(&annotation, Annotation::Dimension { from, to, .. } if from.distance(to) <= 0.0) {
+            return;
+        }
         if self.link(OwnedKind::Annotation, annotation.id()) {
             self.points.push(anchor.clone());
             self.annotations.push(annotation);

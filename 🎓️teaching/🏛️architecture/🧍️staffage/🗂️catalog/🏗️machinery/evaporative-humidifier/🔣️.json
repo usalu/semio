@@ -13,13 +13,55 @@
       "de": "Ein 0,5 m mal 0,6 m großer Verdunstungsbefeuchterteil eines Lüftungsgeräts, aufgeschnitten gezeichnet: Wasser tropft aus einer Rinne über eine gewellte Cellulosematte in eine Wanne, und das verdunstende Wasser kühlt die Matte und die durchströmende Luft."
     },
     "tags": [
-      "humidifier",
-      "evaporative-cooling",
-      "dec",
-      "pad",
-      "latent-heat",
-      "air-handling",
-      "appliance"
+      {
+        "id": "humidifier",
+        "title": {
+          "en": "humidifier",
+          "de": "Luftbefeuchter"
+        }
+      },
+      {
+        "id": "evaporative-cooling",
+        "title": {
+          "en": "evaporative cooling",
+          "de": "Verdunstungskühlung"
+        }
+      },
+      {
+        "id": "dec",
+        "title": {
+          "en": "DEC",
+          "de": "DEC"
+        }
+      },
+      {
+        "id": "pad",
+        "title": {
+          "en": "evaporative pad",
+          "de": "Verdunstungsmatte"
+        }
+      },
+      {
+        "id": "latent-heat",
+        "title": {
+          "en": "latent heat",
+          "de": "latente Wärme"
+        }
+      },
+      {
+        "id": "air-handling",
+        "title": {
+          "en": "air handling",
+          "de": "Lufttechnik"
+        }
+      },
+      {
+        "id": "appliance",
+        "title": {
+          "en": "appliance",
+          "de": "Gerät"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage content (G2)",
@@ -226,17 +268,32 @@
     },
     "anchors": [
       {
-        "id": "base-contact",
+        "id": "runner-inlet-contact",
         "bone": "casing",
-        "x": 0.25,
+        "x": 0.06,
         "y": 0,
         "kind": "contact",
         "title": {
-          "en": "Base on the surface",
-          "de": "Fuß auf der Unterlage"
+          "en": "Inlet-side base runner on the surface",
+          "de": "Kufe der Eintrittsseite auf der Unterlage"
         },
         "support": "contact",
-        "footprintLengthM": 0.42,
+        "footprintLengthM": 0.04,
+        "footprintWidthM": 0.4,
+        "frictionCoefficient": 0.4
+      },
+      {
+        "id": "runner-outlet-contact",
+        "bone": "casing",
+        "x": 0.44,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Outlet-side base runner on the surface",
+          "de": "Kufe der Austrittsseite auf der Unterlage"
+        },
+        "support": "contact",
+        "footprintLengthM": 0.04,
         "footprintWidthM": 0.4,
         "frictionCoefficient": 0.4
       },
@@ -2287,7 +2344,8 @@
         "bones": {},
         "ground": "auto",
         "contacts": [
-          "base-contact"
+          "runner-inlet-contact",
+          "runner-outlet-contact"
         ],
         "thermal": {
           "regions": {
@@ -2339,7 +2397,8 @@
         },
         "ground": "auto",
         "contacts": [
-          "base-contact"
+          "runner-inlet-contact",
+          "runner-outlet-contact"
         ],
         "thermal": {
           "regions": {
@@ -2391,7 +2450,8 @@
         },
         "ground": "auto",
         "contacts": [
-          "base-contact"
+          "runner-inlet-contact",
+          "runner-outlet-contact"
         ],
         "thermal": {
           "regions": {
@@ -2476,7 +2536,12 @@
         ],
         "contacts": [
           {
-            "anchor": "base-contact",
+            "anchor": "runner-inlet-contact",
+            "fromS": 0,
+            "toS": 1.2
+          },
+          {
+            "anchor": "runner-outlet-contact",
             "fromS": 0,
             "toS": 1.2
           }
@@ -2528,7 +2593,12 @@
         ],
         "contacts": [
           {
-            "anchor": "base-contact",
+            "anchor": "runner-inlet-contact",
+            "fromS": 0,
+            "toS": 300
+          },
+          {
+            "anchor": "runner-outlet-contact",
             "fromS": 0,
             "toS": 300
           }
@@ -2813,12 +2883,13 @@
       "gravityMS2": 9.80665,
       "dynamics": "quasi-static",
       "supports": [
-        "base-contact"
+        "runner-inlet-contact",
+        "runner-outlet-contact"
       ],
       "assumptions": [
         {
-          "en": "The 14 kg humidifier stands on its two base runners: a unilateral contact of 0.42 m by 0.4 m carries the weight; pad and trough rest on the cassette rails, the water on the tank floor.",
-          "de": "Der 14 kg schwere Befeuchter steht auf seinen zwei Kufen: ein einseitiger Kontakt von 0,42 m mal 0,4 m trägt das Gewicht; Matte und Rinne ruhen auf den Kassettenschienen, das Wasser auf dem Wannenboden."
+          "en": "The 14 kg humidifier stands on its two base runners: one unilateral contact of 0.04 m by 0.4 m under each runner carries the weight; pad and trough rest on the cassette rails, the water on the tank floor.",
+          "de": "Der 14 kg schwere Befeuchter steht auf seinen zwei Kufen: je ein einseitiger Kontakt von 0,04 m mal 0,4 m unter jeder Kufe trägt das Gewicht; Matte und Rinne ruhen auf den Kassettenschienen, das Wasser auf dem Wannenboden."
         }
       ],
       "clinical": false
@@ -5072,7 +5143,7 @@
             "part": "mass"
           },
           {
-            "id": "base-contact-pad",
+            "id": "runner-inlet-contact-pad",
             "kind": "box",
             "bone": "casing",
             "material": "galvanised-steel",
@@ -5090,17 +5161,32 @@
                 0
               ]
             },
-            "repeat": {
-              "count": 2,
+            "member": "casing",
+            "part": "support",
+            "anchor": "runner-inlet-contact"
+          },
+          {
+            "id": "runner-outlet-contact-pad",
+            "kind": "box",
+            "bone": "casing",
+            "material": "galvanised-steel",
+            "role": "body",
+            "tone": 0.4,
+            "size": [
+              0.04,
+              0.0075,
+              0.4
+            ],
+            "transform": {
               "translation": [
-                0.38,
-                0,
+                0.44,
+                0.00375,
                 0
               ]
             },
             "member": "casing",
             "part": "support",
-            "anchor": "base-contact"
+            "anchor": "runner-outlet-contact"
           }
         ],
         "decisions": [
@@ -6542,7 +6628,7 @@
             "part": "mass"
           },
           {
-            "id": "base-contact-pad",
+            "id": "runner-inlet-contact-pad",
             "kind": "box",
             "bone": "casing",
             "material": "galvanised-steel",
@@ -6560,17 +6646,32 @@
                 0
               ]
             },
-            "repeat": {
-              "count": 2,
+            "member": "casing",
+            "part": "support",
+            "anchor": "runner-inlet-contact"
+          },
+          {
+            "id": "runner-outlet-contact-pad",
+            "kind": "box",
+            "bone": "casing",
+            "material": "galvanised-steel",
+            "role": "body",
+            "tone": 0.4,
+            "size": [
+              0.04,
+              0.015,
+              0.4
+            ],
+            "transform": {
               "translation": [
-                0.38,
-                0,
+                0.44,
+                0.0075,
                 0
               ]
             },
             "member": "casing",
             "part": "support",
-            "anchor": "base-contact"
+            "anchor": "runner-outlet-contact"
           }
         ],
         "decisions": [
@@ -7311,27 +7412,50 @@
             "part": "mass"
           },
           {
-            "id": "base-contact-pad",
+            "id": "runner-inlet-contact-pad",
             "kind": "box",
             "bone": "casing",
             "material": "galvanised-steel",
             "role": "body",
             "tone": 0.4,
             "size": [
-              0.42,
+              0.04,
               0.03,
               0.4
             ],
             "transform": {
               "translation": [
-                0.25,
+                0.06,
                 0.015,
                 0
               ]
             },
             "member": "casing",
             "part": "support",
-            "anchor": "base-contact"
+            "anchor": "runner-inlet-contact"
+          },
+          {
+            "id": "runner-outlet-contact-pad",
+            "kind": "box",
+            "bone": "casing",
+            "material": "galvanised-steel",
+            "role": "body",
+            "tone": 0.4,
+            "size": [
+              0.04,
+              0.03,
+              0.4
+            ],
+            "transform": {
+              "translation": [
+                0.44,
+                0.015,
+                0
+              ]
+            },
+            "member": "casing",
+            "part": "support",
+            "anchor": "runner-outlet-contact"
           }
         ],
         "decisions": [
@@ -7889,27 +8013,50 @@
             "part": "mass"
           },
           {
-            "id": "base-contact-pad",
+            "id": "runner-inlet-contact-pad",
             "kind": "box",
             "bone": "casing",
             "material": "galvanised-steel",
             "role": "body",
             "tone": 0.4,
             "size": [
-              0.42,
+              0.04,
               0.03,
               0.4
             ],
             "transform": {
               "translation": [
-                0.25,
+                0.06,
                 0.015,
                 0
               ]
             },
             "member": "casing",
             "part": "support",
-            "anchor": "base-contact"
+            "anchor": "runner-inlet-contact"
+          },
+          {
+            "id": "runner-outlet-contact-pad",
+            "kind": "box",
+            "bone": "casing",
+            "material": "galvanised-steel",
+            "role": "body",
+            "tone": 0.4,
+            "size": [
+              0.04,
+              0.03,
+              0.4
+            ],
+            "transform": {
+              "translation": [
+                0.44,
+                0.015,
+                0
+              ]
+            },
+            "member": "casing",
+            "part": "support",
+            "anchor": "runner-outlet-contact"
           }
         ],
         "decisions": [

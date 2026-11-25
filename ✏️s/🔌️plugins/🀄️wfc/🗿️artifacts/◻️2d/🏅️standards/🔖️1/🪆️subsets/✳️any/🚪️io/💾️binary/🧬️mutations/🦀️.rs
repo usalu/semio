@@ -14,6 +14,8 @@ use crate::schema::mutations::Wfc2dMutation;
 use crate::standards::v1::subsets::any::io::text::mutations::{operation_from_dsl, operation_to_dsl, Wfc2dOperationDsl};
 use protocol::OpBinary;
 
+dsl::artifact_persisted_binary_operation!(Wfc2dMutation);
+
 #[path = "original.rs"]
 mod original;
 

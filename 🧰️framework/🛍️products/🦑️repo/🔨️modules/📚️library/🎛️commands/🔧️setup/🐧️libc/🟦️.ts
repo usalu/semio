@@ -9,6 +9,6 @@ export function linuxNativeLibcV1(lddVersion: string): "gnu" | "musl" {
 export function linuxHostLibcV1(): "gnu" | "musl" {
   const glibc = (process.report?.getReport?.() as { header?: { glibcVersionRuntime?: string } } | undefined)?.header?.glibcVersionRuntime;
   if (glibc) return "gnu";
-  const ldd = spawnSync("ldd", ["--version"], { encoding: "utf8" });
+  const ldd = spawnSync("ldd", ["--version"], { windowsHide: true, encoding: "utf8" });
   return linuxNativeLibcV1(`${ldd.stdout ?? ""}\n${ldd.stderr ?? ""}`);
 }

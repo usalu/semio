@@ -34,7 +34,7 @@
         }
 
         fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
-            Some(semio_plugin_ownership::transient_publication::bounded_transient_root_retirement_factory::<Self::Transient>())
+            Some(semio_plugin_transient_publication::transient_publication::bounded_transient_root_retirement_factory::<Self::Transient>())
         }
 
 
@@ -112,7 +112,7 @@
         }
 
         fn build_transient_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
-            Some(semio_plugin_ownership::transient_publication::transient_store_disposer::<PublicationTransient, PublicationTransientMutation>(std::sync::Arc::new(semio_framework_value::factory::OwnedValueRetirementFactory::<PublicationTransient>::default())))
+            Some(semio_plugin_transient_publication::transient_publication::transient_store_disposer::<PublicationTransient, PublicationTransientMutation>(std::sync::Arc::new(semio_framework_value::factory::OwnedValueRetirementFactory::<PublicationTransient>::default())))
         }
 
         fn reference_birth()->Option<fn()->Result<TestSnapshot,semio_framework::Fault>>{Some(||{

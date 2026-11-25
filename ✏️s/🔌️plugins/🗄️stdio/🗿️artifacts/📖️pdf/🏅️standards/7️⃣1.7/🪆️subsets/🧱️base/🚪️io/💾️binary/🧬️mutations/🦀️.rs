@@ -21,3 +21,4 @@ impl OpBinary for PdfMutation {
 }
 
 dsl::original_pack_value_operation_receiving!(PdfMutation);
+dsl::artifact_persisted_binary_operation!(PdfMutation);

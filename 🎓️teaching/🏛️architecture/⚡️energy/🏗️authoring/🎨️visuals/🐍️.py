@@ -36,8 +36,23 @@ UI_SPACING = _theme.UI_SPACING
 UI_PIXEL = _theme.UI_PIXEL
 CHROME_BORDER = _theme.CHROME_BORDER
 CHROME_FILL = _theme.CHROME_FILL
-CHROME_CHIP_FILL = color("dark-6-7")
-CHROME_CHIP_OPACITY = 0.76
+_surface = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.🪟️presentation.🎨️surface.🐍️")
+
+
+@lru_cache(maxsize=None)
+def chip_glass(level: str = "window", appearance: str = "dark") -> tuple[str, float]:
+    """🧊 Fill and opacity of a chip lying on content of ``level``: the glass of the next level plus the foreground veil, from the styling token projection."""
+    paint = _surface.chip_paint(level, appearance=appearance)
+    return paint["fill"], paint["alpha"]
+
+
+@lru_cache(maxsize=None)
+def _frame_fill(level: str, appearance: str) -> str:
+    """🎨 Resolve the body paint from the same elevation ramp as the chip."""
+    return _surface.surface_paint(level, appearance=appearance)["fill"]
+
+
+CHROME_CHIP_FILL, CHROME_CHIP_OPACITY = chip_glass()
 CHROME_FOREGROUND = _theme.CHROME_FOREGROUND
 
 _staffage = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🧍️staffage.🐍️")
@@ -90,59 +105,106 @@ def window_frame_outline(width: float, height: float, *, inset: float = 1) -> li
     return [(left, top), (right, top), (right, bottom), (left, bottom)]
 
 
+def _chip_rows(width, height, top_depth, top_chips, bottom_depth, bottom_chips):
+    """📐 Clamp both chip rows and their spans to the frame before painting either fill or edges."""
+    from math import isfinite
+
+    width, height = (max(0.0, value) if isfinite(value) else 0.0 for value in (width, height))
+    top = min(max(0.0, top_depth), height)
+    bottom = max(top, height - max(0.0, bottom_depth))
+    for dock, y0, y1, chips in (("top", 0.0, top, top_chips), ("bottom", bottom, height, bottom_chips)):
+        if y1 - y0 <= 0.5:
+            continue
+        spans = sorted((max(0.0, a), min(b, width)) for a, b in chips if isfinite(a) and isfinite(b))
+        yield dock, y0, y1, [(a, b) for a, b in spans if b - a > 0.5]
+
+
 def window_frame_chip_regions(
     width: float, height: float, *, top_depth: float = 0, bottom_depth: float = 0, top_chips=(), bottom_chips=(),
 ) -> list[dict]:
     """🧊 Match WindowFrame's glass chip overlays: clamped, merged spans of the rows that lie inside the frame."""
-    from math import isfinite
-
-    epsilon = 0.5
-    width, height = (max(0.0, value) if isfinite(value) else 0.0 for value in (width, height))
-    top_depth = min(max(0.0, top_depth), height)
-    bottom_depth = min(max(0.0, bottom_depth), max(0.0, height - top_depth))
-
-    def spans(chips):
+    regions = []
+    for dock, y0, y1, chips in _chip_rows(width, height, top_depth, top_chips, bottom_depth, bottom_chips):
         merged = []
-        for chip in sorted(tuple(chip) for chip in chips if isfinite(chip[0]) and isfinite(chip[1]) and chip[1] > chip[0]):
-            start, end = max(0.0, min(chip[0], width)), max(0.0, min(chip[1], width))
-            if end - start <= epsilon:
-                continue
-            if merged and start <= merged[-1][1] + epsilon:
+        for start, end in chips:
+            if merged and start <= merged[-1][1] + 0.5:
                 merged[-1] = (merged[-1][0], max(merged[-1][1], end))
             else:
                 merged.append((start, end))
-        return merged
-
-    regions = []
-    if top_depth > epsilon:
-        regions += [{"x": start, "y": 0, "width": end - start, "height": top_depth, "dock": "top"} for start, end in spans(top_chips)]
-    if bottom_depth > epsilon:
-        regions += [{"x": start, "y": height - bottom_depth, "width": end - start, "height": bottom_depth, "dock": "bottom"} for start, end in spans(bottom_chips)]
+        regions.extend({"x": start, "y": y0, "width": end - start, "height": y1 - y0, "dock": dock} for start, end in merged)
     return regions
 
 
-def window_frame(
-    width: float, height: float, *, title_width: float | None = None, title_depth: float = 0,
-    color: str = P_PRIMARY, fill_opacity: float = 0.88,
+def _chip_edges(width: float, height: float, top_depth: float, top_chips, bottom_depth: float, bottom_chips) -> list:
+    """〰️ Paint only inner chip edges, with one stroke along any interval shared by two chips."""
+    from collections import Counter, defaultdict
+
+    edges = set()
+    horizontal = defaultdict(Counter)
+    for dock, y0, y1, chips in _chip_rows(width, height, top_depth, top_chips, bottom_depth, bottom_chips):
+        y0, y1 = round(y0, 6), round(y1, 6)
+        inner_y = y1 if dock == "top" else y0
+        for left, right in chips:
+            left, right = round(left, 6), round(right, 6)
+            if 0.5 < inner_y < height - 0.5:
+                horizontal[inner_y][left] += 1
+                horizontal[inner_y][right] -= 1
+            edges.update((x, y0, x, y1) for x in (left, right) if 0.5 < x < width - 0.5)
+    for y, endpoints in horizontal.items():
+        active = 0
+        ordered = sorted(endpoints)
+        for left, right in zip(ordered, ordered[1:]):
+            active += endpoints[left]
+            if active:
+                edges.add((left, y, right, y))
+    return sorted(edges)
+
+
+def frame_chips(
+    width: float, height: float, *, top_depth: float = 0, top_chips=(), bottom_depth: float = 0, bottom_chips=(), color: str = P_PRIMARY,
+    stroke_width: float = CHROME_BORDER, level: str = "window", appearance: str = "dark", center=(0.0, 0.0, 0.0),
 ):
-    """🔲 Build one rectangular chrome polygon; a title chip is a translucent glass overlay inside its top-left corner."""
-    from manim import Line, Polygon
+    """🧊 Build the glass chip overlay of one frame whose centre is ``center``: translucent chip rectangles (the glass of the next level plus the foreground veil) and only their inner edges. Add it above the content.
+    @see 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🎨️surface/🐍️.py chip_paint
+    """
+    from manim import Line, Polygon, VGroup
 
-    def corners(points, ox, oy):
-        return [np.array([ox + x * UI_PIXEL - width / 2, oy + height / 2 - y * UI_PIXEL, 0.0]) for x, y in points]
+    def corners(points):
+        return [np.array([x * UI_PIXEL - width / 2, height / 2 - y * UI_PIXEL, 0.0]) + np.asarray(center, dtype=float) for x, y in points]
 
-    frame = Polygon(
-        *corners(window_frame_outline(width / UI_PIXEL, height / UI_PIXEL, inset=0), 0, 0),
-        color=color, stroke_width=CHROME_BORDER, fill_color=CHROME_FILL, fill_opacity=fill_opacity,
-    )
-    if title_width is None or title_depth <= 0:
-        return frame
-    for region in window_frame_chip_regions(width / UI_PIXEL, height / UI_PIXEL, top_depth=title_depth / UI_PIXEL, top_chips=((0, title_width / UI_PIXEL),)):
+    pixel_width, pixel_height = width / UI_PIXEL, height / UI_PIXEL
+    args = (top_depth / UI_PIXEL, [(a / UI_PIXEL, b / UI_PIXEL) for a, b in top_chips], bottom_depth / UI_PIXEL, [(a / UI_PIXEL, b / UI_PIXEL) for a, b in bottom_chips])
+    regions = window_frame_chip_regions(pixel_width, pixel_height, top_depth=args[0], top_chips=args[1], bottom_depth=args[2], bottom_chips=args[3])
+    glass = chip_glass(level, appearance)
+    overlay = VGroup()
+    for region in regions:
         left, top, right, bottom = region["x"], region["y"], region["x"] + region["width"], region["y"] + region["height"]
-        chip = Polygon(*corners([(left, top), (right, top), (right, bottom), (left, bottom)], 0, 0),
-                       stroke_width=0, fill_color=CHROME_CHIP_FILL, fill_opacity=CHROME_CHIP_OPACITY)
-        inner = [corners([(left, bottom), (right, bottom)], 0, 0)] + ([corners([(right, top), (right, bottom)], 0, 0)] if right < width / UI_PIXEL - 0.5 else [])
-        frame.add(chip, *[Line(a, b, color=color, stroke_width=CHROME_BORDER) for a, b in inner])
+        overlay.add(Polygon(*corners([(left, top), (right, top), (right, bottom), (left, bottom)]),
+                            stroke_width=0, fill_color=glass[0], fill_opacity=glass[1]))
+    neutral = _surface.border_ink(appearance)
+    for x0, y0, x1, y1 in _chip_edges(pixel_width, pixel_height, *args):
+        start, end = corners([(x0, y0), (x1, y1)])
+        overlay.add(Line(start, end, color=neutral if y0 == y1 else color, stroke_width=stroke_width))
+    return overlay
+
+
+def window_frame(
+    width: float, height: float, *, top_depth: float = 0, top_chips=(), bottom_depth: float = 0, bottom_chips=(),
+    color: str = P_PRIMARY, fill_opacity: float = 0.88, glass: bool = False, stroke_width: float = CHROME_BORDER,
+    fill_color: str | None = None, level: str = "window", appearance: str = "dark",
+):
+    """🔲 Build one rectangular chrome polygon (``glass``: the surface of a free-standing chip, one level above what it lies on); its chips are translucent glass overlays inside the top and bottom edge, spans measured from the left edge in scene units.
+    Content that must be seen through a chip is added after the frame and the chips are re-added above it with ``frame_chips``.
+    """
+    from manim import Polygon
+
+    tint, opacity = chip_glass(level, appearance) if glass else (fill_color or _frame_fill(level, appearance), fill_opacity)
+    border = _surface.border_ink(appearance) if top_chips or bottom_chips else color
+    frame = Polygon(
+        *[np.array([x * UI_PIXEL - width / 2, height / 2 - y * UI_PIXEL, 0.0]) for x, y in window_frame_outline(width / UI_PIXEL, height / UI_PIXEL, inset=0)],
+        color=border, stroke_width=stroke_width, fill_color=tint, fill_opacity=opacity,
+    )
+    frame.add(*frame_chips(width, height, top_depth=top_depth, top_chips=top_chips, bottom_depth=bottom_depth, bottom_chips=bottom_chips, color=color, stroke_width=stroke_width, level=level, appearance=appearance).submobjects)
     return frame
 
 
@@ -318,7 +380,7 @@ def watt_anchor(watts: float, *, compare: str = "laptop", title: str | None = No
     title_width = head.width + 2 * UI_SPACING if head is not None else None
     frame = window_frame(
         max(2.8, body.width + 4 * UI_SPACING, (title_width or 0) + 3 * UI_SPACING),
-        body.height + 2 * UI_SPACING + depth, title_width=title_width, title_depth=depth, color=color,
+        body.height + 2 * UI_SPACING + depth, top_depth=depth, top_chips=((0, title_width),) if head is not None else (), color=color,
     )
     body.move_to(frame.get_center() + DOWN * depth / 2)
     if head is not None:
@@ -597,7 +659,7 @@ def window_chip(content, color: str = P_PRIMARY):
     """🪪 Frame plain or typeset label content with the shared square cap surface."""
     from manim import VGroup
 
-    frame = window_frame(content.width + 2 * UI_SPACING, content.height + 2 * UI_SPACING, color=color)
+    frame = window_frame(content.width + 2 * UI_SPACING, content.height + 2 * UI_SPACING, color=color, glass=True)
     frame.move_to(content.get_center())
     return VGroup(frame, content)
 
@@ -1220,7 +1282,7 @@ def window_card(heading, reading, *, color: str = P_PRIMARY, width: float | None
     body_height = reading.height if reading is not None else 0
     frame_width = max(width or 0, body_width + 4 * UI_SPACING, (title_width or 0) + 3 * UI_SPACING)
     frame_height = max(height or 0, depth + body_height + 2 * UI_SPACING)
-    frame = window_frame(frame_width, frame_height, title_width=title_width, title_depth=depth, color=color)
+    frame = window_frame(frame_width, frame_height, top_depth=depth, top_chips=((0, title_width),) if heading is not None else (), color=color)
     if heading is not None:
         heading.move_to([frame.get_left()[0] + UI_SPACING + heading.width / 2,
                          frame.get_top()[1] - depth / 2, 0])
@@ -1250,33 +1312,32 @@ def stat_card(
     return window_card(heading, reading, color=color, width=width, height=height)
 
 
-def card_grid(entries, *, rows: int = 1, cols: int | None = None, color: str = P_PRIMARY,
-              buff: float = 2 * UI_SPACING, **card_kwargs):
-    """🗂️ Grid of ``stat_card``s that all share one frame size.
+def card_grid(entries, *, rows: int = 1, cols: int | None = None, color: str = P_PRIMARY, **card_kwargs):
+    """🗂️ Tile stat cards edge to edge with a single hairline on every occupied cell edge."""
+    from manim import DL, DR, UL, UR, Line, VGroup
 
-    ``entries`` are ``(caption, value)`` or ``(caption, value, accent_colour)``.
-    Measuring every body first and then forcing one width/height is what keeps a
-    row from looking ragged and stops a long caption widening one card into its
-    neighbour.
-    """
-    from manim import VGroup
+    prepared = [(caption, value, (tones[0] if tones else None) or color) for caption, value, *tones in entries]
+    if not prepared:
+        return VGroup()
+    probes = [stat_card(caption, value, color=accent, **card_kwargs) for caption, value, accent in prepared]
+    options = {**card_kwargs, "width": max(card.width for card in probes), "height": max(card.height for card in probes)}
+    cards = VGroup(*(stat_card(caption, value, color=accent, **options) for caption, value, accent in prepared))
+    cols = cols if cols is not None else -(-len(cards) // max(1, rows))
+    cards.arrange_in_grid(rows=rows, cols=cols, buff=0)
+    if len(cards) == 1:
+        return cards
 
-    prepared = []
-    for entry in entries:
-        caption, value, *rest = entry
-        accent = rest[0] if rest and rest[0] else color
-        prepared.append((caption, value, accent))
-
-    probes = [stat_card(c, v, color=a, **card_kwargs) for c, v, a in prepared]
-    card_w = max(p.width for p in probes)
-    card_h = max(p.height for p in probes)
-    cards = VGroup(*[
-        stat_card(c, v, color=a, width=card_w, height=card_h, **card_kwargs)
-        for c, v, a in prepared
-    ])
-    if cols is None:
-        cols = -(-len(cards) // max(1, rows))
-    cards.arrange_in_grid(rows=rows, cols=cols, buff=(buff, buff))
+    border = _surface.border_ink("dark")
+    for index, card in enumerate(cards):
+        frame = card[0]
+        frame.set_stroke(width=0, family=False)
+        edges = [(UL, UR), (UL, DL)]
+        if (index + 1) % cols == 0 or index + 1 == len(cards):
+            edges.append((UR, DR))
+        if index + cols >= len(cards):
+            edges.append((DL, DR))
+        card.add(*(Line(frame.get_corner(start), frame.get_corner(end), color=border, stroke_width=CHROME_BORDER)
+                   for start, end in edges))
     return cards
 
 

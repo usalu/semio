@@ -645,7 +645,7 @@
       "memberId": "member-b1",
       "label": "Restraint 1",
       "startSupport": "Fork",
-      "endSupport": "Fork",
+      "endSupport": "Fixed",
       "intermediatePosition": 0.0,
       "torsionalSpring": 0.0,
       "lateralSpringPosition": 0.0,

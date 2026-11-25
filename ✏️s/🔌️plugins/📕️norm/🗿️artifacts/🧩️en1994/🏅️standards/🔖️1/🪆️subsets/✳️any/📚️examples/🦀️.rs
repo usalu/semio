@@ -24,4 +24,7 @@ mod example_composite_floor_beam_failing;
 #[cfg(test)]
 #[path = "🌉️composite-bridge-girder/🧪️tests/🧩️example/🦀️.rs"]
 mod example;
+#[cfg(test)]
+#[path = "🧪️tests/🗜️pack-twins/🦀️.rs"]
+mod pack_twins;
 //#endregion 🪢️Mounts

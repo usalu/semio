@@ -16,7 +16,16 @@
         "id": "footing-F1",
         "patch": {
           "width": 3.0,
-          "embedment": null
+          "length": null,
+          "embedment": null,
+          "baseInclinationDeg": null,
+          "settlementLimit": null,
+          "loadCases": {
+            "removed": [],
+            "inserted": [],
+            "moved": [],
+            "modified": []
+          }
         }
       }
     ]
@@ -30,6 +39,7 @@
   "pileGroups": null,
   "labTests": null,
   "layerWaters": null,
+  "placements": null,
   "cases": {
     "removed": [],
     "inserted": [],

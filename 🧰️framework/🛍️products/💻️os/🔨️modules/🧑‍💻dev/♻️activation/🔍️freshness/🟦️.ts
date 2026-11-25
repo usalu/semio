@@ -1,27 +1,27 @@
-import {runtimeCatalogBuildInventoryV1} from "@semio-tech/plugin-registry/catalog-view";
+import {runtimeCatalogBuildInventoryV1} from "../../../🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts";
 
 /** 🧩️ Semantic activation freshness owner. */
 
-import { resolveBootSourceContentHashes, SOURCE_FRESHNESS_COMPONENT_CONCURRENCY, mapBoundedV1, stagedModuleMtime, writeStagedSourceContentHash } from "@semio-tech/framework-plugin/build/freshness";
+import { resolveBootSourceContentHashes, SOURCE_FRESHNESS_COMPONENT_CONCURRENCY, mapBoundedV1, stagedModuleMtime, writeStagedSourceContentHash } from "../../../🔌️plugin/📦️packages/🦀️rust/🏗️build/🔍️freshness/🟦️.ts";
 import { ACTIVATION_RECEIPT_FILE, PLAYGROUND_SESSION_OUTPUT_ROOT_ENV, activationSourceFreshnessKey, developmentRuntimeRoot, nextActivationReceipt, playgroundSessionOutputPath, builtPluginModulesRootIn, publishActivationReceipt, readActivationReceipt, stagedModuleReportLines, stagedModuleVerdict, type PreparedComponentFacts, type StagedModuleFacts, type StagedModuleVerdict } from "../🟦️.ts";
 
 import { constants as fsConstants, createReadStream, createWriteStream, copyFileSync, cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, rmdirSync, statSync, unlinkSync, watch, writeFileSync } from "node:fs";
 
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 
-import { filterProjectedPluginRegistry, readGeneratedCatalogProjection } from "@semio-tech/plugin-registry/catalog-view";
+import { filterProjectedPluginRegistry, readRequiredCatalogProjectionV1 } from "../../../🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts";
 
-import { generatePluginRegistry, type DeployedRegistryEntryV1 } from "@semio-tech/plugin-registry/discovery";
+import { generatePluginRegistry, type DeployedRegistryEntryV1 } from "../../../🔌️plugin/📇️registry/🔎️discovery/🟦️.ts";
 
 import { defaultExtensionInstallRoot, EXTENSION_INSTALL_META, EXTENSION_WATCH_MARKER } from "../../../🔌️plugin/🏪️store/📥️installation/🟦️.ts";
 
-import { MODULE_BRIDGE_FILE, MODULE_SHARD_DIRECTORY, MODULE_HOT_SWAP_FILE, MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, moduleDirectoryName, parseModuleDirectories, moduleIdForDirectoryName, moduleRoutePath, componentOwnerRootV1 } from "@semio-tech/plugin-registry/deployment";
+import { MODULE_BRIDGE_FILE, MODULE_SHARD_DIRECTORY, MODULE_HOT_SWAP_FILE, MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, moduleDirectoryName, parseModuleDirectories, moduleIdForDirectoryName, moduleRoutePath, componentOwnerRootV1 } from "../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 
-import { findWorkspaceRoot } from "@semio-tech/process/routing";
+import { findWorkspaceRoot } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 const repoRoot = findWorkspaceRoot();
 
-import { resolveCatalogFilterPluginId } from "@semio-tech/framework-plugin/build/plan";
+import { resolveCatalogFilterPluginId } from "../../../🔌️plugin/📦️packages/🦀️rust/🏗️build/📋️plan/🟦️.ts";
 
 
 
@@ -106,8 +106,8 @@ export function reportStagedModuleFreshness(variant: string, renderer: "react" |
  * refuses to start over a stale module is worse than one that says which module is stale. */
 async function reportServeStagedModuleFreshness(variant: string, renderer: "react" | "wgpu", profile: "prototype" | "release", runtime: string, receipt?: { readonly plugins: readonly { readonly pluginId: string; readonly artifactSha256: string }[] }): Promise<void> {
   try {
-    const selected = new Set(filterProjectedPluginRegistry(readGeneratedCatalogProjection(), resolveCatalogFilterPluginId(variant)).map((entry) => entry.pluginId));
-    const components = readGeneratedCatalogProjection().entries.filter((entry) => selected.has(entry.pluginId));
+    const selected = new Set(filterProjectedPluginRegistry(readRequiredCatalogProjectionV1(), resolveCatalogFilterPluginId(variant)).map((entry) => entry.pluginId));
+    const components = readRequiredCatalogProjectionV1().entries.filter((entry) => selected.has(entry.pluginId));
     reportStagedModuleFreshness(variant, renderer, profile, await collectStagedModuleFacts({
       moduleRoot: builtPluginModulesRootIn(repoRoot, profile),
       installRoot: join(runtime, "extensions"),

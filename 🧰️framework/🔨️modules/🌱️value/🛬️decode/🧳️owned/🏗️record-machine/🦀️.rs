@@ -19,7 +19,10 @@ pub struct RecordSpec{pub count:usize,pub tuple:bool,pub flatten:&'static [bool]
 
 /// 🏷️ The static flags of one field of a record.
 #[derive(Clone,Copy)]
-pub struct FieldShape{pub leaf:bool,pub flat:bool}
+pub struct FieldShape{pub leaf:bool,pub flat:bool,pub text:bool,pub pure_default:bool}
+
+/// 🪙️ A vacant part is written as its empty discriminant and defaults, so one seed part quotes at most this many bytes however large the empty owner is.
+pub const SEED_WRITE_BYTES:usize=8;
 
 /// 🧩️ The resident state of one record receiver that does not depend on its field types.
 pub struct NativeRecordCore<I:NativeValueSource+?Sized,N,const C:usize>{
@@ -38,8 +41,8 @@ pub trait RecordSlotView{
 
 /// 🧱️ The slot operations of one field type shared by its present slot and its phased default.
 pub trait RecordSlot<T>:RecordSlotView{
- fn slot_work(&self,source:&Source,body:usize)->Result<u64,ValueError>;
- fn slot_nested(&mut self,source:&Source,control:&mut NativeDecodeControl<'_>,witness:OriginalSourceTurnWitness<'_>,body:usize,maximum:u64,grant:RetainedCloneGrant)->RetainedWorkPoll<Step,NativeReceivingFailure>;
+ fn slot_work(&self,source:Option<RetainedCloneRef<'_,dyn NativeValueSource>>,body:usize)->Result<u64,ValueError>;
+ fn slot_nested(&mut self,source:Option<RetainedCloneRef<'_,dyn NativeValueSource>>,control:&mut NativeDecodeControl<'_>,witness:OriginalSourceTurnWitness<'_>,body:usize,maximum:u64,grant:RetainedCloneGrant)->RetainedWorkPoll<Step,NativeReceivingFailure>;
  fn slot_retire(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->Close;
  fn slot_begin(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Close;
  fn slot_close_plan(&self,body:usize)->Option<Result<(RetirementDemand,u64),ValueError>>;
@@ -52,8 +55,8 @@ pub trait RecordSlot<T>:RecordSlotView{
 pub struct NoSlot;
 impl RecordSlotView for NoSlot{fn view_empty(&self)->bool{true}fn view_birth(&self)->bool{false}fn view_control(&self)->bool{false}fn view_pending(&self)->bool{false}fn view_birth_step(&mut self,_:&mut OriginalRetirementCloseLoan<'_>,_:RetainedCloneGrant)->OriginalRetirementPoll{unreachable!()}}
 impl<T> RecordSlot<T> for NoSlot{
- fn slot_work(&self,_:&Source,_:usize)->Result<u64,ValueError>{Err(invalid())}
- fn slot_nested(&mut self,_:&Source,_:&mut NativeDecodeControl<'_>,_:OriginalSourceTurnWitness<'_>,_:usize,_:u64,_:RetainedCloneGrant)->RetainedWorkPoll<Step,NativeReceivingFailure>{RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(invalid().into()),work:0})}
+ fn slot_work(&self,_:Option<RetainedCloneRef<'_,dyn NativeValueSource>>,_:usize)->Result<u64,ValueError>{Err(invalid())}
+ fn slot_nested(&mut self,_:Option<RetainedCloneRef<'_,dyn NativeValueSource>>,_:&mut NativeDecodeControl<'_>,_:OriginalSourceTurnWitness<'_>,_:usize,_:u64,_:RetainedCloneGrant)->RetainedWorkPoll<Step,NativeReceivingFailure>{RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(invalid().into()),work:0})}
  fn slot_retire(&mut self,_:usize,_:&mut RetainedAllocationEffect<'_>)->Close{RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(invalid().into()),work:0})}
  fn slot_begin(&mut self,_:&mut RetainedAllocationEffect<'_>)->Close{RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(invalid().into()),work:0})}
  fn slot_close_plan(&self,_:usize)->Option<Result<(RetirementDemand,u64),ValueError>>{None}
@@ -89,8 +92,8 @@ impl<T:NativeDefault> RecordSlotView for Default_<T>{
  fn view_birth_step(&mut self,original:&mut OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->OriginalRetirementPoll{self.close_original_birth_step(original,grant)}
 }
 impl<T:NativeDefault> RecordSlot<T> for Default_<T>{
- fn slot_work(&self,_:&Source,body:usize)->Result<u64,ValueError>{self.advance_work_demand(body)}
- fn slot_nested(&mut self,_:&Source,control:&mut NativeDecodeControl<'_>,witness:OriginalSourceTurnWitness<'_>,body:usize,maximum:u64,grant:RetainedCloneGrant)->RetainedWorkPoll<Step,NativeReceivingFailure>{self.advance(control,witness,body,maximum,grant).map(|s|Step::Progress(s.progress()))}
+ fn slot_work(&self,_:Option<RetainedCloneRef<'_,dyn NativeValueSource>>,body:usize)->Result<u64,ValueError>{self.advance_work_demand(body)}
+ fn slot_nested(&mut self,_:Option<RetainedCloneRef<'_,dyn NativeValueSource>>,control:&mut NativeDecodeControl<'_>,witness:OriginalSourceTurnWitness<'_>,body:usize,maximum:u64,grant:RetainedCloneGrant)->RetainedWorkPoll<Step,NativeReceivingFailure>{self.advance(control,witness,body,maximum,grant).map(|s|Step::Progress(s.progress()))}
  fn slot_retire(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->Close{native_close_settle(effect,|effect,reply|self.close_step(body,effect,reply)).map(progress)}
  fn slot_begin(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Close{native_close_settle(effect,|effect,reply|self.begin_close_into(effect,reply)).map(progress)}
  fn slot_close_plan(&self,body:usize)->Option<Result<(RetirementDemand,u64),ValueError>>{close_plan_of(self.terminal_is_empty(),self.is_closing(),||Ok((self.close_demands(body)?,self.close_work_demand(body)?)),||Ok((self.begin_close_demand()?,self.begin_close_work_demand()?)))}
@@ -101,30 +104,69 @@ impl<T:NativeDefault> RecordSlot<T> for Default_<T>{
  fn slot_reset(&mut self,_:*mut Frame){}
 }
 
+/// 🔤️ Selects the exact page of one text leaf the next funded step copies: whole short text at once, otherwise a char-aligned page.
+fn text_page(text:&str,copied:usize,body:usize,maximum:u64)->Result<usize,ValueError>{
+ let remaining=text.len().checked_sub(copied).ok_or_else(invalid)?;
+ let page=body.saturating_sub(size_of::<Option<String>>()).min(usize::try_from(maximum.saturating_sub(1)).unwrap_or(usize::MAX)).min(semio_framework_value_control_contract::RETAINED_CLONE_BULK_PAGE_BYTES);
+ let mut end=copied+remaining.min(page.max(usize::from(remaining!=0)));
+ while end>copied&&!text.is_char_boundary(end){end-=1}
+ if end==copied&&remaining>0{end=copied+text[copied..].chars().next().map_or(0,char::len_utf8)}
+ Ok(end-copied)
+}
+
+/// 🔤️ Quotes one step of a text leaf: the page copy and, on the first step, the exact byte buffer reservation.
+fn plan_text_stage<I:NativeValueSource+?Sized>(spec:&RecordSpec,input:RetainedCloneRef<'_,I>,index:usize,body:usize,maximum:u64,copied:Option<usize>)->Result<(RetirementDemand,u64,u8),ValueError>{
+ let child=input.try_project::<dyn NativeValueSource,ValueError,_>(index,|original|if spec.tuple{original.sequence_child(index)}else{original.record_child(index)})?;
+ let text=child.get().text()?;let count=text_page(text,copied.unwrap_or(0),body,maximum)?;
+ let copy_bytes=count.checked_add(size_of::<Option<String>>()).ok_or_else(invalid)?;
+ Ok((RetirementDemand{copy_bytes,capacity_bytes:if copied.is_none(){text.len()}else{0},depth:1,..Default::default()},u64::try_from(count).map_err(|_|invalid())?.checked_add(1).ok_or_else(invalid)?,27))
+}
+
+/// 🔤️ Copies one quoted page of a text leaf into its pending string; the first page reserves the whole buffer once under the allocation marker.
+pub fn field_text<I:NativeValueSource+?Sized,N,const C:usize>(c:&mut NativeRecordCore<I,N,C>,spec:&RecordSpec,i:usize,input:RetainedCloneRef<'_,I>,pending:&mut ManuallyDrop<Option<String>>,effect:&mut RetainedAllocationEffect<'_>,demand:RetirementDemand,work:&mut u128)->Result<(),OriginalReceivingPrimary>{
+ let index=c.positions[i].ok_or_else(invalid)?;
+ let child=input.try_project::<dyn NativeValueSource,ValueError,_>(index,|original|if spec.tuple{original.sequence_child(index)}else{original.record_child(index)})?;
+ let text=child.get().text()?;let count=demand.copy_bytes.checked_sub(size_of::<Option<String>>()).ok_or_else(invalid)?;
+ if pending.is_none(){
+  if !text.is_empty()&&effect.actual().is_some(){return Err(ValueError::invariant("string allocation marker occupied").into())}
+  let mut buffer=String::new();if !text.is_empty(){*effect.actual()=Some(0)}
+  if buffer.try_reserve_exact(text.len()).is_err(){return Err(ValueError::literal(ValueRefusalKind::AllocationFailed,"string byte allocation failed").with_retained_progress(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Option<String>>(),..Default::default()}).into())}
+  if !text.is_empty(){*effect.actual()=Some(buffer.capacity())}
+  if buffer.capacity()!=text.len(){return Err(ValueError::invariant("string byte allocator changed its exact original capacity").into())}
+  **pending=Some(buffer);
+ }
+ let buffer=pending.as_mut().ok_or_else(invalid)?;let copied=buffer.len();
+ buffer.push_str(text.get(copied..copied+count).ok_or_else(invalid)?);
+ if buffer.len()==text.len(){c.stage=3}
+ *work=u128::try_from(count).map_err(|_|invalid())?+1;Ok(())
+}
+
 fn project<'a,I:NativeValueSource+?Sized>(input:RetainedCloneRef<'a,I>,spec:&RecordSpec,shape:FieldShape,i:usize,index:usize,flat_key:bool)->Result<RetainedCloneRef<'a,dyn NativeValueSource>,ValueError>{
  let key=if flat_key&&shape.flat&&index==usize::MAX{usize::MAX-i}else{index};
  input.try_project::<dyn NativeValueSource,ValueError,_>(key,|original|if shape.flat&&index==usize::MAX{Ok(original.as_source())}else if spec.tuple{original.sequence_child(index)}else{original.record_child(index)})
 }
 
 /// 📐️ Plans one field stage of a record.
-pub fn field_plan<I:NativeValueSource+?Sized,N,T,const C:usize>(c:&NativeRecordCore<I,N,C>,spec:&RecordSpec,shape:FieldShape,i:usize,input:RetainedCloneRef<'_,I>,body:usize,maximum:u64,slot:Option<&dyn NativeFieldPlanSlot>,default:Option<&dyn NativeFieldPlanSlot>)->Result<(RetirementDemand,u64,u8),ValueError>{
+pub fn field_plan<I:NativeValueSource+?Sized,N,T,const C:usize>(c:&NativeRecordCore<I,N,C>,spec:&RecordSpec,shape:FieldShape,i:usize,input:RetainedCloneRef<'_,I>,body:usize,maximum:u64,slot:Option<&dyn NativeFieldPlanSlot>,default:Option<&dyn NativeFieldPlanSlot>,text_copied:Option<usize>)->Result<(RetirementDemand,u64,u8),ValueError>{
  let option_bytes=size_of::<Option<T>>();let demand=NativeRecordStorage::<N>::field_demand::<T>;
- let stage=|slot:Option<&dyn NativeFieldPlanSlot>,present:bool|plan_field_stage(c.stage,present,slot.ok_or_else(invalid)?,&c.source,&c.projection,body,maximum,option_bytes,demand);
- let Some(index)=c.positions[i]else{return if spec.required[i]{Err(invalid())}else{stage(default,false)}};
+ let stage=|slot:Option<&dyn NativeFieldPlanSlot>,present:bool,child:Option<RetainedCloneRef<'_,dyn NativeValueSource>>|plan_field_stage(c.stage,present,slot.ok_or_else(invalid)?,&c.source,child,&c.projection,body,maximum,option_bytes,demand);
+ let Some(index)=c.positions[i]else{return if spec.required[i]{Err(invalid())}else{if shape.pure_default&&c.stage==0{Ok((fixed(size_of::<Option<T>>()+size_of::<u8>()),1,13))}else{stage(default,false,None)}}};
+ if shape.text&&c.stage==0{return plan_text_stage(spec,input,index,body,maximum,text_copied)}
  if shape.leaf{return plan_leaf_stage(c.stage,option_bytes,demand)}
- if c.stage==0{let child=project(input,spec,shape,i,index,true)?;return Ok((c.projection.demand(child)?,c.projection.work_demand(child)?,23))}
- stage(slot,true)
+ if c.stage==0{return Ok((fixed(size_of::<u8>()),1,13))}
+ let child=if c.stage==1{Some(project(input,spec,shape,i,index,true)?)}else{None};
+ stage(slot,true,child)
 }
 
 /// ⏱️ Quotes the work of the next child action of one field.
-pub fn field_work<I:NativeValueSource+?Sized,N,T,P:RecordSlot<T>,M:RecordSlot<T>,const C:usize>(c:&NativeRecordCore<I,N,C>,i:usize,body:usize,slot:Option<&P>,default:Option<&M>)->Result<u64,ValueError>{
- if c.positions[i].is_some(){match slot{Some(slot)=>slot.slot_work(&c.source,body),None=>Err(invalid())}}else{match default{Some(default)=>default.slot_work(&c.source,body),None=>Err(invalid())}}
+pub fn field_work<I:NativeValueSource+?Sized,N,T,P:RecordSlot<T>,M:RecordSlot<T>,const C:usize>(c:&NativeRecordCore<I,N,C>,spec:&RecordSpec,shape:FieldShape,input:RetainedCloneRef<'_,I>,i:usize,body:usize,slot:Option<&P>,default:Option<&M>)->Result<u64,ValueError>{
+ if let Some(index)=c.positions[i]{match slot{Some(slot)=>slot.slot_work(Some(project(input,spec,shape,i,index,true)?),body),None=>Err(invalid())}}else{match default{Some(default)=>default.slot_work(None,body),None=>Err(invalid())}}
 }
 
 /// 🪆️ Advances the nested child action of one field.
-pub fn field_nested<I:NativeValueSource+?Sized,N,T,P:RecordSlot<T>,M:RecordSlot<T>,const C:usize>(c:&mut NativeRecordCore<I,N,C>,i:usize,control:&mut NativeDecodeControl<'_>,witness:OriginalSourceTurnWitness<'_>,body:usize,maximum:u64,grant:RetainedCloneGrant,slot:Option<&mut P>,default:Option<&mut M>)->RetainedWorkPoll<Step,NativeReceivingFailure>{
+pub fn field_nested<I:NativeValueSource+?Sized,N,T,P:RecordSlot<T>,M:RecordSlot<T>,const C:usize>(c:&mut NativeRecordCore<I,N,C>,spec:&RecordSpec,shape:FieldShape,input:RetainedCloneRef<'_,I>,i:usize,control:&mut NativeDecodeControl<'_>,witness:OriginalSourceTurnWitness<'_>,body:usize,maximum:u64,grant:RetainedCloneGrant,slot:Option<&mut P>,default:Option<&mut M>)->RetainedWorkPoll<Step,NativeReceivingFailure>{
  let failure=||RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(invalid().into()),work:0});
- if c.positions[i].is_some(){match slot{Some(slot)=>slot.slot_nested(&c.source,control,witness,body,maximum,grant),None=>failure()}}else{match default{Some(default)=>default.slot_nested(&c.source,control,witness,body,maximum,grant),None=>failure()}}
+ if let Some(index)=c.positions[i]{match(slot,project(input,spec,shape,i,index,true)){(Some(slot),Ok(child))=>slot.slot_nested(Some(child),control,witness,body,maximum,grant),(_,Err(error))=>RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(error.into()),work:0}),_=>failure()}}else{match default{Some(default)=>default.slot_nested(None,control,witness,body,maximum,grant),None=>failure()}}
 }
 
 /// ♻️ Retires the nested child of one field.
@@ -164,11 +206,11 @@ fn take_step<I:NativeValueSource+?Sized,N,T,S:RecordSlot<T>,const C:usize>(c:&mu
 }
 
 /// 🪄️ Applies one step of one field: its projection, receipt, placement and slot close.
-pub fn field_apply<I:NativeValueSource+?Sized,N,T,P:RecordSlot<T>,M:RecordSlot<T>,const C:usize>(c:&mut NativeRecordCore<I,N,C>,shape:FieldShape,shared:bool,offset:usize,i:usize,effect:&mut RetainedAllocationEffect<'_>,work:&mut u128,pending:&mut ManuallyDrop<Option<T>>,slot:Option<&mut P>,default:Option<&mut M>,frame:*mut Frame)->Result<Option<Option<Step>>,OriginalReceivingPrimary>{
+pub fn field_apply<I:NativeValueSource+?Sized,N,T,P:RecordSlot<T>,M:RecordSlot<T>,const C:usize>(c:&mut NativeRecordCore<I,N,C>,pure:fn()->Option<T>,shape:FieldShape,shared:bool,offset:usize,i:usize,effect:&mut RetainedAllocationEffect<'_>,work:&mut u128,pending:&mut ManuallyDrop<Option<T>>,slot:Option<&mut P>,default:Option<&mut M>,frame:*mut Frame)->Result<Option<Option<Step>>,OriginalReceivingPrimary>{
  let Some(_)=c.positions[i]else{
   let default=default.ok_or_else(invalid)?;
   match c.stage{
-   0=>{c.stage=1;*work=1},1=>{c.stage=2;*work=1},
+   0=>{if shape.pure_default{if let Some(value)=pure(){**pending=Some(value);c.stage=3;*work=1}else{return Err(invalid().into())}}else{c.stage=1;*work=1}},1=>{c.stage=2;*work=1},
    2=>return take_step(c,pending,work,effect,default),
    3=>{if place_step(c,offset,i,pending,work,effect)?{c.stage=4;*work+=2}},
    4=>{c.stage=if default.view_empty(){5}else{7};*work=1},
@@ -178,13 +220,13 @@ pub fn field_apply<I:NativeValueSource+?Sized,N,T,P:RecordSlot<T>,M:RecordSlot<T
  if shape.leaf{match c.stage{3=>{if place_step(c,offset,i,pending,work,effect)?{c.field+=1;c.stage=0;*work+=2}},_=>return Err(invalid().into())}return Ok(None)}
  let slot=slot.ok_or_else(invalid)?;
  match c.stage{
-  1=>{c.stage=2;*work=1},
+  0=>{c.stage=1;*work=1},1=>{c.stage=2;*work=1},
   2=>return take_step(c,pending,work,effect,slot),
   3=>{if place_step(c,offset,i,pending,work,effect)?{c.stage=4;*work+=2}},
-  4=>{c.stage=if slot.view_empty(){5}else{7};*work=1},
+  4=>{c.stage=if slot.view_empty(){6}else{7};*work=1},
   5=>{if c.source.is_some(){c.source.take();}else{c.stage=6;}*work=1},
   6=>{if shared{slot.slot_reset(frame)}c.field+=1;c.stage=0;*work=2},
-  7=>{c.stage=5;*work=1},_=>return Err(invalid().into())}
+  7=>{c.stage=6;*work=1},_=>return Err(invalid().into())}
  Ok(None)
 }
 
@@ -216,11 +258,11 @@ pub trait NativeRecordArms<I:NativeValueSource+?Sized,N,const C:usize>:Send+'sta
  fn static_spec()->&'static RecordSpec where Self:Sized;
  fn born()->Self where Self:Sized;
  fn plan_field(&self,c:&NativeRecordCore<I,N,C>,i:usize,input:RetainedCloneRef<'_,I>,body:usize,maximum:u64)->Result<(RetirementDemand,u64,u8),ValueError>;
- fn work_field(&self,c:&NativeRecordCore<I,N,C>,i:usize,body:usize)->Result<u64,ValueError>;
+ fn work_field(&self,c:&NativeRecordCore<I,N,C>,input:RetainedCloneRef<'_,I>,i:usize,body:usize)->Result<u64,ValueError>;
  fn close_plan_field(&self,c:&NativeRecordCore<I,N,C>,i:usize,body:usize)->Result<(RetirementDemand,u64),ValueError>;
  fn apply_field(&mut self,c:&mut NativeRecordCore<I,N,C>,i:usize,effect:&mut RetainedAllocationEffect<'_>,work:&mut u128)->Result<Option<Option<Step>>,OriginalReceivingPrimary>;
- fn leaf_field(&mut self,c:&mut NativeRecordCore<I,N,C>,i:usize,input:RetainedCloneRef<'_,I>,work:&mut u128)->Result<(),OriginalReceivingPrimary>;
- fn nested_field(&mut self,c:&mut NativeRecordCore<I,N,C>,i:usize,control:&mut NativeDecodeControl<'_>,witness:OriginalSourceTurnWitness<'_>,body:usize,maximum:u64,grant:RetainedCloneGrant)->RetainedWorkPoll<Step,NativeReceivingFailure>;
+ fn leaf_field(&mut self,c:&mut NativeRecordCore<I,N,C>,i:usize,input:RetainedCloneRef<'_,I>,effect:&mut RetainedAllocationEffect<'_>,demand:RetirementDemand,work:&mut u128)->Result<(),OriginalReceivingPrimary>;
+ fn nested_field(&mut self,c:&mut NativeRecordCore<I,N,C>,input:RetainedCloneRef<'_,I>,i:usize,control:&mut NativeDecodeControl<'_>,witness:OriginalSourceTurnWitness<'_>,body:usize,maximum:u64,grant:RetainedCloneGrant)->RetainedWorkPoll<Step,NativeReceivingFailure>;
  fn retire_field(&mut self,c:&mut NativeRecordCore<I,N,C>,i:usize,body:usize,effect:&mut RetainedAllocationEffect<'_>)->Close;
  fn begin_field(&mut self,c:&mut NativeRecordCore<I,N,C>,i:usize,effect:&mut RetainedAllocationEffect<'_>)->Close;
  fn close_field(&mut self,c:&mut NativeRecordCore<I,N,C>,i:usize,original:Option<&mut OriginalRetirementCloseLoan<'_>>,body:usize,d:RetirementDemand,effect:&mut RetainedAllocationEffect<'_>)->Close;
@@ -286,8 +328,8 @@ fn apply<I:NativeValueSource+?Sized,N:'static,const C:usize>(c:&mut NativeRecord
   18=>{let extra=size_of::<Option<N>>()+size_of::<u8>();match unsafe{c.partial.take_initialized_into(&mut c.output,extra,effect)}{RetainedWorkPoll::Pending{..}=>return Ok(None),RetainedWorkPoll::Complete(turn)=>{work=turn.work;turn.result?;if c.output.is_some(){c.phase=5;work+=2;}}}},
   19=>{c.stage=2;work=1},20=>{c.stage=3;work=1},
   26=>{if spec.tuple||spec.any_flatten{return Err(invalid().into())}let NativeRecordKey::Ordinal(ordinal)=input.get().record_key(c.scan)?else{return Err(invalid().into())};match spec.leaves.iter().position(|leaf|leaf.ordinal==u32::from(ordinal)){Some(field)=>{if c.positions[field].is_some(){return Err(invalid().into())}c.positions[field]=Some(c.scan)},None if c.subset=>{},None=>return Err(invalid().into())}c.scan+=1;work=2;},
-  25=>{let field=c.field;a.leaf_field(c,field,input,&mut work)?},
-  _=>return Err(invalid().into())}DBG_ACTIONS[action as usize%64].0.fetch_add(1,std::sync::atomic::Ordering::Relaxed);DBG_ACTIONS[action as usize%64].1.fetch_add(d.copy_bytes as u64,std::sync::atomic::Ordering::Relaxed);Ok(Some(Step::Progress(receipt(d))))})()?;
+  25|27=>{let field=c.field;a.leaf_field(c,field,input,effect,d,&mut work)?},
+  _=>return Err(invalid().into())}Ok(Some(Step::Progress(receipt(d))))})()?;
  let Some(step)=step else{return Ok(None)};
  let recorded=effect.performed_work();
  if work>recorded{let owed=u64::try_from(work-recorded).map_err(|_|ValueError::invariant("native record action work overflow"))?;if !effect.performed(owed)?{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"native record action exceeded its original work").into())}}else if work<recorded{return Err(ValueError::invariant("native record action recorded more work than it quoted").into())}
@@ -296,8 +338,7 @@ fn apply<I:NativeValueSource+?Sized,N:'static,const C:usize>(c:&mut NativeRecord
 
 fn retire_normal<I:NativeValueSource+?Sized,N:'static,const C:usize>(c:&mut NativeRecordCore<I,N,C>,a:&mut dyn NativeRecordArms<I,N,C>,action:u8,body:usize,effect:&mut RetainedAllocationEffect<'_>)->Close{
  let failure=||RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(invalid().into()),work:0});
- let field=c.field;
- match action{
+ let field=c.field;match action{
   5=>{let matcher=c.matcher.as_mut().expect("selected retained matcher");native_close_settle(effect,|effect,reply|matcher.close_into(body,effect,reply)).map(progress)},
   15=>a.retire_field(c,field,body,effect),
   16=>c.source.as_mut().expect("selected retained source").close_step(body,effect).map(progress),
@@ -374,7 +415,7 @@ impl<I:NativeValueSource+?Sized,N:'static,F:NativeRecordArms<I,N,C>,const C:usiz
  pub fn birth(subset:bool)->Self{let mut fields=F::born();fields.anchor();let mut core=NativeRecordCore::new(fields.spec());core.subset=subset;Self{core,fields}}
  const CORE_SEEDS:usize=17;
  unsafe fn seed_size(target:*mut MaybeUninit<Self>,index:usize)->Option<usize>{
-  fn size<T>(_:*mut T)->usize{size_of::<T>()}
+  fn size<T>(_:*mut T)->usize{size_of::<T>().min(SEED_WRITE_BYTES)}
   let target=target.cast::<Self>();
   Some(unsafe{match index{
    0=>size(std::ptr::addr_of_mut!((*target).core.binding)),1=>size(std::ptr::addr_of_mut!((*target).core.positions)),2=>size(std::ptr::addr_of_mut!((*target).core.initialized)),
@@ -407,24 +448,27 @@ impl<I:NativeValueSource+?Sized,N:'static,F:NativeRecordArms<I,N,C>,const C:usiz
    field=>return F::seed_write(std::ptr::addr_of_mut!((*target).fields),field-Self::CORE_SEEDS)}}
   true}
  /// 🧬️ Returns the factory seed template of this record shape.
- pub fn template(subset:bool)->Option<NativeSeedTemplate<Self>>{let write:unsafe fn(*mut MaybeUninit<Self>,usize)->bool=if subset{Self::seed_write::<true>}else{Self::seed_write::<false>};Some(unsafe{NativeSeedTemplate::fields(Self::CORE_SEEDS+F::seed_count(),Self::seed_size,write)})}
+ unsafe fn seed_all_size(target:*mut MaybeUninit<Self>,index:usize)->Option<usize>{if index!=0{return None}let mut total=0usize;for part in 0..Self::CORE_SEEDS+F::seed_count(){total=total.checked_add(unsafe{Self::seed_size(target,part)}?)?}Some(total)}
+ unsafe fn seed_all_write<const SUBSET:bool>(target:*mut MaybeUninit<Self>,index:usize)->bool{index==0&&(0..Self::CORE_SEEDS+F::seed_count()).all(|part|unsafe{Self::seed_write::<SUBSET>(target,part)})}
+ /// 🪙️ One funded step writes every vacant part of the receiver: the parts carry no custody, so they need no separate receipts.
+ pub fn template(subset:bool)->Option<NativeSeedTemplate<Self>>{let write:unsafe fn(*mut MaybeUninit<Self>,usize)->bool=if subset{Self::seed_all_write::<true>}else{Self::seed_all_write::<false>};Some(unsafe{NativeSeedTemplate::fields(1,Self::seed_all_size,write)})}
 }
 
 impl<I:NativeValueSource+?Sized,N:RetireOwned+'static,F:NativeRecordArms<I,N,C>,const C:usize> NativeReceiver<I,N> for NativeRecordReceiver<I,N,F,C>{
  fn demands(&self,input:RetainedCloneRef<'_,I>,body:usize,maximum:u64)->Result<RetirementDemand,ValueError>{let(d,q,_)=plan(&self.core,&self.fields,input,body,maximum)?;Ok(if q<=maximum{d}else{Default::default()})}
  fn select_advance(&self,input:RetainedCloneRef<'_,I>,body:usize,maximum:u64)->Result<NativeAdvanceSelection,ValueError>{let(_,q,action)=plan(&self.core,&self.fields,input,body,maximum)?;Ok(if matches!(action,3|14){NativeAdvanceSelection::Nested}else{NativeAdvanceSelection::Local{work:q}})}
- fn advance_work_demand(&self,input:RetainedCloneRef<'_,I>,body:usize)->Result<u64,ValueError>{let(_,q,action)=plan(&self.core,&self.fields,input,body,u64::MAX)?;if action!=14{return Ok(q)}self.fields.work_field(&self.core,self.core.field,body)}
+ fn advance_work_demand(&self,input:RetainedCloneRef<'_,I>,body:usize)->Result<u64,ValueError>{let(_,q,action)=plan(&self.core,&self.fields,input,body,u64::MAX)?;if action!=14{return Ok(q)}self.fields.work_field(&self.core,input,self.core.field,body)}
  fn advance_nested(&mut self,input:RetainedCloneRef<'_,I>,control:&mut NativeDecodeControl<'_>,witness:OriginalSourceTurnWitness<'_>,body:usize,maximum:u64,grant:RetainedCloneGrant)->RetainedWorkPoll<Step,NativeReceivingFailure>{
   use RetainedWorkPoll::Complete;
   let(d,q,action)=match plan(&self.core,&self.fields,input,body,maximum){Ok(plan)=>plan,Err(error)=>return Complete(RetainedWorkOutcome{result:Err(error.into()),work:0})};
   if (q==0&&action!=3)||q>maximum||!retained_clone_grant_admits(grant,d){return Complete(RetainedWorkOutcome{result:Ok(Step::Progress(Default::default())),work:0})}
   if action==3{return self.core.matcher.as_mut().expect("selected retained matcher").advance_nested(input,control,witness,body,maximum,grant)}
-  if action==14{let field=self.core.field;return self.fields.nested_field(&mut self.core,field,control,witness,body,maximum,grant)}
+  if action==14{let field=self.core.field;return self.fields.nested_field(&mut self.core,input,field,control,witness,body,maximum,grant)}
   Complete(RetainedWorkOutcome{result:Err(invalid().into()),work:0})}
  fn advance_local<'reply>(&mut self,input:RetainedCloneRef<'_,I>,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,Step,OriginalReceivingPrimary>)->Result<OriginalEffectReplyComplete<'reply,Step,OriginalReceivingPrimary>,ValueError>{
   let maximum=effect.maximum_work_units();
   if let Ok((d,q,action@(23|24)))=plan(&self.core,&self.fields,input,body,maximum){if q==0||q>maximum||!retained_clone_grant_admits(effect.grant(),d){return Ok(reply.complete(Ok(Step::Progress(Default::default()))))}
-   let done=if action==23{let field=self.core.field;let spec=self.fields.spec();let core=&mut self.core;native_relay(reply.progress(),|reply:OriginalEffectReply<'_,Step,ValueError>|field_admit(core,spec,FieldShape{leaf:false,flat:spec.flatten[field]},field,input,effect,reply))}else{let core=&mut self.core;native_relay(reply.progress(),|reply|core.projection.take(&mut *core.source,effect,reply))};
+   let done=if action==23{let field=self.core.field;let spec=self.fields.spec();let core=&mut self.core;native_relay(reply.progress(),|reply:OriginalEffectReply<'_,Step,ValueError>|field_admit(core,spec,FieldShape{leaf:false,flat:spec.flatten[field],text:false,pure_default:false},field,input,effect,reply))}else{let core=&mut self.core;native_relay(reply.progress(),|reply|core.projection.take(&mut *core.source,effect,reply))};
    if action==23&&self.core.projection.borrow().is_ok(){self.core.stage=8}else if action==24&&self.core.source.is_some(){self.core.stage=1}
    return done}
   if let Ok((d,q,22))=plan(&self.core,&self.fields,input,body,maximum){if q==0||q>maximum||!retained_clone_grant_admits(effect.grant(),d){return Ok(reply.complete(Ok(Step::Progress(Default::default()))))}return self.core.matcher.as_mut().expect("selected retained matcher").advance_local(input,body,effect,reply.progress())}
@@ -468,10 +512,25 @@ impl<I:NativeValueSource+?Sized,N:RetireOwned+'static,F:NativeRecordArms<I,N,C>,
  fn close_original_birth_step(&mut self,original:&mut OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->OriginalRetirementPoll{close_original_birth_step(&mut self.core,&mut self.fields,original,grant)}
  fn recover_close_original_step<'reply>(&mut self,_:&mut OriginalRetirementCloseLoan<'_>,_:usize,_:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,Step,OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'reply,Step,OriginalRetirementFailure>,ValueError>{Ok(reply.pending())}
  fn terminal_is_empty(&self)->bool{is_empty(&self.core,&self.fields)}
+ fn flat_close_demand(&self)->Option<(RetirementDemand,u64)>{
+  let c=&self.core;let a=&self.fields;
+  if !matches!(c.phase,5|6)||c.matcher.is_some()||c.source.is_some()||!c.projection.terminal_is_empty()||!c.retirement.is_empty()||(c.partial.initialized()&&!c.partial.taken())||c.output.is_some()||!a.frame_empty()||!a.pending_empty()||!a.slots_empty(){return None}
+  let alias=RetainedCloneBinding::flat_release_quote(&c.binding).ok()?;let count=a.spec().count;
+  let mut copy_bytes=size_of::<bool>()+count*size_of::<usize>();let mut work=1+u64::try_from(count).ok()?;let mut release_bytes=0;
+  if let Some(demand)=alias{copy_bytes+=demand.copy_bytes;work+=1}
+  if c.partial.reserved(){let release=c.partial.release_demand();copy_bytes+=release.copy_bytes;release_bytes=release.release_bytes;work+=c.partial.release_work_demand()}
+  Some((RetirementDemand{copy_bytes,release_bytes,depth:1,..Default::default()},work))
+ }
+ fn flat_close(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneProgress,ValueError>{
+  let(demand,work)=self.flat_close_demand().ok_or_else(invalid)?;
+  if !retained_clone_grant_admits(effect.grant(),demand)||effect.remaining_work_units()?<work{return Ok(Default::default())}
+  let release_work=if self.core.partial.reserved(){self.core.partial.release_work_demand()}else{0};
+  if !effect.performed(work-release_work)?{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"native record flat close exceeded its original work"))}
+  if self.core.partial.reserved(){self.core.partial.release(effect).result?;}
+  if !RetainedCloneBinding::flat_release(&mut self.core.binding){return Err(ValueError::invariant("native record alias changed during its flat close"))}
+  self.core.closing=true;self.core.close_field=self.fields.spec().count;self.core.phase=7;Ok(receipt(demand))
+ }
  fn native_terminal_release(&self)->Option<RetainedCursorRelease<Self>>{self.terminal_is_empty().then(||unsafe{RetainedCursorRelease::native(|owner:&Self|owner.terminal_is_empty())})}
 }
 
 impl<I:NativeValueSource+?Sized,N:'static,F:NativeRecordArms<I,N,C>,const C:usize> Drop for NativeRecordReceiver<I,N,F,C>{fn drop(&mut self){assert!(std::thread::panicking()||is_empty(&self.core,&self.fields),"native record receiving requires funded closure")}}
-
-#[allow(clippy::declare_interior_mutable_const)]pub static DBG_ACTIONS:[(std::sync::atomic::AtomicU64,std::sync::atomic::AtomicU64);64]=[const{(std::sync::atomic::AtomicU64::new(0),std::sync::atomic::AtomicU64::new(0))};64];
-pub fn debug_dump()->String{DBG_ACTIONS.iter().enumerate().filter(|(_,(n,_))|n.load(std::sync::atomic::Ordering::Relaxed)>0).map(|(i,(n,b))|format!("a{}:{}x{}",i,n.load(std::sync::atomic::Ordering::Relaxed),b.load(std::sync::atomic::Ordering::Relaxed))).collect::<Vec<_>>().join(" ")}

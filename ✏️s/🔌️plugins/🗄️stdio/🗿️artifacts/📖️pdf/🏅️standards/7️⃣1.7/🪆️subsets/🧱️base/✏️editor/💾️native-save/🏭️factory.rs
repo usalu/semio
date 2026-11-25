@@ -40,6 +40,12 @@ pub fn app_io() -> AppIo {
     }
 }
 
+/// 💾️ Declares the native Save on an app definition: its `artifact:native` output port ([`app_io`]) and the `exportMediaFile` action naming that port. The shell resolves Save to the revision-bound segmented export only when the action's port is a declared output port (`declaredMediaFileExportV1`); without the port it falls back to the reference route, which re-encodes the whole document and never appends to an opened file.
+pub fn declare_native_save(definition: &mut semio_plugin::AppDefinition) {
+    definition.io = app_io();
+    definition.actions.push(export_action());
+}
+
 /// 🗂️ Keeps the shell's explicit and normal Save routes on the same native representation.
 pub fn export_action() -> ActionDefinition {
     let mut action = media_file_export_action_definition(

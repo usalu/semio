@@ -224,3 +224,31 @@ fn resolve_split_side_uses_dominant_axis_from_center() {
     assert_eq!(resolve_split_side(60.0, 10.0, 120.0, 400.0), DockSide::Top);
     assert_eq!(resolve_split_side(60.0, 390.0, 120.0, 400.0), DockSide::Bottom);
 }
+
+/// 🪂️ The active drop place of a tab drop is the shared insert slot inside the tab row: the first half of the tab the drop lands before, the second half of the last tab at the end, the whole row when it is empty.
+#[test]
+fn the_tab_drop_place_is_the_insert_slot_inside_the_tab_row() {
+    let bar = Rect::new(10.0, 4.0, 200.0, 24.0);
+    let bars = |widths: Vec<f32>| vec![(vec![0], WindowStackCorner::TopLeft, bar, widths)];
+    let slot = |index: usize, widths: Vec<f32>| drop_zone_indicator_rect(&DockDropZone::Tab { stack_path: vec![0], corner: WindowStackCorner::TopLeft, index }, &bars(widths), &[], bar).expect("the stack has a tab row");
+    assert_eq!(slot(0, vec![80.0, 60.0]), Rect::new(10.0, 4.0, 40.0, 24.0));
+    assert_eq!(slot(1, vec![80.0, 60.0]), Rect::new(90.0, 4.0, 30.0, 24.0));
+    assert_eq!(slot(2, vec![80.0, 60.0]), Rect::new(120.0, 4.0, 30.0, 24.0));
+    assert_eq!(slot(0, Vec::new()), bar);
+    for index in 0..=2 {
+        let found = slot(index, vec![80.0, 60.0]);
+        assert!(found.x >= bar.x && found.x + found.w <= bar.x + bar.w && found.y == bar.y && found.h == bar.h, "the slot lies inside the row");
+    }
+}
+
+/// 🪂️ A split drop is the half of the stack body it takes, and every tab row and body is an available place while a drag travels.
+#[test]
+fn the_split_drop_place_is_a_half_body_and_every_stack_is_an_available_place() {
+    let body = Rect::new(0.0, 24.0, 200.0, 100.0);
+    let tab_bars = vec![(vec![0], WindowStackCorner::TopLeft, Rect::new(0.0, 0.0, 200.0, 24.0), vec![80.0])];
+    let bodies = vec![(vec![0], body, "a".to_string())];
+    let canvas = Rect::new(0.0, 0.0, 200.0, 124.0);
+    assert_eq!(drop_zone_indicator_rect(&DockDropZone::Split { stack_path: vec![0], side: DockSide::Left }, &tab_bars, &bodies, canvas), Some(Rect::new(0.0, 24.0, 100.0, 100.0)));
+    assert_eq!(drop_zone_indicator_rect(&DockDropZone::RootSplit { side: DockSide::Bottom }, &tab_bars, &bodies, canvas), Some(Rect::new(0.0, 62.0, 200.0, 62.0)));
+    assert_eq!(dock_drop_places(&tab_bars, &bodies), vec![Rect::new(0.0, 0.0, 200.0, 24.0), body]);
+}

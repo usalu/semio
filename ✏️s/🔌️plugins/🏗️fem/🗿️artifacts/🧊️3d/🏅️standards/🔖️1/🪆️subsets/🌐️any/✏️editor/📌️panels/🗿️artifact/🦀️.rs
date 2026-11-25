@@ -14,6 +14,8 @@
 use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3d_entity_target;
 use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3d_load_target;
 use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::Fem3dInteractionSnapshot;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3D_ANALYSIS_ID;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3D_GRANULARITY_ANALYSIS;
 use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3D_GRANULARITY_COMBINATION;
 use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3D_GRANULARITY_ELEMENT;
 use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3D_GRANULARITY_LOAD;
@@ -208,13 +210,18 @@ pub fn fem3d_analysis_description(document: &Fem3dSnapshot, labels: &Fem3dLabels
 /// one-page `UiValue` argument arena and starves every panel rendered beside the tree, and focus and
 /// delete live in the inspector for the same reason.
 fn entity_item(id: &str, granularity: &str, label: &str, description: &LabelText, icon: &str, dimmed: bool) -> UiAssemblyResult<ui::TreeItemBuilder> {
+    entity_item_text(id, granularity, label, description.as_str(), icon, dimmed)
+}
+
+/// 🌳️ [`entity_item`] with a description that is data (the analysis settings summary) rather than a label.
+fn entity_item_text(id: &str, granularity: &str, label: &str, description: &str, icon: &str, dimmed: bool) -> UiAssemblyResult<ui::TreeItemBuilder> {
     let identity = if granularity == FEM3D_GRANULARITY_LOAD {
         let segments = protocol::wire::decode_scoped_identity(id).map_err(|_| capacity_error("fem3d load identity refused"))?;
         if !matches!(segments.as_slice(), [FEM3D_GRANULARITY_LOAD, _, _]) { return Err(capacity_error("fem3d load identity shape refused")); }
         id.to_string()
     } else { fem3d_entity_target(granularity, id).map_err(|_| capacity_error("fem3d entity identity refused"))? };
     let item = ui::tree_item(UiLabel(UiText::clipped(label))).try_id(&identity).map_err(|_| capacity_error("fem3d artifact row id admission failed"))?;
-    Ok(item.icon(icon_text(icon)?).description(UiText::clipped(description.as_str())).dimmed(dimmed).granularity(granularity_text(granularity)?))
+    Ok(item.icon(icon_text(icon)?).description(UiText::clipped(description)).dimmed(dimmed).granularity(granularity_text(granularity)?))
 }
 
 fn entity_row(id: &str, granularity: &str, label: &str, description: &LabelText, icon: &str, dimmed: bool) -> UiAssemblyResult<BuiltNode> {
@@ -304,7 +311,7 @@ pub fn build_artifact_tree(document: &Fem3dSnapshot, interaction: &Fem3dInteract
             Some(section_label(&labels.supports, document.supports.len())?),
             true,
             &document.supports,
-            |support| entity_row(&support.id, FEM3D_GRANULARITY_SUPPORT, &fem3d_support_label(support, labels), &labels.support, "anchor", !has_node(document, &support.node_id)),
+            |support| entity_row(&support.id, FEM3D_GRANULARITY_SUPPORT, &fem3d_support_label(support, labels), &labels.support, "triangle", !has_node(document, &support.node_id)),
             placeholder.clone(),
         )?
         .window_section_or_placeholder(
@@ -351,11 +358,11 @@ pub fn build_artifact_tree(document: &Fem3dSnapshot, interaction: &Fem3dInteract
             Some(section_label(&labels.sections, document.sections.len())?),
             false,
             &document.sections,
-            |section| entity_row(&section.id, FEM3D_GRANULARITY_SECTION, &fem3d_section_label(section), &labels.section, "ruler", false),
+            |section| entity_row(&section.id, FEM3D_GRANULARITY_SECTION, &fem3d_section_label(section), &labels.section, "beam", false),
             placeholder,
         )?
         .window_section(windows, &format!("{TREE_NAMESPACE}.analysis"), Some(ui_label(labels.analysis.as_str())?), false, &analysis, |description| {
-            tree_item_desc(format!("{TREE_NAMESPACE}.analysis.settings"), ui_label(labels.analysis.as_str())?, Some(description.clone()))
+            entity_item_text(FEM3D_ANALYSIS_ID, FEM3D_GRANULARITY_ANALYSIS, labels.analysis.as_str(), description, "settings-2", false)?.default_open(false).try_build().map_err(|_| capacity_error("fem3d analysis row admission failed"))
         })?
         .interaction_domain(FEM3D_PLAY_CONTROLLER_ID, FEM3D_INTERACTION_DOMAIN)?
         .selected(marked_ids(&interaction.selected_ids))?

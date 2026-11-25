@@ -14,11 +14,15 @@
       }
     },
     "Summary": {
-      "description": "Authored numbers and texts of the summary that an Nx run leaves when it ends in failure. `reasonPattern`: the first line of a failed task's output that matches it is its reason, otherwise its last line. `maximumTasks`: tasks named in full. The verdict says whether another rerun of the whole run is likely to help: `inputs` (the task read files a peer was editing), `implementation` (the build implementation is outdated, so the command starts again with the current one), `no` (the task itself failed).",
+      "description": "Authored numbers and texts of the summary that an Nx run leaves when it ends in failure. `reasonPattern`: the first line of a failed task's output that matches it is its reason, otherwise its last line. `maximumTasks`: tasks named in full. `maximumTailLines` and `maximumTailLineCharacters`: the bound of the output tail kept per failed task (colour codes of `ansiPattern` removed, rows of `tailNoisePattern` left out, so the failed task's own error stays readable in a stage failure log that floods with progress rows). The verdict says whether another rerun of the whole run is likely to help: `inputs` (the task read files a peer was editing), `implementation` (the build implementation is outdated, so the command starts again with the current one), `no` (the task itself failed).",
       "const": {
         "version": 1,
         "maximumTasks": 16,
         "maximumReasonCharacters": 160,
+        "maximumTailLines": 60,
+        "maximumTailLineCharacters": 400,
+        "ansiPattern": "\\u001b\\[[0-9;]*[A-Za-z]",
+        "tailNoisePattern": "^\\[(?:script|phase)\\] ",
         "reasonPattern": "(Error|error|failed|refused|stale|unserved|cannot|not found|differs)",
         "texts": {
           "en": {
@@ -28,7 +32,11 @@
             "notRun": "Not run because a task they depend on failed ({count}): {tasks}",
             "inputs": "another rerun is likely to help: a peer edited files the task reads",
             "implementation": "another rerun is likely to help: the command starts again with the current build implementation",
-            "no": "another rerun is unlikely to help: the task itself failed"
+            "no": "another rerun is unlikely to help: the task itself failed",
+            "unattributed": "no output carries this task's header; the output printed before the summary follows",
+            "silent": "the task printed no output at all; its exit status and signal are in the stage log",
+            "lateSignal": "[nx] {signal} reached this run after Nx had already ended with exit status {code} (failed: {tasks}); the failure is the cause and keeps its status, the signal is only reported and its sender is unknown (this run sends only SIGTERM and SIGKILL)",
+            "signal": "[nx] {signal} reached this run while Nx was still running; exit status {status}; the sender is unknown (this run sends only SIGTERM and SIGKILL)"
           },
           "de": {
             "header": "Nx-Lauf fehlgeschlagen: {failed} Aufgabe(n) gelang(en) nach {reruns} Wiederholung(en) des ganzen Laufs nicht.",
@@ -37,7 +45,11 @@
             "notRun": "Nicht ausgeführt, weil eine Aufgabe, von der sie abhängen, fehlschlug ({count}): {tasks}",
             "inputs": "eine weitere Wiederholung hilft wahrscheinlich: ein anderer Prozess bearbeitete Dateien, die die Aufgabe liest",
             "implementation": "eine weitere Wiederholung hilft wahrscheinlich: der Befehl startet mit der aktuellen Build-Implementierung neu",
-            "no": "eine weitere Wiederholung hilft wahrscheinlich nicht: die Aufgabe selbst ist fehlgeschlagen"
+            "no": "eine weitere Wiederholung hilft wahrscheinlich nicht: die Aufgabe selbst ist fehlgeschlagen",
+            "unattributed": "keine Ausgabe trägt die Kopfzeile dieser Aufgabe; es folgt die Ausgabe vor der Zusammenfassung",
+            "silent": "die Aufgabe gab gar nichts aus; Exit-Status und Signal stehen im Stufenprotokoll",
+            "lateSignal": "[nx] {signal} erreichte diesen Lauf, nachdem Nx schon mit Exit-Status {code} geendet hatte (fehlgeschlagen: {tasks}); der Fehlschlag ist die Ursache und behält seinen Status, das Signal wird nur gemeldet und sein Absender ist unbekannt (dieser Lauf sendet nur SIGTERM und SIGKILL)",
+            "signal": "[nx] {signal} erreichte diesen Lauf, während Nx noch lief; Exit-Status {status}; der Absender ist unbekannt (dieser Lauf sendet nur SIGTERM und SIGKILL)"
           }
         }
       }

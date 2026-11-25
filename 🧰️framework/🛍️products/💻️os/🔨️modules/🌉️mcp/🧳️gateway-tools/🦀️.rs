@@ -12,6 +12,9 @@ pub mod artifact_quick;
 #[path = "../🧠️context/🦀️.rs"]
 pub mod context;
 
+#[path = "../🧭️discovery-tools/🦀️.rs"]
+pub mod discovery_tools;
+
 #[cfg(test)]
 #[path = "../🧠️context/🧪️tests/🔬️quick/🦀️.rs"]
 pub mod context_quick;

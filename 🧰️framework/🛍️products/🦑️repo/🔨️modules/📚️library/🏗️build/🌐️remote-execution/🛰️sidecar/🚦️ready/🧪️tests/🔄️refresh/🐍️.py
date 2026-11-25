@@ -8,7 +8,7 @@ def digests(platform,stages,hashes):
     return out
 def refresh(stages,done,done_ms,now,maximum,marker,repo,ready_ms,failure):
     if not marker or not repo or ready_ms is None:return None
-    if failure is not None and failure.get('code') not in ('stage-timeout','stage-stall-exhausted','store-full','interrupted','spawn-failed','loop-failed'):return None
+    if failure is not None and failure.get('code') not in ('stage-timeout','stage-stall-exhausted','store-full','source-transient','interrupted','spawn-failed','loop-failed'):return None
     stale=[n for n,d in stages if done.get(n)!=d]
     if not stale:return None
     for n in stale:

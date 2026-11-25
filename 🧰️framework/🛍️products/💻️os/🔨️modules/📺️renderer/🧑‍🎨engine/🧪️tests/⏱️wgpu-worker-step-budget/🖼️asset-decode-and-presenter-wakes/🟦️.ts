@@ -6,6 +6,7 @@ import { FrameTurnScheduler } from "@semio-tech/framework-renderer-wgpu/frame-tu
 import { readFrameWorkerDirectory } from "../../📨️browser-frame-transport/📖️frame-worker-source/🟦️.ts";
 import { BROWSER_WORKER_RS, FRAME_TURN_FIXTURE, FRAME_TURN_SCHEDULER_TS, FRAME_WORKER_TS, TwoKindFrameTurnScheduler } from "../🧰️step-budget-fixtures/🟦️.ts";
 import type { WorkerTurnOwner } from "../🧰️step-budget-fixtures/🟦️.ts";
+import { launchChromium } from "../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🌐️chromium-launch/🟦️";
 
 /** 🔔 Registers the off frame path asset decode, sealed asset retry, parked presenter checkout and reentrant wake tests. */
 export function registerAssetDecodeAndPresenterWakeTests(): void {
@@ -116,8 +117,7 @@ export function registerAssetDecodeAndPresenterWakeTests(): void {
   });
   it("matches Chromium task delivery for parked presenter completion and reentrant wake", async () => {
     const fixture = JSON.parse(readFileSync(FRAME_TURN_FIXTURE, "utf8")).presenterWait;
-    const { chromium } = await import("playwright");
-    const browser = await chromium.launch({ headless: true });
+    const browser = await launchChromium();
     try {
       const page = await browser.newPage();
       const observed = await page.evaluate(async (timings: string[]) => {

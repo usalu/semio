@@ -63,83 +63,97 @@ fn validate_flags(flags: u16, name: &str) -> Result<(), ZipError> {
     Ok(())
 }
 
-/// 🛡️ Refuses serialization states that cannot save and reopen as the same logical snapshot.
-pub fn validate_zip_snapshot_serialization(snapshot: &ZipSnapshot) -> Result<(), ZipError> {
-    let archive_comment = encode_zip_text(&snapshot.comment, snapshot.comment_utf8, "archive comment")?;
+/// 🛡️ Refuses an archive comment that cannot save and reopen as the same comment.
+pub fn validate_zip_comment(comment: &str, comment_utf8: bool) -> Result<(), ZipError> {
+    let archive_comment = encode_zip_text(comment, comment_utf8, "archive comment")?;
     if archive_comment.len() > u16::MAX as usize {
         return Err(ZipError::Malformed("archive comment too long".into()));
     }
-    if !snapshot.comment_utf8 && std::str::from_utf8(&archive_comment).is_ok() {
+    if !comment_utf8 && std::str::from_utf8(&archive_comment).is_ok() {
         return Err(ZipError::Malformed("CP437 archive comment bytes are valid UTF-8 and would reopen ambiguously".into()));
     }
+    Ok(())
+}
+
+/// 🛡️ Refuses one member header state that cannot save and reopen as the same member.
+pub fn validate_zip_entry_headers(name: &str, metadata: &ZipEntryMetadata) -> Result<(), ZipError> {
+    if name.is_empty() {
+        return Err(ZipError::Malformed("ZIP member names must be nonempty and unique".into()));
+    }
+    check_entry_name(&name)?;
+    NativeCompressionMethod::from_code(metadata.compression_method).ok_or_else(|| ZipError::UnsupportedMethod { name: name.to_string(), method: metadata.compression_method })?;
+    validate_flags(metadata.local.flags, &name)?;
+    validate_flags(metadata.central.flags, &name)?;
+    if metadata.local.flags & 0x0008 != metadata.central.flags & 0x0008 {
+        return Err(ZipError::Malformed(format!("{}: local and central data-descriptor flags disagree", name)));
+    }
+    if metadata.data_descriptor_signature && metadata.local.flags & 0x0008 == 0 {
+        return Err(ZipError::Malformed(format!("{}: descriptor signature requested without data-descriptor flags", name)));
+    }
+    if contains_extra(&metadata.local.extra_fields, EXTRA_ZIP64) && metadata.local.version_needed < 45 {
+        return Err(ZipError::Malformed(format!("{}: local ZIP64 marker requires version-needed 45 or newer", name)));
+    }
+    if contains_extra(&metadata.central.extra_fields, EXTRA_ZIP64) && metadata.central.version_needed < 45 {
+        return Err(ZipError::Malformed(format!("{}: central ZIP64 marker requires version-needed 45 or newer", name)));
+    }
+    let local_name = encoded_header_text(
+        &name,
+        metadata.local.flags,
+        &metadata.local.extra_fields,
+        EXTRA_UNICODE_PATH,
+        &metadata.local.unicode_path_legacy_name,
+        "local filename",
+    )?;
+    let central_name = encoded_header_text(
+        &name,
+        metadata.central.flags,
+        &metadata.central.extra_fields,
+        EXTRA_UNICODE_PATH,
+        &metadata.central.unicode_path_legacy_name,
+        "central filename",
+    )?;
+    let central_comment = encoded_header_text(
+        &metadata.central.comment,
+        metadata.central.flags,
+        &metadata.central.extra_fields,
+        EXTRA_UNICODE_COMMENT,
+        &metadata.central.unicode_comment_legacy,
+        "central comment",
+    )?;
+    if local_name.len() > u16::MAX as usize || central_name.len() > u16::MAX as usize || central_comment.len() > u16::MAX as usize {
+        return Err(ZipError::Malformed(format!("{}: encoded name or comment exceeds 65535 bytes", name)));
+    }
+    let mut local_derived = Vec::new();
+    if contains_extra(&metadata.local.extra_fields, EXTRA_ZIP64) {
+        local_derived.push((EXTRA_ZIP64, vec![0; 16]));
+    }
+    if let Some(legacy) = &metadata.local.unicode_path_legacy_name {
+        local_derived.push((EXTRA_UNICODE_PATH, unicode_extra_payload(legacy, &name)));
+    }
+    encode_extra_fields(&metadata.local.extra_fields, &local_derived)?;
+    let mut central_derived = Vec::new();
+    if contains_extra(&metadata.central.extra_fields, EXTRA_ZIP64) {
+        central_derived.push((EXTRA_ZIP64, vec![0; 24]));
+    }
+    if let Some(legacy) = &metadata.central.unicode_path_legacy_name {
+        central_derived.push((EXTRA_UNICODE_PATH, unicode_extra_payload(legacy, &name)));
+    }
+    if let Some(legacy) = &metadata.central.unicode_comment_legacy {
+        central_derived.push((EXTRA_UNICODE_COMMENT, unicode_extra_payload(legacy, &metadata.central.comment)));
+    }
+    encode_extra_fields(&metadata.central.extra_fields, &central_derived)?;
+    Ok(())
+}
+
+/// 🛡️ Refuses serialization states that cannot save and reopen as the same logical snapshot.
+pub fn validate_zip_snapshot_serialization(snapshot: &ZipSnapshot) -> Result<(), ZipError> {
+    validate_zip_comment(&snapshot.comment, snapshot.comment_utf8)?;
     let mut names = std::collections::HashSet::new();
     for entry in &snapshot.entries {
-        if entry.name.is_empty() || !names.insert(entry.name.as_str()) {
+        if !names.insert(entry.name.as_str()) {
             return Err(ZipError::Malformed("ZIP member names must be nonempty and unique".into()));
         }
-        check_entry_name(&entry.name)?;
-        let metadata = &entry.metadata;
-        NativeCompressionMethod::from_code(metadata.compression_method).ok_or_else(|| ZipError::UnsupportedMethod { name: entry.name.clone(), method: metadata.compression_method })?;
-        validate_flags(metadata.local.flags, &entry.name)?;
-        validate_flags(metadata.central.flags, &entry.name)?;
-        if metadata.local.flags & 0x0008 != metadata.central.flags & 0x0008 {
-            return Err(ZipError::Malformed(format!("{}: local and central data-descriptor flags disagree", entry.name)));
-        }
-        if metadata.data_descriptor_signature && metadata.local.flags & 0x0008 == 0 {
-            return Err(ZipError::Malformed(format!("{}: descriptor signature requested without data-descriptor flags", entry.name)));
-        }
-        if contains_extra(&metadata.local.extra_fields, EXTRA_ZIP64) && metadata.local.version_needed < 45 {
-            return Err(ZipError::Malformed(format!("{}: local ZIP64 marker requires version-needed 45 or newer", entry.name)));
-        }
-        if contains_extra(&metadata.central.extra_fields, EXTRA_ZIP64) && metadata.central.version_needed < 45 {
-            return Err(ZipError::Malformed(format!("{}: central ZIP64 marker requires version-needed 45 or newer", entry.name)));
-        }
-        let local_name = encoded_header_text(
-            &entry.name,
-            metadata.local.flags,
-            &metadata.local.extra_fields,
-            EXTRA_UNICODE_PATH,
-            &metadata.local.unicode_path_legacy_name,
-            "local filename",
-        )?;
-        let central_name = encoded_header_text(
-            &entry.name,
-            metadata.central.flags,
-            &metadata.central.extra_fields,
-            EXTRA_UNICODE_PATH,
-            &metadata.central.unicode_path_legacy_name,
-            "central filename",
-        )?;
-        let central_comment = encoded_header_text(
-            &metadata.central.comment,
-            metadata.central.flags,
-            &metadata.central.extra_fields,
-            EXTRA_UNICODE_COMMENT,
-            &metadata.central.unicode_comment_legacy,
-            "central comment",
-        )?;
-        if local_name.len() > u16::MAX as usize || central_name.len() > u16::MAX as usize || central_comment.len() > u16::MAX as usize {
-            return Err(ZipError::Malformed(format!("{}: encoded name or comment exceeds 65535 bytes", entry.name)));
-        }
-        let mut local_derived = Vec::new();
-        if contains_extra(&metadata.local.extra_fields, EXTRA_ZIP64) {
-            local_derived.push((EXTRA_ZIP64, vec![0; 16]));
-        }
-        if let Some(legacy) = &metadata.local.unicode_path_legacy_name {
-            local_derived.push((EXTRA_UNICODE_PATH, unicode_extra_payload(legacy, &entry.name)));
-        }
-        encode_extra_fields(&metadata.local.extra_fields, &local_derived)?;
-        let mut central_derived = Vec::new();
-        if contains_extra(&metadata.central.extra_fields, EXTRA_ZIP64) {
-            central_derived.push((EXTRA_ZIP64, vec![0; 24]));
-        }
-        if let Some(legacy) = &metadata.central.unicode_path_legacy_name {
-            central_derived.push((EXTRA_UNICODE_PATH, unicode_extra_payload(legacy, &entry.name)));
-        }
-        if let Some(legacy) = &metadata.central.unicode_comment_legacy {
-            central_derived.push((EXTRA_UNICODE_COMMENT, unicode_extra_payload(legacy, &metadata.central.comment)));
-        }
-        encode_extra_fields(&metadata.central.extra_fields, &central_derived)?;
+        validate_zip_entry_headers(&entry.name, &entry.metadata)?;
     }
     Ok(())
 }

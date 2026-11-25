@@ -13,7 +13,7 @@ fn multiple_value(input: &serde_json::Value) -> IfcValue {
 }
 #[test]
 fn multiple_required_references_use_the_original_controller_and_keep_supplied_fields_editable() {
-    let _arena=semio_plugin::artifact_app_laws::FixtureUiArena::admit();semio_ui_contract::built_node_pages_are_terminal_empty();
+    let _arena=semio_plugin::artifact_app_laws::FixtureUiArena::admit();crate::editor::tree_probe::warm_ui();
     use semio_plugin::{AppRenderOperationContext, ChildContentView};
     use semio_ui_contract::{Component, ContainerRole, OriginalBuiltTreeRetirement};
     use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::{IfcComplexType, IfcEntity};
@@ -62,7 +62,7 @@ fn multiple_required_references_use_the_original_controller_and_keep_supplied_fi
                     break;
                 }
                 Ok(None) => {}
-                Err(_) => panic!("multiple neutral guidance refuses"),
+                Err(error)=>panic!("{error:?}: multiple neutral guidance refuses"),
             }
         }
         let tree = output.take().expect("original multiple reference body");

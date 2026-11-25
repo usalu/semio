@@ -55,7 +55,7 @@ staffage_motion = _manim_module.staffage_motion
 staffage_height = _manim_module.staffage_height
 fitted_staffage = _manim_module.fitted_staffage
 BOILER_RATE = 60.0
-BOILER_CLEARANCE_M = 0.7
+BOILER_CLEARANCE_M = 0.6
 sun_glyph = _manim_module.sun_glyph
 math_label = _manim_module.math_label
 math_row = _manim_module.math_row
@@ -230,7 +230,7 @@ def _boiler(floor, unit):
 
 def _heat_pump(base, unit):
     """♻️ Outdoor heat-pump unit at the supplied physical metre."""
-    return staffage_motion("shared-heat-pump-heating-sweep", unit=unit, anchor=_pt(base), rate=0.0)
+    return staffage_motion("shared-heat-pump-heating-modulation", unit=unit, anchor=_pt(base), rate=0.0)
 
 
 METER_CASTS = {"strom": "shared-electricity-meter-run", "gas": "shared-gas-meter-run"}
@@ -369,6 +369,15 @@ def _say(scene, narration, key, caption, *beats, during=None, first=False):
 
 #region Beat 1 – Drei Bilanzgrenzen
 
+def _upstream_inset(ground):
+    """🔭 The frame of the upstream chain with its caption below: a square outline on the shared frame owner, filled with the scene behind it.
+    @see 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🐍️.py window_frame
+    """
+    inset = _manim_module.window_frame(3.35, 1.15, color=P_PRIMARY, stroke_width=1.2, fill_opacity=0.0).move_to(np.array([-5.1, ground + 0.45, 0.0]))
+    label = body_text(tr("Upstream: separate scale", "Vorkette: eigener Maßstab"), font_size=LABEL_FONT_SIZE - 4, color=P_PRIMARY).move_to(np.array([-5.1, ground - 0.28, 0.0]))
+    return inset, label
+
+
 class Beat1_DreiBilanzgrenzen(Scene):
     NARRATION = [
         ("intro",
@@ -438,9 +447,7 @@ class Beat1_DreiBilanzgrenzen(Scene):
         ground = _ground(-2.2, 3.7, G)
         metre = room_metre(hs["w_height"] / 2)
         upstream_metre = 0.14
-        inset = RoundedRectangle(corner_radius=0.06, width=3.35, height=1.15, color=P_PRIMARY, stroke_width=1.2)
-        inset.move_to(np.array([-5.1, G + 0.45, 0.0]))
-        inset_label = body_text(tr("Upstream: separate scale", "Vorkette: eigener Maßstab"), font_size=LABEL_FONT_SIZE - 4, color=P_PRIMARY).move_to(np.array([-5.1, G - 0.28, 0.0]))
+        inset, inset_label = _upstream_inset(G)
         annex = _outline(
             Line(np.array([wall_r, G + 0.95, 0.0]), np.array([wall_r + 1.05, G + 0.95, 0.0])),
             Line(np.array([wall_r + 1.05, G + 0.95, 0.0]), np.array([wall_r + 1.05, G, 0.0])),

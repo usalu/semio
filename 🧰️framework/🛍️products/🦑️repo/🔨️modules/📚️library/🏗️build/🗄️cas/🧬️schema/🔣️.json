@@ -118,6 +118,7 @@
         "version",
         "holder",
         "pid",
+        "startMs",
         "expiresAtMs",
         "digests"
       ],
@@ -131,7 +132,12 @@
         },
         "pid": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 1
+        },
+        "startMs": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Creation time of the holder process in ms since the epoch (see process identity); a pin without it is a hard error"
         },
         "expiresAtMs": {
           "type": "integer",
@@ -311,8 +317,8 @@
           {
             "id": "bun-cache",
             "path": ".cache/b/d/m/bun-cache",
-            "mode": "hardlink",
-            "reason": "The bun content cache never changes a stored file in place."
+            "mode": "reflink",
+            "reason": "Bun copies cached packages with their mode and patches the copies in place, so a shared read-only hard link makes every patch fail with EACCES; only copy-on-write clones keep every file private and writable."
           },
           {
             "id": "tool-downloads",

@@ -55,6 +55,12 @@ fn a_thousand_receiving_turns_on_one_owner_never_exhaust_the_escrow_table(){
  assert_eq!(completed,1000);close(caller,decoder);
 }
 
+#[path="owner-succession.rs"]
+mod owner_succession;
+
+#[path="component-owner-succession.rs"]
+mod component_owner_succession;
+
 #[path="retained-charge.rs"]
 mod retained_charge;
 
@@ -66,3 +72,4 @@ mod receiving_refund;
 
 #[path="close-birth-ledger.rs"]
 mod close_birth_ledger;
+

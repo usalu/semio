@@ -11,7 +11,7 @@ use std::sync::Arc;
 fn fixture()->serde_json::Value{serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()}
 fn stock()->RetainedCloneGrant{let f=fixture();let p=&f["stock"];RetainedCloneGrant{maximum_items:p["maximumItems"].as_u64().unwrap() as usize,maximum_copy_bytes:p["maximumCopyBytes"].as_u64().unwrap() as usize,maximum_capacity_bytes:p["maximumCapacityBytes"].as_u64().unwrap() as usize,maximum_release_bytes:p["maximumReleaseBytes"].as_u64().unwrap() as usize,maximum_depth:p["maximumDepth"].as_u64().unwrap() as usize}}
 fn caller()->OriginalWorkFixture{OriginalWorkFixture::with_source(semio_framework_job::OperationId(994),semio_framework_job::Generation(17),stock(),||Some(1),u64::MAX,1<<24)}
-fn loan()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32768,maximum_capacity_bytes:1<<20,maximum_release_bytes:1<<20,maximum_depth:4096}}
+fn loan()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:64,maximum_copy_bytes:32768,maximum_capacity_bytes:1<<20,maximum_release_bytes:1<<20,maximum_depth:4096}}
 fn image(width:u32,height:u32,pixels:Vec<u8>)->SemioImageSnapshot{crate::semio_image_from_rgba8(width,height,pixels)}
 fn owned(caller:&mut OriginalWorkFixture,image:SemioImageSnapshot)->RasterImagePayload{
     let mut output = None;
@@ -23,7 +23,7 @@ fn owned(caller:&mut OriginalWorkFixture,image:SemioImageSnapshot)->RasterImageP
         assert_eq!(progress.retained_capacity_bytes, demand.capacity_bytes);
         assert_eq!(progress.copied_bytes, demand.copy_bytes);
         output = Some(payload);
-        semio_framework_job::receive_original_retained_work(cx, RetainedWorkOutcome {
+        semio_framework_job::receive_original_retained_work::<semio_framework_value::ValueError>(cx, RetainedWorkOutcome {
             result: Ok(RetainedCloneStep::Progress(progress)), work: turn.work,
         })?;
         Ok(())
@@ -31,7 +31,7 @@ fn owned(caller:&mut OriginalWorkFixture,image:SemioImageSnapshot)->RasterImageP
     output.unwrap()
 }
 fn alias(caller:&mut OriginalWorkFixture,payload:&RasterImagePayload)->Arc<SemioImageSnapshot>{
-    let mut output=None;caller.turn(loan(),|cx|{let turn=payload.owner(cx.retained_grant());let work=turn.work;let (owner,progress)=turn.result.unwrap();assert_eq!((progress.retained_capacity_bytes,progress.copied_bytes),(0,0));output=Some(owner);semio_framework_job::receive_original_retained_work(cx,RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(progress)),work})?;Ok(())}).unwrap();output.unwrap()
+    let mut output=None;caller.turn(loan(),|cx|{let turn=payload.owner(cx.retained_grant());let work=turn.work;let (owner,progress)=turn.result.unwrap();assert_eq!((progress.retained_capacity_bytes,progress.copied_bytes),(0,0));output=Some(owner);semio_framework_job::receive_original_retained_work::<semio_framework_value::ValueError>(cx,RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(progress)),work})?;Ok(())}).unwrap();output.unwrap()
 }
 fn effect_step<E: Into<OriginalTurnPrimary>>(
     cx: &mut StepContext<'_>,
@@ -67,20 +67,7 @@ fn close_alias(caller:&mut OriginalWorkFixture,owner:Arc<SemioImageSnapshot>)->(
 }
 
 fn source<T:RetireOwned+Sync>(caller:&mut OriginalWorkFixture,value:T)->RetainedCloneSource<T> {
-    let mut admission=RetainedCloneSource::<T>::admission_owned(value,());
-    let mut output=None;
-    while output.is_none() {
-        caller.turn(loan(), |cx| {
-            let ready = admission.phase() == "ready";
-            effect_step(cx, |effect| {
-                if ready { admission.take_output(&mut output,effect) }
-                else { admission.advance(effect) }
-            })?;
-            Ok(())
-        }).unwrap();
-    }
-    assert!(admission.terminal_is_empty());
-    output.unwrap()
+    caller.admit_source(value,loan())
 }
 
 fn canonical<T:ArtifactCanonicalJsonTree+RetireOwned>(caller:&mut OriginalWorkFixture,value:T)->Vec<u8> {
@@ -88,11 +75,14 @@ fn canonical<T:ArtifactCanonicalJsonTree+RetireOwned>(caller:&mut OriginalWorkFi
     let mut projection=None;
     caller.turn(loan(), |cx| {
         effect_step(cx, |effect| {
-            let turn = source.project_owned(0, |value|value as &dyn ArtifactCanonicalJsonTree, effect);
-            RetainedWorkOutcome { work: turn.work, result: turn.result.map(|(value,progress)| {
-                projection=Some(value);
-                RetainedCloneStep::Progress(progress)
-            }) }
+            let reference = source.borrow().project(0, |value|value as &dyn ArtifactCanonicalJsonTree);
+            let result = semio_framework_pack_json::retained_alias(reference, effect)
+                .and_then(|alias| alias.ok_or_else(|| semio_framework_value::ValueError::invariant("canonical projection alias is funded")))
+                .map(|(value,progress)| {
+                    projection=Some(value);
+                    RetainedCloneStep::Progress(progress)
+                });
+            RetainedWorkOutcome { work: effect.performed_work(), result }
         })?;
         Ok(())
     }).unwrap();
@@ -101,7 +91,7 @@ fn canonical<T:ArtifactCanonicalJsonTree+RetireOwned>(caller:&mut OriginalWorkFi
         let (value,progress)=ArtifactCanonicalJsonTreeCursor::admit(projection.take().unwrap(),cx.retained_grant())
             .unwrap_or_else(|(error,_)|panic!("payload canonical fixture: {error}"));
         cursor=Some(value);
-        semio_framework_job::receive_original_retained_work(cx,RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(progress)),work:1})?;
+        semio_framework_job::receive_original_retained_work::<semio_framework_value::ValueError>(cx,RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(progress)),work:1})?;
         Ok(())
     }).unwrap();
     let mut cursor=cursor.unwrap();
@@ -133,7 +123,7 @@ fn payload_admission_preserves_original_pixels_and_refused_ownership(){
     let turn=RasterImagePayload::from_owned(input,RetainedCloneGrant::default());assert_eq!(turn.work,0);let (_,input)=turn.result.err().expect("unfunded owned payload must refuse");assert_eq!(input.frames[0].rgba8.as_ptr(),pointer);
     let payload=owned(&mut caller,input);assert_eq!(payload.image().frames[0].rgba8.as_ptr(),pointer);let owner=alias(&mut caller,&payload);let second=alias(&mut caller,&payload);assert!(Arc::ptr_eq(&owner,&second));
     let turn=RasterImagePayload::from_shared(second,RetainedCloneGrant::default());let (_,second)=turn.result.err().expect("unfunded shared payload must refuse");assert!(Arc::ptr_eq(&owner,&second));
-    let mut shared=None;caller.turn(loan(),|cx|{let turn=RasterImagePayload::from_shared(second,cx.retained_grant());let work=turn.work;let (value,progress)=turn.result.unwrap_or_else(|(error,_)|panic!("payload shared fixture: {error}"));assert_eq!(progress.retained_capacity_bytes,0);shared=Some(value);semio_framework_job::receive_original_retained_work(cx,RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(progress)),work})?;Ok(())}).unwrap();let shared=shared.unwrap();assert_eq!(shared.image().frames[0].rgba8.as_ptr(),pointer);caller.retire_owned(shared,loan());caller.retire_owned(payload,loan());assert_eq!(owner.frames[0].rgba8.as_ptr(),pointer);close_alias(&mut caller,owner);caller.finish();
+    let mut shared=None;caller.turn(loan(),|cx|{let turn=RasterImagePayload::from_shared(second,cx.retained_grant());let work=turn.work;let (value,progress)=turn.result.unwrap_or_else(|(error,_)|panic!("payload shared fixture: {error}"));assert_eq!(progress.retained_capacity_bytes,0);shared=Some(value);semio_framework_job::receive_original_retained_work::<semio_framework_value::ValueError>(cx,RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(progress)),work})?;Ok(())}).unwrap();let shared=shared.unwrap();assert_eq!(shared.image().frames[0].rgba8.as_ptr(),pointer);caller.retire_owned(shared,loan());caller.retire_owned(payload,loan());assert_eq!(owner.frames[0].rgba8.as_ptr(),pointer);close_alias(&mut caller,owner);caller.finish();
 }
 
 #[test]

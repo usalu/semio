@@ -99,6 +99,8 @@ export const DOCUMENT_ACTIVATION_LABELS = {
   preparing: { en: "Preparing extensions for this document ({completed} of {total})…", de: "Erweiterungen für dieses Dokument werden vorbereitet ({completed} von {total})…" },
   unavailable: { en: "The document opened with unavailable nodes: {kinds}. Extension {plugins} could not be loaded. Everything else works.", de: "Das Dokument wurde mit nicht verfügbaren Knoten geöffnet: {kinds}. Erweiterung {plugins} konnte nicht geladen werden. Alles andere funktioniert." },
   cancelled: { en: "Opening the document was cancelled while loading extension {plugins}.", de: "Das Öffnen des Dokuments wurde beim Laden der Erweiterung {plugins} abgebrochen." },
+  openingExample: { en: "Opening example {example}… Large examples can take a few minutes.", de: "Beispiel {example} wird geöffnet… Große Beispiele können einige Minuten dauern." },
+  exampleRefused: { en: "Example {example} could not be opened: {reason}", de: "Beispiel {example} konnte nicht geöffnet werden: {reason}" },
 } as const;
 
 /** 🗣️ The text of `key` in `locale` (`en`, `de` or a region tag of them) with its placeholders filled. */

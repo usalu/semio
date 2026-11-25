@@ -1,0 +1,945 @@
+[
+ {
+  "op": "extrude",
+  "scale": "50",
+  "id": "neck",
+  "bone": "neck",
+  "view": "front"
+ },
+ {
+  "op": "sync",
+  "scale": "50",
+  "id": "neck",
+  "bone": "neck"
+ },
+ {
+  "op": "copy-scale",
+  "scale": "50",
+  "id": "hand-r",
+  "bone": "hand-r",
+  "from": "200"
+ },
+ {
+  "op": "sync",
+  "scale": "100",
+  "id": "hand-l",
+  "bone": "hand-l",
+  "slack": 0.004
+ },
+ {
+  "op": "extrude",
+  "scale": "100",
+  "id": "neck",
+  "bone": "neck",
+  "view": "front"
+ },
+ {
+  "op": "sync",
+  "scale": "100",
+  "id": "neck",
+  "bone": "neck"
+ },
+ {
+  "op": "copy",
+  "scale": "100",
+  "id": "upper-arm-l",
+  "bone": "upper-arm-l",
+  "from": "elevation",
+  "to": [
+   "front",
+   "plan"
+  ]
+ },
+ {
+  "op": "extrude",
+  "scale": "200",
+  "id": "neck",
+  "bone": "neck",
+  "view": "front"
+ },
+ {
+  "op": "sync",
+  "scale": "200",
+  "id": "neck",
+  "bone": "neck"
+ },
+ {
+  "op": "add",
+  "scale": "200",
+  "view": "plan",
+  "id": "head",
+  "why": "head and helmet of the coarse bands as the elevation outlines swept laterally: the face exists under the helmet in the plan (1:200, 1:500) and in the front (1:500), so mouth and nose stay on the head when it nods and the figure is as tall in the front as in the side view",
+  "shape": {
+   "id": "head",
+   "bone": "head",
+   "role": "body",
+   "z": 5,
+   "filled": true,
+   "tone": 0.86,
+   "region": "head-skin",
+   "material": "skin",
+   "kind": "poly",
+   "closed": true,
+   "points": [
+    [
+     -0.06154,
+     -0.10741
+    ],
+    [
+     0.04859,
+     -0.10598
+    ],
+    [
+     0.09007,
+     -0.09025
+    ],
+    [
+     0.10341,
+     -0.07499
+    ],
+    [
+     0.11915,
+     -0.04496
+    ],
+    [
+     0.10961,
+     0.04848
+    ],
+    [
+     0.07862,
+     0.08233
+    ],
+    [
+     0.05431,
+     0.08853
+    ],
+    [
+     0.02809,
+     0.08424
+    ],
+    [
+     -0.03103,
+     0.04801
+    ],
+    [
+     -0.07298,
+     0.00796
+    ],
+    [
+     -0.09443,
+     -0.05068
+    ],
+    [
+     -0.08823,
+     -0.09787
+    ]
+   ],
+   "solid": {
+    "kind": "extruded",
+    "sweep": "w",
+    "z0": -0.073,
+    "z1": 0.073
+   }
+  }
+ },
+ {
+  "op": "set",
+  "scale": "500",
+  "view": "front",
+  "id": "helmet",
+  "bone": "head",
+  "why": "head and helmet of the coarse bands as the elevation outlines swept laterally: the face exists under the helmet in the plan (1:200, 1:500) and in the front (1:500), so mouth and nose stay on the head when it nods and the figure is as tall in the front as in the side view",
+  "set": {
+   "kind": "poly",
+   "points": [
+    [
+     0.04773,
+     -0.18035
+    ],
+    [
+     0.07061,
+     -0.13029
+    ],
+    [
+     0.14356,
+     -0.10312
+    ],
+    [
+     0.16425,
+     -0.0667
+    ],
+    [
+     0.15566,
+     0.06774
+    ],
+    [
+     0.14069,
+     0.1014
+    ],
+    [
+     0.1099,
+     0.12209
+    ],
+    [
+     0.04983,
+     0.12495
+    ],
+    [
+     0.01836,
+     0.09921
+    ]
+   ],
+   "closed": true,
+   "x": null,
+   "y": null,
+   "w": null,
+   "h": null,
+   "x0": null,
+   "y0": null,
+   "x1": null,
+   "y1": null,
+   "r0": null,
+   "r1": null,
+   "r": null,
+   "cx": null,
+   "cy": null,
+   "rx": null,
+   "ry": null,
+   "d": null,
+   "followTip": null,
+   "solid": {
+    "kind": "extruded",
+    "sweep": "w",
+    "z0": -0.1138,
+    "z1": 0.1137
+   }
+  }
+ },
+ {
+  "op": "add",
+  "scale": "500",
+  "view": "front",
+  "id": "head",
+  "why": "head and helmet of the coarse bands as the elevation outlines swept laterally: the face exists under the helmet in the plan (1:200, 1:500) and in the front (1:500), so mouth and nose stay on the head when it nods and the figure is as tall in the front as in the side view",
+  "shape": {
+   "id": "head",
+   "bone": "head",
+   "role": "body",
+   "z": 5,
+   "filled": true,
+   "tone": 0.86,
+   "region": "head-skin",
+   "material": "skin",
+   "kind": "poly",
+   "closed": true,
+   "points": [
+    [
+     0.03219,
+     -0.11313
+    ],
+    [
+     0.05936,
+     -0.11313
+    ],
+    [
+     0.10294,
+     -0.07385
+    ],
+    [
+     0.08797,
+     0.06565
+    ],
+    [
+     -0.01434,
+     0.0749
+    ],
+    [
+     -0.12227,
+     0.05993
+    ],
+    [
+     -0.11083,
+     -0.06164
+    ]
+   ],
+   "solid": {
+    "kind": "extruded",
+    "sweep": "w",
+    "z0": -0.073,
+    "z1": 0.073
+   }
+  }
+ },
+ {
+  "op": "set",
+  "scale": "500",
+  "view": "plan",
+  "id": "helmet",
+  "bone": "head",
+  "why": "head and helmet of the coarse bands as the elevation outlines swept laterally: the face exists under the helmet in the plan (1:200, 1:500) and in the front (1:500), so mouth and nose stay on the head when it nods and the figure is as tall in the front as in the side view",
+  "set": {
+   "kind": "poly",
+   "points": [
+    [
+     0.04773,
+     -0.18035
+    ],
+    [
+     0.07061,
+     -0.13029
+    ],
+    [
+     0.14356,
+     -0.10312
+    ],
+    [
+     0.16425,
+     -0.0667
+    ],
+    [
+     0.15566,
+     0.06774
+    ],
+    [
+     0.14069,
+     0.1014
+    ],
+    [
+     0.1099,
+     0.12209
+    ],
+    [
+     0.04983,
+     0.12495
+    ],
+    [
+     0.01836,
+     0.09921
+    ]
+   ],
+   "closed": true,
+   "x": null,
+   "y": null,
+   "w": null,
+   "h": null,
+   "x0": null,
+   "y0": null,
+   "x1": null,
+   "y1": null,
+   "r0": null,
+   "r1": null,
+   "r": null,
+   "cx": null,
+   "cy": null,
+   "rx": null,
+   "ry": null,
+   "d": null,
+   "followTip": null,
+   "solid": {
+    "kind": "extruded",
+    "sweep": "w",
+    "z0": -0.1144,
+    "z1": 0.1144
+   }
+  }
+ },
+ {
+  "op": "add",
+  "scale": "500",
+  "view": "plan",
+  "id": "head",
+  "why": "head and helmet of the coarse bands as the elevation outlines swept laterally: the face exists under the helmet in the plan (1:200, 1:500) and in the front (1:500), so mouth and nose stay on the head when it nods and the figure is as tall in the front as in the side view",
+  "shape": {
+   "id": "head",
+   "bone": "head",
+   "role": "body",
+   "z": 5,
+   "filled": true,
+   "tone": 0.86,
+   "region": "head-skin",
+   "material": "skin",
+   "kind": "poly",
+   "closed": true,
+   "points": [
+    [
+     0.03219,
+     -0.11313
+    ],
+    [
+     0.05936,
+     -0.11313
+    ],
+    [
+     0.10294,
+     -0.07385
+    ],
+    [
+     0.08797,
+     0.06565
+    ],
+    [
+     -0.01434,
+     0.0749
+    ],
+    [
+     -0.12227,
+     0.05993
+    ],
+    [
+     -0.11083,
+     -0.06164
+    ]
+   ],
+   "solid": {
+    "kind": "extruded",
+    "sweep": "w",
+    "z0": -0.073,
+    "z1": 0.073
+   }
+  }
+ },
+ {
+  "op": "set",
+  "scale": "50",
+  "view": "elevation",
+  "id": "hand-l",
+  "bone": "hand-l",
+  "why": "third fixer: the left hand of 1:50 is the prism of the 1:500 band in the three views with the lateral span 0.136 to 0.196 m (the span of 1:500, 0.130 to 0.202, fails the guard in the plan with 16.8 mm; this one passes: elevation 15.0, front 13.1, plan 13.5 mm)",
+  "set": {
+   "kind": "poly",
+   "points": [
+    [
+     0.04462,
+     -0.04119
+    ],
+    [
+     0.11184,
+     -0.01831
+    ],
+    [
+     0.11823,
+     0.0124
+    ],
+    [
+     0.1004,
+     0.03747
+    ],
+    [
+     0.04672,
+     0.04958
+    ],
+    [
+     0.00458,
+     0.02889
+    ],
+    [
+     -0.00114,
+     -0.01259
+    ]
+   ],
+   "closed": true,
+   "x": null,
+   "y": null,
+   "w": null,
+   "h": null,
+   "x0": null,
+   "y0": null,
+   "x1": null,
+   "y1": null,
+   "r0": null,
+   "r1": null,
+   "r": null,
+   "cx": null,
+   "cy": null,
+   "rx": null,
+   "ry": null,
+   "d": null,
+   "followTip": null,
+   "solid": {
+    "kind": "extruded",
+    "sweep": "w",
+    "z0": 0.136,
+    "z1": 0.196
+   }
+  }
+ },
+ {
+  "op": "set",
+  "scale": "50",
+  "view": "front",
+  "id": "hand-l",
+  "bone": "hand-l",
+  "why": "third fixer: the left hand of 1:50 is the prism of the 1:500 band in the three views with the lateral span 0.136 to 0.196 m (the span of 1:500, 0.130 to 0.202, fails the guard in the plan with 16.8 mm; this one passes: elevation 15.0, front 13.1, plan 13.5 mm)",
+  "set": {
+   "kind": "poly",
+   "points": [
+    [
+     0.04462,
+     -0.04119
+    ],
+    [
+     0.11184,
+     -0.01831
+    ],
+    [
+     0.11823,
+     0.0124
+    ],
+    [
+     0.1004,
+     0.03747
+    ],
+    [
+     0.04672,
+     0.04958
+    ],
+    [
+     0.00458,
+     0.02889
+    ],
+    [
+     -0.00114,
+     -0.01259
+    ]
+   ],
+   "closed": true,
+   "x": null,
+   "y": null,
+   "w": null,
+   "h": null,
+   "x0": null,
+   "y0": null,
+   "x1": null,
+   "y1": null,
+   "r0": null,
+   "r1": null,
+   "r": null,
+   "cx": null,
+   "cy": null,
+   "rx": null,
+   "ry": null,
+   "d": null,
+   "followTip": null,
+   "solid": {
+    "kind": "extruded",
+    "sweep": "w",
+    "z0": 0.136,
+    "z1": 0.196
+   }
+  }
+ },
+ {
+  "op": "set",
+  "scale": "50",
+  "view": "plan",
+  "id": "hand-l",
+  "bone": "hand-l",
+  "why": "third fixer: the left hand of 1:50 is the prism of the 1:500 band in the three views with the lateral span 0.136 to 0.196 m (the span of 1:500, 0.130 to 0.202, fails the guard in the plan with 16.8 mm; this one passes: elevation 15.0, front 13.1, plan 13.5 mm)",
+  "set": {
+   "kind": "poly",
+   "points": [
+    [
+     0.04462,
+     -0.04119
+    ],
+    [
+     0.11184,
+     -0.01831
+    ],
+    [
+     0.11823,
+     0.0124
+    ],
+    [
+     0.1004,
+     0.03747
+    ],
+    [
+     0.04672,
+     0.04958
+    ],
+    [
+     0.00458,
+     0.02889
+    ],
+    [
+     -0.00114,
+     -0.01259
+    ]
+   ],
+   "closed": true,
+   "x": null,
+   "y": null,
+   "w": null,
+   "h": null,
+   "x0": null,
+   "y0": null,
+   "x1": null,
+   "y1": null,
+   "r0": null,
+   "r1": null,
+   "r": null,
+   "cx": null,
+   "cy": null,
+   "rx": null,
+   "ry": null,
+   "d": null,
+   "followTip": null,
+   "solid": {
+    "kind": "extruded",
+    "sweep": "w",
+    "z0": 0.136,
+    "z1": 0.196
+   }
+  }
+ },
+ {
+  "op": "extrude",
+  "scale": "200",
+  "id": "helmet",
+  "bone": "head",
+  "view": "front",
+  "span": "full",
+  "why": "third fixer: the helmet of 1:200 in the front is the elevation outline swept laterally (trial of the first fixer: guard OK at 1:200 with front 42.7 mm of 60; the same op fails the guard at 1:50 and 1:100 with 42.5 mm): whole-figure sync-height when the head bows"
+ },
+ {
+  "op": "set",
+  "scale": "50",
+  "view": "front",
+  "id": "head",
+  "bone": "head",
+  "why": "fourth fixer: the helmet of the front is a loft (ops .lofts.json); its dome, rim and ridge stand behind the face, the peak before it, and the face ends at the rim, so that the raised head shows the face before the helmet",
+  "set": {
+   "points": [
+    [
+     -0.02222,
+     0.57075
+    ],
+    [
+     0.02136,
+     0.57056
+    ],
+    [
+     0.03547,
+     0.57742
+    ],
+    [
+     0.045,
+     0.58696
+    ],
+    [
+     0.05168,
+     0.59935
+    ],
+    [
+     0.0595,
+     0.623
+    ],
+    [
+     0.06903,
+     0.66495
+    ],
+    [
+     0.07285,
+     0.69642
+    ],
+    [
+     0.07285,
+     0.702
+    ],
+    [
+     -0.07304,
+     0.702
+    ],
+    [
+     -0.07304,
+     0.69737
+    ],
+    [
+     -0.06827,
+     0.66019
+    ],
+    [
+     -0.06064,
+     0.62681
+    ],
+    [
+     -0.05368,
+     0.60508
+    ],
+    [
+     -0.04415,
+     0.58601
+    ],
+    [
+     -0.03556,
+     0.57742
+    ]
+   ]
+  }
+ },
+ {
+  "op": "set",
+  "scale": "50",
+  "view": "front",
+  "id": "helmet",
+  "bone": "head",
+  "why": "fourth fixer: the helmet of the front is a loft (ops .lofts.json); its dome, rim and ridge stand behind the face, the peak before it, and the face ends at the rim, so that the raised head shows the face before the helmet",
+  "set": {
+   "z": 4.96
+  }
+ },
+ {
+  "op": "set",
+  "scale": "50",
+  "view": "front",
+  "id": "helmet-ridge",
+  "bone": "head",
+  "why": "fourth fixer: the helmet of the front is a loft (ops .lofts.json); its dome, rim and ridge stand behind the face, the peak before it, and the face ends at the rim, so that the raised head shows the face before the helmet",
+  "set": {
+   "z": 4.97
+  }
+ },
+ {
+  "op": "add",
+  "scale": "50",
+  "view": "front",
+  "id": "helmet-peak",
+  "why": "fourth fixer: the helmet of the front is a loft (ops .lofts.json); its dome, rim and ridge stand behind the face, the peak before it, and the face ends at the rim, so that the raised head shows the face before the helmet",
+  "shape": {
+   "id": "helmet-peak",
+   "kind": "loft",
+   "bone": "head",
+   "role": "body",
+   "z": 5.5,
+   "filled": true,
+   "tone": 0.92,
+   "region": "helmet",
+   "material": "hdpe-shell",
+   "sections": [
+    {
+     "at": [
+      0.0498,
+      -0.09743,
+      0
+     ],
+     "rx": 0.09535,
+     "ry": 0.00429,
+     "exponent": 2.6,
+     "rotation": [
+      -0.47372,
+      -0.52496,
+      -0.47372,
+      0.52496
+     ]
+    },
+    {
+     "at": [
+      0.05019,
+      -0.13382,
+      0
+     ],
+     "rx": 0.08772,
+     "ry": 0.00429,
+     "exponent": 2.6,
+     "rotation": [
+      -0.47372,
+      -0.52496,
+      -0.47372,
+      0.52496
+     ]
+    },
+    {
+     "at": [
+      0.04933,
+      -0.16266,
+      0
+     ],
+     "rx": 0.07056,
+     "ry": 0.004,
+     "exponent": 2.6,
+     "rotation": [
+      -0.47372,
+      -0.52496,
+      -0.47372,
+      0.52496
+     ]
+    },
+    {
+     "at": [
+      0.04843,
+      -0.18193,
+      0
+     ],
+     "rx": 0.04577,
+     "ry": 0.00381,
+     "exponent": 2.6,
+     "rotation": [
+      -0.47372,
+      -0.52496,
+      -0.47372,
+      0.52496
+     ]
+    },
+    {
+     "at": [
+      0.04827,
+      -0.18962,
+      0
+     ],
+     "rx": 0.02098,
+     "ry": 0.00381,
+     "exponent": 2.6,
+     "rotation": [
+      -0.47372,
+      -0.52496,
+      -0.47372,
+      0.52496
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "op": "set",
+  "scale": "100",
+  "view": "front",
+  "id": "head",
+  "bone": "head",
+  "why": "fourth fixer: the helmet of the front is a loft (ops .lofts.json); its dome, rim and ridge stand behind the face, the peak before it, and the face ends at the rim, so that the raised head shows the face before the helmet",
+  "set": {
+   "points": [
+    [
+     -0.02126,
+     0.57075
+    ],
+    [
+     0.0205,
+     0.57056
+    ],
+    [
+     0.04786,
+     0.59173
+    ],
+    [
+     0.05673,
+     0.61251
+    ],
+    [
+     0.07008,
+     0.67258
+    ],
+    [
+     0.07174,
+     0.702
+    ],
+    [
+     -0.07103,
+     0.702
+    ],
+    [
+     -0.07103,
+     0.68116
+    ],
+    [
+     -0.05673,
+     0.61251
+    ],
+    [
+     -0.04796,
+     0.59173
+    ]
+   ]
+  }
+ },
+ {
+  "op": "set",
+  "scale": "100",
+  "view": "front",
+  "id": "helmet",
+  "bone": "head",
+  "why": "fourth fixer: the helmet of the front is a loft (ops .lofts.json); its dome, rim and ridge stand behind the face, the peak before it, and the face ends at the rim, so that the raised head shows the face before the helmet",
+  "set": {
+   "z": 4.96
+  }
+ },
+ {
+  "op": "set",
+  "scale": "100",
+  "view": "front",
+  "id": "helmet-ridge",
+  "bone": "head",
+  "why": "fourth fixer: the helmet of the front is a loft (ops .lofts.json); its dome, rim and ridge stand behind the face, the peak before it, and the face ends at the rim, so that the raised head shows the face before the helmet",
+  "set": {
+   "z": 4.97
+  }
+ },
+ {
+  "op": "add",
+  "scale": "100",
+  "view": "front",
+  "id": "helmet-peak",
+  "why": "fourth fixer: the helmet of the front is a loft (ops .lofts.json); its dome, rim and ridge stand behind the face, the peak before it, and the face ends at the rim, so that the raised head shows the face before the helmet",
+  "shape": {
+   "id": "helmet-peak",
+   "kind": "loft",
+   "bone": "head",
+   "role": "body",
+   "z": 5.5,
+   "filled": true,
+   "tone": 0.92,
+   "region": "helmet",
+   "material": "hdpe-shell",
+   "sections": [
+    {
+     "at": [
+      0.04838,
+      -0.09759,
+      0
+     ],
+     "rx": 0.09535,
+     "ry": 0.00751,
+     "exponent": 2.6,
+     "rotation": [
+      -0.47372,
+      -0.52496,
+      -0.47372,
+      0.52496
+     ]
+    },
+    {
+     "at": [
+      0.0493,
+      -0.15308,
+      0
+     ],
+     "rx": 0.07818,
+     "ry": 0.00751,
+     "exponent": 2.6,
+     "rotation": [
+      -0.47372,
+      -0.52496,
+      -0.47372,
+      0.52496
+     ]
+    },
+    {
+     "at": [
+      0.04827,
+      -0.18962,
+      0
+     ],
+     "rx": 0.02479,
+     "ry": 0.00751,
+     "exponent": 2.6,
+     "rotation": [
+      -0.47372,
+      -0.52496,
+      -0.47372,
+      0.52496
+     ]
+    }
+   ]
+  }
+ }
+]

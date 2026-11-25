@@ -26,7 +26,28 @@ pub fn measured_objects(snapshot: &PdfSnapshot, metrics: &mut FontMeasurements<'
 }
 
 /// 🖼️ Host canvas layers for the whole document.
-pub fn canvas_layers(snapshot: &PdfSnapshot, selected: Option<&str>) -> String {
+pub fn canvas_layers(snapshot: &PdfSnapshot, selected: Option<&str>, locale: Locale) -> String {
+    canvas_paint(snapshot, selected, locale).layers_json()
+}
+
+/// 🎨️ The painted canvas: its layers, and the zero-based pages that hold content the canvas keeps in the document but cannot paint (a placeholder stands in for it, or the page has operators the editor keeps verbatim). Each such page carries a localized notice layer at its top.
+pub struct CanvasPaint { pub layers: Vec<Value>, pub preserved_pages: Vec<usize> }
+
+impl CanvasPaint {
+    /// 🧾️ The host canvas layer list.
+    pub fn layers_json(&self) -> String { serde_json::to_string(&self.layers).unwrap_or_else(|_| "[]".into()) }
+
+    /// ♿️ The canvas's accessible description: the fixed description, followed by the one-based pages whose content is preserved but not displayed.
+    pub fn description(&self, locale: Locale) -> String {
+        let labels = pdf_editor_labels(locale);
+        if self.preserved_pages.is_empty() { return labels.canvas_description.as_str().to_owned(); }
+        let pages = self.preserved_pages.iter().map(|page| (page + 1).to_string()).collect::<Vec<_>>().join(", ");
+        format!("{} {}", labels.canvas_description.as_str(), labels.preserved_pages.fill(&[("pages", pages.as_str())]))
+    }
+}
+
+/// 🎨️ Paints every page and marks the pages with preserved, undisplayed content; see [`CanvasPaint`].
+pub fn canvas_paint(snapshot: &PdfSnapshot, selected: Option<&str>, locale: Locale) -> CanvasPaint {
     let viewports: Vec<_> = page_viewports(snapshot).collect();
     let mut metrics = FontMeasurements::new(snapshot);
     let placed = placement(snapshot, &viewports, &mut metrics);
@@ -36,10 +57,11 @@ pub fn canvas_layers(snapshot: &PdfSnapshot, selected: Option<&str>) -> String {
         layers.push(json!({ "id": format!("p{page_index}:paper"), "segments": rect_segments(0.0, top, width, height), "fill": { "color": [1.0, 1.0, 1.0, 1.0] }, "stroke": { "color": [0.75, 0.75, 0.78, 1.0], "width": 1.0 } }));
     }
     let mut forms = FormPaint { active: Vec::new(), active_fonts: Vec::new(), remaining_ops: MAX_FORM_PAINT_OPERATIONS, metrics };
+    let mut preserved: Vec<bool> = snapshot.pages.iter().map(|page| page.content.iter().any(|op| matches!(op, PdfOp::Unknown { .. }))).collect();
     for item in &placed {
         let start = layers.len();
         let page = &snapshot.pages[item.object.page];
-        paint_object(snapshot, page, &page.content, item, &mut layers, &mut forms);
+        if !paint_object(snapshot, page, &page.content, item, &mut layers, &mut forms) { preserved[item.object.page] = true; }
         if selected == Some(item.object.id.as_str()) {
             layers.push(json!({ "id": format!("{}.selection", item.object.id), "segments": rect_segments(item.canvas_x, item.canvas_y, item.canvas_w.max(1.0), item.canvas_h.max(1.0)), "stroke": { "color": [0.1, 0.45, 0.95, 1.0], "width": 2.0 } }));
         }
@@ -47,7 +69,24 @@ pub fn canvas_layers(snapshot: &PdfSnapshot, selected: Option<&str>) -> String {
             constrain_clip(layer, item.viewport.clip_rect());
         }
     }
-    serde_json::to_string(&layers).unwrap_or_else(|_| "[]".into())
+    let notice = pdf_editor_labels(locale).preserved_notice.as_str();
+    let preserved_pages: Vec<usize> = preserved.iter().enumerate().filter_map(|(page, held)| held.then_some(page)).collect();
+    for &page in &preserved_pages {
+        let [left, top, width, _] = viewports[page].clip_rect();
+        layers.push(json!({ "id": format!("p{page}:preserved"), "kind": "text", "x": left + 4.0, "y": top + 4.0, "width": (width - 8.0).max(1.0), "height": 12.0, "text": { "content": notice, "size": 10.0, "fontFamily": "Anta" }, "fill": { "color": [0.55, 0.2, 0.05, 1.0] } }));
+    }
+    CanvasPaint { layers, preserved_pages }
+}
+
+/// 🫥️ Whether the canvas paints object `id` itself rather than a placeholder for content it keeps but cannot display; edits of an undisplayed object are refused.
+pub fn object_displayed(snapshot: &PdfSnapshot, id: &str) -> bool {
+    let viewports: Vec<_> = page_viewports(snapshot).collect();
+    let mut metrics = FontMeasurements::new(snapshot);
+    let placed = placement(snapshot, &viewports, &mut metrics);
+    let Some(item) = placed.iter().find(|item| item.object.id == id) else { return true; };
+    let mut forms = FormPaint { active: Vec::new(), active_fonts: Vec::new(), remaining_ops: MAX_FORM_PAINT_OPERATIONS, metrics };
+    let page = &snapshot.pages[item.object.page];
+    paint_object(snapshot, page, &page.content, item, &mut Vec::new(), &mut forms)
 }
 
 const MAX_FORM_PAINT_DEPTH: usize = 24;
@@ -60,11 +99,12 @@ struct FormPaint<'a> {
     metrics: FontMeasurements<'a>,
 }
 
-fn paint_object<'a>(snapshot: &'a PdfSnapshot, page: &PdfPage, content: &[PdfOp], item: &Placed, layers: &mut Vec<Value>, forms: &mut FormPaint<'a>) {
+/// 🖌️ Paints one placed object; false when only a placeholder stands in for content the canvas cannot display.
+fn paint_object<'a>(snapshot: &'a PdfSnapshot, page: &PdfPage, content: &[PdfOp], item: &Placed, layers: &mut Vec<Value>, forms: &mut FormPaint<'a>) -> bool {
     let form = match item.object.kind {
         ObjectKind::Form => snapshot.form(&item.object.text).map(|form| (form, item.object.ctm)),
         ObjectKind::Annotation => match page.annotations.get(item.object.start) {
-            Some(annotation) if !annotation_visible(annotation) => return,
+            Some(annotation) if !annotation_visible(annotation) => return true,
             Some(annotation) => annotation_appearance(snapshot, annotation),
             None => None,
         },
@@ -72,24 +112,25 @@ fn paint_object<'a>(snapshot: &'a PdfSnapshot, page: &PdfPage, content: &[PdfOp]
     };
     if let Some((form, ctm)) = form {
         paint_form(snapshot, page, item, form, ctm, layers, forms);
-        return;
+        return true;
     }
     let first = layers.len();
+    let mut displayed = true;
     let color = [item.object.fill[0] as f32, item.object.fill[1] as f32, item.object.fill[2] as f32, 1.0];
     let stroke = [item.object.stroke[0] as f32, item.object.stroke[1] as f32, item.object.stroke[2] as f32, 1.0];
     match item.object.kind {
         ObjectKind::Text => {
             let mode = item.object.text_placement.as_ref().map_or(0, |text| text.render_mode);
-            if mode == 3 { return; }
+            if mode == 3 { return true; }
             if type3_text::paint_type3_text(snapshot, page, item, content, layers, forms) {
                 attach_clips(page, item, &mut layers[first..]);
-                return;
+                return true;
             }
             let paint = mode & 3;
-            if paint == 3 { return; }
+            if paint == 3 { return true; }
             if truetype_text::paint_truetype_text(item, content, paint, color, stroke, layers, forms) {
                 attach_clips(page, item, &mut layers[first..]);
-                return;
+                return true;
             }
             let display = |x: f64, y: f64| {
                 let (x, y) = apply(item.object.text_transform, x, -y);
@@ -152,6 +193,7 @@ fn paint_object<'a>(snapshot: &'a PdfSnapshot, page: &PdfPage, content: &[PdfOp]
             if let Some(layer) = preview {
                 layers.push(layer);
             } else {
+                displayed = false;
                 layers.push(json!({ "id": item.object.id, "segments": rect_segments(item.canvas_x, item.canvas_y, item.canvas_w.max(1.0), item.canvas_h.max(1.0)), "fill": { "color": if item.object.kind == ObjectKind::Image { [0.85, 0.88, 0.92, 1.0] } else { color } }, "stroke": { "color": stroke, "width": 1.0 } }));
                 if !item.object.text.is_empty() {
                     layers.push(json!({ "id": format!("{}.label", item.object.id), "kind": "text", "x": item.canvas_x + 4.0, "y": item.canvas_y + 4.0, "width": item.canvas_w.max(1.0), "height": 12.0, "text": { "content": item.object.text, "size": 12.0, "fontFamily": "Anta" }, "fill": { "color": [0.1, 0.1, 0.12, 1.0] } }));
@@ -160,6 +202,7 @@ fn paint_object<'a>(snapshot: &'a PdfSnapshot, page: &PdfPage, content: &[PdfOp]
         }
     }
     attach_clips(page, item, &mut layers[first..]);
+    displayed
 }
 
 fn attach_clips(page: &PdfPage, item: &Placed, layers: &mut [Value]) {

@@ -1,4 +1,16 @@
 {
+  "annex": null,
+  "structureKind": null,
+  "steelFYPa": null,
+  "beams": null,
+  "columns": null,
+  "slabs": null,
+  "placements": null,
+  "studs": null,
+  "fireRating": null,
+  "insulationThicknessM": null,
+  "fatigueDetail": null,
+  "reliabilityClass": null,
   "cases": {
     "removed": [
       {

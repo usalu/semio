@@ -346,6 +346,11 @@ impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for Pdf17Ed
     fn snapshot_edit_special(event: &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Option<Vec<Self::Mutation>>, Fault> {
         crate::standards::v1_7::subsets::base::schema::mutations::special_edit(event, snapshot)
     }
+
+    fn snapshot_edit_is_admitted(event: &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> bool {
+        semio_s_artifact_stdio_contract::editing::snapshot_edit_payload_is_admitted(event)
+            && (crate::standards::v1_7::subsets::base::schema::mutations::addresses_whole_value_lane(event) || semio_s_artifact_stdio_contract::editing::snapshot_edit_path_is_admitted(event, snapshot))
+    }
 }
 
 semio_s_artifact_stdio_contract::bounded_native_editing_editor! {
@@ -384,11 +389,10 @@ pub fn create_pdf17_editor() -> semio_plugin::AppDefinition {
     let builder = builder.window_kind_def(crate::editor::page::thumbnails_window_definition());
     let builder = builder.window_kind_def(semio_s_artifact_stdio_contract::editing::snapshot_details_window_definition());
     let builder = builder.default_layout(crate::editor::page::document_layout(main::WINDOW_KIND_ID));
-    let mut definition = semio_s_artifact_stdio_contract::editing::snapshot_edit_actions_with(builder).build_definition();
-    for window in definition.window_kinds.iter_mut() {
-        if window.id == main::WINDOW_KIND_ID { window.actions.retain(|action| action.id != "insert-image"); }
-    }
-    definition.actions.extend(image_import::actions().into_iter().chain(std::iter::once(semio_s_artifact_stdio_pdf_native_save::factory::export_action())));
+    let mut definition = semio_s_artifact_stdio_contract::editing::snapshot_edit_actions_with(crate::editor::page::edit_actions_with(builder)).build_definition();
+    definition.actions.retain(|action| action.id != "insert-image");
+    definition.actions.extend(image_import::actions());
+    semio_s_artifact_stdio_pdf_native_save::factory::declare_native_save(&mut definition);
     crate::editor::page::install_object_interaction(&mut definition);
     definition
 }

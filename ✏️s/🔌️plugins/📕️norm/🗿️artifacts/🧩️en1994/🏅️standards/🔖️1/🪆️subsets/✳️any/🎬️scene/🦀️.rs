@@ -44,7 +44,7 @@ pub use diagrams::diagrams;
 
 pub use handles::handles;
 
-pub use base::{facts, handles, layout};
+pub use base::{eigen_modes, facts, handles, layout};
 use base::{kit, statics};
 use kit::Out;
 use model::En1994Snapshot;

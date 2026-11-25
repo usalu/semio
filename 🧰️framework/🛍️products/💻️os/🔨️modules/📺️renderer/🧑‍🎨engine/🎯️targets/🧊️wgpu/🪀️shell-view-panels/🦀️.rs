@@ -26,7 +26,7 @@ use semio_renderer_wgpu_shell_view_overlays::{OverlaysViewCtx, chrome_status_acc
 use semio_renderer_wgpu_shell_view_paint::{PLUGIN_INSTALL_TOP_GAP, chrome_icon, chrome_text, render_tutorial_gesture_overlay_node, RetainedChromeGroupStep, SHELL_WINDOW_PAINT_OPPORTUNITIES, ShellChromeBandSpan, ShellUtilityPath, plugin_install_action_rect, scene_chrome_labels, surface_fits_overlay, transient_notice_tone};
 use semio_renderer_wgpu_shell_window_actions::{window_actions_rect, window_search_rect};
 use semio_renderer_wgpu_shell_windows::{PanelAnchor, WindowState};
-use semio_renderer_wgpu_dock::{DockRenderContext, drop_zone_indicator_rect, kind_pane_document_rect};
+use semio_renderer_wgpu_dock::{DockRenderContext, dock_drop_places, drop_zone_indicator_rect, kind_pane_document_rect};
 use semio_renderer_wgpu_hub_workspace::hub_connection::HubConnectionState;
 use semio_renderer_wgpu_scene_canvas2d::ui_image_loading::framework_widget_context;
 use semio_renderer_wgpu_shell_vocab::shell_chrome_string;

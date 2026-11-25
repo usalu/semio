@@ -77,7 +77,7 @@ export function createExtensionCompletion({ requireActorId, requireUiRoute, exec
       });
       drive.report(`completion req=${req}`);
       if (frames.length > 0) turnOutcomes.push({ instanceId, frames });
-      if (wireTurnStatusTag(settled.at(-1)?.status) === "more-work") void drainTypedOperations(instanceId);
+      if (drive.owesASettle(settled.at(-1))) void drainTypedOperations(instanceId, drive.takeAcknowledgements());
       return emptyInvocation([...carried, ...leftoverWire.map((effect) => wgpuHostEffect(effect)).filter((effect): effect is Effect => effect !== null)]);
     };
     return Object.freeze({ instanceId, req, assertActive, complete });
@@ -151,7 +151,7 @@ export function createRequestActor({ state, pluginId, registry, captureExtension
       });
       const raw = await extension.invoke(capability, requestJson, { originInstanceId: instanceId });
       completion.assertActive();
-      outcome = { ok: encodePackValue(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(raw))) };
+      outcome = { ok: raw };
     } catch (error) {
       completion.assertActive();
       const fault = error instanceof SemioFaultError ? error.fault : {

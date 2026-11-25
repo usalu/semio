@@ -27,6 +27,7 @@ use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3
 use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3d_load_target;
 use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3d_load_owner;
 use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::Fem3dInteractionSnapshot;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3D_GRANULARITY_ANALYSIS;
 use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3D_GRANULARITY_COMBINATION;
 use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3D_GRANULARITY_ELEMENT;
 use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3D_GRANULARITY_LOAD;
@@ -362,9 +363,7 @@ fn combination_rows(doc: &Fem3dSnapshot, combination: &FemCombination, labels: &
     let mut rows = UiFixedList::default();
     push(&mut rows, read_only_row("combination.id", labels.id.as_str(), &combination.id))?;
     push(&mut rows, text_row("combination.name", labels.name.as_str(), &combination.name, "patchCombination", "name", &combination.id))?;
-    if let Some(row) = add_term_row(doc, combination, labels)? {
-        rows.try_push(row).map_err(|_| ui_error("ui.fixed-capacity"))?;
-    }
+    rows.try_push(add_term_row(doc, combination, labels)?).map_err(|_| ui_error("ui.fixed-capacity"))?;
     if let Some(row) = remove_term_row(doc, combination, labels)? {
         rows.try_push(row).map_err(|_| ui_error("ui.fixed-capacity"))?;
     }
@@ -379,13 +378,10 @@ fn term_row(doc: &Fem3dSnapshot, combination: &FemCombination, case_id: &str, fa
 }
 
 /// ➕️ The select that appends a term: its options are the cases this combination does NOT already
-/// superpose, and the chosen id rides the control's own `value`.
-fn add_term_row(doc: &Fem3dSnapshot, combination: &FemCombination, labels: &Fem3dLabels) -> UiAssemblyResult<Option<BuiltNode>> {
+/// superpose, and the chosen id rides the control's own `value`. It stays rendered with no options left, so the control never vanishes.
+fn add_term_row(doc: &Fem3dSnapshot, combination: &FemCombination, labels: &Fem3dLabels) -> UiAssemblyResult<BuiltNode> {
     let options: Vec<(String, String)> = doc.load_cases.iter().filter(|case| !combination.terms.contains_key(&case.id)).map(|case| (case.id.clone(), case.name.clone())).collect();
-    if options.is_empty() {
-        return Ok(None);
-    }
-    select_row("combination.add-term", labels.add_term.as_str(), "", options, "patchCombination", ADD_TERM_FIELD, &combination.id).map(Some)
+    select_row("combination.add-term", labels.add_term.as_str(), "", options, "patchCombination", ADD_TERM_FIELD, &combination.id)
 }
 
 /// ➖️ The select that drops a term: its options are the cases this combination superposes.
@@ -399,6 +395,15 @@ fn remove_term_row(doc: &Fem3dSnapshot, combination: &FemCombination, labels: &F
 //#endregion 🔖️Sections
 
 //#region 🔖️Render
+/// 🧮️ The analysis settings as read-only rows — shown in the summary and when the tree's Analysis row is selected.
+fn analysis_rows(doc: &Fem3dSnapshot, labels: &Fem3dLabels) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
+    let mut analysis = UiFixedList::default();
+    push(&mut analysis, read_only_row("summary.modal-count", labels.modal_count.as_str(), doc.analysis.modal_count))?;
+    push(&mut analysis, read_only_row("summary.buckling-count", labels.buckling_count.as_str(), doc.analysis.buckling_count))?;
+    push(&mut analysis, read_only_row("summary.deformation-scale", labels.deformation_scale.as_str(), doc.analysis.deformation_scale))?;
+    Ok(analysis)
+}
+
 /// 📋️ The document summary shown when the `"fem3d"` domain selects nothing: what this document is
 /// and how much of it there is, plus the analysis settings read-only.
 fn summary(doc: &Fem3dSnapshot, labels: &Fem3dLabels) -> UiAssemblyResult<BuiltNode> {
@@ -416,13 +421,9 @@ fn summary(doc: &Fem3dSnapshot, labels: &Fem3dLabels) -> UiAssemblyResult<BuiltN
     ] {
         push(&mut counts, read_only_row(suffix, label, count))?;
     }
-    let mut analysis = UiFixedList::default();
-    push(&mut analysis, read_only_row("summary.modal-count", labels.modal_count.as_str(), doc.analysis.modal_count))?;
-    push(&mut analysis, read_only_row("summary.buckling-count", labels.buckling_count.as_str(), doc.analysis.buckling_count))?;
-    push(&mut analysis, read_only_row("summary.deformation-scale", labels.deformation_scale.as_str(), doc.analysis.deformation_scale))?;
     PanelTreeBuilder::new(ROOT)?
         .section(format!("{ROOT}.summary"), Some(ui_label(labels.summary.as_str())?), true, counts)?
-        .section(format!("{ROOT}.analysis"), Some(ui_label(labels.analysis.as_str())?), true, analysis)?
+        .section(format!("{ROOT}.analysis"), Some(ui_label(labels.analysis.as_str())?), true, analysis_rows(doc, labels)?)?
         .build()
 }
 
@@ -455,7 +456,7 @@ pub fn selection_row(identity: &str, labels: &Fem3dLabels) -> UiAssemblyResult<B
             let noun = match *kind {
                 "node" => &labels.node, "element" => &labels.element, "solid" => &labels.solid,
                 "material" => &labels.material, "section" => &labels.section, "support" => &labels.support,
-                "loadCase" => &labels.load_case, "combination" => &labels.combination,
+                "loadCase" => &labels.load_case, "combination" => &labels.combination, "analysis" => &labels.analysis,
                 _ => return Err(ui_error("fem3d.entity-identity")),
             };
             format!("{} {id}", noun.as_str())
@@ -520,6 +521,7 @@ pub fn render(doc: &Fem3dSnapshot, interaction: &Fem3dInteractionSnapshot, label
                 .section(format!("{ROOT}.combination"), Some(ui_label(labels.combination.as_str())?), true, combination_rows(doc, combination, labels)?)?
                 .window_section(windows, &format!("{ROOT}.combination.terms"), Some(ui_label(labels.terms.as_str())?), true, &entries, |(case_id, factor)| term_row(doc, combination, case_id, *factor))?
         }
+        FEM3D_GRANULARITY_ANALYSIS => return builder.section(format!("{ROOT}.analysis"), Some(ui_label(labels.analysis.as_str())?), true, analysis_rows(doc, labels)?)?.build(),
         _ => return summary(doc, labels),
     };
     builder.section(format!("{ROOT}.actions"), Some(ui_label(labels.actions.as_str())?), true, action_rows(identity, kind, labels)?)?.build()

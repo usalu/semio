@@ -91,6 +91,7 @@ pub enum GifMutation {
     RemoveAppExtension(remove_app_extension::RemoveAppExtension),
 }
 dsl::original_pack_value_operation_receiving!(GifMutation);
+dsl::artifact_persisted_binary_operation!(GifMutation);
 //#endregion 🔖️Mutations
 
 //#region 🔖️Kinds

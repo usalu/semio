@@ -13,15 +13,69 @@
       "de": "Eine neutrale erwachsene Person von 1,69 m, entspannt stehend in Fleece-Sweatshirt, Jeans und Stoffsneakern, die generische Maßstabsfigur des Archivs. Vier Posen (entspannt, Arme verschränkt, zeigend, Hände wärmend) und drei Schleifen (ruhiges Atmen, Zittern, Fächeln) zeigen Behaglichkeit, Kälte und Hitze bei etwa 1,2 met in normaler Innenraumkleidung."
     },
     "tags": [
-      "human",
-      "adult",
-      "standing",
-      "scale-figure",
-      "neutral",
-      "thermal-comfort",
-      "shivering",
-      "fanning",
-      "pointing"
+      {
+        "id": "human",
+        "title": {
+          "en": "human",
+          "de": "Mensch"
+        }
+      },
+      {
+        "id": "adult",
+        "title": {
+          "en": "adult",
+          "de": "erwachsen"
+        }
+      },
+      {
+        "id": "standing",
+        "title": {
+          "en": "standing",
+          "de": "Stehen"
+        }
+      },
+      {
+        "id": "scale-figure",
+        "title": {
+          "en": "scale figure",
+          "de": "Maßstabsfigur"
+        }
+      },
+      {
+        "id": "neutral",
+        "title": {
+          "en": "neutral",
+          "de": "neutral"
+        }
+      },
+      {
+        "id": "thermal-comfort",
+        "title": {
+          "en": "thermal comfort",
+          "de": "thermische Behaglichkeit"
+        }
+      },
+      {
+        "id": "shivering",
+        "title": {
+          "en": "shivering",
+          "de": "Zittern"
+        }
+      },
+      {
+        "id": "fanning",
+        "title": {
+          "en": "fanning",
+          "de": "Fächeln"
+        }
+      },
+      {
+        "id": "pointing",
+        "title": {
+          "en": "pointing",
+          "de": "Zeigen"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage content worker A2",

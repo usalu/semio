@@ -10,6 +10,7 @@ import {CAS_GRAPH_CLOSURE_AREA_V1,CAS_POLICY_V1,casTextV1,requireCasPolicyV1,typ
 import {createCasPlannerV1,type CasPlanTotalsV1,type CasReasonV1} from "./🧮️plan.ts";
 import {casKeeperCountSyncV1,planCasHolderEvictionV1,readCasHeldV1,reconcileCasKeepersV1,recordCasHolderEvictionV1,resetCasHeldCacheV1,type CasHeldV1,type CasHolderPlanBlobV1} from "../🫂️holders/🟦️.ts";
 import {reclaimCasObjectsV1} from "../🪦️reclaim/🟦️.ts";
+import {processIdentityForPidV1,parseProcessIdentityV1,processHolderAliveV1} from "../../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts";
 
 export {casCutV1,createCasPlannerV1} from "./🧮️plan.ts";
 export type {CasCutV1,CasPlanTotalsV1,CasReasonV1} from "./🧮️plan.ts";
@@ -39,7 +40,6 @@ export type CasCollectionV1=Readonly<{status:"idle"|"collected"|"locked";partial
 
 const reconciledAt=new Map<string,number>();
 const STORE="store",zero:CasPlanTotalsV1={totalBytes:0,protectedBytes:0,candidateBytes:0,plannedBytes:0,keptBytes:0,shortfallBytes:0,capShortfallBytes:0,partitionShortfallBytes:0,needBytes:0};
-const alive=(pid:number):boolean=>{try{process.kill(pid,0);return true;}catch(error){return (error as NodeJS.ErrnoException).code==="EPERM";}};
 const sorted=(names:string[]):string[]=>names.sort((left,right)=>left<right?-1:left>right?1:0);
 const LOCK_POLL_MS=100;
 const TEMPORARY=/(^\.)|(\.tmp$)/u;
@@ -58,22 +58,22 @@ async function acquire(root:string,policy:CasPolicyV1,nowMs:number,pid:number,op
  for(let attempt=0;attempt<2;attempt++){
   try{
    const handle=await openLock(lock);
-   try{await handle.writeFile(JSON.stringify({pid,atMs:nowMs}));}catch(error){await handle.close().catch(()=>undefined);await unlink(lock).catch(()=>undefined);if(fullDisk(error))return{release:withoutLock,beat:noBeat,lockless:true};throw error;}
+   try{await handle.writeFile(JSON.stringify({...processIdentityForPidV1(pid),atMs:nowMs}));}catch(error){await handle.close().catch(()=>undefined);await unlink(lock).catch(()=>undefined);if(fullDisk(error))return{release:withoutLock,beat:noBeat,lockless:true};throw error;}
    await handle.close();
    let last=-1;
    return{release:async()=>{await unlink(lock).catch(()=>undefined);},lockless:false,beat:async(progress,atMs)=>{
     if(progress===last)return;last=progress;
     try{
      if((JSON.parse(await readFile(lock,"utf8")) as {pid:number}).pid!==pid)return;
-     const temporary=`${lock}.${pid}.tmp`;await writeFile(temporary,JSON.stringify({pid,atMs}));await rename(temporary,lock);
+     const temporary=`${lock}.${pid}.tmp`;await writeFile(temporary,JSON.stringify({...processIdentityForPidV1(pid),atMs}));await rename(temporary,lock);
     }catch{}
    }};
   }catch(error){
    if(fullDisk(error))return{release:withoutLock,beat:noBeat,lockless:true};
    if((error as NodeJS.ErrnoException).code!=="EEXIST")throw error;
    try{
-    const held=JSON.parse(await readFile(lock,"utf8")) as {pid:number;atMs:number};
-    if(alive(held.pid)&&nowMs-held.atMs<policy.lockStaleMs)return undefined;
+    const held=JSON.parse(await readFile(lock,"utf8")) as {pid:number;startMs:number;atMs:number},holder=parseProcessIdentityV1(held);
+    if(holder!==undefined&&processHolderAliveV1(holder)&&nowMs-held.atMs<policy.lockStaleMs)return undefined;
    }catch{}
    await unlink(lock).catch(()=>undefined);
   }
@@ -127,9 +127,20 @@ async function* nothing():AsyncGenerator<Entry>{}
 
 const holderSummary=(held:CasHeldV1,blobs:ReadonlyMap<string,CasHolderPlanBlobV1>):CasHolderEvictionV1=>({holders:held.holders.length,entries:held.entries.length,heldBlobs:blobs.size,heldBytes:[...blobs.values()].reduce((sum,blob)=>sum+blob.size,0),evictedEntries:0,evictedBlobs:0,freedBytes:0,protectedEntries:0,reason:"capacity"});
 
+/** 🫥️ The held objects the scan saw, plus every object a held entry names that the scan did not see but that is on disk (an entry published while the collector walked the store, whose objects landed in a shard already walked): alive and never freeable in this pass, so only an entry whose object is really gone counts as dead and the capacity stage never removes a unit that was just compiled. One `lstat` per unseen digest. */
+async function heldOnDisk(root:string,policy:CasPolicyV1,held:CasHeldV1,scanned:ReadonlyMap<string,CasHolderPlanBlobV1&{access:number}>):Promise<Map<string,CasHolderPlanBlobV1&{access:number}>>{
+ const blobs=new Map(scanned),gone=new Set<string>();
+ for(const entry of held.entries)for(const digest of entry.digests){
+  if(blobs.has(digest)||gone.has(digest))continue;
+  const info=await lstat(join(root,"v1","o",digest.slice(0,policy.fanOutHexLength),digest.slice(policy.fanOutHexLength))).catch(()=>undefined);
+  if(info?.isFile())blobs.set(digest,{size:info.size,access:info.mtimeMs,freeable:false});else gone.add(digest);
+ }
+ return blobs;
+}
+
 /** 🫂️ The capacity stage, only for the store's own cap: when every object nobody references is gone and the cap still needs `need` bytes, the least recently used entries of the registered holders are removed, never below the protected share `holderProtectedShare` of the cap per live holder (their files first, recorded in the holder's own eviction log with the reason `capacity`, the pid and the role of the evicting process), then the objects no remaining entry references, a pin, a lease or a hard link keeps, and the minimum age protects, so no holder is ever left with an entry whose objects were taken behind its back. A dry run only counts. */
-async function evictHolders(options:CasCollectOptionsV1,policy:CasPolicyV1,held:CasHeldV1,blobs:ReadonlyMap<string,CasHolderPlanBlobV1&{access:number}>,need:number,now:()=>number):Promise<CasHolderEvictionV1>{
- const rows=held.entries.map(entry=>({id:entry.file,holder:entry.holder,access:entry.digests.reduce((latest,digest)=>Math.max(latest,blobs.get(digest)?.access??0),entry.digests.some(digest=>blobs.has(digest))?0:entry.mtimeMs),digests:entry.digests}));
+async function evictHolders(options:CasCollectOptionsV1,policy:CasPolicyV1,held:CasHeldV1,scanned:ReadonlyMap<string,CasHolderPlanBlobV1&{access:number}>,need:number,now:()=>number):Promise<CasHolderEvictionV1>{
+ const blobs=await heldOnDisk(options.root,policy,held,scanned),rows=held.entries.map(entry=>({id:entry.file,holder:entry.holder,access:entry.digests.reduce((latest,digest)=>Math.max(latest,blobs.get(digest)?.access??0),entry.digests.some(digest=>blobs.has(digest))?0:entry.mtimeMs),digests:entry.digests}));
  const floor=Math.floor(policy.holderProtectedShare*(policy.heldCapBytes??policy.capBytes)),plan=planCasHolderEvictionV1(rows,blobs,need,new Map(held.holders.map(holder=>[holder.holder,floor]))),summary={...holderSummary(held,blobs),protectedEntries:plan.protectedEntries};
  if(plan.entries.length===0)return summary;
  if(options.dryRun)return{...summary,evictedEntries:plan.entries.length,evictedBlobs:plan.digests.length,freedBytes:plan.freedBytes};
@@ -199,7 +210,7 @@ export async function collectCasV1(options:CasCollectOptionsV1):Promise<CasColle
   const plan=partial?undefined:planner.finish();
   if(!plan)return{status:"collected",partial:true,dryRun:options.dryRun===true,scanned,evicted,freedBytes:freed,busy,skipped,totals:zero,byReason,...lockless,...partition?{partition}:{}};
   const totals=plan.totals,graphClosures=graphClosureBytes>0?{graphClosureBytes}:{};
-  const census=partial||options.dryRun?undefined:censusOf(scannedEntries,pins,held,started);
+  const census=partial||options.dryRun?undefined:censusOf(scannedEntries,pins,held,started),counted=new Map(census?scannedEntries.map(row=>[row.hash,row]):[]);
   const heldNeed=options.unreferencedOnly!==true&&totals.capShortfallBytes>0&&heldBlobs.size>0;let holders:CasHolderEvictionV1|undefined=held.holders.length>0?holderSummary(held,heldBlobs):undefined;
   if(totals.plannedBytes<=0&&!heldNeed){
    await compactAll(options,policy,started,views,progress=>lock.beat(scanned+evicted+progress,now()));await finishUsage(totals.keptBytes-(options.externalBytes??0));if(census)await writeCasCensusV1(options.root,census);
@@ -218,7 +229,7 @@ export async function collectCasV1(options:CasCollectOptionsV1):Promise<CasColle
      if(fresh<0)continue;
      if(entry.hash!==undefined&&(transients.get(entry.hash)??0)>now()){skipped++;continue;}
      if(fresh>entry.access||fresh>=started||((entry.hash??entry.pin)!==undefined&&pins.has((entry.hash??entry.pin)!))){skipped++;continue;}
-     try{await unlink(entry.path);evicted++;freed+=entry.size;used-=entry.size;byReason[reason]++;if(census&&entry.kind)forgetCensusV1(census,entry.kind,entry.size);}
+     try{await unlink(entry.path);evicted++;freed+=entry.size;used-=entry.size;byReason[reason]++;if(census&&entry.hash!==undefined)forgetCensusV1(census,counted,entry.hash);}
      catch(error){const code=(error as NodeJS.ErrnoException).code;if(code==="ENOENT")continue;if(code==="EBUSY"||code==="EPERM"||code==="EACCES"){busy++;continue;}throw error;}
     }
     await report("evict");
@@ -281,7 +292,8 @@ async function recordUsage(options:CasCollectOptionsV1,bytes:number,atMs:number,
 export type CasObjectClassV1="pinned"|"held"|"leased"|"linked"|"expired"|"young"|"unreferenced";
 /** 📊️ The counters of the store as its last complete scan found them, minus what that collection removed: objects and bytes per class and per holder (an object counts for the first holder naming it), so a status answers in milliseconds without walking the store. @see ../🧬️schema/🔣️.json */
 export type CasCensusV1=Readonly<{version:1;atMs:number;objects:number;bytes:number;classes:Record<CasObjectClassV1,{objects:number;bytes:number}>;holders:{kind:"pin"|"unit-cache";holder:string;label:string;entries:number;objects:number;bytes:number}[]}>;
-type CensusRowV1={hash:string;size:number;kind:CasObjectClassV1};
+/** 🧮️ One object as the census scan counted it. */
+export type CensusRowV1={hash:string;size:number;kind:CasObjectClassV1};
 const CAS_OBJECT_CLASSES_V1:readonly CasObjectClassV1[]=["pinned","held","leased","linked","expired","young","unreferenced"];
 
 function censusOf(rows:readonly CensusRowV1[],pins:ReadonlyMap<string,string>,held:CasHeldV1,atMs:number):CasCensusV1{
@@ -296,8 +308,10 @@ function censusOf(rows:readonly CensusRowV1[],pins:ReadonlyMap<string,string>,he
  }
  return{version:1,atMs,objects,bytes,classes,holders:[...holders.values()].sort((left,right)=>right.bytes-left.bytes)};
 }
-function forgetCensusV1(census:CasCensusV1,kind:CasObjectClassV1,size:number):void{
- const row=census.classes[kind];row.objects--;row.bytes-=size;(census as {objects:number}).objects--;(census as {bytes:number}).bytes-=size;
+/** ➖️ Takes one removed object out of the census under the class and size the census scan counted it with; an object the scan never counted (stored since) changes nothing, so a class never goes below zero. */
+export function forgetCensusV1(census:CasCensusV1,counted:Map<string,CensusRowV1>,hash:string):void{
+ const known=counted.get(hash);if(known===undefined)return;counted.delete(hash);
+ const row=census.classes[known.kind];row.objects--;row.bytes-=known.size;(census as {objects:number}).objects--;(census as {bytes:number}).bytes-=known.size;
 }
 
 /** 📊️ Where the census of a store lives. */

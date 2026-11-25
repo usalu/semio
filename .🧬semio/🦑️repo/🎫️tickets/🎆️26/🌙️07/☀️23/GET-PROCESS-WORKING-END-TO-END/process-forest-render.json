@@ -1,0 +1,28 @@
+[
+ {
+  "name": "wait for the initial document",
+  "js": "(async()=>'w')()",
+  "until": "(async()=>String(document.querySelectorAll('canvas').length>=1&&!/Loading document/.test(document.body.innerText)&&!!document.querySelector('[role=combobox]')))()",
+  "timeoutMs": 420000,
+  "settleMs": 2000
+ },
+ {
+  "name": "open example select",
+  "js": "(async()=>'o')()",
+  "pointer": "(async()=>{const e=document.querySelector('[role=combobox]');const r=e.getBoundingClientRect();return JSON.stringify([r.x+r.width/2,r.y+r.height/2])})()",
+  "settleMs": 1000
+ },
+ {
+  "name": "switch example to Concrete Forest",
+  "js": "(async()=>'p')()",
+  "pointer": "(async()=>{const e=[...document.querySelectorAll('[role=option]')].find(e=>e.innerText.trim()==='Concrete Forest');const r=e.getBoundingClientRect();return JSON.stringify([r.x+r.width/2,r.y+r.height/2])})()",
+  "settleMs": 3000,
+  "until": "(async()=>String(document.querySelector('[role=combobox]').innerText.trim()==='Concrete Forest'&&!/Loading document/.test(document.body.innerText)))()",
+  "timeoutMs": 420000
+ },
+ {
+  "name": "example state concrete",
+  "js": "(async()=>JSON.stringify([document.querySelector('[role=combobox]').innerText,document.querySelectorAll('canvas').length]))()",
+  "settleMs": 500
+ }
+]

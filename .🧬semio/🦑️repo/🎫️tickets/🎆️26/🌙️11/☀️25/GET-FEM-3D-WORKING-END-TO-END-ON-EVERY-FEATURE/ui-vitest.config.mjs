@@ -1,0 +1,1 @@
+export default { root: "C:/semio", test: { environment: "jsdom", include: ["🧰️framework/**/🧪️tests/🛟️chrome-panel-safe-area/*.ts", "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/**/🧪️tests/🎨️icon-registry/*.ts", "🧰️framework/**/🛠️ShellHelpers/🧪️tests/🪟️tree-windows/*.tsx"], exclude: ["**/node_modules/**", ".cache/**"], testTimeout: 60000 } };

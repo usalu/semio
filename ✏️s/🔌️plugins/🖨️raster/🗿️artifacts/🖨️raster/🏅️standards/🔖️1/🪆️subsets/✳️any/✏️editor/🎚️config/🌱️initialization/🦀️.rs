@@ -1,6 +1,6 @@
 //! 🌱️ Raster configuration declares its original default, packed coverage receiver and shared replay preparation.
 use super::{RasterConfig as State,RasterConfigMutation as Mutation};
-use semio_plugin_ownership::original_store_genesis::{OriginalStoreGenesisOwner,OriginalFixedStoreInitial,FixedStoreInitial};
+use semio_plugin_store_lifecycle::original_store_genesis::{OriginalStoreGenesisOwner,OriginalFixedStoreInitial,FixedStoreInitial};
 use semio_framework_value::{RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,ValueError,ValueRefusalKind,retained_clone::RetainedCloneBirthDemand};
 use store::os_store::document_store_owners::{DocumentStoreOwnerProducer,DocumentStoreOwners,DocumentStoreOwnersAdmissionError,BoundedArtifactRetirementFactory};
 use std::{mem::size_of,sync::Arc};

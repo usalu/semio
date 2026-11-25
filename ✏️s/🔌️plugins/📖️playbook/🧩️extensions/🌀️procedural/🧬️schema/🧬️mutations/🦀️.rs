@@ -15,6 +15,7 @@ pub enum ModulePayloadMutation {
     SetPayload(SetPayload),
 }
 dsl::original_pack_value_operation_receiving!(ModulePayloadMutation);
+dsl::artifact_persisted_binary_operation!(ModulePayloadMutation);
 
 //#region 🔖️OpCodec
 

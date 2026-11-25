@@ -12,7 +12,7 @@ use store::os_store::store_schema::ArtifactCommand;
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_plugin_decl_surface::{ArtifactEditor, ArtifactViewer};
 #[cfg(test)]
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use store::{ArtifactStore, ArtifactStoreInitializationAuthority, MemberFactory, SpaceMember};
 #[cfg(any(test, feature = "artifact-app-testing"))]

@@ -1,0 +1,9 @@
+[
+  {"op": "volume", "scale": "50", "id": "hand-r", "as": "prism-v", "fixed": true},
+  {"op": "volume", "scale": "500", "id": "hand-r", "as": "revolved", "fixed": true},
+  {"scale": "50", "id": "shorts", "op": "volume", "views": ["front"], "as": "prism-w", "profile": "elevation", "fixed": true},
+  {"scale": "100", "id": "shirt", "op": "volume", "views": ["plan"], "as": "revolved", "fixed": true},
+  {"scale": "500", "id": "shirt", "op": "volume", "views": ["plan"], "as": "revolved", "fixed": true},
+  {"search": true, "order": ["loft"], "scale": "50", "id": "shirt-core", "solids": ["shirt"], "subsets": [["plan"]]},
+  {"search": true, "order": ["loft"], "scale": "100", "id": "shirt", "subsets": [["front"], ["front", "plan"]]}
+]

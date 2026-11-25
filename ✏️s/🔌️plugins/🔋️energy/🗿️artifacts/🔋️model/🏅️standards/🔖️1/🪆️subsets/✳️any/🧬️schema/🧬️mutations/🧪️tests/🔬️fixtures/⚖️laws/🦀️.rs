@@ -4,7 +4,8 @@ use super::case::{fixture_root, Case};
 use crate::diff::ReferenceEnergyModelDiff as EnergyModelDiff;
 use crate::mutations::EnergyModelMutation;
 use crate::snapshot::reference::EnergyModelSnapshot;
-use protocol::{ColdMutation, Mutation, SemanticMutation};
+use protocol::{ColdDiffAlgebra, ColdMutation, ColdMutationDiff, Mutation, MutationDiff, SemanticMutation};
+use crate::snapshot::EnergyModelSnapshot as NativeSnapshot;
 use semio_framework_value::ToValue;
 
 fn committed_document(case: &Case, label: &str, text: &str) -> semio_framework_pack_json::Value {
@@ -132,7 +133,7 @@ pub fn assert_canonical(case: &Case) {
 /// 🧷️ The payload-intrinsic invariant ids the committed mutation's own leaf payload schema declares in `x-semio-invariant`.
 fn declared_invariants(case: &Case) -> Vec<String> {
     let mutation: EnergyModelMutation = semio_framework_pack_json::from_json_str(case.mutation.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed mutation payload decodes");
-    let schema = <EnergyModelMutation as Mutation<EnergyModelSnapshot>>::input_schema(&mutation).expect("every energy leaf publishes its payload schema");
+    let schema = <EnergyModelMutation as Mutation<NativeSnapshot>>::input_schema(&mutation).expect("every energy leaf publishes its payload schema");
     let document = semio_framework_pack_json::parse(schema, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("leaf payload schema is valid JSON");
     document.get("x-semio-invariant").and_then(semio_framework_pack_json::Value::as_array).map(|rows| rows.iter().filter_map(|row| row.get("id").and_then(semio_framework_pack_json::Value::as_str).map(str::to_string)).collect()).unwrap_or_default()
 }
@@ -186,7 +187,7 @@ pub async fn assert_semantics(case: &Case) {
     let descriptor = SemanticMutation::semantics(&mutation);
     assert!(protocol::is_approved_verb(descriptor.verb), "{}: {:?} is not an approved verb", case.kind, descriptor.verb);
     assert_eq!(descriptor.kind, case.kind);
-    assert_eq!(<EnergyModelMutation as SemanticMutation<EnergyModelSnapshot>>::kinds().len(), super::KINDS.len());
+    assert_eq!(<EnergyModelMutation as SemanticMutation<NativeSnapshot>>::kinds().len(), super::KINDS.len());
     assert_inverse(case);
     let _ = base;
 }
@@ -209,15 +210,115 @@ pub async fn assert_laws(case: &Case) {
     if committed_is_rejected(case) {
         assert!(built(case).worst_level().is_some_and(|level| level >= semio_framework_diagnostic::Severity::Error), "{}/{}: the committed outcome is a refusal but the implementation applied the mutation", case.kind, case.directory);
         assert_eq!(decode(case, "after-snapshot", case.after.as_str()), base, "{}/{}: a refused vector must leave the document untouched", case.kind, case.directory);
-        protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, first.clone(), first).await;
+        diff_absorb_law(&base, first.clone(), first);
         return;
     }
-    protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
-    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
+    inverse_law(&base, &mutation);
+    inverse_sum_law(&mutation, &base);
     let after = protocol::apply_diff_cold(&first, &base).expect("the committed forward diff applies");
     let undo = <EnergyModelMutation as ColdMutation<EnergyModelSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture").pop();
     let second = undo.map_or_else(EnergyModelDiff::default, |step| <EnergyModelMutation as ColdMutation<EnergyModelSnapshot>>::diff(&step, &after).diff().clone());
-    protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, first, second).await;
+    diff_absorb_law(&base, first, second);
+}
+
+/// 🔁️ The framework's inverse law (`assert_mutation_inverse_law`) over the reference snapshot: the framework law needs one snapshot type that is both natively and coldly mutable, while the energy reference snapshot is cold only, so the same assertions run here on the cold mutation arithmetic.
+pub fn inverse_law(base: &EnergyModelSnapshot, mutation: &EnergyModelMutation) {
+    let (forward, messages) = ColdMutation::diff(mutation, base).into_parts();
+    let rejected = messages.iter().any(|message| matches!(message.level, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal));
+    let applied = (!rejected).then(|| protocol::apply_diff_cold(&forward, base));
+    <EnergyModelDiff as MutationDiff<EnergyModelSnapshot>>::retire_cold(forward);
+    assert!(!rejected, "a mutation expected to invert cleanly must not have been rejected — forward outcome carries an Error/Fatal message: {messages:?}");
+    let mut state = applied.expect("an unrejected forward outcome is applied").expect("valid forward diff must apply");
+    let mut backward = ColdMutation::inverse(mutation, base).expect("valid retained mutation inverse fixture");
+    backward.reverse();
+    for undo in &backward {
+        let (delta, _) = ColdMutation::diff(undo, &state).into_parts();
+        let next = protocol::apply_diff_cold(&delta, &state).expect("valid inverse diff must apply");
+        <EnergyModelDiff as MutationDiff<EnergyModelSnapshot>>::retire_cold(delta);
+        <EnergyModelDiff as MutationDiff<EnergyModelSnapshot>>::retire_projection(std::mem::replace(&mut state, next));
+    }
+    let restored = state == *base;
+    let report = restored.then(String::new).unwrap_or_else(|| format!("restored={state:?} base={base:?}"));
+    <EnergyModelDiff as MutationDiff<EnergyModelSnapshot>>::retire_projection(state);
+    drop(backward);
+    assert!(restored, "applying mutation.inverse(base) (reversed) after mutation must restore base; {report}");
+}
+
+/// 📱️ The framework's L3 inverse-sum law (`assert_mutation_inverse_sum_law`) over the reference snapshot, with the same four assertions.
+pub fn inverse_sum_law(mutation: &EnergyModelMutation, base: &EnergyModelSnapshot) {
+    fn canon(diff: EnergyModelDiff) -> EnergyModelDiff {
+        let mut canonical = EnergyModelDiff::default();
+        <EnergyModelDiff as ColdMutationDiff<EnergyModelSnapshot>>::absorb(&mut canonical, diff);
+        canonical
+    }
+    let (forward, messages) = ColdMutation::diff(mutation, base).into_parts();
+    let rejected = messages.iter().any(|message| matches!(message.level, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal));
+    if rejected {
+        <EnergyModelDiff as MutationDiff<EnergyModelSnapshot>>::retire_cold(forward);
+        panic!("a mutation expected to invert cleanly must not have been rejected — forward outcome carries an Error/Fatal message: {messages:?}");
+    }
+    let after = protocol::apply_diff_cold(&forward, base).expect("valid forward diff must apply");
+    let changed = after != *base;
+    let negative = ColdDiffAlgebra::inverse(&forward, base);
+    <EnergyModelDiff as MutationDiff<EnergyModelSnapshot>>::retire_cold(forward);
+    let mut backward = ColdMutation::inverse(mutation, base).expect("valid retained mutation inverse fixture");
+    let non_empty = !backward.is_empty();
+    backward.reverse();
+    let mut state: Option<EnergyModelSnapshot> = None;
+    let mut sum = EnergyModelDiff::default();
+    for undo in &backward {
+        let current = state.as_ref().unwrap_or(&after);
+        let (step, _) = ColdMutation::diff(undo, current).into_parts();
+        let next = protocol::apply_diff_cold(&step, current).expect("valid inverse diff must apply");
+        <EnergyModelDiff as ColdMutationDiff<EnergyModelSnapshot>>::absorb(&mut sum, step);
+        if let Some(displaced) = state.replace(next) {
+            <EnergyModelDiff as MutationDiff<EnergyModelSnapshot>>::retire_projection(displaced);
+        }
+    }
+    drop(backward);
+    let restored = state.unwrap_or_else(|| after.clone());
+    let replayed = restored == *base;
+    let report_state = format!("{restored:?}");
+    <EnergyModelDiff as MutationDiff<EnergyModelSnapshot>>::retire_projection(restored);
+    let summed = protocol::apply_diff_cold(&sum, &after);
+    let summed_restores = summed.as_ref() == Ok(base);
+    if let Ok(projection) = summed {
+        <EnergyModelDiff as MutationDiff<EnergyModelSnapshot>>::retire_projection(projection);
+    }
+    <EnergyModelDiff as MutationDiff<EnergyModelSnapshot>>::retire_projection(after);
+    let canonical_sum = canon(sum);
+    let canonical_negative = canon(negative);
+    let matches_negative = !changed || canonical_sum == canonical_negative;
+    let report = format!("sum={:?} negative={:?} restored={report_state} base={base:?}", canonical_sum.to_value(), canonical_negative.to_value());
+    <EnergyModelDiff as MutationDiff<EnergyModelSnapshot>>::retire_cold(canonical_sum);
+    <EnergyModelDiff as MutationDiff<EnergyModelSnapshot>>::retire_cold(canonical_negative);
+    assert!(!changed || non_empty, "mutation.inverse(base) must not be empty for a mutation that changes state; base={base:?}");
+    assert!(replayed, "applying mutation.inverse(base) (reversed) after mutation must restore base; {report}");
+    assert!(summed_restores, "the summed inverse diffs must restore base from the applied state; {report}");
+    assert!(matches_negative, "the summed inverse diffs must equal the negative of the forward diff, d.inverse(base); {report}");
+}
+
+/// 🧮️ The framework's diff-absorb law (`assert_mutation_diff_absorb_law`) over the reference snapshot: `absorb(d1, d2).apply(base)` equals `d2.apply(d1.apply(base))`.
+fn diff_absorb_law(base: &EnergyModelSnapshot, d1: EnergyModelDiff, d2: EnergyModelDiff) {
+    let mid = protocol::apply_diff_cold(&d1, base).expect("first valid diff must apply");
+    let sequential = protocol::apply_diff_cold(&d2, &mid);
+    <EnergyModelDiff as MutationDiff<EnergyModelSnapshot>>::retire_projection(mid);
+    let mut absorbed = d1;
+    <EnergyModelDiff as ColdMutationDiff<EnergyModelSnapshot>>::absorb(&mut absorbed, d2);
+    let composed = protocol::apply_diff_cold(&absorbed, base);
+    <EnergyModelDiff as MutationDiff<EnergyModelSnapshot>>::retire_cold(absorbed);
+    let matches = composed == sequential;
+    let report = matches.then(String::new).unwrap_or_else(|| format!("composed={composed:?} sequential={sequential:?}"));
+    for projection in [composed, sequential].into_iter().flatten() {
+        <EnergyModelDiff as MutationDiff<EnergyModelSnapshot>>::retire_projection(projection);
+    }
+    assert!(matches, "absorb(d1, d2).apply(base) must equal d2.apply(&d1.apply(base)); {report}");
+}
+
+/// 📱️ The committed vector's inverse steps sum to the negative of its forward diff.
+pub fn assert_inverse_sum(case: &Case) {
+    let (base, mutation) = committed(case);
+    inverse_sum_law(&mutation, &base);
 }
 
 /// 📝️ Every declared kind survives the text and binary op codecs the `dsl::DslEnum` derive

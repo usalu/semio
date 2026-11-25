@@ -145,13 +145,13 @@ export function cacheAreaDirectoryV1(workspace:string,ledger:CacheLedgerV1,area:
  return area.directory===undefined?null:join(workspace,ledger.roots[area.root].directory,...segments(area.directory));
 }
 
-/** 🏠️ The home of one declared area for a long-running writer: its directory, its budget in bytes and, on macOS where a partition is an attached image, a refusal while that image is not attached (a write below an unattached mount point lands on the host volume and is hidden when the image attaches later). A workspace without the partition directory has no image at all and resolves to a plain directory. */
+/** 🏠️ The home of one declared area for a long-running writer: its directory, its budget in bytes and, on macOS where a partition is an attached image, a refusal while that image is not attached (a write below an unattached mount point lands on the host volume and is hidden when the image attaches later). A missing partition directory is refused the same way: on macOS every partition becomes an image, and a home written before it exists is content the image receiver must refuse. The refusal is a `CacheAreaDetachedError`. */
 export function cacheAreaHomeV1(workspace:string,id:string,ledger:CacheLedgerV1=cacheLedgerV1(),partitions:CachePartitionBudgetsV1=budgetPolicy.partitions):Readonly<{directory:string;budgetBytes:number|null}>{
  const area=ledger.areas.find(row=>row.id===id);if(area===undefined)throw Error("Declared cache area required: "+id);
  const directory=cacheAreaDirectoryV1(workspace,ledger,area,partitions);if(directory===null)throw Error("Directory of the cache area required: "+id);
  if(process.platform==="darwin"&&area.partition!==undefined){
   const parent=join(workspace,partitions[area.partition]!.directory),mount=join(parent,mountDirectory),device=(path:string)=>{try{return statSync(path).dev;}catch{return undefined;}};
-  if(device(parent)!==undefined&&(device(mount)===undefined||device(mount)===device(parent)))throw Error("The partition "+area.partition+" is not attached, so the area "+id+" has no home yet / Die Partition "+area.partition+" ist nicht angehängt, der Bereich "+id+" hat noch kein Zuhause");
+  if(device(mount)===undefined||device(mount)===device(parent))throw Object.assign(Error("The partition "+area.partition+" is not attached, so the area "+id+" has no home yet / Die Partition "+area.partition+" ist nicht angehängt, der Bereich "+id+" hat noch kein Zuhause"),{name:"CacheAreaDetachedError"});
  }
  return Object.freeze({directory,budgetBytes:cacheAreaBudgetBytesV1(ledger,area,partitions)});
 }

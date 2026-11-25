@@ -13,17 +13,83 @@
    "de": "Eine städtische Spielplatzwippe nach vielen Sommern: ein 3,5 m langer Lärchenbalken 140 x 200 mm kippt auf einem abgeschmierten geteilten Lager auf einem verzinkten Vierkantpfosten, zwei halb eingegrabene Autoreifen begrenzen ihn auf 10 Grad je Seite, zwei T-Griffe aus lackiertem Stahlrohr sind dort blank gegriffen, wo Hände sie halten; der Balken ist silbergrau vergraut und rissig und trägt ein gesprühtes Tag, das hintere Sitzbrett ist durchgesessen, das vordere in frischer Lärche ersetzt."
   },
   "tags": [
-   "used",
-   "park",
-   "public-space",
-   "play",
-   "seesaw",
-   "rocking",
-   "larch",
-   "timber",
-   "galvanised-steel",
-   "tyre",
-   "playground"
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "park",
+    "title": {
+     "en": "park",
+     "de": "Park"
+    }
+   },
+   {
+    "id": "public-space",
+    "title": {
+     "en": "public space",
+     "de": "öffentlicher Raum"
+    }
+   },
+   {
+    "id": "play",
+    "title": {
+     "en": "play",
+     "de": "Spiel"
+    }
+   },
+   {
+    "id": "seesaw",
+    "title": {
+     "en": "seesaw",
+     "de": "Wippe"
+    }
+   },
+   {
+    "id": "rocking",
+    "title": {
+     "en": "rocking",
+     "de": "Wippen"
+    }
+   },
+   {
+    "id": "larch",
+    "title": {
+     "en": "larch",
+     "de": "Lärche"
+    }
+   },
+   {
+    "id": "timber",
+    "title": {
+     "en": "timber",
+     "de": "Holz"
+    }
+   },
+   {
+    "id": "galvanised-steel",
+    "title": {
+     "en": "galvanised steel",
+     "de": "verzinkter Stahl"
+    }
+   },
+   {
+    "id": "tyre",
+    "title": {
+     "en": "tyre",
+     "de": "Reifen"
+    }
+   },
+   {
+    "id": "playground",
+    "title": {
+     "en": "playground",
+     "de": "Spielplatz"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content (used park objects wave)",

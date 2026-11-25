@@ -41,9 +41,9 @@ export function collectTreeItemControls(state: UiDocumentState, ids: readonly Ui
 /** 🚦️ The text colour a tree row's `style.tone` paints (a history row's outcome, a refused input): a semantic role, and
  * never the only cue — the row's icon and its words say the same. Neutral and the brand roles paint nothing. */
 export const TREE_ROW_TONE_CLASSES: Readonly<Partial<Record<NonNullable<StyleSpec["tone"]>, string>>> = {
-  info: "text-info",
-  success: "text-success",
-  warning: "text-warning",
+  info: "text-info-ink",
+  success: "text-success-ink",
+  warning: "text-warning-ink",
   danger: "text-destructive",
 };
 

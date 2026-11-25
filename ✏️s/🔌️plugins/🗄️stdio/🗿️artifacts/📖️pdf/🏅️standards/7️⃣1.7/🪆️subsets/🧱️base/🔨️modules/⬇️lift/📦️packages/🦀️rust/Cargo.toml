@@ -12,18 +12,8 @@ role = "library"
 [package.metadata.semio.carve]
 owned = [
   "standards::v1_7::subsets::base::modules::lift",
-  "standards::v1_7::subsets::base::modules::lift::catalog_and_page_mode",
-  "standards::v1_7::subsets::base::modules::lift::lifter_and_document",
-  "standards::v1_7::subsets::base::modules::lift::lifter_and_document::document_lift",
-  "standards::v1_7::subsets::base::modules::lift::lifter_and_document::document_lift::controlled",
-  "standards::v1_7::subsets::base::modules::lift::lifter_and_document::page_content",
-  "standards::v1_7::subsets::base::modules::lift::lifter_and_document::page_content::controlled",
-  "standards::v1_7::subsets::base::modules::lift::lifter_and_document::page_content::program",
-  "standards::v1_7::subsets::base::modules::lift::navigation_and_annotations",
-  "standards::v1_7::subsets::base::modules::lift::page_tree",
-  "standards::v1_7::subsets::base::modules::lift::page_tree::tests",
-  "standards::v1_7::subsets::base::modules::lift::resources_and_fonts",
-  "standards::v1_7::subsets::base::modules::lift::resources_and_fonts::resource_entry_tests",
+  "standards::v1_7::subsets::base::modules::lift::document_lift",
+  "standards::v1_7::subsets::base::modules::lift::document_lift::controlled",
 ]
 
 [lints]
@@ -34,7 +24,9 @@ path = "🦀️.rs"
 
 [dependencies]
 semio-framework-value = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-s-artifact-stdio-pdf-xref-stream = { path = "../../../🔗️xref/💧️stream/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-lifter = { path = "../../🧱️lifter/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-page-content = { path = "../../🧩️lifter-and-document/📜️page-content/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-page-tree = { path = "../../🌳️page-tree/📦️packages/🦀️rust" }
 pack = { workspace = true }
 semio-framework-2d = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }

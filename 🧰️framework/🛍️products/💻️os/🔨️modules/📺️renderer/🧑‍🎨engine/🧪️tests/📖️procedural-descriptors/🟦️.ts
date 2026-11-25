@@ -84,7 +84,7 @@ describe("window-kind action scoping", () => {
       ["s.procedural.generation3d@1/*#editor", "renameGeneration", ["generation3d-generations"]],
       ["s.procedural.generation3d@1/*#editor", "removeGeneration", ["generation3d-generations"]],
       ["s.procedural.generation3d@1/*#editor", "updateGenerationValues", ["generation3d-generate-form"]],
-      ["s.procedural.generation3d@1/*#editor", "setLodMode", ["procedural-main"]],
+      ["s.procedural.generation3d@1/*#editor", "setLodMode", ["procedural-main", "generation3d-generate-preview", "procedural-preview"]],
       ["s.procedural.generation3d@1/*#editor", "nodeGraphEdit", ["procedural-main"]],
       ["s.procedural.generation3d@1/*#editor", "setShowMode", ["generation3d-generate-preview", "procedural-preview"]],
       ["s.procedural.generation3d@1/*#editor", "setSunAzimuth", ["generation3d-generate-preview", "procedural-preview"]],

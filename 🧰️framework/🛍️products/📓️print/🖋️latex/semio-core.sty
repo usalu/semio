@@ -58,6 +58,7 @@
     { dark } {
       \colorlet{semio-chrome-base}{semio-chrome-dark-base}
       \colorlet{semio-chrome-window}{semio-chrome-dark-window}
+      \colorlet{semio-chrome-pane}{semio-chrome-dark-pane}
       \colorlet{semio-chrome-canvas}{semio-chrome-dark-canvas}
       \colorlet{semio-chrome-panel}{semio-chrome-dark-panel}
       \colorlet{semio-chrome-border-normal}{semio-chrome-dark-border-normal}
@@ -71,6 +72,7 @@
   } {
     \colorlet{semio-chrome-base}{semio-chrome-light-base}
     \colorlet{semio-chrome-window}{semio-chrome-light-window}
+    \colorlet{semio-chrome-pane}{semio-chrome-light-pane}
     \colorlet{semio-chrome-canvas}{semio-chrome-light-canvas}
     \colorlet{semio-chrome-panel}{semio-chrome-light-panel}
     \colorlet{semio-chrome-border-normal}{semio-chrome-light-border-normal}
@@ -536,8 +538,7 @@
 }
 % 🪆 Composed identifiers nest one separator only — "." between every level,
 % whether appendix→chapter (BB.M), heading→window slot (H.a), or
-% chapter→subsection (SB.B.1). Nonheading keys mute ancestors; headings
-% supply their selected foreground for every segment.
+% chapter→subsection (SB.B.1). The contents register styles the prefix separately.
 % \l_tmpa_int is set to the character count of everything up to & including
 % the *last* "." (0 if there is none); the muted head and bright tail are
 % then sliced out of \l_tmpa_tl by that offset.
@@ -550,22 +551,8 @@
 % 🔗 Single choke point for every hierarchy key chip (heading pairs, window and
 % table headers, nested paragraphs), hence the single place that turns the key
 % into a jump to its Inhaltsverzeichnis line — see the TocLineLinks region.
-% #1 always arrives fully expanded (\exp_args:Ne at both call sites), so the
-% number doubles as the anchor key.
-\cs_new_protected:Npn \semio_hierarchy_chip_number:nnn #1 #2 #3 {
-  \semio@tocline@link {#1} {
-    \semio_identifier_split_point:n {#1}
-    \int_compare:nNnF \l_tmpa_int = \c_zero_int {
-      \textcolor {#2} { \tl_range:Nnn \l_tmpa_tl { 1 } { \l_tmpa_int } }
-    }
-    \textcolor {#3} { \tl_range:Nnn \l_tmpa_tl { \l_tmpa_int + 1 } { -1 } }
-  }
-}
 \cs_new_protected:Npn \semio_hierarchy_chip_number:n #1 {
-  \semio_hierarchy_chip_number:nnn {#1} {semio-chrome-text-normal} {semio-chrome-foreground}
-}
-\cs_new_protected:Npn \semio_heading_chip_number:nn #1 #2 {
-  \semio_hierarchy_chip_number:nnn {#1} {#2} {#2}
+  \semio@tocline@link {#1} { \textcolor { semio-chrome-foreground } {#1} }
 }
 \cs_new_protected:Npn \semio_toc_number:n #1 {
   \semio_identifier_split_point:n {#1}
@@ -593,7 +580,6 @@
 \NewDocumentCommand \semio@kind@label@plural { m } { \semio_kind_label_plural_document:n {#1} }
 \NewDocumentCommand \semio@kind@number { m m } { \semio_kind_chip_number:nn {#1} {#2} }
 \NewDocumentCommand \semio@kind@number@bare { m } { \exp_args:Ne \semio_kind_chip_bare:n {#1} }
-\NewDocumentCommand \semio@heading@number { m m } { \exp_args:Ne \semio_heading_chip_number:nn {#1} {#2} }
 \NewDocumentCommand \semio@toc@number { m } { \exp_args:Ne \semio_toc_number:n {#1} }
 \NewDocumentCommand \semio@register@title { m } { \semio_register_title:n {#1} }
 \NewExpandableDocumentCommand \SemioRegisterTitle { m } { \semio_register_title_text:n {#1} }
@@ -678,7 +664,9 @@
 % by one hairline, so its top edge lies on the previous frame's bottom edge. A
 % paragraph or authored space in between clears the record and the frame keeps
 % its ordinary separation. The record is state, not \lastskip: the page builder
-% empties the main vertical list between two frames. A horizontal edge is shared
+% empties the main vertical list between two frames. The record keeps the glue
+% with its stretch and shrink, so the cancellation also holds on a page that
+% is stretched to the bottom of the text area. A horizontal edge is shared
 % by the two sections it separates and belongs to neither, so it is always drawn
 % in the neutral border colour; only vertical edges belong to one part and may
 % carry its accent colour.
@@ -690,11 +678,12 @@
 \AddToHook{cmd/vspace/before}{\semio@frame@release}
 % 🔓️ Argument: separation from a preceding non-frame.
 \newcommand{\semio@frame@open}[1]{%
-  \ifhmode\par\fi
+  \ifhmode\@@par\fi
   \global\semio@frame@interlockedfalse
   \ifsemio@frame@pending
     \global\semio@frame@interlockedtrue
-    \vskip\dimexpr-\semio@frame@pending@gap-\semio@stroke@hairline\relax
+    \skip@\glueexpr\semio@frame@pending@gap\relax
+    \vskip\glueexpr-\skip@-\semio@stroke@hairline\relax
     \nointerlineskip
   \else
     \ifnum\lastnodetype=-1 \else\addvspace{#1}\fi
@@ -704,14 +693,72 @@
 % 🔒️ Argument: separation to a following non-frame.
 \newcommand{\semio@frame@close}[1]{%
   \ifhmode\par\fi
-  \vskip\dimexpr#1\relax
+  \vskip\glueexpr#1\relax
   \semio@frame@record{#1}%
 }
+% 🧱️ A frame of the column that ends a page closes on the footer rule: on the
+% main vertical list its bottom edge is painted over in the canvas colour and
+% redrawn as a discardable edge. Argument: separation to a following non-frame.
+\newcommand{\semio@frame@seal}[1]{%
+  \ifhmode\par\fi
+  \ifinner\else\ifdim\@totalleftmargin=\z@
+    \kern-\semio@stroke@hairline
+    \semio@frame@erase
+    \semio@frame@edge{}{\z@}{\columnwidth}%
+    \nobreak
+  \fi\fi
+  \semio@frame@close{#1}%
+}
+% 🧽️ Paints the hairline below the current position over in the canvas colour,
+% between the column sides; it bleeds a little so no anti-aliased seam is left.
+\newcommand{\semio@frame@erase}{%
+  \nointerlineskip
+  \moveright\semio@stroke@hairline\hbox{\smash{\textcolor{semio-chrome-canvas}{\vrule width\dimexpr\columnwidth-2\dimexpr\semio@stroke@hairline\relax\relax height\dimexpr\semio@stroke@hairline+.15pt\relax depth.15pt}}\vrule width\z@ height\semio@stroke@hairline}%
+}
+% ✂️ A bottom edge that is shared with whatever follows, or closed by the footer
+% rule when it ends the text area. Every edge records where it is shipped; on the
+% next pass an edge that landed on the bottom of the text area keeps its glue
+% but draws no hairline, so the page break, wherever and however it happens,
+% leaves the frame closed by the footer rule and the layout unchanged.
+% A closing kern keeps \addvspace from taking the edge for removable space.
+% Arguments: the break material between the record and the edge, how far the
+% edge reaches out to the left, and its width.
+\newcount\semio@frame@edge@count
+\newcommand{\semio@frame@edge@reach}{131072}
+\gdef\semio@frame@page@bottom{0}
+\newcommand{\semio@frame@page@at}[1]{\gdef\semio@frame@page@bottom{#1}}
+\newcommand{\semio@frame@edge@at}[2]{%
+  \ifnum\numexpr#2-\semio@frame@page@bottom\relax<\semio@frame@edge@reach\relax
+    \expandafter\gdef\csname semio@frame@edge@end@#1\endcsname{}%
+  \fi
+}
+\newcommand{\semio@frame@edge}[3]{%
+  \global\advance\semio@frame@edge@count\@ne
+  \pdfsavepos
+  \edef\semio@frame@edge@write{\write\@auxout{\noexpand\string\noexpand\semio@frame@edge@at{\the\semio@frame@edge@count}{\noexpand\the\noexpand\pdflastypos}}}%
+  \semio@frame@edge@write
+  #1%
+  \vskip-\semio@stroke@hairline
+  \ifcsname semio@frame@edge@end@\the\semio@frame@edge@count\endcsname
+    \vskip\semio@stroke@hairline
+  \else
+    \cleaders\hbox{\kern-\dimexpr#2\relax\textcolor{semio-chrome-border-normal}{\vrule width\dimexpr#3\relax height\semio@stroke@hairline}}\vskip\semio@stroke@hairline
+  \fi
+  \kern\z@
+}
+% 📄️ Each page records the bottom of its text area for the edges shipped on it.
+\newcommand{\semio@frame@page@end}{%
+  \ifvoid\@cclv\else
+  \edef\semio@frame@page@write{\write\@auxout{\noexpand\string\noexpand\semio@frame@page@at{\noexpand\the\noexpand\numexpr\noexpand\pdflastypos-\number\ht\@cclv\noexpand\relax}}}%
+  \setbox\@cclv\vbox to\ht\@cclv{\boxmaxdepth\maxdimen\pdfsavepos\semio@frame@page@write\unvbox\@cclv}%
+  \fi
+}
+\AddToHook{cmd/@makecol/before}{\semio@frame@page@end}
 % 🧲️ A frame set as a paragraph of its own drops \parskip when it shares the edge above.
 \newcommand{\semio@frame@tight}{\ifsemio@frame@interlocked\parskip\z@\fi}
 % 📝️ Argument: glue between the frame's bottom edge and whatever follows.
 \newcommand{\semio@frame@record}[1]{%
-  \xdef\semio@frame@pending@gap{\the\dimexpr#1\relax}%
+  \xdef\semio@frame@pending@gap{\the\glueexpr#1\relax}%
   \global\semio@frame@pendingtrue
 }
 % \noindent must precede the following material in the same paragraph. A
@@ -727,35 +774,61 @@
 % 📋️ A list is split into one cell per point: a hairline across the column opens
 % the list, separates neighbouring points and closes it, each shared by the two
 % cells it lies between. Inside a window the line runs to the window's border.
+% A list that directly follows a frame opens as a frame: its opening line is the
+% previous frame's bottom edge, so the glue left below that frame is cancelled.
+% Its first cell is padded below the line like every following cell. Every
+% other line is a discardable edge with the item break right above it, so a
+% page that breaks between two points ends on the footer rule and the next page
+% opens on the navbar rule.
 \newif\ifsemio@list@closing
+\newif\ifsemio@list@shared
 \newcommand{\semio@list@divider}{%
   \par
   \global\semio@list@closingfalse
   \begingroup
   \dimen@\prevdepth
   \ifsemio@column@framed \dimen@ii\semio@window@bodypad\else \dimen@ii\z@\fi
-  \nobreak\vskip\dimexpr\itemsep+\parsep\relax
-  \nointerlineskip
-  \moveleft\dimen@ii\vbox to\z@{\vss\hbox{\textcolor{semio-chrome-border-normal}{\vrule width\dimexpr\hsize+2\dimen@ii\relax height\semio@stroke@hairline}}}%
-  \nointerlineskip
+  \ifsemio@list@shared
+    \global\semio@list@sharedfalse
+    \nobreak\vskip\semio@stroke@hairline
+    \nointerlineskip
+    \moveleft\dimen@ii\vbox to\z@{\vss\hbox{\textcolor{semio-chrome-border-normal}{\vrule width\dimexpr\hsize+2\dimen@ii\relax height\semio@stroke@hairline}}}%
+    \nointerlineskip
+    \nobreak\vskip\dimexpr\itemsep+\parsep\relax
+    \dimen@\z@
+  \else
+    \nobreak\vskip\dimexpr\itemsep+\parsep\relax
+    \semio@frame@edge{\penalty-\@lowpenalty}{\dimen@ii}{\hsize+2\dimen@ii}%
+  \fi
   \prevdepth\dimen@
   \endgroup
 }
 \newcommand{\semio@list@install}{%
   \let\semio@list@item\item
+  \global\semio@list@sharedfalse
+  \ifsemio@frame@pending
+    \semio@frame@open\z@
+    \vskip\z@
+    \global\semio@list@sharedtrue
+  \fi
+  \@itempenalty\@M
   \def\item{\semio@list@divider\semio@list@item}%
 }
 % 🪟️ Inside a window the closing line is owed to whatever follows the list: a
-% paragraph draws it, the window's own bottom border replaces it.
+% paragraph draws it, the window's own bottom border replaces it. In the column
+% it is a discardable edge, so a list that ends a page closes on the footer rule.
 \newcommand{\semio@list@close}{%
   \ifsemio@column@framed
     \par\global\semio@list@closingtrue
     \xdef\semio@list@closing@width{\the\dimexpr\hsize+2\dimexpr\semio@window@bodypad\relax\relax}%
   \else
-    \semio@list@divider
+    \par
+    \nobreak\vskip\dimexpr\itemsep+\parsep\relax
+    \semio@frame@edge{\penalty\@endparpenalty}{\z@}{\hsize}%
+    \@endparpenalty\@M
   \fi
   \let\item\semio@list@item
-  \xdef\semio@list@tail{\the\dimexpr\@topsepadd\relax}%
+  \xdef\semio@list@tail{\the\glueexpr\@topsepadd\relax}%
 }
 \newcommand{\semio@list@closing@draw}{%
   \ifsemio@list@closing

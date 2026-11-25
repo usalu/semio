@@ -195,6 +195,37 @@ async fn inference_get_on_an_open_probe_names_the_missing_service_not_found() {
     assert_eq!(payload["code"], "NOT_FOUND");
 }
 
+#[test]
+fn inference_list_pages_the_roster_without_payload_contracts_unless_narrowed() {
+    let workspace = open_workspace(plugin_only_catalog("neutral-host"));
+    let roster = declared_inferences_for_workspace(&workspace).expect("roster");
+    let mut registry = InMemoryToolRegistry::new();
+    register_inference_tools(&mut registry, Some(workspace));
+    let mut seen = Vec::new();
+    let mut cursor: Option<String> = None;
+    loop {
+        let mut arguments = serde_json::json!({ "limit": 1 });
+        if let Some(cursor) = &cursor {
+            arguments["cursor"] = serde_json::json!(cursor);
+        }
+        let page = registry.call("inference_list", arguments).expect("registered tool").structured_content.expect("structured content");
+        assert_eq!(page["total"], roster.len());
+        for row in page["declared"].as_array().unwrap() {
+            assert!(row.get("payload").is_none(), "an unfiltered roster is metadata only: {row}");
+            seen.push(row["inferenceSchema"].as_str().unwrap().to_string());
+        }
+        cursor = page["nextCursor"].as_str().map(str::to_string);
+        if cursor.is_none() {
+            break;
+        }
+    }
+    assert_eq!(seen, roster.iter().map(|row| row.inference_schema.clone()).collect::<Vec<_>>());
+    let narrowed = registry.call("inference_list", serde_json::json!({ "inferenceSchema": roster[0].inference_schema })).unwrap().structured_content.unwrap();
+    assert_eq!(narrowed["declared"][0], serde_json::to_value(&roster[0]).unwrap(), "narrowed to one service the full declaration rides");
+    let bogus = registry.call("inference_list", serde_json::json!({ "cursor": "bogus" })).unwrap();
+    assert_eq!(bogus.structured_content.unwrap()["code"], "INPUT_INVALID");
+}
+
 //#endregion 🧪️Discovery
 
 //#region 🧪️ExecutionSeam

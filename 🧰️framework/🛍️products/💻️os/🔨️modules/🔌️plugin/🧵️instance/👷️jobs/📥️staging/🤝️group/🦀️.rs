@@ -7,7 +7,7 @@ use semio_plugin_decl_emission::Emit;
 use store::MemberFactory;
 use store::ReferenceSpaceMember;
 use semio_framework::FaultFrom;
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use semio_plugin_decl_app::tool_contract::ArtifactToolCompletionValue;
 use semio_plugin_instance_children::children_components::ChildComposition;

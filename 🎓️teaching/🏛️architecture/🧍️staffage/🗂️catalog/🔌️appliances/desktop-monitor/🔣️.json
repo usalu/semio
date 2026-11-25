@@ -13,12 +13,48 @@
       "de": "Ein 24-Zoll-LED-Desktop-Monitor auf Standfuß, 0,41 m hoch und 0,21 m tief, Panel um 5 Grad nach hinten geneigt: eingeschaltet gibt er 25 W als Wärme ab, den größten Teil über das Rückgehäuse, im Bereitschaftsbetrieb 0,25 W."
     },
     "tags": [
-      "monitor",
-      "display",
-      "office-equipment",
-      "internal-gain",
-      "electrical",
-      "heat-source"
+      {
+        "id": "monitor",
+        "title": {
+          "en": "monitor",
+          "de": "Monitor"
+        }
+      },
+      {
+        "id": "display",
+        "title": {
+          "en": "display",
+          "de": "Bildschirm"
+        }
+      },
+      {
+        "id": "office-equipment",
+        "title": {
+          "en": "office equipment",
+          "de": "Büroausstattung"
+        }
+      },
+      {
+        "id": "internal-gain",
+        "title": {
+          "en": "internal gain",
+          "de": "innere Wärmelast"
+        }
+      },
+      {
+        "id": "electrical",
+        "title": {
+          "en": "electrical",
+          "de": "Elektro"
+        }
+      },
+      {
+        "id": "heat-source",
+        "title": {
+          "en": "heat source",
+          "de": "Wärmequelle"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage content (A3)",

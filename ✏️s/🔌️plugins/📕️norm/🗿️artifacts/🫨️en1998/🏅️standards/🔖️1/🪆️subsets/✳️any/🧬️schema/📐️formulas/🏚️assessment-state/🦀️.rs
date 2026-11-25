@@ -185,7 +185,3 @@ pub fn member_ratios(a: &En1998Assessment, annex: AnnexChoice) -> MemberRatios {
     let shear = (a.shear_force_demand_n > 0.0).then(|| demand_capacity_ratio(a.shear_force_demand_n, shear_capacity_n));
     MemberRatios { chord, chord_capacity_rad, shear, shear_capacity_n }
 }
-
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;

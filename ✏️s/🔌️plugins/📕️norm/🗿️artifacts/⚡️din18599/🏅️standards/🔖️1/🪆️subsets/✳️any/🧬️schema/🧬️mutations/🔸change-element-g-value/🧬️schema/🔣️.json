@@ -11,7 +11,7 @@
   ],
   "properties": {
     "mutation": {
-      "const": "changeelementgvalue"
+      "const": "changeElementGValue"
     },
     "elementId": {
       "type": "string",

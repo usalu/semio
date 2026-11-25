@@ -1,0 +1,40 @@
+{
+  "schema": "select-popup-rows/v1",
+  "rowInset": 0,
+  "cases": [
+    {
+      "id": "three-rows",
+      "items": 3,
+      "triggerWidth": 120,
+      "menuTop": 0,
+      "rows": [
+        { "index": 0, "x": 0, "yRows": 0, "width": 120, "heightRows": 1 },
+        { "index": 1, "x": 0, "yRows": 1, "width": 120, "heightRows": 1 },
+        { "index": 2, "x": 0, "yRows": 2, "width": 120, "heightRows": 1 }
+      ],
+      "menuRows": 3,
+      "separators": 2,
+      "paint": { "chosen": "active-fill", "hovered": "hover-fill-and-emphasised-text", "tick": false, "chevron": "chevron-down" }
+    },
+    {
+      "id": "one-row",
+      "items": 1,
+      "triggerWidth": 64,
+      "menuTop": 26,
+      "rows": [{ "index": 0, "x": 0, "yRows": 0, "width": 64, "heightRows": 1 }],
+      "menuRows": 1,
+      "separators": 0,
+      "paint": { "chosen": "active-fill", "hovered": "hover-fill-and-emphasised-text", "tick": false, "chevron": "chevron-down" }
+    },
+    {
+      "id": "empty",
+      "items": 0,
+      "triggerWidth": 120,
+      "menuTop": 0,
+      "rows": [],
+      "menuRows": 0,
+      "separators": 0,
+      "paint": { "chosen": "active-fill", "hovered": "hover-fill-and-emphasised-text", "tick": false, "chevron": "chevron-down" }
+    }
+  ]
+}

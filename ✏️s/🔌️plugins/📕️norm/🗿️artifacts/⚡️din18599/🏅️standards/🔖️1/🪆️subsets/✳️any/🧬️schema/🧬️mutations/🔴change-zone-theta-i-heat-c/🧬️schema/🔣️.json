@@ -11,7 +11,7 @@
   ],
   "properties": {
     "mutation": {
-      "const": "changezonethetaiheatc"
+      "const": "changeZoneThetaIHeatC"
     },
     "zoneId": {
       "type": "string",

@@ -26,6 +26,7 @@ doctest = false
 semio-framework-artifact-reference = { path = "../../../../../../../🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust" }
 framework_hash = { path = "../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
 semio-framework = { workspace = true }
+semio-framework-async = { workspace = true }
 semio-framework-onboarding = { path = "../../../../../../../🔨️modules/🎓️onboarding/📦️packages/🦀️rust" }
 semio-os-kernel = { path = "../../../../../📦️packages/🦀️rust", features = ["sync", "ureq"] }
 semio-framework-process-routing-workspace = { path = "../../../../../../../🔨️modules/🏃️process/🧭️routing/🏠️workspace/📦️packages/🦀️rust" }

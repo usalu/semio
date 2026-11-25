@@ -20,7 +20,7 @@ describe("tree helpers", () => {
         expect(markup).toContain("h-full");
         expect(markup).not.toContain("bg-foreground");
         expect(markup).toContain('data-slot="slider-thumb"');
-        expect(markup).toContain("rounded-full");
+        expect(markup).not.toMatch(/\brounded(?:-|\b)/);
         expect(markup).toContain("hover:bg-emphasized");
         expect(markup).toContain("group-hover:bg-emphasized");
         expect(markup).toContain('data-slot="slider-value"');

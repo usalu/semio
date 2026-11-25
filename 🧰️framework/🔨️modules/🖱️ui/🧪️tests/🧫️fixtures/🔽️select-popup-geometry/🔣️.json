@@ -11,8 +11,8 @@
       "id": "normal",
       "viewportHeight": 1000,
       "popupWidth": 128,
-      "popupHeight": 232.0625,
-      "scrollViewportHeight": 185.3125,
+      "popupHeight": 214.75,
+      "scrollViewportHeight": 168,
       "initialScroll": 0
     },
     {
@@ -21,9 +21,10 @@
       "popupWidth": 128,
       "popupHeight": 189.25,
       "scrollViewportHeight": 142.5,
-      "initialScroll": 29,
+      "initialScroll": 10,
       "wheelDelta": 34,
-      "scrollAfterWheel": 42
+      "scrollAfterWheel": 25.5
     }
-  ]
+  ],
+  "rowHeight": 24
 }

@@ -32,11 +32,11 @@ export function useFooterItemsState({ uiDevice, mobile, buildPanelSelectionProps
       items.push(navbarFillItem("footerLeadingFill"));
       if (credits.length > 0) items.push(shellFooterCreditsMenuItem(credits, uiLocale));
     } else {
-      if (credits.some((item) => item.placement === "leading")) items.push({ key: "footerLeadingGap", className: "w-huge", content: null });
+      if (credits.some((item) => item.placement === "leading")) items.push({ key: "footerLeadingSpacer", className: "w-huge", content: null });
       for (const item of credits.filter((item) => item.placement === "leading")) items.push(shellFooterNavbarItem(item, uiLocale, false));
       items.push(navbarFillItem("footerLeadingFill"));
       for (const item of credits.filter((item) => item.placement === "trailing")) items.push(shellFooterNavbarItem(item, uiLocale, false));
-      if (credits.some((item) => item.placement === "trailing")) items.push({ key: "footerTrailingGap", className: "w-huge", content: null });
+      if (credits.some((item) => item.placement === "trailing")) items.push({ key: "footerTrailingSpacer", className: "w-huge", content: null });
     }
     if (!mobile && !(compactFooter && presencePeers.length === 0)) items.push({ key: "presenceBar", content: <PresenceBar id="s-presence-peers" peers={timeTravelPeers.peers} /> });
     if (agentBridge.pendingApprovals.length > 0) items.push({ key: "agentApprovals", content: <AgentApprovalsNotice approvals={agentBridge.pendingApprovals} onReview={revealAgentApproval} /> });

@@ -1,5 +1,5 @@
 {
-  "mutation": "changeelementlabelde",
+  "mutation": "changeElementLabelDe",
   "elementId": "wall-n",
   "newLabelDe": "Nordwand außen"
 }

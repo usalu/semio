@@ -122,6 +122,35 @@ pub fn lateral_deflection(h: f64, lambda: f64, k_h: f64, d: f64, x: f64) -> f64 
     2.0 * h * lambda / (k_h * d) * (-lambda * x).exp() * (lambda * x).cos()
 }
 
+/// 🪵️ Head deflection y(0) [m] of a free-head pile of finite length `length` with a free tip on a Winkler foundation under the head load `h`: the four-constant solution `y = Σ c_i φ_i` of `EI y'''' + k_h·D y = 0` with `y'' = 0`, `EI y''' = H` at the head and `y'' = y''' = 0` at the tip, solved by Gaussian elimination; beyond `λ·L = 24` the tip no longer matters and the long-pile closed form is exact to double precision.
+pub fn lateral_head_deflection(h: f64, lambda: f64, k_h: f64, d: f64, length: f64) -> f64 {
+    let long = lateral_deflection(h, lambda, k_h, d, 0.0);
+    let x = lambda * length;
+    if !(x > 0.0 && x < 24.0) {
+        return long;
+    }
+    let ei = k_h * d / (4.0 * lambda.powi(4));
+    let (p, q) = (x.exp(), (-x).exp());
+    let (c, s) = (x.cos(), x.sin());
+    let (f1, f2, f3, f4) = (p * c, p * s, q * c, q * s);
+    let mut m = [[0.0, 1.0, 0.0, -1.0, 0.0], [-2.0, 2.0, 2.0, 2.0, h / (ei * lambda.powi(3))], [-f2, f1, f4, -f3, 0.0], [-f1 - f2, f1 - f2, f3 - f4, f3 + f4, 0.0]];
+    for col in 0..4 {
+        let pivot = (col..4).max_by(|a, b| m[*a][col].abs().total_cmp(&m[*b][col].abs())).unwrap_or(col);
+        m.swap(col, pivot);
+        for row in col + 1..4 {
+            let factor = m[row][col] / m[col][col];
+            for k in col..5 {
+                m[row][k] -= factor * m[col][k];
+            }
+        }
+    }
+    let mut c_i = [0.0; 4];
+    for row in (0..4).rev() {
+        c_i[row] = (m[row][4] - (row + 1..4).map(|k| m[row][k] * c_i[k]).sum::<f64>()) / m[row][row];
+    }
+    c_i[0] + c_i[2]
+}
+
 /// 🪵️ Bending moment line M(x) [N·m] of the same pile: M = −(H/λ)·e^(−λx)·sin(λx), extremum 0.3224·H/λ at λx = π/4.
 pub fn lateral_moment(h: f64, lambda: f64, x: f64) -> f64 {
     -(h / lambda) * (-lambda * x).exp() * (lambda * x).sin()
@@ -253,7 +282,11 @@ pub fn resistance_settlement(n: f64, rs_max: f64, rb_max: f64, ea: f64, l: f64, 
 
 fn pile_09(c: &Case) -> R {
     let (n, rs_max, rb_max, d) = (c.positive("n")?, c.positive("rs_max")?, c.positive("rb_max")?, c.positive("d")?);
-    let (ea, l) = (c.positive("ea")?, c.positive("l")?);
+    let l = c.positive("l")?;
+    let ea = match c.opt("ea") {
+        Some(_) => c.positive("ea")?,
+        None => concrete_modulus_pa(c.so("concrete_class", "")).ok_or("pile concrete class without a registry modulus")? * c.positive("area")?,
+    };
     let (s_ref_s, s_ref_b) = (c.o("s_ref_s", 0.01 * d), c.o("s_ref_b", 0.10 * d));
     gate(n < rs_max + rb_max, "load exceeds the sum of shaft and base capacity")?;
     let (s_mob, s_el) = resistance_settlement(n, rs_max, rb_max, ea, l, (s_ref_s, s_ref_b)).ok_or("load exceeds the sum of shaft and base capacity")?;

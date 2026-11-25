@@ -4,6 +4,8 @@ use semio_framework_replication_codec::PackEncodeOptions as EncodeOptions;
 fn encode_document(spec:&semio_framework_dsl_record::RecordSpec,record:&semio_framework_dsl_record::RecordValue,options:&EncodeOptions)->Result<Vec<u8>,semio_framework_pack_error::PackRefusal>{
  semio_framework_pack_record_encode::encode_document_controlled(spec,record,options,&mut semio_framework_value::native_encoding::NativeEncodeControl::new(1<<30,&mut |_|true))
 }
+/// 🏦️ Reference oracle for expression fields: printing a formula is paid original Work, so the controlled document encoder runs under a real Source turn and its finite stock.
+fn encode_document_with_loan(spec:&semio_framework_dsl_record::RecordSpec,record:&semio_framework_dsl_record::RecordValue)->Vec<u8>{let big=1usize<<30;let stock=crate::tests::staged_rig::Stock{grant:RetainedCloneGrant{maximum_items:big,maximum_copy_bytes:big,maximum_capacity_bytes:big,maximum_release_bytes:big,maximum_depth:64},work:1<<40,submitted:Default::default(),partials:0,posts:0};let mut bank=crate::tests::staged_rig::EncodeBank::new(stock,false);let mut encoded=None;bank.run(big,64,|_,control|{encoded=Some(semio_framework_pack_record_encode::encode_document_controlled(spec,record,&Default::default(),control));Ok(())}).unwrap();bank.finish();encoded.unwrap().unwrap()}
 use semio_framework_dsl_record::{BorrowedFieldSpec as F,BorrowedShape as B,RecordLayout,DslField,FieldValue};
 use semio_framework_dsl_record_derive::DslRecord;
 #[derive(Debug,PartialEq,DslRecord)]
@@ -13,7 +15,7 @@ struct Original{name:String,enabled:bool}
 struct ExpressionOriginal{formula:semio_framework_dsl_record::ExprValue,text:String}
 #[test]
 fn borrowed_pack_document_derived_expression_joins_original_symbol_and_default_codec(){
- use semio_framework_dsl_record::{ExprValue as E,ExprOp,BorrowedDslRecord};let source=ExpressionOriginal{formula:E::Binary(ExprOp::Add,Box::new(E::Num(1.0)),Box::new(E::Binary(ExprOp::Add,Box::new(E::Num(2.0)),Box::new(E::Num(3.0))))),text:"1 + (2 + 3)".into()};let semio_framework_dsl_record::Shape::Record(make)=ExpressionOriginal::shape()else{panic!("derived Record")};let FieldValue::Record(record)=source.to_value()else{panic!("derived Record")};let expected=encode_document(&(make.ordinary)(),&record,&Default::default()).unwrap();let mut cursor=BorrowedPackDocumentCursor::default();let mut actual=Vec::new();let mut output=[0;1];for _ in 0..2000000{let grant=exact(&cursor);let(step,birth,free)=turn(grant,|effect|cursor.advance(&source,ExpressionOriginal::RECORD,&mut output,effect).unwrap());assert_eq!((birth,free),(step.progress.retained_capacity_bytes,0));assert!(step.progress.fits(grant));actual.extend_from_slice(&output[..step.written_bytes]);if step.complete{break;}}let complete=cursor.is_complete();close(&mut cursor);assert!(complete);assert_eq!(actual,expected);let mut accepted=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(65536,&mut accepted);assert_eq!(source.to_value_controlled(&mut control).unwrap(),FieldValue::Record(record));
+ use semio_framework_dsl_record::{ExprValue as E,ExprOp,BorrowedDslRecord};let source=ExpressionOriginal{formula:E::Binary(ExprOp::Add,Box::new(E::Num(1.0)),Box::new(E::Binary(ExprOp::Add,Box::new(E::Num(2.0)),Box::new(E::Num(3.0))))),text:"1 + (2 + 3)".into()};let semio_framework_dsl_record::Shape::Record(make)=ExpressionOriginal::shape()else{panic!("derived Record")};let FieldValue::Record(record)=source.to_value()else{panic!("derived Record")};let expected=encode_document_with_loan(&(make.ordinary)(),&record);let mut cursor=BorrowedPackDocumentCursor::default();let mut actual=Vec::new();let mut output=[0;1];for _ in 0..2000000{let grant=exact(&cursor);let(step,birth,free)=turn(grant,|effect|cursor.advance(&source,ExpressionOriginal::RECORD,&mut output,effect).unwrap());assert_eq!((birth,free),(step.progress.retained_capacity_bytes,0));assert!(step.progress.fits(grant));actual.extend_from_slice(&output[..step.written_bytes]);if step.complete{break;}}let complete=cursor.is_complete();close(&mut cursor);assert!(complete);assert_eq!(actual,expected);let mut accepted=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(65536,&mut accepted);assert_eq!(source.to_value_controlled(&mut control).unwrap(),FieldValue::Record(record));
 }
 static FIELDS:[F;2]=[F::new(0,"name",B::Text),F::new(1,"enabled",B::Bool)];
 fn spec()->BorrowedRecordSpec{BorrowedRecordSpec{keyword:None,layout:RecordLayout::Inline,fields:&FIELDS}}
@@ -26,7 +28,7 @@ fn borrowed_pack_document_default_codec_exact_original_output_and_cancellation()
  for row in fixture["records"].as_array().unwrap(){
   let source=Original{name:row["name"].as_str().unwrap().into(),enabled:row["enabled"].as_bool().unwrap()};let Bowned=Original::shape();let semio_framework_dsl_record::Shape::Record(make)=Bowned else{panic!("original Record")};let FieldValue::Record(record)=source.to_value()else{panic!("original Record")};let expected=encode_document(&(make.ordinary)(),&record,&Default::default()).unwrap();
   let mut cursor=BorrowedPackDocumentCursor::default();let mut output=[0;1];let mut actual=Vec::new();let mut requested=false;
-  for _ in 0..2000000{let grant=exact(&cursor);let source_request=cursor.phase==Phase::Segment&&!cursor.hash_pending&&cursor.compressed.is_none()&&!cursor.deflate.is_complete()&&!cursor.need_raw&&cursor.deflate.phase().as_str()=="input"&&cursor.pending.is_none()&&!cursor.raw_done;if source_request{assert!(grant.maximum_copy_bytes>=fixture["controlBookkeeping"]["minimumGrantCopyBytes"].as_u64().unwrap()as usize);}
+  for _ in 0..2000000{let grant=exact(&cursor);let source_request=cursor.measure&&cursor.phase==Phase::Segment&&cursor.staged_hashed==cursor.staged_end&&cursor.compressed.is_none()&&!cursor.deflate.is_complete()&&!cursor.need_raw&&cursor.deflate.phase().as_str()=="input"&&cursor.staged_start==cursor.staged_end&&!cursor.raw_done;if source_request{assert!(grant.maximum_copy_bytes>=fixture["controlBookkeeping"]["minimumGrantCopyBytes"].as_u64().unwrap()as usize);}
 if grant.maximum_copy_bytes!=0{let(zero,birth,free)=turn(RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-1,..grant},|effect|cursor.advance(&source,spec(),&mut output,effect).unwrap());assert_eq!(zero.progress,Default::default());assert_eq!((birth,free),(0,0));}
    let(step,birth,free)=turn(grant,|effect|cursor.advance(&source,spec(),&mut output,effect).unwrap());assert_eq!(birth,step.progress.retained_capacity_bytes);assert_eq!(free,0);assert!(step.progress.fits(grant));if source_request{assert!(cursor.need_raw);assert_eq!(step.progress.copied_items,1);assert_eq!(step.progress.copied_bytes,fixture["controlBookkeeping"]["copyBytes"].as_u64().unwrap()as usize);requested=true;}actual.extend_from_slice(&output[..step.written_bytes]);if step.complete{break;}}
   assert!(requested);assert!(cursor.is_complete());assert_eq!(cursor.output_len(),Some(expected.len()));assert_eq!(actual,expected);close(&mut cursor);
@@ -58,6 +60,17 @@ fn borrowed_pack_document_batched_actions_match_the_canonical_oracle_in_fewer_ac
   let(result,birth,free)=turn(grant,|effect|cursor.advance_batch(&source,spec(),&mut output,effect,1024));let step=result.unwrap();assert_eq!((birth,free),(step.progress.retained_capacity_bytes,0));assert!(step.progress.fits(grant));assert!(step.progress.copied_items<=1);assert!(cursor.last_turn_work()<=1024);actions+=1;actual.extend_from_slice(&output[..step.written_bytes]);if step.complete{break;}}
  assert!(cursor.is_complete());assert_eq!(actual,expected);close(&mut cursor);
  assert!(actions*2<single_actions,"{actions} batched actions against {single_actions} single-event actions");
+}
+
+/// 🏃️ Under a grant that funds whole runs, one segment event stages a run of raw bytes and drives every compressor step it feeds, and the emitting pass lends the measured pass's kept compressed bytes a block per event without projecting or deflating again: the document is the canonical one byte for byte, and its events stay proportional to runs of raw bytes of one pass.
+#[test]
+fn borrowed_pack_document_segment_runs_match_the_canonical_oracle_in_events_per_run(){
+ let source=Original{name:"run-based segment text ".repeat(800),enabled:true};let semio_framework_dsl_record::Shape::Record(make)=Original::shape()else{panic!("Record")};let FieldValue::Record(record)=source.to_value()else{panic!("Record")};let expected=encode_document(&(make.ordinary)(),&record,&Default::default()).unwrap();
+ let mut cursor=BorrowedPackDocumentCursor::default();let mut output=[0;4096];let mut actual=Vec::new();let mut events=0usize;
+ for _ in 0..3000000{let first=exact(&cursor);let grant=RetainedCloneGrant{maximum_copy_bytes:first.maximum_copy_bytes+65536,..first};
+  let(result,birth,free)=turn(grant,|effect|cursor.advance(&source,spec(),&mut output,effect));let step=result.unwrap();assert_eq!((birth,free),(step.progress.retained_capacity_bytes,0));assert!(step.progress.fits(grant));assert!(step.progress.copied_items<=1);events+=1;actual.extend_from_slice(&output[..step.written_bytes]);if step.complete{break;}}
+ assert!(cursor.is_complete());assert_eq!(actual,expected);close(&mut cursor);
+ let raw=source.name.len();assert!(events*8<raw,"{events} events for {raw} raw body bytes: one measuring pass, then kept compressed bytes a block per event");
 }
 
 #[test]
@@ -92,11 +105,28 @@ fn borrowed_pack_document_standard_chunks_preserve_original_and_independent_hash
 fn borrowed_pack_document_chunk_frontiers_cancel_with_exact_original_retirement(){
  let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🧱️chunks/🔣️.json")).unwrap();let pattern:Vec<u8>=fixture["pattern"].as_array().unwrap().iter().map(|v|v.as_u64().unwrap()as u8).collect();let source=ChunkOriginal{data:pattern.repeat(fixture["repeat"].as_u64().unwrap()as usize)};let original=source.data.as_ptr();let spec=BorrowedRecordSpec{keyword:None,layout:RecordLayout::Inline,fields:&CHUNK_FIELDS};
  let native=PagedChunkOriginal{data:semio_framework_value::paged::PagedBytes::try_from_slice(&source.data).unwrap()};let native_pointer=native.data.retained_bytes().backing_ptr(0);for source_view in [&source as &dyn semio_framework_dsl_record::native_encoding::FieldProjectionSource,&native]{
- for target in fixture["cancelFrontiers"].as_array().unwrap(){let target=target.as_str().unwrap();let frontier=match target{"ChunkBirth"=>Phase::ChunkBirth,"ChunkRead"=>Phase::ChunkRead,"ChunkHash"=>Phase::ChunkHash,"ChunkCatalog"=>Phase::ChunkCatalog,"ChunkPrefix"=>Phase::ChunkPrefix,"ChunkEmit"=>Phase::ChunkEmit,"ChunkChecksum"=>Phase::ChunkChecksum,"TablePrefix"=>Phase::TablePrefix,"TableBody"=>Phase::TableBody,"TableChecksum"=>Phase::TableChecksum,_=>panic!("unknown cancellation frontier")};let mut cursor=BorrowedPackDocumentCursor::default();let mut output=[0;1];let mut reached=false;
+ for target in fixture["cancelFrontiers"].as_array().unwrap(){let target=target.as_str().unwrap();let frontier=match target{"ChunkBirth"=>Phase::ChunkBirth,"ChunkRead"=>Phase::ChunkRead,"ChunkCatalog"=>Phase::ChunkCatalog,"ChunkPrefix"=>Phase::ChunkPrefix,"ChunkEmit"=>Phase::ChunkEmit,"ChunkChecksum"=>Phase::ChunkChecksum,"TablePrefix"=>Phase::TablePrefix,"TableBody"=>Phase::TableBody,"TableChecksum"=>Phase::TableChecksum,_=>panic!("unknown cancellation frontier")};let mut cursor=BorrowedPackDocumentCursor::default();let mut output=[0;1];let mut reached=false;
   for _ in 0..10000000{if cursor.phase==frontier{reached=true;break;}let grant=exact(&cursor);let(step,birth,free)=turn(grant,|effect|cursor.advance(source_view,spec,&mut output,effect).unwrap());assert_eq!((birth,free),(step.progress.retained_capacity_bytes,0));assert!(step.progress.fits(grant));if step.complete{break;}}
   let demand=cursor.retirement_demands().unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};let mut denied=vec![RetainedCloneGrant{maximum_items:0,..grant}];if demand.copy_bytes!=0{denied.push(RetainedCloneGrant{maximum_copy_bytes:demand.copy_bytes-1,..grant});}if demand.release_bytes!=0{denied.push(RetainedCloneGrant{maximum_release_bytes:demand.release_bytes-1,..grant});}if demand.depth!=0{denied.push(RetainedCloneGrant{maximum_depth:demand.depth-1,..grant});}
   for denied in denied{let(step,birth,free)=turn(denied,|effect|cursor.close(effect).unwrap());assert_eq!(step.progress,Default::default());assert_eq!((birth,free),(0,0));}close(&mut cursor);assert!(reached,"missing original frontier{target}");assert_eq!(source.data.as_ptr(),original);
  }
  assert_eq!(native.data.retained_bytes().backing_ptr(0),native_pointer);}
 
+}
+
+/// 🧪️ Every frame split and body length ends each segment with complete output custody before the compressor restarts, one action per event and batched, and the bytes stay the canonical ones.
+#[test]
+fn borrowed_pack_document_every_frame_split_and_body_length_restarts_with_complete_custody(){
+ let semio_framework_dsl_record::Shape::Record(make)=Original::shape()else{panic!("Record")};let mut bad=Vec::new();
+ for frame in [16usize,63,64,65,200]{for length in [0usize,1,2,5,63,64,65,130,400]{for batched in [false,true]{
+  let source=Original{name:"αβ x".repeat(length/4+1)[..].chars().take(length).collect(),enabled:length%2==0};let FieldValue::Record(record)=source.to_value()else{panic!("Record")};
+  let mut options=EncodeOptions::default();options.frame_size=frame as u64;let expected=encode_document(&(make.ordinary)(),&record,&options).unwrap();
+  let mut cursor=BorrowedPackDocumentCursor::with_options(&options).unwrap();let mut output=[0;7];let mut one=[0;1];let mut actual=Vec::new();let mut failure=None;
+  for _ in 0..3000000{let first=exact(&cursor);let grant=RetainedCloneGrant{maximum_copy_bytes:first.maximum_copy_bytes+if batched{4096}else{0},..first};
+   let measuring=cursor.output_len().is_none();match turn(grant,|effect|if batched{cursor.advance_batch(&source,spec(),&mut output,effect,1024)}else if measuring{cursor.advance(&source,spec(),&mut [],effect)}else{cursor.advance(&source,spec(),&mut one,effect)}).0{Ok(step)=>{if batched{actual.extend_from_slice(&output[..step.written_bytes]);}else{actual.extend_from_slice(&one[..step.written_bytes]);}if step.complete{break;}}Err(error)=>{failure=Some(format!("{:?}",error.reason));break}}}
+  if let Some(reason)=failure{bad.push(format!("frame {frame} length {length} batched {batched}: {reason}"));std::mem::forget(cursor);continue;}
+  if actual!=expected{bad.push(format!("frame {frame} length {length} batched {batched}: bytes differ"));close(&mut cursor);continue;}
+  close(&mut cursor);
+ }}}
+ assert!(bad.is_empty(),"{} failing combinations:\n{}",bad.len(),bad.join("\n"));
 }

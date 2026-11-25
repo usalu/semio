@@ -42,7 +42,7 @@ export async function compileDistributionProductV1(workspace:string,invocation:S
     return readDistributionCompileReceiptV1(JSON.stringify({version:1,mode,owner,manifestSha256:createHash("sha256").update(manifest).digest("hex")}),mode);
    }finally{for(const[name,value]of previous)if(value===undefined)delete process.env[name];else process.env[name]=value;}
   });
- ))))));
+ }))))));
 }
 
 /** 🏗️ Runs the real compiler without copy hooks, capturing main and worker input byte witnesses. */

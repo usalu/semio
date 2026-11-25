@@ -110,7 +110,7 @@ describe("📡️ a history change replaying before adoption is announced outsid
     expect(start, "applyLoadDocumentEffect must still be where this law reads it").toBeGreaterThanOrEqual(0);
     const load = host.slice(start, host.indexOf("\nexport ", start + 1));
     expect(
-      [load.split("programHistoryProjectionsWithLoadV1(").length - 1, /progress: \(status\) => \{[^}]*showLoad\(status\);/u.test(load), /\} finally \{\s*showLoad\(null\);/u.test(load)],
+      [load.split("programHistoryProjectionsWithLoadV1(").length - 1, /progress: \(status\) => \{[^}]*showLoad\(documentLoadRunningV1\(status\.state\) && !stopping \? status : null\);/u.test(load), /\} finally \{\s*showLoad\(null\);/u.test(load)],
       "the shell folds every polled step of a load into the loading program's projection and ends it however the load ends",
     ).toEqual([1, true, true]);
   });

@@ -1,0 +1,9 @@
+{
+  "cases": [
+    {"id": "calm-host-resident-leads", "peakRssBytes": 2147483648, "chargedSamples": [104857600, 1073741824, 2040109465], "expected": 2147483648},
+    {"id": "compressed-final-charged-leads", "peakRssBytes": 2304770048, "chargedSamples": [1776287744, 6962544640, 8426356736, 7098859520], "expected": 8426356736},
+    {"id": "no-sample-arrived", "peakRssBytes": 314572800, "chargedSamples": [], "expected": 314572800},
+    {"id": "peak-is-not-the-last-sample", "peakRssBytes": 0, "chargedSamples": [5, 9, 3], "expected": 9},
+    {"id": "equal", "peakRssBytes": 1048576, "chargedSamples": [1048576], "expected": 1048576}
+  ]
+}

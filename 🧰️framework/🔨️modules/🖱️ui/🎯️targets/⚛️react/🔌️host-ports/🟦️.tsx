@@ -12,6 +12,9 @@ import { clone as cloneSkeleton } from "three/examples/jsm/utils/SkeletonUtils.j
 import { SVGRenderer } from "three/examples/jsm/renderers/SVGRenderer.js";
 import * as React from "react";
 import { cn } from "@semio-tech/ui/modules/class-name-composition";
+import { useLevel } from "@semio-tech/ui/elements/Surface";
+import { windowFrameChipLevel } from "@semio-tech/ui/elements/WindowChrome";
+import { glassClass } from "@semio-tech/ui/modules/surface-presentation";
 
 /** 🧊️ Host surface for three.js / R3F (implemented by 🔌️Adapters). */
 export interface ThreeHostPort {
@@ -496,7 +499,7 @@ export function iconShotFrameClass(shape: IconRenderShape): string {
   return shape === "ellipse" ? "rounded-[50%]" : "rounded-none";
 }
 
-/** 🎭️ Centered shot frame overlay with shape mask and W×H badge. */
+/** 🎭️ Centered shot guide with a shape mask and inset dimensions. */
 export function IconShotFrame({
   width,
   height,
@@ -514,21 +517,29 @@ export function IconShotFrame({
   readonly badge?: boolean;
   readonly children?: React.ReactNode;
 }): React.ReactNode {
+  const chipLevel = windowFrameChipLevel(useLevel());
+  const ellipse = shape === "ellipse";
   return (
     <div className={cn("pointer-events-none absolute inset-0 flex items-center justify-center", className)}>
       <div
-        className={cn("relative box-border overflow-hidden border-2 border-accent outline outline-1 outline-[color-mix(in_srgb,var(--foreground)_20%,transparent)]", iconShotFrameClass(shape))}
+        className={cn("relative box-border overflow-hidden border-solid border-[color:var(--border-emphasized-color)]", iconShotFrameClass(shape))}
         data-icon-shot-frame
         data-icon-shot-shape={shape}
         style={{
           ...iconShotFrameStyle(width, height),
           ...(background ? { background } : {}),
+          borderWidth: "var(--stroke-hairline)",
         }}
       >
         {children}
         {badge ? (
-          <span className="pointer-events-none absolute bottom-1 right-1 rounded-sm bg-background/80 px-1 font-mono text-[0.625rem] text-muted-foreground">
-            {width}×{height} · {shape}
+          <span
+            data-glass-chip=""
+            data-level={chipLevel}
+            className={cn("pointer-events-none absolute bottom-0 max-w-full border-solid border-[color:var(--border-normal-color)] px-single font-mono text-tiny text-foreground", glassClass, ellipse ? "inset-x-0 flex justify-center pb-single" : "end-0")}
+            style={{ borderBlockStartWidth: "var(--stroke-hairline)", borderInlineStartWidth: ellipse ? undefined : "var(--stroke-hairline)" }}
+          >
+            <span className={cn("block truncate", ellipse && "max-w-[60%]")}>{width}×{height}</span>
           </span>
         ) : null}
       </div>

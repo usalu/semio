@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Flat heap across owners / Flacher Heap über Eigner",
-  "description": "EN: A generated workspace of independent owners, each with its own module closure; after the warmup owners the managed heap after a collection may grow by at most the declared megabytes over the remaining owners and by at most the declared slope per owner. DE: Ein erzeugter Arbeitsbereich unabhängiger Eigner mit je eigener Modul-Closure; nach den Aufwärm-Eignern darf der verwaltete Heap nach einer Sammlung über die übrigen Eigner höchstens um die genannten Megabyte und höchstens um die genannte Steigung je Eigner wachsen.",
+  "description": "EN: A generated workspace of independent owners, each with its own module closure; after the warmup owners the managed heap after a collection may grow by at most the declared megabytes over the remaining owners and by at most the declared slope per owner, plus the declared bytes per node the module closure graph gains (the graph belongs to the tree and is shared by every later owner). DE: Ein erzeugter Arbeitsbereich unabhängiger Eigner mit je eigener Modul-Closure; nach den Aufwärm-Eignern darf der verwaltete Heap nach einer Sammlung über die übrigen Eigner höchstens um die genannten Megabyte und höchstens um die genannte Steigung je Eigner wachsen, zuzüglich der genannten Bytes je Knoten, die der Modul-Closure-Graph gewinnt (der Graph gehört dem Baum und wird von jedem späteren Eigner geteilt).",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -11,7 +11,8 @@
     "bytesPerModule",
     "warmup",
     "maximumGrowthMegabytes",
-    "maximumSlopeKilobytesPerOwner"
+    "maximumSlopeKilobytesPerOwner",
+    "graphNodeKilobytes"
   ],
   "properties": {
     "version": {
@@ -40,6 +41,11 @@
     "maximumSlopeKilobytesPerOwner": {
       "type": "number",
       "exclusiveMinimum": 0
+    },
+    "graphNodeKilobytes": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "EN: The bytes one node of the module closure graph may hold (its digest, edges and witness): the graph is the tree's, shared by every owner after it, so its growth with the modules of new owners is allowed on top of the flat per-owner state. DE: Die Bytes, die ein Knoten des Modul-Closure-Graphen halten darf (Digest, Kanten und Zeuge): der Graph gehört dem Baum und wird von jedem späteren Eigner geteilt, daher ist sein Wachstum mit den Modulen neuer Eigner zusätzlich zum flachen Zustand je Eigner erlaubt."
     }
   }
 }

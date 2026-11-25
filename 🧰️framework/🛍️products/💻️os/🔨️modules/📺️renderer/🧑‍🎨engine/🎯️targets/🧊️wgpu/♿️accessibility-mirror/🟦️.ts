@@ -105,6 +105,7 @@ export function createAccessibilityMirror(root: HTMLElement, transport: Accessib
       }
       if (node.role === "form") return document.createElement("form");
       if (node.role === "paragraph") return document.createElement("p");
+      if (node.role === "heading") return document.createElement(`h${Math.min(6, Math.max(1, node.level ?? 2))}`);
       if (node.role === "separator") return document.createElement("hr");
       const generic = document.createElement("div");
       generic.setAttribute("role", node.role);
@@ -119,7 +120,7 @@ export function createAccessibilityMirror(root: HTMLElement, transport: Accessib
     if (node.role === "option") element.dataset.commandItemId = node.key;
     element.dataset.depth = String(node.depth);
     if (node.label !== undefined) element.setAttribute("aria-label", node.label);
-    if (node.role === "paragraph" && node.label !== undefined) element.textContent = node.label;
+    if ((node.role === "paragraph" || node.role === "heading") && node.label !== undefined) element.textContent = node.label;
     if (node.live !== "off") element.setAttribute("aria-live", node.live);
     if (node.shortcut !== undefined) element.setAttribute("aria-keyshortcuts", node.shortcut);
     if (node.hidden === true) element.setAttribute("aria-hidden", "true");

@@ -44,4 +44,7 @@ pub mod road_bridge_failing;
 #[cfg(test)]
 #[path = "🏢️road-bridge-failing/🧪️tests/🧩️example/🦀️.rs"]
 mod example_road_bridge_failing;
+#[cfg(test)]
+#[path = "🧪️tests/🗜️pack-twins/🦀️.rs"]
+mod pack_twins;
 //#endregion 🪢️Mounts

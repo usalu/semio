@@ -1,10 +1,39 @@
 //! 🧭️ Caller-owned semantic staging over a retained PDF graph.
 
 use super::*;
+use crate::standards::v1_7::subsets::base::io::error::PResult;
 
 #[path = "🧭️controlled/🦀️.rs"]
 mod controlled;
 pub use controlled::{ControlledDocumentLiftCursor, ControlledLiftBarrier, ControlledLiftEvent, ControlledLiftPartial, ControlledLiftReceipt};
+
+/// ⬇️ Lifts a whole document from its trailer.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn lift_document(trailer: &[PdfDictEntry], declared_version: &str, source: &mut dyn ObjectSource) -> PResult<PdfSnapshot> {
+    let lifter=lift_document_with(trailer, declared_version, source);if let Some(error)=lifter.admission_error {return Err(error)}Ok(lifter.snapshot)
+}
+
+/// ⬇️ Lifts a whole document and hands back the lifter (its reference → id maps included).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn lift_document_with<'s>(trailer: &[PdfDictEntry], declared_version: &str, source: &'s mut dyn ObjectSource) -> Lifter<'s> {
+    let mut cursor = DocumentLiftCursor::new();
+    let grant = DocumentLiftGrant {
+        traversal: CosGrant { work: 4096, allocation_bytes: usize::MAX, release_bytes: usize::MAX }, semantic: true,
+    };
+    loop {
+        match cursor.advance(trailer, declared_version, source, grant, false).status {
+            DocumentLiftStatus::Complete => return Lifter::bind(source, cursor.take_result().expect("complete document lift")),
+            DocumentLiftStatus::Failed => {
+                while cursor.close_traversal_step(grant.traversal).is_some() {}
+                while cursor.close_page_content_step(grant.traversal).is_some() {}
+                let partial = cursor.take_partial().expect("failed document lift");
+                return Lifter::bind(source, partial.lifter);
+            }
+            DocumentLiftStatus::More => {}
+            _ => unreachable!("synchronous lift admitted both traversal and semantic work"),
+        }
+    }
+}
 
 /// 🧩 One existing semantic lift operation. A page or resource operation can decode nested data.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

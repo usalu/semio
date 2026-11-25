@@ -4,7 +4,7 @@ import {ensureRepositoryBrowserPathV1} from "../../../../../🦑️repo/🔨️m
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import type { Page } from "playwright";
-import { PLAYWRIGHT_MODULE_SPECIFIER } from "../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🟦️.ts";
+import { launchBrowserV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🟦️.ts";
 import { withDevServe } from "../🧮️program-matrix/🟦️.ts";
 import { activate, boot, clickRowAction, dialog, faultsSince, openSessions, pageWindowedTables, signIn, submitDialog, waitNamedRow, type Human, type Session } from "../👥️two-human/🔑️sessions/🟦️.ts";
 import { settleHome } from "../👥️two-human/🏠️space-creation-and-edits/🟦️.ts";
@@ -99,8 +99,7 @@ async function spawnStudioE2eDrawFromPalette(page: import("playwright").Page): P
 }
 
 async function runStudioE2eVerify(baseUrl: string, timeoutMs: number): Promise<void> {
-  const { chromium }: typeof import("playwright") = await import(PLAYWRIGHT_MODULE_SPECIFIER);
-  const browser = await chromium.launch({ headless: true });
+  const browser = await launchBrowserV1({ headless: true });
   const page = await browser.newPage();
   const pageErrors: string[] = [];
   page.on("pageerror", (err) => pageErrors.push(String(err)));
@@ -249,8 +248,7 @@ export async function runHomeE2e(repoRoot: string, options: HomeE2eOptions): Pro
   const keptFile = join(outDir, "kept.os");
   writeFileSync(keptFile, homeE2eStudioText(keptName));
   ensureRepositoryBrowserPathV1(repoRoot,process.env);
-  const { chromium }: typeof import("playwright") = await import(PLAYWRIGHT_MODULE_SPECIFIER);
-  const browser = await chromium.launch({ headless: true, args: ["--use-angle=metal", "--ignore-gpu-blocklist"] });
+  const browser = await launchBrowserV1({ headless: true, args: ["--use-angle=metal", "--ignore-gpu-blocklist"] });
   const [session] = (await openSessions(browser, [options.baseUrl], [options.human ?? { label: "local", email: "", password: "" }], options.locale === "de" ? "de-DE" : "en-US")) as [Session];
   const page = session.page;
   await session.context.addInitScript(() => {

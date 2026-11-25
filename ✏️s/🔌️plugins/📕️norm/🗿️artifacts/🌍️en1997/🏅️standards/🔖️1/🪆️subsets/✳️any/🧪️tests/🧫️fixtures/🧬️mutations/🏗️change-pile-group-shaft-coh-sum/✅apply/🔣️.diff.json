@@ -22,13 +22,23 @@
       {
         "id": "group-G1",
         "patch": {
-          "shaftCohesionSum": 800000.0
+          "pileId": null,
+          "rows": null,
+          "columns": null,
+          "spacing": null,
+          "capVertical": null,
+          "capMomentX": null,
+          "capMomentY": null,
+          "singleResistance": null,
+          "shaftCohesionSum": 800000.0,
+          "baseCohesion": null
         }
       }
     ]
   },
   "labTests": null,
   "layerWaters": null,
+  "placements": null,
   "cases": {
     "removed": [],
     "inserted": [],

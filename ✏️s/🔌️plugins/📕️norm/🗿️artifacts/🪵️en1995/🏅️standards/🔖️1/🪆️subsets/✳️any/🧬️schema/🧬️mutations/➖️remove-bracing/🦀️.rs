@@ -17,7 +17,10 @@ impl<Op> protocol::MutationKind<En1995Snapshot, Op> for RemoveBracing where Op: 
 impl<Op> protocol::ColdMutationKind<En1995Snapshot, Op> for RemoveBracing where Op: protocol::ColdMutation<En1995Snapshot, ReferenceDiff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::insert_bracing::InsertBracing> {
     fn diff(&self, base: &En1995Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<En1995Snapshot>>::ReferenceDiff> { crate::remove_bracing::diff::diff(self, base) }
     fn inverse(&self, base: &En1995Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-        crate::remove_bracing::inverse::inverse(self, base)
+        Ok(match crate::remove_bracing::inverse::inverse(self, base) {
+            Some(inverse) => vec![Op::from(inverse)],
+            None => Vec::new(),
+        })
     }
 }
 

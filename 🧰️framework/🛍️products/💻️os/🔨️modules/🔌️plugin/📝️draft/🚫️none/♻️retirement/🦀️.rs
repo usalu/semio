@@ -1,7 +1,7 @@
 //! 📝️ Exact store owners for the zero-payload draft lane, and the zero-payload retirement every
 //! statically empty lane (`NoDraft`, `NoConfig`) shares.
 
-use semio_plugin_ownership::store_lifecycle::{bounded_document_store_disposer, ArtifactOwnedDisposer};
+use semio_plugin_store_lifecycle::store_lifecycle::{bounded_document_store_disposer, ArtifactOwnedDisposer};
 use crate::NoDraft;
 use crate::NoDraftMutation;
 use crate::store;

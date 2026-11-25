@@ -13,18 +13,90 @@
    "de": "Ein gebrauchter elektrischer Ölradiator mit 2 kW und neun gepressten Stahlrippen auf Rollenfüßen, 0,64 x 0,45 x 0,25 m und 12,0 kg, mit vergilbtem Lack, Rostpunkten an den unteren Rippenrändern, einem Ersatz-Thermostatknopf, einer nicht passenden Rolle und einem abgeklebten Kabel auf seinem Wickel, im Gebrauchtwarenkaufhaus auf einem gefalteten Möbelpolster gelagert, von einer Person am Kopf des Gehäuses und der äußeren Endrippe getragen und mit voller Leistung im Wohnzimmer heizend."
   },
   "tags": [
-   "used",
-   "household",
-   "second-hand",
-   "living",
-   "bedroom",
-   "heater",
-   "oil-filled-radiator",
-   "electric-heating",
-   "steel",
-   "enamel",
-   "castors",
-   "reuse-depot"
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "household",
+    "title": {
+     "en": "household",
+     "de": "Haushalt"
+    }
+   },
+   {
+    "id": "second-hand",
+    "title": {
+     "en": "second-hand",
+     "de": "Second-Hand"
+    }
+   },
+   {
+    "id": "living",
+    "title": {
+     "en": "living",
+     "de": "Wohnen"
+    }
+   },
+   {
+    "id": "bedroom",
+    "title": {
+     "en": "bedroom",
+     "de": "Schlafzimmer"
+    }
+   },
+   {
+    "id": "heater",
+    "title": {
+     "en": "heater",
+     "de": "Heizgerät"
+    }
+   },
+   {
+    "id": "oil-filled-radiator",
+    "title": {
+     "en": "oil filled radiator",
+     "de": "Ölradiator"
+    }
+   },
+   {
+    "id": "electric-heating",
+    "title": {
+     "en": "electric heating",
+     "de": "Elektroheizung"
+    }
+   },
+   {
+    "id": "steel",
+    "title": {
+     "en": "steel",
+     "de": "Stahl"
+    }
+   },
+   {
+    "id": "enamel",
+    "title": {
+     "en": "enamel",
+     "de": "Emaille"
+    }
+   },
+   {
+    "id": "castors",
+    "title": {
+     "en": "castors",
+     "de": "Lenkrollen"
+    }
+   },
+   {
+    "id": "reuse-depot",
+    "title": {
+     "en": "reuse depot",
+     "de": "Wiederverwendungslager"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content (used household objects wave)",
@@ -8031,8 +8103,581 @@
     ]
    },
    "500": {
-    "status": "unavailable",
-    "denominator": 500
+    "status": "authored",
+    "denominator": 500,
+    "decisions": [
+     {
+      "en": "Body for the 75 mm feature: the fin row is one envelope prism of the fin outline over the true stack length (it stands for the seven typified fins of 1:200, whose 25 mm gaps no longer print), the control housing takes the cord plate in and is one 75 mm slab on the stack end, each foot bar with its two castors is one 75 mm rail from the pad to the fins, and the pad is its declared 12 mm sheet; knob, hubs and castor wheels are below the feature and left out.",
+      "de": "Körper für das 75-mm-Merkmal: die Rippenreihe ist ein Hüllprisma des Rippenumrisses über die wahre Stapellänge (es steht für die sieben typisierten Rippen von 1:200, deren 25-mm-Spalte nicht mehr drucken), das Bediengehäuse nimmt die Kabelplatte auf und ist eine 75-mm-Scheibe am Stapelende, jede Fußschiene mit ihren zwei Rollen ist eine 75-mm-Kufe von der Unterlage bis zu den Rippen, und die Unterlage ist ihre erklärte 12-mm-Platte; Knopf, Naben und Rollenräder liegen unter dem Merkmal und entfallen."
+     },
+     {
+      "en": "Thermal: pad, fins, housing and rails by reference, the castors as four 75 mm blocks, knob and cord as 75 mm blocks on the housing and a 75 mm plume patch in the top of the stack.",
+      "de": "Thermik: Unterlage, Rippen, Gehäuse und Kufen als Verweis, die Rollen als vier 75-mm-Blöcke, Knopf und Kabel als 75-mm-Blöcke am Gehäuse und eine 75-mm-Auftriebsfläche oben im Stapel."
+     },
+     {
+      "en": "Structure: the members by reference, castor bars and the knob as 75 mm members, the clamps, the housing screws and the knob spindle as 75 mm joints, four 75 mm pad supports and three mass markers.",
+      "de": "Tragwerk: die Stäbe als Verweis, Rollenleisten und der Knopf als 75-mm-Stäbe, die Klemmen, die Gehäuseschrauben und die Knopfachse als 75-mm-Gelenke, vier 75-mm-Auflager der Unterlage und drei Massenmarken."
+     }
+    ],
+    "body": [
+     {
+      "id": "pad",
+      "kind": "box",
+      "bone": "blanket",
+      "material": "felt-pad",
+      "role": "body",
+      "tone": 0.3,
+      "size": [
+       0.45,
+       0.012,
+       0.6
+      ],
+      "transform": {
+       "translation": [
+        0.225,
+        0,
+        0
+       ]
+      },
+      "sheet": true
+     },
+     {
+      "id": "fins",
+      "kind": "extrude",
+      "bone": "fins",
+      "material": "enamelled-steel",
+      "role": "body",
+      "tone": 0.82,
+      "profile": [
+       [
+        0,
+        -0.055
+       ],
+       [
+        0.02,
+        -0.075
+       ],
+       [
+        0.548,
+        -0.075
+       ],
+       [
+        0.568,
+        -0.055
+       ],
+       [
+        0.568,
+        0.055
+       ],
+       [
+        0.548,
+        0.075
+       ],
+       [
+        0.02,
+        0.075
+       ],
+       [
+        0,
+        0.055
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.179,
+      "to": 0.179,
+      "envelope": true
+     },
+     {
+      "id": "housing",
+      "kind": "box",
+      "bone": "housing",
+      "material": "housing-plastic",
+      "role": "body",
+      "tone": 0.88,
+      "size": [
+       0.525,
+       0.12,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.2625,
+        0,
+        -0.005
+       ]
+      }
+     },
+     {
+      "id": "rails",
+      "kind": "box",
+      "bone": "feet",
+      "material": "painted-steel",
+      "role": "body",
+      "tone": 0.45,
+      "size": [
+       0.25,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.125,
+        -0.0245,
+        -0.126
+       ]
+      },
+      "repeat": {
+       "count": 2,
+       "translation": [
+        0,
+        0,
+        0.252
+       ]
+      }
+     }
+    ],
+    "thermal": [
+     {
+      "id": "th-pad",
+      "of": "pad",
+      "region": "pad"
+     },
+     {
+      "id": "th-fins",
+      "of": "fins",
+      "region": "fins"
+     },
+     {
+      "id": "th-housing",
+      "of": "housing",
+      "region": "housing"
+     },
+     {
+      "id": "th-rails",
+      "of": "rails",
+      "region": "feet"
+     },
+     {
+      "id": "th-castors-right",
+      "kind": "box",
+      "bone": "castors",
+      "material": "castor-polyamide",
+      "role": "body",
+      "tone": 0.55,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0,
+        0.0175,
+        -0.126
+       ]
+      },
+      "repeat": {
+       "count": 2,
+       "translation": [
+        0.2,
+        0,
+        0
+       ]
+      },
+      "region": "castors"
+     },
+     {
+      "id": "th-castors-left",
+      "kind": "box",
+      "bone": "castors",
+      "material": "castor-polyamide",
+      "role": "body",
+      "tone": 0.55,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0,
+        0.0175,
+        0.126
+       ]
+      },
+      "repeat": {
+       "count": 2,
+       "translation": [
+        0.2,
+        0,
+        0
+       ]
+      },
+      "region": "castors"
+     },
+     {
+      "id": "th-knob",
+      "kind": "box",
+      "bone": "knob",
+      "material": "knob-plastic",
+      "role": "body",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "region": "knob"
+     },
+     {
+      "id": "th-cord",
+      "kind": "box",
+      "bone": "housing",
+      "material": "pvc-cord",
+      "role": "body",
+      "tone": 0.25,
+      "size": [
+       0.19,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.155,
+        0,
+        -0.043
+       ]
+      },
+      "region": "cord"
+     },
+     {
+      "id": "th-plume",
+      "kind": "box",
+      "bone": "fins",
+      "material": "enamelled-steel",
+      "role": "detail",
+      "tone": 0.6,
+      "size": [
+       0.075,
+       0.075,
+       0.3
+      ],
+      "transform": {
+       "translation": [
+        0.5305,
+        0,
+        0
+       ]
+      },
+      "region": "fins",
+      "tags": [
+       "plume"
+      ]
+     }
+    ],
+    "structure": [
+     {
+      "id": "m-pad",
+      "of": "pad",
+      "member": "blanket",
+      "part": "member"
+     },
+     {
+      "id": "m-fins",
+      "of": "fins",
+      "member": "fins",
+      "part": "member"
+     },
+     {
+      "id": "m-housing",
+      "of": "housing",
+      "member": "housing",
+      "part": "member"
+     },
+     {
+      "id": "m-rails",
+      "of": "rails",
+      "member": "feet",
+      "part": "member"
+     },
+     {
+      "id": "m-castors",
+      "kind": "box",
+      "bone": "castors",
+      "material": "castor-polyamide",
+      "role": "body",
+      "tone": 0.55,
+      "size": [
+       0.275,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.1,
+        0.0175,
+        -0.126
+       ]
+      },
+      "repeat": {
+       "count": 2,
+       "translation": [
+        0,
+        0,
+        0.252
+       ]
+      },
+      "member": "castors",
+      "part": "member"
+     },
+     {
+      "id": "m-knob",
+      "kind": "box",
+      "bone": "knob",
+      "material": "knob-plastic",
+      "role": "body",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "member": "knob",
+      "part": "member"
+     },
+     {
+      "id": "j-clamps",
+      "kind": "box",
+      "bone": "feet",
+      "material": "painted-steel",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.125,
+        0.021,
+        -0.126
+       ]
+      },
+      "repeat": {
+       "count": 2,
+       "translation": [
+        0,
+        0,
+        0.252
+       ]
+      },
+      "member": "feet",
+      "part": "joint"
+     },
+     {
+      "id": "j-housing-screws",
+      "kind": "box",
+      "bone": "housing",
+      "material": "painted-steel",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.25,
+        0,
+        0.033
+       ]
+      },
+      "member": "housing",
+      "part": "joint"
+     },
+     {
+      "id": "j-knob-spindle",
+      "kind": "box",
+      "bone": "knob",
+      "material": "painted-steel",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0,
+        0,
+        0.0375
+       ]
+      },
+      "member": "knob",
+      "part": "joint"
+     },
+     {
+      "id": "support-pad-floor-fl",
+      "kind": "box",
+      "bone": "blanket",
+      "material": "felt-pad",
+      "role": "ground",
+      "tone": 0.2,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.405,
+        0.0315,
+        0.25
+       ]
+      },
+      "member": "blanket",
+      "part": "support",
+      "anchor": "pad-floor-fl"
+     },
+     {
+      "id": "support-pad-floor-fr",
+      "kind": "box",
+      "bone": "blanket",
+      "material": "felt-pad",
+      "role": "ground",
+      "tone": 0.2,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.405,
+        0.0315,
+        -0.25
+       ]
+      },
+      "member": "blanket",
+      "part": "support",
+      "anchor": "pad-floor-fr"
+     },
+     {
+      "id": "support-pad-floor-rl",
+      "kind": "box",
+      "bone": "blanket",
+      "material": "felt-pad",
+      "role": "ground",
+      "tone": 0.2,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.045,
+        0.0315,
+        0.25
+       ]
+      },
+      "member": "blanket",
+      "part": "support",
+      "anchor": "pad-floor-rl"
+     },
+     {
+      "id": "support-pad-floor-rr",
+      "kind": "box",
+      "bone": "blanket",
+      "material": "felt-pad",
+      "role": "ground",
+      "tone": 0.2,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.045,
+        0.0315,
+        -0.25
+       ]
+      },
+      "member": "blanket",
+      "part": "support",
+      "anchor": "pad-floor-rr"
+     },
+     {
+      "id": "mass-fins",
+      "kind": "box",
+      "bone": "fins",
+      "material": "enamelled-steel",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.269,
+        0,
+        0
+       ]
+      },
+      "member": "fins",
+      "part": "mass"
+     },
+     {
+      "id": "mass-housing",
+      "kind": "box",
+      "bone": "housing",
+      "material": "housing-plastic",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.268,
+        0,
+        0
+       ]
+      },
+      "member": "housing",
+      "part": "mass"
+     },
+     {
+      "id": "mass-feet",
+      "kind": "box",
+      "bone": "feet",
+      "material": "enamelled-steel",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.125,
+        0.042,
+        0
+       ]
+      },
+      "member": "feet",
+      "part": "mass"
+     }
+    ]
    }
   },
   "presentation": {

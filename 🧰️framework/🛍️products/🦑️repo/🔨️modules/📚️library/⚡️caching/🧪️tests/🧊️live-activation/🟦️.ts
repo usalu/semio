@@ -81,6 +81,7 @@ const EXTENSION_INSTALL_META = "install.json", MODULE_PLUGIN_ROUTE = "/plugins",
 const put = (path, value) => { mkdirSync(dirname(path), { recursive: true }); writeFileSync(path, value); };
 const count = (name) => appendFileSync(join(repoRoot, ".counts"), name + "\\n");
 const builtPluginModulesRootIn = () => moduleRoot, moduleDirectoryName = (id) => id;
+const shardWorkerPublicationV1 = (published) => published === "{}" ? "current" : "stale";
 const playgroundCatalog = fixture.variants.map(variant => ({ variant, pluginId: fixture.plugin })), validateFontAsset = () => 1;
 const readGeneratedCatalogProjection = () => ({ entries: [{ pluginId: fixture.plugin, role: "extension" }] });
 class BundleScript { constructor(root) { this.root = root; } }

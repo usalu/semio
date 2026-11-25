@@ -20,6 +20,17 @@ pub fn fem3d_mesh_preview(doc: &Fem3dSnapshot) -> Result<Vec<SolidMesh>, Fem3dEr
     meshing::mesh_solids(doc).map(|(_, meshes)| meshes)
 }
 
+/// 🗺️ [`fem3d_mesh_preview`] that survives a failing solid: the meshes of every solid that meshes, plus
+/// `(solid id, reason)` for each one that does not — so a scene draws the rest and marks the failing ones.
+pub fn fem3d_mesh_preview_partial(doc: &Fem3dSnapshot) -> (Vec<SolidMesh>, Vec<(String, String)>) {
+    let (_, meshes, failures) = meshing::mesh_solids_partial(doc);
+    let failures = failures.into_iter().filter_map(|error| match error {
+        Fem3dError::MeshFailed { solid_id, reason } => Some((solid_id, reason)),
+        _ => None,
+    }).collect();
+    (meshes, failures)
+}
+
 /// 🎨️ Nodal-averaged von Mises stress for `case_id`'s solved result, keyed by node id — the
 /// document-layer bridge to `semio_s_fem_analyses::nodal_averaged_scalar`, mirroring `fem_2d`'s
 /// `fem2d_nodal_von_mises`, feeding `fem-plugin`'s solid stress contour rendering.

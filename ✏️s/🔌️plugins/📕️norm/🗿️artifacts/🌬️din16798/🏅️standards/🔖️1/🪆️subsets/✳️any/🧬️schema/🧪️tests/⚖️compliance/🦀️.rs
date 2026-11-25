@@ -82,8 +82,12 @@ fn usage_category_sets_the_typical_occupancy_the_declared_occupancy_is_reported_
         let check = report.checks.iter().find(|c| c.id == id).unwrap_or_else(|| panic!("{name}: {id} missing"));
         match case["typicalOccupants"].as_f64() {
             Some(typical) => {
-                assert_eq!(check.status, CheckStatus::Info, "{name}");
+                assert_eq!(check.status, CheckStatus::Info, "{name}: an informative row never blocks a verdict");
+                assert!(check.explanation.en.contains("Unverified basis") && check.explanation.de.contains("Ungeprüfte Grundlage"), "{name}: the verdict must say the density is unverified");
                 assert!((check.computed.value - typical).abs() < 1e-9, "{name}: {} vs {typical}", check.computed.value);
+                let id = check.ndps.first().unwrap_or_else(|| panic!("{name}: no registry id cited"));
+                assert!(id.starts_with("ndp.din16798-1.occupancy.") && !semio_s_plugin_norm_compliance::ndp_is_verified_for(id, doc.annex), "{name}: {id}");
+                assert!(check.unverified_basis(), "{name}");
             }
             None => assert_eq!(check.status, CheckStatus::NotApplicable, "{name}"),
         }

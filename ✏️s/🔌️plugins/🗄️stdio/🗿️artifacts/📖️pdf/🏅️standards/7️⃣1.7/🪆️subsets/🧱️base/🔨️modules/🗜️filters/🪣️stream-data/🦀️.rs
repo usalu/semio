@@ -117,8 +117,8 @@ impl PdfStreamDataCursor {
         Some(std::mem::take(&mut self.output))
     }
 
-    /// 📄️ Whether the next unit only moves one body byte of an uncompressed stream into its retained output.
-    pub fn copies_identity_bytes(&self) -> bool { self.phase == Phase::Decode && matches!(self.decoder, Decoder::Identity) }
+    /// 📄️ Whether the next units only decode body bytes into staging or the decoder history and move staged bytes into reserved output pages: at most two bytes of copy per unit, every reservation reported as its own allocation.
+    pub fn decodes_body_bytes(&self) -> bool { self.phase == Phase::Decode }
 
     /// 🪣️ Quotes the fresh history unit before copying any staged stream bytes.
     pub fn next_reserves_history(&self) -> bool {

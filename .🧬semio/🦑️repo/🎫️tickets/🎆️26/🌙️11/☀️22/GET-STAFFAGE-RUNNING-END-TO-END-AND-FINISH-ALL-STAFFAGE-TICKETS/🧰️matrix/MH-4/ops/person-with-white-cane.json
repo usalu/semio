@@ -3,8 +3,8 @@
   "op": "plan-revolve",
   "scale": "50",
   "id": "sleeve-r",
-  "rebuild": true,
-  "why": "arm-r: half profiles in elevation (0.20 m deep at the shoulder) and front (0.10 m wide): the plan body of revolution takes the mean radius of both"
+  "radius": "keep",
+  "why": "arm-r: the plan body of revolution cut or stretched to the length of the elevation outline, its radius kept (the mean radius of the elevation and front outlines moved the plan silhouette of the default pose from 14.6 to 23.7 mm against the limit of 15.0)"
  },
  {
   "op": "extrude",
@@ -54,10 +54,9 @@
   "id": "hand-r",
   "from": "elevation",
   "to": [
-   "front",
-   "plan"
+   "front"
   ],
-  "why": "hand-r: sww/swv/swu: the body of the elevation in every view"
+  "why": "hand-r: the body of the elevation in the front (in the plan it moved the silhouette of the default pose from 14.6 to 19.6 mm against the limit of 15.0)"
  },
  {
   "op": "plan-revolve",
@@ -206,12 +205,6 @@
   "why": "thigh-l: flat/None/flat: revolved about the bone axis"
  },
  {
-  "op": "front-sweep",
-  "scale": "200",
-  "id": "thigh-r",
-  "why": "thigh-r: flat/flat/flat: prism along v fitted to the elevation outline"
- },
- {
   "op": "plan-revolve",
   "scale": "200",
   "id": "thigh-r",
@@ -244,12 +237,6 @@
   "scale": "500",
   "id": "shank-r",
   "why": "shank-r: flat/None/flat: revolved about the bone axis"
- },
- {
-  "op": "front-sweep",
-  "scale": "500",
-  "id": "thigh-l",
-  "why": "thigh-l: flat/flat/flat: prism along v fitted to the elevation outline"
  },
  {
   "op": "plan-revolve",

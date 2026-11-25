@@ -4,7 +4,7 @@ use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress, RetainedC
 use semio_plugin_decl_app::ArtifactApp;
 use semio_plugin_instance_jobs::jobs_components::{produce_declared_tool_catalog, OriginalDeclaredEmptyOperationSource, OriginalDeclaredTools};
 use semio_plugin_mounted_owner::MountedOwnerPolicyV1;
-use semio_plugin_ownership::original_store_genesis::OriginalStoreBirth;
+use semio_plugin_store_lifecycle::original_store_genesis::OriginalStoreBirth;
 const HEADER: RetainedCloneGrant = MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation;
 const TURN: RetainedCloneGrant = RetainedCloneGrant { maximum_copy_bytes: 4096, maximum_capacity_bytes: 4096, ..HEADER };
 fn caller() -> OriginalJobFixtureCaller {

@@ -83,6 +83,7 @@ pub enum Fem3dMutation {
     MoveSelection(semio_s_artifact_fem_3d_mesh::standards::v1::subsets::any::schema::mutations::move_selection::MoveSelection),
 }
 dsl::original_pack_value_operation_receiving!(Fem3dMutation);
+dsl::artifact_persisted_binary_operation!(Fem3dMutation);
 //#endregion 🔖️Mutations
 
 //#region 🔖️LeafImports

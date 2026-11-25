@@ -1,4 +1,7 @@
 /** 📤️ The retained, ephemeral, fresh turn, host only, config and presence publication contract checks. */
+import Ajv from "ajv";
+import staleFixtures from "../../🧫️fixtures/🥇️tool-latest-wins.json" with { type: "json" };
+import retainedCommandSchema from "../../../🧵️retained-command/🧬️schema/🔣️.json" with { type: "json" };
 import { toolJobPublicationContracts, toolJobPublicationAuthorityReady, toolJobStoreBatchPublicationBounded, toolJobEphemeralOneItemPublicationBounded, toolJobPublicationFreshnessBeforeEveryTurn } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/⚖️laws/🟦️.ts";
 
 /** 📰 Checks the retained store and plugin publication bounds. */
@@ -114,41 +117,61 @@ fn publish_mounted_typed_operation_unit() {
     throw new Error("[verify interactivity tool-jobs] self-test per-publication Presence factory reconstruction was falsely accepted.");
 }
 
-/** 🔔 Checks publication freshness before every turn and the host only, config and presence publication contracts. */
-export function freshTurnAndHostOnlyPublicationChecks() {
+/** 🧯️ Checks that stale publication stops Store work and reports only an operation-local fault. */
+export function stalePublicationChecks() {
+  const validateStale = new Ajv({ strict: true }).addSchema(retainedCommandSchema).getSchema(`${retainedCommandSchema.$id}#/$defs/StalePublicationCase`)!;
+  const cases = staleFixtures.publicationCases.filter(row => row.staleAt !== undefined);
+  if (cases.length !== 1 || !validateStale(cases[0])) throw new Error("Stale publication fixture must refuse locally and preserve the next commit");
+  for (const change of [{ committed: true }, { faultCode: "guest.trap" }, { nextGeneration: 0 }]) {
+    if (validateStale({ ...cases[0], ...change })) throw new Error("Stale publication schema accepted a hostile result");
+  }
   const freshPublicationTurn = `
+fn typed_operation_document_is_fresh(operation: &Operation, canonical_revision: Revision, live_revision: Revision, live_generation: u64) -> bool {
+  canonical_revision == live_revision && matches!(validate_commit(operation, live_revision, Generation(live_generation)), CommitValidation::Accepted)
+}
 fn publish_mounted_typed_operation_unit() {
   let live_revision = self.stores.store.content_revision_now();
-  validate_commit(&mounted.operation, live_revision);
-  if mounted.canonical_revision != live_revision { return Err(stale); }
+  if mounted.reject_cancelled_publication()? {
+    mounted.reserve_cancelled_result(cx)?;
+    self.stores.handoff_mounted_durable_publication(mounted)?;
+    return Ok(());
+  }
+  if !typed_operation_document_is_fresh(&mounted.operation, mounted.canonical_revision, live_revision, live_generation) {
+    cx.with_original_retirement(|cx| {
+      close_original_retained_step(cx, demand, |_| {
+        mounted.terminal_fault = Some(borrowed_report("interactive-job.stale"));
+        mounted.cancellation_lease.as_ref().expect("claimed publication lease").cancel();
+      })?;
+      Ok(())
+    })?;
+    return Ok(());
+  }
   if let Some(pending) = mounted.pending_artifact_publication.as_mut() { advance(pending); }
   self.stores.store.admit_apply_batch();
 }`;
   if (!toolJobPublicationFreshnessBeforeEveryTurn(freshPublicationTurn))
     throw new Error("[verify interactivity tool-jobs] self-test publication freshness before every resumed or new turn was falsely rejected.");
-  const staleResumedPublicationTurn = freshPublicationTurn
-    .replace("  validate_commit(&mounted.operation, live_revision);\n", "")
-    .replace(
-      "  if let Some(pending) = mounted.pending_artifact_publication.as_mut() { advance(pending); }",
-      "  if let Some(pending) = mounted.pending_artifact_publication.as_mut() { advance(pending); }\n  validate_commit(&mounted.operation, live_revision);",
-    );
+  const resume = "  if let Some(pending) = mounted.pending_artifact_publication.as_mut() { advance(pending); }";
+  const staleResumedPublicationTurn = freshPublicationTurn.replace(resume, "").replace("  if !typed_operation_document_is_fresh", resume + "\n  if !typed_operation_document_is_fresh");
   if (toolJobPublicationFreshnessBeforeEveryTurn(staleResumedPublicationTurn))
     throw new Error("[verify interactivity tool-jobs] self-test resumed publication advanced before freshness validation was falsely accepted.");
-  if (toolJobPublicationFreshnessBeforeEveryTurn(freshPublicationTurn.replace("mounted.canonical_revision != live_revision", "false")))
+  if (toolJobPublicationFreshnessBeforeEveryTurn(freshPublicationTurn.replace("canonical_revision == live_revision", "true")))
     throw new Error("[verify interactivity tool-jobs] self-test publication freshness without canonical/live revision comparison was falsely accepted.");
-  const helperFreshPublicationTurn = `
-fn typed_operation_document_is_fresh(operation: &Operation, canonical_revision: Revision, live_revision: Revision, live_generation: u64) -> bool {
-  canonical_revision == live_revision && matches!(validate_commit(operation, live_revision, Generation(live_generation)), CommitValidation::Accepted)
-}
-fn publish_mounted_typed_operation_unit() {
-  if !typed_operation_document_is_fresh(&mounted.operation, mounted.canonical_revision, live_revision, live_generation) { return Err(stale); }
-  if let Some(pending) = mounted.pending_artifact_publication.as_mut() { advance(pending); }
-  self.stores.store.admit_apply_batch();
-}`;
-  if (!toolJobPublicationFreshnessBeforeEveryTurn(helperFreshPublicationTurn))
-    throw new Error("[verify interactivity tool-jobs] self-test exact extracted publication freshness guard was falsely rejected.");
-  if (toolJobPublicationFreshnessBeforeEveryTurn(helperFreshPublicationTurn.replace("validate_commit(operation", "accept_without_validation(operation")))
+  if (toolJobPublicationFreshnessBeforeEveryTurn(freshPublicationTurn.replace("validate_commit(operation", "accept_without_validation(operation")))
     throw new Error("[verify interactivity tool-jobs] self-test extracted publication freshness guard without commit validation was falsely accepted.");
+  for (const [before, after] of [
+    ["    return Ok(());\n  }\n  if let Some(pending)", "    return Err(stale);\n  }\n  if let Some(pending)"],
+    ["mounted.cancellation_lease.as_ref().expect(\"claimed publication lease\").cancel()", "drop(mounted)"],
+    ["mounted.reserve_cancelled_result(cx)?", "drop(mounted)"],
+  ] as const) {
+    if (toolJobPublicationFreshnessBeforeEveryTurn(freshPublicationTurn.replace(before, after)))
+      throw new Error("[verify interactivity tool-jobs] self-test stale publication without a local terminal result was falsely accepted.");
+  }
+}
+
+/** 🔔 Checks publication freshness before every turn and the host only, config and presence publication contracts. */
+export function freshTurnAndHostOnlyPublicationChecks() {
+  stalePublicationChecks();
   const hostOnlyPublication = `const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[ArtifactToolPublicationContract { tool_id: "setView", lanes: &[ArtifactToolPublicationLane::HostOnly] }];`;
   const hostOnlyContracts = toolJobPublicationContracts(hostOnlyPublication, hostOnlyPublication, new Map());
   if (hostOnlyContracts?.get("setView")?.join(",") !== "HostOnly" || !toolJobPublicationAuthorityReady("", hostOnlyContracts.get("setView")!))

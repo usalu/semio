@@ -866,8 +866,10 @@ def _spectrum():
         marker(0.5, tr("Sun (5800 K): short-wave", "Sonne (5800 K): kurzwellig"), PASTEL_YELLOW),
         marker(10.0, tr("Room surfaces (20 °C): long-wave", "Raumflächen (20 °C): langwellig"), PASTEL_ORANGE),
     )
-    panel = RoundedRectangle(corner_radius=0.15, width=10.6, height=4.5, stroke_color=P_PRIMARY, stroke_width=1.6,
-                             fill_color=P_DEEP_DARK, fill_opacity=1.0).move_to(np.array([0.0, y + 0.55, 0.0]))
+    depth = heading.height + 0.3
+    panel = _manim_module.window_frame(10.6, 4.5, top_depth=depth, top_chips=((0, heading.width + 0.4),), color=P_PRIMARY, stroke_width=1.6,
+                                       fill_color=P_DEEP_DARK, fill_opacity=1.0).move_to(np.array([0.0, y + 0.55, 0.0]))
+    heading.move_to(np.array([panel.get_left()[0] + 0.2 + heading.width / 2, panel.get_top()[1] - depth / 2, 0.0]))
     base = VGroup(bands, ticks, names, axis, heading)
     for m in (panel, base, marks):
         m.set_z_index(901)
@@ -1068,7 +1070,7 @@ class Beat5_Zusammenfassung(Scene):
             tr(r"R_{\mathrm{si}}\;\text{inside},\;R_{\mathrm{se}}\;\text{outside:}\;\text{convection and radiation in one value}",
                r"R_{\mathrm{si}}\;\text{innen},\;R_{\mathrm{se}}\;\text{außen:}\;\text{Konvektion und Strahlung in einem Wert}"),
             np.array([0.0, 2.72, 0.0]), size=LABEL_FONT_SIZE, color=PASTEL_GREEN)
-        surf_box = SurroundingRectangle(surf_note, color=PASTEL_GREEN, buff=0.14, corner_radius=0.1, stroke_width=2)
+        surf_box = SurroundingRectangle(surf_note, color=PASTEL_GREEN, buff=0.14, stroke_width=2)
         r_tags = VGroup(
             math_label(r"R_{\mathrm{si}}", p(-0.62, _profile_y(THETA_I - 0.6 * (THETA_I - theta_si)) + 0.34), size=LABEL_FONT_SIZE, color=PASTEL_GREEN),
             math_label(r"R_{\mathrm{se}}", p(0.62, _profile_y(THETA_E + 0.6 * (theta_se - THETA_E)) + 0.34), size=LABEL_FONT_SIZE, color=PASTEL_GREEN),

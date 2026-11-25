@@ -1,0 +1,31 @@
+{
+"ops": [
+{"op": "shape-set", "scale": "50", "view": "front", "id": "tyre-a-3", "set": {"bone": "castor-a-3"}},
+{"op": "shape-set", "scale": "50", "view": "front", "id": "tyre-a-2", "set": {"bone": "castor-a-2"}},
+{"op": "shape-set", "scale": "50", "view": "front", "id": "tyre-b-3", "set": {"bone": "castor-b-3"}},
+{"op": "shape-set", "scale": "50", "view": "front", "id": "tyre-b-2", "set": {"bone": "castor-b-2"}},
+{"op": "shape-set", "scale": "50", "view": "front", "id": "tyre-b-1", "set": {"bone": "castor-b-1"}},
+{"op": "shape-set", "scale": "50", "view": "front", "id": "tyre-a-1", "set": {"bone": "castor-a-1"}},
+{"op": "shape-set", "scale": "50", "view": "plan", "id": "tyre-a-1", "set": {"bone": "castor-a-1"}},
+{"op": "shape-set", "scale": "50", "view": "plan", "id": "tyre-a-2", "set": {"bone": "castor-a-2"}},
+{"op": "shape-set", "scale": "50", "view": "plan", "id": "tyre-a-3", "set": {"bone": "castor-a-3"}},
+{"op": "shape-set", "scale": "50", "view": "plan", "id": "tyre-b-1", "set": {"bone": "castor-b-1"}},
+{"op": "shape-set", "scale": "50", "view": "plan", "id": "tyre-b-2", "set": {"bone": "castor-b-2"}},
+{"op": "shape-set", "scale": "50", "view": "plan", "id": "tyre-b-3", "set": {"bone": "castor-b-3"}},
+{"op": "shape-set", "scale": "100", "view": "front", "id": "tyre-a-3", "set": {"bone": "castor-a-3"}},
+{"op": "shape-set", "scale": "100", "view": "front", "id": "tyre-a-2", "set": {"bone": "castor-a-2"}},
+{"op": "shape-set", "scale": "100", "view": "front", "id": "tyre-b-3", "set": {"bone": "castor-b-3"}},
+{"op": "shape-set", "scale": "100", "view": "front", "id": "tyre-b-2", "set": {"bone": "castor-b-2"}},
+{"op": "shape-set", "scale": "100", "view": "front", "id": "tyre-b-1", "set": {"bone": "castor-b-1"}},
+{"op": "shape-set", "scale": "100", "view": "front", "id": "tyre-a-1", "set": {"bone": "castor-a-1"}},
+{"op": "shape-set", "scale": "100", "view": "plan", "id": "tyre-a-1", "set": {"bone": "castor-a-1"}},
+{"op": "shape-set", "scale": "100", "view": "plan", "id": "tyre-a-2", "set": {"bone": "castor-a-2"}},
+{"op": "shape-set", "scale": "100", "view": "plan", "id": "tyre-a-3", "set": {"bone": "castor-a-3"}},
+{"op": "shape-set", "scale": "100", "view": "plan", "id": "tyre-b-1", "set": {"bone": "castor-b-1"}},
+{"op": "shape-set", "scale": "100", "view": "plan", "id": "tyre-b-2", "set": {"bone": "castor-b-2"}},
+{"op": "shape-set", "scale": "100", "view": "plan", "id": "tyre-b-3", "set": {"bone": "castor-b-3"}}
+],
+"solidify": [
+{"scales": ["500"], "bones": ["mallet-a", "mallet-b"]}
+]
+}

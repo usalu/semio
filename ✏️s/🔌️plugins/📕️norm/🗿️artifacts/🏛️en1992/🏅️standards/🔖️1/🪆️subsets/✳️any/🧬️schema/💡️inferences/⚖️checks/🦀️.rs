@@ -46,13 +46,5 @@ pub fn field_metadata() -> &'static [(&'static str, &'static str, &'static str, 
 }
 
 #[cfg(test)]
-#[path = "🧪️tests/📍️reach/🦀️.rs"]
-mod reach_tests;
-
-#[cfg(test)]
-#[path = "🧪️tests/🧭️spec-trace/🦀️.rs"]
-mod spec_trace_tests;
-
-#[cfg(test)]
 #[path = "🧪️tests/🩹️remedies/🦀️.rs"]
 mod remedies_tests;

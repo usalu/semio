@@ -33,8 +33,8 @@ for(const vector of cases)test("inventory receipt "+vector.mode,async()=>{
  const owner={name:"fixture owner"},invocation={control:{signal:signals.signal}},ports={
   selected:!whole,scope:whole?undefined:"s",options:{selection:{}},root:"fixture",memoPath:"private",registry:{},invocation,phaseControl:{},loadedGraphAdmissionFormatV1:"v",ownerRegistryInvalidationV1:{},readBuildOwnerRegistryV1:(v:unknown)=>v,buildGraphScopeKeyV1:()=>"s",registryDigest:"d",ownerRegistryDigestV1:()=>"d",askOwnerRegistryV1:()=>"d",
   producer:{readBuildOwnerRegistrySourceV1:()=>"{}",discoverBuildOwnerAdmissionFactsV1:async()=>({})},
-  readAdmissionMemoV1:async()=>{sample("memo-read");return{admission,observations:[1,2]};},
-  selectedAdmissionFactsV1:{entries:()=>[],seed:()=>undefined},ownersOfAdmissionMemoV1:()=>[],
+  readForgottenPathsV1:()=>({paths:new Map(),listings:new Map()}),rowsForgottenV1:()=>false,forgetPersistedPathsV1:async()=>true,readAdmissionMemoV1:async()=>{sample("memo-read");return{admission,observations:[1,2],owners:[],close:async()=>{}};},
+  selectedAdmissionFactsV1:{entries:()=>[],suffixes:()=>[],seed:()=>undefined},ownersOfAdmissionMemoV1:()=>[],
   observation:{captureObservedSourceInputsV1:async(read:()=>Promise<unknown>)=>({value:await read(),observations:[3]}),settleObservedComputationV1:async(run:()=>Promise<unknown>)=>{sample("scoped-discovery");return run();}},
   closeBuildOwnerAdmissionV1:async(_selection:unknown,_registry:unknown,observe:(owner:unknown,targets:unknown,inputs:unknown)=>Promise<unknown>)=>{
    await observe(owner,[],[]);
@@ -89,7 +89,7 @@ for(const vector of owners)test("active admission lookup "+vector.mode,async()=>
     expect(read()?.active).toEqual(prior);expect(sliceReadMovedAtV1()).toBe(moved);
    }
    if(vector.mode==="cancel"){signal.abort(cause);signal.signal.throwIfAborted();}return facts;}},
-  readAdmissionMemoV1:async()=>undefined,selectedAdmissionFactsV1:{entries:()=>[]},
+  readForgottenPathsV1:()=>({paths:new Map(),listings:new Map()}),rowsForgottenV1:()=>false,forgetPersistedPathsV1:async()=>true,readAdmissionMemoV1:async()=>undefined,selectedAdmissionFactsV1:{entries:()=>[],suffixes:()=>[]},
   buildGraphSourceFactsHoldV1:async(_rows:unknown,_invocation:unknown,_onStale:unknown,onVerified?:(rows:number)=>void)=>{
    sample("memo-check",memoAttempt===0?0:vector.discoveryAt,memoAttempt===0?vector.memoSampleAt:vector.discoverySampleAt);
    for(const count of vector.verified?.[memoAttempt]??[]){

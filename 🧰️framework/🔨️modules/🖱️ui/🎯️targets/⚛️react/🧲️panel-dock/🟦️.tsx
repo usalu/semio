@@ -2,9 +2,7 @@ import { type PanelTabNode, type PanelDock, findPanelTabPath, findPanelTabNode, 
 import { type Anchor, ANCHORS } from "@semio-tech/ui/modules/panel-anchor";
 import { type PanelTabDockTarget, type PanelTreeUnitDockMove, type PanelDockContextValue, PanelDockContext } from "@semio-tech/ui/modules/panel-dock";
 import * as React from "react";
-import { cn } from "@semio-tech/ui/modules/class-name-composition";
-import { surfaceClass } from "@semio-tech/ui/modules/surface-presentation";
-import { borderNormalClass } from "@semio-tech/ui/modules/border-presentation";
+import { DragGhost, useDragActive, useDragEscape } from "@semio-tech/ui/modules/pointer-drag";
 import { usePanelGhost } from "@semio-tech/ui/elements/PanelGhost";
 import chromeParityConstants from "../../../🧬️schema/📐️chrome-parity-constants/🧮️values.json";
 import { reactHostPort } from "@semio-tech/ui/elements/Ports/react";
@@ -206,25 +204,6 @@ export function computeTabDockDropZone(pointerX: number, pointerY: number, rows:
 
 //#endregion 🎯️HitTesting
 
-//#region 🪟️DragPreview
-
-const DOCK_DRAG_CURSOR_OFFSET_X = 8;
-const DOCK_DRAG_CURSOR_OFFSET_Y = 10;
-
-/** 🪟️ Floating label following the cursor while dragging a panel tab or tree unit. */
-const DockDragChip: React.FC<{ readonly label: string; readonly x: number; readonly y: number }> = ({ label, x, y }) => (
-  <div
-    data-slot="dock-drag-chip"
-    data-level="window"
-    className={cn("pointer-events-none fixed z-tutorial flex max-w-[12rem] shrink-0 items-center gap-half rounded-sm border px-single py-half text-xs text-element shadow-md select-none", surfaceClass, borderNormalClass)}
-    style={{ left: x + DOCK_DRAG_CURSOR_OFFSET_X, top: y + DOCK_DRAG_CURSOR_OFFSET_Y }}
-  >
-    <span className="truncate">{label}</span>
-  </div>
-);
-
-//#endregion 🪟️DragPreview
-
 interface PanelDockDragState {
   readonly anchor: Anchor;
   readonly tabId: string;
@@ -278,6 +257,14 @@ export const PanelDockProvider: React.FC<PanelDockProviderProps> = ({ dock, onTa
     setDropTarget(zone);
   }, []);
 
+  const cancelTabDrag = reactHostPort.useCallback(() => {
+    panelGhost?.end();
+    setDragState(null);
+    setPendingDrag(null);
+    dropTargetRef.current = null;
+    setDropTarget(null);
+  }, [panelGhost]);
+
   const startTabDrag = reactHostPort.useCallback((anchor: Anchor, tabId: string, label: string, event: React.PointerEvent<HTMLElement>) => {
     if (event.button !== 0) return;
     setPendingDrag({ anchor, tabId, pointerId: event.pointerId, label, startX: event.clientX, startY: event.clientY });
@@ -311,34 +298,23 @@ export const PanelDockProvider: React.FC<PanelDockProviderProps> = ({ dock, onTa
       if (dragState && dropTargetRef.current) {
         onTabDockDrop({ tabId: dragState.tabId, fromAnchor: dragState.anchor, target: dropTargetRef.current });
       }
-      panelGhost?.end();
-      setDragState(null);
-      setPendingDrag(null);
-      dropTargetRef.current = null;
-      setDropTarget(null);
+      cancelTabDrag();
+    };
+    const handleCancel = (event: PointerEvent) => {
+      if (event.pointerId === (dragState?.pointerId ?? pendingDrag?.pointerId)) cancelTabDrag();
     };
     document.addEventListener("pointermove", handleMove);
     document.addEventListener("pointerup", handleUp);
+    document.addEventListener("pointercancel", handleCancel);
     return () => {
       document.removeEventListener("pointermove", handleMove);
       document.removeEventListener("pointerup", handleUp);
+      document.removeEventListener("pointercancel", handleCancel);
     };
-  }, [pendingDrag, dragState, onTabDockDrop, panelGhost, refreshDropTarget]);
+  }, [pendingDrag, dragState, onTabDockDrop, cancelTabDrag, refreshDropTarget]);
 
-  reactHostPort.useEffect(() => {
-    if (!dragState) return;
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== "Escape") return;
-      event.preventDefault();
-      panelGhost?.end();
-      setDragState(null);
-      setPendingDrag(null);
-      dropTargetRef.current = null;
-      setDropTarget(null);
-    };
-    document.addEventListener("keydown", handleKeyDown, true);
-    return () => document.removeEventListener("keydown", handleKeyDown, true);
-  }, [dragState, panelGhost]);
+  useDragActive(dragState !== null);
+  useDragEscape(dragState !== null, cancelTabDrag);
 
   const contextValue = reactHostPort.useMemo<PanelDockContextValue>(
     () => ({ dragTabId: dragState?.tabId ?? null, draggedSubtreeIds: dragState ? excludedIdsRef.current : null, dropTarget, startTabDrag, registerTabRowDropTarget, onTreeUnitDockDrop }),
@@ -348,7 +324,7 @@ export const PanelDockProvider: React.FC<PanelDockProviderProps> = ({ dock, onTa
   return (
     <PanelDockContext.Provider value={contextValue}>
       {children}
-      {dragState ? <DockDragChip label={dragState.label} x={dragState.x} y={dragState.y} /> : null}
+      {dragState ? <DragGhost x={dragState.x} y={dragState.y}>{dragState.label}</DragGhost> : null}
     </PanelDockContext.Provider>
   );
 };

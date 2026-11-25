@@ -71,3 +71,10 @@ import { shardWorkerMessageHandlerSource } from "./📨️message-handler/🟦�
 export function shardWorkerSource(): string {
   return [shardWorkerBootstrapSource(), shardWorkerActorStateSource(), shardWorkerDrivePacingSource(), shardWorkerActorLoadingSource(), shardWorkerMessageHandlerSource()].join("");
 }
+
+/** 🔖️ Classifies a published shard worker against the one the current sources generate, since every component bridge is staged without it. */
+export type ShardWorkerPublicationV1 = "missing" | "stale" | "current";
+/** 🔖️ The published text is the identity: the generated worker is a pure function of its sources. */
+export function shardWorkerPublicationV1(published: string | undefined): ShardWorkerPublicationV1 {
+  return published === undefined ? "missing" : published === shardWorkerSource() ? "current" : "stale";
+}

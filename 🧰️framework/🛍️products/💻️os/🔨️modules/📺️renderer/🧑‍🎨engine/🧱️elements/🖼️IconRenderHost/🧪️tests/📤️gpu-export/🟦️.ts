@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { chromium } from "playwright";
+import { launchChromium } from "../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🌐️chromium-launch/🟦️";
 import sharp from "sharp";
 import { describe, expect, it } from "vitest";
 
@@ -14,7 +14,7 @@ describe("🖼️ Icon GPU PNG export", () => {
   
 
   it("matches browser PNG pixels at a width requiring GPU row padding", async () => {
-    const browser = await chromium.launch({ headless: true });
+    const browser = await launchChromium();
     try {
       const page = await browser.newPage();
       const png = await page.evaluate((fixture) => {

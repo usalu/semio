@@ -17,6 +17,7 @@ pub type DagStore = store::ArtifactStore<DagSnapshot, DagMutation>;
 pub enum DagMutation {}
 
 semio_os_kernel::original_ordinal_operation_receiving!(DagMutation);
+semio_os_kernel::artifact_persisted_binary_operation!(DagMutation);
 
 impl semio_framework_value::retirement::RetireOwned for DagMutation {
     type RetirementCursor = semio_framework_value::retirement::Leaf<()>;

@@ -25,6 +25,9 @@ export type Slug = string;
 /** 🌍️ A human-readable text in every supported language; there is no default language. */
 export type Text = { readonly en: string; readonly de: string };
 
+/** 🏷️ A tag of an asset: `id` is the slug that search and links use, `title` is what a reader sees in the language of the page. */
+export type Tag = { readonly id: Slug; readonly title: Text };
+
 /** 🗣️ The languages every {@link Text} carries, English first. */
 export const LANGUAGES = ["en", "de"] as const;
 
@@ -254,11 +257,17 @@ export type MemberSection = { readonly kind: "rect"; readonly w: number; readonl
 /** 📊️ A prismatic bar between two bone-local end points with a physical section, carried by the full 3D frames of its bones and drawn in its true foreshortened outline in every viewpoint. It has no planar geometry and no `solid`: a diagonal is one member, never a bounding rectangle. */
 export type MemberShape = { readonly kind: "member"; readonly from: MemberEnd; readonly to: MemberEnd; readonly section: MemberSection };
 
+/** 🥚️ One section of a loft, in the bone-local frame of its bone in metres: the superellipse `|x/rx|^n + |y/ry|^n = 1` (`exponent` n, default 2, an ellipse; larger is boxier) centred at `at` = [u, v, w] in its own x, y plane. `rotation` (a unit quaternion [x, y, z, w]) alone decides which bone axes x and y are: with the limb rotation `[0.5, 0.5, 0.5, 0.5]` x is v (`rx` the half depth) and y is w (`ry` the half width); without `rotation` the section stands perpendicular to the path through the section centres, x being u projected perpendicular to the path (w when the path runs exactly along u) and y = path x x. One definition for the `loft` shape of a drawing ({@link LoftShape}) and the `loft` solid of a volume ({@link VolumeSolid}). */
+export type LoftSection = { readonly at: Vector3; readonly rx: number; readonly ry: number; readonly exponent?: number; readonly rotation?: Quaternion };
+
+/** 🧵️ A body lofted between two or more {@link LoftSection}s in order of travel: a part whose cross-section changes freely along its bone (an arm, a hand, a shoe, a coat, a tapering soundbox), which is neither a prism nor a body of revolution. The sections are carried by the full 3D frame of the shape's bone (or blended over `weights`, as a volume solid is) and the body between every two consecutive sections is drawn in its true outline in every viewpoint, so the side elevation, the front elevation and the plan are one 3D definition at every pose and clip instant. Like the {@link MemberShape} it has no planar geometry and no `solid`; the same sections written as a `loft` solid of the volume are the same body (D54). */
+export type LoftShape = { readonly kind: "loft"; readonly sections: readonly LoftSection[]; readonly weights?: VolumeSolidBase["weights"] };
+
 /** 🔺️ One of the shape primitives. */
-export type ShapeGeometry = CapsuleShape | EllipseShape | RectShape | PolyShape | PathShape | MemberShape;
+export type ShapeGeometry = CapsuleShape | EllipseShape | RectShape | PolyShape | PathShape | MemberShape | LoftShape;
 
 /** 🌀️ How a shape of any viewpoint is a solid of its rig-plane profile, authored in the bone's local frame like a side elevation shape and placed with the full 3D frame of its bone (spread, twist and sagittal rotation) and projected to the viewpoint (side elevation, front elevation or plan), so one 3D definition reads right in all three views at every pose and clip instant.
- * `revolved`: an axisymmetric part (umbrella canopy, rib, lid, drum) about an axis through the rest origin of `axisBone` along its bone-local direction `axis` (`u` along the bone, `v` its normal in the sagittal plane, `w` the lateral axis), through the point translated from that origin by `axisX` along world x and `axisZ` along world z (default 0) at rest, the axis then carried with that bone; `axisBone` is the shape's own bone or one of its ancestors, so the solid moves rigidly with its bone; the optional `lateralScale` (> 0, default 1, a physical circle) scales the lateral radius to an elliptic cross-section; the front paper x is the lateral distance from the axis (`mirror` also draws the reflection, so a half profile reads as the whole body), the plan is the circle of the widest lateral reach about the axis.
+ * `revolved`: an axisymmetric part (umbrella canopy, rib, lid, drum) about an axis through the rest origin of `axisBone` along its bone-local direction `axis` (`u` along the bone, `v` its normal in the sagittal plane, `w` the lateral axis), through the point translated from that origin by `axisX` along world x and `axisZ` along world z (default 0) at rest, the axis then carried with that bone; `axisBone` is the shape's own bone or one of its ancestors, so the solid moves rigidly with its bone; the optional `lateralScale` (> 0, default 1, a physical circle) makes the cross-section an ellipse: it scales the radius along the u of `axisBone` projected perpendicular to the axis (along its w when the axis is u, the kernel semantics of the volume `revolve`), relative to the radius the profile states, in every view (a mirrored body, the half profile of the front and the plan alike); the front paper x is the lateral distance from the axis (`mirror` also draws the reflection, so a half profile reads as the whole body), the plan is the circle of the widest lateral reach about the axis.
  * `extruded`: a prismatic part swept along the bone-local axis `sweep` (`u` along the bone, with the profile in the (v, w) plane; `w` lateral, with the profile in the (u, v) plane; `v` along the bone normal, with the profile in the (u, w) plane; required, never defaulted), here described for the lateral sweep: a part (blind slat, damper flap, door panel, boom, board) spanning `z0`..`z1` (left is +); the front is `z0`..`z1` by the height range of the profile, the plan the forward range of the profile by `z0`..`z1`. The optional `zTip` is the span at the bone tip in the same order as `z0`..`z1` (`zTip[0] < zTip[1]`); the span interpolates from `z0`..`z1` along the first profile coordinate divided by bone length (u for v and w sweeps, v for a u sweep), so a tapered limb, blade or branch is one extruded solid. */
 export type Solid = { readonly kind: "revolved"; readonly axisBone: Slug; readonly axis: "u" | "v" | "w"; readonly axisX: number; readonly axisZ?: number; readonly lateralScale?: number; readonly mirror?: boolean } | { readonly kind: "extruded"; readonly sweep: "u" | "v" | "w"; readonly z0: number; readonly z1: number; readonly zTip?: readonly [number, number]; readonly weights?: VolumeSolidBase["weights"] };
 
@@ -346,7 +355,7 @@ export type VolumeSolid = VolumeSolidBase &
     | { readonly kind: "revolve"; readonly profile: readonly Vector2[]; readonly axis: Vector3; readonly origin: Vector3; readonly sweepRad?: number; readonly lateralScale?: number }
     | { readonly kind: "extrude"; readonly profile: readonly Vector2[]; readonly holes?: readonly (readonly Vector2[])[]; readonly plane: (typeof VOLUME_PLANES)[number]; readonly from: number; readonly to: number; readonly taperTo?: readonly [number, number] }
     | { readonly kind: "polyhedron"; readonly vertices: readonly Vector3[]; readonly triangles: readonly (readonly [number, number, number])[] }
-    | { readonly kind: "loft"; readonly sections: readonly { readonly at: Vector3; readonly rx: number; readonly ry: number; readonly exponent?: number; readonly rotation?: Quaternion }[]; readonly capStart: boolean; readonly capEnd: boolean }
+    | { readonly kind: "loft"; readonly sections: readonly LoftSection[]; readonly capStart: boolean; readonly capEnd: boolean }
   );
 
 /** 🔥️ The lists of an {@link AuthoredVolume}: `body` (the tone views), `thermal` (the thermal model made spatial) and `structure` (the structural idealisation made spatial). */
@@ -828,7 +837,7 @@ export type Asset = {
   readonly category: CategoryId;
   readonly title: Text;
   readonly summary: Text;
-  readonly tags: readonly Slug[];
+  readonly tags: readonly Tag[];
   readonly provenance: Provenance;
   readonly dimensions: Dimensions;
   readonly materials: readonly Material[];

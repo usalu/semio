@@ -155,8 +155,11 @@ pub fn pile_settlement_catalogue(doc: &En1997Snapshot, pile: &Pile, report: &mut
         .with_n("rs_max", crate::part_1::shaft_resistance_n(pile.alpha_s, pile.diameter, pile.unit_shaft_resistance, pile.length))
         .with_n("rb_max", crate::part_1::base_resistance_n(pile.unit_base_resistance, area))
         .with_n("d", pile.diameter)
-        .with_n("ea", modulus * area)
         .with_n("l", pile.length);
+    let c = match pile.elastic_modulus > 0.0 {
+        true => c.with_n("ea", modulus * area),
+        false => c.with_s("concrete_class", pile.concrete_class.designation().unwrap_or_default()).with_n("area", area),
+    };
     reference(report, "PILE-09", &c, "piles", &pile.id, &label);
 }
 

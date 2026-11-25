@@ -37,6 +37,7 @@ use crate::schema::mutations::{NoteMutation};
 #[cfg(test)] use crate::schema::mutations::{apply_note_mutation};
 
 protocol::original_ordinal_operation_receiving!(NoteMutation);
+protocol::artifact_persisted_binary_operation!(NoteMutation);
 
 impl protocol::OpBinary for NoteMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

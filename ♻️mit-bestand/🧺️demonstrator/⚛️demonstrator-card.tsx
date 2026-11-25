@@ -7,13 +7,10 @@ import { demonstratorPaneDescriptionParagraphs, type DemonstratorPaneView } from
 
 export function DemonstratorCard({
   pane,
-  lifted,
   onClick,
   className,
 }: {
   readonly pane: DemonstratorPaneView;
-  /** 🎈️ Lifted while its app is revealed — never maps to window `active` (that paints the primary frame stroke). */
-  readonly lifted?: boolean;
   readonly onClick: () => void;
   readonly className?: string;
 }) {
@@ -25,7 +22,6 @@ export function DemonstratorCard({
     <OverviewCard
       as="button"
       slot="demonstrator-pane-card"
-      lifted={lifted}
       onClick={onClick}
       label={cardLabel}
       className={className}

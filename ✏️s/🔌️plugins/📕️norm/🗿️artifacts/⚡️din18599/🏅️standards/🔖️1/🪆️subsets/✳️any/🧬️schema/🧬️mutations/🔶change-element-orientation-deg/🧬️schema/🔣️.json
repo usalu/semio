@@ -11,7 +11,7 @@
   ],
   "properties": {
     "mutation": {
-      "const": "changeelementorientationdeg"
+      "const": "changeElementOrientationDeg"
     },
     "elementId": {
       "type": "string",

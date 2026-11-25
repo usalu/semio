@@ -26,6 +26,17 @@ pub struct WindowConfigAuthority {
     pub retired_snapshots:semio_framework_value_retirement_queue::RetirementQueue,
 }
 
+impl WindowConfigAuthority {
+    /// 🪪️ Verifies the captured partition and revision against the current committed borrow.
+    pub fn matches_committed(&self, live: &WindowConfigBorrow<'_>) -> bool {
+        live.authority == self.snapshot.authority()
+            && live.window_id == self.window_id
+            && live.window_kind_id == self.window_kind_id
+            && live.generation == self.generation
+            && live.revision == self.revision
+    }
+}
+
 #[doc(hidden)]
 pub trait ErasedWindowConfigPublication: Send {
     fn as_any_mut(&mut self) -> &mut dyn Any;

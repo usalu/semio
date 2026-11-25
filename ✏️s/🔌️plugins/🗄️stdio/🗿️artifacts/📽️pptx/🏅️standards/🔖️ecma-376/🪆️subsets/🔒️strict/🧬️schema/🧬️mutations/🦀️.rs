@@ -106,6 +106,7 @@ pub enum PptxStrictMutation {
     RemoveAlternateContent(remove_alternate_content::RemoveAlternateContent),
 }
 dsl::original_pack_value_operation_receiving!(PptxStrictMutation);
+dsl::artifact_persisted_binary_operation!(PptxStrictMutation);
 
 /// 🧾️ Kebab-case spelling of every `PptxStrictMutation` variant, in declaration order — the exhaustive
 /// mutation catalog `pptx-ecma-376-strict` (`../../🔣️oracle.json`) is measured against

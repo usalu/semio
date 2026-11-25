@@ -172,9 +172,13 @@ fn engagement_pointer_uses_the_live_selection_camera_clip_and_window_address() {
     }
 }
 
-/// 🖱️ The probe's own drag: one move onto the aim point, a press, eight interpolated moves, a release.
+/// 🖱️ The probe's own drag: one move onto the aim point, a press, eight interpolated moves, a release; the middle button drags with Shift held because plain middle orbits and Shift+middle pans.
 fn drag(state: &mut World3dState, button: i16, to: [f32; 2]) {
-    let modifiers = PointerModifiers::default();
+    drag_with(state, button, to, PointerModifiers { shift: button == 1, ..PointerModifiers::default() });
+}
+
+/// 🖱️ [`drag`] with the modifiers held for the whole gesture.
+fn drag_with(state: &mut World3dState, button: i16, to: [f32; 2], modifiers: PointerModifiers) {
     let from = point("aim");
     enqueue(state, WorldInteractionIntent::pointer_move(from[0], from[1], 0.0, 0.0, false, 0, &modifiers));
     enqueue(state, WorldInteractionIntent::pointer_button(from[0], from[1], true, button, &modifiers));
@@ -746,5 +750,20 @@ fn leaving_before_a_queued_ray_finishes_still_clears_its_hover() {
     for (index, action) in result.iter().enumerate() {
         assert_eq!(action.action, "interactionHover");
         assert_eq!(action.args.as_ref().unwrap()["targets"].as_str() == Some("[]"), index % 2 == 1);
+    }
+}
+
+/// 🖱️ The binding both renderers share: left and plain middle drags orbit, plain right drags pan, and a `select` utility keeps its marquee on the left button.
+#[test]
+fn left_and_middle_drags_orbit_and_right_drags_pan_unless_select_owns_the_left_button() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
+    for (button, utility, shift, pans, orbits) in [(0, "transform", false, false, true), (0, "", false, false, true), (1, "select", false, false, true), (1, "select", true, true, false), (2, "select", false, true, false), (0, "select", false, false, false)] {
+        let mut state = journey_state();
+        state.session.active_utility = utility.into();
+        let before = state.camera.orbit.clone();
+        drag_with(&mut state, button, point("dragTo"), PointerModifiers { shift, ..PointerModifiers::default() });
+        journal(&mut state);
+        let (target_moved, position_moved) = (state.camera.orbit.target != before.target, state.camera.orbit.to_camera().position != before.to_camera().position);
+        assert_eq!((target_moved, position_moved && !target_moved), (pans, orbits), "button {button} shift {shift} under utility {utility:?}");
     }
 }

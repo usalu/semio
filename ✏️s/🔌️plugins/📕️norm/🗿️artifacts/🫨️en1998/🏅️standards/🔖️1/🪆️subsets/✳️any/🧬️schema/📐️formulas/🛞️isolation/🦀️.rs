@@ -107,7 +107,3 @@ impl Bilinear {
 pub fn effective_period_s(mass_kg: f64, effective_stiffness_n_per_m: f64) -> f64 {
     2.0 * std::f64::consts::PI * (mass_kg / effective_stiffness_n_per_m).sqrt()
 }
-
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;

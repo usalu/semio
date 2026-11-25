@@ -46,6 +46,41 @@ fn every_component_implies_the_role_the_shared_fixture_declares() {
     assert_eq!(seen.len(), 19, "the fixture covers every one of the contract's 19 components");
 }
 
+/// 🔠️ A text component with a heading level is a heading announcing that level, clamped to `1..=6`; without a level it stays a paragraph.
+#[test]
+fn heading_text_projects_the_heading_role_and_its_clamped_level() {
+    let fixture: serde_json::Value = serde_json::from_str(PROJECTION_FIXTURE).expect("🔠️ the projection fixture parses");
+    for (index, case) in fixture["headings"].as_array().expect("heading cases").iter().enumerate() {
+        let id = case["id"].as_str().expect("case id");
+        let record: crate::UiNodeRecord = serde_json::from_value(serde_json::json!({
+            "id": index,
+            "key": format!("#heading-{index}"),
+            "component": case["component"],
+            "layout": { "kind": "leaf", "width": "hug", "height": "hug" },
+            "style": {},
+            "activity": "idle",
+            "accessibility": {}
+        }))
+        .unwrap_or_else(|error| panic!("{id}: fixture record deserializes: {error}"));
+        let node = accessibility_projection_node(&record, 4);
+        assert_eq!(node.role, case["role"].as_str().expect("role"), "{id}: role");
+        assert_eq!(node.level, case["level"].as_u64().map(|level| level as usize), "{id}: level");
+        assert!(!node.focusable, "{id}: a heading takes no focus of its own");
+    }
+}
+
+/// 🔠️ The builder emits a heading clamped to the valid range, emphasized, and the contract round-trips it.
+#[test]
+fn heading_builder_clamps_the_level_and_emphasizes() {
+    let node: crate::BuiltNode = crate::heading(crate::Label::try_from("Pages").unwrap(), 9).into();
+    let crate::Component::Text(props) = &node.component else { panic!("a heading is a text component") };
+    assert_eq!((props.heading_level, props.emphasize, props.heading()), (Some(crate::HEADING_LEVEL_MAX), Some(true), Some(6)));
+    let json = serde_json::to_value(&node.component).expect("serialize");
+    assert_eq!(json["headingLevel"], 6);
+    let plain: crate::BuiltNode = crate::text(crate::Label::try_from("Body").unwrap()).into();
+    assert!(serde_json::to_value(&plain.component).expect("serialize").get("headingLevel").is_none());
+}
+
 /// 🔀️ A retained Toggle keeps the semantic state channel of the React control selected by its
 /// appearance: the button publishes pressed, while the native checkbox publishes checked.
 #[test]

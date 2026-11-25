@@ -36,6 +36,11 @@ let processStartedV1=false;
 export const carriedStagesV1={};
 
 
+/** 💽️ Whether a build failed because the store's volume has no room left (`ENOSPC`, `EDQUOT` or the typed "disk is full" refusal): the one failure after which the journal of the build is retired at once, because its rows hold the space the next build needs and cannot be resumed on a full volume. */
+export function diskFullFailureV1(error){
+ return ["ENOSPC","EDQUOT"].includes(error?.code)||/disk is full|no space left|Die Festplatte ist voll/iu.test(String(error?.message??""));
+}
+
 /** 🌊 The owners one wave re-infers: the policy wave, or its share when the load was granted `basisPoints` of the memory it asked for (the host could not give more: `SEMIO_SLICE_WAVE_BASIS_POINTS`, set by the slice pool), never fewer than one. The wave is what bounds the memory of a build, so a narrower grant means smaller waves: slower, never a wait.
  * @see ../../🏡️resident/🏗️composition/🌐️host/👷️slice-pool/🧱️limit/🟨️.mjs */
 export function scaledOwnerWaveV1(ownerWave,basisPoints){
@@ -240,7 +245,8 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
     if(!last.more)return{...last,computed:total};
     wave=last.deferred;
    }
-  }finally{await disposeSources(carry.disposers);}
+  }catch(error){if(carry.journalKey!==undefined&&diskFullFailureV1(error))await journal.clear(carry.journalKey).catch(()=>{});throw error;}
+  finally{await disposeSources(carry.disposers);}
  }
   async function buildOnce({identity,implementation,membership,compute,prime,signal,progress,hint,only,observedAtMs=now(),coverage,claim,repair,qualify},carry){
   const marks={};if(!processStartedV1){processStartedV1=true;marks.start=Math.round(process.uptime()*1000);}Object.assign(marks,carriedStagesV1);for(const key of Object.keys(carriedStagesV1))delete carriedStagesV1[key];let markedAt=now();const mark=name=>{const at=now();marks[name]=(marks[name]??0)+at-markedAt;markedAt=at;};

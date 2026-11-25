@@ -123,6 +123,14 @@ export type ActionRef = string;"####,
 export type ActionSemantics = { effects: CapabilityEffects, policy: CapabilityPolicy, execution: CapabilityExecution, description?: unknown, useWhen: Array<string>, examples: Array<string>, };"####,
         },
         SchemaMetadata {
+            name: "ActionSet",
+            version: 1,
+            typescript: r####"/**
+ * 🧺️ One action table a plugin declares once for every app that offers exactly these actions: each member app's roster (`AppDefinition.actions`) is its own rows followed by the rows of every set naming it. A package of N editors that share one edit catalog therefore stores the catalog once instead of N times, which keeps a descriptor inside the catalog bound. Resolved by `resolveManifestActionSets` (`🎯️action-bus/🟦️.ts`), whose Rust twin is `PluginManifest::resolved`.
+ */
+export type ActionSet = { id: string, appIds: Array<string>, actions: Array<ActionDefinition>, };"####,
+        },
+        SchemaMetadata {
             name: "ActivationEvent",
             version: 1,
             typescript: r####"/**

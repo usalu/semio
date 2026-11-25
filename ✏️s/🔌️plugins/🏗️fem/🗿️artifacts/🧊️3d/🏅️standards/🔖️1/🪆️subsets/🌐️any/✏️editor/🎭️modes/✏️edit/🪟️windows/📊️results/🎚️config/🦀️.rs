@@ -234,7 +234,33 @@ pub fn captured<C>(view: &semio_plugin::ConfigView<'_, C>) -> Option<Fem3dResult
     view.window::<Fem3dResultsWindowConfigOwner>().cloned()
 }
 
-/// 🪟️ The results-window instance a command both READS through [`current`] and writes back.
+thread_local! {
+    static SHADOW: std::cell::RefCell<std::collections::HashMap<String, Fem3dResultsWindowConfig>> = std::cell::RefCell::new(std::collections::HashMap::new());
+}
+
+/// 🪞️ Remembers the last state of one results window, so the app-level panel — which a host binds only to the FOCUSED pane — can still read the state of a results window the user last left.
+pub fn remember(window_id: &str, config: &Fem3dResultsWindowConfig) {
+    SHADOW.with(|shadow| { shadow.borrow_mut().insert(window_id.to_owned(), config.clone()); });
+}
+
+/// 🪞️ The state [`remember`] last stored for one results window.
+pub fn remembered(window_id: &str) -> Option<Fem3dResultsWindowConfig> {
+    SHADOW.with(|shadow| shadow.borrow().get(window_id).cloned())
+}
+
+/// 🩹️ The sparse publication of only the display fields a gesture named (all of them for `None`; a mode change also carries the source it may have cleared), so a write made while another pane holds focus never resets the fields it did not touch.
+pub fn addressed_fields(window_id: &str, config: &Fem3dResultsWindowConfig, field: Option<&str>) -> semio_plugin::WindowConfigMutation {
+    let named = |name: &str| field.is_none_or(|field| field == name || (name == "sourceId" && field == "mode"));
+    let patch = Fem3dResultsWindowConfigPatch {
+        result_source_id: named("sourceId").then(|| FemResultSourceChange { id: config.result_source_id.clone() }),
+        result_mode: named("mode").then(|| config.result_mode.clone()),
+        result_mode_index: named("modeIndex").then_some(config.result_mode_index),
+        ..Default::default()
+    };
+    semio_plugin::WindowConfigMutation::of::<Fem3dResultsWindowConfigOwner>(window_id, Fem3dResultsWindowConfigMutation::Update(Fem3dResultsWindowConfigUpdate { patch: Box::new(patch) }))
+}
+
+/// 🪟️ The results-window instance a command both READS through [`current`] and writes back. A command issued from another window (the Actions palette of the Model window) speaks for the first open results window.
 ///
 /// `requested` is the `windowId` a panel control tagged onto its own arguments (the puzzle3d
 /// Settings-panel rule): a panel projection carries no `window_id` of its own, so without the tag a
@@ -259,12 +285,9 @@ pub fn addressed_window_id<C>(cfg: &semio_plugin::ConfigView<'_, C>, view: &semi
     if let Some(captured) = captured {
         return Ok(captured);
     }
-    let id = view.window_id.as_deref().ok_or_else(|| semio_plugin::Fault::from("fem.window.required: command has no addressed window instance"))?;
-    let kind = view.window_instances.iter().find(|window| window.id == id).map(|window| window.window_kind_id.as_str()).ok_or_else(|| semio_plugin::Fault::from("fem.window.stale: addressed window instance is not open"))?;
-    if kind != kind_id {
-        return Err(semio_plugin::Fault::from("fem.window.kind: addressed window has the wrong kind"));
-    }
-    Ok(id.to_string())
+    let results = |window: &&semio_plugin::ViewWindowInstance| window.window_kind_id == kind_id;
+    let own = view.window_id.as_deref().and_then(|id| view.window_instances.iter().filter(results).find(|window| window.id == id));
+    own.or_else(|| view.window_instances.iter().find(results)).map(|window| window.id.clone()).ok_or_else(|| semio_plugin::Fault::from("fem.window.required: no FEM 3D results window is open"))
 }
 
 /// 🎚️ The whole-record publication into one exact results-window partition.

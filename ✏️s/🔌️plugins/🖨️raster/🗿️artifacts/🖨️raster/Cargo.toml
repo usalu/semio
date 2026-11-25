@@ -297,6 +297,12 @@ path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️t
 [workspace.dependencies.semio-plugin-ownership]
 path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/🧱️owner/📦️packages/🦀️rust"
 
+[workspace.dependencies.semio-plugin-store-lifecycle]
+path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/♻️lifecycle/🧱️owner/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-plugin-transient-publication]
+path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🫧️transient/🧱️owner/📦️packages/🦀️rust"
+
 [workspace.dependencies.semio-os-store-operation-wire]
 path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/📦️packages/🦀️rust"
 

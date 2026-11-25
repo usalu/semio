@@ -7,6 +7,7 @@ import{nativeImageInformationV1}from"../📥️information/🟦️.ts";
 import{invalidateNativeImageRosterV1}from"../📡️roster/🟦️.ts";
 import{nativeImageHdiutilProgramV1}from"../🛠️hdiutil/🟦️.ts";
 import{nativeImageContainerFreeBytesSyncV1,nativeImageForceDetachArgumentsV1,nativeImageRefreshMechanismV1,nativeImageVolumeLatchedV1}from"../⚖️availability/🟦️.ts";
+import{nativeImageGuardedMountModeV1}from"../../🌐️platform/📋️contract/📂️mount/🟦️.ts";
 const protocol=imageSchema.definitions.ImageProtocol.const.reclaim;
 /** 📏️ Names the three numbers that decide when host blocks held by an image count as bloat. */
 export type NativeImageReclaimRuleV1=Readonly<{reclaimFloorBytes:number;reclaimRatioPercent:number;reclaimTightHostFreeBytes:number}>;
@@ -144,10 +145,11 @@ export function createNativeImageDarwinReclaimPortV1(given:Readonly<{image:strin
  });
 }
 
-/** 🛡️ Makes the plain directory a detached image leaves behind at its mount point read-only (0555): a writer that resolves a path below it fails loudly with EACCES instead of silently filling the host disk, and the next attach mounts over it as before. A mounted or absent mount point is left alone. */
+/** 🛡️ Makes the plain directory a detached image leaves behind at its mount point read-only (its mode without the write bits, 0555 for the usual 0755): a writer that resolves a path below it fails loudly with EACCES instead of silently filling the host disk, the next attach mounts over it as before, and the mount contract admits exactly this guarded mode as the same underlying directory, so a guarded image reopens after a detach or a reboot. A mounted or absent mount point is left alone.
+ * @see ../../🌐️platform/📋️contract/📂️mount/🟦️.ts */
 export function guardDetachedNativeImageMountV1(mountPoint:string|undefined):void{
  if(mountPoint===undefined)return;
- try{const row=lstatSync(mountPoint);if(row.isDirectory()&&!row.isSymbolicLink()&&row.dev===lstatSync(dirname(mountPoint)).dev)chmodSync(mountPoint,0o555);}catch{}
+ try{const row=lstatSync(mountPoint);if(row.isDirectory()&&!row.isSymbolicLink()&&row.dev===lstatSync(dirname(mountPoint)).dev)chmodSync(mountPoint,nativeImageGuardedMountModeV1(row.mode)&0o7777);}catch{}
 }
 const fill=(template:readonly string[],values:Readonly<Record<string,string>>):string[]=>template.map(part=>part.replace(/<([A-Za-z]+)>/gu,(_,key)=>values[key]??_));
 type CommandRunnerV1=(program:string,args:readonly string[])=>Promise<string>;

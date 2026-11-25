@@ -32,12 +32,14 @@ semio-s-artifact-norm-en1999-diff-graphql = { workspace = true }
 semio-s-artifact-norm-en1999-diff-json-schema = { workspace = true }
 semio-s-artifact-norm-en1999-diff-proto = { workspace = true }
 semio-s-artifact-norm-en1999-model = { workspace = true }
+semio-s-artifact-norm-en1999-diff-rows-details = { workspace = true }
 semio-s-plugin-norm-compliance = { workspace = true }
 
 [features]
-test-support = ["dep:serde", "semio-s-artifact-norm-en1999-model/test-support", "semio-s-plugin-norm-compliance/test-support"]
+test-support = ["dep:serde", "semio-s-artifact-norm-en1999-model/test-support", "semio-s-plugin-norm-compliance/test-support", "semio-s-artifact-norm-en1999-diff-rows-details/test-support"]
 
 [dev-dependencies]
+semio-s-artifact-norm-en1999-diff-rows-details = { workspace = true, features = ["test-support"] }
 semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-s-plugin-norm-compliance = { workspace = true, features = ["compliance-testing"] }
 serde = { workspace = true }

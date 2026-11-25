@@ -5,7 +5,7 @@ const BODY:usize=4096;
 fn stock(fixture:&serde_json::Value)->EffectBank{EffectBank::new(Wallet::from_profile(&fixture["stock"]))}
 #[test]
 fn sequence_storage_refusal_retains_the_exact_unpublished_value(){
- let fixture:serde_json::Value=serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../🌳️value/📖️source/🧪️tests/🧫️fixtures/📐️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../🌳️value/📖️source/🧪️tests/🧫️fixtures/📐️.json")).unwrap();
  for row in fixture["storage"].as_array().unwrap(){
   let value=row["value"].as_u64().unwrap();let index=row["index"].as_u64().unwrap()as usize;let accepted=row["accepted"].as_bool().unwrap();let mut bank=stock(&fixture);
   if row["kind"]=="vector"{

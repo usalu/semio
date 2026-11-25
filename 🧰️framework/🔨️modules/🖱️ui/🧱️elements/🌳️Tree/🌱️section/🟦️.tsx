@@ -7,7 +7,7 @@ import { TreeContext, TreeAlignedRow, treeHeaderRowClassName, treeInspectorInner
 import { useFlow } from "../../../🔨️modules/🧭️flow-direction-context/🟦️.tsx";
 import { useUiDriverDragSurface } from "../../🚗️UiDriver/🟦️.tsx";
 import { cn } from "../../../🔨️modules/🏷️class-name-composition/🟦️.ts";
-import { dropZoneReadyTextClass, dropZoneReadyFillClass } from "../../../🔨️modules/🎨️chrome-class-names/🟦️.ts";
+import { dragSourceAttributes, dropPlaceAttributes, useNativeDropOver } from "../../../🔨️modules/🫳️pointer-drag/🟦️.tsx";
 import { DragHandle } from "../../🧱️DragHandle/🟦️.tsx";
 import { CollapsibleTrigger, CollapsibleContent, Collapsible } from "../../↕️Collapsible/🟦️.tsx";
 import { renderTreeRowIcon, treeFoldChevronIcon, treePresentationLabelStyle, treeRowChromeContentFillClasses, treeRowChromeShellClasses, treeRowShellClassName, treeSectionChevronClassName, treeSectionContentPaddingTopPx, treeSectionLabelSlotClassName, treeSemanticHoverStaySelector } from "../🎨️chrome/🟦️.tsx";
@@ -62,7 +62,8 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
   onDragLeave,
   onDrop,
   isLastSection = false,
-  isDropReady = false,
+  dropPlace: dropPlaceProp,
+  isDragging = false,
   isDragHandle = false,
   dragInitiation,
   windowAttributes,
@@ -134,16 +135,19 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
     },
     [onDragEnd],
   );
+  const sectionOver = useNativeDropOver();
+  const dropPlace = dropPlaceProp === undefined ? undefined : sectionOver.over ? "active" : dropPlaceProp;
+  const isDropReady = dropPlace !== undefined;
+  const dragPaint = { ...dragSourceAttributes(isDragging), ...dropPlaceAttributes(dropPlace) };
   const isHeaderlessSection = suppressLocalizedLabel && localizedLabel === undefined && !icon && actions.length === 0 && !loading && !waiting && !showDragHandle;
   const rowClassName = cn(
     treeRowShellClassName,
     treeRowChromeShellClasses(false, false),
     isExpandable ? "cursor-foldable" : "cursor-selectable",
     showDragHandle && resolvedDragInitiation === "surface" ? "cursor-grab active:cursor-grabbing" : "",
-    isDropReady && dropZoneReadyTextClass,
     className,
   );
-  const rowContentFillClassName = cn(treeRowChromeContentFillClasses(false, false, loading, waiting), isDropReady && dropZoneReadyFillClass);
+  const rowContentFillClassName = cn(treeRowChromeContentFillClasses(false, false, loading, waiting));
   const sectionDragHandle = showDragHandle && !driverSurfaceDrag ? <DragHandle labelId="ui.tree.drag.sort" onPointerDown={resolvedDragInitiation === "handle" ? armDrag : undefined} emphasized={isDropReady} /> : null;
 
   if (isHeaderlessSection) {
@@ -168,9 +172,14 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
           onSectionPointerLeave?.();
         }}
         onDragStart={onDragStart}
+        {...dragPaint}
         onDragEnd={handleDragEnd}
         onDragOver={onDragOver}
-        onDragLeave={onDragLeave}
+        onDragEnter={sectionOver.bind.onDragEnter}
+        onDragLeave={(event) => {
+          sectionOver.bind.onDragLeave(event);
+          onDragLeave?.(event);
+        }}
         onDrop={onDrop}
         onDoubleClick={(event) => {
           if (!onDoubleClick) return;
@@ -216,9 +225,14 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
           onSectionPointerLeave?.();
         }}
         onDragStart={onDragStart}
+        {...dragPaint}
         onDragEnd={handleDragEnd}
         onDragOver={onDragOver}
-        onDragLeave={onDragLeave}
+        onDragEnter={sectionOver.bind.onDragEnter}
+        onDragLeave={(event) => {
+          sectionOver.bind.onDragLeave(event);
+          onDragLeave?.(event);
+        }}
         onDrop={onDrop}
         onDoubleClick={handleExpandableSectionDoubleClick}
       >

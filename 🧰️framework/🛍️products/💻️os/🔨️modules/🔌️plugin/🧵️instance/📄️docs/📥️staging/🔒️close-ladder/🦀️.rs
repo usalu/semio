@@ -4,7 +4,7 @@
 //! beyond its stores is released through exact per-axis quotes and an unchanged caller grant.
 use semio_plugin_decl_app::ArtifactApp;
 use semio_plugin_decl_media::ArtifactDownloadOutput;
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use semio_plugin_decl_emission::Emit;
 use semio_framework::FaultFrom;

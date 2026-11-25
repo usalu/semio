@@ -13,16 +13,76 @@
    "de": "Ein gebrauchter dreitüriger Kleiderschrank 1,50 x 0,58 x 2,00 m aus weiß foliierter 16-mm-Spanplatte, 112,8 kg mit seiner Umzugsdecke: ein Fachteil hinter der linken Tür, ein Hängeraum mit Stange und Hutboden hinter Spiegeltür und rechter Tür, ein verschrammter Sockel mit ausgebrochener Ecke, eine angeschlagene linke Tür, deren verlorener Griff durch einen Buchenknopf ersetzt ist, und der Kippschutzwinkel noch auf dem Oberboden; gelagert auf einer gefalteten Decke, von zwei Trägern getragen, wieder in Gebrauch mit sich öffnenden Türen."
   },
   "tags": [
-   "used",
-   "household",
-   "second-hand",
-   "bedroom",
-   "wardrobe",
-   "storage",
-   "chipboard",
-   "mirror",
-   "hinged-door",
-   "interior"
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "household",
+    "title": {
+     "en": "household",
+     "de": "Haushalt"
+    }
+   },
+   {
+    "id": "second-hand",
+    "title": {
+     "en": "second-hand",
+     "de": "Second-Hand"
+    }
+   },
+   {
+    "id": "bedroom",
+    "title": {
+     "en": "bedroom",
+     "de": "Schlafzimmer"
+    }
+   },
+   {
+    "id": "wardrobe",
+    "title": {
+     "en": "wardrobe",
+     "de": "Kleiderschrank"
+    }
+   },
+   {
+    "id": "storage",
+    "title": {
+     "en": "storage",
+     "de": "Lagerung"
+    }
+   },
+   {
+    "id": "chipboard",
+    "title": {
+     "en": "chipboard",
+     "de": "Spanplatte"
+    }
+   },
+   {
+    "id": "mirror",
+    "title": {
+     "en": "mirror",
+     "de": "Spiegel"
+    }
+   },
+   {
+    "id": "hinged-door",
+    "title": {
+     "en": "hinged door",
+     "de": "Drehflügeltür"
+    }
+   },
+   {
+    "id": "interior",
+    "title": {
+     "en": "interior",
+     "de": "Innenausbau"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content (used household objects wave)",

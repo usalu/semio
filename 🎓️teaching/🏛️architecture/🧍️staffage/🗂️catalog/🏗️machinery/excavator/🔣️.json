@@ -13,12 +13,48 @@
    "de": "Ein 22-t-Kettenbagger der 20-t-Klasse mit Dieselmotor: langes Raupenfahrwerk mit acht lastverteilenden Bodenkontakten (vier unter jeder Kette), Oberwagen mit Kabine, Maschinenhaus, Auspuffrohr und Gegengewicht sowie 5,7-m-Ausleger, 2,9-m-Stiel und 1-m3-Löffel, angetrieben von zwei Auslegerzylindern, einem Stielzylinder und einem Löffelzylinder, der den Löffel über seine Zweilaschen-Kinematik dreht."
   },
   "tags": [
-   "machine",
-   "excavator",
-   "crawler",
-   "diesel",
-   "hydraulic",
-   "construction"
+   {
+    "id": "machine",
+    "title": {
+     "en": "machine",
+     "de": "Maschine"
+    }
+   },
+   {
+    "id": "excavator",
+    "title": {
+     "en": "excavator",
+     "de": "Bagger"
+    }
+   },
+   {
+    "id": "crawler",
+    "title": {
+     "en": "crawler",
+     "de": "Raupe"
+    }
+   },
+   {
+    "id": "diesel",
+    "title": {
+     "en": "diesel",
+     "de": "Diesel"
+    }
+   },
+   {
+    "id": "hydraulic",
+    "title": {
+     "en": "hydraulic",
+     "de": "hydraulisch"
+    }
+   },
+   {
+    "id": "construction",
+    "title": {
+     "en": "construction",
+     "de": "Bau"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content worker (vehicles)",
@@ -1960,8 +1996,62 @@
        "solid": {
         "kind": "extruded",
         "sweep": "w",
+        "z0": -0.5,
+        "z1": 0.5
+       }
+      },
+      {
+       "id": "counterweight-flank-3",
+       "bone": "counterweight",
+       "role": "body",
+       "z": 58.7,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "path",
+       "d": "M 0.301,0.08 L 0.3209,0 L 0.5557,0 L 0.57,0.08 L 0.57,1.08 L 0.5557,1.16 L 0.3209,1.16 L 0.301,1.08 Z",
+       "region": "counterweight",
+       "material": "cast-iron",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
         "z0": -1.37,
         "z1": 1.37
+       }
+      },
+      {
+       "id": "counterweight-flank-2",
+       "bone": "counterweight",
+       "role": "body",
+       "z": 58.8,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "path",
+       "d": "M 0.1826,0.08 L 0.2025,0 L 0.5557,0 L 0.57,0.08 L 0.57,1.08 L 0.5557,1.16 L 0.2025,1.16 L 0.1826,1.08 Z",
+       "region": "counterweight",
+       "material": "cast-iron",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -1.15,
+        "z1": 1.15
+       }
+      },
+      {
+       "id": "counterweight-flank-1",
+       "bone": "counterweight",
+       "role": "body",
+       "z": 58.9,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "path",
+       "d": "M 0.0829,0.08 L 0.1028,0 L 0.5557,0 L 0.57,0.08 L 0.57,1.08 L 0.5557,1.16 L 0.1028,1.16 L 0.0829,1.08 Z",
+       "region": "counterweight",
+       "material": "cast-iron",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.85,
+        "z1": 0.85
        }
       },
       {
@@ -2495,15 +2585,15 @@
        "z": 1,
        "filled": true,
        "tone": 0.35,
-       "kind": "path",
-       "d": "M 0,0.08 L 0.0199,0 L 0.5557,0 L 0.57,0.08 L 0.57,1.08 L 0.5557,1.16 L 0.0199,1.16 L 0,1.08 Z",
        "region": "counterweight",
        "material": "cast-iron",
+       "kind": "path",
+       "d": "M 0.57,-1.37 L 0.4011,-1.37 A 0.1 0.1 0 0 0 0.3111,-1.29 A 2.83 2.83 0 0 0 0.3111,1.29 A 0.1 0.1 0 0 0 0.4011,1.37 L 0.57,1.37 Z",
        "solid": {
         "kind": "extruded",
-        "sweep": "w",
-        "z0": -1.37,
-        "z1": 1.37
+        "sweep": "v",
+        "z0": 0,
+        "z1": 1.16
        }
       },
       {
@@ -6810,15 +6900,15 @@
        "z": 32,
        "filled": true,
        "tone": 0.35,
-       "kind": "path",
-       "d": "M 0,0 L 0.57,0 L 0.57,1.16 L 0,1.16 Z",
        "region": "counterweight",
        "material": "cast-iron",
+       "kind": "path",
+       "d": "M 0.57,-1.37 L 0.4011,-1.37 L 0.3602,-1.3575 L 0.3283,-1.3291 L 0.3111,-1.29 L 0.1896,-1.0184 L 0.0973,-0.7356 L 0.0351,-0.4446 L 0.0039,-0.1488 L 0.0039,0.1488 L 0.0351,0.4446 L 0.0973,0.7356 L 0.1896,1.0184 L 0.3111,1.29 L 0.3283,1.3291 L 0.3602,1.3575 L 0.4011,1.37 L 0.57,1.37 Z",
        "solid": {
         "kind": "extruded",
-        "sweep": "w",
-        "z0": -1.37,
-        "z1": 1.37
+        "sweep": "v",
+        "z0": 0,
+        "z1": 1.16
        }
       },
       {
@@ -7156,15 +7246,15 @@
        "z": 1,
        "filled": true,
        "tone": 0.35,
-       "kind": "path",
-       "d": "M 0,0 L 0.57,0 L 0.57,1.16 L 0,1.16 Z",
        "region": "counterweight",
        "material": "cast-iron",
+       "kind": "path",
+       "d": "M 0.57,-1.37 L 0.4011,-1.37 L 0.3602,-1.3575 L 0.3283,-1.3291 L 0.3111,-1.29 L 0.1896,-1.0184 L 0.0973,-0.7356 L 0.0351,-0.4446 L 0.0039,-0.1488 L 0.0039,0.1488 L 0.0351,0.4446 L 0.0973,0.7356 L 0.1896,1.0184 L 0.3111,1.29 L 0.3283,1.3291 L 0.3602,1.3575 L 0.4011,1.37 L 0.57,1.37 Z",
        "solid": {
         "kind": "extruded",
-        "sweep": "w",
-        "z0": -1.37,
-        "z1": 1.37
+        "sweep": "v",
+        "z0": 0,
+        "z1": 1.16
        }
       },
       {
@@ -10065,15 +10155,15 @@
        "z": 25,
        "filled": true,
        "tone": 0.35,
-       "kind": "path",
-       "d": "M 0,0 L 0.57,0 L 0.57,1.16 L 0,1.16 Z",
        "region": "counterweight",
        "material": "cast-iron",
+       "kind": "path",
+       "d": "M 0.57,-1.37 L 0.4011,-1.37 L 0.3427,-1.3451 L 0.3111,-1.29 L 0.1602,-0.9386 L 0.058,-0.5701 L 0.0065,-0.1912 L 0.0065,0.1912 L 0.058,0.5701 L 0.1602,0.9386 L 0.3111,1.29 L 0.3427,1.3451 L 0.4011,1.37 L 0.57,1.37 Z",
        "solid": {
         "kind": "extruded",
-        "sweep": "w",
-        "z0": -1.37,
-        "z1": 1.37
+        "sweep": "v",
+        "z0": 0,
+        "z1": 1.16
        }
       },
       {
@@ -10289,15 +10379,15 @@
        "z": 1,
        "filled": true,
        "tone": 0.35,
-       "kind": "path",
-       "d": "M 0,0 L 0.57,0 L 0.57,1.16 L 0,1.16 Z",
        "region": "counterweight",
        "material": "cast-iron",
+       "kind": "path",
+       "d": "M 0.57,-1.37 L 0.4011,-1.37 L 0.3427,-1.3451 L 0.3111,-1.29 L 0.1602,-0.9386 L 0.058,-0.5701 L 0.0065,-0.1912 L 0.0065,0.1912 L 0.058,0.5701 L 0.1602,0.9386 L 0.3111,1.29 L 0.3427,1.3451 L 0.4011,1.37 L 0.57,1.37 Z",
        "solid": {
         "kind": "extruded",
-        "sweep": "w",
-        "z0": -1.37,
-        "z1": 1.37
+        "sweep": "v",
+        "z0": 0,
+        "z1": 1.16
        }
       },
       {
@@ -11978,7 +12068,7 @@
        "filled": true,
        "tone": 0.45,
        "kind": "path",
-       "d": "M 0,-0.06 L 0.66,-0.06 L 0.72,0 L 0.66,0.06 L 0,0.06 L -0.06,0 Z",
+       "d": "M 0,-0.08 L 0.66,-0.08 L 0.74,0 L 0.66,0.08 L 0,0.08 L -0.08,0 Z",
        "region": "attachment",
        "material": "paint-steel",
        "solid": {
@@ -12272,15 +12362,15 @@
        "z": 21,
        "filled": true,
        "tone": 0.35,
-       "kind": "path",
-       "d": "M 0,0 L 0.57,0 L 0.57,1.16 L 0,1.16 Z",
        "region": "counterweight",
        "material": "cast-iron",
+       "kind": "path",
+       "d": "M 0.57,-1.37 L 0.4011,-1.37 L 0.3427,-1.3451 L 0.3111,-1.29 L 0.0789,-0.6635 L 0,0 L 0.0789,0.6635 L 0.3111,1.29 L 0.3427,1.3451 L 0.4011,1.37 L 0.57,1.37 Z",
        "solid": {
         "kind": "extruded",
-        "sweep": "w",
-        "z0": -1.37,
-        "z1": 1.37
+        "sweep": "v",
+        "z0": 0,
+        "z1": 1.16
        }
       },
       {
@@ -12304,15 +12394,15 @@
        "z": 1,
        "filled": true,
        "tone": 0.35,
-       "kind": "path",
-       "d": "M 0,0 L 0.57,0 L 0.57,1.16 L 0,1.16 Z",
        "region": "counterweight",
        "material": "cast-iron",
+       "kind": "path",
+       "d": "M 0.57,-1.37 L 0.4011,-1.37 L 0.3427,-1.3451 L 0.3111,-1.29 L 0.0789,-0.6635 L 0,0 L 0.0789,0.6635 L 0.3111,1.29 L 0.3427,1.3451 L 0.4011,1.37 L 0.57,1.37 Z",
        "solid": {
         "kind": "extruded",
-        "sweep": "w",
-        "z0": -1.37,
-        "z1": 1.37
+        "sweep": "v",
+        "z0": 0,
+        "z1": 1.16
        }
       },
       {
@@ -12876,7 +12966,7 @@
        "filled": true,
        "tone": 0.45,
        "kind": "path",
-       "d": "M 0,-0.06 L 0.66,-0.06 L 0.72,0 L 0.66,0.06 L 0,0.06 L -0.06,0 Z",
+       "d": "M 0,-0.08 L 0.66,-0.08 L 0.74,0 L 0.66,0.08 L 0,0.08 L -0.08,0 Z",
        "region": "attachment",
        "material": "paint-steel",
        "solid": {
@@ -12968,7 +13058,7 @@
        "filled": true,
        "tone": 0.45,
        "kind": "path",
-       "d": "M 0,-0.06 L 0.66,-0.06 L 0.72,0 L 0.66,0.06 L 0,0.06 L -0.06,0 Z",
+       "d": "M 0,-0.08 L 0.66,-0.08 L 0.74,0 L 0.66,0.08 L 0,0.08 L -0.08,0 Z",
        "region": "attachment",
        "material": "paint-steel",
        "solid": {

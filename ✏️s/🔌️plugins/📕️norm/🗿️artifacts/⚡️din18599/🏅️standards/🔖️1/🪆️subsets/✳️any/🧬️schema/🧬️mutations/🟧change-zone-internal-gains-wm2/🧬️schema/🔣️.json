@@ -11,7 +11,7 @@
   ],
   "properties": {
     "mutation": {
-      "const": "changezoneinternalgainswm2"
+      "const": "changeZoneInternalGainsWM2"
     },
     "zoneId": {
       "type": "string",

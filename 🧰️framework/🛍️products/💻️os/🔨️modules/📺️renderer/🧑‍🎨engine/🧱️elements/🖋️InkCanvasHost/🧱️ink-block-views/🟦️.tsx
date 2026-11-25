@@ -90,7 +90,7 @@ export function InkItemView({
     "data-border-probe-art": "",
     ...sharedBorderlessBoxProps,
     "data-shared-border-state": hovered ? "hover" : selected ? "active" : undefined,
-    className: cn("bg-background/90 absolute overflow-hidden rounded border shadow-sm", block.locked && "opacity-70", hidden && "pointer-events-none opacity-0"),
+    className: cn("bg-background/90 absolute overflow-hidden border", block.locked && "opacity-70", hidden && "pointer-events-none opacity-0"),
     style: {
       left: bounds.x,
       top: bounds.y,
@@ -188,7 +188,7 @@ export function InkSelectionChrome({ camera, bounds, onResizePointerDown }: { re
       {INK_RESIZE_HANDLES.map((handle) => {
         const left = handle.includes("w") ? topLeft.x - 4 : handle.includes("e") ? topLeft.x + width - 4 : topLeft.x + width / 2 - 4;
         const top = handle.includes("n") ? topLeft.y - 4 : handle.includes("s") ? topLeft.y + height - 4 : topLeft.y + height / 2 - 4;
-        return <div key={handle} className="border-primary bg-background absolute z-30 h-2 w-2 rounded-sm border" style={{ left, top, cursor: INK_RESIZE_CURSOR[handle] }} onPointerDown={(event) => onResizePointerDown(handle, event)} />;
+        return <div key={handle} className="border-primary bg-background absolute z-30 h-2 w-2 border" style={{ left, top, cursor: INK_RESIZE_CURSOR[handle] }} onPointerDown={(event) => onResizePointerDown(handle, event)} />;
       })}
     </>
   );

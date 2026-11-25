@@ -13,7 +13,7 @@
   {"op": "extrude", "scale": "500", "id": "boot-l", "view": "plan"},
   {"op": "plan-revolve", "scale": "500", "id": "jeans-thigh-l"},
   {"op": "extrude", "scale": "500", "id": "toddler-suit", "view": "front"},
-  {"op": "plan-prism", "scale": "500", "id": "toddler-suit"},
+  {"op": "plan-core", "scale": "500", "id": "toddler-suit", "as": "toddler-suit-core", "half": 0.09},
   {"op": "extrude", "scale": "500", "id": "boot-r", "view": "front"},
   {"op": "extrude", "scale": "500", "id": "boot-r", "view": "plan"},
   {"op": "plan-revolve", "scale": "500", "id": "jeans-thigh-r"}

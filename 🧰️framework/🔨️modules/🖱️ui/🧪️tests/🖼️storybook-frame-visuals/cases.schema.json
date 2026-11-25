@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "storybook-frame-visuals/v1",
+  "type": "object",
+  "required": ["schema", "minLineCoverage", "rowTolerance", "viewport", "stories"],
+  "properties": {
+    "schema": { "const": "storybook-frame-visuals/v1" },
+    "minLineCoverage": { "type": "number", "exclusiveMinimum": 0, "maximum": 1.5 },
+    "rowTolerance": { "type": "number", "minimum": 0 },
+    "viewport": { "type": "object", "required": ["width", "height"], "properties": { "width": { "type": "integer" }, "height": { "type": "integer" } } },
+    "stories": { "type": "object", "additionalProperties": { "type": "string" } }
+  }
+}

@@ -9,7 +9,7 @@ const sha=value=>createHash("sha256").update(value).digest("hex"),slash=value=>v
 const executable=process.execPath,held={work:undefined,staged:new Map(),rows:[],links:"",server:undefined,token:"",service:undefined,active:undefined,idle:undefined};
 const link=(target,path)=>{mkdirSync(dirname(path),{recursive:true});symlinkSync(target,path,"junction");};
 const shim=(target,path,platform=process.platform)=>{if(platform!=="win32"){symlinkSync(target,path);return;}const real=resolve(dirname(path),target);if(/[%"\r\n]/.test(real+executable))fail("a tool path with a percent sign, a quote or a line break cannot be shimmed: "+real);if(/\.(exe|com)$/i.test(real)){copyFileSync(real,path+".exe");return;}readFileSync(real);writeFileSync(path+".cmd",'@"'+executable+'" "'+real+'" %*\r\n');};
-const terminate=(child,platform=process.platform,run=command=>Bun.spawnSync(command,{stdout:"ignore",stderr:"ignore"}),kill=(pid,name)=>process.kill(pid,name))=>{try{if(platform==="win32"){const done=run(["taskkill","/PID",String(child.pid),"/T","/F"]);if(done.exitCode!==0&&child.exitCode===null)child.kill("SIGKILL");}else kill(-child.pid,"SIGKILL");}catch{child.kill("SIGKILL");}};
+const terminate=(child,platform=process.platform,run=command=>Bun.spawnSync(command,{windowsHide:true,stdout:"ignore",stderr:"ignore"}),kill=(pid,name)=>process.kill(pid,name))=>{try{if(platform==="win32"){const done=run(["taskkill","/PID",String(child.pid),"/T","/F"]);if(done.exitCode!==0&&child.exitCode===null)child.kill("SIGKILL");}else kill(-child.pid,"SIGKILL");}catch{child.kill("SIGKILL");}};
 const signature=info=>info.size+":"+info.mtimeNs+":"+info.ctimeNs+":"+info.ino;
 async function serve(manifest,workspace,inside){
  const spec=manifest.service;if(!spec)return undefined;
@@ -103,7 +103,7 @@ async function execute(argv,session){
  const children=new Set(),stop=()=>{for(const child of children)terminate(child);};
  if(worker){session.signal.addEventListener("abort",stop,{once:true});if(session.signal.aborted)stop();}
  const run=async command=>{
-  const child=Bun.spawn([executable,"exec",expand(command)+suffix],{cwd,env:environment,stdin:"ignore",stdout:worker?"pipe":"inherit",stderr:worker?"pipe":"inherit",detached:worker&&process.platform!=="win32"});children.add(child);
+  const child=Bun.spawn([executable,"exec",expand(command)+suffix],{windowsHide:true,cwd,env:environment,stdin:"ignore",stdout:worker?"pipe":"inherit",stderr:worker?"pipe":"inherit",detached:worker&&process.platform!=="win32"});children.add(child);
   const[code,out,err]=await Promise.all([child.exited,worker?new Response(child.stdout).text():"",worker?new Response(child.stderr).text():""]);children.delete(child);
   if(worker)session.chunks.push(out,err);
   if(session?.signal.aborted)fail("cancelled");

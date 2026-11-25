@@ -419,7 +419,9 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
         }
         let bytes = std::fs::read(path).map_err(|error| RunError::Io { path: path.clone(), source: error })?;
         let decoded = store::pack_rt::decode_wire_value(&bytes).map_err(|error| RunError::Host(format!("plugin `{plugin_id}`: decoding `{}` as a pack: {error}", path.display())))?;
-        semio_framework_value::FromValue::from_value(decoded).map_err(|error| RunError::Host(format!("plugin `{plugin_id}`: decoding `{}` as a PackageDescriptor: {error}", path.display())))
+        let mut descriptor: PackageDescriptor = semio_framework_value::FromValue::from_value(decoded).map_err(|error| RunError::Host(format!("plugin `{plugin_id}`: decoding `{}` as a PackageDescriptor: {error}", path.display())))?;
+        descriptor.manifest = descriptor.manifest.resolved();
+        Ok(descriptor)
     }
 
     /// ✅️ R1-native-manifest: the real recursive-load shape the OLD gap's own doc comment spelled

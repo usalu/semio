@@ -55,7 +55,7 @@ use semio_plugin_decl_media::ArtifactDownloadOutput;
 pub use semio_plugin_decl_media::ArtifactOutputChunks;
 
 use semio_plugin_ownership::sdk_fault::plugin_sdk_fault;
-use semio_plugin_ownership::store_lifecycle::ArtifactDisposal;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactDisposal;
 use semio_plugin_decl_emission::ArtifactMutationOutcome;
 use semio_plugin_operation::ToolCancellationLease;
 use semio_framework_job::InteractiveJobCloseStep;

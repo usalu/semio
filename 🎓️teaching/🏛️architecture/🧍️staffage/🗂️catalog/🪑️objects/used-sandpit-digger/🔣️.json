@@ -13,18 +13,90 @@
    "de": "Ein städtischer Sandkasten von 4 x 4 m, eingefasst mit zwei Lagen silbergrauer Lärche und Gehrungs-Sitzbrettern, von denen eines in frischem Holz ersetzt ist; der Sand ist bis 120 mm über dem Rasen abgesackt, unter der Schaufel des Sitzbaggers liegt eine Grube, ein Spielzeugeimer und ein Spaten sind liegen geblieben. Der Bagger dreht auf einem herausnehmbaren Pfosten in einer Bodenhülse; seine Pulverbeschichtung blättert an den Schweißnähten, die Schaufel ist bis auf blanken Stahl abgerieben."
   },
   "tags": [
-   "used",
-   "park",
-   "public-space",
-   "play",
-   "sandpit",
-   "digger",
-   "larch",
-   "timber",
-   "steel",
-   "sand",
-   "hdpe",
-   "playground"
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "park",
+    "title": {
+     "en": "park",
+     "de": "Park"
+    }
+   },
+   {
+    "id": "public-space",
+    "title": {
+     "en": "public space",
+     "de": "öffentlicher Raum"
+    }
+   },
+   {
+    "id": "play",
+    "title": {
+     "en": "play",
+     "de": "Spiel"
+    }
+   },
+   {
+    "id": "sandpit",
+    "title": {
+     "en": "sandpit",
+     "de": "Sandkasten"
+    }
+   },
+   {
+    "id": "digger",
+    "title": {
+     "en": "digger",
+     "de": "Bagger"
+    }
+   },
+   {
+    "id": "larch",
+    "title": {
+     "en": "larch",
+     "de": "Lärche"
+    }
+   },
+   {
+    "id": "timber",
+    "title": {
+     "en": "timber",
+     "de": "Holz"
+    }
+   },
+   {
+    "id": "steel",
+    "title": {
+     "en": "steel",
+     "de": "Stahl"
+    }
+   },
+   {
+    "id": "sand",
+    "title": {
+     "en": "sand",
+     "de": "Sand"
+    }
+   },
+   {
+    "id": "hdpe",
+    "title": {
+     "en": "HDPE",
+     "de": "HDPE"
+    }
+   },
+   {
+    "id": "playground",
+    "title": {
+     "en": "playground",
+     "de": "Spielplatz"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content (used park objects wave)",

@@ -22,7 +22,7 @@ export default {
     // reported 58 tests for 29 real ones and doubled this package's run time. Add new in-source files
     // to `includeSource`/`coverage.include` only — a file absent from `includeSource` does not run at
     // all while the suite still reports green.
-    include: ["../../📮️shard-client/🩹️ui-patch/🧪️tests/🟦️.ts", "../../📮️shard-client/🧪️tests/🔌️ui-composition/🟦️.ts"],
+    include: ["../../📮️shard-client/🩹️ui-patch/🧪️tests/🟦️.ts", "../../📮️shard-client/🧊️core-modules/🧪️tests/🟦️.ts", "../../📮️shard-client/🧪️tests/🔌️ui-composition/🟦️.ts"],
     coverage: { include: ["../../📮️shard-client/🟦️.ts", "../../📮️shard-client/*/🟦️.ts", "../../📬️mailbox/🟦️.ts", "../../📥️cold-pair/🟦️.ts", "../../🧵️turn-scheduler/🟦️.ts", "../../🖼️wire-turn/🟦️.ts", "../../🖼️wire-turn/*/🟦️.ts"] },
     includeSource: [
       "../../📮️shard-client/🟦️.ts",

@@ -50,6 +50,7 @@ pub enum Mp4Mutation {
     SetSampleSync(set_sample_sync::SetSampleSync),
 }
 dsl::original_pack_value_operation_receiving!(Mp4Mutation);
+dsl::artifact_persisted_binary_operation!(Mp4Mutation);
 
 /// 📇️ Kebab-case spelling of every `Mp4Mutation` variant, in declaration order — the ground truth
 /// `../../🔣️oracle.json`'s own `kinds` list is checked against (the framework never

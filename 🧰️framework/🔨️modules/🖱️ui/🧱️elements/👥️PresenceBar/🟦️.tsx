@@ -112,7 +112,7 @@ export const PresenceBar: React.FC<PresenceBarProps> = ({ peers, max = PRESENCE_
               <span
                 aria-hidden="true"
                 data-row-id={`peer-agent-badge:${peer.actor}`}
-                className={cn(surfaceClass, "pointer-events-none absolute bottom-0 right-0 flex size-3 items-center justify-center rounded-full text-[0.5rem] leading-none")}
+                className={cn(surfaceClass, "pointer-events-none absolute bottom-0 right-0 flex size-3 items-center justify-center text-[0.5rem] leading-none")}
                 style={{ outline: `1px solid ${presencePaint(peer.color, appearance)}` }}
               >
                 🤖
@@ -122,7 +122,7 @@ export const PresenceBar: React.FC<PresenceBarProps> = ({ peers, max = PRESENCE_
               <span
                 aria-hidden="true"
                 data-row-id={`peer-activity-badge:${peer.actor}`}
-                className={cn(surfaceClass, "pointer-events-none absolute top-0 right-0 flex size-3 items-center justify-center rounded-full text-[0.5rem] leading-none")}
+                className={cn(surfaceClass, "pointer-events-none absolute top-0 right-0 flex size-3 items-center justify-center text-[0.5rem] leading-none")}
                 style={{ outline: `1px solid ${presencePaint(peer.color, appearance)}` }}
               >
                 {peer.activity.badge}

@@ -22,13 +22,23 @@
       {
         "id": "group-G1",
         "patch": {
-          "spacing": 3.6
+          "pileId": null,
+          "rows": null,
+          "columns": null,
+          "spacing": 3.6,
+          "capVertical": null,
+          "capMomentX": null,
+          "capMomentY": null,
+          "singleResistance": null,
+          "shaftCohesionSum": null,
+          "baseCohesion": null
         }
       }
     ]
   },
   "labTests": null,
   "layerWaters": null,
+  "placements": null,
   "cases": {
     "removed": [],
     "inserted": [],

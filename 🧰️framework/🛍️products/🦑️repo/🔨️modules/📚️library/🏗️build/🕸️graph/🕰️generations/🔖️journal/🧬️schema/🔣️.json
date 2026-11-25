@@ -15,7 +15,7 @@
       "type": "object",
       "required": ["file", "sha256", "bytes"],
       "additionalProperties": false,
-      "properties": {"file": {"type": "string"}, "sha256": {"$ref": "#/definitions/Hex"}, "bytes": {"type": "integer", "minimum": 0}}
+      "properties": {"file": {"type": "string", "pattern": "^[0-9a-f]{64}\\.[0-9]+\\.rows\\.br$"}, "sha256": {"$ref": "#/definitions/Hex"}, "bytes": {"type": "integer", "minimum": 0}}
     },
     "Journal": {
       "type": "object",

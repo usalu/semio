@@ -5,10 +5,10 @@ import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 /** 📊️ The authored layout of the volume facts: the partition folder, its mount name, the nested mounts and the header line. */
 export const VOLUME_FACTS_POLICY_V1=Object.freeze(schema.definitions.Policy.const);
 /** 📋️ One volume: its path and its size and free bytes. */
-export type VolumeFactV1=Readonly<{path:string;totalBytes:number;freeBytes:number}>;
+export type VolumeFactV1=Readonly<{path:string;totalBytes:number;freeBytes:number;totalInodes?:number;freeInodes?:number}>;
 
 function rowOf(path:string):VolumeFactV1|undefined{
- try{const space=statfsSync(path);return{path,totalBytes:Number(space.blocks)*Number(space.bsize),freeBytes:Number(space.bavail)*Number(space.bsize)};}catch{return undefined;}
+ try{const space=statfsSync(path);const files=Number(space.files),ffree=Number(space.ffree),inodes=Number.isFinite(files)&&files>0&&Number.isFinite(ffree)&&ffree>=0?{totalInodes:files,freeInodes:Math.min(ffree,files)}:{};return{path,totalBytes:Number(space.blocks)*Number(space.bsize),freeBytes:Number(space.bavail)*Number(space.bsize),...inodes};}catch{return undefined;}
 }
 
 /** 📖️ Reads the host volume of the workspace and every mount below `.cache/b/*` (partition images and the nested native Nx shards of the nx partition); a folder that is no own volume is left out. */
@@ -32,7 +32,7 @@ export function readVolumeFactsV1(workspace:string,policy=VOLUME_FACTS_POLICY_V1
 
 /** 🧾️ The lines that tell where the space is: the header, then one line per volume with free and total megabytes. Pure. */
 export function formatVolumeFactsV1(rows:readonly VolumeFactV1[],policy=VOLUME_FACTS_POLICY_V1):string{
- return[policy.header,...rows.map(row=>`${row.path}: ${Math.floor(row.freeBytes/1048576)} of ${Math.floor(row.totalBytes/1048576)}`)].join("\n");
+ return[policy.header,...rows.map(row=>`${row.path}: ${Math.floor(row.freeBytes/1048576)} of ${Math.floor(row.totalBytes/1048576)}${row.totalInodes===undefined?"":`, inodes ${row.freeInodes} of ${row.totalInodes}`}`)].join("\n");
 }
 
 /** 🩺️ The facts of this machine as text; empty when nothing can be read, never throws. */

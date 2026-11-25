@@ -138,15 +138,15 @@ function HistoryRowAuthors({ column }: { readonly column: HistoryColumn }): Reac
 
 const HISTORY_LEVEL_BADGE_CLASS: Record<HistoryMutationLevel, string> = {
   info: "bg-[var(--accent)] text-[var(--accent-foreground)]",
-  warning: "bg-warning/20 text-warning",
-  error: "bg-destructive/20 text-destructive",
+  warning: "bg-warning/20 text-warning-ink",
+  error: "bg-destructive/20 text-destructive-foreground",
   fatal: "bg-destructive text-destructive-foreground",
 };
 
 /** 🏷️ Small uppercase level chip for a checkpoint's worst `mutationLevel` — see {@link HistoryColumn}. */
 function HistoryLevelBadge({ level }: { readonly level: HistoryMutationLevel }): React.ReactElement {
   return (
-    <span className={cn("shrink-0 rounded px-1.5 py-0.5 text-2xs uppercase", HISTORY_LEVEL_BADGE_CLASS[level])} title={level}>
+    <span className={cn("shrink-0 px-1.5 py-0.5 text-2xs uppercase", HISTORY_LEVEL_BADGE_CLASS[level])} title={level}>
       {level}
     </span>
   );
@@ -157,7 +157,7 @@ function HistoryRowLabels({ column }: { readonly column: HistoryColumn }): React
     <div className="flex min-w-0 flex-wrap items-center gap-1">
       {column.labels.length > 0 ? (
         column.labels.map((label) => (
-          <span key={`${column.checkpointId}-${label}`} className="rounded px-1.5 py-0.5 text-2xs bg-[var(--accent)] text-[var(--accent-foreground)]">
+          <span key={`${column.checkpointId}-${label}`} className="px-1.5 py-0.5 text-2xs bg-[var(--accent)] text-[var(--accent-foreground)]">
             {label}
           </span>
         ))

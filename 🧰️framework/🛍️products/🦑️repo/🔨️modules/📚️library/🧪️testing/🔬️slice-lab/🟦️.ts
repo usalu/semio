@@ -247,7 +247,7 @@ export function treeChurnV1(root:string,marker:string,ignore:readonly string[]=[
  let rows=changed;
  if(whole&&changed.length){
   const names=changed.map(name=>name.split(sep).join("/"));
-  const ignored=spawnSync("git",["-c","core.fsmonitor=false","check-ignore","-z","--stdin"],{cwd:workspace,input:names.join("\0")+"\0",encoding:"utf8",maxBuffer:64*MEGABYTE,timeout:Math.max(1,Math.ceil(deadline-performance.now()))});
+  const ignored=spawnSync("git",["-c","core.fsmonitor=false","check-ignore","-z","--stdin"],{windowsHide:true,cwd:workspace,input:names.join("\0")+"\0",encoding:"utf8",maxBuffer:64*MEGABYTE,timeout:Math.max(1,Math.ceil(deadline-performance.now()))});
   if(ignored.error)throw ignored.error;
   if(ignored.status!==0&&ignored.status!==1)throw Error("Slice lab change scan could not read ignore rules: "+ignored.stderr.trim().slice(0,512));
   const omit=new Set(ignored.stdout.split("\0"));
@@ -381,7 +381,7 @@ async function runOwnedSliceLabV1(options:SliceLabOptionsV1,io:SliceLabIoV1,{sta
    const file=join(plan.work,`m${plan.index}`,"config.json"),log=join(plan.work,`m${plan.index}`,"driver.log");
    writeFileSync(file,JSON.stringify(config));
    const logFd=openSync(log,"a");
-   drivers.set(plan.origin,spawn(process.execPath,[join(here,"👷️machine","🟦️.ts"),`--config=${file}`],{cwd:plan.root,env:sliceLabEnvironmentV1(plan,options.preload),stdio:["ignore",logFd,logFd]}));
+   drivers.set(plan.origin,spawn(process.execPath,[join(here,"👷️machine","🟦️.ts"),`--config=${file}`],{windowsHide:true,cwd:plan.root,env:sliceLabEnvironmentV1(plan,options.preload),stdio:["ignore",logFd,logFd]}));
    started_.set(plan.origin,seconds());
    say(`machine ${plan.origin} started / Maschine ${plan.origin} gestartet`);
   };

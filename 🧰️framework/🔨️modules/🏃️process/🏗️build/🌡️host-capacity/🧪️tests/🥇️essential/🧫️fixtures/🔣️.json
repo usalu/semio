@@ -1,0 +1,26 @@
+[
+  {
+    "name": "macOS swap churn during memory pressure",
+    "platform": "darwin",
+    "sample": {"availableMegabytes": 2325, "compressedMegabytes": 8637, "swapUsedMegabytes": 6980, "swapOutMegabytesPerSecond": 103},
+    "expected": {"verdict": "wait", "reason": "swap"}
+  },
+  {
+    "name": "Linux saturated swap traffic with room",
+    "platform": "linux",
+    "sample": {"availableMegabytes": 12000, "swapUsedMegabytes": 0, "swapOutMegabytesPerSecond": 128},
+    "expected": {"verdict": "wait", "reason": "swap-activity"}
+  },
+  {
+    "name": "Windows critical memory pressure with unavailable swap counters",
+    "platform": "win32",
+    "sample": {"pressure": "critical", "swapUsedMegabytes": null, "swapOutMegabytesPerSecond": null},
+    "expected": {"verdict": "wait", "reason": "pressure-critical"}
+  },
+  {
+    "name": "macOS inactive swap from a completed workload",
+    "platform": "darwin",
+    "sample": {"availableMegabytes": 2325, "swapUsedMegabytes": 6980, "swapOutMegabytesPerSecond": 0},
+    "expected": {"verdict": "admit", "reason": "override"}
+  }
+]

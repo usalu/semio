@@ -6,7 +6,8 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { chromium, type Page } from "playwright";
+import type { Browser, Page } from "playwright";
+import { launchChromium } from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🌐️chromium-launch/🟦️";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { reconcileTextEditorEchoV1, type TextEditorEchoStateV1 } from "../../🧱️elements/✏️TextEditor/🖍️buffer-and-edit-helpers/🟦️.tsx";
 import { TEXT_EDITOR_READ_ONLY_REFUSALS, refuseTextEditorEditV1 } from "../../🧱️elements/✏️TextEditor/🚫️edit-refusals-and-keys/🟦️.ts";
@@ -115,10 +116,10 @@ describe("🔁️ the host's optimistic local echo, refusals and read-only mode 
 });
 
 describe("⌨️ Chromium's native textarea answers every typing sequence of the text-input fixture (third-party oracle)", () => {
-  let browser: Awaited<ReturnType<typeof chromium.launch>>;
+  let browser: Browser;
   let page: Page;
   beforeAll(async () => {
-    browser = await chromium.launch({ headless: true });
+    browser = await launchChromium();
     page = await browser.newPage();
     await page.setContent('<textarea style="font-family: monospace; font-size: 14px; width: 600px; height: 200px" spellcheck="false"></textarea><script>window.inputEvents=[];const area=document.querySelector("textarea");area.addEventListener("paste",event=>window.inputEvents.push(`paste:${event.clipboardData.getData("text/plain")}`));area.addEventListener("compositionend",event=>window.inputEvents.push(`compose:${event.data}`));</script>');
   }, 60_000);

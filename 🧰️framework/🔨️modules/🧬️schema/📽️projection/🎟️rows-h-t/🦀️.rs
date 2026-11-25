@@ -427,7 +427,7 @@ export type PluginDependency = { pluginId: string, version: string, };"####,
         },
         SchemaMetadata {
             name: "PluginManifest",
-            version: 1,
+            version: 2,
             typescript: r####"export type PluginManifest = { pluginId: string, label: string, version: string, apps: Array<AppDefinition>, examples: Array<ExampleDefinition>, capabilities: Array<CapabilityRequirement>,
 /**
  * 🗂️ Open plugin contributions — see `TopicContribution`.
@@ -457,7 +457,11 @@ dependencies: Array<PluginDependency>,
  * 📦️ Artifact-kind contributions (mutations/inferences) this plugin contributes onto artifact
  * kinds it depends on — see `ArtifactContributionDescriptor`.
  */
-contributions: Array<ArtifactContributionDescriptor>, };"####,
+contributions: Array<ArtifactContributionDescriptor>,
+/**
+ * 🧺️ Action tables shared by several apps of this plugin, each declared once — see `ActionSet`.
+ */
+actionSets?: Array<ActionSet>, };"####,
         },
         SchemaMetadata {
             name: "PortMultiplicity",

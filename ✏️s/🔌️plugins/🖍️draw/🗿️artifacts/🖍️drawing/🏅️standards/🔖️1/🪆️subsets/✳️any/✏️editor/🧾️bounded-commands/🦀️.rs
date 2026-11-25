@@ -69,9 +69,8 @@ pub const DRAWING_BOUNDED_PAYLOAD_SCHEMA: &str = "drawing.tool-command.v1";
 const DRAWING_BOUNDED_RAW_BYTES: usize = 65_536;
 
 /// 🛣️ One publication lane row per bounded route, read off each handler's real `Emit` construction
-/// (`🎮️commands/*/🦀️.rs`). The four whole-document routes emit nothing but an `Effect::LoadDocument`
-/// — effects are not a store lane, so those are honestly `HostOnly`; the layer routes emit
-/// `DrawingMutation`s; the view routes emit exact Canvas window mutations.
+/// (`🎮️commands/*/🦀️.rs`). Example switches also clear local selection, layer routes emit
+/// `DrawingMutation`s, and view routes emit exact Canvas window mutations.
 const DRAWING_BOUNDED_PUBLICATION_CONTRACTS: &[semio_plugin::ArtifactToolPublicationContract] = &[
     semio_plugin::ArtifactToolPublicationContract { tool_id: "deleteSelection", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
     semio_plugin::ArtifactToolPublicationContract { tool_id: "nudgeSelectionLeft", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
@@ -85,7 +84,7 @@ const DRAWING_BOUNDED_PUBLICATION_CONTRACTS: &[semio_plugin::ArtifactToolPublica
     semio_plugin::ArtifactToolPublicationContract { tool_id: "replaceDocument", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
     semio_plugin::ArtifactToolPublicationContract { tool_id: "commitDocument", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
     semio_plugin::ArtifactToolPublicationContract { tool_id: "loadDocumentJson", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
-    semio_plugin::ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
+    semio_plugin::ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[semio_plugin::ArtifactToolPublicationLane::Interaction] },
     semio_plugin::ArtifactToolPublicationContract { tool_id: "setSelectedOpacity", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
     semio_plugin::ArtifactToolPublicationContract { tool_id: "engagementSubmit", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
     semio_plugin::ArtifactToolPublicationContract { tool_id: "addLayer", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },

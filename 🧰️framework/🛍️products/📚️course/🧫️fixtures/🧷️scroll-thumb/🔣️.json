@@ -1,0 +1,19 @@
+{
+  "schema": "semio.course.scroll-thumb/v1",
+  "description": "The overlay thumb of a scroller whose native scrollbar is hidden. The track is the client height without the clearance of the bands over it (top, bottom). The thumb is as high as the visible share of the content (track * clientHeight / scrollHeight), at least `minimum` and at most the track; its offset from the top of the track is the scrolled share (scrollTop / (scrollHeight - clientHeight)) of the room the thumb leaves in the track. Nothing overflows (scrollHeight <= clientHeight) or no track is left: no thumb (null). `thumbToScroll` is the inverse: the scrollTop a thumb offset stands for.",
+  "geometry": [
+    { "name": "content fits", "input": { "scrollTop": 0, "scrollHeight": 600, "clientHeight": 600, "top": 30, "bottom": 25, "minimum": 24 }, "expected": null },
+    { "name": "at the top, half visible", "input": { "scrollTop": 0, "scrollHeight": 1200, "clientHeight": 600, "top": 0, "bottom": 0, "minimum": 24 }, "expected": { "size": 300, "offset": 0 } },
+    { "name": "at the bottom, half visible", "input": { "scrollTop": 600, "scrollHeight": 1200, "clientHeight": 600, "top": 0, "bottom": 0, "minimum": 24 }, "expected": { "size": 300, "offset": 300 } },
+    { "name": "bands shorten the track", "input": { "scrollTop": 300, "scrollHeight": 1200, "clientHeight": 600, "top": 30, "bottom": 20, "minimum": 24 }, "expected": { "size": 275, "offset": 137.5 } },
+    { "name": "a very long page keeps the minimum", "input": { "scrollTop": 5000, "scrollHeight": 60000, "clientHeight": 600, "top": 0, "bottom": 0, "minimum": 24 }, "expected": { "size": 24, "offset": 48.484848 } },
+    { "name": "overscroll is clamped", "input": { "scrollTop": -40, "scrollHeight": 1200, "clientHeight": 600, "top": 0, "bottom": 0, "minimum": 24 }, "expected": { "size": 300, "offset": 0 } },
+    { "name": "bands cover the whole client", "input": { "scrollTop": 0, "scrollHeight": 1200, "clientHeight": 600, "top": 400, "bottom": 200, "minimum": 24 }, "expected": null }
+  ],
+  "thumbToScroll": [
+    { "name": "top", "input": { "scrollTop": 0, "scrollHeight": 1200, "clientHeight": 600, "top": 0, "bottom": 0, "minimum": 24 }, "offset": 0, "expected": 0 },
+    { "name": "middle", "input": { "scrollTop": 0, "scrollHeight": 1200, "clientHeight": 600, "top": 0, "bottom": 0, "minimum": 24 }, "offset": 150, "expected": 300 },
+    { "name": "bottom", "input": { "scrollTop": 0, "scrollHeight": 1200, "clientHeight": 600, "top": 0, "bottom": 0, "minimum": 24 }, "offset": 300, "expected": 600 },
+    { "name": "past the bottom is clamped", "input": { "scrollTop": 0, "scrollHeight": 1200, "clientHeight": 600, "top": 0, "bottom": 0, "minimum": 24 }, "offset": 900, "expected": 600 }
+  ]
+}

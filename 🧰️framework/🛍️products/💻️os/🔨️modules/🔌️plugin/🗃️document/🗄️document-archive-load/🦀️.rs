@@ -265,11 +265,19 @@ where
     pub completed: u64,
     pub total: u64,
     pub fold: (u64, u64),
+    pub stage: u64,
+    pub members_done: u64,
+    pub replacement_decoded: u64,
     pub decoded: u64,
     pub merge: bool,
     pub ahead: u64,
     pub fault: Vec<u8>,
     pub work: semio_framework_value_native_owned::native_decoding::OriginalWorkAuthority<ArchiveWorkProducer>,
+}
+
+/// 📊️ The operations done of a whole-document load: the settled count plus the fold, the replacement stages, the member passes and the records its replacement decoded so far.
+pub fn document_archive_load_completed(settled: u64, fold: u64, stage: u64, members_done: u64, decoded: u64) -> u64 {
+    settled.saturating_add(fold).saturating_add(stage).saturating_add(members_done).saturating_add(decoded)
 }
 
 impl<P, Mutation> ActiveDocumentArchiveLoad<P, Mutation>
@@ -302,6 +310,9 @@ where
             completed: 0,
             total,
             fold: (0, 0),
+            stage: 0,
+            members_done: 0,
+            replacement_decoded: 0,
             decoded: 0,
             merge: false,
             ahead: 0,
@@ -321,6 +332,17 @@ where
     }
 
     pub fn status(&self) -> protocol::DocumentArchiveLoadStatus {
+        self.status_with_decoded(0)
+    }
+
+    /// 📈️ Keeps the highest decode count its replacement reported, so the replacement's retirement never lowers the load's progress.
+    pub fn note_replacement_decoded(&mut self, decoded: u64) {
+        self.replacement_decoded = self.replacement_decoded.max(decoded);
+    }
+
+    /// 📊️ The status with the records the awaited replacement decoded so far (`live_decoded`) counted as discovered and done at once: the long phase after the fold moves neither a stage nor a member, and this is the count that still moves.
+    pub fn status_with_decoded(&self, live_decoded: u64) -> protocol::DocumentArchiveLoadStatus {
+        let decoded = live_decoded.max(self.replacement_decoded);
         let state = match self.state {
             ActiveDocumentArchiveLoadState::Pending => protocol::DocumentArchiveLoadState::Pending,
             ActiveDocumentArchiveLoadState::Running => protocol::DocumentArchiveLoadState::Running,
@@ -328,7 +350,7 @@ where
             ActiveDocumentArchiveLoadState::Cancelled => protocol::DocumentArchiveLoadState::Cancelled,
             ActiveDocumentArchiveLoadState::Fault => protocol::DocumentArchiveLoadState::Fault,
         };
-        protocol::DocumentArchiveLoadStatus { operation: self.operation, state, completed: self.completed.saturating_add(self.fold.0), total: self.total.saturating_add(self.fold.1), ahead: self.ahead, fault: self.fault.clone() }
+        protocol::DocumentArchiveLoadStatus { operation: self.operation, state, completed: document_archive_load_completed(self.completed, self.fold.0, self.stage, self.members_done, decoded), total: self.total.saturating_add(self.fold.1).saturating_add(decoded), ahead: self.ahead, fault: self.fault.clone() }
     }
 
     pub fn terminal(&self) -> bool {
@@ -526,11 +548,11 @@ impl OriginalDocumentArchiveAdmission{
   if self.source.is_some_and(|source|source!=identity)||self.source.is_some()&&(self.operation!=operation||self.donor!=donor||self.phase!=6&&self.members!=archive.members.len()){return Err(archive_admission_fault("archive admission requires its unchanged Source and donor").into())}
   if self.phase==6{return if archive.parent_pack.is_empty()&&archive.parent_spr.is_empty()&&archive.members.is_empty(){Ok(true)}else{Err(archive_admission_fault("transferred archive donor must remain empty").into())}}if cx.is_cancelled(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::Canceled,"archive admission observed cancellation").into())}
   if !archive_admission_charge(cx,std::mem::size_of::<Self>())?{return Ok(false)}
-  if self.source.is_none(){if archive.members.len()>protocol::DOCUMENT_ARCHIVE_MAXIMUM_MEMBERS||archive.parent_pack.is_empty()||archive.parent_spr.is_empty(){return Err(archive_admission_fault("archive count and parent pair must satisfy the declared archive bounds").into())}self.source=Some(identity);self.donor=donor;self.operation=operation;self.members=archive.members.len();self.payload=archive.parent_pack.len().checked_add(archive.parent_spr.len()).ok_or_else(||archive_admission_fault("archive byte count overflow"))?;self.phase=1;return Ok(false)}
+  if self.source.is_none(){if archive.members.len()>protocol::DOCUMENT_ARCHIVE_MAXIMUM_MEMBERS{return Err(document_load_fault(semio_plugin_decl_app::DOCUMENT_LOAD_TOO_MANY_MEMBERS_CODE,"archive member count exceeds its declared bound").with_param("count",archive.members.len().to_string()).with_param("maximum",protocol::DOCUMENT_ARCHIVE_MAXIMUM_MEMBERS.to_string()).into())}if archive.parent_pack.is_empty()||archive.parent_spr.is_empty(){return Err(document_load_fault(semio_plugin_decl_app::DOCUMENT_LOAD_INCOMPLETE_CODE,"archive parent pair must hold its content and its history").into())}self.source=Some(identity);self.donor=donor;self.operation=operation;self.members=archive.members.len();self.payload=archive.parent_pack.len().checked_add(archive.parent_spr.len()).ok_or_else(||archive_admission_fault("archive byte count overflow"))?;self.phase=1;return Ok(false)}
   match self.phase{
-   1=>{if self.row<self.members{self.payload=self.payload.checked_add(archive.members[self.row].envelope_pack.len()).ok_or_else(||archive_admission_fault("archive byte count overflow"))?;self.row+=1;}else{if self.payload>protocol::DOCUMENT_ARCHIVE_MAXIMUM_BYTES{return Err(archive_admission_fault("archive exceeds its declared byte bound").into())}self.row=0;self.search=0;self.phase=2;}},
-   2=>{if self.row==self.members{self.row=0;self.field=0;self.offset=0;self.phase=3;}else if self.search==self.members{return Err(archive_admission_fault("archive member ordinals must be unique and contiguous").into())}else if archive.members[self.search].ordinal as usize==self.row{let bytes=std::mem::size_of::<protocol::OwnedDocumentMemberPackEntry>()*2;if !archive_admission_charge(cx,bytes)?{return Ok(false)}archive.members.swap(self.row,self.search);self.row+=1;self.search=self.row;}else{self.search+=1;}},
-   3=>{if self.row==self.members{self.row=0;self.phase=4;}else{let entry=&archive.members[self.row];if entry.envelope_pack.is_empty(){return Err(archive_admission_fault("archive member envelope must be present").into())}let fields=[entry.reference.artifact_id.as_str(),entry.reference.artifact_kind.as_str(),entry.reference.standard.as_str(),entry.reference.subset.as_str(),entry.owner.parent.artifact_id.as_str(),entry.owner.parent.artifact_kind.as_str(),entry.owner.parent.standard.as_str(),entry.owner.parent.subset.as_str(),entry.owner.slot.as_str(),entry.owner.child_id.as_str()];let field=fields[self.field];if field.is_empty()||field.len()>store::MEMBER_OPEN_IDENTITY_BYTES{return Err(archive_admission_fault("archive member identity exceeds its declared bounds").into())}while self.offset<field.len()&&!cx.should_yield(){let character=field[self.offset..].chars().next().ok_or_else(||archive_admission_fault("archive member identity lost its character frontier"))?;cx.consume_fuel(1);if character.is_control(){return Err(archive_admission_fault("archive member identity contains a control character").into())}self.offset+=character.len_utf8();}if self.offset==field.len(){self.offset=0;self.field+=1;if self.field==fields.len(){self.field=0;self.row+=1;}}}},
+   1=>{if self.row<self.members{self.payload=self.payload.checked_add(archive.members[self.row].envelope_pack.len()).ok_or_else(||archive_admission_fault("archive byte count overflow"))?;self.row+=1;}else{if self.payload>protocol::DOCUMENT_ARCHIVE_MAXIMUM_BYTES{return Err(document_load_fault(semio_plugin_decl_app::DOCUMENT_LOAD_TOO_LARGE_CODE,"archive exceeds its declared byte bound").with_param("bytes",self.payload.to_string()).with_param("maximum",protocol::DOCUMENT_ARCHIVE_MAXIMUM_BYTES.to_string()).into())}self.row=0;self.search=0;self.phase=2;}},
+   2=>{if self.row==self.members{self.row=0;self.field=0;self.offset=0;self.phase=3;}else if self.search==self.members{return Err(document_load_fault(semio_plugin_decl_app::DOCUMENT_LOAD_MEMBER_INVALID_CODE,"archive member ordinals must be unique and contiguous").with_param("ordinal",(self.row+1).to_string()).into())}else if archive.members[self.search].ordinal as usize==self.row{let bytes=std::mem::size_of::<protocol::OwnedDocumentMemberPackEntry>()*2;if !archive_admission_charge(cx,bytes)?{return Ok(false)}archive.members.swap(self.row,self.search);self.row+=1;self.search=self.row;}else{self.search+=1;}},
+   3=>{if self.row==self.members{self.row=0;self.phase=4;}else{let entry=&archive.members[self.row];if entry.envelope_pack.is_empty(){return Err(document_load_fault(semio_plugin_decl_app::DOCUMENT_LOAD_MEMBER_INVALID_CODE,"archive member envelope must be present").with_param("ordinal",(self.row+1).to_string()).into())}let fields=[entry.reference.artifact_id.as_str(),entry.reference.artifact_kind.as_str(),entry.reference.standard.as_str(),entry.reference.subset.as_str(),entry.owner.parent.artifact_id.as_str(),entry.owner.parent.artifact_kind.as_str(),entry.owner.parent.standard.as_str(),entry.owner.parent.subset.as_str(),entry.owner.slot.as_str(),entry.owner.child_id.as_str()];let field=fields[self.field];if field.is_empty()||field.len()>store::MEMBER_OPEN_IDENTITY_BYTES{return Err(document_load_fault(semio_plugin_decl_app::DOCUMENT_LOAD_MEMBER_INVALID_CODE,"archive member identity exceeds its declared bounds").with_param("ordinal",(self.row+1).to_string()).into())}while self.offset<field.len()&&!cx.should_yield(){let character=field[self.offset..].chars().next().ok_or_else(||archive_admission_fault("archive member identity lost its character frontier"))?;cx.consume_fuel(1);if character.is_control(){return Err(archive_admission_fault("archive member identity contains a control character").into())}self.offset+=character.len_utf8();}if self.offset==field.len(){self.offset=0;self.field+=1;if self.field==fields.len(){self.field=0;self.row+=1;}}}},
    4=>{if self.row<self.members/2{if !archive_admission_charge(cx,std::mem::size_of::<protocol::OwnedDocumentMemberPackEntry>()*2)?{return Ok(false)}archive.members.swap(self.row,self.members-1-self.row);self.row+=1;}else{self.phase=5;self.ready=true;}},
    5=>return Ok(self.ready),
    _=>return Err(archive_admission_fault("archive admission frontier is invalid").into())
@@ -586,4 +608,18 @@ mod original_archive_admission_laws{
         assert_eq!(accepted,row["accepted"].as_bool().unwrap(),"{}",row["name"]);
     }
  }
+}
+
+#[cfg(test)]
+mod progress_laws {
+    use super::document_archive_load_completed;
+
+    /// 📊️ LAW: every part of the load adds to `completed` and none can lower it, so one load's progress only moves forward.
+    #[test]
+    fn completed_adds_fold_stage_and_member_passes_and_never_decreases() {
+        assert_eq!(document_archive_load_completed(1, 127, 0, 0, 0), 128);
+        let walk = [(1, 127, 3, 0, 0), (1, 127, 4, 2, 0), (1, 127, 4, 5, 9), (1, 127, 4, 5, 90_000), (1, 127, 8, 8, 90_000)].map(|(a, b, c, d, e)| document_archive_load_completed(a, b, c, d, e));
+        assert!(walk.windows(2).all(|pair| pair[0] <= pair[1]), "{walk:?}");
+        assert_eq!(document_archive_load_completed(u64::MAX, 1, 1, 1, 1), u64::MAX);
+    }
 }

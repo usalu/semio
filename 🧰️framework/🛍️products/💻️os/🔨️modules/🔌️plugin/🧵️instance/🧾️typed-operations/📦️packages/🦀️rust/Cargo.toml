@@ -53,6 +53,7 @@ semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust"
 semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust" }
 semio-os-kernel = { path = "../../../../../../📦️packages/🦀️rust" }
 semio-plugin-ownership = { path = "../../../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
+semio-plugin-store-lifecycle = { path = "../../../../♻️lifecycle/🧱️owner/📦️packages/🦀️rust" }
 semio-plugin-instance-docs = { path = "../../../📄️docs/📦️packages/🦀️rust"}
 semio-plugin-instance-render = { path = "../../../🖼️render/📦️packages/🦀️rust" }
 semio-plugin-instance-dispatch = { path = "../../../📨️dispatch/📦️packages/🦀️rust" }

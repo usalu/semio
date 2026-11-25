@@ -11,9 +11,9 @@ import type { DrawingItem, DrawingScene, Fill, Legend, PathCommand } from "../..
 import { VIEW_TITLES } from "../../🎨️depiction/🟦️.ts";
 import { viewpointCaption } from "../../🎨️depiction/✂️section/🟦️.ts";
 import { FIDELITY_NAMES, PROJECTION_NAMES, isSheet } from "../📑️sheet/🟦️.ts";
+import { DRAWING_FONT_STACK } from "../../📐️units/🟦️.ts";
 import * as portable from "../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🧮️math/🎯️portable/🟦️.ts";
 
-const FONT_STACK = "Anta, 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, 'DejaVu Sans', sans-serif";
 /** 🏷️ The XML namespace of the `staffage:` metadata of every SVG the archive writes, in the library and in the web target alike; its version is that of the asset schema. */
 export const SVG_NAMESPACE = "https://semio.tech/staffage/v2";
 const PATTERN_SIZE_MM = 1.2;
@@ -85,7 +85,7 @@ function itemMarkup(item: DrawingItem, patterns: Set<string>, compact: boolean):
   const id = slug(item.id);
   if (item.kind === "text") {
     const weight = item.weight === "bold" ? ` font-weight="bold"` : "";
-    return `<text id="${id}" x="${num(item.x)}" y="${num(item.y)}" font-family="${FONT_STACK}" font-size="${num(item.sizeMm)}"${weight} text-anchor="${item.anchor}" fill="${item.color}">${esc(item.text)}</text>`;
+    return `<text id="${id}" x="${num(item.x)}" y="${num(item.y)}" font-family="${DRAWING_FONT_STACK}" font-size="${num(item.sizeMm)}"${weight} text-anchor="${item.anchor}" fill="${item.color}">${esc(item.text)}</text>`;
   }
   const { stroke, fill } = item;
   const d = compact ? compactData(item.commands) : pathData(item.commands);

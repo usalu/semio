@@ -1,0 +1,65 @@
+{
+  "$comment": "Controlled-lift ledger: `equal` means the controlled lifter lifts every typed lane exactly like the reference lifter; otherwise `<barrier>:<entry>:<pages lifted before it>` names where it still stops. Each lifter slice advances these entries.",
+  "documents": [
+    {
+      "name": "navigation",
+      "path": "🧪️tests/🧫️fixtures/🧭️navigation/navigation.pdf",
+      "expect": "equal"
+    },
+    {
+      "name": "multi-resource generated",
+      "path": "🧪️tests/🧫️fixtures/🧩️multi-resource/generated.pdf",
+      "expect": "equal"
+    },
+    {
+      "name": "multi-resource report",
+      "path": "🧪️tests/🧫️fixtures/🧩️multi-resource/report.pdf",
+      "expect": "equal"
+    },
+    {
+      "name": "fonts",
+      "path": "🧪️tests/🧫️fixtures/🔤️fonts/fonts.pdf",
+      "expect": "equal"
+    },
+    {
+      "name": "nested page tree",
+      "path": "🧪️tests/🧫️fixtures/🌳️nested-tree/nested.pdf",
+      "expect": "equal"
+    },
+    {
+      "name": "form resources",
+      "path": "🧪️tests/🧫️fixtures/🖼️form-resources/form-resources.pdf",
+      "expect": "equal"
+    },
+    {
+      "name": "form images",
+      "path": "🧪️tests/🧫️fixtures/🖼️form-images/form-images.pdf",
+      "expect": "equal"
+    },
+    {
+      "name": "page resources",
+      "path": "🧪️tests/🧫️fixtures/🎨️page-resources/page-resources.pdf",
+      "expect": "equal"
+    },
+    {
+      "name": "acro form",
+      "path": "🧪️tests/🧫️fixtures/📝️acro-form/acro-form.pdf",
+      "expect": "equal"
+    },
+    {
+      "name": "bachelor thesis",
+      "path": "🖼️assets/🎓️bachelor-thesis/🎓️bachelor-thesis.pdf",
+      "expect": "equal"
+    },
+    {
+      "name": "site plan",
+      "path": "🧪️tests/🧫️fixtures/🌍️real-world/🗺️site.pdf",
+      "expect": "equal"
+    },
+    {
+      "name": "institution diagram",
+      "path": "🧪️tests/🧫️fixtures/🌍️real-world/🏰️institution.pdf",
+      "expect": "equal"
+    }
+  ]
+}

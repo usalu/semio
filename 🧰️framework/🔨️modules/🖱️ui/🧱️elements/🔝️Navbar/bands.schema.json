@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "shell-bands/v1",
+  "description": "Navbar and footer are glass bands one layer above the canvas (panel-level glass with the chip tint). The canvas runs beneath them from the top to the bottom client edge. Scrollers and docks keep the band height as safe clearance, so the body rectangle starts below the top band and ends above the bottom band. A line shared with a band is painted by the band. A band wins every hit inside it.",
+  "type": "object",
+  "required": ["schema", "bandGlass", "cases"],
+  "properties": {
+    "schema": { "const": "shell-bands/v1" },
+    "bandGlass": {
+      "type": "object",
+      "required": ["level", "chipTint"],
+      "properties": { "level": { "const": "panel" }, "chipTint": { "const": true } }
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "client", "navbar", "tutorial", "footer", "subfooter", "canvas", "body", "navbarRect", "footerRect", "navbarLine", "footerLine", "hits"],
+        "properties": {
+          "id": { "type": "string" },
+          "client": { "$ref": "#/$defs/size" },
+          "navbar": { "type": "number", "minimum": 0 },
+          "tutorial": { "type": "number", "minimum": 0 },
+          "footer": { "type": "number", "minimum": 0 },
+          "subfooter": { "type": "number", "minimum": 0 },
+          "canvas": { "$ref": "#/$defs/rect" },
+          "body": { "$ref": "#/$defs/rect" },
+          "navbarRect": { "$ref": "#/$defs/rect" },
+          "footerRect": { "$ref": "#/$defs/rect" },
+          "navbarLine": { "$ref": "#/$defs/rect" },
+          "footerLine": { "$ref": "#/$defs/rect" },
+          "hits": { "type": "array", "items": { "type": "object", "required": ["x", "y", "winner"], "properties": { "x": { "type": "number" }, "y": { "type": "number" }, "winner": { "enum": ["navbar", "footer", "body"] } } } }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "size": { "type": "object", "required": ["w", "h"], "properties": { "w": { "type": "number" }, "h": { "type": "number" } } },
+    "rect": { "type": "object", "required": ["x", "y", "w", "h"], "properties": { "x": { "type": "number" }, "y": { "type": "number" }, "w": { "type": "number" }, "h": { "type": "number" } } }
+  }
+}

@@ -1,7 +1,6 @@
 extern crate semio_os_kernel as store;
 extern crate semio_os_kernel as protocol;
-#[path = "../../../../🧪️tests/🧰️support/🦀️.rs"]
-mod context;
+use semio_s_artifact_process_process3d_harness as context;
 use semio_s_artifact_process_process3d_panels::inspection::*;
 use semio_s_artifact_process_process3d_kit::{editor::process3d::terminology::process3d_measure_label, editor::process3d::terminology::Process3dLabels};
 use semio_s_artifact_process_process3d_model::{snapshot::Capability, snapshot::Pose, snapshot::Process3dSnapshot, snapshot::ProcessMeasure, snapshot::ProcessStep, snapshot::Stock, snapshot::WorkingSolid, snapshot::WorkshopMachine};

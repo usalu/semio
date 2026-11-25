@@ -86,6 +86,7 @@ pub enum SvgBasicMutation {
     SetTransform(set_transform::SetTransform),
 }
 dsl::original_pack_value_operation_receiving!(SvgBasicMutation);
+dsl::artifact_persisted_binary_operation!(SvgBasicMutation);
 
 /// 📇️ Kebab-case spelling of every `SvgBasicMutation` variant, in declaration order — the exact
 /// `kinds` list `../../🔣️oracle.json`'s `mutationCatalogs` entry declares.

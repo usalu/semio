@@ -3,16 +3,26 @@ import { createFlowBrowserRuntime } from "../../🌐️browser/🏃️runtime/�
 import { MockFlowBridge } from "../🎭️mock-flow-bridge/🟦️.ts";
 
 interface FlowOpenFailureFixture {
-  readonly verifiedRejection: { readonly nativeSession: "absent"; readonly entry: "released" };
+  readonly verifiedRejection: { readonly nativeSession: "absent"; readonly entry: "released"; readonly lateSubscriber: string; readonly unhandledRejections: number };
   readonly uncertainTransport: { readonly entry: "retained-until-host-terminal"; readonly globalCloseCalls: number; readonly terminal: boolean };
 }
 
 export async function testFlowOpenOwnership(fixture: FlowOpenFailureFixture): Promise<void> {
   const memory = new WebAssembly.Memory({ initial: 400 });
   const rejectedBridge = new MockFlowBridge(memory, { rejectOpenReplies: 1 });
-  const rejectedRuntime = await createFlowBrowserRuntime({ source: rejectedBridge.exports });
-  const rejectedSession = rejectedRuntime.openSession();
-  await assert.rejects(rejectedSession.selectedWidgetIds().result, /session open rejected before admission/);
+  const rejectedRuntime = await createFlowBrowserRuntime({ source: rejectedBridge.exports, schedule: queueMicrotask });
+  let unhandled = 0;
+  const observeUnhandled = () => { unhandled += 1; };
+  process.on("unhandledRejection", observeUnhandled);
+  try {
+    const rejectedSession = rejectedRuntime.openSession();
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
+    await assert.rejects(rejectedSession.selectedWidgetIds().result, { message: fixture.verifiedRejection.lateSubscriber });
+    assert.equal(unhandled, fixture.verifiedRejection.unhandledRejections);
+  } finally {
+    process.off("unhandledRejection", observeUnhandled);
+  }
   await rejectedRuntime.close();
   assert.equal(rejectedBridge.closedSessionSlots.length === 0 ? "absent" : "present", fixture.verifiedRejection.nativeSession);
   assert.equal(rejectedRuntime.terminalIsEmpty(), fixture.verifiedRejection.entry === "released");

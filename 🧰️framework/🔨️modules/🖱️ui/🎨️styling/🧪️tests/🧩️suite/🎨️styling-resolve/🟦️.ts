@@ -1,6 +1,8 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { describe, it, expect } from "bun:test";
 import { clearColorResolveCache, resolveColorHex, resolveSemanticColorHex, resolveSpatialAxisColors, SPATIAL_AXIS_COLOR_REFS, resolveColorRgba, serializeCanvasThemeJson, STYLING_BOARD_PALETTES, STYLING_TOKENS, syncSessionCanvasTheme } from "../../../📦️packages/🟦️typescript/🟦️.ts";
-import { uiCss } from "../🧰️suite-build-server/🟦️.ts";
+import { paletteCss, uiCss } from "../🧰️suite-build-server/🟦️.ts";
 
 describe("styling resolve", () => {
   it("selection fill uses accent with emphasized text color so muted gray stays readable", () => {
@@ -19,6 +21,25 @@ describe("styling resolve", () => {
       expect(values.some(value => value.includes(`--theme-${appearance}-chrome-border-emphasized`))).toBe(true);
     }
     expect(uiCss).toMatch(/:root,\s*\.dark\s*\{[^}]*--color-emphasized:\s*var\(--foreground\)/);
+  });
+
+  it("projects every level knob from levels in the token source instead of declaring it by hand", () => {
+    const levels = JSON.parse(readFileSync(resolve(import.meta.dir, "../../../🔣️.json"), "utf8")).levels as Record<string, number>;
+    const knobs: Record<string, string> = {
+      "--level-shade-step": `${levels.shadeStepPercent}%`,
+      "--element-shade-step": `${levels.elementStepPercent}%`,
+      "--hover-shade-step": `${levels.hoverStepPercent}%`,
+      "--glass-alpha-step": `${levels.glassAlphaStep}`,
+      "--glass-blur-step": `${levels.glassBlurStepPx / 16}rem`,
+      "--glass-saturate": `${levels.glassSaturate}`,
+      "--veil-alpha": `${levels.veilAlpha}`,
+      "--veil-blur": `${levels.veilBlurPx / 16}rem`,
+      "--chip-tint": `${levels.chipTintPercent}%`,
+    };
+    for (const [name, value] of Object.entries(knobs)) {
+      expect(paletteCss).toContain(`${name}: ${value};`);
+      expect(uiCss).not.toMatch(new RegExp(`${name}\\s*:`));
+    }
   });
 
   it("leaves panel-tab dividers to the border compositor instead of native box-shadow lines", () => {

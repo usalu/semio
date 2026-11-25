@@ -1,7 +1,7 @@
 //! 📥️ Current exact registry load/reopen baseline for the retained load lifecycle cutover.
 
 use std::sync::Arc;
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use semio_framework_value::retirement::controlled::ControlledRetirement;
 use semio_plugin_window_config::{DirectIngress, TypedWindowConfigStoreOwner, WindowConfigMutation, WindowConfigOwner, WindowConfigOwnerRegistry, WindowConfigPack, WindowConfigPackLoadStep, bounded_window_config_preparation_factory, bounded_window_config_store_disposer, bounded_window_config_store_owners, registry};
 use semio_plugin_window_config::retained::ErasedWindowConfigPackLoad;

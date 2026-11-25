@@ -86,7 +86,7 @@ fn page_inspector_edits_and_clears_pdf_boundaries() {
     }
     assert_eq!(page.user_unit, case["userUnit"].as_f64());
     let view_size = |snapshot: &PdfSnapshot| {
-        let scene: Value = serde_json::from_str(&canvas_layers(snapshot, None)).unwrap();
+        let scene: Value = serde_json::from_str(&canvas_layers(snapshot, None, semio_ui_locale::Locale::En)).unwrap();
         let corner = &scene[0]["segments"][2]["to"];
         [corner[0].as_f64().unwrap(), corner[1].as_f64().unwrap()]
     };

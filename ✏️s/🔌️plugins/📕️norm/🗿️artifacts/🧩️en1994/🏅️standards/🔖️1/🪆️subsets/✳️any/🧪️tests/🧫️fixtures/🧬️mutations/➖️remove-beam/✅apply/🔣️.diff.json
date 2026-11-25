@@ -15,6 +15,7 @@
   },
   "columns": null,
   "slabs": null,
+  "placements": null,
   "studs": {
     "removed": [
       {
@@ -184,5 +185,12 @@
   },
   "fireRating": null,
   "insulationThicknessM": null,
-  "fatigueDetail": null
+  "fatigueDetail": null,
+  "reliabilityClass": null,
+  "cases": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  }
 }

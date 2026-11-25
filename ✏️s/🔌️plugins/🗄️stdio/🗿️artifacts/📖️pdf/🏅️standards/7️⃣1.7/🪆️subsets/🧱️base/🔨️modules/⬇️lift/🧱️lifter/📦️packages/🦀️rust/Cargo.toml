@@ -1,0 +1,28 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-s-artifact-stdio-pdf-lifter"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Object-graph lifter of semio-s-artifact-stdio-pdf: lifter state, resources, fonts, navigation, annotations and catalog"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+semio-s-artifact-stdio-pdf-conformance-support = { path = "../../../../../🧬️schema/🏅️conformance-support/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-diff = { path = "../../../../../../../../4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/🔺️diff/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-fonts = { path = "../../../../🔤️fonts/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-inferences = { path = "../../../../../🧬️schema/💡️inferences/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-model = { path = "../../../../../🧬️schema/📸️snapshot/📐️model/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-mut-base-4 = { path = "../../../../../📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-mut-family-5 = { path = "../../../../🖋️content/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-page-content = { path = "../../../🧩️lifter-and-document/📜️page-content/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-page-tree = { path = "../../../🌳️page-tree/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-snapshot-2 = { path = "../../../../../🧬️schema/📸️snapshot/📦️packages/🦀️rust" }

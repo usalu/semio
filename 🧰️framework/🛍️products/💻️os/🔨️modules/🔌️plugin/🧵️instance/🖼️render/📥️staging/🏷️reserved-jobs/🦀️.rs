@@ -3,7 +3,7 @@
 //! 🏷️ The inputs of the reserved action and media jobs.
 use semio_plugin_decl_emission::{ActionMeta, Emit};
 use semio_plugin_decl_app::ArtifactApp;
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use semio_plugin_decl_app::tool_contract::{ArtifactReservedToolInput, ArtifactReservedToolJob, ArtifactReservedToolJobRequest, ArtifactToolCompletion};
 use semio_plugin_decl_views::child_view::ChildContentView;

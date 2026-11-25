@@ -1,0 +1,4 @@
+{
+  "mutation": "changeInvestigationDepth",
+  "newInvestigationDepth": -1.0
+}

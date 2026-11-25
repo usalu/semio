@@ -4,7 +4,7 @@
 import { appCommandIdsV1, type Effect, hostEffectInvocationV1, type InvocationResponse } from "@semio-tech/framework";
 import { decodeAppFrame, decodePackValue, faultDisplayMessage } from "@semio-tech/framework-os";
 import { performInvocation, WGPU_TYPED_OPERATION_SETTLE_LIMIT, WgpuTypedOperationDrive } from "../../🧾️typed-operations-and-handle/🟦️.ts";
-import { admitSpawnedJob, wgpuBuildScopedContributionsPack, wgpuContributionsIngressSize, wgpuEffectDispatchScope, wgpuHostEffect, wgpuSetContributionsCommand, wgpuSlimContributionsView } from "../../🎛️contributions-and-effects/🟦️.ts";
+import { admitSpawnedJob, wgpuBuildScopedContributionsPack, wgpuContributionsIngressSize, wgpuEffectDispatchScope, wgpuEffectWindowInstances, wgpuHostEffect, wgpuSetContributionsCommand, wgpuSlimContributionsView } from "../../🎛️contributions-and-effects/🟦️.ts";
 import { serializeWgpuActorCall, submitTurn } from "../../🧵️shard-and-actor-calls/🟦️.ts";
 import { yieldWgpuUi } from "../../🍽️ui-intake-and-route/🟦️.ts";
 import { shellFrameBytes } from "../../../../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🔖️turn-result/🟦️.ts";
@@ -41,7 +41,7 @@ export function createContributionsAndBackbone({ pluginId, consumedTopicsFor, em
       if (!effect || typeof effect !== "object" || !("dispatchAction" in effect)) continue;
       const dispatch = effect.dispatchAction as { readonly action: string; readonly args?: unknown };
       try {
-        const addressed = hostEffectInvocationV1(wgpuEffectDispatchScope(pluginId, appId, slimView), appCommandIdsV1(manifest, appId), dispatch.action, (dispatch.args ?? {}) as Record<string, unknown>);
+        const addressed = hostEffectInvocationV1(wgpuEffectDispatchScope(pluginId, appId, slimView), appCommandIdsV1(manifest, appId), dispatch.action, (dispatch.args ?? {}) as Record<string, unknown>, wgpuEffectWindowInstances(slimView));
         const tick = await performInvocation(requireChannel(instanceId), instanceId, addressed.invocation, slimView);
         ticks.push(tick);
       } catch (error) {

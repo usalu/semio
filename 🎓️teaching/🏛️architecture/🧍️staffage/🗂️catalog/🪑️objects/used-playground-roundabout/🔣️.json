@@ -13,17 +13,83 @@
    "de": "Ein bodenbündiges kommunales Plattformkarussell aus feuerverzinktem Stahl nach rund fünfzehn Jahren auf einem deutschen Spielplatz: eine 1,80-m-Plattform aus Tränenblech auf acht Speichen dreht sich auf einem Kegelrollenlager in einer verzinkten Einbauwanne über einem Beton-Punktfundament, 35 mm über dem gegossenen EPDM-Belag; eine rot pulverbeschichtete Mittelsäule trägt einen Haltering und vier gebogene Haltebügel. Der Gebrauch ist sichtbar: das Tränenmuster ist in einem Ring, wo Kinder laufen, glattgetreten, die Umrandung zu einer 15-mm-Mulde ausgetreten, ein Bügel um 20 mm verbogen und ein anderer in blankem Zink ersetzt, der Lack kreidet und rostet an den Schweißnähten, und das trockene Lager knirscht."
   },
   "tags": [
-   "used",
-   "park",
-   "public-space",
-   "play",
-   "roundabout",
-   "carousel",
-   "steel",
-   "galvanised",
-   "powder-coated",
-   "rubber-surfacing",
-   "concrete"
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "park",
+    "title": {
+     "en": "park",
+     "de": "Park"
+    }
+   },
+   {
+    "id": "public-space",
+    "title": {
+     "en": "public space",
+     "de": "öffentlicher Raum"
+    }
+   },
+   {
+    "id": "play",
+    "title": {
+     "en": "play",
+     "de": "Spiel"
+    }
+   },
+   {
+    "id": "roundabout",
+    "title": {
+     "en": "roundabout",
+     "de": "Drehkarussell"
+    }
+   },
+   {
+    "id": "carousel",
+    "title": {
+     "en": "carousel",
+     "de": "Karussell"
+    }
+   },
+   {
+    "id": "steel",
+    "title": {
+     "en": "steel",
+     "de": "Stahl"
+    }
+   },
+   {
+    "id": "galvanised",
+    "title": {
+     "en": "galvanised",
+     "de": "verzinkt"
+    }
+   },
+   {
+    "id": "powder-coated",
+    "title": {
+     "en": "powder coated",
+     "de": "pulverbeschichtet"
+    }
+   },
+   {
+    "id": "rubber-surfacing",
+    "title": {
+     "en": "rubber surfacing",
+     "de": "Gummibelag"
+    }
+   },
+   {
+    "id": "concrete",
+    "title": {
+     "en": "concrete",
+     "de": "Beton"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content (used park objects wave)",

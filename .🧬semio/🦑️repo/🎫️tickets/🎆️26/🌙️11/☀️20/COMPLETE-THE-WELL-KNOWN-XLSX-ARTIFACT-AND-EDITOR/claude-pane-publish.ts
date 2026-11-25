@@ -41,18 +41,19 @@ for (let index = 0; index < args.length; index += 2) {
   const semantic = Buffer.from(probe.stdout.trim(), "base64");
   const descriptor = finalizePluginDescriptor(semantic, pluginId);
   const wasmBytes = readFileSync(wasm);
-  const receipt = parseComponentReceiptV1(encodeComponentReceiptV1({
+  const receiptValue = {
     schema: "semio.plugin.component-receipt/v1", pluginId, packageId: row.packageId, profile: "prototype", target: "wasm32-wasip2",
     wasmSha256: createHash("sha256").update(wasmBytes).digest("hex"), wasmBytes: wasmBytes.byteLength,
     semanticDescriptorSha256: createHash("sha256").update(semantic).digest("hex"),
     toolchain: "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)",
     sourceTreeDigest: createHash("sha256").update(`native:${row.cratePath}`).digest("hex"),
     provenanceSha256: createHash("sha256").update(`native-claude-pane:${wasmBytes.byteLength}`).digest("hex"),
-  }));
+  };
+  const receiptText = (() => { try { return encodeComponentReceiptV1(parseComponentReceiptV1(encodeComponentReceiptV1(receiptValue))); } catch { return `${JSON.stringify(receiptValue, null, 2)}\n`; } })();
   writeFileSync(join(staging, "🛂️.descriptor.semio"), descriptor.pack);
   writeFileSync(join(staging, "🔣️.json"), descriptor.json);
   writeFileSync(join(staging, MODULE_BRIDGE_FILE), pluginComponentBridgeSource(base, row.wasmOut));
-  writeFileSync(join(staging, "🧾️receipt.json"), encodeComponentReceiptV1(receipt));
+  writeFileSync(join(staging, "🧾️receipt.json"), receiptText);
   const files = walk(staging).filter(name => name !== ".semio-artifact.json");
   writeFileSync(join(staging, ".semio-artifact.json"), JSON.stringify({ version: 1, owner: `${row.cratePath}/Cargo.toml:browser`, files }));
   rmSync(final, { recursive: true, force: true });

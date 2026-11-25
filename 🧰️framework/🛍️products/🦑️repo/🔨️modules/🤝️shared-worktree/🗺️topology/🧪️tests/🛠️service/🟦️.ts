@@ -187,15 +187,24 @@ test("windows server: the cache and relay tasks that exist are registered again 
  const ports=fake("windows");ports.outputs["schtasks /Query /TN semio-fleet-compact /XML"]="<Task>--collect-blobs</Task>";
  maintainServiceDefinitionV1({topology,groupId:"c3",ports});ports.clock.now+=QUIET+1;
  expect(maintainServiceDefinitionV1({topology,groupId:"c3",ports})).toMatchObject({action:"applied"});
- expect(ports.calls.filter(call=>call.startsWith("schtasks /Create")).map(call=>call.split(" ")[3])).toEqual(["semio-fleet-replica","semio-fleet-compact","semio-fleet-cache","semio-fleet-relay"]);
+ expect(ports.calls.filter(call=>call.startsWith("schtasks /Create")).map(call=>call.split(" ")[3])).toEqual(["semio-fleet-replica","semio-fleet-compact","semio-fleet-store-mount","semio-fleet-cache","semio-fleet-relay"]);
  expect(ports.calls).toContain("schtasks /End /TN semio-fleet-cache");expect(ports.calls).toContain("schtasks /Run /TN semio-fleet-relay");
  expect(ports.calls).not.toContain("schtasks /End /TN semio-fleet-replica");
+ expect(ports.calls).not.toContain("schtasks /End /TN semio-fleet-store-mount");
+});
+
+test("windows: the store mount task is kept on the headless host like the replica, so a stale visible console definition is replaced",()=>{
+ const ports=fake("windows");pass(ports,2);
+ const xml=Buffer.from(ports.files.get("/entry/service-definition/semio-fleet-store-mount.xml")!,"latin1").toString("utf16le");
+ expect(xml).toContain("<Command>conhost.exe</Command>");expect(xml).toContain("--headless cmd.exe");
+ const absent=fake("windows");absent.status["schtasks /Query /TN semio-fleet-store-mount"]=1;pass(absent,2);
+ expect(absent.calls.filter(call=>call.startsWith("schtasks /Create")).map(call=>call.split(" ")[3])).toEqual(["semio-fleet-replica","semio-fleet-compact"]);
 });
 
 test("windows: the task is exported, registered again from UTF-16 XML with /F, and the exported one is registered again when that fails",()=>{
  const ok=fake("windows");
  expect(pass(ok,2)).toMatchObject({action:"applied"});
- expect(ok.calls.filter(call=>call.startsWith("schtasks /Create")).length).toBe(2);
+ expect(ok.calls.filter(call=>call.startsWith("schtasks /Create")).length).toBe(3);
  expect(ok.calls[0]).toContain("/Query");
  const xml=ok.files.get("/entry/service-definition/semio-fleet-replica.xml")!;
  expect(xml.startsWith("\xff\xfe")).toBe(true);

@@ -159,7 +159,7 @@ export function SyncAttachCard({ activeUri, cardKind, draftPath, syncUtilities, 
               ) : null}
             </SharedBorderRowCell>
             {quarantinedConflicts.length > 0 ? (
-              <SharedBorderRowCell tone="destructive" role="status" data-semio-sync-quarantined="" className="text-xs text-warning">
+              <SharedBorderRowCell tone="destructive" role="status" data-semio-sync-quarantined="" className="text-xs text-warning-ink">
                 {quarantinedLabel} ({quarantinedConflicts.length})
               </SharedBorderRowCell>
             ) : null}
@@ -249,7 +249,7 @@ const HUB_CONNECTION_TONE: Readonly<Record<HubConnectionIndicatorStateV1, string
   live: "text-emphasized",
   online: "text-emphasized",
   connecting: "text-muted-foreground",
-  reconnecting: "text-warning",
+  reconnecting: "text-warning-ink",
 };
 
 export interface HubConnectionIndicatorProps {

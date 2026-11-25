@@ -1,6 +1,6 @@
 //! 🧪️ Real config genesis retains its actual native semantic issuer through handoff and cancellation.
 use super::EnergyConfigGenesis;
-use semio_plugin_ownership::original_store_genesis::{OriginalStoreBirth,OriginalStoreGenesis,OriginalStoreSlot};
+use semio_plugin_store_lifecycle::original_store_genesis::{OriginalStoreBirth,OriginalStoreGenesis,OriginalStoreSlot};
 use semio_framework_job::*;
 use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,ToValue};
 use std::mem::size_of;

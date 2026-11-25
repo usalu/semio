@@ -398,7 +398,7 @@
       "corrugationDepth": 0.0,
       "webHeight": 0.0,
       "stiffenerSpacing": 0.0,
-      "stiffenerShape": "Flat",
+      "stiffenerShape": "None",
       "stiffenerDepth": 0.0,
       "stiffenerThickness": 0.0,
       "stiffenerFlangeWidth": 0.0,

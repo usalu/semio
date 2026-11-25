@@ -1,5 +1,9 @@
 //! 🧯️ Retirement drivers and turn limits of the reactor turn: the retire-until-complete drivers and the close, patch, executor hold and measured guest turn limits.
 
+#[path = "🔦️more-work-sources/🦀️.rs"]
+mod more_work_sources;
+pub use more_work_sources::TurnMoreWorkSources;
+
 /// 🏃️ Upper bound on process-pool pumps per reactor turn on wasm.
 /// 🧹️ Drives one per-turn retirement ladder entry for a bounded RUN of units instead of the single
 /// unit it used to get, stopping as soon as the entry reports itself complete, its run is spent, or

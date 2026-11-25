@@ -2,7 +2,7 @@ import {createHash} from "node:crypto";
 import {appendFileSync,mkdirSync,readFileSync,rmSync,statSync,utimesSync,writeFileSync} from "node:fs";
 import {join} from "node:path";
 import {FLEET_POLICY_V1} from "../🪪️identity/🟦️.ts";
-import {fleetCacheRootV1,readLocalFleetCacheFactsV1} from "../../../../../🏗️build/🌐️remote-cache/🛰️fleet/🟦️.ts";
+import {fleetCacheRootV1,instanceRefusedV1,readLocalFleetCacheFactsV1} from "../../../../../🏗️build/🌐️remote-cache/🛰️fleet/🟦️.ts";
 
 const fleet=FLEET_POLICY_V1,EMPTY=createHash("sha256").digest("hex");
 type Environment=Readonly<Record<string,string|undefined>>;
@@ -17,12 +17,19 @@ function accessOfFactsV1(environment:Environment):string|undefined{
  try{const root=environment.SEMIO_UNIT_CACHE_WORKSPACE_ROOT||fleetCacheRootV1(environment);return root===undefined?undefined:readLocalFleetCacheFactsV1(root)?.facts.cache.access;}catch{return undefined;}
 }
 
+/** 🧬️ The instance (namespace) this machine writes to: the fleet facts' when the environment names another one without the operator's override (a leftover of an older provisioning would write entries that no reader of the fleet looks into), else the environment's, else the policy default. */
+function instanceOfV1(environment:Environment):string{
+ const named=environment.SEMIO_REMOTE_CACHE_INSTANCE||undefined;
+ try{const root=environment.SEMIO_UNIT_CACHE_WORKSPACE_ROOT||fleetCacheRootV1(environment),facts=root===undefined?undefined:readLocalFleetCacheFactsV1(root)?.facts;if(facts!==undefined&&(named===undefined||instanceRefusedV1(environment,"SEMIO_REMOTE_CACHE_INSTANCE",facts)!==undefined))return facts.cache.instance;}catch{}
+ return named??"main";
+}
+
 /** ⚙️ Reads the fleet tier's settings from the environment the launcher exports (`SEMIO_REMOTE_CACHE_*`, the variables of the remote cache contract); `undefined` when the tier is off: no endpoint, `SEMIO_UNIT_CACHE_REMOTE=off`, or a read-only access that never claims or uploads still downloads, so only the endpoint decides. */
 export function readFleetSettingsV1(root:string,environment:Environment):FleetSettingsV1|undefined{
  const endpoint=environment.SEMIO_REMOTE_CACHE_ENDPOINT;
  if(!endpoint||environment.SEMIO_UNIT_CACHE_REMOTE==="off"||environment.SEMIO_UNIT_CACHE==="off")return undefined;
  const access=environment.SEMIO_REMOTE_CACHE_ACCESS||accessOfFactsV1(environment)||"read-only";
- return Object.freeze({endpoint:endpoint.replace(/\/+$/u,""),instance:environment.SEMIO_REMOTE_CACHE_INSTANCE||"main",token:environment.SEMIO_REMOTE_CACHE_TOKEN||undefined,upload:access==="read-write"&&environment.SEMIO_REMOTE_CACHE_UPLOAD!=="false",timeoutMilliseconds:whole(environment.SEMIO_REMOTE_CACHE_TIMEOUT_SECONDS,1)===undefined?undefined:whole(environment.SEMIO_REMOTE_CACHE_TIMEOUT_SECONDS,1)!*1000,retries:whole(environment.SEMIO_REMOTE_CACHE_RETRIES,0),stateDirectory:join(root,fleet.layout.state),signedRoot:environment.SEMIO_REMOTE_CACHE_SIGNED==="1"?environment.SEMIO_UNIT_CACHE_WORKSPACE_ROOT||undefined:undefined,identity:endpoint+"|"+(environment.SEMIO_REMOTE_CACHE_GENERATION??"")+"|"+(environment.SEMIO_REMOTE_CACHE_TOKEN?createHash("sha256").update(environment.SEMIO_REMOTE_CACHE_TOKEN).digest("hex").slice(0,8):"")});
+ return Object.freeze({endpoint:endpoint.replace(/\/+$/u,""),instance:instanceOfV1(environment),token:environment.SEMIO_REMOTE_CACHE_TOKEN||undefined,upload:access==="read-write"&&environment.SEMIO_REMOTE_CACHE_UPLOAD!=="false",timeoutMilliseconds:whole(environment.SEMIO_REMOTE_CACHE_TIMEOUT_SECONDS,1)===undefined?undefined:whole(environment.SEMIO_REMOTE_CACHE_TIMEOUT_SECONDS,1)!*1000,retries:whole(environment.SEMIO_REMOTE_CACHE_RETRIES,0),stateDirectory:join(root,fleet.layout.state),signedRoot:environment.SEMIO_REMOTE_CACHE_SIGNED==="1"?environment.SEMIO_UNIT_CACHE_WORKSPACE_ROOT||undefined:undefined,identity:endpoint+"|"+(environment.SEMIO_REMOTE_CACHE_GENERATION??"")+"|"+(environment.SEMIO_REMOTE_CACHE_TOKEN?createHash("sha256").update(environment.SEMIO_REMOTE_CACHE_TOKEN).digest("hex").slice(0,8):"")});
 }
 
 /** 🚦️ Why a request did not give an answer: the server is unreachable or failing, refuses the credential, or does not know the route. */
@@ -40,6 +47,7 @@ export interface FleetClientV1{
  claimsUsable():boolean;
  getResult(key:string):Promise<Uint8Array|"miss"|FleetFaultV1>;
  hasResult(key:string):Promise<boolean|undefined>;
+ slotKeys?(slot:string):Promise<readonly Readonly<{key:string;storedAtMs:number}>[]|undefined>;
  getBlob(hash:string,size:number):Promise<Uint8Array|undefined>;
  hasBlob(hash:string):Promise<boolean|undefined>;
  putBlob(hash:string,bytes:Uint8Array):Promise<boolean>;
@@ -119,6 +127,12 @@ export function createFleetClientV1(settings:FleetSettingsV1,world:Readonly<{fet
    const answer=await call("HEAD",`${base}/ac/${key}`,fleet.timeouts.lookupMilliseconds);
    if(typeof answer==="string")return undefined;
    return answer.status===200?true:answer.status===404?false:undefined;
+  },
+  async slotKeys(slot){
+   const answer=await call("GET",`${base}/v1/slots/${slot}`,fleet.timeouts.lookupMilliseconds);
+   if(typeof answer==="string"||answer.status!==200)return undefined;
+   const body=await json<{slot?:string;keys?:{key?:unknown;storedAtMs?:unknown}[]}>(answer.response);
+   return body?.slot===slot&&Array.isArray(body.keys)?body.keys.filter((row):row is {key:string;storedAtMs:number}=>typeof row.key==="string"&&/^[a-f0-9]{64}$/u.test(row.key)&&typeof row.storedAtMs==="number"):undefined;
   },
   async getBlob(hash,size){
    if(hash===EMPTY)return new Uint8Array(0);

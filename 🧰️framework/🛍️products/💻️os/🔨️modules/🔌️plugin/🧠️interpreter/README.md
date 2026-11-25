@@ -31,6 +31,18 @@ overflowing at call depth 26 read as "runaway recursion" for a full slice).
 📞️ Nested calls preserve their denied operands and return each funded physical frame separately from eight actual VM instructions.
 📥️ Actual memory load/store instructions quote all guest-byte and machine mutations before changing address, operands or PC.
 
+## 🏗️instance/▶️invocation/🦀️.rs
+
+▶️ Each admitted scalar instruction preserves the original execution cap separately from physical work and storage.
+
+📏️ What the meters mean. Every executed guest instruction consumes exactly one unit of execution fuel (the VM's own `spent_fuel`) and exactly one unit of work, which drives the yield, deadline and cancellation cadence (`StepContext::charge_work_unit`). Retained items and copy bytes (`StepContext::charge_retained_item`) are a memory ledger, not a second instruction counter: they are charged only for real retained effects.
+
+- Retained items and copy bytes: only what the host really retains or allocates: frame, control, local and operand-stack births and growth that allocate, label type vectors that allocate, `memory.grow` (born capacity, bytes copied and zero-initialised into the replacement, released backing), `data.drop` releases, host import argument and result transport, instantiation and data segments, checkpoint and image transfer, and every retirement step that releases or copies.
+- Work only: constants, locals, globals, numerics, `select`, loads and stores, untaken branches, plan bookkeeping, frame births and returns served by the instance pool, pool recycling, call arguments moved into a pooled frame, branch results moved to another height, and `memory.copy`/`fill`/`init` inside the guest's own linear memory. Moved bytes cost one work unit per 64 bytes (at least one; divisor `workBytesPerUnit` in the metering fixture), a single move spans at most the bytes the turn's remaining work and a 1 MiB declared chunk allow, so yield, deadline and cancellation still bound it.
+- Frame pool: each instance recycles at most 16 empty value, control and type vectors per kind; a returned frame quotes release 0 and copy 0 while the pool has room and the exact backing bytes when it is full.
+
+📏️ The language-neutral vector lives in `▶️invocation/📏️metering` (instruction kinds to items, copy bytes and fuel), checked by the Rust interpreter against Wasmtime and by an independent TypeScript decoder with SQLite arithmetic and JavaScript WebAssembly.
+
 ## 🧮️numeric-execution/🦀️.rs
 
 🧮️ Numeric failures remain fixed scalar facts until an ordinary caller chooses diagnostic text.

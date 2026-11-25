@@ -39,6 +39,9 @@ impl OpBinary for RasterMutationDsl {
     }
 }
 
+dsl::original_decoded_operation_receiving!(RasterMutation);
+dsl::artifact_persisted_binary_operation!(RasterMutation);
+
 impl OpBinary for RasterMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         raster_mutation_to_dsl(self).encode_op()

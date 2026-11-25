@@ -58,23 +58,28 @@ export function useFlowSessionAttach(core: FlowCoreAfterFlowInteractionPublicati
 
   useEffect(() => {
     let cancelled = false;
+    const retire = (session: NonNullable<typeof sessionRef.current>) => {
+      cancelFlowTasks(session);
+      void session.free().catch((error: unknown) => {
+        console.error(`[flow] session close refused on ${surfaceId}`, error);
+      });
+    };
     void createFlowSession().then((session) => {
       if (cancelled) {
-        void session.free();
+        retire(session);
         return;
       }
       interactionLedger.retire();
       sessionRef.current = session;
       setSessionReady(true);
     }, (error: unknown) => {
+      if (!cancelled) console.error(`[flow] session unavailable on ${surfaceId}`, error);
     });
     return () => {
       cancelled = true;
-      if (sessionRef.current) {
-        cancelFlowTasks(sessionRef.current);
-        void sessionRef.current.free();
-      }
+      const session = sessionRef.current;
       sessionRef.current = null;
+      if (session) retire(session);
     };
   }, [interactionLedger, surfaceId]);
 
@@ -144,7 +149,7 @@ export function useFlowSessionAttach(core: FlowCoreAfterFlowInteractionPublicati
         };
       })
       .catch((error: unknown) => {
-        if (cancelled) return;
+        if (!cancelled) console.error(`[flow] canvas attach refused on ${surfaceId}`, error);
       });
     return () => {
       cancelled = true;

@@ -83,3 +83,8 @@ export function captureProgramRetirementOwnersV1(loaded: readonly Readonly<{ han
 export function sameProgramRetirementOwnersV1(captured: readonly ProgramRetirementOwnerV1[], live: readonly ProgramRetirementOwnerV1[]): boolean {
   return captured.length === live.length && captured.every(owner => live.some(candidate => candidate.handle === owner.handle && candidate.session.pluginId === owner.session.pluginId && candidate.session.app.id === owner.session.app.id && candidate.session.instanceId === owner.session.instanceId));
 }
+
+/** 💾️ Whether retiring a program must first keep its document: only a document with an identity can be kept, and only a shell with a data folder can keep anything, so a folderless shell retires the program without a save it could never acknowledge ({@link admitProgramRetirementV1}). */
+export function programRetirementKeepsDocumentV1(localDataDir: string | undefined, parentDocumentId: string | null): boolean {
+  return Boolean(localDataDir) && parentDocumentId !== null;
+}

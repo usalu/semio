@@ -76,7 +76,7 @@ export async function placeRemoteExecutionLinkV1(target:string,path:string,root:
 }
 
 const probe=(command:string,args:readonly string[]):boolean=>{
- try{return spawnSync(command,args,{stdio:"ignore",timeout:10000}).status===0;}catch{return false;}
+ try{return spawnSync(command,args,{windowsHide:true,stdio:"ignore",timeout:10000}).status===0;}catch{return false;}
 };
 const executable=(path:string):boolean=>{try{accessSync(path,constants.X_OK);return true;}catch{return false;}};
 

@@ -11,3 +11,4 @@ import "../../../../✏️s/🔌️plugins/🧩️puzzle/🧪️tests/🧊️sto
 import "../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🧪️tests/🎨️storybook/🟦️.ts";
 import "../../../../🧰️framework/🔨️modules/🖱️ui/🧪️tests/📚️storybook-new-stories/🟦️.ts";
 import "../../../../🧰️framework/🔨️modules/🖱️ui/🧪️tests/📚️storybook-uncovered-components/🟦️.ts";
+import "../../../../🧰️framework/🔨️modules/🖱️ui/🧪️tests/🖼️storybook-frame-visuals/🟦️.ts";

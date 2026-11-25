@@ -208,21 +208,6 @@ impl<E: editing::SnapshotEditingEditor, C: IfcDetailsProfile> IfcDetailsWork<E, 
         self.domain.turns()
     }
     #[cfg(any(test, feature = "testkit"))]
-    pub fn debug_residue(&self) -> String {
-        let mut out = String::new();
-        macro_rules! t { ($n:expr, $e:expr) => { if !$e { out.push_str($n); out.push(' '); } }; }
-        t!("rules", self.rules.terminal_is_empty()); t!("cursor", self.cursor.terminal_is_empty()); t!("admission", self.admission.terminal_is_empty());
-        t!("command_wire", self.command_wire.terminal_is_empty()); t!("address", self.address.terminal_is_empty()); t!("reference", self.reference.terminal_is_empty());
-        t!("enumeration", self.enumeration.terminal_is_empty()); t!("domain", self.domain.terminal_is_empty()); t!("entity_removal", self.entity_removal.terminal_is_empty());
-        t!("roster", self.constituent_roster.terminal_is_empty()); t!("parts_cursor", self.parts_cursor.terminal_is_empty()); t!("parts", self.parts.is_none());
-        t!("value_cursor", self.value_cursor.terminal_is_empty()); t!("header_cursor", self.header_cursor.terminal_is_empty()); t!("value_edit", self.value_edit.terminal_is_empty());
-        t!("value", self.value.is_none()); t!("original_event", self.original_event.is_none()); t!("header_values", self.header_values.is_none()); t!("entity", self.entity.is_none());
-        t!("garbage", self.garbage.is_none()); t!("pending", self.pending.is_none()); t!("semantic_emit", self.semantic_emit.is_none()); t!("unborn", self.unborn.is_none());
-        t!("source_admission", self.source_admission.is_none()); t!("retirement", self.retirement.is_empty()); t!("codec", !self.publication.codec_live());
-        t!("source", self.source.as_ref().is_none_or(Source::terminal_is_empty)); t!("pub_source", self.publication.view.source.as_ref().is_none_or(Source::terminal_is_empty));
-        out
-    }
-    #[cfg(any(test, feature = "testkit"))]
     pub fn reduction_ticks(&self) -> usize {
         self.control.ticks
     }

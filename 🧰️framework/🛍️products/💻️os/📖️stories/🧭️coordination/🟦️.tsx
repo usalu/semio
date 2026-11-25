@@ -75,7 +75,7 @@ export function OsBootHost({ plugin, appId, locks, inventory }: OsBootHostProps)
   if (available === false) {
     return (
       <div className="p-4 text-sm">
-        <p className="font-medium text-warning">plugin artifact missing: {target.pluginId}</p>
+        <p className="font-medium text-warning-ink">plugin artifact missing: {target.pluginId}</p>
         <p className="mt-1 opacity-80">
           {moduleUrl} returned a non-OK response. Build it once with <code>bun repo run {target.pluginId}:build-wasm</code> (or the matching wasm target for{" "}
           <code>{target.cratePath}</code>) — this story never triggers a cargo build itself.
@@ -173,7 +173,7 @@ export function WgpuBootHost({ plugin, inventory }: WgpuBootHostProps) {
   if (state.kind === "missing-artifact") {
     return (
       <div className="p-4 text-sm">
-        <p className="font-medium text-warning">plugin artifact missing: {plugin}</p>
+        <p className="font-medium text-warning-ink">plugin artifact missing: {plugin}</p>
         <p className="mt-1 opacity-80">
           Build it once with <code>bun repo run {plugin}:build-wasm</code> — this story never triggers a cargo build itself.
         </p>

@@ -5,9 +5,9 @@ import { normWireInteger, normWireLiteral, normWireObject, normWireRange, type N
 import { parseThermalZone, type ThermalZone } from "../../../📸️snapshot/🟦️.ts";
 
 export interface InsertZone {
-  mutation: "insertzone";
+  mutation: "insertZone";
   index: number;
   zone: ThermalZone;
 }
 
-export const parseInsertZone: NormWireReader<InsertZone> = normWireObject<InsertZone>({ mutation: normWireRequired(normWireLiteral("insertzone")), index: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), zone: normWireRequired(parseThermalZone) });
+export const parseInsertZone: NormWireReader<InsertZone> = normWireObject<InsertZone>({ mutation: normWireRequired(normWireLiteral("insertZone")), index: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), zone: normWireRequired(parseThermalZone) });

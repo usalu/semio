@@ -114,14 +114,17 @@ impl DrawingGestureOperationJob {
             let (emit, transient) = match emit {
                 Ok(Some(output)) => output,
                 Ok(None) => {
-                    context.consume_fuel(1);
+                    context.consume_fuel(context.fuel_remaining().min(1));
                     return DrawingJobTurn::Yield;
                 }
                 Err(error) => {
                     if let Err(rejected) = original.completion.complete(Err(error), semio_plugin::EphemeralEmit::default()) {
                         self.pending_completion_rejection = Some(rejected);
+                        return self.outcomes.fault("drawing.gesture-completion-rejected");
                     }
-                    return self.outcomes.fault("drawing.gesture-dispatch-refused");
+                    self.completed = true;
+                    context.consume_fuel(context.fuel_remaining().min(1));
+                    return DrawingJobTurn::Complete;
                 }
             };
             let default_transient = DrawingCanvasWindowTransient::default();
@@ -137,8 +140,11 @@ impl DrawingGestureOperationJob {
                 Err(error) => {
                     if let Err(rejected) = original.completion.complete(Err(error), semio_plugin::EphemeralEmit::default()) {
                         self.pending_completion_rejection = Some(rejected);
+                        return self.outcomes.fault("drawing.gesture-completion-rejected");
                     }
-                    return self.outcomes.fault("drawing.gesture-transient-refused");
+                    self.completed = true;
+                    context.consume_fuel(context.fuel_remaining().min(1));
+                    return DrawingJobTurn::Complete;
                 }
             };
             if let Err(rejected) = original.completion.complete(Ok(emit), ephemeral) {
@@ -146,7 +152,7 @@ impl DrawingGestureOperationJob {
                 return self.outcomes.fault("drawing.gesture-completion-rejected");
             }
             self.completed = true;
-            context.consume_fuel(1);
+            context.consume_fuel(context.fuel_remaining().min(1));
         }
         DrawingJobTurn::Complete
     }

@@ -142,7 +142,7 @@ fn fem2d_retained_reduce(
     let view = context.and_then(|context| context.view_state.as_deref());
     match command {
         Fem2dCommand::SetCamera(payload) => set_camera::handle_window(payload, &cfg, view.ok_or_else(|| Fault::from("fem2d.camera.window-context-required"))?),
-        Fem2dCommand::SetResultDisplay(payload) => set_result_display::handle_window(payload, &cfg, view.ok_or_else(|| Fault::from("fem2d.results.window-context-required"))?),
+        Fem2dCommand::SetResultDisplay(payload) => set_result_display::handle_window(&set_result_display::resolved(payload, &doc), &cfg, view.ok_or_else(|| Fault::from("fem2d.results.window-context-required"))?),
         Fem2dCommand::SetResultAnimation(payload) => set_result_animation::handle_window(payload, &doc, &cfg, view.ok_or_else(|| Fault::from("fem2d.results.window-context-required"))?),
         Fem2dCommand::ResultAnimationTick(payload) => result_animation_tick::handle_window(payload, &doc, &cfg, view.ok_or_else(|| Fault::from("fem2d.results.window-context-required"))?),
         Fem2dCommand::CanvasPointerDown(payload) => canvas_pointer_down::handle_window(payload, &doc, &cfg, view.ok_or_else(|| Fault::from("fem2d.pointer.window-context-required"))?),
@@ -205,6 +205,10 @@ impl semio_plugin::retained_command::ArtifactCommandWork<EditorApp<Fem2dPlayApp>
                 let clock = payload.window_id.as_deref().filter(|id| !id.is_empty()).and_then(|id| context.and_then(|context| results_window::transient::captured_clock::<results_window::transient::Fem2dResultsWindowTransientOwner>(context.window_transient.as_ref(), id)));
                 let step = set_result_animation::set_result_animation_step::<set_result_animation::Fem2dResultsPlayback>(payload, &cfg, view, clock)?;
                 Ok(semio_plugin::retained_command::ArtifactCommandWorkStep::CompleteWithEphemeral { emit: step.emit, ephemeral: semio_plugin::EphemeralEmit { presence: Vec::new(), transient: Vec::new(), window_transient: step.window_transient } })
+            }
+            Fem2dCommand::RemoveSelection(payload) => {
+                let routed = Fem2dCommand::RemoveSelection(remove_selection::with_selection(payload, &selected));
+                fem2d_retained_reduce(&routed, snapshot, config, history, interaction, hover, context, operation).map(semio_plugin::retained_command::ArtifactCommandWorkStep::Complete)
             }
             _ => fem2d_retained_reduce(command, snapshot, config, history, interaction, hover, context, operation).map(semio_plugin::retained_command::ArtifactCommandWorkStep::Complete),
         }

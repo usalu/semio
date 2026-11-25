@@ -463,26 +463,35 @@ pub mod testing {
 
         /// 🔭️ [`Self::step_job`] that also reports the callback verdict the production step observed.
         pub fn step_job_observed<J: InteractiveJob + ?Sized>(&mut self, job: &mut J, budget: semio_framework_job::StepBudget, verdict: &mut Option<semio_framework_trace::CallbackVerdict>) -> Result<Option<(JobTurn, Option<Vec<u8>>)>, semio_framework_job::OriginalTurnFailure> {
-            let answered = self.caller.as_mut().expect("original fixture remains live").turn_with_decoder(budget.retained, &mut self.decoder, |cx| cx.with_original_work_loan(budget.fuel, budget.deadline_us, |cx| {
+            let answered = self.caller.as_mut().expect("original fixture remains live").turn_with_decoder(budget.retained, &mut self.decoder, |cx| {
                 if self.received.is_some() && !self.returns.receive_outcome(cx, &mut self.received)? { return Ok(false); }
                 if self.summary.is_some() { return self.returns.acknowledge_outcome(cx); }
-                if !self.returns.admit(cx)? { return Ok(false); }
-                let (_, receiver) = self.returns.context_parts()?;
-                match semio_framework_job::drive_step(job, cx, receiver, "puzzle_fixture", semio_framework_job::InteractiveStage::InteractiveStep, verdict)? {
-                    semio_framework_job::OriginalJobReturn::Preparing | semio_framework_job::OriginalJobReturn::Pending => Ok(false),
-                    semio_framework_job::OriginalJobReturn::Outcome(reply) => {
-                        self.summary = Some(match reply.original() {
-                            None => (JobTurn::Yield, None),
-                            Some(JobOutcomeBorrow::Complete { output, .. }) => (JobTurn::Complete, output.map(payload_bytes)),
-                            Some(outcome) => (owned_turn_ref(outcome), None),
-                        });
-                        self.received = Some(reply.into_descriptor());
-                        self.returns.receive_outcome(cx, &mut self.received)?;
-                        Ok(false)
+                let admission_work = cx.original_source_parent()?.loan_admission_work_demand()?;
+                if !cx.with_original_work_loan(admission_work, budget.deadline_us, |cx| self.returns.admit(cx))? { return Ok(false); }
+                cx.with_original_work_loan(budget.fuel, budget.deadline_us, |cx| {
+                    let (_, receiver) = self.returns.context_parts()?;
+                    match semio_framework_job::drive_step(job, cx, receiver, "puzzle_fixture", semio_framework_job::InteractiveStage::InteractiveStep, verdict)? {
+                        semio_framework_job::OriginalJobReturn::Preparing | semio_framework_job::OriginalJobReturn::Pending => Ok(false),
+                        semio_framework_job::OriginalJobReturn::Outcome(reply) => {
+                            self.summary = Some(match reply.original() {
+                                None => (JobTurn::Yield, None),
+                                Some(JobOutcomeBorrow::Complete { output, .. }) => (JobTurn::Complete, output.map(payload_bytes)),
+                                Some(outcome) => (owned_turn_ref(outcome), None),
+                            });
+                            self.received = Some(reply.into_descriptor());
+                            self.returns.receive_outcome(cx, &mut self.received)?;
+                            Ok(false)
+                        }
+                        semio_framework_job::OriginalJobReturn::Continuation(continuation) => {
+                            let reason = continuation.view();
+                            let detail = format!("callback={:?}, qualification={:?}, receipt={:?}", reason.callback, reason.qualification, reason.receipt_qualification);
+                            let mut held = Some(continuation);
+                            self.returns.receive_continuation(cx, &mut held)?;
+                            panic!("original Puzzle job step failed: {detail}")
+                        }
                     }
-                    semio_framework_job::OriginalJobReturn::Continuation(continuation) => { let mut held = Some(continuation); self.returns.receive_continuation(cx, &mut held)?; panic!("original Puzzle job step returned a failure continuation") }
-                }
-            }))?;
+                })
+            })?;
             Ok(if answered { self.summary.take() } else { None })
         }
 

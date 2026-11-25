@@ -12,8 +12,20 @@
       "de": "Ein Rad auf einem Gestell, das sich pro Schleife zweimal dreht: der Schlusskey unterscheidet sich vom ersten um 720 Grad."
     },
     "tags": [
-      "wheel",
-      "fixture"
+      {
+        "id": "wheel",
+        "title": {
+          "en": "wheel",
+          "de": "Rad"
+        }
+      },
+      {
+        "id": "fixture",
+        "title": {
+          "en": "fixture",
+          "de": "Prüfkörper"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage core engine",

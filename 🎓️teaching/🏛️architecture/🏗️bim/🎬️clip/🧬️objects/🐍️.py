@@ -179,8 +179,7 @@ class Beat2_ObjectOrientation(_visuals.ClipScene):
     def _chip(self, text, point, color=MUTED, *, width=None, size=S_LABEL):
         """🔲 A rounded label chip around one string; the string is squeezed when it does not fit the width."""
         label = self.text(text, (0, 0, 0), size=size, color=color, width=(width - 0.2) if width else None)
-        frame = _engine.RoundedRectangle(corner_radius=0.05, width=(width or label.width + 0.28), height=0.36, stroke_color=color, stroke_width=W_THIN,
-                                         fill_color=_visuals._art.CHROME_FILL, fill_opacity=0.95)
+        frame = _visuals._art.window_frame(width or label.width + 0.28, 0.36, color=color, stroke_width=W_THIN, glass=True)
         chip = _engine.VGroup(frame, label.move_to(frame))
         chip.frame, chip.label = frame, label
         return place(chip, point)
@@ -848,7 +847,7 @@ class Beat2_ObjectOrientation(_visuals.ClipScene):
         """🏢 A two-line chip: the class IfcBuildingStorey above the storey name."""
         kind = self.text("IfcBuildingStorey", (0, 0, 0), size=S_SMALL, color=MUTED)
         label = self.text(name, (0, 0, 0), size=S_LABEL, color=color)
-        frame = _engine.RoundedRectangle(corner_radius=0.05, width=1.85, height=0.62, stroke_color=color, stroke_width=W_THIN, fill_color=_visuals._art.CHROME_FILL, fill_opacity=0.95)
+        frame = _visuals._art.window_frame(1.85, 0.62, color=color, stroke_width=W_THIN, glass=True)
         chip = _engine.VGroup(frame, kind.move_to(frame.get_center() + np.array([0, 0.15, 0])), label.move_to(frame.get_center() + np.array([0, -0.13, 0])))
         return place(chip, point)
 

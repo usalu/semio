@@ -18,7 +18,7 @@ use semio_plugin_window_config::{WindowConfigMutation, WindowConfigOwner, Window
 use semio_plugin_window_transient::window_transient::{WindowTransientMutation, WindowTransientOwner, WindowTransientOwnerBundle, WindowTransientOwnerRegistry};
 use semio_plugin_testing_laws::artifact_app_laws;
 use semio_plugin_testing_laws::artifact_app_laws::close_registered_fixture_app;
-use semio_plugin_ownership::store_lifecycle::{bounded_config_store_disposer, bounded_config_store_one_item_preparation_factory, bounded_document_store_disposer};
+use semio_plugin_store_lifecycle::store_lifecycle::{bounded_config_store_disposer, bounded_config_store_one_item_preparation_factory, bounded_document_store_disposer};
 use semio_plugin_window_transient::built_text_to_component_tree;
 use semio_plugin_testing_fixtures_publication::publication_fixture::presence::mutations::change_publication_presence::ChangePublicationPresence;
 use semio_plugin_testing_fixtures_publication::publication_fixture::transient::mutations::change_publication_transient::ChangePublicationTransient;
@@ -177,7 +177,7 @@ impl WindowConfigOwner for RetirementWindowConfigOwner {
         semio_plugin_window_config::bounded_window_config_preparation_factory::<Self>()
     }
 
-    fn build_store_disposer() -> Box<dyn semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer<store::ConfigStore<Self::State, Self::Mutation>>> {
+    fn build_store_disposer() -> Box<dyn semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer<store::ConfigStore<Self::State, Self::Mutation>>> {
         semio_plugin_window_config::bounded_window_config_store_disposer::<Self>()
     }
 }
@@ -226,15 +226,15 @@ impl ArtifactApp for RetirementApp {
         registry.register::<RetirementWindowTransientOwner>()
     }
 
-    fn build_document_store_disposer() -> Option<Box<dyn semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+    fn build_document_store_disposer() -> Option<Box<dyn semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
         Some(bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
     }
 
-    fn build_config_store_disposer() -> Option<Box<dyn semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+    fn build_config_store_disposer() -> Option<Box<dyn semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
         Some(bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
     }
 
-    fn build_draft_store_disposer() -> Option<Box<dyn semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
+    fn build_draft_store_disposer() -> Option<Box<dyn semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
         Some(bounded_config_store_disposer::<Self::Draft, Self::DraftMutation>())
     }
 
@@ -258,12 +258,12 @@ impl ArtifactApp for RetirementApp {
         Some(transient_preparation_factory())
     }
 
-    fn build_presence_store_disposer() -> Option<Box<dyn semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
         Some(semio_plugin_decl_views::presence_retirement::bounded_presence_store_disposer::<Self::Presence,Self::PresenceMutation>())
     }
 
-    fn build_transient_store_disposer() -> Option<Box<dyn semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
-        Some(semio_plugin_ownership::transient_publication::bounded_transient_store_disposer::<Self::Transient,Self::TransientMutation>())
+    fn build_transient_store_disposer() -> Option<Box<dyn semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+        Some(semio_plugin_transient_publication::transient_publication::bounded_transient_store_disposer::<Self::Transient,Self::TransientMutation>())
     }
 
     fn build_presence_local_root_retirement_factory() -> Option<Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {

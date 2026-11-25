@@ -1745,6 +1745,11 @@
       ]
     },
     {
+      "name": "semio-plugin-store-lifecycle",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/♻️lifecycle/🧱️owner/📦️packages/🦀️rust/Cargo.toml",
+      "features": []
+    },
+    {
       "name": "semio-plugin-testing-caller",
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🎟️caller/📦️packages/🦀️rust/Cargo.toml",
       "features": []

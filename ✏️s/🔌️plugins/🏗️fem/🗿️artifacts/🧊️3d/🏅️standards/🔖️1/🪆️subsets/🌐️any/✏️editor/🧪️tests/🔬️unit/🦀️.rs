@@ -361,6 +361,42 @@ async fn manifest_labels_resolve_german_3d() {
     assert_eq!(action.label.resolve(Terminology::Native, Locale::De), "Rahmen hinzufügen");
     assert_eq!(action.label.resolve(Terminology::Native, Locale::En), "Add Frame");
 }
+/// ⌨️ LAW: undo binds Ctrl+Z and redo binds both Ctrl+Shift+Z and Ctrl+Y, the two redo chords desktop users reach for.
+#[test]
+fn history_keys_bind_undo_and_both_redo_chords() {
+    let definition = create_fem3d_app();
+    let bound = |action: &str| definition.keybindings.iter().filter(|binding| binding.action.action == action).map(|binding| binding.keys.as_str()).collect::<Vec<_>>();
+    assert_eq!(bound("undo"), ["mod+z"]);
+    assert_eq!(bound("redo"), ["mod+shift+z", "mod+y"]);
+}
+/// 🧮️ LAW: every palette mutation's declared action args cover its command payload's required wire fields, so the action palette can always author a valid payload (language-neutral vectors in `🧮️action-args/🔣️.json`).
+#[test]
+fn every_mutation_action_declares_args_covering_its_payload() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧮️action-args/🔣️.json")).expect("language-neutral action-args fixture");
+    let definition = create_fem3d_app();
+    let model_window = definition.window_kinds.iter().find(|window| window.id == window_model::FEM3D_WINDOW_MODEL).expect("model window declared");
+    let actions = semio_framework::window_kind_actions(&definition, model_window);
+    let names = |value: &serde_json::Value| value.as_array().expect("array").iter().map(|item| item.as_str().expect("string").to_owned()).collect::<std::collections::BTreeSet<_>>();
+    for (action_id, vector) in fixture.as_object().expect("object") {
+        let action = actions.iter().find(|action| action.id == *action_id).unwrap_or_else(|| panic!("action {action_id} is declared by the manifest"));
+        let declared = action.args.iter().map(|arg| arg.id.clone()).collect::<std::collections::BTreeSet<_>>();
+        let required = action.args.iter().filter(|arg| arg.required).map(|arg| arg.id.clone()).collect::<std::collections::BTreeSet<_>>();
+        assert_eq!(declared, names(&vector["args"]), "action {action_id} declares exactly the payload's wire fields");
+        assert_eq!(required, names(&vector["required"]), "action {action_id} marks the right args required");
+        assert!(names(&vector["payloadRequired"]).is_subset(&declared), "action {action_id} covers every required payload field");
+    }
+}
+/// 🔗️ LAW: the palette's `addCombination.terms` argument is declared as JSON text with a worked example, so a form authors exactly the value the command admits.
+#[test]
+fn the_combination_terms_argument_is_declared_as_json_text() {
+    let definition = create_fem3d_app();
+    let model_window = definition.window_kinds.iter().find(|window| window.id == window_model::FEM3D_WINDOW_MODEL).expect("model window declared");
+    let actions = semio_framework::window_kind_actions(&definition, model_window);
+    let action = actions.iter().find(|action| action.id == "addCombination").expect("addCombination declared");
+    let terms = action.args.iter().find(|arg| arg.id == "terms").expect("terms arg");
+    assert!(format!("{:?}", terms.schema).contains("Json"), "{:?}", terms.schema);
+    assert!(terms.description.is_some(), "the form shows an example");
+}
 //#endregion 🔖️ManifestSanity
 
 //#region 🔖️CrossCutting

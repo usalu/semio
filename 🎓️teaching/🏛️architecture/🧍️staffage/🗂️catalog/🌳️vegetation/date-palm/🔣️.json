@@ -1208,12 +1208,48 @@
       "de": "Eine ausgewachsene weibliche Dattelpalme (Phoenix dactylifera) von etwa 12,5 m: ein schlanker, unverzweigter Stamm, bedeckt von einer Spirale alter Blattbasen, ein faseriger Schaft mit abgeschnittenen Blattstielstümpfen unter der Krone, sechzehn graugrüne Fiederwedel in vier Kränzen (der unterste hängend, der jüngste aufrecht, zwei Speerblätter in der Mitte), jeder mit bedorntem Blattstiel und steifen, V-förmig gestellten Fiedern, und zwei schwere Fruchtstände, die an ihren Stielen unter der Krone hängen."
     },
     "tags": [
-      "tree",
-      "palm",
-      "evergreen",
-      "unbranched",
-      "wind",
-      "transpiration"
+      {
+        "id": "tree",
+        "title": {
+          "en": "tree",
+          "de": "Baum"
+        }
+      },
+      {
+        "id": "palm",
+        "title": {
+          "en": "palm",
+          "de": "Palme"
+        }
+      },
+      {
+        "id": "evergreen",
+        "title": {
+          "en": "evergreen",
+          "de": "immergrün"
+        }
+      },
+      {
+        "id": "unbranched",
+        "title": {
+          "en": "unbranched",
+          "de": "unverzweigt"
+        }
+      },
+      {
+        "id": "wind",
+        "title": {
+          "en": "wind",
+          "de": "Wind"
+        }
+      },
+      {
+        "id": "transpiration",
+        "title": {
+          "en": "transpiration",
+          "de": "Transpiration"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage vegetation content worker",

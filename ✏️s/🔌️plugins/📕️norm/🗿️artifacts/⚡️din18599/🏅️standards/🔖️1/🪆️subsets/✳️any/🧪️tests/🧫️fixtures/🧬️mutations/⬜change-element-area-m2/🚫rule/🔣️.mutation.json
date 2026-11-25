@@ -1,5 +1,5 @@
 {
-  "mutation": "changeelementaream2",
+  "mutation": "changeElementAreaM2",
   "elementId": "wall-n",
   "newAreaM2": -1.0
 }

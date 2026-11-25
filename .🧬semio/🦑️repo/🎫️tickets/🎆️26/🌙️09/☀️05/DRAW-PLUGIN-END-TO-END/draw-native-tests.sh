@@ -4,7 +4,7 @@
 cd "$(dirname "$0")/../../../../../../.."
 G="$PWD/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/🗑️generated"
 label="$1"; crate="$2"; shift 2
-cd "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing" || exit 1
+cd "${NATIVE_DIR:-✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing}" || exit 1
 while pgrep -f "cargo.*semio-s-artifact-draw" >/dev/null; do sleep 10; done
 for attempt in 1 2 3 4 5 6; do
   CARGO_INCREMENTAL=0 SEMIO_OFFLOAD=never SEMIO_BUILD_MODE=prototype SEMIO_LANGUAGE=en repo cargo --store=isolated --configuration=prototype -- test --no-fail-fast -p "$crate" "$@" > "$G/native-$label.txt" 2>&1

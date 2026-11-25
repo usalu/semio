@@ -14,7 +14,6 @@ import { parseResolvedPluginViewState } from "@semio-tech/framework";
 import {
   createTreeWindowContextV1,
   createTreeWindowSchedulerV1,
-  TREE_WINDOW_DEFAULT_ROWS,
   uiNodeToTreePanelConfig,
   type TreeWindowHostV1
 } from "../../🌳️tree-windows/🟦️.tsx";
@@ -90,6 +89,19 @@ describe("🪟️ tree window scheduler", () => {
     expect(context.openStates[law.node]).toBe(law.closed);
   });
 
+  it("tells every subscribed tree of the body about a disclosure toggle, whatever the guest answers to it", () => {
+    const law = reportsFixture.disclosure;
+    const context = createTreeWindowContextV1(law.body, { openStatesFor: () => ({}), setOpen: () => {}, reportWindows: () => {} });
+    const heard: number[] = [];
+    const unsubscribe = context.subscribe!(() => heard.push(context.revision!()));
+    context.setOpen(law.node, law.opened);
+    context.setOpen(law.node, law.closed);
+    unsubscribe();
+    context.setOpen(law.node, law.opened);
+    expect(heard).toEqual([1, 2]);
+    expect(context.revision!()).toBe(3);
+  });
+
   it("merges sibling observers into a whole-body report and retires only the unmounted source", () => {
     const reports: { keys: string[]; viewport: number }[] = [];
     const reporter = createTreeWindowReporterV1((requests, viewport) => reports.push({ keys: requests.map((row) => row.nodeKey).sort(), viewport }));
@@ -151,9 +163,20 @@ describe("🪟️ tree window scheduler", () => {
     scheduler.settled("outliner");
     expect(refreshed).toEqual(["outliner", "outliner"]);
     expect(scheduler.viewStateFields().treeWindows?.map((request) => request.nodeKey)).toEqual(["a", "b", "c"]);
-    expect(scheduler.viewStateFields().treeWindows?.every((request) => request.rows === TREE_WINDOW_DEFAULT_ROWS)).toBe(true);
+    expect(scheduler.viewStateFields().treeWindows?.every((request) => request.rows === 33)).toBe(true);
     scheduler.settled("outliner");
     expect(refreshed).toEqual(["outliner", "outliner"]);
+  });
+
+  it("F14: a freshly opened container asks only for the node ledger the measured windows leave, so it never starves the visible ones", () => {
+    const scheduler = createTreeWindowSchedulerV1({ refresh: () => {}, setTimer: manualTimers().setTimer, clearTimer: manualTimers().clearTimer });
+    scheduler.reportWindows("outliner", [{ nodeKey: "cases", offset: 0, rows: 90 }, { nodeKey: "nodes", offset: 0, rows: 10 }], 32);
+    scheduler.setOpen("outliner", "materials", true);
+    const windows = scheduler.viewStateFields().treeWindows!;
+    expect(windows.find((request) => request.nodeKey === "cases")?.rows).toBe(90);
+    expect(windows.find((request) => request.nodeKey === "materials")?.rows).toBe(1);
+    const cost = windows.reduce((carry, request) => carry + 1 + request.rows, 0);
+    expect(cost).toBeLessThanOrEqual(103 + 1);
   });
 
   /** 🧯️ 📓️s3-review-streaming-loop.md §3: an open container the reader has scrolled PAST used to look

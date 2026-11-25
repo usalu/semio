@@ -2,7 +2,7 @@ import{afterAll,expect,test}from"bun:test";
 import{chmodSync,existsSync,mkdirSync,mkdtempSync,readFileSync,rmSync,writeFileSync}from"node:fs";
 import{tmpdir}from"node:os";
 import{join}from"node:path";
-import{spawn}from"node:child_process";
+import{spawn,spawnSync}from"node:child_process";
 import{validateJsonSchemaSubset}from"../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from"../../🧬️schema/🔣️.json"with{type:"json"};
 import boundary from"./🔣️.json"with{type:"json"};
@@ -68,6 +68,18 @@ posix("a stage ended by a signal says which one in both languages, and the log o
  const second=await runReadyStageV1({home:next,root,environment:{},stage:stageOf("workspace"),signal:new AbortController().signal,jobs:1,onLine:()=>{}});
  expect(second.exit).toBe(0);
  expect(readFileSync(join(directory,"workspace.previous.log"),"utf8")).toContain("before the kill");expect(readFileSync(join(directory,"workspace.log"),"utf8")).not.toContain("before the kill");
+},60000);
+
+posix("every failed Nx task's own output tail reaches the failure log and ready.json although a flood of rows and the rerun summary follow it, and equals the independent Python cut",async()=>{
+ const tasks=["@semio-tech/ui-styling-tokens:generate:prototype","@semio-tech/framework-actor-rs:typegen:prototype"],body=(task:string)=>Array.from({length:80},(_,index)=>`\u001b[2mdetail ${task} ${index}\u001b[0m`).concat(`\u001b[31merror\u001b[0m: DEEP-CAUSE ${task}`),script=["#!/bin/sh",...tasks.flatMap(task=>[`echo '> nx run ${task}'`,...body(task).map(line=>`printf '%s\\n' '${line}'`),"echo ''"]),rows(3000,0),"echo ' NX   Running target generate failed'","echo 'Failed tasks:'",...tasks.map(task=>`echo '- ${task}'`),"echo 'Output of 7 successful tasks were not shown.'","exit 1",""].join("\n"),home=fakeHome(script);
+ const result=await runReadyStageV1({home,root:temp("tails"),environment:{},stage:stageOf("workspace"),signal:new AbortController().signal,jobs:1,onLine:()=>{}});
+ expect(result.exit).toBe(1);
+ const python=["python3","python"].find(name=>spawnSync(name,["-c","pass"]).status===0);
+ for(const task of tasks){
+  const own=body(task).map(line=>line.replace(/\u001b\[[0-9;]*[A-Za-z]/gu,"")).slice(-60);
+  for(const lines of [result.failure!,result.tail]){const at=lines.findIndex(line=>line.startsWith(`[nx] failed task ${task}`));expect(at,task).toBeGreaterThanOrEqual(0);expect(lines.slice(at+1,at+1+(lines===result.failure?60:10))).toEqual(own.slice(-(lines===result.failure?60:10)));}
+  if(python){const oracle=spawnSync(python,["-I","-c","import sys,re;t=sys.argv[1];rows=[re.sub(r'\\x1b\\[[0-9;]*[A-Za-z]','',l) for l in sys.stdin.read().split(chr(10))];print(chr(10).join([l for l in rows if l.strip() and not l.startswith('[')][-60:]))",task],{input:body(task).join("\n"),encoding:"utf8"});expect(oracle.stdout.trimEnd().split("\n")).toEqual(own);}
+ }
 },60000);
 
 test("the Nx child that ends by a signal is said, not reported as a plain exit 1 (source shape)",()=>{

@@ -20,7 +20,7 @@ describe("shell notice bands", () => {
     expect(stack.className).not.toMatch(/\bborder\b|\brounded|\bgap-|\bpx-|\bpy-/u);
     expect(stack.className).toContain("absolute");
     expect(stack.className).toContain("bg-menu");
-    expect(stack.className).not.toContain("bg-base");
+    expect(stack.className).not.toContain("bg-background");
     const cells = Array.from(stack.children);
     expect(cells).toHaveLength(2);
     for (const cell of cells) {

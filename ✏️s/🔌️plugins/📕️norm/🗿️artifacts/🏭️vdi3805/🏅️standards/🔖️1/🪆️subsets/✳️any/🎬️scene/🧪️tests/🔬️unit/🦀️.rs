@@ -133,7 +133,7 @@ fn a_curve_diagram_has_one_draggable_marker_per_point() {
     let document = model::conforming_valve_dataset();
     let report = inferences::evaluate(&document);
     let all = diagrams(&document, &report, Some("VLV-50-001"));
-    let curve = all.iter().find(|d| d.id == "curve:VLV-50-001:curve-kvs").expect("curve diagram");
+    let curve = all.iter().find(|d| d.id == "curve:VLV-50-001/curve-kvs").expect("curve diagram");
     assert_eq!(curve.markers.len(), document.curves.get("curve-kvs").expect("curve").points.len());
     assert_eq!(curve.markers[1].binding.as_ref().map(|b| b.path.as_str()), Some("curves[id=curve-kvs].points[1].y"));
 }

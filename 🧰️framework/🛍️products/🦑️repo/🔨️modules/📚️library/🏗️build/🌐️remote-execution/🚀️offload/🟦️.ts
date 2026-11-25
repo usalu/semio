@@ -13,14 +13,15 @@ import {offloadRealTextV1,planOffloadV1} from "./🗺️paths/🟦️.ts";
 import {OFFLOAD_POLICY_V1,offloadActionSecondsV1,offloadDeadlineMillisecondsV1,offloadCrateTypesOfV1,offloadLinksNativelyV1,offloadKilledPeakMegabytesV1,offloadPeakMegabytesV1,offloadPinV1,offloadTextV1,offloadTextsV1,type OffloadReasonV1} from "./📐️policy/🟦️.ts";
 import {remoteExecutionOriginV1} from "../🌡️load/🟦️.ts";
 import {bumpOffloadCountersV1} from "./📊️counters/🟦️.ts";
+import {awaitBeyondHostV1} from "./🚛️beyond-host/🟦️.ts";
 import {eligibleFleetWorkersV1,fleetWorkersV1,offloadDeclaredThreadsV1,readOffloadMemoV1,readUnitCostV1,readUnitExpenseV1,readUnitPeakV1,writeOffloadMemoV1,writeOffloadOverheadV1,writeUnitPeakV1} from "./🚦️admission/🟦️.ts";
 import type {FleetWorkerV1} from "./🚦️admission/🟦️.ts";
 import {releaseImplicitTokenV1} from "./🎟️token/🟦️.ts";
 import {offloadLinkerIdentityV1,offloadSdkIdentityV1,offloadSysrootV1,rustcVersionTextV1} from "./🧰️toolchain/🟦️.ts";
 import {COMMAND_POLICY_V1,commandProgramV1,commandTextsV1,commandToolPeakMegabytesV1,commandToolPropertyV1,commandToolSourceV1} from "./🧰️command/📐️policy/🟦️.ts";
 
-export {offloadModeV1,offloadPinV1,offloadSettingV1,OFFLOAD_POLICY_V1} from "./📐️policy/🟦️.ts";
-export {localUnitAdmissionV1,sharedUnitAdmissionV1,slotQueueMillisecondsV1,worthARoundTripV1,readOffloadOverheadV1,writeOffloadOverheadV1,readUnitCostV1,writeUnitCostV1,offloadDeclaredThreadsV1,readUnitPeakV1,readUnitPeaksV1,writeUnitPeakV1,readFamilyPeakV1,readFamilyCostV1,readUnitExpenseV1,awaitFleetFitV1,offloadFanOutJobsV1,offloadGateV1} from "./🚦️admission/🟦️.ts";
+export {offloadModeV1,offloadPinV1,offloadSettingV1,offloadTextsV1,OFFLOAD_POLICY_V1} from "./📐️policy/🟦️.ts";
+export {localUnitAdmissionV1,sharedUnitAdmissionV1,slotQueueMillisecondsV1,worthARoundTripV1,readOffloadOverheadV1,writeOffloadOverheadV1,readUnitCostV1,writeUnitCostV1,offloadDeclaredThreadsV1,readUnitPeakV1,readUnitPeaksV1,writeUnitPeakV1,readFamilyPeakV1,readFamilyCostV1,readUnitExpenseV1,awaitFleetFitV1,offloadFanOutJobsV1,offloadGateV1,fleetQueueV1} from "./🚦️admission/🟦️.ts";
 export {detectWorkerRustcV1} from "./🧰️toolchain/🟦️.ts";
 export {COMMAND_POLICY_V1,commandProgramV1,commandToolKeyV1,commandToolPropertyV1} from "./🧰️command/📐️policy/🟦️.ts";
 
@@ -121,8 +122,15 @@ export async function openOffloadSessionV1(input:Readonly<{root:string;environme
 const patientUpload=(content:RemoteExecutionContentV1):RemoteExecutionContentV1=>{const outage=readRemoteExecutionPolicyV1().worker.outage;return outageTolerantRemoteExecutionContentV1(content,{...outage,seconds:Math.min(outage.seconds,30)});};
 
 /** 🚀️ Hands one rustc unit to another machine. Local first is the caller's rule (it calls this only when the gate offers the unit: in `distribute` mode every unit worth a round trip, in `pin` mode every unit); this builds the hermetic action, releases the job token while it waits, and answers either the compiler's own result translated into the requester's paths (exit status, streams byte for byte, output files written into the real output directory) or the reason the unit compiles here. Never throws: any fault is a reason. The result is NOT stored in the caches here: the caller publishes it like a local compilation, under the unit key it computed, so the entry exists exactly once. */
-export async function offloadRustcUnitV1(input:Readonly<{args:readonly string[];environment:Environment;cwd:string;recorded?:readonly string[];root:string;lane?:string;crate:string;key:string;compiler:readonly string[];digest?:(path:string)=>string|null;signal?:AbortSignal;onStage?:(stage:OffloadStageV1)=>void;ports?:OffloadPortsV1;peakMegabytes?:number;queue?:boolean}>):Promise<OffloadOutcomeV1>{
- const {environment,cwd,ports}=input,pin=offloadPinV1(environment),queue=input.queue===true||pin!==undefined,waitMs=pin!==undefined?policy.timeouts.pinQueueMilliseconds:queue?policy.timeouts.queueSaturatedMilliseconds:0,{marks,bytes,started,local,settle}=offloadRecorderV1({root:input.root,...input.lane?{lane:input.lane}:{},crate:input.crate,key:input.key,environment});
+export async function offloadRustcUnitV1(input:Readonly<{args:readonly string[];environment:Environment;cwd:string;recorded?:readonly string[];root:string;lane?:string;crate:string;key:string;compiler:readonly string[];digest?:(path:string)=>string|null;signal?:AbortSignal;onStage?:(stage:OffloadStageV1)=>void;ports?:OffloadPortsV1;peakMegabytes?:number;queue?:boolean;beyondHost?:Readonly<{report:(text:string)=>void}>}>):Promise<OffloadOutcomeV1>{
+ const beyond=input.beyondHost;
+ if(beyond===undefined)return offloadRustcAttemptV1(input);
+ return awaitBeyondHostV1<OffloadOutcomeV1>({crate:input.crate,...input.signal?{signal:input.signal}:{},report:beyond.report,attempt:remaining=>offloadRustcAttemptV1({...input,queue:true,queueMilliseconds:remaining}),queue:async()=>{const row=await fleetQueueV1(input.environment);return row;}});
+}
+
+/** 🚀️ One attempt of {@link offloadRustcUnitV1} (`queueMilliseconds` overrides how long the unit may queue). */
+async function offloadRustcAttemptV1(input:Readonly<{args:readonly string[];environment:Environment;cwd:string;recorded?:readonly string[];root:string;lane?:string;crate:string;key:string;compiler:readonly string[];digest?:(path:string)=>string|null;signal?:AbortSignal;onStage?:(stage:OffloadStageV1)=>void;ports?:OffloadPortsV1;peakMegabytes?:number;queue?:boolean;queueMilliseconds?:number}>):Promise<OffloadOutcomeV1>{
+ const {environment,cwd,ports}=input,pin=offloadPinV1(environment),queue=input.queue===true||pin!==undefined,waitMs=input.queueMilliseconds??(pin!==undefined?policy.timeouts.pinQueueMilliseconds:queue?policy.timeouts.queueSaturatedMilliseconds:0),{marks,bytes,started,local,settle}=offloadRecorderV1({root:input.root,...input.lane?{lane:input.lane}:{},crate:input.crate,key:input.key,environment});
  try{
   const text=rustcVersionTextV1(input.root,input.compiler,environment),toolchainParsed=text===undefined?undefined:parseRustcIdentityV1(text);
   if(!toolchainParsed)return settle(local("toolchain-missing"));

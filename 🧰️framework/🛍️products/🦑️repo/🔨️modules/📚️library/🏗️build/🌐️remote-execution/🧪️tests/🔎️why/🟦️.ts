@@ -13,7 +13,7 @@ import {readRemoteExecutionPolicyV1,requireRemoteExecutionShapeV1} from "../../ð
 const scratch:string[]=[],servers:{stop:(force?:boolean)=>void}[]=[];
 afterEach(()=>{for(const server of servers.splice(0))server.stop(true);for(const path of scratch.splice(0))rmSync(path,{recursive:true,force:true});});
 const temporary=():string=>{const path=mkdtempSync(join(testScratchRootV1("rexec-why"),"scratch-"));scratch.push(path);return path;};
-const CODES:readonly RemoteExecutionWorkerWhyCodeV1[]=["starting","no-scheduler","scheduler-unreachable","identity-unregistered","no-toolchain","provisioning","sandbox-unavailable","disk-full","policy-off","not-registered","no-headroom","failed"];
+const CODES:readonly RemoteExecutionWorkerWhyCodeV1[]=["starting","no-scheduler","scheduler-unreachable","identity-unregistered","no-toolchain","provisioning","partition-detached","sandbox-unavailable","disk-full","policy-off","not-registered","no-headroom","failed"];
 const view:RemoteExecutionHostViewV1={host:{version:1,atMs:Date.now()+86_400_000,platform:"darwin",cores:8,totalMegabytes:65536,availableMegabytes:60000,pressure:"normal",swapUsedMegabytes:0,swapOutMegabytesPerSecond:0,load:0.5,openFiles:1000,openFilesMaximum:200000,attachedImages:0},grants:[],waiters:[]} as never;
 const toolchain="rustc 1.0.0-nightly (abcdef 2026-07-20)\nhost: aarch64-apple-darwin\n";
 

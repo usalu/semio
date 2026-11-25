@@ -1,0 +1,6 @@
+[
+  { "name": "no published worker", "published": "absent", "publication": "missing" },
+  { "name": "the generated worker", "published": "generated", "publication": "current" },
+  { "name": "a worker without the succession reply", "published": "generated-without", "removed": "settleSuccession", "publication": "stale" },
+  { "name": "an empty worker", "published": "empty", "publication": "stale" }
+]

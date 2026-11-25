@@ -90,14 +90,14 @@
       }
     },
     "Lock": {
-      "description": "daemon.lock: created exclusively by the one daemon of a worktree; a lock whose pid is gone is stale.",
+      "description": "daemon.lock: created exclusively by the one daemon of a worktree; a lock whose holder (pid with creation time) is gone is stale.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["version", "pid", "startedMs", "originId"],
+      "required": ["version", "pid", "startMs", "originId"],
       "properties": {
         "version": { "const": 1 },
         "pid": { "type": "integer", "minimum": 1 },
-        "startedMs": { "$ref": "#/definitions/Count" },
+        "startMs": { "type": "integer", "minimum": 1, "description": "Creation time of the holder process in ms since the epoch (the process identity of pid and startMs): a pid that now belongs to a process created at another time is another process and the lock is stale." },
         "originId": { "$ref": "#/definitions/OriginId" },
         "bootMs": { "$ref": "#/definitions/Count", "description": "Estimated boot time of the host (wall clock minus uptime) when the lock was taken: a lock from another boot is stale." },
         "hb": { "const": true, "description": "The holder refreshes the modification time of the lock every 5 s; a lock with this marker that has not been refreshed for 60 s is stale although its pid answers." }

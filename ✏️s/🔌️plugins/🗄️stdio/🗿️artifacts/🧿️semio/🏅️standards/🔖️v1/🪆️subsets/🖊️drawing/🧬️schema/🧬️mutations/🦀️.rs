@@ -62,6 +62,7 @@ pub enum SemioDrawingMutation {
     ChangeStrokeWidth(change_stroke_width::ChangeStrokeWidth),
 }
 dsl::original_pack_value_operation_receiving!(SemioDrawingMutation);
+dsl::artifact_persisted_binary_operation!(SemioDrawingMutation);
 
 /// 🏷️ Kebab-case spelling of every `SemioDrawingMutation` variant, in declaration order — the
 /// vocabulary the `semio-v1-drawing` mutation catalog (`../../🔣️oracle.json`) declares

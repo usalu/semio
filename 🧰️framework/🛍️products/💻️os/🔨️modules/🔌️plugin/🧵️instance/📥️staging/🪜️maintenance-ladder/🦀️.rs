@@ -1,6 +1,6 @@
 //! 🪜️ Runs pressure units first, then visits live owners in round-robin order. The close ladder shares the ingress, store-replacement, and archive-load units.
 use semio_plugin_decl_app::ArtifactApp;
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use semio_plugin_decl_emission::Emit;
 use semio_framework::FaultFrom;
@@ -59,7 +59,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
             if matches!(unit,MaintenanceUnit::MediaRefusal)&&self.media.quoted_media_refusal_selected(){return self.ladder_ctx().maintenance_unit_step(unit,cx,grant)}
             let step=if matches!(unit,MaintenanceUnit::ToolOverlay)&&self.tools.original_tool_follow.is_some(){
                 LAST_MAINTENANCE_STAGE.store(unit.trace(),std::sync::atomic::Ordering::Relaxed);
-                let debug_step=self.ladder_ctx().maintenance_unit_step(unit,cx,loan)?;static DEBUG_FOLLOW:std::sync::atomic::AtomicU32=std::sync::atomic::AtomicU32::new(0);let n=DEBUG_FOLLOW.fetch_add(1,std::sync::atomic::Ordering::Relaxed);if n<8||n%256==0{eprintln!("[DEBUG] follow unit #{n} {debug_step:?}");}debug_step
+                self.ladder_ctx().maintenance_unit_step(unit,cx,loan)?
             }else if let MaintenanceUnit::Stage(stage @ (0 | 14 | 24))=unit{
                 self.maintenance.maintenance_stage=(stage+1)%MAINTENANCE_STAGES;
                 LAST_MAINTENANCE_STAGE.store(unit.trace(),std::sync::atomic::Ordering::Relaxed);

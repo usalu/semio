@@ -85,7 +85,9 @@ impl Builder<'_, '_> {
     }
 
     fn stations(&self) -> Vec<StationValue> {
-        envelope(self.input.report.checks.iter().filter(|c| c.subject.entity_id == self.id()))
+        let own = || self.input.report.checks.iter().filter(|c| c.subject.entity_id == self.id());
+        let whole = own().filter(|c| c.stations.is_empty()).map(|c| c.utilization).fold(0.0, f64::max);
+        envelope(own()).into_iter().map(|s| StationValue { value: s.value.max(whole), ..s }).collect()
     }
 
     fn hogging_zones(&self) -> Vec<(f64, f64)> {

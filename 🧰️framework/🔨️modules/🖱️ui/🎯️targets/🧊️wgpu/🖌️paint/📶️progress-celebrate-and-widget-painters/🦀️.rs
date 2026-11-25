@@ -139,9 +139,9 @@ pub fn hover_owner(flags: NodeFlags) -> bool {
 /// `separator` until `Theme` gained a real `--muted` field (ticket 26/09/17 packet W2k).
 pub fn paint_progress(node: &UiProgressNode, bounds: Rect, theme: &Theme, draw: &mut DrawList) {
     let (track, fill) = progress_bar_rects(node, bounds, theme);
-    draw.push_rounded(track, theme.muted, theme.border_radius);
+    draw.push_solid(track, theme.muted);
     if fill[2] > 0.0 {
-        draw.push_rounded(fill, theme.accent, theme.border_radius);
+        draw.push_solid(fill, theme.accent);
     }
 }
 //#endregion 📶️Progress
@@ -240,12 +240,13 @@ pub fn paint_slider_travel(node: &semio_ui_declaration::ui::UiSliderNode, value:
     let ink = if state.dragging { theme.selected } else if state.hovered { theme.text } else { theme.text_element };
     let thumb_fill = if state.dragging || state.focus_visible { theme.selected } else if state.hovered { theme.text } else { theme.text_element };
     let tick_color = dim(theme.text_element.with_alpha(theme.text_element.a * 0.6));
+    let square = matches!(node.appearance, ui_contract::SliderAppearance::Track);
     let push_thumb = |draw: &mut DrawList, rect: [f32; 4]| {
-        let radius = rect[3] * 0.5;
+        let radius = if square { 0.0 } else { rect[3] * 0.5 };
         if state.focus_visible {
             let inset = theme.stroke_hairline;
             draw.push_rounded(rect, dim(theme.border_emphasized), radius);
-            draw.push_rounded([rect[0] + inset, rect[1] + inset, rect[2] - inset * 2.0, rect[3] - inset * 2.0], dim(thumb_fill), radius - inset);
+            draw.push_rounded([rect[0] + inset, rect[1] + inset, rect[2] - inset * 2.0, rect[3] - inset * 2.0], dim(thumb_fill), (radius - inset).max(0.0));
         } else {
             draw.push_rounded(rect, dim(thumb_fill), radius);
         }
@@ -267,8 +268,8 @@ pub fn paint_slider_travel(node: &semio_ui_declaration::ui::UiSliderNode, value:
             push_thumb(draw, [x - knob * 0.5, y - knob * 0.5, knob, knob]);
         }
         ui_contract::SliderAppearance::Track => {
-            draw.push_rounded([presentation.rail.x, presentation.rail.y, presentation.rail.w, presentation.rail.h], dim(theme.muted), presentation.rail.h * 0.5);
-            draw.push_rounded([presentation.range.x, presentation.range.y, presentation.range.w, presentation.range.h], dim(ink), presentation.range.h * 0.5);
+            draw.push_solid([presentation.rail.x, presentation.rail.y, presentation.rail.w, presentation.rail.h], dim(theme.muted));
+            draw.push_solid([presentation.range.x, presentation.range.y, presentation.range.w, presentation.range.h], dim(ink));
             for tick in semio_ui_wgpu_controls::slider::slider_tick_rects(presentation.rail, node.min, node.max, node.scale, &node.snaps, theme.stroke_hairline.max(1.0), presentation.thumb.h * 0.75) {
                 draw.push_solid([tick.x, tick.y, tick.w, tick.h], tick_color);
             }

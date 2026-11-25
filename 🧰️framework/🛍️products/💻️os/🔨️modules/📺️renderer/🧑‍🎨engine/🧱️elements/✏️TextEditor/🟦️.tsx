@@ -226,7 +226,7 @@ export function WasmEditorSurface(props: WasmEditorSurfaceProps) {
         }}
       >
         {renameDraft ? (
-          <div className={cn("pointer-events-auto absolute z-50 flex min-w-[12rem] shadow-md", glassClass)} data-level="pane" style={renamePosition ? { left: renamePosition.x, top: renamePosition.y - 4 } : { left: 12, top: 12 }}>
+          <div className={cn("pointer-events-auto absolute z-50 flex min-w-[12rem]", glassClass)} data-level="pane" data-glass-chip="" style={renamePosition ? { left: renamePosition.x, top: renamePosition.y - 4 } : { left: 12, top: 12 }}>
             <Input
               id="text-editor-rename"
               className="font-mono text-xs text-foreground"
@@ -254,12 +254,12 @@ export function WasmEditorSurface(props: WasmEditorSurfaceProps) {
               const session = sessionRef.current;
               const position = session ? caretScreenPosition(session) : null;
               return (
-                <div className={cn("pointer-events-auto absolute z-50 max-h-48 min-w-40 overflow-auto rounded border border-border p-1 shadow-md", glassClass)} data-level="menu" style={position ? { left: position.x, top: position.y + 18 } : { left: 12, top: 12 }}>
+                <SharedBorderRow orientation="vertical" className={cn("pointer-events-auto absolute z-50 max-h-48 min-w-40 overflow-auto p-1", glassClass)} data-level="menu" data-glass-chip="" style={position ? { left: position.x, top: position.y + 18 } : { left: 12, top: 12 }}>
                   {completions.map((item, index) => (
                     <button {...sharedBorderlessBoxProps}
                       key={`${item.label}-${index}`}
                       type="button"
-                      className={`block w-full rounded px-2 py-1 text-left font-mono text-[0.6875rem] ${index === completionIndex ? "bg-accent text-accent-foreground" : "hover:bg-active-base"}`}
+                      className={`block w-full px-2 py-1 text-left font-mono text-[0.6875rem] ${index === completionIndex ? "bg-accent text-accent-foreground" : "hover:bg-active-base"}`}
                       onPointerDown={(event) => event.stopPropagation()}
                       onClick={() => applyCompletion(item)}
                     >
@@ -267,12 +267,12 @@ export function WasmEditorSurface(props: WasmEditorSurfaceProps) {
                       {item.detail ? <span className="ml-2 text-muted-foreground">{item.detail}</span> : null}
                     </button>
                   ))}
-                </div>
+                </SharedBorderRow>
               );
             })()
           : null}
       </div>
-      <ContextMenuTriggerButton className="absolute right-1 top-1 z-10 bg-background/80" resolveTarget={() => surfaceRef.current?.querySelector("[data-text-editor-pointer-layer]") ?? null} />
+      <ContextMenuTriggerButton data-glass-chip="" className="ui-glass absolute right-1 top-1 z-10" resolveTarget={() => surfaceRef.current?.querySelector("[data-text-editor-pointer-layer]") ?? null} />
       <ContextMenuController title={contextMenuTitleLabel} open={contextMenu != null} position={contextMenu?.position ?? null} items={contextMenu?.items ?? []} onOpenChange={(open) => !open && dismissContextMenu()} />
       <textarea
         ref={sinkRef}

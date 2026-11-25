@@ -13,12 +13,48 @@
       "de": "Ein 14-Zoll-Laptop aus Aluminium, 0,218 m tief, 13 mm dick und mit auf 105 Grad geöffnetem Deckel: unter voller Büroauslastung gibt er 60 W elektrische Leistung als Wärme ab, über Unterseite, Tastaturdeck und Deckelscharnier, geschlossen im Ruhezustand 1,8 W."
     },
     "tags": [
-      "laptop",
-      "computer",
-      "office-equipment",
-      "internal-gain",
-      "electrical",
-      "heat-source"
+      {
+        "id": "laptop",
+        "title": {
+          "en": "laptop",
+          "de": "Laptop"
+        }
+      },
+      {
+        "id": "computer",
+        "title": {
+          "en": "computer",
+          "de": "Computer"
+        }
+      },
+      {
+        "id": "office-equipment",
+        "title": {
+          "en": "office equipment",
+          "de": "Büroausstattung"
+        }
+      },
+      {
+        "id": "internal-gain",
+        "title": {
+          "en": "internal gain",
+          "de": "innere Wärmelast"
+        }
+      },
+      {
+        "id": "electrical",
+        "title": {
+          "en": "electrical",
+          "de": "Elektro"
+        }
+      },
+      {
+        "id": "heat-source",
+        "title": {
+          "en": "heat source",
+          "de": "Wärmequelle"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage content (A3)",

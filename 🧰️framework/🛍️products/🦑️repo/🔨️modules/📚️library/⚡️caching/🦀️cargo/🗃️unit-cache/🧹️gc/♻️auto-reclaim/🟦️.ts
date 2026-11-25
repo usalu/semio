@@ -9,6 +9,7 @@ import {cacheLedgerV1,cacheReclaimShareBytesV1} from "../../../../💾️storage
 import {gcNeedBytesV1,measureVolumeV1,unitBudgetBytesV1,type VolumeFactsV1} from "../🟦️.ts";
 import {tryClaimWithBallastV1} from "../🛟️ballast/🟦️.ts";
 import {collectIncrementalV1,type IncrementalLockPortV1} from "../🌱️incremental/🟦️.ts";
+import {collectTemporariesV1} from "../🗑️temporaries/🟦️.ts";
 import {collectComponentRunsV1} from "../🧩️runs/🟦️.ts";
 import {collectUnitsV1,type ProfileLeasePortV1,type ProfileLivePortV1} from "../🧱️units/🟦️.ts";
 import {fillRatesV1,fillReportV1,readFillSamplesV1} from "../📈️fill/🟦️.ts";
@@ -41,17 +42,19 @@ export function autoReclaimDemandBytesV1(availableBytes:number,rule:RustImageRec
 /** 💬️ One operator message with its placeholders filled. */
 export function autoReclaimTextV1(kind:keyof typeof messages,parameters:Readonly<Record<string,string|number>>,language:"en"|"de"):string{return messages[kind][language].replace(/\{(\w+)\}/gu,(_,name:string)=>String(parameters[name]??""));}
 
-/** 🌱️ Collects (or, in a dry run, only reports) what the Rust image can give back, least recently used first: the Cargo incremental sessions, then the component runs a newer run supersedes, then the stale build units. Lock-aware: a unit a running build holds is never removed. It frees the most of the pressure rule of the image, the machine quota and the demand, measured by `measure`. Shared by `repo cache gc` and the automatic reclaim. */
+/** 🌱️ Collects (or, in a dry run, only reports) what the Rust image can give back, least recently used first: the compiler temporaries of the lanes (garbage nothing reads; only under need, a dry run always reports them), then the Cargo incremental sessions, then the component runs a newer run supersedes, then the stale build units. Lock-aware: a unit a running build holds is never removed. It frees the most of the pressure rule of the image, the machine quota and the demand, measured by `measure`. Shared by `repo cache gc` and the automatic reclaim. */
 export async function collectRustImageV1(store:string,options:Readonly<{dryRun:boolean;language:"en"|"de";demandBytes:number;quotaBytes:number;unitBudgetBytes:number;measure:()=>VolumeFactsV1;control:(collector:string)=>CargoGcControlV1;write:(line:string)=>void}&RustImageHeldPortsV1>):Promise<void>{
  const{dryRun,measure,quotaBytes,demandBytes}=options,volume=measure(),need=Math.max(gcNeedBytesV1(volume.volumeBytes,volume.freeBytes),quotaBytes,demandBytes),report={language:options.language,write:options.write},held={lock:options.lock,leases:options.leases,live:options.live};
  const remaining=(planned:number):number=>{if(dryRun)return Math.max(0,need-planned);const now=measure(),gained=now.freeBytes-volume.freeBytes;return Math.max(gcNeedBytesV1(now.volumeBytes,now.freeBytes),quotaBytes-gained,demandBytes-gained,0);};
- const sessions=await collectIncrementalV1(store,{dryRun,volumeBytes:volume.volumeBytes,needBytes:()=>need,satisfied:()=>need>0&&measure().freeBytes-volume.freeBytes>=need,report,lock:held.lock,...options.control("incremental")});
- const afterSessions=dryRun?volume:measure(),needRuns=remaining(sessions.freedBytes);
+ const temporaries=!dryRun&&need<=0?{freedBytes:0}:await collectTemporariesV1(join(store,"u"),{dryRun,needBytes:()=>need,satisfied:()=>measure().freeBytes-volume.freeBytes>=need,report,...options.control("temporaries")});
+ const afterTemporaries=dryRun?volume:measure(),needSessions=remaining(temporaries.freedBytes);
+ const sessions=await collectIncrementalV1(store,{dryRun,volumeBytes:volume.volumeBytes,needBytes:()=>needSessions,satisfied:()=>needSessions>0&&measure().freeBytes-afterTemporaries.freeBytes>=needSessions,report,lock:held.lock,...options.control("incremental")});
+ const afterSessions=dryRun?volume:measure(),needRuns=remaining(temporaries.freedBytes+sessions.freedBytes);
  const runs=await collectComponentRunsV1(store,{dryRun,needBytes:()=>needRuns,satisfied:()=>{
   const current=measure();
   return afterSessions.unmeasured||current.unmeasured?undefined:current.freeBytes-afterSessions.freeBytes>=needRuns;
  },report,...options.control("runs")});
- const afterRuns=dryRun?volume:measure(),needUnits=remaining(sessions.freedBytes+runs.freedBytes);
+ const afterRuns=dryRun?volume:measure(),needUnits=remaining(temporaries.freedBytes+sessions.freedBytes+runs.freedBytes);
  await collectUnitsV1(store,{dryRun,needBytes:()=>needUnits,budgetBytes:options.unitBudgetBytes,satisfied:()=>needUnits>0&&measure().freeBytes-afterRuns.freeBytes>=needUnits,report,...held,...options.control("units")});
  options.write(fillReportV1(fillRatesV1(readFillSamplesV1(join(store,"u")),Date.now()),measure().freeBytes,options.language));
 }
@@ -116,7 +119,7 @@ function defaultKick(options:RustImageReclaimRequestV1):NonNullable<RustImageRec
   for(let at=options.root,parent=dirname(at);parent!==at;at=parent,parent=dirname(at)){
    const image=join(parent,nativeImageBackingFilenameV1());
    if(!existsSync(image)||nativeImageRootV1(parent)!==at)continue;
-   const run=(program:string,args:readonly string[])=>new Promise<string>((resolve,reject)=>execFile(program,[...args],{env:{PATH:"/usr/bin:/bin:/usr/sbin:/sbin",LANG:"C",LC_ALL:"C"},maxBuffer:1048576,signal:request.signal},(error,stdout)=>error?reject(error):resolve(stdout)));
+   const run=(program:string,args:readonly string[])=>new Promise<string>((resolve,reject)=>execFile(program,[...args],{windowsHide:true,env:{PATH:"/usr/bin:/bin:/usr/sbin:/sbin",LANG:"C",LC_ALL:"C"},maxBuffer:1048576,signal:request.signal},(error,stdout)=>error?reject(error):resolve(stdout)));
    const port=createNativeImageKickPortV1(process.platform,{image,mountPoint:at,run});
    if(port!==null){
     const result=await kickNativeImageV1(port,{check:()=>request.signal.throwIfAborted()});

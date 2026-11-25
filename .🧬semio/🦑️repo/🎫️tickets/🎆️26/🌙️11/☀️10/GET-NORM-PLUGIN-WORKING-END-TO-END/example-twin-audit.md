@@ -1,0 +1,11 @@
+# Example Twin Audit
+
+DIN 4108 and EN 1991 each include an example test that decodes every DSL, pack, and JSON twin, checks document equality and canonical pack bytes, and reports stale or orphaned assets. The tests can regenerate packs with `SEMIO_UPDATE_GOLDEN=1`. Equivalent pack-twin tests exist for 12 further standards families.
+
+`repo test-file` does not support Rust test files. A combined `repo cargo` invocation was refused because the two packages belong to different workspaces. Separate `repo cargo --store=shared --configuration=prototype -- test -p semio-s-artifact-norm-{din4108,en1991}-examples every_pack_and_json_twin -- --nocapture` invocations were cancelled after more than two minutes in preparation; the gateway reported storage and critical memory pressure and contention for Cargo preparation. Neither test reached execution, so twin equality remains unverified.
+
+Independent inspection confirms the DIN 4108 pack has a SEM envelope and a deflate-compressed binary payload; decompressing alone does not establish semantic equality with its DSL.
+
+`inspect-example-symbols.py` independently inflates the symbol block and compares the strings with the DSL. Both DIN 4108 packs have no symbols absent from their corresponding DSL. EN 1991 has a DSL and pack nested within each example folder, plus another pack at the parent example folder; these are different bytes and have 14 versus 22 symbols for the office example and 15 versus 23 for the failing example. All extracted symbols occur in the DSL. The twin test indexes by the immediate parent name, so it will reject these duplicated pack IDs before semantic comparisons. The newer parent packs include additional symbols but string containment alone cannot establish which is canonical. A cache search was stopped due to host memory pressure.
+
+The bounded native `inspect-en1991-packs.py` reads both pack segment and field structures. Within each pair all 114 decoded fields match except `cases` (field 94): each nested pack has no cases, while each outer pack carries the case present in the DSL. The outer packs' scalar values and ordinary table rows match the DSL; the exceptional case and impact rows were separately inspected. A byte-for-byte canonical re-encoding and codec integrity validation were not established, so neither pair was changed.

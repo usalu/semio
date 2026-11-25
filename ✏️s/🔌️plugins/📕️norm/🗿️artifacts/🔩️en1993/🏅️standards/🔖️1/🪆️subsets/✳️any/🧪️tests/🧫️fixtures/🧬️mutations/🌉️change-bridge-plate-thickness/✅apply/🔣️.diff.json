@@ -95,7 +95,16 @@
           "lambda1": null,
           "lambdaMax": null,
           "detailId": null,
-          "plateThickness": 1.5
+          "plateThickness": 1.5,
+          "deckThickness": null,
+          "troughSpacing": null,
+          "troughWidth": null,
+          "troughThickness": null,
+          "crossbeamSpacing": null,
+          "surfacingThickness": null,
+          "wheelLoad": null,
+          "wheelPatch": null,
+          "consequence": null
         }
       }
     ]

@@ -13,7 +13,7 @@ import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
 import {formatHlcV1} from "../../📒️journal/🟦️.ts";
 import {refusePathV1} from "../../🚧️boundary/🟦️.ts";
-import {applyIndexV1,assembleViewV1,crlfScriptsV1,diffTreeV1,emptyTreeV1,foldRegistersV1,forgetGitV1,gitCandidatesV1,gitGuardsV1,gitPinsHashV1,gitPresentV1,gitStateV1,gitViewDeltaV1,gitViewV1,GIT_PINS_V1,GIT_VIEW_PINS_V1,spellingV1,volumeV1,INDEX_BASE_V1,INDEX_PREFIX_V1,indexCertifiedV1,indexRealmV1,linearizeRefV1,mergeTreesV1,missingObjectsV1,normaliseGitConfigV1,sweepGitGarbageV1,publishIndexV1,readTreeV1,rebaseRequestedV1,requestRebaseV1,resolveGitV1,stageHealthV1,unmergedV1,updateIndexV1,verifyIndexV1,writeTreeV1,type IndexHostV1} from "../🟦️.ts";
+import {applyIndexV1,assembleViewV1,parseGitViewV1,crlfScriptsV1,diffTreeV1,emptyTreeV1,foldRegistersV1,forgetGitV1,gitCandidatesV1,gitGuardsV1,gitPinsHashV1,gitPresentV1,gitStateV1,gitViewDeltaV1,gitViewV1,GIT_PINS_V1,GIT_VIEW_PINS_V1,spellingV1,volumeV1,INDEX_BASE_V1,INDEX_PREFIX_V1,indexCertifiedV1,indexRealmV1,linearizeRefV1,mergeTreesV1,missingObjectsV1,normaliseGitConfigV1,sweepGitGarbageV1,publishIndexV1,readTreeV1,rebaseRequestedV1,requestRebaseV1,resolveGitV1,stageHealthV1,unmergedV1,updateIndexV1,verifyIndexV1,writeTreeV1,type IndexHostV1} from "../🟦️.ts";
 
 type Tree={path:string;mode:string;file:string};
 type Fold=(typeof fixture.folds)[number];
@@ -897,6 +897,24 @@ gitTest("a case-only rename, a renamed directory and an NFD spelling give the li
  const view=(await gitViewV1(root))!;
  expect(view.lines).toEqual([" D Dir/in.txt"," D Foo.txt",` D ${nfc}`,`?? ${nfc}`,"?? dir/in.txt","?? foo.txt"]);
  expect(view).toMatchObject({deleted:3,untracked:3,modified:0,staged:0});
+});
+
+test("a staged path deleted from the disk is one line whatever the spelling check adds, as Linux git prints it",()=>{
+ const porcelain=["AD added.txt","MD changed.txt"," M kept.txt"].join("\0")+"\0";
+ const plain=parseGitViewV1(porcelain),checked=parseGitViewV1(porcelain,{deleted:["added.txt","changed.txt","Gone.txt"]});
+ expect(plain.lines).toEqual([" M kept.txt","AD added.txt","MD changed.txt"]);
+ expect(checked.lines).toEqual([" D Gone.txt"," M kept.txt","AD added.txt","MD changed.txt"]);
+ expect(checked).toMatchObject({deleted:3,modified:1,staged:2});
+});
+
+gitTest("an entry added to the stage and deleted from the disk gives the same view on every volume",async()=>{
+ const root=repository("added-deleted");
+ putFile(root,"keep.txt");cli(root,["add","-A"]);cli(root,["commit","-q","-m","initial"]);
+ putFile(root,"sa/00/a.json");putFile(root,"sa/00/b.json");cli(root,["add","-A"]);rmSync(join(root,"sa"),{recursive:true,force:true});
+ forgetGitV1(root);
+ const view=(await gitViewV1(root))!;
+ expect(view.lines).toEqual(["AD sa/00/a.json","AD sa/00/b.json"]);
+ expect(view).toMatchObject({deleted:2,modified:0,untracked:0,staged:2});
 });
 
 gitTest("the spelling check names absent paths, their case and normalisation variants and the NFD-only ones",async()=>{

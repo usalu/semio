@@ -13,12 +13,48 @@
       "de": "Ein neigbarer Marktschirm mit Betonballastplatte und angeschweißtem Standrohr, zweiteiligem Aluminiummast mit Kupplungsmuffe, Kurbelwinde und Knickgelenk unter dem Läufer und einem achteckigen Schirm aus acht ebenen Polyesterbahnen auf acht Speichen im 45-Grad-Abstand (11 Grad Planversatz, damit alle acht Speichen im Aufriss sichtbar sind); ein Läufer mit acht Spreizen klappt die Speichen am Mast nach unten."
     },
     "tags": [
-      "parasol",
-      "market",
-      "tilt",
-      "canopy",
-      "wind",
-      "street-furniture"
+      {
+        "id": "parasol",
+        "title": {
+          "en": "parasol",
+          "de": "Sonnenschirm"
+        }
+      },
+      {
+        "id": "market",
+        "title": {
+          "en": "market",
+          "de": "Markt"
+        }
+      },
+      {
+        "id": "tilt",
+        "title": {
+          "en": "tilt",
+          "de": "Kippen"
+        }
+      },
+      {
+        "id": "canopy",
+        "title": {
+          "en": "canopy",
+          "de": "Vordach"
+        }
+      },
+      {
+        "id": "wind",
+        "title": {
+          "en": "wind",
+          "de": "Wind"
+        }
+      },
+      {
+        "id": "street-furniture",
+        "title": {
+          "en": "street furniture",
+          "de": "Stadtmobiliar"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage content (CV-FO)",

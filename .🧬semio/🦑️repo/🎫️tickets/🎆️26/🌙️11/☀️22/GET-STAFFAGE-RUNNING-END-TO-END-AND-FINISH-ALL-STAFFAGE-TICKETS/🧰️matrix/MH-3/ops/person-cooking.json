@@ -1,6 +1,12 @@
 [
-  { "op": "copy", "scale": "50", "id": "sleeve-r", "from": "elevation", "to": ["plan"] },
-  { "op": "front-sweep", "scale": "50", "id": "sleeve-r", "revolvedTwin": true },
-  { "op": "front-sweep", "scale": "100", "id": "head", "range": "stretch", "swing": 40 },
-  { "op": "front-sweep", "scale": "100", "id": "hair", "range": "stretch", "swing": 40 }
+  {"op": "copy", "scale": "50", "id": "sleeve-r", "from": "elevation", "to": ["plan"]},
+  {"op": "front-sweep", "scale": "50", "id": "sleeve-r", "revolvedTwin": true},
+  {"op": "front-sweep", "scale": "50", "id": "head", "range": "stretch", "swing": 40},
+  {"op": "front-sweep", "scale": "50", "id": "hair", "range": "stretch", "swing": 40},
+  {"op": "front-sweep", "scale": "100", "id": "head", "range": "stretch", "swing": 40},
+  {"op": "front-sweep", "scale": "100", "id": "hair", "range": "stretch", "swing": 40},
+  {"op": "front-sweep", "scale": "200", "id": "head", "range": "stretch", "swing": 40},
+  {"op": "front-sweep", "scale": "200", "id": "hair", "range": "stretch", "swing": 40},
+  {"op": "front-sweep", "scale": "500", "id": "head", "range": "stretch", "swing": 40},
+  {"op": "front-sweep", "scale": "500", "id": "hair", "range": "stretch", "swing": 40}
 ]

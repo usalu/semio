@@ -27,6 +27,10 @@ fn oracle(case: &Value) -> Value {
     serde_json::from_slice(&out.stdout).expect("oracle json")
 }
 
+fn rest_of(handle: &scene::Handle) -> f64 {
+    scene::projection_kit::handle_kit::rest_of(&handle.kind, &handle.anchor).unwrap_or(0.0)
+}
+
 fn close(a: f64, b: f64, tolerance: f64) {
     assert!((a - b).abs() <= tolerance * b.abs().max(1.0), "{a} != {b}");
 }
@@ -143,7 +147,7 @@ fn handles_write_current_values_at_zero_drag() {
         assert!(entities.contains(&h.entity.id.as_str()), "{} has no entity", h.id);
         assert!(scene.entities.iter().any(|e| e.handles.contains(&h.id)), "{} not referenced", h.id);
     }
-    let value = |id: &str, path: &str| grips.iter().find(|h| h.id == id).and_then(|h| h.writes_at(0.0).into_iter().find(|w| w.path == path)).map(|w| w.value).expect(path);
+    let value = |id: &str, path: &str| grips.iter().find(|h| h.id == id).and_then(|h| h.writes_at(rest_of(h)).into_iter().find(|w| w.path == path)).map(|w| w.value).expect(path);
     let f = &doc.footings[0];
     close(value("footing-F1:width", "footings[id=footing-F1].width"), f.width, 1e-9);
     close(value("footing-F1:length", "footings[id=footing-F1].length"), f.length, 1e-9);
@@ -154,7 +158,8 @@ fn handles_write_current_values_at_zero_drag() {
     let selected = handles::handles(&doc, &[], &[scene::EntityRef::new(scene::EntityKind::Solid, "footing-F1:wedge-active", "footings[id=footing-F1]")]);
     assert_handle_laws(&selected);
     assert!(selected.iter().all(|h| h.entity.id == "footing-F1") && selected.len() >= 5);
-    let drag = grips.iter().find(|h| h.id == "footing-F1:embedment").expect("embedment handle").writes_at(0.5);
+    let embedment = grips.iter().find(|h| h.id == "footing-F1:embedment").expect("embedment handle");
+    let drag = embedment.writes_at(rest_of(embedment) + 0.5);
     close(drag[0].value, f.embedment - 0.5, 1e-9);
 }
 
@@ -1121,8 +1126,9 @@ fn gauges_write_existing_leaves_move_by_steps_and_the_dragged_document_re_evalua
     let wall = doc.retaining_walls[0].clone();
     let surcharge = all.iter().find(|h| h.id == format!("{}:gauge-surcharge", wall.id)).expect("surcharge gauge");
     assert_eq!(surcharge.writes[0].path, format!("retainingWalls[id={}].surcharge", wall.id));
-    assert!((surcharge.writes_at(0.0)[0].value - wall.surcharge).abs() <= 500.0);
-    let dragged = surcharge.writes_at(1.0)[0].value;
+    let rest = rest_of(surcharge);
+    assert!((surcharge.writes_at(rest)[0].value - wall.surcharge).abs() <= 500.0);
+    let dragged = surcharge.writes_at(rest + 1.0)[0].value;
     assert!((dragged - (wall.surcharge + 20_000.0)).abs() <= 500.0, "{dragged}");
     let mut moved = doc.clone();
     moved.retaining_walls[0].surcharge = dragged;

@@ -1,6 +1,7 @@
 //! 📦️ The object-record writer: per-class dispatch, layouts, scales, sort tables, dictionaries, xrecords and the handle map.
 
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::{DwgLogicalObject, DwgLogicalObjectBody, tables::DwgTableRecordBody};
+use semio_s_artifact_stdio_dwg_snapshot_objects::{DwgLogicalObject, DwgLogicalObjectBody};
+use semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgTableRecordBody;
 use std::collections::{BTreeMap, BTreeSet};
 
 use semio_s_artifact_stdio_dwg_snapshot::standards::v_ac1024::subsets::any::io::binary::snapshot::dwg_crc16;
@@ -39,8 +40,8 @@ pub mod associativity;
 //#region 🔖️DwgStructuralCodec
 //#region DwgRead
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_r2010_xrecord_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    let semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody::XRecord(xrecord) = object.body.as_ref().ok_or_else(|| format!("XRECORD {:#x} body missing", object.handle))? else {
+fn encode_r2010_xrecord_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    let semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody::XRecord(xrecord) = object.body.as_ref().ok_or_else(|| format!("XRECORD {:#x} body missing", object.handle))? else {
         return Err(format!("object {:#x} is not an XRECORD body", object.handle));
     };
     let xdata = encode_xrecord_values(&xrecord.values)?;
@@ -69,8 +70,8 @@ fn encode_r2010_xrecord_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objec
     finish_r2010_object_frame(&data, handles)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_r2010_dictionary_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    let semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody::Dictionary(dictionary) = object.body.as_ref().ok_or_else(|| format!("dictionary {:#x} body missing", object.handle))? else {
+fn encode_r2010_dictionary_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    let semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody::Dictionary(dictionary) = object.body.as_ref().ok_or_else(|| format!("dictionary {:#x} body missing", object.handle))? else {
         return Err(format!("object {:#x} is not a dictionary body", object.handle));
     };
     if dictionary.cloning_flag > 5 {
@@ -118,8 +119,8 @@ fn encode_r2010_dictionary_frame(object: &semio_s_artifact_stdio_dwg_snapshot_ob
     finish_r2010_object_frame(&data, handles)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_r2010_placeholder_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody;
+fn encode_r2010_placeholder_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    use semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody;
     if !matches!(object.body, Some(DwgLogicalObjectBody::Placeholder(_)))
         || !object.extended_data.is_empty()
         || object.owner_handle.is_none()
@@ -141,8 +142,8 @@ fn encode_r2010_placeholder_frame(object: &semio_s_artifact_stdio_dwg_snapshot_o
     finish_r2010_object_frame(&data, handles)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_r2010_dictionary_variable_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody;
+fn encode_r2010_dictionary_variable_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    use semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody;
     let Some(DwgLogicalObjectBody::DictionaryVariable(body)) = object.body.as_ref() else {
         return Err(format!("DICTIONARYVAR {:#x} body missing", object.handle));
     };
@@ -165,8 +166,8 @@ fn encode_r2010_dictionary_variable_frame(object: &semio_s_artifact_stdio_dwg_sn
     finish_r2010_object_frame(&data, handles)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_r2010_annotation_scale_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody;
+fn encode_r2010_annotation_scale_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    use semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody;
     let Some(DwgLogicalObjectBody::AnnotationScale(body)) = object.body.as_ref() else {
         return Err(format!("SCALE {:#x} body missing", object.handle));
     };
@@ -202,8 +203,8 @@ fn encode_r2010_annotation_scale_frame(object: &semio_s_artifact_stdio_dwg_snaps
     finish_r2010_object_frame(&data, handles)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_r2010_sort_entities_table_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody;
+fn encode_r2010_sort_entities_table_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    use semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody;
     let Some(DwgLogicalObjectBody::SortEntitiesTable(body)) = object.body.as_ref() else {
         return Err(format!("SORTENTSTABLE {:#x} body missing", object.handle));
     };
@@ -242,15 +243,15 @@ fn encode_r2010_sort_entities_table_frame(object: &semio_s_artifact_stdio_dwg_sn
     finish_r2010_object_frame(&data, handles)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_r2010_layout_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgOrthographicView;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgPlotArea;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgPlotPaperUnit;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgPlotRotation;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgShadePlot;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgShadePlotResolution;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgStandardScale;
+fn encode_r2010_layout_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    use semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgOrthographicView;
+    use semio_s_artifact_stdio_dwg_snapshot_objects::DwgPlotArea;
+    use semio_s_artifact_stdio_dwg_snapshot_objects::DwgPlotPaperUnit;
+    use semio_s_artifact_stdio_dwg_snapshot_objects::DwgPlotRotation;
+    use semio_s_artifact_stdio_dwg_snapshot_objects::DwgShadePlot;
+    use semio_s_artifact_stdio_dwg_snapshot_objects::DwgShadePlotResolution;
+    use semio_s_artifact_stdio_dwg_snapshot_objects::DwgStandardScale;
     let Some(DwgLogicalObjectBody::Layout(layout)) = object.body.as_ref() else { return Err(format!("LAYOUT {:#x} body missing", object.handle)) };
     let dimensions = [
         (&layout.margins, 4),
@@ -383,9 +384,9 @@ fn encode_r2010_layout_frame(object: &semio_s_artifact_stdio_dwg_snapshot_object
     finish_r2010_object_frame(&data, handles)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_r2010_object_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject, block_names: &std::collections::BTreeMap<u64, String>) -> Result<Vec<u8>, String> {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEntityBody;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody;
+fn encode_r2010_object_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject, block_names: &std::collections::BTreeMap<u64, String>) -> Result<Vec<u8>, String> {
+    use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgEntityBody;
+    use semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody;
     match object.body.as_ref().ok_or_else(|| format!("object {:#x} has no typed body", object.handle))? {
         DwgLogicalObjectBody::Dictionary(_) => encode_r2010_dictionary_frame(object),
         DwgLogicalObjectBody::TableControl(_) => encode_r2010_table_control_frame(object),

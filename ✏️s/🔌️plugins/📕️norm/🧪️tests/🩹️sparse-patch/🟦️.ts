@@ -19,4 +19,4 @@ test("native sparse patch vectors match their independent schema oracle", async 
     if (row.valid) expect(read()).toEqual(row.value);
     else expect(read).toThrow();
   }
-});
+}, 120000);

@@ -13,12 +13,48 @@
       "de": "Ein 1,80 m langer Picknicktisch aus Weichholz mit verschraubten A-Böcken, Streben und zwei Bänken für vier Personen, die zwischen den Böcken an Stahl-Knotenblechkonsolen hängen: waagerecht verriegelt als Sitz oder lotrecht zwischen die Böcke abgeschwenkt; Stirnansicht, Längsansicht und Grundriss."
     },
     "tags": [
-      "picnic-table",
-      "bench",
-      "a-frame",
-      "outdoor",
-      "timber",
-      "folding"
+      {
+        "id": "picnic-table",
+        "title": {
+          "en": "picnic table",
+          "de": "Picknicktisch"
+        }
+      },
+      {
+        "id": "bench",
+        "title": {
+          "en": "bench",
+          "de": "Bank"
+        }
+      },
+      {
+        "id": "a-frame",
+        "title": {
+          "en": "A-frame",
+          "de": "A-Rahmen"
+        }
+      },
+      {
+        "id": "outdoor",
+        "title": {
+          "en": "outdoor",
+          "de": "Außenbereich"
+        }
+      },
+      {
+        "id": "timber",
+        "title": {
+          "en": "timber",
+          "de": "Holz"
+        }
+      },
+      {
+        "id": "folding",
+        "title": {
+          "en": "folding",
+          "de": "klappbar"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage content (NW-F)",

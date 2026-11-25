@@ -76,6 +76,10 @@ pub trait SnapshotDetailsProvider {
     fn presentation(&self, _path: &[SnapshotDetailPathSegment], _locale: Locale) -> Option<SnapshotDetailPresentation> {
         None
     }
+    /// 🔽️ Whether the collection at `path` opens on first paint; a provider keeps metadata collapsed so the first viewport reaches its content.
+    fn default_open(&self, _path: &[SnapshotDetailPathSegment]) -> bool {
+        true
+    }
     fn item_capabilities(&self, path: &[SnapshotDetailPathSegment]) -> SnapshotDetailItemCapabilities {
         SnapshotDetailItemCapabilities::for_path(path)
     }

@@ -2,7 +2,7 @@
 
 use super::XrefStreamError;
 use semio_framework_value::{ByteReadRange, ByteReadSource, ValueRefusalKind};
-use semio_s_artifact_stdio_pdf_inferences::standards::v1_7::subsets::base::modules::filters::{DecodedStreamData, PdfDecodedStreamCursor, StreamDataGrant, StreamDataReceipt, StreamDataStatus};
+use semio_s_artifact_stdio_pdf_inferences::standards::v1_7::subsets::base::modules::filters::{declares_logical_codec, DecodedStreamData, PdfDecodedStreamCursor, StreamDataGrant, StreamDataReceipt, StreamDataStatus};
 use semio_s_artifact_stdio_pdf_lexer::{CosGrant, CosLimits, CosReceipt, CosStatus, NormalObject, NormalObjectStatus, PdfCosCursor, PdfNormalObjectCursor, PdfStreamDictionaryCursor, StreamSpan};
 use semio_s_artifact_stdio_pdf_snapshot_2::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfDictEntry, PdfObject, PdfStreamFilter};
 
@@ -83,6 +83,17 @@ impl NormalProjectionCursor {
 
     pub fn keep_object_streams(mut self) -> Self { self.keep_object_streams = true; self }
 
+    /// 🔁️ Reuses this closed cursor's box for the next object at `offset`, keeping its object-stream policy and stream ceiling, so a graph import allocates one projection for every object instead of one per object; `false` unless the cursor is closed (it then owns nothing).
+    pub fn restart(&mut self, id: ObjRef, offset: usize, limits: CosLimits) -> bool {
+        if !matches!(self.phase, Phase::Closed) { return false; }
+        let (keep_object_streams, maximum_stream_bytes) = (self.keep_object_streams, self.maximum_stream_bytes);
+        *self = Self { keep_object_streams, ..Self::new(id, offset, limits, maximum_stream_bytes) };
+        true
+    }
+
+    /// 🗂️ Whether the next units only lex the object's own bytes (its dictionary or the scan for its stream's end), which costs a byte of staging per byte like a body byte; length planning and every allocation-bearing stage are excluded by their own receipts.
+    pub fn frames_bytes(&self) -> bool { matches!(self.phase, Phase::Frame) && self.frame.lexes_bytes() }
+
     pub fn provide_length(&mut self, reference: ObjRef, length: Option<usize>) -> Result<(), &'static str> {
         self.frame.provide_length(reference, length)
     }
@@ -94,9 +105,9 @@ impl NormalProjectionCursor {
         Ok(())
     }
 
-    /// 📄️ Whether the next unit only moves one body byte of an uncompressed stream into its retained output.
-    pub fn copies_identity_bytes(&self) -> bool {
-        matches!(self.phase, Phase::Shape(Shape::Decode)) && self.decoder.as_ref().is_some_and(PdfDecodedStreamCursor::copies_identity_bytes)
+    /// 📄️ Whether the next units only decode stream body bytes (see [`PdfDecodedStreamCursor::decodes_body_bytes`]).
+    pub fn decodes_body_bytes(&self) -> bool {
+        matches!(self.phase, Phase::Shape(Shape::Decode)) && self.decoder.as_ref().is_some_and(PdfDecodedStreamCursor::decodes_body_bytes)
     }
 
     /// 🛂️ Quotes an empty history allocation before decoding normal stream data.
@@ -179,6 +190,10 @@ impl NormalProjectionCursor {
                 self.phase = Phase::Shape(Shape::Omitted);
                 return receipt(Ok(NormalProjectionEvent::More), 1);
             }
+        }
+        if !self.object_stream && declares_logical_codec(dict) {
+            self.phase = Phase::Shape(Shape::Reference);
+            return receipt(Ok(NormalProjectionEvent::More), 1);
         }
         self.decoder = Some(PdfDecodedStreamCursor::new(self.maximum_stream_bytes, self.maximum_stream_bytes));
         self.phase = Phase::Shape(Shape::Decode);

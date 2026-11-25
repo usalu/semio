@@ -100,7 +100,8 @@ async fn produces_committed_diff() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
     let decoded = decode_value::<SSpaceDiff>((*DIFF));
-    let rows = decoded.artifacts.as_ref().expect("the committed rename diff carries the row vector");
+    let applied = protocol::apply_diff_cold(&decoded, &before()).expect("the committed rename diff applies to the before-index");
+    let rows = &applied.artifacts;
     assert_eq!(rows[1].name, "Massing Study", "rename-artifact/renames-artifact-1: the untargeted sibling row must ride through the diff unchanged");
     let reencoded = encode_value(&decoded);
     let original = semio_framework_pack_json::parse((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff reparses");

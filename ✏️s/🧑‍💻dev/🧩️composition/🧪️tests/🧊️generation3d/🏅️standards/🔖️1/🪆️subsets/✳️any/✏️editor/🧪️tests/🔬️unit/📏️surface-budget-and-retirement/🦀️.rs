@@ -105,4 +105,48 @@ async fn the_first_turn_sequence_retires_every_flow_host_it_builds() {
     assert!(closed, "the retained evaluation-session owner never reached its terminal close");
     assert!(semio_plugin::ArtifactInstanceOperationOwner::terminal_is_empty(&owner));
 }
+/// 🛑️ The abort affordance through the PRODUCTION binding (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, 2026-11-25).
+///
+/// The host binds a window's run with `ArtifactView::with_tool_run_poll`; the owned `tool_run` field only
+/// tests ever set, so rendering from `doc.tool_run()` published `cancellable: false` for every live run
+/// (190 s of `computing 4/7` with no stop). This law binds the run the way the host does, renders every
+/// body from `doc.tool_run_poll()` over a working chain and requires the preview body to offer the abort
+/// with the run's own identity, so the dispatched `toolRunAbort` addresses the run the ledger holds.
+#[test]
+fn a_running_preview_run_bound_by_the_host_is_cancellable_and_addresses_its_run() {
+    use semio_plugin::{ArtifactView, ToolRunPollView};
+    let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
+    let identity = semio_framework_tool_run::ToolRunIdentity { id: semio_framework_tool_run::ToolRunId { app_instance_id: 1, run: 7 }, generation: 3, base_revision: [0; 32] };
+    let poll = ToolRunPollView { tool_id: semio_s_artifact_procedural_3d_preview_eval::PREVIEW_EVAL_TOOL_ID, identity, state: semio_framework_tool_run::ToolRunState::Running };
+    let snapshot = semio_s_artifact_procedural_3d_io_text::snapshot::default_snapshot();
+    let history = semio_plugin::HistoryView::empty();
+    let bound = ArtifactView::new(&snapshot, &history).with_tool_run_poll(Some(poll));
+    assert!(bound.tool_run().is_none() && bound.tool_run_poll().is_some(), "the host binds the poll view only; the owned run field is a test setter");
+    let config = Generation3dConfig::default();
+    let view_state = semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
+    let mut host = semio_os_flow::FlowHost::default();
+    let mut session = FlowEvalSession::new();
+    assert!(session.sync(&host), "the default demo graph has pending nodes, so the chain is unsettled");
+    session.arm_window_tick("preview-1", crate::preview_reply::TURN).expect("window tick admission");
+    let mut offered = 0;
+    for body_key in GENERATION3D_BODY_KEYS {
+        let tree = generation3d_render_body(body_key, &snapshot, &config, None, &view_state, &PreviewInteractionMarks::default(), &session, bound.tool_run_poll(), &mut None).expect("render");
+        let projection = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("render json").replace('\\', "");
+        if projection.contains("\"cancellable\":true") {
+            offered += 1;
+            assert!(projection.contains("\"cancelAction\":\"toolRunAbort\""), "{body_key}: the abort is the framework's toolRunAbort");
+            assert!(projection.contains("\"runId\":\"") && projection.contains(&format!("\"generation\":{}", identity.generation)), "{body_key}: the abort carries the run's own id and generation");
+        }
+    }
+    assert!(offered >= 1, "no preview body offered the abort for a running preview run bound the way the host binds it");
+    let unbound = ArtifactView::new(&snapshot, &history);
+    for body_key in GENERATION3D_BODY_KEYS {
+        let tree = generation3d_render_body(body_key, &snapshot, &config, None, &view_state, &PreviewInteractionMarks::default(), &session, unbound.tool_run_poll(), &mut None).expect("render");
+        let projection = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("render json").replace('\\', "");
+        assert!(!projection.contains("\"cancellable\":true"), "{body_key}: with no run bound there is nothing to abort");
+    }
+    context::retire_flow_eval_session(session);
+    host.retire_cold();
+    snapshot.retire_cold();
+}
 //#endregion 🧹️RetirementTests

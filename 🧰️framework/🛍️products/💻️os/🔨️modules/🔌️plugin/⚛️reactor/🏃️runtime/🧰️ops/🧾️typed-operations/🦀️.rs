@@ -78,7 +78,7 @@ pub fn advance_typed_operation_output_with_leftover<PA: PluginApp>(app: &mut PA,
     advance_typed_operation_output_inner(app, instance, Some(pages), identity, cx)
 }
 
-/// 📨️ The original media command acknowledges its own pages while routing ordinary effects and receipts.
+/// 📨️ Advances the original media command's operation while routing ordinary effects and receipts; its pages reach the shell through the instance's result pages, and the command acknowledges a page only after that presentation.
 pub fn advance_original_media_operation_output<PA: PluginApp>(app: &mut PA, instance: u32, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<PluginExchangeOutput, semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     advance_typed_operation_output_inner(app, instance, None, identity, cx).map(|(output, _)| output)
 }
@@ -319,6 +319,13 @@ pub fn plugin_drive_pending_effects<PA: PluginApp>(runtime: &PluginRuntime<PA>, 
     }
     Ok(runnable)
 }
+thread_local!{static SILENT_TYPED_OPERATION_UNITS:std::cell::Cell<u64>=const{std::cell::Cell::new(0)};}
+/// 🩺️ Names the operations, stages and result page state a runnable typed operation is parked on when its units keep returning nothing: a `[TRACE]` line at every power of two from 64 consecutive silent units.
+fn trace_silent_typed_operation_unit<PA:PluginApp>(output:&PluginExchangeOutput,app:&PA,instance:u32){
+    let silent=!output.ownership_receipt_pending()&&output.frames.is_empty()&&output.effects.is_empty()&&output.events.is_empty()&&output.typed_operation_pages==0;
+    let streak=SILENT_TYPED_OPERATION_UNITS.with(|units|{let next=if silent{units.get().saturating_add(1)}else{0};units.set(next);next});
+    if streak>=64&&streak.is_power_of_two(){semio_plugin_reactor_app::debug_runtime_line(format_args!("[TRACE] typed-operation silent units={streak} instance={instance} {}",app.typed_operation_diagnostic()))}
+}
 /// 📮️ Publishes admitted operations without requiring another user command — as many units of ONE
 /// instance as [`TypedOperationGrant`] allows, so a staged work costs the host one round trip per
 /// acknowledgeable result page instead of one per unit. Units of a SECOND instance are left to the
@@ -338,7 +345,9 @@ pub async fn plugin_continue_typed_operations<PA: PluginApp>(runtime: &PluginRun
         let output = match cell.instance.try_lock() {
             Ok(mut active) => {
                 let mut pages=match cell.result_pages.try_lock(){Ok(pages)=>pages,Err(std::sync::TryLockError::WouldBlock)=>return Ok((driven,TypedOperationScan{runnable:false,contended:true})),Err(std::sync::TryLockError::Poisoned(_))=>return Err(plugin_internal_fault("original result receiving authority is poisoned").into())};
-                advance_typed_operation_output(&mut active.app, instance, &mut pages, identity,cx)?
+                let output=advance_typed_operation_output(&mut active.app, instance, &mut pages, identity,cx)?;
+                trace_silent_typed_operation_unit(&output, &active.app, instance);
+                output
             },
             Err(std::sync::TryLockError::WouldBlock) => return Ok((driven, TypedOperationScan { runnable: false, contended: true })),
             Err(std::sync::TryLockError::Poisoned(_)) => return Err(plugin_internal_fault(format!("runtime operation authority is poisoned for instance {instance}")).into()),

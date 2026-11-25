@@ -1,6 +1,8 @@
 //! 🧩️ Dynamic blocks: parameters, grips, actions, visibility states and representation data.
 
-use crate::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::{DwgEvaluationExpression, DwgNamedEvaluationNodeReference, DwgPropertyExpressionReference};
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::{DwgEvaluationExpression, DwgNamedEvaluationNodeReference, DwgPropertyExpressionReference};
 
 //#region 🔖️DrawingModel
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

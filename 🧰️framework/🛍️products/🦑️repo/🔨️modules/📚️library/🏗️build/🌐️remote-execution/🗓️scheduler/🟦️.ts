@@ -51,6 +51,7 @@ export class RemoteExecutionSchedulerV1{
  private readonly pendingRestore=new Set<Operation>();
  private readonly inputs:OperationInputLeasesV1;
  private renewing=false;
+ private closed=false;
  private holdUntil=0;
  private readonly waits:number[]=[];
  private lastTick=0;
@@ -123,10 +124,10 @@ export class RemoteExecutionSchedulerV1{
    if(operation.offload&&!placementIdleElsewhereV1(this.view(operation),this.views(),this.load,this.clock())&&!((this.reserved.get(operation.requester??"")??0)>this.clock())){this.counters.offloadRejected++;const standing=placementIdleCountV1(this.view(operation),this.views(),this.load,this.clock());this.emit("declined",`${this.label(operation)}: ${standing.workers} workers, ${standing.compatible} compatible, ${standing.headroom} with headroom, requester ${operation.requester??"unknown"}`);return this.finish(operation,{status:DECLINED,actionResult:null,cached:false,worker:""});}
    if(operation.requester!==undefined&&!placementAnyCandidateV1(this.view(operation),this.views(),this.load))return this.finish(operation,{status:FAILED_BACK("No other machine can take the action"),actionResult:null,cached:false,worker:""});
    if(operation.requester!==undefined)this.load.count(operation.requester,"offloadedOut");
-   if(this.queue.length>=this.options.maximumQueued)return this.finish(operation,{status:{code:8,message:"Execution queue is full"},actionResult:null,cached:false,worker:""});
    const absent=await this.inputs.hold(operation.id,operation.instance,operation.action,bytes);
    if(operation.stage!=="CACHE_CHECK"){this.inputs.release(operation.id);return;}
    if(absent.length>0){this.emit("refused",`${this.label(operation)}: ${absent.length} input blobs missing`);return this.finish(operation,{status:MISSING(...absent),actionResult:null,cached:false,worker:""});}
+   if(this.queue.length>=this.options.maximumQueued)return this.finish(operation,{status:{code:8,message:"Execution queue is full"},actionResult:null,cached:false,worker:""});
    operation.stage="QUEUED";operation.queuedAt=this.clock();this.queue.push(operation);this.counters.queued++;this.touch(operation);this.dispatch();
   }catch(error){
    this.finish(operation,{status:{code:14,message:`Preparing the action failed: ${error instanceof Error?error.message:String(error)}`},actionResult:null,cached:false,worker:""});
@@ -144,7 +145,7 @@ export class RemoteExecutionSchedulerV1{
 
  private detach(operation:Operation,wake:()=>void):void{
   operation.subscribers.delete(wake);
-  if(operation.subscribers.size>0||operation.stage==="COMPLETED")return;
+  if(operation.subscribers.size>0||operation.stage==="COMPLETED"||this.closed)return;
   operation.lingerTimer=setTimeout(()=>{this.cancel(operation);},this.options.lingerSeconds*1000);
   operation.lingerTimer.unref();
  }
@@ -167,7 +168,7 @@ export class RemoteExecutionSchedulerV1{
   try{
    for(;;){
     if(operation.version!==seen||beat){seen=operation.version;beat=false;const shown=this.snapshot(operation);yield shown;if(shown.stage==="COMPLETED")return;}
-    if(signal.aborted)return;
+    if(signal.aborted||this.closed)return;
     let timer:ReturnType<typeof setTimeout>|undefined;
     await new Promise<void>(resolve=>{wake=resolve;timer=setTimeout(()=>{beat=true;resolve();},this.keepAliveMilliseconds);if(operation.version!==seen||signal.aborted)resolve();});
     clearTimeout(timer);
@@ -198,7 +199,7 @@ export class RemoteExecutionSchedulerV1{
   for(const operation of this.operations.values()){
    if(operation.stage!=="QUEUED"&&operation.stage!=="EXECUTING")continue;
    const worker=operation.worker===undefined?operation.restoredWorker:(()=>{const found=this.workers.get(operation.worker!);return found===undefined?undefined:{name:found.registration.name,origin:found.registration.origin};})();
-   rows.push({id:operation.id,instance:operation.instance,action:operation.action,platform:operation.platform,timeoutSeconds:operation.timeoutSeconds,stage:operation.stage,attempt:operation.attempt,failures:operation.failures,offload:operation.offload,...operation.requester===undefined?{}:{requester:operation.requester},...operation.submittedBy===undefined?{}:{submittedBy:operation.submittedBy},...operation.peakMegabytes===undefined?{}:{peakMegabytes:operation.peakMegabytes},...worker===undefined?{}:{worker}});
+   rows.push({id:operation.id,instance:operation.instance,action:operation.action,platform:operation.platform,timeoutSeconds:operation.timeoutSeconds,stage:operation.stage,attempt:operation.attempt,failures:operation.failures,offload:operation.offload,...operation.requester===undefined?{}:{requester:operation.requester},...operation.submittedBy===undefined?{}:{submittedBy:operation.submittedBy},...operation.peakMegabytes===undefined?{}:{peakMegabytes:operation.peakMegabytes},...operation.stage==="EXECUTING"&&operation.startedAt!==undefined?{runningMilliseconds:Math.max(0,this.clock()-operation.startedAt)}:{},...worker===undefined?{}:{worker}});
   }
   return rows;
  }
@@ -210,7 +211,7 @@ export class RemoteExecutionSchedulerV1{
    const key=`${row.instance}|${row.action.hash}`;
    if(this.byKey.has(key)||this.operations.has(row.id))continue;
    const operation:Operation={id:row.id,instance:row.instance,action:row.action,key,platform:row.platform.map(property=>({name:property.name,value:property.value})),timeoutSeconds:row.timeoutSeconds,stage:row.stage,version:0,createdAt:now,queuedAt:now,attempt:row.attempt,failures:row.failures,tried:new Set(),offload:row.offload,subscribers:new Set(),cancelRequested:false,...row.requester===undefined?{}:{requester:row.requester},...row.submittedBy===undefined?{}:{submittedBy:row.submittedBy},...row.peakMegabytes===undefined?{}:{peakMegabytes:row.peakMegabytes}};
-   if(row.stage==="EXECUTING"){operation.restored=true;operation.startedAt=now;if(row.worker!==undefined)operation.restoredWorker=row.worker;this.pendingRestore.add(operation);}
+   if(row.stage==="EXECUTING"){operation.restored=true;operation.startedAt=now-(row.runningMilliseconds??0);if(row.worker!==undefined)operation.restoredWorker=row.worker;this.pendingRestore.add(operation);}
    else this.queue.push(operation);
    this.operations.set(operation.id,operation);this.byKey.set(key,operation);
    operation.lingerTimer=setTimeout(()=>{this.cancel(operation);},(this.options.lingerSeconds*1000)+this.resumeGraceMilliseconds);operation.lingerTimer.unref();
@@ -475,9 +476,11 @@ export class RemoteExecutionSchedulerV1{
   return {version:1,service:"semio-remote-execution",wallMs:now,expireSeconds:this.options.loadExpireSeconds,machines,tasks,queued:view.queued,executing:view.running,counters:view.counters};
  }
 
- /** 🛑️ Stops timers and releases every waiting worker. */
+ /** 🛑️ Stops timers, releases every waiting worker and ends every open operation stream (its client re-attaches by name to the scheduler that takes over), so nothing of this scheduler keeps a shutdown waiting. */
  close():void{
   if(this.timer)clearInterval(this.timer);
+  this.closed=true;
+  for(const operation of this.operations.values()){if(operation.lingerTimer)clearTimeout(operation.lingerTimer);for(const wake of operation.subscribers)wake();}
   for(const worker of this.workers.values()){worker.waiter?.({version:1,task:null,cancel:[],known:false});delete worker.waiter;}
  }
 }

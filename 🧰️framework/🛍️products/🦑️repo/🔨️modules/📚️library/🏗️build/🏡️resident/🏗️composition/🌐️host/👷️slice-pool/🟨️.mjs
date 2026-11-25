@@ -12,6 +12,9 @@ import formatStampSchema from "../../../../🧷️format-stamps/🧬️schema/�
 
 /** ⏳ What a slice worker says first when it ends because a source a peer just edited imports a module that is not there yet: the replica has not settled, so the restart is waited for (bounded by the settle budget) and never counted as the same deterministic failure. */
 const UNSETTLED_PREFIX_V1=formatStampSchema.$defs.Protocol.const.loadFailure.unsettledPrefix;
+/** 🧊️ The start of the cause of a worker whose source facts a repeated inference could not refresh; a load that ends this way the declared number of times in a row is started once more (the worker refreshes those facts in a targeted way) before it is refused.
+ * @see ../../../../👁️observation/🟨️.mjs `staleSourceFactsErrorV1` */
+const STALE_FACTS_PREFIX_V1="Stale source facts that a repeated inference cannot refresh";
 import {planGuardVerdictV1,sliceAdmissionV1,sliceBookingV1,sliceCeilingMegabytesV1,sliceLimitPolicyV1,slicePlanCeilingMegabytesV1} from "./🧱️limit/🟨️.mjs";
 import {createPressureWatchV1,hostPressureLevelV1} from "./🌡️pressure/🟨️.mjs";
 import {awaitImplementationQuietV1,quietBudgetV1,implementationDriftPathsV1,implementationPathShownV1,implementationStampsV1} from "./🔕️quiet/🟨️.mjs";
@@ -117,7 +120,7 @@ export function createSlicePoolV1({workerUrl,maximum=2,heartbeatMilliseconds=200
  });
  const execute=async(request,{signal,onProgress,wantsReport,rank}={})=>{
   const turn=(async()=>{
-   let ownsSlot=false,heavyHandoffs=0,recycles=0,carried,totalRestarts=0,quietSpent=0,churnSince,streak=0,lastCause="",sameCause=0;const drifted=new Set();
+   let ownsSlot=false,heavyHandoffs=0,recycles=0,carried,totalRestarts=0,quietSpent=0,churnSince,streak=0,lastCause="",sameCause=0;const drifted=new Set(),refreshed=new Set();
    let level=learnedLevel??Math.min(cutPolicy.levels,graphCutStartLevelV1({limitMegabytes:planLimitMegabytes},cutPolicy));
    try{for(let restarts=0;;restarts++){
    if(!ownsSlot){
@@ -153,6 +156,7 @@ export function createSlicePoolV1({workerUrl,maximum=2,heartbeatMilliseconds=200
     totalRestarts++;
     const lasted=error.ranMilliseconds>=restartPolicy.progressMilliseconds;
     const cause=String(error.workerCause??""),unsettled=cause.includes(UNSETTLED_PREFIX_V1);sameCause=unsettled?0:cause!==""&&cause===lastCause?sameCause+1:cause!==""?1:0;lastCause=cause;
+    if(sameCause>=(restartPolicy.sameCauseMaximum??Infinity)&&cause.includes(STALE_FACTS_PREFIX_V1)&&!refreshed.has(cause)){refreshed.add(cause);sameCause=0;}
     if(cause!==""&&sameCause>=(restartPolicy.sameCauseMaximum??Infinity))throw Object.assign(new Error(Object.values(renderBothV1("host-slice-worker-failing",{count:sameCause,exit:error.exit,cause})).join("\n")),{code:"slice-worker-failing",cause,count:sameCause,exit:error.exit});
     if(lasted){churnSince=now();streak=0;}
     churnSince??=now()-(error.ranMilliseconds??0);

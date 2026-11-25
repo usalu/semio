@@ -5,8 +5,10 @@ const utf8=new TextEncoder();
 function prefix(text:string,maximum:number):{text:string;complete:boolean}{let output="",bytes=0;for(const scalar of text){const escaped=JSON.stringify(scalar).slice(1,-1);const length=utf8.encode(escaped).length;if(bytes+length>maximum)return {text:output,complete:false};output+=scalar;bytes+=length;}return {text:output,complete:true};}
 /** 📥️ Retains the exact original reference and constructs the same finite report as the native carrier. */
 export function createCompletionFault<T extends CompletionFaultSource>(original:T):CompletionFault<T>{
- const code=prefix(original.code,128),message=prefix(original.message,224);
- const report=JSON.stringify({origin:original.origin,code:code.complete?code.text:"interactive-job.fault-capacity",severity:original.severity,message:message.text,scope:{},retryable:original.retryable});
+ const code=prefix(original.code,128);
+ const projection={origin:original.origin,code:code.complete?code.text:"interactive-job.fault-capacity",severity:original.severity,message:"",scope:{},retainedProgress:{copiedItems:0,copiedBytes:0,retainedCapacityBytes:0,releasedBytes:0},retryable:original.retryable};
+ projection.message=prefix(original.message,Math.min(224,480-utf8.encode(JSON.stringify(projection)).length)).text;
+ const report=JSON.stringify(projection);
  if(utf8.encode(report).length>480)throw new RangeError("Completion fault report exceeds its declared frame");
  return {original,report};
 }

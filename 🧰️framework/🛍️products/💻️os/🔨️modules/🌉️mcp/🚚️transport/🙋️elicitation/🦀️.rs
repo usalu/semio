@@ -28,7 +28,7 @@ pub struct StdioLines {
 
 /// 📥️ What one bounded read of the client stream produced.
 #[derive(Debug, PartialEq, Eq)]
-pub(crate) enum StdioRead {
+pub enum StdioRead {
     Line(String),
     Eof,
     TimedOut,
@@ -84,7 +84,7 @@ impl StdioLines {
     /// (the answer it is waiting for has not been written by the client yet, so anything already
     /// queued is by construction not it), and the serve loop drains that queue afterwards in arrival
     /// order. A `budget` that elapses answers [`StdioRead::TimedOut`] and consumes nothing.
-    pub(crate) fn read_line_direct_within(&self, budget: std::time::Duration) -> Result<StdioRead, GatewayError> {
+    pub fn read_line_direct_within(&self, budget: std::time::Duration) -> Result<StdioRead, GatewayError> {
         match self.inbound.lock().expect("stdio inbound channel poisoned").recv_timeout(budget) {
             Ok(Ok(line)) => Ok(StdioRead::Line(line)),
             Ok(Err(error)) => Err(GatewayError::new(GatewayErrorCode::Internal, format!("stdio transport io error: {error}"))),
@@ -93,7 +93,7 @@ impl StdioLines {
         }
     }
 
-    pub(crate) fn defer(&self, line: String) {
+    pub fn defer(&self, line: String) {
         self.deferred.lock().expect("stdio deferred queue poisoned").push_back(line);
     }
 }

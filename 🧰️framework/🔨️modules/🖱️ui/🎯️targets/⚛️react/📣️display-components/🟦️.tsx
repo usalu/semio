@@ -2,6 +2,7 @@ import type { UiLabel } from "@semio-tech/ui/elements/UiLabel";
 import * as React from "react";
 import { InfoIcon, LightbulbIcon, TriangleAlertIcon, AlertCircleIcon, ChevronLeftIcon } from "@semio-tech/ui/elements/Icons";
 import { useLabel } from "@semio-tech/ui/elements/Label";
+import { SharedBorderRow, SharedBorderRowCell } from "@semio-tech/ui/elements/SharedBorderRow";
 
 // Read-only display wrappers for tooltips and callouts.
 // Consumers MUST pass valid config objects.
@@ -33,10 +34,10 @@ const iconMap = {
  * 🎨️ colorMap holds the data fields for a colorMap record.
  **/
 const colorMap = {
-  note: "border-info-border bg-info-bg text-info-foreground",
-  tip: "border-success-border bg-success-bg text-success-foreground",
-  caution: "border-warning-border bg-warning-bg text-warning-foreground",
-  danger: "border-destructive-border bg-destructive-bg text-destructive-foreground",
+  note: "bg-info-bg text-info-foreground",
+  tip: "bg-success-bg text-success-foreground",
+  caution: "bg-warning-bg text-warning-foreground",
+  danger: "bg-destructive-bg text-destructive-foreground",
 };
 
 /**
@@ -47,15 +48,17 @@ export const Aside: React.FC<AsideProps> = ({ kind = "note", title, children }) 
   const colorClass = colorMap[kind];
 
   return (
-    <aside className={`my-small p-single border ${colorClass}`}>
-      <div className="flex items-start gap-single">
-        <Icon className="size-small mt-0.5 flex-shrink-0" />
-        <div className="flex-1">
-          {title && <div className="font-semibold mb-1">{title}</div>}
-          <div>{children}</div>
+    <SharedBorderRow as="aside" orientation="vertical" tone={kind === "danger" ? "destructive" : "default"} data-slot="aside">
+      <SharedBorderRowCell className={`p-single ${colorClass}`}>
+        <div className="flex items-start gap-single">
+          <Icon className="size-small mt-0.5 flex-shrink-0" />
+          <div className="flex-1">
+            {title && <div className="font-semibold mb-1">{title}</div>}
+            <div>{children}</div>
+          </div>
         </div>
-      </div>
-    </aside>
+      </SharedBorderRowCell>
+    </SharedBorderRow>
   );
 };
 // #endregion 👥️PresenceBar

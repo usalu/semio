@@ -261,6 +261,7 @@ func RunChild(executable string, argv []string, env []string) error {
 	command := exec.Command(executable, argv[1:]...)
 	command.Stdin, command.Stdout, command.Stderr = os.Stdin, os.Stdout, os.Stderr
 	command.Env = env
+	hideChild(command, true)
 	interrupts := make(chan os.Signal, 2)
 	signal.Notify(interrupts, os.Interrupt)
 	defer signal.Stop(interrupts)

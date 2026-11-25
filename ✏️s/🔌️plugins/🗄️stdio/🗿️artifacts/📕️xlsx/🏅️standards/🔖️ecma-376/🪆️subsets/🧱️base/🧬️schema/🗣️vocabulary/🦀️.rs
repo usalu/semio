@@ -75,7 +75,7 @@ pub fn expanded_element_name(name: &str, scope: &[(String, String)]) -> Result<(
 pub fn expanded_attribute_name(name: &str, scope: &[(String, String)]) -> Result<(String, String), String> {
     let Some((prefix, local)) = name.split_once(':') else { return Ok((String::new(), name.into())) };
     let namespace =
-        if prefix == "xml" { "http://www.w3.org/XML/1998/namespace" } else { scope.iter().rev().find(|(bound, _)| bound == prefix).map(|(_, value)| value.as_str()).ok_or_else(|| format!("unbound XML namespace prefix in attribute {name}"))? };
+        if prefix == "xml" { "http://www.w3.org/XML/1998/namespace" } else if prefix == "xmlns" { "http://www.w3.org/2000/xmlns/" } else { scope.iter().rev().find(|(bound, _)| bound == prefix).map(|(_, value)| value.as_str()).ok_or_else(|| format!("unbound XML namespace prefix in attribute {name}"))? };
     Ok((namespace.into(), local.into()))
 }
 
@@ -96,6 +96,38 @@ pub fn attribute_value<'a>(node: &'a semio_s_artifact_stdio_xml::schema::snapsho
         }
     }
     Ok(None)
+}
+
+/// 🔗️ The namespaces a workbook part binds where it uses them: the namespace of its root element, the distinct namespace URIs of every prefixed `id` attribute (the relationship ids such as `<sheet r:id>`), and its unprefixed `conformance` attribute.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct WorkbookNamespaces {
+    pub main: String,
+    pub relationship_ids: Vec<String>,
+    pub conformance: Option<String>,
+}
+
+/// 🧭️ Resolves the prefixes of a workbook root through the namespace bindings in scope at each element that uses them, so a prefix declared on a descendant (`<sheet xmlns:r=…>`) binds exactly like one declared on the root; an undeclared prefix is refused.
+pub fn workbook_namespaces(root: &semio_s_artifact_stdio_xml::schema::snapshot::XmlNode) -> Result<WorkbookNamespaces, String> {
+    use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;
+    let XmlNode::Element { name, attrs, .. } = root else { return Err("workbook root is not an element".into()) };
+    let root_scope = namespace_scope(&[], root);
+    let (main, _) = expanded_element_name(name, &root_scope)?;
+    let mut relationship_ids = Vec::new();
+    let mut pending = vec![(root, root_scope)];
+    while let Some((node, scope)) = pending.pop() {
+        let XmlNode::Element { attrs, children, .. } = node else { continue };
+        for attribute in attrs.iter().filter(|attribute| attribute.name.contains(':') && !attribute.name.starts_with("xmlns:")) {
+            let (namespace, local) = expanded_attribute_name(&attribute.name, &scope)?;
+            if local == "id" && !relationship_ids.contains(&namespace) {
+                relationship_ids.push(namespace);
+            }
+        }
+        for child in children.iter().rev() {
+            pending.push((child, namespace_scope(&scope, child)));
+        }
+    }
+    let conformance = attrs.iter().find(|attribute| attribute.name == "conformance").map(|attribute| attribute.value.clone());
+    Ok(WorkbookNamespaces { main, relationship_ids, conformance })
 }
 //#endregion 🔖️Constants
 
@@ -209,3 +241,47 @@ pub fn positioned_worksheet_children<'a>(
     })
 }
 
+
+#[cfg(test)]
+mod namespace_declaration_tests {
+    use super::expanded_attribute_name;
+
+    /// 🧪️ Every case of the language-agnostic fixture resolves exactly as declared; `xmlns:*` declaration attributes are never refused as unbound prefixes.
+    /// @see ./🧪️tests/🧫️fixtures/🔣️.json
+    #[test]
+    fn attribute_names_resolve_as_the_fixture_declares() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️tests/🧫️fixtures/🔣️.json")).expect("fixture is JSON");
+        let cases = fixture["cases"].as_array().expect("cases");
+        assert!(!cases.is_empty());
+        for case in cases {
+            let scope: Vec<(String, String)> = case["scope"].as_array().expect("scope").iter().map(|pair| (pair[0].as_str().expect("prefix").to_string(), pair[1].as_str().expect("uri").to_string())).collect();
+            let resolved = expanded_attribute_name(case["attribute"].as_str().expect("attribute"), &scope);
+            match case["expected"].as_object() {
+                Some(expected) => assert_eq!(resolved, Ok((expected["namespace"].as_str().expect("namespace").to_string(), expected["local"].as_str().expect("local").to_string())), "{}", case["name"]),
+                None => assert!(resolved.is_err(), "{}", case["name"]),
+            }
+        }
+    }
+    /// 🧪️ Every workbook of the fixture binds its relationship-id prefix wherever it declares it: on the root, on a descendant only, under another prefix, or not at all.
+    /// @see ./🧪️tests/🧫️fixtures/🔣️.json
+    #[test]
+    fn workbook_namespaces_resolve_as_the_fixture_declares() {
+        use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_from_text;
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️tests/🧫️fixtures/🔣️.json")).expect("fixture is JSON");
+        let cases = fixture["workbooks"].as_array().expect("workbooks");
+        assert!(cases.iter().any(|case| case["name"].as_str().is_some_and(|name| name.contains("only on a child"))));
+        for case in cases {
+            let document = xml_document_from_text(case["xml"].as_str().expect("xml")).expect("fixture xml parses");
+            let resolved = super::workbook_namespaces(document.root.as_ref().expect("root"));
+            match case["expected"].as_object() {
+                Some(expected) => {
+                    let resolved = resolved.unwrap_or_else(|error| panic!("{}: {error}", case["name"]));
+                    assert_eq!(resolved.main, expected["main"].as_str().expect("main"), "{}", case["name"]);
+                    let ids: Vec<&str> = expected["relationshipIds"].as_array().expect("ids").iter().map(|id| id.as_str().expect("uri")).collect();
+                    assert_eq!(resolved.relationship_ids, ids, "{}", case["name"]);
+                }
+                None => assert!(resolved.is_err(), "{}", case["name"]),
+            }
+        }
+    }
+}

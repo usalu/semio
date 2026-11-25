@@ -104,7 +104,24 @@ fn presence_publication_operation<A: ArtifactApp>(operation: semio_framework_job
             }
 }
 
-pub(super) async fn retained_cancellation_publication_boundaries<A: ArtifactApp<Presence = PublicationPresence, PresenceMutation = PublicationPresenceMutation> + Default>() {
+fn mount_presence_operation<A: ArtifactApp>(app: &mut VcsArtifactApp<A>, cx: &mut semio_framework_job::StepContext<'_>) -> MountedTypedCommandFullOperation<A> {
+    let revision = app.stores.store.content_revision_now();
+    let operation = semio_framework_job::Operation::new(
+        semio_framework_job::allocate_operation_id(),
+        semio_framework_job::RevisionId(u64::from_be_bytes(revision[..8].try_into().unwrap())),
+        semio_framework_job::Generation(app.stores.store.generation_now()),
+        17,
+    );
+    let key = ToolOperationKey { app_instance_id: 7, document: ArtifactDocumentAuthority(7), operation_id: operation.operation, base_revision: operation.base_revision, generation: operation.generation };
+    for _ in 0..artifact_app_laws::OriginalFixtureCaller::maximum_turns() {
+        if let Some(lease) = app.tools.tool_cancellations.begin(&key, cx).unwrap() {
+            return presence_publication_operation(operation, revision, lease, cx);
+        }
+    }
+    panic!("original publication cancellation lease was never admitted")
+}
+
+pub(super) async fn retained_cancellation_publication_boundaries<A: ArtifactApp<Presence = PublicationPresence, PresenceMutation = PublicationPresenceMutation> + Default>(stale_only: bool) {
         let mut original_scope = artifact_app_laws::OriginalFixtureScope::admit();
         let cx = original_scope.cx();
         let fixture: Value = serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../../🧪️tests/🧫️fixtures/🥇️tool-latest-wins.json")).expect("language-neutral cancellation boundaries");
@@ -113,7 +130,9 @@ pub(super) async fn retained_cancellation_publication_boundaries<A: ArtifactApp<
         assert_eq!(grant.maximum_items, 1);
         assert_eq!(bytes, TYPED_OPERATION_RESULT_PAGE_BYTES);
         for case in fixture["publicationCases"].as_array().unwrap() {
-            let boundary = case["cancelAt"].as_str().unwrap();
+            let stale = case["staleAt"].as_str();
+            if stale_only != stale.is_some() { continue; }
+            let boundary = stale.or_else(|| case["cancelAt"].as_str()).unwrap();
             let mounted_grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32_768,maximum_capacity_bytes:262_144,maximum_release_bytes:1_048_576,maximum_depth:4_096};
         let mounted_policy=semio_plugin_mounted_owner::MountedOwnerPolicyV1{preparation:mounted_grant,maintenance:mounted_grant,close:mounted_grant};
         let identity_started=std::time::Instant::now();
@@ -121,26 +140,12 @@ pub(super) async fn retained_cancellation_publication_boundaries<A: ArtifactApp<
         let mut identity=semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576,&mut identity_progress as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("original typed fixture supplied identity authority");
         let mut app = VcsArtifactApp::<A>::new(A::default(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()),mounted_policy,&mut identity).await.expect("the reference snapshot births");
         semio_plugin_reactor_app::PluginApp::bind_instance_id(&mut app, 7).await;
-            let revision = app.stores.store.content_revision_now();
-            let operation = semio_framework_job::Operation::new(
-                semio_framework_job::allocate_operation_id(),
-                semio_framework_job::RevisionId(u64::from_be_bytes(revision[..8].try_into().unwrap())),
-                semio_framework_job::Generation(app.stores.store.generation_now()),
-                17,
-            );
             artifact_app_laws::ensure_fixture_cancellation_issuer(&mut app, cx).unwrap();
-            let key = ToolOperationKey { app_instance_id: 7, document: ArtifactDocumentAuthority(7), operation_id: operation.operation, base_revision: operation.base_revision, generation: operation.generation };
-            let mut lease = None;
-            for _ in 0..artifact_app_laws::OriginalFixtureCaller::maximum_turns() {
-                lease = app.tools.tool_cancellations.begin(&key, cx).unwrap();
-                if lease.is_some() { break; }
-            }
-            let lease = lease.expect("original publication cancellation lease admitted");
             let before = app.stores.presence_store.local_read().unwrap();
-            let mut mounted = presence_publication_operation::<A>(operation, revision, lease, cx);
+            let mut mounted = mount_presence_operation(&mut app, cx);
             if boundary != "producer" {
                 let pending =
-                    app.stores.presence_store.begin_publish_one(operation.operation, 0, ChangePublicationPresence { revision: 1 }.into(), Some(&TwoTurnPublicationPresencePreparationFactory), app.stores.presence_local_root_retirement_factory.clone()).unwrap();
+                    app.stores.presence_store.begin_publish_one(mounted.operation.operation, 0, ChangePublicationPresence { revision: 1 }.into(), Some(&TwoTurnPublicationPresencePreparationFactory), app.stores.presence_local_root_retirement_factory.clone()).unwrap();
                 mounted.pending_artifact_publication = Some(PendingArtifactStorePublication::Presence(pending));
                 let target = match boundary {
                     "preparation" => store::os_store::one_item_publication::ArtifactStoreOneItemPublicationPhase::Preparing,
@@ -163,8 +168,17 @@ pub(super) async fn retained_cancellation_publication_boundaries<A: ArtifactApp<
                 };
                 assert_eq!(pending.phase(), target);
             }
-            mounted.cancellation_lease.as_ref().unwrap().cancel();
+            if stale.is_some() {
+                mounted.canonical_revision[31] ^= 1;
+            } else {
+                mounted.cancellation_lease.as_ref().unwrap().cancel();
+            }
             if boundary == "awaitingAck" {
+                for _ in 0..256 {
+                    if mounted.stage == MountedTypedCommandFullOperationStage::AwaitingAck { break; }
+                    publish_mounted_fixture_unit(&mut app, &mut mounted, mounted_policy.maintenance, cx);
+                }
+                assert_eq!(mounted.stage, MountedTypedCommandFullOperationStage::AwaitingAck);
                 let mut page = present_mounted_page(&mut mounted, semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().preparation, cx).unwrap();
                 assert!(!mounted.reject_cancelled_publication().unwrap());
                 assert_eq!(mounted.result_page.as_ref().unwrap().token, page.token);
@@ -181,20 +195,46 @@ pub(super) async fn retained_cancellation_publication_boundaries<A: ArtifactApp<
             }
             let mut cancelled = present_mounted_page(&mut mounted, mounted_policy.preparation, cx).expect("cancelled result page presented");
             assert_eq!(cancelled.lane, TypedOperationResultLane::Fault);
-            assert!(std::str::from_utf8(cancelled.bytes()).unwrap().contains("cancelled"));
+            if let Some(code) = case["faultCode"].as_str() {
+                let fault = semio_plugin_decl_app::tool_contract::decode_typed_operation_fault_page(cancelled.bytes());
+                assert_eq!(fault.code.as_str(), code);
+            } else {
+                assert!(std::str::from_utf8(cancelled.bytes()).unwrap().contains("cancelled"));
+            }
             assert_eq!(serde_json::json!({ "committed": app.stores.presence_store.generation_now() != 0 }), serde_json::json!({ "committed": case["committed"] }));
             assert_eq!(std::ptr::eq(before.get(), app.stores.presence_store.local()), !case["committed"].as_bool().unwrap());
             assert!(!mounted.ui_pending);
             let token = artifact_app_laws::close_fixture_result_page(&mut cancelled, mounted_policy.close);
             assert!(mounted.acknowledge_result_page(token).unwrap());
             retire_acknowledged_mounted_page(&mut mounted, mounted_policy.close, cx);
-            close_mounted(&mut mounted, boundary, mounted_policy.close, cx);
+            close_mounted(&mut mounted, &app.tools.tool_cancellations, boundary, mounted_policy.close, cx);
             assert!(mounted.terminal_is_empty(), "{boundary}");
             assert_eq!(app.tools.tool_cancellations.active_operation_count(), 0);
             drop(before);
+            if let Some(next_generation) = case["nextGeneration"].as_u64() {
+                let mut next = mount_presence_operation(&mut app, cx);
+                let pending = app.stores.presence_store.begin_publish_one(next.operation.operation, 0, ChangePublicationPresence { revision: 1 }.into(), Some(&TwoTurnPublicationPresencePreparationFactory), app.stores.presence_local_root_retirement_factory.clone()).unwrap();
+                next.pending_artifact_publication = Some(PendingArtifactStorePublication::Presence(pending));
+                for _ in 0..256 {
+                    publish_mounted_fixture_unit(&mut app, &mut next, artifact_app_laws::fixture_mounted_policy().maintenance, cx);
+                    if next.stage != MountedTypedCommandFullOperationStage::AwaitingAck { continue; }
+                    let mut page = present_mounted_page(&mut next, mounted_policy.preparation, cx).expect("fresh result page presented");
+                    let lane = page.lane;
+                    assert_ne!(lane, TypedOperationResultLane::Fault);
+                    let token = artifact_app_laws::close_fixture_result_page(&mut page, mounted_policy.close);
+                    assert!(next.acknowledge_result_page(token).unwrap());
+                    retire_acknowledged_mounted_page(&mut next, mounted_policy.close, cx);
+                    if lane == TypedOperationResultLane::Terminal { break; }
+                }
+                assert_eq!(next.stage, MountedTypedCommandFullOperationStage::Retiring);
+                assert_eq!(app.stores.presence_store.generation_now(), next_generation);
+                close_mounted(&mut next, &app.tools.tool_cancellations, "fresh publication after conflict", mounted_policy.close, cx);
+                assert!(next.terminal_is_empty());
+            }
             close_app(&mut app, boundary, cx);
             assert!(app.close_terminal_is_empty(), "{boundary}");
         }
+        if stale_only { return; }
         for case in fixture["linearizationCases"].as_array().unwrap() {
             let mut cancellations = KeyedCancellationFixture::open();
             let key = ToolOperationKey {
@@ -373,7 +413,7 @@ pub(super) async fn retained_closing_publication_retires_through_the_publication
     let token = artifact_app_laws::close_fixture_result_page(&mut page, mounted_policy.close);
     assert!(mounted.acknowledge_result_page(token).unwrap());
     retire_acknowledged_mounted_page(&mut mounted, mounted_policy.close, cx);
-    close_mounted(&mut mounted, "closing", mounted_policy.close, cx);
+    close_mounted(&mut mounted, &app.tools.tool_cancellations, "closing", mounted_policy.close, cx);
     assert!(mounted.terminal_is_empty());
     close_app(&mut app, "closing", cx);
     assert!(app.close_terminal_is_empty());

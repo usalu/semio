@@ -21,6 +21,8 @@ import { CanvasBottomChipRow, type CanvasBottomChips } from "../🎨️Canvas/�
 import { LevelProvider, SurfaceScope } from "../🌈️Surface/🟦️.tsx";
 import { chromeStatusBorderClass } from "../../🔨️modules/🌀️status-border-presentation/🟦️.ts";
 import { type Anchor, ANCHORS } from "../../🔨️modules/⚓️panel-anchor/🟦️.ts";
+import { publishShellChromePanelBox, safeAreaBoxFromRect } from "../../🔨️modules/🛟️chrome-safe-area/🟦️.tsx";
+import { useShellScopeOptional } from "../🐚️ShellScope/🟦️.tsx";
 import { useSharedBorderFrameRef } from "../🗂️WindowChrome/shared-border.ts";
 import { UiMobileProvider } from "../../🔨️modules/📱️ui-mobile-context/🟦️.tsx";
 import { GhostProvider, PanelGhostRoot } from "../👻️PanelGhost/🟦️.tsx";
@@ -132,22 +134,60 @@ function bindScrollBand(band: HTMLDivElement | null) {
   };
 }
 
+/** 📐️ Publishes the heights of the top and bottom band rows as the clearance custom properties of the layout root, so every scroller, dock, panel and overlay under it can keep clear of the glass bands while the canvas runs beneath them, and each row as an occupied chrome box, so anchored window panes step clear of it like of any chrome panel.
+ *
+ * @see https://developer.mozilla.org/docs/Web/API/ResizeObserver */
+function useBandClearance(rootRef: React.RefObject<HTMLDivElement | null>, enabled: boolean, bands: string) {
+  const shellRoot = useShellScopeOptional()?.rootRef.current ?? undefined;
+  const key = `layout-band:${React.useId()}`;
+  React.useLayoutEffect(() => {
+    const root = rootRef.current;
+    if (!root || !enabled) return;
+    const bands = (edge: string) => [...root.querySelectorAll<HTMLElement>(`:scope > [data-layout-band="${edge}"]`)];
+    const boxes = [...bands("start").map((band) => ["top-middle", band] as const), ...bands("end").map((band) => ["bottom-middle", band] as const)];
+    const publish = () => {
+      boxes.forEach(([anchor, band], index) => publishShellChromePanelBox(shellRoot, `${key}:${index}`, anchor, safeAreaBoxFromRect(band.getBoundingClientRect())));
+      root.style.setProperty("--layout-clearance-top", `${bands("start").reduce((sum, band) => sum + band.offsetHeight, 0)}px`);
+      root.style.setProperty("--layout-clearance-bottom", `${bands("end").reduce((sum, band) => sum + band.offsetHeight, 0)}px`);
+      root.style.setProperty("--layout-subfooter-height", `${root.querySelector<HTMLElement>(':scope > [data-slot="layout-subfooter"]')?.offsetHeight ?? 0}px`);
+    };
+    publish();
+    const observer = typeof ResizeObserver === "function" ? new ResizeObserver(publish) : undefined;
+    for (const band of [...bands("start"), ...bands("end"), ...root.querySelectorAll<HTMLElement>(':scope > [data-slot="layout-subfooter"]')]) observer?.observe(band);
+    window.addEventListener("resize", publish);
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener("resize", publish);
+      boxes.forEach(([anchor], index) => publishShellChromePanelBox(shellRoot, `${key}:${index}`, anchor, null));
+      root.style.removeProperty("--layout-clearance-top");
+      root.style.removeProperty("--layout-clearance-bottom");
+      root.style.removeProperty("--layout-subfooter-height");
+    };
+  }, [rootRef, enabled, bands, shellRoot, key]);
+}
+
+const bleedStyle: React.CSSProperties = { insetInline: 0, top: 0, bottom: "var(--layout-subfooter-height, 0px)" };
+
+/** 📏️ The canvas is a full-bleed layer without a height of its own, so a layout in a host of automatic height keeps this floor between its bands instead of collapsing onto them. */
+const LAYOUT_MIN_HEIGHT = "24rem";
+const layoutFloorStyle: React.CSSProperties = { minBlockSize: LAYOUT_MIN_HEIGHT };
+
 const Layout: React.FC<LayoutProps> = ({ navbar, subnavbar, footer, subfooter, panels, mobilePanel, canvas, canvasChips, scrollCanvas = false, canvasStatus, canvasSkeleton, mobile = false, className = "" }) => {
+  const rootRef = React.useRef<HTMLDivElement>(null);
+  useBandClearance(rootRef, !scrollCanvas, `${Boolean(navbar)}${Boolean(subnavbar)}${Boolean(footer)}${Boolean(subfooter)}`);
   const canvasBody = canvasStatus === "loading" || canvasStatus === "waiting" ? (canvasSkeleton ?? <CanvasSkeleton />) : canvas;
   const canvasClassName = cn("flex-1 min-w-0 min-h-0 relative", scrollCanvas && "isolate", chromeStatusBorderClass(canvasStatus));
+  const bleedClassName = cn("absolute z-0 isolate min-w-0", chromeStatusBorderClass(canvasStatus));
   const middle = mobile ? (
-    <div className="flex flex-col flex-1 min-h-0">
+    <div className="relative flex flex-col flex-1 min-h-0">
       {mobilePanel?.visible && <LayoutMobilePanel {...mobilePanel} />}
-      <div className={cn(canvasClassName, mobilePanel?.visible && "hidden")}>{canvasBody}</div>
+      {scrollCanvas ? <div className={cn(canvasClassName, mobilePanel?.visible && "hidden")}>{canvasBody}</div> : null}
     </div>
   ) : (
     <div className="flex flex-1 min-h-0 relative">
       <div data-slot="layout-canvas-column" className="flex flex-col flex-1 min-w-0 relative">
         <div className="flex flex-1 min-h-0 relative">
-          <div className={canvasClassName}>
-            {canvasBody}
-            <CanvasBottomChipRow chips={canvasChips} />
-          </div>
+          {scrollCanvas ? <div className={canvasClassName}>{canvasBody}<CanvasBottomChipRow chips={canvasChips} /></div> : <CanvasBottomChipRow chips={canvasChips} />}
         </div>
       </div>
       {ANCHORS.map((anchor) => {
@@ -159,7 +199,7 @@ const Layout: React.FC<LayoutProps> = ({ navbar, subnavbar, footer, subfooter, p
   return (
     <UiMobileProvider mobile={mobile}>
       <GhostProvider>
-        <div data-slot="layout" data-level="base" className={cn("relative flex h-full w-full flex-col overflow-hidden", surfaceClass, className)}>
+        <div ref={rootRef} data-slot="layout" data-level="base" style={layoutFloorStyle} className={cn("relative isolate flex h-full w-full flex-col overflow-hidden", surfaceClass, className)}>
           <SurfaceScope level="base" fill="surface">
             {scrollCanvas ? (
               <div data-slot="layout-scrollport" tabIndex={0}>
@@ -174,10 +214,11 @@ const Layout: React.FC<LayoutProps> = ({ navbar, subnavbar, footer, subfooter, p
               </div>
             ) : (
               <>
-                {navbar && <div className="flex-shrink-0">{navbar}</div>}
-                {subnavbar && <div className="flex-shrink-0">{subnavbar}</div>}
+                {navbar && <div data-layout-band="start" className="relative z-[1] flex-shrink-0">{navbar}</div>}
+                {subnavbar && <div data-layout-band="start" className="relative z-[1] flex-shrink-0">{subnavbar}</div>}
                 {middle}
-                {footer && <div className="flex-shrink-0">{footer}</div>}
+                <div data-slot="layout-canvas-bleed" className={cn(bleedClassName, mobile && mobilePanel?.visible && "hidden")} style={bleedStyle}>{canvasBody}</div>
+                {footer && <div data-layout-band="end" className="relative z-[1] flex-shrink-0">{footer}</div>}
               </>
             )}
             {subfooter && (

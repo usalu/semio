@@ -1,6 +1,9 @@
 import type * as React from "react";
 import { reactHostPort } from "../../🧱️elements/🔌️Ports/⚛️react/🟦️.ts";
 
+export * from "./places.ts";
+export * from "./ghost.tsx";
+
 /** 🖱️ Pointer-drag props for a host element (replaces imperative drag controllers). */
 export function usePointerDrag<TElement extends HTMLElement = HTMLDivElement>(handlers: {
   onStart?: (event: React.PointerEvent<TElement>) => void;

@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Window Viewport Inset Cases",
+  "type": "object",
+  "required": ["schema", "minViewportPx", "cases"],
+  "additionalProperties": false,
+  "properties": {
+    "schema": { "const": "window-viewport-inset/v1" },
+    "minViewportPx": { "type": "number" },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "bodyWidthPx", "panes", "inset"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string" },
+          "bodyWidthPx": { "type": "number" },
+          "panes": { "type": "array", "items": { "$ref": "#/$defs/span" } },
+          "inset": { "$ref": "#/$defs/span" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "span": { "type": "object", "required": ["leftPx", "rightPx"], "additionalProperties": false, "properties": { "leftPx": { "type": "number" }, "rightPx": { "type": "number" } } }
+  }
+}

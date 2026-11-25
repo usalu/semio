@@ -14,8 +14,13 @@ use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base
 /// 📥️ Decodes a physical XLSX workbook and requires strict conformance.
 pub fn decode_xlsx(bytes: &[u8]) -> Result<XlsxSnapshot, XlsxError> {
     let snapshot = decode_base_xlsx(bytes)?;
-    require_xlsx_conformance(&check_strict_conformance(&snapshot))?;
+    natural_conformance(&snapshot)?;
     Ok(snapshot)
+}
+
+/// 🛡️ Requires strict conformance of a decoded workbook, whichever decoder produced it.
+pub fn natural_conformance(snapshot: &XlsxSnapshot) -> Result<(), XlsxError> {
+    require_xlsx_conformance(&check_strict_conformance(snapshot))
 }
 
 /// 📤️ Emits a physical XLSX workbook after checking strict conformance.

@@ -22,7 +22,7 @@ import outputSchema from "./🧬️schema/📬️output.json" with { type: "json
 import heartbeat from "./🧬️schema/📣️heartbeat.json" with { type: "json" };
 import processBudgetSchema from "../⏱️budget/🧬️schema/🔣️.json" with { type: "json" };
 import {Transform} from "node:stream";
-import{requireIssuedResourceControlV1}from"../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import{requireIssuedResourceControlV1,ResourceLoanDeadlineExhaustedV1}from"../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import{noteScriptProcessActivityV1}from"../🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🟦️.ts";
 import{ProgressDeadlineExpiredV1}from"../⏱️budget/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
@@ -110,18 +110,18 @@ export async function runOwnedCommand(command: string, args: string[], cwd: stri
   const auxiliary=options.auxiliaryInput===undefined?undefined:readOwnedCommandAuxiliaryInputV1(options.auxiliaryInput);
   if(auxiliary){if(!options.control)throw Error("Actual Original auxiliary input control required");requireIssuedResourceControlV1(options.control);if(options.signal!==undefined&&options.signal!==options.control.signal)throw Error("Same Original auxiliary input signal required");}
   const commandSignal=auxiliary?options.control!.signal:options.signal;
-  if (commandSignal?.aborted) {if(auxiliary)throw commandSignal.reason;throw stopRefusalV1(label, "cancelled");}
+  if (commandSignal?.aborted) {if(auxiliary||commandSignal.reason instanceof ResourceLoanDeadlineExhaustedV1)throw commandSignal.reason;throw stopRefusalV1(label, "cancelled");}
   const ceiling = bunTestCeilingV1(command, args, cwd, options.env ?? process.env);
   const routed = routeRegisteredCommandV1(command, args, cwd, options.env ?? process.env), child = spawn(routed.command, [...routed.arguments], { cwd, env: routed.environment as NodeJS.ProcessEnv, detached: process.platform !== "win32", stdio: [options.input === undefined ? "inherit" : "pipe", options.stdout === "ignore" && options.output === undefined && !options.outputConsumer ? "ignore" : "pipe", "pipe", ...(auxiliary?["pipe" as const]:[])], windowsHide: true });
-  let stopped = "", stopRefusal: RepoErrorV1 | undefined, closed = false, publicationRefused = false, publicationFailure: unknown, interruptPublication!: () => void;
+  let stopped = "", stopRefusal: RepoErrorV1 | ResourceLoanDeadlineExhaustedV1 | undefined, closed = false, publicationRefused = false, publicationFailure: unknown, interruptPublication!: () => void;
   const pending = new Set<Promise<void>>(), interrupted = new Promise<void>(accept => { interruptPublication = accept; });
-  const terminate = (reason: string, refusal?: RepoErrorV1): void => {
+  const terminate = (reason: string, refusal?: RepoErrorV1 | ResourceLoanDeadlineExhaustedV1): void => {
     if (!stopped) { stopped = reason; stopRefusal = refusal; }
     interruptPublication();
     if (!closed) void terminateOwnedChildTreeGracefullyV1(child, { record: (row, signal) => { const line = ownedKillRecordLineV1({ pid: row.pid, signal, killer: process.pid, label, reason: stopped }); process.stderr.write(`${line}\n`); } }).catch(() => undefined);
   };
   const release = ceiling !== undefined && child.pid !== undefined ? ceiling(child.pid, terminate) : undefined;
-  const abort = (): void => commandSignal?.reason instanceof ProgressDeadlineExpiredV1 ? terminate(commandSignal.reason.message, refuseProcessV1("timeout", "execution.progress-expired", { label, notice: commandSignal.reason.message })) : terminate("cancelled", stopRefusalV1(label, "cancelled"));
+  const abort = (): void => commandSignal?.reason instanceof ProgressDeadlineExpiredV1 ? terminate(commandSignal.reason.message, refuseProcessV1("timeout", "execution.progress-expired", { label, notice: commandSignal.reason.message })) : commandSignal?.reason instanceof ResourceLoanDeadlineExhaustedV1 ? terminate(commandSignal.reason.message, commandSignal.reason) : terminate("cancelled", stopRefusalV1(label, "cancelled"));
   const observe = (stream: NodeJS.ReadableStream,source:OwnedCommandStreamV1): void => {
     const decoder = new StringDecoder("utf8");
     let pending = "";

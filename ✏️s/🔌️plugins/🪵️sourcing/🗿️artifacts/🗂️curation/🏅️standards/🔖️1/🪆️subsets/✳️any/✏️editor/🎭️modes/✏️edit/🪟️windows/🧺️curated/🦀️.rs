@@ -1,8 +1,9 @@
 //! 🧺️ Sourcing curation app — the curated window: the currently-picked objects and their counts.
 
+use crate::schema::catalog_kind_name;
 use crate::editor::sourcing::config::SourcingCurationConfig;
 use crate::editor::sourcing::terminology::SourcingLabels;
-use crate::editor::sourcing::editor_vocabulary::{sourcing_table, sourcing_table_action, sourcing_table_row};
+use crate::editor::sourcing::editor_vocabulary::{sourcing_row_menu, sourcing_table, sourcing_table_action, sourcing_table_row};
 use crate::{CuratedItem, CurationSnapshot, ObjectKind, SortDirection};
 use semio_plugin::BuiltNode;
 use semio_ui_locale::LocalizedLabel;
@@ -78,23 +79,28 @@ pub fn curated_row_actions(item: &CuratedItem, kind: &ObjectKind, labels: &Sourc
     actions
 }
 
-pub fn render(document: &CurationSnapshot, cfg: &SourcingCurationConfig, labels: &SourcingLabels, locale: semio_plugin::Locale) -> UiAssemblyResult<BuiltNode> {
+pub fn render(document: &CurationSnapshot, cfg: &SourcingCurationConfig, labels: &SourcingLabels, selected_ids: &[String], locale: semio_plugin::Locale) -> UiAssemblyResult<BuiltNode> {
     let columns = [("name", labels.col_name.as_str(), true), ("availability", labels.col_availability.as_str(), true), ("count", labels.col_count.as_str(), true), ("actions", labels.col_actions.as_str(), false)];
-    let rows = curated_rows(document, cfg)
+    let mut ordered = curated_rows(document, cfg);
+    if let Some(sort) = cfg.filters.sort.as_ref().filter(|sort| sort.column_id == "name") {
+        ordered.sort_by(|(_, a), (_, b)| { let ordering = catalog_kind_name(a, locale).cmp(&catalog_kind_name(b, locale)); if sort.direction == SortDirection::Desc { ordering.reverse() } else { ordering } });
+    }
+    let rows = ordered
         .into_iter()
         .map(|(item, kind)| {
             sourcing_table_row(
                 &kind.id,
                 vec![
-                    ("name", TableCell::Text { value: kind.name.clone() }),
+                    ("name", TableCell::Text { value: catalog_kind_name(&kind, locale) }),
                     ("availability", TableCell::Number { value: kind.availability as f64 }),
                     ("count", TableCell::Stepper { value: item.count as f64, min: 0.0, max: kind.availability as f64, step: 1.0, action: sourcing_table_action("curationSetCount", Some(&kind.id)) }),
                     ("actions", TableCell::Buttons { buttons: curated_row_actions(&item, &kind, labels) }),
+                    ("menu", sourcing_row_menu(&kind, item.count, labels)),
                 ],
             )
         })
         .collect();
-    sourcing_table(SOURCING_CURATION_SURFACE_CURATED, &columns, rows, "dropOnCurated", cfg.filters.sort.as_ref(), semio_plugin::surface_name(locale, "Curated table", "Kuratierte Tabelle"))
+    sourcing_table(SOURCING_CURATION_SURFACE_CURATED, &columns, rows, "dropOnCurated", cfg.filters.sort.as_ref(), selected_ids, semio_plugin::surface_name(locale, "Curated table", "Kuratierte Tabelle"))
 }
 //#endregion 🔖️Render
 

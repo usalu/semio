@@ -404,6 +404,30 @@ impl WorldInteractionAuthority {
                 return if self.active.is_some() { WorldInteractionAuthorityStep::Pending } else { WorldInteractionAuthorityStep::Complete };
             }
         }
+        if intent.button == 0 {
+            let modifiers = PointerModifiers { shift: intent.shift, ctrl: intent.ctrl, alt: intent.alt, meta: intent.meta, repeat: false };
+            let pressed = intent.phase == WorldInteractionPhase::PointerButton && intent.down;
+            let released = intent.phase == WorldInteractionPhase::PointerButton && !intent.down;
+            let moved = intent.phase == WorldInteractionPhase::PointerMove && intent.down;
+            if pressed {
+                self.left_orbit = self.gumball.is_none() && world3d_left_press_orbits(session_state, selection_state, &modifiers);
+            }
+            if self.left_orbit && (pressed || released || moved) {
+                if released {
+                    self.left_orbit = false;
+                }
+                if moved {
+                    if let Some(plan) = plan_world3d_drag(session_state, camera_state, generation, intent.dx, intent.dy, 0, &modifiers) {
+                        self.active = Some(WorldInteractionActive::Plan { plan, retirement: None });
+                        context.consume_fuel(1);
+                        return WorldInteractionAuthorityStep::Pending;
+                    }
+                }
+                self.queue.retire_front(intent.generation);
+                context.consume_fuel(1);
+                return WorldInteractionAuthorityStep::Complete;
+            }
+        }
         if intent.phase == WorldInteractionPhase::PointerButton && intent.button == 0 && !intent.down && session_state.active_utility == "brush" {
             match WorldBrushCommitJob::new(session_state, gumball_state, intent.generation) {
                 Ok(Some(job)) => {

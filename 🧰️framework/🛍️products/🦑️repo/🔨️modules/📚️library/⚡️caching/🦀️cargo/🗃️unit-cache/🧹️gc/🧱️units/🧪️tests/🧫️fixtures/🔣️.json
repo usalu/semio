@@ -22,8 +22,7 @@
             "profile": "prototype",
             "bytes": 52428800,
             "lastUsedMs": 8280000000,
-            "held": false,
-            "busy": false
+            "held": false
           },
           {
             "path": "/s/b/p/prototype/build/serde/b",
@@ -31,8 +30,7 @@
             "profile": "prototype",
             "bytes": 52428800,
             "lastUsedMs": 8424000000,
-            "held": false,
-            "busy": false
+            "held": false
           },
           {
             "path": "/s/b/p/prototype/build/serde/c",
@@ -40,8 +38,7 @@
             "profile": "prototype",
             "bytes": 52428800,
             "lastUsedMs": 8532000000,
-            "held": false,
-            "busy": false
+            "held": false
           },
           {
             "path": "/s/b/p/prototype/build/serde/d",
@@ -49,8 +46,7 @@
             "profile": "prototype",
             "bytes": 52428800,
             "lastUsedMs": 8632800000,
-            "held": false,
-            "busy": false
+            "held": false
           },
           {
             "path": "/s/b/p/prototype/build/serde/e",
@@ -58,8 +54,7 @@
             "profile": "prototype",
             "bytes": 52428800,
             "lastUsedMs": 8636400000,
-            "held": false,
-            "busy": false
+            "held": false
           }
         ]
       },
@@ -93,8 +88,7 @@
             "profile": "prototype",
             "bytes": 52428800,
             "lastUsedMs": 8568000000,
-            "held": false,
-            "busy": false
+            "held": false
           },
           {
             "path": "/s/b/p/prototype/build/serde/b",
@@ -102,8 +96,7 @@
             "profile": "prototype",
             "bytes": 52428800,
             "lastUsedMs": 8629200000,
-            "held": false,
-            "busy": false
+            "held": false
           },
           {
             "path": "/s/b/p/prototype/build/tokio/a",
@@ -111,8 +104,7 @@
             "profile": "prototype",
             "bytes": 52428800,
             "lastUsedMs": 8622000000,
-            "held": false,
-            "busy": false
+            "held": false
           }
         ]
       },
@@ -130,8 +122,7 @@
             "profile": "prototype",
             "bytes": 52428800,
             "lastUsedMs": 8568000000,
-            "held": false,
-            "busy": false
+            "held": false
           },
           {
             "path": "/s/b/p/prototype/build/a/2",
@@ -139,8 +130,7 @@
             "profile": "prototype",
             "bytes": 52428800,
             "lastUsedMs": 8586000000,
-            "held": false,
-            "busy": false
+            "held": false
           },
           {
             "path": "/s/b/p/prototype/build/a/3",
@@ -148,8 +138,7 @@
             "profile": "prototype",
             "bytes": 52428800,
             "lastUsedMs": 8604000000,
-            "held": false,
-            "busy": false
+            "held": false
           },
           {
             "path": "/s/b/p/prototype/build/a/4",
@@ -157,8 +146,7 @@
             "profile": "prototype",
             "bytes": 52428800,
             "lastUsedMs": 8622000000,
-            "held": false,
-            "busy": false
+            "held": false
           },
           {
             "path": "/s/b/p/prototype/build/b/1",
@@ -166,8 +154,7 @@
             "profile": "prototype",
             "bytes": 52428800,
             "lastUsedMs": 8611200000,
-            "held": false,
-            "busy": false
+            "held": false
           }
         ]
       },
@@ -201,8 +188,7 @@
             "profile": "prototype",
             "bytes": 52428800,
             "lastUsedMs": 8568000000,
-            "held": false,
-            "busy": false
+            "held": false
           },
           {
             "path": "/s/b/p/prototype/build/a/2",
@@ -210,8 +196,7 @@
             "profile": "prototype",
             "bytes": 52428800,
             "lastUsedMs": 8586000000,
-            "held": false,
-            "busy": false
+            "held": false
           },
           {
             "path": "/s/b/p/prototype/build/a/3",
@@ -219,8 +204,7 @@
             "profile": "prototype",
             "bytes": 52428800,
             "lastUsedMs": 8604000000,
-            "held": false,
-            "busy": false
+            "held": false
           },
           {
             "path": "/s/b/p/prototype/build/a/4",
@@ -228,8 +212,7 @@
             "profile": "prototype",
             "bytes": 52428800,
             "lastUsedMs": 8622000000,
-            "held": false,
-            "busy": false
+            "held": false
           }
         ]
       },
@@ -258,8 +241,7 @@
             "profile": "prototype",
             "bytes": 52428800,
             "lastUsedMs": 8568000000,
-            "held": false,
-            "busy": false
+            "held": false
           },
           {
             "path": "/s/b/p/prototype/build/a/2",
@@ -267,8 +249,7 @@
             "profile": "prototype",
             "bytes": 52428800,
             "lastUsedMs": 8604000000,
-            "held": false,
-            "busy": false
+            "held": false
           },
           {
             "path": "/s/b/p/prototype/build/b/1",
@@ -276,8 +257,7 @@
             "profile": "prototype",
             "bytes": 52428800,
             "lastUsedMs": 8622000000,
-            "held": false,
-            "busy": false
+            "held": false
           }
         ]
       },
@@ -311,8 +291,7 @@
             "profile": "prototype",
             "bytes": 52428800,
             "lastUsedMs": 8639280000,
-            "held": false,
-            "busy": false
+            "held": false
           },
           {
             "path": "/s/b/p/prototype/build/a/2",
@@ -320,8 +299,7 @@
             "profile": "prototype",
             "bytes": 52428800,
             "lastUsedMs": 8639640000,
-            "held": false,
-            "busy": false
+            "held": false
           },
           {
             "path": "/s/b/p/prototype/build/a/3",
@@ -329,8 +307,7 @@
             "profile": "prototype",
             "bytes": 52428800,
             "lastUsedMs": 8622000000,
-            "held": true,
-            "busy": false
+            "held": true
           },
           {
             "path": "/s/b/p/prototype/build/a/4",
@@ -338,8 +315,7 @@
             "profile": "prototype",
             "bytes": 52428800,
             "lastUsedMs": 8607600000,
-            "held": false,
-            "busy": false
+            "held": false
           }
         ]
       },
@@ -352,7 +328,7 @@
       ]
     },
     {
-      "name": "a busy profile loses only superseded idle units, never its newest variants",
+      "name": "a profile that compilers hold loses no unit, superseded and idle or not",
       "input": {
         "needBytes": 1048576000,
         "nowMs": 8640000000,
@@ -363,8 +339,7 @@
             "profile": "prototype",
             "bytes": 52428800,
             "lastUsedMs": 8460000000,
-            "held": false,
-            "busy": true
+            "held": true
           },
           {
             "path": "/s/b/p/prototype/build/a/2",
@@ -372,8 +347,7 @@
             "profile": "prototype",
             "bytes": 52428800,
             "lastUsedMs": 8496000000,
-            "held": false,
-            "busy": true
+            "held": true
           },
           {
             "path": "/s/b/p/prototype/build/a/3",
@@ -381,8 +355,7 @@
             "profile": "prototype",
             "bytes": 52428800,
             "lastUsedMs": 8532000000,
-            "held": false,
-            "busy": true
+            "held": true
           },
           {
             "path": "/s/b/p/prototype/build/a/4",
@@ -390,8 +363,7 @@
             "profile": "prototype",
             "bytes": 52428800,
             "lastUsedMs": 8632800000,
-            "held": false,
-            "busy": true
+            "held": true
           },
           {
             "path": "/s/b/p/prototype/build/a/5",
@@ -399,31 +371,14 @@
             "profile": "prototype",
             "bytes": 52428800,
             "lastUsedMs": 8636400000,
-            "held": false,
-            "busy": true
+            "held": true
           }
         ]
       },
-      "remove": [
-        {
-          "path": "/s/b/p/prototype/build/a/1",
-          "bytes": 52428800,
-          "reason": "superseded"
-        },
-        {
-          "path": "/s/b/p/prototype/build/a/2",
-          "bytes": 52428800,
-          "reason": "superseded"
-        },
-        {
-          "path": "/s/b/p/prototype/build/a/3",
-          "bytes": 52428800,
-          "reason": "superseded"
-        }
-      ]
+      "remove": []
     },
     {
-      "name": "a busy profile keeps units idle for less than the busy minimum",
+      "name": "a profile that compilers hold keeps units that are recent",
       "input": {
         "needBytes": 1048576000,
         "nowMs": 8640000000,
@@ -434,8 +389,7 @@
             "profile": "prototype",
             "bytes": 52428800,
             "lastUsedMs": 8629560000,
-            "held": false,
-            "busy": true
+            "held": true
           },
           {
             "path": "/s/b/p/prototype/build/a/2",
@@ -443,8 +397,7 @@
             "profile": "prototype",
             "bytes": 52428800,
             "lastUsedMs": 8631000000,
-            "held": false,
-            "busy": true
+            "held": true
           },
           {
             "path": "/s/b/p/prototype/build/a/3",
@@ -452,15 +405,14 @@
             "profile": "prototype",
             "bytes": 52428800,
             "lastUsedMs": 8632800000,
-            "held": false,
-            "busy": true
+            "held": true
           }
         ]
       },
       "remove": []
     },
     {
-      "name": "a busy profile gives pressure units idle for the busy minimum that are not among the newest",
+      "name": "a profile that compilers hold gives no unit to pressure however long it is idle",
       "input": {
         "needBytes": 1048576000,
         "nowMs": 8640000000,
@@ -471,8 +423,7 @@
             "profile": "prototype",
             "bytes": 52428800,
             "lastUsedMs": 8611200000,
-            "held": false,
-            "busy": true
+            "held": true
           },
           {
             "path": "/s/b/p/prototype/build/a/2",
@@ -480,8 +431,7 @@
             "profile": "prototype",
             "bytes": 52428800,
             "lastUsedMs": 8614800000,
-            "held": false,
-            "busy": true
+            "held": true
           },
           {
             "path": "/s/b/p/prototype/build/a/3",
@@ -489,8 +439,7 @@
             "profile": "prototype",
             "bytes": 52428800,
             "lastUsedMs": 8618400000,
-            "held": false,
-            "busy": true
+            "held": true
           },
           {
             "path": "/s/b/p/prototype/build/a/4",
@@ -498,23 +447,11 @@
             "profile": "prototype",
             "bytes": 52428800,
             "lastUsedMs": 8625600000,
-            "held": false,
-            "busy": true
+            "held": true
           }
         ]
       },
-      "remove": [
-        {
-          "path": "/s/b/p/prototype/build/a/1",
-          "bytes": 52428800,
-          "reason": "pressure"
-        },
-        {
-          "path": "/s/b/p/prototype/build/a/2",
-          "bytes": 52428800,
-          "reason": "pressure"
-        }
-      ]
+      "remove": []
     },
     {
       "name": "crates and profiles rank separately",
@@ -528,8 +465,7 @@
             "profile": "prototype",
             "bytes": 10485760,
             "lastUsedMs": 8316000000,
-            "held": false,
-            "busy": false
+            "held": false
           },
           {
             "path": "/s/b/p/prototype/build/a/2",
@@ -537,8 +473,7 @@
             "profile": "prototype",
             "bytes": 10485760,
             "lastUsedMs": 8352000000,
-            "held": false,
-            "busy": false
+            "held": false
           },
           {
             "path": "/s/b/p/prototype/build/a/3",
@@ -546,8 +481,7 @@
             "profile": "prototype",
             "bytes": 10485760,
             "lastUsedMs": 8388000000,
-            "held": false,
-            "busy": false
+            "held": false
           },
           {
             "path": "/s/b/p/debug/build/a/1",
@@ -555,8 +489,7 @@
             "profile": "debug",
             "bytes": 10485760,
             "lastUsedMs": 8316000000,
-            "held": false,
-            "busy": false
+            "held": false
           },
           {
             "path": "/s/b/p/debug/build/a/2",
@@ -564,8 +497,7 @@
             "profile": "debug",
             "bytes": 10485760,
             "lastUsedMs": 8636400000,
-            "held": false,
-            "busy": false
+            "held": false
           }
         ]
       },

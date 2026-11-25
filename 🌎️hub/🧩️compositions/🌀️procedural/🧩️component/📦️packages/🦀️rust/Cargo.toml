@@ -36,6 +36,15 @@ aliases = ["procedural 3d"]
 ports = { react = 6018, wgpu = 6118 }
 viewer_path = "/?plugin=generation3d&role=viewer"
 
+[[package.metadata.semio.playground]]
+variant = "generator"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
+app = "s.procedural.generation3d@1/*#editor"
+brand = "entwerfen-mit-bestand-generator"
+devContribution = "♻️mit-bestand/🧺️demonstrator/🐚️shell/🧬️schema/🔣️.json"
+aliases = ["entwerfen-mit-bestand-generator"]
+ports = { react = 6027, wgpu = 6127 }
+
 # 🎪️ The `generator` demonstrator row moved to
 # ✏️s/🔌️plugins/🎪️demonstrator/🪪️manifest/🗿️artifact/⚡️implementations/🦀️rust/Cargo.toml — see that
 # crate's docstring (REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT).

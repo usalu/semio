@@ -65,6 +65,8 @@ semio-s-artifact-fem-3d-engine = { workspace = true }
 semio-s-artifact-fem-3d-io = { workspace = true }
 semio-s-artifact-fem-3d-model = { workspace = true }
 semio-s-artifact-fem-3d-mutations = { workspace = true }
+semio-s-artifact-fem-3d-mesh-topology = { workspace = true }
+semio-s-fem-node = { workspace = true }
 semio-s-fem-app-surface = { workspace = true }
 semio-s-fem-model = { workspace = true }
 
@@ -78,7 +80,6 @@ semio-s-artifact-fem-3d-analysis = { workspace = true }
 semio-s-artifact-fem-3d-boundary = { workspace = true }
 semio-s-artifact-fem-3d-load = { workspace = true }
 semio-s-artifact-fem-3d-material = { workspace = true }
-semio-s-artifact-fem-3d-mesh-topology = { workspace = true }
 semio-s-artifact-fem-3d-scene = { workspace = true }
 serde_json = { workspace = true }
 semio-plugin = { workspace = true, features = ["artifact-app-testing"] }
@@ -86,5 +87,4 @@ semio-s-artifact-fem-3d-editor-model-window = { workspace = true, features = ["t
 semio-framework-replication = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust" }
 semio-os-command = { path = "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/📦️packages/🦀️rust" }
 semio-s-artifact-fem-3d-diff = { workspace = true }
-semio-s-fem-node = { workspace = true }
 semio-s-fem-material = { workspace = true }

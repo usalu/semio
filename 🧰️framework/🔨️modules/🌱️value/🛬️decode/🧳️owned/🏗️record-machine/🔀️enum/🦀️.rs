@@ -1,40 +1,42 @@
 //! 🔀️ The native enum receiving machine is compiled once per owner shape instead of once per derived enum; an enum contributes only its children table and its variant constructors.
 use super::*;
+
 use super::tree::{fixed,invalid,receipt,child_grant,NativeValueSource,NativeFieldPlanSlot,variant::{NativeVariantSelector,NativeVariantSpec}};
 use crate::native_decoding::{NativeReceivingFailure,NativeSeedTemplate};
-use crate::retained_clone::{RetainedCloneClose,RetainedOwnedProjection,RetainedOwnedProjectionAdmission,retained_clone_grant_admits};
+use crate::retained_clone::{RetainedCloneClose,RetainedCloneRef,retained_clone_grant_admits};
 use crate::{OriginalEffectReply,OriginalEffectReplyComplete,OriginalRetirementCloseLoan,OriginalRetirementFailure,OriginalRetirementPoll,RetainedAllocationEffect,RetainedWorkPoll,ValueRefusalKind};
-use super::machine::{RecordSlot,RecordSlotView,Source,Step,Close,progress};
+use super::machine::{RecordSlot,RecordSlotView,Frame,Step,Close,progress,SEED_WRITE_BYTES};
 use std::mem::{size_of,ManuallyDrop,MaybeUninit};
 
 /// 🧩️ The resident state of one enum receiver that does not depend on its variant types.
-pub struct NativeEnumCore<I:NativeValueSource+?Sized,N>{pub selector:NativeVariantSelector<I>,pub projection:RetainedOwnedProjectionAdmission<dyn NativeValueSource>,pub source:Source,pub output:ManuallyDrop<Option<N>>,pub retirement:RetainedCloneClose,pub direct:bool,pub phase:u8,pub closing:bool}
+pub struct NativeEnumCore<I:NativeValueSource+?Sized,N>{pub selector:NativeVariantSelector<I>,pub output:ManuallyDrop<Option<N>>,pub retirement:RetainedCloneClose,pub direct:bool,pub phase:u8,pub closing:bool}
 
 /// 👶️ The one live child of an enum receiver: its slot, its pending value and its variant constructor.
-pub struct EnumChild<P,T,N>{pub slot:P,pub pending:ManuallyDrop<Option<T>>,pub construct:fn(T)->N}
+pub struct EnumChild<P,T,N>{pub slot:P,pub pending:ManuallyDrop<Option<T>>,pub frame:Frame,pub construct:fn(T)->N}
 impl<P:Default,T,N> EnumChild<P,T,N>{
  /// 🌱️ Births an empty child around its variant constructor.
- pub fn born(construct:fn(T)->N)->Self{Self{slot:P::default(),pending:ManuallyDrop::new(None),construct}}
+ pub fn born(construct:fn(T)->N)->Self{Self{slot:P::default(),pending:ManuallyDrop::new(None),frame:Default::default(),construct}}
 }
 
 /// 🔭️ The child operations that do not depend on a variant type, so they run through one erased view.
 pub trait EnumChildOps<I:NativeValueSource+?Sized,N>{
- fn plan(&self,c:&NativeEnumCore<I,N>,child_bytes:usize,body:usize,maximum:u64)->Result<(RetirementDemand,u64,u8),ValueError>;
+ fn plan(&self,c:&NativeEnumCore<I,N>,child_bytes:usize,child:Option<RetainedCloneRef<'_,dyn NativeValueSource>>,body:usize,maximum:u64)->Result<(RetirementDemand,u64,u8),ValueError>;
  fn apply(&mut self,c:&mut NativeEnumCore<I,N>,effect:&mut RetainedAllocationEffect<'_>,work:&mut u128)->Result<Option<Option<Step>>,OriginalReceivingPrimary>;
  fn close_plan(&self,c:&NativeEnumCore<I,N>,child_bytes:usize,body:usize)->Result<(RetirementDemand,u64),ValueError>;
  fn close(&mut self,c:&mut NativeEnumCore<I,N>,body:usize,effect:&mut RetainedAllocationEffect<'_>)->Option<Close>;
  fn retire(&mut self,begin:bool,body:usize,effect:&mut RetainedAllocationEffect<'_>)->Close;
- fn work(&self,c:&NativeEnumCore<I,N>,body:usize)->Result<u64,ValueError>;
- fn nested(&mut self,c:&NativeEnumCore<I,N>,control:&mut NativeDecodeControl<'_>,witness:OriginalSourceTurnWitness<'_>,body:usize,maximum:u64,grant:RetainedCloneGrant)->RetainedWorkPoll<Step,NativeReceivingFailure>;
+ fn work(&self,child:Option<RetainedCloneRef<'_,dyn NativeValueSource>>,body:usize)->Result<u64,ValueError>;
+ fn anchor(&mut self);
+ fn nested(&mut self,child:Option<RetainedCloneRef<'_,dyn NativeValueSource>>,control:&mut NativeDecodeControl<'_>,witness:OriginalSourceTurnWitness<'_>,body:usize,maximum:u64,grant:RetainedCloneGrant)->RetainedWorkPoll<Step,NativeReceivingFailure>;
  fn view(&self)->&dyn RecordSlotView;
  fn view_mut(&mut self)->&mut dyn RecordSlotView;
 }
 
 impl<I:NativeValueSource+?Sized,N,T:RetireOwned,P:RecordSlot<T>+NativeFieldPlanSlot> EnumChildOps<I,N> for EnumChild<P,T,N>{
- fn plan(&self,c:&NativeEnumCore<I,N>,_:usize,body:usize,maximum:u64)->Result<(RetirementDemand,u64,u8),ValueError>{
+ fn plan(&self,c:&NativeEnumCore<I,N>,_:usize,child:Option<RetainedCloneRef<'_,dyn NativeValueSource>>,body:usize,maximum:u64)->Result<(RetirementDemand,u64,u8),ValueError>{
   let slot=&self.slot;let placed=size_of::<Option<T>>()+size_of::<Option<N>>()+size_of::<u8>();
   match c.phase{
-   2=>if slot.plan_ready(){if c.selector.settled(){Ok((fixed(size_of::<u8>()),1,4))}else{Ok((c.selector.settlement_demand(body)?,c.selector.settlement_work_demand(body)?,8))}}else{Ok((slot.plan_demands(&c.source,body,maximum)?,1,3))},
+   2=>if slot.plan_ready(){if c.selector.settled(){Ok((fixed(size_of::<u8>()),1,4))}else{Ok((c.selector.settlement_demand(body)?,c.selector.settlement_work_demand(body)?,8))}}else{Ok((slot.plan_demands(child,body,maximum)?,1,3))},
    3=>{let mut d=slot.plan_take_demand()?;d.copy_bytes=d.copy_bytes.checked_add(placed).ok_or_else(invalid)?;Ok((d,tree::work_sum(slot.plan_take_work_demand()?,2)?,4))},
    4=>Ok((fixed(placed),3,4)),
    5=>if slot.plan_terminal_is_empty(){Ok((fixed(size_of::<u8>()),1,4))}else if !slot.plan_is_closing(){Ok((slot.plan_begin_close_demand()?,slot.plan_begin_close_work_demand()?,9))}else{Ok((slot.plan_close_demands(body)?,slot.plan_close_work_demand(body)?,5))},
@@ -59,8 +61,9 @@ impl<I:NativeValueSource+?Sized,N,T:RetireOwned,P:RecordSlot<T>+NativeFieldPlanS
   None
  }
  fn retire(&mut self,begin:bool,body:usize,effect:&mut RetainedAllocationEffect<'_>)->Close{if begin{self.slot.slot_begin(effect)}else{self.slot.slot_retire(body,effect)}}
- fn work(&self,c:&NativeEnumCore<I,N>,body:usize)->Result<u64,ValueError>{self.slot.slot_work(&c.source,body)}
- fn nested(&mut self,c:&NativeEnumCore<I,N>,control:&mut NativeDecodeControl<'_>,witness:OriginalSourceTurnWitness<'_>,body:usize,maximum:u64,grant:RetainedCloneGrant)->RetainedWorkPoll<Step,NativeReceivingFailure>{self.slot.slot_nested(&c.source,control,witness,body,maximum,grant)}
+ fn work(&self,child:Option<RetainedCloneRef<'_,dyn NativeValueSource>>,body:usize)->Result<u64,ValueError>{self.slot.slot_work(child,body)}
+ fn anchor(&mut self){let frame=std::ptr::addr_of_mut!(self.frame);self.slot.slot_reset(frame)}
+ fn nested(&mut self,child:Option<RetainedCloneRef<'_,dyn NativeValueSource>>,control:&mut NativeDecodeControl<'_>,witness:OriginalSourceTurnWitness<'_>,body:usize,maximum:u64,grant:RetainedCloneGrant)->RetainedWorkPoll<Step,NativeReceivingFailure>{self.slot.slot_nested(child,control,witness,body,maximum,grant)}
  fn view(&self)->&dyn RecordSlotView{&self.slot}
  fn view_mut(&mut self)->&mut dyn RecordSlotView{&mut self.slot}
 }
@@ -83,39 +86,36 @@ fn failure<T,E:From<ValueError>>()->RetainedWorkPoll<T,E>{RetainedWorkPoll::Comp
 
 impl<I:NativeValueSource+?Sized,N:RetireOwned,S:NativeEnumChildren<I,N>> NativeEnumReceiver<I,N,S>{
  /// 🌱️ Births the receiver of one derived enum.
- pub fn birth()->Self{Self{core:NativeEnumCore{selector:NativeVariantSelector::new(S::spec()),projection:Default::default(),source:ManuallyDrop::new(None),output:ManuallyDrop::new(None),retirement:Default::default(),direct:false,phase:0,closing:false},child:None}}
+ pub fn birth()->Self{Self{core:NativeEnumCore{selector:NativeVariantSelector::new(S::spec()),output:ManuallyDrop::new(None),retirement:Default::default(),direct:false,phase:0,closing:false},child:None}}
+ fn project<'a>(&self,input:RetainedCloneRef<'a,I>)->Result<RetainedCloneRef<'a,dyn NativeValueSource>,ValueError>{let direct=self.core.direct;input.try_project::<dyn NativeValueSource,ValueError,_>(if direct{usize::MAX-1}else{usize::MAX},|value|if direct{value.variant_payload()}else{Ok(value.as_source())})}
  fn plan(&self,input:RetainedCloneRef<'_,I>,body:usize,maximum:u64)->Result<(RetirementDemand,u64,u8),ValueError>{
   let c=&self.core;
   if c.closing||c.phase>=7{return Err(invalid())}
   c.selector.validate_input(input)?;
   match c.phase{
-   0=>if c.selector.result().is_some(){Ok((fixed(size_of::<Option<S>>()+size_of::<bool>()+size_of::<u8>()),3,0))}else{Ok((c.selector.demands(input,body,maximum)?,match c.selector.select_advance(input,body,maximum)?{NativeAdvanceSelection::Nested=>1,NativeAdvanceSelection::Local{work}=>work},1))},
-   1=>if !c.projection.terminal_is_empty(){Ok((c.projection.take_demand()?,c.projection.take_work_demand()?,24))}else{let child=input.try_project::<dyn NativeValueSource,ValueError,_>(if c.direct{usize::MAX-1}else{usize::MAX},|value|if c.direct{value.variant_payload()}else{Ok(value.as_source())})?;Ok((c.projection.demand(child)?,c.projection.work_demand(child)?,23))},
-   2|3|4|5=>self.child.as_ref().ok_or_else(invalid)?.child().plan(c,size_of::<Option<S>>(),body,maximum),
-   6=>if let Some(source)=c.source.as_ref(){if source.terminal_is_empty(){Ok((fixed(size_of::<Option<RetainedOwnedProjection<dyn NativeValueSource>>>()),1,6))}else{Ok((source.close_demand(body)?,source.close_work_demand(body)?,7))}}else{Ok((fixed(size_of::<u8>()),1,6))},
+   0=>if c.selector.result().is_some(){Ok((fixed(size_of::<Option<S>>().min(SEED_WRITE_BYTES)+size_of::<bool>()+size_of::<u8>()),3,0))}else{Ok((c.selector.demands(input,body,maximum)?,match c.selector.select_advance(input,body,maximum)?{NativeAdvanceSelection::Nested=>1,NativeAdvanceSelection::Local{work}=>work},1))},
+   2|3|4|5=>{let projected=if c.phase==2{Some(self.project(input)?)}else{None};self.child.as_ref().ok_or_else(invalid)?.child().plan(c,size_of::<Option<S>>(),projected,body,maximum)},
+   6=>Ok((fixed(size_of::<u8>()),1,6)),
    _=>Err(invalid())}
  }
  fn apply(&mut self,action:u8,effect:&mut RetainedAllocationEffect<'_>,d:RetirementDemand)->Result<Option<Step>,OriginalReceivingPrimary>{
   let mut work:u128=0;let core=&mut self.core;let child=&mut self.child;
   let step=(||->Result<Option<Step>,OriginalReceivingPrimary>{match action{
-   0=>{let selected=core.selector.result().ok_or_else(invalid)?;core.direct=selected.direct;let index=selected.index+if selected.direct{S::variants()}else{0};*child=Some(S::born(index).ok_or_else(invalid)?);core.phase=1;work=3},
+   0=>{let selected=core.selector.result().ok_or_else(invalid)?;core.direct=selected.direct;let index=selected.index+if selected.direct{S::variants()}else{0};*child=Some(S::born(index).ok_or_else(invalid)?);if let Some(born)=child.as_mut(){born.child_mut().anchor()}core.phase=2;work=3},
    4=>{if let Some(early)=child.as_mut().ok_or_else(invalid)?.child_mut().apply(core,effect,&mut work)?{return Ok(early)}},
-   6=>{if core.source.is_some(){core.source.take();}else{core.phase=7;}work=1},_=>return Err(invalid().into())}Ok(Some(Step::Progress(receipt(d))))})()?;
+   6=>{core.phase=7;work=1},_=>return Err(invalid().into())}Ok(Some(Step::Progress(receipt(d))))})()?;
   let Some(step)=step else{return Ok(None)};
   let recorded=effect.performed_work();
   if work>recorded{let owed=u64::try_from(work-recorded).map_err(|_|ValueError::invariant("native enum action work overflow"))?;if !effect.performed(owed)?{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"native enum action exceeded its original work").into())}}else if work<recorded{return Err(ValueError::invariant("native enum action recorded more work than it quoted").into())}
   Ok(Some(step))
  }
  fn retire(&mut self,action:u8,body:usize,effect:&mut RetainedAllocationEffect<'_>)->Close{
-  if action==7{return self.core.source.as_mut().expect("retained enum payload projection").close_step(body,effect).map(progress)}
   match self.child.as_mut(){Some(child)=>child.child_mut().retire(action==9,body,effect).map(progress),None=>failure()}
  }
  fn close_plan(&self,body:usize)->Result<(RetirementDemand,u64),ValueError>{
   let c=&self.core;
   if !c.closing{return Err(invalid())}
   if !c.selector.terminal_is_empty(){return Ok((c.selector.close_demands(body)?,c.selector.close_work_demand(body)?))}
-  if !c.projection.terminal_is_empty(){return Ok((c.projection.close_demand(body)?,c.projection.close_work_demand(body)?))}
-  if let Some(source)=c.source.as_ref(){return if source.terminal_is_empty(){Ok((fixed(size_of::<Option<RetainedOwnedProjection<dyn NativeValueSource>>>()),1))}else{Ok((source.close_demand(body)?,source.close_work_demand(body)?))}}
   if !c.retirement.is_empty(){return Ok((c.retirement.demands(body)?,c.retirement.next_owner_work::<N>(false,&None,body)?))}
   if let Some(child)=self.child.as_ref(){return child.child().close_plan(c,size_of::<Option<S>>(),body)}
   Ok((c.retirement.next_owner_demands::<N>(c.output.is_some(),&None,body)?,c.retirement.next_owner_work::<N>(c.output.is_some(),&None,body)?))
@@ -128,31 +128,26 @@ impl<I:NativeValueSource+?Sized,N:RetireOwned,S:NativeEnumChildren<I,N>> NativeE
   if !retained_clone_grant_admits(g,d){return Complete(RetainedWorkOutcome{result:Ok(Step::Progress(Default::default())),work:0})}
   let c=&mut self.core;
   if !c.selector.terminal_is_empty(){return native_close_settle(effect,|effect,reply|c.selector.close_into(body,effect,reply)).map(progress)}
-  if !c.projection.terminal_is_empty(){return native_close_settle(effect,|effect,reply|c.projection.close_into(body,effect,reply)).map(progress)}
-  if let Some(source)=c.source.as_mut(){if source.terminal_is_empty(){c.source.take();return finish(effect,1,Ok(Step::Progress(receipt(d))))}return source.close_step(body,effect).map(progress)}
   if !c.retirement.is_empty(){return c.retirement.step_granted(body,effect).map(progress)}
   if let Some(child)=self.child.as_mut(){return match child.child_mut().close(c,body,effect){Some(poll)=>poll,None=>{self.child=None;finish(effect,1,Ok(Step::Progress(receipt(d))))}}}
   let turn=c.retirement.begin_granted(&mut c.output,effect);
   Complete(RetainedWorkOutcome{result:turn.result.map(|s|s.unwrap_or(Step::Progress(Default::default()))).map_err(Into::into),work:turn.work})
  }
- fn empty(&self)->bool{let c=&self.core;c.selector.terminal_is_empty()&&c.projection.terminal_is_empty()&&c.source.is_none()&&self.child.is_none()&&c.output.is_none()&&c.retirement.is_empty()}
- const SEEDS:usize=9;
+ fn empty(&self)->bool{let c=&self.core;c.selector.terminal_is_empty()&&self.child.is_none()&&c.output.is_none()&&c.retirement.is_empty()}
+ const SEEDS:usize=7;
  unsafe fn seed_size(target:*mut MaybeUninit<Self>,index:usize)->Option<usize>{
-  fn size<T>(_:*mut T)->usize{size_of::<T>()}
+  fn size<T>(_:*mut T)->usize{size_of::<T>().min(SEED_WRITE_BYTES)}
   let target=target.cast::<Self>();
   Some(unsafe{match index{
-   0=>size(std::ptr::addr_of_mut!((*target).core.selector)),1=>size(std::ptr::addr_of_mut!((*target).core.projection)),2=>size(std::ptr::addr_of_mut!((*target).core.source)),
-   3=>size(std::ptr::addr_of_mut!((*target).child)),4=>size(std::ptr::addr_of_mut!((*target).core.output)),5=>size(std::ptr::addr_of_mut!((*target).core.retirement)),
-   6=>size(std::ptr::addr_of_mut!((*target).core.direct)),7=>size(std::ptr::addr_of_mut!((*target).core.phase)),8=>size(std::ptr::addr_of_mut!((*target).core.closing)),
+   0=>size(std::ptr::addr_of_mut!((*target).core.selector)),1=>size(std::ptr::addr_of_mut!((*target).child)),2=>size(std::ptr::addr_of_mut!((*target).core.output)),
+   3=>size(std::ptr::addr_of_mut!((*target).core.retirement)),4=>size(std::ptr::addr_of_mut!((*target).core.direct)),5=>size(std::ptr::addr_of_mut!((*target).core.phase)),6=>size(std::ptr::addr_of_mut!((*target).core.closing)),
    _=>return None}})
  }
  unsafe fn seed_write(target:*mut MaybeUninit<Self>,index:usize)->bool{
   let target=target.cast::<Self>();
   unsafe{match index{
-   0=>std::ptr::addr_of_mut!((*target).core.selector).write(NativeVariantSelector::new(S::spec())),1=>std::ptr::addr_of_mut!((*target).core.projection).write(Default::default()),
-   2=>std::ptr::addr_of_mut!((*target).core.source).write(ManuallyDrop::new(None)),3=>std::ptr::addr_of_mut!((*target).child).write(None),
-   4=>std::ptr::addr_of_mut!((*target).core.output).write(ManuallyDrop::new(None)),5=>std::ptr::addr_of_mut!((*target).core.retirement).write(Default::default()),
-   6=>std::ptr::addr_of_mut!((*target).core.direct).write(false),7=>std::ptr::addr_of_mut!((*target).core.phase).write(0),8=>std::ptr::addr_of_mut!((*target).core.closing).write(false),
+   0=>std::ptr::addr_of_mut!((*target).core.selector).write(NativeVariantSelector::new(S::spec())),1=>std::ptr::addr_of_mut!((*target).child).write(None),2=>std::ptr::addr_of_mut!((*target).core.output).write(ManuallyDrop::new(None)),
+   3=>std::ptr::addr_of_mut!((*target).core.retirement).write(Default::default()),4=>std::ptr::addr_of_mut!((*target).core.direct).write(false),5=>std::ptr::addr_of_mut!((*target).core.phase).write(0),6=>std::ptr::addr_of_mut!((*target).core.closing).write(false),
    _=>return false}}
   true
  }
@@ -165,24 +160,18 @@ impl<I:NativeValueSource+?Sized,N:RetireOwned,S:NativeEnumChildren<I,N>> NativeR
  fn select_advance(&self,input:RetainedCloneRef<'_,I>,body:usize,maximum:u64)->Result<NativeAdvanceSelection,ValueError>{let(_,q,action)=self.plan(input,body,maximum)?;Ok(match action{1=>self.core.selector.select_advance(input,body,maximum)?,3=>NativeAdvanceSelection::Nested,_=>NativeAdvanceSelection::Local{work:q}})}
  fn advance_work_demand(&self,input:RetainedCloneRef<'_,I>,body:usize)->Result<u64,ValueError>{
   let(_,work,action)=self.plan(input,body,u64::MAX)?;
-  match action{1=>self.core.selector.advance_work_demand(input,body),3=>self.child.as_ref().ok_or_else(invalid)?.child().work(&self.core,body),_=>Ok(work)}
+  match action{1=>self.core.selector.advance_work_demand(input,body),3=>{let projected=self.project(input)?;self.child.as_ref().ok_or_else(invalid)?.child().work(Some(projected),body)},_=>Ok(work)}
  }
  fn advance_nested(&mut self,input:RetainedCloneRef<'_,I>,control:&mut NativeDecodeControl<'_>,witness:OriginalSourceTurnWitness<'_>,body:usize,maximum:u64,g:RetainedCloneGrant)->RetainedWorkPoll<Step,NativeReceivingFailure>{
   use RetainedWorkPoll::Complete;
   let(d,q,action)=match self.plan(input,body,maximum){Ok(plan)=>plan,Err(error)=>return Complete(RetainedWorkOutcome{result:Err(error.into()),work:0})};
   if q==0||q>maximum||!retained_clone_grant_admits(g,d){return Complete(RetainedWorkOutcome{result:Ok(Step::Progress(Default::default())),work:0})}
   if action==1{return self.core.selector.advance_nested(input,control,witness,body,maximum,g)}
-  if action==3{return match self.child.as_mut(){Some(child)=>child.child_mut().nested(&self.core,control,witness,body,maximum,g),None=>failure()}}
+  if action==3{let projected=match self.project(input){Ok(projected)=>projected,Err(error)=>return Complete(RetainedWorkOutcome{result:Err(error.into()),work:0})};return match self.child.as_mut(){Some(child)=>child.child_mut().nested(Some(projected),control,witness,body,maximum,g),None=>failure()}}
   failure()
  }
  fn advance_local<'reply>(&mut self,input:RetainedCloneRef<'_,I>,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,Step,OriginalReceivingPrimary>)->Result<OriginalEffectReplyComplete<'reply,Step,OriginalReceivingPrimary>,ValueError>{
   let maximum=effect.maximum_work_units();
-  if let Ok((d,q,action@(23|24)))=self.plan(input,body,maximum){
-   if q==0||q>maximum||!retained_clone_grant_admits(effect.grant(),d){return Ok(reply.complete(Ok(Step::Progress(Default::default()))))}
-   let core=&mut self.core;
-   let done=if action==23{native_relay(reply.progress(),|reply|{let child=input.try_project::<dyn NativeValueSource,ValueError,_>(if core.direct{usize::MAX-1}else{usize::MAX},|value|if core.direct{value.variant_payload()}else{Ok(value.as_source())})?;core.projection.admit(child,effect,reply)})}else{native_relay(reply.progress(),|reply|core.projection.take(&mut *core.source,effect,reply))};
-   if action==24&&core.source.is_some(){core.phase=2}
-   return done}
   if let Ok((d,q,action))=self.plan(input,body,maximum){if matches!(action,1|8){if q==0||q>maximum||!retained_clone_grant_admits(effect.grant(),d){return Ok(reply.complete(Ok(Step::Progress(Default::default()))))}return if action==1{self.core.selector.advance_local(input,body,effect,reply.progress())}else{self.core.selector.settle_into(effect,reply.progress())}}}
   let result=(||->Result<Option<Step>,OriginalReceivingPrimary>{
    let(d,q,action)=self.plan(input,body,maximum)?;

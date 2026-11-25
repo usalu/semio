@@ -172,3 +172,29 @@ fn captured_snapshot_quotes_original_root_and_completes_only_after_returning_its
         }
     }
 }
+
+#[test]
+fn registry_owner_quotes_the_terminal_copy() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+    let law = &fixture["registryOwnerClose"];
+    let mut owner = semio_framework_value_snapshot_read::SnapshotReadLeaseRegistryOwner::new();
+    let mut saw_final_copy = false;
+    for _ in 0..fixture["maximumTurns"].as_u64().unwrap() {
+        if owner.closed() { break; }
+        let demand = owner.custody_demands().unwrap();
+        let selected = grant(demand);
+        if demand.copy_bytes != 0 {
+            let denied = RetainedCloneGrant {
+                maximum_copy_bytes: demand.copy_bytes - law["underfundFinalCopyBy"].as_u64().unwrap() as usize,
+                ..selected
+            };
+            let step = drive(denied, 1, |effect| owner.close_custody_step(effect)).result.unwrap();
+            assert_eq!(step.progress(), RetainedCloneProgress::default());
+            assert_eq!(!owner.closed(), law["heldOnDenial"].as_bool().unwrap());
+            saw_final_copy = true;
+        }
+        drive(selected, 1 << 20, |effect| owner.close_custody_step(effect)).result.unwrap();
+    }
+    assert!(saw_final_copy);
+    assert_eq!(owner.closed(), law["closedAfterFunding"].as_bool().unwrap());
+}

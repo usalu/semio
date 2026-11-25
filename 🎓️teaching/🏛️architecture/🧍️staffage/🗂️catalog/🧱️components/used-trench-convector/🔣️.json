@@ -13,21 +13,111 @@
    "de": "Ein ausgebauter Unterflurkonvektor für freie Konvektion, wie ihn ein Händler für gebrauchte Haustechnik anbietet: eine 2,0 m lange abgekantete Stahlwanne von 260 x 110 mm (verzinktes Blech 1,25 mm, innen schwarz pulverbeschichtet) mit ihrem natur eloxierten Aluminium-Randrahmen, ein Kupfer-Aluminium-Wärmetauscher von 1,80 m (zwei Kupferrohre 15 mm durch Aluminiumlamellen im Abstand von 8 mm, verstaubt, zwei Lamellen verbogen) auf drei Haltern an der Fensterseite, Vor- und Rücklaufanschluss von ihren Schläuchen getrennt und mit Messingkappen verschlossen, ein Entlüftungsventil, vier Nivellierwinkel und graue Estrichreste an der Außenwand; entleert 14.7 kg. Der Rollrost aus Aluminium von 2000 x 250 mm ist ausgebaut und liegt umreift als Rolle von 236 mm auf einem der zwei Nadelholz-Kanthölzer 80 x 80 mm daneben; zusammen 23.8 kg. Posen: auf den Kanthölzern gelagert, von zwei Personen getragen, wobei Kanthölzer und Rost liegen bleiben, und wieder eingebaut auf einer Rohdecke im Heizbetrieb 75/65 °C mit warmer Luft über den Lamellen."
   },
   "tags": [
-   "component",
-   "reclaimed",
-   "used",
-   "hvac",
-   "heating",
-   "convector",
-   "trench-convector",
-   "floor-heater",
-   "galvanised-steel",
-   "copper",
-   "aluminium",
-   "grille",
-   "timber",
-   "operating",
-   "thermal"
+   {
+    "id": "component",
+    "title": {
+     "en": "component",
+     "de": "Bauteil"
+    }
+   },
+   {
+    "id": "reclaimed",
+    "title": {
+     "en": "reclaimed",
+     "de": "wiederverwendet"
+    }
+   },
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "hvac",
+    "title": {
+     "en": "HVAC",
+     "de": "HLK"
+    }
+   },
+   {
+    "id": "heating",
+    "title": {
+     "en": "heating",
+     "de": "Heizung"
+    }
+   },
+   {
+    "id": "convector",
+    "title": {
+     "en": "convector",
+     "de": "Konvektor"
+    }
+   },
+   {
+    "id": "trench-convector",
+    "title": {
+     "en": "trench convector",
+     "de": "Unterflurkonvektor"
+    }
+   },
+   {
+    "id": "floor-heater",
+    "title": {
+     "en": "floor heater",
+     "de": "Bodenheizung"
+    }
+   },
+   {
+    "id": "galvanised-steel",
+    "title": {
+     "en": "galvanised steel",
+     "de": "verzinkter Stahl"
+    }
+   },
+   {
+    "id": "copper",
+    "title": {
+     "en": "copper",
+     "de": "Kupfer"
+    }
+   },
+   {
+    "id": "aluminium",
+    "title": {
+     "en": "aluminium",
+     "de": "Aluminium"
+    }
+   },
+   {
+    "id": "grille",
+    "title": {
+     "en": "grille",
+     "de": "Gitter"
+    }
+   },
+   {
+    "id": "timber",
+    "title": {
+     "en": "timber",
+     "de": "Holz"
+    }
+   },
+   {
+    "id": "operating",
+    "title": {
+     "en": "operating",
+     "de": "Betrieb"
+    }
+   },
+   {
+    "id": "thermal",
+    "title": {
+     "en": "thermal",
+     "de": "thermisch"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage component authors (used HVAC wave, author 12)",

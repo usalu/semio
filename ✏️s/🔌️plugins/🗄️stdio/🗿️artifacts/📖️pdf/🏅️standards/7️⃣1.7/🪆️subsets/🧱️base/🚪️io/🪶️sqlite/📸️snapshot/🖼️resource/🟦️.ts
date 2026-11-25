@@ -15,8 +15,7 @@ export async function writePdfImage(out:PdfProjection,image:PdfImage):Promise<bi
   const color=image.colorSpace==null?null:await writePdfColorSpace(out,image.colorSpace);const reference=image.body.kind==="artifact"?await writePdfArtifactReference(out,image.body.reference):null;const extra=await writePdfDictionary(out,image.extra??[]);
   let maskKind:string|null=null;let stencil:string|null=null;
   if(image.mask!=null){switch(image.mask.kind){case "stencil":maskKind=image.mask.kind;stencil=image.mask.image;break;case "colorKey":maskKind=image.mask.kind;break;default:throw new Error("Unknown PDF image mask");}}
-  const key=await out.insert("pdf_image",[image.id,pdfInteger(image.width),pdfInteger(image.height),color,pdfInteger(image.bitsPerComponent??0),image.imageMask?1n:0n,image.interpolate?1n:0n,image.body.kind,reference,image.softMask??null,optionalInteger(image.softMaskInData),maskKind,stencil,image.matte==null?0n:1n,image.intent??null,image.optionalContent??null,optionalInteger(image.structParent),extra]);
-  if(image.body.kind==="samples"){out.checkRowsAdditional(image.body.values.length);for(const[ordinal,value]of image.body.values.entries())await out.insert("pdf_image_sample",[key,BigInt(ordinal),pdfInteger(value,16)]);}
+  const key=await out.insert("pdf_image",[image.id,pdfInteger(image.width),pdfInteger(image.height),color,pdfInteger(image.bitsPerComponent??0),image.imageMask?1n:0n,image.interpolate?1n:0n,image.body.kind,reference,image.softMask??null,optionalInteger(image.softMaskInData),maskKind,stencil,image.matte==null?0n:1n,image.intent??null,image.optionalContent??null,optionalInteger(image.structParent),extra,image.body.kind==="samples"?await out.bytes(image.body.packed):null]);
   await writePdfReals(out,"pdf_image_real",key,"decode",image.decode??[]);
   if(image.matte!=null)await writePdfReals(out,"pdf_image_real",key,"matte",image.matte);
   if(image.mask?.kind==="colorKey"){out.checkRowsAdditional(image.mask.ranges.length);for(const[ordinal,value]of image.mask.ranges.entries())await out.insert("pdf_image_color_key",[key,BigInt(ordinal),pdfInteger(value)]);}
@@ -25,7 +24,7 @@ export async function writePdfImage(out:PdfProjection,image:PdfImage):Promise<bi
 
 /** 📥️ Restore complete image ownership and exact optional mask and matte semantics. */
 export async function readPdfImage(reader:PdfReader,key:bigint):Promise<PdfImage>{
-  const row=await reader.take("pdf_image",key,19);const kind=await reader.optionalText(row,12);let mask:PdfImageMask|null=null;
+  const row=await reader.take("pdf_image",key,20);const kind=await reader.optionalText(row,12);let mask:PdfImageMask|null=null;
   switch(kind){
     case null:reader.nullExcept("pdf_image",row,13,14,[]);break;
     case "stencil":mask={kind,image:await reader.text(row,13)};break;
@@ -35,6 +34,6 @@ export async function readPdfImage(reader:PdfReader,key:bigint):Promise<PdfImage
     }
     default:throw new Error("Unknown PDF image mask");
   }
-  let body:PdfImageBody;switch(artifactSqliteText(row,8)){case "samples":{reader.nullExcept("pdf_image",row,9,10,[]);const values:number[]=[];for(const child of await reader.children("pdf_image_sample",1,2,key)){const value=await reader.take("pdf_image_sample",child.rowid,4);values.push(pdfNumber(value,3,16));}body={kind:"samples",values};break;}case "artifact":body={kind:"artifact",reference:await readPdfArtifactReference(reader,artifactSqliteInteger(row,9))};break;default:throw new Error("Unknown PDF image body");}
+  let body:PdfImageBody;switch(artifactSqliteText(row,8)){case "samples":reader.nullExcept("pdf_image",row,9,10,[]);body={kind:"samples",packed:await reader.bytes(row,19)};break;case "artifact":reader.nullExcept("pdf_image",row,19,20,[]);body={kind:"artifact",reference:await readPdfArtifactReference(reader,artifactSqliteInteger(row,9))};break;default:throw new Error("Unknown PDF image body");}
   return {id:await reader.text(row,1),width:pdfNumber(row,2),height:pdfNumber(row,3),colorSpace:row.values[4]===null?null:await readPdfColorSpace(reader,artifactSqliteInteger(row,4)),bitsPerComponent:pdfNumber(row,5),imageMask:pdfBoolean(row,6),decode:await readPdfReals(reader,"pdf_image_real",key,"decode"),interpolate:pdfBoolean(row,7),body,softMask:await reader.optionalText(row,10),softMaskInData:optionalNumber(row,11),mask,matte:pdfBoolean(row,14)?await readPdfReals(reader,"pdf_image_real",key,"matte"):null,intent:await reader.optionalText(row,15),optionalContent:await reader.optionalText(row,16),structParent:optionalNumber(row,17),extra:await readPdfDictionary(reader,artifactSqliteInteger(row,18))};
 }

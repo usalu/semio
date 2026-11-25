@@ -9,7 +9,7 @@ pub fn zone(id: u32, name: &str) -> crate::model::Zone {
 
 /// 📸️ The persisted snapshot a typed model lives in, both composed child handles minted.
 pub fn snapshot(model: crate::model::Model) -> EnergyModelSnapshot {
-    crate::snapshot::energy_snapshot_with_state(crate::snapshot::ENERGY_MODEL_DOCUMENT_SCHEMA, &model, None)
+    crate::snapshot::reference::energy_snapshot_with_state(crate::snapshot::ENERGY_MODEL_DOCUMENT_SCHEMA, &model, None)
 }
 
 /// 🔗️ A head-pinned forward link to another artifact.

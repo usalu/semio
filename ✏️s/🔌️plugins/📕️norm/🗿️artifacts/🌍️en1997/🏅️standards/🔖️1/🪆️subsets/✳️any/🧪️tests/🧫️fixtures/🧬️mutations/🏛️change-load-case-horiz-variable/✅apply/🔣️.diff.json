@@ -15,6 +15,11 @@
       {
         "id": "footing-F1",
         "patch": {
+          "width": null,
+          "length": null,
+          "embedment": null,
+          "baseInclinationDeg": null,
+          "settlementLimit": null,
           "loadCases": {
             "removed": [],
             "inserted": [],
@@ -23,7 +28,13 @@
               {
                 "id": "lc-bsP",
                 "patch": {
-                  "horizontalVariable": 80000.0
+                  "designSituation": null,
+                  "verticalPermanent": null,
+                  "verticalVariable": null,
+                  "horizontalPermanent": null,
+                  "horizontalVariable": 80000.0,
+                  "momentPermanent": null,
+                  "momentVariable": null
                 }
               }
             ]
@@ -41,6 +52,7 @@
   "pileGroups": null,
   "labTests": null,
   "layerWaters": null,
+  "placements": null,
   "cases": {
     "removed": [],
     "inserted": [],

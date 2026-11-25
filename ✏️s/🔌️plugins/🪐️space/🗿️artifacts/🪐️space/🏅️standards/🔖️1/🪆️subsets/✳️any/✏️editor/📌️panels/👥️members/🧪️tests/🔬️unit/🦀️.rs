@@ -12,6 +12,7 @@ fn wire_and_retire(node: semio_plugin::BuiltNode) -> String {
 
 #[semio_framework_async_macros::async_test]
 async fn empty_config_renders_the_empty_state() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let json = wire_and_retire(render(&SpaceIndexConfig::default(), &TreeWindows::unhosted()).expect("empty members panel"));
     assert!(json.contains("s-space-members.empty"));
     assert!(json.contains("s-space-invite"));
@@ -20,6 +21,7 @@ async fn empty_config_renders_the_empty_state() {
 
 #[semio_framework_async_macros::async_test]
 async fn members_render_with_a_remove_action_each() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let config = SpaceIndexConfig { members: vec![SpaceIndexMember { user_id: "u-1".into(), email: "a@example.com".into(), display_name: "Alice".into(), role: "author".into() }], ..Default::default() };
     let json = wire_and_retire(render(&config, &TreeWindows::unhosted()).expect("members panel"));
     assert!(json.contains("member:u-1"));
@@ -29,6 +31,7 @@ async fn members_render_with_a_remove_action_each() {
 
 #[semio_framework_async_macros::async_test]
 async fn public_visibility_offers_make_private() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let config = SpaceIndexConfig { visibility: "public".into(), ..Default::default() };
     let json = wire_and_retire(render(&config, &TreeWindows::unhosted()).expect("public members panel"));
     assert!(json.contains("\"visibility\":\"private\""));
@@ -56,6 +59,7 @@ fn window_body(config: &SpaceIndexConfig, requests: Vec<TreeWindowRequest>) -> S
 /// `+N`, and the three fixed action rows sit in their own unwindowed section.
 #[semio_framework_async_macros::async_test]
 async fn oversized_membership_stamps_totals_and_never_a_continuation_row() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let config = oversized_config(300);
     let json = window_body(&config, Vec::new());
     assert!(json.contains("\"total\":300"), "the members section stamps its full extent: {json}");
@@ -68,6 +72,7 @@ async fn oversized_membership_stamps_totals_and_never_a_continuation_row() {
 /// 🪟️ Law (b): a container the host closed stamps its total and materialises nothing.
 #[semio_framework_async_macros::async_test]
 async fn closed_section_stamps_total_and_materialises_no_members() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let config = oversized_config(300);
     let json = window_body(&config, vec![TreeWindowRequest { body_key: SPACE_INDEX_BODY_MEMBERS.into(), node_key: SPACE_INDEX_PANEL_MEMBERS.into(), open: Some(false), offset: 0, rows: 0 }]);
     assert!(json.contains("\"total\":300"), "a closed section still stamps its extent: {json}");
@@ -78,6 +83,7 @@ async fn closed_section_stamps_total_and_materialises_no_members() {
 /// 🪟️ Law (c): a host window materialises exactly `[offset, offset + rows)`, keyed by the raw row id.
 #[semio_framework_async_macros::async_test]
 async fn host_window_materialises_exactly_its_slice() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let config = oversized_config(300);
     let json = window_body(&config, vec![TreeWindowRequest { body_key: SPACE_INDEX_BODY_MEMBERS.into(), node_key: SPACE_INDEX_PANEL_MEMBERS.into(), open: Some(true), offset: 120, rows: 6 }]);
     assert!(json.contains("\"offset\":120"), "the section reports its offset: {json}");
@@ -93,6 +99,7 @@ async fn host_window_materialises_exactly_its_slice() {
 /// row keeps its own `removeMember` binding instead.
 #[semio_framework_async_macros::async_test]
 async fn unbound_tree_keeps_per_row_actions_and_declares_no_domain() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let config = oversized_config(3);
     let json = window_body(&config, Vec::new());
     assert!(!json.contains("interactionDomain"), "the members tree binds no domain: {json}");

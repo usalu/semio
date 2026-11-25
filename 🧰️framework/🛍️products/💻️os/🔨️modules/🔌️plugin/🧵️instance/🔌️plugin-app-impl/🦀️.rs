@@ -14,7 +14,7 @@ use std::sync::Arc;
 use semio_plugin_decl_app::{ArtifactApp, DOCUMENT_LOAD_BUSY_CODE, DOCUMENT_LOAD_CHANGED_CODE, DOCUMENT_LOAD_FAILED_CODE, DOCUMENT_LOAD_HISTORY_INVALID_CODE, DOCUMENT_LOAD_INCOMPLETE_CODE, DOCUMENT_LOAD_MEMBER_INVALID_CODE, DOCUMENT_LOAD_OPERATION_UNKNOWN_CODE, DOCUMENT_LOAD_TOO_LARGE_CODE, DOCUMENT_LOAD_TOO_MANY_MEMBERS_CODE, EphemeralSnapshot, MediaArtifactDescriptor, MediaArtifactError, MediaConsumption, NATURAL_FILE_PORT, TransactionPrepareOutcome, document_load_fault, media_projection_error, natural_file_input_media, whole_document_archive};
 use store::os_store::store_schema::{ArtifactCommand, ArtifactEnvelope};
 use semio_framework_artifact_reference::ArtifactDialect;
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use semio_plugin_operation::original_catalog_constructor::{ArtifactStoreConstructorKind, ArtifactStoreConstructorPhase};
 use semio_plugin_decl_app::tool_contract::{ArtifactToolCompletionValue, ArtifactToolPublicContract, ToolOwnerWitness, TypedOperationResultLane};
@@ -245,7 +245,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> P
         if self.original_controller_close.as_ref().is_none_or(|owner|(owner.terminal)(&self.app))&&self.constructor.constructor_terminal_is_empty()&&self.close_ladder_quoted_retirement_selected(){let step=self.close_ladder_step(cx,loan)?;return Ok(PluginLifecycleStep::retained(step,self.close_terminal_is_empty()))}
         let demand=self.close_retirement_demands(loan.maximum_copy_bytes)?;
         if self.original_controller_close.as_ref().is_none_or(|owner|(owner.terminal)(&self.app))&&!self.constructor.constructor_terminal_is_empty(){return semio_plugin_ownership::bounded_ownership::original_lifecycle_effect_step(cx,loan,demand,|_,effect|{self.stores.close_store_constructor_unit(&mut self.constructor, effect)?;let progress=self.constructor.constructor_receipt().map_or(Default::default(),|(_,_,_,progress)|*progress);self.constructor.take_constructor_receipt();Ok((PluginLifecycleStep::Progress(progress),false))})}
-        semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,loan,demand,|same,grant|{
+        semio_plugin_document_media::original_composed_lifecycle_step(cx,loan,demand,|same,grant|{
             if let Some(owner)=self.original_controller_close.as_ref().filter(|owner|!(owner.terminal)(&self.app)){let before=same.retained_progress();(owner.step)(&mut self.app,same)?;let p=semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,same.retained_progress())?;return Ok((PluginLifecycleStep::Progress(p),false))}
             let step=self.close_ladder_step(same,grant)?;let terminal=self.close_terminal_is_empty();Ok((PluginLifecycleStep::retained(step,terminal),terminal))
         })
@@ -380,7 +380,6 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> P
 
     fn close_diagnostic(&self) -> String {
         let ladder = self.ladder_ref();
-        eprintln!("{}", ladder.debug_unsettled());
         if matches!(ladder.close_rung(), semio_plugin_instance_ladders::ladders_close_ladder::CloseRung::OwnedStores) {
             let lane = semio_plugin_instance_ladders::ladders_lifecycle_stores::ORIGINAL_STORE_LANES
                 .get(usize::from(self.close.close_owned_stage)).copied().unwrap_or("complete");
@@ -411,7 +410,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> P
     fn typed_operation_diagnostic(&self) -> String {
         let operations = (0..ARTIFACT_LIVE_OUTPUT_SLOTS).filter_map(|index| {
             let (id, operation) = self.tools.tool_operations.entry(index)?;
-            Some(format!("op {id} '{}' {:?} s={} rej={}/{} cancel={} term={} sem={} out={} res={} fc={} prod={} ref={} wait={:?}", operation.verb, operation.stage, operation.session.is_some(), operation.session_rejected.is_some(), operation.session_rejected.as_ref().is_some_and(|rejected| rejected.admission_pending()), operation.user_cancel_requested, operation.terminal_seen, operation.worker_semantic_pending, operation.worker_outcome_pending, operation.worker_resume_pending, operation.worker_fault_capture.is_some(), operation.producer_request.is_some(), operation.retained_structural_refusal().unwrap_or_else(|| "none".into()), semio_plugin_retained_command::typed_operation::last_publication_wait(*id)))
+            Some(format!("op {id} '{}' {:?} page={}/{} s={} rej={}/{} cancel={} term={} sem={} out={} res={} fc={} prod={} ref={} wait={:?}", operation.verb, operation.stage, operation.result_page.is_some(), operation.result_page_presented, operation.session.is_some(), operation.session_rejected.is_some(), operation.session_rejected.as_ref().is_some_and(|rejected| rejected.admission_pending()), operation.user_cancel_requested, operation.terminal_seen, operation.worker_semantic_pending, operation.worker_outcome_pending, operation.worker_resume_pending, operation.worker_fault_capture.is_some(), operation.producer_request.is_some(), operation.retained_structural_refusal().unwrap_or_else(|| "none".into()), semio_plugin_retained_command::typed_operation::last_publication_wait(*id)))
         }).collect::<Vec<_>>().join("; ");
         let lw=(0..ARTIFACT_LIVE_OUTPUT_SLOTS).find_map(|i|self.tools.latest_wins_commands.entry(i)).map(|(id,p)|format!(" lw{id}:ctx/lookup/accepted/closing/key={:?}",(p.context_phase,p.lookup_started,p.accepted,p.closing,p.key_copy.as_ref().map(|k|(k.part,k.prefix,k.offset))))).unwrap_or_default();
         let command = format!("command idle={} shared pending={} route cache={} route delivery={} action delivery={} original emission={} original typed command={}", self.original_command_scope.is_idle(), self.shared_command_source_pending(), self.host_events.routes.cache_busy(), self.host_events.routes.delivering, !self.host_events.action_delivery.terminal_is_empty(), self.original_emission.pending(), self.original_typed_command.pending());
@@ -447,7 +446,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> P
             || self.pending.reserved_commit_outcome.is_some()
             || self.host_events.resumes.pending()
             || self.host_events.routes.pending() || self.original_host_event_command.pending()
-            || !self.tools.tool_operations.is_empty()
+            || self.tools.has_runnable_tool_operation()
             || self.ingest.has_runnable_artifact_envelope_decode_worker_step()
             || !self.tools.latest_wins_commands.is_empty()
             || self.tools.typed_effect_outbox.len() != 0
@@ -843,7 +842,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> P
         if self.ingest.document_archive_loads.get(operation).is_some_and(ActiveDocumentArchiveLoad::awaits_merge) {
             self.command_ctx().merge_document_archive(operation, identity, cx).await?;
         }
-        self.ingest.document_archive_loads.get(operation).map(ActiveDocumentArchiveLoad::status).ok_or_else(|| document_load_fault(DOCUMENT_LOAD_OPERATION_UNKNOWN_CODE, "recursive document archive authority changed before status publication"))
+        self.ingest.document_archive_status(operation).ok_or_else(|| document_load_fault(DOCUMENT_LOAD_OPERATION_UNKNOWN_CODE, "recursive document archive authority changed before status publication"))
     }
 
     fn cancel_document_archive_load(&mut self, operation: u64) -> Result<(), Fault> { self.ingest.cancel_document_archive_load(operation) }

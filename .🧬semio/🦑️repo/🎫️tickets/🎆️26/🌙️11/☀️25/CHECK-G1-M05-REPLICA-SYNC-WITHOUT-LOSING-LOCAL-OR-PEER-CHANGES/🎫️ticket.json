@@ -1,0 +1,32 @@
+{
+  "title": "Check g1-m05 Replica Sync Without Losing Local or Peer Changes",
+  "emoji": "🔄",
+  "status": "closed",
+  "description": "Coordinator asked to make sure worker g1-m05 (Windows, this machine) is in sync with the shared-worktree fleet, that no local changes are lost and that no changes from other workers are overwritten. Read-only check through replica status, fleet --diff, verify and .cache/f/lost; report findings.",
+  "summary": "g1-m05 (this Windows machine) is in sync. The daemon runs on the fleet code 96d644fb9453, the store is reachable, and the machine is 0 events behind every quiet origin. fleet --diff shows no line that exists only on this machine against the healthy peers. The 3 incoming paths that were missing arrived during the check; receiver-tests.rs differs only in the executable bit on macOS. lost/ has no overwrite newer than 2026-11-24 02:22. verify (23 min, 471,198 files) reported 48 drifted paths, all with an mtime inside the scan window, so they are concurrent live edits; trust was re-verified afterwards and this ticket's files reached the peers within about 1 min. Open points for W23 and the coordinator: round failures rose from 9 to 29, publish p95 is up to 183 s, and leftover *.tmp files from failed renames sit in .cache/f/boot and the store origin. Nothing in the tree was changed. Report: sync-check.md.",
+  "goal": "🎯repomechanisms",
+  "sessions": [
+    "8bdfe44f-ac44-4b08-ba5b-e5454be55c80"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-25 12:47:19",
+      "author": "",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Coordinator asked to make sure worker g1-m05 (Windows, this machine) is in sync with the shared-worktree fleet, that no local changes are lost and that no changes from other workers are overwritten. Read-only check through replica status, fleet --diff, verify and .cache/f/lost; report findings.",
+      "llm": "opus-5-5"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-25 13:13:04",
+      "author": "ueli",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "8d17d8ba3998690932b0032ea2ca41bce5c994b6",
+      "summary": "g1-m05 (this Windows machine) is in sync. The daemon runs on the fleet code 96d644fb9453, the store is reachable, and the machine is 0 events behind every quiet origin. fleet --diff shows no line that exists only on this machine against the healthy peers. The 3 incoming paths that were missing arrived during the check; receiver-tests.rs differs only in the executable bit on macOS. lost/ has no overwrite newer than 2026-11-24 02:22. verify (23 min, 471,198 files) reported 48 drifted paths, all with an mtime inside the scan window, so they are concurrent live edits; trust was re-verified afterwards and this ticket's files reached the peers within about 1 min. Open points for W23 and the coordinator: round failures rose from 9 to 29, publish p95 is up to 183 s, and leftover *.tmp files from failed renames sit in .cache/f/boot and the store origin. Nothing in the tree was changed. Report: sync-check.md."
+    }
+  ]
+}

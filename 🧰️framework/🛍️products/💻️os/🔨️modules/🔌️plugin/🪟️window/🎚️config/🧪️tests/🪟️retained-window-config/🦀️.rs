@@ -1,6 +1,6 @@
 //! 🧪️ Retained reducers bind the exact captured window-config owner and version.
 
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use semio_framework_value::retirement::controlled::ControlledRetirement;
 use semio_plugin_window_config::{DirectIngress, WindowConfigAuthorityIdentity, TypedWindowConfigPublication, TypedWindowConfigStoreOwner, WindowConfigMutation, WindowConfigOwner, WindowConfigSnapshot};
 use semio_plugin_window_config::retained::ErasedWindowConfigPackLoad;

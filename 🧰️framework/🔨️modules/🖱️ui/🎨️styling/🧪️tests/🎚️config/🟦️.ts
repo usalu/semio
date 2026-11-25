@@ -17,7 +17,7 @@ export default {
     root: testRoot,
     name: "@semio-tech/ui-styling",
     environment: "jsdom",
-    include: ["🧪️tests/🧪️levels-oklabmix/🟦️.ts", "🧪️tests/🧪️theme-resolve/🟦️.ts", "🧪️tests/🧪️playgroundflowwasmdevstubplugin/🟦️.ts"],
+    include: ["🧪️tests/🧪️levels-oklabmix/🟦️.ts", "🧪️tests/🧪️semantic-ink-contrast/🟦️.ts", "🧪️tests/🧪️theme-resolve/🟦️.ts", "🧪️tests/🧪️playgroundflowwasmdevstubplugin/🟦️.ts", "🧪️tests/🧪️generated-freshness/🟦️.ts"],
     coverage: { include: ["📽️projection/🟦️.ts", "🌓️theme/**/🟦️.ts", "🏗️builder/🌐️vite/🟦️.ts"] },
     passWithNoTests: false,
   },

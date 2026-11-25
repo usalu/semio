@@ -13,22 +13,118 @@
    "de": "Ein Sand-Wasser-Spieltisch der kommunalen Spielplatzbauart nach vielen Sommern: eine 1,55 m lange Edelstahlrinne auf 0,68 m Arbeitshöhe auf vergrauten Douglasienzargen und vier Robinienpfosten in Betonpunktfundamenten, zwei Schieber, eine klare Archimedische Schnecke aus Polycarbonat mit Handkurbel, die Wasser aus einem unteren Becken auf seinem Sockel hebt, Kalkränder in den Becken, eingeschwemmter nasser Sand am Auslauf, ein in frischem Holz ersetztes Stirnbrett und eine Spritzmulde im Sand unter dem Auslauf; jeden Winter vom Bauhof entleert."
   },
   "tags": [
-   "used",
-   "park",
-   "public-space",
-   "play",
-   "water",
-   "water-play",
-   "sand-play",
-   "archimedes-screw",
-   "sluice",
-   "stainless-steel",
-   "timber",
-   "robinia",
-   "douglas-fir",
-   "polycarbonate",
-   "concrete-footing",
-   "playground"
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "park",
+    "title": {
+     "en": "park",
+     "de": "Park"
+    }
+   },
+   {
+    "id": "public-space",
+    "title": {
+     "en": "public space",
+     "de": "öffentlicher Raum"
+    }
+   },
+   {
+    "id": "play",
+    "title": {
+     "en": "play",
+     "de": "Spiel"
+    }
+   },
+   {
+    "id": "water",
+    "title": {
+     "en": "water",
+     "de": "Wasser"
+    }
+   },
+   {
+    "id": "water-play",
+    "title": {
+     "en": "water play",
+     "de": "Wasserspiel"
+    }
+   },
+   {
+    "id": "sand-play",
+    "title": {
+     "en": "sand play",
+     "de": "Sandspiel"
+    }
+   },
+   {
+    "id": "archimedes-screw",
+    "title": {
+     "en": "Archimedes screw",
+     "de": "Archimedische Schraube"
+    }
+   },
+   {
+    "id": "sluice",
+    "title": {
+     "en": "sluice",
+     "de": "Schleuse"
+    }
+   },
+   {
+    "id": "stainless-steel",
+    "title": {
+     "en": "stainless steel",
+     "de": "Edelstahl"
+    }
+   },
+   {
+    "id": "timber",
+    "title": {
+     "en": "timber",
+     "de": "Holz"
+    }
+   },
+   {
+    "id": "robinia",
+    "title": {
+     "en": "robinia",
+     "de": "Robinie"
+    }
+   },
+   {
+    "id": "douglas-fir",
+    "title": {
+     "en": "douglas fir",
+     "de": "Douglasie"
+    }
+   },
+   {
+    "id": "polycarbonate",
+    "title": {
+     "en": "polycarbonate",
+     "de": "Polycarbonat"
+    }
+   },
+   {
+    "id": "concrete-footing",
+    "title": {
+     "en": "concrete footing",
+     "de": "Betonfundament"
+    }
+   },
+   {
+    "id": "playground",
+    "title": {
+     "en": "playground",
+     "de": "Spielplatz"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content (used park objects wave)",

@@ -134,7 +134,27 @@
         "package": "semio-os-mcp",
         "binary": "semio-os-mcp",
         "sourcesRecord": "semio-os-mcp.sources.json",
-        "diagnosticChannel": "stderr"
+        "diagnosticChannel": "stderr",
+        "prerequisites": [
+          {
+            "target": "@semio-tech/assets:build",
+            "produces": [
+              "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🪪️icon-name/🦀️.rs"
+            ]
+          },
+          {
+            "target": "@semio-tech/framework-schema:generate",
+            "produces": [
+              "🧰️framework/🔨️modules/🧬️schema/🤖️generated/🏷️entity-kinds/🦀️.rs"
+            ]
+          },
+          {
+            "target": "@semio-tech/ui-styling-tokens:generate",
+            "produces": [
+              "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🔤️tokens/🦀️.rs"
+            ]
+          }
+        ]
       }
     },
     "Diagnostics": {

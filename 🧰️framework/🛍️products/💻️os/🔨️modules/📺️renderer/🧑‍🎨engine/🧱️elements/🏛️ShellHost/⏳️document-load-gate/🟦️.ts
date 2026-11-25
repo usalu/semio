@@ -23,6 +23,9 @@ export type DocumentLoadGateV1 = {
   readonly begin: (pluginId: string, instanceId: number) => () => void;
   readonly loading: (pluginId: string, instanceId: number) => boolean;
   readonly deferred: (pluginId: string, instanceId: number) => number;
+  /** 🛑️ Whether the person asked to cancel the load now running: it stops showing as loading at once, while the program still retires what it held. */
+  readonly cancelling: (pluginId: string, instanceId: number) => boolean;
+  readonly markCancelling: (pluginId: string, instanceId: number) => void;
   readonly settled: (pluginId: string, instanceId: number, signal?: AbortSignal) => Promise<"settled" | "queue-full">;
 };
 
@@ -33,6 +36,7 @@ type Slot = { loads: number; readonly waiters: Waiter[] };
  * idempotent release; the last release wakes every parked input in the order it arrived, a cancelled one leaves the queue. */
 export function createDocumentLoadGateV1(capacity: number = DOCUMENT_LOAD_DEFER_CAPACITY_V1): DocumentLoadGateV1 {
   const slots = new Map<string, Slot>();
+  const stopping = new Set<string>();
   const key = sessionInstanceKeyV1;
   return {
     begin: (pluginId, instanceId) => {
@@ -47,11 +51,17 @@ export function createDocumentLoadGateV1(capacity: number = DOCUMENT_LOAD_DEFER_
         slot.loads -= 1;
         if (slot.loads > 0) return;
         slots.delete(id);
+        stopping.delete(id);
         for (const waiter of slot.waiters.splice(0)) waiter.resolve();
       };
     },
     loading: (pluginId, instanceId) => (slots.get(key(pluginId, instanceId))?.loads ?? 0) > 0,
     deferred: (pluginId, instanceId) => slots.get(key(pluginId, instanceId))?.waiters.length ?? 0,
+    cancelling: (pluginId, instanceId) => stopping.has(key(pluginId, instanceId)),
+    markCancelling: (pluginId, instanceId) => {
+      const id = key(pluginId, instanceId);
+      if (slots.has(id)) stopping.add(id);
+    },
     settled: (pluginId, instanceId, signal) => {
       const slot = slots.get(key(pluginId, instanceId));
       if (slot === undefined) return Promise.resolve("settled");
@@ -69,4 +79,22 @@ export function createDocumentLoadGateV1(capacity: number = DOCUMENT_LOAD_DEFER_
       });
     },
   };
+}
+
+/** 🏁️ How a whole-document load ended without a document. */
+export type DocumentLoadEndV1 = "cancelled" | "failed";
+
+/** 🧾️ Records on the effect owner that its load ended without a document, so the action that carried it reads as not applied. */
+export function noteDocumentLoadEndV1(owner: { documentLoad?: DocumentLoadEndV1 }, cancelled: boolean): void {
+  owner.documentLoad = cancelled ? "cancelled" : "failed";
+}
+
+/** 🧾️ The refusal detail of an action whose document load ended without a document, `undefined` when it loaded or carried none. */
+export function documentLoadRefusalDetailV1(owner: { readonly documentLoad?: DocumentLoadEndV1 }): string | undefined {
+  return owner.documentLoad === undefined ? undefined : `document-load.${owner.documentLoad}`;
+}
+
+/** 🏃️ Whether a load status is still moving the document in: only then does the loading band show, and a cancelled load stops showing it at once while the program retires what it held. */
+export function documentLoadRunningV1(state: string): boolean {
+  return state === "pending" || state === "running";
 }

@@ -14,6 +14,8 @@ schedule(sample());
 try{
 const{useProcessWideImplementationPinV1,withImplementationPinV1}=await import("../../../../📥️inputs/🔏️revision/🟨️.mjs");
 useProcessWideImplementationPinV1();
+const report=await import("../../../../🧠️memory/📋️slice-report/🟨️.mjs"),leaveBoot=report.openSliceReadStepV1("worker-boot");
+report.startSliceProgressV1({emit:(event:{phase:string;done:number;total:number})=>{report.noteSliceReportPhaseV1(event);parentPort!.postMessage({type:"progress",...event});}});
 const{finishOnLoadedImplementationV1}=await import("../../../../👁️observation/🟨️.mjs");
 finishOnLoadedImplementationV1();
 const routing=await import("../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts");
@@ -23,7 +25,7 @@ const{withResidentSliceNativeRecheckV1}=await import("./🪟️recheck/🟦️.t
 const{publishBuildBootstrapSourcesV1}=await import("../../../../🚀️bootstrap/🟦️.ts");
 const{buildBackendCompactGraphV1,buildBackendDefaultIdV1}=await import("../../../../🔌️backends/🟦️.ts"),{loadBuildBackendV1}=await import("../../../../🔌️backends/🚚️loading/🟦️.ts");
 const{sealedGenerationPinV1}=await import("../../../../🕸️graph/🟦️.ts"),{onGenerationProgressV1}=await import("../../../../🕸️graph/🕰️generations/🔌️load/🟨️.mjs");
-const report=await import("../../../../🧠️memory/📋️slice-report/🟨️.mjs"),{inferenceCacheSizesV1,observationCollectionsV1}=await import("../../../../👁️observation/🟨️.mjs");
+const{inferenceCacheSizesV1,observationCollectionsV1}=await import("../../../../👁️observation/🟨️.mjs");
 const{boundedCacheStatsV1}=await import("../../../../🧊️bounded/🟨️.mjs"),{graphStringInternerV1}=await import("../../../../🧠️memory/🟨️.mjs");
 report.registerSliceCollectionsV1("observation",()=>observationCollectionsV1());
 report.registerSliceCollectionsV1("bounded",()=>boundedCacheStatsV1().map((row:{name:string;entries:number;bytes:number})=>({name:"bounded:"+row.name,entries:row.entries,bytes:row.bytes})));
@@ -42,7 +44,6 @@ const{onGraphPassNoticeV1}=await import("../../../../🕸️graph/📥️load/�
 onGraphPassNoticeV1(notice=>{parentPort!.postMessage({type:"progress",phase:"round",done:notice.round,total:notice.round,running:[],decision:{key:"round",used:notice.round,budget:notice.evicted,kind:String(notice.moved),limit:notice.heap}});});
 const{onLeaseQueueNoticeV1}=await import("../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts"),{describeGraphWriterResourceV1}=await import("../../../../📥️inputs/💾️storage/🔒️writer/🟨️.mjs");
 onLeaseQueueNoticeV1(notice=>{const lock=describeGraphWriterResourceV1(notice.resource);parentPort!.postMessage({type:"progress",phase:"lease-wait",done:notice.holderDone??0,total:notice.holderTotal??0,leaseWait:{lock:lock??{kind:"other"},resource:notice.resource.slice(-160),position:notice.position,queued:notice.queued,pid:notice.holderPid,seconds:notice.holderSeconds,...notice.holderState===undefined?{}:{state:notice.holderState},...notice.holderAgent===undefined?{}:{agent:notice.holderAgent},...notice.holderPhase===undefined?{}:{phase:notice.holderPhase},...notice.holderDone===undefined||notice.holderTotal===undefined?{}:{done:notice.holderDone,total:notice.holderTotal},...notice.holderEtaMinutes===undefined?{}:{etaMinutes:notice.holderEtaMinutes}}});});
-report.startSliceProgressV1({emit:(event:{phase:string;done:number;total:number})=>{report.noteSliceReportPhaseV1(event);parentPort!.postMessage({type:"progress",...event});}});
 const{onPlanStageV1}=await import("../../../../🧠️memory/🪜️plan-stage/🟨️.mjs");
 onPlanStageV1(event=>{report.noteSliceReportStageV1(event);parentPort!.postMessage(event);const entered={phase:"stage "+String(event.stage),done:0,total:0};report.noteSliceReportPhaseV1(entered);parentPort!.postMessage({type:"progress",...entered});});
 const{onPlanStopV1}=await import("../../../../🧠️memory/🪜️plan-stage/🟨️.mjs");
@@ -55,13 +56,17 @@ process.on("message",(message:{type?:string})=>{
  if(message?.type==="slice-report"){const text=reporter.read();if(text!==undefined&&Buffer.byteLength(text)<=READY_SLICE_REPORT_POLICY_V1.fileBytes)parentPort!.postMessage({type:"slice-report",report:text});}
 });
 process.channel?.unref?.();
+leaveBoot();
 try{
   await withImplementationPinV1(()=>routing.receiveScriptProcessInvocation(process.env,async(original:any)=>{
-    const control=routing.createIssuedResourceControlV1(original,"graph:slice-worker",0),tool=workerData.tool??buildBackendDefaultIdV1(),backend=await loadBuildBackendV1(tool);
-    publishBuildBootstrapSourcesV1(workerData.root);
-    const graph:any=await withRepositoryCompilerRuntimeEntriesV1(workerData.root,original,control,async()=>{
-     const externalInputs=await backend.graphExternalInputs?.()??[];
-     return withResidentSliceNativeRecheckV1(original,control,()=>loadBuildInvocationGraphV1(workerData.root,workerData.arguments,original,original,control,false,undefined,workerData.graphPolicy,buildBackendCompactGraphV1(tool),externalInputs));
+    const control=routing.createIssuedResourceControlV1(original,"graph:slice-worker",0),tool=workerData.tool??buildBackendDefaultIdV1();
+    const graph:any=await report.sliceReadWaitStepV1("slice-prepare",async(leave:()=>void)=>{
+     const backend=await loadBuildBackendV1(tool);
+     publishBuildBootstrapSourcesV1(workerData.root);
+     return withRepositoryCompilerRuntimeEntriesV1(workerData.root,original,control,async()=>{
+      const externalInputs=await backend.graphExternalInputs?.()??[];
+      return withResidentSliceNativeRecheckV1(original,control,()=>{leave();return loadBuildInvocationGraphV1(workerData.root,workerData.arguments,original,original,control,false,undefined,workerData.graphPolicy,buildBackendCompactGraphV1(tool),externalInputs);});
+     });
     });
     reporter.stop();parentPort!.postMessage({type:"done",graph,generationPin:sealedGenerationPinV1(tool),...graph?.stats===undefined?{}:{stats:graph.stats}});
   }));

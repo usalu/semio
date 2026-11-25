@@ -515,6 +515,17 @@ export function worldInstancePickBlocked(activeUtility: string | undefined): boo
   return activeUtility === "brush" || activeUtility === "volumeBrush" || activeUtility === "surfaceBrush";
 }
 
+/** 🖱️ Whether a plain left press on empty space orbits the camera; `activeUtility` is the window's EXPLICITLY armed utility (`undefined` when none is armed, which is not the `select` fallback other consumers read). A held Shift/Ctrl/Meta merge modifier, an armed utility that owns the left button (`select` marquee, brushes, fill, relocate), paint mode or a live engagement session claim it for a marquee or tool gesture instead; `transform` leaves it to orbit because its gumball handles take their own presses first. */
+export function world3dLeftPressOrbits(press: { readonly shiftKey: boolean; readonly ctrlKey: boolean; readonly metaKey: boolean }, state: { readonly activeUtility?: string | null; readonly paintMode?: boolean; readonly engagementSessionActive?: boolean }): boolean {
+  if (press.shiftKey || press.ctrlKey || press.metaKey || state.paintMode || state.engagementSessionActive) return false;
+  return !(state.activeUtility === "select" || state.activeUtility === "fill" || state.activeUtility === "worldRelocate" || worldInstancePickBlocked(state.activeUtility ?? undefined));
+}
+
+/** 🖱️ Whether a left press-and-release moved far enough to be an orbit drag rather than a pick. */
+export function world3dLeftReleaseIsDrag(startX: number, startY: number, endX: number, endY: number): boolean {
+  return Math.hypot(endX - startX, endY - startY) > 4;
+}
+
 /** 🎯️ The instance lane's resolved hover target, retained verbatim for a missed canvas pick.
  * Marker lanes never publish to this lane; target ids remain opaque across every domain. */
 export function hoveredInteractionTargetV1(target: InteractionTarget | null | undefined): InteractionTarget | null {

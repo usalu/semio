@@ -13,19 +13,97 @@
    "de": "Ein gebrauchter teakfurnierter Schreibtisch mit Unterschrank aus den 1970er-Jahren, 1,20 x 0,60 m und 0,74 m hoch: eine 25-mm-Platte auf einer Wange und einem 0,40 m breiten Unterschrank mit drei Schubkästen (Schlüsselloch des Zentralverschlusses im oberen), hinten eine Knieblende. Der Gebrauch hinterließ eine zerkratzte, sonnengebleichte Platte mit zwei Glasrändern, eine abgeschlagene Plattenecke, bestoßene Fronten und einen verchromten Bügelgriff anstelle einer verlorenen Teak-Griffleiste. Auf einer gefalteten Möbeldecke gelagert, von zwei Trägern waagerecht getragen, wieder am Laptop in Gebrauch mit sich öffnenden Schubkästen."
   },
   "tags": [
-   "used",
-   "household",
-   "second-hand",
-   "office",
-   "desk",
-   "writing-desk",
-   "pedestal",
-   "drawers",
-   "teak",
-   "veneer",
-   "chipboard",
-   "1970s",
-   "moving-blanket"
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "household",
+    "title": {
+     "en": "household",
+     "de": "Haushalt"
+    }
+   },
+   {
+    "id": "second-hand",
+    "title": {
+     "en": "second-hand",
+     "de": "Second-Hand"
+    }
+   },
+   {
+    "id": "office",
+    "title": {
+     "en": "office",
+     "de": "Büro"
+    }
+   },
+   {
+    "id": "desk",
+    "title": {
+     "en": "desk",
+     "de": "Schreibtisch"
+    }
+   },
+   {
+    "id": "writing-desk",
+    "title": {
+     "en": "writing desk",
+     "de": "Sekretär"
+    }
+   },
+   {
+    "id": "pedestal",
+    "title": {
+     "en": "pedestal",
+     "de": "Sockel"
+    }
+   },
+   {
+    "id": "drawers",
+    "title": {
+     "en": "drawers",
+     "de": "Schubladen"
+    }
+   },
+   {
+    "id": "teak",
+    "title": {
+     "en": "teak",
+     "de": "Teak"
+    }
+   },
+   {
+    "id": "veneer",
+    "title": {
+     "en": "veneer",
+     "de": "Furnier"
+    }
+   },
+   {
+    "id": "chipboard",
+    "title": {
+     "en": "chipboard",
+     "de": "Spanplatte"
+    }
+   },
+   {
+    "id": "1970s",
+    "title": {
+     "en": "1970s",
+     "de": "1970er"
+    }
+   },
+   {
+    "id": "moving-blanket",
+    "title": {
+     "en": "moving blanket",
+     "de": "Umzugsdecke"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content (used household objects wave)",

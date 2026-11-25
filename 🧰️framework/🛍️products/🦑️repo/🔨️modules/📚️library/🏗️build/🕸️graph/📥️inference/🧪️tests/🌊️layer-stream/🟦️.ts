@@ -72,17 +72,16 @@ test("entries that name equal values store that value once and share one parsed 
  }finally{rmSync(directory,{recursive:true,force:true});}
 });
 
-test("an entry names each walk question of its sidecar once and its layers by index, so the record stays small however many layers share walks, and an entry of an earlier format is a miss",async()=>{
+test("an entry names its layers by index and the derived fact of each layer once in its sidecar, so the record stays small however many layers it names, and an entry of an earlier format is a miss",async()=>{
  const directory=mkdtempSync(join(tmpdir(),"layer-stream-sidecar-")),store=createClosureStoreV1({directory});
  try{
-  const LAYERS=200,WALKS=200,walks=Array.from({length:WALKS},(_,at)=>JSON.stringify({walk:1,roots:["/w/"+at+"/"+"x".repeat(600)]})),layers=Array.from({length:LAYERS},(_,at)=>[{kind:"file",path:"/w/"+at,fact:at}]);
-  const sidecar={facts:layers.map(()=>null),members:layers.map((_,at)=>walks.filter((_walk,index)=>(index+at)%2===0))};
-  const saved=await store.save("wide",{recipe:{fn:"probe"},value:[],rows:[],layers,sidecar});
+  const LAYERS=2000,layers=Array.from({length:LAYERS},(_,at)=>[{kind:"file",path:"/w/"+at,fact:at}]),facts=layers.map((_,at)=>at%10===0?{row:{kind:"derived",path:JSON.stringify({derive:1,workspaceRoot:"/w",recipe:{fn:"entries",at}}),fact:"f"+at}}:null);
+  const saved=await store.save("wide",{recipe:{fn:"probe"},value:[],rows:[],layers,sidecar:{facts}});
   expect(saved.bytes).toBeLessThan(1024*1024);
   const file=join(directory,"e",readdirSync(join(directory,"e"))[0]!),text=brotliDecompressSync(readFileSync(file)).toString("utf8");
-  expect(text.length).toBeLessThan(1024*1024);expect(JSON.parse(text).version).toBe(3);
+  expect(text.length).toBeLessThan(1024*1024);expect(JSON.parse(text).version).toBe(3);expect(Object.keys(JSON.parse(text).sidecar)).toEqual(["facts"]);
   const loaded=await createClosureStoreV1({directory}).load("wide");
-  expect((loaded?.sidecar as {members:string[][]}).members).toEqual(sidecar.members);
+  expect((loaded?.sidecar as {facts:unknown[]}).facts).toEqual(facts);
   writeFileSync(file,brotliCompressSync(Buffer.from(JSON.stringify({...JSON.parse(text),version:2}))));
   expect(await createClosureStoreV1({directory}).load("wide")).toBeUndefined();
  }finally{rmSync(directory,{recursive:true,force:true});}

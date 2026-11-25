@@ -6,7 +6,7 @@ use semio_plugin_window_kits_rich::tree_kit::{TreeWindows,tree_window_indexed_it
 use semio_framework::{ActionArgControl, ArgPresentation, ArgSchema, FaultFrom, IconName, reference_id_text};
 use semio_plugin_decl_app::ArtifactApp;
 #[cfg(test)]
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 #[cfg(test)]
 use semio_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
 use pack::snapshot::ArtifactPack;

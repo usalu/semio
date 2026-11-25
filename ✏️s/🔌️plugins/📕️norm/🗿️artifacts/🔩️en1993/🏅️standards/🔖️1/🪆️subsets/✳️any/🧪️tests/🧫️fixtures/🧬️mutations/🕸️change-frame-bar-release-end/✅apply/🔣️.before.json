@@ -822,7 +822,7 @@
       "startNodeId": "node-a",
       "endNodeId": "node-b",
       "releaseStart": "Rigid",
-      "releaseEnd": "Rigid"
+      "releaseEnd": "Pinned"
     },
     {
       "id": "bar-2",

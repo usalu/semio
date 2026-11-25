@@ -11,11 +11,13 @@
  * - `{ "op": "rebind", scale, view, id, "to": bone }`: a flat front or plan shape that is bound to another bone than the one whose part it draws (a seat drawn on the thorax) is bound to `to` and takes as its points the outline the default pose drew, moved so that the default pose draws it where it was drawn before; a shape already on `to` is left alone.
  * - `{ "op": "core", scale, id, "as"?: id, "share"?: 0.6 }`: a plan part with a free outline (a trunk) on a bone that leans keeps its outline and gets below it the middle slice of the same body, the shape `as` (default `<id>-core`): the elevation outline of `id` swept laterally over `share` of the lateral range the plan shape has, so the plan reaches as far ahead and back as the elevation at every lean.
  * - `{ "op": "plan-prism", scale, id }`: the plan shape of a part on a bone that stands (a trunk, a head) keeps its outline and becomes an `extruded` solid with `sweep: "u"`: the flat plan outline is re-expressed as the transverse (v, w) section of the bone, narrowed along v by what the sweep along a bone that rests inclined adds (so the rest pose draws the extent it drew), and swept along the bone over the span whose (u, v) footprint has the support function of the elevation outline; an existing `sweep: "u"` solid is refitted in its span only, unless its span is shorter than half the elevation outline: such a slab is a flat sheet across the bone and is rebuilt from its outline like a flat shape. `"fit": "inside"` takes instead the longest span whose footprint stays inside the hull of the elevation outline (within 2 mm), for a part whose depth changes along the bone: the plan then never reaches beyond the elevation, and the op `core` adds the slice that reaches as far.
- * - `{ "op": "anchor-split", id, "into": [{ id, z, title }…] }`: a lumped contact without `z` that stands for the wheels of both sides becomes one anchor per wheel at its real lateral place (D45); every place that names the anchor (`contacts` of the poses, of the clips, any other reference) names the new ones in its stead.
- * - `{ "op": "thicken", scale, view, id, "from"?: view }`: an outline that a tracer laid as a thin plate across the viewing direction of the default pose (an `extruded` shape a few centimetres thick) gets the real depth of the part along its sweep axis, read from the shape of the same id in `from` (default: the elevation, else the other view): the range of that shape's profile along the axis, or axis ± largest radius of a revolved one. The plate keeps its outline, so the view draws what it drew where it looks along the sweep axis, and turns as a body in every other pose.
+ * - `{ "op": "anchor-split", id, "into": [{ id, z, title }…] }`: a lumped contact without `z` that stands for the wheels of both sides becomes one anchor per wheel at its real lateral place (D45); every place that names the anchor (`contacts` of the poses, of the clips, any other reference) names the new ones in its stead (an event whose `target` is the anchor becomes one event per part; `event` of a part overrides its fields, such as the title).
+ * - `{ "op": "thicken", scale, view, id, "from"?: view }`: an outline that a tracer laid as a thin plate across the viewing direction of the default pose (an `extruded` shape a few centimetres thick) gets the real depth of the part along its sweep axis, read from the shape of the same id in `from` (default: the elevation, else the other view): the range of that shape's profile along the axis, or axis ± largest radius of a revolved one. So that the view of the default pose draws no more than it drew, the outline is first narrowed by what the sweep over that depth adds on the sheet there (the common part of the outline moved to the two ends of the depth; `"hold": false` keeps the outline as it is; the op refuses when less than half of the outline is left, `"least"` states another share; `"share"` takes only that part of the depth about its middle, where the whole depth would narrow the outline by more than the silhouette guard allows); in every other pose the part then turns as a body.
+ * - `{ "op": "keep-as", scale, view, id, "as": id, "to": bone }`: a flat blob that drew two parts under the id of one (an upper arm seen from above together with the shoulder cap it hangs from) stays as the shape `as` on the bone `to` (bound there as `rebind` does), so that the shape `id` can become the solid of its own part; nothing happens when `as` exists.
  * - `{ "op": "carry", "from": scale, scale, view, id }`: a part that a coarser band left out although an anchor stands on it (a load roller) is drawn there too: the shape of `from` is added to the view of `scale` (or replaces the geometry of the shape of that id), `"set"` overrides paint fields; `"geometry": true` gives an existing shape only the geometry and solid of the other band (a limb that a finer band drew as tracer plates takes the body of revolution of the coarser band). `{ "op": "carry-solid", "from": scale, scale, id }` does the same for the solid of that id in `volumes.<scale>.body`, so drawing and body stay one part.
  * @see ./gate.ts — the measurement that says which bones need an op */
 import { join } from "node:path";
+import polygonClipping from "polygon-clipping";
 import { S, dot, readDoc, round, sub, support, writeDoc, type V3 } from "../MR/lib.ts";
 
 const { restFrames } = await import(join(S, "🔨️modules", "🦴️rig", "🟦️.ts"));
@@ -326,7 +328,7 @@ function apply(op: any): string {
       const shape = need(op.scale, "plan", op.id, op.bone);
       const frame = frames[shape.bone]!.frame;
       const twin = find(op.scale, "elevation", op.twin ?? op.id, shape.bone);
-      if (twin === undefined || twin.solid?.kind === "revolved") throw new Error(`1:${op.scale} "${op.id}" needs a flat or extruded elevation twin on ${shape.bone}`);
+      if (twin === undefined) throw new Error(`1:${op.scale} "${op.id}" needs an elevation twin on ${shape.bone}`);
       const target = footprint(twin, "elevation", frame, lengthOf(shape.bone), 1)!;
       const before = snapshot(shape);
       const [u0, u1] = rangeOf(target, 0);
@@ -361,7 +363,7 @@ function apply(op: any): string {
         throw new Error(`no anchor "${op.id}"`);
       }
       const whole = asset.anchors[index];
-      asset.anchors.splice(index, 1, ...(op.into as any[]).map((part) => ({ ...structuredClone(whole), ...part })));
+      asset.anchors.splice(index, 1, ...(op.into as any[]).map(({ event: _event, ...part }) => ({ ...structuredClone(whole), ...part })));
       let places = 0;
       const visit = (node: any): void => {
         if (Array.isArray(node)) {
@@ -369,6 +371,7 @@ function apply(op: any): string {
             const entry = node[i];
             if (entry === op.id) (node.splice(i, 1, ...(op.into as any[]).map((part) => part.id)), places++);
             else if (entry !== null && typeof entry === "object" && entry.anchor === op.id) (node.splice(i, 1, ...(op.into as any[]).map((part) => ({ ...structuredClone(entry), anchor: part.id }))), places++);
+            else if (entry !== null && typeof entry === "object" && entry.target === op.id) (node.splice(i, 1, ...(op.into as any[]).map((part) => ({ ...structuredClone(entry), target: part.id, ...(part.event ?? {}) }))), places++);
             else visit(entry);
           }
           return;
@@ -402,11 +405,37 @@ function apply(op: any): string {
         const coordinates = sweep === "w" ? ["u", "v"] : sweep === "v" ? ["u", "w"] : ["v", "w"];
         return rangeOf(points, coordinates.indexOf(axis) as 0 | 1);
       };
-      const local = (op.from ? [op.from] : ["elevation", "front", "plan"]).map(spanFrom).find((range) => range !== undefined);
-      if (local === undefined) throw new Error(`1:${op.scale} ${op.view} "${op.id}": no other view gives the depth along ${axis}`);
+      const whole = (op.from ? [op.from] : ["elevation", "front", "plan"]).map(spanFrom).find((range) => range !== undefined);
+      if (whole === undefined) throw new Error(`1:${op.scale} ${op.view} "${op.id}": no other view gives the depth along ${axis}`);
+      const local: [number, number] = [(whole[0] + whole[1]) / 2 - ((whole[1] - whole[0]) / 2) * (op.share ?? 1), (whole[0] + whole[1]) / 2 + ((whole[1] - whole[0]) / 2) * (op.share ?? 1)];
       const base = axis === "w" ? frame.o[2] : 0;
+      if (Math.abs(shape.solid.z0 - local[0] - base) < 0.0003 && Math.abs(shape.solid.z1 - local[1] - base) < 0.0003) return "unchanged";
+      if (op.hold !== false) {
+        const posed = evaluate(asset, { kind: "pose", pose: asset.presentation.defaultPose }, { kind: "scale", scale: { denominator: Number(op.scale) } }).bones[shape.bone].frame;
+        const paper = (vector: { x: number; y: number; z: number }): P2 => (op.view === "elevation" ? [vector.x, vector.y] : op.view === "front" ? [vector.z, vector.y] : [vector.x, vector.z]);
+        const [first, second] = axis === "w" ? ["u", "v"] : axis === "v" ? ["u", "w"] : ["v", "w"];
+        const [P, Q, A] = [paper(posed[first]), paper(posed[second]), paper(posed[axis])];
+        const det = P[0] * Q[1] - Q[0] * P[1];
+        if (Math.abs(det) < 0.3) throw new Error(`1:${op.scale} ${op.view} "${op.id}": the plate does not face the view in the default pose (the view sees ${Math.abs(det).toFixed(2)} of its area)`);
+        const c: P2 = [(A[0] * Q[1] - Q[0] * A[1]) / det, (P[0] * A[1] - A[0] * P[1]) / det];
+        const middle = (shape.solid.z0 + shape.solid.z1) / 2 - base;
+        const moved = (to: number): [number, number][] => pointsOf(shape).map(([x, y]) => [x + c[0] * (middle - to), y + c[1] * (middle - to)]);
+        const common = polygonClipping.intersection([moved(local[0])], [moved(local[1])]);
+        const area = (ring: readonly (readonly [number, number])[]): number => Math.abs(ring.reduce((sum, point, i) => sum + point[0] * ring[(i + 1) % ring.length]![1] - ring[(i + 1) % ring.length]![0] * point[1], 0)) / 2;
+        const ring = common.map((polygon) => polygon[0]!).sort((x, y) => area(y) - area(x))[0];
+        if (ring === undefined || area(ring) < (op.least ?? 0.5) * area(pointsOf(shape))) throw new Error(`1:${op.scale} ${op.view} "${op.id}": the plate is too oblique to the view to keep its drawing at the depth [${local.map((value) => value.toFixed(3))}] (the sweep moves it ${(Math.hypot(c[0], c[1]) * (local[1] - local[0]) * 1000).toFixed(0)} mm on the sheet)`);
+        for (const key of GEOMETRY_KEYS) if (key !== "closed" && key !== "solid") delete shape[key];
+        Object.assign(shape, { kind: "poly", points: ring.slice(0, -1).map(([x, y]) => [round(x, 4), round(y, 4)]), closed: true });
+      }
       shape.solid = { kind: "extruded", sweep: axis, z0: round(local[0] + base), z1: round(local[1] + base) };
       return `${settle(shape, before) ? "thickened" : "unchanged"}: ${axis} [${shape.solid.z0}, ${shape.solid.z1}]`;
+    }
+    case "keep-as": {
+      if (shapesOf(op.scale, op.view).some((shape) => shape.id === op.as)) return "unchanged";
+      const shape = need(op.scale, op.view, op.id, op.bone);
+      const list = shapesOf(op.scale, op.view);
+      list.splice(list.indexOf(shape), 0, { ...structuredClone(shape), id: op.as });
+      return `kept as ${op.as}: ${apply({ op: "rebind", scale: op.scale, view: op.view, id: op.as, to: op.to })}`;
     }
     case "rebind": {
       const shape = need(op.scale, op.view, op.id, op.bone);

@@ -87,6 +87,7 @@ pub enum PlyMutation {
     SetRowProperty(set_row_property::SetRowProperty),
 }
 dsl::original_pack_value_operation_receiving!(PlyMutation);
+dsl::artifact_persisted_binary_operation!(PlyMutation);
 
 /// 🏷️ Kebab-case spelling of every `PlyMutation` variant, in declaration order — the vocabulary the
 /// `ply-1-0-any` mutation catalog (`../../🔣️oracle.json`) declares and the exhaustive

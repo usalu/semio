@@ -17,7 +17,7 @@ import type { PluginWebMaterializeContext } from "./🧾️contract/🟦️.ts";
 import { optimizePluginCoreModules, optimizePluginCoreModulesAsync } from "./🪶️wasm-opt/🟦️.ts";
 import { stripWasmDebugSectionsV1 } from "./🪶️strip-debug/🟦️.ts";
 import { nativeTranspileArgsV1, nativeTranspileBinaryV1, PLUGIN_COMPONENT_IMPORT_MAPS_V1 } from "./🦀️native-transpile/🟦️.ts";
-import { rewriteJcoAsyncResultLiftingAt, rewriteJcoComponentAssetUrlsAt } from "./🧬️jco-module-rewrites/🟦️.ts";
+import { rewriteJcoAsyncResultLiftingAt, rewriteJcoComponentFactoryAt } from "./🧬️jco-module-rewrites/🟦️.ts";
 
 export function rewritePreview2ShimImports(componentJsPath: string, preview2VendorDir: string): void {
   const outDir = dirname(componentJsPath);
@@ -34,7 +34,7 @@ export function transpilePluginComponent(artifact: string, outDir: string, compo
     throw new Error(`native transpile failed for ${artifact}`);
   }
   rewriteJcoAsyncResultLiftingAt(join(outDir, `${componentBase}.js`));
-  rewriteJcoComponentAssetUrlsAt(join(outDir, `${componentBase}.js`));
+  rewriteJcoComponentFactoryAt(join(outDir, `${componentBase}.js`));
   optimizePluginCoreModules(outDir, componentBase, ctx);
   rewritePreview2ShimImports(join(outDir, `${componentBase}.js`), ctx.preview2VendorDir);
 }
@@ -53,7 +53,7 @@ export async function transpilePluginComponentModulesAsync(artifact: string, out
     rmSync(slim, { force: true });
   }
   rewriteJcoAsyncResultLiftingAt(join(outDir, `${componentBase}.js`));
-  rewriteJcoComponentAssetUrlsAt(join(outDir, `${componentBase}.js`));
+  rewriteJcoComponentFactoryAt(join(outDir, `${componentBase}.js`));
 }
 
 /** 🚀️ Async twin of {@link transpilePluginComponent}: the same transpile invocation, native (no `--async-mode` flag, `pure` and `host-async` mapped to one shim, see

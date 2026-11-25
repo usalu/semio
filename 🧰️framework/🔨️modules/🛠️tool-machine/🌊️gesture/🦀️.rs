@@ -338,24 +338,29 @@ pub fn drive_press<T: GestureTool<Gesture = GestureState<M>, Mutation = M>, M: P
 /// [`GestureTool`] (design §22.10, law `slots`). Pure: the runtime keeps one per app instance, overlays
 /// [`Self::provisional`] on the committed document for every render, and ends a window's gesture on its host facts
 /// ([`Self::host_event`]) — no editor maps a host fact to an abort of its own. A persisted gesture holds no host timer.
+/// A host abort that meets a slot lent to a retained read is deferred (law `🔗️read/🧪️tests/⏸️deferred`): the gesture is
+/// ended at once for every reader of the ledger and its press is closed, and [`Self::settle_deferred_aborts`] drops it once
+/// the read returns.
 #[derive(Debug, PartialEq)]
 pub struct GestureLedger<M> {
     pub(super) source_revision:u64,
     pub(super) live_windows:usize,
     pub(super) windows: std::collections::BTreeMap<semio_framework_value::SharedUtf8, RetainedOriginalSlot<GestureState<M>>>,
     pub(crate) closed: std::collections::BTreeMap<String, String>,
+    pub(super) deferred: std::collections::BTreeMap<semio_framework_value::SharedUtf8, ToolAbortReason>,
 }
 
 impl<M> Default for GestureLedger<M> {
     fn default() -> Self {
-        Self { source_revision:0,live_windows:0, windows: std::collections::BTreeMap::new(), closed: std::collections::BTreeMap::new() }
+        Self { source_revision:0,live_windows:0, windows: std::collections::BTreeMap::new(), closed: std::collections::BTreeMap::new(), deferred: std::collections::BTreeMap::new() }
     }
 }
 
 impl<M> GestureLedger<M> {
     /// 🪪️ Identifies the original provisional source across a multi-turn complete-prefix refold.
     pub fn source_revision(&self)->u64{self.source_revision}
-    fn update_live_windows(&mut self,window:&str,was_open:bool){let open=self.open(window).is_some();if open&&!was_open{self.live_windows+=1;}else if was_open&&!open{self.live_windows-=1;}}
+    fn resident(&self,window:&str)->bool{self.windows.get(window).is_some_and(|slot|!slot.is_empty())}
+    fn update_live_windows(&mut self,window:&str,was_open:bool){let open=self.resident(window);if open&&!was_open{self.live_windows+=1;}else if was_open&&!open{self.live_windows-=1;}}
     fn change_source_revision(&mut self){self.source_revision=self.source_revision.checked_add(1).expect("original tool source revision exhausted");}
 
     /// 🪹️ Whether no window holds an open gesture.
@@ -363,14 +368,14 @@ impl<M> GestureLedger<M> {
         self.live_windows==0
     }
 
-    /// 🔦️ The open gesture of `window`.
+    /// 🔦️ The open gesture of `window`; a gesture whose abort waits on a retained read is already ended.
     pub fn open(&self, window: &str) -> Option<&GestureState<M>> {
-        self.windows.get(window).filter(|slot|!slot.is_empty()).map(RetainedOriginalSlot::get)
+        self.windows.get(window).filter(|slot|!slot.is_empty()&&!self.deferred.contains_key(window)).map(RetainedOriginalSlot::get)
     }
 
     /// 🏘️ The windows holding an open gesture, in window id order.
     pub fn windows(&self) -> impl Iterator<Item = &str> {
-        self.windows.iter().filter(|(_,slot)|!slot.is_empty()).map(|(key,_)|key.as_str())
+        self.windows.iter().filter(|(key,slot)|!slot.is_empty()&&!self.deferred.contains_key(key.as_str())).map(|(key,_)|key.as_str())
     }
 
     /// 🪞️ Every open gesture's provisional mutations, window by window in window id order — the overlay a render applies
@@ -397,7 +402,8 @@ impl<M> GestureLedger<M> {
     /// 🖋️ Keeps the gesture a dispatch decided for `window` (`None` clears the slot).
     pub fn settle(&mut self, window: &str, next: Option<GestureState<M>>) -> Result<(), Option<GestureState<M>>> {
         if self.windows.get(window).is_some_and(RetainedOriginalSlot::has_read){return Err(next);}
-        let was_open=self.open(window).is_some();
+        self.settle_deferred(window);
+        let was_open=self.resident(window);
         self.change_source_revision();
         match next {
             Some(gesture) => {
@@ -429,6 +435,7 @@ impl<M> GestureLedger<M> {
         M: PartialEq,
     {
         if self.windows.get(window).is_some_and(RetainedOriginalSlot::has_read){return Err(ToolRefusal::Unclosed);}
+        self.settle_deferred(window);
         let drive = drive_press::<T, M>(self.windows.get(window).filter(|slot|!slot.is_empty()).map(RetainedOriginalSlot::get), self.closed.get(window).map(String::as_str), press, verb, phase, tick, authoring_seed, base_revision)?;
         if let Some(next) = drive.next {
             self.settle(window, next).unwrap_or_else(|_|unreachable!("exclusive original gesture decision remains write-admitted"));
@@ -440,22 +447,58 @@ impl<M> GestureLedger<M> {
     }
 
     /// 🧹️ Host cancel of `window`'s open gesture: zero trace, and its press is closed. `Aborted(ref, reason)`, or `Idle`
-    /// when none was open.
+    /// when none was open. A slot lent to a retained read keeps the fact (the first one wins) and closes its press now;
+    /// [`Self::settle_deferred_aborts`] ends it once the read returns.
     pub fn abort(&mut self, window: &str, reason: ToolAbortReason) -> ToolStep<M> {
-        if self.windows.get(window).is_some_and(RetainedOriginalSlot::has_read){return ToolStep::Idle;}
-        let Some(slot) = self.windows.remove(window).filter(|slot|!slot.is_empty()) else { return ToolStep::Idle };
-        self.live_windows-=1;self.change_source_revision();
-        let gesture=slot.try_into_original().unwrap_or_else(|_|unreachable!("original gesture write fence"));
+        if let Some((key,slot))=self.windows.get_key_value(window).filter(|(_,slot)|slot.has_read()&&!slot.is_empty()){
+            if !self.deferred.contains_key(window){
+                let press=slot.get().press.clone();
+                self.deferred.insert(key.clone(),reason);
+                if !press.is_empty(){self.closed.insert(window.to_string(),press);}
+            }
+            return ToolStep::Idle;
+        }
+        if let Some(step)=self.settle_deferred(window){return step;}
+        let Some(gesture)=self.take_resident(window) else { return ToolStep::Idle };
         if !gesture.press.is_empty() {
             self.closed.insert(window.to_string(), gesture.press);
         }
         ToolStep::Aborted(gesture.transaction, reason)
     }
 
+    fn take_resident(&mut self,window:&str)->Option<GestureState<M>>{
+        let slot=self.windows.remove(window).filter(|slot|!slot.is_empty())?;
+        self.live_windows-=1;self.change_source_revision();
+        Some(slot.try_into_original().unwrap_or_else(|_|unreachable!("original gesture write fence")))
+    }
+
+    fn settle_deferred(&mut self,window:&str)->Option<ToolStep<M>>{
+        if self.windows.get(window).is_some_and(RetainedOriginalSlot::has_read){return None;}
+        let reason=self.deferred.remove(window)?;
+        self.take_resident(window).map(|gesture|ToolStep::Aborted(gesture.transaction,reason))
+    }
+
+    /// ⏯️ Ends every gesture whose host abort waited on a retained read that has since returned: one `(window, Aborted)`
+    /// per gesture with the deferred fact's reason, in window id order.
+    pub fn settle_deferred_aborts(&mut self) -> Vec<(String, ToolStep<M>)> {
+        let ready:Vec<String>=self.deferred.keys().filter(|window|!self.windows.get(window.as_str()).is_some_and(RetainedOriginalSlot::has_read)).map(|window|window.to_string()).collect();
+        ready.into_iter().filter_map(|window|self.settle_deferred(&window).map(|step|(window,step))).collect()
+    }
+
+    /// ⏸️ Whether a host abort of `window` waits on its retained read.
+    pub fn abort_deferred(&self, window: &str) -> bool {
+        self.deferred.contains_key(window)
+    }
+
+    /// ⏳️ Whether any window's host abort waits on its retained read.
+    pub fn aborts_deferred(&self) -> bool {
+        !self.deferred.is_empty()
+    }
+
     /// 🛎️ A host fact of `window`: its open gesture ends with the fact's reason ([`GestureHostEvent::abort_reason`]; a
     /// gesture pinned to no revision survives a moved base), `Idle` when it stays or none was open.
     pub fn host_event(&mut self, window: &str, event: GestureHostEvent) -> ToolStep<M> {
-        match self.windows.get(window).filter(|slot|!slot.is_empty()).map(RetainedOriginalSlot::get).and_then(|gesture| event.abort_reason(!gesture.base_revision.is_empty())) {
+        match self.open(window).and_then(|gesture| event.abort_reason(!gesture.base_revision.is_empty())) {
             Some(reason) => self.abort(window, reason),
             None => ToolStep::Idle,
         }

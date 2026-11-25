@@ -1,0 +1,17 @@
+# F14 result: g1-m05 `dependencies` stage never finishing
+
+## Root causes found in code and logs
+1. Progress never counted: `dependencies:publish-binding:N` (printed every 8 bindings) was not in the process-tree `progressPatterns`, so past the 4x hard cap (4 h) the stage counted as "no progress" and ended `stage-timeout`; the 600 s stall rule could also fire between laps. Fixed: pattern added (`🌲️process-tree/🧬️schema/🔣️.json`). A stage that keeps publishing is now extended up to the 24x progress ceiling.
+2. Unchanged bindings were not cheap: the failed attempt's log shows `changed:0` laps of 8 bindings at 68-96 s, i.e. 9-12 s per binding even when the link already pointed at the target (so the R79 figure of 0.17 s unchanged did not hold on m05). Every binding opened a full descriptor session (pair of directory handles, about 2,000 handle fact verifications each of 5 native calls). Fixed: `resumeJavascriptDependencyPublishedBindingV1` skips that session when the endpoint is already the canonical link to the issued target and equals the observed row (checked by the existing endpoint fence plus a stamp recheck). Progress persistence needs no new ledger: the content-addressed links on disk are the ledger (target path contains the generation digest). A changed binding (descriptor changed, different target or stamp) fails the cheap check and is published as before; only it pays. An attempt that restarts at binding 1 now spends about 0.05 ms per finished binding.
+3. The profile line was cut by the log cap right after `NtQueryInformationFile`, hiding the costly symbols (js:facts, NtCreateFile, FlushFileBuffers, fsync). Now only the 6 costliest symbols are printed, plus `resumed`. The next m05 attempt will therefore show what the remaining per-changed-binding cost is.
+
+## Proof on this Mac (synthetic fixture, 120 bindings, load about 40)
+- Re-publishing an unchanged link through the descriptor path: 75.8 ms per binding; resume: 0.049 ms per binding (ratio 1,554).
+- 48-binding fixture: interrupted after 20 bindings, second pass resumes 20 and publishes 28, a link changed afterwards invalidates only itself (47 resumed, 1 published), a final pass resumes all 48.
+- Tests (`repo test-file`): `💾️storage/🧪️tests/⏭️resume-published` 4/0, `🌲️process-tree/🧪️tests/📦️publish-binding-progress` 3/0 (independent Python regex agrees), profile 3/0, deferred-flush 4/0, fence 8/0, edge-scan 1/0, capsule-identity 5/0, ancestry 7/0, process-tree 16/0, graph-progress 3/0, absolute-deadline 1/0. Landing recorded in `T/landings.md` ("Wave 1125 F14").
+
+## Not changed, not verified
+- Cost of a link that really changes (9-14 s per binding on m05) is still unexplained: native counters add up to under 1 s per lap, so it is outside them (likely NtCreateFile/flush latency on the busy disk). The next attempt's profile line will name it. A changed generation (inputs changed by replica churn) still costs that per binding.
+- Not done: batching many bindings into one process (no spawn per binding exists; the work is in-process), per-binding fsync (already deferred by `beginArtifactRelativeDeferredFlushV1`).
+- Live: m05 attempt 46 is an adopted, already running process (old code); it only takes the change at its next start. m05 behaviour after the landing is NOT verified yet. Check `S/origins/g1-m05/ready-log-dependencies.txt` for `"resumed":` in the binding profile lines and a falling `wallMs` for `changed:0` laps.
+- Remaining user action (from F4): exclude `C:\semio` from Defender real-time scanning.

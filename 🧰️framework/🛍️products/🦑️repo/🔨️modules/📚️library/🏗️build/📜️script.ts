@@ -19,7 +19,7 @@ import { buildBudgetMs } from "../../../../../🔨️modules/🏃️process/📦
 
 import bazelTestSchema from "./🔧️tools/🏗️bazel/🧪️tests/🧬️schema/📋️dispatch.json" with { type: "json" };
 import {compileJsonSchemaSubset} from "../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-import { isMainModuleV1 } from "../../../../../📦️packages/🟦️typescript/⚙️runtime/🏁️main/🟦️.ts";
+import { guardStandardStreamsV1, isMainModuleV1 } from "../../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
 import {installOutputContractV1,machineOutputV1,writeResultLineV1} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/📤️output/🟦️.ts";
 let bazelTestContractV1:ReturnType<typeof compileJsonSchemaSubset>|undefined;
 const bazelTestContract=()=>bazelTestContractV1??=compileJsonSchemaSubset(bazelTestSchema);
@@ -144,6 +144,7 @@ export async function runBuildCliWithRestartV1(root:string,argv:readonly string[
 
 /** 🔨️ The command line entry that installs the output contract first. */
 export async function runBuildMainV1(root:string,argv:readonly string[],environment:NodeJS.ProcessEnv=process.env):Promise<void> {
+  guardStandardStreamsV1();
   installOutputContractV1(argv);
   await runBuildCliWithRestartV1(root,argv,environment);
 }

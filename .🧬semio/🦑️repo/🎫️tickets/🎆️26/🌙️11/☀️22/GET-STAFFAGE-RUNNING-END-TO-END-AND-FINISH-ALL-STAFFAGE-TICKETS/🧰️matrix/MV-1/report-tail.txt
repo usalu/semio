@@ -1,0 +1,17 @@
+
+## 6. Takeover of 2026-11-25: state found and what was done
+
+- Found at 09:00: no report file; 14 catalog files written by the first fixer between 18:45 and 20:20 on 2026-11-24, each byte-identical to its trial copy or to a later `make.sh` run; complete proof logs for all 14 (runs that ended, 20:10 to 06:25). 12 plants green in every line. `black-locust`: the real `🧊️catalog-silhouette` test failed (front boundary 53.7 mm at 1:50 and 50.3 mm at 1:100, limit 30 mm), a regression against the backup. `english-oak`: 3 hard scan findings `unavailable-scale-unsuitable` at 1:200, check CLI `✗`, 21 failing matrix cells.
+- Measured again by the takeover on the catalog files (09:00 to 09:07, `T/🔎️scan.ts --language en` over the 14 ids in one run): 13 clean, `english-oak` 3 hard findings. The catalog files of the 12 green plants were not written again; their proof lines in section 3 are the first fixer's complete runs on exactly these bytes.
+- `english-oak`: `fix-english-oak.ts` (new step of the chain, section 2.2), tried on a copy first (every scale prints, gate 0), then `make.sh english-oak`; the catalog file equals the trial copy byte for byte; all proofs and the matrix run again (section 3).
+- `black-locust`: trials on copies: without plates the guard passes but the gate has 10 hard findings (`fol-l1`, 1:200 and 1:500); with the plates of `fol-l1` at all four scales the guard fails at 1:50 and 1:100. Written: plates of `fol-l1` at 1:200 and 1:500 only (`plants.tsv`: `--limit 1.0 --scales 200,500`; the 36 plates of the earlier flags removed first with `carry.ts --limit 99`, as `finish.sh` with `STRIP=1` does), then all proofs and the matrix again.
+- Idempotence (`W/again.sh`): a second `make.sh` changed no byte of `black-locust` (sha-256 `f8c93712678f56ac…`) and of `english-oak` (`cc5d67aca6783df6…`).
+- Memory, measured with `/usr/bin/time -l` (queue rule of 09:20): `english-oak` (20 MB document): `📊️matrix.ts --assets` 1456 MB peak (1139 s), anchor search 1829 MB, `measure.ts` 1822 MB, `carry.ts` 1323 MB, check CLI 984 MB, scan and gate below 450 MB. `black-locust` (1.7 MB): matrix 821 MB, `measure.ts` 979 MB, `carry.ts` 243 MB. The 1200 MB of the queue rule are too little for the matrix of a tree as large as `english-oak`: peak plus 30 % is 1900 MB.
+
+## 7. Files
+
+Updated (catalog, `S/🗂️catalog/🌳️vegetation/<id>/🔣️.json`): `apple-tree`, `bamboo-clump`, `black-alder`, `black-locust`, `common-ash`, `common-lilac`, `common-reed`, `crab-apple`, `dawn-redwood`, `english-oak`, `european-beech`, `field-maple`, `fig-tree`, `hawthorn`.
+
+Created or updated in `U/🧰️matrix/MV-1/` (kept): first fixer: `anchors.ts`, `carry.ts`, `rebind.ts`, `fix-common-lilac.ts`, `bone.ts`, `probe.ts`, `extreme.ts`, `make.sh`, `trial.sh`, `prove.sh`, `matrix.sh`, `vt.sh`, `look.sh`, `status.sh`, `q.sh`, `plants.tsv`, `before.json`, `ops/<id>.json` (14), `report-head.txt`, `report-rows.py`, `write-report.py`; takeover: created `fix-english-oak.ts`, `suit.ts`, `exp.sh`, `finish.sh`, `takeover.sh`, `again.sh`, `sheets.sh`, `sheets.tsv`, `sheets.txt`, `open.txt`, `report-tail.txt`; updated `plants.tsv` (flags of `black-locust`), `q.sh`, `make.sh`, `trial.sh`, `prove.sh`, `matrix.sh` (reservations of the queue rule, runs inside one reservation), `report-head.txt`, `write-report.py`.
+
+Created: `U/multiview-MV-1.md` (this report). Removed: `U/🗑️generated/matrix/MV-1` (backups, trial copies, logs, matrix output, sheets). No request was filed in `U/requests.md`.

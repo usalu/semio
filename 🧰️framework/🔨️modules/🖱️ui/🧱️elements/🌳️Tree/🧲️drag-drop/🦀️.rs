@@ -1,20 +1,10 @@
-//! 🧲️ The tree drop rule — the Rust twin of `🧲️drag-drop/🟦️.tsx` (`resolveTreeDropPosition`, `isTreeReorderDragEvent`, `TreeReorderDropPreview`) and of the accept rule in `🟦️.tsx` (`handleDragOverItem`). One rule, two hosts: both read the neutral vectors `🧪️tests/🧫️fixtures/🧲️drag-drop/🔣️.json`. Pure: a host passes the row frame and the pointer, this answers where the drop lands and which preview shape (insert line or nest box) it draws.
+//! 🧲️ The tree drop rule — the Rust twin of `🧲️drag-drop/🟦️.tsx` (`resolveTreeDropPosition`, `isTreeReorderDragEvent`, `TreeReorderDropPreview`) and of the accept rule in `🟦️.tsx` (`handleDragOverItem`). One rule, two hosts: both read the neutral vectors `🧪️tests/🧫️fixtures/🧲️drag-drop/🔣️.json` and the shared band cases `🔨️modules/🫳️pointer-drag/places.cases.json`. Pure: a host passes the row frame and the pointer, this answers where the drop lands and which band of the row is the active drop place (a rectangle inside the row, tinted at `DROP_TINT_ACTIVE_PERCENT`).
 //! @see 🎫️ 26/09/17 WGPU-RENDERER-REACT-PARITY · 📓️opus55-wave3-tree-drag.md
+
+use super::drag_places::{tree_drop_band, DropRect, TreeBand};
 
 /// 📍️ The fraction of a row's height, from each edge, that means "before" or "after" — React's `0.25` / `0.75` cut.
 pub const TREE_DROP_EDGE_FRACTION: f32 = 0.25;
-
-/// 📏️ The insert line's thickness in px — React's `h-0.5`.
-pub const TREE_DROP_LINE_THICKNESS: f32 = 2.0;
-
-/// 🔲️ The nest box's border width in px — React's `border-2`.
-pub const TREE_DROP_BOX_BORDER: f32 = 2.0;
-
-/// 🎨️ The nest box's border alpha — React's `border-primary/80`.
-pub const TREE_DROP_BOX_BORDER_ALPHA: f32 = 0.8;
-
-/// 🎨️ The nest box's fill alpha — React's `bg-primary/10`.
-pub const TREE_DROP_BOX_FILL_ALPHA: f32 = 0.1;
 
 /// 📚️ The MIME a catalogue (palette) row carries its encoded payload under — React's `CATALOGUE_DRAG_MIME`.
 pub const TREE_CATALOGUE_DRAG_MIME: &str = "application/x-semio-catalogue-item";
@@ -85,35 +75,23 @@ pub fn tree_drag_kind(row_reorder: bool, default_mime: bool, foreign: bool) -> T
     }
 }
 
-/// 👁️ The shape one preview draws.
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub enum TreeDropShape {
-    /// ➖️ A 2 px insert line.
-    Line([f32; 4]),
-    /// 🔲️ The nest box over the whole row.
-    Box([f32; 4]),
+/// 🌳️ The band of the row a drop at `position` lands in, in the vocabulary of the shared drop places.
+pub const fn tree_band(position: TreeDrop) -> TreeBand {
+    match position {
+        TreeDrop::Before => TreeBand::Before,
+        TreeDrop::After => TreeBand::After,
+        TreeDrop::Inside => TreeBand::Inside,
+    }
 }
 
-/// 👁️ The preview a drag shows over the row `frame` (`[x, y, w, h]`), `None` when the row refuses it. A positional row drag previews only a row that carries the row-reorder MIME (`target_accepts`), is not itself being dragged and is hit on an edge; a plain tree drag previews every position, nest included; a palette drag previews nothing.
-pub fn tree_drop_preview(kind: TreeDragKind, position: TreeDrop, target_accepts: bool, target_is_source: bool, frame: [f32; 4]) -> Option<TreeDropShape> {
-    let [x, y, w, h] = frame;
+/// 👁️ The active drop place a drag shows over the row `frame` (`[x, y, w, h]`): the band of the row the drop lands in, `None` when the row refuses it. A positional row drag previews only a row that carries the row-reorder MIME (`target_accepts`), is not itself being dragged and is hit on an edge; a plain tree drag previews every position, nest included; a palette drag previews nothing.
+pub fn tree_drop_preview(kind: TreeDragKind, position: TreeDrop, target_accepts: bool, target_is_source: bool, frame: [f32; 4]) -> Option<[f32; 4]> {
     let accepted = match kind {
         TreeDragKind::RowReorder => target_accepts && !target_is_source && position != TreeDrop::Inside,
         TreeDragKind::Plain => true,
         TreeDragKind::Other => false,
     };
-    accepted.then(|| match position {
-        TreeDrop::Before => TreeDropShape::Line([x, y, w, TREE_DROP_LINE_THICKNESS]),
-        TreeDrop::After => TreeDropShape::Line([x, y + h - TREE_DROP_LINE_THICKNESS, w, TREE_DROP_LINE_THICKNESS]),
-        TreeDrop::Inside => TreeDropShape::Box(frame),
-    })
-}
-
-/// 🔲️ The four strips of a nest box's `border-2` inside `frame`: top, bottom, left, right.
-pub fn tree_drop_box_border(frame: [f32; 4]) -> [[f32; 4]; 4] {
-    let [x, y, w, h] = frame;
-    let b = TREE_DROP_BOX_BORDER.min(w * 0.5).min(h * 0.5);
-    [[x, y, w, b], [x, y + h - b, w, b], [x, y + b, b, (h - 2.0 * b).max(0.0)], [x + w - b, y + b, b, (h - 2.0 * b).max(0.0)]]
+    accepted.then(|| tree_drop_band(DropRect::from_frame(frame), tree_band(position)).frame())
 }
 
 #[cfg(test)]

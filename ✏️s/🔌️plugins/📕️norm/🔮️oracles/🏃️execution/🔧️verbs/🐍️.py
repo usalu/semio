@@ -517,13 +517,20 @@ def inverse_mutation(kinds, document, kind, arguments):
         return declared_inverse(document, kind, arguments)
     if kind in SETS and declared_set(copy.deepcopy(document), kind, arguments) is not None:
         old = declared_get(document, kind, arguments)
-        return [(kind, {**arguments, SETS[kind]["value"]: copy.deepcopy(old)})]
+        inverse = {**arguments, SETS[kind]["value"]: copy.deepcopy(old)}
+        keys = [selector["key"] for selector in SETS[kind]["selectors"] if selector["kind"] == "id" and selector["key"] in arguments]
+        if SETS[kind]["path"].rpartition(".")[2] == "id" and keys and SETS[kind]["value"] in arguments:
+            inverse[keys[-1]] = arguments[SETS[kind]["value"]]
+        return [(kind, inverse)]
     steps, record = descent(document, kind, arguments)
     if record is not None:
         inner = nested_kind(kind, steps)
         prefix = kind.split("-", 1)[1][: len(kind.split("-", 1)[1]) - len(inner.split("-", 1)[1])]
         outer = lambda step: next((candidate for candidate in (step.replace("-", "-" + prefix, 1), step) if candidate in kinds), step)
-        return [(outer(step), {**dict(steps), **payload}) for step, payload in inverse_mutation([nested_kind(candidate, steps) for candidate in kinds], record, inner, nested_arguments(arguments, steps))]
+        left = nested_arguments(arguments, steps)
+        renamed = next((left[key] for key in new_value_arguments(left) if normalised(named_field(key)) == "id"), None)
+        address = {**dict(steps), steps[-1][0]: renamed} if renamed is not None and steps and isinstance(steps[-1][1], str) else dict(steps)
+        return [(outer(step), {**address, **payload}) for step, payload in inverse_mutation([nested_kind(candidate, steps) for candidate in kinds], record, inner, left)]
     if any(isinstance(value, int) for _, value in steps):
         return []
     original = kind

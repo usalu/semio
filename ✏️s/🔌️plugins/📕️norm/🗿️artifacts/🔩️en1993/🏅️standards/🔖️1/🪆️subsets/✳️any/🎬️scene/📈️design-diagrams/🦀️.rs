@@ -427,7 +427,7 @@ fn ladder_of(rows: Vec<&CheckResult>, diagram_id: String, collection: &str, id: 
 
 fn ladder(report: &CheckReport, collection: &str, id: &str) -> Option<Diagram2d> {
     let rows = report.checks.iter().filter(|c| c.subject.entity_id == id && c.utilization.is_finite()).collect();
-    ladder_of(rows, format!("ladder:{collection}:{id}"), collection, id, ("Check utilisation", "Nachweisausnutzung"))
+    ladder_of(rows, format!("ladder:{id}"), collection, id, ("Check utilisation", "Nachweisausnutzung"))
 }
 
 /// 📊️ The outcome diagram `check-outcomes:<row>` of every row outside [`LADDER_COLLECTIONS`](crate::kit::LADDER_COLLECTIONS) that owns checks of a family no dedicated diagram draws: one bar per such check against the limit at 1, routed through [`owner_entity`](crate::kit::owner_entity).

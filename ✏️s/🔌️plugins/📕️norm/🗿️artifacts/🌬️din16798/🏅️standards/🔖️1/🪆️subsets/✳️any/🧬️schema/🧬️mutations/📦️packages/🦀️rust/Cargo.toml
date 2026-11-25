@@ -48,6 +48,7 @@ semio-s-plugin-norm-app-surface = { workspace = true }
 test-support = ["dep:serde", "semio-s-artifact-norm-din16798-diff/test-support", "semio-s-artifact-norm-din16798-model/test-support", "semio-s-artifact-norm-din16798-mut-air-hygiene/test-support", "semio-s-artifact-norm-din16798-mut-building/test-support", "semio-s-artifact-norm-din16798-mut-indoor/test-support", "semio-s-artifact-norm-din16798-mut-thermal/test-support", "semio-s-artifact-norm-din16798-mut-ventilation/test-support", "semio-s-artifact-norm-din16798-mut-zones/test-support"]
 
 [dev-dependencies]
+semio-s-artifact-norm-din16798-mutations = { path = ".", features = ["test-support"] }
 semio-framework-async-macros = { workspace = true }
 semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }

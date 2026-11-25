@@ -11,8 +11,9 @@ import {
   type DescriptorProgress
 } from "../📇️descriptor/📥️text/🟦️.ts";
 import { readPackageReceiptIdentity, type PackageReceiptIdentity, type PackageReceiptSource } from "../📇️descriptor/📦️package/🟦️.ts";
-import type { PluginManifest } from "../../🛂️manifest/🟦️.ts";
+import { actionSetsFault, resolveManifestActionSets, type PluginManifest } from "../../🛂️manifest/🟦️.ts";
 import { readPackageAssetDeclarations, type PackageAssetDeclaration } from "../📦️package-assets/🟦️.ts";
+import { PackageComponentError, readPackageComponents, type PackageComponents } from "../🧩️package-components/🟦️.ts";
 import { SemioFaultError } from "../🚨️fault/🟦️.ts";
 
 // #region 🎠️Kernel
@@ -35,6 +36,8 @@ export interface PluginPackageDescriptor {
   readonly componentSha256: string;
   /** 🎁️ The package assets the descriptor declares (name, exact size, SHA-256) for the kernel to deliver on `instance-open`. */
   readonly assets?: readonly PackageAssetDeclaration[];
+  /** 🧩️ The deployable components the descriptor declares, each with the apps it serves; absent for a package of one component. */
+  readonly components?: PackageComponents;
 }
 
 /** 🧾️ Binds {@link fetchDescriptorManifest} to a required receipt source naming the same plugin and package. */
@@ -51,7 +54,8 @@ export async function fetchPackageDescriptor(pluginId: string, moduleUrl: string
   let assets: readonly PackageAssetDeclaration[];
   try { assets = readPackageAssetDeclarations(descriptor); }
   catch { throw descriptorFault(pluginId, "plugin.descriptor-invalid", "malformed package asset declaration"); }
-  return { manifest, packageId, componentSha256: receipt.componentSha256, ...(assets.length === 0 ? {} : { assets }) };
+  const components = admitPackageComponents(pluginId, descriptor, manifest);
+  return { manifest, packageId, componentSha256: receipt.componentSha256, ...(assets.length === 0 ? {} : { assets }), ...(components === null ? {} : { components }) };
 }
 
 /** 📥️ `onProgress` is called on the response headers and on every streamed chunk — see
@@ -62,10 +66,25 @@ export async function fetchDescriptorManifest(pluginId: string, moduleUrl: strin
   try { assets = readPackageAssetDeclarations(descriptor); }
   catch { throw descriptorFault(pluginId, "plugin.descriptor-invalid", "malformed package asset declaration"); }
   if (assets.length > 0) manifestPackageAssets.set(manifest, assets);
+  const components = admitPackageComponents(pluginId, descriptor, manifest);
+  if (components !== null) manifestPackageComponents.set(manifest, components);
   return manifest;
 }
 
+/** 🧩️ The descriptor's components against its own app roster, or a typed descriptor fault naming why they do not partition it. */
+function admitPackageComponents(pluginId: string, descriptor: object, manifest: PluginManifest): PackageComponents | null {
+  try { return readPackageComponents(descriptor, manifest.apps.map(app => app.id)); }
+  catch (error) { throw descriptorFault(pluginId, "plugin.descriptor-invalid", error instanceof PackageComponentError ? error.message : "malformed package component declaration"); }
+}
+
 const manifestPackageAssets = new WeakMap<PluginManifest, readonly PackageAssetDeclaration[]>();
+const manifestPackageComponents = new WeakMap<PluginManifest, PackageComponents>();
+
+/** 🧩️ The components the descriptor behind `manifest` declared when {@link fetchDescriptorManifest} read it, for the loader to register
+ * with the {@link ActivationRegistry} so an activation loads only its app's component; `undefined` for a package of one component. */
+export function descriptorPackageComponents(manifest: PluginManifest): PackageComponents | undefined {
+  return manifestPackageComponents.get(manifest);
+}
 
 /** 📦️ The package assets the descriptor behind `manifest` declared when {@link fetchDescriptorManifest} read it, so a loader that
  * registers the manifest with the {@link ActivationRegistry} can pass them on for delivery with `instance-open`; none for a manifest
@@ -112,7 +131,9 @@ async function fetchDescriptorDocument(pluginId: string, moduleUrl: string, sign
     if (manifest.pluginId !== pluginId) throw fault("plugin.descriptor-identity-mismatch", `expected ${pluginId}, received ${manifest.pluginId}`);
     if (!("apps" in manifest) || !Array.isArray(manifest.apps)) throw fault("plugin.descriptor-invalid", "missing app roster");
     if ("examples" in manifest && Array.isArray(manifest.examples)) for (const row of manifest.examples) if (!row?.dialect) throw fault("plugin.descriptor-invalid", `example ${String(row?.id ?? "?")} misses its dialect`);
-    return { descriptor: descriptor as object, manifest: manifest as PluginManifest };
+    const actionSetFault = actionSetsFault(manifest as PluginManifest);
+    if (actionSetFault !== undefined) throw fault("plugin.descriptor-invalid", actionSetFault);
+    return { descriptor: descriptor as object, manifest: resolveManifestActionSets(manifest as PluginManifest) };
   } catch (error) {
     await response.body?.cancel(error).catch(() => {});
     signal?.throwIfAborted();

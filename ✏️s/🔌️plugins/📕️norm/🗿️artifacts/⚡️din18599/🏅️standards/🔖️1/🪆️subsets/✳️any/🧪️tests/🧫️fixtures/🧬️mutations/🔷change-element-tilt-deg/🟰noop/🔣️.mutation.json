@@ -1,5 +1,5 @@
 {
-  "mutation": "changeelementtiltdeg",
+  "mutation": "changeElementTiltDeg",
   "elementId": "wall-n",
   "newTiltDeg": 90.0
 }

@@ -6,13 +6,14 @@ const require = createRequire(resolve("✏️s/🔌️plugins/🖍️draw/🧪�
 const { chromium } = require("playwright");
 const browser = await chromium.launch({ headless: true, args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-unsafe-webgpu"] });
 const page = await (await browser.newContext({ locale: "en", viewport: { width: 1600, height: 1000 } })).newPage();
+await page.routeWebSocket(address => address.searchParams.has("token"), () => undefined);
 await page.goto("http://127.0.0.1:6064/?plugin=draw");
 await page.waitForFunction(() => document.documentElement.dataset.semioOsReady, undefined, { timeout: 90000 });
 await page.waitForTimeout(8000);
 await page.getByText("Artifact", { exact: true }).first().click();
 await page.waitForTimeout(3000);
 const hash = async () => createHash("sha256").update(await page.screenshot({ clip: { x: 310, y: 85, width: 980, height: 820 } })).digest("hex").slice(0, 10);
-const rows = () => page.locator('[role="treeitem"][id*="drawing-play-layers.shape."]').count();
+const rows = () => page.locator('[role="treeitem"][id^="panel:framework.panel.artifact/"]').count();
 for (const name of ["Add Ellipse", "Add Rectangle", "Add Polygon", "Add Line", "Add Text", "Add Ellipse"]) {
   const before = await hash(), count = await rows(), start = performance.now();
   await page.getByText(name, { exact: true }).first().click();

@@ -13,19 +13,97 @@
    "de": "Ein gebrauchter 70-cm-Röhrenfernseher der 1990er-Jahre, 0,70 x 0,53 x 0,49 m, auf einem Drehfuß, 34 kg, mit fehlender Bedienklappe, Kratzern, eingebranntem Senderlogo und verstaubten Lüftungsschlitzen, auf einer Möbeldecke gelagert, das Kabel hinten angeklebt, von zwei Personen getragen und im Wohnzimmer mit 100 W wieder warm in Betrieb."
   },
   "tags": [
-   "used",
-   "household",
-   "second-hand",
-   "living",
-   "television",
-   "crt",
-   "picture-tube",
-   "electrical",
-   "heat-source",
-   "internal-gain",
-   "plastic",
-   "glass",
-   "reuse-depot"
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "household",
+    "title": {
+     "en": "household",
+     "de": "Haushalt"
+    }
+   },
+   {
+    "id": "second-hand",
+    "title": {
+     "en": "second-hand",
+     "de": "Second-Hand"
+    }
+   },
+   {
+    "id": "living",
+    "title": {
+     "en": "living",
+     "de": "Wohnen"
+    }
+   },
+   {
+    "id": "television",
+    "title": {
+     "en": "television",
+     "de": "Fernseher"
+    }
+   },
+   {
+    "id": "crt",
+    "title": {
+     "en": "CRT",
+     "de": "Röhrenbildschirm"
+    }
+   },
+   {
+    "id": "picture-tube",
+    "title": {
+     "en": "picture tube",
+     "de": "Bildröhre"
+    }
+   },
+   {
+    "id": "electrical",
+    "title": {
+     "en": "electrical",
+     "de": "Elektro"
+    }
+   },
+   {
+    "id": "heat-source",
+    "title": {
+     "en": "heat source",
+     "de": "Wärmequelle"
+    }
+   },
+   {
+    "id": "internal-gain",
+    "title": {
+     "en": "internal gain",
+     "de": "innere Wärmelast"
+    }
+   },
+   {
+    "id": "plastic",
+    "title": {
+     "en": "plastic",
+     "de": "Kunststoff"
+    }
+   },
+   {
+    "id": "glass",
+    "title": {
+     "en": "glass",
+     "de": "Glas"
+    }
+   },
+   {
+    "id": "reuse-depot",
+    "title": {
+     "en": "reuse depot",
+     "de": "Wiederverwendungslager"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content (used household objects wave)",

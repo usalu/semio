@@ -1,10 +1,10 @@
 //! 🎞️ Admits Image XObjects and their independent native stream roles.
 
-use super::{dict_get, dict_name, PdfDictEntry, PdfImage, PdfImageSampleCursor, PdfObject, PdfStreamFilter};
+use super::{dict_get, dict_name, PdfDictEntry, PdfImage, PdfImagePackedCursor, PdfObject, PdfStreamFilter};
 use crate::standards::v1_7::subsets::base::io::foreign_artifacts::{
-    INLINE_IMAGE_SAMPLES_MAXIMUM_BYTES, PdfDctResourceIdentity, PdfSampledResourceIdentity, qualified_image_dictionary,
+    INLINE_IMAGE_SAMPLES_MAXIMUM_BYTES, PdfDctResourceIdentity, PdfSampledResourceIdentity, encoded_sampled_image, qualified_image_dictionary,
 };
-use crate::standards::v1_7::subsets::base::modules::lexer::{CosGrant, CosReceipt, CosStatus};
+use crate::standards::v1_7::subsets::base::modules::lexer::{CosGrant, CosReceipt, CosStatus, grow_table, table_growth};
 use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfColorSpace, PdfImageBody, PdfStreamBytes};
 use semio_framework_value::ByteReadSource;
 use super::sample_receipt;
@@ -12,7 +12,7 @@ use super::sample_receipt;
 const DEPTH: u32 = 8;
 
 enum ImageBacking {
-    Samples { cursors: [PdfImageSampleCursor; 2], next: usize },
+    Samples { cursors: [PdfImagePackedCursor; 2], next: usize },
     Dct { identity: PdfDctResourceIdentity, bytes: usize },
     SampledArtifact { identity: PdfSampledResourceIdentity, bytes: usize },
 }
@@ -23,6 +23,7 @@ pub(super) struct ControlledImageCursor {
     height: u32,
     gray: bool,
     interpolate: bool,
+    soft_mask: Option<ObjRef>,
     backing: ImageBacking,
 }
 
@@ -30,6 +31,16 @@ impl ControlledImageCursor {
     /// 🔍️ Qualifies a typed native stream without acquiring sample backing.
     pub(super) fn new(value: &PdfObject) -> Result<Option<Self>, &'static str> {
         let PdfObject::Stream { dict, data, filters } = value else { return Ok(None); };
+        if filters.is_empty() && encoded_sampled_image(dict) {
+            let dimension = |key| match dict_get(dict, key) { Some(PdfObject::Int(raw)) => u32::try_from(*raw).ok().filter(|size| *size != 0), _ => None };
+            let (Some(width), Some(height), Some(identity)) = (dimension("Width"), dimension("Height"), PdfSampledResourceIdentity::encoded(dict)) else { return Ok(None); };
+            return Ok(Some(Self {
+                width, height, gray: dict_name(dict, "ColorSpace") == Some("DeviceGray"),
+                interpolate: dict_get(dict, "Interpolate").and_then(PdfObject::as_bool).unwrap_or(false),
+                soft_mask: dict_get(dict, "SMask").and_then(PdfObject::as_ref),
+                backing: ImageBacking::SampledArtifact { identity, bytes: data.len() },
+            }));
+        }
         if !matches!(filters.as_slice(), [] | [PdfStreamFilter::Flate { .. } | PdfStreamFilter::Dct { .. }]) || !qualified_image_dictionary(dict) { return Ok(None); }
         let Some(gray) = dict_name(dict, "ColorSpace").and_then(|name| match name {
             "DeviceGray" => Some(true),
@@ -43,13 +54,14 @@ impl ControlledImageCursor {
         let width = dimension("Width").ok_or("invalid PDF image width")?;
         let height = dimension("Height").ok_or("invalid PDF image height")?;
         let interpolate = dict_get(dict, "Interpolate").and_then(PdfObject::as_bool).unwrap_or(false);
+        let soft_mask = dict_get(dict, "SMask").and_then(PdfObject::as_ref);
         let backing = match filters.as_slice() {
             [] | [PdfStreamFilter::Flate { .. }] => {
                 let components = if gray { 1 } else { 3 };
-                let sample_cursor = || PdfImageSampleCursor::checked_new(width, height, components, DEPTH);
+                let sample_cursor = || PdfImagePackedCursor::checked_new(width, height, components, DEPTH);
                 let first = sample_cursor()?;
                 if first.packed_length != data.len() { return Err("image packed body does not match its declared geometry"); }
-                if first.sample_count * std::mem::size_of::<u32>() > INLINE_IMAGE_SAMPLES_MAXIMUM_BYTES {
+                if first.packed_length > INLINE_IMAGE_SAMPLES_MAXIMUM_BYTES {
                     let Some(identity) = PdfSampledResourceIdentity::new(filters) else { return Ok(None); };
                     ImageBacking::SampledArtifact { identity, bytes: data.len() }
                 } else {
@@ -64,7 +76,7 @@ impl ControlledImageCursor {
             }
             _ => return Ok(None),
         };
-        Ok(Some(Self { width, height, gray, interpolate, backing }))
+        Ok(Some(Self { width, height, gray, interpolate, soft_mask, backing }))
     }
 
     fn done(&self) -> bool {
@@ -119,12 +131,12 @@ impl ControlledImageCursor {
     }
 
     /// 🫴️ Transfers both role bodies after backing and identifier work is fully admitted.
-    pub(super) fn take_images(&mut self, id: &str) -> Option<[PdfImage; 2]> {
+    pub(super) fn take_images(&mut self, id: &str, soft_mask: Option<&str>) -> Option<[PdfImage; 2]> {
         if !self.done() { return None; }
         let bodies = match &mut self.backing {
             ImageBacking::Samples { cursors: [first, second], .. } => {
-                [first.take_samples()?, second.take_samples().expect("complete replayed PDF image")]
-                    .map(|values| PdfImageBody::Samples { values })
+                [first.take_packed()?, second.take_packed().expect("complete replayed PDF image")]
+                    .map(|packed| PdfImageBody::Samples { packed })
             }
             ImageBacking::Dct { identity, .. } => {
                 let reference = identity.reference();
@@ -137,8 +149,9 @@ impl ControlledImageCursor {
         };
         Some(bodies.map(|body| {
             let color_space = if self.gray { PdfColorSpace::DeviceGray } else { PdfColorSpace::DeviceRgb };
-            let mut image = PdfImage::samples(id, self.width, self.height, color_space, DEPTH, Vec::new());
+            let mut image = PdfImage::packed(id, self.width, self.height, color_space, DEPTH, Vec::new());
             image.interpolate = self.interpolate;
+            image.soft_mask = soft_mask.map(str::to_owned);
             image.body = body;
             image
         }))
@@ -198,53 +211,87 @@ impl ControlledImageBinding {
     fn name(&self) -> &str { std::str::from_utf8(&self.name[..self.length]).expect("authored PDF image name") }
 }
 
+/// 🎭️ The soft mask an image names: its owner and typed id, and whether this admission still lifts it after the image (a mask typed before is only referenced).
+struct SoftMask { owner: ObjRef, name: [u8; MAX_NAME], length: usize, fresh: bool }
+
 struct ImageAdmission {
     binding: ControlledImageBinding,
     samples: Option<ControlledImageCursor>,
     role_position: Option<usize>,
     role_target: usize,
+    mask: Option<SoftMask>,
+    image: Option<usize>,
 }
 
-/// 🪟️ Coordinates page bindings and the independently owned image roles of one native lift.
+/// 🪟️ Coordinates page bindings and the independently owned image roles of one native lift: the owner of every typed image (in image order) and the images the active page binds grow under quotes, so a document or page may bind any number of images.
 #[derive(Default)]
 pub struct ControlledImageResources {
-    owners: [ObjRef; Self::MAX_COUNT],
+    owners: Vec<ObjRef>,
     active: Option<ImageAdmission>,
-    page_images: [u8; Self::MAX_COUNT],
-    page_length: usize,
+    page_images: Vec<u32>,
 }
 
 impl ControlledImageResources {
-    /// 📏️ Limits the number of distinct image resources on the controlled path.
-    pub const MAX_COUNT: usize = 32;
+    /// 🪪️ The native owner of the image typed in `slot`.
+    pub fn owner(&self, slot: usize) -> ObjRef { self.owners[slot] }
 
-    /// 📑️ Starts a new page with no bound image resources.
-    pub fn clear_page(&mut self) { self.page_length = 0; }
+    /// 📏️ The growth the owner table needs before it can adopt `count` images typed outside this table.
+    pub fn adoption_growth(&self, count: usize) -> usize { table_growth(&self.owners, count) }
 
-    /// 📌️ Binds one admitted image slot to the active page; false when the page exceeds the slot table.
+    /// 🪢️ Adopts an image typed outside this table (the reference builder, inside a form or an appearance) as the next image slot after [`Self::adoption_growth`] was granted; false when the allocator refuses.
+    pub fn adopt(&mut self, owner: ObjRef) -> bool {
+        if !grow_table(&mut self.owners, 1) { return false; }
+        self.owners.push(owner);
+        true
+    }
+
+    /// 🚪️ Gives up the active admission before it acquired any backing, returning the image's owner so the reference builder can lift it.
+    pub fn abandon(&mut self) -> Option<ObjRef> { self.active.take().map(|active| active.binding.owner) }
+
+    /// 📑️ Starts a new page with no bound image resources; the page table keeps its capacity.
+    pub fn clear_page(&mut self) { self.page_images.clear(); }
+
+    /// 📏️ The growth the page table needs before it can bind one more image (zero when it has room).
+    pub fn page_growth(&self) -> usize { table_growth(&self.page_images, 1) }
+
+    /// 📥️ Grows the page table exactly as [`Self::page_growth`] quoted; false when the allocator refuses.
+    pub fn grow_page(&mut self) -> bool { grow_table(&mut self.page_images, 1) }
+
+    /// 📌️ Binds one admitted image slot to the active page; false when the table has no room left ([`Self::grow_page`] first).
     pub fn push_page(&mut self, slot: usize) -> bool {
-        let Some(entry) = self.page_images.get_mut(self.page_length) else { return false; };
-        let Ok(slot) = u8::try_from(slot) else { return false; };
-        *entry = slot;
-        self.page_length += 1;
+        let Ok(slot) = u32::try_from(slot) else { return false; };
+        if self.page_images.len() == self.page_images.capacity() { return false; }
+        self.page_images.push(slot);
         true
     }
 
     /// 🔗️ Reports whether the active page binds an image whose typed ID is the authored XObject name.
     pub fn page_contains(&self, snapshot: &PdfSnapshot, name: &str) -> bool {
-        self.page_images[..self.page_length].iter().any(|slot| snapshot.images[usize::from(*slot)].id == name)
+        self.page_images.iter().any(|slot| snapshot.images[*slot as usize].id == name)
+    }
+
+    /// 📦️ The bytes the owner and page tables hold.
+    pub fn held_bytes(&self) -> usize { self.owners.capacity() * size_of::<ObjRef>() + self.page_images.capacity() * size_of::<u32>() }
+
+    /// 🧺️ Drops both tables once the lift credited [`Self::held_bytes`].
+    pub fn release(&mut self) {
+        self.owners = Vec::new();
+        self.page_images = Vec::new();
     }
 
     /// 🌱 Starts admission of a resource inspected through its exact page or branch dictionary.
     pub fn begin(&mut self, binding: ControlledImageBinding) {
-        self.active = Some(ImageAdmission { binding, samples: None, role_position: None, role_target: 0 });
+        self.active = Some(ImageAdmission { binding, samples: None, role_position: None, role_target: 0, mask: None, image: None });
     }
 
-    /// 📦️ Quotes empty owned table or sample backing separately from writes.
-    pub fn reserves_empty(&self, snapshot: &PdfSnapshot) -> bool {
-        self.active.as_ref().and_then(|active| active.samples.as_ref()).is_some_and(|samples| {
-            snapshot.images.capacity() == 0 || samples.reserving_samples()
-        })
+    /// 📦️ Quotes empty sample backing separately from writes.
+    pub fn reserves_empty(&self) -> bool {
+        self.active.as_ref().and_then(|active| active.samples.as_ref()).is_some_and(ControlledImageCursor::reserving_samples)
+    }
+
+    /// 🏃️ Whether the next unit moves image bytes, one per unit of its grant: copying packed samples into reserved backing or hashing an encoded body.
+    pub fn copies_bytes(&self) -> bool {
+        self.active.as_ref().and_then(|active| active.samples.as_ref()).is_some_and(|samples| !samples.done() && !samples.reserving_samples())
     }
 
     /// 📨️ Quotes the inline typed values that the next work unit can write or move.
@@ -270,27 +317,37 @@ impl ControlledImageResources {
                 active.role_position = Some(position - 1);
                 return Some(sample_receipt(Ok(CosStatus::More), 1));
             }
+            if let Some(mask) = active.mask.take().filter(|mask| mask.fresh) {
+                active.image.get_or_insert(count - 1);
+                active.binding = ControlledImageBinding { owner: mask.owner, name: mask.name, length: mask.length };
+                active.role_position = None;
+                return Some(sample_receipt(Ok(CosStatus::More), 1));
+            }
+            let end = active.image.unwrap_or(count - 1);
             self.active = None;
-            return Some(sample_receipt(Ok(CosStatus::Complete { end: count - 1 }), 1));
+            return Some(sample_receipt(Ok(CosStatus::Complete { end }), 1));
         }
         let binding = &active.binding;
         if let Some(samples) = active.samples.as_mut() {
-            if snapshot.images.capacity() == 0 { return Some(reserve_images(snapshot, grant)); }
             if !samples.done() { return Some(sample_image(source, binding.owner, samples, grant)); }
-            let bytes = 2 * binding.length + size_of::<PdfGraphIdentity>() + samples.reference_bytes();
+            let bytes = 2 * binding.length + 2 * size_of::<PdfGraphIdentity>() + samples.reference_bytes()
+                + table_growth(&snapshot.images, 1) + table_growth(&snapshot.admitted_stream_roles, 1) + table_growth(&self.owners, 1);
             if bytes > grant.allocation_bytes { return Some(sample_receipt(Ok(CosStatus::NeedsAllocation { bytes }), 0)); }
-            if snapshot.admitted_stream_roles.len() == snapshot.admitted_stream_roles.capacity() {
-                return Some(sample_receipt(Err("PDF image role exceeds the retained role slots"), 1));
+            if !grow_table(&mut snapshot.images, 1) || !grow_table(&mut snapshot.admitted_stream_roles, 1) || !grow_table(&mut self.owners, 1) {
+                return Some(sample_receipt(Err("unable to grow the PDF image tables"), 1));
             }
-            let [image, role] = samples.take_images(binding.name()).expect("qualified PDF image is fully sampled");
+            let mask = active.mask.as_ref().map(|mask| std::str::from_utf8(&mask.name[..mask.length]).expect("authored PDF soft mask name"));
+            let [image, role] = samples.take_images(binding.name(), mask).expect("qualified PDF image is fully sampled");
             let identity = PdfGraphIdentity { owner: binding.owner, path: Vec::new() };
+            let mut dependencies = vec![identity.clone()];
+            if let Some(mask) = samples.soft_mask { dependencies.push(PdfGraphIdentity { owner: mask, path: Vec::new() }); }
             active.role_position = Some(snapshot.admitted_stream_roles.len());
             active.role_target = snapshot.admitted_stream_roles.len() - content_roles;
             snapshot.admitted_stream_roles.push(PdfAdmittedStreamRole {
-                dependencies: vec![identity.clone()], identity, value: PdfStreamRoleValue::Image { image: role },
+                dependencies, identity, value: PdfStreamRoleValue::Image { image: Box::new(role) },
             });
             snapshot.images.push(image);
-            self.owners[count] = binding.owner;
+            self.owners.push(binding.owner);
             active.samples = None;
             return Some(CosReceipt { allocated_bytes: bytes, ..sample_receipt(Ok(CosStatus::More), 1) });
         }
@@ -300,13 +357,35 @@ impl ControlledImageResources {
             self.active = None;
             return Some(sample_receipt(Ok(CosStatus::Complete { end: index }), 1));
         }
-        if count == Self::MAX_COUNT || snapshot.images.iter().any(|image| image.id == binding.name()) { return None; }
+        if self.owners.len() != count || snapshot.images.iter().any(|image| image.id == binding.name()) { return None; }
         let mut qualified = Ok(None);
         source.inspect(binding.owner, &mut |stream| {
             if let Some(stream) = stream { qualified = ControlledImageCursor::new(stream); }
         });
         match qualified {
             Ok(Some(samples)) => {
+                if let Some(owner) = samples.soft_mask {
+                    if active.image.is_some() { return None; }
+                    let mask = match self.owners[..count].iter().position(|existing| *existing == owner) {
+                        Some(index) => {
+                            let id = snapshot.images[index].id.as_bytes();
+                            let mut name = [0; MAX_NAME];
+                            name[..id.len()].copy_from_slice(id);
+                            SoftMask { owner, name, length: id.len(), fresh: false }
+                        }
+                        None => {
+                            let length = binding.length + "SMask".len();
+                            if length > MAX_NAME { return None; }
+                            let mut name = [0; MAX_NAME];
+                            name[..binding.length].copy_from_slice(&binding.name[..binding.length]);
+                            name[binding.length..length].copy_from_slice(b"SMask");
+                            let id = std::str::from_utf8(&name[..length]).expect("authored PDF soft mask name");
+                            if snapshot.images.iter().any(|image| image.id == id) { return None; }
+                            SoftMask { owner, name, length, fresh: true }
+                        }
+                    };
+                    active.mask = Some(mask);
+                }
                 active.samples = Some(samples);
                 Some(sample_receipt(Ok(CosStatus::More), 1))
             }
@@ -329,15 +408,6 @@ impl ControlledImageResources {
         self.active = None;
         sample_receipt(Ok(CosStatus::Closed), 0)
     }
-}
-
-fn reserve_images(snapshot: &mut PdfSnapshot, grant: CosGrant) -> CosReceipt {
-    let bytes = ControlledImageResources::MAX_COUNT * size_of::<PdfImage>();
-    if bytes > grant.allocation_bytes { return sample_receipt(Ok(CosStatus::NeedsAllocation { bytes }), 0); }
-    if snapshot.images.try_reserve_exact(ControlledImageResources::MAX_COUNT).is_err() {
-        return sample_receipt(Err("unable to allocate PDF image slots"), 1);
-    }
-    CosReceipt { allocated_bytes: snapshot.images.capacity() * size_of::<PdfImage>(), ..sample_receipt(Ok(CosStatus::More), 1) }
 }
 
 fn sample_image(source: &mut dyn ObjectSource, owner: ObjRef, samples: &mut ControlledImageCursor, grant: CosGrant) -> CosReceipt {

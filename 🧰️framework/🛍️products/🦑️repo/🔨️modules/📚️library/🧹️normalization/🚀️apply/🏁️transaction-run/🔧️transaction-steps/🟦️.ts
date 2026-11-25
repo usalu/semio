@@ -240,7 +240,7 @@ export function regenerateGeneratorOutputs({ repoRoot, options, journal, journal
     if (validateResumeTuples(repoRoot, plan, journal, taxonomy)) persistJournal(repoRoot, journalPath, journal);
     if (journal.completedRegenerationIds.includes(regeneration.id)) {
       if (canonicalJson(generatorTreeInventory(repoRoot, regeneration.outputRoots, taxonomy)) !== canonicalJson(regeneration.outputs)) throw new Error(`Completed regeneration output changed: ${regeneration.id}`);
-      if (regeneration.verifyCommand) execFileSync(regeneration.verifyCommand[0], [...regeneration.verifyCommand.slice(1)], { cwd: absolutePath(repoRoot, regeneration.cwd), env: { ...process.env }, stdio: "inherit" });
+      if (regeneration.verifyCommand) execFileSync(regeneration.verifyCommand[0], [...regeneration.verifyCommand.slice(1)], { windowsHide: true, cwd: absolutePath(repoRoot, regeneration.cwd), env: { ...process.env }, stdio: "inherit" });
       report(options.progress, "apply", "regenerations", index + 1, plan.regenerations.length, regeneration.contractId);
       continue;
     }
@@ -250,12 +250,12 @@ export function regenerateGeneratorOutputs({ repoRoot, options, journal, journal
       journal.startedRegenerationIds.push(regeneration.id);
       persistJournal(repoRoot, journalPath, journal);
     }
-    execFileSync(regeneration.command[0], [...regeneration.command.slice(1)], { cwd: absolutePath(repoRoot, regeneration.cwd), env: { ...process.env }, stdio: "inherit" });
+    execFileSync(regeneration.command[0], [...regeneration.command.slice(1)], { windowsHide: true, cwd: absolutePath(repoRoot, regeneration.cwd), env: { ...process.env }, stdio: "inherit" });
     checkCancellation(repoRoot, options.cancelFile);
     const actualOutputs = generatorTreeInventory(repoRoot, regeneration.outputRoots, taxonomy);
     if (canonicalJson(actualOutputs) !== canonicalJson(regeneration.outputs)) throw new Error(`Regeneration ${regeneration.id} produced missing, stale, unexpected, byte-different, or mode-different output`);
     durablySyncGeneratorRecords(repoRoot, actualOutputs);
-    if (regeneration.verifyCommand) execFileSync(regeneration.verifyCommand[0], [...regeneration.verifyCommand.slice(1)], { cwd: absolutePath(repoRoot, regeneration.cwd), env: { ...process.env }, stdio: "inherit" });
+    if (regeneration.verifyCommand) execFileSync(regeneration.verifyCommand[0], [...regeneration.verifyCommand.slice(1)], { windowsHide: true, cwd: absolutePath(repoRoot, regeneration.cwd), env: { ...process.env }, stdio: "inherit" });
     checkCancellation(repoRoot, options.cancelFile);
     journal.completedRegenerationIds.push(regeneration.id);
     persistJournal(repoRoot, journalPath, journal);

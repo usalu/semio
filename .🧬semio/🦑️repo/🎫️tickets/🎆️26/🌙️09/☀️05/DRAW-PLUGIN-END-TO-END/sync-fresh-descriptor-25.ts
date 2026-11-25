@@ -1,0 +1,22 @@
+/** 🛂️ Publishes the verified emitted Draw pair through the component owner's stage writer. */
+import { createHash } from 'node:crypto';
+import { createReadStream, readFileSync } from 'node:fs';
+import { join, resolve } from 'node:path';
+import { verifySemanticDescriptorPairBytesV1 } from '@semio-tech/plugin-registry/catalog-verification/descriptor-pair';
+import { componentStageTargetV1, settleComponentDescriptorV1 } from '../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧩️component-stage/🟦️.ts';
+const [componentArg, outputArg, expectedHash, browserArg]=process.argv.slice(2);
+if (!componentArg || !outputArg || !browserArg || !/^[a-f0-9]{64}$/.test(expectedHash??'')) throw Error('Expected component, emitted pair, verified component SHA-256, and published browser module');
+const root=process.cwd(), component=resolve(componentArg), output=resolve(outputArg), hash=createHash('sha256');
+for await (const chunk of createReadStream(component)) hash.update(chunk);
+if(hash.digest('hex')!==expectedHash)throw Error('Component differs from preparation');
+const jsonBytes=await Bun.file(join(output,'🔣️.json')).bytes(),packBytes=await Bun.file(join(output,'🛂️.descriptor.semio')).bytes();
+const pair=verifySemanticDescriptorPairBytesV1(jsonBytes,packBytes);
+const browser=resolve(browserArg),receipt=await Bun.file(join(browser,'🧾️receipt.json')).json();
+if(pair.pluginId!=='draw'||receipt.wasmSha256!==expectedHash||receipt.semanticDescriptorSha256!==pair.semanticSha256||createHash('sha256').update(await Bun.file(join(browser,'🛂️.descriptor.semio')).bytes()).digest('hex')!==pair.semanticSha256)throw Error('Fresh browser and native semantic pair mismatch');
+const target=componentStageTargetV1(root,'🌎️hub/🧩️compositions/🖍️draw/🧩️component/📦️packages/🦀️rust/Cargo.toml');
+const paths=['🔣️.json','🛂️.descriptor.semio'].map(name=>join(target.ownerRoot,name));
+const before=paths.map(path=>createHash('sha256').update(readFileSync(path)).digest('hex'));
+if(paths.some((path,index)=>createHash('sha256').update(readFileSync(path)).digest('hex')!==before[index]))throw Error('Owner pair changed during preflight');
+const diff=settleComponentDescriptorV1(root,target,{profile:'prototype',directory:output},{jsonBytes,packBytes},'write');
+for(const [path,expected] of [[paths[0],jsonBytes],[paths[1],packBytes]] as const) if(!Buffer.from(readFileSync(path)).equals(Buffer.from(expected)))throw Error('Published owner bytes differ');
+console.log(JSON.stringify({component,expectedHash,semanticSha256:pair.semanticSha256,before,diff}));

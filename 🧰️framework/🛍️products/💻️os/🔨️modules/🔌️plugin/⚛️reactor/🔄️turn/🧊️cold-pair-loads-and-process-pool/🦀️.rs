@@ -215,7 +215,11 @@ pub(super) async fn drive_cold_pair_ingress<PA: semio_plugin_reactor_app::Plugin
     }
     if let Some(pending) = COLD_PAIR_DOCUMENT_LOAD.with(|slot| slot.borrow_mut().take()) {
         let answers_this_turn = !pending.superseded && cold_pair_page_lifetime.is_none_or(|lifetime| lifetime == pending.cursor.lifetime);
-        let status = step_cold_pair_document_load(runtime, pending, identity, cx).await;
+        let mut status = step_cold_pair_document_load(runtime, pending, identity, cx).await;
+        while matches!(status, semio_framework::kernel::ColdPairIngressStatus::Loading(_)) && quiet_slice_open(false, cx.should_yield(), guest_turn_executing_us()) {
+            let Some(next) = COLD_PAIR_DOCUMENT_LOAD.with(|slot| slot.borrow_mut().take()) else { break };
+            status = step_cold_pair_document_load(runtime, next, identity, cx).await;
+        }
         if answers_this_turn {
             cold_pair_ingress = status;
         }

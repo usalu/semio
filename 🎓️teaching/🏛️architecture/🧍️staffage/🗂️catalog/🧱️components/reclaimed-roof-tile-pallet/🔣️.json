@@ -13,16 +13,76 @@
    "de": "168 gebrauchte Biberschwanzziegel aus Ton (155 x 375 mm mit Segmentschnitt, Nase und von Flechten gedunkeltem sichtbarem Fuß), hochkant auf der Langkante in umreiften Bündeln zu 14, zwei Lagen zu zwei Reihen auf einer EUR-Palette mit Dachlatten zwischen den Lagen; auf Gabelzinken gehoben, und fünfzehn davon wieder als Doppeldeckung aus fünf Reihen auf Latten mit 150 mm Lattweite unter Schnee und einer wandernden Wartungslast gehängt."
   },
   "tags": [
-   "component",
-   "reclaimed",
-   "clay",
-   "ceramic",
-   "roof-tile",
-   "plain-tile",
-   "biberschwanz",
-   "roofing",
-   "pallet",
-   "stacked-goods"
+   {
+    "id": "component",
+    "title": {
+     "en": "component",
+     "de": "Bauteil"
+    }
+   },
+   {
+    "id": "reclaimed",
+    "title": {
+     "en": "reclaimed",
+     "de": "wiederverwendet"
+    }
+   },
+   {
+    "id": "clay",
+    "title": {
+     "en": "clay",
+     "de": "Ton"
+    }
+   },
+   {
+    "id": "ceramic",
+    "title": {
+     "en": "ceramic",
+     "de": "Keramik"
+    }
+   },
+   {
+    "id": "roof-tile",
+    "title": {
+     "en": "roof tile",
+     "de": "Dachziegel"
+    }
+   },
+   {
+    "id": "plain-tile",
+    "title": {
+     "en": "plain tile",
+     "de": "Flachziegel"
+    }
+   },
+   {
+    "id": "biberschwanz",
+    "title": {
+     "en": "biberschwanz",
+     "de": "Biberschwanz"
+    }
+   },
+   {
+    "id": "roofing",
+    "title": {
+     "en": "roofing",
+     "de": "Dacheindeckung"
+    }
+   },
+   {
+    "id": "pallet",
+    "title": {
+     "en": "pallet",
+     "de": "Palette"
+    }
+   },
+   {
+    "id": "stacked-goods",
+    "title": {
+     "en": "stacked goods",
+     "de": "Stapelgut"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage component authors",

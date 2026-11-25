@@ -1,0 +1,8 @@
+{
+  "removedKeys": ["inset"],
+  "bodyStyle": {
+    "inset": 0
+  },
+  "gridRuleForbidden": ["gap", "padding"],
+  "forbiddenSourcePatterns": ["3\\.2", "\\b900\\b", "chrome\\.navbarHeight", "chrome\\.footerHeight"]
+}

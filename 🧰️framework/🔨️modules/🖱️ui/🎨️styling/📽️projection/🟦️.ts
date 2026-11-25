@@ -272,7 +272,26 @@ function emitPaletteTheme(tokens: Tokens): string {
   for (const [key, value] of Object.entries(geometry.cssVars)) lines.push(`  ${key}: ${value};`);
   lines.push("}");
   lines.push("");
+  lines.push(...emitLevelKnobs(tokens.levels ?? LEVELS_DEFAULT));
   return lines.join("\n");
+}
+
+/** 🎚️ Projects the `levels` knobs of `🔣️.json` into the CSS vars the surface utilities read; a theme may override each one inline. */
+function emitLevelKnobs(levels: StylingLevels): string[] {
+  return [
+    ":root {",
+    `  --level-shade-step: ${levels.shadeStepPercent}%;`,
+    `  --element-shade-step: ${levels.elementStepPercent}%;`,
+    `  --hover-shade-step: ${levels.hoverStepPercent}%;`,
+    `  --glass-alpha-step: ${levels.glassAlphaStep};`,
+    `  --glass-blur-step: ${levels.glassBlurStepPx / 16}rem;`,
+    `  --glass-saturate: ${levels.glassSaturate};`,
+    `  --veil-alpha: ${levels.veilAlpha};`,
+    `  --veil-blur: ${levels.veilBlurPx / 16}rem;`,
+    `  --chip-tint: ${levels.chipTintPercent}%;`,
+    "}",
+    "",
+  ];
 }
 
 /** 🔢️ Renders an `[0, 1]` fraction as a clean percent literal (`0.68` → `"68"`), avoiding float
@@ -569,6 +588,7 @@ function emitPython(tokens: Tokens, resolvedAppearances: ReturnType<typeof resol
   lines.push(`STYLING_RADII: Final[dict[str, float]] = ${JSON.stringify(tokens.radii ?? {}, null, 4)}`);
   lines.push(`STYLING_OPACITIES: Final[dict[str, float]] = ${JSON.stringify(tokens.opacities ?? {}, null, 4)}`);
   lines.push(`STYLING_METRICS: Final[dict[str, dict[str, float | list[float]]]] = ${JSON.stringify(resolveMetrics(tokens.metrics), null, 4)}`);
+  lines.push(`STYLING_LEVELS: Final[dict[str, float | list[str]]] = ${JSON.stringify(tokens.levels ?? LEVELS_DEFAULT, null, 4)}`);
   lines.push("");
   for (const group of paletteGroupNames(resolvedAppearances)) {
     lines.push("@dataclass(frozen=True, slots=True)");

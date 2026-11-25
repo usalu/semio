@@ -1,0 +1,11 @@
+# EN 1990 Native Replay Verification
+
+The existing `replay_preparation_physical` test used framework interfaces that had changed since the test was written. The previous compile log showed 20 errors in the receiving, replay quote, and retirement calls.
+
+Updated the test in `✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🧮️physical/🦀️.rs` to admit and settle the original Job decoder and its scope, drive retirement through original Work effects and current poll types, and install the framework heap witness in the integration test executable. The test still uses the committed bridge SLS insertion vector and checks completion, denial with no state change, cancellation at six turn boundaries, and physical allocation and release receipts at two operation indices.
+
+The pinned Bun SQLite oracle reproduced the complete committed `after` snapshot, and Ajv accepted the physical policy against its committed schema. Python's standard-library SQLite implementation independently produced the same snapshot. The direct Bun invocation used the repository's provisioned binary because the generic repo tool command was queued behind host memory pressure. Rust formatting and the scoped whitespace check passed.
+
+The native test was submitted through `repo cargo --store=shared --configuration=prototype --parallelism=2 -- test --offline -p semio-s-artifact-norm-en1990-mutations --test replay_preparation_physical`, from the EN 1990 workspace. Source admission completed for 710 units, 4,573 files, and 63,995,689 bytes. The repository admitted two of ten cores and announced a 4.8 GiB Rust compiler memory budget. Cargo began compiling dependencies.
+
+The memory incident stopped this invocation before it compiled the test. Its process lineage was repo Bun 37187 → cargo build-entry Bun 37517 → Cargo 42630 → wrapper Bun 44632 → scheduler 48961 → rustc 52560. Wrapper Bun 48744 was another Cargo child. I terminated that tree and verified every process exited. The repository-wide `norm-plugin:test` request 37110 was still waiting for project graph capacity. I terminated it and the queued oracle command 44598 as well. The changed Rust test has no compile or runtime result.

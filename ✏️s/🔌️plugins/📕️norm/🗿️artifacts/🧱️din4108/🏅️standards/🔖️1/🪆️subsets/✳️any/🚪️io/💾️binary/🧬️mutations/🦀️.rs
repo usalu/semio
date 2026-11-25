@@ -56,4 +56,5 @@ impl OpBinary for Din4108Mutation {
 }
 }
 
-dsl::original_pack_value_operation_receiving!(crate::Din4108Mutation);
+dsl::original_decoded_operation_receiving!(crate::Din4108Mutation);
+dsl::artifact_persisted_binary_operation!(crate::Din4108Mutation);

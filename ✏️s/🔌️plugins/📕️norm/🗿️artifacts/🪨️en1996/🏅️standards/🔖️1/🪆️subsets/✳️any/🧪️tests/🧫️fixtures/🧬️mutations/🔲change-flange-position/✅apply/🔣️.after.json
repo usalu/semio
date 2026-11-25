@@ -120,7 +120,7 @@
           "id": "flange-1",
           "lengthM": 1.0,
           "thicknessM": 0.2,
-          "positionM": 0.0
+          "positionM": 0.5
         }
       ],
       "bars": [

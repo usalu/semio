@@ -12,6 +12,7 @@ import { type ActiveSession } from "../../../🐚️Shell/📦️program-session
 import { NOTE_SHELL_COMMAND_ACTION_ID, NOTE_WORLD_NAVIGATION_ACTION_ID, TUTORIAL_RECORDING_EXCLUDED_ACTION_IDS, undeclaredActionDiagnostic } from "../../../🛠️ShellHelpers/🔩️plumbing/🆔️action-ids/🟦️.ts";
 import { exampleSelectionAfterInputV1, SET_ACTIVE_EXAMPLE_ACTION_ID, frameworkOwnsExampleSwitch } from "../../../🛠️ShellHelpers/🔩️plumbing/🔀️example-switching/🟦️.ts";
 import { resolveBootExampleId } from "../../../🐚️Shell/🔒️boot-and-locks/🟦️.ts";
+import { TIME_TRAVEL_VERBS } from "../../../🛠️ShellHelpers/⏪️time-travel/🟦️.tsx";
 import { parsePanelState } from "../../../🛠️ShellHelpers/📌️panel/🟦️.ts";
 import { frameworkLayoutDeclaredInstances } from "../../../🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
 import { checkinSubmitMessageV1 } from "../../../🛠️ShellHelpers/🧾️transfer-checkin-tutorial/🟦️.ts";
@@ -222,6 +223,7 @@ export async function runShellInput({ clipboardFragmentRef, primaryPluginId, dis
     const stagedLifecycle=stagedSignal?{started:(operation:import("@semio-tech/framework").ActionOperationControlV1)=>{lifecycle?.started(operation);if(stagedSignal.aborted)void operation.cancel();else stagedSignal.addEventListener("abort",()=>{void operation.cancel();},{once:true});}}:lifecycle;
     const loadGate = core.documentLoadGateRef.current;
     if (loadGate.loading(targetSession.pluginId, targetSession.instanceId)) {
+      if (action.action === TIME_TRAVEL_VERBS.cancelReplay) loadGate.markCancelling(targetSession.pluginId, targetSession.instanceId);
       const declaredKind = command?.kind ?? targetSession.app.windowKinds.flatMap((kind) => resolveWindowActions(targetSession.app, kind)).find((entry) => entry.id === action.action)?.kind;
       const waits = documentLoadWaitPolicyV1(action.action, declaredKind, NOTE_SHELL_COMMAND_ACTION_ID);
       if (waits === "drop") return applied();
@@ -252,6 +254,7 @@ export async function runShellInput({ clipboardFragmentRef, primaryPluginId, dis
       const memory = core.committedExamplesByProgramRef.current;
       const selection = exampleSelectionAfterInputV1(action, outcome, memory.get(key), resolveBootExampleId("", exampleOptionsRef.current, defaults.exampleId), focused);
       if (selection) {
+        core.exampleBeforePickByProgramRef.current.set(key, memory.get(key)?.exampleId ?? resolveBootExampleId("", exampleOptionsRef.current, defaults.exampleId));
         memory.set(key, selection.memory);
         if (selection.visibleExampleId !== undefined) dispatch({ type: "SET_ACTIVE_EXAMPLE_ID", value: selection.visibleExampleId });
       }

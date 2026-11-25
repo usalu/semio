@@ -36,6 +36,7 @@ vi.mock("@semio-tech/assets", async () => ({ ...await vi.importActual("@semio-te
 
 class MountWorker {
   static owners: MountWorker[] = [];
+  static stores: MountWorker[] = [];
   static holdClose = false;
   static holdBoot = false;
   static rejectClose = false;
@@ -48,8 +49,8 @@ class MountWorker {
   addEventListener(type: string, listener: EventListenerOrEventListenerObject): void { this.events.addEventListener(type, listener); }
   removeEventListener(type: string, listener: EventListenerOrEventListenerObject): void { this.events.removeEventListener(type, listener); }
 
-  constructor(readonly url: string, readonly options: WorkerOptions) {
-    MountWorker.owners.push(this);
+  constructor(readonly url: string | URL, readonly options: WorkerOptions) {
+    (typeof url === "string" ? MountWorker.owners : MountWorker.stores).push(this);
   }
 
   postMessage(message: any): void {
@@ -157,6 +158,7 @@ afterEach(async () => {
   for (const cleanup of cleanups.splice(0)) await cleanup();
   document.body.replaceChildren();
   MountWorker.owners = [];
+  MountWorker.stores = [];
   MountWorker.holdClose = false;
   MountWorker.holdBoot = false;
   MountWorker.rejectClose = false;
@@ -230,17 +232,20 @@ describe("embedded WGPU mount lifecycle", () => {
       cleanups.push(dispose);
     }
     expect(MountWorker.owners).toHaveLength(fixture.expected.workers);
+    expect(MountWorker.stores, "each mount opens its own local catalog store Worker beside its frame Worker").toHaveLength(fixture.expected.workers);
     expect(document.querySelectorAll("canvas")).toHaveLength(fixture.expected.canvases);
     expect(new Set([...document.querySelectorAll("[id]")].map(node => node.id)).size).toBe(document.querySelectorAll("[id]").length);
     for (const [index, owner] of MountWorker.owners.entries()) expect(owner.messages.find(message => message.kind === "boot").descriptor.pluginVariant).toBe(fixture.roots[index]!.variant);
     await disposers[0]!();
     expect(MountWorker.owners.map(owner => owner.terminated)).toEqual(fixture.expected.workerStoppedAfterFirstDispose);
+    expect(MountWorker.stores.map(store => store.terminated), "the local catalog store Worker retires with its own owner only").toEqual(fixture.expected.workerStoppedAfterFirstDispose);
     expect(roots[0]!.childElementCount).toBe(0);
     expect(roots[1]!.querySelector("canvas")).not.toBeNull();
     await disposers[0]!();
     expect(MountWorker.owners[1]!.terminated).toBe(false);
     await disposers[1]!();
     expect(MountWorker.owners.every(owner => owner.terminated)).toBe(fixture.expected.allStoppedAfterFinalDispose);
+    expect(MountWorker.stores.every(store => store.terminated)).toBe(fixture.expected.allStoppedAfterFinalDispose);
     expect(document.querySelectorAll("canvas")).toHaveLength(0);
   });
 

@@ -31,6 +31,12 @@ pub(super) struct Reader {
 impl Reader {
     pub(super) fn new(position: usize) -> Self { Self { position, scan: Scan::Idle, atom: [0; MAX_SCALAR_BYTES] } }
 
+    /// 🔁️ Restarts a retired reader at `position`; the atom is scratch every scalar overwrites before reading it.
+    pub(super) fn rearm(&mut self, position: usize) {
+        self.position = position;
+        self.scan = Scan::Idle;
+    }
+
     pub(super) fn step(&mut self, byte_at: &impl Fn(usize) -> Option<u8>, scalar_limit: usize, string_limit: usize, turn: &mut Turn) -> Result<Option<Token>, &'static str> {
         let byte = match self.scan {
             Scan::Angle(_) | Scan::Bytes { .. } => None,

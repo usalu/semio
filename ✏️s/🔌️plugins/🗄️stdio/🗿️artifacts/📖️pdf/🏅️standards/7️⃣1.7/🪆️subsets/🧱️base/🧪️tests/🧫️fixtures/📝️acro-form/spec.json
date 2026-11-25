@@ -1,0 +1,42 @@
+{
+  "pages": 2,
+  "fields": [
+    {
+      "name": "address",
+      "type": "Container",
+      "children": [
+        "name",
+        "email"
+      ]
+    },
+    {
+      "name": "agree",
+      "type": "Button",
+      "children": []
+    },
+    {
+      "name": "country",
+      "type": "Choice",
+      "children": []
+    },
+    {
+      "name": "color",
+      "type": "Button",
+      "children": [],
+      "widgets": 3
+    },
+    {
+      "name": "notes",
+      "type": "Text",
+      "children": [],
+      "widgets": 2
+    }
+  ],
+  "widgetsPerPage": [
+    8,
+    1
+  ],
+  "defaultFonts": [
+    "Helv"
+  ]
+}

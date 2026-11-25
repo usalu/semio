@@ -3,6 +3,7 @@
 //! Members of tier-1 crates are methods of their component struct with the lower components as parameters; use-case members stay `impl ShellState` and address the components as `self.<component>.<field>`; a private item that crossed a module boundary was widened to `pub(super)`.
 
 use super::*;
+use semio_renderer_wgpu_ui_engine::retained_ui_engine::{drag_ghost_position, DropPlaceState};
 
 //#region ShellChrome
 pub struct ShellChromeFrameCursor {
@@ -535,7 +536,7 @@ impl<'ctx> PanelsViewCtx<'ctx> {
                 cursor.advance(ShellChromeFramePhase::TreeDrag);
             }
             ShellChromeFramePhase::TreeDrag => {
-                self.render_tree_drag_overlay_node(overlay, input, theme);
+                self.render_tree_drag_overlay_node(overlay, atlas, icons, input, theme);
                 cursor.advance(ShellChromeFramePhase::TutorialGesture);
             }
             ShellChromeFramePhase::TutorialGesture => {
@@ -687,7 +688,8 @@ impl<'ctx> PanelsViewCtx<'ctx> {
         match cursor.phase {
             0 => {
                 if semio_ui_theme::shell_floor_paints(self.chrome.chrome_floor_scope) {
-                    draw.push_solid([bounds.x, bounds.y, bounds.w, bounds.h], theme.background);
+                    let canvas = self.as_session().canvas_rect(theme);
+                    draw.push_solid([canvas.x, canvas.y, canvas.w, canvas.h], theme.background);
                 }
                 cursor.rect = Some(bounds.inset(theme.panel_inset));
                 cursor.phase = 1;
@@ -908,11 +910,19 @@ impl<'ctx> PanelsViewCtx<'ctx> {
             6 => {
                 self.as_chrome_view().paint_empty_anchor_drop_zones(draw, icons, input, theme);
                 if let Some((drag, zone)) = self.dock.dock_drag.as_ref().and_then(|drag| drag.drop_zone.as_ref().map(|zone| (drag, zone))) {
-                    if let Some(indicator) = drop_zone_indicator_rect(zone, &self.dock.dock_drop_tab_bars, &self.dock.dock_drop_bodies, self.dock.dock_canvas_bounds, theme.gap_standard) {
-                        draw.push_rounded([indicator.x, indicator.y, indicator.w, indicator.h], theme.accent.with_alpha(0.24), theme.border_radius);
+                    let tint = |state: DropPlaceState| theme.accent.with_alpha(theme.accent.a * state.tint_alpha());
+                    for place in dock_drop_places(&self.dock.dock_drop_tab_bars, &self.dock.dock_drop_bodies) {
+                        draw.push_solid([place.x, place.y, place.w, place.h], tint(DropPlaceState::Available));
+                    }
+                    if let Some(indicator) = drop_zone_indicator_rect(zone, &self.dock.dock_drop_tab_bars, &self.dock.dock_drop_bodies, self.dock.dock_canvas_bounds) {
+                        draw.push_solid([indicator.x, indicator.y, indicator.w, indicator.h], tint(DropPlaceState::Active));
                     }
                     let ghost_w = (drag.payload.ghost_label.chars().count() as f32 * theme.font_size_small * 0.55 + theme.padding_standard * 2.0).clamp(64.0, 180.0);
-                    draw.push_rounded([drag.x - ghost_w * 0.5, drag.y - theme.control_height * 0.5, ghost_w, theme.control_height], theme.selected.with_alpha(0.9), theme.border_radius);
+                    let [ghost_x, ghost_y] = drag_ghost_position(drag.x, drag.y);
+                    let ghost = draw.push_glass([ghost_x, ghost_y, ghost_w, theme.chip_row_height()], 0.0, theme.drag_ghost_glass());
+                    draw.begin_glass_content(ghost);
+                    chrome_text(draw, atlas, input, theme, &drag.payload.ghost_label, ghost_x + theme.padding_standard, ghost_y + (theme.chip_row_height() + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, theme.text);
+                    draw.end_glass_content();
                 }
                 draw.pop_scissor();
                 cursor.phase = 7;

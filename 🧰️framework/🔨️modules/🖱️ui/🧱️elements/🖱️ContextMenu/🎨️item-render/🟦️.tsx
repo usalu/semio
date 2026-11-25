@@ -12,8 +12,8 @@ export const contextMenuOrdinalClassName = "w-small shrink-0 text-center text-xs
 export function contextMenuItemClassName(item: Pick<ContextMenuItem, "checked" | "destructive">, ...extra: Array<string | false | null | undefined>): string {
   return cn(
     floatingMenuItemClass,
-    "pointer-events-auto whitespace-nowrap data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50",
-    item.destructive && "text-destructive focus:bg-destructive/10 hover:bg-destructive/10",
+    "min-h-(--chip-row-height)! pointer-events-auto whitespace-nowrap data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50",
+    item.destructive && "text-destructive-foreground focus:bg-destructive/10 hover:bg-destructive/10",
     ...extra,
     item.checked && "bg-active-base text-emphasized hover:bg-active-base/90 hover:text-emphasized",
   );
@@ -46,7 +46,7 @@ function renderContextMenuColor(color: string | undefined): React.ReactNode {
   if (!color) {
     return null;
   }
-  return <span aria-hidden data-slot="context-menu-color-swatch" className="size-small shrink-0 rounded-sm" style={{ background: color, outline: "var(--stroke-hairline) solid var(--border)", outlineOffset: "calc(-1 * var(--stroke-hairline))" }} />;
+  return <span aria-hidden data-slot="context-menu-color-swatch" className="size-small shrink-0" style={{ background: color, outline: "var(--stroke-hairline) solid var(--border)", outlineOffset: "calc(-1 * var(--stroke-hairline))" }} />;
 }
 
 function renderContextMenuIcon(icon: ContextMenuItem["icon"], required = false): React.ReactNode {

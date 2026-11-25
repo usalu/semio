@@ -108,7 +108,7 @@ fn a_ui_map_still_refuses_one_entry_past_capacity() {
 fn a_javascript_ordered_carrier_leaf_recovers_its_payload() {
     let fixture = fixture();
     let attributes: UiFixedMap<UiText> = serde_json::from_str(&fixture.data_attributes_json).expect("carrier map decodes");
-    let props = TextProps { value: Label(UiText::try_from_str(&fixture.value).expect("carrier leaf label")), emphasize: None, data_attributes: Some(attributes) };
+    let props = TextProps { value: Label(UiText::try_from_str(&fixture.value).expect("carrier leaf label")), emphasize: None, data_attributes: Some(attributes), heading_level: None };
     assert_eq!(props.packed_payload(), fixture.payload, "the carrier leaf must recover the catalogue payload byte-for-byte");
 }
 
@@ -174,7 +174,7 @@ fn a_javascript_ordered_carrier_map_decodes_through_from_value() {
 fn an_ascending_carrier_leaf_still_round_trips_through_json() {
     let fixture = fixture();
     let attributes: UiFixedMap<UiText> = serde_json::from_str(&fixture.data_attributes_json).expect("carrier map decodes");
-    let props = TextProps { value: Label(UiText::try_from_str(&fixture.value).expect("carrier leaf label")), emphasize: None, data_attributes: Some(attributes) };
+    let props = TextProps { value: Label(UiText::try_from_str(&fixture.value).expect("carrier leaf label")), emphasize: None, data_attributes: Some(attributes), heading_level: None };
     let text = serde_json::to_string(&Component::Text(props.clone())).expect("carrier leaf serializes");
     let read: Component = serde_json::from_str(&text).expect("carrier leaf round-trips");
     assert_eq!(read, Component::Text(props), "an ascending carrier leaf survives the reader byte-for-byte");

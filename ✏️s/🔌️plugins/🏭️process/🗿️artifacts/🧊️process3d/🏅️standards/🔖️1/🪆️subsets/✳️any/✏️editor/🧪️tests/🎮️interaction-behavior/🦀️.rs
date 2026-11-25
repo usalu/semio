@@ -2,8 +2,7 @@
 
 #![recursion_limit = "512"]
 
-#[path = "../🧰️support/🦀️.rs"]
-mod context;
+use semio_s_artifact_process_process3d_harness as context;
 
 use context::{
     app, app_with_registry, dispatch, dispatch_with_utility, main_window_measures, main_window_view,

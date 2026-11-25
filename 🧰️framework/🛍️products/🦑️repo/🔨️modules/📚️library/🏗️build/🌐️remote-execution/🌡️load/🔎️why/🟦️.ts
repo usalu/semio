@@ -1,5 +1,5 @@
 /** 🔎️ Why the build worker of a machine is not working: a closed code, the same sentence in English and German. */
-export type RemoteExecutionWorkerWhyCodeV1="starting"|"no-scheduler"|"scheduler-unreachable"|"identity-unregistered"|"no-toolchain"|"provisioning"|"sandbox-unavailable"|"disk-full"|"policy-off"|"not-registered"|"no-headroom"|"failed";
+export type RemoteExecutionWorkerWhyCodeV1="starting"|"no-scheduler"|"scheduler-unreachable"|"identity-unregistered"|"no-toolchain"|"provisioning"|"partition-detached"|"sandbox-unavailable"|"disk-full"|"policy-off"|"not-registered"|"no-headroom"|"failed";
 
 /** 🗣️ A reason a worker is absent, as a machine reports it to the scheduler (`WorkerWhy` of the schema). */
 export type RemoteExecutionWorkerWhyV1=Readonly<{code:RemoteExecutionWorkerWhyCodeV1;en:string;de:string}>;
@@ -11,6 +11,7 @@ const TEXTS:Readonly<Record<RemoteExecutionWorkerWhyCodeV1,Readonly<{en:string;d
  "identity-unregistered":{en:"the signed worker identity of this machine is not accepted ({detail}): its worker key is not registered or pinned, or its clock is off",de:"die signierte Worker-Identität dieser Maschine wird nicht angenommen ({detail}): ihr Worker-Schlüssel ist nicht registriert oder festgeschrieben, oder ihre Uhr geht falsch"},
  "no-toolchain":{en:"the pinned Rust toolchain is not installed and could not be provisioned ({detail})",de:"die festgeschriebene Rust-Toolchain ist nicht installiert und konnte nicht bereitgestellt werden ({detail})"},
  "provisioning":{en:"the pinned Rust toolchain is being provisioned ({detail})",de:"die festgeschriebene Rust-Toolchain wird bereitgestellt ({detail})"},
+ "partition-detached":{en:"the cache partition of the worker home is not attached yet ({detail})",de:"die Cache-Partition des Worker-Zuhauses ist noch nicht angehängt ({detail})"},
  "sandbox-unavailable":{en:"no confining sandbox on this host while the policy requires one ({detail})",de:"keine einschränkende Sandbox auf diesem Rechner, obwohl die Richtlinie eine verlangt ({detail})"},
  "disk-full":{en:"too little free disk space for the worker: {free} GiB free on {path}, {slots} of {concurrency} slots usable, one action needs {oneAction} GiB",de:"zu wenig freier Speicherplatz für den Worker: {free} GiB frei auf {path}, {slots} von {concurrency} Plätzen nutzbar, eine Aktion braucht {oneAction} GiB"},
  "policy-off":{en:"the worker policy runs no actions (worker.actions is none)",de:"die Worker-Richtlinie führt keine Aktionen aus (worker.actions ist none)"},

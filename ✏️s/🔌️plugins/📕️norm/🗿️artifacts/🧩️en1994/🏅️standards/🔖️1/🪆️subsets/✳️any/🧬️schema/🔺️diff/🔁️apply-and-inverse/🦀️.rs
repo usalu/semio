@@ -62,12 +62,7 @@ impl protocol::ColdMutationDiff<En1994Snapshot> for En1994Diff {
         if other.fatigue_detail.is_some() {
             self.fatigue_detail = other.fatigue_detail;
         }
-        if let Some(later) = other.cases {
-            match &mut self.cases {
-                Some(cases) => cases.absorb(later),
-                None => self.cases = Some(later),
-            }
-        }
+        self.cases.absorb(other.cases);
     }
 
     fn apply(&self, unpublished: &mut En1994Snapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
@@ -109,9 +104,7 @@ impl protocol::ColdMutationDiff<En1994Snapshot> for En1994Diff {
         if let Some(value) = &self.fatigue_detail {
             next.fatigue_detail = value.clone();
         }
-        if let Some(cases) = &self.cases {
-            next.cases = cases.commit_onto(&base.cases, capability).map_err(|error| error.under(["cases"]))?;
-        }
+        next.cases = self.cases.commit_onto(&base.cases, capability).map_err(|error| error.under(["cases"]))?;
         *unpublished = next;
         Ok(())
     }
@@ -119,7 +112,7 @@ impl protocol::ColdMutationDiff<En1994Snapshot> for En1994Diff {
 
 impl protocol::DiffAlgebra<En1994Snapshot> for En1994Diff {
     fn is_empty(&self) -> bool {
-        self.annex.is_none() && self.reliability_class.is_none() && self.structure_kind.is_none() && self.steel_f_y_pa.is_none() && self.beams.as_ref().map_or(true, |rows| rows.is_empty()) && self.columns.as_ref().map_or(true, |rows| rows.is_empty()) && self.slabs.as_ref().map_or(true, |rows| rows.is_empty()) && self.placements.as_ref().map_or(true, |rows| rows.is_empty())  && self.studs.as_ref().map_or(true, |rows| rows.is_empty()) && self.fire_rating.is_none() && self.insulation_thickness_m.is_none() && self.fatigue_detail.is_none() && self.cases.as_ref().map_or(true, |cases| cases.is_empty())
+        self.annex.is_none() && self.reliability_class.is_none() && self.structure_kind.is_none() && self.steel_f_y_pa.is_none() && self.beams.as_ref().map_or(true, |rows| rows.is_empty()) && self.columns.as_ref().map_or(true, |rows| rows.is_empty()) && self.slabs.as_ref().map_or(true, |rows| rows.is_empty()) && self.placements.as_ref().map_or(true, |rows| rows.is_empty())  && self.studs.as_ref().map_or(true, |rows| rows.is_empty()) && self.fire_rating.is_none() && self.insulation_thickness_m.is_none() && self.fatigue_detail.is_none() && self.cases.is_empty()
     }
 }
 
@@ -138,7 +131,7 @@ impl protocol::ColdDiffAlgebra<En1994Snapshot> for En1994Diff {
             fire_rating: self.fire_rating.as_ref().map(|_| base.fire_rating.clone()),
             insulation_thickness_m: self.insulation_thickness_m.as_ref().map(|_| base.insulation_thickness_m.clone()),
             fatigue_detail: self.fatigue_detail.as_ref().map(|_| base.fatigue_detail.clone()),
-            cases: self.cases.as_ref().map(|cases| cases.inverse(&base.cases)).filter(|cases| !cases.is_empty()),
+            cases: self.cases.inverse(&base.cases),
         }
     }
 }

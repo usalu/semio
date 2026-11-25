@@ -1,0 +1,16 @@
+# F8 result: worker join defects
+
+## 1. Probe of closed port 6090 (fixed)
+Cause: `topology/🔣️.json` carried `cache.endpoint` `:6090` for g1..g5 while `ports.cache` is 6094; reachability probes, `doctor/preflight` cache check and `portOf` (service launch lines) read the endpoint. Fix: committed endpoints now `:6094`; `readTopologyV1` refuses a group whose endpoint port differs from `ports.cache` (single source of truth cannot drift again); `portOf` uses `ports.cache` when declared; Python oracle and README aligned. Test: `topology/🧪️tests/🟦️.ts` 72 pass (new assertions: every committed endpoint port equals ports.cache; a 6090 variant is refused).
+
+## 2. Sealed code snapshot "missing" `📦️packages/🟦️typescript/⚙️runtime/🏁️main/🟦️.ts` (hardened, root cause only partly proven)
+Findings: the file is tracked, is in the seal (`files[0]`, the first sorted path), and the store snapshot `8493edad…` is complete today (86 files, 0 missing). The join reported only the first file, so the whole `files/` tree was unreadable at that moment. Store evidence: `bootstrap/code` holds 5672 entries (44 digests, 270 stale `.tmp-` dirs, 5358 AppleDouble `._*` files) and every origin republishes a "damaged" snapshot with `rm -r target` then `rename`, a long window in which the snapshot does not exist. Fixes: (a) publish renames the old snapshot aside (microsecond window) then removes it; (b) prune also removes stale `._*`; (c) provisioner `overlay_copy` retries each file copy 5 times. Tests: resilience 25 pass (new aside and `._` assertions). NOT verified: the exact transient on m14 (cannot be reproduced from here); the one failing test in that file ("cooperative yield") is a load-sensitive timing test, unrelated.
+
+## 3. `-inf` and `replica/sa` strays (cause of `sa` fixed, `-inf` not found)
+`🔁️replica/sa/<xx>/<key>.json.br` (2737 files, decoded: `{"version":1,"key":…,"image":…}`) is the source-analysis store (`analysisStoreDirectoryOfV1` = `dirname(closureStore)/sa`; existing guard refuses a relative closure store). Gap: an explicit `session.analysisStore` was not checked, so a relative value writes under the cwd (replica module dir). Fix: `useAnalysisStoreV1` refuses a relative directory (new en/de text). `-inf` (root file, blob dd60d1d1) contains `[capacity] admitted command…` output, i.e. a shell redirect/tee target literally named `-inf`; no committed script or source produces it (git grep), so the creator is an ad-hoc command of some session. Not fixed, only identified. Both strays are already deleted from the worktree; they only live as staged index entries (`AD`). Removing index entries needs a git command, which is forbidden; the archivist `commit` skill (git add -A) clears them. 2738 entries pending.
+
+## 4. g1-m13 marker
+No code change needed: `🚦️ready/🟦️.ts` already writes `native-bootstrap.done` after the last stage and retries failed stages with back-off; tools, native, repo-mcp and dependencies stages already succeeded after the Rustup failure. The marker only waits for the workspace stage, which fails on the crate-admission refusal (lane F1). No human run is needed, so no `prompt-g1-m13.md`.
+
+## Not verified
+Live fleet effect (workers restart on code change and will re-probe 6094); no real join run.

@@ -16,7 +16,7 @@ use axum::extract::State;
 #[cfg(test)]
 use axum::http::{HeaderMap, StatusCode};
 #[cfg(test)]
-use axum::response::Response;
+use axum::response::{IntoResponse, Response};
 #[cfg(test)]
 use super::http_surface::{HEADER_MISMATCH, HttpAdmission, HttpState};
 

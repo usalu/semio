@@ -1,11 +1,13 @@
 //! 🎛️ Record-metadata macros shared by every hand-written `DslRecord` of the AC1024 snapshot.
 
+#[macro_export]
 macro_rules! dwg_ordinary_shape {
     ([primitive $kind:ident]) => { semio_framework_dsl_record::Shape::$kind };
     ([typed $child:ty]) => { <$child as semio_framework_dsl_record::DslField>::shape() };
     ([tuple $kind:ident $count:literal]) => { semio_framework_dsl_record::Shape::Tuple(Box::new(semio_framework_dsl_record::Shape::$kind), Some($count)) };
     ([enum $(($label:literal, $ordinal:literal)),+]) => { semio_framework_dsl_record::Shape::Enum(vec![$(($label.into(), $ordinal)),+]) };
 }
+#[macro_export]
 macro_rules! dwg_controlled_shape {
     ([primitive $kind:ident], $control:ident) => {{ $control.checkpoint()?; Ok::<_, ValueError>(semio_framework_dsl_record::Shape::$kind) }};
     ([typed $child:ty], $control:ident) => { <$child as semio_framework_dsl_record::DslField>::shape_controlled($control) };
@@ -24,17 +26,19 @@ macro_rules! dwg_controlled_shape {
         })
     }};
 }
+#[macro_export]
 macro_rules! dwg_borrowed_shape {
     ([primitive $kind:ident]) => {semio_framework_dsl_record::BorrowedShape::$kind};
     ([typed $child:ty]) => {<$child as semio_framework_dsl_record::BorrowedDslField>::SHAPE};
     ([tuple $kind:ident $count:literal]) => {semio_framework_dsl_record::BorrowedShape::Tuple(||semio_framework_dsl_record::BorrowedShape::$kind,Some($count))};
     ([enum $(($label:literal,$ordinal:literal)),+]) => {semio_framework_dsl_record::BorrowedShape::Enum(&[$(($label,$ordinal)),+])};
 }
+#[macro_export]
 macro_rules! dwg_borrowed_metadata {
     ([] [$($generic:ident)?]; $($fields:tt)*) => {};
     ([$owner:ident] []; $($fields:tt)*) => {
         impl semio_framework_dsl_record::BorrowedDslRecord for $owner {
-            dwg_borrowed_metadata!(@spec; $($fields)*);
+            $crate::dwg_borrowed_metadata!(@spec; $($fields)*);
         }
         impl semio_framework_dsl_record::BorrowedDslField for $owner {
             const SHAPE:semio_framework_dsl_record::BorrowedShape=semio_framework_dsl_record::BorrowedShape::Record(semio_framework_dsl_record::borrowed_record::<Self>);
@@ -42,7 +46,7 @@ macro_rules! dwg_borrowed_metadata {
     };
     ([$owner:ident] [$generic:ident]; $($fields:tt)*) => {
         impl<$generic:semio_framework_dsl_record::BorrowedDslField> semio_framework_dsl_record::BorrowedDslRecord for $owner<$generic> {
-            dwg_borrowed_metadata!(@spec; $($fields)*);
+            $crate::dwg_borrowed_metadata!(@spec; $($fields)*);
         }
         impl<$generic:semio_framework_dsl_record::BorrowedDslField> semio_framework_dsl_record::BorrowedDslField for $owner<$generic> {
             const SHAPE:semio_framework_dsl_record::BorrowedShape=semio_framework_dsl_record::BorrowedShape::Record(semio_framework_dsl_record::borrowed_record::<Self>);
@@ -51,15 +55,16 @@ macro_rules! dwg_borrowed_metadata {
     (@spec; $($id:literal,$key:literal,$optional:literal,$shape:tt;)+) => {
         const RECORD:semio_framework_dsl_record::BorrowedRecordSpec=semio_framework_dsl_record::BorrowedRecordSpec {
             keyword:None,layout:semio_framework_dsl_record::RecordLayout::Inline,
-            fields:&[$({let mut field=semio_framework_dsl_record::BorrowedFieldSpec::new($id,$key,dwg_borrowed_shape!($shape));field.optional=$optional;field}),+],
+            fields:&[$({let mut field=semio_framework_dsl_record::BorrowedFieldSpec::new($id,$key,$crate::dwg_borrowed_shape!($shape));field.optional=$optional;field}),+],
         };
     };
 }
+#[macro_export]
 macro_rules! dwg_metadata {
     ($spec:ident $(<$generic:ident>)?, $controlled:ident, $producer:ident $(=> $owner:ident)?; $($id:literal, $key:literal, $optional:literal, $shape:tt;)+) => {
-        dwg_borrowed_metadata!([$($owner)?] [$($generic)?]; $($id,$key,$optional,$shape;)+);
+        $crate::dwg_borrowed_metadata!([$($owner)?] [$($generic)?]; $($id,$key,$optional,$shape;)+);
         pub fn $spec $(<$generic: semio_framework_dsl_record::DslField>)?() -> semio_framework_dsl_record::RecordSpec {
-            let fields = vec![$({ let mut field = semio_framework_dsl_record::FieldSpec::new($id, $key, dwg_ordinary_shape!($shape)); field.optional = $optional; field }),+];
+            let fields = vec![$({ let mut field = semio_framework_dsl_record::FieldSpec::new($id, $key, $crate::dwg_ordinary_shape!($shape)); field.optional = $optional; field }),+];
             semio_framework_dsl_record::RecordSpec::new(None, semio_framework_dsl_record::RecordLayout::Inline, fields)
         }
         pub fn $controlled<C: semio_framework_dsl_record::NativeSchemaControl $(, $generic: semio_framework_dsl_record::DslField)?>(control: &mut C) -> Result<semio_framework_dsl_record::RecordSpec, ValueError> {
@@ -68,7 +73,7 @@ macro_rules! dwg_metadata {
                 control.begin_stage(COUNT)?;
                 let mut fields = control.allocate_vec::<semio_framework_dsl_record::FieldSpec>(COUNT)?;
                 $(control.checkpoint()?;
-                let shape = dwg_controlled_shape!($shape, control)?;
+                let shape = $crate::dwg_controlled_shape!($shape, control)?;
                 let mut field = semio_framework_dsl_record::producer::field($id, $key, shape, control)?;
                 field.optional = $optional;
                 fields.push(field);
@@ -85,6 +90,7 @@ macro_rules! dwg_metadata {
         }
     };
 }
+#[macro_export]
 macro_rules! dwg_controlled_payloads {
     ($tag_field:literal; units[$($unit:ident = $unit_tag:literal),*]; $($tag:literal, $field:literal, $variant:ident, $ty:ty;)+) => {
         fn to_value_controlled(&self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::FieldValue,ValueError>{

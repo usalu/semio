@@ -190,23 +190,10 @@ async fn drawing_matrix_to_transform_round_trips_and_handles_zero_scale_x() {
     assert_eq!(degenerate.shear, 0.0);
 }
 
-#[semio_framework_async_macros::async_test]
-async fn drawing_play_layers_tree_row_id_formats_and_parses_back() {
-    let shape = create_drawing_shape_layer_rect(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Shape")).to_string().into()).expect("nonempty authored identity"), "Shape");
-    let id = layer_id(&shape).to_string();
-    let row_id = drawing_play_layers_tree_row_id(&shape);
-    assert_eq!(row_id, format!("drawing-play-layers.shape.{id}"));
-    assert_eq!(drawing_play_layer_id_from_tree_row_id(&row_id), Some(id));
-
-    let child_row = drawing_play_boolean_child_row_id("bool-1", "child-1");
-    assert_eq!(child_row, "drawing-play-layers.boolean-child.6.bool-1child-1");
-    assert_eq!(drawing_play_layer_id_from_tree_row_id(&child_row), Some("child-1".to_string()));
-    for (parent, child) in [("a.child.b", "c.child.d"), ("🌳.child", "葉.1")] {
-        assert_eq!(drawing_play_layer_id_from_tree_row_id(&drawing_play_boolean_child_row_id(parent, child)), Some(child.into()));
-    }
-
-    assert_eq!(drawing_play_layer_id_from_tree_row_id("not-a-row-id"), None);
-    assert_eq!(drawing_play_layer_id_from_tree_row_id("drawing-play-layers."), None);
+#[test]
+fn boolean_operand_rows_never_share_a_key() {
+    assert_eq!(drawing_play_boolean_child_row_id("bool-1", "child-1"), "drawing-play-layers.boolean-child.6.bool-1child-1");
+    assert_ne!(drawing_play_boolean_child_row_id("a", "bc"), drawing_play_boolean_child_row_id("ab", "c"));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -489,12 +476,6 @@ fn nested_group_transform_reaches_scene_and_bounds() {
 fn curve_bounds_include_the_visible_extremum() {
     let layer = create_drawing_path_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Curve")).to_string().into()).expect("nonempty authored identity"), "Curve", vec![PathSegment::Move { to: [0.0, 0.0] }, PathSegment::Cubic { ctrl1: [0.0, 100.0], ctrl2: [100.0, 100.0], to: [100.0, 0.0] }].into());
     assert_eq!(drawing_layer_world_bounds(&layer), Some((0.0, 0.0, 100.0, 75.0)));
-}
-
-#[test]
-fn tree_row_ids_preserve_dotted_layer_ids() {
-    assert_eq!(drawing_play_layer_id_from_tree_row_id("drawing-play-layers.shape.shape.a"), Some("shape.a".into()));
-    assert_eq!(drawing_play_layer_id_from_tree_row_id("drawing-play-layers.group.group.a"), Some("group.a".into()));
 }
 
 #[test]

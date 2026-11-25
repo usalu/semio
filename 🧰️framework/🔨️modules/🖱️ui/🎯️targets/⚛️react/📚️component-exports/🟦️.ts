@@ -4,7 +4,7 @@ import { Button, type ButtonProps } from "@semio-tech/ui/elements/Button";
 import { Form, type FormProps } from "@semio-tech/ui/elements/Form";
 import { Checkbox, type CheckboxProps, type CheckboxState } from "@semio-tech/ui/elements/Checkbox";
 import { Input, CollapsedFieldDisplay, fitCollapsedFieldText, resolveCollapsedFieldDisplayState, COLLAPSED_FIELD_ELLIPSIS, formatNumber } from "@semio-tech/ui/elements/Input";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectScrollDownButton, SelectScrollUpButton, SelectSeparator, SelectTrigger, SelectValue, resolveSelectPlacement, type SelectAlign, type SelectContentProps, type SelectGroupProps, type SelectItemProps, type SelectLabelProps, type SelectPosition, type SelectPreventableEvent, type SelectProps, type SelectScrollButtonProps, type SelectSeparatorProps, type SelectSide, type SelectTriggerProps, type SelectValueProps } from "@semio-tech/ui/elements/Select";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue, resolveSelectPlacement, type SelectAlign, type SelectContentProps, type SelectGroupProps, type SelectItemProps, type SelectLabelProps, type SelectPosition, type SelectPreventableEvent, type SelectProps, type SelectSeparatorProps, type SelectSide, type SelectTriggerProps, type SelectValueProps } from "@semio-tech/ui/elements/Select";
 import { Slider, sliderValuesMatch, resolveSliderDraftClear, clampSliderValuesToReady, normalizeSliderRange, normalizeSliderValues, type SliderDirection, type SliderOrientation, type SliderProps, type SliderRange, type SliderValue } from "@semio-tech/ui/elements/Slider";
 import { Stepper } from "@semio-tech/ui/elements/Stepper";
 import { SharedBorderRow, SharedBorderRowCell, SharedBorderRowField, SharedBorderRowLabel, useSharedBorderFrameRef, useSharedBorderBox, sharedBorderlessBoxProps, type SharedBorderRowCellProps, type SharedBorderRowEdge, type SharedBorderRowElement, type SharedBorderRowFieldProps, type SharedBorderRowLabelProps, type SharedBorderRowOrientation, type SharedBorderRowProps, type SharedBorderRowTone } from "@semio-tech/ui/elements/SharedBorderRow";
@@ -58,8 +58,6 @@ export {
   SelectGroup,
   SelectItem,
   SelectLabel,
-  SelectScrollDownButton,
-  SelectScrollUpButton,
   SelectSeparator,
   SelectTrigger,
   SelectValue,
@@ -72,7 +70,6 @@ export {
   type SelectPosition,
   type SelectPreventableEvent,
   type SelectProps,
-  type SelectScrollButtonProps,
   type SelectSeparatorProps,
   type SelectSide,
   type SelectTriggerProps,

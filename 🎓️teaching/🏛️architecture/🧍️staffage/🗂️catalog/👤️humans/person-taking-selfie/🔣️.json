@@ -13,15 +13,69 @@
       "de": "Eine 24-jährige Frau von 1,69 m (58 kg) in Fleece-Kapuzenpullover, enger Jeans, Stoffsneakern und einem 15-Liter-Tagesrucksack beim Sightseeing: Sie hält ihr Smartphone mit ausgestrecktem Arm, den Bildschirm zum Gesicht gedreht, hebt das Kinn und stützt die andere Hand in die Hüfte. Posen mit ausgestrecktem Arm, von oben, mit der Sehenswürdigkeit dahinter und beim Ansehen des Fotos; eine Posierschleife, eine Abfolge aus Aufnehmen und Ansehen sowie ruhiges Atmen."
     },
     "tags": [
-      "human",
-      "adult",
-      "woman",
-      "standing",
-      "smartphone",
-      "selfie",
-      "tourist",
-      "daypack",
-      "posing"
+      {
+        "id": "human",
+        "title": {
+          "en": "human",
+          "de": "Mensch"
+        }
+      },
+      {
+        "id": "adult",
+        "title": {
+          "en": "adult",
+          "de": "erwachsen"
+        }
+      },
+      {
+        "id": "woman",
+        "title": {
+          "en": "woman",
+          "de": "Frau"
+        }
+      },
+      {
+        "id": "standing",
+        "title": {
+          "en": "standing",
+          "de": "Stehen"
+        }
+      },
+      {
+        "id": "smartphone",
+        "title": {
+          "en": "smartphone",
+          "de": "Smartphone"
+        }
+      },
+      {
+        "id": "selfie",
+        "title": {
+          "en": "selfie",
+          "de": "Selfie"
+        }
+      },
+      {
+        "id": "tourist",
+        "title": {
+          "en": "tourist",
+          "de": "Tourist"
+        }
+      },
+      {
+        "id": "daypack",
+        "title": {
+          "en": "daypack",
+          "de": "Tagesrucksack"
+        }
+      },
+      {
+        "id": "posing",
+        "title": {
+          "en": "posing",
+          "de": "Posieren"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage human worker HW-11",
@@ -8565,6 +8619,7 @@
               "tone": 0.25,
               "region": "face-skin",
               "kind": "poly",
+              "closed": true,
               "points": [
                 [
                   -0.0629,
@@ -8679,15 +8734,14 @@
                   0.0253
                 ]
               ],
-              "closed": true,
               "solid": {
                 "kind": "extruded",
                 "sweep": "v",
-                "z0": -0.082,
-                "z1": 0.0346,
+                "z0": -0.0598,
+                "z1": 0.029,
                 "zTip": [
-                  -0.0619,
-                  0.0437
+                  -0.0406,
+                  0.0259
                 ]
               }
             },
@@ -19538,34 +19592,6 @@
               "kind": "poly",
               "points": [
                 [
-                  -0.2758,
-                  0.23364
-                ],
-                [
-                  -0.2758,
-                  0.22044
-                ],
-                [
-                  -0.2734,
-                  0.21204
-                ],
-                [
-                  -0.2686,
-                  0.20364
-                ],
-                [
-                  -0.2566,
-                  0.19284
-                ],
-                [
-                  -0.241,
-                  0.18684
-                ],
-                [
-                  -0.193,
-                  0.17604
-                ],
-                [
                   -0.103,
                   0.14724
                 ],
@@ -19766,96 +19792,32 @@
                   0.15804
                 ],
                 [
-                  0.0519,
-                  0.17724
+                  0.0422,
+                  0.173
                 ],
                 [
-                  0.0471,
-                  0.19044
+                  0.0099,
+                  0.1851
                 ],
                 [
-                  0.0375,
-                  0.20124
+                  -0.002,
+                  0.1875
                 ],
                 [
-                  0.0375,
-                  0.20364
+                  -0.03,
+                  0.1875
                 ],
                 [
-                  0.0339,
-                  0.20484
+                  -0.0599,
+                  0.1793
                 ],
                 [
-                  0.0267,
-                  0.21204
+                  -0.0817,
+                  0.1675
                 ],
                 [
-                  0.0243,
-                  0.21204
-                ],
-                [
-                  0.0219,
-                  0.21564
-                ],
-                [
-                  0.0122,
-                  0.22044
-                ],
-                [
-                  -0.0082,
-                  0.22644
-                ],
-                [
-                  -0.0407,
-                  0.23004
-                ],
-                [
-                  -0.0431,
-                  0.23364
-                ],
-                [
-                  -0.0586,
-                  0.23964
-                ],
-                [
-                  -0.0766,
-                  0.24204
-                ],
-                [
-                  -0.1592,
-                  0.26244
-                ],
-                [
-                  -0.2002,
-                  0.26964
-                ],
-                [
-                  -0.2122,
-                  0.26964
-                ],
-                [
-                  -0.2266,
-                  0.27444
-                ],
-                [
-                  -0.2446,
-                  0.27324
-                ],
-                [
-                  -0.2614,
-                  0.26364
-                ],
-                [
-                  -0.2614,
-                  0.26124
-                ],
-                [
-                  -0.2674,
-                  0.25644
-                ],
-                [
-                  -0.2734,
-                  0.24444
+                  -0.1002,
+                  0.1501
                 ]
               ],
               "closed": true,
@@ -24592,6 +24554,7 @@
               "tone": 0.25,
               "region": "face-skin",
               "kind": "poly",
+              "closed": true,
               "points": [
                 [
                   -0.0629,
@@ -24666,15 +24629,14 @@
                   0.0253
                 ]
               ],
-              "closed": true,
               "solid": {
                 "kind": "extruded",
                 "sweep": "v",
-                "z0": -0.0817,
-                "z1": 0.0341,
+                "z0": -0.0598,
+                "z1": 0.029,
                 "zTip": [
-                  -0.0609,
-                  0.0435
+                  -0.0422,
+                  0.0258
                 ]
               }
             },
@@ -29232,8 +29194,8 @@
                   0.029
                 ],
                 [
-                  0.0565,
-                  0.064
+                  0.02,
+                  0.0652
                 ],
                 [
                   0.2505,
@@ -29976,6 +29938,7 @@
               "tone": 0.25,
               "region": "face-skin",
               "kind": "poly",
+              "closed": true,
               "points": [
                 [
                   -0.0629,
@@ -30026,15 +29989,14 @@
                   0.0467
                 ]
               ],
-              "closed": true,
               "solid": {
                 "kind": "extruded",
                 "sweep": "v",
-                "z0": -0.0769,
-                "z1": 0.0326,
+                "z0": -0.0598,
+                "z1": 0.029,
                 "zTip": [
-                  -0.0408,
-                  0.0441
+                  -0.0439,
+                  0.0256
                 ]
               }
             },
@@ -30376,8 +30338,8 @@
                   0.029
                 ],
                 [
-                  0.0565,
-                  0.064
+                  0.02,
+                  0.0652
                 ],
                 [
                   0.2505,
@@ -31563,8 +31525,8 @@
                   0.029
                 ],
                 [
-                  0.0565,
-                  0.064
+                  0.02,
+                  0.0652
                 ],
                 [
                   0.2505,
@@ -33646,6 +33608,7 @@
               "tone": 0.4,
               "region": "face-skin",
               "kind": "poly",
+              "closed": true,
               "points": [
                 [
                   -0.0629,
@@ -33680,15 +33643,14 @@
                   0.0467
                 ]
               ],
-              "closed": true,
               "solid": {
                 "kind": "extruded",
                 "sweep": "v",
-                "z0": -0.0771,
-                "z1": 0.0328,
+                "z0": -0.0598,
+                "z1": 0.029,
                 "zTip": [
-                  -0.042,
-                  0.0446
+                  -0.0454,
+                  0.0256
                 ]
               }
             },
@@ -35009,62 +34971,60 @@
                 "hair"
               ],
               "kind": "poly",
+              "closed": true,
               "points": [
                 [
-                  0.0183,
-                  -0.0675
+                  -0.071,
+                  0.0124
                 ],
                 [
-                  0.0435,
-                  -0.0851
+                  -0.0416,
+                  0.0325
                 ],
                 [
-                  0.0873,
-                  -0.0876
+                  -0.0122,
+                  0.0524
                 ],
                 [
-                  0.1419,
-                  -0.0581
+                  0.0172,
+                  0.0704
                 ],
                 [
-                  0.1639,
-                  0.0045
+                  0.0465,
+                  0.0847
                 ],
                 [
-                  0.1336,
-                  0.0663
+                  0.0759,
+                  0.0859
                 ],
                 [
-                  0.093,
-                  0.0864
+                  0.1053,
+                  0.0784
                 ],
                 [
-                  0.0491,
-                  0.0864
+                  0.1347,
+                  0.059
+                ],
+                [
+                  0.1641,
+                  -0.0163
+                ],
+                [
+                  0.1641,
+                  -0.0193
                 ],
                 [
                   -0.071,
-                  0.024
-                ],
-                [
-                  -0.071,
-                  -0.024
-                ],
-                [
-                  -0.016,
-                  -0.059
+                  -0.0193
                 ]
               ],
-              "closed": true,
               "solid": {
-                "kind": "extruded",
-                "sweep": "v",
-                "z0": -0.0878,
-                "z1": 0.0582,
-                "zTip": [
-                  -0.0568,
-                  0.0572
-                ]
+                "kind": "revolved",
+                "axisBone": "head",
+                "axis": "u",
+                "axisX": 0.0193,
+                "axisZ": -0.0006,
+                "mirror": true
               }
             }
           ]

@@ -1,0 +1,11 @@
+--- a/✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/〰️analytic-curves/📦️packages/🦀️rust/Cargo.toml
++++ b/✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/〰️analytic-curves/📦️packages/🦀️rust/Cargo.toml
+@@ -20,6 +20,8 @@
+ semio-framework-job = { path = "../../../../../../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust" }
+ semio-framework-value = { path = "../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+ semio-s-artifact-stdio-step-geometry.workspace = true
++semio-s-artifact-stdio-dwg-geometry = { path = "../../../../../../🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📦️packages/🦀️rust" }
++semio-s-artifact-stdio-dwg-read = { path = "../../../../../../🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📥️import/📦️packages/🦀️rust" }
+ semio-s-spatial-kernel-semio-session.workspace = true
+ neural_engine = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust", package = "semio-os-kernel-neural-engine" }
+ semio-framework-replication-history-index = { path = "../../../../../../../../🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/📦️packages/🦀️rust" }

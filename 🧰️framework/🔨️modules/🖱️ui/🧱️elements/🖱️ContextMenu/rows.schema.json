@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "context-menu-rows/v1",
+  "description": "Rows of a context menu level: menu-level glass without padding, rows of chip-row height filling the width, single lines between rows, a hovered or active row filled with the hover fill and its text emphasised, no tick. A separator without a label has no height of its own: the line between its neighbours is the separator.",
+  "type": "object",
+  "required": ["schema", "inset", "cases"],
+  "properties": {
+    "schema": { "const": "context-menu-rows/v1" },
+    "inset": { "const": 0 },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "items", "contentRows", "lines", "rowYRows", "activeFill", "activeText"],
+        "properties": {
+          "id": { "type": "string" },
+          "items": { "type": "array", "items": { "enum": ["item", "separator", "header"] } },
+          "contentRows": { "type": "integer", "minimum": 0 },
+          "lines": { "type": "integer", "minimum": 0 },
+          "rowYRows": { "type": "array", "items": { "type": ["integer", "null"] } },
+          "activeFill": { "const": "hover-fill" },
+          "activeText": { "const": "emphasised" }
+        }
+      }
+    }
+  }
+}

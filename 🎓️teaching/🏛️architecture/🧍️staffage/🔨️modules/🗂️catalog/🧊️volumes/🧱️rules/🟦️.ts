@@ -7,7 +7,7 @@
  *
  * @see ../../🧊️volume/🟦️.ts — the per-solid rules
  * @see ../🟦️.ts — `checkVolumes`, the superset with geometry */
-import type { Asset, AuthoredVolume, Respiration, ScaleDenominator, Slug, StructuralSolid, Text, ThermalSolid, VolumeList, VolumeSolid } from "../../../../🧬️schema/🟦️.ts";
+import type { Asset, AuthoredVolume, LoftSection, Respiration, ScaleDenominator, Slug, StructuralSolid, Text, ThermalSolid, VolumeList, VolumeSolid } from "../../../../🧬️schema/🟦️.ts";
 import { polyhedronExtents } from "../../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🟦️.ts";
 import { SCALE_DENOMINATORS } from "../../../../🧬️schema/🟦️.ts";
 import { flattenGeometry, solidDrawingProjector } from "../../../🧮️evaluation/🟦️.ts";
@@ -122,6 +122,17 @@ export const featureOf = (denominator: number, minFeatureMm: number = VOLUME_LIM
 type Extent = readonly number[];
 const span = (values: readonly number[]): number => (values.length === 0 ? 0 : Math.max(...values) - Math.min(...values));
 
+/** 🥖️ The three dimensions of a lofted body in metres, of a volume solid and of a drawn `loft` alike: the length of the path through the section centres and the widest section along each of its two axes. */
+function loftExtents(sections: readonly LoftSection[]): Extent {
+  let pathLength = 0;
+  for (let i = 1; i < sections.length; i++) {
+    const [x, y, z] = sections[i]!.at;
+    const previous = sections[i - 1]!.at;
+    pathLength += Math.hypot(x - previous[0], y - previous[1], z - previous[2]);
+  }
+  return [pathLength, 2 * Math.max(...sections.map((s) => s.rx)), 2 * Math.max(...sections.map((s) => s.ry))];
+}
+
 /** 🧮️ The three dimensions of a solid in metres, using the section path length for a swept loft, sorted ascending, scaled by the smallest factor of its `transform`. */
 export function sortedExtents(solid: VolumeSolid): readonly [number, number, number] {
   let extents: Extent;
@@ -151,16 +162,9 @@ export function sortedExtents(solid: VolumeSolid): readonly [number, number, num
     case "polyhedron":
       extents = polyhedronExtents(solid.vertices, solid.triangles[0]);
       break;
-    case "loft": {
-      let pathLength = 0;
-      for (let i = 1; i < solid.sections.length; i++) {
-        const [x, y, z] = solid.sections[i]!.at;
-        const previous = solid.sections[i - 1]!.at;
-        pathLength += Math.hypot(x - previous[0], y - previous[1], z - previous[2]);
-      }
-      extents = [pathLength, 2 * Math.max(...solid.sections.map((s) => s.rx)), 2 * Math.max(...solid.sections.map((s) => s.ry))];
+    case "loft":
+      extents = loftExtents(solid.sections);
       break;
-    }
   }
   const factor = solid.transform?.scale === undefined ? 1 : Math.min(...solid.transform.scale);
   return extents.map((e) => e * factor).sort((p, q) => p - q) as unknown as readonly [number, number, number];
@@ -230,7 +234,7 @@ export function minimumWidth(points: readonly { readonly x: number; readonly y: 
   return best === Infinity ? 0 : best;
 }
 
-/** 🖋️ The thinnest filled 2D shape extent in metres that of the authored section or its paper projection for each bone (the least of the shorter side of the bounding box and the smallest width over all directions, {@link minimumWidth}, of every filled closed body, detail or glazing shape); bones without such a shape are absent. */
+/** 🖋️ The thinnest filled 2D shape extent in metres that of the authored section or its paper projection for each bone (the least of the shorter side of the bounding box and the smallest width over all directions, {@link minimumWidth}, of every filled closed body, detail or glazing shape; of a `loft` the least of its dimensions as a body, {@link loftExtents}, never the tapered section at its end); bones without such a shape are absent. */
 export function thinnestDrawn(asset: Asset, denominator: ScaleDenominator): ReadonlyMap<Slug, number> {
   const rep = asset.representations[`${denominator}`];
   const out = new Map<Slug, number>();
@@ -241,9 +245,10 @@ export function thinnestDrawn(asset: Asset, denominator: ScaleDenominator): Read
       if (shape.kind === "member" || !shape.filled || !["body", "detail", "glazing"].includes(shape.role)) continue;
       const flat = flattenGeometry(shape);
       if (!flat.closed) continue;
-      if (shape.solid) project ??= solidDrawingProjector(asset, { kind:"pose", pose:asset.presentation.defaultPose });
-      const sectionWidth = minimumWidth(flat.rings.flat());
-      const projectedWidth = shape.solid ? minimumWidth(project!(shape, flat.rings, view).flat()) : sectionWidth;
+      const body = shape.solid !== undefined || shape.kind === "loft";
+      if (body) project ??= solidDrawingProjector(asset, { kind:"pose", pose:asset.presentation.defaultPose });
+      const sectionWidth = shape.kind === "loft" ? Math.min(...loftExtents(shape.sections)) : minimumWidth(flat.rings.flat());
+      const projectedWidth = body ? minimumWidth(project!(shape, flat.rings, view).flat()) : sectionWidth;
       const thin = projectedWidth > 1e-9 ? Math.min(sectionWidth, projectedWidth) : sectionWidth;
       if (thin > 1e-9) out.set(shape.bone, Math.min(out.get(shape.bone) ?? Infinity, thin));
     }

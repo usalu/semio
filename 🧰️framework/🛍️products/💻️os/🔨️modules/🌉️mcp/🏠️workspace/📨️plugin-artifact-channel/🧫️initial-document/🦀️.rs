@@ -6,7 +6,7 @@ use semio_framework::{ArtifactDialect, IoEntryDirection};
 use semio_framework_artifact_reference::io::text::artifact_reference::DialectCoordinateText as _;
 use semio_framework_value::ToValue;
 use semio_os_mcp_foundation::errors::GatewayErrorCode;
-use semio_plugin_host::{GuestRelayOperationRequest, PluginRegistration, call_plugin};
+use semio_plugin_host::{PluginRegistration, call_plugin};
 
 #[derive(ToValue)]
 struct IoImport {
@@ -30,8 +30,7 @@ impl PluginArtifactChannel {
         if !json_import {
             return Err(GatewayError::new(GatewayErrorCode::InputInvalid, "selected artifact owner declares no JSON import for initial content"));
         }
-        let host = self.host_driver_policy;
-        if initial.len() > host.root.max_patch_bytes as usize {
+        if initial.len() > self.host_driver_policy.root.max_patch_bytes as usize {
             return Err(GatewayError::new(GatewayErrorCode::InputInvalid, "initial content exceeds the configured JSON input bound"));
         }
         scope.enter(ActivationPhase::LoadingDocument).map_err(crate::compiled_components::activation_fault)?;
@@ -62,13 +61,8 @@ impl PluginArtifactChannel {
     }
 
     fn initial_import_driver(&self, scope: &ActivationScope) -> Result<semio_plugin_host::GuestRelayWakeDriver, GatewayError> {
-        let host = self.host_driver_policy;
         let cancel = scope.cancel().clone();
-        self.operation_caps().issue(GuestRelayOperationRequest {
-            work_units: host.root.operation_fuel,
-            maximum_elapsed_microseconds: DOCUMENT_LOAD_WALL_BUDGET.as_micros() as u64,
-            retained: host.operation,
-        }, semio_framework_job::default_now_us, Box::new(move || cancel.is_cancelled_now()))
+        self.operation_caps().issue(implicit_editor_request(DOCUMENT_LOAD_WALL_BUDGET.as_micros() as u64), semio_framework_job::default_now_us, Box::new(move || cancel.is_cancelled_now()))
             .map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("initial JSON import Source: {error}")))
     }
 }

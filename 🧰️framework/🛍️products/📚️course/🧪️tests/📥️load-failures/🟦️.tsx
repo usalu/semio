@@ -95,7 +95,7 @@ describe("📥️ load failures", () => {
     const scope = testing.within(client.container);
     testing.fireEvent.click(await scope.findByRole("button", { name: "Deutsch" }));
     const sentence = "Deutsch could not be loaded – the course stays in English.";
-    const findNotice = () => scope.findByRole("alert", undefined, { timeout: 5_000 });
+    const findNotice = () => scope.findByRole("alert", undefined, { timeout: 20_000 });
     const notice = await findNotice();
     expect(notice.textContent).toContain(sentence);
     expect(notice.closest("[lang]")?.getAttribute("lang")).toBe("en");

@@ -1,0 +1,1747 @@
+import{refuseBuildV1}from"../📖️texts/🟦️.ts";
+import{createBoundedCacheV1}from"../🧊️bounded/🟨️.mjs";
+import{REVISION_POLICY_V1,captureBoundedSourceRevisionV1,implementationPinnedV1,observeCurrentSourceRevisionV1,physicalSourceOriginV1}from"../📥️inputs/🔏️revision/🟨️.mjs";
+import{declareFormatStampV1}from"../🧷️format-stamps/🟨️.mjs";
+import{publishFileDurablySyncV1,staleImplementationV1}from"../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
+import {withBuildGraphOptionalPublicationV1,registerBuildGraphOptionalHandleV1,requireRepositoryBuildGraphObservationPathV1 as requireManagedGraphObservationPathV1} from "../📥️inputs/💾️storage/🟨️.mjs";
+import * as fs from "node:fs";
+import{fieldExtractorIdentityV1,fieldFactV1,fieldValueV1,installedPackageFileV1,jsonPointerValueV1,registerFieldExtractorV1}from"./🧩️field/🟨️.mjs";
+import{noteObservedInReadParentV1}from"./🚧️read-parent/🟨️.mjs";
+import{retireProducerPublicationAtExitV1}from"./🪦️producer-publications/🟨️.mjs";
+
+const observedWorlds = new AsyncLocalStorage();
+const world = new Proxy({}, { get: (_target, key) => (observedWorlds.getStore() ?? fs)[key] });
+/** 🔭️ Runs `body` with every observed read of workspace sources routed through `port`, a synchronous port shaped like the read half of `node:fs` (a pinned revision view); concurrent bodies keep their own port. Cache and observation block files always use the live disk. */
+export function withObservedWorldV1(port, body) { return observedWorlds.run(port, body); }
+/** 🧩️ Imports a workspace module through the port of the running plan when that port loads modules (a capturing port); `undefined` when no plan port is installed. */
+export function importObservedModuleV1(path) { const port = observedWorlds.getStore(); return typeof port?.importModule === "function" ? port.importModule(path) : undefined; }
+import { readFile as readFileAsync, stat as statAsync } from "node:fs/promises";
+import { AsyncLocalStorage } from "node:async_hooks";
+import { setTimeout as settlementDelay } from "node:timers/promises";
+import { createHash } from "node:crypto";
+import { createRowRebaserV1, rebaseRowV1, rebaseRowsV1 } from "./🏚️relocation/🟨️.mjs";
+import { sha256HexV1, utf8TextV1 } from "../🧂️text-bytes/🟨️.mjs";
+import { hollowDirectoryV1, machineLocalRowV1, sourceTreeFilterV1 } from "./📂️source-names/🟨️.mjs";
+import { createDirectoryFactMemoV1, directoryStampV1 } from "./📂️directory-stamps/🟨️.mjs";
+
+/** 🔢️ A hex SHA-256 digest, compiled once. */
+const SHA256_HEX_V1 = /^[a-f0-9]{64}$/u;
+import { GRAPH_MEMORY_POLICY_V1, graphStringInternerV1, internJsonStringsV1 } from "../🧠️memory/🟨️.mjs";
+import { footprintPulseV1 } from "../🧠️memory/🦶️footprint/🟨️.mjs";
+import { createRowPoolV1, createRowTableV1, distinctObservationRowsV1, factKeyV1 } from "./🔢️row-table/🟨️.mjs";
+import { analysisStoreKeyV1, readStoredAnalysisV1, writeStoredAnalysisV1 } from "./🗄️analysis-store/🟨️.mjs";
+import { createWeakCollectionTrackerV1, describeCollectionV1 } from "../🧠️memory/📋️slice-report/🟨️.mjs";
+import { brotliCompress, brotliCompressSync, brotliDecompressSync, constants as zlibConstants } from "node:zlib";
+
+/** 🗜️ Persisted inference records are brotli streams: their observation rows repeat across projects and shrink about 15 times. */
+const packInferenceRecordV1=bytes=>new Promise((accept,reject)=>brotliCompress(bytes,{params:{[zlibConstants.BROTLI_PARAM_QUALITY]:5,[zlibConstants.BROTLI_PARAM_LGWIN]:22,[zlibConstants.BROTLI_PARAM_SIZE_HINT]:bytes.length}},(error,packed)=>error?reject(error):accept(packed)));
+import{createRequire}from"node:module";
+import { basename, dirname, join, resolve, relative, sep } from "node:path";
+import { fileURLToPath } from "node:url";
+import { openRecordStore, recordKey, RECORD_STORE_PACK_LIMIT } from "../../⚡️caching/🗃️records/🟦️.ts";
+import { compileJsonSchemaSubset } from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+const observationSchemaURLV1=new URL("./🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL)),observationSchemaCaptureV1=captureBoundedSourceRevisionV1(fileURLToPath(observationSchemaURLV1),REVISION_POLICY_V1.maximumTextBytes,true),sourceAnalysisSchemaV1=JSON.parse(observationSchemaCaptureV1.text??""),observationSchemaRevisionV1=observationSchemaCaptureV1.sha256;
+import{requireExactSourceReadBatchV1,readExactSourceFileV1}from"../📥️inputs/🧮️digest/📥️read/🟨️.mjs";
+
+/** 🗃️ This module's own bytes: persisted observations validated by another revision of these rules are a miss. */
+const OBSERVATION_REVISION = captureBoundedSourceRevisionV1(fileURLToPath(physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL)),REVISION_POLICY_V1.maximumSourceBytes).sha256;
+
+/** 🔖️ The declared stamps of the inference protocol, registered by the stamps component of each revision: a project record names the stamp of every inferrer that took part in its output instead of the bytes of their code, and a stamp row holds while that inferrer still carries the stamp it was recorded with. */
+const inferenceStamps=new Map();
+let stampedFragments=[];
+export function registerInferenceStampsV1(entries,fragments=[]){for(const[path,stamp]of entries){if(typeof path!=="string"||!path||typeof stamp!=="string"||!stamp)throw Error("Inference stamp path and value required");inferenceStamps.set(path,stamp);}if(!Array.isArray(fragments)||fragments.some(fragment=>typeof fragment!=="string"||fragment.length<2))throw Error("Inference source fragments required");stampedFragments=[...fragments];}
+
+/** 🏷️ The declared stamp of the persisted project record format and the only revision of the record rules: a record written under another stamp is a miss, an edit of this module that keeps the stamp moves no record key and no owner pool revision (bump the stamp in the schema when rows, digest or validation change for the same inputs). */
+const recordStampV1=()=>sourceAnalysisSchemaV1.$defs.record.const.stamp;
+declareFormatStampV1("graph.record",sourceAnalysisSchemaV1);
+
+/** 📌️ Records the stamp of each named inferrer in the active inference scope, so the record that is being computed names exactly the protocol versions it took part in. */
+export function observedInferenceStampsV1(paths){for(const path of paths)record("stamp",path);}
+
+/** 📸️ The facts of the implementation files this process loaded, taken at load and kept in memory: the digest of each file as it was when the code was read. They are facts of the PROCESS, not of the tree: a fact about such a file holds when it names the loaded digest, never by a read of the file on disk, so an edit of tooling during a read cannot make a fact stale that the process could never refresh. Only a new process loads a new digest. */
+const loadedImplementationFactsV1 = new Map();
+
+/** 📸️ Registers the rows an implementation module loaded with the bytes they had at load; the first row of a path wins, a later load of the same path in this process never replaces it. */
+export function registerLoadedImplementationRowsV1(rows) {
+  for (const row of rows) if (row.kind === "digest" && typeof row.fact?.sha256 === "string" && !loadedImplementationFactsV1.has(row.path)) loadedImplementationFactsV1.set(row.path, Object.freeze({ sha256: row.fact.sha256, ignored: row.fact.ignore !== undefined }));
+}
+
+/** 🗝️ Borrows the loaded digest only for observations the implementation pin owns. */
+function loadedImplementationFactV1(kind, path, fact) {
+  const loaded = loadedImplementationFactsV1.get(path);
+  if (loaded === undefined || typeof fact?.sha256 !== "string") return undefined;
+  return kind === "digest" || (kind === "file" && !loaded.ignored && fact.error === undefined) ? loaded : undefined;
+}
+
+let finishOnLoadedImplementationV1Enabled = false;
+
+/** 🧊️ Makes this process finish what it runs on the code it loaded: an observation of an implementation file it loaded names the loaded digest even when a peer edited the file since, so a running request is never restarted by an edit and the next request, loaded from the new code, finds the old digest stale and observes again. */
+export function finishOnLoadedImplementationV1() { finishOnLoadedImplementationV1Enabled = true; }
+
+/** 🧊️ The fact a pinned process records for an implementation file: the loaded digest when the file moved after load. */
+export function loadedImplementationRecordedFactV1(kind, path, fact) {
+  if (!finishOnLoadedImplementationV1Enabled || kind !== "file" || fact === null || typeof fact !== "object" || fact.error !== undefined || typeof fact.sha256 !== "string") return fact;
+  const loaded = loadedImplementationFactsV1.get(path);
+  return loaded === undefined || loaded.ignored || loaded.sha256 === fact.sha256 ? fact : { ...fact, sha256: loaded.sha256 };
+}
+
+/** 🔎️ A pinned implementation observation holds exactly when it names the digest the process loaded. */
+function loadedImplementationAnswerV1(kind, path, fact) {
+  if (!implementationPinnedV1()) return undefined;
+  const loaded = loadedImplementationFactV1(kind, path, fact);
+  return loaded === undefined ? undefined : fact.sha256 === loaded.sha256;
+}
+
+/** 🪪️ Restarts when this inference observed the current version of an implementation file its worker still executes at another digest. */
+export function requirePinnedImplementationFactsV1(observations, signal) {
+  if (!implementationPinnedV1()) return;
+  for (const row of observations) {
+    signal?.throwIfAborted();
+    const loaded = loadedImplementationFactV1(row.kind, row.path, row.fact);
+    if (loaded === undefined || row.fact.sha256 === loaded.sha256) continue;
+    let current;
+    try { current = observeCurrentSourceRevisionV1(row.path, REVISION_POLICY_V1.maximumSourceBytes); }
+    catch { signal?.throwIfAborted(); continue; }
+    if (current.sha256 !== row.fact.sha256) continue;
+    const pinnedDrift = {path:row.path, expectedSha256:row.fact.sha256, currentSha256:current.sha256, pinnedSha256:loaded.sha256};
+    const error = staleSourceFactsErrorV1([row]);
+    error.message += " ("+JSON.stringify(pinnedDrift)+")";
+    throw Object.assign(error,{pinnedDrift});
+  }
+}
+
+/** 🧷️ Refuses a statically cached observation instance whose executing Source or privately captured schema changed. */
+export function requireCurrentObservationV1(){if(implementationPinnedV1())return;try{if(captureBoundedSourceRevisionV1(fileURLToPath(physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL)),REVISION_POLICY_V1.maximumSourceBytes).sha256===OBSERVATION_REVISION&&captureBoundedSourceRevisionV1(fileURLToPath(observationSchemaURLV1),REVISION_POLICY_V1.maximumTextBytes).sha256===observationSchemaRevisionV1)return;}catch(cause){throw Object.assign(staleImplementationV1("Stale loaded observation implementation; restart required"),{code:"BUILD_AUTHORITY_CHANGED",cause});}throw Object.assign(staleImplementationV1("Stale loaded observation implementation; restart required"),{code:"BUILD_AUTHORITY_CHANGED"});}
+
+/** 🧊️ The failure of an attempt whose source facts a repeated inference left as they were (a process that reads a pinned implementation file whose bytes changed on disk cannot refresh them): it ends as a stale implementation, so the outermost command starts again with the current code instead of repairing for ever. */
+export function staleSourceFactsErrorV1(rows){const named=rows.slice(0,4).map(row=>row.kind+":"+row.path).join(", ");return Object.assign(staleImplementationV1("Stale source facts that a repeated inference cannot refresh; restart required: "+named+" / Veraltete Quellfakten, die eine erneute Ableitung nicht erneuern kann; Neustart erforderlich: "+named),{code:"BUILD_AUTHORITY_CHANGED",paths:rows.slice(0,8).map(row=>row.path)});}
+
+/** 🚧️ The declared limits of the observation module; its schema file is their single source. */
+export const OBSERVATION_LIMITS_V1 = Object.freeze({...sourceAnalysisSchemaV1.$defs.limits.const});
+
+/** ⏱️ Files stamped this close to the start of a computation may still change within one timestamp tick, so their result is never persisted (racy-git rule). */
+const RACY_MS = OBSERVATION_LIMITS_V1.racyMilliseconds;
+
+const scopes = new AsyncLocalStorage();
+const inferenceValidationScopes = new AsyncLocalStorage();
+const sourceCaptures = new AsyncLocalStorage();
+const recordScopes = new AsyncLocalStorage();
+const plainRecordReads = new AsyncLocalStorage();
+const requireRepositoryBuildGraphObservationPathV1 = (path, mode) => mode === "read" && plainRecordReads.getStore() === true ? Object.freeze({ kind: "ordinary" }) : requireManagedGraphObservationPathV1(path, mode);
+const recordStores = new Map();
+const recordStoreHandles = new Map();
+const usedInference = new Map();
+const originalInferencePublications = new Map();
+const loadObservations = new Map();
+const projectComputations = new Map();
+const projectImages = new Map();
+const projectChecks = new WeakMap();
+const trackedV1={projectChecks:createWeakCollectionTrackerV1(),sharedChecks:createWeakCollectionTrackerV1(),scopes:createWeakCollectionTrackerV1()},trackedSeenV1=new WeakSet();
+const trackV1=(kind,map)=>{if(map!==null&&typeof map==="object"&&!trackedSeenV1.has(map)&&!(typeof map.size==="number"&&map.size<OBSERVATION_LIMITS_V1.trackMinimumEntries)){trackedSeenV1.add(map);trackedV1[kind].track(map);}};
+const sourceAnalyses = new Map();
+const activeSourceAnalyses = new Set();
+const sourceAnalysisImages = new Map();
+const SOURCE_ANALYSIS_BYTES = OBSERVATION_LIMITS_V1.sourceAnalysisBytes;
+let sourceAnalysisBytes = 0;
+let loadSealed = false;
+let authorityDigest;
+
+/** 🧊️ Keeps the serialized image of recently inferred projects up to the declared byte bound, oldest first out: a repeated round in this process reuses a retained image, every other repeat reads the persisted record, so the images of thousands of projects never accumulate. */
+const retainedProjectImages=new Set();let retainedProjectImageBytes=0;
+function retainProjectImageV1(cachePath,entry){
+ const previous=projectImages.get(cachePath);if(previous?.image)retainedProjectImageBytes-=previous.image.length;
+ retainedProjectImages.delete(cachePath);projectImages.set(cachePath,entry);retainedProjectImages.add(cachePath);retainedProjectImageBytes+=entry.image.length;
+ while(retainedProjectImageBytes>GRAPH_MEMORY_POLICY_V1.retainedImageBytes&&retainedProjectImages.size){const oldest=retainedProjectImages.values().next().value,held=projectImages.get(oldest);retainedProjectImages.delete(oldest);if(held?.image)retainedProjectImageBytes-=held.image.length;projectImages.delete(oldest);}
+}
+
+/** 📊️ Exposes owned project computation counts without influencing source admission. */
+export function projectInferenceCountsV1(){return Object.fromEntries(projectComputations);}
+
+/** 📦️ The facts one project record consumed, whether it was computed or reused in this process. */
+export function projectInferenceObservationsV1(cachePath){return originalInferencePublications.get(cachePath)?.observations;}
+
+/** 🪨️ Runs a partial inference in project scope without an all-or-nothing round: every project is consistent with the facts of its own record, contradictory facts between projects are legitimate and a project that raced an edit is stale in the next verification instead of restarting the pass. */
+export async function observeInferenceSnapshotV1(compute){
+ requireCurrentObservationV1();loadSealed=true;
+ const nested=new Map();
+ return inferenceValidationScopes.run(nested,()=>scopes.run(nested,compute));
+}
+
+/** 📣️ Reports owned observation counts without exposing or discarding original source facts. */
+export function sourceObservationStatsV1(){let projectObservationRows=0,projectImageBytes=0;for(const project of projectImages.values()){projectObservationRows+=project.observations.length;projectImageBytes+=project.image?.length??0;}return {loadObservations:loadObservations.size,projectImages:projectImages.size,projectImageBytes,originalInferencePublications:originalInferencePublications.size,projectObservationRows,captureObservations:sourceCaptures.getStore()?.size??0,recordStores:recordStores.size,analysisEntries:sourceAnalysisImages.size,analysisBytes:sourceAnalysisBytes};}
+
+/** 🔏️ Registers one explicit parser revision; receipts can never provide executable analysis code. */
+export function registerSourceAnalysisV1({id,revision,analyze}){
+ if(typeof id!=="string"||!id.length||id.length>OBSERVATION_LIMITS_V1.maximumIdentifierCharacters||id.trim()!==id||id.includes("\0")||typeof revision!=="string"||!SHA256_HEX_V1.test(revision)||typeof analyze!=="function")throw Error("Explicit source analysis identity, revision and parser required");
+ const prior=sourceAnalyses.get(id);if(prior?.provider.revision===revision){if(prior.analyze!==analyze)throw Error("Ambiguous source analysis revision registration");return prior.provider;}
+ const provider=Object.freeze({id,revision});sourceAnalyses.set(id,{provider,analyze});return provider;
+}
+
+/** 🪪️ Admits only the immutable currently registered parser handle. */
+function sourceAnalysisProviderV1(provider){const registered=sourceAnalyses.get(provider?.id);if(!registered||registered.provider!==provider)throw Error("Current registered source analysis provider required");return registered;}
+
+/** ♻️ Shares a physical validation only within the same original parent inference whose final receipt still rechecks every fact. */
+/** 📁️ Directories one inference round already proved real; the round's final receipt still rechecks every recorded fact. */
+const roundDirectories=new WeakMap();
+const rowChecks=new WeakMap();
+function residentFactV1(fact){
+ if(fact===null||typeof fact!=="object")return true;
+ if(Array.isArray(fact))return fact.length<=32&&fact.every(residentFactV1);
+ for(const value of Object.values(fact)){
+  if(typeof value==="string"){if(value.length>8192)return false;}
+  else if(Array.isArray(value)){if(value.length>32)return false;}
+  else if(value!==null&&typeof value==="object"&&!residentFactV1(value))return false;
+ }
+ return true;
+}
+function residentRowsV1(rows){return rows.filter(row=>residentFactV1(row?.fact));}
+function projectObservationHoldsV1(row,parent){
+ parent=inferenceValidationScopes.getStore()??parent;
+ const seen=rebaseRowV1(row);
+ if(machineLocalRowV1(seen.kind,seen.path))return true;
+ const factText=JSON.stringify(row.fact);
+ if(factText.length>8192)return seen.kind==="file"?fileFactHolds(seen.path,seen.fact)&&JSON.stringify(facts.file(seen.path)?.sha256??null)===JSON.stringify(seen.fact.sha256??null):current([seen]);
+ let checks=parent&&projectChecks.get(parent),rows=parent&&rowChecks.get(parent);if(parent&&!checks){checks=new Map();projectChecks.set(parent,checks);trackV1("projectChecks",checks);}if(parent&&!rows){rows=new WeakMap();rowChecks.set(parent,rows);}
+ const shared=rows?.get(row);if(shared!==undefined)return shared;
+ const key=rowTableV1.id(row),previous=checks?.get(key);if(previous!==undefined){rows?.set(row,previous);return previous;}
+ const holds=seen.kind==="file"?fileFactHolds(seen.path,seen.fact)&&JSON.stringify(facts.file(seen.path)?.sha256??null)===JSON.stringify(seen.fact.sha256??null):current([seen]);
+ checks?.set(key,holds);rows?.set(row,holds);return holds;
+}
+
+/** 📛️ The identity every persisted project record of this process is written under: its record stamp and the authority digest of its module loads, equal in every process whose records another may reuse. */
+export function inferenceRecordIdentityV1(){return sha256HexV1(JSON.stringify([recordStampV1(),inferenceAuthorityDigestV1()]));}
+
+/** 🧮️ The authority digest of a list of rows: the same function in the process that answers the rows and in every process that adopts them, so both name their records alike whatever a process keeps in its own table of loads. */
+function authorityDigestOfRowsV1(rows){return sha256HexV1(JSON.stringify(rows.filter(row=>!(row.kind==="file"&&stampedFragments.some(fragment=>row.path.includes(fragment)))).map(row=>JSON.stringify([observationIdentityV1(row),observationMeaningV1(row)])).sort()));}
+
+/** 📚️ Seals module-load authority and names it by the meaning of its data facts, so project records inherit the declared policies and schemas by digest instead of by rows; every file below a fragment of the inference protocol is named by its stamp, never by its bytes. */
+export function inferenceAuthorityDigestV1(){
+ loadSealed=true;
+ return authorityDigest??=authorityDigestOfRowsV1([...loadObservations.values()]);
+}
+
+/** 🫱️ Seals the module-load authority of this process and answers its rows, so a farm worker can serve under exactly this authority: the digest is derived again from the rows answered, because the digest the first project asked for was made before later loads and the table of a worker that adopts these rows holds fewer of them (13 directory rows fewer), so the farm was refused as differing in its records. */
+export function inferenceAuthorityRowsV1(){const rows=[...loadObservations.values()];loadSealed=true;authorityDigest=authorityDigestOfRowsV1(rows);return rows;}
+
+/** 🎁️ Serves under the sealed authority of a parent process: the parent's rows become the authority of this process (its records are then named as the parent's own records are, whatever the parent's command read before its first project), unless a row this process recorded at its own load says something else about the same fact; those conflicts are answered and nothing is adopted. */
+export function adoptInferenceAuthorityV1(rows){
+ const parent=new Map(rows.map(row=>[JSON.stringify(observationIdentityV1(row)),observationMeaningV1(row)])),conflicts=[...loadObservations.values()].filter(row=>{const meaning=parent.get(JSON.stringify(observationIdentityV1(row)));return meaning!==undefined&&meaning!==observationMeaningV1(row);}).map(row=>row.kind+":"+row.path);
+ if(conflicts.length)return conflicts;
+ loadObservations.clear();retainObservationsV1(loadObservations,rows);loadSealed=true;authorityDigest=authorityDigestOfRowsV1(rows);return [];
+}
+
+/** 🎟️ Admits one physical project's own input observations through its own computation, bound to the sealed authority digest. */
+export async function observeProjectInferenceV1({cachePath,key,owner,reusable,stamps=[],prepare,fleet,deferOffer=false,verdict,verdictFinal=false,prepareAttempts=1,stale},compute){
+ requireCurrentObservationV1();requireInferenceReuseV1(reusable);originalInferencePublications.delete(cachePath);usedInference.delete(cachePath);
+ const parent=scopes.getStore(),identity=sha256HexV1(JSON.stringify([recordStampV1(),null,key])),previous=projectImages.get(cachePath);
+ const inherit=rows=>{retainSourceFactsV1(rows);retainObservationsV1(parent,rows);};
+ if(previous?.identity===identity&&previous.image!==null&&previous.observations.every(row=>projectObservationHoldsV1(row,parent))){
+  const value=internJsonStringsV1(JSON.parse(previous.image.toString("utf8")),graphStringInternerV1);
+  if(await inferenceReusableV1(reusable,value)&&(parent?consistentObservationsV1(previous.observations):current(previous.observations))){inherit(previous.observations);originalInferencePublications.set(cachePath,previous.publication);usedInference.set(cachePath,previous.headerDigest);return value;}
+ }
+ let own;const value=await observeInferenceComputationV1({cachePath,key,reusable,prepare,fleet,deferOffer,verdict,verdictFinal,prepareAttempts,stale,published:found=>{own=found;}},async()=>{projectComputations.set(owner,(projectComputations.get(owner)??0)+1);observedInferenceStampsV1(stamps);const image=jsonImage(await compute());if(image===undefined)throw Error("Project inference requires a language-neutral JSON image");return JSON.parse(image);},Boolean(parent&&inferenceValidationScopes.getStore()));
+ const publication=own??originalInferencePublications.get(cachePath);
+ if(!publication)throw Object.assign(Error("Original project inference observations required for "+String(owner)+" ("+cachePath+") / Ursprüngliche Beobachtungen der Projektableitung erforderlich für "+String(owner)+" ("+cachePath+")"),{code:"BUILD_INFERENCE_PUBLICATION_LOST",semioProject:typeof owner==="string"?owner:undefined});
+ inherit(publication.observations);
+ retainProjectImageV1(cachePath,{identity,image:Buffer.from(JSON.stringify(value)),observations:publication.observations,publication,headerDigest:usedInference.get(cachePath)??null});
+ return internJsonStringsV1(value,graphStringInternerV1);
+}
+
+/** 📥️ Retains every actual source fact, including facts inherited from valid inference records. */
+function retainSourceFactsV1(rows){retainObservationsV1(sourceCaptures.getStore(),rows);}
+
+/** 🧾️ Preserves distinct consumed results for a path, including contradictory reads. */
+function retainObservationsV1(target,rows){
+ if(!target)return;trackV1("scopes",target);
+ if(Array.isArray(rows)&&rows.length>=DETACHED_LAYER_ROWS){
+  if(target instanceof DetachedScopeV1){if(!target.layers.has(rows)){target.layers.add(rows);target.order.push(rows);}return;}
+  let done=retainedArrays.get(target);if(done===undefined)retainedArrays.set(target,done=new WeakSet());
+  if(done.has(rows))return;done.add(rows);
+ }
+ if(target instanceof DetachedScopeV1){for(const row of rows){const id=rowTableV1.id(row);if(!target.has(id)){target.set(id,row);target.order.push(row);}}return;}
+ for(const row of rows)target.set(rowTableV1.id(row),row);
+}
+
+/** 🔁️ The stored row arrays already merged into one scope: a shared computation replayed into the same scope again (one import after another asking for the same index) costs nothing the second time, since merging an array twice changes nothing. */
+const retainedArrays=new WeakMap();
+
+/** 🧺️ The rows of one scope: its own rows and the row arrays it merged by reference, each row once. */
+function scopeRowsV1(scope){
+ if(!scope.layers.size)return[...scope.values()];
+ const rows=new Set();for(const item of scope.order){if(Array.isArray(item))for(const row of item)rows.add(row);else rows.add(item);}
+ return[...rows];
+}
+
+/** 🧅️ The scope of a detached computation: rows it observed itself, and the stored row arrays of the shared computations it reused, kept by reference so that a thousand detached computations over one closure hold that closure once. */
+class DetachedScopeV1 extends Map{constructor(){super();this.layers=new Set();this.order=[];}}
+const DETACHED_LAYER_ROWS=OBSERVATION_LIMITS_V1.detachedLayerRows;
+
+/** 🧅️ The enclosing scope of a read over many owners: the stored row arrays of a reused owner are kept by reference (one pointer per owner and scope, never a copy of its rows), and the distinct rows are taken once, by content, when the scope is read; a row of a later row-table generation costs no second entry, since nothing is keyed by the number a row had when it was merged.
+ * @see ./🧪️tests/🧺️scope-rows */
+class LayeredScopeV1 extends DetachedScopeV1{
+ constructor(){super();this.settled=undefined;this.settledAt=-1;}
+ distinct(){
+  if(this.settledAt===this.order.length)return this.settled;
+  const seen=new Set(),rows=[];for(const item of this.order){if(Array.isArray(item)){for(const row of item)if(!seen.has(row)){seen.add(row);rows.push(row);}}else if(!seen.has(item)){seen.add(item);rows.push(item);}}
+  this.settled=distinctObservationRowsV1(rows);this.settledAt=this.order.length;return this.settled;
+ }
+ values(){return this.distinct()[Symbol.iterator]();}
+ get size(){return this.distinct().length;}
+ clear(){super.clear();this.layers.clear();this.order=[];this.settled=undefined;this.settledAt=-1;}
+}
+
+/** 🧩️ The capture of one settle round: besides its rows it lists the row sets of the units (owners) that were merged into it, a reused unit by its stored array and a freshly observed one by what its own capture saw, so that a contradiction can be told apart into one inside a single unit and one between two units.
+ * @see ./🧪️tests/🌀️settle-churn */
+class SettlementScopeV1 extends LayeredScopeV1{constructor(){super();this.units=[];}}
+
+/** 🧲️ Merges what a finished scope observed into the scope around it: a layered child hands its row arrays over by reference. */
+function retainScopeV1(target,child){
+ if(!target)return;
+ if(child instanceof LayeredScopeV1&&target instanceof DetachedScopeV1){trackV1("scopes",target);for(const item of child.order){if(Array.isArray(item)){if(!target.layers.has(item)){target.layers.add(item);target.order.push(item);}}else retainObservationsV1(target,[item]);}return;}
+ retainObservationsV1(target,child.values());
+}
+
+/** 🔑️ The exact content key of one observation row, computed once per row object; flat facts avoid JSON serialisation. */
+function observationKeyV1(row){return row.kind+"\0"+row.path+"\0"+factKeyV1(row.fact);}
+
+/** 🪢️ Shares one row object between every project that observed identical bytes, so persisted headers cost memory by distinct fact, not by project. */
+const rowTableV1=createRowTableV1({maximumRows:OBSERVATION_LIMITS_V1.rowStoreRows,maximumCharacters:OBSERVATION_LIMITS_V1.rowStoreCharacters});
+
+/** 🗺️ The JSON text of one observation row, serialised once per row object: a header costs concatenation, not the repeated serialisation of rows that thousands of projects share. */
+const observationJsons=new WeakMap();
+/** 🗺️ The JSON text of one observation row, serialised once per row object for as long as the row lives: a list that shares its rows with other lists costs the concatenation of their texts, never another serialisation of the rows. */
+export function observationRowJsonV1(row){let text=observationJsons.get(row);if(text===undefined){text=JSON.stringify(row);observationJsons.set(row,text);}return text;}
+function observationRowsJsonV1(rows){return "["+rows.map(observationRowJsonV1).join(",")+"]";}
+function internObservationsV1(rows){return rows.map(row=>rowTableV1.canonical(row.kind,row.path,row.fact,path=>{if(typeof row.path==="string")row.path=path;return row;}));}
+const rowPoolV1=createRowPoolV1();
+
+/** 🪢️ Makes the rows of a stored or detached closure one live instance per distinct row, in place: the caches that keep thousands of such rows cost one object per distinct row, not one per holder. */
+export function shareObservationRowsV1(rows){return rowPoolV1.rows(rows);}
+
+function canonicalObservationV1(kind,path,fact){return rowTableV1.canonical(kind,path,fact,shared=>({kind,path:shared,fact}));}
+function recordRowV1(row){
+ footprintPulseV1();
+ const capture=sourceCaptures.getStore(),target = scopes.getStore() ?? (loadSealed||capture ? undefined : loadObservations);
+ if(!target&&!capture)return;
+ retainObservationsV1(target,[row]);retainSourceFactsV1([row]);
+}
+
+/** 🤝️ Validates a persisted project's facts through the original inference's shared physical checks, so a fact that many projects consumed is probed once per inference while the final receipt still rechecks all of them. */
+const sharedChecks=new WeakMap();
+function sharedObservationsHoldV1(rows,parent){
+ parent=inferenceValidationScopes.getStore()??parent;if(!parent)return current(rows);
+ let checks=sharedChecks.get(parent);if(!checks){checks=new Map();sharedChecks.set(parent,checks);trackV1("sharedChecks",checks);}
+ return consistentObservationsV1(rows)&&rows.every(row=>{const key=rowTableV1.id(row),previous=checks.get(key);if(previous!==undefined)return previous;const holds=current([row]);checks.set(key,holds);return holds;});
+}
+
+/** 🪸️ The verdict on the stored rows of one shared computation, remembered per validation round by array identity, so thousands of detached or nested users of one closure validate its rows once. */
+const memoRowChecksV1=new WeakMap();
+function memoRowsKnownV1(rows){if(rows.length<DETACHED_LAYER_ROWS)return undefined;const round=inferenceValidationScopes.getStore();return round?memoRowChecksV1.get(round)?.get(rows):undefined;}
+function memoRowsRememberV1(rows,holds){if(rows.length<DETACHED_LAYER_ROWS)return;const round=inferenceValidationScopes.getStore();if(!round)return;let checks=memoRowChecksV1.get(round);if(!checks)memoRowChecksV1.set(round,checks=new WeakMap());checks.set(rows,holds);}
+function memoRowsHoldV1(rows,parent){const known=memoRowsKnownV1(rows);if(known!==undefined)return known;const holds=rows.every(row=>projectObservationHoldsV1(row,parent));memoRowsRememberV1(rows,holds);return holds;}
+
+/** 🧵️ Shares validated invocation work while replaying every consumed fact into each receiving project. */
+export function memoizedObservedComputationV1(cache,key,compute) {
+ noteObservedInReadParentV1("computations");const parent=scopes.getStore(),previous=cache.get(key);
+ if(previous&&memoRowsHoldV1(previous.observations,parent)){retainObservationsV1(parent,previous.observations);retainSourceFactsV1(previous.observations);return previous.value;}
+ const nested=new DetachedScopeV1();let stored;
+ try{const value=scopes.run(nested,compute);if(value&&typeof value.then==="function")throw Error("Synchronous observed computation required");stored=scopeRowsV1(nested);if(value!==null)cache.set(key,{value,observations:stored});return value;}
+ finally{const rows=stored??scopeRowsV1(nested);retainObservationsV1(parent,rows);retainSourceFactsV1(rows);}
+}
+
+const validatedAsyncDeliveriesV1=new WeakMap();
+
+/** 🪬️ Reuses only a fully delivered validated hit in the exact live receiving frames. */
+function validatedAsyncDeliveryV1(entry,parent,capture,validation,remember=false){
+ if(!parent||!capture||!validation)return false;
+ let parents=validatedAsyncDeliveriesV1.get(entry);if(!parents){if(!remember)return false;validatedAsyncDeliveriesV1.set(entry,parents=new WeakMap());}
+ let captures=parents.get(parent);if(!captures){if(!remember)return false;parents.set(parent,captures=new WeakMap());}
+ let validations=captures.get(capture);if(!validations){if(!remember)return false;captures.set(capture,validations=new WeakSet());}
+ const delivered=validations.has(validation);if(remember)validations.add(validation);return delivered;
+}
+
+/** 🌊️ Retains complete observations while an original caller yields asynchronous inference. */
+export async function memoizedObservedAsyncComputationV1(cache,key,compute,checkpoint) {
+ if(typeof checkpoint!=="function")throw Error("Original asynchronous inference checkpoint required");
+ const parent=scopes.getStore(),capture=sourceCaptures.getStore(),validation=inferenceValidationScopes.getStore()??parent,previous=cache.get(key);
+ if(previous){if(validatedAsyncDeliveryV1(previous,parent,capture,validation)){await checkpoint(true);return previous.value;}let holds=true;const known=memoRowsKnownV1(previous.observations);if(known!==undefined)holds=known;else{for(const row of previous.observations){await checkpoint();if(!projectObservationHoldsV1(row,parent)){holds=false;break;}}memoRowsRememberV1(previous.observations,holds);}if(holds){retainObservationsV1(parent,previous.observations);retainSourceFactsV1(previous.observations);validatedAsyncDeliveryV1(previous,parent,capture,validation,true);return previous.value;}}
+ const nested=new DetachedScopeV1();let stored;
+ try{const value=await scopes.run(nested,compute);stored=scopeRowsV1(nested);if(value!==null)cache.set(key,{value,observations:stored});return value;}
+ finally{const rows=stored??scopeRowsV1(nested);retainObservationsV1(parent,rows);retainSourceFactsV1(rows);}
+}
+
+/** ⚖️ Refuses mixed source images while allowing identical bytes with different file stamps. */
+const observationIdentities=new WeakMap(),observationMeanings=new WeakMap();
+function observationIdentityV1(row,remember=true){let value=observationIdentities.get(row);if(value===undefined){value=row.kind+"\0"+row.path+(row.kind==="analysis"?"\0"+row.fact?.provider:row.kind==="field"?"\0"+row.fact?.format+"\0"+row.fact?.pointer:"");if(remember)observationIdentities.set(row,value);}return value;}
+
+/** 🧠️ Distinguishes semantic results independently of their original source byte hints. */
+function observationMeaningV1(row,remember=true){let value=observationMeanings.get(row);if(value===undefined){value=JSON.stringify(row.kind==="file"&&row.fact?.sha256?{sha256:row.fact.sha256}:row.kind==="analysis"?{provider:row.fact?.provider,revision:row.fact?.revision,resultSha256:row.fact?.resultSha256}:row.kind==="resolve"?canonicalResolutionV1(row.fact):row.fact);if(remember)observationMeanings.set(row,value);}return value;}
+
+/** 🚫️ Finds the first conflicting result for the same source consumer, keeping large batch keys transient. */
+function firstObservationConflictV1(rows){
+ const seen=new Map(),remember=rows.length<=OBSERVATION_LIMITS_V1.consistencyMemoRows;
+ for(const row of rows){
+  const key=observationIdentityV1(row,remember),meaning=observationMeaningV1(row,remember),previous=seen.get(key);
+  if(previous!==meaning&&seen.has(key))return {row,key,previous,meaning};
+  seen.set(key,meaning);
+ }
+}
+
+/** 🚫️ Every path of `rows` that was read in more than one state, each once. */
+function observationConflictPathsV1(rows){
+ const first=new Map(),paths=new Set();
+ for(const row of rows){const key=observationIdentityV1(row,false),meaning=observationMeaningV1(row,false),known=first.get(key);if(known===undefined)first.set(key,meaning);else if(known!==meaning)paths.add(row.path);}
+ return paths;
+}
+
+/** ⚖️ Tells the contradictions of one settle round apart (a round without units is one unit as a whole): the first one inside a single unit (an owner's own observation, or what the settled computation read itself), which no repetition of the other units can repair, and every path read in two states, which between two units is only churn: each unit holds a consistent snapshot of its own inputs and the rows of both states stay recorded, so a later read finds the newer one stale and re-checks exactly that unit.
+ * @see ./🧪️tests/🌀️settle-churn */
+function settlementConflictsV1(rows,units){
+ const whole=firstObservationConflictV1(rows);
+ if(whole===undefined)return{paths:[]};
+ if(!units.length){const paths=observationConflictPathsV1(rows);return{blocking:whole,paths:paths.size?[...paths]:[whole.row.path]};}
+ const paths=new Set(),owned=new Set();let blocking;
+ for(const unit of new Set(units)){
+  for(const row of unit)owned.add(observationKeyV1(row));
+  const inner=firstObservationConflictV1(unit);
+  if(inner!==undefined){blocking??=inner;for(const path of observationConflictPathsV1(unit))paths.add(path);}
+ }
+ const rest=owned.size?rows.filter(row=>!owned.has(observationKeyV1(row))):rows,inner=rest.length?firstObservationConflictV1(rest):undefined;
+ if(inner!==undefined){blocking??=inner;for(const path of observationConflictPathsV1(rest))paths.add(path);}
+ if(blocking===undefined)for(const path of observationConflictPathsV1(rows))paths.add(path);
+ if(!paths.size)paths.add(whole.row.path);
+ return{blocking,paths:[...paths]};
+}
+
+function consistentObservationsV1(rows){return firstObservationConflictV1(rows)===undefined;}
+
+/** 🧨️ Names the first contradictory source read and whether it contradicts sealed module-load authority, which no re-inference in this process can repair. */
+function conflictingInferenceErrorV1({row,key,previous,meaning}){
+ let loaded=false;
+ for(const authority of loadObservations.values()){
+  if(observationIdentityV1(authority,false)!==key)continue;
+  const known=observationMeaningV1(authority,false);
+  if(known===previous||known===meaning){loaded=true;break;}
+ }
+ return Object.assign(Error(loaded?"Build graph implementation authority changed during inference; restart the owned build invocation: "+row.kind+":"+row.path:"Conflicting inference observations: "+row.kind+":"+row.path),{code:loaded?"BUILD_AUTHORITY_CHANGED":"BUILD_SOURCE_CONFLICT",path:row.path});
+}
+
+/** 🗃️ The plan-wide capture that keeps no row object: each distinct row (by its number in the row table) is appended once to a row log and only its log id is kept, so the memory of a capture over thousands of owners is four bytes per distinct row and the rows are read back in batches where they are consumed. */
+class SpilledCaptureV1{
+ constructor(builder){this.builder=builder;this.marks=new Uint8Array(1024);this.list=undefined;}
+ set(id,row){
+  const byte=id>>>3,bit=1<<(id&7);
+  if(byte>=this.marks.length){const next=new Uint8Array(Math.max(byte+1,this.marks.length*2));next.set(this.marks);this.marks=next;}
+  if(this.marks[byte]&bit)return this;
+  this.marks[byte]|=bit;this.builder.add([row]);return this;
+ }
+ finish(){return this.list??=this.builder.finish();}
+ values(){return this.finish().rows();}
+ clear(){this.marks=new Uint8Array(0);}
+}
+
+/** 🕸️ Captures exact inference dependencies independently of nested observation scopes; with `spill` (a row log) the distinct rows are kept as ids into that log and `observations` is the list of them (iterable, counted, read in batches) instead of an array of row objects. */
+export async function captureObservedSourceInputsV1(compute,onFailure,includeAuthority=true,spill=undefined){
+ if(typeof includeAuthority!=="boolean")throw Error("Explicit Source authority capture required");const parent=sourceCaptures.getStore(),captured=spill===undefined?new LayeredScopeV1():new SpilledCaptureV1(spill.builder()),observations=()=>{if(includeAuthority)retainObservationsV1(captured,loadObservations.values());return spill===undefined?[...captured.values()]:captured.finish();};
+ try{return {value:await sourceCaptures.run(captured,compute),observations:observations(),authorityObservations:[...loadObservations.values()]};}
+ catch(error){onFailure?.(observations(),[...loadObservations.values()]);throw error;}
+ finally{retainScopeV1(parent,captured);if(parent instanceof SettlementScopeV1&&spill===undefined)parent.units.push(captured.distinct());captured.clear();}
+}
+
+/** 📝️ Records only the exact bytes read by the original live bounded Source batch. */
+export async function observedExactSourceFileV1(batch,root,name){requireExactSourceReadBatchV1(batch,root);const value=await readExactSourceFileV1(batch,name);requireExactSourceReadBatchV1(batch,root);if(value)record("file",resolve(root,name),{size:value.byteLength,mtimeMs:0,ctimeMs:0,ino:0,sha256:value.sha256});return value;}
+
+/** 🧭️ Normalizes every accepted fs path argument to one absolute key. */
+function absolute(path) {
+  return resolve(path instanceof URL ? fileURLToPath(path) : typeof path === "string" ? path : String(path));
+}
+
+/** 🌐️ The node type a stat result denotes, the only stat fact graph inference reads. */
+function nodeType(stat) {
+  return stat.isSymbolicLink() ? "symlink" : stat.isFile() ? "file" : stat.isDirectory() ? "directory" : "other";
+}
+
+/** 🧂️ The content digest of a file of the live disk, remembered by its path and stamp (size, modification time, change time, inode) so that a file hashed once is not hashed again by every owner and every shared computation that verifies a row of it; a stamp younger than two seconds is never remembered (a write in the same clock tick of the same size would keep it), and any write moves the change time, which no process can set back. */
+const fileShaMemoV1=new Map();
+function fileShaV1(path,stat){
+ const live=observedWorlds.getStore()===undefined,stamp=stat.size+":"+stat.mtimeMs+":"+stat.ctimeMs+":"+stat.ino,known=live?fileShaMemoV1.get(path):undefined;
+ if(known!==undefined&&known.stamp===stamp)return known.sha256;
+ const sha256=sha256HexV1(world.readFileSync(path));
+ if(live&&Date.now()-Math.max(stat.mtimeMs,stat.ctimeMs)>2000){if(fileShaMemoV1.size>=200000)fileShaMemoV1.clear();fileShaMemoV1.set(path,{stamp,sha256});}
+ return sha256;
+}
+/** 🧂️ {@link fileShaV1} without blocking, for the verification of recorded rows: the digest of a file whose stamp changed is taken once per stamp in this process (a checkout that a replica rewrote with the same bytes is read once, not once per owner, per round and per seal), and a digest is remembered only when the file is calm and its stamp is the same after the read as before it.
+ * @see ./🧪️tests/🧂️file-digest-memo */
+async function fileShaAsyncV1(path,stat,signal){
+ const stamp=stat.size+":"+stat.mtimeMs+":"+stat.ctimeMs+":"+stat.ino,known=fileShaMemoV1.get(path);
+ if(known!==undefined&&known.stamp===stamp)return known.sha256;
+ const hash=createHash("sha256");
+ for await(const chunk of fs.createReadStream(path,{end:stat.size,highWaterMark:OBSERVATION_LIMITS_V1.fileDigestChunkBytes,signal}))hash.update(chunk);
+ const sha256=hash.digest("hex");
+ if(Date.now()-Math.max(stat.mtimeMs,stat.ctimeMs)>2000){
+  const after=await statAsync(path);
+  if(after.size+":"+after.mtimeMs+":"+after.ctimeMs+":"+after.ino===stamp){if(fileShaMemoV1.size>=200000)fileShaMemoV1.clear();fileShaMemoV1.set(path,{stamp,sha256});}
+ }
+ return sha256;
+}
+/** 🗝️ The identity of one file's bytes: stamp plus content digest, or the error code that replaced them. */
+function fileFact(path) {
+  try {
+    const stat = world.statSync(path);
+    return { size: stat.size, mtimeMs: stat.mtimeMs, ctimeMs: stat.ctimeMs, ino: stat.ino, sha256: fileShaV1(path, stat) };
+  } catch (error) { return { error: error.code ?? "EUNKNOWN" }; }
+}
+
+/** 🧬️ Captures the bytes actually passed to a parser, with stamps retained solely as validation hints. */
+function sourceFactV1(stamp,bytes){return {size:bytes.length,mtimeMs:stamp instanceof Error?0:stamp.mtimeMs,ctimeMs:stamp instanceof Error?0:stamp.ctimeMs,ino:stamp instanceof Error?0:stamp.ino,sha256:sha256HexV1(bytes)};}
+
+/** 🔬️ Runs a synchronous JSON parser under its own complete nested observation scope. */
+function analyzeSourceV1(registered,path,bytes){
+ const key=JSON.stringify([registered.provider.id,registered.provider.revision,path]);if(activeSourceAnalyses.has(key))throw Error("Recursive source analysis refused");
+ const nested=new Map(),parent=scopes.getStore();activeSourceAnalyses.add(key);
+ try{const image=jsonImage(scopes.run(nested,()=>registered.analyze(path,bytes)));if(image===undefined)throw Error("Source analysis requires a synchronous JSON image");return {image,nestedObservations:[...nested.values()]};}finally{activeSourceAnalyses.delete(key);retainObservationsV1(parent,nested.values());retainSourceFactsV1(nested.values());}
+}
+
+/** 🪄️ The rows of a remembered analysis from their numbers in the compact row store, or undefined once the store dropped one of them. */
+function analysisRowsV1(ids){const rows=new Array(ids.length);for(let at=0;at<ids.length;at++){const row=rowTableV1.row(ids[at]);if(row===undefined)return undefined;rows[at]=row;}return rows;}
+
+/** 🗄️ The machine store of source analyses this process uses (`{root, directory}`: the workspace and a directory shared by the processes of the machine), or none: a parser result that another process stored for the same source content is taken once its rows hold, so a process does not parse a file that another one parsed.
+ * @see ./🗄️analysis-store/🧬️schema/🔣️.json */
+let analysisStoreV1;
+export function useSourceAnalysisStoreV1(store){analysisStoreV1=store===undefined?undefined:Object.freeze({root:store.root,directory:store.directory});}
+
+/** 🪶️ Bounds reusable JSON parser results without retaining source buffers or parser trees. */
+function sourceAnalysisImageV1(registered,path,bytes,sha256,copyBytes=false){
+ const records=recordScopes.getStore()?.records,key=recordKey("source-analysis-v1",registered.provider.id,registered.provider.revision,path,sha256),previous=sourceAnalysisImages.get(key);let result;
+ if(previous){sourceAnalysisImages.delete(key);sourceAnalysisBytes-=previous.bytes;const rows=analysisRowsV1(previous.ids);if(rows!==undefined&&current(rows))result={image:previous.image,nestedObservations:rows};}
+ const hit=result?undefined:records?.get(key);
+ if(hit!==undefined)try{const candidate=JSON.parse(utf8TextV1(hit));if(typeof candidate.image==="string"&&jsonImage(JSON.parse(candidate.image))===candidate.image&&Array.isArray(candidate.nestedObservations)&&current(candidate.nestedObservations))result=candidate;}catch{}
+ let storeKey;
+ if(!result&&analysisStoreV1!==undefined){storeKey=analysisStoreKeyV1(analysisStoreV1.root,registered.provider.id,registered.provider.revision,path,sha256,bytes.length);if(storeKey!==undefined){const stored=readStoredAnalysisV1(analysisStoreV1.directory,analysisStoreV1.root,storeKey);try{if(stored!==undefined&&jsonImage(JSON.parse(stored.image))===stored.image&&current(stored.nestedObservations)){result=stored;storeKey=undefined;}}catch{}}}
+ if(!result){result=analyzeSourceV1(registered,path,copyBytes?Buffer.from(bytes):bytes);if(storeKey!==undefined)writeStoredAnalysisV1(analysisStoreV1.directory,analysisStoreV1.root,storeKey,result);}
+ const size=Buffer.byteLength(result.image)+4*result.nestedObservations.length+OBSERVATION_LIMITS_V1.sourceAnalysisOverheadBytes;
+ if(size<=SOURCE_ANALYSIS_BYTES){while(sourceAnalysisBytes+size>SOURCE_ANALYSIS_BYTES){const oldest=sourceAnalysisImages.keys().next().value;sourceAnalysisBytes-=sourceAnalysisImages.get(oldest).bytes;sourceAnalysisImages.delete(oldest);}sourceAnalysisImages.set(key,{image:result.image,ids:Uint32Array.from(result.nestedObservations,row=>rowTableV1.id(row)),bytes:size});sourceAnalysisBytes+=size;records?.put(key,Buffer.from(JSON.stringify(result)));}
+ return result;
+}
+
+/** 🏺️ Reuses semantic images only while every nested dependency remains current. */
+function observeSourceBytesV1(registered,path,bytes,source,copyBytes){
+ const result=sourceAnalysisImageV1(registered,path,bytes,source.sha256,copyBytes);
+ retainObservationsV1(scopes.getStore(),result.nestedObservations);retainSourceFactsV1(result.nestedObservations);
+ const fact={provider:registered.provider.id,revision:registered.provider.revision,source,resultSha256:sha256HexV1(result.image),nestedObservations:result.nestedObservations};record("analysis",path,fact);return JSON.parse(result.image);
+}
+
+/** 📏️ Reads and fingerprints the source once before recording the consuming parser facts. */
+function observeReadSourceV1(path,analyze,recordSource=false){
+ const key=absolute(path);let stamp,bytes;
+ try{stamp=world.statSync(path);}catch(error){stamp=error;}
+ try{bytes=world.readFileSync(path);}catch(error){record("file",key,{error:error.code??"EUNKNOWN"});throw error;}
+ const source=sourceFactV1(stamp,bytes);
+ if(recordSource){recordFileV1(key,source);settleRead(key,stamp,bytes,source);}
+ try{return analyze(key,bytes,source);}catch(error){if(!recordSource)recordFileV1(key,source);throw error;}
+}
+
+/** 📖️ Observes one parser's semantics without asserting that unrelated source body bytes remain unchanged. */
+export function observedSourceAnalysisV1(provider,path){
+ const registered=sourceAnalysisProviderV1(provider);
+ return observeReadSourceV1(path,(key,bytes,source)=>observeSourceBytesV1(registered,key,bytes,source));
+}
+
+/** 👥️ Records two independent parser facts against the same source image, isolating the second parser from any first-parser byte mutations. A caller that consumes the entire Source can also retain its exact file fact from that image. */
+export function observedSourceAnalysisPairV1(first,second,path,{recordSource=false}={}){
+ const before=sourceAnalysisProviderV1(first),after=sourceAnalysisProviderV1(second);
+ return observeReadSourceV1(path,(key,bytes,source)=>[observeSourceBytesV1(before,key,bytes,source,true),observeSourceBytesV1(after,key,bytes,source)],recordSource);
+}
+
+/** 🗞️ Reads parser input asynchronously while preserving synchronous parser and nested probe semantics. */
+export async function observedSourceAnalysisAsyncV1(provider,path){
+ const registered=sourceAnalysisProviderV1(provider),key=absolute(path);let stamp,bytes;
+ try{stamp=(observedWorlds.getStore() ? world.statSync(path) : await statAsync(path));}catch(error){stamp=error;}
+ try{bytes=(observedWorlds.getStore() ? world.readFileSync(path) : await readFileAsync(path));}catch(error){record("file",key,{error:error.code??"EUNKNOWN"});throw error;}
+ const source=sourceFactV1(stamp,bytes);try{return observeSourceBytesV1(registered,key,bytes,source);}catch(error){recordFileV1(key,source);throw error;}
+}
+
+/** 🧩️ Reads one field of a data file (a JSON pointer, a TOML key path or a registered projection) and records only the digest of that value: the closure holds while the re-extracted value is the same, so an edit of any other part of the file moves nothing. A missing file, unparsable text or an absent field throws after recording its own distinct digest. */
+export function observedFieldV1(path,format,pointer,{paths=[]}={}){
+ const key=absolute(path),read=()=>world.readFileSync(path,"utf8"),other=file=>world.readFileSync(file,"utf8"),named=paths.map(absolute).sort(),fact=fieldFactV1(key,format,pointer,read,other,named);
+ record("field",key,fact);
+ return fieldValueV1(key,format,pointer,read,other);
+}
+export{jsonPointerValueV1,registerFieldExtractorV1};
+
+/** 🧐️ Validates the facts one analysis consumed through the round's shared checks, so a fact that thousands of analyses consumed is probed once per inference round. */
+const nestedChecks=new WeakMap();
+function nestedObservationsHoldV1(rows){
+ const round=inferenceValidationScopes.getStore();if(!round)return current(rows);
+ let checks=nestedChecks.get(round);if(!checks){checks=new Map();nestedChecks.set(round,checks);}
+ return consistentObservationsV1(rows)&&rows.every(row=>{const key=rowTableV1.id(row),known=checks.get(key);if(known!==undefined)return known;const holds=current([row]);checks.set(key,holds);return holds;});
+}
+
+/** 🔁️ Replays current registered parsers after byte changes and retains every nested dependency; a file whose size, inode and both stamps are those of the recorded source is the recorded source, exactly as for a `file` fact, and is not read again. */
+function sourceAnalysisFactHoldsV1(path,fact){return sourceAnalysisFailureV1(path,fact)===undefined;}
+const analysisOwnerPatternV1=new RegExp(sourceAnalysisSchemaV1.$defs.sourceAnalysisOwner.pattern,"u");
+const analysisOwnerRoleV1=id=>analysisOwnerPatternV1.exec(id)?.groups?.role;
+const portableOwnerPatternV1=new RegExp(sourceAnalysisSchemaV1.$defs.portableSourceAnalysisOwner.pattern,"u");
+const recordedOwnerRoleV1=id=>analysisOwnerRoleV1(id)??portableOwnerPatternV1.exec(id)?.groups?.role;
+
+/** 🪪️ Uses the exact registered parser when present. A generated owner identity can otherwise use a locally registered alias with exactly the same role and revision.
+ * @see ./🧪️tests/🪪️parser-identity */
+function registeredAnalysisV1(fact){
+ const id=fact?.provider,exact=sourceAnalyses.get(id);
+ if(exact!==undefined)return exact;
+ const role=recordedOwnerRoleV1(id);
+ if(role!==undefined)for(const[key,entry]of sourceAnalyses)if(entry.provider.revision===fact.revision&&analysisOwnerRoleV1(key)===role)return entry;
+}
+/** 🔑️ A nested row as the comparison of a replay sees it: an analysis row by the role of its parser (no owner hash), every other row by identity and meaning. */
+function replayRowKeyV1(row){
+ if(row?.kind!=="analysis"||typeof row.fact?.provider!=="string")return JSON.stringify([observationIdentityV1(row),observationMeaningV1(row)]);
+ const id=row.fact.provider;return JSON.stringify(["analysis",row.path,recordedOwnerRoleV1(id)??id,row.fact.revision,row.fact.resultSha256]);
+}
+/** 🧐️ Why a recorded analysis fact does not hold here, as one short token with its data (`contract`, `provider-unregistered <id>`, `revision <recorded> <registered>`, `shape`, `nested-rows`, `unreadable <message>`, `replay-result`, `replay-nested`, `replay-set`), or undefined while it holds; {@link sourceAnalysisFactHoldsV1} is exactly "no failure", so the verdict and its reason cannot differ.
+ * @see ./🧪️tests/🧐️analysis-reason */
+function sourceAnalysisFailureV1(path,fact){
+ if(sourceAnalysisContractV1.validate(fact).length)return"contract";
+ if(machineLocalRowV1("analysis",path))return undefined;
+ const registered=registeredAnalysisV1(fact);
+ if(!registered){const id=String(fact?.provider),role=recordedOwnerRoleV1(id),same=role===undefined?[]:[...sourceAnalyses.keys()].filter(key=>analysisOwnerRoleV1(key)===role);return"provider-unregistered "+id.slice(0,90)+"; registered "+sourceAnalyses.size+", same role "+(same.length===0?"none":same[0].slice(0,90));}
+ if(registered.provider.revision!==fact.revision)return"revision "+String(fact.revision).slice(0,12)+" "+String(registered.provider.revision).slice(0,12);
+ if(!Array.isArray(fact.nestedObservations)||!fact.source||!SHA256_HEX_V1.test(fact.source.sha256??"")||!SHA256_HEX_V1.test(fact.resultSha256??""))return"shape";
+ if(!nestedObservationsHoldV1(fact.nestedObservations))return"nested-rows";
+ try{
+  const stamp=world.statSync(path),recorded=fact.source;if(stamp.size===recorded.size&&stamp.mtimeMs===recorded.mtimeMs&&stamp.ctimeMs===recorded.ctimeMs&&stamp.ino===recorded.ino)return undefined;
+  const bytes=world.readFileSync(path),sha256=sha256HexV1(bytes);if(sha256===fact.source.sha256)return undefined;
+  const replay=sourceCaptures.run(undefined,()=>recordScopes.run(undefined,()=>scopes.run(undefined,()=>sourceAnalysisImageV1(registered,path,bytes,sha256))));
+  const moved=" "+String(fact.source.sha256).slice(0,10)+">"+sha256.slice(0,10);
+  if(sha256HexV1(replay.image)!==fact.resultSha256)return"replay-result"+moved;
+  if(!current(replay.nestedObservations))return"replay-nested"+moved;
+  const before=new Set(fact.nestedObservations.map(replayRowKeyV1)),after=new Set(replay.nestedObservations.map(replayRowKeyV1));
+  return before.size===after.size&&[...before].every(row=>after.has(row))?undefined:"replay-set"+moved;
+ }catch(error){return"unreadable "+String(error?.code??error?.message??error).slice(0,80);}
+}
+
+/** 🔁️ What one validation round has read of the tree: typed listings (or the error they failed with) and hollow verdicts by path. A round is one consistent snapshot, so a directory is read once however many facts walk below it (the top level of a slice lists thousands of directories, each fact of each owner walked below every one of them); outside a round every read is fresh. The seal verifies outside any round. */
+const roundTreeReadsV1=new WeakMap();
+function roundReadsV1(){const round=inferenceValidationScopes.getStore();if(round===undefined)return undefined;let reads=roundTreeReadsV1.get(round);if(reads===undefined){reads={stamps:new Map(),listings:new Map(),hollow:new Map(),answers:new Map()};roundTreeReadsV1.set(round,reads);}return reads;}
+/** 🗂️ Answers one pure filesystem question (existence, type, module resolution) once per round: every owner of a round asks the same few thousand questions, and a stale answer is caught by the verification of the round's rows, which re-probes the disk without this cache. */
+function roundAnswerV1(key,run){
+ const reads=roundReadsV1();if(reads===undefined)return run();
+ let known=reads.answers.get(key);if(known===undefined){try{known={value:run()};}catch(error){known={error};}reads.answers.set(key,known);}
+ if(known.error!==undefined)throw known.error;return known.value;
+}
+/** 🧽️ Forgets what the current round remembers of the disk, so a retried observation reads it anew. */
+export function forgetRoundReadsV1(){const round=inferenceValidationScopes.getStore();if(round===undefined)return;roundTreeReadsV1.delete(round);roundDirectories.delete(round);}
+function typedListingV1(path){
+ const reads=roundReadsV1(),capture=listingCaptureV1;
+ if(reads===undefined&&capture===undefined)return world.readdirSync(path,{withFileTypes:true});
+ let known=reads?.listings.get(path);
+ if(known===undefined){
+  let stamp;if(observedWorlds.getStore()===undefined)try{stamp=directoryStampV1(fs.statSync(path));}catch{}
+  try{known={entries:world.readdirSync(path,{withFileTypes:true}),stamp};}catch(error){known={error};}
+  reads?.listings.set(path,known);
+ }
+ capture?.push(known.stamp===undefined?null:[path,known.stamp]);
+ if(known.error!==undefined)throw known.error;return known.entries;
+}
+/** 🏷️ The listings the directory fact being computed read, each with the stamp of its directory taken before the read (`null` for a listing that has no stamp), or undefined while no fact is computed. */
+let listingCaptureV1;
+/** 📂️ The facts of directory listings remembered by the stamps of the directories they were computed from: a verification of an unchanged directory costs one stat per directory it listed instead of a listing and a digest, in every round and every pass of the process.
+ * @see ./📂️directory-stamps/🟨️.mjs */
+const directoryFactsV1=createDirectoryFactMemoV1({calmMilliseconds:OBSERVATION_LIMITS_V1.racyMilliseconds});
+/** 📊️ How often the memo of directory facts answered by stamps (`hits`), had to list again (`misses`), remembered a fact (`recorded`) or refused one (`refused`), and how many facts it holds. */
+export function observationDirectoryFactCountsV1(){return directoryFactsV1.counts();}
+/** 🏷️ The stamp of a directory now, taken once per validation round (a round is one consistent snapshot, like its listings), or undefined when it cannot be read. */
+function currentDirectoryStampV1(path){
+ const reads=roundReadsV1(),listed=reads?.listings.get(path)?.stamp;
+ if(listed!==undefined)return listed.text;
+ let known=reads?.stamps.get(path);
+ if(known===undefined){try{known=directoryStampV1(fs.statSync(path)).text;}catch{known=null;}reads?.stamps.set(path,known);}
+ return known===null?undefined:known;
+}
+const LISTED_INDEX_ENTRIES_V1=64,listedIndexesV1=new WeakMap();
+/** 📇️ Whether the round's listing of the parent directory already proves one recorded fact about a child (its type, its existence, or its absence), so the child is not probed once more: a directory whose listing is verified in the same call (`listed`, the paths of its `readdir` rows) is read once and answers every `lstat`, `exists`, `fileExists` and `directoryExists` row of its entries. Only a confirmation counts: a missing name that differs from a listed one by letter case, a link, any other node type, or a disagreement is left to the real probe, which stays the single authority. */
+function listedChildHoldsV1(kind,path,fact,listed){
+ const cut=Math.max(path.lastIndexOf("/"),path.lastIndexOf("\\")),parent=path.slice(0,cut),name=path.slice(cut+1);
+ if(cut<1||name===""||!listed.has(parent)||roundReadsV1()===undefined)return false;
+ let entries;try{entries=typedListingV1(parent);}catch{return false;}
+ let index;if(entries.length>LISTED_INDEX_ENTRIES_V1){index=listedIndexesV1.get(entries);if(index===undefined){index={exact:new Map(),folded:new Set()};for(const entry of entries){index.exact.set(entry.name,entry);index.folded.add(entry.name.toLowerCase());}listedIndexesV1.set(entries,index);}}
+ const entry=index===undefined?entries.find(row=>row.name===name):index.exact.get(name);
+ if(entry===undefined){
+  const lower=name.toLowerCase();
+  if(index===undefined?entries.some(row=>row.name.toLowerCase()===lower):index.folded.has(lower))return false;
+  return kind==="lstat"?fact==="!ENOENT":fact===false;
+ }
+ const type=nodeType(entry);
+ if(type!=="file"&&type!=="directory")return false;
+ return kind==="lstat"?fact===type:kind==="exists"?fact===true:kind==="fileExists"?fact===(type==="file"):fact===(type==="directory");
+}
+function roundHollowV1(path){
+ const reads=roundReadsV1();if(reads===undefined)return hollowDirectoryV1(path,typedListingV1,join);
+ const outer=listingCaptureV1;let known=reads.hollow.get(path);
+ if(known===undefined){
+  const inner=[];listingCaptureV1=inner;
+  try{known={verdict:hollowDirectoryV1(path,typedListingV1,join),listings:inner};}finally{listingCaptureV1=outer;}
+  reads.hollow.set(path,known);
+ }
+ if(outer!==undefined)for(const row of known.listings)outer.push(row);return known.verdict;
+}
+
+/** 🆔️ Fingerprints the names or typed entries of a directory read that belong to the source tree as the build sees it (`📂️source-names`): machine-local output and operating-system noise are not part of the fact, so a record made on one machine holds on every other and after a build. A name of the generated-directory list leaves only where the entry is a directory or a link (`directory` is where the untyped names were listed; none means every name is a directory). */
+function directoryFactV1(entries,typed=false,directory=null){
+ const hollow=directory===null?undefined:entry=>{const name=String(typed?entry.name:entry);if(!(typed?entry.isDirectory():directoryOnlyV1(join(directory,name))))return false;return roundHollowV1(join(directory,name));};
+ const kept=sourceTreeFilterV1(entries,entry=>String(typed?entry.name:entry),entry=>typed?entry.isDirectory()||entry.isSymbolicLink():directory===null||directoryLinkOrDirectoryV1(join(directory,String(entry))),hollow);
+ return sha256HexV1(JSON.stringify(kept.map(entry=>typed?[String(entry.name),nodeType(entry)]:String(entry)).sort()));
+}
+function directoryLinkOrDirectoryV1(path){try{const stat=world.lstatSync(path);return stat.isDirectory()||stat.isSymbolicLink();}catch{return false;}}
+function directoryOnlyV1(path){try{return world.lstatSync(path).isDirectory();}catch{return false;}}
+
+/** 🔤️ Decodes the BOM forms accepted by the TypeScript host without another runtime dependency. */
+function typescriptTextV1(bytes){if(bytes.length>=2&&bytes[0]===254&&bytes[1]===255){const swapped=Buffer.from(bytes);for(let index=0;index+1<swapped.length;index+=2){const byte=swapped[index];swapped[index]=swapped[index+1];swapped[index+1]=byte;}return swapped.toString("utf16le",2);}if(bytes.length>=2&&bytes[0]===255&&bytes[1]===254)return bytes.toString("utf16le",2);return bytes.toString("utf8",bytes.length>=3&&bytes[0]===239&&bytes[1]===187&&bytes[2]===191?3:0);}
+
+/** 📂️ Replays the host's sorted immediate directories, following directory symlinks. */
+function typescriptDirectoriesV1(path){try{return world.readdirSync(path||".",{withFileTypes:true}).filter(entry=>{try{return(entry.isSymbolicLink()?world.statSync(join(path,entry.name)):entry).isDirectory();}catch{return false;}}).map(entry=>entry.name).sort();}catch{return[];}}
+
+/** 🔦️ The directory fact of `path` for one of the kinds that read a directory (`readdir`, `readdirNames`, `directories`), as a record row would hold it. */
+export function directoryFactOfV1(kind,path){if(kind!=="readdir"&&kind!=="readdirNames"&&kind!=="directories")throw Error("Directory fact kind required");return facts[kind](path);}
+
+/** 🔗️ The seam of the shared command closure entries: the inferrer of command sources registers how the answer of a `closure` fact is read now (`answer`, synchronous: an answer is only given while the rows the entry was computed from still hold) and how the entries named by facts are brought up to date (`settle`, asynchronous, called before facts are checked, with the value of the record the facts belong to, which carries the recipes they name). A `closure` fact is a question put to an entry of the closure of a command, never a copy of its rows. */
+let closureProviderV1;
+export function registerClosureProviderV1(provider){
+ if(!provider||typeof provider.answer!=="function"||typeof provider.settle!=="function")throw refuseBuildV1("invalid","observation.closure-provider-incomplete");
+ closureProviderV1=provider;
+}
+/** 🏁️ Whether the rows one inference observed still hold when it ends, so its record may be stored: the file, listing and analysis rows are probed as they stand; the closure rows are verified one closure at a time by the provider (`verify`: the entry is made current, every query of the rows is answered at once against it and compared with the recorded answer), because the entries of the bounded in-process cache are evicted while the owner runs (an owner with three entries of 40 MB in a cache of 96 MB found one missing at the end and left no record) and an entry the tree has touched since is derived again instead of voiding the record when the answers are unchanged. A provider without `verify` answers from the cache as before.
+ * @see ../🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs */
+export const projectRowsHoldAtEndV1=(rows,value,nested,parent)=>projectRowsHoldV1(rows,value,rest=>nested?rest.every(row=>projectObservationHoldsV1(row,parent)):current(rest));
+/** 🏁️ The same verdict for any probe of the rows that are not closure rows: `holdsRest` probes them, the closure rows are verified by the provider one closure at a time (see {@link projectRowsHoldAtEndV1}); a stored record found by a look is judged the same way, so a project that uses more closure entries than the cache holds is not refused for the entries it evicted itself. */
+export async function projectRowsHoldV1(rows,value,holdsRest,closureFailed){
+ const provider=closureProviderV1,verify=provider?.verify,closure=typeof verify==="function"?rows.filter(row=>row.kind==="closure"):[],others=closure.length===0?rows:rows.filter(row=>row.kind!=="closure");
+ if(!holdsRest(others))return false;
+ if(closure.length===0)return true;
+ if(closureFailed===undefined)return await verify.call(provider,closure,value);
+ let failure;
+ const holds=await verify.call(provider,closure,value,(row,why)=>{if(row===undefined||row.kind!=="closure"||closure.includes(row))failure??={row,why};});
+ if(!holds)closureFailed(failure?.row,failure?.why,closure.length);
+ return holds;
+}
+/** 🛎️ Brings the closure entries named by the `closure` facts among `rows` up to date, so the synchronous checks that follow can answer; the provider is asked even when no row is a closure fact, because it also readies what every stored fact is checked against (the registered source analyses of a fresh process). */
+export async function settleClosureRowsV1(rows,value){
+ if(!closureProviderV1)return;
+ const paths=new Set();for(const row of rows)if(row.kind==="closure")paths.add(row.path);
+ await closureProviderV1.settle([...paths],value);
+}
+/** 🔎️ Probes independent rows and names the first refusal, if any. A closure row uses the provider and other rows are checked as they stand.
+ * @see ./🧪️tests/🔎️stale-row */
+export async function firstFailingRowV1(rows,value){
+ for(const row of rows){
+  let holds=true;
+  try{holds=row.kind==="closure"?await projectRowsHoldV1([row],value,()=>true):current([row]);}catch{holds=false;}
+  if(holds!==true)return namedStaleRowV1(row,row.kind==="analysis"?sourceAnalysisFailureV1(row.path,row.fact):undefined);
+ }
+ return undefined;
+}
+/** 🏷️ Renders one already observed failure without probing its source again. */
+function namedStaleRowV1(row,why){
+ const short=(text,limit)=>{const line=typeof text==="string"?text:JSON.stringify(text)??"";return line.length>limit?line.slice(0,limit)+"...":line;};
+ return Object.freeze({kind:String(row.kind),path:short(row.path,200),fact:short(row.fact,160),...staleDigestsV1(row),...why===undefined?{}:{why:short(why,300)}});
+}
+/** 🔖️ The recorded and the current digest (12 hex digits) of one row that no longer holds, so a stale verdict names what moved and not only where: a file by its content digest, a field by its value digest, any other fact by the digest of its JSON; `-` when the current answer cannot be asked here. */
+function staleDigestsV1(row){
+ const digest=value=>sha256HexV1(typeof value==="string"?value:JSON.stringify(value)??"").slice(0,12),{kind,path,fact}=row;
+ try{
+  if(kind==="file"&&typeof fact?.sha256==="string"){const now=facts.file(path);return{recorded:fact.sha256.slice(0,12),current:typeof now.sha256==="string"?now.sha256.slice(0,12):"!"+String(now.error??"unknown")};}
+  if(kind==="field"&&typeof fact?.digest==="string")return{recorded:fact.digest.slice(0,12),current:String(facts.field(path,fact).digest).slice(0,12)};
+  if(kind==="analysis"||kind==="global"||typeof facts[kind]!=="function")return{recorded:digest(fact),current:"-"};
+  return{recorded:digest(fact),current:digest(facts[kind](path))};
+ }catch{return{recorded:digest(fact),current:"-"};}
+}
+/** 🤝️ The verdict of one process on one stored project record, the only verification the record gets: the record is read plainly (a farm child holds no custody of the graph store and only reads), its closure entries are settled and every observed row is verified, the closure rows through the provider and the others as they stand now. `headerDigest` names the record by the digest of its header line, which covers every observed row and every block digest the record names, so a reader that holds the same header and adopts a `holds` verdict verifies nothing itself; `other` is a record of another key, `missing` none, `stale` a row that no longer holds. A verdict is single use and never kept: a later verdict judges the files as they are then.
+ * @see ./🧪️tests/🤝️adopted-verdict */
+export async function verifyStoredProjectRecordV1({cachePath,key}){
+ requireCurrentObservationV1();const judge=++judgedHereV1;
+ const record=plainRecordReads.run(true,()=>readInferenceRecordOrMissV1(cachePath,{say:()=>{}}));
+ if(!record)return{verdict:"missing",verifier:process.pid};
+ const{header,line,value}=record,headerDigest=sha256HexV1(line);
+ if(header.digest!==sha256HexV1(JSON.stringify([recordStampV1(),null,key])))return{verdict:"other",headerDigest,verifier:process.pid};
+ await settleClosureRowsV1(header.observations,value);
+ const rows=header.observations;
+ let staleRow;
+ const fail=(row,why,count)=>{staleRow=row===undefined?staleWholeRowV1(rows,why,count):namedStaleRowV1(row,why);};
+ const holds=await projectRowsHoldV1(rows,value,rest=>current(rest,fail),fail);
+ if(holds)return{verdict:"holds",headerDigest,rows:header.observations.length,verifier:process.pid};
+ return{verdict:"stale",headerDigest,rows:header.observations.length,staleRow:staleRow===undefined?undefined:Object.freeze({...staleRow,why:(staleRow.why===undefined?"":staleRow.why+"; ")+"judge "+judge+" of pid "+process.pid}),verifier:process.pid};
+}
+let judgedHereV1=0;
+/** 🧮️ Describes an observed consistency or closure batch failure when no row-specific failure is known.
+ * @see ./🧪️tests/🧮️stale-whole */
+function staleWholeRowV1(rows,why,closureCount){
+ const kinds={};for(const row of rows)kinds[row.kind]=(kinds[row.kind]??0)+1;
+ return namedStaleRowV1({kind:"whole",path:closureCount===undefined?"record observations":"closure observations",fact:kinds},why??"consistent true, other rows true, "+closureCount+" closure rows together false");
+}
+/** 🪡️ Records the answer one closure entry gave to the running inference. */
+export function recordClosureFactV1(path,answer){record("closure",path,answer);}
+/** 📏️ The entry counts of the in-process caches a graph construction fills (what {@link releaseInferenceMemoryV1} drops). */
+/** 🧮️ The collections this module holds across owners, for the slice memory report: its module maps, the verdict maps of the live validation rounds and the scopes the rows of every owner are retained into, each with its entries and a sample to estimate bytes from. */
+export function observationCollectionsV1(){
+ const out=[],add=(name,value)=>out.push(describeCollectionV1("observation:"+name,value));
+ add("inferenceStamps",inferenceStamps);add("recordStores",recordStores);add("recordStoreHandles",recordStoreHandles);add("usedInference",usedInference);add("originalInferencePublications",originalInferencePublications);add("loadObservations",loadObservations);add("projectComputations",projectComputations);add("projectImages",projectImages);add("sourceAnalyses",sourceAnalyses);add("sourceAnalysisImages",sourceAnalysisImages);add("retainedProjectImages",retainedProjectImages);add("fieldDigests",fieldDigests);add("settledReads",settledReads);add("fileRecordImages",fileRecordImages);add("inferenceRowCounts",inferenceRowCountsV1);add("verifiedBlocks",verifiedBlocks);add("directoryFacts",directoryFactsV1.entries());
+ const table=rowTableV1.stats();out.push({name:"observation:rowTable",entries:table.rows,bytes:table.bytes});out.push({name:"observation:rowPool",entries:rowPoolV1.size(),bytes:rowPoolV1.size()*160});
+ for(const kind of Object.keys(trackedV1)){
+  let largest,count=0,total=0;
+  for(const value of trackedV1[kind]){
+   if(!(value instanceof Map))continue;
+   const size=value.size;
+   count++;total+=size;
+   if(largest===undefined||size>largest.size)largest=value;
+  }
+  if(largest!==undefined)out.push(describeCollectionV1("observation:"+kind+" (largest of "+count+" maps, "+total+" entries total)",largest));
+ }
+ return out;
+}
+export function inferenceCacheSizesV1(){return {interned:rowTableV1.size(),rowStore:rowTableV1.stats(),analysisImages:sourceAnalysisImages.size,analysisBytes:sourceAnalysisBytes,settledReadBytes,fileRecordImageBytes,verifiedBlockRows,settledReads:settledReads.size,projectImages:projectImages.size,publications:originalInferencePublications.size,registryFiles:registryOwnersV1.stats().entries};}
+/** 🕊️ Drops every in-process cache a graph construction filled (interned rows, verified blocks, project images and publications, settled reads, analysis images, registry rows): they only save recomputation, a process that keeps them while it idles (a loader through a long Bazel phase) pins gigabytes. Safe only when no inference runs; the next inference refills what it needs. */
+export function releaseProjectInferenceRetentionV1(cachePath){
+ originalInferencePublications.delete(cachePath);usedInference.delete(cachePath);
+ const held=projectImages.get(cachePath);if(held?.image)retainedProjectImageBytes-=held.image.length;
+ retainedProjectImages.delete(cachePath);projectImages.delete(cachePath);
+}
+export function releaseInferenceMemoryV1(){
+ rowTableV1.clear();directoryFactsV1.clear();verifiedBlocks.clear();verifiedBlockRows=0;blocksByIdentity.clear();blocksRefused.clear();
+ settledReads.clear();settledReadBytes=0;fileRecordImages.clear();fileRecordImageBytes=0;sourceAnalysisImages.clear();sourceAnalysisBytes=0;
+ projectImages.clear();retainedProjectImages.clear();retainedProjectImageBytes=0;usedInference.clear();originalInferencePublications.clear();registryOwnersV1.clear();
+}
+/** 📒️ The owner rows of the committed owner registry by name, parsed once per file stamp: the registry is a question the inference asks one owner at a time, never a file it depends on as a whole. */
+const registryOwnersV1=createBoundedCacheV1({name:"observation:registry-owners",maxEntries:OBSERVATION_LIMITS_V1.registryOwnerEntries,maxBytes:OBSERVATION_LIMITS_V1.registryOwnerBytes});
+function registryOwnerRowV1(path){
+ let workspaceRoot,name;try{[workspaceRoot,name]=JSON.parse(path);}catch{return "!unreadable";}
+ const file=join(workspaceRoot,"📋️build-owners.json");let status;
+ try{status=world.statSync(file,{bigint:true});}catch(error){return `!${error.code??"EUNKNOWN"}`;}
+ const stamp=status.size+":"+status.mtimeNs+":"+status.ino;let known=registryOwnersV1.get(file);
+ if(known?.stamp!==stamp){
+  let owners;try{owners=new Map(JSON.parse(world.readFileSync(file,"utf8")).owners.map(owner=>[owner.name,JSON.stringify({root:owner.root,manifest:owner.manifest})]));}catch{return "!unreadable";}
+  known={stamp,owners};registryOwnersV1.set(file,known);
+ }
+ return known.owners.get(name)??"null";
+}
+/** 🖊️ Records the registry row (root and manifest) one inference read for one owner name, or its absence. */
+/** 🌐️ The answers of the global facts a record may depend on without any file (the generator contracts of the taxonomy): a `global` row is `{kind, path: JSON [name, workspaceRoot, segments], fact}` and holds while the resolver registered under `name` says that `fact` (what the inference read at `segments` of that global) still holds for the workspace of the path; without a resolver it does not hold, so a process that cannot answer never adopts such a record.
+ * @see ../🕸️graph/📥️inference/📜️contract-reads/🟨️.mjs */
+const globalFactResolversV1=new Map();
+export function registerGlobalFactV1(name,holds){globalFactResolversV1.set(name,holds);}
+function globalFactHoldsV1(path,fact){let name,root,segments;try{[name,root,segments]=JSON.parse(path);}catch{return false;}const holds=globalFactResolversV1.get(name);if(holds===undefined)return false;try{return holds(root,segments,JSON.parse(fact))===true;}catch{return false;}}
+/** ✍️ Records what the running inference read of one global fact, as a row of its record. */
+export function observeGlobalFactV1(name,workspaceRoot,segments,fact){record("global",JSON.stringify([name,workspaceRoot,segments]),JSON.stringify(fact));}
+/** 🔭️ The collection of rows the running inference records into, undefined outside an inference: a reader that records once per collection tells apart the computations whose rows are replayed to others. */
+export function observationScopeV1(){return scopes.getStore();}
+export function recordRegistryOwnerV1(workspaceRoot,name,row){record("registry",JSON.stringify([workspaceRoot,name]),row===undefined||row===null?"null":JSON.stringify({root:row.root,manifest:row.manifest}));}
+/** ❓️ Whether recorded rows still hold, sharing the checks of the running inference round. */
+/** 🧲️ Merges stored row arrays into the observation scope the caller runs in, by reference (a shared graph node costs one reference, not its rows). */
+export function retainObservedRowsV1(rows){
+ const target=scopes.getStore(),capture=sourceCaptures.getStore();
+ for(const scope of[target,capture]){
+  if(!scope||!rows.length)continue;
+  if(scope instanceof DetachedScopeV1){if(!scope.layers.has(rows)){scope.layers.add(rows);scope.order.push(rows);}}
+  else retainObservationsV1(scope,rows);
+ }
+ if(capture instanceof SettlementScopeV1&&rows.length)capture.units.push(rows);
+}
+export function observationRowsHoldV1(rows){return sharedObservationsHoldV1(rows,scopes.getStore());}
+/** 🔭️ The running validation round, if any; an entry validated once in a round stays valid for it. */
+/** 🔁️ Runs `compute` inside the validation round `round` instead of a fresh one: every computation of one settle pass shares what it validated once (a memoized computation replayed by thousands of module nodes is checked once per pass). */
+export function withObservationPassRoundV1(round,compute){return inferenceValidationScopes.run(round,compute);}
+export function observationRoundV1(){return inferenceValidationScopes.getStore();}
+/** 🔂️ Runs `compute` inside one validation round (the round already open when there is one): the verdict on a stored fact or a memoized computation is reached once per round instead of once per consumer, as a snapshot pass does; a fact that changes during the round is stale in the next verification. */
+export function withObservationRoundV1(compute){return inferenceValidationScopes.run(inferenceValidationScopes.getStore()??new Map(),compute);}
+/** 🫧️ Runs `compute` with its observations detached from the running inference: they are returned, not recorded into the project that asked, so a shared computation (the closure of a command) is stored once and every project that uses it records one question instead of its rows. */
+export async function observeDetachedV1(compute){
+ const rows=new DetachedScopeV1(),captured=new DetachedScopeV1(),taken=()=>({rows:[...rows.values()],layers:[...new Set([...rows.layers,...captured.layers])]});
+ try{const value=await sourceCaptures.run(captured,()=>scopes.run(rows,compute));return{value,...taken()};}
+ catch(error){if(error!==null&&typeof error==="object"&&Object.isExtensible(error))Object.defineProperty(error,DETACHED_FAILURE_V1,{value:taken(),configurable:true});throw error;}
+}
+
+/** 🫧️ The synchronous form of `observeDetachedV1`: runs `compute` with its observations returned, not recorded into the running scope. */
+export function observeDetachedSyncV1(compute){
+ const rows=new DetachedScopeV1(),captured=new DetachedScopeV1(),value=sourceCaptures.run(captured,()=>scopes.run(rows,compute));
+ return{value,rows:[...rows.values()],layers:[...new Set([...rows.layers,...captured.layers])]};
+}
+
+/** 🛑️ Names the property under which a failed detached computation hands the facts it read to its caller. */
+const DETACHED_FAILURE_V1=Symbol.for("semio.observation.detached-failure");
+
+/** 📰️ The facts a detached computation read before it failed (rows and shared layers), or undefined for an error that carries none: they are the reason of the failure, so whoever withholds work because of it must hold them. */
+export function detachedFailureV1(error){return error!==null&&typeof error==="object"?error[DETACHED_FAILURE_V1]:undefined;}
+
+/** 🧲️ Records the facts of a failed detached computation into the observation the caller runs in, so a result built on that failure goes stale exactly when one of the facts it rests on changes. */
+export function retainDetachedFailureV1(error){
+ const failure=detachedFailureV1(error);if(!failure)return;
+ const rows=[...failure.rows,...failure.layers.flat()];
+ retainObservationsV1(scopes.getStore(),rows);retainSourceFactsV1(rows);
+}
+/** 🤔️ Whether the shared rows of one reused computation still hold, checked once per validation round however many detached computations share them. */
+export function observationLayerHoldsV1(layer){return memoRowsHoldV1(layer,scopes.getStore());}
+/** 🧪️ Whether one stored row still holds, probed against the tree now and remembered nowhere: for a caller that keeps its own verdict per distinct row (the row dictionary of the closure layers), which asks once per row and pass, so no per-round table of rows is filled beside it. */
+export function observationRowFreshV1(row){const seen=rebaseRowV1(row);if(machineLocalRowV1(seen.kind,seen.path))return true;return seen.kind==="file"?fileFactHolds(seen.path,seen.fact)&&JSON.stringify(facts.file(seen.path)?.sha256??null)===JSON.stringify(seen.fact.sha256??null):current([seen]);}
+
+/** 🪪️ The stamp of one path as a witness reads it: size, both times, inode and mode of what the path names now (a symbolic link is followed, so a retargeted link or a replaced file moves it), or `!` and the error code of the failed stat. */
+const witnessTupleV1=path=>{try{const status=fs.statSync(path);return status.size+":"+status.mtimeMs+":"+status.ctimeMs+":"+status.ino+":"+status.mode;}catch(error){return"!"+(error?.code??"E");}};
+const witnessLinkV1=path=>{try{return fs.lstatSync(path).isSymbolicLink();}catch{return false;}};
+const witnessDirectoryV1=path=>{try{return fs.lstatSync(path).isDirectory();}catch{return false;}};
+const WITNESS_TYPED_V1=new Set(["lstat","stat","exists","fileExists","directoryExists"]),WITNESS_LISTED_V1=new Set(["readdir","readdirNames"]);
+/** 🪪️ The witness of rows that all hold now: the stamps of the few files and directories whose state decides them, so that a later verification of the same rows is one stat per distinct path instead of one probe per row and no stored layer is read. An `analysis` row is decided by the bytes of its file (and the registered revision of its parser, kept in `code`) and by its nested rows; a type or existence row (`lstat`, `stat`, `exists`, `fileExists`, `directoryExists`) by its own name alone and is kept in `typed` with the fact it recorded: stamping the directory that holds the name (as an earlier form did) made every stamp fail whenever anything was created or removed beside it, in the workspace root, in a home directory or in a plugin folder a peer works in, and the full verification that followed read every layer again (11 to 28 CPU seconds per Rust owner instead of one); a listing row by the directory it lists; a module resolution of an absolute path by the directory of the target (the listing the extension probes read) and, for a directory or link, by the target and its `package.json`. Every other row (fields, owner registry questions, realpaths, TypeScript text) is kept in `live` and probed again by every verification. Undefined while a path is not calm (it was written within the racy window before `since`, the start of the verification that found the rows holding), a row is of a kind or shape that cannot be witnessed, or the observation runs over a plan port instead of the disk. Each stamped path is stated once: its stamp is refused unless it was last written and changed before `since` minus the racy window (a write inside the verification cannot hide), and the stamp kept is that same stat.
+ * @see ./🧪️tests/🪪️witness */
+export function observationWitnessV1(rows,{since=Date.now()}={}){
+ if(observedWorlds.getStore()!==undefined)return undefined;
+ const paths=new Set(),live=new Map(),code=new Map(),seen=new Set(),typed=[];
+ const visit=raw=>{
+  const row=rebaseRowV1(raw),{kind,path,fact}=row;
+  if(machineLocalRowV1(kind,path))return true;
+  const key=kind+"\0"+path+"\0"+(typeof fact==="string"?fact:JSON.stringify(fact));
+  if(seen.has(key))return true;
+  seen.add(key);
+  if(kind==="analysis"){const registered=registeredAnalysisV1(fact);if(registered===undefined||!Array.isArray(fact.nestedObservations))return false;code.set(fact.provider+"\0"+fact.revision,registered.provider.revision);paths.add(path);return fact.nestedObservations.every(visit);}
+  if(kind==="field"){const identity=fieldExtractorIdentityV1(fact?.format);if(identity===undefined)return false;code.set("f\0"+fact.format,identity);paths.add(path);for(const other of fact.paths??[])paths.add(other);return true;}
+  if(WITNESS_TYPED_V1.has(kind)){typed.push([kind,path,fact]);return true;}
+  if(WITNESS_LISTED_V1.has(kind)){paths.add(path);return true;}
+  if(kind==="resolve"){
+   let target;try{target=JSON.parse(path)[1];}catch{return false;}
+   if(typeof target!=="string"||resolve(target)!==target){live.set(JSON.stringify({kind,path,fact}),true);return true;}
+   paths.add(dirname(target));
+   if(witnessLinkV1(target)||witnessDirectoryV1(target)){paths.add(target);paths.add(join(target,"package.json"));}
+   return true;
+  }
+  live.set(JSON.stringify({kind,path,fact}),true);return true;
+ };
+ for(const row of rows)if(!visit(row))return undefined;
+ const limit=since-RACY_MS,list=[...paths],tuples=new Array(list.length);
+ for(let at=0;at<list.length;at++){let status;try{status=fs.statSync(list[at]);}catch(error){tuples[at]="!"+(error?.code??"E");continue;}if(status.mtimeMs>=limit||status.ctimeMs>=limit)return undefined;tuples[at]=status.size+":"+status.mtimeMs+":"+status.ctimeMs+":"+status.ino+":"+status.mode;}
+ return{paths:list,tuples,typed,code:[...code],live:[...live.keys()]};
+}
+/** 🪪️ Whether the state a witness recorded is the state of the disk now, with the registered parsers it was taken under: the stamps are compared path by path (each distinct path of a round is stamped once through `tuples`), the live rows are probed once per round through `verdicts`; `step` is awaited between chunks so a long witness gives the event loop its turns and stops at cancellation. A witness that fails says nothing about the rows: the caller verifies them in full.
+ * @see ./🧪️tests/🪪️witness */
+export async function observationWitnessHoldsV1(witness,{tuples=new Map(),verdicts=new Map(),step}={}){
+ if(observedWorlds.getStore()!==undefined)return false;
+ for(const[key,revision]of witness.code){if(key.startsWith("f\0")){if(fieldExtractorIdentityV1(key.slice(2))!==revision)return false;continue;}const[provider,recorded]=key.split("\0");if(registeredAnalysisV1({provider,revision:recorded})?.provider.revision!==revision)return false;}
+ const{paths,tuples:recorded}=witness;
+ for(let at=0;at<paths.length;at++){
+  let now=tuples.get(paths[at]);
+  if(now===undefined){now=witnessTupleV1(paths[at]);tuples.set(paths[at],now);}
+  if(now!==recorded[at])return false;
+  if(step!==undefined&&(at&1023)===1023)await step();
+ }
+ for(let at=0;at<witness.typed.length;at++){
+  const[kind,path,fact]=witness.typed[at],key="\0"+kind+"\0"+path;
+  let holds=verdicts.get(key);
+  if(holds===undefined){holds=recordedFactHoldsV1(kind,path,fact);verdicts.set(key,holds);}
+  if(!holds)return false;
+  if(step!==undefined&&(at&1023)===1023)await step();
+ }
+ for(const text of witness.live){
+  let holds=verdicts.get(text);
+  if(holds===undefined){holds=observationRowFreshV1(JSON.parse(text));verdicts.set(text,holds);}
+  if(!holds)return false;
+  if(step!==undefined)await step();
+ }
+ return true;
+}
+
+/** 🫧️ The same verdict on the shared rows of one reused computation as {@link observationLayerHoldsV1}, row by row with `step` awaited between rows so a long layer gives the event loop its turns and stops at cancellation. */
+export async function observationLayerHoldsAsyncV1(layer,step){
+ const parent=scopes.getStore(),known=memoRowsKnownV1(layer);if(known!==undefined)return known;
+ let holds=true;for(const row of layer){if(!projectObservationHoldsV1(row,parent)){holds=false;break;}await step();}
+ memoRowsRememberV1(layer,holds);return holds;
+}
+
+/** 🫧️ The same verdict as {@link observationRowsHoldV1}, row by row with `step` awaited between rows. */
+export async function observationRowsHoldAsyncV1(rows,step){
+ const parent=inferenceValidationScopes.getStore()??scopes.getStore();
+ if(!consistentObservationsV1(rows))return false;
+ let checks;if(parent){checks=sharedChecks.get(parent);if(!checks){checks=new Map();sharedChecks.set(parent,checks);trackV1("sharedChecks",checks);}}
+ for(const row of rows){
+  const key=checks===undefined?undefined:rowTableV1.id(row),previous=key===undefined?undefined:checks.get(key);
+  const holds=previous??current([row]);if(key!==undefined&&previous===undefined)checks.set(key,holds);
+  if(!holds)return false;await step();
+ }
+ return true;
+}
+
+/** 🖋️ The spelling in which a module resolution is recorded: the id of the dependency generation inside `.cache/b/d/m/j/<id>/` is a placeholder, so a new generation of the same packages does not stale every resolution of the repository's own command sources. */
+const DEPENDENCY_GENERATION_PATH_V1=/([\\/]\.cache[\\/]b[\\/]d[\\/]m[\\/]j[\\/])[0-9a-f]{16,64}(?=[\\/])/u;
+export function canonicalResolutionV1(path){return typeof path==="string"?path.replace(DEPENDENCY_GENERATION_PATH_V1,"$1*"):path;}
+
+/** 🗒️ Whether a recorded fact equals the freshly recomputed one; recorded module resolutions are compared in their canonical spelling. */
+/** 🗂️ The absolute directories whose entry sets are proven unchanged since the facts about them were recorded (the host derives them from the frontiers of two consecutive verifications): a listing, a type probe of an entry or the absence of an entry in such a directory holds without a probe. */
+let stableDirectoriesInUseV1=new Set();
+export function useStableDirectoriesV1(directories){stableDirectoriesInUseV1=directories;}
+const probeCountsV1={readdir:0};
+/** 🔢️ How many directory listings this process made, by the observed walks and by the verification of recorded listings. */
+export function observationProbeCountsV1(){return{...probeCountsV1};}
+function stableFactHoldsV1(kind,path,fact){
+ if(stableDirectoriesInUseV1.size===0)return false;
+ if(kind==="readdir"||kind==="readdirNames")return stableDirectoriesInUseV1.has(path);
+ const parent=path.slice(0,Math.max(path.lastIndexOf("/"),path.lastIndexOf("\\")));
+ return kind==="lstat"&&stableDirectoriesInUseV1.has(parent)||(kind==="fileExists"||kind==="directoryExists"||kind==="exists")&&fact===false&&stableDirectoriesInUseV1.has(parent);
+}
+function recordedFactHoldsV1(kind,path,fact){if(kind==="global")return globalFactHoldsV1(path,fact);if(stableFactHoldsV1(kind,path,fact))return true;if(kind==="field")return facts.field(path,fact).digest===fact.digest;return JSON.stringify(facts[kind](path))===JSON.stringify(kind==="resolve"?canonicalResolutionV1(fact):fact);}
+
+/** 🧠️ The digest of a field, kept while the stamps (size, both times, inode) of every file it read are unchanged and none lies within the racy window: one verification round re-extracts a field once however many closures hold it, and an untouched file is not read again. */
+const fieldDigests = new Map();
+function fieldFactCachedV1(path, fact) {
+  const files = [path, ...(fact.paths ?? [])], read = () => world.readFileSync(path, "utf8"), other = file => world.readFileSync(file, "utf8"), compute = () => fieldFactV1(path, fact.format, fact.pointer, read, other, fact.paths ?? []);
+  let stamp;
+  try { const taken = Date.now(); stamp = files.map(file => { const status = world.statSync(file); if (!(status.mtimeMs < taken - RACY_MS && status.ctimeMs < taken - RACY_MS)) throw Error("racy"); return status.size + ":" + status.mtimeMs + ":" + status.ctimeMs + ":" + status.ino; }).join("|"); } catch { return compute(); }
+  const key = fact.format + "\0" + fact.pointer + "\0" + path, known = fieldDigests.get(key);
+  if (known?.stamp === stamp) return known.fact;
+  const fresh = compute();
+  if (fieldDigests.size >= OBSERVATION_LIMITS_V1.fieldMemoRows) fieldDigests.clear();
+  fieldDigests.set(key, { stamp, fact: fresh });
+  return fresh;
+}
+
+/** 🔎️ Recomputes one observation's fact exactly as it was first taken. */
+const facts = {
+  stamp: (path) => inferenceStamps.get(path) ?? "!unregistered",
+  analysis: (path,fact) => sourceAnalysisFactHoldsV1(path,fact),
+  file: (path) => fileFact(path),
+  field: (path,fact) => fieldFactCachedV1(path,fact),
+  exists: (path) => world.existsSync(path),
+  stat: (path) => { try { return nodeType(world.statSync(path)); } catch (error) { return `!${error.code ?? "EUNKNOWN"}`; } },
+  lstat: (path) => { try { return nodeType(world.lstatSync(path)); } catch (error) { return `!${error.code ?? "EUNKNOWN"}`; } },
+  readdir: (path) => {
+    const live = observedWorlds.getStore() === undefined;
+    if (live) { const known = directoryFactsV1.lookup(path, currentDirectoryStampV1); if (known !== undefined) return known; }
+    probeCountsV1.readdir++;
+    const outer = listingCaptureV1, capture = live ? [] : undefined;
+    listingCaptureV1 = capture;
+    try { const fact = directoryFactV1(typedListingV1(path),true,path); if (capture !== undefined) directoryFactsV1.record(path, capture, fact); return fact; } catch (error) { return `!${error.code ?? "EUNKNOWN"}`; } finally { listingCaptureV1 = outer; }
+  },
+  readdirNames: (path) => {probeCountsV1.readdir++;try{return directoryFactV1(world.readdirSync(path),false,path);}catch(error){return `!${error.code??"EUNKNOWN"}`;}},
+  fileExists: (path) => {try{return world.statSync(path).isFile();}catch{return false;}},
+  directoryExists: (path) => {try{return world.statSync(path).isDirectory();}catch{return false;}},
+  directories: (path) => directoryFactV1(typescriptDirectoriesV1(path)),
+  typescriptText: (path) => {try{return sha256HexV1(typescriptTextV1(world.readFileSync(path)));}catch{return "!missing";}},
+  typescriptRealpath: (path) => {try{return path.length<OBSERVATION_LIMITS_V1.nativeRealpathMaximumCharacters?world.realpathSync.native(path):world.realpathSync(path);}catch{return path;}},
+  realpath: (path) => { try { return world.realpathSync(path); } catch (error) { return `!${error.code ?? "EUNKNOWN"}`; } },
+  realpathNative: (path) => { try { return world.realpathSync.native(path); } catch (error) { return `!${error.code ?? "EUNKNOWN"}`; } },
+  closure: (path) => closureProviderV1 ? closureProviderV1.answer(path) : "!unregistered",
+  registry: (path) => registryOwnerRowV1(path),
+  global: () => "!unregistered",
+  resolve: (key) => { const [from, request] = JSON.parse(key); try { return canonicalResolutionV1(createRequire(from).resolve(request)); } catch (error) { return `!${error.code ?? "EUNKNOWN"}`; } },
+};
+
+/** ✍️ Records one fact in the active inference scope, or — while modules evaluate before the first inference and outside every capture — in the module-load authority; captured reads outside a scope belong to their capture only. */
+function record(kind, path, fact) {
+  if(machineLocalRowV1(kind,path))return;
+  footprintPulseV1();noteObservedInReadParentV1("records");
+  const capture=sourceCaptures.getStore(),target = scopes.getStore() ?? (loadSealed||capture ? undefined : loadObservations);
+  if(!target&&!capture)return;
+  const row=canonicalObservationV1(kind,path,loadedImplementationRecordedFactV1(kind,path,fact===undefined?facts[kind](path):fact));
+  retainObservationsV1(target,[row]);retainSourceFactsV1([row]);
+}
+
+/** 🏃️ Runs one probe and records the fact its own outcome proves, so observing costs no second syscall. */
+function probe(kind, path, run, fact) {
+  let value;
+  try { value = run(); } catch (error) { record(kind, absolute(path), `!${error.code ?? "EUNKNOWN"}`); throw error; }
+  record(kind, absolute(path), fact(value));
+  return value;
+}
+
+/** 📃️ The encoding a `readFileSync`/`readFile` options argument selects, if any. */
+function encodingOf(options) {
+  return typeof options === "string" ? options : options?.encoding ?? undefined;
+}
+
+/** 🧮️ Reads bytes once: the stamp is taken first and the digest from the very bytes returned, so a change racing the read can only make the fact stale, never wrong. */
+/** 📦️ Records the read of one file: a file of an installed package store is keyed by the identity (name and version) of its package, since the store is immutable per identity; every other file by its content. */
+function recordFileV1(key,fact){
+ if(fact.error===undefined&&installedPackageFileV1(key)){
+  const identity=fieldFactV1(key,"package-identity","",()=>undefined,other=>world.readFileSync(other,"utf8"));
+  if(!identity.digest.startsWith("!")){record("field",key,identity);return;}
+ }
+ record("file",key,fact);
+}
+
+function readObserved(path, stamp, bytes, options) {
+  const fact = sourceFactV1(stamp,bytes);
+  recordFileV1(absolute(path), fact);
+  const encoding = encodingOf(options);
+  settleRead(absolute(path), stamp, bytes, fact, encoding !== undefined);
+  return encoding ? bytes.toString(encoding) : bytes;
+}
+
+/** 🪣️ Source bytes whose stamp was already settled when read, so an unchanged file is read and hashed once while its stamp still matches. */
+const settledReads = new Map(), SETTLED_READ_BYTES = OBSERVATION_LIMITS_V1.settledReadBytes;
+
+/** 🗄️ The JSON image of the analysis of a settled file, per namespace and path, while the file keeps its stamp: the analysis is a pure function of the bytes, so a file that many projects ask about is read, hashed, parsed and stored once and every later asker parses the image. Bounded like the settled reads. */
+const fileRecordImages = new Map(), FILE_RECORD_IMAGE_BYTES = OBSERVATION_LIMITS_V1.fileRecordImageBytes, FILE_RECORD_IMAGE_LIMIT = OBSERVATION_LIMITS_V1.fileRecordImageMaximumBytes;
+let fileRecordImageBytes = 0;
+function rememberFileRecordImageV1(memoKey, key, image) {
+  const settled = settledReads.get(key), previous = fileRecordImages.get(memoKey);
+  if (previous) { fileRecordImageBytes -= previous.image.length; fileRecordImages.delete(memoKey); }
+  if (settled === undefined || image.length > FILE_RECORD_IMAGE_LIMIT) return;
+  while (fileRecordImageBytes + image.length > FILE_RECORD_IMAGE_BYTES && fileRecordImages.size > 0) {
+    const oldest = fileRecordImages.keys().next().value;
+    fileRecordImageBytes -= fileRecordImages.get(oldest).image.length;
+    fileRecordImages.delete(oldest);
+  }
+  fileRecordImages.set(memoKey, { size: settled.size, mtimeMs: settled.mtimeMs, ctimeMs: settled.ctimeMs, ino: settled.ino, rowId: settled.rowId, image });
+  fileRecordImageBytes += image.length;
+}
+function rememberedFileRecordImageV1(memoKey, path) {
+  const known = fileRecordImages.get(memoKey);
+  if (known === undefined) return undefined;
+  let stamp;
+  try { stamp = world.statSync(path); } catch {}
+  if (stamp && stamp.size === known.size && stamp.mtimeMs === known.mtimeMs && stamp.ctimeMs === known.ctimeMs && stamp.ino === known.ino) return known;
+  fileRecordImageBytes -= known.image.length;
+  fileRecordImages.delete(memoKey);
+  return undefined;
+}
+let settledReadBytes = 0;
+function settleRead(key, stamp, bytes, fact, owned = false) {
+  if (stamp instanceof Error || !Buffer.isBuffer(bytes) || bytes.length > OBSERVATION_LIMITS_V1.settledReadMaximumFileBytes) return;
+  const taken = Date.now();
+  if (!(stamp.mtimeMs < taken - RACY_MS && stamp.ctimeMs < taken - RACY_MS)) { const previous = settledReads.get(key); if (previous) { settledReadBytes -= previous.bytes.length; settledReads.delete(key); } return; }
+  const previous = settledReads.get(key); if (previous) settledReadBytes -= previous.bytes.length;
+  if (settledReadBytes + bytes.length > SETTLED_READ_BYTES) { settledReads.clear(); settledReadBytes = 0; }
+  settledReads.set(key, { size: stamp.size, mtimeMs: stamp.mtimeMs, ctimeMs: stamp.ctimeMs, ino: stamp.ino, bytes: owned ? bytes : Buffer.from(bytes), rowId: rowTableV1.id(canonicalObservationV1("file", key, fact)) }); settledReadBytes += bytes.length;
+}
+function settledRead(path, stamp, options) {
+  if (stamp instanceof Error) return undefined;
+  const key = absolute(path), hit = settledReads.get(key);
+  if (!hit || hit.size !== stamp.size || hit.mtimeMs !== stamp.mtimeMs || hit.ctimeMs !== stamp.ctimeMs || hit.ino !== stamp.ino) return undefined;
+  const row = rowTableV1.row(hit.rowId); if (row === undefined) return undefined;
+  recordRowV1(row);
+  const encoding = encodingOf(options);
+  return { value: encoding ? hit.bytes.toString(encoding) : Buffer.from(hit.bytes) };
+}
+
+/** 👁️ The `node:fs` reads graph inference may perform, each recording what it observed so a persisted result can later be proven current. Writes stay on `node:fs`. */
+export const observedFs = Object.freeze({
+  readFileSync(path, options) {
+    let stamp;
+    try { stamp = world.statSync(path); } catch (error) { stamp = error; }
+    const settled = settledRead(path, stamp, options); if (settled) return settled.value;
+    let bytes;
+    try { bytes = world.readFileSync(path); } catch (error) { record("file", absolute(path), { error: error.code ?? "EUNKNOWN" }); throw error; }
+    return readObserved(path, stamp, bytes, options);
+  },
+  existsSync(path) {
+    const key = absolute(path);
+    const value = roundAnswerV1("e\0"+key, () => world.existsSync(path));
+    record("exists", key, value);
+    return value;
+  },
+  statSync(path, options) { return probe("stat", path, () => world.statSync(path, options), (value) => value ? nodeType(value) : "!ENOENT"); },
+  lstatSync(path, options) {
+    const round = options === undefined ? inferenceValidationScopes.getStore() : undefined;
+    if (!round) return probe("lstat", path, () => world.lstatSync(path, options), (value) => value ? nodeType(value) : "!ENOENT");
+    let directories = roundDirectories.get(round); if (!directories) { directories = new Map(); roundDirectories.set(round, directories); }
+    const key = absolute(path), known = directories.get(key);
+    if (known) { recordRowV1(known.row); return known.value; }
+    const value = probe("lstat", path, () => world.lstatSync(path), (value) => value ? nodeType(value) : "!ENOENT");
+    if (value.isDirectory()) directories.set(key, { value, row: canonicalObservationV1("lstat", key, "directory") });
+    return value;
+  },
+  readdirSync(path, options) {probeCountsV1.readdir++;const typed=options?.withFileTypes===true,shared=typed&&typeof path==="string"&&Object.keys(options).length===1;return probe(typed?"readdir":"readdirNames",path,shared?()=>typedListingV1(path).slice():()=>world.readdirSync(path,options),value=>directoryFactV1(value,typed,path));},
+  realpathSync: Object.assign((path, options) => probe("realpath", path, () => world.realpathSync(path, options), (value) => String(value)), { native: (path, options) => probe("realpathNative", path, () => world.realpathSync.native(path, options), (value) => String(value)) }),
+  async readFile(path, options) {
+    let stamp;
+    try { stamp = (observedWorlds.getStore() ? world.statSync(path) : await statAsync(path)); } catch (error) { stamp = error; }
+    const settled = settledRead(path, stamp, options); if (settled) return settled.value;
+    let bytes;
+    try { bytes = (observedWorlds.getStore() ? world.readFileSync(path) : await readFileAsync(path)); } catch (error) { record("file", absolute(path), { error: error.code ?? "EUNKNOWN" }); throw error; }
+    return readObserved(path, stamp, bytes, options);
+  },
+});
+
+if(!import.meta.semioFrozenAuthorizers){
+ observedFs.readFileSync(new URL("./🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL)));
+ observedFs.readFileSync(new URL("../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts",physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL)));
+}
+const sourceAnalysisContractV1=compileJsonSchemaSubset(sourceAnalysisSchemaV1.$defs.sourceAnalysis,sourceAnalysisSchemaV1);
+
+/** 🪧️ `createRequire(from).resolve(request)` with its outcome recorded, so a persisted result is invalidated when module resolution would now answer differently. */
+export function observedRequireResolve(from, request) {
+  const key = JSON.stringify([absolute(from), request]);
+  try {
+    const resolved = roundAnswerV1("r\0"+key, () => createRequire(from).resolve(request));
+    record("resolve", key, canonicalResolutionV1(resolved));
+    return resolved;
+  } catch (error) { record("resolve", key, `!${error.code ?? "EUNKNOWN"}`); throw error; }
+}
+
+/** 🧩️ A TypeScript module resolution host that delegates to TypeScript's own `sys` and records every probe it answers. */
+export function observedTypeScriptHost(sys) {
+  return {
+    ...sys,
+    fileExists: (path) => probe("fileExists",path,()=>roundAnswerV1("f\0"+absolute(path),()=>sys.fileExists(path)),value=>value),
+    directoryExists: (path) => probe("directoryExists",path,()=>roundAnswerV1("d\0"+absolute(path),()=>sys.directoryExists(path)),value=>value),
+    readFile: (path, encoding) => probe("typescriptText",path,()=>sys.readFile(path,encoding),value=>value===undefined?"!missing":sha256HexV1(value)),
+    realpath: sys.realpath && ((path) => probe("typescriptRealpath",path,()=>sys.realpath(path),value=>value)),
+    getDirectories: (path) => probe("directories",path,()=>sys.getDirectories(path),value=>directoryFactV1(value)),
+  };
+}
+
+/** 🌀️ Structural equality that distinguishes absent from `undefined`, so only results that survive JSON exactly are persisted. */
+function jsonExact(value) {
+  if (value === null || typeof value === "string" || typeof value === "boolean") return true;
+  if (typeof value === "number") return Number.isFinite(value);
+  if (Array.isArray(value)) return value.every((item, index) => index in value && jsonExact(item));
+  if (typeof value !== "object" || Object.getPrototypeOf(value) !== Object.prototype && Object.getPrototypeOf(value) !== null) return false;
+  return Object.values(value).every(jsonExact);
+}
+
+/** 🪞️ The JSON image of a value when it is built only from plain objects, arrays, strings, booleans, finite numbers and `null` (object
+ * properties holding `undefined` are dropped, exactly as a consumer reading them sees `undefined`), or `undefined` when it is not. */
+function jsonImage(value) {
+  const representable = (item) => item === null || typeof item === "string" || typeof item === "boolean" || typeof item === "number" && Number.isFinite(item) || Array.isArray(item) && item.every((element, index) => index in item && element !== undefined && representable(element)) || typeof item === "object" && !Array.isArray(item) && (Object.getPrototypeOf(item) === Object.prototype || Object.getPrototypeOf(item) === null) && Object.values(item).every((entry) => entry === undefined || representable(entry));
+  return representable(value) ? JSON.stringify(value) : undefined;
+}
+
+/**
+ * ⚙️ Memoizes a pure per-content analysis across inference runs: inside {@link observeInference} the result for `namespace` (which must
+ * name the analysis code revision) and `inputs` (every byte it reads) is kept in a content-addressed record store, and both a hit and a miss
+ * return the value's JSON image so they are indistinguishable. Outside an inference, or for a value without a JSON image, it computes.
+ * @template T
+ * @param {string} namespace
+ * @param {readonly (string | Uint8Array)[]} inputs
+ * @param {() => T} compute
+ * @returns {T}
+ */
+export function memoizedRecord(namespace, inputs, compute) {
+  const store = recordScopes.getStore()?.records;
+  if (!store) return compute();
+  const key = recordKey(namespace, ...inputs), hit = store.get(key);
+  if (hit !== undefined) { try { return JSON.parse(utf8TextV1(hit)); } catch {} }
+  const value = compute(), image = jsonImage(value);
+  if (image === undefined) return value;
+  store.put(key, Buffer.from(image, "utf8"));
+  return JSON.parse(image);
+}
+
+/**
+ * 🗂️ {@link memoizedRecord} for an analysis of one file's bytes, keyed by their digest, that reads the file only when it must: a file whose
+ * stamp equals the one the previous inference recorded (results are persisted only when no input was racy) is known by that digest, its
+ * fact is recorded without a read, and a stored analysis is returned. Otherwise the bytes are read (and observed) and analysed.
+ * @template T
+ * @param {string} namespace
+ * @param {string} path
+ * @param {(bytes: Buffer) => T} compute
+ * @returns {T}
+ */
+export function memoizedFileRecord(namespace, path, compute) {
+  const scope = recordScopes.getStore();
+  if (!scope) return compute(observedFs.readFileSync(path));
+  const key = absolute(path), memoKey = namespace + "\0" + key, remembered = rememberedFileRecordImageV1(memoKey, path);
+  const rememberedRow = remembered === undefined ? undefined : rowTableV1.row(remembered.rowId);
+  if (rememberedRow !== undefined) { recordRowV1(rememberedRow); return JSON.parse(remembered.image); }
+  const hint = scope.hints.get(key);
+  if (hint) {
+    let stamp;
+    try { stamp = world.statSync(path); } catch {}
+    if (stamp && stamp.size === hint.size && stamp.mtimeMs === hint.mtimeMs && stamp.ctimeMs === hint.ctimeMs && stamp.ino === hint.ino) {
+      const hit = scope.records.get(recordKey(namespace, hint.sha256));
+      if (hit !== undefined) {
+        try { const value = JSON.parse(utf8TextV1(hit)); record("file", key, hint); return value; } catch {}
+      }
+    }
+  }
+  const bytes = observedFs.readFileSync(path), value = compute(bytes), image = jsonImage(value);
+  if (image === undefined) return value;
+  rememberFileRecordImageV1(memoKey, key, image);
+  scope.records.put(recordKey(namespace, sha256HexV1(bytes)), Buffer.from(image, "utf8"));
+  return JSON.parse(image);
+}
+
+/** 🏋️ Reads a module asynchronously only when its original settled byte fingerprint has no verified semantic record. */
+export async function memoizedFileRecordAsyncV1(namespace,path,compute){
+ const scope=recordScopes.getStore(),key=absolute(path),hint=scope?.hints.get(key);
+ if(hint){
+  let stamp;try{stamp=(observedWorlds.getStore() ? world.statSync(path) : await statAsync(path));}catch{}
+  if(stamp&&stamp.size===hint.size&&stamp.mtimeMs===hint.mtimeMs&&stamp.ctimeMs===hint.ctimeMs&&stamp.ino===hint.ino){
+   const hit=scope.records.get(recordKey(namespace,hint.sha256));if(hit!==undefined)try{const value=JSON.parse(utf8TextV1(hit));record("file",key,hint);return value;}catch{}
+  }
+ }
+ const bytes=await observedFs.readFile(path),value=compute(bytes),image=jsonImage(value);
+ if(scope&&image!==undefined&&Buffer.byteLength(image)<=FILE_RECORD_IMAGE_LIMIT){scope.records.put(recordKey(namespace,sha256HexV1(bytes)),Buffer.from(image,"utf8"));return JSON.parse(image);}
+ return value;
+}
+
+/** ✔️ True when a recorded file fact still names the same bytes: an unchanged stamp proves it cheaply, and a restamped file of the same size is proven by its digest, so rewrites of identical content stay hits. */
+function fileFactHolds(path, fact) {
+  if (fact.error !== undefined) { try { world.readFileSync(path); return false; } catch (error) { return fact.error === (error.code ?? "EUNKNOWN"); } }
+  let current;
+  try { current = world.statSync(path); } catch { return false; }
+  if (current.size !== fact.size) return false;
+  if (current.mtimeMs === fact.mtimeMs && current.ctimeMs === fact.ctimeMs && current.ino === fact.ino) return true;
+  try { return fileShaV1(path, current) === fact.sha256; } catch { return false; }
+}
+
+/** ✅️ True when every recorded fact still holds; stops at the first stale fact. Synchronous probes beat the four-thread pool here: each is one cached-inode syscall. */
+function current(observations,failed) {
+  observations = rebaseRowsV1(observations);
+  if(!consistentObservationsV1(observations)){failed?.(undefined,"conflicting observations");return false;}
+  return observations.every(row=>{
+    const {kind,path,fact}=row;
+    if(machineLocalRowV1(kind,path))return true;
+    let why,holds;
+    if(kind==="analysis"){why=sourceAnalysisFailureV1(path,fact);holds=why===undefined;}
+    else if(kind==="field"&&failed!==undefined){
+      const digest=facts.field(path,fact).digest;
+      holds=digest===fact.digest;
+      if(!holds)why=digest==="!absent-file"?"field-source-unavailable":digest.startsWith("!")?"field-"+digest.slice(1):"field-value";
+    }else holds=kind==="file"?fileFactHolds(path,fact):typeof facts[kind]==="function"&&recordedFactHoldsV1(kind,path,fact);
+    if(!holds)failed?.(row,why);
+    return holds;
+  });
+}
+
+/**
+ * 📸️ Returns `compute()`'s result, reusing the persisted result for `key` while every filesystem fact the computation observed — reads,
+ * existence and type probes, directory listings, real paths and module resolutions, including those made while its modules loaded —
+ * still holds. A result is persisted only when it is exactly JSON-representable and no file it read was stamped within {@link RACY_MS}
+ * of the start, so a hit is indistinguishable from a recomputation.
+ * @template T
+ * @param {{ readonly cachePath: string; readonly key: unknown }} options
+ * @param {() => Promise<T> | T} compute
+ * @returns {Promise<T>}
+ */
+/** 🧳️ Keeps packed descriptors inside the original graph writer lifetime. */
+function observedRecordStoreV1(path){
+ let records=recordStores.get(path);if(!records){records=openRecordStore(path,{publication:(plan,write)=>withBuildGraphOptionalPublicationV1(join(path,"0-0-0000000000000000.pack"),plan,write)});recordStores.set(path,records);const original=records;recordStoreHandles.set(path,registerBuildGraphOptionalHandleV1(()=>{try{original.close();}finally{if(recordStores.get(path)===original){recordStores.delete(path);recordStoreHandles.delete(path);}}}));}return records;
+}
+
+/** 🔌️ Closes one project's pack store once its inference is persisted: its descriptors and location index are not kept for the remaining projects of the graph. */
+function releaseObservedRecordStoreV1(path){
+ const records=recordStores.get(path);if(!records)return;
+ recordStores.delete(path);const unregister=recordStoreHandles.get(path);recordStoreHandles.delete(path);
+ try{records.close();}finally{unregister?.();}
+}
+
+/**
+ * ▶️ Runs one inference pass in rounds until a single round observed one mutually consistent source snapshot; only that round's facts reach
+ * the caller's scope and capture. Projects whose images still hold are reused, so a round re-infers only the projects a concurrent edit
+ * touched. A failing round is repeated while any fact it consumed has changed since, or was stamped within {@link RACY_MS} (a half-written
+ * file); otherwise its failure is genuine and rethrown with its facts retained. A failure that demands a restart (`BUILD_AUTHORITY_CHANGED`) or
+ * that returns unchanged (same code and message) in the next round is genuine as well: a peer editing the tree must not keep a deterministic
+ * failure looking transient for `limit` whole-inference rounds.
+ * A path read in two states by two different units (owners) does not keep the round alive: every unit holds a consistent snapshot of its own
+ * inputs, the rows of both states stay recorded (a later read finds the newer one stale and re-checks only that unit), and `onRound` receives
+ * `{settled:true, paths}`. Only a contradiction inside one unit repeats the round, with `paths` naming what kept it alive.
+ * @see ./🧪️tests/🌀️settle-churn
+ * @template T
+ * @param {() => Promise<T> | T} compute
+ * @param {{ readonly signal?: AbortSignal; readonly limit?: number; readonly onRound?: (round: { round: number; settled?: true; conflict?: string; paths?: readonly string[]; failure?: unknown }) => void | Promise<void> }} [options]
+ * @returns {Promise<T>}
+ */
+export async function settleObservedComputationV1(compute,{signal,limit=OBSERVATION_LIMITS_V1.settleRounds,onRound}={}){
+ const parent=scopes.getStore(),capture=sourceCaptures.getStore(),accept=(rows,captured)=>{retainObservationsV1(parent,rows);retainScopeV1(capture,captured);};
+ let previousFailure;
+ for(let round=0;;round++){
+  signal?.throwIfAborted();
+  const nested=new LayeredScopeV1(),captured=new SettlementScopeV1(),started=Date.now();let value,failure,failed=false;
+  try{value=await sourceCaptures.run(captured,()=>inferenceValidationScopes.run(nested,()=>scopes.run(nested,compute)));}catch(error){failed=true;failure=error;}
+  signal?.throwIfAborted();
+  const rows=[...nested.values()],{blocking:conflict,paths:contested}=settlementConflictsV1(rows,captured.units),consistent=conflict===undefined;
+  if(consistent&&!failed){accept(rows,captured);if(contested.length)await onRound?.({round,settled:true,paths:contested});return value;}
+  const signature=failed?JSON.stringify([failure?.code??null,(()=>{try{return String(failure?.message??failure);}catch{return"";}})()]):undefined;
+  if(failed&&(failure?.code==="BUILD_AUTHORITY_CHANGED"||failure?.code==="BUILD_COLLECTED_ERRORS"||signature===previousFailure)){accept(rows,captured);throw failure;}
+  previousFailure=signature;
+  if(consistent&&await observationsHold(rows,OBSERVATION_LIMITS_V1.holdNestingLimit,new Set(),new Set(),signal)){
+   signal?.throwIfAborted();
+   const youngest=rows.reduce((most,{kind,fact})=>{const source=kind==="file"?fact:kind==="analysis"?fact.source:undefined;return source?Math.max(most,source.mtimeMs??0,source.ctimeMs??0):most;},0);
+   if(youngest<started-RACY_MS){accept(rows,captured);throw failure;}
+   try{await settlementDelay(Math.max(0,youngest+RACY_MS-Date.now()),undefined,{signal});}
+   catch(error){signal?.throwIfAborted();throw error;}
+  }
+  signal?.throwIfAborted();
+  await onRound?.({round,...(conflict===undefined?{}:{conflict:conflict.row.path,paths:contested}),...(failed?{failure}:{})});
+  signal?.throwIfAborted();
+  if(round+1>=limit){accept(rows,captured);throw failed?failure:conflictingInferenceErrorV1(conflict);}
+ }
+}
+
+function requireInferenceReuseV1(reusable){if(reusable!==undefined&&typeof reusable!=="function")throw Error("Explicit inference reuse predicate required");}
+
+/** ⚠️ Keeps receiving failures outside corrupt-cache miss handling. */
+async function inferenceReusableV1(reusable,value){requireCurrentObservationV1();if(reusable===undefined)return true;const holds=await reusable(value);requireCurrentObservationV1();if(typeof holds!=="boolean")throw Error("Boolean inference reuse result required");return holds;}
+
+/** 🌐️ The port through which project inference records travel through the fleet cache: `gate` seeds a missing record from the fleet or claims its computation, the returned `publish` stores the finished record, `abandon` gives the claim back. Absent: the records stay local. */
+let projectFleetPort,projectClosureTravel;
+export function useProjectFleetV1(port){projectFleetPort=port;}
+/** 🚚️ Registers how the closure entries of a project record travel with it: `export(root, image)` answers the portable bundles of the recipes the record names, `import(root, bundles)` stores bundles of another machine; the closure owner registers itself when it loads. */
+export function registerProjectClosureTravelV1(travel){projectClosureTravel=travel;}
+/** 🔑️ The key text a project record is filed under in the fleet for a record key (the revision of this module, the record key): what a machine that pulls the inference of a project claims it by. */
+export function projectRecordKeyTextV1(key){return JSON.stringify([recordStampV1(),null,key]);}
+/** 🚚️ The closure travel registered by the closure owner, or undefined. */
+export function projectClosureTravelV1(){return projectClosureTravel;}
+
+/** 📤️ The record at `cachePath` in portable form (digest, authority rows, every observation row expanded, result text) or undefined. */
+export function exportProjectRecordV1(cachePath){let record;try{record=readInferencePhysicalRecordV1(cachePath,true);}catch{return undefined;}if(!record)return undefined;return{digest:record.header.digest,authority:record.header.authorityObservations,observations:record.header.observations,image:JSON.stringify(record.value)};}
+
+/** 📥️ Reports whether the graph store accepted the portable record at `cachePath`. The next lookup checks every observation against this tree. */
+export async function importProjectRecordV1(cachePath,portable){
+ if(!portable||typeof portable.digest!=="string"||typeof portable.image!=="string"||!Array.isArray(portable.observations)||!Array.isArray(portable.authority))throw Error("Portable project record required");
+ const started=Date.now(),header=inferenceHeaderTextV1(portable.digest,sha256HexV1(portable.image),portable.authority,portable.observations,dirname(cachePath)),packed=await packInferenceRecordV1(Buffer.from(`${header}\n${portable.image}`)),bytes=packed.byteLength,temporary=`${cachePath}.${process.pid}.${started}.tmp`;
+ fs.mkdirSync(dirname(cachePath),{recursive:true});let previous=0;try{previous=fs.lstatSync(cachePath).size;}catch(error){if(error.code!=="ENOENT")throw error;}
+ return withBuildGraphOptionalPublicationV1(cachePath,{peakBytes:bytes,retainedDeltaBytes:bytes-previous},()=>{publishFileDurablySyncV1(temporary,cachePath,packed);});
+}
+
+export async function observeInference({ cachePath, key, reusable, verdict, verdictFinal = false, prepare, prepareAttempts = 1 }, compute) {
+  requireCurrentObservationV1();requireInferenceReuseV1(reusable);
+  return observeInferenceComputationV1({cachePath,key,reusable,verdict,verdictFinal,prepare,prepareAttempts},compute,false);
+}
+
+/** 🛂️ Validates nested project records within one original inference; its outer publication still rechecks every source fact freshly. */
+/** 🔢️ The rows each running project inference has observed so far, by record path: what the owner stage shows next to every running owner. */
+const inferenceRowCountsV1=new Map();
+/** 🔢️ How many distinct observation rows the inference recording at `cachePath` holds right now (0 when none runs). */
+export function observedInferenceRowsV1(cachePath){return inferenceRowCountsV1.get(cachePath)?.()??0;}
+
+
+/** 🧹️ Forgets the row counter of a finished inference. */
+export function forgetObservedInferenceRowsV1(cachePath){inferenceRowCountsV1.delete(cachePath);}
+
+/** ⏱️ Where the lookups of stored project records spend their time in this process (milliseconds summed over the looks, concurrent looks count each their own wall time): reading the record, settling its closure rows, probing its rows, the reuse predicate, the offer to the fleet and the gate that fetches a missing record. */
+const lookupClockV1={count:0,read:0,verdict:0,settle:0,hold:0,reusable:0,offer:0,gate:0};
+function lookupLapV1(key,work){const at=performance.now();try{return work();}finally{lookupClockV1[key]+=performance.now()-at;}}
+async function lookupLapAsyncV1(key,work){const at=performance.now();try{return await work();}finally{lookupClockV1[key]+=performance.now()-at;}}
+/** ⏱️ The lookup clock of this process, in whole milliseconds. */
+export function observationLookupClockV1(){return Object.fromEntries(Object.entries(lookupClockV1).map(([key,value])=>[key,Math.round(value)]));}
+/** 📤️ With `deferOffer` a record that is found stored here is not offered to the fleet cache by this look (the take pass of a machine that does not serve the fleet: every look would build the documents of the record, closure bundles with their layers inline, and queue up to 64 of them for upload before the next look may go on). */
+async function observeInferenceComputationV1({cachePath,key,reusable,prepare,fleet,deferOffer=false,verdict,verdictFinal=false,prepareAttempts=1,stale,published},compute,nestedProject) {
+  requireCurrentObservationV1();loadSealed = true;
+  originalInferencePublications.delete(cachePath);usedInference.delete(cachePath);
+  const parent=scopes.getStore();
+  const digest = sha256HexV1(JSON.stringify([recordStampV1(), null, key])), hints = new Map(), authority=nestedProject?[]:[...loadObservations.values()];
+  const lookup=async()=>{
+  let candidate,told=false,refused;lookupClockV1.count++;
+  const record=lookupLapV1("read",()=>readInferenceRecordOrMissV1(cachePath));if(record){const{header,line}=record;refused=stale===undefined?undefined:(row,why,count)=>{if(told)return;told=true;stale(row===undefined?staleWholeRowV1(header.observations,why,count):namedStaleRowV1(row,why));};if(header.digest===digest){const headerDigest=sha256HexV1(line),said=verdict===undefined?undefined:await lookupLapAsyncV1("verdict",()=>verdict({headerDigest})).catch(error=>{if(verdictFinal)throw error;return undefined;});if(said?.verdict==="holds"&&said.headerDigest===headerDigest)candidate={value:record.value,header,headerDigest,adopted:true};else if(verdictFinal&&(said?.verdict==="stale"||said?.verdict==="other"||said?.verdict==="missing")){}else{await lookupLapAsyncV1("settle",()=>settleClosureRowsV1(header.observations,record.value));if(await lookupLapAsyncV1("hold",()=>projectRowsHoldV1(header.observations,record.value,rest=>nestedProject?sharedObservationsHoldV1(rest,parent):current(rest,refused),refused)))candidate={value:record.value,header,headerDigest};}}for(const{kind,path,fact}of header.observations)if(kind==="file"&&typeof fact?.sha256==="string")hints.set(path,fact);}
+  if(candidate&&await lookupLapAsyncV1("reusable",()=>inferenceReusableV1(reusable,candidate.value))&&(candidate.adopted===true||await lookupLapAsyncV1("hold",()=>projectRowsHoldV1(candidate.header.observations,candidate.value,rest=>nestedProject?sharedObservationsHoldV1(rest,parent):current(rest))))){const{header,value,headerDigest}=candidate;retainSourceFactsV1(header.observations);retainObservationsV1(parent,header.observations);usedInference.set(cachePath,headerDigest);{const found={path:cachePath,digest,authorityObservations:header.authorityObservations,observations:header.observations};originalInferencePublications.set(cachePath,found);published?.(found);}return{value};}
+  return undefined;
+  };
+  const port=fleet!==undefined?projectFleetPort:undefined;let gate,computedElsewhere=false;
+  const info=port?{cachePath,fleet,keyText:JSON.stringify([recordStampV1(),null,key]),exportRecord:()=>exportProjectRecordV1(cachePath),closures:projectClosureTravel,import:portable=>importProjectRecordV1(cachePath,portable)}:undefined;
+  let reused=await lookup();
+  if(reused&&port&&!deferOffer)await lookupLapAsyncV1("offer",()=>port.offer(info));
+  if(!reused&&port){gate=await lookupLapAsyncV1("gate",()=>port.gate(info)).catch(()=>undefined);if(gate?.deferred)throw Object.assign(Error("owner left to a live peer: this reader has other owners to infer / Owner einem aktiven Peer überlassen: dieser Leser hat andere Owner abzuleiten"),{code:"BUILD_OWNER_DEFERRED"});if(gate?.seeded)reused=await lookup();}
+  try{
+   for(let attempt=0;!reused&&prepare!==undefined&&attempt<prepareAttempts&&await prepare();attempt++){computedElsewhere=true;reused=await lookup();}
+   if(reused){if(computedElsewhere&&gate&&!gate.seeded)gate.publish();return reused.value;}
+  }catch(error){await gate?.abandon?.();throw error;}
+  const observations = new LayeredScopeV1(), started = Date.now();
+  inferenceRowCountsV1.set(cachePath,()=>observations.size);
+  const records=observedRecordStoreV1(`${cachePath}.records`);
+  const result = await inferenceValidationScopes.run(inferenceValidationScopes.getStore()??observations,()=>recordScopes.run({ records, hints }, () => scopes.run(observations, compute)));
+  requireCurrentObservationV1();records.flush();
+  if(records.stats.records>2*records.stats.accessed)records.retainAccessed();else if(records.stats.packs>RECORD_STORE_PACK_LIMIT)records.compact();
+  releaseObservedRecordStoreV1(`${cachePath}.records`);
+  const rows = [...authority, ...observations.values()];retainSourceFactsV1(rows);
+  retainObservationsV1(parent,rows);
+  const conflict=firstObservationConflictV1(rows),consistent=conflict===undefined;
+  if(conflict!==undefined&&!nestedProject)throw conflictingInferenceErrorV1(conflict);
+  originalInferencePublications.delete(cachePath);
+  if (jsonImage(result) !== undefined) { const found={path:cachePath,digest,authorityObservations:authority,observations:rows}; originalInferencePublications.set(cachePath, found); published?.(found); }
+  const racy = rows.some(({ kind, fact }) => {const source=kind==="file"?fact:kind==="analysis"?fact.source:undefined;return source&&(source.mtimeMs>=started-RACY_MS||source.ctimeMs>=started-RACY_MS);});
+  usedInference.set(cachePath, null);
+  if (consistent && !racy && jsonExact(result) && await projectRowsHoldAtEndV1(rows,result,nestedProject,parent)) {
+    fs.mkdirSync(dirname(cachePath), { recursive: true });
+    const image=JSON.stringify(result),temporary = `${cachePath}.${process.pid}.${started}.tmp`, header = inferenceHeaderTextV1(digest,sha256HexV1(image),authority,rows,dirname(cachePath));
+    const packed=await packInferenceRecordV1(Buffer.from(`${header}\n${image}`)),bytes=packed.byteLength;let previous=0;try{previous=fs.lstatSync(cachePath).size;}catch(error){if(error.code!=="ENOENT")throw error;}
+    if(withBuildGraphOptionalPublicationV1(cachePath,{peakBytes:bytes,retainedDeltaBytes:bytes-previous},()=>{publishFileDurablySyncV1(temporary,cachePath,packed);})){usedInference.set(cachePath,sha256HexV1(header));gate?.publish();}
+  }
+  await gate?.abandon?.();
+  return result;
+}
+
+/**
+ * 🚀️ Runs a graph dependency computation while recording every filesystem fact it observes, then publishes a receipt for the graph seal:
+ * this process, when it completed, the exact inference records (by header digest) this process's node inference used in the receipt's
+ * directory, and the dependency
+ * facts. A receipt is published only when every input is non-racy and still holds and every inference record used was persisted; otherwise
+ * any previous receipt is removed, so a seal can never pair a graph with inputs it was not computed from.
+ * @template T
+ * @param {{ readonly receiptPath: string; readonly recordDirectory?: string }} options
+ * @param {() => Promise<T> | T} compute
+ * @returns {Promise<T>}
+ */
+export async function observeDependencies({ receiptPath, recordDirectory }, compute) {
+  requireCurrentObservationV1();
+  const observations = new LayeredScopeV1(), started = Date.now(),publicationPath=receiptPath.replace(/\.receipt\.json$/u,".publication.json"),hints=new Map();
+  if(recordDirectory)try{const previous=JSON.parse(fs.readFileSync(publicationPath,"utf8"));if(previous.version===1&&previous.revision===OBSERVATION_REVISION&&Array.isArray(previous.observations)&&Number.isSafeInteger(previous.startedAt))for(const row of previous.observations)if(row.kind==="file"&&SHA256_HEX_V1.test(row.fact?.sha256??"")&&row.fact.mtimeMs<previous.startedAt-RACY_MS&&row.fact.ctimeMs<previous.startedAt-RACY_MS)hints.set(row.path,row.fact);}catch{}
+  const records=recordDirectory?observedRecordStoreV1(recordDirectory):undefined;
+  const run=()=>scopes.run(observations,compute),result=await(records?recordScopes.run({records,hints},run):run());
+  requireCurrentObservationV1();records?.flush();if(records){if(records.stats.records>2*records.stats.accessed)records.retainAccessed();else if(records.stats.packs>RECORD_STORE_PACK_LIMIT)records.compact();}
+  const rows = [...observations.values()], inference = [...usedInference].filter(([path]) => dirname(path) === dirname(receiptPath)).sort(([left], [right]) => left < right ? -1 : left > right ? 1 : 0);
+  const conflict=firstObservationConflictV1(rows);
+  if(conflict!==undefined)throw conflictingInferenceErrorV1(conflict);
+  const racy = rows.some(({ kind, fact }) => {const source=kind==="file"?fact:kind==="analysis"?fact.source:undefined;return source&&(source.mtimeMs>=started-RACY_MS||source.ctimeMs>=started-RACY_MS);});
+  fs.mkdirSync(dirname(receiptPath), { recursive: true });
+  const originalInference=[...originalInferencePublications.values()].filter(value=>dirname(value.path)===dirname(receiptPath)).sort((left,right)=>Buffer.compare(Buffer.from(left.path),Buffer.from(right.path)));
+  if(publicationPath===receiptPath)throw Error("Original inference receipt must have an owned publication path");
+  const producerPath=resolve(dirname(publicationPath),"p-"+process.pid,basename(publicationPath));
+  if(originalInference.length&&jsonImage(result)!==undefined){const image=JSON.stringify({version:1,revision:OBSERVATION_REVISION,pid:process.pid,startedAt:started,completedAt:Date.now(),inference:originalInference,observations:rows});fs.mkdirSync(dirname(producerPath),{recursive:true});retireProducerPublicationAtExitV1(dirname(producerPath));for(const path of [producerPath,publicationPath]){const temporary=path+"."+process.pid+"."+started+".tmp",parent=resolve(dirname(path)),status=fs.lstatSync(parent);if(temporary.length>observationBlockPolicyV1.maximumPathUnits||[...temporary].length>observationBlockPolicyV1.maximumPathUnits||!status.isDirectory()||status.isSymbolicLink()||fs.realpathSync(parent)!==parent)throw Error("Original inference producer namespace refused");publishFileDurablySyncV1(temporary,path,Buffer.from(image));}}else for(const path of [producerPath,publicationPath])fs.rmSync(path,{force:true});
+  if (racy || inference.length === 0 || inference.some(([, digest]) => digest === null) || !current(rows)) { fs.rmSync(receiptPath, { force: true }); return result; }
+  const temporary = `${receiptPath}.${process.pid}.${started}.tmp`;
+  publishFileDurablySyncV1(temporary, receiptPath, Buffer.from(JSON.stringify({ format: 1, revision: OBSERVATION_REVISION, pid: process.pid, completedAt: Date.now(), inference, observations: rows })));
+  return result;
+}
+
+/** 🪝️ Captures freshly computed source facts and refuses a preparation whose inputs changed before receipt. */
+export async function captureSourcePreparationV1(compute, control) {
+  const observations = new Map(), value = await scopes.run(observations, compute), original = [...observations.values()];
+  return {value,original,received:await receiveSourcePreparationV1(original,control)};
+}
+
+/** 🔐️ Rechecks and records every original source fingerprint under the same preparation control. */
+export async function receiveSourcePreparationV1(original,control){
+  const received=[];
+  for(const row of original){
+    control.check();if(received.length%OBSERVATION_LIMITS_V1.fingerprintProgressRows===0)await control.advance("source-fingerprints");
+    const next=row.kind==="analysis"&&sourceAnalysisFactHoldsV1(row.path,row.fact)?row:{kind:row.kind,path:row.path,fact:facts[row.kind](row.path,row.fact)};
+    if(JSON.stringify(row.fact)!==JSON.stringify(next.fact))throw Error(`Original source preparation inputs changed: ${row.kind}:${row.path}`);
+    received.push(next);
+  }
+  return received;
+}
+
+/** 📜️ The header line of a persisted inference record (its digest and observations), read without the result that follows it. */
+export function inferenceHeaderLine(cachePath){return readInferencePhysicalRecordV1(cachePath).line;}
+
+
+const observationUTF8V1=new TextDecoder("utf-8",{fatal:true,ignoreBOM:true});
+const observationBlockPolicyV1=sourceAnalysisSchemaV1.$defs.observationBlock.const,blockRowsValidatorV1=compileJsonSchemaSubset({$defs:sourceAnalysisSchemaV1.$defs,$ref:"#/$defs/observationRows"}),headerValidatorV1=compileJsonSchemaSubset({$defs:sourceAnalysisSchemaV1.$defs,$ref:"#/$defs/inferenceHeader"});
+/** 🎯️ Projects finite aggregate admission DATA without granting physical read custody. */
+export function observationBlockBudgetAdmitsV1(used,next,maximum){return Number.isSafeInteger(used)&&Number.isSafeInteger(next)&&Number.isSafeInteger(maximum)&&used>=0&&next>=0&&maximum>=1&&used<=maximum-next;}
+function observationReadBudgetV1(){return{packed:0,output:0,rows:0,nodes:0,parentSets:new Map()};}
+function observationChargeV1(budget,kind,next){const maximum=observationBlockPolicyV1[{packed:"maximumAggregatePackedBytes",output:"maximumAggregateOutputBytes",rows:"maximumAggregateRows",nodes:"maximumAggregateNodes"}[kind]];if(!observationBlockBudgetAdmitsV1(budget[kind],next,maximum))throw Error("Finite aggregate observation "+kind+" budget exceeded");budget[kind]+=next;}
+function observationParentsFenceV1(path,parents){return()=>{requireRepositoryBuildGraphObservationPathV1(path,"read");for(const original of parents){const row=fs.lstatSync(original.path,{bigint:true});if(!row.isDirectory()||row.isSymbolicLink()||[row.dev,row.ino,row.mode].join(":")!==original.identity)throw Error("Observation ancestry changed");}};}
+function observationAbsenceFenceV1(path,parents,missing){const unchanged=observationParentsFenceV1(path,Object.freeze(parents.map(row=>Object.freeze({...row}))));return Object.freeze({absent:true,missing,parentFence:unchanged,recheck:()=>{unchanged();try{fs.lstatSync(missing);throw Error("Absent observation coordinate reappeared");}catch(error){if(error?.code!=="ENOENT")throw error;}}});}
+/** 🍂️ The refusal of a leaf that was replaced between the read and the delivery of its content: the record was rewritten under the reader (a farm worker, the fleet take or a peer renaming a newer record over it), which is a race and not damage. */
+function leafChangedV1(){return Object.assign(Error("Observation leaf changed before delivery (the record was replaced while it was read)"),{code:"BUILD_INFERENCE_LEAF_CHANGED"});}
+
+/** 🔁️ Runs one read of a leaf again while the leaf is replaced under it (up to `attempts` times): a block is content-addressed and every read validates its bytes against its name, so a peer's replacement holding the same content is accepted on the next read and a replacement holding other content is refused by that read; a leaf that keeps changing fails with `BUILD_INFERENCE_LEAF_CHANGED`, every other failure at once. */
+export function settleObservationLeafV1(attempt,{attempts=3}={}){
+ for(let count=1;;count++){
+  try{return attempt();}
+  catch(error){if(error?.code!=="BUILD_INFERENCE_LEAF_CHANGED"||count>=attempts)throw error;}
+ }
+}
+
+/** 📖️ Reads the physical record of one project for a lookup, a record that cannot be read being a miss: a leaf replaced while it is read is read again (up to three times) and then counts as absent, a damaged record counts as absent, and one line says why; every other failure stays a failure. */
+export function readInferenceRecordOrMissV1(cachePath,{read=readInferencePhysicalRecordV1,say=line=>process.stderr.write(line+"\n")}={}){
+ for(let attempt=1;;attempt++){
+  try{return read(cachePath,true);}
+  catch(error){
+   const changed=error?.code==="BUILD_INFERENCE_LEAF_CHANGED";
+   if(changed&&attempt<3)continue;
+   if(!changed&&!observationBlockDamagedV1(error))throw error;
+   say("graph: the record of "+basename(dirname(cachePath))+"/"+basename(cachePath)+" cannot be read ("+String(error?.message??error).replace(/\s+/gu," ").slice(0,120)+"), inferring the project here / der Eintrag kann nicht gelesen werden, das Projekt wird hier abgeleitet");
+   return null;
+  }
+ }
+}
+
+function observationLeafFenceV1(path,parents,epoch){const unchanged=observationParentsFenceV1(path,parents);return()=>{unchanged();const actual=fs.lstatSync(path,{bigint:true});if(!actual.isFile()||actual.isSymbolicLink()||actual.nlink!==1n||observationEpochV1(actual)!==epoch)throw leafChangedV1();};}
+function observationEpochV1(row){return[row.dev,row.ino,row.mode,row.nlink,row.size,row.mtimeNs,row.ctimeNs].join(":");}
+function observationPhysicalReadV1(path,maximumBytes,optional,namedBlock=false,budget=observationReadBudgetV1(),absenceProof=false){
+ path=resolve(path);const custody=requireRepositoryBuildGraphObservationPathV1(path,"read"),check=()=>requireRepositoryBuildGraphObservationPathV1(path,"read"),parents=[],ancestry=[];for(let cursor=dirname(path);;cursor=dirname(cursor)){if(ancestry.length>=observationBlockPolicyV1.maximumAncestors)throw Error("Finite observation ancestry required");ancestry.push(cursor);if(dirname(cursor)===cursor)break;}ancestry.reverse();let device,inside=false;
+ const unchanged=observationParentsFenceV1(path,parents);
+ for(const directory of ancestry){if(custody.root===directory)inside=true;let row;try{row=fs.lstatSync(directory,{bigint:true});}catch(error){if(error?.code!=="ENOENT"||!optional||custody.kind==="managed"&&(directory===custody.root||!inside||!relative(custody.root,directory).split(sep).some(name=>["np","ip","rr","inference"].includes(name))))throw error;unchanged();try{fs.lstatSync(directory);throw Error("Absent observation namespace reappeared");}catch(probe){if(probe?.code!=="ENOENT")throw probe;}return absenceProof?observationAbsenceFenceV1(path,parents,directory):null;}if(!row.isDirectory()||row.isSymbolicLink()||inside&&device!==undefined&&row.dev!==device)throw Error("Original observation physical ancestry required");if(inside)device=row.dev;parents.push({path:directory,identity:[row.dev,row.ino,row.mode].join(":")});}
+ const parentKey=dirname(path),retained=budget.parentSets.get(parentKey);let retainedParents;if(retained){if(retained.length!==parents.length||parents.some((row,index)=>row.path!==retained[index].path||row.identity!==retained[index].identity))throw Error("Observation retained ancestry changed");retainedParents=retained;}else{if(!observationBlockBudgetAdmitsV1(budget.parentSets.size,1,observationBlockPolicyV1.maximumParentSets))throw Error("Finite observation parent sets exceeded");retainedParents=Object.freeze(parents.map(row=>Object.freeze(row)));budget.parentSets.set(parentKey,retainedParents);}
+ let initial;try{initial=fs.lstatSync(path,{bigint:true});}catch(error){if(error?.code!=="ENOENT"||!optional){if(error?.code==="ENOENT"&&namedBlock){unchanged();try{fs.lstatSync(path);throw Error("Absent named inference block reappeared");}catch(probe){if(probe?.code!=="ENOENT")throw probe;}throw Object.assign(Error("Named inference observation block is absent"),{code:"BUILD_INFERENCE_BLOCK_ABSENT",cause:error});}throw error;}unchanged();try{fs.lstatSync(path);throw Error("Absent observation leaf reappeared");}catch(probe){if(probe?.code!=="ENOENT")throw probe;}return absenceProof?observationAbsenceFenceV1(path,parents,path):null;}if(!initial.isFile()||initial.isSymbolicLink()||initial.nlink!==1n||inside&&initial.dev!==device||initial.size<1n||initial.size>BigInt(maximumBytes))throw Error("Bounded original observation leaf required");const epoch=observationEpochV1(initial),descriptor=fs.openSync(path,fs.constants.O_RDONLY|(fs.constants.O_NOFOLLOW??0)|(fs.constants.O_NONBLOCK??0));let bytes,readFailed=false;try{check();const opened=fs.fstatSync(descriptor,{bigint:true});if(!opened.isFile()||observationEpochV1(opened)!==epoch)throw Error("Observation descriptor identity changed");observationChargeV1(budget,"packed",Number(initial.size));bytes=Buffer.alloc(Number(initial.size));let offset=0;while(offset<bytes.length){check();const count=fs.readSync(descriptor,bytes,offset,Math.min(OBSERVATION_LIMITS_V1.leafReadChunkBytes,bytes.length-offset),offset);if(count===0)throw Error("Partial observation leaf read");offset+=count;}if(observationEpochV1(fs.fstatSync(descriptor,{bigint:true}))!==epoch)throw Error("Observation descriptor changed during read");}catch(error){readFailed=true;throw error;}finally{try{fs.closeSync(descriptor);}catch(error){if(!readFailed)throw error;}}const recheck=observationLeafFenceV1(path,retainedParents,epoch);recheck();return{bytes,recheck,epoch};
+}
+function observationJsonV1(text,budget=observationReadBudgetV1()){let depth=0,nodes=0,string=false,escape=false;for(let index=0;index<text.length;index++){const char=text[index];if(string){if(escape)escape=false;else if(char==="\\")escape=true;else if(char==='"')string=false;continue;}if(char==='"'){string=true;if(++nodes>observationBlockPolicyV1.maximumNodes)throw Error("Finite observation JSON nodes required");}else if(char==="["||char==="{"){if(++depth>observationBlockPolicyV1.maximumDepth||++nodes>observationBlockPolicyV1.maximumNodes)throw Error("Finite observation JSON depth required");}else if(char==="]"||char==="}")depth--;else if(char===","&&++nodes>observationBlockPolicyV1.maximumNodes)throw Error("Finite observation JSON nodes required");}observationChargeV1(budget,"nodes",nodes);return JSON.parse(text);}
+function observationInflateV1(packed,budget,maximum){const remaining=observationBlockPolicyV1.maximumAggregateOutputBytes-budget.output;if(remaining<1)throw Error("Finite aggregate observation output budget exhausted");const bytes=brotliDecompressSync(packed,{maxOutputLength:Math.min(maximum,remaining)});observationChargeV1(budget,"output",bytes.length);return bytes;}
+const verifiedBlocks=new Map(),VERIFIED_BLOCK_ROWS=OBSERVATION_LIMITS_V1.verifiedBlockRows;let verifiedBlockRows=0;
+/** ⏳️ Remembers a block whose bytes, hash and rows this process verified, by the full identity of its leaf. */
+function rememberVerifiedBlockV1(path,epoch,rows){if(verifiedBlockRows+rows.length>VERIFIED_BLOCK_ROWS){verifiedBlocks.clear();verifiedBlockRows=0;}const prior=verifiedBlocks.get(path);if(prior)verifiedBlockRows-=prior.ids.length;verifiedBlocks.set(path,{epoch,ids:Uint32Array.from(rows,row=>rowTableV1.id(row)),recheck:undefined});verifiedBlockRows+=rows.length;}
+/** 🔍️ A verified block while its leaf still has the identity it was verified with (device, inode, mode, links, size and both nanosecond stamps); any other leaf is read and validated again. */
+function verifiedBlockV1(path){
+ const entry=verifiedBlocks.get(path);if(entry===undefined)return undefined;
+ try{const row=fs.lstatSync(path,{bigint:true}),rows=analysisRowsV1(entry.ids);if(rows!==undefined&&row.isFile()&&!row.isSymbolicLink()&&row.nlink===1n&&observationEpochV1(row)===entry.epoch){entry.recheck??=()=>{requireRepositoryBuildGraphObservationPathV1(path,"read");const actual=fs.lstatSync(path,{bigint:true});if(!actual.isFile()||actual.isSymbolicLink()||observationEpochV1(actual)!==entry.epoch)throw leafChangedV1();};return{epoch:entry.epoch,rows,recheck:entry.recheck};}}catch{}
+ verifiedBlockRows-=entry.ids.length;verifiedBlocks.delete(path);return undefined;
+}
+/** ⌛️ Registers a block that a farm worker of this implementation validated and that the caller verified to hold, by its hash, the text it is named by: its first reader takes the rows of the registration instead of validating the leaf again. A leaf that is not the one regular file the adoption wrote is not registered. */
+export function adoptVerifiedBlockV1(path,text){
+ try{const row=fs.lstatSync(path,{bigint:true});if(!row.isFile()||row.isSymbolicLink()||row.nlink!==1n)return;rememberVerifiedBlockV1(path,observationEpochV1(row),internObservationsV1(JSON.parse(text)));}catch{}
+}
+function readObservationBlockV1(directory,digest,optional=false,budget=observationReadBudgetV1()){const path=inferenceObservationBlockPathV1(directory,digest),verified=verifiedBlockV1(path);if(verified){requireRepositoryBuildGraphObservationPathV1(path,"read");observationChargeV1(budget,"rows",verified.rows.length);return{rows:verified.rows,recheck:verified.recheck,epoch:verified.epoch};}const physical=observationPhysicalReadV1(path,observationBlockPolicyV1.maximumPackedBytes,optional,true,budget,optional);if(!physical||physical.absent)return physical;const bytes=observationInflateV1(physical.bytes,budget,observationBlockPolicyV1.maximumOutputBytes);if(sha256HexV1(bytes)!==digest)throw Error("Inference block content differs from its name");const rows=observationJsonV1(observationUTF8V1.decode(bytes),budget);if(blockRowsValidatorV1.validate(rows).length)throw Error("Closed inference observation block rows required");observationChargeV1(budget,"rows",rows.length);physical.recheck();const shared=internObservationsV1(rows);rememberVerifiedBlockV1(path,physical.epoch,shared);return{rows:shared,recheck:physical.recheck,epoch:physical.epoch};}
+function readInferencePhysicalRecordV1(cachePath,optional=false){const budget=observationReadBudgetV1(),physical=observationPhysicalReadV1(cachePath,observationBlockPolicyV1.maximumHeaderPackedBytes,optional,false,budget);if(!physical)return null;const text=observationUTF8V1.decode(observationInflateV1(physical.bytes,budget,observationBlockPolicyV1.maximumHeaderOutputBytes)),newline=text.indexOf("\n");if(newline<0)throw Error("Complete inference header and result required");const line=text.slice(0,newline),header=observationJsonV1(line,budget);if(headerValidatorV1.validate(header).length)throw Error("Closed inference record header required");const result=text.slice(newline+1);if(header.resultSha256!==sha256HexV1(result))throw Error("Inference result content differs from its header");const value=observationJsonV1(result,budget);observationChargeV1(budget,"rows",header.authorityObservations.length+header.observations.length);const expanded=expandInferenceBlocksV1(dirname(cachePath),header.blocks,budget);header.observations=[...expanded,...internObservationsV1(header.observations)];if(header.observations.length>observationBlockPolicyV1.maximumHeaderRows)throw Error("Finite expanded inference rows required");physical.recheck();return{header,line,value};}
+
+/** 🧱️ The shared fact table of persisted records: the rows of one record are cut into content-defined blocks (a cut follows every row whose key hash hits the mask once a block has its minimum rows), so the long runs of rows that thousands of projects share, such as one command closure, become the same block files and a record header lists block digests instead of repeating the rows. */
+const BLOCK_MINIMUM_ROWS=OBSERVATION_LIMITS_V1.blockMinimumRows,BLOCK_MAXIMUM_ROWS=observationBlockPolicyV1.maximumRows,BLOCK_CUT_MASK=OBSERVATION_LIMITS_V1.blockCutMask;
+const blockRowIdentities=new WeakMap(),blockRowCuts=new WeakMap(),blocksByIdentity=createBoundedCacheV1({name:"observation:blocks-by-identity",maxEntries:OBSERVATION_LIMITS_V1.blockIdentityEntries,maxBytes:OBSERVATION_LIMITS_V1.blockIdentityBytes});
+let blockRowCounter=0;
+const blocksRefused=createBoundedCacheV1({name:"observation:blocks-refused",maxEntries:4096,maxBytes:4096}),BLOCK_REFUSAL_MILLISECONDS=OBSERVATION_LIMITS_V1.blockRefusalMilliseconds;
+const blockRowIdV1=row=>{let id=blockRowIdentities.get(row);if(id===undefined){id=++blockRowCounter;blockRowIdentities.set(row,id);}return id;};
+const blockRowCutV1=row=>{let cut=blockRowCuts.get(row);if(cut===undefined){const key=observationKeyV1(row);let hash=0x811c9dc5;for(let at=0;at<key.length;at++){hash^=key.charCodeAt(at);hash=Math.imul(hash,16777619);}cut=(hash>>>0)&BLOCK_CUT_MASK;blockRowCuts.set(row,cut);}return cut;};
+function partitionObservationsV1(rows){
+ const blocks=[];let current=[],ids=[];
+ for(const row of rows){
+  current.push(row);ids.push(blockRowIdV1(row));
+  if(current.length>=BLOCK_MAXIMUM_ROWS||current.length>=BLOCK_MINIMUM_ROWS&&blockRowCutV1(row)===0){blocks.push({rows:current,key:ids.join(",")});current=[];ids=[];}
+ }
+ if(current.length)blocks.push({rows:current,key:ids.join(",")});
+ return blocks;
+}
+
+/** 🚰️ One full-digest observation block path is shared by readers and publishers. */
+export function inferenceObservationBlockPathV1(directory,digest){const policy=sourceAnalysisSchemaV1.$defs.observationBlock.const;if(typeof directory!=="string"||resolve(directory)!==directory||typeof digest!=="string"||!new RegExp(policy.digestPattern,"u").test(digest))throw Error("Canonical observation block path required");const path=join(directory,policy.directory,digest+policy.extension);if(path.length>policy.maximumPathUnits)throw Error("Observation block path exceeds "+policy.maximumPathUnits+" characters");return path;}
+
+/** 🩹️ Whether a failed read says that a block leaf is absent or damaged (not a block, not its name, not closed rows): the record that names it is a miss and the next publication replaces the leaf; anything else is a fault of the store and propagates. */
+function observationBlockDamagedV1(error){return error?.code==="BUILD_INFERENCE_BLOCK_ABSENT"||/^(?:Z_|ERR_BROTLI|ERR_ZLIB)/u.test(String(error?.code))||error?.name==="ZlibError"||/Decompression failed|Inference block content differs from its name|Inference result content differs from its header|Closed inference observation block rows required|Closed inference record header required|Complete inference header and result required/u.test(String(error?.message));}
+
+/** 💾️ Publishes shared block bytes only after current physical presence, hash and closed rows are validated. */
+function persistInferenceBlockV1(directory,block){
+ requireRepositoryBuildGraphObservationPathV1(directory,"write");let known=blocksByIdentity.get(block.key);if(known===undefined){known={digest:sha256HexV1(observationRowsJsonV1(block.rows))};blocksByIdentity.set(block.key,known);}block.digest=known.digest;const path=inferenceObservationBlockPathV1(directory,known.digest);const present=settleObservationLeafV1(()=>{let found;try{found=readObservationBlockV1(directory,known.digest,true);}catch(error){if(!observationBlockDamagedV1(error))throw error;try{fs.unlinkSync(path);}catch(gone){if(gone?.code!=="ENOENT")throw gone;}found=readObservationBlockV1(directory,known.digest,true);}if(found&&!found.absent)found.recheck();return found;});if(present&&!present.absent)return true;if((blocksRefused.get(directory)??0)>Date.now())return false;const packed=brotliCompressSync(Buffer.from(observationRowsJsonV1(block.rows)),{params:{[zlibConstants.BROTLI_PARAM_QUALITY]:5,[zlibConstants.BROTLI_PARAM_LGWIN]:22}}),temporary=path+"."+process.pid+"."+Date.now()+".tmp";if(temporary.length>observationBlockPolicyV1.maximumPathUnits)throw Error("Observation block staging path exceeds256 characters");if(!withBuildGraphOptionalPublicationV1(path,{peakBytes:packed.byteLength,retainedDeltaBytes:packed.byteLength},()=>{present.recheck();let created;if(present.missing===dirname(path)){fs.mkdirSync(dirname(path));const row=fs.lstatSync(dirname(path),{bigint:true}),parent=fs.lstatSync(dirname(dirname(path)),{bigint:true});if(!row.isDirectory()||row.isSymbolicLink()||row.dev!==parent.dev)throw Error("Original created block directory required");created=[row.dev,row.ino,row.mode].join(":");}else if(present.missing!==path)throw Error("Only exact block directory creation admitted");const fence=()=>{present.parentFence();if(created!==undefined){const row=fs.lstatSync(dirname(path),{bigint:true});if(!row.isDirectory()||row.isSymbolicLink()||[row.dev,row.ino,row.mode].join(":")!==created)throw Error("Created block directory identity changed");}};fence();publishFileDurablySyncV1(temporary,path,packed);fence();})){blocksRefused.set(directory,Date.now()+BLOCK_REFUSAL_MILLISECONDS);return false;}try{settleObservationLeafV1(()=>readObservationBlockV1(directory,known.digest).recheck());}catch(error){if(!observationBlockDamagedV1(error))throw error;try{fs.unlinkSync(path);}catch(gone){if(gone?.code!=="ENOENT")throw gone;}blocksRefused.set(directory,Date.now()+BLOCK_REFUSAL_MILLISECONDS);return false;}return true;
+}
+
+/** 💬️ The header text of a record: blocks first (written before the record that names them), rows no block could hold inline. */
+function inferenceHeaderTextV1(digest,resultSha256,authority,rows,directory){
+ const blocks=[],inline=[];
+ for(const block of partitionObservationsV1(rows)){if(persistInferenceBlockV1(directory,block))blocks.push(block.digest);else for(const row of block.rows)inline.push(row);}
+ return `{"digest":${JSON.stringify(digest)},"resultSha256":"${resultSha256}","authorityObservations":${observationRowsJsonV1(authority)},"blocks":${JSON.stringify(blocks)},"observations":${observationRowsJsonV1(inline)}}`;
+}
+
+/** 💤️ Revalidates every named block physically and retains all identities through the final delivery fence. */
+function expandInferenceBlocksV1(directory,digests,budget=observationReadBudgetV1()){const rows=[],proofs=[];if(!Array.isArray(digests)||digests.length>observationBlockPolicyV1.maximumBlocks)throw Error("Finite inference block roster required");for(const digest of digests){const block=readObservationBlockV1(directory,digest,false,budget);proofs.push(block.recheck);for(const row of block.rows)rows.push(row);if(rows.length>observationBlockPolicyV1.maximumHeaderRows)throw Error("Finite expanded inference rows required");}for(const recheck of proofs)recheck();return rows;}
+
+/** 🔚️ Reads a physically authenticated closed inference header and all named blocks under actual reader custody. */
+export function readInferenceHeaderV1(cachePath){return readInferencePhysicalRecordV1(cachePath).header;}
+
+/** 🧹️ The block digests one record header names, read without expanding any block; a header that is not a closed inference header refuses, because liveness cannot then be proven. */
+function inferenceHeaderBlocksV1(file){
+ const stat=fs.lstatSync(file,{bigint:true});if(!stat.isFile()||stat.isSymbolicLink()||stat.nlink!==1n||stat.size<1n||stat.size>BigInt(observationBlockPolicyV1.maximumHeaderPackedBytes))throw refuseBuildV1("invalid","observation.inference-header-unbounded",{file});
+ const text=brotliDecompressSync(fs.readFileSync(file),{maxOutputLength:observationBlockPolicyV1.maximumHeaderOutputBytes}).toString("utf8"),newline=text.indexOf("\n");if(newline<0)throw refuseBuildV1("invalid","observation.inference-header-incomplete",{file});
+ const header=JSON.parse(text.slice(0,newline));if(headerValidatorV1.validate(header).length)throw refuseBuildV1("invalid","observation.inference-record-header-open",{file});
+ return header.blocks;
+}
+
+/** 🗑️ Removes the observation blocks of one record directory that no record header names any more: every re-inference writes a new header and new blocks, the superseded blocks are never read again, and without this they accumulate until the finite inventory of the graph store is exceeded and no graph command can run. A block is live when a header of `directory` names it; a block younger than `graceMilliseconds` is kept (its header may still be written); a header that cannot be read as a closed header aborts before anything is removed. The caller holds the writer custody of the record namespace, so no header appears meanwhile. `dryRun` only counts; below `max(minimumBlocks, blocksPerHeader × headers)` blocks nothing is read and the sweep reports `skipped`. Reports progress and stops at the next checkpoint when `signal` aborts. */
+export async function sweepSupersededObservationBlocksV1(directory,{headerPattern=/^[a-f0-9]{24}\.json$/u,graceMilliseconds=OBSERVATION_LIMITS_V1.sweepGraceMilliseconds,now=Date.now(),dryRun=false,minimumBlocks=0,blocksPerHeader=0,signal,progress}={}){
+ const blocks=join(directory,observationBlockPolicyV1.directory),digest=new RegExp(observationBlockPolicyV1.digestPattern,"u"),leaf=name=>name.endsWith(observationBlockPolicyV1.extension)&&digest.test(name.slice(0,-observationBlockPolicyV1.extension.length));
+ let names;try{names=fs.readdirSync(blocks);}catch(error){if(error?.code==="ENOENT")return{headers:0,live:0,blocks:0,removed:0,bytes:0,kept:0};throw error;}
+ const headers=fs.readdirSync(directory).filter(name=>headerPattern.test(name)).sort(),live=new Set();
+ if(names.length<=Math.max(minimumBlocks,blocksPerHeader*headers.length))return{headers:headers.length,live:0,blocks:names.length,removed:0,bytes:0,kept:names.length,skipped:true};
+ for(let at=0;at<headers.length;at++){signal?.throwIfAborted();for(const block of inferenceHeaderBlocksV1(join(directory,headers[at])))live.add(block);if(at%OBSERVATION_LIMITS_V1.sweepHeaderProgressRows===OBSERVATION_LIMITS_V1.sweepHeaderProgressRows-1){await progress?.({phase:"sweep-headers",done:at+1,total:headers.length});await new Promise(resolve=>setImmediate(resolve));}}
+ let removed=0,bytes=0,kept=0;const total=names.length;
+ for(let at=0;at<names.length;at++){
+  signal?.throwIfAborted();const name=names[at];
+  if(leaf(name)){
+   if(live.has(name.slice(0,-observationBlockPolicyV1.extension.length)))kept++;
+   else{
+    const path=join(blocks,name);let stat;try{stat=fs.lstatSync(path,{bigint:true});}catch(error){if(error?.code==="ENOENT")continue;throw error;}
+    if(!stat.isFile()||stat.isSymbolicLink()||stat.nlink!==1n||now-Number(stat.mtimeNs/1000000n)<graceMilliseconds)kept++;
+    else{if(!dryRun)try{fs.unlinkSync(path);}catch(error){if(error?.code!=="ENOENT")throw error;continue;}removed++;bytes+=Number(stat.size);}
+   }
+  }
+  if(at%OBSERVATION_LIMITS_V1.sweepBlockProgressRows===OBSERVATION_LIMITS_V1.sweepBlockProgressRows-1){await progress?.({phase:"sweep-blocks",done:at+1,total});await new Promise(resolve=>setImmediate(resolve));}
+ }
+ await progress?.({phase:"sweep-blocks",done:total,total});
+ return{headers:headers.length,live:live.size,blocks:total,removed,bytes,kept};
+}
+
+/**
+ * 👯️ {@link current} without blocking: every recorded fact re-checked through the libuv pool, `limit` at a time; false at the first stale
+ * fact (with `exhaustive` every row is verified and each stale one is reported to `onStale`, so the caller learns the complete set of changed rows of one pass). The worker limit is a positive safe integer. Existence, type and listing facts about entries of a directory in `stableDirectories` (absolute paths whose entry sets are proven
+ * unchanged, e.g. by unchanged directory stamps) hold without a probe: an entry can only appear, vanish or change type by changing its parent.
+ * Existence follows symbolic links, so a present entry is probed for every entry in `symlinks`, and for every entry when `symlinks` is `true`; an absent entry of a stable directory cannot appear without changing that directory.
+ */
+export function observationsHold(observations, limit = OBSERVATION_LIMITS_V1.holdNestingLimit, stableDirectories = new Set(), symlinks = new Set(),signal,onStale,onVerified,exhaustive=false) {
+  return inferenceValidationScopes.run(inferenceValidationScopes.getStore() ?? new Map(), () => observationsHoldInRoundV1(observations, limit, stableDirectories, symlinks, signal, onStale,onVerified,undefined,exhaustive));
+}
+
+const asyncAdmissionChecksV1=new WeakMap();
+
+/** 🪧️ Shares exact observation verdicts and followed path types across owner admissions in this settle pass. The seal always verifies outside the pass. */
+export function observationsHoldWithinRoundV1(observations,limit,signal,onStale,onVerified){
+ return withObservationRoundV1(()=>{
+  const round=inferenceValidationScopes.getStore();
+  let checks=asyncAdmissionChecksV1.get(round);
+  if(checks===undefined){checks={rows:createRowRebaserV1(),verdicts:new WeakMap(),metadata:new Map()};asyncAdmissionChecksV1.set(round,checks);}
+  return observationsHoldInRoundV1(observations,limit,new Set(),new Set(),signal,onStale,onVerified,checks);
+ });
+}
+
+async function observationsHoldInRoundV1(observations, limit, stableDirectories, symlinks, signal, onStale,onVerified,sharedChecks,exhaustive=false) {
+  signal?.throwIfAborted();
+  if(!Number.isSafeInteger(limit)||limit<1)throw new RangeError("Positive observation worker limit required");
+  observations = sharedChecks===undefined?rebaseRowsV1(observations):sharedChecks.rows(observations);
+  const verdicts=sharedChecks?.verdicts,metadata=sharedChecks?.metadata;
+  await settleClosureRowsV1(observations);signal?.throwIfAborted();
+  const conflict=firstObservationConflictV1(observations);
+  if(conflict!==undefined){onStale?.(conflict.row);if(!exhaustive)return false;}
+  let next = 0, stale = conflict!==undefined;
+  const listed = new Set();
+  for (const row of observations) if (row.kind === "readdir") listed.add(row.path);
+  const check = async ({ kind, path, fact }) => {
+    if (machineLocalRowV1(kind, path)) return true;
+    const loadedAnswer = loadedImplementationAnswerV1(kind, path, fact);
+    if (loadedAnswer !== undefined) return loadedAnswer;
+    if (listed.size !== 0 && (kind === "lstat" || kind === "exists" || kind === "fileExists" || kind === "directoryExists") && listedChildHoldsV1(kind, path, fact, listed)) return true;
+    if (stableDirectories.size !== 0) {
+      const parent = path.slice(0, Math.max(path.lastIndexOf("/"), path.lastIndexOf("\\"))), absent = fact === false;
+      if (kind === "lstat" && stableDirectories.has(parent) || kind === "exists" && stableDirectories.has(parent) && (absent || symlinks !== true && !symlinks.has(path)) || (kind === "fileExists" || kind === "directoryExists") && absent && stableDirectories.has(parent) || (kind === "readdir" || kind === "readdirNames") && stableDirectories.has(path)) return true;
+    }
+    if (metadata !== undefined && (kind === "stat" || kind === "fileExists" || kind === "directoryExists")) {
+      if (stableFactHoldsV1(kind, path, fact)) return true;
+      let type = metadata.get(path);
+      if (type === undefined) {
+        type = facts.stat(path);
+        if (metadata.size >= OBSERVATION_LIMITS_V1.holdMetadataPaths) metadata.clear();
+        metadata.set(path, type);
+      }
+      return (kind === "stat" ? type : type === (kind === "fileExists" ? "file" : "directory")) === fact;
+    }
+    if (kind === "file") {
+      if (fact.error !== undefined) return fileFactHolds(path, fact);
+      let stamp;
+      try { stamp = (observedWorlds.getStore() ? world.statSync(path) : await statAsync(path)); } catch { return false; }
+      if (stamp.size !== fact.size) return false;
+      if (stamp.mtimeMs === fact.mtimeMs && stamp.ctimeMs === fact.ctimeMs && stamp.ino === fact.ino) return true;
+      try {
+        if(observedWorlds.getStore())return sha256HexV1(world.readFileSync(path))===fact.sha256;
+        return await fileShaAsyncV1(path,stamp,signal)===fact.sha256;
+      } catch { signal?.throwIfAborted();return false; }
+    }
+    if (kind === "exists") { try { (observedWorlds.getStore() ? world.statSync(path) : await statAsync(path)); return fact === true; } catch { return fact === false; } }
+    if(kind==="analysis")return sourceAnalysisFactHoldsV1(path,fact);
+    return typeof facts[kind] === "function" && recordedFactHoldsV1(kind, path, fact);
+  };
+  let since = performance.now();
+  const workers=Math.min(limit,observations.length),stride=OBSERVATION_LIMITS_V1.holdProgressRows;
+  const positions=onVerified!==undefined&&observations.length>=stride?Array.from({length:workers},()=>Infinity):undefined;
+  let successful=0,published=0;
+  const publish=()=>{
+    const verified=Math.floor(positions.reduce((first,index)=>Math.min(first,index),next)/stride)*stride;
+    if(verified>published){published=verified;onVerified(verified);}
+  };
+  const worker=async(_slot,index)=>{
+    while((exhaustive||!stale)&&next<observations.length){
+      signal?.throwIfAborted();
+      if(performance.now()-since>=OBSERVATION_LIMITS_V1.yieldMilliseconds){
+        since=performance.now();await new Promise(resolve=>setImmediate(resolve));
+        if(!exhaustive&&stale||next>=observations.length)break;
+      }
+      if(positions!==undefined)positions[index]=next;
+      const row=observations[next++];
+      let verdict=verdicts?.get(row);
+      if(verdict===undefined){
+        const pending=check(row);
+        verdicts?.set(row,pending);
+        verdict=await pending;
+        verdicts?.set(row,verdict);
+      }else if(typeof verdict!=="boolean")verdict=await verdict;
+      if(!verdict){stale=true;onStale?.(row);continue;}
+      if(positions!==undefined&&!stale){
+        signal?.throwIfAborted();positions[index]=Infinity;
+        if(++successful%stride===0)publish();
+      }
+    }
+  };
+  await Promise.all(Array.from({length:workers},worker));
+  signal?.throwIfAborted();
+  if(positions!==undefined&&!stale)publish();
+  return !stale;
+}

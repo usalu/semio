@@ -1,4 +1,4 @@
-import {PLAYWRIGHT_MODULE_SPECIFIER} from "../../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🟦️.ts";
+import { launchBrowserV1 } from "../../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🟦️.ts";
 import {ensureRepositoryBrowserPathV1} from "../../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🧰️preparation/🟦️.ts";
 /** 🌉️ The scale fixture artifacts, the linked session engines and the owned parity pixel comparison of the ticket-owned browser host staging suite. */
 import { createTestKit, type TestDependencies, type TestSource } from "../🧰️test-kit/🟦️.ts";
@@ -224,8 +224,7 @@ export async function registerFixtureAndPixelTests(vitest: NonNullable<ImportMet
 
     itLong("preserves fixed CSS color, alpha, and diagnostic marker pixels through Canvas PNGs", async () => {
       ensureRepositoryBrowserPathV1(repoRoot,process.env);
-      const { chromium }: typeof import("playwright") = await import(PLAYWRIGHT_MODULE_SPECIFIER);
-      const browser = await chromium.launch({ headless: true });
+      const browser = await launchBrowserV1({ headless: true });
       try {
         const page = await browser.newPage({ viewport: { width: 4, height: 3 } });
         await page.setContent(

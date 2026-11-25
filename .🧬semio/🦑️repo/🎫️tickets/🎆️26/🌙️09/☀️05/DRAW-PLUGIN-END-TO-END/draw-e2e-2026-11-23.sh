@@ -11,6 +11,8 @@ MANIFEST="🌎️hub/🧩️compositions/🖍️draw/🧩️component/📦️pac
 BROWSER="✏️s/🔌️plugins/🖍️draw/📦️packages/🟦️typescript/📜️script.ts"
 stage() { name="$1"; shift; echo "[DEBUG] draw e2e $name"; DRAW_NATIVE_BUILD_MODE=prototype repo tools exec --light bun -- "$T/draw-native-dev.ts" "$G" "$name-$RUN" "$@"; }
 stage component "$DRIVER" component --manifest "$MANIFEST"
+echo "[DEBUG] draw e2e support"
+stage support "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📜️script.ts" support
 stage prepare "$DEV" prepare draw react prototype
 stage activate "$DEV" activate draw react prototype
 for locale in en de; do

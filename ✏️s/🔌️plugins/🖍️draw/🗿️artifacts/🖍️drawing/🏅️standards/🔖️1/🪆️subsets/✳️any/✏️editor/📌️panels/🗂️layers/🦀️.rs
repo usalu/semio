@@ -13,7 +13,7 @@
 
 use crate::terminology::DrawingPlayLabels;
 use crate::{drawing_play_action, ui_value_map, ui_value_text, DRAWING_INTERACTION_DOMAIN, DRAWING_INTERACTION_GRANULARITY, DRAWING_PLAY_CONTROLLER_ID};
-use semio_s_artifact_draw_drawing_model::{drawing_play_boolean_child_row_id, drawing_play_layers_tree_row_id, find_drawing_layer, layer_base};
+use semio_s_artifact_draw_drawing_model::{drawing_play_boolean_child_row_id, find_drawing_layer, layer_base};
 use semio_s_artifact_draw_drawing_model::DrawingLayerNode;
 use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 use semio_plugin::tree_item;
@@ -103,14 +103,14 @@ pub fn layers_rows<'a>(document: &'a DrawingSnapshot, labels: &DrawingPlayLabels
 
 /// 🕹️ No per-row selection `action` and no argument map: the tree carries the ONE `interactionSelect`
 /// binding `.interaction_domain(...)?` stamps and this row declares only its `granularity`, keyed by
-/// its own row id — never declare a select action here
+/// the layer's own id, the identity `drawing_interaction_topology` knows — never declare a select action here
 /// (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
 ///
 /// 🪟️ Recursive: a `Group` nests layer rows and a `Boolean` nests operand rows, and BOTH are windowed
 /// containers of their own at every depth, so an expanded group costs the first paint one slice.
 fn layer_tree_item(windows: &TreeWindows<'_>, doc: &DrawingSnapshot, layer: &DrawingLayerNode) -> UiAssemblyResult<BuiltNode> {
-    let row_id = drawing_play_layers_tree_row_id(layer);
     let base = layer_base(layer);
+    let row_id = base.id.to_string();
     let description = match layer {
         DrawingLayerNode::Boolean(boolean) => boolean.operation.clone(),
         _ => base.blend_mode.clone(),

@@ -105,7 +105,6 @@
         "title_font_size",
         "title_line_height",
         "title_max_width",
-        "inset",
         "path_inset",
         "border_width"
       ],
@@ -143,10 +142,6 @@
           "exclusiveMinimum": 0
         },
         "title_max_width": {
-          "type": "number",
-          "exclusiveMinimum": 0
-        },
-        "inset": {
           "type": "number",
           "exclusiveMinimum": 0
         },

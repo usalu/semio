@@ -13,15 +13,69 @@
    "de": "Ein ausgewachsener Gewöhnlicher Flieder (Syringa vulgaris) aus sieben aufrechten Ausläuferstämmen, die sich zu einer etwa 4 m hohen Vase öffnen; das Laub aus herzförmigen Blättern füllt die oberen zwei Drittel, und im Mai stehen an jeder Triebspitze aufrechte kegelförmige Rispen."
   },
   "tags": [
-   "shrub",
-   "deciduous",
-   "flowering-shrub",
-   "multi-stem",
-   "garden",
-   "panicles",
-   "wind",
-   "rain",
-   "transpiration"
+   {
+    "id": "shrub",
+    "title": {
+     "en": "shrub",
+     "de": "Strauch"
+    }
+   },
+   {
+    "id": "deciduous",
+    "title": {
+     "en": "deciduous",
+     "de": "laubabwerfend"
+    }
+   },
+   {
+    "id": "flowering-shrub",
+    "title": {
+     "en": "flowering shrub",
+     "de": "Blütenstrauch"
+    }
+   },
+   {
+    "id": "multi-stem",
+    "title": {
+     "en": "multi-stem",
+     "de": "mehrstämmig"
+    }
+   },
+   {
+    "id": "garden",
+    "title": {
+     "en": "garden",
+     "de": "Garten"
+    }
+   },
+   {
+    "id": "panicles",
+    "title": {
+     "en": "panicles",
+     "de": "Rispen"
+    }
+   },
+   {
+    "id": "wind",
+    "title": {
+     "en": "wind",
+     "de": "Wind"
+    }
+   },
+   {
+    "id": "rain",
+    "title": {
+     "en": "rain",
+     "de": "Regen"
+    }
+   },
+   {
+    "id": "transpiration",
+    "title": {
+     "en": "transpiration",
+     "de": "Transpiration"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage plant collection worker PW-12",
@@ -51204,100 +51258,100 @@
        "closed": true,
        "points": [
         [
-         0.24,
+         0.6,
          0.0
         ],
         [
-         0.2318,
-         0.0621
+         0.5796,
+         0.1553
         ],
         [
-         0.2078,
-         0.12
+         0.5196,
+         0.3
         ],
         [
-         0.1697,
-         0.1697
+         0.4243,
+         0.4243
         ],
         [
-         0.12,
-         0.2078
+         0.3,
+         0.5196
         ],
         [
-         0.0621,
-         0.2318
+         0.1553,
+         0.5796
         ],
         [
          0.0,
-         0.24
+         0.6
         ],
         [
-         -0.0621,
-         0.2318
+         -0.1553,
+         0.5796
         ],
         [
-         -0.12,
-         0.2078
+         -0.3,
+         0.5196
         ],
         [
-         -0.1697,
-         0.1697
+         -0.4243,
+         0.4243
         ],
         [
-         -0.2078,
-         0.12
+         -0.5196,
+         0.3
         ],
         [
-         -0.2318,
-         0.0621
+         -0.5796,
+         0.1553
         ],
         [
-         -0.24,
+         -0.6,
          0.0
         ],
         [
-         -0.2318,
-         -0.0621
+         -0.5796,
+         -0.1553
         ],
         [
-         -0.2078,
-         -0.12
+         -0.5196,
+         -0.3
         ],
         [
-         -0.1697,
-         -0.1697
+         -0.4243,
+         -0.4243
         ],
         [
-         -0.12,
-         -0.2078
+         -0.3,
+         -0.5196
         ],
         [
-         -0.0621,
-         -0.2318
+         -0.1553,
+         -0.5796
         ],
         [
          0.0,
-         -0.24
+         -0.6
         ],
         [
-         0.0621,
-         -0.2318
+         0.1553,
+         -0.5796
         ],
         [
-         0.12,
-         -0.2078
+         0.3,
+         -0.5196
         ],
         [
-         0.1697,
-         -0.1697
+         0.4243,
+         -0.4243
         ],
         [
-         0.2078,
-         -0.12
+         0.5196,
+         -0.3
         ],
         [
-         0.2318,
-         -0.0621
+         0.5796,
+         -0.1553
         ]
        ]
       },

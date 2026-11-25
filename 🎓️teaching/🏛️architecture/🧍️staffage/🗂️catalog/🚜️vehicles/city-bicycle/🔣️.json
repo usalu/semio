@@ -13,13 +13,55 @@
    "de": "Ein Holland-Stadtrad ohne Fahrer mit tiefem Einstieg, 28-Zoll-Rädern, Kettenkasten, Dynamobeleuchtung und Zweibeinständer: rollende Räder, drehende Kurbeln mit waagerechten Pedalen, Lenkung, klappbarer Ständer, Wärme von Nabenbremse und Antrieb."
   },
   "tags": [
-   "vehicle",
-   "bicycle",
-   "city",
-   "dutch",
-   "step-through",
-   "wheeled",
-   "human-powered"
+   {
+    "id": "vehicle",
+    "title": {
+     "en": "vehicle",
+     "de": "Fahrzeug"
+    }
+   },
+   {
+    "id": "bicycle",
+    "title": {
+     "en": "bicycle",
+     "de": "Fahrrad"
+    }
+   },
+   {
+    "id": "city",
+    "title": {
+     "en": "city",
+     "de": "Stadt"
+    }
+   },
+   {
+    "id": "dutch",
+    "title": {
+     "en": "dutch",
+     "de": "niederländisch"
+    }
+   },
+   {
+    "id": "step-through",
+    "title": {
+     "en": "step through",
+     "de": "Tiefeinsteiger"
+    }
+   },
+   {
+    "id": "wheeled",
+    "title": {
+     "en": "wheeled",
+     "de": "rollend"
+    }
+   },
+   {
+    "id": "human-powered",
+    "title": {
+     "en": "human powered",
+     "de": "muskelbetrieben"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content worker NW-VE (vehicles)",
@@ -384,20 +426,38 @@
     "frictionCoefficient": 0.8
    },
    {
-    "id": "stand-foot",
+    "id": "stand-foot-left",
     "bone": "stand",
     "x": 0.232,
     "y": 0,
     "kind": "contact",
     "title": {
-     "en": "Stand feet",
-     "de": "Ständerfüße"
+     "en": "Left stand foot",
+     "de": "Linker Ständerfuß"
     },
     "support": "contact",
     "normalDeg": 90,
     "footprintLengthM": 0.03,
-    "footprintWidthM": 0.2,
-    "frictionCoefficient": 0.6
+    "footprintWidthM": 0.022,
+    "frictionCoefficient": 0.6,
+    "z": 0.09
+   },
+   {
+    "id": "stand-foot-right",
+    "bone": "stand",
+    "x": 0.232,
+    "y": 0,
+    "kind": "contact",
+    "title": {
+     "en": "Right stand foot",
+     "de": "Rechter Ständerfuß"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.03,
+    "footprintWidthM": 0.022,
+    "frictionCoefficient": 0.6,
+    "z": -0.09
    },
    {
     "id": "rack-deck",
@@ -31342,7 +31402,8 @@
     "ground": "auto",
     "contacts": [
      "contact-f",
-     "stand-foot"
+     "stand-foot-left",
+     "stand-foot-right"
     ],
     "thermal": {
      "operating": {
@@ -32048,7 +32109,8 @@
     "ground": "auto",
     "contacts": [
      "contact-f",
-     "stand-foot"
+     "stand-foot-left",
+     "stand-foot-right"
     ],
     "thermal": {
      "operating": {
@@ -32332,7 +32394,12 @@
       "toS": 2.6
      },
      {
-      "anchor": "stand-foot",
+      "anchor": "stand-foot-left",
+      "fromS": 2.6,
+      "toS": 5
+     },
+     {
+      "anchor": "stand-foot-right",
       "fromS": 2.6,
       "toS": 5
      }
@@ -32370,10 +32437,19 @@
       "t": 2.6,
       "kind": "contact-on",
       "title": {
-       "en": "Stand foot touches down",
-       "de": "Ständerfuß setzt auf"
+       "en": "Left stand foot touches down",
+       "de": "Linker Ständerfuß setzt auf"
       },
-      "target": "stand-foot"
+      "target": "stand-foot-left"
+     },
+     {
+      "t": 2.6,
+      "kind": "contact-on",
+      "title": {
+       "en": "Right stand foot touches down",
+       "de": "Rechter Ständerfuß setzt auf"
+      },
+      "target": "stand-foot-right"
      },
      {
       "t": 2.6,

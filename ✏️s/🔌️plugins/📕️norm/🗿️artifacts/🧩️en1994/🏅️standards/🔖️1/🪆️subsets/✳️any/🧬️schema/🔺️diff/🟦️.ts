@@ -30,7 +30,7 @@ export interface En1994Diff {
   /** @state artifact */
   reliabilityClass?: ("RC1" | "RC2" | "RC3") | null;
   /** @state artifact */
-  cases?: CaseRowDelta;
+  cases: CaseRowDelta;
 }
 
 export interface En1994BeamsActionsInserted {
@@ -485,7 +485,7 @@ export interface CaseRowDelta {
   modified: CaseRowModification[];
 }
 
-export const parseEn1994Diff: NormWireReader<En1994Diff> = normWireObject<En1994Diff>({ annex: normWireOptional(normWireNullable(parseAnnexChoice)), structureKind: normWireOptional(normWireNullable(parseStructureKind)), steelFYPa: normWireOptional(normWireNullable(normWireNumber)), beams: normWireOptional(normWireNullable(normWireRef(() => parseEn1994BeamsRows))), columns: normWireOptional(normWireNullable(normWireRef(() => parseEn1994ColumnsRows))), slabs: normWireOptional(normWireNullable(normWireRef(() => parseEn1994SlabsRows))), placements: normWireOptional(normWireNullable(normWireRef(() => parseEn1994PlacementsRows))), studs: normWireOptional(normWireNullable(normWireRef(() => parseEn1994StudsRows))), fireRating: normWireOptional(normWireNullable(parseFireRating)), insulationThicknessM: normWireOptional(normWireNullable(normWireNumber)), fatigueDetail: normWireOptional(normWireNullable(parseFatigueDetail)), reliabilityClass: normWireOptional(normWireNullable(normWireLiteral("RC1", "RC2", "RC3"))), cases: normWireOptional(normWireRef(() => parseCaseRowDelta)) });
+export const parseEn1994Diff: NormWireReader<En1994Diff> = normWireObject<En1994Diff>({ annex: normWireOptional(normWireNullable(parseAnnexChoice)), structureKind: normWireOptional(normWireNullable(parseStructureKind)), steelFYPa: normWireOptional(normWireNullable(normWireNumber)), beams: normWireOptional(normWireNullable(normWireRef(() => parseEn1994BeamsRows))), columns: normWireOptional(normWireNullable(normWireRef(() => parseEn1994ColumnsRows))), slabs: normWireOptional(normWireNullable(normWireRef(() => parseEn1994SlabsRows))), placements: normWireOptional(normWireNullable(normWireRef(() => parseEn1994PlacementsRows))), studs: normWireOptional(normWireNullable(normWireRef(() => parseEn1994StudsRows))), fireRating: normWireOptional(normWireNullable(parseFireRating)), insulationThicknessM: normWireOptional(normWireNullable(normWireNumber)), fatigueDetail: normWireOptional(normWireNullable(parseFatigueDetail)), reliabilityClass: normWireOptional(normWireNullable(normWireLiteral("RC1", "RC2", "RC3"))), cases: normWireRequired(normWireRef(() => parseCaseRowDelta)) });
 export const parseEn1994BeamsActionsInserted: NormWireReader<En1994BeamsActionsInserted> = normWireObject<En1994BeamsActionsInserted>({ index: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), row: normWireRequired(parseCharacteristicAction) });
 export const parseEn1994BeamsActionsModified: NormWireReader<En1994BeamsActionsModified> = normWireObject<En1994BeamsActionsModified>({ id: normWireRequired(normWireString), patch: normWireRequired(normWireRef(() => parseEn1994BeamsActionsPatch)) });
 export const parseEn1994BeamsActionsMoved: NormWireReader<En1994BeamsActionsMoved> = normWireObject<En1994BeamsActionsMoved>({ id: normWireRequired(normWireString), from: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), to: normWireRequired(normWireRange(normWireInteger, {"minimum":0})) });

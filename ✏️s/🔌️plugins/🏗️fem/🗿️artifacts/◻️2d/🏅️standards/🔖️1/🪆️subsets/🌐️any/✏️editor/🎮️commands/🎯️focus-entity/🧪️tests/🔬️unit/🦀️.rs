@@ -52,3 +52,19 @@ async fn focus_entity_refuses_an_unknown_entity_and_an_unaddressed_window() {
     assert!(handle_window(&FocusEntity { id: "ridge".into() }, &view, &cfg, &ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).is_err());
     assert!(handle(&FocusEntity { id: "ridge".into() }, &view, &cfg).is_err(), "the doc-scoped route always refuses");
 }
+
+/// 🎯️ LAW: a panel button has no window of its own, so Focus addresses the pane the user last touched
+/// and re-centres that pane's camera on the entity, instead of faulting with "window-required".
+#[semio_framework_async_macros::async_test]
+async fn focus_entity_from_a_panel_recentres_the_focused_pane() {
+    let doc = demo();
+    let history = HistoryView::empty();
+    let view = ArtifactView::new(&*doc, &history);
+    let config = NoConfig::default();
+    let cfg = ConfigView { snapshot: &config, window: None };
+    let panel = ViewModel { window_id: None, focused_window_id: Some("w".into()), ..addressed(model_window::WINDOW_KIND_ID) };
+    let emit = handle_window(&FocusEntity { id: "scope:1:7:element2:e3".into() }, &view, &cfg, &panel).expect("panel focus");
+    assert_eq!(emit.window_config_mutations.len(), 1);
+    assert_eq!(emit.window_config_mutations[0].window_id(), "w");
+    assert_eq!(emit.window_config_mutations[0].window_kind_id(), model_window::WINDOW_KIND_ID);
+}

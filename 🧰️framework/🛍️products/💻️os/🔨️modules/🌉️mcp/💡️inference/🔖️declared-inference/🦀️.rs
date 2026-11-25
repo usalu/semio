@@ -106,6 +106,37 @@ fn installed_descriptors_for_contributions(workspace: &HeadlessWorkspace) -> Res
 
 /// 💡️ Real, static, plugin-agnostic discovery: the UNION of every registered plugin's own declared [Design notes](README.md#source-notes-123).
 pub fn declared_inferences_for_workspace(workspace: &HeadlessWorkspace) -> Result<Vec<DeclaredInference>, GatewayError> {
+    let Some(key) = roster_cache_key(workspace) else {
+        return compute_declared_inferences_for_workspace(workspace);
+    };
+    if let Some(roster) = roster_cache().lock().expect("roster cache lock poisoned").get(&key) {
+        return Ok(roster.as_ref().clone());
+    }
+    let roster = compute_declared_inferences_for_workspace(workspace)?;
+    roster_cache().lock().expect("roster cache lock poisoned").insert(key, Arc::new(roster.clone()));
+    Ok(roster)
+}
+
+/// 🗄️ The folder roster is a pure function of the compiled catalog (every descriptor it reads is that catalog's own), so it is
+/// computed once per catalog hash instead of re-reading and decoding every descriptor on each call. A hub workspace and a
+/// test-injected descriptor set are never cached: their descriptors are not named by the hash.
+fn roster_cache_key(workspace: &HeadlessWorkspace) -> Option<String> {
+    #[cfg(test)]
+    if workspace.test_discovery.is_some() {
+        return None;
+    }
+    match workspace.origin() {
+        WorkspaceOrigin::Folder { .. } => workspace.discovery_catalog().ok().map(|catalog| catalog.hash.clone()),
+        WorkspaceOrigin::Hub { .. } => None,
+    }
+}
+
+fn roster_cache() -> &'static std::sync::Mutex<std::collections::HashMap<String, Arc<Vec<DeclaredInference>>>> {
+    static CACHE: std::sync::OnceLock<std::sync::Mutex<std::collections::HashMap<String, Arc<Vec<DeclaredInference>>>>> = std::sync::OnceLock::new();
+    CACHE.get_or_init(Default::default)
+}
+
+fn compute_declared_inferences_for_workspace(workspace: &HeadlessWorkspace) -> Result<Vec<DeclaredInference>, GatewayError> {
     let descriptors = workspace.discovery_descriptors()?;
     if descriptors.is_empty() {
         return Err(GatewayError::new(GatewayErrorCode::PluginUnavailable, "no plugin-owned capability is registered in this workspace's catalog — nothing to read a declared inference roster from").retryable());

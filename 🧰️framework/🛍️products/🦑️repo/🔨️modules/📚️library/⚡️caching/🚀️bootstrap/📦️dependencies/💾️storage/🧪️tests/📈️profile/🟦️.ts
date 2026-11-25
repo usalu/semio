@@ -32,7 +32,7 @@ test("every Windows native symbol of the relative layer is counted and the produ
  expect(layer).toContain("symbols:timedArtifactRelativeSymbolsV1(library.symbols");
  expect(layer).toContain('timedArtifactRelativeBodyV1("js:facts"');
  const from=source.indexOf("await publishJavascriptDependencyPreservingSourceDescriptorV1(binding"),to=source.indexOf("await verifyReady();const finals"),loop=source.slice(from,to);
- expect(loop).toContain('purpose:"binding-profile"');expect(loop).toContain("native:takeArtifactRelativeNativeProfileV1()");
+ expect(loop).toContain('purpose:"binding-profile"');expect(loop).toContain("native:javascriptDependencyProfileTopV1(takeArtifactRelativeNativeProfileV1())");expect(source).toContain("resumed=resumeJavascriptDependencyPublishedBindingV1(binding,previous");
  expect(source).toContain('purpose:"payload-profile"');expect(layer).toContain("fstatSync as fstatSyncRaw");expect(layer).toContain("const calls=timedArtifactRelativeSymbolsV1(library.symbols");
- for(const field of["wallMs","snapshotMs","publishMs","fenceMs","changed"])expect(loop).toContain(field+":");
+ for(const field of["wallMs","snapshotMs","publishMs","fenceMs","changed","resumed"])expect(loop).toContain(field+":");
 });

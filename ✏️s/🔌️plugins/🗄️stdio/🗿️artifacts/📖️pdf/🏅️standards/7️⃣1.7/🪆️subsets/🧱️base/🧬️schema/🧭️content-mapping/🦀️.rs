@@ -18,24 +18,26 @@ pub struct ResourceMap {
 /// 🔁 Rewrites every resource name in `ops` through `map` (names the map does not know stay).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn rename_content(ops: Vec<PdfOp>, map: &ResourceMap) -> Vec<PdfOp> {
-    let rename = |table: &HashMap<String, String>, name: &mut String| {
-        if let Some(id) = table.get(name.as_str()) {
-            *name = id.clone();
-        }
-    };
     ops.into_iter()
         .map(|mut op| {
-            match &mut op {
-                PdfOp::SetFont { name, .. } => rename(&map.fonts, name),
-                PdfOp::PaintXObject { name } => rename(&map.x_objects, name),
-                PdfOp::SetExtGState { name } => rename(&map.ext_g_states, name),
-                PdfOp::PaintShading { name } => rename(&map.shadings, name),
-                PdfOp::SetStrokeColorN { pattern: Some(name), .. } | PdfOp::SetFillColorN { pattern: Some(name), .. } => rename(&map.patterns, name),
-                PdfOp::SetStrokeColorSpace { name } | PdfOp::SetFillColorSpace { name } => rename(&map.color_spaces, name),
-                PdfOp::MarkedContentPointWithProperties { properties: PdfPropertyList::Named { name }, .. } | PdfOp::BeginMarkedContentWithProperties { properties: PdfPropertyList::Named { name }, .. } => rename(&map.properties, name),
-                _ => {}
-            }
+            if let Some((name, id)) = rename_target(&mut op, map) { *name = id.to_owned(); }
             op
         })
         .collect()
+}
+
+/// 🎯️ The resource name `op` selects and the id `map` renames it to, when the map knows that name; [`rename_content`] applies it to every operator, a bounded lifter one operator per unit.
+pub fn rename_target<'a, 'm>(op: &'a mut PdfOp, map: &'m ResourceMap) -> Option<(&'a mut String, &'m str)> {
+    let (table, name) = match op {
+        PdfOp::SetFont { name, .. } => (&map.fonts, name),
+        PdfOp::PaintXObject { name } => (&map.x_objects, name),
+        PdfOp::SetExtGState { name } => (&map.ext_g_states, name),
+        PdfOp::PaintShading { name } => (&map.shadings, name),
+        PdfOp::SetStrokeColorN { pattern: Some(name), .. } | PdfOp::SetFillColorN { pattern: Some(name), .. } => (&map.patterns, name),
+        PdfOp::SetStrokeColorSpace { name } | PdfOp::SetFillColorSpace { name } => (&map.color_spaces, name),
+        PdfOp::MarkedContentPointWithProperties { properties: PdfPropertyList::Named { name }, .. } | PdfOp::BeginMarkedContentWithProperties { properties: PdfPropertyList::Named { name }, .. } => (&map.properties, name),
+        _ => return None,
+    };
+    let id = table.get(name.as_str())?;
+    Some((name, id.as_str()))
 }

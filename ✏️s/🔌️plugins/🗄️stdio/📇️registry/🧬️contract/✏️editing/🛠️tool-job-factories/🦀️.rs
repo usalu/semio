@@ -93,7 +93,13 @@ pub fn bounded_native_edit_bounded_first_step_proofs<E: BoundedNativeEditingEdit
         .collect()
 }
 
+/// 🎟️ Admits the event's own payload (encoded size, value node budget, finite numbers, unique object keys) and its address in `snapshot`.
 pub fn snapshot_edit_value_is_admitted<S: ToValue>(event: &SnapshotEditEvent, snapshot: &S) -> bool {
+    snapshot_edit_payload_is_admitted(event) && snapshot_edit_path_is_admitted(event, snapshot)
+}
+
+/// 📦️ Admits the event's own payload (encoded size, value node budget, finite numbers, unique object keys) without looking at any snapshot address, for an editor whose own edit rules address fields the snapshot does not hold yet.
+pub fn snapshot_edit_payload_is_admitted(event: &SnapshotEditEvent) -> bool {
     fn value_is_admitted(value: &DslValue, remaining: &mut usize, depth: usize) -> bool {
         if *remaining == 0 || depth > 128 {
             return false;
@@ -113,8 +119,7 @@ pub fn snapshot_edit_value_is_admitted<S: ToValue>(event: &SnapshotEditEvent, sn
         return false;
     }
     let mut remaining = SNAPSHOT_EDIT_MAXIMUM_VALUE_NODES;
-    if matches!(event, SnapshotEditEvent::SetValue {value,..}|SnapshotEditEvent::InsertValue {value,..} if !value_is_admitted(value,&mut remaining,0)){return false;}
-    snapshot_edit_path_is_admitted(event,snapshot)
+    !matches!(event, SnapshotEditEvent::SetValue {value,..}|SnapshotEditEvent::InsertValue {value,..} if !value_is_admitted(value,&mut remaining,0))
 }
 
 /// 🧭️ Borrow only snapshot shape after a retained worker has admitted the original event payload.

@@ -14,7 +14,7 @@ held = set()
 published = []
 for wave in waves:
     held.update(wave)
-    doc = {"version": 1, "holder": "test-held", "pid": 42, "expiresAtMs": 3600000,
+    doc = {"version": 1, "holder": "test-held", "pid": 42, "startMs": 1700000000000, "expiresAtMs": 3600000,
            "digests": [char * 64 for char in sorted(held)]}
     validator.validate(doc)
     published.append([digest[0] for digest in doc["digests"]])

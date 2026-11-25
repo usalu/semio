@@ -153,7 +153,7 @@ impl En1994Snapshot {
         s
     }
 
-    /// 🌉️ Bridge girder with FLM3 fatigue actions (EN 1994-2).
+    /// 🌉️ Bridge girder with FLM3 fatigue actions (EN 1994-2); its 160 studs are spread symmetrically over the 25 m span so that both halves carry the shear connection.
     pub fn bridge_girder() -> Self {
         let mut s = Self::example(AnnexChoice::De);
         s.structure_kind = StructureKind::Bridge;
@@ -161,6 +161,7 @@ impl En1994Snapshot {
         s.fatigue_detail = FatigueDetail::StudWelded;
         s.beams[0].n_cycles = 2.0e6;
         s.beams[0].span_m = 25.0;
+        s.studs = Stud::typical_row("beam-B1", 12.5, 0.15, 160);
         let mut fat = crate::CharacteristicAction::fatigue_flm3("FLM3");
         fat.delta_sigma_k_pa = 65e6;
         fat.delta_tau_k_pa = 40e6;

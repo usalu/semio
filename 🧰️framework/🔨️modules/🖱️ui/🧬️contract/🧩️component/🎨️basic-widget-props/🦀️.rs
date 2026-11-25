@@ -40,6 +40,11 @@ fn is_default_container_role(value: &ContainerRole) -> bool {
     *value == ContainerRole::default()
 }
 
+/// 🔠️ The shallowest heading level (`<h1>`).
+pub const HEADING_LEVEL_MIN: u16 = 1;
+/// 🔡️ The deepest heading level (`<h6>`).
+pub const HEADING_LEVEL_MAX: u16 = 6;
+
 /// 📝️ Props for `Component::Text`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
@@ -53,6 +58,10 @@ pub struct TextProps {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub data_attributes: Option<crate::UiFixedMap<crate::UiText>>,
+    /// 🔠️ The heading level `1..=6`; `None` is a paragraph. Hosts render a real heading element and announce `aria-level`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub heading_level: Option<u16>,
 }
 
 /// 🧩️ Concatenates one packed text leaf: `value` then attribute values in the caller's key order.
@@ -65,6 +74,11 @@ pub fn packed_text_leaf(value: &str, attribute_values: impl IntoIterator<Item = 
 }
 
 impl TextProps {
+    /// 🔠️ The announced heading level, clamped to the valid range; `None` for a paragraph.
+    pub fn heading(&self) -> Option<u16> {
+        self.heading_level.map(|level| level.clamp(HEADING_LEVEL_MIN, HEADING_LEVEL_MAX))
+    }
+
     /// 🎒️ Inverse of the 33-slice pack: `value` then ascending `data_attributes`.
     pub fn packed_payload(&self) -> String {
         match &self.data_attributes {

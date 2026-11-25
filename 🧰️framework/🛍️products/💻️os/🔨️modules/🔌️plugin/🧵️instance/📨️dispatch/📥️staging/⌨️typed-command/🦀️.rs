@@ -10,7 +10,7 @@ use std::sync::Arc;
 use semio_plugin_decl_app::{ArtifactApp, ArtifactOwnedContextHandle};
 use store::os_store::store_schema::ArtifactCommand;
 use semio_plugin_decl_media::ArtifactOutputChunks;
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use semio_plugin_decl_app::tool_contract::{ArtifactOwnedToolJobContext, ArtifactOwnedToolJobInputs, ArtifactOwnedToolJobRequest, ArtifactOwnedToolJobSnapshots, ArtifactToolCompletion, ArtifactToolRawInput};
 use pack::snapshot::ArtifactPack;
 use semio_plugin_decl_views::child_view::ChildContentView;
@@ -88,11 +88,11 @@ impl<'ctx, A: ArtifactApp, M: store::ReferenceSpaceMember + MemberFactory + 'sta
                 if window.window_kind_id != expected_kind {
                     return Err(plugin_sdk_fault("targeted window transient capture does not match the command owner's expected window kind"));
                 }
-                Some(view.for_window_instance(window_id).ok_or_else(|| plugin_sdk_fault("targeted window transient capture lost its attached window instance"))?)
+                Some(view.scope_window_instance(window_id).ok_or_else(|| plugin_sdk_fault("targeted window transient capture lost its attached window instance"))?)
             }
             None => None,
         };
-        let window_transient_authority = self.stores.window_transient_store.capture(targeted_window_transient_view.as_ref().or(meta.view_state.as_deref()))?;
+        let window_transient_authority = self.stores.window_transient_store.capture(targeted_window_transient_view.as_deref().or(meta.view_state.as_deref()))?;
         Ok(TypedCommandRoots {
             snapshot,
             config,

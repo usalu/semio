@@ -185,6 +185,38 @@ All three draggable task kinds (classification, matching, sorting) use this one 
 
 **Open.** The footer's seam was not measured (its lines had not been painted when the script ran). Lines on other screens, at display scales other than 2, and the flicker the user saw elsewhere were not examined.
 
+## 11. Nothing of the canvas paints above a band
+
+**Finding.** An emphasised chip line of a quiz page scrolled under the navbar showed on top of the navbar. The compositor's overlays sit at `z-index` 40 (41 while a line is stated). `#course-main` formed no stacking context, so these overlays competed with the navbar and footer (`z-index` 40) in the page's root context, and they won: a stated overlay is higher, and an equal one comes later in the DOM.
+
+**Fix.** `#course-main` is `isolation: isolate`. All canvas overlays now stack inside the main area, and the main area as a whole lies under both bands. The drag ghost is appended to `.course-app`, outside main, so it still lies above everything. File: course `🎨️styles/⚖️footer-and-forced-colors/🎨️.css`.
+
+**Checked in the browser.** 106 of the 111 overlays are inside main; 0 of them have a stacking context outside main. A chip hovered at the navbar seam keeps its line on the seam, painted by the band.
+
+## 12. A dropdown opens one level above, as a menu
+
+**Finding.** Native `<select>` lists were drawn by the operating system, in a flat dark style, at no level of the design system, so they barely stood out from the quiz rows.
+
+**Fix.** In the design system's base layer every `select` and its `::picker(select)` use `appearance: base-select` (customisable select). The picker gets the menu-level knobs (a `::picker(select)` block next to `[data-level="menu"]`, since a pseudo-element cannot carry `data-level`). It is drawn as menu-level glass with a hairline outline and no radius or shadow. Options are rows of `--chip-row-height`, separated by lines. The chosen option is filled with the active colour; a hovered one is emphasised in its text only; keyboard focus gets an inset active-colour line. The closed select is square with the element line, or line-free as a border cell. Forced colours fall back to `appearance: auto`. Browsers without `base-select` keep the native list. File: `🖱️ui/🎨️styling/🖌️ui/🎨️.css`.
+
+**Checked in the browser.** On a classification task the picker opened at menu level: a lighter glass (alpha 0.4, blur 40 px, saturate 1.45), a 1 px outline, radius 0, lines between the options and a filled chosen row.
+
+**Follow-up: icon and rows.**
+- The native picker icon (`select::picker-icon`) is now the catalog chevron (`🖼️assets/🔣️icons/🧭️navigation/🔽️chevron-down.svg`), inlined as a data-URI mask. It is `--size-small`, coloured `--muted-foreground` (emphasised on hover), and turns 180° while the list is open. An inline mask needs no published asset, but a theme's icon override does not reach it.
+- Native options are drawn like context-menu rows. A hovered row gets `--hover-interactive-fill` and emphasised text, and the chosen row gets the active fill. The default tick (`::checkmark`) is hidden, as context menus show no tick.
+
+**React select (`🖱️ui/🧱️elements/🔽️Select/🟦️.tsx`).**
+- It was already menu-level glass (`data-level="menu"`, `glassClass`).
+- Its rows floated in a padded viewport with a tick icon. The viewport (`data-shared-border-cells`, vertical, flex column) now has no padding, and its rows are cells, so the compositor draws the lines between them.
+- Rows are `--chip-row-height` high and carry no radius or tick. They carry `data-active` (keyboard highlight, hover fill) and `data-selected` (active fill) from the shared menu-row presentation.
+- The separator is a hairline without margins.
+
+**Tests (vitest with jsdom, `verify-ui.ts` in this ticket).** The Select and WindowChrome suites pass: 8 files, 129 tests. This includes the compositor DOM suites that the `repo test-file` route could not run (`document is not defined`).
+- `🔸️keeps-measured-popup-minimum` now asserts the new contract: no viewport padding, a vertical cells owner, a selected row with `data-selected`, no tick and no radius.
+- One compositor test still expected a hover line on a lone borderless box, which the hover law forbids. It now gives that box drawn edges and checks that they turn to the hover state.
+
+**Open.** No React `Select` is mounted on the course site, so its new rows were checked by tests only, not visually. The wgpu Select target (`🔽️Select/🎯️targets/🧊️wgpu`) was not changed.
+
 ## Verification
 
 - `outlines.test.ts` 9, `states.test.ts` 16, `segments.test.ts` 13 pass; `shared-border.test.ts` 45 pass, `focus-boxes.test.tsx` 11 pass. The remaining failures of those two files (9 and 2) and of the component suites are `document is not defined` under the graph-free `repo test-file` route and are independent of this change.

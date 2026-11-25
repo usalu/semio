@@ -6,6 +6,7 @@ use semio_os_kernel::native_catalog::NativeCatalogV1;
 use semio_os_kernel::native_catalog::configured_native_catalog_v1;
 use std::path::Path;
 use std::path::PathBuf;
+use crate::catalog::pool_map;
 use crate::plugin_paths_and_descriptor::{load_registry_plugin_descriptor, plugin_registry_entries};
 use semio_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
 
@@ -24,14 +25,15 @@ pub struct RegistryDiscovery {
 }
 
 impl RegistryDiscovery {
-    /// 🔎️ Reads the caller's exact contributed owners and retains per-descriptor diagnostics.
+    /// 🔎️ Reads the caller's exact contributed owners, loading their descriptors in parallel on the worker pool, and retains per-descriptor diagnostics.
     pub fn scan(root:PathBuf,catalog:&NativeCatalogV1)->Result<Self,GatewayError>{
         let mut diagnostics=Vec::new();let entries=plugin_registry_entries(&root,catalog)?;
         let mut descriptor_paths = Vec::with_capacity(entries.len());
         let mut descriptors = Vec::with_capacity(entries.len());
-        for entry in &entries {
+        let loading_root = root.clone();
+        for (entry, loaded) in pool_map(entries, move |entry| load_registry_plugin_descriptor(&loading_root, entry)) {
             descriptor_paths.push(entry.owner_root.join("🔣️.json"));
-            match load_registry_plugin_descriptor(&root, entry) {
+            match loaded {
                 Ok(descriptor) => descriptors.push(descriptor),
                 Err(error) => diagnostics.push(format!("skipping plugin `{}`: {error}", entry.plugin_id)),
             }

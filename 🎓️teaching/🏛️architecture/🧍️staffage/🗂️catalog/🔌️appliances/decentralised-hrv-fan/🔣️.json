@@ -13,19 +13,97 @@
       "de": "Ein quadratisches dezentrales Pendellüftungsgerät von 0,26 m bei abgenommener Innenblende: in der Sockelwanne dreht sich ein umkehrbarer Ventilator mit fünf radialen Flügeln vor einem Keramik-Wabenkern, der die Wärme der Abluft 70 Sekunden speichert und in den nächsten 70 Sekunden an die Zuluft zurückgibt; eine Hülse von 196 mm führt beide durch die Wand."
     },
     "tags": [
-      "fan",
-      "reversing-fan",
-      "push-pull",
-      "pendulum-ventilation",
-      "decentralised",
-      "heat-recovery",
-      "regenerator",
-      "ceramic",
-      "ventilation",
-      "wall-mounted",
-      "appliance",
-      "electrical",
-      "rotating"
+      {
+        "id": "fan",
+        "title": {
+          "en": "fan",
+          "de": "Ventilator"
+        }
+      },
+      {
+        "id": "reversing-fan",
+        "title": {
+          "en": "reversing fan",
+          "de": "Wendelüfter"
+        }
+      },
+      {
+        "id": "push-pull",
+        "title": {
+          "en": "push pull",
+          "de": "Drücken und Ziehen"
+        }
+      },
+      {
+        "id": "pendulum-ventilation",
+        "title": {
+          "en": "pendulum ventilation",
+          "de": "Pendellüftung"
+        }
+      },
+      {
+        "id": "decentralised",
+        "title": {
+          "en": "decentralised",
+          "de": "dezentral"
+        }
+      },
+      {
+        "id": "heat-recovery",
+        "title": {
+          "en": "heat recovery",
+          "de": "Wärmerückgewinnung"
+        }
+      },
+      {
+        "id": "regenerator",
+        "title": {
+          "en": "regenerator",
+          "de": "Regenerator"
+        }
+      },
+      {
+        "id": "ceramic",
+        "title": {
+          "en": "ceramic",
+          "de": "Keramik"
+        }
+      },
+      {
+        "id": "ventilation",
+        "title": {
+          "en": "ventilation",
+          "de": "Lüftung"
+        }
+      },
+      {
+        "id": "wall-mounted",
+        "title": {
+          "en": "wall mounted",
+          "de": "wandmontiert"
+        }
+      },
+      {
+        "id": "appliance",
+        "title": {
+          "en": "appliance",
+          "de": "Gerät"
+        }
+      },
+      {
+        "id": "electrical",
+        "title": {
+          "en": "electrical",
+          "de": "Elektro"
+        }
+      },
+      {
+        "id": "rotating",
+        "title": {
+          "en": "rotating",
+          "de": "rotierend"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage content (F2)",

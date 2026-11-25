@@ -13,13 +13,55 @@
    "de": "Eine moderne Strauchrose (Rosa) in Juniblüte: elf grünbraune Ruten steigen steil aus dem veredelten Wurzelhals auf, neigen sich bogig nach außen und nicken an den Spitzen; so entsteht eine Fontäne von 1.66 m Breite und 1.50 m Höhe; Büschel offener Blüten von 9 cm Durchmesser sitzen auf den Bögen und Spitzen zwischen den gefiederten Blättern. Die öfterblühende Rose der Rabatten, Vorgärten und Parks."
   },
   "tags": [
-   "shrub",
-   "deciduous",
-   "flowering",
-   "rose",
-   "arching",
-   "wind",
-   "transpiration"
+   {
+    "id": "shrub",
+    "title": {
+     "en": "shrub",
+     "de": "Strauch"
+    }
+   },
+   {
+    "id": "deciduous",
+    "title": {
+     "en": "deciduous",
+     "de": "laubabwerfend"
+    }
+   },
+   {
+    "id": "flowering",
+    "title": {
+     "en": "flowering",
+     "de": "blühend"
+    }
+   },
+   {
+    "id": "rose",
+    "title": {
+     "en": "rose",
+     "de": "Rose"
+    }
+   },
+   {
+    "id": "arching",
+    "title": {
+     "en": "arching",
+     "de": "überhängend"
+    }
+   },
+   {
+    "id": "wind",
+    "title": {
+     "en": "wind",
+     "de": "Wind"
+    }
+   },
+   {
+    "id": "transpiration",
+    "title": {
+     "en": "transpiration",
+     "de": "Transpiration"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage plant worker PW-14",

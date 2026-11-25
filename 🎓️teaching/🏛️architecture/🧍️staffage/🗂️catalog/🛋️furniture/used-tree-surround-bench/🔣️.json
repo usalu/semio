@@ -13,20 +13,104 @@
    "de": "Eine sechseckige kommunale Baumrundbank um eine alte Linde, 2,4 m über die Sitzecken: sechs Segmente aus je fünf vergrauten und gespaltenen Robinienlatten auf pulverbeschichteten Stahlrahmen mit zwölf Stellfüßen auf bündig in die Kiesdecke gelegten Betonplatten, eine Latte in frischem Holz ersetzt und eine innere Platte von einer Wurzel um 30 mm angehoben; der Bauhof hebt ein Segment aus, sechs Besucher sitzen um den Stamm."
   },
   "tags": [
-   "used",
-   "park",
-   "public-space",
-   "seating",
-   "tree-bench",
-   "bench",
-   "street-furniture",
-   "timber",
-   "robinia",
-   "steel",
-   "galvanised",
-   "concrete",
-   "weathered",
-   "root-heave"
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "park",
+    "title": {
+     "en": "park",
+     "de": "Park"
+    }
+   },
+   {
+    "id": "public-space",
+    "title": {
+     "en": "public space",
+     "de": "öffentlicher Raum"
+    }
+   },
+   {
+    "id": "seating",
+    "title": {
+     "en": "seating",
+     "de": "Sitzmöbel"
+    }
+   },
+   {
+    "id": "tree-bench",
+    "title": {
+     "en": "tree bench",
+     "de": "Baumbank"
+    }
+   },
+   {
+    "id": "bench",
+    "title": {
+     "en": "bench",
+     "de": "Bank"
+    }
+   },
+   {
+    "id": "street-furniture",
+    "title": {
+     "en": "street furniture",
+     "de": "Stadtmobiliar"
+    }
+   },
+   {
+    "id": "timber",
+    "title": {
+     "en": "timber",
+     "de": "Holz"
+    }
+   },
+   {
+    "id": "robinia",
+    "title": {
+     "en": "robinia",
+     "de": "Robinie"
+    }
+   },
+   {
+    "id": "steel",
+    "title": {
+     "en": "steel",
+     "de": "Stahl"
+    }
+   },
+   {
+    "id": "galvanised",
+    "title": {
+     "en": "galvanised",
+     "de": "verzinkt"
+    }
+   },
+   {
+    "id": "concrete",
+    "title": {
+     "en": "concrete",
+     "de": "Beton"
+    }
+   },
+   {
+    "id": "weathered",
+    "title": {
+     "en": "weathered",
+     "de": "verwittert"
+    }
+   },
+   {
+    "id": "root-heave",
+    "title": {
+     "en": "root heave",
+     "de": "Wurzelaufbruch"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content (used park objects wave)",

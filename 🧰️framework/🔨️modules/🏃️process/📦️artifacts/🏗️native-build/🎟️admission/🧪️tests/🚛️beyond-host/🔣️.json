@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "description": "Language-neutral vectors of the beyond-host rule: a unit is beyond a machine when its largest known peak (the carving entry's measured peak for its crate and target, or the peak learned on the machine) is above the final budget of the worker class and the machine is no larger than the class host. A unit never measured, and a machine larger than the class, answer false.",
+  "workerClass": "16g",
+  "classHostMegabytes": 16384,
+  "finalMegabytes": 4096,
+  "cases": [
+    {"name": "the cad final on a 16 GB worker", "crate": "semio_hub_cad_component", "target": "wasm32-wasip2", "learned": null, "host": 16384, "beyond": true},
+    {"name": "the cad final on the 32 GB coordinator", "crate": "semio_hub_cad_component", "target": "wasm32-wasip2", "learned": null, "host": 32768, "beyond": false},
+    {"name": "the puzzle final on a 16 GB worker", "crate": "semio_hub_puzzle_component", "target": "wasm32-wasip2", "learned": null, "host": 16384, "beyond": true},
+    {"name": "the puzzle final on an 8 GB machine", "crate": "semio_hub_puzzle_component", "target": "wasm32-wasip2", "learned": null, "host": 8192, "beyond": true},
+    {"name": "a carved unit below the ceiling stays", "crate": "semio_hub_flow", "target": "wasm32-wasip2", "learned": null, "host": 16384, "beyond": false},
+    {"name": "an unlisted unit never measured stays", "crate": "unknown_crate", "target": "wasm32-wasip2", "learned": null, "host": 16384, "beyond": false},
+    {"name": "an unlisted unit learned above the ceiling goes", "crate": "unknown_crate", "target": "wasm32-wasip2", "learned": 4097, "host": 16384, "beyond": true},
+    {"name": "an unlisted unit learned at the ceiling stays", "crate": "unknown_crate", "target": "wasm32-wasip2", "learned": 4096, "host": 16384, "beyond": false},
+    {"name": "the same crate on another target is not the carved unit", "crate": "semio_hub_cad_component", "target": "host", "learned": null, "host": 16384, "beyond": false},
+    {"name": "a machine just above the class host carries it", "crate": "semio_hub_cad_component", "target": "wasm32-wasip2", "learned": null, "host": 16385, "beyond": false},
+    {"name": "the dwg objects library on a worker", "crate": "semio_s_artifact_stdio_dwg_snapshot_objects", "target": "wasm32-unknown-unknown", "learned": 3000, "host": 16384, "beyond": true}
+  ]
+}

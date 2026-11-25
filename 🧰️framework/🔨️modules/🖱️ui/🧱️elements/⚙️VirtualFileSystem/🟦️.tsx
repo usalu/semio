@@ -453,7 +453,7 @@ const VirtualFileSystemNodeGlyph: React.FC<{
   }
   if (kindIcon && isVirtualFileSystemRemoteIcon(kindIcon)) {
     return (
-      <span className={`${glyphClass} overflow-hidden rounded-sm`}>
+      <span className={`${glyphClass} overflow-hidden`}>
         <img src={kindIcon} alt="" className="size-full object-cover" />
       </span>
     );
@@ -546,7 +546,7 @@ export const VirtualFileSystem: React.FC<VirtualFileSystemProps> = ({
               <button
                 type="button"
                 data-vfs-expand
-                className="inline-flex size-small shrink-0 items-center justify-center rounded text-element hover:bg-hover-interactive-fill hover:text-emphasized"
+                className="inline-flex size-small shrink-0 items-center justify-center text-element hover:bg-hover-interactive-fill hover:text-emphasized"
                 aria-label={row.isExpanded ? collapseLabel : expandLabel}
                 aria-expanded={row.isExpanded}
                 onClick={(event) => {

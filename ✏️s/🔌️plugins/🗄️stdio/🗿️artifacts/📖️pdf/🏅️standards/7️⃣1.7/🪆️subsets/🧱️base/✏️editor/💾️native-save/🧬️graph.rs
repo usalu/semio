@@ -2,8 +2,9 @@ use std::borrow::Cow;
 use crate::standards::v1_7::subsets::base::{
     io::{error::{PResult, PdfEngineError}, export::{EncodeOptions, PreparedPdfGraph}},
     modules::{lexer::dict_get, writer::DocumentTrailer},
-    schema::snapshot::{ObjRef, PdfDictEntry, PdfImageBody, PdfIndirectObject, PdfObject, PdfOp, PdfSnapshot, PdfStreamFilter},
+    schema::snapshot::{ObjRef, PdfDictEntry, PdfImageBody, PdfIndirectObject, PdfObject, PdfOp, PdfSnapshot, PdfStreamBytes, PdfStreamFilter},
 };
+use semio_framework_value::paged::PAGED_BYTES_CHUNK_BYTES;
 use super::classic_graph_quote::{GraphLoan, GraphRefusal, object_order};
 use super::ordinary_graft::OrdinaryRows;
 
@@ -22,6 +23,29 @@ pub struct PinnedPdfGraph {
 
 const REFERENCE_SLACK: usize = 2048;
 
+/// ✍️ Bytes one typed operator may spell to at most in a lowered content stream: its name and up to seven numeric operands of at most eighteen characters each.
+const SPELLED_OPERATOR_BYTES: usize = 2 * size_of::<PdfOp>();
+
+/// 🧱️ The metadata one payload page of a paged stream body costs beyond its payload, measured on a one-byte body.
+fn paged_page_frame() -> Option<usize> {
+    let probe = PdfStreamBytes::try_from_slice(&[0]).ok()?;
+    probe.retained_bytes().allocated_bytes().checked_sub(PAGED_BYTES_CHUNK_BYTES)
+}
+
+/// 📚️ Bounds what a paged stream body of `length` bytes allocates: whole payload pages, one page frame each, and one more frame per fan-out of branch pages above them.
+fn paged_extent(length: usize, frame: usize) -> Option<usize> {
+    let pages = length.div_ceil(PAGED_BYTES_CHUNK_BYTES).max(1);
+    pages.checked_mul(PAGED_BYTES_CHUNK_BYTES + frame)?.checked_add(frame.checked_mul(pages.div_ceil(PAGE_FANOUT - 1) + 1)?)
+}
+
+/// 🧾️ The pages a retained stream body already owns, which a copied row allocates again exactly.
+fn stream_pages(value: &PdfObject) -> usize {
+    match value { PdfObject::Stream { data, .. } => data.retained_bytes().allocated_bytes(), _ => 0 }
+}
+
+/// 🌳️ Children per branch page of a paged body.
+const PAGE_FANOUT: usize = 16;
+
 /// 🔢️ The table a file-ordered roster needs for its ascending view; an ascending roster needs none.
 fn order_extent(objects: &[PdfIndirectObject]) -> usize {
     if objects.windows(2).all(|pair| pair[0].id.num < pair[1].id.num) { 0 } else { objects.len() * size_of::<u32>() }
@@ -35,7 +59,7 @@ fn object_bytes(value: &PdfObject) -> usize {
         PdfObject::Real(decimal) => decimal.coefficient.len(),
         PdfObject::Array(values) => values.iter().map(object_bytes).sum(),
         PdfObject::Dict(entries) => entries_bytes(entries),
-        PdfObject::Stream { dict, data, filters } => entries_bytes(dict) + data.len() + filters.len() * size_of::<PdfStreamFilter>(),
+        PdfObject::Stream { dict, filters, .. } => entries_bytes(dict) + filters.len() * size_of::<PdfStreamFilter>(),
         _ => 0,
     }
 }
@@ -82,18 +106,20 @@ impl PinnedPdfGraph {
     }
 
 
-    /// 🧮️ Bounds the capacity a reconciled reference graph can own: every retained row may be copied and every typed lane may be spelled afresh.
+    /// 🧮️ Bounds the capacity a reconciled reference graph can own: every retained row may be copied (its tree twice for growth, its stream pages exactly as the original holds them) and every typed lane may be spelled afresh (each page's dictionary and resources, and a fresh paged content stream of its spelled operators).
     pub fn reference_extent(snapshot: &PdfSnapshot) -> Option<usize> {
-        let retained = snapshot.objects.iter().try_fold(0usize, |sum, object| sum.checked_add(size_of::<PdfIndirectObject>() + object_bytes(&object.value)))?;
+        let frame = paged_page_frame()?;
+        let retained = snapshot.objects.iter().try_fold(0usize, |sum, object| sum.checked_add(2 * (size_of::<PdfIndirectObject>() + object_bytes(&object.value)) + stream_pages(&object.value)))?;
         let pages = snapshot.pages.iter().try_fold(0usize, |sum, page| {
-            sum.checked_add(page.content.len().checked_mul(size_of::<PdfOp>() + 64)?)?.checked_add(512 + page.annotations.len().checked_mul(1024)?)
+            let spelled = page.content.len().checked_mul(SPELLED_OPERATOR_BYTES)?;
+            sum.checked_add(2 * (page.content.len().checked_mul(size_of::<PdfOp>() + 64)?.checked_add(512 + page.annotations.len().checked_mul(1024)?)?))?.checked_add(paged_extent(spelled, frame)?)
         })?;
         let images = snapshot.images.iter().try_fold(0usize, |sum, image| sum.checked_add(match &image.body {
-            PdfImageBody::Samples { values } => values.len().checked_mul(4)?,
+            PdfImageBody::Samples { packed } => packed.len().checked_add(paged_extent(packed.len(), frame)?)?,
             _ => 0,
         } + 1024))?;
         let fonts = snapshot.fonts.len().checked_mul(2048)?;
-        retained.checked_add(order_extent(&snapshot.objects))?.checked_add(pages)?.checked_add(images)?.checked_add(fonts)?.checked_mul(2)?.checked_add(REFERENCE_SLACK)
+        retained.checked_add(2 * order_extent(&snapshot.objects))?.checked_add(pages)?.checked_add(2 * images)?.checked_add(2 * fonts)?.checked_add(REFERENCE_SLACK)
     }
 
     /// 📏️ The capacity this graph actually owns beyond its fixed frame once a reference reconciliation filled it.

@@ -17,6 +17,7 @@ import {planGcV1,type GcInputV1} from "../../🟦️.ts";
 import {activeScriptProcessWaitsV1,admissionWaitedMillisecondsV1} from "../../../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🟦️.ts";
 import {nativeImageBackingFilenameV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import {HEADROOM_POLICY_V1 as policy,admitImageHeadroomV1,createEffectiveMeasureV1,headroomImageMountV1,decideHeadroomV1,headroomEstimateV1,headroomFloorBytesV1,headroomOutstandingV1,headroomPriorV1,headroomQuantileV1,headroomTextV1,readHeadroomHistoryV1,readHeadroomLedgerV1,recordHeadroomSampleV1,type HeadroomHistoryV1,type HeadroomInputV1,type HeadroomRowV1} from "../🟦️.ts";
+import {ownProcessIdentityV1} from "../../../../../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts";
 
 const GIB=1024**3,volume=48*GIB,layout=UNIT_CACHE_POLICY_V1.layout;
 const ajv=new Ajv({strict:true});ajv.addSchema(componentSchema,"headroom.json");
@@ -160,7 +161,7 @@ test("the only command left goes on after one completed cleanup found nothing mo
 test("a silent record, a record of a dead process and an unmeasurable image never hold anyone back",async()=>{
  const root=scratch(),directory=join(root,layout.headroom);mkdirSync(directory,{recursive:true});
  try{
-  const record=(id:string,pid:number)=>JSON.stringify({version:1,pid,label:id,id,state:"running",reservedBytes:40*GIB,rampMilliseconds:1800000,arrivedMs:1,admittedMs:Date.now()});
+  const record=(id:string,pid:number)=>JSON.stringify({version:1,pid,startMs:pid===process.pid?ownProcessIdentityV1().startMs:Date.now(),label:id,id,state:"running",reservedBytes:40*GIB,rampMilliseconds:1800000,arrivedMs:1,admittedMs:Date.now()});
   writeFileSync(join(directory,"silent.json"),record("silent",process.pid));const old=new Date(Date.now()-policy.staleMilliseconds-5000);utimesSync(join(directory,"silent.json"),old,old);
   const dead=Bun.spawnSync(["true"]).pid;writeFileSync(join(directory,"dead.json"),record("dead",dead));
   writeFileSync(join(directory,"broken.json"),"{");writeFileSync(join(directory,"live.json"),record("live",process.pid));

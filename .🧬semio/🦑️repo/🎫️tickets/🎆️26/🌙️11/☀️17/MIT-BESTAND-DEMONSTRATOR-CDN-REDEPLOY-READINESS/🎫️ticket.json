@@ -3,11 +3,12 @@
   "emoji": "🧺",
   "status": "open",
   "description": "Get the mit-bestand demonstrator ready to be redeployed on a CDN as fast as possible: the static release build must succeed and every app (all eight panes) must run from the static bundle. Bugs are acceptable for this redeploy. Fall back to native tools if the shared work fleet mechanism does not work.",
-  "summary": "Freed 4.5 GiB in the Rust image by running the component run collector; fixed its planner (artifact-marker components, failed run retention) with tests; wrote 🔬️rust-image-space.md.",
+  "summary": "CDN archive ready: .cache/deploy/site-20261125T134801Z.tar.gz (597 MB, 1,815 files, SHA256SUMS), byte-identical to the site verified by the official static matrix. All eight apps run in English and German; 10 of 16 strict boots pass. Aussuchen and Bearbeiten fail only on one leftover debug console line, Generator's 3D preview is empty. Koordinator, Aggregator, Bearbeiten and Verfolgen were re-pointed through runtimeVariant (Bearbeiten stays on the bundled guest) and eight cad and process extensions are withheld. Stale shard worker and surface wasm republished. No guest was rebuilt: the demonstrator and process finals exceed the 4,096 MB link budget and the policy was left unchanged. Details: 📊️status-2026-11-25.md.",
   "goal": "runningdemonstrator",
   "sessions": [
     "058433d9-45c4-4cd3-a90e-f80054e511e4",
-    "9f06210d-4265-49f6-9c6c-d141489a3344"
+    "9f06210d-4265-49f6-9c6c-d141489a3344",
+    "0d1bc55f-65d2-45c8-a53c-b995b7b717ee"
   ],
   "interactions": [
     {
@@ -55,6 +56,91 @@
       "client": "claude-code",
       "checkpoint": "",
       "prompt": "Reopen: the work is not done. Demonstrator, Procedural and the remaining roster modules still need release builds, then the static site, the 16-case matrix and the CDN archive. A subagent closed this ticket by mistake.",
+      "llm": "opus-5-5",
+      "effort": "medium"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-25 05:50:03",
+      "author": "ueli",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "8d17d8ba3998690932b0032ea2ca41bce5c994b6",
+      "summary": "CDN archive ready: .cache/deploy/site-20261125T134801Z.tar.gz (597 MB, 1,815 files, SHA256SUMS), byte-identical to the site verified by the official static matrix. All eight apps run in English and German; 10 of 16 strict boots pass. Aussuchen and Bearbeiten fail only on one leftover debug console line, Generator's 3D preview is empty. Koordinator, Aggregator, Bearbeiten and Verfolgen were re-pointed through runtimeVariant (Bearbeiten stays on the bundled guest) and eight cad and process extensions are withheld. Stale shard worker and surface wasm republished. No guest was rebuilt: the demonstrator and process finals exceed the 4,096 MB link budget and the policy was left unchanged. Details: 📊️status-2026-11-25.md.",
+      "files": [
+        {
+          "path": "🛅♻️mitbestand🛅🧺️demonstrator🗃️🔨️modules🗃️🧩️runtime🗃️📇️catalog🗃️🧬️schema⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🌊️flow🗃️🖥️host🗃️🧾️evalsessionstate💻🦀️"
+        },
+        {
+          "path": "⚙️cargo"
+        },
+        {
+          "path": "🛅♻️mitbestand🛅🧺️demonstrator🗃️🔨️modules🗃️🧩️runtime🗃️📇️catalog💻🟦️"
+        },
+        {
+          "path": "🛅♻️mitbestand🛅🧺️demonstrator🗃️🔨️modules🗃️🧩️runtime🗃️📇️catalog🗃️🧪️tests💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🌊️flow🗃️🖥️host🗃️⏱️evalsession🗃️🔭️previewtessellationcancellationandstatus💻🦀️"
+        },
+        {
+          "path": "🛅♻️mitbestand🛅🧺️demonstrator⚙️📋️project"
+        },
+        {
+          "path": "🛅♻️mitbestand🛅🧺️demonstrator🗃️🔨️modules🗃️🧩️runtime⚙️🧫️pipeline"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🗃️🌱️value🗃️🛬️decode🗃️🧳️owned🗃️🏗️recordmachine🗃️🪡️field💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🗃️🌱️value🗃️🛬️decode🗃️🧳️owned🗃️🧬️protocol🗃️📦️packages🛅🦀️rust💻🦀️"
+        },
+        {
+          "path": "🛅♻️mitbestand🛅🧺️demonstrator💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🧠️interpreter🗃️🏗️instance💻🦀️"
+        },
+        {
+          "path": "🛅♻️mitbestand🛅🧺️demonstrator📃readme"
+        },
+        {
+          "path": "🛅♻️mitbestand🛅🧺️demonstrator🗃️🔨️modules🗃️🧩️runtime💻🟦️"
+        },
+        {
+          "path": "🛅♻️mitbestand🛅🧺️demonstrator🗃️🔨️modules🗃️🧩️runtime⚙️🧫️cases"
+        },
+        {
+          "path": "🛅♻️mitbestand🛅🧺️demonstrator🗃️🧪️tests🗃️🧪️demonstratorcompileclosure🗃️🎭️e2e⚙️🧫️cases"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🧵️instance🗃️📄️docs🗃️📦️packages🛅🦀️rust⚙️cargo"
+        },
+        {
+          "path": "🛅♻️mitbestand🛅🧺️demonstrator🗃️🔨️modules🗃️🧩️runtime🗃️📇️catalog⚙️🧫️cases"
+        },
+        {
+          "path": "🛅♻️mitbestand🛅🧺️demonstrator🗃️🔨️modules🗃️🧩️runtime🗃️📦️assets💻🟦️"
+        },
+        {
+          "path": "🛅♻️mitbestand🛅🧺️demonstrator🗃️🔨️modules🗃️🧩️runtime⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🗃️🧵️job🗃️⏱️context💻🦀️"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-25 08:24:45",
+      "author": "",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Continue end to end: rebuild the guests with the pending fixes (procedural preview first), carve the process and demonstrator finals below the link budget without changing the policy, rerun the matrix and repackage. Review side effects of the previous run.",
       "llm": "opus-5-5",
       "effort": "medium"
     }

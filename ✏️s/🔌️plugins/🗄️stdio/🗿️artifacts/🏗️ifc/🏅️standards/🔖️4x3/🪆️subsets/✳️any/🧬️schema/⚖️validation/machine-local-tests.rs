@@ -2,7 +2,7 @@
 use super::*;
 use semio_plugin::app_testing::OriginalWorkFixture;
 use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::IfcComplexType;
-use semio_s_artifact_stdio_ifc_4_mutations::standards::v4::subsets::any::schema::mutations::SetEntityArg;
+use semio_s_artifact_stdio_ifc_4_mutations::standards::v4::subsets::any::schema::mutations::set_entity_arg::SetEntityArg;
 fn grant() -> RetainedCloneGrant {
     RetainedCloneGrant { maximum_items: 100000, maximum_copy_bytes: 1048576, maximum_capacity_bytes: 1048576, maximum_release_bytes: 1048576, maximum_depth: 256 }
 }
@@ -69,6 +69,40 @@ fn local_issued_alias_and_entity_rules_use_actual_overlay_candidate() {
         assert_eq!(machine.local_status().unwrap(), law["status"].as_str().unwrap());
         let report = machine.report().unwrap();
         if law["status"] != "incomplete" { assert!(report.results.iter().any(|record| record.owner == law["owner"].as_str() && record.rule == law["rule"].as_str())); }
+        caller.cancel().cancel_now();
+        machine.begin_close(); receiver.begin_close(); overlay.begin_close();
+        for _ in 0..100000 {
+            if machine.terminal_is_empty() && receiver.terminal_is_empty() && overlay.terminal_is_empty() { break; }
+            caller.turn(grant(), |cx| cx.with_original_retirement(|cx| {
+                if !machine.terminal_is_empty() { return semio_framework_job::close_original_retained_step(cx, machine.close_demands(4096)?, |loan| machine.close_step(loan)); }
+                if !receiver.terminal_is_empty() { return semio_framework_job::close_original_retained_step(cx, receiver.close_demands(4096)?, |loan| receiver.close_step(loan)); }
+                semio_framework_job::close_original_retained_step(cx, overlay.close_demands(4096)?, |loan| overlay.close_step(loan))
+            })).unwrap();
+        }
+        assert!(machine.terminal_is_empty() && receiver.terminal_is_empty() && overlay.terminal_is_empty());
+        caller.finish();
+    }
+}
+/// 🧭️ Resolves a local rule identifier per ISO 10303-11: entity attributes first, then the schema scope's enumeration types, so qualified enumeration items (`IfcDerivedUnitEnum.USERDEFINED`) evaluate instead of staying unbound; an identifier missing from every scope stays `express.unbound`.
+#[test]
+fn local_identifiers_resolve_attributes_then_schema_scope_and_unbound_names_stay_refused() {
+    let values: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔎️details/🧪️tests/type-enum-input.json")).unwrap();
+    for (unit, defined, status) in [("ACCELERATIONUNIT", IfcValue::Unset, "pass"), ("USERDEFINED", IfcValue::Unset, "fail"), ("USERDEFINED", IfcValue::String("caller".into()), "pass")] {
+        let source = snapshot(&values["sources"]["derived"]);
+        let mutations = vec![IfcMutation::SetEntityArg(SetEntityArg { id: source.entities[0].id, index: 1, value: IfcValue::Enum(unit.into()) }), IfcMutation::SetEntityArg(SetEntityArg { id: source.entities[0].id, index: 2, value: defined })];
+        let mut caller = OriginalWorkFixture::new();
+        let mut overlay = PopulationOverlay::default();
+        let mut receiver = PopulationReceiver::default();
+        for _ in 0..100000 { if caller.work_turn(grant(), 1, |cx| overlay.advance(&source, &mutations, cx)).unwrap() { break; } }
+        for _ in 0..100000 { if caller.work_turn(grant(), 1, |cx| receiver.advance(&overlay, &source, &mutations, cx)).unwrap() { break; } }
+        let environment = MachineEnvironment { overlay: Some(&overlay), receiver: Some(&receiver), source: Some(&source), mutations: &mutations };
+        let position = overlay.find(source.entities[0].id).unwrap();
+        let mut machine = RetainedMachine::default();
+        assert!(caller.work_turn(grant(), 1, |cx| machine.start_local(position, cx)).unwrap());
+        let mut complete = false;
+        for _ in 0..1000000 { if caller.work_turn(grant(), 1, |cx| machine.advance_local(&environment, cx)).unwrap() { complete = true; break; } }
+        assert!(complete);
+        assert_eq!(machine.local_status().unwrap(), status, "{unit} {:?}", mutations.len());
         caller.cancel().cancel_now();
         machine.begin_close(); receiver.begin_close(); overlay.begin_close();
         for _ in 0..100000 {

@@ -11,10 +11,15 @@
   "why": "hand-r: sww/swv/swv: the body of the elevation in every view"
  },
  {
-  "op": "front-sweep",
+  "op": "prism",
   "scale": "50",
   "id": "shank-l",
-  "why": "shank-l: flat/flat/flat: prism along v fitted to the elevation outline"
+  "view": "front",
+  "span": [
+   -0.025,
+   0.025
+  ],
+  "why": "shank-l: flat front shape (39 mm short of the elevation when crouching). The full depth of the elevation shank (front-sweep, 143 mm) moves the front silhouette of the default pose from 15.0 to 17.3 mm against the guard limit of 15.0, a depth of 80 mm to 15.9: a prism of 50 mm depth keeps 15.0"
  },
  {
   "op": "plan-revolve",

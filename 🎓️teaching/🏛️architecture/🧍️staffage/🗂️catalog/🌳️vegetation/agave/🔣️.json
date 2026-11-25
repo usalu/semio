@@ -1679,12 +1679,48 @@
       "de": "Eine ausgewachsene Amerikanische Agave (Agave americana) von 1,45 m Höhe und 2,5 m Breite: eine Rosette aus 28 steifen, sukkulenten, blaugrauen Blättern in der 137,5-Grad-Spirale um einen kurzen Stamm, den die umfassenden Blattbasen verdecken; jedes Blatt oben rinnig und unten gekielt, über der Basis verengt, in der Mitte am breitesten, sein Rand gekerbt und gezähnt, seine Spitze ein dunkler Stachel; die untersten Blätter bogig zum Beet, im Herzen ein Speer eingerollter junger Blätter. Eine CAM-Pflanze: ihre Spaltöffnungen öffnen sich nachts."
     },
     "tags": [
-      "agave",
-      "succulent",
-      "cam",
-      "rosette",
-      "drought",
-      "transpiration"
+      {
+        "id": "agave",
+        "title": {
+          "en": "agave",
+          "de": "Agave"
+        }
+      },
+      {
+        "id": "succulent",
+        "title": {
+          "en": "succulent",
+          "de": "Sukkulente"
+        }
+      },
+      {
+        "id": "cam",
+        "title": {
+          "en": "CAM",
+          "de": "CAM"
+        }
+      },
+      {
+        "id": "rosette",
+        "title": {
+          "en": "rosette",
+          "de": "Rosette"
+        }
+      },
+      {
+        "id": "drought",
+        "title": {
+          "en": "drought",
+          "de": "Trockenheit"
+        }
+      },
+      {
+        "id": "transpiration",
+        "title": {
+          "en": "transpiration",
+          "de": "Transpiration"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage vegetation content worker NW-V2",

@@ -31,7 +31,7 @@ export function auditGeneratorContracts(audit: TaxonomyAudit): void {
     const targets = new Map<string, string>();
     for (const [id, contract] of Object.entries(taxonomy.generatorContracts)) {
       if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(id)) problems.push(`generatorContracts id ${JSON.stringify(id)} must be kebab-case.`);
-      const allowedKeys = new Set(["ownership", "ownerPath", "target", "previewTarget", "previewArguments", "previewScript", "previewProgress", "previewLimits", "checkTarget", "nativeConsumers", "inputPatterns", "inputDiscovery", "compilerInputManifest", "packageGeneration", "currentPackageDestination", "projectionActivation", "outputRoots", "reason"]);
+      const allowedKeys = new Set(["ownership", "ownerPath", "target", "previewTarget", "previewArguments", "previewScript", "previewProgress", "previewLimits", "checkTarget", "nativeConsumers", "ingressPreparation", "inputPatterns", "inputDiscovery", "compilerInputManifest", "packageGeneration", "currentPackageDestination", "projectionActivation", "outputRoots", "reason"]);
       for (const key of Object.keys(contract)) if (!allowedKeys.has(key)) problems.push(`generatorContracts[${JSON.stringify(id)}].${key} is forbidden.`);
       const ownership = contract.ownership as string;
       if (!["owned", "external"].includes(ownership)) problems.push(`generatorContracts[${JSON.stringify(id)}].ownership must be owned or external.`);
@@ -41,6 +41,7 @@ export function auditGeneratorContracts(audit: TaxonomyAudit): void {
         if (!runnable || !Array.isArray(contract.nativeConsumers) || contract.nativeConsumers.length === 0 || new Set(contract.nativeConsumers).size !== contract.nativeConsumers.length) problems.push(`generatorContracts[${JSON.stringify(id)}].nativeConsumers requires distinct Cargo project roots on an owned generator.`);
         else for (const consumer of contract.nativeConsumers) if (workspacePath(consumer, `generatorContracts[${JSON.stringify(id)}].nativeConsumers`) && exactTouchesOpaque(consumer)) problems.push(`generatorContracts[${JSON.stringify(id)}].nativeConsumers crosses an opaque boundary.`);
       }
+      if (contract.ingressPreparation !== undefined && (contract.ingressPreparation !== true || !contract.nativeConsumers?.length)) problems.push(`generatorContracts[${JSON.stringify(id)}].ingressPreparation must be true and requires nativeConsumers.`);
       const targetKnown = runnable;
       if (targetKnown) {
         if (workspacePath(contract.ownerPath, `generatorContracts[${JSON.stringify(id)}].ownerPath`) && exactTouchesOpaque(contract.ownerPath)) problems.push(`generatorContracts[${JSON.stringify(id)}].ownerPath crosses an opaque boundary.`);

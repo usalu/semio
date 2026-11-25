@@ -13,12 +13,48 @@
       "de": "Ein feuerverzinktes Rohr KHP 48,3 x 3,2, zu einem umgekehrten U gebogen (Biegeradius 180 mm), mit angeschweißtem Querholm auf 0,40 m, 0,3 m tief im Betonfundament: 0,75 m breit, 0,80 m hoch, von der Parkseite her frontal gezeichnet; ein angelehntes Fahrrad ist eine Last, kein zweites Asset. Von oben ist der Bügel ein Balken mit runden Enden."
     },
     "tags": [
-      "bicycle-stand",
-      "sheffield-stand",
-      "steel",
-      "street-furniture",
-      "galvanised",
-      "mobility"
+      {
+        "id": "bicycle-stand",
+        "title": {
+          "en": "bicycle stand",
+          "de": "Fahrradständer"
+        }
+      },
+      {
+        "id": "sheffield-stand",
+        "title": {
+          "en": "Sheffield stand",
+          "de": "Sheffield-Ständer"
+        }
+      },
+      {
+        "id": "steel",
+        "title": {
+          "en": "steel",
+          "de": "Stahl"
+        }
+      },
+      {
+        "id": "street-furniture",
+        "title": {
+          "en": "street furniture",
+          "de": "Stadtmobiliar"
+        }
+      },
+      {
+        "id": "galvanised",
+        "title": {
+          "en": "galvanised",
+          "de": "verzinkt"
+        }
+      },
+      {
+        "id": "mobility",
+        "title": {
+          "en": "mobility",
+          "de": "Mobilität"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage content (NW-O)",

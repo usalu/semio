@@ -41,6 +41,7 @@ impl SourceCustody{
     fn begin_close(&mut self){self.closing=true;}
     fn empty(&self)->bool{self.source.as_ref().is_none_or(SnapshotSource::terminal_is_empty)}
     fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{match self.source.as_ref().filter(|source|!source.terminal_is_empty()){Some(source)=>source.next_close_demand(body),None=>Ok(Default::default())}}
+    fn close_work(&self,body:usize)->Result<u64,ValueError>{match self.source.as_ref().filter(|source|!source.terminal_is_empty()){Some(source)=>source.next_close_work_demand(body),None=>Ok(1)}}
     fn close_owned(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome{
         let Some(source)=self.source.as_mut()else{return super::idle_step(RetainedCloneStep::Complete(Default::default()))};
         let turn=super::settled(source.close_step(body,effect));
@@ -48,7 +49,7 @@ impl SourceCustody{
         turn
     }
 }
-semio_s_artifact_stdio_ifc_details_profile::retire_self!([] SourceCustody);
+semio_s_artifact_stdio_ifc_details_profile::retire_self!([] SourceCustody; work = |custody: &SourceCustody, body: usize| custody.close_work(body));
 #[derive(Default,semio_framework_value::RetireOwned)]
 pub struct SourceLoan{admission:Option<Admission>,source:SourceCustody,binding:Option<Binding>}
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"staging.original-source-loan")}
@@ -62,6 +63,8 @@ impl SourceLoan{
             None=>Ok(RetirementDemand{copy_bytes:Self::metadata_bytes(),depth:1,..Default::default()}),
         }
     }
+    /// ⏱️ Quotes the work of the next close transition of the admission or the published source.
+    pub fn close_work(&self,body:usize)->Result<u64,ValueError>{let staged=match self.admission.as_ref(){Some(admission)=>admission.close_work_demand()?,None=>1};Ok(staged.max(self.source.close_work(body)?))}
     pub fn source(&self)->Option<&SnapshotSource>{if self.ready(){self.source.source.as_ref()}else{None}}
     pub fn advance(&mut self,owner:&Arc<IfcSnapshot>,expected:&IfcSnapshot,revision:[u8;32],cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
         let pointer=expected as *const _ as usize;

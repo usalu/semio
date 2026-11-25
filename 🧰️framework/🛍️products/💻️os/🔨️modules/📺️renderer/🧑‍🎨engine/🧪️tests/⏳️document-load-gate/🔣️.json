@@ -1,15 +1,68 @@
 {
   "ephemeralNoteActionId": "noteShellCommand",
   "policy": [
-    { "action": "noteShellCommand", "kind": "shell", "expect": "drop" },
-    { "action": "noteShellCommand", "kind": null, "expect": "drop" },
-    { "action": "setContributions", "kind": "mutation", "expect": "defer" },
-    { "action": "paste", "kind": "clipboard", "expect": "defer" },
-    { "action": "setActiveTab", "kind": "view", "expect": "pass" },
-    { "action": "hover", "kind": "interaction", "expect": "pass" },
-    { "action": "undo", "kind": "history", "expect": "pass" },
-    { "action": "historyEditCancelReplay", "kind": "history", "expect": "pass" },
-    { "action": "unknown", "kind": null, "expect": "pass" }
+    {
+      "action": "noteShellCommand",
+      "kind": "shell",
+      "expect": "drop"
+    },
+    {
+      "action": "noteShellCommand",
+      "kind": null,
+      "expect": "drop"
+    },
+    {
+      "action": "setContributions",
+      "kind": "mutation",
+      "expect": "defer"
+    },
+    {
+      "action": "paste",
+      "kind": "clipboard",
+      "expect": "defer"
+    },
+    {
+      "action": "setActiveTab",
+      "kind": "view",
+      "expect": "pass"
+    },
+    {
+      "action": "hover",
+      "kind": "interaction",
+      "expect": "pass"
+    },
+    {
+      "action": "undo",
+      "kind": "history",
+      "expect": "pass"
+    },
+    {
+      "action": "historyEditCancelReplay",
+      "kind": "history",
+      "expect": "pass"
+    },
+    {
+      "action": "unknown",
+      "kind": null,
+      "expect": "pass"
+    }
   ],
-  "capacity": 2
+  "capacity": 2,
+  "loadEnds": [
+    {
+      "cancelled": true,
+      "documentLoad": "cancelled",
+      "refusal": "document-load.cancelled"
+    },
+    {
+      "cancelled": false,
+      "documentLoad": "failed",
+      "refusal": "document-load.failed"
+    },
+    {
+      "cancelled": null,
+      "documentLoad": null,
+      "refusal": null
+    }
+  ]
 }

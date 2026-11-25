@@ -543,6 +543,125 @@
         "command": "repo ./📜️script.ts test native-artifacts"
       }
     },
+    "test-native-component-streaming": {
+      "executor": "repo:script",
+      "cache": true,
+      "dependsOn": [],
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "{projectRoot}/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🏃️process",
+        "command": "repo ./📜️script.ts test native-component-streaming"
+      }
+    },
+    "test-native-component-jobs": {
+      "executor": "repo:script",
+      "cache": true,
+      "dependsOn": [],
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "{projectRoot}/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🏃️process",
+        "command": "repo ./📜️script.ts test native-component-jobs"
+      }
+    },
+    "test-native-component-retry": {
+      "executor": "repo:script",
+      "cache": true,
+      "dependsOn": [],
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "{projectRoot}/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🏃️process",
+        "command": "repo ./📜️script.ts test native-component-retry"
+      }
+    },
+    "test-native-component-seal": {
+      "executor": "repo:script",
+      "cache": true,
+      "dependsOn": [],
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "{projectRoot}/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🏃️process",
+        "command": "repo ./📜️script.ts test native-component-seal"
+      }
+    },
+    "test-native-component-closure": {
+      "executor": "repo:script",
+      "cache": true,
+      "dependsOn": [],
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "{projectRoot}/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🏃️process",
+        "command": "repo ./📜️script.ts test native-component-closure"
+      }
+    },
+    "test-native-component-failures": {
+      "executor": "repo:script",
+      "cache": true,
+      "dependsOn": [],
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "{projectRoot}/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🏃️process",
+        "command": "repo ./📜️script.ts test native-component-failures"
+      }
+    },
+    "test-native-component-real": {
+      "executor": "repo:script",
+      "cache": true,
+      "dependsOn": [],
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "{projectRoot}/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🏃️process",
+        "command": "repo ./📜️script.ts test native-component-real"
+      }
+    },
     "test-native-storage-platform": {
       "executor": "repo:script",
       "cache": false,
@@ -871,7 +990,8 @@
           }
         }
       }
-    },    "test-native-image-availability": {
+    },
+    "test-native-image-availability": {
       "executor": "repo:script",
       "cache": true,
       "dependsOn": [],
@@ -888,7 +1008,6 @@
         "command": "repo ./📜️script.ts test native-image-availability"
       }
     },
-
     "test-runtime-environment": {
       "executor": "repo:script",
       "cache": true,

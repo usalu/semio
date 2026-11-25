@@ -122,7 +122,7 @@ export function WorldSurfaceStatusPane({visuals,locale,glassClass}:{readonly vis
   const version=useSyncExternalStore(useCallback(listener=>{const appearances=[...visuals.values()].flatMap(visual=>visual.appearance?[visual.appearance]:[]);for(const appearance of appearances)appearance.listeners.add(listener);return()=>{for(const appearance of appearances)appearance.listeners.delete(listener);};},[visuals]),snapshot,snapshot);
   const [pending,failed,cancelled]=version.split(":").map(Number);if(pending===undefined||failed===undefined||cancelled===undefined)throw Error("Complete owned surface status required");const language=locale?.split(/[-_]/)[0];const labels=language==="en"?{loading:"Loading surface textures",failed:"Surface could not be displayed",cancelled:"Surface texture loading cancelled",cancel:"Cancel"}:language==="de"?{loading:"Oberflächentexturen werden geladen",failed:"Oberfläche konnte nicht dargestellt werden",cancelled:"Laden der Oberflächentexturen abgebrochen",cancel:"Abbrechen"}:undefined;
   const active=Boolean(pending||failed||cancelled);
-  return <div role="status" aria-live="polite" aria-busy={pending>0 || undefined} data-slot="world-surface-status" data-surface-pending={pending} data-surface-failed={failed} data-surface-cancelled={cancelled} className={active?cn("pointer-events-auto rounded px-single py-half text-xs shadow-sm",glassClass):"sr-only"}>{active&&<><span>{failed?labels?.failed:pending?labels?.loading:labels?.cancelled}</span>{pending>0&&<><progress value={[...visuals.values()].reduce((sum,visual)=>sum+(visual.appearance?.textures.size ?? 0),0)-pending} max={[...visuals.values()].reduce((sum,visual)=>sum+(visual.appearance?.textures.size ?? 0),0)} aria-label={labels?.loading}/><button {...sharedBorderlessBoxProps} type="button" onClick={()=>{for(const visual of visuals.values()){const appearance=visual.appearance;if(appearance&&!appearance.closed&&appearance.pending){appearance.fault="cancelled";disposeWorldMeshAppearance(appearance);}}}}>{labels?.cancel}</button></>}</>}</div>;
+  return <div role="status" aria-live="polite" aria-busy={pending>0 || undefined} data-glass-chip={active?"":undefined} data-slot="world-surface-status" data-surface-pending={pending} data-surface-failed={failed} data-surface-cancelled={cancelled} className={active?cn("pointer-events-auto px-single py-half text-xs",glassClass):"sr-only"}>{active&&<><span>{failed?labels?.failed:pending?labels?.loading:labels?.cancelled}</span>{pending>0&&<><progress value={[...visuals.values()].reduce((sum,visual)=>sum+(visual.appearance?.textures.size ?? 0),0)-pending} max={[...visuals.values()].reduce((sum,visual)=>sum+(visual.appearance?.textures.size ?? 0),0)} aria-label={labels?.loading}/><button {...sharedBorderlessBoxProps} type="button" onClick={()=>{for(const visual of visuals.values()){const appearance=visual.appearance;if(appearance&&!appearance.closed&&appearance.pending){appearance.fault="cancelled";disposeWorldMeshAppearance(appearance);}}}}>{labels?.cancel}</button></>}</>}</div>;
 }
 
 export function WorldComputeStatusPane({
@@ -144,7 +144,7 @@ export function WorldComputeStatusPane({
   if (idle) {
     if (!status.hint) return <div className="sr-only" data-slot="world-compute-status" data-compute-phase={status.phase} role="status" aria-busy={undefined} />;
     return (
-      <div className={cn("pointer-events-none flex items-center gap-single rounded px-single py-half text-xs text-muted-foreground shadow-sm", glassClass)} data-level="pane" data-slot="world-compute-status" data-compute-phase={status.phase} role="status" aria-busy={undefined}>
+      <div data-glass-chip="" className={cn("pointer-events-none flex items-center gap-single px-single py-half text-xs text-muted-foreground", glassClass)} data-level="pane" data-slot="world-compute-status" data-compute-phase={status.phase} role="status" aria-busy={undefined}>
         <span data-slot="world-compute-hint">{status.hint}</span>
       </div>
     );
@@ -152,7 +152,8 @@ export function WorldComputeStatusPane({
   if (!labels) return <div className="sr-only" data-slot="world-compute-status" data-compute-phase={status.phase} data-language-required="" role="status" aria-busy={status.computing ? "true" : undefined} />;
   return (
     <div
-      className={cn("pointer-events-auto flex items-center gap-single rounded px-single py-half text-xs shadow-sm", glassClass)}
+      data-glass-chip=""
+      className={cn("pointer-events-auto flex items-center gap-single px-single py-half text-xs", glassClass)}
       data-level="pane"
       data-slot="world-compute-status"
       data-compute-phase={status.phase}
@@ -171,7 +172,7 @@ export function WorldComputeStatusPane({
         </span>
       )}
       {status.cancellable ? (
-        <button {...sharedBorderlessBoxProps} type="button" data-slot="world-compute-cancel" data-cancel-action={status.cancelAction} data-cancel-run-id={status.cancelArgs.runId} data-cancel-generation={status.cancelArgs.generation} className="rounded border px-half py-0 text-xs" onClick={onCancel}>
+        <button {...sharedBorderlessBoxProps} type="button" data-slot="world-compute-cancel" data-cancel-action={status.cancelAction} data-cancel-run-id={status.cancelArgs.runId} data-cancel-generation={status.cancelArgs.generation} className="border px-half py-0 text-xs" onClick={onCancel}>
           {labels.cancel}
         </button>
       ) : null}
@@ -444,10 +445,14 @@ export function resolveMarqueeInstanceIds(
   return hits;
 }
 
-/** 🖱️ Whether a host-local click sits inside the axis-aligned screen box of projected mesh corners. */
+/** 🎯️ Screen pixels a click may miss a projected box by and still pick it — thin columns project a few pixels wide. */
+export const WORLD3D_PICK_TOLERANCE_PX = 3;
+
+/** 🖱️ Whether a host-local click sits inside the axis-aligned screen box of projected mesh corners, grown by `tolerancePx`. */
 export function world3dProjectedAabbContainsClick(
   click: { readonly x: number; readonly y: number },
   corners: readonly (readonly [number, number])[],
+  tolerancePx: number = WORLD3D_PICK_TOLERANCE_PX,
 ): boolean {
   if (corners.length === 0) return false;
   let minX = Infinity;
@@ -460,7 +465,7 @@ export function world3dProjectedAabbContainsClick(
     if (x > maxX) maxX = x;
     if (y > maxY) maxY = y;
   }
-  return click.x >= minX && click.x <= maxX && click.y >= minY && click.y <= maxY;
+  return click.x >= minX - tolerancePx && click.x <= maxX + tolerancePx && click.y >= minY - tolerancePx && click.y <= maxY + tolerancePx;
 }
 
 /** 🖱️ Nearest projected AABB that contains the click; empty space returns null. */

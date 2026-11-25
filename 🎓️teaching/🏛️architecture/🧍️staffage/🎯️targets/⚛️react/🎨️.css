@@ -122,8 +122,18 @@
   font-size: 1rem;
 }
 
-.staffage-app[data-staffage-phone] [role="radiogroup"] {
-  flex-wrap: wrap;
+/* ⏳️ The size of an event marker on a clip's timeline: the pointer target, the finger target on a phone and on a tablet. The timeline insets its track by half of it. */
+.staffage-app {
+  --staffage-marker: 1.5rem;
+}
+
+[data-ui-device="tablet"] .staffage-app,
+.staffage-app[data-ui-device="tablet"] {
+  --staffage-marker: var(--layout-touch-min, 44px);
+}
+
+.staffage-app[data-staffage-phone] {
+  --staffage-marker: 44px;
 }
 
 .staffage-app[data-staffage-phone] [data-viewer] [data-stage] {

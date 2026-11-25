@@ -1,3 +1,4 @@
+process.env.SEMIO_PLUGIN_CATALOG ??= "/Users/ueli/Documents/semio/✏️s/🧑‍💻dev/🧩️catalog/🤖️generated";
 import {existsSync, readFileSync} from "node:fs";
 import {join, resolve} from "node:path";
 import {artifactFiles} from "@semio-tech/framework-plugin/browser-bundle/distribution/inventory";

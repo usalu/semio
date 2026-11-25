@@ -13,12 +13,48 @@
       "de": "Ein Bücherregal aus Spanplatte, 0,80 x 1,80 m, mit fünf verstellbaren Böden im 32-mm-Lochraster; die beladene Pose biegt jeden Boden um die berechnete Balkendurchbiegung, die Clips beladen die Böden und stecken einen um."
     },
     "tags": [
-      "bookshelf",
-      "storage",
-      "shelf",
-      "chipboard",
-      "adjustable",
-      "interior"
+      {
+        "id": "bookshelf",
+        "title": {
+          "en": "bookshelf",
+          "de": "Bücherbrett"
+        }
+      },
+      {
+        "id": "storage",
+        "title": {
+          "en": "storage",
+          "de": "Lagerung"
+        }
+      },
+      {
+        "id": "shelf",
+        "title": {
+          "en": "shelf",
+          "de": "Regalboden"
+        }
+      },
+      {
+        "id": "chipboard",
+        "title": {
+          "en": "chipboard",
+          "de": "Spanplatte"
+        }
+      },
+      {
+        "id": "adjustable",
+        "title": {
+          "en": "adjustable",
+          "de": "verstellbar"
+        }
+      },
+      {
+        "id": "interior",
+        "title": {
+          "en": "interior",
+          "de": "Innenausbau"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage content (NW-F)",

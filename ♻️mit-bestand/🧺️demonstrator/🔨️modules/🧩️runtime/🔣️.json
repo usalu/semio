@@ -9,11 +9,11 @@
     },
     {
       "variant": "koordinator",
-      "runtimeVariant": "koordinator"
+      "runtimeVariant": "cad"
     },
     {
       "variant": "aggregator",
-      "runtimeVariant": "aggregator"
+      "runtimeVariant": "puzzle3d"
     },
     {
       "variant": "aussuchen",
@@ -25,7 +25,7 @@
     },
     {
       "variant": "verfolgen",
-      "runtimeVariant": "verfolgen"
+      "runtimeVariant": "gis2d"
     },
     {
       "variant": "energy",
@@ -35,5 +35,15 @@
       "variant": "fem3d",
       "runtimeVariant": "fem3d"
     }
+  ],
+  "withheldExtensions": [
+    "cad-extension-aec-building",
+    "cad-extension-aec-building-energy",
+    "cad-extension-aec-building-structure",
+    "cad-extension-spatial-shape",
+    "process-extension-concrete",
+    "process-extension-metal",
+    "process-extension-robotic",
+    "process-extension-wood"
   ]
 }

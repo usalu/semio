@@ -15,7 +15,8 @@ pub mod install_pack;
 
 const DCT_KIND: &str = "s.stdio.jpeg";
 pub const SAMPLED_IMAGE_KIND: &str = "s.stdio.samples";
-pub const INLINE_IMAGE_SAMPLES_MAXIMUM_BYTES: usize = 1 << 20;
+/// 📐️ The largest packed sample body (§8.9.3) an 8-bit image keeps inline in the typed snapshot; a larger one is a sampled artifact.
+pub const INLINE_IMAGE_SAMPLES_MAXIMUM_BYTES: usize = 1 << 18;
 const RAW_KIND: &str = "s.stdio.binary";
 const RAW_STANDARD: &str = "raw";
 const RAW_SUBSET: &str = "*";
@@ -62,6 +63,17 @@ impl PdfSampledResourceIdentity {
         let mut hash = semio_framework_hash::Sha256::new();
         hash.update(SAMPLED_IMAGE_KIND.as_bytes());
         Some(Self { hash, cursor: 0, filter_wire, filter_len })
+    }
+
+    /// 🗜️ Binds a large sampled image whose retained body is still its encoded file bytes: the identity hashes the declared chain ahead of the body and no typed filter after it.
+    pub fn encoded(dict: &[PdfDictEntry]) -> Option<Self> {
+        if !encoded_sampled_image(dict) { return None; }
+        let mut filter_wire = [0u8; 160];
+        filter_wire[..2].copy_from_slice(b"[]");
+        let mut hash = semio_framework_hash::Sha256::new();
+        hash.update(SAMPLED_IMAGE_KIND.as_bytes());
+        hash.update(encoded_chain(dict).as_bytes());
+        Some(Self { hash, cursor: 0, filter_wire, filter_len: 2 })
     }
 
     /// ▶️ Hashes at most `work` pages of native stream bytes and reports page work consumed.
@@ -212,9 +224,13 @@ pub fn artifact_reference(kind: &str, digest: [u8; 32]) -> ArtifactRef {
     ArtifactRef { artifact_id, dialect: ArtifactDialect { artifact_kind: RAW_KIND.into(), standard: RAW_STANDARD.into(), subset: RAW_SUBSET.into() } }
 }
 
-pub fn qualified_image_dictionary(dict: &[PdfDictEntry]) -> bool {
+/// 🖼️ Qualifies an 8-bit gray or RGB image dictionary whose only reference is an indirect soft mask.
+pub fn qualified_image_dictionary(dict: &[PdfDictEntry]) -> bool { qualified_image_entries(dict, false) }
+
+/// 🧾️ The qualified image keys, plus its declared `Filter` and `DecodeParms` when the body is still encoded.
+fn qualified_image_entries(dict: &[PdfDictEntry], encoded: bool) -> bool {
     use crate::standards::v1_7::subsets::base::modules::lexer::{dict_get, dict_name};
-    dict.len() <= 8 && dict.iter().enumerate().all(|(index, entry)| {
+    dict.len() <= if encoded { 11 } else { 9 } && dict.iter().enumerate().all(|(index, entry)| {
         !dict[..index].iter().any(|previous| previous.key == entry.key) && match entry.key.as_str() {
             "Type" => entry.value.as_name() == Some("XObject"),
             "Subtype" => entry.value.as_name() == Some("Image"),
@@ -222,9 +238,48 @@ pub fn qualified_image_dictionary(dict: &[PdfDictEntry]) -> bool {
             "ImageMask" => entry.value.as_bool() == Some(false),
             "Interpolate" => entry.value.as_bool().is_some(),
             "Width" | "Height" | "ColorSpace" => true,
+            "SMask" => entry.value.as_ref().is_some(),
+            "Filter" | "DecodeParms" => encoded,
             _ => false,
         }
     }) && dict_name(dict, "Subtype") == Some("Image") && dict_get(dict, "BitsPerComponent").is_some()
+}
+
+/// 🖼️ Whether an import keeps this image XObject as its encoded file body: a qualified 8-bit DeviceGray or DeviceRGB image whose declared chain is exactly one Flate filter and whose samples would exceed the inline sample ceiling, so it is typed as a sampled artifact identified by its encoded bytes and chain and decoded only when a consumer resolves its pixels.
+pub fn encoded_sampled_image(dict: &[PdfDictEntry]) -> bool {
+    use crate::standards::v1_7::subsets::base::modules::lexer::{dict_get, dict_name};
+    let flate = |value: &PdfObject| matches!(value.as_name(), Some("FlateDecode" | "Fl"));
+    let single = match dict_get(dict, "Filter") { Some(PdfObject::Array(items)) => matches!(items.as_slice(), [item] if flate(item)), Some(value) => flate(value), None => false };
+    let parameters = match dict_get(dict, "DecodeParms") {
+        None | Some(PdfObject::Null | PdfObject::Dict(_)) => true,
+        Some(PdfObject::Array(items)) => matches!(items.as_slice(), [PdfObject::Null | PdfObject::Dict(_)]),
+        _ => false,
+    };
+    let components = match dict_name(dict, "ColorSpace") { Some("DeviceGray") => 1usize, Some("DeviceRGB") => 3, _ => return false };
+    let dimension = |key| match dict_get(dict, key) { Some(PdfObject::Int(raw)) => usize::try_from(*raw).ok().filter(|size| *size != 0), _ => None };
+    let (Some(width), Some(height)) = (dimension("Width"), dimension("Height")) else { return false; };
+    single && parameters && qualified_image_entries(dict, true)
+        && width.saturating_mul(height).saturating_mul(components) > INLINE_IMAGE_SAMPLES_MAXIMUM_BYTES
+}
+
+/// 🧬️ The canonical spelling of an encoded stream's declared chain (its `Filter` then its `DecodeParms`), hashed into its identity ahead of its body.
+fn encoded_chain(dict: &[PdfDictEntry]) -> String {
+    let spell = |key: &str| semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(&dict.iter().find(|entry| entry.key == key).map(|entry| &entry.value).unwrap_or(&PdfObject::Null).to_value()));
+    spell("Filter") + &spell("DecodeParms")
+}
+
+/// 🗜️ Whether a retained stream still carries the encoded body of its declared logical chain.
+fn encoded_stream(dict: &[PdfDictEntry], filters: &[PdfStreamFilter]) -> bool {
+    filters.is_empty() && crate::standards::v1_7::subsets::base::modules::filters::declares_logical_codec(dict)
+}
+
+/// 🔓️ Decodes a resolved encoded stream into the form its consumers read (decoded body, typed chain, dictionary without its filter declaration); every other value is returned as it is.
+fn decoded_resource(value: PdfObject) -> PResult<PdfObject> {
+    let PdfObject::Stream { dict, data, filters } = value else { return Ok(value); };
+    if !encoded_stream(&dict, &filters) { return Ok(PdfObject::Stream { dict, data, filters }); }
+    let (body, chain) = crate::standards::v1_7::subsets::base::modules::filters::decode_stream_admitted(&dict, &data.to_vec_owner())?;
+    let dict = dict.into_iter().filter(|entry| crate::standards::v1_7::subsets::base::modules::lexer::retain_stream_entry(entry, true)).collect();
+    Ok(PdfObject::Stream { dict, data: stream_bytes(&body), filters: chain })
 }
 
 /// 🛂️ Native admission and resolution are the only access to foreign encoded bodies.
@@ -238,7 +293,7 @@ pub trait PdfArtifactResourcePort {
 pub struct NativePdfArtifactResources<'a> {resources:Vec<(ArtifactRef,PdfObject)>,graph:&'a [PdfIndirectObject],identities:std::cell::RefCell<std::collections::HashMap<String,std::collections::HashMap<String,usize>>>}
 fn identity(kind:&str,object:&PdfObject)->PResult<ArtifactRef> {
     let PdfObject::Stream {dict,data,filters}=object else{return Err(PdfEngineError::Unsupported("foreign PDF artifact requires a native stream".into()));};
-    let mut hash=semio_framework_hash::Sha256::new();hash.update(kind.as_bytes());{let mut page=[0u8;4096];let mut at=0;while at<data.len(){let count=(data.len()-at).min(page.len());if semio_framework_value::ByteReadSource::read_bytes(data,at,&mut page[..count])!=count{return Err(PdfEngineError::Malformed("foreign PDF artifact lost a stream byte".into()))}hash.update(&page[..count]);at+=count;}}
+    let mut hash=semio_framework_hash::Sha256::new();hash.update(kind.as_bytes());if encoded_stream(dict,filters){hash.update(encoded_chain(dict).as_bytes());}{let mut page=[0u8;4096];let mut at=0;while at<data.len(){let count=(data.len()-at).min(page.len());if semio_framework_value::ByteReadSource::read_bytes(data,at,&mut page[..count])!=count{return Err(PdfEngineError::Malformed("foreign PDF artifact lost a stream byte".into()))}hash.update(&page[..count]);at+=count;}}
     let value=semio_framework_pack_json::from_dsl_value(&filters.to_value());hash.update(semio_framework_pack_json::to_string(&value).as_bytes());
     if kind=="s.stdio.font.type1" {for name in ["Length1","Length2","Length3"]{let entry=dict.iter().find(|entry|entry.key==name).map(|entry|&entry.value).unwrap_or(&PdfObject::Null);hash.update(semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(&entry.to_value())).as_bytes());}}
     Ok(artifact_reference(kind, hash.finalize()))
@@ -265,7 +320,7 @@ impl PdfArtifactResourcePort for NativePdfArtifactResources<'_> {
             self.identities.borrow_mut().insert(kind.to_string(),index);
         }
         let native=reference.dialect.artifact_kind==RAW_KIND&&reference.dialect.standard==RAW_STANDARD&&reference.dialect.subset==RAW_SUBSET;
-        if let Some(position)=self.identities.borrow().get(kind).filter(|_|native).and_then(|index|index.get(&reference.artifact_id)).copied(){return Ok(self.graph[position].value.clone());}
+        if let Some(position)=self.identities.borrow().get(kind).filter(|_|native).and_then(|index|index.get(&reference.artifact_id)).copied(){return decoded_resource(self.graph[position].value.clone());}
         Err(PdfEngineError::Unsupported(format!("foreign PDF artifact {} has not been admitted",reference.artifact_id)))
     }
 

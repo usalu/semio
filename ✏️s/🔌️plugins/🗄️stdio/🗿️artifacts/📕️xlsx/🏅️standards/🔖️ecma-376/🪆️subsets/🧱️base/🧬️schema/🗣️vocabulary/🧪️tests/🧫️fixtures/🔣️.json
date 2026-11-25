@@ -1,0 +1,128 @@
+{
+  "description": "Attribute-name resolution of namespace declarations: `xmlns:*` attributes are declarations in the reserved xmlns namespace (Namespaces in XML 1.0, section 3), never lookups of a bound prefix; ordinary prefixes resolve through the scope; undeclared prefixes are refused.",
+  "cases": [
+    {
+      "name": "declaration of r on an element whose scope does not bind it yet",
+      "scope": [],
+      "attribute": "xmlns:r",
+      "expected": {
+        "namespace": "http://www.w3.org/2000/xmlns/",
+        "local": "r"
+      }
+    },
+    {
+      "name": "xml prefix is always bound",
+      "scope": [],
+      "attribute": "xml:space",
+      "expected": {
+        "namespace": "http://www.w3.org/XML/1998/namespace",
+        "local": "space"
+      }
+    },
+    {
+      "name": "declared prefix resolves through the scope",
+      "scope": [
+        [
+          "r",
+          "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+        ]
+      ],
+      "attribute": "r:id",
+      "expected": {
+        "namespace": "http://schemas.openxmlformats.org/officeDocument/2006/relationships",
+        "local": "id"
+      }
+    },
+    {
+      "name": "undeclared prefix is refused",
+      "scope": [],
+      "attribute": "r:id",
+      "expected": null
+    },
+    {
+      "name": "strict relationships declaration",
+      "scope": [],
+      "attribute": "xmlns:r",
+      "expected": {
+        "namespace": "http://www.w3.org/2000/xmlns/",
+        "local": "r"
+      }
+    }
+  ],
+  "workbooks": [
+    {
+      "name": "prefix declared on the root",
+      "xml": "<workbook xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\"><sheets><sheet name=\"A\" sheetId=\"1\" r:id=\"rId1\"/></sheets></workbook>",
+      "expected": {
+        "main": "http://schemas.openxmlformats.org/spreadsheetml/2006/main",
+        "relationshipIds": [
+          "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+        ]
+      }
+    },
+    {
+      "name": "prefix declared only on a child element",
+      "xml": "<workbook xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><sheets><sheet xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" name=\"A\" sheetId=\"1\" r:id=\"rId1\"/></sheets></workbook>",
+      "expected": {
+        "main": "http://schemas.openxmlformats.org/spreadsheetml/2006/main",
+        "relationshipIds": [
+          "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+        ]
+      }
+    },
+    {
+      "name": "another prefix for the same namespace on each sheet",
+      "xml": "<workbook xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><sheets><sheet xmlns:rel=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" name=\"A\" sheetId=\"1\" rel:id=\"rId1\"/><sheet xmlns:q=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" name=\"B\" sheetId=\"2\" q:id=\"rId2\"/></sheets></workbook>",
+      "expected": {
+        "main": "http://schemas.openxmlformats.org/spreadsheetml/2006/main",
+        "relationshipIds": [
+          "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+        ]
+      }
+    },
+    {
+      "name": "prefixed root element",
+      "xml": "<x:workbook xmlns:x=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\"><x:sheets><x:sheet name=\"A\" sheetId=\"1\" r:id=\"rId1\"/></x:sheets></x:workbook>",
+      "expected": {
+        "main": "http://schemas.openxmlformats.org/spreadsheetml/2006/main",
+        "relationshipIds": [
+          "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+        ]
+      }
+    },
+    {
+      "name": "genuinely wrong namespace on a child",
+      "xml": "<workbook xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><sheets><sheet xmlns:r=\"http://purl.oclc.org/ooxml/officeDocument/relationships\" name=\"A\" sheetId=\"1\" r:id=\"rId1\"/></sheets></workbook>",
+      "expected": {
+        "main": "http://schemas.openxmlformats.org/spreadsheetml/2006/main",
+        "relationshipIds": [
+          "http://purl.oclc.org/ooxml/officeDocument/relationships"
+        ]
+      }
+    },
+    {
+      "name": "two namespaces in one workbook are both reported",
+      "xml": "<workbook xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\"><sheets><sheet name=\"A\" sheetId=\"1\" r:id=\"rId1\"/><sheet xmlns:r=\"http://purl.oclc.org/ooxml/officeDocument/relationships\" name=\"B\" sheetId=\"2\" r:id=\"rId2\"/></sheets></workbook>",
+      "expected": {
+        "main": "http://schemas.openxmlformats.org/spreadsheetml/2006/main",
+        "relationshipIds": [
+          "http://schemas.openxmlformats.org/officeDocument/2006/relationships",
+          "http://purl.oclc.org/ooxml/officeDocument/relationships"
+        ]
+      }
+    },
+    {
+      "name": "no relationship attributes",
+      "xml": "<workbook xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><sheets/></workbook>",
+      "expected": {
+        "main": "http://schemas.openxmlformats.org/spreadsheetml/2006/main",
+        "relationshipIds": []
+      }
+    },
+    {
+      "name": "undeclared prefix is refused",
+      "xml": "<workbook xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><sheets><sheet name=\"A\" sheetId=\"1\" r:id=\"rId1\"/></sheets></workbook>",
+      "expected": null
+    }
+  ]
+}

@@ -2,11 +2,12 @@ import {createHash,randomBytes} from "node:crypto";
 import {hostname} from "node:os";
 import {mkdirSync,readFileSync,realpathSync,writeFileSync} from "node:fs";
 import {dirname,join} from "node:path";
-import {type RustcUnitV1,type unitKeyV1} from "../🔏️key/🟦️.ts";
+import {differingComponentsV1,unitKeyComponentsV1,type RustcUnitV1,type unitKeyV1} from "../🔏️key/🟦️.ts";
+import {decodeActionResultV1,parseRemoteUnitV1,type KeyComponentsV1} from "./📦️wire/🟦️.ts";
 import {type UnitEventV1} from "../💾️store/🟦️.ts";
 import {createFleetClientV1,readFleetSettingsV1,type FleetClientV1} from "./📡️client/🟦️.ts";
 import {fleetCacheRootV1,remoteCacheFetchV1} from "../../../../🏗️build/🌐️remote-cache/🛰️fleet/🟦️.ts";
-import {compilerReleaseV1,type CompilerReleaseV1,FLEET_POLICY_V1,hostIndependentV1,neutralReleaseV1,platformOfV1,portableRootsV1,remoteKeyV1,slotIdV1,slotPartsV1,type PlatformV1,type PortableRootV1,type ToolRootsV1} from "./🪪️identity/🟦️.ts";
+import {compilerReleaseV1,type CompilerReleaseV1,FLEET_POLICY_V1,hostIndependentV1,neutralReleaseV1,platformOfV1,portableRootsV1,portableTextV1,remoteKeyV1,slotIdV1,slotPartsV1,type PlatformV1,type PortableRootV1,type ToolRootsV1} from "./🪪️identity/🟦️.ts";
 import {enqueueUploadV1,markOfferedV1,offeredV1,spoolBoundV1,spoolLengthV1,startUploaderV1} from "./📤️uploader/🟦️.ts";
 import {installFleetUnitV1} from "./📥️adopt/🟦️.ts";
 import {decodeProtobufV1,encodeProtobufV1,REAPI_V1} from "../../../../🏗️build/🌐️remote-execution/📡️wire/📦️protobuf/🟦️.ts";
@@ -16,7 +17,7 @@ const pause=(milliseconds:number):Promise<void>=>new Promise(done=>{setTimeout(d
 type Environment=Readonly<Record<string,string|undefined>>;
 
 /** 🛰️ One unit as the fleet tier sees it: its key and slot, the platform it needs and the roots that make its paths portable. */
-export type FleetUnitV1=Readonly<{client:FleetClientV1;root:string;environment:Environment;localKey:string;key:string;slot:string;slotParts:readonly string[];crate:string;platform:PlatformV1;roots:readonly PortableRootV1[];cwd:string;workspace:string|undefined;laneRoot:string|undefined;owner:string;expected:readonly string[];tools?:ToolRootsV1;run?:true}>;
+export type FleetUnitV1=Readonly<{client:FleetClientV1;root:string;environment:Environment;localKey:string;key:string;slot:string;slotParts:readonly string[];crate:string;platform:PlatformV1;roots:readonly PortableRootV1[];cwd:string;workspace:string|undefined;laneRoot:string|undefined;owner:string;expected:readonly string[];tools?:ToolRootsV1;run?:true;keyComponents?:KeyComponentsV1}>;
 
 /** 🏷️ The owner name a process claims under: machine, process and a random suffix, so a restarted process never inherits a dead one's claim. */
 export const fleetOwnerV1=():string=>`${hostname().replace(/[^A-Za-z0-9._-]/gu,"-").slice(0,60)}:${process.pid}:${randomBytes(3).toString("hex")}`;
@@ -47,6 +48,33 @@ export function fleetUnidentifiedReasonV1(root:string,environment:Environment):s
  try{return readFleetSettingsV1(root,environment)?"no-compiler-identity":undefined;}catch{return "no-compiler-identity";}
 }
 
+/** 🧾️ The named inputs of the key of one unit as stored in its manifest (see `KeyComponents` of the schema): the digests of the portable key inputs and of the platform, never a path of this machine. `undefined` when they cannot be read.
+ * @see ./🧬️schema/🔣️.json */
+export function keyComponentsOfV1(keyInput:Parameters<typeof unitKeyV1>[0],roots:readonly PortableRootV1[],platform:PlatformV1):KeyComponentsV1|undefined{
+ try{
+  const named=unitKeyComponentsV1({...keyInput,normalized:keyInput.normalized.map(argument=>portableTextV1(argument,roots)),environment:keyInput.environment.map(([name,value])=>[name,portableTextV1(value,roots)] as [string,string])}),values=Object.fromEntries(Object.entries(named.values).slice(0,32).map(([name,value])=>[name,value.slice(0,512)]));
+  return Object.freeze({origin:hostname().replace(/[^A-Za-z0-9._-]/gu,"-").slice(0,60)||"unknown",components:Object.freeze({...named.components,platform:createHash("sha256").update(JSON.stringify(platform)).digest("hex").slice(0,16)}),values:Object.freeze(values)});
+ }catch{return undefined;}
+}
+
+/** 🔭️ The stored unit of the same slot that this unit's key is nearest to, and the key inputs that differ from it: asks the cache which action results it holds under the slot (`GET /<instance>/v1/slots/<slot>`), reads the key components of up to four of them from their manifests and answers the one that differs in the fewest inputs, preferring one of another origin. `undefined` when the cache cannot say or no stored unit carries key components. Never throws.
+ * @see ./🧬️schema/🔣️.json */
+export async function explainFleetMissV1(unit:FleetUnitV1):Promise<Readonly<{key:string;origin:string;differs:readonly string[]}>|undefined>{
+ try{
+  const own=unit.keyComponents;if(own===undefined||unit.client.slotKeys===undefined||!unit.client.usable())return undefined;
+  const rows=((await unit.client.slotKeys(unit.slot))??[]).filter(row=>row.key!==unit.key).slice(0,4),found:{key:string;origin:string;differs:string[]}[]=[];
+  for(const row of rows){
+   const answer=await unit.client.getResult(row.key);if(typeof answer==="string")continue;
+   const manifest=decodeActionResultV1(answer).files.find(file=>file.path===fleet.manifestName);if(manifest===undefined)continue;
+   const bytes=await unit.client.getBlob(manifest.digest.hash,manifest.digest.size);if(bytes===undefined)continue;
+   let record:KeyComponentsV1|undefined;try{record=parseRemoteUnitV1(bytes,{key:row.key}).keyComponents;}catch{continue;}
+   if(record!==undefined)found.push({key:row.key,origin:record.origin,differs:differingComponentsV1([own.components,record.components])});
+  }
+  found.sort((left,right)=>Number(left.origin===own.origin)-Number(right.origin===own.origin)||left.differs.length-right.differs.length);
+  return found[0];
+ }catch{return undefined;}
+}
+
 const clients=new Map<string,FleetClientV1>();
 
 /** 📡️ The fleet client of this process for one cache configuration (one per endpoint, instance and credential, so the manifest lookup before the key and the unit lookup after it share it); `undefined` when the tier is off. Never throws. */
@@ -65,7 +93,7 @@ export function prepareFleetV1(input:Readonly<{root:string;environment:Environme
   const settings=readFleetSettingsV1(input.root,input.environment);if(!settings)return undefined;
   const workspace=input.environment.SEMIO_UNIT_CACHE_WORKSPACE_ROOT||undefined,client=world.client??fleetClientV1(input.root,input.environment);if(client===undefined)return undefined;
   const platform=platformOfV1({release:input.basics.release,unit:input.unit,args:input.args,environment:input.environment,toolchain:input.toolchain}),roots=portableRootsV1({cwd:input.cwd,workspace,hints:[input.environment.CARGO_MANIFEST_DIR,input.environment.PWD],...input.tools});
-  return Object.freeze({client,root:input.root,environment:input.environment,localKey:input.localKey,key:remoteKeyV1(platform,input.keyInput,roots,input.sensitive),slot:input.basics.slot,slotParts:input.basics.slotParts,crate:input.crate,platform,roots,cwd:input.cwd,workspace,laneRoot:input.laneRoot,owner:fleetOwnerV1(),expected:input.expected??[],...input.tools===undefined?{}:{tools:input.tools}});
+  return Object.freeze({client,root:input.root,environment:input.environment,localKey:input.localKey,key:remoteKeyV1(platform,input.keyInput,roots,input.sensitive),slot:input.basics.slot,slotParts:input.basics.slotParts,crate:input.crate,platform,roots,cwd:input.cwd,workspace,laneRoot:input.laneRoot,owner:fleetOwnerV1(),expected:input.expected??[],...input.tools===undefined?{}:{tools:input.tools},...(kc=>kc===undefined?{}:{keyComponents:kc})(keyComponentsOfV1(input.keyInput,roots,platform))});
  }catch{return undefined;}
 }
 
@@ -203,7 +231,7 @@ export async function obtainFleetUnitV1(unit:FleetUnitV1,event:(kind:UnitEventV1
  }catch{return compile("error");}
 }
 
-const jobExtras=(unit:FleetUnitV1)=>({...unit.run?{run:true as const}:{},...unit.tools===undefined?{}:{tools:{...unit.tools}}});
+const jobExtras=(unit:FleetUnitV1)=>({...unit.run?{run:true as const}:{},...unit.tools===undefined?{}:{tools:{...unit.tools}},...unit.keyComponents===undefined?{}:{keyComponents:unit.keyComponents}});
 
 /** 🎁️ A local hit of a unit this machine never shared: queues it once so a machine that already built something fills the fleet cache too (the worker first asks the server whether it has the unit). Cheap when the unit is settled: one file test. */
 export function offerFleetUnitV1(unit:FleetUnitV1):void{

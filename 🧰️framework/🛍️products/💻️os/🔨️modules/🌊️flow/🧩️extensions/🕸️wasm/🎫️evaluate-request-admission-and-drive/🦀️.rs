@@ -101,11 +101,65 @@ impl EvaluationRequestAdmission {
 /// `TESSELLATE_STEP_BUDGET`'s reasoning: units are not time.
 pub const EVALUATE_STEP_BUDGET: usize = 8;
 
-/// ⌛️ Wall-clock allowance for one `evaluate` round trip when the requester names none. Chosen
+/// ⌛️ Wall-clock allowance for evaluation work in one `evaluate` round trip. Chosen
 /// well under the host shard watchdog's 16 s silence threshold AND under the 5 s ordinary
 /// heartbeat window, so a worker driving a budgeted evaluation is never mistaken for a dead one
 /// (`🎭️actor/📮️shard-client/🟦️.ts`'s `SHARD_LIVENESS_POLICY`).
 pub const EVALUATE_STEP_WALL_MICROS: u64 = 2_000_000;
+
+const DEFAULT_ROUND_UNITS: u64 = 256;
+const MAXIMUM_ROUND_UNITS: u64 = 4096;
+
+/// 📊️ Tracks a reply's work and elapsed-time ceilings across worker polls.
+pub(super) struct EvaluationRound {
+    remaining: u64,
+    started_us: Option<u64>,
+}
+
+impl EvaluationRound {
+    pub(super) fn new(requested_units: u64) -> Self {
+        let remaining = if requested_units == 0 { DEFAULT_ROUND_UNITS } else { requested_units.min(MAXIMUM_ROUND_UNITS) };
+        Self { remaining, started_us: None }
+    }
+
+    fn begin(&mut self, cx: &semio_framework_job::StepContext<'_>) {
+        if self.started_us.is_none() {
+            self.started_us = cx.now_us();
+        }
+    }
+
+    fn spent(&mut self, work: u64, now_us: impl FnOnce() -> Option<u64>) -> bool {
+        self.remaining = self.remaining.saturating_sub(work);
+        self.remaining == 0 || self.started_us.is_some_and(|started| {
+            now_us().is_some_and(|now| now.saturating_sub(started) >= EVALUATE_STEP_WALL_MICROS)
+        })
+    }
+}
+
+#[cfg(test)]
+mod round_tests {
+    use super::*;
+
+    #[test]
+    fn progress_reply_uses_the_original_round_opportunity() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/⏱️reply-cadence/🔣️.json")).unwrap();
+        assert_eq!(fixture["defaultUnits"].as_u64(), Some(DEFAULT_ROUND_UNITS));
+        assert_eq!(fixture["maximumUnits"].as_u64(), Some(MAXIMUM_ROUND_UNITS));
+        assert_eq!(fixture["maximumElapsedUs"].as_u64(), Some(EVALUATE_STEP_WALL_MICROS));
+        for case in fixture["cases"].as_array().unwrap() {
+            let mut round = EvaluationRound::new(case["requestedUnits"].as_u64().unwrap());
+            round.started_us = case["startedUs"].as_u64();
+            for poll in case["polls"].as_array().unwrap() {
+                assert_eq!(
+                    round.spent(poll[0].as_u64().unwrap(), || poll[1].as_u64()),
+                    poll[2].as_bool().unwrap(),
+                    "{}",
+                    case["name"],
+                );
+            }
+        }
+    }
+}
 
 /// 🧊️ Explicit cold dependency identity policy; normal requests carry their own full grant.
 pub(super) const COLD_EVALUATION_IDENTITY_POLICY:RetainedCloneGrant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:1048576,maximum_release_bytes:256*1024*1024,maximum_depth:1024};
@@ -126,7 +180,7 @@ pub fn evaluate_step_envelope_cold(registry:&neural_engine::SharedRegistry,reque
 }
 
 pub(super) fn evaluation_admit_original_request(registry:&neural_engine::SharedRegistry,mut request:EvaluateRequest,jobs:&mut EvaluationJobRegistry,existing:Option<usize>,mut physical:RetainedCloneProgress,admitted_slot:&mut Option<usize>,cx:&mut semio_framework_job::StepContext<'_>)->EvaluationReply {
-    let memory_grant=cx.retained_grant();let round_units=request.round_units;let identity=registry.owner_identity();
+    let memory_grant=cx.retained_grant();let mut round=EvaluationRound::new(request.round_units);let identity=registry.owner_identity();
     let mut returned_request=None;
     let slot=if let Some(slot)=existing{
         let remaining=evaluation_remaining_grant(memory_grant,physical);if remaining.maximum_items==0||remaining.maximum_depth==0{return EvaluationReply::pending_request(request,physical)}physical.copied_items+=1;
@@ -166,12 +220,11 @@ pub(super) fn evaluation_admit_original_request(registry:&neural_engine::SharedR
         match jobs.jobs.insert_reserved(key,retained,grant){Ok((None,receipt))=>{physical=physical.checked_add(receipt).expect("original SDK indexed row receipt");jobs.admission_owner=None;jobs.lookup_epoch=jobs.lookup_epoch.checked_add(1).expect("original registry key epoch");},Ok((Some(_),_))=>unreachable!("original vacant evaluation slot remains unique"),Err((error,key,mut retained))=>{let mut request=retained.request_admission.take().unwrap().request.take().unwrap();request.operator_id=key.1;let registry=retained.registry.take().unwrap();let _original_registry=registry;return EvaluationReply::refused_original(request,physical,error.into());}}
         (0..jobs.jobs.slot_count()).find(|slot|jobs.jobs.slot_entry(*slot).is_some_and(|(key,_)|key.0==identity&&key.1.as_ptr()==key_pointer)).unwrap()
     };
-    *admitted_slot=Some(slot);evaluation_drive_original(registry,jobs,slot,memory_grant,round_units,physical,returned_request,cx)
+    *admitted_slot=Some(slot);evaluation_drive_original(registry,jobs,slot,memory_grant,Some(&mut round),physical,returned_request,cx)
 }
 
-pub(super) fn evaluation_drive_original(registry:&neural_engine::SharedRegistry,jobs:&mut EvaluationJobRegistry,slot:usize,memory_grant:RetainedCloneGrant,round_units:u64,mut physical:RetainedCloneProgress,returned_request:Option<EvaluateRequest>,cx:&mut semio_framework_job::StepContext<'_>)->EvaluationReply {
+pub(super) fn evaluation_drive_original(registry:&neural_engine::SharedRegistry,jobs:&mut EvaluationJobRegistry,slot:usize,memory_grant:RetainedCloneGrant,mut round:Option<&mut EvaluationRound>,mut physical:RetainedCloneProgress,returned_request:Option<EvaluateRequest>,cx:&mut semio_framework_job::StepContext<'_>)->EvaluationReply {
     let (key,retained)=jobs.jobs.slot_entry_mut(slot).unwrap();
-    let mut spent=0u64;
     loop{
         if cx.should_yield(){return EvaluationReply{retirement_posted:false,external_pending:false,pending_source:None,wire:None,complete:false,faulted:false,retirement_progress:physical,returned_request,refusal:None}}
         let remaining=evaluation_remaining_grant(memory_grant,physical);
@@ -193,8 +246,8 @@ pub(super) fn evaluation_drive_original(registry:&neural_engine::SharedRegistry,
             match result{Ok(step)=>physical=physical.checked_add(step.progress()).expect("original SDK compact source receipt"),Err(error)=>{physical=physical.checked_add(error.retained_progress()).expect("original SDK failed compact source receipt");retained.fault=Some(error.into());retained.cancel();}}
             if retained.compact_request.is_none()&&retained.compact_active.is_none(){retained.compact_cleanup=false;}return EvaluationReply{retirement_posted:false,external_pending:false,pending_source:None,wire:None,complete:false,faulted:false,retirement_progress:physical,returned_request,refusal:None};
         }
-        let budget=usize::try_from(cx.fuel_remaining()).unwrap_or(usize::MAX);let units=if round_units==0{budget}else{budget.min(round_units.saturating_sub(spent)as usize)};spent=spent.saturating_add(units as u64);
         if physical!=Default::default(){return EvaluationReply{retirement_posted:false,external_pending:false,pending_source:None,wire:None,complete:false,faulted:false,retirement_progress:physical,returned_request,refusal:None}}
+        if let Some(round)=round.as_deref_mut(){round.begin(cx);}
         let before_units=retained.units;let restarting=retained.restarting;let (step,receipt,failed)=match retained.advance(registry,&key.1,cx){Ok((step,receipt))=>(step,receipt,false),Err(error)=>{let receipt=retained.normal_step_progress();retained.fault=Some(error);retained.cancel();(EvaluationStep::Working(retained.progress()),receipt,true)}};
         if !failed&&!retained.normal_context_posted&&receipt==Default::default()&&retained.units==before_units{return EvaluationReply{retirement_posted:false,external_pending:false,pending_source:None,wire:None,complete:false,faulted:false,retirement_progress:physical,returned_request,refusal:None}}
         let work=if restarting&&!retained.restarting&&retained.units==0{receipt.copied_items.max(1)}else{retained.units.saturating_sub(before_units).max(receipt.copied_items).max(1)};if !retained.normal_context_posted{cx.consume_fuel(work as u64);}
@@ -205,9 +258,10 @@ pub(super) fn evaluation_drive_original(registry:&neural_engine::SharedRegistry,
             EvaluationStep::Done(mut reply)=>{reply.retirement_posted=retained.normal_context_posted;reply.retirement_progress=physical;reply.returned_request=returned_request;if reply.complete{retained.cancelled=true;}return reply;},
             EvaluationStep::Cancelled(progress)=>retained.response=Some(EvaluationOutput::envelope(EvaluationEnvelopeSource{output:None,done:true,cancellable:false,phase:"cancelled",units_done:progress.units_done,units_total:progress.units_total,pending:None},false)),
             EvaluationStep::Working(progress)=>{
-                let expired=cx.should_yield();
-                let _=(funded,expired,spent);
-                retained.response=Some(EvaluationOutput::envelope(EvaluationEnvelopeSource{output:None,done:false,cancellable:true,phase:progress.phase,units_done:progress.units_done,units_total:progress.units_total,pending:None},false));
+                let publish=round.is_some_and(|round|round.spent(work as u64,||cx.now_us()));
+                if publish{
+                    retained.response=Some(EvaluationOutput::envelope(EvaluationEnvelopeSource{output:None,done:false,cancellable:true,phase:progress.phase,units_done:progress.units_done,units_total:progress.units_total,pending:None},false));
+                }
             },
         }
         return EvaluationReply{retirement_posted:retained.normal_context_posted,external_pending:false,pending_source:None,wire:None,complete:false,faulted:false,retirement_progress:physical,returned_request,refusal:None};

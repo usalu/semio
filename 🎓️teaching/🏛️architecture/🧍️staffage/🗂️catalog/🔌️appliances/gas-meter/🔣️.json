@@ -13,16 +13,76 @@
       "de": "Ein kompakter Balgengaszähler G4 von 0,19 m mal 0,25 m in der Frontansicht: ein Gehäuse aus zwei tiefgezogenen Stahlblechschalen mit Falznaht, zwei Rohrstutzen mit Überwurfmuttern im Abstand von 110 mm oben, ein Zählwerkskopf mit achtstelligem Zählwerk und einem Prüfrad, dessen Zeiger sich mit dem Gasdurchfluss dreht."
     },
     "tags": [
-      "meter",
-      "gas-meter",
-      "bellows-meter",
-      "g4",
-      "final-energy",
-      "billing",
-      "wall-mounted",
-      "appliance",
-      "gas",
-      "rotating"
+      {
+        "id": "meter",
+        "title": {
+          "en": "meter",
+          "de": "Zähler"
+        }
+      },
+      {
+        "id": "gas-meter",
+        "title": {
+          "en": "gas meter",
+          "de": "Gaszähler"
+        }
+      },
+      {
+        "id": "bellows-meter",
+        "title": {
+          "en": "bellows meter",
+          "de": "Balgengaszähler"
+        }
+      },
+      {
+        "id": "g4",
+        "title": {
+          "en": "g4",
+          "de": "G4"
+        }
+      },
+      {
+        "id": "final-energy",
+        "title": {
+          "en": "final energy",
+          "de": "Endenergie"
+        }
+      },
+      {
+        "id": "billing",
+        "title": {
+          "en": "billing",
+          "de": "Abrechnung"
+        }
+      },
+      {
+        "id": "wall-mounted",
+        "title": {
+          "en": "wall mounted",
+          "de": "wandmontiert"
+        }
+      },
+      {
+        "id": "appliance",
+        "title": {
+          "en": "appliance",
+          "de": "Gerät"
+        }
+      },
+      {
+        "id": "gas",
+        "title": {
+          "en": "gas",
+          "de": "Gas"
+        }
+      },
+      {
+        "id": "rotating",
+        "title": {
+          "en": "rotating",
+          "de": "rotierend"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage content (G4)",

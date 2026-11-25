@@ -13,12 +13,48 @@
    "de": "Ein 12 m langer batterieelektrischer Niederflur-Solobus auf zwei luftgefederten Achsen mit absenkbarer Vorderachse, zwei Doppelschiebetüren, Dach-Traktionsbatterie und Wärmepumpenaggregat, rollenden Rädern und Fahrgastlasten."
   },
   "tags": [
-   "vehicle",
-   "bus",
-   "public-transport",
-   "battery-electric",
-   "low-floor",
-   "wheeled"
+   {
+    "id": "vehicle",
+    "title": {
+     "en": "vehicle",
+     "de": "Fahrzeug"
+    }
+   },
+   {
+    "id": "bus",
+    "title": {
+     "en": "bus",
+     "de": "Bus"
+    }
+   },
+   {
+    "id": "public-transport",
+    "title": {
+     "en": "public transport",
+     "de": "öffentlicher Verkehr"
+    }
+   },
+   {
+    "id": "battery-electric",
+    "title": {
+     "en": "battery electric",
+     "de": "batterieelektrisch"
+    }
+   },
+   {
+    "id": "low-floor",
+    "title": {
+     "en": "low floor",
+     "de": "Niederflur"
+    }
+   },
+   {
+    "id": "wheeled",
+    "title": {
+     "en": "wheeled",
+     "de": "rollend"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content worker (vehicles)",
@@ -1485,7 +1521,7 @@
      "front": [
       {
        "id": "tyre-rl",
-       "bone": "wheel-r",
+       "bone": "axle-r",
        "role": "body",
        "z": 1.5,
        "filled": true,
@@ -1747,7 +1783,7 @@
       },
       {
        "id": "tyre-fl",
-       "bone": "wheel-f",
+       "bone": "axle-f",
        "role": "body",
        "z": 1.6,
        "filled": true,
@@ -1973,7 +2009,7 @@
       },
       {
        "id": "tyre-rr",
-       "bone": "wheel-r",
+       "bone": "axle-r",
        "role": "body",
        "z": 1.5,
        "filled": true,
@@ -2235,7 +2271,7 @@
       },
       {
        "id": "tyre-fr",
-       "bone": "wheel-f",
+       "bone": "axle-f",
        "role": "body",
        "z": 1.6,
        "filled": true,
@@ -5476,7 +5512,7 @@
        "kind": "path",
        "d": "M 0.617,0 L 0.893,0 L 0.893,0.96 L 0.617,0.96 Z M 0.938,0 L 1.212,0 L 1.212,0.96 L 0.938,0.96 Z",
        "id": "tyre-rl",
-       "bone": "wheel-r",
+       "bone": "axle-r",
        "role": "body",
        "z": 1.5,
        "filled": true,
@@ -5492,7 +5528,7 @@
        "h": 0.96,
        "r": 0.035,
        "id": "tyre-fl",
-       "bone": "wheel-f",
+       "bone": "axle-f",
        "role": "body",
        "z": 1.6,
        "filled": true,
@@ -5504,7 +5540,7 @@
        "kind": "path",
        "d": "M-1.21250 0.90720 L-1.21250 0.05280 L-1.20050 0.02400 L-1.18730 0.00960 L-1.16690 0.00000 L-0.98330 0.00000 L-0.96290 0.00960 L-0.94730 0.02640 L-0.93770 0.05280 L-0.93770 0.24480 L-0.91610 0.27960 L-0.89210 0.24480 L-0.89210 0.05160 L-0.88250 0.02640 L-0.86690 0.00960 L-0.84650 0.00000 L-0.66410 0.00000 L-0.64250 0.00960 L-0.63050 0.02280 L-0.61730 0.05400 L-0.61730 0.90600 L-0.62690 0.93240 L-0.64250 0.95040 L-0.66410 0.96000 L-0.84650 0.96000 L-0.86690 0.95040 L-0.88250 0.93360 L-0.89210 0.90840 L-0.89210 0.71520 L-0.91490 0.68040 L-0.93770 0.71520 L-0.93770 0.90720 L-0.94730 0.93360 L-0.96290 0.95040 L-0.98330 0.96000 L-1.16690 0.96000 L-1.18730 0.95040 L-1.20050 0.93600 Z M0.61750 0.90720 L0.61750 0.05280 L0.62950 0.02400 L0.64270 0.00960 L0.66310 0.00000 L0.84670 0.00000 L0.86710 0.00960 L0.88270 0.02640 L0.89230 0.05280 L0.89230 0.24480 L0.91390 0.27960 L0.93790 0.24480 L0.93790 0.05160 L0.94750 0.02640 L0.96310 0.00960 L0.98350 0.00000 L1.16590 0.00000 L1.18750 0.00960 L1.19950 0.02280 L1.21270 0.05400 L1.21270 0.90600 L1.20310 0.93240 L1.18750 0.95040 L1.16590 0.96000 L0.98350 0.96000 L0.96310 0.95040 L0.94750 0.93360 L0.93790 0.90840 L0.93790 0.71520 L0.91510 0.68040 L0.89230 0.71520 L0.89230 0.90720 L0.88270 0.93360 L0.86710 0.95040 L0.84670 0.96000 L0.66310 0.96000 L0.64270 0.95040 L0.62950 0.93600 Z",
        "id": "tyre-rr",
-       "bone": "wheel-r",
+       "bone": "axle-r",
        "role": "body",
        "z": 1.5,
        "filled": true,
@@ -5520,7 +5556,7 @@
        "h": 0.96,
        "r": 0.035,
        "id": "tyre-fr",
-       "bone": "wheel-f",
+       "bone": "axle-f",
        "role": "body",
        "z": 1.6,
        "filled": true,
@@ -7607,7 +7643,7 @@
        "kind": "path",
        "d": "M 0.617,0 L 0.893,0 L 0.893,0.96 L 0.617,0.96 Z M 0.938,0 L 1.212,0 L 1.212,0.96 L 0.938,0.96 Z",
        "id": "tyre-rl",
-       "bone": "wheel-r",
+       "bone": "axle-r",
        "role": "body",
        "z": 1.5,
        "filled": true,
@@ -7623,7 +7659,7 @@
        "h": 0.96,
        "r": 0.035,
        "id": "tyre-fl",
-       "bone": "wheel-f",
+       "bone": "axle-f",
        "role": "body",
        "z": 1.6,
        "filled": true,
@@ -7635,7 +7671,7 @@
        "kind": "path",
        "d": "M -0.893,0 L -0.617,0 L -0.617,0.96 L -0.893,0.96 Z M -1.212,0 L -0.938,0 L -0.938,0.96 L -1.212,0.96 Z",
        "id": "tyre-rr",
-       "bone": "wheel-r",
+       "bone": "axle-r",
        "role": "body",
        "z": 1.5,
        "filled": true,
@@ -7651,7 +7687,7 @@
        "h": 0.96,
        "r": 0.035,
        "id": "tyre-fr",
-       "bone": "wheel-f",
+       "bone": "axle-f",
        "role": "body",
        "z": 1.6,
        "filled": true,
@@ -8751,7 +8787,7 @@
        "kind": "path",
        "d": "M 0.617,0 L 0.893,0 L 0.893,0.96 L 0.617,0.96 Z M 0.938,0 L 1.212,0 L 1.212,0.96 L 0.938,0.96 Z",
        "id": "tyre-rl",
-       "bone": "wheel-r",
+       "bone": "axle-r",
        "role": "body",
        "z": 1.5,
        "filled": true,
@@ -8767,7 +8803,7 @@
        "h": 0.96,
        "r": 0.035,
        "id": "tyre-fl",
-       "bone": "wheel-f",
+       "bone": "axle-f",
        "role": "body",
        "z": 1.6,
        "filled": true,
@@ -8779,7 +8815,7 @@
        "kind": "path",
        "d": "M-1.21250 0.92400 L-1.21250 0.03600 L-1.17650 0.00000 L-0.65450 0.00000 L-0.61850 0.03600 L-0.61850 0.92400 L-0.65450 0.96000 L-1.17650 0.96000 Z M0.61750 0.92400 L0.61750 0.03600 L0.65350 0.00000 L1.17550 0.00000 L1.21150 0.03600 L1.21150 0.92400 L1.17550 0.96000 L0.65350 0.96000 Z",
        "id": "tyre-rr",
-       "bone": "wheel-r",
+       "bone": "axle-r",
        "role": "body",
        "z": 1.5,
        "filled": true,
@@ -8795,7 +8831,7 @@
        "h": 0.96,
        "r": 0.035,
        "id": "tyre-fr",
-       "bone": "wheel-f",
+       "bone": "axle-f",
        "role": "body",
        "z": 1.6,
        "filled": true,

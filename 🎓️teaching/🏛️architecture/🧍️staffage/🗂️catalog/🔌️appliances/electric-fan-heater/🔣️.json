@@ -13,13 +13,55 @@
       "de": "Ein tragbarer Heizlüfter von 2000 W, 0,31 m hoch, in zwei Stufen zu je 1000 W: Der Lüfter bläst 0,032 m3/s um etwa 50 K erwärmte Luft als warmen Strahl aus dem vorderen Gitter, während Gitter, Haube und Gehäuse die restlichen 75 W abgeben."
     },
     "tags": [
-      "fan-heater",
-      "heater",
-      "appliance",
-      "internal-gain",
-      "electric",
-      "heat-source",
-      "air-jet"
+      {
+        "id": "fan-heater",
+        "title": {
+          "en": "fan heater",
+          "de": "Heizlüfter"
+        }
+      },
+      {
+        "id": "heater",
+        "title": {
+          "en": "heater",
+          "de": "Heizgerät"
+        }
+      },
+      {
+        "id": "appliance",
+        "title": {
+          "en": "appliance",
+          "de": "Gerät"
+        }
+      },
+      {
+        "id": "internal-gain",
+        "title": {
+          "en": "internal gain",
+          "de": "innere Wärmelast"
+        }
+      },
+      {
+        "id": "electric",
+        "title": {
+          "en": "electric",
+          "de": "elektrisch"
+        }
+      },
+      {
+        "id": "heat-source",
+        "title": {
+          "en": "heat source",
+          "de": "Wärmequelle"
+        }
+      },
+      {
+        "id": "air-jet",
+        "title": {
+          "en": "air jet",
+          "de": "Luftstrahl"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage content (A4)",

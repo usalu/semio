@@ -1,0 +1,19 @@
+--- a/export.rs	2026-11-25 08:58:55
++++ b/export.rs	2026-11-25 08:59:02
+@@ -7,10 +7,12 @@
+ //! `DwgGeometry::PolyfaceMesh` entity on its own layer — a mesh entity, not an edge-polyline
+ //! fallback — then dwg's own `encode_dwg` for the native container bytes.
+ //!
+-//! 🔖 Standard note: this artifact's registered export dialect is `ac1018` (R2004) and the writer
+-//! `encode_dwg` reaches is the R2004 canonical writer, so the label and the bytes agree; the
+-//! `SemioMeshToDwg` bridge lives under the dwg artifact's `ac1024` module tree only because that is
+-//! where the shared logical drawing model was rehomed — one `DwgSnapshot` type serves both.
++//! 🔖 Dialect: the written stamp is owned by `WRITTEN_VERSION` in the dwg snapshot crate (`AC1024`, R2010).
++//! The `ac1018` registration names the stdio standard this leaf composes with, not the bytes: `dwg_to_bytes`
++//! stamps through that one constant, exactly as the `brep.interchange` widget does.
++//!
++//! 🧊 Carried: the faceted surface as one polyface mesh per part. Not carried: exact BRep (curved faces, edges,
++//! topology), because the dwg format layer has no 3DSOLID/BODY entity and no ACIS body codec; STEP carries it.
+ use semio_s_artifact_procedural_3d_mesh_bridge::io_error;
+ use semio_plugin::ArtifactSerializer;
+ use semio_s_artifact_stdio_dwg_snapshot::standards::v_ac1024::subsets::any::schema::snapshot::DwgSnapshot;

@@ -29,6 +29,7 @@ async fn render_produces_a_node_for_the_default_document() {
 /// it just never attaches row action buttons to it.
 #[semio_framework_async_macros::async_test]
 async fn a_row_stamps_the_artifact_row_id_with_no_actions_cell() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     use crate::standards::v1::subsets::any::schema::snapshot::{SpaceArtifactDialect, SpaceArtifactRow};
     let mut document = SSpaceSnapshot::default();
     document.artifacts.push(SpaceArtifactRow { id: "artifact-1".into(), name: "First".into(), dialect: SpaceArtifactDialect { artifact_kind: "s.draw.draw".into(), standard: "1".into(), subset: "*".into() }, ..Default::default() });

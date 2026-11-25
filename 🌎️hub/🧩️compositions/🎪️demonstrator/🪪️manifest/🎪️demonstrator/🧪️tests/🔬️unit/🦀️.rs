@@ -10,51 +10,40 @@ fn bundle_keeps_its_plugin_identity() {
     assert_eq!(manifest.plugin_id, PLUGIN_ID);
     assert_eq!(manifest.label, PLUGIN_LABEL);
     assert_eq!(manifest.version, PLUGIN_VERSION);
-    assert_eq!(manifest.dependencies.iter().map(|dependency| dependency.plugin_id.as_str()).collect::<Vec<_>>(), vec!["cad", "gis", "procedural", "process", "puzzle", "sourcing"]);
+    assert_eq!(manifest.dependencies.iter().map(|dependency| dependency.plugin_id.as_str()).collect::<Vec<_>>(), vec!["process", "sourcing"]);
 }
 
 /// 🔗️ Ticket 26/09/05/S-END-TO-END lane H: the dependency list above is not free-standing prose —
 /// every surface this bundle registers for an artifact kind it does NOT own must name that kind's
 /// owner among its dependencies, or the host's `AppRouter` excludes the whole plugin
-/// (`surface.contribution-not-permitted`) and none of its ten surfaces route. Derived from the
+/// (`surface.contribution-not-permitted`) and none of its six surfaces route. Derived from the
 /// built manifest's own app dialects, so adding a borrowed app without its dependency fails here.
 #[test]
 fn every_borrowed_surface_is_backed_by_a_declared_dependency() {
     artifact_app_laws::assert_surface_dependencies_declared(&test_bundle().manifest);
 }
 
-/// 🎯️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET: playground's own two native
-/// surfaces are registered first (right after `.artifact(...)`), then the six foreign plugins'
-/// surfaces in their preserved order — gis's own W2 packet (P7) has landed, so `gis2d-play` is now
-/// `s.gis.gismap@1/*#editor` (coordinator follow-up, done once gis's own report confirmed the new
-/// module path, per that packet's ground truth). W4-FIX: `sourcing`/`process` were still on the
-/// deleted `apps::`/`document_app` path (`s.demonstrator.playground@1/*#editor`-style ids never
-/// applied to them) — now `.editor::<E>()` + `.viewer::<V>()` like every other foreign plugin here,
-/// so each contributes TWO surfaces instead of one (8 foreign surfaces total, from 6 plugins).
+/// 🎯️ Playground's own two native surfaces are registered first (right after `.artifact(...)`),
+/// then the `sourcing` and `process` editor+viewer pairs.
 #[test]
-fn bundle_registers_its_own_and_the_six_foreign_demonstrator_surfaces() {
+fn bundle_registers_its_own_and_the_two_foreign_demonstrator_surfaces() {
     let ids: Vec<String> = test_bundle().manifest.apps.iter().map(|app| app.id.clone()).collect();
     assert_eq!(
         ids,
         vec![
             "s.demonstrator.playground@1/*#editor",
             "s.demonstrator.playground@1/*#viewer",
-            "s.procedural.generation3d@1/*#editor",
-            "s.cad.cad@1/*#editor",
-            "s.puzzle.puzzle3d@1/*#editor",
             "s.sourcing.curation@1/*#editor",
             "s.sourcing.curation@1/*#viewer",
             "s.process.process3d@1/*#editor",
             "s.process.process3d@1/*#viewer",
-            "s.gis.gismap@1/*#editor",
         ]
     );
 }
 
-/// 🏠️ LAW: demonstrator HOSTS the kinds of the six plugins whose surfaces it embeds — it owns only its playground, every
+/// 🏠️ LAW: demonstrator HOSTS the kinds of the two plugins whose surfaces it embeds — it owns only its playground, every
 /// embedded surface's kind is a hosted row naming that surface's owner (a declared dependency), and every embedded editor
-/// presents a kind it hosts — so a trusted catalog with demonstrator and the owners has one creating editor per kind (hub 7800
-/// p34, 2026-09-29: `3d.cad`/`3d.generation`/`3d.process`/`s.gis.gismap` creation answered 409).
+/// presents a kind it hosts — so a trusted catalog with demonstrator and the owners has one creating editor per kind .
 #[test]
 fn demonstrator_hosts_the_kinds_of_every_embedded_surface_and_owns_only_its_playground() {
     let manifest = test_bundle().manifest;
@@ -64,14 +53,10 @@ fn demonstrator_hosts_the_kinds_of_every_embedded_surface_and_owns_only_its_play
     assert_eq!(
         hosted,
         std::collections::BTreeSet::from([
-            ("3d.generation", "generation.3d", "procedural"),
-            ("3d.cad", "cad.scene", "cad"),
-            ("3d.puzzle", "puzzle.3d", "puzzle"),
             ("catalogue.sourcing", "sourcing.curation/v1", "sourcing"),
             ("catalogue.kinds", "catalogue.kinds", "sourcing"),
             ("kit.catalog", "kit.catalog", "sourcing"),
             ("3d.process", "process.3d", "process"),
-            ("s.gis.gismap", "gis.map", "gis"),
         ])
     );
     let dependencies: std::collections::BTreeSet<&str> = manifest.dependencies.iter().map(|dependency| dependency.plugin_id.as_str()).collect();
@@ -91,7 +76,7 @@ fn every_surface_declares_a_artifact_schema() {
 #[test]
 fn contribution_consumers_declare_the_hidden_app_command() {
     let consumers: Vec<String> = test_bundle().manifest.apps.iter().filter(|app| app.commands.iter().any(|command| command.id == "setContributions")).map(|app| app.id.clone()).collect();
-    assert_eq!(consumers, vec!["s.procedural.generation3d@1/*#editor", "s.cad.cad@1/*#editor", "s.sourcing.curation@1/*#editor", "s.process.process3d@1/*#editor"]);
+    assert_eq!(consumers, vec!["s.sourcing.curation@1/*#editor", "s.process.process3d@1/*#editor"]);
     for app in test_bundle().manifest.apps {
         if let Some(command) = app.commands.iter().find(|command| command.id == "setContributions") {
             assert!(!command.in_palette, "host catalogue command leaked into {}'s palette", app.id);
@@ -100,10 +85,6 @@ fn contribution_consumers_declare_the_hidden_app_command() {
             assert_eq!(command.semantics.execution.interactive_job, InteractiveJobClassification::Migrated, "host catalogue command in {} must be admitted as migrated interactive work", app.id);
         }
     }
-    let procedural = test_bundle().manifest.apps.into_iter().find(|app| app.id == "s.procedural.generation3d@1/*#editor").expect("procedural surface");
-    let tick = procedural.commands.iter().find(|command| command.id == "flowEvalTick").expect("recursive evaluation command");
-    assert!(!tick.in_palette);
-    assert!(tick.args.is_empty());
 }
 
 fn assert_tree_reconciles(tree: ComponentTree, generation: u64, label: &str) {
@@ -127,17 +108,13 @@ async fn aggregate_runtime_renders_every_demonstrator_window() {
     let runtime = semio_plugin::plugin_runtime::PluginRuntime::<DemonstratorApps>::new(semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT).expect("explicit test mounted owner policy");
     semio_plugin::plugin_runtime::install_plugin_bundle(&runtime, test_bundle());
     let apps: &[(&str, &[&str])] = &[
-        ("s.procedural.generation3d@1/*#editor", &["procedural.play.main", "procedural.play.preview", "procedural.play.generations", "procedural.play.generate-form", "procedural.play.generate-preview"]),
-        ("s.cad.cad@1/*#editor", &["cad.play.shape", "cad.play.building", "cad.play.energy", "cad.play.structure-classic"]),
-        ("s.puzzle.puzzle3d@1/*#editor", &["puzzle3d.play.composite"]),
         ("s.sourcing.curation@1/*#editor", &["sourcing.pool", "sourcing.curated", "sourcing.preview", "sourcing.grid"]),
         ("s.process.process3d@1/*#editor", &["process.play.main"]),
-        ("s.gis.gismap@1/*#editor", &["gis2d.play.composite"]),
     ];
     let view_state = serde_json::to_string(&semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).expect("aggregate view state serializes");
     let mut generation = 1_u64;
     for (app_index, (app_id, body_keys)) in apps.iter().enumerate() {
-        let instance_id = u32::try_from(app_index + 1).expect("six aggregate app instances");
+        let instance_id = u32::try_from(app_index + 1).expect("aggregate app instances");
         semio_plugin::plugin_runtime::plugin_create_app_with_id(&runtime, instance_id, app_id, semio_os_kernel::ActorId(semio_os_kernel::os_spr::LOCAL_ACTOR_ID.into())).await.unwrap_or_else(|fault| panic!("aggregate app {app_id} opens: {fault:?}"));
         for body_key in *body_keys {
             let tree = semio_plugin::plugin_runtime::plugin_render(&runtime, instance_id, body_key, &view_state).await.unwrap_or_else(|fault| panic!("aggregate body {body_key} renders: {fault:?}"));
@@ -165,18 +142,14 @@ fn assert_viewer_children_declared<V: ArtifactViewer>(app_id: &str, derived: usi
 /// at app creation (`seed_genesis_children` → `genesis_member_schema::<M>`) for any dialect `M` does
 /// not declare — aussuchen and verfolgen crashed on `s.stdio.semio@v1/kit` exactly this way while the
 /// bundle registered them over `NoMembers`. Every surface this manifest lists is proven here, and the
-/// three that really compose children carry a nonzero count, so the next app bundled in cannot regress
+/// two that really compose children carry a nonzero count, so the next app bundled in cannot regress
 /// this without failing natively first.
 #[test]
 fn every_bundled_surface_declares_its_derived_child_dialects() {
     assert_editor_children_declared::<crate::editor::playground::PlaygroundEditor>("s.demonstrator.playground@1/*#editor", 0);
     assert_viewer_children_declared::<crate::viewer::playground::PlaygroundViewer>("s.demonstrator.playground@1/*#viewer", 0);
-    assert_editor_children_declared::<Generation3dPlayApp>("s.procedural.generation3d@1/*#editor", 0);
-    assert_editor_children_declared::<CadPlayApp>("s.cad.cad@1/*#editor", 4);
-    assert_editor_children_declared::<Puzzle3dPlayApp>("s.puzzle.puzzle3d@1/*#editor", 0);
     assert_editor_children_declared::<SourcingCurationApp>("s.sourcing.curation@1/*#editor", 1);
     assert_viewer_children_declared::<SourcingViewer>("s.sourcing.curation@1/*#viewer", 1);
     assert_editor_children_declared::<Process3dPlayApp>("s.process.process3d@1/*#editor", 5);
     assert_viewer_children_declared::<Process3dViewer>("s.process.process3d@1/*#viewer", 5);
-    assert_editor_children_declared::<Gis2dPlayApp>("s.gis.gismap@1/*#editor", 2);
 }

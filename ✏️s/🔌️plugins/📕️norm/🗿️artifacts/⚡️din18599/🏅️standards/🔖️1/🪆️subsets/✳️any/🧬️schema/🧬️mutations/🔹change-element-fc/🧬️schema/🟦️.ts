@@ -4,9 +4,9 @@
 import { normWireLiteral, normWireNumber, normWireObject, normWireRange, type NormWireReader, normWireRequired, normWireString } from "@semio-tech/norm-js/registry/contract";
 
 export interface ChangeElementFc {
-  mutation: "changeelementfc";
+  mutation: "changeElementFc";
   elementId: string;
   newFc: number;
 }
 
-export const parseChangeElementFc: NormWireReader<ChangeElementFc> = normWireObject<ChangeElementFc>({ mutation: normWireRequired(normWireLiteral("changeelementfc")), elementId: normWireRequired(normWireString), newFc: normWireRequired(normWireRange(normWireNumber, {"minimum":0,"maximum":1})) });
+export const parseChangeElementFc: NormWireReader<ChangeElementFc> = normWireObject<ChangeElementFc>({ mutation: normWireRequired(normWireLiteral("changeElementFc")), elementId: normWireRequired(normWireString), newFc: normWireRequired(normWireRange(normWireNumber, {"minimum":0,"maximum":1})) });

@@ -7,8 +7,8 @@
 
 import { expect, test, type Locator, type Page } from "../../../../../.storybook/🧪️tests/🎭️playwright/🟦️.ts";
 import { writeFileSync } from "node:fs";
-import snapshotCorpus from "../🧫️fixtures/📸️board-session/🔣️.json";
-import keyboardCorpus from "../🧫️fixtures/⌨️story-keyboard/🔣️.json";
+import snapshotCorpus from "../🧫️fixtures/📸️board-session/🔣️.json" with { type: "json" };
+import keyboardCorpus from "../🧫️fixtures/⌨️story-keyboard/🔣️.json" with { type: "json" };
 import { storyId, type StoryIndexEntry } from "../📚️storybook-index/🟦️.ts";
 
 type Puzzle2dBoardDebug = {

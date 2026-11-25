@@ -26,6 +26,9 @@ mod tests;
 //#endregion 🧪️Tests
 
 /// 💾️ Binary JSON operation payloads with the artifact's physical byte representation.
+protocol::original_decoded_operation_receiving!(LowpolyMutation);
+protocol::artifact_persisted_binary_operation!(LowpolyMutation);
+
 impl OpBinary for LowpolyMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(semio_s_artifact_lowpoly_lowpoly_model::standards::v1::subsets::any::io::text::lowpoly_json_encode(self).into_bytes())

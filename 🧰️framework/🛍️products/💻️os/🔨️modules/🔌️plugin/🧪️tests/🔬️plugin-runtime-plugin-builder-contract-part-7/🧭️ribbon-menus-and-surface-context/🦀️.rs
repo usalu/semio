@@ -29,19 +29,14 @@
     async fn context_menu_wire_requires_and_forwards_canonical_view_state() {
         assert!(serde_json::from_str::<ContextMenuWireRequest>(r#"{"menu":{"id":"window"}}"#).is_err());
         let wire: ContextMenuWireRequest = serde_json::from_str(r#"{"menu":{"id":"window"},"viewState":{"locale":"de","terminology":"reuse"}}"#).expect("canonical viewState parses");
-        let (request, view_state) = wire.into_parts().unwrap();
+        let (request, view_state) = wire.into_parts();
         assert_eq!(request.menu.id, "window");
         assert_eq!(view_state.locale, semio_ui_locale::Locale::De);
         assert_eq!(view_state.terminology, semio_ui_locale::Terminology::Reuse);
-        let fixture: Value = serde_json::from_str(include_str!("../../../⚛️reactor/🪟️surfaces/🧪️tests/🧫️fixtures/🪟️surface-context-lifecycle/🔣️.json")).unwrap();
-        for surface in fixture["surfaces"].as_array().unwrap() {
-            let wire: ContextMenuWireRequest = serde_json::from_value(json!({"menu":{"id":"window"},"windowInstanceId":surface["windowId"],"viewState":fixture["view"]})).unwrap();
-            let (_, view) = wire.into_parts().unwrap();
-            assert_eq!(view.window_id.as_deref(), surface["windowId"].as_str());
-            assert_eq!(view.active_utility_id.as_deref(), surface["activeUtilityId"].as_str());
-        }
-        let wire: ContextMenuWireRequest = serde_json::from_value(json!({"menu":{"id":"window"},"windowInstanceId":"unknown","viewState":fixture["view"]})).unwrap();
-        assert!(wire.into_parts().is_err());
+        assert_eq!(semio_plugin_runtime_ops::ops_surface_render::with_context_menu_view(&request, &view_state, |panel| panel.locale).unwrap(), semio_ui_locale::Locale::De);
+        let wire: ContextMenuWireRequest = serde_json::from_value(json!({"menu":{"id":"window"},"windowInstanceId":"unknown","viewState":{"locale":"de","terminology":"reuse"}})).unwrap();
+        let (request, view_state) = wire.into_parts();
+        assert!(semio_plugin_runtime_ops::ops_surface_render::with_context_menu_view(&request, &view_state, |_| ()).is_err());
     }
 
     #[semio_framework_async_macros::async_test]

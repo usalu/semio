@@ -33,6 +33,11 @@ Feature: The polygon union never silently returns nothing
     When their union is built
     Then a piece counts as lying on an edge of another polygon only with both ends and its middle, vertices within the resolution of another polygon are joined to it before the union is repeated, and the union is one ring of the area polygon-clipping finds
 
+  Scenario: Prism faces that stand within nanometres of the vertical
+    Given the faces of a shank prism of a pregnant person swept along the bone normal with one profile edge along the bone, whose sweep edges stand 0.5 to 23 nanometres off the vertical in the front view, and the faces of a hand prism of a tour guide seen along its profile with its two end outlines as slivers of 2 micrometres
+    When their union is built
+    Then the slab union that cannot close with vertical slabs is repeated on the polygons turned by a fixed angle and turned back, and the union is one ring of the area shapely and polygon-clipping find
+
   Scenario: Duplicate points do not matter
     Given a square with a doubled corner and a closing point
     Then its union is the square

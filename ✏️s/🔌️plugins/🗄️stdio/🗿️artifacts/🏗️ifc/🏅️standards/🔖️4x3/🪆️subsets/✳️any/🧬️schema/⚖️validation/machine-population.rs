@@ -500,7 +500,11 @@ impl RetainedMachine {
             if let Some((_, value)) = record.fields[..record.length].iter().flatten().find(|(name, _)| name.eq_ignore_ascii_case(frame.name)).copied() {
                 return self.dependent_result(value, entity, frame.scope, frame.depth + 1);
             } else if frame.identity {
-                return Err(refusal("express.unbound"));
+                frame.kind = Kind::Lookup;
+                frame.stage = 2;
+                frame.position = 0;
+                frame.b = 0;
+                return self.push(frame);
             } else {
                 self.result(Value::Missing);
             }

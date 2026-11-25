@@ -13,13 +13,55 @@
       "de": "Ein Holzkohle-Kugelgrill von 57 cm auf drei Beinen: Deckel geschlossen oder angehoben, glühende Kohle im Inneren, heiße Emailleschalen und Rauch, der durch die Deckelöffnung oder über den offenen Kessel abzieht."
     },
     "tags": [
-      "charcoal-grill",
-      "kettle-grill",
-      "barbecue",
-      "fire",
-      "smoke",
-      "outdoor",
-      "lid"
+      {
+        "id": "charcoal-grill",
+        "title": {
+          "en": "charcoal grill",
+          "de": "Holzkohlegrill"
+        }
+      },
+      {
+        "id": "kettle-grill",
+        "title": {
+          "en": "kettle grill",
+          "de": "Kugelgrill"
+        }
+      },
+      {
+        "id": "barbecue",
+        "title": {
+          "en": "barbecue",
+          "de": "Grill"
+        }
+      },
+      {
+        "id": "fire",
+        "title": {
+          "en": "fire",
+          "de": "Feuer"
+        }
+      },
+      {
+        "id": "smoke",
+        "title": {
+          "en": "smoke",
+          "de": "Rauch"
+        }
+      },
+      {
+        "id": "outdoor",
+        "title": {
+          "en": "outdoor",
+          "de": "Außenbereich"
+        }
+      },
+      {
+        "id": "lid",
+        "title": {
+          "en": "lid",
+          "de": "Deckel"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage content (NW-O)",

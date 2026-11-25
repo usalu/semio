@@ -237,11 +237,13 @@ where
     /// 🚚️ Transfers an interrupted publication to this Store's bounded maintenance queue before
     /// its driver leaves scope. The queue retains the exact preparation and clone cursor owners;
     /// subsequent maintenance turns cancel unpublished work and retire every owner under grants.
+    /// A publication that still holds Store-issued commit metadata or causal custody stays with its
+    /// driver (`false`), which returns that custody through `ArtifactStore::prepare_apply_batch_close` first.
     pub fn handoff_batch_publication_close(&mut self, publication: &mut Option<ArtifactStoreBatchPublication<P, Mutation>>) -> Result<bool, VcsError>
     where
         P: Sync,
     {
-        if publication.is_none() {
+        if publication.as_ref().is_none_or(ArtifactStoreBatchPublication::holds_store_custody) {
             return Ok(false);
         }
         self.displaced_retirements.reserve(1)?;

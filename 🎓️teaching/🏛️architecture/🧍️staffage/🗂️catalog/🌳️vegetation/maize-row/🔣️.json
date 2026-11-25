@@ -2200,15 +2200,69 @@
    "de": "Ein Stück von 1 m einer Feldreihe Mais (Zea mays) zur Rispenblüte: sechs Pflanzen im Abstand von 0,2 m auf einem angehäufelten Damm, 2,5 m hoch bis zu den Rispenspitzen. Jede Pflanze hat acht überhängende Bandblätter in wechselnden Zeilen (die Blattebenen benachbarter Pflanzen gegeneinander gedreht, wie in einer gesäten Reihe), einen Kolben in Lieschen mit Narbenfäden in 1 m Höhe und eine verzweigte Rispe. Eine C4-Kultur."
   },
   "tags": [
-   "maize",
-   "corn",
-   "crop",
-   "grass",
-   "row",
-   "c4",
-   "fruit",
-   "wind",
-   "transpiration"
+   {
+    "id": "maize",
+    "title": {
+     "en": "maize",
+     "de": "Mais"
+    }
+   },
+   {
+    "id": "corn",
+    "title": {
+     "en": "corn",
+     "de": "Maiskorn"
+    }
+   },
+   {
+    "id": "crop",
+    "title": {
+     "en": "crop",
+     "de": "Nutzpflanze"
+    }
+   },
+   {
+    "id": "grass",
+    "title": {
+     "en": "grass",
+     "de": "Gras"
+    }
+   },
+   {
+    "id": "row",
+    "title": {
+     "en": "row",
+     "de": "Reihe"
+    }
+   },
+   {
+    "id": "c4",
+    "title": {
+     "en": "c4",
+     "de": "C4"
+    }
+   },
+   {
+    "id": "fruit",
+    "title": {
+     "en": "fruit",
+     "de": "Obst"
+    }
+   },
+   {
+    "id": "wind",
+    "title": {
+     "en": "wind",
+     "de": "Wind"
+    }
+   },
+   {
+    "id": "transpiration",
+    "title": {
+     "en": "transpiration",
+     "de": "Transpiration"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage plant worker PW-16",

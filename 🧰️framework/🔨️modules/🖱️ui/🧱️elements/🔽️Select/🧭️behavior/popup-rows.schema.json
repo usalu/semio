@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "select-popup-rows/v1",
+  "description": "Rows of a Select popup: menu-level glass without viewport padding, rows of chip-row height separated by single lines, the chosen row filled with the active colour, the hovered row filled and emphasised, no tick.",
+  "type": "object",
+  "required": ["schema", "rowInset", "cases"],
+  "properties": {
+    "schema": { "const": "select-popup-rows/v1" },
+    "rowInset": { "const": 0 },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "items", "triggerWidth", "menuTop", "rows", "menuRows", "separators", "paint"],
+        "properties": {
+          "id": { "type": "string" },
+          "items": { "type": "integer", "minimum": 0 },
+          "triggerWidth": { "type": "number", "minimum": 0 },
+          "menuTop": { "type": "number" },
+          "rows": { "type": "array", "items": { "type": "object", "required": ["index", "x", "yRows", "width", "heightRows"], "properties": { "index": { "type": "integer" }, "x": { "type": "number" }, "yRows": { "type": "number" }, "width": { "type": "number" }, "heightRows": { "const": 1 } } } },
+          "menuRows": { "type": "number" },
+          "separators": { "type": "integer", "minimum": 0 },
+          "paint": {
+            "type": "object",
+            "required": ["chosen", "hovered", "tick", "chevron"],
+            "properties": {
+              "chosen": { "enum": ["active-fill"] },
+              "hovered": { "enum": ["hover-fill-and-emphasised-text"] },
+              "tick": { "const": false },
+              "chevron": { "const": "chevron-down" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

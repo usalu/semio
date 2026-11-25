@@ -18,8 +18,9 @@ pub const ATOMIC_BACKBONE_MAXIMUM_BYTES: usize = 2 * 1024 * 1024;
 pub const ATOMIC_BACKBONE_HEADER_BYTES: usize = 42;
 const PARTS: usize = ATOMIC_BACKBONE_MAXIMUM_BYTES / ATOMIC_BACKBONE_PART_BYTES;
 
+/// 🏷️ Whether `tool` is `{app}#original-media`: the operation follows the last `#`, because every surface app id is itself `{coordinate}#{role}`.
 pub fn is_atomic_backbone_tool(tool: &str) -> bool {
-    tool.split_once('#').is_some_and(|(app, operation)| !app.is_empty() && operation == ATOMIC_BACKBONE_TOOL)
+    tool.rsplit_once('#').is_some_and(|(app, operation)| !app.is_empty() && operation == ATOMIC_BACKBONE_TOOL)
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::RetireOwned)]

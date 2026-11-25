@@ -42,10 +42,10 @@ test("original incomplete preview carries only current business progress and no 
 
 test("original preview occupied handle replaces one current canonical mesh and retains its original displaced source",async()=>{
  const law=(await import("../../../📥️preview/🧪️tests/🧫️fixtures/🔁️replacement.json")).default;const schema=(await import("../../../📥️preview/🧬️schema/🔁️replacement/🔣️.json")).default;const validate=new Ajv({strict:true}).compile(schema);expect(validate(law)).toBe(true);expect(validate({...law,borrowedSourceOnly:false})).toBe(false);expect(validate({...law,sourceEpochs:[0,1,1]})).toBe(false);
- const first=JSON.parse(JSON.stringify(completeFixture.mesh)),second=JSON.parse(JSON.stringify(completeFixture.mesh));const handle=completeFixture.handle;
+ const meshes=Array.from({length:law.rounds},()=>JSON.parse(JSON.stringify(completeFixture.mesh))),first=meshes[0]!,last=meshes[meshes.length-1]!;const handle=completeFixture.handle;
  let cache:{[key:string]:typeof first}={};const displaced=[];let epoch=0;const epochs=[epoch];
- for(const mesh of[first,second]){if(cache[handle])displaced.push(cache[handle]);cache=applyPatch(cache,[{op:cache[handle]?"replace":"add",path:`/${handle.replaceAll("~","~0").replaceAll("/","~1")}`,value:mesh}],true,false).newDocument;epochs.push(++epoch);}
- expect(epochs).toEqual(law.sourceEpochs);expect(law.borrowedSourceOnly).toBe(true);expect(Object.values(law.foreignEpochEffects)).toEqual([0,0,0,0]);expect(Object.keys(cache)).toHaveLength(law.expectedEntries);expect(cache[handle]).toBe(second);expect(displaced[0]).toBe(first);expect(displaced).toHaveLength(law.rounds-1);expect(law.copyBody).toBe(64);expect(law.terminalDropBytes).toBe(0);
+ for(const mesh of meshes){if(cache[handle])displaced.push(cache[handle]);cache=applyPatch(cache,[{op:cache[handle]?"replace":"add",path:`/${handle.replaceAll("~","~0").replaceAll("/","~1")}`,value:mesh}],true,false).newDocument;epochs.push(++epoch);}
+ expect(epochs).toEqual(law.sourceEpochs);expect(law.toleranceRounds).toHaveLength(law.rounds);expect(law.sourceEpochs).toHaveLength(law.rounds+1);expect(law.borrowedSourceOnly).toBe(true);expect(Object.values(law.foreignEpochEffects)).toEqual([0,0,0,0]);expect(Object.keys(cache)).toHaveLength(law.expectedEntries);expect(cache[handle]).toBe(last);expect(displaced[0]).toBe(first);expect(displaced).toHaveLength(law.rounds-1);expect(law.copyBody).toBe(64);expect(law.terminalDropBytes).toBe(0);
 });
 
 

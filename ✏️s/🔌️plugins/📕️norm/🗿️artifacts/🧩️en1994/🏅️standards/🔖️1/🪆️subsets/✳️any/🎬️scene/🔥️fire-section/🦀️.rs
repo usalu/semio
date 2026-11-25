@@ -16,8 +16,8 @@ use super::scene::colour_maps::RampId;
 use super::scene::*;
 use super::SceneInput;
 
-const STEEL_PREFIXES: [&str; 1] = ["en1994.1-2.4.3.theta."];
-const RESISTANCE_PREFIXES: [&str; 1] = ["en1994.1-2.4.3.mfi."];
+const STEEL_PREFIX: &str = "en1994.1-2.4.3.theta.";
+const RESISTANCE_PREFIX: &str = "en1994.1-2.4.3.mfi.";
 const SLAB_ROWS: usize = 13;
 const REBAR_STRIP_M: f64 = 0.3;
 const STEP_MIN: f64 = 5.0;
@@ -64,7 +64,7 @@ pub(crate) fn project(input: &SceneInput, layout: &Layout, f: &BeamFacts, out: &
         &format!("Gleichmäßige Temperatur des geschützten Stahlquerschnitts in Feldmitte nach {list} min ISO 834 (A_p/V = {:.0} 1/m, Bekleidung {:.0} mm); θ_a = {:.0} °C am Ende (konzentrierte Kapazität, ohne Gradient über das Profil).", fire.am_v, fire.board_m * 1e3, end.steel_c),
     );
     let spec = surface(format!("{}:fire-plate", f.beam.id), "beams", steel_points.clone(), py, px, MaterialRole::Steel, name)
-        .bound(binding(input.report, &f.beam.id, &STEEL_PREFIXES))
+        .bound(fire_binding(input.report, STEEL_PREFIX, &f.beam.id))
         .detailed(detail)
         .channel(ColourChannel::Fields { active: active(&steel_fields), fields: steel_fields })
         .translucent(0.85);
@@ -84,7 +84,7 @@ pub(crate) fn project(input: &SceneInput, layout: &Layout, f: &BeamFacts, out: &
         &format!("Temperaturen θ des Plattenquerschnitts in Feldmitte nach {list} min ISO 834 aus zweidimensionaler Wärmeleitung (Brand an der Unterseite, der Stahlflansch schirmt {:.0} mm davon ab); Unterseite {:.0} °C, Bewehrungslage {:.0} °C, Plattenoberseite {:.0} °C am Ende (äquivalente Vollplatte mit h_eff = {:.0} mm für die {:.0} mm dicke Decke, h_c + h_p·b_0/Teilung; ungeprüft: ndp.en1994.1-2.{{concrete-conduction,alpha-unexposed,rho-concrete,heff}}).", f.steel.width_m * 1e3, end.soffit_c, end.rebar_c, end.slab_top_c, fire.thermal_m * 1e3, ys * 1e3),
     );
     let spec = surface(format!("{}:fire-slab", f.beam.id), "beams", slab_points.clone(), rows, cols, MaterialRole::Concrete, name)
-        .bound(binding(input.report, &f.beam.id, &RESISTANCE_PREFIXES))
+        .bound(fire_binding(input.report, RESISTANCE_PREFIX, &f.beam.id))
         .detailed(detail)
         .channel(ColourChannel::Fields { active: active(&slab_fields), fields: slab_fields })
         .translucent(0.85);
@@ -100,7 +100,7 @@ pub(crate) fn project(input: &SceneInput, layout: &Layout, f: &BeamFacts, out: &
         &format!("Temperatur der Bewehrungslage {:.0} mm unter der Plattenoberseite nach {list} min ISO 834: {:.0} °C am Ende, k_s,θ = {:.2} der Festigkeit ({}-Stäbe, EN 1992-1-2 Tabelle 3.2a; aus dem Plattenfeld gelesen; ungeprüft: ndp.en1994.1-2.ks.*).", HOGGING_REBAR_DEPTH_M * 1e3, end.rebar_c, end.rebar_ks, fire.rebar.wire()),
     );
     let spec = surface(format!("{}:fire-rebar", f.beam.id), "beams", strip.clone(), 2, 2, MaterialRole::Rebar, name)
-        .bound(binding(input.report, &f.beam.id, &RESISTANCE_PREFIXES))
+        .bound(fire_binding(input.report, RESISTANCE_PREFIX, &f.beam.id))
         .detailed(detail)
         .channel(ColourChannel::Fields { active: active(&rebar_fields), fields: rebar_fields })
         .translucent(0.95);
@@ -119,7 +119,7 @@ fn minutes_axis(end: f64) -> Axis {
 fn temperatures(f: &BeamFacts, points: &[Point], end: f64, report: &CheckReport) -> Diagram2d {
     let id = f.beam.id.as_str();
     let last = &points[points.len() - 1];
-    let check = worst(report, id, &["en1994.1-2.4.3.theta."]);
+    let check = fire_check(report, STEEL_PREFIX, id);
     let (gas, steel, soffit, rebar, top) = (list(points, &|p| p.gas_c), list(points, &|p| p.steel_c), list(points, &|p| p.soffit_c), list(points, &|p| p.rebar_c), list(points, &|p| p.slab_top_c));
     Diagram2d {
         id: format!("fire-temperature:{id}"),
@@ -165,7 +165,7 @@ fn temperatures(f: &BeamFacts, points: &[Point], end: f64, report: &CheckReport)
 fn resistance(f: &BeamFacts, points: &[Point], end: f64, report: &CheckReport) -> Diagram2d {
     let id = f.beam.id.as_str();
     let last = &points[points.len() - 1];
-    let check = worst(report, id, &["en1994.1-2.4.3.mfi."]);
+    let check = fire_check(report, RESISTANCE_PREFIX, id);
     let m_ed = part_en1990::fire_combination(&f.beam.actions, f.beam.span_m, f.beam.adjacent_span_m, f.beam.support, f.beam.spacing_m, f.annex, f.reliability_class).m_nm / 1e3;
     let (steel_only, with_kc) = (list(points, &|p| p.reduced.steel_only_nm / 1e3), list(points, &|p| p.reduced.m_nm / 1e3));
     let cold = points[0].reduced.steel_only_nm / 1e3;

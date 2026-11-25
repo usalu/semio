@@ -1,0 +1,427 @@
+{
+  "lineage": [
+    {
+      "name": "package check",
+      "arguments": [
+        "check",
+        "-p",
+        "semio-framework-value",
+        "--lib"
+      ],
+      "lineage": [
+        "cargo",
+        "cargo:check",
+        "cargo:check:semio-framework-value"
+      ]
+    },
+    {
+      "name": "long package flag",
+      "arguments": [
+        "test",
+        "--package",
+        "a-b",
+        "--no-run"
+      ],
+      "lineage": [
+        "cargo",
+        "cargo:test",
+        "cargo:test:a-b"
+      ]
+    },
+    {
+      "name": "package equals form",
+      "arguments": [
+        "build",
+        "--package=x"
+      ],
+      "lineage": [
+        "cargo",
+        "cargo:build",
+        "cargo:build:x"
+      ]
+    },
+    {
+      "name": "workspace",
+      "arguments": [
+        "test",
+        "--workspace"
+      ],
+      "lineage": [
+        "cargo",
+        "cargo:test",
+        "cargo:test:workspace"
+      ]
+    },
+    {
+      "name": "toolchain selector is no subcommand",
+      "arguments": [
+        "+nightly",
+        "check",
+        "-p",
+        "y"
+      ],
+      "lineage": [
+        "cargo",
+        "cargo:check",
+        "cargo:check:y"
+      ]
+    },
+    {
+      "name": "test arguments after the separator name nothing",
+      "arguments": [
+        "test",
+        "-p",
+        "z",
+        "--",
+        "-p",
+        "other"
+      ],
+      "lineage": [
+        "cargo",
+        "cargo:test",
+        "cargo:test:z"
+      ]
+    },
+    {
+      "name": "version query",
+      "arguments": [
+        "--version"
+      ],
+      "lineage": [
+        "cargo"
+      ]
+    },
+    {
+      "name": "empty",
+      "arguments": [],
+      "lineage": [
+        "cargo"
+      ]
+    }
+  ],
+  "jobs": [
+    {
+      "name": "cores by default",
+      "arguments": [
+        "check"
+      ],
+      "environment": {},
+      "cores": 10,
+      "jobs": 10
+    },
+    {
+      "name": "environment",
+      "arguments": [
+        "check"
+      ],
+      "environment": {
+        "CARGO_BUILD_JOBS": "3"
+      },
+      "cores": 10,
+      "jobs": 3
+    },
+    {
+      "name": "flag beats environment",
+      "arguments": [
+        "check",
+        "-j",
+        "5"
+      ],
+      "environment": {
+        "CARGO_BUILD_JOBS": "3"
+      },
+      "cores": 10,
+      "jobs": 5
+    },
+    {
+      "name": "attached short flag",
+      "arguments": [
+        "check",
+        "-j6"
+      ],
+      "environment": {},
+      "cores": 10,
+      "jobs": 6
+    },
+    {
+      "name": "long flag equals",
+      "arguments": [
+        "build",
+        "--jobs=7"
+      ],
+      "environment": {},
+      "cores": 10,
+      "jobs": 7
+    },
+    {
+      "name": "long flag separate",
+      "arguments": [
+        "build",
+        "--jobs",
+        "4"
+      ],
+      "environment": {},
+      "cores": 10,
+      "jobs": 4
+    },
+    {
+      "name": "jobs after the separator are the test binary's",
+      "arguments": [
+        "test",
+        "--",
+        "-j",
+        "9"
+      ],
+      "environment": {},
+      "cores": 8,
+      "jobs": 8
+    },
+    {
+      "name": "garbage falls back to cores",
+      "arguments": [
+        "check",
+        "--jobs=many"
+      ],
+      "environment": {
+        "CARGO_BUILD_JOBS": "x"
+      },
+      "cores": 4,
+      "jobs": 4
+    },
+    {
+      "name": "zero falls back to cores",
+      "arguments": [
+        "check",
+        "-j",
+        "0"
+      ],
+      "environment": {},
+      "cores": 2,
+      "jobs": 2
+    }
+  ],
+  "caps": [
+    {
+      "name": "no flag stays as written",
+      "arguments": [
+        "check",
+        "-p",
+        "a"
+      ],
+      "granted": 2,
+      "capped": [
+        "check",
+        "-p",
+        "a"
+      ]
+    },
+    {
+      "name": "separate flag is capped",
+      "arguments": [
+        "check",
+        "-j",
+        "8"
+      ],
+      "granted": 2,
+      "capped": [
+        "check",
+        "-j",
+        "2"
+      ]
+    },
+    {
+      "name": "flag below the grant is kept",
+      "arguments": [
+        "check",
+        "--jobs=1"
+      ],
+      "granted": 3,
+      "capped": [
+        "check",
+        "--jobs=1"
+      ]
+    },
+    {
+      "name": "attached flag is capped",
+      "arguments": [
+        "build",
+        "-j12"
+      ],
+      "granted": 4,
+      "capped": [
+        "build",
+        "-j4"
+      ]
+    },
+    {
+      "name": "long equals is capped",
+      "arguments": [
+        "build",
+        "--jobs=99"
+      ],
+      "granted": 1,
+      "capped": [
+        "build",
+        "--jobs=1"
+      ]
+    },
+    {
+      "name": "test binary arguments are untouched",
+      "arguments": [
+        "test",
+        "-j",
+        "9",
+        "--",
+        "-j",
+        "9"
+      ],
+      "granted": 2,
+      "capped": [
+        "test",
+        "-j",
+        "2",
+        "--",
+        "-j",
+        "9"
+      ]
+    }
+  ],
+  "toolchains": [
+    {
+      "name": "dated nightly gets the triple",
+      "file": "[toolchain]\nchannel = \"nightly-2026-07-20\"\ncomponents = [\"rust-src\"]\n",
+      "triple": "aarch64-apple-darwin",
+      "toolchain": "nightly-2026-07-20-aarch64-apple-darwin"
+    },
+    {
+      "name": "linux triple",
+      "file": "[toolchain]\nprofile = \"minimal\"\nchannel = \"nightly-2026-07-20\"\n",
+      "triple": "x86_64-unknown-linux-gnu",
+      "toolchain": "nightly-2026-07-20-x86_64-unknown-linux-gnu"
+    },
+    {
+      "name": "windows triple",
+      "file": "[toolchain]\nchannel = \"stable\"\n",
+      "triple": "x86_64-pc-windows-msvc",
+      "toolchain": "stable-x86_64-pc-windows-msvc"
+    },
+    {
+      "name": "channel that names a triple is kept",
+      "file": "[toolchain]\nchannel = \"nightly-2026-07-20-aarch64-apple-darwin\"\n",
+      "triple": "aarch64-apple-darwin",
+      "toolchain": "nightly-2026-07-20-aarch64-apple-darwin"
+    },
+    {
+      "name": "version channel is kept",
+      "file": "[toolchain]\nchannel = \"1.99.0\"\n",
+      "triple": "aarch64-apple-darwin",
+      "toolchain": "1.99.0"
+    },
+    {
+      "name": "no pin",
+      "file": "[toolchain]\nprofile = \"minimal\"\n",
+      "triple": "aarch64-apple-darwin",
+      "toolchain": null
+    }
+  ],
+  "shims": [
+    {
+      "name": "check compiles through the gate",
+      "arguments": [
+        "check",
+        "-p",
+        "x"
+      ],
+      "called": [
+        "cargo",
+        "--store=isolated",
+        "--configuration=prototype",
+        "--",
+        "check",
+        "-p",
+        "x"
+      ]
+    },
+    {
+      "name": "test keeps its test binary arguments",
+      "arguments": [
+        "test",
+        "-p",
+        "x",
+        "--",
+        "--nocapture"
+      ],
+      "called": [
+        "cargo",
+        "--store=isolated",
+        "--configuration=prototype",
+        "--",
+        "test",
+        "-p",
+        "x",
+        "--",
+        "--nocapture"
+      ]
+    },
+    {
+      "name": "metadata goes through the registry",
+      "arguments": [
+        "metadata",
+        "--no-deps"
+      ],
+      "called": [
+        "tools",
+        "exec",
+        "cargo",
+        "--",
+        "metadata",
+        "--no-deps"
+      ]
+    },
+    {
+      "name": "a toolchain selector goes through the registry",
+      "arguments": [
+        "+nightly",
+        "check"
+      ],
+      "called": [
+        "tools",
+        "exec",
+        "cargo",
+        "--",
+        "+nightly",
+        "check"
+      ]
+    },
+    {
+      "name": "a version query goes through the registry",
+      "arguments": [
+        "--version"
+      ],
+      "called": [
+        "tools",
+        "exec",
+        "cargo",
+        "--",
+        "--version"
+      ]
+    },
+    {
+      "name": "an argument with a space stays one argument",
+      "arguments": [
+        "build",
+        "--features",
+        "a b"
+      ],
+      "called": [
+        "cargo",
+        "--store=isolated",
+        "--configuration=prototype",
+        "--",
+        "build",
+        "--features",
+        "a b"
+      ]
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 /** 🪞️ Derived-view detection: a front or plan view that is a mirrored, rotated or uniformly scaled and shifted copy of the elevation (or of another view or band) is not a handcrafted view.
  *
  * The evaluated rings of two views are sampled to point sets (vertices and edge midpoints), centred on their bounding box and scaled to a unit longest side. The distance is the symmetric Hausdorff distance under the best of a small candidate set of transforms
- * (identity, mirror about each axis, rotations of 90, 180 and 270 degrees, and the mirrored rotations). A distance below {@link NEAR_MATCH} is flagged, below {@link COPY} for the same view of two bands.
+ * (identity, mirror about each axis, rotations of 90, 180 and 270 degrees, and the mirrored rotations). A distance below {@link NEAR_MATCH} is flagged, below {@link COPY} for the same view of two bands; "below" is decided in whole millionths of the longest side ({@link sameDrawing}, D55).
  *
  * @see ./🧰️.ts — the matrix column
  * @see ../../🧫️fixtures/🔭️multiview-coverage/🔣️.json — the allowlist of genuinely symmetric bodies
@@ -14,6 +14,9 @@ export const NEAR_MATCH = 0.03;
 
 /** 🔭️ The normalised distance below which the same view of two bands counts as a copy. */
 export const COPY = 0.005;
+
+/** 🎚️ Whether a normalised distance lies below its threshold, decided in whole millionths of the longest side (D55): a distance that equals the threshold is not below it, so two views that differ by exactly the asked share are two drawings whatever the binary rounding of their coordinates; one millionth less is the same drawing. */
+export const sameDrawing = (distance: number, threshold: number): boolean => Math.round(distance * 1e6) < Math.round(threshold * 1e6);
 
 /** 🔢️ The most points a sample keeps per view. */
 export const MAX_POINTS = 240;
@@ -88,7 +91,7 @@ export function derivedFlags(views: Readonly<Record<PlanarViewpoint, readonly Ev
     const mine = sets[view];
     if (mine === undefined || other === undefined) return;
     const best = transforms ? bestTransform(mine, other) : { name: "identity", distance: hausdorff(mine, other) };
-    if (best.distance < threshold) flags.push({ view, against, transform: best.name, distance: Math.round(best.distance * 1e5) / 1e5 });
+    if (sameDrawing(best.distance, threshold)) flags.push({ view, against, transform: best.name, distance: Math.round(best.distance * 1e5) / 1e5 });
   };
   compare("front", "elevation", sets.elevation, NEAR_MATCH);
   compare("plan", "elevation", sets.elevation, NEAR_MATCH);

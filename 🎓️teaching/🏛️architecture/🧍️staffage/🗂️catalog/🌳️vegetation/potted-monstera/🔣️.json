@@ -13,14 +13,62 @@
    "de": "Ein Fensterblatt (Monstera deliciosa) von 1,6 m Höhe in einem cremeweiß glasierten Steinzeugtopf von 0,36 m auf einem Untersetzer, an einem Kokos-Moosstab kletternd: neun ledrige, glänzende Blätter auf Stielen von 0,3 bis 0,6 m in zwei Zeilen, die älteren Spreiten von 0,5 m tief geschlitzt und mit ovalen Löchern durchbrochen, die jüngste ganzrandig; zwei Luftwurzeln. Eine klassische schattenverträgliche Zimmerpflanze in Wohnräumen und Büros."
   },
   "tags": [
-   "monstera",
-   "aroid",
-   "climber",
-   "indoor",
-   "potted",
-   "houseplant",
-   "fenestrated",
-   "broad-leaf"
+   {
+    "id": "monstera",
+    "title": {
+     "en": "monstera",
+     "de": "Monstera"
+    }
+   },
+   {
+    "id": "aroid",
+    "title": {
+     "en": "aroid",
+     "de": "Aronstabgewächs"
+    }
+   },
+   {
+    "id": "climber",
+    "title": {
+     "en": "climber",
+     "de": "Kletterer"
+    }
+   },
+   {
+    "id": "indoor",
+    "title": {
+     "en": "indoor",
+     "de": "Innenraum"
+    }
+   },
+   {
+    "id": "potted",
+    "title": {
+     "en": "potted",
+     "de": "getopft"
+    }
+   },
+   {
+    "id": "houseplant",
+    "title": {
+     "en": "houseplant",
+     "de": "Zimmerpflanze"
+    }
+   },
+   {
+    "id": "fenestrated",
+    "title": {
+     "en": "fenestrated",
+     "de": "gefenstert"
+    }
+   },
+   {
+    "id": "broad-leaf",
+    "title": {
+     "en": "broad leaf",
+     "de": "breitblättrig"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage plant worker PW-17",

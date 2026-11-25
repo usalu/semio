@@ -111,26 +111,32 @@ test("a request that can never fit is refused at the door with an actionable bil
  }
 });
 
-test("the wait has a deadline scaled to its priority, and past it a stop is bounded: the shrinkable minimum is admitted when the free memory above the floor covers it",()=>{
+test("the priority deadline can admit a shrinkable minimum under a soft stop, while hard stops wait or expire",()=>{
  expect(hostWaitDeadlineMillisecondsV1(real,"interactive")).toBeLessThan(hostWaitDeadlineMillisecondsV1(real,"batch"));
  const item={...request(6627),minimumMegabytes:2048,label:"graph-plan"} as HostRequestV1,busy:HostGrantV1[]=[{id:"bbbbbbbb2",operation:"run",jobs:1,cpu:1,reservedMegabytes:1000,admittedAtMs:0,observedMegabytes:1000,pid:process.pid,bootAtMs:0} as HostGrantV1],ask=(sample:HostSampleV1,waited:number)=>evaluateHostCapacityV1(real,withUnmanagedHostV1(sample,busy),busy,[{request:item,arrivedAtMs:1000,pid:process.pid}],1000+waited).decisions[0]!;
  const critical=machine(16384,5000,{pressure:"critical"}),warn=machine(16384,5000,{pressure:"warn"});
  expect(ask(critical,batchDeadline-1)).toMatchObject({verdict:"wait",reason:"pressure-critical"});
- expect(ask(critical,batchDeadline)).toMatchObject({verdict:"admit",reason:"shrunk",reservedMegabytes:5000-2048});
+ expect(ask(critical,batchDeadline)).toMatchObject({verdict:"wait",reason:"pressure-critical",reservedMegabytes:0});
  expect(ask(warn,batchDeadline-1).verdict).toBe("wait");
  expect(ask(warn,batchDeadline)).toMatchObject({verdict:"admit",reason:"shrunk"});
  expect(ask(machine(16384,2048+1000,{pressure:"critical"}),batchDeadline),"below the minimum the stop keeps holding").toMatchObject({verdict:"wait",reason:"pressure-critical"});
- const swapping=machine(16384,5000,{swapUsedMegabytes:9000,swapOutMegabytesPerSecond:200});
- expect(ask(swapping,batchDeadline-1).verdict).toBe("wait");expect(ask(swapping,batchDeadline)).toMatchObject({verdict:"admit",reason:"shrunk"});
+ const swapping=machine(32768,7000,{swapUsedMegabytes:9000,swapOutMegabytesPerSecond:103});
+ expect(ask(swapping,batchDeadline)).toMatchObject({verdict:"wait",reason:"swap",reservedMegabytes:0});
+ const saturated=machine(16384,5000,{swapUsedMegabytes:0,swapOutMegabytesPerSecond:103});
+ expect(ask(saturated,batchDeadline)).toMatchObject({verdict:"wait",reason:"swap-activity",reservedMegabytes:0});
+ expect(ask(critical,real.wait.starvedMilliseconds!)).toMatchObject({verdict:"wait",reason:"starved",reservedMegabytes:0});
 });
 
 test("a request past its deadline under a stop says so in both languages, naming the stop, the limit and what it waited",async()=>{
  const fastDeadline=readHostCapacityPolicyV1({...buildPolicy.hostCapacity,wait:{...buildPolicy.hostCapacity.wait,pollMilliseconds:10,progressMilliseconds:20,sampleMaximumAgeMilliseconds:0,deadlineBatchMilliseconds:1000,deadlineInteractiveMilliseconds:1000}});
  for(const [language,text] of [["en_US.UTF-8","after waiting"],["de_DE.UTF-8","Wartezeit"]] as const){
   const lines:string[]=[],item={...request(6627),minimumMegabytes:2048,label:"graph-plan"} as HostRequestV1;
-  const handle=await withHostCapacityV1({directory:fresh(),policy:fastDeadline,request:item,control:control(),environment:{LANG:language},write:line=>lines.push(line),sample:async()=>({host:{...host(5000),pressure:"critical" as const},swappedOutMegabytes:0})},async granted=>granted);
+  const pastLimit=language.startsWith("de")?"über der Wartegrenze von 1s":"past the wait limit of 1s";
+  let recovered=false;
+  const handle=await withHostCapacityV1({directory:fresh(),policy:fastDeadline,request:item,control:control(),environment:{LANG:language},write:line=>{lines.push(line);if(line.includes(pastLimit))recovered=true;},sample:async()=>({host:{...host(5000),pressure:recovered?"warn" as const:"critical" as const},swappedOutMegabytes:0})},async granted=>granted);
   expect(handle.reservedMegabytes).toBe(5000-2048);
-  expect(lines.some(line=>line.includes(text)&&line.includes("1s")),language+": "+lines.join(" | ")).toBe(true);
+  expect(recovered).toBe(true);
+  expect(lines.some(line=>line.includes(text)),language+": "+lines.join(" | ")).toBe(true);
   const stuck:string[]=[],controller=new AbortController();
   setTimeout(()=>controller.abort(new Error("stop")),2500);
   await withHostCapacityV1({directory:fresh(),policy:fastDeadline,request:item,control:control(controller.signal),environment:{LANG:language},write:line=>stuck.push(line),sample:async()=>({host:{...host(2048+1000),pressure:"critical" as const},swappedOutMegabytes:0})},async granted=>granted).catch(()=>undefined);

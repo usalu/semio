@@ -562,12 +562,48 @@
       "de": "Ein Abschnitt einer geschnittenen Hainbuchenhecke (Carpinus betulus) von 3,14 m Länge und 1,87 m Höhe: sechs Pflanzen zu einer dichten, flach abgeschlossenen Masse geschnitten, am Fuß 0,70 m dick und bis zur Schulter auf 0,56 m geböscht, damit Licht an das untere Laub gelangt, mit einem flachen Sommeraustrieb auf der Oberseite; die untersten 0,35 m sind offen, sodass die grauen, gekehlten Stämme und der gemulchte Pflanzstreifen im großen Maßstab sichtbar sind."
     },
     "tags": [
-      "hedge",
-      "deciduous",
-      "broadleaf",
-      "clipped",
-      "wind",
-      "transpiration"
+      {
+        "id": "hedge",
+        "title": {
+          "en": "hedge",
+          "de": "Hecke"
+        }
+      },
+      {
+        "id": "deciduous",
+        "title": {
+          "en": "deciduous",
+          "de": "laubabwerfend"
+        }
+      },
+      {
+        "id": "broadleaf",
+        "title": {
+          "en": "broadleaf",
+          "de": "Laubholz"
+        }
+      },
+      {
+        "id": "clipped",
+        "title": {
+          "en": "clipped",
+          "de": "geschnitten"
+        }
+      },
+      {
+        "id": "wind",
+        "title": {
+          "en": "wind",
+          "de": "Wind"
+        }
+      },
+      {
+        "id": "transpiration",
+        "title": {
+          "en": "transpiration",
+          "de": "Transpiration"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage vegetation content worker",

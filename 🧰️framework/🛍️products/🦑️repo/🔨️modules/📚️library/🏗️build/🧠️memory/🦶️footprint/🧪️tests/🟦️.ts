@@ -461,17 +461,17 @@ test("a slow stretch names itself in the trace, a fast one does not",()=>{
 });
 
 test("the walk caches of the owners are released every declared interval whatever the footprint reads and whatever the governor's headroom said; only the shrink and the spill of entries follow the footprint",()=>{
- const scripts=createScriptInputCache({workspaceRoot:"/w"}) as any,fill=()=>{scripts.files.set("a",1);scripts.closures.set("b",1);scripts.commandDependencies.set("c",1);scripts.walkNodes=new Map([["n",1]]);scripts.reachState={graph:new Map()};};
+ const graph={nodes:1},scripts=createScriptInputCache({workspaceRoot:"/w"}) as any,fill=()=>{scripts.files.set("a",1);scripts.closures.set("b",1);scripts.commandDependencies.set("c",1);scripts.walkNodes=new Map([["n",1]]);scripts.sharedBytes=7;scripts.closureGraph=graph;};
  const gate=(share:number)=>({grantBytes:()=>1000*MB,footprintBytes:()=>1000*MB*share/100});
  const interval=INFERENCE_LIMITS_V1.ownersPerRelease;
  fill();for(let owner=0;owner<interval-1;owner++)releaseOwnerStateV1(scripts,{shrink:true,gate:gate(30)});
- expect([scripts.files.size,scripts.closures.size,scripts.commandDependencies.size,scripts.walkNodes.size,scripts.reachState!==undefined]).toEqual([1,1,1,1,true]);
+ expect([scripts.files.size,scripts.closures.size,scripts.commandDependencies.size,scripts.walkNodes.size,scripts.sharedBytes]).toEqual([1,1,1,1,7]);
  releaseOwnerStateV1(scripts,{shrink:true,gate:gate(30)});
- expect([scripts.files.size,scripts.closures.size,scripts.commandDependencies.size,scripts.walkNodes.size,scripts.reachState]).toEqual([0,0,0,0,undefined]);
+ expect([scripts.files.size,scripts.closures.size,scripts.commandDependencies.size,scripts.walkNodes.size,scripts.sharedBytes]).toEqual([0,0,0,0,0]);expect(scripts.closureGraph,"the module graph outlives every release: the next owner's walks are lookups").toBe(graph);
  fill();for(let owner=0;owner<interval-1;owner++)releaseOwnerStateV1(scripts,{gate:gate(70)});
  expect(scripts.walkNodes.size).toBe(1);
  releaseOwnerStateV1(scripts,{gate:gate(70)});
- expect([scripts.files.size,scripts.walkNodes.size,scripts.reachState]).toEqual([0,0,undefined]);
+ expect([scripts.files.size,scripts.walkNodes.size,scripts.sharedBytes]).toEqual([0,0,0]);expect(scripts.closureGraph).toBe(graph);
  fill();releaseOwnerStateV1(scripts,{gate:gate(90)});
  expect([scripts.files.size,scripts.closures.size,scripts.commandDependencies.size]).toEqual([0,0,0]);expect(scripts.walkNodes.size).toBe(1);
  fill();for(let owner=0;owner<40;owner++)releaseOwnerStateV1(scripts,{});

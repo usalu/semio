@@ -13,12 +13,48 @@
       "de": "Ein Bodenstaubsauger von 700 W mit Schlauch, Teleskoprohr und Bodendüse, 5,1 kg: Der Motor gibt 157 W an Kesselschale, Deckel und Gitter ab und 543 W an warme Abluft hinter dem Kessel; Posen geparkt und läuft."
     },
     "tags": [
-      "vacuum-cleaner",
-      "household",
-      "appliance",
-      "internal-gain",
-      "electric",
-      "heat-source"
+      {
+        "id": "vacuum-cleaner",
+        "title": {
+          "en": "vacuum cleaner",
+          "de": "Staubsauger"
+        }
+      },
+      {
+        "id": "household",
+        "title": {
+          "en": "household",
+          "de": "Haushalt"
+        }
+      },
+      {
+        "id": "appliance",
+        "title": {
+          "en": "appliance",
+          "de": "Gerät"
+        }
+      },
+      {
+        "id": "internal-gain",
+        "title": {
+          "en": "internal gain",
+          "de": "innere Wärmelast"
+        }
+      },
+      {
+        "id": "electric",
+        "title": {
+          "en": "electric",
+          "de": "elektrisch"
+        }
+      },
+      {
+        "id": "heat-source",
+        "title": {
+          "en": "heat source",
+          "de": "Wärmequelle"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage content (A4)",

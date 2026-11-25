@@ -33,14 +33,14 @@ pub fn inference_list_capability() -> CapabilityDefinition {
         "inference.list",
         "inference_list",
         "List Declared Inferences",
-        "Lists inference metadata declared for one resolvable artifact or every catalogued workspace plugin. Discovery does not grant execution or document access.",
+        "Pages inference metadata declared for one resolvable artifact or every catalogued workspace plugin; the payload contract (input and output schema) is included only when narrowed by artifactId or inferenceSchema. Discovery does not grant execution or document access. — Blättert durch die Inferenz-Metadaten eines auflösbaren Artefakts oder aller katalogisierten Arbeitsbereich-Plugins; der Nutzlastvertrag (Ein- und Ausgabeschema) ist nur enthalten, wenn artifactId oder inferenceSchema einschränkt. Die Auflistung gewährt weder Ausführung noch Dokumentzugriff.",
         inference_list_input_schema(),
         inference_list_output_schema(),
     )
 }
 
 pub fn inference_get_capability() -> CapabilityDefinition {
-    inference_capability("inference.get", "inference_get", "Get Inference", "Reads one declared inference field for an artifact — a typed, retryable gap until a real artifact-infer route is wired.", inference_get_input_schema(), inference_get_output_schema())
+    inference_capability("inference.get", "inference_get", "Get Inference", "Reads one declared inference field for an artifact — a typed, retryable gap until a real artifact-infer route is wired. — Liest ein deklariertes Inferenzfeld eines Artefakts — eine typisierte, wiederholbare Lücke, bis ein echter Artefakt-Inferenzweg angebunden ist.", inference_get_input_schema(), inference_get_output_schema())
 }
 
 /// 💡️ The plugin-declared inference capabilities — discovery (`inference_list`/`inference_get`) and
@@ -189,7 +189,7 @@ pub fn ui_focus_capability() -> CapabilityDefinition {
         kind: CapabilityKind::Ui,
         audience: CapabilityAudience::Agent,
         title: "Focus Window".to_string(),
-        description: "Focuses a window on the attached shell (omit windowId to clear focus).".to_string(),
+        description: "Focuses a window on the attached shell (omit windowId to clear focus). — Fokussiert ein Fenster der angeschlossenen Shell (ohne windowId wird der Fokus aufgehoben).".to_string(),
         artifact_kind: None,
         use_when: vec!["focus a window".to_string(), "bring a window to the front".to_string()],
         input_schema: ui_focus_input_schema(),
@@ -212,7 +212,7 @@ pub fn ui_reveal_capability() -> CapabilityDefinition {
         kind: CapabilityKind::Ui,
         audience: CapabilityAudience::Agent,
         title: "Reveal In Panel".to_string(),
-        description: "Makes a panel visible and navigates it to the given path on the attached shell.".to_string(),
+        description: "Makes a panel visible and navigates it to the given path on the attached shell. — Macht ein Panel der angeschlossenen Shell sichtbar und navigiert es zum angegebenen Pfad.".to_string(),
         artifact_kind: None,
         use_when: vec!["reveal an item in a panel".to_string(), "show this in the explorer".to_string()],
         input_schema: ui_reveal_input_schema(),
@@ -235,7 +235,7 @@ fn job_get_capability() -> CapabilityDefinition {
         kind: CapabilityKind::Job,
         audience: CapabilityAudience::Agent,
         title: "Get Job".to_string(),
-        description: "Reads the status/progress/result of one plugin-agnostic job by id.".to_string(),
+        description: "Reads the status/progress/result of one plugin-agnostic job by id. — Liest Status, Fortschritt und Ergebnis eines pluginunabhängigen Auftrags per Id.".to_string(),
         artifact_kind: None,
         use_when: vec!["check on a running job".to_string(), "is this job done yet".to_string()],
         input_schema: job_get_input_schema(),
@@ -258,7 +258,7 @@ fn job_cancel_capability() -> CapabilityDefinition {
         kind: CapabilityKind::Job,
         audience: CapabilityAudience::Agent,
         title: "Cancel Job".to_string(),
-        description: "Requests cooperative cancellation of one running or pending job by id.".to_string(),
+        description: "Requests cooperative cancellation of one running or pending job by id. — Fordert den kooperativen Abbruch eines laufenden oder wartenden Auftrags per Id an.".to_string(),
         artifact_kind: None,
         use_when: vec!["cancel a running job".to_string(), "stop this job".to_string()],
         input_schema: job_cancel_input_schema(),
@@ -288,7 +288,7 @@ pub fn conversation_reply_capability() -> CapabilityDefinition {
         kind: CapabilityKind::Ui,
         audience: CapabilityAudience::Agent,
         title: "Reply In Chat".to_string(),
-        description: "Publishes one chunk of the agent's own free-text turn into the shell's agent panel.".to_string(),
+        description: "Publishes one chunk of the agent's own free-text turn into the shell's agent panel. — Veröffentlicht einen Abschnitt des eigenen Freitext-Beitrags des Agenten im Agentenpanel der Shell.".to_string(),
         artifact_kind: None,
         use_when: vec!["answer the human in the chat panel".to_string(), "ask a clarifying question".to_string(), "say what you are about to do".to_string()],
         input_schema: conversation_reply_input_schema(),
@@ -356,7 +356,7 @@ pub fn artifact_capabilities() -> Vec<CapabilityDefinition> {
             CapabilityKind::Query,
             "file",
             "Open Artifact",
-            "Opens an existing artifact by id and returns its identity, kind, revision stamp and size — not its full body (that is the semio://artifact/{id} resource's job).",
+            "Opens an existing artifact by id and returns its identity, kind, revision stamp and size — not its full body (that is the semio://artifact/{id} resource's job). — Öffnet ein bestehendes Artefakt per Id und liefert Identität, Art, Revisionsstempel und Größe — nicht den vollständigen Inhalt (das ist Aufgabe der Ressource semio://artifact/{id}).",
             vec!["open an artifact".to_string(), "what artifacts exist".to_string()],
             artifact_open_input_schema(),
             artifact_open_output_schema(),
@@ -367,7 +367,7 @@ pub fn artifact_capabilities() -> Vec<CapabilityDefinition> {
             CapabilityKind::Mutation,
             "add",
             "Create Artifact",
-            "Creates a new artifact of a given kind in the bound workspace through the ordinary envelope/store path.",
+            "Creates a new artifact of a given kind in the bound workspace through the ordinary envelope/store path. — Erstellt ein neues Artefakt der angegebenen Art im gebundenen Arbeitsbereich über den gewöhnlichen Hüllen- und Speicherweg.",
             vec!["create a new artifact".to_string(), "start a new document".to_string()],
             artifact_create_input_schema(),
             artifact_create_output_schema(),

@@ -1,22 +1,24 @@
-"""⚓️ Splits lumped z-0 contact anchors of an asset into one anchor per physical contact (D45): `python3 split-anchors.py <asset.json> <spec.json> [--write]`. The spec is a list of `{ "anchor": id, "into": [{ "id", "z", "title": {en, de}, ...fields }] }` and optional `{ "assumption": index, "text": {en, de} }` entries; every reference `{"anchor": id}` in clip and pose contacts, supports and volumes is repeated once per new anchor, in place. Idempotent: an anchor that no longer exists is skipped. The file keeps its indentation; it is only written when it did not change on disk since it was read."""
+"""⚓️ Splits lumped z-0 contact anchors of an asset into one anchor per physical contact (D45): `python3 split-anchors.py <asset.json> <spec.json> [--write]`. The spec is a list of `{ "anchor": id, "into": [{ "id", "z", "title": {en, de}, ...fields }] }` and optional `{ "assumption": index, "text": {en, de} }` entries; every reference in clips, poses, structure and volumes (an object `{"anchor": id}` or the bare id in a `contacts` list of a pose; never a bone of the same name) is repeated once per new anchor, in place. Idempotent: an anchor that no longer exists is skipped. The file keeps its indentation; it is only written when it did not change on disk since it was read."""
 import json, sys
 path, spec = sys.argv[1], json.load(open(sys.argv[2]))
 text = open(path, encoding="utf8").read()
 doc = json.loads(text)
 a = doc["asset"]
 changed = 0
-def refs(node, old, new):
+def refs(node, old, new, key=None):
     global changed
     if isinstance(node, dict):
-        for v in node.values(): refs(v, old, new)
+        for k, v in node.items(): refs(v, old, new, k)
     elif isinstance(node, list):
         i = 0
         while i < len(node):
             item = node[i]
             if isinstance(item, dict) and item.get("anchor") == old:
                 node[i:i + 1] = [dict(item, anchor=n) for n in new]; changed += 1; i += len(new)
+            elif key == "contacts" and item == old:
+                node[i:i + 1] = list(new); changed += 1; i += len(new)
             else:
-                refs(item, old, new); i += 1
+                refs(item, old, new, key); i += 1
 for entry in spec:
     if "assumption" in entry:
         if a["structure"]["assumptions"][entry["assumption"]] != entry["text"]:

@@ -11,7 +11,7 @@
   ],
   "properties": {
     "mutation": {
-      "const": "changezonelightingpowerwm2"
+      "const": "changeZoneLightingPowerWM2"
     },
     "zoneId": {
       "type": "string",

@@ -1,0 +1,53 @@
+[
+ {
+  "scale": "50",
+  "bone": "hand-r",
+  "paint": "hand-r",
+  "replace": [
+   "hand-r",
+   "hand-r-l2",
+   "hand-r-l3",
+   "hand-r-l4",
+   "hand-r-l5",
+   "hand-r-l6",
+   "hand-r-l7",
+   "hand-r-l8",
+   "hand-r-l9",
+   "hand-r-l10",
+   "hand-r-l11",
+   "hand-r-l12",
+   "hand-r-l13",
+   "hand-r-l14",
+   "hand-r-l15",
+   "hand-r-l16"
+  ],
+  "fit": [
+   {
+    "id": "thumb-r",
+    "solids": [
+     "thumb-r",
+     "thumbtip-r"
+    ],
+    "stations": 5
+   },
+   {
+    "id": "fingers-r",
+    "solids": [
+     "finger-1-r",
+     "finger-2-r",
+     "finger-3-r",
+     "finger-4-r",
+     "finger-1-mid-r",
+     "finger-2-mid-r",
+     "finger-3-mid-r",
+     "finger-4-mid-r",
+     "fingertip-1-r",
+     "fingertip-2-r",
+     "fingertip-3-r",
+     "fingertip-4-r"
+    ],
+    "stations": 5
+   }
+  ]
+ }
+]

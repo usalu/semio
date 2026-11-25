@@ -28,7 +28,7 @@ const LAYER_TITLES = {
   legend: tx("Legend", "Legende"),
 } as const satisfies Record<LayerId, ReturnType<typeof tx>>;
 
-/** 🔤️ The room reserved around measured text relative to its Helvetica width, covering renderers that fall back to a slightly wider sans-serif. */
+/** 🔤️ The room reserved around measured text relative to its Anta width (the face `writeSvg` names first), covering renderers that fall back to a slightly wider sans-serif and the kerning the table leaves out. */
 export const TEXT_SLACK = 1.04;
 
 /** 🧭️ What every view builder needs: state, options, scale factor and the model-to-paper mapping `(x, y) → (x·k, −y·k)`; `camera` is the axonometric camera of an axonometric depiction. */

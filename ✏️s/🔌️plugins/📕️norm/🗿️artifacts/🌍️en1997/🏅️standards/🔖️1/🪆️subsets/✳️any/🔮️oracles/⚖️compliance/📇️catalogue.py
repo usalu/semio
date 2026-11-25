@@ -654,8 +654,9 @@ def _slices(c, n=400):
         yb, yg = base(x), ground(x)
         ht = max(yg - yb, 0.0)
         wet = min(max(min(yg, gwl) - yb, 0.0), ht)
-        w = gamma * (ht - wet) * dx + gsat * wet * dx + q * dx
-        u = ru * gamma * ht * dx if ru > 0 else 9810.0 * wet * dx
+        ponded = max(gwl - yg, 0.0)
+        w = gamma * (ht - wet) * dx + gsat * wet * dx + 9810.0 * ponded * dx + q * dx
+        u = ru * gamma * ht * dx if ru > 0 else 9810.0 * max(gwl - yb, 0.0) * dx
         out.append(dict(b=dx, w=w, alpha=math.asin((xc - x) / r), u=u, x=x, yb=yb, yg=yg))
     return out, run
 

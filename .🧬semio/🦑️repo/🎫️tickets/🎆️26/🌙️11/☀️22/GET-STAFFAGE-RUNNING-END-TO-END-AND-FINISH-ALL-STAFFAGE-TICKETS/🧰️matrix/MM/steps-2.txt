@@ -1,0 +1,5 @@
+phases-jogger-50 400 - "$M/phases.ts" --snapshot "$SP/snap/jogger.json" --scale 50 --subjects 10 --every 25
+phases-olive-50 400 - "$M/phases.ts" --snapshot "$SP/snap/olive-tree.json" --scale 50 --subjects 10 --every 12
+phases-saguaro-500 600 - "$M/phases.ts" --snapshot "$SP/snap/saguaro-cactus.json" --scale 500 --subjects 6 --every 20
+phases-saguaro-50 900 - "$M/phases.ts" --snapshot "$SP/snap/saguaro-cactus.json" --scale 50 --subjects 6 --every 20
+proofs-rigid 300 - "$T/🖨️proofs.ts" --out "$G/proofs" --assets finned-heat-exchanger --scales 100

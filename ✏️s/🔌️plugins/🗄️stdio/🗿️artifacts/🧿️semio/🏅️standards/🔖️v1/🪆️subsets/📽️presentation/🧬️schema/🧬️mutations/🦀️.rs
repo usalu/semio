@@ -98,6 +98,7 @@ pub enum SemioPresentationMutation {
     SetLayoutMaster(set_layout_master::SetLayoutMaster),
 }
 dsl::original_pack_value_operation_receiving!(SemioPresentationMutation);
+dsl::artifact_persisted_binary_operation!(SemioPresentationMutation);
 
 /// 🏷️ This subset's DECLARED mutation vocabulary, kebab-case, in enum declaration order — the one
 /// list the repository test platform's completeness gate measures `📽️mutate-semio-presentation`

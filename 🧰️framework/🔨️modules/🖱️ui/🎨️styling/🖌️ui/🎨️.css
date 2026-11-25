@@ -179,6 +179,14 @@
 [data-slot="layout-scrollport"]:has(> [data-slot="layout-scroll-end"] [data-slot="footer"]) {
   scroll-padding-block-end: var(--footer-band-height);
 }
+[data-slot="layout-canvas-bleed"] {
+  scroll-padding-block: var(--layout-clearance-top, 0px) var(--layout-clearance-bottom, 0px);
+}
+
+.ui-band-clearance {
+  padding-block: var(--layout-clearance-top, 0px) var(--layout-clearance-bottom, 0px);
+  scroll-padding-block: var(--layout-clearance-top, 0px) var(--layout-clearance-bottom, 0px);
+}
 /* #endregion 🪟️PageChrome */
 
 /* https://tailwindcss.com/doc/theme */
@@ -256,8 +264,11 @@
     --warning-foreground: var(--color-dark);
     --warning-border: var(--color-warning);
     --destructive-bg: var(--color-light-8-9);
-    --destructive-foreground: var(--color-danger);
+    --destructive-foreground: var(--color-danger-deep);
     --destructive-border: var(--color-danger);
+    --info-ink: var(--color-info-deep);
+    --success-ink: var(--color-success-deep);
+    --warning-ink: var(--color-warning-deep);
     --scrollbar-thumb: var(--border-color);
     --scrollbar-thumb-hover: var(--muted-foreground);
     --color-new: var(--success-border);
@@ -742,8 +753,11 @@
   --warning-foreground: var(--color-light);
   --warning-border: var(--color-warning);
   --destructive-bg: var(--color-dark-8-9);
-  --destructive-foreground: var(--color-danger);
-  --destructive-border: var(--color-danger);
+  --destructive-foreground: var(--color-danger-bright);
+  --destructive-border: var(--color-danger-bright);
+  --info-ink: var(--color-info);
+  --success-ink: var(--color-success-bright);
+  --warning-ink: var(--color-warning);
   --plaster: var(--color-gray);
   --plaster-edge: var(--color-foreground);
 }
@@ -1017,23 +1031,9 @@
   --z-navbar: 100;
   --z-modal: 1000;
   --z-tutorial: 10000;
-  --glass-saturate: 1.45;
-  /* #region 🎚️LevelKnobs — formula knobs for the unified 6-level surface system (base=0 window=1
-     pane=2 panel=3 dialog=4 menu=5); 🖌️ui.css and ui/styling/🔣️.json's "levels" block must stay
-     in lockstep (see contract at .🧬semio/🦑️repo/🎫️tickets/26/07/27/UNIFIED-6-LEVEL-UI-SURFACE-SYSTEM/contract.txt).
-     --glass-saturate above (1.45) is reused as-is by the new glass utilities, no duplicate knob. */
-  --level-shade-step: 5%;
-  --glass-alpha-step: 0.12;
-  --glass-blur-step: 0.5rem;
-  --element-shade-step: 6%;
-  --hover-shade-step: 12%;
-  --veil-alpha: 0.4;
-  --veil-blur: 0.5rem;
-  --chip-tint: 10%;
-  /* #endregion 🎚️LevelKnobs */
+  /* 🎚️ The level knobs (shade, glass alpha and blur, saturation, veil, chip tint) are projected from `levels` in 🔣️.json into the palette stylesheet. */
   --scrollbar-size: var(--spacing-double);
   --color-background: var(--base);
-  --color-base: var(--base);
   --color-window: var(--window);
   --color-panel: var(--panel);
   --color-foreground: var(--foreground);
@@ -1049,6 +1049,20 @@
   --color-active-foreground: var(--active-foreground);
   --color-destructive: var(--destructive-border);
   --color-destructive-foreground: var(--destructive-foreground);
+  --color-info-bg: var(--info-bg);
+  --color-info-ink: var(--info-ink);
+  --color-success-ink: var(--success-ink);
+  --color-warning-ink: var(--warning-ink);
+  --color-info-foreground: var(--info-foreground);
+  --color-info-border: var(--info-border);
+  --color-success-bg: var(--success-bg);
+  --color-success-foreground: var(--success-foreground);
+  --color-success-border: var(--success-border);
+  --color-warning-bg: var(--warning-bg);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-warning-border: var(--warning-border);
+  --color-destructive-bg: var(--destructive-bg);
+  --color-destructive-border: var(--destructive-border);
   --color-changed-base: var(--color-warning);
   --color-selected-changed: color-mix(in oklch, var(--active-base) 50%, var(--color-warning) 50%);
   --color-selected-added: color-mix(in oklch, var(--active-base) 50%, var(--color-success) 50%);
@@ -1082,7 +1096,7 @@
    menu=5). Each block redeclares the same formula with its literal k baked in, since CSS custom
    properties cannot be recomputed per-descendant (see contract CSS MECHANISM section); this is
    still 100% formula-derived off --level-shade-step/--glass-alpha-step/--glass-blur-step/
-   --element-shade-step/--hover-shade-step above, just unrolled six times. base is combined with
+   --element-shade-step/--hover-shade-step of the palette stylesheet, just unrolled six times. base is combined with
    `:root` so undecorated content defaults to base level. --border-element-color here supersedes
    the old window/panel-only blocks above and is the only source of it for pane/dialog/menu. */
 :root,
@@ -1127,6 +1141,13 @@
 }
 
 [data-level="menu"] {
+  --surface-bg: color-mix(in oklab, var(--base), var(--foreground) calc(5 * var(--level-shade-step)));
+  --surface-alpha: calc(1 - 5 * var(--glass-alpha-step));
+  --surface-blur: calc(5 * var(--glass-blur-step));
+  --border-element-color: color-mix(in oklab, var(--color-gray), var(--foreground) calc(5 * var(--element-shade-step)));
+  --surface-hover: color-mix(in oklab, var(--surface-bg), var(--foreground) var(--hover-shade-step));
+}
+::picker(select) {
   --surface-bg: color-mix(in oklab, var(--base), var(--foreground) calc(5 * var(--level-shade-step)));
   --surface-alpha: calc(1 - 5 * var(--glass-alpha-step));
   --surface-blur: calc(5 * var(--glass-blur-step));
@@ -6646,6 +6667,10 @@
   width: auto;
   max-width: none;
 }
+/* A native button sizes to its content even at `width: auto`, so a button row of a vertical owner spans the owner explicitly. */
+[data-shared-border-cells][data-orientation="vertical"] > button[data-shared-border-frame] {
+  width: 100%;
+}
 [data-shared-border-cells] > [data-slot="button-group"] {
   padding: 0;
 }
@@ -7301,6 +7326,9 @@
 :is([data-shared-border-frame], [data-slot="popover-content"], [data-slot="dialog-content"]) table > tbody > tr:last-child {
   border-bottom-width: 0;
 }
+:is([data-shared-border-frame], [data-slot="popover-content"], [data-slot="dialog-content"]) table > tbody > tr[data-shared-border-edges="bottom"]:last-child > td {
+  padding-block: 0;
+}
 
 /* 🎓️ Introduction step body: emphasize only the paragraph under the pointer — never sibling
  * paragraphs, footer step-count chip, or checklist. Title chip + drag handle emphasize via
@@ -7359,9 +7387,65 @@
   }
 }
 
+/* 🫳️ A drag: the dragged element leaves its place and travels with the pointer as one floating rectangle of menu-level glass with the chip tint, on a layer above everything (`[data-drag-ghost]`); its source is hidden in place and keeps its room (`[data-drag-hidden]`). While it travels (`:root[data-drag-active]`) every place it can be dropped on (`[data-drop-place]`) is tinted at 10 % of the active colour and the one under the pointer (`[data-drop-active]`) at 32 %. A place is tinted by an image laid over its own fill, so what it shows stays. Nothing of it is animated, so reduced motion changes nothing; forced colours outline the places instead of tinting them. */
+[data-drag-hidden] {
+  opacity: 0;
+}
+
+[data-drag-ghost] {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: calc(var(--z-tutorial) + 10);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-single);
+  max-width: 16rem;
+  margin: 0;
+  padding: var(--spacing-half) var(--spacing-single);
+  overflow: hidden;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  outline: var(--stroke-hairline) solid var(--border-emphasized-color);
+  outline-offset: calc(-1 * var(--stroke-hairline));
+  background-color: color-mix(in srgb, var(--surface-bg) calc(var(--surface-alpha) * 100%), transparent);
+  font-size: var(--text-xs, 0.75rem);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  pointer-events: none;
+  user-select: none;
+}
+
+:root[data-drag-active] [data-drop-place] {
+  background-image: linear-gradient(color-mix(in srgb, var(--active-base) 10%, transparent), color-mix(in srgb, var(--active-base) 10%, transparent));
+}
+
+:root[data-drag-active] [data-drop-place][data-drop-active] {
+  background-image: linear-gradient(color-mix(in srgb, var(--active-base) 32%, transparent), color-mix(in srgb, var(--active-base) 32%, transparent));
+}
+
+@media (forced-colors: active) {
+  :root[data-drag-active] [data-drop-place] {
+    outline: var(--stroke-hairline) dashed CanvasText;
+    outline-offset: calc(-1 * var(--stroke-hairline));
+    background-image: none;
+  }
+
+  :root[data-drag-active] [data-drop-place][data-drop-active] {
+    outline: var(--stroke-default) solid Highlight;
+    background-image: none;
+  }
+
+  [data-drag-ghost] {
+    outline-color: CanvasText;
+  }
+}
+
 /* ⬛️ No rounded corner and no shadow anywhere: the radius and shadow tokens of the theme are zero, and the controls a browser draws itself are drawn here instead.
    A native tick box and a native radio button are squares with the element line; a ticked box is filled with the active colour and carries its tick, a chosen radio button holds a smaller square of the active colour.
    As a direct child of a cells owner (`data-shared-border-cells`) the control is a cell of the border grid: it has no line of its own, its edges are the shared lines of its row, it is as high as the row, and a chosen radio button fills its cell.
+   A native select opens its list one level above, as a menu: square, at menu level glass with a hairline outline, its options separated by lines and drawn like menu rows (a hovered one with the hover fill and emphasised text, the chosen one filled with the active colour and no tick); its picker icon is the catalog chevron, turned while the list is open.
    Forced colours keep the system's own controls. */
 @layer base {
   input:is([type="checkbox"], [type="radio"]) {
@@ -7431,6 +7515,88 @@
     content: none;
   }
 
+  select,
+  ::picker(select) {
+    appearance: base-select;
+  }
+
+  select {
+    border: var(--stroke-hairline) solid var(--border-element-color);
+    border-radius: 0;
+    background-color: transparent;
+    color: inherit;
+    cursor: pointer;
+  }
+
+  select::picker-icon {
+    content: "";
+    inline-size: var(--size-small);
+    block-size: var(--size-small);
+    background-color: var(--muted-foreground);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") center / contain no-repeat;
+    transition: rotate 150ms;
+  }
+
+  select:open::picker-icon {
+    rotate: 180deg;
+  }
+
+  select:hover::picker-icon {
+    background-color: var(--border-emphasized-color);
+  }
+
+  ::picker(select) {
+    margin: 0;
+    padding: 0;
+    border: var(--stroke-hairline) solid var(--border-normal-color);
+    border-radius: 0;
+    box-shadow: none;
+    color: var(--foreground);
+    -webkit-backdrop-filter: blur(var(--surface-blur)) saturate(var(--glass-saturate));
+    backdrop-filter: blur(var(--surface-blur)) saturate(var(--glass-saturate));
+    background-color: color-mix(in srgb, var(--surface-bg) calc(var(--surface-alpha) * 100%), transparent);
+  }
+
+  select option {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-single);
+    min-block-size: var(--chip-row-height);
+    padding-inline: var(--spacing-double);
+    border-radius: 0;
+    background-color: transparent;
+    cursor: pointer;
+  }
+
+  select option + option {
+    border-block-start: var(--stroke-hairline) solid var(--border-normal-color);
+  }
+
+  select option::checkmark {
+    display: none;
+  }
+
+  select option:is(:hover, :focus-visible):not(:checked, :disabled) {
+    background-color: var(--hover-interactive-fill);
+    color: var(--border-emphasized-color);
+  }
+
+  select option:checked {
+    background-color: var(--active-base);
+    color: var(--active-foreground);
+  }
+
+  select option:focus-visible {
+    outline: var(--stroke-hairline) solid var(--active-base);
+    outline-offset: calc(-1 * var(--stroke-hairline));
+  }
+
+  select option:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
   @media (forced-colors: active) {
     input:is([type="checkbox"], [type="radio"]) {
       -webkit-appearance: auto;
@@ -7441,6 +7607,11 @@
 
     input:is([type="checkbox"], [type="radio"])::before {
       content: none;
+    }
+
+    select,
+    ::picker(select) {
+      appearance: auto;
     }
   }
 }
@@ -7469,16 +7640,6 @@
   border-style: none;
 }
 
-/* 🫸️ Two chips of one cap or footer row whose free space would drop under the card-band minimum abut instead (chip-abut.ts): the reaching chip stretches over the free space and the pair shares one seam. */
-[data-window-frame-chip][data-chip-abut] {
-  flex: 1 1 auto;
-  justify-self: stretch;
-}
-
-[data-anchor] > [data-window-frame]:has(> [data-window-frame-chip][data-chip-abut]) {
-  min-inline-size: var(--chip-abut-size);
-}
-
 /* 🪟️ A folded pane chip stretched to the width of the control group hanging under it: the chip and its toggle fill the stack, so both share the same left and right lines. */
 [data-pane-chip-fill] > [data-window-frame-chip] {
   flex: 1 1 auto;
@@ -7486,6 +7647,11 @@
 
 [data-pane-chip-fill] > [data-window-frame-chip] > [data-slot="window-pane-chrome-toggle"] {
   flex: 1 1 auto;
+}
+
+/* ⌨️ A menu or list box that holds focus for its roving rows is a container, not a control: it paints no browser ring (its rows and its frame carry the focus lines). */
+:is([role="menu"], [role="listbox"]):focus-visible {
+  outline: none;
 }
 
 /* ⌨️ Keyboard focus on a docked control is the recolour of its chip's own lines (the frame border paints them in the focus colour, chip-focus.ts), never a ring inside them. */
@@ -7517,12 +7683,6 @@
 [data-slot="context-menu-content"] {
   background: transparent !important;
   background-color: transparent !important;
-}
-
-/* 🃏️ Card stack and grid: every card is one rectangle with its chips inside it, so cards abut with no gap, lift or band and share one line. A card never lifts in a stack, a grid or the layered overview (a swiped card shares its lines with the neighbour hints): a translate would break the shared line, so hover emphasis stays on colour and outline. */
-:is([data-card-stack], [data-card-grid], [data-layered-overview]) [data-overview-card-paint] {
-  translate: none !important;
-  transform: none !important;
 }
 
 /* 🔳️ Card grid: cards tile edge to edge. No gap, no cell padding, the card fills its cell, so neighbours share one line. */

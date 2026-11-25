@@ -11,14 +11,14 @@ use semio_s_artifact_stdio_dwg_read_records::standards::v_ac1024::subsets::any::
 //#region 🔖️DwgStructuralCodec
 //#region DwgRead
 /// 🧩️ Decodes one assoc network object body from its main, string and handle streams.
-pub fn decode_assoc_network_object(handle: u64, payload_size: usize, main_end_bit: usize, data: &mut DwgBitReader<'_>, handle_reader: &mut DwgBitReader<'_>, object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject) -> Result<(), String> {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgAssocNetwork;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgAssocNetworkMember;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgAssocNetworkMemberKind;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgAssociativeAction;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgAssociativeActionDependency;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgAssociativeActionStatus;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody;
+pub fn decode_assoc_network_object(handle: u64, payload_size: usize, main_end_bit: usize, data: &mut DwgBitReader<'_>, handle_reader: &mut DwgBitReader<'_>, object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject) -> Result<(), String> {
+    use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgAssocNetwork;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgAssocNetworkMember;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgAssocNetworkMemberKind;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgAssociativeAction;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgAssociativeActionDependency;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgAssociativeActionStatus;
+    use semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody;
     let action_version = data.read_bs()?;
     let action_status = data.read_bl()?;
     if action_version != 1 || action_status != 0 {
@@ -60,12 +60,12 @@ pub fn decode_assoc_network_object(handle: u64, payload_size: usize, main_end_bi
     Ok(())
 }
 /// 🧩️ Decodes one assoc 2D constraint group object body from its main, string and handle streams.
-pub fn decode_assoc_2d_constraint_group_object(handle: u64, payload: &[u8], payload_size: usize, data_end_bit: usize, main_end_bit: usize, data: &mut DwgBitReader<'_>, handle_reader: &mut DwgBitReader<'_>, strings: &mut Option<DwgBitReader<'_>>, object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject) -> Result<(), String> {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::constraints::DwgAssoc2dConstraintGroup;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgAssociativeAction;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgAssociativeActionDependency;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgAssociativeActionStatus;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody;
+pub fn decode_assoc_2d_constraint_group_object(handle: u64, payload: &[u8], payload_size: usize, data_end_bit: usize, main_end_bit: usize, data: &mut DwgBitReader<'_>, handle_reader: &mut DwgBitReader<'_>, strings: &mut Option<DwgBitReader<'_>>, object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject) -> Result<(), String> {
+    use semio_s_artifact_stdio_dwg_snapshot_objects_constraints::DwgAssoc2dConstraintGroup;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgAssociativeAction;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgAssociativeActionDependency;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgAssociativeActionStatus;
+    use semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody;
     let strings = strings.as_mut().ok_or_else(|| format!("ACDBASSOC2DCONSTRAINTGROUP {handle:#x} class stream missing"))?;
     let action_version = data.read_bs()?;
     let action_status = data.read_bl()?;
@@ -126,11 +126,11 @@ pub fn decode_assoc_2d_constraint_group_object(handle: u64, payload: &[u8], payl
     Ok(())
 }
 /// 🧩️ Decodes one evaluation graph object body from its main, string and handle streams.
-pub fn decode_evaluation_graph_object(handle: u64, payload_size: usize, main_end_bit: usize, data: &mut DwgBitReader<'_>, handle_reader: &mut DwgBitReader<'_>, object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject) -> Result<(), String> {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgEvaluationGraph;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgEvaluationGraphEdge;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgEvaluationGraphNode;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody;
+pub fn decode_evaluation_graph_object(handle: u64, payload_size: usize, main_end_bit: usize, data: &mut DwgBitReader<'_>, handle_reader: &mut DwgBitReader<'_>, object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject) -> Result<(), String> {
+    use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgEvaluationGraph;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgEvaluationGraphEdge;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgEvaluationGraphNode;
+    use semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody;
     let watermark = data.read_bl()?;
     let watermark_copy = data.read_bl()?;
     if watermark != watermark_copy {
@@ -192,7 +192,7 @@ pub fn decode_evaluation_graph_object(handle: u64, payload_size: usize, main_end
     Ok(())
 }
 /// 🧩️ Decodes one assoc dimension dependency body object body from its main, string and handle streams.
-pub fn decode_assoc_dimension_dependency_body_object(handle: u64, payload: &[u8], payload_size: usize, data_end_bit: usize, main_end_bit: usize, data: &mut DwgBitReader<'_>, handle_reader: &mut DwgBitReader<'_>, strings: &mut Option<DwgBitReader<'_>>, object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject) -> Result<(), String> {
+pub fn decode_assoc_dimension_dependency_body_object(handle: u64, payload: &[u8], payload_size: usize, data_end_bit: usize, main_end_bit: usize, data: &mut DwgBitReader<'_>, handle_reader: &mut DwgBitReader<'_>, strings: &mut Option<DwgBitReader<'_>>, object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject) -> Result<(), String> {
     let dependency_version = data.read_bs()?;
     let dimension_base_version = data.read_bs()?;
     let class_version = data.read_bs()?;
@@ -209,18 +209,18 @@ pub fn decode_assoc_dimension_dependency_body_object(handle: u64, payload: &[u8]
         return Err(format!("ASSOCDIMDEPENDENCYBODY {handle:#x} string stream is not exactly consumed"));
     }
     validate_entity_terminal_fill(handle_reader, payload_size * 8, handle, "ASSOCDIMDEPENDENCYBODY")?;
-    object.body = Some(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody::AssociativeDimensionDependencyBody(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgAssociativeDimensionDependencyBody { name }));
+    object.body = Some(semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody::AssociativeDimensionDependencyBody(semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgAssociativeDimensionDependencyBody { name }));
 
     Ok(())
 }
 /// 🧩️ Decodes one assoc variable object body from its main, string and handle streams.
-pub fn decode_assoc_variable_object(handle: u64, payload: &[u8], payload_size: usize, data_end_bit: usize, main_end_bit: usize, data: &mut DwgBitReader<'_>, handle_reader: &mut DwgBitReader<'_>, strings: &mut Option<DwgBitReader<'_>>, object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject) -> Result<(), String> {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgAssociativeAction;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgAssociativeActionDependency;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgAssociativeActionStatus;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgAssociativeVariable;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgEvaluationVariant;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody;
+pub fn decode_assoc_variable_object(handle: u64, payload: &[u8], payload_size: usize, data_end_bit: usize, main_end_bit: usize, data: &mut DwgBitReader<'_>, handle_reader: &mut DwgBitReader<'_>, strings: &mut Option<DwgBitReader<'_>>, object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject) -> Result<(), String> {
+    use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgAssociativeAction;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgAssociativeActionDependency;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgAssociativeActionStatus;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgAssociativeVariable;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgEvaluationVariant;
+    use semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody;
     let action_version = data.read_bs()?;
     let action_status = data.read_bl()?;
     if action_version != 1 || action_status != 0 {
@@ -280,7 +280,7 @@ pub fn decode_assoc_variable_object(handle: u64, payload: &[u8], payload_size: u
     Ok(())
 }
 /// 🧩️ Decodes one assoc geometry dependency object body from its main, string and handle streams.
-pub fn decode_assoc_geometry_dependency_object(handle: u64, payload: &[u8], payload_size: usize, data_end_bit: usize, main_end_bit: usize, data: &mut DwgBitReader<'_>, handle_reader: &mut DwgBitReader<'_>, strings: &mut Option<DwgBitReader<'_>>, object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject) -> Result<(), String> {
+pub fn decode_assoc_geometry_dependency_object(handle: u64, payload: &[u8], payload_size: usize, data_end_bit: usize, main_end_bit: usize, data: &mut DwgBitReader<'_>, handle_reader: &mut DwgBitReader<'_>, strings: &mut Option<DwgBitReader<'_>>, object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject) -> Result<(), String> {
     let class_version = data.read_bs()?;
     let status = data.read_bl()?;
     if class_version != 1 || status != 0 {
@@ -314,9 +314,9 @@ pub fn decode_assoc_geometry_dependency_object(handle: u64, payload: &[u8], payl
     let dependency_node_handle = read_object_handle(handle_reader, handle)?;
     let dependency_body_handle = read_object_handle(handle_reader, handle)?;
     validate_entity_terminal_fill(handle_reader, payload_size * 8, handle, "ACDBASSOCGEOMDEPENDENCY")?;
-    object.body = Some(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody::AssociativeGeometryDependency(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgAssociativeGeometryDependency {
-        dependency: semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgAssociativeDependency {
-            status: semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgAssociativeDependencyStatus::UpToDate,
+    object.body = Some(semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody::AssociativeGeometryDependency(semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgAssociativeGeometryDependency {
+        dependency: semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgAssociativeDependency {
+            status: semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgAssociativeDependencyStatus::UpToDate,
             is_read_dependency,
             is_write_dependency,
             is_attached_to_object,
@@ -337,7 +337,7 @@ pub fn decode_assoc_geometry_dependency_object(handle: u64, payload: &[u8], payl
     Ok(())
 }
 /// 🧩️ Decodes one assoc value dependency object body from its main, string and handle streams.
-pub fn decode_assoc_value_dependency_object(handle: u64, payload: &[u8], payload_size: usize, data_end_bit: usize, main_end_bit: usize, data: &mut DwgBitReader<'_>, handle_reader: &mut DwgBitReader<'_>, strings: &mut Option<DwgBitReader<'_>>, object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject) -> Result<(), String> {
+pub fn decode_assoc_value_dependency_object(handle: u64, payload: &[u8], payload_size: usize, data_end_bit: usize, main_end_bit: usize, data: &mut DwgBitReader<'_>, handle_reader: &mut DwgBitReader<'_>, strings: &mut Option<DwgBitReader<'_>>, object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject) -> Result<(), String> {
     let class_version = data.read_bs()?;
     let status = data.read_bl()?;
     if class_version != 1 || status != 0 {
@@ -355,7 +355,7 @@ pub fn decode_assoc_value_dependency_object(handle: u64, payload: &[u8], payload
     if value_dependency_version != 0 || cached_value_code != 90 {
         return Err(format!("ACDBASSOCVALUEDEPENDENCY {handle:#x} has unsupported value version/code {value_dependency_version}/{cached_value_code}"));
     }
-    let cached_value = semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgEvaluationVariant::Integer32(data.read_bl()? as i32);
+    let cached_value = semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgEvaluationVariant::Integer32(data.read_bl()? as i32);
     if data.bit_position() != main_end_bit {
         return Err(format!("ACDBASSOCVALUEDEPENDENCY {handle:#x} main stream is not exactly consumed: {} != {main_end_bit}", data.bit_position()));
     }
@@ -371,9 +371,9 @@ pub fn decode_assoc_value_dependency_object(handle: u64, payload: &[u8], payload
     let dependency_node_handle = read_object_handle(handle_reader, handle)?;
     let dependency_body_handle = read_object_handle(handle_reader, handle)?;
     validate_entity_terminal_fill(handle_reader, payload_size * 8, handle, "ACDBASSOCVALUEDEPENDENCY")?;
-    object.body = Some(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody::AssociativeValueDependency(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgAssociativeValueDependency {
-        dependency: semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgAssociativeDependency {
-            status: semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgAssociativeDependencyStatus::UpToDate,
+    object.body = Some(semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody::AssociativeValueDependency(semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgAssociativeValueDependency {
+        dependency: semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgAssociativeDependency {
+            status: semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgAssociativeDependencyStatus::UpToDate,
             is_read_dependency,
             is_write_dependency,
             is_attached_to_object,
@@ -393,7 +393,7 @@ pub fn decode_assoc_value_dependency_object(handle: u64, payload: &[u8], payload
     Ok(())
 }
 /// 🧩️ Decodes one assoc dependency object body from its main, string and handle streams.
-pub fn decode_assoc_dependency_object(handle: u64, payload_size: usize, main_end_bit: usize, data: &mut DwgBitReader<'_>, handle_reader: &mut DwgBitReader<'_>, strings: &mut Option<DwgBitReader<'_>>, object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject) -> Result<(), String> {
+pub fn decode_assoc_dependency_object(handle: u64, payload_size: usize, main_end_bit: usize, data: &mut DwgBitReader<'_>, handle_reader: &mut DwgBitReader<'_>, strings: &mut Option<DwgBitReader<'_>>, object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject) -> Result<(), String> {
     let class_version = data.read_bs().map_err(|error| format!("ACDBASSOCDEPENDENCY {handle:#x} class version: {error}"))?;
     if class_version != 1 {
         return Err(format!("ACDBASSOCDEPENDENCY {handle:#x} class version {class_version} is unsupported"));
@@ -421,8 +421,8 @@ pub fn decode_assoc_dependency_object(handle: u64, payload_size: usize, main_end
     let dependency_node_handle = read_object_handle(handle_reader, handle)?;
     let dependency_body_handle = read_object_handle(handle_reader, handle)?;
     validate_entity_terminal_fill(handle_reader, payload_size * 8, handle, "ACDBASSOCDEPENDENCY")?;
-    object.body = Some(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody::AssociativeDependency(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgAssociativeDependency {
-        status: semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgAssociativeDependencyStatus::UpToDate,
+    object.body = Some(semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody::AssociativeDependency(semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgAssociativeDependency {
+        status: semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgAssociativeDependencyStatus::UpToDate,
         is_read_dependency,
         is_write_dependency,
         is_attached_to_object,

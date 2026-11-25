@@ -40,6 +40,7 @@ semio-framework-artifact-reference = { workspace = true }
 semio-framework-dispatch-macros = { path = "../../../../../../../../🔨️modules/🔀️dispatch/📦️packages/🦀️rust" }
 semio-plugin-mounted-owner = { path = "../../../../🏇️mounted-owner/📦️packages/🦀️rust" }
 semio-plugin-ownership = { path = "../../../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
+semio-plugin-store-lifecycle = { path = "../../../../♻️lifecycle/🧱️owner/📦️packages/🦀️rust" }
 semio-plugin-window-transient = { path = "../../../../🪟️window/📦️packages/🦀️rust" }
 semio-framework-tool-run = { workspace = true }
 semio-framework-trace = { workspace = true }

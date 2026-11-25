@@ -8,8 +8,15 @@ import {publishUnitV1} from "../../../💾️store/🟦️.ts";
 import {createFleetClientV1,readFleetSettingsV1} from "../../📡️client/🟦️.ts";
 import {FLEET_POLICY_V1} from "../../🪪️identity/🟦️.ts";
 import {readBuildCountersV1} from "../../📊️counters/🟦️.ts";
-import {drainUploadsV1,enqueueUploadV1,retryJobV1,spoolBoundV1,spoolLengthV1,type SpoolJobV1} from "../🟦️.ts";
+import {drainUploadsV1,enqueueUploadV1,retryJobV1,spoolBoundV1,spoolLengthV1,startUploaderV1,type SpoolJobV1} from "../🟦️.ts";
+import {claimHeldV1} from "../../../🔒️lock/🟦️.ts";
 import schema from "../../🧬️schema/🔣️.json" with {type:"json"};
+import policy from "../../../../../../🏗️build/🔣️policy.json" with {type:"json"};
+import {readCasPinsV1} from "../../../../../../🏗️build/🗄️cas/📌️pins/🟦️.ts";
+import {collectCasV1} from "../../../../../../🏗️build/🗄️cas/🧹️collector/🟦️.ts";
+import {CAS_POLICY_V1} from "../../../../../../🏗️build/🗄️cas/🧬️schema/🟦️.ts";
+import {existsSync as present} from "node:fs";
+const pins=(root:string):Set<string>=>{try{return new Set((readdirSync(join(root,"v1","p")).filter(name=>name.endsWith(".json")).flatMap(name=>(JSON.parse(readFileSync(join(root,"v1","p",name),"utf8")) as {digests:string[]}).digests)));}catch{return new Set();}};
 import {fleetCacheLocalPathV1} from "../../../../../../🏗️build/🌐️remote-cache/🛰️fleet/🟦️.ts";
 import {keyGapV1,registryCrateDirectoryV1} from "../../../🔏️key/🔗️sources/🟦️.ts";
 
@@ -110,6 +117,40 @@ test("a job put off while the credential was denied waits for a drainer of that 
  expect(spoolLengthV1(root)).toBe(0);expect(await createFleetClientV1(readFleetSettingsV1(root,right)!).hasResult(key)).toBe(true);
 },120000);
 
+test("a build with another credential hands the spool over even within the spawn throttle of the last start: the drainer of the old credential, which lives as long as a job waits, ends and a successor uploads the job",async()=>{
+ const server=await startRemoteCacheServerV1({directory:directory("srv-hand"),host:"127.0.0.1",port:0,maximumBytes:2**30,maximumEntryBytes:2**28,maximumAgeDays:30,defaultInstance:"main",tokens:{write:"w-token"}});servers.push(server);
+ const cas=directory("cas-hand"),root=directory("cache-hand"),out=directory("out-hand"),state=join(root,fleet.layout.state),right={SEMIO_REMOTE_CACHE_ENDPOINT:server.url,SEMIO_REMOTE_CACHE_INSTANCE:"main",SEMIO_REMOTE_CACHE_ACCESS:"read-write",SEMIO_REMOTE_CACHE_TOKEN:"w-token",SEMIO_CAS_ROOT:cas},wrong={...right,SEMIO_REMOTE_CACHE_TOKEN:"wrong-token"};
+ process.env.SEMIO_CAS_ROOT=cas;
+ writeFileSync(join(out,"libcore-1.rlib"),"rlib bytes");writeFileSync(join(out,"core-1.d"),`${out}/core-1.d: ${out}/lib.rs\n`);writeFileSync(join(out,"lib.rs"),"pub fn id()->u32{1}\n");
+ const localKey="d".repeat(64),key="e".repeat(64),denied=readFleetSettingsV1(root,wrong)!.identity,successor=readFleetSettingsV1(root,right)!.identity;
+ expect(publishUnitV1(root,{key:localKey,crate:"core",cwd:out,outDir:out,laneRoot:undefined,outputs:[join(out,"libcore-1.rlib"),join(out,"core-1.d")],stdout:"",stderr:"",stampDirectory:undefined})).toBeDefined();
+ expect(enqueueUploadV1(root,job({key,localKey,cwd:out,queuedMs:Date.now(),claimed:false}))).toBe(true);
+ mkdirSync(state,{recursive:true});writeFileSync(join(state,fleet.layout.denied),denied);writeFileSync(join(state,fleet.layout.uploaderIdentity),denied);writeFileSync(join(state,fleet.layout.spawned),denied);
+ const old=drainUploadsV1(root,wrong,{idleMilliseconds:fleet.uploader.maximumJobAgeMilliseconds});
+ while(!claimHeldV1(state,"uploader"))await new Promise(done=>setTimeout(done,20));
+ expect(startUploaderV1(root,{...process.env,...right,SEMIO_UNIT_CACHE_UPLOADER_IDLE_MS:"300"}),"the start for the new credential is not throttled by the start of the old one").toBe(true);
+ expect(readFileSync(join(state,fleet.layout.uploaderIdentity),"utf8")).toBe(successor);expect(readFileSync(join(state,fleet.layout.spawned),"utf8")).toBe(successor);
+ expect(startUploaderV1(root,{...process.env,...right}),"a storm of the same credential starts one successor").toBe(false);
+ expect(await old,"the drainer of the old credential ends instead of holding the lock").toMatchObject({uploaded:0,failed:0,dropped:0});
+ while(spoolLengthV1(root)>0||claimHeldV1(state,"uploader"))await new Promise(done=>setTimeout(done,100));
+ expect(await createFleetClientV1(readFleetSettingsV1(root,right)!).hasResult(key),"the successor uploaded the job").toBe(true);
+},120000);
+
+test("a worker that ends idle leaves no spawn throttle behind (it clears the spawn stamp): a unit queued right after it ended starts a new worker at once and is uploaded",async()=>{
+ const server=await startRemoteCacheServerV1({directory:directory("srv-idle"),host:"127.0.0.1",port:0,maximumBytes:2**30,maximumEntryBytes:2**28,maximumAgeDays:30,defaultInstance:"main",tokens:{write:"w-token"}});servers.push(server);
+ const cas=directory("cas-idle"),root=directory("cache-idle"),out=directory("out-idle"),state=join(root,fleet.layout.state),environment={...process.env,SEMIO_REMOTE_CACHE_ENDPOINT:server.url,SEMIO_REMOTE_CACHE_INSTANCE:"main",SEMIO_REMOTE_CACHE_ACCESS:"read-write",SEMIO_REMOTE_CACHE_TOKEN:"w-token",SEMIO_CAS_ROOT:cas,SEMIO_UNIT_CACHE_UPLOADER_IDLE_MS:"200"};
+ process.env.SEMIO_CAS_ROOT=cas;
+ writeFileSync(join(out,"libcore-1.rlib"),"rlib bytes");writeFileSync(join(out,"core-1.d"),`${out}/core-1.d: ${out}/lib.rs\n`);writeFileSync(join(out,"lib.rs"),"pub fn id()->u32{1}\n");
+ const localKey="f".repeat(64),client=createFleetClientV1(readFleetSettingsV1(root,environment)!);
+ expect(publishUnitV1(root,{key:localKey,crate:"core",cwd:out,outDir:out,laneRoot:undefined,outputs:[join(out,"libcore-1.rlib"),join(out,"core-1.d")],stdout:"",stderr:"",stampDirectory:undefined})).toBeDefined();
+ const ended=async(key:string)=>{while(await client.hasResult(key)!==true||spoolLengthV1(root)>0||claimHeldV1(state,"uploader")||present(join(state,fleet.layout.spawned)))await new Promise(done=>setTimeout(done,50));};
+ for(const [round,key] of["1a","1b"].map((prefix,index)=>[index,prefix.repeat(32)] as const)){
+  expect(enqueueUploadV1(root,job({key,localKey,cwd:out,queuedMs:Date.now(),claimed:false}))).toBe(true);
+  expect(startUploaderV1(root,environment),round===0?"the first unit starts the worker":"the unit after an idle end is not throttled by the start before it").toBe(true);
+  await ended(key);
+ }
+},120000);
+
 test("offers of local hits fill at most half of the spool, so a unit compiled meanwhile is still queued; at the full spool a compiled unit is refused; the bound follows the free room of the disk between the declared minimum and maximum",()=>{
  const root=directory("cap"),bound=64,half=bound/2;
  const key=(index:number)=>index.toString(16).padStart(16,"0").padEnd(64,"0");
@@ -150,6 +191,58 @@ test("the cache is full or busy for a while and 20 spooled units are all still t
  expect(readBuildCountersV1(workspace).skipReasons,"nothing was lost, nothing counted").toEqual({});
  expect(enqueueUploadV1(root,job({key:"2".repeat(64),localKey,cwd:out,queuedMs:Date.now(),claimed:false}),bound),"room again").toBe(true);
 },180000);
+
+test("a unit as large as the fleet cache admits is shared: the client bounds equal the server's largest entry; a unit beyond them ends once as upload-oversize, never as upload-failed, and a unit within them is uploaded",async()=>{
+ const server=policy.remoteCache.server;
+ expect(fleet.limits.maximumEntryBytes).toBe(Math.min(server.maximumEntryBytes,Math.floor(server.maximumBytes/2)));
+ expect(fleet.limits.maximumBlobBytes).toBe(fleet.limits.maximumEntryBytes);
+ expect(fleet.limits.maximumUploadBytesInFlight).toBeLessThan(fleet.limits.maximumEntryBytes*fleet.limits.maximumUploadJobs);
+ const cache=await startRemoteCacheServerV1({directory:directory("srv5"),host:"127.0.0.1",port:0,maximumBytes:2**30,maximumEntryBytes:2**28,maximumAgeDays:30,defaultInstance:"main",tokens:{write:"w-token"}});servers.push(cache);
+ const cas=directory("cas5"),root=directory("cache5"),out=directory("out5"),workspace=directory("work5");
+ const environment={SEMIO_REMOTE_CACHE_ENDPOINT:cache.url,SEMIO_REMOTE_CACHE_INSTANCE:"main",SEMIO_REMOTE_CACHE_ACCESS:"read-write",SEMIO_REMOTE_CACHE_TOKEN:"w-token",SEMIO_CAS_ROOT:cas,SEMIO_UNIT_CACHE_WORKSPACE_ROOT:workspace};
+ process.env.SEMIO_CAS_ROOT=cas;
+ const rlib=Buffer.alloc(3*2**20,7);rlib.writeUInt32BE(5,0);
+ writeFileSync(join(out,"libbig-1.rlib"),rlib);writeFileSync(join(out,"big-1.d"),`${out}/big-1.d: ${out}/lib.rs\n`);writeFileSync(join(out,"lib.rs"),"pub fn id()->u32{5}\n");
+ const small="a".repeat(64),large="b".repeat(64);
+ for(const key of [small,large])expect(publishUnitV1(root,{key,crate:"big",cwd:out,outDir:out,laneRoot:undefined,outputs:[join(out,"libbig-1.rlib"),join(out,"big-1.d")],stdout:"",stderr:"",stampDirectory:undefined})).toBeDefined();
+ const entryDirectory=join(root,"e",large.slice(0,2),large),file=join(entryDirectory,readdirSync(entryDirectory).find(name=>name.endsWith(".json"))!),entry=JSON.parse(readFileSync(file,"utf8")) as {outputs:{bytes:number}[]};
+ entry.outputs[0]!.bytes=fleet.limits.maximumEntryBytes+1;writeFileSync(file,JSON.stringify(entry));
+ expect(enqueueUploadV1(root,job({key:"c".repeat(64),localKey:small,cwd:out,queuedMs:Date.now(),claimed:false}))).toBe(true);
+ expect(enqueueUploadV1(root,job({key:"d".repeat(64),localKey:large,cwd:out,queuedMs:Date.now()+1,claimed:false}))).toBe(true);
+ expect(await drainUploadsV1(root,environment,{idleMilliseconds:0})).toMatchObject({uploaded:1,failed:1});
+ expect(spoolLengthV1(root)).toBe(0);
+ const client=createFleetClientV1(readFleetSettingsV1(root,environment)!);
+ expect(await client.hasResult("c".repeat(64))).toBe(true);expect(await client.hasResult("d".repeat(64))).toBe(false);
+ expect(readBuildCountersV1(workspace).skipReasons).toEqual({"upload-oversize":1});
+},120000);
+
+test("a unit waiting in the spool is pinned in the host store while the drainer holds it: a capacity eviction over the cap keeps its entry and objects, and the pin leaves with the upload",async()=>{
+ const cache=await startRemoteCacheServerV1({directory:directory("srv6"),host:"127.0.0.1",port:0,maximumBytes:2**30,maximumEntryBytes:2**28,maximumAgeDays:30,defaultInstance:"main",tokens:{write:"w-token"}});servers.push(cache);
+ let open:()=>void=()=>{};const gate=new Promise<void>(done=>{open=done;});
+ const proxy=Bun.serve({port:0,async fetch(request){
+  if(request.method==="PUT")await gate;
+  return fetch(cache.url+new URL(request.url).pathname+new URL(request.url).search,{method:request.method,headers:request.headers,body:request.method==="GET"||request.method==="HEAD"?undefined:await request.arrayBuffer()});
+ }});proxies.push(proxy);
+ const cas=directory("cas6"),root=directory("cache6"),out=directory("out6");
+ const environment={SEMIO_REMOTE_CACHE_ENDPOINT:`http://127.0.0.1:${proxy.port}`,SEMIO_REMOTE_CACHE_INSTANCE:"main",SEMIO_REMOTE_CACHE_ACCESS:"read-write",SEMIO_REMOTE_CACHE_TOKEN:"w-token",SEMIO_CAS_ROOT:cas};
+ process.env.SEMIO_CAS_ROOT=cas;
+ writeFileSync(join(out,"libpin-1.rlib"),"pinned rlib bytes");writeFileSync(join(out,"pin-1.d"),`${out}/pin-1.d: ${out}/lib.rs\n`);writeFileSync(join(out,"lib.rs"),"pub fn id()->u32{6}\n");
+ const localKey="e".repeat(64),entry=publishUnitV1(root,{key:localKey,crate:"pin",cwd:out,outDir:out,laneRoot:undefined,outputs:[join(out,"libpin-1.rlib"),join(out,"pin-1.d")],stdout:"",stderr:"",stampDirectory:undefined})!;
+ const digests=entry.outputs.map(row=>row.sha256),entryDirectory=join(root,"e",localKey.slice(0,2),localKey),other="9".repeat(64);
+ writeFileSync(join(out,"libpin-1.rlib"),"unspooled rlib bytes");publishUnitV1(root,{key:other,crate:"pin",cwd:out,outDir:out,laneRoot:undefined,outputs:[join(out,"libpin-1.rlib"),join(out,"pin-1.d")],stdout:"",stderr:"",stampDirectory:undefined});
+ expect(enqueueUploadV1(root,job({key:"f".repeat(64),localKey,cwd:out,queuedMs:Date.now(),claimed:false}))).toBe(true);
+ const drained=drainUploadsV1(root,environment,{idleMilliseconds:0});
+ for(let tries=0;tries<200;tries++){const pins=await readCasPinsV1(cas,Date.now());if(digests.every(digest=>pins.has(digest)))break;await Bun.sleep(25);}
+ expect(digests.every(digest=>pins(cas).has(digest)),"the waiting unit is pinned").toBe(true);
+ const collected=await collectCasV1({root:cas,policy:{...CAS_POLICY_V1,capBytes:1,minimumCapBytes:1,holderProtectedShare:0,minAgeMs:0,areas:[]}});
+ expect(collected.status).toBe("collected");
+ expect(readdirSync(entryDirectory).filter(name=>name.endsWith(".json")).length,"the entry survives the capacity eviction").toBe(1);
+ expect(present(join(root,"e",other.slice(0,2),other))&&readdirSync(join(root,"e",other.slice(0,2),other)).some(name=>name.endsWith(".json")),"a unit that waits for nothing is evicted").toBe(false);
+ expect(digests.every(digest=>present(join(cas,"v1","o",digest.slice(0,CAS_POLICY_V1.fanOutHexLength),digest.slice(CAS_POLICY_V1.fanOutHexLength))))).toBe(true);
+ open();
+ expect(await drained).toMatchObject({uploaded:1});
+ expect(digests.some(digest=>pins(cas).has(digest)),"the pin leaves with the upload").toBe(false);
+},120000);
 
 test("one stalled upload does not stall the others: the drain runs a sliding pool, so units behind a slow one are uploaded while it hangs",async()=>{
  const server=await startRemoteCacheServerV1({directory:directory("srv3"),host:"127.0.0.1",port:0,maximumBytes:2**30,maximumEntryBytes:2**28,maximumAgeDays:30,defaultInstance:"main",tokens:{write:"w-token"}});servers.push(server);

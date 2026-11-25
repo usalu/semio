@@ -1,5 +1,5 @@
-import {readScriptProcessJsonV1} from "@semio-tech/process/routing/invocation/process/json";
-import { isLocalSessionProfileIdV1 } from "@semio-tech/framework-os/modules/directory/local-session/broker/schema";
+import {readScriptProcessJsonV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/📥️invocation/🏃️process/📥️json/🟦️.ts";
+import { isLocalSessionProfileIdV1 } from "../../../../📦️packages/🟦️typescript/🔨️modules/📇️directory/🎫️local-session/🗄️broker/🧬️schema/🟦️.ts";
 
 /** 🔌️ Selects a separately supervised first-party service; no command or path is carried. */
 export type DevLocalHubProviderV1=Readonly<{version:1;service:"local-hub";defaultProfileId:string}>;

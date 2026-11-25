@@ -13,15 +13,69 @@
    "de": "Eine ausgewachsene, frei stehende Rosskastanie (Aesculus hippocastanum) von etwa 24 m: ein kurzer, mächtiger Stamm, eine breite, gewölbte Krone aus schweren, aufsteigenden Ästen, deren unterste nach unten ausschwingen und an den Spitzen wieder aufbiegen, große gefingerte Blätter und im Mai weiße Blütenkerzen über die ganze Krone."
   },
   "tags": [
-   "tree",
-   "deciduous",
-   "broadleaf",
-   "park-tree",
-   "dense-crown",
-   "flowering",
-   "fruit",
-   "wind",
-   "transpiration"
+   {
+    "id": "tree",
+    "title": {
+     "en": "tree",
+     "de": "Baum"
+    }
+   },
+   {
+    "id": "deciduous",
+    "title": {
+     "en": "deciduous",
+     "de": "laubabwerfend"
+    }
+   },
+   {
+    "id": "broadleaf",
+    "title": {
+     "en": "broadleaf",
+     "de": "Laubholz"
+    }
+   },
+   {
+    "id": "park-tree",
+    "title": {
+     "en": "park tree",
+     "de": "Parkbaum"
+    }
+   },
+   {
+    "id": "dense-crown",
+    "title": {
+     "en": "dense crown",
+     "de": "dichte Krone"
+    }
+   },
+   {
+    "id": "flowering",
+    "title": {
+     "en": "flowering",
+     "de": "blühend"
+    }
+   },
+   {
+    "id": "fruit",
+    "title": {
+     "en": "fruit",
+     "de": "Obst"
+    }
+   },
+   {
+    "id": "wind",
+    "title": {
+     "en": "wind",
+     "de": "Wind"
+    }
+   },
+   {
+    "id": "transpiration",
+    "title": {
+     "en": "transpiration",
+     "de": "Transpiration"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage plant collection worker PW-02",

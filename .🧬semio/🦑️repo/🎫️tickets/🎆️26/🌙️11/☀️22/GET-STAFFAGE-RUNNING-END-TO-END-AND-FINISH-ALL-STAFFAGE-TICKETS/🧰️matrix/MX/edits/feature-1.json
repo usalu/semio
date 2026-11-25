@@ -1,0 +1,7 @@
+[
+ {
+  "name": "scenarios",
+  "old": "  Scenario: A truthful band copy is allowlisted with its reason",
+  "new": "  Scenario: A difference that equals the tolerance has one verdict\n    Given a drawing whose height differs from the declared height by exactly the D18 tolerance\n    When the height is checked in metres and on the paper of several scales\n    Then it is within the tolerance everywhere, and one micrometre more is a finding everywhere\n\n  Scenario: An unfilled outline is a drawn shape\n    Given a view or a symbol whose only shape is drawn as an unfilled outline\n    When the scene is asked whether it draws a shape of the view\n    Then the outline run counts as drawn, and a shape without pen and fill is named with its role and the pen of its representation or symbol\n\n  Scenario: A view that cannot differ in a band is allowlisted for that band\n    Given a view that equals another view of its own band in some bands for a physical reason\n    When the allowlist names the asset, the view and those bands\n    Then the in-band equality is no finding in the named bands and still one in every other band\n\n  Scenario: A truthful band copy is allowlisted with its reason"
+ }
+]

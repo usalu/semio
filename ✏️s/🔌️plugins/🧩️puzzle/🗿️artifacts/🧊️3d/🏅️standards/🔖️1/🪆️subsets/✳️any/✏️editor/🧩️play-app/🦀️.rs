@@ -522,7 +522,7 @@ impl ArtifactEditor for Puzzle3dPlayApp {
         with_puzzle3d_session_for(puzzle3d_view_session_key(doc), &runtime, |_session| {
             let Some(labels) = puzzle3d_labels(view_state) else { return HashMap::new() };
             let envelope = main::scene_for(doc.snapshot, &runtime, Some(view_state), window_id);
-            HashMap::from([(window_id.to_string(), main::engagement(&envelope, labels, doc.original_tool_run()))])
+            HashMap::from([(window_id.to_string(), main::engagement(&envelope, labels, doc.tool_run_poll()))])
         })
     }
 
@@ -538,7 +538,7 @@ impl ArtifactEditor for Puzzle3dPlayApp {
         with_puzzle3d_session_for(puzzle3d_view_session_key(doc), &runtime, |_session| {
             let Some(labels) = puzzle3d_labels(view_state) else { return HashMap::new() };
             let envelope = main::scene_for(doc.snapshot, &runtime, Some(view_state), window_id);
-            HashMap::from([(window_id.to_string(), main::engagement(&envelope, labels, doc.original_tool_run()))])
+            HashMap::from([(window_id.to_string(), main::engagement(&envelope, labels, doc.tool_run_poll()))])
         })
     }
 
@@ -552,7 +552,7 @@ impl ArtifactEditor for Puzzle3dPlayApp {
             let wid = view_state.window_id.as_deref().unwrap_or(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID);
             let Some(labels) = puzzle3d_labels(view_state) else { return HashMap::new() };
             let envelope = main::scene_for(doc.snapshot, &runtime, Some(view_state), wid);
-            HashMap::from([(semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_FILL_TOOL_ID.to_string(), fill_tool::measures(&envelope, labels, doc.original_tool_run()))])
+            HashMap::from([(semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_FILL_TOOL_ID.to_string(), fill_tool::measures(&envelope, labels, doc.tool_run_poll()))])
         })
     }
 

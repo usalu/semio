@@ -16,7 +16,21 @@ repo dev mcp stdio os --catalog ✏️s/🧑‍💻dev/🧩️catalog/🤖️gen
 The root `📋️project.json` declaration `tool:workspace/os-mcp-stdio` owns this command.
 The client configuration writer derives both client files from that declaration.
 The launcher answers the cold handshake immediately, prepares the native executable and catalog through their owning build and generation interfaces, then forwards requests to the native server.
-A handshake whose `serverInfo.version` is `warming` means preparation is still running. Discovery waits for the native server and returns its actual catalog; a preparation failure returns a JSON-RPC error. Native discovery and successful tool calls are the readiness checks.
+A handshake whose `serverInfo.version` is `warming` means preparation is still running. While it runs, discovery (`tools/list`, `resources/list`, `resources/templates/list`, `prompts/list`) answers empty lists immediately and tool requests wait for the native server; once the native server is ready the launcher sends `list_changed` notifications for tools, resources and prompts so clients refetch its actual catalog. A preparation failure returns a JSON-RPC error for every request. Native discovery and successful tool calls are the readiness checks.
+
+When a previously published native server already exists (its executable admits and the `--catalog` publication holds `🦀️catalog.json` and `🔌️plugins.json`), the launcher serves from it at once and revalidates behind it: the build and catalog targets refresh in the background without holding the publication they replace, then the refreshed publication is admitted for the rest of the session.
+If the refresh changed the executable (size, modification time, inode) or the catalog content, the launcher starts a new native server, handshakes it with the client's original `initialize` parameters, routes new requests to it and sends the `tools`, `resources` and `prompts` `list_changed` notifications. The replaced server finishes the requests it already holds, its other frames are dropped and logged, and it is then ended.
+An unchanged refresh does nothing. A failed refresh logs `[semio-os-mcp] refresh failed: …` on stderr and the session keeps serving. A cold launch with nothing usable behaves as described above.
+
+### Native server supervision
+
+An unexpected exit of the serving native server (non-zero status or a signal; a clean exit and a client close are not crashes) does not end the session. The launcher answers the requests that server held with a retryable JSON-RPC error (`-32603`, `data.cause: "server-exited"`, the exit status or signal and an en + de `summary`), keeps the background staging running, starts a replacement through the refresh handshake and replay path, queues requests that arrive meanwhile and announces `list_changed` once the replacement serves (a replacement already being handshaken for a refresh is promoted instead). Restarts, including replacements that fail their handshake, are bounded by the `Supervision` budget of `📡️stdio/🚪️gateway/🧬️schema/🔣️.json` (3 within 60 s); beyond it the session fails as for a clean server loss.
+
+### Component models on demand
+
+Typed plugin mutations, exports and inference need the retained component model of their plugin, which the native server reads through the `SEMIO_MCP_COMPONENT_MODELS` manifest of its environment (schema `📡️stdio/📦️component-models/🔣️.json`). Nobody has to build models by hand: when the serving native server answers a call with the retryable `PLUGIN_UNAVAILABLE` whose `details` carry `cause: "model-missing"`, `missingModel: {pluginId, cratePath}` and the en + de `summary` (definition `MissingModelDetails`; the same typed shape in a tool error `structuredContent` or a JSON-RPC error `data`), the launcher's gateway relays it unchanged and builds that plugin's model once per plugin and session.
+Builds run one at a time through the owning component driver (`buildComponentClosureV1`, facet `model`) under the session's cancellation, with progress on stderr (`[semio-os-mcp] building the component model of plugin …`). When the build published a model set that differs from the one the child carries, the launcher admits the models again (its readers stay held, a new reader group is added for the new child), updates the child environment, and swaps a freshly handshaken server in behind the client through the refresh path above, announcing `list_changed`; the client retries its call and the new child sees the model. A build that fails logs `[semio-os-mcp] component model failed for plugin …`; the next refusal retries it. A model that appears while the background refresh runs (for example built by another session) also marks the refresh as changed, because the refresh fingerprint includes the model manifest.
+Only missing models are requested, never a model a running child already holds, so the exclusive publication writer does not wait on the launcher's own readers of other models.
 
 For development choose **New Task**, search `mcp http` or `mcp inspector`, complete
 its form and choose **Start**. Inspect output and readiness in Task overview;
@@ -394,6 +408,20 @@ Ordering is stable (tools by name; the others in registry declaration order), th
 did not mint is `INVALID_PARAMS`, and a cursor past the end is a legal empty final page so a walk
 always terminates. The default page is 100 entries, so today's twenty-seven tools and the current
 resource roster are still one page for every existing client.
+
+The list tools `capabilities_search` and `inference_list` page with the same cursor (`limit` 1 to 100,
+default 20; `total` and `nextCursor` in the result); a cursor this server did not mint is a typed
+`INPUT_INVALID`. `inference_list` returns metadata only unless it is narrowed by `artifactId` or
+`inferenceSchema`; the payload contract (input and output schema) of one service rides in that
+narrowed answer, never in the roster-wide page.
+
+## Tool arguments and errors
+
+Every tool's `arguments` are validated against its own published `inputSchema` (type, required,
+bounds, enums, `additionalProperties`) by one gate in the tool registry before any tool body runs; a
+violation is an `INPUT_INVALID` tool error that names the offending field. A tool error carries
+`code`, `message`, `details` and `retryable` in `structuredContent`, and its text content leads with
+the code (`NOT_FOUND: no such job: …`) for clients that show only text.
 
 ## No model provider — the agent is the client, not a dependency
 

@@ -21,13 +21,21 @@ impl std::ops::DerefMut for SpaceIndexApp {
     }
 }
 
+impl Drop for SpaceIndexApp {
+    fn drop(&mut self) {
+        if !std::thread::panicking() {
+            semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, self.1.cx()).expect("the fixture app pays its original close");
+        }
+    }
+}
+
     /// 🧩️ Adapts `create_space_index_editor`'s `AppDefinition` (contract §2.4) into the
     /// `App { definition, examples }` shape `new_app_with_registry` expects.
     fn space_index_manifest_for_tests() -> semio_plugin::App {
         semio_plugin::App { definition: create_space_index_editor(), examples: Vec::new() }
     }
 
-    semio_plugin::history_edit_acceptance_law!("space", SpaceIndexEditor, space_index_manifest_for_tests, "../..");
+    semio_plugin::history_edit_acceptance_law!("space", SpaceIndexEditor, space_index_manifest_for_tests, "../../..");
 
     /// 🧪️ An app instance carrying the real `AppActionRegistry`. The registry-LESS
     /// `artifact_app_laws::new_app` is unusable here: `with_registry_on_bus` joins
@@ -64,7 +72,8 @@ impl std::ops::DerefMut for SpaceIndexApp {
             updated_at_ms: 1,
             updated_by: "user:1".into(),
         });
-        semio_plugin::artifact_app_laws::load_document_text(&mut app.0, &store::os_store::text_format::ArtifactTextFiles { dsl: snapshot.print_dsl(), ops: String::new() }, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("load test artifact");
+        let booted = app.0.document_text().await.expect("booted document text");
+        semio_plugin::artifact_app_laws::load_document_text(&mut app.0, &store::os_store::text_format::ArtifactTextFiles { dsl: snapshot.print_dsl(), ops: booted.ops }, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("load test artifact");
         (app, id)
     }
     
@@ -80,7 +89,8 @@ impl std::ops::DerefMut for SpaceIndexApp {
         let mut app = new_app().await;
         let id = "artifact-0123456789abcdef0123456789abcdef".to_string();
         let snapshot = empty_space_index_snapshot("space-1");
-        semio_plugin::artifact_app_laws::load_document_text(&mut app.0, &store::os_store::text_format::ArtifactTextFiles { dsl: snapshot.print_dsl(), ops: String::new() }, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("load empty Space index");
+        let booted = app.0.document_text().await.expect("booted document text");
+        semio_plugin::artifact_app_laws::load_document_text(&mut app.0, &store::os_store::text_format::ArtifactTextFiles { dsl: snapshot.print_dsl(), ops: booted.ops }, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("load empty Space index");
         let descriptor = DocumentDescriptor {
             space_id: "space-1".into(),
             document_id: id.clone(),
@@ -115,16 +125,28 @@ impl std::ops::DerefMut for SpaceIndexApp {
                 },
             ),
         ];
-        semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &SpaceIndexCommand::FoldDirectoryEvents(FoldDirectoryEvents { events_json: semio_framework_pack_json::to_json_string(&events) }), &meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("fold indexed artifact");
+        dispatch(&mut app, SpaceIndexCommand::FoldDirectoryEvents(FoldDirectoryEvents { events_json: semio_framework_pack_json::to_json_string(&events) })).await.expect("fold indexed artifact");
         let files = app.config_pack().await.expect("indexed config pack");
-        let config = store::os_store::text_format::parse_document_pack::<SpaceIndexConfig, SpaceIndexConfigMutation>(&files.pack, &files.spr, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("indexed config projection").snapshot;
+        let config = store::os_store::text_format::parse_document_pack::<SpaceIndexConfig, SpaceIndexConfigMutation>(&files.pack, &files.spr, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("indexed config projection").into_snapshot();
         assert_eq!(config.indexed_artifacts.len(), 1);
         (app, id)
     }
     
-    #[allow(dead_code)]
-    pub async fn dispatch(app: &mut SpaceIndexApp, command: SpaceIndexCommand) -> semio_plugin::InvocationResult {
-        semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch")
+    /// 🚦️ Dispatches one command as the interactive host does and settles its job ticket, so the receipt carries the effects and the revisions the typed operation actually published.
+    pub async fn dispatch(app: &mut SpaceIndexApp, command: SpaceIndexCommand) -> Result<semio_plugin::artifact_app_laws::TypedOperationFixtureReceipt, semio_framework_job::OriginalTurnFailure> {
+        dispatch_as(app, command, "local").await
+    }
+
+    /// 📝️ Whether a settled operation published a document, draft or config row; a relay or dialog request publishes none.
+    pub fn writes_the_document(receipt: &semio_plugin::artifact_app_laws::TypedOperationFixtureReceipt) -> bool {
+        use semio_plugin::app::TypedOperationResultLane;
+        receipt.lanes.iter().any(|lane| matches!(lane, TypedOperationResultLane::Artifact | TypedOperationResultLane::Draft | TypedOperationResultLane::Config))
+    }
+
+    /// 🚦️ [`dispatch`] with an explicit action source.
+    pub async fn dispatch_as(app: &mut SpaceIndexApp, command: SpaceIndexCommand, source: &str) -> Result<semio_plugin::artifact_app_laws::TypedOperationFixtureReceipt, semio_framework_job::OriginalTurnFailure> {
+        semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta(source), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await?;
+        Ok(semio_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, 1, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await?)
     }
 }
 
@@ -162,14 +184,16 @@ async fn every_declared_mutation_action_is_registered() {
         "foldDirectoryEvents",
         "presenceHeartbeat",
     ] {
-        assert!(definition.window_kinds.iter().flat_map(|window| window.actions.iter()).any(|action| action.id == command), "registry declares {command}");
+        assert!(definition.actions.iter().chain(definition.window_kinds.iter().flat_map(|window| window.actions.iter())).any(|action| action.id == command), "registry declares {command}");
     }
 }
 
 #[semio_framework_async_macros::async_test]
 async fn the_three_dialogs_are_registered_with_the_right_submit_actions() {
     let definition = create_space_index_editor();
-    assert_eq!(definition.dialogs.len(), 3);
+    let own = definition.dialogs.iter().filter(|dialog| dialog.id != semio_framework::history_edit::HISTORY_EDIT_FINALIZE_DIALOG_ID).count();
+    assert_eq!(own, 3);
+    assert!(definition.dialogs.iter().any(|dialog| dialog.id == semio_framework::history_edit::HISTORY_EDIT_FINALIZE_DIALOG_ID), "the framework injects the history-edit finalize dialog");
     let by_id = |id: &str| definition.dialogs.iter().find(|dialog| dialog.id == id).unwrap_or_else(|| panic!("dialog {id} must be registered"));
     assert_eq!(by_id("createArtifact").submit_action, ActionRef::new("createArtifact"));
     assert_eq!(by_id("createArtifact").args.iter().map(|arg| arg.id.as_str()).collect::<Vec<_>>(), ["name", "kindChoice"]);
@@ -192,6 +216,7 @@ async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
 
 #[semio_framework_async_macros::async_test]
 async fn the_members_panel_body_renders_through_the_editor_dispatch() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     use semio_plugin::{ArtifactView, ConfigView, HistoryView};
     let snapshot = SSpaceSnapshot::default();
     let history = HistoryView::empty();
@@ -227,24 +252,24 @@ async fn command_from_action_covers_every_declared_action_and_rejects_unknown_on
     ];
     for (action, args) in cases {
         let args = semio_framework_pack_json::to_dsl_value(&args);
-        let command = SpaceIndexEditor::command_from_action(action, Some((args).clone()), None).unwrap_or_else(|error| panic!("{action} must bridge: {error:?}"));
+        let command = SpaceIndexEditor::command_from_action(action, &mut Some(args.clone()), &mut None).unwrap_or_else(|error| panic!("{action} must bridge: {error:?}"));
         assert_eq!(command.command_id(), action, "the bridged command's own id must round-trip");
     }
-    assert!(SpaceIndexEditor::command_from_action("bogus", None, None).is_err());
+    assert!(SpaceIndexEditor::command_from_action("bogus", &mut None, &mut None).is_err());
 }
 
 #[semio_framework_async_macros::async_test]
 async fn create_artifact_dialog_submission_preserves_the_exact_catalog_choice_in_the_host_relay() {
     let kind_choice = "{\"kindId\":\"s.gis.gismap\",\"schema\":\"gis.map\"}";
     let args = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "name": " First map ", "kindChoice": kind_choice }));
-    let SpaceIndexCommand::CreateArtifact(command) = SpaceIndexEditor::command_from_action("createArtifact", Some((args).clone()), None).expect("dialog submission must bridge") else {
+    let SpaceIndexCommand::CreateArtifact(command) = SpaceIndexEditor::command_from_action("createArtifact", &mut Some(args.clone()), &mut None).expect("dialog submission must bridge") else {
         panic!("expected CreateArtifact");
     };
     assert_eq!(command.kind_choice, kind_choice);
     let mut app = context::new_app().await;
-    let result = semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &SpaceIndexCommand::CreateArtifact(command), &semio_plugin::artifact_app_laws::meta("dialog"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dialog submission");
+    let result = context::dispatch_as(&mut app, SpaceIndexCommand::CreateArtifact(command), "dialog").await.expect("dialog submission");
     assert!(app.snapshot().expect("projection").artifacts.is_empty());
-    let [Effect::ReplayShellCommand { action_id, args }] = result.requested_effects.as_slice() else {
+    let [Effect::ReplayShellCommand { action_id, args }] = result.effects.as_slice() else {
         panic!("dialog submission must emit one ReplayShellCommand");
     };
     assert_eq!(action_id, "os.create-space-artifact");
@@ -257,7 +282,7 @@ async fn create_artifact_dialog_submission_preserves_the_exact_catalog_choice_in
 /// the dialog", mirroring Home's `createSpace`.
 #[semio_framework_async_macros::async_test]
 async fn command_from_action_bridges_an_empty_create_artifact_click() {
-    let SpaceIndexCommand::CreateArtifact(payload) = SpaceIndexEditor::command_from_action("createArtifact", None, None).expect("no-args click must bridge") else { panic!("expected CreateArtifact") };
+    let SpaceIndexCommand::CreateArtifact(payload) = SpaceIndexEditor::command_from_action("createArtifact", &mut None, &mut None).expect("no-args click must bridge") else { panic!("expected CreateArtifact") };
     assert_eq!(payload.name, "");
     assert_eq!(payload.kind_choice, "");
 }

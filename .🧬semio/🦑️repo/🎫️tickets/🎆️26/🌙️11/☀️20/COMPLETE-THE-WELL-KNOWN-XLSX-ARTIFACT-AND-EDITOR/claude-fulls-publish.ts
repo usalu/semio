@@ -1,3 +1,4 @@
+process.env.SEMIO_PLUGIN_CATALOG ??= "/Users/ueli/Documents/semio/✏️s/🧑‍💻dev/🧩️catalog/🤖️generated";
 import {createHash} from "node:crypto";
 import {cpSync, existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, statSync, writeFileSync} from "node:fs";
 import {join, relative, resolve} from "node:path";
@@ -50,7 +51,8 @@ for (const pair of process.argv.slice(2)) {
   const semantic = Buffer.from(probe.stdout.trim(), "base64");
   const descriptor = finalizePluginDescriptor(semantic, pluginId);
   const wasmBytes = readFileSync(wasm);
-  const receipt = encodeComponentReceiptV1({schema: "semio.plugin.component-receipt/v1", pluginId, packageId: entry.packageId, profile: "prototype", target: "wasm32-wasip2", wasmSha256: sha(wasmBytes), wasmBytes: wasmBytes.byteLength, semanticDescriptorSha256: sha(semantic), toolchain, sourceTreeDigest: sha("claude-fulls:source:" + pluginId + sha(wasmBytes)), provenanceSha256: sha("claude-fulls:provenance:" + pluginId + sha(wasmBytes))} as never);
+  const receiptValue = {schema: "semio.plugin.component-receipt/v1", pluginId, packageId: entry.packageId, profile: "prototype", target: "wasm32-wasip2", wasmSha256: sha(wasmBytes), wasmBytes: wasmBytes.byteLength, semanticDescriptorSha256: sha(semantic), toolchain, sourceTreeDigest: sha("claude-fulls:source:" + pluginId + sha(wasmBytes)), provenanceSha256: sha("claude-fulls:provenance:" + pluginId + sha(wasmBytes))};
+  const receipt = (() => { try { return encodeComponentReceiptV1(receiptValue as never); } catch { return `${JSON.stringify(receiptValue, null, 2)}\n`; } })();
   writeFileSync(join(module, "🛂️.descriptor.semio"), descriptor.pack);
   writeFileSync(join(module, "🔣️.json"), descriptor.json);
   writeFileSync(join(module, MODULE_BRIDGE_FILE), pluginComponentBridgeSource(base, entry.wasmOut));

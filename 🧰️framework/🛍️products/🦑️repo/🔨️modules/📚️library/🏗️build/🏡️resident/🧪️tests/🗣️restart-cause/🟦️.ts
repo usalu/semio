@@ -76,6 +76,16 @@ test("a worker that ran long before it died on the same missing module again and
  expect(failure.code).toBe("slice-worker-failing");expect(failure.cause).toBe(MISSING);expect(failure.count).toBe(3);expect(long.started.length).toBe(3);
 });
 
+test("a worker that ends on stale source facts the declared number of times in a row is started once more before the plan stops",async()=>{
+ const STALE="Stale source facts that a repeated inference cannot refresh; restart required: global:[\"closure-graph\"]";
+ const three=[{exit:75,tail:STALE},{exit:75,tail:STALE},{exit:75,tail:STALE}];
+ const healed=harness([...three,{exit:"done"}],{backoffMilliseconds:[1],settleMilliseconds:60000,progressMilliseconds:0,totalMaximum:100,sameCauseMaximum:3});
+ await healed.run("/tmp/healed");await healed.pool.close();expect(healed.started.length).toBe(4);
+ const stuck=harness([...three,...three,{exit:"done"}],{backoffMilliseconds:[1],settleMilliseconds:60000,progressMilliseconds:0,totalMaximum:100,sameCauseMaximum:3});
+ const failure:any=await stuck.run("/tmp/stuck").then(()=>undefined,reason=>reason);await stuck.pool.close();
+ expect(failure.code).toBe("slice-worker-failing");expect(failure.count).toBe(3);expect(stuck.started.length).toBe(6);
+});
+
 test("the declared policy bounds the same-cause restarts at a small number",()=>{
  const maximum=(HOST_POLICY_V1 as unknown as{sliceRestartSameCauseMaximum:number}).sliceRestartSameCauseMaximum;
  expect(Number.isInteger(maximum)&&maximum>=2&&maximum<=5).toBe(true);

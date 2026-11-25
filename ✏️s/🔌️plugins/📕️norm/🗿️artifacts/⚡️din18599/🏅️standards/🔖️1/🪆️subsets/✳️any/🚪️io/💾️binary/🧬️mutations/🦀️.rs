@@ -54,4 +54,5 @@ impl OpBinary for Din18599Mutation {
 }
 }
 
-dsl::original_pack_value_operation_receiving!(crate::Din18599Mutation);
+dsl::original_decoded_operation_receiving!(crate::Din18599Mutation);
+dsl::artifact_persisted_binary_operation!(crate::Din18599Mutation);

@@ -232,7 +232,3 @@ semio_plugin::derive_artifact_facets!(
     analyzer: XlsxAnalyzer,
     composer: XlsxComposer,
 );
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️native-document/🦀️.rs"]
-mod native_document_tests;

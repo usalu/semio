@@ -2,7 +2,7 @@
 //!
 //! 🛠️ The instance's tool-machine turns: gesture, scrub and typing dispatch.
 use semio_plugin_decl_app::ArtifactApp;
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use semio_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
 use pack::snapshot::ArtifactPack;
 use semio_plugin_decl_emission::Emit;

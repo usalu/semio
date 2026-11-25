@@ -38,7 +38,7 @@ use store::Mutation;
 use protocol::OpBinary;
 use protocol::OpText;
 use semio_framework_value_derive::ToValue;
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use semio_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
 use semio_plugin_decl_emission::Emit;
 use semio_framework::FaultFrom;

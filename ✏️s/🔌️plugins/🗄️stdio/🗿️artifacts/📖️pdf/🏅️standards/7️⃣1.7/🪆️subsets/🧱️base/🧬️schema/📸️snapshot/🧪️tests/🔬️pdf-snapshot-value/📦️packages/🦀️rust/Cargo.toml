@@ -106,6 +106,7 @@ testkit = ["semio-s-artifact-stdio-pdf-snapshot/testkit", "semio-s-artifact-stdi
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }
+semio-ui-contract-validation = { workspace = true }
 semio-framework-trace = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }
 semio-framework-io-sqlite-snapshot-testing-backing = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️testing/💰️backing/📦️packages/🦀️rust" }
 semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

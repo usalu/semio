@@ -5,9 +5,10 @@ import { createHash } from "node:crypto";
 import { existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { basename, dirname, relative, resolve, sep } from "node:path";
 import { deflateRawSync } from "node:zlib";
-import { admitCompositionContributionV1, selectCompositionContributionsV1, resolveCompositionNativeFactoriesV1, resolveCompositionOpenTargetsV1, type CompositionNativeReceiptV1, type CompositionContributionV1 } from "./📋️contract/🟦️.ts";
+import { admitCompositionContributionV1, selectCompositionContributionsV1, resolveCompositionNativeFactoriesV1, resolveCompositionOpenTargetsV1, type CompositionNativeReceiptV1, type CompositionContributionV1, type CompositionAppV1 } from "./📋️contract/🟦️.ts";
 
-type OwnerV1 = { id: string; root: string; enum: string; label: string; main: boolean };
+type ShardV1 = { root: string; enum: string; variants: string[] };
+type OwnerV1 = { id: string; root: string; enum: string; label: string; main: boolean; shards: ShardV1[] };
 type InputV1 = { directory: string; manifest: string; contribution: CompositionContributionV1; observed: Map<string, string>; nativeReceipts: CompositionNativeReceiptV1[] };
 const boundary = 4 * 1024 * 1024;
 /** 📇️ The full artifact catalog crate's manifest, whose dependency region the composition publishes. */
@@ -37,28 +38,71 @@ function read(root: string, path: string): string {
 function owners(value: unknown): OwnerV1[] {
   const document = value as { schema: string; owners: OwnerV1[] };
   if (!document || Object.keys(document).sort().join(",") !== "owners,schema" || document.schema !== "semio.stdio.composition-owners/v1" || !Array.isArray(document.owners)) throw new Error("Invalid Stdio composition owner authority");
-  for (const owner of document.owners) if (!owner || Object.keys(owner).sort().join(",") !== "enum,id,label,main,root" || !/^[a-z][a-z0-9-]*$/.test(owner.id) || !/^[A-Za-z_][A-Za-z0-9_]*$/.test(owner.enum) || typeof owner.label !== "string" || !owner.label.length || typeof owner.main !== "boolean" || typeof owner.root !== "string" || owner.root.split("/").some((part) => !part || part === "." || part === "..") || !owner.root.endsWith("/🦀️.rs")) throw new Error("Invalid Stdio composition owner");
+  for (const owner of document.owners) if (!owner || Object.keys(owner).sort().join(",") !== "enum,id,label,main,root,shards" || !/^[a-z][a-z0-9-]*$/.test(owner.id) || !/^[A-Za-z_][A-Za-z0-9_]*$/.test(owner.enum) || typeof owner.label !== "string" || !owner.label.length || typeof owner.main !== "boolean" || typeof owner.root !== "string" || owner.root.split("/").some((part) => !part || part === "." || part === "..") || !owner.root.endsWith("/🦀️.rs")) throw new Error("Invalid Stdio composition owner");
   for (const key of ["id", "root", "enum"] as const) if (new Set(document.owners.map((owner) => owner[key])).size !== document.owners.length) throw new Error(`Duplicate composition owner ${key}`);
+  const identifier = /^[A-Za-z_][A-Za-z0-9_]*$/;
+  for (const owner of document.owners) if (!Array.isArray(owner.shards) || owner.main && owner.shards.length > 0 || owner.shards.some((shard) => !shard || Object.keys(shard).sort().join(",") !== "enum,root,variants" || !identifier.test(shard.enum) || typeof shard.root !== "string" || shard.root.split("/").some((part) => !part || part === "." || part === "..") || !shard.root.endsWith("/🦀️.rs") || !Array.isArray(shard.variants) || !shard.variants.length || shard.variants.some((variant) => typeof variant !== "string" || !identifier.test(variant)))) throw new Error("Invalid Stdio composition shard");
+  const shards = document.owners.flatMap((owner) => owner.shards);
+  for (const key of ["root", "enum"] as const) if (new Set([...document.owners.map((owner) => owner[key]), ...shards.map((shard) => shard[key])]).size !== document.owners.length + shards.length) throw new Error(`Duplicate composition shard ${key}`);
   if (document.owners.filter((owner) => owner.main).length !== 1) throw new Error("Stdio composition requires one authored catalog owner");
   return document.owners;
 }
 
-function rustSource(owner: OwnerV1, rows: CompositionContributionV1[]): string {
+/** 🧵️ The runtime app type one contributed app closes over. */
+function appType(app: CompositionAppV1): string {
+  return `VcsArtifactApp<${app.role === "editor" ? "EditorApp" : "ViewerApp"}<${app.type}>>`;
+}
+
+/** 🗂️ The owner's apps in contribution order, optionally only those one shard declares. */
+function ownerApps(owner: OwnerV1, rows: CompositionContributionV1[], shard?: ShardV1): CompositionAppV1[] {
+  return rows.flatMap((row) => row.apps.filter((app) => app.owner === owner.id && (!shard || shard.variants.includes(app.variant)))).sort((a, b) => a.order - b.order);
+}
+
+/** ✍️ The registrations of `apps`, each with its owner mutation roster when it declares one. */
+function registrationSource(apps: CompositionAppV1[]): string {
+  return apps.map((app) => `    builder = builder.${app.role}::<${app.type}>(${app.factory}());${app.mutationRoster ? `\n    builder = builder.${app.role}_mutation_roster::<${app.type}>();` : ""}`).join("\n");
+}
+
+/** 🔌️ The owner's `plugin()` over the app enum `apps`: the plugin's identity, hosted artifacts, activations and capability request around
+ * `registrations`, the same for the owner and for every one of its shard components, so each component describes the same plugin. */
+function pluginSource(owner: OwnerV1, rows: CompositionContributionV1[], apps: string, registrations: string, doc: string): string {
   const hosted = rows.filter((row) => row.apps.some((app) => app.owner === owner.id));
-  const apps = hosted.flatMap((row) => row.apps.filter((app) => app.owner === owner.id)).sort((a, b) => a.order - b.order);
   const crate = (row: CompositionContributionV1) => row.package.replaceAll("-", "_");
-  const variants = apps.map((app) => `        ${app.variant}(VcsArtifactApp<${app.role === "editor" ? "EditorApp" : "ViewerApp"}<${app.type}>>),`).join("\n");
-  const registrations = apps.map((app) => `    builder = builder.${app.role}::<${app.type}>(${app.factory}());${app.mutationRoster ? `\n    builder = builder.${app.role}_mutation_roster::<${app.type}>();` : ""}`).join("\n");
   const activations = hosted.map((row) => `    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: ${crate(row)}::artifact_kind().id });`).join("\n");
   const assembly = owner.main ? `    let registry = semio_hub_stdio_catalog::selected_registry()?;\n    let plan = semio_s_plugin_stdio::AssemblyPlan::new(&registry, semio_s_plugin_stdio::AssemblyOwner { plugin_id: ${JSON.stringify(owner.id)}, package_id: semio_hub_stdio_catalog::component_package_id()?, package_version: env!("CARGO_PKG_VERSION") })?;\n    let catalog = semio_hub_stdio_catalog::artifact_catalog_contribution(plan.assemblies())?;\n    builder = plan.apply(builder);` : hosted.map((row) => `    builder = builder.host_artifact(${(row.catalogPackage ?? row.package).replaceAll("-", "_")}::declaration(${crate(row)}::definition()?).map_err(PluginAssemblyError::definition)?);`).join("\n");
-  const source = `//! 🧩️ Typed runtime assembly published from artifact-owned composition contributions.\n\nuse semio_plugin::__semio_dispatch_PluginApp;\nuse semio_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};\nuse semio_plugin::plugin_app_close_prelude::*;\nuse semio_plugin::{ExecutionMode, Plugin, PluginApp, PluginAssemblyError};\n\nsemio_framework_dispatch_macros::dyn_enum_close! {\n    /// 🗃️ The present owner-authored runtime app contributions.\n    pub enum ${owner.enum}: PluginApp {\n${variants}\n    }\n}\n\n/// 🔌️ Builds the exact present artifact and app contributions.\npub fn plugin() -> Result<Plugin<${owner.enum}>, PluginAssemblyError> {\n    let mut builder = semio_plugin::PluginBuilder::<semio_plugin::NeedsLabel, ${owner.enum}>::new(${JSON.stringify(owner.id)}).label(${JSON.stringify(owner.label)}).version(env!("CARGO_PKG_VERSION")).package_id(${owner.main ? "semio_hub_stdio_catalog::component_package_id()?" : JSON.stringify(`semio:${owner.id}`)}).schema_documents("stdio", semio_s_artifact_stdio_contract::STDIO_REGISTRY_SCHEMA_DOCUMENTS)${owner.main ? '.schema_documents("stdio", semio_hub_stdio_catalog::CATALOG_SCHEMA_DOCUMENTS)' : '.depends_on("stdio", semio_framework::tree_pin!())'};\n${assembly}\n${registrations}\n${activations}\n    builder = builder.execution(ExecutionMode::Isolated).requests(CapabilityRequest { id: CapabilityId("artifacts.write".into()), scope: "plugin".into(), reason: "persist contributed editor operations to the open document".into(), optional: false });\n    ${owner.main ? "builder.contributes_topic(catalog)" : "builder"}.try_build()\n}\n`;
-  return source;
+  return `/// ${doc}\npub fn plugin() -> Result<Plugin<${apps}>, PluginAssemblyError> {\n    let mut builder = semio_plugin::PluginBuilder::<semio_plugin::NeedsLabel, ${apps}>::new(${JSON.stringify(owner.id)}).label(${JSON.stringify(owner.label)}).version(env!("CARGO_PKG_VERSION")).package_id(${owner.main ? "semio_hub_stdio_catalog::component_package_id()?" : JSON.stringify(`semio:${owner.id}`)}).schema_documents("stdio", semio_s_artifact_stdio_contract::STDIO_REGISTRY_SCHEMA_DOCUMENTS)${owner.main ? '.schema_documents("stdio", semio_hub_stdio_catalog::CATALOG_SCHEMA_DOCUMENTS)' : '.depends_on("stdio", semio_framework::tree_pin!())'};\n${assembly}\n${registrations}\n${activations}\n    builder = builder.execution(ExecutionMode::Isolated).requests(CapabilityRequest { id: CapabilityId("artifacts.write".into()), scope: "plugin".into(), reason: "persist contributed editor operations to the open document".into(), optional: false });\n    ${owner.main ? "builder.contributes_topic(catalog)" : "builder"}.try_build()\n}\n`;
+}
+
+/** 🧩️ A shard's component registrations: the component the shard's crate names, then its apps. */
+function shardRegistrationSource(owner: OwnerV1, shard: ShardV1, rows: CompositionContributionV1[], component: string): string {
+  return `    builder = builder.component(${JSON.stringify(component)});\n${registrationSource(ownerApps(owner, rows, shard))}`;
+}
+
+/** 🧱️ One shard root: its apps close in their own crate, so every crate instantiates the app-generic runtime of only its own apps, and its
+ * `plugin()` is the shard's deployable component of the owner's plugin (the component the shard's crate names, with its apps only). */
+function shardSource(owner: OwnerV1, shard: ShardV1, rows: CompositionContributionV1[], component: string): string {
+  const variants = ownerApps(owner, rows, shard).map((app) => `        ${app.variant}(${appType(app)}),`).join("\n");
+  return `//! 🧱️ One runtime shard of \`${owner.id}\`: its declared apps close in their own crate, so this crate alone instantiates their app-generic runtime.\n\nuse semio_plugin::__semio_dispatch_PluginApp;\nuse semio_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};\nuse semio_plugin::plugin_app_close_prelude::*;\nuse semio_plugin::{ExecutionMode, Plugin, PluginApp, PluginAssemblyError};\n\nsemio_framework_dispatch_macros::dyn_enum_close! {\n    /// 🗃️ The owner-authored runtime apps of this shard.\n    pub enum ${shard.enum}: PluginApp {\n${variants}\n    }\n}\n\n${pluginSource(owner, rows, shard.enum, shardRegistrationSource(owner, shard, rows, component), `🧩️ Builds the \`${component}\` component of \`${owner.id}\`: the plugin's identity with this shard's apps only.`)}`;
+}
+
+function rustSource(owner: OwnerV1, rows: CompositionContributionV1[], shardCrates: Map<string, string>, shardPackages: Map<string, string>): string {
+  const apps = ownerApps(owner, rows);
+  const variants = owner.shards.length ? owner.shards.map((shard) => `        ${shard.enum}(${shardCrates.get(shard.root)}::${shard.enum}),`).join("\n") : apps.map((app) => `        ${app.variant}(${appType(app)}),`).join("\n");
+  const conversions = owner.shards.flatMap((shard) => ownerApps(owner, rows, shard).map((app) => `impl From<${appType(app)}> for ${owner.enum} {\n    fn from(app: ${appType(app)}) -> Self {\n        Self::${shard.enum}(app.into())\n    }\n}\n\n`)).join("");
+  const registrations = owner.shards.length ? owner.shards.map((shard) => shardRegistrationSource(owner, shard, rows, shardPackages.get(shard.root)!)).join("\n") : registrationSource(apps);
+  return `//! 🧩️ Typed runtime assembly published from artifact-owned composition contributions.\n\nuse semio_plugin::__semio_dispatch_PluginApp;\nuse semio_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};\nuse semio_plugin::plugin_app_close_prelude::*;\nuse semio_plugin::{ExecutionMode, Plugin, PluginApp, PluginAssemblyError};\n\nsemio_framework_dispatch_macros::dyn_enum_close! {\n    /// 🗃️ The present owner-authored runtime app contributions.\n    pub enum ${owner.enum}: PluginApp {\n${variants}\n    }\n}\n\n${conversions}${pluginSource(owner, rows, owner.enum, registrations, "🔌️ Builds the exact present artifact and app contributions.")}`;
 }
 
 /** 🌱️ The one-line root of an owner's `🧩️component` cdylib crate: the entry point over its library's `plugin` and app enum. */
 function componentSource(owner: OwnerV1, library: string, emoji: string): string {
   const crate = library.replaceAll("-", "_"), apps = owner.main ? `${crate}::plugin::${owner.enum}` : `${crate}::${owner.enum}`;
   return `//! ${emoji} The \`${owner.id}\` plugin component: the one cdylib of \`${library}\`, holding only its entry point.\n\nsemio_plugin::plugin_exports!(semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, ${crate}::plugin, ${apps});\n`;
+}
+
+/** 🌱️ The one-line root of a shard's `🧩️component` cdylib crate: the entry point over the shard's own `plugin` and app enum. */
+function shardComponentSource(owner: OwnerV1, shard: ShardV1, library: string, emoji: string): string {
+  const crate = library.replaceAll("-", "_");
+  return `//! ${emoji} The \`${library}\` component of the \`${owner.id}\` plugin: the cdylib of one runtime shard, holding only its entry point.\n\nsemio_plugin::plugin_exports!(semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, ${crate}::plugin, ${crate}::${shard.enum});\n`;
 }
 
 /** 📂️ An owner's directory inside the hub root: the hub root itself for the catalog owner, else its root file's directory. */
@@ -197,13 +241,25 @@ export function prepareStdioComposition(repoRoot: string, hubRoot: string): { co
     for (const part of local.split(sep)) { current = resolve(current, part); if (existsSync(current) && lstatSync(current).isSymbolicLink()) throw new Error("Composition output follows a symlink"); }
     outputs.set(absolute, { previous: existsSync(absolute) ? read(hubRoot, path) : undefined, next });
   };
+  const shardManifest = (shard: ShardV1) => relative(hubRoot, resolve(hubRoot, dirname(shard.root), "📦️packages/🦀️rust/Cargo.toml"));
+  const shardPackages = new Map(config.flatMap((owner) => owner.shards).map((shard) => [shard.root, (Bun.TOML.parse(read(hubRoot, shardManifest(shard))) as { package: { name: string } }).package.name]));
+  const shardCrates = new Map([...shardPackages].map(([root, name]) => [root, name.replaceAll("-", "_")]));
   for (const owner of config) {
-    publish(owner.root, rustSource(owner, rows));
+    const variants = ownerApps(owner, rows).map((app) => app.variant), declared = owner.shards.flatMap((shard) => shard.variants);
+    if (owner.shards.length && (declared.length !== variants.length || new Set(declared).size !== declared.length || variants.some((variant) => !declared.includes(variant)))) throw new Error(`Composition shards of ${owner.id} must partition its apps exactly`);
+    publish(owner.root, rustSource(owner, rows, shardCrates, shardPackages));
     const directory = ownerDirectory(owner), path = relative(hubRoot, resolve(hubRoot, directory, "📦️packages/🦀️rust/Cargo.toml")) || "📦️packages/🦀️rust/Cargo.toml";
     const componentPath = relative(hubRoot, resolve(hubRoot, directory, COMPONENT_MANIFEST));
     const hosted = rows.filter((row) => row.apps.some((app) => app.owner === owner.id));
+    for (const shard of owner.shards) {
+      publish(shard.root, shardSource(owner, shard, rows, shardPackages.get(shard.root)!));
+      publish(relative(hubRoot, resolve(hubRoot, dirname(shard.root), "🧩️component/🦀️.rs")), shardComponentSource(owner, shard, shardPackages.get(shard.root)!, basename(resolve(hubRoot, dirname(shard.root))).match(/^[^a-z0-9]+/u)?.[0] ?? "📗️"));
+      const shardHosted = hosted.filter((row) => row.apps.some((app) => app.owner === owner.id && shard.variants.includes(app.variant)));
+      publish(shardManifest(shard), region(read(hubRoot, shardManifest(shard)), "Composition Dependencies", unique(shardHosted.flatMap(hostedPackages)).map((name) => `${name} = { workspace = true }`).join("\n")));
+    }
     const direct = unique([...(owner.main ? ["semio-hub-stdio-catalog"] : []), ...hosted.flatMap(hostedPackages)]);
-    const dependencies = direct.map((name) => `${name} = { workspace = true }`).join("\n");
+    const shardDependencies = owner.shards.map((shard) => `${shardPackages.get(shard.root)} = { path = ${JSON.stringify(relative(dirname(resolve(hubRoot, path)), dirname(resolve(hubRoot, shardManifest(shard)))).split(sep).join("/"))} }`);
+    const dependencies = [...direct.map((name) => `${name} = { workspace = true }`), ...shardDependencies].join("\n");
     let manifest = region(read(hubRoot, path), "Composition Dependencies", dependencies);
     if (owner.main) manifest = region(manifest, "Composition Test Dependencies", unique(rows.flatMap(hostedPackages)).filter((name) => !direct.includes(name)).map((name) => `${name} = { workspace = true }`).join("\n"));
     publish(path, manifest);

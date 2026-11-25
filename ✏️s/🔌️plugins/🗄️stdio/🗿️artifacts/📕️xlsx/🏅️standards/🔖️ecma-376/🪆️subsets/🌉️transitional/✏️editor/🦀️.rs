@@ -136,6 +136,28 @@ impl ArtifactEditor for XlsxTransitionalEditor {
         semio_s_artifact_stdio_contract::import_media_as_load::<Self>(port, media)
     }
 
+    const SINGLE_TURN_NATURAL_DECODE: bool = true;
+
+    const PAGED_NATURAL_SOURCE_MAXIMUM_BYTES: u32 = semio_s_artifact_stdio_xlsx_base::standards::v_ecma_376::subsets::base::io::import::controlled::XLSX_PAGED_NATURAL_SOURCE_MAXIMUM_BYTES;
+
+    fn build_natural_file_decode_owner(bytes: Vec<u8>, contract: semio_plugin::ToolExecutionContract) -> Result<semio_plugin::NaturalFileDecodeOwner<Self::Snapshot>, semio_plugin::MediaError> {
+        semio_s_artifact_stdio_xlsx_base::standards::v_ecma_376::subsets::base::io::import::controlled::build_xlsx_natural_decode(bytes, contract, io::natural_conformance)
+    }
+
+    fn admit_natural_file_decode_owner(
+        bytes: &mut Option<Vec<u8>>, contract: semio_plugin::ToolExecutionContract,
+        owner: &mut Option<semio_plugin::NaturalFileDecodeOwner<Self::Snapshot>>, context: &mut semio_plugin::StepContext<'_>,
+    ) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+        semio_s_artifact_stdio_xlsx_base::standards::v_ecma_376::subsets::base::io::import::controlled::admit_xlsx_natural_decode(bytes, contract, io::natural_conformance, owner, context)
+    }
+
+    fn admit_paged_natural_file_decode_owner(
+        source: &mut Option<semio_plugin::NaturalFilePagedSource>, contract: semio_plugin::ToolExecutionContract,
+        owner: &mut Option<semio_plugin::NaturalFileDecodeOwner<Self::Snapshot>>, context: &mut semio_plugin::StepContext<'_>,
+    ) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+        semio_s_artifact_stdio_xlsx_base::standards::v_ecma_376::subsets::base::io::import::controlled::admit_xlsx_paged_natural_decode(source, contract, io::natural_conformance, owner, context)
+    }
+
     fn natural_file_codec() -> Option<semio_plugin::NaturalFileCodec> {
         Some(semio_plugin::NaturalFileCodec {
             format_kind: "s.stdio.xlsx@ecma-376",

@@ -1,0 +1,17 @@
+{
+  "default": 20,
+  "maximum": 100,
+  "cursorPrefix": "semio.page.",
+  "cases": [
+    { "name": "no cursor and no limit starts at the first page", "arguments": {}, "offset": 0, "size": 20 },
+    { "name": "an explicit limit", "arguments": { "limit": 3 }, "offset": 0, "size": 3 },
+    { "name": "a minted cursor continues at its offset", "arguments": { "limit": 3, "cursor": "semio.page.00000003" }, "offset": 3, "size": 3 },
+    { "name": "a cursor past the end is still a window", "arguments": { "cursor": "semio.page.00000900" }, "offset": 900, "size": 20 },
+    { "name": "a bare decimal cursor was not minted here", "arguments": { "cursor": "3" }, "error": "INPUT_INVALID" },
+    { "name": "a foreign cursor was not minted here", "arguments": { "cursor": "bogus" }, "error": "INPUT_INVALID" },
+    { "name": "a cursor of the wrong type", "arguments": { "cursor": 3 }, "error": "INPUT_INVALID" },
+    { "name": "limit zero", "arguments": { "limit": 0 }, "error": "INPUT_INVALID" },
+    { "name": "limit above the maximum", "arguments": { "limit": 101 }, "error": "INPUT_INVALID" },
+    { "name": "a fractional limit", "arguments": { "limit": 2.5 }, "error": "INPUT_INVALID" }
+  ]
+}

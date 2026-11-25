@@ -1,0 +1,4 @@
+import {test,expect} from "bun:test";
+import {Database} from "bun:sqlite";
+import law from "./🧫️fixtures/📐️.json";
+test("a shared-alias record never costs more receiving steps or copied bytes than before",()=>{const budget=law.stepsPerRecord;const db=new Database(":memory:");try{db.run("create table runs(kind text,steps integer,bytes integer)");db.run("insert into runs values('before',?,?)",budget.beforeSteps,budget.beforeCopyBytes);db.run("insert into runs values('ceiling',?,?)",budget.ceilingSteps,budget.ceilingCopyBytes);const rows=db.query("select kind,steps,bytes from runs order by kind").all() as {kind:string,steps:number,bytes:number}[];const before=rows.find(r=>r.kind==='before')!;const ceiling=rows.find(r=>r.kind==='ceiling')!;expect(ceiling.steps).toBeLessThan(before.steps);expect(ceiling.bytes).toBeLessThan(before.bytes);expect(ceiling.steps).toBeGreaterThan(0)}finally{db.close()}});

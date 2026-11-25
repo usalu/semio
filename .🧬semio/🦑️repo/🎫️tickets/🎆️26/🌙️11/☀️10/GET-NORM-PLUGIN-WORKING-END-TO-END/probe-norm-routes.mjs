@@ -419,28 +419,35 @@ async function probe(id) {
     if (shellState.shell.shellReady !== id) throw Error("The shell did not publish its ready state");
     const requireArchive = target => observeArchives && page.waitForFunction(
       count => (globalThis.__semioArchiveReceipts ?? 0) >= count, target, {timeout:pickerWaitMs});
-    if (witnessInitialArchive) await requireArchive(1);
-    let draw;
-    if (requireDraw && shellState.shell.shellReady === id) {
-      const witness = await page.waitForFunction(variant => {
+    if (exercisePicker || witnessInitialArchive) await requireArchive(1);
+    async function waitForDraw(previous = [], timeout = shellWaitMs) {
+      const witness = await page.waitForFunction(({variant,previous}) => {
         const pane = document.querySelector(`[data-layered-pane="${variant}"]`);
+        const observed = globalThis.__semioDrawSurfaces ??= { ids: new WeakMap(), next: 0 };
+        const drawn = [];
         for (const canvas of pane?.querySelectorAll("canvas[data-world-geometry-drawn]") ?? []) {
           const surface = canvas.closest("[data-meshes-json][data-world-geometry-revision]");
           const vertices = Number(canvas.dataset.worldGeometryVertices);
           if (!surface || !canvas.getClientRects().length || vertices <= 0 || !Number.isFinite(vertices)) continue;
           if (canvas.dataset.worldGeometryRevision !== surface.dataset.worldGeometryRevision) continue;
-          return canvas;
+          if (!observed.ids.has(canvas)) observed.ids.set(canvas, ++observed.next);
+          const key = `${observed.ids.get(canvas)}:${surface.dataset.worldGeometryRevision}`;
+          drawn.push({canvas,key});
         }
-        return null;
-      }, id, {timeout:shellWaitMs});
-      const canvas = witness.asElement();
-      draw = await canvas.evaluate(element => ({
+        const current = drawn.find(row => !previous.includes(row.key));
+        return current && {canvas: current.canvas, keys: drawn.map(row => row.key)};
+      }, {variant:id,previous}, {timeout});
+      const keysHandle = await witness.getProperty("keys");
+      const keys = await keysHandle.jsonValue();
+      await keysHandle.dispose();
+      const canvas = (await witness.getProperty("canvas")).asElement();
+      const draw = await canvas.evaluate(element => ({
         revision: element.dataset.worldGeometryRevision,
         vertices: Number(element.dataset.worldGeometryVertices),
         width: element.width,
         height: element.height,
       }));
-      if (witnessInitialArchive) {
+      if (witnessInitialArchive && previous.length === 0) {
         const image = require("pngjs").PNG.sync.read(await canvas.screenshot({timeout:20000}));
         const inset = Math.max(1, Math.floor(Math.min(image.width, image.height) / 5));
         const colors = new Set();
@@ -452,11 +459,14 @@ async function probe(id) {
         draw.interiorColors = colors.size;
         if (colors.size < 2) throw Error("The model canvas did not paint varying interior pixels");
       }
+      await canvas.dispose();
       await witness.dispose();
+      return {draw,keys};
     }
+    let paint = requireDraw ? await waitForDraw() : undefined;
+    const draw = paint?.draw;
     if (previewBindings && (!preview || !bindings)) throw new Error("Preview core and bindings must both be fetched");
     if ((exercisePicker || witnessInitialArchive) && shellState.shell.shellReady === id) {
-      if (!witnessInitialArchive) await requireArchive(1);
       const pickerSelector = `[data-layered-pane="${id}"] [id="playground.navbar.fixture"]`;
       const picker = page.locator(pickerSelector);
       const initial = (await picker.innerText({timeout:10000})).trim();
@@ -471,22 +481,37 @@ async function probe(id) {
       pickerRoundTrip = {initial,canvases,meshBytes};
       if (exercisePicker) {
         await picker.click({timeout:10000});
-        const options = page.getByRole("option");
+        const listboxId = await picker.getAttribute("aria-controls");
+        if (!listboxId) throw Error("The example picker does not name its listbox");
+        const options = page.getByRole("listbox").and(page.locator(`[id=${JSON.stringify(listboxId)}]`)).getByRole("option");
         await options.first().waitFor({timeout:10000});
-        pickerRoundTrip.offered = (await options.allTextContents()).map(label => label.trim());
-        const alternative = pickerRoundTrip.offered.find(label => label !== initial);
-        if (alternative === undefined) throw new Error("Picker exposes no alternative to the curated example");
-        await page.getByRole("option", {name:alternative,exact:true}).click({timeout:10000});
-        for (const label of [alternative,initial]) {
-          if (label === initial) {
-            await picker.click({timeout:10000});
-            await page.getByRole("option", {name:label,exact:true}).click({timeout:10000});
-          }
+        const offered = await options.evaluateAll(nodes => nodes.map(node => ({
+          value: node.dataset.value,
+          label: node.textContent.trim(),
+          selected: node.getAttribute("aria-selected") === "true",
+          enabled: node.getAttribute("aria-disabled") !== "true",
+        })));
+        const named = offered.filter(option => option.value && option.value !== "__none__");
+        const curated = named.find(option => option.selected && option.label === initial);
+        const alternative = named.find(option => option.enabled && option.value !== curated?.value);
+        if (!curated || !alternative) throw Error("The example picker has no selected curated example and distinct enabled named alternative");
+        pickerRoundTrip.offered = named.map(({value,label}) => ({value,label}));
+        const locateOption = option => options.and(page.locator(`[data-value=${JSON.stringify(option.value)}]`));
+        for (const [stage,option,count] of [["selected",alternative,2],["restored",curated,3]]) {
+          await locateOption(option).click({timeout:10000});
           await page.waitForFunction(([selector,text]) => document.querySelector(selector)?.textContent?.trim() === text,
-            [pickerSelector,label], {timeout:pickerWaitMs});
-          await requireArchive(label === initial ? 3 : 2);
-          pickerRoundTrip[label === initial ? "restored" : "selected"] = label;
+            [pickerSelector,option.label], {timeout:pickerWaitMs});
+          await requireArchive(count);
+          pickerRoundTrip[stage] = option.label;
+          pickerRoundTrip[`${stage}Value`] = option.value;
+          if (paint) {
+            paint = await waitForDraw(paint.keys, pickerWaitMs);
+            pickerRoundTrip[`${stage}Draw`] = paint.draw;
+          }
+          await picker.click({timeout:10000});
+          await locateOption(option).and(page.getByRole("option", {selected:true})).waitFor({timeout:10000});
         }
+        await page.keyboard.press("Escape");
       }
     }
     const windows = await shell.locator('[data-slot="window-body"]').allInnerTexts();

@@ -1,0 +1,8 @@
+{
+  "name": "semio-os-flow-host-read-authoring",
+  "projectType": "library",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

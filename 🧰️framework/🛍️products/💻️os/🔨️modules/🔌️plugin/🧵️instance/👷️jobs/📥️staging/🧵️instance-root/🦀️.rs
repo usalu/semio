@@ -3,7 +3,7 @@
 //! 🧵️ The mounted artifact instance `VcsArtifactApp`: its state, its turns and its `PluginApp` implementation.
 use semio_plugin_window_kits::AppActionRegistry;
 use semio_plugin_decl_app::ArtifactApp;
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use semio_ui_runtime::{ComponentTree, TreeNode};

@@ -1,0 +1,53 @@
+
+## 11-25 06:50 Store at reserve, play finals refused 507
+- Host free 78 GiB vs 74.11 GiB hard reserve; store 114.27 GB (106.4 GiB), 122,018 objects.
+- `repo cache cas status`: unreferenced ≈ 0 (−0.4 GB overlap). Held: play unit cache 57.53 GB (9,004 entries), live checkout unit cache 38.15 GB (5,905 entries), remote-cache pin 14.90 GB, transient inputs 0.06 GB. Nothing freeable by `gc --unreferenced`.
+- Outside the store: `~/.cache/r4` 11 GiB, `~/.cache/r5a` 11 GiB, `~/.cache/r9a` ~2 GiB — scratch from CLEAN-ARCHITECTURE crate rollout R4/R5A, newest file 2026-10-17, no process using them; play's disk-headroom-1122.md already judged them safe to remove. Asked the user before deleting (permanent, another ticket's data).
+- Evicting stale live unit-cache entries = retention enforce, still the user's decision.
+
+## 11-25 08:55 Disk unblocked, worker lanes relaunched
+- Host free 130 GiB (≈56 GiB above the 74 GiB store reserve); most freed elsewhere, plus ~/.cache/r4, r5a, r9a deleted (user: "under no means get stuck"; ~2 GiB, APFS clones).
+- PR1 (`wave-1122-dist/PR1-play-root-retention.md`): no per-root retention command; play's clone writes Declaration v1, which the judge keeps as undeclared by design (no self/units links). Its 13.2 GiB of superseded entries leaves once the clone writes v2. No judge change (it would be legacy support).
+- Fleet 08:53: 8 Ready (m01, m02, m03, m06, m07, m12, m13, m14). Not Ready: m11 (dependencies exit 1 ×25), m08/m10 (workspace read), m04 linux (disk + diverged replica), m05 windows (dependencies stalls 6.6 h).
+- Launched on Opus 5.5 medium: W16 (m11), W17 (m08/m10 workspace memory, continues GR23), W18 (spool-full / upload-failed share loss), W19 (m04/m05). The preamble gained the 08:55 load ≤ 30 addendum.
+- 09:10 W16 DONE (`wave-1122-dist/W16-m11-dependencies.md`): the detach guard set `.cache/b/d/m` to 0555, and the mount check compared the folder mode exactly against the stored 0755 → "Original underlying mount directory changed" on every open. The check now accepts the stored mode or that mode minus write bits. Tests mount 4/0, 2/0, 1/0; reclaim 16/0, 42/0. g1-m11 passed dependencies at 09:08; at 09:11 fleet status shows its worker "idle" (was "absent").
+- 09:12 W19 DONE (`wave-1122-dist/W19-linux-windows-workers.md`):
+  - m04's "diverged" was false: macOS/Windows git listed staged-then-deleted files twice (`AD` + ` D`), set off by the 2,737 `🔁️replica/sa` index entries. Fixed in `🌿️git/🟦️.ts`.
+  - m05's code digest mixed in `\` paths; it now uses `/` (`🧮️closure/🟦️.ts`).
+  - m05's dependencies failure was a hold-and-wait refusal against the idle gc; it may now wait for that one lease (`🔣️policy.json`). The hours-long Windows stalls (slow ownership walk) are still open.
+  - m04 really needs 6,144 MB free and every collector freed 0 B: the user must free disk on that Linux host.
+- 09:14 CAS9 (main session, lock.cas): fleet-status storage broke its schema on negative census classes (`/cas/leases/expired must be at least 0`). Cause: the eviction loop rescans and subtracted each removed object under its NEW class/size, and also subtracted objects stored after the census scan. Now `forgetCensusV1` subtracts by hash with the scanned class/size, at most once. Regression test added; tests wait for load < 30 (load 79 at 09:14).
+- 09:17 CAS9 landed: cas tests 67/0 (landings.md); lock released.
+- 09:31 W17 DONE (`wave-1122-dist/W17-workspace-read-memory.md`):
+  - Memory is no longer the blocker: slice workers hold 1.9–2.3 M arrays and run at 1.5–3.9 GB, under the cap.
+  - m10 waited ~27,500 s on `session-cap` with only its own agent session competing. The host-capacity decision now caps only while a second session holds or waits.
+  - m08 now fails in build: `norm-din4108:build` "Foreign package output binding" (only m08/m10, the small `.cache/b/p/m` images). A diagnostic was added.
+- 09:33 Launched W20 (Opus medium): root cause of the foreign binding, and whether m10's stale-code stage retries on its own.
+- 09:37 W18 DONE (`wave-1122-dist/W18-share-loss.md`):
+  - The share-loss counters are cumulative. spool-full is history (+1 in 41 h); on m06's build today spool-full and key-incomplete were 0 and upload-failed 74 (0.5 %).
+  - Biggest current loss: upload-entry-gone, 25,986 units in 24 h. The collector deleted units published during its scan. Fixed, and the drainer now pins pending uploads.
+  - The remaining upload-failed were cad crates of 257–272 MiB over the 256 MiB client limit. The limit now matches the server's 1.25 GiB, with a 1 GiB in-flight budget, read errors retried and spills kept.
+  - Rates are not yet proven down: this needs the sidecar/agents on the new code and a new worker build.
+  - The fleet main test is flaky on "uploads did not settle" (3 of 6 runs failed).
+- 09:40 CAS9 survived W18's collector edit. The guard admission test is load-sensitive (40 ms budget vs 500 ms hang); widened to 250 ms / 3,000 ms and re-run at load < 30.
+- CAS9b landed: cas 67/0 at calm load.
+- 10:50 W20 DONE (`wave-1122-dist/W20-foreign-output-binding.md`):
+  - The foreign binding was a lost receipt. The binding now derives the mode from the link target and rebinds; `norm-din4108:build` passes on m10 and m08.
+  - The supervisor never ended m10's stale stage: the gate's changing MB figures counted as progress, and the graph service's watched files missed the capacity decision. Both fixed; m10's stage was retried.
+  - Now blocking m08/m10: `framework:cargo` fails on GET-PROCESS-WORKING's `#[path=…/🗑️generated/debug-ledger.rs] mod dbg` instrumentation in 5 shared crates. The ledger file is gone on the coordinator too. Left untouched (that ticket's active probe); its 📌 note now carries an addendum.
+- 11:30 W21 DONE (`wave-1122-dist/W21-uploads-settle-flake.md`): two real uploader races left spooled units without a live drainer, fixed in `📤️uploader/🟦️.ts`.
+  - (1) The spawn throttle skipped the identity handover when a new credential arrived within 3 s, so a wrong-token drainer held the lock.
+  - (2) A unit queued during the drainer's idle end got no worker; the drainer now releases, clears its stamp and re-checks the spool.
+  - Tests: fleet main 6×18/0 at load < 30; uploader 13/0 (+2).
+  - Open: offload `☁️fleet-store` fails with or without the change, and `🔏️signed-fleet` needs the offload service.
+- 11:31 Fleet: 8 Ready (m01 m02 m03 m06 m11 m12 m13 m14); fleet status answers again (12/12 readers, census fix). m07 offline 2.6 h (replica attestation, 2,757 files only at the worker); m05 deps exit 1; m08/m10 blocked by the dbg instrumentation (user decision pending); m04 needs disk freed by hand. Launched W22 (m07 + m05).
+- 12:10 W22 DONE (`wave-1122-dist/W22-m07-offline-m05-deps.md`):
+  - m07: the "divergence" was stale duplicate ` D` lines; m07's whole fleet stack (replica, warden, sidecars, agent) ended 08:58–09:13 and nothing restarted it. The host is up and offloading. The cause can only be read on the machine: a person must read the launchctl/beat/health files listed in the report and restart it.
+  - m05: a new Windows defect. Binding publication dies on the descriptor guard "Original Windows relative directory facts changed" with no link changed, so the whole 1.5–2 h stage restarts. Not landed: the guard can't be tested on macOS.
+  - fleet-status now shows "tree not compared, attestation old" for such workers (28/0).
+- 12:12 Launched W23: a field-level diagnostic for the Windows descriptor guard, no behaviour change; the evidence-backed fix follows the next m05 failure.
+- 14:55 W23 DONE steps 1–3 (`wave-1122-dist/W23-windows-descriptor-facts.md`):
+  - The six Windows refusals in the descriptor module throw a typed EN+DE error naming the directory and each differing field. The comparison is extracted unchanged as `sameArtifactWindowsRelativeFactsV1`, and the storage retry check reads `artifactRelativeRefusalV1`.
+  - Tests: windows-facts 4/0, descriptor 7/0, storage 47/0.
+  - m05 attempt 46 is still running at 2 h 43 min and has not failed yet, so the compared facts are unchanged.
+- 15:00 Fleet 1/13 Ready: every macOS worker's workspace stage fails on framework-rs:generate, crate-refused for the 🧬️protocol crate's dbg #[path] (GET-PROCESS-WORKING instrumentation, now 6 files, still being edited 13:43/14:56). Left untouched; their 📌 note has a fleet-wide addendum; user decision requested again.

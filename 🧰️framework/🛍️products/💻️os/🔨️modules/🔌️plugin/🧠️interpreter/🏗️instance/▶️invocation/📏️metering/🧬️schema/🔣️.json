@@ -1,0 +1,165 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "workBytesPerUnit",
+    "cases",
+    "calls"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "moduleHex",
+          "static",
+          "kinds",
+          "instructions",
+          "retained",
+          "items",
+          "copyBytes",
+          "expected",
+          "stackPeak",
+          "labelVectors",
+          "moved",
+          "workUnits"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "moduleHex": {
+            "type": "string",
+            "pattern": "^(?:[a-f0-9]{2})+$"
+          },
+          "static": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string"
+            }
+          },
+          "kinds": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string"
+            }
+          },
+          "instructions": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "copyBytes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "expected": {
+            "type": "integer"
+          },
+          "retained": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "bytes"
+              ],
+              "properties": {
+                "kind": {
+                  "type": "string"
+                },
+                "bytes": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          },
+          "stackPeak": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "labelVectors": {
+            "const": 1
+          },
+          "moved": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "bytes"
+              ],
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "memory.fill",
+                    "memory.copy",
+                    "memory.init"
+                  ]
+                },
+                "bytes": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          },
+          "workUnits": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "calls": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "count",
+          "moduleHex",
+          "expected"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "moduleHex": {
+            "type": "string",
+            "pattern": "^(?:[a-f0-9]{2})+$"
+          },
+          "expected": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "workBytesPerUnit": {
+      "const": 64
+    }
+  }
+}

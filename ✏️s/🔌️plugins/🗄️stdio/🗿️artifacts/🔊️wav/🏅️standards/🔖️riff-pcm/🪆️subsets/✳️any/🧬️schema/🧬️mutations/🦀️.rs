@@ -41,6 +41,7 @@ pub enum WavMutation {
     SetPadBytes(set_pad_bytes::SetPadBytes),
 }
 dsl::original_pack_value_operation_receiving!(WavMutation);
+dsl::artifact_persisted_binary_operation!(WavMutation);
 
 /// 🦠️ Kebab-case spelling of every `WavMutation` variant — the exhaustive vocabulary the mutation
 /// oracle catalog (`../../🔣️oracle.json`) is measured against. Order matches the enum.

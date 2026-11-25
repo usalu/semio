@@ -20,7 +20,24 @@
       {
         "id": "anchor-A1",
         "patch": {
-          "tendonYieldForce": 1400000.0
+          "wallId": null,
+          "tendon": null,
+          "headDepth": null,
+          "inclinationDeg": null,
+          "freeLength": null,
+          "fixedLength": null,
+          "fixedDiameter": null,
+          "bondStress": null,
+          "designForce": null,
+          "tendonYieldForce": 1400000.0,
+          "minFreeLength": null,
+          "testFactor": null,
+          "tests": {
+            "removed": [],
+            "inserted": [],
+            "moved": [],
+            "modified": []
+          }
         }
       }
     ]
@@ -29,6 +46,7 @@
   "pileGroups": null,
   "labTests": null,
   "layerWaters": null,
+  "placements": null,
   "cases": {
     "removed": [],
     "inserted": [],

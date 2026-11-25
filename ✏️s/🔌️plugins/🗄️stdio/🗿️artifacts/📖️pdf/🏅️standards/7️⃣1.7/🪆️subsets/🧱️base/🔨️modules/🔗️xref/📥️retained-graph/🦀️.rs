@@ -2,6 +2,7 @@
 
 use semio_framework_value::{ByteReadRange, ByteReadSource};
 use crate::standards::v1_7::subsets::base::io::text::snapshot::retained_text::{RetainedTextCursor, RetainedTextGrant, RetainedTextReceipt, RetainedTextStatus};
+use super::interpreted_streams::InterpretedStreamCursor;
 use crate::standards::v1_7::subsets::base::modules::lexer::{CosGrant, CosLimits, CosReceipt, CosStatus, PdfCosCursor, PdfHeader, PdfIndirectLengthCursor, PdfStreamDictionaryCursor, StreamSpan};
 use crate::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfDictEntry, PdfIndirectObject, PdfObject, PdfStreamBytes, PdfStreamFilter};
 use crate::standards::v1_7::subsets::base::modules::xref::{GraphMaterializationEvent, NormalProjection, NormalProjectionCursor, NormalProjectionEvent, ObjectStreamCursor, ObjectStreamEvent, PdfFileStructure, PdfFileStructureCursor, PdfFileStructureEvent, PdfFileStructureReceipt, RetainedGraphBuilder, StructuredTrailer, XrefEntry, XrefFileOrderCursor, XrefFileOrderEvent, XrefIndex, XrefIndexLookup, XrefIndexReceipt, XrefIndexStatus, XrefStreamError, XrefTrailerCursor, WRITER_TRAILER_KEYS};
@@ -66,6 +67,11 @@ struct RawStream {
     span: StreamSpan,
     dictionary: PdfStreamDictionaryCursor,
     bytes: PdfStreamBytes,
+}
+
+impl RawStream {
+    /// 📄️ Whether the next unit only moves encoded body bytes into reserved pages (or reserves the next page), at most one byte of copy per byte.
+    fn copies_body_bytes(&self) -> bool { self.bytes.len() < self.span.end.saturating_sub(self.span.start) }
 }
 
 struct ObjectStream {
@@ -193,6 +199,7 @@ impl GraphImportCursor {
             Phase::Member => self.member(grant),
             Phase::CloseOrder => {
                 if self.stream.is_some() { return self.retire_stream(grant); }
+                if self.normal.is_some() { return self.retire_normal(grant); }
                 let step = self.order.close_step(grant);
                 if step.event == Ok(XrefFileOrderEvent::Closed) { self.phase = Phase::Complete; }
                 order(step)
@@ -206,6 +213,11 @@ impl GraphImportCursor {
             Some(XrefEntry::Normal { offset, gen }) => {
                 if self.stream.is_some() { return self.retire_stream(grant); }
                 self.current = ObjRef { num: number, gen };
+                if let Some(cursor) = self.normal.as_mut() {
+                    if !cursor.restart(self.current, offset, CosLimits::default()) { return failed("the PDF object projection is still in flight"); }
+                    self.phase = Phase::Normal;
+                    return more(1);
+                }
                 let bytes = std::mem::size_of::<NormalProjectionCursor>();
                 if bytes > grant.allocation_bytes { return report(Ok(GraphImportEvent::NeedsAllocation { bytes }), 0); }
                 let cursor = NormalProjectionCursor::new(self.current, offset, CosLimits::default(), self.maximum_stream_bytes).keep_object_streams();
@@ -319,15 +331,18 @@ impl GraphImportCursor {
         more(1)
     }
 
+    /// ♻️ Closes the finished object's projection but keeps its box for the next normal object; the box itself retires once the order completes or the import closes.
     fn close_normal(&mut self, grant: CosGrant) -> GraphImportReceipt {
-        let step = self.retire_normal(grant);
-        if self.normal.is_none() {
+        let step = self.normal.as_mut().expect("closing PDF object projection").close_step(grant);
+        if matches!(step.event, Ok(NormalProjectionEvent::Closed)) {
+            let step = GraphImportReceipt { work: step.work.max(1), ..projection(step) };
             self.phase = if self.raw.is_some() { Phase::RawStream }
             else if self.stream.is_some() { Phase::StreamHeader }
             else if self.pending.is_some() { Phase::Publish }
             else { Phase::Order };
+            return step;
         }
-        step
+        projection(step)
     }
 
     fn retire_normal(&mut self, grant: CosGrant) -> GraphImportReceipt {
@@ -795,7 +810,7 @@ pub struct PreparedPdfFile {
     pub trailer: Vec<PdfDictEntry>,
 }
 
-enum PreparePhase { Allocate, Bytes, TakeBytes, ReleaseBytes, Trailer, TakeTrailer, AppendInherited, Text, Ready, Closing, Closed }
+enum PreparePhase { Allocate, Bytes, TakeBytes, ReleaseBytes, Trailer, TakeTrailer, AppendInherited, Text, Interpret, Ready, Closing, Closed }
 
 /// 🧾️ Prepares the authored graph and its native metadata without borrowing it across turns.
 pub struct PdfFilePreparationCursor {
@@ -811,6 +826,7 @@ pub struct PdfFilePreparationCursor {
     trailer_reverse: usize,
     trailer_entry_retirement: Option<PdfCosCursor>,
     text: Option<RetainedTextCursor>,
+    interpret: Option<InterpretedStreamCursor>,
     maximum_objects: usize,
     maximum_stream_bytes: usize,
 }
@@ -820,7 +836,7 @@ impl PdfFilePreparationCursor {
         Self {
             phase: PreparePhase::Allocate, bytes: None, header: None, graph: None, graph_retirement: Default::default(),
             dictionary: None, inherited: std::array::from_fn(|_| None), trailer: Vec::new(),
-            trailer_replacement: Vec::new(), trailer_reverse: 0, trailer_entry_retirement: None, text: None, maximum_objects, maximum_stream_bytes,
+            trailer_replacement: Vec::new(), trailer_reverse: 0, trailer_entry_retirement: None, text: None, interpret: None, maximum_objects, maximum_stream_bytes,
         }
     }
 
@@ -835,6 +851,7 @@ impl PdfFilePreparationCursor {
             PreparePhase::TakeTrailer => "take-trailer",
             PreparePhase::AppendInherited => "append-inherited",
             PreparePhase::Text => "text",
+            PreparePhase::Interpret => "interpret",
             PreparePhase::Ready => "ready",
             PreparePhase::Closing => "closing",
             PreparePhase::Closed => "closed",
@@ -899,24 +916,55 @@ impl PdfFilePreparationCursor {
                 let step = self.text.as_mut().expect("native PDF text admission").advance(
                     &mut graph.objects, &mut self.trailer, |id| exact_position(&graph.positions, id), text_grant(grant), false,
                 );
-                if step.status == Ok(RetainedTextStatus::Complete) { self.text = None; self.phase = PreparePhase::Ready; }
+                if step.status == Ok(RetainedTextStatus::Complete) {
+                    self.text = None;
+                    self.interpret = Some(InterpretedStreamCursor::new(self.maximum_stream_bytes));
+                    self.phase = PreparePhase::Interpret;
+                }
                 text_receipt(step)
+            }
+            PreparePhase::Interpret => {
+                let cursor = self.interpret.as_mut().expect("interpreted PDF stream walk");
+                if cursor.closing() {
+                    let step = cursor.close_step(grant);
+                    if step.status == Ok(CosStatus::Closed) { self.interpret = None; self.phase = PreparePhase::Ready; }
+                    return graph_receipt(cos(step));
+                }
+                let ImportedGraph { objects, positions } = self.graph.as_mut().expect("attached PDF graph");
+                let step = cursor.advance(objects, &self.trailer, |id| exact_position(positions, id), grant);
+                if matches!(step.status, Ok(CosStatus::Complete { .. })) { cursor.begin_close(); }
+                graph_receipt(cos(step))
             }
             _ => unreachable!(),
         }
     }
 
-    /// 📄️ Whether the next unit only moves one body byte of an uncompressed stream into its retained output, which a bulk work grant may cover with one byte of copy each.
-    pub fn copying_identity_bytes(&self) -> bool {
-        matches!(self.phase, PreparePhase::Bytes) && self.bytes.as_ref().is_some_and(|file|
+    /// 🏃️ Bytes the next unit writes when it belongs to the structure or text pass: one for a scanned byte or value, more for a unit that fills an index slot or queues a role; `None` for every other unit.
+    pub fn run_write_bytes(&self) -> Option<usize> {
+        match self.phase {
+            PreparePhase::Bytes => self.bytes.as_ref().filter(|file| matches!(file.phase, BytePhase::Structure))?.structure.run_write_bytes(),
+            PreparePhase::Text => self.text.as_ref()?.run_write_bytes(),
+            _ => None,
+        }
+    }
+
+    /// ✍️ Bytes the next single unit writes when it fills a slot or queue entry rather than scanning, so one unit is charged exactly that many bytes of copy.
+    pub fn writing_bytes(&self) -> Option<usize> { self.run_write_bytes().filter(|&bytes| bytes > 1) }
+
+    /// 📄️ Whether the next units only decode stream body bytes into their retained output, lex an object's own bytes, scan the cross-reference structure or retained values, move an encoded body into its retained pages, or decode an interpreted stream in place, which a bulk work grant may cover with two bytes of copy per byte unit.
+    pub fn decoding_body_bytes(&self) -> bool {
+        let interpreting = matches!(self.phase, PreparePhase::Interpret) && self.interpret.as_ref().is_some_and(InterpretedStreamCursor::decodes_body_bytes);
+        interpreting || self.run_write_bytes() == Some(1) || matches!(self.phase, PreparePhase::Bytes) && self.bytes.as_ref().is_some_and(|file|
             matches!(file.phase, BytePhase::Project) && file.projection.as_ref().is_some_and(|graph|
-                matches!(graph.phase, Phase::Normal) && graph.retiring.is_none() && graph.length.is_none() && graph.length_reference.is_none() && graph.compressed_length.is_none()
-                    && graph.normal.as_ref().is_some_and(|stream| stream.copies_identity_bytes())))
+                graph.retiring.is_none() && graph.length.is_none() && graph.length_reference.is_none() && graph.compressed_length.is_none()
+                    && (matches!(graph.phase, Phase::Normal) && graph.normal.as_ref().is_some_and(|stream| stream.decodes_body_bytes() || stream.frames_bytes())
+                        || matches!(graph.phase, Phase::RawStream) && graph.raw.as_ref().is_some_and(RawStream::copies_body_bytes))))
     }
 
     /// 🧵️ Quotes the next unit when it reserves empty retained slots or a fresh Flate history.
     pub fn reserving_empty_backing(&self) -> bool {
-        matches!(self.phase, PreparePhase::Bytes) && self.bytes.as_ref().is_some_and(|file|
+        matches!(self.phase, PreparePhase::Interpret) && self.interpret.as_ref().is_some_and(InterpretedStreamCursor::next_reserves_history)
+            || matches!(self.phase, PreparePhase::Bytes) && self.bytes.as_ref().is_some_and(|file|
             matches!(file.phase, BytePhase::Project) && file.projection.as_ref().is_some_and(|graph|
                 matches!(graph.phase, Phase::Reserve) || matches!(graph.phase, Phase::Normal)
                     && graph.retiring.is_none() && graph.length.is_none() && graph.length_reference.is_none() && graph.compressed_length.is_none()
@@ -984,6 +1032,7 @@ impl PdfFilePreparationCursor {
         if matches!(self.phase, PreparePhase::Closing | PreparePhase::Closed) { return; }
         if let Some(bytes) = self.bytes.as_mut() { bytes.begin_close(); }
         if let Some(text) = self.text.as_mut() { text.begin_close(); }
+        if let Some(interpret) = self.interpret.as_mut() { interpret.begin_close(); }
         self.phase = PreparePhase::Closing;
     }
 
@@ -1006,6 +1055,11 @@ impl PdfFilePreparationCursor {
             let step = cursor.close_step(text_grant(grant));
             if step.status == Ok(RetainedTextStatus::Closed) { self.text = None; }
             return text_receipt(step);
+        }
+        if let Some(cursor) = self.interpret.as_mut() {
+            let step = cursor.close_step(grant);
+            if step.status == Ok(CosStatus::Closed) { self.interpret = None; }
+            return graph_receipt(cos(step));
         }
         if let Some(cursor) = self.trailer_entry_retirement.as_mut() {
             let step = cursor.close_step(grant);
@@ -1257,4 +1311,67 @@ mod tests {
         assert!(cursor.trailer.iter().map(|entry| entry.key.as_str()).eq(ordered));
     }
 
+    /// 🌐️ The most one browser turn can copy through a run: the interactive component's per-turn copy grant.
+    const BROWSER_TURN_COPY: usize = 512 * 1024;
+
+    /// 📂️ The bytes of a ledger document, found by walking up from the crate to the first directory that holds its path.
+    fn ledger_file(relative: &str) -> Vec<u8> {
+        let start = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        let found = start.ancestors().map(|directory| directory.join(relative)).find(|path| path.is_file()).unwrap_or_else(|| panic!("ledger document {relative} is not under {start:?}"));
+        std::fs::read(found).unwrap()
+    }
+
+    /// 🏃️ Prepares `input` with the grant each unit quotes, covering every scanning pass with `run` units per call (single units when `run` is zero); the outcome, the calls, the largest copy of one call's work and the calls the structure and text passes took.
+    fn prepare_driven(input: &[u8], run: usize) -> (Result<PreparedPdfFile, String>, usize, usize, usize) {
+        let mut cursor = PdfFilePreparationCursor::new(100_000, 64 << 20);
+        let mut grant = CosGrant { work: 1, allocation_bytes: 0, release_bytes: 0 };
+        let (mut calls, mut largest, mut passes) = (0, 0, 0);
+        loop {
+            let bodies = run != 0 && cursor.decoding_body_bytes();
+            let writes = if bodies { None } else { cursor.writing_bytes() };
+            let unit = if bodies { 2 } else { writes.map_or(128, |bytes| bytes.max(2)) };
+            grant.work = if bodies || run != 0 && writes.is_some() { run } else { 1 };
+            calls += 1;
+            let trace = cursor.trace();
+            passes += usize::from(trace.starts_with("bytes/structure") || trace == "text");
+            let step = cursor.advance(input, grant, false);
+            assert!(step.work <= grant.work && step.allocated_bytes <= grant.allocation_bytes && step.released_bytes <= grant.release_bytes, "a unit stays inside its grant");
+            largest = largest.max(step.work * unit);
+            match step.event {
+                Ok(PdfByteGraphEvent::NeedsAllocation { bytes }) => grant.allocation_bytes = bytes,
+                Ok(PdfByteGraphEvent::NeedsRelease { bytes }) => grant.release_bytes = bytes,
+                Ok(PdfByteGraphEvent::More | PdfByteGraphEvent::Object) => { grant.allocation_bytes = 0; grant.release_bytes = 0; }
+                Ok(PdfByteGraphEvent::Complete) => return (Ok(cursor.take().expect("prepared PDF file")), calls, largest, passes),
+                other => return (Err(format!("{other:?}")), calls, largest, passes),
+            }
+        }
+    }
+
+    /// 🏃️ LAW: the xref structure pass and the retained-text pass run as body bytes: every ledger document prepares to exactly the objects, trailer and header that single units reach, no run copies more than one browser turn, and the runs take at most a quarter of the single-unit calls over the ledger.
+    #[test]
+    fn body_runs_prepare_every_real_world_document_like_single_units_in_fewer_calls() {
+        let ledger: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🌍️real-world/🔣️.json")).unwrap();
+        let mut report = Vec::new();
+        for case in ledger["documents"].as_array().unwrap() {
+            let name = case["name"].as_str().unwrap();
+            let input = &ledger_file(case["path"].as_str().unwrap());
+            let (single, unit_calls, _, unit_passes) = prepare_driven(input, 0);
+            let (run, run_calls, largest, run_passes) = prepare_driven(input, 4096);
+            assert!(largest <= BROWSER_TURN_COPY, "{name}: a run copies {largest} bytes");
+            match (single, run) {
+                (Ok(single), Ok(run)) => assert!(
+                    single.header.offset() == run.header.offset() && single.graph.objects == run.graph.objects && single.trailer == run.trailer,
+                    "{name}: a body-run preparation reaches the single-unit file"
+                ),
+                (single, run) => assert_eq!(single.map(|_| ()), run.map(|_| ()), "{name}: a body-run preparation reaches the single-unit outcome"),
+            }
+            report.push((name.to_owned(), unit_calls, run_calls, unit_passes, run_passes));
+        }
+        let total = |select: fn(&(String, usize, usize, usize, usize)) -> (usize, usize)| report.iter().map(select).fold((0, 0), |(units, runs), (unit, run)| (units + unit, runs + run));
+        let (units, runs) = total(|(_, unit, run, _, _)| (*unit, *run));
+        let (pass_units, pass_runs) = total(|(_, _, _, unit, run)| (*unit, *run));
+        println!("prepare runs (name, calls single, calls run, structure and text pass calls single, run): {report:?}");
+        assert!(4 * runs <= units, "body runs save at least three quarters of the ledger's calls ({runs} of {units}): {report:?}");
+        assert!(8 * pass_runs <= pass_units, "body runs save at least seven eighths of the structure and text pass calls ({pass_runs} of {pass_units}): {report:?}");
+    }
 }

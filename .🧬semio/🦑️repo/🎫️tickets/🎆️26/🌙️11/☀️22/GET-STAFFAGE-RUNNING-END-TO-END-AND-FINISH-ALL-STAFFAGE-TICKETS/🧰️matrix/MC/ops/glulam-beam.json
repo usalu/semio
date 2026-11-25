@@ -1,0 +1,4 @@
+[
+{"op": "shape", "scale": "500", "view": "elevation", "id": "beam", "shape": {"id": "beam", "bone": "beam", "role": "body", "z": 1, "filled": true, "tone": 0.4, "regions": ["beam-sides", "beam-top", "beam-soffit", "beam-end-grain", "bearing-steel"], "material": "glulam", "kind": "rect", "x": 0, "y": -0.32, "w": 8, "h": 0.62}},
+{"op": "set", "path": ["representations", "500", "decisions", "thinElements"], "value": {"en": "There are no thin parts; the 20 mm plates (0.04 mm) are merged into the bar bottom, a deviation of 0.04 mm.", "de": "Es gibt keine dünnen Teile; die 20-mm-Platten (0,04 mm) gehen im Balkenfuß auf, eine Abweichung von 0,04 mm."}}
+]

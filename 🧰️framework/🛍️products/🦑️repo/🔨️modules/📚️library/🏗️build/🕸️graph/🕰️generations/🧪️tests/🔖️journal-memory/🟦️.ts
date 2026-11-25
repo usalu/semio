@@ -7,7 +7,7 @@ const here=dirname(fileURLToPath(import.meta.url)),generations=join(here,"../.."
 const run=(owners:number,per:number)=>{
  const script=`
   import{mkdtempSync,rmSync,readFileSync}from"node:fs";import{tmpdir}from"node:os";import{join}from"node:path";
-  const{createRowLogV1}=await import(${JSON.stringify(url("🗃️row-log/🟨️.mjs"))}),{createBuildJournalV1,decodeJournalRowsV1,BUILD_JOURNAL_V1}=await import(${JSON.stringify(url("🔖️journal/🟨️.mjs"))}),{createNodeFilePortV1}=await import(${JSON.stringify(url("🗃️file-ports/🟨️.mjs"))});
+  const{createRowLogV1}=await import(${JSON.stringify(url("🗃️row-log/🟨️.mjs"))}),{createBuildJournalV1,decodeJournalRowsV1,unpackJournalRowsV1,BUILD_JOURNAL_V1}=await import(${JSON.stringify(url("🔖️journal/🟨️.mjs"))}),{createNodeFilePortV1}=await import(${JSON.stringify(url("🗃️file-ports/🟨️.mjs"))});
   const directory=mkdtempSync(join(tmpdir(),"journal-memory-")),log=createRowLogV1({path:join(directory,"rl","a.rows")}),upserts=new Map(),append=new Map();
   const hex=character=>character.repeat(64);
   for(let owner=0;owner<${owners};owner++){const builder=log.builder();for(let from=0;from<${per};from+=250)builder.add(Array.from({length:Math.min(250,${per}-from)},(_unused,at)=>({kind:"file",path:"/w/pkg/p"+owner+"/src/f"+(from+at)+".ts",fact:{size:from+at,mtimeMs:1.7e12+from+at,ino:owner*100000+from+at,sha256:String(owner*100000+from+at).padStart(64,"0")}})));(owner%2?append:upserts).set("o"+String(owner).padStart(6,"0"),builder.finish());}
@@ -19,7 +19,7 @@ const run=(owners:number,per:number)=>{
   const carry={files:[],waves:0,names:[],done:0,dropped:new Set(),returned:new Set(),derived:new Set()};
   await journal.wave({key:hex("a"),current:undefined,identity:hex("b"),implementation:hex("c"),carry,steps:[],upserts,append,owners:{},env:{digest:hex("d")}});
   clearInterval(timer);sample();
-  const seen=new Map();let bytes=0;for(const file of carry.files){const raw=readFileSync(join(directory,"store",BUILD_JOURNAL_V1.directory,file.file));bytes+=raw.length;for(const entry of decodeJournalRowsV1(raw)){const key=entry.mode+entry.name;seen.set(key,(seen.get(key)??0)+entry.rows.length);}}
+  const seen=new Map();let bytes=0;for(const file of carry.files){const raw=unpackJournalRowsV1(readFileSync(join(directory,"store",BUILD_JOURNAL_V1.directory,file.file)));bytes+=raw.length;for(const entry of decodeJournalRowsV1(raw)){const key=entry.mode+entry.name;seen.set(key,(seen.get(key)??0)+entry.rows.length);}}
   const exact=[...upserts.keys()].every(name=>seen.get("u"+name)===${per})&&[...append.keys()].every(name=>seen.get("a"+name)===${per});
   console.log(JSON.stringify({growth:(peak-before)/1048576,files:carry.files.length,largest:largest/1048576,bytes:bytes/1048576,exact,entries:seen.size}));log.close();rmSync(directory,{recursive:true,force:true});
  `;

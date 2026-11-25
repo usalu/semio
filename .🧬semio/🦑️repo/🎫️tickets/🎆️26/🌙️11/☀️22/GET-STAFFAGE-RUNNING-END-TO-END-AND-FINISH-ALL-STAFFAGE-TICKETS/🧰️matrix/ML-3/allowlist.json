@@ -1,0 +1,61 @@
+{
+  "note": "Proposals of round ML-3 for MX-2 (D49, D51, D58). Each entry names the only bands the measure finds without any allowlist (`ML-3/derived.ts`, 2026-11-25) and replaces the entry of the same asset and view without bands that `MS/allowlist.json` had merged; see `withdraw`.",
+  "withdraw": [
+    {
+      "list": "derivedViewAllowlist",
+      "asset": "boxwood-ball",
+      "view": "front",
+      "bands": null,
+      "by": "the entry below for 1:500 only"
+    },
+    {
+      "list": "derivedViewAllowlist",
+      "asset": "norway-spruce",
+      "view": "front",
+      "bands": null,
+      "by": "the entry below for 1:500 only; 1:200 is repaired in the asset (`ML-3/fix-norway-spruce.ts`)"
+    },
+    {
+      "list": "derivedViewAllowlist",
+      "asset": "windmill-palm",
+      "view": "front",
+      "bands": null,
+      "by": "the entry below for 1:200 only"
+    }
+  ],
+  "derivedViewAllowlist": [
+    {
+      "asset": "boxwood-ball",
+      "view": "front",
+      "bands": [
+        "500"
+      ],
+      "reason": {
+        "en": "A clipped box ball is a sphere by its making: at 1:500 the crown is one sphere of 0.8 m (1.6 mm on paper) on the vertical axis of the stems, and every elevation of a sphere is the same circle (measured distance 0). What tells the sides apart in the finer bands (0.18 to 0.26), the relief of the shoot clusters, the stems (merged to 4.4 cm at 1:200) and the gap of 7 cm under the ball, lies below the smallest feature of 1:500 (75 mm, 0.15 mm on paper) and is merged into the one outline.",
+        "de": "Eine geschnittene Buchskugel ist durch ihren Schnitt eine Kugel: bei 1:500 ist die Krone eine Kugel von 0,8 m (1,6 mm auf Papier) auf der senkrechten Achse der Stämmchen, und jede Ansicht einer Kugel ist derselbe Kreis (gemessener Abstand 0). Was die Seiten in den feineren Bändern unterscheidet (0,18 bis 0,26), das Relief der Triebbüschel, die Stämmchen (bei 1:200 zu 4,4 cm vereinigt) und der Spalt von 7 cm unter der Kugel, liegt unter dem kleinsten Merkmal von 1:500 (75 mm, 0,15 mm auf Papier) und geht in dem einen Umriss auf."
+      }
+    },
+    {
+      "asset": "norway-spruce",
+      "view": "front",
+      "bands": [
+        "500"
+      ],
+      "reason": {
+        "en": "A Norway spruce is monopodial: whorls of branches all round one straight stem make the crown a body of revolution about the stem by nature. At 1:500 (the tree is 60 mm high and 17 mm wide on paper) the crown is two solids of revolution with an elliptic section, 8.48 m wide and 7.41 m deep, so the front is the true, 13 % narrower view of the same serrated cone (0.53 m apart on a 30 m tree, normalised 0.018). What tells the sides apart in the finer bands (0.05 to 0.11 at 1:50, 1:100 and 1:200), the two leading sprays of each whorl, reaches 0.4 to 0.6 m beyond the rim of its skirt: about 1 mm on paper at 1:500 and 0.3 to 0.6 mm thick, merged into the stepped envelope of that band.",
+        "de": "Eine Fichte wächst monopodial: Astquirle rings um einen geraden Stamm machen die Krone von Natur aus zu einem Drehkörper um den Stamm. Bei 1:500 (der Baum ist auf dem Papier 60 mm hoch und 17 mm breit) besteht die Krone aus zwei Drehkörpern mit elliptischem Querschnitt, 8,48 m breit und 7,41 m tief, daher ist die Vorderansicht die wahre, 13 % schmalere Ansicht desselben gezackten Kegels (0,53 m Abstand an einem 30 m hohen Baum, normiert 0,018). Was die Seiten in den feineren Bändern unterscheidet (0,05 bis 0,11 bei 1:50, 1:100 und 1:200), die zwei Leitzweige jedes Quirls, reicht 0,4 bis 0,6 m über den Saum seiner Schürze hinaus: bei 1:500 etwa 1 mm auf Papier und 0,3 bis 0,6 mm dick, in der gestuften Hülle dieses Bands vereinigt."
+      }
+    },
+    {
+      "asset": "windmill-palm",
+      "view": "front",
+      "bands": [
+        "200"
+      ],
+      "reason": {
+        "en": "A windmill palm carries twenty fan leaves in a spiral of 137.5 degrees round one unbranched stem, with five dead leaves folded down along it: the crown has rotational symmetry about the stem by nature. Front and side are two true views of the 201 solids of the 1:200 body and draw other leaves; the two figures are 0.218 m apart on a palm of 7.81 m (normalised 0.0279, the limit is 0.03), carried by a dead leaf beside the stem at 5.4 m. The other bands measure 0.037 (1:500), 0.039 (1:100) and 0.049 (1:50) and need no entry.",
+        "de": "Eine Hanfpalme trägt zwanzig Fächerblätter in einer Spirale von 137,5 Grad um einen unverzweigten Stamm, darunter fünf abgestorbene, am Stamm herabhängende Blätter: die Krone ist von Natur aus drehsymmetrisch um den Stamm. Vorder- und Seitenansicht sind zwei wahre Ansichten der 201 Körper des 1:200-Modells und zeichnen andere Blätter; die beiden Figuren liegen an einer Palme von 7,81 m um 0,218 m auseinander (normiert 0,0279, die Grenze ist 0,03), getragen von einem toten Blatt neben dem Stamm in 5,4 m Höhe. Die anderen Bänder messen 0,037 (1:500), 0,039 (1:100) und 0,049 (1:50) und brauchen keinen Eintrag."
+      }
+    }
+  ]
+}

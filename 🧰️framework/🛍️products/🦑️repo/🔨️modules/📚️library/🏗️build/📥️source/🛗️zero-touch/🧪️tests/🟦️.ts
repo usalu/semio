@@ -148,6 +148,7 @@ for (const row of fixture.commandCases as unknown as readonly CommandCaseRow[]) 
 test("a command registry row is closed", () => {
   expect(() => readZeroTouchCommandsV1(JSON.stringify({ commands: [] }))).toThrow("Root command registry required");
   expect(() => readZeroTouchCommandsV1(JSON.stringify({ commands: [{ id: "a", module: "a.ts", requires: "maybe" }] }))).toThrow("Root command registry row required");
+  expect(readZeroTouchCommandsV1(JSON.stringify({ commands: [{ id: "a", module: "a.ts", requires: "staged" }] }))).toEqual([{ id: "a", module: "a.ts", requires: "staged" }]);
   expect(() => readZeroTouchCommandsV1(JSON.stringify({ commands: [{ id: "a", module: "a.ts", requires: "none" }, { id: "a", module: "b.ts", requires: "none" }] }))).toThrow("Root command registry row required");
 });
 

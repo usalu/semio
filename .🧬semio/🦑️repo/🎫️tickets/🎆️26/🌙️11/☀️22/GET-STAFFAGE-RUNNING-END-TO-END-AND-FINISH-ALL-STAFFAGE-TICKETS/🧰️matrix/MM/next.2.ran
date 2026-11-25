@@ -1,0 +1,22 @@
+#!/bin/sh
+# 🎟️ MM job 2 (about 18 min, at most 700 MB): the cells of jogger, olive-tree and atlas-cedar with the trial tree (--smol for the trees) against the recorded cells of the same documents, and where the rest of the time goes.
+M=/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️22/GET-STAFFAGE-RUNNING-END-TO-END-AND-FINISH-ALL-STAFFAGE-TICKETS/🧰️matrix/MM
+mv "$M/next.sh" "$M/next.2.ran" 2>/dev/null
+G="${M%/🧰️matrix/MM}/🗑️generated/matrix/MM"
+X=/private/tmp/claude-501/-Users-ueli-Documents-semio/26600f60-7314-4bf4-ab97-26644d4b8c37/scratchpad
+BUN=$(ls ~/Library/Caches/semio/runtimes/bun/*/bun | head -1)
+L="$G/n2"; mkdir -p "$L"; rm -f "$L/ended"
+cd "$X" || exit 1
+g() { name=$1; shift; sh "$M/guarded.sh" 700 "$L/$name.log" timeout "$@"; }
+S=🎓️teaching/🏛️architecture/🧍️staffage
+T="$X/trial/$S/🧪️tests/🔭️multiview-coverage"
+g hot2-trial 60 "$BUN" "$M/hot.ts" --tree "$X/trial" --only evaluate --count 2 cyclist:500 cyclist:50 dancer:50
+g hot-trial 100 "$BUN" "$M/hot.ts" --tree "$X/trial" --only evaluate,render,derived --count 4 jogger:50 saguaro-cactus:50
+g prof-jogger 60 "$BUN" --smol --cpu-prof --cpu-prof-dir "$L/prof-jogger" "$M/hot.ts" --tree "$X/trial" --only evaluate --count 12 jogger:50
+g jogger 420 "$BUN" "$M/one.ts" --probe --snapshot cat/👤️humans/jogger/🔣️.json --out "$L/jogger.json" --suite "$T"
+python3 "$M/same-cells.py" "$G/f-pair/cells/jogger.json" "$L/jogger.json" > "$L/same.txt" 2>&1
+g prof-render 60 "$BUN" --smol --cpu-prof --cpu-prof-dir "$L/prof-render" "$M/hot.ts" --tree "$X/trial" --only render,derived jogger:50 jogger:100
+g olive 240 "$BUN" --smol "$M/one.ts" --probe --snapshot cat/🌳️vegetation/olive-tree/🔣️.json --out "$L/olive.json" --suite "$T"
+python3 "$M/same-cells.py" "$G/f-resume/cells/olive-tree.json" "$L/olive.json" >> "$L/same.txt" 2>&1
+g cedar 200 "$BUN" --smol "$M/one.ts" --probe --snapshot cat/🌳️vegetation/atlas-cedar/🔣️.json --out "$L/cedar.json" --suite "$T"
+date > "$L/ended"

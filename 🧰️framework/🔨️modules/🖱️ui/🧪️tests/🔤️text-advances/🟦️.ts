@@ -8,7 +8,7 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { chromium } from "playwright";
+import { launchChromium } from "../🌐️chromium-launch/🟦️";
 import { describe, expect, it } from "vitest";
 import fixture from "../🧫️fixtures/🔤️text-advances/🔣️.json" with { type: "json" };
 
@@ -26,7 +26,7 @@ describe("🔤️ text advance corpus", () => {
     const css = Object.entries(faceFiles)
       .map(([face, file]) => `@font-face{font-family:"${faces[face]}";src:url(data:font/ttf;base64,${readFileSync(file).toString("base64")})}`)
       .join("");
-    const browser = await chromium.launch({ headless: true });
+    const browser = await launchChromium();
     try {
       const page = await browser.newPage();
       await page.setContent(`<style>${css} span{white-space:pre}</style>`);

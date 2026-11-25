@@ -13,16 +13,76 @@
       "de": "Eine 9 m breite klassische Balancier-Erdölpumpe in der Seitenansicht: Platte und Rahmen, ein A-förmiger Bock, ein Balancier mit gebogenem Pferdekopf, der über eine Kurbel mit Gegengewicht und Schubstange nickt, ein Elektromotor mit Riemenschutz und der Bohrlochkopf mit Polierstange."
     },
     "tags": [
-      "pumpjack",
-      "nodding-donkey",
-      "oil",
-      "extraction",
-      "primary-energy",
-      "fossil",
-      "machine",
-      "oilfield",
-      "rotating",
-      "linkage"
+      {
+        "id": "pumpjack",
+        "title": {
+          "en": "pumpjack",
+          "de": "Gestängetiefpumpe"
+        }
+      },
+      {
+        "id": "nodding-donkey",
+        "title": {
+          "en": "nodding donkey",
+          "de": "Pferdekopfpumpe"
+        }
+      },
+      {
+        "id": "oil",
+        "title": {
+          "en": "oil",
+          "de": "Öl"
+        }
+      },
+      {
+        "id": "extraction",
+        "title": {
+          "en": "extraction",
+          "de": "Absaugung"
+        }
+      },
+      {
+        "id": "primary-energy",
+        "title": {
+          "en": "primary energy",
+          "de": "Primärenergie"
+        }
+      },
+      {
+        "id": "fossil",
+        "title": {
+          "en": "fossil",
+          "de": "fossil"
+        }
+      },
+      {
+        "id": "machine",
+        "title": {
+          "en": "machine",
+          "de": "Maschine"
+        }
+      },
+      {
+        "id": "oilfield",
+        "title": {
+          "en": "oilfield",
+          "de": "Ölfeld"
+        }
+      },
+      {
+        "id": "rotating",
+        "title": {
+          "en": "rotating",
+          "de": "rotierend"
+        }
+      },
+      {
+        "id": "linkage",
+        "title": {
+          "en": "linkage",
+          "de": "Gestänge"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage content (G1)",

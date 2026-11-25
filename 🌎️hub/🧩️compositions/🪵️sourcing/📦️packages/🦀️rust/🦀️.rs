@@ -1,5 +1,7 @@
 //! 🪵️ Sourcing plugin — declarative curation app bundled as a hot-swappable WASM component.
 //!
+//! Its compile unit stays under the 16 GB-class unit ceiling (`Policy.unitCeiling` of the native-build admission schema).
+//!
 //! WIRING ONLY. Every leaf `mod` below points at exactly one taxonomy component file with a `#[path]`
 //! written in full from the plugin root, prefixed with `../../` since THIS file now lives two levels
 //! below the plugin root (`📦️packages/🦀️rust/`, moved here for Shape V2 tree purity — see ticket

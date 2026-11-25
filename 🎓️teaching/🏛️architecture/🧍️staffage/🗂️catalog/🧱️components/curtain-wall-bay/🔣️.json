@@ -13,13 +13,55 @@
       "de": "Ein 1,35 m breites, 3,30 m hohes Feld einer Pfosten-Riegel-Fassade: thermisch getrennte Aluminiumpfosten 50 x 150 mm und -riegel 50 x 100 mm mit Polyamid-Isolatoren, Pressleisten und 12-mm-Deckschalen (U_f 2,0 und 2,2), eine Argon-Isolierverglasung 6-16-6 (U_g etwa 1,08), 15 mm tief eingespannt, mit Warme-Kante-Randverbund, und eine emaillierte Brüstung mit gedämmter Stahlrückwand (U etwa 0,31); die Pfosten hängen an Deckenkonsolen und sind über Stoßdorne geführt. Jedes Element ist eine konditionierte, geschichtete Region; Sonne und Schatten folgen den Besonnungsanteilen der Posen."
     },
     "tags": [
-      "component",
-      "facade",
-      "curtain-wall",
-      "mullion",
-      "glazing",
-      "spandrel",
-      "conditioned"
+      {
+        "id": "component",
+        "title": {
+          "en": "component",
+          "de": "Bauteil"
+        }
+      },
+      {
+        "id": "facade",
+        "title": {
+          "en": "facade",
+          "de": "Fassade"
+        }
+      },
+      {
+        "id": "curtain-wall",
+        "title": {
+          "en": "curtain wall",
+          "de": "Vorhangfassade"
+        }
+      },
+      {
+        "id": "mullion",
+        "title": {
+          "en": "mullion",
+          "de": "Pfosten"
+        }
+      },
+      {
+        "id": "glazing",
+        "title": {
+          "en": "glazing",
+          "de": "Verglasung"
+        }
+      },
+      {
+        "id": "spandrel",
+        "title": {
+          "en": "spandrel",
+          "de": "Brüstungsfeld"
+        }
+      },
+      {
+        "id": "conditioned",
+        "title": {
+          "en": "conditioned",
+          "de": "klimatisiert"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage component authors (NW-C)",

@@ -13,15 +13,69 @@
    "de": "Ein ausgewachsener immergrüner Rhododendron (Rhododendron-ponticum-Hybride), gewachsen als dichte Kuppel von 3 m Höhe und 3,5 m Breite auf neun knorrigen Stämmen; ledrige dunkle Blätter bekleiden ihn bis 25 cm über dem Boden, und im Mai stehen an jeder Triebspitze gewölbte Stände trichterförmiger Blüten."
   },
   "tags": [
-   "shrub",
-   "evergreen",
-   "flowering-shrub",
-   "dome",
-   "garden",
-   "trusses",
-   "wind",
-   "frost",
-   "transpiration"
+   {
+    "id": "shrub",
+    "title": {
+     "en": "shrub",
+     "de": "Strauch"
+    }
+   },
+   {
+    "id": "evergreen",
+    "title": {
+     "en": "evergreen",
+     "de": "immergrün"
+    }
+   },
+   {
+    "id": "flowering-shrub",
+    "title": {
+     "en": "flowering shrub",
+     "de": "Blütenstrauch"
+    }
+   },
+   {
+    "id": "dome",
+    "title": {
+     "en": "dome",
+     "de": "Kuppel"
+    }
+   },
+   {
+    "id": "garden",
+    "title": {
+     "en": "garden",
+     "de": "Garten"
+    }
+   },
+   {
+    "id": "trusses",
+    "title": {
+     "en": "trusses",
+     "de": "Fachwerkträger"
+    }
+   },
+   {
+    "id": "wind",
+    "title": {
+     "en": "wind",
+     "de": "Wind"
+    }
+   },
+   {
+    "id": "frost",
+    "title": {
+     "en": "frost",
+     "de": "Frost"
+    }
+   },
+   {
+    "id": "transpiration",
+    "title": {
+     "en": "transpiration",
+     "de": "Transpiration"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage plant collection worker PW-12",
@@ -125829,100 +125883,100 @@
        "closed": true,
        "points": [
         [
-         0.3,
+         0.46,
          0.0
         ],
         [
-         0.2898,
-         0.0776
+         0.4443,
+         0.1191
         ],
         [
-         0.2598,
-         0.15
+         0.3984,
+         0.23
         ],
         [
-         0.2121,
-         0.2121
+         0.3253,
+         0.3253
         ],
         [
-         0.15,
-         0.2598
+         0.23,
+         0.3984
         ],
         [
-         0.0776,
-         0.2898
+         0.1191,
+         0.4443
         ],
         [
          0.0,
-         0.3
+         0.46
         ],
         [
-         -0.0776,
-         0.2898
+         -0.1191,
+         0.4443
         ],
         [
-         -0.15,
-         0.2598
+         -0.23,
+         0.3984
         ],
         [
-         -0.2121,
-         0.2121
+         -0.3253,
+         0.3253
         ],
         [
-         -0.2598,
-         0.15
+         -0.3984,
+         0.23
         ],
         [
-         -0.2898,
-         0.0776
+         -0.4443,
+         0.1191
         ],
         [
-         -0.3,
+         -0.46,
          0.0
         ],
         [
-         -0.2898,
-         -0.0776
+         -0.4443,
+         -0.1191
         ],
         [
-         -0.2598,
-         -0.15
+         -0.3984,
+         -0.23
         ],
         [
-         -0.2121,
-         -0.2121
+         -0.3253,
+         -0.3253
         ],
         [
-         -0.15,
-         -0.2598
+         -0.23,
+         -0.3984
         ],
         [
-         -0.0776,
-         -0.2898
+         -0.1191,
+         -0.4443
         ],
         [
          0.0,
-         -0.3
+         -0.46
         ],
         [
-         0.0776,
-         -0.2898
+         0.1191,
+         -0.4443
         ],
         [
-         0.15,
-         -0.2598
+         0.23,
+         -0.3984
         ],
         [
-         0.2121,
-         -0.2121
+         0.3253,
+         -0.3253
         ],
         [
-         0.2598,
-         -0.15
+         0.3984,
+         -0.23
         ],
         [
-         0.2898,
-         -0.0776
+         0.4443,
+         -0.1191
         ]
        ]
       },

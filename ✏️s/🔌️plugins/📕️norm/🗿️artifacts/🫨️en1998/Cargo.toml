@@ -28,6 +28,7 @@ members = [
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧱️details/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📐️formulas/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📐️formulas/🧪️tests/🔬️worked-examples/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📐️formulas/🫙️part-4/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust",
@@ -75,6 +76,7 @@ members = [
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭️silos-tanks-tank/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭️silos-tanks/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📈️accelerograms/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋️cases/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️placements/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️critical-regions-more/📦️packages/🦀️rust",
@@ -461,6 +463,9 @@ path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️
 [workspace.dependencies.semio-s-artifact-norm-en1998-schema-formulas]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📐️formulas/📦️packages/🦀️rust"
 
+[workspace.dependencies.semio-s-artifact-norm-en1998-schema-formulas-worked-examples]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📐️formulas/🧪️tests/🔬️worked-examples/📦️packages/🦀️rust"
+
 [workspace.dependencies.semio-s-artifact-norm-en1998-schema-part4]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📐️formulas/🫙️part-4/📦️packages/🦀️rust"
 
@@ -505,6 +510,9 @@ path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️
 
 [workspace.dependencies.semio-s-artifact-norm-en1998-mut-tie-beams]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️tie-beams/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mut-cases]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋️cases/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-norm-en1998-mut-isolation-systems]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️isolation-systems/📦️packages/🦀️rust"

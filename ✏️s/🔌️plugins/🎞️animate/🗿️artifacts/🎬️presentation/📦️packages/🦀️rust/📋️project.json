@@ -9,7 +9,8 @@
   ],
   "namedInputs": {
     "nativeSources": [
-      "{workspaceRoot}/✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/**/*.{ts,tsx,json,semio,wit,sql}",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/🎨️palette/🎨️.css",
+      "{workspaceRoot}/✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/**/*.{ts,tsx,json,semio,wit,sql,css}",
       "{workspaceRoot}/✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/**/*",
       "{workspaceRoot}/✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/**/*"
     ]

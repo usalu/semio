@@ -8,7 +8,7 @@ fn value(raw:&serde_json::Value)->IfcValue{match raw["kind"].as_str().unwrap(){"
 fn raw(value:&serde_json::Value)->DslValue{match value{serde_json::Value::String(value)=>DslValue::String(value.clone()),serde_json::Value::Object(values)=>DslValue::Object(values.iter().map(|(key,value)|(key.clone(),raw(value))).collect()),serde_json::Value::Array(values)=>DslValue::Array(values.iter().map(raw).collect()),_=>panic!("closed draft carrier")}}
 #[test]
 fn donated_numeric_binary_controller_matches_neutral_raw_fields_and_private_readiness(){
-    let _arena=semio_plugin::artifact_app_laws::FixtureUiArena::admit();semio_ui_contract::built_node_pages_are_terminal_empty();
+    let _arena=semio_plugin::artifact_app_laws::FixtureUiArena::admit();crate::editor::tree_probe::warm_ui();
     let law:serde_json::Value=serde_json::from_str(include_str!("guided-type-number-binary-cases.json")).unwrap();
     let sources:serde_json::Value=serde_json::from_str(include_str!("../../../../../🔎️details/🧪️tests/type-number-binary-input.json")).unwrap();
     for row in law["cases"].as_array().unwrap(){
@@ -21,7 +21,7 @@ fn donated_numeric_binary_controller_matches_neutral_raw_fields_and_private_read
         let mut donor=Some(semio_plugin::action_staging::StagedFormRequest{token:semio_plugin::action_staging::StagedFormToken{action:editing::SET_SNAPSHOT_VALUE_ACTION_ID.into(),window:view.window_id.as_ref().unwrap().clone(),generation:"1".into(),revision:"0".repeat(64)},locale:view.locale,args:raw(&serde_json::json!({"path":"/entities/0","value":{"$ifcType":row["target"],"$ifcInputs":rows}})),page:None});
         for _ in 0..16{if caller.work_turn(staged_grant(),1000,|cx|Ifc4x3AnyEditor::receive_render_work_request(&mut work,&mut donor,&view,cx)).unwrap().is_some(){break;}}
         assert!(donor.is_none());let mut output=None;
-        for _ in 0..1000000{match caller.work_turn(staged_grant(),1000,|cx|Ok(work.render(semio_plugin::action_staging::STAGED_FORM_BODY_KEY,&snapshot,&doc,&view,cx))).unwrap(){Ok(Some(tree))=>{output=Some(tree);break;},Ok(None)=>{},Err(_)=>panic!("typed raw draft must remain editable: {}",row["id"])}}
+        for _ in 0..1000000{match caller.work_turn(staged_grant(),1000,|cx|Ok(work.render(semio_plugin::action_staging::STAGED_FORM_BODY_KEY,&snapshot,&doc,&view,cx))).unwrap(){Ok(Some(tree))=>{output=Some(tree);break;},Ok(None)=>{},Err(error)=>panic!("{error:?}: typed raw draft must remain editable: {}",row["id"])}}
         let tree=output.take().expect("original numeric input body");let Component::Extension(status)=&tree.root.children.get(0).unwrap().component else{panic!("typed status")};assert_eq!(serde_json::to_value(&status.props).unwrap()["ready"],row["ready"]);
         let mut actual=Vec::new();for field in tree.root.children.iter().skip(1){if let Some(node)=field.children.get(0){match &node.component{Component::Input(props)=>{actual.push(("text",props.value.as_ref()));assert!(!node.bindings.is_empty());},Component::Select(props)=>{assert!(props.items.len()<=32);assert_eq!(props.items.iter().map(|item|item.value.as_ref()).collect::<Vec<_>>(),vec!["integer","real"]);actual.push(("choice",props.value.as_ref()));assert!(!node.bindings.is_empty());},_=>{}}}}
         let expected=row["fields"].as_array().unwrap();assert_eq!(actual.len(),expected.len());for (actual,expected) in actual.iter().zip(expected){assert_eq!(actual.0,expected["kind"].as_str().unwrap());assert_eq!(actual.1,expected["value"].as_str().unwrap_or(""));}

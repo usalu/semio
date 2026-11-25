@@ -30,6 +30,7 @@ semio-framework-replication-command-ingress = { path = "../../../../../../../../
 semio-framework-value-persistent = { path = "../../../../../../../../🔨️modules/🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust" }
 semio-plugin-decl-views = { path = "../../../👁️view/📦️packages/🦀️rust" }
 semio-plugin-ownership = { path = "../../../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
+semio-plugin-store-lifecycle = { path = "../../../../♻️lifecycle/🧱️owner/📦️packages/🦀️rust" }
 serde_json = "1.0.140"
 
 [dev-dependencies]

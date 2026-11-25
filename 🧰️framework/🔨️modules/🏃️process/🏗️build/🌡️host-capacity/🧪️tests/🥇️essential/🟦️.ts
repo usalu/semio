@@ -1,9 +1,11 @@
-/** 🥇️ Contract: the first worker of a farm is admitted whatever the free memory says; the floor applies to the additional workers. A farm without a child makes its parent infer every owner itself (the largest process doing the slowest work), so the gate keeps one child admitted: only a critical pressure, a sibling that already runs and a request that is not essential keep the old rules.
+/** 🥇️ Contract: the first worker of a farm can start when free memory is short; the floor applies to additional workers. Critical pressure and active swap hold every worker.
  * @see ../../📏️decision/🟦️.ts */
 import {expect,test} from "bun:test";
 import {decideHostCapacityV1,evaluateHostCapacityV1,readHostCapacityPolicyV1,type HostGrantV1,type HostSampleV1,type HostWaiterV1} from "../../🟦️.ts";
 import decisionFixture from "../🧫️fixtures/🔣️.json";
 import lendFixture from "../🤲️lend/🧫️fixtures/🔣️.json";
+import {sqliteHostOracleV1} from "../🔮️sqlite/🟦️.ts";
+import hardStops from "./🧫️fixtures/🔣️.json";
 
 const policy=readHostCapacityPolicyV1({...decisionFixture.policy,memory:{...decisionFixture.policy.memory,maximumQuiet:lendFixture.policy.maximumQuiet}});
 const world=lendFixture.worlds.find(row=>row.name.startsWith("16 GB machine, the parent holds 5500"))!;
@@ -29,8 +31,20 @@ test("the floor applies to the additional workers: a sibling of the same label, 
  expect(verdict([waiter({essential:true,holder:"otherholder1"})],[...ledger,sibling]).verdict,"another holder has no worker yet").toBe("admit");
 });
 
-test("a critical pressure and a request that is not elastic keep the old rules",()=>{
- expect(verdict([waiter({essential:true})],ledger,host({pressure:"critical"})).verdict).toBe("wait");
+test("hard stops hold the essential worker while inactive swap permits it",()=>{
+ const queue=[waiter({essential:true})];
+ for(const row of hardStops){
+  const sample=host({platform:row.platform,...row.sample} as Partial<HostSampleV1>);
+  const result=verdict(queue,ledger,sample);
+  expect(result,row.name).toMatchObject(row.expected);
+  if(row.expected.verdict==="wait"){
+   const sqlite=sqliteHostOracleV1(policy,{name:row.name,host:sample,ledger,queue,nowMs:world.nowMs});
+   expect(result,row.name).toEqual(sqlite.decisions[0]!);
+  }
+ }
+});
+
+test("a nonelastic request waits for memory",()=>{
  expect(verdict([waiter({essential:true,elastic:false})]).verdict).toBe("wait");
 });
 

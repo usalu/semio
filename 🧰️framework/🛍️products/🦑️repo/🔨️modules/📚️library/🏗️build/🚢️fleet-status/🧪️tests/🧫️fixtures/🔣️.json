@@ -9068,6 +9068,1698 @@
      "reasons": {}
     }
    }
+  },
+  {
+   "id": "warden-reported-alarm",
+   "language": "de",
+   "facts": {
+    "version": 1,
+    "atMs": 1793415394207,
+    "workspace": "/w",
+    "host": {
+     "ageSeconds": 20,
+     "platform": "darwin",
+     "cores": null,
+     "totalMegabytes": 16384,
+     "availableMegabytes": 8753,
+     "pressure": "normal",
+     "swapUsedMegabytes": 0,
+     "load": 3.5
+    },
+    "leases": {
+     "holders": [
+      {
+       "pid": 355,
+       "resource": "bazel-slot-s1",
+       "mode": "shared",
+       "class": "graph",
+       "heldSeconds": 2896,
+       "command": "bun repo run xbun repo run xbun repo run x",
+       "agent": "codex",
+       "standing": {
+        "state": "stuck",
+        "priority": "agent",
+        "phase": "cargo:workspace",
+        "implementationDigest": "bbbbbbbbbbbbbbbb",
+        "implementationAgeSeconds": 3899,
+        "silentSeconds": 4688
+       }
+      },
+      {
+       "pid": 355,
+       "resource": "bazel-slot-s1",
+       "mode": "shared",
+       "class": "tool-singleton",
+       "heldSeconds": 6338,
+       "command": "bun repo run xbun repo run xbun repo run x",
+       "agent": "codex",
+       "standing": {
+        "state": "stuck",
+        "priority": "agent",
+        "phase": "cargo:workspace",
+        "implementationDigest": "bbbbbbbbbbbbbbbb",
+        "implementationAgeSeconds": 3899,
+        "silentSeconds": 4688
+       }
+      },
+      {
+       "pid": 355,
+       "resource": "cargo-preparation:/w",
+       "mode": "shared",
+       "class": "tool-singleton",
+       "heldSeconds": 4476,
+       "command": "bun repo run xbun repo run xbun repo run x",
+       "agent": "codex",
+       "standing": {
+        "state": "stuck",
+        "priority": "agent",
+        "phase": "cargo:workspace",
+        "implementationDigest": "bbbbbbbbbbbbbbbb",
+        "implementationAgeSeconds": 3899,
+        "silentSeconds": 4688
+       }
+      },
+      {
+       "pid": 109,
+       "resource": "bazel-slot-s1",
+       "mode": "shared",
+       "class": "graph",
+       "heldSeconds": 315,
+       "command": "hash123",
+       "session": "aa.d",
+       "agent": "ueli"
+      },
+      {
+       "pid": 109,
+       "resource": "rustup:home",
+       "mode": "exclusive",
+       "class": "graph",
+       "heldSeconds": 2346,
+       "command": "hash123",
+       "session": "aa.d",
+       "agent": "ueli"
+      },
+      {
+       "pid": 109,
+       "resource": "graph-claim-slot:/w:0",
+       "mode": "exclusive",
+       "class": "graph",
+       "heldSeconds": 5617,
+       "command": "hash123",
+       "session": "aa.d",
+       "agent": "ueli"
+      },
+      {
+       "pid": 171,
+       "resource": "nx:daemon-slot:1",
+       "mode": "shared",
+       "class": "image",
+       "heldSeconds": 8863,
+       "session": "aa.d",
+       "standing": {
+        "state": "stale",
+        "priority": "background",
+        "total": 414,
+        "done": 368,
+        "implementationDigest": "cccccccccccccccc",
+        "implementationAgeSeconds": 3372,
+        "staleIds": [
+         "a",
+         "c"
+        ]
+       }
+      },
+      {
+       "pid": 171,
+       "resource": "graph-claim:/w:tok1",
+       "mode": "shared",
+       "class": "image",
+       "heldSeconds": 2737,
+       "session": "aa.d",
+       "standing": {
+        "state": "stale",
+        "priority": "background",
+        "total": 414,
+        "done": 368,
+        "implementationDigest": "cccccccccccccccc",
+        "implementationAgeSeconds": 3372,
+        "staleIds": [
+         "a",
+         "c"
+        ]
+       }
+      },
+      {
+       "pid": 308,
+       "resource": "build-graph-state:/w:selected:7",
+       "mode": "shared",
+       "class": "tool-singleton",
+       "heldSeconds": 8564,
+       "command": "bun repo run xbun repo run xbun repo run x",
+       "agent": "default"
+      },
+      {
+       "pid": 308,
+       "resource": "rustup:home",
+       "mode": "exclusive",
+       "class": "image",
+       "heldSeconds": 2330,
+       "command": "bun repo run xbun repo run xbun repo run x",
+       "agent": "default"
+      },
+      {
+       "pid": 236,
+       "resource": "repository-graph-facts:/w:shard:7",
+       "mode": "shared",
+       "class": "tool-singleton",
+       "heldSeconds": 2055,
+       "command": "bun repo run xbun repo run x",
+       "session": "aa.d"
+      },
+      {
+       "pid": 236,
+       "resource": "nx:daemon-slot:1",
+       "mode": "exclusive",
+       "class": "image",
+       "heldSeconds": 915,
+       "command": "bun repo run xbun repo run x",
+       "session": "aa.d"
+      },
+      {
+       "pid": 236,
+       "resource": "cargo-preparation:/w",
+       "mode": "shared",
+       "class": "tool-singleton",
+       "heldSeconds": 7730,
+       "command": "bun repo run xbun repo run x",
+       "session": "aa.d"
+      },
+      {
+       "pid": 168,
+       "resource": "cargo-preparation:/w",
+       "mode": "shared",
+       "class": "tool-singleton",
+       "heldSeconds": 2646,
+       "command": "/Users/u/w/cache/Users/u/w/cache/Users/u/w/cache",
+       "session": "aa.d",
+       "standing": {
+        "state": "stale",
+        "priority": "interactive",
+        "implementationDigest": "cccccccccccccccc",
+        "implementationAgeSeconds": 3020,
+        "parentPid": 109,
+        "staleIds": [
+         "c"
+        ]
+       }
+      }
+     ],
+     "waiters": [
+      {
+       "pid": 168,
+       "resource": "graph-claim:/w:tok1",
+       "mode": "shared",
+       "class": "graph",
+       "waitedSeconds": 2897,
+       "blockers": [
+        "2/3",
+        "1/q"
+       ],
+       "command": "/Users/u/w/cache/Users/u/w/cache/Users/u/w/cache",
+       "session": "aa.d",
+       "position": 3,
+       "historyKey": "k3"
+      }
+     ],
+     "cycles": []
+    },
+    "capacity": {
+     "floorMegabytes": 2048,
+     "headroomMegabytes": 4520,
+     "capacityMegabytes": 14336,
+     "grants": [
+      {
+       "id": "g236",
+       "operation": "show",
+       "pid": 236,
+       "jobs": 4,
+       "reservedMegabytes": 3986,
+       "observedMegabytes": 4267,
+       "heldSeconds": 178,
+       "agent": "codex"
+      },
+      {
+       "id": "g116",
+       "operation": "show",
+       "pid": 116,
+       "jobs": 2,
+       "reservedMegabytes": 2149,
+       "observedMegabytes": 12797,
+       "heldSeconds": 521,
+       "phase": "plan",
+       "lent": true,
+       "agent": "default"
+      },
+      {
+       "id": "g355",
+       "operation": "test",
+       "pid": 355,
+       "jobs": 3,
+       "reservedMegabytes": 4881,
+       "observedMegabytes": 2034,
+       "heldSeconds": 1555,
+       "phase": "execution"
+      }
+     ],
+     "waiters": [
+      {
+       "id": "w168",
+       "operation": "graph",
+       "pid": 168,
+       "needMegabytes": 8619,
+       "waitedSeconds": 1590,
+       "reason": "load",
+       "reasonText": "why",
+       "position": 1
+      },
+      {
+       "id": "w109",
+       "operation": "run",
+       "pid": 109,
+       "needMegabytes": 2612,
+       "waitedSeconds": 862,
+       "reason": "load",
+       "reasonText": "why",
+       "position": 2
+      }
+     ]
+    },
+    "activeMilliseconds": {
+     "run": [
+      639621,
+      143663,
+      293690,
+      729272,
+      362810,
+      85319,
+      534361,
+      350562,
+      170366,
+      701185,
+      413026,
+      859586,
+      70064,
+      722596,
+      690294,
+      664718,
+      650919,
+      628194,
+      638855,
+      405344,
+      121234,
+      589152,
+      584534,
+      311737
+     ],
+     "cargo": [
+      687430,
+      523367,
+      537006,
+      208915,
+      19865,
+      466319,
+      524368,
+      878767,
+      69968,
+      674602,
+      350148,
+      347031,
+      166366,
+      252129,
+      662909,
+      464787,
+      581629,
+      11764,
+      314430,
+      167217,
+      496007,
+      106593,
+      428522,
+      812841,
+      659671,
+      366948,
+      650891,
+      392891,
+      566178,
+      158264,
+      591284,
+      701660,
+      273061,
+      257333
+     ],
+     "show": [
+      154432,
+      738370,
+      716096,
+      189036,
+      274793,
+      444446,
+      517020,
+      671595,
+      475288,
+      753155,
+      252677
+     ],
+     "test": [
+      42472,
+      151551,
+      184392,
+      776761,
+      828440,
+      391280,
+      621198,
+      206587,
+      3364,
+      816034,
+      311075,
+      219711,
+      893389,
+      743259,
+      417697,
+      655976,
+      627728,
+      647403,
+      813378,
+      697359,
+      14218,
+      140046,
+      668034,
+      465230,
+      268967,
+      741636,
+      885506,
+      162355,
+      94317,
+      754115,
+      479085,
+      351600,
+      684397
+     ]
+    },
+    "history": {
+     "k1": [
+      134182
+     ],
+     "k2": [
+      1471186,
+      1663783,
+      457773,
+      1641855
+     ],
+     "k3": [
+      1941460,
+      923418,
+      404776,
+      1326666,
+      1433496
+     ]
+    },
+    "bazel": {
+     "slotPrefix": "bazel-slot-",
+     "slots": [
+      {
+       "slot": "s7",
+       "pid": null,
+       "treeMegabytes": 800
+      },
+      {
+       "slot": "s11",
+       "pid": null,
+       "treeMegabytes": null,
+       "key": "k11"
+      }
+     ]
+    },
+    "storage": {
+     "hostFreeBytes": 63350767616,
+     "hostFreeFloorBytes": 16106127360,
+     "images": [
+      {
+       "id": "graph",
+       "kind": "partition",
+       "state": "mounted",
+       "usedBytes": 6332906659,
+       "capacityBytes": 8589934592,
+       "budgetBytes": null,
+       "source": "statfs"
+      }
+     ],
+     "overAreas": [
+      "playwright"
+     ],
+     "machine": {
+      "totalBytes": 42949672960,
+      "effectiveTotalBytes": 42949672960,
+      "usedBytes": 42949672960,
+      "footprintBytes": 45097156608,
+      "overBytes": 0,
+      "evictBytes": 1073741824,
+      "blockedBytes": 0,
+      "source": "default"
+     }
+    },
+    "sealed": {
+     "mode": "sealed",
+     "entries": []
+    },
+    "sources": [
+     {
+      "id": "leases",
+      "ok": true,
+      "milliseconds": 280
+     },
+     {
+      "id": "capacity",
+      "ok": true,
+      "milliseconds": 251
+     },
+     {
+      "id": "bazel",
+      "ok": true,
+      "milliseconds": 200
+     },
+     {
+      "id": "storage",
+      "ok": true,
+      "milliseconds": 164
+     },
+     {
+      "id": "sealed",
+      "ok": true,
+      "milliseconds": 102
+     },
+     {
+      "id": "generation",
+      "ok": true,
+      "milliseconds": 167
+     }
+    ],
+    "fleet": {
+     "scheduler": "http://cache.g1.semio.internal:8981",
+     "expireSeconds": 15,
+     "machines": [
+      {
+       "origin": "g1-server",
+       "platform": "macos-arm64-0123456789abcdef",
+       "pressure": "normal",
+       "load": 1.5,
+       "cores": 8,
+       "running": 2,
+       "queued": 1,
+       "headroom": true,
+       "ageSeconds": 41,
+       "worker": "idle",
+       "offloadedIn": 9,
+       "offloadedOut": 1,
+       "refused": 0,
+       "cacheHit": 112,
+       "cacheMiss": 98,
+       "cacheSkipped": 35,
+       "cacheSkipReasons": {
+        "upload-dropped": 24,
+        "read-only": 11
+       }
+      },
+      {
+       "origin": "g1-m03",
+       "platform": "macos-arm64-0123456789abcdef",
+       "pressure": "warn",
+       "load": 1.5,
+       "cores": 8,
+       "running": 1,
+       "queued": 3,
+       "headroom": true,
+       "ageSeconds": 41,
+       "worker": "idle",
+       "offloadedIn": 5,
+       "offloadedOut": 1,
+       "refused": 0,
+       "cacheHit": 177,
+       "cacheMiss": 212,
+       "cacheSkipped": 0
+      }
+     ],
+     "queued": 0,
+     "executing": 2,
+     "offloadRejected": 0,
+     "refused": 3,
+     "retried": 1,
+     "cache": {
+      "hits": 91,
+      "misses": 67,
+      "puts": 19
+     },
+     "keys": {
+      "origins": 2,
+      "units": 2,
+      "diffs": [
+       {
+        "crate": "c0",
+        "slot": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "origins": [
+         "g1-m01",
+         "g1-m02"
+        ],
+        "differs": [
+         "extern:x"
+        ],
+        "sameSource": false
+       },
+       {
+        "crate": "c1",
+        "slot": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "origins": [
+         "g1-m01",
+         "g1-m02"
+        ],
+        "differs": [
+         "source",
+         "platform"
+        ],
+        "sameSource": true
+       }
+      ],
+      "byComponent": {
+       "platform": 1
+      }
+     }
+    },
+    "workers": {
+     "offlineSeconds": 600,
+     "rows": [
+      {
+       "origin": "g1-m04",
+       "platform": "linux",
+       "liveness": "offline",
+       "recorded": "waiting",
+       "stage": "dependencies",
+       "stageIndex": 5,
+       "stageCount": 5,
+       "attempts": 48,
+       "recordAgeSeconds": 7200,
+       "heartbeatAgeSeconds": null,
+       "refusal": null
+      },
+      {
+       "origin": "g1-m09",
+       "platform": "windows",
+       "liveness": "silent",
+       "recorded": "running",
+       "stage": "dependencies",
+       "stageIndex": 4,
+       "stageCount": 5,
+       "attempts": 30,
+       "recordAgeSeconds": 600,
+       "heartbeatAgeSeconds": 3,
+       "refusal": null
+      }
+     ]
+    },
+    "memory": {
+     "local": {
+      "origin": "g1-coordinator",
+      "ageSeconds": 3,
+      "absent": false,
+      "mode": "enforce",
+      "level": "calm",
+      "hold": false,
+      "guardMegabytes": 2048,
+      "dangerMegabytes": 1024,
+      "availableMegabytes": 5664,
+      "totalMegabytes": 16384,
+      "swapUsedMegabytes": null,
+      "swapOutMegabytesPerSecond": 12.5,
+      "compressedMegabytes": 0,
+      "pressure": "normal",
+      "subjects": 5,
+      "subjectMegabytes": 7296,
+      "suspended": 0,
+      "counters": {
+       "suspended": 0,
+       "resumed": 0,
+       "cancelled": 0
+      },
+      "lastAlarm": {
+       "atMs": 1793414477485,
+       "action": "report",
+       "kind": "rustc",
+       "pid": 2055,
+       "owner": "",
+       "megabytes": 2936,
+       "text": {
+        "en": "report pid 7 (agent) at 5 MB",
+        "de": "report PID 2 (Agent) bei 3 MB"
+       }
+      },
+      "overhead": {
+       "tickMillisecondsP95": 12.0,
+       "cpuBasisPoints": 120.25,
+       "residentMegabytes": 60.6
+      }
+     },
+     "origins": {
+      "g1-m09": {
+       "origin": "g1-m09",
+       "ageSeconds": 59,
+       "absent": false,
+       "mode": "enforce",
+       "level": "calm",
+       "hold": false,
+       "guardMegabytes": 2048,
+       "dangerMegabytes": 1024,
+       "availableMegabytes": 5250,
+       "totalMegabytes": 16384,
+       "swapUsedMegabytes": null,
+       "swapOutMegabytesPerSecond": 0,
+       "compressedMegabytes": 0,
+       "pressure": "normal",
+       "subjects": 6,
+       "subjectMegabytes": 4273,
+       "suspended": 0,
+       "counters": {
+        "suspended": 0,
+        "resumed": 0,
+        "cancelled": 0
+       },
+       "lastAlarm": null,
+       "overhead": {
+        "tickMillisecondsP95": 12.0,
+        "cpuBasisPoints": 800.5,
+        "residentMegabytes": 38.0
+       }
+      },
+      "g1-m04": {
+       "origin": "g1-m04",
+       "ageSeconds": 60,
+       "absent": false,
+       "mode": "enforce",
+       "level": "guard",
+       "hold": false,
+       "guardMegabytes": 2048,
+       "dangerMegabytes": 1024,
+       "availableMegabytes": 1500,
+       "totalMegabytes": 16384,
+       "swapUsedMegabytes": null,
+       "swapOutMegabytesPerSecond": 12.5,
+       "compressedMegabytes": null,
+       "pressure": "warn",
+       "subjects": 2,
+       "subjectMegabytes": 29,
+       "suspended": 1,
+       "counters": {
+        "suspended": 1,
+        "resumed": 1,
+        "cancelled": 0
+       },
+       "lastAlarm": {
+        "atMs": 1793415259049,
+        "action": "resume",
+        "kind": "bun",
+        "pid": 7892,
+        "owner": "",
+        "megabytes": 1639,
+        "text": {
+         "en": "resume pid 9 (agent) at 5 MB",
+         "de": "resume PID 3 (Agent) bei 9 MB"
+        }
+       },
+       "overhead": {
+        "tickMillisecondsP95": 3.4,
+        "cpuBasisPoints": 10.0,
+        "residentMegabytes": 60.6
+       }
+      },
+      "g1-server": {
+       "origin": "g1-server",
+       "ageSeconds": 3,
+       "absent": false,
+       "mode": "enforce",
+       "level": "calm",
+       "hold": true,
+       "guardMegabytes": 2048,
+       "dangerMegabytes": 1024,
+       "availableMegabytes": 6754,
+       "totalMegabytes": 16384,
+       "swapUsedMegabytes": null,
+       "swapOutMegabytesPerSecond": null,
+       "compressedMegabytes": 0,
+       "pressure": "normal",
+       "subjects": 1,
+       "subjectMegabytes": 476,
+       "suspended": 0,
+       "counters": {
+        "suspended": 0,
+        "resumed": 0,
+        "cancelled": 0
+       },
+       "lastAlarm": null,
+       "overhead": {
+        "tickMillisecondsP95": 40.5,
+        "cpuBasisPoints": 10.0,
+        "residentMegabytes": 38.0
+       }
+      },
+      "g1-m12": {
+       "origin": "g1-m12",
+       "ageSeconds": 3,
+       "absent": false,
+       "mode": "enforce",
+       "level": "calm",
+       "hold": true,
+       "guardMegabytes": 2048,
+       "dangerMegabytes": 1024,
+       "availableMegabytes": 4164,
+       "totalMegabytes": 16384,
+       "swapUsedMegabytes": 1500,
+       "swapOutMegabytesPerSecond": 0,
+       "compressedMegabytes": 0,
+       "pressure": "normal",
+       "subjects": 3,
+       "subjectMegabytes": 7607,
+       "suspended": 0,
+       "counters": {
+        "suspended": 0,
+        "resumed": 0,
+        "cancelled": 0
+       },
+       "lastAlarm": {
+        "atMs": 1793414494530,
+        "action": "suspend",
+        "kind": "bun",
+        "pid": 6314,
+        "owner": "",
+        "megabytes": 2207,
+        "text": {
+         "en": "suspend pid 8 (agent) at 7 MB",
+         "de": "suspend PID 4 (Agent) bei 5 MB"
+        }
+       },
+       "overhead": {
+        "tickMillisecondsP95": 40.5,
+        "cpuBasisPoints": 10.0,
+        "residentMegabytes": 38.0
+       }
+      },
+      "g1-m20": {
+       "origin": "g1-m20",
+       "ageSeconds": 60,
+       "absent": false,
+       "mode": "enforce",
+       "level": "guard",
+       "hold": false,
+       "guardMegabytes": 2048,
+       "dangerMegabytes": 1024,
+       "availableMegabytes": 1500,
+       "totalMegabytes": 16384,
+       "swapUsedMegabytes": 1500,
+       "swapOutMegabytesPerSecond": null,
+       "compressedMegabytes": null,
+       "pressure": "warn",
+       "subjects": 7,
+       "subjectMegabytes": 7654,
+       "suspended": 3,
+       "counters": {
+        "suspended": 3,
+        "resumed": 3,
+        "cancelled": 0
+       },
+       "lastAlarm": {
+        "atMs": 1793414723293,
+        "action": "report",
+        "kind": "cargo",
+        "pid": 646,
+        "owner": "",
+        "megabytes": 1595,
+        "text": {
+         "en": "report pid 9 (agent) at 2 MB",
+         "de": "report PID 7 (Agent) bei 8 MB"
+        }
+       },
+       "overhead": {
+        "tickMillisecondsP95": 12.0,
+        "cpuBasisPoints": 120.25,
+        "residentMegabytes": 38.0
+       }
+      }
+     }
+    },
+    "cas": {
+     "root": "/h/.cache/semio/cas",
+     "capBytes": 53687091200,
+     "effectiveCapBytes": 8589934592,
+     "highWatermarkBytes": 7730941132,
+     "lowWatermarkBytes": 6442450944,
+     "incrementBytes": 2147483648,
+     "leases": {
+      "leased": 471,
+      "expired": 210,
+      "leasedBytes": null,
+      "expiredBytes": 413794150
+     },
+     "lastCollection": null
+    },
+    "offload": {
+     "local": 12,
+     "fleet": 38,
+     "builds": [
+      {
+       "pid": 2800,
+       "local": 7,
+       "fleet": 22
+      },
+      {
+       "pid": 8371,
+       "local": 5,
+       "fleet": 16
+      }
+     ],
+     "out": 8044,
+     "refused": 30,
+     "fellBack": 53,
+     "reasons": {}
+    }
+   },
+   "report": {
+    "version": 1,
+    "atMs": 1793415394207,
+    "workspace": "/w",
+    "summary": {
+     "running": 5,
+     "blocked": 1,
+     "waiting": 0,
+     "alerts": 1,
+     "warnings": 15
+    },
+    "memory": {
+     "totalMegabytes": 16384,
+     "availableMegabytes": 8753,
+     "floorMegabytes": 2048,
+     "spareMegabytes": 4520,
+     "pressure": "normal",
+     "swapUsedMegabytes": 0,
+     "load": 3.5,
+     "sampleAgeSeconds": 20,
+     "cores": null,
+     "admittedMegabytes": 11016,
+     "observedMegabytes": 19098,
+     "unobservedGrants": 0,
+     "overReservedMegabytes": 2847,
+     "underReservedMegabytes": 10929,
+     "grants": 3,
+     "waiters": 2,
+     "warden": {
+      "origin": "g1-coordinator",
+      "ageSeconds": 3,
+      "absent": false,
+      "mode": "enforce",
+      "level": "calm",
+      "hold": false,
+      "guardMegabytes": 2048,
+      "dangerMegabytes": 1024,
+      "availableMegabytes": 5664,
+      "totalMegabytes": 16384,
+      "swapUsedMegabytes": null,
+      "swapOutMegabytesPerSecond": 12.5,
+      "compressedMegabytes": 0,
+      "pressure": "normal",
+      "subjects": 5,
+      "subjectMegabytes": 7296,
+      "suspended": 0,
+      "counters": {
+       "suspended": 0,
+       "resumed": 0,
+       "cancelled": 0
+      },
+      "lastAlarm": {
+       "atMs": 1793414477485,
+       "action": "report",
+       "kind": "rustc",
+       "pid": 2055,
+       "owner": "",
+       "megabytes": 2936,
+       "text": {
+        "en": "report pid 7 (agent) at 5 MB",
+        "de": "report PID 2 (Agent) bei 3 MB"
+       }
+      },
+      "overhead": {
+       "tickMillisecondsP95": 12.0,
+       "cpuBasisPoints": 120.25,
+       "residentMegabytes": 60.6
+      }
+     }
+    },
+    "runs": [
+     {
+      "pid": 171,
+      "pids": [
+       171
+      ],
+      "state": "running",
+      "ageSeconds": 8863,
+      "session": "aa.d",
+      "priority": "background",
+      "implementation": {
+       "state": "stale",
+       "freshness": "current",
+       "digest": "cccccccccccc",
+       "ageSeconds": 3372
+      },
+      "memory": {
+       "admittedMegabytes": null,
+       "observedMegabytes": null,
+       "deltaMegabytes": null,
+       "jobs": 0
+      },
+      "exclusive": []
+     },
+     {
+      "pid": 308,
+      "pids": [
+       308
+      ],
+      "state": "running",
+      "ageSeconds": 8564,
+      "agent": "default",
+      "command": "bun repo run xbun repo run xbun repo run x",
+      "memory": {
+       "admittedMegabytes": null,
+       "observedMegabytes": null,
+       "deltaMegabytes": null,
+       "jobs": 0
+      },
+      "exclusive": [
+       "rustup:home"
+      ]
+     },
+     {
+      "pid": 236,
+      "pids": [
+       236
+      ],
+      "state": "running",
+      "ageSeconds": 7730,
+      "agent": "codex",
+      "session": "aa.d",
+      "command": "bun repo run xbun repo run x",
+      "operation": "show",
+      "memory": {
+       "admittedMegabytes": 3986,
+       "observedMegabytes": 4267,
+       "deltaMegabytes": 281,
+       "jobs": 4
+      },
+      "exclusive": [
+       "nx:daemon-slot:1"
+      ]
+     },
+     {
+      "pid": 355,
+      "pids": [
+       355
+      ],
+      "state": "running",
+      "ageSeconds": 6338,
+      "agent": "codex",
+      "command": "bun repo run xbun repo run xbun repo run x",
+      "operation": "test",
+      "phase": "cargo:workspace",
+      "priority": "agent",
+      "implementation": {
+       "state": "stuck",
+       "freshness": "older",
+       "digest": "bbbbbbbbbbbb",
+       "ageSeconds": 3899
+      },
+      "memory": {
+       "admittedMegabytes": 4881,
+       "observedMegabytes": 2034,
+       "deltaMegabytes": -2847,
+       "jobs": 3
+      },
+      "exclusive": []
+     },
+     {
+      "pid": 116,
+      "pids": [
+       116
+      ],
+      "state": "running",
+      "ageSeconds": 521,
+      "agent": "default",
+      "operation": "show",
+      "phase": "plan",
+      "memory": {
+       "admittedMegabytes": 2149,
+       "observedMegabytes": 12797,
+       "deltaMegabytes": 10648,
+       "jobs": 2
+      },
+      "exclusive": [],
+      "lent": true
+     },
+     {
+      "pid": 109,
+      "pids": [
+       109,
+       168
+      ],
+      "state": "blocked",
+      "ageSeconds": 5617,
+      "agent": "ueli",
+      "session": "aa.d",
+      "command": "hash123",
+      "priority": "interactive",
+      "implementation": {
+       "state": "stale",
+       "freshness": "current",
+       "digest": "cccccccccccc",
+       "ageSeconds": 3020
+      },
+      "memory": {
+       "admittedMegabytes": null,
+       "observedMegabytes": null,
+       "deltaMegabytes": null,
+       "jobs": 0
+      },
+      "waitingFor": {
+       "kind": "lease",
+       "subject": "graph-claim:/w:tok1",
+       "waitedSeconds": 2897,
+       "estimatedWaitSeconds": null
+      },
+      "exclusive": [
+       "graph-claim-slot:/w:0",
+       "rustup:home"
+      ]
+     }
+    ],
+    "queues": {
+     "graph": {
+      "builder": null,
+      "computers": 1,
+      "slots": 1,
+      "waiting": 1,
+      "longestWaitSeconds": 2897,
+      "estimatedWaitSeconds": null
+     },
+     "capacity": {
+      "floorMegabytes": 2048,
+      "spareMegabytes": 4520,
+      "grants": 3,
+      "waiters": [
+       {
+        "id": "w168",
+        "pid": 168,
+        "operation": "graph",
+        "needMegabytes": 8619,
+        "waitedSeconds": 1590,
+        "reason": "load",
+        "reasonText": "why",
+        "position": 1,
+        "estimatedWaitSeconds": 0
+       },
+       {
+        "id": "w109",
+        "pid": 109,
+        "operation": "run",
+        "needMegabytes": 2612,
+        "waitedSeconds": 862,
+        "reason": "load",
+        "reasonText": "why",
+        "position": 2,
+        "estimatedWaitSeconds": 0
+       }
+      ]
+     },
+     "leases": [
+      {
+       "resource": "graph-claim:/w:tok1",
+       "class": "graph",
+       "holders": [
+        {
+         "pid": 171,
+         "mode": "shared",
+         "heldSeconds": 2737,
+         "etaSeconds": null,
+         "state": "stale"
+        }
+       ],
+       "waiters": [
+        {
+         "pid": 168,
+         "mode": "shared",
+         "position": 3,
+         "waitedSeconds": 2897,
+         "estimatedWaitSeconds": null
+        }
+       ]
+      }
+     ],
+     "leasesOmitted": 0
+    },
+    "bazel": {
+     "slots": 2,
+     "live": 0,
+     "held": 0,
+     "rssMegabytes": 800,
+     "servers": [
+      {
+       "slot": "s7",
+       "live": false,
+       "held": false,
+       "pid": null,
+       "holderPid": null,
+       "treeMegabytes": 800
+      },
+      {
+       "slot": "s11",
+       "live": false,
+       "held": false,
+       "pid": null,
+       "holderPid": null,
+       "treeMegabytes": null,
+       "key": "k11"
+      }
+     ]
+    },
+    "storage": {
+     "hostFreeBytes": 63350767616,
+     "hostFreeFloorBytes": 16106127360,
+     "machine": {
+      "totalBytes": 42949672960,
+      "effectiveTotalBytes": 42949672960,
+      "usedBytes": 42949672960,
+      "footprintBytes": 45097156608,
+      "overBytes": 0,
+      "evictBytes": 1073741824,
+      "blockedBytes": 0,
+      "source": "default"
+     },
+     "overAreas": [
+      "playwright"
+     ],
+     "images": [
+      {
+       "id": "graph",
+       "kind": "partition",
+       "state": "mounted",
+       "usedBytes": 6332906659,
+       "capacityBytes": 8589934592,
+       "budgetBytes": null,
+       "source": "statfs",
+       "usedBasisPoints": 7372
+      }
+     ]
+    },
+    "sealed": {
+     "mode": "sealed",
+     "drifted": 0,
+     "blocked": 0,
+     "entries": []
+    },
+    "generation": null,
+    "findings": [
+     {
+      "id": "holder-stuck",
+      "severity": "alert",
+      "subject": "pid 355",
+      "values": {
+       "pid": 355,
+       "resource": "bazel-slot-s1",
+       "minutes": 78
+      },
+      "text": "pid 355 hält bazel-slot-s1 seit 78 min ohne Fortschritt"
+     },
+     {
+      "id": "capacity-wait",
+      "severity": "warn",
+      "subject": "pid 109",
+      "values": {
+       "pid": 109,
+       "waited": "14 min",
+       "operation": "run",
+       "need": 2612
+      },
+      "text": "pid 109 wartet seit 14 min auf Speicher (run, braucht 2612 MB)"
+     },
+     {
+      "id": "capacity-wait",
+      "severity": "warn",
+      "subject": "pid 168",
+      "values": {
+       "pid": 168,
+       "waited": "27 min",
+       "operation": "graph",
+       "need": 8619
+      },
+      "text": "pid 168 wartet seit 27 min auf Speicher (graph, braucht 8619 MB)"
+     },
+     {
+      "id": "holder-stale",
+      "severity": "warn",
+      "subject": "pid 168",
+      "values": {
+       "pid": 168,
+       "resource": "cargo-preparation:/w",
+       "ids": "c"
+      },
+      "text": "pid 168 hält cargo-preparation:/w mit älterem Code (c)"
+     },
+     {
+      "id": "holder-stale",
+      "severity": "warn",
+      "subject": "pid 171",
+      "values": {
+       "pid": 171,
+       "resource": "graph-claim:/w:tok1",
+       "ids": "a, c"
+      },
+      "text": "pid 171 hält graph-claim:/w:tok1 mit älterem Code (a, c)"
+     },
+     {
+      "id": "lease-wait",
+      "severity": "warn",
+      "subject": "pid 168",
+      "values": {
+       "pid": 168,
+       "waited": "48 min",
+       "resource": "graph-claim:/w:tok1"
+      },
+      "text": "pid 168 wartet seit 48 min auf graph-claim:/w:tok1"
+     },
+     {
+      "id": "under-reserved",
+      "severity": "warn",
+      "subject": "pid 116",
+      "values": {
+       "pid": 116,
+       "observed": 12797,
+       "reserved": 2149
+      },
+      "text": "pid 116 nutzt 12797 MB, zugesagt sind aber nur 2149 MB"
+     },
+     {
+      "id": "unit-cache-read-only",
+      "severity": "warn",
+      "subject": "g1-server",
+      "values": {
+       "origin": "g1-server",
+       "count": 11
+      },
+      "text": "g1-server darf den Flotten-Cache nur lesen (11 Einheit(en) ohne Teilen kompiliert): alles, was es kompiliert, bleibt lokal und speist die anderen Maschinen nie"
+     },
+     {
+      "id": "unit-key-machine-dependent",
+      "severity": "warn",
+      "subject": "c1",
+      "values": {
+       "crate": "c1",
+       "origins": "g1-m01,g1-m02",
+       "components": "source,platform"
+      },
+      "text": "c1 hat auf g1-m01,g1-m02 verschiedene Einheitenschlüssel bei gleichem Quelltext: abweichende Schlüsselbestandteile source,platform; die Maschinen teilen diese Einheit nicht"
+     },
+     {
+      "id": "worker-memory-tight",
+      "severity": "warn",
+      "subject": "g1-m04",
+      "values": {
+       "origin": "g1-m04",
+       "level": "Wache",
+       "available": 1500,
+       "guard": 2048,
+       "danger": 1024,
+       "swap": "?",
+       "pressure": "warn"
+      },
+      "text": "Worker g1-m04 ist auf Speicherstufe Wache: 1500 MB verfügbar (Wache 2048 MB, Gefahr 1024 MB), Swap ? MB, Druck warn"
+     },
+     {
+      "id": "worker-memory-tight",
+      "severity": "warn",
+      "subject": "g1-m20",
+      "values": {
+       "origin": "g1-m20",
+       "level": "Wache",
+       "available": 1500,
+       "guard": 2048,
+       "danger": 1024,
+       "swap": 1500,
+       "pressure": "warn"
+      },
+      "text": "Worker g1-m20 ist auf Speicherstufe Wache: 1500 MB verfügbar (Wache 2048 MB, Gefahr 1024 MB), Swap 1500 MB, Druck warn"
+     },
+     {
+      "id": "worker-offline",
+      "severity": "warn",
+      "subject": "g1-m04",
+      "values": {
+       "origin": "g1-m04",
+       "age": "2.0 h",
+       "recorded": "waiting",
+       "stage": "dependencies"
+      },
+      "text": "Worker g1-m04 zeigte 2.0 h lang kein Lebenszeichen; sein Eintrag sagt noch waiting in Stufe dependencies und ist veraltet"
+     },
+     {
+      "id": "worker-silent",
+      "severity": "warn",
+      "subject": "g1-m09",
+      "values": {
+       "origin": "g1-m09",
+       "age": "10 min",
+       "recorded": "running",
+       "stage": "dependencies"
+      },
+      "text": "Worker g1-m09 lebt, schrieb aber 10 min lang keinen Bereitschaftseintrag, obwohl er running in Stufe dependencies ist"
+     },
+     {
+      "id": "worker-warden-intervened",
+      "severity": "warn",
+      "subject": "g1-m04",
+      "values": {
+       "origin": "g1-m04",
+       "suspended": 1,
+       "resumed": 1,
+       "cancelled": 0,
+       "alarm": "resume PID 3 (Agent) bei 9 MB"
+      },
+      "text": "Worker g1-m04: sein Wächter hat eingegriffen (1 angehalten, 1 fortgesetzt, 0 abgebrochen); zuletzt: resume PID 3 (Agent) bei 9 MB"
+     },
+     {
+      "id": "worker-warden-intervened",
+      "severity": "warn",
+      "subject": "g1-m20",
+      "values": {
+       "origin": "g1-m20",
+       "suspended": 3,
+       "resumed": 3,
+       "cancelled": 0,
+       "alarm": "report PID 7 (Agent) bei 8 MB"
+      },
+      "text": "Worker g1-m20: sein Wächter hat eingegriffen (3 angehalten, 3 fortgesetzt, 0 abgebrochen); zuletzt: report PID 7 (Agent) bei 8 MB"
+     },
+     {
+      "id": "worker-warden-overhead",
+      "severity": "warn",
+      "subject": "g1-m09",
+      "values": {
+       "origin": "g1-m09",
+       "percent": 8,
+       "tick": 12,
+       "resident": 38
+      },
+      "text": "Worker g1-m09: sein Wächter braucht 8 % eines Kerns (Takt p95 12 ms, 38 MB resident)"
+     }
+    ],
+    "sources": [
+     {
+      "id": "leases",
+      "ok": true,
+      "milliseconds": 280
+     },
+     {
+      "id": "capacity",
+      "ok": true,
+      "milliseconds": 251
+     },
+     {
+      "id": "bazel",
+      "ok": true,
+      "milliseconds": 200
+     },
+     {
+      "id": "storage",
+      "ok": true,
+      "milliseconds": 164
+     },
+     {
+      "id": "sealed",
+      "ok": true,
+      "milliseconds": 102
+     },
+     {
+      "id": "generation",
+      "ok": true,
+      "milliseconds": 167
+     }
+    ],
+    "fleet": {
+     "scheduler": "http://cache.g1.semio.internal:8981",
+     "machines": [
+      {
+       "origin": "g1-m03",
+       "platform": "macos-arm64-0123456789abcdef",
+       "pressure": "warn",
+       "load": 1.5,
+       "cores": 8,
+       "running": 1,
+       "queued": 3,
+       "headroom": true,
+       "ageSeconds": 41,
+       "worker": "idle",
+       "offloadedIn": 5,
+       "offloadedOut": 1,
+       "refused": 0,
+       "cacheHit": 177,
+       "cacheMiss": 212,
+       "cacheSkipped": 0
+      },
+      {
+       "origin": "g1-server",
+       "platform": "macos-arm64-0123456789abcdef",
+       "pressure": "normal",
+       "load": 1.5,
+       "cores": 8,
+       "running": 2,
+       "queued": 1,
+       "headroom": true,
+       "ageSeconds": 41,
+       "worker": "idle",
+       "offloadedIn": 9,
+       "offloadedOut": 1,
+       "refused": 0,
+       "cacheHit": 112,
+       "cacheMiss": 98,
+       "cacheSkipped": 35,
+       "cacheSkipReasons": {
+        "upload-dropped": 24,
+        "read-only": 11
+       }
+      }
+     ],
+     "queued": 0,
+     "executing": 2,
+     "offloadedIn": 14,
+     "offloadedOut": 2,
+     "refused": 3,
+     "declined": 0,
+     "retried": 1,
+     "cacheHit": 289,
+     "cacheMiss": 310,
+     "cache": {
+      "hits": 91,
+      "misses": 67,
+      "puts": 19
+     },
+     "keys": {
+      "origins": 2,
+      "units": 2,
+      "diffs": [
+       {
+        "crate": "c0",
+        "slot": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "origins": [
+         "g1-m01",
+         "g1-m02"
+        ],
+        "differs": [
+         "extern:x"
+        ],
+        "sameSource": false
+       },
+       {
+        "crate": "c1",
+        "slot": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "origins": [
+         "g1-m01",
+         "g1-m02"
+        ],
+        "differs": [
+         "source",
+         "platform"
+        ],
+        "sameSource": true
+       }
+      ],
+      "byComponent": {
+       "platform": 1
+      }
+     }
+    },
+    "workers": {
+     "offlineSeconds": 600,
+     "counts": {
+      "ready": 0,
+      "working": 0,
+      "idle": 0,
+      "silent": 1,
+      "offline": 1,
+      "absent": 0
+     },
+     "rows": [
+      {
+       "origin": "g1-m04",
+       "platform": "linux",
+       "liveness": "offline",
+       "recorded": "waiting",
+       "stage": "dependencies",
+       "stageIndex": 5,
+       "stageCount": 5,
+       "attempts": 48,
+       "recordAgeSeconds": 7200,
+       "heartbeatAgeSeconds": null,
+       "refusal": null,
+       "memory": {
+        "origin": "g1-m04",
+        "ageSeconds": 60,
+        "absent": false,
+        "mode": "enforce",
+        "level": "guard",
+        "hold": false,
+        "guardMegabytes": 2048,
+        "dangerMegabytes": 1024,
+        "availableMegabytes": 1500,
+        "totalMegabytes": 16384,
+        "swapUsedMegabytes": null,
+        "swapOutMegabytesPerSecond": 12.5,
+        "compressedMegabytes": null,
+        "pressure": "warn",
+        "subjects": 2,
+        "subjectMegabytes": 29,
+        "suspended": 1,
+        "counters": {
+         "suspended": 1,
+         "resumed": 1,
+         "cancelled": 0
+        },
+        "lastAlarm": {
+         "atMs": 1793415259049,
+         "action": "resume",
+         "kind": "bun",
+         "pid": 7892,
+         "owner": "",
+         "megabytes": 1639,
+         "text": {
+          "en": "resume pid 9 (agent) at 5 MB",
+          "de": "resume PID 3 (Agent) bei 9 MB"
+         }
+        },
+        "overhead": {
+         "tickMillisecondsP95": 3.4,
+         "cpuBasisPoints": 10.0,
+         "residentMegabytes": 60.6
+        }
+       }
+      },
+      {
+       "origin": "g1-m09",
+       "platform": "windows",
+       "liveness": "silent",
+       "recorded": "running",
+       "stage": "dependencies",
+       "stageIndex": 4,
+       "stageCount": 5,
+       "attempts": 30,
+       "recordAgeSeconds": 600,
+       "heartbeatAgeSeconds": 3,
+       "refusal": null,
+       "memory": {
+        "origin": "g1-m09",
+        "ageSeconds": 59,
+        "absent": false,
+        "mode": "enforce",
+        "level": "calm",
+        "hold": false,
+        "guardMegabytes": 2048,
+        "dangerMegabytes": 1024,
+        "availableMegabytes": 5250,
+        "totalMegabytes": 16384,
+        "swapUsedMegabytes": null,
+        "swapOutMegabytesPerSecond": 0,
+        "compressedMegabytes": 0,
+        "pressure": "normal",
+        "subjects": 6,
+        "subjectMegabytes": 4273,
+        "suspended": 0,
+        "counters": {
+         "suspended": 0,
+         "resumed": 0,
+         "cancelled": 0
+        },
+        "lastAlarm": null,
+        "overhead": {
+         "tickMillisecondsP95": 12.0,
+         "cpuBasisPoints": 800.5,
+         "residentMegabytes": 38.0
+        }
+       }
+      }
+     ]
+    },
+    "cas": {
+     "root": "/h/.cache/semio/cas",
+     "usedBytes": null,
+     "usedBasisPoints": null,
+     "capBytes": 53687091200,
+     "effectiveCapBytes": 8589934592,
+     "highWatermarkBytes": 7730941132,
+     "lowWatermarkBytes": 6442450944,
+     "incrementBytes": 2147483648,
+     "leases": {
+      "leased": 471,
+      "expired": 210,
+      "leasedBytes": null,
+      "expiredBytes": 413794150
+     },
+     "lastCollection": null
+    },
+    "retention": null,
+    "offload": {
+     "local": 12,
+     "fleet": 38,
+     "builds": [
+      {
+       "pid": 2800,
+       "local": 7,
+       "fleet": 22
+      },
+      {
+       "pid": 8371,
+       "local": 5,
+       "fleet": 16
+      }
+     ],
+     "out": 8044,
+     "refused": 30,
+     "fellBack": 53,
+     "deadline": 0,
+     "lost": 0,
+     "silent": 0,
+     "reasons": {}
+    }
+   }
   }
  ]
 }

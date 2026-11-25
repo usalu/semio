@@ -44,6 +44,23 @@
         }
       }
     },
+    "Tag": {
+      "description": "A tag of an asset: a slug that search and links use, and its title in every supported language, which is what a reader sees.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/Slug"
+        },
+        "title": {
+          "$ref": "#/$defs/Text"
+        }
+      }
+    },
     "CategoryId": {
       "description": "One of the nine archive categories.",
       "enum": [
@@ -840,7 +857,7 @@
               "type": "boolean"
             },
             "lateralScale": {
-              "description": "Optional elliptic cross-section: the scale of the radius along the bone axis u projected perpendicular to the revolve axis (along w when the axis is parallel to u, the kernel semantics) relative to the radius in the profile; 1 is a physical circle (the default, not a fallback), 0.5 an ellipse half as wide as it is deep.",
+              "description": "Optional elliptic cross-section: the scale of the radius along the u of axisBone projected perpendicular to the revolve axis (along its w when the axis is u, the kernel semantics of the volume revolve) relative to the radius in the profile; 1 is a physical circle (the default, not a fallback), 0.5 an ellipse half as wide as it is deep. It holds in every view: a mirrored body is the ellipse, a half profile is drawn at its distance from the axis times the reach of the ellipse in the direction it is drawn in, and the plan is the ellipse of the widest reach.",
               "type": "number",
               "exclusiveMinimum": 0,
               "default": 1
@@ -1384,6 +1401,96 @@
             },
             "section": {
               "$ref": "#/$defs/MemberSection"
+            }
+          }
+        },
+        {
+          "description": "A loft: a body lofted between two or more superelliptic sections in order of travel, for a part whose cross-section changes freely along its bone (an arm, a hand, a shoe, a coat, a tapering soundbox) and which is neither a prism nor a body of revolution. The sections are stated in the bone-local frame of the shape's bone exactly as the sections of the loft solid of a volume are, carried by the full 3D frame of the bone (or blended over weights) and the body between every two consecutive sections is drawn in its true outline in every viewpoint, so the side elevation, the front elevation and the plan are one 3D definition at every pose and clip instant. It has no planar geometry and no solid (validators `loft-sections`, `loft-section`, `loft-fold`, `loft-solid`, `loft-in-paper-symbol`).",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id",
+            "bone",
+            "role",
+            "z",
+            "filled",
+            "tone",
+            "sections"
+          ],
+          "properties": {
+            "kind": {
+              "const": "loft"
+            },
+            "id": {
+              "$ref": "#/$defs/Slug"
+            },
+            "bone": {
+              "$ref": "#/$defs/Slug"
+            },
+            "role": {
+              "$ref": "#/$defs/ShapeRole"
+            },
+            "z": {
+              "type": "number"
+            },
+            "filled": {
+              "type": "boolean"
+            },
+            "tone": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "region": {
+              "$ref": "#/$defs/Slug"
+            },
+            "regions": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Slug"
+              },
+              "minItems": 1
+            },
+            "material": {
+              "$ref": "#/$defs/Slug"
+            },
+            "hatch": {
+              "$ref": "#/$defs/Slug"
+            },
+            "penMm": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "sections": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/LoftSection"
+              },
+              "minItems": 2
+            },
+            "weights": {
+              "description": "Blend of the solid over bones (skinning): at most four influences, each a bone and a non-negative weight, summing to 1 (validators `volume-weights-bone` and `volume-weights-sum`); absent: the solid is rigid to `bone`. The coordinates stay those of the frame of `bone`.",
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "bone",
+                  "weight"
+                ],
+                "properties": {
+                  "bone": {
+                    "$ref": "#/$defs/Slug"
+                  },
+                  "weight": {
+                    "type": "number",
+                    "minimum": 0
+                  }
+                }
+              },
+              "minItems": 1,
+              "maxItems": 4
             }
           }
         }
@@ -4318,33 +4425,7 @@
             "sections": {
               "type": "array",
               "items": {
-                "type": "object",
-                "additionalProperties": false,
-                "required": [
-                  "at",
-                  "rx",
-                  "ry"
-                ],
-                "properties": {
-                  "at": {
-                    "$ref": "#/$defs/Vector3"
-                  },
-                  "rx": {
-                    "type": "number",
-                    "exclusiveMinimum": 0
-                  },
-                  "ry": {
-                    "type": "number",
-                    "exclusiveMinimum": 0
-                  },
-                  "exponent": {
-                    "type": "number",
-                    "exclusiveMinimum": 0
-                  },
-                  "rotation": {
-                    "$ref": "#/$defs/Quaternion"
-                  }
-                }
+                "$ref": "#/$defs/LoftSection"
               },
               "minItems": 2
             },
@@ -5310,33 +5391,7 @@
             "sections": {
               "type": "array",
               "items": {
-                "type": "object",
-                "additionalProperties": false,
-                "required": [
-                  "at",
-                  "rx",
-                  "ry"
-                ],
-                "properties": {
-                  "at": {
-                    "$ref": "#/$defs/Vector3"
-                  },
-                  "rx": {
-                    "type": "number",
-                    "exclusiveMinimum": 0
-                  },
-                  "ry": {
-                    "type": "number",
-                    "exclusiveMinimum": 0
-                  },
-                  "exponent": {
-                    "type": "number",
-                    "exclusiveMinimum": 0
-                  },
-                  "rotation": {
-                    "$ref": "#/$defs/Quaternion"
-                  }
-                }
+                "$ref": "#/$defs/LoftSection"
               },
               "minItems": 2
             },
@@ -6559,33 +6614,7 @@
             "sections": {
               "type": "array",
               "items": {
-                "type": "object",
-                "additionalProperties": false,
-                "required": [
-                  "at",
-                  "rx",
-                  "ry"
-                ],
-                "properties": {
-                  "at": {
-                    "$ref": "#/$defs/Vector3"
-                  },
-                  "rx": {
-                    "type": "number",
-                    "exclusiveMinimum": 0
-                  },
-                  "ry": {
-                    "type": "number",
-                    "exclusiveMinimum": 0
-                  },
-                  "exponent": {
-                    "type": "number",
-                    "exclusiveMinimum": 0
-                  },
-                  "rotation": {
-                    "$ref": "#/$defs/Quaternion"
-                  }
-                }
+                "$ref": "#/$defs/LoftSection"
               },
               "minItems": 2
             },
@@ -7141,7 +7170,7 @@
         "tags": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Slug"
+            "$ref": "#/$defs/Tag"
           }
         },
         "provenance": {
@@ -7539,6 +7568,36 @@
           }
         }
       ]
+    },
+    "LoftSection": {
+      "description": "One section of a loft in the bone-local frame of its bone, in metres: the superellipse |x/rx|^n + |y/ry|^n = 1 (exponent n, default 2, an ellipse; larger is boxier) centred at at = [u, v, w] in its own x, y plane. rotation (a unit quaternion [x, y, z, w]) alone decides which bone axes x and y are: with the limb rotation [0.5, 0.5, 0.5, 0.5] x is v (rx the half depth) and y is w (ry the half width); without rotation the section stands perpendicular to the path through the section centres, x being u projected perpendicular to the path (w when the path runs exactly along u) and y = path x x. One definition for the loft shape of a drawing and the loft solid of a volume.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "at",
+        "rx",
+        "ry"
+      ],
+      "properties": {
+        "at": {
+          "$ref": "#/$defs/Vector3"
+        },
+        "rx": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "ry": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "exponent": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "rotation": {
+          "$ref": "#/$defs/Quaternion"
+        }
+      }
     }
   }
 }

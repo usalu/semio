@@ -72,7 +72,7 @@ export async function driveInboundRequest(drive: InboundRequestDrive): Promise<I
     if (result) return { status: "answered", turns, result };
     if (drive.signal?.aborted === true) return { status: "cancelled", turns };
     drive.onProgress?.({ capability: drive.capability, turns, budget });
-    if (wireTurnStatusTag(turn.status) !== "more-work") return { status: "unanswered", turns };
+    if (turns === budget || wireTurnStatusTag(turn.status) !== "more-work") return { status: "unanswered", turns };
     turn = await drive.submit([]);
   }
   return { status: "unanswered", turns: budget };

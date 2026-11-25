@@ -1,5 +1,5 @@
 {
-  "mutation": "changeelementfc",
+  "mutation": "changeElementFc",
   "elementId": "wall-n",
   "newFc": 1.0
 }

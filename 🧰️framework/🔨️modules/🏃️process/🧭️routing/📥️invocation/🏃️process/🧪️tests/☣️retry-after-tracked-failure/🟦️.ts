@@ -1,5 +1,6 @@
 import{expect,test}from"bun:test";
 import*as api from"../../🟦️.ts";
+import fixture from"./🔣️.json"with{type:"json"};
 
 const envelope=(owner:string)=>api.createScriptProcessEnvelope({version:1,owner,maximumElapsedMilliseconds:0},{fixture:"retry"},Date.now());
 
@@ -21,4 +22,17 @@ test("a failure thrown through a tracked operation closes the process for every 
   }
  });
  expect(attempts).toEqual(["retry","retry","done"]);
+});
+
+/** 🕳️ Pins that an admitted reader finding its published artifact absent answers its caller (who rebuilds) while every other thrown failure still closes the owner. */
+test("an absent published artifact never closes the process, any other thrown failure does",async()=>{
+ for(const row of fixture.rows){
+  await api.withScriptProcessEnvelope(envelope("fixture:"+row.id),async original=>{
+   const first=api.createIssuedResourceControlV1(original,"fixture:first",0),failure=row.closes?Object.assign(Error("vanished"),{code:row.failure}):new api.PublishedArtifactAbsentV1("absent");
+   await expect(api.withIssuedResourceOperationV1(first,async()=>{throw failure;})).rejects.toBe(failure);
+   let later:unknown;try{api.createIssuedResourceControlV1(original,"fixture:later",0);}catch(error){later=error;}
+   expect(later!==undefined).toBe(row.closes);
+   if(row.closes)throw failure;
+  }).catch(error=>{if(!row.closes)throw error;});
+ }
 });

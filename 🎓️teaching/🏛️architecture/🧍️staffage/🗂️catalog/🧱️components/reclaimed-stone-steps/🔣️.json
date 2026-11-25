@@ -13,15 +13,69 @@
    "de": "Fünf massive Granit-Blockstufen 150 x 350 x 1200 mm aus einer rückgebauten Außentreppe, wie eine Bauteilbörse sie kreuzweise auf Kanthölzern lagert: Trittflächen in der begangenen Mitte ausgetreten und Vorderkanten rund abgetreten, gestockte Ansichtsflächen, Mörtelkrusten an den Köpfen, die in der Hauswand steckten, bleigefüllte Geländerlöcher und eine abgeschlagene Vorderkante; eine Stufe in der Scheren-Steinzange gehoben, und alle fünf als Treppe 15/30 auf einem gestuften Betonfundament wieder versetzt."
   },
   "tags": [
-   "component",
-   "reclaimed",
-   "stone",
-   "granite",
-   "natural-stone",
-   "stair",
-   "block-step",
-   "landscape",
-   "structural"
+   {
+    "id": "component",
+    "title": {
+     "en": "component",
+     "de": "Bauteil"
+    }
+   },
+   {
+    "id": "reclaimed",
+    "title": {
+     "en": "reclaimed",
+     "de": "wiederverwendet"
+    }
+   },
+   {
+    "id": "stone",
+    "title": {
+     "en": "stone",
+     "de": "Stein"
+    }
+   },
+   {
+    "id": "granite",
+    "title": {
+     "en": "granite",
+     "de": "Granit"
+    }
+   },
+   {
+    "id": "natural-stone",
+    "title": {
+     "en": "natural stone",
+     "de": "Naturstein"
+    }
+   },
+   {
+    "id": "stair",
+    "title": {
+     "en": "stair",
+     "de": "Treppe"
+    }
+   },
+   {
+    "id": "block-step",
+    "title": {
+     "en": "block step",
+     "de": "Blockstufe"
+    }
+   },
+   {
+    "id": "landscape",
+    "title": {
+     "en": "landscape",
+     "de": "Landschaft"
+    }
+   },
+   {
+    "id": "structural",
+    "title": {
+     "en": "structural",
+     "de": "tragend"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage component authors",

@@ -7,13 +7,26 @@
  */
 import type { Alternative, Asset, Language } from "../../../🧬️schema/🟦️.ts";
 import type { RepresentationResolution } from "../../🔗️contracts/🟦️.ts";
-import { ANNOTATION_TEXT_MM, LABEL_TEXT_MM, formatNumber } from "../../📐️units/🟦️.ts";
-import { wrap } from "../🖍️palette/🟦️.ts";
+import { ANNOTATION_TEXT_MM, LABEL_TEXT_MM, DRAWING_FONT_STACK, formatNumber, textWidthMm } from "../../📐️units/🟦️.ts";
+import { TEXT_SLACK } from "../🧱️canvas/🟦️.ts";
 
 /** 🪧️ A rendered box: size in paper millimetres and its inner markup (origin top-left). */
 export type ExplanationBox = { readonly widthMm: number; readonly heightMm: number; readonly lines: readonly { readonly text: string; readonly bold: boolean }[]; readonly markup: string };
 
-const FONT_STACK = "Anta, 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, 'DejaVu Sans', sans-serif";
+/** ✍️ Greedy word wrap at a width in millimetres, measured in the face the box is written in (`textWidthMm`, with the room the canvas reserves); a single word wider than the box stays on its own line. */
+function wrapTo(text: string, widthMm: number, sizeMm: number, bold: boolean): string[] {
+  const lines: string[] = [];
+  let line = "";
+  for (const word of text.split(/\s+/u)) {
+    const next = line === "" ? word : `${line} ${word}`;
+    if (line !== "" && textWidthMm(next, sizeMm, bold) * TEXT_SLACK > widthMm) {
+      lines.push(line);
+      line = word;
+    } else line = next;
+  }
+  return line === "" ? lines : [...lines, line];
+}
+
 const escape = (text: string): string => text.replace(/&/gu, "&amp;").replace(/</gu, "&lt;").replace(/>/gu, "&gt;");
 
 function alternativeText(asset: Asset, alternative: Alternative, language: Language): string {
@@ -30,7 +43,7 @@ export function explanationBox(asset: Asset, resolution: Extract<RepresentationR
   const de = language === "de";
   const out: { text: string; bold: boolean }[] = [];
   const push = (text: string, bold = false): void => {
-    for (const line of wrap(text, Math.floor((widthMm - 4) / (LABEL_TEXT_MM * 0.56)))) out.push({ text: line, bold });
+    for (const line of wrapTo(text, widthMm - 4, bold ? ANNOTATION_TEXT_MM : LABEL_TEXT_MM, bold)) out.push({ text: line, bold });
   };
   const mm = (value: number): string => formatNumber(value, 2, language);
   if (resolution.kind === "unavailable") {
@@ -49,7 +62,7 @@ export function explanationBox(asset: Asset, resolution: Extract<RepresentationR
   for (const alternative of resolution.alternatives) push(`→ ${alternativeText(asset, alternative, language)}`);
   const pitch = LABEL_TEXT_MM * 1.45;
   const heightMm = out.length * pitch + 4;
-  const text = out.map((line, i) => `<text x="2" y="${(2 + (i + 0.85) * pitch).toFixed(3)}" font-family="${FONT_STACK}" font-size="${line.bold ? ANNOTATION_TEXT_MM : LABEL_TEXT_MM}"${line.bold ? ` font-weight="bold"` : ""} fill="#001117">${escape(line.text)}</text>`).join("");
+  const text = out.map((line, i) => `<text x="2" y="${(2 + (i + 0.85) * pitch).toFixed(3)}" font-family="${DRAWING_FONT_STACK}" font-size="${line.bold ? ANNOTATION_TEXT_MM : LABEL_TEXT_MM}"${line.bold ? ` font-weight="bold"` : ""} fill="#001117">${escape(line.text)}</text>`).join("");
   const markup = `<rect x="0.1" y="0.1" width="${widthMm - 0.2}" height="${(heightMm - 0.2).toFixed(3)}" fill="#fff8e1" stroke="#001117" stroke-width="0.25" stroke-dasharray="1.5 1"/>${text}`;
   return { widthMm, heightMm, lines: out, markup };
 }

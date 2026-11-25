@@ -25,6 +25,7 @@
         "headroomDangerMaximumMegabytes": 4096,
         "calmTicks": 3,
         "suspendMaximumSeconds": 120,
+        "pauseDeadlineSeconds": 10,
         "maximumSuspendsPerTick": 4,
         "maximumCancelsPerTick": 2,
         "keepRunning": 1,
@@ -49,22 +50,40 @@
         "logMaximumBytes": 4194304,
         "defaultMode": "enforce",
         "ensureMilliseconds": 15000,
-        "observeOnlyMilliseconds": 8000
+        "observeOnlyMilliseconds": 8000,
+        "swapUsedGuardBasisPoints": 3500,
+        "swapUsedDangerBasisPoints": 5500,
+        "swapShareGuardBasisPoints": 4500,
+        "swapShareDangerBasisPoints": 6000,
+        "compressedGuardBasisPoints": 3500,
+        "compressedDangerBasisPoints": 5000,
+        "capMaximumBasisPoints": 6000,
+        "capMilliseconds": 5000,
+        "capProbeMaximum": 8,
+        "holdMinimumMegabytes": 512,
+        "holdOperations": ["run", "run-many", "affected", "exec", "watch", "cargo", "command"],
+        "pressureDeficitMegabytes": 1024,
+        "othersMaximum": 5,
+        "ceilingNearBasisPoints": 7500,
+        "flapWindowSeconds": 1800,
+        "flapMaximumSuspensions": 2,
+        "resumeHoldSeconds": 120
       }
     },
     "Kinds": {
-      "description": "Ordered kinds of subjects: the first entry whose pattern matches the command line of a process that is a subject candidate (below a root, or matching an identity) names its kind. A pattern may name the anchors <workspace> and <browsers> (see Anchors); a kind whose anchor is empty does not match. rank is the cost to redo (ascending = cheapest first), actions are what the warden may do, signal is what a cancel sends, scope is what a signal reaches (process: the pid, group: its process group, tree: the pid and every descendant, parent first). source is the repository path of the code that starts the process; a test proves every pattern names a path that exists there.",
+      "description": "Ordered kinds of subjects: the first entry whose pattern matches the command line of a process that is a subject candidate (below a root, or matching an identity) names its kind. A pattern may name the anchors <workspace> and <browsers> (see Anchors); a kind whose anchor is empty does not match. rank is the cost to redo (ascending = cheapest first), actions are what the warden may do, signal is what a cancel sends, scope is what a signal reaches (process: the pid, group: its process group, tree: the pid and every descendant, parent first). source is the repository path of the code that starts the process; a test proves every pattern names a path that exists there. A kind with `ceiling: \"unit\"` runs compile units: the runtime ceiling of its subject is derived from its command line by the admission law of the compile-memory policy (`Policy.unitCeiling` of the admission schema: the budget of the unit kind, or the declared `budgetMegabytes` of its carving entry) and is enforced at every level, see Ceiling.",
       "const": [
-        {"name": "remote-unit", "rank": 10, "pattern": "^(?:\\S*/)?rustc(?:\\.exe)?\\s.*/remote-execution/work/", "actions": ["suspend", "cancel"], "signal": "SIGKILL", "scope": "tree", "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/👷️worker/🟦️.ts"},
-        {"name": "local-unit", "rank": 20, "pattern": "^(?:\\S*/)?(?:rustc|rustdoc|clippy-driver)(?:\\.exe)?(?:\\s|$)", "actions": ["suspend", "cancel"], "signal": "SIGKILL", "scope": "tree", "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/📜️script.ts"},
-        {"name": "pool-child", "rank": 25, "pattern": "🌐️owner-pool/🧒️child/", "actions": ["suspend", "cancel"], "signal": "SIGKILL", "scope": "tree", "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🌐️owner-pool/🧒️child/🟨️.mjs"},
-        {"name": "farm-worker", "rank": 30, "pattern": "🏊️project-farm/👷️worker/", "actions": ["suspend", "cancel"], "signal": "SIGKILL", "scope": "tree", "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/👷️worker/🟨️.mjs"},
-        {"name": "warm-deriver", "rank": 35, "pattern": "🧮️derive/♨️warm/⌨️main/", "actions": ["suspend", "cancel"], "signal": "SIGKILL", "scope": "tree", "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🕸️graph/🧠️memo/🧮️derive/♨️warm/⌨️main/🟦️.ts"},
-        {"name": "heavy-question", "rank": 40, "pattern": "🪆️heavy-questions/📜️script.ts", "actions": ["suspend", "cancel"], "signal": "SIGKILL", "scope": "tree", "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🪆️heavy-questions/📜️script.ts"},
-        {"name": "browser", "rank": 45, "pattern": "^<browsers>/(?!.*(?:\\s--type=|crashpad))", "actions": ["suspend", "cancel"], "signal": "SIGKILL", "scope": "tree", "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🧰️preparation/🟦️.ts"},
-        {"name": "test", "rank": 50, "pattern": "^(?:\\S*/)?bun(?:\\.exe)?\\s+test(?:\\s|$)", "actions": ["suspend", "cancel"], "signal": "SIGKILL", "scope": "tree", "source": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts"},
-        {"name": "test-binary", "rank": 55, "pattern": "^<workspace>/(?:\\S*/)?deps/[^/\\s]+-[0-9a-f]{16}(?:\\.exe)?(?:\\s|$)", "actions": ["suspend", "cancel"], "signal": "SIGKILL", "scope": "tree", "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts"},
-        {"name": "slice-worker", "rank": 60, "pattern": "👷️slice-pool/👷️worker.ts", "actions": ["suspend", "cancel"], "signal": "SIGKILL", "scope": "tree", "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts"},
+        {"name": "remote-unit", "rank": 10, "pattern": "^(?:\\S*/)?rustc(?:\\.exe)?\\s.*/remote-execution/work/", "actions": ["suspend", "cancel"], "signal": "SIGTERM", "scope": "tree", "capMegabytes": 10240, "capCritical": true, "ceiling": "unit", "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/👷️worker/🟦️.ts"},
+        {"name": "local-unit", "rank": 20, "pattern": "^(?:\\S*/)?(?:rustc|rustdoc|clippy-driver)(?:\\.exe)?(?:\\s|$)", "actions": ["suspend", "cancel"], "signal": "SIGTERM", "scope": "tree", "capMegabytes": 10240, "capCritical": true, "ceiling": "unit", "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/📜️script.ts"},
+        {"name": "pool-child", "rank": 25, "pattern": "🌐️owner-pool/🧒️child/", "actions": ["suspend", "cancel"], "signal": "SIGKILL", "scope": "tree", "capMegabytes": 6144, "capCritical": true, "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🌐️owner-pool/🧒️child/🟨️.mjs"},
+        {"name": "farm-worker", "rank": 30, "pattern": "🏊️project-farm/👷️worker/", "actions": ["suspend", "cancel"], "signal": "SIGKILL", "scope": "tree", "capMegabytes": 4096, "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/👷️worker/🟨️.mjs"},
+        {"name": "warm-deriver", "rank": 35, "pattern": "🧮️derive/♨️warm/⌨️main/", "actions": ["suspend", "cancel"], "signal": "SIGKILL", "scope": "tree", "capMegabytes": 6144, "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🕸️graph/🧠️memo/🧮️derive/♨️warm/⌨️main/🟦️.ts"},
+        {"name": "heavy-question", "rank": 40, "pattern": "🪆️heavy-questions/📜️script.ts", "actions": ["suspend", "cancel"], "signal": "SIGKILL", "scope": "tree", "capMegabytes": 8192, "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🪆️heavy-questions/📜️script.ts"},
+        {"name": "browser", "rank": 45, "pattern": "^<browsers>/(?!.*(?:\\s--type=|crashpad))", "actions": ["suspend", "cancel"], "signal": "SIGKILL", "scope": "tree", "capMegabytes": 4096, "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🧰️preparation/🟦️.ts"},
+        {"name": "headless-browser", "rank": 46, "pattern": "^(?=.*(?:[Cc]hrom|[Ff]irefox|headless_shell))(?=.*\\s--?headless(?:\\s|=|$))(?!.*\\s--type=)", "actions": ["suspend", "cancel"], "signal": "SIGKILL", "scope": "tree", "capMegabytes": 4096, "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🧰️preparation/🟦️.ts"},
+        {"name": "test", "rank": 50, "pattern": "^(?:\\S*/)?bun(?:\\.exe)?\\s+test(?:\\s|$)", "actions": ["suspend", "cancel"], "signal": "SIGKILL", "scope": "tree", "capMegabytes": 8192, "source": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts"},
+        {"name": "test-binary", "rank": 55, "pattern": "^<workspace>/(?:\\S*/)?deps/[^/\\s]+-[0-9a-f]{16}(?:\\.exe)?(?:\\s|$)", "actions": ["suspend", "cancel"], "signal": "SIGKILL", "scope": "tree", "capMegabytes": 8192, "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts"},
+        {"name": "slice-worker", "rank": 60, "pattern": "👷️slice-pool/👷️worker.ts", "actions": ["suspend", "cancel"], "signal": "SIGKILL", "scope": "tree", "capMegabytes": 6144, "capCritical": true, "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts"},
         {"name": "cargo", "rank": 65, "pattern": "^(?:\\S*/)?cargo(?:\\.exe)?(?:\\s|$)", "actions": ["cancel"], "signal": "SIGTERM", "scope": "tree", "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts"},
         {"name": "stage", "rank": 90, "pattern": "🚦️ready/🏃️wrapper/🟦️.ts", "actions": ["cancel"], "signal": "SIGTERM", "scope": "tree", "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🛰️sidecar/🚦️ready/🏃️wrapper/🟦️.ts"}
       ]
@@ -86,11 +105,12 @@
       }
     },
     "Identities": {
-      "description": "Patterns over the command line of processes that are subject candidates by what they are, whatever their ancestry (an agent shell, a ticket script, a terminal): the pinned toolchain binaries of a workspace (cargo, rustc, rustdoc, clippy-driver), the cargo test and bench executables of a workspace (a deps directory of any target directory below it, the executable named with the 16 hex digits of its metadata hash), and every process of the repository browser runtime. Never patterns, protected paths and the kinds still apply; a toolchain or a browser of the user (cargo home, Homebrew, rustup, the user-level Playwright cache, applications) matches none of them.",
+      "description": "Patterns over the command line of processes that are subject candidates by what they are, whatever their ancestry (an agent shell, a ticket script, a terminal): the pinned toolchain binaries of a workspace (cargo, rustc, rustdoc, clippy-driver), the cargo test and bench executables of a workspace (a deps directory of any target directory below it, the executable named with the 16 hex digits of its metadata hash), every process of the repository browser runtime, and cargo or a compile tool of any toolchain (a script that exports a user rustc to bypass the repository launcher included) whose command line names a path below a workspace (source, output, dependency or manifest). Never patterns, protected paths and the kinds still apply; a toolchain or a browser of the user (cargo home, Homebrew, rustup, the user-level Playwright cache, applications) matches none of them.",
       "const": [
         "^<workspace>/\\.cache/b/t/m/r/[^/]+/toolchains/[^/]+/bin/",
         "^<workspace>/(?:\\S*/)?deps/[^/\\s]+-[0-9a-f]{16}(?:\\.exe)?(?:\\s|$)",
-        "^<browsers>/"
+        "^<browsers>/",
+        "^(?:\\S*/)?(?:cargo|rustc|rustdoc|clippy-driver)(?:\\.exe)?\\s.*<workspace>/"
       ]
     },
     "Swap": {
@@ -116,13 +136,14 @@
       "const": {"enforce": ["darwin", "linux"], "observeOnly": ["win32"]}
     },
     "Table": {
-      "description": "The command that reads the process table on unix, with the locale each platform needs to print non-ASCII command lines (ps escapes them otherwise). The full form prints every column; the loop reads the cheap columns every tick (pid, parent, group, resident, state, elapsed, start) and the expensive command line only of processes it has not seen yet (key: pid and start text), one `-p` list, or the whole table from commandAllMinimum new processes on (a process younger than commandSettledSeconds, or one still printed as `(name)`, may not have executed its program yet, so its command line is read again on the next tick instead of kept): the command line column costs about three times the rest of the table together.",
+      "description": "The command that reads the process table on unix, with the locale each platform needs to print non-ASCII command lines (ps escapes them otherwise). The full form prints every column; the loop reads the cheap columns every tick (pid, parent, group, resident, state, elapsed, start) and the expensive command line only of processes it has not seen yet (key: pid and start text), one `-p` list, or the whole table from commandAllMinimum new processes on (a process younger than commandSettledSeconds, or one still printed as `(name)`, may not have executed its program yet, so its command line is read again on the next tick instead of kept): the command line column costs about three times the rest of the table together. `chargeMinimumKilobytes` is the resident size from which Linux reads `smaps_rollup` for a process (the table prints the resident set; macOS reads every process natively).",
       "const": {
         "command": "ps",
         "arguments": ["-A", "-ww", "-o", "pid=,ppid=,pgid=,rss=,state=,etime=,lstart=,args="],
         "quickArguments": ["-A", "-o", "pid=,ppid=,pgid=,rss=,state=,etime=,lstart="],
         "commandArguments": ["-ww", "-o", "pid=,args="],
         "commandAllMinimum": 64,
+        "chargeMinimumKilobytes": 32768,
         "commandSettledSeconds": 3,
         "locale": {"darwin": "en_US.UTF-8", "linux": "C.UTF-8"},
         "start": {"command": "ps", "arguments": ["-o", "lstart=", "-p"]}
@@ -131,6 +152,19 @@
     "Mode": {"enum": ["observe", "enforce"]},
     "Level": {"enum": ["calm", "guard", "danger"]},
     "Pressure": {"enum": ["normal", "warn", "critical"]},
+    "Trigger": {"enum": ["available", "headroom", "swap-used", "swap-share", "compressed", "pressure", "critical", "swap", "cap"]},
+    "Other": {
+      "description": "One consumer the warden does not own: the topmost process of a tree outside every subject, with the resident megabytes of the whole tree. Reported, never touched.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pid", "megabytes", "processes", "command"],
+      "properties": {
+        "pid": {"type": "integer", "minimum": 1},
+        "megabytes": {"type": "integer", "minimum": 0},
+        "processes": {"type": "integer", "minimum": 1},
+        "command": {"type": "string", "maxLength": 192}
+      }
+    },
     "Host": {
       "type": "object",
       "additionalProperties": false,
@@ -147,14 +181,15 @@
       }
     },
     "ProcessRow": {
+      "description": "One process of the table. `memoryKilobytes` is what the kernel charges the process (macOS phys_footprint through proc_pid_rusage, Linux proportional plus swapped proportional set size of the processes that are resident enough to matter, Windows the private usage), never the resident set that `ps` prints: macOS counts the pages an allocator freed but kept mapped (MADV_FREE_REUSABLE) as resident, which read a 3 GB browser tree as 5 GB. A process the kernel does not let us read keeps the resident set `ps` printed.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["pid", "parent", "group", "rssKilobytes", "stopped", "elapsedSeconds", "start", "command"],
+      "required": ["pid", "parent", "group", "memoryKilobytes", "stopped", "elapsedSeconds", "start", "command"],
       "properties": {
         "pid": {"type": "integer", "minimum": 1},
         "parent": {"type": "integer", "minimum": 0},
         "group": {"type": "integer", "minimum": 0},
-        "rssKilobytes": {"type": "integer", "minimum": 0},
+        "memoryKilobytes": {"type": "integer", "minimum": 0},
         "stopped": {"type": "boolean"},
         "elapsedSeconds": {"type": "integer", "minimum": 0},
         "start": {"type": "string"},
@@ -180,7 +215,25 @@
         "start": {"type": "string"},
         "owner": {"type": "string"},
         "scope": {"enum": ["process", "group", "tree"]},
-        "signal": {"enum": ["SIGKILL", "SIGTERM"]}
+        "signal": {"enum": ["SIGKILL", "SIGTERM"]},
+        "capMegabytes": {"type": "integer", "minimum": 1},
+        "capCritical": {"type": "boolean"},
+        "ceiling": {"$ref": "#/definitions/Ceiling"},
+        "suspensions": {"type": "integer", "minimum": 0, "description": "How often the loop suspended this subject within flapWindowSeconds (set by the loop, not by classification)."},
+        "resumedSeconds": {"type": "integer", "minimum": 0, "description": "Seconds since the loop resumed this subject, within flapWindowSeconds."}
+      }
+    },
+    "Ceiling": {
+      "description": "The runtime ceiling of a compile unit (the typed over-ceiling verdict is a subject whose megabytes exceed `megabytes`): `unit` is `<crate>|<target>` (target `host` without `--target`), `kind` the budget kind (`final` for a `cdylib` link unit, else `library`), `megabytes` the most its resident footprint may reach, `listed` whether the unit is on the closed carving list of the admission policy, then `measuredMegabytes` is its measured peak. An unlisted unit above it must be carved; a listed unit above it outgrew its declared budget. Both are cancelled at once, at every level of the ladder.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["unit", "kind", "megabytes", "listed"],
+      "properties": {
+        "unit": {"type": "string", "minLength": 3},
+        "kind": {"enum": ["library", "final"]},
+        "megabytes": {"type": "integer", "minimum": 1},
+        "listed": {"type": "boolean"},
+        "measuredMegabytes": {"type": "integer", "minimum": 1}
       }
     },
     "Previous": {
@@ -197,19 +250,21 @@
       "additionalProperties": false,
       "required": ["action", "id", "reason"],
       "properties": {
-        "action": {"enum": ["suspend", "resume", "cancel"]},
+        "action": {"enum": ["suspend", "resume", "cancel", "report"]},
         "id": {"type": "string", "minLength": 1},
-        "reason": {"enum": ["guard", "danger", "overdue", "calm"]}
+        "reason": {"enum": ["guard", "danger", "overdue", "calm", "cap", "ceiling"]},
+        "capMegabytes": {"type": "integer", "minimum": 1}
       }
     },
     "Decision": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["level", "calmTicks", "hold", "guardMegabytes", "dangerMegabytes", "resumeMegabytes", "swapRoomMegabytes", "headroomMegabytes", "headroomGuardMegabytes", "headroomDangerMegabytes", "actions"],
+      "required": ["level", "calmTicks", "hold", "trigger", "guardMegabytes", "dangerMegabytes", "resumeMegabytes", "swapRoomMegabytes", "headroomMegabytes", "headroomGuardMegabytes", "headroomDangerMegabytes", "actions"],
       "properties": {
         "level": {"$ref": "#/definitions/Level"},
         "calmTicks": {"type": "integer", "minimum": 0},
         "hold": {"type": "boolean"},
+        "trigger": {"anyOf": [{"type": "null"}, {"$ref": "#/definitions/Trigger"}]},
         "guardMegabytes": {"type": "integer", "minimum": 0},
         "dangerMegabytes": {"type": "integer", "minimum": 0},
         "resumeMegabytes": {"type": "integer", "minimum": 0},
@@ -229,13 +284,16 @@
         "atMs": {"type": "integer", "minimum": 0},
         "observed": {"type": "boolean"},
         "level": {"$ref": "#/definitions/Level"},
-        "action": {"enum": ["suspend", "resume", "cancel"]},
-        "reason": {"enum": ["guard", "danger", "overdue", "calm"]},
+        "action": {"enum": ["suspend", "resume", "cancel", "report"]},
+        "reason": {"enum": ["guard", "danger", "overdue", "calm", "cap", "ceiling"]},
         "id": {"type": "string", "minLength": 1},
         "pid": {"type": "integer", "minimum": 1},
         "kind": {"type": "string", "minLength": 1},
         "owner": {"type": "string"},
         "megabytes": {"type": "integer", "minimum": 0},
+        "trigger": {"$ref": "#/definitions/Trigger"},
+        "capMegabytes": {"type": "integer", "minimum": 1},
+        "ceiling": {"$ref": "#/definitions/Ceiling"},
         "host": {
           "type": "object",
           "additionalProperties": false,
@@ -263,7 +321,7 @@
       "description": "The record written before a cancel signal, so the owner of the process can tell a warden cancel from a crash and requeue instead of failing.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["version", "pid", "start", "kind", "owner", "command", "megabytes", "atMs", "reason"],
+      "required": ["version", "pid", "start", "kind", "owner", "command", "megabytes", "atMs", "reason", "ancestors"],
       "properties": {
         "version": {"const": 1},
         "pid": {"type": "integer", "minimum": 1},
@@ -273,7 +331,10 @@
         "command": {"type": "string", "maxLength": 512},
         "megabytes": {"type": "integer", "minimum": 0},
         "atMs": {"type": "integer", "minimum": 0},
-        "reason": {"enum": ["guard", "danger", "overdue", "calm"]}
+        "reason": {"enum": ["guard", "danger", "overdue", "calm", "cap", "ceiling"]},
+        "ancestors": {"type": "array", "maxItems": 64, "items": {"type": "integer", "minimum": 1}, "description": "The pids of the processes above the cancelled one, nearest first: the owner of a build finds the cancels that hit its own process tree by its pid, whatever the command line says."},
+        "capMegabytes": {"type": "integer", "minimum": 1},
+        "ceiling": {"$ref": "#/definitions/Ceiling"}
       }
     },
     "Absent": {
@@ -342,6 +403,8 @@
             "byKind": {"type": "object", "additionalProperties": {"$ref": "#/definitions/KindTotal"}}
           }
         },
+        "trigger": {"anyOf": [{"type": "null"}, {"$ref": "#/definitions/Trigger"}]},
+        "others": {"type": "array", "items": {"$ref": "#/definitions/Other"}},
         "suspended": {"type": "array", "items": {"$ref": "#/definitions/Suspended"}},
         "counters": {
           "type": "object",
@@ -372,10 +435,21 @@
       "const": {
         "en": {
           "alarm": "[warden] {action} {kind} pid {pid} ({owner}, {megabytes} MB): {reason}; host {available} MB available (guard {guard} MB, danger {danger} MB), swap {swap}, pressure {pressure}{headroom}{observed}",
-          "actions": {"suspend": "suspended", "resume": "resumed", "cancel": "cancelled"},
+          "actions": {"suspend": "suspended", "resume": "resumed", "cancel": "cancelled", "report": "reported"},
           "headroom": ", headroom {headroom} MB (guard {headroomGuard} MB, danger {headroomDanger} MB)",
-          "triggers": {"guard": {"available": "available memory is below the guard line", "headroom": "available memory plus swap that can still grow is below the headroom guard line", "pressure": "memory pressure is warn", "swap": "swap-out rate is high and available memory is below the resume line"}, "danger": {"available": "available memory is below the danger line", "headroom": "available memory plus swap that can still grow is below the headroom danger line", "pressure": "memory pressure is critical"}},
-          "reasons": {"overdue": "suspended for too long", "calm": "memory is calm again"},
+          "triggers": {"guard": {"available": "available memory is below the guard line", "headroom": "available memory plus swap that can still grow is below the headroom guard line", "pressure": "memory pressure is warn", "critical": "memory pressure is critical and available memory is below the resume line", "swap": "swap-out rate is high and available memory is below the resume line", "swap-used": "swap in use is above its line and available memory is below the resume line", "swap-share": "the share of the swap in use is above its line and available memory is below the resume line", "compressed": "compressed memory is above its line", "cap": "a build-critical process crossed its memory cap"}, "danger": {"available": "available memory is below the danger line", "headroom": "available memory plus swap that can still grow is below the headroom danger line", "pressure": "memory pressure is critical", "swap-used": "swap in use is above its danger line and available memory is below the guard line", "swap-share": "the share of the swap in use is above its danger line and available memory is below the guard line", "compressed": "compressed memory is above its danger line"}},
+          "reasons": {"overdue": "suspended for too long", "calm": "memory is calm again", "cap": "its memory is over the cap of {cap} MB for {kind}", "capCrossed": "its memory crossed the cap of {cap} MB for {kind}; it is a build-critical kind, so other work is held first and it is only killed when the host is critical", "ceiling": "unit {unit} peaked at {peak} MB, above its {ceilingKind} ceiling of {ceiling} MB, and it is not on the carving list: carve it along the domain taxonomy so that it fits", "ceilingListed": "unit {unit} peaked at {peak} MB, above its declared carving budget of {ceiling} MB (measured {measured} MB): carve it further, or measure it again and declare the new budget", "guard": "the host was short of memory (tight) and the process stayed suspended for too long", "danger": "the host was critically short of memory"},
+          "ceilingKinds": {"library": "library", "final": "final link"},
+          "cancelLine": "[warden] cancelled {kind} pid {pid} ({megabytes} MB): {reason}",
+          "failure": {"head": "[warden] the build cannot finish: the host warden cancelled {count} of its processes to keep this machine from running out of memory", "line": "  - {kind} pid {pid} ({owner}, {megabytes} MB): {reason}", "tail": "Nothing is retried. Remove the cause named above (carve a unit that is over its ceiling) or wait until the host memory is calm, then run the command again."},
+          "levels": {"calm": "calm", "guard": "tight", "danger": "critical"},
+          "triggerNone": "no trigger",
+          "held": "[warden] {operation} waits: host memory is {level} ({trigger}); nothing heavy starts until it is calm (available {available} MB, swap in use {swap} MB, compressed {compressed} MB)",
+          "status": "Memory guard: {level} ({mode}), {trigger}; available {available} of {total} MB, swap in use {swap} MB, compressed {compressed} MB, pressure {pressure}; suspended {suspended}, resumed {resumed}, cancelled {cancelled}",
+          "statusOthers": "Memory guard: largest consumers it does not own: {others}",
+          "statusOther": "{command} (pid {pid}, {processes} processes, {megabytes} MB)",
+          "statusAbsent": "Memory guard: no warden is running on this machine",
+          "statusAlarm": "Memory guard: last action: {text}",
           "pressures": {"normal": "normal", "warn": "warn", "critical": "critical"},
           "observed": " [observe mode: nothing was signalled]",
           "swapUnknown": "unknown",
@@ -389,10 +463,21 @@
         },
         "de": {
           "alarm": "[Wächter] {action} {kind} pid {pid} ({owner}, {megabytes} MB): {reason}; Host {available} MB verfügbar (Wache {guard} MB, Gefahr {danger} MB), Swap {swap}, Druck {pressure}{headroom}{observed}",
-          "actions": {"suspend": "angehalten", "resume": "fortgesetzt", "cancel": "abgebrochen"},
+          "actions": {"suspend": "angehalten", "resume": "fortgesetzt", "cancel": "abgebrochen", "report": "gemeldet"},
           "headroom": ", Reserve {headroom} MB (Wache {headroomGuard} MB, Gefahr {headroomDanger} MB)",
-          "triggers": {"guard": {"available": "der verfügbare Speicher liegt unter der Wachlinie", "headroom": "der verfügbare Speicher plus noch wachsender Swap liegt unter der Wachlinie der Reserve", "pressure": "der Speicherdruck ist Warnung", "swap": "die Swap-Auslagerungsrate ist hoch und der verfügbare Speicher liegt unter der Wiederaufnahmelinie"}, "danger": {"available": "der verfügbare Speicher liegt unter der Gefahrenlinie", "headroom": "der verfügbare Speicher plus noch wachsender Swap liegt unter der Gefahrenlinie der Reserve", "pressure": "der Speicherdruck ist kritisch"}},
-          "reasons": {"overdue": "zu lange angehalten", "calm": "der Speicher ist wieder ruhig"},
+          "triggers": {"guard": {"available": "der verfügbare Speicher liegt unter der Wachlinie", "headroom": "der verfügbare Speicher plus noch wachsender Swap liegt unter der Wachlinie der Reserve", "pressure": "der Speicherdruck ist Warnung", "critical": "der Speicherdruck ist kritisch und der verfügbare Speicher liegt unter der Wiederaufnahmelinie", "swap": "die Swap-Auslagerungsrate ist hoch und der verfügbare Speicher liegt unter der Wiederaufnahmelinie", "swap-used": "der belegte Swap liegt über seiner Linie und der verfügbare Speicher unter der Wiederaufnahmelinie", "swap-share": "der Anteil des belegten Swaps liegt über seiner Linie und der verfügbare Speicher unter der Wiederaufnahmelinie", "compressed": "der komprimierte Speicher liegt über seiner Linie", "cap": "ein baukritischer Prozess hat seine Speicherobergrenze überschritten"}, "danger": {"available": "der verfügbare Speicher liegt unter der Gefahrenlinie", "headroom": "der verfügbare Speicher plus noch wachsender Swap liegt unter der Gefahrenlinie der Reserve", "pressure": "der Speicherdruck ist kritisch", "swap-used": "der belegte Swap liegt über seiner Gefahrenlinie und der verfügbare Speicher unter der Wachlinie", "swap-share": "der Anteil des belegten Swaps liegt über seiner Gefahrenlinie und der verfügbare Speicher unter der Wachlinie", "compressed": "der komprimierte Speicher liegt über seiner Gefahrenlinie"}},
+          "reasons": {"overdue": "zu lange angehalten", "calm": "der Speicher ist wieder ruhig", "cap": "sein Speicher liegt über der Obergrenze von {cap} MB für {kind}", "capCrossed": "sein Speicher hat die Obergrenze von {cap} MB für {kind} überschritten; die Art ist baukritisch, daher wird zuerst anderes angehalten und erst bei kritischem Host abgebrochen", "ceiling": "Einheit {unit} erreichte {peak} MB und liegt über ihrer Obergrenze {ceilingKind} von {ceiling} MB; sie steht nicht auf der Carving-Liste: entlang der Domänen-Taxonomie schneiden, damit sie passt", "ceilingListed": "Einheit {unit} erreichte {peak} MB und liegt über ihrem erklärten Carving-Budget von {ceiling} MB (gemessen {measured} MB): weiter schneiden oder neu messen und das neue Budget eintragen", "guard": "der Host hatte knappen Speicher (angespannt) und der Prozess blieb zu lange angehalten", "danger": "der Host hatte kritisch wenig Speicher"},
+          "ceilingKinds": {"library": "Bibliothek", "final": "Final-Link"},
+          "cancelLine": "[Wächter] abgebrochen {kind} pid {pid} ({megabytes} MB): {reason}",
+          "failure": {"head": "[Wächter] der Build kann nicht enden: der Host-Wächter hat {count} seiner Prozesse abgebrochen, damit dieser Rechner nicht ohne Speicher gerät", "line": "  - {kind} pid {pid} ({owner}, {megabytes} MB): {reason}", "tail": "Es wird nichts wiederholt. Die oben genannte Ursache beheben (eine Einheit über ihrer Obergrenze schneiden) oder warten, bis der Host-Speicher ruhig ist, dann den Befehl erneut ausführen."},
+          "levels": {"calm": "ruhig", "guard": "knapp", "danger": "kritisch"},
+          "triggerNone": "kein Auslöser",
+          "held": "[Wächter] {operation} wartet: der Hostspeicher ist {level} ({trigger}); nichts Schweres startet, bis er wieder ruhig ist (verfügbar {available} MB, Swap belegt {swap} MB, komprimiert {compressed} MB)",
+          "status": "Speicherwächter: {level} ({mode}), {trigger}; verfügbar {available} von {total} MB, Swap belegt {swap} MB, komprimiert {compressed} MB, Druck {pressure}; angehalten {suspended}, fortgesetzt {resumed}, abgebrochen {cancelled}",
+          "statusOthers": "Speicherwächter: größte fremde Verbraucher: {others}",
+          "statusOther": "{command} (pid {pid}, {processes} Prozesse, {megabytes} MB)",
+          "statusAbsent": "Speicherwächter: auf diesem Rechner läuft kein Wächter",
+          "statusAlarm": "Speicherwächter: letzte Maßnahme: {text}",
           "pressures": {"normal": "normal", "warn": "Warnung", "critical": "kritisch"},
           "observed": " [Beobachtungsmodus: nichts wurde signalisiert]",
           "swapUnknown": "unbekannt",

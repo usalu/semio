@@ -3,6 +3,7 @@ import {dirname,join,relative,resolve,sep} from "node:path";
 import {fleetReportV1} from "../../🩺️attest/🟦️.ts";
 import {adoptV1,planAdoptV1,type AdoptPlanV1,type AdoptResultV1,type AdoptStepV1} from "../🧲️adopt/🟦️.ts";
 import {closeReplicaV1,localPathsV1,openReplicaV1,requireReplicaShapeV1,setSyncEnabledV1,verifyV1,type ReplicaOptionsV1,type ReplicaSinkV1,type VerifyReportV1} from "../🟦️.ts";
+import {processHolderAliveV1,requireProcessIdentityV1} from "../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts";
 
 /** 📍️ The phases of a relocation: `prepare` stops the old tree from publishing, `move` takes the machine identity to the new tree and adopts the store there (the old services must be stopped by then), `finish` verifies the new tree (and the fleet, with a wait) and only then retires the old tree, `all` runs the three in a row. */
 export type RelocatePhaseV1="prepare"|"move"|"finish"|"all";
@@ -46,9 +47,9 @@ async function identityOf(worktree:string):Promise<Identity|undefined>{
 }
 
 async function alive(worktree:string):Promise<boolean>{
- const value=await readJson(localPathsV1(worktree).lock) as {pid?:unknown}|undefined;
- if(typeof value?.pid!=="number")return false;
- try{process.kill(value.pid,0);return true;}catch(error){return (error as {code?:string}).code==="EPERM";}
+ const value=await readJson(localPathsV1(worktree).lock);
+ if(value===undefined)return false;
+ return processHolderAliveV1(requireProcessIdentityV1(value,"daemon.lock"));
 }
 
 const inside=(parent:string,child:string):boolean=>{const path=relative(parent,child);return path!==""&&!path.startsWith("..")&&!path.startsWith(sep)&&resolve(parent,path)===child;};

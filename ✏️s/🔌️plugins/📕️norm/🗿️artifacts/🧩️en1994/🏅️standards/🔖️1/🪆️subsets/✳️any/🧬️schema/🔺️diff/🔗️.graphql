@@ -13,7 +13,7 @@ type En1994Diff {
   insulationThicknessM: JSON
   fatigueDetail: JSON
   reliabilityClass: JSON
-  cases: CaseRowDelta
+  cases: CaseRowDelta!
 }
 type En1994BeamsActionsInserted {
   index: Int!

@@ -27,6 +27,7 @@
     "./return": "./📤️return/🟦️.ts",
     "./return/response": "./📤️return/📨️response/🟦️.ts",
     "./shard-client/activation": "./📮️shard-client/🔐️activation/🟦️.ts",
+    "./shard-client/core-modules": "./📮️shard-client/🧊️core-modules/🟦️.ts",
     "./shard-client/heartbeat": "./📮️shard-client/💓️heartbeat/🟦️.ts",
     "./shard-client/quota": "./📮️shard-client/🚨️quota/🟦️.ts",
     "./shard-client/ui-patch": "./📮️shard-client/🩹️ui-patch/🟦️.ts",

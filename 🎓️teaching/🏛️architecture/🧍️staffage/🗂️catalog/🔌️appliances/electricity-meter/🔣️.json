@@ -13,15 +13,69 @@
       "de": "Ein einphasiger Stromzähler der Bauart Ferraris, 0,132 m breit und 0,212 m hoch, vom Raum aus gesehen: eine Grundplatte mit Klemmenblock, eine helle Kappe mit einem Fenster auf das Zifferblatt, das Rollenzählwerk und die Kante der waagrechten Läuferscheibe aus Aluminium, deren dunkle Marke mit der Last von links nach rechts läuft, und darunter ein Klemmendeckel."
     },
     "tags": [
-      "meter",
-      "electricity-meter",
-      "ferraris",
-      "final-energy",
-      "billing",
-      "wall-mounted",
-      "appliance",
-      "electrical",
-      "rotating"
+      {
+        "id": "meter",
+        "title": {
+          "en": "meter",
+          "de": "Zähler"
+        }
+      },
+      {
+        "id": "electricity-meter",
+        "title": {
+          "en": "electricity meter",
+          "de": "Stromzähler"
+        }
+      },
+      {
+        "id": "ferraris",
+        "title": {
+          "en": "Ferraris meter",
+          "de": "Ferraris-Zähler"
+        }
+      },
+      {
+        "id": "final-energy",
+        "title": {
+          "en": "final energy",
+          "de": "Endenergie"
+        }
+      },
+      {
+        "id": "billing",
+        "title": {
+          "en": "billing",
+          "de": "Abrechnung"
+        }
+      },
+      {
+        "id": "wall-mounted",
+        "title": {
+          "en": "wall mounted",
+          "de": "wandmontiert"
+        }
+      },
+      {
+        "id": "appliance",
+        "title": {
+          "en": "appliance",
+          "de": "Gerät"
+        }
+      },
+      {
+        "id": "electrical",
+        "title": {
+          "en": "electrical",
+          "de": "Elektro"
+        }
+      },
+      {
+        "id": "rotating",
+        "title": {
+          "en": "rotating",
+          "de": "rotierend"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage content (G4)",

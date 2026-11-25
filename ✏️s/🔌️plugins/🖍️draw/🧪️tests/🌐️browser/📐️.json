@@ -8,6 +8,7 @@
     "minimumBootLayers",
     "example",
     "exampleLayer",
+    "bootPaint",
     "emptyExample",
     "blankExample",
     "utility",
@@ -45,6 +46,36 @@
     },
     "exampleLayer": {
       "const": "emblem-orange"
+    },
+    "bootPaint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "color",
+        "tolerance",
+        "minimumPixels"
+      ],
+      "properties": {
+        "color": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        },
+        "tolerance": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 64
+        },
+        "minimumPixels": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
     },
     "emptyExample": {
       "const": {
@@ -130,6 +161,9 @@
         "boot",
         "blank",
         "example",
+        "copy",
+        "paste",
+        "cut",
         "attach",
         "rectangle",
         "undo",

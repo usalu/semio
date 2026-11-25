@@ -67,14 +67,14 @@ fn merge_status_json(computing: Option<String>, preview_status: Option<String>) 
 
 /// 👁️ Merges the session's live "still computing" flag, the resumable tessellation's progress and a
 /// fresh [`preview_status_json`] result into the one status object a preview window publishes.
-pub fn preview_scene_status_json(session: Option<&FlowEvalSession>, run: Option<&ToolRunView>, preview_status: Option<String>) -> Option<String> {
+pub fn preview_scene_status_json(session: Option<&FlowEvalSession>, run: Option<semio_plugin::ToolRunPollView<'_>>, preview_status: Option<String>) -> Option<String> {
     let chain = session.map(FlowEvalSession::preview_chain_status).unwrap_or_default();
-    let computing = (chain.working || (run.is_some_and(preview_eval_run_is_abortable) && !chain.settled())).then(|| r#"{"computing":true}"#.to_string());
+    let computing = (chain.working || (run.as_ref().is_some_and(preview_eval_run_is_abortable) && !chain.settled())).then(|| r#"{"computing":true}"#.to_string());
     merge_status_json(merge_status_json(computing, Some(preview_progress_status_json(session, run))), preview_status)
 }
 
 /// ⏯️ Whether `run` is this surface's preview evaluation and still has work its abort would stop.
-pub fn preview_eval_run_is_abortable(run: &ToolRunView) -> bool {
+pub fn preview_eval_run_is_abortable(run: &semio_plugin::ToolRunPollView<'_>) -> bool {
     run.tool_id == PREVIEW_EVAL_TOOL_ID && matches!(run.state, ToolRunState::Starting | ToolRunState::Running | ToolRunState::Paused)
 }
 
@@ -88,7 +88,7 @@ pub fn preview_eval_run_is_abortable(run: &ToolRunView) -> bool {
 /// resolved through the SAME [`geometry_extension_address`] the invocation producer uses — read
 /// live, never cached — and published as `phase: "faulted"` plus a `fault` object naming the flow
 /// extension id and every `<manifest id> → <owning plugin id>` translation the session does carry.
-pub fn preview_progress_status_json(session: Option<&FlowEvalSession>, run: Option<&ToolRunView>) -> String {
+pub fn preview_progress_status_json(session: Option<&FlowEvalSession>, run: Option<semio_plugin::ToolRunPollView<'_>>) -> String {
     preview_progress_status_json_for(session, run, geometry_extension_address())
 }
 
@@ -96,7 +96,7 @@ pub fn preview_progress_status_json(session: Option<&FlowEvalSession>, run: Opti
 /// the unaddressable branch is provable without mutating the process-global contribution table (a
 /// test that uninstalls and reinstalls it poisons the flow catalogue's cache lock and leaves the
 /// neural registry unretired for every later test in the binary).
-pub fn preview_progress_status_json_for(session: Option<&FlowEvalSession>, run: Option<&ToolRunView>, address: Result<String, semio_os_flow::FlowExtensionAddressMiss>) -> String {
+pub fn preview_progress_status_json_for(session: Option<&FlowEvalSession>, run: Option<semio_plugin::ToolRunPollView<'_>>, address: Result<String, semio_os_flow::FlowExtensionAddressMiss>) -> String {
     let status = session.map(FlowEvalSession::preview_tessellate_status).unwrap_or_default();
     let eval_status = session.map(FlowEvalSession::preview_eval_status).unwrap_or_default();
     let chain = session.map(FlowEvalSession::preview_chain_status).unwrap_or_default();
@@ -236,7 +236,7 @@ pub struct PreviewStatusDebug<'a> {
 /// 📈️ THE preview-window status projection: progress + widget errors + debug counters + the
 /// optional authored hint a window shows while it has nothing to paint. All three World3d preview
 /// windows publish exactly this, so a probe, a shell pane and a law can name one shape.
-pub fn preview_window_status_json(session: Option<&FlowEvalSession>, run: Option<&ToolRunView>, widget_status: Option<String>, debug: &PreviewStatusDebug<'_>, hint: Option<&str>) -> Option<String> {
+pub fn preview_window_status_json(session: Option<&FlowEvalSession>, run: Option<semio_plugin::ToolRunPollView<'_>>, widget_status: Option<String>, debug: &PreviewStatusDebug<'_>, hint: Option<&str>) -> Option<String> {
     let base = preview_scene_status_json(session, run, widget_status);
     let mut object = base.as_deref().and_then(|text| semio_framework_pack_json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).ok()).and_then(|value| value.as_object().cloned()).unwrap_or_else(semio_framework_pack_json::Object::new);
     let mut debug_object = semio_framework_pack_json::Object::new();

@@ -5,7 +5,7 @@ const { chromium } = require("playwright");
 const quiz = process.argv[2] ?? "heating";
 const size = { width: Number(process.argv[3] ?? 40), height: Number(process.argv[4] ?? 40) };
 const browser = await chromium.launch();
-const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
+const page = await browser.newPage({ viewport: { width: Number(process.argv[5] ?? 1280), height: Number(process.argv[6] ?? 720) } });
 await page.goto("http://127.0.0.1:6061/" + (quiz === "home" ? "" : "#" + quiz));
 await page.waitForSelector(quiz === "home" ? "#course-main [data-card] [data-window-frame]" : `[data-layered-pane="${quiz}"][data-opened] [data-pet-prop]`, { timeout: 180000 });
 await page.waitForTimeout(3000);

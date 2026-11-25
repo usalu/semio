@@ -4,15 +4,20 @@
  * - `{ "op": "front-sweep", scale, id }`: the front shape becomes (or stays) an `extruded` solid with `sweep: "v"`; its outline is kept (a flat front outline is first re-expressed in the bone-local (u, w) plane), cut along the bone to the u-range of the elevation twin (stretched to it where it falls short; `"range": "stretch"` only stretches, `"keep"` leaves it; `"lateral": "plan"` cuts it the same way across the bone to the lateral range of the plan twin), and `z0`, `z1`, `zTip` are fitted so that the (u, v) footprint of the prism has the support function of the elevation outline in every direction (so the heights agree at every sagittal angle).
  * - `{ "op": "extrude", scale, id, "view": "front" | "plan" }`: the exact alternative for a part whose front outline is a plain taper (and for the plan of a part that is a prism): the shape takes the elevation outline as its profile and becomes an `extruded` solid with `sweep: "w"` whose lateral span `z0`, `z1`, `zTip` is fitted to the (u, w) footprint the shape had; elevation and this view then agree at every pose by construction, and the view draws the hull of the swept outline instead of its own outline. It is also the op for a bone that points at the viewer of the front view (a foot, a toe): there no front outline can be swept along v and `front-sweep` refuses.
  * - `{ "op": "plan-revolve", scale, id }`: the plan shape becomes (or stays) a `revolved` solid about the bone axis. An elevation twin that is itself revolved is copied (one body in three views). Else an existing revolved profile is kept in shape, cut or stretched to the u-range of the elevation twin, and its axis offset and radius scale are fitted to the (u, v) footprint of the elevation twin and the (u, w) footprint of the front twin; a flat plan shape gets a new profile of the mean half thickness of the two twins at nine stations (`"stations": n`).
- * - `{ "op": "copy", scale, id, "from": view, "to": [view…] }`: the geometry and the solid of the shape in `from` replace those of its twins in `to` (the same revolved or extruded body in several views); `"create": true` adds a missing twin with the paint fields of the source.
- * - `{ "op": "set", scale, view, id, "set": {…} }` and `{ "op": "remove", scale, view, id }`: a hand-made correction of single fields, or the removal of a shape.
+ * - `{ "op": "copy", scale, id, "from": view, "to": [view…] }`: the geometry and the solid of the shape in `from` replace those of its twins in `to` (the same revolved or extruded body in several views); `"create": true` adds a missing twin with the paint fields of the source. `"createOnly": true` (MH-3, third fixer) only adds the missing twin and leaves an existing one alone (a part split off another shape, which later `set` ops give its own geometry). `"once": true` (MH-3, third fixer) leaves a target alone that is already a solid of the kind and sweep of the source, so that a later op of the list may refit the copy (the 1:200 trunk prism that takes the section of 1:50 and its own span) and a second run changes nothing.
+ * - `{ "op": "set", scale, view, id, "set": {…} }` and `{ "op": "remove", scale, view, id }`: a hand-made correction of single fields, or the removal of a shape (`"ifPresent": true` on `set` leaves a missing shape alone: the paint of a shape that a later loft step replaces and inherits).
  * - `{ "op": "anchor", id, "set": {…} }`: binds an anchor (`bone`, `x`, `y`, `z`).
- * - `{ "op": "plan-sweep-u", scale, id }` (MH-3): the plan shape of a part that stands along its bone (trunk, neck, head, hood: the plan looks along `u`) keeps its outline and becomes an `extruded` solid with `sweep: "u"`: the outline is re-expressed as the transverse (v, w) section of the bone and swept from `z0` to `z1`, the u-range of the elevation twin fitted so that the (u, v) footprint of the prism has the support function of the elevation outline (`"span": [u0, u1]` states it instead, `"twin"` names another elevation shape); a shape that is such a prism already is refitted (`"view": "front"` refits a front shape that is one); `"section": "ellipse"` replaces a plan shape that has no outline of its own (a copy of the front prism) by an ellipse over the thickness of the elevation twin and the width of the front twin.
+ * - `{ "op": "plan-sweep-u", scale, id }` (MH-3): the plan shape of a part that stands along its bone (trunk, neck, head, hood: the plan looks along `u`) keeps its outline and becomes an `extruded` solid with `sweep: "u"`: the outline is re-expressed as the transverse (v, w) section of the bone and swept from `z0` to `z1`, the u-range of the elevation twin fitted so that the (u, v) footprint of the prism has the support function of the elevation outline (`"span": [u0, u1]` states it instead, `"twin"` names another elevation shape); a shape that is such a prism already is refitted (`"view": "front"` refits a front shape that is one); `"section": "ellipse"` replaces a plan shape that has no outline of its own (a copy of the front prism) by an ellipse over the thickness of the elevation twin and the width of the front twin, `"section": "volume"` by the superellipse over the largest half axes of the sections of the loft (the plan looks along the bone and sees them all; centre and exponent of the widest section) of the same id in the authored volume (`"volumeId"` names another).
  * - `{ "op": "elevation-extrude", scale, id }` (MH-3): a flat ELEVATION shape on a bone that a pose twists or spreads becomes an `extruded` solid with `sweep: "w"` over the lateral range of its front twin (`"z": [z0, z1]` states it in asset coordinates, `"frontTwin"` names another front shape), so the side view widens with the twist as the front and plan solids do; the outline is kept.
- * - `"fromBone"`, `"fromId"` on `copy` (MH-3): the source is the shape `fromId` of the mirror limb `fromBone` (a revolved body is the same on the left and on the right: its axis bone becomes `bone` and its lateral axis offset changes sign); `as` names a target whose id differs from the source.
+ * - `"fromBone"`, `"fromId"` on `copy` (MH-3): the source is the shape `fromId` of the mirror limb `fromBone` (a revolved body is the same on the left and on the right: its axis bone becomes `bone` and its lateral axis offset changes sign); `as` names a target whose id differs from the source; `"fromScale"` takes the source from another band (the section of a trunk prism that a coarser band has no outline for).
  * - `"view": "plan"` on `front-sweep` (MH-3): refits the span of a PLAN shape that is a prism along v already (a hand drawn by its (u, w) outline).
  * - `"revolvedTwin": true` on `front-sweep` (MH-3): the elevation twin may be a revolved body; the front keeps its own outline (a sleeve traced from the volume, whose section is no circle) and is swept over the thickness of that body.
  * - `"spanOf": id` on `front-sweep` (MH-3): a part that lies on another (a fringe on the hair) takes the fitted span of that front shape instead of a fit of its own.
+ * - `"axis": [v, w] | "volume"` on `plan-revolve` (MH-3): the axis of the revolved body is not fitted but stated in the bone frame, or taken from the loft of the same id in the authored volume (a sleeve whose sections lie beside the bone axis); `"profile": "volume"` takes the radius profile from that loft too (the mean of its two half axes at every section), so the drawing is the body of revolution nearest to the solid.
+ * - `"span": "box"` on `extrude` with `"view": "front"` (MH-3): the lateral span of the prism is the lateral range the flat front shape had, the same at the joint and at the tip (a shoe on a foot bone that rests inclined: no outline of it in the bone's (u, w) plane can be read from the front drawing).
+ * - `{ "op": "run", scale, id, "width"? }` (MH-3): see `run` below; for the plan of a shoe at the scales whose silhouette tolerance a rectangular prism does not meet.
+ * - `"fitSection": true` on `plan-sweep-u` (MH-3, second fixer): the depth of the section (its extent along v, about its middle) is fitted together with the span, between 0.75 and 1.1 of the drawn depth: a trunk whose side outline is rounded at the shoulders is no box, and a box of the full drawn depth reaches ahead of the side view by its corner when the trunk bends.
+ * - `{ "op": "simplify", scale, "view"?, "id"?, "tolerance"?, "min"? }` (MH-3, second fixer): the outline of a solid shape that the silhouette rounds traced from a raster (several hundred vertices in steps of a millimetre) is reduced to the vertices that carry its form (Ramer-Douglas-Peucker on the closed ring, at most `tolerance` metres off the traced outline, default 0.001: 0.02 mm on paper at 1:50), because the engine unites one quad per edge of a prism for every evaluated state and such an asset takes minutes per state. Without `id` every solid shape of the scale (of `view`, or of the three views) with more than `min` vertices (default 60) is taken; the rings of a path with several are reduced each for itself, and a ring that falls below three vertices (smaller than the tolerance) leaves the path. A shape is only rewritten when at least a tenth of its vertices goes, so a second run changes nothing.
  * - `"swing": degrees` on `front-sweep` and `plan-sweep-u` (MH-3): the footprint is fitted only in the directions a view measures while the bone turns at most that far from rest (the height for the front, within `swing` of the bone axis; the forward reach for the plan, within `swing` of the bone normal) instead of all around. It is the fit for a round part (a head) that no prism matches in every direction.
  * @see ../MR/gate.ts — the measurement that says which bones need an op */
 import { join } from "node:path";
@@ -207,7 +212,7 @@ function frontExtrude(op: any): string {
   const profile = pointsOf(twin);
   const [a, b] = rangeOf(profile, 0);
   const edgeOn = Math.abs(frame.u[1] * frame.w[2] - frame.w[1] * frame.u[2]) < 0.2;
-  const lateral = shape.solid !== undefined ? undefined : op.view === "plan" ? rangeOf(pointsOf(shape), 1).map((z) => z - frame.o[2]) : edgeOn ? rangeOf(pointsOf(shape), 0).map((z) => z - frame.o[2]) : undefined;
+  const lateral = shape.solid !== undefined ? undefined : op.view === "plan" ? rangeOf(pointsOf(shape), 1).map((z) => z - frame.o[2]) : edgeOn || op.span === "box" ? rangeOf(pointsOf(shape), 0).map((z) => z - frame.o[2]) : undefined;
   const across = shape.solid?.kind === "extruded" && shape.solid.sweep === "w" ? undefined : lateral !== undefined ? [a, b].flatMap((u) => lateral.map((w) => [u, w] as const)) : footprint(shape, op.view ?? "front", frame, length, 2);
   if (across !== undefined) {
     const prism = (p: readonly number[]): P2[] =>
@@ -230,6 +235,22 @@ function copyGeometry(source: any, target: any): void {
   for (const key of GEOMETRY_KEYS) if (source[key] !== undefined) target[key] = structuredClone(source[key]);
 }
 
+/** 🧊️ The local offset (v, w) of the axis a revolved drawing takes with `"axis"`: the two numbers given, or with `"volume"` the mean centre of the wide sections (at least half the largest radius) of the loft of the same id and bone in the authored volume of the scale (`"volumeId"` names another solid). */
+function volumeAxis(op: any, shape: any): [number, number] {
+  if (Array.isArray(op.axis)) return [op.axis[0], op.axis[1]];
+  const solid = volumeLoft(op, shape);
+  const widest = Math.max(...solid.sections.map((section: any) => Math.max(section.rx, section.ry)));
+  const wide = solid.sections.filter((section: any) => Math.max(section.rx, section.ry) >= widest / 2);
+  return [wide.reduce((sum: number, section: any) => sum + section.at[1], 0) / wide.length, wide.reduce((sum: number, section: any) => sum + section.at[2], 0) / wide.length];
+}
+
+/** 🫙️ The loft of the authored volume of the scale that a drawn limb stands for: the body solid of the same id and bone (`"volumeId"` names another). */
+function volumeLoft(op: any, shape: any): any {
+  const solid = (asset.volumes?.[op.scale]?.body ?? []).find((candidate: any) => candidate.id === (op.volumeId ?? shape.id) && candidate.bone === shape.bone);
+  if (solid?.kind !== "loft") throw new Error(`1:${op.scale} "${op.id}": the volume has no loft "${op.volumeId ?? shape.id}" on ${shape.bone}`);
+  return solid;
+}
+
 function planRevolve(op: any): string {
   const shape = need(op.scale, "plan", op.id, op.bone);
   const frame = frames[shape.bone]!.frame;
@@ -237,16 +258,18 @@ function planRevolve(op: any): string {
   const twin = find(op.scale, "elevation", op.twin ?? op.id, shape.bone);
   if (twin === undefined) throw new Error(`1:${op.scale} "${op.id}" has no elevation twin on ${shape.bone}`);
   const before = snapshot(shape);
-  if (twin.solid?.kind === "revolved") {
+  if (twin.solid?.kind === "revolved" && op.axis === undefined && op.profile === undefined) {
     copyGeometry(twin, shape);
     return `${settle(shape, before) ? "copied" : "unchanged"}: the revolved elevation twin`;
   }
   const side = footprint(twin, "elevation", frame, length, 1)!;
   const frontTwin = find(op.scale, "front", op.frontTwin ?? op.id, shape.bone);
   const across = frontTwin === undefined ? undefined : footprint(frontTwin, "front", frame, length, 2);
-  const range = rangeOf(side, 0);
+  const lofted: P2[] | undefined = op.profile === "volume" ? volumeLoft(op, shape).sections.map((section: any) => [section.at[0], (section.rx + section.ry) / 2] as const).sort((a: P2, b: P2) => a[0] - b[0]) : undefined;
+  const range = lofted === undefined ? rangeOf(side, 0) : rangeOf(lofted, 0);
   let radial: P2[];
-  if (shape.solid?.kind === "revolved" && op.rebuild !== true) radial = op.range === "stretch" ? stretch(revolvedOf(shape, frame).radial, range) : clipStretch(revolvedOf(shape, frame).radial, range);
+  if (lofted !== undefined) radial = lofted;
+  else if (shape.solid?.kind === "revolved" && op.rebuild !== true) radial = op.range === "stretch" ? stretch(revolvedOf(shape, frame).radial, range) : clipStretch(revolvedOf(shape, frame).radial, range);
   else {
     const n = op.stations ?? 9;
     const half = (points: readonly P2[], u: number): number | undefined => {
@@ -270,7 +293,7 @@ function planRevolve(op: any): string {
   const cost = (p: readonly number[]): number => Math.max(mismatch(band(p[0]!, p[2]!), side), across === undefined ? 0 : mismatch(band(p[1]!, p[2]!), across)) + (p[2]! < 0.2 ? 1 : 0);
   const held = shape.solid?.kind === "revolved" && op.rebuild !== true ? [revolvedOf(shape, frame).av, revolvedOf(shape, frame).aw, 1] : undefined;
   const found = search(held ?? [mid(side), across === undefined ? 0 : mid(across), 1], cost, 0.02, 0.00005);
-  const [av, aw, scale] = (held !== undefined && cost(held) - cost(found) < 0.0003 ? held : found) as [number, number, number];
+  const [av, aw, scale] = (op.axis !== undefined ? [...volumeAxis(op, shape), 1] : held !== undefined && cost(held) - cost(found) < 0.0003 ? held : found) as [number, number, number];
   const t = Math.abs(frame.u[1]) < 0.05 ? 0 : -(av * frame.v[1] + aw * frame.w[1]) / frame.u[1];
   const offset: V3 = [av * frame.v[0] + aw * frame.w[0] + t * frame.u[0], 0, av * frame.v[2] + aw * frame.w[2] + t * frame.u[2]];
   if (Math.abs(dot(offset, frame.v) - av) > 0.0005) throw new Error(`1:${op.scale} "${op.id}": the bone lies level, so the axis of a revolved solid cannot be offset along its normal by ${(av * 1000).toFixed(0)} mm (the offset of an axis is horizontal): use the op "extrude" with "view": "plan"`);
@@ -283,7 +306,7 @@ function planRevolve(op: any): string {
 }
 
 function copy(op: any): string {
-  const source = need(op.scale, op.from, op.fromId ?? op.id, op.fromBone ?? op.bone);
+  const source = need(op.fromScale ?? op.scale, op.from, op.fromId ?? op.id, op.fromBone ?? op.bone);
   const bone = op.fromBone === undefined ? source.bone : (op.bone as string);
   const done: string[] = [];
   for (const view of op.to as string[]) {
@@ -293,6 +316,14 @@ function copy(op: any): string {
       target = { ...structuredClone(source), id: op.as ?? op.id, ...(op.paint ?? {}) };
       shapesOf(op.scale, view).push(target);
       done.push(`${view} created`);
+      continue;
+    }
+    if (op.createOnly === true) {
+      done.push(`${view} unchanged`);
+      continue;
+    }
+    if (op.once === true && source.solid !== undefined && target.solid?.kind === source.solid.kind && target.solid.sweep === source.solid.sweep) {
+      done.push(`${view} unchanged`);
       continue;
     }
     const before = JSON.stringify(target);
@@ -320,10 +351,21 @@ function planSweepU(op: any): string {
   const length = lengthOf(shape.bone);
   const prism = shape.solid?.kind === "extruded" && shape.solid.sweep === "u";
   if (!prism && (op.view ?? "plan") !== "plan") throw new Error(`1:${op.scale} ${op.view} "${op.id}" is no prism along u: only a plan outline can become one`);
-  if (shape.solid !== undefined && !prism && op.section !== "ellipse") throw new Error(`1:${op.scale} plan "${op.id}" is a ${shape.solid.kind} solid${shape.solid.sweep ? ` swept along ${shape.solid.sweep}` : ""}, not a sweep along u (state "section": "ellipse" to rebuild it)`);
+  if (shape.solid !== undefined && !prism && op.section === undefined) throw new Error(`1:${op.scale} plan "${op.id}" is a ${shape.solid.kind} solid${shape.solid.sweep ? ` swept along ${shape.solid.sweep}` : ""}, not a sweep along u (state "section": "ellipse" to rebuild it)`);
   const before = snapshot(shape);
   let section = shape.solid === undefined ? planLocal(pointsOf(shape), frame) : pointsOf(shape);
-  if (!prism && op.section === "ellipse") {
+  if (op.section === "volume") {
+    const loft = volumeLoft(op, shape);
+    const widest = loft.sections.reduce((best: any, section: any) => (section.rx * section.ry > best.rx * best.ry ? section : best));
+    const side = find(op.scale, "elevation", op.twin ?? op.id, shape.bone);
+    const deep = side === undefined ? undefined : footprint(side, "elevation", frame, length, 1);
+    const half = deep === undefined ? widest.ry : (rangeOf(deep, 1)[1] - rangeOf(deep, 1)[0]) / 2;
+    const [rx, ry] = [Math.max(...loft.sections.map((each: any) => each.rx)), Math.max(...loft.sections.map((each: any) => each.ry))];
+    const [hv, hw] = Math.abs(ry - half) <= Math.abs(rx - half) ? [ry, rx] : [rx, ry];
+    const bend = 2 / (widest.exponent ?? 2);
+    const curve = (value: number): number => Math.sign(value) * Math.abs(value) ** bend;
+    section = Array.from({ length: 32 }, (_, i) => [widest.at[1] + hv * curve(Math.cos((Math.PI * i) / 16)), widest.at[2] + hw * curve(Math.sin((Math.PI * i) / 16))] as const);
+  } else if (!prism && op.section === "ellipse") {
     const side = find(op.scale, "elevation", op.twin ?? op.id, shape.bone);
     const ahead = find(op.scale, "front", op.frontTwin ?? op.id, shape.bone);
     const deep = side === undefined ? undefined : footprint(side, "elevation", frame, length, 1);
@@ -339,12 +381,18 @@ function planSweepU(op: any): string {
     const target = twin === undefined ? undefined : footprint(twin, "elevation", frame, length, 1);
     if (target === undefined) throw new Error(`1:${op.scale} "${op.id}" has no elevation twin with a (u, v) footprint on ${shape.bone}: state "span" or "twin"`);
     const [v0, v1] = rangeOf(section, 0);
-    const box = (p: readonly number[]): P2[] => [[p[0]!, v0], [p[0]!, v1], [p[1]!, v0], [p[1]!, v1]];
+    const middle = (v0 + v1) / 2;
+    const deep = op.fitSection === true;
+    const box = (p: readonly number[]): P2[] => {
+      const [a, b] = [middle + (v0 - middle) * (p[2] ?? 1), middle + (v1 - middle) * (p[2] ?? 1)];
+      return [[p[0]!, a], [p[0]!, b], [p[1]!, a], [p[1]!, b]];
+    };
     const [u0, u1] = rangeOf(target, 0);
     const angles = swingAngles(op.swing, 90);
-    const fitted = op.fit === false ? [u0, u1] : search([u0, u1], (p) => mismatch(box(p), target, angles) + (p[0]! >= p[1]! - 0.002 ? 1 : 0));
+    const fitted = op.fit === false ? [u0, u1] : search(deep ? [u0, u1, 1] : [u0, u1], (p) => mismatch(box(p), target, angles) + (p[0]! >= p[1]! - 0.002 || (p[2] ?? 1) < 0.75 || (p[2] ?? 1) > 1.1 ? 1 : 0));
     span = [fitted[0]!, fitted[1]!];
-    left = mismatch(box(span), target, angles);
+    left = mismatch(box(fitted), target, angles);
+    if (deep) section = section.map(([v, w]) => [middle + (v - middle) * fitted[2]!, w] as const);
   }
   for (const key of GEOMETRY_KEYS) if (key !== "closed") delete shape[key];
   Object.assign(shape, { kind: "poly", points: section.map(([v, w]) => [round(v, 4), round(w, 4)]), closed: true, solid: { kind: "extruded", sweep: "u", z0: round(span[0]), z1: round(span[1]) } });
@@ -369,8 +417,80 @@ function elevationExtrude(op: any): string {
   return `${settle(shape, before) ? "extruded" : "unchanged"}: the elevation outline swept laterally, span ${JSON.stringify(shape.solid)}`;
 }
 
+/** 🦴️ The middle run of a part whose plan outline must stay as drawn (a shoe on a foot bone that rests inclined: its rounded plan outline is no section of a prism in the bone frame): a second plan (or, with `"view": "front"`, front) shape `<id>-run` under the outline, the elevation outline swept laterally over `width` metres about the middle of the drawn outline. At rest it lies inside the outline; when the bone turns it carries the heel and the tip where the side view shows them. */
+function run(op: any): string {
+  const view: string = op.view ?? "plan";
+  const outline = need(op.scale, view, op.id, op.bone);
+  const twin = need(op.scale, "elevation", op.twin ?? op.id, outline.bone);
+  if (outline.solid !== undefined) throw new Error(`1:${op.scale} ${view} "${op.id}" is a solid already: it needs no run`);
+  const lateral = rangeOf(pointsOf(outline), view === "plan" ? 1 : 0);
+  const [middle, half] = [(lateral[0] + lateral[1]) / 2, (op.width ?? 0.04) / 2];
+  const list = shapesOf(op.scale, view);
+  let shape = find(op.scale, view, `${op.id}-run`, outline.bone);
+  const before = shape === undefined ? undefined : JSON.stringify(shape);
+  if (shape === undefined) list.splice(list.indexOf(outline), 0, (shape = { ...structuredClone(outline), id: `${op.id}-run` }));
+  for (const key of GEOMETRY_KEYS) delete shape[key];
+  Object.assign(shape, { kind: "poly", points: structuredClone(pointsOf(twin)), closed: true, solid: { kind: "extruded", sweep: "w", z0: round(middle - half), z1: round(middle + half) } });
+  if (typeof outline.z === "number") shape.z = round(outline.z - 0.01, 2);
+  return before === undefined ? "created" : JSON.stringify(shape) === before ? "unchanged" : "set";
+}
+
+/** 🪒️ The vertices of a closed ring that carry its form: Ramer-Douglas-Peucker between the two vertices furthest apart, on both halves. */
+function reduce(ring: readonly P2[], tolerance: number): P2[] {
+  const far = (from: P2): number => ring.reduce((best, p, i) => (Math.hypot(p[0] - from[0], p[1] - from[1]) > Math.hypot(ring[best]![0] - from[0], ring[best]![1] - from[1]) ? i : best), 0);
+  const a = far(ring[0]!);
+  const b = far(ring[a]!);
+  const [low, high] = a < b ? [a, b] : [b, a];
+  const walk = (points: readonly P2[]): P2[] => {
+    const keep = new Array<boolean>(points.length).fill(false);
+    keep[0] = keep[points.length - 1] = true;
+    const stack: [number, number][] = [[0, points.length - 1]];
+    while (stack.length > 0) {
+      const [i, j] = stack.pop()!;
+      const [p, q] = [points[i]!, points[j]!];
+      const length = Math.hypot(q[0] - p[0], q[1] - p[1]);
+      let [worst, at] = [0, -1];
+      for (let k = i + 1; k < j; k++) {
+        const r = points[k]!;
+        const d = length < 1e-12 ? Math.hypot(r[0] - p[0], r[1] - p[1]) : Math.abs((q[0] - p[0]) * (p[1] - r[1]) - (p[0] - r[0]) * (q[1] - p[1])) / length;
+        if (d > worst) [worst, at] = [d, k];
+      }
+      if (worst > tolerance) keep[at] = true, stack.push([i, at], [at, j]);
+    }
+    return points.filter((_, i) => keep[i]);
+  };
+  const first = walk(ring.slice(low, high + 1));
+  const second = walk([...ring.slice(high), ...ring.slice(0, low + 1)]);
+  return [...first.slice(0, -1), ...second.slice(0, -1)];
+}
+
+function simplify(op: any): string {
+  const views: string[] = op.view === undefined ? ["elevation", "front", "plan"] : [op.view];
+  const done: string[] = [];
+  for (const view of views)
+    for (const shape of shapesOf(op.scale, view)) {
+      if (op.id !== undefined ? shape.id !== op.id || (op.bone !== undefined && shape.bone !== op.bone) : shape.solid === undefined) continue;
+      if (shape.kind !== "poly" && shape.kind !== "path") continue;
+      const flat = flattenGeometry(shape);
+      if (flat.closed !== true) continue;
+      const rings: P2[][] = flat.rings.map((ring: any[]) => ring.map((p) => [p.x, p.y] as const));
+      const total = rings.reduce((sum, ring) => sum + ring.length, 0);
+      if (op.id === undefined && total <= (op.min ?? 60)) continue;
+      const reduced = rings.map((ring) => reduce(ring, op.tolerance ?? 0.001)).filter((ring) => ring.length >= 3);
+      const count = reduced.reduce((sum, ring) => sum + ring.length, 0);
+      if (reduced.length === 0 || count > 0.9 * total) continue;
+      for (const key of GEOMETRY_KEYS) if (key !== "solid" && key !== "followTip") delete shape[key];
+      const points = reduced.map((ring) => ring.map(([x, y]) => [round(x, 4), round(y, 4)]));
+      Object.assign(shape, points.length === 1 ? { kind: "poly", points: points[0], closed: true } : { kind: "path", d: points.map((ring) => `M${ring.map(([x, y]) => `${x} ${y}`).join(" L")} Z`).join(" ") });
+      done.push(`${view} ${shape.id} ${total} > ${count}`);
+    }
+  return done.length === 0 ? "unchanged" : `reduced: ${done.join(", ")}`;
+}
+
 function apply(op: any): string {
   switch (op.op) {
+    case "run": return run(op);
+    case "simplify": return simplify(op);
     case "plan-sweep-u": return planSweepU(op);
     case "elevation-extrude": return elevationExtrude(op);
     case "front-sweep": return frontSweep(op);
@@ -378,6 +498,7 @@ function apply(op: any): string {
     case "extrude": return frontExtrude(op);
     case "copy": return copy(op);
     case "set": {
+      if (op.ifPresent === true && find(op.scale, op.view, op.id, op.bone) === undefined) return "unchanged: not drawn (any more)";
       const shape = need(op.scale, op.view, op.id, op.bone);
       const before = JSON.stringify(shape);
       for (const [key, value] of Object.entries(op.set)) value === null ? delete shape[key] : (shape[key] = structuredClone(value));
@@ -412,7 +533,7 @@ for (const op of ops) {
     result = `unchanged, REFUSED: ${(error as Error).message}`;
   }
   if (!result.startsWith("unchanged") && !/^(\w+ unchanged(, )?)+$/.test(result)) changed++;
-  console.log(`${asset.id} ${op.op} ${op.scale ? `1:${op.scale} ` : ""}${op.view ?? ""}${op.view ? " " : ""}${op.id}: ${result}`);
+  console.log(`${asset.id} ${op.op} ${op.scale ? `1:${op.scale} ` : ""}${op.view ?? ""}${op.view ? " " : ""}${op.id ?? "*"}: ${result}`);
 }
 if (args.includes("--write") || flag("out") !== undefined) console.log(writeDoc(read, flag("out")) ? `written: ${flag("out") ?? read.file}` : "file unchanged");
 console.log(`${asset.id}: ${ops.length} ops, ${changed} changed something, ${refused} refused`);

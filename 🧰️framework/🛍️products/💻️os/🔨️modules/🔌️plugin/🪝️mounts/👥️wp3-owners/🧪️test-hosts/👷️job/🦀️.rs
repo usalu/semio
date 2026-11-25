@@ -70,7 +70,7 @@ use semio_plugin_testing_laws::artifact_app_laws;
     use semio_plugin_job::drive_agent_lane_preview;
     use semio_ui_contract::*;
     use semio_plugin_decl_app::ArtifactApp;
-    use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+    use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
     use semio_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
     use pack::snapshot::ArtifactPack;
     use semio_plugin_decl_emission::Emit;

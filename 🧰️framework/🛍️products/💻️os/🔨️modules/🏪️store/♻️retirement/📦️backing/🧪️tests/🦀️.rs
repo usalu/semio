@@ -135,40 +135,50 @@ fn artifact_store_resident_registry_terminal_drop_has_no_unreported_native_lock_
 fn artifact_store_resident_registry_arc_frame_retains_original_alias_until_whole_funding() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let mut owner = SnapshotReadLeaseRegistryOwner::new();
+    let close = |owner: &mut SnapshotReadLeaseRegistryOwner, grant: RetainedCloneGrant| {
+        let mut wallet = semio_framework_value::AuthoringWallet::new(grant, 1 << 20);
+        wallet.run_settled(grant, 1 << 20, |effect| owner.close_custody_step(effect)).unwrap().unwrap().0.result
+    };
     let original = owner.identity();
     let alias = (*owner).clone();
     assert_eq!(alias.strong_count(), 1 + fixture["registryExternalAliases"].as_u64().unwrap() as usize);
     loop {
         let slots = owner.empty_backing_demands().unwrap();
         if slots.release_bytes == 0 { break; }
-        assert_eq!(owner.close_empty_backing_step(RetainedCloneGrant { maximum_items: 1, maximum_release_bytes: slots.release_bytes, maximum_depth: slots.depth, ..Default::default() }).unwrap().progress().released_bytes, slots.release_bytes);
+        let grant = demand_grant(slots);
+        let mut wallet = semio_framework_value::AuthoringWallet::new(grant, 1 << 20);
+        let turn = wallet.run(grant, 1 << 20, |effect| owner.close_empty_backing_step(effect)).unwrap().unwrap();
+        assert_eq!(turn.output.result.unwrap().progress().released_bytes, slots.release_bytes);
     }
-    let extent = owner.custody_byte_demand().unwrap();
+    let extent = owner.custody_demands().unwrap().release_bytes;
     let grant = RetainedCloneGrant { maximum_items: 1, maximum_release_bytes: extent, maximum_depth: 1, ..Default::default() };
     assert!(extent <= fixture["maximumAdmissionBytes"].as_u64().unwrap() as usize);
-    let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_custody_step(grant));
+    let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| close(&mut owner, grant));
     assert_eq!(step.unwrap(), denied());
     assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
     let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| drop(alias));
     assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-    let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_custody_step(RetainedCloneGrant { maximum_release_bytes: extent - 1, ..grant }));
+    let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| close(&mut owner, RetainedCloneGrant { maximum_release_bytes: extent - 1, ..grant }));
     assert_eq!(step.unwrap(), denied());
     assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
     assert_eq!(owner.identity(), original);
-    let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_custody_step(grant));
+    let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| close(&mut owner, grant));
     assert_eq!(step.unwrap(), released(extent, false));
     assert_eq!((heap.requested_bytes, heap.released_bytes), (0, extent));
     let mut pages = 0;
     loop {
-        let page = owner.custody_byte_demand().unwrap();
+        let page = owner.custody_demands().unwrap().release_bytes;
         if page == 0 { break; }
         assert!(page <= semio_os_store_read::SNAPSHOT_READ_RELEASE_PAGE_BYTES);
-        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_custody_step(RetainedCloneGrant { maximum_release_bytes: page, ..grant }));
+        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| close(&mut owner, RetainedCloneGrant { maximum_release_bytes: page, ..grant }));
         assert_eq!(step.unwrap().progress().released_bytes, page);
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, page));
         pages += page;
     }
-    while !owner.closed() { owner.close_custody_step(grant).unwrap(); }
+    while !owner.closed() {
+        let grant = demand_grant(owner.custody_demands().unwrap());
+        close(&mut owner, grant).unwrap();
+    }
     assert_eq!(pages, SNAPSHOT_READ_LEASE_CAPACITY * size_of::<u64>());
     let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| drop(owner));
     assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));

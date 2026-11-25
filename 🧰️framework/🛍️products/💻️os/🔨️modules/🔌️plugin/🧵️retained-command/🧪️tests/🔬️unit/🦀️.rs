@@ -56,3 +56,18 @@ fn a_funding_wait_names_its_phase_resource_demand_and_grant() {
     note_publication_wait(10, "the worker completion is not ready", [1, 2, 3]);
     assert_eq!(last_publication_wait(10).expect("the plain wait is readable").to_string(), "the worker completion is not ready [1, 2, 3]");
 }
+
+/// 📏️ LAW: a grant shortfall names the first resource a demand overruns with both figures, and a covering grant has none.
+#[test]
+fn a_grant_shortfall_names_the_first_unfunded_resource_with_its_demand_and_grant() {
+    use semio_framework_value::{retained_clone::RetainedCloneGrant, RetirementDemand};
+    use semio_plugin_ownership::bounded_ownership::{plugin_grant_funds, plugin_grant_shortfall};
+    let grant = RetainedCloneGrant { maximum_items: 4, maximum_copy_bytes: 100, maximum_capacity_bytes: 200, maximum_release_bytes: 300, maximum_depth: 2 };
+    let covered = RetirementDemand { copy_bytes: 100, capacity_bytes: 200, release_bytes: 300, depth: 2, ..Default::default() };
+    assert_eq!(plugin_grant_shortfall(covered, grant), None);
+    assert!(plugin_grant_funds(covered, grant));
+    assert_eq!(plugin_grant_shortfall(RetirementDemand { copy_bytes: 101, ..covered }, grant), Some(("copy bytes", 101, 100)));
+    assert_eq!(plugin_grant_shortfall(RetirementDemand { capacity_bytes: 201, release_bytes: 301, ..covered }, grant), Some(("capacity bytes", 201, 200)));
+    assert_eq!(plugin_grant_shortfall(RetirementDemand { depth: 3, ..covered }, grant), Some(("depth", 3, 2)));
+    assert_eq!(plugin_grant_shortfall(covered, RetainedCloneGrant { maximum_items: 0, ..grant }), Some(("items", 1, 0)));
+}

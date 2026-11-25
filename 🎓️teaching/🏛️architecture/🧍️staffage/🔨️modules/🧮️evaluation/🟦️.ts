@@ -12,7 +12,7 @@
  * @see ../🔗️contracts/🟦️.ts — `EvaluatedState`, `EvaluationQuery`
  * @see https://www.w3.org/TR/SVG11/paths.html — the path grammar
  */
-import type { Anchor, Asset, AppliedLoad, Bone, BoneOffset, Shape, Slug, Solid, PlanarViewpoint, Text } from "../../🧬️schema/🟦️.ts";
+import type { Anchor, Asset, AppliedLoad, Bone, BoneOffset, LoftSection, Shape, Slug, Solid, PlanarViewpoint, Text } from "../../🧬️schema/🟦️.ts";
 import type { Affine, EvaluatedBone, EvaluatedShape, EvaluatedState, EvaluationQuery, Point, RepresentationSelector, RespirationState, WorldForce } from "../🔗️contracts/🟦️.ts";
 import { PLANT_HZ, clipOf, cycleOf, poseOf, sampleClip, samplePose, transition, wrapTime } from "../🎞️animation/🟦️.ts";
 import { respirationOffsets, respirationState } from "../💨️transport/🫁️respiration/🟦️.ts";
@@ -306,6 +306,7 @@ export function flattenGeometry(shape: Shape): FlatPath {
     case "poly": return { rings: [shape.points.map(([x, y]) => ({ x, y }))], closed: shape.closed };
     case "path": return flattenPath(shape.d);
     case "member": return { rings: [], closed: true };
+    case "loft": return { rings: [], closed: true };
   }
 }
 //#endregion 〰️Flattening
@@ -321,6 +322,11 @@ function restWorld(asset: Asset): Record<Slug, Affine> {
 
 const CIRCLE_SEGMENTS = 64;
 const UNION_CIRCLE_SEGMENTS = 32;
+
+/** 🎡️ The cosine and sine of the `segments` equal steps of a full turn, so a circle drawn in every view of every state computes them once. */
+const turnOf = (segments: number): readonly { readonly cos: number; readonly sin: number }[] => Array.from({ length: segments }, (_, i) => ({ cos: portable.cos((2 * Math.PI * i) / segments), sin: portable.sin((2 * Math.PI * i) / segments) }));
+
+const UNION_TURN = turnOf(UNION_CIRCLE_SEGMENTS);
 
 /** 🧊️ The current and the rest 3D frames of the bones of a spread or twisted rig. */
 type Chain3 = { readonly now: Readonly<Record<Slug, SolvedFrame>>; readonly rest: Readonly<Record<Slug, SolvedFrame>> };
@@ -420,6 +426,8 @@ type MemberShape = Extract<Shape, { readonly kind: "member" }>;
 
 const MEMBER_SEGMENTS = 32;
 
+const MEMBER_TURN = turnOf(MEMBER_SEGMENTS);
+
 /** 🧱️ The corners of the two end sections of a `member` solid in world metres: the end points are carried by the frames of their bones (`from` by the shape's own bone, `to` by `to.bone`); a rectangular section has the width `widthM` along the part of the normal `v` of the start bone perpendicular to the bar and the depth `depthM` along the remaining perpendicular axis (the frame completes the orthonormal triple `bar`, width, depth), a circular section is `MEMBER_SEGMENTS` points of the diameter `diameterM` about the bar. */
 export function memberSections(member: MemberShape, frameOf: (id: Slug) => Frame3): readonly [readonly Vec3[], readonly Vec3[]] {
   const at = (id: Slug, p: { readonly x: number; readonly y: number; readonly z: number }): Vec3 => {
@@ -441,30 +449,86 @@ export function memberSections(member: MemberShape, frameOf: (id: Slug) => Frame
   const { section } = member;
   const offsets: readonly (readonly [number, number])[] =
     section.kind === "circle"
-      ? Array.from({ length: MEMBER_SEGMENTS }, (_, i) => [(section.d / 2) * portable.cos((2 * Math.PI * i) / MEMBER_SEGMENTS), (section.d / 2) * portable.sin((2 * Math.PI * i) / MEMBER_SEGMENTS)] as const)
+      ? MEMBER_TURN.map(({ cos, sin }) => [(section.d / 2) * cos, (section.d / 2) * sin] as const)
       : ([[-1, -1], [1, -1], [1, 1], [-1, 1]] as const).map(([s, t]) => [(s * section.w) / 2, (t * section.h) / 2] as const);
   const corner = (centre: Vec3, [s, t]: readonly [number, number]): Vec3 => [centre[0] + s * width[0] + t * depth[0], centre[1] + s * width[1] + t * depth[1], centre[2] + s * width[2] + t * depth[2]];
   return [offsets.map((o) => corner(a, o)), offsets.map((o) => corner(b, o))];
 }
 
-/** 🔭️ A {@link Solid} placed by the full 3D frames of its bone and projected to the view (`elevation` is the side view): an extruded part is the profile swept from `z0` to `z1` along the lateral axis of the frame (`sweep` `w`: the profile in the (u, v) plane, `z` measured from the rest origin of the bone in world z) or longitudinally (`sweep` `u`: transverse (v, w) profile) or along the bone normal (`sweep` `v`: the profile in the (u, w) plane, `z` measured from the bone origin along v), the span tapering along the first profile coordinate to `zTip` at the bone length (clamped to that interval), as ONE outline, the union of the profile at both ends and the sweep of every edge; a revolved part is revolved about the longitudinal axis of its axis bone (its own rest direction, whatever its rest tilt, carried to the current frame), one outline, the union of the hulls of the projected circles of the two ends of every profile edge; without `mirror` the half profile itself is drawn: each profile point keeps its signed distance along the forward direction of the axis bone and its height along the axis, moved into the lateral direction of the view (front) or left in the sagittal plane (elevation). */
-function solid3(solid: Solid, profile: readonly (readonly Point[])[], kin: Chain3, bone: Slug, viewpoint: PlanarViewpoint, length: number): Point[][] {
-  const rings = profile.map((ring) => simplifyRing(ring, 0.0003));
+type LoftShape = Extract<Shape, { readonly kind: "loft" }>;
+
+/** 🪡️ The number of points a section of a `loft` shape is drawn with; point j stands at the angle `2 pi j / LOFT_SEGMENTS` from the x axis of the section. */
+export const LOFT_SEGMENTS = 32;
+
+const LOFT_TURN = turnOf(LOFT_SEGMENTS);
+
+/** 🥖️ The section rings of a `loft` shape in the bone-local frame (u, v, w) in metres, one ring of {@link LOFT_SEGMENTS} points per section: the superellipse `|x/rx|^n + |y/ry|^n = 1` about `at` in the section's own x, y plane. The frames are those of the kernel's volume loft: a section with `rotation` lies in the x, y plane of that quaternion; a section without stands perpendicular to the path tangent at its centre (central difference of the neighbouring centres, one-sided at the ends), x being u projected perpendicular to the tangent (w when the tangent runs along u) and y = tangent x x. */
+export function loftRings(loft: { readonly sections: readonly LoftSection[] }): Vec3[][] {
+  const { sections } = loft;
+  const last = sections.length - 1;
+  const signedPower = (x: number, e: number): number => Math.sign(x) * portable.pow(Math.abs(x), e);
+  return sections.map((section, i) => {
+    let x: Vec3;
+    let y: Vec3;
+    if (section.rotation !== undefined) {
+      const [qx, qy, qz, qw] = section.rotation;
+      x = [1 - 2 * (qy * qy + qz * qz), 2 * (qx * qy + qz * qw), 2 * (qx * qz - qy * qw)];
+      y = [2 * (qx * qy - qz * qw), 1 - 2 * (qx * qx + qz * qz), 2 * (qy * qz + qx * qw)];
+    } else {
+      const [from, to] = [sections[Math.max(0, i - 1)]!.at, sections[Math.min(last, i + 1)]!.at];
+      const travel: Vec3 = [to[0] - from[0], to[1] - from[1], to[2] - from[2]];
+      const whole: Vec3 = [sections[last]!.at[0] - sections[0]!.at[0], sections[last]!.at[1] - sections[0]!.at[1], sections[last]!.at[2] - sections[0]!.at[2]];
+      const tangent = portable.hypot(...travel) > 1e-12 ? norm(travel) : portable.hypot(...whole) > 1e-12 ? norm(whole) : ([0, 0, 1] as Vec3);
+      const along: Vec3 = [1 - tangent[0] * tangent[0], -tangent[1] * tangent[0], -tangent[2] * tangent[0]];
+      x = norm(portable.hypot(...along) < 1e-6 ? [-tangent[0] * tangent[2], -tangent[1] * tangent[2], 1 - tangent[2] * tangent[2]] : along);
+      y = cross(tangent, x);
+    }
+    const e = 2 / (section.exponent ?? 2);
+    return LOFT_TURN.map(({ cos, sin }): Vec3 => {
+      const a = section.rx * signedPower(cos, e);
+      const b = section.ry * signedPower(sin, e);
+      return [section.at[0] + a * x[0] + b * y[0], section.at[1] + a * x[1] + b * y[1], section.at[2] + a * x[2] + b * y[2]];
+    });
+  });
+}
+
+/** 🪢️ How a bone-local point (u, v, w) of a shape reaches the world: by the current frame of its bone, or, with skin weights, by the weighted blend of the point carried from the rest frame to the current frame of every weighted bone. */
+function placing(kin: Chain3, bone: Slug, weights: readonly { readonly bone: Slug; readonly weight: number }[] | undefined): (a: number, b: number, c: number) => Vec3 {
   const now = kin.now[bone]!.frame;
   const rest = kin.rest[bone]!.frame;
   const atFrame = (f: typeof rest, a: number, b: number, c: number): Vec3 => [
     f.o[0] + a*f.u[0] + b*f.v[0] + c*f.w[0], f.o[1] + a*f.u[1] + b*f.v[1] + c*f.w[1], f.o[2] + a*f.u[2] + b*f.v[2] + c*f.w[2],
   ];
-  const place = (a: number, b: number, c: number): Vec3 => {
-    if (solid.kind !== "extruded" || !solid.weights?.length) return atFrame(now, a, b, c);
+  return (a, b, c) => {
+    if (!weights?.length) return atFrame(now, a, b, c);
     const bind = atFrame(rest, a, b, c);
     const result: [number, number, number] = [0, 0, 0];
-    for (const joint of solid.weights) {
+    for (const joint of weights) {
       const q = carry(kin.rest[joint.bone]!.frame, kin.now[joint.bone]!.frame, bind);
       for (let i = 0; i < 3; i++) result[i]! += joint.weight * q[i]!;
     }
     return result;
   };
+}
+
+/** 🧷️ A `loft` shape placed by the full 3D frame of its bone and projected to the view as ONE outline: the union of the convex hulls of every two consecutive section rings ({@link loftRings}), the body between two superelliptic sections. A pair that projects to a line (its sections seen edge-on along their common plane) has no area and is left out. */
+function loft3(loft: LoftShape, kin: Chain3, viewpoint: PlanarViewpoint): Point[][] {
+  const place = placing(kin, loft.bone, loft.weights);
+  const rings = loftRings(loft).map((ring) => ring.map((p) => projected(viewpoint, place(p[0], p[1], p[2]))));
+  const bodies: Point[][] = [];
+  for (let i = 0; i + 1 < rings.length; i++) {
+    const body = hull([...rings[i]!, ...rings[i + 1]!]);
+    const area = body.reduce((sum, p, k) => sum + p.x * body[(k + 1) % body.length]!.y - body[(k + 1) % body.length]!.x * p.y, 0) / 2;
+    if (body.length >= 3 && Math.abs(area) > 1e-12) bodies.push(body);
+  }
+  return bodies.length === 0 ? [] : bodies.length === 1 ? bodies : unionPolygons(bodies);
+}
+
+/** 🔭️ A {@link Solid} placed by the full 3D frames of its bone and projected to the view (`elevation` is the side view): an extruded part is the profile swept from `z0` to `z1` along the lateral axis of the frame (`sweep` `w`: the profile in the (u, v) plane, `z` measured from the rest origin of the bone in world z) or longitudinally (`sweep` `u`: transverse (v, w) profile) or along the bone normal (`sweep` `v`: the profile in the (u, w) plane, `z` measured from the bone origin along v), the span tapering along the first profile coordinate to `zTip` at the bone length (clamped to that interval), as ONE outline, the union of the profile at both ends and the sweep of every edge; a revolved part is revolved about the longitudinal axis of its axis bone (its own rest direction, whatever its rest tilt, carried to the current frame), one outline, the union of the hulls of the projected circles of the two ends of every profile edge, each circle an ellipse when `lateralScale` is not 1 (the radius along the u of the axis bone projected perpendicular to the axis, its w when the axis is u, times `lateralScale`: the kernel semantics of the volume `revolve`); without `mirror` the half profile itself is drawn: each profile point keeps its signed distance along the forward direction of the axis bone and its height along the axis, moved into the lateral direction of the view (front) or left in the sagittal plane (elevation), times the reach of the ellipse in that direction. */
+function solid3(solid: Solid, profile: readonly (readonly Point[])[], kin: Chain3, bone: Slug, viewpoint: PlanarViewpoint, length: number): Point[][] {
+  const rings = profile.map((ring) => simplifyRing(ring, 0.0003));
+  const rest = kin.rest[bone]!.frame;
+  const place = placing(kin, bone, solid.kind === "extruded" ? solid.weights : undefined);
   if (solid.kind === "extruded") {
     const lateral = solid.sweep === "w";
     const base = lateral ? rest.o[2] : 0;
@@ -490,15 +554,23 @@ function solid3(solid: Solid, profile: readonly (readonly Point[])[], kin: Chain
   const axis = norm(axisNow[solid.axis]);
   const e1 = norm(portable.hypot(...cross(axis, [0, 0, 1])) > 1e-9 ? cross(axis, [0, 0, 1]) : cross(axis, [1, 0, 0]));
   const e2 = cross(axis, e1);
+  const lateralScale = solid.lateralScale ?? 1;
+  const wide = norm(solid.axis === "u" ? axisNow.w : axisNow.u);
+  const stretch = (x: number, y: number, z: number): Vec3 => {
+    if (lateralScale === 1) return [0, 0, 0];
+    const s = (lateralScale - 1) * (x * wide[0] + y * wide[1] + z * wide[2]);
+    return [s * wide[0], s * wide[1], s * wide[2]];
+  };
   const circle = (p: Point): Point[] => {
     const q = place(p.x, p.y, profileZ);
     const d: Vec3 = [q[0] - origin[0], q[1] - origin[1], q[2] - origin[2]];
     const h = dot(d, axis);
     const radial: Vec3 = [d[0] - h * axis[0], d[1] - h * axis[1], d[2] - h * axis[2]];
     const r = portable.hypot(...radial);
-    return Array.from({ length: UNION_CIRCLE_SEGMENTS }, (_, i) => {
-      const t = (2 * Math.PI * i) / UNION_CIRCLE_SEGMENTS;
-      return projected(viewpoint, [origin[0] + shift[0] + h * axis[0] + r * (portable.cos(t) * e1[0] + portable.sin(t) * e2[0]), origin[1] + shift[1] + h * axis[1] + r * (portable.cos(t) * e1[1] + portable.sin(t) * e2[1]), origin[2] + shift[2] + h * axis[2] + r * (portable.cos(t) * e1[2] + portable.sin(t) * e2[2])]);
+    return UNION_TURN.map(({ cos, sin }) => {
+      const round: Vec3 = [r * (cos * e1[0] + sin * e2[0]), r * (cos * e1[1] + sin * e2[1]), r * (cos * e1[2] + sin * e2[2])];
+      const oval = stretch(round[0], round[1], round[2]);
+      return projected(viewpoint, [origin[0] + shift[0] + h * axis[0] + round[0] + oval[0], origin[1] + shift[1] + h * axis[1] + round[1] + oval[1], origin[2] + shift[2] + h * axis[2] + round[2] + oval[2]]);
     });
   };
   if (solid.mirror !== true && viewpoint !== "plan") {
@@ -515,8 +587,9 @@ function solid3(solid: Solid, profile: readonly (readonly Point[])[], kin: Chain
         const q = place(p.x, p.y, profileZ);
         const d: Vec3 = [q[0] - origin[0], q[1] - origin[1], q[2] - origin[2]];
         const h = dot(d, axis);
-        const rho = dot(d, meridian);
         const direction = viewpoint === "elevation" ? meridian : lateral;
+        const oval = stretch(direction[0], direction[1], direction[2]);
+        const rho = dot(d, meridian) * (lateralScale === 1 ? 1 : portable.hypot(direction[0] + oval[0], direction[1] + oval[1], direction[2] + oval[2]));
         return projected(viewpoint, [origin[0] + shift[0] + h * axis[0] + rho * direction[0], origin[1] + shift[1] + h * axis[1] + rho * direction[1], origin[2] + shift[2] + h * axis[2] + rho * direction[2]]);
       }),
     );
@@ -618,7 +691,7 @@ function placeProjected(asset: Asset, shape: Shape, flat: { readonly rings: read
   return { shape, rings, closed: flat.closed };
 }
 
-/** 📷️ How near a shape is to the viewer along the view direction, larger is nearer: the nearest point of the shape carried by the 3D frames of its bone (the same carry that places it) — the highest point in the plan, the foremost in the front, the point of the smallest lateral position in the elevation (the right of the asset faces the viewer) — so a broad or rotated shape is ranked by its extent, not by its bone origin and tip. A `solid` is carried at the plane of its profile; a flat shape at the depth profile it was placed with. */
+/** 📷️ How near a shape is to the viewer along the view direction, larger is nearer: the nearest point of the shape carried by the 3D frames of its bone (the same carry that places it) — the highest point in the plan, the foremost in the front, the point of the smallest lateral position in the elevation (the right of the asset faces the viewer) — so a broad or rotated shape is ranked by its extent, not by its bone origin and tip. A `loft` is ranked by the nearest point of its section rings in the frame of its bone. An extruded `solid` is carried as {@link solid3} places it, its profile in the plane of its `sweep` (`w`: (u, v), `v`: (u, w), `u`: (v, w)) at the middle of its span, tapered to `zTip` along the first profile coordinate; a revolved one at the plane of its profile; a flat shape at the depth profile it was placed with. */
 export function shapeDepth(state: EvaluatedState, shape: Shape, viewpoint: PlanarViewpoint): number {
   const vec = (v: { readonly x: number; readonly y: number; readonly z: number }): Vec3 => [v.x, v.y, v.z];
   const frameOf = (id: Slug): Frame3 => {
@@ -640,16 +713,25 @@ function shapeDepthIn(asset: Asset, frameOf: (id: Slug) => Frame3, shape: Shape,
     const [start, end] = memberSections(shape, frameOf);
     return Math.max(...[...start, ...end].map((q) => nearness(viewpoint, vec3(q))));
   }
+  if (shape.kind === "loft") return Math.max(...loftRings(shape).flat().map((p) => nearness(viewpoint, { x: now.o[0] + p[0] * now.u[0] + p[1] * now.v[0] + p[2] * now.w[0], y: now.o[1] + p[0] * now.u[1] + p[1] * now.v[1] + p[2] * now.w[1], z: now.o[2] + p[0] * now.u[2] + p[1] * now.v[2] + p[2] * now.w[2] })));
   const rest = restOf(asset)[shape.bone];
   if (rest === undefined) return 0;
   const points = flattenGeometry(shape).rings.flat();
   if (points.length === 0) return 0;
   const plan = viewpoint === "plan";
   const profile = DEPTHS.get(shape) ?? undefined;
-  const local = (p: Point, c: number): Vec3 => [now.o[0] + p.x * now.u[0] + p.y * now.v[0] + c * now.w[0], now.o[1] + p.x * now.u[1] + p.y * now.v[1] + c * now.w[1], now.o[2] + p.x * now.u[2] + p.y * now.v[2] + c * now.w[2]];
+  const at = (a: number, b: number, c: number): Vec3 => [now.o[0] + a * now.u[0] + b * now.v[0] + c * now.w[0], now.o[1] + a * now.u[1] + b * now.v[1] + c * now.w[1], now.o[2] + a * now.u[2] + b * now.v[2] + c * now.w[2]];
+  const local = (p: Point, c: number): Vec3 => at(p.x, p.y, c);
+  const length = boneOf(asset, shape.bone).lengthM;
   const world = (p: Point): Vec3 => {
     if (viewpoint === "elevation") return local(p, 0);
-    if (shape.solid !== undefined) return local(p, shape.solid.kind === "extruded" ? (shape.solid.z0 + shape.solid.z1) / 2 - rest.frame.o[2] : 0);
+    if (shape.solid?.kind === "extruded") {
+      const { sweep, z0, z1, zTip } = shape.solid;
+      const t = zTip === undefined || !(length > 0) ? 0 : Math.min(Math.max(p.x / length, 0), 1);
+      const middle = zTip === undefined ? (z0 + z1) / 2 : (z0 + (zTip[0] - z0) * t + z1 + (zTip[1] - z1) * t) / 2;
+      return sweep === "u" ? at(middle, p.x, p.y) : sweep === "v" ? at(p.x, middle, p.y) : at(p.x, p.y, middle - rest.frame.o[2]);
+    }
+    if (shape.solid !== undefined) return local(p, 0);
     return plan ? carry(rest.frame, now, [p.x, profile?.(p.x) ?? rest.frame.o[1], p.y]) : carry(rest.frame, now, [profile?.(p.y) ?? rest.frame.o[0], p.y, p.x]);
   };
   return Math.max(...points.map((p) => nearness(viewpoint, vec3(world(p)))));
@@ -665,6 +747,24 @@ export class MemberInPaperUnitsError extends Error {
     this.name = "MemberInPaperUnitsError";
     this.asset = asset;
     this.shape = shape;
+  }
+}
+
+/** 🫧️ Thrown when a `loft` is drawn in paper units (a nominal symbol): a loft is a body of physical metres in the frame of a bone and has no paper-millimetre outline, so the symbol must draw it with planar shapes and the loft is never silently dropped. The validator reports the same defect as `loft-in-paper-symbol`. */
+export class LoftInPaperUnitsError extends Error {
+  readonly asset: string;
+  readonly shape: string;
+
+  constructor(asset: string, shape: string) {
+    super(`loft "${shape}" of asset "${asset}" cannot be drawn in paper units: a nominal symbol draws planar shapes only`);
+    this.name = "LoftInPaperUnitsError";
+    this.asset = asset;
+    this.shape = shape;
+  }
+
+  /** 🗣️ The refusal in both languages. */
+  get reason(): Text {
+    return { en: this.message, de: `Der Loft "${this.shape}" des Assets "${this.asset}" kann nicht in Papiereinheiten gezeichnet werden: ein nominales Symbol zeichnet nur ebene Formen.` };
   }
 }
 
@@ -693,7 +793,9 @@ function placeShape(asset: Asset, shape: Shape, world: Readonly<Record<Slug, Aff
   if (matrix === undefined) throw new Error(`shape "${shape.id}" of asset "${asset.id}" is bound to unknown bone "${shape.bone}"`);
   const flat = flattenGeometry(shape);
   if (identity && shape.kind === "member") throw new MemberInPaperUnitsError(asset.id, shape.id);
+  if (identity && shape.kind === "loft") throw new LoftInPaperUnitsError(asset.id, shape.id);
   if (identity) return { shape, rings: flat.rings, closed: flat.closed };
+  if (shape.kind === "loft" && kin !== undefined) return { shape, rings: loft3(shape, kin, viewpoint), closed: true };
   if (shape.kind === "member" && kin !== undefined) {
     const [start, end] = memberSections(shape, (id) => kin.now[id]!.frame);
     return { shape, rings: [hull([...start, ...end].map((q) => projected(viewpoint, q)))], closed: true };
@@ -899,6 +1001,7 @@ export function solidDrawingProjector(asset: Asset, query: EvaluationQuery) {
   return (shape: Shape, profile: readonly (readonly Point[])[], view: PlanarViewpoint): readonly (readonly Point[])[] => {
     const solid = shape.solid;
     const length = lengths.get(shape.bone);
+    if (shape.kind === "loft") return length === undefined || shape.weights?.some(joint => !lengths.has(joint.bone)) ? profile : loft3(shape, kin, view);
     if (!solid || length === undefined) return profile;
     if (solid.kind === "revolved" ? !lengths.has(solid.axisBone) : solid.weights?.some(joint => !lengths.has(joint.bone))) return profile;
     return solid3(solid, profile, kin, shape.bone, view, length);
@@ -913,6 +1016,14 @@ export function evaluate(asset: Asset, query: EvaluationQuery, selector?: Repres
 /** 🖼️ Evaluates a drawing while deferring other projections and kinematics until a consumer reads them. */
 export function evaluateDrawing(asset: Asset, query: EvaluationQuery, selector?: RepresentationSelector): EvaluatedState {
   return evaluatedState(asset, query, selector, false);
+}
+
+/** 🪞️ The state as {@link evaluate} gives it for another selector that draws the same authored representation (a scale elsewhere in its valid range): the same shapes, bones and loads, the representation as that selector names it. Nothing is evaluated again; undefined when the selector draws another representation. */
+export function restated(state: EvaluatedState, selector: RepresentationSelector): EvaluatedState | undefined {
+  const { representation } = geometryOf(state.asset, selector);
+  const mine = state.representation;
+  if (representation.kind !== "scale" || mine.kind !== "scale" || representation.denominator !== mine.denominator) return undefined;
+  return representation.requested === mine.requested && representation.exact === mine.exact ? state : { ...state, representation };
 }
 
 function evaluatedState(asset: Asset, query: EvaluationQuery, selector: RepresentationSelector | undefined, eager: boolean): EvaluatedState {
@@ -934,7 +1045,7 @@ function evaluatedState(asset: Asset, query: EvaluationQuery, selector: Represen
     if (twins === undefined) {
       twins = new Map();
       for (const shape of geometry.elevation) {
-        if (shape.solid !== undefined) continue;
+        if (shape.solid !== undefined || shape.kind === "loft") continue;
         twins.set(`${shape.id} ${shape.bone}`, [shape]);
         if (shape.role !== "ground") twins.set(`* ${shape.bone}`, [...(twins.get(`* ${shape.bone}`) ?? []), shape]);
       }

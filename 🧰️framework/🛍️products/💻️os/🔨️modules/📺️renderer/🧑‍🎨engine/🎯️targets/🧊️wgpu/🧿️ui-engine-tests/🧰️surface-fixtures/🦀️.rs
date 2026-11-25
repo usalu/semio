@@ -75,18 +75,81 @@ pub fn serve_cpu_only_component_close() {
     semio_renderer_wgpu_host_winit::os_host::finish_cpu_only_fixture_component_close(|owner| drop_engine_surface(&owner.host_id));
 }
 
-pub fn close_retained_surface_fixture(window_id: &str) {
-    let mut caller=crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
-    assert!(semio_renderer_wgpu_ui_engine::retained_ui_engine::request_ui_document_close(window_id));
-    for _ in 0..262_144 {
-        if !semio_renderer_wgpu_ui_engine::retained_ui_engine::ui_document_close_pending() {
-            break;
+thread_local! {
+    static SURFACE_GENERATIONS: std::cell::RefCell<HashMap<String, (u64, String)>> = std::cell::RefCell::new(HashMap::new());
+    static SURFACE_CALLER: std::cell::RefCell<Option<SurfaceCaller>> = const { std::cell::RefCell::new(None) };
+}
+
+/// 🎟️ The one long-lived wide caller of a law at generation 1, as every native frame caller is in production: it mounts each surface the law paints and pays the close of each, because a layout session can only be driven and retired by the caller that birthed it.
+struct SurfaceCaller(Option<crate::fixture_original_turn::FixtureTurnV1>);
+
+impl Drop for SurfaceCaller {
+    fn drop(&mut self) {
+        if let Some(caller) = self.0.take() {
+            let _ = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| caller.finish()));
         }
-        caller.turn(|cx|semio_renderer_wgpu_ui_engine::retained_ui_engine::close_ui_document_one(cx)).expect("original fixture caller turn");
-        semio_renderer_wgpu_host_winit::os_host::finish_cpu_only_fixture_component_close(|owner| drop_engine_surface(&owner.host_id));
     }
+}
+
+/// 🔢️ The ingress generation of `window_id` for `scene`: the same scene repainted stays the same published document, a scene whose content changed (its mounting host id aside, which the law echoes back from the first paint) is the successor document of the same surface, so the generation only grows.
+fn surface_generation(window_id: &str, scene: &UiComponentSceneNode) -> u64 {
+    let mut content = scene.clone();
+    content.host_id = String::new();
+    let fingerprint = format!("{content:?}");
+    SURFACE_GENERATIONS.with(|generations| {
+        let mut generations = generations.borrow_mut();
+        let (generation, last) = generations.entry(window_id.to_owned()).or_insert((0, String::new()));
+        if *last != fingerprint {
+            *generation += 1;
+            *last = fingerprint;
+        }
+        *generation
+    })
+}
+
+/// 🎟️ Takes the law's one surface caller, born on first use; the law hands it back with [`keep_surface_caller`].
+pub fn take_surface_caller() -> crate::fixture_original_turn::FixtureTurnV1 {
+    SURFACE_CALLER.with(|slot| slot.borrow_mut().take()).and_then(|mut held| held.0.take()).unwrap_or_else(|| crate::fixture_original_turn::FixtureTurnV1::wide(ui_contract::UI_WORKER_RETIREMENT_POLICY, 1))
+}
+
+/// 🎟️ Hands the law's surface caller back for the next paint or close.
+pub fn keep_surface_caller(caller: crate::fixture_original_turn::FixtureTurnV1) {
+    SURFACE_CALLER.with(|slot| *slot.borrow_mut() = Some(SurfaceCaller(Some(caller))));
+}
+
+/// 🎟️ Runs `advance` on the law's one surface caller.
+pub fn with_surface_caller<R>(advance: impl FnOnce(&mut crate::fixture_original_turn::FixtureTurnV1) -> R) -> R {
+    let mut caller = take_surface_caller();
+    let result = advance(&mut caller);
+    keep_surface_caller(caller);
+    result
+}
+
+/// 🪦 Pays the close of `window_id` on the law's surface caller, running `host` after every close turn to serve the component close requests, then retires the caller once it owns no further surface.
+pub fn retire_surface_caller_window(window_id: &str, mut host: impl FnMut()) {
+    assert!(semio_renderer_wgpu_ui_engine::retained_ui_engine::request_ui_document_close(window_id));
+    with_surface_caller(|caller| {
+        for _ in 0..262_144 {
+            if !semio_renderer_wgpu_ui_engine::retained_ui_engine::ui_document_close_pending() {
+                break;
+            }
+            caller.turn_funded(1 << 20, |cx| semio_renderer_wgpu_ui_engine::retained_ui_engine::close_ui_document_one(cx)).expect("original fixture caller turn");
+            host();
+        }
+        caller.disown_surface(window_id);
+    });
+    SURFACE_GENERATIONS.with(|generations| generations.borrow_mut().remove(window_id));
     assert!(!semio_renderer_wgpu_ui_engine::retained_ui_engine::ui_document_close_pending(), "the EngineCanvas fixture returns every retained owner");
-    caller.finish();
+    let caller = take_surface_caller();
+    if caller.owns_surfaces() {
+        keep_surface_caller(caller);
+    } else {
+        caller.finish();
+    }
+}
+
+pub fn close_retained_surface_fixture(window_id: &str) {
+    retire_surface_caller_window(window_id, || semio_renderer_wgpu_host_winit::os_host::finish_cpu_only_fixture_component_close(|owner| drop_engine_surface(&owner.host_id)));
 }
 
 /// 🧹️ Drains every attached `World3dState` through its OWN dynamic retirement ladder. The state's
@@ -125,8 +188,9 @@ pub fn paint_retained_surface_scene(scene: &UiComponentSceneNode, bounds: Rect) 
 }
 
 pub fn paint_retained_surface_in_window(scene: &UiComponentSceneNode, bounds: Rect, window_id: &str) -> RetainedSurfacePaint {
-    let mut caller=crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
-    let document = retained_document(window_id, 1, 1, vec![retained_surface_record(scene)]);
+    let mut caller=take_surface_caller();
+    caller.own_surface(window_id);
+    let document = retained_document(window_id, surface_generation(window_id, scene), 1, vec![retained_surface_record(scene)]);
     let mut draw = DrawList::default();
     let mut atlas = FontAtlas::builtin();
     let icons = IconAtlas::default();
@@ -139,7 +203,7 @@ pub fn paint_retained_surface_in_window(scene: &UiComponentSceneNode, bounds: Re
     let complete = (0..(1 << 20)).any(|_| {
         let mut ctx = semio_renderer_wgpu_scene_canvas2d::ui_image_loading::framework_widget_context(&mut draw, None, &mut atlas, Some(&icons), &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, bounds.h);
         let mut hosts = semio_renderer_wgpu_scene_state::SceneEngineHosts { chrome_labels: semio_renderer_wgpu_scene_state::SceneChromeLabels::english(), world3d_states: &mut world3d_states, world_resources: &mut world_resources, window_id };
-        let done = caller.turn(|cx|semio_renderer_wgpu_ui_engine::retained_document_consumer::render_ui_document_step(&mut cursor, &document, bounds, &mut ctx, window_id, &scene.controller_id, semio_ui_wgpu_layout::chrome::UiDriverDrag::Handle, &mut hosts, cx));
+        let done = caller.turn_funded(1<<20,|cx|semio_renderer_wgpu_ui_engine::retained_document_consumer::render_ui_document_step(&mut cursor, &document, bounds, &mut ctx, window_id, &scene.controller_id, semio_ui_wgpu_layout::chrome::UiDriverDrag::Handle, &mut hosts, cx));
         semio_renderer_wgpu_host_winit::os_host::finish_cpu_only_fixture_component_close(|owner| drop_engine_surface(&owner.host_id));
         assert!(done || !cursor.terminal_is_fault(), "retained EngineCanvas document faulted in phase {}", cursor.phase_name());
         done
@@ -150,7 +214,7 @@ pub fn paint_retained_surface_in_window(scene: &UiComponentSceneNode, bounds: Re
     assert_eq!(owner.surface_id, window_id);
     assert_eq!(owner.kind, scene.component_kind);
     caller.retire_world(&mut world_resources);
-    caller.finish();
+    keep_surface_caller(caller);
     let mut actions=semio_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
     if let Some(action)=input.drive_retained_action_step().expect("one retained fixture page"){actions.push(action.descriptor);}
     RetainedSurfacePaint { draw, owner,actions }

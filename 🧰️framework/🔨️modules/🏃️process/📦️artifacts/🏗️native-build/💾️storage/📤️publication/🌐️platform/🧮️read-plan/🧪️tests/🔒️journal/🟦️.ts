@@ -8,7 +8,7 @@ import {createIssuedResourceControlV1,createRequestedIssuedResourceControlV1} fr
 import {declareBuildTestEnvelopeV1,withBuildTestInvocationV1} from "../../../../../../../../🧪️testing/📥️invocation/🟦️.ts";
 import fixture from "./🔣️.json" with {type:"json"};
 
-declareBuildTestEnvelopeV1({owner:"test:native-input-journal-admission",maximumElapsedMilliseconds:120000,capabilities:{}});
+declareBuildTestEnvelopeV1({owner:"test:native-input-journal-admission",maximumElapsedMilliseconds:120000,capabilities:{artifacts:true}});
 
 test("the protected input journal tolerates bounded catalog contention and never waits for a real writer",()=>withBuildTestInvocationV1(async original=>{
  const oracle=new Database(":memory:"),scratch=mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR!,"ij-"));

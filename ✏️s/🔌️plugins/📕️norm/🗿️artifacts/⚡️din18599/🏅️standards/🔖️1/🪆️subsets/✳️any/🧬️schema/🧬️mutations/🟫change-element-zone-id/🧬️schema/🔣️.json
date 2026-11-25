@@ -11,7 +11,7 @@
   ],
   "properties": {
     "mutation": {
-      "const": "changeelementzoneid"
+      "const": "changeElementZoneId"
     },
     "elementId": {
       "type": "string",

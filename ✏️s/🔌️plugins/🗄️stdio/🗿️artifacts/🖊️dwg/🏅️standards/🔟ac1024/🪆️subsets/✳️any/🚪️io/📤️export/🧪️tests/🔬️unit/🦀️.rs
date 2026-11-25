@@ -91,6 +91,77 @@ async fn dwg_crc16_matches_seed_on_empty_input() {
 }
 
 #[semio_framework_async_macros::async_test]
+async fn every_written_drawing_wears_the_one_owned_dialect_stamp() {
+    use semio_s_artifact_stdio_dwg_snapshot::standards::v_ac1024::subsets::any::schema::snapshot::WRITTEN_VERSION;
+    let dialect: serde_json::Value = serde_json::from_slice(include_bytes!("../🧫️fixtures/🏷️written-dialect/🔣️.json")).unwrap();
+    let stamp = dialect["stamp"].as_str().unwrap();
+    assert_eq!(WRITTEN_VERSION, stamp);
+    let mut drawing = DwgDrawing::default();
+    let layer = drawing.ensure_layer("solids");
+    drawing.entities.push(DwgEntity { layer, color: DwgColor::ByLayer, geometry: DwgGeometry::PolyfaceMesh { vertices: vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]], faces: vec![[1, 2, 3, 0]] } });
+    assert_eq!(DwgSnapshot::from_drawing(&drawing).unwrap().version, stamp);
+    let bytes = dwg_to_bytes(&drawing).unwrap();
+    assert_eq!(&bytes[..stamp.len()], stamp.as_bytes());
+    assert_eq!(semio_s_artifact_stdio_dwg_read::standards::v_ac1024::subsets::any::io::import::decode_dwg(&bytes).unwrap().version, stamp);
+    for foreign in dialect["readOnlyStamps"].as_array().unwrap() {
+        let mut snapshot = DwgSnapshot::from_drawing(&drawing).unwrap();
+        snapshot.version = foreign.as_str().unwrap().into();
+        assert!(encode_dwg(&snapshot).is_err(), "{foreign} must not be writable over AC1024 object streams");
+    }
+}
+
+fn drain_cursor(mut cursor: DwgWriteCursor) -> (Vec<u8>, usize) {
+    let (mut steps, mut last) = (0, 0.0f32);
+    let bytes = loop {
+        match cursor.step().expect("the cursor writes") {
+            DwgWriteStep::Working => {
+                steps += 1;
+                let progress = cursor.progress();
+                assert!(progress >= last && progress < 1.0, "progress {progress} after {last}");
+                last = progress;
+            }
+            DwgWriteStep::Complete(bytes) => {
+                assert_eq!(cursor.progress(), 1.0);
+                assert!(cursor.step().is_err(), "a finished cursor refuses more work");
+                break bytes;
+            }
+        }
+    };
+    (bytes, steps)
+}
+
+#[semio_framework_async_macros::async_test]
+async fn stepped_writer_is_byte_identical_to_the_one_shot_writer() {
+    let case: serde_json::Value = serde_json::from_slice(include_bytes!("../🧫️fixtures/🧵️write-cursor/🔣️.json")).unwrap();
+    let phases = case["phaseOrder"].as_array().unwrap().len();
+    let drawings = [DwgDrawing::default(), super::acadrust_oracle_tests::every_entity_kind(), dwg_from_bytes(&ARCHITECTURAL_FIXTURE[..]).expect("AutoCAD drawing reads")];
+    let mut previous_steps = 0;
+    for drawing in drawings {
+        let expected = dwg_to_bytes(&drawing).expect("one-shot write");
+        let (bytes, steps) = drain_cursor(DwgWriteCursor::new(drawing));
+        assert!(bytes == expected, "stepped bytes differ from the one-shot writer");
+        assert!(steps >= phases, "{steps} steps cannot cover {phases} phases");
+        assert!(steps >= previous_steps, "a larger drawing needs at least as many steps");
+        previous_steps = steps;
+    }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn stepped_writer_from_a_snapshot_matches_the_snapshot_writer_and_cancels() {
+    let case: serde_json::Value = serde_json::from_slice(include_bytes!("../🧫️fixtures/🧵️write-cursor/🔣️.json")).unwrap();
+    let snapshot = DwgSnapshot::from_drawing(&super::acadrust_oracle_tests::every_entity_kind()).unwrap();
+    let (bytes, _) = drain_cursor(DwgWriteCursor::from_snapshot(snapshot.clone()));
+    assert!(bytes == encode_r2004_snapshot(&snapshot).unwrap());
+    let mut cursor = DwgWriteCursor::new(super::acadrust_oracle_tests::every_entity_kind());
+    for _ in 0..case["cancelAfterSteps"].as_u64().unwrap() {
+        assert!(matches!(cursor.step().unwrap(), DwgWriteStep::Working));
+    }
+    cursor.cancel();
+    assert_eq!(cursor.step().err().as_deref(), Some("DWG write cancelled"));
+    assert_eq!(cursor.step().err().as_deref(), Some("DWG write cancelled"));
+}
+
+#[semio_framework_async_macros::async_test]
 async fn dwg_writer_produces_a_structurally_valid_container() {
     let bytes = dwg_to_bytes(&DwgDrawing::default()).expect("encode empty drawing");
     assert_eq!(&bytes[0..6], b"AC1024");

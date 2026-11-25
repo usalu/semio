@@ -7,7 +7,8 @@ import {emptyHostEstimateStoreV1,estimateHostPhaseV1,evaluateHostCapacityV1,host
 import library from "../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔣️policy.json";
 import fixture from "./🧫️fixtures/🔣️.json";
 
-const policy=readHostCapacityPolicyV1(library.hostCapacity),now=1_800_000_000_000;
+const{interactiveReserveBasisPoints:_a,interactiveReserveMinimumMegabytes:_b,interactiveReserveMaximumMegabytes:_c,sessionCapBasisPoints:_d,...plainMemory}=library.hostCapacity.memory as Record<string,number>;
+const plain={...library.hostCapacity,memory:plainMemory},policy=readHostCapacityPolicyV1(plain),now=1_800_000_000_000;
 const sample=(totalMegabytes:number,availableMegabytes:number,pressure:"normal"|"critical"="normal"):HostSampleV1=>({version:1,atMs:now,platform:"darwin",cores:10,totalMegabytes,availableMegabytes,pressure,swapUsedMegabytes:0,swapOutMegabytesPerSecond:0,load:1,openFiles:8000,openFilesMaximum:245760,attachedImages:10});
 const learned=(total:number):HostRequestV1=>{
  const capacity=total-hostFloorMegabytesV1(policy,{totalMegabytes:total}),base=sizeHostRequestV1(policy,{id:"aaaaaaaa1",operation:"command",host:{totalMegabytes:total}})!;
@@ -46,7 +47,7 @@ test("A learned 200 % request is shrunk to the room the host has when the room c
 const roots:string[]=[],fresh=()=>{const root=mkdtempSync(join(realpathSync(tmpdir()),"progress-"));roots.push(root);return root;};
 afterAll(()=>{for(const root of roots)rmSync(root,{recursive:true,force:true});});
 const control=()=>({signal:new AbortController().signal,remainingMilliseconds:()=>null,publish:async()=>undefined,yieldContinuation:async()=>undefined});
-const quick=readHostCapacityPolicyV1({...library.hostCapacity,wait:{...library.hostCapacity.wait,pollMilliseconds:10,progressMilliseconds:20,sampleMaximumAgeMilliseconds:0,deadlineBatchMilliseconds:1000,deadlineInteractiveMilliseconds:1000,starvedMilliseconds:2500,bypassMilliseconds:600000}});
+const quick=readHostCapacityPolicyV1({...plain,wait:{...library.hostCapacity.wait,pollMilliseconds:10,progressMilliseconds:20,sampleMaximumAgeMilliseconds:0,deadlineBatchMilliseconds:1000,deadlineInteractiveMilliseconds:1000,starvedMilliseconds:2500,bypassMilliseconds:600000}});
 const asked=(fixedMegabytes:number,minimumMegabytes?:number):HostRequestV1=>({id:newHostCapacityIdV1(),operation:"command",priority:"batch",minimumJobs:1,preferredJobs:1,fixedMegabytes,perJobMegabytes:0,cpuPerJob:1,...minimumMegabytes===undefined?{}:{minimumMegabytes}} as HostRequestV1);
 
 test("A request that no shrink can serve ends with a named error past the starved bound naming the holder, while a shrinkable one is admitted with what the host has",async()=>{

@@ -3,24 +3,17 @@
 use crate::standards::v1_7::subsets::base::modules::colour::{extra_entries, lift_colour_space, rect_of};
 use crate::standards::v1_7::subsets::base::modules::content::{parse_content, FontTable};
 use crate::standards::v1_7::subsets::base::modules::fonts::FontCodec;
-use crate::standards::v1_7::subsets::base::modules::lexer::{dict_f64, dict_get, dict_i64, dict_name, CosGrant};
+use crate::standards::v1_7::subsets::base::modules::lexer::{dict_f64, dict_get, dict_i64, dict_name};
 use crate::standards::v1_7::subsets::base::schema::graph_source::ObjectSource;
 use std::collections::{HashMap, HashSet};
-use crate::standards::v1_7::subsets::base::io::error::{PResult, PdfEngineError};
+use crate::standards::v1_7::subsets::base::io::error::PdfEngineError;
 use crate::standards::v1_7::subsets::base::io::text_string::decode_text_string;
 use crate::standards::v1_7::subsets::base::io::foreign_artifacts::NativePdfArtifactResources;
 use crate::standards::v1_7::subsets::base::schema::stream_roles::{PdfAdmittedStreamRole, PdfGraphIdentity, PdfGraphPath, PdfStreamRoleValue};
 use crate::standards::v1_7::subsets::base::schema::content_mapping::{ResourceMap, rename_content};
 use crate::standards::v1_7::subsets::base::modules::lift::*;
 
-#[path = "🧭️document-lift/🦀️.rs"]
-mod document_lift;
-pub use document_lift::*;
-
-#[path = "📜️page-content/🦀️.rs"]
-mod page_content;
-pub use page_content::{project_content_bytes, PageContentBarrier, PageContentCursor, PageContentEvent, PageContentReceipt, PageProgramCursor};
-
+use semio_s_artifact_stdio_pdf_page_content::project_content_bytes;
 
 //#region 🔖️Lifter
 /// 🏷️ Resource categories whose ids share one namespace each (`Page` keys pages by index).
@@ -44,37 +37,37 @@ pub struct DocumentLiftState {
     pub snapshot: PdfSnapshot,
     pub admitted_stream_roles: Vec<PdfAdmittedStreamRole>,
     pub ids: HashMap<(Category, ObjRef), String>,
-    used: HashMap<Category, HashSet<String>>,
-    inline_ids: HashMap<(Category, usize, String), String>,
-    in_progress: HashSet<(Category, ObjRef)>,
+    pub used: HashMap<Category, HashSet<String>>,
+    pub inline_ids: HashMap<(Category, usize, String), String>,
+    pub in_progress: HashSet<(Category, ObjRef)>,
     pub page_refs: Vec<ObjRef>,
     pub annotation_refs: HashMap<ObjRef, (u32, u32)>,
-    font_codecs: HashMap<String, FontCodec>,
-    scope: usize,
+    pub font_codecs: HashMap<String, FontCodec>,
+    pub scope: usize,
     pub admission_error: Option<PdfEngineError>,
-    artifacts: NativePdfArtifactResources<'static>,
+    pub artifacts: NativePdfArtifactResources<'static>,
 }
 
 /// 🧭 One lifting pass over a document.
 pub struct Lifter<'s> {
-    pub(crate) source: &'s mut dyn ObjectSource,
+    pub source: &'s mut dyn ObjectSource,
     pub snapshot: PdfSnapshot,
     pub admitted_stream_roles: Vec<PdfAdmittedStreamRole>,
     pub ids: HashMap<(Category, ObjRef), String>,
-    pub(crate) used: HashMap<Category, HashSet<String>>,
-    pub(crate) inline_ids: HashMap<(Category, usize, String), String>,
-    pub(crate) in_progress: HashSet<(Category, ObjRef)>,
+    pub used: HashMap<Category, HashSet<String>>,
+    pub inline_ids: HashMap<(Category, usize, String), String>,
+    pub in_progress: HashSet<(Category, ObjRef)>,
     pub page_refs: Vec<ObjRef>,
     pub annotation_refs: HashMap<ObjRef, (u32, u32)>,
-    pub(crate) font_codecs: HashMap<String, FontCodec>,
-    pub(crate) scope: usize,
+    pub font_codecs: HashMap<String, FontCodec>,
+    pub scope: usize,
     pub admission_error:Option<PdfEngineError>,
-    pub(crate) artifacts:NativePdfArtifactResources<'static>,
+    pub artifacts:NativePdfArtifactResources<'static>,
 }
 
 struct MappedFonts<'a> {
-    pub(crate) map: &'a HashMap<String, String>,
-    pub(crate) codecs: &'a HashMap<String, FontCodec>,
+    pub map: &'a HashMap<String, String>,
+    pub codecs: &'a HashMap<String, FontCodec>,
 }
 
 impl FontTable for MappedFonts<'_> {
@@ -84,7 +77,7 @@ impl FontTable for MappedFonts<'_> {
 }
 
 impl<'s> Lifter<'s> {
-    fn bind(source: &'s mut dyn ObjectSource, state: DocumentLiftState) -> Self {
+    pub fn bind(source: &'s mut dyn ObjectSource, state: DocumentLiftState) -> Self {
         let DocumentLiftState {
             snapshot, admitted_stream_roles, ids, used, inline_ids, in_progress, page_refs, annotation_refs,
             font_codecs, scope, admission_error, artifacts,
@@ -95,7 +88,7 @@ impl<'s> Lifter<'s> {
         }
     }
 
-    fn unbind(self) -> DocumentLiftState {
+    pub fn unbind(self) -> DocumentLiftState {
         let Self {
             source: _, snapshot, admitted_stream_roles, ids, used, inline_ids, in_progress, page_refs,
             annotation_refs, font_codecs, scope, admission_error, artifacts,
@@ -106,7 +99,7 @@ impl<'s> Lifter<'s> {
         }
     }
 
-    pub(crate) fn text(&mut self, value: Option<&PdfObject>) -> Option<String> {
+    pub fn text(&mut self, value: Option<&PdfObject>) -> Option<String> {
         let value = self.source.deref(value?);
         match value {
             PdfObject::Text(text) => Some(text),
@@ -161,36 +154,8 @@ impl<'s> Lifter<'s> {
 //#endregion 🔖️Lifter
 
 //#region 🔖️Document
-/// ⬇️ Lifts a whole document from its trailer.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn lift_document(trailer: &[PdfDictEntry], declared_version: &str, source: &mut dyn ObjectSource) -> PResult<PdfSnapshot> {
-    let lifter=lift_document_with(trailer, declared_version, source);if let Some(error)=lifter.admission_error {return Err(error)}Ok(lifter.snapshot)
-}
-
-/// ⬇️ Lifts a whole document and hands back the lifter (its reference → id maps included).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn lift_document_with<'s>(trailer: &[PdfDictEntry], declared_version: &str, source: &'s mut dyn ObjectSource) -> Lifter<'s> {
-    let mut cursor = DocumentLiftCursor::new();
-    let grant = DocumentLiftGrant {
-        traversal: CosGrant { work: 4096, allocation_bytes: usize::MAX, release_bytes: usize::MAX }, semantic: true,
-    };
-    loop {
-        match cursor.advance(trailer, declared_version, source, grant, false).status {
-            DocumentLiftStatus::Complete => return Lifter::bind(source, cursor.take_result().expect("complete document lift")),
-            DocumentLiftStatus::Failed => {
-                while cursor.close_traversal_step(grant.traversal).is_some() {}
-                while cursor.close_page_content_step(grant.traversal).is_some() {}
-                let partial = cursor.take_partial().expect("failed document lift");
-                return Lifter::bind(source, partial.lifter);
-            }
-            DocumentLiftStatus::More => {}
-            _ => unreachable!("synchronous lift admitted both traversal and semantic work"),
-        }
-    }
-}
-
 impl Lifter<'_> {
-    pub(crate) fn lift_info(&mut self, dict: &[PdfDictEntry]) -> PdfInfo {
+    pub fn lift_info(&mut self, dict: &[PdfDictEntry]) -> PdfInfo {
         PdfInfo {
             title: self.text(dict_get(dict, "Title")),
             author: self.text(dict_get(dict, "Author")),
@@ -205,7 +170,7 @@ impl Lifter<'_> {
         }
     }
 
-    fn attribute_value(&mut self, attribute: PageAttribute) -> Option<PdfObject> {
+    pub fn attribute_value(&mut self, attribute: PageAttribute) -> Option<PdfObject> {
         let mut result = None;
         self.source.inspect(attribute.owner, &mut |node| {
             result = node.and_then(PdfObject::as_dict).and_then(|dict| dict.get(attribute.entry)).map(|entry| entry.value.clone());
@@ -237,7 +202,7 @@ impl Lifter<'_> {
         Some(self.source.deref(&value))
     }
 
-    fn lift_page(&mut self, index: u32, leaf: PageTreeLeaf, prepared: Option<Vec<PdfOp>>) -> PdfPage {
+    pub fn lift_page(&mut self, index: u32, leaf: PageTreeLeaf, prepared: Option<Vec<PdfOp>>) -> PdfPage {
         let PageTreeLeaf { reference: page_ref, inheritance } = leaf;
         let dict = match self.source.get(page_ref) {
             Some(PdfObject::Dict(dict) | PdfObject::Stream { dict, .. }) => dict,
@@ -260,7 +225,7 @@ impl Lifter<'_> {
             None => {
                 let fonts = MappedFonts { map: &map.fonts, codecs: &self.font_codecs };
                 let artifacts = &mut self.artifacts;
-                page_content::project_content_bytes(self.source, dict_get(&dict, "Contents"), |data| parse_content(data, &fonts, artifacts))
+                project_content_bytes(self.source, dict_get(&dict, "Contents"), |data| parse_content(data, &fonts, artifacts))
             }
         };
         let operators = match program {
@@ -278,9 +243,7 @@ impl Lifter<'_> {
                 }
             }
 
-            let mut fonts: Vec<_> = self.ids.keys().filter_map(|&(category, reference)| (category == Category::Font).then_some(reference)).collect();
-            fonts.sort_unstable();
-            for owner in fonts {
+            for owner in self.font_owners() {
                 dependencies.extend(self.source.role_dependencies(&PdfGraphIdentity { owner, path: Vec::new() }));
             }
             let mut seen = HashSet::new();
@@ -327,9 +290,16 @@ impl Lifter<'_> {
         let ops = match parse_content(content, &MappedFonts {map:&map.fonts,codecs:&self.font_codecs},&mut self.artifacts){Ok(ops)=>ops,Err(error)=>{self.admission_error=Some(error);Vec::new()}};
         self.source.record_role(owner, PdfStreamRoleValue::Operators { content: ops.clone() });
         let mut dependencies = Vec::new();
-        for ((category, object), _) in &self.ids { if *category == Category::Font { dependencies.extend(self.source.role_dependencies(&PdfGraphIdentity { owner: *object, path: Vec::new() })); } }
+        for font in self.font_owners() { dependencies.extend(self.source.role_dependencies(&PdfGraphIdentity { owner: font, path: Vec::new() })); }
         self.source.record_role_dependencies(owner, crate::standards::v1_7::subsets::base::schema::stream_roles::PdfStreamRoleKind::Operators, &dependencies);
         rename_content(ops, map)
+    }
+
+    /// 🔢️ Every claimed font object in ascending object order, the one order content roles depend on fonts in.
+    pub(crate) fn font_owners(&self) -> Vec<ObjRef> {
+        let mut fonts: Vec<_> = self.ids.keys().filter_map(|&(category, reference)| (category == Category::Font).then_some(reference)).collect();
+        fonts.sort_unstable();
+        fonts
     }
 }
 

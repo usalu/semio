@@ -17,6 +17,24 @@
       {
         "id": "wall-W1",
         "patch": {
+          "height": null,
+          "embedment": null,
+          "baseWidth": null,
+          "stemThickness": null,
+          "backfillPhiDeg": null,
+          "backfillGamma": null,
+          "wallFrictionDeg": null,
+          "earthPressureMode": null,
+          "wallMovement": null,
+          "ocr": null,
+          "concreteGamma": null,
+          "surcharge": null,
+          "verticalPermanent": null,
+          "horizontalPermanent": null,
+          "seismicKh": null,
+          "seismicKv": null,
+          "reinforcementSpacing": null,
+          "reinforcementWidth": null,
           "reinforcementFriction": 1.5
         }
       }
@@ -29,6 +47,7 @@
   "pileGroups": null,
   "labTests": null,
   "layerWaters": null,
+  "placements": null,
   "cases": {
     "removed": [],
     "inserted": [],

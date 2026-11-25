@@ -2,10 +2,10 @@
 /// 🗄️ The DDL of the tables this module projects.
 pub const SQL: &str = include_str!("🗄️.sql");
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgBlockGripLocationComponent;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgDynamicBlockProxyNode;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgEvaluationExpression;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgEvaluationExpressionValue;
+use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgBlockGripLocationComponent;
+use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgDynamicBlockProxyNode;
+use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgEvaluationExpression;
+use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgEvaluationExpressionValue;
 use super::number::Projection;
 use super::reader::{full_unsigned,high,low,ordinal,signed_integer,signed_word,unsigned,Reader};
 use super::xrecord::require_null;

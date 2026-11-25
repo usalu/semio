@@ -17,6 +17,10 @@ use semio_framework_value::retained_clone::{RetainedCloneClose, RetainedCloneGra
 use semio_framework_value::retirement::RetireOwned;
 use semio_framework_value::{RetainedAllocationEffect, RetirementDemand, ValueError, ValueRefusalKind};
 use std::mem::{ManuallyDrop, size_of, size_of_val};
+/// 📋️ The three phases that copy the request args into the commit args; distinct from the SET constructor phases 96 to 102.
+const COMMIT_COPY: u8 = 110;
+const COMMIT_TAKE: u8 = 111;
+const COMMIT_CLOSE: u8 = 112;
 fn invalid() -> ValueError {
     ValueError::literal(ValueRefusalKind::InvalidValue, "staging.type-input")
 }
@@ -474,7 +478,7 @@ impl<C: IfcDetailsProfile + 'static> IfcTypeInputSourceWork<C> {
     }
     fn step_demands(&self) -> Result<RetirementDemand, ValueError> {
         if self.source_loan.as_ref().and_then(|loan|loan.source()).is_none(){return self.source_demands();}
-        if matches!(self.state.phase,96|97|98){let own=4*size_of::<State>();let child=if self.state.phase==98{self.commit_copy.close_demands(4096)?}else{self.commit_copy.demands(4096)?};return Ok(RetirementDemand{copy_bytes:own.checked_add(child.copy_bytes).ok_or_else(invalid)?,capacity_bytes:child.capacity_bytes,release_bytes:child.release_bytes,depth:child.depth.max(1)});}
+        if matches!(self.state.phase,COMMIT_COPY|COMMIT_TAKE|COMMIT_CLOSE){let own=4*size_of::<State>();let child=if self.state.phase==COMMIT_CLOSE{self.commit_copy.close_demands(4096)?}else{self.commit_copy.demands(4096)?};return Ok(RetirementDemand{copy_bytes:own.checked_add(child.copy_bytes).ok_or_else(invalid)?,capacity_bytes:child.capacity_bytes,release_bytes:child.release_bytes,depth:child.depth.max(1)});}
         if self.state.phase==80{
             let base=4*size_of::<State>()+2*size_of::<bool>();
             let child=if let Some(candidate)=self.candidate.as_ref(){let source=self.source_loan.as_ref().and_then(|loan|loan.source()).ok_or_else(stale)?;candidate.demands(source,source.try_authority()?.get()?,4096)?}else{RetirementDemand{copy_bytes:size_of::<super::type_guidance_candidate::GuidedCandidate<C>>()+size_of::<Box<super::type_guidance_candidate::GuidedCandidate<C>>>(),capacity_bytes:size_of::<super::type_guidance_candidate::GuidedCandidate<C>>(),depth:1,..Default::default()}};
@@ -747,7 +751,7 @@ impl<C: IfcDetailsProfile + 'static> IfcTypeInputSourceWork<C> {
         self.binding.is_some()
     }
     pub fn context_matches(&self, window: Option<&str>, locale: Locale) -> Result<bool, ValueError> {
-        self.request.as_ref().or_else(|| self.page.as_ref().and_then(|page| page.request.as_ref())).or_else(||self.candidate.as_ref().and_then(|candidate|candidate.request())).map(|request| request.context_matches(window, locale)).ok_or_else(stale)
+        self.request.as_ref().or_else(|| self.page.as_ref().and_then(|page| page.request.as_ref())).or_else(||self.candidate.as_ref().and_then(|candidate|candidate.request())).or_else(||self.commit_copy.request()).map(|request| request.context_matches(window, locale)).ok_or_else(stale)
     }
     pub fn receive(&mut self, donor: &mut Option<StagedFormRequest>, source: &IfcSnapshot, revision: [u8; 32], cx: &mut StepContext<'_>) -> Result<bool, OriginalTurnFailure> {
         if self.binding.is_some() || donor.is_none() || self.state.closing {
@@ -1283,18 +1287,18 @@ impl<C: IfcDetailsProfile + 'static> IfcTypeInputSourceWork<C> {
                 }else{
                     let lease=self.source_loan.as_ref().and_then(|loan|loan.source()).ok_or_else(stale)?;let grant=cx.retained_grant();let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes.saturating_sub(own),..grant};let before=cx.retained_progress();
                     if cx.with_retained_loan(child,|cx|self.candidate.as_mut().ok_or_else(stale)?.advance(&mut self.request,lease,source,revision,cx))?{
-                        self.state.ready=self.candidate.as_ref().ok_or_else(stale)?.valid();self.state.phase=if self.state.ready{96}else{6};let delegated=cx.retained_progress()!=before;cx.consume_retained(RetainedCloneProgress{copied_items:usize::from(!delegated),copied_bytes:own,..Default::default()})?;if !delegated{cx.consume_fuel(1);}
+                        self.state.ready=self.candidate.as_ref().ok_or_else(stale)?.valid();self.state.phase=if self.state.ready{COMMIT_COPY}else{6};let delegated=cx.retained_progress()!=before;cx.consume_retained(RetainedCloneProgress{copied_items:usize::from(!delegated),copied_bytes:own,..Default::default()})?;if !delegated{cx.consume_fuel(1);}
                     }
                 }
             }
-            96|97|98=>{
+            COMMIT_COPY|COMMIT_TAKE|COMMIT_CLOSE=>{
                 let own=4*size_of::<State>();let grant=cx.retained_grant();let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes.saturating_sub(own),..grant};let before=cx.retained_progress();
                 let ready=match self.state.phase{
-                    96=>cx.with_retained_loan(child,|cx|self.commit_copy.advance(&mut self.request,cx))?,
-                    97=>cx.with_retained_loan(child,|cx|self.commit_copy.take_args(&mut self.commit_args,cx))?,
+                    COMMIT_COPY=>cx.with_retained_loan(child,|cx|self.commit_copy.advance(&mut self.request,cx))?,
+                    COMMIT_TAKE=>cx.with_retained_loan(child,|cx|self.commit_copy.take_args(&mut self.commit_args,cx))?,
                     _=>{if self.commit_copy.empty(){true}else{let demand=self.commit_copy.close_demands(4096)?;closed_in(cx,demand,|effect|self.commit_copy.close_owned(4096,effect))?;false}},
                 };
-                if ready{let next=match self.state.phase{96=>97,97=>98,_=>6};if next==98{self.commit_copy.begin_close();}self.state.phase=next;let delegated=cx.retained_progress()!=before;cx.consume_retained(RetainedCloneProgress{copied_items:usize::from(!delegated),copied_bytes:own,..Default::default()})?;if !delegated{cx.consume_fuel(1);}}
+                if ready{let next=match self.state.phase{COMMIT_COPY=>COMMIT_TAKE,COMMIT_TAKE=>COMMIT_CLOSE,_=>6};if next==COMMIT_CLOSE{self.commit_copy.begin_close();}self.state.phase=next;let delegated=cx.retained_progress()!=before;cx.consume_retained(RetainedCloneProgress{copied_items:usize::from(!delegated),copied_bytes:own,..Default::default()})?;if !delegated{cx.consume_fuel(1);}}
             },
             84|85|89=>self.advance_list_copy(cx)?,
             92|94|95=>self.advance_typed_copy(cx)?,
@@ -1870,7 +1874,15 @@ impl<C: IfcDetailsProfile + 'static> IfcTypeInputSourceWork<C> {
         refused(invalid())
     }
 }
-retire_self!([C: IfcDetailsProfile + 'static] IfcTypeInputSourceWork<C>);
+impl<C: IfcDetailsProfile + 'static> IfcTypeInputSourceWork<C> {
+    pub fn close_work(&self, body: usize) -> Result<u64, ValueError> {
+        if !self.retirement.is_empty() {
+            return self.retirement.next_owner_work::<String>(false, &None, body);
+        }
+        self.source_loan.as_ref().map_or(Ok(1), |loan| loan.close_work(body))
+    }
+}
+retire_self!([C: IfcDetailsProfile + 'static] IfcTypeInputSourceWork<C>; work = |work: &IfcTypeInputSourceWork<C>, body: usize| work.close_work(body));
 impl<C: IfcDetailsProfile + 'static> Drop for IfcTypeInputSourceWork<C> {
     fn drop(&mut self) {
         assert!(std::thread::panicking() || self.terminal_is_empty(), "type input guidance requires original paid retirement");

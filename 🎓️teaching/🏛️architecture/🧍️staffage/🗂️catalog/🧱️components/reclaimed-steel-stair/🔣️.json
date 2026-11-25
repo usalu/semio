@@ -13,14 +13,62 @@
    "de": "Ein rückgebauter Industrie-Stahltreppenlauf für ein Geschoss von 2,80 m: zwei Wangen aus U-Profil UPN 200 (4.66 m lang, St 37-2), vierzehn gekantete Tränenblechstufen 5/7 mm von 800 x 260 mm, durch angeschweißte Seitenwangen verschraubt, fünfzehn Steigungen von 186,7 mm auf Auftritten von 250 mm (36,7 Grad, 2s + a = 623 mm), links ein seitlich angeschraubter Handlauf 42,4 mm mit Knieleiste; die Laschen oben sind abgebrannt, der rechte Handlauf ist entfernt (seine leeren Löcher bleiben), die Stufen sind auf der Lauflinie blank gelaufen und der graue Anstrich ist zu Rostpatina geworden. Er liegt auf zwei Unterlegern, wird an einem Vierstrang-Kettengehänge gehoben und mit einer gehenden Person und der Treppenlast T2 wieder eingebaut."
   },
   "tags": [
-   "component",
-   "reclaimed",
-   "structural",
-   "stair",
-   "stringer",
-   "steel",
-   "chequer-plate",
-   "industrial"
+   {
+    "id": "component",
+    "title": {
+     "en": "component",
+     "de": "Bauteil"
+    }
+   },
+   {
+    "id": "reclaimed",
+    "title": {
+     "en": "reclaimed",
+     "de": "wiederverwendet"
+    }
+   },
+   {
+    "id": "structural",
+    "title": {
+     "en": "structural",
+     "de": "tragend"
+    }
+   },
+   {
+    "id": "stair",
+    "title": {
+     "en": "stair",
+     "de": "Treppe"
+    }
+   },
+   {
+    "id": "stringer",
+    "title": {
+     "en": "stringer",
+     "de": "Wange"
+    }
+   },
+   {
+    "id": "steel",
+    "title": {
+     "en": "steel",
+     "de": "Stahl"
+    }
+   },
+   {
+    "id": "chequer-plate",
+    "title": {
+     "en": "chequer plate",
+     "de": "Riffelblech"
+    }
+   },
+   {
+    "id": "industrial",
+    "title": {
+     "en": "industrial",
+     "de": "industriell"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage component authors",

@@ -29,11 +29,11 @@ impl<Op> protocol::ColdMutationKind<En1995Snapshot, Op> for ChangeAnnex where Op
         crate::change_annex::diff::diff(self, base)
     }
     fn inverse(&self, base: &En1995Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        crate::change_annex::inverse::inverse(self, base)?
-    
-    })
-}
+        Ok(match crate::change_annex::inverse::inverse(self, base) {
+            Some(inverse) => vec![Op::from(inverse)],
+            None => Vec::new(),
+        })
+    }
 }
 //#endregion 🔖️ChangeAnnex
 

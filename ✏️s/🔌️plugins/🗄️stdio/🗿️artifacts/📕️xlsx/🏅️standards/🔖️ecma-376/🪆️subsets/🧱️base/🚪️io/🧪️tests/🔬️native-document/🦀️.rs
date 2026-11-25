@@ -2,7 +2,7 @@
 
 use calamine::Reader;
 use semio_plugin::{io::{AnalyzeSource, ComposeSource, Confidence}, ArtifactAnalysis, ArtifactBuilder, ArtifactComposition};
-use crate::standards::v_ecma_376::subsets::base::io::{
+use semio_s_artifact_stdio_xlsx_base::standards::v_ecma_376::subsets::base::io::{
     export::serializers::encode_xlsx,
     import::deserializers::{decode_xlsx, sniff_xlsx_subset},
     XlsxAnalyzer, XlsxBuilder, XlsxComposerComposition,
@@ -119,7 +119,7 @@ fn export_keeps_the_default_content_type_for_custom_xml() {
 
 #[test]
 fn implicit_worksheet_coordinates_edit_and_undo_without_moving_siblings() {
-    use crate::editor::xlsx::standards::v_ecma_376::subsets::base::{XlsxEditor, XlsxEditorCommand};
+    use semio_s_artifact_stdio_xlsx_base::editor::xlsx::standards::v_ecma_376::subsets::base::{XlsxEditor, XlsxEditorCommand};
     use protocol::{ColdMutation, OpBinary, OpText};
     use semio_framework_value::ToValue;
     use semio_s_artifact_stdio_contract::editing::{BoundedNativeEditingEditor, SnapshotEditEvent, SnapshotEditingCommand, SnapshotEditingEditor};

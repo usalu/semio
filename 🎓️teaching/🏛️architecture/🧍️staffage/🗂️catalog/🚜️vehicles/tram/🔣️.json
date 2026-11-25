@@ -13,13 +13,55 @@
    "de": "Ein Abschnitt einer 100-%-Niederflur-Gelenkstraßenbahn: ein Endmodul mit Fahrerstand (9,0 m) mit angetriebenem Drehgestell und Laufdrehgestell, Gelenkbalg und ein eingehängtes Mittelmodul, mit Schwenkschiebetüren, hebe- und senkbarem Stromabnehmer, Fahrmotoren, Bremswiderstand und -scheiben sowie Dachklimaanlage."
   },
   "tags": [
-   "vehicle",
-   "tram",
-   "rail",
-   "low-floor",
-   "articulated",
-   "electric",
-   "pantograph"
+   {
+    "id": "vehicle",
+    "title": {
+     "en": "vehicle",
+     "de": "Fahrzeug"
+    }
+   },
+   {
+    "id": "tram",
+    "title": {
+     "en": "tram",
+     "de": "Straßenbahn"
+    }
+   },
+   {
+    "id": "rail",
+    "title": {
+     "en": "rail",
+     "de": "Schiene"
+    }
+   },
+   {
+    "id": "low-floor",
+    "title": {
+     "en": "low floor",
+     "de": "Niederflur"
+    }
+   },
+   {
+    "id": "articulated",
+    "title": {
+     "en": "articulated",
+     "de": "Gelenk-"
+    }
+   },
+   {
+    "id": "electric",
+    "title": {
+     "en": "electric",
+     "de": "elektrisch"
+    }
+   },
+   {
+    "id": "pantograph",
+    "title": {
+     "en": "pantograph",
+     "de": "Pantograph"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content worker NW-VE (vehicles)",

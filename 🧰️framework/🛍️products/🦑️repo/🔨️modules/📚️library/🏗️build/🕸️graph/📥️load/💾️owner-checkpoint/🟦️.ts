@@ -15,6 +15,7 @@ type BatchV1={path:string;stamp:Stats;records:Map<string,LocationV1>};
 type LocationV1={batch:BatchV1;offset:number;record:RecordIndexV1};
 type CheckpointPortV1=Readonly<{
  check():void;
+ refused?(rows:readonly unknown[],storedAt:number):boolean;
  yieldContinuation():Promise<void>;
  publish(paths:readonly string[],plan:{peakBytes:number;retainedDeltaBytes:number},write:()=>void):boolean;
 }>;
@@ -150,13 +151,13 @@ export async function openOwnerCheckpointV1(directory:string,scope:string,format
   async read(suffix:string):Promise<OwnerEntryV1|undefined>{
    const key=keyOf(suffix),location=lookups.get(key);
    if(!location)return undefined;
-   return read(location.batch.path,location.batch.stamp,async file=>{
+   return read(location.batch.path,location.batch.stamp,async(file,stamp)=>{
     const bytes=await bytesAt(file,location.record.bytes,location.offset,check);
     if(digest(bytes)!==location.record.hash)return undefined;
     const record=JSON.parse(decode(bytes));
     if(!validity("Record",record)||record.key!==key||validateJsonSchemaSubset(ownerFactsSchema,record.facts).length||record.facts.project.name!==suffix.split("\0",1)[0])return undefined;
     const rows=decodeAuthorityObservationsV1(record.observations,kinds,check);
-    return rows.length?{facts:record.facts,rows}:undefined;
+    return rows.length&&!port.refused?.(rows,stamp.mtimeMs)?{facts:record.facts,rows}:undefined;
    });
   },
   save(suffix:string,entry:OwnerEntryV1):void{

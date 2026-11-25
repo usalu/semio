@@ -3,12 +3,15 @@
 //#region 🎠️Kernel
 export {
   descriptorPackageAssets,
+  descriptorPackageComponents,
   fetchDescriptorManifest,
   fetchPackageDescriptor,
   PLUGIN_DESCRIPTOR_CODE_UNIT_CAPACITY,
   pluginDescriptorUrl
 } from "../../🛂️descriptor-admission/🟦️.ts";
 export type { PluginPackageDescriptor } from "../../🛂️descriptor-admission/🟦️.ts";
+export { PACKAGE_COMPONENT_ID, PACKAGE_COMPONENT_MAXIMUM, PackageComponentError, packageComponentForApp, readPackageComponents } from "../../🧩️package-components/🟦️.ts";
+export type { PackageComponentDeclaration, PackageComponents } from "../../🧩️package-components/🟦️.ts";
 export { createTurnOutcomeBroadcast } from "../../📡️turn-outcome-broadcast/🟦️.ts";
 export type { TurnOutcome } from "../../📡️turn-outcome-broadcast/🟦️.ts";
 export type { PluginDispatchHintV1, PluginWasmHandle } from "../../🪝️plugin-wasm-handle/🟦️.ts";

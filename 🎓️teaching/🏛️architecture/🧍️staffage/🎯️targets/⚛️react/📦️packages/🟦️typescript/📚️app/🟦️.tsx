@@ -1,6 +1,7 @@
 /** 📚️ The archive app of the staffage site: language gate, navigation bar, the nested overview and the footer; `mountArchive` renders it on a root element.
  *
  * No language is assumed. The reader's stored choice, else the first language of the browser's list the app speaks, decides; with neither the app asks, in every language at once, before it shows anything else.
+ * A finger is a finger at every width: a window as wide as a desktop on a coarse pointer keeps the desktop layout and takes the touch sizes of the tablet device, so every control is a finger target there too.
  * Everything the reader chooses is kept locally (`💾️persistence`); everything a link must reproduce is in the address (`🗺️routing`). Light, dark and system themes come from the design system's surface chrome.
  *
  * @see ../../../🔨️modules/🥞️levels/🟦️.tsx — the nested layered overview
@@ -10,7 +11,7 @@
 import { StrictMode, useEffect, useMemo, useRef, useState, type ReactElement } from "react";
 import { createPortal } from "react-dom";
 import { createRoot } from "react-dom/client";
-import { DEFAULT_UI_DRIVER, Navbar, UI_AVAILABLE_HEIGHT, bootstrapElementsSurfaceChromeDocument, elementsSurfaceDeviceForMatches, navbarFillItem, useElementsSurfaceChrome, type NavbarItem } from "@semio-tech/ui-react/chrome";
+import { DEFAULT_UI_DRIVER, Navbar, UI_AVAILABLE_HEIGHT, bootstrapElementsSurfaceChromeDocument, elementsSurfaceDeviceForMatches, navbarFillItem, useElementsSurfaceChrome, useMediaQuery, type NavbarItem } from "@semio-tech/ui-react/chrome";
 import { VIEWS } from "@teaching/staffage";
 import "../../../🎨️.css";
 import { ArchiveProvider, useArchive, useLocal } from "../../../🔨️modules/🧭️context/🟦️.tsx";
@@ -30,8 +31,8 @@ const ROUTE_TITLES = { overview: "nav.overview", all: "all.title", category: "na
 function LanguageGate(props: { readonly onChoose: (language: (typeof OFFERED)[number]) => void }): ReactElement {
   return (
     <div data-staffage-language-gate="" className="staffage-app flex min-h-0 flex-col overflow-hidden bg-background text-foreground" style={{ height: UI_AVAILABLE_HEIGHT }}>
-      <main id="staffage-main" className="relative flex min-h-0 flex-1 flex-col items-center gap-double overflow-auto p-4">
-        <SharedBorderRow orientation="vertical" className="my-auto w-full max-w-xl shrink-0 bg-panel">
+      <main id="staffage-main" className="relative flex min-h-0 flex-1 flex-col overflow-auto">
+        <SharedBorderRow orientation="vertical" className="w-full flex-1 bg-panel">
           <SharedBorderRowCell className="flex-col items-start gap-double p-4">
             {inEveryLanguage("brand.title").map(({ language, text }) => (
               <h1 key={language} lang={language} className="m-0 font-serif text-3xl leading-tight">
@@ -41,7 +42,7 @@ function LanguageGate(props: { readonly onChoose: (language: (typeof OFFERED)[nu
           </SharedBorderRowCell>
           {OFFERED.map((language) => (
             <SharedBorderRow key={language} lang={language}>
-              <Button grouped variant="primary" className="min-w-32 justify-start" onClick={() => props.onChoose(language)}>
+              <Button grouped variant="primary" icon="globe" className="min-w-32 justify-start" onClick={() => props.onChoose(language)}>
                 {LANGUAGE_NAMES[language]}
               </Button>
               <SharedBorderRowCell className="flex-1 px-double py-single text-sm">{translator(language)("language.invite")}</SharedBorderRowCell>
@@ -113,8 +114,8 @@ function SettingsMenu({ phone }: { readonly phone: boolean }): ReactElement {
           <Bar>
             {asCells(confirm ? (
               <>
-                <Button variant="primary" onClick={() => { store.dispatch({ type: "everything-cleared" }); setConfirm(false); }}>{t("settings.clearConfirm")}</Button>
-                <Button onClick={() => setConfirm(false)}>{t("action.cancel")}</Button>
+                <Button variant="primary" icon="check" onClick={() => { store.dispatch({ type: "everything-cleared" }); setConfirm(false); }}>{t("settings.clearConfirm")}</Button>
+                <Button icon="x" onClick={() => setConfirm(false)}>{t("action.cancel")}</Button>
               </>
             ) : (
               <Button icon="trash-2" className="flex-1" onClick={() => setConfirm(true)}>{t("settings.clear")}</Button>
@@ -160,8 +161,8 @@ function Navigation({ phone }: { readonly phone: boolean }): ReactElement {
         </a>
       ),
     },
-    { key: "up", content: up === null ? <span /> : <Button variant="quiet" icon="arrow-left" aria-label={t("nav.up")} title={t("nav.up")} onClick={() => navigate(up, recallParams(up))}><span className="hidden md:inline">{t("nav.up")}</span></Button> },
-    ...(phone ? [] : links.map((link): NavbarItem => ({ key: link.href, className: "hidden md:flex", content: <ButtonLink href={link.href} icon={link.icon} variant="quiet" aria-label={link.label} aria-current={link.active ? "page" : undefined} className={cn(link.active && "text-primary")}>{link.label}</ButtonLink> }))),
+    { key: "up", content: up === null ? <span /> : <Button variant="quiet" icon="arrow-left" aria-label={t("nav.up")} title={t("nav.up")} onClick={() => navigate(up, recallParams(up))}><span className="hidden xl:inline">{t("nav.up")}</span></Button> },
+    ...(phone ? [] : links.map((link): NavbarItem => ({ key: link.href, className: "hidden md:flex", content: <ButtonLink href={link.href} icon={link.icon} variant="quiet" aria-label={link.label} title={link.label} aria-current={link.active ? "page" : undefined} className={cn(link.active && "text-primary")}><span className="hidden xl:inline">{link.label}</span></ButtonLink> }))),
     navbarFillItem("fill"),
     ...(phone ? [] : [{
       key: "search",
@@ -223,7 +224,8 @@ function Client(props: { readonly store: ArchiveStore; readonly catalog: Catalog
   const state = useArchiveState(store);
   const { language } = resolveLanguage(state.preferences.language, languages);
   const breakpoint = useBreakpoint();
-  useElementsSurfaceChrome({ appearance: state.preferences.theme, device: elementsSurfaceDeviceForMatches({ mobile: breakpoint === "mobile", tablet: breakpoint === "tablet" }), driver: DEFAULT_UI_DRIVER, browserDefaults: "native" });
+  const finger = useMediaQuery("(pointer: coarse)");
+  useElementsSurfaceChrome({ appearance: state.preferences.theme, device: elementsSurfaceDeviceForMatches({ mobile: breakpoint === "mobile", tablet: breakpoint === "tablet" || finger }), driver: DEFAULT_UI_DRIVER, browserDefaults: "native" });
   useEffect(() => {
     document.documentElement.style.fontSize = state.preferences.textSize === "large" ? "112.5%" : "";
   }, [state.preferences.textSize]);

@@ -1,0 +1,154 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:build:graph:load:selected-exchange:v1",
+  "title": "The sealed generation of a selected read, offered to the fleet",
+  "description": "One machine reads a selection and seals it; every other machine on the same tree state fetches the sealed generation instead of reading. The head is keyed by the digest of the scope (selection and owner registry), the semantics revision of what inference produces and the platform: never by a path, a state root, a home directory or a host name. It carries, per owner, the digest of the neutral observation rows the generation was sealed for (root token, no stamps, no location rows), so a reader accepts each owner on its own: an owner whose rows hold in the reader's tree is installed, every other owner is read again, and the result is published as the new head. A head of another revision, scope or platform, a corrupt head and a head whose documents do not match their names are a miss. `revision` is declared here and moves whenever the results of an inference change (law `revision` in the tests: the stamp table and the fixture corpus are pinned beside it).",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "domain": "semio.selected-generation.v1",
+        "revision": 1,
+        "claimTtlMilliseconds": 30000,
+        "claimHeartbeatMilliseconds": 8000,
+        "waitMaximumMilliseconds": 1500000,
+        "waitSliceMilliseconds": 15000,
+        "headSwapAttempts": 4,
+        "maximumOwners": 20000,
+        "maximumDocuments": 8,
+        "documents": [
+          "graph",
+          "owners",
+          "admission"
+        ],
+        "retentionManifest": "stage.json",
+        "redeclareMaximumMilliseconds": 3000,
+        "lookMaximumMilliseconds": 120000,
+        "readBesideMinimumTotalMegabytes": 24576
+      }
+    },
+    "Head": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "revision",
+        "scope",
+        "platform",
+        "createdMs",
+        "membership",
+        "owners",
+        "documents"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "scope": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "platform": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "createdMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "membership": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "owners": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        },
+        "documents": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "hash",
+              "size"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "maxLength": 96
+              },
+              "hash": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "size": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "closureGraph": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$",
+          "description": "EN: The SHA-256 of the head of the module closure graph of the machine that read the selection, offered to the fleet as one object: a machine that takes the head adopts that graph by digests before it judges the owners. DE: Der SHA-256 des Kopfes des Modul-Closure-Graphen der Maschine, die die Auswahl las, als ein Objekt der Flotte angeboten: eine Maschine, die den Kopf nimmt, übernimmt diesen Graphen über Digests, bevor sie die Besitzer prüft."
+        }
+      }
+    },
+    "TextCatalogue": {
+      "const": {
+        "waiting": {
+          "en": "Waiting for another machine to seal and publish the selected graph ({seconds} s of at most {limit} s, holder {by}).",
+          "de": "Warte darauf, dass eine andere Maschine den gewählten Graphen versiegelt und veröffentlicht ({seconds} s von höchstens {limit} s, Halter {by})."
+        },
+        "installed": {
+          "en": "Took the sealed graph of the fleet: {owners} owners hold, none read again ({seconds} s).",
+          "de": "Versiegelten Graphen der Flotte übernommen: {owners} Besitzer gelten, keiner neu gelesen ({seconds} s)."
+        },
+        "repaired": {
+          "en": "Took the sealed graph of the fleet: {held} owners hold, {differing} differ and are read again.",
+          "de": "Versiegelten Graphen der Flotte übernommen: {held} Besitzer gelten, {differing} weichen ab und werden neu gelesen."
+        },
+        "published": {
+          "en": "Published the sealed graph of this read to the fleet ({owners} owners).",
+          "de": "Versiegelten Graphen dieses Lesens an die Flotte veröffentlicht ({owners} Besitzer)."
+        },
+        "not-published": {
+          "en": "The sealed graph of this read was not published to the fleet: {reason}.",
+          "de": "Der versiegelte Graph dieses Lesens wurde nicht an die Flotte veröffentlicht: {reason}."
+        },
+        "taken-over": {
+          "en": "The machine that was reading stopped answering; reading here with the owner records it published.",
+          "de": "Die lesende Maschine antwortet nicht mehr; lese hier mit den von ihr veröffentlichten Besitzerdatensätzen."
+        },
+        "fetching": {
+          "en": "Fetching the sealed graph of the fleet: {documents} documents, {owners} owners.",
+          "de": "Hole den versiegelten Graphen der Flotte: {documents} Dokumente, {owners} Besitzer."
+        },
+        "reading-beside": {
+          "en": "{by} holds the claim of this selection, but this machine has {megabytes} MB and reads it beside the holder instead of waiting for it.",
+          "de": "{by} hält den Anspruch auf diese Auswahl, aber diese Maschine hat {megabytes} MB und liest sie neben dem Halter, statt auf ihn zu warten."
+        },
+        "look-bound": {
+          "en": "The fleet did not deliver the sealed graph within {seconds} s; reading here.",
+          "de": "Die Flotte lieferte den versiegelten Graphen nicht innerhalb von {seconds} s; lese hier."
+        },
+        "graph-adopted": {
+          "en": "Took the module graph of the fleet by digests: {confirmed} nodes confirmed by this tree, {refused} left to walk.",
+          "de": "Modulgraph der Flotte über Digests übernommen: {confirmed} Knoten von diesem Baum bestätigt, {refused} bleiben zu durchlaufen."
+        }
+      }
+    }
+  }
+}

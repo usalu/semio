@@ -10,6 +10,7 @@ use crate::standards::v1::subsets::any::schema::mutations::SSpaceMutation;
 use protocol::OpBinary;
 
 dsl::original_tagged_operation_receiving!(SSpaceMutation, COMPONENT_PROTOCOL_SEMIO);
+dsl::artifact_persisted_binary_operation!(SSpaceMutation);
 
 pub const BINARY_TAG_REGISTRY: &[(&str, u8)] = &[
     ("create-artifact", create_artifact::BINARY_TAG),

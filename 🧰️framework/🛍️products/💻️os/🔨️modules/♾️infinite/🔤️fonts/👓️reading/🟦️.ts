@@ -1,9 +1,9 @@
 import{requireIssuedResourceControlInvocationV1,type ScriptInvocation}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import type{ResourceLeaseControl}from"@semio-tech/process/leases";
-import{fontAssetPublicationRootV1}from"@semio-tech/framework-canvas-ts/fonts/publication";
-import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
-import { withRepositoryCacheStoreV1 } from "@semio-tech/repo-lib/storage";
-import { withRepositoryArtifactV1, withRepositoryArtifactTaskV1, type RepositoryArtifactV1, readNativeCallerAuthorityV1 } from "@semio-tech/repo-lib/artifacts";
+import{fontAssetPublicationRootV1}from"../../../../../../🔨️modules/🖼️canvas/📦️packages/🟦️typescript/🔤️fonts/📦️publication/🟦️.ts";
+import{validateJsonSchemaSubset}from"../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+import { withRepositoryCacheStoreV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/💾️storage/🟦️.ts";
+import { withRepositoryArtifactV1, withRepositoryArtifactTaskV1, type RepositoryArtifactV1, readNativeCallerAuthorityV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️artifacts/🟦️.ts";
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
 
 /** 🔤️ Retains the actual mode's packed font publication until its accepted consumer settles. */

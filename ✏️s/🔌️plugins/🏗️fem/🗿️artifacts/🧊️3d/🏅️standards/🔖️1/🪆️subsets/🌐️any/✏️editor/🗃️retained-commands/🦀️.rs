@@ -141,7 +141,7 @@ pub fn fem3d_route(command: &Fem3dCommand, doc: &ArtifactView<'_, Fem3dSnapshot>
     let window = |fault: &str| view.ok_or_else(|| Fault::from(format!("fem3d.{fault}.window-context-required")));
     match command {
         Fem3dCommand::SetCamera(payload) => set_camera::handle_window(payload, cfg, window("camera")?),
-        Fem3dCommand::SetResultDisplay(payload) => set_result_display::handle_window(payload, cfg, window("results")?),
+        Fem3dCommand::SetResultDisplay(payload) => set_result_display::handle_window(&set_result_display::resolved(payload, doc), cfg, window("results")?),
         Fem3dCommand::SetResultAnimation(payload) => set_result_animation::handle_window(payload, doc, cfg, window("results")?),
         Fem3dCommand::ResultAnimationTick(payload) => result_animation_tick::handle_window(payload, doc, cfg, window("results")?),
         Fem3dCommand::FocusEntity(payload) => focus_entity::handle_window(payload, doc, cfg, window("focus-entity")?),

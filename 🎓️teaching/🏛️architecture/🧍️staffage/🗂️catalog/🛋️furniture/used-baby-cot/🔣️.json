@@ -13,21 +13,111 @@
    "de": "Ein gebrauchtes umbaubares Kinderbett aus Buche für eine Matratze 60 x 120 cm, 1,29 x 0,69 x 0,88 m auf vier 50-mm-Rollen, 26.2 kg mit Matratze: runde 20-mm-Sprossen mit 57 mm Abstand, drei herausnehmbare Schlupfsprossen, ein Lattenrost in drei Höhen, in den oberen Holm genagte Bissspuren, eine durchgelegene Matratze, eine ersetzte Leiste und eine fremde Rolle; im Gebrauchtwarenlager mit den eingelegten Schlupfsprossen gelagert, von zwei Personen getragen und wieder in Gebrauch mit einem schlafenden Kind."
   },
   "tags": [
-   "used",
-   "household",
-   "second-hand",
-   "children",
-   "bedroom",
-   "baby-cot",
-   "cot",
-   "bed",
-   "beech",
-   "solid-wood",
-   "convertible",
-   "slatted-base",
-   "mattress",
-   "castors",
-   "interior"
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "household",
+    "title": {
+     "en": "household",
+     "de": "Haushalt"
+    }
+   },
+   {
+    "id": "second-hand",
+    "title": {
+     "en": "second-hand",
+     "de": "Second-Hand"
+    }
+   },
+   {
+    "id": "children",
+    "title": {
+     "en": "children",
+     "de": "Kinder"
+    }
+   },
+   {
+    "id": "bedroom",
+    "title": {
+     "en": "bedroom",
+     "de": "Schlafzimmer"
+    }
+   },
+   {
+    "id": "baby-cot",
+    "title": {
+     "en": "baby cot",
+     "de": "Babybett"
+    }
+   },
+   {
+    "id": "cot",
+    "title": {
+     "en": "cot",
+     "de": "Feldbett"
+    }
+   },
+   {
+    "id": "bed",
+    "title": {
+     "en": "bed",
+     "de": "Bett"
+    }
+   },
+   {
+    "id": "beech",
+    "title": {
+     "en": "beech",
+     "de": "Buche"
+    }
+   },
+   {
+    "id": "solid-wood",
+    "title": {
+     "en": "solid wood",
+     "de": "Massivholz"
+    }
+   },
+   {
+    "id": "convertible",
+    "title": {
+     "en": "convertible",
+     "de": "Cabrio"
+    }
+   },
+   {
+    "id": "slatted-base",
+    "title": {
+     "en": "slatted base",
+     "de": "Lattenrost"
+    }
+   },
+   {
+    "id": "mattress",
+    "title": {
+     "en": "mattress",
+     "de": "Matratze"
+    }
+   },
+   {
+    "id": "castors",
+    "title": {
+     "en": "castors",
+     "de": "Lenkrollen"
+    }
+   },
+   {
+    "id": "interior",
+    "title": {
+     "en": "interior",
+     "de": "Innenausbau"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content (used household objects wave)",

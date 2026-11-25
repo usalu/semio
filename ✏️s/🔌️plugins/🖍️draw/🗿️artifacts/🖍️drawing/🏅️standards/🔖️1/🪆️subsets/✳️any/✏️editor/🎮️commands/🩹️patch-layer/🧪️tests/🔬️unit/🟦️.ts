@@ -32,7 +32,7 @@ test("bulk field targets reject missing identities atomically and retain documen
   if(row.expected===null){expect(()=>selectFieldTargets(document,row.ids)).toThrow(/missing/);continue;}
   const selected=selectFieldTargets(document,row.ids).map(layer=>layer.id);
   const oracle=produce([] as string[],draft=>{
-   const visit=(layers:readonly FixtureLayer[]):void=>{for(const layer of layers){if(row.ids.includes(layer.id)||row.ids.includes("drawing-play-layers."+layer.kind+"."+layer.id))draft.push(layer.id);if(layer.kind==="group")visit((layer.children??[]).filter((child):child is FixtureLayer=>typeof child!=="string"));}};
+   const visit=(layers:readonly FixtureLayer[]):void=>{for(const layer of layers){if(row.ids.includes(layer.id))draft.push(layer.id);if(layer.kind==="group")visit((layer.children??[]).filter((child):child is FixtureLayer=>typeof child!=="string"));}};
    visit(fixture.document.layers);
   });
   expect(selected).toEqual(row.expected);expect(selected).toEqual(oracle);

@@ -259,7 +259,7 @@ fn picking_an_example_row_selects_it_and_dispatches_set_active_example() {
     let manifest = semio_framework::PluginManifest {
         plugin_id: "test".into(), label: "Test".into(), version: "1".into(), apps: vec![app.clone()],
         examples: vec![semio_framework::ExampleDefinition { id: "nakagin".into(), label: LocalizedLabel::native("Nakagin", "Nakagin"), icon_id: "file".into(), artifact_json: "{}".into(), dialect: app.dialect.clone() }],
-        capabilities: vec![], topic_contributions: vec![], commands: vec![], artifact_kinds: vec![], hosted_artifact_kinds: vec![], dependencies: vec![], contributions: vec![],
+        capabilities: vec![], topic_contributions: vec![], commands: vec![], artifact_kinds: vec![], hosted_artifact_kinds: vec![], action_sets: vec![], dependencies: vec![], contributions: vec![],
     };
     shell.plugins.plugins.push(ProgramBridgeEntry::from_wasm("test".into(), None, None, std::path::PathBuf::from("missing-example-picker-guest.wasm"), manifest).unwrap());
     shell.input.overlay_state = OverlayState::Dropdown("example".into());

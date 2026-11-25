@@ -345,7 +345,7 @@ test("the offload reader counts compile slots as local and light slots as runnin
 });
 
 const NOW=1_793_000_000_000;
-const alarmOf=(action:"suspend"|"cancel",text:{en:string;de:string})=>({version:1,atMs:NOW-4000,observed:false,level:"danger",action,reason:"danger",id:"p1",pid:4242,kind:"cargo",owner:"agent-7",megabytes:3100,host:{availableMegabytes:600,guardMegabytes:2048,dangerMegabytes:1024,swapOutMegabytesPerSecond:30,pressure:"critical",headroomMegabytes:null,headroomGuardMegabytes:4096,headroomDangerMegabytes:2048},text});
+const alarmOf=(action:"suspend"|"cancel"|"report",text:{en:string;de:string})=>({version:1,atMs:NOW-4000,observed:false,level:"danger",action,reason:"danger",id:"p1",pid:4242,kind:"cargo",owner:"agent-7",megabytes:3100,host:{availableMegabytes:600,guardMegabytes:2048,dangerMegabytes:1024,swapOutMegabytesPerSecond:30,pressure:"critical",headroomMegabytes:null,headroomGuardMegabytes:4096,headroomDangerMegabytes:2048},text});
 const stateOf=(over:Record<string,unknown>={},host:Record<string,unknown>={})=>({version:1,atMs:NOW-5000,pid:77,mode:"enforce",code:"c0de",host:{totalMegabytes:16384,availableMegabytes:7000,swapUsedMegabytes:100,swapOutMegabytesPerSecond:0,compressedMegabytes:900,pressure:"normal",swapFreeMegabytes:null,swapVolumeFreeMegabytes:null,...host},level:"calm",hold:false,guardMegabytes:2048,dangerMegabytes:1024,resumeMegabytes:3072,swapRoomMegabytes:null,headroomMegabytes:null,headroomGuardMegabytes:4096,headroomDangerMegabytes:2048,subjects:{count:2,megabytes:2500,byKind:{cargo:{count:2,megabytes:2500}}},suspended:[],counters:{suspended:0,resumed:0,cancelled:0,ticks:50},lastAlarms:[],overhead:{tickMillisecondsP50:2,tickMillisecondsP95:4.5,cpuBasisPoints:60,residentMegabytes:41},...over});
 const memoryOf=(origin:string,value:unknown,at=NOW)=>workerMemoryOfV1(origin,value as never,at);
 const workerRow=(origin:string,liveness:"ready"|"working"|"offline"="ready")=>({origin,platform:"macos",liveness,recorded:"running",stage:"tools",stageIndex:1,stageCount:5,attempts:1,recordAgeSeconds:3,heartbeatAgeSeconds:2,refusal:null});
@@ -444,12 +444,15 @@ test("a worker row shows how its tree differs from the coordinator in both langu
  const tree=(extra:Record<string,unknown>)=>({reference:"g1-server",files:0,onlyThere:0,onlyHere:0,stale:false,verdict:"ok",...extra});
  const facts=(rows:Record<string,unknown>[]):FleetFactsV1=>({version:1,atMs:NOW,workspace:"/w",sources:[],workers:{offlineSeconds:600,rows:rows as never}});
  const recent={hours:12,ok:0,failed:1,stalled:28,timedOut:0,seconds:12_060};
- const rows=[{...workerRow("same"),tree:tree({}),recent},{...workerRow("apart"),tree:tree({files:8,onlyThere:8,stale:true,verdict:"lagging"})},{...workerRow("blind"),tree:null},{...workerRow("plain")}];
+ const rows=[{...workerRow("same"),tree:tree({}),recent},{...workerRow("apart"),tree:tree({files:8,onlyThere:8,stale:true,verdict:"lagging"})},{...workerRow("blind"),tree:null},{...workerRow("plain")},{...workerRow("gone"),tree:tree({files:4809,onlyThere:2757,onlyHere:2052,verdict:"stale"})}];
  const english=formatFleetReportV1("en",summarizeFleetV1(facts(rows),"en")),german=formatFleetReportV1("de",summarizeFleetV1(facts(rows),"de"));
  expect(english.find(line=>line.includes("same macos"))).toContain(", tree same as g1-server");
  expect(english.find(line=>line.includes("apart macos"))).toContain(", tree differs from g1-server by 8 file(s) (8 only here at the worker, 0 only at g1-server), replica says lagging, edits in flight, its view is still being refreshed");
  expect(english.find(line=>line.includes("blind macos"))).toContain(", tree not comparable (no readable view)");
  expect(english.find(line=>line.includes("plain macos"))).not.toContain("tree");
+ expect(english.find(line=>line.includes("gone macos"))).toContain(", tree not compared: the replica's attestation is old, so its view (4809 differing line(s)) no longer describes the worker's tree");
+ expect(english.find(line=>line.includes("gone macos"))).not.toContain("only here at the worker");
+ expect(german.find(line=>line.includes("gone macos"))).toContain(", Baum nicht verglichen: der Nachweis der Replika ist alt");
  expect(english.find(line=>line.includes("same macos"))).toContain(", last 12 h in this stage: 1 failed, 28 stopped as stalled (3.4 h run)");
  expect(german.find(line=>line.includes("same macos"))).toContain(", letzte 12 h in dieser Stufe: 1 fehlgeschlagen, 28 als stillstehend beendet (");
  expect(english.find(line=>line.includes("plain macos"))).not.toContain("last 12 h");

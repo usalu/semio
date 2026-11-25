@@ -1,0 +1,17 @@
+import {readFileSync} from "node:fs";
+import {heapStats} from "bun:jsc";
+const G="/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build";
+const [path,stage="seed",limitMb="3000"]=process.argv.slice(2);
+const obs=await import(G+"/👁️observation/🟨️.mjs"),producer=await import(G+"/🕸️graph/📥️inference/🟨️.mjs"),memoMod=await import(G+"/🕸️graph/📥️load/🧠️admission-memo/🟦️.ts"),ws=await import(G+"/🕸️graph/📁️workspace/🟦️.ts");
+await producer.libraryBootstrap;producer.prepareSourceAnalysesV1();
+const mb=(n:number)=>Math.round(n/1048576),top=()=>{const c=heapStats().objectTypeCounts as Record<string,number>;return ["Array","string","Object","Map","Set","WeakRef"].map(k=>k+"="+Math.round((c[k]??0)/1000)+"k").join(" ")};
+const lap=(name:string,gc=true)=>{if(gc)Bun.gc(true);const m=process.memoryUsage();console.log(name.padEnd(14),"heap",mb(m.heapUsed),"rss",mb(m.rss),"ext",mb(m.external),top());};
+lap("start");
+const text=readFileSync(path,"utf8");lap("read "+mb(text.length)+"M");
+const memo=memoMod.readAdmissionMemoV1?JSON.parse(text):undefined;lap("parse");
+const owners=memoMod.ownersOfAdmissionMemoV1(memo);lap("owners "+owners.length);
+if(stage==="seed")process.exit(0);
+const timer=setInterval(()=>{const m=process.memoryUsage();console.log("  tick heap",mb(m.heapUsed),"rss",mb(m.rss),top());if(m.rss>Number(limitMb)*1048576){console.log("limit");process.exit(2);}},1500);
+let stale=0;const t=performance.now();
+const ok=await ws.buildGraphSourceFactsHoldV1(memo.observations,undefined,row=>{stale++;if(stale<6)console.log("stale",row.kind,row.path.slice(-90))},undefined,false,true);
+clearInterval(timer);lap("hold="+ok+" "+Math.round(performance.now()-t)+"ms");

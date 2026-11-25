@@ -1,0 +1,16 @@
+{
+  "now": 2000000000000,
+  "forgotten": [
+    {"path": "/w/a.rs", "at": 1999999999000},
+    {"path": "[\"closure-graph\",\"/w\",{}]", "at": 1999999990000}
+  ],
+  "rows": [
+    {"name": "names a forgotten file, stored before", "rows": [{"kind": "file", "path": "/w/a.rs"}], "storedAt": 1999999998000, "refused": true},
+    {"name": "names a forgotten file, stored at the same time", "rows": [{"kind": "file", "path": "/w/a.rs"}], "storedAt": 1999999999000.7, "refused": true},
+    {"name": "names a forgotten file, stored after", "rows": [{"kind": "file", "path": "/w/a.rs"}], "storedAt": 1999999999001, "refused": false},
+    {"name": "lists the directory of a forgotten file", "rows": [{"kind": "readdir", "path": "/w"}], "storedAt": 1999999998000, "refused": true},
+    {"name": "stats the directory of a forgotten file", "rows": [{"kind": "stat", "path": "/w"}], "storedAt": 1999999998000, "refused": false},
+    {"name": "names a forgotten global row", "rows": [{"kind": "global", "path": "[\"closure-graph\",\"/w\",{}]"}], "storedAt": 1999999980000, "refused": true},
+    {"name": "names nothing forgotten", "rows": [{"kind": "file", "path": "/w/b.rs"}, {"kind": "exists"}], "storedAt": 1, "refused": false}
+  ]
+}

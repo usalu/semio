@@ -1,0 +1,7 @@
+[
+  {"op": "front-sweep", "scale": "50", "id": "shirt-waist"},
+  {"op": "front-sweep", "scale": "100", "id": "shirt-waist"},
+  {"op": "front-sweep", "scale": "100", "id": "shirt"},
+  {"op": "front-sweep", "scale": "200", "id": "shoe-r"},
+  {"op": "front-sweep", "scale": "500", "id": "shank-l"}
+]

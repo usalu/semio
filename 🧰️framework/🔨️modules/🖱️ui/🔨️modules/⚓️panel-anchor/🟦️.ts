@@ -63,7 +63,8 @@ export function anchorPositionStyle(anchor: Anchor, inset = "0px"): React.CSSPro
  * band where {@link PanelChromeTabBar} parked the folded toggles, so opening unfolds in place instead of
  * jumping the chips into the canvas. The cap is exactly as tall as the band (`--panel-header-height`
  * is set to the band height) and starts on the band's outer edge, so its tab frame shares the band's lines. Max height
- * grows by the same overhang so the body still fills the canvas region. A bottom panel has no band to overhang: its
+ * grows by the same overhang and stops one footer band short, so the body fills the canvas region without covering the folded bottom
+ * panel chips (`Canvas` `bottomChips`) that share the same column. A bottom panel has no band to overhang: its
  * folded toggles are glass chips inside the canvas frame's bottom edge (`Canvas` `bottomChips`), so the open cap lands
  * on the same row inside the canvas rectangle.
  * @see {@link anchorPositionStyle}
@@ -74,7 +75,7 @@ export function chromeHostedOpenPanelPositionStyle(anchor: Anchor): React.CSSPro
   style["--panel-header-height"] = vertical === "bottom" ? "var(--footer-band-height)" : "var(--navbar-band-height)";
   if (vertical === "top") {
     style.top = "calc(-1 * var(--navbar-band-height))";
-    style.maxHeight = "calc(100% + var(--navbar-band-height))";
+    style.maxHeight = "calc(100% + var(--navbar-band-height) - var(--footer-band-height))";
   }
   return style as React.CSSProperties;
 }
@@ -100,4 +101,18 @@ export function nearestAnchor(pointerX: number, pointerY: number, hostRect: { re
   const distanceFromHorizontalMidline = Math.abs(y - 0.5);
   if (distanceFromVerticalMidline >= distanceFromHorizontalMidline) return x < 0.5 ? "left-middle" : "right-middle";
   return y < 0.5 ? "top-middle" : "bottom-middle";
+}
+
+/** 🔲️ The cell of the 3×3 grid over a host that an anchor stands for: the corner anchors take the corner cells, the edge middles the middle cell of their edge. The dead centre belongs to no anchor, {@link nearestAnchor} assigns it to an edge middle. */
+export function anchorPlaceRect(anchor: Anchor, hostRect: { readonly left: number; readonly top: number; readonly width: number; readonly height: number }): { readonly left: number; readonly top: number; readonly right: number; readonly bottom: number } {
+  const column = { left: 0, middle: 1, right: 2 }[anchorHorizontal(anchor)];
+  const row = { top: 0, middle: 1, bottom: 2 }[anchorVertical(anchor)];
+  const cellWidth = hostRect.width / 3;
+  const cellHeight = hostRect.height / 3;
+  return { left: hostRect.left + column * cellWidth, top: hostRect.top + row * cellHeight, right: hostRect.left + (column + 1) * cellWidth, bottom: hostRect.top + (row + 1) * cellHeight };
+}
+
+/** 🎯️ The eight places a pane can be dropped on over a host, one per anchor. */
+export function anchorPlaces(hostRect: { readonly left: number; readonly top: number; readonly width: number; readonly height: number }): readonly { readonly id: Anchor; readonly rect: ReturnType<typeof anchorPlaceRect> }[] {
+  return ANCHORS.map((anchor) => ({ id: anchor, rect: anchorPlaceRect(anchor, hostRect) }));
 }

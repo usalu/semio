@@ -13,19 +13,97 @@
    "de": "Ein Sprudelstein im Park aus den 2000er-Jahren: ein grauer Granitfindling von 0,86 x 0,72 m und 0,80 m Höhe (864 kg), für eine PE-Steigleitung von 25 mm kerngebohrt, auf der Abdeckplatte eines Speicherschachts DN 1200 unter einem Kiesbecken von 1,8 m mit Granitpflaster-Einfassung vermörtelt; eine Unterwasserpumpe von 80 W hebt eine Wasserkuppe von 56 mm aus der Auslaufmulde. Kalk verkrustet Mulde und Laufspuren, Algen und Moos verdunkeln die schattige Rückseite, Lindenlaub liegt im verschlammten Kies und der verzinkte Revisionsdeckel trägt eine stumpfe Patina. Sprudelnd und verdunstend in der Sommersonne, abgeschaltet und trocknend, von Kindern beklettert und vom Bauhof geöffnet, um die Pumpe am Seil herauszuheben."
   },
   "tags": [
-   "used",
-   "park",
-   "public-space",
-   "water",
-   "fountain",
-   "bubbler-stone",
-   "granite",
-   "boulder",
-   "submersible-pump",
-   "gravel",
-   "limescale",
-   "reservoir-shaft",
-   "moisture-source"
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "park",
+    "title": {
+     "en": "park",
+     "de": "Park"
+    }
+   },
+   {
+    "id": "public-space",
+    "title": {
+     "en": "public space",
+     "de": "öffentlicher Raum"
+    }
+   },
+   {
+    "id": "water",
+    "title": {
+     "en": "water",
+     "de": "Wasser"
+    }
+   },
+   {
+    "id": "fountain",
+    "title": {
+     "en": "fountain",
+     "de": "Brunnen"
+    }
+   },
+   {
+    "id": "bubbler-stone",
+    "title": {
+     "en": "bubbler stone",
+     "de": "Sprudelstein"
+    }
+   },
+   {
+    "id": "granite",
+    "title": {
+     "en": "granite",
+     "de": "Granit"
+    }
+   },
+   {
+    "id": "boulder",
+    "title": {
+     "en": "boulder",
+     "de": "Findling"
+    }
+   },
+   {
+    "id": "submersible-pump",
+    "title": {
+     "en": "submersible pump",
+     "de": "Tauchpumpe"
+    }
+   },
+   {
+    "id": "gravel",
+    "title": {
+     "en": "gravel",
+     "de": "Kies"
+    }
+   },
+   {
+    "id": "limescale",
+    "title": {
+     "en": "limescale",
+     "de": "Kalk"
+    }
+   },
+   {
+    "id": "reservoir-shaft",
+    "title": {
+     "en": "reservoir shaft",
+     "de": "Speicherschacht"
+    }
+   },
+   {
+    "id": "moisture-source",
+    "title": {
+     "en": "moisture source",
+     "de": "Feuchtequelle"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content (used park objects wave, row 26)",

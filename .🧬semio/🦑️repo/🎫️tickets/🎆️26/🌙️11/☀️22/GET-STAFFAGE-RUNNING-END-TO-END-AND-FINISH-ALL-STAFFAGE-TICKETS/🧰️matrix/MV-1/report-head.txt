@@ -1,0 +1,50 @@
+# 🌳️ Multiview Fixer Report: Batch MV-1 (14 Plants)
+
+Fixer report of 2026-11-24 and 2026-11-25 (first fixer until 06:25, takeover from 09:00; one coherent state, every asset measured again by the takeover, section 6) for `🧰️matrix/batches/MV-1.tsv` (brief `📋️multiview-brief.md`, causes B, D and G of `multiview-diagnosis.md` 5.5 and 5.6). Paths: `S` = `🎓️teaching/🏛️architecture/🧍️staffage`, `T` = `S/🧪️tests/🔭️multiview-coverage`, `U` = this ticket folder, `W` = `U/🧰️matrix/MV-1`, `M` = `U/🧰️matrix/MR`. Every number was measured in this session. No rule, threshold, test, tool, fixture, engine, schema, README or manifest file was edited; the scripts of `M`, `🧰️silhouette/R4-P` and the other fixers were read and imported, not changed.
+
+## 1. Result
+
+@RESULT@
+
+"Gate" is `M/gate.ts`: the matrix's own `geometryFindings` over every pose, clip instant and transition at every authored scale (392 to 530 subjects per plant). "Scan" is the official `T/🔎️scan.ts` (poses). The suite already holds the two changes of the second worker (descendant bones in the anchor test, hard tier only for twins of one id); the numbers "before" are measured with them, so nothing of those two kinds was repaired in an asset.
+
+## 2. What was wrong and how it is repaired
+
+Three causes, one tool each, chained by `W/make.sh <id>` (idempotent: a second run was compared byte by byte with the first for the plants it was run twice on, see section 3).
+
+### 2.1 Flat front and plan outlines on bones the wind turns (cause D): `carry.ts`
+
+A foliage mass is one elevation outline, one front outline and one plan outline on its bone. The elevation outline turns with the bone as a whole; the front and the plan outline are one sheet at one depth and foreshorten (hawthorn `fol-7` 1:200 in `gale`: elevation y 3.868 … 6.127 m, front 4.541 … 5.893 m; whole tree 443 mm lower in the front than in the side elevation).
+
+Tried and not used: one prism per mass (`front-sweep` of `M/fit.ts`) cannot follow a round mass (a box against an ellipse misses by about 0.2 radius at 15 degrees) and needs an upright bone; the plates of `🧰️silhouette/R4-P/redraw.ts` were rejected on rowan for the contour lines they draw in the default pose (`multiview-MS.md`).
+
+What `carry.ts` does instead keeps the drawing of the default pose as it is:
+
+- It measures, per scale, view and bone, the largest distance between the extent of the bone in the view and in the elevation over every subject, and works only on bones beyond 0.75 tolerance whose views agree in the default pose to half the tolerance (a bone whose views draw different parts is left and named).
+- The elevation outline of the bone is cut at stations along the bone axis nearest to the viewing direction (3, 4, 6, 8, 11 or 14: the first number that brings the bone below 0.75 tolerance). At each station a plate stands across that axis: an `extruded` solid 0.004 mm thick whose profile is the drawn outline of the bone in that view, scaled down about its middle to the band the elevation chord covers and cut by the outline itself. Every plate lies inside the drawn outline and below it in the paint order (`z` below the lowest shape of the bone, same tone and region), so the default pose draws what it drew before.
+- The drawn outline stays the sheet on top. A sheet that shares its id with an elevation shape is carried by the engine at one depth and overshoots on the lee side in a gale (hawthorn `fol-5` plan: 250 mm beyond the elevation); it takes the suffix `-mvs`, so the engine carries each vertex at the depth of the elevation silhouette there.
+- In a turned pose the bone carries each plate at its own depth; the plates show at the windward and lee edge what the sheet alone loses.
+- Plates that do not bring a part nearer (slender limbs) are not kept.
+
+A bone with plates draws several shapes, so the matrix compares it in the reported tier; the per-plant sections therefore state the measured drift of the bones with plates before and after, and the whole-figure extents (`sync-forward`, `sync-height`, `sync-lateral`), which stay in the hard tier, are clean.
+
+Limits, stated plainly:
+
+- The plates are the solid that side and front (or plan) outline have in common, not the foliage body, so in a turned pose a plate can show beyond the body by about its depth times the sine of the angle. Measured where a default pose is itself turned: `apple-tree` (default pose 0.56 degrees at the foliage), front boundary distance of the silhouette guard 13.1 mm before, 22.5 mm at 1:50 and 64.1 mm at 1:100 with plates (limits 15 and 30 mm): the guard failed. The six plants that had no synchrony finding at all (`apple-tree`, `crab-apple`, `fig-tree`, of which the default pose is turned, and `common-ash`, `dawn-redwood`, `european-beech`) therefore carry no plates (`-` in `plants.tsv`); their drawings are untouched, only anchors moved.
+- In a gale the edge of a mass shows the lobes of its plates beside the outline (sheets, section 4).
+- Foliage as fine as the bamboo's cannot be cut by the outline of all its leaves at once (the polygon clipper overflows its stack); there only the four foliage bones that set the extents carry plates, at 1:100, 1:200 and 1:500.
+
+### 2.2 Shapes on another bone than the part (causes B and G): `rebind.ts`, `fix-common-lilac.ts`
+
+- `black-locust` (`rebind.ts`, then plates on one bone only): the side elevation drew every lateral limb and foliage mass on the stem bones (`trunk`, `ld1` … `ld3`), front and plan on the bones of the limbs; in `storm` the limbs turn up to 9 degrees, the stem 1 to 2, so elevation and plan were 623 mm apart. A flat elevation shape on a limb that stands askew to the paper would be `lateral-ambiguous` for the validator; `rebind.ts` therefore binds each of the 140 shapes to the bone of its front twin as a plate: an `extruded` solid 0.004 mm thick, swept along the lateral axis of the bone at the lateral place the front twin draws the part, with a profile solved so that the plate is seen exactly as the outline in the rest pose. 14 shapes on the limb `l9`, whose plane stands nearly edge-on to the paper, stay on the stem and are named by the tool. Once the twins share a bone the matrix compares them in the hard tier: the foliage mass `fol-l1` is 420 mm (1:200) and 422 mm (1:500) higher in the elevation than in the front in `storm` (tolerance 396 mm); at 1:50 and 1:100 the bone draws several shapes and has no hard finding. The first fixer gave `carry.ts` its default flags: 36 plates on three masses at all four scales, and the plates of `fol-l1` moved the front boundary of the silhouette guard at 1:50 from 13.1 to 53.7 mm and at 1:100 from 26.3 to 48.9 mm (limit 30 mm): the real `🧊️catalog-silhouette` test failed. The takeover keeps plates only where a hard finding needs them: `--limit 1.0 --scales 200,500` (the three plates of `fol-l1` at 1:200 and at 1:500, where the guard allows 60 and 150 mm).
+- `english-oak` draws its crown on the stem bones in all three views; 194 single flat shapes (patches of the silhouette round and limb pieces) sat on askew limb bones, each in one view only, and moved alone (elevation top 421 mm above the front in `storm`, front 419 mm wider than the plan in `wet-snow`). `rebind.ts --stem` binds each to the nearest ancestor bone in the drawing plane, at the same place in the rest pose. Two of those patches (`sv1-200-p-202` and `sv1-200-p-203`, plan 1:200) lie 37.5 mm apart: 0.0075 mm of white between two 0.18 mm pens. On their askew limb bone the default pose foreshortened the pair until the pens met; on the stem bone the gap stayed and 1:200 stopped printing (`unavailable-scale-unsuitable` in three views, 21 failing matrix cells, check CLI `✗`: the state the first fixer left). `fix-english-oak.ts` (takeover) moves the nearest vertex of `sv1-200-p-202` 9 mm into `sv1-200-p-203`: the two patches of one leaf mass are joined in every pose, min gap of 1:200 is 0.993 mm.
+- `common-lilac` 1:500: the stem cluster is a cone (radius 0.24 m at the ground, 0.60 m at 1.45 m); the plan drew the circle of its foot, elevation and front the cone: 360 mm apart in every pose. `fix-common-lilac.ts` draws the plan circle with the radius of the top of the loft (read from the body).
+
+### 2.3 Anchors off the drawing of their bone (causes B and C): `anchors.ts`
+
+Every landmark anchor (here the transpiration outlets) is measured as the matrix measures it, over every scale, view and subject. An anchor that fails anywhere is searched a new place on a grid of half a tolerance round its rest position, on its own bone or on any bone that is drawn in the three views and draws the place itself (a bone with child bones is measured against its own shapes only: the descendant rule of the suite would let a stem pass everywhere); the nearest place whose worst distance is at most 0.6 tolerance (bamboo 0.8) is taken, and a change of the bone counts as half a tolerance of movement, so an outlet stays on its bone when its bone draws a place nearby. The result is saved as absolute ops in `W/ops/<id>.json`, which `make.sh` applies. `english-oak`: its twelve outlets were bound to foliage and limb bones that no view draws at any scale (the matrix skips such an anchor); with `--undrawn` they are bound to the stem bone that draws their place. The leaf patches `th-tp-*` of the thermal volumes were not moved (`validateAsset` reports nothing new; physics and breathing tests pass as before).
+
+## 3. Per plant
+
+"Proof" lines are the output of `W/prove.sh` as printed: gate, scan, then silhouette guard, `validateAsset` and three-views sweep outside the test runner twice (first triple: the state before, from the backup; second triple: now), the check CLI with the number of authored scales it calls suitable, the real tests with a name filter, and the matrix of the plant (cells by status).
+

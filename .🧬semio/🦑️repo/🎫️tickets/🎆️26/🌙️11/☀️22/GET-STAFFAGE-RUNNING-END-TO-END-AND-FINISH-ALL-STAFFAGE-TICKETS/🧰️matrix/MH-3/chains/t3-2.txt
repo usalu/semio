@@ -1,0 +1,4 @@
+# third fixer: variants of the jacket plan prism of person-hanging-laundry (1000 MB; the gate's peak memory is printed)
+"$here/in-var.sh" person-hanging-laundry "$here/var/laundry-swing30.json" laundry-swing30
+"$here/in-var.sh" person-hanging-laundry "$here/var/laundry-swing45.json" laundry-swing45
+"$here/in-var.sh" person-hanging-laundry "$here/var/laundry-swing60.json" laundry-swing60

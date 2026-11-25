@@ -72,7 +72,7 @@
         {
           "id": "setActiveExample",
           "lanes": [
-            "host-only"
+            "interaction"
           ]
         },
         {

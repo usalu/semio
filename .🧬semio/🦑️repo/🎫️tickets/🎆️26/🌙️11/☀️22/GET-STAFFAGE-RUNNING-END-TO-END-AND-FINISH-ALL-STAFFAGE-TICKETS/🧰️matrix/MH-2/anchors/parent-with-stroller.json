@@ -1,0 +1,8 @@
+[
+ {"anchor": "wheel-rear", "into": [
+  {"id": "wheel-rear-l", "z": 0.47, "title": {"en": "Left rear wheel contact patch", "de": "Aufstandsfläche des linken Hinterrads"}},
+  {"id": "wheel-rear-r", "z": -0.084, "title": {"en": "Right rear wheel contact patch", "de": "Aufstandsfläche des rechten Hinterrads"}}]},
+ {"anchor": "wheel-front", "into": [
+  {"id": "wheel-front-l", "z": 0.408, "title": {"en": "Left front wheel contact patch", "de": "Aufstandsfläche des linken Vorderrads"}},
+  {"id": "wheel-front-r", "z": -0.022, "title": {"en": "Right front wheel contact patch", "de": "Aufstandsfläche des rechten Vorderrads"}}]}
+]

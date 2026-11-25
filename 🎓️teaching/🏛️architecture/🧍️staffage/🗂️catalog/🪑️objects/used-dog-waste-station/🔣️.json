@@ -13,18 +13,90 @@
    "de": "Eine gebrauchte städtische Hundetoilette im Parkrasen: ein verzinkter, moosgrün pulverbeschichteter 60-mm-Pfosten, 0,52 m tief in ein Betonpunktfundament gesetzt, trägt ein verblasstes Schild 300 x 250 mm, einen Rollenbeutelspender 240 x 130 x 300 mm mit halb leerer Rolle und einen verzinkten 30-l-Behälter mit Regenhaube und Einwurfklappe; der Pfostenfuß rostet, wo der Lack abgeplatzt ist, Aufkleber, Graffiti und eine Delle zeichnen den Behälter, die Fundamentecke ist abgeschlagen, und jemand hat einen gefüllten Beutel auf dem Fundamentkopf abgelegt."
   },
   "tags": [
-   "used",
-   "park",
-   "public-space",
-   "waste",
-   "dog-waste",
-   "bag-dispenser",
-   "litter-bin",
-   "signage",
-   "galvanised",
-   "powder-coated",
-   "steel",
-   "street-furniture"
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "park",
+    "title": {
+     "en": "park",
+     "de": "Park"
+    }
+   },
+   {
+    "id": "public-space",
+    "title": {
+     "en": "public space",
+     "de": "öffentlicher Raum"
+    }
+   },
+   {
+    "id": "waste",
+    "title": {
+     "en": "waste",
+     "de": "Abfall"
+    }
+   },
+   {
+    "id": "dog-waste",
+    "title": {
+     "en": "dog waste",
+     "de": "Hundekot"
+    }
+   },
+   {
+    "id": "bag-dispenser",
+    "title": {
+     "en": "bag dispenser",
+     "de": "Beutelspender"
+    }
+   },
+   {
+    "id": "litter-bin",
+    "title": {
+     "en": "litter bin",
+     "de": "Abfalleimer"
+    }
+   },
+   {
+    "id": "signage",
+    "title": {
+     "en": "signage",
+     "de": "Beschilderung"
+    }
+   },
+   {
+    "id": "galvanised",
+    "title": {
+     "en": "galvanised",
+     "de": "verzinkt"
+    }
+   },
+   {
+    "id": "powder-coated",
+    "title": {
+     "en": "powder coated",
+     "de": "pulverbeschichtet"
+    }
+   },
+   {
+    "id": "steel",
+    "title": {
+     "en": "steel",
+     "de": "Stahl"
+    }
+   },
+   {
+    "id": "street-furniture",
+    "title": {
+     "en": "street furniture",
+     "de": "Stadtmobiliar"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content (used park objects wave)",

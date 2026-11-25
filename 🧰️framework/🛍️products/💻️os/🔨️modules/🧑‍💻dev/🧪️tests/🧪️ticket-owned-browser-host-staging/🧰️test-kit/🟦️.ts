@@ -123,35 +123,40 @@ export function createTestKit(vitest: NonNullable<ImportMeta["vitest"]>, depende
     if (result.status !== 0) throw new Error(`bun child failed (${result.status}): ${result.stderr || result.stdout}`);
     return JSON.parse(result.stdout) as T;
   };
-  /** 🧭️ A dynamic `import()` that the test runner's module graph never sees: the generated modules identify an activation by the query of their own `import.meta.url`, which the runner's loader strips, so only the platform loader keeps their identity. */
+  /** 🧭️ A dynamic `import()` that the test runner's module graph never sees: the generated bridge resolves its component, host and core module URLs (with their rebuild version) against its own `import.meta.url`, whose query the runner's loader strips, so only the platform loader keeps it. */
   const nativeImport = Vm.runInThisContext("(url) => import(url)", { importModuleDynamically: Vm.constants.USE_MAIN_CONTEXT_DEFAULT_LOADER }) as (url: string) => Promise<unknown>;
-  /** 🌉️ Writes the actual generated bridge, host shim and a guest module into one directory and loads the bridge there, so a case drives the real `createActorApi` against a guest that answers the retained original-turn protocol (`channelVersion`, `admitActorContext`, `closeActorContext`, `poll` with a retained receipt). Every activation takes its own actor id because the host shim binds one clock per actor/generation module. */
+  /** 🌉️ Writes the actual generated bridge, host shim and a guest instantiation factory into one directory and loads the bridge there, so a case drives the real `createActorApi` against a guest that answers the retained original-turn protocol (`channelVersion`, `admitActorContext`, `closeActorContext`, `poll` with a retained receipt). Every activation takes its own actor id and gets its own host and instance from the factory; the core module loader answers the URLs the factory asks for (the fixture guest asks for none). */
   const generatedBridge = async (guestSource: string, hostShim: string = dependencies.hostShimSource()) => {
     const directory = dependencies.mkdtempSync(join(dependencies.tmpdir(), "semio-generated-bridge-"));
     dependencies.writeFileSync(join(directory, "component.js"), guestSource);
     dependencies.writeFileSync(join(directory, dependencies.PLUGIN_HOST_SHIM_FILE), hostShim);
-    dependencies.writeFileSync(join(directory, "bridge.mjs"), dependencies.pluginComponentBridgeSource("component", "component.core.wasm"));
-    const { createActorApi } = (await nativeImport(dependencies.pathToFileURL(join(directory, "bridge.mjs")).href)) as { createActorApi: (actorId: string, generation: bigint, admission: unknown, clock: () => bigint, original: { receipt(value: unknown): void; hold(value: unknown): void }) => Promise<any> };
-    const held: unknown[] = [], receipts: unknown[] = [];
+    dependencies.writeFileSync(join(directory, "bridge.mjs"), dependencies.pluginComponentBridgeSource("component"));
+    const { createActorApi } = (await nativeImport(dependencies.pathToFileURL(join(directory, "bridge.mjs")).href)) as { createActorApi: (actorId: string, generation: bigint, admission: unknown, clock: () => bigint, original: { receipt(value: unknown): void; hold(value: unknown): void }, coreModule: (url: string) => Promise<WebAssembly.Module>) => Promise<any> };
+    const held: unknown[] = [], receipts: unknown[] = [], coreModuleUrls: string[] = [];
+    const coreModule = async (url: string): Promise<WebAssembly.Module> => { coreModuleUrls.push(url); throw new Error(`fixture guest has no core module: ${url}`); };
     let sequence = 0, now = 1_000n;
-    const activate = async (generation: bigint, actorId = `actor-${++sequence}`): Promise<any> => createActorApi(actorId, generation, await fixtureOriginalWorkStock().admit(), () => now++, { receipt: (value) => receipts.push(value), hold: (value) => held.push(value) });
-    return { directory, activate, held, receipts, dispose: () => dependencies.rmSync(directory, { recursive: true, force: true }) };
+    const activate = async (generation: bigint, actorId = `actor-${++sequence}`): Promise<any> => { const stock = fixtureOriginalWorkStock(), admission = await stock.admit(); return createActorApi(actorId, generation, admission, () => now++, { receipt: (value) => receipts.push(value), hold: (value) => held.push(value), succeed: async () => stock.succeed(admission) }, coreModule); };
+    return { directory, activate, held, receipts, coreModuleUrls, dispose: () => dependencies.rmSync(directory, { recursive: true, force: true }) };
   };
-  /** 🛡️ A guest module whose `reactor` answers the retained original-turn protocol with zero spend; its default `poll` answers what the case supplies through `globalThis.__bridgeNext`, and a case may replace the poll body (it sees `events`, `grant` and `receipt`), add imports before the module (`prelude`) and members after the protocol (`extra`). */
-  const retainedGuestSource = (options: { readonly prelude?: string; readonly poll?: string; readonly extra?: string } = {}): string => `${options.prelude ?? ""}
+  /** 🛡️ A guest instantiation factory (the shape `--instantiation async` transpiles to) whose `reactor` answers the staged-budget retained-turn protocol with zero spend: `stageActorContextBudget` keeps the budget the next consuming call is accounted against, `admitActorInput` hands the pack wire it received to `globalThis.__bridgeAdmitted` and `poll` answers what the case supplies through `globalThis.__bridgeNext`. A case may replace the poll body (it sees the staged `budget` and `receipt()`), add statements at the start of each instantiation, where `imports` is the import object the bridge passed (`prelude`), and members after the protocol (`extra`). */
+  const retainedGuestSource = (options: { readonly prelude?: string; readonly poll?: string; readonly extra?: string } = {}): string => `export async function instantiate(getCoreModule, imports) {
+${options.prelude ?? ""}
 const zero = { copiedItems: 0n, copiedBytes: 0n, retainedCapacityBytes: 0n, releasedBytes: 0n };
-const call = (retained) => ({ input: retained, spent: zero, workUnitsSpent: 0n });
-const receipt = (retained) => ({ ...call(retained), remaining: retained.grant, remainingFuel: retained.work.fuel });
-export const reactor = {
+let budget;
+const call = () => ({ input: budget.input, spent: zero, workUnitsSpent: 0n, refusal: { tag: "none" } });
+const receipt = () => { const { refusal, ...accounted } = call(); return accounted; };
+const reactor = {
   channelVersion: async () => ${APP_CHANNEL_VERSION},
-  admitActorContext: async (retained) => ({ ...call(retained), ready: true, blocked: false, complete: false, refusal: undefined }),
-  closeActorContext: async (retained) => ({ ...call(retained), ready: true, blocked: false, complete: true, refusal: undefined }),
-  poll: async (events, grant) => { ${options.poll ?? "globalThis.__bridgePolled?.(events, grant); return { retainedReceipt: receipt(grant.retained), fuelUsed: 0n, uiPatches: [], status: { tag: \"idle\" }, commandIngress: { kind: 0 }, ...globalThis.__bridgeNext };"} },
+  stageActorContextBudget: (staged) => { budget = staged; },
+  admitActorContext: async () => ({ ...call(), ready: true, blocked: false, complete: false }),
+  closeActorContext: async () => ({ ...call(), ready: true, blocked: false, complete: true }),
+  admitActorInput: async (wire) => { globalThis.__bridgeAdmitted?.(wire); return { ...call(), ready: true, disposition: "retained" }; },
+  poll: async () => { ${options.poll ?? "globalThis.__bridgePolled?.(); return { retainedReceipt: receipt(), fuelUsed: 0n, uiPatches: [], status: { tag: \"idle\" }, commandIngress: { kind: 0 }, ...globalThis.__bridgeNext };"} },
   ${options.extra ?? ""}
 };
-export const jobs = {};
-export const checkpoint = {};
-export const describe = {};
+return { reactor, jobs: {}, checkpoint: {}, describe: {} };
+}
+export const wasiImports = Object.freeze({});
 `;
   return { contractModuleExport, devContractModule, itLong, underBun, generatedBridge, retainedGuestSource };
 }

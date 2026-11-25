@@ -158,7 +158,7 @@ export function InteractionRepl(props: InteractionReplProps): ReactNode {
               if (!spatial) return <span>{target.label}</span>;
               return (
                 <>
-                  <span className="mr-single inline-block size-2 rounded-xs" style={{ background: targetStyle(spatial, false, false).color }} />
+                  <span className="mr-single inline-block size-2" style={{ background: targetStyle(spatial, false, false).color }} />
                   <span className="text-muted-foreground">{target.domain}</span> <code className="text-foreground">{target.label}</code>
                 </>
               );

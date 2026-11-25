@@ -102,24 +102,21 @@ pub fn receive_effect<E: semio_framework_value::native_decoding::NativeReceiving
     let mut out = None;
     let mut frame = NativeReceivingEffect::<E>::default();
     let mut done = None;
-    let mut frame_phase = None;
     cx.with_native_receiving_work(&mut out, demand, |native, _, maximum| {
-        let polled = match native.receive_effect(demand, maximum, &mut frame, run) { Ok(polled) => polled, Err(error) => { eprintln!("[DEBUG] receive_effect error {error:?} phase={:?} demand={:?} maximum={maximum}", frame.phase(), demand); return Err(error); } };
+        let polled = native.receive_effect(demand, maximum, &mut frame, run)?;
         if matches!(polled, NativeReceivingEffectPoll::Pending { work: 0 }) && frame.phase() == NativeReceivingEffectPhase::Granted {
             frame.cancel_unstarted(native)?
         }
         done = Some(polled);
-        frame_phase = Some(frame.phase());
         Ok(())
     })?;
-    if matches!(done, Some(NativeReceivingEffectPoll::Pending { work: 0 })) { eprintln!("[DEBUG] receive_effect pending0 phase={:?}", frame_phase); }
     match done {
         Some(NativeReceivingEffectPoll::Complete(turn)) => {
             semio_framework_job::receive_original_receiving_work(cx, RetainedWorkOutcome { result: turn.result.map_err(receiving_fault), work: turn.work })?;
             Ok(())
         }
         Some(NativeReceivingEffectPoll::Pending { work: 0 }) | None => Ok(()),
-        Some(NativeReceivingEffectPoll::Pending { work }) => { eprintln!("[DEBUG] receive_effect pending work={work} phase={:?} demand={:?} fuel={}", frame_phase, demand, cx.fuel_remaining()); Err(ValueError::invariant("native receiving effect suspended mid-turn").into()) }
+        Some(NativeReceivingEffectPoll::Pending { .. }) => Err(ValueError::invariant("native receiving effect suspended mid-turn").into()),
     }
 }
 /// 🪙️ Runs one quoted owner close inside the context's own effect and settles the outcome's performed work once.
@@ -130,6 +127,12 @@ pub fn closed_in(cx: &mut semio_framework_job::StepContext<'_>, demand: semio_fr
 #[macro_export]
 macro_rules! retire_self {
     ([$($generics:tt)*] $type:ty) => {
+        $crate::retire_self!(@impl [$($generics)*] $type, |_: &$type, _: usize| -> Result<u64, $crate::retained::__value::ValueError> { Ok(1) });
+    };
+    ([$($generics:tt)*] $type:ty; work = $work:expr) => {
+        $crate::retire_self!(@impl [$($generics)*] $type, $work);
+    };
+    (@impl [$($generics:tt)*] $type:ty, $work:expr) => {
         impl<$($generics)*> $crate::retained::__value::retirement::RetireOwned for $type {
             type RetirementCursor = Self;
             fn retirement_seed(mut self) -> Self {
@@ -155,8 +158,8 @@ macro_rules! retire_self {
                     step => reply.complete(Ok(step)),
                 })
             }
-            fn next_computational_work(&self, _: usize) -> Result<u64, $crate::retained::__value::ValueError> {
-                Ok(1)
+            fn next_computational_work(&self, body: usize) -> Result<u64, $crate::retained::__value::ValueError> {
+                ($work)(self, body)
             }
             fn next_demand(&self, body: usize) -> Result<$crate::retained::__value::RetirementDemand, $crate::retained::__value::ValueError> {
                 self.close_demands(body)

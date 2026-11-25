@@ -13,16 +13,76 @@
       "de": "Eine wandmontierte Handbrause mit 0,11 m Kopfdurchmesser an einer 0,7 m langen Brausestange von 22 mm mit einem 1,25 m langen Schlauch, der als Bogen zum Wandanschluss hängt; im Betrieb liefert sie 12 L/min (Sparmodus 9 L/min) Wasser von 38 degC als warmen Strahl und Dampffahne."
     },
     "tags": [
-      "shower",
-      "hand-shower",
-      "riser-rail",
-      "bathroom",
-      "hot-water",
-      "spray",
-      "vapour",
-      "moisture",
-      "internal-gain",
-      "appliance"
+      {
+        "id": "shower",
+        "title": {
+          "en": "shower",
+          "de": "Dusche"
+        }
+      },
+      {
+        "id": "hand-shower",
+        "title": {
+          "en": "hand shower",
+          "de": "Handbrause"
+        }
+      },
+      {
+        "id": "riser-rail",
+        "title": {
+          "en": "riser rail",
+          "de": "Steigschiene"
+        }
+      },
+      {
+        "id": "bathroom",
+        "title": {
+          "en": "bathroom",
+          "de": "Badezimmer"
+        }
+      },
+      {
+        "id": "hot-water",
+        "title": {
+          "en": "hot water",
+          "de": "Warmwasser"
+        }
+      },
+      {
+        "id": "spray",
+        "title": {
+          "en": "spray",
+          "de": "Sprühen"
+        }
+      },
+      {
+        "id": "vapour",
+        "title": {
+          "en": "vapour",
+          "de": "Dampf"
+        }
+      },
+      {
+        "id": "moisture",
+        "title": {
+          "en": "moisture",
+          "de": "Feuchte"
+        }
+      },
+      {
+        "id": "internal-gain",
+        "title": {
+          "en": "internal gain",
+          "de": "innere Wärmelast"
+        }
+      },
+      {
+        "id": "appliance",
+        "title": {
+          "en": "appliance",
+          "de": "Gerät"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage content (A10)",

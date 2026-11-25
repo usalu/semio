@@ -304,6 +304,101 @@ def generate_unreferenced() -> None:
     print(f"[base] wrote {UNREFERENCED_DIR}")
 
 
+LARGE_GRID_DIR = GRID_FIXTURES / "📏️large-grid"
+LARGE_GRID_SHAPE = {"Ledger": (480, 14), "Archive": (240, 10), "Notes": (60, 4)}
+
+
+def large_grid_value(sheet: str, row: int, column: int) -> object:
+    """🧮️ One deterministic cell: a label, an integer, a fraction, a repeated and a unique string by turns, so the pool, numbers and inline text all grow."""
+    kind = (row * 7 + column * 3) % 5
+    if kind == 0:
+        return f"{sheet}-{row:04d}-{column:02d}"
+    if kind == 1:
+        return row * 1000 + column
+    if kind == 2:
+        return round(row / 8 + column / 64, 6)
+    if kind == 3:
+        return ("alpha", "beta", "gamma", "delta")[(row + column) % 4]
+    return f"{sheet} unique text of row {row} and column {column}, padded so the sheet part outgrows one scheduler step"
+
+
+def large_grid_cells() -> dict[str, dict[str, object]]:
+    sheets = {}
+    for title, (rows, columns) in LARGE_GRID_SHAPE.items():
+        sheets[title] = {
+            f"{openpyxl.utils.get_column_letter(column)}{row}": large_grid_value(title, row, column)
+            for row in range(1, rows + 1)
+            for column in range(1, columns + 1)
+        }
+    return sheets
+
+
+def large_grid_package() -> bytes:
+    """🏗️ The workbook openpyxl writes for those cells, with the fixed clock and properties every pinned package uses."""
+    workbook = openpyxl.Workbook()
+    workbook.remove(workbook.active)
+    for title, cells in large_grid_cells().items():
+        sheet = workbook.create_sheet(title)
+        for coordinate, value in cells.items():
+            sheet[coordinate] = value
+    workbook.properties.created = datetime(2026, 1, 1)
+    workbook.properties.modified = datetime(2026, 1, 1)
+    buffer = io.BytesIO()
+    workbook.save(buffer)
+    return repack(pin_modified(read_parts(buffer.getvalue())))
+
+
+def large_grid_witness(package: bytes) -> dict:
+    """👁 The grid exactly as openpyxl reads the package back, the language-agnostic expectation every decoder is held to."""
+    grid = read_grid(package)
+    return {
+        "reader": "openpyxl.load_workbook",
+        "packageVersion": f"openpyxl@{openpyxl.__version__}",
+        "packageBytes": len(package),
+        "sha256": sha(package),
+        "sheets": [
+            {"name": title, "rows": LARGE_GRID_SHAPE[title][0], "columns": LARGE_GRID_SHAPE[title][1], "cells": len(cells)}
+            for title, cells in grid.items()
+        ],
+        "probes": {
+            title: {coordinate: cells[coordinate] for coordinate in ("A1", "B2", f"C{LARGE_GRID_SHAPE[title][0]}", f"D{LARGE_GRID_SHAPE[title][0] // 2}")}
+            for title, cells in grid.items()
+        },
+    }
+
+
+def verify_large_grid() -> int:
+    """🔬 The committed package and witness are exactly what openpyxl re-derives, and openpyxl reads back every generated cell."""
+    package = large_grid_package()
+    witness = large_grid_witness(package)
+    expected = large_grid_cells()
+    if read_grid(package) != expected:
+        print("[base] large grid: openpyxl does not read back the generated cells")
+        return 1
+    committed_package = LARGE_GRID_DIR / "📦️package.xlsx"
+    committed_witness = LARGE_GRID_DIR / "🔣️.json"
+    if not committed_package.is_file() or not committed_witness.is_file():
+        print("[base] large grid: fixture missing")
+        return 1
+    if committed_package.read_bytes() != package:
+        print("[base] large grid: package bytes differ from the openpyxl rebuild")
+        return 1
+    if json.loads(committed_witness.read_text(encoding="utf-8")) != witness:
+        print("[base] large grid: openpyxl witness differs from the committed one")
+        return 1
+    print(f"[base] large grid: {witness['packageBytes']} bytes, {sum(sheet['cells'] for sheet in witness['sheets'])} cells replay")
+    return 0
+
+
+def generate_large_grid() -> None:
+    """📝 Writes the larger-than-one-step workbook and the openpyxl witness the Rust paged decoder is compared against."""
+    package = large_grid_package()
+    LARGE_GRID_DIR.mkdir(parents=True, exist_ok=True)
+    (LARGE_GRID_DIR / "📦️package.xlsx").write_bytes(package)
+    (LARGE_GRID_DIR / "🔣️.json").write_text(json.dumps(large_grid_witness(package), indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    print(f"[base] wrote {LARGE_GRID_DIR}")
+
+
 def manifest_path(subset: str) -> Path:
     return SUBSETS / CLASSES[subset] / "🔮️oracles" / "🔣️.json"
 
@@ -334,6 +429,7 @@ def generate() -> int:
         path.write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
         print(f"[{subset}] wrote {directory}")
     generate_unreferenced()
+    generate_large_grid()
     return 0
 
 
@@ -360,10 +456,11 @@ def verify() -> int:
             print(f"[{subset}] the testEvidence row is missing or does not match the committed bytes")
     failures += verify_grid_pairs()
     failures += verify_unreferenced()
+    failures += verify_large_grid()
     print("every pair replays" if failures == 0 else f"{failures} failure(s)")
     return 0 if failures == 0 else 1
 
 
 if __name__ == "__main__":
     command = sys.argv[1] if len(sys.argv) > 1 else ""
-    sys.exit({"generate": generate, "verify": verify, "generate-unreferenced": lambda: generate_unreferenced() or 0}.get(command, lambda: print("usage: generate | verify | generate-unreferenced") or 2)())
+    sys.exit({"generate": generate, "verify": verify, "generate-unreferenced": lambda: generate_unreferenced() or 0, "generate-large-grid": lambda: generate_large_grid() or 0}.get(command, lambda: print("usage: generate | verify | generate-unreferenced | generate-large-grid") or 2)())

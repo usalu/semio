@@ -66,10 +66,12 @@ semio-s-artifact-norm-en1994-mut-beam-action-rows = { workspace = true }
 semio-s-artifact-norm-en1994-mut-column-action-rows = { workspace = true }
 semio-s-artifact-norm-en1994-mut-slab-action-rows = { workspace = true }
 semio-s-artifact-norm-en1994-mut-placements = { workspace = true }
+semio-s-artifact-norm-en1994-mutations-edit-rules = { workspace = true }
 semio-s-plugin-norm-app-surface = { workspace = true }
 semio-framework-diagnostic = { workspace = true }
 
 [dev-dependencies]
+semio-s-artifact-norm-en1994-mutations = { path = ".", features = ["test-support"] }
 semio-framework-async-macros = { workspace = true }
 semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }

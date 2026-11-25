@@ -11,6 +11,7 @@ import {
   type ShardEventEnvelope
 } from "../../🎭️actor/📦️packages/🟦️typescript/📮️shard-client/🟦️.ts";
 import { fetchPackageAssets, type PackageAssetDeclaration } from "../📦️package-assets/🟦️.ts";
+import { packageComponentForApp, type PackageComponents } from "../🧩️package-components/🟦️.ts";
 import { OwnedResidentLedger } from "../../🌱️value/📦️packages/🟦️typescript/💾️resident/🟦️.ts";
 import { TurnScheduler, type Backpressure, type CoalesceKey, type Lane } from "../../🎭️actor/📦️packages/🟦️typescript/🧵️turn-scheduler/🟦️.ts";
 import { ON_EXTENSION_REQUEST_ACTIVATION_PREFIX, type PluginCatalog } from "../📚️plugin-catalog/🟦️.ts";
@@ -31,6 +32,8 @@ export interface ActivationManifestEntry {
   readonly host?: string;
   /** 🚚️ The package assets the plugin's descriptor declares, delivered with the activation so they reach `instance-open`. */
   readonly assets?: readonly PackageAssetDeclaration[];
+  /** 🧩️ The components the plugin's descriptor declares: an activation loads only the one that owns its app. Absent for a package of one component. */
+  readonly components?: PackageComponents;
 }
 
 /** 🔐️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-extension-activation): the web mirror of
@@ -136,6 +139,7 @@ export class ActivationRegistry {
   private readonly residencyOrder: string[] = [];
   private readonly checkpoints = new Map<string, Uint8Array>();
   private readonly actorPlugin = new Map<string, string>();
+  private readonly actorComponent = new Map<string, string | null>();
   /** 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (web-activation): see `QueuedTurnPayload`'s own doc —
    * this registry's mirror of the native `RuntimeActorId.generation` field, out of band since this
    * class's `actorId` is a plain caller-minted string. */
@@ -292,13 +296,18 @@ export class ActivationRegistry {
    * A `manual` activation has no WIT variant and therefore queues nothing — the host's own trigger is
    * not a declared activation event and must not be dressed up as one. The extension cascade below
    * activates each child `on-extension-request:<parent>`, the declared event that names exactly what
-   * pulled it up. */
-  async activate(pluginId: string, actorId: string, reason: ActivationReason): Promise<void> {
+   * pulled it up.
+   *
+   * 🧩️ `appId` names the app the actor opens: of a plugin with several components the activation loads only the one that owns it
+   * ({@link packageComponentForApp}), and an activation of no app (`null`) loads the first. A resume loads the same component again. */
+  async activate(pluginId: string, actorId: string, reason: ActivationReason, appId: string | null = null): Promise<void> {
     const manifest = this.manifests.get(pluginId);
     if (!manifest) throw new Error(`ActivationRegistry.activate: no manifest for plugin ${pluginId}`);
+    const component = packageComponentForApp(manifest.components ?? null, appId);
     await this.evictForMemoryPressure();
     const assets = [...(await this.loadAssets(manifest.moduleUrl)), ...(await this.loadPackageAssets(manifest))];
-    await this.shardClient.activate(actorId, manifest.moduleUrl, this.grantsFor(pluginId), this.defaultBudget, assets);
+    await this.shardClient.activate(actorId, manifest.moduleUrl, this.grantsFor(pluginId), this.defaultBudget, assets, component);
+    this.actorComponent.set(actorId, component);
     this.markResident(actorId, pluginId);
     const activation = activationEventEnvelope(reason);
     if (activation) this.enqueueTurn(actorId, "Maintenance", [activation]);
@@ -333,8 +342,10 @@ export class ActivationRegistry {
       }
       const childActorId = `${parentActorId}::${extensionId}`;
       try {
+        const component = packageComponentForApp(manifest.components ?? null, null);
         const assets = [...(await this.loadAssets(manifest.moduleUrl)), ...(await this.loadPackageAssets(manifest))];
-        await this.shardClient.activate(childActorId, manifest.moduleUrl, this.grantsFor(extensionId), this.defaultBudget, assets);
+        await this.shardClient.activate(childActorId, manifest.moduleUrl, this.grantsFor(extensionId), this.defaultBudget, assets, component);
+        this.actorComponent.set(childActorId, component);
         this.markResident(childActorId, extensionId);
         const activation = activationEventEnvelope(`${ON_EXTENSION_REQUEST_ACTIVATION_PREFIX}${this.manifests.get(pluginId)?.manifestPluginId ?? pluginId}`);
         if (activation) this.enqueueTurn(childActorId, "Maintenance", [activation]);
@@ -419,7 +430,7 @@ export class ActivationRegistry {
     if (!manifest) throw new Error(`ActivationRegistry.resume: no manifest for plugin ${pluginId}`);
     await this.evictForMemoryPressure();
     const assets = [...(await this.loadAssets(manifest.moduleUrl)), ...(await this.loadPackageAssets(manifest))];
-    await this.shardClient.activate(actorId, manifest.moduleUrl, this.grantsFor(pluginId), this.defaultBudget, assets);
+    await this.shardClient.activate(actorId, manifest.moduleUrl, this.grantsFor(pluginId), this.defaultBudget, assets, this.actorComponent.get(actorId) ?? packageComponentForApp(manifest.components ?? null, null));
     const checkpoint = this.checkpoints.get(actorId);
     if (checkpoint) await this.shardClient.restore(actorId, checkpoint);
     this.markResident(actorId, pluginId);
@@ -505,6 +516,7 @@ export class ActivationRegistry {
     this.resident.delete(actorId);
     this.checkpoints.delete(actorId);
     this.actorPlugin.delete(actorId);
+    this.actorComponent.delete(actorId);
     const index = this.residencyOrder.indexOf(actorId);
     if (index !== -1) this.residencyOrder.splice(index, 1);
   }

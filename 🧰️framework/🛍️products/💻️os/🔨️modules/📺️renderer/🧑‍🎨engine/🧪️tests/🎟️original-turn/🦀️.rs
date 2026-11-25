@@ -41,8 +41,10 @@ impl FixtureTurnV1 {
     pub fn cumulative_receipt(&self)->semio_framework_job::RetainedCloneProgress{self.caller.as_ref().unwrap().cumulative_receipt()}
     pub fn alias(&mut self)->CancelToken{self.caller.as_mut().unwrap().admit_alias(self.grant)}
     pub fn own_surface(&mut self,surface:&str){if !self.surfaces.iter().any(|owned|owned==surface){self.surfaces.push(surface.to_owned());}}
+    pub fn disown_surface(&mut self,surface:&str){self.surfaces.retain(|owned|owned!=surface);}
+    pub fn owns_surfaces(&self)->bool{!self.surfaces.is_empty()}
     pub fn retire_world(&mut self,world:&mut infinite_world::world::World3dBuildContext){
-        for _ in 0..65_536{if world.terminal_is_empty(){break}self.turn(|cx|world.close_step(cx)).expect("original fixture world retirement");}
+        for _ in 0..65_536{if world.terminal_is_empty(){break}self.turn_funded(CLOSE_TURN_WORK,|cx|world.close_step(cx)).expect("original fixture world retirement");}
         assert!(world.terminal_is_empty());
     }
     pub fn turn<R>(&mut self,advance:impl FnOnce(&mut StepContext<'_>)->R)->R{self.limited(self.grant,advance)}

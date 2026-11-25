@@ -401,6 +401,16 @@ impl<A: ArtifactApp> PendingArtifactStorePublication<A> {
         }
     }
 
+    /// 🏛️ Whether a durable batch still holds commit metadata or causal custody that only its issuing store returns before the generic retirement.
+    pub fn holds_store_custody(&self) -> bool {
+        match self {
+            Self::Artifact(publication) => publication.holds_store_custody(),
+            Self::Config(publication) => publication.holds_store_custody(),
+            Self::Draft(publication) => publication.holds_store_custody(),
+            _ => false,
+        }
+    }
+
     /// ♻️ Whether the owning store already moved this publication into its retirement phase.
     pub fn is_closing(&self) -> bool {
         matches!(self.one_item_phase(), store::os_store::one_item_publication::ArtifactStoreOneItemPublicationPhase::Closing | store::os_store::one_item_publication::ArtifactStoreOneItemPublicationPhase::Complete)
@@ -544,6 +554,9 @@ pub fn advance_original_fault_capture(capture:&mut Option<MountedWorkerFaultCapt
 
 #[path = "🤝️group/🦀️.rs"]
 pub mod group;
+
+#[path = "⏳️ack-wait/🦀️.rs"]
+mod ack_wait;
 
 #[cfg(test)]
 use semio_plugin_decl_emission as app_emission;

@@ -182,9 +182,8 @@ describe("🖱️ Canvas2dHost gesture sample lane", () => {
     expect(receiver.sent.map((entry) => entry.action)).toEqual(["canvasPointerMove"]);
     expect(receiver.sent[0]!.args).toMatchObject({ x: 200, y: 200 });
   });
-});
 
- it("retains move modifiers at sampling time across delayed dispatch and release", async () => {
+  it("retains move modifiers at sampling time across delayed dispatch and release", async () => {
     const receiver = manualReceiver();
     const live = session(receiver.dispatch);
     const keys = { shift: true, alt: true, ctrl: false, meta: false };
@@ -199,3 +198,19 @@ describe("🖱️ Canvas2dHost gesture sample lane", () => {
     expect(receiver.sent[2]!.args).toMatchObject({ shift: false, alt: false, cancelled: false });
     expect(receiver.sent[3]!.args).toMatchObject({ x: 30, y: 40, shift: false, alt: false });
   });
+
+  it("applies the persistent selection mode to plain presses and releases so the radios govern clicks, marquee and lasso", async () => {
+    const none = { shift: false, ctrl: false, meta: false, alt: false };
+    const expected = { replace: [false, false], additive: [true, false], subtractive: [false, true], invertive: [true, true] } as const;
+    for (const [mode, [shift, ctrl]] of Object.entries(expected)) {
+      const receiver = manualReceiver();
+      const live = new JsonLayersCanvasSession(() => "[]", { x: 0, y: 0, zoom: 1 }, () => undefined, receiver.dispatch, undefined, () => mode as "replace");
+      live.setSize(640, 480, 1);
+      live.pointerDown(5, 5, 0, false, none);
+      live.pointerUp(60, 60, none);
+      await receiver.settleAll();
+      expect(receiver.sent[0]!.args, mode).toMatchObject({ shift, ctrl, meta: false });
+      expect(receiver.sent.at(-1)!.args, mode).toMatchObject({ shift, ctrl, meta: false });
+    }
+  });
+});

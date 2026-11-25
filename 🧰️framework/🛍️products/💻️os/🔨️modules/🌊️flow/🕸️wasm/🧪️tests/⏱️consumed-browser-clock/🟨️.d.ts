@@ -1,2 +1,2 @@
 /** ⏱️ Actual consumed-browser-clock Source law entry. */
-export function testFlowBrowserClock():Promise<void>;
+export function testFlowBrowserClock(packageRoot: string):Promise<void>;

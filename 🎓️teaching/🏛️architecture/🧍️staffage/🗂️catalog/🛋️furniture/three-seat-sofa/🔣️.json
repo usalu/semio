@@ -13,11 +13,41 @@
       "de": "Ein 2,00 m breites gepolstertes Dreisitzer-Sofa: Kastenarmlehnen, ein Rückenrahmen mit gerollter Oberkante, drei einzeln einsinkende Sitzkissen und drei Rückenkissen auf einem Sperrholzsockel mit gedrechselten Buchenfüßen; Vorderansicht, Schnitt und Grundrisssymbol."
     },
     "tags": [
-      "sofa",
-      "seating",
-      "upholstery",
-      "interior",
-      "foam"
+      {
+        "id": "sofa",
+        "title": {
+          "en": "sofa",
+          "de": "Sofa"
+        }
+      },
+      {
+        "id": "seating",
+        "title": {
+          "en": "seating",
+          "de": "Sitzmöbel"
+        }
+      },
+      {
+        "id": "upholstery",
+        "title": {
+          "en": "upholstery",
+          "de": "Polster"
+        }
+      },
+      {
+        "id": "interior",
+        "title": {
+          "en": "interior",
+          "de": "Innenausbau"
+        }
+      },
+      {
+        "id": "foam",
+        "title": {
+          "en": "foam",
+          "de": "Schaumstoff"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage content (NW-F)",

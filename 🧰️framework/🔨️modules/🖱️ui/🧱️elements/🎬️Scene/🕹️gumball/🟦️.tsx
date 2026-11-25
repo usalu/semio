@@ -2,9 +2,9 @@ import * as THREE from "three";
 import type { ThreeEvent } from "@react-three/fiber";
 import * as React from "react";
 import { reactHostPort, sceneHostPort } from "../../🔌️Ports/🟦️.tsx";
-import { type GumballConfig, type GumballHandleKind, type GumballPose, type GumballVec3, gumballAxisRotateAngle, gumballAxisScaleFactor, gumballConfigVisible, gumballEyeFromPivot, gumballHandleEnabled, gumballLen, gumballPoseFromObject3D, gumballProjectRayOntoAxis, gumballRayPlanePoint, gumballResolveDragSnaps, gumballSnapScalar, gumballSub, gumballV3, resolveGumballConfig } from "../🧿️gumball-model/🟦️.ts";
+import { type GumballConfig, type GumballHandleKind, type GumballPose, type GumballVec3, gumballAxisRotateAngle, gumballAxisScaleFactor, gumballConfigVisible, gumballDragEndPointerState, gumballEyeFromPivot, gumballHighlightKind, gumballHandleEnabled, gumballLen, gumballPoseFromObject3D, gumballProjectRayOntoAxis, gumballRayPlanePoint, gumballResolveDragSnaps, gumballSnapScalar, gumballSub, gumballV3, resolveGumballConfig } from "../🧿️gumball-model/🟦️.ts";
 import { type GumballHandleVisualState, GumballInteractionPreview, type GumballVisualPalette, gumballBaseColorForKind, gumballHandleVisualState, gumballResolveHandleVisual, gumballWorldAxis, useGumballVisualPalette } from "../🎨️gumball-visual/🟦️.tsx";
-import { gumballBindHandleRaycast, gumballNdcFromPointer, gumballPointerConsumesCanvasEventRef, gumballRayFromNdc, gumballRaycastKindAtClientPoint, gumballRaycastOwnedAtClientPoint } from "../🎯️gumball-pick/🟦️.ts";
+import { gumballBindHandleRaycast, gumballNdcFromPointer, gumballPointerConsumesCanvasEventRef, gumballPressTarget, gumballRayFromNdc, gumballRaycastKindAtClientPoint, gumballRaycastOwnedAtClientPoint } from "../🎯️gumball-pick/🟦️.ts";
 import { GUMBALL_ARROW_HEAD, GUMBALL_ARROW_HEAD_RADIUS_SCALE, GUMBALL_ARROW_RADIUS, GUMBALL_AXIS_BY_KIND, GUMBALL_HANDLE_LENGTH, GUMBALL_PLANE_OFFSET, GUMBALL_PLANE_SIZE, GUMBALL_RING_RADIUS, GUMBALL_RING_TUBE, GUMBALL_SCALE_PICK, GUMBALL_SCALE_RENDER_ORDER, GUMBALL_UNIFORM_BOX, GumballPlaneScaleLHandle, type GumballPreviewAxis, GumballScaleAxisHandle, type GumballScalePlane, gumballPlaneScaleFactors, gumballScalePlaneAxisIndices, gumballWorldPointToLocalOffset } from "../🔩️gumball-handles/🟦️.tsx";
 import { useFrame, useThree } from "../🔌️three-hooks/🟦️.ts";
 
@@ -105,7 +105,7 @@ function GumballHandles(props: {
   readonly onPointerOver: (kind: GumballHandleKind) => void;
   readonly onPointerOut: () => void;
 }): React.ReactElement {
-  const highlightKind = props.active ?? props.hovered;
+  const highlightKind = gumballHighlightKind(props.active, props.hovered);
   const handleProps = (kind: GumballHandleKind, children: React.ReactNode) => (
     <GumballHandleMesh
       kind={kind}
@@ -248,6 +248,7 @@ export function UnifiedGumball(props: UnifiedGumballProps): React.ReactElement |
   const gl = useThree((state) => state.gl);
   const invalidate = useThree((state) => state.invalidate);
   const controls = useThree((state) => state.controls as { enabled?: boolean } | null);
+  const connectedEvents = useThree((state) => state.events.connected);
   const pointerGuardEnabled = gumballConfigVisible(config);
 
   reactHostPort.useEffect(() => {
@@ -354,7 +355,9 @@ export function UnifiedGumball(props: UnifiedGumballProps): React.ReactElement |
   const endDrag = reactHostPort.useCallback(() => {
     const state = dragRef.current;
     dragRef.current = null;
-    setActiveKind(null);
+    const settled = gumballDragEndPointerState();
+    setActiveKind(settled.active);
+    setHovered(settled.hovered);
     window.removeEventListener("pointermove", onWindowMoveRef.current);
     window.removeEventListener("pointerup", onWindowUpRef.current);
     window.removeEventListener("keydown", onWindowKeyRef.current, true);
@@ -469,6 +472,7 @@ export function UnifiedGumball(props: UnifiedGumballProps): React.ReactElement |
   reactHostPort.useEffect(() => {
     if (!pointerGuardEnabled) return;
     const canvas = gl.domElement;
+    const pressTarget = gumballPressTarget(connectedEvents, canvas);
     const onPointerDownCapture = (event: PointerEvent) => {
       if (event.button !== 0) return;
       const group = groupRef.current;
@@ -496,18 +500,18 @@ export function UnifiedGumball(props: UnifiedGumballProps): React.ReactElement |
     const clearPointerCapture = () => {
       gumballPointerConsumesCanvasEventRef.current = false;
     };
-    canvas.addEventListener("pointerdown", onPointerDownCapture, true);
-    canvas.addEventListener("pointermove", onPointerMoveCapture, true);
-    canvas.addEventListener("pointerup", clearPointerCapture, true);
-    canvas.addEventListener("pointercancel", clearPointerCapture, true);
+    pressTarget.addEventListener("pointerdown", onPointerDownCapture, true);
+    pressTarget.addEventListener("pointermove", onPointerMoveCapture, true);
+    pressTarget.addEventListener("pointerup", clearPointerCapture, true);
+    pressTarget.addEventListener("pointercancel", clearPointerCapture, true);
     return () => {
-      canvas.removeEventListener("pointerdown", onPointerDownCapture, true);
-      canvas.removeEventListener("pointermove", onPointerMoveCapture, true);
-      canvas.removeEventListener("pointerup", clearPointerCapture, true);
-      canvas.removeEventListener("pointercancel", clearPointerCapture, true);
+      pressTarget.removeEventListener("pointerdown", onPointerDownCapture, true);
+      pressTarget.removeEventListener("pointermove", onPointerMoveCapture, true);
+      pressTarget.removeEventListener("pointerup", clearPointerCapture, true);
+      pressTarget.removeEventListener("pointercancel", clearPointerCapture, true);
       clearPointerCapture();
     };
-  }, [camera, gl.domElement, invalidate, pointerGuardEnabled, scene]);
+  }, [camera, connectedEvents, gl.domElement, invalidate, pointerGuardEnabled, scene]);
 
   const handlePointerOver = reactHostPort.useCallback(
     (kind: GumballHandleKind) => {

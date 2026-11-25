@@ -231,6 +231,12 @@ where
         self.commit_transition(transition, dependencies).await
     }
 
+    /// 🏁️ Commits a baseline checkpoint over the current head when no edit is pending, so a document without any checkpoint still has a history position to branch from.
+    pub(super) async fn commit_baseline_checkpoint(&mut self, identity: &mut EntityIdentityAuthority<'_>) -> Result<(), VcsError> where Mutation: semio_os_spr::ColdMutation<P> {
+        let (transition, dependencies, _) = self.log.baseline_checkpoint_transition(identity)?;
+        self.commit_transition(transition, dependencies).await
+    }
+
     /// 🕹️ Parses `command_text` via [`parse_command`] and dispatches it — the op-line
     /// textual entry point (op-efficient one-line-per-structural-field commands, indented op
     /// lines for `Apply`/`AppendTransaction`).

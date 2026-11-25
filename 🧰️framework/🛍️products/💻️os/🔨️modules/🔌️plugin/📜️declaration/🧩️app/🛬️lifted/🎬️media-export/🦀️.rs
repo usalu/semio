@@ -4,7 +4,7 @@ use semio_framework_value::retained_clone::RetainedCloneGrant;
 use semio_framework_value::retained_clone::RetainedCloneProgress;
 use semio_framework_value::retained_clone::RetainedCloneStep;
 use crate::ArtifactApp;
-use semio_plugin_ownership::store_lifecycle::ArtifactSnapshotCloseLease;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactSnapshotCloseLease;
 use semio_plugin_decl_media::ArtifactMediaExportCompletion;
 use semio_plugin_decl_media::ArtifactMediaExportCredit;
 use semio_plugin_decl_media::ArtifactOutputChunks;

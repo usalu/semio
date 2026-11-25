@@ -5,6 +5,7 @@ import {dirname,join,sep} from "node:path";
 import {compileJsonSchemaSubset,type CompiledJsonSchemaSubset} from "../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {yieldingV1} from "../🛡️resilience/⏳️yielding/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
+import {ownProcessIdentityV1,processHolderAliveV1} from "../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts";
 
 /** 🧾️ One journal line: a put, delete or link of one shared path, ordered by its hybrid logical clock. */
 export type FleetEventV1=Readonly<{version:1;hlc:string;operation:"put"|"delete"|"link";path:string;sha256?:string;bytes?:number;executable?:boolean;target?:string;base:string|null}>;
@@ -122,18 +123,17 @@ export async function readThroughReplacementV1<T>(read:()=>Promise<T>,wait:(mill
 }
 const segmentName=(segment:number):string=>`${String(segment).padStart(12,"0")}.jsonl`;
 const byKey=(left:readonly [string,unknown],right:readonly [string,unknown]):number=>left[0]<right[0]?-1:left[0]>right[0]?1:0;
-const stage=(tmp:string,originId:string):string=>join(tmp,`${originId}-${process.pid}-${randomBytes(8).toString("hex")}`);
-const alive=(pid:number):boolean=>{try{process.kill(pid,0);return true;}catch(error){return (error as {code?:string}).code==="EPERM";}};
+const stage=(tmp:string,originId:string):string=>join(tmp,`${originId}-${process.pid}-${ownProcessIdentityV1().startMs}-${randomBytes(8).toString("hex")}`);
 
 /** 🧹️ Reclaims staging files that a crash (`kill -9`) left in `<store>/v1/tmp`; returns how many files and bytes were removed. With `originId` it removes that origin's own leftovers at once: names `<originId>-<pid>-<hex>` whose process is dead and the older `<originId>-<hex>` names; a name of a live process (a `compact` running beside the daemon) stays. With `olderThanMilliseconds` it removes any file whose newest timestamp (modification or inode change) is older than that, which also covers the relay's files and the ones of other origins, and must be far beyond the longest write; `.nfs*` placeholders stay. A store without `tmp` yields nothing and is never created. */
 export async function reclaimStagingV1(storeRoot:string,options:Readonly<{originId?:string;olderThanMilliseconds?:number;now?:number}>={}):Promise<Readonly<{files:number;bytes:number}>>{
- const {tmp}=storePathsV1(storeRoot),own=options.originId===undefined?undefined:new RegExp(`^${options.originId}-(?:([0-9]+)-)?[0-9a-f]{16}$`,"u"),now=options.now??Date.now();
+ const {tmp}=storePathsV1(storeRoot),own=options.originId===undefined?undefined:new RegExp(`^${options.originId}-([0-9]+)-([0-9]+)-[0-9a-f]{16}$`,"u"),now=options.now??Date.now();
  let files=0,bytes=0;
  for(const name of await readdir(tmp).catch(()=>[] as string[])){
   if(name.startsWith(".nfs"))continue;
   const found=own?.exec(name),file=join(tmp,name),info=await lstat(file).catch(()=>undefined);
   if(info===undefined||!info.isFile())continue;
-  const dead=found!==undefined&&found!==null&&(found[1]===undefined||!alive(Number(found[1])));
+  const dead=found!==undefined&&found!==null&&!processHolderAliveV1({pid:Number(found[1]),startMs:Number(found[2])});
   const old=options.olderThanMilliseconds!==undefined&&now-Math.max(info.mtimeMs,info.ctimeMs)>options.olderThanMilliseconds;
   if(!dead&&!old)continue;
   await unlink(file).then(()=>{files++;bytes+=info.size;},()=>{});

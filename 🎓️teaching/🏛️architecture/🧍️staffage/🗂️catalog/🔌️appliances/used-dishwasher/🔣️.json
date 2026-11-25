@@ -13,18 +13,90 @@
    "de": "Ein gebrauchter 60-cm-Standgeschirrspüler 850 x 600 x 600 mm des deutschen Mittelpreissegments, 47,6 kg, auf einer 12,6 kg schweren Düsseldorfer Halbpalette: weiß pulverbeschichteter Korpus mit Delle und Rost an den Unterkanten, eine abnehmbare Schichtstoff-Arbeitsplatte mit Wasserrändern und abgebrochener Ecke, eine Klapptür mit vergilbter Bedienblende und grauem Ersatz-Programmknebel, zwei Drahtkörbe mit abgeplatzter Beschichtung, ein verkalkter Edelstahlbehälter, und Ablaufschlauch, Zulaufschlauch und Netzleitung aufgerollt und an die Rückwand geklebt; gelagert auf der Palette, von zwei Trägern getragen, spült mit 2,2 kW, beladen bei offener Tür und trocknend mit angelehnter Tür."
   },
   "tags": [
-   "used",
-   "household",
-   "second-hand",
-   "kitchen",
-   "appliance",
-   "dishwasher",
-   "electric",
-   "internal-gain",
-   "heat-source",
-   "steel",
-   "pallet",
-   "hoses-taped"
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "household",
+    "title": {
+     "en": "household",
+     "de": "Haushalt"
+    }
+   },
+   {
+    "id": "second-hand",
+    "title": {
+     "en": "second-hand",
+     "de": "Second-Hand"
+    }
+   },
+   {
+    "id": "kitchen",
+    "title": {
+     "en": "kitchen",
+     "de": "Küche"
+    }
+   },
+   {
+    "id": "appliance",
+    "title": {
+     "en": "appliance",
+     "de": "Gerät"
+    }
+   },
+   {
+    "id": "dishwasher",
+    "title": {
+     "en": "dishwasher",
+     "de": "Geschirrspüler"
+    }
+   },
+   {
+    "id": "electric",
+    "title": {
+     "en": "electric",
+     "de": "elektrisch"
+    }
+   },
+   {
+    "id": "internal-gain",
+    "title": {
+     "en": "internal gain",
+     "de": "innere Wärmelast"
+    }
+   },
+   {
+    "id": "heat-source",
+    "title": {
+     "en": "heat source",
+     "de": "Wärmequelle"
+    }
+   },
+   {
+    "id": "steel",
+    "title": {
+     "en": "steel",
+     "de": "Stahl"
+    }
+   },
+   {
+    "id": "pallet",
+    "title": {
+     "en": "pallet",
+     "de": "Palette"
+    }
+   },
+   {
+    "id": "hoses-taped",
+    "title": {
+     "en": "hoses taped",
+     "de": "Schläuche abgeklebt"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content (used household objects wave)",
@@ -17740,8 +17812,503 @@
     ]
    },
    "500": {
-    "status": "unavailable",
-    "denominator": 500
+    "status": "authored",
+    "denominator": 500,
+    "decisions": [
+     {
+      "en": "Body for the 75 mm feature: the pallet as one 144 mm slab; the machine as one block from the pallet to the top of the worktop (base, plinth, panels, tub and worktop merged) with the plinth step under the door and the worktop as a 75 mm lip over it, and the door with its control panel as one 75 mm leaf on the hinge; baskets, hoses, plug and every sheet edge are below the feature and left out.",
+      "de": "Körper für das 75-mm-Merkmal: die Palette als eine 144-mm-Platte; die Maschine als ein Block von der Palette bis zur Oberkante der Arbeitsplatte (Bodengruppe, Sockel, Bleche, Bottich und Arbeitsplatte verschmolzen) mit der Sockelstufe unter der Tür und der Arbeitsplatte als 75-mm-Lippe darüber, und die Tür mit ihrer Bedienblende als ein 75-mm-Blatt am Scharnier; Körbe, Schläuche, Stecker und jede Blechkante liegen unter dem Merkmal und entfallen."
+     },
+     {
+      "en": "Thermal: pallet and door by reference, the block split into 75 mm region solids (base, plinth, two sides, back, worktop), the hidden tub as a 75 mm tube between the sides with the two racks as blocks in it, the hoses as a 75 mm block on the back and a 75 mm steam outlet at the door top.",
+      "de": "Thermik: Palette und Tür als Verweis, der Block in 75-mm-Regionskörper geteilt (Bodengruppe, Sockel, zwei Seiten, Rückwand, Arbeitsplatte), der verdeckte Bottich als 75-mm-Rohr zwischen den Seiten mit den zwei Körben als Blöcken darin, die Schläuche als 75-mm-Block an der Rückwand und ein 75-mm-Dampfauslass an der Türoberkante."
+     },
+     {
+      "en": "Structure: slab, block and door by reference, the block spanning the bones of the cabinet, two 75 mm hinge joints, a 75 mm pallet support and the mass marker.",
+      "de": "Tragwerk: Platte, Block und Tür als Verweis, der Block überspannt die Knochen des Gehäuses, zwei 75-mm-Scharniergelenke, ein 75-mm-Auflager der Palette und die Massenmarke."
+     }
+    ],
+    "body": [
+     {
+      "id": "pallet-slab",
+      "kind": "box",
+      "bone": "pallet",
+      "material": "pallet-spruce",
+      "role": "body",
+      "tone": 0.55,
+      "size": [
+       0.8,
+       0.144,
+       0.6
+      ],
+      "transform": {
+       "translation": [
+        0.4,
+        0.072,
+        0
+       ]
+      }
+     },
+     {
+      "id": "machine-block",
+      "kind": "extrude",
+      "bone": "body",
+      "material": "painted-steel",
+      "role": "body",
+      "tone": 0.88,
+      "profile": [
+       [
+        0,
+        0
+       ],
+       [
+        0.6,
+        0
+       ],
+       [
+        0.6,
+        0.125
+       ],
+       [
+        0.525,
+        0.125
+       ],
+       [
+        0.525,
+        0.775
+       ],
+       [
+        0.6,
+        0.775
+       ],
+       [
+        0.6,
+        0.85
+       ],
+       [
+        0,
+        0.85
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.3,
+      "to": 0.3
+     },
+     {
+      "id": "door-leaf",
+      "kind": "box",
+      "bone": "door",
+      "material": "door-composite",
+      "role": "body",
+      "tone": 0.92,
+      "size": [
+       0.65,
+       0.075,
+       0.6
+      ],
+      "transform": {
+       "translation": [
+        0.325,
+        -0.0175,
+        0
+       ]
+      }
+     }
+    ],
+    "thermal": [
+     {
+      "id": "th-pallet-slab",
+      "of": "pallet-slab",
+      "region": "pallet"
+     },
+     {
+      "id": "th-door-leaf",
+      "of": "door-leaf",
+      "region": "door"
+     },
+     {
+      "id": "th-base",
+      "kind": "box",
+      "bone": "base",
+      "material": "base-unit",
+      "role": "body",
+      "tone": 0.4,
+      "size": [
+       0.525,
+       0.11,
+       0.6
+      ],
+      "transform": {
+       "translation": [
+        0.2625,
+        0.055,
+        0
+       ]
+      },
+      "region": "base"
+     },
+     {
+      "id": "th-plinth",
+      "kind": "box",
+      "bone": "plinth",
+      "material": "pp-plinth",
+      "role": "body",
+      "tone": 0.85,
+      "size": [
+       0.075,
+       0.115,
+       0.6
+      ],
+      "transform": {
+       "translation": [
+        0.0375,
+        0.0575,
+        0
+       ]
+      },
+      "region": "plinth"
+     },
+     {
+      "id": "th-side-l",
+      "kind": "box",
+      "bone": "side-l",
+      "material": "painted-steel",
+      "role": "body",
+      "tone": 0.88,
+      "size": [
+       0.665,
+       0.525,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.4225,
+        -0.2625,
+        -0.0375
+       ]
+      },
+      "region": "cabinet"
+     },
+     {
+      "id": "th-side-r",
+      "kind": "box",
+      "bone": "side-r",
+      "material": "painted-steel",
+      "role": "body",
+      "tone": 0.88,
+      "size": [
+       0.665,
+       0.525,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.4225,
+        -0.2625,
+        0.0375
+       ]
+      },
+      "region": "cabinet"
+     },
+     {
+      "id": "th-back",
+      "kind": "box",
+      "bone": "back",
+      "material": "painted-steel",
+      "role": "body",
+      "tone": 0.8,
+      "size": [
+       0.665,
+       0.075,
+       0.45
+      ],
+      "transform": {
+       "translation": [
+        0.4225,
+        -0.0375,
+        0
+       ]
+      },
+      "region": "cabinet"
+     },
+     {
+      "id": "th-worktop",
+      "kind": "box",
+      "bone": "worktop",
+      "material": "laminate-chipboard",
+      "role": "body",
+      "tone": 0.75,
+      "size": [
+       0.6,
+       0.075,
+       0.6
+      ],
+      "transform": {
+       "translation": [
+        0.3,
+        -0.0075,
+        0
+       ]
+      },
+      "region": "worktop"
+     },
+     {
+      "id": "th-tub",
+      "kind": "extrude",
+      "bone": "tub",
+      "material": "stainless-steel",
+      "role": "body",
+      "tone": 0.55,
+      "profile": [
+       [
+        0.03,
+        -0.015
+       ],
+       [
+        0.48,
+        -0.015
+       ],
+       [
+        0.48,
+        0.65
+       ],
+       [
+        0.03,
+        0.65
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.225,
+      "to": 0.225,
+      "holes": [
+       [
+        [
+         0.105,
+         0.06
+        ],
+        [
+         0.405,
+         0.06
+        ],
+        [
+         0.405,
+         0.575
+        ],
+        [
+         0.105,
+         0.575
+        ]
+       ]
+      ],
+      "region": "tub"
+     },
+     {
+      "id": "th-rack-lower",
+      "kind": "box",
+      "bone": "basket-lower",
+      "material": "coated-wire",
+      "role": "detail",
+      "tone": 0.45,
+      "size": [
+       0.26,
+       0.19,
+       0.4
+      ],
+      "transform": {
+       "translation": [
+        0.235,
+        0.17,
+        0
+       ]
+      },
+      "region": "racks"
+     },
+     {
+      "id": "th-rack-upper",
+      "kind": "box",
+      "bone": "basket-upper",
+      "material": "coated-wire",
+      "role": "detail",
+      "tone": 0.45,
+      "size": [
+       0.26,
+       0.17,
+       0.4
+      ],
+      "transform": {
+       "translation": [
+        0.235,
+        0.1,
+        0
+       ]
+      },
+      "region": "racks"
+     },
+     {
+      "id": "th-hoses",
+      "kind": "box",
+      "bone": "hoses",
+      "material": "pvc-hose",
+      "role": "body",
+      "tone": 0.45,
+      "size": [
+       0.075,
+       0.5,
+       0.45
+      ],
+      "transform": {
+       "translation": [
+        -0.0375,
+        0.3,
+        0
+       ]
+      },
+      "region": "hoses"
+     },
+     {
+      "id": "th-door-steam",
+      "kind": "box",
+      "bone": "door",
+      "material": "door-composite",
+      "role": "detail",
+      "tone": 0.5,
+      "size": [
+       0.075,
+       0.075,
+       0.4
+      ],
+      "transform": {
+       "translation": [
+        0.6125,
+        -0.0175,
+        0
+       ]
+      },
+      "region": "door",
+      "tags": [
+       "door-steam"
+      ]
+     }
+    ],
+    "structure": [
+     {
+      "id": "m-pallet-slab",
+      "of": "pallet-slab",
+      "member": "pallet",
+      "part": "member"
+     },
+     {
+      "id": "m-machine-block",
+      "of": "machine-block",
+      "member": "base",
+      "part": "member",
+      "members": [
+       "body",
+       "side-l",
+       "side-r",
+       "back",
+       "worktop",
+       "tub",
+       "basket-lower",
+       "basket-upper"
+      ]
+     },
+     {
+      "id": "m-door-leaf",
+      "of": "door-leaf",
+      "member": "door",
+      "part": "member"
+     },
+     {
+      "id": "j-hinge-r",
+      "kind": "box",
+      "bone": "door",
+      "material": "painted-steel",
+      "role": "detail",
+      "tone": 0.4,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.0375,
+        -0.0175,
+        -0.2625
+       ]
+      },
+      "member": "door",
+      "part": "joint"
+     },
+     {
+      "id": "j-hinge-l",
+      "kind": "box",
+      "bone": "door",
+      "material": "painted-steel",
+      "role": "detail",
+      "tone": 0.4,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.0375,
+        -0.0175,
+        0.2625
+       ]
+      },
+      "member": "door",
+      "part": "joint"
+     },
+     {
+      "id": "support-pallet-floor",
+      "kind": "box",
+      "bone": "pallet",
+      "material": "pallet-spruce",
+      "role": "ground",
+      "tone": 0.2,
+      "size": [
+       0.6,
+       0.075,
+       0.5
+      ],
+      "transform": {
+       "translation": [
+        0.4,
+        0.0375,
+        0
+       ]
+      },
+      "member": "pallet",
+      "part": "support",
+      "anchor": "pallet-floor"
+     },
+     {
+      "id": "mass-machine",
+      "kind": "box",
+      "bone": "body",
+      "material": "base-unit",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.3,
+        0.36,
+        0
+       ]
+      },
+      "member": "base",
+      "part": "mass"
+     }
+    ]
    }
   },
   "presentation": {

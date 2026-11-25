@@ -81,7 +81,7 @@ test("transposed matrices put type icons in the header and retain eight writable
   expect(latex).toContain("padding .initial:n = " + matrix.columnPaddingMillimetres + "mm");
   expect(latex).toContain("\\setlength { \\tabcolsep } { \\l_semio_assignment_matrix_padding_dim }");
   expect(latex).toContain("\\textbf{#2} & #3");
-  expect(latex).toContain("\\vbox to \\l_semio_assignment_matrix_header_dim");
+  expect(latex).toContain("\\vbox to \\dim_eval:n { \\l_semio_assignment_matrix_header_dim + \\l_semio_assignment_matrix_band_dim }");
   expect(latex).toContain("\\renewcommand { \\arraystretch } { 0 }");
   expect(latex).toContain("\\semio_assignment_matrix_writing_cell:");
   expect(latex).toContain("\\NewDocumentCommand \\AssignmentMatrixImage");
@@ -110,14 +110,25 @@ test("unnamed assignment matrices retain one connected frame and automatic right
   const latex = readFileSync(new URL("../../🖋️latex/semio-assignment.sty", import.meta.url), "utf8");
   expect(latex).toContain("\\tl_set:Nn \\l_semio_assignment_matrix_title_tl {#1}");
   expect(latex).toContain("\\exp_args:NV \\semio_table_long_open:n \\l_semio_assignment_matrix_title_tl");
-  expect(latex).toContain("\\use:c { semio@table@long@continuation@chrome }");
+  expect(latex).not.toContain("semio@table@long@continuation@chrome");
+  expect(latex).toContain("\\use:c { semio@window@chips@store } { \\use:c { semio@window@header@number@first } } { \\use:c { semio@window@header@title } }");
+  expect(latex).toContain("\\use:c { semio@window@chips@band } { \\l_semio_assignment_matrix_band_width_dim }");
+  expect(latex).toContain("\\dim_set:Nn \\l_semio_assignment_matrix_band_width_dim { \\linewidth - 2 \\arrayrulewidth }");
+  expect(latex).toContain("#2 \\tex_kern:D \\l_semio_assignment_matrix_band_dim");
+  expect(latex).toContain("\\semio_assignment_matrix_header_begin:nn {\\l_semio_assignment_label_dim} {\\l_semio_assignment_matrix_band_tl}");
+  expect(latex).toContain("\\semio_assignment_matrix_header_begin:nn {\\l_semio_assignment_type_dim} {}");
+  expect(latex.split("\\dim_set:Nn \\arrayrulewidth { \\use:c { semio@stroke@hairline } }").length - 1).toBe(2);
   expect(latex).toContain("\\semio_table_long_close:");
+  const window = readFileSync(new URL("../../🖋️latex/semio-window.sty", import.meta.url), "utf8");
+  expect(window).toContain("\\newcommand{\\semio@window@chips@store}[2]{%");
+  expect(window).toContain("\\semio@window@chips@band{\\linewidth-2\\dimexpr\\semio@stroke@hairline\\relax}%");
 });
 
 test("blank table names preserve an explicit active matrix context", () => {
   const latex = readFileSync(new URL("../../🖋️latex/semio-assignment.sty", import.meta.url), "utf8");
   expect(latex).toContain("\\bool_set_true:N \\l_semio_assignment_matrix_active_bool");
-  expect(latex.split("\\bool_if:NT \\l_semio_assignment_matrix_active_bool").length - 1).toBe(2);
+  expect(latex.split("\\bool_if:NTF \\l_semio_assignment_matrix_active_bool").length - 1).toBe(1);
+  expect(latex.split("\\bool_if:NT \\l_semio_assignment_matrix_active_bool").length - 1).toBe(1);
   expect(latex).not.toContain("\\tl_if_empty:NF \\l_semio_assignment_matrix_title_tl");
 });
 

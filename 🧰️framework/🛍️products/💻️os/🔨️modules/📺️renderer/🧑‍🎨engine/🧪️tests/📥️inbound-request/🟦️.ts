@@ -29,6 +29,8 @@ import {
   isDeclaredSurfaceCancelAction
 } from "../../🧱️elements/🛠️ShellHelpers/🛑️extension-io/🟦️.ts";
 import type { LoadedProgramState } from "../../🧱️elements/🐚️Shell/📦️program-sessions/🟦️.ts";
+import { loadedWgpuHandles } from "../../🎯️targets/🧊️wgpu/🐚️plugin-bridge/🎛️contributions-and-effects/🟦️.ts";
+import { createRequestActor } from "../../🎯️targets/🧊️wgpu/🐚️plugin-bridge/🔌️plugin-module-loader/📞️extension-and-request-actors/🟦️.ts";
 
 import inboundRequestFixture from "@semio-tech/framework-plugin/reactor/testing/fixtures/inbound-request.json";
 import { extensionInvocationWireFixture } from "../../../../🌊️flow/🧪️tests/🧫️fixtures/🟦️.ts";
@@ -136,6 +138,15 @@ describe("inbound request seam", () => {
     expect(submit).toHaveBeenCalledTimes(3);
   });
 
+  it.each(inboundRequestFixture.driveBudgetRows)("$name", async (row) => {
+    const capability = inboundRequestFixture.capability;
+    const submit = vi.fn(emulateGuest({ capability, turnsBeforeAnswer: row.turnsBeforeAnswer }));
+    const answer = await driveInboundRequest({ req: 12n, capability, payload: new TextEncoder().encode("{}"), originInstanceId: 0, submit });
+    expect(answer.status).toBe(row.status);
+    expect(answer.turns).toBe(row.submitted);
+    expect(submit).toHaveBeenCalledTimes(row.submitted);
+  });
+
   it("gives up on a guest that goes quiet without answering", async () => {
     const answer = await driveInboundRequest({
       req: 13n,
@@ -171,13 +182,13 @@ describe("inbound request seam", () => {
 describe("extension invocation across the door", () => {
   /** 🚪️ A real door: the handle's `invoke` is `driveInboundRequest` over the guest emulation, so this
    * exercises the SAME protocol the adapted `PluginWasmHandle` uses — not a stubbed `invoke`. */
-  const doorEntry = (answerFor: (request: string) => { readonly ok: string } | { readonly faultCode: string }): LoadedProgramState => {
+  const doorEntry = (answerFor: (request: string) => { readonly ok: Uint8Array } | { readonly faultCode: string }): LoadedProgramState => {
     let seq = 0n;
     const submit = async (events: readonly SubmittedEvent[]) => {
       const request = events.find((event) => event.kind === "request")!.payload as RequestEvent;
       const answer = answerFor(new TextDecoder().decode(Uint8Array.from(request.params.payload)));
       const outcome: WireVariant = "ok" in answer
-        ? { tag: "ok", val: Array.from(new TextEncoder().encode(answer.ok)) }
+        ? { tag: "ok", val: Array.from(answer.ok) }
         : { tag: "fault", val: Array.from(encodePackValue({ origin: "plugin", code: answer.faultCode, severity: "error", message: answer.faultCode, scope: {}, retryable: false })) };
       return { effects: [{ tag: "respond", val: { req: request.req, outcome } }], status: { tag: "idle" } };
     };
@@ -203,13 +214,40 @@ describe("extension invocation across the door", () => {
       },
       manifest: {},
     } as unknown as LoadedProgramState;
-    const extension = doorEntry(() => (answer === undefined ? { faultCode: "extension.evaluate.bad-request" } : { ok: JSON.stringify(answer) }));
+    expect(extensionInvocationWireFixture.answerEncoding).toBe("pack");
+    const encoded = answer === undefined ? undefined : encodePackValue(answer);
+    const extension = doorEntry(() => (encoded === undefined ? { faultCode: "extension.evaluate.bad-request" } : { ok: encoded }));
     await runInvokeExtensionEffect(requester, extension, 1, "flow-extension-test", extensionInvocationWireFixture.capability, row.requestJson, 21n);
     expect(complete).toHaveBeenCalledOnce();
     const [outcome] = complete.mock.calls[0] as unknown as [{ ok?: Uint8Array; fault?: Uint8Array }];
     expect("ok" in outcome ? "ok" : "fault").toBe(row.outcome);
-    if (row.outcome === "ok") expect(decodePackValue(outcome.ok!)).toEqual(answer);
+    if (row.outcome === "ok") {
+      expect(outcome.ok).toEqual(encoded);
+      expect(decodePackValue(outcome.ok!)).toEqual(answer);
+    }
     else expect(decodeFaultFromWire(Array.from(outcome.fault!), decodePackValue)?.message).toBe("extension.evaluate.bad-request");
+  });
+
+  it("carries a packed WGPU extension response directly to the requester", async () => {
+    const row = extensionInvocationWireFixture.rows.find((row) => row.name === "ok")!;
+    const extensionId = "test-packed-wgpu-extension";
+    const answer = encodePackValue({ done: row.done, phase: row.phase });
+    const response = { output: null, mutations: [], inverseGroup: { invocationId: "", mutations: [], inverseMutations: [] } };
+    const complete = vi.fn(async (_outcome: { readonly ok: Uint8Array } | { readonly fault: Uint8Array }) => response);
+    const invoke = vi.fn(async () => answer);
+    loadedWgpuHandles.set(extensionId, { invoke } as never);
+    try {
+      const actor = createRequestActor({
+        state: {} as never, pluginId: "requester", registry: {} as never,
+        captureExtensionCompletion: (instanceId, req) => ({ instanceId, req, assertActive: () => {}, complete }),
+      });
+      await expect(actor.dispatchInvokeExtension(1, extensionId, extensionInvocationWireFixture.capability, row.requestJson, 21n)).resolves.toBe(response);
+      expect(complete).toHaveBeenCalledOnce();
+      const outcome = complete.mock.calls[0]![0];
+      expect("ok" in outcome ? outcome.ok : undefined).toBe(answer);
+    } finally {
+      loadedWgpuHandles.delete(extensionId);
+    }
   });
 });
 

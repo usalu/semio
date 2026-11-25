@@ -6,19 +6,19 @@
     {
       "helper": "_stand",
       "cast": "shared-person-winter",
-      "height": 1.69,
+      "height": 1.72,
       "asset": "standing-adult"
     },
     {
       "helper": "_boiler",
       "cast": "shared-boiler-heating-cycle",
-      "height": 0.72,
+      "height": 0.82,
       "asset": "gas-boiler"
     },
     {
       "helper": "_derrick",
       "cast": "demand-primary-energy-pumpjack",
-      "height": 5.57,
+      "height": 6.878,
       "asset": "oil-pumpjack"
     },
     {
@@ -29,14 +29,14 @@
     },
     {
       "helper": "_heat_pump",
-      "cast": "shared-heat-pump-heating-sweep",
+      "cast": "shared-heat-pump-heating-modulation",
       "asset": "heat-pump-outdoor-unit",
       "height": 1.45
     }
   ],
   "mounting": {
-    "boilerOriginM": 0.7,
-    "bracketLocalM": 0.64,
+    "boilerOriginM": 0.6,
+    "bracketLocalM": 0.74,
     "bracketHeightM": 1.34,
     "radiatorOriginM": 0,
     "cases": [

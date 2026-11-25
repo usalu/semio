@@ -1,0 +1,115 @@
+{
+ "phase": "cold",
+ "scope": "sample",
+ "steps": [
+  {
+   "label": "bootstrap",
+   "wallS": 10.8,
+   "cpuS": 1.1,
+   "rssMB": 140,
+   "peakMB": 140,
+   "heapMB": 33
+  },
+  {
+   "label": "questions",
+   "wallS": 5.8,
+   "cpuS": 0.7,
+   "rssMB": 119,
+   "peakMB": 145,
+   "heapMB": 32,
+   "owners": 40,
+   "targets": 114,
+   "questionsAsked": 112,
+   "distinctQuestions": 87,
+   "failedTargets": 0,
+   "kinds": {
+    "language:rust": 25,
+    "project": 9,
+    "language:typescript": 5,
+    "language:dotnet": 1
+   }
+  },
+  {
+   "label": "cold-pass",
+   "wallS": 181.3,
+   "cpuS": 19.2,
+   "rssMB": 272,
+   "peakMB": 468,
+   "heapMB": 139,
+   "visited": 5605,
+   "built": 4430,
+   "nodes": 4430,
+   "edges": 21192,
+   "componentDigests": 4430,
+   "families": 88,
+   "undefinedDigests": 0,
+   "walkNodes": 7564
+  },
+  {
+   "label": "owner-identities",
+   "wallS": 0,
+   "cpuS": 0,
+   "rssMB": 273,
+   "peakMB": 468,
+   "heapMB": 139,
+   "owners": 40,
+   "distinct": 40,
+   "perOwnerMicros": 11.2
+  },
+  {
+   "label": "save",
+   "wallS": 10.6,
+   "cpuS": 1.1,
+   "rssMB": 242,
+   "peakMB": 468,
+   "heapMB": 202,
+   "chunks": 256,
+   "written": 256,
+   "bytes": 1771845,
+   "nodes": 4430,
+   "edges": 21192
+  },
+  {
+   "label": "warm-dirty-pass",
+   "wallS": 23.3,
+   "cpuS": 2.2,
+   "rssMB": 254,
+   "peakMB": 468,
+   "heapMB": 257,
+   "dirty": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
+   "built": 1,
+   "visited": 5605,
+   "questionsMoved": 0
+  },
+  {
+   "label": "resave",
+   "wallS": 6.1,
+   "cpuS": 0.8,
+   "rssMB": 482,
+   "peakMB": 501,
+   "heapMB": 185,
+   "chunks": 256,
+   "written": 6,
+   "bytes": 43953,
+   "nodes": 4430,
+   "edges": 21192
+  },
+  {
+   "label": "warm-full-revalidation",
+   "wallS": 62.2,
+   "cpuS": 5,
+   "rssMB": 258,
+   "peakMB": 506,
+   "heapMB": 216,
+   "built": 4,
+   "visited": 5605,
+   "questionsMoved": 0
+  }
+ ],
+ "storeBytes": 1771851,
+ "load": [
+  103.85986328125,
+  94.3955078125,
+  83.291015625
+ ]
+}

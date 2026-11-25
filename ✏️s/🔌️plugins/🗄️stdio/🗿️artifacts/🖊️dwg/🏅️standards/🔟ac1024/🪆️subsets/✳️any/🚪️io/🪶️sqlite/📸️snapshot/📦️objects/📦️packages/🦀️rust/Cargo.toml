@@ -25,6 +25,10 @@ semio-framework-schema-state = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-stdio-dwg-snapshot-objects = { workspace = true }
+semio-s-artifact-stdio-dwg-snapshot-objects-associativity = { workspace = true }
+semio-s-artifact-stdio-dwg-snapshot-objects-blocks = { workspace = true }
+semio-s-artifact-stdio-dwg-snapshot-objects-tables = { workspace = true }
+semio-s-artifact-stdio-dwg-snapshot-objects-xrecord = { workspace = true }
 
 [dev-dependencies]
 semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

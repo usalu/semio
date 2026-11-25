@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 import { createElement } from "react";
 import { diffArrays } from "diff";
 import { compile } from "@tailwindcss/node";
-import { chromium } from "playwright";
+import { launchChromium } from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🌐️chromium-launch/🟦️";
 import { afterEach, describe, expect, it } from "vitest";
 import { cleanup, render } from "@semio-tech/ui-react/test";
 import { DiffViewHost } from "../../🧱️elements/🔺️DiffViewHost/🟦️.tsx";
@@ -57,7 +57,7 @@ afterEach(() => cleanup());
 
 describe("authored DiffView surface parity", () => {
   it("measures the current styled React DiffView reference", async () => {
-    const browser = await chromium.launch({ headless: true });
+    const browser = await launchChromium();
     try {
       const page = await browser.newPage({ viewport: { width: 800, height: 400 } });
       const stylesPath = resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🖌️ui/🎨️.css");

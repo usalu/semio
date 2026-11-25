@@ -97,7 +97,7 @@ impl FlowEvalSession {
     pub fn next_preview_cancellation_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{
         if self.state.preview_cancellation_cursor.is_none(){return Ok(Default::default())}
         match self.state.preview_cancellation_phase{
-            0=>self.retirement.admission_demands(),
+            0=>if self.retirement.slot_owed(){self.retirement.slot_demands()}else{self.retirement.admission_demands()},
             4=>self.geometry_port.as_ref().map_or(Ok(Default::default()),|port|Ok(RetirementDemand{copy_bytes:port.next_cancel_copy_byte_demand()?,capacity_bytes:port.next_cancel_capacity_byte_demand(copy)?,release_bytes:port.next_cancel_release_byte_demand()?,depth:port.next_cancel_depth_demand()?})),
             5=>self.retirement.demands(copy),
             _=>Ok(RetirementDemand{depth:1,..Default::default()}),
@@ -115,6 +115,7 @@ impl FlowEvalSession {
         if grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return Ok(RetainedCloneStep::Progress(Default::default()))}
         let mut progress=RetainedCloneProgress{copied_items:1,..Default::default()};
         match self.state.preview_cancellation_phase{
+            0 if self.retirement.slot_owed()=>{progress=self.retirement.reserve_slot(effect)?;},
             0=>{
                 self.retirement.preflight(grant)?;
                 let mut original=Some(SessionCollectionOwner::Cancellation(SessionPreviewCancellationSources::take(&mut self.state)));

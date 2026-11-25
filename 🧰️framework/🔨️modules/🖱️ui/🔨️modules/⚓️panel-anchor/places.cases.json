@@ -1,0 +1,20 @@
+{
+  "host": { "left": 100, "top": 50, "width": 300, "height": 600 },
+  "places": {
+    "top-left": { "left": 100, "top": 50, "right": 200, "bottom": 250 },
+    "top-middle": { "left": 200, "top": 50, "right": 300, "bottom": 250 },
+    "top-right": { "left": 300, "top": 50, "right": 400, "bottom": 250 },
+    "left-middle": { "left": 100, "top": 250, "right": 200, "bottom": 450 },
+    "right-middle": { "left": 300, "top": 250, "right": 400, "bottom": 450 },
+    "bottom-left": { "left": 100, "top": 450, "right": 200, "bottom": 650 },
+    "bottom-middle": { "left": 200, "top": 450, "right": 300, "bottom": 650 },
+    "bottom-right": { "left": 300, "top": 450, "right": 400, "bottom": 650 }
+  },
+  "pointers": [
+    { "name": "a corner cell is its corner", "point": { "x": 110, "y": 60 }, "anchor": "top-left" },
+    { "name": "the far corner cell is the opposite corner", "point": { "x": 390, "y": 640 }, "anchor": "bottom-right" },
+    { "name": "an edge cell is its edge middle", "point": { "x": 250, "y": 60 }, "anchor": "top-middle" },
+    { "name": "the dead centre left of the midline reaches the left middle", "point": { "x": 210, "y": 345 }, "anchor": "left-middle" },
+    { "name": "the dead centre below the midline reaches the bottom middle", "point": { "x": 250, "y": 440 }, "anchor": "bottom-middle" }
+  ]
+}

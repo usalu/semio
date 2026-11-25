@@ -897,7 +897,7 @@
       "type": "string"
     },
     "ArtifactInferenceRequestV1": {
-      "description": "💡️ The request `semio_plugin_host::ArtifactInferenceRouter::infer` decodes — os is a CLIENT of that router here, so this export is an explicit MIRROR of the router's own private `InferenceRouteRequest` (which that crate does not export), never a second authority. The router re-checks every identity field against its registered route and against the guest's echo before any result is publishable, so a drift between this mirror and the router is a decode failure at the first call, not a silently wrong answer.",
+      "description": "💡️ The request `semio_plugin_host::ArtifactInferenceRouter::infer` decodes — os is a [Design notes](README.md#source-notes-40).",
       "properties": {
         "algorithmVersion": {
           "minimum": 0.0,
@@ -989,32 +989,32 @@
           "additionalProperties": false,
           "properties": {
             "maximumCapacityBytes": {
-              "minimum": 0,
+              "minimum": 0.0,
               "type": "integer"
             },
             "maximumCopyBytes": {
-              "minimum": 0,
+              "minimum": 0.0,
               "type": "integer"
             },
             "maximumDepth": {
-              "minimum": 0,
+              "minimum": 0.0,
               "type": "integer"
             },
             "maximumItems": {
-              "minimum": 0,
+              "minimum": 0.0,
               "type": "integer"
             },
             "maximumReleaseBytes": {
-              "minimum": 0,
+              "minimum": 0.0,
               "type": "integer"
             }
           },
           "required": [
-            "maximumItems",
-            "maximumCopyBytes",
             "maximumCapacityBytes",
-            "maximumReleaseBytes",
-            "maximumDepth"
+            "maximumCopyBytes",
+            "maximumDepth",
+            "maximumItems",
+            "maximumReleaseBytes"
           ],
           "title": "Retained Clone Grant",
           "type": "object"
@@ -1047,10 +1047,10 @@
         "policy",
         "policyVersion",
         "requestedCacheMode",
+        "retained",
         "revision",
         "sourceDialect",
-        "wireVersion",
-        "retained"
+        "wireVersion"
       ],
       "type": "object"
     },
@@ -1098,7 +1098,6 @@
       "required": [
         "actualCacheMode",
         "artifactKind",
-        "canonicalPayload",
         "complete",
         "generation",
         "inferenceSchema",
@@ -1887,7 +1886,7 @@
           "type": "string"
         },
         "channel": {
-          "description": "🔀️ Which document owner this session's artifact verbs execute against — `\"shell\"` when a live shell is attached over `/bridge` and declared `relayAppCommands` (the agent's edits happen in the window the human is looking at, land in that human's undo history and replicate to their collaborators), `\"headless\"` when this process's own `--folder`/`--hub` workspace owns them. The decision is taken HERE, once per session, and is sticky: a client that reads `\"shell\"` is never silently re-routed onto a different document.",
+          "description": "🔀️ Which document owner this session's artifact verbs execute against — `\"shell\"` when a [Design notes](README.md#source-notes-224).",
           "type": "string"
         },
         "locale": {
@@ -2037,30 +2036,30 @@
       "type": "object"
     },
     "HubInferenceApprovalRequestV1": {
-      "type": "object",
       "additionalProperties": false,
+      "properties": {
+        "jobId": {
+          "pattern": "^[0-9a-f]{32}$",
+          "type": "string"
+        },
+        "proposalHash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "schema": {
+          "const": "semio.hub.inference-approval/v1"
+        },
+        "version": {
+          "const": 1
+        }
+      },
       "required": [
         "schema",
         "version",
         "jobId",
         "proposalHash"
       ],
-      "properties": {
-        "schema": {
-          "const": "semio.hub.inference-approval/v1"
-        },
-        "version": {
-          "const": 1
-        },
-        "jobId": {
-          "type": "string",
-          "pattern": "^[0-9a-f]{32}$"
-        },
-        "proposalHash": {
-          "type": "string",
-          "pattern": "^[0-9a-f]{64}$"
-        }
-      }
+      "type": "object"
     },
     "InferenceApproveInput": {
       "additionalProperties": false,
@@ -2102,7 +2101,7 @@
       "additionalProperties": false,
       "properties": {
         "after": {
-          "maximum": 16,
+          "maximum": 9007199254740991,
           "minimum": 0,
           "type": "integer"
         },
@@ -2123,6 +2122,19 @@
       "properties": {
         "artifactId": {
           "type": "string"
+        },
+        "cursor": {
+          "description": "The `nextCursor` of a previous page; omit for the first page.",
+          "type": "string"
+        },
+        "inferenceSchema": {
+          "type": "string"
+        },
+        "limit": {
+          "default": 20,
+          "maximum": 100,
+          "minimum": 1,
+          "type": "integer"
         }
       },
       "type": "object"
@@ -2133,6 +2145,15 @@
         "artifactKind": {},
         "declared": {
           "type": "array"
+        },
+        "nextCursor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "total": {
+          "type": "integer"
         }
       },
       "type": "object"
@@ -2442,9 +2463,9 @@
                         }
                       },
                       "required": [
+                        "commitSeq",
                         "contentSha256",
-                        "headEditId",
-                        "commitSeq"
+                        "headEditId"
                       ],
                       "type": "object"
                     },
@@ -2456,12 +2477,12 @@
                     }
                   },
                   "required": [
-                    "source",
                     "artifactId",
                     "artifactKind",
-                    "spaceId",
+                    "authors",
                     "revision",
-                    "authors"
+                    "source",
+                    "spaceId"
                   ],
                   "type": "object"
                 },
@@ -2470,10 +2491,10 @@
                 }
               },
               "required": [
-                "schema",
+                "content",
                 "notice",
                 "provenance",
-                "content"
+                "schema"
               ],
               "type": "object"
             },
@@ -2647,27 +2668,27 @@
               "additionalProperties": false,
               "properties": {
                 "childOpBytes": {
-                  "minimum": 0,
+                  "minimum": 0.0,
                   "type": "integer"
                 },
                 "config": {
-                  "minimum": 0,
+                  "minimum": 0.0,
                   "type": "integer"
                 },
                 "document": {
-                  "minimum": 0,
+                  "minimum": 0.0,
                   "type": "integer"
                 },
                 "draft": {
-                  "minimum": 0,
+                  "minimum": 0.0,
                   "type": "integer"
                 }
               },
               "required": [
-                "document",
+                "childOpBytes",
                 "config",
-                "draft",
-                "childOpBytes"
+                "document",
+                "draft"
               ],
               "type": "object"
             },
@@ -2725,9 +2746,9 @@
                             }
                           },
                           "required": [
+                            "commitSeq",
                             "contentSha256",
-                            "headEditId",
-                            "commitSeq"
+                            "headEditId"
                           ],
                           "type": "object"
                         },
@@ -2739,12 +2760,12 @@
                         }
                       },
                       "required": [
-                        "source",
                         "artifactId",
                         "artifactKind",
-                        "spaceId",
+                        "authors",
                         "revision",
-                        "authors"
+                        "source",
+                        "spaceId"
                       ],
                       "type": "object"
                     },
@@ -2753,10 +2774,10 @@
                     }
                   },
                   "required": [
-                    "schema",
+                    "content",
                     "notice",
                     "provenance",
-                    "content"
+                    "schema"
                   ],
                   "type": "object"
                 },
@@ -2774,8 +2795,8 @@
           },
           "required": [
             "opsCount",
-            "warnings",
-            "untrusted"
+            "untrusted",
+            "warnings"
           ],
           "type": "object"
         }

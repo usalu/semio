@@ -4,9 +4,9 @@
 import { normWireLiteral, normWireNumber, normWireObject, normWireRange, type NormWireReader, normWireRequired, normWireString } from "@semio-tech/norm-js/registry/contract";
 
 export interface ChangeZoneInternalGainsWM2 {
-  mutation: "changezoneinternalgainswm2";
+  mutation: "changeZoneInternalGainsWM2";
   zoneId: string;
   newInternalGainsWM2: number;
 }
 
-export const parseChangeZoneInternalGainsWM2: NormWireReader<ChangeZoneInternalGainsWM2> = normWireObject<ChangeZoneInternalGainsWM2>({ mutation: normWireRequired(normWireLiteral("changezoneinternalgainswm2")), zoneId: normWireRequired(normWireString), newInternalGainsWM2: normWireRequired(normWireRange(normWireNumber, {"minimum":0,"maximum":100})) });
+export const parseChangeZoneInternalGainsWM2: NormWireReader<ChangeZoneInternalGainsWM2> = normWireObject<ChangeZoneInternalGainsWM2>({ mutation: normWireRequired(normWireLiteral("changeZoneInternalGainsWM2")), zoneId: normWireRequired(normWireString), newInternalGainsWM2: normWireRequired(normWireRange(normWireNumber, {"minimum":0,"maximum":100})) });

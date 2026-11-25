@@ -1,10 +1,10 @@
 //! ⚠️ Bounded typed Fault binding donates original strings and domain cells without cloning the parsed donor.
-use crate::original_receiving::completed::CompletedInput;
+use crate::CompletedInput;
 use semio_framework_value::retirement::controlled::ControlledRetirement;
 use semio_framework_value::{DslValue, RetainedCloneProgress, ValueError, ValueRefusalKind};
 use std::mem::ManuallyDrop;
 use semio_framework_job::{OriginalTurnFailure, StepContext};
-use crate::original_receiving::metadata;
+use crate::metadata;
 use semio_framework::{Fault, FaultCode, FaultScope, FaultOrigin, FaultCause, FaultParams, Severity};
 use semio_plugin_reactor_receiving_source::retired_poll;
 pub(super) struct FaultCursor{pub output:ManuallyDrop<Option<Fault>>,pub closing:ManuallyDrop<Option<ControlledRetirement<Fault>>>,pub field:usize,pub nested:usize,pub kind:u8,pub cause:usize,cause_field:usize,pub seen:u8,progress_seen:u8,cause_seen:bool,pub reserved:bool,pub closed:bool}

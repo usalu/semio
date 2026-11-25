@@ -1,0 +1,11 @@
+{
+  "workUnits": 100000000,
+  "maximumElapsedMicroseconds": 86400000000,
+  "retained": {
+    "maximumItems": 1048576,
+    "maximumCopyBytes": 268435456,
+    "maximumCapacityBytes": 134217728,
+    "maximumReleaseBytes": 134217728,
+    "maximumDepth": 64
+  }
+}

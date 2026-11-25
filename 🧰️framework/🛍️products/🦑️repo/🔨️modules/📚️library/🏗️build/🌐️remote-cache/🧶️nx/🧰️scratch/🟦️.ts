@@ -51,7 +51,7 @@ export function wipeScratchNxCacheV1(base:string):void{
 /** ▶️ Runs `nx run-many -t build` in a scratch workspace as an asynchronous child (never `spawnSync`: a caller that serves the cache in its own process would block its event loop and the server could not answer), killed after `timeoutMilliseconds`. `hits` and `total` come from Nx's own summary line `Cache: <hits>/<total> hit`. */
 export function runScratchNxV1(nx:string,base:string,environment:Readonly<Record<string,string>>,timeoutMilliseconds:number):Promise<Readonly<{status:number|null;text:string;hits:number;total:number}>>{
  return new Promise(accept=>{
-  const child=spawn("node",[nx,"run-many","-t","build"],{cwd:base,env:{PATH:process.env.PATH??"",HOME:process.env.HOME??"",NX_DAEMON:"false",NX_NO_CLOUD:"true",NX_TUI:"false",CI:"1",NO_COLOR:"1",...environment}}),parts:Buffer[]=[],timer=setTimeout(()=>child.kill("SIGKILL"),timeoutMilliseconds);
+  const child=spawn("node",[nx,"run-many","-t","build"],{windowsHide:true,cwd:base,env:{PATH:process.env.PATH??"",HOME:process.env.HOME??"",NX_DAEMON:"false",NX_NO_CLOUD:"true",NX_TUI:"false",CI:"1",NO_COLOR:"1",...environment}}),parts:Buffer[]=[],timer=setTimeout(()=>child.kill("SIGKILL"),timeoutMilliseconds);
   child.stdout.on("data",chunk=>parts.push(chunk));child.stderr.on("data",chunk=>parts.push(chunk));
   const finish=(status:number|null)=>{clearTimeout(timer);const text=Buffer.concat(parts).toString(),match=/Cache:\s*(\d+)\/(\d+)\s+hit/u.exec(text);accept({status,text,hits:match===null?0:Number(match[1]),total:match===null?0:Number(match[2])});};
   child.on("error",()=>finish(null));child.on("close",finish);

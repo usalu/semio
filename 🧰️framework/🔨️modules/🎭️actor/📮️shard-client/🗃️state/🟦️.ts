@@ -6,6 +6,7 @@ import type { OwnedNativeUiPatchAuthority } from "../🩹️ui-patch/🟦️.ts"
 import type { CreateShardWorker, HostEffectHandler } from "../🚨️quota/🟦️.ts";
 import type { ShardClientOptions } from "../⚙️options/🟦️.ts";
 import { DEFAULT_MAX_OUTSTANDING_EFFECTS_PER_ACTOR } from "../💓️heartbeat/🟦️.ts";
+import { ShardCoreModules } from "../🧊️core-modules/🟦️.ts";
 
 /** 🗃️ The single private state object of one {@link ShardClient}: every mutable field and every injected policy of the transport lives here, and the facade and its collaborators share it instead of holding many private fields. */
 export class ShardClientState {
@@ -45,6 +46,8 @@ export class ShardClientState {
   readonly originalWorkStock: OriginalBootstrapOwner;
   readonly originalClosures = new Map<bigint, ShardActivation>();
   readonly originalReturns = new Map<bigint, Promise<void>>();
+  /** 🧊️ The core modules the activations of this client hold, keyed by served URL and held per activation generation: seeded into every activation so a worker never compiles a module another worker already compiled. The page itself never compiles. */
+  readonly coreModules = new ShardCoreModules<WebAssembly.Module>((url) => Promise.reject(new Error(`shard-core-module.unseeded: ${url}`)));
   constructor(options: ShardClientOptions) {
     if (!(options.originalWorkStock instanceof OriginalBootstrapOwner)) throw new Error("original-bootstrap.invalid-owner");
     this.originalWorkStock = options.originalWorkStock;

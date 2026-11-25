@@ -1,0 +1,27 @@
+[package]
+workspace = "../../../../../../../../../.."
+name = "semio-s-artifact-norm-vdi3805-inferences-laws"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "VDI 3805 inference laws: determinism, published sheet scopes and corrections against the public inferences API"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-os-kernel = { workspace = true }
+semio-s-artifact-norm-vdi3805-inferences = { workspace = true }
+semio-s-artifact-norm-vdi3805-model = { workspace = true }
+semio-s-plugin-norm-compliance = { workspace = true }
+
+[dev-dependencies]
+semio-framework-async-macros = { workspace = true }
+semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-s-plugin-norm-compliance = { workspace = true, features = ["compliance-testing"] }

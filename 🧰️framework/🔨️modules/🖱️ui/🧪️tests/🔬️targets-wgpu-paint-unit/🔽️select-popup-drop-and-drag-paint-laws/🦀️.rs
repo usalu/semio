@@ -32,12 +32,16 @@ fn painting_an_open_select_popup_emits_more_instances_than_a_closed_one_and_high
     let open_total: usize = open_draw.layers.iter().map(|layer| layer.ui_instances.len()).sum();
 
     assert!(open_total > closed_total, "an open Select should paint its popup rows in addition to the closed trigger");
-    let has_selected_highlight = open_draw
-        .layers
-        .iter()
-        .flat_map(|layer| layer.ui_instances.iter())
-        .any(|instance| (instance.color[0] - theme.row_hover.r).abs() < 0.001 && (instance.color[1] - theme.row_hover.g).abs() < 0.001 && (instance.color[2] - theme.row_hover.b).abs() < 0.001);
-    assert!(has_selected_highlight, "the popup row matching the Select's current value should paint a row_hover highlight");
+    let accent_fills = |draw: &DrawList| draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).filter(|instance| (instance.color[0] - theme.accent.r).abs() < 0.001 && (instance.color[1] - theme.accent.g).abs() < 0.001 && (instance.color[2] - theme.accent.b).abs() < 0.001).count();
+    assert!(accent_fills(&open_draw) > accent_fills(&closed_draw), "the popup row matching the Select's current value should paint the accent fill (React's chosen row)");
+    let solids: Vec<_> = open_draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).filter(|instance| instance.params[2] == semio_ui_draw_contract::KIND_SOLID).collect();
+    let accent = [theme.accent.r, theme.accent.g, theme.accent.b, theme.accent.a];
+    let neutral = [theme.border_normal.r, theme.border_normal.g, theme.border_normal.b, theme.border_normal.a];
+    let fill = solids.iter().position(|instance| instance.color == accent && instance.rect[3] == theme.chip_row_height()).expect("selected row fill");
+    let [x, y, width, _] = solids[fill].rect;
+    let dividers: Vec<_> = solids.iter().enumerate().filter(|(_, instance)| instance.color == neutral && instance.rect == [x, y, width, theme.stroke_hairline]).map(|(index, _)| index).collect();
+    assert_eq!(dividers.len(), 1, "adjacent rows share a single divider");
+    assert!(dividers[0] > fill, "the selected row must not cover its divider");
 }
 
 #[test]

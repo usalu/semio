@@ -68,6 +68,7 @@ export async function loadSelectedThroughFleetV1<G>(port:SelectedAttemptPortV1<G
   },
   readBesideMegabytes:port.totalMegabytes??Math.floor(totalmem()/1048576),
   signal:port.signal,alive:()=>sliceReadActiveV1(),step:sliceReadStepV1 as never,
+  graph:{offer:async()=>(await import("../../../📥️inference/🧭️script-inputs/🌳️closure-graph/🛰️fleet/🟦️.ts")).machineClosureGraphExchangeV1({client,workspaceRoot:port.root,scope:port.scope}).offer(),adopt:async head=>(await import("../../../📥️inference/🧭️script-inputs/🌳️closure-graph/🛰️fleet/🟦️.ts")).machineClosureGraphExchangeV1({client,workspaceRoot:port.root,scope:port.scope}).adopt(head)},
   read:async()=>{ran=true;try{result=await port.attempt();}catch(error){failed=true;failure=error;throw error;}if(!port.sealed(result))return undefined;try{return await sealedOf();}catch{return undefined;}}
  }).catch(error=>{if(failed)throw failure;if(port.signal?.aborted)throw error;return undefined;});
  if(outcome!==undefined){

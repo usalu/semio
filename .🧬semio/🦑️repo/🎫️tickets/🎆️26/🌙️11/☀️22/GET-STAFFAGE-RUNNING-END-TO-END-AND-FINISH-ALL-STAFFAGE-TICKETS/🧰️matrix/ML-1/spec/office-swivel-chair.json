@@ -1,0 +1,364 @@
+{
+ "ops": [
+  {
+   "op": "nest",
+   "scale": "50",
+   "view": "front",
+   "id": "backrest-shell",
+   "axis": 1,
+   "mid": -0.0351,
+   "pieces": [
+    {
+     "id": "backrest-shell-middle",
+     "clip": [
+      -0.17,
+      0.17
+     ],
+     "trimLow": 0.0054,
+     "slide": 0.0083
+    },
+    {
+     "id": "backrest-shell-centre",
+     "clip": [
+      -0.105,
+      0.105
+     ],
+     "trimLow": 0.0147,
+     "slide": 0.0309
+    }
+   ]
+  },
+  {
+   "op": "nest",
+   "scale": "50",
+   "view": "front",
+   "id": "backrest-pad",
+   "axis": 1,
+   "mid": -0.041,
+   "pieces": [
+    {
+     "id": "backrest-pad-middle",
+     "clip": [
+      -0.17,
+      0.17
+     ],
+     "trimLow": 0.0047,
+     "slide": 0.0066
+    },
+    {
+     "id": "backrest-pad-centre",
+     "clip": [
+      -0.105,
+      0.105
+     ],
+     "trimLow": 0.0128,
+     "slide": 0.0262
+    }
+   ]
+  },
+  {
+   "op": "nest",
+   "scale": "50",
+   "view": "elevation",
+   "id": "seat-cushion",
+   "axis": 1,
+   "range": [
+    -0.19685,
+    0.19685
+   ],
+   "pieces": [
+    {
+     "id": "seat-cushion-middle",
+     "clip": [
+      -0.21201,
+      0.17685
+     ],
+     "range": [
+      -0.23936,
+      0.23985
+     ]
+    }
+   ]
+  },
+  {
+   "op": "nest",
+   "scale": "50",
+   "view": "front",
+   "id": "seat-cushion",
+   "axis": 1,
+   "range": [
+    -0.21201,
+    0.17685
+   ],
+   "pieces": [
+    {
+     "id": "seat-cushion-middle",
+     "clip": [
+      -0.19685,
+      0.19685
+     ],
+     "range": [
+      -0.23988,
+      0.21985
+     ]
+    }
+   ]
+  },
+  {
+   "op": "nest",
+   "scale": "100",
+   "view": "front",
+   "id": "backrest-shell",
+   "axis": 1,
+   "mid": -0.033,
+   "pieces": [
+    {
+     "id": "backrest-shell-middle",
+     "clip": [
+      -0.17,
+      0.17
+     ],
+     "trimLow": 0.0055,
+     "slide": 0.0085
+    },
+    {
+     "id": "backrest-shell-centre",
+     "clip": [
+      -0.105,
+      0.105
+     ],
+     "trimLow": 0.0151,
+     "slide": 0.0317
+    }
+   ]
+  },
+  {
+   "op": "nest",
+   "scale": "100",
+   "view": "front",
+   "id": "backrest-pad",
+   "axis": 1,
+   "mid": -0.0428,
+   "pieces": [
+    {
+     "id": "backrest-pad-middle",
+     "clip": [
+      -0.17,
+      0.17
+     ],
+     "trimLow": 0.0051,
+     "slide": 0.0076
+    },
+    {
+     "id": "backrest-pad-centre",
+     "clip": [
+      -0.105,
+      0.105
+     ],
+     "trimLow": 0.0135,
+     "slide": 0.0278
+    }
+   ]
+  },
+  {
+   "op": "nest",
+   "scale": "100",
+   "view": "elevation",
+   "id": "seat-cushion",
+   "axis": 1,
+   "range": [
+    -0.197,
+    0.197
+   ],
+   "pieces": [
+    {
+     "id": "seat-cushion-middle",
+     "clip": [
+      -0.20991,
+      0.177
+     ],
+     "range": [
+      -0.23936,
+      0.23985
+     ]
+    }
+   ]
+  },
+  {
+   "op": "nest",
+   "scale": "100",
+   "view": "front",
+   "id": "seat-cushion",
+   "axis": 1,
+   "range": [
+    -0.20991,
+    0.177
+   ],
+   "pieces": [
+    {
+     "id": "seat-cushion-middle",
+     "clip": [
+      -0.197,
+      0.197
+     ],
+     "range": [
+      -0.23988,
+      0.21985
+     ]
+    }
+   ]
+  },
+  {
+   "op": "nest",
+   "scale": "200",
+   "view": "front",
+   "id": "backrest-shell",
+   "axis": 1,
+   "mid": -0.0323,
+   "pieces": [
+    {
+     "id": "backrest-shell-middle",
+     "clip": [
+      -0.17,
+      0.17
+     ],
+     "trimLow": 0.0056,
+     "slide": 0.0086
+    },
+    {
+     "id": "backrest-shell-centre",
+     "clip": [
+      -0.105,
+      0.105
+     ],
+     "trimLow": 0.0148,
+     "slide": 0.0309
+    }
+   ]
+  },
+  {
+   "op": "nest",
+   "scale": "200",
+   "view": "elevation",
+   "id": "seat-cushion",
+   "axis": 1,
+   "range": [
+    -0.188,
+    0.188
+   ],
+   "pieces": [
+    {
+     "id": "seat-cushion-middle",
+     "clip": [
+      -0.20106,
+      0.168
+     ],
+     "range": [
+      -0.23936,
+      0.23985
+     ]
+    }
+   ]
+  },
+  {
+   "op": "nest",
+   "scale": "200",
+   "view": "front",
+   "id": "seat-cushion",
+   "axis": 1,
+   "range": [
+    -0.20106,
+    0.168
+   ],
+   "pieces": [
+    {
+     "id": "seat-cushion-middle",
+     "clip": [
+      -0.188,
+      0.188
+     ],
+     "range": [
+      -0.23988,
+      0.21985
+     ]
+    }
+   ]
+  },
+  {
+   "op": "nest",
+   "scale": "500",
+   "view": "front",
+   "id": "backrest",
+   "axis": 1,
+   "mid": -0.0338,
+   "pieces": [
+    {
+     "id": "backrest-middle",
+     "clip": [
+      -0.17,
+      0.17
+     ],
+     "trimLow": 0.0053,
+     "slide": 0.0081
+    },
+    {
+     "id": "backrest-centre",
+     "clip": [
+      -0.105,
+      0.105
+     ],
+     "trimLow": 0.0126,
+     "slide": 0.0257
+    }
+   ]
+  },
+  {
+   "op": "nest",
+   "scale": "500",
+   "view": "elevation",
+   "id": "seat-band",
+   "axis": 1,
+   "range": [
+    -0.1901,
+    0.1901
+   ],
+   "pieces": [
+    {
+     "id": "seat-band-middle",
+     "clip": [
+      -0.20497,
+      0.1701
+     ],
+     "range": [
+      -0.23936,
+      0.23985
+     ]
+    }
+   ]
+  },
+  {
+   "op": "nest",
+   "scale": "500",
+   "view": "front",
+   "id": "seat-band",
+   "axis": 1,
+   "range": [
+    -0.20497,
+    0.1701
+   ],
+   "pieces": [
+    {
+     "id": "seat-band-middle",
+     "clip": [
+      -0.1901,
+      0.1901
+     ],
+     "range": [
+      -0.23988,
+      0.21985
+     ]
+    }
+   ]
+  }
+ ]
+}

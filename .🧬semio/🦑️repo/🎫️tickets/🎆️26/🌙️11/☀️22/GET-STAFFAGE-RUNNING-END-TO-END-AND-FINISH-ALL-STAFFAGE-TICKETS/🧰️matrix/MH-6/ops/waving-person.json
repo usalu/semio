@@ -1,10 +1,9 @@
 [
-  {"op": "copy", "scale": "50", "id": "sleeve-l", "from": "elevation", "to": ["front", "plan"]},
+  {"op": "copy", "scale": "50", "id": "sleeve-l", "from": "front", "to": ["plan"]},
   {"op": "front-sweep", "scale": "50", "id": "neck"},
   {"op": "copy", "scale": "100", "id": "sleeve-l", "from": "elevation", "to": ["plan"]},
   {"op": "front-sweep", "scale": "100", "id": "neck"},
   {"op": "copy", "scale": "200", "id": "sleeve-r", "from": "elevation", "to": ["plan"]},
-  {"op": "copy", "scale": "500", "id": "sil-arm-l", "from": "elevation", "to": ["plan"]},
   {"op": "front-sweep", "scale": "500", "id": "sil-body"},
   {"op": "copy", "scale": "500", "id": "sil-forearm-r", "from": "elevation", "to": ["plan"]}
 ]

@@ -65,6 +65,16 @@ pub fn drawing_document_store_owners_source_demands() -> Result<semio_framework_
 /// 🗃️ Admits the document owner catalog with the drawing issuer installed for publication and replay, so a persisted folder with history restores.
 pub fn drawing_document_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(store::os_store::document_store_owners::DocumentStoreOwners<DrawingSnapshot, DrawingMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<DrawingSnapshot, DrawingMutation>> {
     store::os_store::document_store_owners::bounded_artifact_store_owners_with_shared_semantic_preparation(grant, semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: 0, depth: 0 }, 0, DrawingArtifactStorePreparationFactory::default)
+        .map(|(mut owners, progress)| {
+            owners.operation_wire = drawing_history_wire(owners.operation_wire);
+            (owners, progress)
+        })
+}
+
+fn drawing_history_wire(wire: store::os_store::ArtifactOperationWire<DrawingMutation>) -> store::os_store::ArtifactOperationWire<DrawingMutation> {
+    use store::os_store::{original_edit::with_original_edit_message, whole_document_target, ArtifactPersistedOperation};
+
+    with_original_edit_message(DrawingMutation::install_persisted_receiving(wire).with_original_target(whole_document_target))
 }
 //#endregion 📬️StorePreparation
 

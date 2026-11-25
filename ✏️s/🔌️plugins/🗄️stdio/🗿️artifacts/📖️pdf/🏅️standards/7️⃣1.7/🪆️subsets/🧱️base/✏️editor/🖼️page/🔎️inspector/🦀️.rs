@@ -187,7 +187,7 @@ fn entry_input(family: &str, id: String, label: &str, key: &str, value: &str, co
 /// 🗝️ The generic key-value form: a headed group with one labelled input per editable entry, read-only lines for other entries and an add input taking `key=value`.
 pub(super) fn entry_form(snapshot: &PdfSnapshot, family: &'static str, heading: &str, controller_id: &str, publication_revision: semio_plugin::UiPublicationRevision, locale: Locale) -> UiAssemblyResult<semio_ui_contract::BuiltNode> {
     let mut column = ui::column().try_id(format!("pdf-entries-{family}")).map_err(|_| inspector_error("pdf.entry.group-id"))?.try_label(heading).map_err(|_| inspector_error("pdf.entry.group-label"))?;
-    let title = ui::text(ui::Label(UiText::clipped(heading))).emphasize(true).try_id(format!("pdf-entries-{family}-heading")).map_err(|_| inspector_error("pdf.entry.heading-id"))?.try_build().map_err(|_| inspector_error("pdf.entry.heading"))?;
+    let title = ui::heading(ui::Label(UiText::clipped(heading)), 3).try_id(format!("pdf-entries-{family}-heading")).map_err(|_| inspector_error("pdf.entry.heading-id"))?.try_build().map_err(|_| inspector_error("pdf.entry.heading"))?;
     column = column.try_child(title).map_err(|_| inspector_error("pdf.entry.heading"))?;
     for (index, (key, value, editable)) in entry_rows(snapshot, family).into_iter().enumerate() {
         let node = if editable {

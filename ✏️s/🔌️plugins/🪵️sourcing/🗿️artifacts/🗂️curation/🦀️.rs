@@ -5,15 +5,10 @@
 // into `SourcingModules`; Send comes structurally from that concrete enum (R3), so this lint's suggested
 // `-> impl Future + Send` fix is never taken, and the method is never made sync to silence it.
 #![allow(async_fn_in_trait)]
-#[cfg(test)]
-
-extern crate semio_os_kernel as dsl;
 extern crate semio_os_kernel as protocol;
 extern crate semio_os_kernel as store;
 #[path = "🌉️apply/🦀️.rs"]
 pub mod central_apply;
-#[cfg(test)]
-extern crate semio_os_kernel as vcs;
 extern crate semio_framework_schema as framework_schema;
 
 use {semio_plugin::MediaClass, semio_plugin::MediaForm};
@@ -39,15 +34,6 @@ pub use semio_s_artifact_sourcing_curation_tests::{artifact_kind};
 
 pub use semio_s_artifact_sourcing_curation_tests::{SourcingApplication, artifact, definition, language_spec, pilot_languages};
 
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-/// 🧪️ The mounted-app harness (`context`) of the sourcing editor: it drives the whole app, so it sits above every layer and the tests of commands, windows and panels reach it by this path.
-#[cfg(test)]
-#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs"]
-pub mod editor_unit_tests;
-//#endregion 🧪️Tests
 
 #[path = "."]
         pub mod standards {
@@ -253,34 +239,3 @@ pub mod viewer {
         }
     }
 }
-
-#[cfg(test)]
-#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs"]
-mod hoisted_tests_0;
-#[cfg(test)]
-#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🧪️tests/🔬️unit/🦀️.rs"]
-mod hoisted_tests_1;
-#[cfg(test)]
-#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"]
-mod hoisted_snapshot_2;
-#[cfg(test)]
-#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/➕️curation-add/🧪️tests/🔬️unit/🦀️.rs"]
-mod hoisted_tests_3;
-#[cfg(test)]
-#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📥️load-document-json/🧪️tests/🔬️unit/🦀️.rs"]
-mod hoisted_tests_4;
-#[cfg(test)]
-#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📉️set-filter-min-availability/🧪️tests/🔬️unit/🦀️.rs"]
-mod hoisted_tests_5;
-#[cfg(test)]
-#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧺️curated/🧪️tests/🔬️unit/🦀️.rs"]
-mod hoisted_tests_6;
-#[cfg(test)]
-#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🔢️grid/🧪️tests/🔬️unit/🦀️.rs"]
-mod hoisted_tests_7;
-#[cfg(test)]
-#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🏊️pool/🧪️tests/🔬️unit/🦀️.rs"]
-mod hoisted_tests_8;
-#[cfg(test)]
-#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/👁️preview/🧪️tests/🔬️unit/🦀️.rs"]
-mod hoisted_tests_9;

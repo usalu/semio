@@ -48,7 +48,7 @@ export const Default: Story = {
     ),
   },
   render: (args) => (
-    <div className="h-screen">
+    <div style={{ height: "calc(100dvh - 2rem)" }}>
       <Canvas {...args} />
     </div>
   ),

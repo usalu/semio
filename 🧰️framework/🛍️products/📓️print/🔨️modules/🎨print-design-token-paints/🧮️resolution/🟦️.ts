@@ -18,7 +18,6 @@ export type PrintDesignTokens = {
   readonly colors: Record<string, string>;
   readonly spacing: Record<string, string>;
   readonly strokes?: Record<string, number | number[]>;
-  readonly opacities?: { readonly glassPanelAlpha?: number };
   readonly levels?: PrintStylingLevels;
   readonly appearances?: Record<string, Record<string, Record<string, PrintPaintReference>>>;
   readonly metrics?: {
@@ -27,7 +26,6 @@ export type PrintDesignTokens = {
       readonly paddingStandardUiSpacing?: number;
       readonly navbarHeightUiSpacing?: number;
       readonly footerHeightUiSpacing?: number;
-      readonly glassPanelBlurPx?: number;
       readonly glassSaturate?: number;
     };
     readonly typography?: {
@@ -44,6 +42,7 @@ export type PrintStylingLevels = {
   readonly glassAlphaStep: number;
   readonly glassBlurStepPx: number;
   readonly glassSaturate: number;
+  readonly chipTintPercent: number;
 };
 
 export type PrintPanelGlassStyle = {
@@ -62,14 +61,6 @@ type PrintPaintReference = {
 
 type Rgba8 = [number, number, number, number];
 
-const DEFAULT_LEVELS: PrintStylingLevels = {
-  names: ["base", "window", "pane", "panel", "dialog", "menu"],
-  shadeStepPercent: 5,
-  glassAlphaStep: 0.12,
-  glassBlurStepPx: 8,
-  glassSaturate: 1.45,
-};
-
 /** 🎨️ Loads the canonical framework design-token document for print rendering. */
 export function loadPrintDesignTokens(): PrintDesignTokens {
   return authoredTokens as unknown as PrintDesignTokens;
@@ -77,7 +68,7 @@ export function loadPrintDesignTokens(): PrintDesignTokens {
 
 /** 📜️ Renders the canonical LaTeX stylesheet text from framework design-token paints. */
 export function renderPrintLatexTokenStylesheet(tokens: PrintDesignTokens = loadPrintDesignTokens()): string {
-  const lines: string[] = ["% Generated from framework/ui/styling/🔣️.json — run `repo ./📜️script.ts generate`.", "\\NeedsTeXFormat{LaTeX2e}", "\\ProvidesPackage{semio-tokens}[2026/07/06 v0.1.0 semio design tokens]", "\\RequirePackage{xcolor}", ""];
+  const lines: string[] = ["% Generated from 🧰️framework/🔨️modules/🖱️ui/🎨️styling/🔣️.json — run `repo ./📜️script.ts generate`.", "\\NeedsTeXFormat{LaTeX2e}", "\\ProvidesPackage{semio-tokens}[2026/07/06 v0.1.0 semio design tokens]", "\\RequirePackage{xcolor}", ""];
   for (const [key, hex] of Object.entries(tokens.colors)) lines.push(`\\definecolor{${latexColorKey(key)}}{HTML}{${hex.replace(/^#/, "")}}`);
   lines.push("");
   const unitFactor = remFactor(tokens.spacing.compact ?? "0.2rem");
@@ -119,8 +110,22 @@ export function renderPrintLatexTokenStylesheet(tokens: PrintDesignTokens = load
     for (const name of PRINT_LEVEL_SURFACE_KEYS) lines.push(`\\definecolor{semio-chrome-${theme}-${name}}{HTML}{${levelSurfaceHex(tokens, theme, name).replace(/^#/, "")}}`);
   }
   lines.push("");
+  lines.push(...renderChipGlass(tokens));
+  lines.push("");
   lines.push(...renderVisualizationPalette(tokens));
   return `${lines.join("\n")}\n`;
+}
+
+/** 🧊️ Renders the chip glass of print: a chip lies one level above its content, so its surface is the glass of that level (`semio-chrome-<appearance>-<level>` at alpha `1 - k * glassAlphaStep`) under a veil of the foreground at `chipTintPercent`. Print has no backdrop blur, so the blur steps stay on screen. */
+export function renderChipGlass(tokens: PrintDesignTokens = loadPrintDesignTokens()): string[] {
+  const levels = resolveLevels(tokens);
+  const lines = ["% Glass of the levels and the chip veil (chipTintPercent): chip surface = level glass at \\semio@glass@alpha@<level>, then the foreground veil at \\semio@chip@tint."];
+  levels.names.forEach((name, index) => {
+    const alpha = +(1 - index * levels.glassAlphaStep).toFixed(4);
+    lines.push(`\\newcommand{\\semio@glass@alpha@${name}}{${alpha}}`, `\\newcommand{\\semio@glass@alpha@${name}@pct}{${+(alpha * 100).toFixed(2)}}`);
+  });
+  lines.push(`\\newcommand{\\semio@chip@tint}{${+(levels.chipTintPercent / 100).toFixed(4)}}`, `\\newcommand{\\semio@chip@tint@pct}{${levels.chipTintPercent}}`, `\\newcommand{\\semio@chip@tint@rest@pct}{${+(100 - levels.chipTintPercent).toFixed(2)}}`);
+  return lines;
 }
 
 /** 📊️ Renders the categorical presence palette and the sequential/diverging scheme stops that `semio-viz-theme` reads. */
@@ -206,7 +211,8 @@ function rgba8ToHex([red, green, blue]: Rgba8): string {
 }
 
 function resolveLevels(tokens: PrintDesignTokens): PrintStylingLevels {
-  return { ...DEFAULT_LEVELS, ...tokens.levels, names: tokens.levels?.names ?? DEFAULT_LEVELS.names };
+  if (!tokens.levels) throw new Error("tokens.levels missing");
+  return tokens.levels;
 }
 
 function levelIndex(levels: PrintStylingLevels, name: string): number {

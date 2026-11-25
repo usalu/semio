@@ -3,7 +3,7 @@
 //! 🧵️ The mounted artifact instance `VcsArtifactApp`: its state, its turns and its `PluginApp` implementation.
 use semio_framework::{ActionKind, Fault, FaultCode, FaultFrom, FaultOrigin, NOTE_SHELL_COMMAND_ACTION_ID, SET_HISTORY_COMMAND_FILTER_ACTION_ID};
 use semio_plugin_decl_app::ArtifactApp;
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use semio_plugin_operation::CANCEL_TYPED_OPERATION_ACTION_ID;
 use semio_plugin_job::reserved_jobs::{CLIPBOARD_ACTION_IDS, is_framework_reserved_action_id};

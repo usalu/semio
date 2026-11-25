@@ -23,12 +23,12 @@ export async function registerNavigationTests(vitest: NonNullable<ImportMeta["vi
   });
 
   describe("resolveWorldOrbitMouseButtonsIdle", () => {
-    it("maps an unmodified middle click to pan in every projection", () => {
-      expect(resolveWorldOrbitMouseButtonsIdle("orthographic")).toEqual({ LEFT: null, MIDDLE: MOUSE.PAN, RIGHT: null });
-      expect(resolveWorldOrbitMouseButtonsIdle("perspective")).toEqual({ LEFT: null, MIDDLE: MOUSE.PAN, RIGHT: null });
+    it("maps unmodified left and middle drags to orbit in every projection and leaves right to the per-press assignment", () => {
+      expect(resolveWorldOrbitMouseButtonsIdle("orthographic")).toEqual({ LEFT: MOUSE.ROTATE, MIDDLE: MOUSE.ROTATE, RIGHT: null });
+      expect(resolveWorldOrbitMouseButtonsIdle("perspective")).toEqual({ LEFT: MOUSE.ROTATE, MIDDLE: MOUSE.ROTATE, RIGHT: null });
     });
 
-    it("pans an orthographic plan camera on an unmodified middle drag", () => {
+    it("pans an orthographic plan camera on a shift+middle drag", () => {
       const canvas = document.createElement("canvas");
       Object.defineProperties(canvas, {
         clientWidth: { value: 400 },
@@ -43,7 +43,7 @@ export async function registerNavigationTests(vitest: NonNullable<ImportMeta["vi
       applyWorldOrbitMouseButtonsIdle(controls, "orthographic");
       const offsetBefore = camera.position.clone().sub(controls.target);
       const pointer = (kind: string, x: number, y: number, button: number) => {
-        const event = new MouseEvent(kind, { bubbles: true, button, clientX: x, clientY: y });
+        const event = new MouseEvent(kind, { bubbles: true, button, clientX: x, clientY: y, shiftKey: true });
         Object.defineProperties(event, { pointerId: { value: 1 }, pointerType: { value: "mouse" }, pageX: { value: x }, pageY: { value: y } });
         return event;
       };
@@ -56,9 +56,9 @@ export async function registerNavigationTests(vitest: NonNullable<ImportMeta["vi
       controls.dispose();
     });
 
-    it("always maps middle click to pan when rotation is disabled (plan/oblique/one-point projections), even in the orthographic family", () => {
-      expect(resolveWorldOrbitMouseButtonsIdle("orthographic", false)).toEqual({ LEFT: null, MIDDLE: MOUSE.PAN, RIGHT: null });
-      expect(resolveWorldOrbitMouseButtonsIdle("perspective", false)).toEqual({ LEFT: null, MIDDLE: MOUSE.PAN, RIGHT: null });
+    it("maps left and middle drags to pan when rotation is disabled (plan/oblique/one-point projections), even in the orthographic family", () => {
+      expect(resolveWorldOrbitMouseButtonsIdle("orthographic", false)).toEqual({ LEFT: MOUSE.PAN, MIDDLE: MOUSE.PAN, RIGHT: null });
+      expect(resolveWorldOrbitMouseButtonsIdle("perspective", false)).toEqual({ LEFT: MOUSE.PAN, MIDDLE: MOUSE.PAN, RIGHT: null });
     });
   });
 
@@ -107,12 +107,12 @@ export async function registerNavigationTests(vitest: NonNullable<ImportMeta["vi
   });
 
   describe("resolveWorldOrbitRightMouseAction", () => {
-    it("reserves plain right click for context menu and maps modifiers to orbit and pan", () => {
-      expect(resolveWorldOrbitRightMouseAction({ button: 2, altKey: false, shiftKey: false })).toBeNull();
+    it("pans on plain and shift right drags (three flips the assigned action under a modifier) and orbits on alt+right", () => {
+      expect(resolveWorldOrbitRightMouseAction({ button: 2, altKey: false, shiftKey: false })).toBe(MOUSE.PAN);
       expect(resolveWorldOrbitRightMouseAction({ button: 2, altKey: true, shiftKey: false }, "perspective")).toBe(MOUSE.ROTATE);
       expect(resolveWorldOrbitRightMouseAction({ button: 2, altKey: true, shiftKey: false }, "orthographic")).toBe(MOUSE.ROTATE);
-      expect(resolveWorldOrbitRightMouseAction({ button: 2, altKey: false, shiftKey: true })).toBe(MOUSE.PAN);
-      expect(resolveWorldOrbitRightMouseAction({ button: 2, altKey: true, shiftKey: true })).toBe(MOUSE.PAN);
+      expect(resolveWorldOrbitRightMouseAction({ button: 2, altKey: false, shiftKey: true })).toBe(MOUSE.ROTATE);
+      expect(resolveWorldOrbitRightMouseAction({ button: 2, altKey: true, shiftKey: true })).toBe(MOUSE.ROTATE);
       expect(resolveWorldOrbitRightMouseAction({ button: 0, altKey: true, shiftKey: false })).toBeNull();
     });
   });

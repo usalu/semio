@@ -29,7 +29,7 @@ use crate::artifact_inference::ArtifactInferenceService;
 use crate::artifact_inference::ArtifactInferenceServiceKey;
 use crate::artifact_inference::ArtifactInferenceServiceMetadata;
 use crate::artifact_inference::ArtifactInferenceServiceRegistry;
-use semio_plugin_ownership::store_lifecycle::OwnerMutationRoster;
+use semio_plugin_store_lifecycle::store_lifecycle::OwnerMutationRoster;
 #[cfg(test)]
 use semio_plugin_identity::ArtifactDefinition;
 #[cfg(test)]

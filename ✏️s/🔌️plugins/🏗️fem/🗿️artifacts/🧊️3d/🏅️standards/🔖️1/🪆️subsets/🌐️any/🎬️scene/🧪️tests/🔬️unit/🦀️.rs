@@ -164,3 +164,24 @@ fn cone_orientation_takes_y_onto_the_direction() {
     }
 }
 
+
+/// 🚨️ LAW (F2): a solid the mesher refuses never takes the others with it: every meshable solid keeps its surface mesh and
+/// instance, the refused one is still drawn as an error-tinted prism under its own id and its label is the bilingual
+/// (English | German) diagnostic naming it — never silently missing.
+#[test]
+fn an_unmeshable_solid_is_marked_and_the_others_still_draw() {
+    let mut doc = demo();
+    let mut bad = doc.solids[0].clone();
+    bad.id = "bad".into();
+    bad.outline = vec![[0.0, 0.0], [1.0, 0.0]];
+    doc.solids.push(bad);
+    let (meshes_json, instances_json) = fem3d_scene_parts(&doc, None, doc.analysis.deformation_scale, None).unwrap();
+    let meshes = semio_framework_pack_json::parse(&meshes_json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let ids: Vec<&str> = meshes.as_array().unwrap().iter().filter_map(|mesh| mesh.get("id").and_then(Value::as_str)).collect();
+    assert!(ids.contains(&"solid-sol1") && ids.contains(&"solid-bad"), "{ids:?}");
+    let all = semio_framework_pack_json::parse(&instances_json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap().as_array().cloned().unwrap();
+    assert_eq!(find(&all, &fem3d_entity_target("solid", "sol1").unwrap()).get("label").and_then(Value::as_str), Some("sol1"));
+    let label = find(&all, &fem3d_entity_target("solid", "bad").unwrap()).get("label").and_then(Value::as_str).unwrap().to_owned();
+    assert!(label.starts_with("Solid bad cannot be meshed") && label.contains("| Körper bad lässt sich nicht vernetzen"), "{label}");
+    retire(doc);
+}

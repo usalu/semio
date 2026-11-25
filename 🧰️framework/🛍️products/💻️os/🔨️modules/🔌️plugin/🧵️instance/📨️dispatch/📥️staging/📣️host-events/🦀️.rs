@@ -5,7 +5,7 @@ use semio_plugin_decl_emission::{ActionMeta, Emit, HostEvent};
 use semio_plugin_command::command_admission::original_typed_command::OriginalTypedCommandSource;
 use semio_framework_value::{ValueError, ValueRefusalKind};
 use semio_plugin_decl_app::ArtifactApp;
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use crate::dispatch_bundle::DispatchCtx;
 use semio_framework_value::DslValue;

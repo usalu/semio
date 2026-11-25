@@ -156,7 +156,7 @@ pub const ID_REMOVALS: &[IdRemoval] = &[
 ];
 
 /// 🌱️ The starter row of an empty collection: the first row the insert tool places has no sibling to copy, so it is the neutral row of the kind with the id `<collection>-<index + 1>` (and the member or action ids of the document where the row links to them).
-fn starter_row(document: &En1990Snapshot, collection: &str, index: usize) -> Option<DslValue> {
+pub fn starter_row(document: &En1990Snapshot, collection: &str, index: usize) -> Option<DslValue> {
     use semio_s_artifact_norm_en1990_model::*;
     let id = format!("{collection}-{}", index + 1);
     let member = document.members.first().map(|member| member.id.clone()).unwrap_or_default();

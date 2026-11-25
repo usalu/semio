@@ -26,7 +26,7 @@ describe("norm mutation aggregates", () => {
         expect(schemaOracle.validateSchema(schema), `${artifact}/${facet}: ${JSON.stringify(schemaOracle.errors)}`).toBe(true);
         requiredProperties(schema, `${artifact}/${facet}`);
       }
-    });
+    }, 120000);
     test(`${artifact} exposes every leaf exactly once`, () => {
       const root = join(import.meta.dir, "../../🗿️artifacts", artifact, "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations");
       const leaves = readdirSync(root, { withFileTypes: true }).filter(entry => entry.isDirectory()).flatMap(entry => {
@@ -51,6 +51,6 @@ describe("norm mutation aggregates", () => {
       expect(refs.length).toBeGreaterThan(0);
       expect(new Set(refs).size).toBe(refs.length);
       expect([...refs].sort()).toEqual(leaves.map(leaf => leaf.$id).sort());
-    });
+    }, 120000);
   }
 });

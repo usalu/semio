@@ -9,7 +9,7 @@ pub use strings::{PdfByteStringCursor, StringReceipt, StringStep};
 
 #[path = "🧱️containers/🦀️.rs"]
 mod containers;
-pub use containers::{CosGrant, CosLimits, CosReceipt, CosStatus, PdfCosCursor};
+pub use containers::{CosGrant, CosLimits, CosReceipt, CosStatus, PdfCosCursor, grow_table, table_growth};
 
 #[path = "🖼️inline-image-span/🦀️.rs"]
 mod inline_image_span;

@@ -76,9 +76,9 @@ test("actual original engine retains ordinal values and borrowed keys through fu
  const engine=await Bun.file(new URL("../../🚂️engine/🦀️.rs",import.meta.url)).text();
  expect(new Vector3(40,0,0).add(new Vector3(1,0,0)).x).toBe(fixture.hostPolicy.value);
  expect(fixture.engine.completedPayloadCloned).toBe(false);
- expect(engine).toContain("values: InferenceValues<Arc<WidgetEvaluation>>");
+ expect(engine).toContain("values: InferenceValues<SharedEvaluation>");
  expect(engine).toContain("super::source_widget_key(&base.snapshot,source)");
- expect(engine).toContain("start_original_step");expect(engine).toContain("parent.admit_loan(cx)");
+ expect(engine).toContain("start_original_step");expect(engine).toContain("parent.admit_loan(&mut self.owners.source,cx)");
  expect(engine).toContain("run.cursor.close_original_plan_step(cx)");expect(engine).toContain("run.values.close_step(cx)");expect(engine).toContain("source.close_step(parent,cx)");
  expect(engine).not.toContain("BTreeMap");expect(engine).not.toContain("previous");expect(engine).not.toContain("values.clone()");expect(engine).not.toContain("cancellation_id.to_string()");expect(engine).not.toContain("snapshot.retire_cold()");
 });

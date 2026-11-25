@@ -7,7 +7,7 @@ use semio_plugin_operation::ToolCancellationLease;
 use semio_os_kernel::SpaceMember;
 use semio_plugin_document_media::media_export::ActiveMediaExport;
 use semio_plugin_decl_app::ArtifactApp;
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use semio_plugin_instance_children::children_components::ChildComposition;
 use semio_plugin_decl_emission::Emit;

@@ -346,6 +346,35 @@
       "shellFramePayload": null
     },
     {
+      "id": "publish-event-maps-to-the-host-event-publication",
+      "why": "Ticket 26/09/09/PROCEDURAL-3D-END-TO-END: lazy node-kind activation requests are `publish-event` effects on `os.on-demand.request`; the wgpu door printed `unmapped effect \"publish-event\" dropped`, so brep/math never activated. The Rust `Effect::PublishEvent { topic, payload }` serializes as `publishEvent`; the wgpu shell funnel consumes it.",
+      "effect": {
+        "tag": "publish-event",
+        "val": {
+          "topic": "os.on-demand.request",
+          "payload": {
+            "base64": "eyJ4IjoxfQ=="
+          }
+        }
+      },
+      "friendly": {
+        "publishEvent": {
+          "topic": "os.on-demand.request",
+          "payload": [
+            123,
+            34,
+            120,
+            34,
+            58,
+            49,
+            125
+          ]
+        }
+      },
+      "warns": false,
+      "shellFramePayload": null
+    },
+    {
       "id": "mapped-effect-still-maps",
       "why": "Control row — the new case must not shadow a real friendly projection.",
       "effect": {

@@ -97,3 +97,166 @@ Splitting the model crate was rejected: its ten modules reference each other cyc
 * XLSX and XML libraries type-check with the new derive output; their test targets already fail on stale test code (`fixture`, `opc_layer`, `RetainedWorkOutcome` call shapes), unrelated to the derives.
 * The measurement logs and sampler output lived in `🗑️generated/model-mem-*` and were deleted after the numbers were taken; `measure-model-memory.sh` reproduces them
   (`sh measure-model-memory.sh TAG rustc -p semio-s-artifact-stdio-pdf-model --lib -- -Ztime-passes -Zmacro-stats -Zthreads=1`; touch the model crate root first, or change a flag, else cargo reuses the build).
+
+## Round 2 (2026-11-25): every PDF crate under 4 GB
+
+Same method, all builds through `native-cargo.sh` (`-Z threads=1`, 3 jobs, exclusive gate, memory guard active). Model crate: `measure-model-memory.sh`
+(now `CRATE=<crate name>` selects the sampled rustc; 1–3 s `top` MEM = physical footprint, rustc `-Ztime-passes` rss per phase). Hub crate:
+`measure-hub-memory.sh <tag>` (the wasm32-wasip2 prototype profile of `rebuild-pdf-wasm.sh`, plus `-Zdump-mono-stats`). Suites: `verify-memory-step.sh <tag>`
+(PDF lib suite, io-export, page-editor tests with `--no-fail-fast`, snapshot-value `editor::pdf14`, XLSX/XML lib type-check, 5 s sampler of every rustc).
+
+### Baseline (quiet machine)
+
+The "9 GB" kills of the model crate were not reproducible with `-Z threads=1` on a quiet machine: the lib peaks at **4.38 GB** footprint (rss 3.99 GB,
+borrowck end 3.36 GB, `generate_crate_metadata` 4.18 GB, 49 s). The 9–14 GB rustc processes in `memory-guard.log` (09:46–09:59) were builds outside the
+gate (`-Z threads=0`, the repository default, one front-end thread and one first CGU batch per core). Expansion is unchanged from the last round (47 MB):
+`RetainedClone` 14.3 MB (82 × 175 KB) is still the largest single derive.
+
+### Step 1: `RetainedClone` hoisted into the framework
+
+* `🧬️retained-clone/🧬️contract/🏗️record-cursor/🦀️.rs` (`retained_clone::record`): one `RetainedRecordCursor<O,R>` holds the core state (phase, output,
+  source binding, spent, closing, close, route, selected quote, child reply) and implements every `RetainedCloneCursor` method once: plan, advance reply,
+  close reply, demands, work, selection, release. Rows are `RetainedRecordRow<T>` (field cursor plus published value); the machine reaches them through two
+  type-erased views, `RetainedRecordQuery` and `RetainedRecordDrive`, implemented once per field type `T` (not per owner), so the row code is shared by every
+  record that has a field of that type. Row codes, close codes and every refusal text are those of the old expansion.
+* The derive (`✨️derive/🧬️retained-clone/🦀️.rs`) emits per type only the rows struct, `RetainedRecordRows` (row count, rows per variant, live-variant selector,
+  two one-arm-per-row dispatchers `query`/`drive` that also project the source, and the constructor) and the `RetainedClone` impl.
+* Cause found on the way: the extra wrapper levels pushed the structural `Send` walk of deeply nested records past the recursion limit
+  (`semio-s-artifact-stdio-pdf-snapshot-2`, `OptionCursor<PdfPredictor>: Send`). `RetainedRecordRow<T>` now states `Send` explicitly; a generic
+  compile-time assertion in the same file proves `RetainedFieldCursor<T>: Send` and `Option<T>: Send` for every `T: RetainedClone`, so the explicit impl is
+  exactly the auto impl and the walk stops at each row.
+
+| model crate | baseline | after step 1 |
+| --- | --- | --- |
+| `RetainedClone` expansion | 14.3 MB (175 KB per type) | **1.39 MB** (17 KB per type) |
+| `macro_expand_crate` rss | 0.77 GB | 0.60 GB |
+| type check end / borrowck end rss | 2.01 / 3.36 GB | 1.84 / **2.75 GB** |
+| `generate_crate_metadata` / `codegen_crate` rss | 4.18 / 4.18 GB | 3.39 / 3.82 GB |
+| **peak footprint (top MEM)** | **4.38 GB** | **3.50 GB** |
+| total time | 48.9 s | 30.5 s |
+
+Verification (`verify-step1b`): PDF lib suite 27 passed, the 11 failures are all `NotFound` from the `bun` SQLite oracle missing on `PATH` in the script
+(environment, fixed in the script for the next runs); XLSX and XML libraries type-check; all PDF crates and their test targets type-check
+(`check -p semio-s-artifact-stdio-pdf -p …-io-export -p …-page-editor-tests -p …-pdf-snapshot-value-tests --lib --tests`).
+
+### Step 3: `RetireOwned` original admission shared
+
+* `♻️retirement/🧱️record/🏛️original/🦀️.rs` (`retirement::record`): one `OriginalRecordRetirement<O>` cursor and one `admit_original_record::<O>` allocator for
+  both original allocations (`OriginalRecordOwner`, implemented by `SharedOriginal<T>` and `BoxOriginal<T>`; the two refusal texts that differed stay
+  selected by `O::SHARED`), plus `original_record_demand::<O>()` for the quoted birth. The derived record emits its field ports once as
+  `OriginalRecordFields` (one demand arm and one step arm per field, shared by the shared and the boxed original, which before each carried a full copy of
+  the cursor struct, its allocator and all arms) and four one-line `RetireOwned` methods per allocation. The `Drop` refusal and the aligned-field check
+  stay per type.
+
+| model crate | after step 1 | after step 3 |
+| --- | --- | --- |
+| `RetireOwned` expansion (carriers + types) | 10.1 + 2.0 MB | **4.3 + 1.2 MB** |
+| total derive expansion | 34 MB | 28 MB |
+| type check end / borrowck end rss | 1.84 / 2.75 GB | 1.56 / **2.33 GB** |
+| `generate_crate_metadata` / `codegen_crate` rss | 3.39 / 3.82 GB | 3.15 / 3.34 GB |
+| **peak footprint (top MEM)** | **3.50 GB** | **3.17 GB** |
+| total time | 30.5 s | 27.8 s |
+
+Verification after steps 1 + 3 (`verify-step3`): PDF lib suite **38/0**, io-export **19/0**, snapshot-value `editor::pdf14` **34/0**, XLSX library type-checks.
+page-editor-tests 67 passed, 2 failed: `mesh_move_shifts_the_decode_range` (`stdio.pdf.content-preserved`) and `paint_fidelity::canvas_paint_matches_mupdf_probes`
+(`codec-ccitt-g4: image packed body does not match its declared geometry`) — image/mesh lifting refusals inside another session's uncommitted work on
+`🔆️coded-image`, `📝️native-page-edit` and `🌈️paint-fidelity` (its `[DEBUG] lift_image` logging is in the same output), not clone or retirement behaviour.
+The XML check failed on `semio_framework_trace` missing in `semio-plugin-instance-app`, another session's edit in flight at that moment (its dependency
+landed minutes later). Sampled peaks of that run: `semio_s_artifact_stdio_pdf_pdf_snapshot_value_tests` **3.71 GB** (was 5.2–5.5 GB in round 4),
+`semio_s_artifact_stdio_pdf_model` 2.92 GB (dev, 20 s samples).
+
+### Step 6: the 20-app hub split into runtime shards
+
+Cause: `semio_hub_stdio_pdf` closed all 20 apps (`VcsArtifactApp<EditorApp<E>>` / `ViewerApp<V>`) in one `dyn_enum_close!`, so this one crate instantiated
+the app-generic runtime (≈2 MB of framework source generic over `A: ArtifactApp`) twenty times. The editors are distinct types on purpose (dialect constant,
+command enum, tool-owner witness identity), so sharing one instantiation would change behaviour; erasing them behind a dynamic app interface is against
+the framework's static-dispatch rule (`sdk-dedyn`). The behaviour-preserving lever is where the instantiation happens.
+
+* The stdio composition owners authority (`🌎️hub/🧩️compositions/🗄️stdio/🧩️composition/🔣️.json`, schema `🧬️schema/🔣️.json`) gives every owner a `shards`
+  list; `stdio-pdf` declares three: PDF 1.4 (6 apps), PDF 1.7 editors (7), PDF 1.7 viewers (7). The generator (`🧩️composition/🟦️.ts`) validates that the
+  shards partition the owner's apps exactly, publishes each shard root (its own `dyn_enum_close!` over its apps) and shard manifest region, nests the shard
+  enums as the owner enum's variants with one `From` per app (so `PluginBuilder::editor::<E>` / `viewer::<V>` and `plugin()` are unchanged), and adds the
+  shard crates to the owner's dependency region. Every other owner has `"shards": []` and its output is byte-identical.
+* New crates (handcrafted manifests, members of `🌎️hub/Cargo.toml`): `semio-hub-stdio-pdf-1-4`, `semio-hub-stdio-pdf-1-7-editors`,
+  `semio-hub-stdio-pdf-1-7-viewers` under `🧩️extensions/📘️pdf/🧩️shards/`. Each instantiates the runtime of only its apps; the hub crate calls the shard
+  enums' non-generic impls and keeps only the builder registrations.
+* Composition tests (`🧱️production-preparation`, `🪪️owner-pairs`): 7/7 (the production-preparation test copies the shard manifests too).
+* The generated app enum dispatches one more `match` level per call; nothing else changes at run time.
+
+| wasm32-wasip2, prototype profile, `-Z threads=1` (`measure-hub-memory.sh hub6`, 20 s samples for the shards) | before (round 4/5) | after |
+| --- | --- | --- |
+| `semio_hub_stdio_pdf` | **5.94–8.76 GB** (r4f/r4g), 7.44 GB (r5b1) | **1.74 GB** (rss 1.94 GB; type check 0.52, metadata 1.54 GB) |
+| `semio_hub_stdio_pdf_1_7_editors` / `_1_7_viewers` / `_1_4` | – | 3.18 / 1.97 / 1.65 GB |
+| `semio_s_artifact_stdio_pdf_model` (wasm) | 4.14–5.06 GB | 2.85 GB |
+
+This moves instantiations between crates (compile memory); it does not remove generated code. Code size is the next section.
+
+## Guest code size
+
+The browser compiles the component's biggest core module; its code section and function count are what Liftoff pays for (`🧮️pdf-browser-page-memory.md`).
+Measured with `wasm-code-size.mjs` (biggest core module of a component: code, data, defined functions, median and largest body), builds through
+`measured-wasm-build.sh` (the staged browser build) and `measure-wasm-profile.sh <tag> <opt> <lto> <codegen-units>` (the same component in its own
+profile `pv<tag>`, so the staged build is neither replaced nor invalidated; 5 s samples of every rustc). `wasm-opt` runs through `measure-wasm-opt.sh`
+(repository binaryen 130, stopped above 6 GB). Every row is one full rebuild of the wasm graph in lane `w`.
+
+| build | opt-level | lto | CGUs | code | functions | median / largest body | build | peak rustc (PDF crates) |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| before (09:37, round 5) | 1 | off | 16 | 271.5 MB | 573,605 | 121 B / 388 KB | – | 7.44 GB hub (r5b1) |
+| r6a: steps 1, 3, 6 (staged) | 1 | off | 16 | 278.4 MB | 588,041 | 121 B / 388 KB | 40 min (33.4 cargo) | 3.43 GB component |
+| pz | `"z"` | off | 16 | **184.8 MB** | 533,976 | 87 B / 140 KB | 31.7 min | 3.49 GB component |
+| pzt | `"z"` | thin | 16 | 186.6 MB | 481,384 | 91 B / 201 KB | 39.6 min | **5.55 GB** component |
+| pzf | `"z"` | fat | 16 | – | – | – | killed after 23 min | **8.87 GB** component (guard SIGKILL) |
+| pz1 | `"z"` | off | 1 | – | – | – | killed after 33 min | **8.21 GB** component (guard SIGKILL); 1.7 editors 5.49, model 4.88, 1.4 4.55 GB |
+
+* r6a vs before: the shards instantiate the per-snapshot functions (decode, codec, store) once per shard instead of once per crate, +14,436 functions
+  (+2.5%); the rest of the new work in the tree is in the same build. r6a's stripped staged core module is 292.5 MB (code 278.4, data 12.6).
+* `panic = "abort"`: no lever, it is already the `wasm32-wasip2` target default (`rustc --print target-spec-json`: `"panic-strategy": "abort"`).
+* `wasm-opt -Oz` on r6a's 292.5 MB core module: stopped by the guard at **6.55 GB after 92 s**, still reading; binaryen cannot optimize a module of
+  this size within the memory rule. On pz's core (`wasm-core-extract.mjs`, `--strip-debug -Oz`): stopped at **6.19 GB after 126 s**, same result.
+* Thin LTO removes 10% of the functions (cross-crate inlining) but no code bytes, and costs +2 GB in the component crate; fat LTO cannot link within
+  the guard. Neither is worth it at this module size.
+* `codegen-units = 1` cannot link the component within the guard either, and it lifts every large crate (one CGU holds the whole crate in LLVM at once):
+  the model crate to 4.88 GB and the 1.7 editor shard to 5.49 GB.
+* Decision: `rebuild-pdf-wasm.sh` (the staged browser dev build) now uses `opt-level = "z"`; LTO, `codegen-units` and the other profile values stay.
+  The next staged build will be the pz shape: 185 MB code, 534k functions, every PDF rustc ≤ 3.5 GB. Not yet rebuilt/staged with it.
+* `opt-level = "s"` was not built: `"z"` is the stronger size setting and already the only lever that fits the guard; `"s"` would land between 1 and `"z"`.
+
+### Where the 80 MB target stands
+
+No profile setting reaches it: the best feasible build is 185 MB of code. What remains is generated code, not code generation:
+
+1. **Ship what the page serves.** The browser component is the whole 20-app composition. One PDF 1.7 editor shard instantiates 7 apps; a component of
+   only the apps a page opens (or one component per app) cuts the code roughly in proportion. This is now a composition choice: the shard crates of
+   step 6 are exactly such units, so a PDF-editor component can close one shard instead of three.
+2. **Remove per-app generic layers in the framework.** The 20× multiplier is the `A: ArtifactApp`-generic runtime (≈2 MB of source); where it only uses
+   `A::Snapshot`/`A::Mutation`, splitting it into functions generic over those types alone collapses the 7 PDF 1.7 apps to one instantiation.
+3. **Per-type derive machines** (steps 1 and 3 here) removed front-end work; the receive arms (step 2) are the remaining per-type expansion.
+
+### Steps not taken in this round, and why
+
+* Step 2 (`NativeReceive` arms into one op, owner type erased from the core) and step 4 (`ToValue`/`FromValue` tables): after steps 1 and 3 the model
+  crate peaks at 3.17 GB and every PDF crate is under 4 GB, so neither is needed for the memory target. They remain the next code-size levers inside
+  the model crate (`NativeReceive` 16.5 MB and `ToValue`/`FromValue` 5.2 MB of the remaining 28 MB expansion).
+* Step 5 (splitting the model crate along the mutation families): only required if the model crate still exceeded the target; it does not.
+
+### Final peaks (every PDF crate, `-Z threads=1`)
+
+| crate | before | after |
+| --- | --- | --- |
+| `semio_s_artifact_stdio_pdf_model` (host lib, 1 s samples) | 4.38 GB | **3.17 GB** |
+| `semio_s_artifact_stdio_pdf_model` (wasm, prototype) | 4.14–5.06 GB | 2.85 GB (opt 1) / 2.82 GB (`"z"`) |
+| `semio_hub_stdio_pdf` (wasm) | 5.94–8.76 GB | **1.74 GB** (rss 1.94) / 1.39 GB (`"z"`) |
+| `semio_hub_stdio_pdf_1_7_editors` / `_1_7_viewers` / `_1_4` (wasm, new) | – | 3.08–3.18 / 1.97–3.27 / 1.65 GB |
+| `semio_hub_stdio_pdf_component` (wasm, cdylib) | 3.81–6.79 GB | 3.43 GB (opt 1) / 3.49 GB (`"z"`) |
+| `semio_s_artifact_stdio_pdf_pdf_snapshot_value_tests` (host) | 5.2–5.5 GB | **3.54–3.71 GB** |
+
+### Changed files (round 2)
+
+* `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🏗️record-cursor/🦀️.rs` (new), `…/🧬️contract/🦀️.rs` (mounts `record`)
+* `🧰️framework/🔨️modules/🌱️value/✨️derive/🧬️retained-clone/🦀️.rs` (`RetainedClone` record expansion, `RetireOwned` original admission)
+* `🧰️framework/🔨️modules/🌱️value/♻️retirement/🧱️record/🏛️original/🦀️.rs` (new), `…/🧱️record/🦀️.rs` (mounts it)
+* `🌎️hub/🧩️compositions/🗄️stdio/🧩️composition/🟦️.ts`, `🔣️.json`, `🧬️schema/🔣️.json`, `🧪️tests/🧱️production-preparation/🟦️.ts`
+* `🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/📘️pdf/🦀️.rs` and `📦️packages/🦀️rust/Cargo.toml` (generated), `🧩️shards/{4️⃣1.4,7️⃣1.7/✏️editors,7️⃣1.7/👁️viewers}/`
+  (`🦀️.rs` generated, `📦️packages/🦀️rust/Cargo.toml` new), `🌎️hub/Cargo.toml` (members)
+* Ticket scripts: `verify-memory-step.sh`, `measure-hub-memory.sh`, `measure-wasm-profile.sh`, `measure-wasm-opt.sh`, `prepare-stdio-composition.ts`,
+  `wasm-code-size.mjs`, `wasm-core-extract.mjs` (new); `measure-model-memory.sh` (`CRATE`), `rebuild-pdf-wasm.sh` (`opt-level = "z"`)

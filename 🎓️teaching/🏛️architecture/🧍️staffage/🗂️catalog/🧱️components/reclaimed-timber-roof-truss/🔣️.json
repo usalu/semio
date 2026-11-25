@@ -13,19 +13,97 @@
    "de": "Ein geschraubter Nadelholz-W-Binder (Fink-Binder) mit 9,00 m Spannweite und 2,20 m Systemhöhe, Gurte C24 80 x 180 mm und Diagonalen 80 x 120 mm, verbunden durch 6-mm-Stahlknotenbleche mit M16-Bolzen, aus einem Dach ausgebaut und bei einer Bauteilbörse aufrecht in einem Holzlagerbock gelagert: die Auflagerplatten noch unter den Traufknoten, die leeren Löcher der ausgebauten Verbandsbolzen, Lattennagellöcher auf den Obergurten und die abgesägten Stummel der Windrispen zeigen sein erstes Leben. Er wird an einem Zweistrang-Kettengehänge gehoben, das an den Obergurtknoten angeschnürt ist, und auf zwei Fußpfetten unter Dachdeckung und Schnee wieder eingebaut."
   },
   "tags": [
-   "component",
-   "reclaimed",
-   "timber",
-   "softwood",
-   "steel",
-   "truss",
-   "roof-truss",
-   "w-truss",
-   "bolted",
-   "gusset-plate",
-   "stillage",
-   "chain-sling",
-   "structural"
+   {
+    "id": "component",
+    "title": {
+     "en": "component",
+     "de": "Bauteil"
+    }
+   },
+   {
+    "id": "reclaimed",
+    "title": {
+     "en": "reclaimed",
+     "de": "wiederverwendet"
+    }
+   },
+   {
+    "id": "timber",
+    "title": {
+     "en": "timber",
+     "de": "Holz"
+    }
+   },
+   {
+    "id": "softwood",
+    "title": {
+     "en": "softwood",
+     "de": "Nadelholz"
+    }
+   },
+   {
+    "id": "steel",
+    "title": {
+     "en": "steel",
+     "de": "Stahl"
+    }
+   },
+   {
+    "id": "truss",
+    "title": {
+     "en": "truss",
+     "de": "Fachwerkträger"
+    }
+   },
+   {
+    "id": "roof-truss",
+    "title": {
+     "en": "roof truss",
+     "de": "Dachbinder"
+    }
+   },
+   {
+    "id": "w-truss",
+    "title": {
+     "en": "W-truss",
+     "de": "W-Binder"
+    }
+   },
+   {
+    "id": "bolted",
+    "title": {
+     "en": "bolted",
+     "de": "verschraubt"
+    }
+   },
+   {
+    "id": "gusset-plate",
+    "title": {
+     "en": "gusset plate",
+     "de": "Knotenblech"
+    }
+   },
+   {
+    "id": "stillage",
+    "title": {
+     "en": "stillage",
+     "de": "Gestell"
+    }
+   },
+   {
+    "id": "chain-sling",
+    "title": {
+     "en": "chain sling",
+     "de": "Kettengehänge"
+    }
+   },
+   {
+    "id": "structural",
+    "title": {
+     "en": "structural",
+     "de": "tragend"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage component authors",

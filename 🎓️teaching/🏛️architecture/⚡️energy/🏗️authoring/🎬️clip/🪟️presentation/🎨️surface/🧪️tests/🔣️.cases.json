@@ -1,0 +1,99 @@
+{
+  "schema": "chip-glass-cases/v1",
+  "chipTintPercent": 10,
+  "tolerance": 1,
+  "minimumContrast": 8,
+  "chips": [
+    {
+      "id": "base-dark-#001117",
+      "content": "base",
+      "appearance": "dark",
+      "parent": "#001117",
+      "glassLevel": "window",
+      "alpha": 0.892,
+      "composite": [
+        30,
+        47,
+        51
+      ]
+    },
+    {
+      "id": "window-dark-#06171c",
+      "content": "window",
+      "appearance": "dark",
+      "parent": "#06171c",
+      "glassLevel": "pane",
+      "alpha": 0.784,
+      "composite": [
+        37,
+        54,
+        57
+      ]
+    },
+    {
+      "id": "pane-dark-own",
+      "content": "pane",
+      "appearance": "dark",
+      "parent": null,
+      "glassLevel": "panel",
+      "alpha": 0.676,
+      "composite": [
+        41,
+        56,
+        60
+      ]
+    },
+    {
+      "id": "base-light-#f7f3e3",
+      "content": "base",
+      "appearance": "light",
+      "parent": "#f7f3e3",
+      "glassLevel": "window",
+      "alpha": 0.892,
+      "composite": [
+        211,
+        210,
+        196
+      ]
+    },
+    {
+      "id": "panel-light-own",
+      "content": "panel",
+      "appearance": "light",
+      "parent": null,
+      "glassLevel": "dialog",
+      "alpha": 0.568,
+      "composite": [
+        196,
+        196,
+        182
+      ]
+    },
+    {
+      "id": "dialog-dark-#112025",
+      "content": "dialog",
+      "appearance": "dark",
+      "parent": "#112025",
+      "glassLevel": "menu",
+      "alpha": 0.46,
+      "composite": [
+        49,
+        66,
+        69
+      ]
+    },
+    {
+      "id": "menu-dark-#112025",
+      "content": "menu",
+      "appearance": "dark",
+      "parent": "#112025",
+      "glassLevel": "menu",
+      "alpha": 0.46,
+      "composite": [
+        49,
+        66,
+        69
+      ]
+    }
+  ]
+}

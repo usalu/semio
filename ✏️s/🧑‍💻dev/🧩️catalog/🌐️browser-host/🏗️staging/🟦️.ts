@@ -60,7 +60,6 @@ import {
   pluginComponentBridgeSource,
 } from "@semio-tech/framework-plugin/browser-bundle/materialization/component-bridge-source";
 import {
-  rewriteJcoComponentAssetUrls,
   rewriteJcoAsyncResultLifting,
 } from "@semio-tech/framework-plugin/browser-bundle/materialization/jco-module-rewrites";
 import {
@@ -150,7 +149,7 @@ async function materializeTestBrowserPluginV1(input: Readonly<{
   const pack=await readArtifactBytesV1(input.descriptorPath,DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES,input.control.signal),descriptor=finalizePluginDescriptor(pack,input.target.pluginId);
   writeFileSync(join(outDir,"🛂️.descriptor.semio"),pack,{flag:"wx",mode:0o600});writeFileSync(join(outDir,"🔣️.json"),descriptor.json,{flag:"wx",mode:0o600});
   if(input.target.pluginId==="space"){if(!input.receiptPath)throw Error("Actual Space model receipt required");writeFileSync(join(outDir,COMPONENT_RECEIPT_FILE),await readArtifactBytesV1(input.receiptPath,COMPONENT_RECEIPT_MAX_BYTES,input.control.signal),{flag:"wx",mode:0o600});}
-  writeFileSync(join(outDir, MODULE_BRIDGE_FILE), pluginComponentBridgeSource(componentBase, input.target.wasmOut));
+  writeFileSync(join(outDir, MODULE_BRIDGE_FILE), pluginComponentBridgeSource(componentBase));
   if (input.selectedSource) writeTestBrowserGisMaterializationReceiptV1(outDir, input.selectedSource);
 }
 

@@ -25,6 +25,7 @@ use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::patch_comb
 use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::fem2d_entity_kind;
 use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::fem2d_load_owner;
 use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::Fem2dInteractionSnapshot;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::FEM2D_GRANULARITY_ANALYSIS;
 use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::FEM2D_GRANULARITY_COMBINATION;
 use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::FEM2D_GRANULARITY_ELEMENT;
 use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::FEM2D_GRANULARITY_LOAD;
@@ -359,9 +360,7 @@ fn combination_rows(doc: &Fem2dSnapshot, combination: &FemCombination, labels: &
     let mut rows = UiFixedList::default();
     push(&mut rows, read_only_row("combination.id", labels.id.as_str(), &combination.id))?;
     push(&mut rows, text_row("combination.name", labels.name.as_str(), &combination.name, "patchCombination", "name", &combination.id))?;
-    if let Some(row) = add_term_row(doc, combination, labels)? {
-        rows.try_push(row).map_err(|_| ui_error("ui.fixed-capacity"))?;
-    }
+    rows.try_push(add_term_row(doc, combination, labels)?).map_err(|_| ui_error("ui.fixed-capacity"))?;
     Ok(rows)
 }
 
@@ -373,18 +372,25 @@ fn term_row(doc: &Fem2dSnapshot, combination: &FemCombination, term: &FemCombina
 }
 
 /// ➕️ The select that appends a term: its options are the cases this combination does NOT already
-/// superpose, and the chosen id rides the control's own `value`, which is why the bound field is the
+/// superpose — none once every case is, which leaves the control present but empty rather than
+/// absent — and the chosen id rides the control's own `value`, which is why the bound field is the
 /// constant `addTerm` rather than a per-case `term:<caseId>`.
-fn add_term_row(doc: &Fem2dSnapshot, combination: &FemCombination, labels: &Fem2dLabels) -> UiAssemblyResult<Option<BuiltNode>> {
+fn add_term_row(doc: &Fem2dSnapshot, combination: &FemCombination, labels: &Fem2dLabels) -> UiAssemblyResult<BuiltNode> {
     let options: Vec<(String, String)> = doc.load_cases.iter().filter(|case| !combination.terms.iter().any(|term| term.case_id == case.id)).map(|case| (case.id.clone(), case.name.clone())).collect();
-    if options.is_empty() {
-        return Ok(None);
-    }
-    select_row("combination.add-term", labels.add_term.as_str(), "", options, "patchCombination", ADD_TERM_FIELD, &combination.id).map(Some)
+    select_row("combination.add-term", labels.add_term.as_str(), "", options, "patchCombination", ADD_TERM_FIELD, &combination.id)
 }
 //#endregion 🔖️Sections
 
 //#region 🔖️Render
+/// 🧮️ The analysis settings as read-only rows — shown in the summary and when the tree's Analysis row is selected.
+fn analysis_rows(doc: &Fem2dSnapshot, labels: &Fem2dLabels) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
+    let mut analysis = UiFixedList::default();
+    push(&mut analysis, read_only_row("summary.modal-count", labels.modal_count.as_str(), doc.analysis.modal_count))?;
+    push(&mut analysis, read_only_row("summary.buckling-count", labels.buckling_count.as_str(), doc.analysis.buckling_count))?;
+    push(&mut analysis, read_only_row("summary.deformation-scale", labels.deformation_scale.as_str(), doc.analysis.deformation_scale))?;
+    Ok(analysis)
+}
+
 /// 📋️ The document summary shown when the `"fem2d"` domain selects nothing: what this document is
 /// and how much of it there is, plus the analysis settings read-only.
 fn summary(doc: &Fem2dSnapshot, labels: &Fem2dLabels) -> UiAssemblyResult<BuiltNode> {
@@ -402,10 +408,7 @@ fn summary(doc: &Fem2dSnapshot, labels: &Fem2dLabels) -> UiAssemblyResult<BuiltN
     ] {
         push(&mut counts, read_only_row(suffix, label, count))?;
     }
-    let mut analysis = UiFixedList::default();
-    push(&mut analysis, read_only_row("summary.modal-count", labels.modal_count.as_str(), doc.analysis.modal_count))?;
-    push(&mut analysis, read_only_row("summary.buckling-count", labels.buckling_count.as_str(), doc.analysis.buckling_count))?;
-    push(&mut analysis, read_only_row("summary.deformation-scale", labels.deformation_scale.as_str(), doc.analysis.deformation_scale))?;
+    let analysis = analysis_rows(doc, labels)?;
     PanelTreeBuilder::new(ROOT)?
         .section(format!("{ROOT}.summary"), Some(ui_label(labels.summary.as_str())?), true, counts)?
         .section(format!("{ROOT}.analysis"), Some(ui_label(labels.analysis.as_str())?), true, analysis)?
@@ -438,7 +441,7 @@ fn selection_row(id: &str, labels: &Fem2dLabels) -> UiAssemblyResult<BuiltNode> 
     let label = match segments.as_slice() {
         ["load", case, raw] => format!("{}: {case} / {raw}", labels.load.as_str()),
         [kind, raw] => {
-            let kind = match *kind { FEM2D_GRANULARITY_NODE => &labels.node, FEM2D_GRANULARITY_ELEMENT => &labels.element, FEM2D_GRANULARITY_REGION => &labels.region, FEM2D_GRANULARITY_SUPPORT => &labels.support, FEM2D_GRANULARITY_MATERIAL => &labels.material, FEM2D_GRANULARITY_SECTION => &labels.section, FEM2D_GRANULARITY_LOAD_CASE => &labels.load_case, FEM2D_GRANULARITY_COMBINATION => &labels.combination, _ => return Err(ui_error("ui.document.identity")) };
+            let kind = match *kind { FEM2D_GRANULARITY_NODE => &labels.node, FEM2D_GRANULARITY_ELEMENT => &labels.element, FEM2D_GRANULARITY_REGION => &labels.region, FEM2D_GRANULARITY_SUPPORT => &labels.support, FEM2D_GRANULARITY_MATERIAL => &labels.material, FEM2D_GRANULARITY_SECTION => &labels.section, FEM2D_GRANULARITY_LOAD_CASE => &labels.load_case, FEM2D_GRANULARITY_COMBINATION => &labels.combination, FEM2D_GRANULARITY_ANALYSIS => &labels.analysis, _ => return Err(ui_error("ui.document.identity")) };
             format!("{}: {raw}", kind.as_str())
         }
         _ => return Err(ui_error("ui.document.identity")),
@@ -500,6 +503,7 @@ pub fn render(doc: &Fem2dSnapshot, interaction: &Fem2dInteractionSnapshot, label
                 .section(format!("{ROOT}.combination"), Some(ui_label(labels.combination.as_str())?), true, combination_rows(doc, combination, labels)?)?
                 .window_section(windows, &format!("{ROOT}.combination.terms"), Some(ui_label(labels.terms.as_str())?), true, &combination.terms, |term| term_row(doc, combination, term))?
         }
+        FEM2D_GRANULARITY_ANALYSIS => return builder.section(format!("{ROOT}.analysis"), Some(ui_label(labels.analysis.as_str())?), true, analysis_rows(doc, labels)?)?.build(),
         _ => return summary(doc, labels),
     };
     builder.section(format!("{ROOT}.actions"), Some(ui_label(labels.actions.as_str())?), true, action_rows(target, kind, labels)?)?.build()

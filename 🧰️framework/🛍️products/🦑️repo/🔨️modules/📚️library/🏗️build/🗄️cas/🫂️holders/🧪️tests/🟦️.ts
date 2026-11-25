@@ -1,6 +1,6 @@
 /** 🧪️ Tests for the reference holders of the host store: the plan against an independent Python model, protection of live holders under the cap, the capacity eviction of entries together with their objects, and the ageing out of dead roots. */
 import {spawnSync} from "node:child_process";
-import {existsSync,lstatSync,mkdirSync,mkdtempSync,readdirSync,readFileSync,rmSync,utimesSync,writeFileSync} from "node:fs";
+import {existsSync,linkSync,lstatSync,mkdirSync,mkdtempSync,readdirSync,readFileSync,rmSync,utimesSync,writeFileSync} from "node:fs";
 import {createHash} from "node:crypto";
 import {tmpdir} from "node:os";
 import {fileURLToPath} from "node:url";
@@ -95,6 +95,21 @@ test("a shared object stays while a live entry references it: the older entry le
  expect(result.holders).toMatchObject({evictedEntries:1,evictedBlobs:1,freedBytes:MIB});
  expect([existsSync(old),existsSync(young)]).toEqual([false,true]);
  expect((await w.store.has(hashes)).map(Boolean)).toEqual([false,true,true]);
+});
+
+test("an entry published while the collector scans is alive, not dead: the capacity stage never removes a unit whose objects are on disk, even when the need cannot be met",async()=>{
+ const policy:CasPolicyV1={...CAS_POLICY_V1,capBytes:MIB,holderProtectedShare:0,minAgeMs:0,areas:[],touchGranularityMs:0,checkEvery:1,progressMs:0},w=world("in-flight",policy),hashes:string[]=[];
+ for(let index=0;index<7;index++)hashes.push(await w.put());
+ const a=w.holder("a"),old=[a.entry("e0",[hashes[0]!,hashes[1]!]),a.entry("e1",[hashes[2]!,hashes[3]!]),a.entry("e2",[hashes[4]!,hashes[5]!])];
+ linkSync(w.store.objectPath(hashes[4]!),join(a.dir,"workspace-link"));a.declare(w.clock.value);w.clock.value+=60_000;
+ let fresh:{file:string;hash:string}|undefined;
+ const result=await collectCasV1({root:w.root,policy,now:()=>w.clock.value,progress:async event=>{if(event.stage!=="scan"||fresh!==undefined)return;const body=Buffer.alloc(MIB,7);body.writeUInt32BE(9999,0);const hash=(await w.store.put(body)).hash;fresh={hash,file:a.entry("fresh",[hash])};}});
+ expect(fresh).toBeDefined();
+ expect(existsSync(fresh!.file)).toBe(true);
+ expect((await w.store.has([fresh!.hash])).map(Boolean)).toEqual([true]);
+ expect(result.holders!.evictedEntries).toBe(3);
+ expect(old.map(file=>existsSync(file))).toEqual([false,false,false]);
+ expect((await w.store.has(hashes)).map(Boolean)).toEqual([false,false,false,false,true,false,false]);
 });
 
 test("a holder that is not renewed or whose root vanished ages out, and its objects are plain candidates again",async()=>{

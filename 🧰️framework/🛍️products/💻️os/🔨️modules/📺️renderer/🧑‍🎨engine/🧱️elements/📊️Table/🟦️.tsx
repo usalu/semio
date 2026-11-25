@@ -8,7 +8,7 @@
 // #region 🔌️Adapters
 import { restoreFocusAfterCommitV1 } from "../🎯️focus-return/🟦️.ts";
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "../⚛️react-port/🟦️.ts";
-import { Button, ContextMenuController, Icon, Input, SharedBorderRow, Table, Textarea, uiDataLabel, useLabel, useShellScopeOptional, type ContextMenuItem, type IconName, type TableColumn } from "@semio-tech/ui-react";
+import { Button, ContextMenuController, Icon, Input, interactionMergeFromModifiers, SharedBorderRow, Table, Textarea, uiDataLabel, useLabel, useShellScopeOptional, type ContextMenuItem, type IconName, type TableColumn } from "@semio-tech/ui-react";
 import { type ActionDescriptor, type ComponentSceneHostProps } from "@semio-tech/framework";
 import { openSurfaceContextMenu, useShellContextMenuFallback, type SurfaceContextMenuResult, useMapContextMenuSpecs } from "../🗣️Interpreter/🖱️surface-menu/🟦️.ts";
 import { parseSceneJsonField, WindowInstanceIdContext } from "../🗣️Interpreter/🌉️scene-host-contract/🟦️.ts";
@@ -60,6 +60,11 @@ function tableRowMenuPlacementItems(row: TableRowRecord, onAction: (action: Acti
   return items;
 }
 
+/** 👆️ The `interactionHover` arguments of a domain-bound table row: its one `{ granularity, id }` target on the pointer channel, or none when the pointer leaves the rows. */
+export function tableRowHoverArgs(domainId: string, granularity: string, rowId: string | undefined): { readonly domainId: string; readonly channel: "pointer"; readonly targets: string } {
+  return { domainId, channel: "pointer", targets: rowId === undefined ? "[]" : JSON.stringify([{ granularity, id: rowId }]) };
+}
+
 /** ⌨️ How far one key moves a stepper cell: arrows step once, Page keys step ten, Home/End jump to a bound. */
 export function tableStepperKeyDelta(key: string, cell: { readonly value: number; readonly min: number; readonly max: number; readonly step: number }): number {
   switch (key) {
@@ -85,6 +90,15 @@ export function tableStepperKeyDelta(key: string, cell: { readonly value: number
 /** 🧮️ The delta actually dispatched: never past `min`/`max`, and `0` when the cell already sits on that bound. */
 export function tableStepperClampedDelta(delta: number, cell: { readonly value: number; readonly min: number; readonly max: number }): number {
   return Math.min(cell.max, Math.max(cell.min, cell.value + delta)) - cell.value;
+}
+
+/** ⌨️ The count a typed stepper entry commits: a finite number on the cell's step grid from its minimum up, clamped to its maximum. A negative, fractional, off-grid or non-numeric entry is refused (`undefined`), so a typo never edits the cell. */
+export function tableStepperTypedValue(text: string, cell: { readonly min: number; readonly max: number; readonly step: number }): number | undefined {
+  const trimmed = text.trim();
+  if (!/^[+-]?\d+(\.\d+)?$/u.test(trimmed)) return undefined;
+  const value = Number(trimmed);
+  if (!Number.isFinite(value) || value < cell.min || !Number.isInteger((value - cell.min) / cell.step)) return undefined;
+  return Math.min(cell.max, value);
 }
 
 export type TableEditableTextState = Readonly<{ base: string; draft: string; dirty: boolean; conflicted: boolean; submitted: readonly string[] }>;
@@ -155,10 +169,17 @@ function TableStepperCell({ cell, id, columnLabel, onAction }: { readonly cell: 
   const incrementLabel = useLabel("ui.tableStepper.increment");
   const valueLabel = useLabel("ui.tableStepper.value");
   const readoutLabel = columnLabel?.trim() ? columnLabel : valueLabel;
+  const [draft, setDraft] = useState<string | undefined>(undefined);
+  useEffect(() => setDraft(undefined), [cell.value]);
   const step = (delta: number): void => {
     const clamped = tableStepperClampedDelta(delta, cell);
     if (clamped === 0) return;
     dispatchCellAction(onAction, cell.action, { delta: clamped });
+  };
+  const commitTyped = (): void => {
+    const typed = draft === undefined ? undefined : tableStepperTypedValue(draft, cell);
+    setDraft(undefined);
+    if (typed !== undefined && typed !== cell.value) dispatchCellAction(onAction, cell.action, { value: typed });
   };
   return (
     <SharedBorderRow framed={false} className="h-full" data-slot="table-stepper" data-stepper-for={id} onClick={(event) => event.stopPropagation()}>
@@ -176,23 +197,40 @@ function TableStepperCell({ cell, id, columnLabel, onAction }: { readonly cell: 
         variant="outline"
       />
       <Input
+        aria-invalid={draft !== undefined && tableStepperTypedValue(draft, cell) === undefined ? true : undefined}
         aria-label={readoutLabel}
         aria-valuemax={cell.max}
         aria-valuemin={cell.min}
         aria-valuenow={cell.value}
         aria-valuetext={String(cell.value)}
+        autoComplete="off"
         className="w-14 min-w-0 text-center font-mono text-xs"
         data-stepper-control="value"
         id={id}
+        inputMode="numeric"
+        onBlur={commitTyped}
+        onChange={(event) => setDraft(event.target.value)}
         onKeyDown={(event) => {
+          if (event.key === "Enter" && draft !== undefined) {
+            event.preventDefault();
+            commitTyped();
+            return;
+          }
+          if (event.key === "Escape" && draft !== undefined) {
+            event.preventDefault();
+            event.stopPropagation();
+            setDraft(undefined);
+            return;
+          }
+          if (draft !== undefined && (event.key === "Home" || event.key === "End")) return;
           const delta = tableStepperKeyDelta(event.key, cell);
           if (delta === 0) return;
           event.preventDefault();
+          setDraft(undefined);
           step(delta);
         }}
-        readOnly
         role="spinbutton"
-        value={String(cell.value)}
+        value={draft ?? String(cell.value)}
       />
       <Button
         aria-label={`${incrementLabel} ${readoutLabel}`}
@@ -307,6 +345,14 @@ export function TableHost({ node, onAction, requestContextMenu }: ComponentScene
     [columns, getRowId, node.surfaceId, onAction],
   );
 
+  const hoverRow = useCallback(
+    (id: string | undefined): void => {
+      if (!scene?.domainId || !scene.domainGranularityId) return;
+      onAction({ controllerId: node.controllerId, action: "interactionHover", args: tableRowHoverArgs(scene.domainId, scene.domainGranularityId, id) });
+    },
+    [node.controllerId, onAction, scene?.domainGranularityId, scene?.domainId],
+  );
+
   if (!scene) return <div className="semio-table-empty">{emptySceneLabel}</div>;
 
   const rowDragMime = scene.rowDragMime;
@@ -368,12 +414,14 @@ export function TableHost({ node, onAction, requestContextMenu }: ComponentScene
                   : {}
             : undefined
         }
-        onRowClick={(row) =>
+        onRowMouseEnter={(row) => hoverRow(getRowId(row))}
+        onRowMouseLeave={() => hoverRow(undefined)}
+        onRowClick={(row, _index, event) =>
           scene.domainId && scene.domainGranularityId
             ? onAction({
                 controllerId: node.controllerId,
                 action: "interactionSelect",
-                args: { domainId: scene.domainId, targets: JSON.stringify([{ granularity: scene.domainGranularityId, id: getRowId(row) }]), merge: "replace", method: "pick" },
+                args: { domainId: scene.domainId, targets: JSON.stringify([{ granularity: scene.domainGranularityId, id: getRowId(row) }]), merge: interactionMergeFromModifiers(event), method: "pick" },
               })
             : onAction({
                 controllerId: node.controllerId,

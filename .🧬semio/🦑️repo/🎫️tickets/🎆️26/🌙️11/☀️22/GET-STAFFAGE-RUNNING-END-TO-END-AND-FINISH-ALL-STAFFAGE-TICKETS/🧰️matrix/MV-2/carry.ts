@@ -1,4 +1,4 @@
-/** 🍃️ Gives the flat front and plan drawing of a part its depth, as the last step of the chain of a plant: `bun carry.ts <id|file.json> [--out file] [--write] [--stations 3,4,6,8,11,14] [--goal 0.75] [--limit 0.75] [--only bone,bone] [--scales 50,100]`.
+/** 🍃️ Gives the flat front and plan drawing of a part its depth, as the last step of the chain of a plant: `bun carry.ts <id|file.json> [--out file] [--write] [--stations 3,4,6,8,11,14] [--goal 0.75] [--limit 0.75] [--only bone,bone] [--scales 50,100] [--force 50:plan:bone,…]`. `--force` names scale, view and bone of sheets that get plates although their views differ at rest by more than half the tolerance (a bone whose elevation draws a fringe of texture beyond its mass; the flags of a plant are kept in `carry-flags/<id>.txt`, which `make.sh` passes).
  *
  * A flat front or plan outline is one sheet at one depth: when the wind poses turn its bone in the sagittal plane the sheet foreshortens, while the elevation outline of the same part turns as a whole (cause D of `multiview-diagnosis.md`). The run measures, per authored scale and over every subject of the matrix (poses, clip instants, transitions), how far the height (front) or forward (plan) extent of each bone leaves the extent of its elevation shapes, and for every bone beyond `limit` × tolerance whose views agree in the default pose to half the tolerance (a bone whose views draw different parts is not a turning sheet) it adds depth plates below the drawn outline:
  * - the elevation outline of the bone is cut at a number of stations (the first rung of the ladder `--stations` that brings the bone below `goal` × tolerance) along the bone axis that lies nearest to the viewing direction; each cut is a chord of the part in the sagittal plane;
@@ -33,6 +33,7 @@ const GOAL = Number(flag("goal") ?? 0.75);
 const LIMIT = Number(flag("limit") ?? 0.75);
 const only = flag("only")?.split(",");
 const scales = flag("scales")?.split(",");
+const forced = new Set((flag("force") ?? "").split(",").filter((k) => k.length > 0).map((k) => k.replaceAll(":", "|")));
 const tolerance: number = engine.toleranceM(asset);
 const COMPARED = ["body", "detail", "glazing"];
 const PREFIX = "mvc-";
@@ -189,7 +190,7 @@ for (const key of Object.keys(asset.representations)) {
 const before = drifts(structuredClone(asset));
 const wanted = [...before.keys()].sort().filter((k) => {
   const { m, rest } = before.get(k)!;
-  return m > LIMIT * tolerance && rest <= 0.5 * tolerance && (only === undefined || only.includes(k.split("|")[2]!));
+  return ((m > LIMIT * tolerance && rest <= 0.5 * tolerance) || forced.has(k)) && (only === undefined || only.includes(k.split("|")[2]!));
 });
 const notes = new Map<string, string>();
 const rung = new Map<string, number>(wanted.map((k) => [k, 0]));

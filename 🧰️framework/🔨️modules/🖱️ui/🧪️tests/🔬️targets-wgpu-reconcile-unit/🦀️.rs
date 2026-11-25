@@ -316,7 +316,7 @@ fn a_tree_row_carries_only_a_semantic_tone() { let _arena = UiArenaFixture::new(
         assert_eq!(tree_row_tone(tone), carried.then_some(tone), "{tone:?}: carried to the row");
         assert_eq!(theme.tone_ink(tone).is_some(), carried, "{tone:?}: an ink of the theme");
     }
-    assert!(theme.tone_ink(ui_contract::Tone::Warning) == Some(theme.warning) && theme.tone_ink(ui_contract::Tone::Danger) == Some(theme.error) && theme.tone_ink(ui_contract::Tone::Success) == Some(theme.success), "the outcome roles paint the theme's outcome inks");
+    assert!(theme.tone_ink(ui_contract::Tone::Warning) == Some(theme.warning_ink) && theme.tone_ink(ui_contract::Tone::Danger) == Some(theme.error_ink) && theme.tone_ink(ui_contract::Tone::Success) == Some(theme.success_ink) && theme.tone_ink(ui_contract::Tone::Info) == Some(theme.info_ink), "the outcome roles paint the theme's outcome inks");
     let mut row = UiTreeItemNode::base("row", Label::data("Row"));
     assert!(!serde_json::to_string(&row).expect("wire").contains("tone"), "a toneless row costs nothing on the wire");
     row.tone = Some(ui_contract::Tone::Warning);

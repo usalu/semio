@@ -29,3 +29,4 @@ impl OpBinary for LayoutMutation {
 }
 
 dsl::original_pack_value_operation_receiving!(LayoutMutation, tagged_key = COMPONENT_PROTOCOL_SEMIO);
+dsl::artifact_persisted_binary_operation!(LayoutMutation);

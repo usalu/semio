@@ -140,8 +140,9 @@ def _room_occupants(room_c, room_h, left_window, right_window, *, count: int = 4
     height = 0.7 * (room_h - 0.16)
     gap = 0.12 * room_metre(room_h - 0.16)
     body = 0.2 * height
-    left = left_window.get_right()[0] + body / 2 + gap
-    right = right_window.get_left()[0] - body / 2 - gap
+    reach = [VGroup(_stand(room_c, room_h, 0.0, cast, 1.0, mirror=mirror)) for mirror in (False, True)]
+    left = left_window.get_right()[0] + gap - reach[0].get_left()[0]
+    right = right_window.get_left()[0] - gap - reach[(count - 1) % 2].get_right()[0]
     if count < 1 or right - left < (count - 1) * (body + gap):
         raise ValueError("Occupants do not fit clear of the open windows")
     xs = [(left + right) / 2] if count == 1 else np.linspace(left, right, count)
@@ -237,7 +238,7 @@ class Beat1_Lueftungsbedarf(Scene):
         caption = caption_bar(subtitle_text(N, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
 
-        room_c, room_w, room_h = np.array([-2.7, 0.45, 0.0]), 5.2, 2.5
+        room_c, room_w, room_h = np.array([-2.7, 0.7, 0.0]), 5.2, 2.5
         shell = _room(room_c, room_w, room_h, window_side="both", window_y=room_c[1] + 0.3)
         win_y = room_c[1] + 0.3
         left_win = _window(np.array([room_c[0] - room_w / 2, win_y, 0.0]))
@@ -290,7 +291,7 @@ class Beat1_Lueftungsbedarf(Scene):
             cluster.set_fill(MOISTURE_COLOR, opacity=0.0)
         smells = VGroup(*[VGroup(*[Dot(np.array([cx + rng.uniform(-0.28, 0.28), floor_top + 0.18 + rng.uniform(-0.07, 0.1), 0.0]),
                                        radius=0.04, color=ODOUR_COLOR).set_fill(ODOUR_COLOR, opacity=0.0) for _ in range(5)])
-                          for cx in (-4.95, -3.9, -2.7, -1.5, -0.5)])
+                          for cx in (xs[0] - 0.55, *[(x0 + x1) / 2 for x0, x1 in zip(xs, xs[1:])], xs[-1] + 0.55)])
         for j, cluster in enumerate(smells):
             cluster.add_updater(lambda m, j=j: m.set_fill(ODOUR_COLOR, opacity=0.9 * float(np.clip(odor.get_value() * 5 - j, 0, 1))))
 
@@ -342,15 +343,17 @@ class Beat1_Lueftungsbedarf(Scene):
 
         caption = swap_caption(self, caption, subtitle_text(N, "personen"))
         blocks, texts = VGroup(), VGroup()
+        block_w = 0.9 * min(b - a for a, b in zip(xs, xs[1:]))
         for x in xs:
-            blocks.add(Rectangle(width=1.1, height=0.44, color=AIR_COLOR, stroke_width=2, fill_color=AIR_COLOR,
-                                 fill_opacity=0.22).move_to(np.array([x, -1.22, 0.0])))
-            texts.add(math_label(rf"{label_number(PER_PERSON_M3H)}\,\frac{{\mathrm{{m^{{3}}}}}}{{\mathrm{{h}}}}", np.array([x, -1.29, 0.0]),
-                                 size=LABEL_FONT_SIZE, color=AIR_COLOR))
-        n_tag = math_label(rf"{PEOPLE}\,\times", np.array([-5.75, -1.29, 0.0]), color=P_ORANGE, edge="center")
+            blocks.add(Rectangle(width=block_w, height=0.44, color=AIR_COLOR, stroke_width=2, fill_color=AIR_COLOR,
+                                 fill_opacity=0.22).move_to(np.array([x, -1.0, 0.0])))
+            label = math_label(rf"{label_number(PER_PERSON_M3H)}\,\frac{{\mathrm{{m^{{3}}}}}}{{\mathrm{{h}}}}", np.array([x, -1.07, 0.0]),
+                               size=LABEL_FONT_SIZE, color=AIR_COLOR)
+            texts.add(label.scale(min(1.0, 0.86 * block_w / label.width), about_point=label.get_center()))
+        n_tag = math_label(rf"{PEOPLE}\,\times", np.array([-5.75, -1.07, 0.0]), color=P_ORANGE, edge="center")
         k = ValueTracker(0.0)
         v_total = math_readout(lambda: rf"= {label_number(PER_PERSON_M3H * k.get_value())}\,\frac{{\mathrm{{m^{{3}}}}}}{{\mathrm{{h}}}}",
-                               np.array([-0.2, -1.29, 0.0]), color=P_WHITE, edge="left")
+                               np.array([-0.2, -1.07, 0.0]), color=P_WHITE, edge="left")
         self.play(FadeIn(n_tag), run_time=0.6)
         self.add(v_total)
         for i, (b, t, p) in enumerate(zip(blocks, texts, people)):

@@ -1,0 +1,500 @@
+reclaimed-cast-iron-column 1:50 subjects 85 tolerance 68.2 mm
+reclaimed-cast-iron-column 1:100 subjects 85 tolerance 68.2 mm
+reclaimed-cast-iron-column 1:200 subjects 85 tolerance 68.2 mm
+reclaimed-cast-iron-column 1:500 HARD sync-forward ×48 worst 841 mm @ pose reinstalled: elevation x and plan x differ: [-0.369, 3.772] vs [0.471, 2.931] m (tolerance 0.068)
+    elevation/plan ×48 841 mm @ pose reinstalled
+reclaimed-cast-iron-column 1:500 HARD sync-height ×24 worst 492 mm @ pose lifted: elevation y and front y differ: [-0.000, 1.388] vs [-0.000, 0.896] m (tolerance 0.068)
+    elevation/front ×24 492 mm @ pose lifted
+reclaimed-cast-iron-column 1:500 subjects 87 tolerance 68.2 mm
+hard findings: 72
+[DEBUG] gate reclaimed-cast-iron-column exit 1
+reclaimed-precast-stair 1:50 HARD anchor-landmark ×155 worst 670 mm @ clip lift min channel 1 @4.808 s: contact anchor "rest-lower" at (0.000, 0.309) m is 670 mm off the drawn shapes of bone "flight" and of its descendant bones in the front
+    rest-lower@front ×82 670 mm @ clip lift min channel 1 @4.808 s
+    rest-upper@front ×73 328 mm @ clip lift min channel 1 @4.808 s
+reclaimed-precast-stair 1:50 reported group-drift-height ×82 worst 814 mm @ clip lift min channel 1 @4.808 s: bone "flight" elevation [0.166, 1.988] vs front [0.980, 2.049] m (20 and 11 shapes)
+    flight ×82 814 mm @ clip lift min channel 1 @4.808 s
+reclaimed-precast-stair 1:50 subjects 93 tolerance 65.9 mm
+reclaimed-precast-stair 1:100 HARD anchor-landmark ×153 worst 670 mm @ clip lift min channel 1 @4.808 s: contact anchor "rest-lower" at (0.000, 0.309) m is 670 mm off the drawn shapes of bone "flight" and of its descendant bones in the front
+    rest-lower@front ×81 670 mm @ clip lift min channel 1 @4.808 s
+    rest-upper@front ×72 362 mm @ clip lift min channel 1 @4.808 s
+reclaimed-precast-stair 1:100 reported group-drift-height ×81 worst 802 mm @ clip lift min channel 1 @4.808 s: bone "flight" elevation [0.177, 1.988] vs front [0.980, 2.049] m (18 and 3 shapes)
+    flight ×81 802 mm @ clip lift min channel 1 @4.808 s
+reclaimed-precast-stair 1:100 subjects 92 tolerance 65.9 mm
+reclaimed-precast-stair 1:200 HARD anchor-landmark ×144 worst 673 mm @ clip lift min channel 1 @4.808 s: contact anchor "rest-lower" at (0.000, 0.309) m is 673 mm off the drawn shapes of bone "flight" and of its descendant bones in the front
+    rest-lower@front ×81 673 mm @ clip lift min channel 1 @4.808 s
+    rest-upper@front ×63 290 mm @ clip lift min channel 1 @4.808 s
+reclaimed-precast-stair 1:200 reported group-drift-height ×81 worst 805 mm @ clip lift min channel 1 @4.808 s: bone "flight" elevation [0.177, 1.988] vs front [0.982, 1.241] m (11 and 2 shapes)
+    flight ×81 805 mm @ clip lift min channel 1 @4.808 s
+reclaimed-precast-stair 1:200 HARD sync-height ×81 worst 747 mm @ clip lift min channel 1 @4.808 s: elevation y and front y differ: [0.000, 1.988] vs [0.000, 1.241] m (tolerance 0.066)
+    elevation/front ×81 747 mm @ clip lift min channel 1 @4.808 s
+reclaimed-precast-stair 1:200 subjects 92 tolerance 65.9 mm
+reclaimed-precast-stair 1:500 HARD anchor-landmark ×143 worst 659 mm @ clip lift min channel 1 @4.808 s: contact anchor "rest-lower" at (0.000, 0.309) m is 659 mm off the drawn shapes of bone "flight" and of its descendant bones in the front
+    rest-lower@front ×81 659 mm @ clip lift min channel 1 @4.808 s
+    rest-upper@front ×62 305 mm @ clip lift min channel 1 @4.808 s
+reclaimed-precast-stair 1:500 HARD sync-bone-height ×81 worst 792 mm @ clip lift min channel 1 @4.808 s: bone "flight" elevation [0.176, 1.988] vs front [0.968, 1.227] m (1 and 1 shapes)
+    flight ×81 792 mm @ clip lift min channel 1 @4.808 s
+reclaimed-precast-stair 1:500 HARD sync-height ×81 worst 761 mm @ clip lift min channel 1 @4.808 s: elevation y and front y differ: [0.000, 1.988] vs [0.000, 1.227] m (tolerance 0.066)
+    elevation/front ×81 761 mm @ clip lift min channel 1 @4.808 s
+reclaimed-precast-stair 1:500 subjects 92 tolerance 65.9 mm
+hard findings: 838
+[DEBUG] gate reclaimed-precast-stair exit 1
+reclaimed-trapezoidal-sheet-stack 1:50 reported group-drift-height ×52 worst 369 mm @ pose lifted: bone "sling-leg-b" elevation [1.687, 2.424] vs front [2.055, 2.055] m (1 and 1 shapes, different parts "sling-leg-b-side" and "sling-leg-b-end")
+    sling-leg-b ×26 369 mm @ pose lifted
+    sling-leg-a ×26 369 mm @ pose lifted
+reclaimed-trapezoidal-sheet-stack 1:50 HARD sync-height ×26 worst 369 mm @ pose lifted: elevation y and front y differ: [0.000, 2.424] vs [0.000, 2.055] m (tolerance 0.120)
+    elevation/front ×26 369 mm @ pose lifted
+reclaimed-trapezoidal-sheet-stack 1:50 subjects 70 tolerance 120.0 mm
+reclaimed-trapezoidal-sheet-stack 1:100 reported group-drift-height ×52 worst 369 mm @ pose lifted: bone "sling-leg-b" elevation [1.687, 2.424] vs front [2.055, 2.055] m (1 and 1 shapes, different parts "sling-leg-b-side" and "sling-leg-b-end")
+    sling-leg-b ×26 369 mm @ pose lifted
+    sling-leg-a ×26 369 mm @ pose lifted
+reclaimed-trapezoidal-sheet-stack 1:100 HARD sync-height ×26 worst 369 mm @ pose lifted: elevation y and front y differ: [0.000, 2.424] vs [0.000, 2.055] m (tolerance 0.120)
+    elevation/front ×26 369 mm @ pose lifted
+reclaimed-trapezoidal-sheet-stack 1:100 subjects 70 tolerance 120.0 mm
+reclaimed-trapezoidal-sheet-stack 1:200 HARD sync-height ×26 worst 645 mm @ pose lifted: elevation y and front y differ: [0.000, 2.424] vs [0.000, 1.779] m (tolerance 0.120)
+    elevation/front ×26 645 mm @ pose lifted
+reclaimed-trapezoidal-sheet-stack 1:200 subjects 70 tolerance 120.0 mm
+reclaimed-trapezoidal-sheet-stack 1:500 HARD sync-height ×26 worst 646 mm @ pose lifted: elevation y and front y differ: [0.000, 2.424] vs [0.000, 1.779] m (tolerance 0.120)
+    elevation/front ×26 646 mm @ pose lifted
+reclaimed-trapezoidal-sheet-stack 1:500 subjects 70 tolerance 120.0 mm
+hard findings: 104
+[DEBUG] gate reclaimed-trapezoidal-sheet-stack exit 1
+sectional-garage-door 1:50 subjects 140 tolerance 57.0 mm
+sectional-garage-door 1:100 subjects 140 tolerance 57.0 mm
+sectional-garage-door 1:200 subjects 140 tolerance 57.0 mm
+sectional-garage-door 1:500 HARD anchor-landmark ×138 worst 80 mm @ pose closed: attachment anchor "drum-cable" at (-0.010, 0.000) m is 80 mm off the drawn shapes of bone "spring-shaft" and of its descendant bones in the plan
+    drum-cable@plan ×84 80 mm @ pose closed
+    drum-cable@front ×54 80 mm @ clip open-close mid closed>travel-1 @1.000 s
+sectional-garage-door 1:500 reported group-drift-height ×140 worst 324 mm @ pose closed: bone "track" elevation [0.000, 2.850] vs front [0.000, 2.526] m (8 and 3 shapes)
+    track ×140 324 mm @ pose closed
+sectional-garage-door 1:500 subjects 140 tolerance 57.0 mm
+hard findings: 138
+[DEBUG] gate sectional-garage-door exit 1
+sliding-door 1:50 HARD anchor-landmark ×67 worst 100 mm @ pose closed: attachment anchor "carriage" at (1.500, 2.100) m is 100 mm off the drawn shapes of bone "leaf" and of its descendant bones in the elevation
+    carriage@elevation ×67 100 mm @ pose closed
+sliding-door 1:50 subjects 67 tolerance 62.0 mm
+sliding-door 1:100 HARD anchor-landmark ×134 worst 100 mm @ pose closed: attachment anchor "carriage" at (1.500, 2.100) m is 100 mm off the drawn shapes of bone "leaf" and of its descendant bones in the elevation
+    carriage@elevation ×67 100 mm @ pose closed
+    carriage@front ×67 100 mm @ pose closed
+sliding-door 1:100 subjects 67 tolerance 62.0 mm
+sliding-door 1:200 HARD anchor-landmark ×67 worst 100 mm @ pose closed: attachment anchor "carriage" at (1.500, 2.100) m is 100 mm off the drawn shapes of bone "leaf" and of its descendant bones in the elevation
+    carriage@elevation ×67 100 mm @ pose closed
+sliding-door 1:200 subjects 67 tolerance 62.0 mm
+sliding-door 1:500 HARD anchor-landmark ×67 worst 100 mm @ pose closed: attachment anchor "carriage" at (1.500, 2.100) m is 100 mm off the drawn shapes of bone "leaf" and of its descendant bones in the elevation
+    carriage@elevation ×67 100 mm @ pose closed
+sliding-door 1:500 subjects 67 tolerance 62.0 mm
+hard findings: 335
+[DEBUG] gate sliding-door exit 1
+used-air-water-heat-pump-monobloc 1:50 subjects 73 tolerance 34.9 mm
+used-air-water-heat-pump-monobloc 1:100 subjects 73 tolerance 34.9 mm
+used-air-water-heat-pump-monobloc 1:200 subjects 73 tolerance 34.9 mm
+used-air-water-heat-pump-monobloc 1:500 HARD anchor-landmark ×146 worst 40 mm @ pose stored: emitter anchor "fan-outlet" at (0.300, 1.144) m is 40 mm off the drawn shapes of bone "unit" and of its descendant bones in the elevation
+    fan-outlet@elevation ×73 40 mm @ pose stored
+    fan-outlet@plan ×73 40 mm @ pose stored
+used-air-water-heat-pump-monobloc 1:500 HARD sync-forward ×47 worst 40 mm @ pose reinstalled: elevation x and plan x differ: [-1.600, 0.300] vs [-1.600, 0.260] m (tolerance 0.035)
+    elevation/plan ×47 40 mm @ pose reinstalled
+used-air-water-heat-pump-monobloc 1:500 subjects 73 tolerance 34.9 mm
+hard findings: 193
+[DEBUG] gate used-air-water-heat-pump-monobloc exit 1
+used-forced-draught-oil-burner 1:50 reported group-drift-forward ×18 worst 28 mm @ clip firing-cycle uniform 3/9 @60.000 s: bone "air-damper" elevation [0.022, 0.089] vs plan [0.050, 0.061] m (2 and 1 shapes)
+    air-damper ×18 28 mm @ clip firing-cycle uniform 3/9 @60.000 s
+used-forced-draught-oil-burner 1:50 reported group-drift-height ×69 worst 176 mm @ pose lifted: bone "hoses" elevation [0.088, 0.466] vs front [0.102, 0.290] m (4 and 4 shapes)
+    hoses ×69 176 mm @ pose lifted
+used-forced-draught-oil-burner 1:50 subjects 81 tolerance 15.0 mm
+used-forced-draught-oil-burner 1:100 reported group-drift-height ×69 worst 176 mm @ pose lifted: bone "hoses" elevation [0.088, 0.466] vs front [0.102, 0.290] m (4 and 4 shapes)
+    hoses ×69 176 mm @ pose lifted
+used-forced-draught-oil-burner 1:100 HARD sync-bone-forward ×19 worst 29 mm @ clip firing-cycle uniform 3/9 @60.000 s: bone "air-damper" elevation [0.021, 0.090] vs plan [0.050, 0.061] m (1 and 1 shapes)
+    air-damper ×19 29 mm @ clip firing-cycle uniform 3/9 @60.000 s
+used-forced-draught-oil-burner 1:100 subjects 81 tolerance 15.0 mm
+used-forced-draught-oil-burner 1:200 reported group-drift-height ×69 worst 187 mm @ pose lifted: bone "hoses" elevation [0.088, 0.466] vs front [0.275, 0.279] m (2 and 2 shapes)
+    hoses ×69 187 mm @ pose lifted
+used-forced-draught-oil-burner 1:200 subjects 81 tolerance 15.0 mm
+hard findings: 19
+[DEBUG] gate used-forced-draught-oil-burner exit 1
+used-pellet-boiler 1:50 HARD sync-bone-forward ×434 worst 534 mm @ clip lift min channel 0 @3.788 s: bone "strap-l-front" elevation [0.377, 1.446] vs plan [0.911, 0.911] m (1 and 1 shapes)
+    strap-l-front ×75 534 mm @ clip lift min channel 0 @3.788 s
+    strap-l-back ×75 534 mm @ clip lift min channel 0 @3.788 s
+    strap-r-front ×75 524 mm @ clip lift min channel 0 @3.788 s
+    strap-r-back ×75 524 mm @ clip lift min channel 0 @3.788 s
+    strap-l-ratchet ×67 79 mm @ pose reinstalled
+    strap-r-ratchet ×67 79 mm @ pose reinstalled
+used-pellet-boiler 1:50 HARD sync-bone-height ×146 worst 198 mm @ clip lift uniform 6/9 @9.333 s: bone "sling-front" elevation [1.296, 1.701] vs front [1.494, 1.503] m (1 and 1 shapes)
+    sling-front ×25 198 mm @ clip lift uniform 6/9 @9.333 s
+    sling-back ×25 198 mm @ clip lift uniform 6/9 @9.333 s
+    strap-r-front-top ×24 188 mm @ transition straps-released>stored @0.5
+    strap-r-back-top ×24 188 mm @ transition straps-released>stored @0.5
+    strap-l-front-top ×24 188 mm @ transition straps-released>stored @0.5
+    strap-l-back-top ×24 188 mm @ transition straps-released>stored @0.5
+used-pellet-boiler 1:50 HARD sync-height ×14 worst 185 mm @ clip lift uniform 6/9 @9.333 s: elevation y and front y differ: [-0.000, 1.701] vs [-0.000, 1.516] m (tolerance 0.029)
+    elevation/front ×14 185 mm @ clip lift uniform 6/9 @9.333 s
+used-pellet-boiler 1:50 subjects 84 tolerance 29.1 mm
+used-pellet-boiler 1:100 HARD sync-bone-forward ×434 worst 534 mm @ clip lift min channel 0 @3.788 s: bone "strap-l-front" elevation [0.377, 1.446] vs plan [0.911, 0.911] m (1 and 1 shapes)
+    strap-l-front ×75 534 mm @ clip lift min channel 0 @3.788 s
+    strap-l-back ×75 534 mm @ clip lift min channel 0 @3.788 s
+    strap-r-front ×75 524 mm @ clip lift min channel 0 @3.788 s
+    strap-r-back ×75 524 mm @ clip lift min channel 0 @3.788 s
+    strap-l-ratchet ×67 79 mm @ pose reinstalled
+    strap-r-ratchet ×67 79 mm @ pose reinstalled
+used-pellet-boiler 1:100 HARD sync-bone-height ×146 worst 198 mm @ clip lift uniform 6/9 @9.333 s: bone "sling-front" elevation [1.296, 1.701] vs front [1.494, 1.503] m (1 and 1 shapes)
+    sling-front ×25 198 mm @ clip lift uniform 6/9 @9.333 s
+    sling-back ×25 198 mm @ clip lift uniform 6/9 @9.333 s
+    strap-r-front-top ×24 188 mm @ transition straps-released>stored @0.5
+    strap-r-back-top ×24 188 mm @ transition straps-released>stored @0.5
+    strap-l-front-top ×24 188 mm @ transition straps-released>stored @0.5
+    strap-l-back-top ×24 188 mm @ transition straps-released>stored @0.5
+used-pellet-boiler 1:100 HARD sync-height ×14 worst 185 mm @ clip lift uniform 6/9 @9.333 s: elevation y and front y differ: [-0.000, 1.701] vs [-0.000, 1.516] m (tolerance 0.029)
+    elevation/front ×14 185 mm @ clip lift uniform 6/9 @9.333 s
+used-pellet-boiler 1:100 subjects 84 tolerance 29.1 mm
+used-pellet-boiler 1:200 HARD sync-bone-forward ×300 worst 534 mm @ clip lift min channel 0 @3.788 s: bone "strap-l-front" elevation [0.377, 1.446] vs plan [0.911, 0.911] m (1 and 1 shapes)
+    strap-l-front ×75 534 mm @ clip lift min channel 0 @3.788 s
+    strap-l-back ×75 534 mm @ clip lift min channel 0 @3.788 s
+    strap-r-front ×75 524 mm @ clip lift min channel 0 @3.788 s
+    strap-r-back ×75 524 mm @ clip lift min channel 0 @3.788 s
+used-pellet-boiler 1:200 HARD sync-bone-height ×146 worst 198 mm @ clip lift uniform 6/9 @9.333 s: bone "sling-front" elevation [1.296, 1.701] vs front [1.494, 1.503] m (1 and 1 shapes)
+    sling-front ×25 198 mm @ clip lift uniform 6/9 @9.333 s
+    sling-back ×25 198 mm @ clip lift uniform 6/9 @9.333 s
+    strap-r-front-top ×24 188 mm @ transition straps-released>stored @0.5
+    strap-r-back-top ×24 188 mm @ transition straps-released>stored @0.5
+    strap-l-front-top ×24 188 mm @ transition straps-released>stored @0.5
+    strap-l-back-top ×24 188 mm @ transition straps-released>stored @0.5
+used-pellet-boiler 1:200 HARD sync-height ×14 worst 185 mm @ clip lift uniform 6/9 @9.333 s: elevation y and front y differ: [-0.000, 1.701] vs [-0.000, 1.516] m (tolerance 0.029)
+    elevation/front ×14 185 mm @ clip lift uniform 6/9 @9.333 s
+used-pellet-boiler 1:200 subjects 84 tolerance 29.1 mm
+used-pellet-boiler 1:500 HARD sync-bone-height ×48 worst 198 mm @ clip lift uniform 6/9 @9.333 s: bone "sling-front" elevation [1.296, 1.701] vs front [1.494, 1.503] m (1 and 1 shapes)
+    sling-front ×24 198 mm @ clip lift uniform 6/9 @9.333 s
+    sling-back ×24 198 mm @ clip lift uniform 6/9 @9.333 s
+used-pellet-boiler 1:500 HARD sync-height ×14 worst 185 mm @ clip lift uniform 6/9 @9.333 s: elevation y and front y differ: [0.000, 1.701] vs [0.000, 1.516] m (tolerance 0.029)
+    elevation/front ×14 185 mm @ clip lift uniform 6/9 @9.333 s
+used-pellet-boiler 1:500 subjects 81 tolerance 29.1 mm
+hard findings: 1710
+[DEBUG] gate used-pellet-boiler exit 1
+used-towel-radiator 1:50 reported group-drift-forward ×67 worst 96 mm @ pose upright: bone "radiator" elevation [0.152, 0.257] vs plan [0.121, 0.354] m (20 and 23 shapes)
+    radiator ×67 96 mm @ pose upright
+used-towel-radiator 1:50 HARD sync-forward ×45 worst 96 mm @ pose reinstalled: elevation x and plan x differ: [-1.650, 0.257] vs [-1.650, 0.354] m (tolerance 0.027)
+    elevation/plan ×45 96 mm @ pose reinstalled
+used-towel-radiator 1:50 subjects 85 tolerance 26.7 mm
+used-towel-radiator 1:100 reported group-drift-forward ×67 worst 101 mm @ clip lift uniform 8/9 @8.889 s: bone "radiator" elevation [0.152, 0.253] vs plan [0.120, 0.355] m (7 and 9 shapes)
+    radiator ×67 101 mm @ clip lift uniform 8/9 @8.889 s
+used-towel-radiator 1:100 HARD sync-forward ×45 worst 101 mm @ pose reinstalled: elevation x and plan x differ: [-1.650, 0.253] vs [-1.650, 0.355] m (tolerance 0.027)
+    elevation/plan ×45 101 mm @ pose reinstalled
+used-towel-radiator 1:100 subjects 85 tolerance 26.7 mm
+used-towel-radiator 1:200 reported group-drift-forward ×67 worst 102 mm @ pose upright: bone "radiator" elevation [0.172, 0.252] vs plan [0.120, 0.355] m (5 and 7 shapes)
+    radiator ×67 102 mm @ pose upright
+used-towel-radiator 1:200 HARD sync-forward ×45 worst 102 mm @ pose reinstalled: elevation x and plan x differ: [-1.650, 0.252] vs [-1.650, 0.355] m (tolerance 0.027)
+    elevation/plan ×45 102 mm @ pose reinstalled
+used-towel-radiator 1:200 subjects 85 tolerance 26.7 mm
+hard findings: 135
+[DEBUG] gate used-towel-radiator exit 1
+used-wall-hung-gas-boiler 1:50 reported group-drift-forward ×349 worst 317 mm @ transition straps-open>stored @0.25: bone "strap-back-leg" elevation [-1.441, -0.745] vs plan [-1.123, -1.063] m (2 and 2 shapes)
+    strap-back-leg ×92 317 mm @ transition straps-open>stored @0.25
+    strap-front-leg ×92 317 mm @ transition straps-open>stored @0.25
+    boiler ×15 85 mm @ clip lift mid lift-clear>lifted @9.500 s
+    strap-back-foot ×72 64 mm @ transition straps-open>stored @0.25
+    strap-front-foot ×78 64 mm @ transition straps-open>stored @0.25
+used-wall-hung-gas-boiler 1:50 reported group-drift-height ×261 worst 156 mm @ pose straps-open: bone "strap-front-leg" elevation [0.148, 0.150] vs front [-0.008, 0.306] m (2 and 4 shapes)
+    strap-front-leg ×101 156 mm @ pose straps-open
+    strap-back-leg ×92 154 mm @ clip lift uniform 1/9 @1.556 s
+    strap-back-top ×24 93 mm @ clip lift mid stored>straps-open @1.500 s
+    strap-front-top ×24 88 mm @ transition straps-down>stored @0.5
+    strap-front-foot ×10 32 mm @ clip lift uniform 1/9 @1.556 s
+    strap-back-foot ×10 31 mm @ clip lift uniform 1/9 @1.556 s
+used-wall-hung-gas-boiler 1:50 HARD sync-forward ×8 worst 107 mm @ clip lift max channel 0 @0.583 s: elevation x and plan x differ: [-0.612, 0.612] vs [-0.719, 0.718] m (tolerance 0.024)
+    elevation/plan ×8 107 mm @ clip lift max channel 0 @0.583 s
+used-wall-hung-gas-boiler 1:50 HARD sync-height ×72 worst 131 mm @ clip lift uniform 8/9 @12.444 s: elevation y and front y differ: [-0.025, 1.185] vs [-0.156, 1.163] m (tolerance 0.024)
+    elevation/front ×72 131 mm @ clip lift uniform 8/9 @12.444 s
+used-wall-hung-gas-boiler 1:50 subjects 101 tolerance 24.5 mm
+used-wall-hung-gas-boiler 1:100 reported group-drift-forward ×352 worst 317 mm @ transition straps-open>stored @0.25: bone "strap-back-leg" elevation [-1.441, -0.745] vs plan [-1.123, -1.063] m (2 and 2 shapes)
+    strap-back-leg ×92 317 mm @ transition straps-open>stored @0.25
+    strap-front-leg ×92 317 mm @ transition straps-open>stored @0.25
+    boiler ×18 88 mm @ clip lift mid lift-clear>lifted @9.500 s
+    strap-back-foot ×72 64 mm @ transition straps-open>stored @0.25
+    strap-front-foot ×78 64 mm @ transition straps-open>stored @0.25
+used-wall-hung-gas-boiler 1:100 reported group-drift-height ×252 worst 158 mm @ clip lift uniform 1/9 @1.556 s: bone "strap-front-leg" elevation [0.273, 0.895] vs front [0.432, 0.737] m (2 and 2 shapes)
+    strap-front-leg ×92 158 mm @ clip lift uniform 1/9 @1.556 s
+    strap-back-leg ×92 154 mm @ clip lift uniform 1/9 @1.556 s
+    strap-back-top ×24 93 mm @ clip lift mid stored>straps-open @1.500 s
+    strap-front-top ×24 88 mm @ transition straps-down>stored @0.5
+    strap-front-foot ×10 32 mm @ clip lift uniform 1/9 @1.556 s
+    strap-back-foot ×10 31 mm @ clip lift uniform 1/9 @1.556 s
+used-wall-hung-gas-boiler 1:100 HARD sync-forward ×8 worst 107 mm @ clip lift max channel 0 @0.583 s: elevation x and plan x differ: [-0.612, 0.612] vs [-0.719, 0.718] m (tolerance 0.024)
+    elevation/plan ×8 107 mm @ clip lift max channel 0 @0.583 s
+used-wall-hung-gas-boiler 1:100 HARD sync-height ×72 worst 131 mm @ clip lift uniform 8/9 @12.444 s: elevation y and front y differ: [-0.025, 1.185] vs [-0.156, 1.163] m (tolerance 0.024)
+    elevation/front ×72 131 mm @ clip lift uniform 8/9 @12.444 s
+used-wall-hung-gas-boiler 1:100 subjects 101 tolerance 24.5 mm
+used-wall-hung-gas-boiler 1:200 reported group-drift-forward ×348 worst 317 mm @ transition straps-open>stored @0.25: bone "strap-back-leg" elevation [-1.441, -0.745] vs plan [-1.123, -1.063] m (2 and 2 shapes)
+    strap-back-leg ×91 317 mm @ transition straps-open>stored @0.25
+    strap-front-leg ×91 317 mm @ transition straps-open>stored @0.25
+    boiler ×18 174 mm @ clip lift max channel 3 @12.529 s
+    strap-back-foot ×71 64 mm @ transition straps-open>stored @0.25
+    strap-front-foot ×77 64 mm @ transition straps-open>stored @0.25
+used-wall-hung-gas-boiler 1:200 reported group-drift-height ×258 worst 158 mm @ clip lift uniform 1/9 @1.556 s: bone "strap-front-leg" elevation [0.273, 0.895] vs front [0.432, 0.737] m (2 and 2 shapes)
+    strap-front-leg ×91 158 mm @ clip lift uniform 1/9 @1.556 s
+    strap-back-leg ×91 154 mm @ clip lift uniform 1/9 @1.556 s
+    strap-back-top ×24 93 mm @ clip lift mid stored>straps-open @1.500 s
+    strap-front-top ×24 88 mm @ clip lift mid stored>straps-open @1.500 s
+    strap-front-foot ×10 32 mm @ clip lift uniform 1/9 @1.556 s
+    strap-back-foot ×10 31 mm @ clip lift uniform 1/9 @1.556 s
+    boiler ×8 26 mm @ clip lift max channel 3 @12.529 s
+used-wall-hung-gas-boiler 1:200 HARD sync-forward ×8 worst 107 mm @ clip lift max channel 0 @0.583 s: elevation x and plan x differ: [-0.612, 0.612] vs [-0.719, 0.718] m (tolerance 0.024)
+    elevation/plan ×8 107 mm @ clip lift max channel 0 @0.583 s
+used-wall-hung-gas-boiler 1:200 HARD sync-height ×71 worst 156 mm @ pose straps-down: elevation y and front y differ: [0.000, 1.029] vs [-0.156, 1.029] m (tolerance 0.024)
+    elevation/front ×71 156 mm @ pose straps-down
+used-wall-hung-gas-boiler 1:200 subjects 100 tolerance 24.5 mm
+hard findings: 239
+[DEBUG] gate used-wall-hung-gas-boiler exit 1
+diesel-generator 1:50 reported group-drift-height ×44 worst 165 mm @ pose rated-load: bone "cap-flap" elevation [3.455, 3.770] vs front [3.620, 3.620] m (2 and 1 shapes)
+    cap-flap ×44 165 mm @ pose rated-load
+diesel-generator 1:50 HARD sync-height ×34 worst 150 mm @ pose rated-load: elevation y and front y differ: [0.000, 3.770] vs [0.000, 3.620] m (tolerance 0.122)
+    elevation/front ×34 150 mm @ pose rated-load
+diesel-generator 1:50 subjects 87 tolerance 121.5 mm
+diesel-generator 1:100 reported group-drift-height ×48 worst 170 mm @ pose rated-load: bone "cap-flap" elevation [3.450, 3.770] vs front [3.620, 3.620] m (2 and 1 shapes)
+    cap-flap ×48 170 mm @ pose rated-load
+diesel-generator 1:100 HARD sync-height ×34 worst 150 mm @ pose rated-load: elevation y and front y differ: [0.000, 3.770] vs [0.000, 3.620] m (tolerance 0.122)
+    elevation/front ×34 150 mm @ pose rated-load
+diesel-generator 1:100 subjects 86 tolerance 121.5 mm
+diesel-generator 1:200 subjects 86 tolerance 121.5 mm
+diesel-generator 1:500 subjects 86 tolerance 121.5 mm
+hard findings: 68
+[DEBUG] gate diesel-generator exit 1
+evaporative-humidifier 1:50 HARD anchor-landmark ×54 worst 20 mm @ pose dry: contact anchor "base-contact" at (0.000, 0.000) m is 20 mm off the drawn shapes of bone "casing" and of its descendant bones in the elevation
+    base-contact@elevation ×54 20 mm @ pose dry
+evaporative-humidifier 1:50 subjects 54 tolerance 15.0 mm
+evaporative-humidifier 1:100 HARD anchor-landmark ×54 worst 20 mm @ pose dry: contact anchor "base-contact" at (0.000, 0.000) m is 20 mm off the drawn shapes of bone "casing" and of its descendant bones in the elevation
+    base-contact@elevation ×54 20 mm @ pose dry
+evaporative-humidifier 1:100 reported group-drift-forward ×54 worst 17 mm @ pose dry: bone "pad" elevation [-0.100, 0.100] vs plan [-0.117, 0.117] m (1 and 1 shapes, different parts "pad" and "film")
+    pad ×54 17 mm @ pose dry
+evaporative-humidifier 1:100 subjects 54 tolerance 15.0 mm
+evaporative-humidifier 1:200 subjects 54 tolerance 15.0 mm
+hard findings: 108
+[DEBUG] gate evaporative-humidifier exit 1
+forklift 1:50 HARD anchor-landmark ×104 worst 212 mm @ pose travel-stopped: contact anchor "contact-f-l" at (0.487, 0.000) m is 212 mm off the drawn shapes of bone "axle-f" and of its descendant bones in the front
+    contact-f-l@front ×25 212 mm @ pose travel-stopped
+    contact-f-r@front ×27 212 mm @ pose travel-stopped
+    contact-r-l@front ×26 202 mm @ clip drive-with-load uniform 5/9 @4.167 s
+    contact-r-r@front ×26 202 mm @ clip drive-with-load uniform 5/9 @4.167 s
+forklift 1:50 reported group-drift-forward ×130 worst 277 mm @ clip drive-with-load uniform 6/9 @5.000 s: bone "wheel-f" elevation [3.904, 4.496] vs plan [4.181, 4.219] m (27 and 2 shapes)
+    wheel-f ×25 277 mm @ clip drive-with-load uniform 6/9 @5.000 s
+    wheel-r ×26 215 mm @ transition approach>travel-stopped @0.5
+    mast-outer ×32 142 mm @ pose travel-cruised
+    mast-inner ×47 140 mm @ pose travel-cruised
+forklift 1:50 reported group-drift-height ×140 worst 306 mm @ pose lowered-forks: bone "axle-r" elevation [0.476, 0.501] vs front [0.170, 0.290] m (2 and 1 shapes)
+    axle-r ×89 306 mm @ pose lowered-forks
+    wheel-f ×25 276 mm @ clip drive-with-load uniform 6/9 @5.000 s
+    wheel-r ×26 215 mm @ transition approach>travel-stopped @0.5
+forklift 1:50 HARD sync-height ×13 worst 117 mm @ transition travel-cruised>lowered-forks @0.5: elevation y and front y differ: [0.000, 2.325] vs [0.118, 2.325] m (tolerance 0.073)
+    elevation/front ×13 117 mm @ transition travel-cruised>lowered-forks @0.5
+forklift 1:50 subjects 89 tolerance 73.2 mm
+forklift 1:100 HARD anchor-landmark ×106 worst 212 mm @ pose travel-stopped: contact anchor "contact-f-l" at (0.487, 0.000) m is 212 mm off the drawn shapes of bone "axle-f" and of its descendant bones in the front
+    contact-f-l@front ×26 212 mm @ pose travel-stopped
+    contact-f-r@front ×28 212 mm @ pose travel-stopped
+    contact-r-l@front ×26 202 mm @ clip drive-with-load uniform 5/9 @4.167 s
+    contact-r-r@front ×26 202 mm @ clip drive-with-load uniform 5/9 @4.167 s
+forklift 1:100 reported group-drift-forward ×131 worst 293 mm @ clip drive-with-load max channel 2 @5.775 s: bone "wheel-f" elevation [4.812, 5.403] vs plan [5.105, 5.110] m (2 and 2 shapes)
+    wheel-f ×26 293 mm @ clip drive-with-load max channel 2 @5.775 s
+    wheel-r ×26 215 mm @ transition approach>travel-stopped @0.5
+    mast-outer ×32 142 mm @ pose travel-cruised
+    mast-inner ×47 140 mm @ pose travel-cruised
+forklift 1:100 reported group-drift-height ×141 worst 308 mm @ pose lowered-forks: bone "axle-r" elevation [0.478, 0.501] vs front [0.170, 0.290] m (2 and 1 shapes)
+    axle-r ×89 308 mm @ pose lowered-forks
+    wheel-f ×26 293 mm @ clip drive-with-load max channel 2 @5.775 s
+    wheel-r ×26 215 mm @ transition approach>travel-stopped @0.5
+forklift 1:100 HARD sync-height ×13 worst 117 mm @ transition travel-cruised>lowered-forks @0.5: elevation y and front y differ: [0.000, 2.325] vs [0.118, 2.325] m (tolerance 0.073)
+    elevation/front ×13 117 mm @ transition travel-cruised>lowered-forks @0.5
+forklift 1:100 subjects 89 tolerance 73.2 mm
+forklift 1:200 HARD anchor-landmark ×54 worst 192 mm @ pose travel-stopped: contact anchor "contact-f-l" at (0.487, 0.000) m is 192 mm off the drawn shapes of bone "axle-f" and of its descendant bones in the front
+    contact-f-l@front ×26 192 mm @ pose travel-stopped
+    contact-f-r@front ×28 192 mm @ pose travel-stopped
+forklift 1:200 reported group-drift-forward ×141 worst 293 mm @ clip drive-with-load max channel 2 @5.775 s: bone "wheel-f" elevation [4.812, 5.403] vs plan [5.105, 5.110] m (2 and 2 shapes)
+    wheel-f ×26 293 mm @ clip drive-with-load max channel 2 @5.775 s
+    chassis ×89 279 mm @ pose travel-stopped
+    wheel-r ×26 215 mm @ transition approach>travel-stopped @0.5
+forklift 1:200 reported group-drift-height ×52 worst 293 mm @ clip drive-with-load max channel 2 @5.775 s: bone "wheel-f" elevation [0.000, 0.591] vs front [0.285, 0.298] m (2 and 2 shapes)
+    wheel-f ×26 293 mm @ clip drive-with-load max channel 2 @5.775 s
+    wheel-r ×26 215 mm @ transition approach>travel-stopped @0.5
+forklift 1:200 HARD sync-height ×13 worst 117 mm @ transition travel-cruised>lowered-forks @0.5: elevation y and front y differ: [0.000, 2.325] vs [0.118, 2.325] m (tolerance 0.073)
+    elevation/front ×13 117 mm @ transition travel-cruised>lowered-forks @0.5
+forklift 1:200 subjects 89 tolerance 73.2 mm
+forklift 1:500 subjects 89 tolerance 73.2 mm
+hard findings: 303
+[DEBUG] gate forklift exit 1
+scroll-compressor 1:50 HARD anchor-landmark ×152 worst 22 mm @ pose off: contact anchor "base-contact" at (0.000, 0.000) m is 22 mm off the drawn shapes of bone "shell" and of its descendant bones in the elevation
+    base-contact@elevation ×76 22 mm @ pose off
+    base-contact@front ×76 22 mm @ pose off
+scroll-compressor 1:50 subjects 76 tolerance 15.0 mm
+scroll-compressor 1:100 subjects 76 tolerance 15.0 mm
+scroll-compressor 1:200 subjects 76 tolerance 15.0 mm
+hard findings: 152
+[DEBUG] gate scroll-compressor exit 1
+cargo-bike 1:50 HARD anchor-landmark ×79 worst 77 mm @ pose ride-end: contact anchor "stand-pad" at (5.815, 0.000) m is 77 mm off the drawn shapes of bone "stand" and of its descendant bones in the plan
+    stand-pad@plan ×31 77 mm @ pose ride-end
+    stand-pad@front ×48 77 mm @ transition rolling-loaded>loaded-on-stand @0.75
+cargo-bike 1:50 subjects 79 tolerance 52.0 mm
+cargo-bike 1:100 HARD anchor-landmark ×84 worst 162 mm @ pose ride-end: contact anchor "stand-pad" at (5.815, 0.000) m is 162 mm off the drawn shapes of bone "stand" and of its descendant bones in the plan
+    stand-pad@plan ×36 162 mm @ pose ride-end
+    stand-pad@front ×48 162 mm @ transition rolling-loaded>loaded-on-stand @0.75
+cargo-bike 1:100 reported group-drift-height ×36 worst 645 mm @ pose rolling-loaded: bone "stand" elevation [0.194, 0.222] vs front [0.194, 0.868] m (3 and 6 shapes)
+    stand ×36 645 mm @ pose rolling-loaded
+cargo-bike 1:100 subjects 79 tolerance 52.0 mm
+cargo-bike 1:200 HARD anchor-landmark ×90 worst 153 mm @ pose ride-start: contact anchor "stand-pad" at (-3.185, 0.000) m is 153 mm off the drawn shapes of bone "stand" and of its descendant bones in the plan
+    stand-pad@plan ×37 153 mm @ pose ride-start
+    stand-pad@front ×53 153 mm @ transition rolling-loaded>loaded-on-stand @0.75
+cargo-bike 1:200 subjects 80 tolerance 52.0 mm
+cargo-bike 1:500 HARD anchor-landmark ×85 worst 136 mm @ pose ride-end: contact anchor "stand-pad" at (5.815, 0.000) m is 136 mm off the drawn shapes of bone "stand" and of its descendant bones in the plan
+    stand-pad@plan ×37 136 mm @ pose ride-end
+    stand-pad@front ×48 136 mm @ transition rolling-loaded>loaded-on-stand @0.75
+cargo-bike 1:500 subjects 80 tolerance 52.0 mm
+hard findings: 338
+[DEBUG] gate cargo-bike exit 1
+city-bicycle 1:50 HARD anchor-landmark ×123 worst 79 mm @ pose parked-on-stand: contact anchor "stand-foot" at (0.000, 0.000) m is 79 mm off the drawn shapes of bone "stand" and of its descendant bones in the front
+    stand-foot@front ×24 79 mm @ pose parked-on-stand
+    stand-foot@plan ×99 79 mm @ pose riding
+city-bicycle 1:50 subjects 112 tolerance 37.4 mm
+city-bicycle 1:100 HARD anchor-landmark ×125 worst 78 mm @ clip brake-and-park max channel 3 @4.162 s: contact anchor "stand-foot" at (0.000, 0.000) m is 78 mm off the drawn shapes of bone "stand" and of its descendant bones in the front
+    stand-foot@front ×24 78 mm @ clip brake-and-park max channel 3 @4.162 s
+    stand-foot@plan ×101 78 mm @ transition parked-on-stand>riding @0.75
+city-bicycle 1:100 subjects 114 tolerance 37.4 mm
+city-bicycle 1:200 HARD anchor-landmark ×208 worst 78 mm @ clip brake-and-park max channel 3 @4.162 s: contact anchor "stand-foot" at (0.000, 0.000) m is 78 mm off the drawn shapes of bone "stand" and of its descendant bones in the front
+    stand-foot@front ×108 78 mm @ clip brake-and-park max channel 3 @4.162 s
+    stand-foot@plan ×100 78 mm @ transition parked-stopped>riding @0.75
+city-bicycle 1:200 subjects 111 tolerance 37.4 mm
+hard findings: 456
+[DEBUG] gate city-bicycle exit 1
+city-bus 1:50 HARD anchor-landmark ×60 worst 409 mm @ transition pull-away-8>level-cruise @0.25: contact anchor "contact-f-l" at (1.050, 0.000) m is 409 mm off the drawn shapes of bone "axle-f" and of its descendant bones in the front
+    contact-f-l@front ×14 409 mm @ transition pull-away-8>level-cruise @0.25
+    contact-f-r@front ×14 409 mm @ transition pull-away-8>level-cruise @0.25
+    contact-r-l@front ×16 408 mm @ transition pull-away-8>level-cruise @0.25
+    contact-r-r@front ×16 408 mm @ transition pull-away-8>level-cruise @0.25
+city-bus 1:50 reported group-drift-height ×135 worst 447 mm @ transition pull-away-8>level-cruise @0.25: bone "wheel-r" elevation [0.000, 0.960] vs front [0.433, 0.513] m (7 and 2 shapes)
+    wheel-r ×14 447 mm @ transition pull-away-8>level-cruise @0.25
+    wheel-f ×14 447 mm @ transition pull-away-8>level-cruise @0.25
+    axle-f ×107 444 mm @ pose level-cruise
+city-bus 1:50 subjects 107 tolerance 240.0 mm
+city-bus 1:100 HARD anchor-landmark ×59 worst 409 mm @ transition pull-away-8>level-cruise @0.25: contact anchor "contact-f-l" at (1.050, 0.000) m is 409 mm off the drawn shapes of bone "axle-f" and of its descendant bones in the front
+    contact-f-l@front ×14 409 mm @ transition pull-away-8>level-cruise @0.25
+    contact-f-r@front ×14 409 mm @ transition pull-away-8>level-cruise @0.25
+    contact-r-l@front ×15 408 mm @ transition pull-away-8>level-cruise @0.25
+    contact-r-r@front ×16 408 mm @ transition pull-away-8>level-cruise @0.25
+city-bus 1:100 reported group-drift-height ×135 worst 446 mm @ transition pull-away-8>level-cruise @0.25: bone "wheel-f" elevation [0.000, 0.960] vs front [0.433, 0.513] m (4 and 2 shapes)
+    wheel-f ×14 446 mm @ transition pull-away-8>level-cruise @0.25
+    wheel-r ×14 446 mm @ transition pull-away-8>level-cruise @0.25
+    axle-f ×107 444 mm @ pose level-cruise
+city-bus 1:100 subjects 107 tolerance 240.0 mm
+city-bus 1:200 HARD anchor-landmark ×58 worst 411 mm @ transition pull-away-8>level-cruise @0.25: contact anchor "contact-f-l" at (1.050, 0.000) m is 411 mm off the drawn shapes of bone "axle-f" and of its descendant bones in the front
+    contact-f-l@front ×14 411 mm @ transition pull-away-8>level-cruise @0.25
+    contact-f-r@front ×14 411 mm @ transition pull-away-8>level-cruise @0.25
+    contact-r-l@front ×15 401 mm @ transition pull-away-8>level-cruise @0.25
+    contact-r-r@front ×15 401 mm @ transition pull-away-8>level-cruise @0.25
+city-bus 1:200 reported group-drift-height ×135 worst 455 mm @ transition pull-away-8>level-cruise @0.25: bone "wheel-r" elevation [0.000, 0.960] vs front [0.433, 0.505] m (3 and 2 shapes)
+    wheel-r ×14 455 mm @ transition pull-away-8>level-cruise @0.25
+    wheel-f ×14 446 mm @ transition pull-away-8>level-cruise @0.25
+    axle-f ×107 444 mm @ pose level-cruise
+city-bus 1:200 subjects 107 tolerance 240.0 mm
+city-bus 1:500 HARD anchor-landmark ×56 worst 411 mm @ transition pull-away-8>level-cruise @0.25: contact anchor "contact-f-l" at (1.050, 0.000) m is 411 mm off the drawn shapes of bone "axle-f" and of its descendant bones in the front
+    contact-f-l@front ×14 411 mm @ transition pull-away-8>level-cruise @0.25
+    contact-f-r@front ×14 411 mm @ transition pull-away-8>level-cruise @0.25
+    contact-r-l@front ×14 332 mm @ clip depart uniform 5/9 @6.111 s
+    contact-r-r@front ×14 332 mm @ clip depart uniform 5/9 @6.111 s
+city-bus 1:500 reported group-drift-height ×28 worst 447 mm @ transition pull-away-8>level-cruise @0.25: bone "wheel-r" elevation [0.000, 0.960] vs front [0.433, 0.513] m (1 and 2 shapes)
+    wheel-r ×14 447 mm @ transition pull-away-8>level-cruise @0.25
+    wheel-f ×14 446 mm @ transition pull-away-8>level-cruise @0.25
+city-bus 1:500 subjects 107 tolerance 240.0 mm
+hard findings: 233
+[DEBUG] gate city-bus exit 1
+city-car 1:50 reported group-drift-forward ×86 worst 227 mm @ clip park-and-open-hatch uniform 1/9 @1.000 s: bone "wheel-f" elevation [-2.523, -1.923] vs plan [-2.296, -2.149] m (11 and 2 shapes)
+    wheel-f ×43 227 mm @ clip park-and-open-hatch uniform 1/9 @1.000 s
+    wheel-r ×43 227 mm @ clip park-and-open-hatch uniform 1/9 @1.000 s
+city-car 1:50 reported group-drift-height ×86 worst 230 mm @ clip park-and-open-hatch uniform 1/9 @1.000 s: bone "wheel-r" elevation [0.000, 0.600] vs front [0.230, 0.382] m (11 and 2 shapes)
+    wheel-r ×43 230 mm @ clip park-and-open-hatch uniform 1/9 @1.000 s
+    wheel-f ×43 230 mm @ clip park-and-open-hatch uniform 1/9 @1.000 s
+city-car 1:50 HARD sync-height ×39 worst 190 mm @ transition lane-cruise-entry>parked @0.25: elevation y and front y differ: [0.000, 1.500] vs [0.190, 1.500] m (tolerance 0.079)
+    elevation/front ×39 190 mm @ transition lane-cruise-entry>parked @0.25
+city-car 1:50 subjects 102 tolerance 78.5 mm
+city-car 1:100 reported group-drift-forward ×86 worst 227 mm @ clip park-and-open-hatch uniform 1/9 @1.000 s: bone "wheel-f" elevation [-2.523, -1.923] vs plan [-2.296, -2.149] m (9 and 2 shapes)
+    wheel-f ×43 227 mm @ clip park-and-open-hatch uniform 1/9 @1.000 s
+    wheel-r ×43 227 mm @ clip park-and-open-hatch uniform 1/9 @1.000 s
+city-car 1:100 reported group-drift-height ×86 worst 230 mm @ clip park-and-open-hatch uniform 1/9 @1.000 s: bone "wheel-r" elevation [0.000, 0.600] vs front [0.230, 0.382] m (9 and 2 shapes)
+    wheel-r ×43 230 mm @ clip park-and-open-hatch uniform 1/9 @1.000 s
+    wheel-f ×43 230 mm @ clip park-and-open-hatch uniform 1/9 @1.000 s
+city-car 1:100 HARD sync-height ×39 worst 195 mm @ transition lane-cruise-entry>parked @0.25: elevation y and front y differ: [0.000, 1.499] vs [0.195, 1.500] m (tolerance 0.079)
+    elevation/front ×39 195 mm @ transition lane-cruise-entry>parked @0.25
+city-car 1:100 subjects 102 tolerance 78.5 mm
+city-car 1:200 reported group-drift-forward ×86 worst 227 mm @ clip park-and-open-hatch uniform 1/9 @1.000 s: bone "wheel-f" elevation [-2.523, -1.923] vs plan [-2.296, -2.149] m (3 and 2 shapes)
+    wheel-f ×43 227 mm @ clip park-and-open-hatch uniform 1/9 @1.000 s
+    wheel-r ×43 227 mm @ clip park-and-open-hatch uniform 1/9 @1.000 s
+city-car 1:200 reported group-drift-height ×86 worst 230 mm @ clip park-and-open-hatch uniform 1/9 @1.000 s: bone "wheel-r" elevation [0.000, 0.600] vs front [0.230, 0.382] m (3 and 2 shapes)
+    wheel-r ×43 230 mm @ clip park-and-open-hatch uniform 1/9 @1.000 s
+    wheel-f ×43 230 mm @ clip park-and-open-hatch uniform 1/9 @1.000 s
+city-car 1:200 HARD sync-height ×39 worst 230 mm @ clip park-and-open-hatch uniform 1/9 @1.000 s: elevation y and front y differ: [0.000, 1.504] vs [0.230, 1.504] m (tolerance 0.079)
+    elevation/front ×39 230 mm @ clip park-and-open-hatch uniform 1/9 @1.000 s
+city-car 1:200 subjects 102 tolerance 78.5 mm
+city-car 1:500 reported group-drift-forward ×86 worst 227 mm @ clip park-and-open-hatch uniform 1/9 @1.000 s: bone "wheel-f" elevation [-2.523, -1.923] vs plan [-2.296, -2.149] m (2 and 2 shapes)
+    wheel-f ×43 227 mm @ clip park-and-open-hatch uniform 1/9 @1.000 s
+    wheel-r ×43 227 mm @ clip park-and-open-hatch uniform 1/9 @1.000 s
+city-car 1:500 reported group-drift-height ×86 worst 230 mm @ clip park-and-open-hatch uniform 1/9 @1.000 s: bone "wheel-r" elevation [0.000, 0.600] vs front [0.230, 0.382] m (2 and 2 shapes)
+    wheel-r ×43 230 mm @ clip park-and-open-hatch uniform 1/9 @1.000 s
+    wheel-f ×43 230 mm @ clip park-and-open-hatch uniform 1/9 @1.000 s
+city-car 1:500 HARD sync-height ×39 worst 230 mm @ clip park-and-open-hatch uniform 1/9 @1.000 s: elevation y and front y differ: [0.000, 1.504] vs [0.230, 1.499] m (tolerance 0.079)
+    elevation/front ×39 230 mm @ clip park-and-open-hatch uniform 1/9 @1.000 s
+city-car 1:500 subjects 102 tolerance 78.5 mm
+hard findings: 156
+[DEBUG] gate city-car exit 1
+motor-scooter 1:50 HARD anchor-landmark ×143 worst 117 mm @ pose parked-on-stand: contact anchor "stand-foot" at (0.000, 0.000) m is 117 mm off the drawn shapes of bone "stand" and of its descendant bones in the front
+    stand-foot@front ×34 117 mm @ pose parked-on-stand
+    stand-foot@plan ×85 106 mm @ pose braking-nose-down
+    contact-r@front ×24 64 mm @ clip ride-loop uniform 6/9 @0.463 s
+motor-scooter 1:50 reported group-drift-height ×24 worst 64 mm @ clip ride-loop uniform 6/9 @0.463 s: bone "wheel-r" elevation [0.000, 0.460] vs front [0.064, 0.396] m (5 and 3 shapes)
+    wheel-r ×24 64 mm @ clip ride-loop uniform 6/9 @0.463 s
+motor-scooter 1:50 subjects 109 tolerance 37.6 mm
+motor-scooter 1:100 HARD anchor-landmark ×216 worst 123 mm @ clip stop-and-shut-down max channel 2 @4.953 s: contact anchor "stand-foot" at (0.000, 0.000) m is 123 mm off the drawn shapes of bone "stand" and of its descendant bones in the front
+    stand-foot@front ×108 123 mm @ clip stop-and-shut-down max channel 2 @4.953 s
+    stand-foot@plan ×108 123 mm @ pose braking-nose-down
+motor-scooter 1:100 subjects 108 tolerance 37.6 mm
+motor-scooter 1:200 subjects 108 tolerance 37.6 mm
+motor-scooter 1:500 subjects 108 tolerance 37.6 mm
+hard findings: 359
+[DEBUG] gate motor-scooter exit 1
+vintage-car-1929 1:50 HARD anchor-landmark ×318 worst 351 mm @ transition lane-start>lane-cruise-entry @0.75: contact anchor "contact-r-l" at (0.700, 0.000) m is 351 mm off the drawn shapes of bone "axle-r" and of its descendant bones in the front
+    contact-r-l@front ×38 351 mm @ transition lane-start>lane-cruise-entry @0.75
+    contact-r-r@front ×38 351 mm @ transition lane-start>lane-cruise-entry @0.75
+    contact-f-l@front ×38 314 mm @ transition lane-cruise-entry>parked @0.75
+    contact-f-r@front ×38 314 mm @ transition lane-cruise-entry>parked @0.75
+    contact-f-r@plan ×83 193 mm @ pose lane-start
+    contact-f-l@plan ×83 192 mm @ pose lane-cruise-entry
+vintage-car-1929 1:50 reported group-drift-height ×76 worst 350 mm @ transition lane-start>lane-cruise-entry @0.75: bone "wheel-f" elevation [0.001, 0.739] vs front [0.351, 0.389] m (7 and 6 shapes)
+    wheel-f ×38 350 mm @ transition lane-start>lane-cruise-entry @0.75
+    wheel-r ×38 350 mm @ transition lane-start>lane-cruise-entry @0.75
+vintage-car-1929 1:50 reported group-drift-lateral ×83 worst 115 mm @ pose parked: bone "axle-f" front [-0.665, 0.665] vs plan [-0.550, 0.550] m (2 and 1 shapes)
+    axle-f ×83 115 mm @ pose parked
+vintage-car-1929 1:50 HARD sync-height ×38 worst 230 mm @ transition crawl-in>parked @0.5: elevation y and front y differ: [0.000, 1.700] vs [0.230, 1.700] m (tolerance 0.089)
+    elevation/front ×38 230 mm @ transition crawl-in>parked @0.5
+vintage-car-1929 1:50 subjects 83 tolerance 89.0 mm
+vintage-car-1929 1:100 HARD anchor-landmark ×152 worst 351 mm @ transition lane-start>lane-cruise-entry @0.75: contact anchor "contact-r-l" at (0.700, 0.000) m is 351 mm off the drawn shapes of bone "axle-r" and of its descendant bones in the front
+    contact-r-l@front ×38 351 mm @ transition lane-start>lane-cruise-entry @0.75
+    contact-r-r@front ×38 351 mm @ transition lane-start>lane-cruise-entry @0.75
+    contact-f-l@front ×38 350 mm @ transition lane-start>lane-cruise-entry @0.75
+    contact-f-r@front ×38 350 mm @ transition lane-start>lane-cruise-entry @0.75
+vintage-car-1929 1:100 reported group-drift-height ×76 worst 350 mm @ transition lane-start>lane-cruise-entry @0.75: bone "wheel-f" elevation [0.001, 0.739] vs front [0.351, 0.389] m (6 and 6 shapes)
+    wheel-f ×38 350 mm @ transition lane-start>lane-cruise-entry @0.75
+    wheel-r ×38 350 mm @ transition lane-start>lane-cruise-entry @0.75
+vintage-car-1929 1:100 HARD sync-height ×38 worst 240 mm @ transition crawl-in>parked @0.5: elevation y and front y differ: [0.000, 1.700] vs [0.240, 1.700] m (tolerance 0.089)
+    elevation/front ×38 240 mm @ transition crawl-in>parked @0.5
+vintage-car-1929 1:100 subjects 83 tolerance 89.0 mm
+vintage-car-1929 1:200 HARD anchor-landmark ×80 worst 342 mm @ transition lane-start>lane-cruise-entry @0.75: contact anchor "contact-r-l" at (0.700, 0.000) m is 342 mm off the drawn shapes of bone "axle-r" and of its descendant bones in the front
+    contact-r-l@front ×40 342 mm @ transition lane-start>lane-cruise-entry @0.75
+    contact-r-r@front ×40 342 mm @ transition lane-start>lane-cruise-entry @0.75
+vintage-car-1929 1:200 reported group-drift-height ×82 worst 352 mm @ clip drive-by max channel 2 @1.498 s: bone "wheel-r" elevation [0.000, 0.740] vs front [0.342, 0.388] m (5 and 2 shapes)
+    wheel-r ×41 352 mm @ clip drive-by max channel 2 @1.498 s
+    wheel-f ×41 352 mm @ clip drive-by max channel 2 @1.498 s
+vintage-car-1929 1:200 HARD sync-height ×40 worst 240 mm @ transition lane-start>lane-cruise-entry @0.75: elevation y and front y differ: [0.000, 1.700] vs [0.240, 1.700] m (tolerance 0.089)
+    elevation/front ×40 240 mm @ transition lane-start>lane-cruise-entry @0.75
+vintage-car-1929 1:200 subjects 84 tolerance 89.0 mm
+vintage-car-1929 1:500 HARD anchor-landmark ×80 worst 339 mm @ clip drive-by max channel 2 @1.498 s: contact anchor "contact-f-l" at (0.700, 0.000) m is 339 mm off the drawn shapes of bone "axle-f" and of its descendant bones in the front
+    contact-f-l@front ×40 339 mm @ clip drive-by max channel 2 @1.498 s
+    contact-f-r@front ×40 339 mm @ clip drive-by max channel 2 @1.498 s
+vintage-car-1929 1:500 reported group-drift-height ×82 worst 352 mm @ clip drive-by max channel 2 @1.498 s: bone "wheel-r" elevation [0.000, 0.740] vs front [0.342, 0.388] m (3 and 2 shapes)
+    wheel-r ×41 352 mm @ clip drive-by max channel 2 @1.498 s
+    wheel-f ×41 352 mm @ clip drive-by max channel 2 @1.498 s
+vintage-car-1929 1:500 HARD sync-height ×40 worst 332 mm @ transition lane-start>lane-cruise-entry @0.75: elevation y and front y differ: [0.000, 1.700] vs [0.333, 1.700] m (tolerance 0.089)
+    elevation/front ×40 332 mm @ transition lane-start>lane-cruise-entry @0.75
+vintage-car-1929 1:500 subjects 84 tolerance 89.0 mm
+hard findings: 786
+[DEBUG] gate vintage-car-1929 exit 1

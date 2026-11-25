@@ -10,15 +10,37 @@ use semio_plugin::PluginBuilder;
 
 //#region 🗃️Apps
 semio_framework_dispatch_macros::dyn_enum_close! {
-    /// 🗃️ Closed runtime app fleet of the Norm Eurocode Structural editor/viewer pairs.
+    /// 🗃️ Closed runtime app fleet of the Norm Eurocode Structural editor/viewer pairs; each app is instantiated once in its own crate.
     pub enum NormEurocodeStructuralApps: PluginApp {
-        En1992Editor(VcsArtifactApp<EditorApp<semio_s_artifact_norm_en1992_editor::En1992PlayApp>>),
-        En1992Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_norm_en1992_viewer::En1992Viewer>>),
-        En1993Editor(VcsArtifactApp<EditorApp<semio_s_artifact_norm_en1993_editor::En1993PlayApp>>),
-        En1993Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_norm_en1993_viewer::En1993Viewer>>),
-        En1994Editor(VcsArtifactApp<EditorApp<semio_s_artifact_norm_en1994_editor::En1994PlayApp>>),
-        En1994Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_norm_en1994_viewer::En1994Viewer>>),
+        En1992Editor(semio_hub_norm_eurocode_structural_en1992_editor::En1992EditorApp),
+        En1992Viewer(semio_hub_norm_eurocode_structural_en1992_viewer::En1992ViewerApp),
+        En1993Editor(semio_hub_norm_eurocode_structural_en1993_editor::En1993EditorApp),
+        En1993Viewer(semio_hub_norm_eurocode_structural_en1993_viewer::En1993ViewerApp),
+        En1994Editor(semio_hub_norm_eurocode_structural_en1994_editor::En1994EditorApp),
+        En1994Viewer(semio_hub_norm_eurocode_structural_en1994_viewer::En1994ViewerApp),
     }
+}
+
+/// 🪄️ Implements `From<instance>` for the fleet, so the builder takes each editor and viewer instance and routes it into the app crate that instantiates it.
+macro_rules! apps_from_instance {
+    ($($variant:ident($wrapper:ty): $instance:ty),+ $(,)?) => {
+        $(
+            impl From<$instance> for NormEurocodeStructuralApps {
+                fn from(app: $instance) -> Self {
+                    Self::$variant(<$wrapper>::from(app))
+                }
+            }
+        )+
+    };
+}
+
+apps_from_instance! {
+    En1992Editor(semio_hub_norm_eurocode_structural_en1992_editor::En1992EditorApp): VcsArtifactApp<EditorApp<semio_s_artifact_norm_en1992_editor::En1992PlayApp>>,
+    En1992Viewer(semio_hub_norm_eurocode_structural_en1992_viewer::En1992ViewerApp): VcsArtifactApp<ViewerApp<semio_s_artifact_norm_en1992_viewer::En1992Viewer>>,
+    En1993Editor(semio_hub_norm_eurocode_structural_en1993_editor::En1993EditorApp): VcsArtifactApp<EditorApp<semio_s_artifact_norm_en1993_editor::En1993PlayApp>>,
+    En1993Viewer(semio_hub_norm_eurocode_structural_en1993_viewer::En1993ViewerApp): VcsArtifactApp<ViewerApp<semio_s_artifact_norm_en1993_viewer::En1993Viewer>>,
+    En1994Editor(semio_hub_norm_eurocode_structural_en1994_editor::En1994EditorApp): VcsArtifactApp<EditorApp<semio_s_artifact_norm_en1994_editor::En1994PlayApp>>,
+    En1994Viewer(semio_hub_norm_eurocode_structural_en1994_viewer::En1994ViewerApp): VcsArtifactApp<ViewerApp<semio_s_artifact_norm_en1994_viewer::En1994Viewer>>,
 }
 //#endregion 🗃️Apps
 

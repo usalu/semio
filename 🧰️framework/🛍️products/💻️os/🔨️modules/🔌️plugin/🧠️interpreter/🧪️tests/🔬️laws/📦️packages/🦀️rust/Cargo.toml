@@ -21,6 +21,11 @@ path = "../../🦀️.rs"
 [dev-dependencies]
 semio-plugin-interpreter = { path = "../../../../📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-test-fixtures = { path = "../../../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
+semio-plugin-interpreter-numeric = { path = "../../../../🔢️numeric-semantics/📦️packages/🦀️rust" }
+semio-framework-actor = { workspace = true }
+semio-framework-job = { workspace = true, features = ["testkit"] }
+semio-framework-trace = { workspace = true }
+semio-framework-value = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 wasmtime = { version = "47.0.3", features = ["cranelift", "component-model", "component-model-async"] }

@@ -18,7 +18,9 @@
    "extrude",
    "revolve",
    "view-sweep"
-  ]
+  ],
+  "strict": true,
+  "limit": 1
  },
  {
   "op": "solid",
@@ -75,7 +77,9 @@
    "extrude",
    "revolve",
    "view-sweep"
-  ]
+  ],
+  "strict": true,
+  "limit": 1
  },
  {
   "op": "solid",
@@ -134,7 +138,9 @@
    "extrude",
    "revolve",
    "view-sweep"
-  ]
+  ],
+  "strict": true,
+  "limit": 1
  },
  {
   "op": "solid",
@@ -191,7 +197,9 @@
    "extrude",
    "revolve",
    "view-sweep"
-  ]
+  ],
+  "strict": true,
+  "limit": 1
  },
  {
   "op": "solid",
@@ -250,7 +258,9 @@
    "extrude",
    "revolve",
    "view-sweep"
-  ]
+  ],
+  "strict": true,
+  "limit": 1
  },
  {
   "op": "solid",
@@ -271,7 +281,9 @@
    "extrude",
    "revolve",
    "view-sweep"
-  ]
+  ],
+  "strict": true,
+  "limit": 1
  },
  {
   "op": "solid",
@@ -284,7 +296,9 @@
   "op": "solid",
   "scale": "50",
   "id": "neck-3",
-  "view": "plan"
+  "view": "plan",
+  "strict": true,
+  "limit": 1
  },
  {
   "op": "solid",
@@ -299,7 +313,9 @@
   "op": "solid",
   "scale": "50",
   "id": "head",
-  "view": "plan"
+  "view": "plan",
+  "strict": true,
+  "limit": 1
  },
  {
   "op": "solid",
@@ -307,12 +323,6 @@
   "id": "muzzle",
   "view": "front",
   "across": "plan"
- },
- {
-  "op": "solid",
-  "scale": "50",
-  "id": "muzzle",
-  "view": "plan"
  },
  {
   "op": "solid",
@@ -324,33 +334,27 @@
    "extrude",
    "revolve",
    "view-sweep"
-  ]
+  ],
+  "strict": true,
+  "limit": 1
  },
  {
   "op": "solid",
   "scale": "50",
   "id": "forelock",
   "view": "front",
-  "across": "plan"
+  "across": "plan",
+  "strict": true,
+  "limit": 1
  },
  {
   "op": "solid",
   "scale": "100",
   "id": "far-thigh",
   "view": "front",
-  "across": "plan"
- },
- {
-  "op": "solid",
-  "scale": "100",
-  "id": "far-thigh",
-  "view": "plan",
-  "across": "front",
-  "order": [
-   "extrude",
-   "revolve",
-   "view-sweep"
-  ]
+  "across": "plan",
+  "strict": true,
+  "limit": 1
  },
  {
   "op": "solid",
@@ -358,18 +362,6 @@
   "id": "far-gaskin",
   "view": "front",
   "across": "plan"
- },
- {
-  "op": "solid",
-  "scale": "100",
-  "id": "far-gaskin",
-  "view": "plan",
-  "across": "front",
-  "order": [
-   "extrude",
-   "revolve",
-   "view-sweep"
-  ]
  },
  {
   "op": "solid",
@@ -381,33 +373,9 @@
  {
   "op": "solid",
   "scale": "100",
-  "id": "far-hind-cannon",
-  "view": "plan",
-  "across": "front",
-  "order": [
-   "extrude",
-   "revolve",
-   "view-sweep"
-  ]
- },
- {
-  "op": "solid",
-  "scale": "100",
   "id": "far-humerus",
   "view": "front",
   "across": "plan"
- },
- {
-  "op": "solid",
-  "scale": "100",
-  "id": "far-humerus",
-  "view": "plan",
-  "across": "front",
-  "order": [
-   "extrude",
-   "revolve",
-   "view-sweep"
-  ]
  },
  {
   "op": "solid",
@@ -419,18 +387,6 @@
  {
   "op": "solid",
   "scale": "100",
-  "id": "far-radius",
-  "view": "plan",
-  "across": "front",
-  "order": [
-   "extrude",
-   "revolve",
-   "view-sweep"
-  ]
- },
- {
-  "op": "solid",
-  "scale": "100",
   "id": "far-fore-cannon",
   "view": "front",
   "across": "plan"
@@ -438,33 +394,11 @@
  {
   "op": "solid",
   "scale": "100",
-  "id": "far-fore-cannon",
-  "view": "plan",
-  "across": "front",
-  "order": [
-   "extrude",
-   "revolve",
-   "view-sweep"
-  ]
- },
- {
-  "op": "solid",
-  "scale": "100",
   "id": "near-thigh",
   "view": "front",
-  "across": "plan"
- },
- {
-  "op": "solid",
-  "scale": "100",
-  "id": "near-thigh",
-  "view": "plan",
-  "across": "front",
-  "order": [
-   "extrude",
-   "revolve",
-   "view-sweep"
-  ]
+  "across": "plan",
+  "strict": true,
+  "limit": 1
  },
  {
   "op": "solid",
@@ -476,33 +410,9 @@
  {
   "op": "solid",
   "scale": "100",
-  "id": "near-gaskin",
-  "view": "plan",
-  "across": "front",
-  "order": [
-   "extrude",
-   "revolve",
-   "view-sweep"
-  ]
- },
- {
-  "op": "solid",
-  "scale": "100",
   "id": "near-hind-cannon",
   "view": "front",
   "across": "plan"
- },
- {
-  "op": "solid",
-  "scale": "100",
-  "id": "near-hind-cannon",
-  "view": "plan",
-  "across": "front",
-  "order": [
-   "extrude",
-   "revolve",
-   "view-sweep"
-  ]
  },
  {
   "op": "solid",
@@ -514,33 +424,9 @@
  {
   "op": "solid",
   "scale": "100",
-  "id": "near-humerus",
-  "view": "plan",
-  "across": "front",
-  "order": [
-   "extrude",
-   "revolve",
-   "view-sweep"
-  ]
- },
- {
-  "op": "solid",
-  "scale": "100",
   "id": "near-radius",
   "view": "front",
   "across": "plan"
- },
- {
-  "op": "solid",
-  "scale": "100",
-  "id": "near-radius",
-  "view": "plan",
-  "across": "front",
-  "order": [
-   "extrude",
-   "revolve",
-   "view-sweep"
-  ]
  },
  {
   "op": "solid",
@@ -552,33 +438,9 @@
  {
   "op": "solid",
   "scale": "100",
-  "id": "near-fore-cannon",
-  "view": "plan",
-  "across": "front",
-  "order": [
-   "extrude",
-   "revolve",
-   "view-sweep"
-  ]
- },
- {
-  "op": "solid",
-  "scale": "100",
   "id": "neck-1",
   "view": "front",
   "across": "plan"
- },
- {
-  "op": "solid",
-  "scale": "100",
-  "id": "neck-1",
-  "view": "plan",
-  "across": "front",
-  "order": [
-   "extrude",
-   "revolve",
-   "view-sweep"
-  ]
  },
  {
   "op": "solid",
@@ -590,27 +452,11 @@
  {
   "op": "solid",
   "scale": "100",
-  "id": "neck-2",
-  "view": "plan",
-  "across": "front",
-  "order": [
-   "extrude",
-   "revolve",
-   "view-sweep"
-  ]
- },
- {
-  "op": "solid",
-  "scale": "100",
   "id": "neck-3",
   "view": "front",
-  "across": "plan"
- },
- {
-  "op": "solid",
-  "scale": "100",
-  "id": "neck-3",
-  "view": "plan"
+  "across": "plan",
+  "strict": true,
+  "limit": 1
  },
  {
   "op": "solid",
@@ -622,21 +468,9 @@
  {
   "op": "solid",
   "scale": "100",
-  "id": "head",
-  "view": "plan"
- },
- {
-  "op": "solid",
-  "scale": "100",
   "id": "muzzle",
   "view": "front",
   "across": "plan"
- },
- {
-  "op": "solid",
-  "scale": "100",
-  "id": "muzzle",
-  "view": "plan"
  },
  {
   "op": "solid",
@@ -803,12 +637,6 @@
   "id": "head",
   "view": "front",
   "across": "plan"
- },
- {
-  "op": "solid",
-  "scale": "200",
-  "id": "head",
-  "view": "plan"
  },
  {
   "op": "solid",
@@ -1061,18 +889,5 @@
    "revolve",
    "view-sweep"
   ]
- },
- {
-  "op": "solid",
-  "scale": "500",
-  "id": "head",
-  "view": "front",
-  "across": "plan"
- },
- {
-  "op": "solid",
-  "scale": "500",
-  "id": "head",
-  "view": "plan"
  }
 ]

@@ -22,7 +22,7 @@ assert(canvasSource.indexOf("slot.command_backing_bytes = command.retirement_bac
 const sceneConsumers = [
   ["iconPaintCache", readModuleTreeSource(new URL("../../../../../♾️infinite/🎲️board/⚙️engine/🦀️.rs", import.meta.url)), "retirement_scene: Cell<Option<semio_framework_canvas::OpaqueSceneRetirementToken>>", "advance_opaque_scene_retirement"],
   ["boardWorldCache", readModuleTreeSource(new URL("../../../../../♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🕹️gestures/🦀️.rs", import.meta.url)), "opaque_scene_retirement: Cell<Option<OpaqueSceneRetirementToken>>", "advance_opaque_scene_retirement"],
-  ["engineCanvasPacket", await Bun.file(new URL("../../../../../📺️renderer/🧑‍🎨engine/🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/📦️prepared-engine-canvas/🦀️.rs", import.meta.url)).text(), "scene_retirement: ManuallyDrop<canvas::CanvasSceneRetirement>", "self.scene_retirement.close_step(&mut self.scene,grant)"],
+  ["engineCanvasPacket", await Bun.file(new URL("../../../../../📺️renderer/🧑‍🎨engine/🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/📦️prepared-engine-canvas/🦀️.rs", import.meta.url)).text(), "scene_retirement: ManuallyDrop<canvas::CanvasSceneRetirement>", "self.scene_retirement.close_step(&mut self.scene,body,effect)"],
 ] as const;
 assert.deepEqual(sceneConsumers.map(([name]) => name), fixture.scene.retainedConsumers);
 for (const [, source, retainedOwner, advance] of sceneConsumers) {

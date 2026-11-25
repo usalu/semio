@@ -61,8 +61,8 @@ impl<I:OriginalReturnOrigin> OriginalReturnBudget<I>{
   if done{self.claims-=1;claim.credit.data.live=false;claim.credit.data.capture_observed=true;claim.credit.data.receive_observed=true;}
   Ok(Some(OriginalReturnStockWitness{source:claim.credit.source,serial:claim.credit.serial,budget:self as*const Self as usize,progress:p,work:delta.work,done,received:false,_origin:std::marker::PhantomData}))
  }
- /// 👁️ Confirms only the actual same-Source observer after its held effects were accepted.
- pub fn acknowledge_stock(&mut self,claim:&mut OriginalReturnStockClaim<I>,witness:&mut OriginalReturnStockWitness<I>)->Result<(),ValueError>{self.qualify_stock_observation(claim,witness)?;if witness.done&&claim.credit.local{let identity=self.stock_identity(claim)?;self.table.as_mut().unwrap().mark_local_received(identity)?}witness.received=true;claim.pending=false;Ok(())}
+ /// 👁️ Confirms only the actual same-Source observer after its held effects were accepted; a settled row is acknowledged here when delivery is local or its host never hands published headers back (`local_acknowledgement`), so its slot becomes reclaimable.
+ pub fn acknowledge_stock(&mut self,claim:&mut OriginalReturnStockClaim<I>,witness:&mut OriginalReturnStockWitness<I>)->Result<(),ValueError>{self.qualify_stock_observation(claim,witness)?;if witness.done&&(claim.credit.local||self.local_acknowledgement){let identity=self.stock_identity(claim)?;self.table.as_mut().unwrap().mark_local_received(identity)?}witness.received=true;claim.pending=false;Ok(())}
  pub fn qualify_stock_observation(&self,claim:&OriginalReturnStockClaim<I>,witness:&OriginalReturnStockWitness<I>)->Result<(),ValueError>{self.stock_identity(claim)?;if !claim.pending||witness.received||witness.budget!=self as*const Self as usize||witness.source!=claim.credit.source||witness.serial!=claim.credit.serial{return Err(bad())}Ok(())}
 }
 

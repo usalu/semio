@@ -214,6 +214,9 @@ export function treeItemToTreeData(store: UiDocumentStore, state: UiDocumentStat
   };
 }
 
+const noSubscription = () => () => undefined;
+const zeroRevision = () => 0;
+
 function TreeView({ store, record, context }: { readonly store: UiDocumentStore; readonly record: UiNodeRecord; readonly context: UiInterpreterContext }) {
   const revision = useUiDocumentRevision(store);
   const rowAdmission = useRowActionAdmissionV1(context);
@@ -221,6 +224,7 @@ function TreeView({ store, record, context }: { readonly store: UiDocumentStore;
   const leftover = useSyncExternalStore(subscribeLeftoverSelectionV1, leftoverSelectionOverlayV1, leftoverSelectionOverlayV1);
   const leftoverIds = leftover?.ids;
   const windows = useTreeWindowContext();
+  const openRevision = useSyncExternalStore(windows?.subscribe ?? noSubscription, windows?.revision ?? zeroRevision, zeroRevision);
   const rootRef = useRef<HTMLDivElement | null>(null);
   const walked = useMemo((): { readonly sections: TreeDataSection[]; readonly walk: TreeWalkContextV1 } => {
     void revision;
@@ -253,7 +257,7 @@ function TreeView({ store, record, context }: { readonly store: UiDocumentStore;
       };
     });
     return { sections, walk };
-  }, [store, record, revision, context, overlay, leftoverIds, windows, rowAdmission]);
+  }, [store, record, revision, context, overlay, leftoverIds, windows, openRevision, rowAdmission]);
   const sections = walked.sections;
   const handleOpenStateChange = useCallback((stateId: string, open: boolean) => windows?.setOpen(walked.walk.keysByDomId?.get(treeDomIdFromOpenStateIdV1(stateId)) ?? stateId, open), [windows, walked]);
   useTreeWindowObserver(rootRef, windows, revision, store);

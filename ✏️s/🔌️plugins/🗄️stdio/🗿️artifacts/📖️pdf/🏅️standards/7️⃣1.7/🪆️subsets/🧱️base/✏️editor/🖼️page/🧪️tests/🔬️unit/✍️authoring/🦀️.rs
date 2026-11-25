@@ -332,11 +332,11 @@ fn extract_and_pick_actions_emit_download_and_picker_effects() {
 
 #[test]
 fn authoring_actions_are_declared_with_english_and_german_labels() {
-    let definition = window_definition();
+    let edits = edit_action_definitions();
     for id in ["create-annotation", "fill-form-field", "replace-page", "replace-page-pick", "merge-document", "merge-pick", "extract-pages"] {
         assert!(is_page_action(id), "{id}");
         assert_eq!(static_action(id), id);
-        assert!(definition.actions.iter().any(|action| action.id == id), "{id}");
+        assert!(edits.iter().any(|action| action.id == id), "{id}");
     }
 }
 
@@ -456,7 +456,7 @@ fn every_typed_snapshot_field_has_a_declared_control_action() {
     assert!(fields.len() >= 30, "{fields:?}");
     let controls = fixture_controls();
     let (derived, mapped) = (controls["derived"].as_array().unwrap(), controls["controls"].as_object().unwrap());
-    let definition = window_definition();
+    let edits = edit_action_definitions();
     for field in &fields {
         let covered = derived.iter().any(|name| name == field) || mapped.get(field).is_some_and(|actions| !actions.as_array().unwrap().is_empty());
         assert!(covered, "typed field '{field}' has no control action");
@@ -468,7 +468,7 @@ fn every_typed_snapshot_field_has_a_declared_control_action() {
     for actions in mapped.values() {
         for action in actions.as_array().unwrap() {
             let action = action.as_str().unwrap();
-            assert!(is_page_action(action) && definition.actions.iter().any(|declared| declared.id == action), "'{action}' is not a declared window action");
+            assert!(is_page_action(action) && edits.iter().any(|declared| declared.id == action), "'{action}' is not a declared edit verb");
         }
     }
 }

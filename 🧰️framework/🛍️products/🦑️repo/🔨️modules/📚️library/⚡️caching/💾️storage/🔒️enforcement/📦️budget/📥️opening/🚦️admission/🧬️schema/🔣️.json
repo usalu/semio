@@ -1,0 +1,83 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Text": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "en",
+        "de"
+      ],
+      "properties": {
+        "en": {
+          "type": "string",
+          "minLength": 1
+        },
+        "de": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "Policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pollMilliseconds",
+        "noticeMilliseconds",
+        "maximumWaitMilliseconds"
+      ],
+      "properties": {
+        "pollMilliseconds": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "noticeMilliseconds": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maximumWaitMilliseconds": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "Protocol": {
+      "const": {
+        "pollMilliseconds": 250,
+        "noticeMilliseconds": 15000,
+        "maximumWaitMilliseconds": 600000
+      },
+      "type": "object"
+    },
+    "Messages": {
+      "const": {
+        "notIssued": {
+          "en": "The handle of repository partition {id} was not issued by its cache owner: a copy or wrapper of the opened partition cannot submit cache operations. Use the handle the opener returned.",
+          "de": "Das Handle der Repository-Partition {id} wurde nicht von seinem Cache-Eigner ausgegeben: eine Kopie oder Hülle der geöffneten Partition kann keine Cache-Operationen einreichen. Das vom Öffner zurückgegebene Handle verwenden."
+        },
+        "closed": {
+          "en": "The cache owner of repository partition {id} is already closed; a closed partition cannot be reused by a later attempt. Open the partition again.",
+          "de": "Der Cache-Eigner der Repository-Partition {id} ist bereits geschlossen; eine geschlossene Partition kann von einem späteren Versuch nicht wiederverwendet werden. Die Partition erneut öffnen."
+        },
+        "failed": {
+          "en": "The cache owner of repository partition {id} failed on an earlier operation: {cause}. Later operations are refused until the partition is closed and opened again.",
+          "de": "Der Cache-Eigner der Repository-Partition {id} ist bei einer früheren Operation fehlgeschlagen: {cause}. Spätere Operationen werden abgelehnt, bis die Partition geschlossen und erneut geöffnet wird."
+        },
+        "closing": {
+          "en": "The cache operation scope of repository partition {id} no longer accepts operations: its body already returned or its owner is closing.",
+          "de": "Der Cache-Operationsbereich der Repository-Partition {id} nimmt keine Operationen mehr an: sein Rumpf ist bereits zurückgekehrt oder sein Eigner schliesst gerade."
+        },
+        "waitTimeout": {
+          "en": "Gave up after {seconds} s waiting for a free cache operation slot on repository partition {id} ({busy} of {limit} slots busy).",
+          "de": "Nach {seconds} s Warten auf einen freien Cache-Operationsplatz der Repository-Partition {id} aufgegeben ({busy} von {limit} Plätzen belegt)."
+        },
+        "waiting": {
+          "en": "Waiting for a free cache operation slot on repository partition {id} ({busy} of {limit} busy, {seconds} s so far).",
+          "de": "Warte auf einen freien Cache-Operationsplatz der Repository-Partition {id} ({busy} von {limit} belegt, bisher {seconds} s)."
+        }
+      },
+      "type": "object"
+    }
+  }
+}

@@ -5,6 +5,7 @@ import {join} from "node:path";
 import {filesystemBusyErrorV1,settleBusyFilesystemSyncV1} from "../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
 import {UNIT_CACHE_POLICY_V1} from "../🔏️key/🟦️.ts";
 import {enterScriptProcessWaitV1} from "../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🟦️.ts";
+import {parseProcessIdentityV1,ownProcessIdentityV1,processHolderAliveV1} from "../../../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts";
 
 const policy=UNIT_CACHE_POLICY_V1;
 /** ⏳️ Cancellable pause that counts as a declared wait for the process watchdog: a process that sleeps here for a lane, a claim or a slot is waiting, not stalled (bounded by the watchdog's wait ceiling). */
@@ -30,9 +31,6 @@ export function watchChangesV1(directories:readonly string[]):Readonly<{wait(mil
  });
 }
 
-/** 🫀️ Whether a process id exists in the table, zombies included; a permission refusal still means it exists. */
-export function processExistsV1(pid:number):boolean{try{process.kill(pid,0);return true;}catch(error){return(error as NodeJS.ErrnoException).code==="EPERM";}}
-
 /** 🧟️ Whether a process has exited but its parent has not reaped it yet: its id still answers `kill(pid,0)` although it can never release anything again. Linux reads the state of `/proc/<pid>/stat`, other POSIX hosts ask `ps -o stat=`, Windows has no zombies. */
 export function processZombieV1(pid:number,world:Readonly<{platform?:string;state?:(pid:number)=>string|undefined}>={}):boolean{
  const platform=world.platform??process.platform;if(platform==="win32")return false;
@@ -43,16 +41,16 @@ export function processZombieV1(pid:number,world:Readonly<{platform?:string;stat
  return(state(pid)??"").startsWith("Z");
 }
 
-/** 🫀️ Whether a process can still act: it exists and is not a zombie. */
-export function processAliveV1(pid:number,world:Readonly<{platform?:string;state?:(pid:number)=>string|undefined}>={}):boolean{return processExistsV1(pid)&&!processZombieV1(pid,world);}
+/** 🫀️ Whether the holder named by pid and creation time can still act: that process exists (a reused pid is another process) and is not a zombie. */
+export function processAliveV1(holder:Readonly<{pid:number;startMs:number}>,world:Readonly<{platform?:string;state?:(pid:number)=>string|undefined}>={}):boolean{return processHolderAliveV1(holder)&&!processZombieV1(holder.pid,world);}
 
 /** 🧹️ Removes one claim file and never throws: a Windows sharing violation (`EPERM`, `EBUSY`, `EACCES` while a reader, scanner or indexer holds the file) is retried on the churn table's pauses, and a file that stays busy is announced in every language and left to age out as stale; `false` then. */
 export function removeClaimFileV1(path:string,world:Readonly<{platform?:string;sleepSync?:(milliseconds:number)=>void;report?:(text:string)=>void}>={}):boolean{
  return settleBusyFilesystemSyncV1(path,()=>rmSync(path,{force:true}),{report:text=>{try{(world.report??(line=>process.stderr.write(line+"\n")))(text);}catch{}},...world.platform?{platform:world.platform}:{},...world.sleepSync?{sleepSync:world.sleepSync}:{}}).settled;
 }
 
-type Holder=Readonly<{pid:number;token:string;atMs:number}>;
-function holderOf(path:string):Holder|undefined{try{const row=JSON.parse(readFileSync(path,"utf8"));return typeof row?.pid==="number"?row:undefined;}catch{return undefined;}}
+type Holder=Readonly<{pid:number;startMs:number;token:string;atMs:number}>;
+function holderOf(path:string):Holder|undefined{try{const row=JSON.parse(readFileSync(path,"utf8"));return parseProcessIdentityV1(row)===undefined?undefined:row;}catch{return undefined;}}
 function ageOf(path:string,now:number):number|undefined{try{return now-statSync(path).mtimeMs;}catch{return undefined;}}
 
 /** 🪪️ One held claim: a file created exclusively and kept fresh by its holder, released by removal. */
@@ -63,7 +61,7 @@ function stale(path:string,staleMs:number,now:number):boolean{
  const age=ageOf(path,now);if(age===undefined)return false;
  const holder=holderOf(path);
  if(holder===undefined)return age>staleMs;
- return age>1000&&(!processExistsV1(holder.pid)||age>2*policy.lock.heartbeatMilliseconds&&processZombieV1(holder.pid));
+ return age>1000&&(!processHolderAliveV1(holder)||age>2*policy.lock.heartbeatMilliseconds&&processZombieV1(holder.pid));
 }
 
 function removeStale(path:string,staleMs:number):void{
@@ -85,7 +83,7 @@ export function openClaimFileV1(path:string,world:Readonly<{platform?:string;sle
 
 function tryCreate(path:string,heartbeatMs:number):ClaimV1|undefined{
  const token=randomBytes(8).toString("hex");const fd=openClaimFileV1(path);if(fd===undefined)return undefined;
- try{writeSync(fd,JSON.stringify({pid:process.pid,token,atMs:Date.now()}));}finally{closeSync(fd);}
+ try{writeSync(fd,JSON.stringify({...ownProcessIdentityV1(),token,atMs:Date.now()}));}finally{closeSync(fd);}
  const beat=setInterval(()=>{try{const now=new Date();utimesSync(path,now,now);}catch{}},heartbeatMs);beat.unref?.();
  let released=false;
  return Object.freeze({path,waitedMs:0,release(){if(released)return;released=true;clearInterval(beat);if(holderOf(path)?.token===token)removeClaimFileV1(path);}});
@@ -109,10 +107,10 @@ export function claimHeldV1(directory:string,name:string):boolean{
  return ageOf(path,Date.now())!==undefined&&!stale(path,policy.lock.staleMilliseconds,Date.now());
 }
 
-/** 🪪️ Who holds the claim `name` right now (pid and claim time), `undefined` when it is free or its holder is unreadable; reads only. */
-export function claimHolderV1(directory:string,name:string):Readonly<{pid:number;atMs:number}>|undefined{
+/** 🪪️ Who holds the claim `name` right now (pid, creation time and claim time), `undefined` when it is free or its holder is unreadable; reads only. */
+export function claimHolderV1(directory:string,name:string):Readonly<{pid:number;startMs:number;atMs:number}>|undefined{
  const path=join(directory,name+".lock"),holder=holderOf(path);
- return holder===undefined||!claimHeldV1(directory,name)?undefined:Object.freeze({pid:holder.pid,atMs:holder.atMs});
+ return holder===undefined||!claimHeldV1(directory,name)?undefined:Object.freeze({pid:holder.pid,startMs:holder.startMs,atMs:holder.atMs});
 }
 
 /** 🔐️ Takes the per-unit claim named `name` inside `directory`. Waiting is bounded: `undefined` after the maximum wait means "compile anyway", so no wait chain can become a deadlock. A holder that died or stopped beating is replaced atomically. */
@@ -181,7 +179,7 @@ export async function acquireSlotV1(root:string,count:number,options:Readonly<{s
  if(!Number.isSafeInteger(count)||count<1)throw Error("Positive compile slot count required");
  const slots=join(root,policy.layout.slots),tickets=join(root,policy.layout.tickets);mkdirSync(slots,{recursive:true});mkdirSync(tickets,{recursive:true});
  const started=Date.now(),name=String(Math.min(started,options.since??started)).padStart(15,"0")+"-"+randomBytes(4).toString("hex")+"-"+process.pid,ticket=join(tickets,name);
- const writeTicket=()=>{const fd=openSync(ticket,"w");try{writeSync(fd,JSON.stringify({pid:process.pid,token:name,atMs:started}));}finally{closeSync(fd);}};
+ const writeTicket=()=>{const fd=openSync(ticket,"w");try{writeSync(fd,JSON.stringify({...ownProcessIdentityV1(),token:name,atMs:started}));}finally{closeSync(fd);}};
  const listener=watchChangesV1([slots,tickets]);writeTicket();
  const beat=setInterval(()=>{try{const now=new Date();utimesSync(ticket,now,now);}catch{}},policy.slot.heartbeatMilliseconds);beat.unref?.();
  let reported=false;

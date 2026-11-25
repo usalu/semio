@@ -212,7 +212,12 @@ pub fn addressed(view: &semio_plugin::ViewModel, config: Fem2dModelWindowConfig)
     if kind != <Fem2dModelWindowConfigOwner as semio_plugin::WindowConfigOwner>::WINDOW_KIND_ID {
         return Err(semio_plugin::Fault::from("fem.window.kind: addressed window has the wrong kind"));
     }
-    Ok(semio_plugin::WindowConfigMutation::of::<Fem2dModelWindowConfigOwner>(id, Fem2dModelWindowConfigMutation::Update(Fem2dModelWindowConfigUpdate { patch: Box::new(Fem2dModelWindowConfigPatch::replacing(&config)) })))
+    Ok(addressed_to(id, config))
+}
+
+/// 🎚️ The whole-record publication into one exact model-window partition.
+pub fn addressed_to(window_id: &str, config: Fem2dModelWindowConfig) -> semio_plugin::WindowConfigMutation {
+    semio_plugin::WindowConfigMutation::of::<Fem2dModelWindowConfigOwner>(window_id, Fem2dModelWindowConfigMutation::Update(Fem2dModelWindowConfigUpdate { patch: Box::new(Fem2dModelWindowConfigPatch::replacing(&config)) }))
 }
 
 #[cfg(test)]

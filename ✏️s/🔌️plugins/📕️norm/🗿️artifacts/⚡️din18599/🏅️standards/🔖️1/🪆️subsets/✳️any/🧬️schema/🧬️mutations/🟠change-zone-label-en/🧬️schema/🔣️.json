@@ -11,7 +11,7 @@
   ],
   "properties": {
     "mutation": {
-      "const": "changezonelabelen"
+      "const": "changeZoneLabelEn"
     },
     "zoneId": {
       "type": "string",

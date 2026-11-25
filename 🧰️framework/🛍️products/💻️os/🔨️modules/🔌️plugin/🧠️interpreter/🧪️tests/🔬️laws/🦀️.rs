@@ -6,3 +6,15 @@
 
 #[path = "../🔬️core-laws/🦀️.rs"]
 mod core_laws;
+
+#[path = "../🔬️metering/🦀️.rs"]
+mod metering;
+
+#[path = "../🔬️host-import/🦀️.rs"]
+mod host_import;
+
+#[path = "../🔬️numeric-execution/🦀️.rs"]
+mod numeric_execution;
+
+#[path = "../🔬️instance-opening/🦀️.rs"]
+mod instance_opening;

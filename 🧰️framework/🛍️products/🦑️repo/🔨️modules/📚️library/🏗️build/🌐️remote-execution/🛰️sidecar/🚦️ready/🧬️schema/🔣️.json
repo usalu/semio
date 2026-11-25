@@ -29,7 +29,7 @@
         "beatByState": {"running": 30000, "backoff": 30000, "waiting": 120000, "observing": 60000, "server": 120000, "ready": 120000},
         "heartbeatNames": ["pool.json", "attest.json"],
         "leaseRenewMilliseconds": 10000,
-        "leaseStaleMilliseconds": 60000, "refreshMaximumAgeMilliseconds": 86400000, "refreshKeepingFailureCodes": ["stage-timeout", "stage-stall-exhausted", "store-full", "interrupted", "spawn-failed", "loop-failed"],
+        "leaseStaleMilliseconds": 60000, "refreshMaximumAgeMilliseconds": 86400000, "refreshKeepingFailureCodes": ["stage-timeout", "stage-stall-exhausted", "store-full", "source-transient", "interrupted", "spawn-failed", "loop-failed"],
         "humanFreshMilliseconds": 90000,
         "humanMaximumMilliseconds": 7200000,
         "graceMilliseconds": 10000,
@@ -69,6 +69,7 @@
         "healCommandMilliseconds": 300000,
         "megabytesPerJob": 1536,
         "tailLines": 20,
+        "failedTaskSummaryLines": 10,
         "failureWindowBytes": 1048576,
         "failureEvidenceChunkBytes": 65536,
         "failureEvidenceLines": 4,
@@ -77,6 +78,7 @@
         "loopStableMilliseconds": 60000,
         "sqliteOpenPattern": "unable to open database file",
         "diskDefaultRequirement": {"megabytes": 1024, "inodes": 20000},
+        "diskDerivation": {"stage": "dependencies", "lockfile": "bun.lock", "entriesPerLockfileLine": 3.6},
         "diskGrowth": {"keptRuns": 5, "floorMegabytes": 1024, "consumerCount": 5, "ceilingPercent": 25, "measuredCeilingMegabytes": 16384},
         "noSpacePatterns": ["No space left on device", "os error 28", "ENOSPC", "There is not enough space on the disk"],
         "diskRequirements": {
@@ -87,6 +89,10 @@
           "workspace": {"megabytes": 4096, "inodes": 100000}
         },
         "storeFullPattern": "No space left \\((EDQUOT|ENOSPC)\\) in (.+?): the disk",
+        "sourceTransientPatterns": ["ENOENT: no such file or directory, \\w+ '{root}[^']*'", "Private Nx engine import missing: ", "(?:refused|invalid|missing) process\\.source\\.", "(?:Cannot find module|Could not resolve)[: ]+[\"']?(?:\\.|{root})", "(?:SyntaxError|Unexpected|Expected|Unterminated|Invalid)\\b[^\\n]*{root}", "plan cannot continue[^\\n]*same text: [^\\n]*{root}", "^error: failed to write [`']{root}[^`']*[`']\\s*$"],
+        "sourceTransientDebounceMilliseconds": 15000,
+        "sourceTransientPollMilliseconds": 5000,
+        "treeStampDirectory": "heads",
         "tailCharacters": 300,
         "serverSuffix": "-server",
         "offEnvironment": "SEMIO_READY",
@@ -257,6 +263,7 @@
           "stage-code-changed": "Stage {stage} waited {minutes} minutes for a named holder while the code it runs changed ({file}); its whole process tree was stopped and the stage starts again at once with the new code (not counted as a failure).",
           "stage-code-stale": "Stage {stage} had run for at least {minutes} minutes when the code it runs changed ({file}); its whole process tree was stopped and the stage starts again at once with the new code, everything it finished stays stored (not counted as a failure).",
           "stage-holder-silent": "Stage {stage} waits for process {pid} ({command}), which holds the dependency store but has not renewed its registration for {silent} seconds, so it may be blocked; the stage was stopped after {minutes} minutes without progress and starts again in {seconds} seconds (stop {count} of {maximum} in a row, not counted as a failure). Stop that process to free the store.",
+          "source-transient": "Stage {stage} failed on a source file of the checkout that is missing or refused ({ending}), usually a peer's edit in progress; it starts again {seconds} seconds after the next change of the replicated tree, or after the back-off if the tree does not change.",
           "store-full": "Stage {stage} cannot create files in {path}: the disk or the quota of the user is full ({errno}); free space there. Retrying with back-off.",
           "disk-short": "Stage {stage} needs {needed} {unit} free in {path} but only {available} {unit} are free ({resource}); free at least {missing} {unit} more there; the stage does not start until space is free there, checking again every minute.",
           "disk-collecting": "Stage {stage} needs {needed} {unit} free in {path} but only {available} {unit} are free: freeing space by priority now (derivable caches first, the image slack last), progress is in the log; {missing} {unit} are still missing; the stage starts as soon as the need is free.",
@@ -282,6 +289,7 @@
           "stage-code-changed": "Stufe {stage} wartete {minutes} Minuten auf einen benannten Halter, während sich der Code änderte, den sie ausführt ({file}); ihr ganzer Prozessbaum wurde beendet und die Stufe startet sofort neu mit dem neuen Code (zählt nicht als Fehler).",
           "stage-code-stale": "Stufe {stage} lief mindestens {minutes} Minuten, als sich der Code änderte, den sie ausführt ({file}); ihr ganzer Prozessbaum wurde beendet und die Stufe startet sofort neu mit dem neuen Code, alles Fertige bleibt gespeichert (zählt nicht als Fehler).",
           "stage-holder-silent": "Stufe {stage} wartet auf Prozess {pid} ({command}), der den Abhängigkeitsspeicher hält, aber seine Anmeldung seit {silent} Sekunden nicht erneuert hat und daher womöglich blockiert ist; die Stufe wurde nach {minutes} Minuten ohne Fortschritt beendet und startet in {seconds} Sekunden neu (Stopp {count} von {maximum} in Folge, zählt nicht als Fehler). Diesen Prozess beenden, um den Speicher freizugeben.",
+          "source-transient": "Stufe {stage} scheiterte an einer Quelldatei des Arbeitsbaums, die fehlt oder abgelehnt wurde ({ending}), meist die Änderung eines Peers in Arbeit; sie startet {seconds} Sekunden nach der nächsten Änderung des replizierten Baums neu, oder nach der Wartezeit, wenn sich der Baum nicht ändert.",
           "store-full": "Stufe {stage} kann in {path} keine Dateien anlegen: der Datenträger oder die Quote des Benutzers ist voll ({errno}); dort Platz freigeben. Neuer Versuch mit Wartezeit.",
           "disk-short": "Stufe {stage} braucht {needed} {unit} frei in {path}, aber nur {available} {unit} sind frei ({resource}); gib dort mindestens {missing} {unit} mehr frei; die Stufe startet erst, wenn dort Platz frei ist, und prüft jede Minute neu.",
           "disk-collecting": "Stufe {stage} braucht {needed} {unit} frei in {path}, aber nur {available} {unit} sind frei: Platz wird jetzt nach Priorität freigegeben (zuerst ableitbare Caches, der Image-Überhang zuletzt), der Fortschritt steht im Protokoll; es fehlen noch {missing} {unit}; die Stufe startet, sobald der Bedarf frei ist.",
@@ -307,7 +315,7 @@
     },
     "Refusal": {
       "type": "object", "additionalProperties": false, "required": ["code", "en", "de"],
-      "properties": {"code": {"enum": ["human-running", "lease-held", "memory-low", "stage-failed", "tooling-compiler", "stage-timeout", "stage-stalled", "stage-stall-exhausted", "stage-code-changed", "stage-code-stale", "stage-step-overdue", "stage-holder-silent", "store-full", "disk-short", "disk-unmeasured", "disk-collecting", "disk-consumers", "disk-unfit", "loop-failed", "spawn-failed", "interrupted", "server"]}, "en": {"type": "string"}, "de": {"type": "string"}}
+      "properties": {"code": {"enum": ["human-running", "lease-held", "memory-low", "stage-failed", "tooling-compiler", "stage-timeout", "stage-stalled", "stage-stall-exhausted", "stage-code-changed", "stage-code-stale", "stage-step-overdue", "stage-holder-silent", "store-full", "source-transient", "disk-short", "disk-unmeasured", "disk-collecting", "disk-consumers", "disk-unfit", "loop-failed", "spawn-failed", "interrupted", "server"]}, "en": {"type": "string"}, "de": {"type": "string"}}
     },
     "Timings": {
       "description": "Per-stage timings of one worker in the store under `v1/origins/<origin>/ready-timings.json`: newest last. A drained physical stage has no attempt count in this supervisor. A null digest means no verified launch digest was available. An observed end bounds the duration when the wrapper receipt is unavailable.",
@@ -316,8 +324,13 @@
         "version": {"const": 1}, "origin": {"type": "string"}, "updatedMs": {"type": "integer"},
         "runs": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["stage", "startedMs", "endedMs", "seconds", "exit", "outcome", "peakMegabytes", "attempts", "digest"],
           "if":{"required":["watchdog"],"properties":{"watchdog":{"required":["toolsGraceDenial"]}}},"then":{"properties":{"stage":{"const":"tools"},"outcome":{"const":"stage-timeout"}}},
-          "properties": {"stage": {"type": "string"}, "startedMs": {"type": "integer"}, "endedMs": {"type": "integer"}, "seconds": {"type": "integer"}, "exit": {"type": ["integer", "null"]}, "outcome": {"enum": ["ok", "stage-failed", "stage-timeout", "stalled", "spawn-failed", "interrupted"]}, "peakMegabytes": {"type": ["integer", "null"]}, "growthMegabytes": {"type": ["integer", "null"]}, "attempts": {"type": ["integer", "null"]}, "digest": {"type": ["string", "null"]}, "endEvidence": {"enum": ["exit-receipt", "observed"]}, "signal": {"type": ["string", "null"]}, "watchdog": {"$ref": "#/definitions/TimingWatchdog"}}}}
+          "properties": {"stage": {"type": "string"}, "startedMs": {"type": "integer"}, "endedMs": {"type": "integer"}, "seconds": {"type": "integer"}, "exit": {"type": ["integer", "null"]}, "outcome": {"enum": ["ok", "stage-failed", "stage-timeout", "stalled", "spawn-failed", "interrupted"]}, "peakMegabytes": {"type": ["integer", "null"]}, "growthMegabytes": {"type": ["integer", "null"]}, "growthInodes": {"type": ["integer", "null"]}, "attempts": {"type": ["integer", "null"]}, "digest": {"type": ["string", "null"]}, "endEvidence": {"enum": ["exit-receipt", "observed"]}, "signal": {"type": ["string", "null"]}, "watchdog": {"$ref": "#/definitions/TimingWatchdog"}, "units": {"$ref": "#/definitions/TimingUnits"}}}}
       }
+    },
+    "TimingUnits": {
+      "description": "What one stage run did with compile units on this machine: the growth of the unit counters of the worktree between the start and the end of the run (restored from this machine, restored from the fleet, compiled, stored for the fleet, compiled but not shared). Absent when the run was adopted from an earlier supervisor (its start reading is unknown) or the counters cannot be read.",
+      "type": "object", "additionalProperties": false, "required": ["restoredLocal", "restoredFleet", "compiled", "stored", "skipped"],
+      "properties": {"restoredLocal": {"type": "integer", "minimum": 0}, "restoredFleet": {"type": "integer", "minimum": 0}, "compiled": {"type": "integer", "minimum": 0}, "stored": {"type": "integer", "minimum": 0}, "skipped": {"type": "integer", "minimum": 0}}
     },
     "Containment": {
       "description": "`containment` of `ready.json`: what the last stage run reaped and what survived its stop, in English and German; `null` when there was nothing to say.",

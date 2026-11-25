@@ -1,0 +1,3 @@
+[
+{"op": "contact-split", "anchor": "stand-pad", "parts": [{"id": "stand-pad-left", "bone": "stand", "x": 0.235, "y": 0, "kind": "contact", "title": {"en": "Left stand foot", "de": "Linker Ständerfuß"}, "support": "contact", "normalDeg": 90, "footprintLengthM": 0.05, "footprintWidthM": 0.052, "frictionCoefficient": 0.6, "z": 0.205}, {"id": "stand-pad-right", "bone": "stand", "x": 0.235, "y": 0, "kind": "contact", "title": {"en": "Right stand foot", "de": "Rechter Ständerfuß"}, "support": "contact", "normalDeg": 90, "footprintLengthM": 0.05, "footprintWidthM": 0.052, "frictionCoefficient": 0.6, "z": -0.205}]}
+]

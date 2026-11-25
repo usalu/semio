@@ -5,6 +5,7 @@
  * Per asset: `validateAsset`; for every authored representation the measured suitability under the print profile (default `office-laser`); every named pose and `samples` instants per clip
  * are evaluated at every authored scale, solved thermally and structurally once (the physics does not depend on the scale) and depicted in all seven views and all three viewpoints (elevation, front, plan) at every authored scale; unavailable
  * scales are listed with their reason. Without `--asset`/`--category` the manifest is validated against all assets too. `✓`/`✗` per asset; exit code 1 when any asset fails.
+ * With `--asset` or `--category` no process holds the catalog (375 documents, 2.1 GB resident when parsed together): the documents are read one at a time, a checked asset is held with the assets its unavailable representations name as alternatives and released before the next. Only the run over the whole catalog, which validates the manifest against all assets, loads them together.
  *
  * @see ../🟦️.ts — semantic validation
  * @see ../../🖨️representation/🟦️.ts — suitability
@@ -20,7 +21,7 @@ import { evaluate } from "../../🧮️evaluation/🟦️.ts";
 import { DEFAULT_PRINT_PROFILE, PRINT_PROFILES, measureSuitability } from "../../🖨️representation/🟦️.ts";
 import { solveStructure } from "../../🏗️structure/🟦️.ts";
 import { solveThermalAt } from "../../🌡️thermal/🟦️.ts";
-import { DEFAULT_CATALOG_ROOT, loadCatalogFromFiles, loadEnvironments } from "../📥️files/🟦️.ts";
+import { DEFAULT_CATALOG_ROOT, assetPathsFromFiles, loadCatalogFromFiles, loadEnvironments } from "../📥️files/🟦️.ts";
 import { type Issue, validateAsset, validateManifest } from "../🟦️.ts";
 
 /** 🎛️ What a check run needs besides the asset. */
@@ -146,18 +147,57 @@ export function checkAsset(asset: Asset, samples = 9, options: Omit<CheckOptions
   return [...checkAssetDetailed(asset, { ...options, samples }).problems];
 }
 
+/** 📖️ The asset of one document file. */
+const readAsset = (path: string): Asset => (JSON.parse(readFileSync(path, "utf8")) as AssetDocument).asset;
+
+/** 🎣️ The assets with the given ids, each read alone: first the document of the folder that carries the id (the contract of the archive), then, for an id no folder carries, the other documents one at a time. No other document is kept. */
+function assetsById(paths: readonly { readonly folder: string; readonly path: string }[], ids: ReadonlySet<string>): Map<string, Asset> {
+  const found = new Map<string, Asset>();
+  const take = (path: string): void => {
+    const asset = readAsset(path);
+    if (ids.has(asset.id) && !found.has(asset.id)) found.set(asset.id, asset);
+  };
+  for (const entry of paths) if (ids.has(entry.folder)) take(entry.path);
+  for (const entry of paths) if (found.size < ids.size && !ids.has(entry.folder)) take(entry.path);
+  return found;
+}
+
+/** 🔀️ The ids of the assets the unavailable representations of an asset name as alternatives: the only other documents its validation reads. */
+const alternativeAssets = (asset: Asset): string[] => Object.values(asset.representations).flatMap((rep) => (rep?.status === "unavailable" ? rep.alternatives.flatMap((alternative) => (alternative.kind === "asset" ? [alternative.asset] : [])) : []));
+
 if (import.meta.main) {
   const { values } = parseArgs({ options: { file: { type: "string" }, asset: { type: "string" }, category: { type: "string" }, catalog: { type: "string" }, samples: { type: "string", default: "9" }, profile: { type: "string" }, "no-physics": { type: "boolean", default: false }, quiet: { type: "boolean", default: false } } });
   const profile = values.profile === undefined ? DEFAULT_PRINT_PROFILE : (PRINT_PROFILES.profiles.find((candidate) => candidate.id === values.profile) ?? (() => { throw new Error(`unknown profile "${values.profile}"`); })());
-  const catalog = values.file ? null : await loadCatalogFromFiles(values.catalog ? resolve(values.catalog) : DEFAULT_CATALOG_ROOT);
-  const assets: readonly Asset[] = values.file ? [(JSON.parse(readFileSync(resolve(values.file), "utf8")) as AssetDocument).asset] : catalog!.assets;
-  const known = new Map(assets.map((asset) => [asset.id, asset] as const));
-  const environments = catalog ? new Set(((await loadEnvironments(catalog.root))?.presets ?? []).map((preset) => preset.id)) : undefined;
-  const selected = assets.filter((asset) => (!values.asset || asset.id === values.asset) && (!values.category || asset.category === values.category));
-  if (selected.length === 0) console.log("✗ no asset selected");
-  let failed = selected.length === 0 ? 1 : 0;
-  if (catalog && !values.asset && !values.category) {
-    const issues = [...validateManifest(catalog.manifest, assets)];
+  const root = values.catalog ? resolve(values.catalog) : DEFAULT_CATALOG_ROOT;
+  const environments = values.file ? undefined : new Set(((await loadEnvironments(root))?.presets ?? []).map((preset) => preset.id));
+  const picked = (asset: Asset): boolean => (!values.asset || asset.id === values.asset) && (!values.category || asset.category === values.category);
+  let failed = 0;
+  const check = (asset: Asset, index: number, count: number, known: ReadonlyMap<string, Asset>): void => {
+    const report = checkAssetDetailed(asset, { samples: Number(values.samples), profile, assets: known, ...(environments === undefined ? {} : { environments }), physics: !values["no-physics"] });
+    failed += report.problems.length ? 1 : 0;
+    console.log(`${report.problems.length ? "✗" : "✓"} ${asset.id} (${index + 1}/${count})${values.quiet ? "" : report.lines.map((line) => `\n  ${line}`).join("")}${report.problems.length ? `\n  ${report.problems.slice(0, 30).join("\n  ")}` : ""}`);
+  };
+  const none = (): void => {
+    console.log("✗ no asset selected");
+    failed = 1;
+  };
+  if (values.file) {
+    const asset = readAsset(resolve(values.file));
+    if (picked(asset)) check(asset, 0, 1, new Map([[asset.id, asset]]));
+    else none();
+  } else if (values.asset || values.category) {
+    const paths = await assetPathsFromFiles(root);
+    const ids = values.asset ? [...assetsById(paths, new Set([values.asset])).values()].filter(picked).map((asset) => asset.id) : paths.flatMap((entry) => [readAsset(entry.path)].filter(picked).map((asset) => asset.id));
+    if (ids.length === 0) none();
+    for (const [index, id] of ids.entries()) {
+      const asset = assetsById(paths, new Set([id])).get(id)!;
+      check(asset, index, ids.length, new Map<string, Asset>([...assetsById(paths, new Set(alternativeAssets(asset).filter((other) => other !== id))), [id, asset]]));
+    }
+  } else {
+    const catalog = await loadCatalogFromFiles(root);
+    if (catalog.assets.length === 0) none();
+    const known = new Map(catalog.assets.map((asset) => [asset.id, asset] as const));
+    const issues = [...validateManifest(catalog.manifest, catalog.assets)];
     for (const entry of catalog.loaded) {
       const category = catalog.manifest.categories.find((candidate) => candidate.id === entry.asset.category);
       if (entry.folder !== entry.asset.id) issues.push({ path: entry.path, code: "asset-folder", message: { en: `Asset "${entry.asset.id}" lives in folder "${entry.folder}".`, de: `Asset "${entry.asset.id}" liegt im Ordner "${entry.folder}".` } });
@@ -165,11 +205,7 @@ if (import.meta.main) {
     }
     console.log(`${issues.length ? "✗" : "✓"} manifest${issues.length ? `\n  ${issues.slice(0, 40).map((issue) => `${issue.code} ${issue.path}: ${issue.message.en}`).join("\n  ")}` : ""}`);
     failed += issues.length ? 1 : 0;
-  }
-  for (const [index, asset] of selected.entries()) {
-    const report = checkAssetDetailed(asset, { samples: Number(values.samples), profile, assets: known, ...(environments === undefined ? {} : { environments }), physics: !values["no-physics"] });
-    failed += report.problems.length ? 1 : 0;
-    console.log(`${report.problems.length ? "✗" : "✓"} ${asset.id} (${index + 1}/${selected.length})${values.quiet ? "" : report.lines.map((line) => `\n  ${line}`).join("")}${report.problems.length ? `\n  ${report.problems.slice(0, 30).join("\n  ")}` : ""}`);
+    for (const [index, asset] of catalog.assets.entries()) check(asset, index, catalog.assets.length, known);
   }
   process.exitCode = failed ? 1 : 0;
 }

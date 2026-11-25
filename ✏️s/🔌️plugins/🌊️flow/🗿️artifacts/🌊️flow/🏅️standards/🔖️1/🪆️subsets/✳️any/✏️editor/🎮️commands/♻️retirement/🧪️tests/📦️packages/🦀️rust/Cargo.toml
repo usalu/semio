@@ -57,7 +57,6 @@ semio-s-artifact-flow-flow-mutations = { path = "../../../../../../🧬️schema
 semio-s-artifact-flow-flow-schema = { path = "../../../../../../🧬️schema/📦️packages/🦀️rust" }
 semio-s-artifact-flow-flow-tests = { path = "../../../../../../🧬️schema/💡️inferences/🧪️tests/🔬️unit/📦️packages/🦀️rust" }
 
-unit_tests = { path = "../../../../../🧪️tests/🔬️unit/📦️packages/🦀️rust", package = "semio-s-artifact-flow-flow-unit-tests", features = ["testkit"] }
 semio-s-artifact-flow-flow-viewer = { path = "../../../../../../👁️viewer/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-csv = { workspace = true }
 semio-s-artifact-stdio-json = { workspace = true }
@@ -69,6 +68,7 @@ semio-s-artifact-stdio-txt = { workspace = true }
 semio_ui_contract = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-ui-contract" }
 
 [dev-dependencies]
+unit_tests = { path = "../../../../../🧪️tests/🔬️unit/📦️packages/🦀️rust", package = "semio-s-artifact-flow-flow-unit-tests", features = ["testkit"] }
 semio-framework-value-native-owned = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-async-macros = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

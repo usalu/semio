@@ -73,7 +73,7 @@ async fn retained_recursive_replacement_fixture(
     envelope.dialect = Some(parent_dialect);
     let mut candidate = store::ArtifactStore::new::<::semio_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, app.stores.store.local_actor_id().clone()).await.expect("recursive candidate parent store");
     store::install_unscheduled_catalog(&mut candidate, funded_recursive_fixture_owners::<ComposedParentSnapshot>("recursive-parent")).expect("recursive candidate parent catalog installs");
-    let job = semio_plugin_ownership::store_lifecycle::ArtifactStoreInitializationJob::new(Box::new(ReadyComposedParentInitialization::from_candidate(candidate)));
+    let job = semio_plugin_store_lifecycle::store_lifecycle::ArtifactStoreInitializationJob::new(Box::new(ReadyComposedParentInitialization::from_candidate(candidate)));
     let operation = semio_framework_job::OperationId(operation);
     app.ingest.store_replacement_jobs.insert_admitted(
         operation.0,

@@ -1,17 +1,19 @@
 import { describe, expect, it } from "vitest";
 import Ajv from "ajv";
 import laws from "../🧫️fixtures/🔬️wgpu-extension-dispatch/🔣️.json";
+import rearmScope from "../🧫️fixtures/🔬️wgpu-extension-dispatch/🪟️rearm-scope.json";
 import documentBackbone from "../🧫️fixtures/📡️wgpu-document-backbone/🔣️.json";
 import { contextIntegerCarriersFixture as integerView, manifestViewContextSchema as viewContextSchema } from "@semio-tech/framework-manifest/testing/fixtures";
 import { GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES, GUEST_HOST_ANSWER_CEILING_BYTES, guestAnswerPages } from "@semio-tech/framework-trace/memory";
 import { extensionRequestActivationReason, serializeWgpuActorCall, WGPU_ACTOR_CALL_QUEUE_CAPACITY, WgpuActorCallQueueFullError } from "@semio-tech/framework-renderer-wgpu/plugin-bridge/shard-and-actor-calls";
 import { wgpuBackboneMessageEffect, wgpuBuildScopedContributionsPack, wgpuCommandIngressByteLength, wgpuContributionsIngressSize, wgpuSetContributionsCommand, wgpuSlimContributionsView, WGPU_CONTRIBUTIONS_SLIM_VIEW } from "@semio-tech/framework-renderer-wgpu/plugin-bridge/contributions-and-effects";
 import { wgpuGuestAnswerPages, wgpuHostAnswerCeilingBytes } from "@semio-tech/framework-renderer-wgpu/plugin-bridge/typed-operations-and-handle";
-import { activationEventEnvelope, createTurnOutcomeBroadcast, type TurnOutcome } from "@semio-tech/framework";
+import { activationEventEnvelope, createTurnOutcomeBroadcast, hostEffectInvocationV1, type TurnOutcome } from "@semio-tech/framework";
 import { AppChannelClient, type AppChannelHandle, AppChannelRequestSequence, decodeAppCommand, encodeAppCommand, encodeAppFrame, encodePackValue } from "@semio-tech/framework-os";
 import { FRAME_WORKER_BOOT_LIVENESS_POLICY, bootPhaseCeilingMs, evaluateBrowserBootLiveness } from "@semio-tech/framework-renderer-wgpu/boot-liveness";
 import { SHARD_COMMAND_MAXIMUM_PAGES } from "@semio-tech/framework-actor/shard-client";
 import { PUBLIC_INVOCATION_BODY_BYTES, PUBLIC_INVOCATION_STRING_BYTES, publicInvocationStringPages } from "@semio-tech/framework-manifest/view-state-and-public-invocation";
+import { wgpuEffectDispatchScope } from "../../🎯️targets/🧊️wgpu/🐚️plugin-bridge/🎛️contributions-and-effects/🟦️.ts";
 
 async function actualAppChannelCommand(sequenceOwnerBefore: number, commandBytes: Uint8Array, viewState: unknown): Promise<Uint8Array> {
   const outcomes = createTurnOutcomeBroadcast<TurnOutcome>();
@@ -64,6 +66,20 @@ describe("wgpu extension-answer paging", () => {
 });
 
 describe("wgpu contributions-before-eval", () => {
+  it("addresses a rearmed action with the focused instance's declared kind", () => {
+    const scope = wgpuEffectDispatchScope("procedural", "editor", rearmScope.view);
+    expect(scope.windowInstanceId).toBe(rearmScope.expected.windowInstanceId);
+    expect(scope.windowKindId).toBe(rearmScope.expected.windowKindId);
+  });
+  it("addresses a rearmed action to its explicitly requested preview", () => {
+    const view = { ...rearmScope.view, windowInstances: [...rearmScope.view.windowInstances, { id: "procedural-preview", windowKindId: "procedural-preview" }] };
+    const scope = wgpuEffectDispatchScope("procedural", "editor", view);
+    const invocation = hostEffectInvocationV1(scope, [], "flowEvalTick", { windowId: "procedural-preview", windowKindId: "procedural-preview" }, view.windowInstances);
+    expect(invocation.kind).toBe("action");
+    if (invocation.kind !== "action") throw new Error("expected action");
+    expect(invocation.invocation.address.windowInstanceId).toBe("procedural-preview");
+    expect(invocation.invocation.address.windowKindId).toBe("procedural-preview");
+  });
   it("records one pack contributions crossing before the first flowEvalTick", () => {
     const timeline = laws.laws.contributionsBeforeEval.timeline;
     const firstEval = timeline.findIndex((row) => row.kind === "flowEvalTick");

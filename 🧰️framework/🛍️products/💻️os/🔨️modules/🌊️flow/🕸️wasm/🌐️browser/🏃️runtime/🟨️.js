@@ -85,6 +85,7 @@ export class FlowSession {
       if (isFlowSessionOpenRejected(error)) this.#releaseOnce();
       throw error;
     });
+    void this.#ready.catch(() => {});
   }
 
   [invokeFeature](name, args) {

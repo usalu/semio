@@ -76,6 +76,11 @@ export function registerRaycastsZ0GroundTests(): void {
     };
     expect(world3dProjectedAabbContainsClick({ x: 500, y: 340 }, table.corners)).toBe(true);
     expect(world3dProjectedAabbContainsClick({ x: 10, y: 10 }, table.corners)).toBe(false);
+    const column = [[100, 50], [103, 50], [103, 300], [100, 300]] as const;
+    expect(world3dProjectedAabbContainsClick({ x: 105, y: 120 }, column)).toBe(true);
+    expect(world3dProjectedAabbContainsClick({ x: 97, y: 120 }, column)).toBe(true);
+    expect(world3dProjectedAabbContainsClick({ x: 107, y: 120 }, column)).toBe(false);
+    expect(world3dProjectedAabbContainsClick({ x: 105, y: 120 }, column, 0)).toBe(false);
     expect(resolveClickInstanceIdFromProjected({ x: 500, y: 340 }, [table, far])).toBe("table");
     expect(resolveClickInstanceIdFromProjected({ x: 10, y: 10 }, [table, far])).toBeNull();
     expect(world3dMarqueePointerCaptureArmed(0)).toBe(false);

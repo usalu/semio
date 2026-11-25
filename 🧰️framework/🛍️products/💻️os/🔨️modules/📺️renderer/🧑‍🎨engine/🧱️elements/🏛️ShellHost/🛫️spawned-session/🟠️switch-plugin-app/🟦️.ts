@@ -1,7 +1,9 @@
 /** 🟠️ The switch plugin app phase of useSpawnedSession. */
 import { DOCUMENT_SERVICE_TOPIC_V1 } from "@semio-tech/framework/inference/service";
 import { admitDocumentServiceWireDeclarationV1 } from "@semio-tech/framework/inference/service/io";
-import { prepareDocumentSurfaceV1 } from "../../🔀️surface-switch/📄️document/🟦️.ts";
+import { prepareDocumentSurfaceV1, restoreDocumentSurfaceV1 } from "../../🔀️surface-switch/📄️document/🟦️.ts";
+import { documentLoadCancelledV1 } from "../../../🛠️ShellHelpers/🧾️transfer-checkin-tutorial/🟦️.ts";
+import { resolveManifestLabel } from "../../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
 import { createAdmittedShellInstanceV1 } from "../../🗨️dialog-origin/🟦️.ts";
 import { type DocumentOpeningReceiptV1 } from "../../🗨️dialog-origin/🛂️admission/📄️document/🟦️.ts";
 import { useCallback, useEffect } from "../../../⚛️react-port/🟦️.ts";
@@ -32,7 +34,7 @@ type PreparedPrimarySessionV1 = Readonly<{
 }>;
 
 /** 🟡 Builds switchToPluginApp, syncSpawnedPluginDocument, ensureSpawnedPlugin of useSpawnedSession. */
-export function useSwitchPluginAppState({ pluginOpInFlightRef, admitProgramRetirementRef, hostMode, hostApp, setSurfaceSwitchBusy, sessionSwitchGateRef, session, loadedPlugins, sessionWorkRef, sealedInstancesRef, loadedPluginsRef, sessionRef, openDocumentSessionsRef, openDocumentRef, closeDocumentRef, documentAttachmentLanesRef, retireSessionInstance, dispatch, appLabelsOverlay, uiTerminology, uiLocale, extraWindowInstancesRef, extraWindowCounterRef, landingAppId, rememberOpenSpaceId, openInstanceIdRef, refreshUi, reportRefreshFault, showTransientNoticeRef, documentServices, documentServiceInventoryRef, backboneWorkerRef }: Pick<ReturnType<typeof useDocumentServicesState>, "hostMode" | "hostApp" | "setSurfaceSwitchBusy" | "sessionSwitchGateRef" | "session" | "loadedPlugins" | "sessionWorkRef" | "sealedInstancesRef" | "loadedPluginsRef" | "sessionRef" | "openDocumentSessionsRef" | "openDocumentRef" | "closeDocumentRef" | "documentAttachmentLanesRef" | "dispatch" | "appLabelsOverlay" | "uiTerminology" | "uiLocale" | "extraWindowInstancesRef" | "extraWindowCounterRef" | "landingAppId" | "rememberOpenSpaceId" | "openInstanceIdRef" | "refreshUi" | "reportRefreshFault" | "showTransientNoticeRef" | "documentServices" | "documentServiceInventoryRef" | "backboneWorkerRef"> & Pick<ReturnType<typeof useUpdateSpacePanelState>, "retireSessionInstance"> & { readonly pluginOpInFlightRef: { current: ReadonlySet<string> }; readonly admitProgramRetirementRef: { current: ProgramRetirementRequestV1 } }) {
+export function useSwitchPluginAppState({ pluginOpInFlightRef, admitProgramRetirementRef, hostMode, hostApp, setSurfaceSwitchBusy, sessionSwitchGateRef, session, loadedPlugins, sessionWorkRef, sealedInstancesRef, loadedPluginsRef, sessionRef, openDocumentSessionsRef, openDocumentRef, closeDocumentRef, documentAttachmentLanesRef, retireSessionInstance, dispatch, appLabelsOverlay, uiTerminology, uiLocale, extraWindowInstancesRef, extraWindowCounterRef, landingAppId, rememberOpenSpaceId, openInstanceIdRef, refreshUi, reportRefreshFault, showTransientNoticeRef, documentServices, documentServiceInventoryRef, backboneWorkerRef, documentTransfer }: Pick<ReturnType<typeof useDocumentServicesState>, "hostMode" | "hostApp" | "setSurfaceSwitchBusy" | "sessionSwitchGateRef" | "session" | "loadedPlugins" | "sessionWorkRef" | "sealedInstancesRef" | "loadedPluginsRef" | "sessionRef" | "openDocumentSessionsRef" | "openDocumentRef" | "closeDocumentRef" | "documentAttachmentLanesRef" | "dispatch" | "appLabelsOverlay" | "uiTerminology" | "uiLocale" | "extraWindowInstancesRef" | "extraWindowCounterRef" | "landingAppId" | "rememberOpenSpaceId" | "openInstanceIdRef" | "refreshUi" | "reportRefreshFault" | "showTransientNoticeRef" | "documentServices" | "documentServiceInventoryRef" | "backboneWorkerRef" | "documentTransfer"> & Pick<ReturnType<typeof useUpdateSpacePanelState>, "retireSessionInstance"> & { readonly pluginOpInFlightRef: { current: ReadonlySet<string> }; readonly admitProgramRetirementRef: { current: ProgramRetirementRequestV1 } }) {
   const switchAppSession = useCallback(
     async (pluginId: string, appId: string, viewState?: ViewModel, documentSource?: ActiveSession, prepared?: PreparedPrimarySessionV1): Promise<ActiveSession | null> => {
       const defaultViewState = (app: AppDefinition): ViewModel => ({ activeModeId: app.defaultModeId ?? app.modes[0]?.id, ...(hostMode ? { panelJson: panelJsonFromState(buildSpacePanelState([], requiredHostPanelLeafId(hostApp))) } : {}) });
@@ -51,85 +53,92 @@ export function useSwitchPluginAppState({ pluginOpInFlightRef, admitProgramRetir
           retirement = await admitProgramRetirementRef.current(owners, current, prepared?.retirement);
           if (retirement === null || !retirement.current()) return null;
         }
-        const outcome = await sessionSwitchGateRef.current.run(
-          {
-            session: predecessor,
-            resolveApp: (targetPluginId, targetAppId) => loadedPlugins.find((entry) => entry.handle.pluginId === targetPluginId)?.manifest.apps.find((candidate) => candidate.id === targetAppId) ?? null,
-            appId: (app) => app.id,
-            quiesce: async (retiring) => {
-              const quiet = await quiesceSessionWorkV1(() => sessionWorkRef.current.pending(retiring.pluginId, retiring.instanceId));
-              if (!quiet.settled) console.warn(`surface-switch draining ${retiring.pluginId}#${retiring.instanceId} ${sessionWorkRef.current.outstanding(retiring.pluginId, retiring.instanceId)}`);
-              return quiet;
+        try {
+          const outcome = await sessionSwitchGateRef.current.run(
+            {
+              session: predecessor,
+              resolveApp: (targetPluginId, targetAppId) => loadedPlugins.find((entry) => entry.handle.pluginId === targetPluginId)?.manifest.apps.find((candidate) => candidate.id === targetAppId) ?? null,
+              appId: (app) => app.id,
+              quiesce: async (retiring) => {
+                const quiet = await quiesceSessionWorkV1(() => sessionWorkRef.current.pending(retiring.pluginId, retiring.instanceId));
+                if (!quiet.settled) console.warn(`surface-switch draining ${retiring.pluginId}#${retiring.instanceId} ${sessionWorkRef.current.outstanding(retiring.pluginId, retiring.instanceId)}`);
+                return quiet;
+              },
+              seal: (retiring) => { if (!predecessorHandle) throw new Error("program-retirement.owner-unavailable"); sealedInstancesRef.current.seal(predecessorHandle, retiring.pluginId, retiring.instanceId); },
+              unseal: (kept) => { if (predecessorHandle) sealedInstancesRef.current.unseal(predecessorHandle, kept.pluginId, kept.instanceId); },
+              createInstance: async (targetPluginId, app) => {
+                if (retirement !== null && !retirement.current()) throw new Error("program-retirement.owner-stale");
+                const handle = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === targetPluginId)?.handle;
+                if (pluginOpInFlightRef.current.has(targetPluginId)) throw new Error("program-retirement.program-busy");
+                if (!handle) throw new Error(`switchToPluginApp: ${targetPluginId} is no longer loaded`);
+                if (prepared !== undefined) {
+                  if (handle !== prepared.handle || !prepared.current()) throw new Error("archive-file.owner-retired");
+                  return prepared.instanceId;
+                }
+                if (documentSource === undefined) return handle.createApp(app.id);
+                const current = () => sessionRef.current?.pluginId === documentSource.pluginId && sessionRef.current?.instanceId === documentSource.instanceId;
+                if (targetPluginId !== documentSource.pluginId || !current() || !app.dialect) throw new Error("surface-document.predecessor-stale");
+                const readArchive = handle.readAppDocumentArchive;
+                const loadArchive = handle.loadAppDocumentArchive;
+                if (!readArchive || !loadArchive) throw new Error("surface-document.archive-port-unavailable");
+                const owners = [...openDocumentSessionsRef.current.values()].filter(entry => entry.plugin === handle && entry.session.instanceId === documentSource.instanceId);
+                if (owners.length > 1) throw new Error("surface-document.owner-ambiguous");
+                const owner = owners[0];
+                const surfaceId = canonicalSurfaceId(app.dialect,app.role);
+                const documentFile = resolveManifestLabel(app.label,uiTerminology,uiLocale) || app.id;
+                let receipt: DocumentOpeningReceiptV1 | null = null;
+                return prepareDocumentSurfaceV1({
+                  current,
+                  capture: () => readArchive(documentSource.instanceId),
+                  create: () => handle.createApp(app.id),
+                  restore: (instanceId,archive) => restoreDocumentSurfaceV1(documentTransfer().trackDocumentTransfer(documentFile,targetPluginId),(captured,signal,progress) => loadArchive(instanceId,captured,signal,progress),archive),
+                  attach: async instanceId => {
+                    if (owner === undefined) return;
+                    const nextSession: ActiveSession = { pluginId: targetPluginId,instanceId,app,viewState: viewState ?? defaultViewState(app),documentInitialized: true };
+                    const bindings = owner.persistenceBindings.map(binding => binding.kind === "hub" ? { ...binding,requestedSurfaceId: surfaceId } : binding);
+                    receipt = await openDocumentRef.current(owner.openingReference,bindings,{ plugin: handle,session: nextSession });
+                    if (receipt === null) throw new Error("surface-document.attachment-refused");
+                  },
+                  release: async instanceId => {
+                    if (receipt !== null) closeDocumentRef.current(receipt.runtimeKey,receipt.clientInstanceId);
+                    await documentAttachmentLanesRef.current.get(handle)?.get(instanceId)?.drain();
+                    await handle.destroyApp(instanceId);
+                  },
+                });
+              },
+              retire: async retired => { if (retirement === null) return retireSessionInstance(retired as ActiveSession); if (!await retirement.retire()) throw new Error("program-retirement.owner-stale"); },
+              defaultViewState,
+              publish: (next) => {
+                dispatch({ type: "SET_SESSION", value: { ...next, documentInitialized: documentSource !== undefined || prepared !== undefined } });
+                prepared?.onPublished();
+              },
+              seedLayout: (app) => {
+                const seeded = applyFrameworkLayoutSeed(app.defaultLayout, withLocalizedWindowKindLabels(app.windowKinds), appLabelsOverlay, uiTerminology, uiLocale);
+                extraWindowInstancesRef.current = seeded.extraInstances;
+                extraWindowCounterRef.current = seeded.extraInstances.length;
+                dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: seeded.extraInstances });
+                dispatch({ type: "SET_SHELL_LAYOUT", value: seeded.modeLayout });
+                dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: seededActiveWindowId(seeded.modeLayout) });
+                if (hostMode && app.id === landingAppId) {
+                  rememberOpenSpaceId(null);
+                  openInstanceIdRef.current = null;
+                }
+              },
+              refresh: prepared === undefined ? refreshUi : (next) => refreshUi(next).catch(error => reportRefreshFault(next.pluginId, error)),
             },
-            seal: (retiring) => { if (!predecessorHandle) throw new Error("program-retirement.owner-unavailable"); sealedInstancesRef.current.seal(predecessorHandle, retiring.pluginId, retiring.instanceId); },
-            unseal: (kept) => { if (predecessorHandle) sealedInstancesRef.current.unseal(predecessorHandle, kept.pluginId, kept.instanceId); },
-            createInstance: async (targetPluginId, app) => {
-              if (retirement !== null && !retirement.current()) throw new Error("program-retirement.owner-stale");
-              const handle = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === targetPluginId)?.handle;
-              if (pluginOpInFlightRef.current.has(targetPluginId)) throw new Error("program-retirement.program-busy");
-              if (!handle) throw new Error(`switchToPluginApp: ${targetPluginId} is no longer loaded`);
-              if (prepared !== undefined) {
-                if (handle !== prepared.handle || !prepared.current()) throw new Error("archive-file.owner-retired");
-                return prepared.instanceId;
-              }
-              if (documentSource === undefined) return handle.createApp(app.id);
-              const current = () => sessionRef.current?.pluginId === documentSource.pluginId && sessionRef.current?.instanceId === documentSource.instanceId;
-              if (targetPluginId !== documentSource.pluginId || !current() || !app.dialect) throw new Error("surface-document.predecessor-stale");
-              const readArchive = handle.readAppDocumentArchive;
-              const loadArchive = handle.loadAppDocumentArchive;
-              if (!readArchive || !loadArchive) throw new Error("surface-document.archive-port-unavailable");
-              const owners = [...openDocumentSessionsRef.current.values()].filter(entry => entry.plugin === handle && entry.session.instanceId === documentSource.instanceId);
-              if (owners.length > 1) throw new Error("surface-document.owner-ambiguous");
-              const owner = owners[0];
-              const surfaceId = canonicalSurfaceId(app.dialect,app.role);
-              let receipt: DocumentOpeningReceiptV1 | null = null;
-              return prepareDocumentSurfaceV1({
-                current,
-                capture: () => readArchive(documentSource.instanceId),
-                create: () => handle.createApp(app.id),
-                restore: (instanceId,archive) => loadArchive(instanceId,archive),
-                attach: async instanceId => {
-                  if (owner === undefined) return;
-                  const nextSession: ActiveSession = { pluginId: targetPluginId,instanceId,app,viewState: viewState ?? defaultViewState(app),documentInitialized: true };
-                  const bindings = owner.persistenceBindings.map(binding => binding.kind === "hub" ? { ...binding,requestedSurfaceId: surfaceId } : binding);
-                  receipt = await openDocumentRef.current(owner.openingReference,bindings,{ plugin: handle,session: nextSession });
-                  if (receipt === null) throw new Error("surface-document.attachment-refused");
-                },
-                release: async instanceId => {
-                  if (receipt !== null) closeDocumentRef.current(receipt.runtimeKey,receipt.clientInstanceId);
-                  await documentAttachmentLanesRef.current.get(handle)?.get(instanceId)?.drain();
-                  await handle.destroyApp(instanceId);
-                },
-              });
-            },
-            retire: async retired => { if (retirement === null) return retireSessionInstance(retired as ActiveSession); if (!await retirement.retire()) throw new Error("program-retirement.owner-stale"); },
-            defaultViewState,
-            publish: (next) => {
-              dispatch({ type: "SET_SESSION", value: { ...next, documentInitialized: documentSource !== undefined || prepared !== undefined } });
-              prepared?.onPublished();
-            },
-            seedLayout: (app) => {
-              const seeded = applyFrameworkLayoutSeed(app.defaultLayout, withLocalizedWindowKindLabels(app.windowKinds), appLabelsOverlay, uiTerminology, uiLocale);
-              extraWindowInstancesRef.current = seeded.extraInstances;
-              extraWindowCounterRef.current = seeded.extraInstances.length;
-              dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: seeded.extraInstances });
-              dispatch({ type: "SET_SHELL_LAYOUT", value: seeded.modeLayout });
-              dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: seededActiveWindowId(seeded.modeLayout) });
-              if (hostMode && app.id === landingAppId) {
-                rememberOpenSpaceId(null);
-                openInstanceIdRef.current = null;
-              }
-            },
-            refresh: prepared === undefined ? refreshUi : (next) => refreshUi(next).catch(error => reportRefreshFault(next.pluginId, error)),
-          },
-          { pluginId, appId, viewState, replaceCurrent: prepared !== undefined },
-          (retired, retireError) => console.warn(`switchToPluginApp: predecessor ${retired.pluginId}/${retired.app.id} retirement failed`, retireError),
-        );
-        if (outcome.status === "draining" || outcome.status === "busy") {
-          showTransientNoticeRef.current(surfaceSwitchBusyTextV1(uiLocale), "info");
+            { pluginId, appId, viewState, replaceCurrent: prepared !== undefined },
+            (retired, retireError) => console.warn(`switchToPluginApp: predecessor ${retired.pluginId}/${retired.app.id} retirement failed`, retireError),
+          );
+          if (outcome.status === "draining" || outcome.status === "busy") {
+            showTransientNoticeRef.current(surfaceSwitchBusyTextV1(uiLocale), "info");
+            return null;
+          }
+          return outcome.session === null || (documentSource === undefined && prepared === undefined) ? outcome.session : { ...outcome.session, documentInitialized: true };
+        } catch (switchError) {
+          if (documentSource === undefined || !documentLoadCancelledV1(switchError)) throw switchError;
+          documentTransfer().notifyDocumentTransfer("load-cancelled", resolveManifestLabel(documentSource.app.label, uiTerminology, uiLocale) || documentSource.app.id, "info");
           return null;
         }
-        return outcome.session === null || (documentSource === undefined && prepared === undefined) ? outcome.session : { ...outcome.session, documentInitialized: true };
       } finally {
         retirement?.release();
         setSurfaceSwitchBusy(false);

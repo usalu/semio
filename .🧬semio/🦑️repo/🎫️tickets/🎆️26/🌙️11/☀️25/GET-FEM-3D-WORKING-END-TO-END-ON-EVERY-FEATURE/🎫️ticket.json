@@ -1,0 +1,23 @@
+{
+  "title": "Get FEM 3D Working End to End on Every Feature",
+  "emoji": "🧊",
+  "status": "open",
+  "description": "Make sure FEM 3D is working end to end on every feature (viewport navigation, picking, gumball, inspection edits, actions, artifact tree, results display/playback, history/alternatives, examples, roles, windows, settings, language). Start from feature-matrix-3d-v2.md failures F1-F14 (ticket 26/11/22/GET-FEM-PLUGIN-WORKING-END-TO-END), fix root causes, rebuild the component and verify in the browser.",
+  "goal": "🎯runningfem3d",
+  "sessions": [
+    "5fef2c9e-80f5-4703-b608-c9a77b9e1ac7"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-25 17:24:44",
+      "author": "",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Make sure FEM 3D is working end to end on every feature (viewport navigation, picking, gumball, inspection edits, actions, artifact tree, results display/playback, history/alternatives, examples, roles, windows, settings, language). Start from feature-matrix-3d-v2.md failures F1-F14 (ticket 26/11/22/GET-FEM-PLUGIN-WORKING-END-TO-END), fix root causes, rebuild the component and verify in the browser.",
+      "llm": "opus-5-5",
+      "effort": "medium"
+    }
+  ]
+}

@@ -152,12 +152,19 @@ pub struct TextBuilder {
     pub(super) base: NodeBase,
     pub(super) value: crate::Label,
     pub(super) emphasize: Option<bool>,
+    pub(super) heading_level: Option<u16>,
 }
 
 /// 📺️ Display text reading `value`.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 pub fn text(value: crate::Label) -> TextBuilder {
-    TextBuilder { base: NodeBase::leaf(), value, emphasize: None }
+    TextBuilder { base: NodeBase::leaf(), value, emphasize: None, heading_level: None }
+}
+
+/// 🔠️ A heading of `level` (clamped to `1..=6`) — `Component::Text` with `heading_level`, emphasized. Hosts render a real heading element and announce its level, so assistive technology can navigate by heading.
+// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+pub fn heading(value: crate::Label, level: u16) -> TextBuilder {
+    TextBuilder { base: NodeBase::leaf(), value, emphasize: Some(true), heading_level: Some(level.clamp(crate::HEADING_LEVEL_MIN, crate::HEADING_LEVEL_MAX)) }
 }
 
 impl TextBuilder {
@@ -176,7 +183,7 @@ impl HasBase for TextBuilder {
 
 impl From<TextBuilder> for BuiltNode {
     fn from(builder: TextBuilder) -> Self {
-        assemble(builder.base, crate::Component::Text(crate::TextProps { value: builder.value, emphasize: builder.emphasize, data_attributes: None }))
+        assemble(builder.base, crate::Component::Text(crate::TextProps { value: builder.value, emphasize: builder.emphasize, data_attributes: None, heading_level: builder.heading_level }))
     }
 }
 //#endregion 📝️Text

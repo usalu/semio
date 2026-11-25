@@ -41,6 +41,60 @@
           "densityKgM3": null,
           "phiInfinity": null,
           "isBasement": null,
+          "openings": {
+            "removed": [],
+            "inserted": [],
+            "moved": [],
+            "modified": []
+          },
+          "loadCases": {
+            "removed": [],
+            "inserted": [],
+            "moved": [],
+            "modified": []
+          },
+          "piers": {
+            "removed": [],
+            "inserted": [],
+            "moved": [],
+            "modified": []
+          },
+          "lintels": {
+            "removed": [],
+            "inserted": [],
+            "moved": [],
+            "modified": []
+          },
+          "ties": {
+            "removed": [],
+            "inserted": [],
+            "moved": [],
+            "modified": []
+          },
+          "prestress": {
+            "removed": [],
+            "inserted": [],
+            "moved": [],
+            "modified": []
+          },
+          "confined": {
+            "removed": [],
+            "inserted": [],
+            "moved": [],
+            "modified": []
+          },
+          "flanges": {
+            "removed": [],
+            "inserted": [],
+            "moved": [],
+            "modified": []
+          },
+          "bars": {
+            "removed": [],
+            "inserted": [],
+            "moved": [],
+            "modified": []
+          },
           "frostClass": null,
           "coverM": null,
           "deflectionLimit": null,
@@ -53,7 +107,8 @@
           "inPlaneShearN": null,
           "inPlaneMomentNm": null,
           "bracingSystem": null,
-          "diaphragmStiffnessNPerM": null
+          "diaphragmStiffnessNPerM": null,
+          "webSpacingM": 1.5
         }
       }
     ]

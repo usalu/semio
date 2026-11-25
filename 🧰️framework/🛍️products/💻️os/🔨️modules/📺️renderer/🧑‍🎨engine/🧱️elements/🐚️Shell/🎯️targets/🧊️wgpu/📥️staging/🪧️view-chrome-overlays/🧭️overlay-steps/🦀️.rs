@@ -328,7 +328,7 @@ impl<'ctx> ChromeOverlaysCtx<'ctx> {
             }
             1 => {
                 let Some(rect) = cursor.rect else { return true };
-                open_chrome_overlay_glass_content(cursor, overlay, rect, theme.border_radius, theme.glass(Level::Menu));
+                open_chrome_overlay_glass_content(cursor, overlay, rect, theme.glass(Level::Menu));
                 cursor.scalar = 2;
             }
             2 => {

@@ -13,14 +13,62 @@
       "de": "Ein 0,17 m großer Edelstahl-Kochtopf, durch die Achse aufgeschnitten, mit 1 l Wasser, das auf einer Flamme warm wird und kocht: aus der wogenden Oberfläche steigt eine Dampffahne auf."
     },
     "tags": [
-      "pot",
-      "cooking",
-      "water",
-      "steam",
-      "boiling",
-      "latent-heat",
-      "kitchen",
-      "plume"
+      {
+        "id": "pot",
+        "title": {
+          "en": "pot",
+          "de": "Topf"
+        }
+      },
+      {
+        "id": "cooking",
+        "title": {
+          "en": "cooking",
+          "de": "Kochen"
+        }
+      },
+      {
+        "id": "water",
+        "title": {
+          "en": "water",
+          "de": "Wasser"
+        }
+      },
+      {
+        "id": "steam",
+        "title": {
+          "en": "steam",
+          "de": "Dampf"
+        }
+      },
+      {
+        "id": "boiling",
+        "title": {
+          "en": "boiling",
+          "de": "Sieden"
+        }
+      },
+      {
+        "id": "latent-heat",
+        "title": {
+          "en": "latent heat",
+          "de": "latente Wärme"
+        }
+      },
+      {
+        "id": "kitchen",
+        "title": {
+          "en": "kitchen",
+          "de": "Küche"
+        }
+      },
+      {
+        "id": "plume",
+        "title": {
+          "en": "plume",
+          "de": "Fahne"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage content (G2)",

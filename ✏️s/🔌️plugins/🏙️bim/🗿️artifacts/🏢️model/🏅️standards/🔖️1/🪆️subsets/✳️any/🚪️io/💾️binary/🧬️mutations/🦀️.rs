@@ -25,3 +25,5 @@ impl OpBinary for ModelMutation {
         dsl::tagged_value_binary::decode_op(COMPONENT_PROTOCOL_SEMIO, dsl::tagged_value_binary::VariantTag::Field("mutation"), bytes)
     }
 }
+dsl::original_decoded_operation_receiving!(ModelMutation);
+dsl::artifact_persisted_encoded_binary_operation!(ModelMutation);

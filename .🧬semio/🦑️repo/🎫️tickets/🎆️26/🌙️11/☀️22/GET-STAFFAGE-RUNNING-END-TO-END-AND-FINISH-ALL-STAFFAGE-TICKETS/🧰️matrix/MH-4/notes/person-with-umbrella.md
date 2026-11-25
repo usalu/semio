@@ -1,0 +1,1 @@
+What was changed, 1:500 only: the plan `coat` becomes a prism along the trunk that keeps its outline (span fitted to the elevation coat); the `shaft` gets a plan shape (a rod revolved about the umbrella axis; folded forward in `close-umbrella` it reached 67 mm beyond everything the plan drew, hidden under the canopy while the umbrella is up).

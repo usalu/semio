@@ -43,3 +43,14 @@ The 5D and full 2D native test closures, the editor activations and the en/de ti
 - Board-host clean rerun (L32 lasso): 54/54 ok. `l25` lasso and `l28` fill admission are confirmed.
 - 04:35: the L34 3D step failed on `levels::CHIP_TINT_PERCENT`. Another agent added `chipTintPercent` to the styling `🔣️.json` and projection but did not regenerate. `repo run @semio-tech/ui-styling-tokens:generate` fails in the dependency installer (EACCES on a patch), so `l39-styling-generate.ts` (bun) regenerated `🔤️tokens/🦀️.rs` and the other artifacts. The full 3D rerun is queued after L34 (`l40-3d-rerun.sh`).
 - L41 (plain flags, wide spill): 3D partial, see `l41-3d-results.md`. The low-memory reaper stopped it during panels; 5D, hub and 2D did not run. Not restarted. New source fixes since: `l42`, `l43`, `l44`.
+- L46 (2026-11-24): fill-run fix in source (tool-run provisional two-step publication, transient publication, ArtifactView tool_run_poll), see `l46-3d-panels-fill.md`. Unverified; picked up by L45 if compiled after the edit.
+- L48 (2026-11-24): activation/time-travel blocked by disk (4.4G free, need 15–20G); engine wasm pkg stale (pre-l33). Candidates in `l48-activation-timetravel-prep.md` need owner approval to delete.
+- L47 (2026-11-24): backbone close fix (Arc::into_inner in store backbone retirement, new pair test), action-producer test births its window, digest test caller fixed. See `l47-backbone-settlement.md`. Unverified.
+- L45 3D (2026-11-25 00:13): 0 results. The build retry compiled, but rustc for the editor-budgets and editor-manifest test crates was SIGKILLed (out of memory: 5g tmpfs + spill in RAM, plus other agents). One combined step meant every 3D target was lost. L50 (`l50-after.sh`) reruns 3D one target per step with `L12_JOBS=1` after L41 (5D, hub, 2D) ends, then `l49-framework.txt`.
+- L51 (2026-11-25 00:31): 5D under L41 also lost two stdio dwg rustc processes to SIGKILL. I stopped L41 and L50; `l51-serial.sh` reruns everything with one build job (3D one target per step, 5D, hub, 2D, then the framework). Logs: `🗑️generated/l51-*.log`.
+- L52 (2026-11-25): action-producer WorkLimit regression came from MIT-BESTAND's `maximum=fuel-1` cap in `with_original_effect_at`. Reverted, and a note left in their ticket. See `l52-action-producer-worklimit.md`. Unverified.
+- L51 3D budgets: 73 passed, 0 failed (`set_active_example` passes now).
+- L51 3D defects: 53 passed, 0 failed.
+- L51 3D gestures: 48 passed, 1 failed. Clipboard slot fixed (l42 confirmed). Mutation latency still at 132 turns (store 1474 of 1599 units).
+- L53 (2026-11-25): store-run turn-loan batching, last-item inverse reservation, chained item close, and a `[DEBUG]` pump histogram. See `l53-mutation-latency-batching.md`. Unverified; the gestures mutation_latency rerun is queued in l49.
+- L51 3D manifest: 63 passed, 0 failed (l44 confirmed).

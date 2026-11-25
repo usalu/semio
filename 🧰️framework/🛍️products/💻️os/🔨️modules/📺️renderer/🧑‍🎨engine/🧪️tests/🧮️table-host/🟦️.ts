@@ -5,7 +5,7 @@ import { DEFAULT_UI_DRIVER, UiDriverProvider } from "@semio-tech/ui-react";
 import { tableStepperKeyboardFixture } from "@semio-tech/ui/testing/fixtures";
 import { cleanup, fireEvent, render } from "@semio-tech/ui-react/test";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { TableHost, tableStepperClampedDelta, tableStepperKeyDelta } from "../../🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
+import { TableHost, tableRowHoverArgs, tableStepperClampedDelta, tableStepperKeyDelta, tableStepperTypedValue } from "../../🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
 import { noopAction } from "../🧰️engine-contract-helpers/🟦️.ts";
 
 describe("framework renderer hosts", () => {
@@ -183,6 +183,55 @@ describe("framework renderer hosts", () => {
     expect(tableStepperClampedDelta(5, cell)).toBe(3);
     expect(tableStepperClampedDelta(-9, cell)).toBe(-2);
     expect(tableStepperClampedDelta(1, { value: 5, min: 0, max: 5 })).toBe(0);
+  });
+
+  it("commits a typed stepper entry as an absolute value and refuses what the shared typed fixture refuses", () => {
+    const { cell, action } = tableStepperKeyboardFixture;
+    for (const typedCase of tableStepperKeyboardFixture.typed.cases) {
+      expect(tableStepperTypedValue(typedCase.text, tableStepperKeyboardFixture.typed.cell) ?? null, typedCase.id).toBe(typedCase.expectedValue);
+      const onAction = vi.fn();
+      const node = {
+        type: "componentScene" as const,
+        surfaceId: "window:sourcing-pool",
+        controllerId: action.controllerId,
+        componentKind: "table" as const,
+        table: {
+          columnsJson: JSON.stringify([{ id: cell.columnId, label: cell.columnLabel }]),
+          rowsJson: JSON.stringify([{ id: cell.rowId, [cell.columnId]: { kind: "stepper", value: 1, min: cell.min, max: cell.max, step: cell.step, action } }]),
+        },
+      };
+      const mounted = render(createElement(UiDriverProvider, { driver: DEFAULT_UI_DRIVER }, createElement(TableHost, { node: node as never, onAction: onAction as never })));
+      const readout = mounted.container.querySelector<HTMLInputElement>(`[id="${node.surfaceId}.${cell.rowId}.${cell.columnId}"]`)!;
+      expect(readout.readOnly, typedCase.id).toBe(false);
+      fireEvent.change(readout, { target: { value: typedCase.text } });
+      fireEvent.keyDown(readout, { key: "Enter" });
+      if (typedCase.expectedValue === null || typedCase.expectedValue === 1) {
+        expect(onAction, typedCase.id).not.toHaveBeenCalled();
+      } else {
+        expect(onAction, typedCase.id).toHaveBeenCalledOnce();
+        expect(onAction, typedCase.id).toHaveBeenCalledWith({ ...action, args: { ...action.args, value: typedCase.expectedValue } });
+      }
+      mounted.unmount();
+    }
+  });
+
+  it("keeps Home and End on the caret while an entry is being typed and cancels it with Escape", () => {
+    const onAction = vi.fn();
+    const { container } = renderStepperTable(1, onAction);
+    const readout = container.querySelector<HTMLInputElement>('[id="window:sourcing-pool.beam-glulam-gl24h.curated"]')!;
+    fireEvent.change(readout, { target: { value: "2" } });
+    expect(fireEvent.keyDown(readout, { key: "End" })).toBe(true);
+    expect(onAction).not.toHaveBeenCalled();
+    fireEvent.keyDown(readout, { key: "Escape" });
+    expect(readout.value).toBe("1");
+    fireEvent.change(readout, { target: { value: "3" } });
+    fireEvent.blur(readout);
+    expect(onAction).toHaveBeenCalledWith(expect.objectContaining({ args: { objectId: "beam-glulam-gl24h", value: 3 } }));
+  });
+
+  it("addresses a row hover to its one target on the pointer channel and clears it with none", () => {
+    expect(tableRowHoverArgs("rows", "object", "beam-kvh-c24")).toEqual({ domainId: "rows", channel: "pointer", targets: JSON.stringify([{ granularity: "object", id: "beam-kvh-c24" }]) });
+    expect(tableRowHoverArgs("rows", "object", undefined)).toEqual({ domainId: "rows", channel: "pointer", targets: "[]" });
   });
 
   it("matches the shared Table stepper keyboard fixture through the actual React spinbutton", () => {

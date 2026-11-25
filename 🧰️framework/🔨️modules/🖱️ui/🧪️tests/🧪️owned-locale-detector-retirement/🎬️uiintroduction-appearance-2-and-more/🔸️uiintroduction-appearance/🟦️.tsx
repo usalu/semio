@@ -208,6 +208,26 @@ describe("UIIntroduction appearance", () => {
       expect(Number.parseFloat(box.style.left)).toBe(window.innerWidth - box.offsetWidth);
     });
 
+    it("abandons the move of the info box with Escape: it returns to where it was and ignores the rest of the gesture", () => {
+      const steps: IntroductionStepDefinition[] = [{ id: "welcome", title: "Welcome", body: "Hi.", introduce: null, show: [], placement: "center", interactions: [], ordered: false, logos: [], demonstrations: [] }];
+      const { container } = render(<UIIntroduction introduction={{ title: "Welcome", steps }} stepIndex={0} onStepIndexChange={vi.fn()} onDismiss={vi.fn()} />);
+      const box = container.querySelector('[data-slot="introduction-info-box"]') as HTMLElement;
+      const handle = container.querySelector('[data-slot="introduction-info-box-drag"] [data-slot="drag-handle"]') as HTMLElement;
+      const startTop = Number.parseFloat(box.style.top);
+      const startLeft = Number.parseFloat(box.style.left);
+      fireEvent.pointerDown(handle, { pointerId: 1, pointerType: "mouse", clientX: 100, clientY: 100 });
+      fireEvent.pointerMove(handle, { pointerId: 1, pointerType: "mouse", clientX: 140, clientY: 160 });
+      expect(Number.parseFloat(box.style.top)).toBe(startTop + 60);
+      fireEvent.keyDown(document, { key: "Escape" });
+      expect(box.getAttribute("data-dragging")).toBeNull();
+      expect(Number.parseFloat(box.style.top)).toBe(startTop);
+      expect(Number.parseFloat(box.style.left)).toBe(startLeft);
+      fireEvent.pointerMove(handle, { pointerId: 1, pointerType: "mouse", clientX: 200, clientY: 200 });
+      fireEvent.pointerUp(handle, { pointerId: 1, pointerType: "mouse", clientX: 200, clientY: 200 });
+      expect(Number.parseFloat(box.style.top)).toBe(startTop);
+      expect(Number.parseFloat(box.style.left)).toBe(startLeft);
+    });
+
     it("places pressable Back and Next chips as pointer-enabled overlays of a pointer-transparent footer row without any gap element", () => {
       const steps: IntroductionStepDefinition[] = [
         { id: "first", title: "First", body: "Step one.", introduce: null, show: [], placement: "center", interactions: [], ordered: false, logos: [], demonstrations: [] },

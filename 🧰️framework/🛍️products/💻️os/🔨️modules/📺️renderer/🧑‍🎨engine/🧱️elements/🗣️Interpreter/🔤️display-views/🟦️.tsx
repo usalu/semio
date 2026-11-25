@@ -18,7 +18,7 @@ import { parseWindowResourcePage, windowResourceMatchesOwner, WindowResourceRead
 import { LocalDocumentWindowContext } from "../🧭️local-document-owner/🟦️.ts";
 import { useTreeWindowContext } from "../🪟️tree-windows/🟦️.ts";
 import { retainedTextBody } from "../🚚️surface-scene-lanes/🟦️.ts";
-import { uiAccessibilityValueV1, uiProgressFractionV1 } from "@semio-tech/ui-contract/presentation/accessibility";
+import { uiAccessibilityValueV1, uiHeadingLevelV1, uiProgressFractionV1 } from "@semio-tech/ui-contract/presentation/accessibility";
 import { shellLabel } from "../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
 import { ShellFaultBoundary } from "../../🐚️Shell/🧯️fault-boundary/🟦️.tsx";
 import { resolveExtensionHost } from "../🗺️element-host-registry/🟦️.ts";
@@ -38,11 +38,13 @@ export function activityBorderClass(record: UiNodeRecord): string | undefined {
 export function TextView({ record }: { readonly record: UiNodeRecord }) {
   const component = record.component as Extract<Component, { type: "text" }>;
   const { props: aria, describedBy } = accessibilityAriaProps(record.accessibility, `node-${record.id}`);
+  const level = uiHeadingLevelV1(component.headingLevel);
+  const Element = level === null ? "p" : (`h${level}` as "h1" | "h2" | "h3" | "h4" | "h5" | "h6");
   return (
-    <p className={cn("text-foreground", component.emphasize ? "font-semibold" : "text-sm")} data-ui-node-id={record.id} data-ui-node-key={record.key} {...aria}>
+    <Element className={cn("text-foreground", component.emphasize || level !== null ? "font-semibold" : "text-sm")} data-ui-node-id={record.id} data-ui-node-key={record.key} {...aria}>
       {describedBy}
       {component.value}
-    </p>
+    </Element>
   );
 }
 
@@ -105,7 +107,7 @@ export function KeyValueListView({ record }: { readonly record: UiNodeRecord }) 
 type ImageRecord = UiNodeRecord & { readonly component: Extract<Component, { type: "image" }> };
 
 function renderImage(record: ImageRecord, source?: string) {
-  return <img id={`node-${record.id}`} src={source || undefined} alt={record.component.alt ?? ""} className="max-h-64 max-w-full rounded-md object-contain" data-ui-node-id={record.id} data-ui-node-key={record.key} />;
+  return <img id={`node-${record.id}`} src={source || undefined} alt={record.component.alt ?? ""} className="max-h-64 max-w-full object-contain" data-ui-node-id={record.id} data-ui-node-key={record.key} />;
 }
 
 function RetainedImageView({ record, store, bytes }: { readonly record: ImageRecord; readonly store: UiDocumentStore; readonly bytes: number }) {
@@ -232,7 +234,7 @@ export function UnknownComponentView({ record }: { readonly record: UiNodeRecord
   const kind = (record.component as { readonly type: string }).type;
   console.error(`Interpreter: unknown component type ${JSON.stringify(kind)} on node ${record.id} ("${record.key}")`);
   return (
-    <div role="alert" className="border-destructive text-destructive rounded-md border border-dashed p-single text-xs" data-ui-node-id={record.id} data-ui-node-key={record.key} data-unknown-component={kind}>
+    <div role="alert" className="border-destructive text-destructive border border-dashed p-single text-xs" data-ui-node-id={record.id} data-ui-node-key={record.key} data-unknown-component={kind}>
       Unrecognized component: {kind}
     </div>
   );

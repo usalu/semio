@@ -438,6 +438,10 @@ pub fn map_fault(fault: &Fault) -> GatewayError {
         "transaction.instance-busy" => GatewayError::new(GatewayErrorCode::PreconditionFailed, fault.message.clone()).retryable(),
         "budget.exceeded" => GatewayError::new(GatewayErrorCode::BudgetExceeded, fault.message.clone()).retryable(),
         "capability.not-found" => GatewayError::new(GatewayErrorCode::NotFound, fault.message.clone()),
+        MODEL_MISSING_FAULT_CODE => match serde_json::from_str::<serde_json::Value>(&fault.message) {
+            Ok(details) => GatewayError::new(GatewayErrorCode::PluginUnavailable, details["summary"]["en"].as_str().unwrap_or("the plugin has no component model yet").to_string()).with_details(details).retryable(),
+            Err(_) => GatewayError::new(GatewayErrorCode::PluginUnavailable, fault.message.clone()).retryable(),
+        },
         "plugin.unavailable" | "workspace.unbound" => GatewayError::new(GatewayErrorCode::PluginUnavailable, fault.message.clone()).retryable(),
         ACTIVATION_CANCELLED_FAULT_CODE => GatewayError::new(GatewayErrorCode::Cancelled, fault.message.clone()),
         code if code == store::sync::DocumentLinkStatus::AccessRevoked.code() => GatewayError::new(GatewayErrorCode::PermissionDenied, fault.message.clone()),
@@ -472,6 +476,14 @@ pub fn unacknowledged_relay_error(edit_id: &str, relay: &HubRelayOutcome) -> Gat
         Some(code) => map_fault(&Fault { code: code.clone(), message: format!("the hub refused edit {edit_id} ({}); it was reverted in this session", relay.detail) }),
         None => map_fault(&Fault { code: HUB_RELAY_UNACKNOWLEDGED_FAULT_CODE.to_string(), message: format!("the hub did not acknowledge edit {edit_id} in time ({}); it was reverted in this session — retry once the hub answers", relay.detail) }),
     }
+}
+
+/// 🕳️ Fault code of a plugin whose retained component model is not published yet; its `message` is the exact `MissingModelDetails` JSON of `📡️stdio/📦️component-models/🔣️.json`, so the typed refusal survives the channel boundary.
+pub const MODEL_MISSING_FAULT_CODE: &str = "plugin.model-missing";
+
+/// 🕳️ Carries a typed missing-model refusal through the channel as a [`Fault`]; `None` for every other error.
+pub fn model_missing_fault(error: &GatewayError) -> Option<Fault> {
+    semio_os_mcp_catalog::plugin_paths_and_descriptor::missing_model_details(error).map(|details| Fault { code: MODEL_MISSING_FAULT_CODE.to_string(), message: details.to_string() })
 }
 
 //#endregion 🔖️Port

@@ -56,9 +56,11 @@ for (const locale of fixture.locales as ("en" | "de")[]) {
     const header = () => mounted.container.querySelector(`[id="${expanded.sections[0].id}"]`)!;
     expect(header().getAttribute("aria-expanded")).toBe(String(fixture.formDefaultOpen));
     const arg = () => mounted.container.querySelector(`[id="${expanded.sections[0].items?.[0]?.id}.input"]`)!;
-    expect(arg().closest('[data-slot="collapsible-content"]')?.hasAttribute("hidden")).toBe(true);
+    expect(arg().closest('[data-slot="collapsible-content"]')?.hasAttribute("hidden")).toBe(!fixture.formDefaultOpen);
     fireEvent.click(header());
-    expect(arg().closest('[data-slot="collapsible-content"]')?.hasAttribute("hidden")).toBe(false);
+    expect(arg().closest('[data-slot="collapsible-content"]')?.hasAttribute("hidden")).toBe(fixture.formDefaultOpen);
+    fireEvent.click(header());
+    expect(arg().closest('[data-slot="collapsible-content"]')?.hasAttribute("hidden")).toBe(!fixture.formDefaultOpen);
     fireEvent.change(arg(), { target: { value: fixture.staged.themeId } });
     expect(onStage).toHaveBeenLastCalledWith(fixture.expandKey, "themeId", fixture.staged.themeId);
     const ready = tree(fixture.expandKey, { [fixture.expandKey]: fixture.staged });

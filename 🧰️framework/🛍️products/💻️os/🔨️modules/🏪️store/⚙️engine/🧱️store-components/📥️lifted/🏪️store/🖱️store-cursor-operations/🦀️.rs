@@ -275,7 +275,7 @@ where
         if let Some(app) = media_app {
             use semio_os_spr::atomic_group::ATOMIC_BACKBONE_TOOL;
             let tool_length = app.len().saturating_add(1 + ATOMIC_BACKBONE_TOOL.len());
-            if app.is_empty() || app.contains('#') || tool_length > ARTIFACT_STORE_ONE_ITEM_ID_BYTES ||
+            if app.is_empty() || tool_length > ARTIFACT_STORE_ONE_ITEM_ID_BYTES ||
                 transaction.is_some() || pages.as_ref().is_none_or(|input| input.len() == 0) ||
                 original_actor.as_str() != store_log.local_actor_id().0.as_str() ||
                 !store_log.operation_wire.as_ref().is_some_and(|wire| wire.original_message_admission.is_some()) {

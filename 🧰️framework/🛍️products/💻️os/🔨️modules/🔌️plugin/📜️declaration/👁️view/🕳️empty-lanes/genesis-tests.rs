@@ -1,6 +1,6 @@
 //! 🧪️ The defining empty lanes use genuine canonical Pack receiving and native Store genesis.
 use super::*;
-use semio_plugin_ownership::original_store_genesis::{OriginalStoreBirth,OriginalStoreGenesis,OriginalStoreGenesisOwner};
+use semio_plugin_store_lifecycle::original_store_genesis::{OriginalStoreBirth,OriginalStoreGenesis,OriginalStoreGenesisOwner};
 use semio_plugin_decl_views::{NoConfig,NoConfigGenesisOwner,NoDraftGenesisOwner};
 fn empty_genesis<O:OriginalStoreGenesisOwner<State=NoConfig,Mutation=semio_plugin_decl_views::NoConfigMutation>>(){
  let law:serde_json::Value=serde_json::from_str(include_str!("genesis.json")).unwrap();let g=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32768,maximum_capacity_bytes:16<<20,maximum_release_bytes:16<<20,maximum_depth:4096};

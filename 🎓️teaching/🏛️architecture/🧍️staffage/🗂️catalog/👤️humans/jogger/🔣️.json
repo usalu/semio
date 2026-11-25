@@ -13,12 +13,48 @@
       "de": "Ein 1,82 m großer, sportlicher Jogger in Laufshirt, kurzer Hose und Laufschuhen bei 2,6 m/s: zwei Flugphasen pro Schritt­zyklus, kräftige Mundatmung, feuchte Haut und anschließende Dehnübungen; vier einzeln gezeichnete Maßstäbe von 1:500 bis 1:50."
     },
     "tags": [
-      "human",
-      "runner",
-      "jogger",
-      "sport",
-      "flight-phase",
-      "stretching"
+      {
+        "id": "human",
+        "title": {
+          "en": "human",
+          "de": "Mensch"
+        }
+      },
+      {
+        "id": "runner",
+        "title": {
+          "en": "runner",
+          "de": "Läufer"
+        }
+      },
+      {
+        "id": "jogger",
+        "title": {
+          "en": "jogger",
+          "de": "Jogger"
+        }
+      },
+      {
+        "id": "sport",
+        "title": {
+          "en": "sport",
+          "de": "Sport"
+        }
+      },
+      {
+        "id": "flight-phase",
+        "title": {
+          "en": "flight phase",
+          "de": "Flugphase"
+        }
+      },
+      {
+        "id": "stretching",
+        "title": {
+          "en": "stretching",
+          "de": "Dehnübung"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage content worker CV-H3",

@@ -13,13 +13,55 @@
       "de": "Ein 1,7-l-Edelstahl-Wasserkocher von 2 kW auf seinem Sockel: er erwärmt das Wasser, seine Hülle und die Heizplatte und kocht mit Dampf am Ausguss und klapperndem Deckel."
     },
     "tags": [
-      "kettle",
-      "kitchen",
-      "water",
-      "boiling",
-      "steam",
-      "appliance",
-      "internal-gain"
+      {
+        "id": "kettle",
+        "title": {
+          "en": "kettle",
+          "de": "Wasserkocher"
+        }
+      },
+      {
+        "id": "kitchen",
+        "title": {
+          "en": "kitchen",
+          "de": "Küche"
+        }
+      },
+      {
+        "id": "water",
+        "title": {
+          "en": "water",
+          "de": "Wasser"
+        }
+      },
+      {
+        "id": "boiling",
+        "title": {
+          "en": "boiling",
+          "de": "Sieden"
+        }
+      },
+      {
+        "id": "steam",
+        "title": {
+          "en": "steam",
+          "de": "Dampf"
+        }
+      },
+      {
+        "id": "appliance",
+        "title": {
+          "en": "appliance",
+          "de": "Gerät"
+        }
+      },
+      {
+        "id": "internal-gain",
+        "title": {
+          "en": "internal gain",
+          "de": "innere Wärmelast"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage content (G2)",

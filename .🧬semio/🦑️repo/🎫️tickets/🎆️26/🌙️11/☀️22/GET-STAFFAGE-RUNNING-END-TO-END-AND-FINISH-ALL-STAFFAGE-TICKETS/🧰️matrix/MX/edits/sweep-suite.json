@@ -1,0 +1,17 @@
+[
+ {
+  "name": "import",
+  "old": "import { SolidSweepError, evaluate } from",
+  "new": "import { SolidSweepError, evaluate, shapeDepth } from"
+ },
+ {
+  "name": "type",
+  "old": "  refused: { name: string; solid: Record<string, unknown> }[];\n};",
+  "new": "  depth: { profile: { x: number; y: number; w: number; h: number }; span: { z0: number; z1: number }; toleranceM: number; cases: { sweep: \"u\" | \"v\" | \"w\"; front: number; plan: number }[] };\n  refused: { name: string; solid: Record<string, unknown> }[];\n};"
+ },
+ {
+  "name": "case",
+  "old": "  it(\"draws w and v differently, so a part is never transposed silently\", () => {",
+  "new": "  for (const c of vectors.depth.cases)\n    it(`ranks a solid swept along ${c.sweep} by the nearest point of its profile at the middle of its span, as the vectors and gl-matrix place it`, () => {\n      const { profile, span, toleranceM } = vectors.depth;\n      const solid = { kind: \"extruded\", sweep: c.sweep, ...span };\n      const shape = { id: \"slat\", kind: \"rect\", bone: vectors.bone, role: \"body\", z: 1, filled: true, tone: 0.5, ...profile, solid } as unknown as Shape;\n      const asset: Asset = { ...sample, representations: { ...sample.representations, [key]: { ...authored, geometry: { ...authored.geometry, front: [shape], plan: [shape] } } } as Asset[\"representations\"] };\n      const state = evaluate(asset, { kind: \"pose\", pose: vectors.pose }, { kind: \"scale\", scale: { denominator: vectors.scale } });\n      const origin = state.bones.pelvis!.origin;\n      const { u, v, w } = vectors.basis;\n      const frame = mat4.fromValues(u[0]!, u[1]!, u[2]!, 0, v[0]!, v[1]!, v[2]!, 0, w[0]!, w[1]!, w[2]!, 0, 0, 0, 0, 1);\n      const middle = (span.z0 + span.z1) / 2;\n      const corners = [[profile.x, profile.y], [profile.x + profile.w, profile.y], [profile.x + profile.w, profile.y + profile.h], [profile.x, profile.y + profile.h]] as const;\n      const points = corners.map(([a, b]) => vec3.transformMat4(vec3.create(), c.sweep === \"u\" ? [middle, a, b] : c.sweep === \"w\" ? [a, b, middle] : [a, middle, b], frame));\n      const found = { front: shapeDepth(state, state.shapes.front[0]!.shape, \"front\") - origin.x, plan: shapeDepth(state, state.shapes.plan[0]!.shape, \"plan\") - origin.y };\n      const reference = { front: Math.max(...points.map((p) => p[0]!)), plan: Math.max(...points.map((p) => p[1]!)) };\n      for (const view of [\"front\", \"plan\"] as const) {\n        expect(Math.abs(found[view] - c[view]), `${view} against the vector`).toBeLessThanOrEqual(toleranceM);\n        expect(Math.abs(found[view] - reference[view]), `${view} against gl-matrix`).toBeLessThanOrEqual(toleranceM);\n      }\n    });\n\n  it(\"draws w and v differently, so a part is never transposed silently\", () => {"
+ }
+]

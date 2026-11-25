@@ -43,13 +43,13 @@ async fn parse_hex_dump_rejects_odd_length_hex() {
 
 #[test]
 fn text_edit_requires_an_explicit_change_set_and_allows_intentional_empty_bytes() {
-    assert!(<BinaryEditor as ArtifactEditor>::command_from_action("textEdit", None, None).is_err());
+    assert!(<BinaryEditor as ArtifactEditor>::command_from_action("textEdit", &mut None, &mut None).is_err());
     let whole_draft = semio_framework_value::DslValue::object([("text".into(), semio_framework_value::DslValue::String(String::new()))]);
-    assert!(<BinaryEditor as ArtifactEditor>::command_from_action("textEdit", Some((whole_draft).clone()), None).is_err(), "a whole draft is no gesture");
+    assert!(<BinaryEditor as ArtifactEditor>::command_from_action("textEdit", &mut Some(whole_draft.clone()), &mut None).is_err(), "a whole draft is no gesture");
     let source = BinarySnapshot { bytes: vec![1, 2, 3], ..BinarySnapshot::default() };
     let emit = |splices: &str| {
         let args = semio_framework_value::DslValue::object([("splices".into(), semio_framework_value::DslValue::String(splices.into()))]);
-        let command = <BinaryEditor as ArtifactEditor>::command_from_action("textEdit", Some((args).clone()), None).expect("explicit change set");
+        let command = <BinaryEditor as ArtifactEditor>::command_from_action("textEdit", &mut Some(args.clone()), &mut None).expect("explicit change set");
         binary_text_emit(&command, &source)
     };
     assert!(emit("[]").expect("an empty change set").artifact_mutations.is_empty());
@@ -70,7 +70,7 @@ fn an_applied_change_set_is_exactly_the_corpus_byte_ranges() {
         let id = case["id"].as_str().expect("id");
         let source = BinarySnapshot { bytes: parse_hex_dump(case["before"].as_str().expect("before")).expect("corpus hex"), ..BinarySnapshot::default() };
         let args = semio_framework_value::DslValue::object([("splices".into(), semio_framework_value::DslValue::String(case["splices"].to_string()))]);
-        let command = <BinaryEditor as ArtifactEditor>::command_from_action("textEdit", Some((args).clone()), None).expect("explicit change set");
+        let command = <BinaryEditor as ArtifactEditor>::command_from_action("textEdit", &mut Some(args.clone()), &mut None).expect("explicit change set");
         let emit = binary_text_emit(&command, &source);
         let Some(expected) = case["leaves"].as_array() else {
             assert!(emit.is_err(), "{id}: refused");
@@ -121,7 +121,7 @@ fn a_document_details_edit_is_one_byte_splice() {
     assert_eq!((range(&moved, 0), range(&moved, 1)), ((0, 1, vec![]), (2, 0, vec![0xde])));
 }
 
-semio_plugin::history_edit_acceptance_law!("stdio", crate::editor::binary::BinaryEditor, || semio_plugin::App { definition: crate::editor::binary::create_binary_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️raw/🪆️subsets/✳️any");
+semio_plugin::history_edit_acceptance_law!("stdio", crate::editor::binary::BinaryEditor, || semio_plugin::App { definition: crate::editor::binary::create_binary_editor(), examples: Vec::new() }, "../../../..");
 
 #[semio_framework_async_macros::async_test]
 async fn natural_binary_files_are_the_exact_bytes_and_survive_a_byte_edit() {

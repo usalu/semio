@@ -71,7 +71,7 @@ pub(super) fn nested_snapshot() -> DrawingSnapshot {
     }
     snapshot.layers.push(group);
     snapshot.layers.iter_mut().for_each(admit_layer_string_destinations);
-    snapshot.assets.insert("asset-a".into(), DrawingImageAsset { width: 1, height: 1, samples: vec![[0,0,0,0];1].into() });
+    snapshot.assets.insert("asset-a", DrawingImageAsset { width: 1, height: 1, samples: vec![[0,0,0,0];1].into() });
     snapshot
 }
 

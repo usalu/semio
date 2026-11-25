@@ -118,6 +118,41 @@ fn binary_breaches<M: OpBinary + PartialEq + Debug>(bundle: &Path, mutation: &M)
     }
 }
 
+/// 🔢️ The installed encoded wire writes exactly the authored `encode_op` bytes of the committed mutation, and its funded frame returns on close.
+fn wire_binary_breaches<M: OpBinary + Sync>(bundle: &Path, mutation: &M) -> Vec<String> {
+    let name = bundle.display();
+    let Ok(expected) = mutation.encode_op() else { return Vec::new() };
+    let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 1 << 20, maximum_depth: 8 };
+    let mut cursor = semio_os_kernel::os_store::ArtifactPreparedOperationCursor::default();
+    let (mut written, mut retained, mut released) = (Vec::new(), 0, 0);
+    for _ in 0..expected.len() + 16 {
+        let mut chunk = [0u8; 64];
+        let Some(source) = semio_os_kernel::os_store::encoded_operation_source(mutation) else { return vec![format!("{name}: the encoded wire has no source for the committed mutation")] };
+        match semio_framework_value::testing::fx(grant, |effect| cursor.advance(source, &mut chunk, effect)) {
+            Ok(step) => {
+                written.extend_from_slice(&chunk[..step.written_bytes]);
+                retained += step.retained_capacity_bytes;
+                if step.complete {
+                    break;
+                }
+            }
+            Err(error) => return vec![format!("{name}: the encoded wire refused its source: {:?}", error.reason)],
+        }
+    }
+    match semio_framework_value::testing::fx(grant, |effect| cursor.close(effect)) {
+        Ok(step) if step.complete => released += step.released_bytes,
+        _ => return vec![format!("{name}: the encoded wire did not close")],
+    }
+    let mut breaches = Vec::new();
+    if written != expected {
+        breaches.push(format!("{name}: the installed wire writes {written:?}, the authored binary op is {expected:?}"));
+    }
+    if retained != released {
+        breaches.push(format!("{name}: the encoded wire retained {retained} capacity bytes and released {released}"));
+    }
+    breaches
+}
+
 /// 🔁️ The committed diff alone, never the produced one, turns the committed before-snapshot into the committed after-snapshot, and its inverse turns the after-snapshot back.
 fn committed_diff_breaches<S, M>(name: &str, committed: &M::ReferenceDiff, before: &S, after: &S) -> Vec<String>
 where
@@ -135,6 +170,32 @@ where
         breaches.push(format!("{name}: the inverse of the committed diff does not turn the committed after-snapshot into the committed before-snapshot"));
     }
     breaches
+}
+
+/// 🔑️ Every object key of a JSON text in document order, the order the schema and the TypeScript twin fix for the wire.
+fn key_order(text: &str) -> Vec<String> {
+    let (mut keys, mut chars) = (Vec::new(), text.chars().peekable());
+    while let Some(character) = chars.next() {
+        if character != '"' {
+            continue;
+        }
+        let mut token = String::new();
+        while let Some(next) = chars.next() {
+            match next {
+                '\\' => {
+                    token.push(next);
+                    token.extend(chars.next());
+                }
+                '"' => break,
+                other => token.push(other),
+            }
+        }
+        while chars.next_if(|next| next.is_whitespace()).is_some() {}
+        if chars.peek() == Some(&':') {
+            keys.push(token);
+        }
+    }
+    keys
 }
 
 /// 🖨️ When `SEMIO_MUTATION_VECTORS_PRODUCED_DIR` is set, a diff that differs from its committed twin lands there as `<leaf>__<case>.json`, the input of the vector regeneration.
@@ -172,12 +233,16 @@ where
     if diff.is_file() {
         breaches.extend(committed_diff_breaches::<S, M>(&name.to_string(), &decode::<M::ReferenceDiff>(&diff), &before, &after));
         let raised = mutation.diff(&before);
-        let matches = json(&semio_framework_pack_json::to_json_string(raised.diff())) == json(&read(&diff));
+        let produced = semio_framework_pack_json::to_json_string(raised.diff());
+        let committed = read(&diff);
+        let matches = json(&produced) == json(&committed);
         let (owned, _) = raised.into_parts();
         <M::ReferenceDiff as semio_os_kernel::MutationDiff<S>>::retire_cold(owned);
         if !matches {
-            record_produced(bundle, &semio_framework_pack_json::to_json_string(mutation.diff(&before).diff()));
+            record_produced(bundle, &produced);
             breaches.push(format!("{name}: the produced diff is not the committed diff"));
+        } else if key_order(&produced) != key_order(&committed) {
+            breaches.push(format!("{name}: the produced diff writes its keys in another order than the committed diff, whose order the TypeScript twin holds to the schema order"));
         }
     } else if status != "rejected" {
         breaches.push(format!("{name}: a {status:?} vector commits no diff"));
@@ -207,7 +272,7 @@ where
 pub async fn assert_committed_vectors<S, M>(root: &Path, prepare: fn())
 where
     S: Clone + PartialEq + Debug + FromValue,
-    M: Mutation<S> + ColdMutation<S> + SemanticMutation<S> + OpBinary + PartialEq + Debug + FromValue + ToValue,
+    M: Mutation<S> + ColdMutation<S> + SemanticMutation<S> + OpBinary + Sync + PartialEq + Debug + FromValue + ToValue,
     M::ReferenceDiff: ToValue + semio_os_kernel::ColdDiffAlgebra<S>,
 {
     prepare();
@@ -220,6 +285,7 @@ where
         let mutation: M = decode(&bundle.join(MUTATION));
         let descriptor = mutation.descriptor();
         breaches.extend(binary_breaches(&bundle, &mutation));
+        breaches.extend(wire_binary_breaches(&bundle, &mutation));
         if bundle.ends_with("🧾️wire-witness") {
             covered.insert(descriptor.semantic_kind);
             continue;
@@ -271,6 +337,13 @@ mod tests {
         let distinct: BTreeSet<&str> = ROLES.iter().copied().collect();
         assert_eq!(distinct.len(), 5);
         assert!(ROLES.iter().all(|name| name.starts_with("🔣️.") && name.ends_with(".json")));
+    }
+
+    #[test]
+    fn the_key_order_reads_every_object_key_and_no_string_value() {
+        assert_eq!(key_order("{\"b\": 1, \"a\": {\"c\": \"v\", \"d\" : [\"x\"]}}"), ["b", "a", "c", "d"]);
+        assert_ne!(key_order("{\"a\":1,\"b\":2}"), key_order("{\"b\":2,\"a\":1}"));
+        assert_eq!(key_order("{\"k\\\"q\":0}"), ["k\\\"q"]);
     }
 }
 

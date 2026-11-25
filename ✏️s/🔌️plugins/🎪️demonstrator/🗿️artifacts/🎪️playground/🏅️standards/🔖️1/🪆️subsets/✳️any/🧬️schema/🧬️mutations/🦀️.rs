@@ -14,6 +14,7 @@ pub enum PlaygroundMutation {
     ChangeSchema(ChangeSchema),
 }
 dsl::original_pack_value_operation_receiving!(PlaygroundMutation);
+dsl::artifact_persisted_binary_operation!(PlaygroundMutation);
 //#endregion 🔖️Aggregate
 
 //#region 🧪️StructuralCorrespondence

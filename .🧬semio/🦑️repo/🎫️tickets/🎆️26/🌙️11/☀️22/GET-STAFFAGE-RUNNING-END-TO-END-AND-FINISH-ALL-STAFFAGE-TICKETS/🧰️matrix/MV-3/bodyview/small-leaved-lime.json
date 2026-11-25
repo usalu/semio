@@ -1,0 +1,10 @@
+{
+ "redraw": [
+  { "scale": 50, "view": "plan", "bones": ["fol-a1", "fol-s1", "la2a", "lb2a", "ln3a", "ln4a", "ls1a", "ls3a", "lw1a", "lw2a", "lw3a", "lw4a"] },
+  { "scale": 50, "view": "front", "bones": ["ln2a"] },
+  { "scale": 100, "view": "plan", "bones": ["la2a", "ls4a"] }
+ ],
+ "rename": [
+  { "scale": 50, "view": "plan", "bone": "ld3", "from": "ld3", "to": "ld3-crown" }
+ ]
+}

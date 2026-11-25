@@ -1,0 +1,18 @@
+[
+{"op": "shape-set", "scale": "50", "view": "front", "id": "tyre-fl", "set": {"bone": "axle-f"}},
+{"op": "shape-set", "scale": "50", "view": "front", "id": "tyre-fr", "set": {"bone": "axle-f"}},
+{"op": "shape-set", "scale": "100", "view": "front", "id": "tyre-fl", "set": {"bone": "axle-f"}},
+{"op": "shape-set", "scale": "100", "view": "front", "id": "tyre-fr", "set": {"bone": "axle-f"}},
+{"op": "shape-set", "scale": "200", "view": "front", "id": "tyre-fl", "set": {"bone": "axle-f"}},
+{"op": "shape-set", "scale": "200", "view": "front", "id": "tyre-fr", "set": {"bone": "axle-f"}},
+{"op": "shape-set", "scale": "500", "view": "front", "id": "tyre-fl", "set": {"bone": "axle-f"}},
+{"op": "shape-set", "scale": "500", "view": "front", "id": "tyre-fr", "set": {"bone": "axle-f"}},
+{"op": "shape-set", "scale": "50", "view": "front", "id": "tyre-rl", "set": {"bone": "axle-r"}},
+{"op": "shape-set", "scale": "50", "view": "front", "id": "tyre-rr", "set": {"bone": "axle-r"}},
+{"op": "shape-set", "scale": "100", "view": "front", "id": "tyre-rl", "set": {"bone": "axle-r"}},
+{"op": "shape-set", "scale": "100", "view": "front", "id": "tyre-rr", "set": {"bone": "axle-r"}},
+{"op": "shape-set", "scale": "200", "view": "front", "id": "tyre-rl", "set": {"bone": "axle-r"}},
+{"op": "shape-set", "scale": "200", "view": "front", "id": "tyre-rr", "set": {"bone": "axle-r"}},
+{"op": "shape-set", "scale": "500", "view": "front", "id": "tyre-rl", "set": {"bone": "axle-r"}},
+{"op": "shape-set", "scale": "500", "view": "front", "id": "tyre-rr", "set": {"bone": "axle-r"}}
+]

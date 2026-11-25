@@ -24,11 +24,20 @@
       {
         "id": "water-gravel",
         "patch": {
+          "layerId": null,
+          "piezometricDepth": null,
+          "permeability": null,
+          "headDifference": null,
+          "flowLength": null,
+          "wellRadius": null,
+          "wellWaterDepth": null,
+          "influenceRadius": null,
           "wellCapacity": 1.5
         }
       }
     ]
   },
+  "placements": null,
   "cases": {
     "removed": [],
     "inserted": [],

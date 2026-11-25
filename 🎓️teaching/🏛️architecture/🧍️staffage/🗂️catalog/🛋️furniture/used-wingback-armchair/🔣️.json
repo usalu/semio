@@ -13,19 +13,97 @@
    "de": "Ein gebrauchter westdeutscher Ohrensessel der 1960er Jahre mit passendem Hocker, wie ihn eine Haushaltsauflösung im Wiederverwendungslager hinterlässt: abgewetzter Baumwollvelours, auf der Fensterseite ausgeblichen, ein um 22 mm durchgesessener Federkernsitz, gedrechselte Buchenbeine mit angelaufenen Messingkappen (eine durch einen Kunststoffgleiter ersetzt), ein Preisschild an der Armlehne; auf einer gefalteten Möbeldecke gelagert, von einer Person auf dem Rücken hinausgetragen und wieder im Gebrauch mit einer lesenden Person von 75 kg."
   },
   "tags": [
-   "used",
-   "household",
-   "second-hand",
-   "living",
-   "armchair",
-   "wingback",
-   "seating",
-   "upholstery",
-   "velour",
-   "beech",
-   "footstool",
-   "moving-blanket",
-   "1960s"
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "household",
+    "title": {
+     "en": "household",
+     "de": "Haushalt"
+    }
+   },
+   {
+    "id": "second-hand",
+    "title": {
+     "en": "second-hand",
+     "de": "Second-Hand"
+    }
+   },
+   {
+    "id": "living",
+    "title": {
+     "en": "living",
+     "de": "Wohnen"
+    }
+   },
+   {
+    "id": "armchair",
+    "title": {
+     "en": "armchair",
+     "de": "Sessel"
+    }
+   },
+   {
+    "id": "wingback",
+    "title": {
+     "en": "wingback",
+     "de": "Ohrensessel"
+    }
+   },
+   {
+    "id": "seating",
+    "title": {
+     "en": "seating",
+     "de": "Sitzmöbel"
+    }
+   },
+   {
+    "id": "upholstery",
+    "title": {
+     "en": "upholstery",
+     "de": "Polster"
+    }
+   },
+   {
+    "id": "velour",
+    "title": {
+     "en": "velour",
+     "de": "Velours"
+    }
+   },
+   {
+    "id": "beech",
+    "title": {
+     "en": "beech",
+     "de": "Buche"
+    }
+   },
+   {
+    "id": "footstool",
+    "title": {
+     "en": "footstool",
+     "de": "Fußhocker"
+    }
+   },
+   {
+    "id": "moving-blanket",
+    "title": {
+     "en": "moving blanket",
+     "de": "Umzugsdecke"
+    }
+   },
+   {
+    "id": "1960s",
+    "title": {
+     "en": "1960s",
+     "de": "1960er"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content (used household objects wave)",

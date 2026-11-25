@@ -3,14 +3,15 @@
   "emoji": "🪵️",
   "status": "open",
   "description": "Get sourcing working end to end. Reported blocker: `bun run dev:sourcing` exits with status 1 (nx run @semio-tech/framework-os-dev:dev -- sourcing). Diagnose and fix the launch path, then verify the sourcing app (curate document: Pool/Curated/Preview, beams/windows/slabs modules) actually boots and works interactively in the s product dev target (port 6081): artifact builds, editor/viewer render, commands, io and mutations round-trip through the pipeline.",
-  "summary": "Sourcing runs end to end on :6081: boot, curation, drag, filters, sort, undo, 3D grid, Preview selection, example switch and saved-archive reload. The composed kit catalogue child is now derived where the parent is loaded — a new ArtifactApp::genesis_child_pack hook seeds it at boot through open_child and completes any archive that omits it before the member roster is reserved, minted from bytes via genesis_member_envelope_pack; non-flow s.stdio.semio members open through the new PackMemberSnapshotOpen instead of rejecting Decode; and PollDocumentArchiveLoad drives the maintenance rotation under a 4 ms wall budget, taking a whole-document load from 97 s to ~300 ms in the browser. Sourcing editor/viewer run over SemioMembers. Verified by 128 passing sourcing tests (the archive-door example load and a saved-archive reload among them), a store round-trip test for the genesis envelope, and a live browser pass with no faults.",
+  "summary": "Sourcing works end to end and was verified live.\n\n1. **Build.** The sourcing hub, beams, slabs and windows components are built from clean, probe-free sources through `repo cargo --store=shared` (admitted, under the warden's unit ceilings), via `native-wasm-build.sh`.\n   - The finished wasm files are exported to the ticket folder, because the cargo build folders get reclaimed.\n   - Link-time optimisation is configured per build, and the sourcing builds run without it.\n   - The hub app fleet is split into the `sourcing-editor` and `sourcing-viewer` crates, which keeps every final compile under its memory ceiling.\n2. **Staging.** `native-stage-modules.ts` transpiles, assembles and checks each component and publishes the activation receipt. All four descriptors are `committed MATCH`.\n3. **Live check.** The app boots on 127.0.0.1:6081. `sourcing-journey.ts` passes 17/17 in English and 17/17 in German:\n   - boot without faults, all four windows render, the pool lists the ten demo stock kinds, the grid renders in 3D;\n   - add, set count, undo/redo, preview, remove, drag in both directions;\n   - filters by query, module, typology and minimum availability, sort;\n   - the example switch;\n   - folder save, reload and reconnect.\n4. **Minimum availability.** The quick-blur stall (Defect 5) no longer reproduces, and the temporary probes are removed (`🎚️min-availability-fault.md`).\n5. **Unrelated fix.** An orphaned `mod dbg` debug ledger was stripped from four framework sources (`strip-orphan-debug-ledger.py`). It pointed at a file deleted with its own ticket, so every cargo build in the repo failed.\n6. **Memory.** The worker halt was fixed in ticket 26/11/24/WARDEN-COVERAGE-FOR-EVERY-REPO-TOOLCHAIN-PROCESS-AND-DISK-BOUNDED-SWAP.\n\nVerification record: `✅️end-to-end-checklist.md` §7.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2592"
   },
   "goal": "🎯runningcuration",
   "sessions": [
     "⚪e839446108d74b1ea55bfa2f78e00ef6",
-    "9bd652ce-b1d7-4e89-a2df-2d7a1cd9b723"
+    "9bd652ce-b1d7-4e89-a2df-2d7a1cd9b723",
+    "c41081eb-227a-49b5-98aa-4afaab48fc47"
   ],
   "interactions": [
     {
@@ -21,6 +22,37 @@
       "client": "claude-code",
       "checkpoint": "",
       "prompt": "Get sourcing working end to end again (2026-11-23): plugin compiles, tests pass, sourcing app boots in s and the curation editor (Pool/Curated/Preview/Grid, beams/windows/slabs) works interactively — curation add/count/remove, drag, filters, sort, undo/redo, example switch, 3D grid and preview, archive save/reload. Fix any regressions introduced since September.",
+      "llm": "opus-5-5",
+      "effort": "medium"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-25 17:58:12",
+      "author": "ueli",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "8d17d8ba3998690932b0032ea2ca41bce5c994b6",
+      "summary": "Sourcing works end to end and was verified live.\n\n1. **Build.** The sourcing hub, beams, slabs and windows components are built from clean, probe-free sources through `repo cargo --store=shared` (admitted, under the warden's unit ceilings), via `native-wasm-build.sh`.\n   - The finished wasm files are exported to the ticket folder, because the cargo build folders get reclaimed.\n   - Link-time optimisation is configured per build, and the sourcing builds run without it.\n   - The hub app fleet is split into the `sourcing-editor` and `sourcing-viewer` crates, which keeps every final compile under its memory ceiling.\n2. **Staging.** `native-stage-modules.ts` transpiles, assembles and checks each component and publishes the activation receipt. All four descriptors are `committed MATCH`.\n3. **Live check.** The app boots on 127.0.0.1:6081. `sourcing-journey.ts` passes 17/17 in English and 17/17 in German:\n   - boot without faults, all four windows render, the pool lists the ten demo stock kinds, the grid renders in 3D;\n   - add, set count, undo/redo, preview, remove, drag in both directions;\n   - filters by query, module, typology and minimum availability, sort;\n   - the example switch;\n   - folder save, reload and reconnect.\n4. **Minimum availability.** The quick-blur stall (Defect 5) no longer reproduces, and the temporary probes are removed (`🎚️min-availability-fault.md`).\n5. **Unrelated fix.** An orphaned `mod dbg` debug ledger was stripped from four framework sources (`strip-orphan-debug-ledger.py`). It pointed at a file deleted with its own ticket, so every cargo build in the repo failed.\n6. **Memory.** The worker halt was fixed in ticket 26/11/24/WARDEN-COVERAGE-FOR-EVERY-REPO-TOOLCHAIN-PROCESS-AND-DISK-BOUNDED-SWAP.\n\nVerification record: `✅️end-to-end-checklist.md` §7.",
+      "files": [
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🗃️🌱️value🗃️🛬️decode🗃️🧳️owned🗃️🏗️recordmachine💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🗃️🌱️value🗃️🛬️decode🗃️🧳️owned🗃️🧬️protocol🗃️📦️packages🛅🦀️rust💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🏪️store🗃️🧩️composition🗃️🚪️open🗃️🏭️operation🗃️🫴️record💻🦀️"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-25 19:55:44",
+      "author": "",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Make sure absolutely every feature of sourcing works end to end: inventory every feature (all UI commands and tool rows of the curation editor and viewer, beams/windows/slabs modules, io codecs binary/text/sqlite import/export, examples, localization en/de, accessibility, keyboard, customization, persistence/reconnect, multi-user sync), run every sourcing test suite, extend the browser journey to cover every feature, fix every failure, verify en and de.",
       "llm": "opus-5-5",
       "effort": "medium"
     }

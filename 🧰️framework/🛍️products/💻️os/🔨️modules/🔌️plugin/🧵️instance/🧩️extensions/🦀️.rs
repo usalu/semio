@@ -10,7 +10,7 @@ extern crate semio_os_kernel as protocol;
 extern crate semio_os_kernel as pack;
 use semio_plugin_decl_emission::{ActionMeta, Emit};
 use semio_plugin_decl_app::ArtifactApp;
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use semio_plugin_instance_children::children_components::ChildComposition;
 use semio_plugin_instance_history::history_components::{CommandHistory, HostEvents, Transactions};

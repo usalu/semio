@@ -25,5 +25,21 @@
     { "id": "unmapped", "key": "Enter", "value": 2, "consumed": false, "expectedDelta": null },
     { "id": "upper-bound-consumes-without-action", "key": "PageUp", "value": 5, "consumed": true, "expectedDelta": null },
     { "id": "home-at-lower-bound-is-unmapped", "key": "Home", "value": 0, "consumed": false, "expectedDelta": null }
-  ]
+  ],
+  "typed": {
+    "cell": { "min": 0, "max": 5, "step": 0.5 },
+    "cases": [
+      { "id": "whole-number", "text": "2", "expectedValue": 2 },
+      { "id": "zero-is-a-value", "text": "0", "expectedValue": 0 },
+      { "id": "on-grid-fraction", "text": "2.5", "expectedValue": 2.5 },
+      { "id": "surrounding-space-is-ignored", "text": " 3 ", "expectedValue": 3 },
+      { "id": "over-the-maximum-clamps", "text": "99999", "expectedValue": 5 },
+      { "id": "negative-is-refused", "text": "-3", "expectedValue": null },
+      { "id": "negative-fraction-is-refused", "text": "-0.5", "expectedValue": null },
+      { "id": "off-grid-fraction-is-refused", "text": "2.25", "expectedValue": null },
+      { "id": "letters-are-refused", "text": "abc", "expectedValue": null },
+      { "id": "exponent-is-refused", "text": "1e1", "expectedValue": null },
+      { "id": "blank-is-refused", "text": "", "expectedValue": null }
+    ]
+  }
 }

@@ -124,6 +124,10 @@ impl<T:Send+Sync+'static> SealedShared<T>{
   if effect.remaining_work_units()?<1{return Ok(Default::default())}if !effect.performed(1)?{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original borrowed alias return exceeded work"))}let Some(source)=self.source.take()else{unreachable!("borrowed original presence checked")};match source.retire(){SharedOriginalRelease::Alias=>{},SharedOriginalRelease::Original(_)=>unreachable!("live borrowed parent retains the original")};Ok(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})
  })();RetainedWorkOutcome{result,work:effect.performed_since(before).expect("same borrowed alias return receipt")}}
  pub fn terminal_is_empty(&self)->bool{self.source.is_none()}
+ /// 🪙️ Reports whether another alias keeps the original alive, so this one returns in one step.
+ pub fn alias_is_returnable(&self)->bool{self.source.as_ref().is_some_and(|source|source.aliases()>1)}
+ /// 🪙️ Returns this alias in one step while another alias remains, else hands it back unchanged.
+ pub fn retire_shared_alias(mut self)->Result<(),Self>{let Some(source)=self.source.take()else{return Ok(())};match source.retire_shared_alias(){Ok(())=>Ok(()),Err(source)=>{*self.source=Some(source);Err(self)}}}
  /// 🕊️ Observes the genuine strong source after all issued aliases have returned.
  pub fn original_aliases_are_returned(&self)->bool{self.source.as_ref().is_none_or(|source|source.aliases()==1)}
  /// 🕊️ Like [`Self::original_aliases_are_returned`] while `resident` aliases stay deliberately held by their long-lived owner.

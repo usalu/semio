@@ -81,6 +81,8 @@ pub use commit_metadata::{advance_batch_metadata,BatchCommitMetadataStep};
 //#region 📬️OneItemPublication
 /// ⛽️ The computational work one preparation step may perform inside its effect.
 const STEP_WORK:u64=64;
+/// 🧹️ Box-close steps one item-close unit may chain: each is its own exactly quoted [`STEP_WORK`] effect funded by what the unit has not spent, and the unit reports ONE item like the preparation loop, so a retiring fold cursor closes in one unit instead of one host-turn item per frame.
+const ITEM_CLOSE_RUN_STEPS:usize=256;
 
 /// 🧊️ Runs one effect-shaped step under an explicit wallet funded by the item grant when no receiving control is in reach; `None` means the work quote was not admitted.
 fn authored<R>(grant:ArtifactStoreOneItemGrant,run:impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>)->R)->Result<Option<R>,ValueError>{
@@ -95,41 +97,13 @@ fn authored<R>(grant:ArtifactStoreOneItemGrant,run:impl FnOnce(&mut semio_framew
 pub fn advance_apply_batch<P,Mutation>(store:&mut StoreParts<'_,P,Mutation>,publication:&mut ArtifactStoreBatchPublication<P,Mutation>,body:usize,grant:ArtifactStoreOneItemGrant,turn_ceiling:RetainedCloneGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<ArtifactStoreOneItemAdvance,VcsError>
 where P:semio_os_spr::StoreState,Mutation:semio_os_spr::StoreMutationFor<P>{
     publication.turn_work=0;let before=receiving.actual_work();
-    let debug_branch=debug_apply_batch_branch(store,publication);semio_framework_value::debug_histogram::debug_unit(debug_branch);
     let result=advance_apply_batch_inner(store,publication,body,grant,turn_ceiling,receiving);
-    semio_framework_value::debug_histogram::debug_unit(match &result{Ok(ArtifactStoreOneItemAdvance::Blocked)=>"result.blocked",Ok(ArtifactStoreOneItemAdvance::PreparationProgress(..)|ArtifactStoreOneItemAdvance::Progress(_))=>"result.progress",Ok(ArtifactStoreOneItemAdvance::Published(..))=>"result.published",Ok(ArtifactStoreOneItemAdvance::PreparationRefused)=>"result.refused",Ok(_)=>"result.terminal",Err(_)=>"result.error"});
-    if let (Ok(ArtifactStoreOneItemAdvance::PreparationProgress(_,receipt)),true)=(&result,debug_branch.starts_with("preflight.digest")){semio_framework_value::debug_histogram::debug_unit_add("digest.items",receipt.copied_items as u64);semio_framework_value::debug_histogram::debug_unit_add("digest.copy_bytes",receipt.copied_bytes as u64);}
     let observed=u64::try_from(receiving.actual_work().saturating_sub(before)).unwrap_or(u64::MAX);
     let coordination=match &result{Ok(ArtifactStoreOneItemAdvance::Blocked|ArtifactStoreOneItemAdvance::AwaitingAck(_)|ArtifactStoreOneItemAdvance::Complete)=>0,Ok(_)=>1,Err(_)=>0};
     let reported=publication.turn_work;publication.turn_work=reported.max(observed).max(coordination);
     publication.turn_work=semio_os_store_one_item::original_one_item_turn_work(reported,observed,coordination!=0).map_err(VcsError::InverseRefused)?;result
 }
 
-/// 🐛️ [DEBUG] Names the branch `advance_apply_batch_inner` is about to take, mirroring its dispatch order, for the temporary mutation-latency histogram.
-fn debug_apply_batch_branch<P,Mutation>(store:&StoreParts<'_,P,Mutation>,publication:&ArtifactStoreBatchPublication<P,Mutation>)->&'static str
-where P:semio_os_spr::StoreState,Mutation:semio_os_spr::StoreMutationFor<P>{
-    const SEAL:[&str;9]=["preflight.digest.seal.countStart","preflight.digest.seal.count","preflight.digest.seal.header","preflight.digest.seal.hashStart","preflight.digest.seal.hash","preflight.digest.seal.takeOwner","preflight.digest.seal.sourceClose","preflight.digest.seal.finalize","preflight.digest.seal.ready"];
-    let stage=publication.stage.as_ref();
-    match publication.phase{
-        ArtifactStoreOneItemPublicationPhase::Preparing if !publication.source_census_finished=>"apply.census",
-        ArtifactStoreOneItemPublicationPhase::Preparing if publication.item_closing=>if stage.is_some_and(|stage|stage.retiring.is_some()){"apply.item_close.retiring"}else{"apply.item_close.preparation"},
-        ArtifactStoreOneItemPublicationPhase::Preparing if stage.is_some_and(|stage|stage.folding.is_some())=>"apply.folding",
-        ArtifactStoreOneItemPublicationPhase::Preparing=>match publication.preparation.as_ref(){None if publication.source.as_ref().is_some_and(|source|source.remaining()==0)=>"apply.flip_cursor",None=>"apply.begin_next",Some(owner) if owner.prepared().is_none()=>"apply.preparation_loop",Some(_)=>"apply.fold"},
-        ArtifactStoreOneItemPublicationPhase::PreparingCursor=>"apply.cursor",
-        ArtifactStoreOneItemPublicationPhase::PreflightingCommit=>match stage{
-            Some(stage) if stage.digest_owner.is_some()=>{let owner=stage.digest_owner.as_ref().expect("digest owner checked");let bits=owner.witness()[0];
-                if owner.ready(){"preflight.digest.take"}else if owner.terminal_is_empty(){"preflight.digest.release"}
-                else if bits>>32==1{if bits&2!=0{"preflight.digest.admission"}else if bits&4!=0{"preflight.digest.seal_birth"}else if bits&1!=0{"preflight.digest.admit_edit"}else{"preflight.digest.other"}}
-                else if bits&(1<<8)!=0{"preflight.digest.seal.closing"}else if bits&(1<<9)!=0{"preflight.digest.seal.hashPending"}else{SEAL.get((bits&0xff)as usize).copied().unwrap_or("preflight.digest.other")}},
-            Some(stage) if !stage.digest_complete=>"preflight.begin_digest",
-            Some(stage) if (stage.diagnostics.row_count()==0&&!stage.diagnostics.terminal_is_empty())||(stage.diagnostics.row_count()!=0&&!stage.diagnostics.joined())=>"preflight.diagnostics",
-            _=>"preflight.flip",
-        },
-        ArtifactStoreOneItemPublicationPhase::Publishing if publication.outbound&&!publication.transaction_open&&batch_amend_target_ref(store,publication.transaction.as_ref()).is_none()&&store.log.operation_wire.as_ref().is_some_and(|wire|wire.original_message_admission.is_some())=>match stage{Some(stage) if !stage.message_complete=>"publishing.message",Some(stage) if stage.commit_metadata.is_none()=>"publishing.metadata",_=>"publishing.commit"},
-        ArtifactStoreOneItemPublicationPhase::Publishing=>if stage.is_some_and(|stage|stage.diagnostics.row_count()!=0&&!stage.diagnostics.prepared()){"publishing.diagnostics"}else{"publishing.transfer"},
-        _=>"apply.terminal",
-    }
-}
 
 fn advance_apply_batch_inner<P, Mutation>(store: &mut StoreParts<'_, P, Mutation>, publication: &mut ArtifactStoreBatchPublication<P, Mutation>, body: usize, grant: ArtifactStoreOneItemGrant, turn_ceiling: RetainedCloneGrant, receiving: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemAdvance, VcsError>
 where
@@ -174,7 +148,20 @@ where
                 return Ok(ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()}));
             }
             if publication.item_closing {
-                if let Some(stage)=publication.stage.as_mut(){if stage.retiring.is_some(){let Some(poll)=receiving.with_effect(item_grant.retained_grant(),STEP_WORK,|_,effect|artifact_retirement_box_close_step(&mut stage.retiring,effect.grant().maximum_copy_bytes,effect)).map_err(|error|VcsError::ValidationFailed(error.into_message()))? else{return Ok(blocked_here())};let step=match poll{semio_framework_value::RetainedWorkPoll::Complete(turn)=>turn.result.map_err(|error|VcsError::ValidationFailed(error.into_value_error().into_message()))?,semio_framework_value::RetainedWorkPoll::Pending{..}=>return Ok(blocked_here())};return Ok(ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),step.progress()));}}
+                if let Some(stage)=publication.stage.as_mut(){if stage.retiring.is_some(){
+                    let unit=item_grant.retained_grant();let mut combined=None::<RetainedCloneProgress>;
+                    for _ in 0..ITEM_CLOSE_RUN_STEPS{
+                        if stage.retiring.is_none(){break}
+                        let spent=combined.unwrap_or_default();
+                        let left=RetainedCloneGrant{maximum_copy_bytes:unit.maximum_copy_bytes.saturating_sub(spent.copied_bytes),maximum_capacity_bytes:unit.maximum_capacity_bytes.saturating_sub(spent.retained_capacity_bytes),maximum_release_bytes:unit.maximum_release_bytes.saturating_sub(spent.released_bytes),..unit};
+                        let Some(poll)=receiving.with_effect(left,STEP_WORK,|_,effect|artifact_retirement_box_close_step(&mut stage.retiring,effect.grant().maximum_copy_bytes,effect)).map_err(|error|VcsError::ValidationFailed(error.into_message()))? else{break};
+                        let step=match poll{semio_framework_value::RetainedWorkPoll::Complete(turn)=>turn.result.map_err(|error|VcsError::ValidationFailed(error.into_value_error().into_message()))?,semio_framework_value::RetainedWorkPoll::Pending{..}=>break};
+                        let progress=step.progress();
+                        if progress==RetainedCloneProgress::default(){combined.get_or_insert(RetainedCloneProgress::default());break}
+                        combined=Some(RetainedCloneProgress{copied_items:1,..spent.saturating_add(progress)});
+                    }
+                    return Ok(combined.map_or_else(blocked_here,|progress|ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),progress)));
+                }}
                 if publication.preparation.is_none(){return Err(VcsError::ValidationFailed("staged batch item lost its original preparation before closure".into()));}
                 let step=match spend_item_close_grant(&mut publication.preparation,item_grant,receiving){Ok(step)=>step,Err(failure)=>{*publication.receiving_fault=Some(failure);publication.begin_close();return Ok(ArtifactStoreOneItemAdvance::PreparationRefused)}};
                 if matches!(step,RetainedCloneStep::Complete(_)){publication.item_closing=false;}

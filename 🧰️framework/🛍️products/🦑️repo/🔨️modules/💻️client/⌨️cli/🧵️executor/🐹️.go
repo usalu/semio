@@ -79,7 +79,7 @@ func terminateOwnedCommandProcessTree(root int) {
 		return
 	}
 	if runtime.GOOS == "windows" {
-		_ = exec.Command("taskkill", "/pid", strconv.Itoa(root), "/T", "/F").Run()
+		_ = hideConsoleWindow(exec.Command("taskkill", "/pid", strconv.Itoa(root), "/T", "/F")).Run()
 		return
 	}
 	owned := ownedCommandProcessTree(root)

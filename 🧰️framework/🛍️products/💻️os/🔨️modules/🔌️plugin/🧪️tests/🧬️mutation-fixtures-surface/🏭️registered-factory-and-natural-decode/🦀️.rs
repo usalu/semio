@@ -112,7 +112,7 @@ impl ArtifactOwnedToolJobFactory for SurfaceFixtureFactory {
     fn latest_wins_target(_command: &SurfaceEditorCommand) -> Option<&str> {
         None
     }
-    fn build_latest_wins_command_disposer() -> Option<Box<dyn semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer<SurfaceEditorCommand>>> {
+    fn build_latest_wins_command_disposer() -> Option<Box<dyn semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer<SurfaceEditorCommand>>> {
         None
     }
 }

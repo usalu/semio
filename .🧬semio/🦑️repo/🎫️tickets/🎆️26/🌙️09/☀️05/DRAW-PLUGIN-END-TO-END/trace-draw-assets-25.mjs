@@ -1,0 +1,11 @@
+import { createRequire } from 'node:module';
+import { resolve } from 'node:path';
+const { chromium } = createRequire(resolve('✏️s/🔌️plugins/🖍️draw/🧪️tests/🌐️browser/🟦️.mjs'))('playwright');
+const browser = await chromium.launch({headless:true,args:['--use-angle=swiftshader','--enable-unsafe-swiftshader','--enable-unsafe-webgpu']});
+const page = await browser.newPage({locale:'en',viewport:{width:1600,height:1000}});
+page.on('request', req => { if (/draw|preview2|shim/i.test(decodeURIComponent(req.url()))) console.log(req.method(),req.url()); });
+await page.routeWebSocket(url=>url.searchParams.has('token'),()=>undefined);
+await page.goto(`${process.argv[2] || 'http://127.0.0.1:6064'}/?plugin=draw&lang=en`);
+await page.waitForFunction(()=>document.documentElement.dataset.semioOsReady,undefined,{timeout:90000});
+await page.waitForTimeout(10000);
+await browser.close();

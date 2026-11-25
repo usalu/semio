@@ -13,20 +13,104 @@
    "de": "Eine ausgebaute Deckenstrahlplatte einer Industriehalle, wie eine Bauteilbörse sie anbietet: ein 6,0 m langes, 0,9 m breites, weiß pulverbeschichtetes Stahlblech 1,25 mm mit seitlichen Aufkantungen von 50 mm, vier Präzisionsstahlrohre 28 x 1,5 mm im Abstand von 225 mm eingepresst, zwei Sammler 42,4 mm an den Enden mit abgetrennten und verschlossenen Vor- und Rücklaufstutzen, eine 40 mm dicke alukaschierte Mineralwollmatte auf der Rückseite und vier verzinkte Aufhängetraversen, deren Ketten an den Ringmuttern M10 abgetrennt wurden, in jeder hängt noch ein abgezwicktes Glied; entleert, vergilbt und staubig, 116 kg mit ihren drei Nadelholz-Kanthölzern 100 x 100 mm. Posen: mit der Strahlfläche nach unten auf den Kanthölzern gelagert, an einem Traversengehänge gehoben, wobei die Kanthölzer liegen bleiben, und in 6 m Höhe in einer Halle wieder aufgehängt, mit 75/65 °C versorgt und etwa 2,6 kW abstrahlend."
   },
   "tags": [
-   "component",
-   "reclaimed",
-   "used",
-   "hvac",
-   "heating",
-   "radiant-panel",
-   "ceiling-panel",
-   "industrial-hall",
-   "sheet-steel",
-   "steel-tube",
-   "mineral-wool",
-   "timber",
-   "operating",
-   "thermal"
+   {
+    "id": "component",
+    "title": {
+     "en": "component",
+     "de": "Bauteil"
+    }
+   },
+   {
+    "id": "reclaimed",
+    "title": {
+     "en": "reclaimed",
+     "de": "wiederverwendet"
+    }
+   },
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "hvac",
+    "title": {
+     "en": "HVAC",
+     "de": "HLK"
+    }
+   },
+   {
+    "id": "heating",
+    "title": {
+     "en": "heating",
+     "de": "Heizung"
+    }
+   },
+   {
+    "id": "radiant-panel",
+    "title": {
+     "en": "radiant panel",
+     "de": "Strahlungspaneel"
+    }
+   },
+   {
+    "id": "ceiling-panel",
+    "title": {
+     "en": "ceiling panel",
+     "de": "Deckenpaneel"
+    }
+   },
+   {
+    "id": "industrial-hall",
+    "title": {
+     "en": "industrial hall",
+     "de": "Industriehalle"
+    }
+   },
+   {
+    "id": "sheet-steel",
+    "title": {
+     "en": "sheet steel",
+     "de": "Stahlblech"
+    }
+   },
+   {
+    "id": "steel-tube",
+    "title": {
+     "en": "steel tube",
+     "de": "Stahlrohr"
+    }
+   },
+   {
+    "id": "mineral-wool",
+    "title": {
+     "en": "mineral wool",
+     "de": "Mineralwolle"
+    }
+   },
+   {
+    "id": "timber",
+    "title": {
+     "en": "timber",
+     "de": "Holz"
+    }
+   },
+   {
+    "id": "operating",
+    "title": {
+     "en": "operating",
+     "de": "Betrieb"
+    }
+   },
+   {
+    "id": "thermal",
+    "title": {
+     "en": "thermal",
+     "de": "thermisch"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage component authors (used HVAC wave, author 09)",

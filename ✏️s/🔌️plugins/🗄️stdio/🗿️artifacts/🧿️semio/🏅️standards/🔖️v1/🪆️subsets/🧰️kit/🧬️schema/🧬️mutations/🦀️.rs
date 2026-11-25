@@ -54,6 +54,7 @@ pub enum SemioKitMutation {
     EditDesign(edit_design::EditDesign),
 }
 dsl::original_pack_value_operation_receiving!(SemioKitMutation);
+dsl::artifact_persisted_binary_operation!(SemioKitMutation);
 
 /// 🏷️ Kebab-case spelling of every `SemioKitMutation` variant, in declaration order — the
 /// vocabulary the `semio-v1-kit` mutation catalog (`../../🔣️oracle.json`) declares and

@@ -6,7 +6,14 @@ import { ACTOR_UI_PATCH_RECEIPT_MAXIMUM_BYTES, encodeActorUiPatchReceipt, valida
 import { COMMAND_INGRESS_KINDS } from "../../../../../../../📦️packages/🟦️typescript/🌐️browser-bundle/🧵️child/🧬️schema/🟦️.ts";
 import { actorCodecRuntimeSourceV1 } from "../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧬️codec/🟦️.ts";
 import { APP_CHANNEL_VERSION, admitGuestChannelVersion } from "../../../../../../../📦️packages/🟦️typescript/🧾️app-channel/🟦️.ts";
-import { PLUGIN_HOST_SHIM_FILE } from "../🧾️contract/🟦️.ts";
+import { PLUGIN_HOST_IMPORT, PLUGIN_HOST_SHIM_FILE } from "../🧾️contract/🟦️.ts";
+
+/** 🧱️ The component table of a deployment that stages every component a descriptor declares in the one factory `componentBase`: each
+ * declared id maps to it, so an activation that names its component reaches the module that carries all of them. Empty for a descriptor
+ * that declares no components. */
+export function monolithicComponentTable(descriptor: { readonly components?: readonly { readonly id: string }[] }, componentBase: string): Readonly<Record<string, string>> {
+  return Object.fromEntries((descriptor.components ?? []).map((component) => [component.id, componentBase]));
+}
 
 /**
  * 🌉️ Normalizes ONE actor's jco-transpiled component (`world actor`: exports `reactor`/
@@ -41,11 +48,21 @@ import { PLUGIN_HOST_SHIM_FILE } from "../🧾️contract/🟦️.ts";
  *
  * 🧪️ terra-web-bridges: every destructured method now returns a Promise (every WIT function in the
  * target world is `async func`) — made EXPLICITLY `async` here rather than relying on bare pass-
- * through. The component and its host imports use matching actor/activation/version URLs; a static
- * relative shim import would otherwise be shared across same-package activations. Each returned API
- * retains that immutable shim module for replies, including while other actors are interleaved.
+ * through.
+ *
+ * 🏭️ The component module is a jco instantiation factory imported once per worker under its rebuild
+ * version only: each activation creates its own host (`createActorHost`) and instance, and asks the
+ * worker's `coreModule(url)` for every core module, so a core module is compiled once per page and
+ * shared by every activation, while the instance, its linear memory and its host live only as long as
+ * the returned API. A per-activation module URL would have kept every instance in the browser's module
+ * map for the page's lifetime.
+ *
+ * 🧩️ A package of several deployable components (`PackageDescriptor.components`) stages each one's factory beside the others and
+ * passes `components` (component id → its jco base name): an activation names its component, the bridge imports only that factory
+ * and asks only for its core modules, so a page compiles the code of the apps it opens and no other. An activation that names no
+ * component runs `componentBase`, the package's only or first component.
  */
-export function pluginComponentBridgeSource(componentBase: string, wasmFileName: string): string {
+export function pluginComponentBridgeSource(componentBase: string, components: Readonly<Record<string, string>> = {}): string {
   return `/** @generated semio actor jco component bridge */
 ${originalOperationWorkerSource()}
 ${pluginStagedGuestSource()}
@@ -123,17 +140,31 @@ function nativeRefusalError(failure, detail) {
   return failure instanceof Error ? failure : undefined;
 }
 
-export async function createActorApi(actorId, activationGeneration, originalAdmission, operationClockUs, originalReturn) {
-  if (typeof activationGeneration !== "bigint" || activationGeneration <= 0n || activationGeneration > 0xffffffffffffffffn) throw new Error("actor-close.invalid-activation-generation");
-  const componentUrl = new URL("./${componentBase}.js", import.meta.url);
+const COMPONENT_BASES = new Map(${JSON.stringify(Object.entries(components))});
+
+function componentBaseFor(component) {
+  if (component === null || component === undefined) return ${JSON.stringify(componentBase)};
+  const base = COMPONENT_BASES.get(component);
+  if (base === undefined) throw new Error("actor-component.unknown: this module stages no component " + JSON.stringify(component));
+  return base;
+}
+
+function versionedUrl(path) {
+  const url = new URL(path, import.meta.url);
   const rebuildVersion = new URL(import.meta.url).searchParams.get("v");
-  componentUrl.searchParams.set("actor", actorId);
-  componentUrl.searchParams.set("activation", activationGeneration.toString());
-  if (rebuildVersion) componentUrl.searchParams.set("v", rebuildVersion);
-  const hostUrl = new URL("./${PLUGIN_HOST_SHIM_FILE}", import.meta.url);
-  hostUrl.search = componentUrl.search;
-  const hostShim = await import(hostUrl.href);
-  const { reactor, jobs, checkpoint, describe, codec } = pluginStagedGuest(await import(componentUrl.href));
+  if (rebuildVersion) url.searchParams.set("v", rebuildVersion);
+  return url.href;
+}
+
+export async function createActorApi(actorId, activationGeneration, originalAdmission, operationClockUs, originalReturn, coreModule, component = null) {
+  if (typeof activationGeneration !== "bigint" || activationGeneration <= 0n || activationGeneration > 0xffffffffffffffffn) throw new Error("actor-close.invalid-activation-generation");
+  if (typeof coreModule !== "function") throw new Error("actor-core-module.loader-required");
+  const base = componentBaseFor(component);
+  const [hostModule, factory] = await Promise.all([import(versionedUrl("./${PLUGIN_HOST_SHIM_FILE}")), import(versionedUrl("./" + base + ".js"))]);
+  if (typeof factory.instantiate !== "function" || typeof hostModule.createActorHost !== "function") throw new Error("actor-component.not-a-factory: the staged component must be a jco instantiation factory (--instantiation async) with a host factory");
+  const hostShim = hostModule.createActorHost(actorId, activationGeneration);
+  const instance = await factory.instantiate((name) => coreModule(versionedUrl("./" + name)), { ...factory.wasiImports, ${JSON.stringify(PLUGIN_HOST_IMPORT)}: hostShim });
+  const { reactor, jobs, checkpoint, describe, codec } = pluginStagedGuest(instance);
   hostShim.__bindOriginalClock(operationClockUs);
   const originalSource = new OriginalOperationSource(originalAdmission, () => hostShim.operationClockUs());
   let refusalDetail;
@@ -158,6 +189,7 @@ export async function createActorApi(actorId, activationGeneration, originalAdmi
     return work;
   };
   let contextReady = false;
+  let jobsStarted = false;
   const fundedJob = (budget, run, cleanup = false) => exclusive(() => originalSourceJob(originalSource, (receipt) => originalReturn.receipt(receipt), originalJobWallUs(budget), run, cleanup), cleanup);
   async function admitWire(value) {
     const turn = originalSource.issue();
@@ -201,6 +233,7 @@ export async function createActorApi(actorId, activationGeneration, originalAdmi
     originalSource,
     closeOriginal: async () => {
       if (originalSource.outstanding || originalSource.nativeRefusal !== undefined || originalSource.producerRefusal !== undefined || originalSource.receiptRefusal !== undefined) throw new Error("original-turn.original-return-pending");
+      if (jobsStarted) await fundedJob(undefined, (funds) => funds.close(jobs), true);
       for (;;) {
         const call = await receiveContext("closeActorContext");
         if (call.complete) {
@@ -252,7 +285,7 @@ export async function createActorApi(actorId, activationGeneration, originalAdmi
       if (raw !== undefined) throw Object.assign(new Error("original-turn.producer-held"), { originalProducer: raw });
       return { ...result, nextWake: optionValue(result.nextWake) ?? null, lifecycleReceipt: lifecycleReceipt(result.lifecycleReceipt, activationGeneration), uiPatchReceipt: uiPatchReceipt(result, activationGeneration), commandIngress: normalizeCommandIngress(result.commandIngress) };
     }),
-    startJob: async (job, kind, input) => fundedJob(undefined, async (funds) => { succession.started(job); await funds.start({ reactor, jobs }, job, kind, input); }),
+    startJob: async (job, kind, input) => fundedJob(undefined, async (funds) => { jobsStarted = true; await funds.start({ reactor, jobs }, job, kind, input); succession.started(job); }),
     stepJob: async (job, budget, control = {}) => fundedJob(budget, async (funds) => { const step = await funds.step(jobs, job, { ...control, held: heldOutput }); if (step.status !== "running") succession.settled(job); return step; }),
     cancelJob: async (job) => fundedJob(undefined, async (funds) => { await funds.cancel(jobs, job, { held: heldOutput }); succession.settled(job); }, true),
     takeSegmentedDownloadChunk: async (instanceId, operationId) => optionValue(await jobs.takeSegmentedDownloadChunk(instanceId, operationId)),

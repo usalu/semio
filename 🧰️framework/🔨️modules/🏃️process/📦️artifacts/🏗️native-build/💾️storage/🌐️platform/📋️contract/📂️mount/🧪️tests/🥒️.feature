@@ -23,3 +23,9 @@ Scenario: Retire Current Publications Across Device Namespace Changes
   When each of the four actual retirement functions is evaluated with real filesystem fixtures and unit kernel ports
   Then device reassignment preserves published inode and mode
   And changed ancestry, backing, receipt, mount directory and original cancellation refuse before removal
+
+Scenario: Reopen An Underlying Mount Directory Guarded After Detachment
+  Given an underlying mount directory published with its held mode
+  When the detached guard withdraws its write bits after a detach or before a reboot
+  Then the same device and inode with the guarded mode is the same underlying directory
+  But a widened, otherwise narrowed, other-typed or replaced directory refuses

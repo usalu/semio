@@ -34,11 +34,11 @@ enum Phase { Seek, Comment, Word(usize), Operand, Ready(Located), Retire, Failed
 pub struct ContentTokenCursor {
     phase: Phase,
     position: usize,
-    operand: Option<PdfCosCursor>,
+    operand: PdfCosCursor,
 }
 
 impl ContentTokenCursor {
-    pub fn new(position: usize) -> Self { Self { phase: Phase::Seek, position, operand: None } }
+    pub fn new(position: usize) -> Self { Self { phase: Phase::Seek, position, operand: PdfCosCursor::idle() } }
     pub fn position(&self) -> usize { self.position }
 
     /// 🔃️ Resumes after the separately framed binary body of an inline image.
@@ -67,7 +67,7 @@ impl ContentTokenCursor {
                     continue;
                 }
                 Phase::Operand => {
-                    let cursor = self.operand.as_mut().expect("active PDF content operand");
+                    let cursor = &mut self.operand;
                     let child = cursor.advance_bytes(|position| source.byte_at(position), grant, false);
                     let status = child.status;
                     result.work += child.work;
@@ -127,8 +127,7 @@ impl ContentTokenCursor {
                 None => self.phase = Phase::Ready(Located::End),
                 Some(b'%') => { self.position += 1; self.phase = Phase::Comment; }
                 Some(b'/' | b'(' | b'<' | b'[' | b'+' | b'-' | b'.' | b'0'..=b'9') => {
-                    self.operand = Some(PdfCosCursor::new(self.position, CosLimits::default()));
-                    self.phase = Phase::Operand;
+                    self.phase = if self.operand.rearm(self.position, CosLimits::default()) { Phase::Operand } else { Phase::Failed("PDF content operand is still retiring") };
                 }
                 Some(byte) if is_ws(byte) || is_delim(byte) => self.position += 1,
                 Some(_) => {
@@ -146,7 +145,7 @@ impl ContentTokenCursor {
         self.phase = Phase::Seek;
         Some(match token {
             Located::Operand => {
-                let cursor = self.operand.as_mut().expect("complete PDF content operand");
+                let cursor = &mut self.operand;
                 let value = cursor.take_value()?;
                 cursor.begin_close();
                 self.phase = Phase::Retire;
@@ -162,9 +161,9 @@ impl ContentTokenCursor {
     /// 🛟️ Discards a malformed operand while retaining the remaining original program.
     pub fn recover(&mut self) -> bool {
         if !matches!(self.phase, Phase::Failed(_)) { return false; }
-        let Some(operand) = self.operand.as_mut() else { return false; };
+        if self.operand.terminal_is_empty() { return false; }
         self.position = self.position.saturating_add(1);
-        operand.begin_close();
+        self.operand.begin_close();
         self.phase = Phase::Retire;
         true
     }
@@ -183,7 +182,7 @@ impl ContentTokenCursor {
 
     pub fn begin_close(&mut self) {
         if !matches!(self.phase, Phase::Closed | Phase::Closing) {
-            if let Some(operand) = self.operand.as_mut() { operand.begin_close(); }
+            self.operand.begin_close();
             self.phase = Phase::Closing;
         }
     }
@@ -192,7 +191,7 @@ impl ContentTokenCursor {
         use ContentTokenEvent as Event;
         match self.phase {
             Phase::Closed => step(Ok(Event::Closed), 0),
-            Phase::Closing if self.operand.is_none() => {
+            Phase::Closing if self.operand.terminal_is_empty() => {
                 self.phase = Phase::Closed;
                 step(Ok(Event::Closed), 0)
             }
@@ -202,10 +201,8 @@ impl ContentTokenCursor {
     }
 
     fn retire_operand(&mut self, grant: CosGrant) -> ContentTokenReceipt {
-        let operand = self.operand.as_mut().expect("closing PDF content operand");
-        let turn = operand.close_step(grant);
+        let turn = self.operand.close_step(grant);
         if turn.status == Ok(CosStatus::Closed) {
-            self.operand = None;
             if matches!(self.phase, Phase::Retire) { self.phase = Phase::Seek; }
         }
         ContentTokenReceipt { event: turn.status.map(event_from_cos), work: turn.work, allocated_bytes: turn.allocated_bytes, released_bytes: turn.released_bytes }

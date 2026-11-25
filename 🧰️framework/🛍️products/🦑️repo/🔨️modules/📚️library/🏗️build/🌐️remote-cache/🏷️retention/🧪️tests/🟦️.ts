@@ -15,6 +15,7 @@ import {createRemoteCacheHandlerV1} from "../../🖥️server/🟦️.ts";
 import {RemoteCacheStoreV1} from "../../💾️store/🟦️.ts";
 import {auditRemoteCacheDirectoryV1,readRemoteCacheMetaV1,scanRemoteCacheMetaV1} from "../🟦️.ts";
 import {declareV1,openTreeDigestsV1} from "../🍂️staleness/🟦️.ts";
+import {ownProcessIdentityV1,readProcessStartV1} from "../../../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts";
 
 const python=testPythonV1(),oracle=join(import.meta.dir,"../../../🪢️slots/🧪️tests/🐍️oracle/🐍️.py"),scratch:string[]=[];
 const directory=(label:string)=>{const path=mkdtempSync(join(tmpdir(),`rcache-stale-${label}-`));scratch.push(path);return path;};
@@ -220,7 +221,7 @@ test("readers racing a collection see a whole entry or a miss, never a partial o
 
 test("an external collection leaves retirement to a running server, which knows the claims, and runs it when none runs",async()=>{
  const tree=directory("tree-def"),folder=directory("deferred"),keys=await seedStore(folder,tree,40);await sleep(80);expect(keys.length).toBe(13);const root=join(folder,"v1"),digests=await openTreeDigestsV1(tree);
- writeFileSync(join(root,REMOTE_CACHE_SERVER_LOCK_V1),`${process.pid}\n${Date.now()}\n`);expect(await remoteCacheServerRunningV1(root)).toBe(true);
+ writeFileSync(join(root,REMOTE_CACHE_SERVER_LOCK_V1),`${process.pid}\n${Date.now()}\n${ownProcessIdentityV1().startMs}\n`);expect(await remoteCacheServerRunningV1(root)).toBe(true);
  const deferred=await collectRemoteCacheDirectoryV1(external(folder,digests,{dryRun:true}));
  expect(deferred.locked?undefined:deferred.value).toMatchObject({deferred:true,removed:{stale:0,entries:0}});
  const claimed=await collectRemoteCacheDirectoryV1(external(folder,digests,{dryRun:true,claimed:(key:string)=>key==="main/nx/ak/akey0"}));
@@ -235,11 +236,11 @@ test("an external collection leaves retirement to a running server, which knows 
 test("a server that runs for days is not taken for dead: the lock is renewed, taken back from nobody, never taken from a living owner and never deleted by a process that lost it",async()=>{
  const root=directory("lock");
  const first=await acquireRemoteCacheLockV1(root,REMOTE_CACHE_SERVER_LOCK_V1);expect(first.held).toBe(false);
- writeFileSync(join(root,REMOTE_CACHE_SERVER_LOCK_V1),`${process.pid}\n${Date.now()-7*3600_000}\n`);expect(await remoteCacheServerRunningV1(root),"older than the six-hour rule").toBe(false);
+ writeFileSync(join(root,REMOTE_CACHE_SERVER_LOCK_V1),`${process.pid}\n${Date.now()-7*3600_000}\n${ownProcessIdentityV1().startMs}\n`);expect(await remoteCacheServerRunningV1(root),"older than the six-hour rule").toBe(false);
  expect(await renewRemoteCacheLockV1(root,REMOTE_CACHE_SERVER_LOCK_V1)).toBe(true);expect(await remoteCacheServerRunningV1(root),"renewed").toBe(true);
- writeFileSync(join(root,REMOTE_CACHE_SERVER_LOCK_V1),`2147483646\n${Date.now()}\n`);expect(await renewRemoteCacheLockV1(root,REMOTE_CACHE_SERVER_LOCK_V1),"names a dead process").toBe(true);
+ writeFileSync(join(root,REMOTE_CACHE_SERVER_LOCK_V1),`2147483646\n${Date.now()}\n1\n`);expect(await renewRemoteCacheLockV1(root,REMOTE_CACHE_SERVER_LOCK_V1),"names a dead process").toBe(true);
  expect(readFileSync(join(root,REMOTE_CACHE_SERVER_LOCK_V1),"utf8").split("\n")[0]).toBe(String(process.pid));
- writeFileSync(join(root,REMOTE_CACHE_SERVER_LOCK_V1),`${process.ppid}\n${Date.now()}\n`);expect(await renewRemoteCacheLockV1(root,REMOTE_CACHE_SERVER_LOCK_V1),"names another living process").toBe(false);
+ writeFileSync(join(root,REMOTE_CACHE_SERVER_LOCK_V1),`${process.ppid}\n${Date.now()}\n${(()=>{const read=readProcessStartV1(process.ppid);return typeof read==="number"?read:1;})()}\n`);expect(await renewRemoteCacheLockV1(root,REMOTE_CACHE_SERVER_LOCK_V1),"names another living process").toBe(false);
  if(!first.held)await first.release();expect(readFileSync(join(root,REMOTE_CACHE_SERVER_LOCK_V1),"utf8").split("\n")[0],"the owner that lost it does not delete the lock of its successor").toBe(String(process.ppid));
 });
 

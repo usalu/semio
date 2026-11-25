@@ -422,4 +422,26 @@ Both en1990 items are being fixed in `en1990-twins-viewport-2026-11-24.md`.
 - **Viewport probe:** it treated "No example" as blank, but the Eurocode blank is the worked example. The probe now requires a new revision, instances above 0 and a drawn canvas. en1990 passes in 42 s with no faults.
 - **Open:** the en1990 editor (9 integration + 6 lib failures), the scene wall-clock gate, and the `norm-eurocode` rebuild after the en1990 and en1998 sources settle. Report: `en1990-twins-viewport-2026-11-24.md`.
 
+## Afternoon fixes (2026-11-24)
+
+- **Serde vs schema:**
+  - Zero-skipped required fields were removed in en1999. en1999 `checks_compliance` 106/0, and the en1999 TypeScript and Rust twins show 0 drift.
+  - `assert_serde_snapshot_law` runs in the en1999, en1995 and din16798 tests.
+  - `serde_json` `float_roundtrip` is now on.
+  - `x-semio-active` is in the vendor vocabulary.
+  - Report: `test-serde-schema-required-2026-11-24.md`.
+- **din16798:** root 52/0, mutations 10/0, examples 3/0, native JS 12058/0. The occupancy densities still need an unverified-basis marking and a human double-key. Report: `din16798-content-tests-2026-11-24.md`.
+- **en1990:** editor lib 32/0, scene 74/0, integration 48/3; the 3 failures are framework history and undo. Report: `en1990-editor-en1993-fieldmeta-2026-11-24.md`.
+- **en1995:**
+  - Split for the source boundary; the new crate `mutations-bridges` passes 4/0.
+  - Root crate 17/0 after the sqlite admission fixes: a duplicate float column, and enum slots that need `Enumeration`.
+  - The independent Python `sqlite3` oracle agrees.
+  - Reports: `en1995-source-boundary-2026-11-24.md`, `en1995-sqlite-snapshot-2026-11-24.md`.
+- **Mutation vectors:** en1999 and en1990 now pass the committed-diff law; the other families are running.
+- **Rebuilds needed before the final sweep:**
+  - `norm-eurocode`: en1990, en1997 and en1998 changed.
+  - `norm-eurocode-materials`: en1995 and en1999 changed.
+  - `norm`: din16798 changed.
+  - `norm-eurocode-structural`: en1992 and en1993 changed.
+
 RESULTS_PENDING

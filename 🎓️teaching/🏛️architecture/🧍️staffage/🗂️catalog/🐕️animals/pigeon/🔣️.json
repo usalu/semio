@@ -13,15 +13,69 @@
       "de": "Eine erwachsene Stadttaube (Columba livia) von 0,35 kg: zweibeiniges Skelett mit S-förmigem Hals, kleinem Kopf mit Wachshaut und Schnabel, Keilschwanz, Laufbeinen mit Zehen und angelegten Flügeln aus Ober-, Unterarm und Hand, die sich zum Flug öffnen; Gehen mit Kopfnicken, Picken, Flügelspreizen und Abflug, mit Gefiederwärmemodell und 41 °C Körpertemperatur."
     },
     "tags": [
-      "animal",
-      "bird",
-      "pigeon",
-      "biped",
-      "head-bob",
-      "wings",
-      "flight",
-      "urban",
-      "gait"
+      {
+        "id": "animal",
+        "title": {
+          "en": "animal",
+          "de": "Tier"
+        }
+      },
+      {
+        "id": "bird",
+        "title": {
+          "en": "bird",
+          "de": "Vogel"
+        }
+      },
+      {
+        "id": "pigeon",
+        "title": {
+          "en": "pigeon",
+          "de": "Taube"
+        }
+      },
+      {
+        "id": "biped",
+        "title": {
+          "en": "biped",
+          "de": "Zweibeiner"
+        }
+      },
+      {
+        "id": "head-bob",
+        "title": {
+          "en": "head bob",
+          "de": "Kopfnicken"
+        }
+      },
+      {
+        "id": "wings",
+        "title": {
+          "en": "wings",
+          "de": "Flügel"
+        }
+      },
+      {
+        "id": "flight",
+        "title": {
+          "en": "flight",
+          "de": "Flug"
+        }
+      },
+      {
+        "id": "urban",
+        "title": {
+          "en": "urban",
+          "de": "urban"
+        }
+      },
+      {
+        "id": "gait",
+        "title": {
+          "en": "gait",
+          "de": "Gangart"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage content worker (animals)",

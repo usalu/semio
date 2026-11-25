@@ -1,0 +1,45 @@
+{
+  "pages": 2,
+  "forms": [
+    "Fm1",
+    "Fn",
+    "Fm2"
+  ],
+  "images": [
+    "Im0",
+    "Im1",
+    "Im1SMask",
+    "Im0_2",
+    "Ix",
+    "Mk",
+    "Pg"
+  ],
+  "formImages": {
+    "Fm1": [
+      "Im0",
+      "Im1"
+    ],
+    "Fm2": [
+      "Im0_2"
+    ],
+    "Fn": [
+      "Im0",
+      "Ix",
+      "Mk"
+    ]
+  },
+  "imageObjects": [
+    8,
+    9,
+    10,
+    11,
+    13,
+    14,
+    15
+  ],
+  "formObjects": [
+    6,
+    7,
+    12
+  ]
+}

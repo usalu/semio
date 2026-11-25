@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 import { renderToStaticMarkup } from "react-dom/server";
 import { compile } from "@tailwindcss/node";
 import Ajv2020 from "ajv/dist/2020.js";
-import { chromium } from "playwright";
+import { launchChromium } from "../../../../🧪️tests/🌐️chromium-launch/🟦️";
 import { describe, expect, it } from "vitest";
 import { Tree } from "../../🟦️.tsx";
 import { TreeItem } from "../../🍃️item/🟦️.tsx";
@@ -29,7 +29,7 @@ describe("Tree label reading order", () => {
     ))).join("");
     const compiler = await compile(readFileSync(cssPath, "utf8"), { base: dirname(cssPath), onDependency: () => {} });
     const classes = [...markup.matchAll(/class="([^"]*)"/g)].flatMap(match => match[1].split(" "));
-    const browser = await chromium.launch({ headless: true });
+    const browser = await launchChromium();
     try {
       const page = await browser.newPage();
       await page.setContent(markup);
@@ -64,7 +64,7 @@ describe("Tree label reading order", () => {
         </FlowProvider>
       </section>,
     ))).join("");
-    const browser = await chromium.launch({ headless: true });
+    const browser = await launchChromium();
     try {
       const page = await browser.newPage();
       await page.setContent(markup);
@@ -103,7 +103,7 @@ describe("Tree label reading order", () => {
     const compiler = await compile(readFileSync(cssPath, "utf8"), { base: dirname(cssPath), onDependency: () => {} });
     const classes = [...markup.matchAll(/class="([^"]*)"/g)].flatMap(match => match[1].split(" "));
     const styles = compiler.build(classes) + readFileSync(resolve(ui, "🌐️globals/🎨️.css"), "utf8");
-    const browser = await chromium.launch({ headless: true });
+    const browser = await launchChromium();
     try {
       const page = await browser.newPage();
       await page.setContent(markup);

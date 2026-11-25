@@ -13,14 +13,62 @@
       "de": "Ein 0,30 m breites Domino-Gaskochfeld in der Frontansicht: eine Stahlplatte mit einem Brenner, einem Flammenkranz von rund 2,5 kW, einem Bedienknebel und einem gusseisernen Pfannenträger, der aufglüht, sobald die Flamme brennt."
     },
     "tags": [
-      "hob",
-      "gas",
-      "cooking",
-      "flame",
-      "burner",
-      "kitchen",
-      "internal-gain",
-      "plume"
+      {
+        "id": "hob",
+        "title": {
+          "en": "hob",
+          "de": "Kochfeld"
+        }
+      },
+      {
+        "id": "gas",
+        "title": {
+          "en": "gas",
+          "de": "Gas"
+        }
+      },
+      {
+        "id": "cooking",
+        "title": {
+          "en": "cooking",
+          "de": "Kochen"
+        }
+      },
+      {
+        "id": "flame",
+        "title": {
+          "en": "flame",
+          "de": "Flamme"
+        }
+      },
+      {
+        "id": "burner",
+        "title": {
+          "en": "burner",
+          "de": "Brenner"
+        }
+      },
+      {
+        "id": "kitchen",
+        "title": {
+          "en": "kitchen",
+          "de": "Küche"
+        }
+      },
+      {
+        "id": "internal-gain",
+        "title": {
+          "en": "internal gain",
+          "de": "innere Wärmelast"
+        }
+      },
+      {
+        "id": "plume",
+        "title": {
+          "en": "plume",
+          "de": "Fahne"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage content (G2)",

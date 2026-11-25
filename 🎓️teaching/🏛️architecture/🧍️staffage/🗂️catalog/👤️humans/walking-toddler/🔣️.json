@@ -13,14 +13,62 @@
    "de": "Ein zweijähriges Kind von 0,87 m und 12 kg tapst in T-Shirt, Shorts über der Windel und weichen Lauflernschuhen: ein grosser Kopf von einem Fünftel der Körperhöhe, kurze Beine, ein runder Bauch und der unreife Gang eines jungen Läufers mit breiter Spur, kurzen schnellen Schritten von 0,22 m bei etwa 170 je Minute, flachen Fußaufsätzen und seitlich abgehaltenen Armen zum Balancieren. Posen für Standphasenmitte, Fußaufsatz, breitbeiniges Stehen und Hocken zum Aufheben; Clips für das Tapsen, Hocken und Aufstehen sowie ruhiges Stehen."
   },
   "tags": [
-   "human",
-   "child",
-   "toddler",
-   "walking",
-   "gait",
-   "family",
-   "playground",
-   "street-life"
+   {
+    "id": "human",
+    "title": {
+     "en": "human",
+     "de": "Mensch"
+    }
+   },
+   {
+    "id": "child",
+    "title": {
+     "en": "child",
+     "de": "Kind"
+    }
+   },
+   {
+    "id": "toddler",
+    "title": {
+     "en": "toddler",
+     "de": "Kleinkind"
+    }
+   },
+   {
+    "id": "walking",
+    "title": {
+     "en": "walking",
+     "de": "Gehen"
+    }
+   },
+   {
+    "id": "gait",
+    "title": {
+     "en": "gait",
+     "de": "Gangart"
+    }
+   },
+   {
+    "id": "family",
+    "title": {
+     "en": "family",
+     "de": "Familie"
+    }
+   },
+   {
+    "id": "playground",
+    "title": {
+     "en": "playground",
+     "de": "Spielplatz"
+    }
+   },
+   {
+    "id": "street-life",
+    "title": {
+     "en": "street life",
+     "de": "Straßenleben"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage human worker HW-05",

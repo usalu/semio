@@ -150,9 +150,9 @@ export function checkZeroTouchClosuresV1(root: string): ReturnType<typeof zeroTo
 }
 
 /** 🧭️ One root command whose module closure the law holds to the registry's declaration. */
-export type ZeroTouchCommandV1 = Readonly<{ id: string; module: string; requires: "none" | "dependencies" }>;
+export type ZeroTouchCommandV1 = Readonly<{ id: string; module: string; requires: "none" | "dependencies" | "staged" }>;
 
-/** 📱️ Walks the full closure of every command module: a workspace package specifier is refused for every command; an external package is refused for `none` and allowed for `dependencies`, whose module is only loaded after the router has provisioned the dependencies; a `none` command reaches a seam by a dynamic import only. */
+/** 📱️ Walks the full closure of every command module: a workspace package specifier is refused for every command; an external package is refused for `none` and allowed for `dependencies` and `staged`, whose module is only loaded once the dependencies are installed (the router provisions them first, or for `staged` finds them already installed); a `none` command reaches a seam by a dynamic import only. */
 export function zeroTouchCommandFindingsV1(commands: readonly ZeroTouchCommandV1[], seams: readonly string[], tree: ZeroTouchTreeV1): Readonly<{ files: Readonly<Record<string, number>>; findings: readonly ZeroTouchFindingV1[] }> {
   const findings: ZeroTouchFindingV1[] = [], files: Record<string, number> = {}, seamModules = new Set(seams);
   for (const command of commands) {
@@ -168,7 +168,7 @@ export function zeroTouchCommandFindingsV1(commands: readonly ZeroTouchCommandV1
         if (specifier.startsWith(".")) {
           const target = relativeTarget(tree, file, specifier);
           if (target === undefined) continue;
-          if (command.requires === "dependencies" || !seamModules.has(target)) pending.push(target);
+          if (command.requires !== "none" || !seamModules.has(target)) pending.push(target);
           else if (kind === "static") findings.push({ closure, kind: "seam-static", file, specifier, detail: `The post-install module ${target} may only be loaded by a dynamic import.` });
         } else if (specifier.startsWith("node:") || isRuntimeBuiltinSpecifierV1(specifier) || isBuiltin(specifier)) continue;
         else if (Object.keys(tree.packages).some((name) => specifier === name || specifier.startsWith(`${name}/`))) {
@@ -189,7 +189,7 @@ export function readZeroTouchCommandsV1(text: string): readonly ZeroTouchCommand
   if (!Array.isArray(value.commands) || value.commands.length === 0) throw Error("Root command registry required");
   const ids = new Set<string>();
   return value.commands.map((row: Record<string, unknown>) => {
-    if (typeof row.id !== "string" || typeof row.module !== "string" || (row.requires !== "none" && row.requires !== "dependencies") || ids.has(row.id)) throw Error("Root command registry row required");
+    if (typeof row.id !== "string" || typeof row.module !== "string" || (row.requires !== "none" && row.requires !== "dependencies" && row.requires !== "staged") || ids.has(row.id)) throw Error("Root command registry row required");
     ids.add(row.id);
     return { id: row.id, module: row.module, requires: row.requires };
   });

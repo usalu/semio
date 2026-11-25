@@ -9,9 +9,10 @@ import { fixtureOriginalWorkStock } from "@semio-tech/framework-actor/retained-t
  * 1. capture EVERY patch of the turn as its own private authority — one receipt, N patches, in
  *    publication order, each addressed by its own `(surface, revision)`; the duplicate-sequence guard
  *    still refuses that receipt on any OTHER turn;
- * 2. acknowledge the whole batch in ONE crossing — `reactor::poll` takes a LIST of events, and
- *    acknowledging one patch per crossing would have put the N round trips the guest just stopped
- *    paying straight back on the inbound side.
+ * 2. acknowledge the whole batch as one ordered submission — a reactor turn serves exactly one event
+ *    slot (`⚛️reactor/🎟️context/🌉️call/🎭️exports` refuses a batch of events), so the batch is N
+ *    crossings of one `patch-ack` event each, in publication order, each answer returned to the
+ *    caller and the whole submission memoized, so a repeat admits nothing new.
  *
  * See `📓️ui-turn-patch-batching-2026-09-15.md`.
  */
@@ -39,11 +40,15 @@ async function fixture(actorId: string) {
   const sent: Sent[] = [];
   const worker: ShardWorkerLike = { onmessage: null, onerror: null, postMessage(message) { sent.push(message as Sent); }, terminate() {} };
   const client = new ShardClient({ originalWorkStock: fixtureOriginalWorkStock(), residentLedger: new OwnedResidentLedger({ bytes: 1_048_576, slots: 4_096, owners: 4_096, control: { bytes: 65_536, slots: 256, owners: 256 } }), shardCount: 1, createWorker: () => worker });
-  const answer = async <T>(pending: Promise<T>, value: unknown): Promise<T> => {
-    await flush(8);
-    worker.onmessage!({ data: { kind: "result", requestId: sent.at(-1)!.requestId, ok: true, value } } as MessageEvent);
+  const answerCrossings = async <T>(pending: Promise<T>, count: number, value: unknown): Promise<T> => {
+    const base = sent.length;
+    for (let index = 0; index < count; index += 1) {
+      for (let spin = 0; spin < 4096 && sent.length === base + index; spin += 1) await Promise.resolve();
+      worker.onmessage!({ data: { kind: "result", requestId: sent.at(-1)!.requestId, ok: true, value } } as MessageEvent);
+    }
     return pending;
   };
+  const answer = <T>(pending: Promise<T>, value: unknown): Promise<T> => answerCrossings(pending, 1, value);
   const plain = { uiPatches: [], effects: [], nextWake: null, status: { tag: "idle" } };
   await answer(client.activate(actorId, "/fixture.js", [], MAINTENANCE_LANE_DEFAULT_BUDGET), undefined);
   const lease = client.captureInstanceLifecycle(actorId, INSTANCE);
@@ -53,7 +58,7 @@ async function fixture(actorId: string) {
   const owner = new OwnedUiInstance(lease.activation, lifetime, { maxNodes: 128, maxDepth: 16, maxChildren: 32, maxTextBytes: 4096, maxPatchOps: 128, maxPatchBytes: 65_536 }, { usizeBits: 32 });
   lease.bindHostRetirement(owner);
   await answer(lease.acknowledge(captured, MAINTENANCE_LANE_DEFAULT_BUDGET), plain);
-  return { sent, client, answer, plain, lease, lifetime, owner };
+  return { sent, client, answer, answerCrossings, plain, lease, lifetime, owner };
 }
 
 /** 🩹️ One turn result carrying `count` surfaces under a single receipt. */
@@ -91,8 +96,8 @@ describe("🧺️ the turn patch batch, on the host side", () => {
     client.disposeAll();
   });
 
-  it("acknowledges the whole batch in ONE crossing, one patch-ack event per surface, in order", async () => {
-    const { sent, answer, client, plain, lease, lifetime, owner } = await fixture("batch-ack");
+  it("acknowledges the whole batch as one ordered submission, one crossing and one patch-ack event per surface", async () => {
+    const { sent, answer, answerCrossings, client, plain, lease, lifetime, owner } = await fixture("batch-ack");
     const count = 3;
     const turn = batchTurn(plain, lifetime, count, 1n);
     await answer(lease.poll(MAINTENANCE_LANE_DEFAULT_BUDGET), turn);
@@ -109,10 +114,11 @@ describe("🧺️ the turn patch batch, on the host side", () => {
       return { source, token: patch.peekAcknowledgement()!, patch };
     });
     const before = sent.length;
-    const submitted = await answer(lease.submitUiAcknowledgements(entries.map(({ source, token }) => ({ source, token })), MAINTENANCE_LANE_DEFAULT_BUDGET), plain);
-    expect(sent.length - before).toBe(1);
-    const posted = sent.at(-1)!.events!;
-    expect(posted).toHaveLength(count);
+    const submitted = await answerCrossings(lease.submitUiAcknowledgements(entries.map(({ source, token }) => ({ source, token })), MAINTENANCE_LANE_DEFAULT_BUDGET), count, plain);
+    expect(sent.length - before).toBe(count);
+    const crossings = sent.slice(before).map((message) => message.events!);
+    expect(crossings.map((events) => events.length)).toEqual(Array.from({ length: count }, () => 1));
+    const posted = crossings.flat();
     expect(posted.map((event) => event.kind)).toEqual(Array.from({ length: count }, () => "patch-ack"));
     expect(posted.map((event) => (event.payload as { surface: { surface: string } }).surface.surface)).toEqual(SURFACES.slice(0, count));
     expect(posted.map((event) => (event.payload as { revision: bigint }).revision)).toEqual(SURFACES.slice(0, count).map((_, index) => BigInt(index + 1)));
@@ -122,7 +128,7 @@ describe("🧺️ the turn patch batch, on the host side", () => {
       expect(patch.acceptAcknowledgement(submitted.receipts[index]!)).toBe(false);
     }
     const again = await lease.submitUiAcknowledgements(entries.map(({ source, token }) => ({ source, token })), MAINTENANCE_LANE_DEFAULT_BUDGET);
-    expect(sent.length - before).toBe(1);
+    expect(sent.length - before).toBe(count);
     expect(again.receipts).toEqual(submitted.receipts);
     client.disposeAll();
   });

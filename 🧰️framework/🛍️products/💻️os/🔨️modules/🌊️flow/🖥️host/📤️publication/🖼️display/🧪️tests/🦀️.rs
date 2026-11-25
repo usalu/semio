@@ -24,7 +24,7 @@ fn display_turns(row:&serde_json::Value,items:usize)->(usize,String){
   let d=source.cursor.demands(&source.snapshot,&source.channels,&source.infos).unwrap();
   let grant=RetainedCloneGrant{maximum_items:items,maximum_copy_bytes:32_768,maximum_capacity_bytes:16_777_216.max(d.capacity_bytes),maximum_release_bytes:1_048_576,maximum_depth:d.depth.max(64)};
   source.cursor.step(&source.snapshot,&source.channels,&source.infos,grant).unwrap();
-  turns+=1;assert!(turns<100_000,"[DEBUG] display never completed under {items} item(s) per turn");
+  turns+=1;assert!(turns<100_000,"display never completed under {items} item(s) per turn");
  }
  let text=source.cursor.text.clone().unwrap();
  source.retire_cold();
@@ -38,7 +38,6 @@ fn display_writer_batches_the_granted_items_within_one_turn(){
  for row in fixture["cases"].as_array().unwrap(){
   let(single,single_text)=display_turns(row,1);
   let(mounted,mounted_text)=display_turns(row,64);
-  println!("[DEBUG] display turns: 1 item={single}, 64 items={mounted}");
   assert_eq!(single_text,mounted_text);
   assert!(mounted*4<single,"mounted turns {mounted} must be far fewer than single-item turns {single}");
  }

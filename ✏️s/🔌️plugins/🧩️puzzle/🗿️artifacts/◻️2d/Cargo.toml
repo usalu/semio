@@ -216,5 +216,11 @@ path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/�
 [workspace.dependencies.semio-plugin-ownership]
 path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/🧱️owner/📦️packages/🦀️rust"
 
+[workspace.dependencies.semio-plugin-store-lifecycle]
+path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/♻️lifecycle/🧱️owner/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-plugin-transient-publication]
+path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🫧️transient/🧱️owner/📦️packages/🦀️rust"
+
 [workspace.dependencies.semio-s-artifact-puzzle-2d-retained-panels]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️retained/📌️panel-mounts/📦️packages/🦀️rust"

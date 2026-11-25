@@ -13,17 +13,83 @@
    "de": "Rund 15 m² gebrauchte Eichen-Fischgrätstäbe 22 x 70 x 280 mm mit den schwarzen Resten ihres Heißbitumenbetts auf der Unterseite, in 18 Lagen zu 4 x 10 Stäben in einer Lattenkiste aus Fichte gestapelt, die auf eine Europalette auf zwei Kanthölzern genagelt ist, obenauf eine Fischgrätprobe aus 27 Stäben; mit der Staplergabel angehoben, die Probe auf Estrich unter Nutzlast und wandernder Einzellast neu verlegt."
   },
   "tags": [
-   "component",
-   "reclaimed",
-   "flooring",
-   "parquet",
-   "herringbone",
-   "oak",
-   "timber",
-   "bitumen",
-   "pallet",
-   "crate",
-   "stacked-goods"
+   {
+    "id": "component",
+    "title": {
+     "en": "component",
+     "de": "Bauteil"
+    }
+   },
+   {
+    "id": "reclaimed",
+    "title": {
+     "en": "reclaimed",
+     "de": "wiederverwendet"
+    }
+   },
+   {
+    "id": "flooring",
+    "title": {
+     "en": "flooring",
+     "de": "Bodenbelag"
+    }
+   },
+   {
+    "id": "parquet",
+    "title": {
+     "en": "parquet",
+     "de": "Parkett"
+    }
+   },
+   {
+    "id": "herringbone",
+    "title": {
+     "en": "herringbone",
+     "de": "Fischgrät"
+    }
+   },
+   {
+    "id": "oak",
+    "title": {
+     "en": "oak",
+     "de": "Eiche"
+    }
+   },
+   {
+    "id": "timber",
+    "title": {
+     "en": "timber",
+     "de": "Holz"
+    }
+   },
+   {
+    "id": "bitumen",
+    "title": {
+     "en": "bitumen",
+     "de": "Bitumen"
+    }
+   },
+   {
+    "id": "pallet",
+    "title": {
+     "en": "pallet",
+     "de": "Palette"
+    }
+   },
+   {
+    "id": "crate",
+    "title": {
+     "en": "crate",
+     "de": "Kiste"
+    }
+   },
+   {
+    "id": "stacked-goods",
+    "title": {
+     "en": "stacked goods",
+     "de": "Stapelgut"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage component authors",

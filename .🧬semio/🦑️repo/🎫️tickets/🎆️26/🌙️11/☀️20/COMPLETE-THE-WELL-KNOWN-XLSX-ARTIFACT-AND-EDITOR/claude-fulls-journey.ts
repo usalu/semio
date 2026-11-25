@@ -73,12 +73,40 @@ async function waitFor<T>(label: string, ms: number, probe: () => Promise<T | nu
 }
 async function railHas(id: string): Promise<boolean> { await unfoldActionsRail(page).catch(() => undefined); return (await readShell(page)).actions.includes(`action.${id}`); }
 
-async function openViaPicker(bytes: Uint8Array, name: string): Promise<{opened: string[]; notes: string[]}> {
+async function spawnEditor(appId: string): Promise<string[] | string> {
+  const program = (await page.evaluate(() => (window as unknown as {__semioOsCatalogProbe?: {programs: {pluginId: string; appId: string}[]}}).__semioOsCatalogProbe?.programs ?? [])).find(p => p.appId === appId);
+  if (!program) return `no catalog program ${appId}`;
+  const before = await windowIds(page);
+  await dismissIntroduction(page);
+  await page.evaluate(() => (document.activeElement instanceof HTMLElement ? document.activeElement.blur() : undefined));
+  await page.keyboard.press(process.platform === "darwin" ? "Meta+p" : "Control+p");
+  const input = page.locator("[role='dialog'] [data-slot='command-input']").first();
+  await input.waitFor({state: "visible", timeout: 15_000}).catch(() => undefined);
+  if ((await input.count()) === 0) return "command palette never opened";
+  await input.fill("xlsx");
+  const item = page.locator(`[data-slot="command-item"][data-command-item-id="spawn.${program.pluginId}.${program.appId}"]`).first();
+  await item.waitFor({state: "visible", timeout: 8_000}).catch(() => undefined);
+  if ((await item.count()) === 0) { await page.keyboard.press("Escape"); return `no palette row spawn.${program.pluginId}.${program.appId}`; }
+  await item.click({timeout: 8_000}).catch(() => item.click({force: true}));
+  const fresh = await waitFor("spawned", 120_000, async () => { const w = (await windowIds(page)).filter(id => !before.includes(id)); return w.length > 0 ? w : null; });
+  if (!fresh) return "no new window after spawn";
+  await page.waitForTimeout(3_500);
+  return fresh;
+}
+async function openViaPicker(bytes: Uint8Array, name: string, editorAppId = "s.stdio.xlsx@ecma-376/transitional#editor"): Promise<{opened: string[]; notes: string[]}> {
+  let bootstrap: string[] = [];
+  if (!(await railHas("openArtifactFile"))) {
+    const spawnedWindows = await spawnEditor(editorAppId);
+    if (typeof spawnedWindows === "string") return {opened: [], notes: [`no openArtifactFile rail row and bootstrap editor failed: ${spawnedWindows}`]};
+    bootstrap = spawnedWindows;
+    if (!(await railHas("openArtifactFile"))) return {opened: [], notes: ["no openArtifactFile rail row in the bootstrap editor"]};
+  }
   const before = await windowIds(page), seen = (await notices()).length;
   picker.next = bytes; picker.name = name;
-  if (!(await railHas("openArtifactFile"))) return {opened: [], notes: ["no openArtifactFile rail row"]};
   await clickUncovered(page, '[data-slot="window-action-pane"] [id="action.openArtifactFile"]');
-  return settleOpen(before, seen);
+  const result = await settleOpen(before, seen);
+  if (bootstrap.length > 0) await closeWindows(bootstrap);
+  return result;
 }
 async function openViaDrop(bytes: Uint8Array, name: string): Promise<{opened: string[]; notes: string[]}> {
   const before = await windowIds(page), seen = (await notices()).length;
@@ -123,8 +151,7 @@ try {
   for (const dialect of ["transitional", "strict"] as Dialect[]) {
     for (const via of ["picker", "drop"] as const) {
       const tag = `${dialect}-${via}`, name = `Quarterly-Budget-${dialect}-${via}.xlsx`, marker = `Original ${dialect} ${via}`, edited = `Edited ${dialect} ${via} ${locale}`;
-      const open = via === "picker" ? openViaPicker : openViaDrop;
-      const {opened, notes} = await open(workbook(dialect, marker), name);
+      const {opened, notes} = await (via === "picker" ? openViaPicker(workbook(dialect, marker), name, `s.stdio.xlsx@ecma-376/${dialect}#editor`) : openViaDrop(workbook(dialect, marker), name));
       const wanted = `s.stdio.xlsx@ecma-376/${dialect}#editor`;
       const owner = (await spawned()).filter(s => s.appId === wanted);
       record(`${tag}:open`, opened.length > 0 && owner.length > 0, `windows=${opened.length} owner=${owner.map(o => o.appId).join(",") || "none"} notes=${JSON.stringify(notes.slice(0, 2))}`);

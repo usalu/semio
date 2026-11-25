@@ -1,4 +1,4 @@
-import {acquireResourceLease,checkResourceLeaseControl,ResourceLeaseTimeoutErrorV1,type ResourceLease,type ResourceLeaseControl} from "@semio-tech/process/leases";
+import {acquireResourceLease,checkResourceLeaseControl,ResourceLeaseTimeoutErrorV1,type ResourceLease,type ResourceLeaseControl} from "../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 
 export const repositoryDependencyBindingsBusyV1 = Symbol("dependency bindings busy");
 

@@ -7,8 +7,8 @@ use semio_framework_value::{RetirementDemand, ValueError, retained_clone::{Retai
 use store::ArtifactStoreInitializationAuthority;
 use std::mem::ManuallyDrop;
 use semio_framework_value::retirement::controlled::ControlledRetirement;
-use crate::bounded_ownership::PluginLifecycleStep;
-use crate::sdk_fault::plugin_sdk_fault;
+use semio_plugin_ownership::bounded_ownership::PluginLifecycleStep;
+use semio_plugin_ownership::sdk_fault::plugin_sdk_fault;
 
 
 
@@ -108,11 +108,11 @@ fn original_bounded_config_factory_retains_source_until_exact_physical_retiremen
     let frame = store::ArtifactOwnedValueRetirementFactory::retirement_birth_bytes(&factory, source.as_ref().unwrap());
     let quote = store::ArtifactOwnedValueRetirementFactory::retire_owned_demands(&factory, source.as_ref().unwrap()).unwrap();
     let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: quote.copy_bytes.max(law["maximumCopyBytes"].as_u64().unwrap() as usize), maximum_capacity_bytes: quote.capacity_bytes.max(frame), maximum_release_bytes: quote.release_bytes, maximum_depth: quote.depth.max(1) };
-    let mut wallet = crate::bounded_ownership::effect_fixture::wallet();
+    let mut wallet = semio_plugin_ownership::bounded_ownership::effect_fixture::wallet();
     let mut axes = vec![RetainedCloneGrant { maximum_items: 0, ..grant }, RetainedCloneGrant { maximum_capacity_bytes: frame - 1, ..grant }, RetainedCloneGrant { maximum_depth: 0, ..grant }];
     if grant.maximum_copy_bytes > 0 { axes.push(RetainedCloneGrant { maximum_copy_bytes: grant.maximum_copy_bytes - 1, ..grant }); }
     for denied in axes {
-        let (outcome, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| wallet.run_invoked(denied, crate::bounded_ownership::effect_fixture::WORK, |effect| semio_framework_value::factory_retire_owned(&factory, &mut source, &mut effect.nested(denied))));
+        let (outcome, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| wallet.run_invoked(denied, semio_plugin_ownership::bounded_ownership::effect_fixture::WORK, |effect| semio_framework_value::factory_retire_owned(&factory, &mut source, &mut effect.nested(denied))));
         if let Ok(Some(done)) = outcome {
             if let semio_framework_value::RetainedWorkPoll::Complete(turn) = done.output { assert!(turn.result.is_err(), "original config factory admitted an unfunded constructor"); }
         }
@@ -120,7 +120,7 @@ fn original_bounded_config_factory_retains_source_until_exact_physical_retiremen
         assert_eq!(source.as_ref().map(String::capacity), Some(source_bytes));
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
     }
-    let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| crate::bounded_ownership::effect_fixture::run_poll(&mut wallet, grant, |effect| semio_framework_value::factory_retire_owned(&factory, &mut source, effect)));
+    let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| semio_plugin_ownership::bounded_ownership::effect_fixture::run_poll(&mut wallet, grant, |effect| semio_framework_value::factory_retire_owned(&factory, &mut source, effect)));
     let (owner, progress) = result.result.unwrap_or_else(|error| panic!("original config typed constructor refused its exact grant: {error:?}"));
     assert!(progress.fits(grant));
     assert_eq!((heap.requested_bytes, heap.released_bytes), (progress.retained_capacity_bytes, progress.released_bytes));
@@ -134,14 +134,14 @@ fn original_bounded_config_factory_retains_source_until_exact_physical_retiremen
         let demand = store::os_store::snapshot_read::artifact_retirement_box_demands(current, copy).unwrap();
         let turn = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
         for denied in [Some(RetainedCloneGrant { maximum_items: 0, ..turn }), (demand.release_bytes != 0).then(|| RetainedCloneGrant { maximum_release_bytes: demand.release_bytes - 1, ..turn })].into_iter().flatten() {
-            let (outcome, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| wallet.run_invoked(denied, crate::bounded_ownership::effect_fixture::WORK, |effect| store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut owner, copy, &mut effect.nested(denied))));
+            let (outcome, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| wallet.run_invoked(denied, semio_plugin_ownership::bounded_ownership::effect_fixture::WORK, |effect| store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut owner, copy, &mut effect.nested(denied))));
             if let Ok(Some(done)) = outcome {
                 if let semio_framework_value::RetainedWorkPoll::Complete(turn) = done.output { if let Ok(step) = turn.result { assert_eq!(step.progress(), RetainedCloneProgress::default()); } }
             }
             assert!(owner.is_some());
             assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         }
-        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| crate::bounded_ownership::effect_fixture::run_poll(&mut wallet, turn, |effect| store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut owner, copy, effect)));
+        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| semio_plugin_ownership::bounded_ownership::effect_fixture::run_poll(&mut wallet, turn, |effect| store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut owner, copy, effect)));
         let progress = step.result.unwrap().progress();
         assert!(progress.fits(turn));
         assert_eq!((heap.requested_bytes, heap.released_bytes), (progress.retained_capacity_bytes, progress.released_bytes));
@@ -442,7 +442,7 @@ where
 
     fn close_step(&mut self, owner: &mut ArtifactStore<P, Mutation>, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<PluginLifecycleStep, Fault> {
         let grant = effect.grant();
-        let step = crate::bounded_ownership::plugin_settle_value(owner.close_owned_store_step(effect)).map_err(|error| plugin_sdk_fault(error.into_message()))?;
+        let step = semio_plugin_ownership::bounded_ownership::plugin_settle_value(owner.close_owned_store_step(effect)).map_err(|error| plugin_sdk_fault(error.into_message()))?;
         let terminal = owner.close_owned_store_terminal_is_empty();
         let step = semio_framework_value::retained_clone::admit_retained_clone_close(grant, step, terminal, "original document Store disposer").map_err(|error| plugin_sdk_fault(error.into_message()))?;
         Ok(PluginLifecycleStep::retained(step, terminal))

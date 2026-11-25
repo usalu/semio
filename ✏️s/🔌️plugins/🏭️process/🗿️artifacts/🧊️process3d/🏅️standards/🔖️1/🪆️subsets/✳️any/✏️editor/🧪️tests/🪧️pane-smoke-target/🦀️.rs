@@ -3,8 +3,7 @@
 #![recursion_limit = "512"]
 extern crate semio_os_kernel as protocol;
 extern crate semio_os_kernel as store;
-#[path = "../🧰️support/🦀️.rs"]
-mod context;
+use semio_s_artifact_process_process3d_harness as context;
 use semio_s_artifact_process_process3d_commands::step::add_step;
 use semio_s_artifact_process_process3d_commands::document::set_active_example;
 use semio_s_artifact_process_process3d_kit::PROCESS3D_EXAMPLE_CONCRETE_FOREST;

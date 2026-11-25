@@ -866,6 +866,38 @@ pub fn reference_page_resources(input: &[u8]) -> Result<Vec<(Vec<String>, Vec<St
     }).collect()
 }
 
+/// 🔤️ Lists every page's fonts through the independent native PDF reader: resource name, subtype and the descriptor key that embeds its program (`FontFile`, `FontFile2`, `FontFile3`), following one descendant font.
+pub fn reference_page_fonts(input: &[u8]) -> Result<Vec<Vec<(String, String, Option<String>)>>, String> {
+    use lopdf::{Document, Object};
+    let document = Document::load_mem(input).map_err(|error| error.to_string())?;
+    let resolve = |object: &Object| -> Option<Object> {
+        match object { Object::Reference(id) => document.get_object(*id).ok().cloned(), other => Some(other.clone()) }
+    };
+    let name = |object: Option<Object>| object.and_then(|object| object.as_name().ok().map(|name| String::from_utf8_lossy(name).into_owned()));
+    let program = |font: &lopdf::Dictionary| -> Option<String> {
+        let descendant = font.get(b"DescendantFonts").ok().and_then(&resolve).and_then(|fonts| fonts.as_array().ok().and_then(|items| items.first().cloned())).and_then(|child| resolve(&child));
+        let owner = descendant.as_ref().and_then(|child| child.as_dict().ok()).unwrap_or(font);
+        let descriptor = owner.get(b"FontDescriptor").ok().and_then(&resolve)?;
+        let descriptor = descriptor.as_dict().ok()?;
+        ["FontFile", "FontFile2", "FontFile3"].into_iter().find(|key| descriptor.has(key.as_bytes())).map(str::to_owned)
+    };
+    document.get_pages().into_values().map(|page| {
+        let mut node = document.get_dictionary(page).map_err(|error| error.to_string())?;
+        for _ in 0..64 {
+            if let Some(Object::Dictionary(resources)) = node.get(b"Resources").ok().and_then(&resolve) {
+                let Some(Object::Dictionary(fonts)) = resources.get(b"Font").ok().and_then(&resolve) else { return Ok(Vec::new()); };
+                return Ok(fonts.iter().map(|(key, value)| {
+                    let font = resolve(value).and_then(|font| font.as_dict().ok().cloned()).unwrap_or_default();
+                    (String::from_utf8_lossy(key).into_owned(), name(font.get(b"Subtype").ok().cloned()).unwrap_or_default(), program(&font))
+                }).collect());
+            }
+            let Some(parent) = node.get(b"Parent").ok().and_then(|parent| parent.as_reference().ok()) else { break; };
+            node = document.get_dictionary(parent).map_err(|error| error.to_string())?;
+        }
+        Ok(Vec::new())
+    }).collect()
+}
+
 /// 📄️ Counts pages through the independent native PDF reader.
 pub fn reference_page_count(input:&[u8])->Result<usize,String> {Ok(lopdf::Document::load_mem(input).map_err(|error|error.to_string())?.get_pages().len())}
 
@@ -873,6 +905,12 @@ pub fn reference_page_count(input:&[u8])->Result<usize,String> {Ok(lopdf::Docume
 pub fn reference_profile_streams(input:&[u8])->Result<Vec<Vec<u8>>,String> {
     let document=lopdf::Document::load_mem(input).map_err(|error|error.to_string())?;
     document.objects.values().filter_map(|object|object.as_stream().ok()).filter(|stream|stream.dict.get(b"N").is_ok()).map(|stream|stream.get_plain_content().map_err(|error|error.to_string())).collect()
+}
+
+/// 🗜️ Reads every native stream body exactly as the file stores it (still encoded by its declared filters), keyed by object number and generation.
+pub fn reference_encoded_stream_bodies(input:&[u8])->Result<Vec<((u32,u16),Vec<u8>)>,String> {
+    let document=lopdf::Document::load_mem(input).map_err(|error|error.to_string())?;
+    Ok(document.objects.iter().filter_map(|(id,object)|object.as_stream().ok().map(|stream|(*id,stream.content.clone()))).collect())
 }
 
 /// 📦️ Reads native stream bodies through the independent PDF filter implementation.
@@ -935,4 +973,187 @@ pub fn reference_widget_appearances(input: &[u8]) -> Result<Vec<(String, String)
         }
     }
     Ok(found)
+}
+
+/// 🧭️ The navigation lanes of a document as the independent reader spells them; pages are zero-based indices in page tree order.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct ReferenceNavigation {
+    pub outline: Vec<(usize, String, Option<usize>)>,
+    pub named: Vec<(String, Option<usize>)>,
+    pub labels: Vec<(i64, Option<String>, Option<String>, Option<i64>)>,
+    pub open_page: Option<usize>,
+    pub catalog_keys: Vec<String>,
+    pub annotations: Vec<usize>,
+}
+
+/// 🧭️ Reads outlines, named destinations (name tree and catalog dictionary), page labels, the open action, the catalog keys and the per-page annotation count through lopdf.
+pub fn reference_navigation(input: &[u8]) -> Result<ReferenceNavigation, String> {
+    use lopdf::{Document, Object};
+    let document = Document::load_mem(input).map_err(|error| error.to_string())?;
+    let pages: Vec<lopdf::ObjectId> = document.get_pages().into_values().collect();
+    let resolve = |object: &Object| -> Object { reference_resolve(&document, object).clone() };
+    let page_of = |destination: &Object| -> Option<usize> {
+        let destination = match resolve(destination) { Object::Dictionary(dict) => resolve(dict.get(b"D").ok()?), other => other };
+        let target = destination.as_array().ok()?.first()?.as_reference().ok()?;
+        pages.iter().position(|page| *page == target)
+    };
+    let catalog = document.catalog().map_err(|error| error.to_string())?;
+    let mut navigation = ReferenceNavigation { catalog_keys: catalog.iter().map(|(key, _)| String::from_utf8_lossy(key).into_owned()).collect(), ..Default::default() };
+    let mut stack: Vec<(Option<Object>, usize)> = catalog.get(b"Outlines").ok().map(&resolve).and_then(|root| root.as_dict().ok().and_then(|root| root.get(b"First").ok().cloned())).map(|first| vec![(Some(first), 0)]).unwrap_or_default();
+    while let Some((cursor, depth)) = stack.pop() {
+        let Some(item) = cursor.map(|cursor| resolve(&cursor)) else { continue };
+        let Ok(item) = item.as_dict() else { continue };
+        stack.push((item.get(b"Next").ok().cloned(), depth));
+        let title = item.get(b"Title").map(|title| lopdf::decode_text_string(&resolve(title)).unwrap_or_default()).unwrap_or_default();
+        let target = item.get(b"Dest").ok().and_then(&page_of).or_else(|| item.get(b"A").ok().map(&resolve).and_then(|action| action.as_dict().ok().and_then(|action| action.get(b"D").ok()).and_then(&page_of)));
+        navigation.outline.push((depth + 1, title, target));
+        if let Ok(first) = item.get(b"First") { stack.push((Some(first.clone()), depth + 1)); }
+    }
+    let mut nodes: Vec<Object> = catalog.get(b"Names").ok().map(&resolve).and_then(|names| names.as_dict().ok().and_then(|names| names.get(b"Dests").ok().cloned())).into_iter().collect();
+    while let Some(node) = nodes.pop() {
+        let Ok(node) = resolve(&node).as_dict().cloned() else { continue };
+        if let Ok(kids) = node.get(b"Kids").map(&resolve) { nodes.extend(kids.as_array().cloned().unwrap_or_default().into_iter().rev()); }
+        if let Ok(names) = node.get(b"Names").map(&resolve) {
+            for pair in names.as_array().cloned().unwrap_or_default().chunks(2) {
+                if let [key, value] = pair { navigation.named.push((lopdf::decode_text_string(&resolve(key)).unwrap_or_default(), page_of(value))); }
+            }
+        }
+    }
+    if let Ok(dests) = catalog.get(b"Dests").map(&resolve) {
+        for (key, value) in dests.as_dict().cloned().unwrap_or_default().iter() { navigation.named.push((String::from_utf8_lossy(key).into_owned(), page_of(value))); }
+    }
+    if let Ok(labels) = catalog.get(b"PageLabels").map(&resolve) {
+        let numbers = labels.as_dict().ok().and_then(|labels| labels.get(b"Nums").ok()).map(&resolve).and_then(|numbers| numbers.as_array().ok().cloned()).unwrap_or_default();
+        for pair in numbers.chunks(2) {
+            let [Object::Integer(start), label] = pair else { continue };
+            let label = resolve(label);
+            let label = label.as_dict().ok();
+            let style = label.and_then(|label| label.get(b"S").ok()).map(reference_text);
+            let prefix = label.and_then(|label| label.get(b"P").ok()).map(|prefix| lopdf::decode_text_string(&resolve(prefix)).unwrap_or_default());
+            navigation.labels.push((*start, style, prefix, label.and_then(|label| label.get(b"St").ok()).and_then(|start| start.as_i64().ok())));
+        }
+    }
+    navigation.open_page = catalog.get(b"OpenAction").ok().and_then(&page_of);
+    navigation.annotations = reference_annotation_dictionaries(&document).iter().map(Vec::len).collect();
+    Ok(navigation)
+}
+
+/// 🧬️ The image and form XObject objects the independent reader reaches from the pages: through page resources, nested form resources, tiling pattern resources and the appearance streams of annotations; object numbers, ascending.
+pub fn reference_reachable_xobjects(input: &[u8]) -> Result<(Vec<u32>, Vec<u32>), String> {
+    use lopdf::{Dictionary, Document, Object};
+    fn visit(document: &Document, resources: &Dictionary, images: &mut std::collections::BTreeSet<u32>, forms: &mut std::collections::BTreeSet<u32>, seen: &mut std::collections::BTreeSet<u32>) {
+        let category = |key: &[u8]| -> Vec<Object> {
+            match resources.get(key).map(|value| reference_resolve(document, value)) {
+                Ok(Object::Dictionary(entries)) => entries.iter().map(|(_, value)| value.clone()).collect(),
+                _ => Vec::new(),
+            }
+        };
+        for entry in category(b"XObject").into_iter().chain(category(b"Pattern")) {
+            let Ok(id) = entry.as_reference() else { continue };
+            let Ok(Object::Stream(stream)) = document.get_object(id) else { continue };
+            if !seen.insert(id.0) { continue; }
+            let subtype = stream.dict.get(b"Subtype").ok().and_then(|subtype| subtype.as_name().ok());
+            match subtype {
+                Some(b"Image") => {
+                    images.insert(id.0);
+                    for key in [b"SMask".as_slice(), b"Mask".as_slice()] {
+                        if let Some(mask) = stream.dict.get(key).ok().and_then(|mask| mask.as_reference().ok()) {
+                            if matches!(document.get_object(mask), Ok(Object::Stream(_))) { images.insert(mask.0); }
+                        }
+                    }
+                }
+                Some(b"Form") => {
+                    forms.insert(id.0);
+                    if let Ok(Object::Dictionary(inner)) = stream.dict.get(b"Resources").map(|value| reference_resolve(document, value)) { visit(document, inner, images, forms, seen); }
+                }
+                _ if stream.dict.get(b"PatternType").ok().and_then(|kind| kind.as_i64().ok()) == Some(1) => {
+                    if let Ok(Object::Dictionary(inner)) = stream.dict.get(b"Resources").map(|value| reference_resolve(document, value)) { visit(document, inner, images, forms, seen); }
+                }
+                _ => {}
+            }
+        }
+    }
+    let document = Document::load_mem(input).map_err(|error| error.to_string())?;
+    let (mut images, mut forms, mut seen) = (std::collections::BTreeSet::new(), std::collections::BTreeSet::new(), std::collections::BTreeSet::new());
+    for page in document.get_pages().into_values() {
+        let mut node = document.get_dictionary(page).map_err(|error| error.to_string())?;
+        for _ in 0..64 {
+            if let Ok(Object::Dictionary(resources)) = node.get(b"Resources").map(|value| reference_resolve(&document, value)) { visit(&document, resources, &mut images, &mut forms, &mut seen); break; }
+            let Some(parent) = node.get(b"Parent").ok().and_then(|parent| parent.as_reference().ok()) else { break; };
+            node = document.get_dictionary(parent).map_err(|error| error.to_string())?;
+        }
+    }
+    for annotation in reference_annotation_dictionaries(&document).into_iter().flatten() {
+        let Ok(Object::Dictionary(appearance)) = annotation.get(b"AP").map(|ap| reference_resolve(&document, ap)) else { continue };
+        for (_, entry) in appearance.iter() {
+            let states: Vec<Object> = match reference_resolve(&document, entry) {
+                Object::Dictionary(states) => states.iter().map(|(_, state)| state.clone()).collect(),
+                _ => vec![entry.clone()],
+            };
+            for state in states {
+                let Ok(id) = state.as_reference() else { continue };
+                let Ok(Object::Stream(stream)) = document.get_object(id) else { continue };
+                if !seen.insert(id.0) { continue; }
+                forms.insert(id.0);
+                if let Ok(Object::Dictionary(inner)) = stream.dict.get(b"Resources").map(|value| reference_resolve(&document, value)) { visit(&document, inner, &mut images, &mut forms, &mut seen); }
+            }
+        }
+    }
+    Ok((images.into_iter().collect(), forms.into_iter().collect()))
+}
+
+/// 🎨️ The resource names every page declares under `key` (`ColorSpace`, `Shading`, `Pattern`) through the independent reader, following the page tree's nearest `/Resources`; names ascending.
+pub fn reference_page_resource_names(input: &[u8], key: &str) -> Result<Vec<Vec<String>>, String> {
+    use lopdf::{Document, Object};
+    let document = Document::load_mem(input).map_err(|error| error.to_string())?;
+    document.get_pages().into_values().map(|page| {
+        let mut node = document.get_dictionary(page).map_err(|error| error.to_string())?;
+        for _ in 0..64 {
+            if let Ok(Object::Dictionary(resources)) = node.get(b"Resources").map(|value| reference_resolve(&document, value)) {
+                let mut names: Vec<String> = match resources.get(key.as_bytes()).map(|value| reference_resolve(&document, value)) {
+                    Ok(Object::Dictionary(entries)) => entries.iter().map(|(name, _)| String::from_utf8_lossy(name).into_owned()).collect(),
+                    _ => Vec::new(),
+                };
+                names.sort();
+                return Ok(names);
+            }
+            let Some(parent) = node.get(b"Parent").ok().and_then(|parent| parent.as_reference().ok()) else { break; };
+            node = document.get_dictionary(parent).map_err(|error| error.to_string())?;
+        }
+        Ok(Vec::new())
+    }).collect()
+}
+
+/// 📝️ One interactive form field as the independent reader spells it: partial name, inherited field type, the widgets it stands for (itself when it is a widget, plus every widget-only kid) and its field kids.
+#[derive(Clone, Debug, PartialEq)]
+pub struct ReferenceField {
+    pub name: String,
+    pub field_type: Option<String>,
+    pub widgets: usize,
+    pub children: Vec<ReferenceField>,
+}
+
+/// 📝️ Reads the `/AcroForm` field tree through lopdf, and the number of widget annotations every page carries.
+pub fn reference_form_fields(input: &[u8]) -> Result<(Vec<ReferenceField>, Vec<usize>), String> {
+    use lopdf::{Dictionary, Document, Object};
+    fn walk(document: &Document, object: &Object, inherited: Option<String>, depth: usize) -> Option<ReferenceField> {
+        if depth > 32 { return None; }
+        let field = reference_resolve(document, object).as_dict().ok()?;
+        let field_type = field.get(b"FT").ok().map(reference_text).or(inherited);
+        let subtype_widget = |dict: &Dictionary| dict.get(b"Subtype").ok().map(reference_text).as_deref() == Some("Widget");
+        let mut widgets = usize::from(subtype_widget(field));
+        let mut children = Vec::new();
+        let kids = field.get(b"Kids").map(|kids| reference_resolve(document, kids)).ok().and_then(|kids| kids.as_array().ok().cloned()).unwrap_or_default();
+        for kid in &kids {
+            let Ok(dict) = reference_resolve(document, kid).as_dict() else { continue };
+            if !dict.has(b"T") && subtype_widget(dict) { widgets += 1; } else if let Some(child) = walk(document, kid, field_type.clone(), depth + 1) { children.push(child); }
+        }
+        Some(ReferenceField { name: field.get(b"T").map(reference_text).unwrap_or_default(), field_type, widgets, children })
+    }
+    let document = Document::load_mem(input).map_err(|error| error.to_string())?;
+    let catalog = document.catalog().map_err(|error| error.to_string())?;
+    let widgets = reference_annotation_dictionaries(&document).into_iter().map(|page| page.into_iter().filter(|annotation| annotation.get(b"Subtype").map(reference_text).is_ok_and(|text| text == "Widget")).count()).collect();
+    let Ok(Object::Dictionary(form)) = catalog.get(b"AcroForm").map(|form| reference_resolve(&document, form)) else { return Ok((Vec::new(), widgets)); };
+    let fields = form.get(b"Fields").map(|fields| reference_resolve(&document, fields)).ok().and_then(|fields| fields.as_array().ok().cloned()).unwrap_or_default();
+    Ok((fields.iter().filter_map(|field| walk(&document, field, None, 0)).collect(), widgets))
 }

@@ -13,15 +13,69 @@
    "de": "Ein ausgewachsener kleiner Fächerahorn (Acer palmatum) aus drei schlanken Stämmen, deren fast waagerechte Äste das Laub in geschichteten, flachen Etagen tragen; die Krone ist breiter als hoch."
   },
   "tags": [
-   "tree",
-   "deciduous",
-   "small-tree",
-   "multi-stem",
-   "layered-tiers",
-   "garden",
-   "wind",
-   "snow",
-   "transpiration"
+   {
+    "id": "tree",
+    "title": {
+     "en": "tree",
+     "de": "Baum"
+    }
+   },
+   {
+    "id": "deciduous",
+    "title": {
+     "en": "deciduous",
+     "de": "laubabwerfend"
+    }
+   },
+   {
+    "id": "small-tree",
+    "title": {
+     "en": "small tree",
+     "de": "Kleinbaum"
+    }
+   },
+   {
+    "id": "multi-stem",
+    "title": {
+     "en": "multi-stem",
+     "de": "mehrstämmig"
+    }
+   },
+   {
+    "id": "layered-tiers",
+    "title": {
+     "en": "layered tiers",
+     "de": "Etagen"
+    }
+   },
+   {
+    "id": "garden",
+    "title": {
+     "en": "garden",
+     "de": "Garten"
+    }
+   },
+   {
+    "id": "wind",
+    "title": {
+     "en": "wind",
+     "de": "Wind"
+    }
+   },
+   {
+    "id": "snow",
+    "title": {
+     "en": "snow",
+     "de": "Schnee"
+    }
+   },
+   {
+    "id": "transpiration",
+    "title": {
+     "en": "transpiration",
+     "de": "Transpiration"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage vegetation content worker NW-V1",

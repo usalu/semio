@@ -39,11 +39,11 @@ export function processLifecycleHost(): LifecycleHost {
       const env = options.env ? { ...process.env, ...options.env } : process.env;
       if (options.background) {
         if (!commandCanStart(command, env)) return { status: -1, stdout: "", stderr: `missing ${command}` };
-        const child = spawn(command, [...args], { detached: true, stdio: "ignore", cwd: options.cwd, env, shell: false });
+        const child = spawn(command, [...args], {windowsHide:true, detached: true, stdio: "ignore", cwd: options.cwd, env, shell: false });
         child.unref();
         return { status: 0, stdout: "", stderr: "" };
       }
-      const answer = spawnSync(command, [...args], { encoding: "utf8", input: options.input, cwd: options.cwd, env, shell: false });
+      const answer = spawnSync(command, [...args], {windowsHide:true, encoding: "utf8", input: options.input, cwd: options.cwd, env, shell: false });
       return { status: answer.error ? -1 : (answer.status ?? -1), stdout: answer.stdout ?? "", stderr: answer.error ? String(answer.error) : (answer.stderr ?? "") };
     },
     download: async (url, destination) => {

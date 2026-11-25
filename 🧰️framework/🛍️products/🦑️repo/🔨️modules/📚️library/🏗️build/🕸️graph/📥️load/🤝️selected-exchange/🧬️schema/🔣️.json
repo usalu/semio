@@ -16,7 +16,11 @@
         "headSwapAttempts": 4,
         "maximumOwners": 20000,
         "maximumDocuments": 8,
-        "documents": ["graph", "owners", "admission"],
+        "documents": [
+          "graph",
+          "owners",
+          "admission"
+        ],
         "retentionManifest": "stage.json",
         "redeclareMaximumMilliseconds": 3000,
         "lookMaximumMilliseconds": 120000,
@@ -26,17 +30,47 @@
     "Head": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["version", "revision", "scope", "platform", "createdMs", "membership", "owners", "documents"],
+      "required": [
+        "version",
+        "revision",
+        "scope",
+        "platform",
+        "createdMs",
+        "membership",
+        "owners",
+        "documents"
+      ],
       "properties": {
-        "version": { "const": 1 },
-        "revision": { "type": "integer", "minimum": 1 },
-        "scope": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
-        "platform": { "type": "string", "minLength": 1, "maxLength": 64 },
-        "createdMs": { "type": "number", "minimum": 0 },
-        "membership": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "version": {
+          "const": 1
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "scope": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "platform": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "createdMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "membership": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
         "owners": {
           "type": "object",
-          "additionalProperties": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
         },
         "documents": {
           "type": "array",
@@ -44,13 +78,31 @@
           "items": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["name", "hash", "size"],
+            "required": [
+              "name",
+              "hash",
+              "size"
+            ],
             "properties": {
-              "name": { "type": "string", "maxLength": 96 },
-              "hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
-              "size": { "type": "integer", "minimum": 0 }
+              "name": {
+                "type": "string",
+                "maxLength": 96
+              },
+              "hash": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "size": {
+                "type": "integer",
+                "minimum": 0
+              }
             }
           }
+        },
+        "closureGraph": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$",
+          "description": "EN: The SHA-256 of the head of the module closure graph of the machine that read the selection, offered to the fleet as one object: a machine that takes the head adopts that graph by digests before it judges the owners. DE: Der SHA-256 des Kopfes des Modul-Closure-Graphen der Maschine, die die Auswahl las, als ein Objekt der Flotte angeboten: eine Maschine, die den Kopf nimmt, übernimmt diesen Graphen über Digests, bevor sie die Besitzer prüft."
         }
       }
     },
@@ -91,6 +143,10 @@
         "look-bound": {
           "en": "The fleet did not deliver the sealed graph within {seconds} s; reading here.",
           "de": "Die Flotte lieferte den versiegelten Graphen nicht innerhalb von {seconds} s; lese hier."
+        },
+        "graph-adopted": {
+          "en": "Took the module graph of the fleet by digests: {confirmed} nodes confirmed by this tree, {refused} left to walk.",
+          "de": "Modulgraph der Flotte über Digests übernommen: {confirmed} Knoten von diesem Baum bestätigt, {refused} bleiben zu durchlaufen."
         }
       }
     }

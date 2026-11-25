@@ -13,4 +13,7 @@ extern crate semio_framework_value_derive as value_derive;
 pub mod demo;
 #[path = "🎬️failing-thin-insulation/🦀️.rs"]
 pub mod failing_thin_insulation;
+#[cfg(test)]
+#[path = "🧪️tests/🗜️pack-twins/🦀️.rs"]
+mod pack_twins;
 //#endregion 🪢️Mounts

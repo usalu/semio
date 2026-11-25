@@ -11,7 +11,7 @@
   ],
   "properties": {
     "mutation": {
-      "const": "insertzone"
+      "const": "insertZone"
     },
     "index": {
       "type": "integer",

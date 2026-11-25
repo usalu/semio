@@ -62,13 +62,15 @@ function Stories({ source, origin, director }: { readonly source: unknown; reado
   return (
     <main className="stories">
       <header className="masthead">
-        <h1>
+        <h1 id="pets-stories-title">
           {text.title}
           {menagerie ? ` · ${menagerie.title[language]}` : ""}
         </h1>
         <code>{origin}</code>
-        <Action label={text.species} pressed={view === "species"} onPress={() => setView("species")} />
-        <Action label={text.sandbox} pressed={view === "sandbox"} onPress={() => setView("sandbox")} />
+        <div className="action-group" role="group" aria-labelledby="pets-stories-title">
+          <Action label={text.species} pressed={view === "species"} onPress={() => setView("species")} />
+          <Action label={text.sandbox} pressed={view === "sandbox"} onPress={() => setView("sandbox")} />
+        </div>
         <Choice label={text.language} value={language} options={LANGUAGES.map((name) => [name, name] as const)} onChange={setLanguage} />
         <Toggle label={text.dark} checked={dark} onChange={setDark} />
       </header>

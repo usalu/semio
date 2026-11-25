@@ -3,14 +3,17 @@
   "emoji": "🏗️",
   "status": "open",
   "description": "Get fem plugin (✏️s/🔌️plugins/🏗️fem) working end to end: Rust compiles and tests pass (engine, 2d/3d artifacts, receiving, sqlite, bridge), TS packages build/test, plugin loads in s and exposes its artifacts. Opus 5.5 coordinates, Sonnet 5.5 agents execute, Haiku 5.5 agents explore/audit. Fall back to native tools if the shared work fleet mechanism fails. Fix fundamental unrelated issues found along the way.",
-  "summary": "FEM plugin works end to end in the browser on the clean wasm e68c95d3 (no temporary prints). 2D: full browser smoke rc=0, Converged 36/512 initially, Converged 49/512 after editing n1 X=1.5 and clicking away, Live Load reaction Ty 12000 N. 3D: Preparing analysis, Solving loads, then results Case: dead after 44 s with no interaction and 0 faults. Fixes: pending effects admitted under their owning instance; roster config partitions for unaddressed windows; TS publishSpawnedJobTerminal repaints the final job frame; child operation identity from the host-bound operation; 2D inspection control_row accessible name; press settlement deadlock (the Commit waited on the tool follow's read lease, which only leftover-budget maintenance advanced), so settle_press now drives the follow, with law a_press_commit_blocked_by_the_follow_read_drives_the_follow (passes natively); panels crate dev-dependency enables artifact-app-testing. Native: law 1/1, 2D inspection 16/16. Open note: the typing settlement has the same read-lease guard. Details in fem-browser-e2e.md.",
+  "summary": "End to end on wasm 849acedc, which includes the deferred host aborts from the \"Deferred Tool Aborts Under Follow Reads\" session and the peer actor-succession change. 2D smoke rc=0: Converged 36/512, then Converged 49/512 after the edit, Live Load Ty 12000 N. 3D: Case: dead with contour, no interaction. The first boot failed with original-turn.succession-unoffered (stale served shard worker from 11-20); native-fem-materialize.ts now also rewrites modules/🧵️shard/🟨️shard-worker.js from shardWorkerSource(), the native stand-in for framework-plugin-web:support. Independent checks: semio-framework-tool-machine 12/12 including the deferred-abort law; typing-edit, instance-render and instance-typed-ops check cleanly. A Sonnet agent ran the FEM session suites (2D 21/21, 3D 3/3), and a Haiku audit found no temporary logs except a per-spawn [TRACE] eprintln in the FEM 3D session-api, now removed (crate checks cleanly).",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2792"
   },
   "goal": "🎯runningfem",
   "sessions": [
     "c426f746-f061-4b5a-9c35-18304e901dfd",
-    "7c72a7d5-b252-444c-b780-385599682350"
+    "7c72a7d5-b252-444c-b780-385599682350",
+    "bf15af08-be25-47f8-922b-c4e028886044",
+    "c1a9e8ee-7a41-4547-b8ba-61f840745b3a",
+    "434a0eee-5e02-4413-aef9-2bfc58a0a19e"
   ],
   "interactions": [
     {
@@ -41,6 +44,91 @@
       "client": "claude-code",
       "checkpoint": "",
       "prompt": "Close the remaining typing-settlement read-lease deadlock (same pattern as the press settlement: a waiting writer blocked by the tool follow's read lease that only leftover-budget maintenance advances).",
+      "llm": "opus-5-5",
+      "effort": "medium"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-24 20:13:24",
+      "author": "ueli",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "8d17d8ba3998690932b0032ea2ca41bce5c994b6",
+      "summary": "Reopened to close the remaining follow-read deadlocks. The tool follow holds a retained read on the press/gesture/typing row it walks, and every writer of that row refused and re-polled while only leftover-budget maintenance moved the follow. A Haiku audit, confirmed in code, found the typing settlement, typing dispatch commit, scrub dispatch writer and gesture settlement beside the already-fixed press settlement. Fix: one shared follow_before_writer (quotes, funds or names the shortfall, then drives one tool_overlay_retirement_step) called by each writer while the follow holds a read of its ledger: OriginalTypingSettlement::awaits_writer, OriginalTypingCommit::awaits_source, and OriginalToolMachineFollow::reads_presses/reads_gestures/reads_typing over OriginalToolLedgerWalk::window. Laws (3/3 native): press, typing and every-writer. cargo check of typing-edit, instance-render and instance-typed-ops is clean. Rebuilt wasm fdae8851: the 2D smoke passes (Converged 36/512, Converged 49/512 after the edit, Live Load Ty 12000 N), and 3D shows Case: dead with the contour and no interaction. The settle_press doc comment is reattached. Left: gesture/typing abort under a held read is a silent no-op (no spin) and needs a deferred-abort design; other agents' [DEBUG] prints in tool_overlay_retirement_step and the maintenance ladder were left in place. Details in fem-browser-e2e.md.",
+      "files": [
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️⏯️toolrun🗃️🎞️tick🗃️🎮️operations🗃️📖️source🗃️🧭️walk💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🧪️tests🗃️🔬️apptypedcommandfulloperation🗃️🧾️sourcerejectionanchorsandhostlane💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🧵️instance🗃️🧾️typedoperations🗃️📥️staging🗃️⌨️typing💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🧵️instance🗃️🧾️typedoperations🗃️📥️staging🗃️⌨️typing🗃️🎟️original💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🛠️toolmachine🗃️🔁️follow💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🧵️instance🗃️🖼️render🗃️📥️staging🗃️🛠️toolmachine💻🦀️"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-24 22:31:41",
+      "author": "",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Host aborts (blur, freeze, lapse) of open gestures, presses and typing runs are silently dropped while the tool follow holds a retained read on their slot; make them take effect once the read returns.",
+      "llm": "opus-5-5",
+      "effort": "medium"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-24 22:33:13",
+      "author": "ueli",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "8d17d8ba3998690932b0032ea2ca41bce5c994b6",
+      "summary": "The deferred-abort follow-up (host aborts dropped while the tool follow holds a read) is owned by its own running session \"Deferred Tool Aborts Under Follow Reads\", started by the user. A Sonnet agent briefed for the same work was stopped before it edited anything, to avoid two writers on the same ledger files. FEM end-to-end state is unchanged and verified on wasm fdae8851: 2D Converged 36/512, then 49/512 after the edit, Live Load Ty 12000 N; 3D Case: dead without interaction; follow laws 3/3; checks clean. Report: fem-browser-e2e.md (Follow-Up section).",
+      "files": [
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🧵️instance🗃️🖼️render🗃️📥️staging🗃️🛠️toolmachine💻🦀️"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-25 01:08:15",
+      "author": "",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Verify the deferred-abort fix end to end in the browser and close out leftovers (stale shard worker, trace print).",
+      "llm": "opus-5-5",
+      "effort": "medium"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-25 01:11:22",
+      "author": "ueli",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "8d17d8ba3998690932b0032ea2ca41bce5c994b6",
+      "summary": "End to end on wasm 849acedc, which includes the deferred host aborts from the \"Deferred Tool Aborts Under Follow Reads\" session and the peer actor-succession change. 2D smoke rc=0: Converged 36/512, then Converged 49/512 after the edit, Live Load Ty 12000 N. 3D: Case: dead with contour, no interaction. The first boot failed with original-turn.succession-unoffered (stale served shard worker from 11-20); native-fem-materialize.ts now also rewrites modules/🧵️shard/🟨️shard-worker.js from shardWorkerSource(), the native stand-in for framework-plugin-web:support. Independent checks: semio-framework-tool-machine 12/12 including the deferred-abort law; typing-edit, instance-render and instance-typed-ops check cleanly. A Sonnet agent ran the FEM session suites (2D 21/21, 3D 3/3), and a Haiku audit found no temporary logs except a per-spawn [TRACE] eprintln in the FEM 3D session-api, now removed (crate checks cleanly)."
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-25 02:03:13",
+      "author": "",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Make sure absolutely every feature works (selection, all utilities such as transform, etc, everything is interactive, so on",
       "llm": "opus-5-5",
       "effort": "medium"
     }

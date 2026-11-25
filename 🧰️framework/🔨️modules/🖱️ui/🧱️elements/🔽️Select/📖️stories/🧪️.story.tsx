@@ -8,7 +8,7 @@
 
 // #endregion 🧲️Header
 
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectScrollDownButton, SelectScrollUpButton, SelectSeparator, SelectTrigger, SelectValue } from "@semio-tech/ui-react";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue } from "@semio-tech/ui-react";
 import { createIconComponent } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "../../../🧪️tests/📚️storybook-types/🟦️.ts";
 
@@ -76,8 +76,6 @@ export const Default: Story = {
             </div>
           </SelectItem>
         </SelectGroup>
-        <SelectScrollUpButton />
-        <SelectScrollDownButton />
       </SelectContent>
     </Select>
   ),

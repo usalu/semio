@@ -1,0 +1,10 @@
+{
+ "_comment": "Language-agnostic readings of the rusage buffer: the counters the kernel wrote (offset to unsigned 64-bit decimal), the return code of proc_pid_rusage and the footprint bytes a reader must report. Offsets follow struct rusage_info_v4: ri_resident_size 64, ri_phys_footprint 72.",
+ "readings": [
+  {"name": "a browser helper: the footprint is far below the resident set", "result": 0, "counters": {"64": "2147483648", "72": "1073741824"}, "footprintBytes": 1073741824},
+  {"name": "a process with a footprint of zero bytes is a reading", "result": 0, "counters": {"64": "16384", "72": "0"}, "footprintBytes": 0},
+  {"name": "a footprint above four gigabytes needs all 64 bits", "result": 0, "counters": {"72": "6442450944"}, "footprintBytes": 6442450944},
+  {"name": "a refused process (not ours, or gone) answers null whatever the buffer holds", "result": -1, "counters": {"72": "123456"}, "footprintBytes": null},
+  {"name": "a footprint beyond the safe integers answers null", "result": 0, "counters": {"72": "18446744073709551615"}, "footprintBytes": null}
+ ]
+}

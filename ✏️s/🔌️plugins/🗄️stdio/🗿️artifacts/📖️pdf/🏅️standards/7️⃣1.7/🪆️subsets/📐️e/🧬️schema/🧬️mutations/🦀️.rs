@@ -52,6 +52,7 @@ pub enum PdfEMutation {
     RemoveFontFile(RemoveFontFile),
 }
 dsl::original_pack_value_operation_receiving!(PdfEMutation);
+dsl::artifact_persisted_binary_operation!(PdfEMutation);
 //#endregion 🔖️Aggregate
 
 //#region 🔖️Codecs

@@ -296,6 +296,86 @@ fn the_cold_factory_begins_a_page_and_closes_after_cancellation() {
     drop(preparation);
 }
 
+/// 📬️ The cold preparation drives the mutation admission's projection (`projectionStart`) like every other original receiving: a leased `TransientRead` base
+/// advances turn by turn to `Prepared`, the prepared root is the cold diff's root, and the preparation then closes to terminal-empty under its original decoder.
+#[test]
+fn the_cold_factory_advances_a_page_through_admission_to_the_published_root_and_closes() {
+    use semio_framework_value::retained_clone::RetainedCloneGrant;
+    use store::ArtifactEphemeralOneItemPreparation as _;
+    use store::os_store::one_item::{ArtifactStoreOneItemGrant, ArtifactStoreOneItemPreparationStep as Step};
+    let wide = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 1 << 22, maximum_capacity_bytes: 1 << 22, maximum_release_bytes: 1 << 22, maximum_depth: 128 };
+    let pages = directory_pages(8);
+    let factory = semio_plugin::cold_transient_preparation_factory::<HomeTransient, HomeTransientMutation>();
+    let root = Arc::new(HomeTransient::default());
+    let registry = store::SnapshotReadRegistryHandle::new();
+    let lease = registry.try_issue(Arc::clone(&root)).expect("the registry leases the captured root");
+    let request = store::ArtifactEphemeralOneItemPreparationRequest {
+        operation: semio_framework_job::OperationId(1),
+        generation: semio_framework_job::Generation(0),
+        base: store::ArtifactEphemeralBaseRead(store::ArtifactEphemeralBaseOwner::TransientRead(semio_framework_value_snapshot_read::SnapshotRead::new(Arc::clone(&root), lease))),
+        mutation: item(&pages[0]),
+    };
+    let Ok(mut preparation) = factory.begin(request) else { panic!("the cold factory begins every admitted page") };
+    let stock = RetainedCloneGrant { maximum_items: 1_000_000, maximum_copy_bytes: 1 << 22, maximum_capacity_bytes: 1 << 22, maximum_release_bytes: 1 << 22, maximum_depth: 128 };
+    let mut caller = semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::OperationId(1), semio_framework_job::Generation(0), stock, || Some(1), 600_000_000, 1 << 26);
+    let mut decoder = caller.admitted_decoder();
+    let mut prepared = None;
+    for turn in 0..100_000 {
+        assert!(turn < 99_999, "the preparation must reach Prepared");
+        let mut step = None;
+        caller
+            .turn_with_decoder(stock, &mut decoder, |cx| {
+                let mut receiving = None;
+                assert!(cx.with_native_receiving_work(&mut receiving, Default::default(), |native, _, _| {
+                    step = Some(preparation.advance(ArtifactStoreOneItemGrant::from_retained(wide), native));
+                    Ok(())
+                })?);
+                Ok(())
+            })
+            .expect("the advance turn runs");
+        match step.expect("the receiving scope ran").expect("a funded turn never refuses") {
+            Step::Prepared(..) => {
+                prepared = preparation.take_prepared();
+                break;
+            }
+            Step::Progress(..) => {}
+            Step::Blocked => panic!("a wide grant never blocks the preparation (turn {turn})"),
+        }
+    }
+    let next_root = prepared.expect("the preparation yields its prepared root").next_root;
+    let (expected, _) = publish(&root, item(&pages[0]));
+    assert_eq!(*next_root, *expected, "the prepared root is the cold diff's root");
+    drop(next_root);
+    drop(registry);
+    preparation.begin_close();
+    for turn in 0..100_000 {
+        if preparation.terminal_is_empty() {
+            break;
+        }
+        assert!(turn < 99_999, "the advanced preparation must close");
+        caller
+            .retirement_turn_with_decoder(wide, &mut decoder, |cx| {
+                let issued = cx.retained_grant();
+                let body = issued.maximum_copy_bytes;
+                let outcome = cx.with_original_effect(issued, |same, effect| same.with_native_retirement(|control| Ok(preparation.close_step_controlled(body, effect, control))));
+                let Some((poll, performed)) = outcome.map_err(semio_framework_job::OriginalTurnFailure::from)? else { return Ok(()) };
+                cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX));
+                poll.expect("the close poll is funded");
+                Ok(())
+            })
+            .expect("the close turn runs");
+    }
+    assert!(preparation.terminal_is_empty());
+    drop(preparation);
+    while !decoder.terminal_is_empty() {
+        caller.turn(stock, |cx| {
+            decoder.close_on_source(cx)?;
+            Ok(())
+        }).expect("the original decoder closes");
+    }
+    caller.retire(stock);
+}
+
 //#endregion 🔖️Codec
 
 /// 🪜️ The grant-driven stepper folds every page to exactly the projection the one-shot `fold_page` yields, in turns whose charged work never exceeds the budget, however small.

@@ -44,6 +44,7 @@ export default defineConfig({
       name: "chromium",
       use: {
         ...devices["Desktop Chrome"],
+        channel: "chromium",
         launchOptions: {
           executablePath: process.env.STORYBOOK_CHROMIUM_PATH || undefined,
           args: browserLaunchOptionsV1().args,

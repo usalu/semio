@@ -123,8 +123,8 @@ fn slider_paints_the_shared_rail_range_thumb_and_numeric_readout() {
     let mut draw = DrawList::default();
     paint_slider(&node, bounds, &theme, &mut atlas, &mut draw);
     let instances: Vec<_> = draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).collect();
-    let rounded: Vec<_> = instances.iter().copied().filter(|instance| (instance.params[2] - KIND_ROUNDED).abs() < 0.01).collect();
-    assert_eq!(rounded.len(), 3);
+    let rounded: Vec<_> = instances.iter().copied().filter(|instance| (instance.params[2] - KIND_ROUNDED).abs() < 0.01 || (instance.params[2] - KIND_SOLID).abs() < 0.01).collect();
+    assert_eq!(rounded.len(), 3, "rail and range are solid squares, the thumb a square box");
     for (instance, expected) in rounded.iter().zip([rect(&case["rail"]), rect(&case["range"]), rect(&case["thumb"])]) {
         assert!(instance.rect.iter().zip(expected).all(|(left, right)| (*left - right).abs() < 0.001));
     }

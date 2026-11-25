@@ -13,6 +13,10 @@
     "hostAnswerCeilingBytes": 8388608
   },
   "capability": "echo",
+  "driveBudgetRows": [
+    { "name": "answer on the last admitted turn", "turnsBeforeAnswer": 63, "status": "answered", "submitted": 64 },
+    { "name": "answer would require an unadmitted turn", "turnsBeforeAnswer": 64, "status": "unanswered", "submitted": 64 }
+  ],
   "rows": [
     {
       "name": "inactive",

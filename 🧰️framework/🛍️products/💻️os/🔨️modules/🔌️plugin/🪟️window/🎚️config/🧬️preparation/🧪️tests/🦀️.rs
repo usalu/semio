@@ -1,5 +1,5 @@
 //! 🧪️ Original Window domain cursors conserve physical custody through every neutral partial frontier.
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use semio_plugin_window_config::retained::ErasedWindowConfigPackLoad;
 use std::future::Future;
 use semio_framework_value::retained_clone::RetainedCloneGrant;

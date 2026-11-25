@@ -1,25 +1,12 @@
 [
  {
-  "op": "copy",
-  "scale": "50",
-  "id": "sleeve-l",
-  "from": "elevation",
-  "to": [
-   "front",
-   "plan"
-  ],
-  "why": "arm-l: rev/swv/sww: one revolved body"
- },
- {
-  "op": "copy",
-  "scale": "50",
-  "id": "sleeve-r",
-  "from": "elevation",
-  "to": [
-   "front",
-   "plan"
-  ],
-  "why": "arm-r: rev/swu/swv: one revolved body"
+  "mh4": 1,
+  "op": "elevation-solid",
+  "scale": "500",
+  "id": "sil-body",
+  "respan": true,
+  "why": "torso: the lateral span of the elevation body fitted to the front outline with its taper (41 mm in the side bend)",
+  "inset": -0.012
  },
  {
   "op": "front-sweep",
@@ -28,44 +15,16 @@
   "why": "neck: sww/swv/None: prism along v fitted to the elevation outline"
  },
  {
-  "op": "copy",
-  "scale": "100",
-  "id": "sleeve-r",
-  "from": "elevation",
-  "to": [
-   "plan"
-  ],
-  "why": "arm-r: rev/None/swv: one revolved body"
- },
- {
   "op": "front-sweep",
   "scale": "100",
   "id": "neck",
   "why": "neck: sww/swv/None: prism along v fitted to the elevation outline"
- },
- {
-  "op": "copy",
-  "scale": "200",
-  "id": "sleeve-r",
-  "from": "elevation",
-  "to": [
-   "plan"
-  ],
-  "why": "arm-r: rev/None/swv: one revolved body"
  },
  {
   "op": "extrude",
   "scale": "200",
   "id": "shoe-r",
   "view": "front",
-  "taper": false,
-  "why": "foot-r: flat/flat/flat: a foot that rolls, the elevation outline swept laterally"
- },
- {
-  "op": "extrude",
-  "scale": "200",
-  "id": "shoe-r",
-  "view": "plan",
   "taper": false,
   "why": "foot-r: flat/flat/flat: a foot that rolls, the elevation outline swept laterally"
  },
@@ -84,14 +43,6 @@
   "why": "foot-r: flat/flat/flat: a foot that rolls, the elevation outline swept laterally"
  },
  {
-  "op": "extrude",
-  "scale": "500",
-  "id": "sil-shoe-r",
-  "view": "plan",
-  "taper": false,
-  "why": "foot-r: flat/flat/flat: a foot that rolls, the elevation outline swept laterally"
- },
- {
   "op": "front-sweep",
   "scale": "500",
   "id": "sil-neck",
@@ -102,5 +53,446 @@
   "scale": "500",
   "id": "shank-r",
   "why": "shank-r: sww/swv/None: prism along v fitted to the elevation outline"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "500",
+  "id": "sil-body",
+  "why": "torso: sww/swv/swu: the front prism refitted to the elevation outline"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "200",
+  "id": "pant-seat",
+  "why": "pelvis: flat/swv: the front prism refitted to the elevation outline"
+ },
+ {
+  "op": "front-sweep",
+  "scale": "500",
+  "id": "sil-seat",
+  "why": "pelvis: flat/swv: the front prism refitted to the elevation outline"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "500",
+  "id": "thigh-l",
+  "rebuild": true,
+  "why": "thigh-l: sww/swv/swu: a prism along u in the plan does not follow the swung thigh (41 mm): revolved about the bone axis"
+ },
+ {
+  "op": "plan-revolve",
+  "scale": "500",
+  "id": "thigh-r",
+  "rebuild": true,
+  "why": "thigh-r: sww/swv/swu: a prism along u in the plan does not follow the swung thigh (70 mm): revolved about the bone axis"
+ },
+ {
+  "op": "copy",
+  "scale": "100",
+  "id": "forearm-r",
+  "from": "front",
+  "to": [
+   "plan"
+  ],
+  "why": "forearm-r: front a body of revolution, plan a prism along u (85 mm apart in the side bend): one body"
+ },
+ {
+  "mh4": 1,
+  "op": "front-sweep",
+  "scale": "50",
+  "id": "hair",
+  "range": "keep",
+  "why": "head: the depth of the front prism fitted to the elevation outline"
+ },
+ {
+  "mh4": 1,
+  "op": "front-sweep",
+  "scale": "50",
+  "id": "head",
+  "range": "keep",
+  "why": "head: the depth of the front prism fitted to the elevation outline"
+ },
+ {
+  "mh4": 1,
+  "op": "front-sweep",
+  "scale": "50",
+  "id": "mouth",
+  "range": "keep",
+  "why": "head: the depth of the front prism fitted to the elevation outline"
+ },
+ {
+  "mh4": 1,
+  "op": "front-sweep",
+  "scale": "50",
+  "id": "hair-strand-0",
+  "range": "keep",
+  "why": "head: the depth of the front prism fitted to the elevation outline"
+ },
+ {
+  "mh4": 1,
+  "op": "front-sweep",
+  "scale": "50",
+  "id": "hair-strand-1",
+  "range": "keep",
+  "why": "head: the depth of the front prism fitted to the elevation outline"
+ },
+ {
+  "mh4": 1,
+  "op": "front-sweep",
+  "scale": "50",
+  "id": "hair-strand-2",
+  "range": "keep",
+  "why": "head: the depth of the front prism fitted to the elevation outline"
+ },
+ {
+  "mh4": 1,
+  "op": "front-sweep",
+  "scale": "50",
+  "id": "hood",
+  "range": "keep",
+  "why": "torso: the depth of the front prism fitted to the elevation outline"
+ },
+ {
+  "mh4": 1,
+  "op": "front-sweep",
+  "scale": "50",
+  "id": "hoodie",
+  "range": "keep",
+  "why": "torso: the depth of the front prism fitted to the elevation outline"
+ },
+ {
+  "mh4": 1,
+  "op": "front-sweep",
+  "scale": "50",
+  "id": "hood-roll",
+  "range": "keep",
+  "why": "torso: the depth of the front prism fitted to the elevation outline"
+ },
+ {
+  "mh4": 1,
+  "op": "front-sweep",
+  "scale": "50",
+  "id": "hem-rib",
+  "range": "keep",
+  "why": "torso: the depth of the front prism fitted to the elevation outline"
+ },
+ {
+  "mh4": 1,
+  "op": "front-sweep",
+  "scale": "50",
+  "id": "collar-rib",
+  "range": "keep",
+  "why": "torso: the depth of the front prism fitted to the elevation outline"
+ },
+ {
+  "mh4": 1,
+  "op": "front-sweep",
+  "scale": "50",
+  "id": "kangaroo-pocket",
+  "range": "keep",
+  "why": "torso: the depth of the front prism fitted to the elevation outline"
+ },
+ {
+  "mh4": 1,
+  "op": "front-sweep",
+  "scale": "50",
+  "id": "drawstring-0",
+  "range": "keep",
+  "why": "torso: the depth of the front prism fitted to the elevation outline"
+ },
+ {
+  "mh4": 1,
+  "op": "prism",
+  "scale": "100",
+  "id": "head",
+  "view": "plan",
+  "refit": true,
+  "why": "head: the span of the plan prism along the bone fitted to the elevation outline (the fold of the hamstring stretch and the side bend showed 45 to 55 mm between the views)"
+ },
+ {
+  "mh4": 1,
+  "op": "prism",
+  "scale": "100",
+  "id": "hair",
+  "view": "plan",
+  "refit": true,
+  "why": "head: the span of the plan prism along the bone fitted to the elevation outline (the fold of the hamstring stretch and the side bend showed 45 to 55 mm between the views)"
+ },
+ {
+  "mh4": 1,
+  "op": "front-sweep",
+  "scale": "100",
+  "id": "hair",
+  "range": "keep",
+  "why": "head: the depth of the front prism fitted to the elevation outline"
+ },
+ {
+  "mh4": 1,
+  "op": "front-sweep",
+  "scale": "100",
+  "id": "head",
+  "range": "keep",
+  "why": "head: the depth of the front prism fitted to the elevation outline"
+ },
+ {
+  "mh4": 1,
+  "op": "prism",
+  "scale": "100",
+  "id": "hoodie",
+  "view": "plan",
+  "refit": true,
+  "why": "torso: the span of the plan prism along the bone fitted to the elevation outline (the fold of the hamstring stretch and the side bend showed 45 to 55 mm between the views)"
+ },
+ {
+  "mh4": 1,
+  "op": "prism",
+  "scale": "100",
+  "id": "hood",
+  "view": "plan",
+  "refit": true,
+  "why": "torso: the span of the plan prism along the bone fitted to the elevation outline (the fold of the hamstring stretch and the side bend showed 45 to 55 mm between the views)"
+ },
+ {
+  "mh4": 1,
+  "op": "front-sweep",
+  "scale": "100",
+  "id": "hood",
+  "range": "keep",
+  "why": "torso: the depth of the front prism fitted to the elevation outline"
+ },
+ {
+  "mh4": 1,
+  "op": "front-sweep",
+  "scale": "100",
+  "id": "hoodie",
+  "range": "keep",
+  "why": "torso: the depth of the front prism fitted to the elevation outline"
+ },
+ {
+  "mh4": 1,
+  "op": "front-sweep",
+  "scale": "100",
+  "id": "hem-rib",
+  "range": "keep",
+  "why": "torso: the depth of the front prism fitted to the elevation outline"
+ },
+ {
+  "mh4": 1,
+  "op": "prism",
+  "scale": "200",
+  "id": "head",
+  "view": "plan",
+  "refit": true,
+  "why": "head: the span of the plan prism along the bone fitted to the elevation outline (the fold of the hamstring stretch and the side bend showed 45 to 55 mm between the views)"
+ },
+ {
+  "mh4": 1,
+  "op": "prism",
+  "scale": "200",
+  "id": "hair",
+  "view": "plan",
+  "refit": true,
+  "why": "head: the span of the plan prism along the bone fitted to the elevation outline (the fold of the hamstring stretch and the side bend showed 45 to 55 mm between the views)"
+ },
+ {
+  "mh4": 1,
+  "op": "front-sweep",
+  "scale": "200",
+  "id": "hair",
+  "range": "keep",
+  "why": "head: the depth of the front prism fitted to the elevation outline"
+ },
+ {
+  "mh4": 1,
+  "op": "front-sweep",
+  "scale": "200",
+  "id": "head",
+  "range": "keep",
+  "why": "head: the depth of the front prism fitted to the elevation outline"
+ },
+ {
+  "mh4": 1,
+  "op": "prism",
+  "scale": "200",
+  "id": "hood",
+  "view": "plan",
+  "refit": true,
+  "why": "torso: the span of the plan prism along the bone fitted to the elevation outline (the fold of the hamstring stretch and the side bend showed 45 to 55 mm between the views)"
+ },
+ {
+  "mh4": 1,
+  "op": "front-sweep",
+  "scale": "200",
+  "id": "hood",
+  "range": "keep",
+  "why": "torso: the depth of the front prism fitted to the elevation outline"
+ },
+ {
+  "mh4": 1,
+  "op": "front-sweep",
+  "scale": "200",
+  "id": "hoodie",
+  "range": "keep",
+  "why": "torso: the depth of the front prism fitted to the elevation outline"
+ },
+ {
+  "mh4": 1,
+  "op": "prism",
+  "scale": "500",
+  "id": "sil-body",
+  "view": "plan",
+  "refit": true,
+  "why": "torso: the span of the plan prism along the bone fitted to the elevation outline (the fold of the hamstring stretch and the side bend showed 45 to 55 mm between the views)"
+ },
+ {
+  "mh4": 1,
+  "op": "extrude",
+  "scale": "50",
+  "id": "shoe-r",
+  "view": "front",
+  "taper": false,
+  "why": "foot-r: flat shape on the foot that the quad stretch lifts behind the body (the heel anchor is 75 mm off the front shoe, the views up to 110 mm apart): the elevation outline swept laterally"
+ },
+ {
+  "mh4": 1,
+  "op": "extrude",
+  "scale": "50",
+  "id": "toe-cap-r",
+  "view": "front",
+  "taper": false,
+  "why": "toe-r: flat shape on the foot that the quad stretch lifts behind the body (the heel anchor is 75 mm off the front shoe, the views up to 110 mm apart): the elevation outline swept laterally"
+ },
+ {
+  "mh4": 1,
+  "op": "extrude",
+  "scale": "50",
+  "id": "sole-r",
+  "view": "front",
+  "taper": false,
+  "why": "foot-r: flat shape on the foot that the quad stretch lifts behind the body (the heel anchor is 75 mm off the front shoe, the views up to 110 mm apart): the elevation outline swept laterally"
+ },
+ {
+  "mh4": 1,
+  "op": "extrude",
+  "scale": "50",
+  "id": "toe-sole-r",
+  "view": "front",
+  "taper": false,
+  "why": "toe-r: flat shape on the foot that the quad stretch lifts behind the body (the heel anchor is 75 mm off the front shoe, the views up to 110 mm apart): the elevation outline swept laterally"
+ },
+ {
+  "mh4": 1,
+  "op": "extrude",
+  "scale": "100",
+  "id": "shoe-r",
+  "view": "front",
+  "taper": false,
+  "why": "foot-r: flat shape on the foot that the quad stretch lifts behind the body (the heel anchor is 75 mm off the front shoe, the views up to 110 mm apart): the elevation outline swept laterally"
+ },
+ {
+  "mh4": 1,
+  "op": "extrude",
+  "scale": "100",
+  "id": "shoe-r",
+  "view": "plan",
+  "taper": false,
+  "why": "foot-r: flat shape on the foot that the quad stretch lifts behind the body (the heel anchor is 75 mm off the front shoe, the views up to 110 mm apart): the elevation outline swept laterally"
+ },
+ {
+  "mh4": 1,
+  "op": "extrude",
+  "scale": "100",
+  "id": "shoe-toe-r",
+  "view": "front",
+  "taper": false,
+  "why": "toe-r: flat shape on the foot that the quad stretch lifts behind the body (the heel anchor is 75 mm off the front shoe, the views up to 110 mm apart): the elevation outline swept laterally"
+ },
+ {
+  "mh4": 1,
+  "op": "extrude",
+  "scale": "100",
+  "id": "shoe-toe-r",
+  "view": "plan",
+  "taper": false,
+  "why": "toe-r: flat shape on the foot that the quad stretch lifts behind the body (the heel anchor is 75 mm off the front shoe, the views up to 110 mm apart): the elevation outline swept laterally"
+ },
+ {
+  "mh4": 3,
+  "op": "set",
+  "scale": "50",
+  "view": "front",
+  "id": "hair-fringe",
+  "set": {
+   "solid": {
+    "kind": "extruded",
+    "sweep": "v",
+    "z0": -0.0517,
+    "z1": 0.0855,
+    "zTip": [
+     -0.06,
+     0.0486
+    ]
+   }
+  },
+  "why": "head: the fringe has no elevation shape of its own; its front prism was deeper than the hair of the elevation and stood 39 mm above it with the head down in the hamstring stretch (sync-height): it takes the depth fitted for the front hair of this band"
+ },
+ {
+  "mh4": 3,
+  "op": "set",
+  "scale": "100",
+  "view": "front",
+  "id": "hair-fringe",
+  "set": {
+   "solid": {
+    "kind": "extruded",
+    "sweep": "v",
+    "z0": -0.072,
+    "z1": 0.0869,
+    "zTip": [
+     -0.0382,
+     0.0454
+    ]
+   }
+  },
+  "why": "head: the fringe has no elevation shape of its own; its front prism was deeper than the hair of the elevation and stood 39 mm above it with the head down in the hamstring stretch (sync-height): it takes the depth fitted for the front hair of this band"
+ },
+ {
+  "mh4": 3,
+  "op": "set",
+  "scale": "200",
+  "view": "front",
+  "id": "hair-fringe",
+  "set": {
+   "solid": {
+    "kind": "extruded",
+    "sweep": "v",
+    "z0": -0.0021,
+    "z1": 0.0817,
+    "zTip": [
+     -0.086,
+     0.0595
+    ]
+   }
+  },
+  "why": "head: the fringe has no elevation shape of its own; its front prism was deeper than the hair of the elevation and stood 39 mm above it with the head down in the hamstring stretch (sync-height): it takes the depth fitted for the front hair of this band"
+ },
+ {
+  "mh4": 3,
+  "op": "front-sweep",
+  "scale": "500",
+  "id": "sil-head",
+  "twin": "head",
+  "range": "keep",
+  "why": "head: the front silhouette of head and hair has no elevation shape of its id; its depth fitted to the elevation head (42 mm above it with the head down, sync-height)"
+ },
+ {
+  "mh4": 3,
+  "op": "prism",
+  "scale": "500",
+  "id": "sil-head",
+  "view": "plan",
+  "twin": "head",
+  "refit": true,
+  "why": "head: the span of the plan prism along the head fitted to the elevation head"
  }
 ]

@@ -77,12 +77,23 @@ export function readFetchedReceiptV1(text:string,request:string):FetchedReceiptV
  return validateJsonSchemaSubset(schema.definitions.Receipt,value,schema).length||(value as FetchedReceiptV1).request!==request?undefined:value as FetchedReceiptV1;
 }
 
+/** 🔐️ The archive rows a receipt proves, `undefined` once a lockfile no longer has the digest the receipt names. */
+export async function fetchedReceiptRowsV1(receipt:FetchedReceiptV1,port:FetchedPortV1):Promise<ReadonlyArray<readonly[string,string]>|undefined>{
+ const packages=new Map<string,readonly[string,string]>();
+ for(const lock of receipt.locks){const bytes=await port.read(lock.path);if(!bytes||bytes.byteLength!==lock.bytes||digestOf(bytes)!==lock.digest)return undefined;const named=fetchedLockedV1(Buffer.from(bytes).toString("utf8"));if(!named)return undefined;for(const row of named)packages.set(row.join(" "),row);}
+ return foldedLockedV1(packages);
+}
+
+/** 🧱️ Archive rows still hold while every one of them has its checksum; a lockfile another process rewrites does not touch them. */
+export async function fetchedArchivesHoldV1(receipt:FetchedReceiptV1,rows:ReadonlyArray<readonly[string,string]>,home:string,port:FetchedPortV1):Promise<boolean>{
+ const now=await fetchedRegistryViewV1(home,port,rows);
+ return now!==undefined&&now.count===receipt.registry.count&&now.digest===receipt.registry.digest;
+}
+
 /** 🛡️ A receipt holds while every lockfile digest is unchanged and every locked archive still has its lockfile checksum. */
 export async function fetchedHoldsV1(receipt:FetchedReceiptV1,home:string,port:FetchedPortV1):Promise<boolean>{
- const packages=new Map<string,readonly[string,string]>();
- for(const lock of receipt.locks){const bytes=await port.read(lock.path);if(!bytes||bytes.byteLength!==lock.bytes||digestOf(bytes)!==lock.digest)return false;const named=fetchedLockedV1(Buffer.from(bytes).toString("utf8"));if(!named)return false;for(const row of named)packages.set(row.join(" "),row);}
- const now=await fetchedRegistryViewV1(home,port,foldedLockedV1(packages));
- return now!==undefined&&now.count===receipt.registry.count&&now.digest===receipt.registry.digest;
+ const rows=await fetchedReceiptRowsV1(receipt,port);
+ return rows!==undefined&&await fetchedArchivesHoldV1(receipt,rows,home,port);
 }
 
 /** 📦️ The regular files of a gzip tar archive keyed by path below the single top directory; `undefined` for an archive that is not a well-formed ustar/pax/GNU tar or escapes its directory. */

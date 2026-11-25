@@ -97,7 +97,7 @@ fn canvas_paint_of_1_4_pages_matches_mupdf_probes() {
     for case in fixture["cases"].as_array().unwrap() {
         let name = case["name"].as_str().unwrap();
         let lifted = lift(&snapshot(case)).unwrap_or_else(|error| panic!("{name}: {}", error.message));
-        let scene: Vec<Value> = serde_json::from_str(&canvas_layers(&lifted, None)).unwrap();
+        let scene: Vec<Value> = serde_json::from_str(&canvas_layers(&lifted, None, semio_ui_locale::Locale::En)).unwrap();
         assert!(!case["probes"].as_array().unwrap().is_empty(), "{name}: the fixture holds no probe");
         for probe in case["probes"].as_array().unwrap() {
             let actual = composite(&scene, canvas_point(&lifted, probe)).map(|value| (value * 255.0).round());
@@ -129,7 +129,7 @@ fn lifted_pages_keep_size_text_and_one_text_object_per_inked_page() {
 
 #[test]
 fn canvas_window_offers_exactly_the_fixture_actions() {
-    let offered: Vec<String> = window_definition().actions.iter().map(|action| format!("{:?}", action.id)).collect();
+    let offered: Vec<String> = window_definition().actions.iter().chain(edit_action_definitions().iter()).map(|action| format!("{:?}", action.id)).collect();
     for expected in fixture()["actions"].as_array().unwrap() {
         let expected = expected.as_str().unwrap();
         assert!(offered.iter().any(|id| id.contains(expected)), "{expected} missing from {offered:?}");

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import Ajv from "ajv";
 import { colorOracle as colorString } from "../⚖️color-oracle/🟦️.ts";
-import { chromium } from "playwright";
+import { launchChromium } from "../../../../🧪️tests/🌐️chromium-launch/🟦️";
 import { createElement, Fragment } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { DataTable, SwatchGrid, galleryCardStyle } from "../../../📖️stories/🧭️coordination/🟦️.tsx";
@@ -17,7 +17,7 @@ export async function proveStylingColorPrimitivesV1(): Promise<number> {
   const css = readFileSync(new URL("../../../🖌️ui/🎨️.css", import.meta.url), "utf8");
   const edgeRule = /\.temp \.react-flow__edge-path\s*\{[^}]*\}/.exec(css)?.[0];
   assert.ok(edgeRule?.includes("stroke: var(--color-primary)"), "actual edge accent consumes the semantic variable");
-  const browser = await chromium.launch({ headless: true });
+  const browser = await launchChromium();
   try {
     const page = await browser.newPage();
     await page.setContent("<style>" + edgeRule + "</style><svg class='temp'><path class='react-flow__edge-path'/></svg>");

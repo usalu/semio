@@ -170,7 +170,7 @@ fn result_mode_value(mode: semio_s_fem_app_surface::ResultMode) -> &'static str 
 
 /// 📊️ The result sources one document offers: every load case, then every combination.
 fn result_sources(doc: &Fem3dSnapshot) -> Vec<(String, String)> {
-    doc.load_cases.iter().map(|case| (case.id.clone(), case.name.clone())).chain(doc.combinations.iter().map(|combination| (combination.id.clone(), combination.name.clone()))).take(RESULT_SOURCE_OPTIONS).collect()
+    doc.load_cases.iter().map(|case| ("loadCase", case.id.as_str(), case.name.as_str())).chain(doc.combinations.iter().map(|combination| ("combination", combination.id.as_str(), combination.name.as_str()))).filter_map(|(kind, id, name)| semio_s_fem_analyses_model::encode_result_source_parts(kind, id).ok().map(|identity| (identity, name.to_owned()))).take(RESULT_SOURCE_OPTIONS).collect()
 }
 
 /// 📊️ Renders the panel for ONE results window. `window` is that window's captured partition, or

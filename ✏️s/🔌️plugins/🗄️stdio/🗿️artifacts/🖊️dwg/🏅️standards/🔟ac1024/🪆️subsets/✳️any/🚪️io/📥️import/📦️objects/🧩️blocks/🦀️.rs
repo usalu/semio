@@ -12,14 +12,14 @@ use semio_s_artifact_stdio_dwg_read_records::standards::v_ac1024::subsets::any::
 //#region 🔖️DwgStructuralCodec
 //#region DwgRead
 /// 🧩️ Decodes one block linear parameter object body from its main, string and handle streams.
-pub fn decode_block_linear_parameter_object(handle: u64, payload: &[u8], payload_size: usize, data_end_bit: usize, main_end_bit: usize, data: &mut DwgBitReader<'_>, handle_reader: &mut DwgBitReader<'_>, strings: &mut Option<DwgBitReader<'_>>, object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject) -> Result<(), String> {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockLinearParameter;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockParameterBaseLocation;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockParameterConnection;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockParameterProperty;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockTwoPointParameter;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgPropertyExpressionReference;
+pub fn decode_block_linear_parameter_object(handle: u64, payload: &[u8], payload_size: usize, data_end_bit: usize, main_end_bit: usize, data: &mut DwgBitReader<'_>, handle_reader: &mut DwgBitReader<'_>, strings: &mut Option<DwgBitReader<'_>>, object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject) -> Result<(), String> {
+    use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockLinearParameter;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockParameterBaseLocation;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockParameterConnection;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockParameterProperty;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockTwoPointParameter;
+    use semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgPropertyExpressionReference;
     let strings = strings.as_mut().ok_or_else(|| format!("BLOCKLINEARPARAMETER {handle:#x} string stream missing"))?;
     let element = decode_r2010_block_element(data, strings, "BLOCKLINEARPARAMETER")?;
     let show_properties = data.read_b()?;
@@ -74,12 +74,12 @@ pub fn decode_block_linear_parameter_object(handle: u64, payload: &[u8], payload
     Ok(())
 }
 /// 🧩️ Decodes one block parameter grip object body from its main, string and handle streams.
-pub fn decode_block_parameter_grip_object(handle: u64, type_code: u16, payload: &[u8], payload_size: usize, data_end_bit: usize, main_end_bit: usize, data: &mut DwgBitReader<'_>, handle_reader: &mut DwgBitReader<'_>, strings: &mut Option<DwgBitReader<'_>>, object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject) -> Result<(), String> {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockFlipGrip;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockLinearGrip;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockVisibilityGrip;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgNamedEvaluationNodeReference;
+pub fn decode_block_parameter_grip_object(handle: u64, type_code: u16, payload: &[u8], payload_size: usize, data_end_bit: usize, main_end_bit: usize, data: &mut DwgBitReader<'_>, handle_reader: &mut DwgBitReader<'_>, strings: &mut Option<DwgBitReader<'_>>, object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject) -> Result<(), String> {
+    use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockFlipGrip;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockLinearGrip;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockVisibilityGrip;
+    use semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgNamedEvaluationNodeReference;
     let strings = strings.as_mut().ok_or_else(|| format!("{} {handle:#x} string stream missing", object.class_name))?;
     object.body = Some(match type_code {
         528 => {
@@ -113,19 +113,19 @@ pub fn decode_block_parameter_grip_object(handle: u64, type_code: u16, payload: 
     Ok(())
 }
 /// 🧩️ Decodes one block alignment and action object body from its main, string and handle streams.
-pub fn decode_block_alignment_and_action_object(handle: u64, type_code: u16, payload: &[u8], payload_size: usize, data_end_bit: usize, main_end_bit: usize, data: &mut DwgBitReader<'_>, handle_reader: &mut DwgBitReader<'_>, strings: &mut Option<DwgBitReader<'_>>, object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject) -> Result<(), String> {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockActionConnection;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockActionCoordinateMode;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockActionWithBasePoint;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockAlignmentGrip;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockAlignmentParameter;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockFlipAction;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockScaleAction;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockScaleMode;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockStretchAction;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgStretchSelection;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgStretchSelector;
+pub fn decode_block_alignment_and_action_object(handle: u64, type_code: u16, payload: &[u8], payload_size: usize, data_end_bit: usize, main_end_bit: usize, data: &mut DwgBitReader<'_>, handle_reader: &mut DwgBitReader<'_>, strings: &mut Option<DwgBitReader<'_>>, object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject) -> Result<(), String> {
+    use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockActionConnection;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockActionCoordinateMode;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockActionWithBasePoint;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockAlignmentGrip;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockAlignmentParameter;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockFlipAction;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockScaleAction;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockScaleMode;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockStretchAction;
+    use semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgStretchSelection;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgStretchSelector;
     let strings = strings.as_mut().ok_or_else(|| format!("{} {handle:#x} string stream missing", object.class_name))?;
     object.body = Some(match type_code {
         533 => {
@@ -242,14 +242,14 @@ pub fn decode_block_alignment_and_action_object(handle: u64, type_code: u16, pay
     Ok(())
 }
 /// 🧩️ Decodes one block constraint parameter object body from its main, string and handle streams.
-pub fn decode_block_constraint_parameter_object(handle: u64, type_code: u16, payload: &[u8], payload_size: usize, data_end_bit: usize, main_end_bit: usize, data: &mut DwgBitReader<'_>, handle_reader: &mut DwgBitReader<'_>, strings: &mut Option<DwgBitReader<'_>>, object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject) -> Result<(), String> {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockBasePointParameter;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockLinearConstraintParameter;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockOnePointParameter;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockParameterAllowedValues;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockParameterConnection;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockParameterProperty;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody;
+pub fn decode_block_constraint_parameter_object(handle: u64, type_code: u16, payload: &[u8], payload_size: usize, data_end_bit: usize, main_end_bit: usize, data: &mut DwgBitReader<'_>, handle_reader: &mut DwgBitReader<'_>, strings: &mut Option<DwgBitReader<'_>>, object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject) -> Result<(), String> {
+    use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockBasePointParameter;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockLinearConstraintParameter;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockOnePointParameter;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockParameterAllowedValues;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockParameterConnection;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockParameterProperty;
+    use semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody;
     let strings = strings.as_mut().ok_or_else(|| format!("{} {handle:#x} string stream missing", object.class_name))?;
     object.body = Some(if type_code == 538 {
         let element = decode_r2010_block_element(data, strings, "BLOCKBASEPOINTPARAMETER")?;
@@ -304,15 +304,15 @@ pub fn decode_block_constraint_parameter_object(handle: u64, type_code: u16, pay
     Ok(())
 }
 /// 🧩️ Decodes one block move action object body from its main, string and handle streams.
-pub fn decode_block_move_action_object(handle: u64, payload: &[u8], payload_size: usize, data_end_bit: usize, main_end_bit: usize, data: &mut DwgBitReader<'_>, handle_reader: &mut DwgBitReader<'_>, strings: &mut Option<DwgBitReader<'_>>, object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject) -> Result<(), String> {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockAction;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockActionConnection;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockActionDependency;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockMoveAction;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockMoveCoordinateMode;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgEvaluationExpression;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgEvaluationExpressionValue;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody;
+pub fn decode_block_move_action_object(handle: u64, payload: &[u8], payload_size: usize, data_end_bit: usize, main_end_bit: usize, data: &mut DwgBitReader<'_>, handle_reader: &mut DwgBitReader<'_>, strings: &mut Option<DwgBitReader<'_>>, object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject) -> Result<(), String> {
+    use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockAction;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockActionConnection;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockActionDependency;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockMoveAction;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockMoveCoordinateMode;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgEvaluationExpression;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgEvaluationExpressionValue;
+    use semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody;
     let parent_id = data.read_bl()? as i32;
     let major_version = data.read_bl()?;
     let minor_version = data.read_bl()?;
@@ -365,15 +365,15 @@ pub fn decode_block_move_action_object(handle: u64, payload: &[u8], payload_size
     Ok(())
 }
 /// 🧩️ Decodes one block visibility parameter object body from its main, string and handle streams.
-pub fn decode_block_visibility_parameter_object(handle: u64, payload: &[u8], payload_size: usize, data_end_bit: usize, main_end_bit: usize, data: &mut DwgBitReader<'_>, handle_reader: &mut DwgBitReader<'_>, strings: &mut Option<DwgBitReader<'_>>, object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject) -> Result<(), String> {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockParameterConnection;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockParameterProperty;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockVisibilityParameter;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgEvaluationExpression;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgEvaluationExpressionValue;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgVisibilityEvaluationHistory;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgVisibilityState;
+pub fn decode_block_visibility_parameter_object(handle: u64, payload: &[u8], payload_size: usize, data_end_bit: usize, main_end_bit: usize, data: &mut DwgBitReader<'_>, handle_reader: &mut DwgBitReader<'_>, strings: &mut Option<DwgBitReader<'_>>, object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject) -> Result<(), String> {
+    use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockParameterConnection;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockParameterProperty;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockVisibilityParameter;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgEvaluationExpression;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgEvaluationExpressionValue;
+    use semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgVisibilityEvaluationHistory;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgVisibilityState;
     let parent_id = data.read_bl()? as i32;
     let major_version = data.read_bl()?;
     let minor_version = data.read_bl()?;
@@ -463,16 +463,16 @@ pub fn decode_block_visibility_parameter_object(handle: u64, payload: &[u8], pay
     Ok(())
 }
 /// 🧩️ Decodes one block flip parameter object body from its main, string and handle streams.
-pub fn decode_block_flip_parameter_object(handle: u64, payload: &[u8], payload_size: usize, data_end_bit: usize, main_end_bit: usize, data: &mut DwgBitReader<'_>, handle_reader: &mut DwgBitReader<'_>, strings: &mut Option<DwgBitReader<'_>>, object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject) -> Result<(), String> {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockFlipParameter;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockFlipValueSet;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockParameterBaseLocation;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockParameterConnection;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockParameterProperty;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgEvaluationExpression;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgEvaluationExpressionValue;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgNamedEvaluationNodeReference;
+pub fn decode_block_flip_parameter_object(handle: u64, payload: &[u8], payload_size: usize, data_end_bit: usize, main_end_bit: usize, data: &mut DwgBitReader<'_>, handle_reader: &mut DwgBitReader<'_>, strings: &mut Option<DwgBitReader<'_>>, object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject) -> Result<(), String> {
+    use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockFlipParameter;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockFlipValueSet;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockParameterBaseLocation;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockParameterConnection;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockParameterProperty;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgEvaluationExpression;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgEvaluationExpressionValue;
+    use semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgNamedEvaluationNodeReference;
     let parent_id = data.read_bl()? as i32;
     let major_version = data.read_bl()?;
     let minor_version = data.read_bl()?;
@@ -556,7 +556,7 @@ pub fn decode_block_flip_parameter_object(handle: u64, payload: &[u8], payload_s
     Ok(())
 }
 /// 🧩️ Decodes one dynamic block purge preventer object body from its main, string and handle streams.
-pub fn decode_dynamic_block_purge_preventer_object(handle: u64, payload_size: usize, main_end_bit: usize, data: &mut DwgBitReader<'_>, handle_reader: &mut DwgBitReader<'_>, object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject) -> Result<(), String> {
+pub fn decode_dynamic_block_purge_preventer_object(handle: u64, payload_size: usize, main_end_bit: usize, data: &mut DwgBitReader<'_>, handle_reader: &mut DwgBitReader<'_>, object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject) -> Result<(), String> {
     let marker = data.read_bs()?;
     if marker != 1 {
         return Err(format!("ACDB_DYNAMICBLOCKPURGEPREVENTER_VERSION {handle:#x} marker {marker} is unsupported"));
@@ -569,12 +569,12 @@ pub fn decode_dynamic_block_purge_preventer_object(handle: u64, payload_size: us
     }
     let protected_block_header_handle = read_object_handle(handle_reader, handle)?.ok_or_else(|| format!("ACDB_DYNAMICBLOCKPURGEPREVENTER_VERSION {handle:#x} protected block header is null"))?;
     validate_entity_terminal_fill(handle_reader, payload_size * 8, handle, "ACDB_DYNAMICBLOCKPURGEPREVENTER_VERSION")?;
-    object.body = Some(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody::DynamicBlockPurgePreventer(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgDynamicBlockPurgePreventer { protected_block_header_handle }));
+    object.body = Some(semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody::DynamicBlockPurgePreventer(semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgDynamicBlockPurgePreventer { protected_block_header_handle }));
 
     Ok(())
 }
 /// 🧩️ Decodes one block representation data object body from its main, string and handle streams.
-pub fn decode_block_representation_data_object(handle: u64, payload_size: usize, main_end_bit: usize, data: &mut DwgBitReader<'_>, handle_reader: &mut DwgBitReader<'_>, object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject) -> Result<(), String> {
+pub fn decode_block_representation_data_object(handle: u64, payload_size: usize, main_end_bit: usize, data: &mut DwgBitReader<'_>, handle_reader: &mut DwgBitReader<'_>, object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject) -> Result<(), String> {
     let marker = data.read_bs()?;
     if marker != 1 {
         return Err(format!("ACDB_BLOCKREPRESENTATION_DATA {handle:#x} marker {marker} is unsupported"));
@@ -587,12 +587,12 @@ pub fn decode_block_representation_data_object(handle: u64, payload_size: usize,
     }
     let represented_block_header_handle = read_object_handle(handle_reader, handle)?.ok_or_else(|| format!("ACDB_BLOCKREPRESENTATION_DATA {handle:#x} represented block header is null"))?;
     validate_entity_terminal_fill(handle_reader, payload_size * 8, handle, "ACDB_BLOCKREPRESENTATION_DATA")?;
-    object.body = Some(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody::BlockRepresentationData(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockRepresentationData { represented_block_header_handle }));
+    object.body = Some(semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody::BlockRepresentationData(semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockRepresentationData { represented_block_header_handle }));
 
     Ok(())
 }
 /// 🧩️ Decodes one block parameter dependency body object body from its main, string and handle streams.
-pub fn decode_block_parameter_dependency_body_object(handle: u64, payload: &[u8], payload_size: usize, data_end_bit: usize, main_end_bit: usize, data: &mut DwgBitReader<'_>, handle_reader: &mut DwgBitReader<'_>, strings: &mut Option<DwgBitReader<'_>>, object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject) -> Result<(), String> {
+pub fn decode_block_parameter_dependency_body_object(handle: u64, payload: &[u8], payload_size: usize, data_end_bit: usize, main_end_bit: usize, data: &mut DwgBitReader<'_>, handle_reader: &mut DwgBitReader<'_>, strings: &mut Option<DwgBitReader<'_>>, object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject) -> Result<(), String> {
     let dependency_version = data.read_bs()?;
     let dimension_base_version = data.read_bs()?;
     let class_version = data.read_bs()?;
@@ -609,16 +609,16 @@ pub fn decode_block_parameter_dependency_body_object(handle: u64, payload: &[u8]
         return Err(format!("BLOCKPARAMDEPENDENCYBODY {handle:#x} string stream is not exactly consumed"));
     }
     validate_entity_terminal_fill(handle_reader, payload_size * 8, handle, "BLOCKPARAMDEPENDENCYBODY")?;
-    object.body = Some(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody::BlockParameterDependencyBody(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockParameterDependencyBody { name }));
+    object.body = Some(semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody::BlockParameterDependencyBody(semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockParameterDependencyBody { name }));
 
     Ok(())
 }
 /// 🧩️ Decodes one dynamic block proxy node object body from its main, string and handle streams.
-pub fn decode_dynamic_block_proxy_node_object(handle: u64, payload: &[u8], payload_size: usize, data_end_bit: usize, main_end_bit: usize, data: &mut DwgBitReader<'_>, handle_reader: &mut DwgBitReader<'_>, strings: &mut Option<DwgBitReader<'_>>, object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject) -> Result<(), String> {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgDynamicBlockProxyNode;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgEvaluationExpression;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgEvaluationExpressionValue;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody;
+pub fn decode_dynamic_block_proxy_node_object(handle: u64, payload: &[u8], payload_size: usize, data_end_bit: usize, main_end_bit: usize, data: &mut DwgBitReader<'_>, handle_reader: &mut DwgBitReader<'_>, strings: &mut Option<DwgBitReader<'_>>, object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject) -> Result<(), String> {
+    use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgDynamicBlockProxyNode;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgEvaluationExpression;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgEvaluationExpressionValue;
+    use semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody;
     let parent_id = data.read_bl()? as i32;
     let major_version = data.read_bl()?;
     let minor_version = data.read_bl()?;
@@ -656,11 +656,11 @@ pub fn decode_dynamic_block_proxy_node_object(handle: u64, payload: &[u8], paylo
     Ok(())
 }
 /// 🧩️ Decodes one block grip location component object body from its main, string and handle streams.
-pub fn decode_block_grip_location_component_object(handle: u64, payload: &[u8], payload_size: usize, data_end_bit: usize, main_end_bit: usize, data: &mut DwgBitReader<'_>, handle_reader: &mut DwgBitReader<'_>, strings: &mut Option<DwgBitReader<'_>>, object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject) -> Result<(), String> {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgBlockGripLocationComponent;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgEvaluationExpression;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgEvaluationExpressionValue;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody;
+pub fn decode_block_grip_location_component_object(handle: u64, payload: &[u8], payload_size: usize, data_end_bit: usize, main_end_bit: usize, data: &mut DwgBitReader<'_>, handle_reader: &mut DwgBitReader<'_>, strings: &mut Option<DwgBitReader<'_>>, object: &mut semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject) -> Result<(), String> {
+    use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgBlockGripLocationComponent;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgEvaluationExpression;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgEvaluationExpressionValue;
+    use semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody;
     let parent_id = data.read_bl()? as i32;
     let major_version = data.read_bl()?;
     let minor_version = data.read_bl()?;

@@ -1,0 +1,11 @@
+{
+  "schema": "semio.os.mcp.progress-lifecycle/1",
+  "definitions": {
+    "Lifecycle": {
+      "description": "A progress notification belongs to the call in flight under its token and to nothing else. Progress is pushed only while that call has not been answered. A job's terminal transition pushes no progress row, because the response is the terminal signal and a client may process a response before a notification read in the same chunk and then reject the latter as an unknown token. A job that outlives its call pushes nothing under the answered token, and the call's token bindings are released with the response. Before the response is written the last pushed row is at least minimumGapMilliseconds old, so a row and the response never share one read. The token is echoed with the JSON type the client sent.",
+      "const": {
+        "minimumGapMilliseconds": 25
+      }
+    }
+  }
+}

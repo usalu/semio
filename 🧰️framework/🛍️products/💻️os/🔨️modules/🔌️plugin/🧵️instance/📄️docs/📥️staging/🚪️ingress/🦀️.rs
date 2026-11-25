@@ -9,7 +9,7 @@ use std::sync::Arc;
 use semio_plugin_decl_app::{ArtifactApp, DOCUMENT_LOAD_FAILED_CODE, DOCUMENT_LOAD_TOO_LARGE_CODE, DOCUMENT_LOAD_TOO_MANY_MEMBERS_CODE, document_load_fault};
 use semio_framework_artifact_reference::{ArtifactDialect, ArtifactRef};
 use store::os_store::store_schema::ArtifactEnvelope;
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use semio_plugin_instance_children::children_components::ChildComposition;
 use semio_plugin_child::{ChildContentRetirement, OwnedDocumentMemberIngress};

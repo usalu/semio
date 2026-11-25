@@ -36,7 +36,7 @@ function startVerdictV1(root:string,store:SealedEntryV1,mode:ImplementationModeV
 }
 /** 🔄️ Starts the detached process that promotes the live tree while a light command runs the snapshot it has (the same door script in `promote` mode, which runs nothing); the process id, or nothing when it could not be started. */
 function refreshV1(argv:readonly string[],environment:NodeJS.ProcessEnv,policy:SealedPolicyV1=sealedPolicyV1):number|undefined{
- try{const script=process.argv[1];if(!script)return undefined;const child=spawn(process.execPath,[script,...argv],{detached:true,stdio:"ignore",env:{...environment,[policy.modeVariable]:"promote"}});child.unref();return child.pid;}catch{return undefined;}
+ try{const script=process.argv[1];if(!script)return undefined;const child=spawn(process.execPath,[script,...argv],{windowsHide:true,detached:true,stdio:"ignore",env:{...environment,[policy.modeVariable]:"promote"}});child.unref();return child.pid;}catch{return undefined;}
 }
 
 const promoteLiveV1=async(root:string,entry:string,environment:NodeJS.ProcessEnv,write:(text:string)=>void):Promise<TrampolinePromotionV1>=>(await import("../🔁️promoter/🟦️.ts")).promoteLiveTreeV1(root,entry,environment,write);
@@ -94,7 +94,7 @@ export async function startImplementationV1(root:string,argv:readonly string[],e
  let snapshot:number|undefined;
  if(process.platform!=="win32")try{snapshot=openSync(store.snapshot(pointer.digest),"r");if(fstatSync(snapshot).size!==pointer.bytes){closeSync(snapshot);if(pin){say("Pinned authenticated door changed.\n");process.exitCode=1;return;}return live();}}catch{if(snapshot!==undefined)try{closeSync(snapshot);}catch{}if(pin){say("Pinned authenticated door is unavailable.\n");process.exitCode=1;return;}return live();}
  const code=await new Promise<number|undefined>(accept=>{
-  const child=spawn(process.execPath,["--eval",loader,"--",pointer.digest,doorRoleV1,...argv],{stdio:["inherit","inherit","inherit",snapshot??"pipe","pipe"],env:{...environment,...(readsGraph?graphChildEnvironmentV1():{}),...(pin?{SEMIO_SEALED_PARTITION_PIN:pin}:{}),BUN_RUNTIME_TRANSPILER_CACHE_PATH:"0"}}),forwards=(["SIGINT","SIGTERM","SIGHUP"] as const).map(signal=>[signal,()=>{stopped=true;try{child.kill(signal);}catch{}}] as const);
+  const child=spawn(process.execPath,["--eval",loader,"--",pointer.digest,doorRoleV1,...argv],{windowsHide:true,stdio:["inherit","inherit","inherit",snapshot??"pipe","pipe"],env:{...environment,...(readsGraph?graphChildEnvironmentV1():{}),...(pin?{SEMIO_SEALED_PARTITION_PIN:pin}:{}),BUN_RUNTIME_TRANSPILER_CACHE_PATH:"0"}}),forwards=(["SIGINT","SIGTERM","SIGHUP"] as const).map(signal=>[signal,()=>{stopped=true;try{child.kill(signal);}catch{}}] as const);
   let ready=false,stopped=false;
   for(const[signal,forward] of forwards)process.on(signal,forward);
   const finish=(value:number|undefined)=>{for(const[signal,forward] of forwards)process.off(signal,forward);accept(value);};

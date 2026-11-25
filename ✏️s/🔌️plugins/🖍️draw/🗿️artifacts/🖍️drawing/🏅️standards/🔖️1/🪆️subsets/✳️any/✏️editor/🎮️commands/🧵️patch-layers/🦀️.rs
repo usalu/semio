@@ -44,6 +44,6 @@ pub fn handle(payload: &PatchLayers, doc: &ArtifactView<'_, DrawingSnapshot>, _c
 /// 🛂️ Every requested target is admitted before a bulk field edit can publish.
 pub fn selected_targets<'a>(document:&'a DrawingSnapshot,ids:&[String])->Result<Vec<&'a semio_s_artifact_draw_drawing_model::DrawingLayerNode>,Fault> {
     let selected=semio_s_artifact_draw_drawing_model::selected_drawing_layers(document,ids);
-    if ids.iter().any(|id|!selected.iter().any(|layer|id==semio_s_artifact_draw_drawing_model::layer_id(layer)||id==&semio_s_artifact_draw_drawing_model::drawing_play_layers_tree_row_id(layer))){return Err(Fault::from("A selected layer field target is missing"));}
+    if ids.iter().any(|id|!selected.iter().any(|layer|id==semio_s_artifact_draw_drawing_model::layer_id(layer))){return Err(Fault::from("A selected layer field target is missing"));}
     Ok(selected)
 }

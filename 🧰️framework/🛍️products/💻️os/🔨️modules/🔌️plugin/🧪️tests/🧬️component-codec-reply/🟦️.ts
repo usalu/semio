@@ -1,4 +1,5 @@
 import { loadActorCodecFixture, loadTurnBootstrapCompositionFixture } from "@semio-tech/framework-actor/testing/fixtures";
+import { guestFactorySource, noCoreModule } from "../✂️worker-vm-source/🟦️.ts";
 type TestSource = { readonly directory: string; readonly url: string };
 
 /** 🧬️ LAW: one codec call reaches a component's `codec` interface through every browser hop with the
@@ -74,14 +75,14 @@ export async function registerComponentCodecReplyTests(vitest: NonNullable<Impor
           (globalThis as { __semioCodecFixture?: unknown }).__semioCodecFixture = codec;
           const caseDirectory = join(directory, `case-${index}`);
           mkdirSync(caseDirectory, { recursive: true });
-          writeFileSync(join(caseDirectory, "🌉️bridge.js"), pluginComponentBridgeSource("fixture_component", "fixture.wasm"));
+          writeFileSync(join(caseDirectory, "🌉️bridge.js"), pluginComponentBridgeSource("fixture_component"));
           writeFileSync(join(caseDirectory, "🟨️.js"), hostShimSource());
-          writeFileSync(join(caseDirectory, "fixture_component.js"), `let staged; export const reactor = { channelVersion: async () => ${APP_CHANNEL_VERSION}, stageActorContextBudget: (budget) => { staged = budget; }, admitActorInput: async (_wire) => ({ input: staged.input, spent: { copiedItems: 0n, copiedBytes: 0n, retainedCapacityBytes: 0n, releasedBytes: 0n }, workUnitsSpent: 0n, ready: true, disposition: "admitted" }) }; export const jobs = {}; export const checkpoint = {}; export const describe = {}; export const codec = globalThis.__semioCodecFixture;\n`);
+          writeFileSync(join(caseDirectory, "fixture_component.js"), guestFactorySource(`let staged; export const reactor = { channelVersion: async () => ${APP_CHANNEL_VERSION}, stageActorContextBudget: (budget) => { staged = budget; }, admitActorInput: async (_wire) => ({ input: staged.input, spent: { copiedItems: 0n, copiedBytes: 0n, retainedCapacityBytes: 0n, releasedBytes: 0n }, workUnitsSpent: 0n, ready: true, disposition: "admitted" }) }; export const codec = globalThis.__semioCodecFixture;`));
           const bridge = await import(pathToFileURL(join(caseDirectory, "🌉️bridge.js")).href);
           const original = stock.admit();
           let api: { readonly originalSource: Pick<InstanceType<typeof OriginalOperationSource>, "close" | "issue">; readonly codec: (request: Record<string, unknown>) => Promise<unknown> } | undefined;
           try {
-            api = await bridge.createActorApi(`a${index}`, 1n, original, clock, { receipt: (receipt: import("../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🎟️retained-turn/🟦️.ts").OriginalOperationReceipt) => stock.receive(original, receipt), hold: (refusal: unknown) => stock.hold(original, refusal) });
+            api = await bridge.createActorApi(`a${index}`, 1n, original, clock, { receipt: (receipt: import("../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🎟️retained-turn/🟦️.ts").OriginalOperationReceipt) => stock.receive(original, receipt), hold: (refusal: unknown) => stock.hold(original, refusal), succeed: async () => stock.succeed(original) }, noCoreModule);
             if (!api) throw Error("Missing generated codec bridge API");
             const mounted = api;
             const generated = await verdict(() => mounted.codec(request(row)));
@@ -123,10 +124,9 @@ export async function registerComponentCodecReplyTests(vitest: NonNullable<Impor
       const held: unknown[] = [];
       const received: number[] = [];
       try {
-        writeFileSync(join(directory, "🌉️bridge.js"), pluginComponentBridgeSource("fixture_component", "fixture.wasm"));
+        writeFileSync(join(directory, "🌉️bridge.js"), pluginComponentBridgeSource("fixture_component"));
         writeFileSync(join(directory, "🟨️.js"), hostShimSource());
-        writeFileSync(join(directory, "fixture_component.js"), `
-          const shim = await import("./🟨️.js" + new URL(import.meta.url).search);
+        writeFileSync(join(directory, "fixture_component.js"), guestFactorySource(`
           const receipt = (budget) => ({ input: budget.input, spent: { copiedItems: 0n, copiedBytes: 0n, retainedCapacityBytes: 0n, releasedBytes: 0n }, workUnitsSpent: 0n });
           let staged;
           export const reactor = {
@@ -134,14 +134,15 @@ export async function registerComponentCodecReplyTests(vitest: NonNullable<Impor
             stageActorContextBudget: (budget) => { staged = budget; },
             admitActorContext: async () => ({ ...receipt(staged), ready: true }),
             admitActorInput: async (_wire) => ({ ...receipt(staged), ready: true, disposition: "admitted" }),
-            poll: async () => { const budget = staged; shim.log("error", "original-turn.semantic " + ${JSON.stringify(law.expectedDetail)}); throw Object.assign(Error("[object Object] (see error.payload)"), {
+            poll: async () => { const budget = staged; host.log("error", "original-turn.semantic " + ${JSON.stringify(law.expectedDetail)}); throw Object.assign(Error("[object Object] (see error.payload)"), {
               payload: { ...receipt(budget), failure: { tag: ${JSON.stringify(law.failure)} } },
             }); },
           };
-        `);
+        `));
         const bridge = await import(pathToFileURL(join(directory, "🌉️bridge.js")).href);
         const clock = () => BigInt(Math.floor(performance.now() * 1000));
         const api = await bridge.createActorApi("native-refusal", 1n, original, clock, {
+          succeed: async () => stock.succeed(original),
           receipt(receipt: Parameters<typeof stock.receive>[1]) {
             received.push(Number(receipt.input.epoch));
             stock.receive(original, receipt);
@@ -150,7 +151,7 @@ export async function registerComponentCodecReplyTests(vitest: NonNullable<Impor
             held.push(refusal);
             stock.hold(original, refusal);
           },
-        });
+        }, noCoreModule);
         const poll = () => api.poll([], undefined, undefined, { maxEffects: 1, maxPatchBytes: 1, maxFrames: 1 });
         await expect(poll()).rejects.toThrow(law.expectedFullMessage);
         await expect(poll()).rejects.toThrow(law.expectedFullMessage);
@@ -179,9 +180,9 @@ export async function registerComponentCodecReplyTests(vitest: NonNullable<Impor
       const original = stock.admit();
       const held: unknown[] = [];
       try {
-        writeFileSync(join(directory, "🌉️bridge.js"), pluginComponentBridgeSource("fixture_component", "fixture.wasm"));
+        writeFileSync(join(directory, "🌉️bridge.js"), pluginComponentBridgeSource("fixture_component"));
         writeFileSync(join(directory, "🟨️.js"), hostShimSource());
-        writeFileSync(join(directory, "fixture_component.js"), `
+        writeFileSync(join(directory, "fixture_component.js"), guestFactorySource(`
           const receipt = (budget) => ({ input: budget.input, spent: { copiedItems: 0n, copiedBytes: 0n, retainedCapacityBytes: 0n, releasedBytes: 0n }, workUnitsSpent: 0n });
           let staged; let polls = 0;
           export const reactor = {
@@ -191,13 +192,14 @@ export async function registerComponentCodecReplyTests(vitest: NonNullable<Impor
             admitActorInput: async (_wire) => ({ ...receipt(staged), ready: true, disposition: "admitted" }),
             poll: async () => { polls += 1; globalThis.__pollCalls = polls; if (polls > 1) throw Error(${JSON.stringify(law.expectedLaterCall)}); throw Object.assign(Error("[object Object] (see error.payload)"), { payload: { ...receipt(staged), failure: ${JSON.stringify(law.failure)} } }); },
           };
-        `);
+        `));
         const bridge = await import(pathToFileURL(join(directory, "🌉️bridge.js")).href);
         const clock = () => BigInt(Math.floor(performance.now() * 1000));
         const api = await bridge.createActorApi("work-overrun", 1n, original, clock, {
           receipt(receipt: Parameters<typeof stock.receive>[1]) { stock.receive(original, receipt); },
           hold(refusal: unknown) { held.push(refusal); stock.hold(original, refusal); },
-        });
+          succeed: async () => stock.succeed(original),
+        }, noCoreModule);
         const poll = () => api.poll([], undefined, undefined, { maxEffects: 1, maxPatchBytes: 1, maxFrames: 1 });
         await expect(poll()).rejects.toThrow(law.expectedMessage);
         expect(held).toHaveLength(law.expectedHeldCount);

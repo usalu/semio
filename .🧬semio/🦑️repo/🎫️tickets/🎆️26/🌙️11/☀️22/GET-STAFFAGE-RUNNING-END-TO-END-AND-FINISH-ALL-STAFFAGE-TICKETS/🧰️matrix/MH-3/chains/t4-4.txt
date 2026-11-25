@@ -1,0 +1,2 @@
+# fourth fixer: heavy proofs of the newly written assets, then whatever is appended (1000 MB)
+"$here/in-final.sh" person-eating-standing

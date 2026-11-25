@@ -165,8 +165,9 @@ impl TrustedCatalogLoader {
             verify_length(record.descriptor.byte_length, descriptor_bytes.len())?;
             let descriptor_sha256 = sha256(&descriptor_bytes, context).await?;
             verify_digest(&record.descriptor.sha256, descriptor_sha256, "descriptor sha256")?;
-            let descriptor = decode_package_descriptor(&descriptor_bytes)?;
+            let mut descriptor = decode_package_descriptor(&descriptor_bytes)?;
             validate_descriptor(record, &descriptor, &bundle.packages)?;
+            descriptor.manifest = descriptor.manifest.resolved();
             report_package_progress(context, position, 2, total_units)?;
 
             let browser_actor = record.browser_actor.identity();

@@ -11,6 +11,7 @@
         "readyMarker": "bindings.json",
         "supersededGraceSeconds": 3600,
         "unfinishedGraceSeconds": 21600,
+        "unfinishedPressureGraceSeconds": 600,
         "retainedGraceSeconds": 21600,
         "rollbackSeconds": 86400,
         "pressureFreeFraction": 0.25,

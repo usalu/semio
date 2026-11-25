@@ -503,7 +503,7 @@ impl ArtifactApp for SingleDocumentApp {
         operation: semio_framework_job::OperationId,
         generation: semio_framework_job::Generation,
         actor: protocol::ActorId,
-    ) -> semio_plugin_ownership::store_lifecycle::ArtifactInitializationAdmission<Self::Snapshot, Self::Mutation> {
+    ) -> semio_plugin_store_lifecycle::store_lifecycle::ArtifactInitializationAdmission<Self::Snapshot, Self::Mutation> {
         Ok(bounded_document_store_initialization_job::<_,_,::semio_os_kernel::os_store::document_store_owners::BoundedDocumentStoreOwnerProducer>(envelope, Self::DOCUMENT_SCHEMA, operation, generation, actor))
     }
 

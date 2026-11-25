@@ -12,7 +12,7 @@ pub const WINDOW_KIND_ID: &str = DocumentWindowKit::KIND_ID;
 pub const BODY_KEY: &str = DocumentWindowKit::KIND_ID;
 
 fn refusal(message: impl Into<String>) -> Fault {
-    Fault::new(FaultOrigin::App, FaultCode::new("stdio.pdf.1.4.page-edit"), message)
+    Fault::new(FaultOrigin::App, FaultCode::new("stdio.pdf.page-edit"), message)
 }
 
 fn ui_error(code: &'static str) -> PluginAssemblyError {

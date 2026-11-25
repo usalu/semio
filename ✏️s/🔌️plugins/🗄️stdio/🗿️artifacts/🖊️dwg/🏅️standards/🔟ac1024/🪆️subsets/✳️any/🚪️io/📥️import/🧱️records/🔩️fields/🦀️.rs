@@ -93,9 +93,9 @@ pub fn decode_r2004_handle_map(bytes: &[u8]) -> Result<Vec<(u64, usize)>, String
     HandleMapRows::new(bytes).collect()
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn decode_r2010_eed(reader: &mut DwgBitReader<'_>, _base: u64) -> Result<Vec<semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::xrecord::DwgExtendedEntityData>, String> {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::xrecord::DwgExtendedEntityData;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::xrecord::DwgXRecordValue;
+pub fn decode_r2010_eed(reader: &mut DwgBitReader<'_>, _base: u64) -> Result<Vec<semio_s_artifact_stdio_dwg_snapshot_objects_xrecord::DwgExtendedEntityData>, String> {
+    use semio_s_artifact_stdio_dwg_snapshot_objects_xrecord::DwgExtendedEntityData;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_xrecord::DwgXRecordValue;
     let mut records = Vec::new();
     loop {
         let size = reader.read_bs()? as usize;
@@ -241,8 +241,8 @@ pub fn fixed_object_name(object_type: u16) -> &'static str {
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn object_category(object_type: u16) -> semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::xrecord::DwgObjectCategory {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::xrecord::DwgObjectCategory;
+pub fn object_category(object_type: u16) -> semio_s_artifact_stdio_dwg_snapshot_objects_xrecord::DwgObjectCategory {
+    use semio_s_artifact_stdio_dwg_snapshot_objects_xrecord::DwgObjectCategory;
     match object_type {
         1..=41 | 43..=47 | 77 | 78 | 498 => DwgObjectCategory::Entity,
         48 | 50 | 52 | 56 | 60 | 62 | 64 | 66 | 68 | 70 => DwgObjectCategory::TableControl,
@@ -301,8 +301,8 @@ fn xrecord_value_kind(group_code: i16) -> Option<XRecordStorageKind> {
     })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn decode_xrecord_values(data: &mut DwgBitReader<'_>, byte_count: usize, main_end_bit: usize) -> Result<Vec<semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::xrecord::DwgXRecordValue>, String> {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::xrecord::DwgXRecordValue;
+pub fn decode_xrecord_values(data: &mut DwgBitReader<'_>, byte_count: usize, main_end_bit: usize) -> Result<Vec<semio_s_artifact_stdio_dwg_snapshot_objects_xrecord::DwgXRecordValue>, String> {
+    use semio_s_artifact_stdio_dwg_snapshot_objects_xrecord::DwgXRecordValue;
     let end_bit = data.bit_position().checked_add(byte_count.checked_mul(8).ok_or("XRECORD value size overflow")?).ok_or("XRECORD value boundary overflow")?;
     if end_bit > main_end_bit {
         return Err("XRECORD values exceed bounded class-main data".into());
@@ -360,8 +360,8 @@ pub fn decode_xrecord_values(data: &mut DwgBitReader<'_>, byte_count: usize, mai
     Ok(values)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn read_visual_style_operation(data: &mut DwgBitReader<'_>) -> Result<semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgVisualStylePropertyOperation, String> {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgVisualStylePropertyOperation;
+pub fn read_visual_style_operation(data: &mut DwgBitReader<'_>) -> Result<semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgVisualStylePropertyOperation, String> {
+    use semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgVisualStylePropertyOperation;
     match data.read_bs()? {
         0 => Ok(DwgVisualStylePropertyOperation::Inherit),
         1 => Ok(DwgVisualStylePropertyOperation::Set),
@@ -371,16 +371,16 @@ pub fn read_visual_style_operation(data: &mut DwgBitReader<'_>) -> Result<semio_
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn read_visual_style_color(data: &mut DwgBitReader<'_>) -> Result<(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgVisualStyleProperty<semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgComplexColor>, u8), String> {
+pub fn read_visual_style_color(data: &mut DwgBitReader<'_>) -> Result<(semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgVisualStyleProperty<semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgComplexColor>, u8), String> {
     let (value, flags) = read_r2010_cmc_main(data)?;
     let operation = read_visual_style_operation(data)?;
-    Ok((semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgVisualStyleProperty { value, operation }, flags))
+    Ok((semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgVisualStyleProperty { value, operation }, flags))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn decode_r2010_block_element(data: &mut DwgBitReader<'_>, strings: &mut DwgBitReader<'_>, class_name: &str) -> Result<semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockElement, String> {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockElement;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgEvaluationExpression;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgEvaluationExpressionValue;
+pub fn decode_r2010_block_element(data: &mut DwgBitReader<'_>, strings: &mut DwgBitReader<'_>, class_name: &str) -> Result<semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockElement, String> {
+    use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockElement;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgEvaluationExpression;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgEvaluationExpressionValue;
     let parent_id = data.read_bl()? as i32;
     let major_version = data.read_bl()?;
     let minor_version = data.read_bl()?;
@@ -396,9 +396,9 @@ pub fn decode_r2010_block_element(data: &mut DwgBitReader<'_>, strings: &mut Dwg
     Ok(DwgBlockElement { evaluation_expression: DwgEvaluationExpression { parent_id, major_version, minor_version, value: DwgEvaluationExpressionValue::Empty, node_id }, name })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn decode_r2010_block_grip(data: &mut DwgBitReader<'_>, strings: &mut DwgBitReader<'_>, x_role: &str, y_role: &str, class_name: &str) -> Result<semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockGrip, String> {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockGrip;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgNamedEvaluationNodeReference;
+pub fn decode_r2010_block_grip(data: &mut DwgBitReader<'_>, strings: &mut DwgBitReader<'_>, x_role: &str, y_role: &str, class_name: &str) -> Result<semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockGrip, String> {
+    use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockGrip;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgNamedEvaluationNodeReference;
     let element = decode_r2010_block_element(data, strings, class_name)?;
     let updated_x = DwgNamedEvaluationNodeReference { node_id: data.read_bl()?, expression_name: x_role.into() };
     let updated_y = DwgNamedEvaluationNodeReference { node_id: data.read_bl()?, expression_name: y_role.into() };
@@ -411,11 +411,11 @@ pub fn decode_r2010_block_grip(data: &mut DwgBitReader<'_>, strings: &mut DwgBit
     Ok(DwgBlockGrip { element, location, insertion_cycling, insertion_cycling_weight, updated_x, updated_y })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn decode_r2010_two_point_parameter(data: &mut DwgBitReader<'_>, strings: &mut DwgBitReader<'_>, class_name: &str) -> Result<(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockTwoPointParameter, [u32; 4]), String> {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockParameterBaseLocation;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockParameterConnection;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockParameterProperty;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockTwoPointParameter;
+pub fn decode_r2010_two_point_parameter(data: &mut DwgBitReader<'_>, strings: &mut DwgBitReader<'_>, class_name: &str) -> Result<(semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockTwoPointParameter, [u32; 4]), String> {
+    use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockParameterBaseLocation;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockParameterConnection;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockParameterProperty;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockTwoPointParameter;
     let element = decode_r2010_block_element(data, strings, class_name)?;
     let show_properties = data.read_b()?;
     let chain_actions = data.read_b()?;
@@ -440,9 +440,9 @@ pub fn decode_r2010_two_point_parameter(data: &mut DwgBitReader<'_>, strings: &m
     Ok((DwgBlockTwoPointParameter { element, show_properties, chain_actions, definition_base, definition_end, properties, property_expression_references: Vec::new(), base_location }, property_node_ids))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn decode_r2010_block_action(data: &mut DwgBitReader<'_>, strings: &mut DwgBitReader<'_>, handles: &mut DwgBitReader<'_>, base: u64, class_name: &str) -> Result<semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockAction, String> {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockAction;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockActionDependency;
+pub fn decode_r2010_block_action(data: &mut DwgBitReader<'_>, strings: &mut DwgBitReader<'_>, handles: &mut DwgBitReader<'_>, base: u64, class_name: &str) -> Result<semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockAction, String> {
+    use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockAction;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockActionDependency;
     let element = decode_r2010_block_element(data, strings, class_name)?;
     let display_location = data.read_3bd()?.to_vec();
     let dependency_count = data.read_bl()? as usize;
@@ -464,17 +464,17 @@ pub fn decode_object_common_relations(data: &mut DwgBitReader<'_>, handles: &mut
     Ok((owner, reactors, extension_dictionary))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn decode_r2010_constraint_node(class: &str, data: &mut DwgBitReader<'_>, handles: &mut DwgBitReader<'_>, base: u64) -> Result<semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::constraints::DwgConstraintNode, String> {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::constraints::DwgAxisConstraint;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::constraints::DwgConstrainedBoundedLine;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::constraints::DwgConstrainedDatumLine;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::constraints::DwgConstrainedImplicitPoint;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::constraints::DwgConstraintGeometry;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::constraints::DwgConstraintNode;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::constraints::DwgConstraintNodeCore;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::constraints::DwgDistanceConstraint;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::constraints::DwgExplicitConstraint;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::constraints::DwgGeometricConstraint;
+pub fn decode_r2010_constraint_node(class: &str, data: &mut DwgBitReader<'_>, handles: &mut DwgBitReader<'_>, base: u64) -> Result<semio_s_artifact_stdio_dwg_snapshot_objects_constraints::DwgConstraintNode, String> {
+    use semio_s_artifact_stdio_dwg_snapshot_objects_constraints::DwgAxisConstraint;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_constraints::DwgConstrainedBoundedLine;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_constraints::DwgConstrainedDatumLine;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_constraints::DwgConstrainedImplicitPoint;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_constraints::DwgConstraintGeometry;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_constraints::DwgConstraintNode;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_constraints::DwgConstraintNodeCore;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_constraints::DwgDistanceConstraint;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_constraints::DwgExplicitConstraint;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_constraints::DwgGeometricConstraint;
     fn core(data: &mut DwgBitReader<'_>) -> Result<DwgConstraintNodeCore, String> {
         let id = data.read_bl()? as i32;
         if id < 0 {
@@ -537,17 +537,17 @@ pub fn decode_r2010_constraint_node(class: &str, data: &mut DwgBitReader<'_>, ha
     })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn read_r2010_cmc_main(data: &mut DwgBitReader<'_>) -> Result<(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgComplexColor, u8), String> {
+pub fn read_r2010_cmc_main(data: &mut DwgBitReader<'_>) -> Result<(semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgComplexColor, u8), String> {
     let index = data.read_bs()?;
     let value = decode_complex_color_value(data.read_bl()?)?;
     let flags = data.read_rc()?;
     if flags > 3 {
         return Err(format!("CMC flags {flags:#x} are invalid"));
     }
-    Ok((semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgComplexColor { index, value, name: None, book_name: None }, flags))
+    Ok((semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgComplexColor { index, value, name: None, book_name: None }, flags))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn read_table_style_color(data: &mut DwgBitReader<'_>, handle: u64) -> Result<semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgComplexColor, String> {
+pub fn read_table_style_color(data: &mut DwgBitReader<'_>, handle: u64) -> Result<semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgComplexColor, String> {
     let (color, flags) = read_r2010_cmc_main(data)?;
     if flags != 0 {
         return Err(format!("TABLESTYLE {handle:#x} named colors are unsupported"));
@@ -555,19 +555,19 @@ pub fn read_table_style_color(data: &mut DwgBitReader<'_>, handle: u64) -> Resul
     Ok(color)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn read_material_color(data: &mut DwgBitReader<'_>, handle: u64) -> Result<semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgMaterialColor, String> {
+pub fn read_material_color(data: &mut DwgBitReader<'_>, handle: u64) -> Result<semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgMaterialColor, String> {
     let source = data.read_rc()?;
     if source > 1 {
         return Err(format!("MATERIAL {handle:#x} color source {source} is unsupported"));
     }
-    Ok(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgMaterialColor { factor: data.read_bd()?, override_rgb: if source == 1 { Some(data.read_bl()?) } else { None } })
+    Ok(semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgMaterialColor { factor: data.read_bd()?, override_rgb: if source == 1 { Some(data.read_bl()?) } else { None } })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn read_material_map(data: &mut DwgBitReader<'_>, strings: &mut DwgBitReader<'_>, handle: u64) -> Result<semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgMaterialMap, String> {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgMaterialMap;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgMaterialMapSource;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgMaterialProjection;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgMaterialTiling;
+pub fn read_material_map(data: &mut DwgBitReader<'_>, strings: &mut DwgBitReader<'_>, handle: u64) -> Result<semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgMaterialMap, String> {
+    use semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgMaterialMap;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgMaterialMapSource;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgMaterialProjection;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgMaterialTiling;
     let blend_factor = data.read_bd()?;
     let projection = match data.read_rc()? {
         0 => DwgMaterialProjection::Inherit,
@@ -605,12 +605,12 @@ pub fn read_material_map(data: &mut DwgBitReader<'_>, strings: &mut DwgBitReader
     Ok(DwgMaterialMap { blend_factor, projection, tiling, scale_to_entity, use_current_block_transform, transform, source })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn decode_r2010_cell_style(data: &mut DwgBitReader<'_>, strings: &mut DwgBitReader<'_>, handles: &mut DwgBitReader<'_>, base: u64) -> Result<semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgCellStyle, String> {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgCellBorder;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgCellBorders;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgCellContentFormat;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgCellMargins;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgCellStyle;
+pub fn decode_r2010_cell_style(data: &mut DwgBitReader<'_>, strings: &mut DwgBitReader<'_>, handles: &mut DwgBitReader<'_>, base: u64) -> Result<semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgCellStyle, String> {
+    use semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgCellBorder;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgCellBorders;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgCellContentFormat;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgCellMargins;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgCellStyle;
     if data.read_bl()? != 5 || data.read_bs()? != 1 {
         return Err(format!("TABLESTYLE {base:#x} cell type or data flag is unsupported"));
     }
@@ -685,8 +685,8 @@ pub fn decode_r2010_cell_style(data: &mut DwgBitReader<'_>, strings: &mut DwgBit
     })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn decode_complex_color_value(word: u32) -> Result<semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgComplexColorValue, String> {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgComplexColorValue;
+pub fn decode_complex_color_value(word: u32) -> Result<semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgComplexColorValue, String> {
+    use semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgComplexColorValue;
     let value = word & 0x00ff_ffff;
     match word >> 24 {
         0xc0 => Ok(DwgComplexColorValue::ByLayer),

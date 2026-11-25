@@ -1,0 +1,109 @@
+{
+  "pageCount": 4,
+  "text": [
+    "Page one",
+    "Page two",
+    "Page three",
+    "Page four"
+  ],
+  "toc": [
+    [
+      1,
+      "Introduction",
+      1
+    ],
+    [
+      1,
+      "Über",
+      2
+    ],
+    [
+      2,
+      "Part A",
+      2
+    ],
+    [
+      2,
+      "Part B é",
+      -1
+    ],
+    [
+      1,
+      "Appendix",
+      4
+    ]
+  ],
+  "namedDestinations": {
+    "chapter.2": 2,
+    "chapter.3": 3,
+    "section.2a": 2,
+    "appendix": 4
+  },
+  "pageLabels": [
+    "i",
+    "ii",
+    "A-5",
+    "A-6"
+  ],
+  "openActionPage": 1,
+  "links": [
+    [],
+    [
+      [
+        3,
+        "goto"
+      ],
+      [
+        4,
+        "goto"
+      ],
+      [
+        null,
+        "uri"
+      ],
+      [
+        1,
+        "goto"
+      ],
+      [
+        1,
+        "goto"
+      ],
+      [
+        1,
+        "goto"
+      ],
+      [
+        1,
+        "goto"
+      ],
+      [
+        1,
+        "goto"
+      ],
+      [
+        1,
+        "goto"
+      ],
+      [
+        1,
+        "goto"
+      ]
+    ],
+    [],
+    []
+  ],
+  "info": {
+    "title": "Prüfbericht",
+    "author": "Jörg",
+    "extra": [
+      "PTEX.Fullbanner",
+      "Custom"
+    ]
+  },
+  "catalogExtra": [
+    "StructTreeRoot",
+    "PieceInfo"
+  ],
+  "groupPage": 3
+}

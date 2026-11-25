@@ -120,7 +120,7 @@ export const TutorialBar: React.FC<TutorialBarProps> = ({
               type="button"
               data-slot="tutorial-chapter-tick"
               title={chapter.title}
-              className="pointer-events-auto absolute top-1/2 size-1 -translate-x-1/2 -translate-y-1/2 rounded-full bg-foreground/50 hover:bg-foreground"
+              className="pointer-events-auto absolute top-1/2 size-1 -translate-x-1/2 -translate-y-1/2 bg-foreground/50 hover:bg-foreground"
               style={{ left: `${durationMs > 0 ? (chapter.atMs / durationMs) * 100 : 0}%` }}
               onClick={() => onSeek(chapter.atMs)}
             />
@@ -133,7 +133,7 @@ export const TutorialBar: React.FC<TutorialBarProps> = ({
           <>
             <Button id="ui.tutorial.record" icon="circle-dot" text={recordLabel} aria-pressed={recording} onClick={onRecordToggle} />
             {recording && (
-              <span id="ui.tutorial.recordingIndicator" data-slot="tutorial-recording-indicator" className="whitespace-nowrap px-single text-xs text-destructive">
+              <span id="ui.tutorial.recordingIndicator" data-slot="tutorial-recording-indicator" className="whitespace-nowrap px-single text-xs text-destructive-foreground">
                 {recordingLabel}
               </span>
             )}
@@ -207,7 +207,7 @@ export const TutorialVideoOverlay: React.FC<TutorialVideoOverlayProps> = ({ src,
       ref={videoRef}
       data-slot="tutorial-video-overlay"
       src={src}
-      className="pointer-events-none fixed z-tutorial rounded-lg object-cover shadow-lg"
+      className="pointer-events-none fixed z-tutorial object-cover"
       style={{ left: `${rect.x * 100}%`, top: `${rect.y * 100}%`, width: `${rect.width * 100}%`, height: `${rect.height * 100}%` }}
       muted={muted}
       playsInline

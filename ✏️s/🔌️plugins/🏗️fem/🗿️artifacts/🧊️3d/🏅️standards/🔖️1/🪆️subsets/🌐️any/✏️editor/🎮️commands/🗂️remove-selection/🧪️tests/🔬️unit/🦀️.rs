@@ -97,3 +97,63 @@ async fn remove_selection_with_unknown_ids_is_a_no_op() {
     dispatch(&mut app, Fem3dCommand::RemoveSelection(RemoveSelection { ids: vec![fem3d_entity_target(FEM3D_GRANULARITY_NODE, "missing").unwrap()] })).await;
     assert!(app.snapshot().expect("snapshot").nodes.is_empty());
 }
+
+fn kinds_of(mutations: &[Fem3dMutation]) -> Vec<String> {
+    mutations.iter().map(|event| event.semantics().kind.to_string()).collect()
+}
+
+fn replay_all(base: &Fem3dSnapshotValue, mutations: &[Fem3dMutation]) -> Fem3dSnapshotValue {
+    let mut current = base.clone();
+    let mut inverse = Vec::new();
+    for event in mutations {
+        inverse.extend(ColdMutation::inverse(event, &current).unwrap());
+        let outcome = ColdMutation::diff(event, &current);
+        assert!(outcome.messages().iter().all(|message| message.level < semio_framework_diagnostic::Severity::Error), "{event:?}: {:?}", outcome.messages());
+        current = replay(&current, event);
+    }
+    let after = current.clone();
+    for event in inverse.iter().rev() { current = replay(&current, event); }
+    assert_eq!(&current, base, "undo restores the exact snapshot");
+    after
+}
+
+/// 🗑️ LAW: removing a node cascades to the members, supports and loads that name it, dependency ordered, and undo restores the exact snapshot.
+#[test]
+fn remove_selection_of_a_node_cascades_its_dependents_and_restores_exact_snapshot_3d() {
+    let (base_value, base) = base();
+    let mutations = removal(&base, vec![fem3d_entity_target(FEM3D_GRANULARITY_NODE, "n1").unwrap()]);
+    assert_eq!(kinds_of(&mutations), ["remove-load", "delete-support", "delete-element", "delete-node"]);
+    let after = replay_all(&base_value, &mutations);
+    assert!(after.nodes.iter().all(|node| node.id.as_str() != "n1") && after.supports.is_empty() && after.elements.is_empty());
+    assert_eq!(after.load_cases[0].loads.len(), 2, "the member load goes with its member, the other loads stay");
+    let n2 = removal(&base, vec![fem3d_entity_target(FEM3D_GRANULARITY_NODE, "n2").unwrap()]);
+    assert_eq!(kinds_of(&n2), ["remove-load", "remove-load", "delete-element", "delete-node"]);
+    assert!(replay_all(&base_value, &n2).supports.len() == 1);
+}
+
+/// 🗑️ LAW: removing a solid cascades to its area loads.
+#[test]
+fn remove_selection_of_a_solid_cascades_its_area_loads_3d() {
+    let (base_value, base) = base();
+    let mutations = removal(&base, vec![fem3d_entity_target(FEM3D_GRANULARITY_SOLID, "slab").unwrap()]);
+    assert_eq!(kinds_of(&mutations), ["remove-load", "delete-solid"]);
+    let after = replay_all(&base_value, &mutations);
+    assert!(after.solids.is_empty() && after.load_cases[0].loads.len() == 2);
+}
+
+/// ⌨️ LAW: Delete and Backspace dispatch `removeSelection` without ids, and that means the live selection; ids a caller names are never overridden by it.
+#[test]
+fn remove_selection_without_ids_speaks_for_the_live_selection_3d() {
+    let (_, base) = base();
+    let history = semio_plugin::HistoryView::empty();
+    let doc = ArtifactView::new(&*base, &history);
+    let config = NoConfig::default();
+    let cfg = ConfigView { snapshot: &config, window: None };
+    let selection = vec![fem3d_entity_target(FEM3D_GRANULARITY_NODE, "n1").unwrap()];
+    let live = semio_s_artifact_fem_3d_editor::editor::fem3d::fem3d_route(&Fem3dCommand::RemoveSelection(RemoveSelection { ids: Vec::new() }), &doc, &cfg, || selection.clone(), None).expect("route");
+    assert_eq!(live.artifact_mutations, removal(&base, selection.clone()));
+    assert!(!live.artifact_mutations.is_empty(), "the key must remove the selected entity");
+    let named = vec![fem3d_entity_target(FEM3D_GRANULARITY_SOLID, "slab").unwrap()];
+    let routed = semio_s_artifact_fem_3d_editor::editor::fem3d::fem3d_route(&Fem3dCommand::RemoveSelection(RemoveSelection { ids: named.clone() }), &doc, &cfg, || selection.clone(), None).expect("route");
+    assert_eq!(routed.artifact_mutations, removal(&base, named), "named ids win over the live selection");
+}

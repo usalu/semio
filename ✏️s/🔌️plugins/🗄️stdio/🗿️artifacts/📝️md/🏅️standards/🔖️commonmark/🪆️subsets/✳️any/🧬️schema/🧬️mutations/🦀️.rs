@@ -85,6 +85,7 @@ pub enum MdMutation {
     SpliceSource(splice_source::SpliceSource),
 }
 dsl::original_pack_value_operation_receiving!(MdMutation);
+dsl::artifact_persisted_binary_operation!(MdMutation);
 //#endregion 🔖️Mutations
 
 //#region 🔖️Kinds

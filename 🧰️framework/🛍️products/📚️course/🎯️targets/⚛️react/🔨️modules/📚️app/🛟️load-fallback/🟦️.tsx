@@ -7,7 +7,7 @@
  */
 
 import type { ReactElement } from "react";
-import { SharedBorderRow } from "@semio-tech/ui-react/chrome";
+import { Icon, SharedBorderRow } from "@semio-tech/ui-react/chrome";
 import { LANGUAGES } from "@semio-tech/course";
 
 type CourseLocale = (typeof LANGUAGES)[number];
@@ -37,10 +37,12 @@ export function LoadFallback(props: { readonly failed: boolean; readonly onRetry
           </p>
           {failed ? (
             <SharedBorderRow>
-              <button type="button" data-shared-border-cell="" onClick={onRetry} className="cursor-pointer bg-transparent px-double py-single text-sm text-foreground">
+              <button type="button" data-shared-border-cell="" onClick={onRetry} className="inline-flex cursor-pointer items-center justify-center gap-single bg-transparent px-double py-single text-sm text-foreground">
+                <Icon icon="rotate-cw" size="small" className="shrink-0" />
                 {LOAD_FALLBACK_TEXTS[locale].retry}
               </button>
-              <button type="button" data-shared-border-cell="" onClick={onReload} className="cursor-pointer bg-transparent px-double py-single text-sm text-foreground">
+              <button type="button" data-shared-border-cell="" onClick={onReload} className="inline-flex cursor-pointer items-center justify-center gap-single bg-transparent px-double py-single text-sm text-foreground">
+                <Icon icon="rotate-cw" size="small" className="shrink-0" />
                 {LOAD_FALLBACK_TEXTS[locale].reload}
               </button>
             </SharedBorderRow>

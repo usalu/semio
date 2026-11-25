@@ -1,0 +1,20 @@
+cargo-features = ["trim-paths"]
+
+[package]
+name = "norm-group-probe"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[workspace]
+members = ["deck", "taper", "paid"]
+resolver = "3"
+
+[profile.prototype]
+inherits = "dev"
+debug = false
+
+[dependencies]
+deck = { path = "deck" }
+paid = { path = "paid" }
+taper = { path = "taper" }

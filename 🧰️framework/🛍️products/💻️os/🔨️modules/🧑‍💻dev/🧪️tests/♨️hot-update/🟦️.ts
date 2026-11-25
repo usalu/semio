@@ -20,6 +20,7 @@
  *
  * @vitest-environment node
  */
+import { launchBrowserV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🟦️.ts";
 import { mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { createServer as createNetServer } from "node:net";
 import { tmpdir } from "node:os";
@@ -151,8 +152,7 @@ describe("dev serve hot update delivery", () => {
     write(workerFreshness.before, false);
     writeFileSync(join(root, "🧰️framework/🟦️.ts"), 'const worker = new Worker(new URL("./👷️worker.ts", import.meta.url), { type: "module" });\nworker.onmessage = event => document.querySelector("output")!.textContent = event.data;\nworker.onerror = event => document.querySelector("output")!.textContent = `ERROR: ${event.message} at ${event.filename}:${event.lineno}`;\n');
     writeFileSync(join(root, "index.html"), '<!doctype html><html><head><meta charset="utf-8"></head><body><output>waiting</output><script type="module" src="/🧰️framework/🟦️.ts"></script></body></html>');
-    const { chromium } = await import("playwright");
-    const browser = await chromium.launch({ headless: true });
+    const browser = await launchBrowserV1({ headless: true });
     const port = await loopbackPort();
     const server = await createServer({ configFile: false, root, logLevel: "silent", cacheDir: join(root, ".vite"), optimizeDeps: { noDiscovery: true, include: [] }, server: { host: "127.0.0.1", port, strictPort: true, hmr: false, watch: null }, plugins: [semioServeCloseVitePlugin(), ...semioSourceFreshnessVitePlugins({ repoRoot: root })] });
     try {
@@ -182,8 +182,7 @@ describe("dev serve hot update delivery", () => {
   }, 90_000);
 
   it.runIf(longLevel)("re-executes an edited module in the live page once per write style, and only through the source watcher", async () => {
-    const { chromium } = await import("playwright");
-    const browser = await chromium.launch({ headless: true });
+    const browser = await launchBrowserV1({ headless: true });
     const graph = sandboxGraph();
     const watched = await serve(graph.root, true);
     let rows: Awaited<ReturnType<typeof writeEveryStyle>> = [];
@@ -215,8 +214,7 @@ describe("dev serve hot update delivery", () => {
   }, 180_000);
 
   it.runIf(longLevel)("restarts under a connected page, releases the old server once, serves again and keeps delivering one update per write", async () => {
-    const { chromium } = await import("playwright");
-    const browser = await chromium.launch({ headless: true });
+    const browser = await launchBrowserV1({ headless: true });
     const graph = sandboxGraph();
     const watched = await serve(graph.root, true);
     const server: ViteDevServer = watched.server;

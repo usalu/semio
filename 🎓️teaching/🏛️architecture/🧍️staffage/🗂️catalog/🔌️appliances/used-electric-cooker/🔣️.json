@@ -13,21 +13,111 @@
    "de": "Ein gebrauchter Stand-Elektroherd mit 50 cm Breite, 0,50 x 0,60 x 0,85 m und 40 kg, mit vier Gusskochplatten in Edelstahlringen, einem 55-l-Backofen mit Ober- und Unterhitze hinter einer doppelt verglasten Tür, einem Backblech und einer Geräteschublade, 8 kW Anschlusswert: die Mulde zeigt eingebrannte Flecken und einen Rostring, ein Knebel ist ein schwarzer Ersatz, das Türglas ist verkratzt. Er lagert auf einer Halbpalette im Gebrauchtwarenlager, wird von zwei Personen mit den Händen unter dem Boden getragen und backt wieder in einer Küche einen Blechkuchen, mit herabgelassener Tür und herausgezogenem Blech."
   },
   "tags": [
-   "used",
-   "household",
-   "second-hand",
-   "kitchen",
-   "cooker",
-   "electric-cooker",
-   "oven",
-   "hob",
-   "hotplates",
-   "cast-iron",
-   "enamel",
-   "white-goods",
-   "pallet",
-   "appliance",
-   "interior"
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "household",
+    "title": {
+     "en": "household",
+     "de": "Haushalt"
+    }
+   },
+   {
+    "id": "second-hand",
+    "title": {
+     "en": "second-hand",
+     "de": "Second-Hand"
+    }
+   },
+   {
+    "id": "kitchen",
+    "title": {
+     "en": "kitchen",
+     "de": "Küche"
+    }
+   },
+   {
+    "id": "cooker",
+    "title": {
+     "en": "cooker",
+     "de": "Herd"
+    }
+   },
+   {
+    "id": "electric-cooker",
+    "title": {
+     "en": "electric cooker",
+     "de": "Elektroherd"
+    }
+   },
+   {
+    "id": "oven",
+    "title": {
+     "en": "oven",
+     "de": "Backofen"
+    }
+   },
+   {
+    "id": "hob",
+    "title": {
+     "en": "hob",
+     "de": "Kochfeld"
+    }
+   },
+   {
+    "id": "hotplates",
+    "title": {
+     "en": "hotplates",
+     "de": "Kochplatten"
+    }
+   },
+   {
+    "id": "cast-iron",
+    "title": {
+     "en": "cast iron",
+     "de": "Gusseisen"
+    }
+   },
+   {
+    "id": "enamel",
+    "title": {
+     "en": "enamel",
+     "de": "Emaille"
+    }
+   },
+   {
+    "id": "white-goods",
+    "title": {
+     "en": "white goods",
+     "de": "Weiße Ware"
+    }
+   },
+   {
+    "id": "pallet",
+    "title": {
+     "en": "pallet",
+     "de": "Palette"
+    }
+   },
+   {
+    "id": "appliance",
+    "title": {
+     "en": "appliance",
+     "de": "Gerät"
+    }
+   },
+   {
+    "id": "interior",
+    "title": {
+     "en": "interior",
+     "de": "Innenausbau"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content (used household objects)",
@@ -21181,8 +21271,609 @@
     ]
    },
    "500": {
-    "status": "unavailable",
-    "denominator": 500
+    "status": "authored",
+    "denominator": 500,
+    "decisions": [
+     {
+      "en": "Body for the 75 mm feature: the pallet as one 144 mm slab; the cooker as one block from the pallet to the hob (casing, drawer, oven, fascia and hob slab merged), the four hotplates as discs of their true 199 and 163 mm that keep their 7 mm above the hob, and the oven door as one 75 mm leaf on the hinge that stands its true 30 mm proud, with the window as a glass block set 10 mm back; knobs, grip, tray and feet are below the feature and left out.",
+      "de": "Körper für das 75-mm-Merkmal: die Palette als eine 144-mm-Platte; der Herd als ein Block von der Palette bis zur Kochmulde (Gehäuse, Schublade, Backofen, Blende und Muldenplatte verschmolzen), die vier Kochplatten als Scheiben ihrer wahren 199 und 163 mm, die ihre 7 mm über der Mulde behalten, und die Backofentür als ein 75-mm-Blatt am Scharnier, das seine wahren 30 mm vorsteht, mit dem Fenster als 10 mm zurückgesetztem Glasblock; Knebel, Griff, Blech und Füße liegen unter dem Merkmal und entfallen."
+     },
+     {
+      "en": "Thermal: pallet, plates, door and door glass by reference, the block as 75 mm region solids (two sides, back, hob top, fascia, drawer front), a 75 mm oven vent and a 75 mm plume patch over the front left plate.",
+      "de": "Thermik: Palette, Platten, Tür und Türglas als Verweis, der Block als 75-mm-Regionskörper (zwei Seiten, Rückwand, Mulde, Blende, Schubladenfront), ein 75-mm-Backofenabzug und eine 75-mm-Auftriebsfläche über der Platte vorn links."
+     },
+     {
+      "en": "Structure: slab, block and door by reference, the block spanning drawer and tray, two 75 mm hinge joints and five mass markers.",
+      "de": "Tragwerk: Platte, Block und Tür als Verweis, der Block überspannt Schublade und Blech, zwei 75-mm-Scharniergelenke und fünf Massenmarken."
+     }
+    ],
+    "body": [
+     {
+      "id": "pallet-slab",
+      "kind": "box",
+      "bone": "pallet",
+      "material": "spruce-pallet",
+      "role": "body",
+      "tone": 0.55,
+      "size": [
+       0.6,
+       0.144,
+       0.8
+      ],
+      "transform": {
+       "translation": [
+        0.3,
+        0.072,
+        0
+       ]
+      }
+     },
+     {
+      "id": "cooker-block",
+      "kind": "box",
+      "bone": "carcass",
+      "material": "enamel-white-aged",
+      "role": "body",
+      "tone": 0.88,
+      "size": [
+       0.57,
+       0.85,
+       0.5
+      ],
+      "transform": {
+       "translation": [
+        0.285,
+        0.425,
+        0
+       ]
+      }
+     },
+     {
+      "id": "plates-large",
+      "kind": "revolve",
+      "bone": "carcass",
+      "material": "cast-iron-aged",
+      "role": "body",
+      "tone": 0.12,
+      "profile": [
+       [
+        0.782,
+        0
+       ],
+       [
+        0.782,
+        0.0995
+       ],
+       [
+        0.857,
+        0.0995
+       ],
+       [
+        0.857,
+        0
+       ]
+      ],
+      "axis": [
+       0,
+       1,
+       0
+      ],
+      "origin": [
+       0.41,
+       0,
+       0.12
+      ],
+      "repeat": {
+       "count": 2,
+       "translation": [
+        -0.25,
+        0,
+        -0.24
+       ]
+      }
+     },
+     {
+      "id": "plates-small",
+      "kind": "revolve",
+      "bone": "carcass",
+      "material": "cast-iron-aged",
+      "role": "body",
+      "tone": 0.12,
+      "profile": [
+       [
+        0.782,
+        0
+       ],
+       [
+        0.782,
+        0.0815
+       ],
+       [
+        0.857,
+        0.0815
+       ],
+       [
+        0.857,
+        0
+       ]
+      ],
+      "axis": [
+       0,
+       1,
+       0
+      ],
+      "origin": [
+       0.41,
+       0,
+       -0.12
+      ],
+      "repeat": {
+       "count": 2,
+       "translation": [
+        -0.25,
+        0,
+        0.24
+       ]
+      }
+     },
+     {
+      "id": "door-leaf",
+      "kind": "extrude",
+      "bone": "door",
+      "material": "enamel-white-aged",
+      "role": "body",
+      "tone": 0.9,
+      "profile": [
+       [
+        -0.247,
+        0
+       ],
+       [
+        0.247,
+        0
+       ],
+       [
+        0.247,
+        0.52
+       ],
+       [
+        -0.247,
+        0.52
+       ]
+      ],
+      "plane": "zx",
+      "from": 0,
+      "to": 0.075,
+      "holes": [
+       [
+        [
+         -0.16,
+         0.16
+        ],
+        [
+         0.16,
+         0.16
+        ],
+        [
+         0.16,
+         0.4
+        ],
+        [
+         -0.16,
+         0.4
+        ]
+       ]
+      ]
+     },
+     {
+      "id": "door-glass",
+      "kind": "box",
+      "bone": "door",
+      "material": "door-glass",
+      "role": "glazing",
+      "tone": 0.25,
+      "size": [
+       0.24,
+       0.065,
+       0.32
+      ],
+      "transform": {
+       "translation": [
+        0.28,
+        0.0425,
+        0
+       ]
+      }
+     }
+    ],
+    "thermal": [
+     {
+      "id": "th-pallet-slab",
+      "of": "pallet-slab",
+      "region": "pallet"
+     },
+     {
+      "id": "th-plates-large",
+      "of": "plates-large",
+      "region": "hotplates"
+     },
+     {
+      "id": "th-plates-small",
+      "of": "plates-small",
+      "region": "hotplates"
+     },
+     {
+      "id": "th-door-leaf",
+      "of": "door-leaf",
+      "region": "oven-door"
+     },
+     {
+      "id": "th-side-r",
+      "kind": "box",
+      "bone": "carcass",
+      "material": "enamel-white-aged",
+      "role": "body",
+      "tone": 0.88,
+      "size": [
+       0.57,
+       0.775,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.285,
+        0.3875,
+        -0.2125
+       ]
+      },
+      "region": "casing"
+     },
+     {
+      "id": "th-side-l",
+      "kind": "box",
+      "bone": "carcass",
+      "material": "enamel-white-aged",
+      "role": "body",
+      "tone": 0.88,
+      "size": [
+       0.57,
+       0.775,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.285,
+        0.3875,
+        0.2125
+       ]
+      },
+      "region": "casing"
+     },
+     {
+      "id": "th-back",
+      "kind": "box",
+      "bone": "carcass",
+      "material": "enamel-white-aged",
+      "role": "body",
+      "tone": 0.88,
+      "size": [
+       0.075,
+       0.775,
+       0.35
+      ],
+      "transform": {
+       "translation": [
+        0.0375,
+        0.3875,
+        0
+       ]
+      },
+      "region": "casing"
+     },
+     {
+      "id": "th-hob-top",
+      "kind": "box",
+      "bone": "carcass",
+      "material": "enamel-hob-stained",
+      "role": "body",
+      "tone": 0.82,
+      "size": [
+       0.57,
+       0.075,
+       0.5
+      ],
+      "transform": {
+       "translation": [
+        0.285,
+        0.8125,
+        0
+       ]
+      },
+      "region": "hob-top"
+     },
+     {
+      "id": "th-fascia",
+      "kind": "box",
+      "bone": "carcass",
+      "material": "enamel-white-aged",
+      "role": "body",
+      "tone": 0.86,
+      "size": [
+       0.075,
+       0.075,
+       0.35
+      ],
+      "transform": {
+       "translation": [
+        0.5325,
+        0.7375,
+        0
+       ]
+      },
+      "region": "fascia"
+     },
+     {
+      "id": "th-drawer",
+      "kind": "box",
+      "bone": "drawer",
+      "material": "enamel-white-aged",
+      "role": "body",
+      "tone": 0.86,
+      "size": [
+       0.075,
+       0.165,
+       0.35
+      ],
+      "transform": {
+       "translation": [
+        0.5325,
+        0.1125,
+        0
+       ]
+      },
+      "region": "drawer"
+     },
+     {
+      "id": "th-glass",
+      "of": "door-glass",
+      "region": "door-window"
+     },
+     {
+      "id": "th-oven-vent",
+      "kind": "box",
+      "bone": "carcass",
+      "material": "enamel-hob-stained",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.3
+      ],
+      "transform": {
+       "translation": [
+        0.0375,
+        0.82,
+        0
+       ]
+      },
+      "region": "hob-top",
+      "tags": [
+       "oven-vent"
+      ]
+     },
+     {
+      "id": "th-hob-plume",
+      "kind": "box",
+      "bone": "carcass",
+      "material": "cast-iron-aged",
+      "role": "detail",
+      "tone": 0.12,
+      "size": [
+       0.1,
+       0.075,
+       0.1
+      ],
+      "transform": {
+       "translation": [
+        0.41,
+        0.8945,
+        0.12
+       ]
+      },
+      "region": "hotplates",
+      "tags": [
+       "hob-plume"
+      ]
+     }
+    ],
+    "structure": [
+     {
+      "id": "m-pallet-slab",
+      "of": "pallet-slab",
+      "member": "pallet",
+      "part": "member",
+      "members": [
+       "pallet-deck"
+      ]
+     },
+     {
+      "id": "m-cooker-block",
+      "of": "cooker-block",
+      "member": "carcass",
+      "part": "member",
+      "members": [
+       "drawer",
+       "tray"
+      ]
+     },
+     {
+      "id": "m-door-leaf",
+      "of": "door-leaf",
+      "member": "door",
+      "part": "member"
+     },
+     {
+      "id": "m-door-glass",
+      "of": "door-glass",
+      "member": "door",
+      "part": "member"
+     },
+     {
+      "id": "j-hinge-r",
+      "kind": "box",
+      "bone": "door",
+      "material": "chrome-steel",
+      "role": "detail",
+      "tone": 0.5,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.0375,
+        0.0375,
+        -0.2095
+       ]
+      },
+      "member": "door",
+      "part": "joint"
+     },
+     {
+      "id": "j-hinge-l",
+      "kind": "box",
+      "bone": "door",
+      "material": "chrome-steel",
+      "role": "detail",
+      "tone": 0.5,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.0375,
+        0.0375,
+        0.2095
+       ]
+      },
+      "member": "door",
+      "part": "joint"
+     },
+     {
+      "id": "mass-carcass",
+      "kind": "box",
+      "bone": "carcass",
+      "material": "chrome-steel",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.296,
+        0.559,
+        0
+       ]
+      },
+      "member": "carcass",
+      "part": "mass"
+     },
+     {
+      "id": "mass-door",
+      "kind": "box",
+      "bone": "door",
+      "material": "chrome-steel",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.279,
+        0,
+        0
+       ]
+      },
+      "member": "door",
+      "part": "mass"
+     },
+     {
+      "id": "mass-drawer",
+      "kind": "box",
+      "bone": "drawer",
+      "material": "chrome-steel",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.352,
+        0.069,
+        0
+       ]
+      },
+      "member": "drawer",
+      "part": "mass"
+     },
+     {
+      "id": "mass-tray",
+      "kind": "box",
+      "bone": "tray",
+      "material": "chrome-steel",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.345,
+        0.453,
+        0
+       ]
+      },
+      "member": "tray",
+      "part": "mass"
+     },
+     {
+      "id": "mass-pallet",
+      "kind": "box",
+      "bone": "pallet",
+      "material": "chrome-steel",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.3,
+        0.061,
+        0
+       ]
+      },
+      "member": "pallet",
+      "part": "mass"
+     }
+    ]
    }
   },
   "presentation": {

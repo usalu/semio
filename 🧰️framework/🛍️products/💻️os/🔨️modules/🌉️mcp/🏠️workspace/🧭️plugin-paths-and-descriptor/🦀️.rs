@@ -172,8 +172,46 @@ pub fn retained_actor_preparation(path: &Path, plugin_id: &str) -> Result<Option
     }))
 }
 
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct MissingModelPolicy {
+    details_key: String,
+    cause: String,
+    summary: MissingModelSummary,
+}
+
+#[derive(Deserialize)]
+struct MissingModelSummary {
+    en: String,
+    de: String,
+}
+
+fn missing_model_policy() -> &'static MissingModelPolicy {
+    static POLICY: std::sync::OnceLock<MissingModelPolicy> = std::sync::OnceLock::new();
+    POLICY.get_or_init(|| {
+        let schema: serde_json::Value = serde_json::from_str(include_str!("../../📡️stdio/📦️component-models/🔣️.json")).expect("valid MCP model schema");
+        serde_json::from_value(schema["definitions"]["MissingModel"]["const"].clone()).expect("valid MCP missing model policy")
+    })
+}
+
+/// 🕳️ The retryable refusal naming the plugin whose model the launcher has not published; the launcher builds exactly that model on sight.
+pub fn missing_plugin_model_error(entry: &PluginRegistryEntry) -> GatewayError {
+    let policy = missing_model_policy();
+    let summary = |text: &str| text.replace("{pluginId}", &entry.plugin_id);
+    let mut details = serde_json::Map::new();
+    details.insert("cause".into(), policy.cause.clone().into());
+    details.insert(policy.details_key.clone(), serde_json::json!({ "pluginId": entry.plugin_id, "cratePath": entry.crate_path.to_string_lossy() }));
+    details.insert("summary".into(), serde_json::json!({ "en": summary(&policy.summary.en), "de": summary(&policy.summary.de) }));
+    GatewayError::new(GatewayErrorCode::PluginUnavailable, summary(&policy.summary.en)).with_details(details.into()).retryable()
+}
+
+/// 🔎️ The typed missing-model details of a refusal [`missing_plugin_model_error`] raised, so a layer that cannot carry `details` natively can carry exactly these.
+pub fn missing_model_details(error: &GatewayError) -> Option<&serde_json::Value> {
+    (error.code == GatewayErrorCode::PluginUnavailable && error.details.get(missing_model_policy().details_key.as_str()).is_some()).then_some(&error.details)
+}
+
 fn resolve_plugin_model_root(repo_root: &Path, entry: &PluginRegistryEntry) -> Result<PathBuf, GatewayError> {
-    let unavailable = || GatewayError::new(GatewayErrorCode::PluginUnavailable, format!("plugin `{}` has no retained component model; build its model and restart the gateway", entry.plugin_id)).retryable();
+    let unavailable = || missing_plugin_model_error(entry);
     let source = std::env::var(&component_model_policy().environment).map_err(|_| unavailable())?;
     let manifest = read_component_model_manifest(&source, env!("SEMIO_BUILD_MODE"))?;
     if !entry.owner_root.starts_with(repo_root) { return Err(unavailable()); }
@@ -222,7 +260,7 @@ pub fn load_package_descriptor(owner_root: &Path) -> Result<semio_framework::Pac
 
 #[cfg(test)]
 mod tests {
-    use super::read_component_model_manifest;
+    use super::{missing_plugin_model_error, read_component_model_manifest, PluginRegistryEntry};
 
     #[test]
     fn model_manifest_binds_the_exact_mode_crate_and_plugin() {
@@ -238,6 +276,15 @@ mod tests {
             }).collect();
             let manifest = serde_json::json!({"version": fixture["version"], "mode": mode, "models": models});
             assert_eq!(read_component_model_manifest(&manifest.to_string(), mode).is_ok(), row["expected"].as_bool().unwrap(), "{}", row["name"]);
+        }
+    }
+
+    #[test]
+    fn missing_model_refusal_names_the_plugin_as_the_launcher_schema_declares() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../📡️stdio/📦️component-models/🧪️tests/🔣️.json")).unwrap();
+        for row in fixture["missing"].as_array().unwrap() {
+            let entry = PluginRegistryEntry { plugin_id: row["pluginId"].as_str().unwrap().into(), owner_root: "/owner".into(), crate_path: row["cratePath"].as_str().unwrap().into() };
+            assert_eq!(missing_plugin_model_error(&entry).to_tool_error_payload(), row["payload"], "{}", row["name"]);
         }
     }
 }

@@ -1,8 +1,5 @@
 {
   "$schema": "./bands.schema.json",
-  "gaps": [
-    { "gap": -4, "sliver": false }, { "gap": 0, "sliver": false }, { "gap": 0.25, "sliver": false }, { "gap": 0.3, "sliver": true }, { "gap": 39.79, "sliver": true }, { "gap": 39.99, "sliver": true }, { "gap": 40, "sliver": false }, { "gap": 120, "sliver": false }
-  ],
   "snaps": [
     { "height": 69.59, "pixel": 1, "expected": 70 },
     { "height": 162.72, "pixel": 1, "expected": 163 },

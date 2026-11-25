@@ -13,14 +13,62 @@
    "de": "Ein abgelängter Hallenbinder GL24h 160 x 1000 mm und 12 m aus einer rückgebauten Halle: ein frisch gesägtes Ende, der verbliebene Stahlschuh mit zwei M20-Bolzen und vier leeren Bolzenlöchern am anderen Ende, Spuren ausgebauter Pfettenschuhe; hochkant auf drei Kanthölzern mit Holzkeilen gelagert, an einem Zweistrang-Rundschlingengehänge angehoben und über 11,75 m unter Dach-, Schnee- und Wartungslast wiedereingebaut."
   },
   "tags": [
-   "component",
-   "reclaimed",
-   "structural",
-   "timber",
-   "glulam",
-   "girder",
-   "beam",
-   "steel"
+   {
+    "id": "component",
+    "title": {
+     "en": "component",
+     "de": "Bauteil"
+    }
+   },
+   {
+    "id": "reclaimed",
+    "title": {
+     "en": "reclaimed",
+     "de": "wiederverwendet"
+    }
+   },
+   {
+    "id": "structural",
+    "title": {
+     "en": "structural",
+     "de": "tragend"
+    }
+   },
+   {
+    "id": "timber",
+    "title": {
+     "en": "timber",
+     "de": "Holz"
+    }
+   },
+   {
+    "id": "glulam",
+    "title": {
+     "en": "glulam",
+     "de": "Brettschichtholz"
+    }
+   },
+   {
+    "id": "girder",
+    "title": {
+     "en": "girder",
+     "de": "Träger"
+    }
+   },
+   {
+    "id": "beam",
+    "title": {
+     "en": "beam",
+     "de": "Balken"
+    }
+   },
+   {
+    "id": "steel",
+    "title": {
+     "en": "steel",
+     "de": "Stahl"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage component authors",

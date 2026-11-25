@@ -1,0 +1,21 @@
+[
+  {"op": "plan-revolve", "scale": "50", "id": "thigh-l"},
+  {"op": "plan-revolve", "scale": "50", "id": "shank-l"},
+  {"op": "plan-revolve", "scale": "100", "id": "thigh-l"},
+  {"op": "plan-revolve", "scale": "100", "id": "shank-l"},
+  {"op": "plan-revolve", "scale": "100", "id": "thigh-r"},
+  {"op": "front-sweep", "scale": "100", "id": "shank-r"},
+  {"op": "copy", "scale": "100", "id": "shank-r", "from": "front", "to": ["plan"]},
+  {"op": "front-sweep", "scale": "200", "id": "thigh-l"},
+  {"op": "plan-revolve", "scale": "200", "id": "thigh-l"},
+  {"op": "plan-revolve", "scale": "200", "id": "shank-l"},
+  {"op": "plan-revolve", "scale": "200", "id": "thigh-r"},
+  {"op": "front-sweep", "scale": "200", "id": "shank-r"},
+  {"op": "plan-revolve", "scale": "200", "id": "shank-r"},
+  {"op": "plan-revolve", "scale": "500", "id": "thigh-l"},
+  {"op": "plan-revolve", "scale": "500", "id": "shank-l"},
+  {"op": "plan-revolve", "scale": "500", "id": "thigh-r"},
+  {"op": "front-sweep", "scale": "500", "id": "shank-r"},
+  {"op": "copy", "scale": "500", "id": "shank-r", "from": "front", "to": ["plan"]},
+  {"scale": "100", "op": "copy", "id": "hand-l", "fromScale": "200", "from": "elevation", "to": ["elevation", "front", "plan"]}
+]

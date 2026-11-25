@@ -13,13 +13,55 @@
       "de": "Ein 0,5 m mal 0,6 m großer Wärmerückgewinnungsteil eines Lüftungsgeräts: ein verzinktes Gehäuse auf zwei Fußschienen um einen auf einer Ecke stehenden Kreuzstrom-Plattenkern aus Aluminium, vier DN-200-Stutzen an den Stirnwänden und eine Bypass-Klappe auf dem Deckel; im Schnitt durch den Kern gezeichnet."
     },
     "tags": [
-      "plate-heat-exchanger",
-      "heat-recovery",
-      "cross-flow",
-      "air-handling",
-      "bypass",
-      "dec",
-      "appliance"
+      {
+        "id": "plate-heat-exchanger",
+        "title": {
+          "en": "plate heat exchanger",
+          "de": "Plattenwärmeübertrager"
+        }
+      },
+      {
+        "id": "heat-recovery",
+        "title": {
+          "en": "heat recovery",
+          "de": "Wärmerückgewinnung"
+        }
+      },
+      {
+        "id": "cross-flow",
+        "title": {
+          "en": "cross-flow",
+          "de": "Querstrom"
+        }
+      },
+      {
+        "id": "air-handling",
+        "title": {
+          "en": "air handling",
+          "de": "Lufttechnik"
+        }
+      },
+      {
+        "id": "bypass",
+        "title": {
+          "en": "bypass",
+          "de": "Bypass"
+        }
+      },
+      {
+        "id": "dec",
+        "title": {
+          "en": "DEC",
+          "de": "DEC"
+        }
+      },
+      {
+        "id": "appliance",
+        "title": {
+          "en": "appliance",
+          "de": "Gerät"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage content (G2)",

@@ -9,6 +9,7 @@
     "host",
     "assetsDirectory",
     "panes",
+    "withheldExtensions",
     "invalidVariants",
     "catalogInputs",
     "brandInputs",
@@ -47,6 +48,14 @@
             "minLength": 1
           }
         }
+      }
+    },
+    "withheldExtensions": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
       }
     },
     "invalidVariants": {

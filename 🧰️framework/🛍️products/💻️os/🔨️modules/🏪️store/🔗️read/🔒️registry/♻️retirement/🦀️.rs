@@ -22,7 +22,6 @@ impl SnapshotReadRegistryAliasRetirement {
  pub fn strong_count(&self)->usize{self.registry.as_ref().map_or(usize::from(self.last_registry.is_some()),SnapshotReadRegistryHandle::strong_count)}
  pub fn alias_handle(&self)->&SnapshotReadRegistryHandle{self.registry.as_ref().expect("live source registry alias is unavailable after header retirement")}
  pub fn frame_byte_demand(&self)->Result<usize,ValueError>{if self.registry.is_some(){snapshot_registry_frame_bytes()}else{Ok(0)}}
- pub fn custody_byte_demand(&self)->Result<usize,ValueError>{self.demands().map(|demand|demand.release_bytes)}
  pub(crate) fn closed(&self)->bool{self.registry.is_none()&&self.last_registry.is_none()}
  fn demands(&self)->Result<RetirementDemand,ValueError>{
   if self.registry.is_some(){return Ok(RetirementDemand{release_bytes:snapshot_registry_frame_bytes()?,depth:1,..Default::default()});}

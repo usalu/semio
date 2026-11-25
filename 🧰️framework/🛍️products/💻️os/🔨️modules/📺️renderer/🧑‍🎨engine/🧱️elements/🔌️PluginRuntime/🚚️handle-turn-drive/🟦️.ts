@@ -112,10 +112,22 @@ export function createSpawnedJobDriver(scope: PluginHandleScope, instances: Retu
   const runningJobs = new Set<string>();
   /** 🛑️ Cancels a job only while the guest owns it, as `ShardLoop::pump` does with its `running_jobs`: a terminal reached ahead
    * of the cancel in the actor's ingress order already released the job, and the guest refuses a cancel without an owner. */
+  const cancelOwnedJob = (actorId: string, job: bigint): Promise<boolean> => serializeCommandIngressForActor(actorId, async () => {
+    const key = `${actorId}#${job}`;
+    if (!runningJobs.has(key)) return false;
+    await shardClient.cancelJob(actorId, job);
+    runningJobs.delete(key);
+    return true;
+  });
   const cancelSpawnedJob = (instanceId: number, actorId: string, job: bigint): void => {
-    void serializeCommandIngressForActor(actorId, async () => {
-      if (runningJobs.has(`${actorId}#${job}`)) await shardClient.cancelJob(actorId, job);
-    }).catch(error => turnOutcomes.push({ instanceId, error }));
+    void cancelOwnedJob(actorId, job).catch(error => turnOutcomes.push({ instanceId, error }));
+  };
+  /** 🧹️ A drive that ends before its job's terminal (its instance closed, or a step failed) cancels the job it still owns:
+   * an orphaned guest job is never stepped, closed or released again, so the actor never quiesces and its stock is never renewed
+   * (`🎭️actor/🎟️retained-turn` `OriginalStockSuccession`). */
+  const releaseSpawnedJob = (instanceId: number, actorId: string, job: bigint): void => {
+    if (state.disposing) runningJobs.delete(`${actorId}#${job}`);
+    else cancelSpawnedJob(instanceId, actorId, job);
   };
   const pendingReservedJobDrives: Promise<void>[] = [];
   const flushReservedJobDrives = async (): Promise<void> => {
@@ -237,10 +249,15 @@ export function createSpawnedJobDriver(scope: PluginHandleScope, instances: Retu
       }
     } catch (error) {
       turnOutcomes.push({ instanceId, error });
+      try {
+        if (live() && await cancelOwnedJob(actorId, job) && live()) await deliverJobCompletion(instanceId, actorId, job, { status: "failed", value: new TextEncoder().encode("plugin.job-drive-failed") });
+      } catch (failure) {
+        turnOutcomes.push({ instanceId, error: failure });
+      }
     } finally {
       ledgerEntry.end();
       endIsolatedJobDrive();
-      runningJobs.delete(key);
+      releaseSpawnedJob(instanceId, actorId, job);
       drivingJobs.delete(key);
       nextJobProgressRefreshMs.delete(key);
     }
@@ -272,7 +289,7 @@ export function createSpawnedJobDriver(scope: PluginHandleScope, instances: Retu
       }
     } finally {
       endIsolatedJobDrive();
-      runningJobs.delete(key);
+      releaseSpawnedJob(instanceId, actorId, job);
       drivingJobs.delete(key);
     }
   };
@@ -515,7 +532,7 @@ export function createTurnPump(scope: PluginHandleScope, instances: ReturnType<t
             serializeCommandIngressForActor(actorId, async () => {
               activation.assertActive();
               return settlePluginTurn(actorId, await submitTurn(actorId, [], { lane: "UserVisible", activation }), "UserVisible", new Set(), (turn) => acceptUiPatches(instanceId, turn), false, activation, call);
-            }),
+            }, "UserVisible"),
           );
           const frames: Uint8Array[] = [];
           const leftover = pendingCompletionEffects.get(instanceId) ?? [];

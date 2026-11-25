@@ -1,0 +1,15 @@
+const res={};
+await fresh();
+await row(/e5 · Beam/); await page.waitForTimeout(1500);
+if(!/ID e5/.test(await insp())){await clickBtn("Inspection",{exact:true});} await page.waitForTimeout(2500);
+await pickOpt(IS("element.material"),/C30\/37/);
+await page.waitForTimeout(8000);
+const all=[]; const h=m=>all.push(m.type()+" "+m.text().slice(0,300)); page.on("console",h);
+await clickBtn("History",{exact:true}); await page.waitForTimeout(3000);
+await page.getByRole("button",{name:"Undo",exact:true}).first().click({timeout:6000});
+await page.waitForTimeout(15000);
+page.off("console",h);
+res.all=all.slice(0,60); res.n=all.length;
+res.rows=(await page.getByRole("treeitem").allTextContents()).filter(t=>/Change|Undo|Redo|Set|Add/.test(t)).slice(0,12);
+await shot("ix/undo2");
+return res;

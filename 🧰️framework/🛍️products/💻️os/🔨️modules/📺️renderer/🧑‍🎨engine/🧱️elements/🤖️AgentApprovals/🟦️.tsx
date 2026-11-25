@@ -112,9 +112,9 @@ function RiskBadge({ risk }: { readonly risk: ApprovalRisk | null }): ReactEleme
   const highLabel = useLabel(agentUiLabel("os.agent.approvals.riskHigh"));
   if (!risk) return null;
   const text = risk === "low" ? lowLabel : risk === "medium" ? mediumLabel : highLabel;
-  const tone = risk === "low" ? "bg-info/20 text-info" : risk === "medium" ? "bg-warning/20 text-warning" : "bg-destructive/20 text-destructive";
+  const tone = risk === "low" ? "bg-info/20 text-info-ink" : risk === "medium" ? "bg-warning/20 text-warning-ink" : "bg-destructive/20 text-destructive";
   return (
-    <span className={`rounded-sm px-single py-0.5 text-xs ${tone}`} data-semio-agent-approval-risk={risk}>
+    <span className={` px-single py-0.5 text-xs ${tone}`} data-semio-agent-approval-risk={risk}>
       {text}
     </span>
   );
@@ -165,7 +165,7 @@ export function AgentApprovalAffordance({ approvalId, summary, requestedAtMs, st
   const decidable = pending && onDecision !== undefined;
 
   return (
-    <section id={agentApprovalElementId(approvalId)} tabIndex={-1} aria-labelledby={titleId} data-semio-agent-approval-id={approvalId} data-semio-agent-approval-state={pending ? "pending" : state === "withdrawn" ? "withdrawn" : (decision ?? "resolved")} data-semio-agent-approval-withdrawal={withdrawal ?? ""} className="flex min-w-0 flex-col gap-single rounded-sm pt-single text-xs text-foreground outline-none [&>:not([role=group])]:px-single">
+    <section id={agentApprovalElementId(approvalId)} tabIndex={-1} aria-labelledby={titleId} data-semio-agent-approval-id={approvalId} data-semio-agent-approval-state={pending ? "pending" : state === "withdrawn" ? "withdrawn" : (decision ?? "resolved")} data-semio-agent-approval-withdrawal={withdrawal ?? ""} className="flex min-w-0 flex-col gap-single pt-single text-xs text-foreground outline-none [&>:not([role=group])]:px-single">
       <p id={titleId} className="min-w-0 break-words" data-semio-agent-approval-verb={parsed.capabilityId ?? ""}>
         <span className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">{parsed.capabilityTitle ? `${verbLabel}: ` : `${roleLabel}: `}</span>
         <span className="font-medium">{subject}</span>
@@ -229,7 +229,7 @@ export function AgentApprovalsNotice({ approvals, onReview }: { readonly approva
   if (!newest) return null;
   const text = approvals.length === 1 ? one : many;
   return (
-    <div role="status" aria-live="polite" aria-label={`${title}: ${text}`} data-semio-agent-approvals-waiting={approvals.length} className="flex items-center gap-single px-single text-2xs text-warning">
+    <div role="status" aria-live="polite" aria-label={`${title}: ${text}`} data-semio-agent-approvals-waiting={approvals.length} className="flex items-center gap-single px-single text-2xs text-warning-ink">
       <span className="sr-only">{announcement}</span>
       <span aria-hidden="true">{text}</span>
       <Button type="button" variant="ghost" icon="hand" id="framework.approvals.review" data-semio-agent-approvals-review={approvals[0]!.approvalId} text={reviewLabel} aria-label={`${reviewLabel}: ${text}`} onClick={() => onReview(approvals[0]!.approvalId)} />

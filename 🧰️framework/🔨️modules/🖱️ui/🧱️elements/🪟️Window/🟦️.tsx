@@ -21,15 +21,15 @@ import { interactiveActiveFillClass } from "../../🔨️modules/🖱️interact
 import { type UiStatus, uiSpacingPx } from "@semio-tech/ui-styling";
 import { ExternalLinkIcon, Minimize2Icon, Maximize2Icon, CloseIcon } from "../🔣️Icons/🟦️.tsx";
 import { PaneHost, Pane } from "../📌️WindowPane/🟦️.tsx";
-import { observeChipRowAbuts, settlePaneChipAbuts } from "../🗂️WindowChrome/chip-abut.ts";
 import { type EngagementSpec, Engagement } from "../🎮️Engagement/🟦️.tsx";
 import { type SearchSpec, UI_WINDOW_SEARCH, routeWindowSearchEscape, shouldRouteKeysToWindowSearch, Search, focusActiveSearchInput } from "../🔍️WindowSearch/🟦️.tsx";
 import { windowMeasuresDefaultWidthPx, windowMeasuresMinWidthPx, windowMeasuresMaxWidthPx, WINDOW_PANE_MEASURES_ICON, WINDOW_PANE_ACTIONS_ICON, WINDOW_PANE_SEARCH_ICON, WINDOW_PANE_UTILITIES_ICON, windowChromeClearedTopOffset } from "../../🔨️modules/📐️window-measures/🟦️.ts";
-import { useChromePanelSafeArea, chromePanelSafeAreaStyle } from "../../🔨️modules/🛟️chrome-safe-area/🟦️.tsx";
+import { useChromePanelSafeArea, chromePanelSafeAreaStyle, useShellChromePanelBoxes } from "../../🔨️modules/🛟️chrome-safe-area/🟦️.tsx";
 import { windowMeasuresBodyClass, windowEngagementBodyClass, utilityBarBodyClass } from "../../🔨️modules/🎨️chrome-class-names/🟦️.ts";
 import { useUiMobile } from "../../🔨️modules/📱️ui-mobile-context/🟦️.tsx";
-import { type WindowPaneId, type WindowPaneOpen, resolveWindowPaneExpansion, windowPaneExclusiveMaxWidthPx, windowQuickActionsCovered } from "../../🔨️modules/🪟️window-pane-exclusivity/🟦️.ts";
+import { type WindowPaneId, type WindowPaneOpen, resolveWindowPaneExpansion, windowPaneExclusiveMaxWidthPx, windowQuickActionsCovered, windowViewportCoverMinShare, windowViewportInsetV1, type WindowViewportInsetV1 } from "../../🔨️modules/🪟️window-pane-exclusivity/🟦️.ts";
 import { GhostRegionShell } from "../👻️PanelGhost/🟦️.tsx";
+import { WindowFrameHostContext } from "../🗂️WindowChrome/🟦️.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🌊️Window
@@ -169,6 +169,7 @@ const Window: React.FC<WindowProps> = ({
   const searchLabel = useLabel(UI_WINDOW_SEARCH.title);
   const utilitiesLabel = useLabel("ui.common.utilities");
   const mobile = useUiMobile();
+  const hostedByFrame = reactHostPort.useContext(WindowFrameHostContext);
   const focusControl = !mobile && (onMaximize || onMinimize);
   const shellScope = useShellScopeOptional();
   const windowRef = reactHostPort.useRef<HTMLDivElement>(null);
@@ -226,6 +227,32 @@ const Window: React.FC<WindowProps> = ({
   const utilityExpanded = expanded.utility;
   const quickActionsCovered = windowQuickActionsCovered(expanded, exclusive);
   const utilityBarMaxHeightPx = useWindowUtilityBarMaxHeightPx(utilityExpanded, windowBodyRef);
+  const [viewportInset, setViewportInset] = reactHostPort.useState<WindowViewportInsetV1>({ leftPx: 0, rightPx: 0 });
+  const chromePanels = useShellChromePanelBoxes(shellScope?.rootRef.current ?? undefined);
+  reactHostPort.useLayoutEffect(() => {
+    const body = windowBodyRef.current;
+    if (!body || typeof ResizeObserver === "undefined") return;
+    const slots = ["window-engagement-overlay", "window-measures-overlay"] as const;
+    const sync = () => {
+      const bodyRect = body.getBoundingClientRect();
+      const tall = (top: number, bottom: number) => Math.min(bottom, bodyRect.bottom) - Math.max(top, bodyRect.top) >= bodyRect.height * windowViewportCoverMinShare;
+      const rects = [
+        ...slots.flatMap((slot) => body.querySelector(`[data-slot="${slot}"]:not([data-folded])`)?.getBoundingClientRect() ?? []),
+        ...chromePanels.map((panel) => panel.box),
+      ];
+      const spans = rects.filter((rect) => rect.right > rect.left && tall(rect.top, rect.bottom)).map((rect) => ({ leftPx: rect.left - bodyRect.left, rightPx: rect.right - bodyRect.left }));
+      const next = windowViewportInsetV1(bodyRect.width, spans);
+      setViewportInset((prev) => (prev.leftPx === next.leftPx && prev.rightPx === next.rightPx ? prev : next));
+    };
+    sync();
+    const ro = new ResizeObserver(sync);
+    ro.observe(body);
+    for (const slot of slots) {
+      const overlay = body.querySelector(`[data-slot="${slot}"]`);
+      if (overlay) ro.observe(overlay);
+    }
+    return () => ro.disconnect();
+  }, [chromePanels, engagementExpanded, measuresExpanded, measuresWidthPx, fill]);
   const togglePane = (pane: WindowPaneId, shown: boolean, setFolded: (folded: boolean) => void) => {
     if (shown) return setFolded(true);
     lastOpenedRef.current.last = pane;
@@ -236,8 +263,6 @@ const Window: React.FC<WindowProps> = ({
     if (pane !== "measures" && rawOpen.measures) setMeasuresFolded(true);
     if (pane !== "utility" && rawOpen.utility) setUtilityBarFolded(true);
   };
-
-  reactHostPort.useLayoutEffect(() => (windowBodyRef.current ? observeChipRowAbuts(windowBodyRef.current, settlePaneChipAbuts) : undefined), []);
 
   reactHostPort.useLayoutEffect(() => {
     const body = windowBodyRef.current;
@@ -336,6 +361,8 @@ const Window: React.FC<WindowProps> = ({
         data-slot="window"
         data-level="window"
         data-elevation-root=""
+        data-shared-border-frame={hostedByFrame ? undefined : ""}
+        data-shared-border-edges={hostedByFrame ? undefined : "top right bottom left"}
         data-active={active ? "true" : undefined}
         onDoubleClick={onDoubleClick}
         onPointerDownCapture={() => onActivate?.()}
@@ -350,7 +377,7 @@ const Window: React.FC<WindowProps> = ({
       >
         {hasControls ? <div ref={controlsRef} data-slot="window-controls-anchor" className="absolute top-0 right-0 z-panel flex items-stretch">{controlsContent}</div> : null}
         <div ref={windowBodyRef} data-slot="window-body" className={cn("relative flex min-w-0 flex-col overflow-hidden", fill ? "min-h-0 flex-1" : "h-auto shrink-0")}>
-          <PaneHost className={cn("flex min-w-0 flex-col", fill ? "min-h-0 flex-1" : undefined)}>{error ? <DefaultErrorDisplay error={error} /> : loading && skeleton ? skeleton : children}</PaneHost>
+          <PaneHost className={cn("flex min-w-0 flex-col", fill ? "min-h-0 flex-1" : undefined)} style={viewportInset.leftPx || viewportInset.rightPx ? { paddingLeft: viewportInset.leftPx, paddingRight: viewportInset.rightPx } : undefined}>{error ? <DefaultErrorDisplay error={error} /> : loading && skeleton ? skeleton : children}</PaneHost>
           {measures ? (
             <Pane
               id={childElementId("framework.window", id, "measures")}

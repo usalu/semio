@@ -1,9 +1,9 @@
 import descriptorSchema from"../../../../../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🧬️schema/🔣️.json"with{type:"json"};
-import{artifactRelativeFilePublicationStageNameV1}from"@semio-tech/framework-filesystem/observation/descriptor";
-import type{ArtifactReadFileIdentityV1,ArtifactRelativeFilePublicationPreparedDataV1}from"@semio-tech/framework-filesystem/observation/descriptor";
-import type{NativeStorageAllocationV1}from"@semio-tech/process/artifacts/native-build/storage";
-import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
-import nativeSchema from"@semio-tech/process/artifacts/native-build/storage/schema.json";
+import{artifactRelativeFilePublicationStageNameV1}from"../../../../../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
+import type{ArtifactReadFileIdentityV1,ArtifactRelativeFilePublicationPreparedDataV1}from"../../../../../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
+import type{NativeStorageAllocationV1}from"../../../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
+import{validateJsonSchemaSubset}from"../../../../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+import nativeSchema from"../../../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🧬️schema/🔣️json/🟦️.ts";
 import schema from"../../🧬️schema.json"with{type:"json"};
 import{createHash}from"node:crypto";
 /** 📜️ Persists one actual prepared publication event outside the directory whose roster it seals. */
@@ -25,4 +25,4 @@ export function requireRepositoryDependencyMarkerPublicationBindingV1(intent:Rep
  const key=(row:NativeStorageAllocationV1)=>JSON.stringify([row.id,row.owner,row.kind,row.phase,row.bytes,row.funding?.version,row.funding?.phase,row.funding?.targetBytes,row.funding?.contextSha256,row.funding?.predecessor.id,row.funding?.predecessor.owner,row.funding?.predecessor.kind,row.funding?.predecessor.phase,row.funding?.predecessor.bytes]);if(current.phase!=="settled"||key(intent.allocation)!==key(current.allocation)||intent.backingStamp!==current.backingStamp||intent.expectedSequence>current.expectedSequence||BigInt(intent.prepared.parent.dev)!==root.dev||BigInt(intent.prepared.parent.ino)!==root.ino||BigInt(intent.prepared.parent.mode)!==root.mode)throw Error("Fresh actual settled funding and original marker publication root required");
 }
 
-import{nativeFundingMetadataAllocationDataV1}from"@semio-tech/process/artifacts/native-build/storage";
+import{nativeFundingMetadataAllocationDataV1}from"../../../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";

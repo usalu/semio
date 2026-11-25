@@ -138,7 +138,7 @@ fn original_native_payload_cancels_at_every_actual_receiving_turn() {
         turns+=1;
         assert!(turns<=maximum);
     }
-    baseline.retire_owned(owner,loan());
+    baseline.retire_receiver(owner,loan());
     baseline.finish();
     for cut in 0..=turns {
         let mut caller=caller();
@@ -152,7 +152,7 @@ fn original_native_payload_cancels_at_every_actual_receiving_turn() {
             assert!(format!("{error:?}").to_lowercase().contains("cancel"));
             caller.retire_owned(error,loan());
         }
-        caller.retire_owned(owner,loan());
+        caller.retire_receiver(owner,loan());
         caller.finish();
     }
 }

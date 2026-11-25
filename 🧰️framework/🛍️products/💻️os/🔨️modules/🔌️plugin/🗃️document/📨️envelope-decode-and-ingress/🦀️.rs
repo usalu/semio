@@ -45,10 +45,24 @@ pub(crate) fn original_worker_lifecycle(cx:&mut semio_framework_job::StepContext
     })
 }
 
+/// 🪙️ Lends the phase to an owner whose nested sources post reserved return effects on the same context: its receipt covers them, so they leave the unposted debit once and rejoin the returned receipt.
+#[doc(hidden)]
+pub fn original_composed_lifecycle_step(cx:&mut semio_framework_job::StepContext<'_>,loan:RetainedCloneGrant,demand:RetirementDemand,advance:impl FnOnce(&mut semio_framework_job::StepContext<'_>,RetainedCloneGrant)->Result<(PluginLifecycleStep,bool),semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>)->Result<PluginLifecycleStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
+    use semio_plugin_ownership::bounded_ownership::{original_lifecycle_delta,original_lifecycle_step,original_plugin_turn_grant};
+    let grant=original_plugin_turn_grant(loan,cx.retained_grant());let reserved_before=cx.reserved_return_progress();
+    let mut step=original_lifecycle_step(cx,grant,demand,|same,_|{
+        let(mut step,terminal)=same.with_retained_loan(grant,|owner|advance(owner,grant).map_err(Into::into))?;
+        if let PluginLifecycleStep::Progress(progress)|PluginLifecycleStep::Complete(progress)=&mut step{let reserved=original_lifecycle_delta(reserved_before,same.reserved_return_progress())?;*progress=original_lifecycle_delta(reserved,*progress)?}
+        Ok((step,terminal))
+    })?;
+    if let PluginLifecycleStep::Progress(progress)|PluginLifecycleStep::Complete(progress)=&mut step{let reserved=original_lifecycle_delta(reserved_before,cx.reserved_return_progress())?;*progress=progress.checked_add(reserved)?}
+    Ok(step)
+}
+
 /// 🎟️ Retains the whole original rejected source through its actual context and paid terminal witness.
 #[doc(hidden)]
 pub fn original_rejection_lifecycle(cx:&mut semio_framework_job::StepContext<'_>,demand:RetirementDemand,grant:RetainedCloneGrant,reason:&'static str,owner:impl FnOnce(&mut semio_framework_job::StepContext<'_>)->Result<(semio_framework_job::InteractiveJobCloseStep,bool),semio_framework_job::OriginalTurnFailure>)->Result<PluginLifecycleStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
-    semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|cx,grant|{
+    original_composed_lifecycle_step(cx,grant,demand,|cx,grant|{
         let(step,terminal)=cx.with_retained_loan(grant,owner)?;let step=match step.admit(grant,terminal)?{
             semio_framework_job::InteractiveJobCloseStep::Pending{progress}|semio_framework_job::InteractiveJobCloseStep::Complete{progress}=>PluginLifecycleStep::Progress(progress),
             semio_framework_job::InteractiveJobCloseStep::Blocked=>PluginLifecycleStep::AwaitingInput{reason},
@@ -190,8 +204,10 @@ where
         }
         if self.outcome_pending{
             let session=self.session.as_mut().ok_or_else(||plugin_sdk_fault("envelope original outcome acknowledgement lost its session"))?;
+            let before=cx.retained_progress();let reserved=cx.reserved_return_progress();
             if session.acknowledge_checked_out_outcome(cx)?{self.outcome_pending=false;self.resume_pending=true;}
-            return Ok(PluginLifecycleStep::Progress(Default::default()));
+            let after=semio_plugin_ownership::bounded_ownership::original_lifecycle_net_after(cx.retained_progress(),reserved,cx.reserved_return_progress());
+            return Ok(PluginLifecycleStep::Progress(semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,after)?));
         }
         if self.resume_pending{
             if grant.maximum_copy_bytes<size_of::<bool>(){return Ok(PluginLifecycleStep::Progress(Default::default()));}

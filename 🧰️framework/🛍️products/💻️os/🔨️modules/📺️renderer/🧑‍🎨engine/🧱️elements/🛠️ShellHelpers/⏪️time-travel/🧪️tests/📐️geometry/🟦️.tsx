@@ -12,7 +12,8 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { compile } from "@tailwindcss/node";
 import { Scanner } from "@tailwindcss/oxide";
-import { chromium, type Browser } from "playwright";
+import { type Browser } from "playwright";
+import { launchChromium } from "../../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🌐️chromium-launch/🟦️";
 import { createElement, Fragment, type ReactElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -91,7 +92,7 @@ describe("📐️ the history-editing bands in a real browser under the real sty
   beforeAll(async () => {
     stylesheet = await compile(readFileSync(stylesPath, "utf8"), { base: dirname(stylesPath), from: stylesPath, onDependency: () => {} });
     stylesheet.build(new Scanner({ sources: stylesheet.sources }).scan());
-    browser = await chromium.launch({ headless: true });
+    browser = await launchChromium();
   }, 120_000);
   afterAll(async () => {
     await browser?.close();
@@ -118,11 +119,20 @@ describe("📐️ the history-editing bands in a real browser under the real sty
                 const hit = document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2);
                 return hit !== null && element.contains(hit);
               };
-              const rows = [...document.querySelector('[data-slot="layout"]')!.children];
+              const layout = document.querySelector('[data-slot="layout"]')!;
+              const bleed = layout.querySelector(':scope > [data-slot="layout-canvas-bleed"]');
+              const bandsHeight = (edge: string) => [...layout.querySelectorAll<HTMLElement>(`:scope > [data-layout-band="${edge}"]`)].reduce((sum, element) => sum + element.offsetHeight, 0);
+              (layout as HTMLElement).style.setProperty("--layout-clearance-top", `${bandsHeight("start")}px`);
+              (layout as HTMLElement).style.setProperty("--layout-clearance-bottom", `${bandsHeight("end")}px`);
+              (layout as HTMLElement).style.setProperty("--layout-subfooter-height", `${layout.querySelector<HTMLElement>(':scope > [data-slot="layout-subfooter"]')?.offsetHeight ?? 0}px`);
+              const rows = [...layout.children].filter((row) => row !== bleed);
               const slot = (row: Element) => row.getAttribute("data-slot") ?? row.querySelector(':scope > [data-slot="navbar"], :scope > [data-slot="footer"]')?.getAttribute("data-slot") ?? "region";
               return {
                 slots: rows.map(slot),
                 rows: rows.map(box),
+                layout: box(layout),
+                bleed: bleed === null ? null : { ...box(bleed), position: getComputedStyle(bleed).position, display: getComputedStyle(bleed).display },
+                bandsOnTop: [...layout.querySelectorAll(':scope > [data-layout-band]')].map((edge) => onTop(edge)),
                 bands: [...document.querySelectorAll("[data-semio-time-travel], [data-semio-history-reprojection]")].map((surface) => ({ ...box(surface), background: getComputedStyle(surface).backgroundColor })),
                 panels: [...document.querySelectorAll('[data-slot="panel"][data-panel-visible="true"]')].map((panel) => ({ anchor: panel.getAttribute("data-anchor") ?? panel.getAttribute("data-panel"), ...box(panel) })),
                 controls: [...document.querySelectorAll("[data-semio-time-travel-control], [data-semio-history-reprojection-control]")].map((control) => ({ name: control.getAttribute("data-semio-time-travel-control") ?? control.getAttribute("data-semio-history-reprojection-control"), onTop: onTop(control), ...box(control) })),
@@ -132,14 +142,19 @@ describe("📐️ the history-editing bands in a real browser under the real sty
             });
             const where = `${viewport.name} ${locale}, ${scene.name}`;
             const [navbar, region, footer, row] = measured.rows as [Box, Box, Box, Box];
-            expect(measured.slots, `${where}: navbar, region, footer, bands — one row each`).toEqual(["navbar", "region", "footer", "layout-subfooter"]);
+            const bleed = measured.bleed!;
+            expect(bleed, `${where}: the canvas floor is its own layer beside the rows`).not.toBeNull();
+            if (viewport.mobile) expect(bleed.display, `${where}: an open mobile panel replaces the canvas floor`).toBe("none");
+            else expect([bleed.position, bleed.top <= measured.layout.top + 0.5, bleed.top <= navbar.top + 0.5, bleed.bottom >= footer.bottom - 0.5, bleed.bottom <= row.top + 0.5, bleed.width >= measured.layout.width - 0.5], `${where}: the canvas floor is absolute, runs from the top edge beneath navbar and footer and stops above the bands row`).toEqual(["absolute", true, true, true, true, true]);
+            expect(measured.bandsOnTop, `${where}: the navbar and footer bands win hit testing over the canvas floor at their centres`).toEqual([true, true]);
+            expect(measured.slots, `${where}: navbar, region, footer, bands — one in-flow row each, the canvas floor aside`).toEqual(["navbar", "region", "footer", "layout-subfooter"]);
             expect([navbar.bottom <= region.top + 0.5, region.bottom <= footer.top + 0.5, footer.bottom <= row.top + 0.5, row.bottom <= measured.viewport.height + 0.5, region.height > 0], `${where}: the rows stack top to bottom inside the viewport and the region keeps a height`).toEqual([true, true, true, true, true]);
             expect(measured.panels.map((panel) => panel.anchor), `${where}: the docks that are open`).toEqual(viewport.mobile ? ["mobilePanel"] : ["bottom-right", "bottom-left"]);
-            for (const panel of measured.panels.filter((entry) => entry.anchor !== "mobilePanel")) expect([panel.bottom > region.bottom + 1, panel.bottom <= footer.bottom + 0.5], `${where}: the open ${panel.anchor} dock pulls its cap below the region, into the footer band`).toEqual([true, true]);
+            for (const panel of measured.panels.filter((entry) => entry.anchor !== "mobilePanel")) expect([panel.top >= navbar.bottom - 0.5, panel.bottom <= footer.top + 0.5, panel.height > 0], `${where}: the open ${panel.anchor} dock lies between the navbar and footer bands and keeps a height`).toEqual([true, true, true]);
             expect(measured.bands.length, `${where}: its bands`).toBeGreaterThanOrEqual(1);
             for (const [index, surface] of measured.bands.entries()) {
               expect([surface.left >= 0, surface.right <= measured.viewport.width + 0.5, surface.top >= row.top - 0.5, surface.bottom <= row.bottom + 0.5], `${where}: band ${index} lies inside its row and the viewport`).toEqual([true, true, true, true]);
-              expect([apart(surface, navbar), apart(surface, region), apart(surface, footer), ...measured.panels.map((panel) => apart(surface, panel))], `${where}: band ${index} lies over neither navbar, region nor footer and under no dock`).toEqual([true, true, true, ...measured.panels.map(() => true)]);
+              expect([apart(surface, navbar), apart(surface, region), apart(surface, footer), ...(viewport.mobile ? [] : [apart(surface, bleed)]), ...measured.panels.map((panel) => apart(surface, panel))], `${where}: band ${index} lies over neither navbar, region, footer nor the canvas floor and under no dock`).toEqual([true, true, true, ...(viewport.mobile ? [] : [true]), ...measured.panels.map(() => true)]);
               expect([surface.background, alpha(surface.background)], `${where}: band ${index} paints an opaque surface`).toEqual([surface.background, 1]);
               for (const other of measured.bands.slice(index + 1)) expect(apart(surface, other), `${where}: bands ${index} and ${index + 1} do not overlap`).toBe(true);
             }

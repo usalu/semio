@@ -272,7 +272,7 @@ fn live_handles(document: &En1996Snapshot, selection: &[semio_s_plugin_norm_stru
     viewport::handles_of(document, selection)
 }
 
-semio_s_plugin_norm_app_surface::norm_live_editor!(En1996PlayApp, En1996Command, handles = live_handles, entities = live_entities, palette = viewport::insert_specs, resolve = semio_s_artifact_norm_en1996_mutations::resolve_edit, scene = |d, r, _| viewport::scene_of(d, r), diagrams = |d, r| diagrams::all(d, r));
+semio_s_plugin_norm_app_surface::norm_live_editor!(En1996PlayApp, En1996Command, handles = live_handles, entities = live_entities, palette = viewport::insert_specs, resolve = semio_s_artifact_norm_en1996_mutations_edit_rules::resolve_edit, scene = |d, r, _| viewport::scene_of(d, r), diagrams = |d, r| diagrams::all(d, r));
 #[cfg(test)]
 semio_s_plugin_norm_app_surface::norm_live_acceptance!(En1996PlayApp, entities = live_entities);
 #[cfg(test)]
@@ -283,10 +283,10 @@ semio_s_plugin_norm_app_surface::norm_latency_bench!(En1996PlayApp, variant = "e
 semio_s_plugin_norm_app_surface::norm_owned_tool_job_factory!(En1996BoundedCommandJobFactory, En1996PlayApp);
 
 impl semio_s_plugin_norm_app_surface::NormRetainedEditor for En1996PlayApp {
-    fn inspector_rules() -> &'static semio_s_plugin_norm_app_surface::NormEditRules { &semio_s_artifact_norm_en1996_mutations::EDIT_RULES }
+    fn inspector_rules() -> &'static semio_s_plugin_norm_app_surface::NormEditRules { &semio_s_artifact_norm_en1996_mutations_edit_rules::EDIT_RULES }
 
     fn inspector_resolve(document: &Self::Snapshot, edit: &semio_s_plugin_norm_app_surface::NormEdit) -> Result<Vec<Self::Mutation>, String> {
-        semio_s_artifact_norm_en1996_mutations::resolve_edit(document, edit)
+        semio_s_artifact_norm_en1996_mutations_edit_rules::resolve_edit(document, edit)
     }
 
     type Family = En1996Family;

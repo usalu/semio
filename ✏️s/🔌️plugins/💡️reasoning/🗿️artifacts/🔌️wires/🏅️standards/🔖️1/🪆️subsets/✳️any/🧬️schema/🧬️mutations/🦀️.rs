@@ -12,6 +12,7 @@ use crate::WiresSnapshot;
 pub enum WiresMutation {}
 
 semio_os_kernel::original_ordinal_operation_receiving!(WiresMutation);
+semio_os_kernel::artifact_persisted_binary_operation!(WiresMutation);
 
 impl semio_framework_pack_json::ArtifactCanonicalJsonTree for WiresMutation {
     fn canonical_tree_node(&self) -> Result<semio_framework_pack_json::ArtifactCanonicalJsonNode<'_>, semio_framework_value::ValueError> {

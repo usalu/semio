@@ -294,6 +294,20 @@
               "minimum": 10000,
               "maximum": 100000
             },
+            "interactiveReserveBasisPoints": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10000,
+              "description": "With the minimum and maximum: the memory kept for the interactive apps of the host (editor, assistant and its helpers, terminal), a share of its memory between the bounds; admission treats at least this much as taken by what is not granted, however little those apps hold right now."
+            },
+            "interactiveReserveMinimumMegabytes": {"type": "integer", "minimum": 0},
+            "interactiveReserveMaximumMegabytes": {"type": "integer", "minimum": 0},
+            "sessionCapBasisPoints": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10000,
+              "description": "The most memory one agent session may hold charged at once (the reservation of a ramping grant, what a grown grant measurably holds), a share of the host memory: a further request of a session that already holds reservations waits (reason session-cap) while the reservations plus its least need would pass it and another agent session has a request waiting that could itself be served under the cap; work-conserving: sessions whose competitors only hold grants, or that are alone on the host, are judged by memory alone."
+            },
             "childStartMegabytes": {
               "type": "integer",
               "minimum": 0,
@@ -501,7 +515,7 @@
               "type": "integer",
               "minimum": 1000,
               "maximum": 86400000,
-              "description": "How long an interactive request waits for memory before the deadline rules apply: the shrinkable minimum is admitted when the free memory above the floor covers it (also under a soft or hard stop), and the wait keeps naming the holders."
+              "description": "How long an interactive request waits for memory before a soft stop may admit a shrinkable minimum that fits. A hard stop continues to hold admission while the wait names the blockers."
             },
             "deadlineBatchMilliseconds": {
               "type": "integer",
@@ -512,7 +526,7 @@
               "type": "integer",
               "minimum": 1000,
               "maximum": 86400000,
-              "description": "How long a shrinkable request waits while nothing of ours runs and not even its minimum is free before it is refused as starved."
+              "description": "How long a request can wait without a fitting reservation or while a hard stop holds before it is refused as starved."
             }
           }
         },
@@ -757,7 +771,8 @@
           "type": "boolean"
         },
         "essential": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "The first elastic worker may start despite a shortage of free memory or a soft stop. Hard stops for critical pressure or active swap hold all workers."
         },
         "label": {
           "type": "string",
@@ -975,7 +990,8 @@
         "shrunk",
         "never",
         "starved",
-        "lent"
+        "lent",
+        "session-cap"
       ]
     },
     "WaitProgress": {
@@ -1250,7 +1266,8 @@
             "ramp",
             "quiet-limit",
             "never",
-            "starved"
+            "starved",
+            "session-cap"
           ],
           "properties": {
             "memory": {
@@ -1278,6 +1295,9 @@
               "type": "string"
             },
             "queue-order": {
+              "type": "string"
+            },
+            "session-cap": {
               "type": "string"
             },
             "ramp": {
@@ -1321,6 +1341,7 @@
             "countersUnavailable",
             "platformUnsupported",
             "quietUpgradeRequired",
+            "exactGrantRequired",
             "memoryNeverFits",
             "memoryStarved",
             "memoryWaitedOut"
@@ -1357,6 +1378,9 @@
               "type": "string"
             },
             "quietUpgradeRequired": {
+              "type": "string"
+            },
+            "exactGrantRequired": {
               "type": "string"
             },
             "memoryNeverFits": {
@@ -1509,6 +1533,7 @@
             "attaches": "too many disk images are attached",
             "load": "the cores are fully booked by our own running jobs",
             "queue-order": "an earlier request is still waiting",
+            "session-cap": "this agent session already holds its share of the memory reservations",
             "ramp": "too many learned reservations are still growing to their peak",
             "quiet-limit": "enough quiet reservations are already held",
             "never": "the request can never fit this machine",
@@ -1527,6 +1552,7 @@
             "platformUnsupported": "Host capacity does not support {platform}",
             "inheritedIdentifier": "Closed inherited host capacity grant identifier required",
             "quietUpgradeRequired": "a quiet request needs the full request it may grow into, under the same id",
+            "exactGrantRequired": "An explicit capacity command requires a live reservation of at least {minimum} MB and {cores} core(s); the current grant supplies {reserved} MB and {availablecores} core(s). Run it outside the enclosing grant or enable capacity admission.",
             "memoryNeverFits": "{operation} needs at least {minimum} MB of memory, but this machine has {total} MB of which {floor} MB stay reserved, so at most {capacity} MB can ever be given out. It cannot run here: use a machine with more memory (at least {needed} MB), or take the result from the fleet cache instead of computing it here.",
             "memoryStarved": "{operation} needs at least {minimum} MB of free memory, but after {seconds} s only {spare} MB are free above the {floor} MB floor of this machine ({total} MB) and nothing of ours is running, so waiting longer cannot help. Close other applications (or stop the resident graph service with `repo service host stop`, which can hold more than 1 GB) until {minimum} MB are free, then run the command again.",
             "memoryWaitedOut": "{operation} needs at least {minimum} MB of free memory, but after {seconds} s only {spare} MB are free above the {floor} MB floor of this machine ({total} MB); it is held by {holders}. The wait ends here instead of going on for ever: run the command again once those finish, or stop them."
@@ -1594,6 +1620,7 @@
             "attaches": "zu viele Disk-Images sind eingehängt",
             "load": "die Kerne sind von unseren laufenden Jobs voll belegt",
             "queue-order": "eine frühere Anfrage wartet noch",
+            "session-cap": "diese Agentensitzung hält schon ihren Anteil an Speicherreservierungen",
             "ramp": "zu viele gelernte Reservierungen wachsen noch auf ihren Spitzenwert an",
             "quiet-limit": "es werden schon genug ruhige Reservierungen gehalten",
             "never": "die Anfrage passt nie auf diesen Rechner",
@@ -1612,6 +1639,7 @@
             "platformUnsupported": "Die Rechnerkapazität unterstützt {platform} nicht",
             "inheritedIdentifier": "Eine gültige Kennung der geerbten Rechner-Kapazitätszusage ist erforderlich",
             "quietUpgradeRequired": "eine ruhige Anfrage braucht die volle Anfrage, in die sie wachsen darf, unter derselben Kennung",
+            "exactGrantRequired": "Ein Befehl mit expliziter Kapazitätsangabe benötigt eine aktive Reservierung von mindestens {minimum} MB und {cores} Kern(en). Die aktuelle Zusage stellt {reserved} MB und {availablecores} Kern(e) bereit. Den Befehl außerhalb der umgebenden Zusage ausführen oder die Kapazitätszulassung aktivieren.",
             "memoryNeverFits": "{operation} braucht mindestens {minimum} MB Speicher, dieser Rechner hat aber {total} MB, von denen {floor} MB reserviert bleiben, also können höchstens {capacity} MB vergeben werden. Es kann hier nicht laufen: einen Rechner mit mehr Speicher verwenden (mindestens {needed} MB) oder das Ergebnis aus dem Flottencache holen, statt es hier zu berechnen.",
             "memoryStarved": "{operation} braucht mindestens {minimum} MB freien Speicher, aber nach {seconds} s sind nur {spare} MB über der Untergrenze von {floor} MB dieses Rechners ({total} MB) frei, und nichts von uns läuft; längeres Warten hilft nicht. Andere Anwendungen schließen (oder den residenten Graphdienst mit `repo service host stop` beenden, er kann über 1 GB halten), bis {minimum} MB frei sind, und den Befehl dann erneut ausführen.",
             "memoryWaitedOut": "{operation} braucht mindestens {minimum} MB freien Speicher, aber nach {seconds} s sind nur {spare} MB über der Untergrenze von {floor} MB dieses Rechners ({total} MB) frei; belegt von {holders}. Das Warten endet hier, statt ewig weiterzugehen: den Befehl erneut ausführen, sobald diese fertig sind, oder sie beenden."

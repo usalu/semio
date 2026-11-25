@@ -1,6 +1,5 @@
 extern crate semio_os_kernel as store;
-#[path = "../../../../🧪️tests/🧰️support/🦀️.rs"]
-mod context;
+use semio_s_artifact_process_process3d_harness as context;
 use semio_s_artifact_process_process3d_panels::document::*;
 use semio_s_artifact_process_process3d_kit::{editor::process3d::terminology::process3d_measure_icon, editor::process3d::terminology::Process3dLabels};
 use semio_s_artifact_process_process3d_kit::{PROCESS3D_GRANULARITY_OBJECT, PROCESS3D_INTERACTION_DOMAIN, PROCESS_3D_PLAY_APP_ID};

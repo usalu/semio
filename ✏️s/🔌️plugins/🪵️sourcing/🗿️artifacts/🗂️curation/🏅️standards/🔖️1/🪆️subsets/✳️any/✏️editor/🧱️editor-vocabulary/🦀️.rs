@@ -73,9 +73,24 @@ pub fn sourcing_table_row(object_id: &str, cells: Vec<(&str, semio_plugin::Table
     semio_framework_value::DslValue::object(entries)
 }
 
+/// ⋯ The row "More" menu both tables share: curate one more (`curationAdd`, while stock lasts), curate one less (`curationSetCount` with `delta -1`) and remove the kind (`curationRemove`), each addressed to the row's kind and offered only while it can act.
+pub fn sourcing_row_menu(kind: &crate::ObjectKind, count: u32, labels: &crate::editor::sourcing::terminology::SourcingLabels) -> semio_plugin::TableCell {
+    let item = |icon: &str, label: semio_ui_locale::LabelText, action: ActionDescriptor| semio_plugin::UiTreeItemAction { icon_id: icon.into(), label: Some(label.into()), action, placement: Some(semio_plugin::UiTreeActionPlacement::Menu), disabled: false, reason: None };
+    let mut buttons = Vec::new();
+    if count < kind.availability {
+        buttons.push(item("plus", labels.curate, sourcing_table_action("curationAdd", Some(&kind.id))));
+    }
+    if count > 0 {
+        let less = semio_framework_value::DslValue::object([("objectId".to_string(), semio_framework_value::DslValue::String(kind.id.clone())), ("delta".to_string(), semio_framework_value::ToValue::to_value(&-1.0f64))]);
+        buttons.push(item("minus", labels.curate_less, ActionDescriptor { controller_id: SOURCING_CONTROLLER_ID.into(), action: "curationSetCount".into(), args: Some(less) }));
+        buttons.push(item("trash-2", labels.remove, sourcing_table_action("curationRemove", Some(&kind.id))));
+    }
+    semio_plugin::TableCell::Buttons { buttons }
+}
+
 /// 📊️ One sourcing table surface: `(id, label, sortable)` columns, [`sourcing_table_row`] records
-/// draggable under [`SOURCING_DRAG_MIME`], and `drop_action` answering a row dropped onto it.
-pub fn sourcing_table(surface_id: &str, columns: &[(&str, &str, bool)], rows: Vec<semio_framework_value::DslValue>, drop_action: &str, sort: Option<&crate::TableSort>, name: &str) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
+/// draggable under [`SOURCING_DRAG_MIME`], `drop_action` answering a row dropped onto it, and the rows of `selected_ids` painted selected.
+pub fn sourcing_table(surface_id: &str, columns: &[(&str, &str, bool)], rows: Vec<semio_framework_value::DslValue>, drop_action: &str, sort: Option<&crate::TableSort>, selected_ids: &[String], name: &str) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let columns = columns
         .iter()
         .map(|(id, label, sortable)| semio_framework_value::DslValue::object([("id".to_string(), semio_framework_value::DslValue::String(id.to_string())), ("label".to_string(), semio_framework_value::DslValue::String(label.to_string())), ("sortable".to_string(), semio_framework_value::DslValue::Bool(*sortable))]))
@@ -84,6 +99,7 @@ pub fn sourcing_table(surface_id: &str, columns: &[(&str, &str, bool)], rows: Ve
     scene.row_drag_mime = Some(SOURCING_DRAG_MIME.into());
     scene.drop_action_json = Some(semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(&sourcing_table_action(drop_action, None))));
     scene.sort_json = sort.map(|sort| semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(sort)));
+    scene.selection_json = Some(semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::object([("selectedIds".to_string(), semio_framework_value::DslValue::Array(selected_ids.iter().cloned().map(semio_framework_value::DslValue::String).collect()))])));
     scene.domain_id = Some(SOURCING_ROWS_DOMAIN.into());
     scene.domain_granularity_id = Some(SOURCING_OBJECT_GRANULARITY.into());
     semio_plugin::scene_surface(surface_id, semio_plugin::plugin_app_close_prelude::SurfaceKind::Table, &scene, name, None)

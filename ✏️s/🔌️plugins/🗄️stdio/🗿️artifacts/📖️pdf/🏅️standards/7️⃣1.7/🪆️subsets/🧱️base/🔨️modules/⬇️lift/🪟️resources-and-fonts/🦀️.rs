@@ -84,11 +84,7 @@ impl Lifter<'_> {
             map.ext_g_states.insert(entry.key.clone(), id);
         }
         for entry in resource_entries(self.source, resources, "ColorSpace").as_ref() {
-            let (id, fresh) = self.claim_id(Category::ColorSpace, &entry.key, entry.value.as_ref());
-            if fresh {
-                let color_space = lift_colour_space(&entry.value, self.source);
-                self.snapshot.color_spaces.push(PdfNamedColorSpace { name: id.clone(), color_space });
-            }
+            let id = self.lift_colour_space_entry(&entry.key, &entry.value);
             map.color_spaces.insert(entry.key.clone(), id);
         }
         for entry in resource_entries(self.source, resources, "Shading").as_ref() {
@@ -118,7 +114,17 @@ impl Lifter<'_> {
         map
     }
 
-    pub(crate) fn lift_ext_g_state_entry(&mut self, name: &str, value: &PdfObject) -> String {
+    /// 🎨️ Lifts one named colour space resource and returns its id.
+    pub fn lift_colour_space_entry(&mut self, name: &str, value: &PdfObject) -> String {
+        let (id, fresh) = self.claim_id(Category::ColorSpace, name, value.as_ref());
+        if fresh {
+            let color_space = lift_colour_space(value, self.source);
+            self.snapshot.color_spaces.push(PdfNamedColorSpace { name: id.clone(), color_space });
+        }
+        id
+    }
+
+    pub fn lift_ext_g_state_entry(&mut self, name: &str, value: &PdfObject) -> String {
         let (id, fresh) = self.claim_id(Category::ExtGState, name, value.as_ref());
         if fresh {
             let resolved = self.source.deref(value);
@@ -144,7 +150,7 @@ impl Lifter<'_> {
         id
     }
 
-    pub(crate) fn lift_shading_entry(&mut self, name: &str, value: &PdfObject) -> String {
+    pub fn lift_shading_entry(&mut self, name: &str, value: &PdfObject) -> String {
         let (id, fresh) = self.claim_id(Category::Shading, name, value.as_ref());
         if fresh {
             match lift_shading(&id, value, self.source) {
@@ -155,7 +161,7 @@ impl Lifter<'_> {
         id
     }
 
-    pub(crate) fn lift_pattern(&mut self, name: &str, value: &PdfObject) -> String {
+    pub fn lift_pattern(&mut self, name: &str, value: &PdfObject) -> String {
         let (id, fresh) = self.claim_id(Category::Pattern, name, value.as_ref());
         if !fresh {
             return id;
@@ -228,7 +234,7 @@ impl Lifter<'_> {
                 let mut id_of = |reference: &PdfObject| -> Option<String> { mask_ids.get(&reference.as_ref()?.num).cloned() };
                 let mut oc_id_of = |reference: &PdfObject| -> Option<String> { oc_ids.get(&(Category::OptionalContent, reference.as_ref()?)).cloned() };
                 let image = match lift_image(&id, dict, &data.to_vec_owner(), filters, self.source, &mut id_of, &mut oc_id_of) {Ok(image)=>image,Err(error)=>{self.admission_error=Some(error);return String::new();}};
-                self.source.record_role(value, PdfStreamRoleValue::Image { image: image.clone() });
+                self.source.record_role(value, PdfStreamRoleValue::Image { image: Box::new(image.clone()) });
                 self.snapshot.images.push(image);
                 for (mask_id, mask) in pending_masks {
                     self.lift_x_object_claimed(&mask_id, &mask);
@@ -279,12 +285,52 @@ pub(crate) fn self_font_id(_font: &PdfObject) -> Option<String> {
 //#endregion 🔖️Resources
 
 //#region 🔖️Fonts
+/// ⏸️ A claimed font between its dictionary lanes and its glyph programs: the reference builder in resumable steps.
+pub struct FontLift {
+    id: String,
+    dict: Vec<PdfDictEntry>,
+    head: FontHead,
+    to_unicode: Option<PdfToUnicode>,
+    procs: Vec<PdfDictEntry>,
+    next: usize,
+    char_procs: Vec<PdfCharProc>,
+    map: ResourceMap,
+    saved_scope: usize,
+}
+
+enum FontHead { Done(PdfFontKind), Type3 { encoding: PdfSimpleEncoding, first_char: u32, widths: Vec<f64>, descriptor: Option<PdfFontDescriptor> } }
+
+/// 🚦️ The outcome of starting a font: an id claimed before, or a claimed font still lifting.
+pub enum FontStart { Claimed(String), Lifting(Box<FontLift>) }
+
+impl FontLift {
+    /// 🔢️ Glyph programs not lifted yet.
+    pub fn remaining_glyphs(&self) -> usize { self.procs.len() - self.next }
+
+    /// 🎯️ The glyph program the next [`Lifter::lift_char_proc`] parses.
+    pub fn next_glyph(&self) -> Option<&PdfObject> { self.procs.get(self.next).map(|entry| &entry.value) }
+
+    /// 🆔️ The claimed font id.
+    pub fn id(&self) -> &str { &self.id }
+}
+
 impl Lifter<'_> {
     /// 🔤 Lifts a font dictionary and returns its id.
     pub fn lift_font(&mut self, name: &str, value: &PdfObject) -> String {
+        match self.begin_font(name, value) {
+            FontStart::Claimed(id) => id,
+            FontStart::Lifting(mut lift) => {
+                while self.lift_char_proc(&mut lift) {}
+                self.finish_font(*lift)
+            }
+        }
+    }
+
+    /// 🔤️ Claims a font and lifts every lane before its glyph programs (Type 3 resources included).
+    pub fn begin_font(&mut self, name: &str, value: &PdfObject) -> FontStart {
         let (id, fresh) = self.claim_id(Category::Font, name, value.as_ref());
         if !fresh {
-            return id;
+            return FontStart::Claimed(id);
         }
         let resolved = self.source.deref(value);
         let dict = resolved.as_dict().map(<[PdfDictEntry]>::to_vec).unwrap_or_default();
@@ -302,7 +348,10 @@ impl Lifter<'_> {
         let encoding = self.lift_simple_encoding(dict_get(&dict, "Encoding"));
         let first_char = dict_i64(&dict, "FirstChar").unwrap_or(0).max(0) as u32;
         let widths = dict_get(&dict, "Widths").map(|w| self.source.deref(w)).map(|w| numbers_of(Some(&w))).unwrap_or_default();
-        let kind = match subtype.as_str() {
+        let saved_scope = self.scope;
+        let mut map = ResourceMap::default();
+        let mut procs = Vec::new();
+        let head = match subtype.as_str() {
             "Type0" => {
                 let cmap = match dict_get(&dict, "Encoding").map(|e| self.source.deref(e)) {
                     Some(PdfObject::Name(name)) => PdfCMap::Predefined { name },
@@ -317,26 +366,41 @@ impl Lifter<'_> {
                     _ => PdfCMap::identity_h(),
                 };
                 let descendant = dict_get(&dict, "DescendantFonts").map(|d| self.source.deref(d)).and_then(|d| d.as_array().and_then(|items| items.first().cloned())).map(|d| self.source.deref(&d)).and_then(|d| d.as_dict().map(|d| self.lift_cid_font(d)));
-                PdfFontKind::Type0 { base_font, cmap, descendant: descendant.unwrap_or_else(|| PdfCidFont { true_type: true, base_font: String::new(), system_info: PdfCidSystemInfo::default(), descriptor: PdfFontDescriptor::default(), default_width: 1000.0, widths: Vec::new(), default_vertical: None, vertical_metrics: Vec::new(), cid_to_gid: None, program: None, extra: Vec::new() }) }
+                FontHead::Done(PdfFontKind::Type0 { base_font, cmap, descendant: descendant.unwrap_or_else(|| PdfCidFont { true_type: true, base_font: String::new(), system_info: PdfCidSystemInfo::default(), descriptor: PdfFontDescriptor::default(), default_width: 1000.0, widths: Vec::new(), default_vertical: None, vertical_metrics: Vec::new(), cid_to_gid: None, program: None, extra: Vec::new() }) })
             }
-            "TrueType" => PdfFontKind::TrueType { base_font, encoding, first_char, widths, descriptor, program },
+            "TrueType" => FontHead::Done(PdfFontKind::TrueType { base_font, encoding, first_char, widths, descriptor, program }),
             "Type3" => {
                 let resources = dict_get(&dict, "Resources").cloned().unwrap_or(PdfObject::Dict(Vec::new()));
-                let saved_scope = self.scope;
                 self.scope = value.as_ref().map_or(self.scope.wrapping_mul(31).wrapping_add(13), |r| r.num as usize);
-                let map = self.lift_resources(&resources);
-                let procs = dict_get(&dict, "CharProcs").map(|p| self.source.deref(p)).and_then(|p| p.as_dict().map(<[PdfDictEntry]>::to_vec)).unwrap_or_default();
-                let mut char_procs = Vec::new();
-                for entry in procs {
-                    if let PdfObject::Stream { data, .. } = self.source.deref(&entry.value) {
-                        let content = self.parse_and_rename(&entry.value, &data.to_vec_owner(), &map);
-                        char_procs.push(PdfCharProc { name: entry.key, content });
-                    }
-                }
+                map = self.lift_resources(&resources);
+                procs = dict_get(&dict, "CharProcs").map(|p| self.source.deref(p)).and_then(|p| p.as_dict().map(<[PdfDictEntry]>::to_vec)).unwrap_or_default();
+                FontHead::Type3 { encoding, first_char, widths, descriptor }
+            }
+            _ => FontHead::Done(PdfFontKind::Type1 { base_font, encoding, first_char, widths, descriptor, program }),
+        };
+        FontStart::Lifting(Box::new(FontLift { id, dict, head, to_unicode, procs, next: 0, char_procs: Vec::new(), map, saved_scope }))
+    }
+
+    /// 🔣️ Parses the next Type 3 glyph program into its own `Operators` role; false once every glyph is lifted.
+    pub fn lift_char_proc(&mut self, lift: &mut FontLift) -> bool {
+        let Some(entry) = lift.procs.get(lift.next).cloned() else { return false; };
+        lift.next += 1;
+        if let PdfObject::Stream { data, .. } = self.source.deref(&entry.value) {
+            let content = self.parse_and_rename(&entry.value, &data.to_vec_owner(), &lift.map);
+            lift.char_procs.push(PdfCharProc { name: entry.key, content });
+        }
+        lift.next < lift.procs.len()
+    }
+
+    /// 🏁️ Publishes a lifted font and its codec; returns its id.
+    pub fn finish_font(&mut self, lift: FontLift) -> String {
+        let FontLift { id, dict, head, to_unicode, char_procs, saved_scope, .. } = lift;
+        let kind = match head {
+            FontHead::Done(kind) => kind,
+            FontHead::Type3 { encoding, first_char, widths, descriptor } => {
                 self.scope = saved_scope;
                 PdfFontKind::Type3 { font_matrix: matrix_of(dict_get(&dict, "FontMatrix")).unwrap_or([0.001, 0.0, 0.0, 0.001, 0.0, 0.0]), font_bbox: rect_of(dict_get(&dict, "FontBBox")).unwrap_or([0.0; 4]), encoding, first_char, widths, char_procs, descriptor }
             }
-            _ => PdfFontKind::Type1 { base_font, encoding, first_char, widths, descriptor, program },
         };
         let font = PdfFont { id: id.clone(), kind, to_unicode, extra: extra_entries(&dict, &["Type", "Subtype", "BaseFont", "Name", "FirstChar", "LastChar", "Widths", "FontDescriptor", "Encoding", "ToUnicode", "DescendantFonts", "FontMatrix", "FontBBox", "CharProcs", "Resources"]) };
         match FontCodec::new(&font,&self.artifacts) {Ok(codec)=>{self.font_codecs.insert(id.clone(),codec);},Err(error)=>self.admission_error=Some(error)};

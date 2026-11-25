@@ -144,13 +144,15 @@ export class DevScript extends Script {
    * Streamable HTTP is the dashboard tool `tool:workspace/os-mcp-http` (build task `@semio-tech/framework-os-mcp-rs:dev`).
    * Extra argv passes straight through to the binary (`--folder`, `--hub`, `--principal`, `--scopes`, `--auto-approve`, …). */
   private async runMcpOs(extra: string[]): Promise<void> {
-    const { servePublishedMcpStdioV1, takeMcpPluginCatalog, stageMcpBinaryAsync, buildMcpArtifactV1, MCP_BINARY_TARGET } = await import("../../../../../💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/🟦️.ts");
+    const { servePublishedMcpStdioV1, createMcpPublicationProbeV1, takeMcpPluginCatalog, stageMcpBinaryAsync, buildMcpArtifactV1, MCP_BINARY_TARGET } = await import("../../../../../💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/🟦️.ts");
     const {withHandledScriptInvocationSignalV1} = await import("../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts");
     const catalog = takeMcpPluginCatalog(extra, this.root), stopped = new AbortController();
     const result = await withHandledScriptInvocationSignalV1(this.invocation,stopped.signal,async invocation=>{
       const control = createIssuedResourceControlV1(invocation, "dev:mcp:stdio", 0);
       const {projectOwnedBuildChildEnvironmentV1} = await import("../../🏗️build/📥️caller/📤️child/🟦️.ts");
+      const [{ ensureRootDependenciesV1 }, { rootCommandRegistryV1 }] = await Promise.all([import("../🗂️registry/🥾️provision/🟦️.ts"), import("../🗂️registry/🟦️.ts")]);
       const stage = async (target: string, progress: (line: string) => void, signal: AbortSignal): Promise<number> => {
+        await ensureRootDependenciesV1(this.root, rootCommandRegistryV1(), "dev", signal);
         if (target === MCP_BINARY_TARGET) {
           progress("[semio-os-mcp] building the owned native publication");
           await buildMcpArtifactV1(this.root,invocation,scriptCompilerAdmissionControlV1(invocation,"dev:mcp:build",0,signal),progress);
@@ -160,7 +162,8 @@ export class DevScript extends Script {
         const environment = await projectOwnedBuildChildEnvironmentV1(this.root, ["run", target, "--output=stream"], invocation, phase);
         return stageMcpBinaryAsync(this.root, progress, signal, target, environment);
       };
-      return servePublishedMcpStdioV1(this.root, catalog.args, invocation, control, scriptInvocationEnvironment(invocation, { ...process.env, ...catalog.env }), catalog.target, stage,reason=>stopped.abort(reason));
+      const launchEnvironment = scriptInvocationEnvironment(invocation, { ...process.env, ...catalog.env });
+      return servePublishedMcpStdioV1(this.root, catalog.args, invocation, control, launchEnvironment, catalog.target, stage,reason=>stopped.abort(reason), createMcpPublicationProbeV1(launchEnvironment));
     });
     process.exit(result.status==="completed"?result.value:0);
   }

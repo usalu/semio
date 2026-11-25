@@ -158,13 +158,13 @@ export function DesktopTitlebar({ title, controls, children }: DesktopTitlebarPr
       {children}
       {controls ? (
         <div className="ms-auto flex items-center gap-tiny" style={{ WebkitAppRegion: "no-drag" } as React.CSSProperties}>
-          <button type="button" onClick={controls.minimize} aria-label={minimizeLabel} className="cursor-pointer rounded-sm p-single text-muted-foreground transition-colors hover:bg-hover-window hover:text-foreground">
+          <button type="button" onClick={controls.minimize} aria-label={minimizeLabel} className="cursor-pointer p-single text-muted-foreground transition-colors hover:bg-hover-window hover:text-foreground">
             <Icon icon="minus" size="tiny" />
           </button>
-          <button type="button" onClick={controls.maximize} aria-label={maximizeLabel} className="cursor-pointer rounded-sm p-single text-muted-foreground transition-colors hover:bg-hover-window hover:text-foreground">
+          <button type="button" onClick={controls.maximize} aria-label={maximizeLabel} className="cursor-pointer p-single text-muted-foreground transition-colors hover:bg-hover-window hover:text-foreground">
             <Icon icon="square" size="tiny" />
           </button>
-          <button type="button" onClick={controls.close} aria-label={closeLabel} className="cursor-pointer rounded-sm p-single text-muted-foreground transition-colors hover:bg-destructive-bg hover:text-destructive-foreground">
+          <button type="button" onClick={controls.close} aria-label={closeLabel} className="cursor-pointer p-single text-muted-foreground transition-colors hover:bg-destructive-bg hover:text-destructive-foreground">
             <Icon icon="x" size="tiny" />
           </button>
         </div>

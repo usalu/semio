@@ -1,0 +1,11 @@
+--- a/✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/🦀️.rs
++++ b/✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/🦀️.rs
+@@ -45,7 +45,7 @@
+ pub use session_core::{mesh_payload_bytes, GeometryOperations, Session, SessionCapture};
+ #[path = "📤️mesh-export/🦀️.rs"]
+ mod mesh_export;
+-pub use mesh_export::NativeMeshExport;
++pub use mesh_export::{MeshExchange, NativeMeshExport};
+ 
+ /// 📤️ Exports tessellated shapes as one GLB mesh.
+ pub fn export_glb_via_tessellation(kernel: &Brep, shapes: &[GeometryHandle], deflection: f64) -> Result<Vec<u8>, BrepModuleError> {

@@ -1,0 +1,12 @@
+[
+ {
+  "name": "paper.tie",
+  "old": "      \"catalog\": { \"asset\": \"used-steel-oil-storage-tanks\", \"denominator\": 500, \"views\": [\"elevation\", \"plan\"] }\n    }\n  },",
+  "new": "      \"catalog\": { \"asset\": \"used-steel-oil-storage-tanks\", \"denominator\": 500, \"views\": [\"elevation\", \"plan\"] }\n    },\n    \"tie\": {\n      \"rule\": \"D50: a length is compared with its nominal one in whole micrometres, so a difference that equals the D18 tolerance is within it in metres and on the paper of every scale; one micrometre more is a finding everywhere\",\n      \"nominalM\": \"1.15\",\n      \"toleranceM\": \"0.023\",\n      \"withinM\": \"1.127\",\n      \"beyondM\": \"1.126998\",\n      \"denominators\": [20, 50, 75, 100, 150],\n      \"catalog\": { \"asset\": \"used-harmonium\", \"denominators\": [50, 100], \"view\": \"elevation\" }\n    }\n  },\n  \"blank\": {\n    \"rule\": \"a shape counts as drawn by its fill (shape:<id>) or by an outline run (outline:<id>:<n>); blank-shapes is reported only when neither exists for any shape of the view, and the reason reads the pens of the representation or of the symbol that is drawn\",\n    \"denominator\": 50,\n    \"unfilled\": { \"id\": \"block\", \"x\": -0.1, \"y\": 0, \"w\": 0.45, \"h\": 0.6 },\n    \"undrawnRole\": \"texture\",\n    \"undrawnDenominator\": 500,\n    \"modes\": [\"dark-line\", \"dark-solid\", \"light-line\", \"light-solid\", \"thermal\"],\n    \"symbol\": { \"asset\": \"kneeling-gardener\", \"symbol\": \"gardener-block\", \"denominator\": 200, \"shape\": \"block\", \"penMm\": 0.18 }\n  },"
+ },
+ {
+  "name": "allowlists.rule",
+  "old": "    \"inBand\": { \"view\": \"plan\", \"reason\": { \"en\": \"A body of revolution: the plan is the same circle as the elevation.\", \"de\": \"Ein Rotationskörper: die Draufsicht ist derselbe Kreis wie die Ansicht.\" } }\n  },",
+  "new": "    \"inBand\": { \"view\": \"plan\", \"reason\": { \"en\": \"A body of revolution: the plan is the same circle as the elevation.\", \"de\": \"Ein Rotationskörper: die Draufsicht ist derselbe Kreis wie die Ansicht.\" } },\n    \"inBandBands\": \"D51: a derivedViewAllowlist entry may carry bands: [scale key, …] (one or more different authored keys); it then allows derived-view-in-band of that view in the named bands only, without bands in every band\"\n  },"
+ }
+]

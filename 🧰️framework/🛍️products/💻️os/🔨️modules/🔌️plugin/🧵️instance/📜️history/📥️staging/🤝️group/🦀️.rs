@@ -13,7 +13,7 @@ use semio_plugin_decl_emission::Emit;
 use semio_framework::FaultFrom;
 use store::MemberFactory;
 use store::SpaceMember;
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use crate::history_components::CommandHistory;
 use std::future::Future;

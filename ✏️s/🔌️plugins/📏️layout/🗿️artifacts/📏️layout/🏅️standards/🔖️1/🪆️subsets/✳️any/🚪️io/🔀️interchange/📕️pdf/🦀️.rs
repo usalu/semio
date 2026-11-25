@@ -115,16 +115,16 @@ fn image_bytes(pdf:&PdfSnapshot,image:&semio_s_artifact_stdio_pdf::standards::v1
             let PdfObject::Stream{data,..}=NativePdfArtifactResources::from_objects(&pdf.objects).resolve(reference).map_err(|error|error.to_string())? else{return Err("layout.pdf.image-resource".into());};
             Ok(("image/jpeg".into(),data.to_vec_owner()))
         },
-        PdfImageBody::Samples{values}=>{
+        PdfImageBody::Samples{packed}=>{
             use semio_s_artifact_stdio_png::{PngSnapshot,schema::snapshot::PngColorType,standards::v1_2::subsets::any::io::encode_png};
             if image.bits_per_component!=8{return Err("layout.pdf.image-bit-depth".into());}
             let components=match image.color_space.as_ref(){Some(PdfColorSpace::DeviceRgb)=>3,Some(PdfColorSpace::DeviceGray)=>1,_=>return Err("layout.pdf.image-colour-space".into())};
             if u64::from(image.width)*u64::from(image.height)>4_194_304{return Err("layout.pdf.image-pixel-limit".into());}
             let pixels=image.width as usize*image.height as usize;
-            if values.len()!=pixels*components{return Err("layout.pdf.image-samples".into());}
-            let alpha=if let Some(id)=&image.soft_mask{let mask=pdf.images.iter().find(|mask|&mask.id==id).ok_or("layout.pdf.missing-soft-mask")?;if mask.width!=image.width||mask.height!=image.height||mask.bits_per_component!=8||mask.color_space!=Some(PdfColorSpace::DeviceGray){return Err("layout.pdf.soft-mask-shape".into());}let PdfImageBody::Samples{values}=&mask.body else{return Err("layout.pdf.soft-mask-codec".into());};if values.len()!=pixels{return Err("layout.pdf.soft-mask-samples".into());}Some(values)}else{None};
+            if packed.len()!=pixels*components{return Err("layout.pdf.image-samples".into());}
+            let alpha=if let Some(id)=&image.soft_mask{let mask=pdf.images.iter().find(|mask|&mask.id==id).ok_or("layout.pdf.missing-soft-mask")?;if mask.width!=image.width||mask.height!=image.height||mask.bits_per_component!=8||mask.color_space!=Some(PdfColorSpace::DeviceGray){return Err("layout.pdf.soft-mask-shape".into());}let PdfImageBody::Samples{packed:mask}=&mask.body else{return Err("layout.pdf.soft-mask-codec".into());};if mask.len()!=pixels{return Err("layout.pdf.soft-mask-samples".into());}Some(mask)}else{None};
             let mut samples=Vec::with_capacity(pixels*4);
-            for (index,pixel) in values.chunks_exact(components).enumerate(){let channels=if components==3{[pixel[0],pixel[1],pixel[2],alpha.map_or(255,|values|values[index])]}else{[pixel[0],pixel[0],pixel[0],alpha.map_or(255,|values|values[index])]};for value in channels{if value>255{return Err("layout.pdf.image-sample".into());}samples.push(value as u16);}}
+            for (index,pixel) in packed.chunks_exact(components).enumerate(){let opacity=alpha.map_or(255,|mask|mask[index]);let channels=if components==3{[pixel[0],pixel[1],pixel[2],opacity]}else{[pixel[0],pixel[0],pixel[0],opacity]};samples.extend(channels.map(u16::from));}
             let mut snapshot=PngSnapshot::default();snapshot.image.width=image.width;snapshot.image.height=image.height;snapshot.image.color_type=PngColorType::Rgba;snapshot.image.samples=samples;
             Ok(("image/png".into(),encode_png(&snapshot)?))
         }

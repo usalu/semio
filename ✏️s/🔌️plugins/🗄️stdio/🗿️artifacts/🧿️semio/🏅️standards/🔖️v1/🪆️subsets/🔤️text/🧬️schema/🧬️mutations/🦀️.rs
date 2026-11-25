@@ -49,6 +49,7 @@ pub enum SemioTextMutation {
     RemoveMark(remove_mark::RemoveMark),
 }
 dsl::original_pack_value_operation_receiving!(SemioTextMutation);
+dsl::artifact_persisted_binary_operation!(SemioTextMutation);
 
 /// 🏷️ Kebab-case spelling of every `SemioTextMutation` variant, in declaration order — the
 /// vocabulary the `semio-v1-text` mutation catalog (`../../🔣️oracle.json`) declares and

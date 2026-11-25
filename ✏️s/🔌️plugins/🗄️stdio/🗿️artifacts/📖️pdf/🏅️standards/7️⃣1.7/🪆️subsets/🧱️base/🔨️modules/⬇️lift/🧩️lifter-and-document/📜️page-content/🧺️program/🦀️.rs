@@ -1,8 +1,8 @@
 //! 📦️ Collects a controlled page's qualified program into the native vector lane.
 
 use super::{controlled::{signal, worked}, ObjRef, ObjectSource, PageContentBarrier, PageContentCursor, PageContentEvent as Event, PageContentReceipt};
-use crate::standards::v1_7::subsets::base::modules::{content::{FontTable, NoFonts}, lexer::CosGrant};
-use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfOp, PdfTextString, PdfTextArrayItem};
+use crate::standards::v1_7::subsets::base::modules::{content::{ContentProgramCursor, FontTable, NoFonts}, lexer::CosGrant};
+use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfOp, PdfPropertyList, PdfTextString, PdfTextArrayItem};
 use std::mem::{size_of, take};
 use std::vec::IntoIter;
 
@@ -69,6 +69,22 @@ impl PageProgramCursor {
         }
     }
 
+    /// 📦️ Whether the next unit reserves the empty, doubled operator vector the collected operators then migrate into one by one: an empty reservation that copies nothing, bounded by the host's release grant rather than its copy grant.
+    pub fn reserving_empty_backing(&self) -> bool { matches!(self.stage, Stage::Collect) && self.commands.len() == self.commands.capacity() }
+
+    /// 📏️ The most one unit of the program copies beside its allocation: an operand move or an operator write.
+    pub const UNIT_COPY_MAXIMUM: usize = if ContentProgramCursor::UNIT_COPY_MAXIMUM > size_of::<PdfOp>() { ContentProgramCursor::UNIT_COPY_MAXIMUM } else { size_of::<PdfOp>() };
+
+    /// 📏️ The bytes the next unit copies beside its allocation, or `None` when it moves source bytes one per unit of its grant: collecting or migrating moves one operator, reserving the doubled vector copies nothing.
+    pub fn unit_copy(&self) -> Option<usize> {
+        match self.stage {
+            Stage::Read => self.source.unit_copy(),
+            Stage::Collect if !self.reserving_empty_backing() => Some(size_of::<PdfOp>()),
+            Stage::Migrate => Some(size_of::<PdfOp>()),
+            _ => Some(0),
+        }
+    }
+
     /// 👀️ Borrows a ready operator before the collector accepts its page resource binding.
     pub fn pending_operator(&self) -> Option<&PdfOp> { self.source.peek_operator() }
 
@@ -97,7 +113,7 @@ impl PageProgramCursor {
     fn collect(&mut self, fonts: &dyn FontTable, grant: CosGrant) -> PageContentReceipt {
         let operator = self.source.peek_operator().expect("ready native page operator");
         let unmapped_text = text_operator(operator) && !self.source.selected_font()
-            .is_some_and(|name| fonts.controlled_type1(name).is_some() || fonts.controlled_code_width(name).is_some());
+            .is_some_and(|name| fonts.controlled_type1(name).is_some() || fonts.controlled_code_width(name).is_some() || fonts.font(name).is_some());
         if unmapped_text || operator_bytes(operator).is_none() {
             return self.begin_fallback(PageContentBarrier::ResourceContext, worked());
         }
@@ -203,7 +219,8 @@ fn text_operator(op: &PdfOp) -> bool {
     matches!(op, PdfOp::SetFont { .. } | PdfOp::ShowText { .. } | PdfOp::ShowTextArray { .. } | PdfOp::NextLineShowText { .. } | PdfOp::NextLineShowTextSpaced { .. })
 }
 
-fn operator_bytes(op: &PdfOp) -> Option<usize> {
+/// 📏️ The heap bytes one qualified operator owns beside its inline value; `None` for an operator the controlled program does not collect.
+pub fn operator_bytes(op: &PdfOp) -> Option<usize> {
     Some(match op {
         PdfOp::SetDash { array, .. }
         | PdfOp::SetStrokeColor { components: array }
@@ -229,6 +246,8 @@ fn operator_bytes(op: &PdfOp) -> Option<usize> {
             PdfTextArrayItem::Codes { codes } => codes.capacity() * size_of::<u32>(),
             PdfTextArrayItem::Adjust { .. } => 0,
         }).sum::<usize>(),
+        PdfOp::MarkedContentPointWithProperties { tag, properties: PdfPropertyList::Named { name } }
+        | PdfOp::BeginMarkedContentWithProperties { tag, properties: PdfPropertyList::Named { name } } => tag.capacity() + name.capacity(),
         PdfOp::InlineImage { .. }
         | PdfOp::MarkedContentPointWithProperties { .. }
         | PdfOp::BeginMarkedContentWithProperties { .. }

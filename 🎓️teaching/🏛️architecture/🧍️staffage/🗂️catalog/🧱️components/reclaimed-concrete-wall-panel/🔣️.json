@@ -13,16 +13,76 @@
    "de": "Eine herausgesägte dreischichtige WBS-70-Außenwandplatte von 6,00 x 2,80 m und 260 mm (140 mm Tragschicht, 60 mm Polystyrol, 60 mm Waschbeton-Wetterschale) mit einer Fensteröffnung 2,40 x 1,60 m, 6.04 t, auf zwei Kanthölzern stehend und an einen A-Bock einer Bauteilbörse gelehnt. Ihr Gebrauch zeigt sich an der abgeplatzten Ecke und der abgeplatzten Oberkante der Schale, den Sägekanten mit abgetrennten Anschlussstäben, Dichtstoffresten, Schellenbohrungen und den beiden einbetonierten Transportschlaufen, an denen sie gehoben und als Fassadenplatte unter Wind wieder eingebaut wird."
   },
   "tags": [
-   "component",
-   "reclaimed",
-   "concrete",
-   "precast",
-   "sandwich-panel",
-   "wall-panel",
-   "wbs-70",
-   "exposed-aggregate",
-   "facade",
-   "a-frame-rack"
+   {
+    "id": "component",
+    "title": {
+     "en": "component",
+     "de": "Bauteil"
+    }
+   },
+   {
+    "id": "reclaimed",
+    "title": {
+     "en": "reclaimed",
+     "de": "wiederverwendet"
+    }
+   },
+   {
+    "id": "concrete",
+    "title": {
+     "en": "concrete",
+     "de": "Beton"
+    }
+   },
+   {
+    "id": "precast",
+    "title": {
+     "en": "precast",
+     "de": "Fertigteil"
+    }
+   },
+   {
+    "id": "sandwich-panel",
+    "title": {
+     "en": "sandwich panel",
+     "de": "Sandwichpaneel"
+    }
+   },
+   {
+    "id": "wall-panel",
+    "title": {
+     "en": "wall panel",
+     "de": "Wandpaneel"
+    }
+   },
+   {
+    "id": "wbs-70",
+    "title": {
+     "en": "WBS 70",
+     "de": "WBS 70"
+    }
+   },
+   {
+    "id": "exposed-aggregate",
+    "title": {
+     "en": "exposed aggregate",
+     "de": "Waschbeton"
+    }
+   },
+   {
+    "id": "facade",
+    "title": {
+     "en": "facade",
+     "de": "Fassade"
+    }
+   },
+   {
+    "id": "a-frame-rack",
+    "title": {
+     "en": "A-frame rack",
+     "de": "A-Rahmen-Regal"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage component authors",

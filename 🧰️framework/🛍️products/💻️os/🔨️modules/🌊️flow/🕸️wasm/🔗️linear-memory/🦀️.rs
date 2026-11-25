@@ -6,7 +6,7 @@ use super::*;
 
 fn flow_bridge_clock_ready() -> bool {
     #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
-    { semio_framework_job::install_browser_monotonic_clock().is_ok() }
+    { install_flow_panic_report(); semio_framework_job::install_browser_monotonic_clock().is_ok() }
     #[cfg(any(not(target_arch = "wasm32"), target_env = "p2"))]
     { semio_framework_job::default_now_us().is_some() }
 }

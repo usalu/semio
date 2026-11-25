@@ -1,6 +1,6 @@
 //! 🪯️ Staged slice of the `lifecycle-stores` band of the mounted artifact instance: its `instance-ladders` members (WP6 step S0 of the instance family).
 use semio_plugin_decl_app::ArtifactApp;
-use semio_plugin_ownership::store_lifecycle::{ArtifactDisposal, ArtifactOwnedDisposer};
+use semio_plugin_store_lifecycle::store_lifecycle::{ArtifactDisposal, ArtifactOwnedDisposer};
 use pack::snapshot::ArtifactPack;
 use semio_plugin_decl_emission::Emit;
 use semio_framework::{Fault, FaultFrom};

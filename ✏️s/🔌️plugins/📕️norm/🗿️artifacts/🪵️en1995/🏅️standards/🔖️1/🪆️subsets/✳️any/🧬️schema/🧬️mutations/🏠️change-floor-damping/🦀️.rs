@@ -17,7 +17,10 @@ impl<Op> protocol::MutationKind<En1995Snapshot, Op> for ChangeFloorDamping where
 impl<Op> protocol::ColdMutationKind<En1995Snapshot, Op> for ChangeFloorDamping where Op: protocol::ColdMutation<En1995Snapshot, ReferenceDiff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::change_floor_damping::ChangeFloorDamping> {
     fn diff(&self, base: &En1995Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<En1995Snapshot>>::ReferenceDiff> { crate::change_floor_damping::diff::diff(self, base) }
     fn inverse(&self, base: &En1995Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-        crate::change_floor_damping::inverse::inverse(self, base)
+        Ok(match crate::change_floor_damping::inverse::inverse(self, base) {
+            Some(inverse) => vec![Op::from(inverse)],
+            None => Vec::new(),
+        })
     }
 }
 

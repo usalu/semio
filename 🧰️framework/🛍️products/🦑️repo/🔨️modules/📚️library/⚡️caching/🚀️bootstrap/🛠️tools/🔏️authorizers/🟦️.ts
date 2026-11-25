@@ -9,6 +9,7 @@ import{nxAuthorizerMemoDirectoriesV1,nxAuthorizerMemoImplementationV1,readNxAuth
 import {dirname,extname,isAbsolute,join,relative,resolve} from "node:path";
 import { runtimeResolveV1 } from "../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🚀️process/🟦️.ts";
 import {refuseBootstrapV1} from "../../📖️texts/🟦️.ts";
+import {concurrentEditV1,retryOnConcurrentEditV1} from "../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
 import {buildSourceCapacityV1} from "../../../../🏗️build/📥️source/🔏️closure/📏️capacity/🟦️.ts";
 import closureSchema from "../../../../🏗️build/📥️source/🔏️closure/🧬️schema/🔣️.json" with { type: "json" };
 
@@ -166,7 +167,9 @@ const membershipRetryV1=authorizerSchema.$defs.SourceMembershipRetry.const;
 /** 🌊️ Whether a failure is the live tree moving under a capture (a path vanished, was replaced or changed between listing and reading) rather than a fact about the sources. */
 function membershipChangeV1(error:unknown):boolean{if(typeof error!=="object"||error===null)return false;const row=error as{code?:unknown;key?:unknown;message?:unknown};return row.code==="ENOENT"||row.code==="ENOTDIR"||row.key==="tools.authorizer-ancestry-changed"||row.message==="Authorizer source changed during capture"||row.message==="Authorizer DATA directory changed"||row.message==="Original authorizer descriptor required";}
 async function traverseNxAuthorizerSourcesV1(workspace:string,entry:string,signal:AbortSignal,options:NxAuthorizerCaptureOptionsV1,progress?:((files:number,phase:"capture"|"projection")=>void)):Promise<NxAuthorizerSourcesV1|NxAuthorizerCensusV1>{
- for(let attempt=1;;attempt++){try{return await walkNxAuthorizerSourcesV1(workspace,entry,signal,options,progress,attempt);}catch(error){signal.throwIfAborted();if(attempt>=membershipRetryV1.attempts||!membershipChangeV1(error))throw error;options.report?.("sources moved while they were read, walking the tool closure again ("+attempt+" of "+membershipRetryV1.attempts+")");}}
+ let attempted=0;
+ try{return await retryOnConcurrentEditV1("read",async attempt=>{attempted=attempt;try{return await walkNxAuthorizerSourcesV1(workspace,entry,signal,options,progress,attempt);}catch(error){signal.throwIfAborted();if(!membershipChangeV1(error))throw error;throw Object.assign(concurrentEditV1("vanished",(error as {path?:string}).path??entry,String((error as Error)?.message??error)),{membership:error});}},{signal,retryable:()=>attempted<membershipRetryV1.attempts,onRetry:event=>options.report?.("sources moved while they were read, walking the tool closure again ("+event.attempt+" of "+membershipRetryV1.attempts+") / Quellen änderten sich beim Lesen, der Werkzeugabschluss wird erneut durchlaufen ("+event.attempt+" von "+membershipRetryV1.attempts+")")});}
+ catch(error){const held=error as {membership?:unknown;cause?:{membership?:unknown}};throw held.membership??held.cause?.membership??error;}
 }
 async function walkNxAuthorizerSourcesV1(workspace:string,entry:string,signal:AbortSignal,options:NxAuthorizerCaptureOptionsV1,progress:((files:number,phase:"capture"|"projection")=>void)|undefined,attempt:number):Promise<NxAuthorizerSourcesV1|NxAuthorizerCensusV1>{
  const remembered=options.memo!==undefined&&options.roots===undefined?await replayCapturedV1(workspace,entry,signal,options.installed===true,options.memo.file):undefined;

@@ -6637,6 +6637,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-plugin-reactor-receiving-completed"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-diagnostic",
+ "semio-framework-job",
+ "semio-framework-job-native-decode",
+ "semio-framework-pack",
+ "semio-framework-pack-json",
+ "semio-framework-trace",
+ "semio-framework-value",
+ "semio-plugin-actor-host",
+ "semio-plugin-reactor-receiving-source",
+]
+
+[[package]]
 name = "semio-plugin-reactor-receiving-source"
 version = "0.1.0"
 dependencies = [
@@ -6732,6 +6748,7 @@ dependencies = [
  "semio-plugin-reactor-core",
  "semio-plugin-reactor-lifecycle",
  "semio-plugin-reactor-patches",
+ "semio-plugin-reactor-receiving-completed",
  "semio-plugin-reactor-receiving-source",
  "semio-plugin-reactor-staged-forms",
  "semio-plugin-reactor-surfaces",
@@ -7089,6 +7106,7 @@ dependencies = [
  "semio-plugin-decl-app",
  "semio-plugin-decl-emission",
  "semio-plugin-decl-tool-contract",
+ "semio-plugin-job-receiving",
  "semio-plugin-ownership",
  "semio-plugin-retained-command",
  "semio-ui-contract-values",
@@ -9059,6 +9077,7 @@ dependencies = [
  "semio-s-artifact-norm-en1991-mut-wind-bridges-loading",
  "semio-s-artifact-norm-en1991-mut-wind-face-coefficients",
  "semio-s-artifact-norm-en1991-mut-wind-faces",
+ "semio-s-artifact-norm-en1991-mutations",
  "semio-s-artifact-norm-en1991-mutations-graphql",
  "semio-s-artifact-norm-en1991-mutations-json-schema",
  "semio-s-artifact-norm-en1991-mutations-proto",
@@ -9265,9 +9284,12 @@ dependencies = [
 name = "semio-s-plugin-norm-app-surface-edit-rules"
 version = "0.1.0"
 dependencies = [
+ "semio-framework",
+ "semio-framework-pack-json",
  "semio-framework-value",
  "semio-os-kernel",
  "semio-s-plugin-norm-app-surface-foundation",
+ "semio-s-plugin-norm-inspector-forms",
 ]
 
 [[package]]
@@ -9631,6 +9653,7 @@ version = "0.1.0"
 name = "semio-s-plugin-norm-ndp"
 version = "0.1.0"
 dependencies = [
+ "semio-s-plugin-norm-ndp-din16798",
  "semio-s-plugin-norm-ndp-din4108",
  "semio-s-plugin-norm-ndp-en1990",
  "semio-s-plugin-norm-ndp-en1991",
@@ -9642,6 +9665,13 @@ dependencies = [
  "semio-s-plugin-norm-ndp-en1997",
  "semio-s-plugin-norm-ndp-en1998",
  "semio-s-plugin-norm-ndp-en1999",
+ "semio-s-plugin-norm-ndp-model",
+]
+
+[[package]]
+name = "semio-s-plugin-norm-ndp-din16798"
+version = "0.1.0"
+dependencies = [
  "semio-s-plugin-norm-ndp-model",
 ]
 

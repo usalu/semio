@@ -1,0 +1,105 @@
+{
+ "byFn": {
+  "target-sources": {
+   "entries": 20525,
+   "refs": 3080389,
+   "max": 46108,
+   "rows": 849411
+  },
+  "native-target": {
+   "entries": 17398,
+   "refs": 5515732,
+   "max": 98967,
+   "rows": 712868
+  },
+  "generic-target": {
+   "entries": 2942,
+   "refs": 2168491,
+   "max": 245145,
+   "rows": 379650
+  },
+  "closure-of": {
+   "entries": 159,
+   "refs": 128574,
+   "max": 66032,
+   "rows": 306
+  },
+  "crate-index": {
+   "entries": 1,
+   "refs": 1,
+   "max": 1,
+   "rows": 0
+  },
+  "tool-closure": {
+   "entries": 31,
+   "refs": 270027,
+   "max": 61944,
+   "rows": 48370
+  },
+  "script-provider": {
+   "entries": 18,
+   "refs": 138434,
+   "max": 33497,
+   "rows": 31556
+  },
+  "source-roots": {
+   "entries": 1,
+   "refs": 1,
+   "max": 1,
+   "rows": 0
+  },
+  "native-command": {
+   "entries": 1,
+   "refs": 0,
+   "max": 0,
+   "rows": 3
+  }
+ },
+ "store": ".cache/b/g/m/inference/selections/8d8f21d74af11ed12bed7540aa42908f48a1a023e5437e26666ef5722ed50089/ce",
+ "entries": 41076,
+ "recipes": {
+  "target-sources": 20525,
+  "native-target": 17398,
+  "generic-target": 2942,
+  "closure-of": 159,
+  "crate-index": 1,
+  "tool-closure": 31,
+  "script-provider": 18,
+  "source-roots": 1,
+  "native-command": 1
+ },
+ "ownersWithEntries": 4889,
+ "sampled": 40,
+ "ownerEntries": 381,
+ "ownerLayerRefsSum": 262393,
+ "ownerLayerUnion": 9337,
+ "ownerOwnRows": 7352,
+ "ownerLayersAlsoInSharedEntries": 3773,
+ "perOwnerLayerRefs": {
+  "min": 0,
+  "median": 0,
+  "max": 249477
+ },
+ "sharedEntries": 211,
+ "sharedLayerRefsSum": 537037,
+ "sharedLayerUnion": 15828,
+ "unionAll": 21392
+}
+       48.96 real        15.68 user         7.11 sys
+          4526833664  maximum resident set size
+                   0  average shared memory size
+                   0  average unshared data size
+                   0  average unshared stack size
+              452382  page reclaims
+                  55  page faults
+                   0  swaps
+                   0  block input operations
+                   0  block output operations
+                   0  messages sent
+                   0  messages received
+                   0  signals received
+               66804  voluntary context switches
+               84779  involuntary context switches
+        194597336781  instructions retired
+         66592166227  cycles elapsed
+          3547386080  peak memory footprint

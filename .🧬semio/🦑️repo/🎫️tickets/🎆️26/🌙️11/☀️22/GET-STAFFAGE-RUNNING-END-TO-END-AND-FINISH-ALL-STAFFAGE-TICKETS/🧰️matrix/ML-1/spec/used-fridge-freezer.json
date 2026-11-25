@@ -1,0 +1,532 @@
+{
+ "ops": [
+  {
+   "op": "shape-set",
+   "scale": "50",
+   "view": "front",
+   "id": "tube-r",
+   "set": {
+    "solid": {
+     "kind": "extruded",
+     "sweep": "v",
+     "z0": -0.104,
+     "z1": -0.076
+    }
+   }
+  },
+  {
+   "op": "shape-set",
+   "scale": "50",
+   "view": "front",
+   "id": "tube-l",
+   "set": {
+    "solid": {
+     "kind": "extruded",
+     "sweep": "v",
+     "z0": -0.104,
+     "z1": -0.076
+    }
+   }
+  },
+  {
+   "op": "shape-set",
+   "scale": "50",
+   "view": "front",
+   "id": "top-bar",
+   "set": {
+    "solid": {
+     "kind": "extruded",
+     "sweep": "v",
+     "z0": -0.104,
+     "z1": -0.076
+    }
+   }
+  },
+  {
+   "op": "shape-set",
+   "scale": "50",
+   "view": "front",
+   "id": "cross-bar-1",
+   "set": {
+    "solid": {
+     "kind": "extruded",
+     "sweep": "v",
+     "z0": -0.1,
+     "z1": -0.08
+    }
+   }
+  },
+  {
+   "op": "shape-set",
+   "scale": "50",
+   "view": "front",
+   "id": "cross-bar-2",
+   "set": {
+    "solid": {
+     "kind": "extruded",
+     "sweep": "v",
+     "z0": -0.1,
+     "z1": -0.08
+    }
+   }
+  },
+  {
+   "op": "shape-set",
+   "scale": "50",
+   "view": "front",
+   "id": "cross-bar-3",
+   "set": {
+    "solid": {
+     "kind": "extruded",
+     "sweep": "v",
+     "z0": -0.1,
+     "z1": -0.08
+    }
+   }
+  },
+  {
+   "op": "shape-set",
+   "scale": "50",
+   "view": "plan",
+   "id": "tube-r",
+   "set": {
+    "solid": {
+     "kind": "extruded",
+     "sweep": "u",
+     "z0": -0.122,
+     "z1": 1.25
+    }
+   }
+  },
+  {
+   "op": "shape-set",
+   "scale": "50",
+   "view": "plan",
+   "id": "tube-l",
+   "set": {
+    "solid": {
+     "kind": "extruded",
+     "sweep": "u",
+     "z0": -0.122,
+     "z1": 1.25
+    }
+   }
+  },
+  {
+   "op": "shape-set",
+   "scale": "50",
+   "view": "plan",
+   "id": "top-bar",
+   "set": {
+    "solid": {
+     "kind": "extruded",
+     "sweep": "u",
+     "z0": 1.222,
+     "z1": 1.25
+    }
+   }
+  },
+  {
+   "op": "shape-set",
+   "scale": "100",
+   "view": "front",
+   "id": "tube-r",
+   "set": {
+    "solid": {
+     "kind": "extruded",
+     "sweep": "v",
+     "z0": -0.104,
+     "z1": -0.076
+    }
+   }
+  },
+  {
+   "op": "shape-set",
+   "scale": "100",
+   "view": "front",
+   "id": "tube-l",
+   "set": {
+    "solid": {
+     "kind": "extruded",
+     "sweep": "v",
+     "z0": -0.104,
+     "z1": -0.076
+    }
+   }
+  },
+  {
+   "op": "shape-set",
+   "scale": "100",
+   "view": "front",
+   "id": "top-bar",
+   "set": {
+    "solid": {
+     "kind": "extruded",
+     "sweep": "v",
+     "z0": -0.104,
+     "z1": -0.076
+    }
+   }
+  },
+  {
+   "op": "shape-set",
+   "scale": "100",
+   "view": "front",
+   "id": "cross-bar-1",
+   "set": {
+    "solid": {
+     "kind": "extruded",
+     "sweep": "v",
+     "z0": -0.1,
+     "z1": -0.08
+    }
+   }
+  },
+  {
+   "op": "shape-set",
+   "scale": "100",
+   "view": "front",
+   "id": "cross-bar-2",
+   "set": {
+    "solid": {
+     "kind": "extruded",
+     "sweep": "v",
+     "z0": -0.1,
+     "z1": -0.08
+    }
+   }
+  },
+  {
+   "op": "shape-set",
+   "scale": "100",
+   "view": "front",
+   "id": "cross-bar-3",
+   "set": {
+    "solid": {
+     "kind": "extruded",
+     "sweep": "v",
+     "z0": -0.1,
+     "z1": -0.08
+    }
+   }
+  },
+  {
+   "op": "shape-set",
+   "scale": "100",
+   "view": "plan",
+   "id": "tube-r",
+   "set": {
+    "solid": {
+     "kind": "extruded",
+     "sweep": "u",
+     "z0": -0.122,
+     "z1": 1.25
+    }
+   }
+  },
+  {
+   "op": "shape-set",
+   "scale": "100",
+   "view": "plan",
+   "id": "tube-l",
+   "set": {
+    "solid": {
+     "kind": "extruded",
+     "sweep": "u",
+     "z0": -0.122,
+     "z1": 1.25
+    }
+   }
+  },
+  {
+   "op": "shape-set",
+   "scale": "100",
+   "view": "plan",
+   "id": "top-bar",
+   "set": {
+    "solid": {
+     "kind": "extruded",
+     "sweep": "u",
+     "z0": 1.222,
+     "z1": 1.25
+    }
+   }
+  },
+  {
+   "op": "shape-set",
+   "scale": "200",
+   "view": "front",
+   "id": "tube-r",
+   "set": {
+    "solid": {
+     "kind": "extruded",
+     "sweep": "v",
+     "z0": -0.104,
+     "z1": -0.076
+    }
+   }
+  },
+  {
+   "op": "shape-set",
+   "scale": "200",
+   "view": "front",
+   "id": "tube-l",
+   "set": {
+    "solid": {
+     "kind": "extruded",
+     "sweep": "v",
+     "z0": -0.104,
+     "z1": -0.076
+    }
+   }
+  },
+  {
+   "op": "shape-set",
+   "scale": "200",
+   "view": "front",
+   "id": "top-bar",
+   "set": {
+    "solid": {
+     "kind": "extruded",
+     "sweep": "v",
+     "z0": -0.105,
+     "z1": -0.075
+    }
+   }
+  },
+  {
+   "op": "shape-set",
+   "scale": "200",
+   "view": "front",
+   "id": "cross-bar-1",
+   "set": {
+    "solid": {
+     "kind": "extruded",
+     "sweep": "v",
+     "z0": -0.1,
+     "z1": -0.08
+    }
+   }
+  },
+  {
+   "op": "shape-set",
+   "scale": "200",
+   "view": "front",
+   "id": "cross-bar-2",
+   "set": {
+    "solid": {
+     "kind": "extruded",
+     "sweep": "v",
+     "z0": -0.1,
+     "z1": -0.08
+    }
+   }
+  },
+  {
+   "op": "shape-set",
+   "scale": "200",
+   "view": "front",
+   "id": "cross-bar-3",
+   "set": {
+    "solid": {
+     "kind": "extruded",
+     "sweep": "v",
+     "z0": -0.1,
+     "z1": -0.08
+    }
+   }
+  },
+  {
+   "op": "shape-set",
+   "scale": "200",
+   "view": "plan",
+   "id": "tube-r",
+   "set": {
+    "solid": {
+     "kind": "extruded",
+     "sweep": "u",
+     "z0": -0.122,
+     "z1": 1.25
+    }
+   }
+  },
+  {
+   "op": "shape-set",
+   "scale": "200",
+   "view": "plan",
+   "id": "tube-l",
+   "set": {
+    "solid": {
+     "kind": "extruded",
+     "sweep": "u",
+     "z0": -0.122,
+     "z1": 1.25
+    }
+   }
+  },
+  {
+   "op": "shape-set",
+   "scale": "200",
+   "view": "plan",
+   "id": "top-bar",
+   "set": {
+    "solid": {
+     "kind": "extruded",
+     "sweep": "u",
+     "z0": 1.221,
+     "z1": 1.251
+    }
+   }
+  },
+  {
+   "op": "shape-set",
+   "scale": "500",
+   "view": "front",
+   "id": "tube-r",
+   "set": {
+    "solid": {
+     "kind": "extruded",
+     "sweep": "v",
+     "z0": -0.104,
+     "z1": -0.076
+    }
+   }
+  },
+  {
+   "op": "shape-set",
+   "scale": "500",
+   "view": "front",
+   "id": "tube-l",
+   "set": {
+    "solid": {
+     "kind": "extruded",
+     "sweep": "v",
+     "z0": -0.104,
+     "z1": -0.076
+    }
+   }
+  },
+  {
+   "op": "shape-set",
+   "scale": "500",
+   "view": "front",
+   "id": "top-bar",
+   "set": {
+    "solid": {
+     "kind": "extruded",
+     "sweep": "v",
+     "z0": -0.105,
+     "z1": -0.075
+    }
+   }
+  },
+  {
+   "op": "shape-set",
+   "scale": "500",
+   "view": "plan",
+   "id": "tube-r",
+   "set": {
+    "solid": {
+     "kind": "extruded",
+     "sweep": "u",
+     "z0": -0.122,
+     "z1": 1.25
+    }
+   }
+  },
+  {
+   "op": "shape-set",
+   "scale": "500",
+   "view": "plan",
+   "id": "tube-l",
+   "set": {
+    "solid": {
+     "kind": "extruded",
+     "sweep": "u",
+     "z0": -0.122,
+     "z1": 1.25
+    }
+   }
+  },
+  {
+   "op": "shape-set",
+   "scale": "500",
+   "view": "plan",
+   "id": "top-bar",
+   "set": {
+    "solid": {
+     "kind": "extruded",
+     "sweep": "u",
+     "z0": 1.221,
+     "z1": 1.251
+    }
+   }
+  },
+  {
+   "op": "sweep-twin",
+   "scales": [
+    "50"
+   ],
+   "view": "plan",
+   "id": "strut-r",
+   "twin": "strut",
+   "z0": -0.2,
+   "z1": -0.18
+  },
+  {
+   "op": "sweep-twin",
+   "scales": [
+    "50"
+   ],
+   "view": "plan",
+   "id": "strut-l",
+   "twin": "strut",
+   "z0": 0.18,
+   "z1": 0.2
+  },
+  {
+   "op": "sweep-twin",
+   "scales": [
+    "100"
+   ],
+   "view": "plan",
+   "id": "strut-r",
+   "twin": "strut",
+   "z0": -0.2,
+   "z1": -0.18
+  },
+  {
+   "op": "sweep-twin",
+   "scales": [
+    "100"
+   ],
+   "view": "plan",
+   "id": "strut-l",
+   "twin": "strut",
+   "z0": 0.18,
+   "z1": 0.2
+  },
+  {
+   "op": "sweep-twin",
+   "scales": [
+    "200"
+   ],
+   "view": "plan",
+   "id": "strut-r",
+   "twin": "strut",
+   "z0": -0.205,
+   "z1": -0.175
+  },
+  {
+   "op": "sweep-twin",
+   "scales": [
+    "200"
+   ],
+   "view": "plan",
+   "id": "strut-l",
+   "twin": "strut",
+   "z0": 0.175,
+   "z1": 0.205
+  }
+ ]
+}

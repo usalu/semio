@@ -1,0 +1,484 @@
+[
+ {
+  "op": "set",
+  "scale": "50",
+  "view": "elevation",
+  "id": "thigh-l",
+  "bone": "thigh-l",
+  "why": "result of the candidate plan>both*0.94 of auto.py",
+  "set": {
+   "kind": "poly",
+   "points": [
+    [
+     -0.11,
+     0.0069
+    ],
+    [
+     -0.11,
+     0.0763
+    ],
+    [
+     -0.05,
+     0.0942
+    ],
+    [
+     0.03,
+     0.1005
+    ],
+    [
+     0.11,
+     0.0949
+    ],
+    [
+     0.2,
+     0.0857
+    ],
+    [
+     0.28,
+     0.0774
+    ],
+    [
+     0.35,
+     0.0715
+    ],
+    [
+     0.4,
+     0.0684
+    ],
+    [
+     0.44,
+     0.0657
+    ],
+    [
+     0.47,
+     0.0586
+    ],
+    [
+     0.492,
+     0.0387
+    ],
+    [
+     0.492,
+     0.0069
+    ]
+   ],
+   "closed": true,
+   "x": null,
+   "y": null,
+   "w": null,
+   "h": null,
+   "x0": null,
+   "y0": null,
+   "x1": null,
+   "y1": null,
+   "r0": null,
+   "r1": null,
+   "r": null,
+   "cx": null,
+   "cy": null,
+   "rx": null,
+   "ry": null,
+   "d": null,
+   "followTip": null,
+   "solid": {
+    "kind": "revolved",
+    "axisBone": "thigh-l",
+    "axis": "u",
+    "axisX": 0.0073,
+    "axisZ": 0.0029,
+    "mirror": true
+   }
+  }
+ },
+ {
+  "op": "set",
+  "scale": "50",
+  "view": "front",
+  "id": "thigh-l",
+  "bone": "thigh-l",
+  "why": "result of the candidate plan>both*0.94 of auto.py",
+  "set": {
+   "kind": "poly",
+   "points": [
+    [
+     -0.11,
+     0.0069
+    ],
+    [
+     -0.11,
+     0.0763
+    ],
+    [
+     -0.05,
+     0.0942
+    ],
+    [
+     0.03,
+     0.1005
+    ],
+    [
+     0.11,
+     0.0949
+    ],
+    [
+     0.2,
+     0.0857
+    ],
+    [
+     0.28,
+     0.0774
+    ],
+    [
+     0.35,
+     0.0715
+    ],
+    [
+     0.4,
+     0.0684
+    ],
+    [
+     0.44,
+     0.0657
+    ],
+    [
+     0.47,
+     0.0586
+    ],
+    [
+     0.492,
+     0.0387
+    ],
+    [
+     0.492,
+     0.0069
+    ]
+   ],
+   "closed": true,
+   "x": null,
+   "y": null,
+   "w": null,
+   "h": null,
+   "x0": null,
+   "y0": null,
+   "x1": null,
+   "y1": null,
+   "r0": null,
+   "r1": null,
+   "r": null,
+   "cx": null,
+   "cy": null,
+   "rx": null,
+   "ry": null,
+   "d": null,
+   "followTip": null,
+   "solid": {
+    "kind": "revolved",
+    "axisBone": "thigh-l",
+    "axis": "u",
+    "axisX": 0.0073,
+    "axisZ": 0.0029,
+    "mirror": true
+   }
+  }
+ },
+ {
+  "op": "copy",
+  "scale": "50",
+  "id": "shoe-l",
+  "bone": "foot-l",
+  "from": "front",
+  "to": [
+   "elevation",
+   "plan"
+  ]
+ },
+ {
+  "op": "copy",
+  "scale": "50",
+  "id": "thigh-r",
+  "bone": "thigh-r",
+  "from": "plan",
+  "to": [
+   "elevation",
+   "front"
+  ]
+ },
+ {
+  "op": "set",
+  "scale": "50",
+  "view": "plan",
+  "id": "sleeve-l",
+  "bone": "upper-arm-l",
+  "why": "result of the candidate solo-plan~6 of auto.py",
+  "set": {
+   "kind": "poly",
+   "points": [
+    [
+     -0.0035,
+     -0.074
+    ],
+    [
+     0.0105,
+     -0.0758
+    ],
+    [
+     0.0245,
+     -0.074
+    ],
+    [
+     0.0376,
+     -0.0687
+    ],
+    [
+     0.0488,
+     -0.0603
+    ],
+    [
+     0.0574,
+     -0.0493
+    ],
+    [
+     0.0628,
+     -0.0365
+    ],
+    [
+     0.066,
+     -0.0267
+    ],
+    [
+     0.068,
+     -0.0112
+    ],
+    [
+     0.066,
+     0.0043
+    ],
+    [
+     0.0615,
+     0.0105
+    ],
+    [
+     0.0423,
+     0.0258
+    ],
+    [
+     0.0314,
+     0.0358
+    ],
+    [
+     0.0212,
+     0.0493
+    ],
+    [
+     0.0116,
+     0.0566
+    ],
+    [
+     0.0005,
+     0.0612
+    ],
+    [
+     -0.0041,
+     0.0627
+    ],
+    [
+     -0.0145,
+     0.0641
+    ],
+    [
+     -0.0249,
+     0.0627
+    ],
+    [
+     -0.0345,
+     0.0586
+    ],
+    [
+     -0.0428,
+     0.0521
+    ],
+    [
+     -0.0492,
+     0.0436
+    ],
+    [
+     -0.0514,
+     0.0398
+    ],
+    [
+     -0.056,
+     0.0287
+    ],
+    [
+     -0.0576,
+     0.0168
+    ],
+    [
+     -0.0563,
+     0.0068
+    ],
+    [
+     -0.0528,
+     0.0001
+    ],
+    [
+     -0.0389,
+     -0.0291
+    ],
+    [
+     -0.0369,
+     -0.0344
+    ],
+    [
+     -0.0342,
+     -0.0455
+    ],
+    [
+     -0.0328,
+     -0.0539
+    ],
+    [
+     -0.0278,
+     -0.0603
+    ],
+    [
+     -0.0166,
+     -0.0687
+    ]
+   ],
+   "closed": true,
+   "x": null,
+   "y": null,
+   "w": null,
+   "h": null,
+   "x0": null,
+   "y0": null,
+   "x1": null,
+   "y1": null,
+   "r0": null,
+   "r1": null,
+   "r": null,
+   "cx": null,
+   "cy": null,
+   "rx": null,
+   "ry": null,
+   "d": null,
+   "followTip": null,
+   "solid": {
+    "kind": "extruded",
+    "sweep": "u",
+    "z0": 0.0494,
+    "z1": 0.2697
+   }
+  }
+ },
+ {
+  "op": "copy",
+  "scale": "50",
+  "id": "sleeve-r",
+  "bone": "upper-arm-r",
+  "from": "elevation",
+  "to": [
+   "front",
+   "plan"
+  ]
+ },
+ {
+  "op": "copy",
+  "scale": "50",
+  "id": "shank-r",
+  "bone": "shank-r",
+  "from": "plan",
+  "to": [
+   "elevation",
+   "front"
+  ]
+ },
+ {
+  "op": "copy",
+  "scale": "50",
+  "id": "hand-l",
+  "bone": "hand-l",
+  "from": "plan",
+  "to": [
+   "front"
+  ]
+ },
+ {
+  "op": "sync",
+  "scale": "50",
+  "id": "hand-l",
+  "bone": "hand-l"
+ },
+ {
+  "op": "copy",
+  "scale": "100",
+  "id": "shoe-r",
+  "bone": "foot-r",
+  "from": "front",
+  "to": [
+   "elevation",
+   "plan"
+  ]
+ },
+ {
+  "op": "copy",
+  "scale": "200",
+  "id": "shoe-r",
+  "bone": "foot-r",
+  "from": "elevation",
+  "to": [
+   "front",
+   "plan"
+  ]
+ },
+ {
+  "op": "anchor-split",
+  "id": "wheel-f-contact",
+  "into": [
+   {
+    "id": "wheel-fl-contact",
+    "z": 0.0855,
+    "footprintWidthM": 0.032,
+    "title": {
+     "en": "Front left wheel contact",
+     "de": "Kontakt Vorderrad links"
+    }
+   },
+   {
+    "id": "wheel-fr-contact",
+    "z": -0.0855,
+    "footprintWidthM": 0.032,
+    "title": {
+     "en": "Front right wheel contact",
+     "de": "Kontakt Vorderrad rechts"
+    }
+   }
+  ],
+  "why": "third fixer, D45: the lumped contact of an axle at z = 0 becomes one contact per wheel at its real z (the wheels are revolved about z = \u00b10.0855 m and 32 mm wide); references in poses, clips and events follow"
+ },
+ {
+  "op": "anchor-split",
+  "id": "wheel-r-contact",
+  "into": [
+   {
+    "id": "wheel-rl-contact",
+    "z": 0.0855,
+    "footprintWidthM": 0.032,
+    "title": {
+     "en": "Rear left wheel contact",
+     "de": "Kontakt Hinterrad links"
+    }
+   },
+   {
+    "id": "wheel-rr-contact",
+    "z": -0.0855,
+    "footprintWidthM": 0.032,
+    "title": {
+     "en": "Rear right wheel contact",
+     "de": "Kontakt Hinterrad rechts"
+    }
+   }
+  ]
+ }
+]

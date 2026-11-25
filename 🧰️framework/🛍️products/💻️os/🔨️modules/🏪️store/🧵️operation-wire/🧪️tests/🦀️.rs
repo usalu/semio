@@ -380,3 +380,32 @@ fn canonical_json_reuses_original_frontier_for_neutral_source_batches() {
     }
 }
 
+
+struct EncodedFrame(Vec<u8>);
+impl protocol::OpBinary for EncodedFrame{
+    fn encode_op(&self)->Result<Vec<u8>,protocol::ProtocolError>{Ok(self.0.clone())}
+    fn decode_op(bytes:&[u8])->Result<Self,protocol::ProtocolError>{Ok(Self(bytes.to_vec()))}
+}
+
+#[test]
+fn encoded_operation_source_writes_exactly_the_authored_binary_frames() {
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/⚖️encoded-frames.json")).unwrap();
+    let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:4096,maximum_release_bytes:4096,maximum_depth:8};
+    for row in fixture["frames"].as_array().unwrap() {
+        let expected:Vec<u8>=serde_json::from_value(row["bytes"].clone()).unwrap();
+        let frame=EncodedFrame(expected.clone());
+        let mut cursor=ArtifactPreparedOperationCursor::default();
+        let mut written=Vec::new();let mut retained=0;
+        for _ in 0..1000 {
+            let mut output=[0;64];
+            let step=effect_fixture::fx(grant,|e|cursor.advance(encoded_operation_source(&frame).unwrap(),&mut output,e)).unwrap();
+            written.extend_from_slice(&output[..step.written_bytes]);retained+=step.retained_capacity_bytes;
+            if step.complete{break}
+        }
+        assert!(cursor.complete,"{}",row["family"]);
+        assert_eq!(written,expected,"{}",row["family"]);
+        let closed=effect_fixture::fx(grant,|e|cursor.close(e)).unwrap();
+        assert!(closed.complete);
+        assert_eq!(retained,closed.released_bytes,"{}",row["family"]);
+    }
+}

@@ -18,8 +18,8 @@ export function registerGraphPickAndSliderAccessibilityTests(): void {
       const target = row.target;
       expect(validateTarget(target), JSON.stringify(validateTarget.errors)).toBe(true);
       expect(validateChannel(row.channel), JSON.stringify(validateChannel.errors)).toBe(true);
-      const match = target?.domain === "handle" ? /^([^@]+)@(.+)$/u.exec(target.id) : null;
-      const oracle = match ? { nodeId: match[1], portId: match[2] } : null;
+      const match = target?.domain === "handle" ? /^(.+)@([^@]+)$/u.exec(target.id) : null;
+      const oracle = match ? { nodeId: match[1], portId: decodeURIComponent(match[2]!) } : null;
       expect(oracle).toEqual(row.channel);
       expect(nodeGraphPickChannel(target)).toEqual(row.channel);
     }

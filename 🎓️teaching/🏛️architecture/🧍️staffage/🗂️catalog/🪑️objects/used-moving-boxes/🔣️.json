@@ -13,17 +13,83 @@
    "de": "Drei gebrauchte Doppelwell-Umzugskartons von 614 x 344 x 354 mm, geleert und zugeklebt, 1,06 m hoch auf einem vierten, flach gefalteten Karton (0,96 x 0,70 m) gestapelt; der untere Karton um 12 mm gestaucht und geknickt, ein eingerissenes Griffloch überklebt, alte Etiketten mit durchgestrichener Filzstiftschrift. Der obere Karton wird an beiden Grifflöchern waagerecht weggetragen und mit aufgeklappten Deckelklappen wieder gepackt; zusammen 4.4 kg."
   },
   "tags": [
-   "used",
-   "household",
-   "second-hand",
-   "hallway",
-   "moving-box",
-   "corrugated-board",
-   "cardboard",
-   "box-stack",
-   "removal",
-   "storage",
-   "object"
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "household",
+    "title": {
+     "en": "household",
+     "de": "Haushalt"
+    }
+   },
+   {
+    "id": "second-hand",
+    "title": {
+     "en": "second-hand",
+     "de": "Second-Hand"
+    }
+   },
+   {
+    "id": "hallway",
+    "title": {
+     "en": "hallway",
+     "de": "Flur"
+    }
+   },
+   {
+    "id": "moving-box",
+    "title": {
+     "en": "moving box",
+     "de": "Umzugskarton"
+    }
+   },
+   {
+    "id": "corrugated-board",
+    "title": {
+     "en": "corrugated board",
+     "de": "Wellpappe"
+    }
+   },
+   {
+    "id": "cardboard",
+    "title": {
+     "en": "cardboard",
+     "de": "Karton"
+    }
+   },
+   {
+    "id": "box-stack",
+    "title": {
+     "en": "box stack",
+     "de": "Kistenstapel"
+    }
+   },
+   {
+    "id": "removal",
+    "title": {
+     "en": "removal",
+     "de": "Umzug"
+    }
+   },
+   {
+    "id": "storage",
+    "title": {
+     "en": "storage",
+     "de": "Lagerung"
+    }
+   },
+   {
+    "id": "object",
+    "title": {
+     "en": "object",
+     "de": "Objekt"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content (used household objects wave)",
@@ -4193,7 +4259,7 @@
       "size": [
        0.614,
        0.007,
-       0.165
+       0.164
       ],
       "transform": {
        "translation": [
@@ -4398,7 +4464,7 @@
       "size": [
        0.614,
        0.007,
-       0.165
+       0.164
       ],
       "transform": {
        "translation": [
@@ -7075,8 +7141,313 @@
     ]
    },
    "500": {
-    "status": "unavailable",
-    "denominator": 500
+    "status": "authored",
+    "denominator": 500,
+    "decisions": [
+     {
+      "en": "Body for the 75 mm feature: three closed blocks, one per box, so the two joints of the stack still read; the top box takes its tube, double bottom and the four 7 mm flaps into its block (the lid no longer opens at this scale), on the flattened box as its declared 14 mm sheet.",
+      "de": "Körper für das 75-mm-Merkmal: drei geschlossene Blöcke, einer je Karton, damit die zwei Fugen des Stapels lesbar bleiben; der oberste Karton nimmt Rohr, Doppelboden und die vier 7-mm-Klappen in seinen Block auf (der Deckel öffnet in diesem Maßstab nicht mehr), auf dem flachgelegten Karton als erklärter 14-mm-Platte."
+     },
+     {
+      "en": "Thermal: one surface per solid by reference in its region.",
+      "de": "Thermik: eine Oberfläche je Körper als Verweis in seiner Region."
+     },
+     {
+      "en": "Structure: the four solids as members by reference, the top block spanning its four flaps, the glued laps as 75 mm joints and four mass markers.",
+      "de": "Tragwerk: die vier Körper als Stäbe per Verweis, der oberste Block überspannt seine vier Klappen, die Klebelaschen als 75-mm-Gelenke und vier Massenmarken."
+     }
+    ],
+    "body": [
+     {
+      "id": "flat-box",
+      "kind": "box",
+      "bone": "flat-box",
+      "material": "kraft-board-worn",
+      "role": "body",
+      "tone": 0.5,
+      "size": [
+       0.96,
+       0.014,
+       0.7
+      ],
+      "transform": {
+       "translation": [
+        0.48,
+        0.007,
+        0
+       ]
+      },
+      "sheet": true
+     },
+     {
+      "id": "box-1",
+      "kind": "box",
+      "bone": "box-1",
+      "material": "kraft-board-worn",
+      "role": "body",
+      "tone": 0.6,
+      "size": [
+       0.614,
+       0.342,
+       0.344
+      ],
+      "transform": {
+       "translation": [
+        0.307,
+        0.171,
+        0
+       ]
+      }
+     },
+     {
+      "id": "box-2",
+      "kind": "box",
+      "bone": "box-2",
+      "material": "kraft-board",
+      "role": "body",
+      "tone": 0.66,
+      "size": [
+       0.614,
+       0.354,
+       0.344
+      ],
+      "transform": {
+       "translation": [
+        0.307,
+        0.177,
+        0
+       ]
+      }
+     },
+     {
+      "id": "box-3",
+      "kind": "box",
+      "bone": "box-3",
+      "material": "kraft-board",
+      "role": "body",
+      "tone": 0.7,
+      "size": [
+       0.614,
+       0.354,
+       0.344
+      ],
+      "transform": {
+       "translation": [
+        0.307,
+        0.177,
+        0
+       ]
+      }
+     }
+    ],
+    "thermal": [
+     {
+      "id": "th-flat-box",
+      "of": "flat-box",
+      "region": "flat-box"
+     },
+     {
+      "id": "th-box-1",
+      "of": "box-1",
+      "region": "stacked-boxes"
+     },
+     {
+      "id": "th-box-2",
+      "of": "box-2",
+      "region": "stacked-boxes"
+     },
+     {
+      "id": "th-box-3",
+      "of": "box-3",
+      "region": "carried-box"
+     }
+    ],
+    "structure": [
+     {
+      "id": "m-flat-box",
+      "of": "flat-box",
+      "member": "flat-box",
+      "part": "member"
+     },
+     {
+      "id": "m-box-1",
+      "of": "box-1",
+      "member": "box-1",
+      "part": "member"
+     },
+     {
+      "id": "m-box-2",
+      "of": "box-2",
+      "member": "box-2",
+      "part": "member"
+     },
+     {
+      "id": "m-box-3",
+      "of": "box-3",
+      "member": "box-3",
+      "part": "member",
+      "members": [
+       "flap-r",
+       "flap-l",
+       "flap-f",
+       "flap-b"
+      ]
+     },
+     {
+      "id": "j-lap-box-1",
+      "kind": "box",
+      "bone": "box-1",
+      "material": "kraft-board-worn",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.3,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.0445,
+        0.171,
+        -0.1275
+       ]
+      },
+      "member": "box-1",
+      "part": "joint"
+     },
+     {
+      "id": "j-lap-box-2",
+      "kind": "box",
+      "bone": "box-2",
+      "material": "kraft-board",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.3,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.0445,
+        0.177,
+        -0.1275
+       ]
+      },
+      "member": "box-2",
+      "part": "joint"
+     },
+     {
+      "id": "j-lap-box-3",
+      "kind": "box",
+      "bone": "box-3",
+      "material": "kraft-board",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.3,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.0445,
+        0.177,
+        -0.1275
+       ]
+      },
+      "member": "box-3",
+      "part": "joint"
+     },
+     {
+      "id": "mass-flat-box",
+      "kind": "box",
+      "bone": "flat-box",
+      "material": "kraft-board-worn",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.48,
+        0.0375,
+        0
+       ]
+      },
+      "member": "flat-box",
+      "part": "mass"
+     },
+     {
+      "id": "mass-box-1",
+      "kind": "box",
+      "bone": "box-1",
+      "material": "kraft-board-worn",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.307,
+        0.16,
+        0
+       ]
+      },
+      "member": "box-1",
+      "part": "mass"
+     },
+     {
+      "id": "mass-box-2",
+      "kind": "box",
+      "bone": "box-2",
+      "material": "kraft-board",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.307,
+        0.166,
+        0
+       ]
+      },
+      "member": "box-2",
+      "part": "mass"
+     },
+     {
+      "id": "mass-box-3",
+      "kind": "box",
+      "bone": "box-3",
+      "material": "kraft-board",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.307,
+        0.112,
+        0
+       ]
+      },
+      "member": "box-3",
+      "part": "mass"
+     }
+    ]
    }
   },
   "presentation": {

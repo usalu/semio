@@ -2,7 +2,7 @@
 
 use super::*;
 use semio_plugin_decl_media::original_media::{FormatResult, RawMediaPicker};
-use semio_plugin_instance_docs::docs_components::picker_publication::PickerPublication;
+use semio_plugin_instance_natural_publication::picker::PickerPublication;
 
 impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> VcsArtifactApp<A, M> {
     pub(super) fn observe_picker_commit(&mut self, picker: &mut RawMediaPicker, cx: &StepContext<'_>) -> Result<(), OriginalTurnFailure> {

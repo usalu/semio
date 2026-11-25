@@ -5,6 +5,7 @@ export CARGO_BUILD_RUSTC=rustc CARGO_BUILD_RUSTC_WRAPPER= CARGO_TARGET_DIR=$N/ta
 export CARGO_PROFILE_DEV_DEBUG=0 CARGO_INCREMENTAL=0 CARGO_PROFILE_DEV_SPLIT_DEBUGINFO=off
 mkdir -p $N
 BUN_DIR=$(dirname $(ls /Users/ueli/Documents/semio/.cache/b/t/m/bun/*/bun | head -1)); export PATH=$BUN_DIR:$PATH
-cd /Users/ueli/Documents/semio/✏️s/🔌️plugins/🪐️space/🗿️artifacts/${WS:-🏠️home} || exit 1
+case ${WS:-home} in space) A=🪐️space;; *) A=🏠️home;; esac
+cd /Users/ueli/Documents/semio/✏️s/🔌️plugins/🪐️space/🗿️artifacts/$A || exit 1
 cargo ${=CMD:-check} ${=SEL:---workspace} --tests -j 4 "$@" > $N/${LOG:-tests}.log 2>&1
 echo "exit $?" >> $N/${LOG:-tests}.log

@@ -45,26 +45,35 @@ fn the_shared_vectors_classify_the_drag_payload() {
 }
 
 #[test]
-fn the_shared_vectors_pick_the_preview_shape() {
+fn the_shared_vectors_pick_the_active_band() {
     for vector in fixture()["previews"].as_array().expect("previews") {
         let flag = |key: &str| vector[key].as_bool().unwrap();
-        let shape = tree_drop_preview(kind(vector["kind"].as_str().unwrap()), position(vector["position"].as_str().unwrap()), flag("accepts"), flag("source"), rect(&vector["frame"]));
-        match (vector["shape"].as_str(), shape) {
-            (None, None) => {}
-            (Some("line"), Some(TreeDropShape::Line(line))) => assert_eq!(line, rect(&vector["rect"]), "{vector}"),
-            (Some("box"), Some(TreeDropShape::Box(frame))) => assert_eq!(frame, rect(&vector["rect"]), "{vector}"),
-            (want, got) => panic!("{vector}: wanted {want:?}, got {got:?}"),
-        }
+        let band = tree_drop_preview(kind(vector["kind"].as_str().unwrap()), position(vector["position"].as_str().unwrap()), flag("accepts"), flag("source"), rect(&vector["frame"]));
+        assert_eq!(band, vector["band"].as_array().map(|_| rect(&vector["band"])), "{vector}");
     }
 }
 
 #[test]
-fn the_nest_box_border_and_alphas_are_react_tokens() {
-    let law = &fixture()["box"];
-    assert_eq!(tree_drop_box_border(rect(&law["frame"])).to_vec(), law["border"].as_array().unwrap().iter().map(rect).collect::<Vec<_>>());
-    assert_eq!(TREE_DROP_BOX_BORDER_ALPHA as f64, (law["borderAlpha"].as_f64().unwrap() as f32) as f64);
-    assert_eq!(TREE_DROP_BOX_FILL_ALPHA, law["fillAlpha"].as_f64().unwrap() as f32);
-    assert_eq!(TREE_DROP_BOX_BORDER, law["borderWidth"].as_f64().unwrap() as f32);
+fn the_bands_are_the_shared_places_cases() {
+    let cases: Value = serde_json::from_str(include_str!("../../../../🔨️modules/🫳️pointer-drag/places.cases.json")).expect("the shared drag cases parse");
+    for case in cases["treeBands"].as_array().expect("tree bands") {
+        let corners = |value: &Value| ["left", "top", "right", "bottom"].map(|key| value[key].as_f64().unwrap() as f32);
+        let [left, top, right, bottom] = corners(&case["row"]);
+        let [band_left, band_top, band_right, band_bottom] = corners(&case["band"]);
+        let drop = position(case["position"].as_str().unwrap());
+        let band = tree_drop_preview(TreeDragKind::Plain, drop, true, false, [left, top, right - left, bottom - top]).expect("a plain drag previews every position");
+        assert_eq!(band, [band_left, band_top, band_right - band_left, band_bottom - band_top], "{case}");
+        assert_eq!(tree_band(drop), tree_band(position(case["position"].as_str().unwrap())));
+    }
+}
+
+#[test]
+fn an_edge_band_is_a_quarter_row_and_the_edge_fraction_is_the_same_quarter() {
+    let frame = [0.0, 100.0, 200.0, 24.0];
+    for drop in [TreeDrop::Before, TreeDrop::After] {
+        let band = tree_drop_preview(TreeDragKind::Plain, drop, true, false, frame).unwrap();
+        assert_eq!(band[3], frame[3] * TREE_DROP_EDGE_FRACTION);
+    }
 }
 
 #[test]

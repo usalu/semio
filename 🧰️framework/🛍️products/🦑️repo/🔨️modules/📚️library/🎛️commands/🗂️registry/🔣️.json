@@ -30,6 +30,10 @@
       "en": "the locked dependencies, installed automatically on first use",
       "de": "die gesperrten Abhängigkeiten, bei der ersten Nutzung automatisch installiert"
     },
+    "requiresStaged": {
+      "en": "the locked dependencies; answers at once and keeps them fresh while it stages",
+      "de": "die gesperrten Abhängigkeiten; antwortet sofort und hält sie während der Bereitstellung aktuell"
+    },
     "legend": {
       "en": "* installs the locked dependencies first when they are missing or changed",
       "de": "* installiert zuerst die gesperrten Abhängigkeiten, wenn sie fehlen oder geändert sind"
@@ -164,6 +168,16 @@
         "en": "The module reaches the TypeScript compiler and the JSON schema library.",
         "de": "Das Modul erreicht den TypeScript-Compiler und die JSON-Schema-Bibliothek."
       },
+      "routes": [
+        {
+          "segments": ["mcp", "stdio", "os"],
+          "requires": "staged",
+          "reason": {
+            "en": "An MCP client starts this server and drops it when the handshake misses its connect timeout; the warm gateway answers at once and ensures the dependencies as its first staging step.",
+            "de": "Ein MCP-Client startet diesen Server und verwirft ihn, wenn der Handshake sein Verbindungszeitlimit verpasst; das warme Gateway antwortet sofort und stellt die Abhängigkeiten als ersten Bereitstellungsschritt sicher."
+          }
+        }
+      ],
       "synopsis": "dev playground <variant> <react|wgpu|native> <prototype|release> | dev storybook|time-travel|mcp …",
       "summary": {
         "en": "Starts browser and native playgrounds, development servers, and the time-travel browser gate.",

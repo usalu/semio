@@ -17,6 +17,7 @@
   "pileGroups": null,
   "labTests": null,
   "layerWaters": null,
+  "placements": null,
   "cases": {
     "removed": [],
     "inserted": [],
@@ -31,7 +32,17 @@
       {
         "id": "investigation-1",
         "patch": {
-          "depth": 24.0
+          "positionX": null,
+          "positionY": null,
+          "groundLevel": null,
+          "depth": 24.0,
+          "kind": null,
+          "readings": {
+            "removed": [],
+            "inserted": [],
+            "moved": [],
+            "modified": []
+          }
         }
       }
     ]

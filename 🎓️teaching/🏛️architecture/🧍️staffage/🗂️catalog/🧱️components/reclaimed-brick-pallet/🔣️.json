@@ -13,14 +13,62 @@
    "de": "Eine Palette mit 384 gereinigten Vollziegeln im Reichsformat (250 x 120 x 65 mm) aus einer abgebrochenen, in Kalkmörtel gemauerten Wand, von Hand in sechzehn kreuzweise verzahnten Lagen mit offenen 10-mm-Stoßfugen auf einer EPAL-Europalette gestapelt und mit zwei PET-Bändern über vier Kantenschutzwinkeln umreift; abgeschlagene Kanten und Kalkmörtelreste zeigen ihr erstes Leben. Sie steht auf dem Lagerplatz, wird auf der Staplergabel 250 mm angehoben, und zwei ihrer Lagen sind neben ihr als 120 mm dicke Läuferverbandwand aus zwölf Scharen unter Schwelle und Wind wieder vermauert. 1.41 t."
   },
   "tags": [
-   "component",
-   "reclaimed",
-   "masonry",
-   "brick",
-   "clay",
-   "pallet",
-   "stacked-goods",
-   "reichsformat"
+   {
+    "id": "component",
+    "title": {
+     "en": "component",
+     "de": "Bauteil"
+    }
+   },
+   {
+    "id": "reclaimed",
+    "title": {
+     "en": "reclaimed",
+     "de": "wiederverwendet"
+    }
+   },
+   {
+    "id": "masonry",
+    "title": {
+     "en": "masonry",
+     "de": "Mauerwerk"
+    }
+   },
+   {
+    "id": "brick",
+    "title": {
+     "en": "brick",
+     "de": "Backstein"
+    }
+   },
+   {
+    "id": "clay",
+    "title": {
+     "en": "clay",
+     "de": "Ton"
+    }
+   },
+   {
+    "id": "pallet",
+    "title": {
+     "en": "pallet",
+     "de": "Palette"
+    }
+   },
+   {
+    "id": "stacked-goods",
+    "title": {
+     "en": "stacked goods",
+     "de": "Stapelgut"
+    }
+   },
+   {
+    "id": "reichsformat",
+    "title": {
+     "en": "reichsformat",
+     "de": "Reichsformat"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage component authors",

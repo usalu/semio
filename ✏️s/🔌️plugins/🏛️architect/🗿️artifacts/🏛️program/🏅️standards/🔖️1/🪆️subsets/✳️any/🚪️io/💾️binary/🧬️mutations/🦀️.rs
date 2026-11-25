@@ -44,4 +44,6 @@ impl protocol::OpBinary for ProgramMutation {
         dsl::tagged_value_binary::decode_op(WIRE_PROTOCOL, dsl::tagged_value_binary::VariantTag::Field("mutation"), bytes)
     }
 }
+dsl::original_decoded_operation_receiving!(ProgramMutation);
+dsl::artifact_persisted_encoded_binary_operation!(ProgramMutation);
 }

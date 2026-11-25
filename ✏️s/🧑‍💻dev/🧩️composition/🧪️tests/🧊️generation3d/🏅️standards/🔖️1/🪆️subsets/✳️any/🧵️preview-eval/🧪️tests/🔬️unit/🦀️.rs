@@ -198,7 +198,7 @@ fn every_status_row_offers_the_run_abort_exactly_while_it_can_stop_work() {
     for row in fixture()["status"].as_array().unwrap() {
         let id = text(&row["id"]);
         let run = run_view(&row["run"]);
-        let status: serde_json::Value = serde_json::from_str(&preview_progress_status_json_for(None, run.as_ref(), Ok("flow-extension-brep".into()))).expect("status json");
+        let status: serde_json::Value = serde_json::from_str(&preview_progress_status_json_for(None, run.as_ref().map(ToolRunView::poll_view), Ok("flow-extension-brep".into()))).expect("status json");
         println!("[STATS] status {id}: cancellable={} cancelAction={} cancelArgs={}", status["cancellable"], status["cancelAction"], status["cancelArgs"]);
         let expected = &row["expected"];
         assert_eq!(status["cancellable"], expected["cancellable"], "{id}: cancellable");
@@ -207,7 +207,7 @@ fn every_status_row_offers_the_run_abort_exactly_while_it_can_stop_work() {
     }
     let miss = semio_os_flow::FlowExtensionAddressMiss { extension_id: GENERATION_3D_GEOMETRY_EXTENSION_ID.into(), contributed: Vec::new() };
     let running = run_view(&serde_json::json!({ "run": 1, "generation": 0, "state": "running" }));
-    let faulted: serde_json::Value = serde_json::from_str(&preview_progress_status_json_for(None, running.as_ref(), Err(miss))).expect("status json");
+    let faulted: serde_json::Value = serde_json::from_str(&preview_progress_status_json_for(None, running.as_ref().map(ToolRunView::poll_view), Err(miss))).expect("status json");
     assert_eq!((faulted["phase"].as_str(), faulted["cancellable"].as_bool()), (Some("faulted"), Some(false)), "an unaddressable kernel has no work an abort could stop");
 }
 
@@ -227,7 +227,7 @@ fn the_lod_deflection_ladder_is_shared_and_monotone() {
 fn surface_controls_fixture_json() -> &'static str { repo_text!("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🧫️fixtures/🛑️surface-controls/🔣️.json") }
 
 fn published(session: &FlowEvalSession, run: Option<&ToolRunView>) -> serde_json::Value {
-    serde_json::from_str(&preview_progress_status_json_for(Some(session), run, Ok(GENERATION_3D_GEOMETRY_EXTENSION_ID.to_string()))).expect("the projection publishes json")
+    serde_json::from_str(&preview_progress_status_json_for(Some(session), run.map(ToolRunView::poll_view), Ok(GENERATION_3D_GEOMETRY_EXTENSION_ID.to_string()))).expect("the projection publishes json")
 }
 
 /// ⚖️ LAW: a live evaluation publishes a RUN of non-idle frames with a monotone ratio and an offered

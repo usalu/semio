@@ -530,7 +530,6 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
 
     /// ♻️ Spends ONE bounded retirement turn on the pending store publication its owner already closed (acknowledged result, refused preparation or cancelled authority): the publication unit would otherwise wait for a maintenance turn that no host guarantees, so a closing owner stalled the operation until the publication-stall ceiling faulted it. The turn reports its own progress and yields to cancellation like every retirement step.
     pub fn advance_closing_publication(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<PluginLifecycleStep, semio_framework_job::OriginalTurnFailure> {
-        semio_framework_value::debug_histogram::debug_unit(self.debug_granted_retirement_owner());
         let grant = cx.retained_grant();
         let demand = self.granted_retirement_demands(grant.maximum_copy_bytes)?;
         semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx, grant, demand, |same, actual| {

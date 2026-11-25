@@ -1,7 +1,9 @@
 /** 🔘️ The visible trigger raises the same `contextmenu` event as a right click, anchored on its target. */
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest";
-import { contextMenuAnchorPointV1, dispatchContextMenuAtV1 } from "../../🔘️trigger/🟦️.tsx";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { ContextMenuTriggerButton, contextMenuAnchorPointV1, dispatchContextMenuAtV1 } from "../../🔘️trigger/🟦️.tsx";
 
 describe("context menu trigger", () => {
   it("anchors just below the trailing edge of the target", () => {
@@ -24,5 +26,11 @@ describe("context menu trigger", () => {
     const bare = document.createElement("div");
     document.body.append(bare);
     expect(dispatchContextMenuAtV1(bare, { x: 1, y: 1 })).toBe(false);
+  });
+
+  it("forwards data attributes to its button, so a host can mark it a glass chip", () => {
+    const markup = renderToStaticMarkup(createElement(ContextMenuTriggerButton, { resolveTarget: () => null, "data-glass-chip": "" }));
+    expect(markup).toContain("data-glass-chip");
+    expect(markup).toContain("data-context-menu-trigger");
   });
 });

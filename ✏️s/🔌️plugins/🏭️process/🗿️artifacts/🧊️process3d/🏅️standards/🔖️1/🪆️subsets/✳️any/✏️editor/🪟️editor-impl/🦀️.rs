@@ -81,7 +81,7 @@ impl ArtifactEditor for Process3dPlayApp {
     const DOCUMENT_SCHEMA: &'static str = semio_s_artifact_process_process3d_model::snapshot::PROCESS_3D_SCHEMA;
 
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
-        Some(std::sync::Arc::new(Process3dArtifactPreparationFactory))
+        Some(std::sync::Arc::new(process3d_document_preparation_factory()))
     }
 
     fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
@@ -282,7 +282,7 @@ impl ArtifactEditor for Process3dPlayApp {
                 let json = string_field("json").or_else(|| field("document").map(semio_framework_pack_json::to_json_string)).unwrap_or_default();
                 Ok(Process3dCommand::SetDocument(set_snapshot::SetDocument { json }))
             }
-            "setActiveExample" => Ok(Process3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: string_field("exampleId").or_else(|| string_field("id")).unwrap_or_else(|| PROCESS3D_EXAMPLE_TIMBER.into()) })),
+            "setActiveExample" => Ok(Process3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: string_field("exampleId").or_else(|| string_field("example_id")).or_else(|| string_field("id")).unwrap_or_else(|| PROCESS3D_EXAMPLE_TIMBER.into()) })),
             "addStep" => Ok(Process3dCommand::AddStep(add_step::AddStep {
                 measure: string_field("measure"),
                 machine_id: string_field("machineId").or_else(|| string_field("machine_id")),

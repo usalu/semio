@@ -167,8 +167,8 @@ pub trait ArtifactApp: Default + Send + 'static {
     fn build_reserved_tool_job(_request:&mut Option<ArtifactReservedToolJobRequest<Self>>,_body:&mut Option<Box<dyn crate::tool_contract::ArtifactReservedJob+Send>>,_construction:&mut semio_framework_job::OriginalConstructionAdmission,_cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"registered reserved app route lacks its original producer").into())
     }
-    /// 🎞️ Builds an owned resumable producer for an explicitly registered media-output port.
-    /// The completed `Media` crosses back to the host only after the job's fresh commit boundary.
+    /// 🎞️ Builds the registered format producer for a picked Original file (`ArtifactReservedToolInput::OriginalPicker`);
+    /// the reserved preparation routes every picker input here instead of [`Self::build_reserved_tool_job`].
     fn build_original_picker_job(
         _request: &mut Option<ArtifactReservedToolJobRequest<Self>>,
         _body: &mut Option<Box<dyn crate::tool_contract::ArtifactReservedJob+Send>>,
@@ -197,6 +197,16 @@ pub trait ArtifactApp: Default + Send + 'static {
     /// installed owner catalog, so a default disposer over no catalog faulted every close with
     /// `artifact store has no owner-supplied bounded disposer`. `None` keeps both routes fail closed.
     fn document_store_owners_source_demands()->Result<RetirementDemand,ValueError>{store::os_store::document_store_owners::bounded_artifact_store_owners_source_demands::<Self::Snapshot,Self::Mutation>()}
+    /// 🪪️ The one operation wire of every document Store of this app: live ingress and every replacement catalog install it, so persisted history replays through the vocabulary's own codec.
+    fn persisted_operation_wire() -> store::ArtifactOperationWire<Self::Mutation> {
+        <Self::Mutation as store::ArtifactPersistedOperation>::install_persisted_receiving(store::ArtifactOperationWire::semantic::<Self::Snapshot>().with_batch_digest()).with_original_target(store::whole_document_target::<Self::Mutation>)
+    }
+
+    /// 🏛️ Every document Store catalog of this app, live or replacement, carries the persisted operation wire: the catalog's wire source is authoritative when it installs.
+    fn persisted_document_store_owners(grant: RetainedCloneGrant) -> Option<Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>>> {
+        Self::build_document_store_owners(grant).map(|built| built.map(|(mut owners, progress)| { owners.operation_wire = Self::persisted_operation_wire(); (owners, progress) }))
+    }
+
     fn build_document_store_owners(grant: RetainedCloneGrant) -> Option<Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>>> {
         Some(store::os_store::document_store_owners::bounded_artifact_store_owners::<Self::Snapshot, Self::Mutation>(grant))
     }
@@ -283,7 +293,7 @@ pub trait ArtifactApp: Default + Send + 'static {
         operation: semio_framework_job::OperationId,
         generation: semio_framework_job::Generation,
         actor: ActorId,
-    ) -> semio_plugin_ownership::store_lifecycle::ArtifactStoreInitializationJob<Self::Snapshot,Self::Mutation> {
+    ) -> semio_plugin_store_lifecycle::store_lifecycle::ArtifactStoreInitializationJob<Self::Snapshot,Self::Mutation> {
         bounded_document_store_initialization_job::<_,_,AppDocumentStoreOwnerProducer<Self>>(envelope,Self::DOCUMENT_SCHEMA,operation,generation,actor)
     }
 
@@ -354,7 +364,7 @@ pub trait ArtifactApp: Default + Send + 'static {
     /// 🏷️ `SemanticMutation` (design §16.2): every document operation labels itself in every shell locale through its
     /// leaf (`MutationKind::label`), so a history row, the history-edit editor and a tool-transaction row are never the
     /// operation's text line — `#[derive(Mutations)]` is the one way an aggregate answers it.
-    type Mutation: ::semio_os_kernel::StoreMutationFor<Self::Snapshot> + Clone + ::protocol::ColdMutation<Self::Snapshot> + protocol::SemanticMutation<Self::Snapshot> + store::ArtifactCanonicalJsonTree + PartialEq + semio_framework_value::retirement::RetireOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
+    type Mutation: ::semio_os_kernel::StoreMutationFor<Self::Snapshot> + store::ArtifactPersistedOperation + Clone + ::protocol::ColdMutation<Self::Snapshot> + protocol::SemanticMutation<Self::Snapshot> + store::ArtifactCanonicalJsonTree + PartialEq + semio_framework_value::retirement::RetireOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
     type Config: Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_value::retirement::RetireOwned + Send + Sync + store::ConfigRecord + ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + 'static;
     type ConfigMutation: Clone + ::protocol::ColdMutation<Self::Config> + ::protocol::Mutation<Self::Config> + store::ArtifactCanonicalJsonTree + PartialEq + semio_framework_value::retirement::RetireOwned + Send + ::protocol::OpText + ::protocol::OpBinary + ::replication::OpBinaryReceiving + 'static;
     /// 🧲️ Volatile draft snapshot — use {@link NoDraft} when the app has no draft lane.

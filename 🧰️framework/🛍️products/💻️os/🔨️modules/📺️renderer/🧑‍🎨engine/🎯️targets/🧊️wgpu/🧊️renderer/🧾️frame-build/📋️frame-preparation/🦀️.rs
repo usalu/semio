@@ -2,6 +2,20 @@
 use super::*;
 
 //#region 📮️RuntimeMailbox
+/// 🧾️ A worker turn receipt excludes the return span its outcome reserved on the caller, so the caller's already posted total is the receipt plus that reserved delta.
+pub fn posted_receipt(before: semio_framework_job::RetainedCloneProgress, receipt: semio_framework_job::RetainedCloneProgress, held_before: semio_framework_job::RetainedCloneProgress, cx: &semio_framework_job::StepContext<'_>) -> bool {
+    let held_after = cx.reserved_return_progress();
+    let delta = |after: usize, before: usize| after.checked_sub(before);
+    let (Some(copied_items), Some(copied_bytes), Some(retained_capacity_bytes), Some(released_bytes)) = (
+        delta(held_after.copied_items, held_before.copied_items),
+        delta(held_after.copied_bytes, held_before.copied_bytes),
+        delta(held_after.retained_capacity_bytes, held_before.retained_capacity_bytes),
+        delta(held_after.released_bytes, held_before.released_bytes),
+    ) else { return false };
+    let reserved = semio_framework_job::RetainedCloneProgress { copied_items, copied_bytes, retained_capacity_bytes, released_bytes };
+    before.checked_add(receipt).and_then(|total| total.checked_add(reserved)).is_ok_and(|total| total == cx.retained_progress())
+}
+
 #[derive(Clone,Copy,PartialEq,Eq)]
 pub enum FramePreparationStep { Pending, Complete, Cancelled, Fault }
 
@@ -62,6 +76,7 @@ impl AppFramePreparation {
             let mut cancel = None;
             let admitted = cx.admit_original_cancel_alias(&mut cancel);
             if let Some(cancel) = cancel {
+                if let Some(job)=self.job.as_mut(){job.bind_business_generation(cx.generation().0);}
                 self.params = Some(semio_framework_job_worker_authority::BatchJobParams { operation:cx.operation(),generation:cx.generation(),cancel,config:semio_framework_job_worker_authority::BatchDriveConfig { retained:self.retained,site:"os_renderer.prepare.worker",stage:semio_framework_job::InteractiveStage::BackgroundStep,fuel_per_step:1,step_budget_us:1000 },now_us:cx.clock_source() });
             }
             admitted?;
@@ -86,21 +101,22 @@ impl AppFramePreparation {
             return Ok(outcome);
         }
         if !self.worker_semantic_pending {
-            let before=cx.retained_progress();let expected=cx.retained_grant();
+            let before=cx.retained_progress();let held_before=cx.reserved_return_progress();let expected=cx.retained_grant();
             if !matches!(session.step_on_original_caller(cx)?,WorkerJobPoll::Outcome|WorkerJobPoll::Terminal) || !session.checkout_outcome() { return Ok(FramePreparationStep::Pending); }
             if let Some((issued,progress))=session.take_checked_out_retained_step_receipt() {
                 self.worker_semantic_pending=true;
-                let posted=before.checked_add(progress).is_ok_and(|total|total==cx.retained_progress());
+                let posted=posted_receipt(before,progress,held_before,cx);
                 if issued!=expected || !progress.fits(issued) || !posted { self.refused_receipt=Some((issued,progress));return Err(refuse("original prepared worker tuple differs from its already posted original caller receipt").into()); }
                 return Ok(FramePreparationStep::Pending);
             }
             return Err(refuse("original prepared worker omitted its checked-out physical receipt").into());
         }
+        let fault_detail=session.checked_out_job().and_then(|job|job.fault_detail());
         self.outcome_pending=Some(match session.checked_out_outcome()? {
             None|Some(JobOutcomeView::Yield { .. })=>FramePreparationStep::Pending,
             Some(JobOutcomeView::Complete { .. })=>FramePreparationStep::Complete,
             Some(JobOutcomeView::Cancelled { .. })=>{self.fault=Some("prepared render job was cancelled");FramePreparationStep::Cancelled},
-            Some(JobOutcomeView::Fault { .. }|JobOutcomeView::PreviewReady { .. }|JobOutcomeView::CheckpointReady { .. })=>{self.fault=Some("prepared render job refused its terminal candidate");FramePreparationStep::Fault},
+            Some(JobOutcomeView::Fault { .. }|JobOutcomeView::PreviewReady { .. }|JobOutcomeView::CheckpointReady { .. })=>{self.fault=Some(fault_detail.unwrap_or("prepared render job refused its terminal candidate"));FramePreparationStep::Fault},
         });
         Ok(FramePreparationStep::Pending)
     }

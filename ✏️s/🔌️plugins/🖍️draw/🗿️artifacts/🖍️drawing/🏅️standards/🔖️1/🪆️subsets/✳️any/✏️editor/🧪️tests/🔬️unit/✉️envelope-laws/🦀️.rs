@@ -65,7 +65,9 @@ const DRAWING_LIVE_LOAD_TURN_BUDGET: usize = 1_000_000;
 
 pub(super) async fn drive_drawing_load(app: &mut DrawingAppFixture, handle: semio_plugin::ArtifactEnvelopeDecodeOperationHandle) -> semio_plugin::ArtifactEnvelopeDecodeOperationPoll {
     let mut identity = artifact_laws::fixture_identity();
+    let grant = app.1.cx().retained_grant();
     for _ in 0..DRAWING_LIVE_LOAD_TURN_BUDGET {
+        semio_plugin::artifact_app_laws::fixture_renew_turn(app.1.cx(), semio_plugin::artifact_app_laws::OriginalFixtureCaller::turn_fuel(), grant).expect("one Drawing load turn");
         app.0.advance_typed_operation_publication(&mut identity, app.1.cx()).await.expect("one Drawing original decode publication turn");
         app.0.maintenance_step(app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("one Drawing maintenance turn");
         let poll = app.0.advance_artifact_envelope_load(handle, app.1.cx()).expect("Drawing load advancement");

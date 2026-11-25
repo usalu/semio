@@ -1,0 +1,7 @@
+[
+ {
+  "name": "scenario",
+  "old": "  Scenario Outline: A heater has a through-grip and eight outlet louvres at every scale\n    Given the electric fan heater at scale <scale>\n    Then the carry bar clears the cover across an 80 mm span in body, temperature and forces\n    And eight distinct louvres cross the outlet in body and temperature\n    And the physical rotary dial matches the thermally modelled control\n    Examples:\n      | scale |\n      | 50    |\n      | 100   |\n      | 200   |\n      | 500   |",
+  "new": "  Scenario Outline: A heater keeps its carry bar and resolves its grip opening, louvres and dial as its band states\n    Given the electric fan heater at scale <scale>\n    Then the carry bar stands above the cover across an 80 mm span in body, temperature and forces\n    And the 26 mm opening under the bar is <grip> in body, temperature and forces\n    And <body louvres> distinct louvre bands cross the outlet in the body and <thermal louvres> in temperature\n    And the rotary dial is <body dial> in the body and present in temperature\n    Examples: no solid dimension below the smallest feature of the band (7.5, 15, 30, 75 mm)\n      | scale | grip   | body louvres | thermal louvres | body dial |\n      | 50    | open   | 8            | 8               | present   |\n      | 100   | open   | 4            | 6               | present   |\n      | 200   | closed | 1            | 1               | present   |\n      | 500   | closed | 1            | 1               | left out  |"
+ }
+]

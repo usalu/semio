@@ -14,7 +14,7 @@ test("inspector channel rows publish graph targets distinct from row identities"
             tree.append(element);
             let hover: { granularity: string; id: string } | undefined;
             element.addEventListener("pointerenter", () => {
-                const direction = row.kind !== "output" ? "!i" : (!row.port || row.port.startsWith("!")) ? "!o" : "";
+                const direction = row.kind !== "output" && (row as { incoming?: boolean }).incoming !== false ? "!i" : (!row.port || row.port.startsWith("!")) ? "!o" : "";
                 hover = { granularity: "handle", id: `h:${row.widget}@${direction}${row.port}` };
             });
             element.addEventListener("pointerleave", () => { hover = undefined; });

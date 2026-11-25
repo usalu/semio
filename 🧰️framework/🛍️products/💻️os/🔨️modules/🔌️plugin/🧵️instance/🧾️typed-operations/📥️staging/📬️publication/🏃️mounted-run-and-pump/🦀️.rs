@@ -170,6 +170,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             let custody=mounted.page_publication_pending()||mounted.pending_artifact_publication.as_ref().is_some_and(|owner|owner.accepted_receipt().is_some());
             let cancelled=mounted.cancellation_lease.as_ref().is_some_and(|lease|lease.publication_is_cancelled());
             let owned_child_route = !acknowledged_page && !custody && !cancelled && mounted.owned_child_group.is_some();
+            let mut staged = false;
             if owned_child_route {
                 record_typed_operation_unit(TypedOperationUnitKind::Store);
                 let remaining=semio_plugin_reactor_app::remaining_plugin_turn_grant(turn,*spent);
@@ -186,11 +187,12 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                     self.publish_mounted_typed_inline_interaction_unit(mounted, identity).await
                 }).await?;
             } else {
+                staged = true;
                 let before = (mounted.publication_progress, mounted.publication.is_some(), mounted.pending_artifact_publication.is_some(), mounted.stage);
                 let remaining = semio_plugin_reactor_app::remaining_plugin_turn_grant(turn, *spent);
                 let (receipt, unit) = cx.with_retained_loan(remaining, |cx| {
                     let original_before = cx.retained_progress();
-                    let grant = semio_plugin_ownership::bounded_ownership::original_lifecycle_grant(cx, remaining);
+                    let grant = cx.retained_grant();
                     self.publish_mounted_typed_operation_unit(mounted, grant, cx).map_err(semio_framework_job::OriginalTurnFailure::from)?;
                     let receipt = mounted.publication_ownership_progress.take();
                     if receipt.is_none() {
@@ -222,7 +224,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             }
             moved=true;
             if cx.fuel_remaining()==fuel{cx.consume_fuel(1)}
-            if owned_child_route{let after=semio_plugin_ownership::bounded_ownership::original_lifecycle_net_after(cx.retained_progress(),reserved_before,cx.reserved_return_progress());let delta=semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,after)?;*spent=spent.checked_add(delta)?;}
+            if !staged{let after=semio_plugin_ownership::bounded_ownership::original_lifecycle_net_after(cx.retained_progress(),reserved_before,cx.reserved_return_progress());let delta=semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,after)?;*spent=spent.checked_add(delta)?;}
             if semio_plugin_reactor_app::remaining_plugin_turn_grant(turn,*spent).maximum_items==0{return Ok(attempted)}
             if mounted.stage != MountedTypedCommandFullOperationStage::Publishing {
                 return Ok(attempted);

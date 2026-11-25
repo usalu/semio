@@ -17,7 +17,7 @@ import type {CasCollectionV1} from "../../../🗄️cas/🧹️collector/🟦️
 import {casPartitionBudgetV1,casPartitionPolicyForV1,decideCasEnforcementV1} from "../../../🗄️cas/🌡️partition/🟦️.ts";
 import {CAS_BUDGET_V1,CAS_POLICY_V1,CAS_RESERVE_FACTOR_V1} from "../../../🗄️cas/🧬️schema/🟦️.ts";
 import {admitBuildDiskV1,expectedDiskGrowthBytesV1} from "../../💽️disk/🟦️.ts";
-import {DISK_WRITERS_V1,consumersOfV1,judgeDiskV1,machineDiskBudgetV1,recoverDiskV1,recoverNeedV1,refuseDiskRecoveryV1,requireDiskWritersV1,type DiskFactsV1,type DiskWriterRowV1,type DiskWriterV1} from "../🟦️.ts";
+import {DISK_WRITERS_V1,consumersOfV1,judgeDiskV1,machineDiskBudgetV1,recoverDiskV1,recoverNeedV1,refuseDiskRecoveryV1,sweepDiskV1,requireDiskWritersV1,type DiskFactsV1,type DiskWriterRowV1,type DiskWriterV1} from "../🟦️.ts";
 import {applyBoundV1,DISK_BOUNDS_V1,finishedReadVerdictV1,selectExpiredV1,selectRotatedV1,selectTemporaryV1} from "../🧺️bounds/🟦️.ts";
 import {collectMachineBoundsV1,realDiskWritersV1} from "../🔌️real/🟦️.ts";
 import {CACHE_SIZE_FILE_V1,readCacheLedgerV1} from "../../../../⚡️caching/💾️storage/🧾️ledger/🟦️.ts";
@@ -309,7 +309,27 @@ test("the real writers bind the registry: every writer that gives bytes to the h
  let spawned=0;
  const counting=realDiskWritersV1({workspace:root,home:root,tmp:root,uid:501,environment:{},ledger:async()=>{spawned++;}});
  for(const writer of counting.filter(item=>item.row.collector==="ledger"&&item.row.relief==="host"))await writer.collect!({needBytes:1});
- expect(spawned).toBe(1);
+ const areas=new Set(counting.filter(item=>item.row.collector==="ledger"&&item.row.relief==="host").map(item=>/--area=([a-z0-9,-]+)/u.exec(item.row.command)?.[1]??"*"));
+ expect(spawned).toBe(areas.size);
+});
+
+/** 🔢️ Contract: under an inode shortage the sweep runs the collectors by expected inodes reclaimed (dependency generations first, the registry's inode rank), not by byte priority; each ledger row spawns the collector of its own area only, so one slow area never starves the next, and an independent model of the order agrees. */
+test("an inode sweep runs the dependency generations first, ranks are unique and a ledger row collects only its own area",async()=>{
+ expect(requireDiskWritersV1().length).toBe(DISK_WRITERS_V1.length);
+ const ranked=DISK_WRITERS_V1.filter(row=>row.inodeRank!==undefined).sort((first,second)=>first.inodeRank!-second.inodeRank!);
+ expect(ranked[0]!.id).toBe("dependency-generations");
+ expect(()=>requireDiskWritersV1([...DISK_WRITERS_V1,{...DISK_WRITERS_V1[0]!,id:"twin",priority:99,inodeRank:1}])).toThrow("inode");
+ const calls:string[]=[],stub=(row:DiskWriterRowV1):DiskWriterV1=>({row:{...row,relief:"host"},root:"/x",measure:()=>0,collect:async()=>{calls.push(row.id);return 0;}});
+ const writers=DISK_WRITERS_V1.filter(row=>row.collector!=="manual").map(stub);
+ await sweepDiskV1({facts:()=>({partition:"v",totalBytes:100,freeBytes:50}),needBytes:1,writers,language:"en",scarce:"inodes"});
+ const model=spawnSync("/usr/bin/python3",["-I","-c","import json,sys;rows=json.loads(sys.argv[1]);rows=[r for r in rows if r['collector']!='manual'];rows.sort(key=lambda r:(r.get('inodeRank',10**9),r['priority']));print(json.dumps([r['id'] for r in rows]))",JSON.stringify(DISK_WRITERS_V1)],{encoding:"utf8"}).stdout.trim();
+ expect(calls).toEqual(JSON.parse(model));
+ calls.length=0;
+ await sweepDiskV1({facts:()=>({partition:"v",totalBytes:100,freeBytes:50}),needBytes:1,writers,language:"en"});
+ expect(calls[0]).toBe("cargo-incremental");
+ const spawnedAreas:(string|undefined)[]=[],real=realDiskWritersV1({workspace:fresh(),home:fresh(),tmp:fresh(),uid:501,environment:{},imageBacked:false,ledger:async(_signal,_need,only)=>{spawnedAreas.push(only);}});
+ for(const id of["dependency-generations","cargo-incremental"])await real.find(item=>item.row.id===id)!.collect!({needBytes:1});
+ expect(spawnedAreas).toEqual(["dependencies","cargo-store"]);
 });
 
 test("the writers that had no bound have one in the registry and in the real writers: waves, footprint logs, read verdicts, staging, the replica's overwritten files, each with a collector that the command `repo cache gc` runs",async()=>{

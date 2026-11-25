@@ -1,0 +1,21 @@
+[
+  {"scale": "50", "bone": "thumb-metacarpal-l", "paint": "hand-l", "swell": {"hand-l-thumb": 0.003}},
+  {"scale": "50", "bone": "thumb-proximal-l", "paint": "hand-l", "swell": {"hand-l-thumb-mid": 0.003}},
+  {"scale": "50", "bone": "thumb-distal-l", "paint": "hand-l", "swell": {"hand-l-thumb-tip": 0.003}},
+  {"scale": "50", "bone": "hand-l", "paint": "hand-l", "replace": ["hand-l"], "fit": [{"id": "hand-l-fingers", "stations": 10, "solids": [], "across": ["index-proximal-l", "index-middle-l", "index-distal-l", "middle-proximal-l", "middle-middle-l", "middle-distal-l", "ring-proximal-l", "ring-middle-l", "ring-distal-l", "little-proximal-l", "little-middle-l", "little-distal-l"]}]},
+  {"scale": "50", "bone": "thumb-metacarpal-r", "paint": "hand-r", "swell": {"hand-r-thumb": 0.003}},
+  {"scale": "50", "bone": "thumb-proximal-r", "paint": "hand-r", "swell": {"hand-r-thumb-mid": 0.003}},
+  {"scale": "50", "bone": "thumb-distal-r", "paint": "hand-r", "swell": {"hand-r-thumb-tip": 0.003}},
+  {"scale": "50", "bone": "hand-r", "paint": "hand-r", "replace": ["hand-r"], "fit": [{"id": "hand-r-fingers", "stations": 10, "solids": [], "across": ["index-proximal-r", "index-middle-r", "index-distal-r", "middle-proximal-r", "middle-middle-r", "middle-distal-r", "ring-proximal-r", "ring-middle-r", "ring-distal-r", "little-proximal-r", "little-middle-r", "little-distal-r"]}]},
+  {"scale": "50", "bone": "dog-thigh-hn", "paint": "dog-near-thigh", "replace": ["dog-near-thigh"], "fit": [{"id": "dog-near-thigh", "stations": 16, "solids": ["dog-thigh-n"]}], "solids": ["dog-thigh-n"]},
+  {"scale": "50", "bone": "dog-thigh-hf", "paint": "dog-far-thigh", "replace": ["dog-far-thigh"], "fit": [{"id": "dog-far-thigh", "stations": 16, "solids": ["dog-thigh-f"]}], "solids": ["dog-thigh-f"]},
+  {"scale": "100", "bone": "dog-thigh-hn", "paint": "dog-near-thigh", "replace": ["dog-near-thigh"], "fit": [{"id": "dog-near-thigh", "stations": 12, "solids": ["dog-thigh-n"]}], "solids": ["dog-thigh-n"]},
+  {"scale": "100", "bone": "dog-thigh-hf", "paint": "dog-far-thigh", "replace": ["dog-far-thigh"], "fit": [{"id": "dog-far-thigh", "stations": 12, "solids": ["dog-thigh-f"]}], "solids": ["dog-thigh-f"]},
+  {"scale": "100", "bone": "dog-neck", "paint": "dog-neck", "replace": ["dog-neck"], "fit": [{"id": "dog-neck", "stations": 12, "solids": ["dog-neck"]}], "solids": ["dog-neck"]},
+  {"scale": "200", "bone": "dog-forearm-fn", "paint": "dog-near-fore-forearm", "replace": ["dog-near-fore-forearm"], "fit": [{"id": "dog-near-fore-forearm", "stations": 8, "solids": ["dog-forearm-n"]}], "solids": ["dog-forearm-n"]},
+  {"scale": "200", "bone": "dog-forearm-ff", "paint": "dog-far-fore-forearm", "replace": ["dog-far-fore-forearm"], "fit": [{"id": "dog-far-fore-forearm", "stations": 8, "solids": ["dog-forearm-f"]}], "solids": ["dog-forearm-f"]},
+  {"scale": "200", "bone": "dog-jaw", "solids": ["dog-jaw"], "paint": "dog-jaw"},
+  {"scale": "200", "bone": "thigh-r", "solids": ["thigh-r"], "paint": "thigh-r"},
+  {"scale": "50", "bone": "dog-shank-hn", "paint": "dog-near-shank", "replace": ["dog-near-shank"], "fit": [{"id": "dog-near-shank", "stations": 16, "solids": ["dog-shank-n"]}], "solids": ["dog-shank-n"]},
+  {"scale": "50", "bone": "dog-shank-hf", "paint": "dog-far-shank", "replace": ["dog-far-shank"], "fit": [{"id": "dog-far-shank", "stations": 16, "solids": ["dog-shank-f"]}], "solids": ["dog-shank-f"]}
+]

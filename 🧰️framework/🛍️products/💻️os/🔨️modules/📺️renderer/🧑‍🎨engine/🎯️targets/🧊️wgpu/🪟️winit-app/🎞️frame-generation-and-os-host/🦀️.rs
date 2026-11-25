@@ -342,7 +342,7 @@ impl OsHost {
     /// inside the loop is still priced by its own two-millisecond ceiling
     /// (`🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🎮️execution/🦀️.rs` `admit_prepared_gpu_opportunity`), so the loop cannot
     /// hide an over-ceiling submit (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-    fn pump_frame_inputs(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{
+    pub fn pump_frame_inputs(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{
         if !self.presenter.holds_presented_input_publication(){let _=self.runtime.pump_pending_applies(RUNTIME_APPLY_TICK_CREDITS,cx)?;}
         #[cfg(not(target_arch="wasm32"))]{let _=self.runtime.pump_native_asset();let _=self.with_asset_decode_context(|runtime,asset_cx|runtime.asset_decode_step(asset_cx))?;}
         if self.advance_component_surface_close(cx)?{self.scheduler.invalidate(InvalidationReason::RESOURCE_READY);}

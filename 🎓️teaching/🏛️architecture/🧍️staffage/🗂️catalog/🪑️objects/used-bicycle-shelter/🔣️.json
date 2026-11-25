@@ -13,17 +13,83 @@
    "de": "Ein städtischer Fahrradunterstand von 5 m aus feuerverzinktem Stahl, wie er nach rund fünfzehn Jahren an einem Parkeingang steht: drei hintere Stützen RR 100 x 100 auf verdübelten Fußplatten tragen Kragträger RR 120 x 60 mit 5 Grad Neigung und Kopfbändern, drei Pfetten und vier 16-mm-Stegplatten aus Polycarbonat unter Aluminium-Sprossen, 2,1 m tief und 2,6 m hoch; eine halbrunde, mit Laub und Moos verstopfte Rinne entwässert in ein Fallrohr hinter der rechten Stütze. Vier Anlehnbügel (0,75 x 0,80 m) im Abstand von 1,20 m stehen unter dem Dach, einer von einem rangierenden Transporter eingedellt, und ein zurückgelassenes Stadtrad mit weichem Hinterreifen und Bauhof-Banderole ist an den zweiten Bügel angeschlossen. Die ursprünglichen Platten sind vergilbt und an der Tiefkante bemoost; Feld 3 hat eine klare Ersatzplatte. Die Muttern der Fußplatten sind verrostet, die Stützen tragen ein Tag und Aufkleberreste."
   },
   "tags": [
-   "used",
-   "park",
-   "public-space",
-   "cycling",
-   "shelter",
-   "bicycle-parking",
-   "sheffield-stand",
-   "galvanised-steel",
-   "polycarbonate",
-   "street-furniture",
-   "roof"
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "park",
+    "title": {
+     "en": "park",
+     "de": "Park"
+    }
+   },
+   {
+    "id": "public-space",
+    "title": {
+     "en": "public space",
+     "de": "öffentlicher Raum"
+    }
+   },
+   {
+    "id": "cycling",
+    "title": {
+     "en": "cycling",
+     "de": "Radfahren"
+    }
+   },
+   {
+    "id": "shelter",
+    "title": {
+     "en": "shelter",
+     "de": "Unterstand"
+    }
+   },
+   {
+    "id": "bicycle-parking",
+    "title": {
+     "en": "bicycle parking",
+     "de": "Fahrradabstellplatz"
+    }
+   },
+   {
+    "id": "sheffield-stand",
+    "title": {
+     "en": "Sheffield stand",
+     "de": "Sheffield-Ständer"
+    }
+   },
+   {
+    "id": "galvanised-steel",
+    "title": {
+     "en": "galvanised steel",
+     "de": "verzinkter Stahl"
+    }
+   },
+   {
+    "id": "polycarbonate",
+    "title": {
+     "en": "polycarbonate",
+     "de": "Polycarbonat"
+    }
+   },
+   {
+    "id": "street-furniture",
+    "title": {
+     "en": "street furniture",
+     "de": "Stadtmobiliar"
+    }
+   },
+   {
+    "id": "roof",
+    "title": {
+     "en": "roof",
+     "de": "Dach"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content (used park objects wave)",

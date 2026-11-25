@@ -7,7 +7,8 @@ import{test,expect}from"bun:test";
 import{Database}from"bun:sqlite";
 import Ajv from"ajv";
 import ts from"typescript";
-import{readFileSync,existsSync}from"node:fs";
+import{readFileSync,existsSync,mkdirSync,mkdtempSync,realpathSync,rmSync,writeFileSync}from"node:fs";
+import{tmpdir}from"node:os";
 import{resolve,join}from"node:path";
 import{pathToFileURL}from"node:url";
 import fixture from"./🔣️.json"with{type:"json"};
@@ -264,4 +265,33 @@ test("neutral declared factory engines select the same exact OS config and reade
  const api=await import("../🕸️engines/🟦️.ts")as unknown as{frameworkOsEngineFacetV1:(input:unknown)=>string},contract=(await import("../🕸️engines/🧬️schema/🔣️.json")).default,validate=new Ajv({strict:true}).compile(contract.definitions.Factories);expect(typeof api.frameworkOsEngineFacetV1).toBe("function");expect(validate([])).toBe(true);expect(api.frameworkOsEngineFacetV1([])).toBe("renderer");
  const db=new Database(":memory:");try{db.exec("create table expected(module text primary key,engine text)");for(const path of fixture.factoryContributions){const contribution=JSON.parse(readFileSync(join(workspace,path),"utf8"));expect(validate(contribution.browserSessionFactories)).toBe(true);expect(api.frameworkOsEngineFacetV1(contribution.browserSessionFactories)).toBe("play");const source=readFileSync(join(workspace,contribution.browserEntry),"utf8"),tree=ts.createSourceFile(contribution.browserEntry,source,ts.ScriptTarget.Latest,true),imports=tree.statements.filter(ts.isImportDeclaration).map(row=>ts.isStringLiteral(row.moduleSpecifier)?row.moduleSpecifier.text:"");db.exec("delete from expected");for(const row of contribution.browserSessionFactories){db.query("insert into expected values(?,?)").run(row.module,row.engine);expect(imports).toContain(row.module);}expect((db.query("select count(*) n from expected").get()as{n:number}).n).toBe(contribution.browserSessionFactories.length);const config=readFileSync(join(workspace,contribution.viteConfig),"utf8");expect(config).toContain("browserSessionFactories: contribution.browserSessionFactories");}for(const invalid of[[{module:"@fixture/unknown",engine:"./unknown/package"}],[{module:"@fixture/unknown",engine:"./unknown/package",authority:true}],Array.from({length:5},()=>({module:"@fixture/unknown",engine:"./unknown/package"}))]){expect(validate(invalid)).toBe(false);expect(()=>api.frameworkOsEngineFacetV1(invalid)).toThrow();}}finally{db.close();}
  const source=readFileSync(join(workspace,"🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts"),"utf8");expect(source).toContain("frameworkOsEngineFacetV1(options.browserSessionFactories)");
+});
+
+test("neutral Flow serve delivery selects the published product only when complete and otherwise keeps the Source stubs",async()=>{
+ const{flowBrowserDeliveryV1,flowBrowserPackageRequestV1}=await import("../../../../../🌊️flow/🕸️wasm/🌐️browser/📦️publication/📋️contract/🟦️.ts"),products=realpathSync(mkdtempSync(join(tmpdir(),"flowdel-"))),intent={version:1,mode:"prototype",command:"serve"};try{
+  const root=flowBrowserPackageRequestV1(products,{version:1,mode:"prototype"}).path;
+  expect(flowBrowserDeliveryV1(workspace,products,intent).kind).toBe("source");
+  mkdirSync(join(root,"🌐️browser"),{recursive:true});writeFileSync(join(root,"flow_core.js"),"");
+  expect(flowBrowserDeliveryV1(workspace,products,intent).kind).toBe("source");
+  mkdirSync(join(root,"🖥️host"),{recursive:true});writeFileSync(join(root,"🌐️browser/🟨️.js"),"");writeFileSync(join(root,"🖥️host/🟨️.js"),"");
+  expect(flowBrowserDeliveryV1(workspace,products,intent)).toEqual({version:1,kind:"publication",root});
+  expect(flowBrowserDeliveryV1(workspace,products,{...intent,mode:"release"}).kind).toBe("source");
+  expect(flowBrowserDeliveryV1(workspace,products,{...intent,command:"build"})).toEqual({version:1,kind:"publication",root});
+ }finally{rmSync(products,{recursive:true,force:true});}
+});
+
+const flowWasmWith=(names:readonly string[]):Uint8Array=>{
+ const u=(n:number):number[]=>{const out:number[]=[];do{let b=n&0x7f;n>>>=7;if(n)b|=0x80;out.push(b);}while(n);return out;},section=(id:number,body:number[])=>[id,...u(body.length),...body],text=new TextEncoder(),count=names.length;
+ return Uint8Array.from([0,0x61,0x73,0x6d,1,0,0,0,...section(1,[1,0x60,0,0]),...section(3,[...u(count),...names.map(()=>0)]),...section(5,[1,0,1]),...section(7,[...u(count+1),...names.flatMap((name,index)=>{const bytes=[...text.encode(name)];return[...u(bytes.length),...bytes,0,...u(index)];}),...[6,...text.encode("memory"),2,0]]),...section(10,[...u(count),...names.flatMap(()=>[2,0,0x0b])])]);
+};
+test("neutral Flow publication refuses a wasm whose export section lacks a schema-listed flow_bridge export",async()=>{
+ const{missingFlowBridgeExportsV1}=await import("../../../../../🌊️flow/🕸️wasm/🌐️browser/📦️publication/📋️contract/🟦️.ts"),required:readonly string[]=(await import("../../../../../🌊️flow/🕸️wasm/🌐️browser/📦️publication/🧬️schema/🔣️.json")).default.definitions.Protocol.const.bridgeExports;
+ expect(required).toHaveLength(7);
+ const complete=flowWasmWith(required);expect(WebAssembly.Module.exports(new WebAssembly.Module(complete)).map(row=>row.name).sort()).toEqual([...required,"memory"].sort());
+ expect(missingFlowBridgeExportsV1(complete)).toEqual([]);
+ const partial=flowWasmWith(required.slice(0,5));expect(missingFlowBridgeExportsV1(partial)).toEqual(required.slice(5));
+ expect(missingFlowBridgeExportsV1(flowWasmWith([]))).toEqual(required);
+ expect(()=>missingFlowBridgeExportsV1(new Uint8Array(4))).toThrow();
+ const host=readFileSync(join(workspace,"🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🖥️host/🏃️runtime/🟨️.js"),"utf8"),listed=[...host.matchAll(/"(flow_bridge_[a-z_]+)"/g)].map(row=>row[1]);
+ expect(required.every((name:string)=>listed.includes(name))).toBe(true);
 });

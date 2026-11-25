@@ -13,17 +13,83 @@
       "de": "Eine Frau von 1,75 m wartet auf einem Bahnsteig in salbeifarbenem Kapuzensweatshirt, schwarzen engen Jeans und weißen Stoffsneakern, Kopfhörer um den Hals und das Haar zum Pferdeschwanz gebunden; sie hebt das linke Handgelenk, um eine mechanische Armbanduhr abzulesen, und tippt mit dem rechten Fuß. Posen: auf die Uhr schauen, mit dem Fuß tippen, warten und Hand in der Hüfte; Clips: ungeduldiges Fußtippen, ein Blick auf die Uhr und ruhiges Atmen."
     },
     "tags": [
-      "human",
-      "adult",
-      "woman",
-      "standing",
-      "waiting",
-      "impatient",
-      "wristwatch",
-      "foot-tapping",
-      "platform",
-      "ponytail",
-      "headphones"
+      {
+        "id": "human",
+        "title": {
+          "en": "human",
+          "de": "Mensch"
+        }
+      },
+      {
+        "id": "adult",
+        "title": {
+          "en": "adult",
+          "de": "erwachsen"
+        }
+      },
+      {
+        "id": "woman",
+        "title": {
+          "en": "woman",
+          "de": "Frau"
+        }
+      },
+      {
+        "id": "standing",
+        "title": {
+          "en": "standing",
+          "de": "Stehen"
+        }
+      },
+      {
+        "id": "waiting",
+        "title": {
+          "en": "waiting",
+          "de": "Warten"
+        }
+      },
+      {
+        "id": "impatient",
+        "title": {
+          "en": "impatient",
+          "de": "ungeduldig"
+        }
+      },
+      {
+        "id": "wristwatch",
+        "title": {
+          "en": "wristwatch",
+          "de": "Armbanduhr"
+        }
+      },
+      {
+        "id": "foot-tapping",
+        "title": {
+          "en": "foot tapping",
+          "de": "Fußwippen"
+        }
+      },
+      {
+        "id": "platform",
+        "title": {
+          "en": "platform",
+          "de": "Plattform"
+        }
+      },
+      {
+        "id": "ponytail",
+        "title": {
+          "en": "ponytail",
+          "de": "Pferdeschwanz"
+        }
+      },
+      {
+        "id": "headphones",
+        "title": {
+          "en": "headphones",
+          "de": "Kopfhörer"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage human worker HW-17",

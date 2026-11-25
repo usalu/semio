@@ -1,0 +1,12 @@
+{
+  "contract": "semio.process3d.original-document-genesis.v1",
+  "schema": "process.3d",
+  "artifactKind": "s.process.process3d",
+  "historyShape": "document",
+  "address": "native-process",
+  "maximumInitialPackBytes": 262144,
+  "machineCount": 3,
+  "stepCount": 0,
+  "toolSolidCount": 0,
+  "turn": { "maximumItems": 1024, "maximumCopyBytes": 1048576, "maximumCapacityBytes": 16777216, "maximumReleaseBytes": 16777216 }
+}

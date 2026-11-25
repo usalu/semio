@@ -8,6 +8,7 @@ import type { TreeDragRole, TreeHeaderAction } from "../⚡️actions/🟦️.ts
 import type { TreeWindowDomAttributes } from "../🔭️virtual-window/🟦️.tsx";
 import type { TreeDataItem, TreeDataSection, TreeSelectionMode } from "../📋️data/🟦️.ts";
 import type { TreeDragAndDropController, TreeDropPosition } from "../🧲️drag-drop/🟦️.tsx";
+import type { DropPlaceState } from "../../../🔨️modules/🫳️pointer-drag/🟦️.tsx";
 
 /**
  * 🌳️ TreeSectionProps holds the data fields for a TreeSectionProps record.
@@ -35,8 +36,10 @@ export interface TreeSectionProps {
   onDragLeave?: React.DragEventHandler<HTMLDivElement>;
   onDrop?: React.DragEventHandler<HTMLDivElement>;
   isLastSection?: boolean;
-  /** 🎯️ Passive drop-zone highlight while a compatible tree drag is in flight. */
-  isDropReady?: boolean;
+  /** 🎯️ Whether this section is a place the dragged element can be dropped on while a compatible tree drag is in flight: `available`, or `active` under the pointer. */
+  dropPlace?: DropPlaceState;
+  /** 🫥️ This section is the one dragged: hidden in place, keeping its room. */
+  isDragging?: boolean;
   /** 🫳️ When true, renders a trailing {@link DragHandle} for reorder (with handle-only initiation unless {@link dragInitiation} is `"surface"`). */
   isDragHandle?: boolean;
   /** 🧲️ `"handle"` restricts native drag start to the trailing grip; `"surface"` keeps the whole section header draggable. Defaults to `"handle"` when {@link isDragHandle} or {@link draggable} is set. */
@@ -138,8 +141,8 @@ export interface TreeItemProps {
   transferPointerDown?: React.PointerEventHandler<HTMLSpanElement>;
   /** 📮️ The row's transfer payload by MIME, mirrored onto the row as `data-drag-mime`/`data-drag-payload` so the transferred bytes are readable from the DOM without opening a real drag. */
   dragData?: Record<string, string>;
-  /** 💧️ Passive drop-zone highlight while a compatible tree drag is in flight. */
-  isDropReady?: boolean;
+  /** 💧️ Whether this row is a place the dragged element can be dropped on while a compatible tree drag is in flight: `available`, or `active` under the pointer. */
+  dropPlace?: DropPlaceState;
   /** 🪞️ Window mirror stamped on this group's branch content element — build it with {@link treeWindowDomAttributes}. */
   windowAttributes?: TreeWindowDomAttributes;
   /** 📐️ This row's own entry index inside its PARENT's window, stamped as `data-tree-window-row` so the

@@ -2,7 +2,7 @@
 Feature: The JSON Schema is the normative contract
   `🧬️schema/🔣️.json` (draft-07, `$id` semio.staffage/v2) defines one `$defs` entry per type of the TypeScript twin, with the same name, the same enums and
   `additionalProperties: false`. A category document is `{ $schema, version, category, assets }`; the manifest is `{ $schema, version, categories,
-  collections, entries }`; every Text requires `en` and `de`; a Shape is exactly one of the five geometries plus the common fields.
+  collections, entries }`; every Text requires `en` and `de`; a Shape is exactly one of the seven geometries (five planar ones, the member and the loft) plus the common fields; the sections of a loft are one definition for shapes and volumes.
 
   THE REFERENCE is ajv, an independent JSON Schema validator: the reference walker must pass, every broken variant of the fixture must fail, and the enums of
   the schema must equal the constants of the TypeScript twin.

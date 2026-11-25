@@ -13,8 +13,8 @@ use semio_s_artifact_stdio_dwg_write_records::standards::v_ac1024::subsets::any:
 //#region 🔖️DwgStructuralCodec
 //#region DwgRead
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn encode_r2010_associative_dependency_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    let Some(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody::AssociativeDependency(dependency)) = object.body.as_ref() else {
+pub fn encode_r2010_associative_dependency_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    let Some(semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody::AssociativeDependency(dependency)) = object.body.as_ref() else {
         return Err(format!("ACDBASSOCDEPENDENCY {:#x} body missing", object.handle));
     };
     let mut data = DwgBitWriter::new();
@@ -52,8 +52,8 @@ pub fn encode_r2010_associative_dependency_frame(object: &semio_s_artifact_stdio
     finish_r2010_object_frame(&data, handles)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn encode_r2010_associative_value_dependency_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    let Some(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody::AssociativeValueDependency(value)) = object.body.as_ref() else {
+pub fn encode_r2010_associative_value_dependency_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    let Some(semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody::AssociativeValueDependency(value)) = object.body.as_ref() else {
         return Err(format!("ACDBASSOCVALUEDEPENDENCY {:#x} body missing", object.handle));
     };
     let dependency = &value.dependency;
@@ -74,7 +74,7 @@ pub fn encode_r2010_associative_value_dependency_frame(object: &semio_s_artifact
     data.write_bl(dependency.dependency_body_id as u32);
     data.write_bs(0);
     match value.cached_value {
-        semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgEvaluationVariant::Integer32(cached) => {
+        semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgEvaluationVariant::Integer32(cached) => {
             data.write_bs(90);
             data.write_bl(cached as u32);
         }
@@ -100,8 +100,8 @@ pub fn encode_r2010_associative_value_dependency_frame(object: &semio_s_artifact
     finish_r2010_object_frame(&data, handles)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn encode_r2010_associative_geometry_dependency_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    let Some(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody::AssociativeGeometryDependency(geometry)) = object.body.as_ref() else {
+pub fn encode_r2010_associative_geometry_dependency_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    let Some(semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody::AssociativeGeometryDependency(geometry)) = object.body.as_ref() else {
         return Err(format!("ACDBASSOCGEOMDEPENDENCY {:#x} body missing", object.handle));
     };
     let dependency = &geometry.dependency;
@@ -144,9 +144,9 @@ pub fn encode_r2010_associative_geometry_dependency_frame(object: &semio_s_artif
     finish_r2010_object_frame(&data, handles)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn encode_r2010_associative_variable_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgEvaluationVariant;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody;
+pub fn encode_r2010_associative_variable_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgEvaluationVariant;
+    use semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody;
     let Some(DwgLogicalObjectBody::AssociativeVariable(variable)) = object.body.as_ref() else {
         return Err(format!("ACDBASSOCVARIABLE {:#x} body missing", object.handle));
     };
@@ -211,8 +211,8 @@ pub fn encode_r2010_associative_variable_frame(object: &semio_s_artifact_stdio_d
     finish_r2010_object_frame(&data, handles)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn encode_r2010_associative_dimension_dependency_body_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    let Some(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody::AssociativeDimensionDependencyBody(body)) = object.body.as_ref() else {
+pub fn encode_r2010_associative_dimension_dependency_body_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    let Some(semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody::AssociativeDimensionDependencyBody(body)) = object.body.as_ref() else {
         return Err(format!("ASSOCDIMDEPENDENCYBODY {:#x} body missing", object.handle));
     };
     let mut data = DwgBitWriter::new();
@@ -238,8 +238,8 @@ pub fn encode_r2010_associative_dimension_dependency_body_frame(object: &semio_s
     finish_r2010_object_frame(&data, handles)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn encode_r2010_evaluation_graph_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    let Some(semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody::EvaluationGraph(graph)) = object.body.as_ref() else {
+pub fn encode_r2010_evaluation_graph_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    let Some(semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody::EvaluationGraph(graph)) = object.body.as_ref() else {
         return Err(format!("ACAD_EVALUATION_GRAPH {:#x} body missing", object.handle));
     };
     if !object.extended_data.is_empty() || object.extension_dictionary_handle.is_some() || object.owner_handle.is_none() || object.reactor_handles.as_slice() != [object.owner_handle.unwrap_or_default()] || graph.nodes.is_empty() {
@@ -285,10 +285,10 @@ pub fn encode_r2010_evaluation_graph_frame(object: &semio_s_artifact_stdio_dwg_s
     finish_r2010_object_frame(&data, handles)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn encode_r2010_assoc_network_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgAssocNetworkMemberKind;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgAssociativeActionStatus;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody;
+pub fn encode_r2010_assoc_network_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgAssocNetworkMemberKind;
+    use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgAssociativeActionStatus;
+    use semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody;
     let Some(DwgLogicalObjectBody::AssocNetwork(network)) = object.body.as_ref() else { return Err(format!("ACDBASSOCNETWORK {:#x} body missing", object.handle)) };
     let action = &network.action;
     if !matches!(action.status, DwgAssociativeActionStatus::UpToDate)
@@ -332,9 +332,9 @@ pub fn encode_r2010_assoc_network_frame(object: &semio_s_artifact_stdio_dwg_snap
     finish_r2010_object_frame(&data, handles)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn encode_r2010_assoc_2d_constraint_group_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgAssociativeActionStatus;
-    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody;
+pub fn encode_r2010_assoc_2d_constraint_group_frame(object: &semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObject) -> Result<Vec<u8>, String> {
+    use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgAssociativeActionStatus;
+    use semio_s_artifact_stdio_dwg_snapshot_objects::DwgLogicalObjectBody;
     let Some(DwgLogicalObjectBody::Assoc2dConstraintGroup(group)) = object.body.as_ref() else { return Err(format!("ACDBASSOC2DCONSTRAINTGROUP {:#x} body missing", object.handle)) };
     if !matches!(group.action.status, DwgAssociativeActionStatus::UpToDate)
         || object.owner_handle.is_none()

@@ -71,7 +71,7 @@ pub fn host_test_shell() -> ShellState {
         topic_contributions: vec![],
         commands: vec![],
         artifact_kinds: vec![],
-        hosted_artifact_kinds: Vec::new(),
+        hosted_artifact_kinds: Vec::new(), action_sets: Vec::new(),
         dependencies: vec![],
         contributions: vec![],
     };
@@ -663,7 +663,7 @@ pub fn boot_manifest(plugin_id: &str, app_ids: &[&str]) -> PluginManifest {
         topic_contributions: vec![],
         commands: vec![],
         artifact_kinds: vec![],
-        hosted_artifact_kinds: Vec::new(),
+        hosted_artifact_kinds: Vec::new(), action_sets: Vec::new(),
         dependencies: vec![],
         contributions: vec![],
     }

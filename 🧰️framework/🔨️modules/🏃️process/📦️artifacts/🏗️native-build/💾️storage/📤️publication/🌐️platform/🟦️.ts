@@ -15,7 +15,7 @@ import{acceptNativeImageMaintenanceV1,acceptNativeImageBorrowerCleanupV1,withNat
 import{readNativeProtectedParentGrantV1,requireNativeImageEnvelopeV1,nativeImageRootV1,nativeImageBackingFilenameV1}from"../../🌐️platform/📋️contract/🟦️.ts";
 import{observeNativeStorageMaintenanceJournalV1,observeNativeStorageMaintenanceJournalPresenceV1,readNativeStorageObservationPolicyV1,retainNativeStorageFailureV1 as protectedParentFailureV1}from"../../🟦️.ts";
 import type{NativeStoragePolicyV1}from"../../📜️journal/🟦️.ts";
-import{requireArtifactDescriptorClosureV1}from"@semio-tech/framework-filesystem/observation/descriptor";
+import{requireArtifactDescriptorClosureV1}from"../../../../../../📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
 import storageSchema from"../../🧬️schema/🔣️.json" with { type: "json" };
 import{acquireNativeStorageMaintenanceMappingWriterV1,releaseNativeStorageMappingWriterV1,type NativeStorageMappingWriterV1}from"../../🔒️mapping/🟦️.ts";
 import type{AcceptedPhysicalCleanupV1}from"../../../../../🧭️routing/📥️invocation/🏃️process/🧹️cleanup/🟦️.ts";
@@ -70,7 +70,7 @@ import*as artifactRetirementFSV1 from"node:fs/promises";
 import{constants as artifactRetirementConstantsV1,type BigIntStats as ArtifactRetirementStatsV1}from"node:fs";
 import{createHash as artifactRetirementHashV1}from"node:crypto";
 import{dirname as artifactRetirementParentV1}from"node:path";
-import{withArtifactDescriptorV1 as withArtifactRetirementDescriptorV1}from"@semio-tech/framework-filesystem/observation/descriptor";
+import{withArtifactDescriptorV1 as withArtifactRetirementDescriptorV1}from"../../../../../../📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
 import{syncNativeCleanupDirectoryV1 as syncArtifactRetirementDirectoryV1}from"../../🧹️cleanup/♻️retirement/💾️durability/🟦️.ts";
 import{observeNativeVolumeEventServiceV1 as observeArtifactRetirementServiceV1}from"../📚️witness/🍎️events/🟦️.ts";
 import{hasNativeImageVolumeSilenceMarkerV1}from"../../🍎️image/🤫️silence/🟦️.ts";
@@ -114,7 +114,7 @@ import{readNativeProtectedArtifactInputBatchV1,nativeProtectedArtifactInputProto
 /** ⌨️ Verifies every canonical bounded byte sequence before the fixed input command's first filesystem effect. */
 async function verifyProtectedArtifactInputBytesV1(batch:NativeProtectedArtifactInputBatchV1,control:ResourceLeaseControl,work={count:0}):Promise<string>{const limits=nativeProtectedArtifactInputProtocolV1(),digest=artifactRetirementHashV1("sha256");digest.update(JSON.stringify([batch.version,batch.purpose,batch.roots])+"\n");const chunk=protectedArtifactInputChunkV1(batch.files.reduce((sum,row)=>sum+row.bytes,0),freemem());for(const file of batch.files){checkResourceLeaseControl(control);if(++work.count>limits.maximumWork)throw Error("Fresh artifact input verification work exceeded");const hash=artifactRetirementHashV1("sha256");let bytes=0;for(let offset=0;offset<file.data.length;offset+=chunk.encoded){checkResourceLeaseControl(control);if(++work.count>limits.maximumWork)throw Error("Fresh artifact input verification work exceeded");const encoded=file.data.slice(offset,offset+chunk.encoded),decoded=Buffer.from(encoded,"base64");if(decoded.toString("base64")!==encoded)throw Error("Canonical immutable artifact input bytes required");bytes+=decoded.length;if(bytes>file.bytes)throw Error("Exact immutable artifact input byte extent required");hash.update(decoded);await control.publish({resource:"native-artifact-input-verification:"+nativeArtifactInputStepV1(),mode:"exclusive",elapsedMs:0});await control.yieldContinuation();checkResourceLeaseControl(control);}if(bytes!==file.bytes||hash.digest("hex")!==file.sha256)throw Error("Complete immutable artifact input content hash required");digest.update(JSON.stringify([file.root,file.path,file.bytes,file.sha256])+"\n");}checkResourceLeaseControl(control);return digest.digest("hex");}
 
-import{withArtifactRelativeDirectoryV1,type ArtifactRelativeDirectoryV1,type ArtifactRelativePathEntryV1,type ArtifactReadFileIdentityV1}from"@semio-tech/framework-filesystem/observation/descriptor";
+import{withArtifactRelativeDirectoryV1,type ArtifactRelativeDirectoryV1,type ArtifactRelativePathEntryV1,type ArtifactReadFileIdentityV1}from"../../../../../../📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
 export type{NativeProtectedArtifactInputBatchV1,NativeProtectedArtifactInputBatchReceiptV1,NativeProtectedArtifactInputBatchObservationV1}from"../../🌐️platform/📋️contract/🟦️.ts";
 type ProtectedArtifactInputOwnerV1=NonNullable<ReturnType<typeof protectedArtifactMaintenanceV1.get>>;
 type ProtectedArtifactInputManifestV1=Readonly<{roots:readonly string[];files:readonly Readonly<Pick<NativeProtectedArtifactInputBatchV1["files"][number],"root"|"path"|"bytes"|"sha256">>[]}>;

@@ -279,6 +279,7 @@ impl Drop for PreparedRenderJob {
             commands: self.commands.take(),
             digest: self.digest,
             fault: self.fault.take(),
+            business_generation: self.business_generation,
             fault_payload: std::mem::replace(&mut self.fault_payload, RetainedPayloadBuilder::new(JobPayloadStream::Fault)),
             receiver: std::mem::replace(&mut self.receiver, PreparedRenderReceiver::unowned()),
             rejected_upload: self.rejected_upload.take(),
@@ -335,7 +336,7 @@ impl PreparedRenderJob {
         let Some(input) = self.input() else {
             return self.complete(cx);
         };
-        if input.preview_generation != cx.generation().0 || !input.permit.as_ref().is_some_and(PreparedRenderProcessPermit::matches) {
+        if self.generation_is_stale(input.preview_generation, cx) || !input.permit.as_ref().is_some_and(PreparedRenderProcessPermit::matches) {
             return self.fault_outcome("prepared render generation is stale", cx);
         }
         if let Some(producer) = self.input.as_mut().and_then(|input| input.raster_producers.front_mut()) {
@@ -357,7 +358,7 @@ impl PreparedRenderJob {
                 self.closing = true;
                 return JobOutcomeBorrow::admit_cancelled(cx).map_err(semio_framework_job::OriginalTurnFailure::from);
             }
-            if self.input().is_some_and(|input| input.preview_generation != cx.generation().0) {
+            if self.input().is_some_and(|input| self.generation_is_stale(input.preview_generation, cx)) {
                 return self.fault_outcome("prepared render generation became stale after raster work", cx);
             }
             return JobOutcomeBorrow::admit_yield(cx).map_err(semio_framework_job::OriginalTurnFailure::from);
@@ -438,7 +439,7 @@ impl PreparedRenderJob {
             self.closing = true;
             return JobOutcomeBorrow::admit_cancelled(cx).map_err(semio_framework_job::OriginalTurnFailure::from);
         }
-        if input.preview_generation != cx.generation().0 || !input.permit.as_ref().is_some_and(PreparedRenderProcessPermit::matches) {
+        if self.generation_is_stale(input.preview_generation, cx) || !input.permit.as_ref().is_some_and(PreparedRenderProcessPermit::matches) {
             return self.fault_outcome("prepared render generation became stale after one worker unit", cx);
         }
         JobOutcomeBorrow::admit_yield(cx).map_err(semio_framework_job::OriginalTurnFailure::from)

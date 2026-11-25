@@ -2,7 +2,7 @@ import { appendFileSync, mkdirSync, readFileSync, rmSync } from "node:fs";
 import { dirname } from "node:path";
 import { Worker } from "node:worker_threads";
 import { join } from "node:path";
-import { OWNER_POOL_POLICY_V1 as P, ownerPoolFitsV1, ownerPoolHeavyV1, ownerPoolRecycleV1, pullOwnerPoolV1 } from "../🟦️.ts";
+import { OWNER_POOL_POLICY_V1 as P, ownerPoolFailureClassV1, ownerPoolFitsV1, ownerPoolHeavyV1, ownerPoolRecycleV1, pullOwnerPoolV1 } from "../🟦️.ts";
 import { fleetGlobalsKeyV1 } from "../../📥️take/🟨️.mjs";
 import { ownerPoolReadFleetV1, ownerPoolTurnMillisecondsV1 } from "../🤝️fleet/🟦️.ts";
 
@@ -35,7 +35,7 @@ export async function runOwnerPoolChildV1({ args, write, input, environment = pr
   try {
     stats = await pullOwnerPoolV1({
       units: () => units, known, stored: unit => { if (presence !== undefined) { try { appendFileSync(presence, Date.now() + " " + unit.name + "\n"); } catch {} } if (published !== undefined) { try { appendFileSync(published, unit.name + "\n"); } catch {} } }, fits: unit => ownerPoolFitsV1(unit, args.grantMegabytes ?? Infinity), turn: unit => { if (!ownerPoolHeavyV1(unit) || args.origin === undefined) return 0; if (Date.now() - fleetAt > 5000) { fleet = ownerPoolReadFleetV1(args.store); fleetAt = Date.now(); } return ownerPoolTurnMillisecondsV1(args.origin, fleet, unit.megabytes ?? 0, Date.now()) ?? 0; }, puller: args.puller, slots: () => (over() ? 0 : 1), stop: over,
-      claim: async unit => { await opening.resend?.().catch(() => undefined); return opening.claim(unit); }, run: unit => opening.run(unit), fail: (name, message, deterministic, code) => { write({ t: "fail", name, message: message.slice(0, 300), deterministic, code: code ?? "" }); opening.fail?.(name, message, deterministic); },
+      claim: async unit => { await opening.resend?.().catch(() => undefined); return opening.claim(unit); }, run: unit => opening.run(unit), fail: (name, message, deterministic, code) => { const filed = ownerPoolFailureClassV1({ message, deterministic, code }); write({ t: "fail", name, message: message.slice(0, 300), deterministic: filed.deterministic, code: filed.code, skipped: filed.skipped }); opening.fail?.(name, message, filed.deterministic); },
       busy: count => { running = count; }, progress: stats => { latest = { ...stats }; },
       done: (unit, ok, milliseconds) => {
         const used = process.cpuUsage(cpu); cpu = process.cpuUsage();

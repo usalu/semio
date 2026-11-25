@@ -8,6 +8,7 @@ import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 import {importClosureV1,moduleSourcesV1,walkSourcesV1,StoreStalledV1,type FailureSummaryV1} from "./🧱️attestation-support/🟦️.ts";
 import type {SidecarStateV1} from "../🔁️replica/🧷️sidecars/🟦️.ts";
 import type {TrustV1} from "../🔏️trust/🟦️.ts";
+import {processHolderAliveV1} from "../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts";
 
 /** 🧾️ The report of the self-check: whether every module of the replica loaded and every embedded schema and text catalogue is well formed, how many of each were checked, the digest of the checked code (filled in by the command) and the first error. */
 export type SelfCheckV1=Readonly<{version:1;ok:boolean;digest:string|null;modules:number;schemas:number;texts:number;error:string|null}>;
@@ -545,7 +546,7 @@ export async function startRejectionV1(root:string,digest:string):Promise<string
 }
 
 /** 💓️ What the watchdog thread of a running daemon writes every second to `.cache/f/boot/beat.json`, from a thread that a blocked event loop cannot stop: the process, the boot stage that supervises it, the phase (`boot` while the code loads, `open` while the state opens, `run` once the daemon started), the code it runs and where that came from (`worktree`, `snapshot` or `store`), how long the event loop has not answered (`lagMs`) and what the main thread last declared it was doing (`activity`, see `activityV1`). */
-export type BeatV1=Readonly<{version:1;pid:number;parent:number;startedMs:number;wallMs:number;phase:"boot"|"open"|"run";base:string;source:"worktree"|"snapshot"|"store";lagMs:number;activity?:string;longestMs?:number;longestActivity?:string}>;
+export type BeatV1=Readonly<{version:1;pid:number;startMs:number;parent:number;startedMs:number;wallMs:number;phase:"boot"|"open"|"run";base:string;source:"worktree"|"snapshot"|"store";lagMs:number;activity?:string;longestMs?:number;longestActivity?:string}>;
 
 /** 🪂️ The guard of a machine that runs a fallback code instead of the code of its worktree: where the code came from and why the worktree code was not used. */
 export type FallbackV1=Readonly<{guard:"code-fallback";source:"snapshot"|"store";reason:string}>;
@@ -554,7 +555,6 @@ export type FallbackV1=Readonly<{guard:"code-fallback";source:"snapshot"|"store"
 export function beatPathV1(root:string):string{return join(root,".cache","f","boot","beat.json");}
 
 const staleBeatMilliseconds=20_000;
-const living=(pid:number):boolean=>{try{process.kill(pid,0);return true;}catch(error){return (error as {code?:string}).code==="EPERM";}};
 
 /** 👀️ Reads the beat of a daemon that lives: the file is valid, its process exists and its last write is at most 20 s old. A daemon whose event loop is blocked still has such a beat, which is how `status` and the lock tell a busy daemon from a dead one. */
 export async function readBeatV1(root:string,now:number=Date.now()):Promise<BeatV1|undefined>{
@@ -562,7 +562,7 @@ export async function readBeatV1(root:string,now:number=Date.now()):Promise<Beat
   const value=JSON.parse(await readFile(beatPathV1(root),"utf8")) as unknown;
   requireResilienceShapeV1("Beat",value,"Closed beat required");
   const beat=value as BeatV1;
-  return living(beat.pid)&&now-beat.wallMs<=staleBeatMilliseconds?beat:undefined;
+  return processHolderAliveV1(beat)&&now-beat.wallMs<=staleBeatMilliseconds?beat:undefined;
  }catch{return undefined;}
 }
 
@@ -643,8 +643,10 @@ export async function publishCodeSnapshotV1(options:Readonly<{root:string;store:
   }
   const handle=await open(join(temporary,"sealed.json"),"w");
   try{await handle.writeFile(JSON.stringify(seal));await handle.sync();}finally{await handle.close();}
-  await rm(target,{recursive:true,force:true});
-  try{await rename(temporary,target);}catch(error){if(await verifyCodeSnapshotV1(target)!==null)throw error;await rm(temporary,{recursive:true,force:true});return {published:false,reason:"present"};}
+  const aside=join(base,`.tmp-${options.originId}-${tokenOf()}-old`);
+  await rename(target,aside).catch(()=>undefined);
+  try{await rename(temporary,target);}catch(error){await rm(aside,{recursive:true,force:true}).catch(()=>{});if(await verifyCodeSnapshotV1(target)!==null)throw error;await rm(temporary,{recursive:true,force:true});return {published:false,reason:"present"};}
+  await rm(aside,{recursive:true,force:true}).catch(()=>{});
   return {published:true,reason:null};
  }catch(error){await rm(temporary,{recursive:true,force:true}).catch(()=>{});return {published:false,reason:(error instanceof Error?error.message:String(error)).slice(0,256)};}
 }
@@ -657,7 +659,7 @@ export async function pruneStoreCodeV1(store:string,keep:number,protect:Readonly
   await rm(snapshot.directory,{recursive:true,force:true});removed.push(snapshot.digest);
  }
  for(const name of await readdir(base).catch(()=>[] as string[])){
-  if(!name.startsWith(".tmp-"))continue;
+  if(!name.startsWith(".tmp-")&&!name.startsWith("._"))continue;
   const info=await stat(join(base,name)).catch(()=>undefined);
   if(info!==undefined&&now-info.mtimeMs>3_600_000)await rm(join(base,name),{recursive:true,force:true});
  }

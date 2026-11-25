@@ -36,7 +36,7 @@ const sliderTickClassName = cn("bg-element pointer-events-none absolute w-px dat
 
 /** 🔘️ Slider thumb presentation (extent token applied per instance). */
 const sliderThumbBaseClassName = cn(
-  "block shrink-0 rounded-full border border-transparent bg-element transition-colors outline-hidden",
+  "block shrink-0 border border-transparent bg-element transition-colors outline-hidden",
   "hover:bg-emphasized group-hover:bg-emphasized",
   "focus-visible:bg-active-base focus-visible:border-emphasized",
   "data-[dragging=true]:bg-active-base",
@@ -44,13 +44,13 @@ const sliderThumbBaseClassName = cn(
 );
 
 /** 🧭️ Dial knob presentation: a square that holds the rotary face, its detent ticks and needle. */
-const sliderDialClassName = cn("relative aspect-square h-medium shrink-0 rounded-full", "data-[invalid=true]:ring-1 data-[invalid=true]:ring-destructive");
+const sliderDialClassName = cn("relative aspect-square h-medium shrink-0", "data-[invalid=true]:ring-1 data-[invalid=true]:ring-destructive");
 
 /** ⛔️ Typed-value refusal presentation: the producer's localized message naming the crossed bound. */
-const sliderRefusalClassName = cn("text-destructive block text-xs leading-tight");
+const sliderRefusalClassName = cn("text-destructive-foreground block text-xs leading-tight");
 
 /** 🔢️ Slider numeric readout presentation. */
-const sliderValueClassName = cn("text-element w-large text-end text-xs leading-none select-none transition-colors", "hover:text-emphasized group-hover:text-emphasized");
+const sliderValueClassName = cn("text-element w-large px-tiny text-end text-xs leading-none select-none transition-colors", "hover:text-emphasized group-hover:text-emphasized");
 
 // #region 📐️Contract
 export type SliderOrientation = "horizontal" | "vertical";
@@ -522,7 +522,7 @@ const Slider = React.forwardRef<HTMLDivElement, SliderProps>(function Slider(
           ref={appearance === "dial" ? undefined : trackRef}
           data-slot="slider-track"
           data-orientation={orientation}
-          className={cn("bg-muted relative w-full overflow-hidden rounded-full data-[orientation=horizontal]:h-single data-[orientation=vertical]:h-full data-[orientation=vertical]:w-single")}
+          className={cn("bg-muted relative w-full overflow-hidden data-[orientation=horizontal]:h-single data-[orientation=vertical]:h-full data-[orientation=vertical]:w-single")}
         >
           <div
             data-slot="slider-range"

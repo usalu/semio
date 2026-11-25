@@ -2,7 +2,7 @@
  * deferred inputs replay in arrival order exactly once the last load settles, never earlier and never past their capacity. */
 import { describe, expect, test } from "bun:test";
 import fixture from "./🔣️.json" with { type: "json" };
-import { createDocumentLoadGateV1, documentLoadWaitPolicyV1 } from "../../🧱️elements/🏛️ShellHost/⏳️document-load-gate/🟦️.ts";
+import { createDocumentLoadGateV1, documentLoadRefusalDetailV1, documentLoadRunningV1, documentLoadWaitPolicyV1, noteDocumentLoadEndV1 } from "../../🧱️elements/🏛️ShellHost/⏳️document-load-gate/🟦️.ts";
 
 describe("document load wait policy", () => {
   for (const row of fixture.policy) test(`${row.action} (${row.kind ?? "undeclared"}) ${row.expect}`, () => {
@@ -79,5 +79,33 @@ describe("document load gate", () => {
     release();
     await parked;
     expect(replayed).toBe(true);
+  });
+});
+
+describe("document load end", () => {
+  for (const row of fixture.loadEnds) test(`${row.cancelled === null ? "a loaded document" : row.cancelled ? "a cancelled load" : "a failed load"} ${row.refusal === null ? "leaves its action applied" : `refuses its action as ${row.refusal}`}`, () => {
+    const owner: { documentLoad?: "cancelled" | "failed" } = {};
+    if (row.cancelled !== null) noteDocumentLoadEndV1(owner, row.cancelled);
+    expect(owner.documentLoad ?? null).toBe(row.documentLoad as "cancelled" | "failed" | null);
+    expect(documentLoadRefusalDetailV1(owner) ?? null).toBe(row.refusal);
+  });
+});
+
+describe("document load cancel", () => {
+  test("a cancelled load reads as stopping until its last release, and only while one runs", () => {
+    const gate = createDocumentLoadGateV1();
+    gate.markCancelling("sourcing", 1);
+    expect(gate.cancelling("sourcing", 1)).toBe(false);
+    const release = gate.begin("sourcing", 1);
+    expect(gate.cancelling("sourcing", 1)).toBe(false);
+    gate.markCancelling("sourcing", 1);
+    expect(gate.cancelling("sourcing", 1)).toBe(true);
+    expect(gate.cancelling("sourcing", 2)).toBe(false);
+    release();
+    expect(gate.cancelling("sourcing", 1)).toBe(false);
+  });
+
+  test("only a pending or running status shows the loading band", () => {
+    expect(["pending", "running", "ready", "cancelled", "fault"].map(documentLoadRunningV1)).toEqual([true, true, false, false, false]);
   });
 });

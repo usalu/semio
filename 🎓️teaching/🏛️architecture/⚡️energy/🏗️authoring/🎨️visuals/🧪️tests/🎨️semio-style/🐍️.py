@@ -175,6 +175,7 @@ class ClipStyleTest(unittest.TestCase):
         import numpy as np
         from manim import Polygon
 
+        surface = importlib.import_module(MODULE + ".🎬️clip.🪟️presentation.🎨️surface.🐍️")
         case = CASES["chrome"]
         frame = self.visuals.window_frame(**case["frame"])
         self.assertIsInstance(frame, Polygon)
@@ -186,7 +187,76 @@ class ClipStyleTest(unittest.TestCase):
         self.assertNotEqual(chip.get_fill_color().to_hex().lower(), self.theme.CHROME_FILL.lower())
         np.testing.assert_allclose([frame.get_left()[0], frame.get_right()[0], frame.get_top()[1], frame.get_bottom()[1]], [-2, 2, 1, -1], atol=1e-8)
         self.assertEqual(frame.get_stroke_width(), self.theme.CHROME_BORDER)
-        self.assertEqual(frame.get_fill_color().to_hex().lower(), self.theme.CHROME_FILL.lower())
+        self.assertEqual(frame.get_fill_color().to_hex().lower(), surface.surface_paint("window")["fill"])
+        self.assertEqual(frame.get_stroke_color().to_hex().lower(), surface.border_ink("dark"))
+
+    def test_chip_glass_comes_from_the_token_projection_and_differs_visibly_from_the_body(self):
+        surface = importlib.import_module(MODULE + ".🎬️clip.🪟️presentation.🎨️surface.🐍️")
+        paint = surface.chip_paint("window")
+        self.assertEqual(self.visuals.CHROME_CHIP_FILL, paint["fill"])
+        self.assertEqual(self.visuals.CHROME_CHIP_OPACITY, paint["alpha"])
+        body = surface.surface_paint("window")
+        self.assertGreaterEqual(max(abs(a - b) for a, b in zip(paint["composite_rgb"], body["composite_rgb"])), 8)
+
+    def test_chip_inner_edges_match_independent_shapely_boundary_difference(self):
+        from shapely.geometry import LineString, box
+        from shapely.ops import unary_union
+
+        for case in CASES["chip_edges"]:
+            with self.subTest(case=case["id"]):
+                args = case["input"]
+                actual = self.visuals._chip_edges(args["width"], args["height"], args.get("top_depth", 0), args.get("top_chips", ()), args.get("bottom_depth", 0), args.get("bottom_chips", ()))
+                self.assertEqual([list(edge) for edge in actual], case["edges"])
+                outline = box(0, 0, args["width"], args["height"]).exterior
+                top = min(args["height"], args.get("top_depth", 0))
+                bottom = max(top, args["height"] - args.get("bottom_depth", 0))
+                rows = [(0, top, args.get("top_chips", ())), (bottom, args["height"], args.get("bottom_chips", ()))]
+                chips = [box(a, y0, b, y1).intersection(outline.envelope).exterior
+                         for y0, y1, spans in rows for a, b in spans]
+                expected = unary_union(chips).difference(outline) if chips else LineString()
+                painted = [LineString([(x0, y0), (x1, y1)]) for x0, y0, x1, y1 in actual]
+                self.assertTrue(unary_union(painted).equals(expected) if actual else expected.is_empty)
+                self.assertAlmostEqual(sum(line.length for line in painted), expected.length)
+
+    def test_chip_overlay_is_one_glass_rectangle_with_one_shared_divider(self):
+        import numpy as np
+        from manim import Line, Polygon
+
+        overlay = self.visuals.frame_chips(4, 2, top_depth=0.4, top_chips=[(0, 1.5), (1.5, 3.0)], color=self.visuals.P_PRIMARY)
+        glass = [part for part in overlay.submobjects if isinstance(part, Polygon)]
+        lines = [part for part in overlay.submobjects if isinstance(part, Line)]
+        self.assertEqual(len(glass), 1)
+        self.assertEqual(len(lines), 4)
+        self.assertTrue(all(part.get_stroke_width() == self.theme.CHROME_BORDER for part in lines))
+        np.testing.assert_allclose([glass[0].get_left()[0], glass[0].get_right()[0], glass[0].get_top()[1], glass[0].get_bottom()[1]], [-2, 1, 1, 0.6], atol=1e-8)
+
+    def test_card_grid_paints_one_hairline_per_occupied_cell_edge(self):
+        from shapely.geometry import LineString, box
+        from shapely.ops import unary_union
+
+        case = CASES["card_grid"]
+        cards = self.visuals.card_grid(case["entries"], rows=case["rows"], cols=case["cols"])
+        frames = [card[0] for card in cards]
+        self.assertAlmostEqual(frames[0].get_right()[0], frames[1].get_left()[0])
+        self.assertAlmostEqual(frames[0].get_bottom()[1], frames[2].get_top()[1])
+        self.assertTrue(all(frame.get_stroke_width() == 0 for frame in frames))
+        self.assertEqual([len(card.submobjects[2:]) for card in cards], case["expected_frame_edges"])
+        lines = [LineString([part.get_start()[:2], part.get_end()[:2]]) for card in cards for part in card.submobjects[2:]]
+        outlines = [box(*(round(value, 6) for value in (frame.get_left()[0], frame.get_bottom()[1], frame.get_right()[0], frame.get_top()[1]))).exterior for frame in frames]
+        expected = unary_union(outlines)
+        self.assertEqual(len(lines), case["expected_unique_edges"])
+        self.assertLess(unary_union(lines).hausdorff_distance(expected), 1e-6)
+        self.assertAlmostEqual(sum(line.length for line in lines), expected.length, delta=1e-5)
+
+    def test_only_depictions_of_other_programs_and_devices_keep_rounded_corners(self):
+        import re
+
+        teaching = ROOT / "🎓️teaching"
+        allowed = {teaching / name for name in CASES["rounded_depictions"]["files"]}
+        pattern = re.compile(r"(RoundedRectangle|SurroundingRectangle)\([^#\n]*corner_radius=(0\.\d*[1-9]|[1-9])")
+        offenders = [str(path.relative_to(teaching)) for path in teaching.rglob("*.py")
+                     if "node_modules" not in path.parts and "🧪️tests" not in path.parts and path not in allowed and pattern.search(path.read_text(encoding="utf-8"))]
+        self.assertEqual(offenders, [])
 
     def test_chip_and_stat_card_keep_readable_content_inside_square_chrome(self):
         from manim import Rectangle

@@ -21,6 +21,16 @@
       {
         "id": "ewall-E1",
         "patch": {
+          "kind": null,
+          "retainedHeight": null,
+          "embedment": null,
+          "propDepth": null,
+          "thickness": null,
+          "backfillGamma": null,
+          "phiDeg": null,
+          "deltaActiveDeg": null,
+          "deltaPassiveDeg": null,
+          "surcharge": null,
           "undrainedStrength": 1.5
         }
       }
@@ -29,6 +39,7 @@
   "pileGroups": null,
   "labTests": null,
   "layerWaters": null,
+  "placements": null,
   "cases": {
     "removed": [],
     "inserted": [],

@@ -5,6 +5,7 @@ resolver = "2"
 members = [
     "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🏷️field-meta/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/⚖️laws/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🎪️showcase/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🎬️scene-members/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🎬️scene-members/🧩️projection/📦️packages/🦀️rust",
@@ -22,6 +23,7 @@ members = [
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚖️checks/🔗️special/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚖️checks/🕸️frame-eigen/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚖️checks/🕸️special-frames/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚖️checks/🧪️tests/⚖️laws/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚖️checks/🧬️core/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚖️checks/🧮️clauses/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚖️checks/🧮️clauses/🧰️special/📦️packages/🦀️rust",
@@ -33,11 +35,24 @@ members = [
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️json-schema-twin/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🛰️proto-twin/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🟦️typescript-twin/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧱️rows/⚖️actions/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧱️rows/🔥️fatigue-fire/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧱️rows/🔩️joints/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧱️rows/🕸️frame/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧱️rows/🗼️structures/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧱️rows/🧑️members/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧱️rows/🧱️materials/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🔗️graphql-twin/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🔣️json-schema-twin/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🛰️proto-twin/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️typescript-twin/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🧱️rows/🔥️fatigue-fire/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🧱️rows/🔩️joints/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🧱️rows/🕸️frame/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🧱️rows/🗼️structures/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🧱️rows/🥫️thin-walled/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🧱️rows/🧑️members/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏳fatigue-stresses-2/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏳fatigue-stresses/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚗️material-ramberg/📦️packages/🦀️rust",
@@ -312,6 +327,9 @@ path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️
 
 [workspace.dependencies.semio-s-artifact-norm-en1993-checks]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚖️checks/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1993-checks-laws]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚖️checks/🧪️tests/⚖️laws/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-norm-en1993-diff]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📦️packages/🦀️rust"
@@ -901,3 +919,44 @@ redundant_clone = "warn"
   level = "warn"
   priority = -1
 
+[workspace.dependencies.semio-s-artifact-norm-en1993-editor-laws]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/⚖️laws/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1993-diff-rows-members]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🧱️rows/🧑️members/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1993-diff-rows-joints]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🧱️rows/🔩️joints/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1993-diff-rows-fatigue-fire]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🧱️rows/🔥️fatigue-fire/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1993-diff-rows-thin-walled]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🧱️rows/🥫️thin-walled/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1993-diff-rows-structures]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🧱️rows/🗼️structures/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1993-diff-rows-frame]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🧱️rows/🕸️frame/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1993-model-rows-materials]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧱️rows/🧱️materials/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1993-model-rows-members]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧱️rows/🧑️members/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1993-model-rows-actions]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧱️rows/⚖️actions/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1993-model-rows-joints]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧱️rows/🔩️joints/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1993-model-rows-fatigue-fire]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧱️rows/🔥️fatigue-fire/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1993-model-rows-structures]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧱️rows/🗼️structures/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1993-model-rows-frame]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧱️rows/🕸️frame/📦️packages/🦀️rust"

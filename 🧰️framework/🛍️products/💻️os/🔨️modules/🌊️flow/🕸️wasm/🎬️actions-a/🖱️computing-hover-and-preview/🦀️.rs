@@ -6,7 +6,7 @@ use semio_os_infinite::board::schema::dag_input::DagChannelRef;
 
 pub(crate) fn dag_input_failure(error:semio_framework_value::ValueError)->FlowFailure{
     let code=match error.kind{semio_framework_value::ValueRefusalKind::Canceled=>AbiErrorCode::Cancelled,semio_framework_value::ValueRefusalKind::OwnershipLimit=>AbiErrorCode::NoCredit,_=>AbiErrorCode::MalformedTag};
-    flow_close_failure(code).with_retained_progress(error.retained_progress())
+    FlowFailure::from_value(code,error)
 }
 
 pub struct FlowAction2516 {

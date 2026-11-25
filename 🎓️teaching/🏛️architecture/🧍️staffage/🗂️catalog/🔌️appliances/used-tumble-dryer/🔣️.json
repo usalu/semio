@@ -13,19 +13,97 @@
    "de": "Ein gebrauchter 8-kg-Wärmepumpen-Kondenstrockner von 598 x 640 x 850 mm und 49,6 kg, wie ihn ein Gebrauchtwarenkaufhaus anbietet: vergilbtes Gehäuse mit Delle und Schrammen, sonnengebleichte Blende, zerkratzte Abdeckplatte mit Preisaufkleber, Tür zugeklebt, Kabel aufgerollt und an die Rückwand geklebt, auf einer gefalteten Umzugsdecke stehend; von zwei Personen unter dem Boden getragen, trocknet er wieder im Hauswirtschaftsraum mit etwa 0,6 kW Mittel seines Anschlusswerts von 1 kW bei warmer Trommel, leert seinen Kondenswasserbehälter und bekommt sein Flusensieb gereinigt."
   },
   "tags": [
-   "used",
-   "household",
-   "second-hand",
-   "utility",
-   "appliance",
-   "tumble-dryer",
-   "heat-pump",
-   "laundry",
-   "electric",
-   "internal-gain",
-   "steel",
-   "polypropylene",
-   "moving-blanket"
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "household",
+    "title": {
+     "en": "household",
+     "de": "Haushalt"
+    }
+   },
+   {
+    "id": "second-hand",
+    "title": {
+     "en": "second-hand",
+     "de": "Second-Hand"
+    }
+   },
+   {
+    "id": "utility",
+    "title": {
+     "en": "utility",
+     "de": "Nutzfahrzeug"
+    }
+   },
+   {
+    "id": "appliance",
+    "title": {
+     "en": "appliance",
+     "de": "Gerät"
+    }
+   },
+   {
+    "id": "tumble-dryer",
+    "title": {
+     "en": "tumble dryer",
+     "de": "Wäschetrockner"
+    }
+   },
+   {
+    "id": "heat-pump",
+    "title": {
+     "en": "heat pump",
+     "de": "Wärmepumpe"
+    }
+   },
+   {
+    "id": "laundry",
+    "title": {
+     "en": "laundry",
+     "de": "Wäsche"
+    }
+   },
+   {
+    "id": "electric",
+    "title": {
+     "en": "electric",
+     "de": "elektrisch"
+    }
+   },
+   {
+    "id": "internal-gain",
+    "title": {
+     "en": "internal gain",
+     "de": "innere Wärmelast"
+    }
+   },
+   {
+    "id": "steel",
+    "title": {
+     "en": "steel",
+     "de": "Stahl"
+    }
+   },
+   {
+    "id": "polypropylene",
+    "title": {
+     "en": "polypropylene",
+     "de": "Polypropylen"
+    }
+   },
+   {
+    "id": "moving-blanket",
+    "title": {
+     "en": "moving blanket",
+     "de": "Umzugsdecke"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage household authors (used household objects wave, author 23)",
@@ -3915,12 +3993,47 @@
        "x": -0.018,
        "y": 0.405,
        "w": 0.036,
-       "h": 0.125,
+       "h": 0.06,
        "solid": {
         "kind": "extruded",
         "sweep": "v",
         "z0": -0.036,
         "z1": -0.035
+       }
+      },
+      {
+       "id": "tape-end",
+       "bone": "unit",
+       "role": "texture",
+       "z": 4.5,
+       "filled": true,
+       "tone": 0.92,
+       "material": "packing-tape",
+       "kind": "poly",
+       "points": [
+        [
+         0.437,
+         0.23
+        ],
+        [
+         0.437,
+         0.295
+        ],
+        [
+         0.473,
+         0.295
+        ],
+        [
+         0.473,
+         0.23
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0.595,
+        "z1": 0.596
        }
       },
       {
@@ -6509,12 +6622,47 @@
        "x": -0.018,
        "y": 0.405,
        "w": 0.036,
-       "h": 0.125,
+       "h": 0.06,
        "solid": {
         "kind": "extruded",
         "sweep": "v",
         "z0": -0.036,
         "z1": -0.035
+       }
+      },
+      {
+       "id": "tape-end",
+       "bone": "unit",
+       "role": "texture",
+       "z": 4.5,
+       "filled": true,
+       "tone": 0.92,
+       "material": "packing-tape",
+       "kind": "poly",
+       "points": [
+        [
+         0.437,
+         0.23
+        ],
+        [
+         0.437,
+         0.295
+        ],
+        [
+         0.473,
+         0.295
+        ],
+        [
+         0.473,
+         0.23
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "u",
+        "z0": 0.595,
+        "z1": 0.596
        }
       },
       {
@@ -11745,8 +11893,698 @@
     ]
    },
    "500": {
-    "status": "unavailable",
-    "denominator": 500
+    "status": "authored",
+    "denominator": 500,
+    "decisions": [
+     {
+      "en": "Body for the 75 mm feature: the dryer is one block from the blanket to the top cover (base, plinth flap, panels, fascia, tank front and cover merged), the porthole door an 80 mm wide ring of 0.46 m around its 0.30 m glass, 75 mm deep and 20 mm proud of the front (the glass 10 mm), on the blanket as its declared 16 mm sheet; cable coil and feet are below the feature and left out.",
+      "de": "Körper für das 75-mm-Merkmal: der Trockner ist ein Block von der Decke bis zum Deckel (Boden, Sockelklappe, Bleche, Blende, Tankfront und Deckel verschmolzen), die Bullaugentür ein 80 mm breiter Ring von 0,46 m um ihr 0,30-m-Glas, 75 mm tief und 20 mm vor der Front (das Glas 10 mm), auf der Decke als erklärter 16-mm-Platte; Kabelring und Füße liegen unter dem Merkmal und entfallen."
+     },
+     {
+      "en": "Thermal: blanket and door by reference, the block as 75 mm region solids (plinth, two sides, back, front, top cover, fascia, tank), the cable as a 75 mm block on the back, the hidden drum as a cylinder and the hidden heat pump as a block inside, a 75 mm vent outlet at the plinth.",
+      "de": "Thermik: Decke und Tür als Verweis, der Block als 75-mm-Regionskörper (Sockel, zwei Seiten, Rückwand, Front, Deckel, Blende, Tank), das Kabel als 75-mm-Block an der Rückwand, die verdeckte Trommel als Zylinder und die verdeckte Wärmepumpe als Block im Inneren, ein 75-mm-Luftauslass am Sockel."
+     },
+     {
+      "en": "Structure: blanket, block and door by reference, the tank as a 75 mm member, four 75 mm foot joints and the hinge, a 75 mm support and four mass markers.",
+      "de": "Tragwerk: Decke, Block und Tür als Verweis, der Tank als 75-mm-Stab, vier 75-mm-Fußgelenke und das Scharnier, ein 75-mm-Auflager und vier Massenmarken."
+     }
+    ],
+    "body": [
+     {
+      "id": "blanket",
+      "kind": "box",
+      "bone": "blanket",
+      "material": "moving-blanket",
+      "role": "body",
+      "tone": 0.45,
+      "size": [
+       0.9,
+       0.016,
+       0.75
+      ],
+      "transform": {
+       "translation": [
+        0.45,
+        0.008,
+        0
+       ]
+      },
+      "sheet": true
+     },
+     {
+      "id": "unit-block",
+      "kind": "box",
+      "bone": "unit",
+      "material": "enamel-steel",
+      "role": "body",
+      "tone": 0.86,
+      "size": [
+       0.595,
+       0.85,
+       0.6
+      ],
+      "transform": {
+       "translation": [
+        0.2975,
+        0.425,
+        0
+       ]
+      }
+     },
+     {
+      "id": "door-ring",
+      "kind": "revolve",
+      "bone": "door",
+      "material": "door-abs",
+      "role": "body",
+      "tone": 0.72,
+      "profile": [
+       [
+        -0.02,
+        0.15
+       ],
+       [
+        -0.02,
+        0.23
+       ],
+       [
+        0.055,
+        0.23
+       ],
+       [
+        0.055,
+        0.15
+       ],
+       [
+        -0.02,
+        0.15
+       ]
+      ],
+      "axis": [
+       0,
+       1,
+       0
+      ],
+      "origin": [
+       0,
+       0,
+       0.235
+      ]
+     },
+     {
+      "id": "door-glass",
+      "kind": "revolve",
+      "bone": "door",
+      "material": "door-glass",
+      "role": "body",
+      "tone": 0.3,
+      "profile": [
+       [
+        -0.01,
+        0
+       ],
+       [
+        -0.01,
+        0.15
+       ],
+       [
+        0.065,
+        0.15
+       ],
+       [
+        0.065,
+        0
+       ]
+      ],
+      "axis": [
+       0,
+       1,
+       0
+      ],
+      "origin": [
+       0,
+       0,
+       0.235
+      ]
+     }
+    ],
+    "thermal": [
+     {
+      "id": "th-blanket",
+      "of": "blanket",
+      "region": "blanket"
+     },
+     {
+      "id": "th-door-ring",
+      "of": "door-ring",
+      "region": "door"
+     },
+     {
+      "id": "th-door-glass",
+      "of": "door-glass",
+      "region": "door"
+     },
+     {
+      "id": "th-plinth",
+      "kind": "box",
+      "bone": "unit",
+      "material": "base-pp",
+      "role": "body",
+      "tone": 0.45,
+      "size": [
+       0.605,
+       0.115,
+       0.6
+      ],
+      "transform": {
+       "translation": [
+        0.3025,
+        0.0575,
+        0
+       ]
+      },
+      "region": "plinth"
+     },
+     {
+      "id": "th-side-right",
+      "kind": "box",
+      "bone": "unit",
+      "material": "enamel-steel",
+      "role": "body",
+      "tone": 0.86,
+      "size": [
+       0.605,
+       0.66,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.3025,
+        0.445,
+        -0.2625
+       ]
+      },
+      "region": "cabinet"
+     },
+     {
+      "id": "th-side-left",
+      "kind": "box",
+      "bone": "unit",
+      "material": "enamel-steel",
+      "role": "body",
+      "tone": 0.86,
+      "size": [
+       0.605,
+       0.66,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.3025,
+        0.445,
+        0.2625
+       ]
+      },
+      "region": "cabinet"
+     },
+     {
+      "id": "th-back",
+      "kind": "box",
+      "bone": "unit",
+      "material": "enamel-steel",
+      "role": "body",
+      "tone": 0.8,
+      "size": [
+       0.075,
+       0.66,
+       0.45
+      ],
+      "transform": {
+       "translation": [
+        0.0375,
+        0.445,
+        0
+       ]
+      },
+      "region": "cabinet"
+     },
+     {
+      "id": "th-front",
+      "kind": "box",
+      "bone": "unit",
+      "material": "enamel-steel",
+      "role": "body",
+      "tone": 0.88,
+      "size": [
+       0.075,
+       0.585,
+       0.45
+      ],
+      "transform": {
+       "translation": [
+        0.5675,
+        0.4075,
+        0
+       ]
+      },
+      "region": "cabinet"
+     },
+     {
+      "id": "th-top-cover",
+      "kind": "box",
+      "bone": "unit",
+      "material": "top-pp",
+      "role": "body",
+      "tone": 0.92,
+      "size": [
+       0.605,
+       0.075,
+       0.6
+      ],
+      "transform": {
+       "translation": [
+        0.3025,
+        0.8125,
+        0
+       ]
+      },
+      "region": "top-cover"
+     },
+     {
+      "id": "th-fascia",
+      "kind": "box",
+      "bone": "unit",
+      "material": "fascia-abs",
+      "role": "body",
+      "tone": 0.78,
+      "size": [
+       0.075,
+       0.075,
+       0.325
+      ],
+      "transform": {
+       "translation": [
+        0.5675,
+        0.7375,
+        -0.0625
+       ]
+      },
+      "region": "fascia"
+     },
+     {
+      "id": "th-tank",
+      "kind": "box",
+      "bone": "tank",
+      "material": "tank-pp",
+      "role": "body",
+      "tone": 0.7,
+      "size": [
+       0.075,
+       0.075,
+       0.125
+      ],
+      "transform": {
+       "translation": [
+        0.2975,
+        -0.0375,
+        -0.0375
+       ]
+      },
+      "region": "tank"
+     },
+     {
+      "id": "th-cable",
+      "kind": "box",
+      "bone": "unit",
+      "material": "pvc-cable",
+      "role": "body",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.14,
+       0.14
+      ],
+      "transform": {
+       "translation": [
+        -0.0375,
+        0.62,
+        -0.15
+       ]
+      },
+      "region": "cable"
+     },
+     {
+      "id": "th-drum",
+      "kind": "revolve",
+      "bone": "unit",
+      "material": "stainless-steel",
+      "role": "body",
+      "tone": 0.5,
+      "profile": [
+       [
+        0.075,
+        0
+       ],
+       [
+        0.075,
+        0.225
+       ],
+       [
+        0.53,
+        0.225
+       ],
+       [
+        0.53,
+        0
+       ]
+      ],
+      "axis": [
+       1,
+       0,
+       0
+      ],
+      "origin": [
+       0,
+       0.455,
+       0
+      ],
+      "region": "drum"
+     },
+     {
+      "id": "th-heat-pump-module",
+      "kind": "box",
+      "bone": "unit",
+      "material": "aluminium-fin",
+      "role": "body",
+      "tone": 0.6,
+      "size": [
+       0.5,
+       0.13,
+       0.52
+      ],
+      "transform": {
+       "translation": [
+        0.27,
+        0.11,
+        0
+       ]
+      },
+      "region": "heat-pump"
+     },
+     {
+      "id": "th-plinth-vent",
+      "kind": "box",
+      "bone": "unit",
+      "material": "base-pp",
+      "role": "detail",
+      "tone": 0.5,
+      "size": [
+       0.075,
+       0.075,
+       0.2
+      ],
+      "transform": {
+       "translation": [
+        0.6425,
+        0.075,
+        0
+       ]
+      },
+      "region": "plinth",
+      "tags": [
+       "plinth-vent"
+      ]
+     }
+    ],
+    "structure": [
+     {
+      "id": "m-blanket",
+      "of": "blanket",
+      "member": "blanket",
+      "part": "member"
+     },
+     {
+      "id": "m-unit-block",
+      "of": "unit-block",
+      "member": "unit",
+      "part": "member"
+     },
+     {
+      "id": "m-door",
+      "of": "door-ring",
+      "member": "door",
+      "part": "member"
+     },
+     {
+      "id": "m-door-glass",
+      "of": "door-glass",
+      "member": "door",
+      "part": "member"
+     },
+     {
+      "id": "m-tank",
+      "kind": "box",
+      "bone": "tank",
+      "material": "tank-pp",
+      "role": "body",
+      "tone": 0.7,
+      "size": [
+       0.335,
+       0.1,
+       0.2
+      ],
+      "transform": {
+       "translation": [
+        0.1675,
+        -0.005,
+        0
+       ]
+      },
+      "member": "tank",
+      "part": "member"
+     },
+     {
+      "id": "support-blanket-floor",
+      "kind": "box",
+      "bone": "blanket",
+      "material": "moving-blanket",
+      "role": "ground",
+      "tone": 0.3,
+      "size": [
+       0.6,
+       0.075,
+       0.5
+      ],
+      "transform": {
+       "translation": [
+        0.45,
+        0.0375,
+        0
+       ]
+      },
+      "member": "blanket",
+      "part": "support",
+      "anchor": "blanket-floor"
+     },
+     {
+      "id": "j-foot-front-right",
+      "kind": "box",
+      "bone": "unit",
+      "material": "foot-rubber",
+      "role": "body",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.54,
+        0.0375,
+        -0.25
+       ]
+      },
+      "member": "unit",
+      "part": "joint"
+     },
+     {
+      "id": "j-foot-front-left",
+      "kind": "box",
+      "bone": "unit",
+      "material": "foot-rubber",
+      "role": "body",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.54,
+        0.0375,
+        0.25
+       ]
+      },
+      "member": "unit",
+      "part": "joint"
+     },
+     {
+      "id": "j-foot-back-right",
+      "kind": "box",
+      "bone": "unit",
+      "material": "foot-rubber",
+      "role": "body",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.05,
+        0.0375,
+        -0.25
+       ]
+      },
+      "member": "unit",
+      "part": "joint"
+     },
+     {
+      "id": "j-foot-back-left",
+      "kind": "box",
+      "bone": "unit",
+      "material": "foot-rubber",
+      "role": "body",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.05,
+        0.0375,
+        0.25
+       ]
+      },
+      "member": "unit",
+      "part": "joint"
+     },
+     {
+      "id": "j-door-hinge",
+      "kind": "box",
+      "bone": "door",
+      "material": "hinge-zinc",
+      "role": "body",
+      "tone": 0.3,
+      "size": [
+       0.1,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0,
+        0.0025,
+        -0.0225
+       ]
+      },
+      "member": "door",
+      "part": "joint"
+     },
+     {
+      "id": "mass-unit",
+      "kind": "box",
+      "bone": "unit",
+      "material": "enamel-steel",
+      "role": "detail",
+      "tone": 0.5,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.29,
+        0.311,
+        0
+       ]
+      },
+      "member": "unit",
+      "part": "mass"
+     },
+     {
+      "id": "mass-door",
+      "kind": "box",
+      "bone": "door",
+      "material": "door-abs",
+      "role": "detail",
+      "tone": 0.5,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0,
+        0.0025,
+        0.235
+       ]
+      },
+      "member": "door",
+      "part": "mass"
+     },
+     {
+      "id": "mass-tank",
+      "kind": "box",
+      "bone": "tank",
+      "material": "tank-pp",
+      "role": "detail",
+      "tone": 0.5,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.17,
+        0,
+        0
+       ]
+      },
+      "member": "tank",
+      "part": "mass"
+     },
+     {
+      "id": "mass-blanket",
+      "kind": "box",
+      "bone": "blanket",
+      "material": "moving-blanket",
+      "role": "detail",
+      "tone": 0.5,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0.45,
+        0.0375,
+        0
+       ]
+      },
+      "member": "blanket",
+      "part": "mass"
+     }
+    ]
    }
   }
  }

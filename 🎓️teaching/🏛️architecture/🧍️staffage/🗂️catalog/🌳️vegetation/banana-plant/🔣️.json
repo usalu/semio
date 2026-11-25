@@ -1197,14 +1197,62 @@
    "de": "Ein ausgewachsener Horst der winterharten Japanischen Faserbanane (Musa basjoo) von etwa 5 m: ein grüner Scheinstamm aus gerollten Blattscheiden, 3,2 m hoch und an der Basis 25 cm dick, der neun Paddelblätter von bis zu 2,4 m Länge und 58 cm Breite an rinnigen Blattstielen trägt, deren Spreiten der Wind entlang der parallelen Adern in Streifen gerissen hat, in der Mitte das aufsteigende eingerollte Zigarrenblatt, zwei tote Blätter, die braun am Scheinstamm hängen, und zwei Schwertkindel von 1,4 m und 0,7 m neben der Mutterpflanze."
   },
   "tags": [
-   "herbaceous-perennial",
-   "banana",
-   "pseudostem",
-   "large-leaves",
-   "hardy",
-   "exotic-garden",
-   "wind",
-   "transpiration"
+   {
+    "id": "herbaceous-perennial",
+    "title": {
+     "en": "herbaceous perennial",
+     "de": "Staude"
+    }
+   },
+   {
+    "id": "banana",
+    "title": {
+     "en": "banana",
+     "de": "Banane"
+    }
+   },
+   {
+    "id": "pseudostem",
+    "title": {
+     "en": "pseudostem",
+     "de": "Scheinstamm"
+    }
+   },
+   {
+    "id": "large-leaves",
+    "title": {
+     "en": "large leaves",
+     "de": "große Blätter"
+    }
+   },
+   {
+    "id": "hardy",
+    "title": {
+     "en": "hardy",
+     "de": "winterhart"
+    }
+   },
+   {
+    "id": "exotic-garden",
+    "title": {
+     "en": "exotic garden",
+     "de": "Exotengarten"
+    }
+   },
+   {
+    "id": "wind",
+    "title": {
+     "en": "wind",
+     "de": "Wind"
+    }
+   },
+   {
+    "id": "transpiration",
+    "title": {
+     "en": "transpiration",
+     "de": "Transpiration"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage vegetation content worker PW-10",

@@ -57,14 +57,16 @@ const args = [testing ? "test" : "build", "--locked", "--profile", profile, "-j"
 if (process.argv.includes("--with-descriptor")) args.push("-p", "semio-plugin-describe", "--bin", "semio-plugin-describe");
 if (pagedPngTest || actorInputTest) args.push("--manifest-path", "🧰️framework/Cargo.toml");
 if (!process.argv.includes("--online")) args.push("--offline");
-if (process.argv.includes("--optimize-interpreter")) {
+const optimizeNativeHotPath = process.argv.includes("--optimize-native-hot-path");
+if (optimizeNativeHotPath || process.argv.includes("--optimize-interpreter")) {
   const source = resolve(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🎚️mode/🦀️profile/📋️constraints/🔣️.json");
-  const native = JSON.parse(readFileSync(source, "utf8")).groups.repository.native;
-  for (const name of ["semio-plugin-interpreter", "semio-plugin-interpreter-numeric"]) {
-    const row = native.find((candidate: { package: string }) => candidate.package === name);
-    if (!row) throw Error(`Interpreter optimization policy required for ${name}`);
-    args.push("--config", `profile.${profile}.package.${name}.opt-level=${row.optLevel}`);
+  const policy = JSON.parse(readFileSync(source, "utf8"));
+  const native: { package: string; optLevel: string }[] = policy.groups[policy.owners["Cargo.toml"]].native;
+  const selected = native.filter(row => row.package.startsWith(optimizeNativeHotPath ? "semio-" : "semio-plugin-interpreter"));
+  for (const row of selected) {
+    args.push("--config", `profile.${profile}.package.${row.package}.opt-level=${row.optLevel}`);
   }
+  console.error(`[DEBUG] Native optimization (${profile}) ${selected.map(row => `${row.package}=${row.optLevel}`).join(", ")}`);
 }
 if (process.argv.includes("--optimize-poll-ledger")) {
   for (const name of ["semio-framework-job-context", "semio-framework-job-payload", "semio-framework-job-return-budget"]) {

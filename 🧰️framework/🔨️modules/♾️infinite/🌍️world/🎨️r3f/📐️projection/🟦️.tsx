@@ -136,7 +136,7 @@ export function WorldProjectionKindSwitch(props: WorldProjectionKindSwitchProps)
   const selectedId = childElementId(props.id, worldProjectionTemplateSelectionId(props.spec));
   const tree = <Tree showLines={surface === "pane"} sortableSections={false} selectionMode="single" selectedIds={[selectedId]} sections={[{ id: childElementId(props.id, "projection-modes"), items }]} />;
   return (
-    <div className={shellClass} data-world-projection-kind-switch {...(surface === "ribbon" ? { "data-level": "window" as const } : {})}>
+    <div className={shellClass} data-world-projection-kind-switch {...(surface === "ribbon" ? { "data-level": "window" as const, "data-glass-chip": "" } : {})}>
       {surface === "ribbon" ? <LevelProvider level="window">{tree}</LevelProvider> : tree}
     </div>
   );
@@ -160,7 +160,7 @@ export function WorldOrbitProjectionSwitch(props: WorldOrbitProjectionSwitchProp
   const shellClass = props.className ?? cn("pointer-events-auto flex text-2xs font-medium", floatingRibbonSurfaceClass);
   const buttonClass = (active: boolean) => cn("px-2 py-1 transition-colors text-muted-foreground hover:text-emphasized", active && "text-emphasized");
   return (
-    <div className={shellClass} data-world-projection-switch data-level="window">
+    <div className={shellClass} data-world-projection-switch data-glass-chip="" data-level="window">
       <button type="button" className={buttonClass(props.projection === "orthographic")} aria-pressed={props.projection === "orthographic"} onClick={() => props.onProjectionChange("orthographic")}>
         Ortho
       </button>

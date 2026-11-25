@@ -2,7 +2,7 @@
 import {expect,it} from "vitest";
 import Ajv from "ajv";
 import {Box2,Vector2} from "three";
-import { chromePanelSafeArea, type SafeAreaYield } from "../../🔨️modules/🛟️chrome-safe-area/🟦️.tsx";
+import { chromePanelSafeArea, chromePanelHeadBox, type SafeAreaYield } from "../../🔨️modules/🛟️chrome-safe-area/🟦️.tsx";
 import { type Anchor } from "../../🔨️modules/⚓️panel-anchor/🟦️.ts";
 import fixture from "../🧫️fixtures/🛟️chrome-panel-safe-area/🔣️.json";
 
@@ -47,4 +47,15 @@ it("clears cascaded panels inside the actual host at every authored anchor",()=>
    checks++;
   }
  }
+});
+
+it("F4: an open top-left pane yields to the dock that covers its header, not to the chip rows and full-width band its tall body overlaps",()=>{
+ const host={left:0,top:29,right:800,bottom:1000},pane={left:0,top:29,right:300,bottom:989};
+ const dock={left:0,top:0,right:300,bottom:942},band={left:0,top:971,right:1600,bottom:1000},chips={left:0,top:947,right:285,bottom:971};
+ expect(chromePanelSafeArea(pane,host,"top-left",[chips,band,dock],"either",-0.5),"the whole body pins the pane under the dock").toEqual({inlinePx:0,blockPx:0});
+ const head=chromePanelHeadBox(pane,"top-left",32);
+ expect(head).toEqual({left:0,top:29,right:300,bottom:61});
+ expect(chromePanelSafeArea(head,host,"top-left",[chips,band,dock],"either",-0.5)).toEqual({inlinePx:300,blockPx:0});
+ expect(chromePanelSafeArea(head,host,"top-left",[chips,band],"either",-0.5),"no dock, no yield to the chip rows").toEqual({inlinePx:0,blockPx:0});
+ expect(chromePanelHeadBox(pane,"bottom-left",32)).toEqual({left:0,top:957,right:300,bottom:989});
 });

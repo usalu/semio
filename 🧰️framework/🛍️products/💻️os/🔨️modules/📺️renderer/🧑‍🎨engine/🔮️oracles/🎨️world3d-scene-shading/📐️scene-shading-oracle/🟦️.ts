@@ -9,6 +9,7 @@ import { renderWgpuCelebration, renderWgpuShading, renderWgpuTextured } from "..
 import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import { runtimeBundleV1 } from "../../../../../../../../🔨️modules/⚙️runtime/🔬️source/🟦️.ts";
 import { runtimeResolveV1 } from "../../../../../../../../🔨️modules/⚙️runtime/🚀️process/🟦️.ts";
+import { launchChromium } from "../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🌐️chromium-launch/🟦️";
 
 declare const THREE: any;
 declare const worldSurfaceMaterial: (name: string, material: any, vertexColors: boolean) => any;
@@ -48,8 +49,6 @@ export async function runSceneShadingOracle(
   const fixtureArgument = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧪️tests/🧫️fixtures/🎨️scene-shading/🔣️.json");
   const output = outputDirectory ? resolve(outputDirectory) : undefined;
   if (output) await mkdir(output, { recursive: true });
-  const playwrightSpecifier = "playwright";
-  const { chromium } = (await import(playwrightSpecifier)) as typeof import("playwright");
   const fixture = JSON.parse(await readFile(fixtureArgument, "utf8")) as SceneShadingOracleFixture;
   const threePath = runtimeResolveV1("three", repoRoot);
   const webgpu = ["shading-wgpu", "shading-s2-wgpu", "shading-s2-current-mesh", "shading-s2-ordered-mesh", "shading-s2-painted", "shading-s2-celebration"].includes(command);
@@ -75,7 +74,7 @@ export async function runSceneShadingOracle(
   if(!bundle)throw Error("Successful oracle bundle output required");
   const javascript = await bundle.text();
   if (output) await writeFile(join(output, "oracle.js"), javascript);
-  const browser = await chromium.launch({ headless: true, args: ["--ignore-gpu-blocklist", ...(process.platform === "darwin" ? ["--use-angle=metal"] : [])] });
+  const browser = await launchChromium({ args: ["--ignore-gpu-blocklist", ...(process.platform === "darwin" ? ["--use-angle=metal"] : [])] });
   try {
     const page = await browser.newPage({ viewport: { width: 64, height: 64 }, deviceScaleFactor: 1 });
     const errors: string[] = [];

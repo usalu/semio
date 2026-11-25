@@ -13,3 +13,4 @@ pub enum PdfViewTransientMutation {
     SetView(SetView),
 }
 dsl::original_pack_value_operation_receiving!(PdfViewTransientMutation);
+dsl::artifact_persisted_binary_operation!(PdfViewTransientMutation);

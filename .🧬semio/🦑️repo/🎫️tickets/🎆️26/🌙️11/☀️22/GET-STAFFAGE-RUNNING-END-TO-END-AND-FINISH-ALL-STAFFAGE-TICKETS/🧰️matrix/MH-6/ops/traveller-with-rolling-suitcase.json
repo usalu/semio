@@ -1,4 +1,5 @@
 [
+  {"op": "anchor-split", "id": "case-foot", "into": [{"id": "case-foot-l", "z": 0.165, "title": {"en": "Left suitcase foot", "de": "Linker Kofferfuß"}, "event": {"title": {"en": "Left trolley foot lifts off", "de": "Linker Trolleyfuß hebt ab"}}}, {"id": "case-foot-r", "z": -0.165, "title": {"en": "Right suitcase foot", "de": "Rechter Kofferfuß"}, "event": {"title": {"en": "Right trolley foot lifts off", "de": "Rechter Trolleyfuß hebt ab"}}}]},
   {"op": "front-sweep", "scale": "50", "id": "thigh-l"},
   {"op": "plan-revolve", "scale": "50", "id": "thigh-l"},
   {"op": "front-sweep", "scale": "50", "id": "shank-l"},
@@ -7,7 +8,6 @@
   {"op": "plan-revolve", "scale": "50", "id": "thigh-r"},
   {"op": "front-sweep", "scale": "50", "id": "shank-r"},
   {"op": "plan-revolve", "scale": "50", "id": "shank-r"},
-  {"op": "copy", "scale": "50", "id": "handle-grip", "from": "elevation", "to": ["plan"]},
   {"op": "front-sweep", "scale": "100", "id": "thigh-l"},
   {"op": "plan-revolve", "scale": "100", "id": "thigh-l"},
   {"op": "front-sweep", "scale": "100", "id": "shank-l"},
@@ -24,7 +24,6 @@
   {"op": "plan-revolve", "scale": "100", "id": "sleeve-l"},
   {"op": "front-sweep", "scale": "100", "id": "hand-l"},
   {"op": "plan-prism", "scale": "100", "id": "hand-l"},
-  {"op": "copy", "scale": "100", "id": "handle-grip", "from": "elevation", "to": ["plan"]},
   {"op": "front-sweep", "scale": "200", "id": "thigh-l"},
   {"op": "plan-revolve", "scale": "200", "id": "thigh-l"},
   {"op": "front-sweep", "scale": "200", "id": "shank-l"},
@@ -43,7 +42,6 @@
   {"op": "plan-prism", "scale": "200", "id": "hand-l"},
   {"op": "front-sweep", "scale": "200", "id": "forearm-l"},
   {"op": "plan-revolve", "scale": "200", "id": "forearm-l", "rebuild": true},
-  {"op": "copy", "scale": "200", "id": "handle-grip", "from": "elevation", "to": ["plan"]},
   {"op": "front-sweep", "scale": "500", "id": "thigh-l"},
   {"op": "plan-revolve", "scale": "500", "id": "thigh-l"},
   {"op": "front-sweep", "scale": "500", "id": "shank-l"},
@@ -61,5 +59,8 @@
   {"op": "front-sweep", "scale": "500", "id": "hand-l"},
   {"op": "plan-prism", "scale": "500", "id": "hand-l"},
   {"op": "front-sweep", "scale": "500", "id": "forearm-l"},
-  {"op": "plan-revolve", "scale": "500", "id": "forearm-l", "rebuild": true}
+  {"op": "plan-revolve", "scale": "500", "id": "forearm-l", "rebuild": true},
+  {"op": "thicken", "scale": "100", "view": "plan", "id": "coat"},
+  {"op": "thicken", "scale": "200", "view": "plan", "id": "coat"},
+  {"op": "copy", "scale": "200", "id": "handle-grip", "from": "elevation", "to": ["plan"]}
 ]

@@ -3,8 +3,28 @@ use super::*;
 const ONE: CosGrant = CosGrant { work: 1, allocation_bytes: 256 * 1024, release_bytes: 256 * 1024 };
 
 #[test]
+fn normal_projection_keeps_a_logical_codec_body_as_the_files_encoded_span() {
+    let source = b"31 2 obj\n<< /Length 9 /Filter /ASCIIHexDecode /Type /XObject >>\nstream\n54657374>\nendstream\nendobj";
+    let mut cursor = NormalProjectionCursor::new(ObjRef { num: 31, gen: 2 }, 0, CosLimits::default(), 4096);
+    for _ in 0..10_000 {
+        let turn = cursor.advance(source, ONE, false);
+        assert!(turn.work <= ONE.work && turn.allocated_bytes <= ONE.allocation_bytes && turn.released_bytes <= ONE.release_bytes);
+        if turn.event.unwrap() == NormalProjectionEvent::Complete { break; }
+    }
+    match cursor.take().expect("projected encoded stream") {
+        NormalProjection::ReferenceStream { dict, span } => {
+            assert_eq!(&source[span.start..span.end], b"54657374>");
+            assert!(dict.iter().any(|entry| entry.key == "Filter" && entry.value.as_name() == Some("ASCIIHexDecode")));
+        }
+        _ => panic!("expected the encoded body span"),
+    }
+    cursor.begin_close();
+    while cursor.close_step(ONE).event.unwrap() != NormalProjectionEvent::Closed {}
+}
+
+#[test]
 fn normal_projection_borrows_the_original_body_and_accepts_an_exact_length() {
-    let source = b"31 2 obj\n<< /Length 40 3 R /Filter /ASCIIHexDecode /Type /XObject >>\nstream\n54657374>\nendstream\nendobj";
+    let source = b"31 2 obj\n<< /Length 40 3 R /Type /XObject >>\nstream\nTest\nendstream\nendobj";
     let id = ObjRef { num: 31, gen: 2 };
     let mut cursor = NormalProjectionCursor::new(id, 0, CosLimits::default(), 4096);
     let mut requested = false;
@@ -17,15 +37,15 @@ fn normal_projection_borrows_the_original_body_and_accepts_an_exact_length() {
             NormalProjectionEvent::NeedsLength(reference) => {
                 assert!(!requested);
                 assert_eq!(reference, ObjRef { num: 40, gen: 3 });
-                assert!(cursor.provide_length(ObjRef { num: 40, gen: 0 }, Some(9)).is_err());
-                cursor.provide_length(reference, Some(9)).unwrap();
+                assert!(cursor.provide_length(ObjRef { num: 40, gen: 0 }, Some(4)).is_err());
+                cursor.provide_length(reference, Some(4)).unwrap();
                 requested = true;
             }
             NormalProjectionEvent::Complete => {
                 match cursor.take().expect("projected native normal object") {
                     NormalProjection::Value(PdfObject::Stream { dict, data, filters }) => {
                         assert_eq!(data.to_vec_owner(), b"Test");
-                        assert_eq!(filters, [super::PdfStreamFilter::AsciiHex]);
+                        assert!(filters.is_empty());
                         assert_eq!(dict.len(), 1);
                         assert_eq!(dict[0].value.as_name(), Some("XObject"));
                     }

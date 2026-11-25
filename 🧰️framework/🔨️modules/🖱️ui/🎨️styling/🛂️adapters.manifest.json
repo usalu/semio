@@ -9,7 +9,7 @@
     },
     {
       "id": "dotnet-elements-styling",
-      "description": "C# Palette, Strokes, Radii from 🔣️.json",
+      "description": "C# Palette from 🔣️.json. No C# renderer draws chrome, so the levels (glass alpha, blur, chip tint) are not emitted; the first C# renderer that does must project them like the Rust and TypeScript targets",
       "generator": "📦️packages/🦀️rust/📜️script.ts generate",
       "outputs": ["🎨️palette/🔷️.cs"]
     },

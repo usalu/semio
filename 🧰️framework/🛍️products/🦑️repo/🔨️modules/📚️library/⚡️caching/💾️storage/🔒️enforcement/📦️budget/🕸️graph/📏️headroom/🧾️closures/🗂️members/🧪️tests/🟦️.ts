@@ -17,7 +17,7 @@ test("kinds and groups of image-relative paths agree with the corpus and with th
   expect(memberKindOfV1(row.name)??null,row.name).toBe(row.kind as never);
   const group=memberGroupOfPathV1(row.name);expect(group?.group??null,row.name).toBe(row.group);expect(group?.directory??null,row.name).toBe(row.directory);expect(group?.member??null,row.name).toBe(row.member);
  }
- const text=readFileSync(new URL("../../🟦️.ts",import.meta.url),"utf8"),tree=ts.createSourceFile("closures.ts",text,ts.ScriptTarget.Latest,true),node=tree.statements.find((value):value is ts.FunctionDeclaration=>ts.isFunctionDeclaration(value)&&value.name?.text==="role");
+ const text=readFileSync(new URL("../../🏷️names/🟦️.ts",import.meta.url),"utf8"),tree=ts.createSourceFile("closures.ts",text,ts.ScriptTarget.Latest,true),node=tree.statements.find((value):value is ts.FunctionDeclaration=>ts.isFunctionDeclaration(value)&&value.name?.text==="role");
  expect(node).toBeDefined();
  const role=new Function(ts.transpileModule(node!.getText(tree),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.None}}).outputText+";return role;")()as(name:string)=>string;
  for(const row of cases.kinds)if(row.kind!==null)expect(role(row.name),row.name).toBe(row.kind);

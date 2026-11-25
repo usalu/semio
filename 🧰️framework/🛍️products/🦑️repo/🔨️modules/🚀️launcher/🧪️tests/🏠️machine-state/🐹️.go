@@ -79,7 +79,12 @@ func TestMachinePathMovesOnlyTheState(t *testing.T) {
 // 🏠️The tools partition of a runtime install and the fleet store pointer of a worktree are read below the declared state directory, not below the checkout.
 func TestLauncherReadsItsStateBelowTheDeclaredDirectory(t *testing.T) {
 	registry, rt, _ := syntheticRegistry(t, []byte("x"), "bun-linux-x64")
-	state, checkout := t.TempDir(), t.TempDir()
+	state, err := os.MkdirTemp("", "ms-")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(state)
+	checkout := t.TempDir()
 	row, _ := rt.Distribution("linux", "x64", false)
 	request := ProvisionRequest{Root: checkout, Name: "bun", Registry: registry, Runtime: rt, Platform: "linux", Arch: "x64", Env: environment(map[string]string{machineStateEnvironment: state, "SEMIO_RUNTIME_CACHE": t.TempDir()})}
 	tools, _, err := request.StoreDirectories(row)

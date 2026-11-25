@@ -37,7 +37,7 @@ export const Field: React.FC<FieldProps> = ({ id, controlId, label, description,
       <SharedBorderRowCell>
         <Label id={association.label} {...(association.target ? { htmlFor: association.target } : {})} className="text-sm font-medium text-foreground truncate" data-slot="field-label">
           {label}
-          {required ? <span aria-hidden="true" className="text-destructive ms-half">*</span> : null}
+          {required ? <span aria-hidden="true" className="text-destructive-foreground ms-half">*</span> : null}
         </Label>
       </SharedBorderRowCell>
       {description ? (
@@ -52,7 +52,7 @@ export const Field: React.FC<FieldProps> = ({ id, controlId, label, description,
       </SharedBorderRow>
       {error ? (
         <SharedBorderRowCell tone="destructive">
-          <p id={association.error} role="alert" className="text-xs text-destructive" data-slot="field-error">
+          <p id={association.error} role="alert" className="text-xs text-destructive-foreground" data-slot="field-error">
             {error}
           </p>
         </SharedBorderRowCell>

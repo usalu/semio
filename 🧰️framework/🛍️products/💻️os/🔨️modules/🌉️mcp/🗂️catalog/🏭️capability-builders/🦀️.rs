@@ -239,7 +239,7 @@ pub fn ui_dialog_open_capability(dialog_ids: &[String]) -> CapabilityDefinition 
         kind: CapabilityKind::Ui,
         audience: CapabilityAudience::Agent,
         title: "Open Dialog".to_string(),
-        description: "Opens one of the workspace's declared modal form dialogs by id.".to_string(),
+        description: "Opens one of the workspace's declared modal form dialogs by id. — Öffnet einen der deklarierten modalen Formulardialoge des Arbeitsbereichs per Id.".to_string(),
         artifact_kind: None,
         use_when: vec!["open a dialog".to_string(), "show a form".to_string()],
         input_schema,

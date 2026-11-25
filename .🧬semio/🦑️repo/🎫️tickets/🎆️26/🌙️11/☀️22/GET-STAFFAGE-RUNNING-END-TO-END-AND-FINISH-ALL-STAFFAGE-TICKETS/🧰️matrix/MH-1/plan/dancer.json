@@ -1,0 +1,17 @@
+[
+  {"op": "volume", "scale": "50", "id": "shirt-waist", "as": "prism-w", "fixed": true},
+  {"op": "volume", "scale": "50", "id": "shoe-toe-r", "as": "prism-w", "fixed": true},
+  {"op": "volume", "scale": "100", "id": "shirt-waist", "as": "prism-w", "fixed": true},
+  {"op": "volume", "scale": "200", "id": "shoe-r", "as": "prism-v", "fixed": true},
+  {"op": "volume", "scale": "200", "id": "shank-r", "as": "revolved", "fixed": true},
+  {"op": "volume", "scale": "200", "id": "shorts", "as": "prism-w", "fixed": true},
+  {"op": "volume", "scale": "500", "id": "shank-l", "as": "prism-w", "fixed": true},
+  {"op": "volume", "scale": "500", "id": "shoe-toe-l", "as": "prism-w", "fixed": true},
+  {"op": "volume", "scale": "500", "id": "shank-r", "as": "revolved", "fixed": true},
+  {"op": "volume", "scale": "500", "id": "shoe-toe-r", "as": "prism-w", "profile": "elevation", "fixed": true},
+  {"op": "volume", "scale": "500", "id": "shoe-r", "as": "prism-v", "fixed": true},
+  {"scale": "50", "label": "foot-r-plan", "choose": [[{"op": "copy", "id": "shoe-r", "from": "front", "to": ["plan"]}, {"op": "remove", "view": "plan", "id": "sole-r"}]], "sync": true},
+  {"scale": "50", "label": "foot-l-front", "choose": [[{"op": "copy", "id": "shoe-l", "from": "plan", "to": ["front"]}, {"op": "remove", "view": "front", "id": "sole-l"}]], "sync": true},
+  {"scale": "100", "label": "shirt-front", "choose": [[{"op": "front-sweep", "id": "shirt"}], [{"op": "front-sweep", "id": "shirt", "range": "keep"}]], "sync": true},
+  {"search": true, "scale": "100", "id": "shirt", "subsets": [["front"], ["elevation", "front"]]}
+]

@@ -1,0 +1,9 @@
+# Native MCP Hot Path Rebuild
+
+The local fallback uses the pinned `nightly-2026-07-20` toolchain from the repository tool registry, the locked dependency graph with Cargo offline, and the ticket's `native-mcp` target. This checkout has no authored `profile.prototype` in the root Cargo manifest, so the fallback uses `dev` and applies the root workspace's first-party native optimization rows to that profile. One Cargo job leaves headroom for the parallel WFC guest build and the host's other processes.
+
+`native-sdk-smoke.ts` starts the supplied binary over the official MCP SDK's stdio transport. It uses the configured plugin catalog and host policies with an isolated ticket workspace and closes the client and fixture afterward. The harness passed its control run against the existing publication with 28 tools, five prompts, seven resources, English context resolution, and a ping response. That control run validates the harness before the rebuilt binary is available.
+
+The first build surfaced a missing JSON import and an out-of-scope host policy reference in the editor channel. The two compile corrections reuse the existing serde JSON re-export and the channel's driver policy. The locked offline retry compiled the updated Wake, Poll, editor runtime, and server, and linked in 9 minutes 52 seconds. Cargo's `dev` summary describes the global profile as unoptimized, and the command applies optimization level 3 to the 21 selected packages. The macOS linker warned that the unwind section exceeds its compact table limit.
+
+The freshly linked 565 MiB `🗑️generated/native-mcp/debug/semio-os-mcp` passed the official SDK smoke with 28 tools, five prompts, seven resources, English context resolution, and a ping response. The journey and WFC agents received this executable path for typed checks. The target remains available for those checks and possible incremental retries.

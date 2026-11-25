@@ -1,4 +1,4 @@
-% Generated from framework/ui/styling/🔣️.json — run `repo ./📜️script.ts generate`.
+% Generated from 🧰️framework/🔨️modules/🖱️ui/🎨️styling/🔣️.json — run `repo ./📜️script.ts generate`.
 \NeedsTeXFormat{LaTeX2e}
 \ProvidesPackage{semio-tokens}[2026/07/06 v0.1.0 semio design tokens]
 \RequirePackage{xcolor}
@@ -7,6 +7,12 @@
 \definecolor{semio-secondary}{HTML}{34d1bf}
 \definecolor{semio-tertiary}{HTML}{fa9500}
 \definecolor{semio-danger}{HTML}{a60009}
+\definecolor{semio-danger-bright}{HTML}{ff8a90}
+\definecolor{semio-danger-deep}{HTML}{8c0007}
+\definecolor{semio-warning-deep}{HTML}{544300}
+\definecolor{semio-success-deep}{HTML}{2d452d}
+\definecolor{semio-success-bright}{HTML}{93c294}
+\definecolor{semio-info-deep}{HTML}{483d32}
 \definecolor{semio-warning}{HTML}{fccf05}
 \definecolor{semio-info}{HTML}{dbbea1}
 \definecolor{semio-success}{HTML}{7eb77f}
@@ -93,6 +99,23 @@
 \definecolor{semio-chrome-dark-panel}{HTML}{1c2d31}
 \definecolor{semio-chrome-dark-dialog}{HTML}{27373a}
 \definecolor{semio-chrome-dark-menu}{HTML}{324143}
+
+% Glass of the levels and the chip veil (chipTintPercent): chip surface = level glass at \semio@glass@alpha@<level>, then the foreground veil at \semio@chip@tint.
+\newcommand{\semio@glass@alpha@base}{1}
+\newcommand{\semio@glass@alpha@base@pct}{100}
+\newcommand{\semio@glass@alpha@window}{0.88}
+\newcommand{\semio@glass@alpha@window@pct}{88}
+\newcommand{\semio@glass@alpha@pane}{0.76}
+\newcommand{\semio@glass@alpha@pane@pct}{76}
+\newcommand{\semio@glass@alpha@panel}{0.64}
+\newcommand{\semio@glass@alpha@panel@pct}{64}
+\newcommand{\semio@glass@alpha@dialog}{0.52}
+\newcommand{\semio@glass@alpha@dialog@pct}{52}
+\newcommand{\semio@glass@alpha@menu}{0.4}
+\newcommand{\semio@glass@alpha@menu@pct}{40}
+\newcommand{\semio@chip@tint}{0.1}
+\newcommand{\semio@chip@tint@pct}{10}
+\newcommand{\semio@chip@tint@rest@pct}{90}
 
 % Visualization palette: categorical presence hues plus scheme stops, per appearance.
 \definecolor{semio-presence-light-0}{HTML}{891a1a}

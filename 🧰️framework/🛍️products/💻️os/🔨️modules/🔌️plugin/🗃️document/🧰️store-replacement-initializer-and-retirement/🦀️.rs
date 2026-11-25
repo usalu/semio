@@ -27,7 +27,7 @@ where
         }
         if let Some(open) = self.active_member_open.as_mut() {
             if store::MemberOpenOperation::terminal_is_empty(open) { drop(self.active_member_open.take()); return Ok(paid()); }
-            let step=cx.with_retained_loan(child,|same|store::MemberOpenOperation::close_step(open,same.original_source_parent()?,same))?;
+            let original=cx.original_source_parent()?;let step=cx.with_retained_loan(child,|same|store::MemberOpenOperation::close_step(open,original,same))?;
             return parent(step,store::MemberOpenOperation::terminal_is_empty(open));
         }
         if self.opened_member.is_some(){

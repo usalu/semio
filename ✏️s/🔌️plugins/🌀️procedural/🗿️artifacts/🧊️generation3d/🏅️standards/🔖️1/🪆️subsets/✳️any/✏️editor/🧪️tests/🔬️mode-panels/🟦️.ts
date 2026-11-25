@@ -21,7 +21,7 @@ function projectPanel(row: ModePanelCase): { readonly windowId: undefined; reado
  * (`wgpu-ui.surface-not-published:framework.panel.*`, ticket 26/09/09/PROCEDURAL-3D-END-TO-END). */
 export function testGeneration3dModePanelPublicationContract(): void {
   const here = fileURLToPath(new URL(".", import.meta.url));
-  const fixture = JSON.parse(readFileSync(`${here}/../../../🧫️fixtures/📌️mode-panel-publication.json`, "utf8")) as ModePanelFixture;
+  const fixture = JSON.parse(readFileSync(`${here}/../../../🧪️tests/🧫️fixtures/📌️mode-panel-publication.json`, "utf8")) as ModePanelFixture;
   assert.equal(fixture.format, "semio.generation3d.mode-panel-publication");
   assert.equal(fixture.version, 1);
 

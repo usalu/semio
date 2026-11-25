@@ -5,9 +5,9 @@ import { normWireLiteral, normWireObject, type NormWireReader, normWireRequired,
 import { type Din18599UsageProfile, parseDin18599UsageProfile } from "../../../📸️snapshot/🟦️.ts";
 
 export interface ChangeZoneUsageProfile {
-  mutation: "changezoneusageprofile";
+  mutation: "changeZoneUsageProfile";
   zoneId: string;
   newUsageProfile: Din18599UsageProfile;
 }
 
-export const parseChangeZoneUsageProfile: NormWireReader<ChangeZoneUsageProfile> = normWireObject<ChangeZoneUsageProfile>({ mutation: normWireRequired(normWireLiteral("changezoneusageprofile")), zoneId: normWireRequired(normWireString), newUsageProfile: normWireRequired(parseDin18599UsageProfile) });
+export const parseChangeZoneUsageProfile: NormWireReader<ChangeZoneUsageProfile> = normWireObject<ChangeZoneUsageProfile>({ mutation: normWireRequired(normWireLiteral("changeZoneUsageProfile")), zoneId: normWireRequired(normWireString), newUsageProfile: normWireRequired(parseDin18599UsageProfile) });

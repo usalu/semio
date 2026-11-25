@@ -145,6 +145,22 @@ fn build_model_meshes_region_and_solves() {
     assert!(result.checks.residual_norm < 1e-6, "residual {}", result.checks.residual_norm);
 }
 
+/// 🌀️ LAW (F2): a region turned about its centre by ANY whole degree still builds its model — the gumball ring turn of a
+/// region can never leave it unmeshable (the lattice once stranded a boundary edge at about 45°).
+#[test]
+fn a_turned_region_always_meshes() {
+    let mut failures = Vec::new();
+    for degrees in 0..=360 {
+        let (sin, cos) = (degrees as f64).to_radians().sin_cos();
+        let mut doc = rectangle_region_doc();
+        doc.regions[0].outline = [[0.0, 0.0], [4.0, 0.0], [4.0, 2.0], [0.0, 2.0]].iter().map(|p| [2.0 + (p[0] - 2.0) * cos - (p[1] - 1.0) * sin, 1.0 + (p[0] - 2.0) * sin + (p[1] - 1.0) * cos]).collect();
+        if let Err(error) = with(&doc, |d| build_model(d, "self").map(|model| model.nodes.len())) {
+            failures.push(format!("{degrees} deg: {error:?}"));
+        }
+    }
+    assert!(failures.is_empty(), "{} of 361 turns failed: {failures:?}", failures.len());
+}
+
 #[test]
 fn region_with_hole_meshes_and_solves() {
     let doc = rectangle_with_hole_region_doc();

@@ -153,21 +153,47 @@ pub fn fem3d_gumball_then(net: &MoveSelection, tick: &MoveSelection) -> Option<M
     let translation = |leaf: &MoveSelection| leaf.angle == 0.0 && factors(leaf) == unscaled;
     let rotation = |leaf: &MoveSelection| offset(leaf) == unmoved && factors(leaf) == unscaled;
     let scaling = |leaf: &MoveSelection| offset(leaf) == unmoved && leaf.angle == 0.0;
-    let same_axis = match (net.unit_axis(), tick.unit_axis()) {
-        (Some(left), Some(right)) => left.iter().zip(right).all(|(left, right)| (left - right).abs() < 1e-9),
-        _ => false,
-    };
     if tick.is_identity() {
         Some(net.clone())
     } else if translation(net) && translation(tick) {
         Some(MoveSelection { dx: net.dx + tick.dx, dy: net.dy + tick.dy, dz: net.dz + tick.dz, ..net.clone() })
-    } else if rotation(net) && rotation(tick) && (net.angle == 0.0 || same_axis) {
-        Some(MoveSelection { axis_x: tick.axis_x, axis_y: tick.axis_y, axis_z: tick.axis_z, angle: net.angle + tick.angle, ..net.clone() })
+    } else if rotation(net) && rotation(tick) {
+        fem3d_turn_then(net, tick)
     } else if scaling(net) && scaling(tick) {
         Some(MoveSelection { sx: net.sx * tick.sx, sy: net.sy * tick.sy, sz: net.sz * tick.sz, ..net.clone() })
     } else {
         None
     }
+}
+
+/// 🌀️ Two rotations about the same pivot as ONE rotation (`tick` after `net`): the angle is a SIGNED sum while the axes
+/// are parallel or anti-parallel within `1e-6` (a drag that reverses flips the axis the host reports, and sensor noise
+/// never makes two ticks of one ring unequal), the quaternion product otherwise — a tick is never dropped.
+fn fem3d_turn_then(net: &MoveSelection, tick: &MoveSelection) -> Option<MoveSelection> {
+    let Some(tick_axis) = tick.unit_axis() else { return Some(net.clone()) };
+    let Some(net_axis) = net.unit_axis().filter(|_| net.angle != 0.0) else {
+        return Some(MoveSelection { axis_x: tick_axis[0], axis_y: tick_axis[1], axis_z: tick_axis[2], angle: tick.angle, ..net.clone() });
+    };
+    let dot: f64 = net_axis.iter().zip(tick_axis).map(|(left, right)| left * right).sum();
+    if dot.abs() > 1.0 - 1e-6 {
+        let angle = net.angle + dot.signum() * tick.angle;
+        return Some(MoveSelection { axis_x: net_axis[0], axis_y: net_axis[1], axis_z: net_axis[2], angle, ..net.clone() });
+    }
+    let quaternion = |axis: [f64; 3], angle: f64| {
+        let (sin, cos) = (angle / 2.0).sin_cos();
+        [cos, axis[0] * sin, axis[1] * sin, axis[2] * sin]
+    };
+    let (a, b) = (quaternion(tick_axis, tick.angle), quaternion(net_axis, net.angle));
+    let product = [
+        a[0] * b[0] - a[1] * b[1] - a[2] * b[2] - a[3] * b[3],
+        a[0] * b[1] + a[1] * b[0] + a[2] * b[3] - a[3] * b[2],
+        a[0] * b[2] - a[1] * b[3] + a[2] * b[0] + a[3] * b[1],
+        a[0] * b[3] + a[1] * b[2] - a[2] * b[1] + a[3] * b[0],
+    ];
+    let sin = (product[1] * product[1] + product[2] * product[2] + product[3] * product[3]).sqrt();
+    let angle = 2.0 * sin.atan2(product[0]);
+    let axis = if sin > 1e-12 { [product[1] / sin, product[2] / sin, product[3] / sin] } else { net_axis };
+    Some(MoveSelection { axis_x: axis[0], axis_y: axis[1], axis_z: axis[2], angle, ..net.clone() })
 }
 
 /// 🎚️ Whether a tick is one the leaf admits and that moves: finite numbers, positive factors, a rotation about a

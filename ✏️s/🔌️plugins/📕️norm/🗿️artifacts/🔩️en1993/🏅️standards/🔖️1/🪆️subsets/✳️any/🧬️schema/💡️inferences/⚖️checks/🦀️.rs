@@ -28,14 +28,6 @@ pub use semio_s_artifact_norm_en1993_spec_trace as spec_trace;
 
 
 #[cfg(test)]
-#[path = "../../🧪️tests/⚖️compliance/🦀️.rs"]
-mod compliance_tests;
-
-#[cfg(test)]
-#[path = "🧪️tests/🔭️special-wiring/🦀️.rs"]
-mod special_wiring_tests;
-
-#[cfg(test)]
 #[path = "🧪️tests/🧩️plate-wiring/🦀️.rs"]
 mod plate_wiring_tests;
 

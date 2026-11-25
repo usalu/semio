@@ -18,6 +18,8 @@ import {
   Diagram,
   Handle,
   Position,
+  SharedBorderRow,
+  SharedBorderRowCell,
   surfaceClass,
   useLabel,
   type Edge,
@@ -89,9 +91,9 @@ function WorkflowDiagramNode({ data }: NodeProps<Node<WorkflowNodeData>>) {
   const rowHeight = 18;
   const bodyHeight = Math.max(data.height, 56 + rowCount * rowHeight);
   return (
-    <div className="rounded border border-border bg-background text-foreground shadow-sm" style={{ width: data.width, minHeight: bodyHeight }}>
-      <div className="border-b border-border px-2 py-1 text-xs font-medium">{data.label}</div>
-      <div className="relative px-2 py-1 text-[0.625rem] leading-[1.125rem]">
+    <SharedBorderRow orientation="vertical" className="bg-background text-foreground" style={{ width: data.width, minHeight: bodyHeight }}>
+      <SharedBorderRowCell className="px-2 py-1 text-xs font-medium">{data.label}</SharedBorderRowCell>
+      <SharedBorderRowCell className="relative flex-1 flex-col items-stretch px-2 py-1 text-[0.625rem] leading-[1.125rem]">
         {Array.from({ length: rowCount }, (_, rowIndex) => {
           const input = data.inputs[rowIndex];
           const output = data.outputs[rowIndex];
@@ -113,8 +115,8 @@ function WorkflowDiagramNode({ data }: NodeProps<Node<WorkflowNodeData>>) {
             </div>
           );
         })}
-      </div>
-    </div>
+      </SharedBorderRowCell>
+    </SharedBorderRow>
   );
 }
 

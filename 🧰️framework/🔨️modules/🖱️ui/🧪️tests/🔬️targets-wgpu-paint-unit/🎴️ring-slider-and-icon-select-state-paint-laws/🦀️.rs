@@ -8,6 +8,10 @@ fn rounded_of(draw: &DrawList) -> Vec<(([f32; 4]), [f32; 4])> {
     draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).filter(|instance| (instance.params[2] - KIND_ROUNDED).abs() < 0.01).map(|instance| (instance.rect, instance.color)).collect()
 }
 
+fn boxes_of(draw: &DrawList) -> Vec<([f32; 4], [f32; 4])> {
+    draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).filter(|instance| (instance.params[2] - KIND_ROUNDED).abs() < 0.01 || (instance.params[2] - KIND_SOLID).abs() < 0.01).map(|instance| (instance.rect, instance.color)).collect()
+}
+
 fn glyph_colors(draw: &DrawList) -> Vec<[f32; 4]> {
     draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).filter(|instance| (instance.params[2] - KIND_GLYPH).abs() < 0.01).map(|instance| instance.color).collect()
 }
@@ -71,7 +75,7 @@ fn state_slider(snaps: Vec<f64>) -> UiNode {
 fn slider_rounded(configure: impl FnOnce(&mut UiTree, NodeId)) -> (Vec<([f32; 4], [f32; 4])>, Theme) {
     let (mut tree, root, theme, mut atlas) = setup(&state_slider(Vec::new()));
     configure(&mut tree, root);
-    (rounded_of(&paint_retained_node_for_test(&tree, root, &theme, &mut atlas)), theme)
+    (boxes_of(&paint_retained_node_for_test(&tree, root, &theme, &mut atlas)), theme)
 }
 
 #[test]
@@ -117,7 +121,7 @@ fn slider_disabled_is_half_opacity_without_the_extra_scrim() {
     slider.presence.state = UiState::Disabled;
     let (tree, root, theme, mut atlas) = setup(&node);
     let draw = paint_retained_node_for_test(&tree, root, &theme, &mut atlas);
-    let rounded = rounded_of(&draw);
+    let rounded = boxes_of(&draw);
     assert_eq!(rounded[0].1, rgba(theme.muted.with_alpha(theme.muted.a * 0.5)));
     assert_eq!(rounded[2].1, rgba(theme.text_element.with_alpha(theme.text_element.a * 0.5)));
     let scrim = draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).filter(|instance| (instance.params[2] - KIND_SOLID).abs() < 0.01 && instance.color == rgba(theme.panel.with_alpha(0.35))).count();

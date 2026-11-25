@@ -27,7 +27,7 @@ export function browserSystemPortV1(environment:Readonly<Record<string,string|un
  const root=process.getuid?.()===0;
  const sudo=process.platform==="linux"&&!root?resolve("sudo"):null;
  let escalate=process.platform!=="linux"||root;
- if(sudo){try{escalate=spawnSync(sudo,["-n","true"],{stdio:"ignore"}).status===0;}catch{escalate=false;}}
+ if(sudo){try{escalate=spawnSync(sudo,["-n","true"],{windowsHide:true,stdio:"ignore"}).status===0;}catch{escalate=false;}}
  return {platform:process.platform,root,escalate,resolve,isFile(path){try{return statSync(path).isFile();}catch(error){if(["ENOENT","ENOTDIR"].includes((error as NodeJS.ErrnoException).code??""))return false;throw error;}}};
 }
 

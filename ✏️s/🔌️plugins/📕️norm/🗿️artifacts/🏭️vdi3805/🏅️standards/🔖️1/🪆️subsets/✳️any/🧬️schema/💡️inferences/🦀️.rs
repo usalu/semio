@@ -65,12 +65,6 @@ pub fn vdi3805_artifact_inference_descriptor() -> ::semio_framework_schema_regis
 }
 //#endregion 🔖️Descriptor
 
-#[cfg(test)]
-//#region 🧪️Tests
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests
-
 //#region 🔖️ComplianceReport
 use semio_s_plugin_norm_compliance::{CheckReport, CheckResult, CheckStatus, LocalizedCopy, Quantity, QuantityKind, Remedy, SubjectRef};
 use semio_s_artifact_norm_vdi3805_checks::{clause, subject_dataset, subject_product, validate_structure, valve_min_kvs_m3_h, ANNEX, RADIATOR_N_MAX, RADIATOR_N_MIN, VALVE_DN_SERIES};

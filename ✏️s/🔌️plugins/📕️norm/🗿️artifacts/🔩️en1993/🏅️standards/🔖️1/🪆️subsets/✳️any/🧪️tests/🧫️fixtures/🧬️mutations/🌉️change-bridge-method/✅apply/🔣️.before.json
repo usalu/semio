@@ -487,7 +487,7 @@
       "phi2": 1.0,
       "deltaSigmaP": 40000000.0,
       "category": 71,
-      "method": "DamageTolerant",
+      "method": "SafeLife",
       "heavyVehicleWeight": 0.0,
       "referenceWeight": 0.0,
       "observedTraffic": 0.0,

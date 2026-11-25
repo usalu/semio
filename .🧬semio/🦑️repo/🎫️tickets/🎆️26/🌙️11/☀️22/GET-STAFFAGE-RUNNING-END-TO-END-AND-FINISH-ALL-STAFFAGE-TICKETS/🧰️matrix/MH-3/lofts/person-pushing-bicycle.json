@@ -1,0 +1,8 @@
+[
+  {"scale": "50", "bone": "hand-r", "paint": "hand-r", "replace": ["hand-r"]},
+  {"scale": "50", "bone": "forearm-r", "paint": "forearm-r", "replace": ["forearm-r"]},
+  {"scale": "50", "bone": "hand-l", "paint": "hand-l", "replace": ["hand-l"]},
+  {"scale": "50", "bone": "forearm-l", "paint": "forearm-l", "replace": ["forearm-l"]},
+  {"scale": "50", "bone": "upper-arm-l", "paint": "upper-arm-l", "replace": ["upper-arm-l"]},
+  {"scale": "50", "bone": "upper-arm-r", "paint": "upper-arm-r", "replace": ["upper-arm-r"]}
+]

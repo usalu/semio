@@ -17,6 +17,7 @@
   "pileGroups": null,
   "labTests": null,
   "layerWaters": null,
+  "placements": null,
   "cases": {
     "removed": [],
     "inserted": [],
@@ -32,7 +33,9 @@
       {
         "id": "characteristic-basis-1",
         "patch": {
-          "layerId": "sand-1-alt"
+          "layerId": "sand-1-alt",
+          "parameter": null,
+          "basis": null
         }
       }
     ]

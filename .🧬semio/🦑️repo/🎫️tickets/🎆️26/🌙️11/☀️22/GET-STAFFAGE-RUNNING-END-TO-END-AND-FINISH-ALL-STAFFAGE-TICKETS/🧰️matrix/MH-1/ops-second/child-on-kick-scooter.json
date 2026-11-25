@@ -1,0 +1,5 @@
+[
+  {"op":"front-sweep","scale":"500","id":"foot-r","twin":"shoe-r"},
+  {"op":"copy","scale":"500","id":"foot-r","from":"front","to":["plan"]},
+  {"scale":"200","op":"volume","id":"foot-r","ids":{"elevation":"shoe-r"},"as":"prism-w","profile":"elevation"}
+]

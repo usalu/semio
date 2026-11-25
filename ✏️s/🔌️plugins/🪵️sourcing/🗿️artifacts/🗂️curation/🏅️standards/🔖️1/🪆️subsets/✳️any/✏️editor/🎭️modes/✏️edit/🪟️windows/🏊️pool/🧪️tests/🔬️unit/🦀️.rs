@@ -65,7 +65,7 @@ fn pool_filter_controls_have_localized_names() {
     use semio_ui_locale::{Locale, Terminology};
     for locale in [Locale::En, Locale::De] {
         let labels = crate::editor::sourcing::terminology::sourcing_curation_labels(&semio_plugin::ViewModel::new(locale, Terminology::Native));
-        let node = filter_bar(&SourcingCurationConfig::default(), labels).expect("initial filter bar");
+        let node = filter_bar(&SourcingCurationConfig::default(), labels, locale).expect("initial filter bar");
         for (key, label) in [
             ("sourcing-filter-query", labels.search.as_str()),
             ("sourcing-filter-typology", labels.col_typology.as_str()),
@@ -91,7 +91,7 @@ async fn pool_row_carries_the_drag_payload_and_a_stepper_bounded_by_availability
     let document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     let kind = crate::stock_of(&document).remove(0);
     let labels = crate::editor::sourcing::terminology::sourcing_curation_labels(&semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native));
-    let row: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&pool_row(&document, &kind, labels))).unwrap();
+    let row: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&pool_row(&document, &kind, labels, semio_ui_locale::Locale::En))).unwrap();
     assert_eq!(row["id"], kind.id.as_str());
     assert_eq!(row["_drag"]["objectId"], kind.id.as_str());
     assert_eq!(row["curated"]["kind"], "stepper");
@@ -106,11 +106,11 @@ async fn pool_row_has_no_actions_column_and_only_a_curated_stepper() {
     let mut document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     let kind = crate::stock_of(&document).remove(0);
     let labels = crate::editor::sourcing::terminology::sourcing_curation_labels(&semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native));
-    let uncurated: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&pool_row(&document, &kind, labels))).unwrap();
+    let uncurated: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&pool_row(&document, &kind, labels, semio_ui_locale::Locale::En))).unwrap();
     assert!(uncurated.get("actions").is_none(), "the pool must not render a second +/- column");
     assert_eq!(uncurated["curated"]["kind"], "stepper");
     crate::schema::curation_delta(&mut document, &kind.id, 1);
-    let curated: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&pool_row(&document, &kind, labels))).unwrap();
+    let curated: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&pool_row(&document, &kind, labels, semio_ui_locale::Locale::En))).unwrap();
     assert_eq!(curated["curated"]["value"].as_f64().unwrap(), 1.0);
 }
 
@@ -152,7 +152,7 @@ async fn pool_scene_names_columns_by_id_and_drops_onto_the_pool() {
 async fn the_filter_bar_binds_each_control_to_its_own_command() {
     let _arena = arena();
     let labels = crate::editor::sourcing::terminology::sourcing_curation_labels(&semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native));
-    let bar = filter_bar(&SourcingCurationConfig::default(), labels).expect("bounded filter bar");
+    let bar = filter_bar(&SourcingCurationConfig::default(), labels, semio_ui_locale::Locale::En).expect("bounded filter bar");
     let ids: Vec<String> = bar.children.iter().map(|child| child.key.as_str().to_string()).collect();
     for expected in ["sourcing-filter-query", "sourcing-filter-typology", "sourcing-filter-min-availability", "sourcing-pool-restock"] {
         assert!(ids.iter().any(|id| id == expected), "{expected} missing from {ids:?}");
@@ -226,7 +226,7 @@ async fn a_contributed_module_reaches_the_filter_bar_and_then_the_pool_rows() {
     let _arena = arena();
     let labels = crate::editor::sourcing::terminology::sourcing_curation_labels(&semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native));
     let cfg = SourcingCurationConfig { contributions_json: fake_contribution(), ..Default::default() };
-    let toggles: Vec<String> = filter_bar(&cfg, labels).expect("bounded filter bar").children.iter().map(|child| child.key.as_str().to_string()).collect();
+    let toggles: Vec<String> = filter_bar(&cfg, labels, semio_ui_locale::Locale::En).expect("bounded filter bar").children.iter().map(|child| child.key.as_str().to_string()).collect();
     assert!(toggles.iter().any(|id| id == "sourcing-filter-module-salvage"), "the contributed module gains its own filter toggle: {toggles:?}");
     let document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     let before: Vec<String> = pool_kinds(&document, &SourcingCurationConfig::default()).into_iter().map(|kind| kind.id).collect();

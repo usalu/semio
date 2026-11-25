@@ -13,12 +13,48 @@
       "de": "Ein Einzelbett aus Kiefer, 0,90 x 2,00 m, mit verstellbarem Lattenrost in drei Teilen und einer 0,20 m dicken Schaumstoffmatratze, die unter dem Schläfer einsinkt; Seitenansicht und das übliche Grundrisszeichen."
     },
     "tags": [
-      "bed",
-      "single-bed",
-      "sleeping",
-      "slatted-base",
-      "mattress",
-      "interior"
+      {
+        "id": "bed",
+        "title": {
+          "en": "bed",
+          "de": "Bett"
+        }
+      },
+      {
+        "id": "single-bed",
+        "title": {
+          "en": "single bed",
+          "de": "Einzelbett"
+        }
+      },
+      {
+        "id": "sleeping",
+        "title": {
+          "en": "sleeping",
+          "de": "Schlafen"
+        }
+      },
+      {
+        "id": "slatted-base",
+        "title": {
+          "en": "slatted base",
+          "de": "Lattenrost"
+        }
+      },
+      {
+        "id": "mattress",
+        "title": {
+          "en": "mattress",
+          "de": "Matratze"
+        }
+      },
+      {
+        "id": "interior",
+        "title": {
+          "en": "interior",
+          "de": "Innenausbau"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage content (NW-F)",

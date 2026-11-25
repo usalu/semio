@@ -2,6 +2,7 @@ import { strict as assert } from "node:assert";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import fixture from "../../../../🧪️tests/🧫️fixtures/🎬️media-app-acceptance/🔣️.json";
+import { launchChromium } from "../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🌐️chromium-launch/🟦️";
 
 type MediaAppReceipt = { readonly id: string; readonly url: string; readonly acceptedWindow: string; readonly acceptedNode: string; readonly token: string; readonly state: string; readonly kind: string; readonly mediaType: string; readonly reason: string; readonly rootCorrelated: boolean; readonly acceptedRoot: { readonly windowId: string; readonly windowGeneration: number; readonly nodeId: number; readonly key: string; readonly role: string } | null };
 
@@ -17,8 +18,7 @@ export async function runBrowserMediaAppAcceptance(segments: readonly string[]):
   if (!serve || (locale !== "en" && locale !== "de") || !output) throw new Error("browser-media-acceptance requires serve, explicit locale and output");
   const outputDirectory = resolve(output);
   mkdirSync(outputDirectory, { recursive: true });
-  const { chromium } = await import("playwright");
-  const browser = await chromium.launch({ headless: true, args: ["--enable-unsafe-webgpu", "--ignore-gpu-blocklist", `--use-angle=${process.platform === "darwin" ? "metal" : process.platform === "win32" ? "d3d11" : "vulkan"}`] });
+  const browser = await launchChromium({ args: ["--enable-unsafe-webgpu", "--ignore-gpu-blocklist", `--use-angle=${process.platform === "darwin" ? "metal" : process.platform === "win32" ? "d3d11" : "vulkan"}`] });
   const context = await browser.newContext({ locale: locale === "en" ? "en-US" : "de-DE", viewport: { width: 1280, height: 900 } });
   const receipts: MediaAppReceipt[] = [];
   const logs: string[] = [];

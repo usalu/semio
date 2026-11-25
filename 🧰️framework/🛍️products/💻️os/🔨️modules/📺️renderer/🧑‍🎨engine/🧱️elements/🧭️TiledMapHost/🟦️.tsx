@@ -41,7 +41,7 @@ export function TiledMapHost(props: ComponentSceneHostProps) {
       {marqueeOverlay?.shape === "polygon" ? <SelectionMarquee coverage={marqueeOverlay.coverage} shape="polygon" points={marqueeOverlay.points} /> : null}
       <ContextMenuController title={contextMenuTitleLabel} open={contextMenu.open} position={contextMenu.position} items={contextMenu.items} onOpenChange={(open) => setContextMenu((prev) => ({ ...prev, open }))} />
       {popupFeature && !rendererUnavailable ? (
-        <div ref={popupRef} className={cn("pointer-events-none absolute z-10 max-w-56 -translate-x-1/2 -translate-y-full px-2 py-1.5", floatingMenuSurfaceClass)} data-level="menu" data-border-probe-art="" style={{ left: 0, top: 0 }}>
+        <div ref={popupRef} className={cn("pointer-events-none absolute z-10 max-w-56 -translate-x-1/2 -translate-y-full px-2 py-1.5", floatingMenuSurfaceClass)} data-level="menu" data-glass-chip="" data-border-probe-art="" style={{ left: 0, top: 0 }}>
           {(() => {
             const meta = overlayIndex.meta.get(popupFeature.kind)?.get(popupFeature.id);
             const title = meta?.label ?? popupFeature.id;

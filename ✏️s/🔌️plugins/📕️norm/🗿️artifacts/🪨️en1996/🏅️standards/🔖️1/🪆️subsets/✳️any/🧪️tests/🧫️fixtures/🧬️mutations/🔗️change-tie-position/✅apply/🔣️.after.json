@@ -90,7 +90,7 @@
         {
           "id": "tie-1",
           "kind": "WallTie",
-          "positionM": 1.0,
+          "positionM": 1.5,
           "levelM": 1.0,
           "capacityN": 1500.0
         }

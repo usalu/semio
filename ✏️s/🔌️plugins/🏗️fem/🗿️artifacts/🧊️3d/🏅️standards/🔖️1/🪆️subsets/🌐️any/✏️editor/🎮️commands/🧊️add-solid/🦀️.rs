@@ -31,6 +31,13 @@ pub struct AddSolid {
 /// 🧱️ Builds a rectangular footprint `[x,y]..[x+width,y+depth]` with `base_z`/`layers`/`mesh_size`/`axis`
 /// defaulted to `0.0`/`1`/`0.5`/`Z` when unspecified — mirrors the pre-migration `handle_action` defaults.
 pub fn handle(payload: &AddSolid, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<Fem3dMutation, NoConfigMutation>, Fault> {
+    let refuse = |code: &'static str, message: String| Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new(code), message);
+    if !doc.snapshot.materials.iter().any(|material| material.id.as_str() == payload.material_id) {
+        return Err(refuse("fem3d.solid.material-unknown", format!("'{}' is not a material of this document", payload.material_id)).with_param("material", payload.material_id.as_str()));
+    }
+    if ![payload.width, payload.depth, payload.height].iter().all(|extent| extent.is_finite() && *extent > 0.0) {
+        return Err(refuse("fem3d.solid.extent", "a solid needs a positive width, depth and height".into()));
+    }
     let id = doc.operation()?.entity_id("sol", "solids")?;
     let outline = vec![[payload.x, payload.y], [payload.x + payload.width, payload.y], [payload.x + payload.width, payload.y + payload.depth], [payload.x, payload.y + payload.depth]];
     let solid = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSolid {

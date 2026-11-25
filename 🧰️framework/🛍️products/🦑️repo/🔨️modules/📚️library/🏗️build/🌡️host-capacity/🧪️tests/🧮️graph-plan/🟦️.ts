@@ -125,7 +125,7 @@ test("a synchronous slice worker startup failure releases the untransferred allo
 test("the actual graph reservation gate reports fair queue ordering even when a plan fits",async()=>{
  const directory=fresh(),messages:string[]=[],views:HostCapacityWaitV1[]=[],begin=new AbortController(),tail=new AbortController(),environment={LANG:"en_US.UTF-8"};
  const policy=readHostCapacityPolicyV1({...fast,wait:{...fast.wait,bypassMilliseconds:40}});
- const held=await reserveGraphPlanCapacityV1({megabytes:20000,environment,directory,policy,write:()=>undefined,sample});
+ const held=await reserveGraphPlanCapacityV1({megabytes:12000,environment,directory,policy,write:()=>undefined,sample});
  const front=reserveGraphPlanCapacityV1({megabytes:20000,environment,directory,policy,write:line=>messages.push(line),sample,signal:begin.signal}).then(grant=>{grant.release();},error=>error);
  try{
   expect(await until(()=>messages.filter(line=>line.includes("not enough free memory")).length>=4)).toBe(true);

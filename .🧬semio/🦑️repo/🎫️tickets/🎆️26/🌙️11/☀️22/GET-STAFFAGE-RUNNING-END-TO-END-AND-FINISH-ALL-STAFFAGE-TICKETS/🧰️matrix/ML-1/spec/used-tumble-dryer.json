@@ -1,0 +1,104 @@
+{
+  "ops": [
+    {
+      "op": "shape-set",
+      "scale": "50",
+      "view": "front",
+      "id": "tape",
+      "set": {
+        "h": 0.06
+      }
+    },
+    {
+      "op": "shape-add",
+      "scale": "50",
+      "view": "front",
+      "after": "tape",
+      "shape": {
+        "id": "tape-end",
+        "bone": "unit",
+        "role": "texture",
+        "z": 4.5,
+        "filled": true,
+        "tone": 0.92,
+        "material": "packing-tape",
+        "kind": "poly",
+        "points": [
+          [
+            0.437,
+            0.23
+          ],
+          [
+            0.437,
+            0.295
+          ],
+          [
+            0.473,
+            0.295
+          ],
+          [
+            0.473,
+            0.23
+          ]
+        ],
+        "closed": true,
+        "solid": {
+          "kind": "extruded",
+          "sweep": "u",
+          "z0": 0.595,
+          "z1": 0.596
+        }
+      }
+    },
+    {
+      "op": "shape-set",
+      "scale": "100",
+      "view": "front",
+      "id": "tape",
+      "set": {
+        "h": 0.06
+      }
+    },
+    {
+      "op": "shape-add",
+      "scale": "100",
+      "view": "front",
+      "after": "tape",
+      "shape": {
+        "id": "tape-end",
+        "bone": "unit",
+        "role": "texture",
+        "z": 4.5,
+        "filled": true,
+        "tone": 0.92,
+        "material": "packing-tape",
+        "kind": "poly",
+        "points": [
+          [
+            0.437,
+            0.23
+          ],
+          [
+            0.437,
+            0.295
+          ],
+          [
+            0.473,
+            0.295
+          ],
+          [
+            0.473,
+            0.23
+          ]
+        ],
+        "closed": true,
+        "solid": {
+          "kind": "extruded",
+          "sweep": "u",
+          "z0": 0.595,
+          "z1": 0.596
+        }
+      }
+    }
+  ]
+}

@@ -13,15 +13,69 @@
       "de": "Ein ausgewachsener Echter Feigenbaum (Ficus carica) von 5,0 m, drei glatte silbergraue Stämme aus einem niedrigen Wurzelhals und eine breite, dichte, runde Krone von 7,0 m Durchmesser aus großen, gelappten Blättern; der spätsommerliche Feigenbehang wird als Pose und Last geführt, in heißem, trockenem Sommerklima."
     },
     "tags": [
-      "tree",
-      "deciduous",
-      "small-tree",
-      "multi-stem",
-      "mediterranean",
-      "fruit-tree",
-      "fruit-load",
-      "wind",
-      "transpiration"
+      {
+        "id": "tree",
+        "title": {
+          "en": "tree",
+          "de": "Baum"
+        }
+      },
+      {
+        "id": "deciduous",
+        "title": {
+          "en": "deciduous",
+          "de": "laubabwerfend"
+        }
+      },
+      {
+        "id": "small-tree",
+        "title": {
+          "en": "small tree",
+          "de": "Kleinbaum"
+        }
+      },
+      {
+        "id": "multi-stem",
+        "title": {
+          "en": "multi-stem",
+          "de": "mehrstämmig"
+        }
+      },
+      {
+        "id": "mediterranean",
+        "title": {
+          "en": "mediterranean",
+          "de": "mediterran"
+        }
+      },
+      {
+        "id": "fruit-tree",
+        "title": {
+          "en": "fruit tree",
+          "de": "Obstbaum"
+        }
+      },
+      {
+        "id": "fruit-load",
+        "title": {
+          "en": "fruit load",
+          "de": "Fruchtbehang"
+        }
+      },
+      {
+        "id": "wind",
+        "title": {
+          "en": "wind",
+          "de": "Wind"
+        }
+      },
+      {
+        "id": "transpiration",
+        "title": {
+          "en": "transpiration",
+          "de": "Transpiration"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage vegetation content worker PW-09",
@@ -853,7 +907,7 @@
         "id": "tp-sun-7",
         "bone": "fol-top",
         "x": -0.0311,
-        "y": -1.1245,
+        "y": -0.9797,
         "kind": "emitter",
         "z": 0.4406,
         "title": {
@@ -876,8 +930,8 @@
       {
         "id": "tp-shade-2",
         "bone": "fol-core-low",
-        "x": 0.2597,
-        "y": 0.7845,
+        "x": 0.2655,
+        "y": 0.6398,
         "kind": "emitter",
         "z": -0.3881,
         "title": {

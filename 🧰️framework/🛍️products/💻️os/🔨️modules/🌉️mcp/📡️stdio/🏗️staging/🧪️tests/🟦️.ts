@@ -94,14 +94,14 @@ test("catalog staging retains the projected Original environment and abort signa
  expect(await actual("root",()=>{},controller.signal,row.target,environment)).toBe(0);expect(captured.command).toBe("repo");expect(captured.args).toEqual(["run",row.target,"--output=stream"]);expect(captured.options.signal).toBe(controller.signal);expect(captured.options.env).toEqual({...environment,CARGO_INCREMENTAL:"0",[CARGO_BUILD_OWNER_PID_ENV]:"99"});
 });
 
-test("normal and interactive staging call one owned artifact producer", () => {
+test("normal and interactive staging call one owned artifact producer", async () => {
  const producerSource=readFileSync(new URL("../🟦️.ts",import.meta.url),"utf8"),producerAst=ts.createSourceFile("producer.ts",producerSource,ts.ScriptTarget.Latest,true);
  const owner=producerAst.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text==="buildMcpArtifactV1");if(!owner)throw Error("Shared MCP artifact producer required");
  const build=readFileSync(new URL("../../../📦️packages/🦀️rust/📜️script.ts",import.meta.url),"utf8");expect(build.includes("await buildMcpArtifactV1(this.repoRoot, this.invocation")).toBe(true);
  const dev=readFileSync(new URL("../../../../../../🦑️repo/🔨️modules/📚️library/🎛️commands/🛠️dev/🟦️.ts",import.meta.url),"utf8");expect(dev).toMatch(/await\s+buildMcpArtifactV1\(this\.root,\s*invocation,\s*scriptCompilerAdmissionControlV1\(invocation,\s*"dev:mcp:build",\s*0,\s*signal\)/u);
  const compiled=ts.transpileModule(owner.getText(producerAst).replace(/^export /u,""),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.None}}).outputText,calls:unknown[][]=[];
- const producer=new Function("resolve","producer","buildAdmittedCargoArtifactsV1","verifyCapturedCargoArtifactsV1","scriptInvocationEnvironment",compiled+";return buildMcpArtifactV1;")((root:string,path:string)=>root+"/"+path,schema.definitions.Producer.const,(...args:unknown[])=>{calls.push(args);return Promise.resolve();},()=>Promise.resolve(),(original:unknown)=>({original}));
- const original={},control={},diagnostics:string[]=[],diagnostic=(line:string)=>{diagnostics.push(line);};void producer("workspace",original,control,diagnostic);expect(calls).toHaveLength(1);const[manifest,args,root,request]=calls[0] as[string,string[],string,Record<string,unknown>];
+ const order:string[]=[],children:unknown[][]=[],producer=new Function("resolve","producer","mcpGeneratedPrerequisiteRequestsV1","runOwnedBuildChildInvocationV1","buildAdmittedCargoArtifactsV1","verifyCapturedCargoArtifactsV1","scriptInvocationEnvironment",compiled+";return buildMcpArtifactV1;")((root:string,path:string)=>root+"/"+path,schema.definitions.Producer.const,()=>[["run","@t/owner:build","--output=stream"]],(...args:unknown[])=>{order.push("child");children.push(args);return Promise.resolve();},(...args:unknown[])=>{order.push("cargo");calls.push(args);return Promise.resolve();},()=>Promise.resolve(),(original:unknown)=>({original}));
+ const original={},control={},diagnostics:string[]=[],diagnostic=(line:string)=>{diagnostics.push(line);};await producer("workspace",original,control,diagnostic);expect(order).toEqual(["child","cargo"]);expect(children).toEqual([["workspace",["run","@t/owner:build","--output=stream"],original,control]]);expect(calls).toHaveLength(1);const[manifest,args,root,request]=calls[0] as[string,string[],string,Record<string,unknown>];
  expect(manifest).toBe("workspace/"+schema.definitions.Producer.const.manifest);expect(root).toBe("workspace");expect(args).toEqual(["--package",schema.definitions.Producer.const.package,"--bin",schema.definitions.Producer.const.binary]);expect(request.invocation).toBe(original);expect(request.control).toBe(control);expect(request.sourcesRecord).toBe(schema.definitions.Producer.const.sourcesRecord);expect(request.output).toBeUndefined();expect(request.environment).toEqual({original});expect(request.diagnostic).toBe(diagnostic);(request.diagnostic as(line:string)=>void)("compiler diagnostic");expect(diagnostics).toEqual(["compiler diagnostic"]);
  const db=new Database(":memory:");try{const row=db.query("select json_array(?, ?, ?, ?) arguments").get("--package","semio-os-mcp","--bin","semio-os-mcp")as{arguments:string};expect(args).toEqual(JSON.parse(row.arguments));}finally{db.close();}
 });
@@ -112,4 +112,26 @@ test("native artifact diagnostics use the explicit owned sink without touching p
  const code=ts.transpileModule(owner.getText(tree),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.None}}).outputText,out:string[]=[],err:string[]=[],write=new Function("process",code+";return writeCargoArtifactDiagnosticV1;")({stdout:{write:(line:string)=>out.push(line)}});
  for(const line of row.lines)write({diagnostic:(value:string)=>err.push(value)},line);expect(out).toEqual(row.stdout);expect(err).toEqual(row.stderr);
  const db=new Database(":memory:");try{expect(db.query("select json_group_array(value) output from json_each(?)").get(JSON.stringify(row.lines))).toEqual({output:JSON.stringify(err)});}finally{db.close();}
+});
+
+test("generated-module owners declared by the producer are requested exactly while their products are missing",async()=>{
+ const {mcpGeneratedPrerequisiteRequestsV1}=await import("../🟦️.ts"),{resolve}=await import("node:path"),fixture=JSON.parse(readFileSync(new URL("./🧫️fixtures/prerequisites.json",import.meta.url),"utf8")),root="/workspace";
+ expect(new Ajv({strict:false}).validate({type:"object",required:["version","cases"],properties:{version:{const:1},cases:{type:"array",minItems:3,items:{type:"object",required:["id","present","requests"],additionalProperties:false,properties:{id:{type:"string"},present:{type:"array",items:{type:"string"}},requests:{type:"array",items:{type:"array",items:{type:"string"}}}}}}}},fixture)).toBe(true);
+ const db=new Database(":memory:");try{
+  for(const row of fixture.cases){
+   const present=new Set(row.present.map((file:string)=>resolve(root,file)));
+   const actual=mcpGeneratedPrerequisiteRequestsV1(root,path=>present.has(path));
+   expect(actual,row.id).toEqual(row.requests);
+   const oracle=db.query("select coalesce(json_group_array(json_array('run',json_extract(p.value,'$.target'),'--output=stream')),'[]') requests from json_each(?1) p where exists(select 1 from json_each(json_extract(p.value,'$.produces')) f where f.value not in (select value from json_each(?2)))").get(JSON.stringify(schema.definitions.Producer.const.prerequisites),JSON.stringify(row.present))as{requests:string};
+   expect(JSON.parse(oracle.requests),row.id).toEqual(row.requests);
+  }
+ }finally{db.close();}
+});
+
+test("the declared owners cover the generated mounts of the workspace graph and gate every Rust-compiling MCP target",async()=>{
+ const {generatedModuleOwnersV1}=await import("../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🏭️generated-owner/🟦️.ts"),{resolve}=await import("node:path"),root=resolve(import.meta.dirname,"../../../../../../../.."),project=JSON.parse(readFileSync(new URL("../../../📦️packages/🦀️rust/📋️project.json",import.meta.url),"utf8"));
+ for(const row of schema.definitions.Producer.const.prerequisites){
+  for(const file of row.produces)expect(await generatedModuleOwnersV1(root,resolve(root,file))).toContain(row.target);
+  for(const target of ["build","build-release","check","test"])expect(project.targets[target].dependsOn,target).toContain(row.target);
+ }
 });

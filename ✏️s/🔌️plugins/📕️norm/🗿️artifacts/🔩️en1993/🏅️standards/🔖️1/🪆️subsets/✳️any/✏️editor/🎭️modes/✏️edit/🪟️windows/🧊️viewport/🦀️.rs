@@ -70,9 +70,3 @@ pub fn render_with(document: &En1993Snapshot, report: &CheckReport, selection: &
     render_viewport_panel(BODY_VIEWPORT, &scene, &view, &selected, &interaction_domain_id(crate::VARIANT), crate::CONTROLLER_ID, locale)
 }
 //#endregion 🔖️Render
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

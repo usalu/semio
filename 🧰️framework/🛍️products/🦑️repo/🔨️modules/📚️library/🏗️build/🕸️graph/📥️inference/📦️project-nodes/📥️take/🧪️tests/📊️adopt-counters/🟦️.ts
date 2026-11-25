@@ -53,12 +53,23 @@ test("unexpected and unrecognized failures use the bounded unknown counter, and 
  expect(counters.line("en")).not.toContain("private-owner");
 });
 
-test("the hot names are read once per interval, the first read at once, and every name counts as listed once",()=>{
- let time=1000,reads=0;const counters=createAdoptCountersV1(),names=[["a","b"],["b","c"],["d"]];
- const hot=createHotNamesV1({read:()=>new Set(names[Math.min(reads++,2)]),counters,now:()=>time,policy:{...TAKE_POLICY_V1,hotNamesMilliseconds:10000}});
- expect([...hot()].sort()).toEqual(["a","b"]);expect(reads).toBe(1);
+test("the hot names are scanned in the background once per interval after the last scan ended, an ask never waits, and every name counts as listed once",async()=>{
+ let time=1000,reads=0,open:((names:Set<string>)=>void)|undefined;const counters=createAdoptCountersV1(),names=[["a","b"],["b","c"],["d"]];
+ const hot=createHotNamesV1({read:()=>new Promise<Set<string>>(resolve=>{const list=names[Math.min(reads++,2)]!;open=()=>resolve(new Set(list));}),counters,now:()=>time,policy:{...TAKE_POLICY_V1,hotNamesMilliseconds:10000}});
+ await Promise.resolve();expect(reads).toBe(1);expect([...hot()]).toEqual([]);
+ time+=60000;for(let call=0;call<1000;call++)hot();expect(reads).toBe(1);
+ open!(new Set());await hot.settled();expect([...hot()].sort()).toEqual(["a","b"]);expect(reads).toBe(1);
  time+=9999;expect([...hot()].sort()).toEqual(["a","b"]);expect(reads).toBe(1);
- time+=1;expect([...hot()].sort()).toEqual(["b","c"]);expect(reads).toBe(2);
- time+=10000;hot();expect(counters.counts().listed).toBe(4);
+ time+=1;hot();await Promise.resolve();expect(reads).toBe(2);expect([...hot()].sort()).toEqual(["a","b"]);
+ open!(new Set());await hot.settled();expect([...hot()].sort()).toEqual(["b","c"]);
+ time+=10000;hot();await Promise.resolve();open!(new Set());await hot.settled();expect(counters.counts().listed).toBe(4);
  for(let call=0;call<1000;call++)hot();expect(reads).toBe(3);
+});
+
+test("a failed scan keeps the names known and the next scan waits its interval",async()=>{
+ let time=0,reads=0;const hot=createHotNamesV1({read:async()=>{reads++;if(reads===2)throw Error("store unreadable");return new Set(["x"+reads]);},now:()=>time,policy:{...TAKE_POLICY_V1,hotNamesMilliseconds:1000}});
+ await hot.settled();expect([...hot()]).toEqual(["x1"]);
+ time+=1000;hot();await hot.settled();expect([...hot()]).toEqual(["x1"]);expect(reads).toBe(2);
+ time+=999;hot();await hot.settled();expect(reads).toBe(2);
+ time+=1;hot();await hot.settled();expect([...hot()]).toEqual(["x3"]);
 });

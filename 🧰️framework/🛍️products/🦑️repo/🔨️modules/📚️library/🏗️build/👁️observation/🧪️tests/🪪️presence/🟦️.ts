@@ -128,6 +128,9 @@ registerBuildTestLawV1("inference reuse preserves issued cancellation and deadli
  const phase=createIssuedResourceControlV1(original,"inference:terminal-reuse",180000);for(const kind of["cancel","deadline"]){const{result,value}=await childOutcome(original,phase,"terminal","lock",kind);expect(result.status,result.stderr).toBe(kind==="cancel"?interruptedStatusV1:1);expect(value.warm).toBe(true);expect(value.calls).toBe(1);expect(value.predicateFailed).toBe(true);expect(value.samePredicate).toBe(true);expect(value.failed).toBe(true);expect(value.message).toMatch(/deadline|abort|cancel|SIGINT|interrupt|terminat|expir|budget|timeout/iu);}
 });
 
+/** 🧘️ Waits for the session tail of the last ask: callers are answered when the batch ends, the session's post verification may still run (bounded overlap), so a census of its phases is taken once every phase is idle. */
+const presenceSettledV1=async(control:Parameters<typeof inferenceInventoryPresenceStatsV1>[1]):Promise<void>=>{for(const until=Date.now()+60000;Object.values(inferenceInventoryPresenceStatsV1(workspace,control).timings).some(row=>row.active>0);){if(Date.now()>until)throw Error("Presence session tail did not settle within 60 s");await Bun.sleep(20);}};
+
 /** 📊️ Exposes the measured Store phases in the slice report for a real managed inventory miss. */
 registerBuildTestLawV1("inventory reader phase counters reach slice memory telemetry","sdk-runtime",async original=>{
  const control=createIssuedResourceControlV1(original,"inference:presence-timing",180000),ajv=new Ajv({strict:true});ajv.addSchema(schema);
@@ -137,6 +140,7 @@ registerBuildTestLawV1("inventory reader phase counters reach slice memory telem
   try{
    const start=process.hrtime.bigint();
    const result=await inferenceInventoryReferencesHoldV1(workspace,{env:"SEMIO_SOURCE_CLOSURE_"+"e".repeat(64)},actual);
+   await presenceSettledV1(actual);
    const elapsed=Math.ceil(Number(process.hrtime.bigint()-start)/1e6),{directory,name}=SLICE_REPORT_POLICY_V1;
    writeSliceReportV1(workspace,{reason:"interval"});
    const presence=JSON.parse(readFileSync(join(workspace,directory,name),"utf8")).sources.owners.presence,timings:Record<string,{started:number;active:number;milliseconds:number}>=presence.timings;
@@ -171,6 +175,7 @@ registerBuildTestLawV1("inventory body operations reach the owned slice receipt"
    let previous:Record<string,number>={};
    try{for(const row of bodyCorpus.cases){
     expect(await sample(row.present?present:{env:"SEMIO_SOURCE_CLOSURE_"+"e".repeat(64)})).toBe(row.present);
+    await presenceSettledV1(actual);
     const {directory,name}=SLICE_REPORT_POLICY_V1;
     writeSliceReportV1(workspace,{reason:"interval"});
     const presence=JSON.parse(readFileSync(join(workspace,directory,name),"utf8")).sources.owners.presence;

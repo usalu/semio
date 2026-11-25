@@ -1,7 +1,6 @@
-/** 🧬️ Jco module rewrites of the plugin web materialization: the async result lifting and the versioned host shim and core asset urls of a freshly transpiled jco module. */
+/** 🧬️ Jco module rewrites of the plugin web materialization: the async result lifting and the WASI import object of a freshly transpiled jco instantiation factory. */
 import { readFileSync, writeFileSync } from "node:fs";
 import ts from "typescript";
-import { PLUGIN_HOST_SHIM_FILE } from "../🧾️contract/🟦️.ts";
 
 //#region 🧬️JcoAsyncResultLifting
 const JCO_INDIRECT_RESULT_MEMORY_GUARD = "if (!ctx.memory) {\n      _debugLog('missing memory despite indirect param usage'";
@@ -73,51 +72,30 @@ export function rewriteJcoAsyncResultLiftingAt(modulePath: string): void {
 }
 //#endregion 🧬️JcoAsyncResultLifting
 
-//#region 🧊️JcoComponentAssetVersioning
-const JCO_HOST_SHIM_URL_HELPER = `function __semioActivationHostUrl() {
-  const url = new URL("./🟨️.js", import.meta.url);
-  const source = new URL(import.meta.url);
-  for (const key of ["actor", "activation", "v"]) {
-    const value = source.searchParams.get(key);
-    if (value !== null) url.searchParams.set(key, value);
-  }
-  return url;
-}`;
+//#region 🏭️JcoComponentFactory
+const JCO_FACTORY_EXPORT = "export function instantiate(getCoreModule, imports, instantiateCore, options)";
+const JCO_FACTORY_WASI_IMPORT = /imports\[(['"])(wasi:([a-z][a-z0-9-]*)\/([a-z][a-z0-9-]*)(?:@[0-9A-Za-z.+-]+)?)\1\]/g;
+const JCO_FACTORY_WASI_EXPORT = "export const wasiImports = ";
+const camel = (name: string): string => name.replace(/-([a-z0-9])/g, (_match, letter: string) => letter.toUpperCase());
 
-function rewriteJcoHostShimImports(source: string): string {
-  const parsed = ts.createSourceFile("component.js", source, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
-  const edits: { start: number; end: number; value: string }[] = [];
-  for (const statement of parsed.statements) {
-    if (!ts.isImportDeclaration(statement) || !ts.isStringLiteral(statement.moduleSpecifier) || statement.moduleSpecifier.text !== `./${PLUGIN_HOST_SHIM_FILE}`) continue;
-    const bindings = statement.importClause?.namedBindings;
-    if (statement.importClause?.name || !bindings || !ts.isNamedImports(bindings)) throw new Error("unsupported jco host shim import shape");
-    const fields = bindings.elements.map((field) => field.propertyName ? `${field.propertyName.getText(parsed)}: ${field.name.text}` : field.name.text).join(", ");
-    edits.push({ start: statement.getStart(parsed), end: statement.end, value: `const { ${fields} } = await import(__semioActivationHostUrl().href);` });
-  }
-  for (const edit of edits.reverse()) source = source.slice(0, edit.start) + edit.value + source.slice(edit.end);
-  return edits.length === 0 ? source : `${JCO_HOST_SHIM_URL_HELPER}\n\n${source}`;
+/** 🏭️ Completes a jco instantiation factory (`--instantiation async`) for the browser: the factory asks its caller for every import, so the module imports the WASI interfaces it names from the preview2 shim (relocated to the vendor directory by `rewritePreview2ShimImports`) and exports them as `wasiImports`, the import object the bridge extends with the activation's own host. The rewrite is idempotent and refuses a module that is not a factory, since only a factory keeps instance state out of module scope. */
+export function rewriteJcoComponentFactory(source: string): string {
+  if (!source.includes(JCO_FACTORY_EXPORT)) throw new Error("jco component module is not an instantiation factory: transpile with --instantiation async");
+  if (source.includes(JCO_FACTORY_WASI_EXPORT)) return source;
+  const interfaces = new Map<string, { readonly packageName: string; readonly member: string }>();
+  for (const match of source.matchAll(JCO_FACTORY_WASI_IMPORT)) interfaces.set(match[2]!, { packageName: match[3]!, member: camel(match[4]!) });
+  const packages = new Map<string, Set<string>>();
+  for (const { packageName, member } of interfaces.values()) packages.set(packageName, (packages.get(packageName) ?? new Set()).add(member));
+  const local = (packageName: string, member: string): string => `__wasi_${camel(packageName)}_${member}`;
+  const imports = [...packages].sort(([left], [right]) => left.localeCompare(right)).map(([packageName, members]) => `import { ${[...members].sort().map((member) => `${member} as ${local(packageName, member)}`).join(", ")} } from '@bytecodealliance/preview2-shim/${packageName}';`);
+  const entries = [...interfaces].sort(([left], [right]) => left.localeCompare(right)).map(([specifier, { packageName, member }]) => `${JSON.stringify(specifier)}: ${local(packageName, member)}`);
+  return `${imports.join("\n")}${imports.length > 0 ? "\n" : ""}${source}\n${JCO_FACTORY_WASI_EXPORT}Object.freeze({ ${entries.join(", ")} });\n`;
 }
 
-const JCO_COMPONENT_ASSET_URL = /new URL\((['"])(\.\/[^'"]+\.core\d*\.wasm)\1,\s*import\.meta\.url\)/g;
-const JCO_COMPONENT_ASSET_URL_HELPER = `function __semioVersionedComponentAssetUrl(path) {
-  const url = new URL(path, import.meta.url);
-  const rebuildVersion = new URL(import.meta.url).searchParams.get("v");
-  if (rebuildVersion) url.searchParams.set("v", rebuildVersion);
-  return url;
-}`;
-
-/** 🪪️ Preserves activation identity for host imports and rebuild identity for extracted core Wasm. */
-export function rewriteJcoComponentAssetUrls(source: string): string {
-  source = rewriteJcoHostShimImports(source);
-  if (source.includes("function __semioVersionedComponentAssetUrl(path)")) return source;
-  const rewritten = source.replace(JCO_COMPONENT_ASSET_URL, (_match, quote, assetPath) => `__semioVersionedComponentAssetUrl(${quote}${assetPath}${quote})`);
-  return rewritten === source ? source : `${JCO_COMPONENT_ASSET_URL_HELPER}\n\n${rewritten}`;
-}
-
-/** 💾️ Applies {@link rewriteJcoComponentAssetUrls} to one freshly transpiled jco module. */
-export function rewriteJcoComponentAssetUrlsAt(modulePath: string): void {
+/** 💾️ Applies {@link rewriteJcoComponentFactory} to one freshly transpiled jco module. */
+export function rewriteJcoComponentFactoryAt(modulePath: string): void {
   const source = readFileSync(modulePath, "utf8");
-  const rewritten = rewriteJcoComponentAssetUrls(source);
+  const rewritten = rewriteJcoComponentFactory(source);
   if (rewritten !== source) writeFileSync(modulePath, rewritten);
 }
-//#endregion 🧊️JcoComponentAssetVersioning
+//#endregion 🏭️JcoComponentFactory

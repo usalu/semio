@@ -11,7 +11,7 @@ import { mat4, vec3 } from "gl-matrix";
 import { describe, expect, it } from "vitest";
 import type { Asset, AuthoredRepresentation, Shape } from "../../🧬️schema/🟦️.ts";
 import { validateAsset } from "../../🔨️modules/🗂️catalog/🟦️.ts";
-import { SolidSweepError, evaluate } from "../../🔨️modules/🧮️evaluation/🟦️.ts";
+import { SolidSweepError, evaluate, shapeDepth } from "../../🔨️modules/🧮️evaluation/🟦️.ts";
 import { resolveViews, type DrawOptions } from "../../🔨️modules/🔭️multiview/🟦️.ts";
 import { fixture } from "../🧰️support/🧰️.ts";
 import { drawOptions } from "../🔭️multiview-coverage/🧰️.ts";
@@ -27,6 +27,7 @@ type Vectors = {
   basis: { u: number[]; v: number[]; w: number[] };
   cases: { name: string; sweep: "u" | "v" | "w"; front: Extent; plan: Extent }[];
   lateralRest: { boneZ: number; cases: { sweep: "v" | "w"; front: Extent; plan: Extent }[] };
+  depth: { profile: { x: number; y: number; w: number; h: number }; span: { z0: number; z1: number }; toleranceM: number; cases: { sweep: "u" | "v" | "w"; front: number; plan: number }[] };
   refused: { name: string; solid: Record<string, unknown> }[];
 };
 
@@ -90,6 +91,27 @@ describe("🧊️ the sweep axis of an extruded solid", () => {
       for (const view of ["front", "plan"] as const) {
         expectExtent(`${view} against the vector`, found[view], c[view]);
         expectExtent(`${view} against gl-matrix`, found[view], reference[view]);
+      }
+    });
+
+  for (const c of vectors.depth.cases)
+    it(`ranks a solid swept along ${c.sweep} by the nearest point of its profile at the middle of its span, as the vectors and gl-matrix place it`, () => {
+      const { profile, span, toleranceM } = vectors.depth;
+      const solid = { kind: "extruded", sweep: c.sweep, ...span };
+      const shape = { id: "slat", kind: "rect", bone: vectors.bone, role: "body", z: 1, filled: true, tone: 0.5, ...profile, solid } as unknown as Shape;
+      const asset: Asset = { ...sample, representations: { ...sample.representations, [key]: { ...authored, geometry: { ...authored.geometry, front: [shape], plan: [shape] } } } as Asset["representations"] };
+      const state = evaluate(asset, { kind: "pose", pose: vectors.pose }, { kind: "scale", scale: { denominator: vectors.scale } });
+      const origin = state.bones.pelvis!.origin;
+      const { u, v, w } = vectors.basis;
+      const frame = mat4.fromValues(u[0]!, u[1]!, u[2]!, 0, v[0]!, v[1]!, v[2]!, 0, w[0]!, w[1]!, w[2]!, 0, 0, 0, 0, 1);
+      const middle = (span.z0 + span.z1) / 2;
+      const corners = [[profile.x, profile.y], [profile.x + profile.w, profile.y], [profile.x + profile.w, profile.y + profile.h], [profile.x, profile.y + profile.h]] as const;
+      const points = corners.map(([a, b]) => vec3.transformMat4(vec3.create(), c.sweep === "u" ? [middle, a, b] : c.sweep === "w" ? [a, b, middle] : [a, middle, b], frame));
+      const found = { front: shapeDepth(state, state.shapes.front[0]!.shape, "front") - origin.x, plan: shapeDepth(state, state.shapes.plan[0]!.shape, "plan") - origin.y };
+      const reference = { front: Math.max(...points.map((p) => p[0]!)), plan: Math.max(...points.map((p) => p[1]!)) };
+      for (const view of ["front", "plan"] as const) {
+        expect(Math.abs(found[view] - c[view]), `${view} against the vector`).toBeLessThanOrEqual(toleranceM);
+        expect(Math.abs(found[view] - reference[view]), `${view} against gl-matrix`).toBeLessThanOrEqual(vectors.toleranceM);
       }
     });
 

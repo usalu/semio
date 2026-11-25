@@ -667,8 +667,11 @@ impl FlowOperationObserver {
         let remaining=budget.deadline_ms.map_or(protocol::FLOW_DEADLINE_MILLISECONDS,|deadline|deadline.saturating_sub(budget.now_ms)).min(protocol::FLOW_DEADLINE_MILLISECONDS);
         self.deadline_us.set(Some(now.saturating_add(remaining.saturating_mul(1000))));Ok(())
     }
+    pub fn poll_time_remaining(&self) -> bool {
+        matches!((semio_framework_job::default_now_us(), self.deadline_us.get()), (Some(now), Some(deadline)) if now < deadline)
+    }
     pub fn observe(&self)->bool{
-        let code=if self.cancelled.get(){Some(AbiErrorCode::Cancelled)}else if self.interrupted.get(){Some(AbiErrorCode::Interrupted)}else{match(semio_framework_job::default_now_us(),self.deadline_us.get()){(Some(now),Some(deadline))if now<deadline=>None,_=>Some(AbiErrorCode::DeadlineExceeded)}};
+        let code=if self.cancelled.get(){Some(AbiErrorCode::Cancelled)}else if self.interrupted.get(){Some(AbiErrorCode::Interrupted)}else{None};
         if let Some(code)=code{self.failure.set(Some(code));false}else{true}
     }
 }
@@ -748,6 +751,9 @@ impl FlowFeature for FlowProgramFeature {
         let mut remaining=budget;
         loop {
             if !self.observer.observe(){let code=self.observer.failure.get().unwrap_or(AbiErrorCode::DeadlineExceeded);drop(domain);return self.failed(abi_failure(code))}
+            if !self.observer.poll_time_remaining() {
+                return FlowFeatureStep::Yield;
+            }
             remaining.byte_credit=budget.byte_credit-spent;
             let before_work=self.action.work_receipt();
             let before=self.action.retained_receipt();

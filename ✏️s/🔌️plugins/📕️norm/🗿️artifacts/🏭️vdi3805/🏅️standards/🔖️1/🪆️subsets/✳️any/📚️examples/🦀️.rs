@@ -23,6 +23,9 @@ pub mod blatt_60;
 pub mod demo;
 #[path = "🌶️nonconforming/🦀️.rs"]
 pub mod nonconforming;
+#[cfg(test)]
+#[path = "🧪️tests/🗜️pack-twins/🦀️.rs"]
+mod pack_twins;
 //#endregion 🪢️Mounts
 
 pub use semio_s_artifact_norm_vdi3805_examples_blatt_3_to_8::{blatt_3, blatt_4, blatt_5, blatt_6, blatt_7, blatt_8};

@@ -19,4 +19,7 @@ pub mod cooled_office;
 pub mod demo;
 #[path = "❌️noncompliant-detached/🦀️.rs"]
 pub mod noncompliant_detached;
+#[cfg(test)]
+#[path = "🧪️tests/🗜️pack-twins/🦀️.rs"]
+mod pack_twins;
 //#endregion 🪢️Mounts

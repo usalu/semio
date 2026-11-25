@@ -1,0 +1,41 @@
+{
+  "$schema": "../../🧬️schema/🔣️.json",
+  "module": {
+    "hex": "0061736d0100000001060160017f017f030201000503010001071402066d656d6f7279020007616476616e636500000a160114004100410028020020006a36020041002802000b",
+    "export": "advance",
+    "calls": [{ "holder": "a#1", "delta": 1 }, { "holder": "b#2", "delta": 10 }, { "holder": "a#1", "delta": 2 }, { "holder": "c#3", "delta": 5 }],
+    "results": [1, 10, 3, 5]
+  },
+  "cases": [
+    {
+      "id": "one-compilation-for-many-activations",
+      "steps": [{ "acquire": "core.wasm", "holder": "a#1" }, { "acquire": "core.wasm", "holder": "b#2" }, { "acquire": "core.wasm", "holder": "c#3" }],
+      "expected": { "compilations": 1, "held": { "core.wasm": 3 }, "seeds": 1 }
+    },
+    {
+      "id": "a-seed-is-adopted-without-compiling",
+      "steps": [{ "acquire": "core.wasm", "holder": "a#1", "seeded": true }, { "acquire": "core.wasm", "holder": "b#2" }],
+      "expected": { "compilations": 0, "held": { "core.wasm": 2 }, "seeds": 1 }
+    },
+    {
+      "id": "the-last-holder-releases-the-entry",
+      "steps": [{ "acquire": "core.wasm", "holder": "a#1" }, { "acquire": "core.wasm", "holder": "b#2" }, { "release": "a#1", "dropped": [] }, { "release": "b#2", "dropped": ["core.wasm"] }],
+      "expected": { "compilations": 1, "held": {}, "seeds": 0 }
+    },
+    {
+      "id": "a-closed-instance-releases-every-core-of-its-component",
+      "steps": [{ "acquire": "core.wasm", "holder": "a#1" }, { "acquire": "core2.wasm", "holder": "a#1" }, { "acquire": "core3.wasm", "holder": "a#1" }, { "acquire": "core.wasm", "holder": "b#2" }, { "release": "a#1", "dropped": ["core2.wasm", "core3.wasm"] }],
+      "expected": { "compilations": 3, "held": { "core.wasm": 1 }, "seeds": 1 }
+    },
+    {
+      "id": "a-released-url-compiles-again-for-a-later-holder",
+      "steps": [{ "acquire": "core.wasm", "holder": "a#1" }, { "release": "a#1", "dropped": ["core.wasm"] }, { "acquire": "core.wasm", "holder": "b#2" }],
+      "expected": { "compilations": 2, "held": { "core.wasm": 1 }, "seeds": 1 }
+    },
+    {
+      "id": "releasing-an-unknown-holder-drops-nothing",
+      "steps": [{ "acquire": "core.wasm", "holder": "a#1" }, { "release": "z#9", "dropped": [] }],
+      "expected": { "compilations": 1, "held": { "core.wasm": 1 }, "seeds": 1 }
+    }
+  ]
+}

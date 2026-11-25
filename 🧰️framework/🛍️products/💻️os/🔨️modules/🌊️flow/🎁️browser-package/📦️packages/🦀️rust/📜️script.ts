@@ -41,7 +41,7 @@ class CheckScript extends BundleScript {
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runAdmittedCargoPackageTestsV1(["semio-os-flow-geometry","semio-os-flow-drawing","semio-os-flow-operators","semio-os-flow-vcs","semio-os-flow-vcs-laws","semio-os-flow-extensions-laws","semio-os-flow-host-source","semio-os-flow-host-read","semio-os-flow-host-laws","semio-os-flow-host","semio-os-flow-wasm"], this.repoRoot, this.invocation, rest);
+    await runAdmittedCargoPackageTestsV1(["semio-os-flow-geometry","semio-os-flow-drawing","semio-os-flow-operators","semio-os-flow-vcs","semio-os-flow-vcs-laws","semio-os-flow-extensions-laws","semio-os-flow-host-source","semio-os-flow-host-read","semio-os-flow-host-read-authoring","semio-os-flow-host-laws","semio-os-flow-host","semio-os-flow-wasm"], this.repoRoot, this.invocation, rest);
   }
 }
 

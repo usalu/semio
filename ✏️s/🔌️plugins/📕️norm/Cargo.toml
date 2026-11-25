@@ -4,6 +4,7 @@ cargo-features = [ "trim-paths" ]
 resolver = "2"
 members = [
     "⚖️compliance/📜️annex-and-tables/🔖️ndp/📦️packages/🦀️rust",
+    "⚖️compliance/📜️annex-and-tables/🔖️ndp/🗃️table/din16798/📦️packages/🦀️rust",
     "⚖️compliance/📜️annex-and-tables/🔖️ndp/🗃️table/din4108/📦️packages/🦀️rust",
     "⚖️compliance/📜️annex-and-tables/🔖️ndp/🗃️table/en1990/📦️packages/🦀️rust",
     "⚖️compliance/📜️annex-and-tables/🔖️ndp/🗃️table/en1991/📦️packages/🦀️rust",

@@ -1,6 +1,7 @@
 //! ⌨️ Command ingress phase of the reactor turn: the retained ingress owner, its cancellation by instance close, its resumption and the admission of one inbound command page. See [`super`].
 
 use super::*;
+use semio_plugin_reactor_lifecycle::command_stall::{command_stalled, note_command_turn, COMMAND_STALLED_FAULT_CODE};
 use semio_plugin_reactor_app::PluginApp;
 use semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime;
 use semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority;
@@ -80,32 +81,6 @@ fn close_instance_command_origin<PA:PluginApp>(runtime:&PluginRuntime<PA>,cx:&mu
  let mut lifetimes=runtime.guest_lifetimes.try_borrow_mut().map_err(|_|reactor_close_fault("command origin close lifetime is busy"))?;
  for index in 0..lifetimes.slots.values.len(){let Some(slot)=lifetimes.slots.get_mut(index)else{continue};if !matches!(slot.cell.phase,Phase::Closing|Phase::Retired)||slot.command_origin.terminal_is_empty(){continue}slot.close_command_origin(&ReactorClosePeers,cx)?;break}Ok(())
 }
-
-/// 🛑️ The fault code a retained command carries when it stayed pending for [`command_idle_turn_limit`] consecutive turns that consumed no work and moved no retained stock; the shell names and localizes it (`⏱️command-stall`).
-pub const COMMAND_STALLED_FAULT_CODE:&str="plugin.command-stalled";
-
-/// ⏳️ The consecutive quiet turns a retained command may spend before the reactor faults it: a spinning guest answers `more-work` thousands of times per second, a host that is only waiting on a job paces its turns at 25 ms or more and never reaches the limit inside the shell's 300 s command wall.
-pub const COMMAND_IDLE_TURN_LIMIT:u32=16_384;
-
-thread_local!{
-    static COMMAND_IDLE_STREAK:std::cell::Cell<(u32,u64,u32)>=const{std::cell::Cell::new((0,0,0))};
-    static COMMAND_IDLE_LIMIT:std::cell::Cell<u32>=const{std::cell::Cell::new(COMMAND_IDLE_TURN_LIMIT)};
-}
-
-/// 🔢️ The idle limit this thread's reactor enforces; laws lower it through [`set_command_idle_turn_limit`].
-pub fn command_idle_turn_limit()->u32{COMMAND_IDLE_LIMIT.with(|limit|limit.get())}
-
-/// 🛑️ Whether a streak of consecutive quiet turns exhausts this thread's idle limit, so the reactor faults the command as stalled.
-#[doc(hidden)]
-pub fn command_stalled(streak:u32)->bool{streak>=command_idle_turn_limit()}
-
-/// 🧪️ Lowers or restores the idle limit of this thread's reactor so a law can reach it without spinning for minutes.
-#[doc(hidden)]
-pub fn set_command_idle_turn_limit(limit:u32){COMMAND_IDLE_LIMIT.with(|slot|slot.set(limit))}
-
-/// 📏️ Counts one turn of the command `seq` of `instance`: a quiet turn extends the streak, any other turn (or another command) restarts it; returns the streak.
-#[doc(hidden)]
-pub fn note_command_turn(instance:u32,seq:u64,quiet:bool)->u32{COMMAND_IDLE_STREAK.with(|slot|{let (i,s,n)=slot.get();let n=if (i,s)==(instance,seq){n}else{0};let n=if quiet{n.saturating_add(1)}else{0};slot.set((instance,seq,n));n})}
 
 /// 🪜️ Repeats one paid retirement step within the turn's own slice while each step makes physical progress, so a retained owner with many frames retires in a few turns instead of one step per turn; stops on completion, on the slice ending or on a step that spent nothing.
 fn step_until_slice(cx:&mut semio_framework_job::StepContext<'_>,mut step:impl FnMut(&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
@@ -191,21 +166,22 @@ impl CommandIngressTurn {
         if matches!(command.as_ref(), Some((_, semio_plugin_runtime_ops::ops_ingress::PluginCommandIngress::FailedDecoded { .. }))) {
             return retire_command_ingress(self.loan.state_slot().expect("failed command retains its original ingress lane"), cx);
         }
-        if output.is_none(){let state=exchange.as_mut().expect("retained Source exchange state precedes command execution");let before=(cx.fuel_remaining(),cx.retained_progress());match plugin_exchange_turn(runtime,cursor.instance,command,state,identity,cx).await{
-            Ok(produced)=>{if state.applied{let mut produced=produced;if let Err(refusal)=collect_original_publication_receipts(&mut produced,cx){return Err(retain_refused_publication(cursor.instance,produced,refusal,cx))}*output=Some(produced)}else{
+        if output.is_none(){let state=exchange.as_mut().expect("retained Source exchange state precedes command execution");loop{let before=(cx.fuel_remaining(),cx.retained_progress());match plugin_exchange_turn(runtime,cursor.instance,command,state,identity,cx).await{
+            Ok(produced)=>{if state.applied{let mut produced=produced;if let Err(refusal)=collect_original_publication_receipts(&mut produced,cx){return Err(retain_refused_publication(cursor.instance,produced,refusal,cx))}*output=Some(produced);break}else{
                 let quiet=(cx.fuel_remaining(),cx.retained_progress())==before&&produced.frames.is_empty()&&produced.effects.is_empty()&&produced.events.is_empty();
                 let streak=note_command_turn(cursor.instance,cursor.seq,quiet);
+                let host_bound=effects.len();
                 let routed=route_exchange_output(cursor.instance,produced,effects,cx);
                 if command_stalled(streak)&&matches!(command.as_ref(),Some((_,semio_plugin_runtime_ops::ops_ingress::PluginCommandIngress::Decoded(_)))){
                     let fault=semio_framework::Fault::new(semio_framework::FaultOrigin::Framework,semio_framework::FaultCode::new(COMMAND_STALLED_FAULT_CODE),format!("{COMMAND_STALLED_FAULT_CODE}: command {} of instance {} stayed pending for {streak} turns without consuming work or moving retained stock",cursor.seq,cursor.instance));
                     note_command_turn(cursor.instance,cursor.seq,false);
                     semio_plugin_runtime_exchange::exch_plugin_exchange::retain_decoded_exchange_failure(command,Some(fault.into()),(cx.operation(),cx.generation()),None);
                 }
-                return routed
+                if routed.is_err()||quiet||command_stalled(streak)||!quiet_slice_open(effects.len()!=host_bound,cx.should_yield(),guest_turn_executing_us()){return routed}
             }},
             Err(failure)=>{
                 if matches!(command.as_ref(),Some((_,semio_plugin_runtime_ops::ops_ingress::PluginCommandIngress::Decoded(_)))){semio_plugin_runtime_exchange::exch_plugin_exchange::retain_decoded_exchange_failure(command,Some(failure),(cx.operation(),cx.generation()),None);return Ok(())}return Err(failure)}
-        }}
+        }}}
         if !step_until_slice(cx,|cx|close_exchange_owner(exchange,exchange_close,cx))?{return Ok(())}
         if let Some((_,semio_plugin_runtime_ops::ops_ingress::PluginCommandIngress::Decoded(owner)))=command.as_mut(){if !step_until_slice(cx,|cx|cx.with_original_retirement(|cx|owner.close_original_step(cx)))?{return Ok(())}}
         if command.is_some(){let bytes=std::mem::size_of_val(command);let grant=cx.retained_grant();if cx.retirement_should_yield()||cx.fuel_remaining()==0||grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0{return Ok(())}command.take();cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);}

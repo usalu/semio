@@ -28,7 +28,7 @@ export function compilerReleaseV1(root:string,inner:readonly string[],environmen
  let text:string|undefined;
  try{if(pinned!==""||Date.now()-statSync(memo).mtimeMs<60000)text=readFileSync(memo,"utf8");}catch{}
  if(text===undefined||!text.includes("host: ")){
-  const probe=spawnSync(inner[0]!,[...inner.slice(1),"-vV"],{encoding:"utf8",env:environment as NodeJS.ProcessEnv});
+  const probe=spawnSync(inner[0]!,[...inner.slice(1),"-vV"],{windowsHide:true,encoding:"utf8",env:environment as NodeJS.ProcessEnv});
   if(probe.status!==0||!probe.stdout.includes("host: "))throw Error("Compiler identity probe failed");
   text=probe.stdout;
   try{mkdirSync(directory,{recursive:true});const temporary=memo+"."+randomBytes(3).toString("hex");writeFileSync(temporary,text);renameSync(temporary,memo);}catch{}

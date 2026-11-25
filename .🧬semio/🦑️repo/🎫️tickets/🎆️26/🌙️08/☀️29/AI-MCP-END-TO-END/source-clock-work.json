@@ -1,0 +1,7 @@
+{
+  "iterations": 20000000,
+  "allowance": 20010000,
+  "charges": [0, 1, 2, 8, 4096, 0, 1, 0, 2],
+  "workReceipt": [20004110, 5890],
+  "clockReceipt": [4895, 352336]
+}

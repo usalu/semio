@@ -1,5 +1,5 @@
 import {createHash} from "node:crypto";
-import {readFileSync} from "node:fs";
+import {readdirSync,readFileSync} from "node:fs";
 import {fileURLToPath} from "node:url";
 import {join} from "node:path";
 import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
@@ -45,10 +45,20 @@ export async function invocationPlanRequestV1(root:string,args:readonly string[]
  return Object.freeze({arguments:resolved,tool:selected.tool,...selected.graphPolicy?{graphPolicy:selected.graphPolicy}:{},targets});
 }
 
-/** 🔖️ The digest of the code the host service runs on (the files `HostPolicy.serviceRevisionFiles` names, relative to the build library): a service started on older code of these files is another implementation than a client on the current code, so it is replaced and retires, instead of a service that has run since the night holding the budget of its old rules. A file that cannot be read counts as absent. */
+const revisionLibraryV1=fileURLToPath(new URL("../../",import.meta.url)),revisionSkippedV1=new Set(["🧪️tests","📖️texts"]),revisionFileV1=/\.(?:ts|mjs|json)$/u;
+
+/** 📂️ The files `HostPolicy.serviceRevisionFiles` names, relative to the build library, in policy order. A name ending in `/` is a folder of rules (the host capacity decision, its gate and sampling) and stands for every `.ts`, `.mjs` and `.json` file below it outside `🧪️tests` and `📖️texts` folders, in UTF-8 byte order, so a module the folder gains is part of the identity without a hand-kept list (the session-cap decision was missing from one, and a waiting service kept its old rule for hours). A folder that cannot be read stands for no file.
+ * @see ../../🏡️resident/🧪️tests/🔖️revision/🟦️.ts */
+export function hostServiceRevisionPathsV1(library:string=revisionLibraryV1):readonly string[]{
+ const rows:string[]=[],walk=(folder:string,found:string[]):void=>{let entries;try{entries=readdirSync(join(library,folder),{withFileTypes:true});}catch{return;}for(const entry of entries){const path=folder+entry.name;if(entry.isDirectory()){if(!revisionSkippedV1.has(entry.name))walk(path+"/",found);}else if(entry.isFile()&&revisionFileV1.test(entry.name))found.push(path);}};
+ for(const path of residentSchema.definitions.HostPolicy.const.serviceRevisionFiles){if(!path.endsWith("/")){rows.push(path);continue;}const found:string[]=[];walk(path,found);rows.push(...found.sort((left,right)=>Buffer.compare(Buffer.from(left),Buffer.from(right))));}
+ return Object.freeze(rows);
+}
+
+/** 🔖️ The digest of the code the host service runs on (the files of `hostServiceRevisionPathsV1`): a service started on older code of these files is another implementation than a client on the current code, so it is replaced and retires, instead of a service that has run since the night holding the budget of its old rules. A file that cannot be read counts as absent. */
 export function hostServiceRevisionV1():string{
  const hash=createHash("sha256");
- for(const path of residentSchema.definitions.HostPolicy.const.serviceRevisionFiles){hash.update(path+"\0");try{hash.update(readFileSync(fileURLToPath(new URL("../../"+path,import.meta.url))));}catch{hash.update("absent");}}
+ for(const path of hostServiceRevisionPathsV1()){hash.update(path+"\0");try{hash.update(readFileSync(join(revisionLibraryV1,path)));}catch{hash.update("absent");}}
  return hash.digest("hex");
 }
 

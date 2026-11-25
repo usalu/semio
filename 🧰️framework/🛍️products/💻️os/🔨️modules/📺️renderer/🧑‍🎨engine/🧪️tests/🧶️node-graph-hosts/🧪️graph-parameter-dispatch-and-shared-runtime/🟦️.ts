@@ -49,6 +49,7 @@ export function registerGraphParameterDispatchTests(): void {
       for (const item of graphParameterFixture.cases) {
         const row = { widgetId: item.widgetId, label: item.label, ...item.before, x: 0, y: 0, w: 100, h: 16 };
         const methods: Record<string, ReturnType<typeof vi.fn>> = {
+          free: vi.fn(async () => {}),
           documentJson: vi.fn(() => {
             throw new Error("slider must not serialize the fixture");
           }),

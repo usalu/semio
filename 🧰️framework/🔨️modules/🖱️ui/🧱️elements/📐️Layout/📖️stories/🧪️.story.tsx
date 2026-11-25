@@ -15,6 +15,8 @@ import { useState, type ComponentType } from "react";
 import { sharedBorderlessBoxProps } from "../../🗂️WindowChrome/shared-border.ts";
 
 // 🔷️#region 🪨️Layout
+const storyViewportStyle = { height: "calc(100dvh - 2rem)" } as const;
+
 const Home = createIconComponent("home");
 const Info = createIconComponent("info");
 const Layers = createIconComponent("layers");
@@ -82,6 +84,7 @@ export const Default: Story = {
     const [bottomRightPath, setBottomRightPath] = useState<readonly string[]>(["settings"]);
 
     return (
+      <div style={storyViewportStyle}>
       <Layout
         navbar={
           <Navbar
@@ -146,6 +149,7 @@ export const Default: Story = {
           },
           "top-middle": {
             visible: true,
+            activeTabPath: ["console"],
             size: topMiddleSize,
             onSizeChange: setTopMiddleSize,
             tabs: [
@@ -160,6 +164,7 @@ export const Default: Story = {
           },
           "top-right": {
             visible: true,
+            activeTabPath: ["properties"],
             size: topRightSize,
             onSizeChange: setTopRightSize,
             tabs: [
@@ -186,6 +191,7 @@ export const Default: Story = {
           </Canvas>
         }
       />
+      </div>
     );
   },
 };
@@ -246,7 +252,7 @@ export const ScrollingPage: Story = {
       </main>
     ),
   },
-  render: (args) => <div className="h-screen"><Layout {...args} /></div>,
+  render: (args) => <div style={storyViewportStyle}><Layout {...args} /></div>,
 };
 
 // #endregion 🪨️Layout

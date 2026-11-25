@@ -22829,7 +22829,7 @@
       "expires": null
     },
     "dev-vendor-cli": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/cli.js",
+      "pathPattern": ".cache/b/p/m/browser/*/modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/cli.js",
       "authority": "Bytecode Alliance preview2-shim",
       "reason": "Exact installed browser CLI module with fixed internal import identity",
       "configurability": "unconfigurable",
@@ -22840,7 +22840,7 @@
       "expires": null
     },
     "dev-vendor-clocks": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/clocks.js",
+      "pathPattern": ".cache/b/p/m/browser/*/modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/clocks.js",
       "authority": "Bytecode Alliance preview2-shim",
       "reason": "Exact installed browser clocks module with fixed internal import identity",
       "configurability": "unconfigurable",
@@ -22851,7 +22851,7 @@
       "expires": null
     },
     "dev-vendor-config": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/config.js",
+      "pathPattern": ".cache/b/p/m/browser/*/modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/config.js",
       "authority": "Bytecode Alliance preview2-shim",
       "reason": "Exact installed browser configuration module with fixed internal import identity",
       "configurability": "unconfigurable",
@@ -22862,7 +22862,7 @@
       "expires": null
     },
     "dev-vendor-environment": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/environment.js",
+      "pathPattern": ".cache/b/p/m/browser/*/modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/environment.js",
       "authority": "Bytecode Alliance preview2-shim",
       "reason": "Exact installed browser environment module with fixed internal import identity",
       "configurability": "unconfigurable",
@@ -22873,7 +22873,7 @@
       "expires": null
     },
     "dev-vendor-filesystem": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/filesystem.js",
+      "pathPattern": ".cache/b/p/m/browser/*/modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/filesystem.js",
       "authority": "Bytecode Alliance preview2-shim",
       "reason": "Exact installed browser filesystem module with fixed internal import identity",
       "configurability": "unconfigurable",
@@ -22884,7 +22884,7 @@
       "expires": null
     },
     "dev-vendor-http": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/http.js",
+      "pathPattern": ".cache/b/p/m/browser/*/modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/http.js",
       "authority": "Bytecode Alliance preview2-shim",
       "reason": "Exact installed browser HTTP module with fixed internal import identity",
       "configurability": "unconfigurable",
@@ -22895,7 +22895,7 @@
       "expires": null
     },
     "dev-vendor-index": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/index.js",
+      "pathPattern": ".cache/b/p/m/browser/*/modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/index.js",
       "authority": "Bytecode Alliance preview2-shim",
       "reason": "Exact installed browser public module with fixed internal import identity",
       "configurability": "unconfigurable",
@@ -22906,7 +22906,7 @@
       "expires": null
     },
     "dev-vendor-io": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/io.js",
+      "pathPattern": ".cache/b/p/m/browser/*/modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/io.js",
       "authority": "Bytecode Alliance preview2-shim",
       "reason": "Exact installed browser IO module with fixed internal import identity",
       "configurability": "unconfigurable",
@@ -22917,7 +22917,7 @@
       "expires": null
     },
     "dev-vendor-random": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/random.js",
+      "pathPattern": ".cache/b/p/m/browser/*/modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/random.js",
       "authority": "Bytecode Alliance preview2-shim",
       "reason": "Exact installed browser randomness module with fixed internal import identity",
       "configurability": "unconfigurable",
@@ -22928,7 +22928,7 @@
       "expires": null
     },
     "dev-vendor-sockets": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/sockets.js",
+      "pathPattern": ".cache/b/p/m/browser/*/modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/sockets.js",
       "authority": "Bytecode Alliance preview2-shim",
       "reason": "Exact installed browser sockets module with fixed internal import identity",
       "configurability": "unconfigurable",
@@ -26500,7 +26500,7 @@
       "expires": null
     },
     "dev-vendor-common": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/common.js",
+      "pathPattern": ".cache/b/p/m/browser/*/modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/common.js",
       "authority": "Bytecode Alliance preview2-shim",
       "reason": "Exact installed browser common module with fixed internal import identity",
       "configurability": "unconfigurable",
@@ -26511,7 +26511,7 @@
       "expires": null
     },
     "dev-vendor-in-memory-filesystem": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/in-memory-filesystem.js",
+      "pathPattern": ".cache/b/p/m/browser/*/modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/in-memory-filesystem.js",
       "authority": "Bytecode Alliance preview2-shim",
       "reason": "Exact installed browser in-memory filesystem module with fixed internal import identity",
       "configurability": "unconfigurable",
@@ -26522,7 +26522,7 @@
       "expires": null
     },
     "dev-vendor-in-memory-http": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/in-memory-http.js",
+      "pathPattern": ".cache/b/p/m/browser/*/modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/in-memory-http.js",
       "authority": "Bytecode Alliance preview2-shim",
       "reason": "Exact installed browser in-memory HTTP module with fixed internal import identity",
       "configurability": "unconfigurable",
@@ -26533,7 +26533,7 @@
       "expires": null
     },
     "dev-vendor-in-memory-sockets": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/in-memory-sockets.js",
+      "pathPattern": ".cache/b/p/m/browser/*/modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/in-memory-sockets.js",
       "authority": "Bytecode Alliance preview2-shim",
       "reason": "Exact installed browser in-memory sockets module with fixed internal import identity",
       "configurability": "unconfigurable",
@@ -26544,7 +26544,7 @@
       "expires": null
     },
     "dev-vendor-opfs-filesystem": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/opfs-filesystem.js",
+      "pathPattern": ".cache/b/p/m/browser/*/modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/opfs-filesystem.js",
       "authority": "Bytecode Alliance preview2-shim",
       "reason": "Exact installed browser OPFS filesystem module with fixed internal import identity",
       "configurability": "unconfigurable",
@@ -30821,6 +30821,14 @@
             "manifestPath": "🧰️framework/📦️packages/🟦️typescript/package.json",
             "entryPath": "🧰️framework/📦️packages/🟦️typescript/🟦️.ts"
           },
+          "@semio-tech/framework-diagnostic-ts/controlled": {
+            "manifestPath": "🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🟦️typescript/package.json",
+            "entryPath": "🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🟦️typescript/🎛️controlled/🟦️.ts"
+          },
+          "@semio-tech/framework-filesystem/observation/descriptor": {
+            "manifestPath": "🧰️framework/🔨️modules/📁️filesystem/package.json",
+            "entryPath": "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts"
+          },
           "@semio-tech/framework-pack-json-ts/members": {
             "manifestPath": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🟦️typescript/package.json",
             "entryPath": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🟦️typescript/🧩️members/🟦️.ts"
@@ -30829,25 +30837,101 @@
             "manifestPath": "🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/package.json",
             "entryPath": "🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/🟦️.ts"
           },
+          "@semio-tech/nx-bootstrap-tools/retention/generation": {
+            "manifestPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/package.json",
+            "entryPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📦️generation/🟦️.ts"
+          },
+          "@semio-tech/nx-bootstrap-tools/retention/physical": {
+            "manifestPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/package.json",
+            "entryPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🟦️.ts"
+          },
+          "@semio-tech/nx-bootstrap-tools/retention/physical/schema.json": {
+            "manifestPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/package.json",
+            "entryPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧬️schema/🔣️.json"
+          },
+          "@semio-tech/nx-bootstrap-tools/sdk/binary/schema.json": {
+            "manifestPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/package.json",
+            "entryPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/🧊️binary/🧬️schema/🔣️.json"
+          },
+          "@semio-tech/nx-bootstrap-tools/sdk/binary/verification": {
+            "manifestPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/package.json",
+            "entryPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/🧊️binary/🔎️verification/🟦️.ts"
+          },
+          "@semio-tech/nx-bootstrap-tools/sdk/source/derivative/index": {
+            "manifestPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/package.json",
+            "entryPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/🔏️index/🟦️.ts"
+          },
+          "@semio-tech/nx-bootstrap-tools/sdk/source/derivative/reader": {
+            "manifestPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/package.json",
+            "entryPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/📥️reader/🟦️.ts"
+          },
           "@semio-tech/pack-json-decode-ts": {
             "manifestPath": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/📦️packages/🟦️typescript/package.json",
             "entryPath": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/📦️packages/🟦️typescript/🟦️.ts"
+          },
+          "@semio-tech/process/artifacts/native-build/storage": {
+            "manifestPath": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/package.json",
+            "entryPath": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts"
+          },
+          "@semio-tech/process/artifacts/native-build/storage/cleanup/retirement/durability": {
+            "manifestPath": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/package.json",
+            "entryPath": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/♻️retirement/💾️durability/🟦️.ts"
+          },
+          "@semio-tech/process/artifacts/native-build/storage/fixed/schema.json": {
+            "manifestPath": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/package.json",
+            "entryPath": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🧬️schema/🔣️json/🟦️.ts"
+          },
+          "@semio-tech/process/artifacts/native-build/storage/platform": {
+            "manifestPath": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/package.json",
+            "entryPath": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🟦️.ts"
+          },
+          "@semio-tech/process/artifacts/native-build/storage/platform/contract": {
+            "manifestPath": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/package.json",
+            "entryPath": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts"
+          },
+          "@semio-tech/process/artifacts/native-build/storage/publication": {
+            "manifestPath": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/package.json",
+            "entryPath": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/📤️publication/🟦️.ts"
+          },
+          "@semio-tech/process/artifacts/native-build/storage/publication/platform": {
+            "manifestPath": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/package.json",
+            "entryPath": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/📤️publication/🌐️platform/🟦️.ts"
+          },
+          "@semio-tech/process/artifacts/native-build/storage/publication/witness/events": {
+            "manifestPath": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/package.json",
+            "entryPath": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/📤️publication/📚️witness/🍎️events/🟦️.ts"
+          },
+          "@semio-tech/process/artifacts/native-build/storage/schema.json": {
+            "manifestPath": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/package.json",
+            "entryPath": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🧬️schema/🔣️json/🟦️.ts"
+          },
+          "@semio-tech/process/execution": {
+            "manifestPath": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/package.json",
+            "entryPath": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts"
+          },
+          "@semio-tech/process/leases": {
+            "manifestPath": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/package.json",
+            "entryPath": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts"
+          },
+          "@semio-tech/process/routing": {
+            "manifestPath": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/package.json",
+            "entryPath": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"
           },
           "@semio-tech/schema-validator-ts": {
             "manifestPath": "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/package.json",
             "entryPath": "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts"
           },
-          "@semio-tech/value-ts/refusal/codec": {
-            "manifestPath": "🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/package.json",
-            "entryPath": "🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/⚠️refusal/🔁️codec/🟦️.ts"
+          "@semio-tech/ui-layout": {
+            "manifestPath": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🖼️presentation/📐️layout/package.json",
+            "entryPath": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🖼️presentation/📐️layout/🟦️.ts"
           },
           "@semio-tech/value-ts/refusal": {
             "manifestPath": "🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/package.json",
             "entryPath": "🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/⚠️refusal/🟦️.ts"
           },
-          "@semio-tech/framework-diagnostic-ts/controlled": {
-            "manifestPath": "🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🟦️typescript/package.json",
-            "entryPath": "🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🟦️typescript/🎛️controlled/🟦️.ts"
+          "@semio-tech/value-ts/refusal/codec": {
+            "manifestPath": "🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/package.json",
+            "entryPath": "🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/⚠️refusal/🔁️codec/🟦️.ts"
           }
         }
       },
@@ -31260,6 +31344,7 @@
       "nativeConsumers": [
         "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust"
       ],
+      "ingressPreparation": true,
       "inputPatterns": [
         "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🌓️theme/🏛️model/🟦️.ts",
         "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🌓️theme/📐️geometry/🔣️.json",
@@ -31592,10 +31677,6 @@
               "manifestPath": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/package.json",
               "entryPath": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts"
             },
-            "@semio-tech/ui-layout": {
-              "manifestPath": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🖼️presentation/📐️layout/package.json",
-              "entryPath": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🖼️presentation/📐️layout/🟦️.ts"
-            },
             "@semio-tech/ui-locale-rs/index": {
               "manifestPath": "🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust/package.json",
               "entryPath": "🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust/🟦️.ts"
@@ -31752,6 +31833,7 @@
             "🧰️framework/🔨️modules/🎠️kernel/🚪️io-router/🟦️.ts",
             "🧰️framework/🔨️modules/🎠️kernel/🛂️descriptor-admission/🟦️.ts",
             "🧰️framework/🔨️modules/🎠️kernel/🧩️extensions/🟦️.ts",
+            "🧰️framework/🔨️modules/🎠️kernel/🧩️package-components/🟦️.ts",
             "🧰️framework/🔨️modules/🎠️kernel/🧭️app-router/🟦️.ts",
             "🧰️framework/🔨️modules/🎠️kernel/🧭️node-kind-trigger/🟦️.ts",
             "🧰️framework/🔨️modules/🎠️kernel/🧮️invocation-response/🟦️.ts",
@@ -31801,6 +31883,7 @@
             "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🚨️quota/🟦️.ts",
             "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🚪️instance-lifecycle/🟦️.ts",
             "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🟦️.ts",
+            "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🧊️core-modules/🟦️.ts",
             "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🧭️routing/🟦️.ts",
             "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🩹️ui-patch/🟦️.ts",
             "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🪪️exact-activation/🟦️.ts",
@@ -31991,6 +32074,7 @@
             "🧰️framework/🔨️modules/🛂️manifest/🧮️arg-schema/📝️staging/reference.ts",
             "🧰️framework/🔨️modules/🛂️manifest/🧮️arg-schema/📝️staging/refresh.ts",
             "🧰️framework/🔨️modules/🛂️manifest/🧮️arg-schema/📝️staging/🟦️.ts",
+            "🧰️framework/🔨️modules/🛂️manifest/🧺️action-sets/🟦️.ts",
             "🧰️framework/🔨️modules/🛰️backbone/🌐️envelope-io/🟦️.ts",
             "🧰️framework/🔨️modules/🛰️backbone/🎭️artifact-actor/🟦️.ts",
             "🧰️framework/🔨️modules/🛰️backbone/🔀️message/🟦️.ts",
@@ -32269,6 +32353,7 @@
         "🧰️framework/🔨️modules/🎠️kernel/🚪️io-router/🟦️.ts",
         "🧰️framework/🔨️modules/🎠️kernel/🛂️descriptor-admission/🟦️.ts",
         "🧰️framework/🔨️modules/🎠️kernel/🧩️extensions/🟦️.ts",
+        "🧰️framework/🔨️modules/🎠️kernel/🧩️package-components/🟦️.ts",
         "🧰️framework/🔨️modules/🎠️kernel/🧭️app-router/🟦️.ts",
         "🧰️framework/🔨️modules/🎠️kernel/🧭️node-kind-trigger/🟦️.ts",
         "🧰️framework/🔨️modules/🎠️kernel/🧮️invocation-response/🟦️.ts",
@@ -32319,6 +32404,7 @@
         "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🚨️quota/🟦️.ts",
         "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🚪️instance-lifecycle/🟦️.ts",
         "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🟦️.ts",
+        "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🧊️core-modules/🟦️.ts",
         "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🧭️routing/🟦️.ts",
         "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🩹️ui-patch/🟦️.ts",
         "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🪪️exact-activation/🟦️.ts",
@@ -32511,6 +32597,7 @@
         "🧰️framework/🔨️modules/🛂️manifest/🧮️arg-schema/📝️staging/reference.ts",
         "🧰️framework/🔨️modules/🛂️manifest/🧮️arg-schema/📝️staging/refresh.ts",
         "🧰️framework/🔨️modules/🛂️manifest/🧮️arg-schema/📝️staging/🟦️.ts",
+        "🧰️framework/🔨️modules/🛂️manifest/🧺️action-sets/🟦️.ts",
         "🧰️framework/🔨️modules/🛰️backbone/🌐️envelope-io/🟦️.ts",
         "🧰️framework/🔨️modules/🛰️backbone/🎭️artifact-actor/🟦️.ts",
         "🧰️framework/🔨️modules/🛰️backbone/🔀️message/🟦️.ts",

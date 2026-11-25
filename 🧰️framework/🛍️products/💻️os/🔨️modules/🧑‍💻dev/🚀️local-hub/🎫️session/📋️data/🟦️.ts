@@ -1,5 +1,5 @@
 import schema from "../🧬️schema/🔣️.json" with { type: "json" };
-import {readScriptProcessJsonV1} from "@semio-tech/process/routing/invocation/process/json";
+import {readScriptProcessJsonV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/📥️invocation/🏃️process/📥️json/🟦️.ts";
 const policy=Object.freeze({...schema.definitions.Policy.const});
 
 export type DevLocalHubProxyV1=Readonly<{version:1;endpoint:string;secret:string}>;

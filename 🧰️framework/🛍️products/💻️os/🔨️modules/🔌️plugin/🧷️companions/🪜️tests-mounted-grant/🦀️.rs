@@ -15,5 +15,5 @@ mod mounted_grant_archive_publication {
     use serde_json::Value;
     use semio_os_kernel as protocol;
 
-    include!("../🧪️tests/🔬️mounted-grant-archive-publication/🦀️.rs");
+    include!("../../🧪️tests/🔬️mounted-grant-archive-publication/🦀️.rs");
 }

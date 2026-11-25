@@ -163,7 +163,7 @@ mod tests {
         for expected in &expectation.accessibility {
             let record = state.get(expected.id).unwrap_or_else(|| panic!("{case_id}: expected node {:?} missing from state", expected.id));
             let a = &record.accessibility;
-            assert_eq!(a.description.as_ref().map(|label| label.as_str()), expected.description.as_deref(), "{case_id}: node {:?} description mismatch", expected.id);
+            assert_eq!(a.description.as_ref().map(|label| label.0.as_str()), expected.description.as_deref(), "{case_id}: node {:?} description mismatch", expected.id);
             assert_eq!(a.live, expected.live, "{case_id}: node {:?} live mismatch", expected.id);
             assert_eq!(a.shortcut.as_deref(), expected.shortcut.as_deref(), "{case_id}: node {:?} shortcut mismatch", expected.id);
             assert_eq!(a.hidden, expected.hidden, "{case_id}: node {:?} hidden mismatch", expected.id);
@@ -278,7 +278,7 @@ mod tests {
                 count += 1;
             }
         }
-        assert_eq!(count, 78);
+        assert_eq!(count, 79);
     }
     //#endregion 🔍️Pairing
 

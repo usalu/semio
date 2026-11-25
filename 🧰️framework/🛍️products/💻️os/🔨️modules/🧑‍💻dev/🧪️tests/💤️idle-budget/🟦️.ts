@@ -21,7 +21,7 @@ import {ensureRepositoryBrowserPathV1} from "../../../../../🦑️repo/🔨️m
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import type { Browser, CDPSession, Page } from "playwright";
-import { PLAYWRIGHT_MODULE_SPECIFIER } from "../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🟦️.ts";
+import { launchBrowserV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🟦️.ts";
 import { acceptanceCheckResult, publishAcceptanceCheckResult } from "@semio-tech/repo-test/acceptance/orchestration";
 import { awaitBeacon, dismissIntroduction, keyOf, kindOf, roleOf, windowIds, type MatrixProgram } from "../🧮️program-matrix/🟦️.ts";
 
@@ -143,8 +143,7 @@ async function bootShellBounded(repoRoot: string, baseUrl: string, headed: boole
 
 async function bootShell(repoRoot: string, baseUrl: string, headed: boolean): Promise<Shell> {
   ensureRepositoryBrowserPathV1(repoRoot,process.env);
-  const { chromium }: typeof import("playwright") = await import(PLAYWRIGHT_MODULE_SPECIFIER);
-  const browser = await chromium.launch({ headless: !headed, args: ["--use-angle=metal", "--enable-gpu", "--ignore-gpu-blocklist"] });
+  const browser = await launchBrowserV1({ headless: !headed, args: ["--use-angle=metal", "--enable-gpu", "--ignore-gpu-blocklist"] });
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
   page.setDefaultNavigationTimeout(300_000);
   const cdp = await page.context().newCDPSession(page);

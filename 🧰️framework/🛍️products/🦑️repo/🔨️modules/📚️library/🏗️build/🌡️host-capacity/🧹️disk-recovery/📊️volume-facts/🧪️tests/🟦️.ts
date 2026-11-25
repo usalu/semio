@@ -14,6 +14,13 @@ test("the line format is exact and every row obeys the schema",()=>{
  expect(formatVolumeFactsV1(rows).split("\n")).toEqual([VOLUME_FACTS_POLICY_V1.header,"/w: 61440 of 262144","/w/.cache/b/n/m/x/native/m: 25 of 63"]);
 });
 
+test("a row with an inode table names free and total inodes after the megabytes, and the host volume of this machine reports them",()=>{
+ expect(formatVolumeFactsV1([{path:"/w",totalBytes:256*1048576*1024,freeBytes:60*1048576*1024,totalInodes:30000000,freeInodes:123215}]).split("\n")[1]).toBe("/w: 61440 of 262144, inodes 123215 of 30000000");
+ const row=readVolumeFactsV1(process.cwd().split("/.🧬semio")[0]!)[0]!;
+ expect(row.totalInodes===undefined||row.freeInodes!<=row.totalInodes).toBe(true);
+ const ajv=new Ajv({strict:true});ajv.addSchema(schema);expect(ajv.validate("schema://repo.disk-recovery/VolumeFactsV1#/definitions/Row",row)).toBe(true);
+});
+
 test("the host volume of a workspace is read, plain folders are no mounts, a missing path never throws",()=>{
  const root=mkdtempSync(join(tmpdir(),"vf-"));
  try{

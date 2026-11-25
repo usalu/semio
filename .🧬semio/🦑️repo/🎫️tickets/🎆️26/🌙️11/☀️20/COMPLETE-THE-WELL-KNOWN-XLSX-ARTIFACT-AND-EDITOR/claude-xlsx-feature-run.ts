@@ -1,14 +1,24 @@
 import { spawnSync } from "node:child_process";
-import { readFileSync, existsSync } from "node:fs";
+import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 const M = "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts";
 const root = resolve(import.meta.dir, "../../../../../../..");
-const { discoverTestCases, planExecution, readResults } = await import(resolve(root, M));
+const { discoverTestCases, buildCasePlan, readResults } = await import(resolve(root, M));
 const [, , binary, role, level, caseDir] = process.argv;
 const found = discoverTestCases(root).find((entry: { caseDir: string }) => entry.caseDir.endsWith(caseDir!));
 if (!found) throw new Error("case not found: " + caseDir);
-const planned = planExecution(root, found, level as never, role as never, "rust");
+const base = buildCasePlan(root, found, level as never);
+const workDir = resolve(import.meta.dir, "🗑️generated/claude-oracles2/work", role!);
+const outputDir = resolve(import.meta.dir, "🗑️generated/claude-oracles2/results", role!);
+const artifactDir = resolve(outputDir, "artifacts");
+mkdirSync(workDir, { recursive: true });
+mkdirSync(artifactDir, { recursive: true });
+const plan = { ...base.plan, role, implementation: "rust", workDir, outputDir, artifactDir, resultsPath: resolve(outputDir, "results.jsonl") };
+const planPath = resolve(workDir, "plan.json");
+rmSync(plan.resultsPath, { force: true });
+writeFileSync(planPath, JSON.stringify(plan, null, 2));
+const planned = { planPath, plan };
 const run = spawnSync(binary!, ["--plan", planned.planPath, "--out", planned.plan.resultsPath], { cwd: root, encoding: "utf8", env: process.env, maxBuffer: 1 << 28 });
 console.log("[DEBUG] exit", run.status, "scenarios", planned.plan.scenarios.length);
 if (run.stderr) console.log(run.stderr.slice(-4000));

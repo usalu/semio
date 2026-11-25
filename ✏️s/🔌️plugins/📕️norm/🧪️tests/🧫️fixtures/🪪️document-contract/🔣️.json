@@ -6,7 +6,7 @@
       "childField": "climateTable",
       "committed": {
         "snapshots": 212,
-        "diffs": 42
+        "diffs": 63
       },
       "document": {
         "buildingCategory": "Residential",

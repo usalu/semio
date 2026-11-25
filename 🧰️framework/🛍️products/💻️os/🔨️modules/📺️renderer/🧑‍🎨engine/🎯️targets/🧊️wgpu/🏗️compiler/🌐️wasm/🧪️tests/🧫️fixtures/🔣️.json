@@ -1505,6 +1505,14 @@
       "name": "semio-plugin-ownership"
     },
     {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/♻️lifecycle/🧱️owner/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-store-lifecycle"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🫧️transient/🧱️owner/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-transient-publication"
+    },
+    {
       "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👥️peer/📦️packages/🦀️rust/Cargo.toml",
       "name": "semio-plugin-peer"
     },

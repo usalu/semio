@@ -1,0 +1,219 @@
+[
+ {
+  "name": "install heartbeat",
+  "js": "(async()=>{window.__hb=[];let last=performance.now();setInterval(()=>{const n=performance.now();window.__hb.push([Math.round(n),Math.round(n-last)]);last=n;if(window.__hb.length>400)window.__hb.shift()},250);return 'ok'})()",
+  "settleMs": 300
+ },
+ {
+  "name": "wait for the initial document",
+  "js": "(async()=>'w')()",
+  "until": "(async()=>String(document.querySelectorAll('canvas').length>=1&&!/Loading document/.test(document.body.innerText)&&!!document.querySelector('[role=combobox]')))()",
+  "timeoutMs": 420000,
+  "settleMs": 2000
+ },
+ {
+  "name": "switch to Viewer",
+  "js": "(async()=>{window.__t0=performance.now();[...document.querySelectorAll('button,[role=tab]')].find(b=>(b.getAttribute('aria-label')||b.innerText).trim().startsWith('Viewer')).click();return 'v'})()",
+  "settleMs": 100
+ },
+ {
+  "name": "probe1",
+  "js": "(async()=>JSON.stringify([Math.round(performance.now()-window.__t0),Math.max(...window.__hb.slice(-60).map(x=>x[1])),(document.body.innerText.match(/Loading document[^\\n]*/)||[''])[0],document.querySelectorAll('canvas').length,(document.querySelector('[aria-pressed=true],[aria-selected=true]')||{}).innerText]))()",
+  "settleMs": 15000
+ },
+ {
+  "name": "probe2",
+  "js": "(async()=>JSON.stringify([Math.round(performance.now()-window.__t0),Math.max(...window.__hb.slice(-60).map(x=>x[1])),(document.body.innerText.match(/Loading document[^\\n]*/)||[''])[0],document.querySelectorAll('canvas').length,(document.querySelector('[aria-pressed=true],[aria-selected=true]')||{}).innerText]))()",
+  "settleMs": 15000
+ },
+ {
+  "name": "probe3",
+  "js": "(async()=>JSON.stringify([Math.round(performance.now()-window.__t0),Math.max(...window.__hb.slice(-60).map(x=>x[1])),(document.body.innerText.match(/Loading document[^\\n]*/)||[''])[0],document.querySelectorAll('canvas').length,(document.querySelector('[aria-pressed=true],[aria-selected=true]')||{}).innerText]))()",
+  "settleMs": 15000
+ },
+ {
+  "name": "probe4",
+  "js": "(async()=>JSON.stringify([Math.round(performance.now()-window.__t0),Math.max(...window.__hb.slice(-60).map(x=>x[1])),(document.body.innerText.match(/Loading document[^\\n]*/)||[''])[0],document.querySelectorAll('canvas').length,(document.querySelector('[aria-pressed=true],[aria-selected=true]')||{}).innerText]))()",
+  "settleMs": 15000
+ },
+ {
+  "name": "probe5",
+  "js": "(async()=>JSON.stringify([Math.round(performance.now()-window.__t0),Math.max(...window.__hb.slice(-60).map(x=>x[1])),(document.body.innerText.match(/Loading document[^\\n]*/)||[''])[0],document.querySelectorAll('canvas').length,(document.querySelector('[aria-pressed=true],[aria-selected=true]')||{}).innerText]))()",
+  "settleMs": 15000
+ },
+ {
+  "name": "probe6",
+  "js": "(async()=>JSON.stringify([Math.round(performance.now()-window.__t0),Math.max(...window.__hb.slice(-60).map(x=>x[1])),(document.body.innerText.match(/Loading document[^\\n]*/)||[''])[0],document.querySelectorAll('canvas').length,(document.querySelector('[aria-pressed=true],[aria-selected=true]')||{}).innerText]))()",
+  "settleMs": 15000
+ },
+ {
+  "name": "probe7",
+  "js": "(async()=>JSON.stringify([Math.round(performance.now()-window.__t0),Math.max(...window.__hb.slice(-60).map(x=>x[1])),(document.body.innerText.match(/Loading document[^\\n]*/)||[''])[0],document.querySelectorAll('canvas').length,(document.querySelector('[aria-pressed=true],[aria-selected=true]')||{}).innerText]))()",
+  "settleMs": 15000
+ },
+ {
+  "name": "probe8",
+  "js": "(async()=>JSON.stringify([Math.round(performance.now()-window.__t0),Math.max(...window.__hb.slice(-60).map(x=>x[1])),(document.body.innerText.match(/Loading document[^\\n]*/)||[''])[0],document.querySelectorAll('canvas').length,(document.querySelector('[aria-pressed=true],[aria-selected=true]')||{}).innerText]))()",
+  "settleMs": 15000
+ },
+ {
+  "name": "probe9",
+  "js": "(async()=>JSON.stringify([Math.round(performance.now()-window.__t0),Math.max(...window.__hb.slice(-60).map(x=>x[1])),(document.body.innerText.match(/Loading document[^\\n]*/)||[''])[0],document.querySelectorAll('canvas').length,(document.querySelector('[aria-pressed=true],[aria-selected=true]')||{}).innerText]))()",
+  "settleMs": 15000
+ },
+ {
+  "name": "probe10",
+  "js": "(async()=>JSON.stringify([Math.round(performance.now()-window.__t0),Math.max(...window.__hb.slice(-60).map(x=>x[1])),(document.body.innerText.match(/Loading document[^\\n]*/)||[''])[0],document.querySelectorAll('canvas').length,(document.querySelector('[aria-pressed=true],[aria-selected=true]')||{}).innerText]))()",
+  "settleMs": 15000
+ },
+ {
+  "name": "probe11",
+  "js": "(async()=>JSON.stringify([Math.round(performance.now()-window.__t0),Math.max(...window.__hb.slice(-60).map(x=>x[1])),(document.body.innerText.match(/Loading document[^\\n]*/)||[''])[0],document.querySelectorAll('canvas').length,(document.querySelector('[aria-pressed=true],[aria-selected=true]')||{}).innerText]))()",
+  "settleMs": 15000
+ },
+ {
+  "name": "probe12",
+  "js": "(async()=>JSON.stringify([Math.round(performance.now()-window.__t0),Math.max(...window.__hb.slice(-60).map(x=>x[1])),(document.body.innerText.match(/Loading document[^\\n]*/)||[''])[0],document.querySelectorAll('canvas').length,(document.querySelector('[aria-pressed=true],[aria-selected=true]')||{}).innerText]))()",
+  "settleMs": 15000
+ },
+ {
+  "name": "probe13",
+  "js": "(async()=>JSON.stringify([Math.round(performance.now()-window.__t0),Math.max(...window.__hb.slice(-60).map(x=>x[1])),(document.body.innerText.match(/Loading document[^\\n]*/)||[''])[0],document.querySelectorAll('canvas').length,(document.querySelector('[aria-pressed=true],[aria-selected=true]')||{}).innerText]))()",
+  "settleMs": 15000
+ },
+ {
+  "name": "probe14",
+  "js": "(async()=>JSON.stringify([Math.round(performance.now()-window.__t0),Math.max(...window.__hb.slice(-60).map(x=>x[1])),(document.body.innerText.match(/Loading document[^\\n]*/)||[''])[0],document.querySelectorAll('canvas').length,(document.querySelector('[aria-pressed=true],[aria-selected=true]')||{}).innerText]))()",
+  "settleMs": 15000
+ },
+ {
+  "name": "probe15",
+  "js": "(async()=>JSON.stringify([Math.round(performance.now()-window.__t0),Math.max(...window.__hb.slice(-60).map(x=>x[1])),(document.body.innerText.match(/Loading document[^\\n]*/)||[''])[0],document.querySelectorAll('canvas').length,(document.querySelector('[aria-pressed=true],[aria-selected=true]')||{}).innerText]))()",
+  "settleMs": 15000
+ },
+ {
+  "name": "probe16",
+  "js": "(async()=>JSON.stringify([Math.round(performance.now()-window.__t0),Math.max(...window.__hb.slice(-60).map(x=>x[1])),(document.body.innerText.match(/Loading document[^\\n]*/)||[''])[0],document.querySelectorAll('canvas').length,(document.querySelector('[aria-pressed=true],[aria-selected=true]')||{}).innerText]))()",
+  "settleMs": 15000
+ },
+ {
+  "name": "probe17",
+  "js": "(async()=>JSON.stringify([Math.round(performance.now()-window.__t0),Math.max(...window.__hb.slice(-60).map(x=>x[1])),(document.body.innerText.match(/Loading document[^\\n]*/)||[''])[0],document.querySelectorAll('canvas').length,(document.querySelector('[aria-pressed=true],[aria-selected=true]')||{}).innerText]))()",
+  "settleMs": 15000
+ },
+ {
+  "name": "probe18",
+  "js": "(async()=>JSON.stringify([Math.round(performance.now()-window.__t0),Math.max(...window.__hb.slice(-60).map(x=>x[1])),(document.body.innerText.match(/Loading document[^\\n]*/)||[''])[0],document.querySelectorAll('canvas').length,(document.querySelector('[aria-pressed=true],[aria-selected=true]')||{}).innerText]))()",
+  "settleMs": 15000
+ },
+ {
+  "name": "probe19",
+  "js": "(async()=>JSON.stringify([Math.round(performance.now()-window.__t0),Math.max(...window.__hb.slice(-60).map(x=>x[1])),(document.body.innerText.match(/Loading document[^\\n]*/)||[''])[0],document.querySelectorAll('canvas').length,(document.querySelector('[aria-pressed=true],[aria-selected=true]')||{}).innerText]))()",
+  "settleMs": 15000
+ },
+ {
+  "name": "probe20",
+  "js": "(async()=>JSON.stringify([Math.round(performance.now()-window.__t0),Math.max(...window.__hb.slice(-60).map(x=>x[1])),(document.body.innerText.match(/Loading document[^\\n]*/)||[''])[0],document.querySelectorAll('canvas').length,(document.querySelector('[aria-pressed=true],[aria-selected=true]')||{}).innerText]))()",
+  "settleMs": 15000
+ },
+ {
+  "name": "probe21",
+  "js": "(async()=>JSON.stringify([Math.round(performance.now()-window.__t0),Math.max(...window.__hb.slice(-60).map(x=>x[1])),(document.body.innerText.match(/Loading document[^\\n]*/)||[''])[0],document.querySelectorAll('canvas').length,(document.querySelector('[aria-pressed=true],[aria-selected=true]')||{}).innerText]))()",
+  "settleMs": 15000
+ },
+ {
+  "name": "probe22",
+  "js": "(async()=>JSON.stringify([Math.round(performance.now()-window.__t0),Math.max(...window.__hb.slice(-60).map(x=>x[1])),(document.body.innerText.match(/Loading document[^\\n]*/)||[''])[0],document.querySelectorAll('canvas').length,(document.querySelector('[aria-pressed=true],[aria-selected=true]')||{}).innerText]))()",
+  "settleMs": 15000
+ },
+ {
+  "name": "probe23",
+  "js": "(async()=>JSON.stringify([Math.round(performance.now()-window.__t0),Math.max(...window.__hb.slice(-60).map(x=>x[1])),(document.body.innerText.match(/Loading document[^\\n]*/)||[''])[0],document.querySelectorAll('canvas').length,(document.querySelector('[aria-pressed=true],[aria-selected=true]')||{}).innerText]))()",
+  "settleMs": 15000
+ },
+ {
+  "name": "probe24",
+  "js": "(async()=>JSON.stringify([Math.round(performance.now()-window.__t0),Math.max(...window.__hb.slice(-60).map(x=>x[1])),(document.body.innerText.match(/Loading document[^\\n]*/)||[''])[0],document.querySelectorAll('canvas').length,(document.querySelector('[aria-pressed=true],[aria-selected=true]')||{}).innerText]))()",
+  "settleMs": 15000
+ },
+ {
+  "name": "probe25",
+  "js": "(async()=>JSON.stringify([Math.round(performance.now()-window.__t0),Math.max(...window.__hb.slice(-60).map(x=>x[1])),(document.body.innerText.match(/Loading document[^\\n]*/)||[''])[0],document.querySelectorAll('canvas').length,(document.querySelector('[aria-pressed=true],[aria-selected=true]')||{}).innerText]))()",
+  "settleMs": 15000
+ },
+ {
+  "name": "probe26",
+  "js": "(async()=>JSON.stringify([Math.round(performance.now()-window.__t0),Math.max(...window.__hb.slice(-60).map(x=>x[1])),(document.body.innerText.match(/Loading document[^\\n]*/)||[''])[0],document.querySelectorAll('canvas').length,(document.querySelector('[aria-pressed=true],[aria-selected=true]')||{}).innerText]))()",
+  "settleMs": 15000
+ },
+ {
+  "name": "probe27",
+  "js": "(async()=>JSON.stringify([Math.round(performance.now()-window.__t0),Math.max(...window.__hb.slice(-60).map(x=>x[1])),(document.body.innerText.match(/Loading document[^\\n]*/)||[''])[0],document.querySelectorAll('canvas').length,(document.querySelector('[aria-pressed=true],[aria-selected=true]')||{}).innerText]))()",
+  "settleMs": 15000
+ },
+ {
+  "name": "probe28",
+  "js": "(async()=>JSON.stringify([Math.round(performance.now()-window.__t0),Math.max(...window.__hb.slice(-60).map(x=>x[1])),(document.body.innerText.match(/Loading document[^\\n]*/)||[''])[0],document.querySelectorAll('canvas').length,(document.querySelector('[aria-pressed=true],[aria-selected=true]')||{}).innerText]))()",
+  "settleMs": 15000
+ },
+ {
+  "name": "probe29",
+  "js": "(async()=>JSON.stringify([Math.round(performance.now()-window.__t0),Math.max(...window.__hb.slice(-60).map(x=>x[1])),(document.body.innerText.match(/Loading document[^\\n]*/)||[''])[0],document.querySelectorAll('canvas').length,(document.querySelector('[aria-pressed=true],[aria-selected=true]')||{}).innerText]))()",
+  "settleMs": 15000
+ },
+ {
+  "name": "probe30",
+  "js": "(async()=>JSON.stringify([Math.round(performance.now()-window.__t0),Math.max(...window.__hb.slice(-60).map(x=>x[1])),(document.body.innerText.match(/Loading document[^\\n]*/)||[''])[0],document.querySelectorAll('canvas').length,(document.querySelector('[aria-pressed=true],[aria-selected=true]')||{}).innerText]))()",
+  "settleMs": 15000
+ },
+ {
+  "name": "probe31",
+  "js": "(async()=>JSON.stringify([Math.round(performance.now()-window.__t0),Math.max(...window.__hb.slice(-60).map(x=>x[1])),(document.body.innerText.match(/Loading document[^\\n]*/)||[''])[0],document.querySelectorAll('canvas').length,(document.querySelector('[aria-pressed=true],[aria-selected=true]')||{}).innerText]))()",
+  "settleMs": 15000
+ },
+ {
+  "name": "probe32",
+  "js": "(async()=>JSON.stringify([Math.round(performance.now()-window.__t0),Math.max(...window.__hb.slice(-60).map(x=>x[1])),(document.body.innerText.match(/Loading document[^\\n]*/)||[''])[0],document.querySelectorAll('canvas').length,(document.querySelector('[aria-pressed=true],[aria-selected=true]')||{}).innerText]))()",
+  "settleMs": 15000
+ },
+ {
+  "name": "probe33",
+  "js": "(async()=>JSON.stringify([Math.round(performance.now()-window.__t0),Math.max(...window.__hb.slice(-60).map(x=>x[1])),(document.body.innerText.match(/Loading document[^\\n]*/)||[''])[0],document.querySelectorAll('canvas').length,(document.querySelector('[aria-pressed=true],[aria-selected=true]')||{}).innerText]))()",
+  "settleMs": 15000
+ },
+ {
+  "name": "probe34",
+  "js": "(async()=>JSON.stringify([Math.round(performance.now()-window.__t0),Math.max(...window.__hb.slice(-60).map(x=>x[1])),(document.body.innerText.match(/Loading document[^\\n]*/)||[''])[0],document.querySelectorAll('canvas').length,(document.querySelector('[aria-pressed=true],[aria-selected=true]')||{}).innerText]))()",
+  "settleMs": 15000
+ },
+ {
+  "name": "probe35",
+  "js": "(async()=>JSON.stringify([Math.round(performance.now()-window.__t0),Math.max(...window.__hb.slice(-60).map(x=>x[1])),(document.body.innerText.match(/Loading document[^\\n]*/)||[''])[0],document.querySelectorAll('canvas').length,(document.querySelector('[aria-pressed=true],[aria-selected=true]')||{}).innerText]))()",
+  "settleMs": 15000
+ },
+ {
+  "name": "probe36",
+  "js": "(async()=>JSON.stringify([Math.round(performance.now()-window.__t0),Math.max(...window.__hb.slice(-60).map(x=>x[1])),(document.body.innerText.match(/Loading document[^\\n]*/)||[''])[0],document.querySelectorAll('canvas').length,(document.querySelector('[aria-pressed=true],[aria-selected=true]')||{}).innerText]))()",
+  "settleMs": 15000
+ },
+ {
+  "name": "probe37",
+  "js": "(async()=>JSON.stringify([Math.round(performance.now()-window.__t0),Math.max(...window.__hb.slice(-60).map(x=>x[1])),(document.body.innerText.match(/Loading document[^\\n]*/)||[''])[0],document.querySelectorAll('canvas').length,(document.querySelector('[aria-pressed=true],[aria-selected=true]')||{}).innerText]))()",
+  "settleMs": 15000
+ },
+ {
+  "name": "probe38",
+  "js": "(async()=>JSON.stringify([Math.round(performance.now()-window.__t0),Math.max(...window.__hb.slice(-60).map(x=>x[1])),(document.body.innerText.match(/Loading document[^\\n]*/)||[''])[0],document.querySelectorAll('canvas').length,(document.querySelector('[aria-pressed=true],[aria-selected=true]')||{}).innerText]))()",
+  "settleMs": 15000
+ },
+ {
+  "name": "probe39",
+  "js": "(async()=>JSON.stringify([Math.round(performance.now()-window.__t0),Math.max(...window.__hb.slice(-60).map(x=>x[1])),(document.body.innerText.match(/Loading document[^\\n]*/)||[''])[0],document.querySelectorAll('canvas').length,(document.querySelector('[aria-pressed=true],[aria-selected=true]')||{}).innerText]))()",
+  "settleMs": 15000
+ },
+ {
+  "name": "probe40",
+  "js": "(async()=>JSON.stringify([Math.round(performance.now()-window.__t0),Math.max(...window.__hb.slice(-60).map(x=>x[1])),(document.body.innerText.match(/Loading document[^\\n]*/)||[''])[0],document.querySelectorAll('canvas').length,(document.querySelector('[aria-pressed=true],[aria-selected=true]')||{}).innerText]))()",
+  "settleMs": 15000
+ }
+]

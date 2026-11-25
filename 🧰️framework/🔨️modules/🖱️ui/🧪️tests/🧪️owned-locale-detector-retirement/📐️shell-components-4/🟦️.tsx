@@ -412,9 +412,12 @@ describe("Shell components", () => {
           />
         </div>,
       );
-      expect(container.querySelector('[data-slot="mode-dock-stack-body"]')?.getAttribute("data-level")).toBe("base");
-      expect(container.querySelector('[data-slot="mode-dock-stack-body"]')?.className).toContain("ui-surface");
-      expect(container.querySelector('[data-slot="mode-dock-stack-body"]')?.className).toContain("p-0");
+      const body = container.querySelector('[data-slot="mode-dock-stack-body"]');
+      const fill = container.querySelector('[data-slot="window-chrome-body-surface"]');
+      expect(body?.getAttribute("data-level")).toBe("window");
+      expect(body?.className).not.toContain("ui-surface");
+      expect(fill?.className).toContain("ui-surface");
+      expect(body?.className).toContain("p-0");
       expect(screen.getByText("Alpha Body")).toBeTruthy();
       expect(screen.queryByText("Beta Body")).toBeNull();
       expect(container.querySelector('[data-slot="mode-dock-chrome-column"]')).toBeNull();

@@ -1,0 +1,88 @@
+{
+ "ops": [
+  {
+   "op": "shape-add",
+   "scale": "50",
+   "view": "front",
+   "after": "cabinet-front",
+   "shape": {
+    "id": "cabinet-underside",
+    "bone": "cabinet",
+    "role": "body",
+    "z": 0.9,
+    "filled": true,
+    "tone": 0.88,
+    "region": "cabinet",
+    "material": "enamelled-steel-aged",
+    "kind": "poly",
+    "points": [
+     [
+      0,
+      0
+     ],
+     [
+      0.538,
+      0
+     ],
+     [
+      0.538,
+      0.02
+     ],
+     [
+      0,
+      0.02
+     ]
+    ],
+    "closed": true,
+    "solid": {
+     "kind": "extruded",
+     "sweep": "w",
+     "z0": -0.2955,
+     "z1": 0.2955
+    }
+   }
+  },
+  {
+   "op": "shape-add",
+   "scale": "100",
+   "view": "front",
+   "after": "cabinet-front",
+   "shape": {
+    "id": "cabinet-underside",
+    "bone": "cabinet",
+    "role": "body",
+    "z": 0.9,
+    "filled": true,
+    "tone": 0.88,
+    "region": "cabinet",
+    "material": "enamelled-steel-aged",
+    "kind": "poly",
+    "points": [
+     [
+      0,
+      0
+     ],
+     [
+      0.538,
+      0
+     ],
+     [
+      0.538,
+      0.02
+     ],
+     [
+      0,
+      0.02
+     ]
+    ],
+    "closed": true,
+    "solid": {
+     "kind": "extruded",
+     "sweep": "w",
+     "z0": -0.2955,
+     "z1": 0.2955
+    }
+   }
+  }
+ ]
+}

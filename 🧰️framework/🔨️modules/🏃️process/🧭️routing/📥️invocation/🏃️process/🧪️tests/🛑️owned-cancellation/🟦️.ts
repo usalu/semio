@@ -48,3 +48,21 @@ test("an owned stop during detached child drain reports cancellation and preserv
   else expect(row.fault==="aggregate"?failure instanceof AggregateError:failure===other).toBe(true);
  }
 });
+
+test("a control's own cancellation stays with its request: the Original admits later work and settles clean, while other failures and parent cancellation still close it",async()=>{
+ for(const row of cases){
+  const stop=new AbortController(),parentStop=new AbortController(),reason=Error(row.name),other=Error("real control failure");let status="failed",live=false,failure:unknown;
+  if(row.beforeStart){stop.abort(reason);if(row.parentCancelled)parentStop.abort(reason);}
+  const run=async(parent:api.IssuedScriptInvocationV1)=>{
+   const control=api.createIssuedResourceControlV1(parent,"fixture:control-stop",0,stop.signal);
+   try{await api.withIssuedResourceOperationV1(control,async()=>{
+    stop.abort(reason);if(row.parentCancelled)parentStop.abort(reason);
+    if(row.fault==="other")throw other;if(row.fault==="aggregate")throw new AggregateError([reason,other],"cleanup failed");throw reason;
+   });}catch(error){if(Object.is(error,reason)&&!parentStop.signal.aborted)status="cancelled";else failure=error;}
+   try{api.createIssuedResourceControlV1(parent,"fixture:after-control-stop",0);live=true;}catch{}
+  };
+  try{await api.withScriptProcessEnvelope(api.createScriptProcessEnvelope({version:1,owner:"fixture:control:"+row.name,maximumElapsedMilliseconds:0},{},Date.now()),original=>row.parentCancelled?api.withScriptInvocationSignalV1(original,parentStop.signal,run):run(original));}catch(error){failure??=error;}
+  expect({status,parentLive:live}).toEqual({status:row.status,parentLive:row.parentLive});
+  if(row.status==="cancelled")expect(failure).toBeUndefined();else expect(failure).toBeDefined();
+ }
+});

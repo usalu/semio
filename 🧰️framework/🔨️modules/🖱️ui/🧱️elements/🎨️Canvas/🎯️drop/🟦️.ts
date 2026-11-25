@@ -35,7 +35,7 @@ export interface ModeStackDropTargets {
 
 function listModeDockTabElements(tabBarElement: HTMLElement | null): HTMLElement[] {
   if (!tabBarElement) return [];
-  return [...tabBarElement.querySelectorAll<HTMLElement>('[data-slot="mode-dock-tab"]')].filter((tab) => tab.getAttribute("data-drag-source") !== "true");
+  return [...tabBarElement.querySelectorAll<HTMLElement>('[data-slot="mode-dock-tab"]')];
 }
 
 function computeTabInsertIndex(pointerX: number, tabBarElement: HTMLElement | null): number {
@@ -45,32 +45,6 @@ function computeTabInsertIndex(pointerX: number, tabBarElement: HTMLElement | nu
     if (pointerX < tabRect.left + tabRect.width / 2) return index;
   }
   return tabs.length;
-}
-
-/** 📍️ Resolves tab-bar insertion line and slot preview geometry for drag feedback. */
-export function computeTabInsertPreview(tabBarElement: HTMLElement | null, insertIndex: number): { insertX: number; top: number; height: number; slotLeft: number; slotWidth: number } | null {
-  if (!tabBarElement) return null;
-  const tabBarRect = tabBarElement.getBoundingClientRect();
-  const tabRects = listModeDockTabElements(tabBarElement).map((tab) => tab.getBoundingClientRect());
-  const top = tabBarRect.top;
-  const height = tabBarRect.height;
-  const defaultWidth = tabRects[0]?.width ?? 96;
-  const resolvedIndex = insertIndex < 0 ? tabRects.length : insertIndex;
-
-  if (tabRects.length === 0) {
-    return { insertX: tabBarRect.left + 6, top, height, slotLeft: tabBarRect.left + 4, slotWidth: defaultWidth };
-  }
-  if (resolvedIndex <= 0) {
-    return { insertX: tabRects[0]!.left, top, height, slotLeft: tabRects[0]!.left, slotWidth: defaultWidth };
-  }
-  if (resolvedIndex >= tabRects.length) {
-    const last = tabRects[tabRects.length - 1]!;
-    return { insertX: last.right, top, height, slotLeft: last.right, slotWidth: defaultWidth };
-  }
-  const prev = tabRects[resolvedIndex - 1]!;
-  const next = tabRects[resolvedIndex]!;
-  const insertX = (prev.right + next.left) / 2;
-  return { insertX, top, height, slotLeft: insertX - defaultWidth / 2, slotWidth: defaultWidth };
 }
 
 function pointerInRect(x: number, y: number, rect: DOMRect): boolean {

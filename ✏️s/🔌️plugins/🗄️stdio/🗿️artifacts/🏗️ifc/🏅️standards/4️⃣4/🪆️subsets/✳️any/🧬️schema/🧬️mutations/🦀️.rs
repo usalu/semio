@@ -88,6 +88,7 @@ pub enum IfcMutation {
     SetEntityComplex(set_entity_complex::SetEntityComplex),
 }
 dsl::original_pack_value_operation_receiving!(IfcMutation);
+dsl::artifact_persisted_binary_operation!(IfcMutation);
 
 /// 📇️ Kebab-case spelling of every `IfcMutation` variant, in declaration order — the exhaustive
 /// mutation catalog `../../🔣️oracle.json`'s `kinds` array is required to match verbatim

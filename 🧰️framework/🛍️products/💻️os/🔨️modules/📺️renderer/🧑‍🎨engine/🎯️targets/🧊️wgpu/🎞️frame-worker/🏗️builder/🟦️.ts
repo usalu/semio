@@ -1,6 +1,6 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
-import { findWorkspaceRoot } from "@semio-tech/process/routing";
+import { findWorkspaceRoot } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { renderWgpuPackageArtifacts } from "../../📽️projection/🟦️.ts";
 
 const repoRoot = findWorkspaceRoot();

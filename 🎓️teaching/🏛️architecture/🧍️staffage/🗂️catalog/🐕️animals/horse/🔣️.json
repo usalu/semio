@@ -13,15 +13,69 @@
       "de": "Ein erwachsenes Warmblutpferd von 550 kg und 1,6 m Widerristhöhe: hufgängiges Skelett mit Schulterblatt, Oberarm, Unterarm, Röhrbein, Fesselbein und Huf als getrennten Ketten der nahen und fernen Seite, dreigliedriger Hals mit Kopf, Unterkiefer und Ohren, vierteiliger Schweif, Stehen, Dösen auf drei Beinen, Grasen, Viertakt-Schritt in Seitenfolge, Grasen mit Schweifschlagen und Kauen sowie ein Wärmemodell für kurzes Fell mit Nüsternatmung."
     },
     "tags": [
-      "animal",
-      "horse",
-      "equine",
-      "quadruped",
-      "unguligrade",
-      "mammal",
-      "livestock",
-      "gait",
-      "grazing"
+      {
+        "id": "animal",
+        "title": {
+          "en": "animal",
+          "de": "Tier"
+        }
+      },
+      {
+        "id": "horse",
+        "title": {
+          "en": "horse",
+          "de": "Pferd"
+        }
+      },
+      {
+        "id": "equine",
+        "title": {
+          "en": "equine",
+          "de": "Pferdeartiger"
+        }
+      },
+      {
+        "id": "quadruped",
+        "title": {
+          "en": "quadruped",
+          "de": "Vierbeiner"
+        }
+      },
+      {
+        "id": "unguligrade",
+        "title": {
+          "en": "unguligrade",
+          "de": "Zehenspitzengänger"
+        }
+      },
+      {
+        "id": "mammal",
+        "title": {
+          "en": "mammal",
+          "de": "Säugetier"
+        }
+      },
+      {
+        "id": "livestock",
+        "title": {
+          "en": "livestock",
+          "de": "Nutztier"
+        }
+      },
+      {
+        "id": "gait",
+        "title": {
+          "en": "gait",
+          "de": "Gangart"
+        }
+      },
+      {
+        "id": "grazing",
+        "title": {
+          "en": "grazing",
+          "de": "Weiden"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage content worker (animals)",

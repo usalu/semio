@@ -13,17 +13,83 @@
    "de": "Eine 31-jährige Läuferin von 1,69 m in Kapuzen-Trainingsoberteil, Trainingshose mit hellem Seitenstreifen und Mesh-Laufschuhen beim Auslaufen im Park: eine stehende Oberschenkeldehnung auf einem Bein, eine Seitbeuge mit dem Arm über dem Kopf und eine Dehnung der Oberschenkelrückseite mit vorgestellter Ferse, gehalten in einem Dehnprogramm als Schleife bei 2,3 MET mit langsamer, tiefer Atmung."
   },
   "tags": [
-   "human",
-   "adult",
-   "woman",
-   "runner",
-   "stretching",
-   "cool-down",
-   "sportswear",
-   "outdoor",
-   "sports-and-leisure",
-   "balance",
-   "fitness"
+   {
+    "id": "human",
+    "title": {
+     "en": "human",
+     "de": "Mensch"
+    }
+   },
+   {
+    "id": "adult",
+    "title": {
+     "en": "adult",
+     "de": "erwachsen"
+    }
+   },
+   {
+    "id": "woman",
+    "title": {
+     "en": "woman",
+     "de": "Frau"
+    }
+   },
+   {
+    "id": "runner",
+    "title": {
+     "en": "runner",
+     "de": "Läufer"
+    }
+   },
+   {
+    "id": "stretching",
+    "title": {
+     "en": "stretching",
+     "de": "Dehnübung"
+    }
+   },
+   {
+    "id": "cool-down",
+    "title": {
+     "en": "cool down",
+     "de": "Abkühlen"
+    }
+   },
+   {
+    "id": "sportswear",
+    "title": {
+     "en": "sportswear",
+     "de": "Sportbekleidung"
+    }
+   },
+   {
+    "id": "outdoor",
+    "title": {
+     "en": "outdoor",
+     "de": "Außenbereich"
+    }
+   },
+   {
+    "id": "sports-and-leisure",
+    "title": {
+     "en": "sports and leisure",
+     "de": "Sport und Freizeit"
+    }
+   },
+   {
+    "id": "balance",
+    "title": {
+     "en": "balance",
+     "de": "Gleichgewicht"
+    }
+   },
+   {
+    "id": "fitness",
+    "title": {
+     "en": "fitness",
+     "de": "Fitness"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage human worker HW-08",

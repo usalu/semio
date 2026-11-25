@@ -3,7 +3,7 @@
 use semio_ui_declaration::layout::ActionDescriptor;
 use semio_ui_theme::geometry::Rect;
 use std::collections::HashMap;
-use semio_ui_wgpu_input::{DragAxis, HitKind, HitTarget};
+use semio_ui_wgpu_input::{DragAxis, HitKind, HitTarget, TREE_DRAG_GHOST_ICON_KEY, TREE_DRAG_GHOST_LABEL_KEY};
 
 //#region 🎯️RetainedHitRegistry
 /// ➡️ One interactive retained node, projected onto this region's flat pointer registry.
@@ -117,7 +117,7 @@ pub fn retained_hit_registration(
                     control_id: format!("tree.label.{}", item.id),
                     action: stack.activate.clone().or_else(|| item.action.clone()),
                     drag_axis: surface_drag.then_some(DragAxis::Both),
-                    drag_data: surface_drag.then(|| item.drag_data.clone().unwrap_or_default()),
+                    drag_data: surface_drag.then(|| tree_item_drag_data(item)),
                 })
             }
             None => {
@@ -188,8 +188,18 @@ pub fn retained_tree_drag_handle_registration(
         control_id: format!("tree.drag.{}.{}", if role == TreeDragRole::Transfer { "transfer" } else { "sort" }, item.id),
         action: None,
         drag_axis: Some(DragAxis::Both),
-        drag_data: Some(item.drag_data.clone().unwrap_or_default()),
+        drag_data: Some(tree_item_drag_data(item)),
     })
+}
+
+/// 🫳️ The payload a draggable tree row carries: its own drag data plus the label and icon its drag ghost shows.
+fn tree_item_drag_data(item: &semio_ui_declaration::ui::UiTreeItemNode) -> HashMap<String, String> {
+    let mut data = item.drag_data.clone().unwrap_or_default();
+    data.insert(TREE_DRAG_GHOST_LABEL_KEY.to_string(), item.label.as_str().to_string());
+    if let Some(icon) = item.icon_id {
+        data.insert(TREE_DRAG_GHOST_ICON_KEY.to_string(), icon.as_str().to_string());
+    }
+    data
 }
 
 //#endregion 🎯️RetainedHitRegistry

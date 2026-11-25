@@ -191,7 +191,7 @@ export function registerClientTests(): void {
       const stored = (): CoursePreferences => readPreferences(localStore(origin.tab(), COURSE.id));
       const first = render(client(origin.tab(), async () => SAMPLE));
       await settings();
-      const play = await screen.findByRole("group", { name: "Play with the pets" });
+      const play = await screen.findByRole("group", { name: "Play with the pets" }, { timeout: 10_000 });
       const pets = within(play).getAllByRole("group");
       const known = SAMPLE.species.map((entry) => entry.name.en);
       expect(pets.length).toBeGreaterThan(0);

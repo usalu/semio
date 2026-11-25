@@ -16,7 +16,7 @@ use std::fmt;
 use std::fmt::Display;
 use std::fmt::Formatter;
 use semio_framework_kernel_identity::{ActivationEvent, CapabilityId, CapabilityRequest, CapabilityRequirement, QuotaSchema};
-use semio_framework_manifest_actions::CommandDefinition;
+use semio_framework_manifest_actions::{ActionDefinition, CommandDefinition};
 use semio_framework_manifest_app_surface::{AppDefinition, AppRef, ExampleDefinition, PanelTabDefinition};
 use semio_framework_manifest_arg_schema::AppRole;
 use semio_framework_manifest_contribution::{ArtifactContributionDescriptor, ContributedInferenceMetadata, ContributedMutationMetadata, PluginDependency, TopicContribution};
@@ -24,6 +24,16 @@ use semio_framework_manifest_media::{ArtifactKindSpec, HostedArtifactKind, Media
 
 // #region 🛂️Manifest
 //#region 🔖️Manifest
+
+/// 🧺️ One action table a plugin stores once for every app that offers exactly these actions (`PluginManifest::share_actions`): each member app's roster (`AppDefinition::actions`) is its own rows followed by the rows of every set naming it. A package of N editors that share one edit catalog therefore stores the catalog once instead of N times, which is what keeps a descriptor inside the catalog bound. Resolved by [`PluginManifest::resolved_app`]; its TypeScript twin is `resolveManifestActionSets` (`🎯️action-bus/🟦️.ts`).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ActionSet {
+    pub id: String,
+    pub app_ids: Vec<String>,
+    pub actions: Vec<ActionDefinition>,
+}
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -66,6 +76,76 @@ pub struct PluginManifest {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub contributions: Vec<ArtifactContributionDescriptor>,
+    /// 🧺️ Action tables shared by several apps of this plugin, each declared once — see [`ActionSet`].
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
+    pub action_sets: Vec<ActionSet>,
+}
+
+impl PluginManifest {
+    /// 🤝️ Declares the action set `id` for the apps `member` accepts: the rows every member declares identically move out of each member's own roster into one table that names them all. Members keep every row that differs between them. Refused when the id exists, fewer than two apps are members, or the members share no row.
+    pub fn share_actions(&mut self, id: &str, member: impl Fn(&AppDefinition) -> bool) -> Result<(), String> {
+        if self.action_sets.iter().any(|set| set.id == id) {
+            return Err(format!("action set {id} is declared twice"));
+        }
+        let members: Vec<usize> = (0..self.apps.len()).filter(|index| member(&self.apps[*index])).collect();
+        if members.len() < 2 {
+            return Err(format!("action set {id} needs at least two member apps, found {}", members.len()));
+        }
+        let first = members[0];
+        let actions: Vec<ActionDefinition> = self.apps[first].actions.iter().filter(|row| members[1..].iter().all(|other| self.apps[*other].actions.iter().any(|own| own == *row))).cloned().collect();
+        if actions.is_empty() {
+            return Err(format!("the member apps of action set {id} share no action"));
+        }
+        for index in &members {
+            self.apps[*index].actions.retain(|own| !actions.iter().any(|row| row.id == own.id));
+        }
+        let app_ids = members.iter().map(|index| self.apps[*index].id.clone()).collect();
+        self.action_sets.push(ActionSet { id: id.into(), app_ids, actions });
+        Ok(())
+    }
+
+    /// 🧭️ The app as its windows see it: its own roster extended by the rows of every action set that names it, in table order. Sets resolve here and nowhere else, so every window resolution ([`resolve_window_actions`](semio_framework_manifest_app_surface::resolve_window_actions)) runs on a resolved app.
+    pub fn resolved_app(&self, app: &AppDefinition) -> AppDefinition {
+        let mut resolved = app.clone();
+        resolved.actions = self.action_sets.iter().filter(|set| set.app_ids.contains(&app.id)).flat_map(|set| set.actions.iter().cloned()).chain(app.actions.iter().cloned()).collect();
+        resolved
+    }
+
+    /// 🧺️ The manifest with every app resolved and no action set left; what a host that reads app rosters directly works on.
+    pub fn resolved(&self) -> Self {
+        let mut resolved = self.clone();
+        resolved.apps = self.apps.iter().map(|app| self.resolved_app(app)).collect();
+        resolved.action_sets = Vec::new();
+        resolved
+    }
+
+    /// 🛂️ Refuses a table whose set ids repeat, whose members are not apps of this manifest, that no app joined, or whose rows collide with a member's own roster or with another set it shares an app with.
+    pub fn validate_action_sets(&self) -> Result<(), String> {
+        let mut ids = std::collections::BTreeSet::new();
+        for set in &self.action_sets {
+            if !ids.insert(set.id.as_str()) {
+                return Err(format!("action set {} is declared twice", set.id));
+            }
+            if set.app_ids.is_empty() {
+                return Err(format!("action set {} has no member app", set.id));
+            }
+            let mut rows = std::collections::BTreeSet::new();
+            if let Some(row) = set.actions.iter().find(|row| !rows.insert(row.id.as_str())) {
+                return Err(format!("action set {} declares action {} twice", set.id, row.id));
+            }
+            for app_id in &set.app_ids {
+                let app = self.apps.iter().find(|app| app.id == *app_id).ok_or_else(|| format!("action set {} names unknown app {app_id}", set.id))?;
+                if let Some(row) = set.actions.iter().find(|row| app.actions.iter().any(|own| own.id == row.id)) {
+                    return Err(format!("app {app_id} declares action {} that action set {} already provides", row.id, set.id));
+                }
+                if let Some(other) = self.action_sets.iter().take_while(|other| other.id != set.id).find(|other| other.app_ids.contains(app_id) && other.actions.iter().any(|row| set.actions.iter().any(|mine| mine.id == row.id))) {
+                    return Err(format!("app {app_id} receives an action from both action sets {} and {}", other.id, set.id));
+                }
+            }
+        }
+        Ok(())
+    }
 }
 
 //#region 🔖️HostResolvedArgs
@@ -517,6 +597,16 @@ pub struct ExecutionProtocol {
     pub app_channel_version: u32,
 }
 
+/// 🧩️ One deployable component of a package and the apps it serves: a package whose apps close in several components declares each one,
+/// and a host loads only the component that owns the app an activation opens. An activation of no app runs on the first component.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ComponentDeclaration {
+    pub id: String,
+    pub apps: Vec<String>,
+}
+
 /// 🔨️ The static, build-time-emitted description of a plugin or extension package —
 /// `📓️design-abi.md` §3's `describe()` output (`🛂️.descriptor.semio`/`🔣️.json`).
 /// Nothing constructs or reads one yet in this packet: additive contract only (packet
@@ -540,6 +630,9 @@ pub struct PackageDescriptor {
     pub extension_points: Vec<ExtensionPointDeclaration>,
     pub execution: ExecutionMode,
     pub execution_protocol: ExecutionProtocol,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
+    pub components: Vec<ComponentDeclaration>,
     #[serde(default)]
     #[value(default)]
     pub quotas: QuotaSchema,
@@ -650,6 +743,10 @@ use semio_framework_manifest_contribution::{ContributedMutationSemantics, Versio
 #[cfg(test)]
 #[path = "../🧪️tests/🔬️plugin-dependency/🦀️.rs"]
 mod plugin_dependency_tests;
+
+#[cfg(test)]
+#[path = "../🧪️tests/🔬️action-sets/🦀️.rs"]
+mod action_sets_tests;
 
 //#region 🔖️AgentContributions
 #[cfg(test)]

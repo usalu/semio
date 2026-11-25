@@ -9,7 +9,7 @@ use semio_framework_job::{StepContext,OriginalTurnFailure};
 use protocol::codec::RetainedWireByteSource;
 use pack::{record::RetainedRecordReceiving,PackLimits};
 use std::mem::{ManuallyDrop,size_of};
-#[derive(Clone,Copy,PartialEq,Eq)]
+#[derive(Clone,Copy,PartialEq,Eq,Debug)]
 enum Phase{Frame,Envelope,Parse,TakeRecord,IssueOriginal,StartReceiving,Receive,TakeSnapshot,CloseReceiving,CloseParser,Ready}
 /// 📸️ Original wire, parsed source, native recipient and output keep separate custody until exact funded closure.
 pub struct OriginalRecordMemberSnapshotOpen<S:NativeReceive<RecordValue>>{
@@ -66,7 +66,7 @@ impl<S:NativeReceive<RecordValue>> OriginalRecordMemberSnapshotOpen<S>{
  fn publish(&mut self,cx:&mut StepContext<'_>,start:RetainedCloneProgress,result:Result<RetainedCloneProgress,ValueError>)->Result<MemberSnapshotOpenStep,OriginalTurnFailure>{
   let mut p=match &result{Ok(p)=>*p,Err(error)=>error.retained_progress()};
   let child=cx.receiving_child_progress();p.copied_items=p.copied_items.max(child.copied_items);p.copied_bytes=p.copied_bytes.max(child.copied_bytes);p.retained_capacity_bytes=p.retained_capacity_bytes.max(child.retained_capacity_bytes);p.released_bytes=p.released_bytes.max(child.released_bytes);
-  let receipt=if let Some(issued)=cx.receiving_issued_grant(){cx.consume_receiving_retained(issued,p)}else{cx.consume_retained(p)};cx.consume_fuel(p.copied_items.saturating_add(p.copied_bytes)as u64);{thread_local!{static DBG:std::cell::RefCell<std::collections::BTreeMap<u8,(u64,u64)>>=std::cell::RefCell::new(Default::default());}DBG.with(|m|{let mut m=m.borrow_mut();let e=m.entry(self.phase as u8).or_default();e.0+=p.copied_items as u64;e.1+=p.copied_bytes as u64;if self.phase==Phase::Ready&&p.copied_items>0{eprintln!("[DEBUG] open {} actions {}",std::any::type_name::<S>().rsplit("::").next().unwrap(),semio_framework_value_native_owned::native_decoding::owned::machine::debug_dump())}});}
+  let receipt=if let Some(issued)=cx.receiving_issued_grant(){cx.consume_receiving_retained(issued,p)}else{cx.consume_retained(p)};cx.consume_fuel(p.copied_items.saturating_add(p.copied_bytes)as u64);
   let now=cx.retained_progress();p=RetainedCloneProgress{copied_items:now.copied_items.saturating_sub(start.copied_items).max(p.copied_items),copied_bytes:now.copied_bytes.saturating_sub(start.copied_bytes).max(p.copied_bytes),retained_capacity_bytes:now.retained_capacity_bytes.saturating_sub(start.retained_capacity_bytes).max(p.retained_capacity_bytes),released_bytes:now.released_bytes.saturating_sub(start.released_bytes).max(p.released_bytes)};self.last=p;
   let receipt_refusal=receipt.err();
   if let Err(error)=result{self.diagnostic.get_or_insert(MemberOpenDiagnostic::Decode);let original=OriginalTurnFailure::from(error.with_retained_progress(p));return Err(OriginalTurnFailure{receipt_refusal,context_refusal:None,..original})}
@@ -188,7 +188,7 @@ impl<S:NativeReceive<RecordValue>+BorrowedDslRecord+pack::snapshot::ArtifactDsl+
 
  fn advance_original(&mut self,cx:&mut StepContext<'_>,g:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
   if self.phase==Phase::Ready{return Ok(Default::default())}let metadata=size_of::<Phase>();let d=self.opening_demand(cx,g.maximum_copy_bytes)?;if !retained_clone_grant_admits(g,d){return Ok(Default::default())}let child=RetainedCloneGrant{maximum_copy_bytes:g.maximum_copy_bytes-metadata,..g};
-  let result=(||->Result<RetainedCloneProgress,ValueError>{Ok(match self.phase{
+      let result=(||->Result<RetainedCloneProgress,ValueError>{Ok(match self.phase{
    Phase::Frame=>{let before=self.request.as_ref().ok_or_else(invalid)?.input_offset;let step=self.request.as_mut().ok_or_else(invalid)?.step_input(cx);let copied=self.request.as_ref().ok_or_else(invalid)?.input_offset-before;match step{MemberOpenInputStep::Framed(_)=>self.phase=Phase::Envelope,MemberOpenInputStep::Pending(_)=>{},MemberOpenInputStep::Rejected(d)=>{self.diagnostic=Some(d);}}progress(copied*(size_of::<usize>()+size_of::<u64>())+size_of::<semio_framework_os_store_member_open::MemberOpenFrame>())},
    Phase::Envelope=>{
     let source=self.request.as_ref().ok_or_else(invalid)?.original_snapshot_source(cx).map_err(semio_framework_os_store_member_open::member_admission_diagnostic)?;let length=semio_os_semio::declared_envelope_prefix_len(S::envelope_id(),semio_os_semio::Component::Pack,1)?;
@@ -222,11 +222,15 @@ impl<S:NativeReceive<RecordValue>+BorrowedDslRecord+pack::snapshot::ArtifactDsl+
   Ok(Self{projection:Default::default(),request:ManuallyDrop::new(Some(request)),parser:ManuallyDrop::new(None),record:ManuallyDrop::new(None),source:ManuallyDrop::new(None),admission:ManuallyDrop::new(None),receiving:ManuallyDrop::new(None),snapshot:ManuallyDrop::new(None),snapshot_close:None,record_close:None,phase:Phase::Frame,envelope_offset:0,payload_start:None,last:Default::default(),diagnostic:None,closing:false,terminal:false,turns:0,receive_request:None})
  }
  fn step(&mut self,cx:&mut StepContext<'_>,grant:RetainedCloneGrant)->Result<MemberSnapshotOpenStep,OriginalTurnFailure>{
+  let ph=self.phase;let w0=cx.original_work_units_spent();let r0=cx.retained_progress();
+  let out=(||->Result<MemberSnapshotOpenStep,OriginalTurnFailure>{
   self.last=Default::default();let start=cx.retained_progress();if self.closing||self.terminal{return Ok(MemberSnapshotOpenStep::Rejected(MemberOpenDiagnostic::Stale))}if let Some(d)=self.diagnostic{return Ok(MemberSnapshotOpenStep::Rejected(d))}
   if let Err(d)=self.request.as_ref().expect("original open request").check_step_authority(cx){self.diagnostic=Some(d);return Ok(MemberSnapshotOpenStep::Rejected(d))}
   let mut g=grant.restricted_by(cx.retained_grant());
   if self.phase!=Phase::Receive{g.maximum_items=g.maximum_items.min(1);}
   if cx.should_yield(){return self.publish(cx,start,Ok(Default::default()))}let result=self.advance_original(cx,g);self.publish(cx,start,result)
+  })();
+  out
  }
  fn take_ready(&mut self,cx:&mut StepContext<'_>)->Result<Option<(S,MemberOpenRequest)>,OriginalTurnFailure>{
   if self.phase!=Phase::Ready||self.closing||self.terminal||self.diagnostic.is_some(){return Ok(None)}
@@ -282,3 +286,4 @@ impl<S:NativeReceive<RecordValue>+Send> ErasedSnapshotRetirement for OriginalRec
 impl<S:NativeReceive<RecordValue>> Drop for OriginalRecordMemberSnapshotOpen<S>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal,"original member open abandoned its received source or output");}}
 
 #[cfg(test)]#[path="🧪️tests/🦀️.rs"]mod tests;
+

@@ -1,0 +1,55 @@
+{
+  "schema": "semio.os.mcp.progress-lifecycle.corpus/1",
+  "rule": "Each scenario is one tools/call under a progressToken. Steps run in order: call opens the call with a token of any JSON type, job mints a named job under it, report pushes an in-flight row, finish ends a job, answer returns the response. rows is every notifications/progress the client may see, in order; the response always follows the last row.",
+  "scenarios": [
+    {
+      "name": "in-flight-rows-then-silence-at-the-terminal-transition",
+      "steps": [
+        { "call": 7 },
+        { "job": "a" },
+        { "report": "a", "progress": 0.25, "message": "quarter" },
+        { "report": "a", "progress": 0.75 },
+        { "finish": "a" },
+        { "answer": true }
+      ],
+      "rows": [
+        { "progressToken": 7, "progress": 0.25, "total": 1.0, "message": "quarter" },
+        { "progressToken": 7, "progress": 0.75, "total": 1.0 }
+      ]
+    },
+    {
+      "name": "a-job-outliving-its-call-pushes-nothing-under-the-answered-token",
+      "steps": [
+        { "call": "tok-late" },
+        { "job": "a" },
+        { "report": "a", "progress": 0.5 },
+        { "answer": true },
+        { "report": "a", "progress": 0.9 },
+        { "finish": "a" }
+      ],
+      "rows": [
+        { "progressToken": "tok-late", "progress": 0.5, "total": 1.0 }
+      ]
+    },
+    {
+      "name": "a-call-without-jobs-pushes-nothing",
+      "steps": [
+        { "call": "tok-empty" },
+        { "answer": true }
+      ],
+      "rows": []
+    },
+    {
+      "name": "the-token-keeps-the-json-type-the-client-sent",
+      "steps": [
+        { "call": 0 },
+        { "job": "a" },
+        { "report": "a", "progress": 0.5 },
+        { "answer": true }
+      ],
+      "rows": [
+        { "progressToken": 0, "progress": 0.5, "total": 1.0 }
+      ]
+    }
+  ]
+}

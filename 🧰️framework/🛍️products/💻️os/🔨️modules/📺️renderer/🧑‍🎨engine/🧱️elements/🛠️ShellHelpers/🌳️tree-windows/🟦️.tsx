@@ -21,7 +21,7 @@ import {
   type ViewTreeWindowRequest
 } from "@semio-tech/framework";
 // #endregion 🔌️Adapters
-import { type TreePanelConfig, UI_TERMINOLOGY_NATIVE } from "@semio-tech/ui-react";
+import { TREE_WINDOW_BODY_NODE_BUDGET, type TreePanelConfig, UI_TERMINOLOGY_NATIVE } from "@semio-tech/ui-react";
 import { ShellFaultBoundary } from "../../🐚️Shell/🧯️fault-boundary/🟦️.tsx";
 import { builtNodeToSnapshot, UiDocumentStore } from "../../📃️UiDocumentStore/🟦️.tsx";
 import { InterpretedUiNode } from "../../🗣️Interpreter/🟦️.tsx";
@@ -99,10 +99,11 @@ function tagSetActiveUtilityWindow(nodes: readonly UtilityNode[], windowId: stri
  * 🧰️ Builds the window utility bar `UtilityNode[]` for one window purely from the static utility registry plus
  * the host-owned active utility id — the replacement for the deleted program `list-tools` sourcing. Each
  * `setActiveUtility` descriptor is tagged with `windowId` so activation is scoped to this exact window.
+ * A never-written register (`undefined`) shows the kind's authored `initialUtilityId` as armed; an explicit clear (`null`) stays cleared.
  */
 export function resolveUtilityNodes(
   app: Pick<AppDefinition, "utilities" | "controllerId">,
-  windowKind: Pick<AppWindowKindDefinition, "utilities">,
+  windowKind: Pick<AppWindowKindDefinition, "utilities" | "initialUtilityId">,
   activeUtilityId: string | null | undefined,
   windowId: string,
   appLabelsOverlay: PluginAppLabelsOverlay = EMPTY_APP_LABELS_OVERLAY,
@@ -116,7 +117,7 @@ export function resolveUtilityNodes(
     deriveUtilityNodes(
       app.controllerId,
       utilities.map((utility) => utilityDefinitionToSpec(utility, appLabelsOverlay, terminology, locale)),
-      activeUtilityId ?? undefined,
+      (activeUtilityId === undefined ? windowKind.initialUtilityId : activeUtilityId) ?? undefined,
     ),
     windowId,
     generation,
@@ -275,11 +276,15 @@ export function createTreeWindowSchedulerV1(options: TreeWindowSchedulerOptionsV
           pages.push({ bodyKey, nodeKey, offset, rows: 1 });
         }
         const nodeKeys = [...new Set([...state.open.keys(), ...state.windows.keys()])].sort();
-        for (const nodeKey of nodeKeys) {
-          if (state.formPages.has(nodeKey) || !treeWindowSendableIdentifierV1(bodyKey, nodeKey, unsendable)) continue;
+        const sendable = nodeKeys.filter((nodeKey) => !state.formPages.has(nodeKey) && treeWindowSendableIdentifierV1(bodyKey, nodeKey, unsendable));
+        const isFresh = (nodeKey: string) => !state.windows.has(nodeKey) && state.open.get(nodeKey) !== false && !state.measured.has(nodeKey);
+        const fresh = sendable.filter(isFresh).length;
+        const spent = sendable.reduce((carry, nodeKey) => carry + (state.windows.has(nodeKey) ? 1 + state.windows.get(nodeKey)!.rows : 0), 0);
+        const freshRows = fresh === 0 ? 0 : Math.max(1, Math.min(viewportRows ?? TREE_WINDOW_DEFAULT_ROWS, Math.floor(Math.max(0, TREE_WINDOW_BODY_NODE_BUDGET - spent) / fresh) - 1));
+        for (const nodeKey of sendable) {
           const open = state.open.get(nodeKey);
           const window = state.windows.get(nodeKey);
-          const rows = window?.rows ?? (open === false || state.measured.has(nodeKey) ? 0 : (viewportRows ?? TREE_WINDOW_DEFAULT_ROWS));
+          const rows = window?.rows ?? (isFresh(nodeKey) ? freshRows : 0);
           flattened.push({ bodyKey, nodeKey, ...(open === undefined ? {} : { open }), offset: window?.offset ?? 0, rows });
         }
       }
@@ -334,11 +339,19 @@ export type TreeWindowHostV1 = {
 
 /** 🌿️ Keeps a body's channel stable while reading the current host-owned disclosure map. */
 export function createTreeWindowContextV1(bodyKey: string, host: TreeWindowHostV1): TreeWindowContextValue {
+  const listeners = new Set<() => void>();
+  let revision = 0;
   return {
     bodyKey,
     get openStates() { return host.openStatesFor(bodyKey); },
+    subscribe: (listener) => (listeners.add(listener), () => void listeners.delete(listener)),
+    revision: () => revision,
     setFormPage: (windowId, page) => host.setFormPage?.(bodyKey, windowId, page),
-    setOpen: (nodeKey, open) => host.setOpen(bodyKey, nodeKey, open),
+    setOpen: (nodeKey, open) => {
+      host.setOpen(bodyKey, nodeKey, open);
+      revision += 1;
+      for (const listener of [...listeners]) listener();
+    },
     reportWindows: (requests, viewportRows) => host.reportWindows(bodyKey, requests, viewportRows),
   };
 }

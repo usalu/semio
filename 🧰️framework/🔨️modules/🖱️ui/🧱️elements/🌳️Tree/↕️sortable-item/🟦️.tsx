@@ -3,11 +3,10 @@ import { reactHostPort } from "../../🔌️Ports/⚛️react/🟦️.ts";
 import { TreeContext, TreeAlignedRow, treeHeaderRowClassName, treeInspectorInnerRowClassName, treeHeaderMainClassName } from "../📏️row-alignment/🟦️.tsx";
 import { useFlow } from "../../../🔨️modules/🧭️flow-direction-context/🟦️.tsx";
 import { useIdLabel } from "../../🏷️Label/🟦️.tsx";
-import { useSortable, SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
+import { useSortable, SortableContext } from "@dnd-kit/sortable";
 import { useUiDriverDragSurface } from "../../🚗️UiDriver/🟦️.tsx";
 import { cn } from "../../../🔨️modules/🏷️class-name-composition/🟦️.ts";
-import { dropZoneReadyTextClass, dropZoneReadyFillClass } from "../../../🔨️modules/🎨️chrome-class-names/🟦️.ts";
+import { dragLabelOf, dragSourceAttributes, dropPlaceAttributes, useDndGhost } from "../../../🔨️modules/🫳️pointer-drag/🟦️.tsx";
 import { DragHandle } from "../../🧱️DragHandle/🟦️.tsx";
 import { type DragEndEvent, DndContext, closestCenter } from "@dnd-kit/core";
 import type { SortableTreeItemProps, SortableTreeItemsProps } from "../🧩️props/🟦️.ts";
@@ -53,15 +52,11 @@ export const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
   const itemId = `item-${id}-${itemKey}`;
   const { open, setOpen } = useTreeOpenState(itemId, defaultOpen);
   const hasChildren = hasNonEmptyChildren(children);
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging, isSorting } = useSortable({ id });
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-  };
+  const { attributes, listeners, setNodeRef, isDragging, isSorting, isOver } = useSortable({ id });
 
-  const isDropReady = isSorting && !isDragging;
-  const rowEmphasized = isSelected || isHighlighted || isDropReady;
+  const dropPlace = isSorting && !isDragging ? (isOver ? "active" : "available") : undefined;
+  const rowEmphasized = isSelected || isHighlighted || dropPlace !== undefined;
+  const dragPaint = { ...dragSourceAttributes(isDragging), ...dropPlaceAttributes(dropPlace) };
   const driverSurfaceDrag = useUiDriverDragSurface();
   const surfaceDragProps = isDragHandle && driverSurfaceDrag ? { ...attributes, ...listeners } : {};
   const itemShellClasses = cn(
@@ -69,10 +64,9 @@ export const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
     treeRowChromeShellClasses(isSelected, isHighlighted),
     hasChildren ? "cursor-foldable" : "cursor-selectable",
     isDragHandle && driverSurfaceDrag ? "cursor-grab active:cursor-grabbing" : "",
-    isDropReady && dropZoneReadyTextClass,
     className,
   );
-  const itemContentFillClassName = cn(treeRowChromeContentFillClasses(isSelected, isHighlighted), isDropReady && dropZoneReadyFillClass);
+  const itemContentFillClassName = cn(treeRowChromeContentFillClasses(isSelected, isHighlighted));
   const GroupFoldChevron = treeFoldChevronIcon(direction, inline, open);
 
   if (hasChildren && displayLabel) {
@@ -93,7 +87,7 @@ export const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
             data-highlighted={isHighlighted ? "true" : undefined}
             id={id}
             ref={setNodeRef}
-            style={style}
+            {...dragPaint}
             className={itemShellClasses}
             {...surfaceDragProps}
             onClick={(event) => {
@@ -168,7 +162,7 @@ export const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
           data-highlighted={isHighlighted ? "true" : undefined}
           id={id}
           ref={setNodeRef}
-          style={style}
+          {...dragPaint}
           className={itemShellClasses}
           {...surfaceDragProps}
           onClick={(event) => {
@@ -246,7 +240,7 @@ export const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
         data-highlighted={isHighlighted ? "true" : undefined}
         id={id}
         ref={setNodeRef}
-        style={style}
+        {...dragPaint}
         className={itemShellClasses}
         {...surfaceDragProps}
         onClick={(event) => {
@@ -289,7 +283,7 @@ export const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
       data-highlighted={isHighlighted ? "true" : undefined}
       id={id}
       ref={setNodeRef}
-      style={style}
+      {...dragPaint}
       className={itemShellClasses}
       {...surfaceDragProps}
       onClick={(event) => {
@@ -319,11 +313,16 @@ export const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
   );
 };
 
+/** 🧲️ No row shifts to make room: the dragged row stays where it is, hidden, and the places show where it can go. */
+const keepPlaces = (): null => null;
+
 /**
  * 🌲️ Drag-and-drop sortable container for tree items.
  **/
 export const SortableTreeItems: React.FC<SortableTreeItemsProps> = ({ items, onReorder, children }) => {
+  const { ghost, start, move, end } = useDndGhost((id) => dragLabelOf(document.getElementById(id)));
   const handleDragEnd = (event: DragEndEvent) => {
+    end();
     const { active, over } = event;
     if (over && active.id !== over.id) {
       const oldIndex = items.findIndex((item) => item.id === active.id);
@@ -335,12 +334,13 @@ export const SortableTreeItems: React.FC<SortableTreeItemsProps> = ({ items, onR
   };
 
   return (
-    <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-      <SortableContext items={items.map((item) => item.id)} strategy={verticalListSortingStrategy}>
+    <DndContext collisionDetection={closestCenter} onDragStart={start} onDragMove={move} onDragCancel={end} onDragEnd={handleDragEnd}>
+      <SortableContext items={items.map((item) => item.id)} strategy={keepPlaces}>
         {items.map((item, index) => (
           <React.Fragment key={item.id}>{children(item, index)}</React.Fragment>
         ))}
       </SortableContext>
+      {ghost}
     </DndContext>
   );
 };

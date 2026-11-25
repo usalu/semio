@@ -25,9 +25,10 @@ import type { WindowLayoutDropZone, WindowLayoutNode } from "@semio-tech/ui-layo
 import type { ControlIcon } from "../🔣️Icons/🟦️.tsx";
 import { ButtonGroup, ButtonGroupItem } from "../🔳️ButtonGroup/🟦️.tsx";
 import { type ModeWindowDescriptor, type WindowTemplateDropPayload } from "./🪟️template-drag/🟦️.ts";
-import { computeModeSplitPreviewInBody } from "./🎯️drop/🟦️.ts";
 import { modePathKey } from "./🗺️layout/🟦️.ts";
-import { MODE_DRAG_CURSOR_OFFSET_X, MODE_DRAG_CURSOR_OFFSET_Y, ModeDockDragPreview } from "./🧲️drag-preview/🟦️.tsx";
+import { DragGhost, useDragActive } from "../../🔨️modules/🫳️pointer-drag/🟦️.tsx";
+import { Icon } from "../🔣️Icons/🟦️.tsx";
+import { ModeDropPlaces } from "./🧲️drop-places/🟦️.tsx";
 import { useModeLayoutState } from "./🧭️mode-layout-state-and-sync/🟦️.tsx";
 import { useModeDragEffectsAndAxisCallbacks, useModeWindowCallbacks } from "./🖱️mode-drag-and-window-callbacks/🟦️.tsx";
 import { useModeShortcutsAndContexts, useModeTemplateDropAndPreview } from "./📥️mode-template-drop-and-contexts/🟦️.tsx";
@@ -36,6 +37,9 @@ import { useModeShortcutsAndContexts, useModeTemplateDropAndPreview } from "./�
 // #region ⚙️Canvas
 
 export type { CanvasBottomChips };
+
+/** 📐️ The stage of a canvas keeps its docks, windows and chips between the glass bands of an enclosing Layout (the band heights are its clearance); only the canvas floor runs beneath the bands. */
+const canvasStageStyle = { top: "var(--layout-clearance-top, 0px)", bottom: "var(--layout-clearance-bottom, 0px)" } as React.CSSProperties;
 
 /**
  * 🌐️ Container component for canvas window layout. Its content is full-bleed; `bottomChips` overlay glass chips inside
@@ -48,8 +52,10 @@ export const Canvas: React.FC<{ children: React.ReactNode; id?: string; status?:
   return (
     <LevelProvider level="base">
       <div id={id} data-slot="canvas" data-level="base" data-ui-status={busy ? status : undefined} className={cn("relative box-border h-full w-full p-0", bgClass, chromeStatusBorderClass(status))}>
-        {busy ? <CanvasSkeleton /> : children}
-        <CanvasBottomChipRow chips={bottomChips} />
+        <div data-slot="canvas-stage" className="absolute inset-x-0" style={canvasStageStyle}>
+          {busy ? <CanvasSkeleton /> : children}
+          <CanvasBottomChipRow chips={bottomChips} />
+        </div>
       </div>
     </LevelProvider>
   );
@@ -59,14 +65,14 @@ export const Canvas: React.FC<{ children: React.ReactNode; id?: string; status?:
  * ↔️ Layout component arranging windows horizontally.
  **/
 export const HorizontalWindows: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  return <div className="flex flex-row h-full w-full gap-0">{children}</div>;
+  return <div className="flex flex-row h-full w-full gap-0 [&>*]:min-w-0 [&>*]:flex-1">{children}</div>;
 };
 
 /**
  * ↕️ Layout component arranging windows vertically.
  **/
 export const VerticalWindows: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  return <div className="flex flex-col h-full w-full gap-0">{children}</div>;
+  return <div className="flex flex-col h-full w-full gap-0 [&>*]:min-h-0 [&>*]:flex-1">{children}</div>;
 };
 
 export interface ModeProps {
@@ -97,6 +103,7 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
   const { clearTemplateDragPreview, onAxisLayoutChanged, onJoinCornerResize, registerAxisGroup, registerAxisElement } = useModeDragEffectsAndAxisCallbacks({ pendingDrag, dragState, dragLayoutSnapshotRef, layoutStateRef, setDragState, setPendingDrag, refreshDropZone, finishDrag, dropZoneRef, setDropZone, setLayoutState, axisGroupRefsRef, axisGroupElementsRef, setTemplateDrag, templateDrag });
   const { canMaximize, previewDragState, tabInsertPreview, draggedInsertTabs, noopDrag, handleExternalTemplateDragOver, handleExternalTemplateDrop, draggedPreviewTitle, draggedPreviewIconId } = useModeTemplateDropAndPreview({ stackDropElementsRef, modeBodyRef, onTemplateDrop, clearTemplateDragPreview, setTemplateDrag, refreshDropZone, templateDrag, dragState, windowsById, dropZone, layoutState });
   const { hasWindows, emptyShellNotice, body } = useModeShortcutsAndContexts({ canMaximize, maximizedStackPath, setMaximizedStackPath, onWindowOpenInNewWindow, activeWindowId, closeWindow, layoutState, toggleMaximize, previewDragState, tabInsertPreview, draggedInsertTabs, registerStackDropTargets, mobile, noopDrag, startTabDrag, clearPendingDrag, activateWindow, deactivateActiveWindow, windowsById, onAxisLayoutChanged, onJoinCornerResize, registerAxisGroup, registerAxisElement, dragState, modeT, children });
+  useDragActive(!mobile && Boolean(previewDragState));
   return (
     <div data-slot="mode" data-mobile={mobile ? "true" : undefined} data-dragging={previewDragState ? "true" : undefined} data-maximized-path={maximizedStackPath ? modePathKey(maximizedStackPath) : undefined} className={cn("relative flex h-full min-h-0 w-full flex-col", className)}>
       <LevelProvider level="base">
@@ -118,49 +125,11 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
           )}
           {!mobile && previewDragState ? (
             <>
-              {dropZone?.kind !== "tab" ? (
-                <ModeDockDragPreview
-                  title={draggedPreviewTitle}
-                  iconId={draggedPreviewIconId}
-                  content={previewDragState.dragKind === "stack" ? windowsById.get(previewDragState.windowId)?.children : undefined}
-                  tabOnly={previewDragState.dragKind === "tab"}
-                  style={{
-                    position: "fixed",
-                    left: previewDragState.x + MODE_DRAG_CURSOR_OFFSET_X,
-                    top: previewDragState.y - MODE_DRAG_CURSOR_OFFSET_Y,
-                    zIndex: 70,
-                  }}
-                />
-              ) : null}
-              {dropZone && (dropZone.kind === "split" || dropZone.kind === "rootSplit") ? (
-                <div data-slot="mode-dock-drop-indicator" className="pointer-events-none absolute inset-0 z-panel">
-                  <div
-                    className="absolute border border-accent bg-accent/20"
-                    style={(() => {
-                      if (dropZone.kind === "rootSplit") {
-                        const side = dropZone.side;
-                        if (side === "left") return { left: 0, top: 0, width: "50%", height: "100%" };
-                        if (side === "right") return { right: 0, top: 0, width: "50%", height: "100%" };
-                        if (side === "top") return { left: 0, top: 0, width: "100%", height: "50%" };
-                        return { left: 0, bottom: 0, width: "100%", height: "50%" };
-                      }
-                      const elements = stackDropElementsRef.current.get(modePathKey(dropZone.stackPath));
-                      const rect = elements?.body?.getBoundingClientRect();
-                      const modeRect = modeBodyRef.current?.getBoundingClientRect();
-                      if (!rect || !modeRect) return { display: "none" };
-                      const bodyOriginLeft = rect.left - modeRect.left;
-                      const bodyOriginTop = rect.top - modeRect.top;
-                      const preview = computeModeSplitPreviewInBody(rect.width, rect.height, dropZone.side);
-                      return {
-                        left: bodyOriginLeft + preview.left,
-                        top: bodyOriginTop + preview.top,
-                        width: preview.width,
-                        height: preview.height,
-                      };
-                    })()}
-                  />
-                </div>
-              ) : null}
+              <DragGhost x={previewDragState.x} y={previewDragState.y}>
+                {draggedPreviewIconId ? <Icon icon={draggedPreviewIconId} size="small" className="shrink-0" /> : null}
+                <span className="truncate">{draggedPreviewTitle}</span>
+              </DragGhost>
+              <ModeDropPlaces stacks={stackDropElementsRef} host={modeBodyRef} zone={dropZone} />
             </>
           ) : null}
         </div>

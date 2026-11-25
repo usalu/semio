@@ -86,7 +86,7 @@ export async function testFlowBrowserOwnership(invocation: ScriptInvocation): Pr
   assert.deepEqual(project.targets[fixture.target.name].inputs, fixture.target.inputs);
   assert.equal(project.targets[fixture.target.name].cache, true);
   assert.equal(project.targets[fixture.target.name].options.command, "repo ./📜️script.ts test-browser-ownership");
-  assert.deepEqual(project.targets[fixture.target.previewName].inputs, ["flowBrowserProduction"]);
+  assert.deepEqual(project.targets[fixture.target.previewName].inputs, ["default", "^default", "reads", "flowBrowserProduction"]);
   assert.deepEqual(project.targets[fixture.target.previewName].outputs, []);
   assert.equal(project.targets[fixture.target.previewName].options.command, "repo ./📜️script.ts preview-generated");
   assert.equal(project.targets[fixture.target.previewName].options.cwd, dirname(fixture.target.projectPath));

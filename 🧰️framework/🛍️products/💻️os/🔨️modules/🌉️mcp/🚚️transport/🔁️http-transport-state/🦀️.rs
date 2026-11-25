@@ -184,19 +184,19 @@ pub(crate) struct BridgeSession {
     pub(crate) inbound: Option<BridgeInboundCursor>,
 }
 
-enum BridgeInboundPhase {
+pub(crate) enum BridgeInboundPhase {
     Decode(ShellToGatewayDecodeCursor),
     Materialize(ShellToGatewayMaterializeCursor),
     Ready(Option<ShellToGateway>),
 }
 
-struct BridgeInboundCursor {
+pub(crate) struct BridgeInboundCursor {
     pub generation: u64,
     pub(crate) frame: ClientWebSocketFrame,
     pub phase: BridgeInboundPhase,
 }
 
-pub(super) struct BridgeWriteCursor {
+pub(crate) struct BridgeWriteCursor {
     pub(crate) header: [u8; 10],
     pub(super) header_len: usize,
     pub(crate) frame: BridgeEncodedLease,

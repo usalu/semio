@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "semio:process:termination:v1",
   "title": "How an owned process tree is stopped: ask first, kill after a declared grace, and say who did it",
-  "description": "An owned command that is cancelled, times out or exceeds a ceiling gets SIGTERM for its whole owned tree (POSIX groups and descendants, found before ancestry is lost), then `graceMilliseconds` to end by itself (looked at every `pollMilliseconds`), and only what is still alive afterwards gets SIGKILL. Windows has no signal to ask with and keeps `taskkill /T /F`. Every signal is announced before it is sent by one line in English and German that names the victim, the signal, the killing process, the command and the reason, so the log of the victim says who stopped it.",
+  "description": "An owned command that is cancelled, times out or exceeds a ceiling gets SIGTERM for its whole owned tree (POSIX groups and descendants, found before ancestry is lost). A caller forwarding an interrupt can send SIGINT first. The tree gets `graceMilliseconds` to end by itself (looked at every `pollMilliseconds`), and only what is still alive afterwards gets SIGKILL. Windows has no signal to ask with and keeps `taskkill /T /F`. Every recorded signal names the victim, the signal, the killing process, the command and the reason in English and German.",
   "definitions": {
     "Policy": {"const": {"version": 1, "graceMilliseconds": 5000, "pollMilliseconds": 100}},
     "Texts": {

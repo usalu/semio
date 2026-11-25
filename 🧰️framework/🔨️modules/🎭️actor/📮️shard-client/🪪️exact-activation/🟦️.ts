@@ -10,7 +10,8 @@ export class ShardExactActivations {
   private readonly hub: ShardClientHubPort;
   constructor(hub: ShardClientHubPort) { this.hub = hub; this.state = hub.state; }
 
-  async activate(actorId: string, moduleUrl: string, caps: readonly ShardCapabilityGrant[], budget: ShardBudget, assets: readonly ShardAsset[] = []): Promise<void> {
+  /** 🧩️ `component` names the deployable component of the module the actor runs (the package descriptor's `components`); `null` runs the module's only, or first, component. */
+  async activate(actorId: string, moduleUrl: string, caps: readonly ShardCapabilityGrant[], budget: ShardBudget, assets: readonly ShardAsset[] = [], component: string | null = null): Promise<void> {
     if (this.state.actorActivations.get(actorId)?.available) throw new Error("actor-close.activation-already-owned");
     if (this.state.activationGeneration >= 0xffffffffffffffffn) throw new Error("actor-close.activation-generation-exhausted");
     const requestId = this.hub.transport.nextRequestId();
@@ -21,7 +22,7 @@ export class ShardExactActivations {
     this.state.activationGeneration = generation;
     this.state.actorActivations.set(actorId, activation);
     this.state.actorsPastFirstTurn.delete(actorId);
-    await this.hub.transport.send<void>(slot, { kind: "activate", requestId, actorId, activationGeneration: generation, originalAdmission, moduleUrl, caps, budget, assets }, requestId);
+    await this.hub.transport.send<void>(slot, { kind: "activate", requestId, actorId, activationGeneration: generation, originalAdmission, moduleUrl, component, caps, budget, assets, coreModules: this.state.coreModules.seeds() }, requestId);
     activation.activated = true;
   }
 
@@ -102,6 +103,7 @@ export class ShardExactActivations {
     activation.operationsAllowed = false;
     this.state.originalClosures.set(activation.originalAdmission.operation, activation);
     slot.worker.postMessage({ kind: "dispose", actorId, activationGeneration: activation.generation } satisfies OutboundMessage);
+    this.state.coreModules.release(String(activation.generation));
     activation.teardownPosted = true;
     activation.available = false;
     if (this.state.outstandingEffectsByActor.get(actorId)?.activation === activation) this.hub.effects.abortOutstandingEffects(actorId);

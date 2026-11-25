@@ -1,5 +1,5 @@
 use crate::standards::v1_7::subsets::base::io::foreign_artifacts::NativePdfArtifactResources;
-use crate::standards::v1_7::subsets::base::schema::snapshot::{stream_bytes, PdfImage, PdfObject, PdfStreamFilter};
+use crate::standards::v1_7::subsets::base::schema::snapshot::{pack_samples, stream_bytes, PdfImage, PdfObject, PdfPackedSamples, PdfStreamFilter};
 use semio_framework_test_fixtures::fixture_text;
 #[allow(unused_imports)]
 use crate::standards::v1_7::subsets::base::modules::colour::{extra_entries, lift_colour_space, lower_colour_space, numbers_of, push_opt, raw_stream};
@@ -23,10 +23,10 @@ fn pdf_semantic_body_image_words_match_neutral_native_and_independent_lopdf() {
     use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfSnapshot, PdfPage, PdfColorSpace};
     let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../🔨️modules/🖼️images/🧪️tests/🔬️unit/🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap(){let integer=|key:&str|row[key].as_u64().unwrap() as u32;let values=row["values"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap() as u32).collect::<Vec<_>>();let packed=row["packed"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap() as u8).collect::<Vec<_>>();let (width,height,components,bits)=(integer("width"),integer("height"),integer("components"),integer("bits"));
-        assert_eq!(pack_image_samples(width,height,components,bits,&values).unwrap(),packed);assert_eq!(unpack_image_samples(width,height,components,bits,&packed).unwrap(),values);
-        let mut snapshot=PdfSnapshot::default();snapshot.pages.push(PdfPage::new(20.0,20.0));snapshot.images.push(PdfImage::samples("I",width,height,if components==3{PdfColorSpace::DeviceRgb}else{PdfColorSpace::DeviceGray},bits,values));let bytes=encode_pdf(&snapshot).unwrap();let reference=semio_s_artifact_stdio_pdf_test_oracle::standards::v1_7::subsets::base::reference_image_sample_streams(&bytes).unwrap();assert_eq!(reference,vec![(bits,packed)]);
+        assert_eq!(pack_samples(width,height,components,bits,&values).unwrap(),packed);assert_eq!(PdfPackedSamples::new(&packed,width,height,components,bits).unwrap().iter().collect::<Vec<_>>(),values);
+        let mut snapshot=PdfSnapshot::default();snapshot.pages.push(PdfPage::new(20.0,20.0));snapshot.images.push(PdfImage::packed("I",width,height,if components==3{PdfColorSpace::DeviceRgb}else{PdfColorSpace::DeviceGray},bits,packed.clone()));let bytes=encode_pdf(&snapshot).unwrap();let reference=semio_s_artifact_stdio_pdf_test_oracle::standards::v1_7::subsets::base::reference_image_sample_streams(&bytes).unwrap();assert_eq!(reference,vec![(bits,packed)]);
     }
-    assert!(unpack_image_samples(3,2,1,1,&[160]).is_err());assert!(pack_image_samples(1,1,1,4,&[16]).is_err());
+    assert!(PdfPackedSamples::new(&[160],3,2,1,1).is_err());assert!(pack_samples(1,1,1,4,&[16]).is_err());
 }
 
 #[test]

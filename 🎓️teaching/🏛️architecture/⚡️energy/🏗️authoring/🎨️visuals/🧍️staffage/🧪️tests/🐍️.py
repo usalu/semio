@@ -23,6 +23,7 @@ from manim import VGroup
 
 S = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🧍️staffage.🐍️")
 V = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️")
+_WORKSPACE_ARCH = S._SOURCES.parent
 CASE = json.loads(Path(__file__).with_name("🔣️.json").read_text(encoding="utf-8"))
 LOD = S.lod_level("full", 15)
 CASE["index"]["lod"] = {"id": LOD.id, "revision": LOD.revision, "canonicalFrames": 3, "canonicalFps": 10}
@@ -566,6 +567,27 @@ class Reference(unittest.TestCase):
             y = matrix[1] * float(first[0]) + matrix[3] * float(first[1]) + matrix[5]
             np.testing.assert_allclose(frame.points[0], [(x - 12.0) / 10, (70.0 - y) / 10], atol=1e-9)
             self.assertEqual([shape.stroke for shape in frame.shapes], [None, "#123456", None])
+
+
+class Catalog(unittest.TestCase):
+    def test_every_cast_names_an_asset_clip_and_pose_of_the_catalog(self):
+        catalog = _WORKSPACE_ARCH / "🧍️staffage/🗂️catalog"
+        assets = {}
+        for file in catalog.glob("*/*/🔣️.json"):
+            asset = json.loads(file.read_text(encoding="utf-8")).get("asset")
+            if asset:
+                poses = asset.get("poses") or []
+                assets[asset["id"]] = ({clip["id"] for clip in asset.get("clips", [])}, {pose["id"] if isinstance(pose, dict) else pose for pose in poses} if isinstance(poses, list) else set(poses))
+        missing = []
+        for name, cast in json.loads(Path(S._MANIFEST).read_text(encoding="utf-8"))["casts"].items():
+            clips, poses = assets.get(cast["asset"], (None, None))
+            if clips is None:
+                missing.append(f"{name}: asset {cast['asset']}")
+            elif "clip" in cast and cast["clip"] not in clips:
+                missing.append(f"{name}: asset {cast['asset']} has no clip {cast['clip']}; clips: {', '.join(sorted(clips))}")
+            elif "pose" in cast and cast["pose"] not in poses:
+                missing.append(f"{name}: asset {cast['asset']} has no pose {cast['pose']}")
+        self.assertEqual(missing, [])
 
 
 class Fit(unittest.TestCase):

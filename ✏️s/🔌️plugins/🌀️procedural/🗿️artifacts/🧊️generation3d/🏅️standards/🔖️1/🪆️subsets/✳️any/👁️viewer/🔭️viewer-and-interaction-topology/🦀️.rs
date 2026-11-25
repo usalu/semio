@@ -312,7 +312,7 @@ impl semio_plugin::ArtifactViewer for Generation3dViewer {
     /// interaction) — every live window goes through `render_with_request_context` instead.
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         let viewed = Generation3dViewedDocument::resolve(doc.snapshot, cfg.snapshot);
-        let tree = generation3d_view_render_body(body_key, viewed.snapshot(), cfg.snapshot, None, None, doc.tool_run(), &preview::Generation3dViewMarks::default(), semio_s_artifact_procedural_3d_terminology::generation3d_labels(view_state), view_state, &mut None);
+        let tree = generation3d_view_render_body(body_key, viewed.snapshot(), cfg.snapshot, None, None, doc.tool_run_poll(), &preview::Generation3dViewMarks::default(), semio_s_artifact_procedural_3d_terminology::generation3d_labels(view_state), view_state, &mut None);
         viewed.retire();
         tree
     }
@@ -346,7 +346,7 @@ impl semio_plugin::ArtifactViewer for Generation3dViewer {
         let tree = owner.with_mut::<Generation3dViewInstanceOperationOwner, _>(|owner| {
             owner.preview_hover.retain_windows(|id| id == window_id || view_state.window_instances.is_empty() || view_state.window_instances.iter().any(|window| window.id == id));
             let mut hover_groups = None;
-            let tree = owner.with_session(|session| generation3d_view_render_body(body_key, viewed.snapshot(), cfg.snapshot, preview_eval_text, Some(session), doc.tool_run(), &marks, labels, view_state, &mut hover_groups));
+            let tree = owner.with_session(|session| generation3d_view_render_body(body_key, viewed.snapshot(), cfg.snapshot, preview_eval_text, Some(session), doc.tool_run_poll(), &marks, labels, view_state, &mut hover_groups));
             if let (Ok(Ok(_)), Some(groups)) = (&tree, hover_groups) {
                 owner.preview_hover.publish(window_id, groups);
             }
@@ -372,7 +372,7 @@ fn generation3d_view_render_body(
     config: &Generation3dViewConfig,
     eval_json: Option<&str>,
     session: Option<&FlowEvalSession>,
-    run: Option<&semio_plugin::ToolRunView>,
+    run: Option<semio_plugin::ToolRunPollView<'_>>,
     marks: &preview::Generation3dViewMarks,
     labels: &semio_s_artifact_procedural_3d_terminology::Generation3dLabels,
     view_state: &semio_plugin::ViewModel,

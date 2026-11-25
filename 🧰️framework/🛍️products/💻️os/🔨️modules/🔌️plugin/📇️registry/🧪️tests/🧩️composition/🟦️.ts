@@ -192,7 +192,7 @@ describe("real React catalog configuration laws", () => {
 
 test("the actual WGPU serve process receives caller-owned composition authority", () => {
   const requested = { port: 6550, variant: "custom", renderer: "wgpu" as const, profile: "prototype" as const, hubUrl: null, logPath: "fixture.log", compositionConfigPath: "fixtures/independent-composition.ts" };
-  expect(devServeCommandV1(requested).args).toEqual(["serve", "custom", "prototype", "--port", "6550", "--composition", requested.compositionConfigPath]);
+  expect(devServeCommandV1(requested).args).toEqual(["run", "@semio-tech/framework-os-dev:dev-custom-wgpu-prototype", "--", "--port", "6550", "--composition", requested.compositionConfigPath]);
 });
 
 

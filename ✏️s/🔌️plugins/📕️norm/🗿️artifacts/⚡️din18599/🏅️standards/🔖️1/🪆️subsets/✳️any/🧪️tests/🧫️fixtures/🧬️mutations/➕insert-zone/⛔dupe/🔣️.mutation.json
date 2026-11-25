@@ -1,5 +1,5 @@
 {
-  "mutation": "insertzone",
+  "mutation": "insertZone",
   "index": 0,
   "zone": {
     "id": "zone-living",

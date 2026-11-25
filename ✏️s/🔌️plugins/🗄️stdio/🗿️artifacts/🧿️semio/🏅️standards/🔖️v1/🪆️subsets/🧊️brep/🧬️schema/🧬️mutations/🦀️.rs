@@ -94,6 +94,7 @@ pub enum SemioBrepMutation {
     MoveVertex(move_vertex::MoveVertex),
 }
 dsl::original_pack_value_operation_receiving!(SemioBrepMutation);
+dsl::artifact_persisted_binary_operation!(SemioBrepMutation);
 
 /// 🏷️ Kebab-case spelling of every `SemioBrepMutation` variant, in declaration order — the
 /// vocabulary the `semio-v1-brep` mutation catalog (`../../🔣️oracle.json`) declares and

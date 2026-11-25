@@ -13,17 +13,83 @@
    "de": "Ein 45-jähriger Wanderer von 1,82 m in moosgrüner Softshelljacke, Trekkinghose, knöchelhohen Wanderschuhen aus Nubukleder, Unterziehhandschuhen und Wollmütze mit Schirm, mit 30-Liter-Tagesrucksack (7 kg) und zwei auf 1,10 m eingestellten Teleskop-Trekkingstöcken aus Aluminium: Rast im Stehen, Verschnaufen auf den Stöcken nach einem steilen Stück und gleichmäßiges Bergaufgehen in diagonaler Stocktechnik mit 0,83 m/s, Füße und Stockspitzen ohne Gleiten; die Stöcke tragen als dritter und vierter Bodenkontakt einen Teil des Gewichts."
   },
   "tags": [
-   "human",
-   "adult",
-   "man",
-   "hiker",
-   "hiking",
-   "trekking-poles",
-   "daypack",
-   "outdoor",
-   "sports-and-leisure",
-   "walking",
-   "uphill"
+   {
+    "id": "human",
+    "title": {
+     "en": "human",
+     "de": "Mensch"
+    }
+   },
+   {
+    "id": "adult",
+    "title": {
+     "en": "adult",
+     "de": "erwachsen"
+    }
+   },
+   {
+    "id": "man",
+    "title": {
+     "en": "man",
+     "de": "Mann"
+    }
+   },
+   {
+    "id": "hiker",
+    "title": {
+     "en": "hiker",
+     "de": "Wanderer"
+    }
+   },
+   {
+    "id": "hiking",
+    "title": {
+     "en": "hiking",
+     "de": "Wandern"
+    }
+   },
+   {
+    "id": "trekking-poles",
+    "title": {
+     "en": "trekking poles",
+     "de": "Trekkingstöcke"
+    }
+   },
+   {
+    "id": "daypack",
+    "title": {
+     "en": "daypack",
+     "de": "Tagesrucksack"
+    }
+   },
+   {
+    "id": "outdoor",
+    "title": {
+     "en": "outdoor",
+     "de": "Außenbereich"
+    }
+   },
+   {
+    "id": "sports-and-leisure",
+    "title": {
+     "en": "sports and leisure",
+     "de": "Sport und Freizeit"
+    }
+   },
+   {
+    "id": "walking",
+    "title": {
+     "en": "walking",
+     "de": "Gehen"
+    }
+   },
+   {
+    "id": "uphill",
+    "title": {
+     "en": "uphill",
+     "de": "bergauf"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage human worker HW-08",
@@ -1417,8 +1483,8 @@
       "source": "authored-estimate"
      },
      "section": {
-      "areaM2": 4.8e-05,
-      "secondMomentM4": 1.79e-09,
+      "areaM2": 0.000048,
+      "secondMomentM4": 1.79e-9,
       "extremeFibreM": 0.009,
       "material": "pole-aluminium",
       "title": {
@@ -1451,8 +1517,8 @@
       "source": "authored-estimate"
      },
      "section": {
-      "areaM2": 4.8e-05,
-      "secondMomentM4": 1.79e-09,
+      "areaM2": 0.000048,
+      "secondMomentM4": 1.79e-9,
       "extremeFibreM": 0.009,
       "material": "pole-aluminium",
       "title": {
@@ -1722,8 +1788,7 @@
         "axisBone": "arm-l",
         "axis": "u",
         "axisX": 0,
-        "mirror": true,
-        "lateralScale": 0.9217
+        "mirror": true
        },
        "hatch": "softshell"
       },
@@ -1776,8 +1841,7 @@
         "axisBone": "forearm-l",
         "axis": "u",
         "axisX": 0,
-        "mirror": true,
-        "lateralScale": 1.0975
+        "mirror": true
        },
        "hatch": "softshell"
       },
@@ -1814,8 +1878,7 @@
         "axisBone": "forearm-l",
         "axis": "u",
         "axisX": 0,
-        "mirror": true,
-        "lateralScale": 1.1312
+        "mirror": true
        }
       },
       {
@@ -3621,8 +3684,7 @@
         "axisBone": "arm-r",
         "axis": "u",
         "axisX": 0,
-        "mirror": true,
-        "lateralScale": 0.9217
+        "mirror": true
        },
        "hatch": "softshell"
       },
@@ -3675,8 +3737,7 @@
         "axisBone": "forearm-r",
         "axis": "u",
         "axisX": 0,
-        "mirror": true,
-        "lateralScale": 1.0975
+        "mirror": true
        },
        "hatch": "softshell"
       },
@@ -3713,8 +3774,7 @@
         "axisBone": "forearm-r",
         "axis": "u",
         "axisX": 0,
-        "mirror": true,
-        "lateralScale": 1.1312
+        "mirror": true
        }
       },
       {
@@ -5926,8 +5986,7 @@
         "axisBone": "arm-l",
         "axis": "u",
         "axisX": 0,
-        "mirror": true,
-        "lateralScale": 0.9217
+        "mirror": true
        }
       },
       {
@@ -5995,8 +6054,7 @@
         "axisBone": "arm-r",
         "axis": "u",
         "axisX": 0,
-        "mirror": true,
-        "lateralScale": 0.9217
+        "mirror": true
        }
       },
       {
@@ -6048,8 +6106,7 @@
         "axisBone": "forearm-l",
         "axis": "u",
         "axisX": 0,
-        "mirror": true,
-        "lateralScale": 1.0975
+        "mirror": true
        }
       },
       {
@@ -6101,8 +6158,7 @@
         "axisBone": "forearm-r",
         "axis": "u",
         "axisX": 0,
-        "mirror": true,
-        "lateralScale": 1.0975
+        "mirror": true
        }
       },
       {
@@ -6138,8 +6194,7 @@
         "axisBone": "forearm-l",
         "axis": "u",
         "axisX": 0,
-        "mirror": true,
-        "lateralScale": 1.1312
+        "mirror": true
        }
       },
       {
@@ -6175,8 +6230,7 @@
         "axisBone": "forearm-r",
         "axis": "u",
         "axisX": 0,
-        "mirror": true,
-        "lateralScale": 1.1312
+        "mirror": true
        }
       },
       {
@@ -8031,8 +8085,7 @@
         "axisBone": "arm-l",
         "axis": "u",
         "axisX": 0,
-        "mirror": true,
-        "lateralScale": 0.9217
+        "mirror": true
        }
       },
       {
@@ -8100,8 +8153,7 @@
         "axisBone": "arm-r",
         "axis": "u",
         "axisX": 0,
-        "mirror": true,
-        "lateralScale": 0.9217
+        "mirror": true
        }
       },
       {
@@ -8153,8 +8205,7 @@
         "axisBone": "forearm-l",
         "axis": "u",
         "axisX": 0,
-        "mirror": true,
-        "lateralScale": 1.0975
+        "mirror": true
        }
       },
       {
@@ -8206,8 +8257,7 @@
         "axisBone": "forearm-r",
         "axis": "u",
         "axisX": 0,
-        "mirror": true,
-        "lateralScale": 1.0975
+        "mirror": true
        }
       },
       {
@@ -8243,8 +8293,7 @@
         "axisBone": "forearm-l",
         "axis": "u",
         "axisX": 0,
-        "mirror": true,
-        "lateralScale": 1.1312
+        "mirror": true
        }
       },
       {
@@ -8280,8 +8329,7 @@
         "axisBone": "forearm-r",
         "axis": "u",
         "axisX": 0,
-        "mirror": true,
-        "lateralScale": 1.1312
+        "mirror": true
        }
       },
       {
@@ -10306,8 +10354,7 @@
         "axisBone": "arm-l",
         "axis": "u",
         "axisX": 0,
-        "mirror": true,
-        "lateralScale": 0.9119
+        "mirror": true
        }
       },
       {
@@ -10351,8 +10398,7 @@
         "axisBone": "forearm-l",
         "axis": "u",
         "axisX": 0,
-        "mirror": true,
-        "lateralScale": 1.0822
+        "mirror": true
        }
       },
       {
@@ -11286,8 +11332,7 @@
         "axisBone": "arm-r",
         "axis": "u",
         "axisX": 0,
-        "mirror": true,
-        "lateralScale": 0.9119
+        "mirror": true
        }
       },
       {
@@ -11331,8 +11376,7 @@
         "axisBone": "forearm-r",
         "axis": "u",
         "axisX": 0,
-        "mirror": true,
-        "lateralScale": 1.0822
+        "mirror": true
        }
       },
       {
@@ -11801,37 +11845,51 @@
        "tone": 0.4,
        "region": "trousers",
        "kind": "poly",
+       "closed": true,
        "points": [
         [
-         0.0282,
-         0.4837
+         0.4747,
+         -0.0668
         ],
         [
-         0.15,
-         0.4844
+         0.474,
+         0.055
         ],
         [
-         0.176,
-         0.8014
+         0.1565,
+         0.081
         ],
         [
-         0.17,
-         0.9894
+         -0.0297,
+         0.0751
         ],
         [
-         0.003,
-         0.9874
+         -0.0297,
+         -0.1045
         ],
         [
-         0.002,
-         0.7964
+         -0.0298,
+         -0.092
         ],
         [
-         0.006,
-         0.7084
+         0.1615,
+         -0.093
+        ],
+        [
+         0.2496,
+         -0.089
         ]
        ],
-       "closed": true
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": -0.1018,
+        "z1": 0.096,
+        "zTip": [
+         -0.0618,
+         0.0699
+        ]
+       }
       },
       {
        "id": "thigh-r",
@@ -11842,37 +11900,51 @@
        "tone": 0.4,
        "region": "trousers",
        "kind": "poly",
+       "closed": true,
        "points": [
         [
-         -0.1498,
-         0.4837
+         0.4747,
+         -0.0548
         ],
         [
-         -0.028,
-         0.4844
+         0.474,
+         0.067
         ],
         [
-         -0.006,
-         0.7084
+         0.2496,
+         0.089
         ],
         [
-         -0.002,
-         0.7964
+         0.1615,
+         0.093
         ],
         [
-         -0.004,
-         0.9894
+         -0.0297,
+         0.091
         ],
         [
-         -0.171,
-         0.9874
+         -0.0297,
+         -0.0885
         ],
         [
-         -0.176,
-         0.8014
+         -0.0298,
+         -0.076
+        ],
+        [
+         0.1565,
+         -0.081
         ]
        ],
-       "closed": true
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": -0.1018,
+        "z1": 0.096,
+        "zTip": [
+         -0.0618,
+         0.0699
+        ]
+       }
       },
       {
        "id": "shank-l",
@@ -11883,41 +11955,55 @@
        "tone": 0.4,
        "region": "trousers",
        "kind": "poly",
+       "closed": true,
        "points": [
         [
-         0.0412,
-         0.139
+         0.3757,
+         -0.0538
         ],
         [
-         0.149,
-         0.1397
+         0.375,
+         0.054
         ],
         [
-         0.148,
-         0.2027
+         0.3119,
+         0.053
         ],
         [
-         0.157,
-         0.3907
+         0.1235,
+         0.062
         ],
         [
-         0.146,
-         0.5447
+         -0.0297,
+         0.0511
         ],
         [
-         0.031,
-         0.5437
+         -0.0297,
+         -0.0812
         ],
         [
-         0.029,
-         0.3767
+         -0.0298,
+         -0.064
         ],
         [
-         0.042,
-         0.1997
+         0.1375,
+         -0.066
+        ],
+        [
+         0.3149,
+         -0.053
         ]
        ],
-       "closed": true
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": -0.0683,
+        "z1": 0.0656,
+        "zTip": [
+         -0.0574,
+         0.0669
+        ]
+       }
       },
       {
        "id": "shank-r",
@@ -11928,45 +12014,59 @@
        "tone": 0.4,
        "region": "trousers",
        "kind": "poly",
+       "closed": true,
        "points": [
         [
-         -0.1488,
-         0.139
+         0.3757,
+         -0.0538
         ],
         [
-         -0.041,
-         0.1397
+         0.375,
+         0.054
         ],
         [
-         -0.042,
-         0.1997
+         0.3149,
+         0.053
         ],
         [
-         -0.029,
-         0.3767
+         0.1375,
+         0.066
         ],
         [
-         -0.028,
-         0.4937
+         0.0203,
+         0.067
         ],
         [
-         -0.032,
-         0.5447
+         -0.0297,
+         0.0631
         ],
         [
-         -0.147,
-         0.5437
+         -0.0297,
+         -0.0692
         ],
         [
-         -0.157,
-         0.3907
+         -0.0298,
+         -0.052
         ],
         [
-         -0.148,
-         0.2027
+         0.1235,
+         -0.062
+        ],
+        [
+         0.3119,
+         -0.053
         ]
        ],
-       "closed": true
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": -0.0683,
+        "z1": 0.0656,
+        "zTip": [
+         -0.0574,
+         0.0669
+        ]
+       }
       },
       {
        "id": "foot-l",
@@ -11977,93 +12077,47 @@
        "tone": 0.25,
        "region": "boots",
        "kind": "poly",
+       "closed": true,
        "points": [
         [
-         0.0673,
-         0.0002
+         -0.0675,
+         -0.0126
         ],
         [
-         0.138,
-         0.0009
+         -0.0316,
+         -0.1011
         ],
         [
-         0.1498,
-         0.0042
+         0.2059,
+         0.0029
         ],
         [
-         0.154,
-         0.0099
+         0.1999,
+         0.0234
         ],
         [
-         0.1528,
-         0.0177
+         0.1772,
+         0.0731
         ],
         [
-         0.1383,
-         0.0232
+         -0.0005,
+         0.0764
         ],
         [
-         0.1488,
-         0.0322
-        ],
-        [
-         0.152,
-         0.0499
-        ],
-        [
-         0.142,
-         0.0759
-        ],
-        [
-         0.136,
-         0.1209
-        ],
-        [
-         0.1218,
-         0.1447
-        ],
-        [
-         0.108,
-         0.1499
-        ],
-        [
-         0.082,
-         0.1499
-        ],
-        [
-         0.0693,
-         0.1447
-        ],
-        [
-         0.054,
-         0.1209
-        ],
-        [
-         0.044,
-         0.0499
-        ],
-        [
-         0.0453,
-         0.0362
-        ],
-        [
-         0.054,
-         0.0249
-        ],
-        [
-         0.0433,
-         0.0167
-        ],
-        [
-         0.043,
-         0.0079
-        ],
-        [
-         0.053,
-         0.0019
+         -0.0553,
+         0.0521
         ]
        ],
-       "closed": true
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.043,
+        "z1": 0.154,
+        "zTip": [
+         0.043,
+         0.154
+        ]
+       }
       },
       {
        "id": "foot-r",
@@ -12074,89 +12128,47 @@
        "tone": 0.25,
        "region": "boots",
        "kind": "poly",
+       "closed": true,
        "points": [
         [
-         -0.1287,
-         0.0002
+         -0.0675,
+         -0.0126
         ],
         [
-         -0.068,
-         -0.0001
+         -0.0316,
+         -0.1011
         ],
         [
-         -0.0432,
-         0.0062
+         0.2059,
+         0.0029
         ],
         [
-         -0.0432,
-         0.0177
+         0.1999,
+         0.0234
         ],
         [
-         -0.054,
-         0.0249
+         0.1772,
+         0.0731
         ],
         [
-         -0.0472,
-         0.0322
+         -0.0005,
+         0.0764
         ],
         [
-         -0.044,
-         0.0439
-        ],
-        [
-         -0.052,
-         0.1129
-        ],
-        [
-         -0.0602,
-         0.1357
-        ],
-        [
-         -0.0772,
-         0.1487
-        ],
-        [
-         -0.1117,
-         0.1487
-        ],
-        [
-         -0.1267,
-         0.1387
-        ],
-        [
-         -0.1347,
-         0.1247
-        ],
-        [
-         -0.142,
-         0.0759
-        ],
-        [
-         -0.152,
-         0.0499
-        ],
-        [
-         -0.1507,
-         0.0362
-        ],
-        [
-         -0.1392,
-         0.0232
-        ],
-        [
-         -0.1527,
-         0.0167
-        ],
-        [
-         -0.153,
-         0.0079
-        ],
-        [
-         -0.143,
-         0.0019
+         -0.0553,
+         0.0521
         ]
        ],
-       "closed": true
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.153,
+        "z1": -0.0432,
+        "zTip": [
+         -0.153,
+         -0.0432
+        ]
+       }
       },
       {
        "id": "toe-l",
@@ -12558,8 +12570,7 @@
         "axisBone": "arm-l",
         "axis": "u",
         "axisX": 0,
-        "mirror": true,
-        "lateralScale": 0.9119
+        "mirror": true
        }
       },
       {
@@ -12615,8 +12626,7 @@
         "axisBone": "arm-r",
         "axis": "u",
         "axisX": 0,
-        "mirror": true,
-        "lateralScale": 0.9119
+        "mirror": true
        }
       },
       {
@@ -12660,8 +12670,7 @@
         "axisBone": "forearm-l",
         "axis": "u",
         "axisX": 0,
-        "mirror": true,
-        "lateralScale": 1.0822
+        "mirror": true
        }
       },
       {
@@ -12705,8 +12714,7 @@
         "axisBone": "forearm-r",
         "axis": "u",
         "axisX": 0,
-        "mirror": true,
-        "lateralScale": 1.0822
+        "mirror": true
        }
       },
       {
@@ -13544,14 +13552,62 @@
        "filled": true,
        "tone": 0.4,
        "region": "trousers",
-       "kind": "capsule",
-       "x0": 0,
-       "y0": 0.09,
-       "x1": 0,
-       "y1": 0.095,
-       "r0": 0.064,
-       "r1": 0.058,
-       "followTip": true
+       "kind": "poly",
+       "closed": true,
+       "points": [
+        [
+         -0.0298,
+         0.0554
+        ],
+        [
+         0.0209,
+         0.058
+        ],
+        [
+         0.0716,
+         0.0604
+        ],
+        [
+         0.1223,
+         0.0628
+        ],
+        [
+         0.1729,
+         0.0603
+        ],
+        [
+         0.2236,
+         0.0571
+        ],
+        [
+         0.2743,
+         0.0539
+        ],
+        [
+         0.325,
+         0.0516
+        ],
+        [
+         0.3757,
+         0.054
+        ],
+        [
+         0.3757,
+         -0.0031
+        ],
+        [
+         -0.0298,
+         -0.0031
+        ]
+       ],
+       "solid": {
+        "kind": "revolved",
+        "axisBone": "shank-l",
+        "axis": "u",
+        "axisX": -0.0031,
+        "axisZ": -0.0096,
+        "mirror": true
+       }
       },
       {
        "id": "shank-r",
@@ -13561,14 +13617,62 @@
        "filled": true,
        "tone": 0.4,
        "region": "trousers",
-       "kind": "capsule",
-       "x0": 0,
-       "y0": -0.09,
-       "x1": 0,
-       "y1": -0.095,
-       "r0": 0.064,
-       "r1": 0.058,
-       "followTip": true
+       "kind": "poly",
+       "closed": true,
+       "points": [
+        [
+         -0.0298,
+         0.0611
+        ],
+        [
+         0.0209,
+         0.0646
+        ],
+        [
+         0.0716,
+         0.0669
+        ],
+        [
+         0.1223,
+         0.069
+        ],
+        [
+         0.1729,
+         0.0663
+        ],
+        [
+         0.2236,
+         0.0629
+        ],
+        [
+         0.2743,
+         0.0595
+        ],
+        [
+         0.325,
+         0.0569
+        ],
+        [
+         0.3757,
+         0.0596
+        ],
+        [
+         0.3757,
+         -0.0014
+        ],
+        [
+         -0.0298,
+         -0.0014
+        ]
+       ],
+       "solid": {
+        "kind": "revolved",
+        "axisBone": "shank-r",
+        "axis": "u",
+        "axisX": -0.0014,
+        "axisZ": 0.0001,
+        "mirror": true
+       }
       },
       {
        "id": "foot-l",
@@ -13783,8 +13887,7 @@
         "axisBone": "arm-l",
         "axis": "u",
         "axisX": 0,
-        "mirror": true,
-        "lateralScale": 0.9119
+        "mirror": true
        }
       },
       {
@@ -13840,8 +13943,7 @@
         "axisBone": "arm-r",
         "axis": "u",
         "axisX": 0,
-        "mirror": true,
-        "lateralScale": 0.9119
+        "mirror": true
        }
       },
       {
@@ -13885,8 +13987,7 @@
         "axisBone": "forearm-l",
         "axis": "u",
         "axisX": 0,
-        "mirror": true,
-        "lateralScale": 1.0822
+        "mirror": true
        }
       },
       {
@@ -13930,8 +14031,7 @@
         "axisBone": "forearm-r",
         "axis": "u",
         "axisX": 0,
-        "mirror": true,
-        "lateralScale": 1.0822
+        "mirror": true
        }
       },
       {
@@ -15105,8 +15205,7 @@
         "axisBone": "arm-l",
         "axis": "u",
         "axisX": 0,
-        "mirror": true,
-        "lateralScale": 0.9087
+        "mirror": true
        }
       },
       {
@@ -15146,8 +15245,7 @@
         "axisBone": "forearm-l",
         "axis": "u",
         "axisX": 0,
-        "mirror": true,
-        "lateralScale": 1.0726
+        "mirror": true
        }
       },
       {
@@ -15759,8 +15857,7 @@
         "axisBone": "arm-r",
         "axis": "u",
         "axisX": 0,
-        "mirror": true,
-        "lateralScale": 0.9087
+        "mirror": true
        }
       },
       {
@@ -15800,8 +15897,7 @@
         "axisBone": "forearm-r",
         "axis": "u",
         "axisX": 0,
-        "mirror": true,
-        "lateralScale": 1.0726
+        "mirror": true
        }
       },
       {
@@ -16084,33 +16180,43 @@
        "tone": 0.4,
        "region": "trousers",
        "kind": "poly",
+       "closed": true,
        "points": [
         [
-         0.0285,
-         0.4839
+         0.4755,
+         -0.0665
         ],
         [
-         0.15,
-         0.4854
+         0.474,
+         0.055
         ],
         [
-         0.176,
-         0.7974
+         0.1608,
+         0.081
         ],
         [
-         0.17,
-         0.9914
+         -0.0295,
+         0.0751
         ],
         [
-         0.002,
-         0.9874
+         -0.0295,
+         -0.093
         ],
         [
-         0.002,
-         0.7954
+         0.1628,
+         -0.093
         ]
        ],
-       "closed": true
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": -0.1015,
+        "z1": 0.0958,
+        "zTip": [
+         -0.0615,
+         0.0696
+        ]
+       }
       },
       {
        "id": "thigh-r",
@@ -16121,33 +16227,43 @@
        "tone": 0.4,
        "region": "trousers",
        "kind": "poly",
+       "closed": true,
        "points": [
         [
-         -0.1495,
-         0.4839
+         0.4755,
+         -0.0545
         ],
         [
-         -0.028,
-         0.4854
+         0.474,
+         0.067
         ],
         [
-         -0.002,
-         0.7954
+         0.1628,
+         0.093
         ],
         [
-         -0.004,
-         0.9914
+         -0.0295,
+         0.091
         ],
         [
-         -0.172,
-         0.9874
+         -0.0295,
+         -0.077
         ],
         [
-         -0.176,
-         0.7974
+         0.1608,
+         -0.081
         ]
        ],
-       "closed": true
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": -0.1015,
+        "z1": 0.0958,
+        "zTip": [
+         -0.0615,
+         0.0696
+        ]
+       }
       },
       {
        "id": "shank-l",
@@ -16158,33 +16274,47 @@
        "tone": 0.4,
        "region": "trousers",
        "kind": "poly",
+       "closed": true,
        "points": [
         [
-         0.0405,
-         0.1392
+         0.3775,
+         -0.0545
         ],
         [
-         0.15,
-         0.1407
+         0.376,
+         0.055
         ],
         [
-         0.158,
-         0.3847
+         0.1302,
+         0.063
         ],
         [
-         0.146,
-         0.5447
+         -0.0295,
+         0.0511
         ],
         [
-         0.03,
-         0.5427
+         -0.0295,
+         -0.0331
         ],
         [
-         0.028,
-         0.3847
+         -0.0289,
+         -0.065
+        ],
+        [
+         0.1302,
+         -0.067
         ]
        ],
-       "closed": true
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": -0.0685,
+        "z1": 0.0665,
+        "zTip": [
+         -0.0571,
+         0.0665
+        ]
+       }
       },
       {
        "id": "shank-r",
@@ -16195,33 +16325,47 @@
        "tone": 0.4,
        "region": "trousers",
        "kind": "poly",
+       "closed": true,
        "points": [
         [
-         -0.1485,
-         0.1392
+         0.3775,
+         -0.0535
         ],
         [
-         -0.041,
-         0.1407
+         0.376,
+         0.054
         ],
         [
-         -0.029,
-         0.3647
+         0.1504,
+         0.066
         ],
         [
-         -0.033,
-         0.5447
+         -0.0295,
+         0.062
         ],
         [
-         -0.147,
-         0.5427
+         -0.0295,
+         -0.0206
         ],
         [
-         -0.157,
-         0.3967
+         -0.0289,
+         -0.052
+        ],
+        [
+         0.1181,
+         -0.062
         ]
        ],
-       "closed": true
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": -0.0685,
+        "z1": 0.0665,
+        "zTip": [
+         -0.0571,
+         0.0665
+        ]
+       }
       },
       {
        "id": "foot-l",
@@ -16232,45 +16376,39 @@
        "tone": 0.25,
        "region": "boots",
        "kind": "poly",
+       "closed": true,
        "points": [
         [
-         0.0745,
-         0.0004
+         -0.0702,
+         -0.0089
         ],
         [
-         0.13,
-         0.0019
+         -0.0317,
+         -0.1004
         ],
         [
-         0.152,
-         0.0239
+         0.2073,
+         0.0036
         ],
         [
-         0.1355,
-         0.1194
+         0.1793,
+         0.0706
         ],
         [
-         0.11,
-         0.1479
-        ],
-        [
-         0.0785,
-         0.1474
-        ],
-        [
-         0.054,
-         0.1179
-        ],
-        [
-         0.044,
-         0.0239
-        ],
-        [
-         0.0565,
-         0.0064
+         -0.0277,
+         0.0626
         ]
        ],
-       "closed": true
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.044,
+        "z1": 0.152,
+        "zTip": [
+         0.044,
+         0.152
+        ]
+       }
       },
       {
        "id": "foot-r",
@@ -16281,45 +16419,39 @@
        "tone": 0.25,
        "region": "boots",
        "kind": "poly",
+       "closed": true,
        "points": [
         [
-         -0.1215,
-         0.0004
+         -0.0702,
+         -0.0089
         ],
         [
-         -0.066,
-         0.0019
+         -0.0317,
+         -0.1004
         ],
         [
-         -0.044,
-         0.0239
+         0.2073,
+         0.0036
         ],
         [
-         -0.054,
-         0.1179
+         0.1793,
+         0.0706
         ],
         [
-         -0.08,
-         0.1479
-        ],
-        [
-         -0.1115,
-         0.1474
-        ],
-        [
-         -0.136,
-         0.1179
-        ],
-        [
-         -0.152,
-         0.0239
-        ],
-        [
-         -0.1395,
-         0.0064
+         -0.0277,
+         0.0626
         ]
        ],
-       "closed": true
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.152,
+        "z1": -0.044,
+        "zTip": [
+         -0.152,
+         -0.044
+        ]
+       }
       },
       {
        "id": "toe-l",
@@ -16603,8 +16735,7 @@
         "axisBone": "arm-l",
         "axis": "u",
         "axisX": 0,
-        "mirror": true,
-        "lateralScale": 0.9087
+        "mirror": true
        }
       },
       {
@@ -16652,8 +16783,7 @@
         "axisBone": "arm-r",
         "axis": "u",
         "axisX": 0,
-        "mirror": true,
-        "lateralScale": 0.9087
+        "mirror": true
        }
       },
       {
@@ -16693,8 +16823,7 @@
         "axisBone": "forearm-l",
         "axis": "u",
         "axisX": 0,
-        "mirror": true,
-        "lateralScale": 1.0726
+        "mirror": true
        }
       },
       {
@@ -16734,8 +16863,7 @@
         "axisBone": "forearm-r",
         "axis": "u",
         "axisX": 0,
-        "mirror": true,
-        "lateralScale": 1.0726
+        "mirror": true
        }
       },
       {
@@ -17200,14 +17328,62 @@
        "filled": true,
        "tone": 0.4,
        "region": "trousers",
-       "kind": "capsule",
-       "x0": 0,
-       "y0": 0.09,
-       "x1": 0,
-       "y1": 0.095,
-       "r0": 0.064,
-       "r1": 0.058,
-       "followTip": true
+       "kind": "poly",
+       "closed": true,
+       "points": [
+        [
+         -0.0295,
+         0.0675
+        ],
+        [
+         0.0214,
+         0.0692
+        ],
+        [
+         0.0723,
+         0.0725
+        ],
+        [
+         0.1231,
+         0.0762
+        ],
+        [
+         0.174,
+         0.0744
+        ],
+        [
+         0.2249,
+         0.0723
+        ],
+        [
+         0.2758,
+         0.0701
+        ],
+        [
+         0.3266,
+         0.0679
+        ],
+        [
+         0.3775,
+         0.0564
+        ],
+        [
+         0.3775,
+         0.0037
+        ],
+        [
+         -0.0295,
+         0.0037
+        ]
+       ],
+       "solid": {
+        "kind": "revolved",
+        "axisBone": "shank-l",
+        "axis": "u",
+        "axisX": 0.0037,
+        "axisZ": -0.0042,
+        "mirror": true
+       }
       },
       {
        "id": "shank-r",
@@ -17217,14 +17393,62 @@
        "filled": true,
        "tone": 0.4,
        "region": "trousers",
-       "kind": "capsule",
-       "x0": 0,
-       "y0": -0.09,
-       "x1": 0,
-       "y1": -0.095,
-       "r0": 0.064,
-       "r1": 0.058,
-       "followTip": true
+       "kind": "poly",
+       "closed": true,
+       "points": [
+        [
+         -0.0295,
+         0.0674
+        ],
+        [
+         0.0214,
+         0.0692
+        ],
+        [
+         0.0723,
+         0.0726
+        ],
+        [
+         0.1231,
+         0.0762
+        ],
+        [
+         0.174,
+         0.0746
+        ],
+        [
+         0.2249,
+         0.0724
+        ],
+        [
+         0.2758,
+         0.0701
+        ],
+        [
+         0.3266,
+         0.0679
+        ],
+        [
+         0.3775,
+         0.0564
+        ],
+        [
+         0.3775,
+         0.0034
+        ],
+        [
+         -0.0295,
+         0.0034
+        ]
+       ],
+       "solid": {
+        "kind": "revolved",
+        "axisBone": "shank-r",
+        "axis": "u",
+        "axisX": 0.0034,
+        "axisZ": 0.0026,
+        "mirror": true
+       }
       },
       {
        "id": "foot-l",
@@ -17415,8 +17639,7 @@
         "axisBone": "arm-l",
         "axis": "u",
         "axisX": 0,
-        "mirror": true,
-        "lateralScale": 0.9087
+        "mirror": true
        }
       },
       {
@@ -17464,8 +17687,7 @@
         "axisBone": "arm-r",
         "axis": "u",
         "axisX": 0,
-        "mirror": true,
-        "lateralScale": 0.9087
+        "mirror": true
        }
       },
       {
@@ -17505,8 +17727,7 @@
         "axisBone": "forearm-l",
         "axis": "u",
         "axisX": 0,
-        "mirror": true,
-        "lateralScale": 1.0726
+        "mirror": true
        }
       },
       {
@@ -17546,8 +17767,7 @@
         "axisBone": "forearm-r",
         "axis": "u",
         "axisX": 0,
-        "mirror": true,
-        "lateralScale": 1.0726
+        "mirror": true
        }
       },
       {
@@ -18338,8 +18558,7 @@
         "axisBone": "arm-l",
         "axis": "u",
         "axisX": 0,
-        "mirror": true,
-        "lateralScale": 0.8954
+        "mirror": true
        }
       },
       {
@@ -18375,8 +18594,7 @@
         "axisBone": "forearm-l",
         "axis": "u",
         "axisX": 0,
-        "mirror": true,
-        "lateralScale": 1.0589
+        "mirror": true
        }
       },
       {
@@ -18903,8 +19121,7 @@
         "axisBone": "arm-r",
         "axis": "u",
         "axisX": 0,
-        "mirror": true,
-        "lateralScale": 0.8954
+        "mirror": true
        }
       },
       {
@@ -18940,8 +19157,7 @@
         "axisBone": "forearm-r",
         "axis": "u",
         "axisX": 0,
-        "mirror": true,
-        "lateralScale": 1.0589
+        "mirror": true
        }
       },
       {
@@ -19134,29 +19350,39 @@
        "tone": 0.4,
        "region": "trousers",
        "kind": "poly",
+       "closed": true,
        "points": [
         [
-         0.0275,
-         0.4839
+         0.4775,
+         -0.0675
         ],
         [
-         0.151,
-         0.4854
+         0.476,
+         0.056
         ],
         [
-         0.169,
-         0.9914
+         -0.0295,
+         0.0738
         ],
         [
-         0.003,
-         0.9874
+         -0.0295,
+         -0.092
         ],
         [
-         0.007,
-         0.6894
+         0.2704,
+         -0.088
         ]
        ],
-       "closed": true
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": -0.1015,
+        "z1": 0.0935,
+        "zTip": [
+         -0.0615,
+         0.0713
+        ]
+       }
       },
       {
        "id": "thigh-r",
@@ -19167,29 +19393,39 @@
        "tone": 0.4,
        "region": "trousers",
        "kind": "poly",
+       "closed": true,
        "points": [
         [
-         -0.1505,
-         0.4839
+         0.4775,
+         -0.0555
         ],
         [
-         -0.027,
-         0.4854
+         0.476,
+         0.068
         ],
         [
-         -0.007,
-         0.6894
+         0.2704,
+         0.088
         ],
         [
-         -0.005,
-         0.9914
+         -0.0295,
+         0.09
         ],
         [
-         -0.171,
-         0.9874
+         -0.0295,
+         -0.076
         ]
        ],
-       "closed": true
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": -0.1015,
+        "z1": 0.0935,
+        "zTip": [
+         -0.0615,
+         0.0713
+        ]
+       }
       },
       {
        "id": "shank-l",
@@ -19200,29 +19436,43 @@
        "tone": 0.4,
        "region": "trousers",
        "kind": "poly",
+       "closed": true,
        "points": [
         [
-         0.0405,
-         0.1392
+         0.3775,
+         -0.0545
         ],
         [
-         0.15,
-         0.1407
+         0.376,
+         0.055
         ],
         [
-         0.158,
-         0.3847
+         0.1302,
+         0.063
         ],
         [
-         0.146,
-         0.5447
+         -0.0295,
+         0.0511
         ],
         [
-         0.03,
-         0.5427
+         -0.0295,
+         -0.0331
+        ],
+        [
+         -0.0289,
+         -0.065
         ]
        ],
-       "closed": true
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": -0.0685,
+        "z1": 0.0665,
+        "zTip": [
+         -0.0571,
+         0.0665
+        ]
+       }
       },
       {
        "id": "shank-r",
@@ -19233,25 +19483,39 @@
        "tone": 0.4,
        "region": "trousers",
        "kind": "poly",
+       "closed": true,
        "points": [
         [
-         -0.1485,
-         0.1392
+         0.3775,
+         -0.0535
         ],
         [
-         -0.041,
-         0.1407
+         0.376,
+         0.054
         ],
         [
-         -0.033,
-         0.5447
+         -0.0295,
+         0.062
         ],
         [
-         -0.147,
-         0.5427
+         -0.0295,
+         -0.0206
+        ],
+        [
+         -0.0289,
+         -0.052
         ]
        ],
-       "closed": true
+       "solid": {
+        "kind": "extruded",
+        "sweep": "v",
+        "z0": -0.0685,
+        "z1": 0.0665,
+        "zTip": [
+         -0.0571,
+         0.0665
+        ]
+       }
       },
       {
        "id": "foot-l",
@@ -19262,41 +19526,39 @@
        "tone": 0.25,
        "region": "boots",
        "kind": "poly",
+       "closed": true,
        "points": [
         [
-         0.0745,
-         0.0004
+         -0.0702,
+         -0.0109
         ],
         [
-         0.128,
-         0.0019
+         -0.0317,
+         -0.1004
         ],
         [
-         0.152,
-         0.0239
+         0.2073,
+         0.0036
         ],
         [
-         0.1395,
-         0.1114
+         0.1773,
+         0.0766
         ],
         [
-         0.11,
-         0.1399
-        ],
-        [
-         0.0685,
-         0.1354
-        ],
-        [
-         0.05,
-         0.1099
-        ],
-        [
-         0.044,
-         0.0239
+         -0.0237,
+         0.0546
         ]
        ],
-       "closed": true
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.044,
+        "z1": 0.152,
+        "zTip": [
+         0.044,
+         0.152
+        ]
+       }
       },
       {
        "id": "foot-r",
@@ -19307,41 +19569,39 @@
        "tone": 0.25,
        "region": "boots",
        "kind": "poly",
+       "closed": true,
        "points": [
         [
-         -0.1215,
-         0.0004
+         -0.0702,
+         -0.0109
         ],
         [
-         -0.068,
-         0.0019
+         -0.0317,
+         -0.1004
         ],
         [
-         -0.044,
-         0.0239
+         0.2073,
+         0.0036
         ],
         [
-         -0.05,
-         0.1099
+         0.1773,
+         0.0766
         ],
         [
-         -0.078,
-         0.1399
-        ],
-        [
-         -0.1215,
-         0.1354
-        ],
-        [
-         -0.14,
-         0.1099
-        ],
-        [
-         -0.152,
-         0.0239
+         -0.0237,
+         0.0546
         ]
        ],
-       "closed": true
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.152,
+        "z1": -0.044,
+        "zTip": [
+         -0.152,
+         -0.044
+        ]
+       }
       },
       {
        "id": "toe-l",
@@ -19544,8 +19804,7 @@
         "axisBone": "arm-l",
         "axis": "u",
         "axisX": 0,
-        "mirror": true,
-        "lateralScale": 0.8954
+        "mirror": true
        }
       },
       {
@@ -19589,8 +19848,7 @@
         "axisBone": "arm-r",
         "axis": "u",
         "axisX": 0,
-        "mirror": true,
-        "lateralScale": 0.8954
+        "mirror": true
        }
       },
       {
@@ -19626,8 +19884,7 @@
         "axisBone": "forearm-l",
         "axis": "u",
         "axisX": 0,
-        "mirror": true,
-        "lateralScale": 1.0589
+        "mirror": true
        }
       },
       {
@@ -19663,8 +19920,7 @@
         "axisBone": "forearm-r",
         "axis": "u",
         "axisX": 0,
-        "mirror": true,
-        "lateralScale": 1.0589
+        "mirror": true
        }
       },
       {
@@ -20023,14 +20279,62 @@
        "filled": true,
        "tone": 0.4,
        "region": "trousers",
-       "kind": "capsule",
-       "x0": 0,
-       "y0": 0.09,
-       "x1": 0,
-       "y1": 0.095,
-       "r0": 0.064,
-       "r1": 0.058,
-       "followTip": true
+       "kind": "poly",
+       "closed": true,
+       "points": [
+        [
+         -0.0295,
+         0.0674
+        ],
+        [
+         0.0214,
+         0.0698
+        ],
+        [
+         0.0723,
+         0.0722
+        ],
+        [
+         0.1231,
+         0.0747
+        ],
+        [
+         0.174,
+         0.0731
+        ],
+        [
+         0.2249,
+         0.0712
+        ],
+        [
+         0.2758,
+         0.0693
+        ],
+        [
+         0.3266,
+         0.0675
+        ],
+        [
+         0.3775,
+         0.0563
+        ],
+        [
+         0.3775,
+         0.0031
+        ],
+        [
+         -0.0295,
+         0.0031
+        ]
+       ],
+       "solid": {
+        "kind": "revolved",
+        "axisBone": "shank-l",
+        "axis": "u",
+        "axisX": 0.0031,
+        "axisZ": -0.0033,
+        "mirror": true
+       }
       },
       {
        "id": "shank-r",
@@ -20040,14 +20344,62 @@
        "filled": true,
        "tone": 0.4,
        "region": "trousers",
-       "kind": "capsule",
-       "x0": 0,
-       "y0": -0.09,
-       "x1": 0,
-       "y1": -0.095,
-       "r0": 0.064,
-       "r1": 0.058,
-       "followTip": true
+       "kind": "poly",
+       "closed": true,
+       "points": [
+        [
+         -0.0295,
+         0.0659
+        ],
+        [
+         0.0214,
+         0.0674
+        ],
+        [
+         0.0723,
+         0.069
+        ],
+        [
+         0.1231,
+         0.0706
+        ],
+        [
+         0.174,
+         0.0693
+        ],
+        [
+         0.2249,
+         0.068
+        ],
+        [
+         0.2758,
+         0.0667
+        ],
+        [
+         0.3266,
+         0.0654
+        ],
+        [
+         0.3775,
+         0.0548
+        ],
+        [
+         0.3775,
+         0.0016
+        ],
+        [
+         -0.0295,
+         0.0016
+        ]
+       ],
+       "solid": {
+        "kind": "revolved",
+        "axisBone": "shank-r",
+        "axis": "u",
+        "axisX": 0.0016,
+        "axisZ": 0.0042,
+        "mirror": true
+       }
       },
       {
        "id": "foot-l",
@@ -20214,8 +20566,7 @@
         "axisBone": "arm-l",
         "axis": "u",
         "axisX": 0,
-        "mirror": true,
-        "lateralScale": 0.8954
+        "mirror": true
        }
       },
       {
@@ -20259,8 +20610,7 @@
         "axisBone": "arm-r",
         "axis": "u",
         "axisX": 0,
-        "mirror": true,
-        "lateralScale": 0.8954
+        "mirror": true
        }
       },
       {
@@ -20365,8 +20715,7 @@
         "axisBone": "forearm-l",
         "axis": "u",
         "axisX": 0,
-        "mirror": true,
-        "lateralScale": 1.0589
+        "mirror": true
        }
       },
       {
@@ -20402,8 +20751,7 @@
         "axisBone": "forearm-r",
         "axis": "u",
         "axisX": 0,
-        "mirror": true,
-        "lateralScale": 1.0589
+        "mirror": true
        }
       },
       {
@@ -46339,7 +46687,7 @@
        {
         "at": [
          0.221,
-         8e-05,
+         0.00008,
          0.126
         ],
         "rx": 0.004,
@@ -46408,7 +46756,7 @@
        {
         "at": [
          0.221,
-         8e-05,
+         0.00008,
          -0.126
         ],
         "rx": 0.004,

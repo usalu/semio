@@ -150,8 +150,7 @@ export function CanvasPresenceOverlayV1(props: CanvasPresenceSurfaceV1): ReactEl
                   fontSize: 10,
                   lineHeight: 1.2,
                   padding: "1px 4px",
-                  borderRadius: 3,
-                  background: color,
+                                    background: color,
                   color: "white",
                   whiteSpace: "nowrap",
                 }}
@@ -195,7 +194,6 @@ export function CanvasPresenceOverlayV1(props: CanvasPresenceSurfaceV1): ReactEl
                     top: -2,
                     fontSize: 10,
                     padding: "1px 4px",
-                    borderRadius: 3,
                     background: color,
                     color: "white",
                     whiteSpace: "nowrap",
@@ -303,13 +301,13 @@ export function TextPeerCaretsOverlayV1(props: {
             aria-label={labels.caret(peer.label)}
             style={{ position: "absolute", left: screen.x, top: screen.y, width: 2, height: props.lineHeightPx, background: color } as CSSProperties}
           >
-            <span style={{ position: "absolute", left: 3, top: -props.lineHeightPx * 0.75, fontSize: 10, lineHeight: 1.2, padding: "1px 4px", borderRadius: 3, background: color, color: "white", whiteSpace: "nowrap" }}>{peer.label}</span>
+            <span style={{ position: "absolute", left: 3, top: -props.lineHeightPx * 0.75, fontSize: 10, lineHeight: 1.2, padding: "1px 4px", background: color, color: "white", whiteSpace: "nowrap" }}>{peer.label}</span>
             {typing && (typing.insert !== "" || typing.deleted !== "") ? (
               <span
                 data-testid="peer-typing"
                 data-peer-typing=""
                 aria-label={labels.typing(peer.label, typing.insert, typing.deleted)}
-                style={{ position: "absolute", left: 3, top: props.lineHeightPx * 0.15, maxWidth: "24rem", overflow: "hidden", textOverflow: "ellipsis", fontSize: 11, lineHeight: 1.3, padding: "0 3px", borderRadius: 3, border: `1px dashed ${color}`, background: "var(--background, white)", color, whiteSpace: "pre", opacity: 0.85 }}
+                style={{ position: "absolute", left: 3, top: props.lineHeightPx * 0.15, maxWidth: "24rem", overflow: "hidden", textOverflow: "ellipsis", fontSize: 11, lineHeight: 1.3, padding: "0 3px", border: `1px dashed ${color}`, background: "var(--background, white)", color, whiteSpace: "pre", opacity: 0.85 }}
               >
                 {typing.deleted !== "" ? <s>{typing.deleted}</s> : null}
                 {typing.insert}

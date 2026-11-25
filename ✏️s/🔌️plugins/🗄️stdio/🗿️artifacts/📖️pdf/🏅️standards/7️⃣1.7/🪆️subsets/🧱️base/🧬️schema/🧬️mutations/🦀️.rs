@@ -264,7 +264,7 @@ impl PdfMutation {
         self.conflict_segments()[0].map(|_| self as &dyn ArtifactOperationTargets)
     }
 
-    /// 🏠 Admits the document's semantic replay, retirement and conflict target issuers together.
+    /// 🏠 Admits the document's semantic replay, retirement, conflict target and original edit message issuers together; the message issuer is what an original-media publication (a picked image) encodes its causal edit with.
     pub fn document_store_owners(
         grant: semio_framework_value::RetainedCloneGrant,
     ) -> Result<
@@ -272,7 +272,7 @@ impl PdfMutation {
         store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<super::PdfSnapshot, Self>,
     > {
         semio_plugin::cold_replay_document_store_owners::<super::PdfSnapshot, Self>(grant).map(|(mut owners, progress)| {
-            owners.operation_wire = owners.operation_wire.with_original_pack_value_receiving().with_original_target(Self::original_conflict_target);
+            owners.operation_wire = store::original_edit::with_original_edit_message(owners.operation_wire.with_original_pack_value_receiving().with_original_target(Self::original_conflict_target));
             (owners, progress)
         })
     }
@@ -569,6 +569,18 @@ macro_rules! rename_in_place {
     ($items:expr, $rest:expr, $edit:expr, $key:ident, $remove:ident, $set:ident, $payload:ident) => {
         item_lane($items, $rest, $edit, |item| item.$key.clone(), |key| PdfMutation::$remove($remove { $key: key }), |item, index| PdfMutation::$set($set { $payload: item, index }))
     };
+}
+
+/// 🧭️ The whole-value lanes [`special_edit`] edits through the lane's own `set-*` kind, listed beside its match: their optional fields have no pointer in a snapshot that does not hold them yet (an untitled document has no `/info/title`), so admission must not ask the snapshot for that address.
+pub const WHOLE_VALUE_LANES: [&str; 15] = ["info", "outlines", "pageLabels", "outputIntents", "acroForm", "optionalContent", "pageLayout", "pageMode", "viewerPreferences", "openAction", "language", "markInfo", "metadata", "documentId", "encryption"];
+
+/// 🧭️ Whether `event` sets, inserts or removes a value inside one of the [`WHOLE_VALUE_LANES`]; [`special_edit`] then answers it, with the lane's own kind or the localized `stdio.pdf.unknown-field` refusal.
+pub fn addresses_whole_value_lane(event: &SnapshotEditEvent) -> bool {
+    let path = match event {
+        SnapshotEditEvent::SetValue { path, .. } | SnapshotEditEvent::InsertValue { path, .. } | SnapshotEditEvent::RemoveValue { path } => path,
+        _ => return false,
+    };
+    pointer_segments(path).ok().and_then(|segments| segments.first().cloned()).is_some_and(|lane| WHOLE_VALUE_LANES.contains(&lane.as_str()))
 }
 
 /// 🎯️ The edits the table cannot express: a whole-value lane set, inserted or removed as a whole (an absent optional lane has no

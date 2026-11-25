@@ -280,10 +280,12 @@
             {
               "type": "object",
               "additionalProperties": false,
-              "required": ["endpointFrom", "tokenFrom", "factsGeneration", "factsState"],
+              "required": ["endpointFrom", "tokenFrom", "instanceFrom", "instanceRefused", "factsGeneration", "factsState"],
               "properties": {
                 "endpointFrom": { "enum": ["environment", "fleet-facts"] },
                 "tokenFrom": { "enum": ["environment", "fleet-identity", "none"] },
+                "instanceFrom": { "description": "Where the instance (namespace) came from: the environment, the fleet facts (the single source of truth that the cache server publishes) or the policy default.", "enum": ["environment", "fleet-facts", "policy"] },
+                "instanceRefused": { "description": "The instance of the environment that the healthy fleet facts contradict and that was therefore not used (a leftover of an older provisioning); null when none.", "oneOf": [{ "const": null }, { "type": "string", "pattern": "^[A-Za-z0-9._-]{1,64}$" }] },
                 "factsGeneration": { "oneOf": [{ "const": null }, { "type": "integer", "minimum": 1 }] },
                 "factsState": { "enum": ["none", "fresh", "checked", "updated", "stale", "absent"] }
               }

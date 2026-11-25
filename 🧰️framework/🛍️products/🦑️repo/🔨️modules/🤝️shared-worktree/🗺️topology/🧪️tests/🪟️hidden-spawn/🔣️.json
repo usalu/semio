@@ -1,0 +1,188 @@
+{
+  "version": 1,
+  "roots": [
+    "🧰️framework"
+  ],
+  "skipDirectories": [
+    "node_modules",
+    ".git",
+    "target",
+    "dist",
+    "🧪️tests",
+    "🗑️generated"
+  ],
+  "extensions": [
+    ".ts",
+    ".mjs",
+    ".cjs"
+  ],
+  "functions": [
+    "spawn",
+    "spawnSync",
+    "execFile",
+    "execFileSync",
+    "exec",
+    "execSync",
+    "fork"
+  ],
+  "posixOnlyPrograms": [
+    "ps",
+    "sysctl",
+    "mkfifo",
+    "hdiutil",
+    "plutil",
+    "vm_stat",
+    "xcrun",
+    "codesign",
+    "sample",
+    "lsof",
+    "launchctl",
+    "systemctl",
+    "journalctl",
+    "kill",
+    "sh",
+    "mount",
+    "df",
+    "du",
+    "cp",
+    "strace",
+    "sandbox-exec",
+    "sudo",
+    "getent",
+    "diskutil",
+    "sw_vers",
+    "uname",
+    "chmod",
+    "chown",
+    "ln",
+    "rm",
+    "mv",
+    "id",
+    "stat",
+    "tar",
+    "nice",
+    "renice",
+    "ionice",
+    "taskpolicy",
+    "security",
+    "open",
+    "osascript",
+    "pmset",
+    "dscl",
+    "hostname",
+    "which"
+  ],
+  "cases": [
+    {
+      "name": "node spawn without the flag",
+      "text": "import {spawn} from \"node:child_process\";\nspawn(file,[\"a\"],{stdio:\"ignore\"});",
+      "lines": [
+        2
+      ]
+    },
+    {
+      "name": "node spawn with the flag",
+      "text": "import {spawn} from \"node:child_process\";\nspawn(file,[\"a\"],{stdio:\"ignore\",windowsHide:true});",
+      "lines": []
+    },
+    {
+      "name": "flag on a later line of the same call",
+      "text": "import {spawnSync} from \"node:child_process\";\nspawnSync(file,\n  [\"a\"],\n  {encoding:\"utf8\",\n   windowsHide:true});",
+      "lines": []
+    },
+    {
+      "name": "a literal flag in a string does not count",
+      "text": "import {spawnSync} from \"node:child_process\";\nspawnSync(file,[\"windowsHide\"]);",
+      "lines": [
+        2
+      ]
+    },
+    {
+      "name": "windowsHide set to false is refused",
+      "text": "import {spawn} from \"node:child_process\";\nspawn(file,[],{windowsHide:false});",
+      "lines": [
+        2
+      ]
+    },
+    {
+      "name": "the shorthand property counts",
+      "text": "import {spawn} from \"node:child_process\";\nconst windowsHide=true;\nspawn(file,[],{windowsHide});",
+      "lines": []
+    },
+    {
+      "name": "execFile with a callback and no options",
+      "text": "import {execFile} from \"node:child_process\";\nexecFile(file,[\"a\"],(error)=>{});",
+      "lines": [
+        2
+      ]
+    },
+    {
+      "name": "an alias of the import is tracked",
+      "text": "import {spawn as launch} from \"node:child_process\";\nlaunch(file,[]);",
+      "lines": [
+        2
+      ]
+    },
+    {
+      "name": "a namespace import is tracked",
+      "text": "import * as cp from \"node:child_process\";\ncp.execFileSync(file,[]);",
+      "lines": [
+        2
+      ]
+    },
+    {
+      "name": "Bun.spawn without the flag",
+      "text": "Bun.spawn([exe,\"a\"],{stdout:\"pipe\"});",
+      "lines": [
+        1
+      ]
+    },
+    {
+      "name": "Bun.spawnSync with the flag",
+      "text": "Bun.spawnSync([exe,\"a\"],{windowsHide:true});",
+      "lines": []
+    },
+    {
+      "name": "a posix-only literal program is exempt",
+      "text": "import {spawnSync} from \"node:child_process\";\nspawnSync(\"ps\",[\"-A\"],{encoding:\"utf8\"});\nspawnSync(\"/usr/bin/hdiutil\",[\"info\"]);",
+      "lines": []
+    },
+    {
+      "name": "a dynamic program is not exempt",
+      "text": "import {spawnSync} from \"node:child_process\";\nspawnSync(program,[\"-A\"],{encoding:\"utf8\"});\nspawnSync(\"git\",[\"status\"]);",
+      "lines": [
+        2,
+        3
+      ]
+    },
+    {
+      "name": "a method signature named spawn is not a call",
+      "text": "import {spawn} from \"node:child_process\";\ntype P={\n spawn(spec:string,signal:AbortSignal):Promise<void>;\n};",
+      "lines": []
+    },
+    {
+      "name": "a local function named spawn without the import is not a call",
+      "text": "const spawn=(a:string)=>a;\nspawn(file,[]);",
+      "lines": []
+    },
+    {
+      "name": "a comment is not a call",
+      "text": "import {spawn} from \"node:child_process\";\n// spawn(file,[]);\n/* spawn(file,[]) */",
+      "lines": []
+    },
+    {
+      "name": "a template string with braces inside the call",
+      "text": "import {spawn} from \"node:child_process\";\nspawn(file,[`${a}`],{env:{...x},stdio:\"pipe\"});",
+      "lines": [
+        2
+      ]
+    },
+    {
+      "name": "dynamic import destructuring",
+      "text": "const {execFileSync}=await import(\"node:child_process\");\nexecFileSync(file,[]);",
+      "lines": [
+        2
+      ]
+    }
+  ]
+}

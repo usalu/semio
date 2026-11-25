@@ -35,6 +35,32 @@ export type FlowStageOptions = {
 };
 
 const STYLE_ID = "semio-flow-style";
+const adopted = new WeakMap<Document | ShadowRoot, CSSStyleSheet>();
+
+/** 🎨️ Gives the air flow layer in `parent` its style where `parent` is styled from, the document or its shadow root: one constructable style sheet adopted there (a Content-Security-Policy that forbids inline `<style>` elements, like the site's release policy, does not block it); where the platform has none, one `<style>` element.
+ * @see ../../🧊️spatial/🖥️stage/🟦️.ts — the 3D stage is styled the same way */
+export function styleFlowLayer(parent: HTMLElement): void {
+  const doc = parent.ownerDocument;
+  const scope = parent.getRootNode();
+  const shadow = typeof ShadowRoot === "function" && scope instanceof ShadowRoot ? scope : null;
+  const container: Document | ShadowRoot = shadow ?? doc;
+  if ("adoptedStyleSheets" in container && Array.isArray(container.adoptedStyleSheets) && typeof CSSStyleSheet === "function" && "replaceSync" in CSSStyleSheet.prototype) {
+    let sheet = adopted.get(container);
+    if (sheet === undefined) {
+      sheet = new CSSStyleSheet();
+      sheet.replaceSync(CSS);
+      adopted.set(container, sheet);
+    }
+    if (!container.adoptedStyleSheets.includes(sheet)) container.adoptedStyleSheets = [...container.adoptedStyleSheets, sheet];
+    return;
+  }
+  const sheets: ParentNode = shadow ?? doc.head;
+  if (sheets.querySelector(`#${STYLE_ID}`) !== null) return;
+  const style = doc.createElement("style");
+  style.id = STYLE_ID;
+  style.textContent = CSS;
+  sheets.append(style);
+}
 const CSS = `
 .semio-flow{position:absolute;inset:0;pointer-events:none;overflow:hidden}
 .semio-flow canvas{position:absolute;inset:0;inline-size:100%;block-size:100%}
@@ -133,15 +159,7 @@ export class FlowStage {
 
   /** 📌️ Puts the layer into `parent` (again): the owner calls it after it replaced the element the layer stood in. The style sheet of the layer goes where `parent` is styled from, the document or its shadow root. */
   mount(parent: HTMLElement): void {
-    const doc = parent.ownerDocument;
-    const scope = parent.getRootNode();
-    const sheets: ParentNode = typeof ShadowRoot === "function" && scope instanceof ShadowRoot ? scope : doc.head;
-    if (sheets.querySelector(`#${STYLE_ID}`) === null) {
-      const style = doc.createElement("style");
-      style.id = STYLE_ID;
-      style.textContent = CSS;
-      sheets.append(style);
-    }
+    styleFlowLayer(parent);
     if (this.#root.parentNode !== parent) parent.append(this.#root);
     this.redraw();
   }

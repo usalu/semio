@@ -199,8 +199,12 @@ pub mod context {
 
 #[path = "../../🎮️commands/📍️add-nodal-load/🧪️tests/🔬️unit/🦀️.rs"]
 mod add_nodal_load;
+#[path = "../../🎮️commands/🔗️add-combination/🧪️tests/🔬️unit/🦀️.rs"]
+mod add_combination;
 #[path = "../../🎮️commands/⚪️add-node/🧪️tests/🔬️unit/🦀️.rs"]
 mod add_node;
+#[path = "../../🎮️commands/🧊️add-solid/🧪️tests/🔬️unit/🦀️.rs"]
+mod add_solid;
 #[path = "../../📌️panels/🗿️artifact/🧪️tests/🔬️unit/🦀️.rs"]
 mod artifact_panel;
 #[path = "../../🧪️tests/🔬️unit/🦀️.rs"]

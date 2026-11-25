@@ -1,6 +1,6 @@
 import{dirname,join}from"node:path";
-import{withArtifactRelativeDirectoryV1}from"@semio-tech/framework-filesystem/observation/descriptor";
-import{readNativeFundingMetadataBaselineV1,nativeFundingMetadataBaselineTextV1,type NativeFundingMetadataBaselineV1}from"@semio-tech/process/artifacts/native-build/storage";
+import{withArtifactRelativeDirectoryV1}from"../../../../../../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
+import{readNativeFundingMetadataBaselineV1,nativeFundingMetadataBaselineTextV1,type NativeFundingMetadataBaselineV1}from"../../../../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
 import{readNativeImageRetirementFileV1}from"../../../../../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📄️retirement-file/🟦️.ts";
 import schema from"../../../🧬️schema.json"with{type:"json"};
 import{readRepositoryDependencyMarkerPublicationIntentV1,repositoryDependencyMarkerPublicationIntentTextV1,type RepositoryDependencyMarkerPublicationIntentV1}from"../🟦️.ts";

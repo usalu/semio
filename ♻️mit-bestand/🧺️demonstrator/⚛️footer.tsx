@@ -2,7 +2,7 @@
 /** 🏛️ Entwerfen mit Bestand landing partner/funding credits — brand-exclusive footer items, not part of the shared `@semio-tech/ui-react` component library. */
 // #endregion 🧲️Header
 
-import type { NavbarItem } from "@semio-tech/ui-react";
+import { sharedBorderlessBoxProps, type NavbarItem } from "@semio-tech/ui-react";
 import { demonstratorFooterItems } from "./🪧️brand.ts";
 import { demonstratorFormat, demonstratorText, type DemonstratorLocale } from "./🔨️modules/🌐️locale/🟦️.ts";
 
@@ -23,8 +23,8 @@ function PartnerLogoLink({ logo, locale }: { readonly logo: PartnerLogo; readonl
       href={logo.href}
       target="_blank"
       rel="noopener noreferrer"
-      data-shared-border-frame="" data-shared-border-edges=""
-      className="inline-flex h-tiny items-center rounded-sm hover:opacity-80 transition-opacity"
+      {...sharedBorderlessBoxProps}
+      className="inline-flex h-tiny items-center hover:opacity-80 transition-opacity"
       aria-label={demonstratorFormat("demonstrator.footer.newTab", locale, { name: logo.alt })}
     >
       <span className="inline-flex shrink-0 items-center h-full">
@@ -54,9 +54,9 @@ export function fundedByZukunftBauFooterItem(key: string, locale: DemonstratorLo
         href={logo.href}
         target="_blank"
         rel="noopener noreferrer"
-        data-shared-border-frame="" data-shared-border-edges=""
+        {...sharedBorderlessBoxProps}
         aria-label={demonstratorFormat("demonstrator.footer.newTab", locale, { name: `${demonstratorText("demonstrator.footer.fundedBy", locale)} ${logo.alt}` })}
-        className="inline-flex items-center gap-tiny rounded-sm px-single py-half text-xs text-muted-foreground hover:text-foreground hover:bg-hover-window transition-colors cursor-pointer no-underline"
+        className="inline-flex items-center gap-tiny px-single py-half text-xs text-muted-foreground hover:text-foreground hover:bg-hover-window transition-colors cursor-pointer no-underline"
       >
         {!iconOnly && <span className="whitespace-nowrap">{demonstratorText("demonstrator.footer.fundedBy", locale)}</span>}
         <span className="inline-flex shrink-0 items-center h-tiny">
@@ -82,7 +82,7 @@ export function aProjectOfLuhUdkFooterItem(key: string, locale: DemonstratorLoca
     key,
     className: "relative z-40",
     content: (
-      <div role="group" aria-label={demonstratorText("demonstrator.footer.aProjectOf", locale)} className="inline-flex items-center gap-tiny rounded-sm px-single py-half text-xs text-muted-foreground hover:text-foreground hover:bg-hover-window transition-colors">
+      <div role="group" aria-label={demonstratorText("demonstrator.footer.aProjectOf", locale)} className="inline-flex items-center gap-tiny px-single py-half text-xs text-muted-foreground hover:text-foreground hover:bg-hover-window transition-colors">
         {!iconOnly && <span className="whitespace-nowrap">{demonstratorText("demonstrator.footer.aProjectOf", locale)}</span>}
         <PartnerLogoLink logo={luh!} locale={locale} />
         {!iconOnly && <span className="whitespace-nowrap">{demonstratorText("demonstrator.footer.and", locale)}</span>}

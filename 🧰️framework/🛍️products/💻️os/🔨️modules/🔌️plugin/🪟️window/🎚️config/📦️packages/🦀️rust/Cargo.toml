@@ -37,6 +37,7 @@ semio-plugin-window-config-mutation = { path = "../../📬️mutation/📦️pac
 semio-plugin-window-config-registry = { path = "../../🗂️registry/📦️packages/🦀️rust" }
 semio-plugin-window-config-replace = { path = "../../🧬️preparation/🔁️replace/📦️packages/🦀️rust" }
 semio-plugin-ownership = { path = "../../../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
+semio-plugin-store-lifecycle = { path = "../../../../♻️lifecycle/🧱️owner/📦️packages/🦀️rust" }
 semio-framework-tool-run = { workspace = true }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-retirement-queue = { path = "../../../../../../../../🔨️modules/🌱️value/♻️retirement/📋️queue/📦️packages/🦀️rust" }

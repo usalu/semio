@@ -677,7 +677,7 @@ pub fn sample_plugin() -> ProgramSnapshot {
         success_metrics: Vec::new(),
     });
 
-    let (a, b) = standards::v1::subsets::any::schema::kernel::normalize_pair(&reception_id, &waiting_id);
+    let (a, b) = crate::standards::v1::subsets::any::schema::kernel::normalize_pair(&reception_id, &waiting_id);
     program.adjacencies.push(Adjacency {
         header: EntityHeader::new(EntityId::new_serial("adjacency", "Reception ↔ Waiting"), "Reception ↔ Waiting"),
         element_a_id: a,

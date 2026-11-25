@@ -45,14 +45,14 @@ export function captureV1(command: readonly string[], options: {readonly cwd: st
   return new Promise((resolve) => {
     const started = Date.now(), windows = process.platform === "win32", resolved = (options.resolution ?? ((name) => resolveCommandV1(name, options.env)))(command[0]!);
     if ("refusal" in resolved) { resolve({exit: 127, output: resolved.refusal, seconds: 0, timedOut: false}); return; }
-    const child = spawn(resolved.path, command.slice(1), {cwd: options.cwd, env: options.env as NodeJS.ProcessEnv, detached: !windows, stdio: ["ignore", "pipe", "pipe"]});
+    const child = spawn(resolved.path, command.slice(1), {windowsHide:true,cwd: options.cwd, env: options.env as NodeJS.ProcessEnv, detached: !windows, stdio: ["ignore", "pipe", "pipe"]});
     let tail = "", timedOut = false;
     const keep = (chunk: Buffer) => { tail = (tail + chunk.toString("utf8")).slice(-TAIL_BYTES); };
     child.stdout.on("data", keep);
     child.stderr.on("data", keep);
     const stop = () => {
       timedOut = true;
-      if (windows) spawnSync("taskkill", ["/T", "/F", "/PID", String(child.pid)]);
+      if (windows) spawnSync("taskkill", ["/T", "/F", "/PID", String(child.pid)],{windowsHide:true});
       else try { process.kill(-child.pid!, "SIGKILL"); } catch { child.kill("SIGKILL"); }
     };
     const timer = setTimeout(stop, options.timeoutMs);

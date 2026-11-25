@@ -1,11 +1,13 @@
 {
   "title": "Renew Actor Original Work Funds",
   "emoji": "🔋",
-  "status": "open",
+  "status": "closed",
   "description": "Every browser plugin actor draws all turns, commands and jobs from one finite original stock issued once at activation; when an axis runs out the guest refuses everything. Design and implement a renewal that keeps the receipt and identity laws: a kernel-issued, receipted successor operation admitted when the actor is quiescent (TypeScript and Rust twins, component bridge source, guest reactor context), decide live versus cumulative capacity accounting, and a typed original-stock-exhausted fault. Schema and language-agnostic fixtures first, native and TypeScript tests, no weakened laws, no compatibility layers.",
+  "summary": "Guest r37 never renewed because the playground served a shard worker from 21 Nov without the succession request. The bridge now refuses such a worker at activation, prepare refuses and the playground launch republishes a stale worker, and a refused job start no longer holds back renewal. In the browser r37 renewed once with a current worker and with the new bridge. Guest linear memory reaches 512 MiB at the tenth shape with and without renewal; not diagnosed. Details: 📓️actor-stock-succession-2026-11-24.md.",
   "goal": "🎯runningos",
   "sessions": [
-    "4688fe24-43e0-4340-93c3-974d789668de"
+    "4688fe24-43e0-4340-93c3-974d789668de",
+    "6018e835-0693-4b1a-9f5e-0a8bdeff242a"
   ],
   "interactions": [
     {
@@ -17,6 +19,220 @@
       "checkpoint": "",
       "prompt": "Every browser plugin actor draws all turns, commands and jobs from one finite original stock issued once at activation; when an axis runs out the guest refuses everything. Design and implement a renewal that keeps the receipt and identity laws: a kernel-issued, receipted successor operation admitted when the actor is quiescent (TypeScript and Rust twins, component bridge source, guest reactor context), decide live versus cumulative capacity accounting, and a typed original-stock-exhausted fault. Schema and language-agnostic fixtures first, native and TypeScript tests, no weakened laws, no compatibility layers.",
       "llm": "opus-5-5"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-24 18:50:19",
+      "author": "ueli",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "3b15468f901294ad97d37119cf8ad8d2a2ca8663",
+      "summary": "Actor stock succession: a kernel-issued, receipted successor operation renews the funds of a quiescent actor Source without changing its identity, capacity stays cumulative, and an exhausted Source answers the typed plugin.original-stock-exhausted fault with EN and DE notices. TypeScript and native laws run one actor past six stocks. No component was built and nothing ran in a browser. 11 older native context tests and 14 older TypeScript source-text tests still fail. Details: 📓️actor-stock-succession-2026-11-24.md.",
+      "files": [
+        {
+          "path": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🔁️succession/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🔁️succession/📋️policy.json"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🔁️succession/🧬️schema/🔣️.json"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🔁️succession/🧪️tests/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🔁️succession/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🏛️bootstrap/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🏛️bootstrap/📮️port/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🏛️bootstrap/📮️port/🧬️schema/🔣️.json"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🎟️context/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🎟️context/🧪️tests/🔁️succession/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🧪️tests/💼️job-funds/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🎭️actor/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🎠️kernel/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🎠️kernel/📜️history/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🎠️kernel/🏷️notice-labels/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🎠️kernel/🧪️tests/🧫️fixtures/🧫️framework-notices/🔣️.json"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/🪙️budget/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/🪙️budget/📦️stock/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/🪙️budget/🧪️tests/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/🪙️budget/🧪️tests/🔒️birth/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/⏸️continuation/🎟️source/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🧵️job/⏱️context/🎟️source/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/📨️messages/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🔐️activation/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/📬️request-transport/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🎭️actor/📤️return/📨️response/🎟️credit/📋️metadata/📥️inbox/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🎟️retained-turn/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🎭️actor/🧪️tests/📣️public-facets/🔣️.json"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🎭️actor/🧪️tests/📣️public-facets/🧬️.json"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖼️canvas/🧵️renderer-work/🔣️stock.json"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🎟️context/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🎟️context/🌉️call/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🎟️context/🌉️call/🎭️exports/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🎟️context/🎟️admitted-input/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🎟️context/🧪️tests/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🎟️context/🧪️tests/🔁️succession/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/🎟️actor-input/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/🎟️actor-input/🧬️schema/🔣️.json"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/🎟️actor-input/🧫️fixtures/🔣️.json"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🌉️component-bridge-source/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🧵️shard-worker-source/🔌️actor-loading-and-replies/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🧵️shard-worker-source/📨️message-handler/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🧪️tests/🔁️succession/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/🎟️original/🧪️tests/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-24 20:35:12",
+      "author": "",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Diagnose why guest r37 never renewed its original stock in the browser and fix it"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-24 20:56:35",
+      "author": "ueli",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "8d17d8ba3998690932b0032ea2ca41bce5c994b6",
+      "summary": "Guest r37 never renewed because the playground served a shard worker from 21 Nov without the succession request. The bridge now refuses such a worker at activation, prepare refuses and the playground launch republishes a stale worker, and a refused job start no longer holds back renewal. In the browser r37 renewed once with a current worker and with the new bridge. Guest linear memory reaches 512 MiB at the tenth shape with and without renewal; not diagnosed. Details: 📓️actor-stock-succession-2026-11-24.md.",
+      "files": [
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🧑‍💻dev🗃️♻️activation🗃️🧰️preparation💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🗃️🎭️actor🗃️🎟️retainedturn🗃️🔁️succession🗃️🧬️schema⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🌐️browserbundle🗃️🏗️materialization🗃️🧵️shardworkersource💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️⚡️caching🗃️🧪️tests🗃️🧊️liveactivation💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🗃️🎭️actor🗃️🎟️retainedturn🗃️🔁️succession🗃️🧪️tests💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🗃️🎭️actor🗃️🎟️retainedturn🗃️🔁️succession🗃️🧪️tests🗃️🧫️fixtures⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🧪️tests🗃️🧪️shardclientreservedresponsesettlement🗃️📥️segmenteddownloadandmultiplexing💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🌐️browserbundle🗃️🏗️materialization🗃️🌉️componentbridgesource💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🌐️browserbundle🗃️🏗️materialization🗃️🧪️tests🗃️🧬️witlowering💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🧪️tests🗃️🧬️componentcodecreply💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🧑‍💻dev🗃️🧪️tests🗃️🧪️ticketownedbrowserhoststaging🗃️🧰️testkit💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🎛️commands🗃️🛠️dev🗃️🎮️playground💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🗃️🎭️actor🗃️🎟️retainedturn💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🔌️plugin🗃️🌐️browserbundle🗃️🏗️materialization🗃️🧪️tests🗃️🔁️succession💻🟦️"
+        }
+      ]
     }
   ]
 }

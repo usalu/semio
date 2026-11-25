@@ -1,5 +1,7 @@
 /** 🛂️ The descriptor route guard, the catalog state transition probe and the plugin component bridge source of the ticket-owned browser host staging suite. */
 import { actorPageFixtureUrl, actorLifetimePatchFixtureUrl, actorLifetimeFixtureUrl } from "@semio-tech/framework-actor/testing/fixtures";
+import { decodePackValue } from "../../../../../../../🔨️modules/🎁️packs/🟦️.ts";
+import { createActorInputWireV1 } from "../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/📨️actor-input-wire/🟦️.ts";
 import { createTestKit, type TestDependencies, type TestSource } from "../🧰️test-kit/🟦️.ts";
 
 export async function registerRouteAndBridgeTests(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: TestDependencies, source: TestSource): Promise<void> {
@@ -7,6 +9,9 @@ export async function registerRouteAndBridgeTests(vitest: NonNullable<ImportMeta
   const { describe, expect, it } = vitest;
   const { itLong, generatedBridge, retainedGuestSource } = createTestKit(vitest, dependencies, source);
   const budget = { maxEffects: 1, maxPatchBytes: 4096, maxFrames: 1 };
+  const wire = createActorInputWireV1();
+  const pollWire = (...events: readonly unknown[]) => Buffer.from(wire.encode({ operation: "poll", events: events.map(wire.event), shape: budget })).toString("hex");
+  const hex = (bytes: unknown) => Buffer.from(bytes as Uint8Array).toString("hex");
 
   type PackValue = import("@semio-tech/framework-os").PackValue;
   type ParityDump = import("../../../⚖️parity/🏗️structure/🟦️.ts").ParityDump;
@@ -68,7 +73,7 @@ export async function registerRouteAndBridgeTests(vitest: NonNullable<ImportMeta
       const vectors = fixture.vectors.filter((row: { length: number }) => row.length !== 0);
       const bridge = await generatedBridge(retainedGuestSource({ extra: `stageCommandPage: async (cursor, bytes) => { globalThis.__bridgeStaged?.("command", cursor, bytes); }, stageColdPairPage: async (page) => { globalThis.__bridgeStaged?.("cold", page); },` }));
       const reached: unknown[][] = [];
-      Object.assign(globalThis, { __bridgePolled: (events: unknown) => reached.push(["poll", events]), __bridgeStaged: (kind: string, ...args: unknown[]) => reached.push(["stage", kind, ...args]) });
+      Object.assign(globalThis, { __bridgeAdmitted: (bytes: unknown) => reached.push(["admit", hex(bytes)]), __bridgePolled: () => reached.push(["poll"]), __bridgeStaged: (kind: string, ...args: unknown[]) => reached.push(["stage", kind, ...args]) });
       try {
         for (const [index, row] of vectors.entries() as Iterable<[number, { length: number }]>) {
           const command = Uint8Array.from({ length: row.length }, (_, byte) => (byte * fixture.bytePattern.multiplier + fixture.bytePattern.addend) % fixture.bytePattern.modulus);
@@ -76,11 +81,11 @@ export async function registerRouteAndBridgeTests(vitest: NonNullable<ImportMeta
           const api = await bridge.activate(1n);
           reached.length = 0;
           await api.poll([], page, undefined, budget);
-          expect(reached.map((step) => step[0])).toEqual(["stage", "poll"]);
-          expect(reached[0]![1]).toBe("command");
-          expect(reached[0]![2]).toBe(page.cursor);
-          expect(reached[0]![3]).toBe(page.bytes);
-          expect(reached[1]![1]).toEqual([]);
+          expect(reached.map((step) => step[0])).toEqual(["admit", "stage", "poll"]);
+          expect(reached[0]![1]).toBe(pollWire());
+          expect(reached[1]![1]).toBe("command");
+          expect(reached[1]![2]).toBe(page.cursor);
+          expect(reached[1]![3]).toBe(page.bytes);
           expect(api.originalSource.producerRefusal).toBeUndefined();
           await api.poll([], undefined, undefined, budget);
         }
@@ -88,9 +93,12 @@ export async function registerRouteAndBridgeTests(vitest: NonNullable<ImportMeta
         const cold = { header: {}, pageIndex: 0, bytes: new Uint8Array([1]) };
         reached.length = 0;
         await (await bridge.activate(1n)).poll([], undefined, cold, budget);
-        expect(reached.map((step) => step.slice(0, 2))).toEqual([["stage", "cold"], ["poll", []]]);
-        expect(reached[0]![2]).toBe(cold);
+        expect(reached.map((step) => step[0])).toEqual(["admit", "stage", "poll"]);
+        expect(reached[0]![1]).toBe(pollWire());
+        expect(reached[1]![1]).toBe("cold");
+        expect(reached[1]![2]).toBe(cold);
       } finally {
+        delete (globalThis as Record<string, unknown>).__bridgeAdmitted;
         delete (globalThis as Record<string, unknown>).__bridgePolled;
         delete (globalThis as Record<string, unknown>).__bridgeStaged;
         bridge.dispose();
@@ -102,8 +110,8 @@ export async function registerRouteAndBridgeTests(vitest: NonNullable<ImportMeta
       const convert = (value: { lifetime: { activationGeneration: string; instanceId: number; guestLifetime: string }; patchSequence: string }) => ({ lifetime: { activationGeneration: BigInt(value.lifetime.activationGeneration), instanceId: value.lifetime.instanceId, guestLifetime: BigInt(value.lifetime.guestLifetime) }, patchSequence: BigInt(value.patchSequence) });
       const result = (receipt: unknown, count: number) => ({ uiPatches: Array.from({ length: count }, () => ({})), uiPatchReceipt: receipt });
       const bridge = await generatedBridge(retainedGuestSource());
-      const polled: unknown[] = [];
-      (globalThis as Record<string, unknown>).__bridgePolled = (events: unknown) => polled.push(events);
+      const polled: string[] = [], expected = new Set<string>([pollWire()]);
+      (globalThis as Record<string, unknown>).__bridgeAdmitted = (bytes: unknown) => polled.push(hex(bytes));
       const answer = async (generation: bigint, next: Record<string, unknown>, events: readonly { kind: string; payload: unknown }[] = []) => {
         (globalThis as Record<string, unknown>).__bridgeNext = next;
         return (await bridge.activate(generation)).poll(events, undefined, undefined, budget);
@@ -118,7 +126,8 @@ export async function registerRouteAndBridgeTests(vitest: NonNullable<ImportMeta
             const before = polled.length;
             await answer(receipt.lifetime.activationGeneration, result(undefined, 0), [{ kind: "patch-" + kind, payload }]);
             expect(polled).toHaveLength(before + 1);
-            expect(polled.at(-1)).toEqual([{ tag: "patch-" + kind, val: payload }]);
+            expected.add(pollWire({ tag: "patch-" + kind, val: payload }));
+            expect(polled.at(-1)).toBe(pollWire({ tag: "patch-" + kind, val: payload }));
             expect(bridge.held).toHaveLength(0);
             await expect(answer(receipt.lifetime.activationGeneration, result(undefined, 0), [{ kind: "wake", payload: undefined }, { kind: "wake", payload: undefined }])).rejects.toThrow("a reactor turn admits at most one event");
           }
@@ -132,10 +141,10 @@ export async function registerRouteAndBridgeTests(vitest: NonNullable<ImportMeta
           await expect(answer(receipt.lifetime.activationGeneration, raw)).rejects.toThrow();
         }
         expect(polled.length).toBeGreaterThan(0);
-        expect(polled.every((events) => (events as unknown[]).length <= 1), "no guest poll carries more than one event").toBe(true);
+        expect(polled.every((bytes) => expected.has(bytes)), "no guest poll carries more than one event").toBe(true);
       } finally {
         delete (globalThis as Record<string, unknown>).__bridgeNext;
-        delete (globalThis as Record<string, unknown>).__bridgePolled;
+        delete (globalThis as Record<string, unknown>).__bridgeAdmitted;
         bridge.dispose();
       }
     });
@@ -146,7 +155,7 @@ export async function registerRouteAndBridgeTests(vitest: NonNullable<ImportMeta
       const body = (receipt: { lifetime: unknown; requestSequence: string; kind: string; closeGeneration?: bigint }) => ({ lifetime: receipt.lifetime, requestSequence: BigInt(receipt.requestSequence), ...(receipt.kind === "captured" ? {} : { closeGeneration: receipt.closeGeneration }) });
       const bridge = await generatedBridge(retainedGuestSource());
       const delivered: unknown[] = [];
-      (globalThis as Record<string, unknown>).__bridgePolled = (events: unknown) => delivered.push(events);
+      (globalThis as Record<string, unknown>).__bridgeAdmitted = (bytes: unknown) => delivered.push((decodePackValue(bytes as Uint8Array) as { events: unknown }).events);
       const answer = async (generation: bigint, next: Record<string, unknown>, events: readonly { kind: string; payload: unknown }[] = []) => {
         (globalThis as Record<string, unknown>).__bridgeNext = next;
         return (await bridge.activate(generation)).poll(events, undefined, undefined, budget);
@@ -174,7 +183,7 @@ export async function registerRouteAndBridgeTests(vitest: NonNullable<ImportMeta
         }
       } finally {
         delete (globalThis as Record<string, unknown>).__bridgeNext;
-        delete (globalThis as Record<string, unknown>).__bridgePolled;
+        delete (globalThis as Record<string, unknown>).__bridgeAdmitted;
         bridge.dispose();
       }
     });
@@ -208,30 +217,42 @@ export async function registerRouteAndBridgeTests(vitest: NonNullable<ImportMeta
     });
 
     it("adapts the shard envelope into the canonical jco variant representation", () => {
-      const source = pluginComponentBridgeSource("plugin", "plugin.core.wasm");
+      const source = pluginComponentBridgeSource("plugin");
       expect(source).toContain('kind === "wake" ? ({ tag: kind }) : ({ tag: kind, val: payload })');
     });
 
     it("adapts the retained original turn and the actor grant into the reactor budget vocabulary", () => {
-      const source = pluginComponentBridgeSource("plugin", "plugin.core.wasm");
+      const source = pluginComponentBridgeSource("plugin");
       expect(source).toContain("reactor.poll(originalContextBudgetWit(turn))");
       expect(source).toContain("reactor[method](originalContextBudgetWit(turn))");
       expect(source).toContain("reactor.admitActorInput(actorInputWire.encode(value), originalContextBudgetWit(turn))");
     });
 
     it("normalizes the scalar command-ingress wire record without relying on async variant discriminants", () => {
-      const source = pluginComponentBridgeSource("plugin", "plugin.core.wasm");
+      const source = pluginComponentBridgeSource("plugin");
       expect(source).toContain("function normalizeCommandIngress(status)");
       expect(source).toContain('[0, "idle"], [1, "page-accepted"], [2, "backpressure"], [3, "command-pending"], [4, "command-complete"], [5, "fault"]');
       expect(source).toContain("commandIngress: normalizeCommandIngress(result.commandIngress)");
     });
 
-    it("gives every actor a distinct component module while carrying the rebuild version", () => {
-      const source = pluginComponentBridgeSource("plugin_component", "plugin_component.core.wasm");
-      expect(source).toContain('componentUrl.searchParams.set("actor", actorId)');
-      expect(source).toContain('componentUrl.searchParams.set("v", rebuildVersion)');
-      expect(source).toContain("await import(componentUrl.href)");
-      expect(source).not.toContain('await import("./🟦️")');
+    it("imports one component factory per rebuild version and instantiates it per activation with its own host and the worker's core modules", () => {
+      const source = pluginComponentBridgeSource("plugin_component");
+      expect(source).toContain('if (rebuildVersion) url.searchParams.set("v", rebuildVersion);');
+      expect(source).toContain('import(versionedUrl("./" + base + ".js"))');
+      expect(source).toContain('const COMPONENT_BASES = new Map([]);');
+      expect(source).toContain('return "plugin_component";');
+      expect(source).toContain("hostModule.createActorHost(actorId, activationGeneration)");
+      expect(source).toContain('factory.instantiate((name) => coreModule(versionedUrl("./" + name)), { ...factory.wasiImports, "./🟨️.js": hostShim })');
+      expect(source).not.toContain('searchParams.set("actor"');
+      expect(source).not.toContain('searchParams.set("activation"');
+    });
+
+    it("maps each declared component id to the factory it stages, and refuses a component the module does not stage", () => {
+      const source = pluginComponentBridgeSource("first_component", { first: "first_component", second: "second_component" });
+      expect(source).toContain('const COMPONENT_BASES = new Map([["first","first_component"],["second","second_component"]]);');
+      expect(source).toContain('return "first_component";');
+      expect(source).toContain("actor-component.unknown");
+      expect(source).toContain("createActorApi(actorId, activationGeneration, originalAdmission, operationClockUs, originalReturn, coreModule, component = null)");
     });
   });
 }

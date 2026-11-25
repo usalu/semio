@@ -12,7 +12,7 @@
   ],
   "properties": {
     "mutation": {
-      "const": "changezonethermalmass"
+      "const": "changeZoneThermalMass"
     },
     "zoneId": {
       "type": "string",

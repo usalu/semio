@@ -1,7 +1,8 @@
 //! 🌡️ Fire field: the 2D transient heat conduction of any concrete section outline under the ISO 834 standard fire (enthalpy formulation, explicit finite volumes, progress and cancellation per time step), with the temperature-dependent siliceous-concrete properties of EN 1992-1-2 3.3 and the boundary conditions of EN 1991-1-2 3.2 (convection 25 and 4 W/m²K, emissivity 0,7, 1,0), the 500 °C isotherm contour (Annex B.1) and the zone-method offset contour (Annex B.2). SI units, `y` across the width, `z` up, origin at the section centroid. The single thermal solver of the EN 1992 plugin: the member checks and the scene read it from here. See [`super`].
 
 use super::*;
-use std::cell::RefCell;
+use std::collections::HashMap;
+use std::sync::{Arc, Mutex, OnceLock};
 
 pub const LEVEL_500: f64 = 500.0;
 pub const MOISTURE_DEFAULT: f64 = 1.5;
@@ -28,7 +29,7 @@ const SAFETY: f64 = 0.2;
 const TABLE_STEP: f64 = 0.5;
 const TABLE_MAX: f64 = 1200.0;
 const ENTHALPY_BINS: usize = 8192;
-const CACHE: usize = 8;
+const CACHE: usize = 256;
 
 /// 🔥️ Which faces of the section `(left, right, bottom, top)` the fire reaches; the other faces are in contact with the ambient air.
 pub type Faces = (bool, bool, bool, bool);
@@ -246,21 +247,20 @@ pub fn rect_outline(width: f64, height: f64) -> Vec<(f64, f64)> {
 
 /// 🧮️ Transient solution for an arbitrary section outline (`y`, `z` in m around the centroid, one closed ring): cells whose centre lies inside carry the heat flow, an exposed face is a cell side that borders the outside in that direction (left, right, bottom, top); results are cached per outline, faces, time and moisture.
 pub fn solve_outline(outline: &[(f64, f64)], faces: Faces, minutes: f64, moisture: f64) -> Field {
-    thread_local! {
-        static CACHE_STORE: RefCell<Vec<(Vec<u64>, Field)>> = const { RefCell::new(Vec::new()) };
-    }
+    static CACHE_STORE: OnceLock<Mutex<HashMap<Vec<u64>, Arc<Field>>>> = OnceLock::new();
+    let store = CACHE_STORE.get_or_init(|| Mutex::new(HashMap::new()));
     let key: Vec<u64> = [minutes, moisture].iter().map(|v| v.to_bits()).chain([faces.0, faces.1, faces.2, faces.3].map(u64::from)).chain(outline.iter().flat_map(|p| [p.0.to_bits(), p.1.to_bits()])).collect();
-    if let Some(hit) = CACHE_STORE.with(|c| c.borrow().iter().find(|(k, _)| *k == key).map(|(_, f)| f.clone())) {
-        return hit;
+    let hit = store.lock().ok().and_then(|c| c.get(&key).cloned());
+    if let Some(hit) = hit {
+        return (*hit).clone();
     }
     let field = solve_outline_with(outline, faces, minutes, moisture, &mut |_| true).unwrap_or_else(|| unreachable!("a step that never cancels"));
-    CACHE_STORE.with(|c| {
-        let mut c = c.borrow_mut();
+    if let Ok(mut c) = store.lock() {
         if c.len() >= CACHE {
-            c.remove(0);
+            c.clear();
         }
-        c.push((key, field.clone()));
-    });
+        c.insert(key, Arc::new(field.clone()));
+    }
     field
 }
 

@@ -553,8 +553,16 @@ pub fn inspector_action_definitions() -> Vec<semio_framework::ActionDefinition> 
     let property = || Arg::text("property", LocalizedLabel::native("Property", "Eigenschaft")).required();
     let text_value = || Arg::text("value", LocalizedLabel::native("Value", "Wert")).required();
     let mut actions = vec![
-        inspector_action(SELECT_WEATHER_FILE_ACTION_ID,"Select weather artifact","Wetterartefakt auswählen",vec![Arg::text("value",LocalizedLabel::native("EPW artifact address","EPW-Artefaktadresse")).required()]),
-        inspector_action(CLEAR_WEATHER_FILE_ACTION_ID,"Clear weather artifact","Wetterartefakt lösen",Vec::new()),
+        inspector_action(SELECT_WEATHER_FILE_ACTION_ID,"Select weather artifact","Wetterartefakt auswählen",vec![Arg::text("value",LocalizedLabel::native("EPW artifact address","EPW-Artefaktadresse")).required()])
+            .describe(LocalizedLabel::native(
+                "Binds the weather artifact at the given EPW artifact address to this energy model, so simulations read its climate data.",
+                "Bindet das Wetterartefakt unter der angegebenen EPW-Artefaktadresse an dieses Energiemodell, damit Simulationen seine Klimadaten lesen.",
+            )),
+        inspector_action(CLEAR_WEATHER_FILE_ACTION_ID,"Clear weather artifact","Wetterartefakt lösen",Vec::new())
+            .describe(LocalizedLabel::native(
+                "Removes the weather artifact binding from this energy model, so simulations no longer read external climate data.",
+                "Löst die Bindung des Wetterartefakts von diesem Energiemodell, damit Simulationen keine externen Klimadaten mehr lesen.",
+            )),
         inspector_action(
             SET_SURFACE_PROPERTY_ACTION_ID,
             "Set surface property",

@@ -5,6 +5,7 @@ import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {randomBytes} from "node:crypto";
 import {consolidateGitV1,ConsolidationFaultV1} from "../🟦️.ts";
+import {ownProcessIdentityV1} from "../../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts";
 
 const scratch:string[]=[],hasGit=spawnSync("git",["--version"]).status===0,gitTest=hasGit?test:test.skip;
 afterAll(()=>{for(const path of scratch)rmSync(path,{recursive:true,force:true});});
@@ -117,9 +118,9 @@ gitTest("a young orphan stays, a lock of a living process refuses and the lock o
  const {root,directory}=repository();
  writeFileSync(join(directory,"pack-2222222222222222222222222222222222222222.pack"),"half");
  const lock=join(root,".git","semio-consolidate.lock");
- mkdirSync(lock);writeFileSync(join(lock,"pid"),String(process.pid));
+ mkdirSync(lock);writeFileSync(join(lock,"owner.json"),JSON.stringify(ownProcessIdentityV1()));
  expect((await consolidateGitV1({worktree:root,apply:true,...quick})).outcome).toBe("locked");
-  rmSync(lock,{recursive:true});mkdirSync(lock);writeFileSync(join(lock,"pid"),String(2**22+12345));
+  rmSync(lock,{recursive:true});mkdirSync(lock);writeFileSync(join(lock,"owner.json"),JSON.stringify({pid:2**22+12345,startMs:1}));
  const result=await consolidateGitV1({worktree:root,apply:true,...quick});
  expect(result.outcome).toBe("consolidated");
  expect(existsSync(join(directory,"pack-2222222222222222222222222222222222222222.pack"))).toBe(true);

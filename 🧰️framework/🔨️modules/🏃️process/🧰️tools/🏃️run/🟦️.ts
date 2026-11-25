@@ -1,6 +1,7 @@
 import { spawn, spawnSync, type ChildProcess, type ChildProcessByStdio, type StdioOptions } from "node:child_process";
 import type { Readable, Writable } from "node:stream";
 import { realpathSync } from "node:fs";
+import { availableParallelism } from "node:os";
 import { isAbsolute, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { OwnedCommandFailure, runOwnedCommand, type OwnedCommandOptions, type OwnedCommandStreamV1 } from "../../🎛️owned-execution/🟦️.ts";
@@ -8,8 +9,9 @@ import { terminateOwnedChildTree } from "../../🪓️termination/🟦️.ts";
 import { requireExplicitBunTestOperandsV1 } from "../../🧪️testing/🟨️bun/🚧️operands/🟦️.ts";
 import { testCheckoutRootV1 } from "../../🧪️testing/🏖️sandbox/🛡️guard/🟦️.ts";
 import { settleOwnedChildV1 } from "../../🎛️owned-execution/🏁️settlement/🟦️.ts";
-import { hostCapacityDirectoryV1, newHostCapacityIdV1, sizeHostRequestV1, withHostCapacityV1, type HostActionKindV1, type HostCapacityPolicyV1 } from "../../🏗️build/🌡️host-capacity/🟦️.ts";
+import { estimateHostRatioV1, hostCapacityDirectoryV1, hostClassBoundV1, hostFloorMegabytesV1, hostLearnCeilingV1, learnableHostRunV1, newHostCapacityIdV1, rampHostRequestV1, readHostEstimateStoreV1, recordHostOutcomeV1, scaleHostRequestV1, sizeHostRequestV1, updateHostEstimateStoreV1, withHostCapacityV1, type HostActionKindV1, type HostCapacityPolicyV1, type HostCapacityPortsV1, type HostRunV1 } from "../../🏗️build/🌡️host-capacity/🟦️.ts";
 import { hostProfileV1 } from "../../🏗️build/🌡️host-capacity/🪞️profile/🟦️.ts";
+import { CARGO_GRANT_POLICY_V1, capCargoGrantJobsV1, cargoGrantEnvironmentV1, cargoGrantJobsV1, cargoGrantLineageV1 } from "../../🏗️build/🌡️host-capacity/🦀️cargo-grant/🟦️.ts";
 import { findToolV1, toolCallerAllowedV1, toolLanguageV1, toolMessageV1, TOOL_REGISTRY_V1, type ToolEntryV1, type ToolRegistryV1 } from "../📖️registry/🟦️.ts";
 import { resolveToolV1, systemToolHostV1, toolRootV1, type ToolHostV1, type ToolResolutionV1 } from "../🔎️resolve/🟦️.ts";
 import { toolEnvironmentV1 } from "../🌿️environment/🟦️.ts";
@@ -33,7 +35,7 @@ export class ToolErrorV1 extends Error {
 /** 📣️ A progress event of one tool run. */
 export type ToolProgressV1 = Readonly<{ phase: "admitting" | "running" | "finished"; tool: string; elapsedMs: number; status?: number | null }>;
 /** 🎟️ What a tool asks the machine for before it starts. */
-export type ToolCapacityAskV1 = Readonly<{ tool: string; operation: string; kind: HostActionKindV1 | undefined; label: string }>;
+export type ToolCapacityAskV1 = Readonly<{ tool: string; operation: string; kind: HostActionKindV1 | undefined; label: string; arguments?: readonly string[]; cwd?: string }>;
 /** 🚪️ Admits a tool run against machine capacity: waits fairly, hands the body the grant's environment, gives the grant back when the body ends. */
 export type ToolAdmissionV1 = <T>(ask: ToolCapacityAskV1, body: (grant: Readonly<{ environment: Readonly<Record<string, string>>; jobs: number }>) => Promise<T>, signal?: AbortSignal) => Promise<T>;
 
@@ -56,16 +58,33 @@ const resolved = new Map<string, ToolResolutionV1>();
 export function setDefaultToolAdmissionV1(admission: ToolAdmissionV1 | undefined): void { defaultAdmission = admission; }
 
 /** 🏗️ Builds the admission port over the host capacity gate of the process module with an explicit policy. */
-export function createToolAdmissionV1(policy: HostCapacityPolicyV1, ports: Readonly<{ environment?: NodeJS.ProcessEnv; directory?: string; write?: (line: string) => void }> = {}): ToolAdmissionV1 {
+export function createToolAdmissionV1(policy: HostCapacityPolicyV1, ports: Readonly<{ environment?: NodeJS.ProcessEnv; directory?: string; write?: (line: string) => void; gate?: HostCapacityPortsV1 }> = {}): ToolAdmissionV1 {
   return async (ask, body, signal) => {
-    const request = sizeHostRequestV1(policy, { id: newHostCapacityIdV1(), operation: ask.operation, host: hostProfileV1(ports.environment ?? process.env), ...ask.kind === undefined ? {} : { kinds: [ask.kind] } });
-    if (request === undefined) return body({ environment: {}, jobs: 1 });
+    const environment = ports.environment ?? process.env, cargo = ask.operation === CARGO_GRANT_POLICY_V1.operation && ask.arguments !== undefined, host = hostProfileV1(environment);
+    const sized = sizeHostRequestV1(policy, { id: newHostCapacityIdV1(), operation: ask.operation, host, ...cargo ? { preferredJobs: cargoGrantJobsV1(ask.arguments!, environment, availableParallelism()) } : {}, ...ask.kind === undefined ? {} : { kinds: [ask.kind] } });
+    if (sized === undefined) return body({ environment: {}, jobs: 1 });
+    const directory = ports.directory ?? hostCapacityDirectoryV1(environment), lineage = cargo ? cargoGrantLineageV1(ask.arguments!) : [], now = Date.now();
+    const capacity = Math.max(0, host.totalMegabytes - hostFloorMegabytesV1(policy, host));
+    let request = sized;
+    if (cargo) {
+      const store = readHostEstimateStoreV1(directory), estimate = estimateHostRatioV1(policy, store, lineage, now);
+      request = rampHostRequestV1(sized, scaleHostRequestV1(policy, sized, estimate.ratioBasisPoints, capacity), estimate, hostClassBoundV1(policy, store, lineage, now).source === "measured");
+    }
+    let failed = false;
+    const learn = cargo ? async (run: HostRunV1): Promise<void> => {
+      if (failed || !learnableHostRunV1(run.status, { limited: run.limited === true, pressured: run.pressured === true })) return;
+      await updateHostEstimateStoreV1(directory, policy, store => recordHostOutcomeV1(policy, store, lineage, { operation: ask.operation, jobs: run.jobs, peakMegabytes: Math.min(run.peakMegabytes, hostLearnCeilingV1(policy, capacity)), defaultMegabytes: Math.max(1, sized.fixedMegabytes + run.jobs * sized.perJobMegabytes), activeMilliseconds: run.activeMilliseconds, peakAtMilliseconds: run.peakAtMilliseconds, endedAtMs: run.endedAtMs, keepPeak: true }), { now: Date.now });
+    } : undefined;
     const controller = new AbortController(), forward = (): void => controller.abort(signal?.reason);
     signal?.addEventListener("abort", forward, { once: true });
     const control = Object.freeze({ signal: controller.signal, remainingMilliseconds: () => null, publish: () => undefined, yieldContinuation: () => new Promise<void>(done => setImmediate(done)) });
     try {
-      const environment = ports.environment ?? process.env;
-      return await withHostCapacityV1({ directory: ports.directory ?? hostCapacityDirectoryV1(environment), policy, request, control, environment, ...ports.write === undefined ? {} : { write: ports.write } }, handle => body({ environment: handle.environment, jobs: handle.jobs }));
+      return await withHostCapacityV1({ ...ports.gate, directory, policy, request, control, environment, ...learn === undefined ? {} : { learn }, ...ports.write === undefined ? {} : { write: ports.write } }, async handle => {
+        const result = await body({ environment: cargo ? { ...handle.environment, ...cargoGrantEnvironmentV1(handle.jobs, environment, ask.cwd ?? process.cwd()) } : handle.environment, jobs: handle.jobs });
+        const outcome = result as { status?: number | null; signal?: string | null } | undefined;
+        failed = typeof outcome === "object" && outcome !== null && (outcome.status !== undefined && outcome.status !== 0 || typeof outcome.signal === "string");
+        return result;
+      });
     } finally { signal?.removeEventListener("abort", forward); }
   };
 }
@@ -163,14 +182,14 @@ export async function runToolV1(toolId: string, args: readonly string[], options
   const requested = (options.command ?? entry.commands[0]!).replace(/\\/gu, "/").split("/").pop()!.replace(/\.(?:exe|cmd|bat)$/iu, ""), capacity = entry.capacity.rules?.find(rule => rule.command === requested && rule.argumentsPrefix.every((value, index) => args[index] === value)) ?? entry.capacity;
   const emit = (event: Omit<ToolProgressV1, "tool" | "elapsedMs">): void => options.onProgress?.({ tool: entry.id, elapsedMs: Math.round(performance.now() - started), ...event });
   const admit = options.admission === false || entry.capacity.mode === "none" || entry.capacity.mode === "inherit" && options.heavy !== true ? undefined : options.admission ?? defaultAdmission;
-  const execute = async (granted: Readonly<Record<string, string>>): Promise<ToolRunResultV1> => {
+  const execute = async (granted: Readonly<Record<string, string>>, invoked: readonly string[] = fullArguments): Promise<ToolRunResultV1> => {
     const childEnvironment = { ...environment, ...granted };
     emit({ phase: "running" });
     let status: number | null = 0, signal: string | null = null, stdout = "", stderr = "";
-    if (options.capture === true) ({ status, signal, stdout, stderr } = await capture(command, fullArguments, cwd, childEnvironment, options, label));
+    if (options.capture === true) ({ status, signal, stdout, stderr } = await capture(command, invoked, cwd, childEnvironment, options, label));
     else {
       try {
-        await runOwnedCommand(command, [...fullArguments], cwd, label, options.timeout ?? 0, {
+        await runOwnedCommand(command, [...invoked], cwd, label, options.timeout ?? 0, {
           env: childEnvironment, ...options.signal === undefined ? {} : { signal: options.signal }, ...options.stdout === undefined ? {} : { stdout: options.stdout },
           ...options.input === undefined ? {} : { input: options.input }, onLine: (line, stream) => { options.onLine?.(line, stream); },
           ...options.onProgress === undefined ? {} : { onProgress: () => emit({ phase: "running" }) },
@@ -182,13 +201,14 @@ export async function runToolV1(toolId: string, args: readonly string[], options
       }
     }
     emit({ phase: "finished", status });
-    const result: ToolRunResultV1 = Object.freeze({ tool: entry.id, command, arguments: Object.freeze(fullArguments), status, signal, stdout, stderr, durationMs: performance.now() - started, resolution });
+    const result: ToolRunResultV1 = Object.freeze({ tool: entry.id, command, arguments: Object.freeze([...invoked]), status, signal, stdout, stderr, durationMs: performance.now() - started, resolution });
     if (options.check !== false && (status !== 0 || signal !== null)) throw new ToolErrorV1("failed", entry.id, toolMessageV1("failed", { tool: entry.id, status: signal ?? String(status) }, language, registry), { status, signal });
     return result;
   };
   if (admit === undefined) return execute({});
   emit({ phase: "admitting" });
-  return admit({ tool: entry.id, operation: capacity.operation ?? "command", kind: capacity.kind, label }, grant => execute(grant.environment), options.signal);
+  const cargo = requested === "cargo" && capacity.operation === CARGO_GRANT_POLICY_V1.operation;
+  return admit({ tool: entry.id, operation: capacity.operation ?? "command", kind: capacity.kind, label, ...cargo ? { arguments: args, cwd } : {} }, grant => execute(grant.environment, cargo ? capCargoGrantJobsV1(fullArguments, grant.jobs) : fullArguments), options.signal);
 }
 
 /** ⏱️ What a finished synchronous tool run left behind: Node's `spawnSync` result plus the resolution; `stdout` and `stderr` are strings under a text `encoding` and buffers otherwise. */

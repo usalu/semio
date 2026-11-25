@@ -13,16 +13,76 @@
    "de": "Ein gebrauchter Wiener Bugholz-Garderobenständer von 1,85 m aus einer Haushaltsauflösung: eine gedrechselte Buchenstange Ø47 mm mit Knauf, vier dampfgebogene Füße auf 0,58 m Aufstandsfläche, ein Schirmring Ø0,40 m auf 0,40 m, vier große obere Haken über 0,60 m und drei kleine untere Haken; der vierte untere Haken ist abgebrochen und unter seinem Stumpf ein verchromter Zinkhaken angeschraubt, die Fußspitzen sind bis aufs Holz abgestoßen und der Nussbaumlack ist verblasst. Er lagert auf einer gefalteten Möbeldecke, wird geneigt unter dem Arm getragen, im Flur mit 8,8 kg Mänteln aufgestellt und einseitig belastet auf Kippen geprüft."
   },
   "tags": [
-   "used",
-   "household",
-   "second-hand",
-   "hallway",
-   "coat-stand",
-   "bentwood",
-   "beech",
-   "turned",
-   "moving-blanket",
-   "interior"
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "household",
+    "title": {
+     "en": "household",
+     "de": "Haushalt"
+    }
+   },
+   {
+    "id": "second-hand",
+    "title": {
+     "en": "second-hand",
+     "de": "Second-Hand"
+    }
+   },
+   {
+    "id": "hallway",
+    "title": {
+     "en": "hallway",
+     "de": "Flur"
+    }
+   },
+   {
+    "id": "coat-stand",
+    "title": {
+     "en": "coat stand",
+     "de": "Garderobenständer"
+    }
+   },
+   {
+    "id": "bentwood",
+    "title": {
+     "en": "bentwood",
+     "de": "Bugholz"
+    }
+   },
+   {
+    "id": "beech",
+    "title": {
+     "en": "beech",
+     "de": "Buche"
+    }
+   },
+   {
+    "id": "turned",
+    "title": {
+     "en": "turned",
+     "de": "gedrechselt"
+    }
+   },
+   {
+    "id": "moving-blanket",
+    "title": {
+     "en": "moving blanket",
+     "de": "Umzugsdecke"
+    }
+   },
+   {
+    "id": "interior",
+    "title": {
+     "en": "interior",
+     "de": "Innenausbau"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content (used household objects wave, author 17)",

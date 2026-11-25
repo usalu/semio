@@ -13,12 +13,48 @@
       "de": "Eine 0,8 m lange Pendelleuchte: eine Deckenrosette, 0,6 m Textilkabel, eine Messinghülse und ein emaillierter Kuppelschirm von 0,266 m Breite mit einer Messing-E27-Fassung darin, die eine 60-W-Glühlampe trägt, deren Kuppe gerade unter dem Rand hervorschaut: 95 % (57 W) verlassen die Flächen als Wärme und die sichtbaren 3 W erwärmen den Raum dort, wo die Wände sie absorbieren, sodass alle 60 W als Wärme im Raum enden; Glas und Schirm sind die warmen Flächen."
     },
     "tags": [
-      "pendant-lamp",
-      "luminaire",
-      "incandescent",
-      "internal-gain",
-      "electrical",
-      "heat-source"
+      {
+        "id": "pendant-lamp",
+        "title": {
+          "en": "pendant lamp",
+          "de": "Pendelleuchte"
+        }
+      },
+      {
+        "id": "luminaire",
+        "title": {
+          "en": "luminaire",
+          "de": "Leuchte"
+        }
+      },
+      {
+        "id": "incandescent",
+        "title": {
+          "en": "incandescent",
+          "de": "Glühlampe"
+        }
+      },
+      {
+        "id": "internal-gain",
+        "title": {
+          "en": "internal gain",
+          "de": "innere Wärmelast"
+        }
+      },
+      {
+        "id": "electrical",
+        "title": {
+          "en": "electrical",
+          "de": "Elektro"
+        }
+      },
+      {
+        "id": "heat-source",
+        "title": {
+          "en": "heat source",
+          "de": "Wärmequelle"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage content (A3)",

@@ -3,6 +3,7 @@ cargo-features = [ "trim-paths" ]
 [workspace]
 resolver = "2"
 members = [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/⚖️laws/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🎬️scene/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🎬️scene/🧱️base/📦️packages/🦀️rust",
@@ -57,6 +58,10 @@ members = [
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️slab-fields/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪟️slab-sheeting/📦️packages/🦀️rust",
     "📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🏷️field-meta/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧩️family/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪟️surfaces/📦️packages/🦀️rust",
 ]
 exclude = [
     "**/🏭️bridge/**",
@@ -77,6 +82,18 @@ member-manifests = [ "**/📦️packages/🦀️rust/Cargo.toml" ]
   version = "0.1.0"
   edition = "2021"
   rust-version = "1.95"
+
+[workspace.dependencies.semio-s-artifact-norm-en1994-editor-surfaces]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪟️surfaces/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1994-editor-family]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧩️family/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1994-editor-field-meta]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🏷️field-meta/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1994-mutations-edit-rules]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📚️table/📦️packages/🦀️rust"
 
 [workspace.dependencies.pack]
 path = "../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust"
@@ -357,3 +374,5 @@ redundant_clone = "warn"
   level = "warn"
   priority = -1
 
+[workspace.dependencies.semio-s-artifact-norm-en1994-editor-laws]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/⚖️laws/📦️packages/🦀️rust"

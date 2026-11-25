@@ -42,7 +42,7 @@ semio-plugin-retained-command = { path = "../../../../🧵️retained-command/�
 semio-plugin-testing-caller = { path = "../../../../🧪️testing/🎟️caller/📦️packages/🦀️rust" }
 semio-plugin-testing-fixtures = { path = "../../../../🧪️testing/🧰️fixtures/📦️packages/🦀️rust" }
 semio-plugin-testing-laws = { path = "../../../../🧪️testing/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
-semio-plugin-tests-06 = { path = "../../../🍉️tests-06/📦️packages/🦀️rust" }
+semio-plugin-tests-06 = { path = "../../../🍉️tests-06/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
 semio-plugin-tool-run = { path = "../../../../⏯️tool-run/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
 semio-plugin-tool-machine = { path = "../../../../🛠️tool-machine/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
 semio-plugin-window-config = { path = "../../../../🪟️window/🎚️config/📦️packages/🦀️rust" }
@@ -55,6 +55,7 @@ semio-framework-async-macros = { path = "../../../../../../../../🔨️modules/
 semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", features = ["testkit"] }
 semio-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", features = ["mutation-testing"] }
 semio-plugin-ownership = { path = "../../../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
+semio-plugin-store-lifecycle = { path = "../../../../♻️lifecycle/🧱️owner/📦️packages/🦀️rust" }
 semio-framework-tool-run = { workspace = true }
 semio-framework-trace = { workspace = true }
 semio_ui_contract = { path = "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-ui-contract" }

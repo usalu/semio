@@ -56,5 +56,5 @@ features = ["testkit"]
 [dev-dependencies.semio-framework-trace-memory-testing]
 path = "../../../../../../../../../../../../🧰️framework/🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust"
 
-[dev-dependencies.semio-plugin-ownership]
-path = "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/🧱️owner/📦️packages/🦀️rust"
+[dev-dependencies.semio-plugin-store-lifecycle]
+path = "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/♻️lifecycle/🧱️owner/📦️packages/🦀️rust"

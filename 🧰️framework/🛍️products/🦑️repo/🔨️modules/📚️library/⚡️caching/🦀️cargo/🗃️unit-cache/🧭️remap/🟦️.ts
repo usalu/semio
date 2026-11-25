@@ -1,3 +1,6 @@
+import {statSync} from "node:fs";
+import {isAbsolute,normalize,resolve,sep} from "node:path";
+
 /** 🧭️ One `--remap-path-prefix=FROM=TO` of a compiler command line. */
 export type RemapV1=Readonly<{from:string;to:string}>;
 
@@ -30,6 +33,7 @@ export function remappedNameV1(remaps:readonly RemapV1[],path:string):string{
 export const remappedV1=(remaps:readonly RemapV1[],path:string):boolean=>remappedNameV1(remaps,path)!==path||remaps.some(row=>row.from===path&&row.to===path);
 
 const BUILD_DIRECTORY_NAME="/cargo/build-dir";
+const OUT_DIRECTORY_NAME="/cargo/out-dir";
 const MACHINE_ROOTS:readonly (readonly [RegExp,string])[]=[[/[\\/]registry[\\/]src$/u,"⟨cargo-registry-src⟩"],[/[\\/]git[\\/]checkouts$/u,"⟨cargo-git-checkouts⟩"],[/[\\/]lib[\\/]rustlib[\\/]src[\\/]rust$/u,"⟨rust-src⟩"]];
 
 /** 🧭️ The same argument with the machine-specific `FROM` of a remapping replaced by the role it plays (the cargo registry source cache, the git checkouts, the compiler's source copy, and Cargo's build directory, which Cargo remaps to `/cargo/build-dir` from wherever the lane or the target directory lives). What such a remapping does to the recorded names is fixed by its `TO`; where the cache lives on the machine does not matter, so two machines with different homes give the same key. Other arguments and remappings of unknown roots are returned unchanged. */
@@ -38,6 +42,7 @@ export function machineNeutralRemapV1(argument:string):string{
  const spec=argument.slice("--remap-path-prefix=".length),cut=spec.lastIndexOf("=");if(cut<=0)return argument;
  const from=spec.slice(0,cut).replace(/[\\/]+$/u,"");
  if(spec.slice(cut+1)===BUILD_DIRECTORY_NAME)return"--remap-path-prefix=⟨cargo-build-dir⟩="+BUILD_DIRECTORY_NAME;
+ if(spec.slice(cut+1)===OUT_DIRECTORY_NAME)return"--remap-path-prefix=⟨cargo-out-dir⟩="+OUT_DIRECTORY_NAME;
  for(const [pattern,token] of MACHINE_ROOTS)if(pattern.test(from))return"--remap-path-prefix="+token+spec.slice(cut);
  return argument;
 }
@@ -70,3 +75,20 @@ export function rustSourceRemapArgumentsV1(args:readonly string[],sysroot:string
 
 /** 🧷️ Everything the wrapper adds to a local link so that its output holds no path of this machine (`objectRootArgumentsV1`, `installNameArgumentsV1`). */
 export const linkRootArgumentsV1=(args:readonly string[],outDir:string,platform:NodeJS.Platform=process.platform):readonly string[]=>[...objectRootArgumentsV1(args,outDir,platform),...installNameArgumentsV1(args,platform)];
+
+/** 🧷️ Spells the crate root of a compiler command line in its normal form (`a/b/../c.rs` becomes `a/c.rs`), when that names the same file: the compiler records the spelling in every output (names, spans, the crate hash), so one file spelled two ways by two routes (Cargo's `[lib] path = "../../lib.rs"` against an offloaded or module-remapped compile) gives two different outputs under one key. A source through a link, an absolute one or one that cannot be resolved stays as given. */
+export function canonicalSourceArgumentsV1(args:readonly string[],source:string,cwd:string):readonly string[]{
+ if(source===""||isAbsolute(source))return args;
+ const normal=normalize(source),at=args.lastIndexOf(source);
+ if(normal===source||at<0)return args;
+ try{const spelled=statSync(cwd+sep+source,{bigint:true}),named=statSync(resolve(cwd,normal),{bigint:true});if(spelled.dev!==named.dev||spelled.ino!==named.ino)return args;}catch{return args;}
+ return Object.freeze(args.map((argument,index)=>index===at?normal:argument));
+}
+
+/** 🧷️ Names the generated-source directory of a build script (`OUT_DIR`, `<build-dir>/<package>/<hash>/out`) the same way in every compile: Cargo derives `<hash>` from the unit identity of its own workspace, so two machines compile one slot with two spellings, the compiler records the spelling of every `include!`d file in the outputs (names, spans, the crate hash) and every dependent of the crate inherits the difference, although the key (which sees the dependency by its interface) is equal. The remapping goes last, where the compiler gives it precedence over the build-directory remapping of Cargo; a unit without `OUT_DIR`, a relative one, or one that is already remapped to this name stays as given.
+ * @see https://doc.rust-lang.org/cargo/reference/build-scripts.html#outputs-of-the-build-script */
+export function canonicalOutDirectoryArgumentsV1(args:readonly string[],outDir:string|undefined):readonly string[]{
+ if(outDir===undefined||outDir===""||!isAbsolute(outDir))return args;
+ if(remapsOfV1(args).some(row=>row.from===outDir&&row.to===OUT_DIRECTORY_NAME))return args;
+ return Object.freeze([...args,`--remap-path-prefix=${outDir.replace(/[\\/]+$/u,"")}=${OUT_DIRECTORY_NAME}`]);
+}

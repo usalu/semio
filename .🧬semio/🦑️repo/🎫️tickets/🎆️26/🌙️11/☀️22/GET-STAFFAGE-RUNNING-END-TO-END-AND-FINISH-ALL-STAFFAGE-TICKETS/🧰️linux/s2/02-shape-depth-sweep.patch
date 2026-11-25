@@ -1,0 +1,91 @@
+--- a/🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🧮️evaluation/🟦️.ts
++++ b/🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🧮️evaluation/🟦️.ts
+@@ -447,40 +447,37 @@
+   return [offsets.map((o) => corner(a, o)), offsets.map((o) => corner(b, o))];
+ }
+ 
++/** 🧱️ The world point of a profile point of an `extruded` solid at one end of its sweep (`end` 0 at `z0`, 1 at `z1`): the one placement the outline ({@link solid3}) and the depth ({@link shapeDepthIn}) of a prism share. The profile lies in the (u, v) plane for `sweep` `w` (span measured from the rest origin of the bone in world z), in the (v, w) plane for `sweep` `u` and in the (u, w) plane for `sweep` `v`; the span tapers along the first profile coordinate to `zTip` at the bone length (clamped to that interval), and a solid with `weights` is carried by its joints from the bind pose. */
++function prismPoint(solid: Extract<Solid, { readonly kind: "extruded" }>, p: Point, end: 0 | 1, bone: Slug, length: number, restOf: (id: Slug) => Frame3, nowOf: (id: Slug) => Frame3): Vec3 {
++  const atFrame = (f: Frame3, a: number, b: number, c: number): Vec3 => [f.o[0] + a * f.u[0] + b * f.v[0] + c * f.w[0], f.o[1] + a * f.u[1] + b * f.v[1] + c * f.w[1], f.o[2] + a * f.u[2] + b * f.v[2] + c * f.w[2]];
++  const t = solid.zTip === undefined || !(length > 0) ? 0 : Math.min(Math.max(p.x / length, 0), 1);
++  const [from, to] = end === 0 ? [solid.z0, solid.zTip?.[0] ?? solid.z0] : [solid.z1, solid.zTip?.[1] ?? solid.z1];
++  const c = from + (to - from) * t - (solid.sweep === "w" ? restOf(bone).o[2] : 0);
++  const [a, b, d] = solid.sweep === "u" ? [c, p.x, p.y] : solid.sweep === "w" ? [p.x, p.y, c] : [p.x, c, p.y];
++  if (!solid.weights?.length) return atFrame(nowOf(bone), a, b, d);
++  const bind = atFrame(restOf(bone), a, b, d);
++  const result: [number, number, number] = [0, 0, 0];
++  for (const joint of solid.weights) {
++    const q = carry(restOf(joint.bone), nowOf(joint.bone), bind);
++    for (let i = 0; i < 3; i++) result[i]! += joint.weight * q[i]!;
++  }
++  return result;
++}
++
+ /** 🔭️ A {@link Solid} placed by the full 3D frames of its bone and projected to the view (`elevation` is the side view): an extruded part is the profile swept from `z0` to `z1` along the lateral axis of the frame (`sweep` `w`: the profile in the (u, v) plane, `z` measured from the rest origin of the bone in world z) or longitudinally (`sweep` `u`: transverse (v, w) profile) or along the bone normal (`sweep` `v`: the profile in the (u, w) plane, `z` measured from the bone origin along v), the span tapering along the first profile coordinate to `zTip` at the bone length (clamped to that interval), as ONE outline, the union of the profile at both ends and the sweep of every edge; a revolved part is revolved about the longitudinal axis of its axis bone (its own rest direction, whatever its rest tilt, carried to the current frame), one outline, the union of the hulls of the projected circles of the two ends of every profile edge; without `mirror` the half profile itself is drawn: each profile point keeps its signed distance along the forward direction of the axis bone and its height along the axis, moved into the lateral direction of the view (front) or left in the sagittal plane (elevation). */
+ function solid3(solid: Solid, profile: readonly (readonly Point[])[], kin: Chain3, bone: Slug, viewpoint: PlanarViewpoint, length: number): Point[][] {
+   const rings = profile.map((ring) => simplifyRing(ring, 0.0003));
+-  const now = kin.now[bone]!.frame;
+-  const rest = kin.rest[bone]!.frame;
+-  const atFrame = (f: typeof rest, a: number, b: number, c: number): Vec3 => [
+-    f.o[0] + a*f.u[0] + b*f.v[0] + c*f.w[0], f.o[1] + a*f.u[1] + b*f.v[1] + c*f.w[1], f.o[2] + a*f.u[2] + b*f.v[2] + c*f.w[2],
+-  ];
+-  const place = (a: number, b: number, c: number): Vec3 => {
+-    if (solid.kind !== "extruded" || !solid.weights?.length) return atFrame(now, a, b, c);
+-    const bind = atFrame(rest, a, b, c);
+-    const result: [number, number, number] = [0, 0, 0];
+-    for (const joint of solid.weights) {
+-      const q = carry(kin.rest[joint.bone]!.frame, kin.now[joint.bone]!.frame, bind);
+-      for (let i = 0; i < 3; i++) result[i]! += joint.weight * q[i]!;
+-    }
+-    return result;
+-  };
+   if (solid.kind === "extruded") {
+-    const lateral = solid.sweep === "w";
+-    const base = lateral ? rest.o[2] : 0;
+-    const span = (a: number): readonly [number, number] => {
+-      if (solid.zTip === undefined) return [solid.z0 - base, solid.z1 - base];
+-      const t = length > 0 ? Math.min(Math.max(a / length, 0), 1) : 0;
+-      return [solid.z0 + (solid.zTip[0] - solid.z0) * t - base, solid.z1 + (solid.zTip[1] - solid.z1) * t - base];
+-    };
+-    const at = (p: Point, c: number): Point => projected(viewpoint, solid.sweep === "u" ? place(c, p.x, p.y) : lateral ? place(p.x, p.y, c) : place(p.x, c, p.y));
++    const [restFrame, nowFrame] = [(id: Slug): Frame3 => kin.rest[id]!.frame, (id: Slug): Frame3 => kin.now[id]!.frame];
+     return rings.flatMap((ring) => {
+-      const low = ring.map((p) => at(p, span(p.x)[0]));
+-      const high = ring.map((p) => at(p, span(p.x)[1]));
++      const [low, high] = ([0, 1] as const).map((end) => ring.map((p) => projected(viewpoint, prismPoint(solid, p, end, bone, length, restFrame, nowFrame)))) as [Point[], Point[]];
+       const sweeps = low.map((p, i) => [p, low[(i + 1) % low.length]!, high[(i + 1) % high.length]!, high[i]!]);
+       return unionPolygons([low, high, ...sweeps]);
+     });
+   }
++  const now = kin.now[bone]!.frame;
++  const rest = kin.rest[bone]!.frame;
++  const place = (a: number, b: number, c: number): Vec3 => [now.o[0] + a * now.u[0] + b * now.v[0] + c * now.w[0], now.o[1] + a * now.u[1] + b * now.v[1] + c * now.w[1], now.o[2] + a * now.u[2] + b * now.v[2] + c * now.w[2]];
+   const axisRest = kin.rest[solid.axisBone]!.frame;
+   const axisNow = kin.now[solid.axisBone]!.frame;
+   const axisAt: Vec3 = [axisRest.o[0] + solid.axisX, axisRest.o[1], axisRest.o[2] + (solid.axisZ ?? 0)];
+@@ -618,7 +615,7 @@
+   return { shape, rings, closed: flat.closed };
+ }
+ 
+-/** 📷️ How near a shape is to the viewer along the view direction, larger is nearer: the nearest point of the shape carried by the 3D frames of its bone (the same carry that places it) — the highest point in the plan, the foremost in the front, the point of the smallest lateral position in the elevation (the right of the asset faces the viewer) — so a broad or rotated shape is ranked by its extent, not by its bone origin and tip. A `solid` is carried at the plane of its profile; a flat shape at the depth profile it was placed with. */
++/** 📷️ How near a shape is to the viewer along the view direction, larger is nearer: the nearest point of the shape carried by the 3D frames of its bone (the same carry that places it) — the highest point in the plan, the foremost in the front, the point of the smallest lateral position in the elevation (the right of the asset faces the viewer) — so a broad or rotated shape is ranked by its extent, not by its bone origin and tip. An `extruded` solid is ranked by the nearest corner of its prism, placed as its outline is ({@link prismPoint}: both ends of the sweep along `u`, `v` or `w`, the taper to `zTip` and the joints of `weights`), in the elevation as in the front and the plan; a `revolved` solid is carried at the plane of its profile; a flat shape at the depth profile it was placed with. */
+ export function shapeDepth(state: EvaluatedState, shape: Shape, viewpoint: PlanarViewpoint): number {
+   const vec = (v: { readonly x: number; readonly y: number; readonly z: number }): Vec3 => [v.x, v.y, v.z];
+   const frameOf = (id: Slug): Frame3 => {
+@@ -647,9 +644,14 @@
+   const plan = viewpoint === "plan";
+   const profile = DEPTHS.get(shape) ?? undefined;
+   const local = (p: Point, c: number): Vec3 => [now.o[0] + p.x * now.u[0] + p.y * now.v[0] + c * now.w[0], now.o[1] + p.x * now.u[1] + p.y * now.v[1] + c * now.w[1], now.o[2] + p.x * now.u[2] + p.y * now.v[2] + c * now.w[2]];
++  const solid = shape.solid;
++  if (solid?.kind === "extruded") {
++    const length = asset.rig.bones.find((candidate) => candidate.id === shape.bone)?.lengthM ?? 0;
++    const restFrame = (id: Slug): Frame3 => restOf(asset)[id]!.frame;
++    return Math.max(...points.flatMap((p) => ([0, 1] as const).map((end) => nearness(viewpoint, vec3(prismPoint(solid, p, end, shape.bone, length, restFrame, frameOf))))));
++  }
+   const world = (p: Point): Vec3 => {
+-    if (viewpoint === "elevation") return local(p, 0);
+-    if (shape.solid !== undefined) return local(p, shape.solid.kind === "extruded" ? (shape.solid.z0 + shape.solid.z1) / 2 - rest.frame.o[2] : 0);
++    if (viewpoint === "elevation" || solid !== undefined) return local(p, 0);
+     return plan ? carry(rest.frame, now, [p.x, profile?.(p.x) ?? rest.frame.o[1], p.y]) : carry(rest.frame, now, [profile?.(p.y) ?? rest.frame.o[0], p.y, p.x]);
+   };
+   return Math.max(...points.map((p) => nearness(viewpoint, vec3(world(p)))));

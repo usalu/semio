@@ -13,12 +13,48 @@
       "de": "Ein 0,776 x 1,2 m großer Holzflügel mit Wärmeschutz-Isolierglas 4-16-4 in einem 0,9 x 1,324 m großen, 300 mm tiefen Holzfutterrahmen, unten an zwei Kippbändern angeschlagen und bis 6 Grad (126 mm am Kopf) gegen zwei Kippbögen nach innen kippend, im Vertikalschnitt gezeichnet; konditioniertes Bauteil mit Innenraum links bei 20 °C und Winter-Referenzfall."
     },
     "tags": [
-      "component",
-      "structural",
-      "window",
-      "tilt",
-      "glass",
-      "timber"
+      {
+        "id": "component",
+        "title": {
+          "en": "component",
+          "de": "Bauteil"
+        }
+      },
+      {
+        "id": "structural",
+        "title": {
+          "en": "structural",
+          "de": "tragend"
+        }
+      },
+      {
+        "id": "window",
+        "title": {
+          "en": "window",
+          "de": "Fenster"
+        }
+      },
+      {
+        "id": "tilt",
+        "title": {
+          "en": "tilt",
+          "de": "Kippen"
+        }
+      },
+      {
+        "id": "glass",
+        "title": {
+          "en": "glass",
+          "de": "Glas"
+        }
+      },
+      {
+        "id": "timber",
+        "title": {
+          "en": "timber",
+          "de": "Holz"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage component authors",

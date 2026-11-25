@@ -1,0 +1,6 @@
+[
+{"op": "shape-set", "scale": "500", "view": "elevation", "id": "unit-block", "set": {"w": 0.6}},
+{"op": "shape-set", "scale": "500", "view": "plan", "id": "unit-block", "set": {"w": 0.6}},
+{"op": "solid-set", "scale": "500", "id": "unit-block", "set": {"size": [0.6, 1.3, 1.12], "transform": {"translation": [0.3, 0.65, 0.0]}}},
+{"op": "note", "scale": "500", "decision": "merged", "en": "The block takes in the fan grille, 40 mm proud of the casing: 0.60 m deep, as long as the stands.", "de": "Der Block schließt das 40 mm vorstehende Lüftergitter ein: 0,60 m tief, so lang wie die Böcke."}
+]

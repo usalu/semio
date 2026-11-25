@@ -6,6 +6,9 @@ use semio_ui_contract::{self as ui_contract, UiPatch};
 use semio_ui_runtime::{SurfaceReconcilePublishedAck, SurfaceReconcilePublishedPatch, SurfaceReconcileReadyPatch};
 use std::cell::RefCell;
 
+#[path = "⏱️command-stall/🦀️.rs"]
+pub mod command_stall;
+
 //#region 📨️PendingPatchAuthority
 const PENDING_PATCH_CAPACITY: usize = semio_ui_runtime::SURFACE_RECONCILE_ADMISSION_SLOTS;
 

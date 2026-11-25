@@ -122,9 +122,9 @@ function SplitDiff({ rows }: { readonly rows: readonly SplitRow[] }) {
   return (
     <div className="semio-diff-view-split min-h-0 w-full">
       {rows.map((row, index) => (
-        <div key={index} className="semio-diff-view-split-row grid grid-cols-[minmax(0,1fr)_1px_minmax(0,1fr)]">
+        <div key={index} className="semio-diff-view-split-row grid grid-cols-[minmax(0,1fr)_1px_minmax(0,1fr)] gap-x-single">
           <SplitDiffLine line={row.left} side="left" />
-          <div className="border-border border-l" />
+          <div className="bg-border" />
           <SplitDiffLine line={row.right} side="right" />
         </div>
       ))}

@@ -186,7 +186,7 @@ impl ArtifactInferenceRouter {
         let request_text = std::str::from_utf8(request).map_err(|error| PluginHostError::Json(error.to_string()))?;
         let identity: InferenceRouteRequest = semio_framework_pack_json::from_json_str(request_text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| PluginHostError::Json(error.to_string()))?;
         self.admit_live_identity(&identity.cancellation_id,identity.revision,identity.generation)?;
-        let result = self.infer_with_visited(request, &mut Vec::new(), drivers).await;
+        let result = Box::pin(self.infer_with_visited(request, &mut Vec::new(), drivers)).await;
         let live = self
             .live_commits
             .lock()
@@ -265,7 +265,7 @@ impl ArtifactInferenceRouter {
 
         let request = semio_framework_pack_json::to_json_string(&route).into_bytes();
         let registration = self.runtimes.lock().map_err(|_| PluginHostError::LockPoisoned("artifact inference runtimes"))?.get(&owner).cloned().ok_or_else(|| PluginHostError::Plugin(format!("inference owner `{owner}` is not loaded")))?;
-        let result = call_plugin(&registration, JOB_KIND_INFER, &request, drivers().map_err(|error|PluginHostError::NativeIo(error))?).await?;
+        let result = Box::pin(call_plugin(&registration, JOB_KIND_INFER, &request, drivers().map_err(|error|PluginHostError::NativeIo(error))?)).await?;
         let result_text = std::str::from_utf8(&result).map_err(|error| PluginHostError::Json(error.to_string()))?;
         let echoed: InferenceRouteResult = semio_framework_pack_json::from_json_str(result_text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| PluginHostError::Json(error.to_string()))?;
         validate_inference_echo(&route, &echoed).await?;

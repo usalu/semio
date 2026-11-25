@@ -358,9 +358,9 @@ pub fn en1992_field_meta(path: &str) -> Option<FieldSpec> {
     semio_s_plugin_norm_app_surface::admit_list_meta(
         semio_s_plugin_norm_app_surface::admit_field_meta(
         describe_en1992_field(path),
-        semio_s_artifact_norm_en1992_mutations::EDIT_RULES.can_set_field(path),
+        semio_s_artifact_norm_en1992_mutations_edit_rules::EDIT_RULES.can_set_field(path),
         ),
-        semio_s_artifact_norm_en1992_mutations::EDIT_RULES.can_insert_item(path),
-        semio_s_artifact_norm_en1992_mutations::EDIT_RULES.can_remove_item(path, semio_s_artifact_norm_en1992_mutations::ID_REMOVALS.iter().map(|rule| rule.path)),
+        semio_s_artifact_norm_en1992_mutations_edit_rules::EDIT_RULES.can_insert_item(path),
+        semio_s_artifact_norm_en1992_mutations_edit_rules::EDIT_RULES.can_remove_item(path, semio_s_artifact_norm_en1992_mutations_edit_rules::ID_REMOVALS.iter().map(|rule| rule.path)),
     )
 }

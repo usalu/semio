@@ -25,6 +25,14 @@ fn close_turn(caller:&mut OriginalJobFixtureCaller,decoder:&mut OriginalJobDecod
 }
 #[test]
 fn ephemeral_original_request_denials_and_cancellation_preserve_exact_custody(){
+ ephemeral_custody(closing)
+}
+/// 🎯️ A close grant equal to its quote moves every close ticket.
+#[test]
+fn ephemeral_original_close_at_its_exact_quote_closes_the_prefix(){
+ ephemeral_custody(grant)
+}
+fn ephemeral_custody(closing:fn(RetirementDemand)->RetainedCloneGrant){
  let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
  let stock=RetainedCloneGrant{maximum_items:1000000,maximum_copy_bytes:4194304,maximum_capacity_bytes:4194304,maximum_release_bytes:4194304,maximum_depth:128};
  let factory=Factory{snapshots:Arc::new(semio_framework_value_factory::OwnedValueRetirementFactory::<bool>::default()),mutations:Arc::new(semio_framework_value_factory::OwnedValueRetirementFactory::<bool>::default()),semantics:Arc::new(Unavailable)};
@@ -56,7 +64,7 @@ fn ephemeral_original_request_denials_and_cancellation_preserve_exact_custody(){
   }
   for turn in 0..100000{
    if owner.empty(){break;}assert!(turn<99999,"original ephemeral prefix failed to close");let d=owner.close_demand(4096).unwrap();let g=closing(d);
-   let controlled=owner.requires_original_control();let(step,heap)=close_turn(&mut caller,&mut decoder,&mut owner,g,controlled);let step=step.unwrap();assert!(step.progress().fits(g));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));
+   let controlled=owner.requires_original_control();let(step,heap)=close_turn(&mut caller,&mut decoder,&mut owner,g,controlled);let step=step.unwrap();if step.progress()==Default::default()&&!matches!(step,RetainedCloneStep::Complete(_)){eprintln!("[DEBUG] stall d={d:?} requote={:?} g={g:?} phase={} step={step:?} active={} native={}",owner.close_demand(g.maximum_copy_bytes),owner.phase,owner.active.is_some(),owner.native.is_some());if turn>0{panic!("[DEBUG] stalled")}}assert!(step.progress().fits(g));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));
   }
   assert_eq!(owner.empty(),law["terminal"].as_bool().unwrap());let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
   while !decoder.terminal_is_empty(){caller.turn(stock,|cx|{decoder.close_on_source(cx)?;Ok(())}).unwrap();}

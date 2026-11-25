@@ -34,6 +34,14 @@
     { "id": "a-surface-is-an-application-you-can-tab-into", "component": { "type": "surface", "surfaceId": "surf-1", "controllerId": "ctrl", "kind": "world-3d", "docSchema": "world3d@1", "doc": { "bytes": [1, 2, 3] } }, "activatable": false, "role": "application", "focusable": true },
     { "id": "an-extension-slot-is-a-region", "component": { "type": "extension", "extension": "plugin.app.slot", "props": { "id": "widget" } }, "activatable": false, "role": "region", "focusable": false }
   ],
+  "headingsNote": "🔠️ A text component with a `headingLevel` is a heading: its role is `heading` and its projection carries the level (`aria-level`), clamped to 1..6 on every renderer; a text component without one stays a paragraph with no level. The React interpreter renders the matching `<h1>`..`<h6>`; the wgpu mirror publishes the same.",
+  "headings": [
+    { "id": "a-level-one-heading", "component": { "type": "text", "value": "Pages", "emphasize": true, "headingLevel": 1 }, "role": "heading", "level": 1 },
+    { "id": "a-level-three-heading", "component": { "type": "text", "value": "Page 2", "emphasize": true, "headingLevel": 3 }, "role": "heading", "level": 3 },
+    { "id": "a-level-below-one-announces-one", "component": { "type": "text", "value": "Zero", "headingLevel": 0 }, "role": "heading", "level": 1 },
+    { "id": "a-level-above-six-announces-six", "component": { "type": "text", "value": "Deep", "headingLevel": 9 }, "role": "heading", "level": 6 },
+    { "id": "text-without-a-level-is-a-paragraph", "component": { "type": "text", "value": "Body", "emphasize": true }, "role": "paragraph", "level": null }
+  ],
   "documentNote": "🌳️ A generation editor's Form window in miniature: a section holding a labelled numeric field, a decorative (aria-hidden) ornament, a live status line, a pressable card, a canvas, and a determinate plus an indeterminate progress bar (value attributes versus `busy`). `expected` is the FULL pre-order projection — a renderer that reorders, loses depth, or drops the hidden node disagrees with the DOM renderer about what exists.",
   "document": {
     "surface": "conformance.a11y.projection",

@@ -13,19 +13,97 @@
    "de": "Ein Betonsitzblock aus Fertigteil vom Typ der kommunalen Kataloge, 2,0 x 0,5 m und 0,45 m Sitzhöhe, etwa 1 t, frei durch sein Eigengewicht auf einem Splittbett in einem wassergebundenen Parkweg stehend, mit fünf vergrauten, rissigen Robinienleisten oben aufgeschraubt. Die Jahre im Einsatz haben die nördliche Oberkante von Skateboards rund geschliffen und abgeplatzt, einen grünen Algenbelag auf der schattigen Nordseite, Rosthöfe um die beiden Transportankerhülsen, Aufkleberreste und Kaugummi hinterlassen; der Bauhof hebt ihn an diesen Hülsen mit dem Kran, und im Sommer ist er ein warmer Sitz für Menschen von beiden Seiten."
   },
   "tags": [
-   "used",
-   "park",
-   "public-space",
-   "seating",
-   "bench",
-   "street-furniture",
-   "precast-concrete",
-   "concrete",
-   "timber",
-   "robinia",
-   "seating-block",
-   "skateboarding",
-   "weathered"
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "park",
+    "title": {
+     "en": "park",
+     "de": "Park"
+    }
+   },
+   {
+    "id": "public-space",
+    "title": {
+     "en": "public space",
+     "de": "öffentlicher Raum"
+    }
+   },
+   {
+    "id": "seating",
+    "title": {
+     "en": "seating",
+     "de": "Sitzmöbel"
+    }
+   },
+   {
+    "id": "bench",
+    "title": {
+     "en": "bench",
+     "de": "Bank"
+    }
+   },
+   {
+    "id": "street-furniture",
+    "title": {
+     "en": "street furniture",
+     "de": "Stadtmobiliar"
+    }
+   },
+   {
+    "id": "precast-concrete",
+    "title": {
+     "en": "precast concrete",
+     "de": "Betonfertigteil"
+    }
+   },
+   {
+    "id": "concrete",
+    "title": {
+     "en": "concrete",
+     "de": "Beton"
+    }
+   },
+   {
+    "id": "timber",
+    "title": {
+     "en": "timber",
+     "de": "Holz"
+    }
+   },
+   {
+    "id": "robinia",
+    "title": {
+     "en": "robinia",
+     "de": "Robinie"
+    }
+   },
+   {
+    "id": "seating-block",
+    "title": {
+     "en": "seating block",
+     "de": "Sitzblock"
+    }
+   },
+   {
+    "id": "skateboarding",
+    "title": {
+     "en": "skateboarding",
+     "de": "Skateboarden"
+    }
+   },
+   {
+    "id": "weathered",
+    "title": {
+     "en": "weathered",
+     "de": "verwittert"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content (used park objects wave)",

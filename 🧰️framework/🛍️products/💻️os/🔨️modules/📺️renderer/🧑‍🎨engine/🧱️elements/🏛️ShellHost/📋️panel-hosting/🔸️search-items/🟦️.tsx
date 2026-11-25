@@ -1,11 +1,12 @@
 /** 🔸️ The search items phase of usePanelHosting. */
 import { useMemo } from "../../../⚛️react-port/🟦️.ts";
-import { type LocalizedLabel, panelTabKindId } from "@semio-tech/framework";
+import { type LocalizedLabel, panelTabKindId, resolveWindowActions } from "@semio-tech/framework";
 import { Icon } from "@semio-tech/ui-react";
 import { FRAMEWORK_CATEGORY_COMMAND_ID } from "../../../🛠️ShellHelpers/🔩️plumbing/🟦️.ts";
 import { appBreadcrumb, flattenPanelTabLeaves, resolveArtifactByAppId } from "../../../🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
 import { commandAddressKey, commandCategoryLabel, commandKeybindingChords, detectCommandPlatform } from "../../../🛠️ShellHelpers/🎛️command-registry/🟦️.tsx";
-import { resolveAppLabel, resolveManifestLabel, resolvePanelTabLabel, shellLabel } from "../../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
+import { resolveAppLabel, resolveManifestLabel, resolvePanelTabLabel, ribbonParentLabel, shellLabel } from "../../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
+import { actionRequiresStagedForm } from "../../../🛠️ShellHelpers/🪟️window-panes/📝️staged-args/🟦️.tsx";
 import { type UISearchItem } from "../../../🔎️ShellSearch/🟦️.tsx";
 import type { useBrandState } from "../🔶️brand/🟦️.tsx";
 
@@ -58,6 +59,33 @@ export function useSearchItems({ session, appLabelsOverlay, uiTerminology, uiLoc
           onCommand(address);
         },
       });
+    }
+    const commandIds = new Set(resolvedCommands.map(({ definition }) => definition.id));
+    const offeredActionIds = new Set<string>();
+    for (const kind of session.app.windowKinds) {
+      for (const definition of resolveWindowActions(session.app, kind)) {
+        if (!definition.inPalette || commandIds.has(definition.id) || offeredActionIds.has(definition.id)) continue;
+        offeredActionIds.add(definition.id);
+        const owner = session.app.windowKinds.find((candidate) => candidate.id === activeWindowId && resolveWindowActions(session.app, candidate).some((action) => action.id === definition.id)) ?? kind;
+        const argCarrying = actionRequiresStagedForm(definition);
+        const label = resolveAppLabel(appLabelsOverlay, "action", definition.id, resolveManifestLabel(definition.label as LocalizedLabel | string, uiTerminology, uiLocale));
+        const category = definition.category ?? (definition.kind === "history" ? "history" : "actions");
+        items.push({
+          id: `window-action.${definition.id}`,
+          label: argCarrying ? `${label}…` : label,
+          category: ribbonParentLabel(category) ?? category,
+          onSelect: () => {
+            dispatch({ type: "SET_SEARCH_OPEN", value: false });
+            dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: owner.id });
+            if (argCarrying) {
+              dispatch({ type: "SET_ACTION_PANE_FOLDED", windowId: owner.id, value: false });
+              dispatch({ type: "SET_ACTION_PANE_EXPANDED", windowId: owner.id, value: definition.id });
+              return;
+            }
+            onAction({ controllerId: session.app.controllerId, action: definition.id, args: { windowId: owner.id } });
+          },
+        });
+      }
     }
     if (hostMode && panel) {
       const spawnEntryCounts = new Map<string, number>();

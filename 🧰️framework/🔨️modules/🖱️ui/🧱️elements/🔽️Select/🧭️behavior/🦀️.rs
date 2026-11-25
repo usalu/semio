@@ -12,17 +12,15 @@ pub const SELECT_COLLISION_PADDING: f32 = 8.0;
 /// 📏️ `min-w-32` at the canonical 16 px root used by the mounted React oracle.
 pub const SELECT_CONTENT_MIN_WIDTH: f32 = 128.0;
 
-/// 🧮️ One popup row's height: a `text-sm` line box plus `py-single` on both sides — React's
-/// `SelectItem` is `py-single … text-sm` (`🟦️.tsx:729`), never a `--size-*` control height, which is
-/// why this does NOT reuse `Theme::control_height` the way the pre-parity literal did.
+/// 🧮️ One popup row's height: the chip row height (`--chip-row-height`, `min-h-(--chip-row-height)` on React's `SelectItem`, `🟦️.tsx`), `Theme::chip_row_height`.
+/// Rows are cells of the popup's border grid: no padding around them, single lines between them (`popup-rows.cases.json`).
 pub fn select_row_height(theme: &Theme) -> f32 {
-    semio_ui_theme::metrics::line_height(theme.font_size_body) + theme.padding_standard * 2.0
+    theme.chip_row_height()
 }
 
-/// 🏔️ The popup's own height for `items` rows — rows plus the viewport's `p-single` inset
-/// (`🟦️.tsx`'s `select-viewport`).
+/// 🏔️ The popup viewport's height for `items` rows: the rows alone, no viewport padding.
 pub fn select_menu_height(items: usize, theme: &Theme) -> f32 {
-    items as f32 * select_row_height(theme) + theme.padding_standard * 2.0
+    items as f32 * select_row_height(theme)
 }
 
 /// 📐️ The popup's top edge **relative to the trigger's own top-left**, flipping above the trigger
@@ -78,7 +76,7 @@ pub fn select_visible_rows(items: usize, theme: &Theme, painted_height: f32) -> 
     if row <= 0.0 {
         return items;
     }
-    let inner = (painted_height - theme.padding_standard * 2.0).max(0.0);
+    let inner = painted_height.max(0.0);
     ((inner / row).floor() as usize).min(items)
 }
 
@@ -102,8 +100,7 @@ pub const SELECT_SCROLL_MIN_STEP: f32 = 24.0;
 /// negative. The viewport is `overflow-y-auto`, so the DOM clamps this for React.
 pub fn select_clamped_scroll(items: usize, theme: &Theme, viewport_height: f32, offset: f32) -> f32 {
     let content = items as f32 * select_row_height(theme);
-    let scroll_height = content + theme.padding_standard * 2.0;
-    offset.clamp(0.0, (scroll_height - viewport_height.max(0.0)).max(0.0))
+    offset.clamp(0.0, (content - viewport_height.max(0.0)).max(0.0))
 }
 
 //#region 🔼️ScrollSlots
@@ -160,8 +157,7 @@ pub fn select_scroll_control_parts(control_id: &str) -> Option<(&str, f32)> {
     control_id.strip_suffix(".scroll.down").map(|id| (id, 1.0))
 }
 
-/// 🪟️ The scrollable viewport's `clientHeight`, including its `p-single` padding exactly as the DOM
-/// reports it to React's `scrollSelectViewport`.
+/// 🪟️ The scrollable viewport's `clientHeight` exactly as the DOM reports it to React's `scrollSelectViewport`.
 pub fn select_scroll_viewport_height(_theme: &Theme, viewport_height: f32) -> f32 {
     viewport_height.max(0.0)
 }
@@ -195,7 +191,6 @@ pub struct SelectPopupGeometry {
     pub first_row: usize,
     pub last_row: usize,
     row_height: f32,
-    viewport_padding: f32,
 }
 
 impl SelectPopupGeometry {
@@ -223,7 +218,7 @@ pub fn select_popup_geometry(trigger: Rect, items: usize, theme: &Theme, viewpor
     let scroll = select_scrolled_offset(items, theme, viewport_height, offset, direction);
     let (first_row, last_row) = select_scrolled_row_window(items, theme, viewport_height, scroll);
     let max_scroll = select_clamped_scroll(items, theme, viewport_height, f32::MAX);
-    SelectPopupGeometry { menu, up, down, scroll, max_scroll, first_row, last_row, row_height: select_row_height(theme), viewport_padding: theme.padding_standard }
+    SelectPopupGeometry { menu, up, down, scroll, max_scroll, first_row, last_row, row_height: select_row_height(theme) }
 }
 
 pub fn select_popup_viewport_rect(popup: SelectPopupGeometry) -> Rect {
@@ -236,7 +231,7 @@ pub fn select_popup_viewport_rect(popup: SelectPopupGeometry) -> Rect {
 
 pub fn select_revealed_scroll(popup: SelectPopupGeometry, index: usize) -> f32 {
     let viewport = select_popup_viewport_rect(popup);
-    let row_top = popup.viewport_padding + index as f32 * popup.row_height;
+    let row_top = index as f32 * popup.row_height;
     let row_bottom = row_top + popup.row_height;
     if popup.row_height >= viewport.h {
         const EDGE_EPSILON: f32 = 0.001;
@@ -256,8 +251,7 @@ pub fn select_revealed_scroll(popup: SelectPopupGeometry, index: usize) -> f32 {
 
 pub fn select_popup_row_rect(_trigger: Rect, index: usize, popup: SelectPopupGeometry, theme: &Theme) -> Rect {
     let viewport = select_popup_viewport_rect(popup);
-    let inset = theme.padding_standard;
-    Rect::new(viewport.x + inset, viewport.y + inset + index as f32 * select_row_height(theme) - popup.scroll, (viewport.w - inset * 2.0).max(0.0), select_row_height(theme))
+    Rect::new(viewport.x, viewport.y + index as f32 * select_row_height(theme) - popup.scroll, viewport.w, select_row_height(theme))
 }
 
 pub fn select_popup_row_hit_rect(trigger: Rect, index: usize, popup: SelectPopupGeometry, theme: &Theme) -> Rect {
@@ -282,8 +276,28 @@ pub fn select_scroll_direction_at(popup: SelectPopupGeometry, x: f32, y: f32) ->
 /// [`select_menu_top`] resolved. Shared by `paint`'s retained row layout, `paint_select`, and
 /// [`render_select_menu`] so geometry and hit-testing can never disagree.
 pub fn select_row_rect(trigger_w: f32, index: usize, menu_top: f32, theme: &Theme) -> Rect {
-    let inset = theme.padding_standard;
-    Rect::new(inset, menu_top + inset + index as f32 * select_row_height(theme), (trigger_w - inset * 2.0).max(0.0), select_row_height(theme))
+    Rect::new(0.0, menu_top + index as f32 * select_row_height(theme), trigger_w.max(0.0), select_row_height(theme))
+}
+
+/// 🖍️ A row's fill and ink (`popup-rows.cases.json` `paint`): the chosen row is filled with the active colour (`accent`, ink `active_foreground`), a hovered or highlighted row with the hover fill and its text emphasised, any other row is unfilled. No tick.
+pub fn select_row_colors(theme: &Theme, chosen: bool, hovered: bool) -> (Option<semio_ui_theme::Rgba>, semio_ui_theme::Rgba) {
+    if chosen {
+        (Some(theme.accent), theme.active_foreground)
+    } else if hovered {
+        (Some(theme.row_hover), theme.border_emphasized)
+    } else {
+        (None, theme.text)
+    }
+}
+
+/// ↦️ The leading inset of a row's text (`px-double`).
+pub fn select_row_text_inset(theme: &Theme) -> f32 {
+    theme.padding_standard * 2.0
+}
+
+/// ➖️ The y of the single line below row `index` (between it and the next row), `None` after the last row.
+pub fn select_row_separator_y(popup: SelectPopupGeometry, index: usize, items: usize, theme: &Theme) -> Option<f32> {
+    (index + 1 < items).then(|| select_popup_row_rect(Rect::new(0.0, 0.0, 0.0, 0.0), index, popup, theme).y + select_row_height(theme))
 }
 //#endregion 🔖️Geometry
 

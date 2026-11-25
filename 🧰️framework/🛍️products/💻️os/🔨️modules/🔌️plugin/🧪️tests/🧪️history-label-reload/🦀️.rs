@@ -8,11 +8,11 @@
 
 use semio_framework_diagnostic::TextError;
 use semio_framework_diagnostic::TextSpan;
-use semio_plugin_ownership::store_lifecycle::bounded_config_store_disposer;
-use semio_plugin_ownership::store_lifecycle::bounded_document_store_disposer;
+use semio_plugin_store_lifecycle::store_lifecycle::bounded_config_store_disposer;
+use semio_plugin_store_lifecycle::store_lifecycle::bounded_document_store_disposer;
 use semio_framework_artifact_reference::StandardId;
 use semio_plugin_window_transient::built_text_to_component_tree;
-use semio_plugin_ownership::store_lifecycle::bounded_config_store_one_item_preparation_factory;
+use semio_plugin_store_lifecycle::store_lifecycle::bounded_config_store_one_item_preparation_factory;
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_plugin_decl_emission::ActionMeta;
 use semio_framework::kernel::ActorId;
@@ -57,7 +57,7 @@ use semio_plugin_decl_views::NoDraftMutation;
 use semio_plugin_decl_views::NoPresence;
 use semio_plugin_decl_views::NoPresenceMutation;
 use semio_plugin_decl_views::NoTransient;
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use semio_plugin_instance_app::VcsArtifactApp;
 
 const HISTORY_LABEL_RELOAD_FIXTURE_JSON: &str = include_str!("../🧫️fixtures/🧫️history-label-reload/🔣️.json");

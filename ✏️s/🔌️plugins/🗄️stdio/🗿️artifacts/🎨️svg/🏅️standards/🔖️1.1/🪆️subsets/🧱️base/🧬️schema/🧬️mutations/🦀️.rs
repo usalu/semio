@@ -28,6 +28,7 @@ pub enum SvgMutation {
     SetTransform(SetTransformPayload),
 }
 dsl::original_pack_value_operation_receiving!(SvgMutation);
+dsl::artifact_persisted_binary_operation!(SvgMutation);
 
 #[cfg(test)]
 pub fn apply_svg_mutation(snapshot: &mut SvgSnapshot, mutation: &SvgMutation) -> protocol::MutationOutcome<SvgDiff> {

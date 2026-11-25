@@ -238,7 +238,7 @@ impl<P, Mutation> ArtifactStoreBatchStage<P, Mutation> {
     {
         use semio_framework_value::RetirementDemand;
         let nested = |mut demand: RetirementDemand| -> Result<RetirementDemand, ValueError> { demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "batch stage depth overflow"))?; Ok(demand) };
-        if self.commit_metadata.is_some()||self.seed_owner.is_some()||self.seed_pending.is_some()||self.seed_retiring.is_some(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original batch metadata and causal custody require the original Store batch abort port"));}
+        if self.holds_store_custody(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original batch metadata and causal custody require the original Store batch abort port"));}
         if !self.diagnostics.terminal_is_empty() { return nested(self.diagnostics.close_demands(body)?); }
         if let Some(owner)=self.displaced_report.as_ref(){return if owner.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of_val(&self.displaced_report),depth:1,..Default::default()})}else{nested(owner.next_demand(body)?)};}
         if let Some(owner) = self.retiring.as_ref() { return nested(artifact_retirement_box_demands(owner, body)?); }
@@ -307,6 +307,8 @@ impl<P, Mutation> ArtifactStoreBatchStage<P, Mutation> {
         if let Some(slot) = self.factory_close.iter_mut().find(|slot| slot.is_some()) { let Some(factory)=slot.as_mut() else { return Err(semio_framework_value::ValueError::invariant("original factory close slot is absent").into()); }; let step = semio_framework_value::RetirementPollExit::resume(factory.step(effect.grant().maximum_copy_bytes, &mut effect.nested(child)))?; let step = semio_framework_value::retained_clone::admit_retained_clone_close(child, step, factory.terminal_is_empty(), "batch stage factory")?; if factory.terminal_is_empty() { *slot = None; } return Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) }); }
         Ok(RetainedCloneStep::Complete(Default::default()))
     }
+    /// 🏛️ Whether this stage still holds commit metadata or a causal seed suffix that only its issuing Store can return (`ArtifactStore::prepare_apply_batch_close`); the generic teardown refuses it until then.
+    pub fn holds_store_custody(&self) -> bool { self.commit_metadata.is_some()||self.seed_owner.is_some()||self.seed_pending.is_some()||self.seed_retiring.is_some() }
     pub fn terminal_is_empty(&self) -> bool {
         self.diagnostics.terminal_is_empty() && self.handoff_ids.iter().all(Option::is_none) && self.handoff_cursors.iter().all(Option::is_none) && self.digest_owner.is_none() && self.message_owner.is_none() && self.message.is_none() && self.commit_metadata.is_none() && self.displaced_report.is_none() && self.seed_owner.is_none() && self.seed_pending.is_none() && self.seed_retiring.is_none() && self.folding.is_none() && self.edit.is_none() && self.pending_edit.is_none() && self.retiring.is_none() && self.post.is_none() && self.unit_flags.capacity() == 0 && self.applied_edit_id.capacity() == 0 && self.tail_edit_id.capacity() == 0 && self.local_actor.is_none() && self.mutation_retirement.is_none() && self.snapshot_retirement.is_none() && self.factory_close.iter().all(Option::is_none)
     }
@@ -455,6 +457,8 @@ impl<P, Mutation> ArtifactStoreBatchPublication<P, Mutation> {
     }
 
     /// 📩️ Borrows the immutable accepted receipt without advancing or acknowledging its original publication.
+    /// 🏛️ Whether the staged batch still holds Store-issued commit metadata or causal custody, which only the issuing Store's abort port returns before generic close.
+    pub fn holds_store_custody(&self) -> bool { self.stage.as_ref().is_some_and(|stage| stage.holds_store_custody()) }
     pub fn accepted_receipt(&self)->Option<LaneItemReceipt>{if self.phase==ArtifactStoreOneItemPublicationPhase::AwaitingAck{self.receipt.as_ref().copied()}else{None}}
 
     pub fn phase(&self) -> ArtifactStoreOneItemPublicationPhase {

@@ -718,6 +718,7 @@
     "phase",
     "pid",
     "source",
+    "startMs",
     "startedMs",
     "version",
     "wallMs"
@@ -727,6 +728,10 @@
      "const": 1
     },
     "pid": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "startMs": {
      "type": "integer",
      "minimum": 1
     },

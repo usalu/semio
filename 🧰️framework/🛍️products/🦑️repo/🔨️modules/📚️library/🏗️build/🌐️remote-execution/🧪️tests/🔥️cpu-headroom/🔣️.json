@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "description": "Language-neutral vectors of the CPU rule of remote-execution headroom: a machine whose one-minute load per core is at or above the ceiling refuses with `load` and reports no headroom; an unknown load never refuses; the coordinator (origin ending in `-server`) registers `reservedSlots` fewer slots than its concurrency, at least one; every other machine registers all.",
+  "ceilingPermille": 1500,
+  "reservedSlots": 2,
+  "saturation": [
+    {"name": "g1-server as audited: load 37 on 10 cores", "load": 37.01, "cores": 10, "saturated": true},
+    {"name": "idle", "load": 0.2, "cores": 10, "saturated": false},
+    {"name": "just below the ceiling", "load": 14.99, "cores": 10, "saturated": false},
+    {"name": "exactly at the ceiling", "load": 15, "cores": 10, "saturated": true},
+    {"name": "a 16 GB worker busy but not over", "load": 11, "cores": 8, "saturated": false},
+    {"name": "a 16 GB worker over", "load": 12.5, "cores": 8, "saturated": true},
+    {"name": "load unknown", "load": null, "cores": 10, "saturated": false},
+    {"name": "zero cores counts as one", "load": 1.6, "cores": 0, "saturated": true}
+  ],
+  "slots": [
+    {"origin": "g1-server", "concurrency": 10, "registered": 8},
+    {"origin": "g1-server", "concurrency": 2, "registered": 1},
+    {"origin": "g1-server", "concurrency": 1, "registered": 1},
+    {"origin": "g1-m07", "concurrency": 8, "registered": 8},
+    {"origin": "g1-serverx", "concurrency": 8, "registered": 8}
+  ],
+  "texts": {
+    "load": 37.01, "cores": 10,
+    "en": "load 37.0 on 10 cores is at or above the ceiling of 1.5 per core: the machine is busy with its own work",
+    "de": "Last 37.0 auf 10 Kernen liegt auf oder über der Obergrenze von 1.5 pro Kern: die Maschine ist mit eigener Arbeit ausgelastet"
+  }
+}

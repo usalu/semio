@@ -18,4 +18,5 @@ impl protocol::OpBinary for FlowMutation {
 }
 
 semio_os_kernel::original_pack_value_operation_receiving!(FlowMutation);
+semio_os_kernel::artifact_persisted_binary_operation!(FlowMutation);
 }

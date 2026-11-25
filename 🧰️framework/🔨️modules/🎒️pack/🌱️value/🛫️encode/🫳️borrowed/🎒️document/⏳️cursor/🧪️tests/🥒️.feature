@@ -1,7 +1,8 @@
 Feature: Retained canonical Pack from the original typed source
   Scenario: Default compressed framing preserves physical receipts and immutable source
     Given the portable record fixture and its authored borrowed schema
-    When original symbols and body are measured and replayed under finite grants
+    When original symbols and body are projected and compressed once under finite grants
+    And their kept compressed segments are emitted after the measured framing
     Then every byte equals the ordinary canonical Pack producer
     And system zlib inflates each codec1 segment to its canonical raw payload
     And every physical birth and retirement matches its sole retained receipt

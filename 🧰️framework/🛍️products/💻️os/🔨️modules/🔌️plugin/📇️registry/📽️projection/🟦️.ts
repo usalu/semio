@@ -1,5 +1,5 @@
 import nativeCatalogSchema from "../📥️runtime/🧬️schema/🔣️.json" with { type: "json" };
-import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
+import {validateJsonSchemaSubset} from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import neutralPublication from "../📣️publication/🔣️.json" with { type: "json" };
 import {parseCatalogPublicationV1,publicationIncludesPackageV1,publicationPackageRootsV1,type CatalogPublicationV1} from "../📣️publication/🟦️.ts";
 import type { ScriptInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -470,7 +470,7 @@ export class CheckScript extends BundleScript {
   run(_segments: string[]): void {
     const repoRoot = this.repoRoot;
     const generatorContracts=Object.fromEntries(Object.entries(TAXONOMY.generatorContracts).filter(([,contract])=>contract.outputRoots.some(root=>root.path===this.publication.outputRoot)));
-    const authorityProblems = Object.keys(generatorContracts).length ? validateGeneratorContractsAgainstWorkspace(repoRoot,{...TAXONOMY,generatorContracts}) : [];
+    const authorityProblems = Object.keys(generatorContracts).length ? validateGeneratorContractsAgainstWorkspace(repoRoot,TAXONOMY,new Set(Object.keys(generatorContracts))) : [];
     if (authorityProblems.length) throw new Error(authorityProblems.join("\n"));
     const { files, entries, playgrounds, frameworkPackages } = renderCatalogFiles(repoRoot, undefined, "refuse", this.publication);
     const outDir = join(repoRoot, this.publication.outputRoot);

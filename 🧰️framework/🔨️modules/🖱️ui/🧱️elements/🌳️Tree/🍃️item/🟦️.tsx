@@ -6,7 +6,7 @@ import { TreeContext, TreeAlignedRow, treeInspectorInnerRowClassName, treeHeader
 import { useFlow } from "../../../🔨️modules/🧭️flow-direction-context/🟦️.tsx";
 import { useUiDriverDragSurface } from "../../🚗️UiDriver/🟦️.tsx";
 import { cn } from "../../../🔨️modules/🏷️class-name-composition/🟦️.ts";
-import { dropZoneReadyTextClass, dropZoneReadyFillClass } from "../../../🔨️modules/🎨️chrome-class-names/🟦️.ts";
+import { dragSourceAttributes, dropPlaceAttributes } from "../../../🔨️modules/🫳️pointer-drag/🟦️.tsx";
 import { ChevronRightIcon, ChevronLeftIcon } from "../../🔣️Icons/🟦️.tsx";
 import { type TreeItemProps, getTreeItemStateId } from "../🧩️props/🟦️.ts";
 import { type TreeDragRole, deriveTreeDragRoles, mergeTreeRowContextMenu, renderTreeDragHandles, renderTreeHeaderActions, treeRowDragPayloadAttributes, useTreeRowDescribedControls } from "../⚡️actions/🟦️.tsx";
@@ -80,7 +80,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
   dragRoles,
   transferPointerDown,
   dragData,
-  isDropReady = false,
+  dropPlace,
   windowAttributes,
   windowRowIndex,
   windowRowTotal,
@@ -170,11 +170,9 @@ export const TreeItem: React.FC<TreeItemProps> = ({
     treeRowChromeShellClasses(isSelected, isHighlighted, isHidden),
     isExpandable ? "cursor-foldable" : "cursor-selectable",
     draggable && (driverSurfaceDrag || (resolvedDragRoles.length === 0 && effectiveDragInitiation === "surface")) ? "cursor-grab active:cursor-grabbing" : "",
-    isDragging ? "opacity-40" : "",
-    isDropReady && dropZoneReadyTextClass,
     className,
   );
-  const itemContentFillClassName = cn(treeRowChromeContentFillClasses(isSelected, isHighlighted, loading, waiting), isDropReady && dropZoneReadyFillClass);
+  const itemContentFillClassName = cn(treeRowChromeContentFillClasses(isSelected, isHighlighted, loading, waiting));
   const windowRowStyle =
     windowRowExtent === undefined
       ? undefined
@@ -185,7 +183,8 @@ export const TreeItem: React.FC<TreeItemProps> = ({
         } as React.CSSProperties);
   const windowRowAria = treeWindowRowAriaAttributes(windowRowIndex, windowRowTotal);
   const treeLabelSelectClass = draggable && (driverSurfaceDrag || (resolvedDragRoles.length === 0 && effectiveDragInitiation === "surface")) ? "select-none" : "select-text";
-  const rowEmphasized = isSelected || isHighlighted || isDropReady;
+  const rowEmphasized = isSelected || isHighlighted || dropPlace !== undefined;
+  const dragPaint = { ...dragSourceAttributes(isDragging), ...dropPlaceAttributes(dropPlace) };
   const dragHandleProps = {
     roles: resolvedDragRoles,
     driverSurfaceDrag,
@@ -216,9 +215,10 @@ export const TreeItem: React.FC<TreeItemProps> = ({
         data-highlighted={isHighlighted ? "true" : undefined}
         id={id}
         data-state={open ? "open" : "closed"}
-        className={cn("min-w-0 w-full", isExpandable ? "cursor-foldable" : "cursor-selectable", treeRowChromeShellClasses(isSelected, isHighlighted, isHidden), isDropReady && dropZoneReadyTextClass, className)}
+        className={cn("min-w-0 w-full", isExpandable ? "cursor-foldable" : "cursor-selectable", treeRowChromeShellClasses(isSelected, isHighlighted, isHidden), className)}
         draggable={effectiveDraggable}
         onDragStart={onDragStart}
+        {...dragPaint}
         onDragEnd={handleDragEnd}
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
@@ -358,6 +358,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
               className={itemShellClasses}
               draggable={effectiveDraggable}
               onDragStart={onDragStart}
+              {...dragPaint}
               onDragEnd={handleDragEnd}
               onDragOver={onDragOver}
               onDragLeave={onDragLeave}
@@ -500,6 +501,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
         className={itemShellClasses}
         draggable={effectiveDraggable}
         onDragStart={onDragStart}
+        {...dragPaint}
         onDragEnd={handleDragEnd}
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}

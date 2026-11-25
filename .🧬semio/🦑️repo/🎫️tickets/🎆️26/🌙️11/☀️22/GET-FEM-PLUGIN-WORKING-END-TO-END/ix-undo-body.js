@@ -1,0 +1,15 @@
+const res={};
+await fresh();
+const matNow=async()=>{await row(/e4 · Beam/).catch(()=>{});await page.waitForTimeout(1800);await row(/e5 · Beam/).catch(()=>{});await page.waitForTimeout(2200);return ((await insp()).match(/Material \| ([^|]+)\|/)||[])[1]?.trim();};
+const waitMat=async(want,ms=45000)=>{const t=Date.now();let m;while(Date.now()-t<ms){m=await matNow();if(want.test(m||""))return {ok:true,ms:Date.now()-t,m};}return {ok:false,m};};
+await row(/e5 · Beam/); await page.waitForTimeout(1500); if(!/ID e5/.test(await insp())){await clickBtn("Inspection",{exact:true});} await page.waitForTimeout(2500);
+res.start=await matNow();
+await pickOpt(IS("element.material"),/C30\/37/);
+res.afterEdit=await waitMat(/C30/,40000);
+log.splice(0);
+await page.keyboard.press("Control+z");
+await page.waitForTimeout(8000);
+res.logAfterUndo=log.splice(0);
+res.undo=await waitMat(/C24/,30000);
+res.health=await health();
+return res;

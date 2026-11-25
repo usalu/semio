@@ -96,7 +96,7 @@ type Captured=Readonly<{code:number|null;stdout:string;stderr:string;aborted:boo
 function capture(file:string,args:readonly string[],cwd:string,env:Record<string,string>,signal?:AbortSignal,limit:number=HERMETIC_POLICY_V1.bounds.maximumStderrBytes):Promise<Captured>{
  return new Promise(done=>{
   let stdout="",stderr="",aborted=false;
-  const child=spawn(file,[...args],{cwd,env,stdio:["ignore","pipe","pipe"]});
+  const child=spawn(file,[...args],{windowsHide:true,cwd,env,stdio:["ignore","pipe","pipe"]});
   const stop=()=>{aborted=true;child.kill("SIGKILL");};
   if(signal?.aborted)stop();else signal?.addEventListener("abort",stop,{once:true});
   child.stdout.on("data",chunk=>{if(stdout.length<limit*64)stdout+=chunk;});

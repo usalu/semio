@@ -159,6 +159,7 @@
     "./modules/menu-item-presentation": "./🔨️modules/📋️menu-item-presentation/🟦️.ts",
     "./modules/panel-anchor": "./🔨️modules/⚓️panel-anchor/🟦️.ts",
     "./modules/panel-dock": "./🔨️modules/🧲️panel-dock/🟦️.tsx",
+    "./modules/pointer-drag": "./🔨️modules/🫳️pointer-drag/🟦️.tsx",
     "./modules/presence-presentation": "./🔨️modules/👥️presence-presentation/🟦️.ts",
     "./modules/shell-floor-presentation": "./🔨️modules/🏠️shell-floor-presentation/🟦️.ts",
     "./modules/status-border-presentation": "./🔨️modules/🌀️status-border-presentation/🟦️.ts",

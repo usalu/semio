@@ -148,6 +148,6 @@ test("A running unit is charged once by the worker: the part of its peak it has 
  expect(one([],7000).admission,"10000 - 2048 floor leaves 7952").toEqual({admit:true});
  expect(one([{megabytes:5000,usedMegabytes:1000}],7000).admission,"a final that will still grow by 4000 MB keeps them free").toEqual({admit:false,reason:"memory"});
  expect(one([{megabytes:5000,usedMegabytes:1000}],3900).admission,"7952 - 4000 = 3952 fits 3900").toEqual({admit:true});
- expect(one([{megabytes:5000,usedMegabytes:5000}],7000).admission,"a unit at its peak holds what the sample shows, nothing more").toEqual({admit:true});
+ expect(one([{megabytes:5000,usedMegabytes:5000}],5000).admission,"a unit at its peak holds what the sample shows, nothing more (the interactive reserve of the policy leaves 5240 of the budget)").toEqual({admit:true});
  expect(one([{megabytes:5000,usedMegabytes:1000}],256).spareMegabytes).toBe(10000-2048-4000);
 });

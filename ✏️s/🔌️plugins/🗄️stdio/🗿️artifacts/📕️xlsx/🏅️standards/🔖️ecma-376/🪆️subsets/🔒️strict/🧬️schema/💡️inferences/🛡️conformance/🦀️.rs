@@ -1,6 +1,7 @@
 //! 🛡️ Logical SpreadsheetML subset conformance diagnostics.
 
 use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::{workbook_namespaces as base_workbook_namespaces, WorkbookNamespaces};
 use semio_framework_diagnostic::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
 use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;
 
@@ -21,18 +22,16 @@ const VML_CONTENT_TYPE: &str = "application/vnd.openxmlformats-officedocument.vm
 const WORKSHEET_CONTENT_TYPE: &str = "application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml";
 const WORKBOOK_PART: &str = "xl/workbook.xml";
 
-/// 🔎️ Real scan of `xl/workbook.xml`'s root element attrs -- `(xmlns, xmlns:r, conformance)`,
-/// each `None` when absent. `None` overall only when the part is missing or unparsable as XML
-/// (should never happen for anything that survived `🧱️base` decode, but never assumed).
+/// 🔎️ Real scan of `xl/workbook.xml`: the namespace of its root element, the namespace of every relationship-id attribute resolved through the bindings in scope where it is used (a prefix may be declared on any element, not only the root) and its `conformance` attribute. `None` only when the part is missing or no workbook element; `Some(Err)` when a prefix is undeclared.
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-fn workbook_root_attrs(snapshot: &XlsxSnapshot) -> Option<(Option<String>, Option<String>, Option<String>)> {
+fn workbook_namespaces(snapshot: &XlsxSnapshot) -> Option<Result<WorkbookNamespaces, String>> {
     let path = snapshot.workbook_part_path()?;
-    let XmlNode::Element { name, attrs, .. } = snapshot.xml_part(&path)?.document.root.as_ref()? else { return None };
+    let root = snapshot.xml_part(&path)?.document.root.as_ref()?;
+    let XmlNode::Element { name, .. } = root else { return None };
     if name.rsplit_once(':').map_or(name.as_str(), |(_, local)| local) != "workbook" {
         return None;
     }
-    let get = |n: &str| attrs.iter().find(|a| a.name == n).map(|a| a.value.clone());
-    Some((get("xmlns"), get("xmlns:r"), get("conformance")))
+    Some(base_workbook_namespaces(root))
 }
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -69,15 +68,23 @@ fn worksheet_content_type_gaps(snapshot: &XlsxSnapshot) -> Vec<Diagnostic> {
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 pub fn check_strict_conformance(snapshot: &XlsxSnapshot) -> Vec<Diagnostic> {
     let mut out = Vec::new();
-    let Some((xmlns, xmlns_r, conformance)) = workbook_root_attrs(snapshot) else {
+    let Some(namespaces) = workbook_namespaces(snapshot) else {
         out.push(hard(CODE_NAMESPACE_MISMATCH, format!("{WORKBOOK_PART} is missing or unparsable as XML -- cannot verify ISO/IEC 29500-1 Strict conformance")));
         return out;
     };
-    if xmlns.as_deref() != Some(STRICT_SML_NS) {
-        out.push(hard(CODE_NAMESPACE_MISMATCH, format!("{WORKBOOK_PART} root xmlns is {xmlns:?}, expected the Strict SpreadsheetML namespace {STRICT_SML_NS:?} (ISO/IEC 29500-1)")));
+    let namespaces = match namespaces {
+        Ok(namespaces) => namespaces,
+        Err(detail) => {
+            out.push(hard(CODE_RELATIONSHIPS_NAMESPACE_MISMATCH, format!("{WORKBOOK_PART} uses an undeclared namespace prefix: {detail}")));
+            return out;
+        }
+    };
+    let conformance = namespaces.conformance;
+    if namespaces.main != STRICT_SML_NS {
+        out.push(hard(CODE_NAMESPACE_MISMATCH, format!("{WORKBOOK_PART} root namespace is {:?}, expected the Strict SpreadsheetML namespace {STRICT_SML_NS:?} (ISO/IEC 29500-1)", namespaces.main)));
     }
-    if xmlns_r.as_deref() != Some(STRICT_R_NS) {
-        out.push(hard(CODE_RELATIONSHIPS_NAMESPACE_MISMATCH, format!("{WORKBOOK_PART} root xmlns:r is {xmlns_r:?}, expected the Strict officeDocument relationships namespace {STRICT_R_NS:?}")));
+    for namespace in namespaces.relationship_ids.iter().filter(|namespace| namespace.as_str() != STRICT_R_NS) {
+        out.push(hard(CODE_RELATIONSHIPS_NAMESPACE_MISMATCH, format!("{WORKBOOK_PART} relationship id attributes use the namespace {namespace:?}, expected the Strict officeDocument relationships namespace {STRICT_R_NS:?}")));
     }
     if conformance.as_deref() != Some("strict") {
         out.push(hard(CODE_CONFORMANCE_ATTRIBUTE, format!("{WORKBOOK_PART} workbook@conformance is {conformance:?}, expected \"strict\" (ISO/IEC 29500-1 §12.3.24)")));

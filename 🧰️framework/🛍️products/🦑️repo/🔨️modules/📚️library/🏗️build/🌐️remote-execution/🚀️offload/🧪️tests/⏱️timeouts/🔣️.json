@@ -4,8 +4,8 @@
   "floorMilliseconds": 60000,
   "capMilliseconds": 900000,
   "unknownMilliseconds": 240000,
-  "linkedCapMilliseconds": 3600000,
-  "linkedUnknownMilliseconds": 2400000,
+  "linkedCapMilliseconds": 1200000,
+  "linkedUnknownMilliseconds": 1200000,
   "silenceMilliseconds": 20000,
   "reattachMilliseconds": 10000
  },
@@ -48,7 +48,7 @@
   {
    "predicted": null,
    "linked": true,
-   "expected": 2400000
+   "expected": 1200000
   },
   {
    "predicted": 0,
@@ -78,7 +78,7 @@
   {
    "predicted": 5000000,
    "linked": true,
-   "expected": 3600000
+   "expected": 1200000
   },
   {
    "predicted": 496697,
@@ -89,6 +89,11 @@
    "predicted": 496697,
    "linked": true,
    "expected": 993394
+  },
+  {
+   "predicted": 1659511,
+   "linked": true,
+   "expected": 1200000
   }
  ]
 }

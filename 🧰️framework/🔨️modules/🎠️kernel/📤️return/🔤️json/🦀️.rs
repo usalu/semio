@@ -1,6 +1,6 @@
 //! 📤️ Bounded JSON traversal over a retained kernel result and its actual UI arena.
 use semio_framework_pack_json::{JsonBorrowContext,JsonBorrowKey,JsonBorrowNode,JsonBorrowProjection,JsonBorrowError,JsonNativeBorrow,JsonWriteSource,JsonWriteNode,JsonWriteEdge,json_borrow_absent};
-use semio_framework_kernel::TurnResult;
+use semio_framework_kernel::{KernelPollOutput, TurnResult};
 use semio_ui_contract::{UiArenaBorrow,ui_value_arena_registry};
 #[path="🧬️projection/🦀️.rs"]mod projection;
 use projection::{KernelJson,project,is_default,is_false,decimal_generation,request_sequence};
@@ -21,7 +21,7 @@ impl<'a> KernelTurnJsonSource<'a>{
 }
 impl JsonWriteSource for KernelTurnJsonSource<'_>{
  fn node_at_path(&self,path:&[usize])->Result<JsonWriteNode<'_>,JsonBorrowError>{self.at(path)?.project_node(&self.context)}
- fn object_key_at_path(&self,path:&[usize],index:usize)->Result<&str,JsonBorrowError>{if path.is_empty(){if index==0{Ok("Ok")}else{Err(json_borrow_absent())}}else{self.at(path)?.project_key(index,&self.context)}}
+ fn object_key_at_path(&self,path:&[usize],index:usize)->Result<&str,JsonBorrowError>{if path.is_empty(){if index==0{Ok(KernelPollOutput::RESULT_KEY)}else{Err(json_borrow_absent())}}else{self.at(path)?.project_key(index,&self.context)}}
  fn traversal_edge_at_path(&self,path:&[usize],index:usize,cursor:usize)->Result<JsonWriteEdge,JsonBorrowError>{if path.is_empty(){if index==0{Ok(JsonWriteEdge{child:0,cursor:0})}else{Err(json_borrow_absent())}}else{self.at(path)?.project_edge(index,cursor,&self.context)}}
 }
 #[cfg(test)]#[path="🧪️tests/🦀️.rs"]mod tests;

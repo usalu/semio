@@ -1,0 +1,13 @@
+[
+  {"op": "volume", "scale": "50", "id": "shirt-waist", "as": "auto"},
+  {"op": "volume", "scale": "50", "id": "shoe-toe-r", "as": "auto"},
+  {"op": "volume", "scale": "100", "id": "shirt-waist", "as": "auto"},
+  {"op": "volume", "scale": "200", "id": "shoe-r", "as": "auto"},
+  {"op": "volume", "scale": "200", "id": "shank-r", "as": "auto"},
+  {"op": "volume", "scale": "200", "id": "shorts", "as": "auto"},
+  {"op": "volume", "scale": "500", "id": "shank-l", "as": "auto"},
+  {"op": "volume", "scale": "500", "id": "shoe-toe-l", "as": "auto"},
+  {"op": "volume", "scale": "500", "id": "shank-r", "as": "auto"},
+  {"op": "volume", "scale": "500", "id": "shoe-toe-r", "as": "auto"},
+  {"op": "volume", "scale": "500", "id": "shoe-r", "as": "auto"}
+]

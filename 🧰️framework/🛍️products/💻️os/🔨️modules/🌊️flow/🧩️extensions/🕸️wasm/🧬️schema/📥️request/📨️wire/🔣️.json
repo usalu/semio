@@ -34,7 +34,8 @@
     },
     "roundUnits": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "description": "Work units before a progress answer. An omitted or zero value uses the standard round of 256 units. Explicit values are capped at 4096 units. Either limit can end early after two seconds of recorded evaluation time. Every poll remains subject to the caller's grants and deadlines."
     },
     "resume": {
       "type": "boolean"

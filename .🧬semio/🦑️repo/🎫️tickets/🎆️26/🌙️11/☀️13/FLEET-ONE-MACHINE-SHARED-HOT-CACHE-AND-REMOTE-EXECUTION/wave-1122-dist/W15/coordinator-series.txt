@@ -1,0 +1,47 @@
+pid uptime_s rss_MB heap_MB external_MB arrays strings functions phase done
+45673 1 108.6 14.8 6.3 16021 49427 9516 start 0
+45673 178 311.5 39.4 24.1 23440 84340 12271 start 0
+45673 239 515.5 157.6 91.3 114004 353861 74794 checking the file inventory of the tree (31897 distinct sour 0
+45673 299 902.1 246.6 130.6 181022 507394 67011 checking the file inventory of the tree (56147 distinct sour 0
+45673 340 710 326.8 179.9 122410 501223 27792 checking the file inventory of the tree (60146 distinct sour 28
+45673 404 558.3 312.7 156 171546 511829 27439 checking the file inventory of the tree (61801 distinct sour 41
+45673 468 603.5 321.3 12.8 199631 530137 31494 checking the file inventory of the tree (61801 distinct sour 107
+45673 528 617.3 344.2 158.5 212447 523629 43280 checking the file inventory of the tree (61801 distinct sour 166
+45673 591 706.4 351.6 166.8 209916 522970 27675 checking the file inventory of the tree (62890 distinct sour 0
+45673 649 757.8 389.3 169.7 262679 593591 84478 checking the file inventory of the tree (62892 distinct sour 11
+45673 709 838 418.1 191.4 294670 630345 42705 checking the file inventory of the tree (82940 distinct sour 0
+45673 772 793 442.1 192.5 326459 608133 27436 checking the file inventory of the tree (82979 distinct sour 55
+45673 831 828.7 468.3 18.9 342909 635927 32443 checking the file inventory of the tree (85161 distinct sour 0
+45673 891 1056 599.1 272.4 476635 1237355 28139 checking the file inventory of the tree (156362 distinct sou 0
+45673 951 929 636.4 290.9 565751 1585757 27705 checking the file inventory of the tree (179800 distinct sou 37
+45673 1014 1268.8 785.5 346.6 1119771 3527831 1013857 checking the file inventory of the tree (179800 distinct sou 95
+45673 1047 1430.2 897 50.6 988872 2403394 35581 checking the file inventory of the tree (215675 distinct sou 0
+45673 1142 783.5 917.7 13 681654 2379523 35491 checking the file inventory of the tree (215675 distinct sou 58
+45673 1188 1490.8 901.2 444.6 715655 2420210 41391 checking the file inventory of the tree (215675 distinct sou 22
+45673 1251 1462.9 948.9 462.6 759966 2407705 27421 checking the file inventory of the tree (215675 distinct sou 57
+45673 1310 1598.6 1038 110.4 919013 2551343 29182 checking the file inventory of the tree (215675 distinct sou 0
+45673 1381 1569.3 1081.1 22.8 861695 2808602 120935 checking the file inventory of the tree (215675 distinct sou 59
+45673 1440 1975.9 1145.9 389.8 1444587 2929443 88388 checking the file inventory of the tree (215675 distinct sou 0
+45673 1505 1453.5 1150.5 571.1 996370 2707903 38157 checking the file inventory of the tree (215675 distinct sou 0
+45673 1561 1781.9 1153.7 562.1 1045935 3056824 457603 checking the file inventory of the tree (215675 distinct sou 0
+45673 1630 1345.1 582.3 420.1 104033 1329561 26919 reading the owners (round 1) / Lese die Projekte (Runde 1) 33
+45673 1667 1385.6 647.8 445.3 175051 1565661 43477 taken 0
+45673 1743 1155 712 476.1 133558 2209639 28582 2032 inventory records and fleet records verified / 2032 Inv 281
+45673 1802 1601.5 920.4 490.1 170330 2694992 28745 2067 inventory records and fleet records verified / 2067 Inv 382
+45673 1860 1506.5 780.2 524.7 395776 3030255 72109 2068 inventory records and fleet records verified / 2068 Inv 382
+45673 1934 1680.8 819.9 557.1 462245 3202531 111904 2405 inventory records and fleet records verified / 2405 Inv 444
+45673 1997 1836.9 975 676.4 405112 3526767 128172 reading the owners (round 1) / Lese die Projekte (Runde 1) 397
+45673 2187 1959.9 998.7 683.5 178525 3003414 29793 reading the owners (round 1) / Lese die Projekte (Runde 1) 586
+45673 2281 1554.7 1031.2 713 236513 3221550 47352 reading the owners (round 1) / Lese die Projekte (Runde 1) 682
+45673 2416 2093.3 1380.8 303.4 539981 4630504 199946 checking the file inventory of the tree (31020 distinct sour 0
+45673 2552 2118.8 1402.9 40.5 948614 6370464 506507 checking the file inventory of the tree (31931 distinct sour 0
+45673 2672 2569.8 1758.3 1089.5 1005900 5739397 30840 checking the file inventory of the tree (166927 distinct sou 0
+45673 2770 3190.7 1267.2 833.3 549320 4301847 48893 reading the owners (round 2) / Lese die Projekte (Runde 2) 18
+45673 2901 1816.3 1599.3 34.1 555333 5435461 33501 checking the file inventory of the tree (26071 distinct sour 0
+45673 3019 3164.3 1826.4 1159.6 1230548 6209645 182407 checking the file inventory of the tree (47497 distinct sour 0
+45673 3141 3334.3 2134 1222.5 1365601 7394916 255997 checking the file inventory of the tree (155291 distinct sou 0
+45673 3264 3260.4 2265.7 946.7 1459937 6972100 123582 checking the file inventory of the tree (155291 distinct sou 17
+45673 3394 3820.5 1489.6 985.6 569323 4632756 29718 reading the owners (round 3) / Lese die Projekte (Runde 3) 36
+45673 3494 3545.2 1768.7 46.9 1018662 6850753 117120 reading the owners (round 3) / Lese die Projekte (Runde 3) 133
+45673 3615 3408 1828.6 1123 743210 6036485 30181 reading the owners (round 3) / Lese die Projekte (Runde 3) 261
+43903 667 3887.3 2235.7 877.8 16732128 6737752 83426 checking the file inventory of the tree (127261 distinct sou 0

@@ -1,0 +1,7 @@
+{
+  "host": {"totalMegabytes":16384,"availableMegabytes":2325,"swapUsedMegabytes":6775,"swapOutMegabytesPerSecond":103,"compressedMegabytes":8637,"pressure":"warn","swapFreeMegabytes":500,"swapVolumeFreeMegabytes":12000},
+  "subjects": [
+    {"id":"paused","pid":11,"kind":"local-unit","rank":20,"elapsedSeconds":60,"megabytes":600,"suspended":true,"suspendedSeconds":30,"canSuspend":true,"canCancel":true,"capCritical":true},
+    {"id":"protected","pid":12,"kind":"protected","rank":90,"elapsedSeconds":100,"megabytes":5000,"suspended":false,"suspendedSeconds":0,"canSuspend":false,"canCancel":false}
+  ]
+}

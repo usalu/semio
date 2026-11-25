@@ -1,0 +1,184 @@
+--- a/✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/〰️analytic-curves/🦀️.rs
++++ b/✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/〰️analytic-curves/🦀️.rs
+@@ -7,12 +7,12 @@
+ use semio_framework_job::StepContext;
+ use semio_framework_3d_brep_engine::CompoundPublication;
+ use semio_framework_3d_brep_engine::{SolidPatternPublication, SolidPatternRecipe};
+-use semio_framework_3d_brep_engine::{MeshDecode, MeshPublication, MeshTextFormat, ObjDecode, StlDecode};
++use semio_framework_3d_brep_engine::{MeshDecode, MeshPublication, ObjDecode, StlDecode};
+ use semio_framework_value::{OriginalRetirementPoll, RetainedAllocationEffect, RetainedCloneGrant as Grant, RetainedCloneProgress as Progress, RetainedCloneStep as Step, RetainedWorkOutcome, RetainedWorkPoll, RetirementDemand, ValueError, ValueRefusalKind};
+ use semio_framework_value::retained_clone::retained_clone_grant_admits;
+ use semio_framework_value::retirement::controlled::ControlledRetirement;
+ use semio_s_artifact_stdio_step_geometry::geometry::{StepWrite, StepSolid, StepSolidDecode, StepWriteSource};
+-use semio_s_spatial_kernel_semio_session::{NativeMeshExport,NativeValidationReport,SolidHealing,Session,SessionCapture,classify_number};
++use semio_s_spatial_kernel_semio_session::{MeshExchange,NativeMeshExport,NativeValidationReport,SolidHealing,Session,SessionCapture,classify_number};
+ 
+ #[path = "🧾️topology-output/🦀️.rs"]
+ mod topology_output;
+@@ -27,6 +27,9 @@
+ #[path = "🔪️compound-cut/🦀️.rs"]
+ mod compound_cut;
+ use compound_cut::CompoundCutDraft;
++#[path = "🖊️dwg-decode/🦀️.rs"]
++mod dwg_decode;
++use dwg_decode::DwgDecode;
+ 
+ #[derive(semio_framework_value::RetireOwned)]
+ enum TopologyOutput {
+@@ -130,9 +133,11 @@
+     ImportObj,
+     ImportStl,
+     ImportStep,
++    ImportDwg,
+     ExportStep,
+     ExportObj,
+     ExportStl,
++    ExportDwg,
+     Cone,
+     Torus,
+     Point,
+@@ -170,8 +175,9 @@
+             Self::ImportObj => "obj-source",
+             Self::ImportStl => "stl-source",
+             Self::ImportStep => "step-source",
++            Self::ImportDwg => "dwg-source",
+             Self::ExportStep => "step-export-source",
+-            Self::ExportObj | Self::ExportStl => "mesh-export-source",
++            Self::ExportObj | Self::ExportStl | Self::ExportDwg => "mesh-export-source",
+             Self::Validate=>"validation-source",
+             Self::Shells => "shells-source",
+             Self::Explode => "explode-source",
+@@ -226,8 +232,8 @@
+             Self::LinearPattern | Self::CircularPattern | Self::GridPattern => 64 + size_of::<SolidPrimitive>() + size_of::<SolidPatternRecipe>(),
+             Self::ImportStep => size_of::<(usize, usize)>(),
+             Self::ExportStep => size_of::<StepWriteSource>(),
+-            Self::ImportObj | Self::ImportStl => size_of::<(usize, f64)>(),
+-            Self::ExportObj | Self::ExportStl => size_of::<SolidPrimitive>() + size_of::<f64>(),
++            Self::ImportObj | Self::ImportStl | Self::ImportDwg => size_of::<(usize, f64)>(),
++            Self::ExportObj | Self::ExportStl | Self::ExportDwg => size_of::<SolidPrimitive>() + size_of::<f64>(),
+             Self::Explode => 64 + size_of::<usize>(),
+             Self::Deconstruct => 64 + 64,
+             Self::Circle => 7 * size_of::<f64>(),
+@@ -278,7 +284,7 @@
+         match self {
+             Self::Validate => size_of::<NativeValidationReport>(),
+             Self::Heal => size_of::<SolidHealing>(),
+-            Self::ExportObj | Self::ExportStl => size_of::<NativeMeshExport>(),
++            Self::ExportObj | Self::ExportStl | Self::ExportDwg => size_of::<NativeMeshExport>(),
+             Self::ImportStep => size_of::<StepSolidDecode>(),
+             Self::ExportStep => size_of::<StepWrite>(),
+             Self::Split => size_of::<[SolidPublication; 2]>(),
+@@ -308,6 +314,7 @@
+                 return session.plan_solid_pattern(geometry_handle(input, "geometry")?, self.pattern_recipe(input)?).map(GeometryOutput::SolidPattern);
+             }
+             Self::ImportStep => return Ok(GeometryOutput::StepDecode(Box::new(StepSolidDecode::new(exchange_text(input)?)))),
++            Self::ImportDwg => return Ok(GeometryOutput::DwgDecode(Box::new(DwgDecode::new(exchange_text(input)?, number(input, "tolerance", "value")?)?))),
+             Self::ImportObj | Self::ImportStl => {
+                 let source = exchange_text(input)?;
+                 let tolerance = number(input, "tolerance", "value")?;
+@@ -318,8 +325,8 @@
+             Self::ExportStep => return step_export_source(session, input, |source| {
+                 Ok(GeometryOutput::StepExport(Box::new(StepWrite::new(source))))
+             }),
+-            Self::ExportObj | Self::ExportStl => {
+-                let format = if matches!(self, Self::ExportObj) { MeshTextFormat::Obj } else { MeshTextFormat::Stl };
++            Self::ExportObj | Self::ExportStl | Self::ExportDwg => {
++                let format = match self { Self::ExportObj => MeshExchange::Obj, Self::ExportStl => MeshExchange::Stl, _ => MeshExchange::Dwg };
+                 let source = geometry_handle(input, "geometry")?;
+                 let tolerance = number(input, "deflection", "value")?;
+                 return session.plan_mesh_export(source, tolerance, format).map(|job| GeometryOutput::MeshExport(Box::new(job)));
+@@ -639,7 +646,7 @@
+     }
+ 
+     fn source_depth(self, session: &Session, input: &Dictionary) -> Result<usize, ValueError> {
+-        if matches!(self, Self::ExportObj | Self::ExportStl | Self::ExportStep) { return session.certified_solid_depth(geometry_handle(input, "geometry")?); }
++        if matches!(self, Self::ExportObj | Self::ExportStl | Self::ExportDwg | Self::ExportStep) { return session.certified_solid_depth(geometry_handle(input, "geometry")?); }
+         if matches!(self, Self::CompoundCut) {
+             return Ok(session.certified_solid_depth(geometry_handle(input, "target")?)?.max(dictionary_depth(input)));
+         }
+@@ -807,6 +814,7 @@
+     Compound(CompoundPublication),
+     SolidPattern(SolidPatternPublication),
+     MeshDecode(MeshDecode),
++    DwgDecode(Box<DwgDecode>),
+     StepDecode(Box<StepSolidDecode>),
+     StepExport(Box<StepWrite>),
+     MeshPublication(MeshPublication),
+@@ -938,7 +946,7 @@
+             Self::Geometry(curve, _) => Some(curve.handle()),
+             Self::Compound(shape)=>Some(shape.handle()),
+             Self::SolidPattern(shape) => Some(shape.handle()),
+-            Self::MeshDecode(_) | Self::MeshExport(_) | Self::StepDecode(_) | Self::StepExport(_) => None,
++            Self::MeshDecode(_) | Self::DwgDecode(_) | Self::MeshExport(_) | Self::StepDecode(_) | Self::StepExport(_) => None,
+             Self::MeshPublication(shape) => shape.handle(),
+             Self::Solid(shape, _) => Some(shape.handle()),
+             Self::Face(shape, _) => Some(shape.handle()),
+@@ -1114,6 +1122,7 @@
+                 GeometryOutput::Compound(_)=>self.progress.phase="compound-members",
+                 GeometryOutput::SolidPattern(_) => self.progress.phase = "solid-pattern-preparation",
+                 GeometryOutput::MeshDecode(_) => self.progress.phase = "mesh-decoding",
++                GeometryOutput::DwgDecode(decoder) => self.progress.phase = decoder.phase(),
+                 GeometryOutput::StepDecode(_) => self.progress.phase = "step-solid-certification",
+                 GeometryOutput::StepExport(export) => self.progress.phase = export.phase(),
+                 GeometryOutput::MeshPublication(_) => self.progress.phase = "mesh-topology",
+@@ -1229,6 +1238,14 @@
+             self.result = Some(GeometryOutput::Solid(solid, "geometry"));
+             return Ok((None, Progress { released_bytes: demand.release_bytes, ..receipt }));
+         }
++        if let GeometryOutput::DwgDecode(decoder) = result {
++            if !decoder.ready() { return decoder.step(exchange_text(&data.input)?, effect).map(|receipt| (None, receipt)); }
++            let demand = decoder.demand();
++            if !retained_clone_grant_admits(grant, demand) || !effect.performed(1)? { return Ok((None, empty)); }
++            self.result = Some(GeometryOutput::MeshPublication(session.plan_mesh_publication_from_cursor(decoder.into_cursor()?)?));
++            self.progress.phase = "mesh-topology";
++            return Ok((None, Progress { copied_bytes: demand.copy_bytes, ..item() }));
++        }
+         if let GeometryOutput::MeshDecode(decoder) = result {
+             if !decoder.ready() { return decoder.step(exchange_text(&data.input)?, effect).map(|receipt| (None, receipt)); }
+             let demand = decoder.demand();
+@@ -1582,7 +1599,7 @@
+             GeometryOutput::Compound(shape)=>session.step_compound_publication(shape,&mut data.live_key,&mut data.claim_key,&mut self.claim_staged,effect)?,
+             GeometryOutput::SolidPattern(shape) => session.step_solid_pattern_publication(shape, &mut data.live_key, &mut data.claim_key, &mut self.claim_staged, effect)?,
+             GeometryOutput::MeshPublication(shape) => session.step_mesh_publication(shape, &mut data.live_key, &mut data.claim_key, &mut self.claim_staged, effect)?,
+-            GeometryOutput::MeshDecode(_) | GeometryOutput::MeshExport(_) | GeometryOutput::StepDecode(_) | GeometryOutput::StepExport(_) => unreachable!("exchange stage owns no live address here"),
++            GeometryOutput::MeshDecode(_) | GeometryOutput::DwgDecode(_) | GeometryOutput::MeshExport(_) | GeometryOutput::StepDecode(_) | GeometryOutput::StepExport(_) => unreachable!("exchange stage owns no live address here"),
+             GeometryOutput::Solid(solid, _) => session.step_solid_primitive(solid, &mut data.live_key, &mut data.claim_key, &mut self.claim_staged, effect)?,
+             GeometryOutput::Face(face, _) => session.step_conic_face_publication(face, &mut data.live_key, &mut data.claim_key, &mut self.claim_staged, effect)?,
+             GeometryOutput::PolygonFace(face, _) => session.step_polygon_face_publication(face, &mut data.live_key, &mut data.claim_key, &mut self.claim_staged, effect)?,
+@@ -1627,6 +1644,7 @@
+             if !shape.ready() { return session.solid_pattern_preparation_demand(shape); }
+         }
+         if let GeometryOutput::MeshDecode(decoder) = result { return Ok(decoder.demand()); }
++        if let GeometryOutput::DwgDecode(decoder) = result { return Ok(decoder.demand()); }
+         if let GeometryOutput::StepDecode(decoder) = result { return Ok(step_decode_demand(decoder)); }
+         if let GeometryOutput::StepExport(export) = result {
+             return step_export_source(session, &data.input, |source| step_export_demand(export, source));
+@@ -1735,7 +1753,7 @@
+             GeometryOutput::Compound(shape)=>session.compound_publication_demand(shape,self.claim_staged,copy),
+             GeometryOutput::SolidPattern(shape) => session.solid_pattern_publication_demand(shape, self.claim_staged, copy),
+             GeometryOutput::MeshPublication(shape) => session.mesh_publication_demand(shape, self.claim_staged, copy),
+-            GeometryOutput::MeshDecode(_) | GeometryOutput::MeshExport(_) | GeometryOutput::StepDecode(_) | GeometryOutput::StepExport(_) => unreachable!("exchange stage owns no live address here"),
++            GeometryOutput::MeshDecode(_) | GeometryOutput::DwgDecode(_) | GeometryOutput::MeshExport(_) | GeometryOutput::StepDecode(_) | GeometryOutput::StepExport(_) => unreachable!("exchange stage owns no live address here"),
+             GeometryOutput::Solid(solid, _) => session.solid_primitive_demand(solid, self.claim_staged, copy),
+             GeometryOutput::Face(face, _) => session.conic_face_demand(face, self.claim_staged, copy),
+             GeometryOutput::PolygonFace(face, _) => {
+@@ -1776,6 +1794,9 @@
+         if let Some(GeometryOutput::StepDecode(decoder)) = &self.result {
+             if !decoder.terminal_is_empty() { return Ok(decoder.close_demand()); }
+             return Ok(RetirementDemand { release_bytes: size_of::<StepSolidDecode>(), depth: 1, ..Default::default() });
++        }
++        if let Some(GeometryOutput::DwgDecode(decoder)) = &self.result {
++            if !decoder.terminal_is_empty() { return Ok(decoder.close_demand()); }
+         }
+         if let Some(GeometryOutput::MeshDecode(decoder)) = &self.result {
+             if !decoder.terminal_is_empty() { return Ok(decoder.close_demand()); }
+@@ -1867,6 +1888,9 @@
+             if !effect.performed(1)? { return Ok(Step::Progress(Progress::default())); }
+             drop(self.result.take());
+             return Ok(Step::Progress(Progress { released_bytes: size_of::<StepSolidDecode>(), ..item() }));
++        }
++        if let Some(GeometryOutput::DwgDecode(decoder)) = &mut self.result {
++            if !decoder.terminal_is_empty() { return decoder.close(effect); }
+         }
+         if let Some(GeometryOutput::MeshDecode(decoder)) = &mut self.result {
+             if !decoder.terminal_is_empty() { return decoder.close(effect); }

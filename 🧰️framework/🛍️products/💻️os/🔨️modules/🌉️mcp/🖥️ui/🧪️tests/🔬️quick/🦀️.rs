@@ -115,6 +115,10 @@ fn ui_focus_with_a_bridge_but_no_shell_attached_is_a_normal_retryable_state() {
     assert_eq!(structured["code"], "PLUGIN_UNAVAILABLE");
     assert_eq!(structured["retryable"], true);
     assert!(structured["message"].as_str().unwrap().contains("no shell is attached"));
+    let text = structured.to_string();
+    assert!(!text.contains("bun run") && !text.contains("dashboard"), "{text}");
+    assert!(structured["details"]["remedy"]["en"].as_str().unwrap().contains("`repo`"));
+    assert!(structured["details"]["remedy"]["de"].as_str().unwrap().contains("`repo`"));
 }
 
 #[test]

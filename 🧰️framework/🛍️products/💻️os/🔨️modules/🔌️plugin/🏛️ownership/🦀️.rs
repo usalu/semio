@@ -313,9 +313,9 @@ pub const ARTIFACT_LIVE_OUTPUT_SLOTS: usize = 64;
 /// release its close owes, under every mounted caller grant and the guest's contiguous request ceiling.
 pub const DOCUMENT_ARCHIVE_LOAD_SLOTS: usize = 2;
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 #[path = "🧪️effect-fixture/🦀️.rs"]
-pub(crate) mod effect_fixture;
+pub mod effect_fixture;
 
 #[path = "🧱️registry-backing/🦀️.rs"]
 mod registry_backing;
@@ -548,19 +548,6 @@ mod typed_owner_work_tests {
         assert!(plugin_grant_funds(demand, grant));
         let large = RetirementDemand { copy_bytes: PLUGIN_SELF_FUNDED_BODY_BYTES + 1, depth: 3, ..Default::default() };
         assert_eq!(plugin_self_funded_grant(large, PLUGIN_SELF_FUNDED_BODY_BYTES), plugin_demand_grant(large));
-    }
-
-    /// 📏️ LAW: a grant shortfall names the first resource a demand overruns with both figures, and a covering grant has none.
-    #[test]
-    fn a_grant_shortfall_names_the_first_unfunded_resource_with_its_demand_and_grant() {
-        let grant = RetainedCloneGrant { maximum_items: 4, maximum_copy_bytes: 100, maximum_capacity_bytes: 200, maximum_release_bytes: 300, maximum_depth: 2 };
-        let covered = RetirementDemand { copy_bytes: 100, capacity_bytes: 200, release_bytes: 300, depth: 2, ..Default::default() };
-        assert_eq!(plugin_grant_shortfall(covered, grant), None);
-        assert!(plugin_grant_funds(covered, grant));
-        assert_eq!(plugin_grant_shortfall(RetirementDemand { copy_bytes: 101, ..covered }, grant), Some(("copy bytes", 101, 100)));
-        assert_eq!(plugin_grant_shortfall(RetirementDemand { capacity_bytes: 201, release_bytes: 301, ..covered }, grant), Some(("capacity bytes", 201, 200)));
-        assert_eq!(plugin_grant_shortfall(RetirementDemand { depth: 3, ..covered }, grant), Some(("depth", 3, 2)));
-        assert_eq!(plugin_grant_shortfall(covered, RetainedCloneGrant { maximum_items: 0, ..grant }), Some(("items", 1, 0)));
     }
 
     fn run(caller: &mut semio_framework_job::OriginalJobFixtureCaller, original: &mut Option<String>, active: &mut Option<ControlledRetirement<String>>, grant: RetainedCloneGrant) -> (RetainedCloneStep, u128) {

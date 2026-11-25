@@ -18,6 +18,8 @@ impl<S:RetireOwned+Send+Sync+'static> OriginalToolLedgerWalk<S>{
  /// 📖️ Lends the exact original state of the selected ready resident.
  pub fn borrow<'a,L:OriginalToolLedgerSource<State=S>>(&self,ledger:&'a L)->Result<RetainedCloneRef<'a,S>,ValueError>{if !self.ready(){return Err(invalid("original tool traversal row is incomplete"))}self.read.borrow(ledger)}
  /// 🪪️ The same sealed resident key and original address identify a ready source.
+ /// 🪟️ The window of the row this walk last read, which stays held until its read returns.
+ pub fn window(&self)->Option<&SharedUtf8>{self.read.window.as_ref()}
  pub fn resident(&self)->Option<(&SharedUtf8,RetainedOriginalSlotKey)>{self.ready().then(||(self.read.window.as_ref().unwrap(),self.read.key.unwrap()))}
  /// ✅️ Only one complete immutable resident is exposed at a time.
  pub fn ready(&self)->bool{self.read.ready()&&!self.returning&&!self.closing}

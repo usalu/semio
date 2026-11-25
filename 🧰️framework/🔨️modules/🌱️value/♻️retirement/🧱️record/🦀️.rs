@@ -2,6 +2,9 @@
 use super::{RetireOwned,RetirementCursor,RetirementStep,retirement_cursor_birth_demand};
 use crate::{RetirementDemand,RetainedAllocationEffect,ValueError,ValueRefusalKind};
 use std::mem::{MaybeUninit,size_of};
+#[path="🏛️original/🦀️.rs"]
+mod original;
+pub use original::{OriginalRecordOwner,OriginalRecordFields,OriginalRecordRetirement,original_record_demand,admit_original_record};
 /// 📐️ Prices field transfer, its defining cursor and the retained ordinal update.
 pub fn field_birth_demand<T:RetireOwned>(value:&T)->Result<RetirementDemand,ValueError>{let mut demand=retirement_cursor_birth_demand(value)?;demand.copy_bytes=size_of::<T>().checked_add(size_of::<T::RetirementCursor>()).and_then(|n|n.checked_add(size_of::<usize>())).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"record field header overflow"))?;Ok(demand)}
 /// 🧷️ Borrows only a type witness for recursive native support.

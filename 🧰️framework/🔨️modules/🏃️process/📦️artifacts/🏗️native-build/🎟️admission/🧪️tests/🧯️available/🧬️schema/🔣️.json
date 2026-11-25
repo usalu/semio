@@ -27,6 +27,7 @@
               "runningUnits": { "type": "integer", "minimum": 0 },
               "waitedMilliseconds": { "type": "integer", "minimum": 0 },
               "wardenLevel": { "enum": ["calm", "guard", "danger", null] },
+              "swapOutBytesPerSecond": { "type": "integer", "minimum": 0 },
               "cancelled": { "type": "boolean" }
             }
           },
@@ -36,7 +37,7 @@
             "required": ["admit", "reason"],
             "properties": {
               "admit": { "type": "boolean" },
-              "reason": { "enum": ["fits", "available", "warden", "waited-out", "unknown"] }
+              "reason": { "enum": ["fits", "available", "warden", "swap", "waited-out", "unknown"] }
             }
           }
         }

@@ -122,6 +122,9 @@ impl DrawingInstanceOperationOwner {
                     if self.operations.can_admit(live_key, DRAWING_GESTURE_RETAINED_BYTES) {
                         break;
                     }
+                    if context.fuel_remaining() == 0 {
+                        return Ok(None);
+                    }
                     let _ = context.with_retained_loan(drawing_gesture_release_grant(), |same| self.operations.close_step(same));
                 }
             }

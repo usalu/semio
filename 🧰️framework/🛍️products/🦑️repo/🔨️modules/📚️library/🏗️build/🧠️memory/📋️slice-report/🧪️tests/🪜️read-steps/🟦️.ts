@@ -5,11 +5,11 @@ import{readFileSync}from"node:fs";
 import{Database}from"bun:sqlite";
 import{readyStepOverdueSecondsV1,readyStepWatchV1}from"../../../../🌐️remote-execution/🛰️sidecar/🚦️ready/🌲️process-tree/🟦️.ts";
 import samples from"./🔣️.json"with{type:"json"};
-import{registerSliceReportSourceV1,sliceReadStepV1,describeSliceReadStepV1,sliceReadMovedAtV1,sliceReadActiveV1,startSliceProgressV1}from"../../🟨️.mjs";
+import{registerSliceReportSourceV1,sliceReadStepV1,sliceReadWaitStepV1,describeSliceReadStepV1,sliceReadMovedAtV1,sliceReadActiveV1,startSliceProgressV1}from"../../🟨️.mjs";
 import schema from"../../🧬️schema/🔣️.json"with{type:"json"};
 
 const pause=(milliseconds:number)=>new Promise(resolve=>setTimeout(resolve,milliseconds));
-const SOURCES=["../../../../🕸️graph/📥️load/🟦️.ts","../../../../🕸️graph/📥️load/🤝️selected-exchange/🟦️.ts","../../../../🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs"];
+const SOURCES=["../../../../🕸️graph/📥️load/🟦️.ts","../../../../🕸️graph/📥️load/🤝️selected-exchange/🟦️.ts","../../../../🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs","../../../../🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts"];
 
 test("a running step is named in both languages with its seconds and its bound, the innermost first, and ends with the step",async()=>{
  expect(describeSliceReadStepV1()).toBeUndefined();
@@ -50,9 +50,9 @@ test("progress is the moment a step began or ended or the owners counted more, a
 
 test("every step used by the load, the exchange and the owner pass is declared with both languages and a bound",()=>{
  const declared=schema.definitions.Steps.const.steps as Record<string,{en:string;de:string;boundMilliseconds:number}>,used=new Set<string>();
- for(const file of SOURCES){const text=readFileSync(new URL(file,import.meta.url),"utf8");for(const match of text.matchAll(/(?:sliceReadStepV1|step)\("([a-z-]+)"/gu))used.add(match[1]!);}
+ for(const file of SOURCES){const text=readFileSync(new URL(file,import.meta.url),"utf8");for(const match of text.matchAll(/(?:sliceReadStepV1|sliceReadWaitStepV1|openSliceReadStepV1|step)\("([a-z-]+)"/gu))used.add(match[1]!);}
  for(const id of used){expect(declared[id],id).toBeDefined();expect(declared[id]!.en.length).toBeGreaterThan(8);expect(declared[id]!.de.length).toBeGreaterThan(8);expect(declared[id]!.boundMilliseconds).toBeGreaterThan(0);}
- for(const id of["inventory","owners-round","facts-hold","seal","exchange-look","exchange-wait","exchange-install","exchange-publish","heavy-wait","orphan-sweep","receipt-check"])expect(used.has(id),id).toBe(true);
+ for(const id of["inventory","owners-round","facts-hold","seal","exchange-look","exchange-wait","exchange-install","exchange-publish","heavy-wait","orphan-sweep","receipt-check","registry-read","graph-state","module-load","worker-boot","slice-prepare"])expect(used.has(id),id).toBe(true);
 });
 
 test("during the owner round the count is told while it moves and the step is told while it stands still",async()=>{
@@ -65,7 +65,7 @@ test("during the owner round the count is told while it moves and the step is to
  }finally{stop();remove();}
 });
 
-test("inventory reports new source observations while a repeated sample keeps the same progress",async()=>{
+test("inventory reports new source observations while a repeated sample of a step past its bound keeps the same progress",async()=>{
  let count=0;
  const remove=registerSliceReportSourceV1("caches",()=>({interned:count}));
  try{
@@ -79,8 +79,8 @@ test("inventory reports new source observations while a repeated sample keeps th
      const row=describeSliceReadStepV1()!;
      expect(row.phase).toContain(`${sample.peak} distinct source observations`);
      expect(row.phase).toContain(`${sample.peak} verschiedene Quellbeobachtungen`);
-     const line=`Reading the project graph slice (${index} s, expected ${row.total} s): ${row.phase}.`;
-     const translated=`Lese den Projektgraph-Ausschnitt (${index} s, erwartet ${row.total} s): ${row.phase}.`;
+     const overdue=row.total+1+index,line=`Reading the project graph slice (${overdue} s, expected ${row.total} s): ${row.phase}.`;
+     const translated=`Lese den Projektgraph-Ausschnitt (${overdue} s, erwartet ${row.total} s): ${row.phase}.`;
      for(const result of [english.observe([line],index*1000),german.observe([translated],index*1000)]){
       expect(result.step).toBeDefined();
       expect(result.quietMs).toBe(sample.quietMs);
@@ -103,7 +103,27 @@ test("live inventory aggregation emits completed checks in the existing step pro
   await sliceReadStepV1("inventory",async()=>{
    expect((await next(0)).phase).not.toContain("completed owner checks");
    count=177;const first=await next(events.length);expect(first.total).toBe(600);expect(first.phase).toContain("177 completed owner checks");
-   phase="memo-publish";const repeated=await next(events.length);expect(repeated.phase).toBe(first.phase);
+   expect(first.phase).toContain("(attempt 1): scanning the owners");expect(first.phase).toContain("(Versuch 1): Durchsuche die Projekte");
+   phase="memo-publish";const repeated=await next(events.length);expect(repeated.phase).toContain("publishing the admission memo");expect(repeated.phase).toContain("Veröffentliche das Zulassungsmemo");expect(repeated.phase).toContain("177 completed owner checks");
   },{},diagnostics);
  }finally{stop();}
+});
+
+test("the inventory names its attempt and sub-phase in both languages, so a restart is a new line, and a wait step ends when its body leaves it",async()=>{
+ let phase="registry-check";const diagnostics=()=>({active:{phase}});
+ await sliceReadStepV1("inventory",async()=>{
+  const first=describeSliceReadStepV1()!.phase;
+  expect(first).toContain("checking the file inventory of the tree (attempt 3): checking the owner registry");
+  expect(first).toContain("Prüfe das Dateiverzeichnis des Baums (Versuch 3): Prüfe das Projektregister");
+  phase="memo-read";expect(describeSliceReadStepV1()!.phase).toContain("(attempt 3): reading the admission memo");
+ },{round:3},diagnostics);
+ await sliceReadStepV1("inventory",async()=>{expect(describeSliceReadStepV1()!.phase).toContain("(attempt 4)");},{round:4});
+ await sliceReadWaitStepV1("graph-state",async leave=>{
+  expect(describeSliceReadStepV1()!.phase).toContain("waiting for the graph state lease and checking the graph store");
+  expect(describeSliceReadStepV1()!.phase).toContain("Warte auf die Graphstatus-Leihe und prüfe den Graphspeicher");
+  leave();leave();expect(describeSliceReadStepV1()).toBeUndefined();
+ });
+ expect(describeSliceReadStepV1()).toBeUndefined();
+ await expect(sliceReadWaitStepV1("graph-state",async()=>{throw Error("lease");})).rejects.toThrow("lease");
+ expect(describeSliceReadStepV1()).toBeUndefined();
 });

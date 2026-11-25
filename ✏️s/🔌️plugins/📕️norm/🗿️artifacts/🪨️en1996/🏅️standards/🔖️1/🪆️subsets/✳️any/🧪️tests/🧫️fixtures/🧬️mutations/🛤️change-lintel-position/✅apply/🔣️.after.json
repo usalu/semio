@@ -80,7 +80,7 @@
       "lintels": [
         {
           "id": "lintel-1",
-          "positionM": 0.6,
+          "positionM": 0.8,
           "spanM": 1.4,
           "depthM": 0.2,
           "bearingLengthM": 0.2

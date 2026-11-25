@@ -1,0 +1,48 @@
+{
+  "schema": {
+    "type": "object",
+    "required": ["description", "cases"],
+    "additionalProperties": false,
+    "properties": {
+      "description": { "type": "string", "minLength": 1 },
+      "cases": {
+        "type": "array",
+        "minItems": 5,
+        "items": {
+          "type": "object",
+          "required": ["id", "hostMode", "primary", "opened", "publication"],
+          "additionalProperties": false,
+          "properties": {
+            "id": { "type": "string", "minLength": 1 },
+            "hostMode": { "type": "boolean" },
+            "primary": { "oneOf": [{ "type": "null" }, { "$ref": "#/definitions/program" }] },
+            "opened": { "$ref": "#/definitions/program" },
+            "publication": { "enum": ["focus-tab", "already-primary", "adopt-primary"] }
+          }
+        }
+      }
+    },
+    "definitions": {
+      "program": {
+        "type": "object",
+        "required": ["pluginId", "appId", "instanceId"],
+        "additionalProperties": false,
+        "properties": {
+          "pluginId": { "type": "string", "minLength": 1 },
+          "appId": { "type": "string", "minLength": 1 },
+          "instanceId": { "type": "integer", "minimum": 1 }
+        }
+      }
+    }
+  },
+  "description": "Where the program of a document the user opened (Open File, a kept file, Import Document) is shown. A host (a shell with a host app) keeps it as a focused tab beside its other programs, and every window follows the focused tab. A standalone program host has one program: the opened instance replaces it through the session switch (the predecessor is persisted and retired), so every window of the editor layout follows the opened document instead of staying on the previous instance; an instance that already is the program needs nothing.",
+  "cases": [
+    { "id": "host-keeps-a-tab", "hostMode": true, "primary": { "pluginId": "studio", "appId": "studio#home", "instanceId": 1 }, "opened": { "pluginId": "stdio-pdf", "appId": "s.stdio.pdf@1.7/*#editor", "instanceId": 2 }, "publication": "focus-tab" },
+    { "id": "host-refocuses-an-open-tab", "hostMode": true, "primary": { "pluginId": "studio", "appId": "studio#home", "instanceId": 1 }, "opened": { "pluginId": "stdio-pdf", "appId": "s.stdio.pdf@1.7/*#editor", "instanceId": 5 }, "publication": "focus-tab" },
+    { "id": "standalone-adopts-the-opened-file", "hostMode": false, "primary": { "pluginId": "stdio-pdf", "appId": "s.stdio.pdf@1.7/*#editor", "instanceId": 1 }, "opened": { "pluginId": "stdio-pdf", "appId": "s.stdio.pdf@1.7/*#editor", "instanceId": 2 }, "publication": "adopt-primary" },
+    { "id": "standalone-adopts-another-surface", "hostMode": false, "primary": { "pluginId": "stdio-pdf", "appId": "s.stdio.pdf@1.7/*#viewer", "instanceId": 1 }, "opened": { "pluginId": "stdio-pdf", "appId": "s.stdio.pdf@1.7/*#editor", "instanceId": 1 }, "publication": "adopt-primary" },
+    { "id": "standalone-adopts-another-plugin", "hostMode": false, "primary": { "pluginId": "stdio-text", "appId": "s.stdio.txt@utf-8/*#editor", "instanceId": 1 }, "opened": { "pluginId": "stdio-pdf", "appId": "s.stdio.pdf@1.7/*#editor", "instanceId": 1 }, "publication": "adopt-primary" },
+    { "id": "standalone-without-a-program-adopts", "hostMode": false, "primary": null, "opened": { "pluginId": "stdio-pdf", "appId": "s.stdio.pdf@1.7/*#editor", "instanceId": 3 }, "publication": "adopt-primary" },
+    { "id": "standalone-already-shows-the-document", "hostMode": false, "primary": { "pluginId": "stdio-pdf", "appId": "s.stdio.pdf@1.7/*#editor", "instanceId": 4 }, "opened": { "pluginId": "stdio-pdf", "appId": "s.stdio.pdf@1.7/*#editor", "instanceId": 4 }, "publication": "already-primary" }
+  ]
+}

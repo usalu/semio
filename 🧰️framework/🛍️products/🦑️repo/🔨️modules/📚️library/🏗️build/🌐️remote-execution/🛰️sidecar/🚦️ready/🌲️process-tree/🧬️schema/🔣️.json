@@ -18,13 +18,14 @@
         "stallStopMilliseconds": 600000,
         "grantWaitFreshMilliseconds": 120000,
         "grantWaitMaximumMilliseconds": 300000,
+        "sliceSilentMilliseconds": 900000,
         "absoluteDeadlineExtraIntervals": 1,
         "stallRestartMaximum": 5,
         "stallRestartBackoffMilliseconds": 30000,
         "stallRestartBackoffMaximumMilliseconds": 600000,
         "livenessCpuMilliseconds": 500,
         "stallSeenMaximum": 4000,
-        "normalisePatterns": ["\\d{4}-\\d{2}-\\d{2}[T ]\\d{2}:\\d{2}:\\d{2}(?:[.,]\\d+)?Z?", "\\b\\d{1,2}:\\d{2}:\\d{2}\\b", "\\b\\d+(?:\\.\\d+)? ?(?:ms|s|sec|secs|seconds|min|minutes|h|hours|Sekunden|Minuten|Stunden)\\b", "\"[A-Za-z]*(?:[Ee]lapsed|[Ww]aited|[Ss]ince|[Dd]uration|[Uu]ptime|Ms|Milliseconds|Seconds|Sec)\"\\s*:\\s*-?\\d+(?:\\.\\d+)?(?:[eE][+-]?\\d+)?", "\"\\w{1,40}\"\\s*:\\s*-?\\d+\\.\\d+(?:[eE][+-]?\\d+)?", "\\b1[5-9]\\d{11}\\b", "\\[repo leases\\] .*"],
+        "normalisePatterns": ["\\d{4}-\\d{2}-\\d{2}[T ]\\d{2}:\\d{2}:\\d{2}(?:[.,]\\d+)?Z?", "\\b\\d{1,2}:\\d{2}:\\d{2}\\b", "\\b\\d+(?:\\.\\d+)? ?(?:ms|s|sec|secs|seconds|min|minutes|h|hours|Sekunden|Minuten|Stunden)\\b", "\"[A-Za-z]*(?:[Ee]lapsed|[Ww]aited|[Ss]ince|[Dd]uration|[Uu]ptime|Ms|Milliseconds|Seconds|Sec)\"\\s*:\\s*-?\\d+(?:\\.\\d+)?(?:[eE][+-]?\\d+)?", "\"\\w{1,40}\"\\s*:\\s*-?\\d+\\.\\d+(?:[eE][+-]?\\d+)?", "\\b1[5-9]\\d{11}\\b", "\\[repo leases\\] .*", "waiting for host capacity \\(.*", "warte auf Rechnerkapazität \\(.*"],
         "holderWaitPatterns": ["holds the dependency store since", "hält den Abhängigkeitsspeicher seit", "waiting for it \\(", "wird darauf gewartet \\(", "[Ww]aiting for (?:the )?(?:holder|lease)"],
         "holderNamedPatterns": [
           "Process (?<pid>\\d+) \\((?<command>.*)\\) holds the dependency store since (?<since>\\S+?)(?: and has not renewed its registration for (?<silent>\\d+) s, so it may be blocked)?; waiting for it \\((?<seconds>\\d+) s of at most (?<limit>\\d+) s\\)",
@@ -44,7 +45,7 @@
           {"file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧬️schema/🔣️.json", "pointer": "/$defs/record/const/stamp"}
         ],
         "graphCounterPatterns": ["\\btaken (?<done>\\d+) (?:of|von) (?<total>\\d+)"],
-        "readingPatterns": ["Reading the project graph", "Loading the project graph", "Planning every target", "Lese den Projektgraph", "Lade den Projektgraph"],
+        "readingPatterns": ["Reading the project graph", "Loading the project graph", "Planning the selected targets", "Planning \\d+ targets", "The graph service (?:holds|is identifying|is checking)", "Waiting for the repo graph service", "Lese den Projektgraph", "Plane die gewählten Ziele", "Plane \\d+ Ziele", "Der Graphdienst (?:hält|ermittelt|prüft)", "Warte auf den Repo-Graphdienst"],
         "executingPatterns": ["Running target \\S+ for (?:project|\\d+ projects)", "^\\s*> nx run \\S+", "graph: plan answered", "Graph: Plan beantwortet"],
         "speedFactor": 1,
         "stepLinePatterns": [
@@ -53,7 +54,7 @@
           "^\\[tools\\] [^:]+: (?<step>.+? / .+?) \\(.*\\): (?<done>\\d+) of (?<bound>\\d+) s;",
           "^\\[tools\\] [^:]+: (?<step>.+? / .+?) \\(.*\\): (?<done>\\d+) von (?<bound>\\d+) s;"
         ],
-        "progressPatterns": ["store-ownership:[a-zA-Z]+:\\d+", "Checking declared package providers: \\d+ edges", "\"completedOperations\":\\d+", "native-artifact-input-(?:stage|read|verification):\\d+", "nx:source-(?:index|verification):[1-9][0-9]*","javascript-selected-payload:[1-9][0-9]*", "dependencies:(?:workspace-edges|Source-aliases|selected-postorder):[1-9][0-9]*", "dependencies:sync-bindings:[1-9][0-9]{0,3}/[1-9][0-9]{0,3}:canonical:(?:0|[1-9][0-9]{0,3}):changed:(?:0|[1-9][0-9]{0,3})(?=\")"]
+        "progressPatterns": ["store-ownership:[a-zA-Z]+:\\d+", "Checking declared package providers: \\d+ edges", "\"completedOperations\":\\d+", "native-artifact-input-(?:stage|read|verification):\\d+", "nx:source-(?:index|verification):[1-9][0-9]*","javascript-selected-payload:[1-9][0-9]*", "dependencies:(?:workspace-edges|Source-aliases|selected-postorder|publish-binding):[1-9][0-9]*", "dependencies:sync-bindings:[1-9][0-9]{0,3}/[1-9][0-9]{0,3}:canonical:(?:0|[1-9][0-9]{0,3}):changed:(?:0|[1-9][0-9]{0,3})(?=\")"]
       }
     },
     "Process": {"type": "object", "additionalProperties": false, "required": ["pid", "ppid", "startMs"], "properties": {"pid": {"type": "integer", "minimum": 1}, "ppid": {"type": "integer", "minimum": 0}, "startMs": {"type": "integer", "minimum": 0}, "name": {"type": "string"}}},

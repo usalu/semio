@@ -1,4 +1,5 @@
-import { chromium, type Browser, type Page } from "playwright";
+import { type Browser, type Page } from "playwright";
+import { launchChromium } from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🌐️chromium-launch/🟦️";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { resolveWgpuHostPlatformPrefs, WGPU_PLATFORM_PREFS_MEDIA_QUERIES } from "@semio-tech/framework-renderer-wgpu/boot-descriptor";
 import fixture from "../../🧱️elements/🐚️Shell/🧪️tests/🧫️fixtures/🎛️platform-prefs/🔣️.json" with { type: "json" };
@@ -31,7 +32,7 @@ describe("🎛️ host platform preferences", () => {
     let page: Page;
 
     beforeAll(async () => {
-      browser = await chromium.launch({ headless: true });
+      browser = await launchChromium();
       page = await browser.newPage();
     }, 60_000);
 

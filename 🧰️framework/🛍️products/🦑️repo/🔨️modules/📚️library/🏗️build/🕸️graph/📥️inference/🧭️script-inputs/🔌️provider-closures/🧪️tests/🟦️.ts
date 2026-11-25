@@ -41,10 +41,10 @@ const infer=(root:string)=>observation.observeInferenceSnapshotV1(async()=>{
  };
  for(const[name,list]of await api.sharedClosureGroups("lib/providers","🔣️.json"))handles[holderOf(name)]=scriptInputs.closureHandleOfV1(list);
  const resolved:Record<string,{value:unknown[];facts:Map<string,string>;rows:Map<string,any>}>={};
- for(const[name,row]of Object.entries(handles)){const result=await api.resolve([[row.key,row.recipe]]),walks=result.derived.filter((fact:any)=>JSON.parse(fact.row.path).walk===1);resolved[name]={value:result.values.get(row.key),facts:new Map(walks.map((fact:any)=>[fact.row.path,fact.row.fact])),rows:new Map(walks.map((fact:any)=>[fact.row.path,fact.row]))};}
+ for(const[name,row]of Object.entries(handles)){const result=await api.resolve([[row.key,row.recipe]]),walks=result.rows.filter((row:any)=>row.kind==="global"&&JSON.parse(row.path)[0]==="closure-graph");resolved[name]={value:result.values.get(row.key),facts:new Map(walks.map((row:any)=>[row.path,row.fact])),rows:new Map(walks.map((row:any)=>[row.path,row]))};}
  return resolved;
 });
-const ask=(row:any,root:string)=>observation.observeInferenceSnapshotV1(()=>scriptInputs.deriveClosureFactV1(row,cache(root,false)));
+const judged=(row:any)=>observation.observeInferenceSnapshotV1(async()=>{await observation.prepareGlobalFactsV1([row]);return observation.observationRowFreshV1(row) as boolean;});
 const esbuildRoster=async(root:string,entries:readonly string[])=>{const roster=new Set<string>();for(const entry of entries){const result=await createRequire(import.meta.url)("esbuild").build({entryPoints:[join(root,entry)],absWorkingDir:root,bundle:true,write:false,platform:"node",format:"esm",metafile:true,logLevel:"silent",outfile:"out.js"});for(const path of Object.keys(result.metafile.inputs))roster.add(path.replace(/^\.\//u,""));}return[...roster].sort();};
 const providerModules=(root:string,ports:readonly string[])=>{const declared=JSON.parse(readFileSync(join(root,corpus.designation),"utf8")).providers as Record<string,string>,pending=[...ports],seen=new Set(pending),modules:string[]=[];while(pending.length){const module=join(dirname(corpus.designation),declared[pending.shift()!]!).replaceAll("\\","/");modules.push(module);for(const match of readFileSync(join(root,module),"utf8").matchAll(/(?<!function\s)\bdefineScriptProviderV1\s*\(\s*["']([a-z0-9-]+)["']/gu))if(!seen.has(match[1]!)&&Object.hasOwn(declared,match[1]!)){seen.add(match[1]!);pending.push(match[1]!);}}return modules;};
 const graphOf=(resolved:Record<string,{value:unknown[]}>)=>({version:1,dependencies:[],namedInputs:{},projects:{
@@ -83,13 +83,13 @@ test("a viewed command closure names its providers by reference, the providers p
    const verdict:Record<string,boolean>={},fresh=await infer(root);
    for(const holder of corpus.holders){
     const before=held[holder]!,after=fresh[holder]!;let changed=[...before.facts.keys()].sort().join("\n")!==[...after.facts.keys()].sort().join("\n");
-    for(const[path,fact]of before.facts){const again=(await ask(before.rows.get(path),root)).fact;if(again!==fact)changed=true;if(after.facts.has(path))expect(after.facts.get(path),`${label}: ${holder}: the held fact is what a fresh inference holds`).toBe(again);}
+    for(const[path,fact]of before.facts){const holds=await judged(before.rows.get(path));if(!holds)changed=true;if(after.facts.has(path))expect(JSON.parse(after.facts.get(path)!).answer===JSON.parse(fact).answer,`${label}: ${holder}: a held row holds exactly when a fresh inference answers the same`).toBe(holds);}
     verdict[holder]=changed;
    }
    expect(verdict,label).toEqual(mutation.changed);
    held=fresh;
   }
-  for(const holder of corpus.holders)expect(held[holder]!.facts.size,`${label}: ${holder} holds its walks by derived facts`).toBeGreaterThan(0);
+  for(const holder of corpus.holders)expect(held[holder]!.facts.size,`${label}: ${holder} holds its walks by closure-graph rows`).toBeGreaterThan(0);
   expect(files(held.product!.value),label).toEqual(state.product.own);expect(references(held.product!.value),label).toEqual(state.product.ports.map(port=>referenceOf(port,"scheduling")));
   expect(fixtureFiles(held.productNative!.value,root),label).toEqual(state.product.own);expect(references(held.productNative!.value),label).toEqual([...state.product.ports.map(port=>referenceOf(port,"native")),toolOf("cargo-command"),toolOf("native-toolchain")].sort((a,b)=>JSON.stringify(a)<JSON.stringify(b)?-1:1));
   expect(files(held.plain!.value),label).toEqual(state.plain.own);expect(references(held.plain!.value),label).toEqual([]);

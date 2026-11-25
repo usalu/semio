@@ -16,6 +16,10 @@ role = "hub"
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-hub-procedural-generation2d-editor-app = { workspace = true }
+semio-hub-procedural-generation2d-viewer-app = { workspace = true }
+semio-hub-procedural-generation3d-editor-app = { workspace = true }
+semio-hub-procedural-generation3d-viewer-app = { workspace = true }
 semio-s-artifact-procedural-2d-viewer = { workspace = true }
 semio-s-artifact-procedural-2d-model = { workspace = true }
 semio-s-artifact-procedural-2d-editor = { workspace = true }

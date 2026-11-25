@@ -1,4 +1,5 @@
 #!/bin/zsh
+export PATH="/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🚪️shims:$PATH"  # managed cargo entry
 T="/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️07/☀️23/GET-PROCESS-WORKING-END-TO-END"
 export RUSTUP_TOOLCHAIN=nightly-2026-07-20-aarch64-apple-darwin
 cd /Users/ueli/Documents/semio

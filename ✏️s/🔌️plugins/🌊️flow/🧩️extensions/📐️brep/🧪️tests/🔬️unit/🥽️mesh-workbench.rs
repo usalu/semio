@@ -31,17 +31,23 @@ fn mesh_source(output: &Value) -> Value {
     serde_json::from_str(output["meshOut"]["data"].as_str().unwrap()).unwrap()
 }
 
+fn evaluation_reply(bytes: &[u8]) -> Value {
+    let output = pack::record::decode_value_record_body_exact(bytes, 1, &pack::record::DecodeOptions::default().limits).unwrap();
+    serde_json::from_str(&semio_framework_pack_json::from_dsl_value(&output).to_string()).unwrap()
+}
+
 fn evaluate(owner: &mut ExtensionEvaluationResources, caller: &mut OriginalJobFixtureCaller, operator: &str, input: Value, limit: u64) -> Value {
-    let request = serde_json::to_vec(&json!({"neuronId": operator, "operatorId": operator, "inputJson": input.to_string()})).unwrap();
+    let mut request = serde_json::to_vec(&json!({"neuronId": operator, "operatorId": operator, "inputJson": input.to_string()})).unwrap();
     for _ in 0..limit {
         let reply = caller.turn(GRANT, |cx| evaluate_invoke_json(owner, &request, cx).map_err(Into::into)).unwrap();
         assert_eq!(reply.retained_progress, caller.receipt());
         assert!(reply.refusal.is_none(), "{operator} refused evaluation");
         if let Some(bytes) = reply.payload {
-            let output = neural_engine::ColdOwner::new(pack::record::decode_value_record_body_exact(&bytes, 1, &pack::record::DecodeOptions::default().limits).unwrap());
-            let logical: Value = serde_json::from_str(&semio_framework_pack_json::from_dsl_value(&output).to_string()).unwrap();
-            assert_eq!(logical["done"], true, "{operator}: {logical}");
-            return logical["output"].clone();
+            let logical = evaluation_reply(&bytes);
+            if logical["done"].as_bool().expect("extension answer has a completion flag") {
+                return logical["output"].clone();
+            }
+            request = serde_json::to_vec(&json!({"neuronId": operator, "operatorId": operator, "inputJson": "", "resume": true})).unwrap();
         }
     }
     panic!("{operator} did not publish its result");
@@ -1024,4 +1030,119 @@ fn cancel_mesh_after(operator:&str,dictionary:neural_engine::Dictionary,phase:&s
     session.close();
     let stock=caller.stock();
     caller.retire(stock);
+}
+
+fn live_currency(value: &Value) -> RetainedCloneGrant {
+    let field = |name: &str| usize::try_from(value[name].as_u64().unwrap()).unwrap_or(usize::MAX);
+    RetainedCloneGrant { maximum_items: field("maximumItems"), maximum_copy_bytes: field("maximumCopyBytes"), maximum_capacity_bytes: field("maximumCapacityBytes"), maximum_release_bytes: field("maximumReleaseBytes"), maximum_depth: field("maximumDepth") }
+}
+
+const REQUEST_CROSSINGS: usize = 64;
+const GUEST_POLLS_PER_CROSSING: usize = 512;
+
+fn answer_with(owner: &mut ExtensionEvaluationResources, caller: &mut OriginalJobFixtureCaller, grant: RetainedCloneGrant, epoch: &mut u64, operator: &str, input: Value, label: &str, round_units: u64) -> (Value, usize) {
+    let input = input.to_string();
+    let started = std::time::Instant::now();
+    let mut total_polls = 0;
+    let mut total_crossings = 0;
+    let mut largest_poll_count = 0;
+    for round in 0..REQUEST_CROSSINGS * GUEST_POLLS_PER_CROSSING {
+        let request = serde_json::to_vec(&json!({
+            "neuronId": operator, "operatorId": operator, "inputJson": if round == 0 { &input } else { "" },
+            "dependencyJson": "", "operatorVersion": "fixture", "nodeHash": round_units + 1, "resume": round != 0, "roundUnits": round_units,
+            "windowId": "preview", "windowKindId": "preview", "extensionId": "brep",
+        })).unwrap();
+        let answer = (1..=REQUEST_CROSSINGS * GUEST_POLLS_PER_CROSSING).find_map(|poll| {
+            *epoch += 1;
+            let reply = caller.turn(grant, |cx| { cx.bind_original_source_epoch(*epoch)?; evaluate_invoke_json(owner, &request, cx).map_err(Into::into) }).unwrap_or_else(|failure| panic!("{label} {operator} round {round} poll {poll}: {failure:?}"));
+            assert_eq!(reply.retained_progress, caller.receipt());
+            assert!(reply.refusal.is_none(), "{label} {operator} round {round} poll {poll} refused: {:?}", reply.refusal);
+            reply.payload.map(|bytes| (poll, bytes))
+        });
+        if let Some((poll, bytes)) = answer {
+            total_polls += poll;
+            total_crossings += poll.div_ceil(GUEST_POLLS_PER_CROSSING);
+            largest_poll_count = largest_poll_count.max(poll);
+            let logical = evaluation_reply(&bytes);
+            if logical["done"].as_bool().expect("extension answer has a completion flag") {
+                eprintln!("[DEBUG] {label} {operator} ({round_units} requested round units) took {round} compact resumes, {total_polls} total polls, {total_crossings} worker crossings at full poll allowance, maximum {largest_poll_count} polls per request, {}ms native wall time", started.elapsed().as_millis());
+                return (logical["output"].clone(), round + 1);
+            }
+        } else {
+            panic!("{label}: {operator} round {round} exhausted {REQUEST_CROSSINGS} crossings of {GUEST_POLLS_PER_CROSSING} polls");
+        }
+    }
+    panic!("{label}: {operator} never published a terminal result");
+}
+
+fn coordinate(schema: &str, xyz: &Value) -> Value {
+    json!({"$schema": schema, "x": xyz[0], "y": xyz[1], "z": xyz[2]})
+}
+
+/// 🔁️ The default graph's BREP operators and two mesh operators respond through the original Flow capability, with fresh Source epochs and resumable intermediate replies. The same renderer currencies and crossing limits bound the test, assuming each crossing reaches the worker's guest poll ceiling.
+#[test]
+fn live_graph_extrude_answers_within_the_live_turn_budget_under_the_live_actor_currencies() {
+    use parry3d::shape::{Cylinder, Shape};
+    use semio_framework_3d_brep_engine::{BrepKernel, GeometryHandle};
+    use semio_s_spatial_kernel_semio_session::map_kernel_error;
+
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/🏗️brep-solid/🔣️.json")).unwrap();
+    let case = fixture["cases"].as_array().unwrap().iter().find(|case| case["name"] == "extrude a circular curve into a cylinder").unwrap();
+    let profile = &case["inputs"]["wire"]["inputs"];
+    let axis = &case["inputs"]["vector"];
+    let radius = profile["radius"].as_f64().unwrap();
+    let height = axis.as_array().unwrap().iter().map(|value| value.as_f64().unwrap().powi(2)).sum::<f64>().sqrt();
+    let oracle_volume = f64::from(Cylinder::new((height / 2.0) as f32, radius as f32).mass_properties(1.0).mass());
+    let tolerance = case["tolerance"].as_f64().unwrap();
+    let expected_volume = case["outputs"]["shape"]["volume"].as_f64().unwrap();
+    assert!((expected_volume - oracle_volume).abs() < tolerance);
+
+    let stock: Value = serde_json::from_str(include_str!("../../../../../../../🧰️framework/🔨️modules/🖼️canvas/🧵️renderer-work/🔣️stock.json")).unwrap();
+    let live = live_currency(&stock["operation"]["grant"]);
+    let live_fuel = stock["operation"]["fuel"].as_u64().unwrap();
+    let wide = live_currency(&stock["stock"]["grant"]);
+    let wide_fuel = stock["stock"]["fuel"].as_u64().unwrap();
+    let rows: [(&str, RetainedCloneGrant, u64); 7] = [
+        ("all live", live, live_fuel),
+        ("items live", RetainedCloneGrant { maximum_items: live.maximum_items, ..wide }, wide_fuel),
+        ("copy live", RetainedCloneGrant { maximum_copy_bytes: live.maximum_copy_bytes, ..wide }, wide_fuel),
+        ("capacity live", RetainedCloneGrant { maximum_capacity_bytes: live.maximum_capacity_bytes, ..wide }, wide_fuel),
+        ("release live", RetainedCloneGrant { maximum_release_bytes: live.maximum_release_bytes, ..wide }, wide_fuel),
+        ("depth live", RetainedCloneGrant { maximum_depth: live.maximum_depth, ..wide }, wide_fuel),
+        ("fuel live", wide, live_fuel),
+    ];
+    for (label, grant, fuel) in rows {
+        let session = Session::new();
+        let mut owner = ExtensionEvaluationResources::new(semio_s_plugin_flow_brep::module_registry(&session));
+        let mut caller = OriginalJobFixtureCaller::admit(OperationId(0x6D6001), Generation(7), wide, || Some(1_000), 1_500, fuel);
+        let mut epoch = 0u64;
+        let circle_input = json!({ "center": coordinate("point", &profile["center"]), "normal": coordinate("point", &profile["normal"]), "radius": number(radius) });
+        let (circle, circle_requests) = answer_with(&mut owner, &mut caller, grant, &mut epoch, "brep.curve.circle", circle_input.clone(), label, 0);
+        if label == "all live" {
+            let (single_step_circle, single_step_requests) = answer_with(&mut owner, &mut caller, grant, &mut epoch, "brep.curve.circle", circle_input, label, 1);
+            for output in [&circle, &single_step_circle] {
+                let handle = GeometryHandle(output["curve"]["handle"].as_str().expect("circle curve handle").to_owned());
+                let actual = session.with_kernel_read(|kernel| kernel.length(&handle).map_err(|error| map_kernel_error(&error))).unwrap();
+                assert!((actual - std::f64::consts::TAU * radius).abs() < tolerance);
+            }
+            assert!(circle_requests < single_step_requests);
+        }
+        let (solid, _) = answer_with(&mut owner, &mut caller, grant, &mut epoch, "brep.solid.extrude", json!({ "wire": circle["curve"], "vector": coordinate("vector", axis) }), label, 0);
+        let handle = GeometryHandle(solid["solid"]["handle"].as_str().unwrap_or_else(|| panic!("{label}: brep.solid.extrude produced no solid: {solid}")).to_owned());
+        let actual_volume = session.with_kernel_read(|kernel| kernel.volume(&handle).map_err(|error| map_kernel_error(&error))).unwrap();
+        assert!((actual_volume - oracle_volume).abs() < tolerance, "{label}: expected volume {oracle_volume}, got {actual_volume}");
+        let (cube, _) = answer_with(&mut owner, &mut caller, grant, &mut epoch, "brep.mesh.box", json!({ "width": number(1.0), "height": number(1.0), "depth": number(1.0) }), label, 0);
+        let (extruded, _) = answer_with(&mut owner, &mut caller, grant, &mut epoch, "brep.mesh.extrude", json!({ "mesh": cube["meshOut"], "faces": text("[0]"), "distance": number(0.5) }), label, 0);
+        assert!(extruded["meshOut"].is_object(), "{label}: brep.mesh.extrude produced no mesh");
+        owner.begin_close();
+        for _ in 0..20_000u64 {
+            if owner.terminal_is_empty() { break; }
+            epoch += 1;
+            let at = epoch;
+            caller.turn(grant, |cx| { cx.bind_original_source_epoch(at)?; owner.close_step(cx).map(|_| ()) }).unwrap();
+        }
+        assert!(owner.terminal_is_empty(), "{label}: owner did not close");
+        session.close();
+        caller.retire(wide);
+    }
 }

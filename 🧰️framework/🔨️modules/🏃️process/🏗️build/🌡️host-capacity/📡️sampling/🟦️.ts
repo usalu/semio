@@ -5,6 +5,7 @@ import {cpus,freemem,loadavg,platform as osPlatform,totalmem} from "node:os";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import {formatHostCapacityV1,hostCapacityErrorV1,type HostCapacityPolicyV1,type HostSampleV1} from "../📏️decision/🟦️.ts";
 import {hostProfileV1} from "../🪞️profile/🟦️.ts";
+import {systemDarwinFootprintPortV1,type DarwinFootprintPortV1} from "../🍏️native-footprint/🟦️.ts";
 import {systemWindowsMemoryPortV1,type WindowsMemoryFactsV1,type WindowsMemoryPortV1,type WindowsMemoryUnknownV1} from "../🪟️native-memory/🟦️.ts";
 import {refuseProcessV1} from "../../../📖️texts/🟦️.ts";
 import {isRepoErrorV1,renderRepoErrorV1} from "../../../📦️packages/🟦️typescript/🏗️build/🗣️language/🚨️error/🟦️.ts";
@@ -291,8 +292,15 @@ export function parseSmapsRollupV1(text:string,fields:readonly string[]=OBSERVER
  return total;
 }
 
-/** 👁️ Observes what the process tree under one pid holds, in the footprint by default (`HostMemoryMeasureV1`): `footprint` on macOS (one call for the whole tree, the process table names its members), `/proc/<pid>/smaps_rollup` on Linux (no external tool), the native process walk on Windows (`K32GetProcessMemoryInfo`: the private commit is the footprint, the working set the resident set); a platform whose footprint source cannot be read says so once in every language and reads the resident set instead. null when the process is gone or, on Windows, when the native calls cannot answer at all, which is announced once in every language (the gate then learns nothing from the run and keeps the declared sizes). */
-export async function observeTreeMegabytesV1(pid:number,run:HostCommandRunnerV1=runHostCommandV1,platform:HostSampleV1["platform"]=osPlatform() as HostSampleV1["platform"],proc:Readonly<{read:HostTextReaderV1;list:()=>Promise<readonly string[]>}>={read:readHostTextV1,list:()=>readdir("/proc")},notify?:(line:string)=>void,measure:HostMemoryMeasureV1="footprint",windows?:WindowsMemoryPortV1,scope?:HostProcessTreeScopeV1):Promise<number|null>{
+/** 🐧️ Reads the footprint (proportional plus swapped proportional set size) in kilobytes of every listed process through `/proc/<pid>/smaps_rollup`, all reads at once; a process that exited, is not ours to read or has no such field is absent from the answer. The callers list only processes whose resident set is large enough to matter, because the kernel walks the page tables of the process to answer. */
+export async function readLinuxChargesV1(pids:readonly number[],read:HostTextReaderV1):Promise<ReadonlyMap<number,number>>{
+ const linux=OBSERVERS.platforms.linux,found=new Map<number,number>();
+ await Promise.all(pids.map(async pid=>{try{const text=await read(`${linux.processDirectory}/${pid}/${linux.footprint.file}`),value=text===null?undefined:parseSmapsRollupV1(text,linux.footprint.fields);if(value!==undefined)found.set(pid,value);}catch{}}));
+ return found;
+}
+
+/** 👁️ Observes what the process tree under one pid holds, in the footprint by default (`HostMemoryMeasureV1`): `proc_pid_rusage` on macOS (`phys_footprint` of each member through the native port, about two microseconds per process; the `footprint` tool for the whole tree when the port cannot load, about 200 milliseconds for 30 processes; the process table names the members), `/proc/<pid>/smaps_rollup` on Linux (no external tool), the native process walk on Windows (`K32GetProcessMemoryInfo`: the private commit is the footprint, the working set the resident set); a platform whose footprint source cannot be read says so once in every language and reads the resident set instead. null when the process is gone or, on Windows, when the native calls cannot answer at all, which is announced once in every language (the gate then learns nothing from the run and keeps the declared sizes). */
+export async function observeTreeMegabytesV1(pid:number,run:HostCommandRunnerV1=runHostCommandV1,platform:HostSampleV1["platform"]=osPlatform() as HostSampleV1["platform"],proc:Readonly<{read:HostTextReaderV1;list:()=>Promise<readonly string[]>}>={read:readHostTextV1,list:()=>readdir("/proc")},notify?:(line:string)=>void,measure:HostMemoryMeasureV1="footprint",windows?:WindowsMemoryPortV1,scope?:HostProcessTreeScopeV1,darwin:DarwinFootprintPortV1|null|undefined=undefined):Promise<number|null>{
  const reason=(error:unknown)=>(language:"en"|"de"):string=>(isRepoErrorV1(error)?renderRepoErrorV1(error,language):String((error as Error)?.message??error)).split("\n")[0]!.slice(0,LIMITS.reasonCharacters),fallback=(why:(language:"en"|"de")=>string):void=>noticeOnceV1("footprintFallback."+platform,"footprintFallback",{platform,reason:why},notify);
  if(platform==="win32"){
   const table=(windows??systemWindowsMemoryPortV1()).processes();
@@ -313,6 +321,11 @@ export async function observeTreeMegabytesV1(pid:number,run:HostCommandRunnerV1=
  const table=OBSERVERS.platforms.darwin.table,rows=parseProcessTableV1(await run(table.command,table.arguments));
  if(measure==="resident")return treeMegabytesV1(rows,pid,scope);
  const members=treePidsV1(rows,pid,scope);if(!members.length)return null;
+ const kernel=darwin===undefined?systemDarwinFootprintPortV1(platform):darwin;
+ if(kernel!==null){
+  const charged=members.map(member=>kernel.footprint(member));
+  if(charged.some(value=>value!==null)){const resident=new Map(rows.map(row=>[row.pid,row.rssKilobytes*1024] as const));return Math.floor(members.reduce((total,member,index)=>total+(charged[index]??resident.get(member)??0),0)/MEGABYTE);}
+ }
  const tool=OBSERVERS.platforms.darwin.footprint;let failure:(language:"en"|"de")=>string=()=>"footprint printed no process";
  const text=await run(tool.command,[...tool.arguments,...members.flatMap(member=>[tool.pidFlag,String(member)])]).catch((error:unknown)=>{failure=reason(error);const partial=(error as {stdout?:unknown})?.stdout;return typeof partial==="string"?partial:"";}),bytes=parseFootprintV1(text);
  if(!bytes.size){fallback(failure);return treeMegabytesV1(rows,pid,scope);}

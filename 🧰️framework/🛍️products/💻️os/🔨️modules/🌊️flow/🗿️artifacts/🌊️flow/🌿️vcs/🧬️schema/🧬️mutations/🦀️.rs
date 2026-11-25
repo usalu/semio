@@ -86,5 +86,6 @@ impl crate::os_spr::OpBinary for FlowMutation {
     }
 }
 semio_os_kernel::original_ordinal_operation_receiving!(FlowMutation);
+semio_os_kernel::artifact_persisted_binary_operation!(FlowMutation);
 //#endregion 🔤️Codecs
 

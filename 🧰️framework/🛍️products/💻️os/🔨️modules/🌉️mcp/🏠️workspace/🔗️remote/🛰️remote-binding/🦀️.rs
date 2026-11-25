@@ -272,6 +272,8 @@ impl HubRemoteBinding {
                     {
                         return Err(HubBindingError::InvalidResponse("execution-target descriptor is not its exact canonical package projection"));
                     }
+                    let mut descriptor = descriptor;
+                    descriptor.manifest = descriptor.manifest.resolved();
                     self.descriptors.lock().unwrap_or_else(PoisonError::into_inner).insert(key.clone(), descriptor.clone(), &used)?;
                     descriptor
                 }

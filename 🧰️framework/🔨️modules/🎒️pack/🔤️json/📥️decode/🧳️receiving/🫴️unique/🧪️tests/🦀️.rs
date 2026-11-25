@@ -96,3 +96,6 @@ fn invalid_utf8_keeps_its_paid_prefix_and_failure_owner(){
  assert!(source.terminal_is_empty());
  caller.retire(g);
 }
+
+#[path="📏️work-equivalence/🦀️.rs"]
+mod work_equivalence;

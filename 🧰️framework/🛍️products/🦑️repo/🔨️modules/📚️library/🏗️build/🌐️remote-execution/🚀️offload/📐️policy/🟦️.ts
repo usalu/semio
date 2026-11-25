@@ -67,6 +67,17 @@ export function offloadDeadlineMillisecondsV1(predictedMilliseconds:number|undef
  return Math.min(cap,Math.max(deadline.floorMilliseconds,Math.ceil(predictedMilliseconds*deadline.factor)));
 }
 
+/** 📏️ What the compiler measured of one run after its admission (the broker's `UnitProvenanceV1`): wall, user and system milliseconds. */
+export type OffloadRunMeasureV1=Readonly<{wallMs:number;userMs:number;sysMs:number}>;
+
+/** 🧮️ The next recorded local cost of a unit after one local compile, `undefined` when the record stays absent. The observation is the run after memory admission (`measure.wallMs`; the wall time of the whole compiler call, `ranMilliseconds`, only when nothing was measured), so a wait in a queue never counts. A run whose CPU time over wall time is below the schema's `cost.minimumUtilisation` was starved (memory pressure, swap, cores) and only upper-bounds the cost: it never raises the record (`contendedRaiseWeight`), may lower it (`contendedLowerWeight`) and teaches a unit without a record only when `learnContendedFirst`. A calm run moves the record by `calmWeight` of the difference. Pure.
+ * @see ../🧪️tests/🧮️unit-cost/🐍️.py */
+export function offloadCostRecordV1(before:number|undefined,ranMilliseconds:number,measure?:OffloadRunMeasureV1):number|undefined{
+ const cost=OFFLOAD_POLICY_V1.cost,observed=measure===undefined?ranMilliseconds:measure.wallMs,contended=measure!==undefined&&observed>0&&(measure.userMs+measure.sysMs)/observed<cost.minimumUtilisation;
+ if(before===undefined)return contended&&!cost.learnContendedFirst?undefined:observed;
+ return Math.round(before+(contended?observed>=before?cost.contendedRaiseWeight:cost.contendedLowerWeight:cost.calmWeight)*(observed-before));
+}
+
 /** 💾️ The megabytes that placement reserves for a unit: the predicted peak of a wasm linked unit (the measured peaks of the release's component finals are 0.4 to 6.5 GiB; this is the cold bound that the family estimate replaces once enough crates were measured), 0 for every other unit (the static part: whether the unit is a linked wasm unit; the size a unit is placed with is `offloadUnitPeakMegabytesV1`). */
 export const offloadPeakMegabytesV1=(types:readonly string[],target:string|undefined):number=>offloadWasmTargetV1(target)&&types.some(type=>OFFLOAD_POLICY_V1.wasm.crateTypes.includes(type))?OFFLOAD_POLICY_V1.wasm.peakMegabytes:0;
 
@@ -117,7 +128,7 @@ export const offloadKilledPeakMegabytesV1=(exitCode:number,placed:number,learned
 /** 🎛️ How a build treats offloading: `distribute` places every unit worth a round trip on any ready machine of the fleet (this machine's slots are one more worker), `pin` places every unit on the one named machine, `never` stays local. */
 export type OffloadModeV1="distribute"|"pin"|"never";
 /** 🧭️ Why a unit stays here or its offload failed. */
-export type OffloadReasonV1="not-portable"|"no-endpoint"|"no-credential"|"unmapped-path"|"inputs-too-large"|"unreadable-input"|"no-idle-machine"|"no-compatible-worker"|"queue-timeout"|"infrastructure"|"toolchain-missing"|"path-dependent-output"|"worker-policy"|"incomplete-inputs"|"remote-failed-local-redo"|"crate-type"|"source-kind"|"cheap"|"local-slot"|"unmeasured"|"final-wait"|"pin-failed"|"cancelled";
+export type OffloadReasonV1="not-portable"|"no-endpoint"|"no-credential"|"unmapped-path"|"inputs-too-large"|"unreadable-input"|"no-idle-machine"|"no-compatible-worker"|"queue-timeout"|"infrastructure"|"toolchain-missing"|"path-dependent-output"|"worker-policy"|"incomplete-inputs"|"remote-failed-local-redo"|"crate-type"|"source-kind"|"cheap"|"local-slot"|"unmeasured"|"final-wait"|"pin-failed"|"beyond-host-refused"|"cancelled";
 
 type Environment=Readonly<Record<string,string|undefined>>;
 

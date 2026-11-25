@@ -187,7 +187,8 @@
           "forming": null,
           "ultimateStrength": null,
           "grossArea": null,
-          "bends": null
+          "bends": null,
+          "usedYield": 1.5
         }
       }
     ]

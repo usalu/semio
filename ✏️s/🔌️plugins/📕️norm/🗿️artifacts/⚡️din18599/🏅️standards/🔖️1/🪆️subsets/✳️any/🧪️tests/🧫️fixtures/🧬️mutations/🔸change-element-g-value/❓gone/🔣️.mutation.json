@@ -1,5 +1,5 @@
 {
-  "mutation": "changeelementgvalue",
+  "mutation": "changeElementGValue",
   "elementId": "ghost",
   "newGValue": 0.5
 }

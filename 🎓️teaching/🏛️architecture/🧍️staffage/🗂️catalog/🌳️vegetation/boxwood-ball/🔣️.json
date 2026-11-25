@@ -272,13 +272,55 @@
       "de": "Eine geschnittene Buchskugel (Buxus sempervirens), im Boden gepflanzt, 0,81 m breit und 0,80 m hoch: eine dichte immergrüne Kugel aus kleinen glänzenden Blättern, ihr Umriss knollig von den geschnittenen Triebbüscheln; die Unterseite liegt 7 cm über dem Mulch, sodass im großen Maßstab fünf kurze, helle Stämme und der Wurzelanlauf zu sehen sind."
     },
     "tags": [
-      "shrub",
-      "evergreen",
-      "broadleaf",
-      "clipped",
-      "topiary",
-      "wind",
-      "transpiration"
+      {
+        "id": "shrub",
+        "title": {
+          "en": "shrub",
+          "de": "Strauch"
+        }
+      },
+      {
+        "id": "evergreen",
+        "title": {
+          "en": "evergreen",
+          "de": "immergrün"
+        }
+      },
+      {
+        "id": "broadleaf",
+        "title": {
+          "en": "broadleaf",
+          "de": "Laubholz"
+        }
+      },
+      {
+        "id": "clipped",
+        "title": {
+          "en": "clipped",
+          "de": "geschnitten"
+        }
+      },
+      {
+        "id": "topiary",
+        "title": {
+          "en": "topiary",
+          "de": "Formschnitt"
+        }
+      },
+      {
+        "id": "wind",
+        "title": {
+          "en": "wind",
+          "de": "Wind"
+        }
+      },
+      {
+        "id": "transpiration",
+        "title": {
+          "en": "transpiration",
+          "de": "Transpiration"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage vegetation content worker PW-13",

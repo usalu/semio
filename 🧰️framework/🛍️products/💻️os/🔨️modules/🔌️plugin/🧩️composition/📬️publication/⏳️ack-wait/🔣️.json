@@ -1,0 +1,13 @@
+{
+  "$comment": "⏳️ Language-agnostic contract of a typed operation that waits for the host: an operation whose result page is out and unacknowledged owes the guest no step, only the host's acknowledgement event can move it, so it must not keep the reactor in more-work. Browser measurement 2026-11-25: a Direct Select click spun more than 6 400 turns, each with no progress.",
+  "rows": [
+    { "stage": "Worker", "resultPagePresented": false, "owesGuestStep": true },
+    { "stage": "Worker", "resultPagePresented": true, "owesGuestStep": true },
+    { "stage": "Publishing", "resultPagePresented": false, "owesGuestStep": true },
+    { "stage": "Publishing", "resultPagePresented": true, "owesGuestStep": true },
+    { "stage": "AwaitingAck", "resultPagePresented": false, "owesGuestStep": true },
+    { "stage": "AwaitingAck", "resultPagePresented": true, "owesGuestStep": false },
+    { "stage": "Retiring", "resultPagePresented": false, "owesGuestStep": true },
+    { "stage": "Retiring", "resultPagePresented": true, "owesGuestStep": true }
+  ]
+}

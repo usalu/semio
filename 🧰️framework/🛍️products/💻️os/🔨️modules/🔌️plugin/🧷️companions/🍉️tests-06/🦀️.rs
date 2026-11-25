@@ -2,6 +2,8 @@
 //!
 //! 🧭️ The test sources stay where they are and are mounted here with `#[path]`; every name they use from the former facade root is spelled with the crate that owns it.
 
+#![recursion_limit = "512"]
+
 extern crate semio_os_kernel as store;
 extern crate semio_os_kernel as protocol;
 

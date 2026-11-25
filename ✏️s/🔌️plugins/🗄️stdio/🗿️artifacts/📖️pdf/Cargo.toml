@@ -37,12 +37,16 @@ members = [
     "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/✏️editor/🖼️page/🧪️tests/🔬️unit/✍️authoring/📦️packages/🦀️rust",
     "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/✏️editor/🖼️page/🧪️tests/🔬️unit/📦️packages/🦀️rust",
     "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/✏️editor/🖼️page/🧭️geometry/🧭️coordinates/📦️packages/🦀️rust",
+    "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/✏️editor/🖼️page/🧮️function-colour/🌈️cmyk-image-clut/📦️packages/🦀️rust",
     "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/✏️editor/🖼️page/🧱️model/📦️packages/🦀️rust",
     "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/✏️editor/🧰️kit/📦️packages/🦀️rust",
     "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/✏️editor/🫧️transient/📦️packages/🦀️rust",
     "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/📦️packages/🦀️rust",
     "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔨️modules/⬆️lower/📦️packages/🦀️rust",
+    "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔨️modules/⬇️lift/🌳️page-tree/📦️packages/🦀️rust",
     "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔨️modules/⬇️lift/📦️packages/🦀️rust",
+    "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔨️modules/⬇️lift/🧩️lifter-and-document/📜️page-content/📦️packages/🦀️rust",
+    "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔨️modules/⬇️lift/🧱️lifter/📦️packages/🦀️rust",
     "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔨️modules/🎞️paint-codecs/📦️packages/🦀️rust",
     "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔨️modules/🔗️xref/💧️stream/📦️packages/🦀️rust",
     "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔨️modules/🔤️fonts/🅰️tables/📦️packages/🦀️rust",
@@ -140,6 +144,9 @@ path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📦️pack
 
 [workspace.dependencies.semio-ui-contract]
 path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-ui-contract-validation]
+path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/🛡️limits/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-ui-scene]
 path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust"

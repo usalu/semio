@@ -23,8 +23,5 @@
   {"op": "front-sweep", "scale": "500", "id": "thigh-r"},
   {"op": "plan-revolve", "scale": "500", "id": "thigh-r"},
   {"op": "front-sweep", "scale": "500", "id": "shank-r"},
-  {"op": "plan-revolve", "scale": "500", "id": "shank-r"},
-  {"op": "thicken", "scale": "50", "view": "elevation", "id": "hand-l"},
-  {"op": "thicken", "scale": "50", "view": "front", "id": "hand-l"},
-  {"op": "thicken", "scale": "50", "view": "plan", "id": "hand-l"}
+  {"op": "plan-revolve", "scale": "500", "id": "shank-r"}
 ]

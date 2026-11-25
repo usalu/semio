@@ -301,6 +301,7 @@ test("adoption makes equal finished files of two workspaces one stored object, l
  const objects=readdirSync(join(root,"v1","o")).flatMap(shard=>readdirSync(join(root,"v1","o",shard)));expect(objects.length).toBe(2);
  const python=spawnSync(testPythonV1()??"python3",["-I","-c",`
 import hashlib,json,os,sys
+import {ownProcessIdentityV1} from "../../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts";
 roots=json.loads(sys.argv[1]);groups={}
 for r in roots:
   for d,_,fs in os.walk(r):
@@ -760,10 +761,10 @@ const readCasPinsOf=async(root:string):Promise<Map<string,string>>=>(await impor
 
 test("a store of a cache server refuses a write that stays over its cap after one bounded collection, lets it go on when the collection relieved it, and an ordinary store never refuses",async()=>{
  resetCasGuardsV1();
- const policy:CasPolicyV1={...CAS_POLICY_V1,capBytes:100*MIB,minAgeMs:0,admissionBudgetMs:40};let collects=0,mode:"relieve"|"keep"|"hang"="relieve",hung=false;let used=150*MIB;
+ const policy:CasPolicyV1={...CAS_POLICY_V1,capBytes:100*MIB,minAgeMs:0,admissionBudgetMs:250};let collects=0,mode:"relieve"|"keep"|"hang"="relieve",hung=false;let used=150*MIB;
  const root=scratch("refuse-cap"),over=()=>{mkdirSync(join(root,"v1"),{recursive:true});writeFileSync(casUsageHintPathV1(root),JSON.stringify({version:1,bytes:used,atMs:Date.now()}));};
  const ports=(refuseOverCap:boolean)=>({root,policy,refuseOverCap,partition:()=>({partition:"/v",totalBytes:100000*MIB,freeBytes:50000*MIB}),usage:async()=>used,
-  collect:async()=>{collects++;if(mode==="hang"){await new Promise(done=>setTimeout(done,500));hung=true;}if(mode==="relieve")used=60*MIB;over();return stub;}});
+  collect:async()=>{collects++;if(mode==="hang"){await new Promise(done=>setTimeout(done,3000));hung=true;}if(mode==="relieve")used=60*MIB;over();return stub;}});
  over();
  const refusing=createCasGuardV1(ports(true));
  await refusing.admit(MIB);expect(collects).toBe(1);
@@ -843,7 +844,7 @@ test("the tick sweeps objects nobody references below every watermark in bounded
 });
 
 test("a refused manual collection names the process that holds the lock and how long ago it progressed",async()=>{
- const root=scratch("locked");mkdirSync(join(root,"v1"),{recursive:true});writeFileSync(join(root,"v1","gc.lock"),JSON.stringify({pid:process.pid,atMs:Date.now()-5000}));
+ const root=scratch("locked");mkdirSync(join(root,"v1"),{recursive:true});writeFileSync(join(root,"v1","gc.lock"),JSON.stringify({...ownProcessIdentityV1(),atMs:Date.now()-5000}));
  const result=await collectCasV1({root,policy:small});
  expect(result.status).toBe("locked");expect(result.lockedBy?.pid).toBe(process.pid);
  expect(formatCasCollectionV1(result,small,"en")).toContain(`process ${process.pid} holds the lock`);expect(formatCasCollectionV1(result,small,"de")).toContain(`Prozess ${process.pid} hält die Sperre`);
@@ -915,7 +916,7 @@ test("the unreferenced sweep runs while another collector holds the lock, frees 
  const root=scratch("sweep-locked"),clock={value:2_000_000_000},{put}=fill(root,0,MIB,clock),hashes:string[]=[];
  for(let index=0;index<6;index++)hashes.push(await put(index));
  const {pinCasV1}=await import("../📌️pins/🟦️.ts");await pinCasV1(root,small,"keeper",[hashes[0]!],3_600_000,Date.now());
- const lock=join(root,"v1","gc.lock");writeFileSync(lock,JSON.stringify({pid:process.pid,atMs:Date.now()}));clock.value+=60_000;
+ const lock=join(root,"v1","gc.lock");writeFileSync(lock,JSON.stringify({...ownProcessIdentityV1(),atMs:Date.now()}));clock.value+=60_000;
  expect((await collectCasV1({root,policy:small,now:()=>clock.value})).status).toBe("locked");
  const swept=await collectCasV1({root,policy:small,unreferencedOnly:true,now:()=>clock.value});
  expect(swept).toMatchObject({status:"collected",lockless:true,evicted:5});expect(existsSync(lock)).toBe(true);
@@ -954,4 +955,30 @@ test("the status answers from the census without walking the store, in both lang
  const run=async(language:"en"|"de")=>{lines.length=0;await runCasCommandV1(["status",`--lang=${language}`],{workspace:home,environment:{SEMIO_CAS_ROOT:root,HOME:home},write:line=>{lines.push(line);},home,partition:()=>undefined},ports);return lines.join("\n");};
  const english=await run("en");expect(english).toContain("2 objects");expect(english).toContain("Census of the last complete scan");expect(english).toContain("unreferenced 0 GiB");
  expect(await run("de")).toContain("Zählung des letzten vollständigen Durchgangs");
+});
+
+test("a removed object leaves the census under the class and size the scan counted it with; one the scan never counted, or one removed twice, changes nothing, so no class goes below zero",async()=>{
+ const {forgetCensusV1}=await import("../🧹️collector/🟦️.ts");
+ const zero=()=>({objects:0,bytes:0}),census={version:1 as const,atMs:0,objects:2,bytes:3*MIB,classes:{pinned:zero(),held:zero(),leased:zero(),linked:zero(),expired:zero(),young:{objects:1,bytes:MIB},unreferenced:{objects:1,bytes:2*MIB}},holders:[]};
+ const counted=new Map([["a".repeat(64),{hash:"a".repeat(64),size:MIB,kind:"young" as const}],["b".repeat(64),{hash:"b".repeat(64),size:2*MIB,kind:"unreferenced" as const}]]);
+ forgetCensusV1(census,counted,"a".repeat(64));
+ expect(census.classes.young,"counted young, removed after it turned unreferenced: leaves young").toEqual({objects:0,bytes:0});
+ expect(census.classes.unreferenced).toEqual({objects:1,bytes:2*MIB});
+ forgetCensusV1(census,counted,"a".repeat(64));forgetCensusV1(census,counted,"c".repeat(64));
+ expect(census.classes.young,"removed twice or stored after the scan: nothing changes").toEqual({objects:0,bytes:0});
+ expect(census).toMatchObject({objects:1,bytes:2*MIB});
+ expect(Object.values(census.classes).every(row=>row.objects>=0&&row.bytes>=0)).toBe(true);
+});
+
+/** 🔓️ Contract: the Bun content cache is adopted only by copy-on-write clones, never by shared read-only hard links, because Bun copies cached packages with their mode and patches the copies in place (a 0444 copy fails every patch with EACCES on Linux). */
+test("the bun cache place of the adoption policy is private and writable",async()=>{
+ const {CAS_ADOPTION_V1}=await import("../🧬️schema/🟦️.ts"),bun=CAS_ADOPTION_V1.places.find(place=>place.id==="bun-cache")!;
+ expect(bun.mode).toBe("reflink");
+ const {adoptCasV1}=await import("../🧲️adopt/🟦️.ts"),root=mkdtempSync(join(tmpdir(),"adopt-bun-")),workspace=join(root,"ws"),cache=join(workspace,"bun-cache");
+ try{
+  mkdirSync(cache,{recursive:true});for(const name of["a","b"])writeFileSync(join(cache,name),"x".repeat(5000));
+  const old=new Date(Date.now()-3_600_000);for(const name of["a","b"])utimesSync(join(cache,name),old,old);
+  await adoptCasV1({root:join(root,"store"),places:[{id:"bun-cache",directory:cache,mode:bun.mode}],policy:{...CAS_ADOPTION_V1,minBytes:1000,quietMs:60_000}});
+  for(const name of["a","b"]){const facts=statSync(join(cache,name));expect(facts.nlink).toBe(1);if(process.platform!=="win32")expect(facts.mode&0o200).toBe(0o200);}
+ }finally{rmSync(root,{recursive:true,force:true});}
 });

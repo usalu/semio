@@ -2,9 +2,10 @@ import type { OriginalOperationAdmission, OriginalOperationReceipt } from "../..
 import type { ActorCodecRequest } from "../../🧬️codec/🟦️.ts";
 import { hopTrace, hopTraceEpochToTimeline } from "../../../⏱️trace/🟦️.ts";
 import type { ShardAsset, ShardBudget, ShardCapabilityGrant, ShardCommandIngressPage, ShardEventEnvelope, ShardFrame, ShardJobBudget } from "../📜️wire/🟦️.ts";
+import type { ShardCoreModuleSeed } from "../🧊️core-modules/🟦️.ts";
 
 export type OutboundMessage =
-  | { readonly kind: "activate"; readonly requestId: string; readonly actorId: string; readonly activationGeneration: bigint; readonly originalAdmission: OriginalOperationAdmission; readonly moduleUrl: string; readonly caps: readonly ShardCapabilityGrant[]; readonly budget: ShardBudget; readonly assets: readonly ShardAsset[] }
+  | { readonly kind: "activate"; readonly requestId: string; readonly actorId: string; readonly activationGeneration: bigint; readonly originalAdmission: OriginalOperationAdmission; readonly moduleUrl: string; readonly component: string | null; readonly caps: readonly ShardCapabilityGrant[]; readonly budget: ShardBudget; readonly assets: readonly ShardAsset[]; readonly coreModules: readonly ShardCoreModuleSeed[] }
   | { readonly kind: "turn"; readonly requestId: string; readonly actorId: string; readonly activationGeneration: bigint; readonly events: readonly ShardEventEnvelope[]; readonly commandPage?: ShardCommandIngressPage; readonly budget: ShardBudget; readonly postedAtEpochMs?: number }
   | { readonly kind: "startJob"; readonly requestId: string; readonly actorId: string; readonly job: bigint; readonly jobKind: string; readonly input: Uint8Array }
   | { readonly kind: "stepJob"; readonly requestId: string; readonly actorId: string; readonly job: bigint; readonly budget: ShardJobBudget }
@@ -91,6 +92,8 @@ export type InboundMessage =
   | { readonly kind: "original-turn-receipt"; readonly actorId: string; readonly activationGeneration: bigint; readonly receipt: OriginalOperationReceipt }
   | { readonly kind: "original-producer-held"; readonly actorId: string; readonly activationGeneration: bigint; readonly operation: bigint; readonly generation: bigint; readonly refusal: unknown }
   | { readonly kind: "original-source-close"; readonly actorId: string; readonly activationGeneration: bigint; readonly operation: bigint; readonly generation: bigint; readonly sourceClosed: boolean }
+  /** 🧊️ An activation holds a compiled core module (compiled by its worker or adopted from a seed): the page keeps it as a seed for every later activation on any worker until its last holding activation is disposed. */
+  | { readonly kind: "core-module"; readonly actorId: string; readonly activationGeneration: bigint; readonly url: string; readonly module: WebAssembly.Module }
   | { readonly kind: "result"; readonly requestId: string; readonly ok: true; readonly value: unknown; readonly timings?: ShardWorkerTurnTimings; readonly beat?: ShardCarriedBeat }
   | { readonly kind: "result"; readonly requestId: string; readonly ok: false; readonly error: string; readonly fault?: ShardReplyFault; readonly stack?: string; readonly type?: string; readonly framesBytes?: number; readonly retryableLifecycle?: boolean; readonly beat?: ShardCarriedBeat }
   /** 🐝️ `phase` names the generated worker's await boundary this beat was emitted at

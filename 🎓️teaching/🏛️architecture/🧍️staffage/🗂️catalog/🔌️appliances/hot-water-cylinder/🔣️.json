@@ -13,16 +13,76 @@
       "de": "Ein freistehender gedämmter Warmwasser-Standspeicher von 0,6 m Durchmesser und 1,48 m Höhe in der Vorderansicht: vier Mantelviertel, die die Schichtung tragen (kalt, halb geladen, voll geladen), eine gewölbte Abdeckung, seitliche Stutzen und ein Thermometer; der Bereitschaftsverlust beträgt 76 W bei voller Ladung."
     },
     "tags": [
-      "hot-water-cylinder",
-      "storage-tank",
-      "buffer",
-      "dhw",
-      "stratification",
-      "heating",
-      "hydronic",
-      "appliance",
-      "heating-plant",
-      "standby-loss"
+      {
+        "id": "hot-water-cylinder",
+        "title": {
+          "en": "hot water cylinder",
+          "de": "Warmwasserspeicher"
+        }
+      },
+      {
+        "id": "storage-tank",
+        "title": {
+          "en": "storage tank",
+          "de": "Speichertank"
+        }
+      },
+      {
+        "id": "buffer",
+        "title": {
+          "en": "buffer",
+          "de": "Puffer"
+        }
+      },
+      {
+        "id": "dhw",
+        "title": {
+          "en": "DHW",
+          "de": "Trinkwarmwasser"
+        }
+      },
+      {
+        "id": "stratification",
+        "title": {
+          "en": "stratification",
+          "de": "Schichtung"
+        }
+      },
+      {
+        "id": "heating",
+        "title": {
+          "en": "heating",
+          "de": "Heizung"
+        }
+      },
+      {
+        "id": "hydronic",
+        "title": {
+          "en": "hydronic",
+          "de": "wasserführend"
+        }
+      },
+      {
+        "id": "appliance",
+        "title": {
+          "en": "appliance",
+          "de": "Gerät"
+        }
+      },
+      {
+        "id": "heating-plant",
+        "title": {
+          "en": "heating plant",
+          "de": "Heizzentrale"
+        }
+      },
+      {
+        "id": "standby-loss",
+        "title": {
+          "en": "standby loss",
+          "de": "Bereitschaftsverlust"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage content (A9)",

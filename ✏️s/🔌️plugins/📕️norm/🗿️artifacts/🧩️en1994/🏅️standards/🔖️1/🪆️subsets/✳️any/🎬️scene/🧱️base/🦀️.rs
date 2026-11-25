@@ -4,6 +4,7 @@ extern crate semio_s_artifact_norm_en1994_checks as checks;
 extern crate semio_s_artifact_norm_en1994_model as model;
 extern crate semio_s_plugin_norm_compliance as norm;
 extern crate semio_s_plugin_norm_structural_scene as scene;
+extern crate semio_s_plugin_norm_mechanics as mechanics;
 
 #[path = "../🌀️statics/🦀️.rs"]
 pub mod statics;
@@ -15,3 +16,5 @@ pub mod layout;
 pub mod kit;
 #[path = "../🕹️handles/🦀️.rs"]
 pub mod handles;
+#[path = "../🌀️eigen-modes/🦀️.rs"]
+pub mod eigen_modes;

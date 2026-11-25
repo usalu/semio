@@ -185,7 +185,7 @@ impl PatchTracker {
     /// arrives as its own lifecycle turn, so counting it here only makes the drain spin on itself.
     pub fn has_publishable_work(&self) -> bool {
         let state = self.state.borrow();
-        state.output_fault.is_some()
+        output_fault_unreported(&state)
             || state.slots.iter().flatten().any(|slot| slot.producer.is_some() || slot.job.is_some() || pending_render_ready(slot))
             || state.deferred.iter().flatten().any(|surface| deferred_surface_ready(&state, surface))
             || state.unadmitted.iter().any(Option::is_some)
@@ -205,7 +205,7 @@ impl PatchTracker {
     /// (`📓️reactor-reconcile-spin-2026-09-14.md` §1, family 2).
     pub fn has_drivable_work(&self) -> bool {
         let state = self.state.borrow();
-        state.output_fault.is_some()
+        output_fault_unreported(&state)
             || state.slots.iter().flatten().any(|slot| slot.producer.is_some() || slot.job.is_some() || pending_render_ready(slot))
             || state.deferred.iter().flatten().any(|surface| deferred_surface_ready(&state, surface))
             || state.unadmitted.iter().any(Option::is_some)
@@ -313,9 +313,14 @@ pub(super) fn pending_render_ready(slot: &SurfaceSlot) -> bool {
     slot.pending_render && slot.producer.is_none() && slot.job.is_none() && slot.reconciler.as_ref().is_some_and(|reconciler| slot.acknowledged_revision.0 >= reconciler.revision().0)
 }
 
+/// 🚨️ Whether a retained output fault still owes its report to the shell; a reported fault stays on the tracker until its instance closes but is no work.
+pub(super) fn output_fault_unreported(state: &PatchTrackerState) -> bool {
+    state.output_fault.as_ref().is_some_and(|fault| !fault.2)
+}
+
 #[doc(hidden)]
 pub fn has_work(state: &PatchTrackerState) -> bool {
-    state.output_fault.is_some()
+    output_fault_unreported(state)
         || state.slots.iter().flatten().any(|slot| slot.producer.is_some() || slot.job.is_some() || pending_render_ready(slot))
         || state.terminals.iter().any(Option::is_some)
         || state.producer_terminals.iter().any(Option::is_some)

@@ -21,16 +21,16 @@
   "choose": [
    [
     {
-     "op": "plan-along",
+     "op": "extrude",
      "id": "cardigan",
-     "clip": true
+     "view": "plan"
     }
    ],
    [
     {
-     "op": "extrude",
+     "op": "plan-along",
      "id": "cardigan",
-     "view": "plan"
+     "clip": true
     }
    ]
   ],
@@ -101,16 +101,16 @@
   "choose": [
    [
     {
-     "op": "plan-along",
+     "op": "extrude",
      "id": "cardigan",
-     "clip": true
+     "view": "plan"
     }
    ],
    [
     {
-     "op": "extrude",
+     "op": "plan-along",
      "id": "cardigan",
-     "view": "plan"
+     "clip": true
     }
    ]
   ],
@@ -181,16 +181,16 @@
   "choose": [
    [
     {
-     "op": "plan-along",
+     "op": "extrude",
      "id": "cardigan",
-     "clip": true
+     "view": "plan"
     }
    ],
    [
     {
-     "op": "extrude",
+     "op": "plan-along",
      "id": "cardigan",
-     "view": "plan"
+     "clip": true
     }
    ]
   ],
@@ -261,16 +261,16 @@
   "choose": [
    [
     {
-     "op": "plan-along",
+     "op": "extrude",
      "id": "cardigan",
-     "clip": true
+     "view": "plan"
     }
    ],
    [
     {
-     "op": "extrude",
+     "op": "plan-along",
      "id": "cardigan",
-     "view": "plan"
+     "clip": true
     }
    ]
   ],

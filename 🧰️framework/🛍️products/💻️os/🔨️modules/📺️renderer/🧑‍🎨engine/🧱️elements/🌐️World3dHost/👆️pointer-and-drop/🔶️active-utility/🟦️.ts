@@ -2,7 +2,7 @@
 import * as React from "../../../⚛️react-port/🟦️.ts";
 import { useCallback, useEffect, useMemo } from "../../../⚛️react-port/🟦️.ts";
 import { createCoalescingActionDispatcher } from "../../../🛠️ShellHelpers/🛑️extension-io/🟦️.ts";
-import { world3dComponentInteractionTarget, world3dInstanceInteractionTargets } from "../../🔗️instance-selection/🟦️.ts";
+import { world3dComponentInteractionTarget, world3dInstanceInteractionTargets, world3dLeftPressOrbits } from "../../🔗️instance-selection/🟦️.ts";
 import { paneSuffixFromSurfaceId, raycastGroundPoint, world3dMarqueePointerCaptureArmed } from "../../🎯️marquee-and-bridges/🟦️.tsx";
 import { world3dVolumeBrushCommits } from "../../🗂️catalogue-drop/🟦️.tsx";
 import { world3dSelectionTargetsActionArgs } from "../../🖱️interaction-domain-args/🟦️.ts";
@@ -48,13 +48,15 @@ export function useActiveUtilityState({ core }: { readonly core: WorldCore6 }) {
         }
       }
       if (paintMode) stepPaintGesture({ kind: "press" });
-      setMarqueeModifiers({ shiftKey: event.shiftKey, ctrlKey: event.ctrlKey, metaKey: event.metaKey });
-      marqueeFinalizeOnceRef.current = false;
       const start = toLocalPoint(event);
       marqueeStartRef.current = start;
+      wasMarqueeDragRef.current = false;
+      if (world3dLeftPressOrbits(event, { activeUtility: interaction.activeUtility, paintMode, engagementSessionActive: selection.engagementSessionActive })) return;
+      setMarqueeModifiers({ shiftKey: event.shiftKey, ctrlKey: event.ctrlKey, metaKey: event.metaKey });
+      marqueeFinalizeOnceRef.current = false;
       setMarqueePath([start]);
     },
-    [beginHandleDrag, beginRelocateDrag, dispatch, gestureRecognizer, handleVoxelPlace, node.surfaceId, paintMode, relocateMode, selection.engagementSessionActive, sendEngagementPointerMove, stepPaintGesture, toLocalPoint, volumeBrushMode, voxelGroundOriginAt, yieldToPinch],
+    [interaction.activeUtility, wasMarqueeDragRef, beginHandleDrag, beginRelocateDrag, dispatch, gestureRecognizer, handleVoxelPlace, node.surfaceId, paintMode, relocateMode, selection.engagementSessionActive, sendEngagementPointerMove, stepPaintGesture, toLocalPoint, volumeBrushMode, voxelGroundOriginAt, yieldToPinch],
   );
 
   const handlePointerMove = useCallback(

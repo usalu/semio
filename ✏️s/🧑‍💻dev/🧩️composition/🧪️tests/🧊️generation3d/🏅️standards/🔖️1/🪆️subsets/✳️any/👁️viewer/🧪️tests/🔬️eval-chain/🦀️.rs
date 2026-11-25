@@ -221,3 +221,34 @@ async fn a_late_contributions_install_re_arms_the_viewer_evaluation_the_empty_re
     println!("[STATS] viewer late install re-armed {ticks} ticks and painted meshes={meshes}");
     semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }
+
+/// 🛑️ LAW: the abort a running preview OFFERS, dispatched through the production action path, reaches the run and ends it as `aborted` (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, 2026-11-25: `cancellable` was `false` for 190 s of a live run, so no abort could be sent at all).
+///
+/// The run is started by the very effect the host's refresh owes (`toolRunStart`), the abort's `runId`/`generation` are read back out of the status the RENDERED preview window publishes (not built by the test), and the framework's `toolRunAbort` is dispatched with exactly those `cancelArgs` through `dispatch_fixture_action`, the entry the shell's action channel uses.
+#[semio_framework_async_macros::async_test]
+async fn the_abort_a_running_preview_offers_reaches_its_run_and_ends_it_as_aborted() {
+    use semio_plugin::artifact_app_laws::{dispatch_fixture_action, fixture_identity, meta};
+    let _serial = context::lock();
+    let mut app = app().await;
+    let view = context::view_shell_view("view-preview");
+    let action_meta = ActionMeta { view_state: Some(view.clone()), ..meta("local") };
+    let owed = app.pending_effects(Some(&view)).await;
+    assert_eq!(context::run_actions(&owed), vec![semio_framework_tool_run::TOOL_RUN_START_ACTION_ID.to_string()], "an attached preview owes exactly one run start");
+    for effect in owed {
+        if let semio_plugin::Effect::DispatchAction { action, args, .. } = effect {
+            dispatch_fixture_action(&mut app.0, &action, args, &action_meta, &mut fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|fault| panic!("{action}: {fault:?}"));
+        }
+    }
+    let started = app.0.tool_run_presence().map(|presence| presence.state.wire_name());
+    assert!(matches!(started, Some("starting" | "running")), "the host's run start must leave a live run, got {started:?}");
+    let body = context::render_with_view(&mut app, preview::BODY_KEY, &view).await.replace('\\', "");
+    assert!(body.contains("\"cancellable\":true"), "a live preview run must offer its abort through the production render binding");
+    let offered = &body[body.find("\"cancelArgs\"").expect("the offered abort carries its run address")..];
+    let digits = |key: &str| -> String { let at = offered.find(key).unwrap_or_else(|| panic!("cancelArgs misses {key}")) + key.len(); offered[at..].trim_start_matches('"').chars().take_while(char::is_ascii_digit).collect() };
+    let (run, generation) = (digits("\"runId\":"), digits("\"generation\":"));
+    let args = semio_framework_value::DslValue::object([(semio_framework_tool_run::TOOL_RUN_ARG_RUN_ID.to_string(), semio_framework_value::DslValue::String(run)), (semio_framework_tool_run::TOOL_RUN_ARG_GENERATION.to_string(), semio_framework_value::DslValue::String(generation))]);
+    dispatch_fixture_action(&mut app.0, semio_framework_tool_run::TOOL_RUN_ABORT_ACTION_ID, Some(args), &action_meta, &mut fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("the offered abort is accepted by the run's owner");
+    let settled = context::drive_preview_run(&mut app, &view, &[]).await;
+    assert_eq!(settled.state.as_deref(), Some("aborted"), "the abort must reach the run and end it as aborted, not complete or leave it running: {settled:?}");
+    semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
+}

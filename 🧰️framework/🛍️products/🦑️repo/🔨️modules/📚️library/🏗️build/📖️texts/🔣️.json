@@ -162,6 +162,14 @@
       "en": "Closed command walk view policy required",
       "de": "Geschlossene Richtlinie der Sichten auf Befehlsdurchläufe erforderlich"
     },
+    "closure.graph-invalid": {
+      "en": "Valid module closure graph {part} required",
+      "de": "Gültiger Teil {part} des Modul-Closure-Graphen erforderlich"
+    },
+    "closure.graph-incomplete": {
+      "en": "Module closure graph lacks the module {key}",
+      "de": "Dem Modul-Closure-Graphen fehlt das Modul {key}"
+    },
     "closure.derived-provider-differs": {
       "en": "The derived command walk was recorded under another script provider designation: {provider}",
       "de": "Der abgeleitete Befehlsdurchlauf wurde unter einer anderen Skriptanbieter-Bezeichnung aufgezeichnet: {provider}"
@@ -597,6 +605,14 @@
     "graph.generator-contracts-required": {
       "en": "Generator contracts of the parent inference required",
       "de": "Die Generatorverträge der übergeordneten Inferenz sind erforderlich"
+    },
+    "graph.analysis-store-closure-store-relative": {
+      "en": "The source analysis store is derived only from an absolute closure store path of this machine, not from \"{closureStore}\" (a relative or foreign path would resolve against the working directory and write into the checkout)",
+      "de": "Der Speicher der Quellanalysen wird nur aus einem absoluten Pfad des Closure-Speichers dieser Maschine abgeleitet, nicht aus \"{closureStore}\" (ein relativer oder fremder Pfad würde gegen das Arbeitsverzeichnis aufgelöst und in den Checkout schreiben)"
+    },
+    "graph.analysis-store-directory-relative": {
+      "en": "The source analysis store directory must be absolute, not \"{analysisStore}\" (a relative path would resolve against the working directory and write into the checkout)",
+      "de": "Das Verzeichnis des Speichers der Quellanalysen muss absolut sein, nicht \"{analysisStore}\" (ein relativer Pfad würde gegen das Arbeitsverzeichnis aufgelöst und in den Checkout schreiben)"
     },
     "bazel.session-slot-invalid": {
       "en": "Not a Bazel session slot: {slot}",

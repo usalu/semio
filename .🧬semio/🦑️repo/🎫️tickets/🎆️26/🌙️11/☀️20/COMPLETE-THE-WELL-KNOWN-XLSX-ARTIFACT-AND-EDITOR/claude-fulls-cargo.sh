@@ -7,7 +7,7 @@ export CARGO_BUILD_JOBS=${JOBS:-4} CARGO_PROFILE_DEV_DEBUG=0 CARGO_INCREMENTAL=0
 export CARGO_UNSTABLE_FEATURE_UNIFICATION=true CARGO_RESOLVER_FEATURE_UNIFICATION=package
 cd /Users/ueli/Documents/semio/🌎️hub || exit 1
 cargo build -p semio-hub-space-component --lib --target wasm32-wasip2 --profile wasm-prototype \
- --config 'profile.wasm-prototype.inherits="dev"' --config 'profile.wasm-prototype.opt-level="s"' --config 'profile.wasm-prototype.codegen-units=16' --config 'profile.wasm-prototype.lto="thin"' --config 'profile.wasm-prototype.incremental=false' "$@"
+ --config 'profile.wasm-prototype.inherits="dev"' --config 'profile.wasm-prototype.opt-level="s"' --config 'profile.wasm-prototype.codegen-units=16' --config 'profile.wasm-prototype.lto="thin"' --config 'profile.wasm-prototype.incremental=false' --config 'profile.wasm-prototype.debug=0' --config 'profile.wasm-prototype.strip="symbols"' "$@"
 cargo_exit=$?
 echo "exit $cargo_exit"
 exit $cargo_exit

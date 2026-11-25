@@ -84,6 +84,7 @@ pub enum SvgTinyMutation {
     RestoreNonTiny(restore_non_tiny::RestoreNonTiny),
 }
 dsl::original_pack_value_operation_receiving!(SvgTinyMutation);
+dsl::artifact_persisted_binary_operation!(SvgTinyMutation);
 
 /// 📇️ Kebab-case spelling of every `SvgTinyMutation` variant, in declaration order — the exact
 /// `kinds` list `../../🔣️oracle.json`'s `mutationCatalogs` entry declares. The framework

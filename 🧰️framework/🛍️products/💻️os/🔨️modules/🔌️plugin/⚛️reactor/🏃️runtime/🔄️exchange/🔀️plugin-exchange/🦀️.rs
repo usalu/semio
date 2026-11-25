@@ -4,7 +4,7 @@ use semio_plugin_decl_emission::ActionMeta;
 use semio_plugin_decl_app::{ArtifactApp, EphemeralSnapshot};
 use semio_plugin_decl_media::ArtifactMediaExportPoll;
 use semio_plugin_runtime_ops::ops_ingress::{COMMAND_INGRESS_MOVES_PER_TURN, PluginCommandIngress, PluginCommandIngressStep, PluginExchangeOutput, encode_exchange_frames, push_invocation_side_frames, relay_clear_default_app, relay_open_artifact, relay_set_default_app, transaction_proposal_frame};
-use semio_plugin_runtime_ops::ops_surface_render::ContextMenuWireRequest;
+use semio_plugin_runtime_ops::ops_surface_render::{ContextMenuWireRequest, answer_context_menu};
 use semio_framework_value::{DslValue, FromValue, ToValue};
 use semio_plugin_job::EmitWire;
 use semio_plugin_extension::extension_runtime_lift::extension_retirement::ExtensionResourceOwner;

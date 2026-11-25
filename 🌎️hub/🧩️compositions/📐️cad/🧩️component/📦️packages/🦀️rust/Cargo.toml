@@ -24,11 +24,15 @@ compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦�
 app = "s.cad.cad@1/*#editor"
 ports = { react = 6020, wgpu = 6120 }
 
-# 🎪️ The `koordinator` demonstrator row moved to
-# ✏️s/🔌️plugins/🎪️demonstrator/🪪️manifest/🗿️artifact/⚡️implementations/🦀️rust/Cargo.toml — see that
-# crate's docstring (REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT). The `/cad-assets` asset row below
-# stays here too (a copy also lives on the bundle crate) since the standalone `cad` dev variant needs
-# it independently of the demonstrator.
+[[package.metadata.semio.playground]]
+variant = "koordinator"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
+app = "s.cad.cad@1/*#editor"
+brand = "entwerfen-mit-bestand-koordinator"
+devContribution = "♻️mit-bestand/🧺️demonstrator/🐚️shell/🧬️schema/🔣️.json"
+aliases = ["entwerfen-mit-bestand-koordinator"]
+ports = { react = 6028, wgpu = 6128 }
+
 [[package.metadata.semio.assets]]
 kind = "static-dir"
 route = "/cad-assets"

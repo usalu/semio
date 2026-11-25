@@ -97,7 +97,13 @@ pub fn en1996_artifact_schema_descriptor() -> semio_framework_schema_registry::A
         artifact: semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
         snapshot: semio_s_artifact_norm_en1996_model::SNAPSHOT_LEAVES,
         diff: semio_s_artifact_norm_en1996_diff::DIFF_LEAVES,
-        mutations: semio_s_artifact_norm_en1996_mutations::MUTATION_LEAVES,
+        mutations: semio_framework_schema_registry::FacetLeaves {
+            rust: include_str!("🧬️mutations/🦀️.rs"),
+            typescript: semio_s_artifact_norm_en1996_mutations_typescript::LEAF,
+            graphql: semio_s_artifact_norm_en1996_mutations_graphql::LEAF,
+            json_schema: semio_s_artifact_norm_en1996_mutations_json_schema::LEAF,
+            proto: semio_s_artifact_norm_en1996_mutations_proto::LEAF,
+        },
     }
 }
 //#endregion 🔖️Descriptor

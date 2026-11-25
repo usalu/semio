@@ -1,0 +1,23 @@
+[
+  {"op": "plan-revolve", "scale": "50", "id": "thigh-l", "fixed": true},
+  {"op": "plan-revolve", "scale": "50", "id": "shank-l", "fixed": true},
+  {"op": "plan-revolve", "scale": "100", "id": "thigh-l", "fixed": true},
+  {"op": "plan-revolve", "scale": "100", "id": "shank-l", "fixed": true},
+  {"op": "plan-revolve", "scale": "100", "id": "thigh-r", "fixed": true},
+  {"op": "front-sweep", "scale": "100", "id": "shank-r", "fixed": true},
+  {"op": "copy", "scale": "100", "id": "shank-r", "from": "front", "to": ["plan"], "fixed": true},
+  {"op": "front-sweep", "scale": "200", "id": "thigh-l", "fixed": true},
+  {"op": "plan-revolve", "scale": "200", "id": "thigh-l", "fixed": true},
+  {"op": "plan-revolve", "scale": "200", "id": "shank-l", "fixed": true},
+  {"op": "plan-revolve", "scale": "200", "id": "thigh-r", "fixed": true},
+  {"op": "front-sweep", "scale": "200", "id": "shank-r", "fixed": true},
+  {"op": "plan-revolve", "scale": "200", "id": "shank-r", "fixed": true},
+  {"op": "plan-revolve", "scale": "500", "id": "thigh-l", "fixed": true},
+  {"op": "plan-revolve", "scale": "500", "id": "shank-l", "fixed": true},
+  {"op": "plan-revolve", "scale": "500", "id": "thigh-r", "fixed": true},
+  {"op": "front-sweep", "scale": "500", "id": "shank-r", "fixed": true},
+  {"op": "copy", "scale": "500", "id": "shank-r", "from": "front", "to": ["plan"], "fixed": true},
+  {"scale": "100", "op": "copy", "id": "hand-l", "fromScale": "200", "from": "elevation", "to": ["elevation", "front", "plan"], "fixed": true},
+  {"op": "volume", "scale": "50", "id": "hand-l", "as": "auto"},
+  {"op": "volume", "scale": "50", "id": "hand-r", "as": "auto"}
+]

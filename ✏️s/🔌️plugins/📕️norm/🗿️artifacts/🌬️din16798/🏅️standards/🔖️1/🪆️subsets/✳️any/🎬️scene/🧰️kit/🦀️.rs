@@ -217,10 +217,10 @@ pub(crate) fn finish(scene: &mut StructuralScene, description: LocalizedCopy) {
     let used = projection_kit::legends::used_layers(&scene.entities, &scene.annotations, LAYER_ANNOTATIONS);
     let roles = role_legend(&scene.entities);
     scene.layers = projection_kit::legends::layers(&LAYERS, &used, &[]);
-    scene.legends = vec![
-        projection_kit::legends::utilisation_legend(loc("Utilisation", "Ausnutzung")),
-        Legend { id: "categories".into(), title: loc("Indoor environment category", "Kategorie des Innenraumklimas"), scale: LegendScale::Roles { entries: roles } },
-    ];
+    scene.legends = vec![projection_kit::legends::utilisation_legend(loc("Utilisation", "Ausnutzung"))];
+    if !roles.is_empty() {
+        scene.legends.push(Legend { id: "categories".into(), title: loc("Indoor environment category", "Kategorie des Innenraumklimas"), scale: LegendScale::Roles { entries: roles } });
+    }
     scene.description = description;
 }
 

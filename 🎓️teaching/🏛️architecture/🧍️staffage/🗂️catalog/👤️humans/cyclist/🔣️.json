@@ -13,12 +13,48 @@
       "de": "Eine Frau mit Helm und Softshelljacke auf einem 28-Zoll-Citybike, als ein mechanisch-anatomisches System: Rahmen, Räder, Kurbel, Pedale und Kette laufen mit der Fahrerin; die Füße folgen den Pedalen, die Räder drehen sich zweimal pro Kurbelumdrehung, und die Fahrerin kann auf den Pedalen stehen oder über dem Rahmen absteigen."
     },
     "tags": [
-      "human",
-      "cyclist",
-      "bicycle",
-      "mechanical",
-      "pedal-cycle",
-      "wheels"
+      {
+        "id": "human",
+        "title": {
+          "en": "human",
+          "de": "Mensch"
+        }
+      },
+      {
+        "id": "cyclist",
+        "title": {
+          "en": "cyclist",
+          "de": "Radfahrer"
+        }
+      },
+      {
+        "id": "bicycle",
+        "title": {
+          "en": "bicycle",
+          "de": "Fahrrad"
+        }
+      },
+      {
+        "id": "mechanical",
+        "title": {
+          "en": "mechanical",
+          "de": "mechanisch"
+        }
+      },
+      {
+        "id": "pedal-cycle",
+        "title": {
+          "en": "pedal cycle",
+          "de": "Tretfahrzeug"
+        }
+      },
+      {
+        "id": "wheels",
+        "title": {
+          "en": "wheels",
+          "de": "Räder"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage content worker humans-a",

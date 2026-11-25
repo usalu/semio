@@ -19,7 +19,11 @@
       {
         "id": "upl-U1",
         "patch": {
-          "porePressure": 80000.0
+          "permanentStabilizing": null,
+          "permanentDestabilizing": null,
+          "variableDestabilizing": null,
+          "porePressure": 80000.0,
+          "totalStress": null
         }
       }
     ]
@@ -29,6 +33,7 @@
   "pileGroups": null,
   "labTests": null,
   "layerWaters": null,
+  "placements": null,
   "cases": {
     "removed": [],
     "inserted": [],

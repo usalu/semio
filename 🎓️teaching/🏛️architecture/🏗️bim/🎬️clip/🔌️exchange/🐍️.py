@@ -71,7 +71,7 @@ def _run(panel, needle, role=None, nth=0):
 
 def _ring(mob, color=DATA, buff=0.045):
     """⭕ A rectangle ring around a token."""
-    return _engine.SurroundingRectangle(mob, color=color, buff=buff, corner_radius=0.04, stroke_width=2.4)
+    return _engine.SurroundingRectangle(mob, color=color, buff=buff, stroke_width=2.4)
 
 
 def _strike(mob, color=WARN):
@@ -109,7 +109,7 @@ def _route(ring, panel, target, color=DATA, lane=0):
 
 def _backed(label, pad=0.05):
     """🧱 A label on an opaque background plate, so lines and hatches behind it do not run through the text."""
-    plate = _engine.RoundedRectangle(corner_radius=0.04, width=label.width + 2 * pad, height=label.height + 2 * pad, fill_color=_d.BACKGROUND, fill_opacity=0.92, stroke_width=0).move_to(label)
+    plate = _engine.Rectangle(width=label.width + 2 * pad, height=label.height + 2 * pad, fill_color=_d.BACKGROUND, fill_opacity=0.92, stroke_width=0).move_to(label)
     return _engine.VGroup(plate, label)
 
 
@@ -603,7 +603,7 @@ class Beat5_Interfaces(_visuals.ClipScene):
         rows = [f"v {x:.3f} {y:.3f} {z:.3f}" for x, y, z in data["vertices"][:3]] + [f"f {a + 1} {b + 1} {c + 1}" for a, b, c in data["faces"][:2]]
         text = _engine.VGroup(*[self.mono(row, (0, 0, 0), size=S_SMALL, color=INK if row[0] in "vf" else MUTED) for row in rows]).arrange(_engine.DOWN, aligned_edge=_engine.LEFT, buff=0.06)
         text.move_to(np.array([-5.3, -0.4, 0]))
-        box = _engine.SurroundingRectangle(text, color=MUTED, buff=0.12, corner_radius=0.05, stroke_width=_d.W_THIN)
+        box = _engine.SurroundingRectangle(text, color=MUTED, buff=0.12, stroke_width=_d.W_THIN)
         return _engine.VGroup(text, box)
 
     def _beat_purpose(self, f):
@@ -998,7 +998,7 @@ class Beat5_Interfaces(_visuals.ClipScene):
             f"SHELL {sh['id']} {' '.join(sh['nodes'])} t {sh['thickness']:g} m{STAR}", f"BEAM  {mb['id']} {' '.join(mb['nodes'])} D {mb['diameter']:.2f} m{STAR}", f"FIX   {sp['node']} {sp['fixity'].upper()}{STAR}")]).arrange(_engine.DOWN, aligned_edge=_engine.LEFT, buff=0.1)
         own.move_to(np.array([3.75, -0.95, 0]))
         key = _engine.VGroup(self._legend((3.75, -2.2, 0), "c"), self._count_legend(f, (3.75, -2.47, 0), "c"))
-        frame = _engine.SurroundingRectangle(own, color=MUTED, buff=0.14, corner_radius=0.05, stroke_width=_d.W_THIN)
+        frame = _engine.SurroundingRectangle(own, color=MUTED, buff=0.14, stroke_width=_d.W_THIN)
         note = self.label("an analysis tool: its own input format (example)", "ein Analysewerkzeug: eigenes Eingabeformat (Beispiel)", (3.65, -1.85, 0), size=S_SMALL, color=MUTED, width=5.4)
         self.step("domain",
                   _seq((*[_engine.FadeOut(m) for m in s.off], _engine.FadeIn(view), _engine.FadeIn(box)),

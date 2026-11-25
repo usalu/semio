@@ -4,9 +4,9 @@
 import { normWireLiteral, normWireObject, type NormWireReader, normWireRequired, normWireString } from "@semio-tech/norm-js/registry/contract";
 
 export interface ChangeElementZoneId {
-  mutation: "changeelementzoneid";
+  mutation: "changeElementZoneId";
   elementId: string;
   newZoneId: string;
 }
 
-export const parseChangeElementZoneId: NormWireReader<ChangeElementZoneId> = normWireObject<ChangeElementZoneId>({ mutation: normWireRequired(normWireLiteral("changeelementzoneid")), elementId: normWireRequired(normWireString), newZoneId: normWireRequired(normWireString) });
+export const parseChangeElementZoneId: NormWireReader<ChangeElementZoneId> = normWireObject<ChangeElementZoneId>({ mutation: normWireRequired(normWireLiteral("changeElementZoneId")), elementId: normWireRequired(normWireString), newZoneId: normWireRequired(normWireString) });

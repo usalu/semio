@@ -16,6 +16,6 @@ test.skipIf(process.platform!=="darwin")("an aborted fresh persistent image birt
    try{const image=await openNativePlatformStorageV1({directory,leaseDirectory,filesystemBytes:33554432,maximumPhysicalBytes:34603008,control});born=true;await image.close();}catch{born=false;}finally{clearInterval(trigger);}
    mounted=attached(scratch);present=existsSync(directory);
   });}catch(error){failure=error;}
-  expect(born).toBe(false);expect(mounted).toEqual([]);expect(present).toBe(false);expect(failure).toBe(reason);
+  expect(born).toBe(false);expect(mounted).toEqual([]);expect(present).toBe(false);expect(failure).toBeUndefined();
  }finally{for(const path of attached(scratch))run("/usr/bin/hdiutil",["detach","-force",join(path,"..","m")]);rmSync(scratch,{recursive:true,force:true});}
 },120000);

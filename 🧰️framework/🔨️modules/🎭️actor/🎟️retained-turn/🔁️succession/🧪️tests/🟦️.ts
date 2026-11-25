@@ -186,6 +186,16 @@ test("a quiescent host attempts nothing the guest must refuse, and a guest refus
   expect([host.guest.successions, host.draws, host.succession.refusal]).toEqual([1, 1, undefined]);
 });
 
+test("a Worker that offers no succession is refused before the actor exists, and every row of the offer agrees", () => {
+  for (const row of fixture.offers) {
+    const host = actor(2), { receipt, hold, succeed } = host.kernel;
+    const offered: any = { receipt, hold, ...(row.offered === "function" ? { succeed } : row.offered === "absent" ? {} : { succeed: row.offered }) };
+    const build = () => new OriginalStockSuccession(host.source, host.reactor, offered, host.held);
+    if (row.accepted) expect(build, row.name).not.toThrow();
+    else expect(build, row.name).toThrow(/original-turn\.succession-unoffered: .*@semio-tech\/framework-plugin-web:support/);
+  }
+});
+
 test("a Source accepts only its own unused successor and never a renewed receipt, and its deadline is no stock", () => {
   const stock = kernelStock(3), admission = stock.admit(), successor = stock.succeed(admission);
   expect(stock.succeed(admission)).toBe(successor);

@@ -50,7 +50,7 @@ pub fn bounded_window_config_preparation_factory<O: WindowConfigOwner>() -> Arc<
 }
 
 pub fn bounded_window_config_store_disposer<O: WindowConfigOwner>() -> Box<dyn ArtifactOwnedDisposer<store::ConfigStore<O::State, O::Mutation>>> {
-    semio_plugin_ownership::store_lifecycle::bounded_config_store_disposer::<O::State, O::Mutation>()
+    semio_plugin_store_lifecycle::store_lifecycle::bounded_config_store_disposer::<O::State, O::Mutation>()
 }
 
 /// 📬️ One typed config mutation addressed to one exact concrete window instance; clonable, so a press holds it as one of its
@@ -184,4 +184,4 @@ impl WindowConfigSnapshot {
 }
 
 /// 📏️ Quotes the actual bounded Store disposer selected by this Window owner.
-pub fn bounded_window_config_store_disposer_birth<O:WindowConfigOwner>()->Result<RetirementDemand,ValueError>{Ok(RetirementDemand{capacity_bytes:size_of::<semio_plugin_ownership::store_lifecycle::ArtifactDocumentStoreDisposer<O::State,O::Mutation>>(),depth:1,..Default::default()})}
+pub fn bounded_window_config_store_disposer_birth<O:WindowConfigOwner>()->Result<RetirementDemand,ValueError>{Ok(RetirementDemand{capacity_bytes:size_of::<semio_plugin_store_lifecycle::store_lifecycle::ArtifactDocumentStoreDisposer<O::State,O::Mutation>>(),depth:1,..Default::default()})}

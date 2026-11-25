@@ -1,0 +1,75 @@
+{
+ "phase": "adopt",
+ "scope": "sample",
+ "steps": [
+  {
+   "label": "bootstrap",
+   "wallS": 16.3,
+   "cpuS": 1.3,
+   "rssMB": 146,
+   "peakMB": 146,
+   "heapMB": 20
+  },
+  {
+   "label": "questions",
+   "wallS": 10.4,
+   "cpuS": 0.6,
+   "rssMB": 156,
+   "peakMB": 164,
+   "heapMB": 36,
+   "owners": 40,
+   "targets": 114,
+   "questionsAsked": 112,
+   "distinctQuestions": 87,
+   "failedTargets": 0,
+   "kinds": {
+    "language:rust": 25,
+    "project": 9,
+    "language:typescript": 5,
+    "language:dotnet": 1
+   }
+  },
+  {
+   "label": "load",
+   "wallS": 6.1,
+   "cpuS": 0.5,
+   "rssMB": 228,
+   "peakMB": 228,
+   "heapMB": 110,
+   "nodes": 4430,
+   "edges": 21192
+  },
+  {
+   "label": "witness",
+   "wallS": 14.4,
+   "cpuS": 0.8,
+   "rssMB": 289,
+   "peakMB": 289,
+   "heapMB": 110,
+   "trusted": 4411,
+   "untrusted": 19
+  },
+  {
+   "label": "adopt-pass",
+   "wallS": 3.7,
+   "cpuS": 1,
+   "rssMB": 422,
+   "peakMB": 422,
+   "heapMB": 148,
+   "built": 19,
+   "visited": 5605,
+   "undefinedDigests": 0,
+   "walkNodes": 38
+  }
+ ],
+ "compare": {
+  "equal": 87,
+  "total": 87
+ },
+ "storeBytes": 1771851,
+ "load": [
+  93.4755859375,
+  98.40087890625,
+  88.67578125
+ ]
+}

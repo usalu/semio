@@ -56,7 +56,7 @@ export function shellCatalogProbePlugins(
  * plain `error`. */
 export const TRANSIENT_NOTICE_TONE_CLASS: Record<Severity, string> = {
   info: "border-border bg-popover text-popover-foreground",
-  warning: "border-warning bg-warning/10 text-warning",
+  warning: "border-warning bg-warning/10 text-warning-ink",
   error: "border-destructive bg-destructive text-destructive-foreground",
   fatal: "border-destructive bg-destructive text-destructive-foreground font-semibold",
 };

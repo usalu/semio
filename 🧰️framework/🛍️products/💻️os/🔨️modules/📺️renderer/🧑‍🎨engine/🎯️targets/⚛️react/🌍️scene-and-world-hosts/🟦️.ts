@@ -23,7 +23,7 @@ import { parseJsonArray, parseSelectionDomainsFromSession, selectionGroupsFromDo
 import { alignModeToDag, catalogueGhostDescriptorJson, type CatalogueAppDragPayload, computeDagMarqueeOverlay, dagElementInteractionChrome, dagOverlayLabelFill, dagOverlayLabelFillHex, dagContentBounds, dagContentCoverage, dagEllipsizeByMeasure, dagFitCamera, dagScreenToWorld, dagStartupCamera, dagWorldToScreen, nodeGraphContentSignature, DAG_CONTENT_FIT_PADDING_PX, DAG_CONTENT_FRAMED_MIN_COVERAGE, DAG_CONTENT_REFIT_MAX_COVERAGE, DAG_LABEL_ELLIPSIS, type DagCameraState, type DagContentBounds, type DagLabelOverlayInteraction, type DagLabelOverlayRow, type DagMarqueeOverlay, type DagPreselectSnapshot, type DagSelectionBounds, type DagSliderOverlayRow, flowCatalogueItemDescriptor, type FlowCatalogueGroup, type FlowCatalogueItem, type FlowCatalogueSection, FlowGraphCanvasHost, flowSurfaceRenderAllowed, flowRankCatalogueSuggestions, flowSpotlightSuggestionListScrollClass, GraphSliderOverlays, NodeGraphHost, nodeGraphHoverActionArgs, nodeGraphSelectionActionArgs, nodeGraphViewportActionArgs, parseNodeGraphSessionViewport, nodeGraphPickChannel, nodeGraphConnectionIsValid, portValueTypes, portValueTypesCompatible, wireRefusalLabelOptions, paintDagLabelOverlays, parseCatalogueAppDragPayload, parseDagCameraState, parseDagLabelRows, parseDagMinimapWidgetCursor, parseDagMinimapWidgetOccluder, parseDagNodeIdArray, parseDagOverlayCamera, parseDagPreselectJson, parseDagSelectionUnionBoundsScreen, parseDagSliderOverlays, dagSliderValueText, resolveHostSnapshotWidgetInstanceId, sceneToSyncJson, sceneToSyncPack, SelectionAlignChrome, useClient } from "@semio-tech/framework-os-node-graph-rs/index";
 import { TextEditorHost } from "@semio-tech/framework-os/modules/renderer/engine/elements/TextEditor";
 import { hostLabel, lineRangeAt, multiSpanReplace } from "@semio-tech/framework-os/modules/renderer/engine/elements/TextEditor/buffer-and-edit-helpers";
-import { TableHost, tableStepperClampedDelta, tableStepperKeyDelta } from "@semio-tech/framework-os/modules/renderer/engine/elements/Table";
+import { TableHost, tableRowHoverArgs, tableStepperClampedDelta, tableStepperKeyDelta, tableStepperTypedValue } from "@semio-tech/framework-os/modules/renderer/engine/elements/Table";
 import { base64ToBytes, Paint2dHost } from "@semio-tech/framework-os/modules/renderer/engine/elements/Paint2dHost";
 import { TiledMapHost } from "@semio-tech/framework-os/modules/renderer/engine/elements/TiledMapHost";
 import { resolveMapInteractionSync } from "@semio-tech/framework-os/modules/renderer/engine/elements/TiledMapHost/map-parsing";
@@ -114,7 +114,7 @@ export { hostLabel, lineRangeAt, multiSpanReplace, TextEditorHost };
 //#endregion 🔖️TextEditorHost
 
 //#region 🔖️TableHost
-export { TableHost, tableStepperClampedDelta, tableStepperKeyDelta };
+export { TableHost, tableRowHoverArgs, tableStepperClampedDelta, tableStepperKeyDelta, tableStepperTypedValue };
 //#endregion 🔖️TableHost
 
 //#region 🔖️Paint2dHost

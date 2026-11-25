@@ -193,6 +193,35 @@ export function registerCompletionAndJobSliceTests(kit: InvocationWireTestKit, h
         });
       }
     });
+    it("cancels the job a failed drive still owns and answers its parked request, so the guest quiesces and renews its stock", async () => {
+      const { encodeAppFrame } = await import("@semio-tech/framework-os");
+      const { default: fixture } = await import("../../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/🔣️extension-invocation.json");
+      const bytes = (value: unknown) => Array.from(encodePackValue(value));
+      for (const failing of [1, 3]) {
+        const cancelled: bigint[] = [], submitted: ShardEventEnvelope[] = [];
+        let stepped = 0, instance = 0;
+        await withRequester(async (_actor, events) => (submitted.push(...events), {
+          uiPatches: [],
+          effects: stepped > 0 ? [] : [
+            { tag: "spawn-job", val: { job: 17n, kind: "semio.draw.mounted-vector", input: new Uint8Array([1]), placement: { tag: "isolated" } } },
+            { tag: "send-message", val: { target: { tag: "shell", val: String(instance) }, payload: Array.from(encodeAppFrame({ Invocation: { in_reply_to: 0, output: bytes(fixture.response), diagnostics: bytes([]), ui_scope: bytes({ kind: "none" }), history_patch: [], messages: [], mutations: [], inverse_group: [] } })) } },
+          ],
+          nextWake: null,
+          status: { tag: "idle" },
+        }), async (handle, opened) => {
+          instance = opened;
+          await handle.captureExtensionCompletion!(instance, BigInt(fixture.requestIds[2]!)).complete({ ok: encodePackValue(fixture.response) });
+          for (let turn = 0; turn < 1_024 && !submitted.some(event => event.kind === "job-completed"); turn += 1) await new Promise(resolve => setTimeout(resolve, 0));
+          expect([stepped, cancelled]).toEqual([failing, [17n]]);
+          expect(submitted.filter(event => event.kind === "job-completed").map(event => event.payload)).toEqual([{ job: 17n, outcome: { tag: "fault", val: Array.from(new TextEncoder().encode("plugin.job-drive-failed")) } }]);
+        }, {
+          jobs: {
+            step: () => { stepped += 1; if (stepped === failing) throw new Error("plugin.original-stock-exhausted: maximumCopyBytes"); return { status: "running" }; },
+            cancel: (job) => { cancelled.push(job); },
+          },
+        });
+      }
+    });
     it("lists a driven job in the task-manager ledger and routes a cancel to the guest's own cancel-job", async () => {
       const { encodeAppFrame } = await import("@semio-tech/framework-os");
       const { default: fixture } = await import("../../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/🔣️extension-invocation.json");

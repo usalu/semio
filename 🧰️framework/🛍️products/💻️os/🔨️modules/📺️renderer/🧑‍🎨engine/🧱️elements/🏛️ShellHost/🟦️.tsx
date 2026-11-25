@@ -242,9 +242,9 @@ function FrameworkOsShellInner(props: FrameworkOsShellInnerProps) {
             </FloatingPane>
           ) : null}
           {directoryBootstrapUi.kind !== "idle" ? (
-            <div className="pointer-events-auto absolute top-workbench right-double z-50 rounded-sm border bg-base px-double py-single text-sm shadow-sm">
-              <DirectoryBootstrapStatusNotice state={directoryBootstrapUi} locale={uiLocale} onCancel={cancelDirectoryBootstrap} />
-            </div>
+            <NoticeStack className="top-workbench right-double">
+              <NoticeCell><DirectoryBootstrapStatusNotice state={directoryBootstrapUi} locale={uiLocale} onCancel={cancelDirectoryBootstrap} /></NoticeCell>
+            </NoticeStack>
           ) : null}
           {hubWorkspaceOpen ? (
             <FloatingPane data-elevation-root="" data-semio-floating-pane="hub-workspace" className="top-workbench left-1/2 max-h-[80vh] w-full max-w-[44rem] -translate-x-1/2">
@@ -288,7 +288,7 @@ function FrameworkOsShellInner(props: FrameworkOsShellInnerProps) {
           {closePrompt === null ? null : <DocumentCloseDialog name={closePrompt.name} locale={uiLocale} failure={closePrompt.failure} saving={closePrompt.phase === "saving"} onKeep={closePrompt.onKeep} onDiscard={closePrompt.onDiscard} />}
           {transientNotice ? <TransientNotice notice={transientNotice} closeLabel={shellLabel("ui.common.close")} onClose={() => dispatch({ type: "SET_TRANSIENT_NOTICE", value: null })} /> : null}
           {installingPluginIds.length > 0 || commandStalls.length > 0 ? (
-            <NoticeStack data-semio-notice-stack="install" className="top-[var(--navbar-band-height)] left-1/2 max-w-[90vw] -translate-x-1/2 bg-menu">
+            <NoticeStack data-semio-notice-stack="install" className="top-[var(--navbar-band-height)] left-1/2 max-w-[90vw] -translate-x-1/2">
               {installingPluginIds.length === 0 ? null : (
                 <NoticeActionRow
                   role="status"
@@ -371,7 +371,7 @@ function FrameworkOsShellInner(props: FrameworkOsShellInnerProps) {
                     {focusedTimeTravel === null || focusedApp === null ? null : <TimeTravelBand session={focusedTimeTravel} terminology={uiTerminology} locale={uiLocale} controllerId={focusedApp.controllerId} onAction={onActionStable} />}
                     {focusedReprojection === null || focusedApp === null ? null : <HistoryReprojectionStatus reprojection={focusedReprojection} locale={uiLocale} sessionOpen={focusedTimeTravel !== null} controllerId={focusedApp.controllerId} onAction={onActionStable} />}
                     {currentCheckIn === undefined || currentDocumentRuntimeKey === null ? null : (
-                      <SharedBorderRow role="status" aria-live="polite" data-semio-checkin-band={currentCheckIn.status.phase} className="bg-menu text-sm">
+                      <SharedBorderRow role="status" aria-live="polite" data-semio-checkin-band={currentCheckIn.status.phase} className="text-sm">
                         <NoticeCell className="flex-row items-center"><span id="s-checkin-status">{checkinStatusText(currentCheckIn.status, uiLocale)}</span></NoticeCell>
                         {isTerminalDocumentCheckInPhaseV1(currentCheckIn.status.phase) ? (
                           <Button icon="x" type="button" variant="outline" id="s-checkin-dismiss" onClick={() => dismissHubCheckIn(currentDocumentRuntimeKey)}>
@@ -410,7 +410,8 @@ function FrameworkOsShellInner(props: FrameworkOsShellInnerProps) {
         <UIFind open={findOpen} onOpenChange={(value) => dispatch({ type: "SET_FIND_OPEN", value })} />
         {session ? (
           <ContextMenuTriggerButton
-            className="fixed bottom-[var(--footer-band-height)] right-0 z-50 border-l border-t bg-background/80"
+            data-glass-chip=""
+            className="ui-glass fixed bottom-[var(--footer-band-height)] right-0 z-50"
             resolveTarget={(button) => {
               const selection = typeof window === "undefined" ? null : window.getSelection();
               return selection !== null && selection.toString() !== "" ? (selection.anchorNode?.parentElement ?? button) : button;

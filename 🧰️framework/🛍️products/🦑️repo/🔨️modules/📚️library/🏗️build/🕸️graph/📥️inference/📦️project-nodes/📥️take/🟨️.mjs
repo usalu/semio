@@ -1,7 +1,9 @@
 import { createHash } from "node:crypto";
 import { execFile } from "node:child_process";
-import { closeSync, constants, mkdirSync, openSync, readFileSync, readdirSync, renameSync, rmSync, statSync, writeSync } from "node:fs";
-import { join } from "node:path";
+import { closeSync, constants, mkdirSync, openSync, readFileSync, readdirSync, renameSync, rmSync, statSync, writeFileSync, writeSync } from "node:fs";
+import { availableParallelism, loadavg } from "node:os";
+import { dirname, join } from "node:path";
+import { readFile as readFileAsync, readdir as readdirAsync, stat as statAsync } from "node:fs/promises";
 import { setTimeout as delay } from "node:timers/promises";
 import { localMachineSpeedFactorV1, scaledMillisecondsV1 } from "../../../../🐢️speed/🟨️.mjs";
 import schema from "./🧬️schema/🔣️.json" with { type: "json" };
@@ -100,7 +102,7 @@ export function createProgressWatchV1({ now = () => performance.now(), windowMil
   });
 }
 
-/** 🔑️ The facts that count as progress of a read: owners finished, taken, started or parked, rows written, owners done in the ledger, records adopted from other machines, and the processor time of the children while owners run. How often the cache was asked is not among them: a look that found nothing moves no owner. */
+/** 🔑️ The facts that count as progress of a read: owners finished, taken, started or parked, rows written, owners done in the ledger, records adopted from other machines, and the processor time of this process and its children while owners run. How often the cache was asked is not among them: a look that found nothing moves no owner. */
 export const TAKE_PROGRESS_KEYS_V1 = Object.freeze(["finished", "taken", "cursor", "projectIndex", "deferred", "rows", "done", "producers", "cpu"]);
 
 /** 🧮️ The sign that the progress watch compares: the declared progress facts of `row` in order, every other field ignored (the number of lookups grows by the poll and by the wait for the fleet even while nothing arrives, so it must never reach the sign).
@@ -184,18 +186,76 @@ export function takeChildrenCpuV1(root = process.pid, run = execFile) {
   });
 }
 
+/** 🥁️ The CPU milliseconds this process itself has used so far (user and system time): an owner inferred in this process (the farm declined it, so one thread walks its closure) shows no row for as long as that walk runs, and what that thread burns is progress as much as what a child burns.
+ * @see ./🧪️tests/🚦️no-progress/🟦️.ts */
+export function takeOwnCpuV1(usage = process.cpuUsage()) { return (usage.user + usage.system) / 1000; }
+
+/** 🪵️ The CPU milliseconds of the work of a read: its child processes and this process itself; undefined where the children cannot be read.
+ * @see ./🧪️tests/🚦️no-progress/🟦️.ts */
+export async function takeWorkCpuV1(root = process.pid, run = execFile, usage = undefined) {
+  const children = await takeChildrenCpuV1(root, run);
+  return (children ?? 0) + takeOwnCpuV1(usage ?? process.cpuUsage());
+}
+
+/** 📈️ How many times longer than on an idle host a process may stay silent: the load average per core (1 on or below one runnable thread per core), never above `loadStretchMaximum`; a starved process is not a stuck one.
+ * @see ./🧪️tests/🚦️no-progress/🟦️.ts */
+export function takeLoadStretchV1(load, cores, policy = TAKE_POLICY_V1) {
+  const perCore = Number.isFinite(load) && Number.isFinite(cores) && cores > 0 ? load / cores : 0;
+  return Math.min(policy.loadStretchMaximum, Math.max(1, perCore));
+}
+
+/** 🕰️ The window without progress on an idle host of this speed: the authored `noProgressMilliseconds` times the speed factor of this machine. */
+export function takeNoProgressWindowV1() { return scaledMillisecondsV1(TAKE_POLICY_V1.noProgressMilliseconds, localMachineSpeedFactorV1()); }
+
+/** 🌡️ The load average of the last minute and the cores of this host, the input of `takeLoadStretchV1` and `takeStopVerdictV1`. */
+export function takeHostLoadV1() { return Object.freeze({ load: loadavg()[0], cores: availableParallelism() }); }
+
+/** ⚖️ Whether a silent read stops now: never before the window stretched by the host load, always at the hard ceiling (`ceiling`), else only when the work used no CPU between two samples (below `stuckCpuMilliseconds`) while the host has idle CPU (`starved` and `alive` extend, `stuck` stops).
+ * @see ./🧪️tests/🚦️no-progress/🟦️.ts */
+export function takeStopVerdictV1({ silentMilliseconds, windowMilliseconds, load, cores, cpuDeltaMilliseconds }, policy = TAKE_POLICY_V1) {
+  if (silentMilliseconds >= policy.noProgressCeilingMilliseconds) return Object.freeze({ stop: true, reason: "ceiling" });
+  if (silentMilliseconds < windowMilliseconds * takeLoadStretchV1(load, cores, policy)) return Object.freeze({ stop: false, reason: "stretched" });
+  if (Number.isFinite(cpuDeltaMilliseconds) && cpuDeltaMilliseconds >= policy.stuckCpuMilliseconds) return Object.freeze({ stop: false, reason: "alive" });
+  const idle = cores > 0 && load / cores * 100 < policy.idleLoadPercentPerCore;
+  return idle ? Object.freeze({ stop: true, reason: "stuck" }) : Object.freeze({ stop: false, reason: "starved" });
+}
+
+/** 🚧️ The owners of the quarantine file `path` that are still quarantined at `now` (names), none where the file is missing or unreadable. */
+export function takeQuarantineReadV1(path, now = Date.now(), policy = TAKE_POLICY_V1) {
+  try {
+    const rows = JSON.parse(readFileSync(path, "utf8"));
+    return Array.isArray(rows) ? rows.filter(row => typeof row?.name === "string" && now - row.at < policy.quarantineMilliseconds).map(row => row.name) : [];
+  } catch { return []; }
+}
+
+/** 🚧️ Quarantines `names` in the file `path` (atomically, temp file and rename), keeping the rows that are still valid: the next pass runs them last and alone in a child instead of in the parent. */
+export function takeQuarantineWriteV1(path, names, reason, now = Date.now(), policy = TAKE_POLICY_V1) {
+  try {
+    let rows = [];
+    try { rows = JSON.parse(readFileSync(path, "utf8")); } catch {}
+    const kept = (Array.isArray(rows) ? rows : []).filter(row => typeof row?.name === "string" && now - row.at < policy.quarantineMilliseconds && !names.includes(row.name));
+    const temp = path + "." + process.pid + ".tmp";
+    mkdirSync(dirname(path), { recursive: true });
+    writeFileSync(temp, JSON.stringify([...kept, ...names.map(name => ({ name, at: now, reason }))]));
+    renameSync(temp, path);
+    return true;
+  } catch { return false; }
+}
+
 /** 🔥️ A sign of CPU progress for the watch: `tick()` reads the CPU of the children and answers a count that grows by one whenever they used at least `cpuProgressPercent` percent of one core since the last tick, so owners that run and compute are progress and owners that hang or wait for nothing are not (an unreadable sample counts as no progress).
  * @see ./🧪️tests/🚦️no-progress/🟦️.ts */
-export function createCpuProgressV1({ sample, now = () => performance.now(), policy = TAKE_POLICY_V1 }) {
-  let previous, at = now(), count = 0;
+export function createCpuProgressV1({ sample, now = () => performance.now(), policy = TAKE_POLICY_V1, stretch = () => 1 }) {
+  let previous, at = now(), count = 0, delta;
   return Object.freeze({
     async tick() {
       const used = await sample(), time = now();
-      if (used !== undefined && previous !== undefined && time > at && (used - previous) * 100 >= (time - at) * policy.cpuProgressPercent) count++;
+      delta = used !== undefined && previous !== undefined ? used - previous : undefined;
+      if (delta !== undefined && time > at && delta * 100 * Math.max(1, stretch()) >= (time - at) * policy.cpuProgressPercent) count++;
       if (used !== undefined) previous = used;
       at = time;
       return count;
     },
+    delta() { return delta; },
   });
 }
 
@@ -229,8 +289,19 @@ export function createTakeLedgerV1(total) {
 
 const fill = (text, values) => text.replace(/\{(\w+)\}/gu, (_all, name) => String(values[name] ?? 0));
 
-/** 🔍️ Looks at every name with `concurrency` workers, once, and again (up to `faultRetries` times, after `faultWaitMilliseconds`) those whose look the cache did not answer (`fault`); answers the outcome of every name. `attempt(name)` answers "present", "fetched", "stale", "miss" or "fault"; a fault that remains is a "miss" (the caller infers or waits for it, the fleet decides nothing). Never throws for an attempt that throws: that name is a miss. `signal` stops the pass early (names not looked at are absent from the answer). */
-export async function takePassV1({ names, attempt, concurrency = TAKE_POLICY_V1.concurrency, faultRetries = TAKE_POLICY_V1.faultRetries, faultWaitMilliseconds = TAKE_POLICY_V1.faultWaitMilliseconds, sleep = takeDelayV1, signal, mark = () => {} }) {
+/** ⏳️ The outcome of one look, or "miss" when it has not answered within `milliseconds` and fewer than `maximum` looks set aside this way still run (`state.count`): the look itself goes on (an inference of the owner joins it), only the lane stops waiting for it, so one owner whose look waits for a grant, a slow record or a refusing cache never holds a lane, and the set-aside looks are bounded. */
+export async function takeBoundedLookV1(look, milliseconds, state = { count: 0 }, maximum = TAKE_POLICY_V1.abandonedLooksMaximum) {
+  if (state.count >= maximum) return await look;
+  let timer;
+  const late = Symbol("late"), first = await Promise.race([look, new Promise(resolve => { timer = setTimeout(() => resolve(late), milliseconds); timer.unref?.(); })]).finally(() => clearTimeout(timer));
+  if (first !== late) return first;
+  state.count++;
+  look.then(() => { state.count--; }, () => { state.count--; });
+  return "miss";
+}
+
+/** 🔍️ Looks at every name with `concurrency` workers, once, and again (up to `faultRetries` times, after `faultWaitMilliseconds`) those whose look the cache did not answer (`fault`); answers the outcome of every name. `attempt(name)` answers "present", "fetched", "stale", "miss" or "fault"; a fault that remains is a "miss" (the caller infers or waits for it, the fleet decides nothing), and so is a look that did not answer within `lookMaximumMilliseconds` ({@link takeBoundedLookV1}, `abandoned` shared by the lanes of one pass). Never throws for an attempt that throws: that name is a miss. `signal` stops the pass early (names not looked at are absent from the answer). */
+export async function takePassV1({ names, attempt, concurrency = TAKE_POLICY_V1.concurrency, faultRetries = TAKE_POLICY_V1.faultRetries, faultWaitMilliseconds = TAKE_POLICY_V1.faultWaitMilliseconds, lookMaximumMilliseconds = TAKE_POLICY_V1.lookMaximumMilliseconds, abandoned = { count: 0 }, abandonedMaximum = TAKE_POLICY_V1.abandonedLooksMaximum, sleep = takeDelayV1, signal, mark = () => {} }) {
   const outcomes = new Map();
   let pending = [...names];
   for (let round = 0; round <= faultRetries && pending.length > 0 && signal?.aborted !== true; round++) {
@@ -241,7 +312,7 @@ export async function takePassV1({ names, attempt, concurrency = TAKE_POLICY_V1.
       while (next < pending.length && signal?.aborted !== true) {
         const name = pending[next++];
         let outcome;
-        try { outcome = await attempt(name, signal); } catch { if (signal?.aborted) return; outcome = "miss"; }
+        try { outcome = await takeBoundedLookV1(attempt(name, signal), lookMaximumMilliseconds, abandoned, abandonedMaximum); } catch { if (signal?.aborted) return; outcome = "miss"; }
         if (signal?.aborted) return;
         if (outcome === "fault" && round < faultRetries) { faulted.push(name); continue; }
         outcomes.set(name, outcome === "fault" ? "miss" : outcome);
@@ -292,19 +363,18 @@ export async function takeClaimedV1({ name, stem, claims, look, signal, sleep = 
  * @see ./🧪️tests/📣️published/🟦️.ts */
 export function fleetGlobalsKeyV1(globals) { return createHash("sha256").update(JSON.stringify(globals)).digest("hex").slice(0, 8); }
 
-/** 📣️ The names of the owners that the pools of the fleet say they stored, of the waves whose globals are `globals` (every wave when none are given): every pool child appends the name to `pool-published-<wave>.txt` below its origin in the shared store, so a reader finds them with one directory read per origin and looks at those first instead of rotating through thousands of owners. Files older than `publishedMaximumAgeMilliseconds` and everything unreadable count for nothing.
+/** 📣️ The names of the owners that the pools of the fleet say they stored, of the waves whose globals are `globals` (every wave when none are given): every pool child appends the name to `pool-published-<wave>.txt` below its origin in the shared store, so a reader finds them with one directory read per origin and looks at those first instead of rotating through thousands of owners. Files older than `publishedMaximumAgeMilliseconds` and everything unreadable count for nothing. Every probe is asynchronous with at most `publishedScanConcurrency` in flight: the store holds thousands of these files and a synchronous scan of them held the main thread of a read for seconds per scan on a loaded worker (W14).
  * @see ./🧪️tests/📣️published/🟦️.ts */
-export function fleetPublishedNamesV1(store, now = Date.now(), policy = TAKE_POLICY_V1, globals) {
+export async function fleetPublishedNamesV1(store, now = Date.now(), policy = TAKE_POLICY_V1, globals) {
   const names = new Set();
   if (typeof store !== "string" || store === "") return names;
+  const key = globals === undefined ? undefined : fleetGlobalsKeyV1(globals), base = join(store, "v1", "origins");
   let origins = [];
-  try { origins = readdirSync(join(store, "v1", "origins")); } catch { return names; }
-  for (const origin of origins) {
-    const directory = join(store, "v1", "origins", origin);
-    let files = [];
-    try { files = readdirSync(directory).filter(file => { const found = /^pool-published-[0-9a-f]+(?:-([0-9a-f]{8}))?\.txt$/u.exec(file); return found !== null && (globals === undefined || found[1] === fleetGlobalsKeyV1(globals)); }); } catch { continue; }
-    for (const file of files) { try { if (now - statSync(join(directory, file)).mtimeMs > policy.publishedMaximumAgeMilliseconds) continue; for (const line of readFileSync(join(directory, file), "utf8").split("\n")) if (line !== "") names.add(line); } catch {} }
-  }
+  try { origins = await readdirAsync(base); } catch { return names; }
+  const files = (await Promise.all(origins.map(async origin => { try { return (await readdirAsync(join(base, origin))).filter(file => { const found = /^pool-published-[0-9a-f]+(?:-([0-9a-f]{8}))?\.txt$/u.exec(file); return found !== null && (key === undefined || found[1] === key); }).map(file => join(base, origin, file)); } catch { return []; } }))).flat();
+  let next = 0;
+  const lane = async () => { while (next < files.length) { const file = files[next++]; try { if (now - (await statAsync(file)).mtimeMs > policy.publishedMaximumAgeMilliseconds) continue; for (const line of (await readFileAsync(file, "utf8")).split("\n")) if (line !== "") names.add(line); } catch {} } };
+  await Promise.all(Array.from({ length: Math.min(policy.publishedScanConcurrency, files.length) }, lane));
   return names;
 }
 
@@ -387,10 +457,15 @@ export function recordTakeLookFailureV1(error, counters, cancelled) {
   return seen === "fault" && error.lookupFault === "unavailable" ? "miss" : result;
 }
 
-/** 🔥️ The names the fleet lists as stored, read from the shared store at most once per `hotNamesMilliseconds` (the owner loop asks for every owner it meets, a directory read per ask would cost more than the looks it saves), and counted as listed. */
+/** 🔥️ The names the fleet lists as stored, scanned from the shared store in the background at most once per `hotNamesMilliseconds` after the previous scan ENDED (the owner loop asks for every owner it meets): an ask answers the names of the last finished scan at once and never waits for a scan, the first scan starts when the reader is created, one scan runs at a time and a failed scan keeps the names known; `settled()` resolves when the scan in flight has ended. A scan that started its interval at its own beginning made a scan longer than the interval run back to back on a loaded worker (W14).
+ * @see ./🧪️tests/📊️adopt-counters/🟦️.ts */
 export function createHotNamesV1({ read, counters, now = Date.now, policy = TAKE_POLICY_V1 }) {
-  let names = new Set(), at = -Infinity;
-  return () => { const time = now(); if (time - at >= policy.hotNamesMilliseconds) { names = read(); at = time; counters?.list(names); } return names; };
+  let names = new Set(), at = -Infinity, flight;
+  const refresh = () => { if (flight !== undefined || now() - at < policy.hotNamesMilliseconds) return; flight = Promise.resolve().then(read).then(found => { names = found; counters?.list(found); }, () => {}).finally(() => { at = now(); flight = undefined; }); };
+  const hot = () => { refresh(); return names; };
+  hot.settled = () => flight ?? Promise.resolve();
+  refresh();
+  return hot;
 }
 
 /** 🥇️ The decision before a local inference of one owner: an owner the fleet lists as stored is not inferred here while its look is pending: it is looked at first (the look is the cheap path to its record, and one in flight is shared) and counts as adopted when the look takes or fetches the record; an owner that is not listed, or whose look finds the record stale, missed, incomplete or faulted, is inferred as before. Answers `"fetched"`, `"present"` or `undefined` (infer).
@@ -408,11 +483,12 @@ export async function takeBeforeInferV1({ name, listed, taken, look, counters })
 /** 🎣️ The take pass of a read that adopts before it looks: beside the lanes of `takePassV1` (own looks, slow under load) an adopt loop (`takePollV1` with `hotOnly`, `adoptConcurrency` looks at once, each owner again after `adoptRetryMilliseconds`) looks at every undecided owner that the fleet lists as stored as soon as it is listed, so a record the fleet delivers is taken within one poll of its publication and never waits for the lanes; the loop ends with the lanes or when `stop()` says every owner is decided. Answers what the adopt loop did.
  * @see ./🧪️tests/🎣️fetch-first/🟦️.ts */
 export async function takeFetchFirstV1({ lanes, heavy = [], concurrency = TAKE_POLICY_V1.concurrency, fetchConcurrency = concurrency, fetches = () => false, attempt, adoptAttempt = attempt, signal, mark = () => {}, hot, queue, arrived, stop = () => false, now, sleep, policy = TAKE_POLICY_V1 }) {
+  const abandoned = { count: 0 }, bound = { lookMaximumMilliseconds: policy.lookMaximumMilliseconds, abandoned, abandonedMaximum: policy.abandonedLooksMaximum };
   const adopting = new AbortController(), abort = signal === undefined ? adopting.signal : AbortSignal.any([signal, adopting.signal]);
   const adopt = takePollV1({ hot, hotOnly: true, queue, attempt: adoptAttempt, arrived, stop, signal: abort, now, sleep, concurrency: Math.min(policy.adoptConcurrency, concurrency), policy: { ...policy, hotRetryMilliseconds: policy.adoptRetryMilliseconds } }).catch(() => Object.freeze({ looks: 0, found: 0 }));
   try {
-    await Promise.all(lanes.map(lane => takePassV1({ names: lane, concurrency: fetches(lane) ? fetchConcurrency : concurrency, attempt, signal, mark })));
-    await takePassV1({ names: heavy, concurrency: 1, attempt, signal, mark });
+    await Promise.all(lanes.map(lane => takePassV1({ names: lane, concurrency: fetches(lane) ? fetchConcurrency : concurrency, attempt, signal, mark, ...bound })));
+    await takePassV1({ names: heavy, concurrency: 1, attempt, signal, mark, ...bound });
    } finally { adopting.abort(); await adopt; }
   return adopt;
 }

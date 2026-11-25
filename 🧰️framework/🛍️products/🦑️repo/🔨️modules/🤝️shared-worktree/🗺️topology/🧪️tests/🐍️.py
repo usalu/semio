@@ -181,21 +181,22 @@ def load(path):
 def check():
     failures=[]
     committed=load(glob.glob(os.path.join(HERE,"..","*.json"))[0])
-    fixture=load(glob.glob(os.path.join(HERE,"*","*.json"))[0])
+    fixture=load(os.path.join(HERE,"🧫️fixtures","🔣️.json"))
     for message in problems(committed): failures.append("committed: "+message)
     if [g["id"] for g in committed["groups"]]!=["g%d"%n for n in range(1,6)]: failures.append("committed: groups must be g1..g5")
     for group in committed["groups"]:
         n=group["id"]
         if group.get("ports")!={"cache":6094,"scheduler":8980,"worker":8981}: failures.append("committed: ports of "+n)
+        if group["cache"]["endpoint"].rsplit(":",1)[-1]!=str(group["ports"]["cache"]): failures.append("committed: cache endpoint port of "+n)
         if group.get("access")!={"enforceNetwork":False,"transport":{"crossGroup":"sealed","inGroup":"trusted-lan"}}: failures.append("committed: access of "+n)
         if n=="g1":
             if group["nfs"]!={"host":"nfs.g1.semio.internal","export":"/Users/Shared/semio-store"}: failures.append("committed: nfs of g1")
             if group["server"]!={"platform":"macos","protocol":"nfs","network":"10.0.1.0/24"}: failures.append("committed: server of g1")
-            if group["cache"]!={"endpoint":"http://cache.g1.semio.internal:6090","instance":"semio"}: failures.append("committed: cache of g1")
+            if group["cache"]!={"endpoint":"http://cache.g1.semio.internal:6094","instance":"main"}: failures.append("committed: cache of g1")
         else:
             if group["nfs"]!={"host":"nfs.%s.semio.internal"%n,"export":"/srv/semio-store"}: failures.append("committed: nfs of "+n)
             if group["server"]!={"platform":"linux","protocol":"nfs","network":"10.0.%s.0/24"%n[1:]}: failures.append("committed: server of "+n)
-            if group["cache"]!={"endpoint":"http://cache.%s.semio.internal:6090"%n,"instance":"semio"}: failures.append("committed: cache of "+n)
+            if group["cache"]!={"endpoint":"http://cache.%s.semio.internal:6094"%n,"instance":"main"}: failures.append("committed: cache of "+n)
         if group["peers"]!={m["id"]:"/mnt/semio-peers/"+m["id"] for m in committed["groups"] if m["id"]!=n}: failures.append("committed: peers of "+n)
     if len(committed["worktree"]["windows"])>15: failures.append("committed: windows worktree root is not short")
     if committed["worktree"]!={"linux":"~/semio","macos":"~/Documents/semio","windows":"C:\\semio"}: failures.append("committed: worktree")

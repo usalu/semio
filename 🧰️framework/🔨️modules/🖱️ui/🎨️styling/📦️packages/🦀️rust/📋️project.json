@@ -4,7 +4,10 @@
   "targets": {
     "generate": {
       "executor": "repo:script",
-      "outputs": [],
+      "outputs": [
+        "{projectRoot}/../../🔤️tokens/🦀️.rs",
+        "{projectRoot}/../../🔤️tokens/🐍️.py"
+      ],
       "metadata": {
         "semio": {
           "cache": {

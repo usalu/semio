@@ -126,7 +126,7 @@ fn worked_examples_of_the_specification_are_reproduced() {
     let ex09 = Case::new("ex09", De).with_s("shape", "circle").with_n("a", 1.5).with_n("sigma0", 200e3).with_n("h1", 2.0).with_n("e1", 8e6).with_n("h2", 2.0).with_n("e2", 12e6);
     assert!((value_of("SLS-01", &ex09, "sigma_z1") - 165.86e3).abs() < 20.0 && (value_of("SLS-01", &ex09, "s") - 0.05095).abs() < 5e-5, "EX97-09");
     let ex10 = Case::new("ex10", De).with_n("h", 3.0).with_n("cc", 0.3).with_n("e0", 0.9).with_n("sigma0", 60e3).with_n("dsigma", 80e3).with_n("cv", 1e-7).with_n("h_dr", 1.5);
-    assert!((value_of("SLS-02", &ex10, "s_c") - 0.1743).abs() < 1e-4 && (value_of("SLS-02", &ex10, "t90") - 1.908e7).abs() < 1e3, "EX97-10");
+    assert!((value_of("SLS-02", &ex10, "s_c") - 0.1743).abs() < 1e-4 && (value_of("SLS-02", &ex10, "t90") / 1.0e4).round() == 1908.0, "EX97-10 t90 rounds to the printed four digits");
     let ex11 = Case::new("ex11", De).with_n("gamma", 19e3).with_n("h", 5.0).with_n("phi_deg", 30.0).with_n("delta_deg", 20.0).with_n("q", 10e3);
     assert!((value_of("RW-01", &ex11, "ka") - 0.29731).abs() < 1e-5 && (value_of("RW-01", &ex11, "e_bot") - 31.218e3).abs() < 2.0 && (value_of("RW-01", &ex11, "e_a") - 85.48e3).abs() < 20.0 && (value_of("RW-01", &ex11, "e_ah") - 80.32e3).abs() < 20.0 && (value_of("RW-01", &ex11, "e_av") - 29.24e3).abs() < 20.0, "EX97-11");
     let coh = Case::new("ex11c", De).with_n("gamma", 19e3).with_n("h", 5.0).with_n("phi_deg", 30.0).with_n("c", 10e3);
@@ -189,11 +189,11 @@ fn din_4085_row_utilisation_is_the_required_over_the_used_coefficient() {
     doc.retaining_walls[0].wall_movement = semio_s_artifact_norm_en1997_model::WallMovement::Free;
     doc.retaining_walls[0].earth_pressure_mode = semio_s_artifact_norm_en1997_model::EarthPressureMode::Active;
     let ep = check_project(&doc).checks.iter().find(|c| c.id.contains("earthPressure")).cloned().expect("DIN 4085 row");
-    assert_eq!(ep.status, CheckStatus::Pass);
+    assert_verdict_up_to_the_basis(&ep, CheckStatus::Pass);
     assert!((ep.utilization - 1.0).abs() < 1e-12 && ep.computed.value > 0.0 && (ep.computed.value - ep.limit.value).abs() < 1e-12);
     doc.retaining_walls[0].earth_pressure_mode = semio_s_artifact_norm_en1997_model::EarthPressureMode::AtRest;
     let conservative = check_project(&doc).checks.iter().find(|c| c.id.contains("earthPressure")).cloned().expect("row");
-    assert_eq!(conservative.status, CheckStatus::Pass);
+    assert_verdict_up_to_the_basis(&conservative, CheckStatus::Pass);
     assert!(conservative.utilization < 1.0);
     doc.retaining_walls[0].wall_movement = semio_s_artifact_norm_en1997_model::WallMovement::Rigid;
     doc.retaining_walls[0].earth_pressure_mode = semio_s_artifact_norm_en1997_model::EarthPressureMode::Active;
@@ -209,7 +209,7 @@ fn governing_rows_warn_when_the_governing_utilisation_exceeds_one() {
     assert!(gov.utilization > 1.0);
     assert!((gov.limit.value - 1.0).abs() < 1e-12, "limit is the real limit 1.0, not max(u, 1)");
     assert_eq!(gov.status, CheckStatus::Warning);
-    assert_eq!(check_project(&compliant_demo()).checks.iter().find(|c| c.id == "en1997.governing.situation").expect("governing").status, CheckStatus::Pass);
+    assert_verdict_up_to_the_basis(check_project(&compliant_demo()).checks.iter().find(|c| c.id == "en1997.governing.situation").expect("governing"), CheckStatus::Pass);
 }
 
 #[test]
@@ -482,7 +482,8 @@ fn hyd_03_largest_gradient_matches_the_oracle_and_bounds_the_exit_gradient() {
     let i_max = value_of("HYD-03", &c, "i_max");
     assert!(i_max >= value_of("HYD-03", &c, "i_exit") * (1.0 - 1e-12), "{i_max}");
     let net = FlowNet::solve(2.0, 1.5, 6.0, 8).expect("net");
-    assert!(close(net.gradient_at(net.centre(), 0), net.exit_gradient(), 1e-12));
+    assert!(close(-net.flow_direction_at(net.centre(), 0)[1], net.exit_gradient(), 1e-12), "the vertical part of the surface gradient next to the wall is the exit gradient");
+    assert!(net.gradient_at(net.centre(), 0) >= net.exit_gradient() * (1.0 - 1e-12));
     assert!(net.max_gradient() > net.delta_h / (2.0 * 1.5 + 2.0 * 1.5));
     for (i, j) in [(0, 0), (net.centre() - 1, net.wall_rows - 1), (net.centre(), net.wall_rows), (net.nx - 1, net.nz - 1)] {
         assert!(net.gradient_at(i, j).is_finite() && net.gradient_at(i, j) >= 0.0);

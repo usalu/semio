@@ -270,6 +270,37 @@ fn solid_area_load_matches_pressure_times_footprint_area() {
     let expected = 8000.0 * 2.0 * 1.0;
     assert!((total_tz_reaction - expected).abs() / expected < 1e-6, "reaction sum {total_tz_reaction} vs expected {expected}");
 }
+
+/// 🌀️ LAW (F2): a slab of the demo's size (`10..12 x 0..2`, mesh size 1) turned about its own centroid by ANY angle still
+/// meshes — the previews and the solver mesh it into the same positive-area tets — and keeps its area and volume, so a
+/// ring turn can never void the model view or fail the analysis.
+#[test]
+fn a_turned_slab_always_meshes_with_its_area_and_volume() {
+    let (area, height) = (4.0, 0.5);
+    let mut doc = solid_slab_doc();
+    let mut failures = Vec::new();
+    for step in 0..=360 {
+        let angle = step as f64 * std::f64::consts::TAU / 360.0;
+        let (sin, cos) = angle.sin_cos();
+        doc.solids[0].outline = [[10.0, 0.0], [12.0, 0.0], [12.0, 2.0], [10.0, 2.0]].iter().map(|p| [11.0 + (p[0] - 11.0) * cos - (p[1] - 1.0) * sin, 1.0 + (p[0] - 11.0) * sin + (p[1] - 1.0) * cos]).collect();
+        doc.solids[0].height = height;
+        match meshing::mesh_solids(&doc) {
+            Err(error) => failures.push(format!("{step} deg: {error:?}")),
+            Ok((_, meshes)) => {
+                let volume: f64 = meshes[0].tets.iter().map(|tet| {
+                    let p = |index: u32| meshes[0].points[tet[index as usize] as usize];
+                    let (a, b, c, d) = (p(0), p(1), p(2), p(3));
+                    let (u, v, w) = ([b[0] - a[0], b[1] - a[1], b[2] - a[2]], [c[0] - a[0], c[1] - a[1], c[2] - a[2]], [d[0] - a[0], d[1] - a[1], d[2] - a[2]]);
+                    ((u[0] * (v[1] * w[2] - v[2] * w[1]) - u[1] * (v[0] * w[2] - v[2] * w[0]) + u[2] * (v[0] * w[1] - v[1] * w[0])) / 6.0).abs()
+                }).sum();
+                if (volume - area * height).abs() > 1e-6 {
+                    failures.push(format!("{step} deg: volume {volume}"));
+                }
+            }
+        }
+    }
+    assert!(failures.is_empty(), "{} of 361 turns failed: {failures:?}", failures.len());
+}
 // #endregion 🔖️Solids
 
 // #region 🔖️ExampleFixture

@@ -238,7 +238,7 @@ export async function trustedBootstrapPluginModuleV1(repoRoot: string, request: 
     abort.close();
   }
   check();
-  writeFileSync(join(moduleDir, MODULE_BRIDGE_FILE), pluginComponentBridgeSource(componentBase, request.outputName));
+  writeFileSync(join(moduleDir, MODULE_BRIDGE_FILE), pluginComponentBridgeSource(componentBase));
   writeFileSync(join(moduleDir, TRUSTED_PLUGIN_MODULE_DESCRIPTOR_JSON_FILE), `${JSON.stringify(packValueToExactJson(decodePackValue(descriptor)), null, 2)}\n`);
   writeFileSync(join(moduleDir, TRUSTED_PLUGIN_MODULE_DESCRIPTOR_PACK_FILE), descriptor);
   writeFileSync(join(moduleDir, COMPONENT_RECEIPT_FILE), encodeComponentReceiptV1(receipt.componentReceipt));

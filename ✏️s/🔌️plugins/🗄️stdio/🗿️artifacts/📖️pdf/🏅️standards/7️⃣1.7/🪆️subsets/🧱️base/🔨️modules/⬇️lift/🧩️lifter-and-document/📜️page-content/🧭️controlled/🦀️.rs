@@ -148,6 +148,15 @@ impl PageContentCursor {
     /// 📊 Returns the number of resolved stream members after the input is planned.
     pub fn stream_count(&self) -> usize { self.stream_count }
 
+    /// 📏️ The bytes the next unit copies beside its allocation, or `None` when it moves source bytes (joining a split program or lexing it), one byte read and at most one written per unit of its grant.
+    pub fn unit_copy(&self) -> Option<usize> {
+        match self.stage {
+            Stage::Copy { .. } => None,
+            Stage::Interpret(_) => self.program.unit_copy(),
+            _ => Some(0),
+        }
+    }
+
     /// 👁️ Exposes the currently ready operator without transferring it.
     pub fn peek_operator(&self) -> Option<&PdfOp> {
         if !matches!(self.stage, Stage::Interpret(_)) { return None; }

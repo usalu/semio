@@ -1,0 +1,17 @@
+import {defaultHostWardenPortsV1,chargeWardenRowsV1} from "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🛡️warden/🔁️loop/🟦️.ts";
+import {observeTreeMegabytesV1} from "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📡️sampling/🟦️.ts";
+import {readHostCapacityPolicyV1} from "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📏️decision/🟦️.ts";
+import fixture from "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🧫️fixtures/🔣️.json";
+const ports=defaultHostWardenPortsV1({hostPolicy:readHostCapacityPolicyV1(fixture.policy),directory:"/tmp/claude-501/b/w"});
+const time=async<T>(f:()=>Promise<T>,n=10)=>{await f();const t=performance.now();let v:T;for(let i=0;i<n;i++)v=await f();return[(performance.now()-t)/n,v!] as const;};
+const [full,rows]=await time(()=>ports.table());
+const [rss]=await time(async()=>rows);
+console.log("table incl. charge ms",full.toFixed(1),"rows",rows.length);
+const raw=rows.map(r=>({...r}));
+const [charge]=await time(()=>chargeWardenRowsV1("darwin",raw));
+console.log("charge only ms",charge.toFixed(2));
+const root=Number(process.argv[2]);
+const [ffi,mb]=await time(()=>observeTreeMegabytesV1(root),10);console.log("observeTree ffi ms",ffi.toFixed(1),mb,"MB");
+const [tool,mb2]=await time(()=>observeTreeMegabytesV1(root,undefined,undefined,undefined,undefined,undefined,undefined,undefined,null),5);console.log("observeTree footprint tool ms",tool.toFixed(1),mb2,"MB");
+const sum=(f:(r:any)=>number)=>Math.round(rows.filter(r=>r.pid>1).reduce((a,r)=>a+f(r),0)/1024);
+console.log("sum memory MB charged",sum(r=>r.memoryKilobytes));

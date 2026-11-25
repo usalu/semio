@@ -13,19 +13,97 @@
    "de": "Ein gebrauchtes E-Drum-Set mit Meshfellen, wie es ein Händler lagert: ein 1,0 m hohes Zwei-Säulen-Aluminiumrack mit 12-Zoll-Snare, drei 8-Zoll-Toms, Hi-Hat-, Crash- und Ride-Pads auf Klappgalgen und dem Soundmodul, ein Kickturm mit Fußmaschine, ein Hi-Hat-Controller und ein Schlagzeughocker, zusammen 34,6 kg. Snare- und Kickfell sind an den Schlagstellen grau abgespielt, das Polster ist geklebt, das Modul nimmt eingeschaltet 6 W auf."
   },
   "tags": [
-   "used",
-   "instrument",
-   "music",
-   "second-hand",
-   "percussion",
-   "stage",
-   "electronic",
-   "drum-kit",
-   "mesh-head",
-   "rack",
-   "aluminium",
-   "rubber",
-   "electrical"
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "instrument",
+    "title": {
+     "en": "instrument",
+     "de": "Instrument"
+    }
+   },
+   {
+    "id": "music",
+    "title": {
+     "en": "music",
+     "de": "Musik"
+    }
+   },
+   {
+    "id": "second-hand",
+    "title": {
+     "en": "second-hand",
+     "de": "Second-Hand"
+    }
+   },
+   {
+    "id": "percussion",
+    "title": {
+     "en": "percussion",
+     "de": "Schlaginstrumente"
+    }
+   },
+   {
+    "id": "stage",
+    "title": {
+     "en": "stage",
+     "de": "Bühne"
+    }
+   },
+   {
+    "id": "electronic",
+    "title": {
+     "en": "electronic",
+     "de": "elektronisch"
+    }
+   },
+   {
+    "id": "drum-kit",
+    "title": {
+     "en": "drum kit",
+     "de": "Schlagzeug"
+    }
+   },
+   {
+    "id": "mesh-head",
+    "title": {
+     "en": "mesh head",
+     "de": "Mesh-Fell"
+    }
+   },
+   {
+    "id": "rack",
+    "title": {
+     "en": "rack",
+     "de": "Regal"
+    }
+   },
+   {
+    "id": "aluminium",
+    "title": {
+     "en": "aluminium",
+     "de": "Aluminium"
+    }
+   },
+   {
+    "id": "rubber",
+    "title": {
+     "en": "rubber",
+     "de": "Gummi"
+    }
+   },
+   {
+    "id": "electrical",
+    "title": {
+     "en": "electrical",
+     "de": "Elektro"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content (used-instruments wave, row 16)",

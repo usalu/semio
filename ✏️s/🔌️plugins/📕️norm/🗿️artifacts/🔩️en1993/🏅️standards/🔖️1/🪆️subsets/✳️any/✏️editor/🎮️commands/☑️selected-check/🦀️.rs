@@ -30,9 +30,3 @@ pub fn handle(_payload: &SetSelectedCheckIndex, _doc: &ArtifactView<'_, En1993Sn
     Ok(Emit::default())
 }
 //#endregion 🔖️Handler
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

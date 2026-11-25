@@ -1,0 +1,13 @@
+{
+  "asset": "kneeling-gardener",
+  "symbol": "gardener-block",
+  "penMm": 0.18,
+  "pixelsPerMm": 20,
+  "cases": [
+    { "scale": 200, "view": "elevation", "mode": "dark-line" },
+    { "scale": 200, "view": "front", "mode": "light-solid" },
+    { "scale": 200, "view": "plan", "mode": "thermal" },
+    { "scale": 500, "view": "elevation", "mode": "light-line" },
+    { "scale": 500, "view": "plan", "mode": "dark-solid" }
+  ]
+}

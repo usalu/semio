@@ -60,9 +60,9 @@ pub fn place_sampled_image(snapshot: &PdfSnapshot, placement: ImagePlacement, ra
         rgb.extend_from_slice(&sample[..3]);
         alpha.push(sample[3]);
     }
-    let rgb = PdfImageBody::Samples { values: rgb.into_iter().map(u32::from).collect() };
+    let rgb = PdfImageBody::Samples { packed: rgb };
     let alpha = alpha.iter().any(|sample| *sample != 255)
-        .then(|| PdfImageBody::Samples { values: alpha.into_iter().map(u32::from).collect() });
+        .then(|| PdfImageBody::Samples { packed: alpha });
     place_image_bodies(snapshot, placement, page, raster.width, raster.height, rgb, alpha)
 }
 

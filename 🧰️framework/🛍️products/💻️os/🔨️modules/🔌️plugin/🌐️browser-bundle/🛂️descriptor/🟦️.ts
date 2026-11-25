@@ -2,6 +2,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { decodePackValue, encodePackValue, packValueToExactJson, type PackValue } from "../../../../📦️packages/🟦️typescript/🟦️.ts";
+import { PLUGIN_HOST_IMPORT } from "../🏗️materialization/🧾️contract/🟦️.ts";
 
 const DESCRIPTOR_ROOT = dirname(fileURLToPath(import.meta.url));
 
@@ -56,9 +57,13 @@ export function assertActorComponentExports(component: Record<string, unknown>, 
 }
 
 export const PLUGIN_DESCRIPTOR_PROBE_SOURCE = `
+import { readFile } from "node:fs/promises";
 import { pathToFileURL } from "node:url";
 ${assertActorComponentExports.toString()}
-const component = await import(pathToFileURL(process.argv[1]).href);
+const moduleUrl = pathToFileURL(process.argv[1]);
+const factory = await import(moduleUrl.href);
+const { createActorHost } = await import(new URL(${JSON.stringify(PLUGIN_HOST_IMPORT)}, moduleUrl).href);
+const component = await factory.instantiate(async (name) => WebAssembly.compile(await readFile(new URL(name, moduleUrl))), { ...factory.wasiImports, ${JSON.stringify(PLUGIN_HOST_IMPORT)}: createActorHost("describe-probe", 1n) });
 assertActorComponentExports(component, ${JSON.stringify(ACTOR_COMPONENT_EXPORTS)});
 const grant = { maximumItems: 1n << 20n, maximumCopyBytes: 64n << 20n, maximumCapacityBytes: 64n << 20n, maximumReleaseBytes: 64n << 20n, maximumDepth: 64n };
 const fuel = 1n << 24n;

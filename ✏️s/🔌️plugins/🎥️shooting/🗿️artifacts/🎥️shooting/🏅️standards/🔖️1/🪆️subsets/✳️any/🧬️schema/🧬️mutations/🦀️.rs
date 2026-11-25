@@ -61,6 +61,7 @@ pub enum ShootingMutation {
     SetShotAutoFit(crate::standards::v1::subsets::any::schema::mutations::set_shot_auto_fit::SetShotAutoFit),
 }
 dsl::original_pack_value_operation_receiving!(ShootingMutation);
+dsl::artifact_persisted_binary_operation!(ShootingMutation);
 
 /// 🏷️ The kebab spelling of every [`ShootingMutation`] variant, in DECLARATION ORDER — the one list
 /// the language-neutral test platform is measured against. It is duplicated in exactly two other

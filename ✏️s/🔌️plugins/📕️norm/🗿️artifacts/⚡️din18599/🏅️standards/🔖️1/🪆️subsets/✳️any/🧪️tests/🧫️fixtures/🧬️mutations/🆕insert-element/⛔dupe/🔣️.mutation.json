@@ -1,5 +1,5 @@
 {
-  "mutation": "insertelement",
+  "mutation": "insertElement",
   "index": 0,
   "element": {
     "id": "wall-n",

@@ -5,7 +5,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { compile } from "@tailwindcss/node";
 import Ajv2020 from "ajv/dist/2020.js";
-import { chromium } from "playwright";
+import { launchChromium } from "../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🌐️chromium-launch/🟦️";
 import { act, cleanup, render } from "@semio-tech/ui-react/test";
 import { COMPOSE_WINDOW_TEMPLATE_MIME, Mode, uiI18n } from "@semio-tech/ui-react";
 import { afterEach, expect, it, vi } from "vitest";
@@ -22,7 +22,7 @@ it("centers the actual localized Mode notice and wraps it without adding a windo
   vi.stubGlobal("MutationObserver", class { observe(): void {} disconnect(): void {} takeRecords(): MutationRecord[] { return []; } });
   const stylesPath = resolve(dirname(fileURLToPath(import.meta.url)), "../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🖌️ui/🎨️.css");
   const compiler = await compile(readFileSync(stylesPath, "utf8"), { base: dirname(stylesPath), from: stylesPath, onDependency: () => {} });
-  const browser = await chromium.launch({ headless: true });
+  const browser = await launchChromium();
   try {
     const page = await browser.newPage();
     for (const locale of fixture.locales) {

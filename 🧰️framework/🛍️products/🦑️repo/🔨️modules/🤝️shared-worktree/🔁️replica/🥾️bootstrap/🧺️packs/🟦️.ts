@@ -107,7 +107,7 @@ export async function writeReachablePackV1(worktree:string,stage:string,signal?:
  if(executable===null)return undefined;
  const args=["-C",worktree,...GIT_PINS_V1.flatMap(([key,value])=>["-c",`${key}=${value}`]),"pack-objects","--revs","--all","--delta-base-offset","--window=0","--threads=2","--quiet",stage];
  const hash=await new Promise<string|undefined>(done=>{
-  const child=spawn(executable,args,{stdio:["pipe","pipe","ignore"],env:{...process.env,GIT_OPTIONAL_LOCKS:"0"},...signal===undefined?{}:{signal}});
+  const child=spawn(executable,args,{windowsHide:true,stdio:["pipe","pipe","ignore"],env:{...process.env,GIT_OPTIONAL_LOCKS:"0"},...signal===undefined?{}:{signal}});
   let out="";
   child.stdout.on("data",chunk=>{out+=String(chunk);});
   child.on("error",()=>done(undefined));

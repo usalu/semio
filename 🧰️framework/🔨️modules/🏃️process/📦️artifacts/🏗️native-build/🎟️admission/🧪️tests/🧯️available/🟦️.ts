@@ -32,7 +32,7 @@ test("the verdict of every corpus case equals the independent Python oracle",()=
 
 test("the held-back lines exist in English and German for every kind and fill every placeholder",()=>{
  const values={unit:"semio_hub_draw_component",predicted:2500,available:1937,margin:2457,level:"calm",seconds:12};
- for(const language of ["en","de"] as const)for(const kind of ["available","warden","cancelled"] as const){
+ for(const language of ["en","de"] as const)for(const kind of ["available","warden","swap","cancelled"] as const){
   const line=formatAdmissionHeldV1(language,kind,values);
   expect(line).toContain("semio_hub_draw_component");
   expect(line).toContain("2500");

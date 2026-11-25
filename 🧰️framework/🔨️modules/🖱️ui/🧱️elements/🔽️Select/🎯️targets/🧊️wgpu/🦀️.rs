@@ -18,7 +18,7 @@
 //! `onKeyDown` at :395-410, `SelectContent`'s at :641-672, `moveActive` at :435-452,
 //! `findTypeaheadOption` at :455-466), not of Radix, which this element stopped wrapping.
 
-use semio_ui_wgpu_layout::chrome::push_control_border;
+use semio_ui_wgpu_layout::chrome::{push_chrome_row, push_control_border};
 use semio_ui_declaration::layout::MeasureSelectItem;
 use semio_ui_theme::geometry::Rect;
 use semio_ui_wgpu_input::{HitKind, HitTarget};
@@ -83,7 +83,7 @@ pub fn render_select<E: Clone, T: SelectItemView>(id: &str, value: &str, items: 
 /// scroll buttons — comes from `🔖️Geometry` above, shared with the retained path.
 pub fn render_select_menu<E: Clone, T: SelectItemView>(id: &str, value: &str, items: &[T], bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
     let viewport_h = ctx.viewport_height;
-    let inset = ctx.theme.padding_standard;
+    let inset = select_row_text_inset(ctx.theme);
     let font_size = ctx.theme.font_size_body;
     let pending = ctx.scroll_offsets.remove(&select_scroll_pending_key(id)).unwrap_or(0.0);
     let scroll_key = select_scroll_key(id);
@@ -95,17 +95,16 @@ pub fn render_select_menu<E: Clone, T: SelectItemView>(id: &str, value: &str, it
         ctx.scroll_offsets.insert(scroll_key, popup.scroll);
     }
     let mut render_rows = |draw: &mut semio_ui_draw_contract::DrawList| {
-        let glass = draw.push_glass([popup.menu.x, popup.menu.y, popup.menu.w, popup.menu.h], ctx.theme.border_radius, ctx.theme.glass(Level::Menu));
+        let glass = draw.push_glass([popup.menu.x, popup.menu.y, popup.menu.w, popup.menu.h], 0.0, ctx.theme.glass(Level::Menu));
         draw.begin_glass_content(glass);
         semio_ui_wgpu_layout::chrome::push_chrome_border(draw, popup.menu, ctx.theme.stroke_hairline, ctx.theme.border_normal, true, true, true, true, semio_ui_wgpu_layout::chrome::SharedBorderState::Normal);
         draw.push_scissor(select_popup_viewport_rect(popup));
         for (index, item) in items.iter().enumerate().take(popup.last_row).skip(popup.first_row) {
             let row = select_popup_row_rect(bounds, index, popup, ctx.theme);
             let row_hovered = ctx.input.hit_at(ctx.input.pointer_x, ctx.input.pointer_y).and_then(|h| h.control_id.as_deref()) == Some(&format!("{id}.item.{}", item.value()));
-            if row_hovered || item.value() == value {
-                draw.push_rounded([row.x, row.y, row.w, row.h], ctx.theme.row_hover, ctx.theme.border_radius);
-            }
-            draw_text_on(draw, ctx.atlas, item.label(), row.x + inset, row.y + (row.h + font_size) * 0.5 - 2.0, font_size, ctx.theme.text);
+            let (fill, ink) = select_row_colors(ctx.theme, item.value() == value, row_hovered);
+            push_chrome_row(draw, row, fill, index > popup.first_row, ctx.theme);
+            draw_text_on(draw, ctx.atlas, item.label(), row.x + inset, row.y + (row.h + font_size) * 0.5 - 2.0, font_size, ink);
             ctx.input.register_hit(HitTarget { rect: select_popup_row_hit_rect(bounds, index, popup, ctx.theme), event: None, control_id: Some(format!("{id}.item.{}", item.value())), kind: HitKind::DropdownItem, drag_axis: None, drag_data: None });
         }
         draw.pop_scissor();

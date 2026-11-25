@@ -1,0 +1,13 @@
+# F28 result
+
+## Task 1: red tests
+- Headroom `🧪️tests/🟦️.ts`: no unbound `refreshStaleImageBeforeOpenV1`/`requireRepositoryPartitionFitsHostV1` anymore (peer or F22 fixed the bindings). Two runs at load ~31: 1 fail, then 3 fail, each a different test (`queued-cancel` 10 s timeout, `actual Nx pressure recovery` 182 s) = load-dependent timeouts of real-process tests, not a product bug or drift. Not fixed; re-run under low load.
+- Closures `retiredSpill is not defined` was test drift, not a product ReferenceError: `directories` calls `retiredSpill`, defined in `closures/🟦️.ts`; tests extract functions by AST and lacked it. Fixed `📏️cardinality` (also `temporaryBase`/`role` stubs, `refusals`/`temporaries` on proof) -> 1 pass; `📁️census` (4 functions, stubs) -> 3 pass.
+- `♻️groups` (0/2 per isolated run) and `🧪️tests/🟦️.ts` (20/7): all remaining failures are one cause, a probable product/test interplay in F26's area: isolated sandbox runs fail with `Closure reference directory changed: <sandbox>/.cache/b/o/m/tmp/gf-*/m/tmp (0 entries before)` instead of the declared primary rejections ("did not end with its declared primary rejection"). The closure proof now walks the `m/tmp` directory (new temporary/refusal handling) and sees it change during the test's own writes. Needs F26 (owner of `closures/🟦️.ts`); no edit made there.
+
+## Task 2: one source of truth
+- Finding: `library/📦️packages/…/budget/📥️opening` is already a pure explicit re-export (no second copy of opening code). The real duplication is the 32 bound: partition `🚦️admission` schema `maximumPending` vs native-build `📥️operation` schema `maximumPendingOperations`, plus four raw `>=maximum` comparisons in the borrower beside `nativeImageOperationAdmissionV1`.
+- Decision: the lower module (native-build `nativeImageOperationAdmissionV1`, schema `maximumPendingOperations`) owns it; partition admission and borrower call that one function. Script `T/🧰️scripts/F28/dedupe.py` (anchored, asserts each anchor once, adds `nativeImageOperationSlotsV1`, packages re-export, `partitionHasRoomV1`, removes `maximumPending` from the admission schema, updates 4 test bindings). NOT landed: product code during the 18:15-19:00 quiet window, and it needs the `native-build` lock (held by F24). Land after 19:00 with locks `caching-storage` + `native-build`, then run admission, headroom, selected-state-recovery, scoped-retirement, borrower tests.
+
+## Task 3
+`📥️opening/🏪️store/🧪️tests/📥️required/🟦️.ts -> ../../👁️observation/🟨️.mjs` is a string fixture (`expect(source).toContain('import * as observationV1 from "../../👁️observation/🟨️.mjs"')`), not an import. Left as is; the checker flags it falsely.

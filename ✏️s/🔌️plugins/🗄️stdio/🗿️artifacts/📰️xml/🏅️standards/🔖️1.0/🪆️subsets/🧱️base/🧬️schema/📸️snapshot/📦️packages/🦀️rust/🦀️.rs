@@ -1,4 +1,4 @@
-//! 📸️ snapshot of `semio-s-artifact-stdio-xml` — a path-preserving carve of the artifact root mounts.
+//! 📸️ snapshot of `semio-s-artifact-stdio-xml` — a path-preserving carve of the artifact root mounts over the shared document model.
 
 #![allow(async_fn_in_trait)]
 
@@ -26,9 +26,14 @@ pub mod standards {
                     pub mod mutation_support;
                     #[path = "."]
                     pub mod snapshot {
-                        #[path = "../../🦀️.rs"]
-                        mod component;
-                        pub use component::*;
+                        #[path = "../../🧬️state/🦀️.rs"]
+                        mod state;
+                        pub use state::*;
+                        pub use semio_s_artifact_stdio_xml_snapshot_document::snapshot::{
+                            lexemes, markup_facts, ownership, retained, validate_xml_declaration_boundary, validate_xml_document_boundaries, XmlAttr, XmlDeclaration,
+                            XmlDoctype, XmlDocument, XmlDtdDeclaration, XmlExternalId, XmlNode, XmlQuote,
+                        };
+                        pub(crate) use semio_s_artifact_stdio_xml_snapshot_document::snapshot::position;
                     }
                 }
                 #[path = "."]

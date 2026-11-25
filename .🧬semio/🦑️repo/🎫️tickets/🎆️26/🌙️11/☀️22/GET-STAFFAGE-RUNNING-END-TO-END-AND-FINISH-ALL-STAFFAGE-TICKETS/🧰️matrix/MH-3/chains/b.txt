@@ -1,0 +1,4 @@
+# dry runs of the six unwritten assets, probe and sheets (2026-11-25, 2500 MB)
+GATE_TIMEOUT=2400 "$here/in-try.sh" person-on-crutches:all person-eating-standing:all person-hanging-laundry:all person-pushing-bicycle:poses person-in-rain-poncho:all person-carrying-shopping-bags:all
+(cd "$T" && timeout 300 "$B" "$here/probe.ts" "$GEN/try/person-pushing-bicycle.json" 50 default hand-r forearm-r hand-l steer) > "$GEN/run/probe-bicycle.txt" 2>&1
+"$here/in-look.sh" person-pushing-bicycle:before:50 person-pushing-bicycle:try:100 person-on-crutches:before:500 person-on-crutches:try:500 person-hanging-laundry:before:500 person-hanging-laundry:try:500

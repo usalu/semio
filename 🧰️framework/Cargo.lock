@@ -9424,6 +9424,8 @@ dependencies = [
 name = "semio-framework-value-paged"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-value-clone-source",
+ "semio-framework-value-clone-source-testing",
  "semio-framework-value-control-contract",
  "semio-framework-value-derive",
  "semio-framework-value-factory",
@@ -9431,12 +9433,15 @@ dependencies = [
  "semio-framework-value-native-encoding",
  "semio-framework-value-native-owned",
  "semio-framework-value-original-slot",
+ "semio-framework-value-paged-list",
  "semio-framework-value-persistent",
  "semio-framework-value-retained-clone",
  "semio-framework-value-retained-map",
  "semio-framework-value-retirement",
  "semio-framework-value-retirement-contract",
  "semio-framework-value-shared-utf8",
+ "semio-framework-value-testing-allocator",
+ "semio-framework-value-testing-effect-bank",
  "serde",
  "serde_json",
 ]
@@ -11533,7 +11538,6 @@ dependencies = [
  "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-pack-json-source-sink",
- "semio-framework-trace-memory-testing",
  "semio-framework-value",
  "semio-framework-value-native-owned",
  "semio-os-pack",
@@ -13403,6 +13407,7 @@ dependencies = [
 name = "semio-ui-wgpu-light"
 version = "0.1.0"
 dependencies = [
+ "kurbo 0.13.1",
  "semio-framework-async-macros",
  "semio-framework-value",
  "semio-ui-contract",

@@ -22,7 +22,7 @@ test("every tracked Cargo manifest parses",()=>{
 
 test("the demonstrator prototype and release preparation name the same declared playground rows",()=>{
  const declared=rowsOf(tracked("🌎️hub/*Cargo.toml")),prototype=variantsOf("prototype");
- expect(prototype).toEqual(["aggregator","aussuchen","bearbeiten","energy","fem3d","generation3d","generator","koordinator","verfolgen"]);
+ expect(prototype).toEqual(["aussuchen","bearbeiten","cad","energy","fem3d","generation3d","generator","gis2d","puzzle3d"]);
  expect(variantsOf("release")).toEqual(prototype);
  expect(prototype.filter(variant=>!declared.includes(variant))).toEqual([]);
  const oracle=tracked("🌎️hub/*Cargo.toml").flatMap(path=>((iarna.parse(readFileSync(join(workspace,path),"utf8")) as any).package?.metadata?.semio?.playground??[]).map((row:{variant:string})=>row.variant)).sort();

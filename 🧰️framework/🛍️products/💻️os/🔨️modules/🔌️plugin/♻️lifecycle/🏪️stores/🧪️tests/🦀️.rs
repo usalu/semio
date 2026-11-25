@@ -10,7 +10,7 @@ use semio_framework_value_testing_allocator as _;
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use std::sync::Arc;
 use semio_plugin_decl_app::ArtifactApp;
-use semio_plugin_ownership::store_lifecycle::{ArtifactDisposal, ArtifactOwnedDisposer};
+use semio_plugin_store_lifecycle::store_lifecycle::{ArtifactDisposal, ArtifactOwnedDisposer};
 use semio_plugin_instance_ladders::ladders_lifecycle_stores::{ORIGINAL_STORE_LANES, original_disposal_demands, original_disposal_step_cold};
 use pack::snapshot::ArtifactPack;
 use semio_plugin_decl_emission::Emit;

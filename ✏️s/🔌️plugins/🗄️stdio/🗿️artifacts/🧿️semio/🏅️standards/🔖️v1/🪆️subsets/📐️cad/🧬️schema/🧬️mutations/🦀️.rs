@@ -76,6 +76,7 @@ pub enum SemioCadMutation {
     SetBlockEntityGeometry(set_block_entity_geometry::SetBlockEntityGeometry),
 }
 dsl::original_pack_value_operation_receiving!(SemioCadMutation);
+dsl::artifact_persisted_binary_operation!(SemioCadMutation);
 
 /// 🏷️ The declared mutation vocabulary of `s.stdio.semio.cad`, in `SemioCadMutation`'s own
 /// declaration order and kebab-case spelling — the single source of truth for the binary op frame's

@@ -1,4 +1,4 @@
-//! 🧪 Unchanged normative example source references share the permanent oracle manifest.
+/// 🧪 Unchanged normative example source references share the permanent oracle manifest.
 static OFFICIAL_CASES: &[(&str, &str, usize)] = &[
     ("basin-advanced-brep.ifc", include_str!("../../🧪️fixtures/official/basin-advanced-brep.ifc"), 152),
     ("basin-faceted-brep.ifc", include_str!("../../🧪️fixtures/official/basin-faceted-brep.ifc"), 692),

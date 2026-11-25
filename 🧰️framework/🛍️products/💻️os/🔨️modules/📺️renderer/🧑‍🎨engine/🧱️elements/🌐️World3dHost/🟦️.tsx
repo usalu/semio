@@ -13,7 +13,7 @@ import { createLongPressV1 } from "../👆️long-press/🟦️.ts";
 import { localizedLabelTextV1 } from "../🏛️ShellHost/📣️replay-refusal/🟦️.ts";
 
 // #region 🔌️Adapters
-import { cn, ContextMenuController, glassClass, IconShotFrame, SelectionMarquee, sunPositionFromAzimuthElevation, chromePanelSafeAreaStyle, windowChromeClearedTopOffset } from "@semio-tech/ui-react";
+import { cn, ContextMenuController, glassClass, IconShotFrame, SelectionMarquee, SharedBorderRow, SharedBorderRowCell, sunPositionFromAzimuthElevation, chromePanelSafeAreaStyle, windowChromeClearedTopOffset } from "@semio-tech/ui-react";
 import { toolRunTraceDataAttributes } from "./⏯️tool-run-trace/🟦️.tsx";
 import { World3dAnnotationOverlay, World3dAnnotationProjector, World3dScalarLegendView, World3dSectionClip, world3dModellingDataAttributes, world3dModellingStrings } from "./📏️modelling/🟦️.tsx";
 import { type ComponentSceneHostProps, type InteractionTarget,
@@ -37,7 +37,7 @@ import { CanvasPresenceOverlayV1, usePresenceRuntimeKeyV1 } from "../👕️canv
 import { isTransparentWorldBackground, WORLD3D_FRAME_BOUNDS_MARGIN, world3dCameraDomJson, world3dSunDomJson } from "./🔭️scene-schema/🟦️.ts";
 import { WorldAcceptedFrameDiagnostics, WorldAutoFit, WorldProjectionContentFrame } from "./🎨️mesh-render/🟦️.tsx";
 import { BrushMeshRegistrar } from "./🧩️glb-surface/🟦️.tsx";
-import { resolveWorldContextMenuTarget, world3dContextMenuSurfaceV1, WORLD3D_SUGGESTIONS_LABELS_V1, WORLD3D_SUGGESTIONS_LONG_PRESS_V1, world3dSuggestionsAltHeld, world3dSuggestionsGestureArmed, world3dSuggestionsGestureTarget, world3dSuggestionsKeyChord, world3dSuggestionsGestureConsumesContextMenu, worldInstancePickBlocked, worldSurfaceGuestSelectionDomV1, worldSurfaceSelectionDomV1 } from "./🔗️instance-selection/🟦️.ts";
+import { world3dLeftPressOrbits, resolveWorldContextMenuTarget, world3dContextMenuSurfaceV1, WORLD3D_SUGGESTIONS_LABELS_V1, WORLD3D_SUGGESTIONS_LONG_PRESS_V1, world3dSuggestionsAltHeld, world3dSuggestionsGestureArmed, world3dSuggestionsGestureTarget, world3dSuggestionsKeyChord, world3dSuggestionsGestureConsumesContextMenu, worldInstancePickBlocked, worldSurfaceGuestSelectionDomV1, worldSurfaceSelectionDomV1 } from "./🔗️instance-selection/🟦️.ts";
 import { isWorldTransformGumballMode } from "./🧮️gumball-math/🟦️.ts";
 import { WorldInstancesLayer } from "./🧱️instance-layers/🟦️.tsx";
 import { WorldPointCloudLayer } from "./🧱️instance-layers/☁️point-cloud-layer/🟦️.tsx";
@@ -94,6 +94,9 @@ export function World3dHost(props: ComponentSceneHostProps) {
     if (terrainMovePosition) dispatch(terrainMovePosition, move);
   }, [terrainMovePosition, dispatch]);
   const terrainFeatures = useMemo(() => parseTerrainOverlayDescriptor(scene?.terrainJson), [scene?.terrainJson]);
+  const terrainHoverLabel = scene?.terrainJson ? terrainFeatureName : null;
+  const scalarLegend = heatmap.status === "applied" ? scalarField : null;
+  const scalarMismatch = Boolean(scalarField) && heatmap.status === "mismatch";
   const terrainCameraFrame = useMemo(() => scene?.cameraJson?.includes('"terrainFrame"') ? {} : null, [scene?.cameraJson]);
   const elevatedTerrainFrame = useRef<object | null>(null);
   const { adoptViewportCamera, cameraNavigating, relocateDragActive } = core;
@@ -228,17 +231,29 @@ export function World3dHost(props: ComponentSceneHostProps) {
                 {(["positions", "routes", "regions"] as const).flatMap((kind) => terrainFeatures.overlays![kind].map((feature) => <li key={`${kind}:${feature.id}`}>{feature.name}</li>))}
               </ul>
             ) : null}
-            {scene?.terrainJson && (terrainFeatures.attribution || terrainFeatureName) ? (
-              <div className="pointer-events-none absolute bottom-2 left-2 z-40 flex flex-col items-start gap-1 text-xs">
-                {terrainFeatureName ? <span className={cn("rounded px-2 py-1", glassClass)}>{terrainFeatureName}</span> : null}
-                {terrainFeatures.attribution ? <a className={cn("pointer-events-auto rounded px-2 py-1 underline", glassClass)} href={terrainFeatures.attribution.url} target="_blank" rel="noopener noreferrer">{terrainFeatures.attribution.label}</a> : null}
-              </div>
-            ) : null}
-            {scalarField && heatmap.status === "applied" ? <World3dScalarLegendView field={scalarField} locale={shellScope?.i18n.language} className={cn("pointer-events-none absolute bottom-2 left-2 z-40 rounded px-single py-half text-xs shadow-sm", glassClass)} /> : null}
-            {scalarField && heatmap.status === "mismatch" ? (
-              <div role="status" data-slot="world-scalar-field-mismatch" className={cn("pointer-events-none absolute bottom-2 left-2 z-40 rounded px-single py-half text-xs shadow-sm", glassClass)}>
-                {world3dModellingStrings(shellScope?.i18n.language).mismatch}
-              </div>
+            {terrainFeatures.attribution || terrainHoverLabel || scalarLegend || scalarMismatch ? (
+              <SharedBorderRow
+                orientation="vertical"
+                data-world-lower-overlay-rail=""
+                data-level="pane"
+                data-glass-chip=""
+                className={cn("pointer-events-none absolute left-single z-40 max-w-[calc(100%_-_2*var(--spacing-single))] text-xs", glassClass)}
+                style={{ bottom: "calc(var(--window-frame-bottom-clearance, 0px) + var(--spacing-single))" }}
+              >
+                {scalarLegend ? (
+                  <SharedBorderRowCell><World3dScalarLegendView field={scalarLegend} locale={shellScope?.i18n.language} /></SharedBorderRowCell>
+                ) : scalarMismatch ? (
+                  <SharedBorderRowCell role="status" data-slot="world-scalar-field-mismatch">
+                    {world3dModellingStrings(shellScope?.i18n.language).mismatch}
+                  </SharedBorderRowCell>
+                ) : null}
+                {terrainHoverLabel ? <SharedBorderRowCell>{terrainHoverLabel}</SharedBorderRowCell> : null}
+                {terrainFeatures.attribution ? (
+                  <SharedBorderRowCell className="p-0">
+                    <a className="pointer-events-auto block w-full px-single py-1 underline focus-visible:outline focus-visible:-outline-offset-2" href={terrainFeatures.attribution.url} target="_blank" rel="noopener noreferrer">{terrainFeatures.attribution.label}</a>
+                  </SharedBorderRowCell>
+                ) : null}
+              </SharedBorderRow>
             ) : null}
             <WorldOrbitProjectionSwitchPane spec={worldProjectionSpec} onSpecChange={handleProjectionKindChange} windowElementSegment={windowInstanceId ?? node.surfaceId} />
             <div
@@ -293,6 +308,7 @@ export function World3dHost(props: ComponentSceneHostProps) {
             projection={cameraState.explicitProjection ? cameraState.projection : undefined}
             constraints={worldOrbitConstraints}
             onRightPointerDown={handleWorldOrbitRightPointerDown}
+            onLeftPointerDown={(event) => world3dLeftPressOrbits(event, { activeUtility: interaction.activeUtility, paintMode, engagementSessionActive: selection.engagementSessionActive })}
             onNavigationGestures={(gestures) => dispatch(NOTE_WORLD_NAVIGATION_ACTION_ID, { windowId: windowInstanceId ?? node.surfaceId, gestures })}
           />
           <WorldOrbitViewControls

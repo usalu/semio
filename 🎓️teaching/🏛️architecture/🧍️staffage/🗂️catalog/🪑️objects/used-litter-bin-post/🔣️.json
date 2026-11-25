@@ -13,17 +13,83 @@
    "de": "Ein 50-l-Abfallbehälter aus verzinktem Stahlblech in der kommunalen Pfostenbauweise nach Jahren im Park: der Einsatz kippt zum Leeren an einem Gelenkbolzen nach vorn unter einer festen, flach kegeligen Regenhaube, sein Fußring ist durch das Zink gerostet, unten vorn sitzt eine Trittdelle, Aufkleberreste und ein Filzstift-Tag bedecken die Wand, und der 60,3-mm-Pfosten steht 0,5 m tief in einem Betonpunktfundament."
   },
   "tags": [
-   "used",
-   "park",
-   "public-space",
-   "waste",
-   "litter-bin",
-   "post-mounted",
-   "galvanised-steel",
-   "rain-hood",
-   "tilting-liner",
-   "concrete-footing",
-   "street-furniture"
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "park",
+    "title": {
+     "en": "park",
+     "de": "Park"
+    }
+   },
+   {
+    "id": "public-space",
+    "title": {
+     "en": "public space",
+     "de": "öffentlicher Raum"
+    }
+   },
+   {
+    "id": "waste",
+    "title": {
+     "en": "waste",
+     "de": "Abfall"
+    }
+   },
+   {
+    "id": "litter-bin",
+    "title": {
+     "en": "litter bin",
+     "de": "Abfalleimer"
+    }
+   },
+   {
+    "id": "post-mounted",
+    "title": {
+     "en": "post mounted",
+     "de": "pfostenmontiert"
+    }
+   },
+   {
+    "id": "galvanised-steel",
+    "title": {
+     "en": "galvanised steel",
+     "de": "verzinkter Stahl"
+    }
+   },
+   {
+    "id": "rain-hood",
+    "title": {
+     "en": "rain hood",
+     "de": "Regenhaube"
+    }
+   },
+   {
+    "id": "tilting-liner",
+    "title": {
+     "en": "tilting liner",
+     "de": "Kipp-Einlage"
+    }
+   },
+   {
+    "id": "concrete-footing",
+    "title": {
+     "en": "concrete footing",
+     "de": "Betonfundament"
+    }
+   },
+   {
+    "id": "street-furniture",
+    "title": {
+     "en": "street furniture",
+     "de": "Stadtmobiliar"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content (used park objects wave)",

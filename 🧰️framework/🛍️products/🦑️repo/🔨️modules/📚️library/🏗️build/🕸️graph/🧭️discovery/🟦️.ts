@@ -57,7 +57,8 @@ export function buildGraphProjectInferenceOptionsV1(selection:BuildGraphSelectio
  return {...options,ownerRoots};
 }
 
-/** 📚️ Assembles all owned inference contributions without installing or invoking Nx. */
+/** 📚️ Assembles all owned inference contributions without installing or invoking Nx. The owners of one call are read in ONE closure pass (one validation round, like a part read and a farm child): a stored closure entry, a stamp, a native closure or any recorded fact is observed once per pass however many owners name it, instead of once per owner in the main thread of a selected read; the facts-hold step of the caller re-verifies every row on the disk after the pass.
+ * @see ./🧪️tests/🔂️owner-pass/🟦️.ts */
 export async function discoverBuildGraphV1(root:string,selection:BuildGraphSelectionV1,registry:BuildOwnerRegistryV1,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,suppliedFiles?:string[],admission?:BuildOwnerAdmissionV1,compact=false,takenMemo?:TakenMemoV1):Promise<BuildGraphV1> {
   requireIssuedResourceControlInvocationV1(phaseControl,invocation);checkResourceLeaseControl(phaseControl);selection=readBuildGraphSelectionV1(selection);registry=readBuildOwnerRegistryV1(registry);
   requireBuildOwnerRegistryAuthorityV1(registry,JSON.parse(pinnedAuthorityReadV1(join(root,"📋️build-owners.json"),()=>observationV1.observedFs.readFileSync(join(root,"📋️build-owners.json"),"utf8"))));
@@ -65,7 +66,7 @@ export async function discoverBuildGraphV1(root:string,selection:BuildGraphSelec
   const files=suppliedFiles??(selection.kind==="all"?buildGraphMembersV1(await workspaceBuildFilesV1(root,invocation)):admission!.files);
   const [owner,tests,policies]=await Promise.all([import("../📥️inference/🟨️.mjs"),import("../../../../🧪️test/📦️packages/🟦️typescript/🟨️.mjs"),import("../📥️inference/🛡️policy/🟨️.mjs")]);checkResourceLeaseControl(phaseControl);
   const policy=graphDeclarationV1("../🔣️policy.json"),options=buildGraphProjectInferenceOptionsV1(selection,registry,admission),foreign=new Set(admission?.observedFiles??[]);
-  const primary=await owner.discoverBuildProjectsV1(files.filter(file=>file.endsWith("📋️project.json")||file.endsWith("Cargo.toml")?!foreign.has(file):javascriptManagerV1.lockFileNames().includes(file)||file.endsWith(".patch")),{...options,catalogFiles:[...foreign].sort()},{workspaceRoot:root,invocation,phaseControl,registry,...takenMemo===undefined?{}:{takenMemo}});
+  const primary=await withClosurePassV1(()=>owner.discoverBuildProjectsV1(files.filter(file=>file.endsWith("📋️project.json")||file.endsWith("Cargo.toml")?!foreign.has(file):javascriptManagerV1.lockFileNames().includes(file)||file.endsWith(".patch")),{...options,catalogFiles:[...foreign].sort()},{workspaceRoot:root,invocation,phaseControl,registry,...takenMemo===undefined?{}:{takenMemo}}));
   if(invocation)await advanceScriptInvocation(invocation,"build:infer","running");
   const contributions=[...primary,...await tests.discoverTestBuildProjectsV1(files.filter(file=>file.endsWith(".feature")),{}, {workspaceRoot:root,invocation,phaseControl})];
   const policyOwners=Object.assign({},...contributions.map(([,contribution])=>contribution.projects??{}));

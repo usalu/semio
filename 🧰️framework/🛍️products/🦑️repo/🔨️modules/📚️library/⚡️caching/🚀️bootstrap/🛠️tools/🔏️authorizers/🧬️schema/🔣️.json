@@ -697,7 +697,7 @@
       }
     },
     "SourceReadAhead": { "const": { "concurrency": 24, "reportFiles": 16, "maximumChangedFiles": 64 }, "description": "Bounded read-ahead of one capture walk: at most `concurrency` source files are open at once; the walk reports its progress every `reportFiles` files; a memo whose files changed in at most `maximumChangedFiles` of them (each keeping its import shape) is re-proven by re-reading only those." },
-    "SourceMembershipRetry": { "const": { "attempts": 4 }, "description": "A path that vanishes, is replaced or changes between the moment a capture lists or resolves it and the moment it reads it is a membership change of the live tree, not a failure: the walk starts again from the entry (at most `attempts` walks in all) and only a path that is still gone after the last walk refuses the capture with the filesystem error." },
+    "SourceMembershipRetry": { "const": { "attempts": 6 }, "description": "A path that vanishes, is replaced or changes between the moment a capture lists or resolves it and the moment it reads it is a membership change of the live tree, not a failure: the walk starts again from the entry through `retryOnConcurrentEditV1` of the `read` profile, so it pauses 10, 40, 160, 640 and 2560 ms between walks while the replica settles (at most `attempts` walks in all) and only a path that is still gone after the last walk refuses the capture with the filesystem error." },
     "SourceCensusPolicy": { "const": { "maximumFiles": 65536, "maximumSourceBytes": 268435456, "progressFiles": 16 } },
     "SourceClosureFamily": { "const": {
       "version": 1,

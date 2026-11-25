@@ -2,6 +2,7 @@ import {test,expect} from "bun:test";
 import Ajv from "ajv";
 import {Database} from "bun:sqlite";
 import {readFileSync} from "node:fs";
+import {decodePackValue, encodePackValue, packUInt} from "@semio-tech/framework/packs";
 import law from "./🧫️fixtures/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
 test("original Completed uses the same admitted donor and independent correlation/full-Fault oracle",()=>{
@@ -10,5 +11,18 @@ test("original Completed uses the same admitted donor and independent correlatio
  const base=new URL("../",import.meta.url);const receiver=readFileSync(new URL("../🦀️.rs",base),"utf8");const completed=readFileSync(new URL("🦀️.rs",base),"utf8");const fault=readFileSync(new URL("⚠️fault/🦀️.rs",base),"utf8");
  const hook=receiver.slice(receiver.indexOf("pub fn retain_completed"),receiver.indexOf("pub async fn advance_responses"));expect(hook.indexOf("position(Option::is_none)")).toBeLessThan(hook.indexOf("take_continuation(req)"));expect(hook.indexOf("owner.witness.admit(cx)")).toBeLessThan(hook.indexOf("donor.take()"));expect(hook.indexOf("metadata(cx)")).toBeLessThan(hook.indexOf("donor.take()"));expect(hook).not.toContain("ManuallyDrop::new(owner)");
  expect(hook).toContain("take_pending_partial(req)");expect(receiver).toContain("resolve_original(self.request.unwrap(),&mut self.request_result)");expect(completed).toContain("new_request(event:Event,partial:Vec<u8>)");
- expect(completed).toContain("grammar.step_source(&source,1,control,grant,false)");expect(completed).toContain("advance_original_step");expect(completed).toContain("original_close_demands");expect(completed).toContain("admit_original_domain_failure");expect(fault).not.toContain("from_value");expect(fault).not.toContain("clone()");
+ expect(completed).toContain("grammar.step_source(&source,1,control,effect,false)");expect(completed).toContain("advance_original_step");expect(completed).toContain("original_close_demands");expect(completed).toContain("admit_original_domain_failure");expect(fault).not.toContain("from_value");expect(fault).not.toContain("clone()");
+});
+
+test("original Completed receives the container-less extension Pack response", () => {
+ const reply = {...law.reply, unitsDone: packUInt(BigInt(law.reply.unitsDone)), unitsTotal: packUInt(BigInt(law.reply.unitsTotal))};
+ const wire = encodePackValue(reply);
+ expect(Buffer.from(wire).toString("hex")).toBe(law.replyWireHex);
+ const pageSize = law.maximumPageBytes;
+ expect(wire.byteLength).toBeGreaterThan(pageSize);
+ const joined = Buffer.concat([wire.subarray(0, pageSize), wire.subarray(pageSize)]);
+ expect(decodePackValue(joined)).toEqual(reply);
+ const source = readFileSync(new URL("../🦀️.rs", import.meta.url), "utf8");
+ expect(source).toContain("RetainedIntrinsicBody::new(RetainedIntrinsicInput::OwnedBytes(bytes)");
+ expect(source).not.toContain("RetainedIntrinsicDocument");
 });

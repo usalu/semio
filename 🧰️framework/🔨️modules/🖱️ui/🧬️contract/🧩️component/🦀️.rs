@@ -23,7 +23,7 @@ mod basic_widget_props;
 pub use basic_widget_props::{
     packed_text_leaf, progress_fraction, ButtonProps, ContainerProps, IconSelectProps, InputProps,
     KeyValueListProps, ProgressProps, RingProps, SelectAppearance, SelectProps, SeparatorProps,
-    TextProps, ToggleAppearance, ToggleProps,
+    TextProps, ToggleAppearance, ToggleProps, HEADING_LEVEL_MAX, HEADING_LEVEL_MIN,
 };
 
 #[path = "🔢️number-scale-and-slider-props/🦀️.rs"]

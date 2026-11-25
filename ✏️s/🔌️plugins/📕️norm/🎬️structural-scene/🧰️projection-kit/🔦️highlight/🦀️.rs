@@ -43,9 +43,14 @@ pub fn worst_by_owner(report: &CheckReport) -> BTreeMap<&str, &CheckResult> {
     worst
 }
 
-/// 🌡️ The governing check among the document-level checks, filed under no entity.
+/// 🌡️ The governing check accepted by `keep`, ordered by severity and then utilisation.
+pub fn governing_where(report: &CheckReport, keep: impl Fn(&CheckResult) -> bool) -> Option<&CheckResult> {
+    report.checks.iter().filter(|c| counts(c) && keep(c)).fold(None, |worst, check| if worst.is_none_or(|known| governs(known, check)) { Some(check) } else { worst })
+}
+
+/// 🏛️ The governing check among the document-level checks, filed under no entity.
 pub fn worst_global(report: &CheckReport) -> Option<&CheckResult> {
-    report.checks.iter().filter(|c| c.subject.entity_id.is_empty() && counts(c)).fold(None, |worst, check| if worst.is_none_or(|known| governs(known, check)) { Some(check) } else { worst })
+    governing_where(report, |check| check.subject.entity_id.is_empty())
 }
 
 fn colour(entity: &mut SceneEntity, governing: &CheckResult) {

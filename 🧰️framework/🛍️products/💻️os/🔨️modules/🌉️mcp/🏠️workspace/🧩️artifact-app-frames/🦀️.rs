@@ -468,7 +468,7 @@ impl ArtifactChannel for PluginArtifactChannel {
                     other => return Err(Self::not_wired("TransactionUndo", format!("unexpected real AppFrame variant {other:?}"))),
                 },
                 AppCommand::Infer(command) => {
-                    let result = self.infer_real(&command).await?;
+                    let result = Box::pin(self.infer_real(&command)).await?;
                     AppFrame::Inferred { inference_schema: result.inference_schema, complete: result.complete, payload: result.canonical_payload }
                 }
                 AppCommand::TransactionRedo { group_id } => match self.exchange_one_real(instance, store::AppCommand::TransactionRedo { seq: 0, group_id: group_id.clone() })? {

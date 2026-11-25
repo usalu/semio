@@ -140,7 +140,7 @@ export async function runRehearsalV1(options:RehearsalOptionsV1,io:Readonly<{say
    const config={origin:plan.origin,proxy:`http://127.0.0.1:${proxies[plan.index-1]!.port}`,instance:all.defaults.instance,state:plan.state,memoryMegabytes:plan.memoryMegabytes,cores:plan.cores,owners:names,ownerMilliseconds:Math.round(options.ownerSeconds*1000),ownerMegabytes:options.ownerMegabytes??64,revision:"r1",work,sampleMilliseconds:P.driverSampleMilliseconds,id,slot:P.slot};
    const file=join(plan.state,"config.json");writeFileSync(file,JSON.stringify(config));
    const log=join(plan.state,"driver.log");
-   drivers.set(plan.origin,Bun.spawn([process.execPath,join(here,"👷️machine","🟦️.ts"),`${P.markerFlag}${id}`,`${P.machineFlag}${plan.origin}`,`--config=${file}`],{cwd:plan.work,env:rehearsalEnvironmentV1(plan,process.env),stdin:"ignore",stdout:Bun.file(log),stderr:Bun.file(log)}));
+   drivers.set(plan.origin,Bun.spawn([process.execPath,join(here,"👷️machine","🟦️.ts"),`${P.markerFlag}${id}`,`${P.machineFlag}${plan.origin}`,`--config=${file}`],{windowsHide:true,cwd:plan.work,env:rehearsalEnvironmentV1(plan,process.env),stdin:"ignore",stdout:Bun.file(log),stderr:Bun.file(log)}));
    say(`machine ${plan.origin} started / Maschine ${plan.origin} gestartet`);
   }
   const deadline=Date.now()+options.timeoutSeconds*1000;

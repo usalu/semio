@@ -22,7 +22,7 @@ fn catalogue_derivation_captures_the_registry_under_the_turns_own_source(){
 }
 #[test]
 fn a_panicking_body_with_a_non_empty_owner_unwinds_without_aborting(){
- let panicked=std::panic::catch_unwind(||{let _owner=FlowOperatorCatalogueOwner::new(flow_extension_registry(),flow_extension_registry_generation());panic!("[DEBUG] expected test-body failure")});
+ let panicked=std::panic::catch_unwind(||{let _owner=FlowOperatorCatalogueOwner::new(flow_extension_registry(),flow_extension_registry_generation());panic!("expected test-body failure")});
  assert!(panicked.is_err());
  let dropped=std::panic::catch_unwind(||drop(FlowOperatorCatalogueOwner::new(flow_extension_registry(),flow_extension_registry_generation())));
  assert!(dropped.is_err(),"outside unwinding a non-empty owner still violates its terminal law");

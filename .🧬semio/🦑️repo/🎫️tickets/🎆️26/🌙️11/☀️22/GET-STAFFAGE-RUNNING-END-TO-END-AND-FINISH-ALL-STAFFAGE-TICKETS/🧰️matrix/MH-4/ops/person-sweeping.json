@@ -1,9 +1,13 @@
 [
  {
-  "op": "plan-revolve",
+  "op": "copy",
   "scale": "50",
   "id": "sleeve-l",
-  "why": "arm-l: sww/None/rev: revolved about the bone axis"
+  "from": "front",
+  "to": [
+   "elevation"
+  ],
+  "why": "arm: the elevation drew the sleeve as a box (its side outline swept over 0.13 m), front and plan as a body of revolution of 0.12 m; the sweeping arm twists 57 degrees and the box shows its diagonal (35 to 54 mm): the body of revolution in the three views"
  },
  {
   "op": "front-sweep",
@@ -12,16 +16,26 @@
   "why": "neck: flat/swv/None: prism along v fitted to the elevation outline"
  },
  {
-  "op": "plan-revolve",
+  "op": "copy",
   "scale": "100",
   "id": "sleeve-l",
-  "why": "arm-l: sww/None/rev: revolved about the bone axis"
+  "from": "front",
+  "to": [
+   "elevation",
+   "plan"
+  ],
+  "why": "arm: the elevation drew the sleeve as a box (its side outline swept over 0.13 m), front and plan as a body of revolution of 0.12 m; the sweeping arm twists 57 degrees and the box shows its diagonal (35 to 54 mm): the body of revolution in the three views"
  },
  {
-  "op": "plan-revolve",
+  "op": "copy",
   "scale": "100",
   "id": "sleeve-r",
-  "why": "arm-r: sww/None/rev: revolved about the bone axis"
+  "from": "front",
+  "to": [
+   "elevation",
+   "plan"
+  ],
+  "why": "arm: the elevation drew the sleeve as a box (its side outline swept over 0.13 m), front and plan as a body of revolution of 0.12 m; the sweeping arm twists 57 degrees and the box shows its diagonal (35 to 54 mm): the body of revolution in the three views"
  },
  {
   "op": "front-sweep",
@@ -30,16 +44,26 @@
   "why": "neck: flat/swv/None: prism along v fitted to the elevation outline"
  },
  {
-  "op": "plan-revolve",
+  "op": "copy",
   "scale": "200",
   "id": "sleeve-l",
-  "why": "arm-l: sww/None/rev: revolved about the bone axis"
+  "from": "front",
+  "to": [
+   "elevation",
+   "plan"
+  ],
+  "why": "arm: the elevation drew the sleeve as a box (its side outline swept over 0.13 m), front and plan as a body of revolution of 0.12 m; the sweeping arm twists 57 degrees and the box shows its diagonal (35 to 54 mm): the body of revolution in the three views"
  },
  {
-  "op": "plan-revolve",
+  "op": "copy",
   "scale": "200",
   "id": "sleeve-r",
-  "why": "arm-r: sww/None/rev: revolved about the bone axis"
+  "from": "front",
+  "to": [
+   "elevation",
+   "plan"
+  ],
+  "why": "arm: the elevation drew the sleeve as a box (its side outline swept over 0.13 m), front and plan as a body of revolution of 0.12 m; the sweeping arm twists 57 degrees and the box shows its diagonal (35 to 54 mm): the body of revolution in the three views"
  },
  {
   "op": "plan-revolve",
@@ -60,34 +84,33 @@
   "why": "shank-r: flat/swv/None: prism along v fitted to the elevation outline"
  },
  {
-  "op": "plan-revolve",
+  "op": "copy",
   "scale": "500",
   "id": "sil-arm-l",
-  "why": "arm-l: sww/None/rev: revolved about the bone axis"
- },
- {
-  "op": "plan-revolve",
-  "scale": "500",
-  "id": "sil-forearm-l",
-  "range": "stretch",
-  "why": "forearm-l: sww/rev/rev: the revolved plan body stretched to the length of the elevation outline"
+  "from": "front",
+  "to": [
+   "elevation",
+   "plan"
+  ],
+  "why": "arm: the elevation drew the sleeve as a box (its side outline swept over 0.13 m), front and plan as a body of revolution of 0.12 m; the sweeping arm twists 57 degrees and the box shows its diagonal (35 to 54 mm): the body of revolution in the three views"
  },
  {
   "op": "copy",
   "scale": "500",
   "id": "sil-forearm-l",
-  "from": "plan",
+  "from": "front",
   "to": [
-   "front"
+   "elevation",
+   "plan"
   ],
-  "why": "forearm-l: sww/rev/rev: the same revolved body in the front"
+  "why": "arm: the elevation drew the sleeve as a box (its side outline swept over 0.13 m), front and plan as a body of revolution of 0.12 m; the sweeping arm twists 57 degrees and the box shows its diagonal (35 to 54 mm): the body of revolution in the three views"
  },
  {
-  "op": "prism",
+  "op": "plan-revolve",
   "scale": "500",
   "id": "sil-head",
-  "view": "plan",
-  "why": "head: flat/None/flat: prism that keeps the outline"
+  "rebuild": true,
+  "why": "head: flat plan shape; a prism that keeps the outline is a box, 40 mm behind the elevation head when it nods: a body revolved about the head axis from the elevation and front twins"
  },
  {
   "op": "front-sweep",
@@ -100,5 +123,47 @@
   "scale": "500",
   "id": "sil-neck",
   "why": "neck: flat/swv/flat: revolved about the bone axis"
+ },
+ {
+  "mh4": 1,
+  "op": "copy",
+  "scale": "100",
+  "id": "hair",
+  "from": "front",
+  "fromId": "face",
+  "to": [
+   "front"
+  ],
+  "create": "only",
+  "paint": {
+   "tone": 0.75,
+   "region": "hair",
+   "role": "body",
+   "filled": true,
+   "z": 5.37
+  },
+  "why": "the front of 1:100 drew the face without the hair, 38 mm lower than the elevation at rest (sync-height): the hair as the face is built there, the same cross-section as a prism along the head",
+  "as": "hair-crown"
+ },
+ {
+  "mh4": 1,
+  "op": "prism",
+  "scale": "100",
+  "id": "hair-crown",
+  "view": "front",
+  "refit": true,
+  "why": "the span of the new front hair along the head fitted to the elevation hair",
+  "bone": "head",
+  "twin": "hair"
+ },
+ {
+  "op": "copy",
+  "scale": "50",
+  "id": "sleeve-r",
+  "from": "front",
+  "to": [
+   "elevation"
+  ],
+  "why": "arm: the body of revolution of the front in the three views (the elevation drew a box)"
  }
 ]

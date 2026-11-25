@@ -11,7 +11,7 @@
   ],
   "properties": {
     "mutation": {
-      "const": "changeelementaream2"
+      "const": "changeElementAreaM2"
     },
     "elementId": {
       "type": "string",

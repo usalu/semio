@@ -1,0 +1,18 @@
+black-locust after - 50 100 200 500
+black-locust before - 50 100
+black-locust after storm 100 500
+black-locust before storm 100
+english-oak after - 200
+english-oak before - 200
+english-oak after storm 100
+english-oak before storm 100
+black-alder after gale 100
+black-alder before gale 100
+field-maple after storm 100
+field-maple before storm 100
+common-reed after storm 100
+common-reed before storm 100
+bamboo-clump after storm-bent 100
+bamboo-clump before storm-bent 100
+common-lilac after - 500
+common-lilac before - 500

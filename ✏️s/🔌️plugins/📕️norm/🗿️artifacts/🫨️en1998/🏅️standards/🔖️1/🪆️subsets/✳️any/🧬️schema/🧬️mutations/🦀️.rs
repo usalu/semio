@@ -11,21 +11,8 @@ extern crate semio_framework_value_derive as value_derive;
 use semio_s_artifact_norm_en1998_diff::En1998Diff;
 use semio_s_artifact_norm_en1998_model::En1998Snapshot;
 
-#[path = "➕️insert-case/🦀️.rs"]
-mod insert_case;
-#[path = "➖️remove-case/🦀️.rs"]
-mod remove_case;
-#[path = "🔢️change-case-number/🦀️.rs"]
-mod change_case_number;
-#[path = "🔤️change-case-text/🦀️.rs"]
-mod change_case_text;
-#[path = "🏷️change-case-label-en/🦀️.rs"]
-mod change_case_label_en;
-#[path = "🏷️change-case-label-de/🦀️.rs"]
-mod change_case_label_de;
-#[path = "📇️change-case-entry-id/🦀️.rs"]
-mod change_case_entry_id;
 
+use semio_s_artifact_norm_en1998_mut_cases::{insert_case, remove_case, change_case_number, change_case_text, change_case_label_en, change_case_label_de, change_case_entry_id};
 #[path = "🧭️edit-rules/🦀️.rs"]
 mod edit_rules;
 pub use edit_rules::{resolve_edit, EDIT_RULES, ID_REMOVALS};

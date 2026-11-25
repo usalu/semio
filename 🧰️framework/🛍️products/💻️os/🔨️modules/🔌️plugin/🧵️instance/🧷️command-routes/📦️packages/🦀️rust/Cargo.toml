@@ -56,6 +56,7 @@ semio-framework-job-worker-authority = { path = "../../../../../../../../🔨️
 semio-os-kernel = { path = "../../../../../../📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-plugin-ownership = { path = "../../../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
+semio-plugin-store-lifecycle = { path = "../../../../♻️lifecycle/🧱️owner/📦️packages/🦀️rust" }
 semio-plugin-instance-render = { path = "../../../🖼️render/📦️packages/🦀️rust" }
 semio-plugin-instance-dispatch = { path = "../../../📨️dispatch/📦️packages/🦀️rust" }
 semio-plugin-instance-typed-ops = { path = "../../../🧾️typed-operations/📦️packages/🦀️rust" }

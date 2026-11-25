@@ -1,0 +1,60 @@
+{
+  "schema": "semio.kernel.package-components-cases/v1",
+  "registrations": [
+    {
+      "id": "one component: no declaration, every activation loads the module's only component",
+      "steps": [{ "component": null, "apps": ["s.note.note@1/*#editor", "s.note.note@1/*#viewer"] }],
+      "components": null,
+      "activations": [{ "app": "s.note.note@1/*#editor", "component": null }, { "app": null, "component": null }]
+    },
+    {
+      "id": "three shards: an app loads its own shard, an activation of no app the first",
+      "steps": [
+        { "component": "semio-hub-stdio-pdf-1-4", "apps": ["s.stdio.pdf@1.4/a#editor", "s.stdio.pdf@1.4/a#viewer"] },
+        { "component": "semio-hub-stdio-pdf-1-7-editors", "apps": ["s.stdio.pdf@1.7/a#editor", "s.stdio.pdf@1.7/*#editor"] },
+        { "component": "semio-hub-stdio-pdf-1-7-viewers", "apps": ["s.stdio.pdf@1.7/*#viewer"] }
+      ],
+      "components": [
+        { "id": "semio-hub-stdio-pdf-1-4", "apps": ["s.stdio.pdf@1.4/a#editor", "s.stdio.pdf@1.4/a#viewer"] },
+        { "id": "semio-hub-stdio-pdf-1-7-editors", "apps": ["s.stdio.pdf@1.7/a#editor", "s.stdio.pdf@1.7/*#editor"] },
+        { "id": "semio-hub-stdio-pdf-1-7-viewers", "apps": ["s.stdio.pdf@1.7/*#viewer"] }
+      ],
+      "activations": [
+        { "app": "s.stdio.pdf@1.7/*#editor", "component": "semio-hub-stdio-pdf-1-7-editors" },
+        { "app": "s.stdio.pdf@1.7/*#viewer", "component": "semio-hub-stdio-pdf-1-7-viewers" },
+        { "app": "s.stdio.pdf@1.4/a#viewer", "component": "semio-hub-stdio-pdf-1-4" },
+        { "app": null, "component": "semio-hub-stdio-pdf-1-4" }
+      ]
+    },
+    {
+      "id": "a component id outside lowercase ascii, digits, - and _",
+      "steps": [{ "component": "main_ä", "apps": ["s.x.x@1/*#editor"] }],
+      "refusal": "must be non-empty lowercase ascii"
+    },
+    {
+      "id": "an app registered before the first component closes in none",
+      "steps": [{ "component": null, "apps": ["s.a.a@1/*#editor"] }, { "component": "late", "apps": ["s.a.a@1/*#viewer"] }],
+      "refusal": "is registered before the first component"
+    },
+    {
+      "id": "a component opened twice",
+      "steps": [{ "component": "twice", "apps": ["s.a.a@1/*#editor"] }, { "component": "twice", "apps": ["s.a.a@1/*#viewer"] }],
+      "refusal": "is declared twice"
+    },
+    {
+      "id": "a component that serves no app",
+      "steps": [{ "component": "empty", "apps": [] }, { "component": "full", "apps": ["s.a.a@1/*#editor"] }],
+      "refusal": "serves no app"
+    }
+  ],
+  "descriptors": [
+    { "id": "an empty component list", "roster": ["a"], "components": [], "code": "package-components.shape", "shapeValid": false },
+    { "id": "a declaration with an extra member", "roster": ["a"], "components": [{ "id": "c", "apps": ["a"], "base": "c.js" }], "code": "package-components.shape", "shapeValid": false },
+    { "id": "an id that is no file-safe key", "roster": ["a"], "components": [{ "id": "C/../x", "apps": ["a"] }], "code": "package-components.id", "shapeValid": false },
+    { "id": "a component without apps", "roster": ["a"], "components": [{ "id": "c", "apps": [] }, { "id": "d", "apps": ["a"] }], "code": "package-components.apps", "shapeValid": false },
+    { "id": "an id declared twice", "roster": ["a", "b"], "components": [{ "id": "c", "apps": ["a"] }, { "id": "c", "apps": ["b"] }], "code": "package-components.duplicate", "shapeValid": true },
+    { "id": "an app the roster does not declare", "roster": ["a"], "components": [{ "id": "c", "apps": ["a", "z"] }], "code": "package-components.unknown-app", "shapeValid": true },
+    { "id": "an app in two components", "roster": ["a"], "components": [{ "id": "c", "apps": ["a"] }, { "id": "d", "apps": ["a"] }], "code": "package-components.shared-app", "shapeValid": true },
+    { "id": "a roster app in no component", "roster": ["a", "b"], "components": [{ "id": "c", "apps": ["a"] }], "code": "package-components.unowned-app", "shapeValid": true }
+  ]
+}

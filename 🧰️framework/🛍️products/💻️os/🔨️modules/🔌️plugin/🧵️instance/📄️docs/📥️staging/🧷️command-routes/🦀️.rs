@@ -4,7 +4,7 @@
 use semio_framework::{ActionKind, Fault, FaultCode, FaultFrom, FaultOrigin};
 use semio_plugin_document_media::ActiveDocumentArchiveLoad;
 use semio_plugin_decl_app::ArtifactApp;
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use semio_plugin_command::DOCUMENT_LOADING_CODE;
 use semio_plugin_decl_emission::Emit;

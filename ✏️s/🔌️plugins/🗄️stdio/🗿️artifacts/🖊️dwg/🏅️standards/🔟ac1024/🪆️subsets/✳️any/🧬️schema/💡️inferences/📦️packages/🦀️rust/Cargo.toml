@@ -28,6 +28,8 @@ semio-framework-value-derive = { workspace = true }
 semio-s-artifact-stdio-dwg-snapshot = { workspace = true }
 semio-s-artifact-stdio-dwg-snapshot-drawing = { workspace = true }
 semio-s-artifact-stdio-dwg-snapshot-objects = { workspace = true }
+semio-s-artifact-stdio-dwg-snapshot-objects-entities = { workspace = true }
+semio-s-artifact-stdio-dwg-snapshot-objects-xrecord = { workspace = true }
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }

@@ -2,6 +2,8 @@
   "status": { "tag": "more-work" },
   "commandEffects": [{ "tag": "probe-command-reply", "val": null }],
   "receiptEffects": [{ "tag": "probe-receipt-observed", "val": null }],
+  "deferredCompletion": { "deferredEvents": 131, "status": "idle" },
+  "standingDrainOrder": ["edit", "drain"],
   "cases": [
     { "name": "terminal command without outstanding acknowledgements", "acknowledgements": [], "deferredEvents": 0, "crossings": 0 },
     { "name": "terminal command with an outstanding acknowledgement", "acknowledgements": [{ "kind": "message", "payload": { "source": { "tag": "shell", "val": 7 }, "payload": [5] } }], "deferredEvents": 0, "crossings": 1 },

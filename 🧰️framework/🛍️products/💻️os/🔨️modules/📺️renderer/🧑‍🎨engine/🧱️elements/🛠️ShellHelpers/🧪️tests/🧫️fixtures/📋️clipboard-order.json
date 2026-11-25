@@ -1,4 +1,5 @@
 {
+  "initial": "previous selection",
   "submitted": ["copy", "paste", "cut", "paste"],
   "copied": ["first selection", "second selection"],
   "pasted": ["first selection", "second selection"],

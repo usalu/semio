@@ -400,9 +400,10 @@
   "derivedViewAllowlist": [
     {
       "asset": "etics-brick-wall-12",
-      "scale": "500",
       "view": "plan",
-      "against": "elevation",
+      "bands": [
+        "500"
+      ],
       "reason": {
         "en": "At 1:500 the wall is one homogeneous block of square face: its top view and its cross-section are the same rectangle.",
         "de": "Bei 1:500 ist die Wand ein homogener Block mit quadratischer Ansichtsfläche: Aufsicht und Querschnitt sind dasselbe Rechteck."
@@ -410,9 +411,10 @@
     },
     {
       "asset": "etics-brick-wall-30",
-      "scale": "500",
       "view": "plan",
-      "against": "elevation",
+      "bands": [
+        "500"
+      ],
       "reason": {
         "en": "At 1:500 the wall is one homogeneous block of square face: its top view and its cross-section are the same rectangle.",
         "de": "Bei 1:500 ist die Wand ein homogener Block mit quadratischer Ansichtsfläche: Aufsicht und Querschnitt sind dasselbe Rechteck."
@@ -420,9 +422,10 @@
     },
     {
       "asset": "solid-brick-wall-1960",
-      "scale": "500",
       "view": "plan",
-      "against": "elevation",
+      "bands": [
+        "500"
+      ],
       "reason": {
         "en": "At 1:500 the wall is one homogeneous block of square face: its top view and its cross-section are the same rectangle.",
         "de": "Bei 1:500 ist die Wand ein homogener Block mit quadratischer Ansichtsfläche: Aufsicht und Querschnitt sind dasselbe Rechteck."

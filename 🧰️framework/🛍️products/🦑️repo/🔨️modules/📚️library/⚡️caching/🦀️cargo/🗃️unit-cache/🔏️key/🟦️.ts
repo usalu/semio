@@ -237,7 +237,7 @@ export function toolchainIdentityV1(root:string,inner:readonly string[],environm
  if(environment.SEMIO_UNIT_CACHE_TOOLCHAIN)return environment.SEMIO_UNIT_CACHE_TOOLCHAIN;
  const memo=join(root,"tc-"+sha256V1(inner.join("\0")+"\0"+(environment.RUSTUP_TOOLCHAIN??"")).slice(0,16));
  try{if(Date.now()-statSync(memo).mtimeMs<60000)return readFileSync(memo,"utf8");}catch{}
- const result=spawnSync(inner[0]!,[...inner.slice(1),"-vV"],{encoding:"utf8",env:environment as NodeJS.ProcessEnv});
+ const result=spawnSync(inner[0]!,[...inner.slice(1),"-vV"],{windowsHide:true,encoding:"utf8",env:environment as NodeJS.ProcessEnv});
  if(result.status!==0)throw Error("Compiler identity probe failed");
  mkdirSync(root,{recursive:true});writeFileSync(memo,result.stdout);return result.stdout;
 }
@@ -246,7 +246,7 @@ export function toolchainIdentityV1(root:string,inner:readonly string[],environm
 export function rustSysrootV1(root:string,inner:readonly string[],environment:Readonly<Record<string,string|undefined>>):string|undefined{
  const memo=join(root,"sr-"+sha256V1(inner.join("\0")+"\0"+(environment.RUSTUP_TOOLCHAIN??"")).slice(0,16));
  try{if(Date.now()-statSync(memo).mtimeMs<60000)return readFileSync(memo,"utf8")||undefined;}catch{}
- const result=spawnSync(inner[0]!,[...inner.slice(1),"--print","sysroot"],{encoding:"utf8",env:environment as NodeJS.ProcessEnv});
+ const result=spawnSync(inner[0]!,[...inner.slice(1),"--print","sysroot"],{windowsHide:true,encoding:"utf8",env:environment as NodeJS.ProcessEnv});
  if(result.status!==0)return undefined;
  const sysroot=result.stdout.trim();mkdirSync(root,{recursive:true});writeFileSync(memo,sysroot);return sysroot||undefined;
 }

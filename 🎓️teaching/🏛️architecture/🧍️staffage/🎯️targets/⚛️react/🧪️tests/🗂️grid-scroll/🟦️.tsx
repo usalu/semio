@@ -36,12 +36,19 @@ function installViewport(width: number, height: number, coarse = false): void {
   };
   globalThis.ResizeObserver = class {
     readonly #callback: ResizeObserverCallback;
+    #delivering = false;
     constructor(callback: ResizeObserverCallback) {
       this.#callback = callback;
     }
     observe(target: Element): void {
+      if (this.#delivering) return;
       const box = { x: 0, y: 0, width: view.width, height: view.height, top: 0, left: 0, bottom: view.height, right: view.width, toJSON: () => ({}) };
-      this.#callback([{ target, contentRect: box } as ResizeObserverEntry], this);
+      this.#delivering = true;
+      try {
+        this.#callback([{ target, contentRect: box } as ResizeObserverEntry], this);
+      } finally {
+        this.#delivering = false;
+      }
     }
     unobserve(): void {}
     disconnect(): void {}

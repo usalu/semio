@@ -13,15 +13,69 @@
       "de": "Eine Frau von 1,69 m im marineblauen Badeanzug liegt in der Mittagssonne auf einem gestreiften Strandtuch von 1,80 × 0,90 m: auf dem Rücken mit den Armen neben dem Körper, auf dem Bauch mit zur Seite gedrehtem Kopf und auf die Ellbogen gestützt mit Blick aufs Meer. Die nackte Haut und der dunkle Badeanzug nehmen den Großteil des Sonnenlichts auf, das Tuch liegt auf 45 °C heißem Sand, und eine Schleife zeigt, wie sie sich mit der Hand Luft zufächelt."
     },
     "tags": [
-      "human",
-      "adult",
-      "summer",
-      "beach",
-      "sunbathing",
-      "lying",
-      "swimwear",
-      "towel",
-      "solar-load"
+      {
+        "id": "human",
+        "title": {
+          "en": "human",
+          "de": "Mensch"
+        }
+      },
+      {
+        "id": "adult",
+        "title": {
+          "en": "adult",
+          "de": "erwachsen"
+        }
+      },
+      {
+        "id": "summer",
+        "title": {
+          "en": "summer",
+          "de": "Sommer"
+        }
+      },
+      {
+        "id": "beach",
+        "title": {
+          "en": "beach",
+          "de": "Strand"
+        }
+      },
+      {
+        "id": "sunbathing",
+        "title": {
+          "en": "sunbathing",
+          "de": "Sonnenbaden"
+        }
+      },
+      {
+        "id": "lying",
+        "title": {
+          "en": "lying",
+          "de": "liegend"
+        }
+      },
+      {
+        "id": "swimwear",
+        "title": {
+          "en": "swimwear",
+          "de": "Badebekleidung"
+        }
+      },
+      {
+        "id": "towel",
+        "title": {
+          "en": "towel",
+          "de": "Handtuch"
+        }
+      },
+      {
+        "id": "solar-load",
+        "title": {
+          "en": "solar load",
+          "de": "solare Last"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage human collection worker HW-16",

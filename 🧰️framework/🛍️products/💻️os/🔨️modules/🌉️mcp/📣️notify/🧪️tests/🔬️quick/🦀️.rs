@@ -12,7 +12,7 @@ use semio_os_mcp_routing::routing_and_shell_routed::ArtifactChannels;
 use semio_os_mcp_schema::schema::{compile_validator, validate};
 use semio_os_mcp_server::mcp_server::McpServer;
 use semio_os_mcp_wire::job_registry::{JobStatus, job_registry};
-use semio_os_mcp_wire::notify::{NOTIFICATION_PROGRESS, NotificationSink, ProgressBinding, RecordingSink, ResourceChange, active_progress_binding, artifact_changed, cancel_request, changes_from_tool_result, decode_cursor, encode_cursor, enter_progress_scope, enter_request_scope, job_progress_changed, jobs_for_request, notification_slot, paginate, resource_update_broker};
+use semio_os_mcp_wire::notify::{answer_active_call, NOTIFICATION_PROGRESS, NotificationSink, ProgressBinding, RecordingSink, ResourceChange, active_progress_binding, artifact_changed, cancel_request, changes_from_tool_result, decode_cursor, encode_cursor, enter_progress_scope, enter_request_scope, job_progress_changed, jobs_for_request, notification_slot, paginate, resource_update_broker};
 use semio_os_mcp_wire::protocol::{JsonRpcId, JsonRpcNotification, JsonRpcRequest, NOTIFICATION_RESOURCES_UPDATED, intercept_cancellation};
 #[cfg(any(test, feature = "testkit"))]
 use semio_os_mcp_capabilities::source_builders::note_and_cad_source;
@@ -251,14 +251,14 @@ fn a_job_minted_outside_a_progress_scope_publishes_nothing() {
     assert!(!job_progress_changed(&job_id, 0.5, None));
 }
 
-/// 🧹️ Terminal transition publishes the last row and releases the binding.
+/// 🧹️ A terminal transition pushes no row and releases the binding.
 #[test]
 fn a_job_minted_inside_a_progress_scope_pushes_notifications_progress() {
     let sink = Arc::new(RecordingSink::new());
     let slot = notification_slot();
     slot.set(sink.clone() as Arc<dyn NotificationSink>).ok().expect("a fresh slot is empty");
     let job_id = {
-        let _scope = enter_progress_scope(Some(ProgressBinding { token: serde_json::json!("tok-m5b-1"), slot: slot.clone() }));
+        let _scope = enter_progress_scope(Some(ProgressBinding::new(serde_json::json!("tok-m5b-1"), slot.clone())));
         let job_id = job_registry().begin("m5b-scoped");
         job_registry().report_progress(&job_id, 0.25, Some("quarter".to_string()));
         job_registry().report_progress(&job_id, 0.75, None);
@@ -273,17 +273,17 @@ fn a_job_minted_inside_a_progress_scope_pushes_notifications_progress() {
     assert_eq!(rows[1].params.as_ref().and_then(|params| params.get("progress")), Some(&serde_json::json!(0.75)));
     job_registry().succeed(&job_id, serde_json::json!({}));
     let terminal = sink.taken();
-    assert_eq!(terminal.iter().filter(|notification| notification.method == NOTIFICATION_PROGRESS).count(), 1);
+    assert_eq!(terminal.iter().filter(|notification| notification.method == NOTIFICATION_PROGRESS).count(), 0, "a terminal transition pushed a progress row");
     assert!(!job_progress_changed(&job_id, 1.0, None), "a terminal job's binding was not released");
 }
 
 #[test]
 fn a_progress_scope_restores_the_one_it_replaced() {
     let slot = notification_slot();
-    let outer = ProgressBinding { token: serde_json::json!("outer"), slot: slot.clone() };
+    let outer = ProgressBinding::new(serde_json::json!("outer"), slot.clone());
     let _outer_scope = enter_progress_scope(Some(outer));
     {
-        let _inner = enter_progress_scope(Some(ProgressBinding { token: serde_json::json!("inner"), slot }));
+        let _inner = enter_progress_scope(Some(ProgressBinding::new(serde_json::json!("inner"), slot)));
         assert_eq!(active_progress_binding().map(|binding| binding.token), Some(serde_json::json!("inner")));
     }
     assert_eq!(active_progress_binding().map(|binding| binding.token), Some(serde_json::json!("outer")));
@@ -307,7 +307,7 @@ fn notifications_cancelled_requests_cancel_of_every_job_minted_under_that_reques
     let request_id = serde_json::json!(4242);
     let job_id = {
         let _request = enter_request_scope(Some(&request_id));
-        let _scope = enter_progress_scope(Some(ProgressBinding { token: serde_json::json!("tok-m5b-3"), slot }));
+        let _scope = enter_progress_scope(Some(ProgressBinding::new(serde_json::json!("tok-m5b-3"), slot)));
         let job_id = job_registry().begin("m5b-cancellable");
         job_registry().report_progress(&job_id, 0.1, None);
         job_id
@@ -447,3 +447,50 @@ fn a_published_route_family_is_relative_and_lower_case_only() {
     }
 }
 
+
+/// 📈️ Replays the language-neutral progress lifecycle corpus against the real job registry and notification lane.
+#[test]
+fn the_progress_lifecycle_corpus_holds() {
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🔣️.json")).expect("the corpus is valid JSON");
+    for scenario in corpus["scenarios"].as_array().expect("scenarios") {
+        let sink = Arc::new(RecordingSink::new());
+        let slot = notification_slot();
+        slot.set(sink.clone() as Arc<dyn NotificationSink>).ok().expect("a fresh slot is empty");
+        let mut jobs: BTreeMap<String, String> = BTreeMap::new();
+        let mut call: Option<(semio_os_mcp_wire::notify::RequestScope, semio_os_mcp_wire::notify::ProgressScope)> = None;
+        for step in scenario["steps"].as_array().expect("steps") {
+            if let Some(token) = step.get("call") {
+                call = Some((enter_request_scope(Some(&serde_json::json!(format!("corpus-{}", scenario["name"])))), enter_progress_scope(Some(ProgressBinding::new(token.clone(), slot.clone())))));
+            } else if let Some(name) = step.get("job").and_then(serde_json::Value::as_str) {
+                jobs.insert(name.to_string(), job_registry().begin("corpus"));
+            } else if let Some(name) = step.get("report").and_then(serde_json::Value::as_str) {
+                job_registry().report_progress(&jobs[name], step["progress"].as_f64().expect("progress"), step.get("message").and_then(serde_json::Value::as_str).map(str::to_string));
+            } else if let Some(name) = step.get("finish").and_then(serde_json::Value::as_str) {
+                job_registry().succeed(&jobs[name], serde_json::json!({}));
+            } else if step.get("answer").is_some() {
+                answer_active_call();
+                call = None;
+            }
+        }
+        drop(call);
+        let rows: Vec<serde_json::Value> = sink.taken().into_iter().filter(|notification| notification.method == NOTIFICATION_PROGRESS).map(|notification| notification.params.expect("progress params")).collect();
+        assert_eq!(serde_json::Value::Array(rows), scenario["rows"], "scenario {}", scenario["name"]);
+        for job in jobs.values() {
+            job_registry().mark_cancelled(job);
+        }
+    }
+}
+
+/// 🚦️ The response never shares a read with the last pushed row: answering waits out the declared gap.
+#[test]
+fn answering_waits_out_the_gap_since_the_last_row() {
+    let sink = Arc::new(RecordingSink::new());
+    let slot = notification_slot();
+    slot.set(sink.clone() as Arc<dyn NotificationSink>).ok().expect("a fresh slot is empty");
+    let _scope = enter_progress_scope(Some(ProgressBinding::new(serde_json::json!(1), slot)));
+    assert!(semio_os_mcp_wire::notify::publish_call_progress(0.0, "begin"));
+    let started = std::time::Instant::now();
+    answer_active_call();
+    assert!(started.elapsed() >= std::time::Duration::from_millis(20), "answered {:?} after the last row", started.elapsed());
+    assert!(!semio_os_mcp_wire::notify::publish_call_progress(0.5, "late"), "a row was pushed after the call was answered");
+}

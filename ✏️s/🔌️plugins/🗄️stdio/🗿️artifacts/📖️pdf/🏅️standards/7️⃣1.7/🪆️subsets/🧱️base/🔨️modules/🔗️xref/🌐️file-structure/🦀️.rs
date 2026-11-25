@@ -111,6 +111,15 @@ impl PdfFileStructureCursor {
         }
     }
 
+    /// 🏃️ Bytes the next unit writes when it is a run unit: a header byte or the cross-reference structure's own run unit.
+    pub fn run_write_bytes(&self) -> Option<usize> {
+        match self.phase {
+            Phase::Header => Some(1),
+            Phase::Xref => self.xref.as_ref()?.run_write_bytes(),
+            _ => None,
+        }
+    }
+
     /// 🛟️ Uses the reference decoder when the enclosing caller permits compatibility work.
     pub fn recover_compatible(&mut self, source: &[u8]) -> bool {
         let Some(cursor) = self.xref.as_mut() else { return false; };

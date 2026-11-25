@@ -154,7 +154,7 @@ fn earth_pressure_movement_inconsistency_fails() {
     doc.retaining_walls[0].wall_movement = semio_s_artifact_norm_en1997_model::WallMovement::Free;
     let report_ok = check_project(&doc);
     let ok = report_ok.checks.iter().find(|c| c.id.contains("earthPressure")).unwrap();
-    assert_eq!(ok.status, CheckStatus::Pass);
+    assert_verdict_up_to_the_basis(ok, CheckStatus::Pass);
 }
 
 #[test]
@@ -189,6 +189,7 @@ fn phi_investigation_correlation_numeric() {
         oedometric_modulus: 40e6,
         poisson_ratio: 0.3,
         cpt_qc: 8_000_000.0,
+        cpt_nkt: 0.0,
         spt_n: 18.0,
     };
     let (phi_inv, src) = part_2::investigation_phi_deg(&layer, 76_000.0).expect("investigation");
@@ -309,6 +310,9 @@ fn typed_facets_have_no_unknown_and_match_rust_fields() {
     assert!(proto.contains("SoilLayer") && proto.contains("SpreadFoundation"), "proto facet drift");
 }
 
+/// 🎬️ Leaves that only shape the scene (the anchor head depth and the thickness of the embedded wall are drawn, no check reads them); the leaf law asserts they still change no check, so an entry goes the day a check reads it.
+const SCENE_ONLY_LEAVES: [&str; 2] = ["anchors[0].headDepth", "embeddedWalls[0].thickness"];
+
 #[test]
 fn perturb_every_editable_leaf_changes_some_check() {
     let base = compliant_demo();
@@ -392,8 +396,9 @@ fn perturb_every_editable_leaf_changes_some_check() {
         false
     }
 
-    let mut unchanged = Vec::new();
-    for (path, cur) in &leaves {
+    let schema: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(family_any_dir().join("🧬️schema").join("📸️snapshot").join("🔣️.json")).expect("snapshot schema")).expect("schema json");
+    let enums: Vec<Vec<String>> = schema["$defs"].as_object().expect("defs").values().filter_map(|definition| definition["enum"].as_array()).map(|domain| domain.iter().filter_map(|value| value.as_str().map(str::to_owned)).collect()).collect();
+    let changes_a_check = |origin: &En1997Snapshot, origin_sig: &[(String, String, i64, i64, i64)], path: &str, cur: &serde_json::Value| -> bool {
         let parts: Vec<&str> = path.split('.').collect();
         let candidates: Vec<serde_json::Value> = match cur {
             serde_json::Value::Number(n) => {
@@ -433,36 +438,81 @@ fn perturb_every_editable_leaf_changes_some_check() {
                     .map(|a| serde_json::json!(a))
                     .collect();
                 if path.contains("governingLayerId") {
-                    for l in &base.layers {
+                    for l in &origin.layers {
                         if l.id != *s {
                             out.insert(0, serde_json::json!(l.id));
                         }
                     }
                     out.push(serde_json::json!("missing-layer-x"));
                 }
+                for domain in enums.iter().filter(|domain| domain.contains(s)) {
+                    for value in domain.iter().filter(|value| *value != s) {
+                        out.insert(0, serde_json::json!(value));
+                    }
+                }
                 out.push(serde_json::json!(format!("{s}-x")));
                 out
             }
-            _ => continue,
+            _ => return false,
         };
-        let mut changed = false;
-        for nv in candidates {
-            let mut tree = serde_json::to_value(&base).unwrap();
-            if !set_at(&mut tree, &parts, nv) {
-                continue;
-            }
-            let Ok(perturbed) = serde_json::from_value::<En1997Snapshot>(tree) else {
-                continue;
-            };
-            if sig(&check_project(&perturbed)) != base_sig {
-                changed = true;
-                break;
-            }
+        candidates.into_iter().any(|nv| {
+            let mut tree = serde_json::to_value(origin).unwrap();
+            set_at(&mut tree, &parts, nv) && serde_json::from_value::<En1997Snapshot>(tree).is_ok_and(|perturbed| sig(&check_project(&perturbed)) != origin_sig)
+        })
+    };
+    type Setup = fn(&mut En1997Snapshot);
+    let scenarios: [(&[&str], Setup); 7] = [
+        (
+            &["piles[0].dynamicTestCount", "piles[0].dynamicResistanceMean", "piles[0].dynamicResistanceMin", "piles[0].hammerEfficiency", "piles[0].hammerWeight", "piles[0].dropHeight", "piles[0].setPerBlow", "piles[0].elasticCompression"],
+            |d| {
+                let pile = &mut d.piles[0];
+                (pile.dynamic_test_count, pile.dynamic_resistance_mean, pile.dynamic_resistance_min) = (5.0, 2.0e6, 1.8e6);
+                (pile.hammer_efficiency, pile.hammer_weight, pile.drop_height, pile.set_per_blow, pile.elastic_compression) = (0.8, 60_000.0, 1.2, 0.004, 0.012);
+            },
+        ),
+        (&["piles[0].negativeFrictionBeta"], |d| d.piles[0].settling_thickness = 4.0),
+        (&["retainingWalls[0].reinforcementFriction", "retainingWalls[0].reinforcementSpacing", "retainingWalls[0].reinforcementWidth"], |d| {
+            let wall = &mut d.retaining_walls[0];
+            (wall.reinforcement_spacing, wall.reinforcement_friction, wall.reinforcement_width) = (0.75, 0.6, 0.1);
+        }),
+        (&["retainingWalls[0].seismicKv"], |d| d.retaining_walls[0].seismic_kh = 0.1),
+        (&["slopes[0].circleCentreX", "slopes[0].circleCentreZ"], |d| {
+            let slope = &mut d.slopes[0];
+            (slope.circle_centre_x, slope.circle_centre_z, slope.circle_radius) = (6.0, 10.0, 12.5);
+        }),
+        (
+            &["labTests[0].compressionIndex", "labTests[0].consolidationTime", "labTests[0].designLife", "labTests[0].drainageHeight", "labTests[0].preloadStress", "labTests[0].secondaryCompressionIndex", "labTests[0].stressIncrement", "labTests[0].swellingIndex", "labTests[0].voidRatio"],
+            |d| {
+                let test = &mut d.lab_tests[0];
+                test.kind = semio_s_artifact_norm_en1997_model::LabTestKind::Oedometer;
+                (test.compression_index, test.swelling_index, test.stress_increment, test.secondary_compression_index) = (0.3, 0.03, 80_000.0, 0.01);
+                (test.drainage_height, test.consolidation_time, test.design_life) = (1.5, 1.0e7, 3.0e8);
+            },
+        ),
+        (&["layerWaters[0].wellCapacity", "layerWaters[0].influenceRadius", "layerWaters[0].wellRadius", "layerWaters[0].wellWaterDepth"], |d| {
+            let water = &mut d.layer_waters[0];
+            (water.well_radius, water.well_water_depth) = (0.3, 15.0);
+        }),
+    ];
+    let mut unchanged = Vec::new();
+    for (path, cur) in &leaves {
+        if changes_a_check(&base, &base_sig, path, cur) {
+            continue;
         }
-        if !changed {
+        let activated = scenarios.iter().find(|(paths, _)| paths.contains(&path.as_str())).is_some_and(|(_, setup)| {
+            let mut doc = base.clone();
+            setup(&mut doc);
+            let doc_sig = sig(&check_project(&doc));
+            let tree = serde_json::to_value(&doc).unwrap();
+            let pointer = format!("/{}", path.replace('[', "/").replace(']', "").replace('.', "/"));
+            tree.pointer(&pointer).is_some_and(|value| changes_a_check(&doc, &doc_sig, path, value))
+        });
+        if !activated {
             unchanged.push(path.clone());
         }
     }
+    assert!(SCENE_ONLY_LEAVES.iter().all(|leaf| unchanged.iter().any(|path| path.as_str() == *leaf)), "a scene-only leaf now changes a check: drop it from SCENE_ONLY_LEAVES");
+    unchanged.retain(|path| !SCENE_ONLY_LEAVES.contains(&path.as_str()));
     let mut r4 = compliant_demo();
     r4.design_approach = semio_s_artifact_norm_en1997_model::ApproachChoice::Da1Geo;
     let mut r4_driven = r4.clone();

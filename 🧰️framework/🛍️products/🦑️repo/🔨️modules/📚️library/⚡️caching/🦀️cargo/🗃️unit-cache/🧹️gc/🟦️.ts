@@ -5,6 +5,7 @@ import {pruneEntriesV1,recordEvictionV1} from "../💾️store/🟦️.ts";
 import {listLanesV1,removeLaneV1} from "../🧵️lane/🟦️.ts";
 import {ensureBallastV1,tryClaimWithBallastV1} from "./🛟️ballast/🟦️.ts";
 import {collectIncrementalV1,type IncrementalReportV1} from "./🌱️incremental/🟦️.ts";
+import {collectTemporariesV1} from "./🗑️temporaries/🟦️.ts";
 import {collectUnitsV1,measureUnitsV1,unitProfilesV1} from "./🧱️units/🟦️.ts";
 import {recordFillSampleV1} from "./📈️fill/🟦️.ts";
 import {pruneAdmissionsV1} from "./📖️admissions/🟦️.ts";
@@ -14,7 +15,7 @@ import {measureNativeImageShardRootV1,nativeImageShardVolumeFactsV1} from "../..
 
 const policy=UNIT_CACHE_POLICY_V1.gc,layout=UNIT_CACHE_POLICY_V1.layout;
 /** 🧮️ One measured lane. */
-export type GcLaneV1=Readonly<{id:string;bytes:number;incrementalBytes:number;lastUsedMs:number;live:boolean;retained?:boolean}>;
+export type GcLaneV1=Readonly<{id:string;bytes:number;incrementalBytes:number;temporariesBytes?:number;lastUsedMs:number;live:boolean;retained?:boolean}>;
 /** 📥️ The measured state of one cache root: `capacityBytes` is the share basis of its parts, `volumeBytes` and `freeBytes` are the image the root lives in, `demandBytes` is what waiting compiles still need freed whatever the water marks say (the headroom they were refused for). */
 export type GcInputV1=Readonly<{capacityBytes:number;volumeBytes:number;freeBytes:number;nowMs:number;lanes:readonly GcLaneV1[];demandBytes?:number}>;
 /** 🚦️ What a command that just looked at the image's free space does about the unit cache. */
@@ -111,17 +112,18 @@ export async function applyGcYieldingV1(root:string,plan:GcPlanV1,nowMs:number,o
 }
 
 /** 🌱️ What a collection removed: lanes, lane incremental sets, the incremental sessions of the build and target directories, the stale build units and the cache entries that are stale against the synchronized tree. */
-export type GcAppliedV1={lanes:number;incremental:number;sessions:number;units:number;retired?:number};
+export type GcAppliedV1={lanes:number;incremental:number;sessions:number;units:number;retired?:number;temporaries?:number};
 
-/** 🚰️ Collects once at a time: a second collector finds the claim taken and reports `running` instead of racing the first. The incremental sessions of every build, target and lane directory of the image go first (lock-aware, least recently used first, they regrow within hours), then lanes and objects are planned on what the image looks like afterwards. `demandBytes` is what waiting compiles need freed beyond the water marks: it raises the need of every stage, and the stages stop as soon as it is met. */
+/** 🚰️ Collects once at a time: a second collector finds the claim taken and reports `running` instead of racing the first. Under need the compiler temporaries of every lane go first (garbage no compiler reads, no rebuild cost; kept while space is plentiful, debuggers read them), then the incremental sessions of every build, target and lane directory of the image go first (lock-aware, least recently used first, they regrow within hours), then lanes and objects are planned on what the image looks like afterwards. `demandBytes` is what waiting compiles need freed beyond the water marks: it raises the need of every stage, and the stages stop as soon as it is met. */
 export async function collectGarbageSingleFlightV1(root:string,capacityBytes:number,options:Readonly<{signal?:AbortSignal;progress?:(done:number,total:number)=>void;nowMs?:number;report?:IncrementalReportV1;volume?:(root:string,capacityBytes:number)=>VolumeFactsV1;demandBytes?:number}>={}):Promise<{running:true}|{running:false;plan:GcPlanV1;applied:GcAppliedV1}>{
  const measure=options.volume??measureVolumeV1,claim=tryClaimWithBallastV1(join(root,layout.locks),policy.collectorClaim);if(!claim)return{running:true};
  try{
-  const nowMs=options.nowMs??Date.now(),demand=Math.max(0,options.demandBytes??0),start=measure(root,capacityBytes);let sessions=0,units=0,retired=0;
+  const nowMs=options.nowMs??Date.now(),demand=Math.max(0,options.demandBytes??0),start=measure(root,capacityBytes);let sessions=0,units=0,retired=0,temporaries=0;
   if(basename(root)==="u")retired=await retireLocalStaleUnitsV1(root,nowMs,options.signal);
   if(basename(root)==="u"){
    const before=start,need=Math.max(gcNeedBytesV1(before.volumeBytes,before.freeBytes),demand);
-   const result=await collectIncrementalV1(dirname(root),{dryRun:false,volumeBytes:before.volumeBytes,needBytes:()=>need,satisfied:()=>need>0&&measure(root,capacityBytes).freeBytes-before.freeBytes>=need,nowMs,signal:options.signal,report:options.report});
+   if(need>0)temporaries=(await collectTemporariesV1(root,{dryRun:false,needBytes:()=>need,satisfied:()=>measure(root,capacityBytes).freeBytes-before.freeBytes>=need,signal:options.signal,progress:options.progress,report:options.report})).removedFiles;
+   const result=await collectIncrementalV1(dirname(root),{dryRun:false,volumeBytes:before.volumeBytes,needBytes:()=>Math.max(0,need-Math.max(0,measure(root,capacityBytes).freeBytes-before.freeBytes)),satisfied:()=>need>0&&measure(root,capacityBytes).freeBytes-before.freeBytes>=need,nowMs,signal:options.signal,report:options.report});
    sessions=result.removed.length;
    const middle=measure(root,capacityBytes),remaining=Math.max(gcNeedBytesV1(middle.volumeBytes,middle.freeBytes),demand-(middle.freeBytes-before.freeBytes)),stamp=join(root,policy.unitStamp);let last=0;try{last=statSync(stamp).mtimeMs;}catch{}
    if(remaining>0||nowMs-last>=policy.unitIntervalMilliseconds){
@@ -130,7 +132,7 @@ export async function collectGarbageSingleFlightV1(root:string,capacityBytes:num
     units=result.removed.length;recordFillSampleV1(root,{atMs:nowMs,freeBytes:after.freeBytes,volumeBytes:after.volumeBytes,profiles:result.profiles});
    }
   }
-  const measured=measureGcV1(root,capacityBytes,nowMs,measure),plan=planGcV1({...measured,demandBytes:Math.max(0,demand-(measured.freeBytes-start.freeBytes))}),applied={...await applyGcYieldingV1(root,plan,nowMs,options),sessions,units,retired};recordEvictionV1(root,{sessions,units,retired});
+  const measured=measureGcV1(root,capacityBytes,nowMs,measure),plan=planGcV1({...measured,demandBytes:Math.max(0,demand-(measured.freeBytes-start.freeBytes))}),applied={...await applyGcYieldingV1(root,plan,nowMs,options),sessions,units,retired,temporaries};recordEvictionV1(root,{sessions,units,retired});
   await pruneAdmissionsV1(root,nowMs,{retentionMs:policy.admissionRetentionMilliseconds,temporaryMs:policy.admissionTemporaryMilliseconds,maximumBytes:Math.floor(capacityBytes*policy.admissionShare)},options.signal);
   return{running:false,plan,applied};
  }finally{claim.release();ensureBallastV1(root);}
@@ -155,7 +157,7 @@ export async function watchUnitCachePressureV1(root:string,capacityBytes:number,
     quietSince=null;
     if(at>=retryAt){
      const result=await collect(root,capacityBytes,{nowMs:at,signal:options.signal,report:options.report});collections++;
-     const after=measure(root,capacityBytes),gained=Math.max(0,after.freeBytes-before.freeBytes);freedBytes+=gained;idle=!result.running&&result.applied.lanes+result.applied.incremental+result.applied.sessions+result.applied.units>0?0:idle+1;
+     const after=measure(root,capacityBytes),gained=Math.max(0,after.freeBytes-before.freeBytes);freedBytes+=gained;idle=!result.running&&result.applied.lanes+result.applied.incremental+result.applied.sessions+result.applied.units+(result.applied.temporaries??0)>0?0:idle+1;
      if(idle>=policy.watchStalledRounds)return{state:"done",reason:"stalled",rounds,collections,freedBytes};
      retryAt=idle===0?at:now()+policy.watchPollMilliseconds;
     }
@@ -172,12 +174,13 @@ export async function watchUnitCachePressureV1(root:string,capacityBytes:number,
  finally{claim.release();}
 }
 
-/** 🛟️ Frees at least `needBytes` of the image before a build's storage reservation would refuse: incremental sessions first, then stale build units, both lock-aware and least recently used first, one collector at a time (a second caller returns 0 and measures again). Returns the bytes the image gained. */
+/** 🛟️ Frees at least `needBytes` of the image before a build's storage reservation would refuse: compiler temporaries first, then incremental sessions, then stale build units, both lock-aware and least recently used first, one collector at a time (a second caller returns 0 and measures again). Returns the bytes the image gained. */
 export async function reclaimUnitStorageV1(store:string,needBytes:number,options:Readonly<{signal?:AbortSignal;report?:IncrementalReportV1;capacityBytes?:number}>={}):Promise<number>{
  const root=join(store,"u"),claim=tryClaimWithBallastV1(join(root,layout.locks),policy.collectorClaim);if(!claim)return 0;
  try{
-  const before=measureVolumeV1(store,1);
-  await collectIncrementalV1(store,{dryRun:false,volumeBytes:before.volumeBytes,needBytes:()=>needBytes,satisfied:()=>measureVolumeV1(store,1).freeBytes-before.freeBytes>=needBytes,signal:options.signal,report:options.report});
+  const before=measureVolumeV1(store,1),gained=()=>Math.max(0,measureVolumeV1(store,1).freeBytes-before.freeBytes);
+  const temporaries=await collectTemporariesV1(root,{dryRun:false,needBytes:()=>needBytes,satisfied:()=>gained()>=needBytes,signal:options.signal,report:options.report});
+  if(temporaries.removedFiles===0||gained()<needBytes)await collectIncrementalV1(store,{dryRun:false,volumeBytes:before.volumeBytes,needBytes:()=>Math.max(0,needBytes-gained()),satisfied:()=>gained()>=needBytes,signal:options.signal,report:options.report});
   const middle=measureVolumeV1(store,1).freeBytes-before.freeBytes;
   if(middle<needBytes||options.capacityBytes!==undefined)await collectUnitsV1(store,{dryRun:false,needBytes:()=>Math.max(0,needBytes-middle),budgetBytes:options.capacityBytes===undefined?undefined:unitBudgetBytesV1(options.capacityBytes),satisfied:()=>measureVolumeV1(store,1).freeBytes-before.freeBytes>=needBytes,signal:options.signal,report:options.report});
   return Math.max(0,measureVolumeV1(store,1).freeBytes-before.freeBytes);

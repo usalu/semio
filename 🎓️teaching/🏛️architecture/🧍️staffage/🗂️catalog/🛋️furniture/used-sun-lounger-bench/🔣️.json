@@ -13,19 +13,97 @@
    "de": "Eine fest eingebaute Parkliege nach vielen Sommern in einem deutschen Stadtpark: 24 vergraute Robinienlatten auf zwei gebogenen Flachstahlholmen, 2,0 m lang und 0,7 m breit, Kopfende 0,76 m, Liegefläche 0,37 m, auf zwei duplexbeschichteten Stahljochen, die auf Streifenfundamente im Rasen geschraubt sind. Die Latten unter Schultern und Hüften sind glatt und heller abgenutzt, einige gerissen, eine gespalten; die Beschichtung kreidet und blättert, die Füße rosten, ein Mäher hat einen Fußpfosten verbeult und der nahe Holm trägt ein Graffiti-Tag und Aufkleberreste. Der Bauhof hebt das Gestell an vier Hebebändern aus und lässt die Fundamente zurück; in Benutzung liegt eine sonnenbadende Person mit 80 kg in der Mittagssonne auf den heißen Latten."
   },
   "tags": [
-   "used",
-   "park",
-   "public-space",
-   "seating",
-   "lounger",
-   "sun-lounger",
-   "street-furniture",
-   "timber",
-   "robinia",
-   "steel",
-   "flat-bar",
-   "footing",
-   "weathered"
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "park",
+    "title": {
+     "en": "park",
+     "de": "Park"
+    }
+   },
+   {
+    "id": "public-space",
+    "title": {
+     "en": "public space",
+     "de": "öffentlicher Raum"
+    }
+   },
+   {
+    "id": "seating",
+    "title": {
+     "en": "seating",
+     "de": "Sitzmöbel"
+    }
+   },
+   {
+    "id": "lounger",
+    "title": {
+     "en": "lounger",
+     "de": "Liege"
+    }
+   },
+   {
+    "id": "sun-lounger",
+    "title": {
+     "en": "sun lounger",
+     "de": "Sonnenliege"
+    }
+   },
+   {
+    "id": "street-furniture",
+    "title": {
+     "en": "street furniture",
+     "de": "Stadtmobiliar"
+    }
+   },
+   {
+    "id": "timber",
+    "title": {
+     "en": "timber",
+     "de": "Holz"
+    }
+   },
+   {
+    "id": "robinia",
+    "title": {
+     "en": "robinia",
+     "de": "Robinie"
+    }
+   },
+   {
+    "id": "steel",
+    "title": {
+     "en": "steel",
+     "de": "Stahl"
+    }
+   },
+   {
+    "id": "flat-bar",
+    "title": {
+     "en": "flat bar",
+     "de": "Flachstahl"
+    }
+   },
+   {
+    "id": "footing",
+    "title": {
+     "en": "footing",
+     "de": "Fundament"
+    }
+   },
+   {
+    "id": "weathered",
+    "title": {
+     "en": "weathered",
+     "de": "verwittert"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content (used park objects wave, row 05)",

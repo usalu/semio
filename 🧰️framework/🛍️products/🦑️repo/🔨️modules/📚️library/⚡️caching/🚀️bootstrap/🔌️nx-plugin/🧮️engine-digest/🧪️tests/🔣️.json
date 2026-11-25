@@ -71,9 +71,9 @@
    "native": "unchanged"
   },
   {
-   "role": "preflight",
+   "role": "doctor",
    "select": {
-    "prefix": "🏗️build/🩺️preflight/"
+    "prefix": "🏗️build/🩺️doctor/"
    },
    "generic": "unchanged",
    "native": "unchanged"
@@ -234,8 +234,7 @@
  "spawnOnly": {
   "mustLeave": [
    "🏗️build/📜️script.ts",
-   "🏗️build/🚪️door/🔄️restart/🟦️.ts",
-   "🏗️build/🩺️doctor/🟦️.ts"
+   "🏗️build/🚪️door/🔄️restart/🟦️.ts"
   ],
   "mustStay": [
    "🟨️.mjs",

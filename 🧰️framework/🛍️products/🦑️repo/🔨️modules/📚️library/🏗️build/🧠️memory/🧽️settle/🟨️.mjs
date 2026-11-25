@@ -1,6 +1,7 @@
 import{createMemoryPortsV1,selectGraphMemoryLanguagesV1}from"../🟨️.mjs";
 import{planStageLimitBytesV1}from"../🪜️plan-stage/🟨️.mjs";
 import{boundedCacheStatsV1}from"../../🧊️bounded/🟨️.mjs";
+import{collectSliceCollectionsV1,registerSliceCollectionsV1}from"../📋️slice-report/🟨️.mjs";
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
 
 const freeze=value=>{if(value!==null&&typeof value==="object"){for(const child of Object.values(value))freeze(child);Object.freeze(value);}return value;};
@@ -40,8 +41,24 @@ export async function settleGraphMemoryV1({release,ports=createMemoryPortsV1(),r
  return result;
 }
 
+/** 🧮️ Every collection a graph read holds across owners (the bounded caches and the collections the parts of the read registered), as `{name, entries, bytes}`. */
+function retainedCollectionsV1(){return[...boundedCacheStatsV1(),...collectSliceCollectionsV1().map(row=>({name:row.name,entries:row.entries,bytes:row.estimatedBytes}))];}
+
+let registeredV1=false;
+/** 🔌️ Registers once per process the collections of the observation, the string interner and the script closures with the report of retained memory, so the whole read (not only a slice worker) names what a wave leaves behind.
+ * @see ../../🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts the same four sources of the slice worker */
+export async function registerRetainedCollectionsV1(){
+ if(registeredV1)return;registeredV1=true;
+ try{
+  const[{observationCollectionsV1},{graphStringInternerV1},{closureCollectionsV1}]=await Promise.all([import("../../👁️observation/🟨️.mjs"),import("../🟨️.mjs"),import("../../🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs")]);
+  registerSliceCollectionsV1("observation",()=>observationCollectionsV1());
+  registerSliceCollectionsV1("interner",()=>{const row=graphStringInternerV1.stats();return[{name:"memory:graphStringInterner",entries:row.entries,bytes:row.characters*2+row.entries*48}];});
+  registerSliceCollectionsV1("closure",()=>closureCollectionsV1());
+ }catch{registeredV1=false;}
+}
+
 /** 🔎️ Logs, between two waves of one read, the managed and resident megabytes and the bounded caches that hold the most bytes, so the log names what a wave leaves behind; quiet on a machine without a plan limit. */
-export function reportRetainedGraphMemoryV1({ports=createMemoryPortsV1(),resident=()=>process.memoryUsage().rss,environment=process.env,report=stderrLine,limitBytes=planStageLimitBytesV1(environment),stats=boundedCacheStatsV1}={}){
+export function reportRetainedGraphMemoryV1({ports=createMemoryPortsV1(),resident=()=>process.memoryUsage().rss,environment=process.env,report=stderrLine,limitBytes=planStageLimitBytesV1(environment),stats=retainedCollectionsV1}={}){
  if(quiet(environment,limitBytes))return;
  const caches=stats().filter(row=>row.entries>0).sort((a,b)=>b.bytes-a.bytes||b.entries-a.entries).slice(0,SETTLE_POLICY_V1.censusCaches).map(row=>row.name+" "+row.entries+" entries "+megabytes(row.bytes)+" MB").join(", ")||"-";
  for(const line of renderSettleMessageV1("retained",{managed:megabytes(ports.sample()),resident:megabytes(resident()),caches},environment))report(line);

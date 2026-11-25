@@ -13,11 +13,41 @@
       "de": "Ein 5,5 m langer Stahlträger IPE 160 (S355) eines Vordachs mit Glasdeckung, über eine thermisch getrennte Platte gelenkig in Türsturzhöhe (Trägerunterkante 2,25 m) an einer außengedämmten Betonwand gelagert und durch einen beidseitig gelenkig angeschlossenen Rohrstab zur Wand darüber gehalten; er trägt Schnee auf Zug und Windsog auf Druck."
     },
     "tags": [
-      "component",
-      "structural",
-      "canopy",
-      "tie",
-      "steel"
+      {
+        "id": "component",
+        "title": {
+          "en": "component",
+          "de": "Bauteil"
+        }
+      },
+      {
+        "id": "structural",
+        "title": {
+          "en": "structural",
+          "de": "tragend"
+        }
+      },
+      {
+        "id": "canopy",
+        "title": {
+          "en": "canopy",
+          "de": "Vordach"
+        }
+      },
+      {
+        "id": "tie",
+        "title": {
+          "en": "tie",
+          "de": "Zugband"
+        }
+      },
+      {
+        "id": "steel",
+        "title": {
+          "en": "steel",
+          "de": "Stahl"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage component authors",

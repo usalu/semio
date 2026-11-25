@@ -1,3 +1,4 @@
+#[path="rows.rs"]mod rows;
 use semio_framework_test_fixtures::fixture_text;
 use crate::*;
 use crate::{DslValue,shared_issuance::SealedShared,retained_clone::RetainedCloneSource};
@@ -17,6 +18,17 @@ fn finish(mut receiver:<Row as NativeReceive<DslValue>>::Receiver,source:Retaine
   if receiver.output_ready(){observed=turns;let row=driver::receive_cut(&mut receiver,original.borrow(),&mut bank,BODY,None).unwrap().expect("uncut receive publishes");assert_eq!(serde_json::json!({"id":row.id.as_str(),"name":row.name.as_str(),"value":row.value}),law["expected"]);driver::retire(row,&mut bank);}
   driver::close(&mut receiver,&mut bank,BODY);assert!(receiver.terminal_is_empty());drop(receiver);driver::close_source(original,&mut bank);driver::close_source(foreign,&mut bank);if observed>0&&cut>observed{break}
  }assert!(observed>0);
+}
+/// 🔨️ LAW: one derived record of two shared strings and one scalar publishes within its pinned receiving steps and copied bytes, because every field slot checks the record's own source alias instead of binding another. The budget is shared with the TS twin.
+#[test]fn native_receive_row_steps_per_record_never_exceed_the_pinned_budget(){
+ let law:serde_json::Value=serde_json::from_str(fixture_text!("../../🧪️tests/🧫️fixtures/📐️.json")).unwrap();
+ let mut bank=bank();let original=driver::admit(&mut bank,input());let mut receiver=Row::receiver();let start=bank.wallet().remaining().maximum_copy_bytes;let mut steps=0u64;
+ while !receiver.output_ready(){driver::none(driver::receive_cut(&mut receiver,original.borrow(),&mut bank,BODY,Some(1))).unwrap();steps+=1;assert!(steps<10_000)}
+ let copied=start-bank.wallet().remaining().maximum_copy_bytes;
+ let row=driver::receive_cut(&mut receiver,original.borrow(),&mut bank,BODY,None).unwrap().expect("uncut receive publishes");driver::retire(row,&mut bank);finish(receiver,original,&mut bank);
+ let budget=&law["stepsPerRecord"];
+ assert!(steps<=budget["ceilingSteps"].as_u64().unwrap(),"{steps} steps");
+ assert!(copied as u64<=budget["ceilingCopyBytes"].as_u64().unwrap(),"{copied} copied bytes");
 }
 #[test]fn native_receive_constructor_and_output_denials_preserve_exact_owner(){
  let mut bank=bank();let original=driver::admit(&mut bank,input());let mut slot=tree::NativeReceiveSlot::<DslValue,Row>::default();semio_framework_value_testing_admission::session_open(&bank);let original_pointer=original.borrow().get()as*const DslValue;

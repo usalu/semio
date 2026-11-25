@@ -21,6 +21,10 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
+[[test]]
+name = "canvas-attach-laws"
+path = "../../🧪️tests/🖼️canvas-attach-laws/🦀️.rs"
+
 [dependencies]
 semio-os-flow-wasm-domain = { path = "../../🧩️domain-adapter/📦️packages/🦀️rust" }
 semio-os-flow-wasm-actions-a = { path = "../../🎬️actions-a/📦️packages/🦀️rust" }

@@ -154,7 +154,7 @@ const config: StorybookConfig = {
       config.plugins.unshift({
         name: "semio-storybook-unbuilt-wasm-stub",
         enforce: "pre",
-        resolveId: (id: string) => (unbuiltWasmSpecifier.test(id) ? `\0semio-wasm-stub:${id}` : undefined),
+        resolveId: (id: string) => (unbuiltWasmSpecifier.test(id) && !requiredEnginePackages.some((name) => id === name || id.startsWith(`${name}/`)) ? `\0semio-wasm-stub:${id}` : undefined),
         load: (id: string) => (id.startsWith("\0semio-wasm-stub:") ? "export default async function init() {}" : undefined),
       });
     }

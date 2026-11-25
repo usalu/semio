@@ -13,14 +13,62 @@
       "de": "Eine Frau von 1,66 m in der 36. Schwangerschaftswoche (71 kg, 13 kg zugenommen) in übergroßem Strickpullover, Umstandsleggings und Stiefeletten, die mit zurückgelehntem Oberkörper und verstärkter Lendenkrümmung steht. Der Bauch ist ein eigener Knochen und eine eigene thermische Region; Physiologie (Stoffwechsel, Atmung, Hautdurchblutung) ist für das dritte Trimester angepasst."
     },
     "tags": [
-      "human",
-      "adult",
-      "woman",
-      "pregnant",
-      "third-trimester",
-      "standing",
-      "waddling",
-      "physiology-adjusted"
+      {
+        "id": "human",
+        "title": {
+          "en": "human",
+          "de": "Mensch"
+        }
+      },
+      {
+        "id": "adult",
+        "title": {
+          "en": "adult",
+          "de": "erwachsen"
+        }
+      },
+      {
+        "id": "woman",
+        "title": {
+          "en": "woman",
+          "de": "Frau"
+        }
+      },
+      {
+        "id": "pregnant",
+        "title": {
+          "en": "pregnant",
+          "de": "schwanger"
+        }
+      },
+      {
+        "id": "third-trimester",
+        "title": {
+          "en": "third trimester",
+          "de": "drittes Trimester"
+        }
+      },
+      {
+        "id": "standing",
+        "title": {
+          "en": "standing",
+          "de": "Stehen"
+        }
+      },
+      {
+        "id": "waddling",
+        "title": {
+          "en": "waddling",
+          "de": "watschelnd"
+        }
+      },
+      {
+        "id": "physiology-adjusted",
+        "title": {
+          "en": "physiology adjusted",
+          "de": "physiologisch angepasst"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage content worker NW-H3",
@@ -5252,7 +5300,7 @@
                 ],
                 [
                   0.0545,
-                  0.0884
+                  0.0888
                 ],
                 [
                   -0.0582,
@@ -5307,7 +5355,7 @@
                 ],
                 [
                   0.1201,
-                  0.0547
+                  0.0551
                 ],
                 [
                   0.099,
@@ -5410,7 +5458,7 @@
                 ],
                 [
                   0.1217,
-                  0.0505
+                  0.0509
                 ],
                 [
                   0.0434,
@@ -9797,7 +9845,7 @@
               "points": [
                 [
                   -0.036,
-                  0.0304
+                  0.0305
                 ],
                 [
                   0.0141,
@@ -9821,31 +9869,31 @@
                 ],
                 [
                   0.2648,
-                  0.0507
+                  0.0508
                 ],
                 [
                   0.315,
-                  0.0437
+                  0.0438
                 ],
                 [
                   0.3651,
-                  0.0396
+                  0.0397
                 ],
                 [
                   0.3651,
-                  -0.0001
+                  0.0001
                 ],
                 [
                   -0.036,
-                  -0.0001
+                  0.0001
                 ]
               ],
               "solid": {
                 "kind": "revolved",
                 "axisBone": "shank-l",
                 "axis": "u",
-                "axisX": -0.0001,
-                "axisZ": 0.002,
+                "axisX": 0.0001,
+                "axisZ": 0.0021,
                 "mirror": true
               }
             },
@@ -9874,7 +9922,7 @@
                 ],
                 [
                   0.1144,
-                  0.0675
+                  0.0676
                 ],
                 [
                   0.1645,
@@ -9890,7 +9938,7 @@
                 ],
                 [
                   0.315,
-                  0.0436
+                  0.0435
                 ],
                 [
                   0.3651,
@@ -13910,7 +13958,7 @@
                 ],
                 [
                   0.1324,
-                  -0.0506
+                  -0.051
                 ],
                 [
                   0.3602,
@@ -13957,7 +14005,7 @@
                 ],
                 [
                   -0.0001,
-                  0.0507
+                  0.0511
                 ],
                 [
                   -0.0344,
@@ -15447,7 +15495,7 @@
                 ],
                 [
                   0.0144,
-                  0.0558
+                  0.0557
                 ],
                 [
                   0.0638,
@@ -15459,7 +15507,7 @@
                 ],
                 [
                   0.1626,
-                  0.055
+                  0.0551
                 ],
                 [
                   0.2121,
@@ -15512,7 +15560,7 @@
                 ],
                 [
                   0.0144,
-                  0.0522
+                  0.0523
                 ],
                 [
                   0.0638,

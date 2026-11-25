@@ -1,73 +1,10 @@
-import { strict as assert } from "node:assert";
 import { existsSync } from "node:fs";
-import { mkdir, writeFile } from "node:fs/promises";
-import { createRequire } from "node:module";
-import { join } from "node:path";
-import type { Browser, Locator, Page } from "playwright";
+import { assert, awaitBeacon, dismissIntroduction, join, kinds, out, reuse, root, runJourneys, session, url, writeFile, type Browser, type Locator } from "./journey-kit.ts";
 
 /** 🪵️ Sourcing curation editor journey (6081): boot, windows, pool, curation add/count/remove, drag both ways, filters, sort, example switch, undo/redo, grid canvas, preview, reload; English and German.
- * Usage: `repo <this file> [en|de ...]` with `serve-sourcing-react-prototype` answering (override with `SOURCING_URL`).
+ * Usage: `bun sourcing-journey.ts [en|de ...]` with the native sourcing host answering on 6081 (override with `SOURCING_URL`).
  * Writes screenshots and `journey.json` under `🗑️generated/journey`.
- * @see ./🌐️browser-journey-2026-11.md */
-
-const root = process.cwd();
-const osDev = "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev";
-const url = process.env.SOURCING_URL ?? "http://127.0.0.1:6081/";
-const out = join(import.meta.dir, "🗑️generated", "journey");
-const languages = process.argv.slice(2).length > 0 ? process.argv.slice(2) : ["en", "de"];
-const { ensureRepositoryBrowserPathV1 } = await import(join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🧰️preparation/🟦️.ts"));
-const { awaitBeacon, dismissIntroduction } = await import(join(root, osDev, "🧪️tests/🧮️program-matrix/🟦️.ts"));
-const require = createRequire(join(root, osDev, "📦️packages/🟦️typescript/package.json"));
-ensureRepositoryBrowserPathV1(root, process.env);
-const { chromium } = require("playwright") as typeof import("playwright");
-await mkdir(out, { recursive: true });
-
-type Verdict = { step: string; pass: boolean; evidence: Record<string, unknown> };
-const verdicts: Verdict[] = [];
-const text = {
-  en: { pool: "Pool", curated: "Curated", preview: "Preview", grid: "Grid", search: "Search", minimum: "Minimum availability", remove: "Remove", curate: "Curate", availability: "Availability", name: "Name", noSelection: "No selection", increase: "Increase Curated", increaseCount: "Increase Count", moduleSlabs: "Slabs", typology: "Typology", allTypologies: "All Typologies" },
-  de: { pool: "Pool", curated: "Kuratiert", preview: "Vorschau", grid: "Raster", search: "Suchen", minimum: "Mindestverfügbarkeit", remove: "Entfernen", curate: "Kuratieren", availability: "Verfügbarkeit", name: "Name", noSelection: "Keine Auswahl", increase: "Erhöhen Kuratiert", increaseCount: "Erhöhen Anzahl", moduleSlabs: "Slabs", typology: "Typologie", allTypologies: "Alle Typologien" },
-} as const;
-const kinds = ["Glulam GL24h 200×400", "KVH C24 100×200", "Steel IPE 200", "Steel HEA 160", "Casement Window 100×120", "Fixed Window 150×150", "Tilt & Turn Window 120×140", "Concrete Slab 240mm", "CLT Slab 160mm", "Hollow Core Slab 265mm"];
-const reuse = "Hexagonal Cut Concrete Forest";
-const BAD = /program load failed sourcing|plugin\.descriptor-invalid|ui\.fixed-capacity|program module unavailable sourcing|Plugin Recovery/u;
-const DEBUG = /\[DEBUG\]/u;
-
-/** 🪟️ One browser session in one locale with console-fault recording and per-step verdicts. */
-async function session(browser: Browser, language: "en" | "de") {
-  const context = await browser.newContext({ locale: language === "en" ? "en-US" : "de-DE", viewport: { width: 1800, height: 1100 } });
-  const page = await context.newPage();
-  const faults: string[] = [];
-  page.on("pageerror", error => faults.push(`pageerror: ${error.message}`.slice(0, 400)));
-  page.on("console", message => { if (!DEBUG.test(message.text()) && (message.type() === "error" || BAD.test(message.text()))) faults.push(`${message.type()}: ${message.text()}`.slice(0, 400)); });
-  const t = text[language];
-  const shot = (name: string) => page.screenshot({ path: join(out, `${language}-${name}.png`) });
-  const panel = (name: string) => page.getByRole("tabpanel", { name, exact: true });
-  const pool = () => panel(t.pool);
-  const curated = () => panel(t.curated);
-  const preview = () => panel(t.preview);
-  const rowIn = (scope: Locator, name: string) => scope.getByRole("row").filter({ hasText: name }).first();
-  const countIn = (scope: Locator, name: string) => rowIn(scope, name).getByRole("spinbutton").first();
-  const names = async (scope: Locator) => scope.locator("tbody tr").evaluateAll(rows => rows.map(row => row.querySelector("td")?.textContent?.replace(/^\s*(Drag to window|Verschieben)\s*/u, "").trim() ?? ""));
-  const body = () => page.evaluate(() => document.body.innerText);
-  const settle = (ms = 700) => page.waitForTimeout(ms);
-  const eventually = async (check: () => Promise<void>, timeout = 10_000) => {
-    const deadline = Date.now() + timeout;
-    for (;;) { try { return await check(); } catch (error) { if (Date.now() > deadline) throw error; await page.waitForTimeout(250); } }
-  };
-  const step = async (name: string, run: () => Promise<Record<string, unknown>>) => {
-    const before = faults.length;
-    let verdict: Verdict;
-    try { verdict = { step: `${language}: ${name}`, pass: true, evidence: await run() }; }
-    catch (error) { verdict = { step: `${language}: ${name}`, pass: false, evidence: { error: String(error).slice(0, 1200) } }; }
-    const fresh = faults.slice(before);
-    if (fresh.some(line => BAD.test(line))) verdict.pass = false;
-    verdict.evidence.faults = fresh.slice(0, 6);
-    await shot(`${verdicts.length}`).catch(() => undefined);
-    verdicts.push(verdict);
-  };
-  return { context, page, faults, t, shot, pool, curated, preview, rowIn, countIn, names, body, settle, eventually, step };
-}
+ * @see ./journey-kit.ts */
 
 async function journey(browser: Browser, language: "en" | "de") {
   const s = await session(browser, language);
@@ -254,12 +191,4 @@ async function journey(browser: Browser, language: "en" | "de") {
   }
 }
 
-const browser = await chromium.launch();
-try {
-  for (const language of languages) await journey(browser, language as "en" | "de").catch(error => verdicts.push({ step: `${language}: journey`, pass: false, evidence: { error: String(error).slice(0, 1500) } }));
-} finally {
-  await browser.close();
-  await writeFile(join(out, "journey.json"), `${JSON.stringify(verdicts, null, 2)}\n`);
-}
-for (const verdict of verdicts) console.log(`${verdict.pass ? "PASS" : "FAIL"} ${verdict.step}`);
-process.exitCode = verdicts.every(verdict => verdict.pass) ? 0 : 1;
+await runJourneys("journey", journey);

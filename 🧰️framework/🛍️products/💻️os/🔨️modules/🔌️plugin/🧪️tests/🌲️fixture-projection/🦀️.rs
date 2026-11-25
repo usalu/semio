@@ -4,7 +4,7 @@ use semio_ui_contract::{BuiltNode, BuiltTreeRetirement, Component, TextProps, Ui
 
 #[doc(hidden)]
 pub fn node() -> BuiltNode {
-    BuiltNode::try_new("K", Component::Text(TextProps { value: "V".try_into().unwrap(), emphasize: None, data_attributes: None })).unwrap()
+    BuiltNode::try_new("K", Component::Text(TextProps { value: "V".try_into().unwrap(), emphasize: None, data_attributes: None, heading_level: None })).unwrap()
 }
 
 #[doc(hidden)]

@@ -22,7 +22,7 @@
           "positionM": 0.5
         },
         {
-          "id": "same opening",
+          "id": "same opening-2",
           "widthM": 1.25,
           "heightM": 2.5,
           "sillHeightM": 0.75,
@@ -75,7 +75,7 @@
               "positionM": 1.5
             },
             {
-              "id": "same beam",
+              "id": "same beam-2",
               "forceN": -35000.25,
               "bearingAreaM2": 0.04,
               "bearingLengthM": 0.2,
@@ -85,7 +85,7 @@
           ]
         },
         {
-          "id": "case 世界",
+          "id": "case 世界-2",
           "designSituation": "persistent",
           "imposedCategory": "a",
           "gKSlabN": 120000.5,

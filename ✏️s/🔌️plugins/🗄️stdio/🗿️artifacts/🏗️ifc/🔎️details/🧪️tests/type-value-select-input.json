@@ -76,14 +76,14 @@
    "id": "missing",
    "member": null,
    "items": null,
-   "domain": null,
+   "domain": null, "ready": false,
    "physical": false
   },
   {
    "id": "boolean-itemless",
    "member": "IFCBOOLEAN",
    "items": [],
-   "domain": null,
+   "domain": null, "ready": false,
    "physical": false
   },
   {
@@ -224,7 +224,7 @@
    "id": "angle-itemless",
    "member": "IFCCOMPOUNDPLANEANGLEMEASURE",
    "items": [],
-   "domain": null,
+   "domain": null, "ready": false,
    "physical": false
   },
   {
@@ -440,7 +440,7 @@
      ]
     }
    ],
-   "domain": null,
+   "domain": null, "ready": false,
    "physical": false
   },
   {

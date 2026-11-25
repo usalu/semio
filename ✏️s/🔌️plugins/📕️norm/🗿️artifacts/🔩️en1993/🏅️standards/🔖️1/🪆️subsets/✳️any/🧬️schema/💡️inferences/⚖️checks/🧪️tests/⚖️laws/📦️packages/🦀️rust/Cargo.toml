@@ -1,0 +1,32 @@
+[package]
+workspace = "../../../../../../../../../../.."
+name = "semio-s-artifact-norm-en1993-checks-laws"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "EN 1993 check laws: compliance and special-wiring suites against the public checks surface"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-s-artifact-norm-en1993-checks = { workspace = true }
+
+[dev-dependencies]
+semio-s-artifact-norm-en1993-checks = { workspace = true }
+semio-s-artifact-norm-en1993-model = { workspace = true, features = ["test-support"] }
+semio-s-artifact-norm-en1993-showcase = { workspace = true }
+semio-s-plugin-norm-results-config = { workspace = true, features = ["test-support"] }
+semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
+semio-s-plugin-norm-app-surface = { workspace = true }
+semio-s-plugin-norm-mechanics = { workspace = true }
+semio-s-plugin-norm-compliance = { workspace = true, features = ["test-support", "compliance-testing"] }
+serde_json = { workspace = true }
+semio-framework-value = { workspace = true }

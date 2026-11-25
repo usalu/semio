@@ -271,16 +271,30 @@ describe("🚚️ the generated shard worker", () => {
     expect(source).toContain("const driveSteps = DRIVE_STEP_CEILING;");
     expect(source.indexOf('driveStopped = "budget"')).toBeLessThan(source.indexOf('driveStopped = "steps"'));
     expect(source).toContain("originalDriveSource.operationClockUs() >= driveDeadline");
-    expect(source).toContain("hostInputSeq !== inputMark");
+    expect(source).toContain("hostInputMoved(inputMark, actorId)");
     expect(source).toContain("actors.get(actorId) !== actor || actor.activationGeneration !== msg.activationGeneration");
+  });
+
+  it("scopes the host-input counter by actor: other-actor traffic never cuts a drive, own input, cancel and unaddressed input do, the step ceiling still bounds it", () => {
+    const law = JSON.parse(readFileSync(resolve(HERE, "../../../../🔌️plugin/⚛️reactor/🧪️tests/🧫️fixtures/🚦️drive-input-scope.json"), "utf8")) as { driving: string; rows: { name: string; traffic: { actorId?: string; kind: string }[]; cut: boolean }[]; fairness: { stepCeilingStillBoundsDrive: boolean } };
+    const begin = source.indexOf("//#region drive-input-scope");
+    const end = source.indexOf("//#endregion drive-input-scope");
+    expect(begin, "the worker declares its drive-input scope region").toBeGreaterThanOrEqual(0);
+    const scope = new Function(`${source.slice(begin, end)}; return { noteHostInput, hostInputMoved };`)() as { noteHostInput: (actorId?: unknown) => unknown; hostInputMoved: (mark: unknown, actorId: string) => boolean };
+    for (const row of law.rows) {
+      const mark = scope.noteHostInput(law.driving);
+      for (const message of row.traffic) scope.noteHostInput(message.actorId);
+      expect(scope.hostInputMoved(mark, law.driving), row.name).toBe(row.cut);
+    }
+    if (law.fairness.stepCeilingStillBoundsDrive) expect(source).toContain("drivePolls + 1 >= driveSteps");
   });
 
   it("counts every host message and yields a macrotask so the drive can actually see one", () => {
     const handler = source.indexOf('self.addEventListener("message", async (event) => {');
-    const mark = source.indexOf("const inputMark = ++hostInputSeq;", handler);
-    const dispatch = source.indexOf("const msg = event.data ?? {};", handler);
+    const mark = source.indexOf("const inputMark = noteHostInput(msg.actorId);", handler);
+    const dispatch = source.indexOf("const { kind } = msg;", handler);
     const yieldAt = source.indexOf("await driveYield();", mark);
-    const interrupt = source.indexOf('if (hostInputSeq !== inputMark) { driveStopped = "input"; break; }', yieldAt);
+    const interrupt = source.indexOf('if (hostInputMoved(inputMark, actorId)) { driveStopped = "input"; break; }', yieldAt);
     expect(handler).toBeGreaterThanOrEqual(0);
     expect(mark).toBeGreaterThan(handler);
     expect(dispatch).toBeGreaterThan(mark);

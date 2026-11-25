@@ -27,7 +27,7 @@
       "id": "en1992",
       "provider": "🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🏷️field-meta/🦀️.rs",
       "function": "en1992_field_meta",
-      "mutations": "semio_s_artifact_norm_en1992_mutations"
+      "mutations": "semio_s_artifact_norm_en1992_mutations_edit_rules"
     },
     {
       "id": "en1993",
@@ -39,7 +39,7 @@
       "id": "en1994",
       "provider": "🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🏷️field-meta/🦀️.rs",
       "function": "en1994_field_meta",
-      "mutations": "semio_s_artifact_norm_en1994_mutations"
+      "mutations": "semio_s_artifact_norm_en1994_mutations_edit_rules"
     },
     {
       "id": "en1995",
@@ -51,7 +51,7 @@
       "id": "en1996",
       "provider": "🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🏷️field-meta/🦀️.rs",
       "function": "en1996_field_meta",
-      "mutations": "semio_s_artifact_norm_en1996_mutations"
+      "mutations": "semio_s_artifact_norm_en1996_mutations_edit_rules"
     },
     {
       "id": "en1997",

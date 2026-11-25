@@ -3,6 +3,6 @@
 export BATCH=MH-1; source "${0:A:h}/../MR/env.sh"
 mkdir -p "$GEN/suggest"
 for a in "$@"; do
-  (cd "$T" && "$B" "$M/suggest.ts" "$a" > "$GEN/suggest/$a.json" 2>&1; "$B" "$M/suggest.ts" "$a" --all > "$GEN/suggest/$a.all.json" 2>&1)
+  "$W/q.sh" 1000 1800 "$T" "$B" "$M/suggest.ts" "$a" > "$GEN/suggest/$a.json" 2>&1; "$W/q.sh" 1000 1800 "$T" "$B" "$M/suggest.ts" "$a" --all > "$GEN/suggest/$a.all.json" 2>&1
   "${0:A:h}/g.sh" "$a" "before-$a"
 done

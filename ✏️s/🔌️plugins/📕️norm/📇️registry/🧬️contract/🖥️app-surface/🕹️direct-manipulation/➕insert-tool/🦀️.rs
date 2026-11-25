@@ -37,15 +37,18 @@ fn fresh_id(spec: &InsertSpec, taken: &[String]) -> String {
     (taken.len() + 1..).map(|n| format!("{}-{n}", spec.id)).find(|id| !taken.contains(id)).unwrap_or_default()
 }
 
-/// ➕ The edit that places a new item of `spec` at `at`: a copy of the last item of the collection (a dotted `spec.collection` path such as `geometry.objects`, an array or a map keyed by entity id) (a document-valid starting point) with a fresh id and, where the item has them, the position fields `x`, `y`, `z` set; an empty collection inserts the default item.
-pub fn insert_edit(document: &DslValue, spec: &InsertSpec, at: [f64; 3]) -> Result<NormEdit, String> {
+/// ➕ The edit that places a new item of `spec` at `at`: a copy of the last item of the collection (a dotted `spec.collection` path such as `geometry.objects`, an array or a map keyed by entity id) (a document-valid starting point) with a fresh id and, where the item has them, the position fields `x`, `y`, `z` set; an empty collection has no row to copy and starts from `blank`, the schema-derived default row of its insert mutation, which is named and positioned the same way.
+pub fn insert_edit(document: &DslValue, spec: &InsertSpec, at: [f64; 3], blank: impl FnOnce() -> Result<DslValue, String>) -> Result<NormEdit, String> {
     let items: Vec<DslValue> = match get_value_at_path(document, &spec.collection) {
         Ok(DslValue::Array(items)) => items.clone(),
         Ok(DslValue::Object(entries)) => entries.iter().map(|(_, value)| value.clone()).collect(),
         _ => return Err(format!("the document has no collection '{}'", spec.collection)),
     };
     let index = items.len();
-    let Some(template) = items.last() else { return Ok(NormEdit::InsertItem { path: spec.collection.clone(), index, value: None }) };
+    let template = match items.last() {
+        Some(template) => template.clone(),
+        None => blank().map_err(|error| format!("the empty collection '{}' has no default row: {error}", spec.collection))?,
+    };
     let mut wrapper = DslValue::object(vec![("item".to_string(), template.clone())]);
     if template.get("id").is_some() {
         set_value_at_path(&mut wrapper, "item.id", DslValue::String(fresh_id(spec, &known_ids(&items))))?;

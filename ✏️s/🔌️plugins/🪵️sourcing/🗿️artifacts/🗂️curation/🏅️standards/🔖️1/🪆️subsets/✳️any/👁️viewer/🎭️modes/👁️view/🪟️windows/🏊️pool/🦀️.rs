@@ -5,6 +5,7 @@
 //! editor-only interaction, not something a read-only viewer needs. MUST NOT import anything from the
 //! sibling `editor` module (`policyViewerPurityBreaches`).
 
+use crate::schema::{catalog_kind_name, catalog_module_label, catalog_typology_path, curated_count};
 use crate::{stock_of, CurationSnapshot};
 use semio_plugin::app::{TableView, TableWindowKit, WindowKit};
 use semio_plugin::{BuiltNode, UiAssemblyResult, WindowKindDefinition};
@@ -19,17 +20,15 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-/// 🧱️ Every stock object kind as one flat row — id/name/module/typology/availability, string cells
-/// only (the framework `TableView` view-model has no typed-cell concept, unlike the editor's
-/// `TableCell::{Text,Number,Stepper,Buttons}` — a viewer renders nothing interactive per cell).
-pub fn view_model(document: &CurationSnapshot) -> TableView {
-    let stock = stock_of(document);
-    let rows = stock.iter().map(|kind| vec![kind.id.clone(), kind.name.clone(), kind.module_id.clone(), kind.typology_path.join(" / "), kind.availability.to_string()]).collect();
-    TableView { columns: vec!["Id".into(), "Name".into(), "Module".into(), "Typology".into(), "Availability".into()], rows }
+/// 🧱️ Every stock object kind as one flat row — name, module, typology, availability and the curated count read from the same document, localized in `locale`, string cells only (the framework `TableView` view-model has no typed-cell concept, a viewer renders nothing interactive per cell).
+pub fn view_model(document: &CurationSnapshot, locale: semio_plugin::Locale) -> TableView {
+    use semio_plugin::surface_name as pick;
+    let rows = stock_of(document).iter().map(|kind| vec![catalog_kind_name(kind, locale), catalog_module_label(&kind.module_id, &kind.module_id, locale), catalog_typology_path(kind, locale), kind.availability.to_string(), curated_count(document, &kind.id).to_string()]).collect();
+    TableView { columns: ["Name", "Module", "Typology", "Availability", "Curated"].iter().zip(["Name", "Modul", "Typologie", "Verfügbarkeit", "Kuratiert"]).map(|(en, de)| pick(locale, en, de).to_string()).collect(), rows }
 }
 
 pub fn render(document: &CurationSnapshot, locale: semio_plugin::Locale) -> UiAssemblyResult<BuiltNode> {
-    TableWindowKit::render(&view_model(document), locale)
+    TableWindowKit::render(&view_model(document, locale), locale)
 }
 //#endregion 🔖️Render
 

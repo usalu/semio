@@ -22,6 +22,8 @@ export function sharedBytesV1(value:unknown,seen?:Set<unknown>):number;
 export function processRoleV1(command:string):string;
 export function parseProcessTreeV1(text:string,root:number,top?:number):SliceProcessesV1;
 export function measureSliceProcessesV1(input?:{footprint?:SliceFootprintV1;table?:()=>Promise<string>;pid?:number}):Promise<{processes?:SliceProcessesV1;footprintMegabytes?:number;treeFootprintMegabytes?:number}>;
+export function openSliceReadStepV1(id:string,detail?:Readonly<Record<string,string|number>>,diagnostics?:()=>unknown):()=>void;
+export function sliceReadWaitStepV1<T>(id:string,run:(leave:()=>void)=>Promise<T>|T,detail?:Readonly<Record<string,string|number>>):Promise<T>;
 export function sliceReadStepV1<T>(id:string,run:()=>Promise<T>|T,detail?:Readonly<Record<string,string|number>>,diagnostics?:()=>unknown):Promise<T>;
 export function describeSliceReadStepV1(now?:number):{id:string;phase:string;done:number;total:number}|undefined;
 export function sliceReadMovedAtV1():number;

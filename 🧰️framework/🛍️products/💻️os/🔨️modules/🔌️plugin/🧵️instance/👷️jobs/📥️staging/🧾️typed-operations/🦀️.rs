@@ -5,7 +5,7 @@ use semio_plugin_ownership::bounded_ownership::{ARTIFACT_LIVE_OUTPUT_SLOTS, Plug
 use semio_plugin_decl_views::AppRenderOperationContext;
 use semio_plugin_decl_app::ArtifactApp;
 use semio_plugin_decl_app::tool_contract::{ArtifactBoundedToolFault, ArtifactToolCompletionValue, TYPED_OPERATION_FAULT_PAGE_BYTES, TypedOperationResultLane};
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use semio_framework_value::retirement::controlled::ControlledRetirement;
 use semio_plugin_decl_emission::Emit;
@@ -92,6 +92,12 @@ impl<A: ArtifactApp> ToolOperations<A> {
             let index = (self.typed_publication_cursor + offset) % ARTIFACT_LIVE_OUTPUT_SLOTS;
             self.tool_operations.entry(index).filter(|(_, operation)| operation.stage != MountedTypedCommandFullOperationStage::AwaitingAck).map(|(id, _)| (index, *id))
         })
+    }
+
+    /// 🧭️ Whether any mounted operation owes the guest a step: every operation except one that waits for the host's acknowledgement of its already presented result page, which no guest unit can move.
+    /// 🚫️async: E1 pure census over an already-owned fixed table — see R9.
+    pub fn has_runnable_tool_operation(&self) -> bool {
+        (0..ARTIFACT_LIVE_OUTPUT_SLOTS).any(|index| self.tool_operations.entry(index).is_some_and(|(_, operation)| operation.stage.owes_guest_step(operation.result_page_presented)))
     }
 
     /// 🩺️ What the publication cursor is about to advance, as the four facts that decide whether the

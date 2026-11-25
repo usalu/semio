@@ -6,15 +6,15 @@
  *
  * @see ../🧮️pipeline/🟦️.ts — `frameOf`, `inlineSvg`
  * @see ../⏱️clock/🟦️.ts — the clock figures follow
+ * @see ../🖼️previews/🚦️live/🟦️.ts — `runFigure`, and the live set a `preview` figure is seated in
  */
 import { useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactElement } from "react";
 import type { Asset, DisplayRange, EvaluationQuery, Language, View, PlanarViewpoint } from "@teaching/staffage";
 import { type StaffageClock } from "../⏱️clock/🟦️.ts";
-import { driveFigure } from "../⏱️clock/🏁️frames/🟦️.ts";
 import { writeSvgMarkup } from "../🧮️pipeline/🧬️svg/🟦️.ts";
 import { defaultQuery, depictionOptions } from "../🧮️pipeline/🟦️.ts";
-import { drawFigure, type Drawing } from "../🧮️pipeline/🏁️drawing/🟦️.ts";
-import { retainDrawing } from "../🧮️pipeline/🏁️drawing/queue.ts";
+import type { Drawing } from "../🧮️pipeline/🏁️drawing/🟦️.ts";
+import { runFigure } from "../🖼️previews/🚦️live/🟦️.ts";
 import type { Selection } from "../💾️persistence/🟦️.ts";
 import { VIEWPOINT_PHRASES, resolveViewpoint, viewpointWord } from "../🔭️viewpoints/🟦️.ts";
 import { clipDurationS, playable, readTrack, type TrackInput } from "../🧪️playground/🎞️timeline/🟦️.ts";
@@ -55,6 +55,8 @@ export type PlacedFigureProps = {
   readonly className?: string;
   readonly label?: string;
   readonly style?: CSSProperties;
+  /** 🚦️ The figure is a preview of an overview grid: it follows the clock only while the live set seats it, else it keeps a still. */
+  readonly preview?: boolean;
 };
 
 type Inputs = Pick<PlacedFigureProps, "asset" | "selection" | "offsetS" | "track" | "pxPerMm" | "xPx" | "groundPx" | "travel"> & { readonly mirrored: boolean; readonly options: ReturnType<typeof depictionOptions> };
@@ -88,9 +90,9 @@ function paint(element: HTMLElement, inputs: Inputs, query: EvaluationQuery, dra
   if (last?.mirrored !== inputs.mirrored) style.transform = inputs.mirrored ? "scaleX(-1)" : "";
 }
 
-/** 📦️ Draws one figure with its ground point at (`xPx`, `groundPx`) of the positioned parent. React renders the element once per change of its props; the clock moves it through the frame driver without a render: markup, position and fade are written straight to the element, and only while it is visible. */
+/** 📦️ Draws one figure with its ground point at (`xPx`, `groundPx`) of the positioned parent. React renders the element once per change of its props; the clock moves it through the frame driver without a render: markup, position and fade are written straight to the element, and only while it is visible (and, for a `preview`, live). */
 export function PlacedFigure(props: PlacedFigureProps): ReactElement | null {
-  const { asset, selection, clock, offsetS, track, view, viewpoint, scale, language, pxPerMm, xPx, groundPx, mirrored: mirroredRequest = false, travel, className, label, style } = props;
+  const { asset, selection, clock, offsetS, track, view, viewpoint, scale, language, pxPerMm, xPx, groundPx, mirrored: mirroredRequest = false, travel, className, label, style, preview = false } = props;
   const mirrored = mirroredRequest && viewpoint === "elevation";
   const ref = useRef<HTMLDivElement | null>(null);
   const resolution = useMemo(() => resolveViewpoint(asset, viewpoint, scale, language), [asset, viewpoint, scale, language]);
@@ -100,7 +102,6 @@ export function PlacedFigure(props: PlacedFigureProps): ReactElement | null {
   }, [view, viewpoint, scale, language, props.range, props.theme]);
   const inputs: Inputs = { asset, selection, offsetS, track, pxPerMm, xPx, groundPx, travel, mirrored, options };
   const latest = useRef(inputs);
-  const held = useRef<number | null>(null);
   const update = useRef<{ readonly asset: Asset; readonly options: Inputs["options"]; readonly clock: StaffageClock; readonly redraw: () => void } | null>(null);
   const [failure, setFailure] = useState<Error | null>(null);
   const available = resolution.available;
@@ -113,26 +114,24 @@ export function PlacedFigure(props: PlacedFigureProps): ReactElement | null {
     const element = ref.current;
     if (element === null) return;
     let last: { readonly query: EvaluationQuery; readonly drawing: Drawing } | null = null;
-    const receive = (drawing: Drawing, query: EvaluationQuery) => {
-      last = { drawing, query };
-      paint(element, latest.current, query, drawing);
-    };
-    const lease = clock.drawBudgetMs > 0 ? retainDrawing(asset, options, true, receive, setFailure) : null;
-    const step = (timeS: number) => {
-      held.current = timeS;
-      const query = queryOf(latest.current, timeS);
-      if (lease) lease.request(query);
-      else receive(drawFigure(asset, options, query, true), query);
-    };
+    const run = runFigure({
+      element, clock, asset, options, wrapLoops: true, liveness: preview ? "budgeted" : "always",
+      time: () => clock.state.frame / clock.state.fps,
+      query: (timeS) => queryOf(latest.current, timeS),
+      animated: () => latest.current.selection?.kind !== "pose",
+      paint: (drawing, query) => {
+        last = { drawing, query };
+        paint(element, latest.current, query, drawing);
+      },
+      fail: setFailure,
+    });
     const redraw = () => {
       if (last) paint(element, latest.current, last.query, last.drawing);
-      step(held.current ?? clock.state.frame / clock.state.fps);
+      run.redraw();
     };
     update.current = { asset, options, clock, redraw };
-    step(clock.state.frame / clock.state.fps);
-    const stop = driveFigure(clock, { element, animated: () => latest.current.selection?.kind !== "pose", step, ...(lease ? { cancelPending: lease.cancelPending } : {}) });
-    return () => { stop(); lease?.release(); update.current = null; };
-  }, [asset, options, clock, available]);
+    return () => { run.stop(); update.current = null; };
+  }, [asset, options, clock, available, preview]);
   if (failure !== null) throw failure;
   if (!resolution.available)
     return (

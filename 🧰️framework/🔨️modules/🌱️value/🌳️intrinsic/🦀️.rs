@@ -2,7 +2,7 @@
 use crate::{ValueError,ValueRefusalKind};
 #[path="../🔁️codec/🦀️.rs"]
 mod codec;
-pub use codec::{path_index,controlled_sequence,edit_through_value,ControlledValueHasher,DecodedValue,IntrinsicRetirement,FromValue,ToValue,ValueEdit,ValueShape};
+pub use codec::{path_index,controlled_map,controlled_sequence,edit_through_value,ControlledValueHasher,DecodedValue,IntrinsicRetirement,FromValue,ToValue,ValueEdit,ValueShape};
 /// 🔢️ Complete binary64 identity preserves signed zero and every NaN payload without allocation.
 pub fn equal_f64(left: f64, right: f64) -> bool { left.to_bits() == right.to_bits() }
 

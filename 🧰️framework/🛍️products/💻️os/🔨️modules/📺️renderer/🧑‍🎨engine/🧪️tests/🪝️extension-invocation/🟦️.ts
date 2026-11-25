@@ -6,14 +6,39 @@ import { extensionInvocationWireFixture } from "../../../../🌊️flow/🧪️t
 import { describe, expect, it, vi } from "vitest";
 import { manifestPublicInvocationSchema as publicInvocationSchema } from "@semio-tech/framework-manifest/testing/fixtures";
 import { PUBLIC_INVOCATION_BODY_BYTES, PUBLIC_INVOCATION_DEPTH, PUBLIC_INVOCATION_STRING_BYTES, publicInvocationCharCost, publicInvocationStringPages } from "@semio-tech/framework";
+import { encodePackValue } from "@semio-tech/framework/packs";
 import { rendererExport } from "../🧰️engine-contract-helpers/🟦️.ts";
 
 
 //#region 🔁️ExtensionInvocation
-/** 📦️ What a capability actually answers across the door: BYTES in the capability's own encoding
- * (`evaluate_invoke_json` emits JSON text), never a JS string — `PluginWasmHandle.invoke` returns the
- * guest's `respond` OK pack verbatim and the shell re-encodes it once, on the completion. */
-const extensionAnswerBytes = (answer: unknown): Uint8Array => new TextEncoder().encode(JSON.stringify(answer));
+const extensionAnswerBytes = encodePackValue;
+
+it.each(extensionInvocationFixture.requesterContinuation)("returns the requester's $status completion to its continuation owner", async ({status, drains}) => {
+  const { createExtensionCompletionCapture } = await import("../../🧱️elements/🔌️PluginRuntime/🧩️module-loader/🟦️.ts");
+  const settling = await import("../../🧱️elements/🔌️PluginRuntime/🔁️turn-settle/🟦️.ts");
+  const instance = extensionInvocationFixture.instanceId;
+  const actorId = "completion-handoff#" + instance;
+  const activation = {actorId, assertActive: vi.fn()};
+  const turn = {status:{tag: status}, nextWake:null, uiPatches:[], effects:[]};
+  const settle = vi.spyOn(settling, "settlePluginTurn").mockImplementation(async (_actor, initial) => initial);
+  const submitTurn = vi.fn(async () => turn);
+  const drain = vi.fn(async (_instance: number) => {});
+  type Owners = Parameters<typeof createExtensionCompletionCapture>;
+  try {
+    const capture = createExtensionCompletionCapture(
+      {shardClient:{captureActorActivation:() => activation}, documentBindings:new Map(), turnOutcomes:[]} as unknown as Owners[0],
+      {requireActorId:() => actorId, submitTurn} as unknown as Owners[1],
+      {acceptUiPatches:() => []} as unknown as Owners[2],
+      {routeHostEffects:() => []} as unknown as Owners[3],
+      drain,
+    );
+    await capture(instance, BigInt(extensionInvocationFixture.requestId)).complete({ok:encodePackValue(extensionInvocationFixture.response)});
+    expect(submitTurn).toHaveBeenCalledTimes(1);
+    expect(drain.mock.calls).toEqual(drains ? [[instance]] : []);
+  } finally {
+    settle.mockRestore();
+  }
+});
 
 describe("extension invocation completion ownership", () => {
   const fixture = extensionInvocationFixture;
@@ -22,6 +47,7 @@ describe("extension invocation completion ownership", () => {
     captureExtensionCompletion: (instanceId: number, req: bigint) => ({ instanceId, req, assertActive: () => {}, complete: (outcome: unknown) => complete(instanceId, req, outcome) }),
   });
   const call = (requester: LoadedProgramState, extension?: LoadedProgramState) => runInvokeExtensionEffect(requester, extension, fixture.instanceId, fixture.extensionId, fixture.capability, JSON.stringify(fixture.request), BigInt(fixture.requestId));
+
 
   it("validates the language-neutral request and fault vectors with the schema oracle", () => {
     expect(rendererExport("ExtensionInvocationCompletionV1")(fixture.completion)).toBe(true);

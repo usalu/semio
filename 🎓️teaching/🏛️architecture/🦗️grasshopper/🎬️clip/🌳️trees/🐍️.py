@@ -328,7 +328,7 @@ class Beat5_DataTrees(_visuals.ClipScene):
 
     def _plate(self, point, width, height):
         """⬛ A dark plate that keeps light text readable on the grey canvas."""
-        return _engine.RoundedRectangle(corner_radius=0.08, width=width, height=height, fill_color=_draft.BACKGROUND, fill_opacity=0.96, stroke_width=0).move_to((*point[:2], 0))
+        return _engine.Rectangle(width=width, height=height, fill_color=_draft.BACKGROUND, fill_opacity=0.96, stroke_width=0).move_to((*point[:2], 0))
 
     def _diagram(self, tree, levels, *, lit=None, labels=True, leaf_color=None, big=False):
         """🌳 Draw a data tree as a real tree: trunk at the bottom (or several roots when the first level is not shared), a level per path segment, one leaf per item, all read from the engine tree.

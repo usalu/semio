@@ -31,7 +31,7 @@ pub fn reserve(tracker: &PatchTracker, surface: ui_contract::SurfaceId) -> Resul
 #[doc(hidden)]
 pub fn leaf(key: &str, text: &str) -> ComponentTree {
     let value = ui_contract::UiText::try_from_str(text).expect("bounded test text");
-    let root = TreeNode::try_new(key, ui_contract::Component::Text(ui_contract::TextProps { value: ui_contract::Label(value), emphasize: None, data_attributes: None })).unwrap_or_else(|_| panic!("bounded test tree"));
+    let root = TreeNode::try_new(key, ui_contract::Component::Text(ui_contract::TextProps { value: ui_contract::Label(value), emphasize: None, data_attributes: None, heading_level: None })).unwrap_or_else(|_| panic!("bounded test tree"));
     ComponentTree::new(root)
 }
 

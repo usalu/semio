@@ -7,6 +7,7 @@ pub struct FrameTransaction {
     directives: Option<FrameDirectives>,
     pub operation: semio_framework_trace::OperationId,
     pub generation: semio_framework_trace::Generation,
+    business_generation: semio_framework_trace::Generation,
     base_witness: Option<RuntimePresentationWitness>,
     effect_opportunities: u32,
     pub stage: FrameTransactionStage,
@@ -83,12 +84,19 @@ enum AppFrameTransactionPhase {
 }
 
 impl FrameTransaction {
+    /// 🪪️ The lent business authority keeps its own generation; `generation` only selects presentation freshness.
+    pub fn with_business_generation(mut self, business_generation: semio_framework_trace::Generation) -> Self {
+        self.business_generation = business_generation;
+        self
+    }
+
     pub fn new(directives: FrameDirectives, operation: semio_framework_trace::OperationId, generation: semio_framework_trace::Generation, retained: semio_framework_job::RetainedCloneGrant) -> Self {
         Self {
             retained,
             directives: Some(directives),
             operation,
             generation,
+            business_generation: generation,
             base_witness: None,
             effect_opportunities: 0,
             stage: FrameTransactionStage::DrainProjectionDeltas,
@@ -182,7 +190,7 @@ impl FrameTransaction {
     pub fn step(&mut self, runtime: &AppMailbox, handle: &AppHandle, context: &mut semio_framework_job::StepContext<'_>) -> AppFrameTransactionStep {
         let _latency = frame_latency::FrameLatencyTimer::start(frame_latency::FrameLatencyAuthority::renderer_frame(self.generation.0), self.stage.latency_stage(), 1);
         context.set_stage(self.stage_label());
-        if context.operation() != self.operation || context.generation() != self.generation || context.is_cancelled() || context.deadline_exceeded() {
+        if context.operation() != self.operation || context.generation() != self.business_generation || context.is_cancelled() || context.deadline_exceeded() {
             self.phase = AppFrameTransactionPhase::Terminal;
             return AppFrameTransactionStep::Superseded;
         }
@@ -231,7 +239,10 @@ impl FrameTransaction {
         }
         match self.phase {
             AppFrameTransactionPhase::SceneCamera => {
-                let grant = context.retained_grant();
+                let Ok(grant) = semio_renderer_wgpu_scene_state::narrow_to_scene_camera_authority(context.retained_grant()) else {
+                    runtime.record_frame_fault("camera original authority was not installed");
+                    return AppFrameTransactionStep::Fault;
+                };
                 if self.scene_camera_cursor.is_none() {
                     match semio_renderer_wgpu_scene_state::SceneCameraDispatchCursor::begin(app_now_ms(), grant) {
                         Ok((cursor, progress)) => {
@@ -811,9 +822,22 @@ impl FrameTransaction {
         }
         if let Some(cursor) = self.build_cursor.as_mut() {
             if !cursor.terminal_is_empty(){return frame_received_child(cursor.close_step(cx),grant,cursor.terminal_is_empty())}
+            if let Some(step) = frame_inline_gate(grant,0).map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,cx))? { return Ok(step); }
+            self.build_cursor = None;
+            return frame_receive_close(frame_inline_progress(0),cx);
         }
-        if grant.maximum_items == 0 { return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() }); }
-        if let Some(owner)=self.after_chrome.as_mut(){if !owner.terminal_is_empty(){return frame_received_child(owner.close_step(cx),grant,owner.terminal_is_empty())}}
+        if let Some(owner)=self.after_chrome.as_mut(){
+            if !owner.terminal_is_empty(){return frame_received_child(owner.close_step(cx),grant,owner.terminal_is_empty())}
+            if let Some(step) = frame_inline_gate(grant,0).map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,cx))? { return Ok(step); }
+            self.after_chrome = None;
+            return frame_receive_close(frame_inline_progress(0),cx);
+        }
+        if self.directives.is_some() {
+            if let Some(step) = frame_inline_gate(grant,0).map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,cx))? { return Ok(step); }
+            self.directives = None;
+            return frame_receive_close(frame_inline_progress(0),cx);
+        }
+        if self.terminal_is_empty() { return Ok(InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() }); }
         frame_receive_close(frame_unpriced_child(),cx)
     }
 
@@ -831,7 +855,7 @@ impl FrameTransaction {
 
     /// 🧭️ Other nested frame children still require their own physical retirement witnesses.
     pub fn terminal_is_empty(&self) -> bool {
-        false
+        self.directives.is_none() && self.scene_camera_cursor.is_none() && self.build_cursor.is_none() && self.finish_cursor.is_none() && self.after_chrome.is_none() && self.raster_uploads.is_none() && self.raster_rejected.is_none()
     }
 
     pub fn discard_presented_input_candidate(&mut self, runtime: &AppMailbox) -> bool {

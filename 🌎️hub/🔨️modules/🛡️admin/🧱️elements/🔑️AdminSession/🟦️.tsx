@@ -6,6 +6,7 @@
 
 // #region 🔌️Adapters
 import * as React from "react";
+import { WindowChrome } from "@semio-tech/ui-react";
 import type {
   AdminConnectionSnapshotV1,
   AdminIntentReceiptV1,
@@ -260,26 +261,25 @@ export function useAdminSession(): AdminSessionState {
 export function AdminAccessGate(): React.ReactElement {
   const t = useAdminT();
   const { status } = useAdminSession();
-
-  if (status === "unreachable") {
-    return (
-      <div className="flex h-full w-full items-center justify-center">
-        <div id="admin-session-unreachable" className="flex w-full max-w-md flex-col gap-single" role="alert" aria-live="assertive">
-          <h1 className="text-lg font-semibold text-emphasized">{t("admin.session.unreachableTitle")}</h1>
-          <p className="text-sm text-muted-foreground">{t("admin.session.unreachableDescription")}</p>
-          <code className="rounded bg-muted px-single py-single text-xs">bun repo run os-hub:dev</code>
-          <p className="text-sm text-muted-foreground">{t("admin.session.unreachableHint")}</p>
-        </div>
-      </div>
-    );
-  }
-
+  const probing = status === "probing";
+  const unreachable = status === "unreachable";
+  const command = unreachable ? "repo run os-hub:dev" : status === "unauthorized" ? "repo run os-hub:dev-secure-admin" : undefined;
   return (
-    <div className="flex h-full w-full items-center justify-center">
-      <div className="flex w-full max-w-md flex-col gap-single" role={status === "probing" ? "status" : "alert"} aria-live={status === "probing" ? "polite" : "assertive"}>
-        <h1 className="text-lg font-semibold text-emphasized">{t("admin.session.title")}</h1>
-        <p className={status === "unauthorized" ? "text-sm text-destructive" : "text-sm text-muted-foreground"}>{t(status === "probing" ? "admin.session.probing" : "admin.session.error")}</p>
-        {status === "unauthorized" ? <code className="rounded bg-muted px-single py-single text-xs">bun repo run os-hub:dev-secure-admin</code> : null}
+    <div className="flex h-full w-full items-center justify-center p-double">
+      <div id={unreachable ? "admin-session-unreachable" : undefined} className="w-full max-w-md" role={probing ? "status" : "alert"} aria-live={probing ? "polite" : "assertive"}>
+        <WindowChrome
+          level="window"
+          titleChips={<h1 className="m-0 flex items-center px-double text-sm font-semibold">{t(unreachable ? "admin.session.unreachableTitle" : "admin.session.title")}</h1>}
+          body={
+            <div className="flex flex-col gap-single p-double">
+              <p className={status === "unauthorized" ? "text-sm text-destructive" : "text-sm text-muted-foreground"}>
+                {t(unreachable ? "admin.session.unreachableDescription" : probing ? "admin.session.probing" : "admin.session.error")}
+              </p>
+              {command && <code className="bg-muted px-single py-single text-xs break-words">{command}</code>}
+              {unreachable && <p className="text-sm text-muted-foreground">{t("admin.session.unreachableHint")}</p>}
+            </div>
+          }
+        />
       </div>
     </div>
   );

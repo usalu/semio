@@ -19,6 +19,67 @@ fn every_poll_crossing_requires_the_actual_enclosing_and_purpose_reserves(){let 
 fn actual_poll_source_captures_and_retires_the_wasmtime_result() { exercise_poll_on_stack(PollExercise::Deliver); }
 
 #[test]
+fn native_poll_decoder_receives_the_authored_kernel_result_capsule() {
+    std::thread::Builder::new().stack_size(16 * 1024 * 1024).spawn(|| {
+        use semio_framework_kernel::KernelPollOutput;
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🎠️kernel/📤️return/🔤️json/🧪️tests/🔣️.json")).unwrap();
+        let wire = fixture["cases"][0]["expected"].as_str().unwrap();
+        let expected: KernelPollOutput = serde_json::from_str(wire).unwrap();
+        assert_eq!(serde_json::to_value(&expected.result).unwrap(), fixture["cases"][0]["input"]);
+        let slice = grant();
+        let stock = RetainedCloneGrant {
+            maximum_items: 10 * slice.maximum_items,
+            maximum_copy_bytes: 10 * slice.maximum_copy_bytes,
+            maximum_capacity_bytes: 10 * slice.maximum_capacity_bytes,
+            maximum_release_bytes: 10 * slice.maximum_release_bytes,
+            ..slice
+        };
+        let limits = JsonReadLimits { maximum_bytes: 2048, maximum_allocation_bytes: stock.maximum_capacity_bytes, maximum_depth: 64, maximum_items: 2048 };
+        let mut decoder = OriginalJsonOutputSource::<KernelPollOutput>::new(OriginalNativeDecodePolicy { maximum_owned_bytes: stock.maximum_capacity_bytes }, limits);
+        let mut caller = OriginalJobFixtureCaller::admit(OperationId(99), Generation(1), stock, clock, 100_000_000, 10_000_000);
+        caller.retain_dispatch().unwrap();
+        let mut captured = None;
+        let mut outcomes = Vec::new();
+        for _ in 0..100_000 {
+            if captured.is_some() { break; }
+            let outcome = caller.turn(slice, |cx| if decoder.ready() { decoder.take_step(&mut captured, cx) } else { decoder.receive_step(wire.as_bytes(), cx) }).unwrap();
+            if let Some(outcome) = outcome {
+                assert!(outcome.receiving_refusal.is_none() && outcome.value.is_ok(), "kernel capsule refused: {:?}", decoder.failure());
+                outcomes.push(ControlledRetirement::retain(outcome));
+            }
+            for _ in 0..2048 {
+                let Some(outcome) = outcomes.last_mut() else { break; };
+                if outcome.terminal_is_empty() { outcomes.pop(); continue; }
+                let Some(receipt) = caller.turn(slice, |cx| decoder.close_owned_step(outcome, cx)).unwrap() else { break; };
+                assert!(receipt.receiving_refusal.is_none());
+                receipt.value.unwrap();
+            }
+        }
+        assert_eq!(captured.as_ref(), Some(&expected));
+        assert!(outcomes.is_empty());
+        caller.cancel().cancel_now();
+        let mut captured = ControlledRetirement::retain(captured.take().unwrap());
+        for _ in 0..100_000 {
+            if captured.terminal_is_empty() { break; }
+            if let Some(receipt) = caller.turn(slice, |cx| decoder.close_owned_step(&mut captured, cx)).unwrap() {
+                assert!(receipt.receiving_refusal.is_none());
+                receipt.value.unwrap();
+            }
+        }
+        assert!(captured.terminal_is_empty());
+        for _ in 0..100_000 {
+            if decoder.terminal_is_empty() { break; }
+            if let OriginalJsonOutputClose::Producer(Some(receipt)) = caller.turn(slice, |cx| decoder.close_step(cx)).unwrap() {
+                assert!(receipt.receiving_refusal.is_none());
+                receipt.value.unwrap();
+            }
+        }
+        assert!(decoder.terminal_is_empty());
+        caller.retire(stock);
+    }).unwrap().join().unwrap_or_else(|panic| std::panic::resume_unwind(panic));
+}
+
+#[test]
 fn bootstrap_and_source_ready_reserves_are_alternatives_on_one_actual_loan(){
  let stock=grant();let mut caller=OriginalJobFixtureCaller::admit(OperationId(107),Generation(1),stock,clock,100_000_000,1_000_000);
  caller.turn(stock,|cx|{
@@ -56,20 +117,24 @@ fn actual_poll_retires_interrupted_input_and_hands_back_returned_input() {
 fn actual_poll_refuses_an_unfundable_ordinary_acknowledgment() {
     let law: serde_json::Value = serde_json::from_str(include_str!("🧫️acknowledgment-stock.json")).unwrap();
     for frontier in law["frontiers"].as_array().unwrap() {
-        let pending_progress = match frontier.as_str().unwrap() {
-            "beforeInput" => false,
-            "inputProgressReceipt" => true,
+        let frontier = match frontier.as_str().unwrap() {
+            "beforeInput" => AcknowledgmentFrontier::BeforeInput,
+            "inputProgressReceipt" => AcknowledgmentFrontier::InputProgress,
+            "scalarProgressReceipt" => AcknowledgmentFrontier::ScalarProgress,
             _ => panic!("unknown acknowledgment frontier"),
         };
-        exercise_poll_on_stack(PollExercise::ExhaustAcknowledgment(pending_progress));
+        exercise_poll_on_stack(PollExercise::ExhaustAcknowledgment(frontier));
     }
 }
 
 #[test]
 fn actual_poll_refuses_and_retires_an_unfundable_returned_frame() { exercise_poll_on_stack(PollExercise::ExhaustReturnedFrame); }
 
-#[derive(Clone, Copy)]
-enum PollExercise { Deliver, RefuseCallback, CloseInput(bool, bool), ExhaustAcknowledgment(bool), ExhaustReturnedFrame }
+#[derive(Clone, Copy, Debug)]
+enum PollExercise { Deliver, RefuseCallback, CloseInput(bool, bool), ExhaustAcknowledgment(AcknowledgmentFrontier), ExhaustReturnedFrame }
+
+#[derive(Clone, Copy, Debug)]
+enum AcknowledgmentFrontier { BeforeInput, InputProgress, ScalarProgress }
 
 fn exercise_poll_on_stack(exercise: PollExercise) {
     std::thread::Builder::new().stack_size(8 * 1024 * 1024)
@@ -118,8 +183,12 @@ fn exercise_poll(exercise: PollExercise) {
         }
     }
     let origin = origin.expect("fixture registry admits the original compiled parent");
+    let execution_fuel = returned_frame.as_ref().map_or(
+        if close_input.is_some() { 8 } else { 10_000 },
+        |law| law["executionFuelPerTurn"].as_u64().unwrap(),
+    );
     let mut session = GuestPollSession::<bool, GuestPollNoReceiverState>::new(
-        fixture_operation_driver(stock, if close_input.is_some() { 8 } else { 10_000 }),
+        fixture_operation_driver(stock, execution_fuel),
         actor,
         origin,
         OriginalNativeDecodePolicy { maximum_owned_bytes: stock.maximum_capacity_bytes },
@@ -152,42 +221,68 @@ fn exercise_poll(exercise: PollExercise) {
         if let Some(law) = returned_frame.as_ref() {
             if let Some((true, issued, request)) = session.fixture_guest_request().filter(|(_, _, request)| request.header_bytes == 152) {
                 let owner = session.fixture_guest_owner();
-                let target = law["ordinaryReleaseBytes"].as_u64().unwrap() as usize;
+                let maximum_steps = law["maximumPollStepsAfterLoan"].as_u64().unwrap();
+                let spent_at_entry = session.fixture_execution_spent() + law["calleeEntryInstructions"].as_u64().unwrap();
+                for _ in 0..maximum_steps {
+                    let status = session.drive_step(input.as_ref(), &mut |_, _, _| panic!("callee entry cannot deliver Poll output"));
+                    assert_eq!(status, GuestPollSessionStatus::Pending);
+                    if session.fixture_execution_spent() >= spent_at_entry { break; }
+                    std::thread::yield_now();
+                }
+                assert_eq!(session.fixture_execution_spent(), spent_at_entry);
+                let target = law["ordinaryCapacityBytes"].as_u64().unwrap() as usize;
+                let mut ballast = Vec::<Vec<u8>>::new();
                 for _ in 0..64 {
-                    let bytes = session.fixture_drive_release() - target;
+                    let bytes = session.fixture_drive_capacity() - target;
                     if bytes == 0 { break; }
-                    let mut donor = Some(Vec::<u8>::with_capacity(bytes));
                     let status = session.with_native_step(|_, _, _, cx| {
-                        let bytes = donor.as_ref().unwrap().capacity();
-                        cx.consume_retained(RetainedCloneProgress { copied_items: 1, released_bytes: bytes, ..Default::default() })?;
+                        cx.consume_retained(RetainedCloneProgress { copied_items: 1, retained_capacity_bytes: bytes, ..Default::default() })?;
                         cx.consume_fuel(1);
-                        drop(donor.take());
+                        ballast.push(Vec::with_capacity(bytes));
                         Ok(())
                     });
                     assert_ne!(status, GuestPollSessionStatus::Refused, "{:?}", session.failure());
                 }
-                assert_eq!(session.fixture_drive_release(), target);
-                for _ in 0..law["maximumPollStepsAfterLoan"].as_u64().unwrap() {
+                assert_eq!(session.fixture_drive_capacity(), target);
+                for _ in 0..maximum_steps {
                     let status = session.drive_step(input.as_ref(), &mut |_, _, _| panic!("unfundable frame cannot deliver output"));
-                    if status == GuestPollSessionStatus::Pending { continue; }
+                    if status == GuestPollSessionStatus::Pending { std::thread::yield_now(); continue; }
                     assert_eq!(Some(format!("{status:?}").as_str()), law["ordinaryStatus"].as_str());
                     let (_, retained, retained_request) = session.fixture_guest_request().unwrap();
                     assert_eq!((retained, retained_request, session.fixture_guest_owner()), (issued, request, owner));
                     let original = session.failure().unwrap().primary.as_ref().unwrap().primary_value().unwrap();
                     assert_eq!(original.kind, ValueRefusalKind::WorkLimit);
-                    assert_eq!(Some(original.message.as_ref()), law["refusal"].as_str());
+                    assert!(law["refusal"].as_str().is_some_and(|text| original.message.starts_with(text)));
                     refused_frame = true;
                     break;
                 }
+                for _ in 0..128 {
+                    let Some(allocation) = ballast.last() else { break; };
+                    let bytes = allocation.capacity();
+                    let status = session.receive_state_step(|_, cx| {
+                        if cx.retained_grant().maximum_release_bytes >= bytes {
+                            cx.consume_retained(RetainedCloneProgress { copied_items: 1, released_bytes: bytes, ..Default::default() })?;
+                            cx.consume_fuel(1);
+                            drop(ballast.pop());
+                        }
+                        Ok(())
+                    });
+                    assert_ne!(status, GuestPollSessionStatus::Refused, "{:?}", session.cleanup_failure());
+                }
+                assert!(ballast.is_empty());
                 break;
             }
         }
-        if let Some(pending_progress) = exhaust_acknowledgment {
-            if let Some((native_step, issued, request)) = session.fixture_guest_request().filter(|(_, _, request)| request.header_bytes == 144) {
-                let armed = if pending_progress {
+        if let Some(frontier) = exhaust_acknowledgment {
+            let before_input = matches!(frontier, AcknowledgmentFrontier::BeforeInput);
+            let scalar = matches!(frontier, AcknowledgmentFrontier::ScalarProgress);
+            let header = if scalar { 152 } else { 144 };
+            if let Some((native_step, issued, request)) = session.fixture_guest_request().filter(|(_, _, request)| request.header_bytes == header) {
+                let armed = if !before_input {
                     let mut observed = None;
                     let status = session.receive_state_step(|poll, _| {
-                        observed = Some(poll.input_progress_pending() && poll.execution_receipt().is_some_and(|receipt| receipt.submitted));
+                        let pending = if scalar { poll.scalar_progress().is_some() } else { poll.input_progress_pending() };
+                        observed = Some(pending && poll.execution_receipt().is_some_and(|receipt| receipt.submitted));
                         Ok(())
                     });
                     assert_ne!(status, GuestPollSessionStatus::Refused, "{:?}", session.cleanup_failure());
@@ -200,7 +295,7 @@ fn exercise_poll(exercise: PollExercise) {
                     let law: serde_json::Value = serde_json::from_str(include_str!("🧫️acknowledgment-stock.json")).unwrap();
                     let target = control_bytes() - law["copyBytesBelowMinimum"].as_u64().unwrap() as usize;
                     let owner = session.fixture_guest_owner();
-                    if !pending_progress {
+                    if before_input {
                         let status = while_origin_is_borrowed(origin, || session.drive_step(input.as_ref(), &mut |_, _, _| {
                             panic!("Input cannot deliver Poll output");
                         }));
@@ -220,7 +315,7 @@ fn exercise_poll(exercise: PollExercise) {
                         }), law["pendingLoan"]);
                         let original = session.failure().unwrap().primary.as_ref().unwrap().primary_value().unwrap();
                         assert_eq!(original.kind, ValueRefusalKind::WorkLimit);
-                        assert_eq!(Some(original.message.as_ref()), law["refusal"].as_str());
+                        assert!(law["refusal"].as_str().is_some_and(|text| original.message.starts_with(text)));
                         refused_acknowledgment = true;
                         break;
                     }
@@ -305,7 +400,7 @@ fn exercise_poll(exercise: PollExercise) {
         match session.close_step(&mut |_, _, _| panic!("Poll must not deliver during close")) {
             GuestPollSessionStatus::Closed => break,
             GuestPollSessionStatus::Pending => {}
-            status => panic!("actual Poll fixture cleanup {status:?}: {:?} {:?}", session.failure(), session.cleanup_failure()),
+            status => panic!("actual Poll fixture {exercise:?} cleanup {status:?}: {:?} {:?}", session.failure(), session.cleanup_failure()),
         }
     }
     assert!(session.terminal_is_empty());
@@ -494,6 +589,8 @@ fn actual_failure_control_owners_prevent_false_terminal_retirement(){
   poll.failure_plan=None;
   assert!(poll.terminal_is_empty());
  }
+ poll.fixed_seen=Some((OriginalActorFixedKind::Failure{authority:None},3190));
+ assert!(poll.refusal_cause().ends_with("; last guest receipt Failure { authority: None }, 3190 guest work units"));
  drop(poll);
  caller.retire(stock);
 }

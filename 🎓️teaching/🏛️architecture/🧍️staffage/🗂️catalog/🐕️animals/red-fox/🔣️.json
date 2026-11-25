@@ -13,15 +13,69 @@
       "de": "Ein erwachsener Rotfuchs (Vulpes vulpes) von 6 kg, 1,10 m von der Nase bis zur Rutenspitze und 0,44 m Schulterhöhe: schlanke Beine mit dunklen Strümpfen, spitzer Fang, aufrechte Ohren und eine lange buschige Rute mit heller Spitze; aufmerksames Stehen, Ducken beim Mäuseln, eingerollt schlafend mit der Rute über der Nase, diagonaler Trab mit Schwebephase und ein Mäusesprung; dichtes Rutenfell als größte Dämmfläche."
     },
     "tags": [
-      "fox",
-      "red-fox",
-      "wildlife",
-      "canid",
-      "trot",
-      "pounce",
-      "curled-sleeping",
-      "quadruped",
-      "brush-tail"
+      {
+        "id": "fox",
+        "title": {
+          "en": "fox",
+          "de": "Fuchs"
+        }
+      },
+      {
+        "id": "red-fox",
+        "title": {
+          "en": "red fox",
+          "de": "Rotfuchs"
+        }
+      },
+      {
+        "id": "wildlife",
+        "title": {
+          "en": "wildlife",
+          "de": "Wildtier"
+        }
+      },
+      {
+        "id": "canid",
+        "title": {
+          "en": "canid",
+          "de": "Hundeartiger"
+        }
+      },
+      {
+        "id": "trot",
+        "title": {
+          "en": "trot",
+          "de": "Trab"
+        }
+      },
+      {
+        "id": "pounce",
+        "title": {
+          "en": "pounce",
+          "de": "Beutesprung"
+        }
+      },
+      {
+        "id": "curled-sleeping",
+        "title": {
+          "en": "curled sleeping",
+          "de": "zusammengerollt schlafend"
+        }
+      },
+      {
+        "id": "quadruped",
+        "title": {
+          "en": "quadruped",
+          "de": "Vierbeiner"
+        }
+      },
+      {
+        "id": "brush-tail",
+        "title": {
+          "en": "brush tail",
+          "de": "Buschschwanz"
+        }
+      }
     ],
     "provenance": {
       "author": "Semio staffage content worker NW-A1",

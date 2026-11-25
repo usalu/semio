@@ -67,7 +67,7 @@ impl State{
   Ok(if self.cleanup_pending(){RetainedCloneStep::Progress(progress)}else{RetainedCloneStep::Complete(progress)})
  }
  fn demands(&self,body:usize)->Result<[usize;4],ValueError>{
-  macro_rules! child{($child:expr)=>{if let Some(child)=$child{if child.terminal_is_empty(){return Ok([0,0,0,1]);}return Ok([child.next_copy_byte_demand()?,child.next_capacity_byte_demand(body)?,child.next_release_byte_demand()?,child.next_depth_demand()?]);}}}
+  macro_rules! child{($child:expr)=>{if let Some(child)=$child{if child.terminal_is_empty(){return Ok([0,0,0,1]);}let demand=child.next_demand(body)?;return Ok([demand.copy_bytes,demand.capacity_bytes,demand.release_bytes,demand.depth]);}}}
   child!(&self.paint_cleanup);child!(&self.discard);child!(&self.raw_discard);child!(&self.cleanup);
   child!(&self.returned);
   Ok([0;4])
@@ -82,6 +82,15 @@ impl Registry{fn new()->Self{Self{instances:[None;INSTANCES],shells:std::array::
 thread_local!{static MOUNTED:RefCell<Registry>=RefCell::new(Registry::new());}
 struct GeometryJob{shell:Rc<RefCell<Option<State>>>,slot:usize,identity:SceneIdentity,job:u64,input:Option<Vec<u8>>,restored:Option<Vec<u8>>}
 fn fail_current(identity:SceneIdentity,slot:usize){MOUNTED.with(|r|{if let Some(i)=r.borrow_mut().instances[identity.instance as usize%INSTANCES].as_mut().filter(|i|i.identity.matches(identity)&&i.candidate==Some(slot)){i.failed=true;}});}
+/// 🔁️ The complete previous picture of the instance, if it is another shell than the candidate's own.
+fn visual_shell(identity:SceneIdentity,slot:usize)->Option<Rc<RefCell<Option<State>>>>{MOUNTED.with(|r|{let r=r.borrow();let visual=r.instances[identity.instance as usize%INSTANCES]?.visual.filter(|visual|*visual!=slot)?;Some(r.shells[visual].clone())})}
+/// 🚚️ Moves the reused geometry out of the previous picture at publication: `None` while that shell is busy, `Some(false)` when the source is gone or no longer matches.
+fn adopt(identity:SceneIdentity,slot:usize,cache:&mut ScenePaintJob)->Option<bool>{
+ if cache.reused_count()==0{return Some(true)}
+ let Some(old)=visual_shell(identity,slot)else{return Some(false)};
+ let Ok(mut owner)=old.try_borrow_mut()else{return None};
+ Some(owner.as_mut().and_then(|owner|owner.visual.as_mut()).is_some_and(|scene|cache.adopt_reused(scene)))
+}
 impl GeometryJob{
  fn advance(&mut self,cx:&mut StepContext<'_>)->JobStep{
   let current=MOUNTED.with(|r|r.borrow().instances[self.identity.instance as usize%INSTANCES].is_some_and(|i|i.identity.matches(self.identity)&&i.candidate==Some(self.slot)));
@@ -93,10 +102,20 @@ impl GeometryJob{
   for turn in 0..cx.fuel_remaining().min(65536){if turn%32==0&&deadline.is_some_and(|d|semio_framework_job::default_now_us().is_none_or(|t|t>=d)){break;}
    if state.cache.is_some(){
     if !state.producer.as_ref().is_some_and(|producer|producer.snapshot_authority_matches(self.identity.generation,self.identity.revision)){state.transfer(false);state.cancelled=true;fail_current(self.identity,self.slot);return JobStep::Failed(b"drawing.geometry.stale-source".to_vec());}
-    let Some(cache)=state.cache.as_mut()else{return JobStep::Failed(b"drawing.geometry.owner-missing".to_vec())};let result=cache.advance_original(cx);let actual=cache.last_turn_work();state.work+=actual;match result{
-     Ok(progress)=>{if actual==0{return JobStep::Running(None);}if progress.done{let authority=state.producer.as_ref().is_some_and(|producer|producer.snapshot_authority_matches(self.identity.generation,self.identity.revision));state.transfer(authority);if !authority{state.cancelled=true;fail_current(self.identity,self.slot);return JobStep::Failed(b"drawing.geometry.stale-source".to_vec());}drop(shell);
-      MOUNTED.with(|r|{let mut r=r.borrow_mut();let index=self.identity.instance as usize%INSTANCES;if let Some(mut i)=r.instances[index]{if i.identity.matches(self.identity)&&i.candidate==Some(self.slot){if let Some(old)=i.visual.filter(|old|*old!=self.slot){r.retiring[old]=true;}i.visual=Some(self.slot);r.instances[index]=Some(i);}}});return JobStep::Done(Vec::new());}}
-     Err(error)=>{state.transfer(false);state.cancelled=true;fail_current(self.identity,self.slot);return JobStep::Failed(error.domain_message().as_bytes().to_vec());}
+    if state.cache.as_ref().is_some_and(|cache|cache.result().is_err()){
+     let old=visual_shell(self.identity,self.slot);
+     let guard=old.as_ref().and_then(|shell|shell.try_borrow().ok());
+     let source=guard.as_ref().and_then(|owner|(**owner).as_ref()).and_then(|owner|owner.visual.as_ref());
+     let Some(cache)=state.cache.as_mut()else{return JobStep::Failed(b"drawing.geometry.owner-missing".to_vec())};let result=cache.advance_original_reusing(cx,source);let actual=cache.last_turn_work();state.work+=actual;match result{
+      Ok(_)=>{if actual==0{return JobStep::Running(None);}}
+      Err(error)=>{state.transfer(false);state.cancelled=true;fail_current(self.identity,self.slot);return JobStep::Failed(error.domain_message().as_bytes().to_vec());}
+     }
+    }
+    if state.cache.as_ref().is_some_and(|cache|cache.result().is_ok()){
+     let authority=state.producer.as_ref().is_some_and(|producer|producer.snapshot_authority_matches(self.identity.generation,self.identity.revision));
+     if authority{let Some(cache)=state.cache.as_mut()else{return JobStep::Failed(b"drawing.geometry.owner-missing".to_vec())};match adopt(self.identity,self.slot,cache){None=>return JobStep::Running(None),Some(false)=>{if cache.forgo_reuse(){continue;}state.transfer(false);state.cancelled=true;fail_current(self.identity,self.slot);return JobStep::Failed(b"drawing.geometry.reuse-lost".to_vec());},Some(true)=>{}}}
+     state.transfer(authority);if !authority{state.cancelled=true;fail_current(self.identity,self.slot);return JobStep::Failed(b"drawing.geometry.stale-source".to_vec());}drop(shell);
+     MOUNTED.with(|r|{let mut r=r.borrow_mut();let index=self.identity.instance as usize%INSTANCES;if let Some(mut i)=r.instances[index]{if i.identity.matches(self.identity)&&i.candidate==Some(self.slot){if let Some(old)=i.visual.filter(|old|*old!=self.slot){r.retiring[old]=true;if let Ok(mut owner)=r.shells[old].try_borrow_mut(){if let Some(previous)=owner.as_mut(){previous.begin_close();}}}i.visual=Some(self.slot);r.instances[index]=Some(i);}}});return JobStep::Done(Vec::new());
     }
    }else{
     let Some(producer)=&mut state.producer else{return JobStep::Done(Vec::new())};
@@ -189,9 +208,11 @@ impl GeometryOwner{
 fn demand_of(demands:[usize;4])->RetirementDemand{RetirementDemand{copy_bytes:demands[0],capacity_bytes:demands[1],release_bytes:demands[2],depth:demands[3]}}
 fn lifecycle(step:RetainedCloneStep)->PluginLifecycleStep{match step{RetainedCloneStep::Complete(progress)=>PluginLifecycleStep::Complete(progress),RetainedCloneStep::Progress(progress)=>PluginLifecycleStep::Progress(progress)}}
 /// 🧹️ True while any retained scene shell of the instance still owns cleanup work, including its store read lease.
-pub fn maintenance_pending(instance:u32)->bool{MOUNTED.with(|r|r.borrow().shells.iter().any(|shell|shell.try_borrow().is_ok_and(|owner|owner.as_ref().is_some_and(|state|state.identity.instance==instance&&state.cleanup_pending()))))}
+pub fn maintenance_pending(instance:u32)->bool{sweep(instance);MOUNTED.with(|r|r.borrow().shells.iter().any(|shell|shell.try_borrow().is_ok_and(|owner|owner.as_ref().is_some_and(|state|state.identity.instance==instance&&state.cleanup_pending()))))}
+/// 🧹️ Closes every superseded picture whose publication-time close was refused because its shell was borrowed.
+fn sweep(instance:u32){MOUNTED.with(|r|{let r=r.borrow();for(slot,shell) in r.shells.iter().enumerate(){if r.retiring[slot]{if let Ok(mut owner)=shell.try_borrow_mut(){if let Some(state)=owner.as_mut().filter(|state|state.identity.instance==instance&&state.visual.is_some()&&state.discard.is_none()){state.begin_close();}}}}})}
 /// 📏️ Quotes the next retained scene cleanup turn from the source owner.
-pub fn maintenance_demands(instance:u32,body:usize)->Result<RetirementDemand,ValueError>{GeometryOwner::new(instance).demands(body).map(demand_of)}
+pub fn maintenance_demands(instance:u32,body:usize)->Result<RetirementDemand,ValueError>{sweep(instance);GeometryOwner::new(instance).demands(body).map(demand_of)}
 /// 🧹️ Pays the original cleanup action for a finished or superseded scene job.
 pub fn maintenance(instance:u32,cx:&mut StepContext<'_>,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,PluginLifecycleFailure>{
  let body=grant.maximum_copy_bytes;

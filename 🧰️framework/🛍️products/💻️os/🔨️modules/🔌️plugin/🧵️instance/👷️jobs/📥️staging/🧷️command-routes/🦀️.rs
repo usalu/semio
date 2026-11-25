@@ -5,7 +5,7 @@ use semio_plugin_ownership::bounded_ownership::{ARTIFACT_LIVE_OUTPUT_SLOTS, Plug
 use semio_framework::{ActionKind, Fault, FaultCode, FaultFrom, FaultOrigin};
 use semio_plugin_decl_app::{ArtifactApp, ArtifactCompletionFault};
 use semio_plugin_decl_app::tool_contract::{ArtifactBoundedToolFault, ArtifactToolCompletion, ArtifactToolCompletionValue};
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use semio_plugin_job::{ChildEmissionPreviewJob, agent_lane_uncarried_fault, drive_agent_lane_preview};
 use semio_plugin_instance_history::history_components::CommandHistory;

@@ -5,6 +5,7 @@ import {mkdir,readdir,readFile,rename,rm,writeFile} from "node:fs/promises";
 import {dirname,join,relative,resolve} from "node:path";
 import {fileURLToPath,pathToFileURL} from "node:url";
 import {isMainThread,Worker,workerData} from "node:worker_threads";
+import {ownProcessIdentityV1,processHolderAliveV1,readProcessStartV1,type ProcessStartReadV1} from "../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts";
 
 type Check=(root:string,signal?:AbortSignal)=>Promise<{ok:boolean;error:string|null}>;
 type Reject=(root:string,digest:string)=>Promise<string|null>;
@@ -17,7 +18,7 @@ type Snapshot=Readonly<{digest:string;createdMs:number;directory:string}>;
 type Offer=Snapshot&Readonly<{healthy:number}>;
 const provenOriginsV1=2;
 type Outcome=Readonly<{kind:"exit";code:number}>|Readonly<{kind:"early";code:number;reason:string}>;
-type Watch=Readonly<{shared:SharedArrayBuffer;beat:string;health:string;parent:number;startedMs:number;base:string;source:string;blockMs:number;beatMs:number}>;
+type Watch=Readonly<{shared:SharedArrayBuffer;beat:string;health:string;parent:number;parentStart:ProcessStartReadV1;startedMs:number;base:string;source:string;blockMs:number;beatMs:number}>;
 type Beat=Readonly<{pid?:number;wallMs?:number;phase?:string;lagMs?:number;activity?:string;longestMs?:number;longestActivity?:string}>;
 
 /** 📐️ The limits of the boot stage in milliseconds: a start counts as early while it has not reached its ready state or ran for less than `earlyMs`; a daemon that is not ready after `readyMs` is killed; a block of the event loop is recorded as a failure after `blockMs` and ends the process after `killMs` (120 s) once the daemon runs (the boot and open phases are bounded by `readyMs` instead), with a `loop-blocked-restart` record and a stack sample taken first; a stopping daemon gets `graceMs` before it is killed; the watchdog writes its beat every `beatMs`; fetching from the store gives up after `storeMs`. `SEMIO_FLEET_BOOT_<NAME>` overrides each one (`EARLY_MS`, `READY_MS`, `BLOCK_MS`, `KILL_MS`, `GRACE_MS`, `BEAT_MS`, `STORE_MS`). */
@@ -35,7 +36,7 @@ const bootDirectory=(root:string):string=>join(root,".cache","f","boot");
 const codeDirectory=(root:string):string=>join(root,".cache","f","code");
 const readJson=(file:string):unknown=>{try{return JSON.parse(readFileSync(file,"utf8"));}catch{return undefined;}};
 const writeAtomic=(file:string,body:string):void=>{mkdirSync(dirname(file),{recursive:true});const temporary=`${file}.${process.pid}.${randomBytes(4).toString("hex")}.tmp`;try{writeFileSync(temporary,body);renameSync(temporary,file);}catch(error){rmSync(temporary,{force:true});throw error;}};
-const alive=(pid:number):boolean=>{try{process.kill(pid,0);return true;}catch(error){return (error as {code?:string}).code==="EPERM";}};
+const parentLives=(pid:number,start:ProcessStartReadV1):boolean=>start==="gone"?false:start==="unknown"?true:processHolderAliveV1({pid,startMs:start});
 const timed=<T>(work:Promise<T>,milliseconds:number):Promise<T>=>new Promise<T>((done,fail)=>{const timer=setTimeout(()=>{fail(Error(`store did not answer within ${milliseconds} ms`));},milliseconds);work.then(value=>{clearTimeout(timer);done(value);},error=>{clearTimeout(timer);fail(error);});});
 
 /** ⏱️ Reads the limits from the environment. */
@@ -126,8 +127,8 @@ function watchdogLoop(config:Watch):void{
  const tick=():void=>{
   const now=Date.now(),lag=Math.max(0,now-shared[0]!),activity=activities[shared[2]!]??"idle";
   if(lag>longest){longest=lag;longestActivity=activity;}
-  if(!alive(config.parent))process.kill(process.pid,"SIGKILL");
-  try{writeAtomic(config.beat,JSON.stringify({version:1,pid:process.pid,parent:config.parent,startedMs:config.startedMs,wallMs:now,phase:phases[shared[1]!]??"boot",base:config.base,source:config.source,lagMs:lag,activity,longestMs:Math.round(longest),longestActivity}));}catch{}
+  if(!parentLives(config.parent,config.parentStart))process.kill(process.pid,"SIGKILL");
+  try{writeAtomic(config.beat,JSON.stringify({version:1,...ownProcessIdentityV1(),parent:config.parent,startedMs:config.startedMs,wallMs:now,phase:phases[shared[1]!]??"boot",base:config.base,source:config.source,lagMs:lag,activity,longestMs:Math.round(longest),longestActivity}));}catch{}
   if(lag>=config.blockMs&&!blocked){blocked=true;record();}
   else if(lag<2000)blocked=false;
  };
@@ -145,7 +146,7 @@ function startWatchdog(root:string,base:string,source:string,limits:BootLimitsV1
  const holder=globalThis as unknown as Record<symbol,unknown>,earlier=readJson(restartFile(root)) as {count?:unknown;wallMs?:unknown}|undefined;
  holder[Symbol.for("semio.fleet.activity")]=(name:string):void=>{const index=activities.indexOf(name as never);if(index>=0)view[2]=index;};
  if(typeof earlier?.count==="number"&&typeof earlier.wallMs==="number")holder[Symbol.for("semio.fleet.blockedRestart")]={count:earlier.count,lastMs:earlier.wallMs};
- const config:Watch={shared,beat:join(bootDirectory(root),"beat.json"),health:join(root,".cache","f","health.json"),parent:process.ppid,startedMs:Date.now(),base,source,blockMs:limits.blockMs,beatMs:limits.beatMs};
+ const config:Watch={shared,beat:join(bootDirectory(root),"beat.json"),health:join(root,".cache","f","health.json"),parent:process.ppid,parentStart:readProcessStartV1(process.ppid),startedMs:Date.now(),base,source,blockMs:limits.blockMs,beatMs:limits.beatMs};
  try{const worker=new Worker(fileURLToPath(import.meta.url),{workerData:{semioBoot:config}});worker.unref();worker.on("error",()=>{});}catch{}
  let last=Date.now();
  setInterval(()=>{
@@ -207,9 +208,9 @@ async function child(args:readonly string[],root:string,module:string,context:Co
  const limits=bootLimitsV1(environment),base=environment.SEMIO_FLEET_BOOT_BASE??root,source=environment.SEMIO_FLEET_BOOT_SOURCE??"worktree",worktree=resolve(base)===resolve(root);
  const dog=startWatchdog(root,base,source,limits);
  let ready=false,reload=false,progressExit:ReturnType<typeof setTimeout>|undefined;
- const owned=globalThis as unknown as Record<symbol,unknown>,progress=Symbol.for("semio.fleet.gitProgressRestart"),parent=process.ppid;
+ const owned=globalThis as unknown as Record<symbol,unknown>,progress=Symbol.for("semio.fleet.gitProgressRestart"),parent=process.ppid,parentStart=readProcessStartV1(parent);
  const armProgressExit=():boolean=>{
-  if(!ready||context.signal.aborted||progressExit!==undefined||process.ppid!==parent||!alive(parent))return false;
+  if(!ready||context.signal.aborted||progressExit!==undefined||process.ppid!==parent||!parentLives(parent,parentStart))return false;
   progressExit=setTimeout(()=>process.exit(1),limits.graceMs);
   return true;
  };

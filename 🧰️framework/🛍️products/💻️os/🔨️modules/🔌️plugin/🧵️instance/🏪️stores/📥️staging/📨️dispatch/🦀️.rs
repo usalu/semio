@@ -4,7 +4,7 @@
 use semio_plugin_command::{AlternativeFact,HistoryRowReads,history_alternative_views};
 use semio_plugin_decl_views::history_view::{AlternativeView,CommandLogEntry,CommandView};
 use semio_plugin_decl_app::ArtifactApp;
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use store::{ArtifactStore, MemberFactory, Mutation, SpaceMember};
 use store::ReferenceSpaceMember as _;

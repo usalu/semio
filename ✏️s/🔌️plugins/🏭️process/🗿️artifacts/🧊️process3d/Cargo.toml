@@ -10,6 +10,7 @@ members = [
     "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️harness/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧰️kit/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/📦️packages/🦀️rust",
@@ -243,11 +244,20 @@ path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️w
 [workspace.dependencies.semio-s-artifact-process-process3d-editor]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust"
 
+[workspace.dependencies.semio-s-artifact-process-process3d-harness]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️harness/📦️packages/🦀️rust"
+
 [workspace.dependencies.semio-s-artifact-process-process3d-viewer]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-plugin-ownership]
 path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/🧱️owner/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-plugin-store-lifecycle]
+path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/♻️lifecycle/🧱️owner/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-plugin-transient-publication]
+path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🫧️transient/🧱️owner/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-os-store-operation-wire]
 path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/📦️packages/🦀️rust"

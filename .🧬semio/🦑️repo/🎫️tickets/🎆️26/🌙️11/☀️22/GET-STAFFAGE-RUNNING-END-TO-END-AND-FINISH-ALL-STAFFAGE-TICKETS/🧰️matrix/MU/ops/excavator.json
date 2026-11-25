@@ -1,0 +1,18 @@
+{
+"ops": [
+{"op": "solid-from", "scale": "50", "view": "front", "id": "counterweight-body", "from": "plan"},
+{"op": "solid-from", "scale": "100", "view": "elevation", "id": "counterweight-body", "from": "plan"},
+{"op": "solid-from", "scale": "100", "view": "front", "id": "counterweight-body", "from": "plan"},
+{"op": "solid-from", "scale": "200", "view": "elevation", "id": "counterweight-body", "from": "plan"},
+{"op": "solid-from", "scale": "200", "view": "front", "id": "counterweight-body", "from": "plan"},
+{"op": "solid-from", "scale": "500", "view": "elevation", "id": "counterweight-body", "from": "plan"},
+{"op": "solid-from", "scale": "500", "view": "front", "id": "counterweight-body", "from": "plan"},
+{"op": "shape", "scale": "50", "view": "elevation", "id": "counterweight-body", "shape": {"id": "counterweight-body", "bone": "counterweight", "role": "body", "z": 59, "filled": true, "tone": 0.35, "kind": "path", "d": "M 0,0.08 L 0.0199,0 L 0.5557,0 L 0.57,0.08 L 0.57,1.08 L 0.5557,1.16 L 0.0199,1.16 L 0,1.08 Z", "region": "counterweight", "material": "cast-iron", "solid": {"kind": "extruded", "sweep": "w", "z0": -0.5, "z1": 0.5}}},
+{"op": "shape-add", "scale": "50", "view": "elevation", "after": "counterweight-body", "shape": {"id": "counterweight-flank-1", "bone": "counterweight", "role": "body", "z": 58.9, "filled": true, "tone": 0.35, "kind": "path", "d": "M 0.0829,0.08 L 0.1028,0 L 0.5557,0 L 0.57,0.08 L 0.57,1.08 L 0.5557,1.16 L 0.1028,1.16 L 0.0829,1.08 Z", "region": "counterweight", "material": "cast-iron", "solid": {"kind": "extruded", "sweep": "w", "z0": -0.85, "z1": 0.85}}},
+{"op": "shape-add", "scale": "50", "view": "elevation", "after": "counterweight-body", "shape": {"id": "counterweight-flank-2", "bone": "counterweight", "role": "body", "z": 58.8, "filled": true, "tone": 0.35, "kind": "path", "d": "M 0.1826,0.08 L 0.2025,0 L 0.5557,0 L 0.57,0.08 L 0.57,1.08 L 0.5557,1.16 L 0.2025,1.16 L 0.1826,1.08 Z", "region": "counterweight", "material": "cast-iron", "solid": {"kind": "extruded", "sweep": "w", "z0": -1.15, "z1": 1.15}}},
+{"op": "shape-add", "scale": "50", "view": "elevation", "after": "counterweight-body", "shape": {"id": "counterweight-flank-3", "bone": "counterweight", "role": "body", "z": 58.7, "filled": true, "tone": 0.35, "kind": "path", "d": "M 0.301,0.08 L 0.3209,0 L 0.5557,0 L 0.57,0.08 L 0.57,1.08 L 0.5557,1.16 L 0.3209,1.16 L 0.301,1.08 Z", "region": "counterweight", "material": "cast-iron", "solid": {"kind": "extruded", "sweep": "w", "z0": -1.37, "z1": 1.37}}},
+{"op": "shape", "scale": "500", "view": "elevation", "id": "bucket-link", "shape": {"id": "bucket-link", "bone": "bucket-link", "role": "body", "z": 8, "filled": true, "tone": 0.45, "kind": "path", "d": "M 0,-0.08 L 0.66,-0.08 L 0.74,0 L 0.66,0.08 L 0,0.08 L -0.08,0 Z", "region": "attachment", "material": "paint-steel", "solid": {"kind": "extruded", "sweep": "w", "z0": -0.2, "z1": 0.04}}},
+{"op": "shape", "scale": "500", "view": "front", "id": "bucket-link", "shape": {"id": "bucket-link", "bone": "bucket-link", "role": "body", "z": 28, "filled": true, "tone": 0.45, "kind": "path", "d": "M 0,-0.08 L 0.66,-0.08 L 0.74,0 L 0.66,0.08 L 0,0.08 L -0.08,0 Z", "region": "attachment", "material": "paint-steel", "solid": {"kind": "extruded", "sweep": "w", "z0": -0.2, "z1": 0.04}}},
+{"op": "shape", "scale": "500", "view": "plan", "id": "bucket-link", "shape": {"id": "bucket-link", "bone": "bucket-link", "role": "body", "z": 6, "filled": true, "tone": 0.45, "kind": "path", "d": "M 0,-0.08 L 0.66,-0.08 L 0.74,0 L 0.66,0.08 L 0,0.08 L -0.08,0 Z", "region": "attachment", "material": "paint-steel", "solid": {"kind": "extruded", "sweep": "w", "z0": -0.2, "z1": 0.04}}}
+]
+}

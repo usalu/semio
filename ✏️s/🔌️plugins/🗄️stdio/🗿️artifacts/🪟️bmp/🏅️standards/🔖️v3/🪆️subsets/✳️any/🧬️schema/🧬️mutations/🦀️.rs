@@ -26,6 +26,7 @@ pub enum BmpMutation {
     RemovePaletteEntry(RemovePaletteEntry),
 }
 dsl::original_pack_value_operation_receiving!(BmpMutation);
+dsl::artifact_persisted_binary_operation!(BmpMutation);
 
 #[cfg(test)]
 pub(crate) fn demo_mutation_cases() -> Vec<BmpMutation> {

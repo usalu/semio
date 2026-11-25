@@ -4,5 +4,5 @@
   "nested_owner_schedules": 4,
   "detached_owner_schedules": 5,
   "card_hit_target": "BUTTON",
-  "card_lift_target": "DIV"
+  "card_paint_target": "DIV"
 }

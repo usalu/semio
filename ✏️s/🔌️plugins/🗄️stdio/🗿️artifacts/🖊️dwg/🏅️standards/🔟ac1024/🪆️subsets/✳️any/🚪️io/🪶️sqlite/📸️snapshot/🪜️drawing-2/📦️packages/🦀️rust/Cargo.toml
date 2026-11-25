@@ -27,6 +27,10 @@ semio-framework-value-derive = { workspace = true }
 semio-s-artifact-stdio-dwg-snapshot-document = { workspace = true }
 semio-s-artifact-stdio-dwg-snapshot-drawing = { workspace = true }
 semio-s-artifact-stdio-dwg-snapshot-objects = { workspace = true }
+semio-s-artifact-stdio-dwg-snapshot-objects-associativity = { workspace = true }
+semio-s-artifact-stdio-dwg-snapshot-objects-constraints = { workspace = true }
+semio-s-artifact-stdio-dwg-snapshot-objects-styles = { workspace = true }
+semio-s-artifact-stdio-dwg-snapshot-objects-xrecord = { workspace = true }
 semio-s-artifact-stdio-dwg-sqlite-objects = { workspace = true }
 
 [dev-dependencies]

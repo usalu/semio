@@ -7,6 +7,10 @@ use semio_s_plugin_norm_app_surface_foundation::{get_value_at_path, object_id_fi
 mod payload_arguments;
 pub use payload_arguments::{SetFieldArgument, SetFieldArgumentSource};
 
+#[path = "🌱️default-row/🦀️.rs"]
+mod default_row;
+pub use default_row::mutation_inputs;
+
 #[cfg(test)]
 #[path = "🧪️tests/🦀️.rs"]
 mod tests;
@@ -402,7 +406,7 @@ impl NormEditRules {
         self.resolve_with_id_removals(&[], document, edit)
     }
 
-    /// 🆔 Resolves like [`NormEditRules::resolve`], except that a `removeItem` on a path of `id_removals` raises the kind that removes the
+    /// 🆔 Resolves like [`NormEditRules::resolve`], where an insertion without a value places the [`NormEditRules::seeded_row`] of its collection, except that a `removeItem` on a path of `id_removals` raises the kind that removes the
     /// row by its id, nested rows included (`members[].actions` carries the `memberId` selector).
     pub fn resolve_with_id_removals<D, M>(&self, id_removals: &[IdRemoval], document: &D, edit: &NormEdit) -> Result<Vec<M>, String>
     where
@@ -410,7 +414,11 @@ impl NormEditRules {
         M: protocol::Mutation<D>,
     {
         let tree = semio_framework_value::ToValue::to_value(document);
-        let (kind, entries) = self.payload(id_removals, &tree, edit)?;
+        let seeded = match edit {
+            NormEdit::InsertItem { path, index, value: None } => Some(NormEdit::InsertItem { path: path.clone(), index: *index, value: Some(self.seeded_row::<D, M>(&tree, path)?) }),
+            _ => None,
+        };
+        let (kind, entries) = self.payload(id_removals, &tree, seeded.as_ref().unwrap_or(edit))?;
         M::from_payload_value(kind, semio_framework_value::DslValue::object(entries)).map(|mutation| vec![mutation]).map_err(|error| error.to_string())
     }
 }

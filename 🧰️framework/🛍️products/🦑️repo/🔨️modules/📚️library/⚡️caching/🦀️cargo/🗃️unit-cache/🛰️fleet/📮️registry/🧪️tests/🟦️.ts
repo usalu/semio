@@ -5,20 +5,20 @@ import {join} from "node:path";
 import {startRemoteCacheServerV1,type RemoteCacheServerV1} from "../../../../../../🏗️build/🌐️remote-cache/🖥️server/🟦️.ts";
 import {sweepSpoolsV1} from "../../../../../../🏗️build/🌐️remote-execution/🛰️sidecar/📮️spool/🟦️.ts";
 import {wrapRustcV1} from "../../../📜️script.ts";
-import {processExistsV1} from "../../../🔒️lock/🟦️.ts";
 import {readLookupsV1} from "../../../💾️store/🟦️.ts";
 import {createFleetClientV1,readFleetSettingsV1} from "../../📡️client/🟦️.ts";
 import {readBuildCountersV1} from "../../📊️counters/🟦️.ts";
 import {FLEET_POLICY_V1} from "../../🪪️identity/🟦️.ts";
 import {enqueueUploadV1,spoolLengthV1,type SpoolJobV1} from "../../📤️uploader/🟦️.ts";
 import {readSpoolRegistryV1,registerSpoolV1} from "../🟦️.ts";
+import {processPidExistsV1} from "../../../../../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts";
 process.env.SEMIO_UNIT_CACHE_UPLOADER_IDLE_MS="1500";
 
 /** 📮️ Contract: every unit a build compiled while the fleet cache was unreachable reaches the fleet cache exactly once, after the build ended, after its upload worker was killed (twice), with no build running: the machine's spool role finds the root in the registry and starts the worker again. Real wrapper, real rustc, real cache server behind a switchable proxy that counts the result writes of each unit. */
 const scratch:string[]=[],servers:RemoteCacheServerV1[]=[],proxies:{stop(force?:boolean):void}[]=[],fleet=FLEET_POLICY_V1;
 const directory=(label:string)=>{const path=realpathSync(mkdtempSync(join(tmpdir(),"u2-"+label+"-")));scratch.push(path);return path;};
 const holder=(cache:string):number|undefined=>{try{return (JSON.parse(readFileSync(join(cache,fleet.layout.state,"uploader.lock"),"utf8")) as {pid:number}).pid;}catch{return undefined;}};
-const killWorker=async(cache:string):Promise<void>=>{const pid=holder(cache);if(pid===undefined)return;try{process.kill(pid,"SIGKILL");}catch{}const until=Date.now()+10000;while(processExistsV1(pid)&&Date.now()<until)await new Promise(done=>setTimeout(done,50));};
+const killWorker=async(cache:string):Promise<void>=>{const pid=holder(cache);if(pid===undefined)return;try{process.kill(pid,"SIGKILL");}catch{}const until=Date.now()+10000;while(processPidExistsV1(pid)&&Date.now()<until)await new Promise(done=>setTimeout(done,50));};
 const pause=(milliseconds:number)=>new Promise(done=>setTimeout(done,milliseconds));
 const caches:string[]=[];
 afterAll(async()=>{for(const cache of caches)await killWorker(cache);for(const proxy of proxies)proxy.stop(true);for(const server of servers)await server.stop().catch(()=>{});if(!process.env.SEMIO_TEST_KEEP)for(const path of scratch)rmSync(path,{recursive:true,force:true});});

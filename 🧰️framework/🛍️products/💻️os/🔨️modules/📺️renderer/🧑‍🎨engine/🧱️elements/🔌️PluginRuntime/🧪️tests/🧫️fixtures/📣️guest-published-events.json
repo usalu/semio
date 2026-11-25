@@ -1,0 +1,10 @@
+{
+  "instance": 7,
+  "hostInternalTags": ["typed-operation-terminal-seen", "typed-operation-pending-output", "typed-operation-terminal-output"],
+  "rows": [
+    { "name": "the guest's boot activation ask for brep", "topic": "os.on-demand.request", "text": "{\"kind\":\"node-kind\",\"nodeKind\":\"brep.solid.extrude\"}" },
+    { "name": "the guest's boot activation ask for math", "topic": "os.on-demand.request", "text": "{\"kind\":\"node-kind\",\"nodeKind\":\"math.vector\"}" },
+    { "name": "a topic the host does not own still crosses, for the effect pass to leave alone", "topic": "os.other", "text": "Hölzer 日本語" },
+    { "name": "an empty payload crosses", "topic": "os.other", "text": "" }
+  ]
+}

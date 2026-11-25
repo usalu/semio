@@ -18,7 +18,7 @@ export interface SpawnDaemonHandle {
 
 /** 🌙️Spawns a long-lived daemon under [[daemonBudgetMs]]; [[SpawnDaemonHandle.kill]] tears down the whole process tree. */
 export function spawnDaemon(cmd: string, args: string[], opts: { cwd?: string; env?: NodeJS.ProcessEnv; stdio?: "inherit" | "pipe" | "ignore" } = {}): SpawnDaemonHandle {
-  const child = spawn(cmd, args, {
+  const child = spawn(cmd, args, {windowsHide:true,
     cwd: opts.cwd,
     env: opts.env ?? process.env,
     stdio: opts.stdio ?? "inherit",

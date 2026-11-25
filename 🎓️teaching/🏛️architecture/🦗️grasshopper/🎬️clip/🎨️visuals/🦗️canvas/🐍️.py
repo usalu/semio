@@ -433,22 +433,27 @@ class Canvas:
 
     def gh_ribbon(self, tabs=RIBBON_TABS, active: str = "Params", *, at=(0, 0, 0), width: float = 12.6, groups=(), highlight=None, anchor: str = "c"):
         """🗂️ Ribbon: the tab row (with plugin tabs) and a strip of component icons for the active tab. ``groups`` is ``[(title, [names])]``. Parts: ``tabs[name]``, ``tiles[name]``."""
+        from itertools import accumulate
+
         sizes = [self._gh_width(tab) + 0.34 for tab in tabs]
+        boundaries = tuple(accumulate(sizes, initial=0.0))
+        spans = tuple(zip(boundaries, boundaries[1:]))
         h_tab, h_strip = 0.4, 1.05
-        widget = Widget()
-        strip = _engine.Rectangle(width=max(sum(sizes), 0.1), height=h_strip, fill_color="#F4F4F4", fill_opacity=1, stroke_color=EDGE, stroke_width=W_THIN)
-        strip.move_to(P((0, -h_tab / 2 - h_strip / 2 + 0.0)))
-        widget.add(strip)
-        widget.parts = {"body": strip, "tabs": {}, "tiles": {}}
-        widget.body = strip
-        x = -sum(sizes) / 2
-        for tab, size in zip(tabs, sizes):
+        ribbon_width = max(sum(sizes), 0.1)
+        frame = _drafting._art.window_frame(ribbon_width, h_tab + h_strip, top_depth=h_tab, top_chips=spans,
+                                             color=EDGE, stroke_width=W_THIN, fill_color="#F4F4F4", fill_opacity=1,
+                                             level="panel", appearance="light").move_to(P((0, -h_strip / 2)))
+        widget = Widget(frame)
+        widget.parts = {"body": frame, "tabs": {}, "tiles": {}}
+        widget.body = frame
+        for tab, (left, right) in zip(tabs, spans):
             on = tab == active
-            cell = _engine.Rectangle(width=size, height=h_tab, fill_color=WHITE if on else "#D9D9D9", fill_opacity=1, stroke_color=EDGE, stroke_width=W_THIN).move_to(P((x + size / 2, 0)))
-            widget.add(cell, self._gh_put(tab, x + size / 2, 0, color=TEXT if on else SUBTLE))
+            x = (left + right - ribbon_width) / 2
+            cell = _engine.Rectangle(width=right - left, height=h_tab, fill_color=WHITE, fill_opacity=0.22 if on else 0,
+                                     stroke_width=0).move_to(P((x, 0)))
+            widget.add(cell, self._gh_put(tab, x, 0, color=TEXT if on else SUBTLE))
             widget.parts["tabs"][tab] = cell
-            x += size
-        gx = -sum(sizes) / 2 + 0.2
+        gx = -ribbon_width / 2 + 0.2
         for title, names in groups:
             start = gx
             for name in names:

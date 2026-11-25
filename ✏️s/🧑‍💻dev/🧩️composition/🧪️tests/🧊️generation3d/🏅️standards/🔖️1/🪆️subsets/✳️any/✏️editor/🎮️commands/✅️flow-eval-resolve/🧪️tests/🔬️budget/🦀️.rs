@@ -208,6 +208,41 @@ fn progress_is_monotone_across_the_round_trips_of_one_evaluation() {
     retire_flow_eval_session(session);
 }
 
+/// 🔁️ A real Pack progress answer owes the mounted editor one continuation with the same evaluation identity.
+#[semio_framework_async_macros::async_test]
+async fn the_preview_reissues_working_evaluations_as_compact_resumes() {
+    use crate::editor_domain::editor_laws::context::{app_with_registry, drive_preview_run_serving, shell_views};
+
+    let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
+    let mut app = app_with_registry().await;
+    let (view, _) = shell_views("procedural-resume-main", "procedural-resume-preview");
+    let mut working = std::collections::BTreeSet::new();
+    let mut resumes = 0;
+    let run = drive_preview_run_serving(&mut app, &view, &[], &mut |pending| {
+        let answer = crate::brep_extension::serve(pending)?;
+        if pending.capability != "evaluate" {
+            return Ok(answer);
+        }
+        let request: serde_json::Value = serde_json::from_str(&pending.request_json).expect("evaluate request");
+        let text = |field: &str| request[field].as_str().expect("evaluate text field");
+        let key = (pending.extension_id.clone(), text("windowId").to_owned(), text("operatorId").to_owned(), request["nodeHash"].as_u64().expect("evaluate node hash"));
+        if request["resume"].as_bool().expect("evaluate resume flag") {
+            assert!(working.remove(&key), "resume must follow a working Pack answer for {key:?}");
+            assert_eq!(text("inputJson"), "");
+            assert_eq!(text("dependencyJson"), "");
+            resumes += 1;
+        }
+        let reply = semio_os_flow::os_pack::pack_rt::decode_wire_value(&answer).expect("evaluate Pack reply");
+        if matches!(reply.get("done"), Some(semio_framework_value::DslValue::Bool(false))) {
+            assert!(working.insert(key), "one progress answer owes one continuation");
+        }
+        Ok(answer)
+    }).await;
+    assert_eq!(run.state.as_deref(), Some("finalized"));
+    assert!(resumes > 0, "default evaluation cadence must exercise a resume");
+    assert!(working.is_empty(), "every working Pack answer must be resumed");
+}
+
 /// ⚖️ LAW: the release a closed run owes reaches BOTH retained-work registries in the geometry
 /// extension — the parked budgeted evaluations and the mesh jobs — because a boolean stopped
 /// mid-validation lives only in the first.

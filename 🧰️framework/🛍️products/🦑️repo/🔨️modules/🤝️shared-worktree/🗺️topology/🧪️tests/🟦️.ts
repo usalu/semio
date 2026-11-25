@@ -10,7 +10,8 @@ import {testPythonV1} from "../../../../../../🔨️modules/🏃️process/📦
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import committed from "../🔣️.json" with {type:"json"};
 import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
-import {applyFleetAddressEnvironmentV1,peerStorePathV1,clientProtocolV1,factsV1,worktreePathV1,groupV1,mountPartsV1,mountPlanV1,platformV1,readTopologyV1,serverPartsV1,serverPlanV1,workerPartsV1,workerServiceV1,type FleetGroupV1,type FleetPlatformV1,type FleetTopologyV1} from "../🟦️.ts";
+import buildPolicy from "../../../📚️library/🏗️build/🔣️policy.json" with {type:"json"};
+import {applyFleetAddressEnvironmentV1,peerStorePathV1,clientProtocolV1,factsV1,worktreePathV1,groupV1,mountPartsV1,mountPlanV1,platformV1,readTopologyV1,serverPartsV1,serverPlanV1,windowsSuperviseScriptV1,workerPartsV1,workerServiceV1,type FleetGroupV1,type FleetPlatformV1,type FleetTopologyV1} from "../🟦️.ts";
 import {checkReachabilityV1,parseTopologyArgumentsV1,preflightLanguagesV1,preflightTextV1,preflightV1,PREFLIGHT_LIMITS_V1,renderFactsV1,runTopologyCommandAsyncV1,runTopologyCommandV1,type PreflightProbesV1,type ReachabilityPortsV1} from "../⌨️command/🟦️.ts";
 import {gitPinsHashV1,type GitGuardsV1} from "../../🌿️git/🟦️.ts";
 import {accessDirectoryV1} from "../../../📚️library/🏗️build/🏡️resident/🔐️consent/🟨️.mjs";
@@ -20,6 +21,7 @@ import {runTopologyScriptV1} from "../📜️script.ts";
 
 type Change={name:string;path:(string|number)[];value?:unknown;remove?:boolean};
 
+const hostedScript=(xml:string):string=>Buffer.from(/-EncodedCommand ([A-Za-z0-9+\/=]+)/u.exec(xml)![1]!,"base64").toString("utf16le");
 const ajv=new Ajv({strict:true,allowUnionTypes:true}),accepts=ajv.compile({$schema:schema.$schema,definitions:schema.definitions,$ref:"#/definitions/Topology"}),python=testPythonV1(),oracle=join(import.meta.dirname,"🐍️.py");
 const PLATFORMS:readonly FleetPlatformV1[]=["linux","macos","windows"],REPLICA="🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica",SCRIPT="📜️script.ts";
 const topology=readTopologyV1(fixture.topology),ids=fixture.topology.groups.map(group=>group.id);
@@ -47,11 +49,11 @@ test("the committed topology is accepted by Ajv and by the repository validator,
  const g1=read.groups[0]!;
  expect(g1.nfs).toEqual({host:"nfs.g1.semio.internal",export:"/Users/Shared/semio-store"});
  expect(g1.server).toEqual({platform:"macos",protocol:"nfs",network:"10.0.1.0/24"});
- expect(g1.cache).toEqual({endpoint:"http://cache.g1.semio.internal:6090",instance:"semio"});
+ expect(g1.cache).toEqual({endpoint:"http://cache.g1.semio.internal:6094",instance:"main"});
  for(const group of read.groups.slice(1)){
   expect(group.nfs).toEqual({host:`nfs.${group.id}.semio.internal`,export:"/srv/semio-store"});
   expect(group.server).toEqual({platform:"linux",protocol:"nfs",network:`10.0.${group.id.slice(1)}.0/24`});
-  expect(group.cache).toEqual({endpoint:`http://cache.${group.id}.semio.internal:6090`,instance:"semio"});
+  expect(group.cache).toEqual({endpoint:`http://cache.${group.id}.semio.internal:6094`,instance:"main"});
  }
  for(const group of read.groups){
   expect(group.peers).toEqual(Object.fromEntries(read.groups.filter(other=>other.id!==group.id).map(other=>[other.id,`/mnt/semio-peers/${other.id}`])));
@@ -61,12 +63,19 @@ test("the committed topology is accepted by Ajv and by the repository validator,
  expect(read.replica).toEqual({pollMilliseconds:250,scanSeconds:90,debounceMilliseconds:150,retentionDays:14,bootstrapMinutes:60,compaction:{automatic:false,snapshotEvents:100000,safetyHours:3,staleHours:12,catchUpEvents:20000}});
 });
 
+test("a group whose cache instance differs from the policy namespace is refused, in both languages, and the committed topology names the policy instance",()=>{
+ const policy=buildPolicy.remoteCache.defaults.instance,copy=JSON.parse(JSON.stringify(committed));
+ expect(readTopologyV1().groups.map(group=>group.cache.instance)).toEqual(readTopologyV1().groups.map(()=>policy));
+ copy.groups[0].cache.instance="semio";
+ expect(()=>readTopologyV1(copy)).toThrow(new RegExp(`g1 needs cache.instance to be the policy instance ${policy}.*braucht cache.instance`,"u"));
+});
+
 test("address environment variables replace one group's host, network and cache endpoint, the file stays unchanged, and the Python oracle agrees",()=>{
  const environment={SEMIO_FLEET_GROUP:"g1",SEMIO_FLEET_NFS_HOST:"203.0.113.10",SEMIO_FLEET_NETWORK:"203.0.113.0/24"};
  const overlaid=applyFleetAddressEnvironmentV1(readTopologyV1(),environment),group=overlaid.groups[0]!;
  expect(group.nfs.host).toBe("203.0.113.10");
  expect(group.server.network).toBe("203.0.113.0/24");
- expect(group.cache.endpoint).toBe("http://203.0.113.10:6090");
+ expect(group.cache.endpoint).toBe("http://203.0.113.10:6094");
  expect(overlaid.groups[1]!.nfs.host).toBe("nfs.g2.semio.internal");
  expect(readTopologyV1().groups[0]!.nfs.host).toBe("nfs.g1.semio.internal");
  expect(()=>applyFleetAddressEnvironmentV1(readTopologyV1(),{SEMIO_FLEET_GROUP:"g1",SEMIO_FLEET_NFS_HOST:"203.0.113.10"})).toThrow("set together");
@@ -79,7 +88,7 @@ test("address environment variables replace one group's host, network and cache 
  const topologyFile=join(import.meta.dirname,"..",readdirSync(join(import.meta.dirname,"..")).find(name=>name.endsWith(".json"))!);
  const result=Bun.spawnSync([python,"-I",oracle,"address",topologyFile],{env:{...process.env,...environment},stdout:"pipe",stderr:"pipe"});
  expect(result.exitCode,result.stderr.toString()).toBe(0);
- expect(JSON.parse(result.stdout.toString())).toEqual({endpoint:"http://203.0.113.10:6090",host:"203.0.113.10",network:"203.0.113.0/24"});
+ expect(JSON.parse(result.stdout.toString())).toEqual({endpoint:"http://203.0.113.10:6094",host:"203.0.113.10",network:"203.0.113.0/24"});
  const partial=Bun.spawnSync([python,"-I",oracle,"address",topologyFile],{env:{...process.env,SEMIO_FLEET_GROUP:"g1",SEMIO_FLEET_NFS_HOST:"203.0.113.10",SEMIO_FLEET_NETWORK:""},stderr:"pipe"});
  expect(partial.exitCode).toBe(1);
  expect(partial.stderr.toString()).toContain("set together");
@@ -235,7 +244,7 @@ test("the worker service keeps the replica daemon alive on every platform",()=>{
  expect(macos).toContain("<key>LimitLoadToSessionType</key><string>Aqua</string>");
  expect(windows).not.toContain("<WorkingDirectory>");
  expect(windows).toContain("<Command>conhost.exe</Command>");
- expect(windows).toContain("<Arguments>--headless powershell.exe -NoProfile -ExecutionPolicy Bypass -File &quot;__WORKER_HOME__\\AppData\\Local\\semio\\fleet\\entry\\boot.ps1&quot; run</Arguments>");
+ expect(windows).toContain("<Arguments>--headless powershell.exe -NoProfile -ExecutionPolicy Bypass -EncodedCommand ");expect(hostedScript(windows)).toBe(windowsSuperviseScriptV1("powershell.exe",'-NoProfile -ExecutionPolicy Bypass -File "__WORKER_HOME__\\AppData\\Local\\semio\\fleet\\entry\\boot.ps1" run'));
  expect(windows).not.toContain(SCRIPT);
  expect(windows).toContain("<RestartOnFailure>");
  expect(windows).toContain("<LogonTrigger>");
@@ -455,12 +464,12 @@ test("the Windows group server shares the store with Server for NFS or, for an s
  expect(nfs["share"]).toContain("Grant-NfsSharePermission -Name store-c -ClientName nfs.b2.example.test -ClientType host -Permission readonly");
  expect(nfs["firewall"]).toContain("-LocalPort 2049,111,1048 -RemoteAddress 10.3.0.0/24");
  expect(nfs["firewall"]).toContain("-LocalPort 443 -RemoteAddress 10.3.0.0/24");
- expect(nfs["relay-unit"]).toContain(`<Arguments>--headless repo ${relay}</Arguments>`);
+ expect(hostedScript(nfs["relay-unit"]!)).toBe(windowsSuperviseScriptV1("repo",relay));
  expect(nfs["relay-unit"]).toContain("<WorkingDirectory>C:\\semio\\"+REPLICA.replaceAll("/","\\")+"</WorkingDirectory>");
  expect(nfs["cache-unit"]).toContain("<Command>conhost.exe</Command>");
- expect(nfs["cache-unit"]).toContain("$env:SEMIO_FLEET_NETWORK='");expect(nfs["cache-unit"]).toContain("remote-cache serve --host fleet --port 443 --directory C:\\semio-remote-cache --max-bytes 214748364800");
- expect(nfs["cache-unit"]).toContain("Get-Content C:\\ProgramData\\semio\\remote-cache.env");
- expect(nfs["cache-unit"]).toContain("&quot;");
+ expect(hostedScript(nfs["cache-unit"]!)).toContain("$env:SEMIO_FLEET_NETWORK='");expect(hostedScript(nfs["cache-unit"]!)).toContain("remote-cache serve --host fleet --port 443 --directory C:\\semio-remote-cache --max-bytes 214748364800");
+ expect(hostedScript(nfs["cache-unit"]!)).toContain("Get-Content C:\\ProgramData\\semio\\remote-cache.env");
+ expect(hostedScript(nfs["cache-unit"]!)).toContain('"Get-Content');
  expect(nfs["cache-unit"]).toContain("<RestartOnFailure>");
  expect(nfs["cache-target"]).toBe("semio-fleet-cache");
  expect(nfs["relay-target"]).toBe("semio-fleet-relay");
@@ -1408,6 +1417,8 @@ test("every group declares the ports of its services and the network policy, lin
  const topology=readTopologyV1(),ajv=new Ajv({strict:true,allowUnionTypes:true}),check=ajv.compile({$schema:schema.$schema,definitions:schema.definitions,$ref:"#/definitions/Topology"});
  expect(check(committed),JSON.stringify(check.errors)).toBe(true);
  for(const group of topology.groups){expect(group.ports,group.id).toEqual({cache:6094,scheduler:8980,worker:8981});expect(group.access).toEqual({enforceNetwork:false,transport:{crossGroup:"sealed",inGroup:"trusted-lan"}});}
+ for(const group of topology.groups)expect(new URL(group.cache.endpoint).port,group.id).toBe(String(group.ports!.cache));
+ expect(()=>{const copy=structuredClone(committed) as any;copy.groups[0].cache.endpoint="http://cache.g1.semio.internal:6090";readTopologyV1(copy);}).toThrow("needs the port of cache.endpoint to be ports.cache 6094");
  const g1=groupV1(topology,"g1"),g2=groupV1(topology,"g2");
  expect(peerStorePathV1(topology,g1,"g2"),"a macOS group server mounts the peers below /Volumes").toBe("/Volumes/semio-peers/g2");
  expect(peerStorePathV1(topology,g2,"g1")).toBe("/mnt/semio-peers/g1");
@@ -1460,4 +1471,20 @@ test("every service definition declares its scheduling class: ProcessType on mac
    expect(read.stdout.trim()).toBe(expected[name==="definition"?"interactive":"background"]!);
   }
  }
+});
+
+test("a crashed Windows service restarts although the headless console host hides its exit status: the hosted script reruns every non-zero exit, and the mount and compaction tasks stay plain",()=>{
+ const windows=workerPartsV1(topology,"c3","windows"),server=serverPartsV1(topology,"c3");
+ for(const xml of [windows["definition"]!,server["cache-unit"]!,server["relay-unit"]!]){
+  const script=hostedScript(xml);
+  expect(script).toStartWith("do{& ");expect(script).toContain(" --% ");expect(script).toContain("$c=$LASTEXITCODE;if($c -eq 0){exit 0};Start-Sleep -Seconds 5}while($true)");
+  expect(xml).toContain("<RestartOnFailure>");
+  const python=testPythonV1();
+  if(python){
+   const run=spawnSync(python,["-I","-c","import base64,re,sys;print(base64.b64decode(re.search(r'-EncodedCommand (\\S+?)<',sys.stdin.read()).group(1)).decode('utf-16-le'),end='')"],{input:xml,encoding:"utf8",windowsHide:true});
+   expect(run.status,run.stderr).toBe(0);expect(run.stdout).toBe(script);
+  }
+ }
+ for(const xml of [windows["mount-definition"]!,windows["compact-definition"]!])expect(xml).not.toContain("-EncodedCommand");
+ expect(windows["mount-definition"]).toContain("<Arguments>--headless cmd.exe ");
 });

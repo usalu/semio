@@ -43,7 +43,7 @@ semio-ui-locale = { path = "../../../../../../../🔨️modules/🖱️ui/🌐�
 semio-os-mcp-wire = { path = "../../../📡️wire/📦️packages/🦀️rust" }
 semio-os-mcp-port = { path = "../../../🔌️channel-port/📦️packages/🦀️rust", features = ["testkit"] }
 semio-os-mcp-routing = { path = "../../../🧲️channel-routing/📦️packages/🦀️rust", features = ["testkit"] }
-semio-os-mcp-capabilities = { path = "../../../🧰️capabilities/📦️packages/🦀️rust" }
+semio-os-mcp-capabilities = { path = "../../../🧰️capabilities/📦️packages/🦀️rust", features = ["testkit"] }
 
 [features]
 testkit = []

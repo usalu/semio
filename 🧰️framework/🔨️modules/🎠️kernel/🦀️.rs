@@ -855,6 +855,20 @@ pub struct TurnResult {
     pub ui_patch_receipt: Option<ActorUiPatchReceipt>,
 }
 
+/// 📬️ The successful Poll capsule carries one kernel result. Refused actor turns use the separate failure receipt.
+#[derive(Debug, PartialEq, Serialize, Deserialize, semio_framework_value::RetireOwned, semio_framework_value::NativeReceive)]
+#[serde(deny_unknown_fields)]
+#[value(crate="::semio_framework_value",deny_unknown_fields)]
+pub struct KernelPollOutput {
+    #[serde(rename = "Ok")]
+    #[value(rename = "Ok")]
+    pub result: TurnResult,
+}
+
+impl KernelPollOutput {
+    pub const RESULT_KEY: &'static str = "Ok";
+}
+
 impl TurnResult {
     /// 🔗️ Checks the typed count while all publication descendants remain in this structural owner.
     pub fn validate_ui_patch_receipt(&self) -> Result<(), &'static str> {

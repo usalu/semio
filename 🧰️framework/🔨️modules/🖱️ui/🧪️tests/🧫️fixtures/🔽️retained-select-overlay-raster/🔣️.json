@@ -32,17 +32,17 @@
       "delta": 34,
       "expectedScroll": 34,
       "expectedFirstRow": 1,
-      "rowHeight": 25.6,
-      "viewportPadding": 3.2,
-      "expectedMaximum": 515.2,
+      "rowHeight": 24,
+      "viewportPadding": 0,
+      "expectedMaximum": 464,
       "unrelatedScroll": 0,
       "commandCount": 0
     },
     "downPress": {
       "direction": 1,
       "expectedScroll": 24,
-      "expectedFirstRow": 0,
-      "expectedLastRowExclusive": 1
+      "expectedFirstRow": 1,
+      "expectedLastRowExclusive": 2
     }
   },
   "image": {

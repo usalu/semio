@@ -2,7 +2,7 @@
 use super::*;
 use semio_framework_job::{OriginalJobFixtureCaller,OriginalJobDecodeOwner,OperationId,Generation,default_now_us};
 use semio_framework_value::RetainedCloneGrant;
-use semio_plugin_ownership::original_store_genesis::OriginalStoreBirth;
+use semio_plugin_store_lifecycle::original_store_genesis::OriginalStoreBirth;
 fn law()->serde_json::Value{serde_json::from_str(include_str!("🔣️.json")).unwrap()}
 fn grant()->RetainedCloneGrant{let l=law();let g=&l["turn"];RetainedCloneGrant{maximum_items:g["items"].as_u64().unwrap()as usize,maximum_copy_bytes:g["copyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:g["capacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:g["releaseBytes"].as_u64().unwrap()as usize,maximum_depth:g["depth"].as_u64().unwrap()as usize}}
 fn caller(id:u64)->OriginalJobFixtureCaller{OriginalJobFixtureCaller::admit(OperationId(id),Generation(47),RetainedCloneGrant{maximum_items:1<<20,maximum_copy_bytes:1<<24,maximum_capacity_bytes:1<<20,maximum_release_bytes:1<<20,maximum_depth:64},default_now_us,u64::MAX,1<<20)}

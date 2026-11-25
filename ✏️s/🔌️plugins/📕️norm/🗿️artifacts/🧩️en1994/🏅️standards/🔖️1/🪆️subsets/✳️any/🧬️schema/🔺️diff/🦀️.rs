@@ -13,10 +13,7 @@ extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
 use semio_s_artifact_norm_en1994_model::En1994Snapshot;
-
-fn missing_target(what: impl std::fmt::Display) -> protocol::MutationApplyError {
-    protocol::MutationApplyError::new("mutation.apply.missing-target", format!("{what} does not exist"))
-}
+use semio_s_plugin_norm_compliance::{nested_patch, scalar_patch};
 
 /// 🔑️ Key extractors of the foreign model rows (`id`), local markers for `list_delta!`.
 macro_rules! row_key {
@@ -40,69 +37,6 @@ row_key! {
     En1994BeamsActionKey for CharacteristicAction;
     En1994ColumnsActionKey for ColumnAction;
     En1994SlabsActionKey for SlabAction;
-}
-
-/// 🩹️ Sparse scalar patch of one keyed row: the struct, its commit, coalescing, inverse and emptiness.
-macro_rules! scalar_patch {
-    ($(#[$doc:meta])* $name:ident for $row:ty { $($f:ident: $t:ty),+ $(,)? }) => {
-        $(#[$doc])*
-        #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
-        #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
-        #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase", default))]
-        #[value(rename_all = "camelCase", default)]
-        pub struct $name { $(pub $f: Option<$t>),+ }
-
-        impl protocol::list_delta::RowPatch<$row> for $name {
-            fn commit_into(&self, row: &mut $row, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
-                $(if let Some(value) = &self.$f { row.$f = value.clone(); })+
-                Ok(())
-            }
-            fn absorb(&mut self, later: Self) { $(if later.$f.is_some() { self.$f = later.$f; })+ }
-            fn inverse(&self, row: &$row) -> Self { Self { $($f: self.$f.as_ref().map(|_| row.$f.clone())),+ } }
-            fn is_empty(&self) -> bool { true $(&& self.$f.is_none())+ }
-        }
-    };
-}
-
-/// 🩹️ Sparse patch of one keyed row with direct leaves (`set`), leaves of nested structs every row owns (`within`) and owned row lanes (`rows`): the struct, its commit, coalescing, inverse and emptiness.
-macro_rules! nested_patch {
-    ($(#[$doc:meta])* $name:ident for $row:ty { set { $($f:ident: $t:ty),* $(,)? } within { $($w:ident => $obj:ident . $inner:ident : $wt:ty),* $(,)? } rows { $($lane:ident : $rows:ty = $label:literal),* $(,)? } }) => {
-        $(#[$doc])*
-        #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
-        #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
-        #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase", default))]
-        #[value(rename_all = "camelCase", default)]
-        pub struct $name { $(pub $f: Option<$t>,)* $(pub $w: Option<$wt>,)* $(pub $lane: Option<$rows>,)* }
-
-        impl protocol::list_delta::RowPatch<$row> for $name {
-            #[allow(unused_variables)]
-            fn commit_into(&self, row: &mut $row, capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
-                $(if let Some(value) = &self.$f { row.$f = value.clone(); })*
-                $(if let Some(value) = &self.$w { row.$obj.$inner = value.clone(); })*
-                $(if let Some(rows) = &self.$lane { row.$lane = rows.commit_onto(&row.$lane, capability).map_err(|error| error.under([$label]))?; })*
-                Ok(())
-            }
-            fn absorb(&mut self, later: Self) {
-                $(if later.$f.is_some() { self.$f = later.$f; })*
-                $(if later.$w.is_some() { self.$w = later.$w; })*
-                $(if let Some(theirs) = later.$lane {
-                    match self.$lane.as_mut() {
-                        Some(mine) => mine.absorb(theirs),
-                        None => self.$lane = Some(theirs),
-                    }
-                    self.$lane = self.$lane.take().filter(|rows| !rows.is_empty());
-                })*
-            }
-            fn inverse(&self, row: &$row) -> Self {
-                Self {
-                    $($f: self.$f.as_ref().map(|_| row.$f.clone()),)*
-                    $($w: self.$w.as_ref().map(|_| row.$obj.$inner.clone()),)*
-                    $($lane: self.$lane.as_ref().map(|rows| rows.inverse(&row.$lane)).filter(|rows| !rows.is_empty()),)*
-                }
-            }
-            fn is_empty(&self) -> bool { true $(&& self.$f.is_none())* $(&& self.$w.is_none())* $(&& self.$lane.as_ref().map_or(true, |rows| rows.is_empty()))* }
-        }
-    };
 }
 
 #[path = "🏗️beam-rows/🦀️.rs"]
@@ -159,7 +93,7 @@ pub struct En1994Diff {
     #[state(artifact)]
     pub reliability_class: Option<semio_s_plugin_norm_compliance::ReliabilityClass>,
     #[state(artifact)]
-    pub cases: Option<semio_s_plugin_norm_compliance::design_case::CaseRowDelta>,
+    pub cases: semio_s_plugin_norm_compliance::design_case::CaseRowDelta,
 }
 
 //#region 🍃️FacetLeaves

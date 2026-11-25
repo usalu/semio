@@ -63,6 +63,7 @@ pub fn native_openable_stdio_bundle() -> std::path::PathBuf {
         extension_points: Vec::new(),
         execution: semio_framework::ExecutionMode::Isolated,
         execution_protocol: semio_framework::ExecutionProtocol { app_channel_version: directory::os_spr::CHANNEL_VERSION },
+        components: Vec::new(),
         quotas: semio_framework::kernel::QuotaSchema::default(),
         contributions: semio_framework::ContributionSet::default(),
         assets: Vec::new(),

@@ -4,7 +4,7 @@ use semio_framework::manifest;
 use semio_os_kernel::native_catalog::NativeCatalogV1;
 use std::path::Path;
 use crate::core_capabilities::core_tool_capabilities;
-use semio_os_mcp_catalog::catalog::{CatalogSource, compile};
+use semio_os_mcp_catalog::catalog::{CatalogSource, compile, compute_catalog_entries_hash};
 use semio_os_mcp_catalog::registry::RegistryDiscovery;
 #[cfg(any(test, feature = "testkit"))]
 use crate::source_builders::{cad_descriptor, note_descriptor};
@@ -75,4 +75,36 @@ fn the_same_input_compiles_to_a_byte_identical_catalog_hash_twice() {
     let catalog_a = compile(&source_a, semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native).expect("compiles");
     let catalog_b = compile(&source_b, semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native).expect("compiles");
     assert_eq!(catalog_a.hash, catalog_b.hash, "discovering + compiling the same install twice must be byte-identical");
+}
+
+#[test]
+fn the_catalog_hash_changes_exactly_when_the_catalog_content_changes() {
+    let source = CatalogSource { descriptors: vec![note_descriptor(), cad_descriptor()], gateway: core_tool_capabilities(), shell: Vec::new(), os_commands: Vec::new() };
+    let compiled = |source: &CatalogSource| compile(source, semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native).expect("compiles");
+    let baseline = compiled(&source);
+    assert_eq!(compiled(&source).hash, baseline.hash, "the same content hashes identically however the work is spread over workers");
+    let (rehashed, entries) = compute_catalog_entries_hash(baseline.entries.clone());
+    assert_eq!((rehashed, entries), (baseline.hash.clone(), baseline.entries.clone()), "the published hash is a pure function of the sorted entries");
+    let mut changed = source.clone();
+    changed.gateway[0].description.push('!');
+    assert_ne!(compiled(&changed).hash, baseline.hash, "one changed character in one entry changes the hash");
+    let mut fewer = source.clone();
+    fewer.descriptors.pop();
+    assert_ne!(compiled(&fewer).hash, baseline.hash, "a removed entry changes the hash");
+}
+
+#[test]
+fn parallel_descriptor_loading_keeps_registry_order_for_paths_and_diagnostics() {
+    let dir = store::test_support::tempdir().expect("tempdir");
+    let root = dir.path().to_path_buf();
+    let rows = [("note", "plugins/note"), ("gone-a", "plugins/gone-a"), ("cad", "plugins/cad"), ("gone-b", "plugins/gone-b")];
+    let catalog = write_registry(&root, &rows);
+    write_descriptor(&root, "plugins/note", &note_descriptor());
+    write_descriptor(&root, "plugins/cad", &cad_descriptor());
+    let discovery = RegistryDiscovery::scan(root.clone(), &catalog).unwrap();
+    let expected_paths: Vec<_> = rows.iter().map(|(_, owner)| root.join(owner).join("🔣️.json")).collect();
+    assert_eq!(discovery.descriptor_paths, expected_paths);
+    assert_eq!(discovery.descriptors.len(), 2);
+    assert_eq!(discovery.diagnostics.len(), 2);
+    assert!(discovery.diagnostics[0].contains("gone-a") && discovery.diagnostics[1].contains("gone-b"), "{:?}", discovery.diagnostics);
 }

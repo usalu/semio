@@ -1,0 +1,18 @@
+[
+  {"op": "volume", "scale": "100", "id": "sleeve-l", "as": "revolved", "fixed": true},
+  {"op": "volume", "scale": "200", "id": "forearm-r", "as": "revolved", "fixed": true},
+  {"op": "volume", "scale": "200", "id": "forearm-l", "as": "revolved", "fixed": true},
+  {"op": "volume", "scale": "200", "id": "sleeve-l", "as": "prism-w", "profile": "elevation", "fixed": true},
+  {"op": "volume", "scale": "200", "id": "hand-r", "as": "revolved", "fixed": true},
+  {"op": "volume", "scale": "200", "id": "sleeve-r", "as": "revolved", "fixed": true},
+  {"op": "volume", "scale": "500", "id": "forearm-r", "as": "prism-v", "fixed": true},
+  {"op": "volume", "scale": "500", "id": "forearm-l", "as": "prism-w", "fixed": true},
+  {"op": "volume", "scale": "500", "id": "hand-l", "as": "prism-w", "fixed": true},
+  {"op": "volume", "scale": "500", "id": "sleeve-r", "as": "revolved", "fixed": true},
+  {"scale": "50", "id": "sleeve-l", "op": "volume", "views": ["elevation", "plan"], "as": "revolved", "fixed": true},
+  {"scale": "50", "id": "hand-r", "op": "volume", "views": ["plan"], "as": "prism-w", "fixed": true},
+  {"scale": "100", "id": "hand-r", "op": "volume", "views": ["plan"], "as": "prism-v", "fixed": true},
+  {"scale": "500", "id": "sleeve-l", "op": "volume", "views": ["elevation", "plan"], "as": "revolved", "fixed": true},
+  {"search": true, "order": ["loft"], "scale": "100", "id": "hand-l", "subsets": [["plan"], ["front", "plan"], ["elevation", "plan"], ["elevation", "front", "plan"]]},
+  {"search": true, "order": ["loft"], "scale": "200", "id": "hand-l", "subsets": [["plan"], ["front", "plan"], ["elevation", "plan"], ["elevation", "front", "plan"]]}
+]

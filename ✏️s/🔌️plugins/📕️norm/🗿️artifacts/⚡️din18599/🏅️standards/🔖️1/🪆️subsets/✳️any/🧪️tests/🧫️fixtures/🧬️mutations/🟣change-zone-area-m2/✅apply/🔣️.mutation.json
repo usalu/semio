@@ -1,5 +1,5 @@
 {
-  "mutation": "changezoneaream2",
+  "mutation": "changeZoneAreaM2",
   "zoneId": "zone-living",
   "newAreaM2": 150.0
 }

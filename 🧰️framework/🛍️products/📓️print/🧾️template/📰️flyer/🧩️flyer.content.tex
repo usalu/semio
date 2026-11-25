@@ -10,24 +10,33 @@
   Kit-of-Parts Design
 \end{Panel}
 
-\begin{Blockquote}
-  \centering
-  {\SemioSans\Large Kit-of-Parts Design\par}
-  \vspace{\SemioSpacingDouble}
-  {\SemioSans Visual is better than text\par}
-  \semioemblem[3cm]
-\end{Blockquote}
-
-\vfill
-\begin{minipage}[t]{0.48\linewidth}
-  \begin{Blockquote}[title=Design]
-    Sharp corners, borders, and basic geometric shapes
-  \end{Blockquote}
-\end{minipage}\hfill
-\begin{minipage}[t]{0.48\linewidth}
-  \begin{Blockquote}[title=Build]
-    Robust templates for reports, papers, and flyers
-  \end{Blockquote}
-\end{minipage}
+\begin{WindowArrangement}[height=\textheight]
+  \begin{WindowColumn}
+    \WindowItem[4]{
+      \begin{Blockquote}[anchor=center]
+        \centering
+        {\SemioSans\Large Kit-of-Parts Design\par}
+        \vspace{\SemioSpacingDouble}
+        {\SemioSans Visual is better than text\par}
+        \vspace{\SemioSpacingDouble}
+        \semioemblem[3cm]
+      \end{Blockquote}
+    }
+    \WindowItem[1]{
+      \begin{WindowRow}
+        \WindowItem{
+          \begin{Blockquote}[title=Design, anchor=center]
+            Sharp corners, borders, and basic geometric shapes
+          \end{Blockquote}
+        }
+        \WindowItem{
+          \begin{Blockquote}[title=Build, anchor=center]
+            Robust templates for reports, papers, and flyers
+          \end{Blockquote}
+        }
+      \end{WindowRow}
+    }
+  \end{WindowColumn}
+\end{WindowArrangement}
 
 \end{document}

@@ -1,0 +1,7 @@
+[
+ {
+  "name": "case",
+  "old": "      \"patch\": [{ \"op\": \"replace\", \"path\": \"/representations/50/sections\", \"value\": {} }],\n      \"expectCodes\": [\"section-empty\"]\n    }\n  ],",
+  "new": "      \"patch\": [{ \"op\": \"replace\", \"path\": \"/representations/50/sections\", \"value\": {} }],\n      \"expectCodes\": [\"section-empty\"]\n    },\n    {\n      \"name\": \"section label that differs between the languages\",\n      \"patch\": [{ \"op\": \"replace\", \"path\": \"/representations/50/sections\", \"value\": { \"front\": { \"plane\": 0, \"label\": { \"en\": \"Cross section\", \"de\": \"Querschnitt\" } } } }],\n      \"expectCodes\": [\"section-label-language\"]\n    },\n    {\n      \"name\": \"section label of letters, the same in both languages\",\n      \"patch\": [{ \"op\": \"replace\", \"path\": \"/representations/50/sections\", \"value\": { \"front\": { \"plane\": 0, \"label\": { \"en\": \"A-A\", \"de\": \"A-A\" } } } }],\n      \"expectCodes\": [],\n      \"expectAbsent\": [\"section-label-language\"]\n    }\n  ],"
+ }
+]

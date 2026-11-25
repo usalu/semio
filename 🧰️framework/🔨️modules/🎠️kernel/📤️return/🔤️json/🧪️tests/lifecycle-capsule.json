@@ -1,0 +1,14 @@
+{
+  "receipt": {
+    "kind": "captured",
+    "lifetime": {"activationGeneration": "1", "instanceId": 0, "guestLifetime": "1"},
+    "requestSequence": "1"
+  },
+  "ack": {
+    "receipt": {
+      "kind": "captured",
+      "lifetime": {"activationGeneration": "1", "instanceId": 0, "guestLifetime": "1"},
+      "requestSequence": 1
+    }
+  }
+}

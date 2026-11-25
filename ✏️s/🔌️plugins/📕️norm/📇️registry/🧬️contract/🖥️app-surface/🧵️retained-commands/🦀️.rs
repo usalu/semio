@@ -110,6 +110,11 @@ pub trait NormRetainedEditor: semio_plugin::ArtifactEditor<Config = NoConfig, Co
     /// 🧭️ The family resolver retains its typed semantic admission and special handlers.
     fn inspector_resolve(document: &Self::Snapshot, edit: &NormEdit) -> Result<Vec<Self::Mutation>, String>;
 
+    /// 🌱️ The neutral row a family places into the empty collection `path` where the schema defaults are not neutral (a conversion factor of 1, a named distribution); the insert tool prefers it to the schema-derived default row, the family resolver uses it for an insertion without a value.
+    fn starter_row(_document: &Self::Snapshot, _path: &str, _index: usize) -> Option<semio_framework_value::DslValue> {
+        None
+    }
+
     fn selected_check_window_mutation(command: &Self::Command) -> Option<semio_s_plugin_norm_results_config::mutations::NormResultsWindowConfigMutation>;
 
     /// 🔗️ The view effects of a click on a check row (the selection of its owner entity, see [`live_check_focus_effects`]); none for apps without a viewport.

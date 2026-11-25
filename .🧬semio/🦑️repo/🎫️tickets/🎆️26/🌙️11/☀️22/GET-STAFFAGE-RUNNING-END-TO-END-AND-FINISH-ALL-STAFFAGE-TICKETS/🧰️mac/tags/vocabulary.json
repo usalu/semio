@@ -1,0 +1,5386 @@
+{
+ "1929": {
+  "en": "1929",
+  "de": "1929"
+ },
+ "125cc": {
+  "en": "125cc",
+  "de": "125-cm³-Motorrad"
+ },
+ "1960s": {
+  "en": "1960s",
+  "de": "1960er"
+ },
+ "1970s": {
+  "en": "1970s",
+  "de": "1970er"
+ },
+ "1980s": {
+  "en": "1980s",
+  "de": "1980er"
+ },
+ "1990s": {
+  "en": "1990s",
+  "de": "1990er"
+ },
+ "a-frame": {
+  "en": "A-frame",
+  "de": "A-Rahmen"
+ },
+ "a-frame-rack": {
+  "en": "A-frame rack",
+  "de": "A-Rahmen-Regal"
+ },
+ "abs": {
+  "en": "ABS",
+  "de": "ABS"
+ },
+ "absorber": {
+  "en": "absorber",
+  "de": "Absorber"
+ },
+ "access-control": {
+  "en": "access control",
+  "de": "Zutrittskontrolle"
+ },
+ "access-platform": {
+  "en": "access platform",
+  "de": "Arbeitsbühne"
+ },
+ "accessibility": {
+  "en": "accessibility",
+  "de": "Barrierefreiheit"
+ },
+ "accordion": {
+  "en": "accordion",
+  "de": "Akkordeon"
+ },
+ "acoustic-guitar": {
+  "en": "acoustic guitar",
+  "de": "Akustikgitarre"
+ },
+ "adjustable": {
+  "en": "adjustable",
+  "de": "verstellbar"
+ },
+ "adult": {
+  "en": "adult",
+  "de": "erwachsen"
+ },
+ "aerophone": {
+  "en": "aerophone",
+  "de": "Aerophon"
+ },
+ "agave": {
+  "en": "agave",
+  "de": "Agave"
+ },
+ "air-conditioner": {
+  "en": "air conditioner",
+  "de": "Klimagerät"
+ },
+ "air-conditioning": {
+  "en": "air conditioning",
+  "de": "Klimatisierung"
+ },
+ "air-handling": {
+  "en": "air handling",
+  "de": "Lufttechnik"
+ },
+ "air-jet": {
+  "en": "air jet",
+  "de": "Luftstrahl"
+ },
+ "air-outlet": {
+  "en": "air outlet",
+  "de": "Luftauslass"
+ },
+ "air-source": {
+  "en": "air source",
+  "de": "Luftquelle"
+ },
+ "alarm": {
+  "en": "alarm",
+  "de": "Alarm"
+ },
+ "alder": {
+  "en": "alder",
+  "de": "Erle"
+ },
+ "aluminium": {
+  "en": "aluminium",
+  "de": "Aluminium"
+ },
+ "amplification": {
+  "en": "amplification",
+  "de": "Verstärkung"
+ },
+ "amputee": {
+  "en": "amputee",
+  "de": "Amputierter"
+ },
+ "anchor-cage": {
+  "en": "anchor cage",
+  "de": "Ankerkorb"
+ },
+ "animal": {
+  "en": "animal",
+  "de": "Tier"
+ },
+ "annual": {
+  "en": "annual",
+  "de": "einjährig"
+ },
+ "anti-tip": {
+  "en": "anti-tip",
+  "de": "Kippsicherung"
+ },
+ "apple": {
+  "en": "apple",
+  "de": "Apfel"
+ },
+ "appliance": {
+  "en": "appliance",
+  "de": "Gerät"
+ },
+ "apron": {
+  "en": "apron",
+  "de": "Schürze"
+ },
+ "archimedes-screw": {
+  "en": "Archimedes screw",
+  "de": "Archimedische Schraube"
+ },
+ "arching": {
+  "en": "arching",
+  "de": "überhängend"
+ },
+ "arm-sling": {
+  "en": "arm sling",
+  "de": "Armschlinge"
+ },
+ "armchair": {
+  "en": "armchair",
+  "de": "Sessel"
+ },
+ "aroid": {
+  "en": "aroid",
+  "de": "Aronstabgewächs"
+ },
+ "articulated": {
+  "en": "articulated",
+  "de": "Gelenk-"
+ },
+ "athlete": {
+  "en": "athlete",
+  "de": "Sportler"
+ },
+ "autumn": {
+  "en": "autumn",
+  "de": "Herbst"
+ },
+ "autumn-colour": {
+  "en": "autumn colour",
+  "de": "Herbstfärbung"
+ },
+ "axial-fan": {
+  "en": "axial fan",
+  "de": "Axialventilator"
+ },
+ "b-flat-trumpet": {
+  "en": "B-flat trumpet",
+  "de": "B-Trompete"
+ },
+ "baby-cot": {
+  "en": "baby cot",
+  "de": "Babybett"
+ },
+ "baby-grand": {
+  "en": "baby grand",
+  "de": "Stutzflügel"
+ },
+ "backpack": {
+  "en": "backpack",
+  "de": "Rucksack"
+ },
+ "bag": {
+  "en": "bag",
+  "de": "Tasche"
+ },
+ "bag-dispenser": {
+  "en": "bag dispenser",
+  "de": "Beutelspender"
+ },
+ "balance": {
+  "en": "balance",
+  "de": "Gleichgewicht"
+ },
+ "balcony": {
+  "en": "balcony",
+  "de": "Balkon"
+ },
+ "ball": {
+  "en": "ball",
+  "de": "Ball"
+ },
+ "ball-sport": {
+  "en": "ball sport",
+  "de": "Ballsport"
+ },
+ "ballet": {
+  "en": "ballet",
+  "de": "Ballett"
+ },
+ "balustrade": {
+  "en": "balustrade",
+  "de": "Balustrade"
+ },
+ "bamboo": {
+  "en": "bamboo",
+  "de": "Bambus"
+ },
+ "banana": {
+  "en": "banana",
+  "de": "Banane"
+ },
+ "band": {
+  "en": "band",
+  "de": "Kapelle"
+ },
+ "bar": {
+  "en": "bar",
+  "de": "Bar"
+ },
+ "bar-compartment": {
+  "en": "bar compartment",
+  "de": "Barfach"
+ },
+ "barbecue": {
+  "en": "barbecue",
+  "de": "Grill"
+ },
+ "barista": {
+  "en": "barista",
+  "de": "Barista"
+ },
+ "barrier": {
+  "en": "barrier",
+  "de": "Absperrung"
+ },
+ "base-cabinet": {
+  "en": "base cabinet",
+  "de": "Unterschrank"
+ },
+ "base-plate": {
+  "en": "base plate",
+  "de": "Fußplatte"
+ },
+ "basket": {
+  "en": "basket",
+  "de": "Korb"
+ },
+ "basketball": {
+  "en": "basketball",
+  "de": "Basketball"
+ },
+ "bass-amplifier": {
+  "en": "bass amplifier",
+  "de": "Bassverstärker"
+ },
+ "bass-drum": {
+  "en": "bass drum",
+  "de": "Bassdrum"
+ },
+ "bass-guitar": {
+  "en": "bass guitar",
+  "de": "Bassgitarre"
+ },
+ "bass-wheel": {
+  "en": "bass wheel",
+  "de": "Basswheel"
+ },
+ "bath": {
+  "en": "bath",
+  "de": "Bad"
+ },
+ "bathroom": {
+  "en": "bathroom",
+  "de": "Badezimmer"
+ },
+ "bathtub": {
+  "en": "bathtub",
+  "de": "Badewanne"
+ },
+ "battery": {
+  "en": "battery",
+  "de": "Batterie"
+ },
+ "battery-electric": {
+  "en": "battery electric",
+  "de": "batterieelektrisch"
+ },
+ "beach": {
+  "en": "beach",
+  "de": "Strand"
+ },
+ "beam": {
+  "en": "beam",
+  "de": "Balken"
+ },
+ "beanie": {
+  "en": "beanie",
+  "de": "Mütze"
+ },
+ "bed": {
+  "en": "bed",
+  "de": "Bett"
+ },
+ "bedroom": {
+  "en": "bedroom",
+  "de": "Schlafzimmer"
+ },
+ "bedside-table": {
+  "en": "bedside table",
+  "de": "Nachttisch"
+ },
+ "beech": {
+  "en": "beech",
+  "de": "Buche"
+ },
+ "beer-garden": {
+  "en": "beer garden",
+  "de": "Biergarten"
+ },
+ "bellows": {
+  "en": "bellows",
+  "de": "Balg"
+ },
+ "bellows-meter": {
+  "en": "bellows meter",
+  "de": "Balgengaszähler"
+ },
+ "belt-bag": {
+  "en": "belt bag",
+  "de": "Gürteltasche"
+ },
+ "bench": {
+  "en": "bench",
+  "de": "Bank"
+ },
+ "bentwood": {
+  "en": "bentwood",
+  "de": "Bugholz"
+ },
+ "berries": {
+  "en": "berries",
+  "de": "Beeren"
+ },
+ "biberschwanz": {
+  "en": "biberschwanz",
+  "de": "Biberschwanz"
+ },
+ "bicycle": {
+  "en": "bicycle",
+  "de": "Fahrrad"
+ },
+ "bicycle-parking": {
+  "en": "bicycle parking",
+  "de": "Fahrradabstellplatz"
+ },
+ "bicycle-stand": {
+  "en": "bicycle stand",
+  "de": "Fahrradständer"
+ },
+ "big-bag": {
+  "en": "big bag",
+  "de": "Big Bag"
+ },
+ "billing": {
+  "en": "billing",
+  "de": "Abrechnung"
+ },
+ "biomass": {
+  "en": "biomass",
+  "de": "Biomasse"
+ },
+ "biped": {
+  "en": "biped",
+  "de": "Zweibeiner"
+ },
+ "birch-plywood": {
+  "en": "birch plywood",
+  "de": "Birkensperrholz"
+ },
+ "bird": {
+  "en": "bird",
+  "de": "Vogel"
+ },
+ "bitumen": {
+  "en": "bitumen",
+  "de": "Bitumen"
+ },
+ "black-steel": {
+  "en": "black steel",
+  "de": "Schwarzstahl"
+ },
+ "blade": {
+  "en": "blade",
+  "de": "Laufklinge"
+ },
+ "blanket": {
+  "en": "blanket",
+  "de": "Decke"
+ },
+ "blind": {
+  "en": "blind",
+  "de": "Jalousie"
+ },
+ "block-step": {
+  "en": "block step",
+  "de": "Blockstufe"
+ },
+ "blossom": {
+  "en": "blossom",
+  "de": "Blüte"
+ },
+ "board": {
+  "en": "board",
+  "de": "Brett"
+ },
+ "boiler": {
+  "en": "boiler",
+  "de": "Heizkessel"
+ },
+ "boiling": {
+  "en": "boiling",
+  "de": "Sieden"
+ },
+ "bollard-light": {
+  "en": "bollard light",
+  "de": "Pollerleuchte"
+ },
+ "bolted": {
+  "en": "bolted",
+  "de": "verschraubt"
+ },
+ "bolzplatz": {
+  "en": "bolzplatz",
+  "de": "Bolzplatz"
+ },
+ "bookcase": {
+  "en": "bookcase",
+  "de": "Bücherregal"
+ },
+ "bookshelf": {
+  "en": "bookshelf",
+  "de": "Bücherbrett"
+ },
+ "boulder": {
+  "en": "boulder",
+  "de": "Findling"
+ },
+ "bounding": {
+  "en": "bounding",
+  "de": "Springlauf"
+ },
+ "bow": {
+  "en": "bow",
+  "de": "Bogen"
+ },
+ "bowed": {
+  "en": "bowed",
+  "de": "gestrichen"
+ },
+ "bowing": {
+  "en": "bowing",
+  "de": "Streichen"
+ },
+ "box-drum": {
+  "en": "box drum",
+  "de": "Kistentrommel"
+ },
+ "box-stack": {
+  "en": "box stack",
+  "de": "Kistenstapel"
+ },
+ "brass": {
+  "en": "brass",
+  "de": "Messing"
+ },
+ "breath-vapour": {
+  "en": "breath vapour",
+  "de": "Atemdampf"
+ },
+ "brick": {
+  "en": "brick",
+  "de": "Backstein"
+ },
+ "brine-water": {
+  "en": "brine water",
+  "de": "Solewasser"
+ },
+ "brisk": {
+  "en": "brisk",
+  "de": "zügig"
+ },
+ "broad-crown": {
+  "en": "broad crown",
+  "de": "breite Krone"
+ },
+ "broad-leaf": {
+  "en": "broad leaf",
+  "de": "breitblättrig"
+ },
+ "broadleaf": {
+  "en": "broadleaf",
+  "de": "Laubholz"
+ },
+ "bronze": {
+  "en": "bronze",
+  "de": "Bronze"
+ },
+ "broom": {
+  "en": "broom",
+  "de": "Besen"
+ },
+ "browsing": {
+  "en": "browsing",
+  "de": "Äsen"
+ },
+ "brush-tail": {
+  "en": "brush tail",
+  "de": "Buschschwanz"
+ },
+ "bubbler-stone": {
+  "en": "bubbler stone",
+  "de": "Sprudelstein"
+ },
+ "buckling": {
+  "en": "buckling",
+  "de": "Knicken"
+ },
+ "buffer": {
+  "en": "buffer",
+  "de": "Puffer"
+ },
+ "buffer-tank": {
+  "en": "buffer tank",
+  "de": "Pufferspeicher"
+ },
+ "build-up": {
+  "en": "build up",
+  "de": "Aufbau"
+ },
+ "bundle": {
+  "en": "bundle",
+  "de": "Bündel"
+ },
+ "bunk-bed": {
+  "en": "bunk bed",
+  "de": "Etagenbett"
+ },
+ "burner": {
+  "en": "burner",
+  "de": "Brenner"
+ },
+ "bus": {
+  "en": "bus",
+  "de": "Bus"
+ },
+ "butterfly-leaf": {
+  "en": "butterfly leaf",
+  "de": "Klappflügel"
+ },
+ "bypass": {
+  "en": "bypass",
+  "de": "Bypass"
+ },
+ "c3": {
+  "en": "c3",
+  "de": "C3"
+ },
+ "c4": {
+  "en": "c4",
+  "de": "C4"
+ },
+ "cactus": {
+  "en": "cactus",
+  "de": "Kaktus"
+ },
+ "cafe": {
+  "en": "café",
+  "de": "Café"
+ },
+ "cage-pallet": {
+  "en": "cage pallet",
+  "de": "Gitterboxpalette"
+ },
+ "cajon": {
+  "en": "cajón",
+  "de": "Cajón"
+ },
+ "calfskin": {
+  "en": "calfskin",
+  "de": "Kalbsfell"
+ },
+ "calisthenics": {
+  "en": "calisthenics",
+  "de": "Calisthenics"
+ },
+ "cam": {
+  "en": "CAM",
+  "de": "CAM"
+ },
+ "camera": {
+  "en": "camera",
+  "de": "Kamera"
+ },
+ "candle": {
+  "en": "candle",
+  "de": "Kerze"
+ },
+ "cane": {
+  "en": "cane",
+  "de": "Gehstock"
+ },
+ "canid": {
+  "en": "canid",
+  "de": "Hundeartiger"
+ },
+ "canopy": {
+  "en": "canopy",
+  "de": "Vordach"
+ },
+ "cantilever": {
+  "en": "cantilever",
+  "de": "Kragarm"
+ },
+ "cantilever-rack": {
+  "en": "cantilever rack",
+  "de": "Kragarmregal"
+ },
+ "canvas": {
+  "en": "canvas",
+  "de": "Segeltuch"
+ },
+ "car": {
+  "en": "car",
+  "de": "Auto"
+ },
+ "cardboard": {
+  "en": "cardboard",
+  "de": "Karton"
+ },
+ "care": {
+  "en": "care",
+  "de": "Pflege"
+ },
+ "cargo-bike": {
+  "en": "cargo bike",
+  "de": "Lastenrad"
+ },
+ "carousel": {
+  "en": "carousel",
+  "de": "Karussell"
+ },
+ "carried-load": {
+  "en": "carried load",
+  "de": "getragene Last"
+ },
+ "carrier": {
+  "en": "carrier",
+  "de": "Träger"
+ },
+ "carrying": {
+  "en": "carrying",
+  "de": "Tragen"
+ },
+ "carrying-case": {
+  "en": "carrying case",
+  "de": "Tragekoffer"
+ },
+ "case": {
+  "en": "case",
+  "de": "Koffer"
+ },
+ "cast": {
+  "en": "cast",
+  "de": "Guss"
+ },
+ "cast-aluminium": {
+  "en": "cast aluminium",
+  "de": "Aluminiumguss"
+ },
+ "cast-iron": {
+  "en": "cast iron",
+  "de": "Gusseisen"
+ },
+ "castor": {
+  "en": "castor",
+  "de": "Lenkrolle"
+ },
+ "castors": {
+  "en": "castors",
+  "de": "Lenkrollen"
+ },
+ "cat": {
+  "en": "cat",
+  "de": "Katze"
+ },
+ "cattle": {
+  "en": "cattle",
+  "de": "Rind"
+ },
+ "ceiling": {
+  "en": "ceiling",
+  "de": "Decke"
+ },
+ "ceiling-panel": {
+  "en": "ceiling panel",
+  "de": "Deckenpaneel"
+ },
+ "cello": {
+  "en": "cello",
+  "de": "Cello"
+ },
+ "celluloid": {
+  "en": "celluloid",
+  "de": "Zelluloid"
+ },
+ "ceramic": {
+  "en": "ceramic",
+  "de": "Keramik"
+ },
+ "chain-net": {
+  "en": "chain net",
+  "de": "Kettennetz"
+ },
+ "chain-sling": {
+  "en": "chain sling",
+  "de": "Kettengehänge"
+ },
+ "chair": {
+  "en": "chair",
+  "de": "Stuhl"
+ },
+ "chaise": {
+  "en": "chaise",
+  "de": "Chaiselongue"
+ },
+ "chalkboard": {
+  "en": "chalkboard",
+  "de": "Kreidetafel"
+ },
+ "charcoal-grill": {
+  "en": "charcoal grill",
+  "de": "Holzkohlegrill"
+ },
+ "chequer-plate": {
+  "en": "chequer plate",
+  "de": "Riffelblech"
+ },
+ "chess": {
+  "en": "chess",
+  "de": "Schach"
+ },
+ "chest-of-drawers": {
+  "en": "chest of drawers",
+  "de": "Kommode"
+ },
+ "child": {
+  "en": "child",
+  "de": "Kind"
+ },
+ "children": {
+  "en": "children",
+  "de": "Kinder"
+ },
+ "chipboard": {
+  "en": "chipboard",
+  "de": "Spanplatte"
+ },
+ "chordophone": {
+  "en": "chordophone",
+  "de": "Chordophon"
+ },
+ "chores": {
+  "en": "chores",
+  "de": "Hausarbeit"
+ },
+ "chrome": {
+  "en": "chrome",
+  "de": "Chrom"
+ },
+ "chrome-steel": {
+  "en": "chrome steel",
+  "de": "Chromstahl"
+ },
+ "circulation-pump": {
+  "en": "circulation pump",
+  "de": "Umwälzpumpe"
+ },
+ "circulator": {
+  "en": "circulator",
+  "de": "Zirkulator"
+ },
+ "cistern": {
+  "en": "cistern",
+  "de": "Zisterne"
+ },
+ "city": {
+  "en": "city",
+  "de": "Stadt"
+ },
+ "classical-guitar": {
+  "en": "classical guitar",
+  "de": "Konzertgitarre"
+ },
+ "classroom": {
+  "en": "classroom",
+  "de": "Klassenzimmer"
+ },
+ "clay": {
+  "en": "clay",
+  "de": "Ton"
+ },
+ "cleaning": {
+  "en": "cleaning",
+  "de": "Reinigung"
+ },
+ "climber": {
+  "en": "climber",
+  "de": "Kletterer"
+ },
+ "climbing": {
+  "en": "climbing",
+  "de": "Klettern"
+ },
+ "clipboard": {
+  "en": "clipboard",
+  "de": "Klemmbrett"
+ },
+ "clipped": {
+  "en": "clipped",
+  "de": "geschnitten"
+ },
+ "clogs": {
+  "en": "clogs",
+  "de": "Clogs"
+ },
+ "clothesline": {
+  "en": "clothesline",
+  "de": "Wäscheleine"
+ },
+ "cloven-hoof": {
+  "en": "cloven hoof",
+  "de": "Spalthuf"
+ },
+ "clump": {
+  "en": "clump",
+  "de": "Horst"
+ },
+ "coastal": {
+  "en": "coastal",
+  "de": "Küste"
+ },
+ "coat-stand": {
+  "en": "coat stand",
+  "de": "Garderobenständer"
+ },
+ "coffee": {
+  "en": "coffee",
+  "de": "Kaffee"
+ },
+ "coffee-table": {
+  "en": "coffee table",
+  "de": "Couchtisch"
+ },
+ "coil": {
+  "en": "coil",
+  "de": "Spule"
+ },
+ "coil-spring": {
+  "en": "coil spring",
+  "de": "Schraubenfeder"
+ },
+ "cold": {
+  "en": "cold",
+  "de": "kalt"
+ },
+ "cold-morning": {
+  "en": "cold morning",
+  "de": "kalter Morgen"
+ },
+ "collector": {
+  "en": "collector",
+  "de": "Kollektor"
+ },
+ "column": {
+  "en": "column",
+  "de": "Stütze"
+ },
+ "columnar": {
+  "en": "columnar",
+  "de": "säulenförmig"
+ },
+ "columnar-oval-crown": {
+  "en": "columnar oval crown",
+  "de": "säulenförmig-ovale Krone"
+ },
+ "combi-boiler": {
+  "en": "combi boiler",
+  "de": "Kombikessel"
+ },
+ "combo": {
+  "en": "combo",
+  "de": "Combo"
+ },
+ "combustion": {
+  "en": "combustion",
+  "de": "Verbrennung"
+ },
+ "communication": {
+  "en": "communication",
+  "de": "Kommunikation"
+ },
+ "commuter": {
+  "en": "commuter",
+  "de": "Pendler"
+ },
+ "component": {
+  "en": "component",
+  "de": "Bauteil"
+ },
+ "compression": {
+  "en": "compression",
+  "de": "Verdichtung"
+ },
+ "compressor": {
+  "en": "compressor",
+  "de": "Verdichter"
+ },
+ "computer": {
+  "en": "computer",
+  "de": "Computer"
+ },
+ "concert": {
+  "en": "concert",
+  "de": "Konzert"
+ },
+ "concert-harp": {
+  "en": "concert harp",
+  "de": "Konzertharfe"
+ },
+ "concrete": {
+  "en": "concrete",
+  "de": "Beton"
+ },
+ "concrete-footing": {
+  "en": "concrete footing",
+  "de": "Betonfundament"
+ },
+ "condenser": {
+  "en": "condenser",
+  "de": "Kondensator"
+ },
+ "condensing-boiler": {
+  "en": "condensing boiler",
+  "de": "Brennwertkessel"
+ },
+ "conditioned": {
+  "en": "conditioned",
+  "de": "klimatisiert"
+ },
+ "conical": {
+  "en": "conical",
+  "de": "kegelförmig"
+ },
+ "conical-crown": {
+  "en": "conical crown",
+  "de": "Kegelkrone"
+ },
+ "conifer": {
+  "en": "conifer",
+  "de": "Nadelbaum"
+ },
+ "construction": {
+  "en": "construction",
+  "de": "Bau"
+ },
+ "container": {
+  "en": "container",
+  "de": "Container"
+ },
+ "contemporary-dance": {
+  "en": "contemporary dance",
+  "de": "zeitgenössischer Tanz"
+ },
+ "controls": {
+  "en": "controls",
+  "de": "Bedienelemente"
+ },
+ "convection": {
+  "en": "convection",
+  "de": "Konvektion"
+ },
+ "convector": {
+  "en": "convector",
+  "de": "Konvektor"
+ },
+ "convertible": {
+  "en": "convertible",
+  "de": "Cabrio"
+ },
+ "cooker": {
+  "en": "cooker",
+  "de": "Herd"
+ },
+ "cooking": {
+  "en": "cooking",
+  "de": "Kochen"
+ },
+ "cool-down": {
+  "en": "cool down",
+  "de": "Abkühlen"
+ },
+ "cooling": {
+  "en": "cooling",
+  "de": "Kühlung"
+ },
+ "cooling-coil": {
+  "en": "cooling coil",
+  "de": "Kühlregister"
+ },
+ "copper": {
+  "en": "copper",
+  "de": "Kupfer"
+ },
+ "corn": {
+  "en": "corn",
+  "de": "Maiskorn"
+ },
+ "corner-sofa": {
+  "en": "corner sofa",
+  "de": "Ecksofa"
+ },
+ "corrugated-board": {
+  "en": "corrugated board",
+  "de": "Wellpappe"
+ },
+ "cot": {
+  "en": "cot",
+  "de": "Feldbett"
+ },
+ "counter": {
+  "en": "counter",
+  "de": "Theke"
+ },
+ "counterbalanced": {
+  "en": "counterbalanced",
+  "de": "Gegengewicht"
+ },
+ "countertop": {
+  "en": "countertop",
+  "de": "Arbeitsplatte"
+ },
+ "courier": {
+  "en": "courier",
+  "de": "Kurier"
+ },
+ "cover": {
+  "en": "cover",
+  "de": "Hülle"
+ },
+ "cow": {
+  "en": "cow",
+  "de": "Kuh"
+ },
+ "crane": {
+  "en": "crane",
+  "de": "Kran"
+ },
+ "crane-fork": {
+  "en": "crane fork",
+  "de": "Kranzinken"
+ },
+ "crate": {
+  "en": "crate",
+  "de": "Kiste"
+ },
+ "crate-stack": {
+  "en": "crate stack",
+  "de": "Kistenstapel"
+ },
+ "crawler": {
+  "en": "crawler",
+  "de": "Raupe"
+ },
+ "crop": {
+  "en": "crop",
+  "de": "Nutzpflanze"
+ },
+ "cross-flow": {
+  "en": "cross-flow",
+  "de": "Querstrom"
+ },
+ "cross-legged": {
+  "en": "cross legged",
+  "de": "Schneidersitz"
+ },
+ "crouching": {
+  "en": "crouching",
+  "de": "Hocken"
+ },
+ "crowd": {
+  "en": "crowd",
+  "de": "Menschenmenge"
+ },
+ "crt": {
+  "en": "CRT",
+  "de": "Röhrenbildschirm"
+ },
+ "crutches": {
+  "en": "crutches",
+  "de": "Unterarmgehstützen"
+ },
+ "culms": {
+  "en": "culms",
+  "de": "Halme"
+ },
+ "culture": {
+  "en": "culture",
+  "de": "Kultur"
+ },
+ "cup-mute": {
+  "en": "cup mute",
+  "de": "Tassendämpfer"
+ },
+ "curled-sleeping": {
+  "en": "curled sleeping",
+  "de": "zusammengerollt schlafend"
+ },
+ "curtain-wall": {
+  "en": "curtain wall",
+  "de": "Vorhangfassade"
+ },
+ "cycling": {
+  "en": "cycling",
+  "de": "Radfahren"
+ },
+ "cyclist": {
+  "en": "cyclist",
+  "de": "Radfahrer"
+ },
+ "cymbals": {
+  "en": "cymbals",
+  "de": "Becken"
+ },
+ "dabbling": {
+  "en": "dabbling",
+  "de": "Gründeln"
+ },
+ "dairy": {
+  "en": "dairy",
+  "de": "Milchvieh"
+ },
+ "dance": {
+  "en": "dance",
+  "de": "Tanz"
+ },
+ "dart-case": {
+  "en": "dart case",
+  "de": "Dartkoffer"
+ },
+ "data-centre": {
+  "en": "data centre",
+  "de": "Rechenzentrum"
+ },
+ "daypack": {
+  "en": "daypack",
+  "de": "Tagesrucksack"
+ },
+ "deaf": {
+  "en": "deaf",
+  "de": "gehörlos"
+ },
+ "dec": {
+  "en": "DEC",
+  "de": "DEC"
+ },
+ "decentralised": {
+  "en": "decentralised",
+  "de": "dezentral"
+ },
+ "deciduous": {
+  "en": "deciduous",
+  "de": "laubabwerfend"
+ },
+ "deck-chair": {
+  "en": "deck chair",
+  "de": "Liegestuhl"
+ },
+ "decor": {
+  "en": "decor",
+  "de": "Dekor"
+ },
+ "deer": {
+  "en": "deer",
+  "de": "Hirsch"
+ },
+ "defensive": {
+  "en": "defensive",
+  "de": "abwehrend"
+ },
+ "defrost": {
+  "en": "defrost",
+  "de": "Abtauen"
+ },
+ "dehumidification": {
+  "en": "dehumidification",
+  "de": "Entfeuchtung"
+ },
+ "delivery": {
+  "en": "delivery",
+  "de": "Lieferung"
+ },
+ "dense-crown": {
+  "en": "dense crown",
+  "de": "dichte Krone"
+ },
+ "desert": {
+  "en": "desert",
+  "de": "Wüste"
+ },
+ "desiccant": {
+  "en": "desiccant",
+  "de": "Trockenmittel"
+ },
+ "desk": {
+  "en": "desk",
+  "de": "Schreibtisch"
+ },
+ "dhw": {
+  "en": "DHW",
+  "de": "Trinkwarmwasser"
+ },
+ "dial": {
+  "en": "dial",
+  "de": "Drehregler"
+ },
+ "diaphragm": {
+  "en": "diaphragm",
+  "de": "Membran"
+ },
+ "die-cast-aluminium": {
+  "en": "die cast aluminium",
+  "de": "Aluminiumdruckguss"
+ },
+ "diesel": {
+  "en": "diesel",
+  "de": "Diesel"
+ },
+ "diffuser": {
+  "en": "diffuser",
+  "de": "Diffusor"
+ },
+ "digger": {
+  "en": "digger",
+  "de": "Bagger"
+ },
+ "digging": {
+  "en": "digging",
+  "de": "Graben"
+ },
+ "digital-piano": {
+  "en": "digital piano",
+  "de": "Digitalpiano"
+ },
+ "digitigrade": {
+  "en": "digitigrade",
+  "de": "Zehengänger"
+ },
+ "dimmer": {
+  "en": "dimmer",
+  "de": "Dimmer"
+ },
+ "dining": {
+  "en": "dining",
+  "de": "Essen"
+ },
+ "dishwasher": {
+  "en": "dishwasher",
+  "de": "Geschirrspüler"
+ },
+ "dismantled": {
+  "en": "dismantled",
+  "de": "zerlegt"
+ },
+ "display": {
+  "en": "display",
+  "de": "Bildschirm"
+ },
+ "display-cabinet": {
+  "en": "display cabinet",
+  "de": "Vitrine"
+ },
+ "district-heating": {
+  "en": "district heating",
+  "de": "Fernwärme"
+ },
+ "djembe": {
+  "en": "djembe",
+  "de": "Djembé"
+ },
+ "doctor": {
+  "en": "doctor",
+  "de": "Arzt"
+ },
+ "dog": {
+  "en": "dog",
+  "de": "Hund"
+ },
+ "dog-waste": {
+  "en": "dog waste",
+  "de": "Hundekot"
+ },
+ "dolly": {
+  "en": "dolly",
+  "de": "Transportroller"
+ },
+ "dome": {
+  "en": "dome",
+  "de": "Kuppel"
+ },
+ "domestic": {
+  "en": "domestic",
+  "de": "häuslich"
+ },
+ "door": {
+  "en": "door",
+  "de": "Tür"
+ },
+ "double-bass": {
+  "en": "double bass",
+  "de": "Kontrabass"
+ },
+ "double-bed": {
+  "en": "double bed",
+  "de": "Doppelbett"
+ },
+ "double-swing": {
+  "en": "double swing",
+  "de": "Doppelschaukel"
+ },
+ "double-walled": {
+  "en": "double walled",
+  "de": "doppelwandig"
+ },
+ "douglas-fir": {
+  "en": "douglas fir",
+  "de": "Douglasie"
+ },
+ "drawer": {
+  "en": "drawer",
+  "de": "Schublade"
+ },
+ "drawers": {
+  "en": "drawers",
+  "de": "Schubladen"
+ },
+ "dreadnought": {
+  "en": "dreadnought",
+  "de": "Dreadnought"
+ },
+ "drinking": {
+  "en": "drinking",
+  "de": "Trinken"
+ },
+ "drinking-fountain": {
+  "en": "drinking fountain",
+  "de": "Trinkbrunnen"
+ },
+ "drought": {
+  "en": "drought",
+  "de": "Trockenheit"
+ },
+ "drought-tolerant": {
+  "en": "drought tolerant",
+  "de": "trockenheitsverträglich"
+ },
+ "drum-kit": {
+  "en": "drum kit",
+  "de": "Schlagzeug"
+ },
+ "drums": {
+  "en": "drums",
+  "de": "Trommeln"
+ },
+ "dry-rotor": {
+  "en": "dry rotor",
+  "de": "Trockenläufer"
+ },
+ "dslr": {
+  "en": "DSLR",
+  "de": "Spiegelreflexkamera"
+ },
+ "duck": {
+  "en": "duck",
+  "de": "Ente"
+ },
+ "dutch": {
+  "en": "dutch",
+  "de": "niederländisch"
+ },
+ "duvet": {
+  "en": "duvet",
+  "de": "Bettdecke"
+ },
+ "e-assist": {
+  "en": "e-assist",
+  "de": "Elektrounterstützung"
+ },
+ "e-scooter": {
+  "en": "e-scooter",
+  "de": "E-Scooter"
+ },
+ "earthwork": {
+  "en": "earthwork",
+  "de": "Erdbau"
+ },
+ "easel": {
+  "en": "easel",
+  "de": "Staffelei"
+ },
+ "eating": {
+  "en": "eating",
+  "de": "Essen"
+ },
+ "ebony": {
+  "en": "ebony",
+  "de": "Ebenholz"
+ },
+ "elastomeric-foam": {
+  "en": "elastomeric foam",
+  "de": "Elastomerschaum"
+ },
+ "elderly": {
+  "en": "elderly",
+  "de": "ältere Person"
+ },
+ "electric": {
+  "en": "electric",
+  "de": "elektrisch"
+ },
+ "electric-bass": {
+  "en": "electric bass",
+  "de": "E-Bass"
+ },
+ "electric-cooker": {
+  "en": "electric cooker",
+  "de": "Elektroherd"
+ },
+ "electric-guitar": {
+  "en": "electric guitar",
+  "de": "E-Gitarre"
+ },
+ "electric-heating": {
+  "en": "electric heating",
+  "de": "Elektroheizung"
+ },
+ "electric-motor": {
+  "en": "electric motor",
+  "de": "Elektromotor"
+ },
+ "electrical": {
+  "en": "electrical",
+  "de": "Elektro"
+ },
+ "electrician": {
+  "en": "electrician",
+  "de": "Elektriker"
+ },
+ "electricity-meter": {
+  "en": "electricity meter",
+  "de": "Stromzähler"
+ },
+ "electronic": {
+  "en": "electronic",
+  "de": "elektronisch"
+ },
+ "electronic-organ": {
+  "en": "electronic organ",
+  "de": "E-Orgel"
+ },
+ "electronics": {
+  "en": "electronics",
+  "de": "Elektronik"
+ },
+ "electrophone": {
+  "en": "electrophone",
+  "de": "Elektrophon"
+ },
+ "elephant-foot": {
+  "en": "elephant foot",
+  "de": "Elefantenfuß"
+ },
+ "enamel": {
+  "en": "enamel",
+  "de": "Emaille"
+ },
+ "enamelled-steel": {
+  "en": "enamelled steel",
+  "de": "emaillierter Stahl"
+ },
+ "endpin": {
+  "en": "endpin",
+  "de": "Stachel"
+ },
+ "epdm": {
+  "en": "EPDM",
+  "de": "EPDM"
+ },
+ "epicormic": {
+  "en": "epicormic",
+  "de": "epikormisch"
+ },
+ "equine": {
+  "en": "equine",
+  "de": "Pferdeartiger"
+ },
+ "etics": {
+  "en": "ETICS",
+  "de": "WDVS"
+ },
+ "evaporative-cooling": {
+  "en": "evaporative cooling",
+  "de": "Verdunstungskühlung"
+ },
+ "evaporator": {
+  "en": "evaporator",
+  "de": "Verdampfer"
+ },
+ "evergreen": {
+  "en": "evergreen",
+  "de": "immergrün"
+ },
+ "ewe": {
+  "en": "ewe",
+  "de": "Mutterschaf"
+ },
+ "excavator": {
+  "en": "excavator",
+  "de": "Bagger"
+ },
+ "excurrent": {
+  "en": "excurrent",
+  "de": "durchgehender Stamm"
+ },
+ "exotic-garden": {
+  "en": "exotic garden",
+  "de": "Exotengarten"
+ },
+ "expansion-valve": {
+  "en": "expansion valve",
+  "de": "Expansionsventil"
+ },
+ "expansion-vessel": {
+  "en": "expansion vessel",
+  "de": "Ausdehnungsgefäß"
+ },
+ "exposed-aggregate": {
+  "en": "exposed aggregate",
+  "de": "Waschbeton"
+ },
+ "extendable": {
+  "en": "extendable",
+  "de": "ausziehbar"
+ },
+ "extension": {
+  "en": "extension",
+  "de": "Verlängerung"
+ },
+ "extract-air": {
+  "en": "extract air",
+  "de": "Abluft"
+ },
+ "extraction": {
+  "en": "extraction",
+  "de": "Absaugung"
+ },
+ "extractor-hood": {
+  "en": "extractor hood",
+  "de": "Dunstabzugshaube"
+ },
+ "fabric": {
+  "en": "fabric",
+  "de": "Stoff"
+ },
+ "facade": {
+  "en": "facade",
+  "de": "Fassade"
+ },
+ "family": {
+  "en": "family",
+  "de": "Familie"
+ },
+ "fan": {
+  "en": "fan",
+  "de": "Ventilator"
+ },
+ "fan-heater": {
+  "en": "fan heater",
+  "de": "Heizlüfter"
+ },
+ "fan-leaves": {
+  "en": "fan leaves",
+  "de": "Fächerblätter"
+ },
+ "fanning": {
+  "en": "fanning",
+  "de": "Fächeln"
+ },
+ "fastigiate": {
+  "en": "fastigiate",
+  "de": "schmal aufrecht"
+ },
+ "faux-leather": {
+  "en": "faux leather",
+  "de": "Kunstleder"
+ },
+ "female": {
+  "en": "female",
+  "de": "weiblich"
+ },
+ "fenestrated": {
+  "en": "fenestrated",
+  "de": "gefenstert"
+ },
+ "fern": {
+  "en": "fern",
+  "de": "Farn"
+ },
+ "ferraris": {
+  "en": "Ferraris meter",
+  "de": "Ferraris-Zähler"
+ },
+ "ficus": {
+  "en": "ficus",
+  "de": "Ficus"
+ },
+ "fig": {
+  "en": "fig",
+  "de": "Feige"
+ },
+ "final-energy": {
+  "en": "final energy",
+  "de": "Endenergie"
+ },
+ "finger-signpost": {
+  "en": "finger signpost",
+  "de": "Wegweiser"
+ },
+ "fins": {
+  "en": "fins",
+  "de": "Lamellen"
+ },
+ "fire": {
+  "en": "fire",
+  "de": "Feuer"
+ },
+ "fitness": {
+  "en": "fitness",
+  "de": "Fitness"
+ },
+ "fixture": {
+  "en": "fixture",
+  "de": "Prüfkörper"
+ },
+ "flag": {
+  "en": "flag",
+  "de": "Fahne"
+ },
+ "flame": {
+  "en": "flame",
+  "de": "Flamme"
+ },
+ "flange": {
+  "en": "flange",
+  "de": "Flansch"
+ },
+ "flap-door": {
+  "en": "flap door",
+  "de": "Klapptür"
+ },
+ "flat-bar": {
+  "en": "flat bar",
+  "de": "Flachstahl"
+ },
+ "flat-clearance": {
+  "en": "flat clearance",
+  "de": "flache Freihaltung"
+ },
+ "flat-crown": {
+  "en": "flat crown",
+  "de": "flache Krone"
+ },
+ "flat-pack": {
+  "en": "flat pack",
+  "de": "Flachpackung"
+ },
+ "flat-plate-collector": {
+  "en": "flat plate collector",
+  "de": "Flachkollektor"
+ },
+ "fleece": {
+  "en": "fleece",
+  "de": "Fleece"
+ },
+ "flight": {
+  "en": "flight",
+  "de": "Flug"
+ },
+ "flight-phase": {
+  "en": "flight phase",
+  "de": "Flugphase"
+ },
+ "flipchart": {
+  "en": "flipchart",
+  "de": "Flipchart"
+ },
+ "floor": {
+  "en": "floor",
+  "de": "Boden"
+ },
+ "floor-heater": {
+  "en": "floor heater",
+  "de": "Bodenheizung"
+ },
+ "floor-lamp": {
+  "en": "floor lamp",
+  "de": "Stehleuchte"
+ },
+ "floorboard": {
+  "en": "floorboard",
+  "de": "Dielenbrett"
+ },
+ "flooring": {
+  "en": "flooring",
+  "de": "Bodenbelag"
+ },
+ "flower": {
+  "en": "flower",
+  "de": "Blume"
+ },
+ "flowering": {
+  "en": "flowering",
+  "de": "blühend"
+ },
+ "flowering-shrub": {
+  "en": "flowering shrub",
+  "de": "Blütenstrauch"
+ },
+ "flowering-tree": {
+  "en": "flowering tree",
+  "de": "Blütenbaum"
+ },
+ "flue": {
+  "en": "flue",
+  "de": "Abgasrohr"
+ },
+ "fluted-trunk": {
+  "en": "fluted trunk",
+  "de": "kannelierter Stamm"
+ },
+ "foam": {
+  "en": "foam",
+  "de": "Schaumstoff"
+ },
+ "folding": {
+  "en": "folding",
+  "de": "klappbar"
+ },
+ "folk": {
+  "en": "folk",
+  "de": "Volksmusik"
+ },
+ "foot-tapping": {
+  "en": "foot tapping",
+  "de": "Fußwippen"
+ },
+ "football": {
+  "en": "football",
+  "de": "Fußball"
+ },
+ "footing": {
+  "en": "footing",
+  "de": "Fundament"
+ },
+ "footstool": {
+  "en": "footstool",
+  "de": "Fußhocker"
+ },
+ "forced-draught-burner": {
+  "en": "forced draught burner",
+  "de": "Gebläsebrenner"
+ },
+ "forklift": {
+  "en": "forklift",
+  "de": "Gabelstapler"
+ },
+ "fossil": {
+  "en": "fossil",
+  "de": "fossil"
+ },
+ "fountain": {
+  "en": "fountain",
+  "de": "Brunnen"
+ },
+ "four-stroke": {
+  "en": "four-stroke",
+  "de": "Viertakt"
+ },
+ "fox": {
+  "en": "fox",
+  "de": "Fuchs"
+ },
+ "free-reed": {
+  "en": "free reed",
+  "de": "durchschlagende Zunge"
+ },
+ "friction": {
+  "en": "friction",
+  "de": "Reibung"
+ },
+ "fridge-freezer": {
+  "en": "fridge freezer",
+  "de": "Kühl-Gefrier-Kombination"
+ },
+ "front-loader": {
+  "en": "front loader",
+  "de": "Frontlader"
+ },
+ "frost": {
+  "en": "frost",
+  "de": "Frost"
+ },
+ "fruit": {
+  "en": "fruit",
+  "de": "Obst"
+ },
+ "fruit-load": {
+  "en": "fruit load",
+  "de": "Fruchtbehang"
+ },
+ "fruit-tree": {
+  "en": "fruit tree",
+  "de": "Obstbaum"
+ },
+ "furniture": {
+  "en": "furniture",
+  "de": "Möbel"
+ },
+ "g4": {
+  "en": "g4",
+  "de": "G4"
+ },
+ "gable-roof": {
+  "en": "gable roof",
+  "de": "Satteldach"
+ },
+ "gait": {
+  "en": "gait",
+  "de": "Gangart"
+ },
+ "galvanised": {
+  "en": "galvanised",
+  "de": "verzinkt"
+ },
+ "galvanised-steel": {
+  "en": "galvanised steel",
+  "de": "verzinkter Stahl"
+ },
+ "game": {
+  "en": "game",
+  "de": "Spiel"
+ },
+ "garage": {
+  "en": "garage",
+  "de": "Garage"
+ },
+ "garden": {
+  "en": "garden",
+  "de": "Garten"
+ },
+ "gardener": {
+  "en": "gardener",
+  "de": "Gärtner"
+ },
+ "gas": {
+  "en": "gas",
+  "de": "Gas"
+ },
+ "gas-boiler": {
+  "en": "gas boiler",
+  "de": "Gaskessel"
+ },
+ "gas-meter": {
+  "en": "gas meter",
+  "de": "Gaszähler"
+ },
+ "gas-spring": {
+  "en": "gas spring",
+  "de": "Gasfeder"
+ },
+ "generator": {
+  "en": "generator",
+  "de": "Generator"
+ },
+ "genset": {
+  "en": "genset",
+  "de": "Stromaggregat"
+ },
+ "gesture": {
+  "en": "gesture",
+  "de": "Geste"
+ },
+ "gig-bag": {
+  "en": "gig bag",
+  "de": "Gigbag"
+ },
+ "gilded": {
+  "en": "gilded",
+  "de": "vergoldet"
+ },
+ "girder": {
+  "en": "girder",
+  "de": "Träger"
+ },
+ "glass": {
+  "en": "glass",
+  "de": "Glas"
+ },
+ "glazing": {
+  "en": "glazing",
+  "de": "Verglasung"
+ },
+ "glide": {
+  "en": "glide",
+  "de": "Gleitflug"
+ },
+ "gliding": {
+  "en": "gliding",
+  "de": "Gleiten"
+ },
+ "gloves": {
+  "en": "gloves",
+  "de": "Handschuhe"
+ },
+ "glulam": {
+  "en": "glulam",
+  "de": "Brettschichtholz"
+ },
+ "goal": {
+  "en": "goal",
+  "de": "Tor"
+ },
+ "goat": {
+  "en": "goat",
+  "de": "Ziege"
+ },
+ "goatskin": {
+  "en": "goatskin",
+  "de": "Ziegenfell"
+ },
+ "goblet-drum": {
+  "en": "goblet drum",
+  "de": "Bechertrommel"
+ },
+ "gown": {
+  "en": "gown",
+  "de": "Kittel"
+ },
+ "graffiti": {
+  "en": "graffiti",
+  "de": "Graffiti"
+ },
+ "grand-piano": {
+  "en": "grand piano",
+  "de": "Flügel"
+ },
+ "granite": {
+  "en": "granite",
+  "de": "Granit"
+ },
+ "granite-trough": {
+  "en": "granite trough",
+  "de": "Granittrog"
+ },
+ "grapevine": {
+  "en": "grapevine",
+  "de": "Weinrebe"
+ },
+ "grass": {
+  "en": "grass",
+  "de": "Gras"
+ },
+ "gravel": {
+  "en": "gravel",
+  "de": "Kies"
+ },
+ "grazing": {
+  "en": "grazing",
+  "de": "Weiden"
+ },
+ "greeting": {
+  "en": "greeting",
+  "de": "Begrüßung"
+ },
+ "grille": {
+  "en": "grille",
+  "de": "Gitter"
+ },
+ "groceries": {
+  "en": "groceries",
+  "de": "Einkäufe"
+ },
+ "ground-sleeve": {
+  "en": "ground sleeve",
+  "de": "Bodenhülse"
+ },
+ "ground-source": {
+  "en": "ground source",
+  "de": "Erdwärme"
+ },
+ "grows-with-child": {
+  "en": "grows with child",
+  "de": "wächst mit"
+ },
+ "gruenderzeit": {
+  "en": "gruenderzeit",
+  "de": "Gründerzeit"
+ },
+ "guide": {
+  "en": "guide",
+  "de": "Fremdenführer"
+ },
+ "guide-dog": {
+  "en": "guide dog",
+  "de": "Blindenführhund"
+ },
+ "guitar": {
+  "en": "guitar",
+  "de": "Gitarre"
+ },
+ "guitar-stand": {
+  "en": "guitar stand",
+  "de": "Gitarrenständer"
+ },
+ "gull": {
+  "en": "gull",
+  "de": "Möwe"
+ },
+ "gusset-plate": {
+  "en": "gusset plate",
+  "de": "Knotenblech"
+ },
+ "gust": {
+  "en": "gust",
+  "de": "Böe"
+ },
+ "gymnosperm": {
+  "en": "gymnosperm",
+  "de": "Nacktsamer"
+ },
+ "hailing": {
+  "en": "hailing",
+  "de": "Heranwinken"
+ },
+ "half-timbered": {
+  "en": "half timbered",
+  "de": "Fachwerk"
+ },
+ "hallway": {
+  "en": "hallway",
+  "de": "Flur"
+ },
+ "halogen": {
+  "en": "halogen",
+  "de": "Halogen"
+ },
+ "hand-drum": {
+  "en": "hand drum",
+  "de": "Handtrommel"
+ },
+ "hand-pump": {
+  "en": "hand pump",
+  "de": "Handpumpe"
+ },
+ "hand-shower": {
+  "en": "hand shower",
+  "de": "Handbrause"
+ },
+ "hand-truck": {
+  "en": "hand truck",
+  "de": "Sackkarre"
+ },
+ "handrail": {
+  "en": "handrail",
+  "de": "Handlauf"
+ },
+ "hands": {
+  "en": "hands",
+  "de": "Hände"
+ },
+ "hands-in-pockets": {
+  "en": "hands in pockets",
+  "de": "Hände in den Taschen"
+ },
+ "hard-case": {
+  "en": "hard case",
+  "de": "Hartschalenkoffer"
+ },
+ "hard-hat": {
+  "en": "hard hat",
+  "de": "Schutzhelm"
+ },
+ "hardscape": {
+  "en": "hardscape",
+  "de": "Hartbelag"
+ },
+ "hardshell-case": {
+  "en": "hardshell case",
+  "de": "Hartschalenkoffer"
+ },
+ "hardwood": {
+  "en": "hardwood",
+  "de": "Laubholz"
+ },
+ "hardy": {
+  "en": "hardy",
+  "de": "winterhart"
+ },
+ "harmonium": {
+  "en": "harmonium",
+  "de": "Harmonium"
+ },
+ "harness": {
+  "en": "harness",
+  "de": "Geschirr"
+ },
+ "harp": {
+  "en": "harp",
+  "de": "Harfe"
+ },
+ "hatchback": {
+  "en": "hatchback",
+  "de": "Schrägheck"
+ },
+ "hdpe": {
+  "en": "HDPE",
+  "de": "HDPE"
+ },
+ "head-bob": {
+  "en": "head bob",
+  "de": "Kopfnicken"
+ },
+ "headphones": {
+  "en": "headphones",
+  "de": "Kopfhörer"
+ },
+ "healthcare": {
+  "en": "healthcare",
+  "de": "Gesundheitswesen"
+ },
+ "hearing-protection": {
+  "en": "hearing protection",
+  "de": "Gehörschutz"
+ },
+ "heat-exchanger": {
+  "en": "heat exchanger",
+  "de": "Wärmeübertrager"
+ },
+ "heat-pump": {
+  "en": "heat pump",
+  "de": "Wärmepumpe"
+ },
+ "heat-recovery": {
+  "en": "heat recovery",
+  "de": "Wärmerückgewinnung"
+ },
+ "heat-source": {
+  "en": "heat source",
+  "de": "Wärmequelle"
+ },
+ "heater": {
+  "en": "heater",
+  "de": "Heizgerät"
+ },
+ "heating": {
+  "en": "heating",
+  "de": "Heizung"
+ },
+ "heating-coil": {
+  "en": "heating coil",
+  "de": "Heizregister"
+ },
+ "heating-control": {
+  "en": "heating control",
+  "de": "Heizungsregelung"
+ },
+ "heating-plant": {
+  "en": "heating plant",
+  "de": "Heizzentrale"
+ },
+ "hedge": {
+  "en": "hedge",
+  "de": "Hecke"
+ },
+ "hedgehog": {
+  "en": "hedgehog",
+  "de": "Igel"
+ },
+ "hedgerow": {
+  "en": "hedgerow",
+  "de": "Feldhecke"
+ },
+ "height-adjustable": {
+  "en": "height adjustable",
+  "de": "höhenverstellbar"
+ },
+ "heliotropism": {
+  "en": "heliotropism",
+  "de": "Heliotropismus"
+ },
+ "helix": {
+  "en": "helix",
+  "de": "Wendel"
+ },
+ "helmet": {
+  "en": "helmet",
+  "de": "Helm"
+ },
+ "herb": {
+  "en": "herb",
+  "de": "Kraut"
+ },
+ "herbaceous-perennial": {
+  "en": "herbaceous perennial",
+  "de": "Staude"
+ },
+ "heritage": {
+  "en": "heritage",
+  "de": "Denkmal"
+ },
+ "herringbone": {
+  "en": "herringbone",
+  "de": "Fischgrät"
+ },
+ "hi-vis": {
+  "en": "hi-vis",
+  "de": "Warnkleidung"
+ },
+ "high-chair": {
+  "en": "high chair",
+  "de": "Hochstuhl"
+ },
+ "hiker": {
+  "en": "hiker",
+  "de": "Wanderer"
+ },
+ "hiking": {
+  "en": "hiking",
+  "de": "Wandern"
+ },
+ "hind-legs": {
+  "en": "hind legs",
+  "de": "Hinterbeine"
+ },
+ "hinged-column": {
+  "en": "hinged column",
+  "de": "Pendelstütze"
+ },
+ "hinged-door": {
+  "en": "hinged door",
+  "de": "Drehflügeltür"
+ },
+ "historic": {
+  "en": "historic",
+  "de": "historisch"
+ },
+ "hob": {
+  "en": "hob",
+  "de": "Kochfeld"
+ },
+ "hollow-core": {
+  "en": "hollow core",
+  "de": "Hohlkammer"
+ },
+ "home-organ": {
+  "en": "home organ",
+  "de": "Heimorgel"
+ },
+ "hood": {
+  "en": "hood",
+  "de": "Kapuze"
+ },
+ "hopper": {
+  "en": "hopper",
+  "de": "Trichter"
+ },
+ "horned": {
+  "en": "horned",
+  "de": "gehörnt"
+ },
+ "horse": {
+  "en": "horse",
+  "de": "Pferd"
+ },
+ "hoses-taped": {
+  "en": "hoses taped",
+  "de": "Schläuche abgeklebt"
+ },
+ "hospital": {
+  "en": "hospital",
+  "de": "Krankenhaus"
+ },
+ "hospitality": {
+  "en": "hospitality",
+  "de": "Gastronomie"
+ },
+ "hosta": {
+  "en": "hosta",
+  "de": "Funkie"
+ },
+ "hot-gas": {
+  "en": "hot gas",
+  "de": "Heißgas"
+ },
+ "hot-rolled": {
+  "en": "hot rolled",
+  "de": "warmgewalzt"
+ },
+ "hot-water": {
+  "en": "hot water",
+  "de": "Warmwasser"
+ },
+ "hot-water-cylinder": {
+  "en": "hot water cylinder",
+  "de": "Warmwasserspeicher"
+ },
+ "hotplates": {
+  "en": "hotplates",
+  "de": "Kochplatten"
+ },
+ "household": {
+  "en": "household",
+  "de": "Haushalt"
+ },
+ "houseplant": {
+  "en": "houseplant",
+  "de": "Zimmerpflanze"
+ },
+ "human": {
+  "en": "human",
+  "de": "Mensch"
+ },
+ "human-powered": {
+  "en": "human powered",
+  "de": "muskelbetrieben"
+ },
+ "humidifier": {
+  "en": "humidifier",
+  "de": "Luftbefeuchter"
+ },
+ "hvac": {
+  "en": "HVAC",
+  "de": "HLK"
+ },
+ "hydraulic": {
+  "en": "hydraulic",
+  "de": "hydraulisch"
+ },
+ "hydraulic-balancing": {
+  "en": "hydraulic balancing",
+  "de": "hydraulischer Abgleich"
+ },
+ "hydronic": {
+  "en": "hydronic",
+  "de": "wasserführend"
+ },
+ "i-section": {
+  "en": "I-section",
+  "de": "I-Profil"
+ },
+ "idiophone": {
+  "en": "idiophone",
+  "de": "Idiophon"
+ },
+ "idle": {
+  "en": "idle",
+  "de": "untätig"
+ },
+ "impatient": {
+  "en": "impatient",
+  "de": "ungeduldig"
+ },
+ "incandescent": {
+  "en": "incandescent",
+  "de": "Glühlampe"
+ },
+ "indoor": {
+  "en": "indoor",
+  "de": "Innenraum"
+ },
+ "indoor-unit": {
+  "en": "indoor unit",
+  "de": "Innengerät"
+ },
+ "industrial": {
+  "en": "industrial",
+  "de": "industriell"
+ },
+ "industrial-hall": {
+  "en": "industrial hall",
+  "de": "Industriehalle"
+ },
+ "infusion-pump": {
+  "en": "infusion pump",
+  "de": "Infusionspumpe"
+ },
+ "injury": {
+  "en": "injury",
+  "de": "Verletzung"
+ },
+ "inline-pump": {
+  "en": "inline pump",
+  "de": "Inline-Pumpe"
+ },
+ "instrument": {
+  "en": "instrument",
+  "de": "Instrument"
+ },
+ "instrument-case": {
+  "en": "instrument case",
+  "de": "Instrumentenkoffer"
+ },
+ "instrument-stand": {
+  "en": "instrument stand",
+  "de": "Instrumentenständer"
+ },
+ "insulation": {
+  "en": "insulation",
+  "de": "Dämmung"
+ },
+ "interior": {
+  "en": "interior",
+  "de": "Innenausbau"
+ },
+ "internal-gain": {
+  "en": "internal gain",
+  "de": "innere Wärmelast"
+ },
+ "internal-gains": {
+  "en": "internal gains",
+  "de": "innere Wärmelasten"
+ },
+ "it-equipment": {
+  "en": "IT equipment",
+  "de": "IT-Geräte"
+ },
+ "iv-stand": {
+  "en": "IV stand",
+  "de": "Infusionsständer"
+ },
+ "ivy": {
+  "en": "ivy",
+  "de": "Efeu"
+ },
+ "jackhammer": {
+  "en": "jackhammer",
+  "de": "Abbauhammer"
+ },
+ "jamb": {
+  "en": "jamb",
+  "de": "Laibung"
+ },
+ "jogger": {
+  "en": "jogger",
+  "de": "Jogger"
+ },
+ "jump": {
+  "en": "jump",
+  "de": "Sprung"
+ },
+ "kerb": {
+  "en": "kerb",
+  "de": "Bordstein"
+ },
+ "kettle": {
+  "en": "kettle",
+  "de": "Wasserkocher"
+ },
+ "kettle-grill": {
+  "en": "kettle grill",
+  "de": "Kugelgrill"
+ },
+ "kettledrum": {
+  "en": "kettledrum",
+  "de": "Pauke"
+ },
+ "keyboard": {
+  "en": "keyboard",
+  "de": "Tasteninstrument"
+ },
+ "kick-scooter": {
+  "en": "kick scooter",
+  "de": "Tretroller"
+ },
+ "kitchen": {
+  "en": "kitchen",
+  "de": "Küche"
+ },
+ "kneeling": {
+  "en": "kneeling",
+  "de": "Knien"
+ },
+ "knitting": {
+  "en": "knitting",
+  "de": "Stricken"
+ },
+ "kyphosis": {
+  "en": "kyphosis",
+  "de": "Kyphose"
+ },
+ "lab-coat": {
+  "en": "lab coat",
+  "de": "Laborkittel"
+ },
+ "lacquer": {
+  "en": "lacquer",
+  "de": "Lack"
+ },
+ "lacquered-brass": {
+  "en": "lacquered brass",
+  "de": "lackiertes Messing"
+ },
+ "ladder": {
+  "en": "ladder",
+  "de": "Leiter"
+ },
+ "ladder-shelf": {
+  "en": "ladder shelf",
+  "de": "Leiterregal"
+ },
+ "laminate": {
+  "en": "laminate",
+  "de": "Laminat"
+ },
+ "laminated-glass": {
+  "en": "laminated glass",
+  "de": "Verbundglas"
+ },
+ "landing": {
+  "en": "landing",
+  "de": "Podest"
+ },
+ "landscape": {
+  "en": "landscape",
+  "de": "Landschaft"
+ },
+ "landscaping": {
+  "en": "landscaping",
+  "de": "Landschaftsbau"
+ },
+ "lantern": {
+  "en": "lantern",
+  "de": "Laterne"
+ },
+ "laptop": {
+  "en": "laptop",
+  "de": "Laptop"
+ },
+ "larch": {
+  "en": "larch",
+  "de": "Lärche"
+ },
+ "large-leaves": {
+  "en": "large leaves",
+  "de": "große Blätter"
+ },
+ "large-shrub": {
+  "en": "large shrub",
+  "de": "Großstrauch"
+ },
+ "latent-heat": {
+  "en": "latent heat",
+  "de": "latente Wärme"
+ },
+ "lattice": {
+  "en": "lattice",
+  "de": "Gitterwerk"
+ },
+ "laundry": {
+  "en": "laundry",
+  "de": "Wäsche"
+ },
+ "layered-tiers": {
+  "en": "layered tiers",
+  "de": "Etagen"
+ },
+ "lean": {
+  "en": "lean",
+  "de": "Neigung"
+ },
+ "leaning": {
+  "en": "leaning",
+  "de": "angelehnt"
+ },
+ "leather": {
+  "en": "leather",
+  "de": "Leder"
+ },
+ "led": {
+  "en": "LED",
+  "de": "LED"
+ },
+ "led-retrofit": {
+  "en": "LED retrofit",
+  "de": "LED-Nachrüstung"
+ },
+ "lenke": {
+  "en": "lenke",
+  "de": "Lenke"
+ },
+ "letter": {
+  "en": "letter",
+  "de": "Brief"
+ },
+ "lever-pump": {
+  "en": "lever pump",
+  "de": "Hebelpumpe"
+ },
+ "lid": {
+  "en": "lid",
+  "de": "Deckel"
+ },
+ "lifting": {
+  "en": "lifting",
+  "de": "Heben"
+ },
+ "light-filtering": {
+  "en": "light filtering",
+  "de": "lichtdurchlässig"
+ },
+ "light-heating-oil": {
+  "en": "light heating oil",
+  "de": "Heizöl EL"
+ },
+ "lighting": {
+  "en": "lighting",
+  "de": "Beleuchtung"
+ },
+ "limescale": {
+  "en": "limescale",
+  "de": "Kalk"
+ },
+ "line-set": {
+  "en": "line set",
+  "de": "Leitungssatz"
+ },
+ "linkage": {
+  "en": "linkage",
+  "de": "Gestänge"
+ },
+ "lintel": {
+  "en": "lintel",
+  "de": "Sturz"
+ },
+ "lip-reed": {
+  "en": "lip reed",
+  "de": "Lippenton"
+ },
+ "litter": {
+  "en": "litter",
+  "de": "Abfall"
+ },
+ "litter-bin": {
+  "en": "litter bin",
+  "de": "Abfalleimer"
+ },
+ "livestock": {
+  "en": "livestock",
+  "de": "Nutztier"
+ },
+ "living": {
+  "en": "living",
+  "de": "Wohnen"
+ },
+ "load": {
+  "en": "load",
+  "de": "Last"
+ },
+ "logistics": {
+  "en": "logistics",
+  "de": "Logistik"
+ },
+ "long-cane": {
+  "en": "long cane",
+  "de": "Langstock"
+ },
+ "long-john": {
+  "en": "long john",
+  "de": "Long John"
+ },
+ "loudspeaker-cabinet": {
+  "en": "loudspeaker cabinet",
+  "de": "Lautsprecherbox"
+ },
+ "lounger": {
+  "en": "lounger",
+  "de": "Liege"
+ },
+ "louvre": {
+  "en": "louvre",
+  "de": "Lamelle"
+ },
+ "low": {
+  "en": "low",
+  "de": "niedrig"
+ },
+ "low-floor": {
+  "en": "low floor",
+  "de": "Niederflur"
+ },
+ "low-posture": {
+  "en": "low posture",
+  "de": "tiefe Haltung"
+ },
+ "lowboard": {
+  "en": "lowboard",
+  "de": "Lowboard"
+ },
+ "luminaire": {
+  "en": "luminaire",
+  "de": "Leuchte"
+ },
+ "lunch-break": {
+  "en": "lunch break",
+  "de": "Mittagspause"
+ },
+ "lying": {
+  "en": "lying",
+  "de": "liegend"
+ },
+ "machine": {
+  "en": "machine",
+  "de": "Maschine"
+ },
+ "machinery": {
+  "en": "machinery",
+  "de": "Maschinen"
+ },
+ "mahogany": {
+  "en": "mahogany",
+  "de": "Mahagoni"
+ },
+ "maintenance": {
+  "en": "maintenance",
+  "de": "Wartung"
+ },
+ "maize": {
+  "en": "maize",
+  "de": "Mais"
+ },
+ "male": {
+  "en": "male",
+  "de": "männlich"
+ },
+ "mallet-percussion": {
+  "en": "mallet percussion",
+  "de": "Stabspiele"
+ },
+ "mammal": {
+  "en": "mammal",
+  "de": "Säugetier"
+ },
+ "man": {
+  "en": "man",
+  "de": "Mann"
+ },
+ "manifold": {
+  "en": "manifold",
+  "de": "Verteiler"
+ },
+ "maple": {
+  "en": "maple",
+  "de": "Ahorn"
+ },
+ "marching": {
+  "en": "marching",
+  "de": "Marschieren"
+ },
+ "marker": {
+  "en": "marker",
+  "de": "Filzstift"
+ },
+ "market": {
+  "en": "market",
+  "de": "Markt"
+ },
+ "masonry": {
+  "en": "masonry",
+  "de": "Mauerwerk"
+ },
+ "mattress": {
+  "en": "mattress",
+  "de": "Matratze"
+ },
+ "measuring": {
+  "en": "measuring",
+  "de": "Messen"
+ },
+ "mechanical": {
+  "en": "mechanical",
+  "de": "mechanisch"
+ },
+ "mechanical-ventilation": {
+  "en": "mechanical ventilation",
+  "de": "mechanische Lüftung"
+ },
+ "mechanism": {
+  "en": "mechanism",
+  "de": "Mechanik"
+ },
+ "mediterranean": {
+  "en": "mediterranean",
+  "de": "mediterran"
+ },
+ "melamine": {
+  "en": "melamine",
+  "de": "Melamin"
+ },
+ "membranophone": {
+  "en": "membranophone",
+  "de": "Membranophon"
+ },
+ "mesh-head": {
+  "en": "mesh head",
+  "de": "Mesh-Fell"
+ },
+ "meter": {
+  "en": "meter",
+  "de": "Zähler"
+ },
+ "mewp": {
+  "en": "MEWP",
+  "de": "Hubarbeitsbühne"
+ },
+ "micromobility": {
+  "en": "micromobility",
+  "de": "Mikromobilität"
+ },
+ "microwave": {
+  "en": "microwave",
+  "de": "Mikrowelle"
+ },
+ "mineral-wool": {
+  "en": "mineral wool",
+  "de": "Mineralwolle"
+ },
+ "mirror": {
+  "en": "mirror",
+  "de": "Spiegel"
+ },
+ "mirror-cabinet": {
+  "en": "mirror cabinet",
+  "de": "Spiegelschrank"
+ },
+ "mobility": {
+  "en": "mobility",
+  "de": "Mobilität"
+ },
+ "mobility-aid": {
+  "en": "mobility aid",
+  "de": "Mobilitätshilfe"
+ },
+ "mobility-scooter": {
+  "en": "mobility scooter",
+  "de": "Elektromobil"
+ },
+ "moisture": {
+  "en": "moisture",
+  "de": "Feuchte"
+ },
+ "moisture-source": {
+  "en": "moisture source",
+  "de": "Feuchtequelle"
+ },
+ "monitor": {
+  "en": "monitor",
+  "de": "Monitor"
+ },
+ "monobloc": {
+  "en": "monobloc",
+  "de": "Monobloc"
+ },
+ "monoblock-burner": {
+  "en": "monoblock burner",
+  "de": "Monoblockbrenner"
+ },
+ "monstera": {
+  "en": "monstera",
+  "de": "Monstera"
+ },
+ "mophead": {
+  "en": "mophead",
+  "de": "Bauernhortensie"
+ },
+ "motorcycle": {
+  "en": "motorcycle",
+  "de": "Motorrad"
+ },
+ "mound": {
+  "en": "mound",
+  "de": "Hügelwuchs"
+ },
+ "mouthpiece": {
+  "en": "mouthpiece",
+  "de": "Mundstück"
+ },
+ "movable": {
+  "en": "movable",
+  "de": "beweglich"
+ },
+ "moving-blanket": {
+  "en": "moving blanket",
+  "de": "Umzugsdecke"
+ },
+ "moving-box": {
+  "en": "moving box",
+  "de": "Umzugskarton"
+ },
+ "mullion": {
+  "en": "mullion",
+  "de": "Pfosten"
+ },
+ "multi-stem": {
+  "en": "multi-stem",
+  "de": "mehrstämmig"
+ },
+ "music": {
+  "en": "music",
+  "de": "Musik"
+ },
+ "music-school": {
+  "en": "music school",
+  "de": "Musikschule"
+ },
+ "musical-instrument": {
+  "en": "musical instrument",
+  "de": "Musikinstrument"
+ },
+ "musician": {
+  "en": "musician",
+  "de": "Musiker"
+ },
+ "mute": {
+  "en": "mute",
+  "de": "Dämpfer"
+ },
+ "mvhr": {
+  "en": "MVHR",
+  "de": "Lüftung mit Wärmerückgewinnung"
+ },
+ "native": {
+  "en": "native",
+  "de": "heimisch"
+ },
+ "natural-stone": {
+  "en": "natural stone",
+  "de": "Naturstein"
+ },
+ "nesting": {
+  "en": "nesting",
+  "de": "Nisten"
+ },
+ "neutral": {
+  "en": "neutral",
+  "de": "neutral"
+ },
+ "nickel-silver": {
+  "en": "nickel silver",
+  "de": "Neusilber"
+ },
+ "night": {
+  "en": "night",
+  "de": "Nacht"
+ },
+ "nocturnal": {
+  "en": "nocturnal",
+  "de": "nachtaktiv"
+ },
+ "nodding-donkey": {
+  "en": "nodding donkey",
+  "de": "Pferdekopfpumpe"
+ },
+ "nodes": {
+  "en": "nodes",
+  "de": "Knoten"
+ },
+ "non-weight-bearing": {
+  "en": "non weight bearing",
+  "de": "Entlastung"
+ },
+ "notice-board": {
+  "en": "notice board",
+  "de": "Anschlagtafel"
+ },
+ "nurse": {
+  "en": "nurse",
+  "de": "Pflegekraft"
+ },
+ "nylon": {
+  "en": "nylon",
+  "de": "Nylon"
+ },
+ "nylon-strings": {
+  "en": "nylon strings",
+  "de": "Nylonsaiten"
+ },
+ "oak": {
+  "en": "oak",
+  "de": "Eiche"
+ },
+ "oak-decor": {
+  "en": "oak decor",
+  "de": "Eichendekor"
+ },
+ "object": {
+  "en": "object",
+  "de": "Objekt"
+ },
+ "office": {
+  "en": "office",
+  "de": "Büro"
+ },
+ "office-equipment": {
+  "en": "office equipment",
+  "de": "Büroausstattung"
+ },
+ "oil": {
+  "en": "oil",
+  "de": "Öl"
+ },
+ "oil-burner": {
+  "en": "oil burner",
+  "de": "Ölbrenner"
+ },
+ "oil-filled-radiator": {
+  "en": "oil filled radiator",
+  "de": "Ölradiator"
+ },
+ "oil-tank": {
+  "en": "oil tank",
+  "de": "Öltank"
+ },
+ "oilfield": {
+  "en": "oilfield",
+  "de": "Ölfeld"
+ },
+ "open-crown": {
+  "en": "open crown",
+  "de": "offene Krone"
+ },
+ "open-flame": {
+  "en": "open flame",
+  "de": "offene Flamme"
+ },
+ "opening": {
+  "en": "opening",
+  "de": "Öffnung"
+ },
+ "operating": {
+  "en": "operating",
+  "de": "Betrieb"
+ },
+ "operating-table": {
+  "en": "operating table",
+  "de": "Operationstisch"
+ },
+ "operating-theatre": {
+  "en": "operating theatre",
+  "de": "Operationssaal"
+ },
+ "opuntia": {
+  "en": "opuntia",
+  "de": "Opuntie"
+ },
+ "orchard": {
+  "en": "orchard",
+  "de": "Obstgarten"
+ },
+ "orchestra": {
+  "en": "orchestra",
+  "de": "Orchester"
+ },
+ "orchestral": {
+  "en": "orchestral",
+  "de": "orchestral"
+ },
+ "ornamental": {
+  "en": "ornamental",
+  "de": "Zier-"
+ },
+ "outdoor": {
+  "en": "outdoor",
+  "de": "Außenbereich"
+ },
+ "outdoor-unit": {
+  "en": "outdoor unit",
+  "de": "Außengerät"
+ },
+ "oven": {
+  "en": "oven",
+  "de": "Backofen"
+ },
+ "overcoat": {
+  "en": "overcoat",
+  "de": "Mantel"
+ },
+ "pad": {
+  "en": "evaporative pad",
+  "de": "Verdunstungsmatte"
+ },
+ "painting": {
+  "en": "painting",
+  "de": "Malen"
+ },
+ "pair": {
+  "en": "pair",
+  "de": "Paar"
+ },
+ "pallet": {
+  "en": "pallet",
+  "de": "Palette"
+ },
+ "pallet-truck": {
+  "en": "pallet truck",
+  "de": "Hubwagen"
+ },
+ "palm": {
+  "en": "palm",
+  "de": "Palme"
+ },
+ "panel-radiator": {
+  "en": "panel radiator",
+  "de": "Plattenheizkörper"
+ },
+ "panicles": {
+  "en": "panicles",
+  "de": "Rispen"
+ },
+ "panting": {
+  "en": "panting",
+  "de": "Hecheln"
+ },
+ "pantograph": {
+  "en": "pantograph",
+  "de": "Pantograph"
+ },
+ "parade": {
+  "en": "parade",
+  "de": "Parade"
+ },
+ "parallel-bars": {
+  "en": "parallel bars",
+  "de": "Barren"
+ },
+ "parasol": {
+  "en": "parasol",
+  "de": "Sonnenschirm"
+ },
+ "parent": {
+  "en": "parent",
+  "de": "Elternteil"
+ },
+ "park": {
+  "en": "park",
+  "de": "Park"
+ },
+ "park-tree": {
+  "en": "park tree",
+  "de": "Parkbaum"
+ },
+ "parka": {
+  "en": "parka",
+  "de": "Parka"
+ },
+ "parquet": {
+  "en": "parquet",
+  "de": "Parkett"
+ },
+ "particleboard": {
+  "en": "particleboard",
+  "de": "Spanplatte"
+ },
+ "passenger": {
+  "en": "passenger",
+  "de": "Fahrgast"
+ },
+ "passive": {
+  "en": "passive",
+  "de": "passiv"
+ },
+ "pasture": {
+  "en": "pasture",
+  "de": "Weide"
+ },
+ "path": {
+  "en": "path",
+  "de": "Weg"
+ },
+ "patient": {
+  "en": "patient",
+  "de": "Patient"
+ },
+ "patio-heater": {
+  "en": "patio heater",
+  "de": "Terrassenstrahler"
+ },
+ "paving": {
+  "en": "paving",
+  "de": "Pflaster"
+ },
+ "pe-x": {
+  "en": "PE-X",
+  "de": "PE-X"
+ },
+ "pedal": {
+  "en": "pedal",
+  "de": "Pedal"
+ },
+ "pedal-cycle": {
+  "en": "pedal cycle",
+  "de": "Tretfahrzeug"
+ },
+ "pedal-harp": {
+  "en": "pedal harp",
+  "de": "Pedalharfe"
+ },
+ "pedestal": {
+  "en": "pedestal",
+  "de": "Sockel"
+ },
+ "pedestrian": {
+  "en": "pedestrian",
+  "de": "Fußgänger"
+ },
+ "pellet-boiler": {
+  "en": "pellet boiler",
+  "de": "Pelletkessel"
+ },
+ "pendant-lamp": {
+  "en": "pendant lamp",
+  "de": "Pendelleuchte"
+ },
+ "pendulous": {
+  "en": "pendulous",
+  "de": "hängend"
+ },
+ "pendulum": {
+  "en": "pendulum",
+  "de": "Pendel"
+ },
+ "pendulum-ventilation": {
+  "en": "pendulum ventilation",
+  "de": "Pendellüftung"
+ },
+ "percussion": {
+  "en": "percussion",
+  "de": "Schlaginstrumente"
+ },
+ "perennial": {
+  "en": "perennial",
+  "de": "mehrjährig"
+ },
+ "perforated-sheet": {
+  "en": "perforated sheet",
+  "de": "Lochblech"
+ },
+ "perforated-steel": {
+  "en": "perforated steel",
+  "de": "Lochstahl"
+ },
+ "pergola": {
+  "en": "pergola",
+  "de": "Pergola"
+ },
+ "pet": {
+  "en": "pet",
+  "de": "Haustier"
+ },
+ "petrol": {
+  "en": "petrol",
+  "de": "Benzin"
+ },
+ "phone": {
+  "en": "phone",
+  "de": "Telefon"
+ },
+ "photographer": {
+  "en": "photographer",
+  "de": "Fotograf"
+ },
+ "physiology-adjusted": {
+  "en": "physiology adjusted",
+  "de": "physiologisch angepasst"
+ },
+ "piano": {
+  "en": "piano",
+  "de": "Klavier"
+ },
+ "piano-dolly": {
+  "en": "piano dolly",
+  "de": "Klaviertransporter"
+ },
+ "picnic": {
+  "en": "picnic",
+  "de": "Picknick"
+ },
+ "picnic-table": {
+  "en": "picnic table",
+  "de": "Picknicktisch"
+ },
+ "picture-tube": {
+  "en": "picture tube",
+  "de": "Bildröhre"
+ },
+ "pig": {
+  "en": "pig",
+  "de": "Schwein"
+ },
+ "pigeon": {
+  "en": "pigeon",
+  "de": "Taube"
+ },
+ "pine": {
+  "en": "pine",
+  "de": "Kiefer"
+ },
+ "pinnate": {
+  "en": "pinnate",
+  "de": "gefiedert"
+ },
+ "pinnate-leaves": {
+  "en": "pinnate leaves",
+  "de": "Fiederblätter"
+ },
+ "pioneer": {
+  "en": "pioneer",
+  "de": "Pionier"
+ },
+ "pipe": {
+  "en": "pipe",
+  "de": "Rohr"
+ },
+ "pipe-clamp": {
+  "en": "pipe clamp",
+  "de": "Rohrschelle"
+ },
+ "pirouette": {
+  "en": "pirouette",
+  "de": "Pirouette"
+ },
+ "piston-valves": {
+  "en": "piston valves",
+  "de": "Pistonventile"
+ },
+ "plain-tile": {
+  "en": "plain tile",
+  "de": "Flachziegel"
+ },
+ "plastic": {
+  "en": "plastic",
+  "de": "Kunststoff"
+ },
+ "plastic-crate": {
+  "en": "plastic crate",
+  "de": "Kunststoffkiste"
+ },
+ "plate-heat-exchanger": {
+  "en": "plate heat exchanger",
+  "de": "Plattenwärmeübertrager"
+ },
+ "platform": {
+  "en": "platform",
+  "de": "Plattform"
+ },
+ "play": {
+  "en": "play",
+  "de": "Spiel"
+ },
+ "playground": {
+  "en": "playground",
+  "de": "Spielplatz"
+ },
+ "plein-air": {
+  "en": "plein air",
+  "de": "Freilichtmalerei"
+ },
+ "plumbing": {
+  "en": "plumbing",
+  "de": "Sanitär"
+ },
+ "plume": {
+  "en": "plume",
+  "de": "Fahne"
+ },
+ "plumes": {
+  "en": "plumes",
+  "de": "Fahnen"
+ },
+ "plywood": {
+  "en": "plywood",
+  "de": "Sperrholz"
+ },
+ "pocket-spring-mattress": {
+  "en": "pocket spring mattress",
+  "de": "Taschenfederkernmatratze"
+ },
+ "point-footing": {
+  "en": "point footing",
+  "de": "Einzelfundament"
+ },
+ "pointing": {
+  "en": "pointing",
+  "de": "Zeigen"
+ },
+ "pollard": {
+  "en": "pollard",
+  "de": "Kopfbaum"
+ },
+ "polycarbonate": {
+  "en": "polycarbonate",
+  "de": "Polycarbonat"
+ },
+ "polyethylene": {
+  "en": "polyethylene",
+  "de": "Polyethylen"
+ },
+ "polypropylene": {
+  "en": "polypropylene",
+  "de": "Polypropylen"
+ },
+ "poncho": {
+  "en": "poncho",
+  "de": "Poncho"
+ },
+ "ponytail": {
+  "en": "ponytail",
+  "de": "Pferdeschwanz"
+ },
+ "posing": {
+  "en": "posing",
+  "de": "Posieren"
+ },
+ "post-mounted": {
+  "en": "post mounted",
+  "de": "pfostenmontiert"
+ },
+ "postal": {
+  "en": "postal",
+  "de": "Post"
+ },
+ "pot": {
+  "en": "pot",
+  "de": "Topf"
+ },
+ "potted": {
+  "en": "potted",
+  "de": "getopft"
+ },
+ "pounce": {
+  "en": "pounce",
+  "de": "Beutesprung"
+ },
+ "pouring": {
+  "en": "pouring",
+  "de": "Eingießen"
+ },
+ "powder-coat": {
+  "en": "powder coat",
+  "de": "Pulverbeschichtung"
+ },
+ "powder-coated": {
+  "en": "powder coated",
+  "de": "pulverbeschichtet"
+ },
+ "powder-coated-steel": {
+  "en": "powder coated steel",
+  "de": "pulverbeschichteter Stahl"
+ },
+ "power": {
+  "en": "power",
+  "de": "Leistung"
+ },
+ "power-tool": {
+  "en": "power tool",
+  "de": "Elektrowerkzeug"
+ },
+ "powered": {
+  "en": "powered",
+  "de": "motorisiert"
+ },
+ "pram": {
+  "en": "pram",
+  "de": "Kinderwagen"
+ },
+ "precast": {
+  "en": "precast",
+  "de": "Fertigteil"
+ },
+ "precast-concrete": {
+  "en": "precast concrete",
+  "de": "Betonfertigteil"
+ },
+ "pregnant": {
+  "en": "pregnant",
+  "de": "schwanger"
+ },
+ "presenter": {
+  "en": "presenter",
+  "de": "Vortragender"
+ },
+ "press": {
+  "en": "press",
+  "de": "Presse"
+ },
+ "pressure-vessel": {
+  "en": "pressure vessel",
+  "de": "Druckbehälter"
+ },
+ "prestressed": {
+  "en": "prestressed",
+  "de": "vorgespannt"
+ },
+ "primary-energy": {
+  "en": "primary energy",
+  "de": "Primärenergie"
+ },
+ "prismatic": {
+  "en": "prismatic",
+  "de": "prismatisch"
+ },
+ "propane": {
+  "en": "propane",
+  "de": "Propan"
+ },
+ "prosthesis": {
+  "en": "prosthesis",
+  "de": "Prothese"
+ },
+ "pseudostem": {
+  "en": "pseudostem",
+  "de": "Scheinstamm"
+ },
+ "pu-foam": {
+  "en": "PU foam",
+  "de": "PU-Schaum"
+ },
+ "public-space": {
+  "en": "public space",
+  "de": "öffentlicher Raum"
+ },
+ "public-transport": {
+  "en": "public transport",
+  "de": "öffentlicher Verkehr"
+ },
+ "pull-up-bar": {
+  "en": "pull up bar",
+  "de": "Klimmzugstange"
+ },
+ "pulling": {
+  "en": "pulling",
+  "de": "Ziehen"
+ },
+ "pump": {
+  "en": "pump",
+  "de": "Pumpe"
+ },
+ "pumpjack": {
+  "en": "pumpjack",
+  "de": "Gestängetiefpumpe"
+ },
+ "push-broom": {
+  "en": "push broom",
+  "de": "Kehrbesen"
+ },
+ "push-cycle": {
+  "en": "push cycle",
+  "de": "Fahrradschieben"
+ },
+ "push-pull": {
+  "en": "push pull",
+  "de": "Drücken und Ziehen"
+ },
+ "pushing": {
+  "en": "pushing",
+  "de": "Schieben"
+ },
+ "pyramidal-crown": {
+  "en": "pyramidal crown",
+  "de": "Pyramidenkrone"
+ },
+ "quadruped": {
+  "en": "quadruped",
+  "de": "Vierbeiner"
+ },
+ "queue": {
+  "en": "queue",
+  "de": "Warteschlange"
+ },
+ "rack": {
+  "en": "rack",
+  "de": "Regal"
+ },
+ "racket": {
+  "en": "racket",
+  "de": "Schläger"
+ },
+ "radiant-heater": {
+  "en": "radiant heater",
+  "de": "Heizstrahler"
+ },
+ "radiant-panel": {
+  "en": "radiant panel",
+  "de": "Strahlungspaneel"
+ },
+ "radiator": {
+  "en": "radiator",
+  "de": "Heizkörper"
+ },
+ "radiator-valve": {
+  "en": "radiator valve",
+  "de": "Heizkörperventil"
+ },
+ "rafter": {
+  "en": "rafter",
+  "de": "Sparren"
+ },
+ "rail": {
+  "en": "rail",
+  "de": "Schiene"
+ },
+ "rain": {
+  "en": "rain",
+  "de": "Regen"
+ },
+ "rain-hood": {
+  "en": "rain hood",
+  "de": "Regenhaube"
+ },
+ "raincoat": {
+  "en": "raincoat",
+  "de": "Regenmantel"
+ },
+ "ramp": {
+  "en": "ramp",
+  "de": "Rampe"
+ },
+ "ratchet-strap": {
+  "en": "ratchet strap",
+  "de": "Ratschengurt"
+ },
+ "reader": {
+  "en": "reader",
+  "de": "Leser"
+ },
+ "reading": {
+  "en": "reading",
+  "de": "Lesen"
+ },
+ "reclaimed": {
+  "en": "reclaimed",
+  "de": "wiederverwendet"
+ },
+ "recliner": {
+  "en": "recliner",
+  "de": "Relaxsessel"
+ },
+ "recycling": {
+  "en": "recycling",
+  "de": "Recycling"
+ },
+ "red-fox": {
+  "en": "red fox",
+  "de": "Rotfuchs"
+ },
+ "reed": {
+  "en": "reed",
+  "de": "Schilf"
+ },
+ "reed-organ": {
+  "en": "reed organ",
+  "de": "Zungenorgel"
+ },
+ "refrigerant-line": {
+  "en": "refrigerant line",
+  "de": "Kältemittelleitung"
+ },
+ "refrigeration": {
+  "en": "refrigeration",
+  "de": "Kältetechnik"
+ },
+ "regeneration": {
+  "en": "regeneration",
+  "de": "Regeneration"
+ },
+ "regenerator": {
+  "en": "regenerator",
+  "de": "Regenerator"
+ },
+ "reichsformat": {
+  "en": "reichsformat",
+  "de": "Reichsformat"
+ },
+ "removal": {
+  "en": "removal",
+  "de": "Umzug"
+ },
+ "reservoir-shaft": {
+  "en": "reservoir shaft",
+  "de": "Speicherschacht"
+ },
+ "resonators": {
+  "en": "resonators",
+  "de": "Resonatoren"
+ },
+ "restaurant": {
+  "en": "restaurant",
+  "de": "Restaurant"
+ },
+ "retail": {
+  "en": "retail",
+  "de": "Einzelhandel"
+ },
+ "retractable-bollard": {
+  "en": "retractable bollard",
+  "de": "versenkbarer Poller"
+ },
+ "reuse-depot": {
+  "en": "reuse depot",
+  "de": "Wiederverwendungslager"
+ },
+ "reversing-fan": {
+  "en": "reversing fan",
+  "de": "Wendelüfter"
+ },
+ "riparian": {
+  "en": "riparian",
+  "de": "Ufer"
+ },
+ "riser-rail": {
+  "en": "riser rail",
+  "de": "Steigschiene"
+ },
+ "rising-bollard": {
+  "en": "rising bollard",
+  "de": "Hubpoller"
+ },
+ "riveted": {
+  "en": "riveted",
+  "de": "genietet"
+ },
+ "road-works": {
+  "en": "road works",
+  "de": "Straßenbau"
+ },
+ "robinia": {
+  "en": "robinia",
+  "de": "Robinie"
+ },
+ "rocking": {
+  "en": "rocking",
+  "de": "Wippen"
+ },
+ "rodent": {
+  "en": "rodent",
+  "de": "Nagetier"
+ },
+ "roe-deer": {
+  "en": "roe deer",
+  "de": "Reh"
+ },
+ "rollator": {
+  "en": "rollator",
+  "de": "Rollator"
+ },
+ "rolled-section": {
+  "en": "rolled section",
+  "de": "Walzprofil"
+ },
+ "roof": {
+  "en": "roof",
+  "de": "Dach"
+ },
+ "roof-tile": {
+  "en": "roof tile",
+  "de": "Dachziegel"
+ },
+ "roof-truss": {
+  "en": "roof truss",
+  "de": "Dachbinder"
+ },
+ "roofing": {
+  "en": "roofing",
+  "de": "Dacheindeckung"
+ },
+ "room-thermostat": {
+  "en": "room thermostat",
+  "de": "Raumthermostat"
+ },
+ "root-heave": {
+  "en": "root heave",
+  "de": "Wurzelaufbruch"
+ },
+ "rooting": {
+  "en": "rooting",
+  "de": "Wühlen"
+ },
+ "rope": {
+  "en": "rope",
+  "de": "Seil"
+ },
+ "rope-tuned": {
+  "en": "rope tuned",
+  "de": "seilgespannt"
+ },
+ "rose": {
+  "en": "rose",
+  "de": "Rose"
+ },
+ "rosette": {
+  "en": "rosette",
+  "de": "Rosette"
+ },
+ "rosewood": {
+  "en": "rosewood",
+  "de": "Palisander"
+ },
+ "rotating": {
+  "en": "rotating",
+  "de": "rotierend"
+ },
+ "rotating-drum": {
+  "en": "rotating drum",
+  "de": "Drehtrommel"
+ },
+ "round-timber": {
+  "en": "round timber",
+  "de": "Rundholz"
+ },
+ "roundabout": {
+  "en": "roundabout",
+  "de": "Drehkarussell"
+ },
+ "row": {
+  "en": "row",
+  "de": "Reihe"
+ },
+ "rubber": {
+  "en": "rubber",
+  "de": "Gummi"
+ },
+ "rubber-surfacing": {
+  "en": "rubber surfacing",
+  "de": "Gummibelag"
+ },
+ "ruminant": {
+  "en": "ruminant",
+  "de": "Wiederkäuer"
+ },
+ "runner": {
+  "en": "runner",
+  "de": "Läufer"
+ },
+ "running": {
+  "en": "running",
+  "de": "Laufen"
+ },
+ "rust": {
+  "en": "rust",
+  "de": "Rost"
+ },
+ "safety-boots": {
+  "en": "safety boots",
+  "de": "Sicherheitsstiefel"
+ },
+ "saloon": {
+  "en": "saloon",
+  "de": "Limousine"
+ },
+ "samaras": {
+  "en": "samaras",
+  "de": "Flügelfrüchte"
+ },
+ "sand": {
+  "en": "sand",
+  "de": "Sand"
+ },
+ "sand-play": {
+  "en": "sand play",
+  "de": "Sandspiel"
+ },
+ "sandpit": {
+  "en": "sandpit",
+  "de": "Sandkasten"
+ },
+ "sandstone": {
+  "en": "sandstone",
+  "de": "Sandstein"
+ },
+ "sandwich": {
+  "en": "sandwich",
+  "de": "Sandwich"
+ },
+ "sandwich-panel": {
+  "en": "sandwich panel",
+  "de": "Sandwichpaneel"
+ },
+ "sanitary": {
+  "en": "sanitary",
+  "de": "Sanitär"
+ },
+ "satchel": {
+  "en": "satchel",
+  "de": "Schultasche"
+ },
+ "scale-figure": {
+  "en": "scale figure",
+  "de": "Maßstabsfigur"
+ },
+ "school": {
+  "en": "school",
+  "de": "Schule"
+ },
+ "scissor-lift": {
+  "en": "scissor lift",
+  "de": "Scherenhebebühne"
+ },
+ "scooter": {
+  "en": "scooter",
+  "de": "Roller"
+ },
+ "scroll": {
+  "en": "scroll",
+  "de": "Schnecke"
+ },
+ "scroll-compressor": {
+  "en": "scroll compressor",
+  "de": "Scrollverdichter"
+ },
+ "scrubs": {
+  "en": "scrubs",
+  "de": "OP-Kleidung"
+ },
+ "seat": {
+  "en": "seat",
+  "de": "Sitz"
+ },
+ "seated": {
+  "en": "seated",
+  "de": "sitzend"
+ },
+ "seating": {
+  "en": "seating",
+  "de": "Sitzmöbel"
+ },
+ "seating-block": {
+  "en": "seating block",
+  "de": "Sitzblock"
+ },
+ "second-hand": {
+  "en": "second-hand",
+  "de": "Second-Hand"
+ },
+ "section": {
+  "en": "section",
+  "de": "Abschnitt"
+ },
+ "sectional": {
+  "en": "sectional",
+  "de": "Sektionaltor"
+ },
+ "sectional-boiler": {
+  "en": "sectional boiler",
+  "de": "Gliederkessel"
+ },
+ "seesaw": {
+  "en": "seesaw",
+  "de": "Wippe"
+ },
+ "selfie": {
+  "en": "selfie",
+  "de": "Selfie"
+ },
+ "semi-evergreen": {
+  "en": "semi evergreen",
+  "de": "halbimmergrün"
+ },
+ "server": {
+  "en": "server",
+  "de": "Server"
+ },
+ "server-rack": {
+  "en": "server rack",
+  "de": "Serverschrank"
+ },
+ "service": {
+  "en": "service",
+  "de": "Dienstleistung"
+ },
+ "setts": {
+  "en": "setts",
+  "de": "Pflastersteine"
+ },
+ "sewing-machine": {
+  "en": "sewing machine",
+  "de": "Nähmaschine"
+ },
+ "sewing-table": {
+  "en": "sewing table",
+  "de": "Nähtisch"
+ },
+ "shade": {
+  "en": "shade",
+  "de": "Schatten"
+ },
+ "shade-tolerant": {
+  "en": "shade tolerant",
+  "de": "schattenverträglich"
+ },
+ "shading": {
+  "en": "shading",
+  "de": "Beschattung"
+ },
+ "sheep": {
+  "en": "sheep",
+  "de": "Schaf"
+ },
+ "sheet-metal": {
+  "en": "sheet metal",
+  "de": "Blech"
+ },
+ "sheet-steel": {
+  "en": "sheet steel",
+  "de": "Stahlblech"
+ },
+ "sheffield-stand": {
+  "en": "Sheffield stand",
+  "de": "Sheffield-Ständer"
+ },
+ "shelf": {
+  "en": "shelf",
+  "de": "Regalboden"
+ },
+ "shelter": {
+  "en": "shelter",
+  "de": "Unterstand"
+ },
+ "shivering": {
+  "en": "shivering",
+  "de": "Zittern"
+ },
+ "shoe-cabinet": {
+  "en": "shoe cabinet",
+  "de": "Schuhschrank"
+ },
+ "shopping": {
+  "en": "shopping",
+  "de": "Einkaufen"
+ },
+ "shopping-trolley": {
+  "en": "shopping trolley",
+  "de": "Einkaufswagen"
+ },
+ "shoulder": {
+  "en": "shoulder",
+  "de": "Schulter"
+ },
+ "shoulders": {
+  "en": "shoulders",
+  "de": "Schultern"
+ },
+ "shovel": {
+  "en": "shovel",
+  "de": "Schaufel"
+ },
+ "showcase": {
+  "en": "showcase",
+  "de": "Schaukasten"
+ },
+ "shower": {
+  "en": "shower",
+  "de": "Dusche"
+ },
+ "shrub": {
+  "en": "shrub",
+  "de": "Strauch"
+ },
+ "sign-language": {
+  "en": "sign language",
+  "de": "Gebärdensprache"
+ },
+ "signage": {
+  "en": "signage",
+  "de": "Beschilderung"
+ },
+ "silenced": {
+  "en": "silenced",
+  "de": "schallgedämpft"
+ },
+ "sill": {
+  "en": "sill",
+  "de": "Fensterbank"
+ },
+ "silver-plated": {
+  "en": "silver plated",
+  "de": "versilbert"
+ },
+ "single-bed": {
+  "en": "single bed",
+  "de": "Einzelbett"
+ },
+ "sink": {
+  "en": "sink",
+  "de": "Spüle"
+ },
+ "sit-stand-desk": {
+  "en": "sit-stand desk",
+  "de": "Sitz-Steh-Schreibtisch"
+ },
+ "sit-up-bench": {
+  "en": "sit-up bench",
+  "de": "Sit-up-Bank"
+ },
+ "sitting": {
+  "en": "sitting",
+  "de": "Sitzen"
+ },
+ "sitting-on-ground": {
+  "en": "sitting on ground",
+  "de": "auf dem Boden sitzend"
+ },
+ "skateboarder": {
+  "en": "skateboarder",
+  "de": "Skateboarder"
+ },
+ "skateboarding": {
+  "en": "skateboarding",
+  "de": "Skateboarden"
+ },
+ "skid": {
+  "en": "skid",
+  "de": "Kufe"
+ },
+ "slab": {
+  "en": "slab",
+  "de": "Platte"
+ },
+ "slatted-base": {
+  "en": "slatted base",
+  "de": "Lattenrost"
+ },
+ "sleeping": {
+  "en": "sleeping",
+  "de": "Schlafen"
+ },
+ "slide": {
+  "en": "slide",
+  "de": "Rutsche"
+ },
+ "sliding": {
+  "en": "sliding",
+  "de": "gleitend"
+ },
+ "sling": {
+  "en": "sling",
+  "de": "Schlinge"
+ },
+ "slippers": {
+  "en": "slippers",
+  "de": "Hausschuhe"
+ },
+ "slouch": {
+  "en": "slouch",
+  "de": "schlaffe Haltung"
+ },
+ "sluice": {
+  "en": "sluice",
+  "de": "Schleuse"
+ },
+ "small-tree": {
+  "en": "small tree",
+  "de": "Kleinbaum"
+ },
+ "smartphone": {
+  "en": "smartphone",
+  "de": "Smartphone"
+ },
+ "smoke": {
+  "en": "smoke",
+  "de": "Rauch"
+ },
+ "smooth-bark": {
+  "en": "smooth bark",
+  "de": "glatte Rinde"
+ },
+ "snake-plant": {
+  "en": "snake plant",
+  "de": "Bogenhanf"
+ },
+ "snare-drum": {
+  "en": "snare drum",
+  "de": "kleine Trommel"
+ },
+ "snow": {
+  "en": "snow",
+  "de": "Schnee"
+ },
+ "sofa": {
+  "en": "sofa",
+  "de": "Sofa"
+ },
+ "soft-case": {
+  "en": "soft case",
+  "de": "Weichtasche"
+ },
+ "softwood": {
+  "en": "softwood",
+  "de": "Nadelholz"
+ },
+ "solar-heat": {
+  "en": "solar heat",
+  "de": "Solarwärme"
+ },
+ "solar-load": {
+  "en": "solar load",
+  "de": "solare Last"
+ },
+ "solar-thermal": {
+  "en": "solar thermal",
+  "de": "Solarthermie"
+ },
+ "solid-wood": {
+  "en": "solid wood",
+  "de": "Massivholz"
+ },
+ "sonoran": {
+  "en": "sonoran",
+  "de": "Sonora"
+ },
+ "sorption-wheel": {
+  "en": "sorption wheel",
+  "de": "Sorptionsrad"
+ },
+ "space-net": {
+  "en": "space net",
+  "de": "Raumnetz"
+ },
+ "spandrel": {
+  "en": "spandrel",
+  "de": "Brüstungsfeld"
+ },
+ "sparse-hair": {
+  "en": "sparse hair",
+  "de": "spärliches Haar"
+ },
+ "speech": {
+  "en": "speech",
+  "de": "Sprechen"
+ },
+ "spines": {
+  "en": "spines",
+  "de": "Stacheln"
+ },
+ "spinet": {
+  "en": "spinet",
+  "de": "Spinett"
+ },
+ "spiral": {
+  "en": "spiral",
+  "de": "Spirale"
+ },
+ "split-ac": {
+  "en": "split AC",
+  "de": "Split-Klimagerät"
+ },
+ "sport": {
+  "en": "sport",
+  "de": "Sport"
+ },
+ "sports-and-leisure": {
+  "en": "sports and leisure",
+  "de": "Sport und Freizeit"
+ },
+ "sportswear": {
+  "en": "sportswear",
+  "de": "Sportbekleidung"
+ },
+ "spray": {
+  "en": "spray",
+  "de": "Sprühen"
+ },
+ "spring": {
+  "en": "spring",
+  "de": "Feder"
+ },
+ "spring-rocker": {
+  "en": "spring rocker",
+  "de": "Federwippe"
+ },
+ "spring-steel": {
+  "en": "spring steel",
+  "de": "Federstahl"
+ },
+ "spruce": {
+  "en": "spruce",
+  "de": "Fichte"
+ },
+ "squirrel": {
+  "en": "squirrel",
+  "de": "Eichhörnchen"
+ },
+ "stack": {
+  "en": "stack",
+  "de": "Stapel"
+ },
+ "stackable": {
+  "en": "stackable",
+  "de": "stapelbar"
+ },
+ "stacked": {
+  "en": "stacked",
+  "de": "gestapelt"
+ },
+ "stacked-goods": {
+  "en": "stacked goods",
+  "de": "Stapelgut"
+ },
+ "stage": {
+  "en": "stage",
+  "de": "Bühne"
+ },
+ "stage-piano": {
+  "en": "stage piano",
+  "de": "Stagepiano"
+ },
+ "stagnation": {
+  "en": "stagnation",
+  "de": "Stagnation"
+ },
+ "stainless-steel": {
+  "en": "stainless steel",
+  "de": "Edelstahl"
+ },
+ "stair": {
+  "en": "stair",
+  "de": "Treppe"
+ },
+ "stalking": {
+  "en": "stalking",
+  "de": "Pirschen"
+ },
+ "standby-loss": {
+  "en": "standby loss",
+  "de": "Bereitschaftsverlust"
+ },
+ "standing": {
+  "en": "standing",
+  "de": "Stehen"
+ },
+ "standing-desk": {
+  "en": "standing desk",
+  "de": "Stehpult"
+ },
+ "standing-load": {
+  "en": "standing load",
+  "de": "ruhende Last"
+ },
+ "steam": {
+  "en": "steam",
+  "de": "Dampf"
+ },
+ "steel": {
+  "en": "steel",
+  "de": "Stahl"
+ },
+ "steel-string": {
+  "en": "steel string",
+  "de": "Stahlsaiten"
+ },
+ "steel-tube": {
+  "en": "steel tube",
+  "de": "Stahlrohr"
+ },
+ "step-through": {
+  "en": "step through",
+  "de": "Tiefeinsteiger"
+ },
+ "stepladder": {
+  "en": "stepladder",
+  "de": "Stehleiter"
+ },
+ "stethoscope": {
+  "en": "stethoscope",
+  "de": "Stethoskop"
+ },
+ "stickered": {
+  "en": "stickered",
+  "de": "gestapelt mit Stapellatten"
+ },
+ "stickers": {
+  "en": "stickers",
+  "de": "Aufkleber"
+ },
+ "stillage": {
+  "en": "stillage",
+  "de": "Gestell"
+ },
+ "stone": {
+  "en": "stone",
+  "de": "Stein"
+ },
+ "stool": {
+  "en": "stool",
+  "de": "Hocker"
+ },
+ "storage": {
+  "en": "storage",
+  "de": "Lagerung"
+ },
+ "storage-crate": {
+  "en": "storage crate",
+  "de": "Lagerkiste"
+ },
+ "storage-tank": {
+  "en": "storage tank",
+  "de": "Speichertank"
+ },
+ "stored": {
+  "en": "stored",
+  "de": "eingelagert"
+ },
+ "stored-on-bearers": {
+  "en": "stored on bearers",
+  "de": "auf Kanthölzern gelagert"
+ },
+ "straight-mute": {
+  "en": "straight mute",
+  "de": "gerader Dämpfer"
+ },
+ "strapped": {
+  "en": "strapped",
+  "de": "gurtgesichert"
+ },
+ "stratification": {
+  "en": "stratification",
+  "de": "Schichtung"
+ },
+ "street-furniture": {
+  "en": "street furniture",
+  "de": "Stadtmobiliar"
+ },
+ "street-lamp": {
+  "en": "street lamp",
+  "de": "Straßenlaterne"
+ },
+ "street-life": {
+  "en": "street life",
+  "de": "Straßenleben"
+ },
+ "street-musician": {
+  "en": "street musician",
+  "de": "Straßenmusiker"
+ },
+ "street-tree": {
+  "en": "street tree",
+  "de": "Straßenbaum"
+ },
+ "streetball": {
+  "en": "streetball",
+  "de": "Streetball"
+ },
+ "stretch": {
+  "en": "stretch",
+  "de": "Strecken"
+ },
+ "stretching": {
+  "en": "stretching",
+  "de": "Dehnübung"
+ },
+ "stringer": {
+  "en": "stringer",
+  "de": "Wange"
+ },
+ "strings": {
+  "en": "strings",
+  "de": "Saiteninstrumente"
+ },
+ "stroller": {
+  "en": "stroller",
+  "de": "Buggy"
+ },
+ "structural": {
+  "en": "structural",
+  "de": "tragend"
+ },
+ "student-instrument": {
+  "en": "student instrument",
+  "de": "Schülerinstrument"
+ },
+ "sub-assembly": {
+  "en": "sub assembly",
+  "de": "Baugruppe"
+ },
+ "submersible-pump": {
+  "en": "submersible pump",
+  "de": "Tauchpumpe"
+ },
+ "subshrub": {
+  "en": "subshrub",
+  "de": "Halbstrauch"
+ },
+ "substation": {
+  "en": "substation",
+  "de": "Umspannstation"
+ },
+ "succulent": {
+  "en": "succulent",
+  "de": "Sukkulente"
+ },
+ "suitcase": {
+  "en": "suitcase",
+  "de": "Koffer"
+ },
+ "summer": {
+  "en": "summer",
+  "de": "Sommer"
+ },
+ "sun-lounger": {
+  "en": "sun lounger",
+  "de": "Sonnenliege"
+ },
+ "sunbathing": {
+  "en": "sunbathing",
+  "de": "Sonnenbaden"
+ },
+ "sunflower": {
+  "en": "sunflower",
+  "de": "Sonnenblume"
+ },
+ "supply-air": {
+  "en": "supply air",
+  "de": "Zuluft"
+ },
+ "support": {
+  "en": "support",
+  "de": "Stütze"
+ },
+ "surgical-light": {
+  "en": "surgical light",
+  "de": "OP-Leuchte"
+ },
+ "surveyor": {
+  "en": "surveyor",
+  "de": "Vermesser"
+ },
+ "sustain-pedal": {
+  "en": "sustain pedal",
+  "de": "Haltepedal"
+ },
+ "sweeping": {
+  "en": "sweeping",
+  "de": "Kehren"
+ },
+ "swimming": {
+  "en": "swimming",
+  "de": "Schwimmen"
+ },
+ "swimwear": {
+  "en": "swimwear",
+  "de": "Badebekleidung"
+ },
+ "swine": {
+  "en": "swine",
+  "de": "Schweine"
+ },
+ "swing": {
+  "en": "swing",
+  "de": "Schaukel"
+ },
+ "swivel": {
+  "en": "swivel",
+  "de": "drehbar"
+ },
+ "swivel-chair": {
+  "en": "swivel chair",
+  "de": "Drehstuhl"
+ },
+ "sword-leaf": {
+  "en": "sword leaf",
+  "de": "Schwertblatt"
+ },
+ "table": {
+  "en": "table",
+  "de": "Tisch"
+ },
+ "table-tennis": {
+  "en": "table tennis",
+  "de": "Tischtennis"
+ },
+ "tall": {
+  "en": "tall",
+  "de": "hochgewachsen"
+ },
+ "tank": {
+  "en": "tank",
+  "de": "Tank"
+ },
+ "tap": {
+  "en": "tap",
+  "de": "Wasserhahn"
+ },
+ "teaching-board": {
+  "en": "teaching board",
+  "de": "Lehrtafel"
+ },
+ "teak": {
+  "en": "teak",
+  "de": "Teak"
+ },
+ "tealight": {
+  "en": "tealight",
+  "de": "Teelicht"
+ },
+ "teenager": {
+  "en": "teenager",
+  "de": "Jugendlicher"
+ },
+ "television": {
+  "en": "television",
+  "de": "Fernseher"
+ },
+ "tennis": {
+  "en": "tennis",
+  "de": "Tennis"
+ },
+ "terracotta": {
+  "en": "terracotta",
+  "de": "Terrakotta"
+ },
+ "terrazzo": {
+  "en": "terrazzo",
+  "de": "Terrazzo"
+ },
+ "test": {
+  "en": "test",
+  "de": "Test"
+ },
+ "text-neck": {
+  "en": "text neck",
+  "de": "Handynacken"
+ },
+ "thermal": {
+  "en": "thermal",
+  "de": "thermisch"
+ },
+ "thermal-comfort": {
+  "en": "thermal comfort",
+  "de": "thermische Behaglichkeit"
+ },
+ "thermostat": {
+  "en": "thermostat",
+  "de": "Thermostat"
+ },
+ "thermostatic-valve": {
+  "en": "thermostatic valve",
+  "de": "Thermostatventil"
+ },
+ "third-trimester": {
+  "en": "third trimester",
+  "de": "drittes Trimester"
+ },
+ "thorny": {
+  "en": "thorny",
+  "de": "dornig"
+ },
+ "threaded-pipe": {
+  "en": "threaded pipe",
+  "de": "Gewinderohr"
+ },
+ "three-point-gait": {
+  "en": "three point gait",
+  "de": "Dreipunktgang"
+ },
+ "throttling": {
+  "en": "throttling",
+  "de": "Drosselung"
+ },
+ "tie": {
+  "en": "tie",
+  "de": "Zugband"
+ },
+ "tiered-crown": {
+  "en": "tiered crown",
+  "de": "Etagenkrone"
+ },
+ "tilt": {
+  "en": "tilt",
+  "de": "Kippen"
+ },
+ "tilting-liner": {
+  "en": "tilting liner",
+  "de": "Kipp-Einlage"
+ },
+ "timber": {
+  "en": "timber",
+  "de": "Holz"
+ },
+ "timpani": {
+  "en": "timpani",
+  "de": "Pauken"
+ },
+ "tip-out": {
+  "en": "tip out",
+  "de": "Auskippen"
+ },
+ "tipping-bin": {
+  "en": "tipping bin",
+  "de": "Kippbehälter"
+ },
+ "toaster": {
+  "en": "toaster",
+  "de": "Toaster"
+ },
+ "toddler": {
+  "en": "toddler",
+  "de": "Kleinkind"
+ },
+ "toilet": {
+  "en": "toilet",
+  "de": "Toilette"
+ },
+ "tolex": {
+  "en": "tolex",
+  "de": "Tolex"
+ },
+ "tongue-and-groove": {
+  "en": "tongue and groove",
+  "de": "Nut und Feder"
+ },
+ "tool": {
+  "en": "tool",
+  "de": "Werkzeug"
+ },
+ "topiary": {
+  "en": "topiary",
+  "de": "Formschnitt"
+ },
+ "total-station": {
+  "en": "total station",
+  "de": "Tachymeter"
+ },
+ "tourism": {
+  "en": "tourism",
+  "de": "Tourismus"
+ },
+ "tourist": {
+  "en": "tourist",
+  "de": "Tourist"
+ },
+ "towel": {
+  "en": "towel",
+  "de": "Handtuch"
+ },
+ "towel-radiator": {
+  "en": "towel radiator",
+  "de": "Handtuchheizkörper"
+ },
+ "tower": {
+  "en": "tower",
+  "de": "Turm"
+ },
+ "tower-crane": {
+  "en": "tower crane",
+  "de": "Turmdrehkran"
+ },
+ "track": {
+  "en": "track",
+  "de": "Laufschiene"
+ },
+ "trades": {
+  "en": "trades",
+  "de": "Handwerk"
+ },
+ "traffic-control": {
+  "en": "traffic control",
+  "de": "Verkehrsregelung"
+ },
+ "tram": {
+  "en": "tram",
+  "de": "Straßenbahn"
+ },
+ "transit-bolts": {
+  "en": "transit bolts",
+  "de": "Transportsicherungen"
+ },
+ "transpiration": {
+  "en": "transpiration",
+  "de": "Transpiration"
+ },
+ "transtibial": {
+  "en": "transtibial",
+  "de": "transtibial"
+ },
+ "trapezoidal-sheet": {
+  "en": "trapezoidal sheet",
+  "de": "Trapezblech"
+ },
+ "traveller": {
+  "en": "traveller",
+  "de": "Reisender"
+ },
+ "tray": {
+  "en": "tray",
+  "de": "Tablett"
+ },
+ "tree": {
+  "en": "tree",
+  "de": "Baum"
+ },
+ "tree-bench": {
+  "en": "tree bench",
+  "de": "Baumbank"
+ },
+ "tree-fern": {
+  "en": "tree fern",
+  "de": "Baumfarn"
+ },
+ "trekking-poles": {
+  "en": "trekking poles",
+  "de": "Trekkingstöcke"
+ },
+ "trellis": {
+  "en": "trellis",
+  "de": "Rankgitter"
+ },
+ "trench-convector": {
+  "en": "trench convector",
+  "de": "Unterflurkonvektor"
+ },
+ "tripod": {
+  "en": "tripod",
+  "de": "Stativ"
+ },
+ "trolley": {
+  "en": "trolley",
+  "de": "Rollwagen"
+ },
+ "trot": {
+  "en": "trot",
+  "de": "Trab"
+ },
+ "truck-mixer": {
+  "en": "truck mixer",
+  "de": "Fahrmischer"
+ },
+ "trumpet": {
+  "en": "trumpet",
+  "de": "Trompete"
+ },
+ "truss": {
+  "en": "truss",
+  "de": "Fachwerkträger"
+ },
+ "trusses": {
+  "en": "trusses",
+  "de": "Fachwerkträger"
+ },
+ "tube": {
+  "en": "tube",
+  "de": "Rohr"
+ },
+ "tumble-dryer": {
+  "en": "tumble dryer",
+  "de": "Wäschetrockner"
+ },
+ "turned": {
+  "en": "turned",
+  "de": "gedrechselt"
+ },
+ "turntable": {
+  "en": "turntable",
+  "de": "Drehteller"
+ },
+ "tussock": {
+  "en": "tussock",
+  "de": "Horstgras"
+ },
+ "tv-sideboard": {
+  "en": "TV sideboard",
+  "de": "TV-Sideboard"
+ },
+ "two-part": {
+  "en": "two part",
+  "de": "zweiteilig"
+ },
+ "txv": {
+  "en": "TXV",
+  "de": "thermostatisches Expansionsventil"
+ },
+ "type-22": {
+  "en": "type 22",
+  "de": "Typ 22"
+ },
+ "typing": {
+  "en": "typing",
+  "de": "Tippen"
+ },
+ "tyre": {
+  "en": "tyre",
+  "de": "Reifen"
+ },
+ "umbrella": {
+  "en": "umbrella",
+  "de": "Regenschirm"
+ },
+ "umbrella-crown": {
+  "en": "umbrella crown",
+  "de": "Schirmkrone"
+ },
+ "unbranched": {
+  "en": "unbranched",
+  "de": "unverzweigt"
+ },
+ "unclipped": {
+  "en": "unclipped",
+  "de": "ungeschnitten"
+ },
+ "underfloor-heating": {
+  "en": "underfloor heating",
+  "de": "Fußbodenheizung"
+ },
+ "ungulate": {
+  "en": "ungulate",
+  "de": "Huftier"
+ },
+ "unguligrade": {
+  "en": "unguligrade",
+  "de": "Zehenspitzengänger"
+ },
+ "uninsulated": {
+  "en": "uninsulated",
+  "de": "ungedämmt"
+ },
+ "uphill": {
+  "en": "uphill",
+  "de": "bergauf"
+ },
+ "upholstery": {
+  "en": "upholstery",
+  "de": "Polster"
+ },
+ "uplighter": {
+  "en": "uplighter",
+  "de": "Deckenfluter"
+ },
+ "upright": {
+  "en": "upright",
+  "de": "aufrecht"
+ },
+ "upright-piano": {
+  "en": "upright piano",
+  "de": "Pianino"
+ },
+ "urban": {
+  "en": "urban",
+  "de": "urban"
+ },
+ "used": {
+  "en": "used",
+  "de": "gebraucht"
+ },
+ "utility": {
+  "en": "utility",
+  "de": "Nutzfahrzeug"
+ },
+ "vacuum-cleaner": {
+  "en": "vacuum cleaner",
+  "de": "Staubsauger"
+ },
+ "valve": {
+  "en": "valve",
+  "de": "Ventil"
+ },
+ "valve-amplifier": {
+  "en": "valve amplifier",
+  "de": "Röhrenverstärker"
+ },
+ "valve-oil": {
+  "en": "valve oil",
+  "de": "Ventilöl"
+ },
+ "van": {
+  "en": "van",
+  "de": "Transporter"
+ },
+ "vanity-unit": {
+  "en": "vanity unit",
+  "de": "Waschtischunterschrank"
+ },
+ "vapour": {
+  "en": "vapour",
+  "de": "Dampf"
+ },
+ "vase-crown": {
+  "en": "vase crown",
+  "de": "Vasenkrone"
+ },
+ "vehicle": {
+  "en": "vehicle",
+  "de": "Fahrzeug"
+ },
+ "velour": {
+  "en": "velour",
+  "de": "Velours"
+ },
+ "veneer": {
+  "en": "veneer",
+  "de": "Furnier"
+ },
+ "ventilation": {
+  "en": "ventilation",
+  "de": "Lüftung"
+ },
+ "villa-savoye": {
+  "en": "Villa Savoye",
+  "de": "Villa Savoye"
+ },
+ "vineyard": {
+  "en": "vineyard",
+  "de": "Weinberg"
+ },
+ "vintage": {
+  "en": "vintage",
+  "de": "Vintage"
+ },
+ "viola": {
+  "en": "viola",
+  "de": "Bratsche"
+ },
+ "violin": {
+  "en": "violin",
+  "de": "Geige"
+ },
+ "violin-case": {
+  "en": "violin case",
+  "de": "Geigenkasten"
+ },
+ "violoncello": {
+  "en": "violoncello",
+  "de": "Violoncello"
+ },
+ "visually-impaired": {
+  "en": "visually impaired",
+  "de": "sehbehindert"
+ },
+ "vitreous-china": {
+  "en": "vitreous china",
+  "de": "Sanitärkeramik"
+ },
+ "w-truss": {
+  "en": "W-truss",
+  "de": "W-Binder"
+ },
+ "waddle": {
+  "en": "waddle",
+  "de": "Watscheln"
+ },
+ "waddling": {
+  "en": "waddling",
+  "de": "watschelnd"
+ },
+ "waiter": {
+  "en": "waiter",
+  "de": "Kellner"
+ },
+ "waiting": {
+  "en": "waiting",
+  "de": "Warten"
+ },
+ "walker": {
+  "en": "walker",
+  "de": "Fußgänger"
+ },
+ "walking": {
+  "en": "walking",
+  "de": "Gehen"
+ },
+ "walking-boot": {
+  "en": "walking boot",
+  "de": "Gehstiefel"
+ },
+ "wall": {
+  "en": "wall",
+  "de": "Wand"
+ },
+ "wall-hung": {
+  "en": "wall hung",
+  "de": "wandhängend"
+ },
+ "wall-mounted": {
+  "en": "wall mounted",
+  "de": "wandmontiert"
+ },
+ "wall-panel": {
+  "en": "wall panel",
+  "de": "Wandpaneel"
+ },
+ "wall-unit": {
+  "en": "wall unit",
+  "de": "Wandschrank"
+ },
+ "wallowing": {
+  "en": "wallowing",
+  "de": "Suhlen"
+ },
+ "walnut-veneer": {
+  "en": "walnut veneer",
+  "de": "Nussbaumfurnier"
+ },
+ "wardrobe": {
+  "en": "wardrobe",
+  "de": "Kleiderschrank"
+ },
+ "warehouse": {
+  "en": "warehouse",
+  "de": "Lager"
+ },
+ "washbasin": {
+  "en": "washbasin",
+  "de": "Waschbecken"
+ },
+ "washing-machine": {
+  "en": "washing machine",
+  "de": "Waschmaschine"
+ },
+ "waste": {
+  "en": "waste",
+  "de": "Abfall"
+ },
+ "waste-bin": {
+  "en": "waste bin",
+  "de": "Abfallbehälter"
+ },
+ "water": {
+  "en": "water",
+  "de": "Wasser"
+ },
+ "water-bottle": {
+  "en": "water bottle",
+  "de": "Trinkflasche"
+ },
+ "water-damage": {
+  "en": "water damage",
+  "de": "Wasserschaden"
+ },
+ "water-play": {
+  "en": "water play",
+  "de": "Wasserspiel"
+ },
+ "waterfowl": {
+  "en": "waterfowl",
+  "de": "Wasservogel"
+ },
+ "waving": {
+  "en": "waving",
+  "de": "Winken"
+ },
+ "waxed": {
+  "en": "waxed",
+  "de": "gewachst"
+ },
+ "wayfinding": {
+  "en": "wayfinding",
+  "de": "Orientierung"
+ },
+ "wbs-70": {
+  "en": "WBS 70",
+  "de": "WBS 70"
+ },
+ "wc": {
+  "en": "WC",
+  "de": "WC"
+ },
+ "weathered": {
+  "en": "weathered",
+  "de": "verwittert"
+ },
+ "weight-shift": {
+  "en": "weight shift",
+  "de": "Gewichtsverlagerung"
+ },
+ "welded-mesh": {
+  "en": "welded mesh",
+  "de": "Schweißgitter"
+ },
+ "wellington-boots": {
+  "en": "wellington boots",
+  "de": "Gummistiefel"
+ },
+ "wet-rotor": {
+  "en": "wet rotor",
+  "de": "Nassläufer"
+ },
+ "wet-skin": {
+  "en": "wet skin",
+  "de": "nasse Haut"
+ },
+ "wet-surface": {
+  "en": "wet surface",
+  "de": "nasse Oberfläche"
+ },
+ "wetland": {
+  "en": "wetland",
+  "de": "Feuchtgebiet"
+ },
+ "wheel": {
+  "en": "wheel",
+  "de": "Rad"
+ },
+ "wheel-loader": {
+  "en": "wheel loader",
+  "de": "Radlader"
+ },
+ "wheelchair": {
+  "en": "wheelchair",
+  "de": "Rollstuhl"
+ },
+ "wheeled": {
+  "en": "wheeled",
+  "de": "rollend"
+ },
+ "wheeled-case": {
+  "en": "wheeled case",
+  "de": "Trolley"
+ },
+ "wheels": {
+  "en": "wheels",
+  "de": "Räder"
+ },
+ "white-cane": {
+  "en": "white cane",
+  "de": "Blindenstock"
+ },
+ "white-goods": {
+  "en": "white goods",
+  "de": "Weiße Ware"
+ },
+ "wildlife": {
+  "en": "wildlife",
+  "de": "Wildtier"
+ },
+ "wind": {
+  "en": "wind",
+  "de": "Wind"
+ },
+ "window": {
+  "en": "window",
+  "de": "Fenster"
+ },
+ "window-surround": {
+  "en": "window surround",
+  "de": "Fensterlaibung"
+ },
+ "wingback": {
+  "en": "wingback",
+  "de": "Ohrensessel"
+ },
+ "wings": {
+  "en": "wings",
+  "de": "Flügel"
+ },
+ "winter": {
+  "en": "winter",
+  "de": "Winter"
+ },
+ "wire-basket": {
+  "en": "wire basket",
+  "de": "Drahtkorb"
+ },
+ "wisteria": {
+  "en": "wisteria",
+  "de": "Glyzine"
+ },
+ "woman": {
+  "en": "woman",
+  "de": "Frau"
+ },
+ "wood": {
+  "en": "wood",
+  "de": "Holz"
+ },
+ "wood-pellets": {
+  "en": "wood pellets",
+  "de": "Holzpellets"
+ },
+ "worker": {
+  "en": "worker",
+  "de": "Arbeiter"
+ },
+ "workplace": {
+  "en": "workplace",
+  "de": "Arbeitsplatz"
+ },
+ "workshop": {
+  "en": "workshop",
+  "de": "Werkstatt"
+ },
+ "worktop": {
+  "en": "worktop",
+  "de": "Arbeitsfläche"
+ },
+ "workwear": {
+  "en": "workwear",
+  "de": "Arbeitskleidung"
+ },
+ "wristwatch": {
+  "en": "wristwatch",
+  "de": "Armbanduhr"
+ },
+ "writing": {
+  "en": "writing",
+  "de": "Schreiben"
+ },
+ "writing-desk": {
+  "en": "writing desk",
+  "de": "Sekretär"
+ },
+ "x-stand": {
+  "en": "X stand",
+  "de": "X-Ständer"
+ },
+ "xylophone": {
+  "en": "xylophone",
+  "de": "Xylophon"
+ },
+ "youth": {
+  "en": "youth",
+  "de": "Jugend"
+ },
+ "yucca": {
+  "en": "yucca",
+  "de": "Palmlilie"
+ }
+}

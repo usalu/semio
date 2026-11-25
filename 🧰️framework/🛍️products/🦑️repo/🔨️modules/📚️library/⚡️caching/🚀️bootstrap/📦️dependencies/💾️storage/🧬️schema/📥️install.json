@@ -2436,7 +2436,8 @@
         "maximumWork": 16777216,
         "progressWorkUnits": 64,
         "scanProgressWorkUnits": 4096,
-        "scanCustodyMilliseconds": 20
+        "scanCustodyMilliseconds": 20,
+        "maximumScanAttempts": 3
       }
     },
     "InstalledPathCase": {

@@ -198,7 +198,7 @@ describe("Shell components", () => {
         expect(onFoldToggle).toHaveBeenCalledTimes(1);
       });
 
-      it("Pane drag handle calls onAnchorChange once per anchor crossed, resolved against the PaneHost's bounds", () => {
+      it("Pane drag handle detaches the pane, shows the eight anchor places over the PaneHost and calls onAnchorChange once, on the drop", () => {
         let anchor: Anchor = "top-left";
         const onAnchorChange = vi.fn((next: Anchor) => {
           anchor = next;
@@ -214,9 +214,20 @@ describe("Shell components", () => {
         host.getBoundingClientRect = () => ({ left: 0, top: 0, width: 300, height: 300, right: 300, bottom: 300, x: 0, y: 0, toJSON: () => ({}) }) as DOMRect;
         const handle = container.querySelector('[data-slot="window-pane-chrome-toggle"] [data-slot="drag-handle"]') as HTMLElement;
         fireEvent.pointerDown(handle, { pointerId: 1, clientX: 10, clientY: 10 });
+        fireEvent.pointerMove(handle, { pointerId: 1, clientX: 11, clientY: 10 });
+        expect(document.body.querySelector("[data-drag-ghost]")).toBeNull();
         fireEvent.pointerMove(handle, { pointerId: 1, clientX: 290, clientY: 290 });
-        expect(onAnchorChange).toHaveBeenCalledWith("bottom-right");
+        expect(onAnchorChange).not.toHaveBeenCalled();
+        expect(document.body.querySelector("[data-drag-ghost]")?.textContent).toContain("Drag");
+        expect(container.querySelector('[data-slot="pane"]')?.hasAttribute("data-drag-hidden")).toBe(true);
+        const places = [...container.querySelectorAll<HTMLElement>('[data-slot="pane-drop-places"] [data-drop-place]')];
+        expect(places).toHaveLength(8);
+        expect(places.filter((place) => place.hasAttribute("data-drop-active")).map((place) => place.getAttribute("data-anchor"))).toEqual(["bottom-right"]);
         fireEvent.pointerUp(handle, { pointerId: 1, clientX: 290, clientY: 290 });
+        expect(onAnchorChange).toHaveBeenCalledTimes(1);
+        expect(onAnchorChange).toHaveBeenCalledWith("bottom-right");
+        expect(document.body.querySelector("[data-drag-ghost]")).toBeNull();
+        expect(container.querySelector('[data-slot="pane-drop-places"]')).toBeNull();
         rerender(
           <PaneHost>
             <Pane id="drag-pane" anchor={anchor} onAnchorChange={onAnchorChange} icon="box" label={uiDataLabel("Drag")} folded={false}>
@@ -225,6 +236,32 @@ describe("Shell components", () => {
           </PaneHost>,
         );
         expect(container.querySelector('[data-slot="pane"]')?.getAttribute("data-anchor")).toBe("bottom-right");
+        expect(container.querySelector('[data-slot="pane"]')?.hasAttribute("data-drag-hidden")).toBe(false);
+      });
+
+      it("Pane drag is abandoned by Escape and by a cancelled pointer without moving the pane", () => {
+        const onAnchorChange = vi.fn();
+        const { container } = render(
+          <PaneHost>
+            <Pane id="drag-pane" anchor="top-left" onAnchorChange={onAnchorChange} icon="box" label={uiDataLabel("Drag")} folded={false}>
+              <div>Content</div>
+            </Pane>
+          </PaneHost>,
+        );
+        const host = container.querySelector('[data-slot="pane-host"]') as HTMLElement;
+        host.getBoundingClientRect = () => ({ left: 0, top: 0, width: 300, height: 300, right: 300, bottom: 300, x: 0, y: 0, toJSON: () => ({}) }) as DOMRect;
+        const handle = container.querySelector('[data-slot="window-pane-chrome-toggle"] [data-slot="drag-handle"]') as HTMLElement;
+        fireEvent.pointerDown(handle, { pointerId: 1, clientX: 10, clientY: 10 });
+        fireEvent.pointerMove(handle, { pointerId: 1, clientX: 290, clientY: 290 });
+        expect(document.body.querySelector("[data-drag-ghost]")).not.toBeNull();
+        fireEvent.keyDown(document, { key: "Escape" });
+        expect(document.body.querySelector("[data-drag-ghost]")).toBeNull();
+        fireEvent.pointerUp(handle, { pointerId: 1, clientX: 290, clientY: 290 });
+        fireEvent.pointerDown(handle, { pointerId: 2, clientX: 10, clientY: 10 });
+        fireEvent.pointerMove(handle, { pointerId: 2, clientX: 290, clientY: 290 });
+        fireEvent.pointerCancel(handle, { pointerId: 2 });
+        expect(document.body.querySelector("[data-drag-ghost]")).toBeNull();
+        expect(onAnchorChange).not.toHaveBeenCalled();
       });
 
       it("Pane without onAnchorChange still renders a drag-handle affordance like panel toggles", () => {
@@ -260,8 +297,8 @@ describe("Shell components", () => {
         const toggle = container.querySelector('[data-slot="window-pane-chrome-toggle"]') as HTMLElement;
         fireEvent.pointerDown(toggle, { pointerId: 1, clientX: 10, clientY: 10 });
         fireEvent.pointerMove(toggle, { pointerId: 1, clientX: 290, clientY: 290 });
-        expect(onAnchorChange).toHaveBeenCalledWith("bottom-right");
         fireEvent.pointerUp(toggle, { pointerId: 1, clientX: 290, clientY: 290 });
+        expect(onAnchorChange).toHaveBeenCalledWith("bottom-right");
       });
 
       it("Pane resize handle grows the pane on its inner edge and respects min/max size", () => {

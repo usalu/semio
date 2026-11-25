@@ -13,18 +13,90 @@
    "de": "Eine ausgebaute 10-kW-Sole-Wasser-Wärmepumpe für innen von 600 x 1150 x 700 mm und 132 kg, wie sie ein Wiederverwendungshändler anbietet: entleert, Kältemittel abgesaugt, Flexschläuche abgeschnitten und verschlossen, Frontblech abgenommen, sodass Scrollverdichter, die zwei Plattenwärmeübertrager und beide Umwälzpumpen sichtbar sind; sie steht auf ihren Gummifüßen zwischen zwei Keilen auf einer Halbpalette, lässt sich an zwei Schlingen abheben und liefert wieder eingebaut 10,2 kW bei B0/W35 aus 2,3 kW Verdichterleistung."
   },
   "tags": [
-   "component",
-   "reclaimed",
-   "used",
-   "hvac",
-   "heating",
-   "heat-pump",
-   "ground-source",
-   "brine-water",
-   "scroll-compressor",
-   "plate-heat-exchanger",
-   "pallet",
-   "steel"
+   {
+    "id": "component",
+    "title": {
+     "en": "component",
+     "de": "Bauteil"
+    }
+   },
+   {
+    "id": "reclaimed",
+    "title": {
+     "en": "reclaimed",
+     "de": "wiederverwendet"
+    }
+   },
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "hvac",
+    "title": {
+     "en": "HVAC",
+     "de": "HLK"
+    }
+   },
+   {
+    "id": "heating",
+    "title": {
+     "en": "heating",
+     "de": "Heizung"
+    }
+   },
+   {
+    "id": "heat-pump",
+    "title": {
+     "en": "heat pump",
+     "de": "Wärmepumpe"
+    }
+   },
+   {
+    "id": "ground-source",
+    "title": {
+     "en": "ground source",
+     "de": "Erdwärme"
+    }
+   },
+   {
+    "id": "brine-water",
+    "title": {
+     "en": "brine water",
+     "de": "Solewasser"
+    }
+   },
+   {
+    "id": "scroll-compressor",
+    "title": {
+     "en": "scroll compressor",
+     "de": "Scrollverdichter"
+    }
+   },
+   {
+    "id": "plate-heat-exchanger",
+    "title": {
+     "en": "plate heat exchanger",
+     "de": "Plattenwärmeübertrager"
+    }
+   },
+   {
+    "id": "pallet",
+    "title": {
+     "en": "pallet",
+     "de": "Palette"
+    }
+   },
+   {
+    "id": "steel",
+    "title": {
+     "en": "steel",
+     "de": "Stahl"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage component authors (used HVAC wave, author 06)",
@@ -13197,8 +13269,831 @@
     ]
    },
    "500": {
-    "status": "unavailable",
-    "denominator": 500
+    "status": "authored",
+    "denominator": 500,
+    "decisions": [
+     {
+      "en": "Body for the 75 mm feature: the pallet as one 144 mm slab, the unit as its 85 mm plinth under the open cabinet, whose panels stay declared 21 mm sheets (two sides, back, top), so its inside shows: the compressor drum on the plinth, evaporator and condenser as boxes that stand on it and the control box under the top; the two hose bundles are 75 mm stubs on the top that keep the height; chocks, brackets, risers and pumps are below the feature and left out.",
+      "de": "Körper für das 75-mm-Merkmal: die Palette als eine 144-mm-Platte, das Gerät als sein 85-mm-Sockel unter dem offenen Schrank, dessen Bleche erklärte 21-mm-Platten bleiben (zwei Seiten, Rückwand, Deckel), sodass sein Inneres sich zeigt: die Verdichtertrommel auf dem Sockel, Verdampfer und Verflüssiger als Kästen, die auf ihm stehen, und der Schaltkasten unter dem Deckel; die zwei Schlauchbündel sind 75-mm-Stutzen auf dem Deckel, die die Höhe halten; Keile, Halter, Steigleitungen und Pumpen liegen unter dem Merkmal und entfallen."
+     },
+     {
+      "en": "Thermal: pallet, plinth and hose stubs by reference; the hidden contents as solids of their own; the casing as its 1 mm steel sheets on its 20 mm linings, all declared; the two pumps as drums of their own and a 75 mm plume patch on the compressor.",
+      "de": "Thermik: Palette, Sockel und Schlauchstutzen als Verweis; der verdeckte Inhalt als eigene Körper; das Gehäuse als seine 1-mm-Stahlbleche auf seinen 20-mm-Auskleidungen, alle erklärt; die zwei Pumpen als eigene Trommeln und eine 75-mm-Auftriebsfläche auf dem Verdichter."
+     },
+     {
+      "en": "Structure: slab, plinth and panels by reference, three 100 mm runner supports, four 75 mm foot pads and two mass markers.",
+      "de": "Tragwerk: Platte, Sockel und Bleche als Verweis, drei 100-mm-Kufenauflager, vier 75-mm-Fußplatten und zwei Massenmarken."
+     }
+    ],
+    "body": [
+     {
+      "id": "pallet-slab",
+      "kind": "box",
+      "bone": "pallet",
+      "material": "softwood",
+      "role": "body",
+      "tone": 0.55,
+      "size": [
+       0.8,
+       0.144,
+       0.6
+      ],
+      "transform": {
+       "translation": [
+        0,
+        0.072,
+        0
+       ]
+      }
+     },
+     {
+      "id": "plinth",
+      "kind": "box",
+      "bone": "unit",
+      "material": "galvanised-steel",
+      "role": "body",
+      "tone": 0.7,
+      "size": [
+       0.7,
+       0.085,
+       0.6
+      ],
+      "transform": {
+       "translation": [
+        0,
+        0.0425,
+        0
+       ]
+      }
+     },
+     {
+      "id": "sides",
+      "kind": "box",
+      "bone": "unit",
+      "material": "casing-panel",
+      "role": "body",
+      "tone": 0.86,
+      "size": [
+       0.7,
+       1.065,
+       0.021
+      ],
+      "transform": {
+       "translation": [
+        0,
+        0.6175,
+        -0.2895
+       ]
+      },
+      "sheet": true,
+      "repeat": {
+       "count": 2,
+       "translation": [
+        0,
+        0,
+        0.579
+       ]
+      }
+     },
+     {
+      "id": "back",
+      "kind": "box",
+      "bone": "unit",
+      "material": "casing-panel",
+      "role": "body",
+      "tone": 0.8,
+      "size": [
+       0.021,
+       1.044,
+       0.558
+      ],
+      "transform": {
+       "translation": [
+        -0.3395,
+        0.607,
+        0
+       ]
+      },
+      "sheet": true
+     },
+     {
+      "id": "top",
+      "kind": "box",
+      "bone": "unit",
+      "material": "casing-panel",
+      "role": "body",
+      "tone": 0.9,
+      "size": [
+       0.7,
+       0.021,
+       0.558
+      ],
+      "transform": {
+       "translation": [
+        0,
+        1.1395,
+        0
+       ]
+      },
+      "sheet": true
+     },
+     {
+      "id": "compressor",
+      "kind": "revolve",
+      "bone": "unit",
+      "material": "compressor-steel",
+      "role": "body",
+      "tone": 0.12,
+      "profile": [
+       [
+        0.085,
+        0
+       ],
+       [
+        0.085,
+        0.12
+       ],
+       [
+        0.521,
+        0.12
+       ],
+       [
+        0.521,
+        0
+       ]
+      ],
+      "axis": [
+       0,
+       1,
+       0
+      ],
+      "origin": [
+       0.1,
+       0,
+       -0.129
+      ]
+     },
+     {
+      "id": "evaporator",
+      "kind": "box",
+      "bone": "unit",
+      "material": "armaflex",
+      "role": "body",
+      "tone": 0.15,
+      "size": [
+       0.2,
+       0.581,
+       0.1
+      ],
+      "transform": {
+       "translation": [
+        -0.2,
+        0.3755,
+        0.199
+       ]
+      }
+     },
+     {
+      "id": "condenser",
+      "kind": "box",
+      "bone": "unit",
+      "material": "stainless-steel",
+      "role": "body",
+      "tone": 0.65,
+      "size": [
+       0.16,
+       0.561,
+       0.1
+      ],
+      "transform": {
+       "translation": [
+        -0.2,
+        0.3655,
+        -0.199
+       ]
+      }
+     },
+     {
+      "id": "control-box",
+      "kind": "box",
+      "bone": "unit",
+      "material": "polymer",
+      "role": "body",
+      "tone": 0.8,
+      "size": [
+       0.1,
+       0.143,
+       0.498
+      ],
+      "transform": {
+       "translation": [
+        0.27,
+        1.0575,
+        0
+       ]
+      }
+     },
+     {
+      "id": "hoses-heating",
+      "kind": "box",
+      "bone": "unit",
+      "material": "stainless-hose",
+      "role": "body",
+      "tone": 0.5,
+      "size": [
+       0.17,
+       0.126,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        -0.2,
+        1.213,
+        -0.199
+       ]
+      }
+     },
+     {
+      "id": "hoses-brine",
+      "kind": "box",
+      "bone": "unit",
+      "material": "armaflex",
+      "role": "body",
+      "tone": 0.2,
+      "size": [
+       0.205,
+       0.126,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        -0.2005,
+        1.213,
+        0.1995
+       ]
+      }
+     }
+    ],
+    "thermal": [
+     {
+      "id": "th-pallet-slab",
+      "of": "pallet-slab",
+      "region": "pallet"
+     },
+     {
+      "id": "th-plinth",
+      "of": "plinth",
+      "region": "base-frame"
+     },
+     {
+      "id": "th-side-sheets",
+      "kind": "box",
+      "bone": "unit",
+      "material": "painted-steel",
+      "role": "body",
+      "tone": 0.86,
+      "size": [
+       0.7,
+       1.065,
+       0.001
+      ],
+      "transform": {
+       "translation": [
+        0,
+        0.6175,
+        -0.2995
+       ]
+      },
+      "sheet": true,
+      "repeat": {
+       "count": 2,
+       "translation": [
+        0,
+        0,
+        0.599
+       ]
+      },
+      "region": "casing"
+     },
+     {
+      "id": "th-back-sheet",
+      "kind": "box",
+      "bone": "unit",
+      "material": "painted-steel",
+      "role": "body",
+      "tone": 0.8,
+      "size": [
+       0.001,
+       1.065,
+       0.598
+      ],
+      "transform": {
+       "translation": [
+        -0.3495,
+        0.6175,
+        0
+       ]
+      },
+      "sheet": true,
+      "region": "casing"
+     },
+     {
+      "id": "th-top-sheet",
+      "kind": "box",
+      "bone": "unit",
+      "material": "painted-steel",
+      "role": "body",
+      "tone": 0.9,
+      "size": [
+       0.7,
+       0.001,
+       0.598
+      ],
+      "transform": {
+       "translation": [
+        0,
+        1.1495,
+        0
+       ]
+      },
+      "sheet": true,
+      "region": "casing"
+     },
+     {
+      "id": "th-side-linings",
+      "kind": "box",
+      "bone": "unit",
+      "material": "acoustic-foam",
+      "role": "body",
+      "tone": 0.3,
+      "size": [
+       0.7,
+       1.065,
+       0.02
+      ],
+      "transform": {
+       "translation": [
+        0,
+        0.6175,
+        -0.289
+       ]
+      },
+      "sheet": true,
+      "repeat": {
+       "count": 2,
+       "translation": [
+        0,
+        0,
+        0.578
+       ]
+      },
+      "region": "lining"
+     },
+     {
+      "id": "th-back-lining",
+      "kind": "box",
+      "bone": "unit",
+      "material": "acoustic-foam",
+      "role": "body",
+      "tone": 0.3,
+      "size": [
+       0.02,
+       1.044,
+       0.558
+      ],
+      "transform": {
+       "translation": [
+        -0.339,
+        0.607,
+        0
+       ]
+      },
+      "sheet": true,
+      "region": "lining"
+     },
+     {
+      "id": "th-top-lining",
+      "kind": "box",
+      "bone": "unit",
+      "material": "acoustic-foam",
+      "role": "body",
+      "tone": 0.3,
+      "size": [
+       0.7,
+       0.02,
+       0.558
+      ],
+      "transform": {
+       "translation": [
+        0,
+        1.139,
+        0
+       ]
+      },
+      "sheet": true,
+      "region": "lining"
+     },
+     {
+      "id": "th-hoses-heating",
+      "of": "hoses-heating",
+      "region": "heating-lines"
+     },
+     {
+      "id": "th-hoses-brine",
+      "of": "hoses-brine",
+      "region": "brine-lines"
+     },
+     {
+      "id": "th-compressor",
+      "kind": "revolve",
+      "bone": "unit",
+      "material": "compressor-steel",
+      "role": "body",
+      "tone": 0.12,
+      "profile": [
+       [
+        0.121,
+        0
+       ],
+       [
+        0.121,
+        0.12
+       ],
+       [
+        0.521,
+        0.12
+       ],
+       [
+        0.521,
+        0
+       ]
+      ],
+      "axis": [
+       0,
+       1,
+       0
+      ],
+      "origin": [
+       0.1,
+       0,
+       -0.129
+      ],
+      "region": "compressor"
+     },
+     {
+      "id": "th-evaporator",
+      "kind": "box",
+      "bone": "unit",
+      "material": "armaflex",
+      "role": "body",
+      "tone": 0.15,
+      "size": [
+       0.2,
+       0.52,
+       0.1
+      ],
+      "transform": {
+       "translation": [
+        -0.2,
+        0.406,
+        0.199
+       ]
+      },
+      "region": "evaporator"
+     },
+     {
+      "id": "th-condenser",
+      "kind": "box",
+      "bone": "unit",
+      "material": "stainless-steel",
+      "role": "body",
+      "tone": 0.65,
+      "size": [
+       0.16,
+       0.46,
+       0.1
+      ],
+      "transform": {
+       "translation": [
+        -0.2,
+        0.416,
+        -0.199
+       ]
+      },
+      "region": "condenser"
+     },
+     {
+      "id": "th-pumps",
+      "kind": "revolve",
+      "bone": "unit",
+      "material": "cast-iron",
+      "role": "body",
+      "tone": 0.35,
+      "profile": [
+       [
+        -0.185,
+        0
+       ],
+       [
+        -0.185,
+        0.05
+       ],
+       [
+        0.06,
+        0.05
+       ],
+       [
+        0.06,
+        0
+       ]
+      ],
+      "axis": [
+       1,
+       0,
+       0
+      ],
+      "origin": [
+       0,
+       0.846,
+       -0.199
+      ],
+      "repeat": {
+       "count": 2,
+       "translation": [
+        0,
+        0,
+        0.398
+       ]
+      },
+      "region": "pumps"
+     },
+     {
+      "id": "th-control-box",
+      "kind": "box",
+      "bone": "unit",
+      "material": "polymer",
+      "role": "body",
+      "tone": 0.8,
+      "size": [
+       0.1,
+       0.143,
+       0.498
+      ],
+      "transform": {
+       "translation": [
+        0.27,
+        1.0575,
+        0
+       ]
+      },
+      "region": "controls"
+     },
+     {
+      "id": "th-compressor-plume",
+      "kind": "revolve",
+      "bone": "unit",
+      "material": "compressor-steel",
+      "role": "detail",
+      "tone": 0.5,
+      "profile": [
+       [
+        0.521,
+        0
+       ],
+       [
+        0.521,
+        0.06
+       ],
+       [
+        0.596,
+        0.06
+       ],
+       [
+        0.596,
+        0
+       ]
+      ],
+      "axis": [
+       0,
+       1,
+       0
+      ],
+      "origin": [
+       0.1,
+       0,
+       -0.129
+      ],
+      "region": "compressor",
+      "tags": [
+       "compressor-plume"
+      ]
+     }
+    ],
+    "structure": [
+     {
+      "id": "member-pallet-slab",
+      "of": "pallet-slab",
+      "member": "pallet",
+      "part": "member"
+     },
+     {
+      "id": "member-frame",
+      "of": "plinth",
+      "member": "unit",
+      "part": "member"
+     },
+     {
+      "id": "member-sides",
+      "of": "sides",
+      "member": "unit",
+      "part": "member"
+     },
+     {
+      "id": "member-back",
+      "of": "back",
+      "member": "unit",
+      "part": "member"
+     },
+     {
+      "id": "member-top",
+      "of": "top",
+      "member": "unit",
+      "part": "member"
+     },
+     {
+      "id": "support-runner-0",
+      "kind": "box",
+      "bone": "pallet",
+      "material": "softwood",
+      "role": "ground",
+      "tone": 0.3,
+      "size": [
+       0.1,
+       0.1,
+       0.1
+      ],
+      "transform": {
+       "translation": [
+        0,
+        0.05,
+        -0.25
+       ]
+      },
+      "member": "pallet",
+      "part": "support",
+      "anchor": "pallet-runner-0"
+     },
+     {
+      "id": "support-runner-1",
+      "kind": "box",
+      "bone": "pallet",
+      "material": "softwood",
+      "role": "ground",
+      "tone": 0.3,
+      "size": [
+       0.1,
+       0.1,
+       0.1
+      ],
+      "transform": {
+       "translation": [
+        0,
+        0.05,
+        0
+       ]
+      },
+      "member": "pallet",
+      "part": "support",
+      "anchor": "pallet-runner-1"
+     },
+     {
+      "id": "support-runner-2",
+      "kind": "box",
+      "bone": "pallet",
+      "material": "softwood",
+      "role": "ground",
+      "tone": 0.3,
+      "size": [
+       0.1,
+       0.1,
+       0.1
+      ],
+      "transform": {
+       "translation": [
+        0,
+        0.05,
+        0.25
+       ]
+      },
+      "member": "pallet",
+      "part": "support",
+      "anchor": "pallet-runner-2"
+     },
+     {
+      "id": "joint-feet-right",
+      "kind": "box",
+      "bone": "unit",
+      "material": "rubber",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        -0.3125,
+        0.0375,
+        -0.2625
+       ]
+      },
+      "repeat": {
+       "count": 2,
+       "translation": [
+        0.625,
+        0,
+        0
+       ]
+      },
+      "member": "unit",
+      "part": "joint"
+     },
+     {
+      "id": "joint-feet-left",
+      "kind": "box",
+      "bone": "unit",
+      "material": "rubber",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        -0.3125,
+        0.0375,
+        0.2625
+       ]
+      },
+      "repeat": {
+       "count": 2,
+       "translation": [
+        0.625,
+        0,
+        0
+       ]
+      },
+      "member": "unit",
+      "part": "joint"
+     },
+     {
+      "id": "mass-unit",
+      "kind": "box",
+      "bone": "unit",
+      "material": "galvanised-steel",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0,
+        0.45,
+        0
+       ]
+      },
+      "member": "unit",
+      "part": "mass"
+     },
+     {
+      "id": "mass-pallet",
+      "kind": "box",
+      "bone": "pallet",
+      "material": "softwood",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        0,
+        0.072,
+        0
+       ]
+      },
+      "member": "pallet",
+      "part": "mass"
+     }
+    ]
    }
   },
   "presentation": {

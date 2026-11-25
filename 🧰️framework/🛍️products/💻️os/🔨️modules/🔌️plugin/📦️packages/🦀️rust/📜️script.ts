@@ -516,7 +516,7 @@ class OriginalCommandReceivingNative extends OriginalCommandReceivingSource{
 /** 🪢️ Checks the original lifecycle context and whole paired cause against independent neutral oracles. */
 class OriginalLifecycleSource extends BundleScript{async run():Promise<void>{await runRepositoryTestCommand(process.execPath,["test",resolve(import.meta.dirname,"../../🏛️ownership/⚠️failure/🧪️tests/🟦️.ts"),resolve(import.meta.dirname,"../../🧪️tests/🧾️document-archive-load-legs/🟦️.ts")],{cwd:this.repoRoot,budgetMs:scriptInvocationBudget(this.invocation,0),signal:this.invocation.control.signal});}}
 /** 🦀️ Runs actual lifecycle failure and context source preservation laws. */
-class OriginalLifecycleNative extends OriginalLifecycleSource{async run():Promise<void>{await super.run();await runAdmittedCargoPackageTestsV1(["semio-plugin-ownership", "semio-plugin-tests-11"],this.repoRoot,this.invocation,["--offline","--lib","-E","test(original_lifecycle_)","--","--nocapture"]);}}
+class OriginalLifecycleNative extends OriginalLifecycleSource{async run():Promise<void>{await super.run();await runAdmittedCargoPackageTestsV1(["semio-plugin-ownership", "semio-plugin-tests-11-2"],this.repoRoot,this.invocation,["--offline","--lib","-E","test(original_lifecycle_)","--","--nocapture"]);}}
 
 /** 📤️ Original bounded output and exact paid acknowledgement against independent neutral semantics. */
 class OriginalPagedOutputSource extends BundleScript{

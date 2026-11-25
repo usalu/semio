@@ -13,16 +13,76 @@
    "de": "Ein gebrauchter schmaler Kipp-Schuhschrank 0,80 x 0,17 x 1,45 m aus 16 mm foliierter Spanplatte mit drei Klappen, der linke Wandwinkel ausgerissen und ein Ersatzgriff an der abgestoßenen unteren Klappe, leer auf einer gefalteten Umzugsdecke gelagert; von zwei Personen fast flach getragen, wieder im Flur an der Wand befestigt mit Schuhen in jedem Fach, und die obere Klappe kippt auf 40 Grad auf."
   },
   "tags": [
-   "used",
-   "household",
-   "second-hand",
-   "hallway",
-   "shoe-cabinet",
-   "storage",
-   "tip-out",
-   "chipboard",
-   "flat-pack",
-   "moving-blanket"
+   {
+    "id": "used",
+    "title": {
+     "en": "used",
+     "de": "gebraucht"
+    }
+   },
+   {
+    "id": "household",
+    "title": {
+     "en": "household",
+     "de": "Haushalt"
+    }
+   },
+   {
+    "id": "second-hand",
+    "title": {
+     "en": "second-hand",
+     "de": "Second-Hand"
+    }
+   },
+   {
+    "id": "hallway",
+    "title": {
+     "en": "hallway",
+     "de": "Flur"
+    }
+   },
+   {
+    "id": "shoe-cabinet",
+    "title": {
+     "en": "shoe cabinet",
+     "de": "Schuhschrank"
+    }
+   },
+   {
+    "id": "storage",
+    "title": {
+     "en": "storage",
+     "de": "Lagerung"
+    }
+   },
+   {
+    "id": "tip-out",
+    "title": {
+     "en": "tip out",
+     "de": "Auskippen"
+    }
+   },
+   {
+    "id": "chipboard",
+    "title": {
+     "en": "chipboard",
+     "de": "Spanplatte"
+    }
+   },
+   {
+    "id": "flat-pack",
+    "title": {
+     "en": "flat pack",
+     "de": "Flachpackung"
+    }
+   },
+   {
+    "id": "moving-blanket",
+    "title": {
+     "en": "moving blanket",
+     "de": "Umzugsdecke"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage content (used household objects wave)",

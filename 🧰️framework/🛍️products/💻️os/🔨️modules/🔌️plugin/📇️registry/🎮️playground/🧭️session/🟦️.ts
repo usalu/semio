@@ -14,7 +14,7 @@ import { MODULE_BRIDGE_FILE, MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, module
 import { PLAYGROUND_SESSION_ARTIFACT_KEY,playgroundSessionsRootV1, playgroundSessionOutputPath, playgroundSessionStagedOutputPath } from "../../../../🧑‍💻dev/📦️packages/🟦️typescript/♻️activation/🟦️.ts";
 export { PLAYGROUND_SESSION_ARTIFACT_KEY } from "../../../../🧑‍💻dev/📦️packages/🟦️typescript/♻️activation/🟦️.ts";
 import type { PluginHostMetadata } from "../../🔎️discovery/🟦️.ts";
-import { type GeneratedCatalogProjection, readGeneratedCatalogProjection,filterProjectedPluginRegistry, projectedHostPluginFilter, registryModuleDirectories } from "../../📖️catalog-view/🟦️.ts";
+import { type GeneratedCatalogProjection, readRequiredCatalogProjectionV1,filterProjectedPluginRegistry, projectedHostPluginFilter, registryModuleDirectories } from "../../📖️catalog-view/🟦️.ts";
 
 import { generatePluginRegistry, TAXONOMY } from "../../🔎️discovery/🟦️.ts";
 import { generatePlaygroundRegistry } from "../🔎️discovery/🟦️.ts";
@@ -23,7 +23,7 @@ export class SessionScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     const variant = args[0];
     if (args.length !== 1 || !variant || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(variant)) throw new Error("Usage: session <variant>");
-    const projection=readGeneratedCatalogProjection();
+    const projection=readRequiredCatalogProjectionV1();
     if(!projection.playgrounds.some(row => row.variant===variant)) throw new Error("Selected playground requires current compiled descriptors: "+variant);
     const { session } = await stagePlaygroundSession(this.repoRoot,this.invocation,variant,projection);
     console.log(`Playground session ${variant}: ${session.plugins.length} plugins staged`);

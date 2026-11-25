@@ -5,9 +5,9 @@ import { normWireLiteral, normWireObject, type NormWireReader, normWireRequired,
 import { type Din18599Adjacency, parseDin18599Adjacency } from "../../../📸️snapshot/🟦️.ts";
 
 export interface ChangeElementAdjacency {
-  mutation: "changeelementadjacency";
+  mutation: "changeElementAdjacency";
   elementId: string;
   newAdjacency: Din18599Adjacency;
 }
 
-export const parseChangeElementAdjacency: NormWireReader<ChangeElementAdjacency> = normWireObject<ChangeElementAdjacency>({ mutation: normWireRequired(normWireLiteral("changeelementadjacency")), elementId: normWireRequired(normWireString), newAdjacency: normWireRequired(parseDin18599Adjacency) });
+export const parseChangeElementAdjacency: NormWireReader<ChangeElementAdjacency> = normWireObject<ChangeElementAdjacency>({ mutation: normWireRequired(normWireLiteral("changeElementAdjacency")), elementId: normWireRequired(normWireString), newAdjacency: normWireRequired(parseDin18599Adjacency) });

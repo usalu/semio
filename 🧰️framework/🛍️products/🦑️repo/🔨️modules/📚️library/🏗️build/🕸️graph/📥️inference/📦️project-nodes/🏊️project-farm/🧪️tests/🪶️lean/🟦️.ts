@@ -47,6 +47,6 @@ test("8 GB and two cores: the farm opens with one 1700 MB child, engages at once
 
 test("16 GB lean read grants more children than one; a serving host and lean off keep the declared farm",async()=>{
  const sixteen=open("16384",8);expect(sixteen.farm).toBeDefined();expect(sixteen.asked[0]!.megabytes).toBe(1700);await sixteen.farm!.close();await closeProjectFarmsV1();
- const off=open("8192",2,"off");expect(off.farm,"lean off at two cores: no farm, as before").toBeUndefined();await closeProjectFarmsV1();
- const serve=open("65536",2);expect(serve.farm,"a serving host at two cores: no farm, as before").toBeUndefined();
+ const off=open("8192",2,"off");expect(off.farm,"lean off at two cores: the one worker the cores leave is still a farm").toBeDefined();await off.farm!.close();await closeProjectFarmsV1();
+ const serve=open("65536",2);expect(serve.farm,"a serving host at two cores: the one worker the cores leave is still a farm").toBeDefined();await serve.farm!.close();
 });

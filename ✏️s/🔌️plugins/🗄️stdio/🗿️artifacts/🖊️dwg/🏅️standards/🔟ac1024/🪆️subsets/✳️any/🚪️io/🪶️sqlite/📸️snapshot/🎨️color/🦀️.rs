@@ -1,7 +1,7 @@
 //! 🎨️ DWG's owned complex-color variants and optional book/name metadata.
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgComplexColor;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgComplexColorValue;
+use semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgComplexColor;
+use semio_s_artifact_stdio_dwg_snapshot_objects_tables::DwgComplexColorValue;
 use super::reader::{byte,optional_text,word,Reader};
 use super::xrecord::require_null;
 use semio_os_kernel::sqlite_snapshot::artifact::Cell;

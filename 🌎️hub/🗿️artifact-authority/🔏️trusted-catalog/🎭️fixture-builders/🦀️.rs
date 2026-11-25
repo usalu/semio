@@ -64,6 +64,7 @@ pub fn headless_stdio_fixture_package(root: &Path) -> Result<(serde_json::Value,
         manifest: plugin.manifest, activation_events: Vec::new(), capability_requests: Vec::new(), extension_points: Vec::new(),
         execution: semio_framework::ExecutionMode::Isolated,
         execution_protocol: semio_framework::ExecutionProtocol { app_channel_version: directory::os_spr::CHANNEL_VERSION },
+        components: Vec::new(),
         quotas: semio_framework::kernel::QuotaSchema::default(), contributions: semio_framework::ContributionSet::default(), assets: Vec::new(),
     };
     let bytes = directory::os_pack::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&descriptor));

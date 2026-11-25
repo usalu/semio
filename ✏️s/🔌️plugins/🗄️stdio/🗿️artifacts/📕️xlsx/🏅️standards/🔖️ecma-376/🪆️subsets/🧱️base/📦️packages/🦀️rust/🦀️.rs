@@ -21,6 +21,12 @@ pub mod standards {
                     #[path = "."]
                     pub mod import {
                         #[path = "."]
+                        pub mod controlled {
+                            #[path = "../../🚪️io/📥️import/🔁️controlled/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
                         pub mod deserializers {
                             #[path = "../../🚪️io/📥️import/🧩️deserializers/🦀️.rs"]
                             mod component;

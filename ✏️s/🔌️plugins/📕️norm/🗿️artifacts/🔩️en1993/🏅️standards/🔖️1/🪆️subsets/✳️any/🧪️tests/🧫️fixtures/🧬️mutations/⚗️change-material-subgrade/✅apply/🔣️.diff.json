@@ -14,7 +14,8 @@
           "eModulus": null,
           "gModulus": null,
           "subgrade": "K2-alt",
-          "kind": null
+          "kind": null,
+          "rambergOsgoodN": null
         }
       }
     ]

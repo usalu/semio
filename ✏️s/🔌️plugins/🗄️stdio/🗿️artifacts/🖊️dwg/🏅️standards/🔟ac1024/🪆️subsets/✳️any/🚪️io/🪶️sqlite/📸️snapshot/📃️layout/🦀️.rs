@@ -2,16 +2,16 @@
 /// 🗄️ The DDL of the tables this module projects.
 pub const SQL: &str = include_str!("🗄️.sql");
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLayout;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLayoutOptions;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgPlotArea;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgPlotOptions;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgPlotPaperUnit;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgPlotRotation;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgShadePlot;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgShadePlotResolution;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgStandardScale;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgOrthographicView;
+use semio_s_artifact_stdio_dwg_snapshot_objects::DwgLayout;
+use semio_s_artifact_stdio_dwg_snapshot_objects::DwgLayoutOptions;
+use semio_s_artifact_stdio_dwg_snapshot_objects::DwgPlotArea;
+use semio_s_artifact_stdio_dwg_snapshot_objects::DwgPlotOptions;
+use semio_s_artifact_stdio_dwg_snapshot_objects::DwgPlotPaperUnit;
+use semio_s_artifact_stdio_dwg_snapshot_objects::DwgPlotRotation;
+use semio_s_artifact_stdio_dwg_snapshot_objects::DwgShadePlot;
+use semio_s_artifact_stdio_dwg_snapshot_objects::DwgShadePlotResolution;
+use semio_s_artifact_stdio_dwg_snapshot_objects::DwgStandardScale;
+use semio_s_artifact_stdio_dwg_snapshot_objects_entities::DwgOrthographicView;
 use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::number::Projection;
 use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::optional_words;
 use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::blocks::project_handles;

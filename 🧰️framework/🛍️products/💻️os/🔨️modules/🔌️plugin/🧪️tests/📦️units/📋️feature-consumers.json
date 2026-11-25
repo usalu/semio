@@ -48,6 +48,7 @@
     "semio-plugin-retained-command",
     "semio-plugin-runtime-exchange",
     "semio-plugin-runtime-ops",
+    "semio-plugin-store-lifecycle",
     "semio-plugin-testing-caller",
     "semio-plugin-window-config",
     "semio-plugin-window-kits",

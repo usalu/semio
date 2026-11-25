@@ -524,6 +524,36 @@ async fn select_same_kind_widens_the_live_selection() {
     close_app(&mut app);
 }
 
+/// 🖐️ LAW (background click, ticket 26/09/23/PUZZLE-5D-BACKGROUND-CLICK-CLEARS-3D-SELECTION): the empty
+/// `interactionSelect` the world host sends for a click on empty space clears the shared selection, and the
+/// world pane paints nothing selected afterwards — instance, grip and `selectionJson` alike.
+#[semio_framework_async_macros::async_test]
+async fn background_click_clears_the_world_pane_selection() {
+    let mut app = Box::new(app_with_registry());
+    let parts = seeded_parts(&mut app, 2);
+    let world_selection = |app: &mut Puzzle5dTestApp| {
+        let body = render_window(app, world3d::BODY_KEY, world3d::WINDOW_KIND_ID);
+        let scene: Value = parse(&body, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("world body");
+        let scene = scene.get("scene").cloned().unwrap_or(Value::Null);
+        let text = |key: &str| scene.get(key).and_then(Value::as_str).unwrap_or("[]").to_string();
+        let ids = parse(&text("selectionJson"), semio_framework_pack_json::JsonMemberPolicy::Reject).ok().and_then(|value| value.get("ids").and_then(Value::as_array).map(Vec::len)).unwrap_or(0);
+        let painted = parse(&text("instancesJson"), semio_framework_pack_json::JsonMemberPolicy::Reject).ok().and_then(|value| value.as_array().map(|rows| rows.iter().filter(|row| row.get("selected").and_then(Value::as_bool) == Some(true)).count())).unwrap_or(0);
+        (ids, painted)
+    };
+    select_id(&mut app, PUZZLE5D_GRANULARITY_PART, &parts[0]).expect("select a part");
+    assert_eq!(world_selection(&mut app), (1, 1), "the world pane paints the pick");
+    dispatch(&mut app, "interactionSelect", Some(&semio_framework_pack_json::json!({ "domainId": PUZZLE5D_INTERACTION_DOMAIN, "targets": "[]", "merge": "replace", "method": "pick" })), Some(world3d::WINDOW_KIND_ID)).expect("empty-target interactionSelect");
+    assert!(app.interaction_state().await.selection.get(PUZZLE5D_INTERACTION_DOMAIN).is_none_or(|selection| selection.ids.is_empty()), "a background click empties the shared selection");
+    assert_eq!(world_selection(&mut app), (0, 0), "the world pane paints nothing selected after a background click");
+    select_id(&mut app, PUZZLE5D_GRANULARITY_PART, &parts[1]).expect("select a part again");
+    assert_eq!(world_selection(&mut app), (1, 1), "the world pane paints the second pick");
+    let board_click = semio_framework_pack_json::json!({ "windowId": board2d::WINDOW_KIND_ID, "eventsJson": "[{\"name\":\"select\",\"payload\":{\"ids\":[],\"exitHighlightIds\":[]}}]" });
+    dispatch(&mut app, "applyBoardEvents", Some(&board_click), Some(board2d::WINDOW_KIND_ID)).expect("applyBoardEvents empty select");
+    assert!(app.interaction_state().await.selection.get(PUZZLE5D_INTERACTION_DOMAIN).is_none_or(|selection| selection.ids.is_empty()), "a board background click empties the shared selection");
+    assert_eq!(world_selection(&mut app), (0, 0), "the world pane paints nothing selected after a board background click");
+    close_app(&mut app);
+}
+
 /// 🔗️ LAW (fastener CRUD): edit and delete both reach the document through the real retained factory, and
 /// each one changes it.
 #[semio_framework_async_macros::async_test]

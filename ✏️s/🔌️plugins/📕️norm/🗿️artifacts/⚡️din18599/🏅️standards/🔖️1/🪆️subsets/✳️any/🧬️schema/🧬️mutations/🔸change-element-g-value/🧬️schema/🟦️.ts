@@ -4,9 +4,9 @@
 import { normWireLiteral, normWireNumber, normWireObject, normWireRange, type NormWireReader, normWireRequired, normWireString } from "@semio-tech/norm-js/registry/contract";
 
 export interface ChangeElementGValue {
-  mutation: "changeelementgvalue";
+  mutation: "changeElementGValue";
   elementId: string;
   newGValue: number;
 }
 
-export const parseChangeElementGValue: NormWireReader<ChangeElementGValue> = normWireObject<ChangeElementGValue>({ mutation: normWireRequired(normWireLiteral("changeelementgvalue")), elementId: normWireRequired(normWireString), newGValue: normWireRequired(normWireRange(normWireNumber, {"minimum":0,"maximum":1})) });
+export const parseChangeElementGValue: NormWireReader<ChangeElementGValue> = normWireObject<ChangeElementGValue>({ mutation: normWireRequired(normWireLiteral("changeElementGValue")), elementId: normWireRequired(normWireString), newGValue: normWireRequired(normWireRange(normWireNumber, {"minimum":0,"maximum":1})) });

@@ -1,0 +1,8 @@
+#!/bin/sh
+# 🚪️ The managed `cargo` entry for POSIX shells: every compiling subcommand goes through the repository's Cargo ingress gate, everything else through the tool registry, so no Cargo run starts outside the machine-wide capacity ledger.
+case "$1" in
+  build|b|check|c|test|t|run|r|bench|clippy|doc|d|rustc|rustdoc|fix|miri|install)
+    exec repo cargo --store="${SEMIO_CARGO_STORE:-isolated}" --configuration="${SEMIO_BUILD_MODE:-prototype}" -- "$@" ;;
+  *)
+    exec repo tools exec cargo -- "$@" ;;
+esac

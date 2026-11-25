@@ -22,6 +22,7 @@ import { Transport } from "../⏯️transport/🟦️.tsx";
 import { scaleChoices } from "../🧊️spatial/🟦️.ts";
 import { depictionOptions, evaluateState, frameOf, sceneOf, type SceneFrame } from "../🧮️pipeline/🟦️.ts";
 import { useViewpointReady } from "../🧮️pipeline/🦥️lazy/⚛️hook/🟦️.tsx";
+import { useTextEpoch } from "../🧮️pipeline/🔤️text/⚛️hook/🟦️.tsx";
 import type { Selection } from "../💾️persistence/🟦️.ts";
 import type { ViewerState } from "../🗺️routing/🟦️.ts";
 import { VIEW_NAMES } from "../🗣️labels/🟦️.ts";
@@ -95,6 +96,7 @@ export function Viewer(props: ViewerProps): ReactElement {
   const model = viewer.viewpoint === "model" && viewer.layout !== "all";
   const planarFocus: PlanarViewpoint = viewer.viewpoint === "front" || viewer.viewpoint === "plan" ? viewer.viewpoint : "elevation";
   const drawable = useViewpointReady(drawnViewpoint);
+  const faces = useTextEpoch();
   const frames = useMemo(() => {
     if (!isDrawn(viewer.viewpoint) || !drawable) return undefined;
     try {
@@ -107,11 +109,11 @@ export function Viewer(props: ViewerProps): ReactElement {
     } catch {
       return undefined;
     }
-  }, [asset, query, viewer.scale, viewer.view, viewer.viewpoint, drawnViewpoint, drawable, language, theme, flowLayers === undefined]);
+  }, [asset, query, viewer.scale, viewer.view, viewer.viewpoint, drawnViewpoint, drawable, language, theme, flowLayers === undefined, faces]);
   const resolutions = useMemo(() => resolveFigure(asset, viewer.scale, language), [asset, viewer.scale, language]);
   const all = viewer.layout === "all";
   const sheetQueries = useMemo(() => (query.kind === "clip" ? Array.from({ length: SHEET_SAMPLES }, (_, index): EvaluationQuery => ({ kind: "clip", clip: query.clip, timeS: (clip.durationS * index) / SHEET_SAMPLES })) : [query]), [query, clip.durationS]);
-  const sheet = useMemo(() => (all ? sheetOf(asset, sheetQueries, { view: viewer.view, denominator: viewer.scale, language, theme, flow: flowLayers !== undefined }) : undefined), [all, asset, sheetQueries, viewer.view, viewer.scale, language, theme, flowLayers === undefined]);
+  const sheet = useMemo(() => (all ? sheetOf(asset, sheetQueries, { view: viewer.view, denominator: viewer.scale, language, theme, flow: flowLayers !== undefined }) : undefined), [all, asset, sheetQueries, viewer.view, viewer.scale, language, theme, flowLayers === undefined, faces]);
   const { environment, own } = useMemo(() => environmentOf(asset, viewer.preset, viewer.environment), [asset, viewer.preset, JSON.stringify(viewer.environment)]);
   const overridden = !own;
   const flowConditions = useMemo(() => flowConditionsOf(viewer.flowSettings), [JSON.stringify(viewer.flowSettings)]);
@@ -195,7 +197,7 @@ export function Viewer(props: ViewerProps): ReactElement {
             <>
               <ButtonGroup below={phone ? "never" : "mobile"}>
                 <Button grouped icon="minus" aria-label={t("viewer.zoomOut")} title={t("viewer.zoomOut")} onClick={() => patch({ zoom: Math.max(0.05, Number(((viewer.zoom === "fit" ? fitZoom.current : viewer.zoom) / 1.25).toFixed(3))) })} />
-                <output data-shared-border-cell="" className="inline-flex min-w-16 items-center justify-center font-mono" aria-label={t("viewer.zoom")}>{zoomText}</output>
+                <output data-shared-border-cell="" className="inline-flex min-w-16 items-center justify-center whitespace-nowrap px-double font-mono" aria-label={t("viewer.zoom")}>{zoomText}</output>
                 <Button grouped icon="plus" aria-label={t("viewer.zoomIn")} title={t("viewer.zoomIn")} onClick={() => patch({ zoom: Math.min(64, Number(((viewer.zoom === "fit" ? fitZoom.current : viewer.zoom) * 1.25).toFixed(3))) })} />
               </ButtonGroup>
               <ButtonGroup below={phone ? "never" : "mobile"}>

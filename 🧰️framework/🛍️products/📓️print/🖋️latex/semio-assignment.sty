@@ -181,6 +181,7 @@
 \NewDocumentEnvironment { AssignmentParameterTable } { O{} m +b } {
   \par \group_begin:
   \keys_set:nn { semio / assignment / table } {#1}
+  \dim_set:Nn \arrayrulewidth { \use:c { semio@stroke@hairline } }
   \int_compare:nNnTF { \l_semio_assignment_columns_int } > { 0 } {
     \dim_set:Nn \l_semio_assignment_value_dim {
       ( \linewidth - \l_semio_assignment_shape_dim
@@ -201,7 +202,7 @@
       #3
     \end{tabular}
     \par
-    \use:c { semio@frame@close } { 0pt }
+    \use:c { semio@frame@seal } { 0pt }
   } {
     \PackageError { semio-assignment } { Positive~value-columns~required } { Select~one~or~more~writable~columns. }
   }
@@ -216,10 +217,6 @@
   \bool_set_true:N \l_semio_assignment_matrix_active_bool
   \tl_set:Nn \l_semio_assignment_matrix_title_tl {#1}
 } { \group_end: }
-\cs_new:Npn \semio_assignment_matrix_chrome: {
-  \use:c { semio@table@long@continuation@chrome }
-    { \int_eval:n { \l_semio_assignment_type_columns_int + 1 } }
-}
 
 \int_new:N \l_semio_assignment_type_columns_int
 \int_new:N \l_semio_assignment_parameter_rows_int
@@ -244,8 +241,23 @@
   label-width .dim_set:N = \l_semio_assignment_label_dim,
   label-width .initial:n = 27mm,
 }
-\cs_new_protected:Npn \semio_assignment_matrix_header_begin:n #1 {
-  \vbox to \l_semio_assignment_matrix_header_dim \bgroup
+\dim_new:N \l_semio_assignment_matrix_band_dim
+\dim_new:N \l_semio_assignment_matrix_band_width_dim
+\tl_new:N \l_semio_assignment_matrix_band_tl
+% 🏷️ A titled matrix lays its chips inside the header row instead of above it, so
+% every column divider runs up to the top edge and each header cell is closed.
+\cs_new_protected:Npn \semio_assignment_matrix_band: {
+  \vbox_to_zero:n {
+    \hbox_overlap_right:n {
+      \tex_kern:D - \tabcolsep
+      \use:c { semio@window@chips@band } { \l_semio_assignment_matrix_band_width_dim }
+    }
+    \tex_vss:D
+  }
+}
+\cs_new_protected:Npn \semio_assignment_matrix_header_begin:nn #1#2 {
+  \vbox to \dim_eval:n { \l_semio_assignment_matrix_header_dim + \l_semio_assignment_matrix_band_dim } \bgroup
+    #2 \tex_kern:D \l_semio_assignment_matrix_band_dim
     \vfil \hbox to #1 \bgroup \hfil
 }
 \cs_new_protected:Npn \semio_assignment_matrix_header_end: {
@@ -297,16 +309,17 @@
 \NewDocumentEnvironment { AssignmentParameterMatrix } { O{} m +m +b } {
   \par \group_begin:
   \keys_set:nn { semio / assignment / matrix } {#1}
+  \dim_set:Nn \arrayrulewidth { \use:c { semio@stroke@hairline } }
   \bool_lazy_and:nnTF
     { \int_compare_p:n { \l_semio_assignment_type_columns_int > 0 } }
     { \int_compare_p:n { \l_semio_assignment_parameter_rows_int > 0 } } {
 
-    \cs_set_eq:NN \semio_assignment_matrix_top: \hline
-    \bool_if:NT \l_semio_assignment_matrix_active_bool {
+    \bool_if:NTF \l_semio_assignment_matrix_active_bool {
       \exp_args:NV \semio_table_long_open:n \l_semio_assignment_matrix_title_tl
-      \cs_set_eq:NN \semio_assignment_matrix_top: \semio_assignment_matrix_chrome:
-    }
-    \bool_if:NF \l_semio_assignment_matrix_active_bool {
+      \use:c { semio@window@chips@store } { \use:c { semio@window@header@number@first } } { \use:c { semio@window@header@title } }
+      \dim_set:Nn \l_semio_assignment_matrix_band_dim { \use:c { semio@chip@h } }
+      \tl_set:Nn \l_semio_assignment_matrix_band_tl { \semio_assignment_matrix_band: }
+    } {
       \use:c { semio@frame@open } { \use:c { semio@window@sep@before } }
     }
     \use:c { semio@frame@tight }
@@ -320,10 +333,11 @@
         - \int_eval:n { \l_semio_assignment_type_columns_int + 2 } \arrayrulewidth )
         / \int_use:N \l_semio_assignment_type_columns_int
     }
+    \dim_set:Nn \l_semio_assignment_matrix_band_width_dim { \linewidth - 2 \arrayrulewidth }
     \arrayrulecolor { semio-chrome-border-normal }
     \noindent
-    \begin{tabular}{|>{\semio_assignment_matrix_header_begin:n {\l_semio_assignment_label_dim}}c<{\semio_assignment_matrix_header_end:}|*{\int_use:N\l_semio_assignment_type_columns_int}{>{\semio_assignment_matrix_header_begin:n {\l_semio_assignment_type_dim}}c<{\semio_assignment_matrix_header_end:}|}}
-      \semio_assignment_matrix_top:
+    \begin{tabular}{|>{\semio_assignment_matrix_header_begin:nn {\l_semio_assignment_label_dim} {\l_semio_assignment_matrix_band_tl}}c<{\semio_assignment_matrix_header_end:}|*{\int_use:N\l_semio_assignment_type_columns_int}{>{\semio_assignment_matrix_header_begin:nn {\l_semio_assignment_type_dim} {}}c<{\semio_assignment_matrix_header_end:}|}}
+      \hline
       \textbf{#2} & #3
       \tabularnewline \hline
       \tl_if_blank:nTF {#4} {
@@ -332,7 +346,7 @@
     \end{tabular}
     \bool_if:NT \l_semio_assignment_matrix_active_bool { \semio_table_long_close: }
     \par
-    \use:c { semio@frame@close } { 0pt }
+    \use:c { semio@frame@seal } { 0pt }
   } {
     \PackageError { semio-assignment } { Positive~matrix~dimensions~required } { Select~one~or~more~type~columns~and~parameter~rows. }
   }

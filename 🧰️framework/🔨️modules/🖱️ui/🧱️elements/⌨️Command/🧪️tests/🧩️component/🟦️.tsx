@@ -207,6 +207,31 @@ describe("Command", () => {
     expect((container.querySelector('[data-value="visible secret"]') as HTMLElement).hidden).toBe(true);
   });
 
+  it("rules every row as a cell of the list, grouped or not (law 12)", () => {
+    const { container } = render(
+      <Command>
+        <CommandList>
+          <CommandGroup heading="One">
+            <CommandItem value="a">A</CommandItem>
+            <CommandItem value="b">B</CommandItem>
+          </CommandGroup>
+          <CommandGroup heading="Two">
+            <CommandItem value="c">C</CommandItem>
+          </CommandGroup>
+        </CommandList>
+      </Command>,
+    );
+    const list = container.querySelector('[data-slot="command-list"]') as HTMLElement;
+    expect(list.getAttribute("data-shared-border-cells")).toBe("");
+    expect(list.getAttribute("data-orientation")).toBe("vertical");
+    const rows = [...container.querySelectorAll('[data-slot="command-item"]')];
+    expect(rows).toHaveLength(3);
+    for (const row of rows) {
+      expect(row.getAttribute("data-shared-border-cell")).toBe("");
+      expect(row.className).toContain("min-h-(--chip-row-height)!");
+    }
+  });
+
   it("composes shortcuts and focus lifecycle through the owned Dialog", async () => {
     const outside = document.createElement("button");
     outside.textContent = "Before palette";

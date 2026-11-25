@@ -13,15 +13,69 @@
    "de": "Eine ausgewachsene, frei stehende Gemeine Esche (Fraxinus excelsior) von etwa 25 m: ein hoher, hellgrauer Stamm mit rautenförmig gefurchter Rinde, der sich in 10 m in drei steile Leittriebe gabelt, Äste, die durchhängen und an den Spitzen aufbiegen, und eine offene, luftige Krone aus lockeren Fiederblattbüscheln mit Himmel dazwischen."
   },
   "tags": [
-   "tree",
-   "deciduous",
-   "broadleaf",
-   "park-tree",
-   "open-crown",
-   "pinnate-leaves",
-   "fruit",
-   "wind",
-   "transpiration"
+   {
+    "id": "tree",
+    "title": {
+     "en": "tree",
+     "de": "Baum"
+    }
+   },
+   {
+    "id": "deciduous",
+    "title": {
+     "en": "deciduous",
+     "de": "laubabwerfend"
+    }
+   },
+   {
+    "id": "broadleaf",
+    "title": {
+     "en": "broadleaf",
+     "de": "Laubholz"
+    }
+   },
+   {
+    "id": "park-tree",
+    "title": {
+     "en": "park tree",
+     "de": "Parkbaum"
+    }
+   },
+   {
+    "id": "open-crown",
+    "title": {
+     "en": "open crown",
+     "de": "offene Krone"
+    }
+   },
+   {
+    "id": "pinnate-leaves",
+    "title": {
+     "en": "pinnate leaves",
+     "de": "Fiederblätter"
+    }
+   },
+   {
+    "id": "fruit",
+    "title": {
+     "en": "fruit",
+     "de": "Obst"
+    }
+   },
+   {
+    "id": "wind",
+    "title": {
+     "en": "wind",
+     "de": "Wind"
+    }
+   },
+   {
+    "id": "transpiration",
+    "title": {
+     "en": "transpiration",
+     "de": "Transpiration"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage plant collection worker PW-02",
@@ -70777,10 +70831,10 @@
    },
    {
     "id": "tp-sun-1",
-    "bone": "t1-2-b",
-    "x": 5.9,
-    "y": -2.5375,
-    "z": 0.4192,
+    "bone": "lead-b-1",
+    "x": 4.5895,
+    "y": 3.9564,
+    "z": -0.3708,
     "kind": "emitter",
     "title": {
      "en": "Transpiration of the sun leaves, anchor 1",
@@ -70789,10 +70843,10 @@
    },
    {
     "id": "tp-sun-2",
-    "bone": "lead-b-1",
-    "x": 4.4709,
-    "y": -0.2871,
-    "z": -5.0339,
+    "bone": "lead-c-2",
+    "x": 3.2582,
+    "y": 2.0435,
+    "z": -2.1215,
     "kind": "emitter",
     "title": {
      "en": "Transpiration of the sun leaves, anchor 2",
@@ -70813,10 +70867,10 @@
    },
    {
     "id": "tp-sun-4",
-    "bone": "lead-c-3",
-    "x": 6.5872,
-    "y": 1.7521,
-    "z": 1.3361,
+    "bone": "lead-a-b",
+    "x": 8.4357,
+    "y": 3.1191,
+    "z": -1.3609,
     "kind": "emitter",
     "title": {
      "en": "Transpiration of the sun leaves, anchor 4",
@@ -70826,9 +70880,9 @@
    {
     "id": "tp-sun-5",
     "bone": "t2-3-b",
-    "x": 4.4357,
-    "y": 0.6172,
-    "z": -1.322,
+    "x": 3.984,
+    "y": -0.0039,
+    "z": -0.554,
     "kind": "emitter",
     "title": {
      "en": "Transpiration of the sun leaves, anchor 5",
@@ -70837,10 +70891,10 @@
    },
    {
     "id": "tp-sun-6",
-    "bone": "t1-1-b",
-    "x": 2.782,
-    "y": -1.0456,
-    "z": -0.9048,
+    "bone": "t1-3",
+    "x": 3.786,
+    "y": 0.0303,
+    "z": 0.2407,
     "kind": "emitter",
     "title": {
      "en": "Transpiration of the sun leaves, anchor 6",
@@ -70874,8 +70928,8 @@
    {
     "id": "tp-sun-9",
     "bone": "lead-b-2",
-    "x": 3.3256,
-    "y": 2.759,
+    "x": 1.8905,
+    "y": 1.3668,
     "z": 2.7638,
     "kind": "emitter",
     "title": {
@@ -70886,9 +70940,9 @@
    {
     "id": "tp-shade-1",
     "bone": "t2-2",
-    "x": 2.1205,
-    "y": 0.1853,
-    "z": -1.0079,
+    "x": 1.7703,
+    "y": 0.0935,
+    "z": -1.2639,
     "kind": "emitter",
     "title": {
      "en": "Transpiration of the shade leaves, anchor 1",
@@ -70897,10 +70951,10 @@
    },
    {
     "id": "tp-shade-2",
-    "bone": "lead-c-1",
-    "x": -0.164,
-    "y": 1.433,
-    "z": -0.4587,
+    "bone": "lead-c",
+    "x": 4.0237,
+    "y": 0.2739,
+    "z": -1.5961,
     "kind": "emitter",
     "title": {
      "en": "Transpiration of the shade leaves, anchor 2",
@@ -70910,9 +70964,9 @@
    {
     "id": "tp-shade-3",
     "bone": "lead-c",
-    "x": 7.9473,
-    "y": -1.6532,
-    "z": -1.6071,
+    "x": 8.203,
+    "y": -1.6647,
+    "z": -2.3751,
     "kind": "emitter",
     "title": {
      "en": "Transpiration of the shade leaves, anchor 3",
@@ -70922,9 +70976,9 @@
    {
     "id": "tp-shade-4",
     "bone": "t2-3",
-    "x": 1.7338,
-    "y": 0.5458,
-    "z": 0.8969,
+    "x": 1.5762,
+    "y": 0.3441,
+    "z": 0.3849,
     "kind": "emitter",
     "title": {
      "en": "Transpiration of the shade leaves, anchor 4",

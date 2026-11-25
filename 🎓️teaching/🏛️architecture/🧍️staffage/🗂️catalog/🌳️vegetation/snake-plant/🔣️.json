@@ -13,13 +13,55 @@
    "de": "Ein Bogenhanf (Dracaena trifasciata, früher Sansevieria trifasciata) von 0,9 m Höhe in einem glasierten Steinzeugtopf von 0,25 m auf einem Untersetzer: zehn steife, aufrechte Schwertblätter von 0,43 bis 0,66 m in drei Rhizomrosetten, 5 bis 7 cm breit und 6 mm dick, dunkelgrün mit hellen Querbändern und harter Spitze. Eine sukkulente CAM-Pflanze, die ihre Spaltöffnungen nachts öffnet; ein Klassiker in Büros und Wohnräumen."
   },
   "tags": [
-   "snake-plant",
-   "succulent",
-   "cam",
-   "indoor",
-   "potted",
-   "houseplant",
-   "sword-leaf"
+   {
+    "id": "snake-plant",
+    "title": {
+     "en": "snake plant",
+     "de": "Bogenhanf"
+    }
+   },
+   {
+    "id": "succulent",
+    "title": {
+     "en": "succulent",
+     "de": "Sukkulente"
+    }
+   },
+   {
+    "id": "cam",
+    "title": {
+     "en": "CAM",
+     "de": "CAM"
+    }
+   },
+   {
+    "id": "indoor",
+    "title": {
+     "en": "indoor",
+     "de": "Innenraum"
+    }
+   },
+   {
+    "id": "potted",
+    "title": {
+     "en": "potted",
+     "de": "getopft"
+    }
+   },
+   {
+    "id": "houseplant",
+    "title": {
+     "en": "houseplant",
+     "de": "Zimmerpflanze"
+    }
+   },
+   {
+    "id": "sword-leaf",
+    "title": {
+     "en": "sword leaf",
+     "de": "Schwertblatt"
+    }
+   }
   ],
   "provenance": {
    "author": "Semio staffage plant worker PW-17",

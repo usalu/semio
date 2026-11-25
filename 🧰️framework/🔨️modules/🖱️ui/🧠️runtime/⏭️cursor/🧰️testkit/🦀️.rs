@@ -13,7 +13,7 @@ pub fn leaf(key: &str) -> TreeNode {
 }
 
 pub fn text(key: &str, value: &str) -> TreeNode {
-    TreeNode::try_new(key, ui_contract::Component::Text(ui_contract::TextProps { value: ui_contract::Label::try_from(value).expect("bounded fixture label"), emphasize: None, data_attributes: None })).expect("bounded fixture node")
+    TreeNode::try_new(key, ui_contract::Component::Text(ui_contract::TextProps { value: ui_contract::Label::try_from(value).expect("bounded fixture label"), emphasize: None, data_attributes: None, heading_level: None })).expect("bounded fixture node")
 }
 
 pub fn container(key: &str, children: Vec<TreeNode>) -> TreeNode {

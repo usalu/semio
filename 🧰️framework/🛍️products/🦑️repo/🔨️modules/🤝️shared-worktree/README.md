@@ -357,7 +357,7 @@ pair identically on every machine, so no machine waits for another and the queue
 ## Network layout
 
 - Five physical networks, one per group, form one logical network. Each group has one **group server** that runs
-  four services: the share that holds the store, the cache server (`repo remote-cache serve`, port 6090 in
+  four services: the share that holds the store, the cache server (`repo remote-cache serve`, port 6094 in
   the topology), the relay and a replica daemon of its own. The group server is a fleet machine: its origin is
   `<group>-server` (for example `g1-server`) and its worktree is the canonical path of its own operating system.
   The server may be a Linux, a macOS or a Windows machine; the topology names which (`server.platform`).

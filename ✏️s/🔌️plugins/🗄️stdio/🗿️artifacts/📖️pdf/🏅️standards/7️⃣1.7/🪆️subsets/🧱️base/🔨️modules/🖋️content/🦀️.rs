@@ -6,7 +6,7 @@
 use crate::standards::v1_7::subsets::base::modules::colour::{lift_colour_space_inline, lower_colour_space_inline};
 use crate::standards::v1_7::subsets::base::modules::filters::{decode_stream, encode_stream};
 use crate::standards::v1_7::subsets::base::modules::fonts::FontCodec;
-use crate::standards::v1_7::subsets::base::modules::images::{packed_image_geometry, unpack_image_samples};
+use crate::standards::v1_7::subsets::base::modules::images::{admit_packed_samples, packed_image_geometry};
 use crate::standards::v1_7::subsets::base::modules::lexer::{dict_get, number_text, write_object, ContentToken, ContentTokenCursor, InlineImageBoundary, InlineImageSpanCursor, InlineImageSpanStep};
 use crate::standards::v1_7::subsets::base::io::error::{PResult, PdfEngineError};
 use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfBaseEncoding, PdfDictEntry, PdfInlineImage, PdfImageBody, PdfLineCap, PdfLineJoin, PdfObject, PdfOp, PdfPropertyList, PdfTextArrayItem, PdfTextString};
@@ -479,11 +479,11 @@ fn parse_inline_image(data: &[u8], tokens: &mut ContentTokenCursor, resources: &
         width, height, bits_per_component, color_space, image_mask,
         decode: entries.iter().find(|e| e.key == "Decode").and_then(|e| e.value.as_array()).map(nums).unwrap_or_default(),
         interpolate: entries.iter().any(|e| e.key == "Interpolate" && e.value.as_bool() == Some(true)),
-        body:PdfImageBody::Samples {values:Vec::new()},
+        body:PdfImageBody::Samples {packed:Vec::new()},
         extra: entries.into_iter().filter(|e| !matches!(e.key.as_str(), "Width" | "Height" | "BitsPerComponent" | "ColorSpace" | "ImageMask" | "Decode" | "Interpolate" | "Filter" | "DecodeParms" | "Length")).collect(),
     };
-    image.body=if let Some(filter)=filters.iter().find(|filter|filter.is_image_codec()) {let kind=match filter {crate::standards::v1_7::subsets::base::schema::snapshot::PdfStreamFilter::Dct {..}=>"s.stdio.jpeg",crate::standards::v1_7::subsets::base::schema::snapshot::PdfStreamFilter::Jpx=>"s.stdio.jpeg2000",crate::standards::v1_7::subsets::base::schema::snapshot::PdfStreamFilter::Ccitt {..}=>"s.stdio.ccitt",crate::standards::v1_7::subsets::base::schema::snapshot::PdfStreamFilter::Jbig2 {..}=>"s.stdio.jbig2",_=>unreachable!()};PdfImageBody::Artifact {reference:resources.admit(kind,PdfObject::Stream {dict:Vec::new(),data:crate::standards::v1_7::subsets::base::schema::snapshot::stream_bytes(&decoded),filters})?}}else{PdfImageBody::Samples {values:unpack_image_samples(width, height, components, sample_bits, &decoded)?}};
-    Ok(PdfOp::InlineImage { image })
+    image.body=if let Some(filter)=filters.iter().find(|filter|filter.is_image_codec()) {let kind=match filter {crate::standards::v1_7::subsets::base::schema::snapshot::PdfStreamFilter::Dct {..}=>"s.stdio.jpeg",crate::standards::v1_7::subsets::base::schema::snapshot::PdfStreamFilter::Jpx=>"s.stdio.jpeg2000",crate::standards::v1_7::subsets::base::schema::snapshot::PdfStreamFilter::Ccitt {..}=>"s.stdio.ccitt",crate::standards::v1_7::subsets::base::schema::snapshot::PdfStreamFilter::Jbig2 {..}=>"s.stdio.jbig2",_=>unreachable!()};PdfImageBody::Artifact {reference:resources.admit(kind,PdfObject::Stream {dict:Vec::new(),data:crate::standards::v1_7::subsets::base::schema::snapshot::stream_bytes(&decoded),filters})?}}else{PdfImageBody::Samples {packed:admit_packed_samples(width, height, components, sample_bits, decoded)?}};
+    Ok(PdfOp::InlineImage { image: Box::new(image) })
 }
 
 /// 📖 Parses a content stream into typed operators.
@@ -518,6 +518,94 @@ pub fn parse_content(data: &[u8], fonts: &dyn FontTable,resources:&mut dyn crate
         ops.push(op);
     }
     Ok(ops)
+}
+
+/// 📏️ What [`parse_content`] types from one content stream, measured without typing it: the operator count, an upper bound of the heap bytes its kept operands own once typed (text decoded through any codec included, every operand of an operator the parser keeps untyped held as a whole value), and of the bytes its inline images own (decoded packed bytes, one `u32` per sample, the boxed image and its dictionary).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct PdfContentExtent {
+    pub operators: usize,
+    pub operand_bytes: usize,
+    pub inline_bytes: usize,
+}
+
+/// 📐️ Measures [`PdfContentExtent`] in one token pass; `None` wherever the parser would recover from or refuse a token, so a caller keeps its worst-case bound.
+pub fn content_extent(data: &[u8]) -> Option<PdfContentExtent> {
+    let mut extent = PdfContentExtent::default();
+    let mut tokens = ContentTokenCursor::new(0);
+    let mut operands = 0;
+    loop {
+        match tokens.next_token(data).ok()? {
+            ContentToken::End => return Some(extent),
+            ContentToken::Value(value) => {
+                if operands < 64 { extent.operand_bytes += typed_operand_bytes(&value); }
+                operands += 1;
+            }
+            ContentToken::Operator { start, end } => {
+                let word = std::str::from_utf8(&data[start..end]).unwrap_or("");
+                if !typed_operator(word) { extent.operand_bytes += operands.min(64) * std::mem::size_of::<PdfObject>() + word.len(); }
+                operands = 0;
+                extent.operators += 1;
+                if word == "BI" { extent.inline_bytes = extent.inline_bytes.saturating_add(inline_image_extent(data, &mut tokens)?); }
+            }
+        }
+    }
+}
+
+/// 🔖️ Whether [`reference_operator`] types `word` (every other operator keeps its operands as untyped values).
+fn typed_operator(word: &str) -> bool {
+    fixed_operator(word, &[]).is_some() || named_operator(word, String::new).is_some() || NumericArray::new(word).is_some()
+        || TextShow::new(word, &[]).is_some() || matches!(word, "q" | "Q" | "Tf" | "TJ" | "DP" | "BDC" | "BI")
+}
+
+/// 📏️ Bounds the heap one operand owns once typed: none for a number kept inline, one `f64` for a number collected into a component list, four bytes per string byte (a decoded code is at most one `u32` or four UTF-8 bytes), a value node per array item and dictionary entry.
+fn typed_operand_bytes(value: &PdfObject) -> usize {
+    match value {
+        PdfObject::Int(_) | PdfObject::Real(_) => std::mem::size_of::<f64>(),
+        PdfObject::Name(text) | PdfObject::Text(text) => text.len(),
+        PdfObject::Str(bytes) => 4 * bytes.len(),
+        PdfObject::Array(items) => items.iter().map(|item| std::mem::size_of::<PdfObject>() + typed_operand_bytes(item)).sum(),
+        PdfObject::Dict(entries) => entries.iter().map(|entry| std::mem::size_of::<PdfDictEntry>() + entry.key.len() + typed_operand_bytes(&entry.value)).sum(),
+        _ => 0,
+    }
+}
+
+/// 🖼️ Frames one inline image exactly as [`parse_inline_image`] does and bounds what typing it owns.
+fn inline_image_extent(data: &[u8], tokens: &mut ContentTokenCursor) -> Option<usize> {
+    let mut entries: Vec<PdfDictEntry> = Vec::new();
+    let mut key: Option<String> = None;
+    loop {
+        match tokens.next_token(data).ok()? {
+            ContentToken::Value(PdfObject::Name(name)) if key.is_none() => key = Some(name),
+            ContentToken::Value(value) => if let Some(k) = key.take() {
+                let expanded = expand_inline_key(&k).to_string();
+                let value = expand_inline_value(&expanded, value);
+                entries.push(PdfDictEntry { key: expanded, value });
+            },
+            ContentToken::Operator { start, end } if &data[start..end] == b"ID" => break,
+            ContentToken::Operator { .. } => {}
+            ContentToken::End => return None,
+        }
+    }
+    let width = inline_image_integer(&entries, "Width", None).ok()?;
+    let height = inline_image_integer(&entries, "Height", None).ok()?;
+    let bits_per_component = inline_image_integer(&entries, "BitsPerComponent", Some(0)).ok()?;
+    let image_mask = dict_get(&entries, "ImageMask").and_then(PdfObject::as_bool) == Some(true);
+    let components = if image_mask { 1 } else { dict_get(&entries, "ColorSpace").map(lift_colour_space_inline).and_then(|color| color.components()).unwrap_or(1) };
+    let (_, packed) = packed_image_geometry(width, height, components, if image_mask { 1 } else { bits_per_component }).ok()?;
+    let filter = match dict_get(&entries, "Filter") {
+        None | Some(PdfObject::Null) => None,
+        Some(PdfObject::Array(items)) => items.first(),
+        value => value,
+    };
+    let boundary = match filter {
+        None => InlineImageBoundary::Packed(packed),
+        Some(value) if value.as_name() == Some("ASCII85Decode") => InlineImageBoundary::Ascii85,
+        _ => InlineImageBoundary::Delimited,
+    };
+    let (raw, resume) = inline_image_body(data, tokens.position(), boundary).ok()?;
+    if !tokens.resume_after_image(resume) { return None; }
+    let dictionary: usize = entries.iter().map(|entry| std::mem::size_of::<PdfDictEntry>() + entry.key.len() + typed_operand_bytes(&entry.value)).sum();
+    packed.max(raw.len()).checked_add(raw.len())?.checked_add(std::mem::size_of::<PdfInlineImage>() + dictionary)
 }
 //#endregion 🔖️Parse
 
@@ -826,7 +914,7 @@ pub fn print_content(ops: &[PdfOp], fonts: &dyn FontTable) -> PResult<Vec<u8>> {
                 if image.interpolate {
                     out.extend_from_slice(b" /I true");
                 }
-                let (data,filters)=match &image.body {PdfImageBody::Samples {values}=>(crate::standards::v1_7::subsets::base::modules::images::pack_image_samples(image.width,image.height,if image.image_mask{1}else{image.color_space.as_ref().and_then(|color|color.components()).unwrap_or(1)},if image.image_mask{1}else{image.bits_per_component},values)?,Vec::new()),PdfImageBody::Artifact {reference}=>{let PdfObject::Stream {data,filters,..}=fonts.content_artifact(reference)? else {return Err(PdfEngineError::Unsupported("inline image artifact is not a native stream".into()));};if !filters.iter().any(|filter|filter.is_image_codec()){return Err(PdfEngineError::Unsupported("referenced image artifact has no native image codec".into()));}(data.to_vec_owner(),filters)}};
+                let (data,filters)=match &image.body {PdfImageBody::Samples {packed}=>{image.packed_samples().transpose().map_err(|reason|PdfEngineError::Unsupported(reason.into()))?;(packed.clone(),Vec::new())},PdfImageBody::Artifact {reference}=>{let PdfObject::Stream {data,filters,..}=fonts.content_artifact(reference)? else {return Err(PdfEngineError::Unsupported("inline image artifact is not a native stream".into()));};if !filters.iter().any(|filter|filter.is_image_codec()){return Err(PdfEngineError::Unsupported("referenced image artifact has no native image codec".into()));}(data.to_vec_owner(),filters)}};
                 let (encoded, filter_entries) = encode_stream(&data, &filters);
                 for entry in filter_entries.iter().chain(image.extra.iter()) {
                     out.push(b' ');

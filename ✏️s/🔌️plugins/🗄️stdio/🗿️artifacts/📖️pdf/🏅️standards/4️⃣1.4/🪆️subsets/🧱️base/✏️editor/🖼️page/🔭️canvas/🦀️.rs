@@ -4,7 +4,7 @@
 use semio_os_kernel::ColdMutation;
 use semio_plugin::app::InteractionView;
 use semio_plugin::retained_command::ArtifactCommandWork;
-use semio_plugin::{ArtifactView, Axis, ComponentTree, EditorApp, Emit, Fault, FaultCode, FaultOrigin, PluginAssemblyError, UiAssemblyResult, WindowKindDefinition, WindowLayout, WindowLayoutNode};
+use semio_plugin::{ArtifactView, Axis, ComponentTree, EditorApp, Emit, Fault, PluginAssemblyError, UiAssemblyResult, WindowKindDefinition, WindowLayout, WindowLayoutNode};
 use semio_s_artifact_stdio_contract::editing::{bounded_native_edit_work, BoundedNativeEditingEditor};
 use semio_s_artifact_stdio_pdf_graph_projection::standards::v1_4::subsets::base::io::encode_pdf;
 use semio_s_artifact_stdio_pdf_mut_base::standards::v1_4::subsets::base::schema::mutations::{InsertPage, MovePage, PdfMutation, RemovePage, ReplacePageText, ResizePage};
@@ -22,7 +22,7 @@ use std::borrow::Cow;
 const CANVAS_ACTIONS: [&str; 8] = ["canvasPointerDown", "canvasPointerMove", "canvasPointerUp", "set-text", "insert-page", "remove-page", "move-page", "set-page-size"];
 
 fn refusal(message: impl Into<String>) -> Fault {
-    Fault::new(FaultOrigin::App, FaultCode::new("stdio.pdf.1.4.page-edit"), message)
+    refuse(PdfFault::PageEdit, message)
 }
 
 /// 🧭️ Whether `action` is one the canvas window offers over the 1.4 page domain.
@@ -46,12 +46,19 @@ pub fn lens(snapshot: &Snapshot14) -> Result<Cow<'_, Snapshot17>, Fault> {
     lift(snapshot).map(Cow::Owned)
 }
 
-/// 🪟️ The canvas window: the shared page window reduced to the actions the 1.4 page domain can publish.
+/// 🪟️ The canvas window: the shared page window, owning only its pointer gestures, view tools and presence lane.
 pub fn window_definition() -> WindowKindDefinition {
-    let mut definition = page::window_definition();
-    definition.actions.retain(|action| CANVAS_ACTIONS.iter().chain(page::VIEW_ACTION_IDS.iter()).any(|id| action.id == *id));
-    definition.actions.extend(semio_s_artifact_stdio_pdf_presence_lane::presence_action_definitions());
-    definition
+    page::window_definition()
+}
+
+/// ✏️ The shared page edits the 1.4 page domain can publish, declared once on the app roster so the canvas and the thumbnail strip (`move-page`) both resolve them.
+pub fn edit_action_definitions() -> Vec<semio_plugin::ActionDefinition> {
+    page::edit_action_definitions().into_iter().filter(|action| CANVAS_ACTIONS.contains(&action.id.as_str())).collect()
+}
+
+/// ✏️ Declares [`edit_action_definitions`] on the app roster of `builder`.
+pub fn edit_actions_with(builder: semio_plugin::app::EditorBuilder) -> semio_plugin::app::EditorBuilder {
+    edit_action_definitions().into_iter().fold(builder, semio_plugin::app::EditorBuilder::action_with)
 }
 
 /// 🪟️ Every window kind the canvas contributes: the page canvas, the page thumbnails and the accessible text layer.

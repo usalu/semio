@@ -1,0 +1,11 @@
+--- a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📤️export/🧪️tests/🔮️acadrust-oracle/🦀️.rs
++++ b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📤️export/🧪️tests/🔮️acadrust-oracle/🦀️.rs
+@@ -154,7 +154,7 @@
+     let case: serde_json::Value = serde_json::from_slice(include_bytes!("../🧫️fixtures/🧵️write-cursor/🔣️.json")).unwrap();
+     let architectural = fixture("../../../../🖼️assets/🏛️architectural/🏛️architectural.dwg");
+     let drawing = dwg_from_bytes(&architectural).expect("this subset reads the DWG");
+-    let mut cursor = DwgWriteCursor::new(drawing.clone());
++    let mut cursor = DwgWriteCursor::from_drawing(&drawing).unwrap();
+     let bytes = loop {
+         if let DwgWriteStep::Complete(bytes) = cursor.step().expect("the cursor writes") { break bytes; }
+     };

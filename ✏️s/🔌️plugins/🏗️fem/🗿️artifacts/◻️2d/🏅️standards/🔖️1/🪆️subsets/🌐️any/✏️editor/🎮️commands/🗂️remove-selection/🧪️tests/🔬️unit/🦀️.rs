@@ -105,6 +105,41 @@ fn remove_selection_orders_dependencies_and_restores_exact_snapshot() {
     
 }
 
+/// 🔗️ LAW: removing a node cascades to every member, support and load that names it, in dependency order, and the transaction restores the exact snapshot when undone.
+#[test]
+fn remove_selection_of_a_node_cascades_its_dependents_and_restores_exact_snapshot() {
+    use protocol::{ColdMutation, Mutation};
+    use semio_os_command::SemanticMutation;
+
+    let (fixture, before) = selection_fixture();
+    let ids: Vec<String> = serde_json::from_value(fixture["cascadeSelection"].clone()).expect("selection ids");
+    let history = semio_plugin::HistoryView::empty();
+    let result = remove_ids(&ArtifactView::new(&*before, &history), &ids).expect("selection command");
+    let emitted: Vec<_> = result.artifact_mutations.iter().map(|operation| operation.semantics().kind).collect();
+    assert_eq!(emitted, serde_json::from_value::<Vec<String>>(fixture["cascadeKinds"].clone()).expect("expected semantic kinds"));
+    let mut cursor = Fem2dSnapshotRetiring::new((*before).clone());
+    let mut undo = Vec::new();
+    for operation in &result.artifact_mutations {
+        undo.push(operation.inverse(&*cursor).expect("semantic inverse"));
+        let outcome = operation.diff(&*cursor);
+        assert!(outcome.messages().iter().all(|message| message.level < semio_framework_diagnostic::Severity::Error), "{outcome:?}");
+        cursor = Fem2dSnapshotRetiring::new(protocol::apply_diff_cold(outcome.diff(), &*cursor).expect("central application"));
+    }
+    let mut oracle = fixture["before"].clone();
+    for pointer in fixture["cascadeOraclePointers"].as_array().expect("oracle pointers") {
+        *oracle.pointer_mut(pointer.as_str().expect("pointer")).expect("collection") = serde_json::Value::Array(Vec::new());
+    }
+    *oracle.pointer_mut("/loadCases/0/loads").expect("load collection") = serde_json::Value::Array(Vec::new());
+    oracle["nodes"].as_array_mut().expect("nodes").retain(|node| node["id"] != "n1");
+    assert_eq!(*cursor, *Fem2dSnapshotRetiring::new(semio_framework_pack_json::from_json_str::<Fem2dSnapshot>(&oracle.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("third-party reconstructed outcome")));
+    for batch in undo.iter().rev() {
+        for operation in batch {
+            cursor = Fem2dSnapshotRetiring::new(protocol::apply_diff_cold(operation.diff(&*cursor).diff(), &*cursor).expect("inverse application"));
+        }
+    }
+    assert_eq!(*cursor, *before);
+}
+
 #[semio_framework_async_macros::async_test]
 async fn remove_selection_mounted_publication_is_atomic_for_selected_and_unselected_referrers() {
     mounted_delete_body().await;
@@ -112,7 +147,7 @@ async fn remove_selection_mounted_publication_is_atomic_for_selected_and_unselec
 
 async fn mounted_delete_body() {
     let (fixture, before) = selection_fixture();
-    for selection in ["completeSelection", "loadSelection", "protectedSelection"] {
+    for selection in ["completeSelection", "loadSelection", "cascadeSelection", "protectedSelection"] {
         let mut app = fem2d_empty_app();
         let semio_framework::kernel::Effect::LoadDocument { pack, spr } = semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::reset_document_effect(&*before) else { panic!("document fixture effect") };
         semio_plugin::artifact_app_laws::load_document(&mut app.0, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("mount shared wire fixture");
@@ -125,7 +160,9 @@ async fn mounted_delete_body() {
         }
         dispatch(&mut app, Fem2dCommand::RemoveSelection(RemoveSelection { ids })).await;
         let after = app.snapshot().expect("published snapshot");
-        if selection == "completeSelection" {
+        if selection == "cascadeSelection" {
+            assert!(after.nodes.len() == 1 && after.elements.is_empty() && after.supports.is_empty() && after.load_cases[0].loads.is_empty());
+        } else if selection == "completeSelection" {
             assert!(after.nodes.is_empty() && after.elements.is_empty() && after.materials.is_empty() && after.sections.is_empty() && after.supports.is_empty() && after.load_cases.is_empty() && after.combinations.is_empty());
         } else {
             assert!(after.load_cases[0].loads.is_empty());
@@ -133,4 +170,17 @@ async fn mounted_delete_body() {
         }
     }
     
+}
+
+/// ⌨️ LAW: Delete and Backspace dispatch `removeSelection` without ids, and that means the live selection; ids a caller names are never overridden by it.
+#[test]
+fn remove_selection_without_ids_speaks_for_the_live_selection() {
+    let (fixture, before) = selection_fixture();
+    let selection: Vec<String> = serde_json::from_value(fixture["cascadeSelection"].clone()).expect("selection ids");
+    let key = with_selection(&RemoveSelection { ids: Vec::new() }, &selection);
+    assert_eq!(key.ids, selection);
+    let named = RemoveSelection { ids: vec!["scope:1:7:element2:e1".into()] };
+    assert_eq!(with_selection(&named, &selection), named);
+    let history = semio_plugin::HistoryView::empty();
+    assert!(!remove_ids(&ArtifactView::new(&*before, &history), &key.ids).expect("selection command").artifact_mutations.is_empty(), "the key must remove the selected entity");
 }

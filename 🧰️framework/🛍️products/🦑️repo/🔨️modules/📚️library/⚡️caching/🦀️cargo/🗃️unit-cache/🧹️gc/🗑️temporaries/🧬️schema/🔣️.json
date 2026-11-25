@@ -1,0 +1,175 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/repo/cargo-compiler-temporaries/v1",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "graceMilliseconds": 600000,
+        "idleMilliseconds": 1800000,
+        "batchFiles": 256,
+        "scanYieldEntries": 512
+      }
+    },
+    "Messages": {
+      "const": {
+        "scan": {
+          "en": "[repo cache] scanning compiler temporaries below {root}",
+          "de": "[repo cache] durchsuche Compiler-Temporärdateien unter {root}"
+        },
+        "would": {
+          "en": "[repo cache] would remove {count} compiler temporaries of lane {lane} ({bytes}), keep {kept}",
+          "de": "[repo cache] würde {count} Compiler-Temporärdateien der Lane {lane} entfernen ({bytes}), {kept} behalten"
+        },
+        "removed": {
+          "en": "[repo cache] removed {count} compiler temporaries of lane {lane} ({bytes}), kept {kept}",
+          "de": "[repo cache] {count} Compiler-Temporärdateien der Lane {lane} entfernt ({bytes}), {kept} behalten"
+        },
+        "summaryPlan": {
+          "en": "[repo cache] compiler temporaries: would remove {count} of {total} files ({bytes}) in {lanes} lanes; {live} lanes have running compilers",
+          "de": "[repo cache] Compiler-Temporärdateien: würde {count} von {total} Dateien entfernen ({bytes}) in {lanes} Lanes; {live} Lanes mit laufenden Compilern"
+        },
+        "summaryApply": {
+          "en": "[repo cache] compiler temporaries: removed {count} of {total} files ({bytes}) in {lanes} lanes; {live} lanes have running compilers",
+          "de": "[repo cache] Compiler-Temporärdateien: {count} von {total} Dateien entfernt ({bytes}) in {lanes} Lanes; {live} Lanes mit laufenden Compilern"
+        }
+      }
+    },
+    "Holder": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "startedMs"
+      ],
+      "properties": {
+        "startedMs": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "File": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "bytes",
+        "mtimeMs"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "mtimeMs": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Lane": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "holders",
+        "files"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "holders": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Holder"
+          }
+        },
+        "files": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/File"
+          }
+        }
+      }
+    },
+    "Input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "nowMs",
+        "lanes"
+      ],
+      "properties": {
+        "nowMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "lanes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Lane"
+          }
+        }
+      }
+    },
+    "Removal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "lane",
+        "path",
+        "bytes"
+      ],
+      "properties": {
+        "lane": {
+          "type": "string",
+          "minLength": 1
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Vector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "input",
+        "remove"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "input": {
+          "$ref": "#/definitions/Input"
+        },
+        "remove": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Removal"
+          }
+        }
+      }
+    }
+  }
+}

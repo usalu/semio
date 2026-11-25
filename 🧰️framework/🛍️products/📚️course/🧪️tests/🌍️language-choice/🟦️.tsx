@@ -146,6 +146,13 @@ describe("🌍️ language choice", () => {
     expect(screen.queryByRole("navigation")).toBeNull();
     expect(document.querySelector(".course-app")?.hasAttribute("lang")).toBe(false);
     expect(readPreferences(localStore(origin.tab(), TENANT)).locale).toBeUndefined();
+    const main = document.getElementById("course-main")!;
+    expect(main.className).not.toMatch(/\bp[xytblr]?-/u);
+    const card = main.querySelector<HTMLElement>("[data-card=language]")!;
+    expect(card.parentElement).toBe(main);
+    expect(card.className).toContain("w-full");
+    expect(card.className).toContain("flex-1");
+    for (const element of [main, card]) expect(element.className).not.toMatch(/\bmax-w-|\bmx-auto\b/u);
 
     await userEvent.setup().click(screen.getByRole("button", { name: "Deutsch" }));
     await screen.findByText("Willkommen im Testkurs", { selector: "[data-slot=introduction-info-box-title]" }, { timeout: 20_000 });

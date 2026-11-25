@@ -1,5 +1,5 @@
 {
-  "mutation": "changezonelabelen",
+  "mutation": "changeZoneLabelEn",
   "zoneId": "zone-living",
   "newLabelEn": "Living room"
 }

@@ -1,5 +1,5 @@
 {
-  "description": "Language-agnostic vectors of the solid placements of front and plan shapes. The profile is a rectangle in the local frame of the left thigh (0.45 m along the bone, 0.05 m to its side), a bone that hangs straight down at rest (world angle -90 degrees) and has a world angle of -68 degrees in the stride pose (hand-computed: cos 68 = 0.374607, sin 68 = 0.927184). Every number is relative to the pelvis origin, which is the thigh origin and the axis of the revolved shapes. Rest profile: x 0..0.05, y -0.45..0. Stride profile: x 0..0.45cos68+0.05sin68 = 0.214932, y -0.45sin68..0.05cos68 = -0.417233..0.018730.",
+  "description": "Language-agnostic vectors of the solid placements of front and plan shapes. The profile is a rectangle in the local frame of the left thigh (0.45 m along the bone, 0.05 m to its side), a bone that hangs straight down at rest (world angle -90 degrees) and has a world angle of -68 degrees in the stride pose (hand-computed: cos 68 = 0.374607, sin 68 = 0.927184). Every number is relative to the pelvis origin, which is the thigh origin and the axis of the revolved shapes. Rest profile: x 0..0.05, y -0.45..0. Stride profile: x 0..0.45cos68+0.05sin68 = 0.214932, y -0.45sin68..0.05cos68 = -0.417233..0.018730. `lateralScale` (D54): a revolved solid with lateralScale 0.5 is an ellipse half as wide as it is deep; the axis runs along u of the pelvis, so the scaled direction is the lateral axis w: the front of `oval` is half as wide as `canopy` (0.025 at rest, 0.107466 in the stride), the half profile `oval-half` is drawn at half its distance from the axis (-0.1..-0.05 becomes -0.05..-0.025, -0.1..0.114932 becomes -0.05..0.057466) and the plan of `oval-crown` reaches the full radius ahead and half of it to the side of the axis at z 0.1 (0.075..0.125 at rest, -0.007466..0.207466 in the stride).",
   "asset": "sample-figure",
   "scale": 100,
   "toleranceM": 1e-05,
@@ -71,6 +71,47 @@
           "z0": -0.2,
           "z1": 0.3
         }
+      },
+      {
+        "id": "oval",
+        "kind": "rect",
+        "bone": "thigh-l",
+        "role": "body",
+        "z": 1,
+        "filled": true,
+        "tone": 0.5,
+        "x": 0,
+        "y": 0,
+        "w": 0.45,
+        "h": 0.05,
+        "solid": {
+          "kind": "revolved",
+          "axisBone": "pelvis",
+          "axis": "u",
+          "axisX": 0,
+          "mirror": true,
+          "lateralScale": 0.5
+        }
+      },
+      {
+        "id": "oval-half",
+        "kind": "rect",
+        "bone": "thigh-l",
+        "role": "body",
+        "z": 1,
+        "filled": true,
+        "tone": 0.5,
+        "x": 0,
+        "y": 0,
+        "w": 0.45,
+        "h": 0.05,
+        "solid": {
+          "kind": "revolved",
+          "axisBone": "pelvis",
+          "axis": "u",
+          "axisX": 0.1,
+          "lateralScale": 0.5
+        }
       }
     ],
     "plan": [
@@ -112,6 +153,27 @@
           "z0": -0.2,
           "z1": 0.3
         }
+      },
+      {
+        "id": "oval-crown",
+        "kind": "rect",
+        "bone": "thigh-l",
+        "role": "body",
+        "z": 1,
+        "filled": true,
+        "tone": 0.5,
+        "x": 0,
+        "y": 0,
+        "w": 0.45,
+        "h": 0.05,
+        "solid": {
+          "kind": "revolved",
+          "axisBone": "pelvis",
+          "axis": "u",
+          "axisX": 0,
+          "axisZ": 0.1,
+          "lateralScale": 0.5
+        }
       }
     ]
   },
@@ -137,6 +199,18 @@
           "maxX": 0.3,
           "minY": -0.45,
           "maxY": 0
+        },
+        "oval": {
+          "minX": -0.025,
+          "maxX": 0.025,
+          "minY": -0.45,
+          "maxY": 0
+        },
+        "oval-half": {
+          "minX": -0.05,
+          "maxX": -0.025,
+          "minY": -0.45,
+          "maxY": 0
         }
       },
       "plan": {
@@ -151,6 +225,12 @@
           "maxX": 0.05,
           "minY": -0.2,
           "maxY": 0.3
+        },
+        "oval-crown": {
+          "minX": -0.05,
+          "maxX": 0.05,
+          "minY": 0.075,
+          "maxY": 0.125
         }
       }
     },
@@ -175,6 +255,18 @@
           "maxX": 0.3,
           "minY": -0.417233,
           "maxY": 0.01873
+        },
+        "oval": {
+          "minX": -0.107466,
+          "maxX": 0.107466,
+          "minY": -0.417233,
+          "maxY": 0.01873
+        },
+        "oval-half": {
+          "minX": -0.05,
+          "maxX": 0.057466,
+          "minY": -0.417233,
+          "maxY": 0.01873
         }
       },
       "plan": {
@@ -189,6 +281,12 @@
           "maxX": 0.214932,
           "minY": -0.2,
           "maxY": 0.3
+        },
+        "oval-crown": {
+          "minX": -0.214932,
+          "maxX": 0.214932,
+          "minY": -0.007466,
+          "maxY": 0.207466
         }
       }
     }

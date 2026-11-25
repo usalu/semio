@@ -282,10 +282,9 @@ class Beat3_SameObject(_visuals.ClipScene):
             item = _model.information(TAG, pid, language, m.base)
             value = item["value"]
             rows.append((pid, short[pid] if language == "de" else item["meaning"], ("TRUE" if value else "FALSE") if isinstance(value, bool) else str(value), item["basis"]))
-        frame = _engine.RoundedRectangle(corner_radius=0.06, width=4.9, height=2.3, stroke_color=GOOD, stroke_width=W_THIN, fill_color=BACKGROUND, fill_opacity=0.9).move_to((RIGHT, -1.35, 0))
-        group = _engine.VGroup(frame, self.text(f"IfcWall · {self._name(_model.element(m.element['type'], m.base))}", (2.1, -0.42, 0), size=S_LABEL, color=GOOD, anchor="l", width=3.1),
-                               self.label("stays the same", "bleibt gleich", (6.8, -0.42, 0), size=S_SMALL, color=MUTED, anchor="r"),
-                               _drafting.segments([(P((2.0, -0.62)), P((6.9, -0.62)))], GOOD, W_THIN))
+        frame = _visuals._art.window_frame(4.9, 2.3, color=GOOD, stroke_width=W_THIN, fill_opacity=0.9, top_depth=0.42, top_chips=((0, 4.9),)).move_to((RIGHT, -1.35, 0))
+        group = _engine.VGroup(frame, self.text(f"IfcWall · {self._name(_model.element(m.element['type'], m.base))}", (2.1, -0.42, 0), size=S_LABEL, color=GOOD, anchor="l", width=2.8),
+                               self.label("stays the same", "bleibt gleich", (6.8, -0.42, 0), size=S_SMALL, color=MUTED, anchor="r"))
         for index, (name, meaning, value, basis) in enumerate(rows):
             y = -0.86 - 0.44 * index
             tone, en, de = words[basis]

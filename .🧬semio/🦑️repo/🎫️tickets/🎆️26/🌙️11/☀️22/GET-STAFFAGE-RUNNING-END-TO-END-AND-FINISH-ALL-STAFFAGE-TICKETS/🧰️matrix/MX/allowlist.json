@@ -1,0 +1,27 @@
+{
+  "derivedViewAllowlist": [
+    {
+      "asset": "steel-column",
+      "view": "front",
+      "bands": [
+        "200",
+        "500"
+      ],
+      "reason": {
+        "en": "An HEB 200 is as wide as it is deep (200 mm): the view onto the flange face and the view onto the web show the same bar, and the base plate (300 x 260 mm) and head plate (240 x 220 mm) differ by 20 mm and 10 mm per side. The only part that tells the two views apart is the gusset, which stands 90 mm above the 20 mm base plate. At 1:50 and 1:100 it is drawn (1.8 mm and 0.9 mm on paper) and the corner of its 16 mm edge is 90.35 mm from the nearest point of the other view, where the measure asks 90 mm on the 3 m column; those bands pass by their drawing and are not allowed here. At 1:200 the gusset edge of the front is 16 mm wide, 0.08 mm on paper and below the 0.2 mm feature minimum, and at 1:500 the whole gusset is 0.1 x 0.18 mm: in these two bands the views differ by the plate overhang of 20 mm per side only.",
+        "de": "Ein HEB 200 ist so breit wie hoch (200 mm): Die Ansicht auf die Flanschfläche und die Ansicht auf den Steg zeigen denselben Stab, Fußplatte (300 x 260 mm) und Kopfplatte (240 x 220 mm) unterscheiden sich um 20 mm und 10 mm je Seite. Das einzige Teil, das beide Ansichten unterscheidet, ist die Rippe, die 90 mm über der 20-mm-Fußplatte steht. Bei 1:50 und 1:100 ist sie gezeichnet (1,8 mm und 0,9 mm auf dem Papier) und die Ecke ihrer 16-mm-Kante liegt 90,35 mm vom nächsten Punkt der anderen Ansicht, wo das Maß an der 3-m-Stütze 90 mm verlangt; diese Maßstäbe bestehen durch ihre Zeichnung und sind hier nicht erlaubt. Bei 1:200 ist die Rippenkante der Vorderansicht 16 mm breit, 0,08 mm auf dem Papier und unter dem Mindestmerkmal von 0,2 mm, bei 1:500 misst die ganze Rippe 0,1 x 0,18 mm: In diesen beiden Maßstäben unterscheiden sich die Ansichten nur um den Plattenüberstand von 20 mm je Seite."
+      }
+    },
+    {
+      "asset": "glulam-beam",
+      "view": "plan",
+      "bands": [
+        "500"
+      ],
+      "reason": {
+        "en": "A glulam beam of 160 x 620 mm on a span of 8 m: at 1:500 the side elevation and the plan are each one bar 16 mm long on paper, 1.24 mm and 0.32 mm wide. Their outlines differ by 230 mm per side, half the difference of depth and width; the measure asks for 240 mm (0.03 of the span). The only parts that tell the views apart, the bearing plates of 120 x 20 mm, are 0.24 x 0.04 mm on paper, below the 0.13 mm pen, and are merged into the bar.",
+        "de": "Ein Brettschichtholzträger von 160 x 620 mm über 8 m Spannweite: Bei 1:500 sind Seitenansicht und Draufsicht je ein Balken von 16 mm Länge auf dem Papier, 1,24 mm und 0,32 mm breit. Ihre Umrisse unterscheiden sich um 230 mm je Seite, die halbe Differenz von Höhe und Breite; das Mass verlangt 240 mm (0,03 der Spannweite). Die einzigen Teile, die die Ansichten unterscheiden, die Lagerplatten von 120 x 20 mm, sind auf dem Papier 0,24 x 0,04 mm gross, unter der 0,13-mm-Feder, und gehen im Balken auf."
+      }
+    }
+  ]
+}

@@ -29,6 +29,10 @@ pub use semio_os_flow_operators::{bridge, catalogue, registry};
 pub use semio_os_flow_mesh as mesh;
 pub use semio_os_flow_geometry as geometry;
 
+/// 🌉️ Links the byte bridge so its `flow_bridge_*` exports reach the browser wasm.
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+extern crate semio_os_flow_wasm as _;
+
 
 pub mod extensions {
     pub use semio_os_flow_operators::extensions::schema;

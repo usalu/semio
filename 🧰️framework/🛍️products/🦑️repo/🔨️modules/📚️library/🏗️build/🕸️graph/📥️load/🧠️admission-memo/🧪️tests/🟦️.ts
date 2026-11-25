@@ -16,6 +16,8 @@ const format="a".repeat(64);
 const row=(path:string,version=1)=>({kind:"file",path,fact:{version}});
 const record=(scope="s".repeat(8)):AdmissionMemoV1=>packAdmissionMemoV1({format,scope,admission:{owners:["o"],files:["o/📋️project.json"],targets:{},inputs:{},catalogProviders:[]},observations:[row("/w/o/📋️project.json"),row("/w/shared.json")],owners:[{suffix:"o\0[[],[]]",facts:{closure:1},rows:[row("/w/o/📋️project.json"),row("/w/o/src.ts")]}]});
 const accept=(value:AdmissionMemoV1)=>value.format===format;
+const collect=async<T>(values:AsyncIterable<T>)=>{const all:T[]=[];for await(const value of values)all.push(value);return all;};
+const pages={admit:()=>undefined,facts:(entry:{facts:unknown})=>entry.facts,release:()=>undefined};
 const directory=()=>mkdtempSync(join(tmpdir(),"admission-memo-"));
 const LOAD=fileURLToPath(new URL("../../🟦️.ts",import.meta.url)),tree=ts.createSourceFile("load.ts",readFileSync(process.env.R140_LOAD_SOURCE??LOAD,"utf8"),ts.ScriptTarget.Latest,true);
 const extract=(name:string)=>{const node=tree.statements.find((each):each is ts.FunctionDeclaration=>ts.isFunctionDeclaration(each)&&each.name?.text===name);if(!node)throw Error("Actual function required: "+name);return ts.transpileModule(ts.createPrinter().printNode(ts.EmitHint.Unspecified,node,tree).replace("export ",""),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.None}}).outputText;};
@@ -25,7 +27,7 @@ test("a written memo is served for its format and scope and its observations are
   const path=join(root,"s.admission.json");await writeAdmissionMemoV1(path,record(),1<<20);
   const hit=await readAdmissionMemoV1(path,"s".repeat(8),accept);
   expect(hit?.admission).toEqual(record().admission);expect(hit?.observations).toEqual(record().observations);
-  expect(ownersOfAdmissionMemoV1(hit!)).toEqual([{suffix:"o\0[[],[]]",facts:{closure:1},rows:[row("/w/o/📋️project.json"),row("/w/o/src.ts")]}]);
+  expect(await collect(ownersOfAdmissionMemoV1(hit!))).toEqual([{suffix:"o\0[[],[]]",facts:{closure:1},rows:[row("/w/o/📋️project.json"),row("/w/o/src.ts")]}]);
  }finally{rmSync(root,{recursive:true,force:true});}
 });
 
@@ -72,7 +74,7 @@ test("a memo of another admission format misses after a format change and hits a
   const path=join(root,"s.admission.json"),at=(changed:string[])=>graphAdmissionFormatHashV1(file=>(changed.some(name=>file.endsWith(name))?"changed:":"same:")+file);
   const [unrelated]=graphSelfUrlsV1().map(url=>fileURLToPath(url)),[format0]=graphAdmissionFormatUrlsV1().map(url=>fileURLToPath(url)),remembered=at([]);
   await writeAdmissionMemoV1(path,{...record(),format:remembered},1<<20);
-  expect(await readAdmissionMemoV1(path,"s".repeat(8),value=>value.format===at([unrelated!]))).toBeDefined();
+  const kept=await readAdmissionMemoV1(path,"s".repeat(8),value=>value.format===at([unrelated!]));expect(kept).toBeDefined();await kept!.close();
   expect(await readAdmissionMemoV1(path,"s".repeat(8),value=>value.format===at([format0!]))).toBeUndefined();
  }finally{rmSync(root,{recursive:true,force:true});}
 });
@@ -80,7 +82,7 @@ test("a memo of another admission format misses after a format change and hits a
 test("facts lent by a memo that no longer holds re-derive only the owner whose own row changed",async()=>{
  const owners=Array.from({length:6},(_,index)=>"owner-"+index),tree=new Map<string,number>(owners.map(name=>["/w/"+name+"/src",1]));
  const memoOf=new Map<string,{facts:unknown;rows:readonly unknown[]}>(),limits={ownerFactsMemoEntries:100};
- const remember=Function("ownerFactsMemoV1","GRAPH_LIMITS_V1","observeOwnerWithRetryV1",extract("rememberOwnerFactsV1")+";"+extract("observeOwnerFactsMemoizedV1")+";return observeOwnerFactsMemoizedV1;")(memoOf,limits,observeOwnerWithRetryV1) as (input:unknown)=>Promise<unknown>;
+ const remember=Function("ownerFactsMemoV1","GRAPH_LIMITS_V1","observeOwnerWithRetryV1","ownerFactsPagesV1",extract("rememberOwnerFactsV1")+";"+extract("forgetOwnerFactV1")+";"+extract("observeOwnerFactsMemoizedV1")+";return observeOwnerFactsMemoizedV1;")(memoOf,limits,observeOwnerWithRetryV1,pages) as (input:unknown)=>Promise<unknown>;
  const hold=async(rows:readonly {path:string;fact:{version:number}}[])=>rows.every(each=>tree.get(each.path)===each.fact.version);
  const derived:string[]=[];
  const observation={captureObservedSourceInputsV1:async(observe:()=>Promise<unknown>)=>{const value=await observe();return{value,observations:[row("/w/"+(value as {name:string}).name+"/src",tree.get("/w/"+(value as {name:string}).name+"/src"))]};},retainObservedRowsV1:()=>{}};
@@ -89,7 +91,7 @@ test("facts lent by a memo that no longer holds re-derive only the owner whose o
  expect(derived).toEqual(owners);
  const memo=packAdmissionMemoV1({format,scope:"s".repeat(8),admission:{owners,files:[],targets:{},inputs:{},catalogProviders:[]},observations:[],owners:[...memoOf].map(([key,entry])=>({suffix:key.slice("scope\0f\0".length),facts:entry.facts,rows:entry.rows}))});
  memoOf.clear();derived.length=0;
- for(const owner of ownersOfAdmissionMemoV1(memo))memoOf.set("scope\0f\0"+owner.suffix,{facts:owner.facts,rows:owner.rows});
+ for await(const owner of ownersOfAdmissionMemoV1(memo))memoOf.set("scope\0f\0"+owner.suffix,{facts:owner.facts,rows:owner.rows});
  tree.set("/w/owner-3/src",2);
  for(const name of owners)await ask(name);
  expect(derived).toEqual(["owner-3"]);
@@ -101,11 +103,12 @@ test("the selected inventory checks the registry scope, then asks the memo, deri
  expect(inventory).toBeGreaterThan(0);expect(scope).toBeGreaterThan(inventory);expect(read).toBeGreaterThan(scope);expect(derive).toBeGreaterThan(read);expect(write).toBeGreaterThan(derive);
  expect(source).toContain("remembered===undefined&&selected&&scope&&captured!==undefined");
  expect(source).toContain("value.format===loadedGraphAdmissionFormatV1");
+ expect(source).toContain("for await(const owner of ownersOfAdmissionMemoV1(lent,known))");expect(source).toContain("finally{await lent.close();}");expect(source).toContain("ownerFactsPagesV1.admit(entry)");expect(source).not.toContain("readFile(memoPath");
  expect(source.slice(inventory,write)).not.toContain("loadedGraphModuleAuthorityV1");
 });
 
 
-test("only a cold owner with integer row positions borrows the corresponding observations",()=>{
+test("only a cold owner with integer row positions borrows the corresponding observations",async()=>{
  const db=new Database(":memory:");
  try{
   const oracle=db.query(`SELECT json_extract(owner.value,'$.suffix') AS suffix FROM json_each(?) owner
@@ -117,7 +120,7 @@ test("only a cold owner with integer row positions borrows the corresponding obs
   let reads=0;
   const observations=new Proxy(cases.observations,{get(target,key,receiver){if(typeof key==="string"&&/^\d+$/.test(key))reads++;return Reflect.get(target,key,receiver);}});
   const memo={...record(),owners:cases.owners,observations} as unknown as AdmissionMemoV1;
-  expect(ownersOfAdmissionMemoV1(memo,new Set(cases.known))).toEqual(cases.expected);
+  expect(await collect(ownersOfAdmissionMemoV1(memo,new Set(cases.known)))).toEqual(cases.expected);
   expect(reads).toBe(3);
  }finally{db.close();}
 });
@@ -158,7 +161,7 @@ test("a memo is written in chunks to the exact bytes of its JSON, and a memo abo
 test("the owner facts a process remembers share one row instance per distinct row, so retention follows the distinct rows and not the owners",async()=>{
  const universe=Array.from({length:4000},(_,at)=>row("/w/dir/"+at+".ts",at)),owners=Array.from({length:200},(_,owner)=>"owner-"+owner);
  const memoOf=new Map<string,{facts:unknown;rows:readonly unknown[]}>(),limits={ownerFactsMemoEntries:100};
- const ask=Function("ownerFactsMemoV1","GRAPH_LIMITS_V1","observeOwnerWithRetryV1",extract("rememberOwnerFactsV1")+";"+extract("observeOwnerFactsMemoizedV1")+";return observeOwnerFactsMemoizedV1;")(memoOf,limits,observeOwnerWithRetryV1) as (input:unknown)=>Promise<unknown>;
+ const ask=Function("ownerFactsMemoV1","GRAPH_LIMITS_V1","observeOwnerWithRetryV1","ownerFactsPagesV1",extract("rememberOwnerFactsV1")+";"+extract("forgetOwnerFactV1")+";"+extract("observeOwnerFactsMemoizedV1")+";return observeOwnerFactsMemoizedV1;")(memoOf,limits,observeOwnerWithRetryV1,pages) as (input:unknown)=>Promise<unknown>;
  const{shareObservationRowsV1}=await import("../../../../👁️observation/🟨️.mjs");
  const observation={captureObservedSourceInputsV1:async(observe:()=>Promise<unknown>)=>({value:await observe(),observations:[]}),retainObservedRowsV1:()=>{},shareObservationRowsV1};
  const fresh=(owner:number)=>JSON.parse(JSON.stringify(Array.from({length:500},(_,at)=>universe[(owner*37+at)%universe.length])));
@@ -169,4 +172,18 @@ test("the owner facts a process remembers share one row instance per distinct ro
  const rows=[...memoOf.values()].flatMap(entry=>entry.rows),distinct=new Set(rows);
  expect(rows.length).toBe(100*500);expect(distinct.size).toBeLessThanOrEqual(universe.length);
  const byText=new Map<string,unknown>();for(const each of rows){const text=JSON.stringify(each);expect(byText.get(text)??each).toBe(each);byText.set(text,each);}
+});
+
+test("a memo is read as a stream: a foreign format is refused before its observations are read, and a reader that stops early releases the file",async()=>{
+ const root=directory();try{
+  const path=join(root,"s.admission.json"),owners=Array.from({length:50},(_,at)=>({suffix:"o"+at+"\0[[],[]]",facts:{closure:at},rows:[0]}));
+  const big=packAdmissionMemoV1({format,scope:"s".repeat(8),admission:{owners:["o"],files:[],targets:{},inputs:{},catalogProviders:[]},observations:[row("/w/a")],owners:owners.map(owner=>({...owner,rows:[row("/w/a")]}))});
+  await writeAdmissionMemoV1(path,big,1<<24);
+  let asked=0;
+  expect(await readAdmissionMemoV1(path,"s".repeat(8),value=>{asked++;expect(value.observations).toEqual([]);return false;})).toBeUndefined();expect(asked).toBe(1);
+  const hit=await readAdmissionMemoV1(path,"s".repeat(8),accept);
+  const seen:string[]=[];for await(const owner of ownersOfAdmissionMemoV1(hit!)){seen.push(owner.suffix);if(seen.length===3)break;}
+  expect(seen).toEqual(owners.slice(0,3).map(owner=>owner.suffix));await hit!.close();await hit!.close();
+  const again=await readAdmissionMemoV1(path,"s".repeat(8),accept);expect((await collect(ownersOfAdmissionMemoV1(again!))).map(owner=>owner.suffix)).toEqual(owners.map(owner=>owner.suffix));
+ }finally{rmSync(root,{recursive:true,force:true});}
 });

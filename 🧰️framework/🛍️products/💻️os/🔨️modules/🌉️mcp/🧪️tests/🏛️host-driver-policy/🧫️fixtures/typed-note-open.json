@@ -11,5 +11,12 @@
     "maximumCapacityBytes": 1740332753,
     "maximumReleaseBytes": 1785438266
   },
-  "driveItems": 4096
+  "driveItems": 4096,
+  "infrastructureCrossing": {
+    "itemsSpent": 65473,
+    "itemsRequired": 93,
+    "copyBytesSpent": 16753877,
+    "copyBytesRequired": 29922
+  },
+  "physicalWorkRefused": 1000000000
 }

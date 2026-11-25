@@ -1,0 +1,112 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "cold-checkout",
+      "present": [],
+      "requests": [
+        [
+          "run",
+          "@semio-tech/assets:build",
+          "--output=stream"
+        ],
+        [
+          "run",
+          "@semio-tech/framework-schema:generate",
+          "--output=stream"
+        ],
+        [
+          "run",
+          "@semio-tech/ui-styling-tokens:generate",
+          "--output=stream"
+        ]
+      ]
+    },
+    {
+      "id": "icon-name-published",
+      "present": [
+        "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🪪️icon-name/🦀️.rs"
+      ],
+      "requests": [
+        [
+          "run",
+          "@semio-tech/framework-schema:generate",
+          "--output=stream"
+        ],
+        [
+          "run",
+          "@semio-tech/ui-styling-tokens:generate",
+          "--output=stream"
+        ]
+      ]
+    },
+    {
+      "id": "entity-kinds-published",
+      "present": [
+        "🧰️framework/🔨️modules/🧬️schema/🤖️generated/🏷️entity-kinds/🦀️.rs"
+      ],
+      "requests": [
+        [
+          "run",
+          "@semio-tech/assets:build",
+          "--output=stream"
+        ],
+        [
+          "run",
+          "@semio-tech/ui-styling-tokens:generate",
+          "--output=stream"
+        ]
+      ]
+    },
+    {
+      "id": "tokens-published",
+      "present": [
+        "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🔤️tokens/🦀️.rs"
+      ],
+      "requests": [
+        [
+          "run",
+          "@semio-tech/assets:build",
+          "--output=stream"
+        ],
+        [
+          "run",
+          "@semio-tech/framework-schema:generate",
+          "--output=stream"
+        ]
+      ]
+    },
+    {
+      "id": "everything-published",
+      "present": [
+        "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🪪️icon-name/🦀️.rs",
+        "🧰️framework/🔨️modules/🧬️schema/🤖️generated/🏷️entity-kinds/🦀️.rs",
+        "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🔤️tokens/🦀️.rs"
+      ],
+      "requests": []
+    },
+    {
+      "id": "unrelated-files-only",
+      "present": [
+        "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icons/🦀️.rs"
+      ],
+      "requests": [
+        [
+          "run",
+          "@semio-tech/assets:build",
+          "--output=stream"
+        ],
+        [
+          "run",
+          "@semio-tech/framework-schema:generate",
+          "--output=stream"
+        ],
+        [
+          "run",
+          "@semio-tech/ui-styling-tokens:generate",
+          "--output=stream"
+        ]
+      ]
+    }
+  ]
+}

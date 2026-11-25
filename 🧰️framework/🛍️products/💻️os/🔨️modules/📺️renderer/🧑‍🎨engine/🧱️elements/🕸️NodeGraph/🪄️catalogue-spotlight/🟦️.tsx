@@ -207,6 +207,7 @@ export function FlowSpotlight({
       ref={rootRef}
       className={cn("pointer-events-auto absolute z-60 flex min-h-0 w-layout-floating-menu-sm flex-col overflow-hidden", floatingMenuSurfaceClass)}
       data-level="menu"
+      data-glass-chip=""
       style={{ left: state.screen.x, top: state.screen.y }}
       onPointerDown={(event) => event.stopPropagation()}
       onDoubleClick={(event) => event.stopPropagation()}
@@ -252,7 +253,7 @@ export function FlowSpotlight({
           <button {...sharedBorderlessBoxProps}
             type="button"
             aria-label={expanded ? collapseSuggestionsLabel : showAllSuggestionsLabel}
-            className="text-muted-foreground hover:bg-muted/40 hover:text-foreground shrink-0 rounded px-half text-2xs"
+            className="text-muted-foreground hover:bg-muted/40 hover:text-foreground shrink-0 px-half text-2xs"
             onClick={() => setExpanded((value) => !value)}
           >
             {expanded ? "▴️" : "▾️"}

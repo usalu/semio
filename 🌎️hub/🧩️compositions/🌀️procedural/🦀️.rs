@@ -14,10 +14,34 @@ use semio_plugin::{ExecutionMode, FlowExtensionDeclaration, FlowExtensionExecuta
 semio_framework_dispatch_macros::dyn_enum_close! {
     /// 🗃️ Closed runtime app fleet for the procedural 2D and 3D surfaces.
     pub enum ProceduralApps: PluginApp {
-        Generation2dEditor(VcsArtifactApp<EditorApp<semio_s_artifact_procedural_2d_editor::Generation2dPlayApp>>),
-        Generation2dViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_procedural_2d_viewer::Generation2dViewer>>),
-        Generation3dEditor(VcsArtifactApp<EditorApp<semio_s_artifact_procedural_3d_editor::Generation3dPlayApp>>),
-        Generation3dViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_procedural_3d_viewer::Generation3dViewer>>),
+        Generation2dEditor(semio_hub_procedural_generation2d_editor_app::Generation2dEditorApps),
+        Generation2dViewer(semio_hub_procedural_generation2d_viewer_app::Generation2dViewerApps),
+        Generation3dEditor(semio_hub_procedural_generation3d_editor_app::Generation3dEditorApps),
+        Generation3dViewer(semio_hub_procedural_generation3d_viewer_app::Generation3dViewerApps),
+    }
+}
+
+impl From<VcsArtifactApp<EditorApp<semio_s_artifact_procedural_2d_editor::Generation2dPlayApp>>> for ProceduralApps {
+    fn from(app: VcsArtifactApp<EditorApp<semio_s_artifact_procedural_2d_editor::Generation2dPlayApp>>) -> Self {
+        Self::Generation2dEditor(app.into())
+    }
+}
+
+impl From<VcsArtifactApp<ViewerApp<semio_s_artifact_procedural_2d_viewer::Generation2dViewer>>> for ProceduralApps {
+    fn from(app: VcsArtifactApp<ViewerApp<semio_s_artifact_procedural_2d_viewer::Generation2dViewer>>) -> Self {
+        Self::Generation2dViewer(app.into())
+    }
+}
+
+impl From<VcsArtifactApp<EditorApp<semio_s_artifact_procedural_3d_editor::Generation3dPlayApp>>> for ProceduralApps {
+    fn from(app: VcsArtifactApp<EditorApp<semio_s_artifact_procedural_3d_editor::Generation3dPlayApp>>) -> Self {
+        Self::Generation3dEditor(app.into())
+    }
+}
+
+impl From<VcsArtifactApp<ViewerApp<semio_s_artifact_procedural_3d_viewer::Generation3dViewer>>> for ProceduralApps {
+    fn from(app: VcsArtifactApp<ViewerApp<semio_s_artifact_procedural_3d_viewer::Generation3dViewer>>) -> Self {
+        Self::Generation3dViewer(app.into())
     }
 }
 //#endregion 🗃️Apps

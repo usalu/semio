@@ -5,34 +5,34 @@ import { createHash } from "node:crypto";
 import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, watch, writeFileSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
 import { tmpdir } from "node:os";
-import { DEV_STREAM_ROUTES, decodePackValue, encodePackValue } from "@semio-tech/framework-os";
+import { DEV_STREAM_ROUTES, decodePackValue, encodePackValue } from "../../../../📦️packages/🟦️typescript/🟦️.ts";
 import type { StreamMuxJsonV1, StreamMuxServerV1 } from "@semio-tech/framework/io/stream-mux";
 import { decodeOwnedZip, encodeOwnedZip } from "../🟦️.ts";
-import { parseInstallationDirectoryV1, installationDirectoryCollision, installationDirectoryEmoji } from "@semio-tech/framework/identity/installation";
-import { MODULE_BRIDGE_FILE, MODULE_EXTENSION_ROUTE, moduleRoutePath } from "@semio-tech/plugin-registry/deployment";
+import { parseInstallationDirectoryV1, installationDirectoryCollision, installationDirectoryEmoji } from "../../../../../../📦️packages/🟦️typescript/🪪️identity/📁️installation/🟦️.ts";
+import { MODULE_BRIDGE_FILE, MODULE_EXTENSION_ROUTE, moduleRoutePath } from "../../📇️registry/📦️deployment/🟦️.ts";
 import {
   PLUGIN_HOST_SHIM_FILE,
   SHARD_WORKER_FILE,
   type PluginWebMaterializeContext,
-} from "@semio-tech/framework-plugin/browser-bundle/materialization/contract";
+} from "../../📦️packages/🦀️rust/🌐️browser-bundle/🏗️materialization/🧾️contract/🟦️.ts";
 import {
   PREVIEW2_VENDOR_RELATIVE,
-} from "@semio-tech/framework-plugin/browser-bundle/imports";
+} from "../../📦️packages/🦀️rust/🌐️browser-bundle/🕸️imports/🟦️.ts";
 import {
   ensurePreview2ShimVendorAt,
-} from "@semio-tech/framework-plugin/browser-bundle/materialization/preview2-shim-patches";
+} from "../../📦️packages/🦀️rust/🌐️browser-bundle/🏗️materialization/🩹️preview2-shim-patches/🟦️.ts";
 import {
   hostShimSource,
-} from "@semio-tech/framework-plugin/browser-bundle/materialization/host-shim-source";
+} from "../../📦️packages/🦀️rust/🌐️browser-bundle/🏗️materialization/🪢️host-shim-source/🟦️.ts";
 import {
   pluginComponentBridgeSource,
-} from "@semio-tech/framework-plugin/browser-bundle/materialization/component-bridge-source";
+} from "../../📦️packages/🦀️rust/🌐️browser-bundle/🏗️materialization/🌉️component-bridge-source/🟦️.ts";
 import {
   shardWorkerSource,
-} from "@semio-tech/framework-plugin/browser-bundle/materialization/shard-worker-source";
+} from "../../📦️packages/🦀️rust/🌐️browser-bundle/🏗️materialization/🧵️shard-worker-source/🟦️.ts";
 import {
   transpilePluginComponent,
-} from "@semio-tech/framework-plugin/browser-bundle/materialization";
+} from "../../📦️packages/🦀️rust/🌐️browser-bundle/🏗️materialization/🟦️.ts";
 
 //#region 🔖️Constants
 export const EXTENSION_STATIC_ROUTE = MODULE_EXTENSION_ROUTE;
@@ -265,7 +265,7 @@ export const webMaterialize: ExtensionMaterializer = async ({ wasmBytes, assets,
     transpilePluginComponent(artifactPath, outDir, componentBase, materializeCtx);
     writeFileSync(join(outDir, PLUGIN_HOST_SHIM_FILE), hostShimSource());
     writeFileSync(join(outDir, SHARD_WORKER_FILE), shardWorkerSource());
-    writeFileSync(join(outDir, MODULE_BRIDGE_FILE), pluginComponentBridgeSource(componentBase, EXTENSION_COMPONENT_FILE));
+    writeFileSync(join(outDir, MODULE_BRIDGE_FILE), pluginComponentBridgeSource(componentBase));
   } finally {
     rmSync(artifactDir, { recursive: true, force: true });
   }

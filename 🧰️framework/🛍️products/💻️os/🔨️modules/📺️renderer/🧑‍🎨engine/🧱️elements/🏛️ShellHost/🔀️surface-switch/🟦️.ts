@@ -39,6 +39,11 @@ export function surfaceRoleAppsV1<T extends RoleSurfaceAppV1>(apps: readonly T[]
   return editor !== undefined && viewer !== undefined ? { editor, viewer } : null;
 }
 
+/** 🔓️ Whether a navbar role button is disabled: only the OTHER role, while a switch is mid-flight or the hub refuses it. In-flight session work never disables it — the switch itself drains that work ({@link quiesceSessionWorkV1}), and gating on it left the Editor button dead for as long as a viewer-side solve stayed pending. */
+export function roleButtonDisabledV1(isActive: boolean, switchBusy: boolean, refused: boolean): boolean {
+  return !isActive && (switchBusy || refused);
+}
+
 /** 👁️✏️ The app a role switch would open, or `null` when the request is a no-op (already that role) or
  * unserviceable (no sibling declared for the open document's dialect). */
 export function roleSwitchTargetV1<T extends RoleSurfaceAppV1>(apps: readonly T[], dialect: ArtifactDialect | undefined, currentRole: AppRole, requested: AppRole): T | null {
